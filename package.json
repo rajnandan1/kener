@@ -1,0 +1,70 @@
+{
+    "name": "kener",
+    "version": "0.0.1",
+    "private": true,
+	"license": "MIT",
+    "description": "Kener: An open-source Node.js status page application for real-time service monitoring, incident management, and customizable reporting. Simplify service outage tracking, enhance incident communication, and ensure a seamless user experience with Kener's intuitive dashboard and robust features.",
+    "author": "Raj Nandan Sharma <rajnandan1@gmail.com>",
+    "keywords": [
+        "Node.js application",
+        "Open-source status page",
+        "Service monitoring tool",
+        "Real-time incident management",
+        "Customizable reporting",
+        "Service outage tracker",
+        "User-friendly dashboard",
+        "Incident communication platform",
+        "Scalable monitoring solution",
+        "Community-driven software",
+        "Website status tracker",
+        "Incident response tool",
+        "System status monitoring",
+        "Service reliability management",
+        "Incident alert system"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/rajnandan1/kener.git"
+    },
+    "scripts": {
+        "dev": "vite dev",
+        "build": "vite build",
+        "preview": "vite preview",
+        "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
+        "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
+        "kener:build": "vite build",
+        "kener:start": "node server.js",
+        "kener": "vite build && node server.js"
+    },
+    "devDependencies": {
+        "@sveltejs/adapter-auto": "^2.0.0",
+        "@sveltejs/adapter-node": "^1.3.1",
+        "@sveltejs/kit": "^1.27.4",
+        "autoprefixer": "^10.4.14",
+        "postcss": "^8.4.24",
+        "postcss-load-config": "^4.0.1",
+        "svelte": "^4.0.5",
+        "svelte-check": "^3.6.0",
+        "tailwindcss": "^3.3.2",
+        "typescript": "^5.0.0",
+        "vite": "^4.4.2"
+    },
+    "type": "module",
+    "dependencies": {
+        "@markdoc/markdoc": "^0.3.5",
+        "axios": "^1.6.2",
+        "bits-ui": "^0.9.8",
+        "cheerio": "^1.0.0-rc.12",
+        "clsx": "^2.0.0",
+        "croner": "^7.0.5",
+        "express": "^4.18.2",
+        "fs-extra": "^11.1.1",
+        "js-yaml": "^4.1.0",
+        "lucide-svelte": "^0.292.0",
+        "mode-watcher": "^0.1.1",
+        "moment": "^2.29.4",
+        "node-cache": "^5.1.2",
+        "tailwind-merge": "^2.0.0",
+        "tailwind-variants": "^0.1.18"
+    }
+}

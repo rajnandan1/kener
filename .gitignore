@@ -2,6 +2,7 @@
 node_modules
 /build
 /.svelte-kit
+/src/lib/.kener
 /package
 .env
 .env.*

@@ -1,0 +1,18 @@
+- name: Google Search
+  description: Search the world's information, including webpages, images, videos and more.
+  tag: "google-search"
+  image: "/google.png"
+  method: GET
+  url: https://www.google.com/webhp
+- name: Svelte Website
+  description: Cybernetically enhanced web apps
+  tag: "svelte-website"
+  method: GET
+  url: https://svelte.dev/
+  image: "/svelte.svg"
+- name: Cashfree Payments
+  description: Cybernetically enhanced web apps
+  tag: "cashfree-payments"
+  method: GET
+  url: https://www.cashfree.com/
+  image: "https://cashfreelogo.cashfree.com/cashfreepayments/logopng4x/Group_4355.png"
