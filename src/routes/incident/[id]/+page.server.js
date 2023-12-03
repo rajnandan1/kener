@@ -2,6 +2,10 @@ import monitors from "$lib/.kener/monitors.json";
 import { activeIncident, getCommentsForIssue, pastIncident } from "$lib/server/incident";
 import Markdoc from "@markdoc/markdoc";
 
+/**
+ * @param {{body: string | import("markdown-it/lib/token")[];number: any;title: any;created_at: any;updated_at: any;comments: any;html_url: any;}} issue
+ * @this {any}
+ */
 async function mapper(issue){
 	const ast = Markdoc.parse(issue.body);
     const content = Markdoc.transform(ast);
@@ -16,7 +20,8 @@ async function mapper(issue){
 		collapsed: true,
         comments: issue.comments,
         html_url: issue.html_url,
-        comments: comments.map((comment) => {
+        // @ts-ignore
+        comments: comments.map((/** @type {{ body: string | import("markdown-it/lib/token")[]; created_at: any; updated_at: any; html_url: any; }} */ comment) => {
             const ast = Markdoc.parse(comment.body);
             const content = Markdoc.transform(ast);
             const html = Markdoc.renderers.html(content);
@@ -30,9 +35,11 @@ async function mapper(issue){
     };
 }
 
+// @ts-ignore
 export async function load({ params, route, url, parent }) {
     const siteData = await parent();
     const github = siteData.site.github;
+	// @ts-ignore
 	const { description, name, tag } = monitors.find((monitor) => monitor.folderName === params.id);
 	const gitHubActiveIssues = await activeIncident(tag, github);
 	const gitHubPastIssues = await pastIncident(tag, github);

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import monitors from "$lib/.kener/monitors.json";
 import { hasActiveIncident } from "$lib/server/incident";
 
