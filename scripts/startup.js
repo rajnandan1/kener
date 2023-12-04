@@ -14,8 +14,7 @@ import * as cheerio from "cheerio";
 let monitors = [];
 let site = {};
 const envSecrets = [];
-const defaultEval = `
-(function (statusCode, responseTime, responseData) {
+const defaultEval = `(function (statusCode, responseTime, responseData) {
 	let statusCodeShort = Math.floor(statusCode/100);
     if(statusCodeShort >=2 && statusCodeShort <= 3) {
         return {

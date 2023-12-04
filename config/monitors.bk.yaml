@@ -1,0 +1,47 @@
+- name: Google Search
+  description: Google Search
+  tag: "create-order"
+  method: POST
+  url: https://sandbox.cashfree.com/pg/orders
+  headers:
+    Content-Type: application/json
+    x-client-id: $X_CLIENT_ID
+    x-client-secret: $X_CLIENT_SECRET
+    x-api-version: '2022-09-01'
+  body: '{"order_amount":22222.1,"order_currency":"INR","customer_details":{"customer_id":"4091284194","customer_email":"statuspage@example.com","customer_phone":"9876543210"}}'
+- name: GET Order
+  description: Some description
+  tag: "get-order"
+  method: POST
+  url: https://sandbox.cashfree.com/pg/orders/$ORDER_ID
+  headers:
+    Content-Type: application/json
+    x-client-id: $X_CLIENT_ID
+    x-client-secret: $X_CLIENT_SECRET
+    x-api-version: '2022-09-01'
+  eval: |
+    (function(statusCode, responseTime, responseDataBase64){
+      const resp = JSON.parse(atob(responseDataBase64));
+      return {
+        status: statusCode == 200 ? 'UP':'DOWN',
+        latency: latency,
+      }
+    })
+- name: GET Order Payments
+  description: Some description
+  method: POST
+  tag: "get-order-payments"
+  url: https://sandbox.cashfree.com/pg/orders/$ORDER_ID/payments
+  headers:
+    Content-Type: application/json
+    x-client-id: $X_CLIENT_ID
+    x-client-secret: $X_CLIENT_SECRET
+    x-api-version: '2022-09-01'
+  eval: |
+    (function(statusCode, responseTime, responseDataBase64){
+      const resp = JSON.parse(atob(responseDataBase64));
+      return {
+        status: statusCode == 200 ? 'UP':'DOWN',
+        latency: latency,
+      }
+    })
