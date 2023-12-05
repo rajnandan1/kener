@@ -83,6 +83,17 @@ This translates to
 ```
 
 ## theme
+It can be set by modifying the `<html>` class in `src/app.html` file
+### Dark Theme
+```html
+<!DOCTYPE html>
+<html lang="en" class="dark dark:bg-background">
+```
+### Light theme
+```html
+<!DOCTYPE html>
+<html lang="en" >
+```
 Can be `light` or `dark`. Defaults to `light`
 
 ## siteURL
@@ -110,11 +121,16 @@ logo: "https://www.example.com/logo.png
 ```
 
 ## favicon
-```yaml
+It can be set by modifying the `<head>` tag in `src/app.html` file. 
+Example add a png called `logo.png` file in `static/` and then
+
+```html
 ...
-favicon: "https://www.example.com/favicon.ico
+<link rel="icon"  href="/logo.png" />
 ...
 ```
+
+
 ## github
 For incident kener uses github comments. Create an empty [github](https://github.com) public repo and add them to `site.yaml`
 ```yaml
@@ -193,6 +209,7 @@ Sample
 | tag         | Required + Unique | This is used to tag incidents created in Github using comments                                            |
 | image       | Optional          | To show a logo before the name                                                                            |
 | cron        | Optional           | Use cron expression to specify the interval to run the monitors. Defaults to `* * * * *` i.e every minute |
+| timeout        | Optional           | Timeout in milliseconds to cancel HTTP call. Default is 5000 |
 | method      | Optional          | HTTP Method                                                                                               |
 | url         | Optional          | HTTP URL                                                                                                  |
 | headers     | Optional          | HTTP headers                                                                                              |

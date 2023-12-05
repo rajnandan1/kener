@@ -10,7 +10,6 @@ import yaml from "js-yaml";
 import { Cron } from "croner";
 import { MONITOR, SITE, APP_HTML, FOLDER, FOLDER_MONITOR, FOLDER_SITE } from "./constants.js";
 import { OneMinuteFetch } from "./cron-minute.js";
-import * as cheerio from "cheerio";
 let monitors = [];
 let site = {};
 const envSecrets = [];
@@ -58,19 +57,6 @@ const Startup = async () => {
     try {
         const fileContent = fs.readFileSync(MONITOR, "utf8");
         site = yaml.load(fs.readFileSync(SITE, "utf8"));
-        const appHTML = fs.readFileSync(APP_HTML, "utf8");
-        const $ = cheerio.load(appHTML);
-        if (site.theme !== undefined && site.theme !== null && site.theme === "dark") {
-            $("#kener-app").attr("class", "dark dark:bg-background");
-        } else {
-            $("#kener-app").attr("class", "");
-        }
-        if (site.favicon !== undefined && site.favicon !== null && site.favicon === "dark") {
-            $("#kener-app-favicon").attr("href", site.favicon);
-        } else {
-            $("#kener-app-favicon").attr("href", "/kener.png");
-        }
-        fs.writeFileSync(APP_HTML, $.html());
         monitors = yaml.load(fileContent);
     } catch (error) {
         console.log(error);

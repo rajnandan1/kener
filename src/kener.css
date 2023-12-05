@@ -121,7 +121,7 @@ section {
     background-color:#f1f5f8;
 }
 .dark .bg-api-nodata {
-    background-color: rgba(100, 100, 100, 0.4);
+    background-color: rgba(100, 100, 100, .4);
 }
 .text-api-nodata {
     color: #f1f5f8;
@@ -139,6 +139,17 @@ section {
 .bgg-api-degraded {
     background: linear-gradient(to right, rgba(187, 219, 243, 0) 0%, rgba(255, 184, 76, 0.5) 50%, rgba(187, 219, 243, 0) 100%);
 }
+.today-sq + .hidden .message {
+	z-index: 30;
+	/* float: left; */
+	/* margin-top: -15px; */
+	position: absolute;
+	width: 300px;
+}
+
+.today-sq:hover + .hidden  {
+	display: block;
+}
 .today-sq:hover {
     /* transform: scale(1.1); */
     box-shadow: rgba(50, 50, 105, 0.15) 0px 2px 5px 0px, rgba(0, 0, 0, 0.05) 0px 1px 1px 0px;
@@ -152,6 +163,7 @@ section {
 }
 .today-sq {
     position: relative;
+	z-index: 0;
 }
 .today-sq-div .today-sq:last-child {
     /* animation: blink 1s linear infinite; */

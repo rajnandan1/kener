@@ -40,7 +40,7 @@
 </script>
 <section class="mx-auto container rounded-3xl bg-white mt-32">
     <div class="grid grid-cols-5 gap-4">
-        <div class="col-span-1 border-r-2 border-gray-500">
+        <div class="col-span-5 md:col-span-1 hidden md:block border-r-2 border-gray-500">
             <ul class="w-full  sticky top-0 text-sm font-medium text-gray-900 bg-white mt-8 rounded-lg">
                 {#each sideBar as item}
                 <li class="w-full px-4 py-2">
@@ -50,8 +50,8 @@
                 <li class="w-full px-4 py-2 rounded-b-lg">Download</li>
             </ul>
         </div>
-        <div class="col-span-4">
-            <div class="bg-white p-10 md">
+        <div class="col-span-5 md:col-span-4">
+            <div class="bg-white pt-6 p-0 md:p-10">
                 <article
                     id="markdown"
                     class="prose prose-stone max-w-none prose-code:bg-gray-200 prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:rounded prose-code:font-mono"

@@ -8,13 +8,14 @@
     import { Button } from "$lib/components/ui/button";
     import moment from "moment";
     import axios from "axios";
-    import { ArrowDown, ArrowUp, ArrowRight, BadgeCheck } from "lucide-svelte";
+    import { ArrowDown, ArrowUp, ArrowRight, BadgeCheck, Dot } from "lucide-svelte";
     import { buttonVariants } from "$lib/components/ui/button";
     import * as Alert from "$lib/components/ui/alert";
 
     export let monitor;
 
     let loading90 = true;
+	let todayDD = moment().format("YYYY-MM-DD")
     let uptime90Day = "0";
     let uptime0Day = "0";
     let dailyUps = 0;
@@ -23,7 +24,7 @@
     let view = "90day";
     let _0Day = {};
     let _90Day = {};
-    const statusObj = {
+    let statusObj = {
         UP: "api-up",
         DEGRADED: "api-degraded",
         DOWN: "api-down",
@@ -132,9 +133,10 @@
                 dailyDown = status == "DOWN" ? dailyDown + 1 : dailyDown;
                 dailyDegraded = status == "DEGRADED" ? dailyDegraded + 1 : dailyDegraded;
             }
-
+			
             uptime0Day = parseUptime(dailyUps + dailyDegraded, dailyUps + dailyDown + dailyDegraded);
         }
+		console.log('>>>>2>>----  monitor:136 ', _90Day, todayDD);
         loading90 = false;
     };
 
@@ -147,7 +149,7 @@
     <Card.Root class="w-full">
         <Card.Header>
             <div class="grid grid-cols-3 gap-4">
-                <div class="col-span-2 relative {!!monitor.image?'pl-11':''}">
+                <div class="col-span-3 md:col-span-2 relative {!!monitor.image?'pl-11':''}">
 					{#if monitor.image}
 					<img src="{monitor.image}" class="w-8 h-8 left-0 top-[1px] absolute" alt="" srcset="">
 					{/if}
@@ -160,7 +162,7 @@
 					</Card.Description>
 					{/if}
                 </div>
-                <div class="col-span-1 text-right">
+                <div class="col-span-3 md:col-span-1 md:text-right">
                     {#if monitor.hasActiveIncident}
                     <a href="incident/{monitor.folderName}">
                         
@@ -169,26 +171,22 @@
                             Ongoing Incident
 						</a>
                     </a>
-                    {:else}
-					<div class="float-right mt-[8px]">
-						<picture>
-							<source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f4af/512.webp" class="float-right" type="image/webp">
-							<img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f4af/512.gif" alt="💯" width="32" height="32">
-						</picture>
-					</div>
-					
+                    {:else if _90Day[todayDD] && _90Day[todayDD].cssClass == statusObj.DOWN}
+						<p class="text-destructive mt-3 text-sm font-semibold">
+							Down for {_90Day[todayDD].DOWN} minutes
+						</p>
 					{/if}
                 </div>
             </div>
         </Card.Header>
         <Separator class="mb-4 mt-1" />
         <Card.Content>
-            <div class="grid grid-cols-4 gap-4 mb-4">
-                <div class="col-span-3 text-left">
+            <div class="grid grid-cols-3   gap-4 mb-4">
+                <div class="col-span-3  sm:col-span-2 text-left">
                     <Button class="h-9 px-4 py-2 w-48 rounded-full sm:w-auto" variant="{view != '90day' ? 'ghost' : ''}" on:click="{(e) => {switchView('90day')}}">90 Day</Button>
                     <Button class="h-9 px-4 py-2 w-48 rounded-full sm:w-auto" variant="{view != '0day' ? 'ghost' : ''}" on:click="{(e) => {switchView('0day')}}">Today</Button>
                 </div>
-                <div class="col-span-1 text-right">
+                <div class="col-span-3 sm:col-span-1 sm:text-right">
                 
 					<a href="/incident/{monitor.folderName}#past_incident" class={buttonVariants({ variant: "ghost" })}>
 						Past Incidents <ArrowRight size="{16}" />
@@ -222,8 +220,9 @@
             </div>
             <div class="flex flex-wrap today-sq-div mt-[45px]">
                 {#each Object.entries(_0Day) as [ts, bar] }
-                <div class="h-[10px] bg-{bar.cssClass} w-[10px] today-sq m-[1px]" title="{bar.timestamp} - {bar.status} - {bar.latency} ms">
-                    {#if bar.index == 0}
+                <div data-index="{bar.index}" class="h-[10px] bg-{bar.cssClass} w-[10px] today-sq m-[1px]" >
+                    
+					{#if bar.index == 0}
                     <div class="arrow start text-sm">
                         Midnight
                         <ArrowDown size="{16}" />
@@ -235,6 +234,13 @@
                     </div>
                     {/if}
                 </div>
+				<div class="hidden relative">
+					<div data-index="{bar.index}"  class="w-[300px]  pb-2 pr-1 pl-1 text-sm text-center rounded font-semibold message bg-indigo-600 text-yellow-50">
+						<span class="text-{bar.cssClass} text-2xl">•</span> {bar.timestamp} / {bar.status} / {bar.latency} ms
+					</div>
+				</div>
+				
+				
                 {/each}
             </div>
             {/if}
