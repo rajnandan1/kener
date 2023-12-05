@@ -136,7 +136,6 @@
 			
             uptime0Day = parseUptime(dailyUps + dailyDegraded, dailyUps + dailyDown + dailyDegraded);
         }
-		console.log('>>>>2>>----  monitor:136 ', _90Day, todayDD);
         loading90 = false;
     };
 
