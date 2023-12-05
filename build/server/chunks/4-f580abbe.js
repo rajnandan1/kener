@@ -9,7 +9,6 @@ var _page = /*#__PURE__*/Object.freeze({
 });
 
 async function mapper(issue) {
-  JSON.parse(fs.readFileSync(public_env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
   const ast = Markdoc.parse(issue.body);
   const content = Markdoc.transform(ast);
   const html = Markdoc.renderers.html(content);
@@ -38,6 +37,7 @@ async function mapper(issue) {
   };
 }
 async function load({ params, route, url, parent }) {
+  let monitors = JSON.parse(fs.readFileSync(public_env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
   const siteData = await parent();
   const github = siteData.site.github;
   const { description, name, tag } = monitors.find((monitor) => monitor.folderName === params.id);
@@ -67,4 +67,4 @@ const stylesheets = [];
 const fonts = [];
 
 export { component, fonts, imports, index, _page_server as server, server_id, stylesheets, _page as universal, universal_id };
-//# sourceMappingURL=4-c71ed128.js.map
+//# sourceMappingURL=4-f580abbe.js.map
