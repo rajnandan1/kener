@@ -22,12 +22,8 @@ metaTags:
   twitter:title: "Kener - Open-Source Node.js Status Page: Real-Time Incident Management & Monitoring"
   twitter:description: "Kener: An open-source Node.js status page application for real-time service monitoring, incident management, and customizable reporting. Simplify service outage tracking, enhance incident communication, and ensure a seamless user experience."
 nav:
-  - name: "Home"
-    url: "/"
-  - name: "About"
-    url: "/about"
-  - name: "Contact"
-    url: "/contact"
+  - name: "Documentation"
+    url: "/docs"
 hero:
   title: Kener is a Open-Source Status Page System
   subtitle: Let your users know what's going on.

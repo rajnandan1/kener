@@ -1,6 +1,7 @@
 .DS_Store
 node_modules
-/build
+static/kener
+build/client/kener
 /.svelte-kit
 /src/lib/.kener
 /package

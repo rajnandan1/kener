@@ -36,6 +36,20 @@ function getWordsStartingWithDollar(text) {
     const wordsArray = text.match(regex);
     return wordsArray || [];
 }
+if (!fs.existsSync(FOLDER)) {
+    fs.mkdirSync(FOLDER);
+    console.log(".kener folder created successfully!");
+}
+
+if (!fs.existsSync(FOLDER_SITE)) {
+    fs.writeFileSync(FOLDER_SITE, JSON.stringify({}));
+    console.log("site.json file created successfully!");
+}
+
+if (!fs.existsSync(FOLDER_MONITOR)) {
+    fs.writeFileSync(FOLDER_MONITOR, JSON.stringify([]));
+    console.log("monitors.json file created successfully!");
+}
 
 
 

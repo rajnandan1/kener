@@ -1,7 +1,6 @@
 
 // Define your constants
-
-const FOLDER = "./src/lib/.kener";
+const FOLDER = process.env.PUBLIC_KENER_FOLDER;
 const MONITOR = "./config/monitors.yaml";
 const SITE = "./config/site.yaml";
 const FOLDER_MONITOR = FOLDER + "/monitors.json";

@@ -1,5 +1,5 @@
 // @ts-ignore
-import { json, fail, error } from "@sveltejs/kit";
+import { json } from "@sveltejs/kit";
 import fs from "fs-extra";
 
 

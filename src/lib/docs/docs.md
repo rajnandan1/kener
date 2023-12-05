@@ -11,9 +11,11 @@ npm install
 
 ## Start Kener
 ```bash
-npm run kener
+npm run kener:dev
 ```
+Kener would be running at PORT 3000. Go to [http://localhost:3000](http://localhost:3000)
 
+![alt text](ss.png "SS")
 ## Folder structure
 
 ```
@@ -26,9 +28,25 @@ npm run kener
 
 ```
 
-Kener would be running at PORT 3000. Go to [http://localhost:3000](http://localhost:3000)
+## Production Deployment
+Once you have added the `config/site.yaml` or `config/monitors.yaml` or changed anything in `src/`
+```shell
+npm i
+npm run kener:build
+npm run kener
+```
 
-![alt text](ss.png "SS")
+
+
+## Custom Deployment
+Kener should be run using `prod.js` script. It needs two environment variables `PUBLIC_KENER_FOLDER=./build/client/kener` and `tz=UTC`
+
+```shell
+export PUBLIC_KENER_FOLDER=./build/client/kener
+export tz=UTC
+node prod.js
+``` 
+- 
 ---
 # Modify Site
 

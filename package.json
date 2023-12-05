@@ -32,9 +32,9 @@
         "preview": "vite preview",
         "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
         "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
-        "kener:build": "vite build",
-        "kener:start": "node server.js",
-        "kener": "node init && vite build && node server.js"
+        "kener:dev": "cross-env PUBLIC_KENER_FOLDER=./static/kener tz=UTC concurrently \"node dev.js\" \"vite dev\"",
+        "kener:build": "cross-env PUBLIC_KENER_FOLDER=./static/kener tz=UTC vite build",
+        "kener": "cross-env PUBLIC_KENER_FOLDER=./build/client/kener tz=UTC node prod.js"
     },
     "devDependencies": {
         "@sveltejs/adapter-auto": "^2.0.0",
@@ -42,6 +42,8 @@
         "@sveltejs/kit": "^1.27.4",
         "@tailwindcss/typography": "^0.5.10",
         "autoprefixer": "^10.4.14",
+        "concurrently": "^8.2.2",
+        "cross-env": "^7.0.3",
         "postcss": "^8.4.24",
         "postcss-load-config": "^4.0.1",
         "svelte": "^4.0.5",
