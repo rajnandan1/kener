@@ -8,7 +8,7 @@ import fs from "fs-extra";
  * @this {any}
  */
 async function mapper(issue) {
-	let monitors = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+	
     const ast = Markdoc.parse(issue.body);
     const content = Markdoc.transform(ast);
     const html = Markdoc.renderers.html(content);
@@ -39,6 +39,7 @@ async function mapper(issue) {
 
 // @ts-ignore
 export async function load({ params, route, url, parent }) {
+	let monitors = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
     const siteData = await parent();
     const github = siteData.site.github;
     // @ts-ignore
