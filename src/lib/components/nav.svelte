@@ -8,7 +8,7 @@
 <div class="one"></div>
 <header class=" relative  z-50 w-full  ">
     <div class="container flex h-14 items-center">
-        <div class="mr-4 hidden md:flex blurry-bg ">
+        <div class="mr-4 flex blurry-bg ">
             <a href="{data.site.home}" class="mr-6 flex items-center space-x-2">
                 <img src="{data.site.logo}" class="h-5 w-5" alt="" srcset="">
                 <span class="hidden font-bold sm:inline-block text-[15px] lg:text-base">
