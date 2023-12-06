@@ -94,6 +94,7 @@ const OneMinuteFetch = async (envSecrets, url, method, headers, body, timeout, c
         statusCode = data.status;
         resp = data.data;
     } catch (err) {
+		console.log(err.message);
         if (err.response !== undefined && err.response.status !== undefined) {
             statusCode = err.response.status;
         }

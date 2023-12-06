@@ -57,7 +57,6 @@
         "@markdoc/markdoc": "^0.3.5",
         "axios": "^1.6.2",
         "bits-ui": "^0.9.8",
-        "cheerio": "^1.0.0-rc.12",
         "clsx": "^2.0.0",
         "croner": "^7.0.5",
         "express": "^4.18.2",
@@ -66,6 +65,7 @@
         "lucide-svelte": "^0.292.0",
         "mode-watcher": "^0.1.1",
         "moment": "^2.29.4",
+        "moment-timezone": "^0.5.43",
         "node-cache": "^5.1.2",
         "tailwind-merge": "^2.0.0",
         "tailwind-variants": "^0.1.18"

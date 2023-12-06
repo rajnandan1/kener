@@ -12,6 +12,8 @@ export async function load({ params, route, url, parent }) {
         monitors[i].hasActiveIncident = await hasActiveIncident(monitors[i].tag, github);
     }
 
+
+
     return {
         monitors: monitors,
     };

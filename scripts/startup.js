@@ -139,11 +139,12 @@ const Startup = async () => {
 
     for (let i = 0; i < monitors.length; i++) {
         const monitor = monitors[i];
-        console.log("Staring One Minute Cron for ", monitor.name);
+        
         let cronExpession = "* * * * *";
         if (monitor.cron !== undefined && monitor.cron !== null) {
             cronExpession = monitor.cron;
         }
+		console.log("Staring " + cronExpession + " Cron for ", monitor.name);
         Cron(cronExpession, async () => {
             OneMinuteFetch(envSecrets, monitor.url, monitor.method, JSON.stringify(monitor.headers), monitor.body, monitor.timeout, monitor.eval, monitor.path0Day);
         });

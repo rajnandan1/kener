@@ -2,8 +2,8 @@
     import "../app.postcss";
     import "../kener.css";
     import Nav from "$lib/components/nav.svelte";
-    
 	export let data;
+	
 </script>
 
 <Nav {data} />

@@ -149,6 +149,7 @@ section {
 
 .today-sq:hover + .hidden  {
 	display: block;
+	z-index: 30;
 }
 .today-sq:hover {
     /* transform: scale(1.1); */
@@ -169,7 +170,8 @@ section {
     /* animation: blink 1s linear infinite; */
 }
 .arrow {
-    display: none;
+    /* display: none; */
+	z-index: 1;
 }
 .today-sq-div .today-sq:first-child .arrow.start {
     display: block;
@@ -180,7 +182,7 @@ section {
 .today-sq-div .today-sq svg {
     margin: 0 auto;
 }
-.today-sq-div .today-sq:last-child .arrow.end {
+.arrow.end {
     display: block;
     position: absolute;
     bottom: -36px;

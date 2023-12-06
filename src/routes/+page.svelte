@@ -24,5 +24,5 @@
 {/if}
 
 {#each data.monitors as monitor}
-	<Monitor {monitor} github="{data.site.github}" />
+	<Monitor {monitor}   />
 {/each}

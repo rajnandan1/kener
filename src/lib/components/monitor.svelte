@@ -6,14 +6,13 @@
     import { onMount } from "svelte";
     import { Skeleton } from "$lib/components/ui/skeleton";
     import { Button } from "$lib/components/ui/button";
-    import moment from "moment";
+    import moment from "moment-timezone";
     import axios from "axios";
     import { ArrowDown, ArrowUp, ArrowRight, BadgeCheck, Dot } from "lucide-svelte";
     import { buttonVariants } from "$lib/components/ui/button";
     import * as Alert from "$lib/components/ui/alert";
 
     export let monitor;
-
     let loading90 = true;
 	let todayDD = moment().format("YYYY-MM-DD")
     let uptime90Day = "0";
@@ -21,6 +20,8 @@
     let dailyUps = 0;
     let dailyDown = 0;
     let dailyDegraded = 0;
+	let avgLatency90Day = 0;
+	let avgLatency0Day = 0;
     let view = "90day";
     let _0Day = {};
     let _90Day = {};
@@ -34,25 +35,11 @@
     const now = moment();
     let minuteFromMidnightTillNow = now.diff(now.clone().startOf("day"), "minutes");
 
-    for (let i = 0; i <= minuteFromMidnightTillNow; i++) {
-        let eachMin = moment().startOf("day").add(i, "minutes").format("YYYY-MM-DD HH:mm:00");
-        _0Day[eachMin] = {
-            timestamp: eachMin,
-            status: "NO_DATA",
-            cssClass: statusObj.NO_DATA,
-            latency: "NA",
-            index: i,
-        };
-    }
+     
     function switchView(s) {
         view = s;
     }
-    function parseUptime(up, all) {
-        if (up == all) {
-            return (uptime90Day = String(((up / all) * parseFloat(100)).toFixed(0)));
-        }
-        return (uptime90Day = String(((up / all) * parseFloat(100)).toFixed(4)));
-    }
+     
 
     const fetchFromFile = async function (day0File, day90File) {
         //use axios to call POST /api/today
@@ -64,78 +51,23 @@
             },
             data: {
                 day0: day0File,
-                day90: day90File,
+				tz: moment.tz.guess()
             },
         };
         let res = await axios(options);
         const day90 = res.data.day90;
-        const day0 = res.data.day0;
+		_0Day = res.data._0Day;
+		_90Day = res.data._90Day;
+		uptime0Day = res.data.uptime0Day;
+		uptime90Day = res.data.uptime90Day;
+		avgLatency90Day = res.data.avgLatency90Day;
+		avgLatency0Day = res.data.avgLatency0Day;
+		dailyUps = res.data.dailyUps;
+		dailyDown = res.data.dailyDown;
+		dailyDegraded = res.data.dailyDegraded;
 
-        //convert all timestamps to local time
-        for (let i = 0; i < day0.length; i++) {
-            let min = moment(day0[i].timestamp).format("YYYY-MM-DD HH:mm:00");
-            let day = moment(day0[i].timestamp).format("YYYY-MM-DD");
-            let hour = moment(day0[i].timestamp).format("YYYY-MM-DD HH:00:00");
-            let status = day0[i].status;
-            let latency = day0[i].latency;
+		
 
-            if (_90Day[day] === undefined) {
-                _90Day[day] = {
-                    timestamp: day,
-                    UP: status == "UP" ? 1 : 0,
-                    DEGRADED: status == "DEGRADED" ? 1 : 0,
-                    DOWN: status == "DOWN" ? 1 : 0,
-                    latency: latency,
-                    avgLatency: latency,
-                };
-            } else {
-                let d = _90Day[day];
-                _90Day[day] = {
-                    timestamp: day,
-                    UP: status == "UP" ? d.UP + 1 : d.UP,
-                    DEGRADED: status == "DEGRADED" ? d.DEGRADED + 1 : d.DEGRADED,
-                    DOWN: status == "DOWN" ? d.DOWN + 1 : d.DOWN,
-                    latency: d.latency + latency,
-                    avgLatency: ((d.latency + latency) / (d.UP + d.DEGRADED + d.DOWN + 1)).toFixed(0),
-                };
-            }
-            _90Day[day].uptimePercentage = parseUptime(_90Day[day].UP + _90Day[day].DEGRADED, _90Day[day].UP + _90Day[day].DEGRADED + _90Day[day].DOWN);
-
-            let cssClass = statusObj.UP;
-            let message = "0 Issues";
-
-            if (_90Day[day].DEGRADED > 0) {
-                cssClass = statusObj.DEGRADED;
-                message = "Degraded for " + _90Day[day].DEGRADED + " minutes";
-            }
-
-            if (_90Day[day].DOWN > 0) {
-                cssClass = statusObj.DOWN;
-                message = "Down for " + _90Day[day].DOWN + " minutes";
-            }
-
-            _90Day[day].cssClass = cssClass;
-            _90Day[day].message = message;
-
-            _90Day = Object.keys(_90Day)
-                .sort()
-                .reduce((obj, key) => {
-                    obj[key] = _90Day[key];
-                    return obj;
-                }, {});
-
-            if (_0Day[min] !== undefined) {
-                _0Day[min].status = status;
-                _0Day[min].cssClass = statusObj[status];
-                _0Day[min].latency = latency;
-
-                dailyUps = status == "UP" ? dailyUps + 1 : dailyUps;
-                dailyDown = status == "DOWN" ? dailyDown + 1 : dailyDown;
-                dailyDegraded = status == "DEGRADED" ? dailyDegraded + 1 : dailyDegraded;
-            }
-			
-            uptime0Day = parseUptime(dailyUps + dailyDegraded, dailyUps + dailyDown + dailyDegraded);
-        }
         loading90 = false;
     };
 
@@ -198,7 +130,9 @@
                 {#if loading90}
                 <Skeleton class="w-[720px] h-[40px] mt-4" />
                 {:else}
-                <div class="uptime90Day text-sm font-semibold mb-1 text-center">Uptime for 90 Day is {uptime90Day}%</div>
+                <div class="uptime90Day text-sm font-semibold mb-1 text-center">
+					Uptime for 90 Day is {uptime90Day}% / {avgLatency90Day} ms AVG latency
+				</div>
                 <div class="chart-status relative">
                     <div class="flex flex-wrap">
                         {#each Object.entries(_90Day) as [ts, bar]}
@@ -215,7 +149,7 @@
             </div>
             {:else}
             <div class="uptime90Day mb-1 text-sm font-semibold text-center">
-                Uptime for today is {uptime0Day}% / {dailyUps} minutes up / {dailyDown} minutes down / {dailyDegraded} minutes degraded
+                Uptime for today is {uptime0Day}% / {avgLatency0Day} ms AVG latency
             </div>
             <div class="flex flex-wrap today-sq-div mt-[45px]">
                 {#each Object.entries(_0Day) as [ts, bar] }
