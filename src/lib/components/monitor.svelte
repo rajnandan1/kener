@@ -6,15 +6,30 @@
     import { onMount } from "svelte";
     import { Skeleton } from "$lib/components/ui/skeleton";
     import { Button } from "$lib/components/ui/button";
-    import moment from "moment-timezone";
     import axios from "axios";
     import { ArrowDown, ArrowUp, ArrowRight, BadgeCheck, Dot } from "lucide-svelte";
     import { buttonVariants } from "$lib/components/ui/button";
     import * as Alert from "$lib/components/ui/alert";
 
+	function getTodayDD() {
+
+		let yourDate = new Date();
+
+		const offset = yourDate.getTimezoneOffset()
+		yourDate = new Date(yourDate.getTime() - (offset*60*1000))
+		return yourDate.toISOString().split('T')[0]
+	}
+
+	function getminuteFromMidnightTillNow() {
+		var date = new Date();
+		var hours = date.getHours();
+		var minutes = date.getMinutes();
+		var totalMinutes = (hours*60) + minutes 
+	}
+
     export let monitor;
     let loading90 = true;
-	let todayDD = moment().format("YYYY-MM-DD")
+	let todayDD = getTodayDD()
     let uptime90Day = "0";
     let uptime0Day = "0";
     let dailyUps = 0;
@@ -32,8 +47,7 @@
         NO_DATA: "api-nodata",
     };
 
-    const now = moment();
-    let minuteFromMidnightTillNow = now.diff(now.clone().startOf("day"), "minutes");
+    let minuteFromMidnightTillNow = getminuteFromMidnightTillNow();
 
      
     function switchView(s) {
@@ -51,7 +65,7 @@
             },
             data: {
                 day0: day0File,
-				tz: moment.tz.guess()
+				tz: Intl.DateTimeFormat().resolvedOptions().timeZone
             },
         };
         let res = await axios(options);
@@ -168,8 +182,8 @@
                     {/if}
                 </div>
 				<div class="hidden relative">
-					<div data-index="{bar.index}"  class="w-[300px]  pb-2 pr-1 pl-1 text-sm text-center rounded font-semibold message bg-indigo-600 text-yellow-50">
-						<span class="text-{bar.cssClass} text-2xl">•</span> {bar.timestamp} / {bar.status} / {bar.latency} ms
+					<div data-index="{bar.index}"  class="w-[300px]  pb-2 pr-1 pl-1 text-sm text-center rounded font-semibold message bg-black text-white border ">
+						<span class="text-{bar.cssClass} text-xl">•</span> {bar.timestamp} / {bar.status} / {bar.latency} ms
 					</div>
 				</div>
 				
