@@ -3,7 +3,6 @@ import { C as Card, a as Card_header, b as Card_title, c as Card_description, S 
 import 'clsx';
 import { I as Icon$1, v as validate_dynamic_element, a as validate_void_dynamic_element, i as is_void } from './ctx-0c900a31.js';
 import { b as buttonVariants } from './index2-b1ce715f.js';
-import moment from 'moment-timezone';
 import { tv } from 'tailwind-variants';
 import 'tailwind-merge';
 import './index3-b13f1ade.js';
@@ -137,9 +136,20 @@ tv({
     variant: "default"
   }
 });
+function getTodayDD() {
+  let yourDate = /* @__PURE__ */ new Date();
+  const offset = yourDate.getTimezoneOffset();
+  yourDate = new Date(yourDate.getTime() - offset * 60 * 1e3);
+  return yourDate.toISOString().split("T")[0];
+}
+function getminuteFromMidnightTillNow() {
+  var date = /* @__PURE__ */ new Date();
+  date.getHours();
+  date.getMinutes();
+}
 const Monitor = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   let { monitor } = $$props;
-  let todayDD = moment().format("YYYY-MM-DD");
+  let todayDD = getTodayDD();
   let _90Day = {};
   let statusObj = {
     UP: "api-up",
@@ -147,8 +157,7 @@ const Monitor = create_ssr_component(($$result, $$props, $$bindings, slots) => {
     DOWN: "api-down",
     NO_DATA: "api-nodata"
   };
-  const now = moment();
-  now.diff(now.clone().startOf("day"), "minutes");
+  getminuteFromMidnightTillNow();
   if ($$props.monitor === void 0 && $$bindings.monitor && monitor !== void 0)
     $$bindings.monitor(monitor);
   return `<section class="mx-auto backdrop-blur-[2px] mb-8 flex w-full max-w-[770px] flex-1 flex-col items-start justify-center">${validate_component(Card, "Card.Root").$$render($$result, { class: "w-full" }, {}, {
@@ -208,4 +217,4 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 });
 
 export { Page as default };
-//# sourceMappingURL=_page.svelte-8c3b086a.js.map
+//# sourceMappingURL=_page.svelte-dd84e9dd.js.map
