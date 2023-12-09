@@ -8,14 +8,15 @@ name of each of these objects need to be unique
 import fs from "fs-extra";
 import yaml from "js-yaml";
 import { Cron } from "croner";
-import { MONITOR, SITE, APP_HTML, FOLDER, FOLDER_MONITOR, FOLDER_SITE } from "./constants.js";
+import { MONITOR, SITE, FOLDER, FOLDER_MONITOR, FOLDER_SITE, API_TIMEOUT } from "./constants.js";
+import { IsValidURL, IsValidHTTPMethod } from "./tool.js";
 import { OneMinuteFetch } from "./cron-minute.js";
 let monitors = [];
 let site = {};
 const envSecrets = [];
 const defaultEval = `(function (statusCode, responseTime, responseData) {
 	let statusCodeShort = Math.floor(statusCode/100);
-    if(statusCodeShort >=2 && statusCodeShort <= 3) {
+    if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {
         return {
 			status: 'UP',
 			latency: responseTime,
@@ -49,6 +50,10 @@ if (!fs.existsSync(FOLDER_MONITOR)) {
     fs.writeFileSync(FOLDER_MONITOR, JSON.stringify([]));
     console.log("monitors.json file created successfully!");
 }
+if (!fs.existsSync(FOLDER_MONITOR)) {
+    fs.writeFileSync(FOLDER_MONITOR, JSON.stringify([]));
+    console.log("monitors.json file created successfully!");
+}
 
 
 
@@ -73,14 +78,33 @@ const Startup = async () => {
         let name = monitor.name;
         let url = monitor.url;
         let method = monitor.method;
-
+		let hasAPI = false;
         let folderName = name.replace(/[^a-z0-9]/gi, "-").toLowerCase();
         monitors[i].folderName = folderName;
 
-        if (!name || !url || !method) {
+        if (!name) {
             console.log("name, url, method are required");
             process.exit(1);
         }
+
+		if (!!url) {
+			if (!IsValidURL(url)) {
+				console.log("url is not valid");
+				process.exit(1);	
+			}
+			hasAPI = true;
+        } 
+
+		if (!!method && hasAPI) {
+			if (!IsValidHTTPMethod(method)) {
+				console.log("method is not valid");
+				process.exit(1);	
+			}
+			method = method.toUpperCase();
+        } else {
+			method = "GET";
+		}
+
         if (monitor.eval === undefined || monitor.eval === null) {
             monitors[i].eval = defaultEval;
         }
@@ -91,10 +115,11 @@ const Startup = async () => {
             monitors[i].body = undefined;
         }
         if (monitor.timeout === undefined || monitor.timeout === null) {
-            monitors[i].timeout = 1000 * 5;
+            monitors[i].timeout = API_TIMEOUT;
         }
 
-        monitors[i].path0Day = `${FOLDER}/${folderName}-day.json`;
+        monitors[i].path0Day = `${FOLDER}/${folderName}-day-json.json`;
+        monitors[i].hasAPI = hasAPI;
 
         //secrets can be in url/body/headers
         //match in monitor.url if a words starts with $, get the word
@@ -131,6 +156,9 @@ const Startup = async () => {
     // init monitors
     for (let i = 0; i < monitors.length; i++) {
         const monitor = monitors[i];
+		if (!monitor.hasAPI) {
+			continue;
+		}
         console.log("Staring One Minute Cron for ", monitor.path0Day);
         await OneMinuteFetch(envSecrets, monitor.url, monitor.method, JSON.stringify(monitor.headers), monitor.body, monitor.timeout, monitor.eval, monitor.path0Day);
     }
@@ -139,7 +167,9 @@ const Startup = async () => {
 
     for (let i = 0; i < monitors.length; i++) {
         const monitor = monitors[i];
-        
+        if (!monitor.hasAPI) {
+			continue;
+		}
         let cronExpession = "* * * * *";
         if (monitor.cron !== undefined && monitor.cron !== null) {
             cronExpession = monitor.cron;

@@ -24,7 +24,8 @@
 		var date = new Date();
 		var hours = date.getHours();
 		var minutes = date.getMinutes();
-		var totalMinutes = (hours*60) + minutes 
+		var totalMinutes = (hours*60) + minutes ;
+		return totalMinutes
 	}
 
     export let monitor;
@@ -174,7 +175,8 @@
                         Midnight
                         <ArrowDown size="{16}" />
                     </div>
-                    {/if} {#if bar.index == minuteFromMidnightTillNow}
+                    {/if} 
+					{#if bar.index == minuteFromMidnightTillNow}
                     <div class="arrow end text-sm">
                         <ArrowUp size="{16}" />
                         Now
