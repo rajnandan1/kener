@@ -7,7 +7,7 @@
     import { Skeleton } from "$lib/components/ui/skeleton";
     import { Button } from "$lib/components/ui/button";
     import axios from "axios";
-    import { ArrowDown, ArrowUp, ArrowRight, BadgeCheck, Dot } from "lucide-svelte";
+    import { ArrowDown, ArrowUp, ArrowRight, BadgeCheck, Dot, PackageCheck, Check, BadgeInfo } from "lucide-svelte";
     import { buttonVariants } from "$lib/components/ui/button";
     import * as Alert from "$lib/components/ui/alert";
 
@@ -30,7 +30,8 @@
 
     export let monitor;
     let loading90 = true;
-	let todayDD = getTodayDD()
+	let todayDD = getTodayDD();
+	
     let uptime90Day = "0";
     let uptime0Day = "0";
     let dailyUps = 0;
@@ -81,7 +82,6 @@
 		dailyDown = res.data.dailyDown;
 		dailyDegraded = res.data.dailyDegraded;
 
-		
 
         loading90 = false;
     };
@@ -91,108 +91,123 @@
     });
 </script>
 
-<section class="mx-auto backdrop-blur-[2px] mb-8 flex w-full max-w-[770px] flex-1 flex-col items-start justify-center">
+<section class="mx-auto backdrop-blur-[2px]  mb-8 flex w-full max-w-[880px] flex-1 flex-col items-start justify-center">
     <Card.Root class="w-full">
-        <Card.Header>
-            <div class="grid grid-cols-3 gap-4">
-                <div class="col-span-3 md:col-span-2 relative {!!monitor.image?'pl-11':''}">
-					{#if monitor.image}
-					<img src="{monitor.image}" class="w-8 h-8 left-0 top-[1px] absolute" alt="" srcset="">
-					{/if}
-                    <Card.Title>
-						{monitor.name}
-					</Card.Title>
-					{#if monitor.description}
-                    <Card.Description class="mt-1">
-						{monitor.description}
-					</Card.Description>
-					{/if}
-                </div>
-                <div class="col-span-3 md:col-span-1 md:text-right">
-                    {#if monitor.hasActiveIncident}
-                    <a href="incident/{monitor.folderName}">
-                        
-						<a href="/incident/{monitor.folderName}#active_incident" class="{buttonVariants({ variant: "outline" })} relative">
-							<span class="animate-ping absolute -right-[2px] -top-[2px] w-[8px] h-[8px] inline-flex rounded-full h-3 w-3 bg-red-500 opacity-75"></span>
-                            Ongoing Incident
-						</a>
-                    </a>
-                    {:else if _90Day[todayDD] && _90Day[todayDD].cssClass == statusObj.DOWN}
-						<p class="text-destructive mt-3 text-sm font-semibold">
-							Down for {_90Day[todayDD].DOWN} minutes
-						</p>
-					{/if}
-                </div>
-            </div>
-        </Card.Header>
-        <Separator class="mb-4 mt-1" />
         <Card.Content>
-            <div class="grid grid-cols-3   gap-4 mb-4">
-                <div class="col-span-3  sm:col-span-2 text-left">
-                    <Button class="h-9 px-4 py-2 w-48 rounded-full sm:w-auto" variant="{view != '90day' ? 'ghost' : ''}" on:click="{(e) => {switchView('90day')}}">90 Day</Button>
-                    <Button class="h-9 px-4 py-2 w-48 rounded-full sm:w-auto" variant="{view != '0day' ? 'ghost' : ''}" on:click="{(e) => {switchView('0day')}}">Today</Button>
-                </div>
-                <div class="col-span-3 sm:col-span-1 sm:text-right">
-                
-					<a href="/incident/{monitor.folderName}#past_incident" class={buttonVariants({ variant: "ghost" })}>
-						Past Incidents <ArrowRight size="{16}" />
-					</a>
-                </div>
-            </div>
-
-            {#if view == "90day"}
-            <div>
-                {#if loading90}
-                <Skeleton class="w-[720px] h-[40px] mt-4" />
-                {:else}
-                <div class="uptime90Day text-sm font-semibold mb-1 text-center">
-					Uptime for 90 Day is {uptime90Day}% / {avgLatency90Day} ms AVG latency
-				</div>
-                <div class="chart-status relative">
-                    <div class="flex flex-wrap">
-                        {#each Object.entries(_90Day) as [ts, bar]}
-                        <div class="h-[40px] w-[8px] rounded-sm oneline">
-                            <div class="h-[40px] bg-{bar.cssClass} w-[6px] rounded-sm mr-[2px]"></div>
-                        </div>
-                        <div class="absolute show-hover text-sm bg-background">
-                            <div class="bgg-{bar.cssClass}">{bar.timestamp} / {bar.message} / {bar.uptimePercentage}% up / {bar.avgLatency} ms AVG latency</div>
-                        </div>
-                        {/each}
-                    </div>
-                </div>
-                {/if}
-            </div>
-            {:else}
-            <div class="uptime90Day mb-1 text-sm font-semibold text-center">
-                Uptime for today is {uptime0Day}% / {avgLatency0Day} ms AVG latency
-            </div>
-            <div class="flex flex-wrap today-sq-div mt-[45px]">
-                {#each Object.entries(_0Day) as [ts, bar] }
-                <div data-index="{bar.index}" class="h-[10px] bg-{bar.cssClass} w-[10px] today-sq m-[1px]" >
-                    
-					{#if bar.index == 0}
-                    <div class="arrow start text-sm">
-                        Midnight
-                        <ArrowDown size="{16}" />
-                    </div>
-                    {/if} 
-					{#if bar.index == minuteFromMidnightTillNow}
-                    <div class="arrow end text-sm">
-                        <ArrowUp size="{16}" />
-                        Now
-                    </div>
-                    {/if}
-                </div>
-				<div class="hidden relative">
-					<div data-index="{bar.index}"  class="w-[300px]  pb-2 pr-1 pl-1 text-sm text-center rounded font-semibold message bg-black text-white border ">
-						<span class="text-{bar.cssClass} text-xl">•</span> {bar.timestamp} / {bar.status} / {bar.latency} ms
+			<div class="grid grid-cols-12 gap-4">
+				<div class="col-span-12 md:col-span-4">
+					<div class="pt-3">
+						<div class="scroll-m-20 text-2xl font-semibold tracking-tight">
+							{#if monitor.image}
+							<img src="{monitor.image}" class="w-6 h-6 inline" alt="" srcset="">
+							{/if}
+							{monitor.name} 
+							{#if monitor.description}
+							<HoverCard.Root>
+								<HoverCard.Trigger>
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide inline lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+								</HoverCard.Trigger>
+								<HoverCard.Content>
+									{monitor.description}
+								</HoverCard.Content>
+							</HoverCard.Root>
+							{/if}
+						</div>
 					</div>
+					{#if !loading90}
+					<div class="pt-2">
+						{#if view == "90day"}
+						<p class="text-sm text-muted-foreground">
+							Uptime for <span class="text-foreground font-semibold">90 Day</span> is {uptime90Day}% and  avg latency is {avgLatency90Day} ms
+						</p>
+						{:else}
+						<p class="text-sm text-muted-foreground">
+							Uptime for <span class="text-foreground font-semibold">Today</span> is {uptime0Day}% and  avg latency is {avgLatency0Day} ms
+						</p>
+						{/if}
+					</div>
+					{/if}
 				</div>
-				
-				
-                {/each}
-            </div>
-            {/if}
+				<div class="col-span-12 md:col-span-8 pt-4">
+					{#if loading90}
+						<Skeleton class="w-full h-[40px] mt-[7px]" />
+					{:else}
+						<div class="grid grid-cols-12 ">
+							<div class="col-span-12 md:col-span-4 mt-2 h-[38px]">
+								<a href="javascript:void(0);" on:click="{(e) => {switchView('90day')}}">
+									<Badge variant="{view != '90day' ? 'outline' : ''}">
+										90 Day
+									</Badge>
+								</a>
+								<a href="javascript:void(0);" on:click="{(e) => {switchView('0day')}}">
+									<Badge variant="{view != '0day' ? 'outline' : ''}" >
+										Today
+									</Badge> 
+								</a>
+								
+							</div>
+							<div class="col-span-12 md:col-span-8 text-right h-[38px]">
+
+								{#if monitor.hasActiveIncident}
+								<a href="/incident/{monitor.folderName}#active_incident" class="{buttonVariants({ variant: "outline" })} relative">
+									<span class="animate-ping absolute -right-[2px] -top-[2px] w-[8px] h-[8px] inline-flex rounded-full bg-red-500 opacity-75"></span>
+                        			Ongoing Incident
+								</a>
+								{:else if _90Day[todayDD]}
+									<div class="text-api-up text-sm font-semibold mt-[12px] text-{_90Day[todayDD].cssClass}">
+										{_90Day[todayDD].message}
+									</div>
+								{/if}
+							</div>
+						</div>	
+						<div class="grid grid-cols-12">
+							{#if view == "90day"}
+								 <div class="chart-status relative mt-1 col-span-12">
+									<div class="flex flex-wrap">
+										{#each Object.entries(_90Day) as [ts, bar]}
+										<div class="h-[30px] w-[6px] rounded-sm oneline">
+											<div class="h-[30px] bg-{bar.cssClass} w-[4px] rounded-sm mr-[2px]"></div>
+										</div>
+										<div class="absolute show-hover text-sm bg-background">
+											<div class="text-{bar.cssClass} font-semibold" >
+												{#if bar.message != "No Data"}
+												{bar.timestamp} / {bar.uptimePercentage}% up / {bar.avgLatency} ms AVG latency
+												{:else}
+												{bar.timestamp} / {bar.message}
+												{/if}
+											</div>
+										</div>
+										{/each}
+									</div>
+								 </div>
+							{:else}
+								<div class="chart-status relative mt-1 col-span-12">
+									<div class="flex flex-wrap today-sq-div ">
+										{#each Object.entries(_0Day) as [ts, bar] }
+										<div data-index="{bar.index}" class="h-[10px] bg-{bar.cssClass} w-[10px] today-sq m-[1px]" >
+											
+										</div>
+										<div class="hidden relative">
+											<div data-index="{bar.index}"  class="w-[300px]  pb-2 pr-1 pl-1 text-sm text-center rounded font-semibold message bg-black text-white border ">
+												<span class="text-{bar.cssClass} text-xl">•</span> {bar.timestamp} / {bar.status} / {bar.latency} ms
+											</div>
+										</div>
+										{/each}
+									</div>
+								</div>
+							{/if}
+
+							<div class="col-span-12 text-right ">
+								<a href="/incident/{monitor.folderName}#past_incident" class="-mr-4 {buttonVariants({ variant: 'link' })}">
+									Past Incidents <ArrowRight size="{16}" />
+								</a>
+							</div>
+						</div>	
+					{/if} 
+				</div>
+			</div>
+
+            
         </Card.Content>
     </Card.Root>
 </section>

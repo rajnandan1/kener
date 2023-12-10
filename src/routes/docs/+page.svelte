@@ -54,8 +54,7 @@
             <div class="bg-white pt-6 p-0 md:p-10">
                 <article
                     id="markdown"
-                    class="prose prose-stone max-w-none prose-code:bg-gray-200 prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:rounded prose-code:font-mono"
-                >
+                    class="prose prose-stone max-w-none prose-code:bg-gray-200 prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:rounded">
                     {@html html}
                 </article>
             </div>
