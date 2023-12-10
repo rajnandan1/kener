@@ -70,7 +70,7 @@ section {
     cursor: pointer;
 }
 .oneline:hover {
-    transform: scaleY(1.1);
+    transform: scaleY(1.2);
 }
 
 .oneline.hover {

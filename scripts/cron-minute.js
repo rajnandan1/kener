@@ -121,9 +121,15 @@ const OneMinuteFetch = async (envSecrets, url, method, headers, body, timeout, c
 	keys.sort((a,b) => {
 		return moment(a).isBefore(moment(b)) ? -1 : 1;
 	});
-    
+    let sortedDay0 = {};
+    keys.reverse()  //reverse to keep 90days data
+        .slice(0, 129600)  //90days data
+        .reverse() //reverse to keep 0day data
+        .forEach((key) => {
+            sortedDay0[key] = originalData[key];
+        });
     try {
-		fs.writeFileSync(out, JSON.stringify(originalData, null, 2));
+		fs.writeFileSync(out, JSON.stringify(sortedDay0, null, 2));
 	} catch (error) {
 		console.error(error);
 	}

@@ -78,12 +78,13 @@ const Startup = async () => {
         let name = monitor.name;
         let url = monitor.url;
         let method = monitor.method;
+        let tag = monitor.tag;
 		let hasAPI = false;
         let folderName = name.replace(/[^a-z0-9]/gi, "-").toLowerCase();
         monitors[i].folderName = folderName;
 
-        if (!name) {
-            console.log("name, url, method are required");
+        if (!name || !tag) {
+            console.log("name, tag are required");
             process.exit(1);
         }
 
@@ -139,6 +140,10 @@ const Startup = async () => {
 
     if (checkIfDuplicateExists(monitors.map((monitor) => monitor.folderName)) === true) {
         console.log("duplicate monitor detected");
+        process.exit(1);
+    }
+    if (checkIfDuplicateExists(monitors.map((monitor) => monitor.tag)) === true) {
+        console.log("duplicate tag detected");
         process.exit(1);
     }
 
