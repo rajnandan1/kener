@@ -41,7 +41,7 @@
 <section class="mx-auto container rounded-3xl bg-white mt-32">
     <div class="grid grid-cols-5 gap-4">
         <div class="col-span-5 md:col-span-1 hidden md:block border-r-2 border-gray-500">
-            <ul class="w-full  sticky top-0 text-sm font-medium text-gray-900 bg-white mt-8 rounded-lg">
+            <ul class="w-full   text-sm font-medium text-gray-900 bg-white mt-8 rounded-lg">
                 {#each sideBar as item}
                 <li class="w-full px-4 py-2">
                     <a href="#{item.id}" class="{item.type == 'h2'?'pl-5':''}">{item.text}</a>

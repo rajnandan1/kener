@@ -12,3 +12,4 @@ config/site.yaml
 !.env.example
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+nodemon.json

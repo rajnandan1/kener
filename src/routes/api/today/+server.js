@@ -67,43 +67,50 @@ export async function POST({ request }) {
 	}
 
     let day0 = JSON.parse(fs.readFileSync(payload.day0, "utf8"));
+	let _90DayFileData = JSON.parse(fs.readFileSync(payload.day90, "utf8"));
+	//_90Day = {..._90Day, ..._90DayFileData};
 
+
+	for (const timestampISO in _90DayFileData) {
+        let cssClass = statusObj.UP;
+        let message = "OK";
+		const element = _90DayFileData[timestampISO];
+
+
+		let currentDay = moment.tz(timestampISO, tz).format("YYYY-MM-DD");
+
+		if(_90Day[currentDay] === undefined) continue;
+
+		_90Day[currentDay].UP = element.UP;
+		_90Day[currentDay].DEGRADED = element.DEGRADED;
+		_90Day[currentDay].DOWN = element.DOWN;
+		_90Day[currentDay].avgLatency = element.avgLatency;
+		_90Day[currentDay].latency = element.latency;
+
+        _90Day[currentDay].uptimePercentage = parseUptime(element.UP + element.DEGRADED, element.UP + element.DEGRADED + element.DOWN);
+
+        if (element.DEGRADED > 0) {
+            cssClass = statusObj.DEGRADED;
+            message = "Degraded for " + element.DEGRADED + " minutes";
+        }
+
+        if (element.DOWN > 0) {
+            cssClass = statusObj.DOWN;
+            message = "Down for " + element.DOWN + " minutes";
+        }
+
+        _90Day[currentDay].cssClass = cssClass;
+        _90Day[currentDay].message = message;
+    }
 	//loop day0 as object
 	for (const timestampISO in day0) {
 		if (Object.hasOwnProperty.call(day0, timestampISO)) {
 			const element = day0[timestampISO];
 			let min = moment.tz(timestampISO, tz).format("YYYY-MM-DD HH:mm:00");
-			let day = moment.tz(timestampISO, tz).format("YYYY-MM-DD");
 			let status = element.status;
             let latency = element.latency;
 
-			//90 Day data
-			let d = _90Day[day];
-            _90Day[day] = {
-                timestamp: day,
-                UP: status == "UP" ? d.UP + 1 : d.UP,
-                DEGRADED: status == "DEGRADED" ? d.DEGRADED + 1 : d.DEGRADED,
-                DOWN: status == "DOWN" ? d.DOWN + 1 : d.DOWN,
-                latency: d.latency + latency,
-                avgLatency: ((d.latency + latency) / (d.UP + d.DEGRADED + d.DOWN + 1)).toFixed(0),
-            };
-			_90Day[day].uptimePercentage = parseUptime(_90Day[day].UP + _90Day[day].DEGRADED, _90Day[day].UP + _90Day[day].DEGRADED + _90Day[day].DOWN);
 			
-			let cssClass = statusObj.UP;
-            let message = "OK";
-
-            if (_90Day[day].DEGRADED > 0) {
-                cssClass = statusObj.DEGRADED;
-                message = "Degraded for " + _90Day[day].DEGRADED + " minutes";
-            }
-
-            if (_90Day[day].DOWN > 0) {
-                cssClass = statusObj.DOWN;
-                message = "Down for " + _90Day[day].DOWN + " minutes";
-            }
-
-            _90Day[day].cssClass = cssClass;
-            _90Day[day].message = message;
 
 			//0 Day data
 			if (_0Day[min] !== undefined) {

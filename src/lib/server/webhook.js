@@ -2,6 +2,7 @@
 import fs from "fs-extra"
 import { env } from "$env/dynamic/public";
 import moment from "moment";
+import Randomstring from "randomstring";
 const WEBHOOK_TOKEN = process.env.WEBHOOK_TOKEN;
 const WEBHOOK_IP = process.env.WEBHOOK_IP;
 
@@ -63,11 +64,7 @@ const store = function(data, authHeader, ip){
 
     //read the monitor.path0Day file
 	let day0 = {};
-	try {
-		day0 = JSON.parse(fs.readFileSync(monitor.path0Day, "utf8"));
-	} catch (error) {
-		return { error: "something went wrong", status: 400 };
-	}
+	 
 
 	
 
@@ -75,22 +72,12 @@ const store = function(data, authHeader, ip){
 
     day0[timeStampISOMinute] = resp;
 	//sort the keys
-	let keys = Object.keys(day0);
-	keys.sort((a,b) => {
-		return moment(a).isBefore(moment(b)) ? -1 : 1;
-	});
-	let sortedDay0 = {};
-	//oppsite of sort is required and only first 1440 keys are required
-	keys.reverse()
-        .slice(0, 129600)
-        .reverse()
-        .forEach((key) => {
-            sortedDay0[key] = day0[key];
-        });
-	
-	
+	 
+	//create a random string with high cardinlity
+	//to avoid cache
+
 	//write the monitor.path0Day file
-	fs.writeFileSync(monitor.path0Day, JSON.stringify(sortedDay0, null, 2));
+	fs.writeFileSync(env.PUBLIC_KENER_FOLDER + `/${monitor.folderName}.webhook.${Randomstring.generate()}.json`, JSON.stringify(day0, null, 2));
 
 
     return { status: 200, message: "success at " + timeStampISOMinute };

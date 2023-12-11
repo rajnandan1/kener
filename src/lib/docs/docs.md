@@ -46,7 +46,16 @@ export PUBLIC_KENER_FOLDER=./build/client/kener
 export tz=UTC
 node prod.js
 ``` 
-- 
+## Github Setup
+- Create a Github Repositiory
+- Go to [Personal Access Token](https://github.com/settings/personal-access-tokens/new)
+- Create a Fine-grained token 
+- If your repository is private then give Read-Write access to issues
+- Add the access token as an environment variable
+```shell
+export GH_TOKEN=github_pat_11AD3ZA3Y0
+```
+
 ---
 # Modify Site
 
@@ -132,11 +141,12 @@ Example add a png called `logo.png` file in `static/` and then
 
 
 ## github
-For incident kener uses github comments. Create an empty [github](https://github.com) public repo and add them to `site.yaml`
+For incident kener uses github comments. Create an empty [github](https://github.com) repo and add them to `site.yaml`
 ```yaml
 github:
   owner: "username"
   repo: "your-reponame"
+  refer: true
 ```
 ## metaTags
 Meta tags are nothing but html `<meta>`. You can use them for SEO purposes
@@ -347,3 +357,11 @@ Assuming `ORDER_ID` is present in env
       }
     })
 ```
+# Incident Management
+Kener uses Github to power incident management. We encourage you to create public repositores so that others can subscribe to updates to issues
+## How to create
+Create an issue with two labels `your-monitor-tag` and `status`
+![alt text](issue.png "issue")
+
+- Open issues are considered as live incidents.
+- Add comments and it will showup in kener.

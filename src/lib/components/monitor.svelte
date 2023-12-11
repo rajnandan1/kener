@@ -67,6 +67,7 @@
             },
             data: {
                 day0: day0File,
+				day90: day90File,
 				tz: Intl.DateTimeFormat().resolvedOptions().timeZone
             },
         };
@@ -91,7 +92,7 @@
     });
 </script>
 
-<section class="mx-auto backdrop-blur-[2px]  mb-8 flex w-full max-w-[880px] flex-1 flex-col items-start justify-center">
+<section class="mx-auto backdrop-blur-[2px]  mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center">
     <Card.Root class="w-full">
         <Card.Content>
 			<div class="grid grid-cols-12 gap-4">
@@ -115,15 +116,30 @@
 						</div>
 					</div>
 					{#if !loading90}
-					<div class="pt-2">
+					<div class="mt-2">
+						
+						
 						{#if view == "90day"}
 						<p class="text-sm text-muted-foreground">
-							Uptime for <span class="text-foreground font-semibold">90 Day</span> is {uptime90Day}% and  avg latency is {avgLatency90Day} ms
+							90 Day
 						</p>
+						
+						<span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+							{uptime90Day}% Uptime
+						</span>
+						<span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
+							{avgLatency90Day}ms Latency
+						</span>
 						{:else}
-						<p class="text-sm text-muted-foreground">
-							Uptime for <span class="text-foreground font-semibold">Today</span> is {uptime0Day}% and  avg latency is {avgLatency0Day} ms
+						<p class="text-sm text-muted-foreground ">
+							Today
 						</p>
+						<span class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
+							{uptime0Day}% Uptime
+						</span>
+						<span class="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-xs font-medium text-indigo-700 ring-1 ring-inset ring-indigo-700/10">
+							{avgLatency0Day}ms Latency	
+						</span>
 						{/if}
 					</div>
 					{/if}
@@ -171,9 +187,9 @@
 										<div class="absolute show-hover text-sm bg-background">
 											<div class="text-{bar.cssClass} font-semibold" >
 												{#if bar.message != "No Data"}
-												{bar.timestamp} / {bar.uptimePercentage}% up / {bar.avgLatency} ms AVG latency
+												{new Date(bar.timestamp).toLocaleDateString()} ● {bar.message} ● {bar.avgLatency} ms AVG latency
 												{:else}
-												{bar.timestamp} / {bar.message}
+												{bar.timestamp} ● {bar.message}
 												{/if}
 											</div>
 										</div>
@@ -189,7 +205,7 @@
 										</div>
 										<div class="hidden relative">
 											<div data-index="{bar.index}"  class="w-[300px]  pb-2 pr-1 pl-1 text-sm text-center rounded font-semibold message bg-black text-white border ">
-												<span class="text-{bar.cssClass} text-xl">•</span> {bar.timestamp} / {bar.status} / {bar.latency} ms
+												<span class="text-{bar.cssClass} text-xl">●</span> {bar.timestamp} / {bar.status} / {bar.latency} ms
 											</div>
 										</div>
 										{/each}

@@ -117,9 +117,10 @@ const Startup = async () => {
         }
         if (monitor.timeout === undefined || monitor.timeout === null) {
             monitors[i].timeout = API_TIMEOUT;
-        }
+        } 
 
         monitors[i].path0Day = `${FOLDER}/${folderName}-day-json.json`;
+        monitors[i].path90Day = `${FOLDER}/${folderName}.90day.json`;
         monitors[i].hasAPI = hasAPI;
 
         //secrets can be in url/body/headers
@@ -165,7 +166,7 @@ const Startup = async () => {
 			continue;
 		}
         console.log("Staring One Minute Cron for ", monitor.path0Day);
-        await OneMinuteFetch(envSecrets, monitor.url, monitor.method, JSON.stringify(monitor.headers), monitor.body, monitor.timeout, monitor.eval, monitor.path0Day);
+        await OneMinuteFetch(envSecrets, monitor.folderName, monitor.url, monitor.method, JSON.stringify(monitor.headers), monitor.body, monitor.timeout, monitor.eval, monitor.path0Day, monitor.path90Day);
     }
 
     //trigger minute cron
@@ -181,7 +182,7 @@ const Startup = async () => {
         }
 		console.log("Staring " + cronExpession + " Cron for ", monitor.name);
         Cron(cronExpession, async () => {
-            OneMinuteFetch(envSecrets, monitor.url, monitor.method, JSON.stringify(monitor.headers), monitor.body, monitor.timeout, monitor.eval, monitor.path0Day);
+            OneMinuteFetch(envSecrets, monitor.folderName, monitor.url, monitor.method, JSON.stringify(monitor.headers), monitor.body, monitor.timeout, monitor.eval, monitor.path0Day, monitor.path90Day);
         });
     }
 };
