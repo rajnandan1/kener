@@ -189,7 +189,7 @@
 												{#if bar.message != "No Data"}
 												{new Date(bar.timestamp).toLocaleDateString()} ● {bar.message} ● {bar.avgLatency} ms AVG latency
 												{:else}
-												{bar.timestamp} ● {bar.message}
+												{new Date(bar.timestamp).toLocaleDateString()} ● {bar.message}
 												{/if}
 											</div>
 										</div>
@@ -203,9 +203,14 @@
 										<div data-index="{bar.index}" class="h-[10px] bg-{bar.cssClass} w-[10px] today-sq m-[1px]" >
 											
 										</div>
-										<div class="hidden relative">
-											<div data-index="{bar.index}"  class="w-[300px]  pb-2 pr-1 pl-1 text-sm text-center rounded font-semibold message bg-black text-white border ">
-												<span class="text-{bar.cssClass} text-xl">●</span> {bar.timestamp} / {bar.status} / {bar.latency} ms
+										<div class="hiddenx relative">
+											<div data-index="{bar.index}"  class="  p-2 text-sm   rounded font-semibold message bg-black text-white border ">
+												<p><span class="text-{bar.cssClass}">●</span> {new Date(bar.timestamp).toLocaleString()}</p>
+												{#if bar.status != 'NO_DATA'}
+												<p class="pl-4">{bar.status} / {bar.latency}ms</p>
+												{:else}
+												<p class="pl-4">-</p>
+												{/if}
 											</div>
 										</div>
 										{/each}

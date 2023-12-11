@@ -139,17 +139,17 @@ section {
 .bgg-api-degraded {
     background: linear-gradient(to right, rgba(187, 219, 243, 0) 0%, rgba(255, 184, 76, 0.5) 50%, rgba(187, 219, 243, 0) 100%);
 }
-.today-sq + .hidden .message {
-	z-index: 30;
-	/* float: left; */
-	/* margin-top: -15px; */
+.today-sq + .hiddenx .message {
 	position: absolute;
-	width: 300px;
+	white-space: nowrap;
 }
 
-.today-sq:hover + .hidden  {
-	display: block;
+.today-sq + .hiddenx  {
+	visibility:hidden;
 	z-index: 30;
+}
+.today-sq:hover + .hiddenx  {
+	visibility: visible;
 }
 .today-sq:hover {
     /* transform: scale(1.1); */
