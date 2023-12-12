@@ -21,7 +21,7 @@
 				{/each}
             </nav>
         </div>
-		{#if data.site.github}
+		{#if data.site.github && data.site.github.visible}
         <div class="flex flex-1 items-center justify-between space-x-2 sm:space-x-4 md:justify-end">
             <div class="w-full flex-1 md:w-auto md:flex-none">
 				<a href="https://github.com/{data.site.github.owner}/{data.site.github.repo}" class="{buttonVariants({ variant: "ghost" })} blurry-bg">

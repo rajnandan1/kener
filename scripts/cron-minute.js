@@ -174,8 +174,8 @@ const OneMinuteFetch = async (envSecrets, folderName, url, method, headers, body
 
 	fs.writeFileSync(_90File, JSON.stringify(_90Day, null, 2));
 
-	//from originaldata, delete all values older than today
-	let today = moment().startOf('day').toISOString();
+	//from originaldata, delete all values older than yesterday
+	let today = moment().subtract(1, "days").startOf("day").toISOString();
 	let _0Day = {};
 	for (const ts in originalData) {
 		const element = originalData[ts];
@@ -191,7 +191,7 @@ const OneMinuteFetch = async (envSecrets, folderName, url, method, headers, body
     });
     let sortedDay0 = {};
     keys.reverse() //reverse to keep 90days data
-        .slice(0, 1440) //90days data
+        .slice(0, 2880) //2days data
         .reverse() //reverse to keep 0day data
         .forEach((key) => {
             sortedDay0[key] = _0Day[key];

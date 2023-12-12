@@ -8,8 +8,8 @@ name of each of these objects need to be unique
 import fs from "fs-extra";
 import yaml from "js-yaml";
 import { Cron } from "croner";
-import { MONITOR, SITE, FOLDER, FOLDER_MONITOR, FOLDER_SITE, API_TIMEOUT } from "./constants.js";
-import { IsValidURL, IsValidHTTPMethod } from "./tool.js";
+import { FOLDER, FOLDER_MONITOR, FOLDER_SITE, API_TIMEOUT } from "./constants.js";
+import { IsValidURL, IsValidHTTPMethod, LoadMonitorsPath, LoadSitePath } from "./tool.js";
 import { OneMinuteFetch } from "./cron-minute.js";
 let monitors = [];
 let site = {};
@@ -60,8 +60,8 @@ if (!fs.existsSync(FOLDER_MONITOR)) {
 
 const Startup = async () => {
     try {
-        const fileContent = fs.readFileSync(MONITOR, "utf8");
-        site = yaml.load(fs.readFileSync(SITE, "utf8"));
+        const fileContent = fs.readFileSync(LoadMonitorsPath(), "utf8");
+        site = yaml.load(fs.readFileSync(LoadSitePath(), "utf8"));
         monitors = yaml.load(fileContent);
     } catch (error) {
         console.log(error);

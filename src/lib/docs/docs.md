@@ -1,4 +1,6 @@
 # Getting Started
+## Requirement 
+- Node 18
 ## Clone the repository
 ```bash
 git clone https://github.com/rajnandan1/kener.git
@@ -9,7 +11,11 @@ git clone https://github.com/rajnandan1/kener.git
 npm install
 ```
 
-## Start Kener
+## Configs
+- Rename `config/site.example.yaml` -> `config/site.yaml`
+- Rename `config/monitors.example.yaml` -> `config/monitors.yaml`
+
+## Start Kener Dev
 ```bash
 npm run kener:dev
 ```
@@ -32,18 +38,38 @@ Kener would be running at PORT 3000. Go to [http://localhost:3000](http://localh
 Once you have added the `config/site.yaml` or `config/monitors.yaml` or changed anything in `src/`
 ```shell
 npm i
+npm run kener
+```
+### Changing files inside `src/`
+```shell
+npm i
 npm run kener:build
 npm run kener
 ```
 
-
-
 ## Custom Deployment
-Kener should be run using `prod.js` script. It needs two environment variables `PUBLIC_KENER_FOLDER=./build/client/kener` and `tz=UTC`
+Kener should be run using `prod.js` script. 
+It needs minimum two environment variables `PUBLIC_KENER_FOLDER=./build/client/kener` and `tz=UTC`. We recommend not to change these variables
+It also needs to yaml files to work
+- site.yaml
+- monitors.yaml
+By default these are present in `config/`. However you can use different location either passing them as argument or having the path as enviorment variable
+
+### As Enviroment variables
+```shell
+export MONITOR_YAML_PATH=/your/path/monitors.yaml
+export SITE_YAML_PATH=/your/path/site.yaml
+```
+### As argument to prod.js
+```shell
+node prod.js --monitors /your/path/monitors.yaml --site /your/path/site.yaml
+```
 
 ```shell
-export PUBLIC_KENER_FOLDER=./build/client/kener
+export PUBLIC_KENER_FOLDER=./build/client/kener 
 export tz=UTC
+npm i
+npm run build
 node prod.js
 ``` 
 ## Github Setup
@@ -63,14 +89,13 @@ There is a folder called `/config`. Inside which there is a `site.yaml` file. Yo
 
 ```yaml
 title: "Kener"
-theme: "dark"
 siteURL: "https://kener.netlify.app"
 home: "/"
 logo: "/logo.svg"
-favicon: "/kener.png"
 github:
   owner: "rajnandan1"
   repo: "kener"
+  visible: true
 metaTags:
   description: "Your description"
   keywords: "keyword1, keyword2"
@@ -80,7 +105,6 @@ nav:
 hero:
   title: Kener is a Open-Source Status Page System
   subtitle: Let your users know what's going on.
-    
 ```
 
 ## title
@@ -364,4 +388,4 @@ Create an issue with two labels `your-monitor-tag` and `status`
 ![alt text](issue.png "issue")
 
 - Open issues are considered as live incidents.
-- Add comments and it will showup in kener.
+- Add comments and it will show up in kener.

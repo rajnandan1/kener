@@ -153,7 +153,7 @@ const Nav = create_ssr_component(($$result, $$props, $$bindings, slots) => {
     $$bindings.data(data);
   return `<div class="one"></div> <header class="relative z-50 w-full "><div class="container flex h-14 items-center"><div class="mr-4 flex blurry-bg "><a${add_attribute("href", data.site.home, 0)} class="mr-6 flex items-center space-x-2"><img${add_attribute("src", data.site.logo, 0)} class="h-5 w-5" alt="" srcset=""> <span class="hidden font-bold sm:inline-block text-[15px] lg:text-base">${escape(data.site.title)}</span></a> <nav class="flex items-center space-x-6 text-sm font-medium">${each(data.site.nav, (navItem) => {
     return `<a${add_attribute("href", navItem.url, 0)}>${escape(navItem.name)} </a>`;
-  })}</nav></div> ${data.site.github ? `<div class="flex flex-1 items-center justify-between space-x-2 sm:space-x-4 md:justify-end"><div class="w-full flex-1 md:w-auto md:flex-none"><a href="${"https://github.com/" + escape(data.site.github.owner, true) + "/" + escape(data.site.github.repo, true)}" class="${escape(buttonVariants({ variant: "ghost" }), true) + " blurry-bg"}">${validate_component(Github$1, "Github").$$render(
+  })}</nav></div> ${data.site.github && data.site.github.visible ? `<div class="flex flex-1 items-center justify-between space-x-2 sm:space-x-4 md:justify-end"><div class="w-full flex-1 md:w-auto md:flex-none"><a href="${"https://github.com/" + escape(data.site.github.owner, true) + "/" + escape(data.site.github.repo, true)}" class="${escape(buttonVariants({ variant: "ghost" }), true) + " blurry-bg"}">${validate_component(Github$1, "Github").$$render(
     $$result,
     {
       class: "h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all"
@@ -172,4 +172,4 @@ const Layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 });
 
 export { Layout as default };
-//# sourceMappingURL=_layout.svelte-de8cb568.js.map
+//# sourceMappingURL=_layout.svelte-925daf0b.js.map
