@@ -1,8 +1,8 @@
 <script>
-    import md from "$lib/docs/docs.md?raw";
     import Markdoc from "@markdoc/markdoc";
     import { onMount } from "svelte";
-    const ast = Markdoc.parse(md);
+	export let data;
+    const ast = Markdoc.parse(data.md);
     const content = Markdoc.transform(ast);
     let html = Markdoc.renderers.html(content);
     let sideBar = [];
