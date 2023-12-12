@@ -58,9 +58,10 @@ We recommend not to change these variables
 It also needs to yaml files to work
 - site.yaml
 - monitors.yaml
+
 By default these are present in `config/`. However you can use different location either passing them as argument or having the path as enviorment variable
 
-### As Enviroment variables
+### Add Enviroment variables
 ```shell
 export MONITOR_YAML_PATH=/your/path/monitors.yaml
 export SITE_YAML_PATH=/your/path/site.yaml
