@@ -52,7 +52,9 @@ Kener should be run using `prod.js` script. It needs minimum two environment var
 
 - `PUBLIC_KENER_FOLDER=./build/client/kener`
 - `tz=UTC`
+
 We recommend not to change these variables
+
 It also needs to yaml files to work
 - site.yaml
 - monitors.yaml
