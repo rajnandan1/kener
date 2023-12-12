@@ -48,8 +48,8 @@ npm run kener
 ```
 
 ## Custom Deployment
-Kener should be run using `prod.js` script. 
-It needs minimum two environment variables 
+Kener should be run using `prod.js` script. It needs minimum two environment variables 
+
 - `PUBLIC_KENER_FOLDER=./build/client/kener`
 - `tz=UTC`
 We recommend not to change these variables
