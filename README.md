@@ -4,7 +4,7 @@ Kener: An open-source Node.js status page application for real-time service moni
 It uses files to store the data. Other adapters are coming soon
 
 Visit a live server [here](https://kener.ing)
-
+Read the documentation [here](https://kener.ing/docs) 
 ![alt text](static/ss.png "SS")
 
-Read the documentation [here](https://kener.ing/docs) 
+
