@@ -5,6 +5,6 @@ It uses files to store the data. Other adapters are coming soon
 
 Visit a live server [here](https://kener.ing)
 
-![alt text](ss.png "SS")
+![alt text](static/ss.png "SS")
 
 Read the documentation [here](https://kener.ing/docs) 
