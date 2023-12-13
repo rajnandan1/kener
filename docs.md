@@ -395,3 +395,6 @@ Create an issue with two labels `your-monitor-tag` and `status`
 
 - Open issues are considered as live incidents.
 - Add comments and it will show up in kener.
+
+# API
+Kener also gives APIs to push data and create incident. Before you use kener apis you will have to set an authorization token called `WEBHOOK_TOKEN`. This also has to be set as an environment variable.

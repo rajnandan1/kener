@@ -34,7 +34,7 @@
                         <Card.Description> {moment(incident.created_at).format("MMMM Do YYYY, h:mm:ss a")} </Card.Description>
                     </Card.Header>
                     <Card.Content>
-						<div class="prose prose-stone dark:prose-invert max-w-none prose-code:bg-gray-200 prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:rounded">
+						<div class="prose prose-stone dark:prose-invert max-w-none  prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:rounded">
 							{@html incident.body}
 						</div>
                         {#if incident.comments.length > 0}
@@ -90,7 +90,7 @@
                         </Collapsible.Trigger>
                         <Collapsible.Content>
                             <Card.Content>
-                                <div class="prose prose-stone dark:prose-invert max-w-none prose-code:bg-gray-200 prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:rounded">
+                                <div class="prose prose-stone dark:prose-invert max-w-none  prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:rounded">
 									{@html incident.body}
 								</div> 
 								{#if incident.comments.length > 0}
@@ -100,7 +100,9 @@
                                         <li class="mb-10 ms-4">
                                             <div class="absolute w-3 h-3 rounded-full mt-1.5 -start-1.5 border border-secondary bg-secondary"></div>
                                             <time class="mb-1 text-sm font-normal leading-none text-muted-foreground"> {moment(comment.created_at).format("MMMM Do YYYY, h:mm:ss a")} </time>
-                                            <div class="mb-4 wysiwyg text-base font-normal prose prose-stone max-w-none prose-code:bg-gray-200 prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:rounded">{@html comment.body}</div>
+                                            <div class="mb-4 wysiwyg text-base font-normal prose dark:prose-invert prose-stone max-w-none  prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:rounded">
+												{@html comment.body}
+											</div>
                                         </li>
                                         {/each}
                                     </ol>
