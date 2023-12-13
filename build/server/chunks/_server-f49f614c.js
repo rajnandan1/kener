@@ -9,12 +9,16 @@ let statusObj = {
   NO_DATA: "api-nodata"
 };
 function parseUptime(up, all) {
+  if (all === 0)
+    return String("-");
   if (up == all) {
     return String((up / all * parseFloat(100)).toFixed(0));
   }
   return String((up / all * parseFloat(100)).toFixed(4));
 }
 function parsePercentage(n) {
+  if (isNaN(n))
+    return "-";
   if (n == 0) {
     return "0";
   }
@@ -68,6 +72,8 @@ async function POST({ request }) {
     let cssClass = statusObj.UP;
     let message = "OK";
     const element = _90DayFileData[timestampISO];
+    if (element === void 0)
+      continue;
     let currentDay = moment.tz(timestampISO, tz).format("YYYY-MM-DD");
     if (_90Day[currentDay] === void 0)
       continue;
@@ -120,8 +126,8 @@ async function POST({ request }) {
     _90Day,
     uptime0Day,
     uptime90Day: parsePercentage(percentage90DaysBuildUp.reduce((a, b) => a + b, 0) / percentage90DaysBuildUp.length),
-    avgLatency90Day: (latency90DaysBuildUp.reduce((a, b) => a + b, 0) / latency90DaysBuildUp.length).toFixed(0),
-    avgLatency0Day: (dailyLatencyBuildUp.reduce((a, b) => a + b, 0) / dailyLatencyBuildUp.length).toFixed(0),
+    avgLatency90Day: latency90DaysBuildUp.length > 0 ? (latency90DaysBuildUp.reduce((a, b) => a + b, 0) / latency90DaysBuildUp.length).toFixed(0) : "-",
+    avgLatency0Day: dailyLatencyBuildUp.length > 0 ? (dailyLatencyBuildUp.reduce((a, b) => a + b, 0) / dailyLatencyBuildUp.length).toFixed(0) : "-",
     dailyUps,
     dailyDown,
     dailyDegraded
@@ -129,4 +135,4 @@ async function POST({ request }) {
 }
 
 export { POST };
-//# sourceMappingURL=_server-47b10fe6.js.map
+//# sourceMappingURL=_server-f49f614c.js.map
