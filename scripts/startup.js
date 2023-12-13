@@ -10,7 +10,7 @@ import yaml from "js-yaml";
 import { Cron } from "croner";
 import { FOLDER, FOLDER_MONITOR, FOLDER_SITE, API_TIMEOUT } from "./constants.js";
 import { IsValidURL, IsValidHTTPMethod, LoadMonitorsPath, LoadSitePath } from "./tool.js";
-import { OneMinuteFetch } from "./cron-minute.js";
+import { Minuter } from "./cron-minute.js";
 let monitors = [];
 let site = {};
 const envSecrets = [];
@@ -150,7 +150,7 @@ const Startup = async () => {
 
     fs.ensureFileSync(FOLDER_MONITOR);
     fs.ensureFileSync(FOLDER_SITE);
-
+	
     try {
         fs.writeFileSync(FOLDER_MONITOR, JSON.stringify(monitors, null, 4));
         fs.writeFileSync(FOLDER_SITE, JSON.stringify(site, null, 4));
@@ -162,27 +162,35 @@ const Startup = async () => {
     // init monitors
     for (let i = 0; i < monitors.length; i++) {
         const monitor = monitors[i];
-		if (!monitor.hasAPI) {
-			continue;
+		//check if file exists 
+		//if not, create file
+		//if yes, do nothing
+		if(!fs.existsSync(monitor.path0Day)) {
+			fs.ensureFileSync(monitor.path0Day);
+			fs.writeFileSync(monitor.path0Day, JSON.stringify({}));
 		}
+		if(!fs.existsSync(monitor.path90Day)) {
+			fs.ensureFileSync(monitor.path90Day);
+			fs.writeFileSync(monitor.path90Day, JSON.stringify({}));
+		}
+		
+		 
         console.log("Staring One Minute Cron for ", monitor.path0Day);
-        await OneMinuteFetch(envSecrets, monitor.folderName, monitor.url, monitor.method, JSON.stringify(monitor.headers), monitor.body, monitor.timeout, monitor.eval, monitor.path0Day, monitor.path90Day);
+        await Minuter(envSecrets, monitor);
     }
 
     //trigger minute cron
 
     for (let i = 0; i < monitors.length; i++) {
         const monitor = monitors[i];
-        if (!monitor.hasAPI) {
-			continue;
-		}
+         
         let cronExpession = "* * * * *";
         if (monitor.cron !== undefined && monitor.cron !== null) {
             cronExpession = monitor.cron;
         }
 		console.log("Staring " + cronExpession + " Cron for ", monitor.name);
         Cron(cronExpession, async () => {
-            OneMinuteFetch(envSecrets, monitor.folderName, monitor.url, monitor.method, JSON.stringify(monitor.headers), monitor.body, monitor.timeout, monitor.eval, monitor.path0Day, monitor.path90Day);
+            await Minuter(envSecrets, monitor);
         });
     }
 };

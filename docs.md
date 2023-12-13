@@ -61,12 +61,12 @@ It also needs to yaml files to work
 
 By default these are present in `config/`. However you can use different location either passing them as argument or having the path as enviorment variable
 
-### Add Enviroment variables
+### Add as Enviroment variables
 ```shell
 export MONITOR_YAML_PATH=/your/path/monitors.yaml
 export SITE_YAML_PATH=/your/path/site.yaml
 ```
-### As argument to prod.js
+### Add as argument to prod.js
 ```shell
 node prod.js --monitors /your/path/monitors.yaml --site /your/path/site.yaml
 ```
