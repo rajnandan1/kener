@@ -397,4 +397,12 @@ Create an issue with two labels `your-monitor-tag` and `status`
 - Add comments and it will show up in kener.
 
 # API
-Kener also gives APIs to push data and create incident. Before you use kener apis you will have to set an authorization token called `WEBHOOK_TOKEN`. This also has to be set as an environment variable.
+Kener also gives APIs to push data and create incident. Before you use kener apis you will have to set an authorization token called `API_TOKEN`. This also has to be set as an environment variable.
+```shell
+export API_TOKEN=some-token-set-by-you
+```
+Additonally you can set IP whitelisting by setting another environment token called `API_IP`
+
+```shell
+export API_IP=127.0.0.1
+```

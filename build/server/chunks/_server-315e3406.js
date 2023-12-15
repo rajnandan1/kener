@@ -4,15 +4,15 @@ import { p as public_env } from './shared-server-58a5f352.js';
 import moment from 'moment';
 import Randomstring from 'randomstring';
 
-const WEBHOOK_TOKEN = process.env.WEBHOOK_TOKEN;
-const WEBHOOK_IP = process.env.WEBHOOK_IP;
+const API_TOKEN = process.env.API_TOKEN;
+const API_IP = process.env.API_IP;
 const store = function(data, authHeader, ip) {
   const tag = data.tag;
   const authToken = authHeader.replace("Bearer ", "");
-  if (authToken !== WEBHOOK_TOKEN) {
+  if (authToken !== API_TOKEN) {
     return { error: "invalid token", status: 401 };
   }
-  if (WEBHOOK_IP !== void 0 && ip != "" && ip !== WEBHOOK_IP) {
+  if (API_IP !== void 0 && ip != "" && ip !== API_IP) {
     return { error: "invalid ip", status: 401 };
   }
   const resp = {};
@@ -77,4 +77,4 @@ async function POST({ request }) {
 }
 
 export { POST };
-//# sourceMappingURL=_server-fa78ed53.js.map
+//# sourceMappingURL=_server-315e3406.js.map

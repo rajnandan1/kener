@@ -9,7 +9,7 @@ import fs from "fs-extra";
 import yaml from "js-yaml";
 import { Cron } from "croner";
 import { FOLDER, FOLDER_MONITOR, FOLDER_SITE, API_TIMEOUT } from "./constants.js";
-import { IsValidURL, IsValidHTTPMethod, LoadMonitorsPath, LoadSitePath } from "./tool.js";
+import { IsValidURL, IsValidHTTPMethod, LoadMonitorsPath, LoadSitePath, GetAllGHLabels, CreateGHLabel } from "./tool.js";
 import { Minuter } from "./cron-minute.js";
 let monitors = [];
 let site = {};
@@ -67,7 +67,8 @@ const Startup = async () => {
         console.log(error);
         process.exit(1);
     }
-
+	
+	
     // Use the 'monitors' array of JSON objects as needed
     //check if each object has name, url, method
     //if not, exit with error
@@ -138,7 +139,7 @@ const Startup = async () => {
             }
         }
     }
-
+	
     if (checkIfDuplicateExists(monitors.map((monitor) => monitor.folderName)) === true) {
         console.log("duplicate monitor detected");
         process.exit(1);
@@ -157,6 +158,27 @@ const Startup = async () => {
     } catch (error) {
         console.log(error);
         process.exit(1);
+    }
+
+	if (!!site.github && !!site.github.owner && !!site.github.repo) {
+        const ghowner = site.github.owner;
+        const ghrepo = site.github.repo;
+        const ghlabels = await GetAllGHLabels(ghowner, ghrepo);
+        const tagsAndDescription = monitors.map((monitor) => {
+            return { tag: monitor.tag, description: monitor.name };
+        });
+        //add status label if does not exist
+        if (ghlabels.indexOf("status") === -1) {
+            await CreateGHLabel(ghowner, ghrepo, "status", "Status of the site");
+        }
+        //add tags if does not exist
+        for (let i = 0; i < tagsAndDescription.length; i++) {
+            const tag = tagsAndDescription[i].tag;
+            const description = tagsAndDescription[i].description;
+            if (ghlabels.indexOf(tag) === -1) {
+                await CreateGHLabel(ghowner, ghrepo, tag, description);
+            }
+        }
     }
 
     // init monitors

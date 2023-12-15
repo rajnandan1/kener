@@ -75,7 +75,16 @@ async function getCommentsForIssue(issueID, githubConfig) {
 		return [];
 	}
 }
-
+/*
+{
+	incident_type: "incident",
+	start_time: "identified", //required
+	end_time: "resolved",
+	title: "title",
+	description: "description",
+	status:"degraded, down"
+}
+*/
  
 
 export { activeIncident, hasActiveIncident, getCommentsForIssue, pastIncident };

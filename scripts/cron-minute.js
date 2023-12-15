@@ -9,7 +9,6 @@ const apiQueue = new Queue({
     timeout: 10000, // Timeout in ms after which a task will be considered as failed (optional)
     autostart: true, // Automatically start the queue (optional)
 });
- 
 
 function replaceAllOccurrences(originalString, searchString, replacement) {
     const regex = new RegExp(`\\${searchString}`, "g");
@@ -19,7 +18,6 @@ function replaceAllOccurrences(originalString, searchString, replacement) {
 const Kener_folder = process.env.PUBLIC_KENER_FOLDER;
 
 const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorEval) => {
-	
     let axiosHeaders = {};
     axiosHeaders["User-Agent"] = "Kener/0.0.1";
     axiosHeaders["Accept"] = "*/*";
@@ -57,13 +55,12 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
     let statusCode = 500;
     let latency = 0;
     let resp = "";
-	let timeoutError = false;
+    let timeoutError = false;
     try {
         let data = await axios(url, options);
         statusCode = data.status;
         resp = data.data;
     } catch (err) {
-       
         if (err.message.startsWith("timeout of") && err.message.endsWith("exceeded")) {
             timeoutError = true;
         }
@@ -110,9 +107,9 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
     if (evalResp.type !== undefined && evalResp.type !== null) {
         toWrite.type = evalResp.type;
     }
-	if(timeoutError){
-		toWrite.type = "timeout";
-	}
+    if (timeoutError) {
+        toWrite.type = "timeout";
+    }
     return toWrite;
 };
 const getWebhookData = async (monitor) => {
@@ -187,7 +184,6 @@ const update90DayData = async (mergedData, startOfMinute, monitor) => {
         fs.writeFileSync(_90File, JSON.stringify({}));
     }
     let dayISO = moment(startOfMinute).startOf("day").toISOString();
-
     //calculat 90day data from mergedData
     let up = 0,
         degraded = 0,
@@ -196,7 +192,7 @@ const update90DayData = async (mergedData, startOfMinute, monitor) => {
 
     for (const timestampISO in mergedData) {
         //only consider data from last today
-        if (!moment(timestampISO).isAfter(moment(dayISO))) {
+        if (moment(timestampISO).isBefore(moment(dayISO))) {
             continue;
         }
         const element = mergedData[timestampISO];
@@ -234,17 +230,17 @@ const update90DayData = async (mergedData, startOfMinute, monitor) => {
     fs.writeFileSync(_90File, JSON.stringify(sorted90Day, null, 2));
 };
 const Minuter = async (envSecrets, monitor) => {
-	console.log("Queue length is " + apiQueue.length);
+    if (apiQueue.length > 0) console.log("Queue length is " + apiQueue.length);
     let apiData = {};
     let webhookData = {};
     const startOfMinute = moment().startOf("minute").toISOString();
     let dayData = {};
     if (monitor.hasAPI) {
         let apiResponse = await apiCall(envSecrets, monitor.url, monitor.method, JSON.stringify(monitor.headers), monitor.body, monitor.timeout, monitor.eval);
-		apiData[startOfMinute] = apiResponse;
-		if(apiResponse.type === "timeout"){
-			console.log("Retrying api call")
-			//retry
+        apiData[startOfMinute] = apiResponse;
+        if (apiResponse.type === "timeout") {
+            console.log("Retrying api call");
+            //retry
             apiQueue.push(async (cb) => {
                 apiCall(envSecrets, monitor.url, monitor.method, JSON.stringify(monitor.headers), monitor.body, monitor.timeout, monitor.eval).then(async (data) => {
                     let day0 = {};
@@ -254,9 +250,8 @@ const Minuter = async (envSecrets, monitor) => {
                 });
             });
         }
-		// apiData[startOfMinute] = await apiCall(envSecrets, startOfMinute, monitor.url, monitor.method, JSON.stringify(monitor.headers), monitor.body, monitor.timeout, monitor.eval);
-		
-	}
+        // apiData[startOfMinute] = await apiCall(envSecrets, startOfMinute, monitor.url, monitor.method, JSON.stringify(monitor.headers), monitor.body, monitor.timeout, monitor.eval);
+    }
     webhookData = await getWebhookData(monitor);
     dayData = await getDayData(monitor);
 

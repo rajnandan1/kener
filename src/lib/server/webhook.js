@@ -3,18 +3,18 @@ import fs from "fs-extra"
 import { env } from "$env/dynamic/public";
 import moment from "moment";
 import Randomstring from "randomstring";
-const WEBHOOK_TOKEN = process.env.WEBHOOK_TOKEN;
-const WEBHOOK_IP = process.env.WEBHOOK_IP;
+const API_TOKEN = process.env.API_TOKEN;
+const API_IP = process.env.API_IP;
 
 const store = function(data, authHeader, ip){
     const tag = data.tag;
     //remove Bearer from start in authHeader
     const authToken = authHeader.replace("Bearer ", "");
-	if (authToken !== WEBHOOK_TOKEN) {
+	if (authToken !== API_TOKEN) {
         return { error: "invalid token", status: 401 };
     }
 
-	if (WEBHOOK_IP !== undefined && ip != "" && ip !== WEBHOOK_IP) {
+	if (API_IP !== undefined && ip != "" && ip !== API_IP) {
         return { error: "invalid ip", status: 401 };
     }
     const resp = {};
