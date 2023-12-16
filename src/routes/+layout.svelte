@@ -4,6 +4,9 @@
     import Nav from "$lib/components/nav.svelte";
 	export let data;
 	
+	var dt = new Date();
+	let tz = dt.getTimezoneOffset(); // -480
+	console.log(tz);
 </script>
 
 <Nav {data} />

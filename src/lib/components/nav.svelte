@@ -11,8 +11,8 @@
             <a href="{data.site.home}" class="mr-6 flex items-center space-x-2">
                 <img src="{data.site.logo}" class="h-5 w-5" alt="" srcset="">
                 <span class="hidden font-bold sm:inline-block text-[15px] lg:text-base">
-					 {data.site.title}
-					 </span>
+					{data.site.title}
+				</span>
             </a>
             <nav class="flex items-center space-x-6 text-sm font-medium">
 				{#each data.site.nav as navItem}

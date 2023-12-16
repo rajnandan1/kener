@@ -40,6 +40,9 @@ const Nav = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 });
 const Layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   let { data } = $$props;
+  var dt = /* @__PURE__ */ new Date();
+  let tz = dt.getTimezoneOffset();
+  console.log(tz);
   if ($$props.data === void 0 && $$bindings.data && data !== void 0)
     $$bindings.data(data);
   return `${validate_component(Nav, "Nav").$$render($$result, { data }, {}, {})} ${$$result.head += `<!-- HEAD_svelte-xs6o1m_START -->${$$result.title = `<title>${escape(data.site.title)}</title>`, ""}${each(Object.entries(data.site.metaTags), ([key, value]) => {
@@ -48,4 +51,4 @@ const Layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 });
 
 export { Layout as default };
-//# sourceMappingURL=_layout.svelte-5353c2ad.js.map
+//# sourceMappingURL=_layout.svelte-af02aa22.js.map
