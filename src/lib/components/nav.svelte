@@ -1,6 +1,5 @@
 <script>
     import {  Github } from "lucide-svelte";
-    import { toggleMode } from "mode-watcher";
     import { Button } from "$lib/components/ui/button";
 	import { buttonVariants } from "$lib/components/ui/button";
 	export let data;

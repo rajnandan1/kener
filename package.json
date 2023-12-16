@@ -65,7 +65,6 @@
         "fs-extra": "^11.1.1",
         "js-yaml": "^4.1.0",
         "lucide-svelte": "^0.292.0",
-        "mode-watcher": "^0.1.1",
         "moment": "^2.29.4",
         "moment-timezone": "^0.5.43",
         "node-cache": "^5.1.2",
