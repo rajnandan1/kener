@@ -10,6 +10,7 @@ export async function load({ params, route, url, cookies }) {
         tzOffset = Number(tzOffsetCookie);
     }
     let site = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
+	console.log("Rendering page with " + tzOffset);
     return {
         site: site,
         tzOffset,

@@ -42,10 +42,10 @@ const Layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   let { data } = $$props;
   if ($$props.data === void 0 && $$bindings.data && data !== void 0)
     $$bindings.data(data);
-  return `<input type="hidden"${add_attribute("value", data.tzOffset, 0)}> ${validate_component(Nav, "Nav").$$render($$result, { data }, {}, {})} ${$$result.head += `<!-- HEAD_svelte-xs6o1m_START -->${$$result.title = `<title>${escape(data.site.title)}</title>`, ""}${each(Object.entries(data.site.metaTags), ([key, value]) => {
+  return `<input type="hidden"${add_attribute("value", data.tzOffset, 0)}> ${validate_component(Nav, "Nav").$$render($$result, { data }, {}, {})} ${$$result.head += `<!-- HEAD_svelte-3shchj_START -->${$$result.title = `<title>${escape(data.site.title)}</title>`, ""}${each(Object.entries(data.site.metaTags), ([key, value]) => {
     return `<meta${add_attribute("name", key, 0)}${add_attribute("content", value, 0)}>`;
-  })}<!-- HEAD_svelte-xs6o1m_END -->`, ""} ${slots.default ? slots.default({}) : ``}`;
+  })}<!-- HEAD_svelte-3shchj_END -->`, ""} ${slots.default ? slots.default({}) : ``}`;
 });
 
 export { Layout as default };
-//# sourceMappingURL=_layout.svelte-a66db7f8.js.map
+//# sourceMappingURL=_layout.svelte-d281ddab.js.map

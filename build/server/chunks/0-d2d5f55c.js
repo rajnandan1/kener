@@ -9,6 +9,7 @@ async function load({ params, route, url, cookies }) {
     tzOffset = Number(tzOffsetCookie);
   }
   let site = JSON.parse(fs.readFileSync(public_env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
+  console.log("Rendering page with " + tzOffset);
   return {
     site,
     tzOffset
@@ -22,11 +23,11 @@ var _layout_server = /*#__PURE__*/Object.freeze({
 
 const index = 0;
 let component_cache;
-const component = async () => component_cache ??= (await import('./_layout.svelte-a66db7f8.js')).default;
+const component = async () => component_cache ??= (await import('./_layout.svelte-d281ddab.js')).default;
 const server_id = "src/routes/+layout.server.js";
-const imports = ["_app/immutable/nodes/0.ab03db67.js","_app/immutable/chunks/scheduler.b29f3093.js","_app/immutable/chunks/index.7aebdd36.js","_app/immutable/chunks/index.eede6470.js","_app/immutable/chunks/index.ed2d54e5.js","_app/immutable/chunks/index.2f161581.js"];
+const imports = ["_app/immutable/nodes/0.a42378a7.js","_app/immutable/chunks/scheduler.b29f3093.js","_app/immutable/chunks/index.7aebdd36.js","_app/immutable/chunks/index.eede6470.js","_app/immutable/chunks/index.ed2d54e5.js","_app/immutable/chunks/index.2f161581.js"];
 const stylesheets = ["_app/immutable/assets/0.d2e53a0b.css"];
 const fonts = [];
 
 export { component, fonts, imports, index, _layout_server as server, server_id, stylesheets };
-//# sourceMappingURL=0-29c4e5d0.js.map
+//# sourceMappingURL=0-d2d5f55c.js.map
