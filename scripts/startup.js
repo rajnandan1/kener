@@ -139,7 +139,15 @@ const Startup = async () => {
             }
         }
     }
-	
+	if(site.github === undefined || site.github.owner === undefined || site.github.repo === undefined) {
+		console.log("github owner and repo are required");
+		process.exit(1);
+	}
+	if(site.github.incidentSince === undefined || site.github.incidentSince === null){
+		site.github = {
+			incidentSince: 24
+		};
+	}
     if (checkIfDuplicateExists(monitors.map((monitor) => monitor.folderName)) === true) {
         console.log("duplicate monitor detected");
         process.exit(1);
@@ -167,9 +175,16 @@ const Startup = async () => {
         const tagsAndDescription = monitors.map((monitor) => {
             return { tag: monitor.tag, description: monitor.name };
         });
-        //add status label if does not exist
-        if (ghlabels.indexOf("status") === -1) {
-            await CreateGHLabel(ghowner, ghrepo, "status", "Status of the site");
+        //add incident label if does not exist
+
+        if (ghlabels.indexOf("incident") === -1) {
+            await CreateGHLabel(ghowner, ghrepo, "incident", "Status of the site");
+        }
+        if (ghlabels.indexOf("incident-degraded") === -1) {
+            await CreateGHLabel(ghowner, ghrepo, "incident-degraded", "Status is degraded of the site");
+        }
+        if (ghlabels.indexOf("incident-down") === -1) {
+            await CreateGHLabel(ghowner, ghrepo, "incident-down", "Status is down of the site");
         }
         //add tags if does not exist
         for (let i = 0; i < tagsAndDescription.length; i++) {
@@ -198,23 +213,23 @@ const Startup = async () => {
 		
 		 
         console.log("Staring One Minute Cron for ", monitor.path0Day);
-        await Minuter(envSecrets, monitor);
+        await Minuter(envSecrets, monitor, site.github);
     }
 
     //trigger minute cron
 
-    for (let i = 0; i < monitors.length; i++) {
-        const monitor = monitors[i];
+    // for (let i = 0; i < monitors.length; i++) {
+    //     const monitor = monitors[i];
          
-        let cronExpession = "* * * * *";
-        if (monitor.cron !== undefined && monitor.cron !== null) {
-            cronExpession = monitor.cron;
-        }
-		console.log("Staring " + cronExpession + " Cron for ", monitor.name);
-        Cron(cronExpession, async () => {
-            await Minuter(envSecrets, monitor);
-        });
-    }
+    //     let cronExpession = "* * * * *";
+    //     if (monitor.cron !== undefined && monitor.cron !== null) {
+    //         cronExpession = monitor.cron;
+    //     }
+	// 	console.log("Staring " + cronExpession + " Cron for ", monitor.name);
+    //     Cron(cronExpession, async () => {
+    //         await Minuter(envSecrets, monitor, site.github);
+    //     });
+    // }
 };
 
 export { Startup };

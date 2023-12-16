@@ -1,6 +1,7 @@
 // @ts-nocheck
 
 import axios from "axios";
+import moment from "moment";
 const GH_TOKEN = process.env.GH_TOKEN;
 /**
  * @param {any} url
@@ -17,13 +18,27 @@ function getAxiosOptions(url){
     };
 	return options;
 }
+function postAxiosOptions(url, data){
+	const options = {
+        url: url,
+        method: "POST",
+        headers: {
+            Accept: "application/vnd.github+json",
+            Authorization: "Bearer " + GH_TOKEN,
+            "X-GitHub-Api-Version": "2022-11-28",
+        },
+		data: data
+    };
+	return options;
+}
 /**
  * @param {any} tagName
  * @param {{ owner: any; repo: any; }} githubConfig
  */
 async function activeIncident(tagName, githubConfig) {
-
-	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues?labels=${tagName},status&state=open&sort=created&direction=desc`;
+	const sinceHours = githubConfig.incidentSince || 24;
+    const since = moment().subtract(sinceHours, "hours").toISOString();
+	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues?labels=${tagName},incident&state=open&sort=created&direction=desc&since=${since}`;
 	try {
 		const response = await axios.request(getAxiosOptions(url));
 		return response.data;
@@ -37,7 +52,9 @@ async function activeIncident(tagName, githubConfig) {
  * @param {{ owner: any; repo: any; }} githubConfig
  */
 async function pastIncident(tagName, githubConfig) {
-	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues?labels=${tagName},status&state=closed&sort=created&direction=desc`;
+	const sinceHours = githubConfig.incidentSince || 24;
+    const since = moment().subtract(sinceHours, "hours").toISOString();
+	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues?labels=${tagName},incident&state=closed&sort=created&direction=desc&since=${since}`;
 	try {
 		const response = await axios.request(getAxiosOptions(url));
 		return response.data;
@@ -51,7 +68,11 @@ async function pastIncident(tagName, githubConfig) {
  * @param {{ owner: any; repo: any; }} githubConfig
  */
 async function hasActiveIncident(tagName, githubConfig) {
-	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues?labels=${tagName},status&state=open&sort=created&direction=desc&per_page=1`;
+	
+	const sinceHours = githubConfig.incidentSince || 24;
+	const since = moment().subtract(sinceHours, "hours").toISOString();
+	
+	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues?labels=${tagName},incident&state=open&sort=created&direction=desc&per_page=1&since=${since}`;
 	try {
 		const response = await axios.request(getAxiosOptions(url));
 		return response.data.length > 0;
@@ -74,6 +95,25 @@ async function getCommentsForIssue(issueID, githubConfig) {
 		console.log(error.response.data);
 		return [];
 	}
+}	
+
+async function createIssue(githubConfig, issueTitle, issueBody, issueLabels) {
+	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues`;
+	try {
+		const payload = {
+			title: issueTitle,
+			body: issueBody,
+			labels: issueLabels,
+		};
+		const response = await axios.request(postAxiosOptions(url, payload));
+		return response.data ;
+	} catch (error) {
+		console.log(error.response.data);
+		return [];
+	}
+}
+async function updateIssue(githubConfig, issueID) {
+
 }
 /*
 {
@@ -87,4 +127,4 @@ async function getCommentsForIssue(issueID, githubConfig) {
 */
  
 
-export { activeIncident, hasActiveIncident, getCommentsForIssue, pastIncident };
+export { activeIncident, hasActiveIncident, getCommentsForIssue, pastIncident, createIssue };

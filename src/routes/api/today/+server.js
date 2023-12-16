@@ -12,6 +12,7 @@ let statusObj = {
 
 function parseUptime(up, all) {
 	if (all === 0) return String("-");
+	if (up == 0) return String("0");
     if (up == all) {
         return String(((up / all) * parseFloat(100)).toFixed(0));
     }

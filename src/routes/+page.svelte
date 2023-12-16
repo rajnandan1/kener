@@ -3,9 +3,10 @@
 	
 	export let data;
 </script>
+<div class="mt-32"></div>
 {#if data.site.hero}
-<section class="mx-auto flex w-full max-w-4xl flex-1 flex-col items-start justify-center">
-    <div class="mx-auto max-w-screen-xl px-4 pt-32 pb-16 lg:flex lg:items-center">
+<section class="mx-auto flex w-full max-w-4xl mb-8 flex-1 flex-col items-start justify-center">
+    <div class="mx-auto max-w-screen-xl px-4   lg:flex lg:items-center">
         <div class="mx-auto max-w-3xl text-center blurry-bg">
 			{#if data.site.hero.image}
 			<img src="{data.site.hero.image}" class="h-16 w-16 m-auto" alt="" srcset="">

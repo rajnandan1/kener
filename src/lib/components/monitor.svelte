@@ -11,37 +11,38 @@
     import { buttonVariants } from "$lib/components/ui/button";
     import * as Alert from "$lib/components/ui/alert";
 
-	function getTodayDD() {
+    function getTodayDD() {
+        let yourDate = new Date();
 
-		let yourDate = new Date();
+        const offset = yourDate.getTimezoneOffset();
+        yourDate = new Date(yourDate.getTime() - offset * 60 * 1000);
+        return yourDate.toISOString().split("T")[0];
+    }
 
-		const offset = yourDate.getTimezoneOffset()
-		yourDate = new Date(yourDate.getTime() - (offset*60*1000))
-		return yourDate.toISOString().split('T')[0]
-	}
-
-	function getminuteFromMidnightTillNow() {
-		var date = new Date();
-		var hours = date.getHours();
-		var minutes = date.getMinutes();
-		var totalMinutes = (hours*60) + minutes ;
-		return totalMinutes
-	}
+    function getminuteFromMidnightTillNow() {
+        var date = new Date();
+        var hours = date.getHours();
+        var minutes = date.getMinutes();
+        var totalMinutes = hours * 60 + minutes;
+        return totalMinutes;
+    }
 
     export let monitor;
-    let loading90 = true;
-	let todayDD = getTodayDD();
-	
-    let uptime90Day = "0";
-    let uptime0Day = "0";
-    let dailyUps = 0;
-    let dailyDown = 0;
-    let dailyDegraded = 0;
-	let avgLatency90Day = 0;
-	let avgLatency0Day = 0;
+
+    let _0Day = monitor.pageData._0Day;
+    let _90Day = monitor.pageData._90Day;
+    let uptime0Day = monitor.pageData.uptime0Day;
+    let uptime90Day = monitor.pageData.uptime90Day;
+    let avgLatency90Day = monitor.pageData.avgLatency90Day;
+    let avgLatency0Day = monitor.pageData.avgLatency0Day;
+    let dailyUps = monitor.pageData.dailyUps;
+    let dailyDown = monitor.pageData.dailyDown;
+    let dailyDegraded = monitor.pageData.dailyDegraded;
+
+    let loading90 = false;
+    let todayDD = getTodayDD();
     let view = "90day";
-    let _0Day = {};
-    let _90Day = {};
+
     let statusObj = {
         UP: "api-up",
         DEGRADED: "api-degraded",
@@ -51,47 +52,16 @@
 
     let minuteFromMidnightTillNow = getminuteFromMidnightTillNow();
 
-     
     function switchView(s) {
         view = s;
     }
-     
 
-    const fetchFromFile = async function (day0File, day90File) {
-        //use axios to call POST /api/today
-        let options = {
-            method: "POST",
-            url: "/api/today",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            data: {
-                day0: day0File,
-				day90: day90File,
-				tz: Intl.DateTimeFormat().resolvedOptions().timeZone
-            },
-        };
-        let res = await axios(options);
-        const day90 = res.data.day90;
-		_0Day = res.data._0Day;
-		_90Day = res.data._90Day;
-		uptime0Day = res.data.uptime0Day;
-		uptime90Day = res.data.uptime90Day;
-		avgLatency90Day = res.data.avgLatency90Day;
-		avgLatency0Day = res.data.avgLatency0Day;
-		dailyUps = res.data.dailyUps;
-		dailyDown = res.data.dailyDown;
-		dailyDegraded = res.data.dailyDegraded;
-
-
-        loading90 = false;
-    };
 
     onMount(async () => {
-        fetchFromFile(monitor.path0Day, monitor.path90Day);
+		let xk = Object.keys(_90Day);
+        console.log(">>>>>>----  monitor:66 ", xk[xk.length - 1], xk[0]);
     });
 </script>
-
 <section class="mx-auto backdrop-blur-[2px]  mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center">
     <Card.Root class="w-full">
         <Card.Content>
@@ -108,7 +78,7 @@
 								<HoverCard.Trigger>
 									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide inline lucide-info"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
 								</HoverCard.Trigger>
-								<HoverCard.Content>
+								<HoverCard.Content class="dark:invert">
 									{monitor.description}
 								</HoverCard.Content>
 							</HoverCard.Root>
@@ -187,9 +157,9 @@
 										<div class="absolute show-hover text-sm bg-background">
 											<div class="text-{bar.cssClass} font-semibold" >
 												{#if bar.message != "No Data"}
-												{new Date(bar.timestamp).toLocaleDateString()} ● {bar.message} ● {bar.avgLatency} ms AVG latency
+												{new Date(bar.timestamp * 1000).toLocaleDateString()} ● {bar.message} ● {bar.avgLatency} ms AVG latency
 												{:else}
-												{new Date(bar.timestamp).toLocaleDateString()} ● {bar.message}
+												{new Date(bar.timestamp * 1000).toLocaleDateString()} ● {bar.message}
 												{/if}
 											</div>
 										</div>
@@ -204,8 +174,8 @@
 											
 										</div>
 										<div class="hiddenx relative">
-											<div data-index="{bar.index}"  class="  p-2 text-sm   rounded font-semibold message bg-black text-white border ">
-												<p><span class="text-{bar.cssClass}">●</span> {new Date(bar.timestamp).toLocaleString()}</p>
+											<div data-index="{ts.index}"  class="  p-2 text-sm   rounded font-semibold message bg-black text-white border ">
+												<p><span class="text-{bar.cssClass}">●</span> {new Date(bar.timestamp * 1000).toLocaleString()}</p>
 												{#if bar.status != 'NO_DATA'}
 												<p class="pl-4">{bar.status} / {bar.latency}ms</p>
 												{:else}

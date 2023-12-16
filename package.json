@@ -27,13 +27,8 @@
         "url": "https://github.com/rajnandan1/kener.git"
     },
     "scripts": {
-        "dev": "vite dev",
-        "build": "vite build",
-        "preview": "vite preview",
-        "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
-        "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
-        "kener:dev": "cross-env PUBLIC_KENER_FOLDER=./static/kener tz=UTC concurrently \"node dev.js\" \"vite dev\"",
-        "kener:dev-monitor": "cross-env PUBLIC_KENER_FOLDER=./static/kener tz=UTC node dev.js",
+        "kener:dev": "cross-env PUBLIC_KENER_FOLDER=./static/kener concurrently \"node dev.js\" \"vite dev\"",
+        "kener:dev-monitor": "cross-env PUBLIC_KENER_FOLDER=./static/kener node dev.js",
         "kener:dev-build": "cross-env PUBLIC_KENER_FOLDER=./static/kener tz=UTC vite build",
         "kener:build": "cross-env PUBLIC_KENER_FOLDER=./build/client/kener tz=UTC vite build",
         "kener": "cross-env PUBLIC_KENER_FOLDER=./build/client/kener tz=UTC node prod.js"
@@ -65,7 +60,6 @@
         "fs-extra": "^11.1.1",
         "js-yaml": "^4.1.0",
         "lucide-svelte": "^0.292.0",
-        "mode-watcher": "^0.1.1",
         "moment": "^2.29.4",
         "moment-timezone": "^0.5.43",
         "node-cache": "^5.1.2",
