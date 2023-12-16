@@ -40,12 +40,6 @@ const Nav = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 });
 const Layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   let { data } = $$props;
-  var dt = /* @__PURE__ */ new Date();
-  let tz = dt.getTimezoneOffset();
-  console.log(tz);
-  if (tz != data.tzOffset) {
-    document.cookie = "tzOffset=" + tz;
-  }
   if ($$props.data === void 0 && $$bindings.data && data !== void 0)
     $$bindings.data(data);
   return `<input type="hidden"${add_attribute("value", data.tzOffset, 0)}> ${validate_component(Nav, "Nav").$$render($$result, { data }, {}, {})} ${$$result.head += `<!-- HEAD_svelte-xs6o1m_START -->${$$result.title = `<title>${escape(data.site.title)}</title>`, ""}${each(Object.entries(data.site.metaTags), ([key, value]) => {
@@ -54,4 +48,4 @@ const Layout = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 });
 
 export { Layout as default };
-//# sourceMappingURL=_layout.svelte-9b837e41.js.map
+//# sourceMappingURL=_layout.svelte-a66db7f8.js.map

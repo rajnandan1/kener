@@ -1,10 +1,13 @@
 <script>
     import "../app.postcss";
     import "../kener.css";
+	import {onMount} from "svelte";
     import Nav from "$lib/components/nav.svelte";
 	export let data;
 	
-	var dt = new Date();
+	
+	onMount(() => {
+		var dt = new Date();
 let tz = dt.getTimezoneOffset(); // -480
 console.log(tz);
 	if(tz != data.tzOffset){
@@ -13,6 +16,7 @@ console.log(tz);
 		//location.reload();
 
 	}
+	});
 </script>
 <input type="hidden" value="{data.tzOffset}">
 <Nav {data} />
