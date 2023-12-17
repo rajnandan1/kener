@@ -1,6 +1,6 @@
-import { c as create_ssr_component, s as setContext, v as validate_component, m as missing_component } from './chunks/ssr-72fe14f2.js';
+import { c as create_ssr_component, s as setContext, v as validate_component, m as missing_component } from './chunks/ssr-3ed108ea.js';
 import { e as error, j as json, t as text, R as Redirect, H as HttpError, A as ActionFailure } from './chunks/index-2b68e648.js';
-import { w as writable, r as readable } from './chunks/index3-1a2d4d4c.js';
+import { w as writable, r as readable } from './chunks/index2-d2b6b2d2.js';
 import { s as set_private_env, a as set_public_env, p as public_env } from './chunks/shared-server-58a5f352.js';
 
 let base = "";
@@ -99,7 +99,7 @@ const options = {
   root: Root,
   service_worker: false,
   templates: {
-    app: ({ head, body, assets: assets2, nonce, env }) => '<!DOCTYPE html>\n<html lang="en" class="dark dark:bg-background">\n    <head>\n        <meta charset="utf-8" />\n        <link rel="icon" id="kener-app-favicon" href="/kener.png" />\n        <meta name="viewport" content="width=device-width, initial-scale=1" />\n        ' + head + '\n    </head>\n    <body data-sveltekit-preload-data="hover">\n        <div style="display: contents">' + body + "</div>\n    </body>\n</html>\n",
+    app: ({ head, body, assets: assets2, nonce, env }) => '<!DOCTYPE html>\n<html lang="en" class="dark dark:bg-background">\n    <head>\n        <meta charset="utf-8" />\n        <link rel="icon" id="kener-app-favicon" href="/k96.png" />\n        <meta name="viewport" content="width=device-width, initial-scale=1" />\n        ' + head + '\n    </head>\n    <body data-sveltekit-preload-data="hover">\n        <div style="display: contents">' + body + "</div>\n    </body>\n</html>\n",
     error: ({ status, message }) => '<!doctype html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<title>' + message + `</title>
 
 		<style>
@@ -171,7 +171,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "12t8kyc"
+  version_hash: "1v3ysnl"
 };
 function get_hooks() {
   return {};
