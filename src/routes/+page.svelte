@@ -1,29 +1,60 @@
 <script>
-	import Monitor from "$lib/components/monitor.svelte"; 
-	
-	export let data;
+    import Monitor from "$lib/components/monitor.svelte";
+    import Incident from "$lib/components/incident.svelte";
+	import { Separator } from "$lib/components/ui/separator";
+	import { Badge } from "$lib/components/ui/badge";
+    export let data;
+	let hasActiveIncidents = false;
+	for(let i=0; i<data.monitors.length; i++){
+		if(data.monitors[i].activeIncidents.length > 0){
+			hasActiveIncidents = true;
+			break;
+		}
+	}
 </script>
 <div class="mt-32"></div>
 {#if data.site.hero}
 <section class="mx-auto flex w-full max-w-4xl mb-8 flex-1 flex-col items-start justify-center">
-    <div class="mx-auto max-w-screen-xl px-4   lg:flex lg:items-center">
+    <div class="mx-auto max-w-screen-xl px-4 lg:flex lg:items-center">
         <div class="mx-auto max-w-3xl text-center blurry-bg">
-			{#if data.site.hero.image}
-			<img src="{data.site.hero.image}" class="h-16 w-16 m-auto" alt="" srcset="">
-			{/if}
-			{#if data.site.hero.title}
-            <h1 class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold text-transparent leading-snug">
-				{data.site.hero.title}
-			</h1>
-			{/if}
-			{#if data.site.hero.subtitle}
+            {#if data.site.hero.image}
+            <img src="{data.site.hero.image}" class="h-16 w-16 m-auto" alt="" srcset="" />
+            {/if} {#if data.site.hero.title}
+            <h1 class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold text-transparent leading-snug">{data.site.hero.title}</h1>
+            {/if} {#if data.site.hero.subtitle}
             <p class="mx-auto mt-4 max-w-xl sm:text-xl">{data.site.hero.subtitle}</p>
-			{/if}
+            {/if}
         </div>
     </div>
 </section>
 {/if}
+{#if hasActiveIncidents}
+<section class="mx-auto backdrop-blur-[2px] mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id="">
+	<p class="text-xl   text-muted-foreground">
+		Ongoing Incidents
+	</p>
+	<p class=" text-2xl font-bold leading-none">
+        <Badge variant="outline text-2xl bg-red-500"> Ongoing Incidents </Badge>
+    </p>
+</section>
+<section class="mx-auto backdrop-blur-[2px] mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id="">
+    
+	{#each data.monitors as monitor} {#each monitor.activeIncidents as incident, i}
+        <Incident {incident} state="close" variant="title+body+comments+monitor" monitor="{monitor}" />
+    {/each} {/each}
+	 
+</section>
+{/if}
+
+{#if data.monitors.length > 0}
+<section class="mx-auto backdrop-blur-[2px] mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id="">
+	<p class=" text-2xl font-bold leading-none">
+        <Badge variant="outline text-2xl bg-red-500"> Availability per Component </Badge>
+    </p>
+</section>
 
 {#each data.monitors as monitor}
-	<Monitor {monitor}   />
+<Monitor {monitor} />
 {/each}
+{/if}
+

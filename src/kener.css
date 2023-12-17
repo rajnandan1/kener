@@ -201,3 +201,10 @@ section {
 .prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::after{
 	content: "";
 }
+.grunge-underline {
+  border: 0;
+  height: 1rem;
+  background: url("https://www.frogment.com/images/grunge-underline.svg") no-repeat;
+  background-size: contain;
+  background-position: bottom;
+}

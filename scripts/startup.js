@@ -9,7 +9,8 @@ import fs from "fs-extra";
 import yaml from "js-yaml";
 import { Cron } from "croner";
 import { FOLDER, FOLDER_MONITOR, FOLDER_SITE, API_TIMEOUT } from "./constants.js";
-import { IsValidURL, IsValidHTTPMethod, LoadMonitorsPath, LoadSitePath, GetAllGHLabels, CreateGHLabel } from "./tool.js";
+import { IsValidURL, IsValidHTTPMethod, LoadMonitorsPath, LoadSitePath } from "./tool.js";
+import {  GetAllGHLabels, CreateGHLabel } from "./github.js";
 import { Minuter } from "./cron-minute.js";
 let monitors = [];
 let site = {};
@@ -120,8 +121,8 @@ const Startup = async () => {
             monitors[i].timeout = API_TIMEOUT;
         } 
 
-        monitors[i].path0Day = `${FOLDER}/${folderName}-day-json.json`;
-        monitors[i].path90Day = `${FOLDER}/${folderName}.90day.json`;
+        monitors[i].path0Day = `${FOLDER}/${folderName}.0day.utc.json`;
+        monitors[i].path90Day = `${FOLDER}/${folderName}.90day.utc.json`;
         monitors[i].hasAPI = hasAPI;
 
         //secrets can be in url/body/headers
@@ -145,7 +146,7 @@ const Startup = async () => {
 	}
 	if(site.github.incidentSince === undefined || site.github.incidentSince === null){
 		site.github = {
-			incidentSince: 24
+			incidentSince: 48
 		};
 	}
     if (checkIfDuplicateExists(monitors.map((monitor) => monitor.folderName)) === true) {
@@ -218,18 +219,18 @@ const Startup = async () => {
 
     //trigger minute cron
 
-    // for (let i = 0; i < monitors.length; i++) {
-    //     const monitor = monitors[i];
+    for (let i = 0; i < monitors.length; i++) {
+        const monitor = monitors[i];
          
-    //     let cronExpession = "* * * * *";
-    //     if (monitor.cron !== undefined && monitor.cron !== null) {
-    //         cronExpession = monitor.cron;
-    //     }
-	// 	console.log("Staring " + cronExpession + " Cron for ", monitor.name);
-    //     Cron(cronExpession, async () => {
-    //         await Minuter(envSecrets, monitor, site.github);
-    //     });
-    // }
+        let cronExpession = "* * * * *";
+        if (monitor.cron !== undefined && monitor.cron !== null) {
+            cronExpession = monitor.cron;
+        }
+		console.log("Staring " + cronExpession + " Cron for ", monitor.name);
+        Cron(cronExpession, async () => {
+            await Minuter(envSecrets, monitor, site.github);
+        });
+    }
 };
 
 export { Startup };

@@ -2,6 +2,7 @@
 
 import axios from "axios";
 import moment from "moment";
+import Markdoc from "@markdoc/markdoc";
 const GH_TOKEN = process.env.GH_TOKEN;
 /**
  * @param {any} url
@@ -112,6 +113,42 @@ async function createIssue(githubConfig, issueTitle, issueBody, issueLabels) {
 		return [];
 	}
 }
+
+async function mapper(issue) {
+    const ast = Markdoc.parse(issue.body);
+    const content = Markdoc.transform(ast);
+    const html = Markdoc.renderers.html(content);
+    const comments = await getCommentsForIssue(issue.number, this.github);
+    return {
+        title: issue.title,
+        number: issue.number,
+        body: html,
+        created_at: issue.created_at,
+        updated_at: issue.updated_at,
+        collapsed: true,
+        comments: issue.comments,
+        // @ts-ignore
+        state: issue.state,
+        closed_at: issue.closed_at,
+        // @ts-ignore
+        labels: issue.labels.map(function (label) {
+            return label.name;
+        }),
+        html_url: issue.html_url,
+        // @ts-ignore
+        comments: comments.map((/** @type {{ body: string | import("markdown-it/lib/token")[]; created_at: any; updated_at: any; html_url: any; }} */ comment) => {
+            const ast = Markdoc.parse(comment.body);
+            const content = Markdoc.transform(ast);
+            const html = Markdoc.renderers.html(content);
+            return {
+                body: html,
+                created_at: comment.created_at,
+                updated_at: comment.updated_at,
+                html_url: comment.html_url,
+            };
+        }),
+    };
+}
 async function updateIssue(githubConfig, issueID) {
 
 }
@@ -127,4 +164,4 @@ async function updateIssue(githubConfig, issueID) {
 */
  
 
-export { activeIncident, hasActiveIncident, getCommentsForIssue, pastIncident, createIssue };
+export { activeIncident, hasActiveIncident, getCommentsForIssue, pastIncident, createIssue, mapper };

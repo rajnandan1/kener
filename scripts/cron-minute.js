@@ -1,7 +1,8 @@
 import axios from "axios";
 import fs from "fs-extra";
 import { UP, DOWN, DEGRADED } from "./constants.js";
-import { GetIncidentsOpen, GetStartTimeFromBody, GetEndTimeFromBody, GetNowTimestampUTC, GetMinuteStartNowTimestampUTC,GetMinuteStartTimestampUTC, GetDayStartTimestampUTC } from "./tool.js";
+import { GetNowTimestampUTC, GetMinuteStartNowTimestampUTC,GetMinuteStartTimestampUTC, GetDayStartTimestampUTC } from "./tool.js";
+import { GetIncidentsOpen, GetEndTimeFromBody, GetStartTimeFromBody } from "./github.js";
 import Randomstring from "randomstring";
 import Queue from "queue";
 
@@ -212,8 +213,9 @@ const getDayData = async (monitor) => {
     }
     return originalData;
 };
-const updateDayData = async (mergedData, startOfMinute, monitor, since) => {
-    let mxBackDate = startOfMinute - (since * 3600);
+const updateDayData = async (mergedData, startOfMinute, monitor) => {
+	let since = 48
+    let mxBackDate = startOfMinute - since * 3600;
 	let _0Day = {};
     for (const ts in mergedData) {
         const element = mergedData[ts];
@@ -227,7 +229,7 @@ const updateDayData = async (mergedData, startOfMinute, monitor, since) => {
     keys.sort();
     let sortedDay0 = {};
     keys.reverse() //reverse to keep 90days data
-        .slice(0, since * 60)  
+        .slice(0, since * 60)
         .reverse() //reverse to keep 0day data
         .forEach((key) => {
             sortedDay0[key] = _0Day[key];
@@ -330,26 +332,21 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
     //merge apiData, webhookData, dayData
     let mergedData = {};
 	// console.log(Object.keys(dayData).length);;
-	console.log(Object.keys(mergedData).length);
     for (const timestamp in dayData) {
         mergedData[timestamp] = dayData[timestamp];
     }
-	console.log(Object.keys(mergedData).length);
     for (const timestamp in apiData) {
         mergedData[timestamp] = apiData[timestamp];
     }
-	console.log(Object.keys(mergedData).length);
     for (const timestamp in webhookData) {
         mergedData[timestamp] = webhookData[timestamp];
     }
-	console.log(Object.keys(mergedData).length);
     for (const timestamp in manualData) {
         mergedData[timestamp] = manualData[timestamp];
     }
-	console.log(Object.keys(mergedData).filter((x) => !Object.keys(mergedData).includes(x)));
 
     //update day data
-    await updateDayData(mergedData, startOfMinute, monitor, githubConfig.incidentSince);
+    await updateDayData(mergedData, startOfMinute, monitor);
     //update 90day data
     await update90DayData(monitor);
 };
