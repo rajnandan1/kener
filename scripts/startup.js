@@ -145,9 +145,7 @@ const Startup = async () => {
 		process.exit(1);
 	}
 	if(site.github.incidentSince === undefined || site.github.incidentSince === null){
-		site.github = {
-			incidentSince: 48
-		};
+		site.github.incidentSince  = 48;
 	}
     if (checkIfDuplicateExists(monitors.map((monitor) => monitor.folderName)) === true) {
         console.log("duplicate monitor detected");
