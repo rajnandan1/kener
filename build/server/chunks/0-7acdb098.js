@@ -11,7 +11,7 @@ async function load({ params, route, url, cookies }) {
   if (!!tzOffsetCookie) {
     tzOffset = Number(tzOffsetCookie);
   }
-  let startTodayAtTs = GetDayStartTimestampUTC(GetMinuteStartNowTimestampUTC()) + tzOffset * 60;
+  let startTodayAtTs = GetDayStartTimestampUTC(GetMinuteStartNowTimestampUTC() - tzOffset * 60) + tzOffset * 60;
   let start90DayAtTs = startTodayAtTs - 90 * 24 * 60 * 60;
   return {
     site,
@@ -35,4 +35,4 @@ const stylesheets = ["_app/immutable/assets/0.79266d14.css"];
 const fonts = [];
 
 export { component, fonts, imports, index, _layout_server as server, server_id, stylesheets };
-//# sourceMappingURL=0-2d0ac7bf.js.map
+//# sourceMappingURL=0-7acdb098.js.map
