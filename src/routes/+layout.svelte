@@ -3,7 +3,19 @@
     import "../kener.css";
     import { onMount } from "svelte";
     import Nav from "$lib/components/nav.svelte";
-    export let data;
+	import { onMount } from "svelte";
+	export let data;
+	onMount(() => {
+        var dt = new Date();
+        let tzOffset = dt.getTimezoneOffset(); // -480
+        
+        if (tzOffset != data.tzOffset) {
+            //set cookie with expiry 30 years and reload
+            document.cookie = "tzOffset=" + tz + ";max-age=" + 60 * 60 * 24 * 365 * 30;
+            location.reload();
+        }
+    });
+</script>
 
     onMount(() => {
         var dt = new Date();

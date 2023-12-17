@@ -9,7 +9,8 @@ import fs from "fs-extra";
 import yaml from "js-yaml";
 import { Cron } from "croner";
 import { FOLDER, FOLDER_MONITOR, FOLDER_SITE, API_TIMEOUT } from "./constants.js";
-import { IsValidURL, IsValidHTTPMethod, LoadMonitorsPath, LoadSitePath, GetAllGHLabels, CreateGHLabel } from "./tool.js";
+import { IsValidURL, IsValidHTTPMethod, LoadMonitorsPath, LoadSitePath } from "./tool.js";
+import {  GetAllGHLabels, CreateGHLabel } from "./github.js";
 import { Minuter } from "./cron-minute.js";
 let monitors = [];
 let site = {};
@@ -120,8 +121,8 @@ const Startup = async () => {
             monitors[i].timeout = API_TIMEOUT;
         } 
 
-        monitors[i].path0Day = `${FOLDER}/${folderName}-day-json.json`;
-        monitors[i].path90Day = `${FOLDER}/${folderName}.90day.json`;
+        monitors[i].path0Day = `${FOLDER}/${folderName}.0day.utc.json`;
+        monitors[i].path90Day = `${FOLDER}/${folderName}.90day.utc.json`;
         monitors[i].hasAPI = hasAPI;
 
         //secrets can be in url/body/headers
@@ -139,7 +140,15 @@ const Startup = async () => {
             }
         }
     }
-	
+	if(site.github === undefined || site.github.owner === undefined || site.github.repo === undefined) {
+		console.log("github owner and repo are required");
+		process.exit(1);
+	}
+	if(site.github.incidentSince === undefined || site.github.incidentSince === null){
+		site.github = {
+			incidentSince: 48
+		};
+	}
     if (checkIfDuplicateExists(monitors.map((monitor) => monitor.folderName)) === true) {
         console.log("duplicate monitor detected");
         process.exit(1);
@@ -167,9 +176,16 @@ const Startup = async () => {
         const tagsAndDescription = monitors.map((monitor) => {
             return { tag: monitor.tag, description: monitor.name };
         });
-        //add status label if does not exist
-        if (ghlabels.indexOf("status") === -1) {
-            await CreateGHLabel(ghowner, ghrepo, "status", "Status of the site");
+        //add incident label if does not exist
+
+        if (ghlabels.indexOf("incident") === -1) {
+            await CreateGHLabel(ghowner, ghrepo, "incident", "Status of the site");
+        }
+        if (ghlabels.indexOf("incident-degraded") === -1) {
+            await CreateGHLabel(ghowner, ghrepo, "incident-degraded", "Status is degraded of the site");
+        }
+        if (ghlabels.indexOf("incident-down") === -1) {
+            await CreateGHLabel(ghowner, ghrepo, "incident-down", "Status is down of the site");
         }
         //add tags if does not exist
         for (let i = 0; i < tagsAndDescription.length; i++) {
@@ -198,7 +214,7 @@ const Startup = async () => {
 		
 		 
         console.log("Staring One Minute Cron for ", monitor.path0Day);
-        await Minuter(envSecrets, monitor);
+        await Minuter(envSecrets, monitor, site.github);
     }
 
     //trigger minute cron
@@ -212,7 +228,7 @@ const Startup = async () => {
         }
 		console.log("Staring " + cronExpession + " Cron for ", monitor.name);
         Cron(cronExpession, async () => {
-            await Minuter(envSecrets, monitor);
+            await Minuter(envSecrets, monitor, site.github);
         });
     }
 };

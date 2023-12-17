@@ -2,7 +2,7 @@ title: "Kener"
 theme: "dark"
 siteURL: "https://kener.netlify.app"
 home: "/"
-logo: "/logo.svg"
+logo: "/kener.png"
 favicon: "/kener.png"
 github:
   owner: "rajnandan1"

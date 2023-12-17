@@ -6,6 +6,21 @@ import Randomstring from "randomstring";
 const API_TOKEN = process.env.API_TOKEN;
 const API_IP = process.env.API_IP;
 
+const checkIfValidTag = function(tag){
+	let tags = [];
+	let monitors = [];
+	try {
+		monitors = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+		tags = monitors.map((monitor) => monitor.tag);
+		if (tags.indexOf(tag) == -1) {
+			throw new Error("not a valid tag");
+		}
+	} catch (err) {
+		return false;
+	}
+	return true;
+}
+
 const store = function(data, authHeader, ip){
     const tag = data.tag;
     //remove Bearer from start in authHeader
@@ -47,19 +62,12 @@ const store = function(data, authHeader, ip){
         return { error: err.message, status: 400 };
     }
     //check if tag is valid
-    let tags = [];
-    let monitors = [];
-    try {
-        monitors = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
-        tags = monitors.map((monitor) => monitor.tag);
-        if (tags.indexOf(tag) == -1) {
-            throw new Error("not a valid tag");
-        }
-    } catch (err) {
-        return { error: err.message, status: 400 };
-    }
+    if (!checkIfValidTag(tag)) {
+		return { error: "invalid tag", status: 400 };
+	}
 
     //get the monitor object matching the tag
+	let monitors = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
     const monitor = monitors.find((monitor) => monitor.tag === tag);
 
     //read the monitor.path0Day file
