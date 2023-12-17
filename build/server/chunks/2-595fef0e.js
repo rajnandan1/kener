@@ -37,7 +37,7 @@ const FetchData = async function(monitor, startTodayAtTs, start90DayAtTs, tzOffs
   let dailyDown = 0;
   let percentage90DaysBuildUp = [];
   let dailyDegraded = 0;
-  const now = GetMinuteStartNowTimestampUTC();
+  const now = GetMinuteStartNowTimestampUTC() - tzOffset * 60;
   const midnight = startTodayAtTs;
   const midnightTomorrow = midnight + secondsInDay;
   const midnight90DaysAgo = start90DayAtTs;
@@ -149,4 +149,4 @@ const stylesheets = [];
 const fonts = [];
 
 export { component, fonts, imports, index, _page_server as server, server_id, stylesheets };
-//# sourceMappingURL=2-149de8a3.js.map
+//# sourceMappingURL=2-595fef0e.js.map

@@ -33,7 +33,7 @@ const FetchData = async function (monitor, startTodayAtTs, start90DayAtTs, tzOff
     let percentage90DaysBuildUp = [];
     let dailyDegraded = 0;
 
-    const now = GetMinuteStartNowTimestampUTC();
+    const now = GetMinuteStartNowTimestampUTC() - tzOffset * 60;
     const midnight = startTodayAtTs;
     const midnightTomorrow = midnight + secondsInDay;
     const minuteFromMidnightTillNow = DurationInMinutes(midnight, now);
