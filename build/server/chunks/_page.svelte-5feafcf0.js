@@ -91,7 +91,7 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   }
   if ($$props.data === void 0 && $$bindings.data && data !== void 0)
     $$bindings.data(data);
-  return `<div class="mt-32"></div> ${data.site.hero ? `<section class="mx-auto flex w-full max-w-4xl mb-8 flex-1 flex-col items-start justify-center"><div class="mx-auto max-w-screen-xl px-4 lg:flex lg:items-center"><div class="mx-auto max-w-3xl text-center blurry-bg">${data.site.hero.image ? `<img${add_attribute("src", data.site.hero.image, 0)} class="h-16 w-16 m-auto" alt="" srcset="">` : ``} ${data.site.hero.title ? `<h1 class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold text-transparent leading-snug">${escape(data.site.hero.title)}</h1>` : ``} ${data.site.hero.subtitle ? `<p class="mx-auto mt-4 max-w-xl sm:text-xl">${escape(data.site.hero.subtitle)}</p>` : ``}</div></div></section>` : ``} ${hasActiveIncidents ? `<section class="mx-auto backdrop-blur-[2px] mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id=""><p class="text-xl text-muted-foreground" data-svelte-h="svelte-xncp7p">Ongoing Incidents</p> <p class="text-2xl font-bold leading-none">${validate_component(Badge, "Badge").$$render($$result, { variant: "outline text-2xl bg-red-500" }, {}, {
+  return `<div class="mt-32"></div> ${data.site.hero ? `<section class="mx-auto flex w-full max-w-4xl mb-8 flex-1 flex-col items-start justify-center"><div class="mx-auto max-w-screen-xl px-4 lg:flex lg:items-center"><div class="mx-auto max-w-3xl text-center blurry-bg">${data.site.hero.image ? `<img${add_attribute("src", data.site.hero.image, 0)} class="h-16 w-16 m-auto" alt="" srcset="">` : ``} ${data.site.hero.title ? `<h1 class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold text-transparent leading-snug">${escape(data.site.hero.title)}</h1>` : ``} ${data.site.hero.subtitle ? `<p class="mx-auto mt-4 max-w-xl sm:text-xl">${escape(data.site.hero.subtitle)}</p>` : ``}</div></div></section>` : ``} ${hasActiveIncidents ? `<section class="mx-auto bg-transparent mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id=""><p class="text-xl text-muted-foreground" data-svelte-h="svelte-xncp7p">Ongoing Incidents</p> <p class="text-2xl font-bold leading-none">${validate_component(Badge, "Badge").$$render($$result, { variant: "outline text-2xl bg-red-500" }, {}, {
     default: () => {
       return `Ongoing Incidents`;
     }
@@ -109,14 +109,18 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
         {}
       )}`;
     })}`;
-  })}</section>` : ``} ${data.monitors.length > 0 ? `<section class="mx-auto backdrop-blur-[2px] mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id=""><p class="text-2xl font-bold leading-none">${validate_component(Badge, "Badge").$$render($$result, { variant: "outline text-2xl bg-red-500" }, {}, {
+  })}</section>` : ``} ${data.monitors.length > 0 ? `<section class="mx-auto bg-transparent mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id=""><div class="grid w-full grid-cols-2 gap-0"><div class="col-span-2 md:col-span-1">${validate_component(Badge, "Badge").$$render($$result, {}, {}, {
     default: () => {
       return `Availability per Component`;
     }
-  })}</p></section> ${each(data.monitors, (monitor) => {
+  })}</div> <div class="col-span-2 md:col-span-1 text-right">${validate_component(Badge, "Badge").$$render($$result, { variant: "outline" }, {}, {
+    default: () => {
+      return `<span class="w-[8px] h-[8px] inline-flex rounded-full bg-api-up opacity-75 mr-1"></span> <span class="mr-3" data-svelte-h="svelte-fd8nbr">UP</span> <span class="w-[8px] h-[8px] inline-flex rounded-full bg-api-degraded opacity-75 mr-1"></span> <span class="mr-3" data-svelte-h="svelte-ddctvm">DEGRADED</span> <span class="w-[8px] h-[8px] inline-flex rounded-full bg-api-down opacity-75 mr-1"></span> <span class="mr-3" data-svelte-h="svelte-1o75psw">DOWN</span>`;
+    }
+  })}</div></div></section> ${each(data.monitors, (monitor) => {
     return `${validate_component(Monitor, "Monitor").$$render($$result, { monitor }, {}, {})}`;
   })}` : ``}`;
 });
 
 export { Page as default };
-//# sourceMappingURL=_page.svelte-51a6ff32.js.map
+//# sourceMappingURL=_page.svelte-5feafcf0.js.map
