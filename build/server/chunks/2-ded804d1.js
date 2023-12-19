@@ -75,17 +75,23 @@ const FetchData = async function(monitor, midnight, midnight90DaysAgo, tzOffset)
   let dailyDown = 0;
   let percentage90DaysBuildUp = [];
   let dailyDegraded = 0;
-  const now = GetMinuteStartNowTimestampUTC();
+  const now = GetMinuteStartNowTimestampUTC() - tzOffset * 60;
   const midnightTomorrow = midnight + secondsInDay;
   for (let i = midnight; i <= now; i += 60) {
     _0Day[i] = {
-      timestamp: i,
+      timestamp: i + tzOffset * 60,
       status: "NO_DATA",
       cssClass: StatusObj.NO_DATA,
       index: (i - midnight) / 60
     };
   }
-  let day0 = JSON.parse(fs.readFileSync(monitor.path0Day, "utf8"));
+  let day0UTC = JSON.parse(fs.readFileSync(monitor.path0Day, "utf8"));
+  let day0 = {};
+  for (const timestampUTC in day0UTC) {
+    const element = day0UTC[timestampUTC];
+    element.timestamp = parseInt(timestampUTC) - tzOffset * 60;
+    day0[parseInt(timestampUTC) - tzOffset * 60] = element;
+  }
   for (const timestamp in day0) {
     const element = day0[timestamp];
     let status = element.status;
@@ -147,4 +153,4 @@ const stylesheets = [];
 const fonts = [];
 
 export { component, fonts, imports, index, _page_server as server, server_id, stylesheets };
-//# sourceMappingURL=2-f86e15a9.js.map
+//# sourceMappingURL=2-ded804d1.js.map

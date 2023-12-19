@@ -78,12 +78,15 @@ const FetchData = async function (monitor, midnight, midnight90DaysAgo, tzOffset
     let percentage90DaysBuildUp = [];
     let dailyDegraded = 0;
 
-    const now = GetMinuteStartNowTimestampUTC();
-    const midnightTomorrow = midnight + secondsInDay;
+	// midnight = midnight - (tzOffset * 60);
+    const now = GetMinuteStartNowTimestampUTC() - (tzOffset * 60); //should be 12:00am
+    
+	
+	const midnightTomorrow = midnight + secondsInDay;
 	
     for (let i = midnight; i <= now; i += 60) {
         _0Day[i] = {
-            timestamp: i,
+            timestamp: i + (tzOffset * 60),
             status: "NO_DATA",
             cssClass: StatusObj.NO_DATA,
             index: (i - midnight) / 60,
@@ -91,12 +94,17 @@ const FetchData = async function (monitor, midnight, midnight90DaysAgo, tzOffset
     }
 
     //loop day0 as object
-    let day0 = JSON.parse(fs.readFileSync(monitor.path0Day, "utf8"));
-
+    let day0UTC = JSON.parse(fs.readFileSync(monitor.path0Day, "utf8"));
+	let day0 = {};
+	//for each timestamp in day0UTC minus offset
+	for (const timestampUTC in day0UTC) {
+		const element = day0UTC[timestampUTC];
+		element.timestamp = parseInt(timestampUTC) - tzOffset * 60;
+		day0[parseInt(timestampUTC) - tzOffset * 60] = element;
+	}
     for (const timestamp in day0) {
         const element = day0[timestamp];
         let status = element.status;
-
         //0 Day data
         if (_0Day[timestamp] !== undefined) {
             _0Day[timestamp].status = status;
