@@ -1,7 +1,7 @@
 // @ts-nocheck
 // @ts-ignore
 import fs from "fs-extra";
-import { GetMinuteStartNowTimestampUTC } from "../../../scripts/tool.js";
+import { GetDayStartTimestampUTC, GetMinuteStartNowTimestampUTC } from "../../../scripts/tool.js";
 import {StatusObj} from "$lib/helpers.js";
 
 function parseUptime(up, all) {
@@ -80,8 +80,8 @@ const FetchData = async function (monitor, midnight, midnight90DaysAgo, tzOffset
 
 	// midnight = midnight - (tzOffset * 60);
     const now = GetMinuteStartNowTimestampUTC() - (tzOffset * 60); //should be 12:00am
-    
-	
+    midnight = GetDayStartTimestampUTC(now)
+	midnight90DaysAgo = midnight - 90 * 24 * 60 * 60;
 	const midnightTomorrow = midnight + secondsInDay;
 	
     for (let i = midnight; i <= now; i += 60) {

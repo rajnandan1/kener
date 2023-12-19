@@ -1,6 +1,6 @@
 import { a as activeIncident, m as mapper } from './incident2-deedf712.js';
 import fs from 'fs-extra';
-import { a as GetMinuteStartNowTimestampUTC } from './tool-e3bbdd70.js';
+import { a as GetMinuteStartNowTimestampUTC, G as GetDayStartTimestampUTC } from './tool-e3bbdd70.js';
 import { S as StatusObj } from './helpers-fc56b344.js';
 import { p as public_env } from './shared-server-58a5f352.js';
 import 'axios';
@@ -76,6 +76,8 @@ const FetchData = async function(monitor, midnight, midnight90DaysAgo, tzOffset)
   let percentage90DaysBuildUp = [];
   let dailyDegraded = 0;
   const now = GetMinuteStartNowTimestampUTC() - tzOffset * 60;
+  midnight = GetDayStartTimestampUTC(now);
+  midnight90DaysAgo = midnight - 90 * 24 * 60 * 60;
   const midnightTomorrow = midnight + secondsInDay;
   for (let i = midnight; i <= now; i += 60) {
     _0Day[i] = {
@@ -153,4 +155,4 @@ const stylesheets = [];
 const fonts = [];
 
 export { component, fonts, imports, index, _page_server as server, server_id, stylesheets };
-//# sourceMappingURL=2-ded804d1.js.map
+//# sourceMappingURL=2-fff575d8.js.map
