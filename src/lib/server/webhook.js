@@ -2,6 +2,7 @@
 import fs from "fs-extra"
 import { env } from "$env/dynamic/public";
 import moment from "moment";
+import { GetMinuteStartNowTimestampUTC, GetNowTimestampUTC, GetMinuteStartTimestampUTC } from "../../../scripts/tool.js";
 import Randomstring from "randomstring";
 const API_TOKEN = process.env.API_TOKEN;
 const API_IP = process.env.API_IP;
@@ -43,19 +44,21 @@ const store = function(data, authHeader, ip){
         return { error: "timestampInSeconds not a number", status: 400 };
     }
     if (data.timestampInSeconds === undefined) {
-        data.timestampInSeconds = Math.floor(Date.now() / 1000);
+        data.timestampInSeconds = GetNowTimestampUTC();
     }
+	data.timestampInSeconds = GetMinuteStartTimestampUTC(data.timestampInSeconds);
     resp.status = data.status;
     resp.latency = data.latency;
     resp.type = "webhook";
-    let timestampISO = moment().toISOString();
+    let timestamp = GetMinuteStartNowTimestampUTC();
     try {
-        timestampISO = moment.unix(data.timestampInSeconds).toISOString();
-        //throw error if timestampISO is future or older than 90days
-        if (moment(timestampISO).isAfter(moment().add(1, "minute"))) {
+        
+        //throw error if timestamp is future or older than 90days
+        if (data.timestampInSeconds > timestamp) {
             throw new Error("timestampInSeconds is in future");
         }
-        if (moment(timestampISO).isBefore(moment().subtract(90, "days"))) {
+		//past 90 days only
+        if (timestamp - data.timestampInSeconds > 90 * 24 * 60 * 60) {
             throw new Error("timestampInSeconds is older than 90days");
         }
     } catch (err) {
@@ -76,9 +79,8 @@ const store = function(data, authHeader, ip){
 
 	
 
-    let timeStampISOMinute = moment(timestampISO).startOf('minute').toISOString();
 
-    day0[timeStampISOMinute] = resp;
+    day0[data.timestampInSeconds] = resp;
 	//sort the keys
 	 
 	//create a random string with high cardinlity
@@ -88,6 +90,6 @@ const store = function(data, authHeader, ip){
 	fs.writeFileSync(env.PUBLIC_KENER_FOLDER + `/${monitor.folderName}.webhook.${Randomstring.generate()}.json`, JSON.stringify(day0, null, 2));
 
 
-    return { status: 200, message: "success at " + timeStampISOMinute };
+    return { status: 200, message: "success at " + data.timestampInSeconds };
 }
 export { store };

@@ -1,6 +1,9 @@
-# Getting Started
-## Requirement 
-- Node 18
+
+
+# Quick Start
+
+Kener has been tested since Node18.
+
 ## Clone the repository
 ```bash
 git clone https://github.com/rajnandan1/kener.git
@@ -22,16 +25,16 @@ npm run kener:dev
 Kener would be running at PORT 3000. Go to [http://localhost:3000](http://localhost:3000)
 
 ![alt text](ss.png "SS")
-## Folder structure
 
+# Concepts
+
+
+
+## Folder structure
 ```
 ├── src (svelte frontend files)
 ├── static (things put here can be referenced directly example static/logo.png -> /logo.png)
 ├── scripts (nodejs server files)
-├── config
-│   ├── site.yaml (to personalize your kener instance)
-│   ├── monitors.yaml (to add monitors)
-
 ```
 
 ## Production Deployment

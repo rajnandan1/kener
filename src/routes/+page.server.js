@@ -11,7 +11,7 @@ export async function load({ params, route, url, parent }) {
     const github = siteData.github;
     for (let i = 0; i < monitors.length; i++) {
        	const gitHubActiveIssues =  await activeIncident(monitors[i].tag, github);
-		let data = await FetchData(monitors[0], parentData.startTodayAtTs, parentData.start90DayAtTs, parentData.tzOffset);
+		let data = await FetchData(monitors[i], parentData.startTodayAtTs, parentData.start90DayAtTs, parentData.tzOffset);
 		monitors[i].pageData = data;
 		monitors[i].activeIncidents = await Promise.all(gitHubActiveIssues.map(mapper, { github }));
 	}

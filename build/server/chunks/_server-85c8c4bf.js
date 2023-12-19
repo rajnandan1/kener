@@ -1,7 +1,8 @@
 import { j as json } from './index-2b68e648.js';
 import fs from 'fs-extra';
 import { p as public_env } from './shared-server-58a5f352.js';
-import moment from 'moment';
+import 'moment';
+import { b as GetNowTimestampUTC, c as GetMinuteStartTimestampUTC, a as GetMinuteStartNowTimestampUTC } from './tool-e3bbdd70.js';
 import Randomstring from 'randomstring';
 
 const API_TOKEN = process.env.API_TOKEN;
@@ -40,18 +41,18 @@ const store = function(data, authHeader, ip) {
     return { error: "timestampInSeconds not a number", status: 400 };
   }
   if (data.timestampInSeconds === void 0) {
-    data.timestampInSeconds = Math.floor(Date.now() / 1e3);
+    data.timestampInSeconds = GetNowTimestampUTC();
   }
+  data.timestampInSeconds = GetMinuteStartTimestampUTC(data.timestampInSeconds);
   resp.status = data.status;
   resp.latency = data.latency;
   resp.type = "webhook";
-  let timestampISO = moment().toISOString();
+  let timestamp = GetMinuteStartNowTimestampUTC();
   try {
-    timestampISO = moment.unix(data.timestampInSeconds).toISOString();
-    if (moment(timestampISO).isAfter(moment().add(1, "minute"))) {
+    if (data.timestampInSeconds > timestamp) {
       throw new Error("timestampInSeconds is in future");
     }
-    if (moment(timestampISO).isBefore(moment().subtract(90, "days"))) {
+    if (timestamp - data.timestampInSeconds > 90 * 24 * 60 * 60) {
       throw new Error("timestampInSeconds is older than 90days");
     }
   } catch (err) {
@@ -63,10 +64,9 @@ const store = function(data, authHeader, ip) {
   let monitors = JSON.parse(fs.readFileSync(public_env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
   const monitor = monitors.find((monitor2) => monitor2.tag === tag);
   let day0 = {};
-  let timeStampISOMinute = moment(timestampISO).startOf("minute").toISOString();
-  day0[timeStampISOMinute] = resp;
+  day0[data.timestampInSeconds] = resp;
   fs.writeFileSync(public_env.PUBLIC_KENER_FOLDER + `/${monitor.folderName}.webhook.${Randomstring.generate()}.json`, JSON.stringify(day0, null, 2));
-  return { status: 200, message: "success at " + timeStampISOMinute };
+  return { status: 200, message: "success at " + data.timestampInSeconds };
 };
 async function POST({ request }) {
   const payload = await request.json();
@@ -84,4 +84,4 @@ async function POST({ request }) {
 }
 
 export { POST };
-//# sourceMappingURL=_server-aec2caf9.js.map
+//# sourceMappingURL=_server-85c8c4bf.js.map

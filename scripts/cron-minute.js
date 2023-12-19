@@ -28,17 +28,25 @@ async function manualIncident(monitor, githubConfig){
         const incident = incidentsResp[i];
         let start_time = GetStartTimeFromBody(incident.body);
 		
+		if (allLabels.indexOf("incident-degraded") == -1 || allLabels.indexOf("incident-down") == -1) {
+			continue;
+        }
+
         if (start_time === null) {
-            continue;
+			start_time = GetMinuteStartTimestampUTC(new Date(incident.created_at).getTime() / 1000);
         }
         let newIncident = {
             start_time: start_time,
         };
         let end_time = GetEndTimeFromBody(incident.body);
+		
         if (end_time !== null) {
             newIncident.end_time = end_time;
         } else {
             newIncident.end_time = GetNowTimestampUTC();
+			if (!!incident.closed_at) {
+                newIncident.end_time = GetMinuteStartTimestampUTC(new Date(incident.closed_at).getTime() / 1000);
+            }
         }
 
         let allLabels = incident.labels.map((label) => label.name);
@@ -203,22 +211,19 @@ const getWebhookData = async (monitor) => {
     }
     return originalData;
 };
-const getDayData = async (monitor) => {
-    let originalData = {};
-    try {
-        let fd = fs.readFileSync(monitor.path0Day, "utf8");
-        originalData = JSON.parse(fd);
-    } catch (error) {
-        console.error(error);
-    }
-    return originalData;
-};
 const updateDayData = async (mergedData, startOfMinute, monitor) => {
-	let since = 48
+
+	let dayData = JSON.parse(fs.readFileSync(monitor.path0Day, "utf8"));
+
+	for (const timestamp in mergedData) {
+        dayData[timestamp] = mergedData[timestamp];
+    }
+	
+	let since = 24*91;
     let mxBackDate = startOfMinute - since * 3600;
 	let _0Day = {};
-    for (const ts in mergedData) {
-        const element = mergedData[ts];
+    for (const ts in dayData) {
+        const element = dayData[ts];
         if (ts >= mxBackDate) {
             _0Day[ts] = element;
         }
@@ -228,12 +233,9 @@ const updateDayData = async (mergedData, startOfMinute, monitor) => {
     let keys = Object.keys(_0Day);
     keys.sort();
     let sortedDay0 = {};
-    keys.reverse() //reverse to keep 90days data
-        .slice(0, since * 60)
-        .reverse() //reverse to keep 0day data
-        .forEach((key) => {
-            sortedDay0[key] = _0Day[key];
-        });
+    keys.reverse().forEach((key) => {
+        sortedDay0[key] = _0Day[key];
+    });
     try {
         fs.writeFileSync(monitor.path0Day, JSON.stringify(sortedDay0, null, 2));
     } catch (error) {
@@ -241,73 +243,12 @@ const updateDayData = async (mergedData, startOfMinute, monitor) => {
     }
 };
 
-const update90DayData = async (monitor) => {
-	const mergedData = JSON.parse(fs.readFileSync(monitor.path0Day, "utf8"));
-
-    let _90Day = {};
-    let _90File = monitor.path90Day;
-    try {
-        let fd = fs.readFileSync(_90File, "utf8");
-        _90Day = JSON.parse(fd);
-    } catch (err) {
-        fs.ensureFileSync(_90File);
-        fs.writeFileSync(_90File, JSON.stringify({}));
-    }
-	let temp = {};
-    for (const timestamp in mergedData) {
-        
-        let dayTS = GetDayStartTimestampUTC(timestamp);
-
-        if (temp[dayTS] === undefined) {
-            temp[dayTS] = {
-                timestamp: dayTS,
-                UP: 0,
-                DEGRADED: 0,
-                DOWN: 0,
-                avgLatency: 0,
-                latency: 0,
-            };
-        }
-
-        let _this = mergedData[timestamp];
-        let d = temp[dayTS];	
-
-        temp[dayTS].UP = d.UP + (_this.status == UP ? 1 : 0);
-        temp[dayTS].DEGRADED = d.DEGRADED + (_this.status == DEGRADED ? 1 : 0);
-        temp[dayTS].DOWN = d.DOWN + (_this.status == DOWN ? 1 : 0);
-        temp[dayTS].latency = d.latency + _this.latency;
-    }
-
-    for (const dayTS in temp) {
-        let d = temp[dayTS];
-        if (d.UP + d.DEGRADED + d.DOWN === 0) {
-            continue;
-        }
-        let avgLatency = (d.latency / (d.UP + d.DEGRADED + d.DOWN)).toFixed(0);
-        temp[dayTS].avgLatency = avgLatency;
-    }
-	_90Day = {..._90Day, ...temp};
-    //sort the keys
-    let keys = Object.keys(_90Day);
-    keys.sort();
-    let sorted90Day = {};
-
-    keys.reverse() //reverse to keep 90days data
-        .slice(0, 90) //90days data
-        .reverse() //reverse to keep 0day data
-        .forEach((key) => {
-            sorted90Day[key] = _90Day[key];
-        });
-
-    fs.writeFileSync(_90File, JSON.stringify(sorted90Day, null, 2));
-};
 const Minuter = async (envSecrets, monitor, githubConfig) => {
     if (apiQueue.length > 0) console.log("Queue length is " + apiQueue.length);
     let apiData = {};
     let webhookData = {};
     let manualData = {};
     const startOfMinute = GetMinuteStartNowTimestampUTC();
-    let dayData = {};
 
     if (monitor.hasAPI) {
         let apiResponse = await apiCall(envSecrets, monitor.url, monitor.method, JSON.stringify(monitor.headers), monitor.body, monitor.timeout, monitor.eval);
@@ -326,15 +267,9 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
         }
     }
     webhookData = await getWebhookData(monitor);
-    dayData = await getDayData(monitor);
 	manualData = await manualIncident(monitor, githubConfig);
-
     //merge apiData, webhookData, dayData
     let mergedData = {};
-	// console.log(Object.keys(dayData).length);;
-    for (const timestamp in dayData) {
-        mergedData[timestamp] = dayData[timestamp];
-    }
     for (const timestamp in apiData) {
         mergedData[timestamp] = apiData[timestamp];
     }
@@ -347,8 +282,6 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
 
     //update day data
     await updateDayData(mergedData, startOfMinute, monitor);
-    //update 90day data
-    await update90DayData(monitor);
 };
 apiQueue.start((err) => {
     if (err) {

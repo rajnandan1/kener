@@ -25,7 +25,15 @@ const GetAllGHLabels = async function (owner, repo) {
     }
     return labels;
 };
-const CreateGHLabel = async function (owner, repo, label, description) {
+function generateRandomColor() {
+    var randomColor = Math.floor(Math.random() * 16777215).toString(16);
+    return randomColor;
+    //random color will be freshly served
+}
+const CreateGHLabel = async function (owner, repo, label, description, color) {
+	if(color === undefined){
+		color = generateRandomColor();
+	}
     const options = {
         method: "POST",
         url: `https://api.github.com/repos/${owner}/${repo}/labels`,
@@ -36,7 +44,7 @@ const CreateGHLabel = async function (owner, repo, label, description) {
         },
         data: {
             name: label,
-            color: generateRandomColor(),
+            color: color,
             description: description,
         },
     };
@@ -82,7 +90,7 @@ const GetIncidentsOpen = async function (tagName, githubConfig) {
 	const sinceISO = new Date(since * 1000).toISOString();
     const options = {
         method: "GET",
-        url: `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues?labels=${tagName},incident&state=open&sort=created&direction=desc&since=${sinceISO}`,
+        url: `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues?labels=${tagName},incident&sort=created&direction=desc&since=${sinceISO}`,
         headers: {
             Accept: "application/vnd.github+json",
             Authorization: "Bearer " + GH_TOKEN,

@@ -1,6 +1,6 @@
 import { a as activeIncident, m as mapper } from './incident2-deedf712.js';
 import fs from 'fs-extra';
-import { a as GetMinuteStartNowTimestampUTC } from './tool-12505213.js';
+import { a as GetMinuteStartNowTimestampUTC } from './tool-e3bbdd70.js';
 import { S as StatusObj } from './helpers-fc56b344.js';
 import { p as public_env } from './shared-server-58a5f352.js';
 import 'axios';
@@ -29,7 +29,45 @@ function parsePercentage(n) {
   return n.toFixed(4);
 }
 const secondsInDay = 24 * 60 * 60;
-const FetchData = async function(monitor, startTodayAtTs, start90DayAtTs, tzOffset) {
+function getDayData(day0, startTime, endTime) {
+  let dayData = {
+    UP: 0,
+    DEGRADED: 0,
+    DOWN: 0,
+    timestamp: startTime,
+    cssClass: StatusObj.NO_DATA,
+    message: "No Data"
+  };
+  for (let i = startTime; i <= endTime; i += 60) {
+    if (day0[i] === void 0) {
+      continue;
+    }
+    if (day0[i].status == "UP") {
+      dayData.UP++;
+    } else if (day0[i].status == "DEGRADED") {
+      dayData.DEGRADED++;
+    } else if (day0[i].status == "DOWN") {
+      dayData.DOWN++;
+    }
+  }
+  dayData.uptimePercentage = parseUptime(dayData.UP + dayData.DEGRADED, dayData.UP + dayData.DEGRADED + dayData.DOWN);
+  let cssClass = StatusObj.UP;
+  let message = "Status OK";
+  if (dayData.DEGRADED > 0) {
+    cssClass = StatusObj.DEGRADED;
+    message = "Degraded for " + dayData.DEGRADED + " minutes";
+  }
+  if (dayData.DOWN > 0) {
+    cssClass = StatusObj.DOWN;
+    message = "Down for " + dayData.DOWN + " minutes";
+  }
+  if (dayData.DEGRADED + dayData.DOWN + dayData.UP > 0) {
+    dayData.message = message;
+    dayData.cssClass = cssClass;
+  }
+  return dayData;
+}
+const FetchData = async function(monitor, midnight, midnight90DaysAgo, tzOffset) {
   let _0Day = {};
   let _90Day = {};
   let uptime0Day = "0";
@@ -38,59 +76,16 @@ const FetchData = async function(monitor, startTodayAtTs, start90DayAtTs, tzOffs
   let percentage90DaysBuildUp = [];
   let dailyDegraded = 0;
   const now = GetMinuteStartNowTimestampUTC();
-  const midnight = startTodayAtTs;
   const midnightTomorrow = midnight + secondsInDay;
-  const midnight90DaysAgo = start90DayAtTs;
   for (let i = midnight; i <= now; i += 60) {
-    let eachMin = i;
-    _0Day[eachMin] = {
-      timestamp: eachMin,
+    _0Day[i] = {
+      timestamp: i,
       status: "NO_DATA",
       cssClass: StatusObj.NO_DATA,
-      index: i
-    };
-  }
-  for (let i = midnight90DaysAgo; i < midnightTomorrow; i += secondsInDay) {
-    let eachDay = i;
-    _90Day[eachDay] = {
-      timestamp: eachDay,
-      UP: 0,
-      DEGRADED: 0,
-      DOWN: 0,
-      uptimePercentage: 0,
-      cssClass: StatusObj.NO_DATA,
-      message: "No Data"
+      index: (i - midnight) / 60
     };
   }
   let day0 = JSON.parse(fs.readFileSync(monitor.path0Day, "utf8"));
-  let _90DayFileData = JSON.parse(fs.readFileSync(monitor.path90Day, "utf8"));
-  for (const timestamp in _90DayFileData) {
-    _90DayFileData[Number(timestamp) + tzOffset * 60] = _90DayFileData[timestamp];
-    delete _90DayFileData[timestamp];
-  }
-  for (const timestamp in _90DayFileData) {
-    let cssClass = StatusObj.UP;
-    let message = "Status OK";
-    const element = _90DayFileData[timestamp];
-    if (element === void 0)
-      continue;
-    if (_90Day[timestamp] === void 0)
-      continue;
-    _90Day[timestamp].UP = element.UP;
-    _90Day[timestamp].DEGRADED = element.DEGRADED;
-    _90Day[timestamp].DOWN = element.DOWN;
-    _90Day[timestamp].uptimePercentage = parseUptime(element.UP + element.DEGRADED, element.UP + element.DEGRADED + element.DOWN);
-    if (element.DEGRADED > 0) {
-      cssClass = StatusObj.DEGRADED;
-      message = "Degraded for " + element.DEGRADED + " minutes";
-    }
-    if (element.DOWN > 0) {
-      cssClass = StatusObj.DOWN;
-      message = "Down for " + element.DOWN + " minutes";
-    }
-    _90Day[timestamp].cssClass = cssClass;
-    _90Day[timestamp].message = message;
-  }
   for (const timestamp in day0) {
     const element = day0[timestamp];
     let status = element.status;
@@ -101,6 +96,9 @@ const FetchData = async function(monitor, startTodayAtTs, start90DayAtTs, tzOffs
       dailyDown = status == "DOWN" ? dailyDown + 1 : dailyDown;
       dailyDegraded = status == "DEGRADED" ? dailyDegraded + 1 : dailyDegraded;
     }
+  }
+  for (let i = midnight90DaysAgo; i < midnightTomorrow; i += secondsInDay) {
+    _90Day[i] = getDayData(day0, i, i + secondsInDay - 1);
   }
   for (const key in _90Day) {
     const element = _90Day[key];
@@ -126,7 +124,7 @@ async function load({ params, route, url, parent }) {
   const github = siteData.github;
   for (let i = 0; i < monitors.length; i++) {
     const gitHubActiveIssues = await activeIncident(monitors[i].tag, github);
-    let data = await FetchData(monitors[0], parentData.startTodayAtTs, parentData.start90DayAtTs, parentData.tzOffset);
+    let data = await FetchData(monitors[i], parentData.startTodayAtTs, parentData.start90DayAtTs, parentData.tzOffset);
     monitors[i].pageData = data;
     monitors[i].activeIncidents = await Promise.all(gitHubActiveIssues.map(mapper, { github }));
   }
@@ -149,4 +147,4 @@ const stylesheets = [];
 const fonts = [];
 
 export { component, fonts, imports, index, _page_server as server, server_id, stylesheets };
-//# sourceMappingURL=2-149de8a3.js.map
+//# sourceMappingURL=2-f86e15a9.js.map

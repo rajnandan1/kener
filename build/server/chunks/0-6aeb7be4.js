@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import { p as public_env } from './shared-server-58a5f352.js';
-import { G as GetDayStartTimestampUTC, a as GetMinuteStartNowTimestampUTC } from './tool-12505213.js';
+import { G as GetDayStartTimestampUTC, a as GetMinuteStartNowTimestampUTC } from './tool-e3bbdd70.js';
 import 'moment';
 
 async function load({ params, route, url, cookies }) {
@@ -11,8 +11,13 @@ async function load({ params, route, url, cookies }) {
   if (!!tzOffsetCookie) {
     tzOffset = Number(tzOffsetCookie);
   }
-  let startTodayAtTs = GetDayStartTimestampUTC(GetMinuteStartNowTimestampUTC() - tzOffset * 60) + tzOffset * 60;
+  let startTodayAtTs = GetDayStartTimestampUTC(GetMinuteStartNowTimestampUTC()) + tzOffset * 60;
   let start90DayAtTs = startTodayAtTs - 90 * 24 * 60 * 60;
+  console.log("Times are");
+  console.log("UTC Minute start now: " + GetMinuteStartNowTimestampUTC());
+  console.log("UTC Day start now: " + GetDayStartTimestampUTC(GetMinuteStartNowTimestampUTC()));
+  console.log("TZ Day start today: " + startTodayAtTs);
+  console.log("TZ Day start 90 days ago: " + start90DayAtTs);
   return {
     site,
     tzOffset,
@@ -35,4 +40,4 @@ const stylesheets = ["_app/immutable/assets/0.79266d14.css"];
 const fonts = [];
 
 export { component, fonts, imports, index, _layout_server as server, server_id, stylesheets };
-//# sourceMappingURL=0-7acdb098.js.map
+//# sourceMappingURL=0-6aeb7be4.js.map

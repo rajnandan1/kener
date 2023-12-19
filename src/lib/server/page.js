@@ -1,9 +1,8 @@
 // @ts-nocheck
 // @ts-ignore
 import fs from "fs-extra";
-import { GetDayStartTimestampUTC, GetMinuteStartNowTimestampUTC, DurationInMinutes } from "../../../scripts/tool.js";
+import { GetMinuteStartNowTimestampUTC } from "../../../scripts/tool.js";
 import {StatusObj} from "$lib/helpers.js";
- 
 
 function parseUptime(up, all) {
     if (all === 0) return String("-");
@@ -24,7 +23,53 @@ function parsePercentage(n) {
     return n.toFixed(4);
 }
 const secondsInDay = 24 * 60 * 60;
-const FetchData = async function (monitor, startTodayAtTs, start90DayAtTs, tzOffset) {
+
+function getDayData(day0, startTime, endTime) {
+    let dayData = {
+        UP: 0,
+        DEGRADED: 0,
+        DOWN: 0,
+        timestamp: startTime,
+		cssClass: StatusObj.NO_DATA,
+		message: "No Data",
+    };
+	//loop thorugh the ts range
+	for (let i = startTime; i <= endTime; i += 60) {
+        //if the ts is in the day0 then add up, down degraded data, if not initialize it
+        if (day0[i] === undefined) {
+            continue;
+        }
+		
+        if (day0[i].status == "UP") {
+            dayData.UP++;
+        } else if (day0[i].status == "DEGRADED") {
+            dayData.DEGRADED++;
+        } else if (day0[i].status == "DOWN") {
+            dayData.DOWN++;
+        }
+    }
+	dayData.uptimePercentage = parseUptime(dayData.UP + dayData.DEGRADED, dayData.UP + dayData.DEGRADED + dayData.DOWN);
+
+	let cssClass = StatusObj.UP;
+    let message = "Status OK";
+
+	if (dayData.DEGRADED > 0) {
+        cssClass = StatusObj.DEGRADED;
+        message = "Degraded for " + dayData.DEGRADED + " minutes";
+    }
+    if (dayData.DOWN > 0) {
+        cssClass = StatusObj.DOWN;
+        message = "Down for " + dayData.DOWN + " minutes";
+    }
+	if(dayData.DEGRADED + dayData.DOWN + dayData.UP > 0){
+		dayData.message = message;
+		dayData.cssClass = cssClass;
+	}
+
+	return dayData;
+}
+
+const FetchData = async function (monitor, midnight, midnight90DaysAgo, tzOffset) {
     let _0Day = {};
     let _90Day = {};
     let uptime0Day = "0";
@@ -34,69 +79,20 @@ const FetchData = async function (monitor, startTodayAtTs, start90DayAtTs, tzOff
     let dailyDegraded = 0;
 
     const now = GetMinuteStartNowTimestampUTC();
-    const midnight = startTodayAtTs;
     const midnightTomorrow = midnight + secondsInDay;
-    const minuteFromMidnightTillNow = DurationInMinutes(midnight, now);
-    const midnight90DaysAgo = start90DayAtTs;
+	
     for (let i = midnight; i <= now; i += 60) {
-        let eachMin = i;
-        _0Day[eachMin] = {
-            timestamp: eachMin,
+        _0Day[i] = {
+            timestamp: i,
             status: "NO_DATA",
             cssClass: StatusObj.NO_DATA,
-            index: i,
-        };
-    }
-    for (let i = midnight90DaysAgo; i < midnightTomorrow; i += secondsInDay) {
-        let eachDay = i;
-        _90Day[eachDay] = {
-            timestamp: eachDay,
-            UP: 0,
-            DEGRADED: 0,
-            DOWN: 0,
-            uptimePercentage: 0,
-            cssClass: StatusObj.NO_DATA,
-            message: "No Data",
+            index: (i - midnight) / 60,
         };
     }
 
-    let day0 = JSON.parse(fs.readFileSync(monitor.path0Day, "utf8"));
-    let _90DayFileData = JSON.parse(fs.readFileSync(monitor.path90Day, "utf8"));
-	for (const timestamp in _90DayFileData) {
-		_90DayFileData[Number(timestamp) + tzOffset * 60] = _90DayFileData[timestamp];
-		delete _90DayFileData[timestamp];
-	}
-	//loop 90DayFileData as object
-    for (const timestamp in _90DayFileData) {
-        let cssClass = StatusObj.UP;
-        let message = "Status OK";
-
-        const element = _90DayFileData[timestamp];
-
-        if (element === undefined) continue;
-
-        if (_90Day[timestamp] === undefined) continue;
-
-        _90Day[timestamp].UP = element.UP;
-        _90Day[timestamp].DEGRADED = element.DEGRADED;
-        _90Day[timestamp].DOWN = element.DOWN;
-
-        _90Day[timestamp].uptimePercentage = parseUptime(element.UP + element.DEGRADED, element.UP + element.DEGRADED + element.DOWN);
-
-        if (element.DEGRADED > 0) {
-            cssClass = StatusObj.DEGRADED;
-            message = "Degraded for " + element.DEGRADED + " minutes";
-        }
-
-        if (element.DOWN > 0) {
-            cssClass = StatusObj.DOWN;
-            message = "Down for " + element.DOWN + " minutes";
-        }
-
-        _90Day[timestamp].cssClass = cssClass;
-        _90Day[timestamp].message = message;
-    }
     //loop day0 as object
+    let day0 = JSON.parse(fs.readFileSync(monitor.path0Day, "utf8"));
+
     for (const timestamp in day0) {
         const element = day0[timestamp];
         let status = element.status;
@@ -110,6 +106,10 @@ const FetchData = async function (monitor, startTodayAtTs, start90DayAtTs, tzOff
             dailyDown = status == "DOWN" ? dailyDown + 1 : dailyDown;
             dailyDegraded = status == "DEGRADED" ? dailyDegraded + 1 : dailyDegraded;
         }
+    }
+    for (let i = midnight90DaysAgo; i < midnightTomorrow; i += secondsInDay) {
+		
+        _90Day[i] = getDayData(day0, i, i + secondsInDay - 1);
     }
 
     for (const key in _90Day) {

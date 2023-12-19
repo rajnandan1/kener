@@ -122,7 +122,6 @@ const Startup = async () => {
         } 
 
         monitors[i].path0Day = `${FOLDER}/${folderName}.0day.utc.json`;
-        monitors[i].path90Day = `${FOLDER}/${folderName}.90day.utc.json`;
         monitors[i].hasAPI = hasAPI;
 
         //secrets can be in url/body/headers
@@ -179,11 +178,20 @@ const Startup = async () => {
         if (ghlabels.indexOf("incident") === -1) {
             await CreateGHLabel(ghowner, ghrepo, "incident", "Status of the site");
         }
+		if (ghlabels.indexOf("resolved") === -1) {
+            await CreateGHLabel(ghowner, ghrepo, "resolved", "Incident is resolved", "65dba6");
+        }
+		if (ghlabels.indexOf("identified") === -1) {
+            await CreateGHLabel(ghowner, ghrepo, "identified", "Incident is Identified", "EBE3D5");
+        }
+		if (ghlabels.indexOf("investigating") === -1) {
+            await CreateGHLabel(ghowner, ghrepo, "investigating", "Incident is investigated", "D4E2D4");
+        }
         if (ghlabels.indexOf("incident-degraded") === -1) {
-            await CreateGHLabel(ghowner, ghrepo, "incident-degraded", "Status is degraded of the site");
+            await CreateGHLabel(ghowner, ghrepo, "incident-degraded", "Status is degraded of the site", "f5ba60");
         }
         if (ghlabels.indexOf("incident-down") === -1) {
-            await CreateGHLabel(ghowner, ghrepo, "incident-down", "Status is down of the site");
+            await CreateGHLabel(ghowner, ghrepo, "incident-down", "Status is down of the site", "ea3462");
         }
         //add tags if does not exist
         for (let i = 0; i < tagsAndDescription.length; i++) {
@@ -205,14 +213,10 @@ const Startup = async () => {
 			fs.ensureFileSync(monitor.path0Day);
 			fs.writeFileSync(monitor.path0Day, JSON.stringify({}));
 		}
-		if(!fs.existsSync(monitor.path90Day)) {
-			fs.ensureFileSync(monitor.path90Day);
-			fs.writeFileSync(monitor.path90Day, JSON.stringify({}));
-		}
 		
 		 
         console.log("Staring One Minute Cron for ", monitor.path0Day);
-        await Minuter(envSecrets, monitor, site.github);
+        //await Minuter(envSecrets, monitor, site.github);
     }
 
     //trigger minute cron
