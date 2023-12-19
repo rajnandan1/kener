@@ -10,7 +10,7 @@
         
         if (tzOffset != data.tzOffset) {
             //set cookie with expiry 30 years and reload
-            document.cookie = "tzOffset=" + tz + ";max-age=" + 60 * 60 * 24 * 365 * 30;
+            document.cookie = "tzOffset=" + tzOffset + ";max-age=" + 60 * 60 * 24 * 365 * 30;
             location.reload();
         }
     });
