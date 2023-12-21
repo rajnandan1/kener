@@ -13,11 +13,6 @@ async function load({ params, route, url, cookies }) {
   }
   let startTodayAtTs = GetDayStartTimestampUTC(GetMinuteStartNowTimestampUTC());
   let start90DayAtTs = startTodayAtTs - 90 * 24 * 60 * 60;
-  console.log("Times are");
-  console.log("UTC Minute start now: " + GetMinuteStartNowTimestampUTC());
-  console.log("UTC Day start now: " + GetDayStartTimestampUTC(GetMinuteStartNowTimestampUTC()));
-  console.log("TZ Day start today: " + startTodayAtTs);
-  console.log("TZ Day start 90 days ago: " + start90DayAtTs);
   return {
     site,
     tzOffset,
@@ -40,4 +35,4 @@ const stylesheets = ["_app/immutable/assets/0.6c1e1a10.css"];
 const fonts = [];
 
 export { component, fonts, imports, index, _layout_server as server, server_id, stylesheets };
-//# sourceMappingURL=0-5ffb8d1d.js.map
+//# sourceMappingURL=0-99c97f82.js.map
