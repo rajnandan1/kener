@@ -2,7 +2,7 @@
 
 # Quick Start
 
-Kener has been tested since Node18.
+Kener has been tested from Node18.
 
 ## Clone the repository
 ```bash
@@ -22,11 +22,12 @@ npm install
 ```bash
 npm run kener:dev
 ```
-Kener would be running at PORT 3000. Go to [http://localhost:3000](http://localhost:3000)
+Kener Development Server would be running at PORT 5173. Go to [http://localhost:5173](http://localhost:5173)
 
 ![alt text](ss.png "SS")
 
-# Concepts
+## Concepts
+Kener has two parts. One is a svelte app which you can find in the src folder and there are code for monitors which you would find in scripts folder. If you want to update the frontend application then you should modify the src folder. 
 
 
 
@@ -35,6 +36,40 @@ Kener would be running at PORT 3000. Go to [http://localhost:3000](http://localh
 ├── src (svelte frontend files)
 ├── static (things put here can be referenced directly example static/logo.png -> /logo.png)
 ├── scripts (nodejs server files)
+├── prod.js(starts an express server, runs the scripts and serves the svelte site)
+├── dev.js (starts the dev server)
+```
+## Environment Vairable 
+#### PUBLIC_KENER_FOLDER (Required)
+```shell
+export PUBLIC_KENER_FOLDER=./build/client/kener
+```
+#### PORT 
+Defaults to 3000 if not specified
+```shell
+export PORT=4242
+```
+#### GH_TOKEN
+A github token to read issues and create labels
+```shell
+export GH_TOKEN=your-github-token
+```
+#### API_TOKEN
+To talk to kener apis you will need to set up a token. It uses Bearer Authorization
+```shell
+export API_TOKEN=sometoken
+```
+#### API_IP
+```shell
+export API_IP=127.0.0.1
+```
+#### MONITOR_YAML_PATH
+```shell
+export MONITOR_YAML_PATH=/your/path/monitors.yaml
+```
+#### SITE_YAML_PATH
+```shell
+export SITE_YAML_PATH=/your/path/site.yaml
 ```
 
 ## Production Deployment
@@ -51,12 +86,9 @@ npm run kener
 ```
 
 ## Custom Deployment
-Kener should be run using `prod.js` script. It needs minimum two environment variables 
-
+Kener should be run using `prod.js` script.
 - `PUBLIC_KENER_FOLDER=./build/client/kener`
-- `tz=UTC`
-
-We recommend not to change these variables
+- node prod.js
 
 It also needs to yaml files to work
 - site.yaml
@@ -76,21 +108,36 @@ node prod.js --monitors /your/path/monitors.yaml --site /your/path/site.yaml
 
 ```shell
 export PUBLIC_KENER_FOLDER=./build/client/kener 
-export tz=UTC
 npm i
-npm run build
+npm run kener:build
 node prod.js
 ``` 
 ## Github Setup
-- Create a Github Repositiory
+Kener uses github for incident management. Issues created in github using certain tags go to kener as incidents.
+### Step 1: Github Repositiory
+Create a Github Repositiory. It can be either public or private
+### Step 2: Create Github Token
+You can create either a classic token or personal access token
+#### Creating Personal Access Token
 - Go to [Personal Access Token](https://github.com/settings/personal-access-tokens/new)
-- Create a Fine-grained token 
-- If your repository is private then give Read-Write access to issues
-- Add the access token as an environment variable
+- Token Name: kener
+- Expiration: Use custom to select a calendar date
+- Description: My Kener
+- Repository access: Check Only Selected Repositories. Select your github repository
+- Repository Permission: Select Issues Read Write
+- Click on generate token
+
+### Creating Classic Token
+- Go to [Tokens](https://github.com/settings/tokens/new)
+- Note: kener
+- Expiration: No Expiration
+- Scopes: write:packages
+- Click on generate Token
+
+Set the token as an environment variable
 ```shell
 export GH_TOKEN=github_pat_11AD3ZA3Y0
 ```
-
 ---
 # Modify Site
 
@@ -98,13 +145,12 @@ There is a folder called `/config`. Inside which there is a `site.yaml` file. Yo
 
 ```yaml
 title: "Kener"
-siteURL: "https://kener.netlify.app"
 home: "/"
 logo: "/logo.svg"
 github:
   owner: "rajnandan1"
   repo: "kener"
-  visible: true
+  incidentSince: 72
 metaTags:
   description: "Your description"
   keywords: "keyword1, keyword2"
@@ -178,9 +224,10 @@ For incident kener uses github comments. Create an empty [github](https://github
 ```yaml
 github:
   owner: "username"
-  repo: "your-reponame"
-  refer: true
+  repo: "respository"
+  incidentSince: 72
 ```
+`incidentSince` is in hours. It means if an issue is created before 72 hours then kener would not honor it. Default is 24
 ## metaTags
 Meta tags are nothing but html `<meta>`. You can use them for SEO purposes
 ```yaml
@@ -219,8 +266,13 @@ nav:
 ![alt text](ss3.png "SS")
 ---
 # Add Monitors
-
 Inside `config/` folder there is a file called `monitors.yaml`. We will be adding our monitors here. Please note that your yaml must be valid. It is an array.
+## Understanding monitors
+Each monitor runs at 1 minute interval by default. Monitor runs in below priorty order. 
+- defaultStatus Data
+- API call Data overrides above data(if specified)
+- Push Status Data overrides API Data
+- Manual Incident Data overrides Pushed data
 
 Sample
 
@@ -230,34 +282,38 @@ Sample
   tag: "google-search"
   image: "/google.png"
   cron: "* * * * *"
-  method: POST
-  url: https://www.google.com/webhp
-  headers: 
-	Content-Type: application/json
-  body: '{"order_amount":1,"order_currency":"INR"}'
-  eval: |
-    (function(statusCode, responseTime, responseDataBase64){
-      const resp = JSON.parse(atob(responseDataBase64));
-      return {
-        status: statusCode == 200 ? 'UP':'DOWN',
-        latency: responseTime,
-      }
-    })
+  defaultStatus: "UP"
+  api:
+	timeout: 4000
+	method: POST
+	url: https://www.google.com/webhp
+	headers: 
+		Content-Type: application/json
+	body: '{"order_amount":1,"order_currency":"INR"}'
+	eval: |
+		(function(statusCode, responseTime, responseDataBase64){
+		const resp = JSON.parse(atob(responseDataBase64));
+		return {
+			status: statusCode == 200 ? 'UP':'DOWN',
+			latency: responseTime,
+		}
+		})
 ```
 
-| Parameter Name        | Usage          | Description                                      |
-| ----------- | ----------------- | --------------------------------------------------------------------------------------------------------- |
-| name        | Required + Unique | This will be shown in the UI to your users. Keep it short and unique                                      |
-| description | Optional          | This will be show below your name                                                                         |
-| tag         | Required + Unique | This is used to tag incidents created in Github using comments                                            |
-| image       | Optional          | To show a logo before the name                                                                            |
-| cron        | Optional           | Use cron expression to specify the interval to run the monitors. Defaults to `* * * * *` i.e every minute |
-| timeout        | Optional           | Timeout in milliseconds to cancel HTTP call. Default is 5000 |
-| method      | Optional          | HTTP Method                                                                                               |
-| url         | Optional          | HTTP URL                                                                                                  |
-| headers     | Optional          | HTTP headers                                                                                              |
-| body        | Optional          | HTTP Body as string                                                                                       |
-| eval        | Optional          | Evaluator written in JS, to parse HTTP response and calculate uptime and latency                                                                                                          |
+| name          | Required          | This will be shown in the UI to your users. Keep it short and unique                                      |
+| ------------- | ----------------- | --------------------------------------------------------------------------------------------------------- |
+| name          | Required + Unique | This will be shown in the UI to your users. Keep it short and unique                                      |
+| description   | Optional          | This will be show below your name                                                                         |
+| tag           | Required + Unique | This is used to tag incidents created in Github using comments                                            |
+| image         | Optional          | To show a logo before the name                                                                            |
+| cron          | Optinal           | Use cron expression to specify the interval to run the monitors. Defaults to `* * * * *` i.e every minute |
+| api.method        | Optional          | HTTP Method                                                                                               |
+| api.url           | Optional          | HTTP URL                                                                                                  |
+| api.headers       | Optional          | HTTP headers                                                                                              |
+| api.body          | Optional          | HTTP Body as string                                                                                       |
+| api.eval          | Optional          | Evaluator written in JS, to parse HTTP response and calculate uptime and latency                          |
+| defaultStatus | Optional          | If no API is given this will be the default status. can be UP/DOWN/DEGRADED                                                                                                          |
+                                                                                                      |
 
 ## cron
 
@@ -304,17 +360,19 @@ Here are some exhaustive examples for monitors
 ```yaml
 - name: Google Search
   tag: "google-search"
-  method: GET
-  url: https://www.google.com/webhp
+  api:
+  	method: GET
+  	url: https://www.google.com/webhp
 ```
 ## A GET Monitor with image
 google.png is in the static folder
 ```yaml
 - name: Google Search
   tag: "google-search"
-  method: GET
   image: "/google.png"
-  url: https://www.google.com/webhp
+  api:
+  	method: GET
+  	url: https://www.google.com/webhp
 ```
 
 ## Get Monitor 15 Minute
@@ -324,8 +382,9 @@ google.png is in the static folder
   description: Search the world's information, including webpages, images, videos and more.
   tag: "google-search"
   cron: "*/15 * * * *"
-  method: GET
-  url: https://www.google.com/webhp
+  api:
+  	method: GET
+  	url: https://www.google.com/webhp
 ```
 
 ## Post Monitor With Body
@@ -333,11 +392,12 @@ google.png is in the static folder
 - name: Google Search
   description: Google Search
   tag: "google-search-post"
-  method: POST
-  url: https://www.google.com/webhp
-  headers:
-    Content-Type: application/json
-  body: '{"order_amount":22222.1,"order_currency":"INR"}'
+  api:
+  	method: POST
+  	url: https://www.google.com/webhp
+  	headers:
+    	Content-Type: application/json
+  	body: '{"order_amount":22222.1,"order_currency":"INR"}'
 ```
 
 ## Secrets in Header
@@ -349,10 +409,11 @@ You can set ENV variables in your machine and use them in your monitors. Example
 - name: Github Issues
   description: Github Issues Fetch
   tag: "gh-search-issue"
-  method: GET
-  url: https://api.github.com/repos/rajnandan1/kener/issues
-  headers:
-	Authorization: Bearer $GH_TOKEN
+  api:
+  	method: GET
+  	url: https://api.github.com/repos/rajnandan1/kener/issues
+  	headers:
+		Authorization: Bearer $GH_TOKEN
 ```
 
 ## Secrets in Body
@@ -362,11 +423,12 @@ Assuming `ORDER_ID` is present in env
 - name: Github Issues
   description: Github Issues Fetch
   tag: "gh-search-issue"
-  method: POST
-  url: https://api.github.com/repos/rajnandan1/kener/issues
-  headers:
-	Content-Type: application/json
-  body: '{"order_amount":22222.1,"order_currency":"INR", "order_id": "$ORDER_ID"}'	
+  api:
+  	method: POST
+  	url: https://api.github.com/repos/rajnandan1/kener/issues
+  	headers:
+		Content-Type: application/json
+  	body: '{"order_amount":22222.1,"order_currency":"INR", "order_id": "$ORDER_ID"}'	
 ```
 
 ## Eval Body
@@ -375,29 +437,37 @@ Assuming `ORDER_ID` is present in env
 - name: Github Issues
   description: Github Issues Fetch
   tag: "gh-search-issue"
-  method: GET
-  url: https://api.github.com/repos/rajnandan1/kener/issues
-  eval: |
-    (function(statusCode, responseTime, responseDataBase64){
-      const resp = JSON.parse(atob(responseDataBase64));
-	  let status = 'DOWN'
-	  if(statusCode == 200) status = 'UP';
-	  if(resp.length == 0) status = 'DOWN';
-	  if(statusCode == 200 && responseTime > 2000) status = 'DEGRADED';
-      return {
-        status: status,
-        latency: responseTime,
-      }
-    })
+  api:
+  	method: GET
+  	url: https://api.github.com/repos/rajnandan1/kener/issues
+  	eval: |
+		(function(statusCode, responseTime, responseDataBase64){
+		const resp = JSON.parse(atob(responseDataBase64));
+		let status = 'DOWN'
+		if(statusCode == 200) status = 'UP';
+		if(resp.length == 0) status = 'DOWN';
+		if(statusCode == 200 && responseTime > 2000) status = 'DEGRADED';
+		return {
+			status: status,
+			latency: responseTime,
+		}
+		})
 ```
 # Incident Management
-Kener uses Github to power incident management. We encourage you to create public repositores so that others can subscribe to updates to issues
-## How to create
-Create an issue with two labels `your-monitor-tag` and `status`
-![alt text](issue.png "issue")
+Kener uses Github to power incident management using labels
+## Labels
+Kener auto creates labels for your monitors using the `tag` parameter
+- `incident`: If an issue is marked as incident it will show up in kener home page
+- `incident-down`: If an issue is marked as incident-down and incident kener would make that monitor down
+- `incident-degraded`: If an issue is marked as incident-degraded and incident then kener would make the monitor degraded
 
-- Open issues are considered as live incidents.
-- Add comments and it will show up in kener.
+## Creating your first incident
+- Go to your github repo of kener
+- Go to issues
+- Create an issue. Give it a title
+- In the body add [start_datetime:1702651340] and [end_datetime:1702651140] and add some description. Time is UTC
+- Add `incident`, `incident-down` and the monitor tag. This will make the monitor down for 4 minutes
+
 
 # API
 Kener also gives APIs to push data and create incident. Before you use kener apis you will have to set an authorization token called `API_TOKEN`. This also has to be set as an environment variable.
@@ -408,4 +478,18 @@ Additonally you can set IP whitelisting by setting another environment token cal
 
 ```shell
 export API_IP=127.0.0.1
+```
+
+## Update Status
+```shell
+curl --request POST \
+  --url http://your-kener.com/api/status \
+  --header 'Authorization: Bearer some-token-set-by-you' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"status": "UP",
+	"latency": 1213,
+	"timestampInSeconds": 1702405860,
+	"tag": "google-search"
+}'
 ```

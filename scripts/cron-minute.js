@@ -33,7 +33,7 @@ async function manualIncident(monitor, githubConfig){
         }
 
         if (start_time === null) {
-			start_time = GetMinuteStartTimestampUTC(new Date(incident.created_at).getTime() / 1000);
+			continue;
         }
         let newIncident = {
             start_time: start_time,
@@ -44,9 +44,6 @@ async function manualIncident(monitor, githubConfig){
             newIncident.end_time = end_time;
         } else {
             newIncident.end_time = GetNowTimestampUTC();
-			if (!!incident.closed_at) {
-                newIncident.end_time = GetMinuteStartTimestampUTC(new Date(incident.closed_at).getTime() / 1000);
-            }
         }
 
         let allLabels = incident.labels.map((label) => label.name);
@@ -187,6 +184,7 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
     if (timeoutError) {
         toWrite.type = "timeout";
     }
+	
     return toWrite;
 };
 const getWebhookData = async (monitor) => {
@@ -251,13 +249,13 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
     const startOfMinute = GetMinuteStartNowTimestampUTC();
 
     if (monitor.hasAPI) {
-        let apiResponse = await apiCall(envSecrets, monitor.url, monitor.method, JSON.stringify(monitor.headers), monitor.body, monitor.timeout, monitor.eval);
+        let apiResponse = await apiCall(envSecrets, monitor.api.url, monitor.api.method, JSON.stringify(monitor.api.headers), monitor.api.body, monitor.api.timeout, monitor.api.eval);
         apiData[startOfMinute] = apiResponse;
         if (apiResponse.type === "timeout") {
             console.log("Retrying api call for " + monitor.name + " at " + startOfMinute + " due to timeout");
             //retry
             apiQueue.push(async (cb) => {
-                apiCall(envSecrets, monitor.url, monitor.method, JSON.stringify(monitor.headers), monitor.body, monitor.timeout, monitor.eval).then(async (data) => {
+                apiCall(envSecrets, monitor.api.url, monitor.api.method, JSON.stringify(monitor.api.headers), monitor.api.body, monitor.api.timeout, monitor.api.eval).then(async (data) => {
                     let day0 = {};
                     day0[startOfMinute] = data;
                     fs.writeFileSync(Kener_folder + `/${monitor.folderName}.webhook.${Randomstring.generate()}.json`, JSON.stringify(day0, null, 2));
@@ -268,8 +266,17 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
     }
     webhookData = await getWebhookData(monitor);
 	manualData = await manualIncident(monitor, githubConfig);
-    //merge apiData, webhookData, dayData
+    //merge noData, apiData, webhookData, dayData
     let mergedData = {};
+	if (monitor.defaultStatus !== undefined && monitor.defaultStatus !== null) {
+        if ([UP, DOWN, DEGRADED].indexOf(monitor.defaultStatus) !== -1) {
+            mergedData[startOfMinute] = {
+                status: monitor.defaultStatus,
+                latency: 0,
+                type: "defaultStatus",
+            };
+        }
+    }
     for (const timestamp in apiData) {
         mergedData[timestamp] = apiData[timestamp];
     }

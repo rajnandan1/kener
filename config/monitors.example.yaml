@@ -10,9 +10,8 @@
   method: GET
   url: https://svelte.dev/
   image: "/svelte.svg"
-- name: Cashfree Payments
-  description: Cybernetically enhanced web apps
-  tag: "cashfree-payments"
-  method: GET
-  url: https://www.cashfree.com/
-  image: "https://cashfreelogo.cashfree.com/cashfreepayments/logopng4x/Group_4355.png"
+- name: Earth
+  description: Our Planent
+  tag: "earth"
+  image: "/earth.png"
+  noData: UP
