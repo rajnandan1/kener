@@ -44,9 +44,9 @@ const Monitor = create_ssr_component(($$result, $$props, $$bindings, slots) => {
     $$bindings.monitor(monitor);
   return `<section class="mx-auto backdrop-blur-[2px] mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center">${validate_component(Card, "Card.Root").$$render($$result, { class: "w-full" }, {}, {
     default: () => {
-      return `${validate_component(Card_content, "Card.Content").$$render($$result, { class: "pb-4" }, {}, {
+      return `${validate_component(Card_content, "Card.Content").$$render($$result, { class: "pb-4 pt-2" }, {}, {
         default: () => {
-          return `<div class="grid grid-cols-12 gap-4"><div class="col-span-12 md:col-span-4"><div class="pt-3"><div class="scroll-m-20 text-2xl font-semibold tracking-tight">${monitor.image ? `<img${add_attribute("src", monitor.image, 0)} class="w-6 h-6 inline" alt="" srcset="">` : ``} ${escape(monitor.name)} ${monitor.description ? `${validate_component(Root, "HoverCard.Root").$$render($$result, {}, {}, {
+          return `<div class="grid grid-cols-12 gap-4"><div class="col-span-12 md:col-span-4"><div class="pt-1"><div class="scroll-m-20 text-2xl font-semibold tracking-tight">${monitor.image ? `<img${add_attribute("src", monitor.image, 0)} class="w-6 h-6 inline" alt="" srcset="">` : ``} ${escape(monitor.name)} ${monitor.description ? `${validate_component(Root, "HoverCard.Root").$$render($$result, {}, {}, {
             default: () => {
               return `${validate_component(Trigger, "HoverCard.Trigger").$$render($$result, {}, {}, {
                 default: () => {
@@ -58,7 +58,7 @@ const Monitor = create_ssr_component(($$result, $$props, $$bindings, slots) => {
                 }
               })}`;
             }
-          })}` : ``}</div></div> ${`<div class="mt-2"><div class="grid grid-cols-2 gap-0"><div class="col-span-2 -mt-2"><a href="${"/incident/" + escape(monitor.folderName, true) + "#past_incident"}" class="${"pt-0 pl-0 pb-0 text-indigo-500 text-left " + escape(buttonVariants({ variant: "link" }), true)}">Recent Incidents ${validate_component(ArrowRight, "ArrowRight").$$render($$result, { size: 16 }, {}, {})}</a></div></div></div>`}</div> <div class="col-span-12 md:col-span-8 pt-2">${`<div class="grid grid-cols-12 "><div class="col-span-12 md:col-span-8 h-[32px]"><a href="javascript:void(0);">${validate_component(Badge, "Badge").$$render(
+          })}` : ``}</div></div> ${`<div class="mt-2"><div class="grid grid-cols-2 gap-0"><div class="col-span-2 -mt-2"><a href="${"/incident/" + escape(monitor.folderName, true) + "#past_incident"}" class="${"pt-0 pl-0 pb-0 text-indigo-500 text-left " + escape(buttonVariants({ variant: "link" }), true)}">Recent Incidents ${validate_component(ArrowRight, "ArrowRight").$$render($$result, { size: 16 }, {}, {})}</a></div></div></div>`}</div> <div class="col-span-12 md:col-span-8 pt-2">${`<div class="grid grid-cols-12"><div class="col-span-12 md:col-span-8 h-[32px]"><a href="javascript:void(0);">${validate_component(Badge, "Badge").$$render(
             $$result,
             {
               variant: ""
@@ -124,4 +124,4 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 });
 
 export { Page as default };
-//# sourceMappingURL=_page.svelte-eb89b3f3.js.map
+//# sourceMappingURL=_page.svelte-5fa31107.js.map

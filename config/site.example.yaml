@@ -1,29 +1,29 @@
 title: "Kener"
-theme: "dark"
-siteURL: "https://kener.netlify.app"
 home: "/"
 logo: "/kener.png"
-favicon: "/kener.png"
 github:
   owner: "rajnandan1"
   repo: "kener"
+  incidentSince: 48
 metaTags:
-  description: "Kener: An open-source Node.js status page application for real-time service monitoring, incident management, and customizable reporting. Simplify service outage tracking, enhance incident communication, and ensure a seamless user experience."
-  keywords: "Node.js application, Open-source status page, Service monitoring tool, Real-time incident management, Customizable reporting, Service outage tracker, User-friendly dashboard, Incident communication platform, Scalable monitoring solution, Community-driven software, Website status tracker, Incident response tool, System status monitoring, Service reliability management, Incident alert system"
-  og:description: "Kener: An open-source Node.js status page application for real-time service monitoring, incident management, and customizable reporting. Simplify service outage tracking, enhance incident communication, and ensure a seamless user experience."
+  description: "Kener: Open-source Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. And the best part? Kener integrates seamlessly with GitHub, making incident management a team effort—making it easier for us to track and fix issues together in a collaborative and friendly environment."
+  keywords: "Node.js status page, Incident management tool, Service monitoring, Service outage tracking, Real-time status updates, GitHub integration for incidents, Open-source status page, Node.js monitoring application, Service reliability, User-friendly incident management, Collaborative incident resolution, Seamless outage communication, Service disruption tracker, Real-time incident alerts, Node.js status reporting"
+  og:description: "Kener: Open-source Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. And the best part? Kener integrates seamlessly with GitHub, making incident management a team effort—making it easier for us to track and fix issues together in a collaborative and friendly environment."
   og:image: "/ss.png"
-  og:title: "Kener - Open-Source Node.js Status Page: Real-Time Incident Management & Monitoring"
+  og:title: "Kener - Open-Source Node.js Status Page: Kener: Streamlined Node.js Status Page for Effortless Incident Management"
   og:type: "website"
   og:site_name: "Kener"
   twitter:card: "summary_large_image"
   twitter:site: "@_rajnandan_"
   twitter:creator: "@_rajnandan_"
   twitter:image: "/ss.png"
-  twitter:title: "Kener - Open-Source Node.js Status Page: Real-Time Incident Management & Monitoring"
-  twitter:description: "Kener: An open-source Node.js status page application for real-time service monitoring, incident management, and customizable reporting. Simplify service outage tracking, enhance incident communication, and ensure a seamless user experience."
+  twitter:title: "Kener: Streamlined Node.js Status Page for Effortless Incident Management"
+  twitter:description: "Kener: Open-source Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. And the best part? Kener integrates seamlessly with GitHub, making incident management a team effort—making it easier for us to track and fix issues together in a collaborative and friendly environment."
 nav:
   - name: "Documentation"
     url: "/docs"
+  - name: "Github"
+    url: "https://github.com/rajnandan1/kener"
 hero:
   title: Kener is a Open-Source Status Page System
   subtitle: Let your users know what's going on.

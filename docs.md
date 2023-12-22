@@ -7,6 +7,7 @@ Kener has been tested from Node18.
 ## Clone the repository
 ```bash
 git clone https://github.com/rajnandan1/kener.git
+cd kener
 ```
 
 ## Install Dependencies
@@ -17,6 +18,11 @@ npm install
 ## Configs
 - Rename `config/site.example.yaml` -> `config/site.yaml`
 - Rename `config/monitors.example.yaml` -> `config/monitors.yaml`
+
+```shell
+mv config/site.example.yaml config/site.yaml
+mv config/monitors.example.yaml config/monitors.yaml
+```
 
 ## Start Kener Dev
 ```bash

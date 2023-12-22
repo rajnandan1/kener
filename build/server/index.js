@@ -99,7 +99,7 @@ const options = {
   root: Root,
   service_worker: false,
   templates: {
-    app: ({ head, body, assets: assets2, nonce, env }) => '<!DOCTYPE html>\n<html lang="en" class="dark dark:bg-background">\n    <head>\n        <meta charset="utf-8" />\n        <link rel="icon" id="kener-app-favicon" href="/k96.png" />\n        <meta name="viewport" content="width=device-width, initial-scale=1" />\n        ' + head + '\n    </head>\n    <body data-sveltekit-preload-data="hover">\n        <div style="display: contents">' + body + "</div>\n    </body>\n</html>\n",
+    app: ({ head, body, assets: assets2, nonce, env }) => '<!DOCTYPE html>\n<html lang="en" class="dark dark:bg-background">\n    <head>\n        <meta charset="utf-8" />\n        <link rel="icon" id="kener-app-favicon" href="/logo96.png" />\n        <meta name="viewport" content="width=device-width, initial-scale=1" />\n\n        <!-- Google tag (gtag.js) -->\n        <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q3MLRXCBFT"><\/script>\n        <script>\n            window.dataLayer = window.dataLayer || [];\n            function gtag() {\n                dataLayer.push(arguments);\n            }\n            gtag("js", new Date());\n\n            gtag("config", "G-Q3MLRXCBFT");\n        <\/script>\n\n        ' + head + '\n    </head>\n    <body data-sveltekit-preload-data="hover">\n        <div style="display: contents">' + body + "</div>\n    </body>\n</html>\n",
     error: ({ status, message }) => '<!doctype html>\n<html lang="en">\n	<head>\n		<meta charset="utf-8" />\n		<title>' + message + `</title>
 
 		<style>
@@ -171,7 +171,7 @@ const options = {
 		<div class="error">
 			<span class="status">` + status + '</span>\n			<div class="message">\n				<h1>' + message + "</h1>\n			</div>\n		</div>\n	</body>\n</html>\n"
   },
-  version_hash: "y8a47k"
+  version_hash: "fcreex"
 };
 function get_hooks() {
   return {};
