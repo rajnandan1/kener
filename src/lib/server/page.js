@@ -1,7 +1,7 @@
 // @ts-nocheck
 // @ts-ignore
 import fs from "fs-extra";
-import { GetDayStartTimestampUTC, GetMinuteStartNowTimestampUTC } from "../../../scripts/tool.js";
+import { GetMinuteStartNowTimestampUTC, BeginingOfDay } from "../../../scripts/tool.js";
 import {StatusObj} from "$lib/helpers.js";
 
 function parseUptime(up, all) {
@@ -68,8 +68,8 @@ function getDayData(day0, startTime, endTime) {
 
 	return dayData;
 }
-
-const FetchData = async function (monitor, midnight, midnight90DaysAgo, tzOffset) {
+ 
+const FetchData = async function (monitor, localTz) {
     let _0Day = {};
     let _90Day = {};
     let uptime0Day = "0";
@@ -78,30 +78,22 @@ const FetchData = async function (monitor, midnight, midnight90DaysAgo, tzOffset
     let percentage90DaysBuildUp = [];
     let dailyDegraded = 0;
 
-	// midnight = midnight - (tzOffset * 60);
-    const now = GetMinuteStartNowTimestampUTC() - (tzOffset * 60); //should be 12:00am
-    midnight = GetDayStartTimestampUTC(now)
-	midnight90DaysAgo = midnight - 90 * 24 * 60 * 60;
-	const midnightTomorrow = midnight + secondsInDay;
-	
+    const now = GetMinuteStartNowTimestampUTC();  
+    const midnight = BeginingOfDay({ timeZone: localTz });
+    const midnight90DaysAgo = midnight - 90 * 24 * 60 * 60;
+    const midnightTomorrow = midnight + secondsInDay;
+
     for (let i = midnight; i <= now; i += 60) {
         _0Day[i] = {
-            timestamp: i + (tzOffset * 60),
+            timestamp: i,
             status: "NO_DATA",
             cssClass: StatusObj.NO_DATA,
             index: (i - midnight) / 60,
         };
     }
-
-    //loop day0 as object
-    let day0UTC = JSON.parse(fs.readFileSync(monitor.path0Day, "utf8"));
-	let day0 = {};
-	//for each timestamp in day0UTC minus offset
-	for (const timestampUTC in day0UTC) {
-		const element = day0UTC[timestampUTC];
-		element.timestamp = parseInt(timestampUTC) - tzOffset * 60;
-		day0[parseInt(timestampUTC) - tzOffset * 60] = element;
-	}
+     
+    let day0 = JSON.parse(fs.readFileSync(monitor.path0Day, "utf8"));
+    
     for (const timestamp in day0) {
         const element = day0[timestamp];
         let status = element.status;
@@ -115,8 +107,8 @@ const FetchData = async function (monitor, midnight, midnight90DaysAgo, tzOffset
             dailyDegraded = status == "DEGRADED" ? dailyDegraded + 1 : dailyDegraded;
         }
     }
+
     for (let i = midnight90DaysAgo; i < midnightTomorrow; i += secondsInDay) {
-		
         _90Day[i] = getDayData(day0, i, i + secondsInDay - 1);
     }
 

@@ -22,21 +22,29 @@
 		incidentPriority = "DEGRADED"
 	}
 	let incidentState = incident.state;
-	let incidentClosedAt = incident.closed_at;
-	let incidentCreatedAt = incident.created_at;
+	let incidentClosedAt = incident.incident_end_time;
+	let incidentCreatedAt = incident.incident_start_time;
 	let incidentMessage = "";
-	if(!!incidentClosedAt && incidentState=="closed"){
+	if(!!incidentClosedAt && !!incidentCreatedAt){
 		//diff between closed_at and created_at
-		let diff = moment(incidentClosedAt).diff(moment(incidentCreatedAt), 'minutes');
+		let diff = moment(incidentClosedAt * 1000).diff(moment(incidentCreatedAt * 1000), 'minutes');
+
+
+
 		if(diff > 0) {
 			incidentMessage = `. Was <span class="text-${StatusObj[incidentPriority]}">${incidentPriority}</span>  for ${diff} minutes`;
 		}
 		
-	} else{
+	} else if(!!incidentCreatedAt){
 		//diff between now and created_at
-		let diff = moment().diff(moment(incidentCreatedAt), 'minutes');
+		let diff = moment().diff(moment(incidentCreatedAt * 1000), 'minutes');
 		incidentMessage = `. Has been <span class="text-${StatusObj[incidentPriority]}">${incidentPriority}</span> for ${diff} minutes`;
 	}
+
+	//find a replace /\[start_datetime:(\d+)\]/ empty  in incident.body
+	//find a replace /\[end_datetime:(\d+)\]/ empty  in incident.body
+	incident.body = incident.body.replace(/\[start_datetime:(\d+)\]/g, "");
+	incident.body = incident.body.replace(/\[end_datetime:(\d+)\]/g, "");
 </script>
 
 <div class="grid grid-cols-3 gap-4 mb-4 w-full">

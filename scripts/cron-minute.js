@@ -1,8 +1,8 @@
 import axios from "axios";
 import fs from "fs-extra";
 import { UP, DOWN, DEGRADED } from "./constants.js";
-import { GetNowTimestampUTC, GetMinuteStartNowTimestampUTC,GetMinuteStartTimestampUTC, GetDayStartTimestampUTC } from "./tool.js";
-import { GetIncidentsOpen, GetEndTimeFromBody, GetStartTimeFromBody } from "./github.js";
+import { GetNowTimestampUTC, GetMinuteStartNowTimestampUTC,GetMinuteStartTimestampUTC } from "./tool.js";
+import { GetIncidents, GetEndTimeFromBody, GetStartTimeFromBody } from "./github.js";
 import Randomstring from "randomstring";
 import Queue from "queue";
 
@@ -14,7 +14,7 @@ const apiQueue = new Queue({
 });
 
 async function manualIncident(monitor, githubConfig){
-    let incidentsResp = await GetIncidentsOpen(monitor.tag, githubConfig);
+    let incidentsResp = await GetIncidents(monitor.tag, githubConfig);
 	
 	let manualData = {};
     if (incidentsResp.length == 0) {
@@ -27,11 +27,11 @@ async function manualIncident(monitor, githubConfig){
     for (let i = 0; i < incidentsResp.length; i++) {
         const incident = incidentsResp[i];
         let start_time = GetStartTimeFromBody(incident.body);
-		
-		if (allLabels.indexOf("incident-degraded") == -1 || allLabels.indexOf("incident-down") == -1) {
+		let allLabels = incident.labels.map((label) => label.name);
+		if (allLabels.indexOf("incident-degraded") == -1 && allLabels.indexOf("incident-down") == -1) {
 			continue;
         }
-
+		
         if (start_time === null) {
 			continue;
         }
@@ -46,8 +46,9 @@ async function manualIncident(monitor, githubConfig){
             newIncident.end_time = GetNowTimestampUTC();
         }
 
-        let allLabels = incident.labels.map((label) => label.name);
+        
         //check if labels has incident-degraded
+		
 
         if (allLabels.indexOf("incident-degraded") !== -1) {
             timeDegradedStart = Math.min(timeDegradedStart, newIncident.start_time);

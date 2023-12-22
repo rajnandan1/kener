@@ -2,16 +2,18 @@
   description: Search the world's information, including webpages, images, videos and more.
   tag: "google-search"
   image: "/google.png"
-  method: GET
-  url: https://www.google.com/webhp
+  api:
+    method: GET
+    url: https://www.google.com/webhp
 - name: Svelte Website
   description: Cybernetically enhanced web apps
   tag: "svelte-website"
-  method: GET
-  url: https://svelte.dev/
+  api:
+    method: GET
+    url: https://svelte.dev/
   image: "/svelte.svg"
 - name: Earth
-  description: Our Planent
+  description: Our blue planet
   tag: "earth"
+  defaultStatus: "UP"
   image: "/earth.png"
-  noData: UP

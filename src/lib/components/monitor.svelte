@@ -41,7 +41,7 @@
 </script>
 <section class="mx-auto backdrop-blur-[2px]  mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center">
     <Card.Root class="w-full">
-        <Card.Content class="pb-0">
+        <Card.Content class="pb-4">
 			<div class="grid grid-cols-12 gap-4">
 				<div class="col-span-12 md:col-span-4">
 					<div class="pt-3">
@@ -65,17 +65,7 @@
 					{#if !loading90}
 					<div class="mt-2">
 						<div class="grid grid-cols-2 gap-0">
-							<div class="col-span-2">
-								<span class="inline-flex text-muted-foreground     text-sm">
-									90 Day Uptime: {uptime90Day}% 
-								</span>
-							</div>
-							<div class="col-span-2">
-								
-								<span class="inline-flex  text-muted-foreground   text-sm">
-									Today Uptime: {uptime0Day}% 
-								</span>
-							</div>
+							 
 							<div class="col-span-2 -mt-2">
 								<a href="/incident/{monitor.folderName}#past_incident" class="pt-0 pl-0 pb-0 text-indigo-500 text-left {buttonVariants({ variant: 'link' })}">
 									Recent Incidents <ArrowRight size="{16}" />
@@ -90,22 +80,22 @@
 						<Skeleton class="w-full h-[40px] mt-[7px]" />
 					{:else}
 						<div class="grid grid-cols-12 ">
-							<div class="col-span-12 md:col-span-4 mt-2 h-[32px]">
+							<div class="col-span-12 md:col-span-8  h-[32px]">
 								<a href="javascript:void(0);" on:click="{(e) => {switchView('90day')}}">
 									<Badge variant="{view != '90day' ? 'outline' : ''}">
-										90 Day
+										90 Day ► {uptime90Day}% 
 									</Badge>
 								</a>
 								<a href="javascript:void(0);" on:click="{(e) => {switchView('0day')}}">
 									<Badge variant="{view != '0day' ? 'outline' : ''}" >
-										Today
+										Today ► {uptime0Day}% 
 									</Badge> 
 								</a>
 								
 							</div>
-							<div class="col-span-12 md:col-span-8 text-right h-[32px]">
+							<div class="col-span-12 md:col-span-4 text-right h-[32px]">
 								{#if _90Day[todayDD]}
-								<div class="text-api-up text-sm font-semibold mt-[8px] text-{_90Day[todayDD].cssClass}">
+								<div class="text-api-up text-sm font-semibold mt-[4px] text-{_90Day[todayDD].cssClass}">
 									{_90Day[todayDD].message}
 								</div>
 								{/if}

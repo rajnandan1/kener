@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { env } from "$env/dynamic/public";
-import { activeIncident, mapper, pastIncident } from "$lib/server/incident";
-
+import { GetIncidents, Mapper } from "../../../../scripts/github.js";
 import fs from "fs-extra";
 
 /**
@@ -16,13 +15,18 @@ export async function load({ params, route, url, parent }) {
     const github = siteData.site.github;
     // @ts-ignore
     const { description, name, tag, image } = monitors.find((monitor) => monitor.folderName === params.id);
-    const gitHubActiveIssues = await activeIncident(tag, github);
-    const gitHubPastIssues = await pastIncident(tag, github);
+	const allIncidents = await GetIncidents(tag, github, "all");
+    const gitHubActiveIssues = allIncidents.filter((issue) => {
+		return issue.state === "open";
+	});
+    const gitHubPastIssues = allIncidents.filter((issue) => {
+        return issue.state === "closed";
+    });
     return {
         issues: params.id,
         githubConfig: github,
         monitor: { description, name, image },
-        activeIncidents: await Promise.all(gitHubActiveIssues.map(mapper, { github })),
-        pastIncidents: await Promise.all(gitHubPastIssues.map(mapper, { github })),
+        activeIncidents: await Promise.all(gitHubActiveIssues.map(Mapper, { github })),
+        pastIncidents: await Promise.all(gitHubPastIssues.map(Mapper, { github })),
     };
 }

@@ -30,12 +30,13 @@
 {/if}
 {#if hasActiveIncidents}
 <section class="mx-auto bg-transparent mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id="">
-	<p class="text-xl   text-muted-foreground">
-		Ongoing Incidents
-	</p>
-	<p class=" text-2xl font-bold leading-none">
-        <Badge variant="outline text-2xl bg-red-500"> Ongoing Incidents </Badge>
-    </p>
+	
+	<div class="grid w-full grid-cols-2 gap-4">
+		<div class="col-span-2 md:col-span-1 text-center md:text-left">
+        	<Badge variant="outline">Ongoing Incidents </Badge>
+		
+		</div>
+		</div>
 </section>
 <section class="mx-auto backdrop-blur-[2px] mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id="">
     
@@ -48,12 +49,12 @@
 
 {#if data.monitors.length > 0}
 <section class="mx-auto  bg-transparent mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id="">
-	<div class="grid w-full grid-cols-2 gap-0">
-		<div class="col-span-2 md:col-span-1">
-        	<Badge > Availability per Component </Badge>
+	<div class="grid w-full grid-cols-2 gap-4">
+		<div class="col-span-2 md:col-span-1 text-center md:text-left">
+        	<Badge class="" variant="outline" > Availability per Component </Badge>
 		
 		</div>
-		<div class="col-span-2 md:col-span-1 text-right">
+		<div class="col-span-2 md:col-span-1 text-center md:text-right">
 			<Badge variant="outline" >
 				<span class="  w-[8px] h-[8px] inline-flex   rounded-full bg-api-up opacity-75 mr-1"></span>
 				<span class="mr-3">UP</span>
