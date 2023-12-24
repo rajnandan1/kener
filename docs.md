@@ -511,7 +511,7 @@ Shows the last health check was UP/DOWN/DEGRADED
 ```
 ## Uptime
 Shows the 90 Day uptime
-![Earth Status](/badge/earth/uptime) -> https://kener.ing/badge/earth/uptime
+![Earth Uptime](/badge/earth/uptime) -> https://kener.ing/badge/earth/uptime
 ```
-![Status Badge](https://your.kener.host/badge/[monitor.tag]/uptime)
+![Uptime Badge](https://your.kener.host/badge/[monitor.tag]/uptime)
 ```
