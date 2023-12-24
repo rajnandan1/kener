@@ -505,13 +505,13 @@ There are two types of badges
 
 ## Status
 Shows the last health check was UP/DOWN/DEGRADED
-![Earth Status](/badge/earth/status)
+![Earth Status](/badge/earth/status) -> https://kener.ing/badge/earth/status
 ```
-![Status Badge](https://your.kener.host/badge/earth/status)
+![Status Badge](https://your.kener.host/badge/[monitor.tag]/status)
 ```
 ## Uptime
 Shows the 90 Day uptime
-![Earth Status](/badge/earth/uptime)
+![Earth Status](/badge/earth/uptime) -> https://kener.ing/badge/earth/uptime
 ```
-![Status Badge](https://your.kener.host/badge/earth/uptime)
+![Status Badge](https://your.kener.host/badge/[monitor.tag]/uptime)
 ```
