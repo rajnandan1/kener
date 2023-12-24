@@ -1,11 +1,11 @@
 import { c as create_ssr_component, e as escape, v as validate_component, a as each, h as compute_rest_props, d as validate_store, f as subscribe, i as spread, j as escape_object } from './ssr-3ed108ea.js';
 import 'clsx';
-import { B as Badge, I as Incident } from './incident-3b230fb3.js';
+import { B as Badge, I as Incident } from './incident-c85c6a5f.js';
 import { s as setCtx, g as getAttrs } from './index3-cffb6b6f.js';
 import { c as cn } from './card-content-bc70344f.js';
 import 'moment';
 import './index2-d2b6b2d2.js';
-import './helpers-fc56b344.js';
+import './helpers-eac5677c.js';
 import 'tailwind-variants';
 import 'tailwind-merge';
 
@@ -70,7 +70,7 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   let { data } = $$props;
   if ($$props.data === void 0 && $$bindings.data && data !== void 0)
     $$bindings.data(data);
-  return `<section class="mx-auto flex w-full max-w-4xl flex-1 flex-col items-start justify-center"><div class="mx-auto max-w-screen-xl px-4 pt-32 pb-16 lg:flex lg:items-center"><div class="mx-auto max-w-3xl text-center blurry-bg"><h1 class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold text-transparent leading-snug">${escape(data.monitor.name)}</h1> <p class="mx-auto mt-4 max-w-xl sm:text-xl">${escape(data.monitor.description)}</p></div></div></section> <section class="mx-auto flex-1 mt-8 flex-col mb-4 flex w-full" id="active_incident"><div class="container"><h1 class="mb-4 text-2xl font-bold leading-none">${validate_component(Badge, "Badge").$$render($$result, { variant: "outline text-2xl bg-red-500" }, {}, {
+  return `<section class="mx-auto flex w-full max-w-4xl flex-1 flex-col items-start justify-center"><div class="mx-auto max-w-screen-xl px-4 pt-32 pb-16 lg:flex lg:items-center"><div class="mx-auto max-w-3xl text-center blurry-bg"><h1 class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold text-transparent leading-snug">${escape(data.monitor.name)}</h1> <p class="mx-auto mt-4 max-w-xl sm:text-xl">${escape(data.monitor.description)}</p></div></div></section> <section class="mx-auto flex-1 mt-8 flex-col mb-4 flex w-full" id="active_incident"><div class="container"><h1 class="mb-4 text-2xl font-bold leading-none">${validate_component(Badge, "Badge").$$render($$result, { variant: "outline" }, {}, {
     default: () => {
       return `Active Incidents`;
     }
@@ -86,7 +86,7 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
       {},
       {}
     )}`;
-  })}` : `<div class="flex items-center justify-left"><p class="text-xl" data-svelte-h="svelte-18j567b">No active incidents</p></div>`}</div></section> ${validate_component(Separator, "Separator").$$render($$result, { class: "container mb-4 w-[400px]" }, {}, {})} <section class="mx-auto flex-1 mt-8 flex-col mb-4 flex w-full" id="active_incident"><div class="container"><h1 class="mb-4 text-2xl font-bold leading-none">${validate_component(Badge, "Badge").$$render($$result, { variant: "outline text-2xl bg-red-500" }, {}, {
+  })}` : `<div class="flex items-center justify-left"><p class="text-xl" data-svelte-h="svelte-18j567b">No active incidents</p></div>`}</div></section> ${validate_component(Separator, "Separator").$$render($$result, { class: "container mb-4 w-[400px]" }, {}, {})} <section class="mx-auto flex-1 mt-8 flex-col mb-4 flex w-full" id="active_incident"><div class="container"><h1 class="mb-4 text-2xl font-bold leading-none">${validate_component(Badge, "Badge").$$render($$result, { variant: "outline" }, {}, {
     default: () => {
       return `Recent Incidents`;
     }
@@ -106,4 +106,4 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 });
 
 export { Page as default };
-//# sourceMappingURL=_page.svelte-9a970c64.js.map
+//# sourceMappingURL=_page.svelte-05597baa.js.map

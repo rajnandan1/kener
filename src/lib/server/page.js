@@ -2,26 +2,8 @@
 // @ts-ignore
 import fs from "fs-extra";
 import { GetMinuteStartNowTimestampUTC, BeginingOfDay } from "../../../scripts/tool.js";
-import {StatusObj} from "$lib/helpers.js";
+import { StatusObj, ParseUptime, ParsePercentage } from "$lib/helpers.js";
 
-function parseUptime(up, all) {
-    if (all === 0) return String("-");
-    if (up == 0) return String("0");
-    if (up == all) {
-        return String(((up / all) * parseFloat(100)).toFixed(0));
-    }
-    return String(((up / all) * parseFloat(100)).toFixed(4));
-}
-function parsePercentage(n) {
-    if (isNaN(n)) return "-";
-    if (n == 0) {
-        return "0";
-    }
-    if (n == 100) {
-        return "100";
-    }
-    return n.toFixed(4);
-}
 const secondsInDay = 24 * 60 * 60;
 
 function getDayData(day0, startTime, endTime) {
@@ -48,7 +30,7 @@ function getDayData(day0, startTime, endTime) {
             dayData.DOWN++;
         }
     }
-	dayData.uptimePercentage = parseUptime(dayData.UP + dayData.DEGRADED, dayData.UP + dayData.DEGRADED + dayData.DOWN);
+	dayData.uptimePercentage = ParsePercentage(dayData.UP + dayData.DEGRADED, dayData.UP + dayData.DEGRADED + dayData.DOWN);
 
 	let cssClass = StatusObj.UP;
     let message = "Status OK";
@@ -117,12 +99,12 @@ const FetchData = async function (monitor, localTz) {
         if (element.message == "No Data") continue;
         percentage90DaysBuildUp.push(parseFloat(element.uptimePercentage));
     }
-    uptime0Day = parseUptime(dailyUps + dailyDegraded, dailyUps + dailyDown + dailyDegraded);
+    uptime0Day = ParseUptime(dailyUps + dailyDegraded, dailyUps + dailyDown + dailyDegraded);
     return {
         _0Day: _0Day,
         _90Day: _90Day,
         uptime0Day,
-        uptime90Day: parsePercentage(percentage90DaysBuildUp.reduce((a, b) => a + b, 0) / percentage90DaysBuildUp.length),
+        uptime90Day: ParsePercentage(percentage90DaysBuildUp.reduce((a, b) => a + b, 0) / percentage90DaysBuildUp.length),
         dailyUps,
         dailyDown,
         dailyDegraded,

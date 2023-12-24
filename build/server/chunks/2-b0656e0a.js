@@ -1,32 +1,11 @@
 import { G as GetIncidents, M as Mapper } from './github-3ae10cb0.js';
 import fs from 'fs-extra';
 import { G as GetMinuteStartNowTimestampUTC, B as BeginingOfDay } from './tool-5bef1c33.js';
-import { S as StatusObj } from './helpers-fc56b344.js';
+import { S as StatusObj, P as ParseUptime, a as ParsePercentage } from './helpers-eac5677c.js';
 import { p as public_env } from './shared-server-58a5f352.js';
 import 'axios';
 import '@markdoc/markdoc';
 
-function parseUptime(up, all) {
-  if (all === 0)
-    return String("-");
-  if (up == 0)
-    return String("0");
-  if (up == all) {
-    return String((up / all * parseFloat(100)).toFixed(0));
-  }
-  return String((up / all * parseFloat(100)).toFixed(4));
-}
-function parsePercentage(n) {
-  if (isNaN(n))
-    return "-";
-  if (n == 0) {
-    return "0";
-  }
-  if (n == 100) {
-    return "100";
-  }
-  return n.toFixed(4);
-}
 const secondsInDay = 24 * 60 * 60;
 function getDayData(day0, startTime, endTime) {
   let dayData = {
@@ -49,7 +28,7 @@ function getDayData(day0, startTime, endTime) {
       dayData.DOWN++;
     }
   }
-  dayData.uptimePercentage = parseUptime(dayData.UP + dayData.DEGRADED, dayData.UP + dayData.DEGRADED + dayData.DOWN);
+  dayData.uptimePercentage = ParsePercentage(dayData.UP + dayData.DEGRADED, dayData.UP + dayData.DEGRADED + dayData.DOWN);
   let cssClass = StatusObj.UP;
   let message = "Status OK";
   if (dayData.DEGRADED > 0) {
@@ -107,12 +86,12 @@ const FetchData = async function(monitor, localTz) {
       continue;
     percentage90DaysBuildUp.push(parseFloat(element.uptimePercentage));
   }
-  uptime0Day = parseUptime(dailyUps + dailyDegraded, dailyUps + dailyDown + dailyDegraded);
+  uptime0Day = ParseUptime(dailyUps + dailyDegraded, dailyUps + dailyDown + dailyDegraded);
   return {
     _0Day,
     _90Day,
     uptime0Day,
-    uptime90Day: parsePercentage(percentage90DaysBuildUp.reduce((a, b) => a + b, 0) / percentage90DaysBuildUp.length),
+    uptime90Day: ParsePercentage(percentage90DaysBuildUp.reduce((a, b) => a + b, 0) / percentage90DaysBuildUp.length),
     dailyUps,
     dailyDown,
     dailyDegraded
@@ -141,11 +120,11 @@ var _page_server = /*#__PURE__*/Object.freeze({
 
 const index = 2;
 let component_cache;
-const component = async () => component_cache ??= (await import('./_page.svelte-5fa31107.js')).default;
+const component = async () => component_cache ??= (await import('./_page.svelte-6e9d50fb.js')).default;
 const server_id = "src/routes/+page.server.js";
-const imports = ["_app/immutable/nodes/2.1c032969.js","_app/immutable/chunks/scheduler.ea4d12df.js","_app/immutable/chunks/index.12c4b772.js","_app/immutable/chunks/globals.7f7f1b26.js","_app/immutable/chunks/index.b3676155.js","_app/immutable/chunks/utils.9739163d.js","_app/immutable/chunks/incident.07f56014.js","_app/immutable/chunks/index.cab2b962.js","_app/immutable/chunks/index.7ea6c3d8.js"];
+const imports = ["_app/immutable/nodes/2.2214c28d.js","_app/immutable/chunks/scheduler.ea4d12df.js","_app/immutable/chunks/index.12c4b772.js","_app/immutable/chunks/globals.7f7f1b26.js","_app/immutable/chunks/index.b3676155.js","_app/immutable/chunks/utils.9739163d.js","_app/immutable/chunks/incident.07f56014.js","_app/immutable/chunks/index.cab2b962.js","_app/immutable/chunks/index.7ea6c3d8.js"];
 const stylesheets = [];
 const fonts = [];
 
 export { component, fonts, imports, index, _page_server as server, server_id, stylesheets };
-//# sourceMappingURL=2-a75cfff7.js.map
+//# sourceMappingURL=2-b0656e0a.js.map

@@ -1,42 +1,41 @@
-// @ts-nocheck
-const  StatusObj = {
-    UP: "api-up",
-    DEGRADED: "api-degraded",
-    DOWN: "api-down",
-    NO_DATA: "api-nodata",
+const StatusObj = {
+  UP: "api-up",
+  DEGRADED: "api-degraded",
+  DOWN: "api-down",
+  NO_DATA: "api-nodata"
 };
 const StatusColor = {
-    UP: "00dfa2",
-    DEGRADED: "ffb84c",
-    DOWN: "ff0060",
-    NO_DATA: "b8bcbe",
+  UP: "00dfa2",
+  DEGRADED: "ffb84c",
+  DOWN: "ff0060",
+  NO_DATA: "b8bcbe"
 };
-// @ts-ignore
-const ParseUptime = function (up, all) {
-	 if (all === 0) return String("-");
-    if (up == 0) return String("0");
-    if (up == all) {
-        // @ts-ignore
-        return String(((up / all) * parseFloat(100)).toFixed(0));
-    }
-    // @ts-ignore
-    return String(((up / all) * parseFloat(100)).toFixed(4));
-}
+const ParseUptime = function(up, all) {
+  if (all === 0)
+    return String("-");
+  if (up == 0)
+    return String("0");
+  if (up == all) {
+    return String((up / all * parseFloat(100)).toFixed(0));
+  }
+  return String((up / all * parseFloat(100)).toFixed(4));
+};
 const ParsePercentage = function(n) {
-	if (isNaN(n)) return "-";
-    if (n == 0) {
-        return "0";
-    }
-    if (n == 100) {
-        return "100";
-    }
-    return n.toFixed(4);
-}
-const Badge = function(left, right, color){
-	const leftWidth = left.length * 10;
-    const rightWidth = right.length * 12.5 + 10;
-    const totalWidth = leftWidth + rightWidth - 5;
-	return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="18">
+  if (isNaN(n))
+    return "-";
+  if (n == 0) {
+    return "0";
+  }
+  if (n == 100) {
+    return "100";
+  }
+  return n.toFixed(4);
+};
+const Badge = function(left, right, color) {
+  const leftWidth = left.length * 10;
+  const rightWidth = right.length * 12.5 + 10;
+  const totalWidth = leftWidth + rightWidth - 5;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${totalWidth}" height="18">
 		<linearGradient id="smooth" x2="0" y2="100%">
 			<stop offset="0"  stop-color="#fff" stop-opacity=".7"/>
 			<stop offset=".1" stop-color="#aaa" stop-opacity=".1"/>
@@ -62,5 +61,7 @@ const Badge = function(left, right, color){
 		</g>
 		</svg>
 		`;
-}
-export { StatusObj, StatusColor, ParseUptime, ParsePercentage, Badge };
+};
+
+export { Badge as B, ParseUptime as P, StatusObj as S, ParsePercentage as a, StatusColor as b };
+//# sourceMappingURL=helpers-eac5677c.js.map

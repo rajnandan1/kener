@@ -1,12 +1,12 @@
 import { c as create_ssr_component, b as add_attribute, e as escape, v as validate_component, a as each } from './ssr-3ed108ea.js';
 import { C as Card, a as Card_content } from './card-content-bc70344f.js';
 import 'clsx';
-import { B as Badge, I as Incident, R as Root, T as Trigger, H as Hover_card_content, a as Icon$1 } from './incident-3b230fb3.js';
+import { B as Badge, I as Incident, R as Root, T as Trigger, H as Hover_card_content, a as Icon$1 } from './incident-c85c6a5f.js';
 import { b as buttonVariants } from './index3-cffb6b6f.js';
 import { tv } from 'tailwind-variants';
 import 'tailwind-merge';
 import './index2-d2b6b2d2.js';
-import './helpers-fc56b344.js';
+import './helpers-eac5677c.js';
 import 'moment';
 
 const Arrow_right = create_ssr_component(($$result, $$props, $$bindings, slots) => {
@@ -44,7 +44,7 @@ const Monitor = create_ssr_component(($$result, $$props, $$bindings, slots) => {
     $$bindings.monitor(monitor);
   return `<section class="mx-auto backdrop-blur-[2px] mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center">${validate_component(Card, "Card.Root").$$render($$result, { class: "w-full" }, {}, {
     default: () => {
-      return `${validate_component(Card_content, "Card.Content").$$render($$result, { class: "pb-4 pt-2" }, {}, {
+      return `${validate_component(Card_content, "Card.Content").$$render($$result, { class: "pb-5 pt-2" }, {}, {
         default: () => {
           return `<div class="grid grid-cols-12 gap-4"><div class="col-span-12 md:col-span-4"><div class="pt-1"><div class="scroll-m-20 text-2xl font-semibold tracking-tight">${monitor.image ? `<img${add_attribute("src", monitor.image, 0)} class="w-6 h-6 inline" alt="" srcset="">` : ``} ${escape(monitor.name)} ${monitor.description ? `${validate_component(Root, "HoverCard.Root").$$render($$result, {}, {}, {
             default: () => {
@@ -124,4 +124,4 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 });
 
 export { Page as default };
-//# sourceMappingURL=_page.svelte-5fa31107.js.map
+//# sourceMappingURL=_page.svelte-6e9d50fb.js.map

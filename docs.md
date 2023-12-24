@@ -499,3 +499,19 @@ curl --request POST \
 	"tag": "google-search"
 }'
 ```
+
+# Badge
+There are two types of badges
+
+## Status
+Shows the last health check was UP/DOWN/DEGRADED
+![Earth Status](/badge/earth/status)
+```
+![Status Badge](https://your.kener.host/badge/earth/status)
+```
+## Uptime
+Shows the 90 Day uptime
+![Earth Status](/badge/earth/uptime)
+```
+![Status Badge](https://your.kener.host/badge/earth/uptime)
+```

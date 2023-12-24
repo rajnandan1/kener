@@ -21,7 +21,7 @@
 <section class="mx-auto flex-1 mt-8 flex-col mb-4 flex w-full" id="active_incident">
     <div class="container">
         <h1 class="mb-4 text-2xl font-bold leading-none">
-            <Badge variant="outline text-2xl bg-red-500"> Active Incidents </Badge>
+            <Badge variant="outline"> Active Incidents </Badge>
         </h1>
 
         {#if data.activeIncidents.length > 0} 
@@ -40,7 +40,7 @@
 <section class="mx-auto flex-1 mt-8 flex-col mb-4 flex w-full" id="active_incident">
     <div class="container">
         <h1 class="mb-4 text-2xl font-bold leading-none">
-            <Badge variant="outline text-2xl bg-red-500"> Recent Incidents </Badge>
+            <Badge variant="outline"> Recent Incidents </Badge>
         </h1>
 
         {#if data.pastIncidents.length > 0} 

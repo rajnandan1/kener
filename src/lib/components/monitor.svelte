@@ -33,7 +33,7 @@
 </script>
 <section class="mx-auto backdrop-blur-[2px] mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center">
     <Card.Root class="w-full">
-        <Card.Content class="pb-4 pt-2">
+        <Card.Content class="pb-5 pt-2">
             <div class="grid grid-cols-12 gap-4">
                 <div class="col-span-12 md:col-span-4">
                     <div class="pt-1">
