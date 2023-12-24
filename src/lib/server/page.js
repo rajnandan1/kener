@@ -30,7 +30,7 @@ function getDayData(day0, startTime, endTime) {
             dayData.DOWN++;
         }
     }
-	dayData.uptimePercentage = ParsePercentage(dayData.UP + dayData.DEGRADED, dayData.UP + dayData.DEGRADED + dayData.DOWN);
+	dayData.uptimePercentage = ParseUptime(dayData.UP + dayData.DEGRADED, dayData.UP + dayData.DEGRADED + dayData.DOWN);
 
 	let cssClass = StatusObj.UP;
     let message = "Status OK";

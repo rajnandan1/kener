@@ -14,13 +14,11 @@ const StatusColor = {
 // @ts-ignore
 const ParseUptime = function (up, all) {
 	 if (all === 0) return String("-");
-    if (up == 0) return String("0");
-    if (up == all) {
-        // @ts-ignore
-        return String(((up / all) * parseFloat(100)).toFixed(0));
-    }
-    // @ts-ignore
-    return String(((up / all) * parseFloat(100)).toFixed(4));
+     if (up == 0) return String("0");
+     if (up == all) {
+         return String(((up / all) * parseFloat(100)).toFixed(0));
+     }
+     return String(((up / all) * parseFloat(100)).toFixed(4));
 }
 const ParsePercentage = function(n) {
 	if (isNaN(n)) return "-";
