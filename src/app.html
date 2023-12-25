@@ -5,7 +5,14 @@
         <link rel="icon" id="kener-app-favicon" href="/logo96.png" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-        <!-- Google tag (gtag.js) -->
+        
+
+        %sveltekit.head%
+    </head>
+    <body data-sveltekit-preload-data="hover">
+        <div style="display: contents">%sveltekit.body%</div>
+
+		<!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q3MLRXCBFT"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
@@ -16,10 +23,5 @@
 
             gtag("config", "G-Q3MLRXCBFT");
         </script>
-
-        %sveltekit.head%
-    </head>
-    <body data-sveltekit-preload-data="hover">
-        <div style="display: contents">%sveltekit.body%</div>
     </body>
 </html>
