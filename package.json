@@ -27,11 +27,12 @@
         "url": "https://github.com/rajnandan1/kener.git"
     },
     "scripts": {
-        "kener:dev": "cross-env PUBLIC_KENER_FOLDER=./static/kener concurrently \"node dev.js\" \"vite dev\"",
-        "kener:dev-monitor": "cross-env PUBLIC_KENER_FOLDER=./static/kener node dev.js",
-        "kener:dev-build": "cross-env PUBLIC_KENER_FOLDER=./static/kener  vite build",
-        "kener:build": "cross-env PUBLIC_KENER_FOLDER=./build/client/kener  vite build",
-        "kener": "cross-env PUBLIC_KENER_FOLDER=./build/client/kener  node prod.js"
+        "build": "node scripts/check.js && vite build",
+        "serve": "node prod.js",
+        "kener:dev": "cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener node scripts/check.js && concurrently \"cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener node dev.js\" \"cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener vite dev\"",
+        "kener:dev-monitor": "cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener  node dev.js",
+        "kener:build": "cross-env NODE_ENV=production node scripts/check.js && cross-env NODE_ENV=production vite build",
+        "kener": "cross-env NODE_ENV=production node prod.js"
     },
     "devDependencies": {
         "@sveltejs/adapter-auto": "^2.0.0",

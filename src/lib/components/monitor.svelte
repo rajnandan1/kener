@@ -4,12 +4,9 @@
     import * as HoverCard from "$lib/components/ui/hover-card";
     import { Separator } from "$lib/components/ui/separator";
     import { onMount } from "svelte";
-    import { Skeleton } from "$lib/components/ui/skeleton";
     import { Button } from "$lib/components/ui/button";
-    import axios from "axios";
-    import { ArrowDown, ArrowUp, ArrowRight, BadgeCheck, Dot, PackageCheck, Check, BadgeInfo } from "lucide-svelte";
+    import {  ArrowRight } from "lucide-svelte";
     import { buttonVariants } from "$lib/components/ui/button";
-    import * as Alert from "$lib/components/ui/alert";
 
     export let monitor;
 
@@ -21,7 +18,6 @@
     let dailyDown = monitor.pageData.dailyDown;
     let dailyDegraded = monitor.pageData.dailyDegraded;
 
-    let loading90 = false;
     let todayDD = Object.keys(_90Day)[Object.keys(_90Day).length - 1];
     let view = "90day";
 
@@ -65,7 +61,6 @@
                             {/if}
                         </div>
                     </div>
-                    {#if !loading90}
                     <div class="mt-2">
                         <div class="grid grid-cols-2 gap-0">
                             <div class="col-span-2 -mt-2">
@@ -75,12 +70,8 @@
                             </div>
                         </div>
                     </div>
-                    {/if}
                 </div>
                 <div class="col-span-12 md:col-span-8 pt-2">
-                    {#if loading90}
-                    <Skeleton class="w-full h-[40px] mt-[7px]" />
-                    {:else}
                     <div class="grid grid-cols-12">
                         <div class="col-span-12 md:col-span-8 h-[32px]">
                             <a href="javascript:void(0);" on:click="{(e) => {switchView('90day')}}">
@@ -133,7 +124,6 @@
                         </div>
                         {/if}
                     </div>
-                    {/if}
                 </div>
             </div>
         </Card.Content>

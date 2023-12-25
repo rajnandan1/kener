@@ -42,26 +42,6 @@ if (!fs.existsSync(FOLDER)) {
     console.log(".kener folder created successfully!");
 }
 
-if (!fs.existsSync(FOLDER_SITE)) {
-    fs.writeFileSync(FOLDER_SITE, JSON.stringify({}));
-    console.log("site.json file created successfully!");
-}
-
-if (!fs.existsSync(FOLDER_MONITOR)) {
-    fs.writeFileSync(FOLDER_MONITOR, JSON.stringify([]));
-    console.log("monitors.json file created successfully!");
-}
-
-console.log(`[${!!process.env.GH_TOKEN ? "✅" : "❗"}] GH_TOKEN is set`);
-console.log(`[${!!process.env.API_TOKEN ? "✅" : "❗"}] API_TOKEN is set`);
-console.log(`[${!!process.env.API_IP ? "✅" : "❗"}] API_IP is set`);
-console.log(`[${!!process.env.MONITOR_YAML_PATH ? "✅" : "❗"}] MONITOR_YAML_PATH is set`);
-console.log(`[${!!process.env.SITE_YAML_PATH ? "✅" : "❗"}] SITE_YAML_PATH is set`);
-console.log(`[${!!process.env.PUBLIC_KENER_FOLDER ? "✅" : "❗"}] PUBLIC_KENER_FOLDER is set`);
-console.log(`[${!!process.env.PORT ? "✅" : "❗"}] PORT is set`);
-
-
-
 const Startup = async () => {
     try {
         const fileContent = fs.readFileSync(LoadMonitorsPath(), "utf8");

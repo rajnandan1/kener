@@ -80,21 +80,15 @@ export SITE_YAML_PATH=/your/path/site.yaml
 
 ## Production Deployment
 Once you have added the `config/site.yaml` or `config/monitors.yaml` or changed anything in `src/`
-```shell
-npm i
-npm run kener
-```
-### Changing files inside `src/`
-```shell
-npm i
-npm run kener:build
-npm run kener
-```
 
-## Custom Deployment
 Kener should be run using `prod.js` script.
-- `PUBLIC_KENER_FOLDER=./build/client/kener`
-- node prod.js
+
+```shell
+export NODE_ENV=production
+npm i
+npm run build
+npm run serve
+```
 
 It also needs to yaml files to work
 - site.yaml
