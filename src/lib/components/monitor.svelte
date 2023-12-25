@@ -7,10 +7,13 @@
     import { Button } from "$lib/components/ui/button";
     import {  ArrowRight } from "lucide-svelte";
     import { buttonVariants } from "$lib/components/ui/button";
+	import { Skeleton } from "$lib/components/ui/skeleton";
+	import axios from "axios";
 
     export let monitor;
+    export let localTz;
 
-    let _0Day = monitor.pageData._0Day;
+    let _0Day = {};
     let _90Day = monitor.pageData._90Day;
     let uptime0Day = monitor.pageData.uptime0Day;
     let uptime90Day = monitor.pageData.uptime90Day;
@@ -21,11 +24,36 @@
     let todayDD = Object.keys(_90Day)[Object.keys(_90Day).length - 1];
     let view = "90day";
 
+
+	function getToday() {
+		//axios post using options application json
+		setTimeout(() => {
+			axios.post('/api/today', {
+			monitor: monitor,
+			localTz: localTz
+		}).then((response) => {
+			if(response.data) {
+				_0Day = response.data;
+			}
+		}).catch((error) => {
+			console.log(error);
+		})
+		}, 1000 * 1);
+		
+
+	}
+
     function switchView(s) {
         view = s;
+		if(Object.keys(_0Day).length == 0 ) {
+			getToday()
+		}
+		
     }
 
-    onMount(async () => {});
+    onMount(async () => {
+		//getToday();
+	});
 </script>
 <section class="mx-auto backdrop-blur-[2px] mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center">
     <Card.Root class="w-full">
@@ -107,6 +135,9 @@
                         {:else}
                         <div class="chart-status relative mt-1 mb-4 col-span-12">
                             <div class="flex flex-wrap today-sq-div">
+								{#if Object.keys(_0Day).length == 0}
+								<Skeleton class="w-full h-[20px] mr-1 rounded-full" />
+								{/if}
                                 {#each Object.entries(_0Day) as [ts, bar] }
                                 <div data-index="{bar.index}" class="h-[10px] bg-{bar.cssClass} w-[10px] today-sq m-[1px]"></div>
                                 <div class="hiddenx relative">

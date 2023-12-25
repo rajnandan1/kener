@@ -48,7 +48,7 @@ Kener has two parts. One is a svelte app which you can find in the src folder an
 ## Environment Vairable 
 #### PUBLIC_KENER_FOLDER (Required)
 ```shell
-export PUBLIC_KENER_FOLDER=./build/client/kener
+export PUBLIC_KENER_FOLDER=/path/to/a/directory
 ```
 #### PORT 
 Defaults to 3000 if not specified
@@ -66,6 +66,7 @@ To talk to kener apis you will need to set up a token. It uses Bearer Authorizat
 export API_TOKEN=sometoken
 ```
 #### API_IP
+While using API you can set this variable to accept request from a specific IP
 ```shell
 export API_IP=127.0.0.1
 ```
@@ -77,6 +78,8 @@ export MONITOR_YAML_PATH=/your/path/monitors.yaml
 ```shell
 export SITE_YAML_PATH=/your/path/site.yaml
 ```
+
+If you do not specify MONITOR_YAML_PATH or SITE_YAML_PATH it will take the values from /config/site.yaml and /config/monitor.yaml respectively
 
 ## Production Deployment
 

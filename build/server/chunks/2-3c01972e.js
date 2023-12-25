@@ -82,13 +82,17 @@ const FetchData = async function(monitor, localTz) {
   }
   for (const key in _90Day) {
     const element = _90Day[key];
+    const uptimePercentage = element.uptimePercentage;
+    delete _90Day[key].UP;
+    delete _90Day[key].DEGRADED;
+    delete _90Day[key].DOWN;
+    delete _90Day[key].uptimePercentage;
     if (element.message == "No Data")
       continue;
-    percentage90DaysBuildUp.push(parseFloat(element.uptimePercentage));
+    percentage90DaysBuildUp.push(parseFloat(uptimePercentage));
   }
   uptime0Day = ParseUptime(dailyUps + dailyDegraded, dailyUps + dailyDown + dailyDegraded);
   return {
-    _0Day,
     _90Day,
     uptime0Day,
     uptime90Day: ParsePercentage(percentage90DaysBuildUp.reduce((a, b) => a + b, 0) / percentage90DaysBuildUp.length),
@@ -104,6 +108,8 @@ async function load({ params, route, url, parent }) {
   const github = siteData.github;
   for (let i = 0; i < monitors.length; i++) {
     const gitHubActiveIssues = await GetIncidents(monitors[i].tag, github, "open");
+    delete monitors[i].api;
+    delete monitors[i].defaultStatus;
     let data = await FetchData(monitors[i], parentData.localTz);
     monitors[i].pageData = data;
     monitors[i].activeIncidents = await Promise.all(gitHubActiveIssues.map(Mapper, { github }));
@@ -120,11 +126,11 @@ var _page_server = /*#__PURE__*/Object.freeze({
 
 const index = 2;
 let component_cache;
-const component = async () => component_cache ??= (await import('./_page.svelte-6b1fd358.js')).default;
+const component = async () => component_cache ??= (await import('./_page.svelte-312ab1e2.js')).default;
 const server_id = "src/routes/+page.server.js";
-const imports = ["_app/immutable/nodes/2.bbd6ca0c.js","_app/immutable/chunks/scheduler.83e0fec9.js","_app/immutable/chunks/index.24520d8d.js","_app/immutable/chunks/each.e59479a4.js","_app/immutable/chunks/card-content.ea8e0826.js","_app/immutable/chunks/incident.107e5bd4.js","_app/immutable/chunks/index.4e801429.js","_app/immutable/chunks/index.3be6ad7f.js"];
+const imports = ["_app/immutable/nodes/2.6dabdebd.js","_app/immutable/chunks/scheduler.1b18627c.js","_app/immutable/chunks/index.a0ccbbe4.js","_app/immutable/chunks/each.e59479a4.js","_app/immutable/chunks/card-content.02ecb8a3.js","_app/immutable/chunks/incident.4ef4dd12.js","_app/immutable/chunks/index.2f5200cf.js","_app/immutable/chunks/index.3e0e01a3.js"];
 const stylesheets = [];
 const fonts = [];
 
 export { component, fonts, imports, index, _page_server as server, server_id, stylesheets };
-//# sourceMappingURL=2-a3eee995.js.map
+//# sourceMappingURL=2-3c01972e.js.map

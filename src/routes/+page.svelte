@@ -62,5 +62,5 @@
 </section>
 
 {#each data.monitors as monitor}
-<Monitor {monitor} />
+<Monitor {monitor} localTz="{data.localTz}" />
 {/each} {/if}

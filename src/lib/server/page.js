@@ -96,12 +96,16 @@ const FetchData = async function (monitor, localTz) {
 
     for (const key in _90Day) {
         const element = _90Day[key];
+		const uptimePercentage = element.uptimePercentage;
+		delete _90Day[key].UP;
+		delete _90Day[key].DEGRADED;
+		delete _90Day[key].DOWN;
+		delete _90Day[key].uptimePercentage;
         if (element.message == "No Data") continue;
-        percentage90DaysBuildUp.push(parseFloat(element.uptimePercentage));
+        percentage90DaysBuildUp.push(parseFloat(uptimePercentage));
     }
     uptime0Day = ParseUptime(dailyUps + dailyDegraded, dailyUps + dailyDown + dailyDegraded);
     return {
-        _0Day: _0Day,
         _90Day: _90Day,
         uptime0Day,
         uptime90Day: ParsePercentage(percentage90DaysBuildUp.reduce((a, b) => a + b, 0) / percentage90DaysBuildUp.length),

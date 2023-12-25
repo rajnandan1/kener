@@ -20,7 +20,7 @@ const Arrow_right = create_ssr_component(($$result, $$props, $$bindings, slots) 
 const ArrowRight = Arrow_right;
 const Monitor = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   let { monitor } = $$props;
-  monitor.pageData._0Day;
+  let { localTz } = $$props;
   let _90Day = monitor.pageData._90Day;
   let uptime0Day = monitor.pageData.uptime0Day;
   let uptime90Day = monitor.pageData.uptime90Day;
@@ -30,6 +30,8 @@ const Monitor = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   let todayDD = Object.keys(_90Day)[Object.keys(_90Day).length - 1];
   if ($$props.monitor === void 0 && $$bindings.monitor && monitor !== void 0)
     $$bindings.monitor(monitor);
+  if ($$props.localTz === void 0 && $$bindings.localTz && localTz !== void 0)
+    $$bindings.localTz(localTz);
   return `<section class="mx-auto backdrop-blur-[2px] mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center">${validate_component(Card, "Card.Root").$$render($$result, { class: "w-full" }, {}, {
     default: () => {
       return `${validate_component(Card_content, "Card.Content").$$render($$result, { class: "pb-5 pt-2" }, {}, {
@@ -107,9 +109,9 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
       return `<span class="w-[8px] h-[8px] inline-flex rounded-full bg-api-up opacity-75 mr-1"></span> <span class="mr-3" data-svelte-h="svelte-fd8nbr">UP</span> <span class="w-[8px] h-[8px] inline-flex rounded-full bg-api-degraded opacity-75 mr-1"></span> <span class="mr-3" data-svelte-h="svelte-ddctvm">DEGRADED</span> <span class="w-[8px] h-[8px] inline-flex rounded-full bg-api-down opacity-75 mr-1"></span> <span class="mr-3" data-svelte-h="svelte-1o75psw">DOWN</span>`;
     }
   })}</div></div></section> ${each(data.monitors, (monitor) => {
-    return `${validate_component(Monitor, "Monitor").$$render($$result, { monitor }, {}, {})}`;
+    return `${validate_component(Monitor, "Monitor").$$render($$result, { monitor, localTz: data.localTz }, {}, {})}`;
   })}` : ``}`;
 });
 
 export { Page as default };
-//# sourceMappingURL=_page.svelte-6b1fd358.js.map
+//# sourceMappingURL=_page.svelte-312ab1e2.js.map
