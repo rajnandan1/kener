@@ -79,9 +79,6 @@ export SITE_YAML_PATH=/your/path/site.yaml
 ```
 
 ## Production Deployment
-Once you have added the `config/site.yaml` or `config/monitors.yaml` or changed anything in `src/`
-
-Kener should be run using `prod.js` script.
 
 ```shell
 export NODE_ENV=production
