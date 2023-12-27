@@ -22,6 +22,7 @@ npm install
 ```shell
 mv config/site.example.yaml config/site.yaml
 mv config/monitors.example.yaml config/monitors.yaml
+mkdir -p ./static/kener
 ```
 
 ## Start Kener Dev
