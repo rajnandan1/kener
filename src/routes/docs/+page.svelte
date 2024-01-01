@@ -1,12 +1,19 @@
 <script>
-    import Markdoc from "@markdoc/markdoc";
+    import { marked } from 'marked';
     import { onMount } from "svelte";
     import * as Card from "$lib/components/ui/card";
+	import * as Accordion from "$lib/components/ui/accordion";
     export let data;
-    const ast = Markdoc.parse(data.md);
-    const content = Markdoc.transform(ast);
-    let html = Markdoc.renderers.html(content);
+	
+    let html = marked.parse(data.md);
     let sideBar = [];
+    function locationHashChanged() {
+        const allSideAs = document.querySelectorAll(".sidebar-a");
+		allSideAs.forEach((sideA) => {
+			sideA.classList.remove("active");
+		});
+		document.querySelector(`[href="${window.location.hash}"]`).classList.add("active");
+    }
     onMount(async () => {
         const headings = document.querySelectorAll("#markdown h1");
         headings.forEach((heading) => {
@@ -14,7 +21,6 @@
             heading.id = id;
             heading.setAttribute("sider", "sidemenu");
             heading.setAttribute("sider-t", "h1");
-            // heading.style.color = "#31304D";
         });
 
         const headings2 = document.querySelectorAll("#markdown h2");
@@ -23,40 +29,67 @@
             heading.id = id;
             heading.setAttribute("sider", "sidemenu");
             heading.setAttribute("sider-t", "h2");
-            // heading.style.color = "#435585";
         });
 
         const sidemenuHeadings = document.querySelectorAll("#markdown [sider='sidemenu']");
-        sidemenuHeadings.forEach((heading) => {
-            sideBar = [
-                ...sideBar,
-                {
-                    id: heading.id,
-                    text: heading.textContent,
-                    type: heading.getAttribute("sider-t"),
-                },
-            ];
-        });
+        //iterate over all headings and create nexted sidebar, if h2 the add to last h1
+		let lastH1 = null;
+		let lastH2 = null;
+		sidemenuHeadings.forEach((heading) => {
+			if (heading.getAttribute("sider-t") == "h1") {
+				lastH1 = {
+					id: heading.id,
+					text: heading.textContent,
+					type: heading.getAttribute("sider-t"),
+					children: [],
+				};
+				sideBar = [...sideBar, lastH1];
+			} else if (heading.getAttribute("sider-t") == "h2") {
+				lastH2 = {
+					id: heading.id,
+					text: heading.textContent,
+					type: heading.getAttribute("sider-t"),
+				};
+				lastH1.children = [...lastH1.children, lastH2];
+			}
+		});
+
+        window.onhashchange = locationHashChanged;
+		
+		
     });
 </script>
-<section class="mx-auto container rounded-3xl mt-8">
+<section class="mx-auto container rounded-3xl scroll-smooth mt-8">
     <Card.Root>
-        <Card.Content>
+        <Card.Content class="px-1">
             <div class="grid grid-cols-5 gap-4">
-                <div class="col-span-5 md:col-span-1 pt-2 hidden md:block border-r-2 border-secondary">
-                    <ul class="w-full text-sm font-medium sticky top-0 overflow-y-auto max-h-screen">
-                        {#each sideBar as item}
-                        <li class="w-full py-2">
-                            <a href="#{item.id}" class="{item.type == 'h2'?'pl-5':''}">{item.text}</a>
-                        </li>
-                        {/each}
-                    </ul>
+                <div class="col-span-5 md:col-span-1 pt-2 hidden md:block pr-1 border-r-2 border-secondary sticky top-0 overflow-y-auto max-h-screen">
+					{#each sideBar as item}
+					<Accordion.Root>
+						<Accordion.Item value="{item.id}">
+							<Accordion.Trigger class="text-sm font-semibold pl-2 pr-3">
+								<a href="#{item.id}" class="sidebar-a">{item.text}</a>
+							</Accordion.Trigger>
+							<Accordion.Content>
+							<!-- <ul class="w-full text-sm font-medium sticky top-0 overflow-y-auto max-h-screen"> -->
+							<ul class=" text-sm font-medium pl-6">
+									{#each item.children as child}
+									<li class="w-full py-2">
+										<a href="#{child.id}" class="sidebar-a">{child.text}</a>
+									</li>
+									{/each}
+								</ul>
+							</Accordion.Content>
+						</Accordion.Item>
+					</Accordion.Root>
+					{/each}
+                    
                 </div>
                 <div class="col-span-5 md:col-span-4">
-                    <div class="pt-6 p-0 md:p-10">
+                    <div class="pt-6 p-0 md:p-10 ">
                         <article
                             id="markdown"
-                            class="prose prose-stone max-w-none dark:prose-invert dark:prose-pre:bg-neutral-900 prose-code:px-[0.3rem] dark:prose-code:bg-yellow-100 dark:prose-code:text-primary-foreground prose-code:py-[0.2rem] prose-code:font-normal prose-code:font-mono prose-code:text-sm prose-code:rounded"
+                            class="prose prose-stone max-w-none dark:prose-invert dark:prose-pre:bg-neutral-900  prose-code:py-[0.2rem] prose-code:font-normal prose-code:font-mono prose-code:text-sm prose-code:rounded"
                         >
                             {@html html}
                         </article>

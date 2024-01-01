@@ -10,7 +10,7 @@
         <div class="mr-4 flex blurry-bg">
             <a href="{data.site.home ? data.site.home:'/'}" class="mr-6 flex items-center space-x-2">
                 {#if data.site.logo}
-				<img src="{data.site.logo}" class="h-5 w-5" alt="" srcset="" />
+				<img src="{data.site.logo}" class="h-9 w-9" alt="{data.site.title}" srcset="" />
 				{/if}
 				{#if data.site.title}
 				<span class="hidden font-bold sm:inline-block text-[15px] lg:text-base"> {data.site.title} </span>

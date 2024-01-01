@@ -39,7 +39,7 @@ Kener has two parts. One is a svelte app which you can find in the src folder an
 
 
 ## Folder structure
-```
+```shell
 ├── src (svelte frontend files)
 ├── static (things put here can be referenced directly example static/logo.png -> /logo.png)
 ├── scripts (nodejs server files)
@@ -91,9 +91,9 @@ npm run build
 npm run serve
 ```
 
-It also needs to yaml files to work
-- site.yaml
-- monitors.yaml
+It also needs 2 yaml files to work
+- site.yaml: Contains information about the site
+- monitors.yaml: Contains your monitors and their related specifications
 
 By default these are present in `config/`. However you can use different location either passing them as argument or having the path as enviorment variable
 
@@ -104,19 +104,19 @@ export SITE_YAML_PATH=/your/path/site.yaml
 ```
 ### Add as argument to prod.js
 ```shell
-node prod.js --monitors /your/path/monitors.yaml --site /your/path/site.yaml
+npm run serve -- --monitors /your/path/monitors.yaml --site /your/path/site.yaml
 ```
 
-```shell
-export PUBLIC_KENER_FOLDER=./build/client/kener 
-npm i
-npm run kener:build
-node prod.js
-``` 
 ## Github Setup
 Kener uses github for incident management. Issues created in github using certain tags go to kener as incidents.
-### Step 1: Github Repositiory
-Create a Github Repositiory. It can be either public or private
+### Step 1: Github Repositiory and Add to site.yaml
+Create a Github Repositiory. It can be either public or private. After you have created a repository open `site.yaml` and add them like this
+
+```yaml
+github:
+  owner: "username"
+  repo: "respository"
+```
 ### Step 2: Create Github Token
 You can create either a classic token or personal access token
 #### Creating Personal Access Token
@@ -136,6 +136,7 @@ You can create either a classic token or personal access token
 - Click on generate Token
 
 Set the token as an environment variable
+
 ```shell
 export GH_TOKEN=github_pat_11AD3ZA3Y0
 ```
@@ -259,12 +260,16 @@ hero:
 
 ## nav
 You can add more links to your navbar.
+
 ```yaml
 nav:
   - name: "Home"
     url: "/home"
 ```
-![alt text](ss3.png "SS")
+
+## scripts
+You can include any script in the app.html file like google analytics etc
+
 ---
 # Add Monitors
 Inside `config/` folder there is a file called `monitors.yaml`. We will be adding our monitors here. Please note that your yaml must be valid. It is an array.
@@ -314,7 +319,6 @@ Sample
 | api.body          | Optional          | HTTP Body as string                                                                                       |
 | api.eval          | Optional          | Evaluator written in JS, to parse HTTP response and calculate uptime and latency                          |
 | defaultStatus | Optional          | If no API is given this will be the default status. can be UP/DOWN/DEGRADED                                                                                                          |
-                                                                                                      |
 
 ## cron
 
@@ -454,6 +458,18 @@ Assuming `ORDER_ID` is present in env
 		}
 		})
 ```
+## With defaultStatus UP
+
+This will not make any API call, each minute it will set the status as UP
+
+```yaml
+- name: Earth
+  description: Our Planent
+  tag: "earth"
+  defaultStatus: UP
+```
+
+---
 # Incident Management
 Kener uses Github to power incident management using labels
 ## Labels
@@ -468,8 +484,7 @@ Kener auto creates labels for your monitors using the `tag` parameter
 - Create an issue. Give it a title
 - In the body add [start_datetime:1702651340] and [end_datetime:1702651140] and add some description. Time is UTC
 - Add `incident`, `incident-down` and the monitor tag. This will make the monitor down for 4 minutes
-
-
+---
 # API
 Kener also gives APIs to push data and create incident. Before you use kener apis you will have to set an authorization token called `API_TOKEN`. This also has to be set as an environment variable.
 ```shell
@@ -482,31 +497,294 @@ export API_IP=127.0.0.1
 ```
 
 ## Update Status
+The update status API can be used to manually update the state of a monitor from a remote server. 
+### Request Body
+| Parameter          | Description                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| status             | `Required` Can be only UP/DOWN/DEGRADED                                              |
+| latency            | `Required` In Seconds. Leave 0 if not required                                       |
+| timestampInSeconds | `Optional` Timestamp in UTC seconds. Defaults to now. Should between 90 Days and now |
+| tag                | `Required` Monitor Tag set in monitors.yaml                                          |
+
 ```shell
 curl --request POST \
-  --url http://your-kener.com/api/status \
+  --url http://your-kener.host/api/status \
   --header 'Authorization: Bearer some-token-set-by-you' \
   --header 'Content-Type: application/json' \
   --data '{
-	"status": "UP",
+	"status": "DOWN",
 	"latency": 1213,
 	"timestampInSeconds": 1702405860,
 	"tag": "google-search"
 }'
 ```
+### Response
+```json
+{
+	"status": 200,
+	"message": "success at 1702405860"
+}
+```
 
+This will update the status of the monitor with tag `google-search` to DOWN at UTC 1702405860
+
+## Create an Incident
+Can be use to create an incident from a remote server
+
+### Request Body
+| Parameter          | Description                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| startDatetime      | `Optional` When did the incident start in UTC second                                 |
+| endDatetime        | `Optional` When did the incident end in  UTC seconds                                 |
+| title              | `Required` Title of the incident        				                                |
+| body               | `Optional` Body of the incident        				                                |
+| tag                | `Required` Monitor Tag of the incident    			                                |
+| impact             | `Optional` Can be only DOWN/DEGRADED     			                                |
+| isMaintenance      | `Optional` Boolean if incident is a maitainance                                      |
+| isIdentified       | `Optional` Incident identified                                                       |
+| isResolved         | `Optional` Incident resolved   			                                            |
+
+```shell
+curl --request POST \
+  --url http://your-kener.host/api/incident \
+  --header 'Authorization: Bearer some-token-set-by-you' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"startDatetime": 1702405740,
+	"endDatetime": 1702405920,
+	"title": "Outage in Mumbai",
+	"body": "Login cluster is down in mumbai region",
+	"tag": "google-search",
+	"impact": "DOWN",
+	"isMaintenance": false,
+	"isIdentified": true,
+	"isResolved": false
+}'
+```
+
+### Response
+```json
+{
+	"createdAt": 1703940450,
+	"closedAt": null,
+	"title": "Outage in Mumbai",
+	"tag": "google-search",
+	"incidentNumber": 12,
+	"startDatetime": 1702405740,
+	"endDatetime": 1702405920,
+	"body": "Login cluster is down in mumbai region",
+	"impact": "DOWN",
+	"isMaintenance": false,
+	"isIdentified": true,
+	"isResolved": false
+}
+```
+## Update an Incident
+Can be use to update an incident from a remote server. It will clear values if not passed
+
+### Request Param
+
+- `incidentNumber`: Number of the incident
+
+### Request Body
+| Parameter          | Description                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| startDatetime      | `Optional` When did the incident start in UTC second                                 |
+| endDatetime        | `Optional` When did the incident end in  UTC seconds                                 |
+| title              | `Required` Title of the incident        				                                |
+| body               | `Optional` Body of the incident        				                                |
+| tag                | `Required` Monitor Tag of the incident    			                                |
+| impact             | `Optional` Can be only DOWN/DEGRADED     			                                |
+| isMaintenance      | `Optional` Boolean if incident is a maitainance                                      |
+| isIdentified       | `Optional` Incident identified                                                       |
+| isResolved         | `Optional` Incident resolved   			                                            |
+
+```shell
+curl --request PATCH \
+  --url http://your-kener.host/api/incident/{incidentNumber} \
+  --header 'Authorization: Bearer some-token-set-by-you' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"startDatetime": 1702405740,
+	"endDatetime": 1702405920,
+	"title": "Outage in Mumbai",
+	"body": "Login cluster is down in mumbai region",
+	"tag": "google-search",
+	"impact": "DOWN",
+	"isMaintenance": false,
+	"isIdentified": true,
+	"isResolved": false
+}'
+```
+
+### Response
+```json
+{
+	"createdAt": 1703940450,
+	"closedAt": null,
+	"title": "Outage in Mumbai",
+	"tag": "google-search",
+	"incidentNumber": 12,
+	"startDatetime": 1702405740,
+	"endDatetime": 1702405920,
+	"body": "Login cluster is down in mumbai region",
+	"impact": "DOWN",
+	"isMaintenance": false,
+	"isIdentified": true,
+	"isResolved": false
+}
+```
+
+## Get an Incident
+
+Use `incidentNumber` to fetch an incident
+
+### Request Body
+
+```shell
+curl --request GET \
+  --url http://your-kener.host/api/incident/{incidentNumber} \
+  --header 'Authorization: Bearer some-token-set-by-you' \
+```
+
+### Response
+```json
+{
+	"createdAt": 1703940450,
+	"closedAt": null,
+	"title": "Outage in Mumbai",
+	"tag": "google-search",
+	"incidentNumber": 12,
+	"startDatetime": 1702405740,
+	"endDatetime": 1702405920,
+	"body": "Login cluster is down in mumbai region",
+	"impact": "DOWN",
+	"isMaintenance": false,
+	"isIdentified": true,
+	"isResolved": false
+}
+```
+
+## Add Comment
+
+Add comments for incident using `incidentNumber`
+
+### Request
+
+```shell
+curl --request POST \
+  --url http://your-kener.host/api/incident/{incidentNumber}/comment \
+  --header 'Authorization: Bearer some-token-set-by-you' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"body": "comment 1"
+}'
+```
+### Response
+```json
+{
+	"commentID": 1873376745,
+	"body": "comment 1",
+	"createdAt": 1704123938
+}
+```
+
+## Get Comments
+
+Use this API to fetch all the comments for an incident
+
+### Request
+```shell
+curl --request GET \
+  --url http://your-kener.host/api/incident/{incidentNumber}/comment \
+  --header 'Authorization: Bearer some-token-set-by-you' \
+```
+
+### Response
+```json
+[
+	{
+		"commentID": 1873372042,
+		"body": "comment 1",
+		"createdAt": 1704123116
+	},
+	{
+		"commentID": 1873372169,
+		"body": "comment 2",
+		"createdAt": 1704123139
+	}
+]
+```
+## Update Incident Status
+Use this to API to update the status of an ongoing incident. 
+
+### Request Body
+| Parameter          | Description                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| isIdentified       | `Optional` Boolean, set it when incident has been identified                         |
+| isResolved         | `Optional` Boolean, set it when incident has been resolved                           |
+| endDatetime        | `Optional` When did the incident end in  UTC seconds                                 |
+
+
+### Request
+```shell
+curl --request POST \
+  --url http://your-kener.host/api/incident/{incidentNumber}/status \
+  --header 'Authorization: Bearer some-token-set-by-you' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"isIdentified": true,
+	"isResolved": false
+	"endDatetime": 1702405920
+}'
+```
+### Response
+```json
+{
+	"createdAt": 1703940450,
+	"closedAt": null,
+	"title": "Outage in Mumbai",
+	"tag": "google-search",
+	"incidentNumber": 12,
+	"startDatetime": 1702405740,
+	"endDatetime": 1702405920,
+	"body": "Login cluster is down in mumbai region",
+	"impact": "DOWN",
+	"isMaintenance": false,
+	"isIdentified": true,
+	"isResolved": false
+}
+```
+---
 # Badge
 There are two types of badges
 
+Syntax
+```md
+http://[hostname]/badge/[tag]/status
+http://[hostname]/badge/[tag]/uptime
+```
 ## Status
 Shows the last health check was UP/DOWN/DEGRADED
-![Earth Status](/badge/earth/status) -> https://kener.ing/badge/earth/status
+![Earth Status](/badge/earth/status)
+
+Example in HTML
+```html
+<img src="https://kener.ing/badge/earth/status">
 ```
-![Status Badge](https://your.kener.host/badge/[monitor.tag]/status)
+Example in MarkDown
+```md
+![Status Badge](https://kener.ing/badge/[monitor.tag]/status)
 ```
 ## Uptime
 Shows the 90 Day uptime
-![Earth Uptime](/badge/earth/uptime) -> https://kener.ing/badge/earth/uptime
+![Earth Uptime](/badge/earth/uptime) 
+
+Example in HTML
+```html
+<img src="https://kener.ing/badge/earth/uptime">
 ```
-![Uptime Badge](https://your.kener.host/badge/[monitor.tag]/uptime)
+Example in MarkDown
+```md
+![Uptime Badge](https://kener.ing/badge/[monitor.tag]/uptime)
 ```

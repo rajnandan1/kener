@@ -102,12 +102,12 @@
                 <div class="col-span-12 md:col-span-8 pt-2">
                     <div class="grid grid-cols-12">
                         <div class="col-span-12 md:col-span-8 h-[32px]">
-                            <a href="javascript:void(0);" on:click="{(e) => {switchView('90day')}}">
+                            <button class="inline-block"  on:click="{(e) => {switchView('90day')}}">
                                 <Badge variant="{view != '90day' ? 'outline' : ''}"> 90 Day ► {uptime90Day}% </Badge>
-                            </a>
-                            <a href="javascript:void(0);" on:click="{(e) => {switchView('0day')}}">
+                            </button>
+                            <button   on:click="{(e) => {switchView('0day')}}">
                                 <Badge variant="{view != '0day' ? 'outline' : ''}"> Today ► {uptime0Day}% </Badge>
-                            </a>
+                            </button>
                         </div>
                         <div class="col-span-12 md:col-span-4 text-right h-[32px]">
                             {#if _90Day[todayDD]}

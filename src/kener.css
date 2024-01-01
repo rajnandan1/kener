@@ -7,11 +7,7 @@
     background-repeat: no-repeat;
     background-size: 100%;
     height: 100svh;
-    background: rgb(34, 193, 195);
     background: linear-gradient(177deg, rgba(255, 137, 131, 0.5) 0%, rgba(35, 136, 224, 0.05) 60%);
-    /* background-size: 300% 300%; */
-    /* clip-path: polygon(0 0, 100% 0, 100% 16%, 0% 100%); */
-    /* animation: gradient-animation 30s ease infinite; */
     clip-path: polygon(0 0, 100% 0, 100% 54%, 0% 100%);
 }
 
@@ -208,3 +204,17 @@ section {
   background-size: contain;
   background-position: bottom;
 }
+.sidebar-a.active{
+	text-decoration: underline;
+}
+#markdown code:not([class^="language-"]) {
+	background-color: #faf6b2;
+	border-radius: 4px;
+	padding: 2px 4px;
+	font-size: 0.833em;
+	color: #000;
+}
+.h1.inactive ~ .h2 {
+	display: none;
+}
+ 

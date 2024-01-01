@@ -58,7 +58,9 @@
                         <div class="scroll-m-20 text-2xl font-semibold tracking-tight">
                             {#if monitor.image}
                             <img src="{monitor.image}" class="w-6 h-6 inline" alt="" srcset="" />
-                            {/if} {monitor.name} {#if monitor.description}
+                            {/if} 
+							{monitor.name} 
+							{#if monitor.description}
                             <HoverCard.Root>
                                 <HoverCard.Trigger>
                                     <svg
@@ -78,7 +80,9 @@
                                         <path d="M12 8h.01" />
                                     </svg>
                                 </HoverCard.Trigger>
-                                <HoverCard.Content class="dark:invert"> {monitor.description} </HoverCard.Content>
+                                <HoverCard.Content class="dark:invert"> 
+									{monitor.description} 
+								</HoverCard.Content>
                             </HoverCard.Root>
                             {/if}
                         </div>
@@ -106,6 +110,16 @@
                 <Card.Description> 
 					{moment(incident.created_at).format("MMMM Do YYYY, h:mm:ss a")} 
 					{@html incidentMessage}
+					<p class="mt-2">
+						{#if incident.labels.includes("identified")}
+						<span class="bg-yellow-100 text-yellow-800 mt-1 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-yellow-900 dark:text-yellow-300">Identified</span>
+						{/if}
+						{#if incident.labels.includes("resolved")}
+						<span class="bg-green-100 text-green-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Resolved</span>
+						{/if}
+					</p>
+					
+					
 				</Card.Description>
             </Card.Header>
             {#if (variant.includes("body") || variant.includes("comments")) && state == "open"}
