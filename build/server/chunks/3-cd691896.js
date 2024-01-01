@@ -1,7 +1,7 @@
-import fs from 'fs-extra';
+import axios from 'axios';
 
 async function load({ params, route, url, parent }) {
-  const data = fs.readFileSync("/Users/raj/kener/docs.md", "utf8");
+  const { data } = await axios.get("https://raw.githubusercontent.com/rajnandan1/kener/main/docs.md");
   return {
     md: data
   };
@@ -21,4 +21,4 @@ const stylesheets = [];
 const fonts = [];
 
 export { component, fonts, imports, index, _page_server as server, server_id, stylesheets };
-//# sourceMappingURL=3-96344d28.js.map
+//# sourceMappingURL=3-cd691896.js.map
