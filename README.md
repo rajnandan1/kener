@@ -51,5 +51,5 @@ Read the documentation [here](https://kener.ing/docs)
 
 ## Roadmap
 - [ ] Add notification
-- [ ] Add api to create incident
+- [x] Add api to create incident
 - [ ] Add Mysql adapter
