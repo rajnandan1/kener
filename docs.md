@@ -795,10 +795,10 @@ You can set different colors for badges, Both Label and Value
 
 ### With Custom Label Color
 
-![Earth Status](https://kener.ing/badge/earth/status?labelColor=89B9AD)
+![Earth Status](https://kener.ing/badge/earth/status?labelColor=F2BED1)
 
 ```md
-![Earth Status](https://kener.ing/badge/earth/status?labelColor=89B9AD)
+![Earth Status](https://kener.ing/badge/earth/status?labelColor=F2BED1)
 ```
 
 ### With Custom Value Color
@@ -811,7 +811,7 @@ You can set different colors for badges, Both Label and Value
 
 ### With Both Different Colors
 
-![Earth Status](https://kener.ing/badge/earth/status?color=D0BFFF&labelColor=FFF3DA)
+![Earth Status](https://kener.ing/badge/earth/uptime?color=D0BFFF&labelColor=FFF3DA)
 
 ```md
 ![Earth Status](https://kener.ing/badge/earth/uptime?color=D0BFFF&labelColor=FFF3DA)
@@ -822,28 +822,28 @@ You can set different colors for badges, Both Label and Value
 You can change the style of the badge. Supported Styles are `plastic`, `flat`, `flat-square`, `for-the-badge` or `social`. Default is `flat`
 
 #### plastic
-![Earth Status](https://kener.ing/badge/earth/status?style=plastic)
+![Earth Status](https://kener.ing/badge/earth/uptime?style=plastic)
 
 ```md
 ![Earth Status](https://kener.ing/badge/earth/uptime?style=plastic)
 ```
 
 #### flat
-![Earth Status](https://kener.ing/badge/earth/status?style=flat)
+![Earth Status](https://kener.ing/badge/earth/uptime?style=flat)
 
 ```md
 ![Earth Status](https://kener.ing/badge/earth/uptime?style=flat)
 ```
 
 #### flat-square
-![Earth Status](https://kener.ing/badge/earth/status?style=flat-square)
+![Earth Status](https://kener.ing/badge/earth/uptime?style=flat-square)
 
 ```md
 ![Earth Status](https://kener.ing/badge/earth/uptime?style=flat-square)
 ```
 
 #### for-the-badge
-![Earth Status](https://kener.ing/badge/earth/status?style=for-the-badge)
+![Earth Status](https://kener.ing/badge/earth/uptime?style=for-the-badge)
 
 ```md
 ![Earth Status](https://kener.ing/badge/earth/uptime?style=for-the-badge)
@@ -851,7 +851,7 @@ You can change the style of the badge. Supported Styles are `plastic`, `flat`, `
 
 
 #### social
-![Earth Status](https://kener.ing/badge/earth/status?style=social)
+![Earth Status](https://kener.ing/badge/earth/uptime?style=social)
 
 ```md
 ![Earth Status](https://kener.ing/badge/earth/uptime?style=social)
