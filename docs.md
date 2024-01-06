@@ -766,7 +766,7 @@ http://[hostname]/badge/[tag]/uptime
 ```
 ## Status
 Shows the last health check was UP/DOWN/DEGRADED
-![Earth Status](/badge/earth/status)
+![Earth Status](https://kener.ing/badge/earth/status)
 
 Example in HTML
 ```html
@@ -778,7 +778,7 @@ Example in MarkDown
 ```
 ## Uptime
 Shows the 90 Day uptime
-![Earth Uptime](/badge/earth/uptime) 
+![Earth Uptime](https://kener.ing/badge/earth/uptime) 
 
 Example in HTML
 ```html
