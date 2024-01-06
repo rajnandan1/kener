@@ -788,3 +788,71 @@ Example in MarkDown
 ```md
 ![Uptime Badge](https://kener.ing/badge/[monitor.tag]/uptime)
 ```
+
+## Customize Badges
+
+You can set different colors for badges, Both Label and Value
+
+### With Custom Label Color
+
+![Earth Status](https://kener.ing/badge/earth/status?labelColor=89B9AD)
+
+```md
+![Earth Status](https://kener.ing/badge/earth/status?labelColor=89B9AD)
+```
+
+### With Custom Value Color
+
+![Earth Status](https://kener.ing/badge/earth/status?color=FFC0D9)
+
+```md
+![Earth Status](https://kener.ing/badge/earth/status?color=FFC0D9)
+```
+
+### With Both Different Colors
+
+![Earth Status](https://kener.ing/badge/earth/status?color=D0BFFF&labelColor=FFF3DA)
+
+```md
+![Earth Status](https://kener.ing/badge/earth/uptime?color=D0BFFF&labelColor=FFF3DA)
+```
+
+### Style Of the Badge
+
+You can change the style of the badge. Supported Styles are `plastic`, `flat`, `flat-square`, `for-the-badge` or `social`. Default is `flat`
+
+#### plastic
+![Earth Status](https://kener.ing/badge/earth/status?style=plastic)
+
+```md
+![Earth Status](https://kener.ing/badge/earth/uptime?style=plastic)
+```
+
+#### flat
+![Earth Status](https://kener.ing/badge/earth/status?style=flat)
+
+```md
+![Earth Status](https://kener.ing/badge/earth/uptime?style=flat)
+```
+
+#### flat-square
+![Earth Status](https://kener.ing/badge/earth/status?style=flat-square)
+
+```md
+![Earth Status](https://kener.ing/badge/earth/uptime?style=flat-square)
+```
+
+#### for-the-badge
+![Earth Status](https://kener.ing/badge/earth/status?style=for-the-badge)
+
+```md
+![Earth Status](https://kener.ing/badge/earth/uptime?style=for-the-badge)
+```
+
+
+#### social
+![Earth Status](https://kener.ing/badge/earth/status?style=social)
+
+```md
+![Earth Status](https://kener.ing/badge/earth/uptime?style=social)
+```

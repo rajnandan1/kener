@@ -53,6 +53,7 @@
     "type": "module",
     "dependencies": {
         "axios": "^1.6.2",
+        "badge-maker": "^3.3.1",
         "bits-ui": "^0.9.9",
         "clsx": "^2.0.0",
         "croner": "^7.0.5",

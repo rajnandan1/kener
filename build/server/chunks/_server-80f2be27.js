@@ -1,9 +1,10 @@
 import { p as public_env } from './shared-server-58a5f352.js';
 import fs from 'fs-extra';
-import { P as ParseUptime, B as Badge } from './helpers-eac5677c.js';
+import { P as ParseUptime } from './helpers-6076deb3.js';
+import { makeBadge } from 'badge-maker';
 
 const monitors = JSON.parse(fs.readFileSync(public_env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
-async function GET({ params, setHeaders }) {
+async function GET({ params, url }) {
   const { path0Day, name } = monitors.find((monitor) => monitor.tag === params.tag);
   const dayData = JSON.parse(fs.readFileSync(path0Day, "utf8"));
   let ups = 0;
@@ -20,10 +21,19 @@ async function GET({ params, setHeaders }) {
     }
   }
   let uptime = ParseUptime(ups + degradeds, ups + degradeds + downs) + "%";
-  setHeaders({
-    "Content-Type": "image/svg+xml"
-  });
-  return new Response(Badge(name, uptime, "0079FF"), {
+  const query = url.searchParams;
+  const labelColor = query.get("labelColor") || "#333";
+  const color = query.get("color") || "#0079FF";
+  const style = query.get("style") || "flat";
+  const format = {
+    label: name,
+    message: uptime,
+    color,
+    labelColor,
+    style
+  };
+  const svg = makeBadge(format);
+  return new Response(svg, {
     headers: {
       "Content-Type": "image/svg+xml"
     }
@@ -31,4 +41,4 @@ async function GET({ params, setHeaders }) {
 }
 
 export { GET };
-//# sourceMappingURL=_server-fbd83b4f.js.map
+//# sourceMappingURL=_server-80f2be27.js.map
