@@ -53,6 +53,11 @@
 
     onMount(async () => {
 		//getToday();
+		//for each div with class 90daygrid scroll to right most
+		let divs = document.querySelectorAll(".daygrid90");
+		divs.forEach((div) => {
+			div.scrollLeft = div.scrollWidth;
+		});
 	});
 </script>
 <section class="mx-auto backdrop-blur-[2px] mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center">
@@ -118,7 +123,7 @@
                     <div class="grid grid-cols-12">
                         {#if view == "90day"}
                         <div class="chart-status relative mt-1 col-span-12">
-                            <div class="flex flex-wrap">
+                            <div class="flex overflow-x-auto daygrid90 overflow-y-hidden">
                                 {#each Object.entries(_90Day) as [ts, bar]}
                                 <div class="h-[30px] w-[6px] rounded-sm oneline">
                                     <div class="h-[30px] bg-{bar.cssClass} w-[4px] rounded-sm mr-[2px]"></div>
