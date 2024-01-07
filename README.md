@@ -1,5 +1,5 @@
 
-<p align="center"><img src="static/ss.png?sanitize=true" width="100%" height="auto" alt="kener example illustration"></p>
+<p align="center"><img src="https://kener.ing/ss.png" width="100%" height="auto" alt="kener example illustration"></p>
 
 <p align="center">
 <img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/rajnandan1/kener?label=Star%20Repo&style=social">

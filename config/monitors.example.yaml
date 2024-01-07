@@ -17,3 +17,10 @@
   tag: "earth"
   defaultStatus: "UP"
   image: "/earth.png"
+- name: Frogment
+  description: A free openAPI spec editor and linter that breaks down your spec into fragments to make editing easier and more intuitive. Visit https://www.frogment.com
+  tag: "frogment"
+  image: "/frogment.png"
+  api:
+    method: GET
+    url: https://www.frogment.com
