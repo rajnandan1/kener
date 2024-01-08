@@ -1,5 +1,6 @@
 <script>
     import Monitor from "$lib/components/monitor.svelte";
+    import * as Card from "$lib/components/ui/card";
     import Incident from "$lib/components/incident.svelte";
     import { Separator } from "$lib/components/ui/separator";
     import { Badge } from "$lib/components/ui/badge";
@@ -60,7 +61,13 @@
         </div>
     </div>
 </section>
-
-{#each data.monitors as monitor}
-<Monitor {monitor} localTz="{data.localTz}" />
-{/each} {/if}
+<section class="mx-auto backdrop-blur-[2px] mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center">
+    <Card.Root class="w-full ">
+        <Card.Content class="p-0 monitors-card">
+            {#each data.monitors as monitor}
+            <Monitor {monitor} localTz="{data.localTz}" />
+            {/each}
+        </Card.Content>
+    </Card.Root>
+</section>
+{/if}

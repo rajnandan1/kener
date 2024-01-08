@@ -217,4 +217,11 @@ section {
 .h1.inactive ~ .h2 {
 	display: none;
 }
- 
+.monitors-card .monitor {
+	padding: 1.3em 1em;
+	border-bottom: 1px solid;
+	border-color: hsl(var(--border) / var(--tw-border-opacity));
+}
+.monitors-card .monitor:last-child {
+	border-bottom: none;
+}
