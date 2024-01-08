@@ -477,6 +477,8 @@ Kener auto creates labels for your monitors using the `tag` parameter
 - `incident`: If an issue is marked as incident it will show up in kener home page
 - `incident-down`: If an issue is marked as incident-down and incident kener would make that monitor down
 - `incident-degraded`: If an issue is marked as incident-degraded and incident then kener would make the monitor degraded
+- `resolved`: Use this tag to mark the incident has RESOLVED
+- `identified`: Use this tag to show that the root cause of the incident has been identified
 
 ## Creating your first incident
 - Go to your github repo of kener
@@ -484,6 +486,9 @@ Kener auto creates labels for your monitors using the `tag` parameter
 - Create an issue. Give it a title
 - In the body add [start_datetime:1702651340] and [end_datetime:1702651140] and add some description. Time is UTC
 - Add `incident`, `incident-down` and the monitor tag. This will make the monitor down for 4 minutes
+
+Here is a [sample incident](https://github.com/rajnandan1/kener/issues/15) for your reference.
+
 ---
 # API
 Kener also gives APIs to push data and create incident. Before you use kener apis you will have to set an authorization token called `API_TOKEN`. This also has to be set as an environment variable.
@@ -778,9 +783,11 @@ Example in MarkDown
 ![Status Badge](https://kener.ing/badge/[monitor.tag]/status)
 ```
 ## Uptime
-Shows the 90 Day uptime
+Shows the 90 Day uptime by default. You can `sinceLast` as query param to get uptime since last x seconds.
 
 ![Earth Uptime](https://kener.ing/badge/earth/uptime) 
+
+### 90 Day Uptime
 
 Example in HTML
 ```html
@@ -789,6 +796,17 @@ Example in HTML
 Example in MarkDown
 ```md
 ![Uptime Badge](https://kener.ing/badge/[monitor.tag]/uptime)
+```
+
+### 15 Minute Uptime
+
+Example in HTML
+```html
+<img src="https://kener.ing/badge/earth/uptime?sinceLast=900">
+```
+Example in MarkDown
+```md
+![Uptime Badge](https://kener.ing/badge/[monitor.tag]/uptime?sinceLast=900)
 ```
 
 ## Customize Badges

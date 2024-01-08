@@ -8,16 +8,22 @@ const monitors = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/monitors
 export async function GET({ params, url }) {
     // @ts-ignore
     const { path0Day, name } = monitors.find((monitor) => monitor.tag === params.tag);
-	 const dayData = JSON.parse(fs.readFileSync(path0Day, "utf8"));
-	const lastObj = {
-		status: "0",
-	};
+	const dayData = JSON.parse(fs.readFileSync(path0Day, "utf8"));
+	const query = url.searchParams;
+	const rangeInSeconds = query.get("sinceLast") || 90 * 24 * 60 * 60;
+	const now = Math.floor(Date.now() / 1000);
+	const since = now - rangeInSeconds;
 	
 	//add all status up, degraded, down
 	let ups = 0;
 	let downs = 0;
 	let degradeds = 0;
+	
+
 	for (const timestamp in dayData) {
+		if (timestamp < since) {
+			continue;
+		}
 		const obj = dayData[timestamp];
 		if (obj.status == "UP") {
 			ups++;
@@ -30,7 +36,7 @@ export async function GET({ params, url }) {
 
 	let uptime = ParseUptime(ups + degradeds, ups + degradeds + downs) + "%";
 	
-    const query = url.searchParams;
+    
     const labelColor = query.get("labelColor") || "#333";
     const color = query.get("color") || "#0079FF";
     const style = query.get("style") || "flat";
