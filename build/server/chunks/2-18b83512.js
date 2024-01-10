@@ -106,16 +106,21 @@ async function load({ params, route, url, parent }) {
   const parentData = await parent();
   const siteData = parentData.site;
   const github = siteData.github;
+  const monitorsActive = [];
   for (let i = 0; i < monitors.length; i++) {
+    if (monitors[i].hidden !== void 0 || monitors[i].hidden === true) {
+      continue;
+    }
     const gitHubActiveIssues = await GetIncidents(monitors[i].tag, github, "open");
     delete monitors[i].api;
     delete monitors[i].defaultStatus;
     let data = await FetchData(monitors[i], parentData.localTz);
     monitors[i].pageData = data;
     monitors[i].activeIncidents = await Promise.all(gitHubActiveIssues.map(Mapper, { github }));
+    monitorsActive.push(monitors[i]);
   }
   return {
-    monitors
+    monitors: monitorsActive
   };
 }
 
@@ -133,4 +138,4 @@ const stylesheets = [];
 const fonts = [];
 
 export { component, fonts, imports, index, _page_server as server, server_id, stylesheets };
-//# sourceMappingURL=2-81154d8f.js.map
+//# sourceMappingURL=2-18b83512.js.map

@@ -9,16 +9,21 @@ export async function load({ params, route, url, parent }) {
     const parentData = await parent();
     const siteData = parentData.site;
     const github = siteData.github;
-    for (let i = 0; i < monitors.length; i++) {
+    const monitorsActive = [];
+	for (let i = 0; i < monitors.length; i++) {
+		if (monitors[i].hidden !== undefined || monitors[i].hidden === true) {
+			continue;
+        }
        	const gitHubActiveIssues = await GetIncidents(monitors[i].tag, github, "open");
 		delete monitors[i].api;
 		delete monitors[i].defaultStatus;
 		let data = await FetchData(monitors[i], parentData.localTz);
 		monitors[i].pageData = data;
 		monitors[i].activeIncidents = await Promise.all(gitHubActiveIssues.map(Mapper, { github }));
+		monitorsActive.push(monitors[i]);
 	}
 
     return {
-        monitors: monitors,
+        monitors: monitorsActive,
     };
 }
