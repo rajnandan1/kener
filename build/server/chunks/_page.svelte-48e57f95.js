@@ -70,7 +70,8 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   let { data } = $$props;
   if ($$props.data === void 0 && $$bindings.data && data !== void 0)
     $$bindings.data(data);
-  return `<section class="mx-auto flex w-full max-w-4xl flex-1 flex-col items-start justify-center"><div class="mx-auto max-w-screen-xl px-4 pt-32 pb-16 lg:flex lg:items-center"><div class="mx-auto max-w-3xl text-center blurry-bg"><h1 class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold text-transparent leading-snug">${escape(data.monitor.name)}</h1> <p class="mx-auto mt-4 max-w-xl sm:text-xl">${escape(data.monitor.description)}</p></div></div></section> <section class="mx-auto flex-1 mt-8 flex-col mb-4 flex w-full" id="active_incident"><div class="container"><h1 class="mb-4 text-2xl font-bold leading-none">${validate_component(Badge, "Badge").$$render($$result, { variant: "outline" }, {}, {
+  return `${$$result.head += `<!-- HEAD_svelte-1j8jcnk_START -->${$$result.title = `<title> ${escape(data.monitor.name)} - Incidents
+	</title>`, ""}<!-- HEAD_svelte-1j8jcnk_END -->`, ""} <section class="mx-auto flex w-full max-w-4xl flex-1 flex-col items-start justify-center"><div class="mx-auto max-w-screen-xl px-4 pt-32 pb-16 lg:flex lg:items-center"><div class="mx-auto max-w-3xl text-center blurry-bg"><h1 class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold text-transparent leading-snug">${escape(data.monitor.name)}</h1> <p class="mx-auto mt-4 max-w-xl sm:text-xl">${escape(data.monitor.description)}</p></div></div></section> <section class="mx-auto flex-1 mt-8 flex-col mb-4 flex w-full" id="active_incident"><div class="container"><h1 class="mb-4 text-2xl font-bold leading-none">${validate_component(Badge, "Badge").$$render($$result, { variant: "outline" }, {}, {
     default: () => {
       return `Active Incidents`;
     }
@@ -106,4 +107,4 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 });
 
 export { Page as default };
-//# sourceMappingURL=_page.svelte-98224a26.js.map
+//# sourceMappingURL=_page.svelte-48e57f95.js.map

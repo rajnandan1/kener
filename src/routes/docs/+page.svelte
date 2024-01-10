@@ -59,6 +59,11 @@
 		
     });
 </script>
+<svelte:head>
+	<title>
+		Kener Documentation
+	</title>
+</svelte:head>
 <section class="mx-auto container rounded-3xl scroll-smooth mt-8">
     <Card.Root>
         <Card.Content class="px-1">
