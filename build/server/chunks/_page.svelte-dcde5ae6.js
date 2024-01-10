@@ -289,7 +289,9 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   let sideBar = [];
   if ($$props.data === void 0 && $$bindings.data && data !== void 0)
     $$bindings.data(data);
-  return `<section class="mx-auto container rounded-3xl scroll-smooth mt-8">${validate_component(Card, "Card.Root").$$render($$result, {}, {}, {
+  return `${$$result.head += `<!-- HEAD_svelte-tjl0wq_START -->${$$result.title = `<title>
+		Kener Documentation
+	</title>`, ""}<!-- HEAD_svelte-tjl0wq_END -->`, ""} <section class="mx-auto container rounded-3xl scroll-smooth mt-8">${validate_component(Card, "Card.Root").$$render($$result, {}, {}, {
     default: () => {
       return `${validate_component(Card_content, "Card.Content").$$render($$result, { class: "px-1" }, {}, {
         default: () => {
@@ -321,4 +323,4 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 });
 
 export { Page as default };
-//# sourceMappingURL=_page.svelte-a36a0a0c.js.map
+//# sourceMappingURL=_page.svelte-dcde5ae6.js.map

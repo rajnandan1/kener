@@ -9,6 +9,11 @@
     import { ArrowDown, ArrowUp, ChevronUp, BadgeCheck, ChevronDown } from "lucide-svelte";
     import * as Collapsible from "$lib/components/ui/collapsible";
 </script>
+<svelte:head>
+	<title>
+		{data.monitor.name} - Incidents
+	</title>
+</svelte:head>
 <section class="mx-auto flex w-full max-w-4xl flex-1 flex-col items-start justify-center">
     <div class="mx-auto max-w-screen-xl px-4 pt-32 pb-16 lg:flex lg:items-center">
         <div class="mx-auto max-w-3xl text-center blurry-bg">
