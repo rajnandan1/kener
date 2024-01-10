@@ -248,6 +248,15 @@ will become
 </head>
 ```
 
+## siteURL
+
+You can set this to generate SiteMaps
+```yaml
+siteURL: https://kener.ing
+```
+
+Sitemaps urls will be `https://kener.ing/sitemap.xml`
+
 ## hero
 Use hero to add a banner to your kener page
 ```yaml
@@ -317,8 +326,9 @@ Sample
 | api.url           | Optional          | HTTP URL                                                                                                  |
 | api.headers       | Optional          | HTTP headers                                                                                              |
 | api.body          | Optional          | HTTP Body as string                                                                                       |
-| api.eval          | Optional          | Evaluator written in JS, to parse HTTP response and calculate uptime and latency                          |
-| defaultStatus | Optional          | If no API is given this will be the default status. can be UP/DOWN/DEGRADED                                                                                                          |
+| api.eval          | Optional          | Evaluator written in JS, to parse HTTP response and calculate uptime and latency                      |
+| defaultStatus | Optional          | If no API is given this will be the default status. can be UP/DOWN/DEGRADED                               |
+| hidden | Optional          | If set to `true` will not show the monitor in the UI                                                             |
 
 ## cron
 
