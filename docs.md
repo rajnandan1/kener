@@ -186,13 +186,6 @@ It can be set by modifying the `<html>` class in `src/app.html` file
 ```
 Can be `light` or `dark`. Defaults to `light`
 
-## siteURL
-Root URL where you are hosting kenner
-```yaml
-...
-siteURL: https://status.example.com
-...
-```
 ## home
 
 Location when someone clicks on the your brand in the top nav bar
