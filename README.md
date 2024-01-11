@@ -22,6 +22,7 @@ Read the documentation [here](https://kener.ing/docs)
 ## Features
 
 - Real-time monitoring
+- Handles Timezones with you knowing it
 - Customizable status page
 - Easy installation and setup
 - Automated incident management
@@ -36,10 +37,10 @@ Read the documentation [here](https://kener.ing/docs)
 - Secrets management for headers and bodies
 - Evaluators for HTTP response parsing
 - Incident tagging and labeling
-- Meta tag customization for SEO
 - User-friendly interface
 - Support for light and dark themes
 - Responsive design for various devices
+- Auto SEO and Social Media ready
 
 
 ## Technologies used
@@ -53,3 +54,13 @@ Read the documentation [here](https://kener.ing/docs)
 - [ ] Add notification
 - [x] Add api to create incident
 - [ ] Add Mysql adapter
+
+## Support
+
+<a href="https://stackexchange.com/users/3713933"><img src="https://stackexchange.com/users/flair/3713933.png" width="208" height="58" alt="profile for Raj Nandan Sharma on Stack Exchange, a network of free, community-driven Q&amp;A sites" title="profile for Raj Nandan Sharma on Stack Exchange, a network of free, community-driven Q&amp;A sites"></a>
+
+<a href="https://www.buymeacoffee.com/app/rajnandan1"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=rajnandan1&button_colour=5F7FFF&font_colour=ffffff&font_family=Poppins&outline_colour=000000&coffee_colour=FFDD00" /></a>
+
+<a href="hhttps://www.paypal.com/paypalme/rajnandan1"><img src="static/paypal.png" /></a>
+
+
