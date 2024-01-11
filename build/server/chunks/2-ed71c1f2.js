@@ -108,7 +108,7 @@ async function load({ params, route, url, parent }) {
   const github = siteData.github;
   const monitorsActive = [];
   for (let i = 0; i < monitors.length; i++) {
-    if (monitors[i].hidden !== void 0 || monitors[i].hidden === true) {
+    if (monitors[i].hidden !== void 0 && monitors[i].hidden === true) {
       continue;
     }
     const gitHubActiveIssues = await GetIncidents(monitors[i].tag, github, "open");
@@ -138,4 +138,4 @@ const stylesheets = [];
 const fonts = [];
 
 export { component, fonts, imports, index, _page_server as server, server_id, stylesheets };
-//# sourceMappingURL=2-18b83512.js.map
+//# sourceMappingURL=2-ed71c1f2.js.map

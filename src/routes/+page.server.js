@@ -11,7 +11,7 @@ export async function load({ params, route, url, parent }) {
     const github = siteData.github;
     const monitorsActive = [];
 	for (let i = 0; i < monitors.length; i++) {
-		if (monitors[i].hidden !== undefined || monitors[i].hidden === true) {
+		if (monitors[i].hidden !== undefined && monitors[i].hidden === true) {
 			continue;
         }
        	const gitHubActiveIssues = await GetIncidents(monitors[i].tag, github, "open");
