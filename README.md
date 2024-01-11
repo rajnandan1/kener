@@ -61,6 +61,6 @@ Read the documentation [here](https://kener.ing/docs)
 
 <a href="https://www.buymeacoffee.com/app/rajnandan1"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=rajnandan1&button_colour=5F7FFF&font_colour=ffffff&font_family=Poppins&outline_colour=000000&coffee_colour=FFDD00" /></a>
 
-<a href="hhttps://www.paypal.com/paypalme/rajnandan1"><img src="static/paypal.png" /></a>
+<a href="hhttps://www.paypal.com/paypalme/rajnandan1"><img style="height:90px;margin-left:-15px" src="static/paypal.png" /></a>
 
 
