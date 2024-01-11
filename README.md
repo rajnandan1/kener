@@ -15,8 +15,10 @@ It uses files to store the data. Other adapters are coming soon
 > **Warning**
 > Kener is still under development. There might be bugs. Please report them by raising a github issue and I will fix them.
 
-Visit a live server [here](https://kener.ing)
-Read the documentation [here](https://kener.ing/docs) 
+#### Visit a live server [here](https://kener.ing)
+
+#### Read the documentation [here](https://kener.ing/docs) 
+
 ![alt text](static/ss.png "SS")
 
 ## Features
