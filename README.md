@@ -22,7 +22,7 @@ Read the documentation [here](https://kener.ing/docs)
 ## Features
 
 - Real-time monitoring
-- Handles Timezones with you knowing it
+- Handles Timezones without you knowing it
 - Customizable status page
 - Easy installation and setup
 - Automated incident management
