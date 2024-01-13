@@ -26,14 +26,15 @@ It uses files to store the data. Other adapters are coming soon
 - Real-time monitoring
 - Handles Timezones without you knowing it
 - Customizable status page
+- 100% Accessiblty Score
 - Easy installation and setup
 - Automated incident management
 - GitHub integration for issue tracking
 - Environment variable configuration
 - Production and custom deployment options
 - API for status updates
-- Badge generation for status and uptime display
-- Branding and theme customization
+- Badge generation for status and uptime display + Customization
+- Branding and theme (light + dark) customization
 - Flexible monitor configuration using YAML
 - Cron-based scheduling for monitors
 - Secrets management for headers and bodies

@@ -43,20 +43,28 @@
         }, 1000 * 1);
     }
 
+	function scrollToRight() {
+		setTimeout(() => {
+			let divs = document.querySelectorAll(".daygrid90");
+			divs.forEach((div) => {
+				div.scrollLeft = div.scrollWidth;
+			});
+		}, 1000 * .2);
+	}
     function switchView(s) {
         view = s;
         if (Object.keys(_0Day).length == 0) {
             getToday();
         }
+		if (view == '90day') {
+			scrollToRight();
+		}
     }
 
     onMount(async () => {
         //getToday();
         //for each div with class 90daygrid scroll to right most
-        let divs = document.querySelectorAll(".daygrid90");
-        divs.forEach((div) => {
-            div.scrollLeft = div.scrollWidth;
-        });
+        scrollToRight()
     });
 </script>
 <div class="grid grid-cols-12 gap-4 monitor pb-4">
@@ -157,3 +165,12 @@
         </div>
     </div>
 </div>
+<style>
+	.daygrid90 {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox */
+}
+.daygrid90::-webkit-scrollbar { 
+    display: none;  /* Safari and Chrome */
+}
+</style>

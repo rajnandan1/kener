@@ -19,6 +19,10 @@ const Arrow_right = create_ssr_component(($$result, $$props, $$bindings, slots) 
   })}`;
 });
 const ArrowRight = Arrow_right;
+const css = {
+  code: ".daygrid90.svelte-zfo4se{-ms-overflow-style:none;scrollbar-width:none}.daygrid90.svelte-zfo4se::-webkit-scrollbar{display:none}",
+  map: null
+};
 const Monitor = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   let { monitor } = $$props;
   let { localTz } = $$props;
@@ -33,6 +37,7 @@ const Monitor = create_ssr_component(($$result, $$props, $$bindings, slots) => {
     $$bindings.monitor(monitor);
   if ($$props.localTz === void 0 && $$bindings.localTz && localTz !== void 0)
     $$bindings.localTz(localTz);
+  $$result.css.add(css);
   return `<div class="grid grid-cols-12 gap-4 monitor pb-4"><div class="col-span-12 md:col-span-4"><div class="pt-1"><div class="scroll-m-20 text-2xl font-semibold tracking-tight">${monitor.image ? `<img${add_attribute("src", monitor.image, 0)} class="w-6 h-6 inline" alt="" srcset="">` : ``} ${escape(monitor.name)} ${monitor.description ? `${validate_component(Root, "HoverCard.Root").$$render($$result, {}, {}, {
     default: () => {
       return `${validate_component(Trigger, "HoverCard.Trigger").$$render($$result, {}, {}, {
@@ -45,7 +50,7 @@ const Monitor = create_ssr_component(($$result, $$props, $$bindings, slots) => {
         }
       })}`;
     }
-  })}` : ``}</div></div> <div class="mt-2"><div class="grid grid-cols-2 gap-0"><div class="col-span-2 -mt-2"><a href="${"/incident/" + escape(monitor.folderName, true) + "#past_incident"}" class="${"pt-0 pl-0 pb-0 text-indigo-500 text-left " + escape(buttonVariants({ variant: "link" }), true)}">Recent Incidents ${validate_component(ArrowRight, "ArrowRight").$$render($$result, { size: 16 }, {}, {})}</a></div></div></div></div> <div class="col-span-12 md:col-span-8 pt-2"><div class="grid grid-cols-12"><div class="col-span-12 md:col-span-8 h-[32px]"><button class="inline-block">${validate_component(Badge, "Badge").$$render(
+  })}` : ``}</div></div> <div class="mt-2"><div class="grid grid-cols-2 gap-0"><div class="col-span-2 -mt-2"><a href="${"/incident/" + escape(monitor.folderName, true) + "#past_incident"}" class="${"pt-0 pl-0 pb-0 text-indigo-500 text-left " + escape(buttonVariants({ variant: "link" }), true) + " svelte-zfo4se"}">Recent Incidents ${validate_component(ArrowRight, "ArrowRight").$$render($$result, { size: 16 }, {}, {})}</a></div></div></div></div> <div class="col-span-12 md:col-span-8 pt-2"><div class="grid grid-cols-12"><div class="col-span-12 md:col-span-8 h-[32px]"><button class="inline-block">${validate_component(Badge, "Badge").$$render(
     $$result,
     {
       variant: ""
@@ -60,9 +65,9 @@ const Monitor = create_ssr_component(($$result, $$props, $$bindings, slots) => {
     default: () => {
       return `Today ► ${escape(uptime0Day)}%`;
     }
-  })}</button></div> <div class="col-span-12 md:col-span-4 text-right h-[32px]">${_90Day[todayDD] ? `<div class="${"text-api-up md:pr-6 text-sm font-semibold mt-[4px] text-" + escape(_90Day[todayDD].cssClass, true)}">${escape(_90Day[todayDD].message)}</div>` : ``}</div></div> <div class="grid grid-cols-12">${`<div class="chart-status relative mt-1 col-span-12"><div class="flex overflow-x-auto daygrid90 overflow-y-hidden">${each(Object.entries(_90Day), ([ts, bar]) => {
-    return `<div class="h-[30px] w-[6px] rounded-sm oneline"><div class="${"h-[30px] bg-" + escape(bar.cssClass, true) + " w-[4px] rounded-sm mr-[2px]"}"></div></div> <div class="absolute show-hover text-sm bg-background"><div class="${"text-" + escape(bar.cssClass, true) + " font-semibold"}">${bar.message != "No Data" ? `● ${escape(new Date(bar.timestamp * 1e3).toLocaleDateString())} ${escape(bar.message)}` : `● ${escape(new Date(bar.timestamp * 1e3).toLocaleDateString())} ${escape(bar.message)}`}</div> </div>`;
-  })}</div></div>`}</div></div></div>`;
+  })}</button></div> <div class="col-span-12 md:col-span-4 text-right h-[32px]">${_90Day[todayDD] ? `<div class="${"text-api-up md:pr-6 text-sm font-semibold mt-[4px] text-" + escape(_90Day[todayDD].cssClass, true) + " svelte-zfo4se"}">${escape(_90Day[todayDD].message)}</div>` : ``}</div></div> <div class="grid grid-cols-12">${`<div class="chart-status relative mt-1 col-span-12"><div class="flex overflow-x-auto daygrid90 overflow-y-hidden svelte-zfo4se">${each(Object.entries(_90Day), ([ts, bar]) => {
+    return `<div class="h-[30px] w-[6px] rounded-sm oneline"><div class="${"h-[30px] bg-" + escape(bar.cssClass, true) + " w-[4px] rounded-sm mr-[2px] svelte-zfo4se"}"></div></div> <div class="absolute show-hover text-sm bg-background"><div class="${"text-" + escape(bar.cssClass, true) + " font-semibold svelte-zfo4se"}">${bar.message != "No Data" ? `● ${escape(new Date(bar.timestamp * 1e3).toLocaleDateString())} ${escape(bar.message)}` : `● ${escape(new Date(bar.timestamp * 1e3).toLocaleDateString())} ${escape(bar.message)}`}</div> </div>`;
+  })}</div></div>`}</div></div> </div>`;
 });
 const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   let { data } = $$props;
@@ -115,4 +120,4 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 });
 
 export { Page as default };
-//# sourceMappingURL=_page.svelte-cc95dca1.js.map
+//# sourceMappingURL=_page.svelte-5ba981ef.js.map
