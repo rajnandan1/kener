@@ -6,6 +6,17 @@ import Randomstring from 'randomstring';
 
 const API_TOKEN = process.env.API_TOKEN;
 const API_IP = process.env.API_IP;
+const GetAllTags = function() {
+  let tags = [];
+  let monitors = [];
+  try {
+    monitors = JSON.parse(fs.readFileSync(public_env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+    tags = monitors.map((monitor) => monitor.tag);
+  } catch (err) {
+    return [];
+  }
+  return tags;
+};
 const CheckIfValidTag = function(tag) {
   let tags = [];
   let monitors = [];
@@ -25,7 +36,15 @@ const auth = function(request) {
   const authToken = authHeader.replace("Bearer ", "");
   let ip = "";
   try {
-    ip = request.headers.get("x-forwarded-for") || request.socket.remoteAddress || request.headers.get("x-real-ip");
+    if (request.headers.get("x-forwarded-for") !== null) {
+      ip = request.headers.get("x-forwarded-for").split(",")[0];
+    } else if (request.headers.get("x-real-ip") !== null) {
+      ip = request.headers.get("x-real-ip");
+    } else if (request.connection && request.connection.remoteAddress !== null) {
+      ip = request.connection.remoteAddress;
+    } else if (request.socket && request.socket.remoteAddress !== null) {
+      ip = request.socket.remoteAddress;
+    }
   } catch (err) {
     console.log("IP Not Found " + err.message);
   }
@@ -81,17 +100,14 @@ const GHIssueToKenerIncident = function(issue) {
   let issueLabels = issue.labels.map((label) => {
     return label.name;
   });
-  let monitors = JSON.parse(fs.readFileSync(public_env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
-  let tagsAvailable = monitors.map((monitor) => {
-    return monitor.tag;
-  });
+  let tagsAvailable = GetAllTags();
   let commonTags = tagsAvailable.filter((tag) => issueLabels.includes(tag));
   let resp = {
     createdAt: Math.floor(new Date(issue.created_at).getTime() / 1e3),
     //in seconds
     closedAt: issue.closed_at ? Math.floor(new Date(issue.closed_at).getTime() / 1e3) : null,
     title: issue.title,
-    tag: commonTags[0],
+    tags: commonTags,
     incidentNumber: issue.number
   };
   resp.startDatetime = GetStartTimeFromBody(issue.body);
@@ -125,7 +141,7 @@ const ParseIncidentPayload = function(payload) {
   let endDatetime = payload.endDatetime;
   let title = payload.title;
   let body = payload.body || "";
-  let tag = payload.tag;
+  let tags = payload.tags;
   let impact = payload.impact;
   let isMaintenance = payload.isMaintenance;
   let isIdentified = payload.isIdentified;
@@ -139,8 +155,8 @@ const ParseIncidentPayload = function(payload) {
   if (!title || typeof title !== "string") {
     return { error: "Invalid title" };
   }
-  if (!tag || typeof tag !== "string") {
-    return { error: "Invalid tag" };
+  if (!tags || !Array.isArray(tags) || tags.length === 0 || tags.some((tag) => typeof tag !== "string")) {
+    return { error: "Invalid tags" };
   }
   if (body && typeof body !== "string") {
     return { error: "Invalid body" };
@@ -148,11 +164,17 @@ const ParseIncidentPayload = function(payload) {
   if (impact && (typeof impact !== "string" || ["DOWN", "DEGRADED"].indexOf(impact) === -1)) {
     return { error: "Invalid impact" };
   }
-  if (!CheckIfValidTag(tag)) {
-    return { error: "Invalid tag" };
+  const allTags = GetAllTags();
+  if (tags.some((tag) => allTags.indexOf(tag) === -1)) {
+    return { error: "Unknown tags" };
+  }
+  if (isMaintenance && typeof isMaintenance !== "boolean") {
+    return { error: "Invalid isMaintenance" };
   }
   let githubLabels = ["incident"];
-  githubLabels.push(tag);
+  tags.forEach((tag) => {
+    githubLabels.push(tag);
+  });
   if (impact) {
     githubLabels.push("incident-" + impact.toLowerCase());
   }
@@ -173,4 +195,4 @@ const ParseIncidentPayload = function(payload) {
 };
 
 export { GHIssueToKenerIncident as G, ParseIncidentPayload as P, auth as a, store as s };
-//# sourceMappingURL=webhook-bd364d16.js.map
+//# sourceMappingURL=webhook-8fe4f1b9.js.map

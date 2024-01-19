@@ -38,7 +38,7 @@ const Monitor = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   if ($$props.localTz === void 0 && $$bindings.localTz && localTz !== void 0)
     $$bindings.localTz(localTz);
   $$result.css.add(css);
-  return `<div class="grid grid-cols-12 gap-4 monitor pb-4"><div class="col-span-12 md:col-span-4"><div class="pt-1"><div class="scroll-m-20 text-2xl font-semibold tracking-tight">${monitor.image ? `<img${add_attribute("src", monitor.image, 0)} class="w-6 h-6 inline" alt="" srcset="">` : ``} ${escape(monitor.name)} ${monitor.description ? `${validate_component(Root, "HoverCard.Root").$$render($$result, {}, {}, {
+  return `<div class="grid grid-cols-12 gap-4 monitor pb-4"><div class="col-span-12 md:col-span-4"><div class="pt-1"><div class="scroll-m-20 text-2xl font-semibold tracking-tight">${monitor.image ? `<img${add_attribute("src", monitor.image, 0)} class="w-6 h-6 inline"${add_attribute("alt", monitor.name, 0)} srcset="">` : ``} ${escape(monitor.name)} ${monitor.description ? `${validate_component(Root, "HoverCard.Root").$$render($$result, {}, {}, {
     default: () => {
       return `${validate_component(Trigger, "HoverCard.Trigger").$$render($$result, {}, {}, {
         default: () => {
@@ -120,4 +120,4 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 });
 
 export { Page as default };
-//# sourceMappingURL=_page.svelte-5ba981ef.js.map
+//# sourceMappingURL=_page.svelte-51d2f534.js.map

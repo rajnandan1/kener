@@ -1,9 +1,9 @@
 {
     "name": "kener",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "private": false,
     "license": "MIT",
-    "description": "Kener: An open-source Node.js status page application for real-time service monitoring, incident management, and customizable reporting. Simplify service outage tracking, enhance incident communication, and ensure a seamless user experience with Kener's intuitive dashboard and robust features.",
+    "description": "Kener: An open-source Node.js status page application for real-time service monitoring, incident management, and customizable reporting. Simplify service outage tracking, enhance incident communication, and ensure a seamless user experience.",
     "author": "Raj Nandan Sharma <rajnandan1@gmail.com>",
     "keywords": [
         "Node.js application",

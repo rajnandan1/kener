@@ -1,5 +1,5 @@
 import { j as json } from './index-2b68e648.js';
-import { a as auth, P as ParseIncidentPayload, G as GHIssueToKenerIncident } from './webhook-bd364d16.js';
+import { a as auth, P as ParseIncidentPayload, G as GHIssueToKenerIncident } from './webhook-8fe4f1b9.js';
 import { U as UpdateIssue, a as GetIncidentByNumber } from './github-54c09baa.js';
 import { p as public_env } from './shared-server-58a5f352.js';
 import fs from 'fs-extra';
@@ -53,6 +53,15 @@ async function PATCH({ request, params }) {
   });
 }
 async function GET({ request, params }) {
+  const authError = auth(request);
+  if (authError !== null) {
+    return json(
+      { error: authError.message },
+      {
+        status: 401
+      }
+    );
+  }
   const incidentNumber = params.incidentNumber;
   let site = JSON.parse(fs.readFileSync(public_env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
   let github = site.github;
@@ -71,4 +80,4 @@ async function GET({ request, params }) {
 }
 
 export { GET, PATCH };
-//# sourceMappingURL=_server-21dfbd18.js.map
+//# sourceMappingURL=_server-f099852d.js.map

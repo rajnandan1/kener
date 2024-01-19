@@ -1,5 +1,5 @@
 import { j as json } from './index-2b68e648.js';
-import { a as auth } from './webhook-bd364d16.js';
+import { a as auth } from './webhook-8fe4f1b9.js';
 import { b as GetCommentsForIssue, A as AddComment } from './github-54c09baa.js';
 import { p as public_env } from './shared-server-58a5f352.js';
 import fs from 'fs-extra';
@@ -96,4 +96,4 @@ async function POST({ request, params }) {
 }
 
 export { GET, POST };
-//# sourceMappingURL=_server-d9ce737b.js.map
+//# sourceMappingURL=_server-170f9674.js.map
