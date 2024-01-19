@@ -53,6 +53,15 @@ export async function PATCH({ request, params }) {
 }
 
 export async function GET({ request, params }) {
+	const authError = auth(request);
+    if (authError !== null) {
+        return json(
+            { error: authError.message },
+            {
+                status: 401,
+            }
+        );
+    }
     const incidentNumber = params.incidentNumber; //number required
     // const headers = await request.headers();
     

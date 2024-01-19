@@ -546,7 +546,7 @@ Can be use to create an incident from a remote server
 | endDatetime        | `Optional` When did the incident end in  UTC seconds                                 |
 | title              | `Required` Title of the incident        				                                |
 | body               | `Optional` Body of the incident        				                                |
-| tag                | `Required` Monitor Tag of the incident    			                                |
+| tags               | `Required` Array of String, Monitor Tags of the incident                             |
 | impact             | `Optional` Can be only DOWN/DEGRADED     			                                |
 | isMaintenance      | `Optional` Boolean if incident is a maitainance                                      |
 | isIdentified       | `Optional` Incident identified                                                       |
@@ -562,7 +562,7 @@ curl --request POST \
 	"endDatetime": 1702405920,
 	"title": "Outage in Mumbai",
 	"body": "Login cluster is down in mumbai region",
-	"tag": "google-search",
+	"tags": ["google-search"],
 	"impact": "DOWN",
 	"isMaintenance": false,
 	"isIdentified": true,
@@ -576,7 +576,7 @@ curl --request POST \
 	"createdAt": 1703940450,
 	"closedAt": null,
 	"title": "Outage in Mumbai",
-	"tag": "google-search",
+	"tags": ["google-search"],
 	"incidentNumber": 12,
 	"startDatetime": 1702405740,
 	"endDatetime": 1702405920,
@@ -601,7 +601,7 @@ Can be use to update an incident from a remote server. It will clear values if n
 | endDatetime        | `Optional` When did the incident end in  UTC seconds                                 |
 | title              | `Required` Title of the incident        				                                |
 | body               | `Optional` Body of the incident        				                                |
-| tag                | `Required` Monitor Tag of the incident    			                                |
+| tags               | `Required` Array of String, Monitor Tags of the incident                            |
 | impact             | `Optional` Can be only DOWN/DEGRADED     			                                |
 | isMaintenance      | `Optional` Boolean if incident is a maitainance                                      |
 | isIdentified       | `Optional` Incident identified                                                       |
@@ -617,7 +617,7 @@ curl --request PATCH \
 	"endDatetime": 1702405920,
 	"title": "Outage in Mumbai",
 	"body": "Login cluster is down in mumbai region",
-	"tag": "google-search",
+	"tags": ["google-search"],
 	"impact": "DOWN",
 	"isMaintenance": false,
 	"isIdentified": true,
@@ -631,7 +631,7 @@ curl --request PATCH \
 	"createdAt": 1703940450,
 	"closedAt": null,
 	"title": "Outage in Mumbai",
-	"tag": "google-search",
+	"tags": ["google-search"],
 	"incidentNumber": 12,
 	"startDatetime": 1702405740,
 	"endDatetime": 1702405920,
@@ -661,7 +661,7 @@ curl --request GET \
 	"createdAt": 1703940450,
 	"closedAt": null,
 	"title": "Outage in Mumbai",
-	"tag": "google-search",
+	"tags": ["google-search"],
 	"incidentNumber": 12,
 	"startDatetime": 1702405740,
 	"endDatetime": 1702405920,
@@ -752,7 +752,7 @@ curl --request POST \
 	"createdAt": 1703940450,
 	"closedAt": null,
 	"title": "Outage in Mumbai",
-	"tag": "google-search",
+	"tags": ["google-search"],
 	"incidentNumber": 12,
 	"startDatetime": 1702405740,
 	"endDatetime": 1702405920,

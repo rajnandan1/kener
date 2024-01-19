@@ -8,7 +8,6 @@ import fs from "fs-extra";
 
 export async function POST({ request }) {
     const payload = await request.json();
-    // const headers = await request.headers();
     const authError = auth(request);
     if (authError !== null) {
         return json(

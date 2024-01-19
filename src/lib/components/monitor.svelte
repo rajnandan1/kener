@@ -72,7 +72,7 @@
         <div class="pt-1">
             <div class="scroll-m-20 text-2xl font-semibold tracking-tight">
                 {#if monitor.image}
-                <img src="{monitor.image}" class="w-6 h-6 inline" alt="" srcset="" />
+                <img src="{monitor.image}" class="w-6 h-6 inline" alt="{monitor.name}" srcset="" />
                 {/if} {monitor.name} {#if monitor.description}
                 <HoverCard.Root>
                     <HoverCard.Trigger>

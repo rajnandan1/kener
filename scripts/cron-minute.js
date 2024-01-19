@@ -44,7 +44,10 @@ async function manualIncident(monitor, githubConfig){
         if (end_time !== null) {
             newIncident.end_time = end_time;
 			if(end_time <= GetNowTimestampUTC() && incident.state === "open"){
-				await CloseIssue(githubConfig, incidentNumber)
+				//close the issue after 30 secs
+				setTimeout(async () => {
+					await CloseIssue(githubConfig, incidentNumber)
+				}, 30000)
 			}
         } else {
             newIncident.end_time = GetNowTimestampUTC();
