@@ -15,7 +15,7 @@
 
 	function handleHeightChange(event) {
 		//use window.postMessage to send the height to the parent
-		element.classList.remove("hidden");
+		
 		window.parent.postMessage(
 			{
 				height: element.offsetHeight,
@@ -42,7 +42,7 @@
      
 </script>
 {#if data.monitors.length > 0}
-<section class="w-fit p-0 hidden" bind:this="{element}">
+<section class="w-fit p-0" bind:this="{element}">
     <Card.Root class="w-[580px] border-0 shadow-none">
         <Card.Content class="p-0 monitors-card ">
             {#each data.monitors as monitor}
