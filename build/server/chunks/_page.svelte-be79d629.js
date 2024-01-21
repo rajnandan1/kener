@@ -1,11 +1,10 @@
-import { c as create_ssr_component, d as subscribe, e as escape, b as add_attribute, v as validate_component, a as each } from './ssr-f056b9d4.js';
-import { M as Monitor } from './monitor-03a6a94b.js';
+import { c as create_ssr_component, e as escape, v as validate_component, a as each } from './ssr-f056b9d4.js';
+import { M as Monitor } from './monitor-27be4546.js';
 import { C as Card, a as Card_content } from './Icon-c4d21504.js';
 import 'clsx';
 import { I as Incident } from './incident-55ad4db5.js';
 import './ctx-0629e220.js';
 import { B as Badge } from './index4-03a346fb.js';
-import { p as page } from './stores-0262db6b.js';
 import './index3-45856754.js';
 import 'tailwind-variants';
 import 'tailwind-merge';
@@ -15,10 +14,7 @@ import './chevron-down-77916ef7.js';
 import './index2-ef0fcb8d.js';
 
 const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
-  let $page, $$unsubscribe_page;
-  $$unsubscribe_page = subscribe(page, (value) => $page = value);
   let { data } = $$props;
-  let category = data.site.categories.find((c) => c.name === $page.params.category);
   let hasActiveIncidents = false;
   for (let i = 0; i < data.monitors.length; i++) {
     if (data.monitors[i].activeIncidents.length > 0) {
@@ -28,8 +24,7 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
   }
   if ($$props.data === void 0 && $$bindings.data && data !== void 0)
     $$bindings.data(data);
-  $$unsubscribe_page();
-  return `${$$result.head += `<!-- HEAD_svelte-zgbzo2_START -->${category ? `${$$result.title = `<title>${escape(category.name)} Categorry Page</title>`, ""} ${category.description ? `<meta name="description"${add_attribute("content", category.description, 0)}>` : ``}` : ``}<!-- HEAD_svelte-zgbzo2_END -->`, ""} <div class="mt-32"></div> ${category ? `<section class="mx-auto flex w-full max-w-4xl mb-8 flex-1 flex-col items-start justify-center"><div class="mx-auto max-w-screen-xl px-4 lg:flex lg:items-center"><div class="mx-auto max-w-3xl text-center blurry-bg">${category.name ? `<h1 class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold text-transparent leading-snug">${escape(category.name)}</h1>` : ``} ${category.description ? `<p class="mx-auto mt-4 max-w-xl sm:text-xl">${escape(category.description)}</p>` : ``}</div></div></section>` : ``} ${hasActiveIncidents ? `<section class="mx-auto bg-transparent mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id=""><div class="grid w-full grid-cols-2 gap-4"><div class="col-span-2 md:col-span-1 text-center md:text-left">${validate_component(Badge, "Badge").$$render($$result, { variant: "outline" }, {}, {
+  return `${$$result.head += `<!-- HEAD_svelte-11ekmvk_START -->${data.monitors.length > 0 ? `${$$result.title = `<title>${escape(data.monitors[0].name)} Monitor Page</title>`, ""}` : ``}<!-- HEAD_svelte-11ekmvk_END -->`, ""} <div class="mt-32"></div> ${hasActiveIncidents ? `<section class="mx-auto bg-transparent mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id=""><div class="grid w-full grid-cols-2 gap-4"><div class="col-span-2 md:col-span-1 text-center md:text-left">${validate_component(Badge, "Badge").$$render($$result, { variant: "outline" }, {}, {
     default: () => {
       return `Ongoing Incidents`;
     }
@@ -78,4 +73,4 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 });
 
 export { Page as default };
-//# sourceMappingURL=_page.svelte-67b57d54.js.map
+//# sourceMappingURL=_page.svelte-be79d629.js.map

@@ -14,10 +14,7 @@ async function load({ params, route, url, parent }) {
   const github = siteData.github;
   const monitorsActive = [];
   for (let i = 0; i < monitors.length; i++) {
-    if (monitors[i].hidden !== void 0 && monitors[i].hidden === true) {
-      continue;
-    }
-    if (monitors[i].category !== void 0 && monitors[i].category !== "home") {
+    if (monitors[i].tag !== params.tag) {
       continue;
     }
     const gitHubActiveIssues = await GetIncidents(monitors[i].tag, github, "open");
@@ -38,13 +35,13 @@ var _page_server = /*#__PURE__*/Object.freeze({
   load: load
 });
 
-const index = 2;
+const index = 7;
 let component_cache;
-const component = async () => component_cache ??= (await import('./_page.svelte-a9a4431f.js')).default;
-const server_id = "src/routes/+page.server.js";
-const imports = ["_app/immutable/nodes/2.b0f80507.js","_app/immutable/chunks/scheduler.71bb06cf.js","_app/immutable/chunks/index.0750685b.js","_app/immutable/chunks/ctx.42013687.js","_app/immutable/chunks/index.8fc884bc.js","_app/immutable/chunks/monitor.d068e0ea.js","_app/immutable/chunks/moment.60ffb904.js","_app/immutable/chunks/Icon.9b837364.js","_app/immutable/chunks/index.63425bb3.js","_app/immutable/chunks/incident.41f33947.js","_app/immutable/chunks/chevron-down.f5d536ec.js"];
+const component = async () => component_cache ??= (await import('./_page.svelte-be79d629.js')).default;
+const server_id = "src/routes/monitor-[tag]/+page.server.js";
+const imports = ["_app/immutable/nodes/7.783e0860.js","_app/immutable/chunks/scheduler.71bb06cf.js","_app/immutable/chunks/index.0750685b.js","_app/immutable/chunks/ctx.42013687.js","_app/immutable/chunks/index.8fc884bc.js","_app/immutable/chunks/monitor.3478c00d.js","_app/immutable/chunks/moment.60ffb904.js","_app/immutable/chunks/Icon.9b837364.js","_app/immutable/chunks/index.63425bb3.js","_app/immutable/chunks/incident.41f33947.js","_app/immutable/chunks/chevron-down.f5d536ec.js","_app/immutable/chunks/paths.22991dd0.js"];
 const stylesheets = ["_app/immutable/assets/monitor.f0f362d5.css"];
 const fonts = [];
 
 export { component, fonts, imports, index, _page_server as server, server_id, stylesheets };
-//# sourceMappingURL=2-4782e693.js.map
+//# sourceMappingURL=7-f9cfaf2a.js.map

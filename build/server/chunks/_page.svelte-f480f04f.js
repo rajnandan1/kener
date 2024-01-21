@@ -1,5 +1,5 @@
 import { c as create_ssr_component, d as subscribe, b as add_attribute, v as validate_component, a as each } from './ssr-f056b9d4.js';
-import { M as Monitor } from './monitor-03a6a94b.js';
+import { M as Monitor } from './monitor-27be4546.js';
 import { C as Card, a as Card_content } from './Icon-c4d21504.js';
 import 'clsx';
 import './ctx-0629e220.js';
@@ -42,4 +42,4 @@ const Page = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 });
 
 export { Page as default };
-//# sourceMappingURL=_page.svelte-f16bf3b4.js.map
+//# sourceMappingURL=_page.svelte-f480f04f.js.map

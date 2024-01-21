@@ -225,7 +225,7 @@
 							</span>
 							{/if}
 						</Button>
-						<h2 class="mb-2 mt-4 text-lg font-semibold px-2">Badge</h2>
+						<h2 class="mb-2 mt-2 text-lg font-semibold px-2">Badge</h2>
 						<p class="pl-2 mb-2 text-muted-foreground text-sm">
 							Get SVG badge for this monitor
 						</p>

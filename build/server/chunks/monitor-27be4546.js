@@ -476,7 +476,7 @@ const Monitor = create_ssr_component(($$result, $$props, $$bindings, slots) => {
                   return `${`${validate_component(Code$1, "Code").$$render($$result, { class: "inline mr-2", size: 12 }, {}, {})} <span class="text-sm font-medium" data-svelte-h="svelte-179knlb">Copy Code</span>`}`;
                 }
               }
-            )} <h2 class="mb-2 mt-4 text-lg font-semibold px-2" data-svelte-h="svelte-i6snld">Badge</h2> <p class="pl-2 mb-2 text-muted-foreground text-sm" data-svelte-h="svelte-1g6m39e">Get SVG badge for this monitor</p> ${validate_component(Button, "Button").$$render(
+            )} <h2 class="mb-2 mt-2 text-lg font-semibold px-2" data-svelte-h="svelte-1uttecz">Badge</h2> <p class="pl-2 mb-2 text-muted-foreground text-sm" data-svelte-h="svelte-1g6m39e">Get SVG badge for this monitor</p> ${validate_component(Button, "Button").$$render(
               $$result,
               {
                 class: "mb-2 mt-2 ml-2",
@@ -533,4 +533,4 @@ const Monitor = create_ssr_component(($$result, $$props, $$bindings, slots) => {
 });
 
 export { Monitor as M };
-//# sourceMappingURL=monitor-03a6a94b.js.map
+//# sourceMappingURL=monitor-27be4546.js.map
