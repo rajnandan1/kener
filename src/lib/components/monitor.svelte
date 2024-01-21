@@ -5,7 +5,7 @@
     import { Separator } from "$lib/components/ui/separator";
     import { onMount } from "svelte";
     import { Button } from "$lib/components/ui/button";
-    import { ArrowRight, Share2, Info, Link, CopyCheck, Code } from "lucide-svelte";
+    import { ArrowRight, Share2, Info, Link, CopyCheck, Code, TrendingUp, Percent } from "lucide-svelte";
     import { buttonVariants } from "$lib/components/ui/button";
     import { Skeleton } from "$lib/components/ui/skeleton";
 	import { createEventDispatcher } from 'svelte';
@@ -31,6 +31,8 @@
     let view = "90day";
 	let copiedLink = false;
 	let copiedEmbed = false;
+	let copiedBadgeStatus = false;
+	let copiedBadgeUptime = false;
 
 	function copyLinkToClipboard(){
 		let link = window.location.href;
@@ -42,6 +44,24 @@
 		navigator.clipboard.writeText(protocol + "//" + domain + path);
 		copiedLink = true;
 		setTimeout(function(){copiedLink = false}, 1500)
+	}
+	function copyUptimeBadge(){
+		let link = window.location.href;
+		let domain = window.location.host;
+		let protocol = window.location.protocol;
+		let path = `/badge/${monitor.tag}/uptime`;
+		navigator.clipboard.writeText(protocol + "//" + domain + path);
+		copiedBadgeUptime = true;
+		setTimeout(function(){copiedBadgeUptime = false}, 1500)
+	}
+	function copyStatusBadge(){
+		let link = window.location.href;
+		let domain = window.location.host;
+		let protocol = window.location.protocol;
+		let path = `/badge/${monitor.tag}/status`;
+		navigator.clipboard.writeText(protocol + "//" + domain + path);
+		copiedBadgeStatus = true;
+		setTimeout(function(){copiedBadgeStatus = false}, 1500)
 	}
 
 	function copyScriptTagToClipboard(){
@@ -136,7 +156,7 @@
 							<Share2 size="{16}" />
 						</span>
                     </HoverCard.Trigger>
-                    <HoverCard.Content class=" pl-1 pr-1 pb-1">
+                    <HoverCard.Content class=" pl-1 pr-1 pb-1 w-[375px]">
 						<h2 class="mb-1 text-lg font-semibold px-2">Share</h2>
 						<p class="pl-2 mb-2 text-muted-foreground text-sm">
 							Share this monitor using a link with others.
@@ -154,7 +174,7 @@
 							</span>
 							{/if}
 						</Button>
-						<h2 class="mb-2 mt-2 text-lg font-semibold px-2">Embed</h2>
+						<h2 class="mb-2 mt-4 text-lg font-semibold px-2">Embed</h2>
 						<p class="pl-2 mb-2 text-muted-foreground text-sm">
 							Embed this monitor using &#x3C;script&#x3E; or &#x3C;iframe&#x3E; in your app.
 						</p>
@@ -202,6 +222,36 @@
 							<CopyCheck class="inline  mr-2" size="{12}" />
 							<span class="text-sm font-medium ">
 								Copied Code
+							</span>
+							{/if}
+						</Button>
+						<h2 class="mb-2 mt-4 text-lg font-semibold px-2">Badge</h2>
+						<p class="pl-2 mb-2 text-muted-foreground text-sm">
+							Get SVG badge for this monitor
+						</p>
+						<Button   class="mb-2 mt-2 ml-2" variant="secondary" on:click="{copyStatusBadge}">
+							{#if !copiedBadgeStatus}
+							<TrendingUp class="inline mr-2" size="{12}" /> 
+							<span class="text-sm font-medium">
+								Status Badge
+							</span>
+							{:else}
+							<CopyCheck class="inline  mr-2" size="{12}" />
+							<span class="text-sm font-medium ">
+								Copied Badge
+							</span>
+							{/if}
+						</Button>
+						<Button   class="mb-2 mt-2 ml-2" variant="secondary" on:click="{copyUptimeBadge}">
+							{#if !copiedBadgeUptime}
+							<Percent class="inline mr-2" size="{12}" /> 
+							<span class="text-sm font-medium">
+								Uptime Badge
+							</span>
+							{:else}
+							<CopyCheck class="inline  mr-2" size="{12}" />
+							<span class="text-sm font-medium ">
+								Copied Badge
 							</span>
 							{/if}
 						</Button>

@@ -1,6 +1,8 @@
 <script>
     import Monitor from "$lib/components/monitor.svelte";
     import * as Card from "$lib/components/ui/card";
+	import { Button, buttonVariants } from "$lib/components/ui/button";
+	
     import Incident from "$lib/components/incident.svelte";
     import { Separator } from "$lib/components/ui/separator";
     import { Badge } from "$lib/components/ui/badge";
@@ -62,12 +64,35 @@
     </div>
 </section>
 <section class="mx-auto backdrop-blur-[2px] mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center">
-    <Card.Root class="w-full ">
+    <Card.Root>
         <Card.Content class="p-0 monitors-card">
             {#each data.monitors as monitor}
             <Monitor {monitor} localTz="{data.localTz}" />
             {/each}
         </Card.Content>
     </Card.Root>
+</section>
+{/if} {#if data.site.categories}
+<section class="mx-auto backdrop-blur-[2px] mb-8 w-full max-w-[890px]">
+	<h2 class="text-xl mb-2 mt-2 font-semibold">
+		Other Monitors
+	</h2>
+    {#each data.site.categories as category}
+
+    <Card.Root class="w-full mb-2">
+        <Card.Header>
+            <Card.Title>{category.name}</Card.Title>
+            <Card.Description class="relative pr-[100px]">
+				{#if category.description}
+				{category.description}
+				{/if}
+				<a href="/category-{category.name}" class="{buttonVariants({ variant: 'secondary' })} absolute right-2 -top-4">
+					View
+				</a>
+			</Card.Description>
+        </Card.Header>
+    </Card.Root>
+
+    {/each}
 </section>
 {/if}
