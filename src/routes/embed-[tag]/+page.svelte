@@ -15,6 +15,7 @@
 
 	function handleHeightChange(event) {
 		//use window.postMessage to send the height to the parent
+		element.classList.remove("hidden");
 		window.parent.postMessage(
 			{
 				height: element.offsetHeight,
@@ -33,7 +34,7 @@
 			document.documentElement.classList.remove("dark");
 			document.documentElement.classList.remove("dark:bg-background");
 		}
-		element.classList.remove("hidden");
+		
 	});
 
     
