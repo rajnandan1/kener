@@ -335,7 +335,7 @@ Sample
 | api.eval          | Optional          | Evaluator written in JS, to parse HTTP response and calculate uptime and latency                      |
 | defaultStatus | Optional          | If no API is given this will be the default status. can be UP/DOWN/DEGRADED                               |
 | hidden | Optional          | If set to `true` will not show the monitor in the UI                                                             |
-| category | Optional          | Use this group your monitors. Make sure you have defined category in `site.yaml` and use the `name` attribute here                                                        |
+| category | Optional          | Use this to group your monitors. Make sure you have defined category in `site.yaml` and use the `name` attribute here                                                        |
 
 ## cron
 
