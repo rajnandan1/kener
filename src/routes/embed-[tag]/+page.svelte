@@ -14,7 +14,6 @@
 
 
 	function handleHeightChange(event) {
-		console.log(element.offsetHeight);
 		//use window.postMessage to send the height to the parent
 		window.parent.postMessage(
 			{

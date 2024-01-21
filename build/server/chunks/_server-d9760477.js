@@ -1,11 +1,13 @@
+import { p as public_env } from './shared-server-58a5f352.js';
+import fs from 'fs-extra';
+
+JSON.parse(fs.readFileSync(public_env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
 async function GET({ url, params }) {
   const { tag } = params;
-  const uriOriginal = url.href;
-  let theme = "light";
-  if (uriOriginal.search("theme=dark") !== -1) {
-    theme = "dark";
-  }
-  const uriEmbedded = uriOriginal.split("/js")[0];
+  const query = url.searchParams;
+  const uriEmbedded = query.get("monitor");
+  const theme = query.get("theme") || "light";
+  const uriOriginal = uriEmbedded;
   const currentSlug = tag;
   const js = `
 	(function () {
@@ -71,4 +73,4 @@ async function GET({ url, params }) {
 }
 
 export { GET };
-//# sourceMappingURL=_server-5f9f1aee.js.map
+//# sourceMappingURL=_server-d9760477.js.map

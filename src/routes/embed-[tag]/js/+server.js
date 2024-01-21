@@ -1,16 +1,15 @@
 // @ts-nocheck
 // @ts-ignore
+import { env } from "$env/dynamic/public";
+import fs from "fs-extra";
+const siteData = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
 export async function GET({ url, params }) {
     const { tag } = params;
-	const uriOriginal = url.href;
-	let theme = "light";
-	//search theme in url, set theme to dark if found
-	if (uriOriginal.search("theme=dark") !== -1) {
-		theme = "dark";
-	}
-	//remove /js from the end of the url
+	const query = url.searchParams;
+	const uriEmbedded = query.get("monitor");
+	const theme = query.get("theme") || "light";
+	const uriOriginal = uriEmbedded;
 
-	const uriEmbedded = uriOriginal.split("/js")[0];
 	const currentSlug = tag;
 	const js = `
 	(function () {

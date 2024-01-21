@@ -51,7 +51,7 @@
 		//get protocol
 		let protocol = window.location.protocol;
 		let path = "/embed-" + monitor.tag;
-		let scriptTag = `<script async src="${protocol + "//" + domain + path}/js?theme=${theme}"><` + '/script>';
+		let scriptTag = `<script async src="${protocol + "//" + domain + path}/js?theme=${theme}&monitor=${protocol + "//" + domain + path}"><` + '/script>';
 
 		if (embedType == 'iframe') {
 			scriptTag = `<iframe src="${protocol + "//" + domain + path}?theme=${theme}" width="100%" height="200" allowfullscreen="allowfullscreen" allowpaymentrequest frameborder="0"></iframe>`;

@@ -17,7 +17,7 @@ async function load({ params, route, url, parent }) {
     if (monitors[i].hidden !== void 0 && monitors[i].hidden === true) {
       continue;
     }
-    if (monitors[i].category !== void 0 && monitors[i].category !== "home") {
+    if (monitors[i].category === void 0 || monitors[i].category !== params.category) {
       continue;
     }
     const gitHubActiveIssues = await GetIncidents(monitors[i].tag, github, "open");
@@ -38,13 +38,13 @@ var _page_server = /*#__PURE__*/Object.freeze({
   load: load
 });
 
-const index = 2;
+const index = 3;
 let component_cache;
-const component = async () => component_cache ??= (await import('./_page.svelte-13ee4dfa.js')).default;
-const server_id = "src/routes/+page.server.js";
-const imports = ["_app/immutable/nodes/2.eaa4e4ff.js","_app/immutable/chunks/scheduler.3b52f240.js","_app/immutable/chunks/index.e0f9dde7.js","_app/immutable/chunks/Icon.55f18d08.js","_app/immutable/chunks/index.df550c81.js","_app/immutable/chunks/monitor.e757fb2a.js","_app/immutable/chunks/moment.0e609d86.js","_app/immutable/chunks/index.b64cf02a.js","_app/immutable/chunks/card-content.2099a051.js","_app/immutable/chunks/incident.4012875f.js","_app/immutable/chunks/chevron-down.2e6263fc.js"];
+const component = async () => component_cache ??= (await import('./_page.svelte-4684a67e.js')).default;
+const server_id = "src/routes/category-[category]/+page.server.js";
+const imports = ["_app/immutable/nodes/3.9f8af64e.js","_app/immutable/chunks/scheduler.3b52f240.js","_app/immutable/chunks/index.e0f9dde7.js","_app/immutable/chunks/Icon.55f18d08.js","_app/immutable/chunks/index.df550c81.js","_app/immutable/chunks/monitor.fdeb3f96.js","_app/immutable/chunks/moment.0e609d86.js","_app/immutable/chunks/index.b64cf02a.js","_app/immutable/chunks/card-content.2099a051.js","_app/immutable/chunks/incident.4012875f.js","_app/immutable/chunks/chevron-down.2e6263fc.js","_app/immutable/chunks/stores.1364b56e.js","_app/immutable/chunks/singletons.313177b6.js","_app/immutable/chunks/paths.c37d2e0d.js"];
 const stylesheets = ["_app/immutable/assets/monitor.f0f362d5.css"];
 const fonts = [];
 
 export { component, fonts, imports, index, _page_server as server, server_id, stylesheets };
-//# sourceMappingURL=2-13c23320.js.map
+//# sourceMappingURL=3-fca880bb.js.map

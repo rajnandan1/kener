@@ -16,6 +16,12 @@
         }
     }
 </script>
+
+<svelte:head>
+	{#if data.monitors.length > 0}
+	<title>{data.monitors[0].name} Monitor Page</title>
+	{/if}
+</svelte:head>
 <div class="mt-32"></div>
 {#if hasActiveIncidents}
 <section class="mx-auto bg-transparent mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id="">

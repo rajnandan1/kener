@@ -16,6 +16,15 @@
         }
     }
 </script>
+<svelte:head>
+	{#if category}
+	<title>{category.name} Categorry Page</title>
+	{#if category.description}
+	<meta name="description" content="{category.description}" />
+	{/if}
+	{/if}
+	
+</svelte:head>
 <div class="mt-32"></div>
 {#if category}
 <section class="mx-auto flex w-full max-w-4xl mb-8 flex-1 flex-col items-start justify-center">
