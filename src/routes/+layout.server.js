@@ -8,8 +8,13 @@ export async function load({ params, route, url, cookies }) {
 	if (!!localTzCookie) {
         localTz = localTzCookie;
     }
+	let showNav = true
+	if(url.pathname.startsWith('/embed')) {
+		showNav = false
+	}
     return {
         site: site,
         localTz: localTz,
+        showNav,
     };
 }
