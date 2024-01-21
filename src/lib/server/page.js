@@ -30,7 +30,6 @@ function getDayData(day0, startTime, endTime) {
             dayData.DOWN++;
         }
     }
-	dayData.uptimePercentage = ParseUptime(dayData.UP + dayData.DEGRADED, dayData.UP + dayData.DEGRADED + dayData.DOWN);
 
 	let cssClass = StatusObj.UP;
     let message = "Status OK";
@@ -57,8 +56,10 @@ const FetchData = async function (monitor, localTz) {
     let uptime0Day = "0";
     let dailyUps = 0;
     let dailyDown = 0;
-    let percentage90DaysBuildUp = [];
     let dailyDegraded = 0;
+	let completeUps = 0;
+	let completeDown = 0;
+	let completeDegraded = 0;
 
     const now = GetMinuteStartNowTimestampUTC();  
     const midnight = BeginingOfDay({ timeZone: localTz });
@@ -79,6 +80,13 @@ const FetchData = async function (monitor, localTz) {
     for (const timestamp in day0) {
         const element = day0[timestamp];
         let status = element.status;
+		if (status == "UP") {
+			completeUps++;
+		} else if (status == "DEGRADED") {
+			completeDegraded++;
+		} else if (status == "DOWN") {
+			completeDown++;
+		}
         //0 Day data
         if (_0Day[timestamp] !== undefined) {
             _0Day[timestamp].status = status;
@@ -96,19 +104,16 @@ const FetchData = async function (monitor, localTz) {
 
     for (const key in _90Day) {
         const element = _90Day[key];
-		const uptimePercentage = element.uptimePercentage;
 		delete _90Day[key].UP;
 		delete _90Day[key].DEGRADED;
 		delete _90Day[key].DOWN;
-		delete _90Day[key].uptimePercentage;
         if (element.message == "No Data") continue;
-        percentage90DaysBuildUp.push(parseFloat(uptimePercentage));
     }
     uptime0Day = ParseUptime(dailyUps + dailyDegraded, dailyUps + dailyDown + dailyDegraded);
     return {
         _90Day: _90Day,
         uptime0Day,
-        uptime90Day: ParsePercentage(percentage90DaysBuildUp.reduce((a, b) => a + b, 0) / percentage90DaysBuildUp.length),
+        uptime90Day: ParseUptime(completeUps + completeDegraded, completeUps + completeDegraded + completeDown),
         dailyUps,
         dailyDown,
         dailyDegraded,
