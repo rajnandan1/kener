@@ -269,8 +269,21 @@ nav:
     url: "/home"
 ```
 
+## categories
+
+You can define categories for your monitors. Each category can have a description. The monitors can be grouped by categories. 
+`name=home` will be shown in the home page. Categories are shown in the order they are defined in the yaml file. A dropdown will appear in the nav bar to select the category.
+
+```yaml
+categories:
+  - name: API
+    description: "Kener provides a simple API for you to use to update your status page."
+  - name: home
+    description: "lroem ipsum lorem ipsum"
+```
+
 ## scripts
-You can include any script in the app.html file like google analytics etc
+You can include any script in the `app.html` file like google analytics etc
 
 ---
 # Add Monitors
@@ -322,6 +335,7 @@ Sample
 | api.eval          | Optional          | Evaluator written in JS, to parse HTTP response and calculate uptime and latency                      |
 | defaultStatus | Optional          | If no API is given this will be the default status. can be UP/DOWN/DEGRADED                               |
 | hidden | Optional          | If set to `true` will not show the monitor in the UI                                                             |
+| category | Optional          | Use this group your monitors. Make sure you have defined category in `site.yaml` and use the `name` attribute here                                                        |
 
 ## cron
 
@@ -463,13 +477,24 @@ Assuming `ORDER_ID` is present in env
 ```
 ## With defaultStatus UP
 
-This will not make any API call, each minute it will set the status as UP
+Each minute it will set the status as UP
 
 ```yaml
 - name: Earth
   description: Our Planent
   tag: "earth"
   defaultStatus: UP
+```
+
+## With Category
+
+Add this monitor to the API category instead of the default home category
+
+```yaml
+- name: Earth
+  description: Our Planent
+  tag: "earth"
+  category: API
 ```
 
 ---
