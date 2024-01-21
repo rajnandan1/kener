@@ -14,6 +14,10 @@ export async function load({ params, route, url, parent }) {
 		if (monitors[i].hidden !== undefined && monitors[i].hidden === true) {
 			continue;
         }
+		//only return monitors that have category as home or category is not present
+		if (monitors[i].category !== undefined && monitors[i].category !== "home") {
+			continue;
+		}
        	const gitHubActiveIssues = await GetIncidents(monitors[i].tag, github, "open");
 		delete monitors[i].api;
 		delete monitors[i].defaultStatus;
