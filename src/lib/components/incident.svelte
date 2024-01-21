@@ -29,8 +29,6 @@
 		//diff between closed_at and created_at
 		let diff = moment(incidentClosedAt * 1000).diff(moment(incidentCreatedAt * 1000), 'minutes');
 
-
-
 		if(diff > 0) {
 			incidentMessage = `. Was <span class="text-${StatusObj[incidentPriority]}">${incidentPriority}</span>  for ${diff} minutes`;
 		}
@@ -108,7 +106,7 @@
                     {/if} {/if}
                 </Card.Title>
                 <Card.Description> 
-					{moment(incident.created_at).format("MMMM Do YYYY, h:mm:ss a")} 
+					{moment(incidentCreatedAt  * 1000).format("MMMM Do YYYY, h:mm:ss a")} 
 					{@html incidentMessage}
 					<p class="mt-2">
 						{#if incident.labels.includes("identified")}

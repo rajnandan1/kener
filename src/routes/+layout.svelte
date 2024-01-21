@@ -17,8 +17,9 @@
         }
     });
 </script>
-
-<Nav {data} />
+{#if data.showNav}
+	<Nav {data} />
+{/if}
 <svelte:head>
 	<title>{data.site.title}</title>
 	{#each Object.entries(data.site.metaTags) as [key, value]}

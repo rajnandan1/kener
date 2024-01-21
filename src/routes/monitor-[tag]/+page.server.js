@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { GetIncidents, Mapper } from "../../scripts/github.js";
+import { GetIncidents, Mapper } from "../../../scripts/github.js";
 import { FetchData } from "$lib/server/page";
 import { env } from "$env/dynamic/public";
 import fs from "fs-extra";
@@ -11,11 +11,9 @@ export async function load({ params, route, url, parent }) {
     const github = siteData.github;
     const monitorsActive = [];
 	for (let i = 0; i < monitors.length; i++) {
-		if (monitors[i].hidden !== undefined && monitors[i].hidden === true) {
-			continue;
-        }
+		 
 		//only return monitors that have category as home or category is not present
-		if (monitors[i].category !== undefined && monitors[i].category !== "home") {
+		if (monitors[i].tag !== params.tag) {
 			continue;
 		}
        	const gitHubActiveIssues = await GetIncidents(monitors[i].tag, github, "open");
