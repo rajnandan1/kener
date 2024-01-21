@@ -37,11 +37,11 @@ var _page_server = /*#__PURE__*/Object.freeze({
 
 const index = 5;
 let component_cache;
-const component = async () => component_cache ??= (await import('./_page.svelte-46e00a0d.js')).default;
+const component = async () => component_cache ??= (await import('./_page.svelte-c43a0657.js')).default;
 const server_id = "src/routes/embed-[tag]/+page.server.js";
-const imports = ["_app/immutable/nodes/5.860db289.js","_app/immutable/chunks/scheduler.3b52f240.js","_app/immutable/chunks/index.e0f9dde7.js","_app/immutable/chunks/Icon.55f18d08.js","_app/immutable/chunks/index.df550c81.js","_app/immutable/chunks/monitor.fdeb3f96.js","_app/immutable/chunks/moment.0e609d86.js","_app/immutable/chunks/index.b64cf02a.js","_app/immutable/chunks/card-content.2099a051.js","_app/immutable/chunks/stores.1364b56e.js","_app/immutable/chunks/singletons.313177b6.js","_app/immutable/chunks/paths.c37d2e0d.js"];
+const imports = ["_app/immutable/nodes/5.ba75d01b.js","_app/immutable/chunks/scheduler.3b52f240.js","_app/immutable/chunks/index.e0f9dde7.js","_app/immutable/chunks/Icon.55f18d08.js","_app/immutable/chunks/index.df550c81.js","_app/immutable/chunks/monitor.fdeb3f96.js","_app/immutable/chunks/moment.0e609d86.js","_app/immutable/chunks/index.b64cf02a.js","_app/immutable/chunks/card-content.2099a051.js","_app/immutable/chunks/stores.f83728c6.js","_app/immutable/chunks/singletons.d8791240.js","_app/immutable/chunks/paths.1616dd3f.js"];
 const stylesheets = ["_app/immutable/assets/monitor.f0f362d5.css"];
 const fonts = [];
 
 export { component, fonts, imports, index, _page_server as server, server_id, stylesheets };
-//# sourceMappingURL=5-0670b7d3.js.map
+//# sourceMappingURL=5-8835a833.js.map
