@@ -1,49 +1,8 @@
 
-<p align="center"><img src="https://kener.ing/ss.png" width="100%" height="auto" alt="kener example illustration"></p>
-
-<style>
-.carousel {
-  display: flex;
-  overflow: hidden;
-}
-
-.slide {
-  flex: 0 0 100%;
-  transition: transform 0.5s ease;
-}
-
-.carousel input[type="radio"] {
-  display: none;
-}
-
-.carousel input[type="radio"]:checked ~ .slides .slide {
-  transform: translateX(-100%);
-}
-</style>
-
-<div class="carousel">
-  <input type="radio" name="carousel" id="slide1" checked>
-  <input type="radio" name="carousel" id="slide2">
-  <input type="radio" name="carousel" id="slide3">
-  
-  <div class="slides">
-    <div class="slide">
-      <h2>Slide 1</h2>
-      <p>This is the content of slide 1.</p>
-    </div>
-    
-    <div class="slide">
-      <h2>Slide 2</h2>
-      <p>This is the content of slide 2.</p>
-    </div>
-    
-    <div class="slide">
-      <h2>Slide 3</h2>
-      <p>This is the content of slide 3.</p>
-    </div>
-  </div>
-</div>
-
+<p align="center">
+	<img src="https://kener.ing/ss.png" width="100%" height="auto" alt="kener example illustration">
+</p>
+ 
 
 <p align="center">
 	<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/rajnandan1/kener?label=Star%20Repo&style=social">
