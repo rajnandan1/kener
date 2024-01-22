@@ -1,9 +1,58 @@
 
 <p align="center"><img src="https://kener.ing/ss.png" width="100%" height="auto" alt="kener example illustration"></p>
 
+<style>
+.carousel {
+  display: flex;
+  overflow: hidden;
+}
+
+.slide {
+  flex: 0 0 100%;
+  transition: transform 0.5s ease;
+}
+
+.carousel input[type="radio"] {
+  display: none;
+}
+
+.carousel input[type="radio"]:checked ~ .slides .slide {
+  transform: translateX(-100%);
+}
+</style>
+
+<div class="carousel">
+  <input type="radio" name="carousel" id="slide1" checked>
+  <input type="radio" name="carousel" id="slide2">
+  <input type="radio" name="carousel" id="slide3">
+  
+  <div class="slides">
+    <div class="slide">
+      <h2>Slide 1</h2>
+      <p>This is the content of slide 1.</p>
+    </div>
+    
+    <div class="slide">
+      <h2>Slide 2</h2>
+      <p>This is the content of slide 2.</p>
+    </div>
+    
+    <div class="slide">
+      <h2>Slide 3</h2>
+      <p>This is the content of slide 3.</p>
+    </div>
+  </div>
+</div>
+
+
 <p align="center">
-<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/rajnandan1/kener?label=Star%20Repo&style=social">
-<a href="https://github.com/ivbeg/awesome-status-pages"><img src="https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg" alt="Awesome status page" /></a></p>
+	<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/rajnandan1/kener?label=Star%20Repo&style=social">
+	<a href="https://github.com/ivbeg/awesome-status-pages"><img src="https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg" alt="Awesome status page" /></a>
+</p>
+
+#### 👉 Visit a live server [here](https://kener.ing)
+
+#### 👉 Read the documentation [here](https://kener.ing/docs) 
 
 # Kener - Status Page System
 Kener: Open-source Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. And the best part? Kener integrates seamlessly with GitHub, making incident management a team effort—making it easier for us to track and fix issues together in a collaborative and friendly environment.
@@ -11,13 +60,6 @@ Kener: Open-source Node.js status page tool, designed to make service monitoring
 It uses files to store the data. Other adapters are coming soon
 
 
-
-> **Warning**
-> Kener is still under development. There might be bugs. Please report them by raising a github issue and I will fix them.
-
-#### Visit a live server [here](https://kener.ing)
-
-#### Read the documentation [here](https://kener.ing/docs) 
 
 ![alt text](static/ss.png "SS")
 
@@ -34,6 +76,9 @@ It uses files to store the data. Other adapters are coming soon
 - Production and custom deployment options
 - API for status updates
 - Badge generation for status and uptime display + Customization
+- Support for custom domains
+- Embed as an iframe or widget
+- Categories for monitors
 - Branding and theme (light + dark) customization
 - Flexible monitor configuration using YAML
 - Cron-based scheduling for monitors
