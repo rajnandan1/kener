@@ -35,6 +35,7 @@ It uses files to store the data. Other adapters are coming soon
     <img src="static/marken_theme.png" alt="Slide 3" style="width: 100%;">
   </div>
 </div>
+
 ## Features
 
 - Real-time monitoring
