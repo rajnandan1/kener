@@ -18,9 +18,23 @@ Kener: Open-source Node.js status page tool, designed to make service monitoring
 
 It uses files to store the data. Other adapters are coming soon
 
-
-
-![alt text](static/ss.png "SS")
+<div style="display: flex; overflow: hidden;">
+  <input type="radio" name="carousel" id="slide1" checked style="display: none;">
+  <input type="radio" name="carousel" id="slide2" style="display: none;">
+  <input type="radio" name="carousel" id="slide3" style="display: none;">
+  
+  <div style="flex: 0 0 100%; transition: transform 0.5s ease;">
+    <img src="static/marken_theme.png" alt="Slide 1" style="width: 100%;">
+  </div>
+  
+  <div style="flex: 0 0 100%; transition: transform 0.5s ease;">
+    <img src="static/marken_api.png" alt="Slide 2" style="width: 100%;">
+  </div>
+  
+  <div style="flex: 0 0 100%; transition: transform 0.5s ease;">
+    <img src="static/marken_share.png" alt="Slide 3" style="width: 100%;">
+  </div>
+</div>
 
 ## Features
 
