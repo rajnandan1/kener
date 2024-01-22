@@ -63,6 +63,13 @@ It uses files to store the data. Other adapters are coming soon
 
 ![image](static/marken_90.png)
 ![image](static/marken_api.png)
+![image](static/marken_badge.png)
+![image](static/marken_embed.png)
+![image](static/marken_inci.png)
+![image](static/marken_share.png)
+![image](static/marken_td.png)
+![image](static/marken_tl.png)
+![image](static/marken_theme.png)
 
 
 ## Support
