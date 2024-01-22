@@ -17,24 +17,7 @@
 Kener: Open-source Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. And the best part? Kener integrates seamlessly with GitHub, making incident management a team effort—making it easier for us to track and fix issues together in a collaborative and friendly environment.
 
 It uses files to store the data. Other adapters are coming soon
- 
-<div style="display: flex; overflow: hidden;">
-  <input type="radio" name="carousel" id="slide1" checked style="display: none;">
-  <input type="radio" name="carousel" id="slide2" style="display: none;">
-  <input type="radio" name="carousel" id="slide3" style="display: none;">
   
-  <div style="flex: 0 0 100%; transition: transform 0.5s ease;">
-    <img src="static/marken_share.png" alt="Slide 1" style="width: 100%;">
-  </div>
-  
-  <div style="flex: 0 0 100%; transition: transform 0.5s ease;">
-    <img src="static/marken_api.png" alt="Slide 2" style="width: 100%;">
-  </div>
-  
-  <div style="flex: 0 0 100%; transition: transform 0.5s ease;">
-    <img src="static/marken_theme.png" alt="Slide 3" style="width: 100%;">
-  </div>
-</div>
 
 ## Features
 
@@ -75,6 +58,12 @@ It uses files to store the data. Other adapters are coming soon
 - [ ] Add notification
 - [x] Add api to create incident
 - [ ] Add Mysql adapter
+
+## Screenshots
+
+![image](static/marken_90.png)
+![image](static/marken_api.png)
+
 
 ## Support
 
