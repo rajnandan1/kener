@@ -61,6 +61,8 @@ It uses files to store the data. Other adapters are coming soon
 
 ## Screenshots
 
+<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vSJhxVFMLyv9vwf3sR6jHfk-73JcztsiTJYGyKsENjoN3_gtXcIUwVJf-stZp22-VeqpNW0qmb_Xm6v/embed?start=true&loop=true&delayms=3000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true"></iframe>
+
 ![image](static/marken_90.png)
 ![image](static/marken_api.png)
 ![image](static/marken_badge.png)
