@@ -27,7 +27,7 @@
 	let incidentMessage = "";
 	if(!!incidentClosedAt && !!incidentCreatedAt){
 		//diff between closed_at and created_at
-		let diff = moment(incidentClosedAt * 1000).diff(moment(incidentCreatedAt * 1000), 'minutes');
+		let diff = moment(incidentClosedAt * 1000).add(1, "minutes").diff(moment(incidentCreatedAt * 1000), 'minutes');
 
 		if(diff > 0) {
 			incidentMessage = `. Was <span class="text-${StatusObj[incidentPriority]}">${incidentPriority}</span>  for ${diff} minutes`;

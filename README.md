@@ -21,30 +21,34 @@ It uses files to store the data. Other adapters are coming soon
 
 ## Features
 
+**Monitoring and Tracking:**
 - Real-time monitoring
-- Handles Timezones without you knowing it
-- Customizable status page
-- 100% Accessiblty Score
-- Easy installation and setup
-- Automated incident management
-- GitHub integration for issue tracking
-- Environment variable configuration
-- Production and custom deployment options
-- API for status updates
-- Badge generation for status and uptime display + Customization
+- Polls HTTP endpoint or Push data to monitor using Rest APIs
+- Handles Timezones for visitors
+- Categorize Monitors into different Sections
+- Cron-based scheduling for monitors. Minimum per minute
+- Flexible monitor configuration using YAML. Define your own parsing for monitor being UP/DOWN/DEGRADED
+- Construct complex API Polls - Chain, Secrets etc
+- Supports a Default Status for Monitors. Example defaultStatus=DOWN if you dont hit API per minute with Status UP
+
+**Customization and Branding:**
+- Customizable status page using yaml or code
+- Badge generation for status and uptime of Monitors
 - Support for custom domains
-- Embed as an iframe or widget
-- Categories for monitors
-- Branding and theme (light + dark) customization
-- Flexible monitor configuration using YAML
-- Cron-based scheduling for monitors
-- Secrets management for headers and bodies
-- Evaluators for HTTP response parsing
-- Incident tagging and labeling
+- Embed Monitor as an iframe or widget
+- Light + Dark Theme
+
+**Incident Management:**
+- Create Incidents using Github Issues - Rich Text
+- Or use APIs to create Incidents
+
+**User Experience and Design:**
+- 100% Accessibility Score
+- Easy installation and setup
 - User-friendly interface
-- Support for light and dark themes
 - Responsive design for various devices
 - Auto SEO and Social Media ready
+
 
 
 ## Technologies used
