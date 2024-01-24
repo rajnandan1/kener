@@ -111,16 +111,18 @@ npm run serve -- --monitors /your/path/monitors.yaml --site /your/path/site.yaml
 ## Install using Docker
 
 [Dockerhub](https://hub.docker.com/r/rajnandan1/kener)
-```
+
+```shell
 docker.io/rajnandan1/kener:latest
 ```
 
 [Github Packages](https://github.com/rajnandan1/kener/pkgs/container/kener)
-```
+
+```shell
 ghcr.io/rajnandan1/kener:latest
 ```
 
-You should mount a host directory to persist your configuration and expose the web port. Environmental variables [found below](#environment-variable) can be passed with `-e` An example `docker run` command:
+You should mount a host directory to persist your configuration and expose the web port. Environmental variables [found above](#environment-variable) can be passed with `-e` An example `docker run` command:
 
 ```shell
 docker run -d -v /path/on/host/config:/config -p 3000:3000 -e "GH_TOKEN=1234" rajnandan1/kener
