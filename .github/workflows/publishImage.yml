@@ -12,6 +12,7 @@ on:
     # don't trigger if just updating docs
     paths-ignore:
       - 'docs.md'
+      - 'README.md'
 
 jobs:
   push_to_registry:
