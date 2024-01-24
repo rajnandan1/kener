@@ -78,9 +78,9 @@ It uses files to store the data. Other adapters are coming soon
 
 ## Support
 
-<a href="https://stackexchange.com/users/3713933"><img src="https://stackexchange.com/users/flair/3713933.png" width="208" height="58" alt="profile for Raj Nandan Sharma on Stack Exchange, a network of free, community-driven Q&amp;A sites" title="profile for Raj Nandan Sharma on Stack Exchange, a network of free, community-driven Q&amp;A sites"></a>
+<a href="https://stackexchange.com/users/3713933"><img src="https://stackexchange.com/users/flair/3713933.png" width="108" height="38" alt="profile for Raj Nandan Sharma on Stack Exchange, a network of free, community-driven Q&amp;A sites" title="profile for Raj Nandan Sharma on Stack Exchange, a network of free, community-driven Q&amp;A sites"></a>
 
-<a href="https://www.buymeacoffee.com/app/rajnandan1"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=rajnandan1&button_colour=5F7FFF&font_colour=ffffff&font_family=Poppins&outline_colour=000000&coffee_colour=FFDD00" /></a>
+<a href="https://www.buymeacoffee.com/rajnandan1"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=rajnandan1&button_colour=5F7FFF&font_colour=ffffff&font_family=Poppins&outline_colour=000000&coffee_colour=FFDD00" /></a>
 
 <a href="hhttps://www.paypal.com/paypalme/rajnandan1"><img style="height:90px;margin-left:-15px" src="static/paypal.png" /></a>
 
