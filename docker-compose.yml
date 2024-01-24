@@ -1,0 +1,30 @@
+version: '3.7'
+services:
+  kener:
+    image: rajnandan1/kener:latest # assuming this is final namespace/image
+    container_name: kener
+    environment:
+      - TZ=Etc/GMT
+      #- GH_TOKEN=
+      #- API_TOKEN=
+      #- API_IP
+
+      # If running on a LINUX HOST and not podman rootless these MUST BE SET
+      # run "id $user" from command line and replace numbers below with output from command
+      #- PUID=1000 # gid
+      #- PGID=1000 # uid
+
+      ### Most likely DO NOT need to change anything below this ###
+
+      #- PORT=3000 Port app listens on IN CONTAINER
+
+      ### If any of the below are changed make sure the bound volume is correct as well ###
+      #- CONFIG_DIR=/config
+      #- PUBLIC_KENER_FOLDER=/config/static
+      #- MONITOR_YAML_PATH=/config/monitors.yaml
+      #- SITE_YAML_PATH=/config/site.yaml
+
+    ports:
+      - '3000:3000/tcp'
+    volumes:
+      - '/host/path/to/config:/config:rw'
