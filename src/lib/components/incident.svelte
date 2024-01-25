@@ -47,7 +47,7 @@
     <div class="col-span-3">
         <Card.Root>
             
-            <Card.Header class="pb-1">
+            <Card.Header>
                 <Card.Title class="relative">
 					{#if variant.includes("monitor")}
                     <div class="pb-4">
