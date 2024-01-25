@@ -26,7 +26,7 @@ if(site.siteURL !== undefined && site.siteURL !== null && site.siteURL !== ""){
 	${monitors
         .map((monitor) => {
             return `<url>
-		<loc>${site.siteURL}/monitor-${encodeURIComponent(monitor.folderName)}</loc>
+		<loc>${site.siteURL}/monitor-${encodeURIComponent(monitor.tag)}</loc>
 		<lastmod>${new Date().toISOString()}</lastmod>
 		<changefreq>daily</changefreq>
 		<priority>0.8</priority>
