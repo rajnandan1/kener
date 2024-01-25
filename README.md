@@ -59,8 +59,10 @@ It uses files to store the data. Other adapters are coming soon
 - [Upptime](https://upptime.js.org/)
 
 ## Roadmap
-- [ ] Add notification
+
 - [x] Add api to create incident
+- [x] Add docker file
+- [ ] Add notification
 - [ ] Add Mysql adapter
 
 ## Screenshots
