@@ -13,7 +13,8 @@
     export let state = "open";
     export let monitor;
 	let blinker = "bg-transparent"
-	let incidentPriority = ""
+	let incidentPriority = "";
+	let incidentDuration = 0;
 	if(incident.labels.includes("incident-down")){
 		blinker = "bg-red-500";
 		incidentPriority = "DOWN"
@@ -26,17 +27,14 @@
 	let incidentCreatedAt = incident.incident_start_time;
 	let incidentMessage = "";
 	if(!!incidentClosedAt && !!incidentCreatedAt){
-		//diff between closed_at and created_at
-		let diff = moment(incidentClosedAt * 1000).add(1, "minutes").diff(moment(incidentCreatedAt * 1000), 'minutes');
+		//incidentDuration between closed_at and created_at
+		incidentDuration = moment(incidentClosedAt * 1000).add(1, "minutes").diff(moment(incidentCreatedAt * 1000), 'minutes');
 
-		if(diff > 0) {
-			incidentMessage = `. Was <span class="text-${StatusObj[incidentPriority]}">${incidentPriority}</span>  for ${diff} minutes`;
-		}
+		 
 		
 	} else if(!!incidentCreatedAt){
-		//diff between now and created_at
-		let diff = moment().diff(moment(incidentCreatedAt * 1000), 'minutes');
-		incidentMessage = `. Has been <span class="text-${StatusObj[incidentPriority]}">${incidentPriority}</span> for ${diff} minutes`;
+		//incidentDuration between now and created_at
+		incidentDuration = moment().diff(moment(incidentCreatedAt * 1000), 'minutes');
 	}
 
 	//find a replace /\[start_datetime:(\d+)\]/ empty  in incident.body
@@ -49,7 +47,7 @@
     <div class="col-span-3">
         <Card.Root>
             
-            <Card.Header>
+            <Card.Header class="pb-1">
                 <Card.Title class="relative">
 					{#if variant.includes("monitor")}
                     <div class="pb-4">
@@ -107,13 +105,25 @@
                 </Card.Title>
                 <Card.Description> 
 					{moment(incidentCreatedAt  * 1000).format("MMMM Do YYYY, h:mm:ss a")} 
-					{@html incidentMessage}
+					{#if incidentPriority != "" && incidentDuration > 0}
+					<p class="leading-10">
+						<Badge class="text-[rgba(0,0,0,.6)] text-xs bg-{StatusObj[incidentPriority]}">
+							{incidentPriority} for {incidentDuration} minute{incidentDuration > 1 ? "s" : ""}
+						</Badge>
+					</p>
+					
+					{/if}
+					
+					
 					<p class="mt-2">
 						{#if incident.labels.includes("identified")}
 						<span class="bg-yellow-100 text-yellow-800 mt-1 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-yellow-900 dark:text-yellow-300">Identified</span>
 						{/if}
 						{#if incident.labels.includes("resolved")}
 						<span class="bg-green-100 text-green-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-green-900 dark:text-green-300">Resolved</span>
+						{/if}
+						{#if incident.labels.includes("maintenance")}
+						<span class="bg-blue-100 text-blue-800 text-sm font-medium me-2 px-2.5 py-0.5 rounded dark:bg-blue-900 dark:text-blue-300">Maintenance</span>
 						{/if}
 					</p>
 					

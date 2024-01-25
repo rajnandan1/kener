@@ -23,7 +23,7 @@
         </div>
     </div>
 </section>
-<section class="mx-auto flex-1 mt-8 flex-col mb-4 flex w-full" id="active_incident">
+<section class="mx-auto flex-1 mt-8 flex-col mb-4 flex w-full" >
     <div class="container">
         <h1 class="mb-4 text-2xl font-bold leading-none">
             <Badge variant="outline"> Active Incidents </Badge>
@@ -42,7 +42,7 @@
     </div>
 </section>
 <Separator class="container mb-4 w-[400px]" />
-<section class="mx-auto flex-1 mt-8 flex-col mb-4 flex w-full" id="active_incident">
+<section class="mx-auto flex-1 mt-8 flex-col mb-4 flex w-full" >
     <div class="container">
         <h1 class="mb-4 text-2xl font-bold leading-none">
             <Badge variant="outline"> Recent Incidents </Badge>
