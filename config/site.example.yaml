@@ -27,4 +27,10 @@ nav:
 hero:
   title: Kener is a Open-Source Status Page System
   subtitle: Let your users know what's going on.
+footerHTML: |
+  Made using 
+  <a href="https://github.com/rajnandan1/kener" target="_blank" rel="noreferrer" class="font-medium underline underline-offset-4">
+    Kener
+  </a>
+  an open source status page system built with Svelte and TailwindCSS.
     

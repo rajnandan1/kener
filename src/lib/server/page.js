@@ -36,11 +36,11 @@ function getDayData(day0, startTime, endTime) {
 
 	if (dayData.DEGRADED > 0) {
         cssClass = StatusObj.DEGRADED;
-        message = "Degraded for " + dayData.DEGRADED + " minutes";
+        message = "Degraded for " + dayData.DEGRADED + " minute" + (dayData.DEGRADED > 1 ? "s" : "");
     }
     if (dayData.DOWN > 0) {
         cssClass = StatusObj.DOWN;
-        message = "Down for " + dayData.DOWN + " minutes";
+        message = "Down for " + dayData.DOWN + " minute" + (dayData.DOWN > 1 ? "s" : "");
     }
 	if(dayData.DEGRADED + dayData.DOWN + dayData.UP > 0){
 		dayData.message = message;
@@ -74,7 +74,7 @@ const FetchData = async function (monitor, localTz) {
             index: (i - midnight) / 60,
         };
     }
-     
+    
     let day0 = JSON.parse(fs.readFileSync(monitor.path0Day, "utf8"));
     
     for (const timestamp in day0) {

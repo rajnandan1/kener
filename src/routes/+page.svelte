@@ -74,7 +74,7 @@
 </section>
 {/if} {#if data.site.categories}
 <section class="mx-auto backdrop-blur-[2px] mb-8 w-full max-w-[890px]">
-	<h2 class="text-xl mb-2 mt-2 font-semibold">
+	<h2 class="text-xl px-2 mb-2 mt-2 font-semibold">
 		Other Monitors
 	</h2>
     {#each data.site.categories as category}

@@ -1,7 +1,7 @@
 <script>
     import * as Card from "$lib/components/ui/card";
     import { Badge } from "$lib/components/ui/badge";
-    import * as HoverCard from "$lib/components/ui/hover-card";
+	import * as Popover from "$lib/components/ui/popover";
     import { Separator } from "$lib/components/ui/separator";
     import { onMount } from "svelte";
     import { Button } from "$lib/components/ui/button";
@@ -135,28 +135,33 @@
             <div class="scroll-m-20 text-2xl font-semibold tracking-tight">
                 {#if monitor.image}
                 <img src="{monitor.image}" class="w-6 h-6 inline" alt="{monitor.name}" srcset="" />
-                {/if} {monitor.name} {#if monitor.description}
-                <HoverCard.Root>
-                    <HoverCard.Trigger>
+                {/if} 
+				<span>
+					{monitor.name}
+				</span>
+				<br>
+				{#if monitor.description}
+                <Popover.Root>
+                    <Popover.Trigger>
                         <span class=" pt-0 pl-1 menu-monitor pr-0   pb-0 {buttonVariants({ variant: 'link' })}">
-							<Info size="{16}" />
+							<Info size="{12}" class="text-muted-foreground" />
 						</span>
-                    </HoverCard.Trigger>
-                    <HoverCard.Content class="text-sm">
+                    </Popover.Trigger>
+                    <Popover.Content class="text-sm">
 						<h2 class="mb-2 text-lg font-semibold">{monitor.name}</h2>
 						<span class="text-muted-foreground text-sm">
 							{@html monitor.description}
 						</span>
-					</HoverCard.Content>
-                </HoverCard.Root>
+					</Popover.Content>
+                </Popover.Root>
                 {/if}
-				<HoverCard.Root>
-                    <HoverCard.Trigger >
+				<Popover.Root>
+                    <Popover.Trigger >
                         <span class=" pt-0 pl-1 pb-0 menu-monitor pr-0 {buttonVariants({ variant: 'link' })}">
-							<Share2 size="{16}" />
+							<Share2 size="{12}" class="text-muted-foreground" />
 						</span>
-                    </HoverCard.Trigger>
-                    <HoverCard.Content class=" pl-1 pr-1 pb-1 w-[375px]">
+                    </Popover.Trigger>
+                    <Popover.Content class=" pl-1 pr-1 pb-1 w-[375px]">
 						<h2 class="mb-1 text-lg font-semibold px-2">Share</h2>
 						<p class="pl-2 mb-2 text-muted-foreground text-sm">
 							Share this monitor using a link with others.
@@ -255,12 +260,12 @@
 							</span>
 							{/if}
 						</Button>
-					</HoverCard.Content>
-                </HoverCard.Root>
+					</Popover.Content>
+                </Popover.Root>
 				
             </div>
         </div>
-        <div class="mt-2">
+        <div class="">
             <div class="grid grid-cols-2 gap-0">
                 <div class="col-span-1 -mt-2">
                     <a href="/incident/{monitor.folderName}#past_incident" class="pt-0 pl-0 pb-0 text-indigo-500 text-left {buttonVariants({ variant: 'link' })}">
@@ -336,11 +341,5 @@
 	.daygrid90::-webkit-scrollbar { 
 		display: none;  /* Safari and Chrome */
 	}
-	.monitor .menu-monitor{
-		/* cursor: copy; */
-		visibility: hidden;
-	}
-	.monitor:hover .menu-monitor{
-		visibility: visible;
-	}
+	
 </style>

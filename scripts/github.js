@@ -51,7 +51,7 @@ const GetAllGHLabels = async function (owner, repo) {
         console.log(GhnotconfireguredMsg);
         return [];
     }
-    const options = getAxiosOptions(`https://api.github.com/repos/${owner}/${repo}/labels`);
+    const options = getAxiosOptions(`https://api.github.com/repos/${owner}/${repo}/labels?per_page=1000`);
 
     let labels = [];
     try {
@@ -231,7 +231,7 @@ async function CreateIssue(githubConfig, issueTitle, issueBody, issueLabels) {
         return null;
     }
 }
-async function UpdateIssue(githubConfig, incidentNumber, issueTitle, issueBody, issueLabels) {
+async function UpdateIssue(githubConfig, incidentNumber, issueTitle, issueBody, issueLabels, state = "open") {
     if (githubConfig.owner === undefined || githubConfig.repo === undefined || GH_TOKEN === undefined) {
         console.log(GhnotconfireguredMsg);
         return null;
@@ -242,6 +242,7 @@ async function UpdateIssue(githubConfig, incidentNumber, issueTitle, issueBody, 
             title: issueTitle,
             body: issueBody,
             labels: issueLabels,
+			state: state,
         };
         const response = await axios.request(patchAxiosOptions(url, payload));
         return response.data;
@@ -285,7 +286,7 @@ async function AddComment(githubConfig, incidentNumber, commentBody) {
     }
 }
 //update issue labels
-async function UpdateIssueLabels(githubConfig, incidentNumber, issueLabels, body) {
+async function UpdateIssueLabels(githubConfig, incidentNumber, issueLabels, body, state = "open") {
 	if (githubConfig.owner === undefined || githubConfig.repo === undefined || GH_TOKEN === undefined) {
 		console.log(GhnotconfireguredMsg);
 		return null;
@@ -295,8 +296,9 @@ async function UpdateIssueLabels(githubConfig, incidentNumber, issueLabels, body
 		const payload = {
 			labels: issueLabels,
 			body: body,
+			state: state,
 		};
-		const response = await axios.request(postAxiosOptions(url, payload));
+		const response = await axios.request(patchAxiosOptions(url, payload));
 		return response.data;
 	} catch (error) {
 		console.log(error.response.data);
