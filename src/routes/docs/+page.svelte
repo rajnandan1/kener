@@ -64,7 +64,7 @@
 		Kener Documentation
 	</title>
 </svelte:head>
-<section class="mx-auto container rounded-3xl scroll-smooth mt-8">
+<section class="mx-auto md:container rounded-3xl scroll-smooth mt-8">
     <Card.Root>
         <Card.Content class="px-1">
             <div class="grid grid-cols-5 gap-4">
@@ -104,3 +104,19 @@
         </Card.Content>
     </Card.Root>
 </section>
+<style>
+	.h1.inactive ~ .h2 {
+		display: none;
+	}
+	#markdown code:not([class^="language-"]) {
+		background-color: #faf6b2;
+		border-radius: 4px;
+		padding: 2px 4px;
+		font-size: 0.833em;
+		color: #000;
+	}
+	.sidebar-a.active{
+		text-decoration: underline;
+	}
+
+</style>

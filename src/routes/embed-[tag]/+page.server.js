@@ -27,5 +27,6 @@ export async function load({ params, route, url, parent }) {
     return {
         monitors: monitorsActive,
         theme,
+        openIncidents: [],
     };
 }

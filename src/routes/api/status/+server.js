@@ -4,7 +4,6 @@ import { json } from "@sveltejs/kit";
 import { store, auth } from "$lib/server/webhook";
 export async function POST({ request }) {
     const payload = await request.json();
-    // const headers = await request.headers();
     const authError = auth(request);
     if (authError !== null) {
         return json(

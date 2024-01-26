@@ -327,8 +327,11 @@ categories:
     description: "lroem ipsum lorem ipsum"
 ```
 
-## scripts
+## Custom Scripts
 You can include any script in the `app.html` file like google analytics etc
+
+## Custom CSS
+You can add custom css in `static/kener.css`
 
 ---
 # Add Monitors

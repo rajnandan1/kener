@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { GetIncidents, Mapper } from "../../../scripts/github.js";
+import { Mapper, GetOpenIncidents, FilterAndInsertMonitorInIncident } from "../../../scripts/github.js";
 import { FetchData } from "$lib/server/page";
 import { env } from "$env/dynamic/public";
 import fs from "fs-extra";
@@ -18,16 +18,16 @@ export async function load({ params, route, url, parent }) {
 		if (monitors[i].category === undefined || monitors[i].category !== params.category) {
 			continue;
 		}
-       	const gitHubActiveIssues = await GetIncidents(monitors[i].tag, github, "open");
-		delete monitors[i].api;
-		delete monitors[i].defaultStatus;
-		let data = await FetchData(monitors[i], parentData.localTz);
-		monitors[i].pageData = data;
-		monitors[i].activeIncidents = await Promise.all(gitHubActiveIssues.map(Mapper, { github }));
-		monitorsActive.push(monitors[i]);
+       	delete monitors[i].api;
+        delete monitors[i].defaultStatus;
+        let data = await FetchData(monitors[i], parentData.localTz);
+        monitors[i].pageData = data;
+        monitorsActive.push(monitors[i]);
 	}
-
+	let openIncidents = await GetOpenIncidents(github);
+    let openIncidentsReduced = openIncidents.map(Mapper);
     return {
         monitors: monitorsActive,
+        openIncidents: FilterAndInsertMonitorInIncident(openIncidentsReduced, monitorsActive),
     };
 }

@@ -7,13 +7,8 @@
     import { Separator } from "$lib/components/ui/separator";
     import { Badge } from "$lib/components/ui/badge";
     export let data;
-    let hasActiveIncidents = false;
-    for (let i = 0; i < data.monitors.length; i++) {
-        if (data.monitors[i].activeIncidents.length > 0) {
-            hasActiveIncidents = true;
-            break;
-        }
-    }
+    let hasActiveIncidents = data.openIncidents.length > 0;
+
 </script>
 <div class="mt-32"></div>
 {#if data.site.hero}
@@ -30,7 +25,8 @@
         </div>
     </div>
 </section>
-{/if} {#if hasActiveIncidents}
+{/if}
+{#if hasActiveIncidents}
 <section class="mx-auto bg-transparent mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id="">
     <div class="grid w-full grid-cols-2 gap-4">
         <div class="col-span-2 md:col-span-1 text-center md:text-left">
@@ -39,9 +35,9 @@
     </div>
 </section>
 <section class="mx-auto backdrop-blur-[2px] mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id="">
-    {#each data.monitors as monitor} {#each monitor.activeIncidents as incident, i}
-    <Incident {incident} state="close" variant="title+body+comments+monitor" monitor="{monitor}" />
-    {/each} {/each}
+    {#each data.openIncidents as incident, i}
+    <Incident {incident} state="close" variant="title+body+comments+monitor" monitor="{incident.monitor}" />
+    {/each}
 </section>
 {/if} {#if data.monitors.length > 0}
 <section class="mx-auto bg-transparent mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id="">

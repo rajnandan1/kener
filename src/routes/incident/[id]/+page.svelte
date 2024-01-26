@@ -36,7 +36,7 @@
         {/each} 
 		{:else}
         <div class="flex items-center justify-left">
-            <p class="text-xl">No active incidents</p>
+            <p class="text-base font-semibold">No active incidents</p>
         </div>
         {/if}
     </div>
@@ -54,7 +54,7 @@
         {/each} 
 		{:else}
         <div class="flex items-center justify-left">
-            <p class="text-xl">No recent incidents</p>
+            <p class="text-base font-semibold">No recent incidents</p>
         </div>
         {/if}
     </div>

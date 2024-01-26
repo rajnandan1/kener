@@ -1,3 +1,4 @@
+/*one is the class for dotted background*/
 .one {
     position: absolute;
     top: 0px;
@@ -23,200 +24,64 @@
     left: 0;
 }
 
+/*Needed to overlay content on top of dotted bg*/
 section {
     position: relative;
     z-index: 1;
 }
+/*Needed overlay content on top of dotted bg*/
 .blurry-bg {
     background-color: var(--background-kener-rgba);
     box-shadow: 0 0 64px 64px var(--background-kener-rgba);
-    /* backdrop-filter: blur(.75px); */
 }
 
-@keyframes gradient {
-    0% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-    100% {
-        background-position: 0% 50%;
-    }
-}
-@keyframes gradient-animation {
-    0% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-    100% {
-        background-position: 0% 50%;
-    }
-}
 
-.apexcharts-canvas {
-    /* background-color: var(--background-kener-rgba); */
-    /* backdrop-filter: blur(.75px); */
-}
 
-.oneline {
-    transition: transform 0.1s ease-in;
-    cursor: pointer;
-}
-.oneline:hover {
-    transform: scaleY(1.2);
-}
-
-.oneline.hover {
-    transform: scaleY(1.3);
-}
-
-.oneline:hover + .oneline {
-    transform: scaleY(1.3);
-}
-.show-hover {
-    display: none;
-    top: 30px;
-    padding: 0px;
-    /* width: 100%; */
-    text-align: left;
-}
-.show-hover div {
-    /* border-radius: 40px; */
-    /* border: 1px solid #eaeaea; */
-}
-.oneline:hover + .show-hover {
-    display: block !important;
-}
-
-.btn-sm {
-    border-radius: 12px;
-    padding: 7px 15px;
-    font-size: 0.833em;
-    height: 24px;
-}
-
+/*Colors for something UP*/
 .bg-api-up {
     background-color: #00dfa2;
 }
 .text-api-up {
     color: #0aca97;
 }
-.bgg-api-up {
-    background: linear-gradient(to right, rgba(187, 219, 243, 0) 0%, rgba(0, 223, 162, 0.5) 50%, rgba(187, 219, 243, 0) 100%);
-}
+/*Colors for something DOWN*/
 .bg-api-down {
     background-color: #ff0060;
 }
 .text-api-down {
     color: #ff0060;
 }
+/*Colors for something Not there*/
 .bg-api-nodata {
     background-color:#f1f5f8;
-}
-.dark .bg-api-nodata {
-    background-color: rgba(100, 100, 100, .4);
 }
 .text-api-nodata {
     color: #b8bcbe;
 }
-.bgg-api-down {
-    background: linear-gradient(to right, rgba(187, 219, 243, 0) 0%, rgba(246, 50, 50, 0.5) 50%, rgba(187, 219, 243, 0) 100%);
+.dark .bg-api-nodata {
+    background-color: rgba(100, 100, 100, .4);
 }
 
+/*Colors for something degraded*/
 .bg-api-degraded {
     background-color: #ffb84c;
 }
 .text-api-degraded {
     color: #ffb84c;
 }
-.bgg-api-degraded {
-    background: linear-gradient(to right, rgba(187, 219, 243, 0) 0%, rgba(255, 184, 76, 0.5) 50%, rgba(187, 219, 243, 0) 100%);
-}
-.today-sq + .hiddenx .message {
-	position: absolute;
-	white-space: nowrap;
-}
 
-.today-sq + .hiddenx  {
-	visibility:hidden;
-	z-index: 30;
-}
-.today-sq:hover + .hiddenx  {
-	visibility: visible;
-}
-.today-sq:hover {
-    /* transform: scale(1.1); */
-    box-shadow: rgba(50, 50, 105, 0.15) 0px 2px 5px 0px, rgba(0, 0, 0, 0.05) 0px 1px 1px 0px;
-    opacity: 0.75;
-    transition: all 0.1s ease-in;
-    cursor: pointer;
-}
-.today-sq-div {
-    cursor: pointer;
-    /* padding-bottom: 20px; */
-}
-.today-sq {
-    position: relative;
-	z-index: 0;
-}
-.today-sq-div .today-sq:last-child {
-    /* animation: blink 1s linear infinite; */
-}
-.arrow {
-    /* display: none; */
-	z-index: 1;
-}
-.today-sq-div .today-sq:first-child .arrow.start {
-    display: block;
-    position: absolute;
-    top: -36px;
-    left: -21px;
-}
-.today-sq-div .today-sq svg {
-    margin: 0 auto;
-}
-.arrow.end {
-    display: block;
-    position: absolute;
-    bottom: -36px;
-    left: -8px;
-}
-[data-state="open"] .lucide-chevron-down {
-	transform: rotate(180deg);
-}
 
-.wysiwyg *{
-	overflow-x: auto;
-}
+
+/*Needed to show markdown properly*/
 .prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::before{
 	content: "";
 }
 .prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::after{
 	content: "";
 }
-.grunge-underline {
-  border: 0;
-  height: 1rem;
-  background: url("https://www.frogment.com/images/grunge-underline.svg") no-repeat;
-  background-size: contain;
-  background-position: bottom;
-}
-.sidebar-a.active{
-	text-decoration: underline;
-}
-#markdown code:not([class^="language-"]) {
-	background-color: #faf6b2;
-	border-radius: 4px;
-	padding: 2px 4px;
-	font-size: 0.833em;
-	color: #000;
-}
-.h1.inactive ~ .h2 {
-	display: none;
-}
+
+
+/*Needed to show monitor stacked properly*/
 .monitors-card .monitor {
 	padding: 1.3em 1em;
 	border-bottom: 1px solid;
@@ -224,4 +89,18 @@ section {
 }
 .monitors-card .monitor:last-child {
 	border-bottom: none;
+}
+
+/*Tag Color*/
+.tag-maintenance{
+	background-color: #A076F9;
+	color: #09090b;
+}
+.tag-resolved{
+	background-color: #2CD3E1;
+	color: #09090b;
+}
+.tag-indetified{
+	background-color: #FEFFAC;
+	color: #09090b;
 }

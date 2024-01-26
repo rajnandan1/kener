@@ -4,14 +4,9 @@
     import Nav from "$lib/components/nav.svelte";
     import { onMount } from "svelte";
     export let data;
-    function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(";").shift();
-    }
     onMount(() => {
         let localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (localTz != data.localTz) {
+        if (data.localTz != "-1" && localTz != data.localTz) {
             document.cookie = "localTz=" + localTz + ";max-age=" + 60 * 60 * 24 * 365 * 30;
             location.reload();
         }

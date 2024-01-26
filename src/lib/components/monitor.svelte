@@ -161,7 +161,7 @@
 							<Share2 size="{12}" class="text-muted-foreground" />
 						</span>
                     </Popover.Trigger>
-                    <Popover.Content class=" pl-1 pr-1 pb-1 w-[375px]">
+                    <Popover.Content class=" pl-1 pr-1 pb-1 w-[375px] max-w-full">
 						<h2 class="mb-1 text-lg font-semibold px-2">Share</h2>
 						<p class="pl-2 mb-2 text-muted-foreground text-sm">
 							Share this monitor using a link with others.
@@ -295,7 +295,7 @@
         <div class="grid grid-cols-12">
             {#if view == "90day"}
             <div class="chart-status relative mt-1 col-span-12">
-                <div class="flex overflow-x-auto daygrid90 overflow-y-hidden">
+                <div class="flex overflow-x-auto daygrid90 overflow-y-hidden py-1">
                     {#each Object.entries(_90Day) as [ts, bar]}
                     <div class="h-[30px] w-[6px] rounded-sm oneline">
                         <div class="h-[30px] bg-{bar.cssClass} w-[4px] rounded-sm mr-[2px]"></div>
@@ -341,5 +341,50 @@
 	.daygrid90::-webkit-scrollbar { 
 		display: none;  /* Safari and Chrome */
 	}
+	.oneline {
+		transition: transform 0.1s ease-in;
+		cursor: pointer;
+	}
+	.oneline:hover {
+		transform: scaleY(1.2);
+	}
+
+	  
+	.oneline:hover + .show-hover {
+		display: block !important;
+	}
+
+	.show-hover {
+		display: none;
+		top: 30px;
+		padding: 0px;
+		text-align: left;
+	}
+
+	.today-sq + .hiddenx .message {
+		position: absolute;
+		white-space: nowrap;
+	}
+
+	.today-sq + .hiddenx  {
+		visibility:hidden;
+		z-index: 30;
+	}
+	.today-sq:hover + .hiddenx  {
+		visibility: visible;
+	}
+	.today-sq:hover {
+		/* transform: scale(1.1); */
+		box-shadow: rgba(50, 50, 105, 0.15) 0px 2px 5px 0px, rgba(0, 0, 0, 0.05) 0px 1px 1px 0px;
+		opacity: 0.75;
+		transition: all 0.1s ease-in;
+		cursor: pointer;
+	}
 	
+	.today-sq {
+		position: relative;
+		z-index: 0;
+	}
+	
+
 </style>

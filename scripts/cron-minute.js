@@ -1,7 +1,7 @@
 import axios from "axios";
 import fs from "fs-extra";
 import { UP, DOWN, DEGRADED } from "./constants.js";
-import { GetNowTimestampUTC, GetMinuteStartNowTimestampUTC,GetMinuteStartTimestampUTC } from "./tool.js";
+import { GetNowTimestampUTC, GetMinuteStartNowTimestampUTC, GetMinuteStartTimestampUTC } from "./tool.js";
 import { GetIncidents, GetEndTimeFromBody, GetStartTimeFromBody, CloseIssue } from "./github.js";
 import Randomstring from "randomstring";
 import Queue from "queue";

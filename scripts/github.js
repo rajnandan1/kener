@@ -148,14 +148,53 @@ const GetIncidents = async function (tagName, githubConfig, state = "all") {
         });
         return issues;
     } catch (error) {
-        //console.log(error.message, options, url);
+        console.log(error.response.data);
         return [];
     }
 };
-
-async function Mapper(issue) {
+const GetOpenIncidents = async function (githubConfig) {
+    if (githubConfig.owner === undefined || githubConfig.repo === undefined || GH_TOKEN === undefined) {
+        console.log(GhnotconfireguredMsg);
+        return [];
+    }
+    
+    const since = GetMinuteStartNowTimestampUTC() - githubConfig.incidentSince * 60 * 60;
+    const sinceISO = new Date(since * 1000).toISOString();
+    const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues?state=open&labels=incident&sort=created&direction=desc&since=${sinceISO}`;
+    const options = getAxiosOptions(url);
+    try {
+        const response = await axios.request(options);
+        let issues = response.data;
+        //issues.createAt should be after sinceISO
+        issues = issues.filter((issue) => {
+            return new Date(issue.created_at) >= new Date(sinceISO);
+        });
+        return issues;
+    } catch (error) {
+        console.log(error.response.data);
+        return [];
+    }
+};
+function FilterAndInsertMonitorInIncident(openIncidentsReduced, monitorsActive) {
+	let openIncidentExploded = [];
+	for (let i = 0; i < openIncidentsReduced.length; i++) {
+        for (let j = 0; j < monitorsActive.length; j++) {
+            if (openIncidentsReduced[i].labels.includes(monitorsActive[j].tag)) {
+                let incident = JSON.parse(JSON.stringify(openIncidentsReduced[i]));
+                incident.monitor = {
+                    name: monitorsActive[j].name,
+                    tag: monitorsActive[j].tag,
+                    image: monitorsActive[j].image,
+                    description: monitorsActive[j].description,
+                };
+                openIncidentExploded.push(incident);
+            }
+        }
+    }
+	return openIncidentExploded;
+}
+function Mapper(issue) {
     const html = marked.parse(issue.body);
-    const comments = await GetCommentsForIssue(issue.number, this.github);
 
     //convert issue.created_at from iso to timestamp  UTC minutes
     const issueCreatedAt = new Date(issue.created_at);
@@ -168,7 +207,13 @@ async function Mapper(issue) {
         issueClosedAtTimestamp = issueClosedAt.getTime() / 1000;
     }
 
-    return {
+	
+	let labels = issue.labels.map(function (label) {
+        return label.name;
+    });
+	//find and add monitors tag in labels
+	
+	let res = {
         title: issue.title,
         incident_start_time: GetStartTimeFromBody(issue.body) || issueCreatedAtTimestamp,
         incident_end_time: GetEndTimeFromBody(issue.body) || issueClosedAtTimestamp,
@@ -177,26 +222,16 @@ async function Mapper(issue) {
         created_at: issue.created_at,
         updated_at: issue.updated_at,
         collapsed: true,
-        comments: issue.comments,
         // @ts-ignore
         state: issue.state,
         closed_at: issue.closed_at,
         // @ts-ignore
-        labels: issue.labels.map(function (label) {
-            return label.name;
-        }),
+        labels: labels,
         html_url: issue.html_url,
-        // @ts-ignore
-        comments: comments.map((/** @type {{ body: string | import("markdown-it/lib/token")[]; created_at: any; updated_at: any; html_url: any; }} */ comment) => {
-            const html = marked.parse(comment.body);
-            return {
-                body: html,
-                created_at: comment.created_at,
-                updated_at: comment.updated_at,
-                html_url: comment.html_url,
-            };
-        }),
+        comments: [],
     };
+
+    return res;
 }
 async function GetCommentsForIssue(issueID, githubConfig) {
     if (githubConfig.owner === undefined || githubConfig.repo === undefined || GH_TOKEN === undefined) {
@@ -320,4 +355,6 @@ export {
     UpdateIssueLabels,
     UpdateIssue,
     CloseIssue,
+    GetOpenIncidents,
+    FilterAndInsertMonitorInIncident,
 };
