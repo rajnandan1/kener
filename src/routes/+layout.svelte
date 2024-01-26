@@ -8,7 +8,10 @@
         let localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         if (localTz != data.localTz) {
             document.cookie = "localTz=" + localTz + ";max-age=" + 60 * 60 * 24 * 365 * 30;
-            location.reload();
+			if(data.isBot === false) {
+				location.reload();
+			}
+            
         }
     });
 </script>
