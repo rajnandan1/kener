@@ -7,7 +7,7 @@ import './tool-153dc604.js';
 import 'marked';
 import './helpers-1d8653cf.js';
 
-async function load({ parent }) {
+async function load({ params, route, url, parent }) {
   let monitors = JSON.parse(fs.readFileSync(public_env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
   const parentData = await parent();
   const siteData = parentData.site;
@@ -17,14 +17,13 @@ async function load({ parent }) {
     if (monitors[i].hidden !== void 0 && monitors[i].hidden === true) {
       continue;
     }
-    if (monitors[i].category !== void 0 && monitors[i].category !== "home") {
+    if (monitors[i].category === void 0 || monitors[i].category !== params.category) {
       continue;
     }
     delete monitors[i].api;
     delete monitors[i].defaultStatus;
     let data = await FetchData(monitors[i], parentData.localTz);
     monitors[i].pageData = data;
-    monitors[i].activeIncidents = [];
     monitorsActive.push(monitors[i]);
   }
   let openIncidents = await GetOpenIncidents(github);
@@ -40,13 +39,13 @@ var _page_server = /*#__PURE__*/Object.freeze({
   load: load
 });
 
-const index = 2;
+const index = 3;
 let component_cache;
-const component = async () => component_cache ??= (await import('./_page.svelte-1fb7e093.js')).default;
-const server_id = "src/routes/+page.server.js";
-const imports = ["_app/immutable/nodes/2.5afdae33.js","_app/immutable/chunks/scheduler.8852886c.js","_app/immutable/chunks/index.fb8f3617.js","_app/immutable/chunks/ctx.1e61a5a6.js","_app/immutable/chunks/index.97524e95.js","_app/immutable/chunks/monitor.6a49087a.js","_app/immutable/chunks/incident.svelte_svelte_type_style_lang.dc139efe.js","_app/immutable/chunks/Icon.7b7db889.js","_app/immutable/chunks/index.cd89ef46.js","_app/immutable/chunks/events.b4751e74.js","_app/immutable/chunks/incident.808686e8.js","_app/immutable/chunks/chevron-down.f8b4fb7d.js"];
+const component = async () => component_cache ??= (await import('./_page.svelte-648dbc49.js')).default;
+const server_id = "src/routes/category-[category]/+page.server.js";
+const imports = ["_app/immutable/nodes/3.f3ee29eb.js","_app/immutable/chunks/scheduler.8852886c.js","_app/immutable/chunks/index.fb8f3617.js","_app/immutable/chunks/ctx.1e61a5a6.js","_app/immutable/chunks/index.97524e95.js","_app/immutable/chunks/monitor.6a49087a.js","_app/immutable/chunks/incident.svelte_svelte_type_style_lang.dc139efe.js","_app/immutable/chunks/Icon.7b7db889.js","_app/immutable/chunks/index.cd89ef46.js","_app/immutable/chunks/events.b4751e74.js","_app/immutable/chunks/incident.17ec64cc.js","_app/immutable/chunks/chevron-down.f8b4fb7d.js","_app/immutable/chunks/stores.e7b6a9b9.js","_app/immutable/chunks/singletons.c332497e.js","_app/immutable/chunks/paths.71fe0e32.js"];
 const stylesheets = ["_app/immutable/assets/monitor.824f5800.css","_app/immutable/assets/incident.d0acbf00.css"];
 const fonts = [];
 
 export { component, fonts, imports, index, _page_server as server, server_id, stylesheets };
-//# sourceMappingURL=2-dd4e6271.js.map
+//# sourceMappingURL=3-50429b0b.js.map

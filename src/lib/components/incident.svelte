@@ -3,7 +3,6 @@
     import { Separator } from "$lib/components/ui/separator";
     import { StatusObj } from "$lib/helpers.js";
     import moment from "moment";
-	import {onMount} from 'svelte';
     import { Button } from "$lib/components/ui/button";
     import { Badge } from "$lib/components/ui/badge";
     import {  ChevronDown } from "lucide-svelte";
@@ -49,7 +48,9 @@
 	let commentsLoading = true
 
 	function getComments(){
-		commentsLoading = true;
+		state = (state=='open'? 'close':'open');
+		if(incident.comments.length > 0) return;
+		if(commentsLoading === false) return;
 		axios.get(`/incident/${incident.number}/comments`).then((response) => {
 			incident.comments = response.data;
 			commentsLoading = false;
@@ -57,9 +58,7 @@
 			// console.log(error);
 		});
 	}
-	onMount(() => {
-		getComments();
-	});
+	
 </script>
 
 <div class="grid grid-cols-3 gap-4 mb-8 w-full incident-div">
@@ -87,8 +86,8 @@
                     <span class="animate-ping absolute -left-[24px] -top-[24px] w-[8px] h-[8px] inline-flex rounded-full {blinker} opacity-75"></span>
                     {/if}
 					{#if variant.includes("body") || variant.includes("comments")}
-                    <div class="absolute right-4 toggle  {state}">
-                        <Button variant="outline" class="rounded-full" size="icon" on:click="{(e) => {state = (state=='open'? 'close':'open')}}">
+                    <div class="absolute right-4 toggle {state}">
+                        <Button variant="outline" class="rounded-full" size="icon" on:click="{getComments}">
                             <ChevronDown class="text-muted-foreground" size="{24}" />
                         </Button>
                     </div>
