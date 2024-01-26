@@ -7,8 +7,9 @@
     onMount(() => {
         let localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         if (localTz != data.localTz) {
-            document.cookie = "localTz=" + localTz + ";max-age=" + 60 * 60 * 24 * 365 * 30;
+            
 			if(data.isBot === false) {
+				document.cookie = "localTz=" + localTz + ";max-age=" + 60 * 60 * 24 * 365 * 30;
 				location.reload();
 			}
             
