@@ -6,7 +6,7 @@
     export let data;
     onMount(() => {
         let localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-        if (data.localTz != "-1" && localTz != data.localTz) {
+        if (localTz != data.localTz) {
             document.cookie = "localTz=" + localTz + ";max-age=" + 60 * 60 * 24 * 365 * 30;
             location.reload();
         }
