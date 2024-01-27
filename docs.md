@@ -434,6 +434,20 @@ Here are some exhaustive examples for monitors
   	method: GET
   	url: https://www.google.com/webhp
 ```
+
+## A Monitor with HTML description
+
+Use tailwind classes to style your description
+
+```yaml
+- name: Google Search
+  tag: "google-search"
+  description: "Hello <b>world</b>"
+  api:
+  	method: GET
+  	url: https://www.google.com/webhp
+```
+
 ## A GET Monitor with image
 google.png is in the static folder
 ```yaml
