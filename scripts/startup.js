@@ -12,6 +12,7 @@ import { FOLDER, FOLDER_MONITOR, FOLDER_SITE, API_TIMEOUT } from "./constants.js
 import { IsValidURL, IsValidHTTPMethod, LoadMonitorsPath, LoadSitePath } from "./tool.js";
 import { GetAllGHLabels, CreateGHLabel } from "./github.js";
 import { Minuter } from "./cron-minute.js";
+import axios from "axios";
 let monitors = [];
 let site = {};
 const envSecrets = [];
@@ -71,20 +72,20 @@ const Startup = async () => {
         }
 
 		if(hasAPI) {
-			let url = monitor.api.url;
-			let method = monitor.api.method;
-			let headers = monitor.api.headers;
-			let evaluator = monitor.api.eval;
-			let body = monitor.api.body;
-			let timeout = monitor.api.timeout;
-			//url
-			if (!!url) {
+            let url = monitor.api.url;
+            let method = monitor.api.method;
+            let headers = monitor.api.headers;
+            let evaluator = monitor.api.eval;
+            let body = monitor.api.body;
+            let timeout = monitor.api.timeout;
+            //url
+            if (!!url) {
                 if (!IsValidURL(url)) {
                     console.log("url is not valid");
                     process.exit(1);
                 }
             }
-			if (!!method) {
+            if (!!method) {
                 if (!IsValidHTTPMethod(method)) {
                     console.log("method is not valid");
                     process.exit(1);
@@ -94,20 +95,20 @@ const Startup = async () => {
                 method = "GET";
             }
             monitors[i].api.method = method;
-			//headers
-			if (headers === undefined || headers === null) {
+            //headers
+            if (headers === undefined || headers === null) {
                 monitors[i].api.headers = undefined;
             } else {
                 //check if headers is a valid json
                 try {
-                    JSON.parse(headers);
+                    JSON.parse(JSON.stringify(headers));
                 } catch (error) {
-                    console.log("headers is not valid ");
+                    console.log("headers are not valid. Quiting");
                     process.exit(1);
                 }
             }
-			//eval
-			if (evaluator === undefined || evaluator === null) {
+            //eval
+            if (evaluator === undefined || evaluator === null) {
                 monitors[i].api.eval = defaultEval;
             } else {
                 let evalResp = eval(evaluator + `(200, 1000, "")`);
@@ -116,27 +117,52 @@ const Startup = async () => {
                     process.exit(1);
                 }
             }
-			//body
-			if (body === undefined || body === null) {
+            //body
+            if (body === undefined || body === null) {
                 monitors[i].api.body = undefined;
             } else {
                 //check if body is a valid string
-				if (typeof body !== "string") {
-					console.log("body is not valid should be a string");
-					process.exit(1);
-				}
+                if (typeof body !== "string") {
+                    console.log("body is not valid should be a string");
+                    process.exit(1);
+                }
             }
-			//timeout
-			if (timeout === undefined || timeout === null) {
+            //timeout
+            if (timeout === undefined || timeout === null) {
                 monitors[i].api.timeout = API_TIMEOUT;
             } else {
-				//check if timeout is a valid number
-				if (isNaN(timeout) || timeout < 0) {
+                //check if timeout is a valid number
+                if (isNaN(timeout) || timeout < 0) {
                     console.log("timeout is not valid ");
                     process.exit(1);
                 }
-			}
-		}
+            }
+
+            //add a description to the monitor if it is website using api.url and method = GET and headers == undefined
+            //call the it to see if recevied content-type is text/html
+            //if yes, append to description
+            if ((headers === undefined || headers === null) && url !== undefined && method === "GET") {
+                
+                try {
+                    const response = await axios({
+                        method: "GET",
+                        url: url,
+                        timeout: API_TIMEOUT,
+                    });
+                    if (response.headers["content-type"].includes("text/html")) {
+						let link = `<a href="${url}" class="font-medium underline underline-offset-4" target="_blank">${url}</a>`;
+						if(monitors[i].description === undefined) {
+							monitors[i].description = link; 
+						} else {
+							monitors[i].description = monitors[i].description?.trim() + " " + link; 
+						}
+                        
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+            }
+        }
 
         monitors[i].path0Day = `${FOLDER}/${folderName}.0day.utc.json`;
         monitors[i].hasAPI = hasAPI;

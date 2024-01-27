@@ -345,7 +345,7 @@
 		transition: transform 0.1s ease-in;
 		cursor: pointer;
 	}
-	.oneline:hover {
+	 .oneline:hover {
 		transform: scaleY(1.2);
 	}
 
@@ -356,7 +356,7 @@
 
 	.show-hover {
 		display: none;
-		top: 30px;
+		top: 40px;
 		padding: 0px;
 		text-align: left;
 	}
