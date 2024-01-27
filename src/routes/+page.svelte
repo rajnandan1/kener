@@ -2,13 +2,10 @@
     import Monitor from "$lib/components/monitor.svelte";
     import * as Card from "$lib/components/ui/card";
     import { Button, buttonVariants } from "$lib/components/ui/button";
+    import Incident from "$lib/components/incident.svelte";
     import { Badge } from "$lib/components/ui/badge";
     export let data;
     let hasActiveIncidents = data.openIncidents.length > 0;
-
-    const imports = {
-        incident: () => import("$lib/components/incident.svelte"),
-    };
 </script>
 
 <div class="mt-32"></div>
@@ -35,9 +32,9 @@
     </div>
 </section>
 <section class="mx-auto mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center backdrop-blur-[2px]" id="">
-    {#each data.openIncidents as incident, i} {#await imports["incident"]() then module}
-    <svelte:component this="{module.default}" {incident} state="close" variant="title+body+comments+monitor" monitor="{incident.monitor}" />
-    {/await} {/each}
+    {#each data.openIncidents as incident, i}
+    <Incident {incident} state="close" variant="title+body+comments+monitor" monitor="{incident.monitor}" />
+    {/each}
 </section>
 {/if} {#if data.monitors.length > 0}
 <section class="mx-auto mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center bg-transparent" id="">
