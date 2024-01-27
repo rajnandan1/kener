@@ -40,22 +40,22 @@ if(process.env.GH_TOKEN === undefined) {
 }
 
 if(process.env.API_TOKEN === undefined) {
-	console.log(`❗ API_TOKEN is not set. Go to https://kener.ing/docs#h2environment-vairable to learn how to set it up`);
+	console.log(`❗ API_TOKEN is not set. Go to https://kener.ing/docs#h2environment-variable to learn how to set it up`);
 } else {
 	console.log(`✅ API_TOKEN is set`);
 }
 if (process.env.API_IP === undefined) {
-    console.log(`❗ API_IP is not set. Go to https://kener.ing/docs#h2environment-vairable to learn how to set it up`);
+    console.log(`❗ API_IP is not set. Go to https://kener.ing/docs#h2environment-variable to learn how to set it up`);
 } else {
     console.log(`✅ API_IP is set`);
 }
 if (process.env.MONITOR_YAML_PATH === undefined) {
-	console.log(`❗ MONITOR_YAML_PATH is not set. Go to https://kener.ing/docs#h2environment-vairable to learn how to set it up. Defaulting to config/monitors.yaml`);
+	console.log(`❗ MONITOR_YAML_PATH is not set. Go to https://kener.ing/docs#h2environment-variable to learn how to set it up. Defaulting to config/monitors.yaml`);
 } else {
 	console.log(`✅ MONITOR_YAML_PATH is set`);
 }
 if (process.env.SITE_YAML_PATH === undefined) {
-    console.log(`❗ SITE_YAML_PATH is not set. Go to https://kener.ing/docs#h2environment-vairable to learn how to set it up. Defaulting to config/site.yaml`);
+    console.log(`❗ SITE_YAML_PATH is not set. Go to https://kener.ing/docs#h2environment-variable to learn how to set it up. Defaulting to config/site.yaml`);
 } else {
     console.log(`✅ SITE_YAML_PATH is set`);
 }
