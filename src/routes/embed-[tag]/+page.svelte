@@ -1,7 +1,6 @@
 <script>
     import Monitor from "$lib/components/monitor.svelte";
     import * as Card from "$lib/components/ui/card";
-    import Incident from "$lib/components/incident.svelte";
     import { Separator } from "$lib/components/ui/separator";
     import { Badge } from "$lib/components/ui/badge";
     import { page } from "$app/stores";

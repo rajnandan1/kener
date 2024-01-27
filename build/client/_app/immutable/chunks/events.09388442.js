@@ -1,0 +1,1 @@
+import{V as a}from"./scheduler.c2c0974e.js";function i(){const n=a();return t=>{const{originalEvent:e}=t.detail,{cancelable:r}=t,c=e.type;n(c,{originalEvent:e,currentTarget:e.currentTarget},{cancelable:r})||t.preventDefault()}}export{i as c};
