@@ -340,8 +340,8 @@ Inside `config/` folder there is a file called `monitors.yaml`. We will be addin
 Each monitor runs at 1 minute interval by default. Monitor runs in below priorty order. 
 - defaultStatus Data
 - API call Data overrides above data(if specified)
-- Push Status Data overrides API Data
-- Manual Incident Data overrides Pushed data
+- Pushed Status Data overrides API Data using [Kener Update Statue API](https://kener.ing/docs#h2update-status)
+- Manual Incident Data overrides Pushed Status Data
 
 Sample
 
@@ -471,7 +471,7 @@ google.png is in the static folder
   	url: https://www.google.com/webhp
 ```
 
-## Post Monitor With Body
+## POST Monitor With Body
 ```yaml
 - name: Google Search
   description: Google Search
@@ -488,7 +488,7 @@ google.png is in the static folder
 
 You can set ENV variables in your machine and use them in your monitors. Example below has `GH_TOKEN` as an environment variable. It uses process.env.GH_TOKEN. 
 `export GH_TOKEN=some.token.for.github`
-> **_NOTE:_**  DO NOT forget the `$` sign in your monitor
+> **_NOTE:_**  DO NOT forget the `$` sign in your monitor secret, otherwise it will not be picked up.
 ```yaml
 - name: Github Issues
   description: Github Issues Fetch
