@@ -143,7 +143,6 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
         statusCode = data.status;
         resp = data.data;
     } catch (err) {
-        
 		if (err.message.startsWith("timeout of") && err.message.endsWith("exceeded")) {
             timeoutError = true;
         }
