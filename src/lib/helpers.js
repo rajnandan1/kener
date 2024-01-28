@@ -18,6 +18,10 @@ const ParseUptime = function (up, all) {
     if (up == all) {
         return String(((up / all) * parseFloat(100)).toFixed(0));
     }
+    //return 50% as 50% and not 50.0000%
+    if (((up / all) * 100) % 10 == 0) {
+        return String(((up / all) * parseFloat(100)).toFixed(0));
+    }
     return String(((up / all) * parseFloat(100)).toFixed(4));
 };
 const ParsePercentage = function (n) {

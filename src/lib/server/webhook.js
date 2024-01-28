@@ -1,6 +1,7 @@
 // @ts-nocheck
 import fs from "fs-extra";
 import { env } from "$env/dynamic/public";
+import { ParseUptime } from "$lib/helpers.js";
 import { GetMinuteStartNowTimestampUTC, GetNowTimestampUTC, GetMinuteStartTimestampUTC } from "../../../scripts/tool.js";
 import { GetStartTimeFromBody, GetEndTimeFromBody } from "../../../scripts/github.js";
 import Randomstring from "randomstring";
@@ -231,4 +232,39 @@ const ParseIncidentPayload = function (payload) {
 
 	return { title, body, githubLabels };
 }
-export { store, auth, CheckIfValidTag, GHIssueToKenerIncident, ParseIncidentPayload, GetAllTags };
+const GetMonitorStatusByTag = function (tag) {
+    if (!CheckIfValidTag(tag)) {
+        return { error: "invalid tag", status: 400 };
+    }
+    const resp = {
+        status: null,
+        uptime: null,
+        lastUpdatedAt: null,
+    };
+    let monitors = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+    const { path0Day } = monitors.find((monitor) => monitor.tag === tag);
+    const dayData = JSON.parse(fs.readFileSync(path0Day, "utf8"));
+	const lastUpdatedAt = Object.keys(dayData)[Object.keys(dayData).length - 1]
+    const lastObj = dayData[lastUpdatedAt];
+    resp.status = lastObj.status;
+    //add all status up, degraded, down
+    let ups = 0;
+    let downs = 0;
+    let degradeds = 0;
+
+    for (const timestamp in dayData) {
+        const obj = dayData[timestamp];
+        if (obj.status == "UP") {
+            ups++;
+        } else if (obj.status == "DEGRADED") {
+            degradeds++;
+        } else if (obj.status == "DOWN") {
+            downs++;
+        }
+    }
+
+    resp.uptime = ParseUptime(ups + degradeds, ups + degradeds + downs) ;
+    resp.lastUpdatedAt = Number(lastUpdatedAt);
+    return { status: 200, ...resp };
+};
+export { store, auth, CheckIfValidTag, GHIssueToKenerIncident, ParseIncidentPayload, GetAllTags, GetMonitorStatusByTag };

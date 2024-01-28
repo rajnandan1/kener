@@ -623,6 +623,32 @@ curl --request POST \
 
 This will update the status of the monitor with tag `google-search` to DOWN at UTC 1702405860
 
+## Get Status
+
+Use this API to get the status of a monitor. 
+
+### Request
+
+Replace `tag=google-search` with your monitor tag in query param
+
+```shell
+
+```shell
+curl --request GET \
+  --url 'http://your-kener.host/api/status?tag=google-search' \
+  --header 'Authorization: Bearer some-token-set-by-you' 
+```
+
+### Response
+
+```json
+{
+	"status": "UP",
+	"uptime": "9.0026",
+	"lastUpdatedAt": 1706447160
+}```
+
+
 ## Create an Incident
 Can be use to create an incident from a remote server
 
