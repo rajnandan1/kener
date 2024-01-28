@@ -646,7 +646,8 @@ curl --request GET \
 	"status": "UP",
 	"uptime": "9.0026",
 	"lastUpdatedAt": 1706447160
-}```
+}
+```
 
 
 ## Create an Incident
