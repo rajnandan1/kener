@@ -517,6 +517,8 @@ Assuming `ORDER_ID` is present in env
 
 ## Eval Body
 
+Read more about [eval](https://kener.ing/docs#h2eval-body)
+
 ```yaml
 - name: Github Issues
   description: Github Issues Fetch
@@ -629,9 +631,8 @@ Use this API to get the status of a monitor.
 
 ### Request
 
-Replace `tag=google-search` with your monitor tag in query param
+Replace `google-search` with your monitor tag in query param
 
-```shell
 
 ```shell
 curl --request GET \
