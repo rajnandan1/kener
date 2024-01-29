@@ -529,7 +529,7 @@ Assuming `ORDER_ID` is present in env
 		const resp = JSON.parse(atob(responseDataBase64));
 		let status = 'DOWN'
 		if(statusCode == 200) status = 'UP';
-		if(resp.length == 0) status = 'DOWN';
+		if(Object.keys(resp).length == 0) status = 'DOWN';
 		if(statusCode == 200 && responseTime > 2000) status = 'DEGRADED';
 		return {
 			status: status,
