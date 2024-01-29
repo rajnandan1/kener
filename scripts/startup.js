@@ -111,11 +111,13 @@ const Startup = async () => {
             if (evaluator === undefined || evaluator === null) {
                 monitors[i].api.eval = defaultEval;
             } else {
-                let evalResp = eval(evaluator + `(200, 1000, "")`);
+                let evalResp = eval(evaluator + `(200, 1000, "e30=")`);
+				
                 if (evalResp === undefined || evalResp === null || evalResp.status === undefined || evalResp.status === null || evalResp.latency === undefined || evalResp.latency === null) {
                     console.log("eval is not valid ");
                     process.exit(1);
                 }
+				monitors[i].api.eval = evaluator;
             }
             //body
             if (body === undefined || body === null) {
