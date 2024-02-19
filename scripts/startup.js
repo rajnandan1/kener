@@ -13,6 +13,7 @@ import { IsValidURL, IsValidHTTPMethod, LoadMonitorsPath, LoadSitePath } from ".
 import { GetAllGHLabels, CreateGHLabel } from "./github.js";
 import { Minuter } from "./cron-minute.js";
 import axios from "axios";
+import { Ninety } from "./ninety.js";
 let monitors = [];
 let site = {};
 const envSecrets = [];
@@ -167,6 +168,7 @@ const Startup = async () => {
         }
 
         monitors[i].path0Day = `${FOLDER}/${folderName}.0day.utc.json`;
+        monitors[i].path90Day = `${FOLDER}/${folderName}.90day.utc.json`;
         monitors[i].hasAPI = hasAPI;
 
         //secrets can be in url/body/headers
@@ -254,9 +256,14 @@ const Startup = async () => {
             fs.ensureFileSync(monitor.path0Day);
             fs.writeFileSync(monitor.path0Day, JSON.stringify({}));
         }
+        if (!fs.existsSync(monitor.path90Day)) {
+            fs.ensureFileSync(monitor.path90Day);
+            fs.writeFileSync(monitor.path90Day, JSON.stringify({}));
+        }
 
-        console.log("Staring One Minute Cron for ", monitor.path0Day);
+        console.log("Initial Fetch for ", monitor.name);
         await Minuter(envSecrets, monitor, site.github);
+		await Ninety(monitor);
     }
 
     //trigger minute cron
@@ -273,6 +280,21 @@ const Startup = async () => {
             await Minuter(envSecrets, monitor, site.github);
         });
     }
+
+	//pre compute 90 day data at 1 minute interval
+	Cron(
+        "* * * * *",
+        async () => {
+            for (let i = 0; i < monitors.length; i++) {
+                const monitor = monitors[i];
+                Ninety(monitor);
+            }
+        },
+        {
+            protect: true,
+        }
+    );
+	
 };
 
 export { Startup };

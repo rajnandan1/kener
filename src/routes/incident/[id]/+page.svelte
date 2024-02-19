@@ -8,6 +8,7 @@
     import { Badge } from "$lib/components/ui/badge";
     import { ArrowDown, ArrowUp, ChevronUp, BadgeCheck, ChevronDown } from "lucide-svelte";
     import * as Collapsible from "$lib/components/ui/collapsible";
+
 </script>
 <svelte:head>
 	<title>
@@ -26,7 +27,7 @@
 <section class="mx-auto flex-1 mt-8 flex-col mb-4 flex w-full" >
     <div class="container">
         <h1 class="mb-4 text-2xl font-bold leading-none">
-            <Badge variant="outline"> Active Incidents </Badge>
+            <Badge variant="outline"> Active Incidents</Badge>
         </h1>
 
         {#if data.activeIncidents.length > 0} 
@@ -45,7 +46,7 @@
 <section class="mx-auto flex-1 mt-8 flex-col mb-4 flex w-full" >
     <div class="container">
         <h1 class="mb-4 text-2xl font-bold leading-none">
-            <Badge variant="outline"> Recent Incidents </Badge>
+            <Badge variant="outline"> Recent Incidents  - Last {data.site.github.incidentSince} Hours </Badge>
         </h1>
 
         {#if data.pastIncidents.length > 0} 
