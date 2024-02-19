@@ -264,7 +264,7 @@
             </div>
             <div class="{monitor.embed === undefined ? 'col-span-12': 'col-span-4'} md:col-span-4 text-right h-[32px]">
                 {#if _90Day[todayDD]}
-                <div class="text-api-up {monitor.embed === undefined ? 'md:pr-6': ''} text-sm font-semibold mt-[4px] text-{_90Day[todayDD].cssClass}">{_90Day[todayDD].message}</div>
+                <div class="text-api-up {monitor.embed === undefined ? 'md:pr-6': ''} text-sm truncate font-semibold mt-[4px] text-{_90Day[todayDD].cssClass}">{_90Day[todayDD].message}</div>
                 {/if}
             </div>
         </div>
