@@ -1,0 +1,27 @@
+- name: Scriptor-Artis Website
+  tag: "website-sa"
+  image: "/sa.png"
+  category: "Website"
+  api:
+    method: GET
+    url: https://www.scriptor-artis.com/
+- name: Devana Website
+  tag: "website-devana"
+  image: "/devana.png"
+  category: "Website"
+  api:
+    method: GET
+    url: https://www.devana.ai/
+- name: Clavus Website
+  tag: "website-clavus"
+  image: "/clavus.png"
+  category: "Website"
+  api:
+    method: GET
+    url: https://www.clavus.io/
+- name: Devana App
+  tag: "app-devana"
+  image: "/devana.png"
+  api:
+    method: GET
+    url: https://app.devana.ai/
