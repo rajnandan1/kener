@@ -13,8 +13,8 @@ export PUBLIC_KENER_FOLDER=${process.cwd()}/static/kener`
 }
 
 if (!fs.existsSync(FOLDER)) {
-    console.log(`❌ Directory does not exist\n\nRun:\nmkdir -p ${FOLDER}`);
-	process.exit(1);
+    console.log(`✅ Directory does not exist\n\nRunning:\nmkdir -p ${FOLDER}`);
+	fs.mkdirSync(FOLDER);
 }
 
 
