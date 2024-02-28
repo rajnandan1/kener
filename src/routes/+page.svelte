@@ -16,7 +16,7 @@
             {#if data.site.hero.image}
             <img src="{data.site.hero.image}" class="m-auto h-16 w-16" alt="" srcset="" />
             {/if} {#if data.site.hero.title}
-            <h1 class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold leading-snug text-transparent">{data.site.hero.title}</h1>
+            <h1 class="bg-gradient-to-r from-blue-500 via-fuchsia-500 to-yellow-400 bg-clip-text text-5xl font-extrabold leading-snug text-transparent">{data.site.hero.title}</h1>
             {/if} {#if data.site.hero.subtitle}
             <p class="mx-auto mt-4 max-w-xl sm:text-xl">{data.site.hero.subtitle}</p>
             {/if}

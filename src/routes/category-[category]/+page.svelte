@@ -25,7 +25,7 @@
     <div class="mx-auto max-w-screen-xl px-4 lg:flex lg:items-center">
         <div class="mx-auto max-w-3xl text-center blurry-bg">
             {#if category.name}
-            <h1 class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold text-transparent leading-snug">{category.name}</h1>
+            <h1 class="bg-gradient-to-r from-blue-500 via-fuchsia-500 to-yellow-400 bg-clip-text text-5xl font-extrabold text-transparent leading-snug">{category.name}</h1>
             {/if} {#if category.description}
             <p class="mx-auto mt-4 max-w-xl sm:text-xl">{category.description}</p>
             {/if}

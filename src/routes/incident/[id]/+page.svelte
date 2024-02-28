@@ -18,7 +18,7 @@
 <section class="mx-auto flex w-full max-w-4xl flex-1 flex-col items-start justify-center">
     <div class="mx-auto max-w-screen-xl px-4 pt-32 pb-16 lg:flex lg:items-center">
         <div class="mx-auto max-w-3xl text-center blurry-bg">
-            <h1 class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold text-transparent leading-snug">{data.monitor.name}</h1>
+            <h1 class="bg-gradient-to-r from-blue-500 via-fuchsia-500 to-yellow-400 bg-clip-text text-5xl font-extrabold text-transparent leading-snug">{data.monitor.name}</h1>
 
             <p class="mx-auto mt-4 max-w-xl sm:text-xl">{@html data.monitor.description}</p>
         </div>
