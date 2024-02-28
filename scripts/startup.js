@@ -14,6 +14,7 @@ import { GetAllGHLabels, CreateGHLabel } from "./github.js";
 import { Minuter } from "./cron-minute.js";
 import axios from "axios";
 import { Ninety } from "./ninety.js";
+import { uploadLocalFilesToBlob, downloadMissingFilesFromBlob } from "./db-sync.js";
 let monitors = [];
 let site = {};
 const envSecrets = [];
@@ -53,6 +54,9 @@ const Startup = async () => {
         console.log(error);
         process.exit(1);
     }
+
+    // Download missing files from blob
+    await downloadMissingFilesFromBlob();
 
     // Use the 'monitors' array of JSON objects as needed
     //check if each object has name, url, method
@@ -278,6 +282,7 @@ const Startup = async () => {
         console.log("Staring " + cronExpession + " Cron for ", monitor.name);
         Cron(cronExpession, async () => {
             await Minuter(envSecrets, monitor, site.github);
+            await uploadLocalFilesToBlob(monitor);
         });
     }
 
