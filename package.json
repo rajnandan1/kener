@@ -32,7 +32,8 @@
         "kener:dev": "cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener node scripts/check.js && concurrently \"cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener node dev.js\" \"cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener vite dev\"",
         "kener:dev-monitor": "cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener  node dev.js",
         "kener:build": "cross-env NODE_ENV=production node scripts/check.js && cross-env NODE_ENV=production vite build",
-        "kener": "cross-env NODE_ENV=production node prod.js"
+        "kener": "cross-env NODE_ENV=production node prod.js",
+        "vercel-build": "cross-env NODE_ENV=production node prod.js"
     },
     "devDependencies": {
         "@sveltejs/adapter-auto": "^2.0.0",
