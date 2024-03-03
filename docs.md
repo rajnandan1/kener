@@ -128,7 +128,7 @@ You should mount a host directory to persist your configuration and expose the w
 docker run -d -v /path/on/host/config:/config -p 3000:3000 -e "GH_TOKEN=1234" rajnandan1/kener
 ```
 
-Or use **Docker Compose** with the example [docker-compose.yaml](docker-compose.yml)
+Or use **Docker Compose** with the example [docker-compose.yaml](https://raw.githubusercontent.com/rajnandan1/kener/main/docker-compose.yml)
 
 ### Using PUID and PGID
 
@@ -150,7 +150,7 @@ Then add to your docker command like so:
 docker run -d ... -e "PUID=1000" -e "PGID=1000" ... rajnandan1/kener
 ```
 
-or substitute them in [docker-compose.yml](/docker-compose.yml)
+or substitute them in [docker-compose.yml](https://raw.githubusercontent.com/rajnandan1/kener/main/docker-compose.yml)
 
 ## Github Setup
 Kener uses github for incident management. Issues created in github using certain tags go to kener as incidents.
@@ -376,7 +376,7 @@ Sample
 | tag           | Required + Unique | This is used to tag incidents created in Github using comments                                            |
 | image         | Optional          | To show a logo before the name                                                                            |
 | cron          | Optinal           | Use cron expression to specify the interval to run the monitors. Defaults to `* * * * *` i.e every minute |
-| api.timeout        | Optional          | timeout for the api in milliseconds.                                                                                             |
+| api.timeout        | Optional          | timeout for the api in milliseconds.  Default is 10000(10 secs)                                                                                           |
 | api.method        | Optional          | HTTP Method                                                                                               |
 | api.url           | Optional          | HTTP URL                                                                                                  |
 | api.headers       | Optional          | HTTP headers                                                                                              |

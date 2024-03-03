@@ -55,6 +55,9 @@ COPY --chown=abc:abc src/lib/helpers.js /app/src/lib/helpers.js
 COPY --from=build --chown=abc:abc /app/build /app/build
 COPY --from=build --chown=abc:abc /app/prod.js /app/prod.js
 
+# Copy the config/static folder from the build stage to the app stage
+COPY --from=build --chown=abc:abc $CONFIG_DIR/static $CONFIG_DIR/static
+
 ENV NODE_ENV=production
 
 # install prod depdendencies and clean cache
