@@ -376,6 +376,7 @@ Sample
 | tag           | Required + Unique | This is used to tag incidents created in Github using comments                                            |
 | image         | Optional          | To show a logo before the name                                                                            |
 | cron          | Optinal           | Use cron expression to specify the interval to run the monitors. Defaults to `* * * * *` i.e every minute |
+| api.timeout        | Optional          | timeout for the api in milliseconds.                                                                                             |
 | api.method        | Optional          | HTTP Method                                                                                               |
 | api.url           | Optional          | HTTP URL                                                                                                  |
 | api.headers       | Optional          | HTTP headers                                                                                              |

@@ -36,7 +36,7 @@ COPY --chown=abc:abc . /app
 
 # build requires PUBLIC_KENER_FOLDER dir exists so create temporarily
 # -- it is non-existent in final stage to allow proper startup and chown'ing/example population
-RUN mkdir -p mkdir -p "${CONFIG_DIR}"/static \
+RUN mkdir -p "${CONFIG_DIR}"/static \
     && npm install \
     && chown -R root:root node_modules \
     && npm run kener:build
