@@ -1,5 +1,4 @@
 // @ts-nocheck
-import { GetIncidents, Mapper } from "../../../scripts/github.js";
 import { FetchData } from "$lib/server/page";
 import { env } from "$env/dynamic/public";
 import fs from "fs-extra";

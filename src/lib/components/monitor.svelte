@@ -135,7 +135,7 @@
         dispatch("heightChange", {});
     });
 </script>
-<div class="grid grid-cols-12 gap-4 monitor pb-4">
+<div class="grid grid-cols-12 gap-4 w-full monitor pb-4 md:w-[890px]">
     {#if monitor.embed === undefined}
     <div class="col-span-12 md:col-span-4">
         <div class="pt-1">
@@ -252,23 +252,24 @@
         </div>
     </div>
     {/if}
-    <div class="col-span-12 {monitor.embed === undefined ? 'md:col-span-8': ''} pt-2">
-        <div class="grid grid-cols-12">
-            <div class="{monitor.embed === undefined ? 'col-span-12': 'col-span-8'} md:col-span-8 h-[32px]">
-                <button class="inline-block" on:click="{(e) => {switchView('90day')}}">
-                    <Badge variant="{view != '90day' ? 'outline' : ''}"> 90 Day ► {uptime90Day}% </Badge>
-                </button>
-                <button on:click="{(e) => {switchView('0day')}}">
-                    <Badge variant="{view != '0day' ? 'outline' : ''}"> Today ► {uptime0Day}% </Badge>
-                </button>
-            </div>
-            <div class="{monitor.embed === undefined ? 'col-span-12': 'col-span-4'} md:col-span-4 text-right h-[32px]">
-                {#if _90Day[todayDD]}
-                <div class="text-api-up {monitor.embed === undefined ? 'md:pr-6': ''} text-sm truncate font-semibold mt-[4px] text-{_90Day[todayDD].cssClass}">{_90Day[todayDD].message}</div>
-                {/if}
-            </div>
-        </div>
-        <div class="grid grid-cols-12">
+    <div class="col-span-12 md:w-[546px] {monitor.embed === undefined ? 'md:col-span-8': 'overflow-hidden'} pt-2 ">
+        
+        <div class="col-span-12">
+			<div class="grid grid-cols-12">
+				<div class="{monitor.embed === undefined ? 'col-span-12': 'col-span-8'} md:col-span-8 h-[32px]">
+					<button class="inline-block" on:click="{(e) => {switchView('90day')}}">
+						<Badge variant="{view != '90day' ? 'outline' : ''}"> 90 Day ► {uptime90Day}% </Badge>
+					</button>
+					<button on:click="{(e) => {switchView('0day')}}">
+						<Badge variant="{view != '0day' ? 'outline' : ''}"> Today ► {uptime0Day}% </Badge>
+					</button>
+				</div>
+				<div class="{monitor.embed === undefined ? 'col-span-12': 'col-span-4'} md:col-span-4 text-right h-[32px]">
+					{#if _90Day[todayDD]}
+					<div class="text-api-up {monitor.embed === undefined ? 'md:pr-6': ''} text-sm truncate font-semibold mt-[4px] text-{_90Day[todayDD].cssClass}">{_90Day[todayDD].message}</div>
+					{/if}
+				</div>
+			</div>
             {#if view == "90day"}
             <div class="chart-status relative mt-1 col-span-12">
                 <div class="flex overflow-x-auto daygrid90 overflow-y-hidden py-1">
@@ -289,7 +290,7 @@
             <div class="chart-status relative mt-1 mb-4 col-span-12">
                 <div class="flex flex-wrap today-sq-div">
                     {#if Object.keys(_0Day).length == 0}
-                    <Skeleton class="w-full h-[20px] mr-1 rounded-full" />
+                    <Skeleton class="md:w-[546px] w-full h-[20px] mr-1 rounded-full" />
                     {/if} {#each Object.entries(_0Day) as [ts, bar] }
                     <div data-index="{bar.index}" class="h-[10px] bg-{bar.cssClass} w-[10px] today-sq m-[1px]"></div>
                     <div class="hiddenx relative">

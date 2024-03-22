@@ -66,7 +66,7 @@
     </Card.Root>
 </section>
 {/if} {#if data.site.categories}
-<section class="mx-auto mb-8 w-full max-w-[890px] backdrop-blur-[2px]">
+<section class="mx-auto mb-8 w-full max-w-[890px] flex-1 flex-col items-start backdrop-blur-[2px]">
     <h2 class="mb-2 mt-2 px-2 text-xl font-semibold">Other Monitors</h2>
     {#each data.site.categories as category}
     <Card.Root class="mb-2 w-full">
