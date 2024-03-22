@@ -8,7 +8,12 @@ console.log("STATUS_OK", STATUS_OK);
 Startup();
 
 const app = express();
-
+app.use((req, res, next) => {
+    if (req.path.startsWith("/embed")) {
+        res.setHeader("X-Frame-Options", "None");
+    }
+    next();
+});
 app.get("/healthcheck", (req, res) => {
     res.end("ok");
 });
