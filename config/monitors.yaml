@@ -1,0 +1,24 @@
+- name: zfir.dev
+  description: Personal portfolio website
+  tag: "public"
+  api:
+    method: GET
+    url: https://zfir.dev
+- name: blog.zfir.dev
+  description: Personal blog
+  tag: "public"
+  api:
+    method: GET
+    url: https://blog.zfir.dev
+- name: l.zfir.dev
+  description: URL shortener
+  tag: "personal"
+  api:
+    method: GET
+    url: https://l.zfir.dev/D2Xzywy
+- name: vpn.zfir.dev
+  description: VPN service
+  tag: "personal"
+  api:
+    method: GET
+    url: https://www.vpn.zfir.dev

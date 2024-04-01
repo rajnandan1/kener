@@ -1,0 +1,27 @@
+title: "zfir.dev Status Page"
+home: "/"
+logo: "/Logo.png"
+github:
+  owner: "zfir-dev"
+  repo: "kener"
+  incidentSince: 48
+metaTags:
+  description: "All details about the status of zfir.dev systems/services."
+  keywords: "zfir.dev Status Page, zfir.dev, zfir, Zafir, Zafir Sk Heerah, Zafir's Blogs"
+  og:description: "All details about the status of zfir.dev systems/services."
+  og:title: "zfir.dev Status"
+  og:type: "website"
+  og:site_name: "zfir.dev Status Page"
+  twitter:card: "summary_large_image"
+  twitter:site: "@_zfir_"
+  twitter:creator: "@_zfir_"
+  twitter:title: "zfir.dev Status Page"
+  twitter:description: "All details about the status of zfir.dev systems/services."
+nav:
+  - name: "GitHub"
+    url: "https://github.com/zfir"
+hero:
+  title: zfir.dev Systems/Services
+  subtitle: All details about the status of zfir.dev systems/services
+footerHTML: |
+  Made using Kener an open source status page system built with Svelte and TailwindCSS. zfir.dev Status Page is maintained by <a href="https://zfir.dev">zfir.dev</a>. zfir.dev © 2024
