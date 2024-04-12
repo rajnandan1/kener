@@ -880,7 +880,8 @@ curl --request POST \
 }
 ```
 
-## Searc Incidents
+## Search Incidents
+
 Use this to API to search incidents. 
 
 ### Request Body
