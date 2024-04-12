@@ -885,6 +885,7 @@ curl --request POST \
 Use this to API to search incidents. 
 
 ### Request Body
+
 | Parameter          | Description                                                                          |
 | ------------------ | ------------------------------------------------------------------------------------ |
 | state       | `Optional` open or closed. Default is open                       |
@@ -894,7 +895,9 @@ Use this to API to search incidents.
 | created_after_utc        | `Optional` timestamp in UTC seconds when the incident was created after. Example: 1702405920                            |
 | created_before_utc        | `Optional` timestamp in UTC seconds when the incident was created before . Example: 1702405920                            |
 | title_like        | `Optional` search incidents with title                          |
+
 ### Request
+
 Search incidents that are closed and title contains `hello incident`
 ```shell
 curl --request POST \
@@ -907,7 +910,9 @@ curl --request POST \
 	"endDatetime": 1702405920
 }'
 ```
+
 ### Response
+
 ```json
 [{
 	"createdAt": 1703940450,
