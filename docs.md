@@ -879,6 +879,50 @@ curl --request POST \
 	"isResolved": false
 }
 ```
+
+## Searc Incidents
+Use this to API to search incidents. 
+
+### Request Body
+| Parameter          | Description                                                                          |
+| ------------------ | ------------------------------------------------------------------------------------ |
+| state       | `Optional` open or closed. Default is open                       |
+| tags         | `Optional` Comma separated monitor tags, example: earth,google-seach                          |
+| page        | `Optional` Page number, starts with 1, defaults to 1                               |
+| per_page        | `Optional` Page size, defaults to 10, max is 100                              |
+| created_after_utc        | `Optional` timestamp in UTC seconds when the incident was created after. Example: 1702405920                            |
+| created_before_utc        | `Optional` timestamp in UTC seconds when the incident was created before . Example: 1702405920                            |
+| title_like        | `Optional` search incidents with title                          |
+### Request
+Search incidents that are closed and title contains `hello incident`
+```shell
+curl --request POST \
+  --url http://your-kener.host/api/incident?state=closed&title_like=Hello%20Incident \
+  --header 'Authorization: Bearer some-token-set-by-you' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"isIdentified": true,
+	"isResolved": false
+	"endDatetime": 1702405920
+}'
+```
+### Response
+```json
+[{
+	"createdAt": 1703940450,
+	"closedAt": null,
+	"title": "Outage in Mumbai - Hello Incident",
+	"tags": ["google-search"],
+	"incidentNumber": 12,
+	"startDatetime": 1702405740,
+	"endDatetime": 1702405920,
+	"body": "Login cluster is down in mumbai region",
+	"impact": "DOWN",
+	"isMaintenance": false,
+	"isIdentified": true,
+	"isResolved": false
+}]
+```
 ---
 # Badge
 There are two types of badges
