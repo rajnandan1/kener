@@ -341,6 +341,44 @@ async function UpdateIssueLabels(githubConfig, incidentNumber, issueLabels, body
 	}
 }
 
+//search issue
+async function SearchIssue(query, page, per_page) {
+	if (GH_TOKEN === undefined) {
+		console.log(GhnotconfireguredMsg);
+		return null;
+	}
+
+	const searchQuery =
+        query
+            .filter(function (q) {
+                if (q == "" || q === undefined || q === null) {
+                    return false;
+                }
+                const qs = q.split(":");
+                if (qs.length < 2) {
+                    return false;
+                }
+                if (qs[1] === "" || qs[1] === undefined || qs[1] === null) {
+                    return false;
+                }
+                return true;
+            })
+            .join(" ")
+	 
+	const url = `https://api.github.com/search/issues?q=${encodeURIComponent(
+        searchQuery
+    )}&per_page=${per_page}&page=${page}`;
+	
+	try {
+		const response = await axios.request(getAxiosOptions(url));
+		return response.data;
+	} catch (error) {
+		console.log(error.response.data);
+		return null;
+	}
+}
+
+
 export {
     GetAllGHLabels,
     CreateGHLabel,
@@ -357,4 +395,5 @@ export {
     CloseIssue,
     GetOpenIncidents,
     FilterAndInsertMonitorInIncident,
+    SearchIssue,
 };
