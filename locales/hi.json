@@ -1,0 +1,24 @@
+{
+  "root": {
+    "Ongoing_Incidents": "चल रही घटनाएँ",
+    "Availability_per_Component": "प्रति कंपोनेंट उपलब्धता",
+    "Other_Monitors": "अन्य मॉनिटर्स"
+  },
+  "statuses": {
+    "UP": "उप",
+    "DOWN": "डाउन",
+    "DEGRADED": "डिग्रडेड"
+  },
+  "monitor": {
+    "share": "शेयर",
+    "share_desc": "इस मॉनिटर को एक लिंक का उपयोग करके दूसरों के साथ साझा करें।",
+    "cp_link": "कॉपी लिंक",
+    "cpd_link": "लिंक कॉपीइड",
+    "embed": "एम्बेड",
+    "embed_desc": "&#x3C;script&#x3E; या &#x3C;iframe&#x3E; का उपयोग करके मॉनिटर एंबेड करें",
+    "theme": "थीम",
+    "theme_light": "लाइट",
+    "theme_dark": "डार्क",
+    "mode": "मोड"
+  }
+}

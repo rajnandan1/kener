@@ -1,0 +1,36 @@
+{
+    "root": {
+        "Ongoing_Incidents": "Ongoing Incidents",
+        "Availability_per_Component": "Availability per Component",
+        "Other_Monitors": "Other Monitors"
+    },
+    "statuses": {
+        "UP": "UP",
+        "DOWN": "DOWN",
+        "DEGRADED": "DEGRADED",
+		"No Data": "No Data",
+		"Status OK": "Status OK"
+    },
+    "monitor": {
+        "share": "Share",
+        "badge": "Badge",
+        "share_desc": "Share this monitor using a link with others",
+        "badge_desc": "Get SVG badge for this monitor",
+        "cp_link": "Copy Link",
+        "cpd_link": "Link Copied",
+        "cp_code": "Copy Code",
+        "cpd_code": "Code Copied",
+        "embed": "Embed",
+        "embed_desc": "Embed this monitor using &#x3C;script&#x3E; or &#x3C;iframe&#x3E; in your app.",
+        "theme": "Theme",
+        "theme_light": "Light",
+        "theme_dark": "Dark",
+        "mode": "Mode",
+        "status": "Status",
+        "copied": "Copied",
+        "uptime": "Uptime",
+		"recent_incidents": "Recent Incidents",
+		"today": "Today",
+		"90_day": "90 Day"
+    }
+}

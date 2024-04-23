@@ -1,5 +1,7 @@
 import fs from "fs-extra";
 import { env } from "$env/dynamic/public";
+import '$lib/i18n'  ;
+import { locale, waitLocale } from "svelte-i18n";
 
 export async function load({ params, route, url, cookies, request }) {
     let site = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
@@ -20,6 +22,10 @@ export async function load({ params, route, url, cookies, request }) {
 	if (userAgent?.includes("Chrome-Lighthouse") || userAgent?.includes("bot")) {
 		isBot = true;
     }
+	
+	const lang = request.headers.get("accept-language")?.split(",")[0];
+	locale.set(lang);
+	await waitLocale();
     return {
         site: site,
         localTz: localTz,
