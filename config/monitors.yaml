@@ -37,6 +37,24 @@
         }
         })
 
+- name: The Developer Portal Midgard
+  description: The Developer Portal Midgard UI
+  tag: "midgard-ui"
+  image: "/midgard.png"
+  cron: "* * * * *"
+  defaultStatus: "UP"
+  api:
+    timeout: 4000
+    method: GET
+    url: https://midgard.heimdall.novonordisk.com/healthcheck
+    eval: |
+        (function(statusCode, responseTime, responseDataBase64){
+        console.log(statusCode)
+        return {
+            status: statusCode == 200 ? 'UP':'DOWN',
+            latency: responseTime,
+        }
+        })
 
 ### NON PROD
 - name: Bifrost Grafana VAL
