@@ -171,3 +171,63 @@
         }
         })
   category: Non-Production
+
+- name: The Developer Portal Midgard DEV
+  description: The Developer Portal Midgard UI for DEV
+  tag: "midgard-ui"
+  image: "/midgard.png"
+  cron: "* * * * *"
+  defaultStatus: "UP"
+  api:
+    timeout: 4000
+    method: GET
+    url: https://midgard-dev.heimdall.novonordisk.com/healthcheck
+    eval: |
+        (function(statusCode, responseTime, responseDataBase64){
+        console.log(statusCode)
+        return {
+            status: statusCode == 200 ? 'UP':'DOWN',
+            latency: responseTime,
+        }
+        })
+  category: Non-Production
+
+- name: The Developer Portal Midgard TST
+  description: The Developer Portal Midgard UI for TST
+  tag: "midgard-ui"
+  image: "/midgard.png"
+  cron: "* * * * *"
+  defaultStatus: "UP"
+  api:
+    timeout: 4000
+    method: GET
+    url: https://midgard-tst.heimdall.novonordisk.com/healthcheck
+    eval: |
+        (function(statusCode, responseTime, responseDataBase64){
+        console.log(statusCode)
+        return {
+            status: statusCode == 200 ? 'UP':'DOWN',
+            latency: responseTime,
+        }
+        })
+  category: Non-Production
+
+- name: The Developer Portal Midgard VAL
+  description: The Developer Portal Midgard UI for VAL
+  tag: "midgard-ui"
+  image: "/midgard.png"
+  cron: "* * * * *"
+  defaultStatus: "UP"
+  api:
+    timeout: 4000
+    method: GET
+    url: https://midgard-val.heimdall.novonordisk.com/healthcheck
+    eval: |
+        (function(statusCode, responseTime, responseDataBase64){
+        console.log(statusCode)
+        return {
+            status: statusCode == 200 ? 'UP':'DOWN',
+            latency: responseTime,
+        }
+        })
+  category: Non-Production
