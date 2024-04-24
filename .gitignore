@@ -2,8 +2,8 @@
 node_modules
 static/kener
 build/client/kener
-config/monitors.yaml
-config/site.yaml
+# config/monitors.yaml
+# config/site.yaml
 /.svelte-kit
 /src/lib/.kener
 /package

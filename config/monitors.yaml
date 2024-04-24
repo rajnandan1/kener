@@ -1,0 +1,155 @@
+### PROD 
+- name: Bifrost Grafana
+  description: Bifrost Grafana
+  tag: "bifrost-grafana"
+  image: "/grafana.png"
+  cron: "* * * * *"
+  defaultStatus: "UP"
+  api:
+    timeout: 4000
+    method: GET
+    url: https://heimdall.dfplatformtool-prd.pub.azure.novonordisk.com/health/grafana
+    eval: |
+        (function(statusCode, responseTime, responseDataBase64){
+        console.log(statusCode)
+        return {
+            status: statusCode == 200 ? 'UP':'DOWN',
+            latency: responseTime,
+        }
+        })
+
+- name: Bifrost OpenTelemetry
+  description: Bifrost Open Telemetry collector for PRD
+  tag: "bifrost-otel"
+  image: "/otel.png"
+  cron: "* * * * *"
+  defaultStatus: "UP"
+  api:
+    timeout: 4000
+    method: GET
+    url: https://heimdall.dfplatformtool-prd.pub.azure.novonordisk.com/health/otlp/http
+    eval: |
+        (function(statusCode, responseTime, responseDataBase64){
+        console.log(statusCode)
+        return {
+            status: statusCode == 200 ? 'UP':'DOWN',
+            latency: responseTime,
+        }
+        })
+
+
+### NON PROD
+- name: Bifrost Grafana VAL
+  description: Bifrost Grafana VAL
+  tag: "bifrost-grafana-val"
+  image: "/grafana.png"
+  cron: "* * * * *"
+  defaultStatus: "UP"
+  api:
+    timeout: 4000
+    method: GET
+    url: https://heimdall.dfplatformtool-val.pub.azure.novonordisk.com/health/grafana
+    eval: |
+        (function(statusCode, responseTime, responseDataBase64){
+        return {
+            status: statusCode == 200 ? 'UP':'DOWN',
+            latency: responseTime,
+        }
+        })
+  category: Non-Production
+
+- name: Bifrost Open Telemetry VAL
+  description: Bifrost Open Telemetry collector for VAL
+  tag: "bifrost-otel-val"
+  image: "/otel.png"
+  cron: "* * * * *"
+  defaultStatus: "UP"
+  api:
+    timeout: 4000
+    method: GET
+    url: https://heimdall.dfplatformtool-val.pub.azure.novonordisk.com/health/otlp/http
+    eval: |
+        (function(statusCode, responseTime, responseDataBase64){
+        return {
+            status: statusCode == 200 ? 'UP':'DOWN',
+            latency: responseTime,
+        }
+        })
+  category: Non-Production
+
+- name: Bifrost Grafana TST
+  description: Bifrost Grafana TST
+  tag: "bifrost-grafana-tst"
+  image: "/grafana.png"
+  cron: "* * * * *"
+  defaultStatus: "UP"
+  api:
+    timeout: 4000
+    method: GET
+    url: https://heimdall.dfplatformtool-tst.pub.azure.novonordisk.com/health/grafana
+    eval: |
+        (function(statusCode, responseTime, responseDataBase64){
+        return {
+            status: statusCode == 200 ? 'UP':'DOWN',
+            latency: responseTime,
+        }
+        })
+  category: Non-Production
+
+- name: Bifrost Open Telemetry TST
+  description: Bifrost Open Telemetry collector for TST
+  tag: "bifrost-otel-tst"
+  image: "/otel.png"
+  cron: "* * * * *"
+  defaultStatus: "UP"
+  api:
+    timeout: 4000
+    method: GET
+    url: https://heimdall.dfplatformtool-tst.pub.azure.novonordisk.com/health/otlp/http
+    eval: |
+        (function(statusCode, responseTime, responseDataBase64){
+        return {
+            status: statusCode == 200 ? 'UP':'DOWN',
+            latency: responseTime,
+        }
+        })
+  category: Non-Production
+
+
+- name: Bifrost Grafana DEV
+  description: Bifrost Grafana DEV
+  tag: "bifrost-grafana-dev"
+  image: "/grafana.png"
+  cron: "* * * * *"
+  defaultStatus: "UP"
+  api:
+    timeout: 4000
+    method: GET
+    url: https://heimdall.dfplatformtool-dev.pub.azure.novonordisk.com/health/grafana
+    eval: |
+        (function(statusCode, responseTime, responseDataBase64){
+        return {
+            status: statusCode == 200 ? 'UP':'DOWN',
+            latency: responseTime,
+        }
+        })
+  category: Non-Production
+
+- name: Bifrost OpenTelemetry DEV
+  description: Bifrost Open Telemetry collector for DEV
+  tag: "bifrost-otel-dev"
+  image: "/otel.png"
+  cron: "* * * * *"
+  defaultStatus: "UP"
+  api:
+    timeout: 4000
+    method: GET
+    url: https://heimdall.dfplatformtool-dev.pub.azure.novonordisk.com/health/otlp/http
+    eval: |
+        (function(statusCode, responseTime, responseDataBase64){
+        return {
+            status: statusCode == 200 ? 'UP':'DOWN',
+            latency: responseTime,
+        }
+        })
+  category: Non-Production

@@ -1,0 +1,27 @@
+title: "Heimdall Status Page"
+home: "/"
+logo: "/logo.png"
+github:
+  owner: ""
+  repo: ""
+  incidentSince: 48
+metaTags:
+  description: "This is Heimdall Status Page. Check the status of all Heimdall capabilities"
+nav:
+  - name: "Documentation"
+    url: "/docs"
+  - name: "Github"
+    url: "https://github.com/rajnandan1/kener"
+categories:
+  - name: Non-Production
+    description: "Heimdall Non-Production"
+hero:
+  title: Heimdall Status Page
+  subtitle: Check the status of all Heimdall capabilities
+footerHTML: |
+  Made using 
+  <a href="https://github.com/rajnandan1/kener" target="_blank" rel="noreferrer" class="font-medium underline underline-offset-4">
+    Kener
+  </a>
+  an open source status page system built with Svelte and TailwindCSS.
+    
