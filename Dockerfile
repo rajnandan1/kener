@@ -52,6 +52,8 @@ COPY --chown=abc:abc scripts /app/scripts
 COPY --chown=abc:abc static /app/static
 COPY --chown=abc:abc config /app/config
 COPY --chown=abc:abc src/lib/helpers.js /app/src/lib/helpers.js
+COPY --chown=abc:abc /config/monitors.yaml /config
+COPY --chown=abc:abc /config/site.yaml /config
 COPY --from=build --chown=abc:abc /app/build /app/build
 COPY --from=build --chown=abc:abc /app/prod.js /app/prod.js
 
@@ -61,7 +63,8 @@ ENV NODE_ENV=production
 # install prod depdendencies and clean cache
 RUN npm install --omit=dev \
     && npm cache clean --force \
-    && chown -R abc:abc node_modules
+    && chown -R abc:abc node_modules \
+    && mkdir -p /config/static
 
 ARG webPort=3000
 ENV PORT=$webPort

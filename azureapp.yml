@@ -1,7 +1,8 @@
+version: "3.0"
+
 services:
   kener:
     image: nnjgonzalez/kenner:1.0.0
-    build: .
     container_name: kener
     environment:
       - TZ=Etc/GMT
@@ -19,10 +20,20 @@ services:
       #- PORT=3000 Port app listens on IN CONTAINER
 
       ### If any of the below are changed make sure the bound volume is correct as well ###
-      #- CONFIG_DIR=/config
+      #.CONFIG_DIR=/app/config
       #- PUBLIC_KENER_FOLDER=/config/static
       #- MONITOR_YAML_PATH=/config/monitors.yaml
       #- SITE_YAML_PATH=/config/site.yaml
 
-    volumes:
-      - /Users/jgfm/Projects/nnoss/kener/config:/config:rw
+  redis:
+    image: bitnami/redis:7.2.4-debian-12-r12
+    restart: always
+
+  oauth2proxy:
+    depends_on:
+      - redis
+    image: bitnami/oauth2-proxy
+    restart: always
+    ports:
+      - "3000:80"
+    command: "--http-address 0.0.0.0:80 --upstream http://kener:3000 --provider azure --session-store-type=redis --redis-connection-url=redis://redis:6379"
