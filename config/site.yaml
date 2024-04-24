@@ -10,8 +10,6 @@ metaTags:
 nav:
   - name: "Documentation"
     url: "/docs"
-  - name: "Github"
-    url: "https://github.com/rajnandan1/kener"
 categories:
   - name: Non-Production
     description: "Heimdall Non-Production"
