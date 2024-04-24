@@ -16,10 +16,3 @@ categories:
 hero:
   title: Heimdall Status Page
   subtitle: Check the status of all Heimdall capabilities
-footerHTML: |
-  Made using 
-  <a href="https://github.com/rajnandan1/kener" target="_blank" rel="noreferrer" class="font-medium underline underline-offset-4">
-    Kener
-  </a>
-  an open source status page system built with Svelte and TailwindCSS.
-    
