@@ -38,7 +38,6 @@ export async function PATCH({ request, params }) {
 	
 	let site = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
 	let github = site.github;
-    console.log("INCIDENT.API", github);
 	let resp = await UpdateIssue(github, incidentNumber, title, body, githubLabels);
 	if (resp === null) {
 		return json(
