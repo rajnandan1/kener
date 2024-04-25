@@ -2,9 +2,9 @@ title: "Heimdall Status Page"
 home: "/"
 logo: "/logo.png"
 github:
-  owner: ""
-  repo: ""
-  incidentSince: 48
+  - owner: "NovoNordisk-OpenSource"
+    repo: "kener"
+    incidentSince: 48
 metaTags:
   description: "This is Heimdall Status Page. Check the status of all Heimdall capabilities"
 nav:
