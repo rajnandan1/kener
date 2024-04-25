@@ -273,7 +273,7 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
         }
     }
     webhookData = await getWebhookData(monitor);
-	manualData = await manualIncident(monitor, githubConfig);
+	manualData = await manualIncident(monitor, githubConfig[0]);
     //merge noData, apiData, webhookData, dayData
     let mergedData = {};
 	if (monitor.defaultStatus !== undefined && monitor.defaultStatus !== null) {

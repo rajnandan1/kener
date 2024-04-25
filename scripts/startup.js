@@ -185,12 +185,12 @@ const Startup = async () => {
             }
         }
     }
-    if (site.github === undefined || site.github.owner === undefined || site.github.repo === undefined) {
+    if (site.github === undefined || site.github[0].owner === undefined || site.github[0].repo === undefined) {
         console.log("github owner and repo are required");
         process.exit(1);
     }
-    if (site.github.incidentSince === undefined || site.github.incidentSince === null) {
-        site.github.incidentSince = 48;
+    if (site.github[0].incidentSince === undefined || site.github[0].incidentSince === null) {
+        site.github[0].incidentSince = 48;
     }
     if (checkIfDuplicateExists(monitors.map((monitor) => monitor.folderName)) === true) {
         console.log("duplicate monitor detected");
@@ -212,9 +212,9 @@ const Startup = async () => {
         process.exit(1);
     }
 
-    if (!!site.github && !!site.github.owner && !!site.github.repo) {
-        const ghowner = site.github.owner;
-        const ghrepo = site.github.repo;
+    if (!!site.github && !!site.github[0].owner && !!site.github[0].repo) {
+        const ghowner = site.github[0].owner;
+        const ghrepo = site.github[0].repo;
         const ghlabels = await GetAllGHLabels(ghowner, ghrepo);
         const tagsAndDescription = monitors.map((monitor) => {
             return { tag: monitor.tag, description: monitor.name };

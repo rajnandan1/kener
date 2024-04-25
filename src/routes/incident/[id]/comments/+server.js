@@ -9,6 +9,9 @@ import { marked } from "marked";
 export async function GET({ params, }) {
     const incidentNumber = params.id;
 	let siteData = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
+
+    console.log("INCIDENT.COMMENTS", siteData.github);
+
     let comments = await GetCommentsForIssue(incidentNumber, siteData.github);
     comments = comments.map((/** @type {{ body: string | import("markdown-it/lib/token")[]; created_at: any; updated_at: any; html_url: any; }} */ comment) => {
         const html = marked.parse(comment.body);

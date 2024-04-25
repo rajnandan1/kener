@@ -13,9 +13,20 @@ export async function load({ params, route, url, parent }) {
 	let monitors = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
     const siteData = await parent();
     const github = siteData.site.github;
+
+    console.log("INCIDENT", github);
+
     // @ts-ignore
     const { description, name, tag, image } = monitors.find((monitor) => monitor.folderName === params.id);
-	const allIncidents = await GetIncidents(tag, github, "all");
+
+    let allIncidents = [];
+
+    for(let i = 0; i < github.length; i++) {
+        console.log("COUNT", github[i], i);
+	    allIncidents = allIncidents.concat(await GetIncidents(tag, github[i], "all"));
+    }    
+    
+    console.log("ALL COUNT", allIncidents.length);
     const gitHubActiveIssues = allIncidents.filter((issue) => {
 		return issue.state === "open";
 	});

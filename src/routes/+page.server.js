@@ -26,7 +26,17 @@ export async function load({ parent }) {
         monitors[i].activeIncidents = [];
         monitorsActive.push(monitors[i]);
     }
-    let openIncidents = await GetOpenIncidents(github);
+
+    console.log("ROUTES", github);
+
+    let openIncidents = [];
+    
+    for(let i = 0; i < github.length; i++) {
+        console.log("COUNT", github[i], i);
+        openIncidents = openIncidents.concat(await GetOpenIncidents(github[i]));
+    }
+    
+    console.log("OPEN COUNT", openIncidents.length);
     let openIncidentsReduced = openIncidents.map(Mapper);
     
 

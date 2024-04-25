@@ -29,6 +29,7 @@ export async function POST({ request }) {
 	}
 	let site = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
     let github = site.github;
+    console.log("INCIDENT.API", github);
     let resp = await CreateIssue(github, title, body, githubLabels);
     if (resp === null) {
 		

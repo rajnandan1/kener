@@ -29,6 +29,7 @@ export async function GET({ request, params }) {
 
 	let site = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
 	let github = site.github;
+    console.log("INCIDENT.API.COMMENT", github);
 	let resp = await GetCommentsForIssue(incidentNumber, github);
 	return json(
         resp.map((comment) => {

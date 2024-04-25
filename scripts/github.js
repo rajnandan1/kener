@@ -128,6 +128,8 @@ const GetIncidentByNumber = async function (githubConfig, incidentNumber) {
     }
 };
 const GetIncidents = async function (tagName, githubConfig, state = "all") {
+    console.log("GetIncidents", tagName, githubConfig, state)
+
     if (githubConfig.owner === undefined || githubConfig.repo === undefined || GH_TOKEN === undefined) {
         console.log(GhnotconfireguredMsg);
         return [];
