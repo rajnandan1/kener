@@ -1,0 +1,18 @@
+title: "Heimdall Status Page"
+home: "/"
+logo: "/logo.png"
+github:
+  owner: ""
+  repo: ""
+  incidentSince: 48
+metaTags:
+  description: "This is Heimdall Status Page. Check the status of all Heimdall capabilities"
+nav:
+  - name: "Documentation"
+    url: "/docs"
+categories:
+  - name: Non-Production
+    description: "Heimdall Non-Production"
+hero:
+  title: Heimdall Status Page
+  subtitle: Check the status of all Heimdall capabilities
