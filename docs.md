@@ -124,6 +124,8 @@ ghcr.io/rajnandan1/kener:latest
 
 You should mount a host directory to persist your configuration and expose the web port. Environmental variables [found above](#environment-variable) can be passed with `-e` An example `docker run` command:
 
+Make sure you have a `/static` folder inside your config folder
+
 ```shell
 docker run -d -v /path/on/host/config:/config -p 3000:3000 -e "GH_TOKEN=1234" rajnandan1/kener
 ```
