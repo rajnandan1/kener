@@ -46,7 +46,7 @@
   api:
     timeout: 4000
     method: GET
-    url: https://midgard.heimdall.novonordisk.com/healthcheck
+    url: https://midgard.heimdall.novonordisk.cloud/healthcheck
     eval: |
         (function(statusCode, responseTime, responseDataBase64){
         console.log(statusCode)
@@ -181,7 +181,7 @@
   api:
     timeout: 4000
     method: GET
-    url: https://midgard-dev.heimdall.novonordisk.com/healthcheck
+    url: https://midgard-dev.heimdall.novonordisk.cloud/healthcheck
     eval: |
         (function(statusCode, responseTime, responseDataBase64){
         console.log(statusCode)
@@ -201,7 +201,7 @@
   api:
     timeout: 4000
     method: GET
-    url: https://midgard-tst.heimdall.novonordisk.com/healthcheck
+    url: https://midgard-tst.heimdall.novonordisk.cloud/healthcheck
     eval: |
         (function(statusCode, responseTime, responseDataBase64){
         console.log(statusCode)
@@ -221,7 +221,7 @@
   api:
     timeout: 4000
     method: GET
-    url: https://midgard-val.heimdall.novonordisk.com/healthcheck
+    url: https://midgard-val.heimdall.novonordisk.cloud/healthcheck
     eval: |
         (function(statusCode, responseTime, responseDataBase64){
         console.log(statusCode)
