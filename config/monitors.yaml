@@ -3,7 +3,7 @@
   description: Bifrost Grafana
   tag: "bifrost-grafana"
   image: "/grafana.png"
-  cron: "*/5 * * * *"
+  cron: "*/ * * * *"
   defaultStatus: "UP"
   api:
     timeout: 4000
@@ -22,7 +22,7 @@
   description: Bifrost Open Telemetry collector for PRD
   tag: "bifrost-otel"
   image: "/otel.png"
-  cron: "*/5 * * * *"
+  cron: "*/ * * * *"
   defaultStatus: "UP"
   api:
     timeout: 4000
@@ -37,11 +37,11 @@
         }
         })
 
-- name: The Developer Portal Midgard
+- name: Developer Portal - Midgard
   description: The Developer Portal Midgard UI
   tag: "midgard-ui"
   image: "/midgard.png"
-  cron: "*/5 * * * *"
+  cron: "*/ * * * *"
   defaultStatus: "UP"
   api:
     timeout: 4000
@@ -61,7 +61,7 @@
   description: Bifrost Grafana VAL
   tag: "bifrost-grafana-val"
   image: "/grafana.png"
-  cron: "*/5 * * * *"
+  cron: "*/ * * * *"
   defaultStatus: "UP"
   api:
     timeout: 4000
@@ -80,7 +80,7 @@
   description: Bifrost Open Telemetry collector for VAL
   tag: "bifrost-otel-val"
   image: "/otel.png"
-  cron: "*/5 * * * *"
+  cron: "*/ * * * *"
   defaultStatus: "UP"
   api:
     timeout: 4000
@@ -99,7 +99,7 @@
   description: Bifrost Grafana TST
   tag: "bifrost-grafana-tst"
   image: "/grafana.png"
-  cron: "*/5 * * * *"
+  cron: "*/ * * * *"
   defaultStatus: "UP"
   api:
     timeout: 4000
@@ -118,7 +118,7 @@
   description: Bifrost Open Telemetry collector for TST
   tag: "bifrost-otel-tst"
   image: "/otel.png"
-  cron: "*/5 * * * *"
+  cron: "*/ * * * *"
   defaultStatus: "UP"
   api:
     timeout: 4000
@@ -138,7 +138,7 @@
   description: Bifrost Grafana DEV
   tag: "bifrost-grafana-dev"
   image: "/grafana.png"
-  cron: "*/5 * * * *"
+  cron: "*/ * * * *"
   defaultStatus: "UP"
   api:
     timeout: 4000
@@ -157,7 +157,7 @@
   description: Bifrost Open Telemetry collector for DEV
   tag: "bifrost-otel-dev"
   image: "/otel.png"
-  cron: "*/5 * * * *"
+  cron: "*/ * * * *"
   defaultStatus: "UP"
   api:
     timeout: 4000
@@ -172,11 +172,11 @@
         })
   category: Non-Production
 
-- name: The Developer Portal Midgard DEV
+- name: Developer Portal - Midgard DEV
   description: The Developer Portal Midgard UI for DEV
   tag: "midgard-ui-dev"
   image: "/midgardlogo.png"
-  cron: "*/5 * * * *"
+  cron: "*/ * * * *"
   defaultStatus: "UP"
   api:
     timeout: 4000
@@ -192,11 +192,11 @@
         })
   category: Non-Production
 
-- name: The Developer Portal Midgard TST
+- name: Developer Portal - Midgard TST
   description: The Developer Portal Midgard UI for TST
   tag: "midgard-ui-tst"
   image: "/midgard.png"
-  cron: "*/5 * * * *"
+  cron: "*/ * * * *"
   defaultStatus: "UP"
   api:
     timeout: 4000
@@ -212,11 +212,11 @@
         })
   category: Non-Production
 
-- name: The Developer Portal Midgard VAL
+- name: Developer Portal - Midgard VAL
   description: The Developer Portal Midgard UI for VAL
   tag: "midgard-ui-val"
   image: "/midgard.png"
-  cron: "*/5 * * * *"
+  cron: "*/ * * * *"
   defaultStatus: "UP"
   api:
     timeout: 4000
