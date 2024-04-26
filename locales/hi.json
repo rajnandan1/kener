@@ -25,7 +25,7 @@
         "status_ok": "स्थिति ठीक है",
         "status_x_hour_y_minute": "%hours घंटा %minutes मिनट के लिए %status",
         "status_x_minute": "%minute मिनट के लिए %status",
-        "status_x_minutes": "%minute मिनट के लिए %status",
+        "status_x_minutes": "%minutes मिनट के लिए %status",
         "theme": "थीम",
         "theme_dark": "डार्क",
         "theme_light": "लाइट",
