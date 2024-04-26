@@ -20,11 +20,11 @@
         "DOWN": "DOWN",
         "DEGRADED": "DEGRADED"
     },
-	"incident": {
-		"identified": "Identified",
-		"resolved": "Resolved",
-		"maintenance": "Maintenance"
-	},
+    "incident": {
+        "identified": "Identified",
+        "resolved": "Resolved",
+        "maintenance": "Maintenance"
+    },
     "monitor": {
         "share": "Share",
         "badge": "Badge",
