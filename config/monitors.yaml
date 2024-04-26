@@ -174,7 +174,7 @@
 
 - name: The Developer Portal Midgard DEV
   description: The Developer Portal Midgard UI for DEV
-  tag: "midgard-ui"
+  tag: "midgard-ui-dev"
   image: "/midgardlogo.png"
   cron: "*/5 * * * *"
   defaultStatus: "UP"
@@ -194,7 +194,7 @@
 
 - name: The Developer Portal Midgard TST
   description: The Developer Portal Midgard UI for TST
-  tag: "midgard-ui"
+  tag: "midgard-ui-tst"
   image: "/midgard.png"
   cron: "*/5 * * * *"
   defaultStatus: "UP"
@@ -214,7 +214,7 @@
 
 - name: The Developer Portal Midgard VAL
   description: The Developer Portal Midgard UI for VAL
-  tag: "midgard-ui"
+  tag: "midgard-ui-val"
   image: "/midgard.png"
   cron: "*/5 * * * *"
   defaultStatus: "UP"
