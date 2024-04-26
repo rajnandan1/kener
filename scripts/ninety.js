@@ -43,7 +43,7 @@ function getDayData(day0, startTime, endTime) {
         cssClass = StatusObj.DEGRADED; 
         message = getDayMessage("Degraded", dayData.DEGRADED);
     }
-    if (dayData.DOWN > 0) {
+    if (dayData.DOWN > 5) {
         cssClass = StatusObj.DOWN;
         message = getDayMessage("Down", dayData.DOWN);
     }
