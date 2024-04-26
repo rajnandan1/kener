@@ -1,6 +1,6 @@
 services:
   kener:
-    image: nnjgonzalez/kenner:1.0.0
+    image: nnjgonzalez/kenner:1.2.0
     build: .
     container_name: kener
     environment:
@@ -23,6 +23,3 @@ services:
       #- PUBLIC_KENER_FOLDER=/config/static
       #- MONITOR_YAML_PATH=/config/monitors.yaml
       #- SITE_YAML_PATH=/config/site.yaml
-
-    volumes:
-      - /Users/jgfm/Projects/nnoss/kener/config:/config:rw
