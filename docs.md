@@ -324,7 +324,7 @@ You can add translations to your site. By default it is set to `en`. Available t
 
 ```yaml
 i18n:
-  defaultLocale: "en"
+  defaultLocale: en
   locales:
     en: English
     hi: Hindi
