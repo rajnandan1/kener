@@ -12,11 +12,15 @@
     import { beforeUpdate, afterUpdate } from "svelte";
     import * as RadioGroup from "$lib/components/ui/radio-group";
     import { Label } from "$lib/components/ui/label";
+	import axios from "axios";
+	import { l, summaryTime, n, ampm } from '$lib/i18n/client';
     const dispatch = createEventDispatcher();
-    import axios from "axios";
+    
 
     export let monitor;
     export let localTz;
+    export let lang;
+
 
     let _0Day = {};
     let _90Day = monitor.pageData._90Day;
@@ -165,36 +169,36 @@
                         </span>
                     </Popover.Trigger>
                     <Popover.Content class="pl-1 pr-1 pb-1 w-[375px] max-w-full">
-                        <h2 class="mb-1 text-lg font-semibold px-2">Share</h2>
-                        <p class="pl-2 mb-2 text-muted-foreground text-sm">Share this monitor using a link with others.</p>
+                        <h2 class="mb-1 text-lg font-semibold px-2">{l(lang,'monitor.share')}</h2>
+                        <p class="pl-2 mb-2 text-muted-foreground text-sm">{l(lang,'monitor.share_desc')}</p>
                         <Button class="ml-2" variant="secondary" on:click="{copyLinkToClipboard}">
                             {#if !copiedLink}
                             <Link class="inline mr-2" size="{12}" />
-                            <span class="text-sm font-medium"> Copy Link </span>
+                            <span class="text-sm font-medium"> {l(lang,'monitor.cp_link')} </span>
                             {:else}
                             <CopyCheck class="inline mr-2" size="{12}" />
-                            <span class="text-sm font-medium"> Copied Link </span>
+                            <span class="text-sm font-medium"> {l(lang,'monitor.cpd_link')} </span>
                             {/if}
                         </Button>
-                        <h2 class="mb-2 mt-4 text-lg font-semibold px-2">Embed</h2>
-                        <p class="pl-2 mb-2 text-muted-foreground text-sm">Embed this monitor using &#x3C;script&#x3E; or &#x3C;iframe&#x3E; in your app.</p>
+                        <h2 class="mb-2 mt-4 text-lg font-semibold px-2">{l(lang,'monitor.embed')}</h2>
+                        <p class="pl-2 mb-2 text-muted-foreground text-sm">{l(lang,'monitor.embed_desc')}</p>
                         <div class="grid grid-cols-2 gap-2">
                             <div class="col-span-1 pl-4">
-                                <h3 class="text-sm mb-2 text-muted-foreground">Theme</h3>
+                                <h3 class="text-sm mb-2 text-muted-foreground">{l(lang,'monitor.theme')}</h3>
                                 <RadioGroup.Root bind:value="{theme}">
                                     <div class="flex items-center space-x-2">
                                         <RadioGroup.Item value="light" id="light-theme" />
-                                        <Label for="light-theme">Light</Label>
+                                        <Label for="light-theme">{l(lang,'monitor.theme_light')}</Label>
                                     </div>
                                     <div class="flex items-center space-x-2">
                                         <RadioGroup.Item value="dark" id="dark-theme" />
-                                        <Label for="dark-theme">Dark</Label>
+                                        <Label for="dark-theme">{l(lang,'monitor.theme_dark')}</Label>
                                     </div>
                                     <RadioGroup.Input name="theme" />
                                 </RadioGroup.Root>
                             </div>
                             <div class="col-span-1 pl-2">
-                                <h3 class="text-sm mb-2 text-muted-foreground">Mode</h3>
+                                <h3 class="text-sm mb-2 text-muted-foreground">{l(lang,'monitor.mode')}</h3>
                                 <RadioGroup.Root bind:value="{embedType}">
                                     <div class="flex items-center space-x-2">
                                         <RadioGroup.Item value="js" id="js-embed" />
@@ -211,30 +215,30 @@
                         <Button class="mb-2 mt-4 ml-2" variant="secondary" on:click="{copyScriptTagToClipboard}">
                             {#if !copiedEmbed}
                             <Code class="inline mr-2" size="{12}" />
-                            <span class="text-sm font-medium"> Copy Code </span>
+                            <span class="text-sm font-medium"> {l(lang,'monitor.cp_code')} </span>
                             {:else}
                             <CopyCheck class="inline mr-2" size="{12}" />
-                            <span class="text-sm font-medium"> Copied Code </span>
+                            <span class="text-sm font-medium"> {l(lang,'monitor.cpd_code')} </span>
                             {/if}
                         </Button>
-                        <h2 class="mb-2 mt-2 text-lg font-semibold px-2">Badge</h2>
-                        <p class="pl-2 mb-2 text-muted-foreground text-sm">Get SVG badge for this monitor</p>
+                        <h2 class="mb-2 mt-2 text-lg font-semibold px-2">{l(lang,'monitor.badge')} </h2>
+                        <p class="pl-2 mb-2 text-muted-foreground text-sm">{l(lang,'monitor.badge_desc')}</p>
                         <Button class="mb-2 mt-2 ml-2" variant="secondary" on:click="{copyStatusBadge}">
                             {#if !copiedBadgeStatus}
                             <TrendingUp class="inline mr-2" size="{12}" />
-                            <span class="text-sm font-medium"> Status Badge </span>
+                            <span class="text-sm font-medium"> {l(lang,'monitor.status')} {l(lang,'monitor.badge')}</span>
                             {:else}
                             <CopyCheck class="inline mr-2" size="{12}" />
-                            <span class="text-sm font-medium"> Copied Badge </span>
+                            <span class="text-sm font-medium"> {l(lang,'monitor.copied')} {l(lang,'monitor.badge')} </span>
                             {/if}
                         </Button>
                         <Button class="mb-2 mt-2 ml-2" variant="secondary" on:click="{copyUptimeBadge}">
                             {#if !copiedBadgeUptime}
                             <Percent class="inline mr-2" size="{12}" />
-                            <span class="text-sm font-medium"> Uptime Badge </span>
+                            <span class="text-sm font-medium"> {l(lang,'monitor.uptime')} {l(lang,'monitor.badge')} </span>
                             {:else}
                             <CopyCheck class="inline mr-2" size="{12}" />
-                            <span class="text-sm font-medium"> Copied Badge </span>
+                            <span class="text-sm font-medium"> {l(lang,'monitor.copied')} {l(lang,'monitor.badge')} </span>
                             {/if}
                         </Button>
                     </Popover.Content>
@@ -245,7 +249,7 @@
             <div class="grid grid-cols-2 gap-0">
                 <div class="col-span-1 -mt-2">
                     <a href="/incident/{monitor.folderName}#past_incident" class="pt-0 pl-0 pb-0 text-indigo-500 text-left {buttonVariants({ variant: 'link' })}">
-                        Recent Incidents <ArrowRight size="{16}" />
+                        {l(lang,'monitor.recent_incidents')} <ArrowRight size="{16}" />
                     </a>
                 </div>
             </div>
@@ -258,15 +262,17 @@
 			<div class="grid grid-cols-12">
 				<div class="{monitor.embed === undefined ? 'col-span-12': 'col-span-8'} md:col-span-8 h-[32px]">
 					<button class="inline-block" on:click="{(e) => {switchView('90day')}}">
-						<Badge variant="{view != '90day' ? 'outline' : ''}"> 90 Day ► {uptime90Day}% </Badge>
+						<Badge variant="{view != '90day' ? 'outline' : ''}"> {l(lang,'monitor.90_day')} ► {n(lang, uptime90Day)}% </Badge>
 					</button>
 					<button on:click="{(e) => {switchView('0day')}}">
-						<Badge variant="{view != '0day' ? 'outline' : ''}"> Today ► {uptime0Day}% </Badge>
+						<Badge variant="{view != '0day' ? 'outline' : ''}"> {l(lang,'monitor.today')} ► {n(lang, uptime0Day)}% </Badge>
 					</button>
 				</div>
 				<div class="{monitor.embed === undefined ? 'col-span-12': 'col-span-4'} md:col-span-4 text-right h-[32px]">
 					{#if _90Day[todayDD]}
-					<div class="text-api-up {monitor.embed === undefined ? 'md:pr-6': ''} text-sm truncate font-semibold mt-[4px] text-{_90Day[todayDD].cssClass}">{_90Day[todayDD].message}</div>
+					<div class="text-api-up   text-sm truncate font-semibold mt-[4px] text-{_90Day[todayDD].cssClass}" title="{_90Day[todayDD].message}">
+						{summaryTime(lang, _90Day[todayDD].message)} 
+					</div>
 					{/if}
 				</div>
 			</div>
@@ -279,8 +285,7 @@
                     </div>
                     <div class="absolute show-hover text-sm bg-background">
                         <div class="text-{bar.cssClass} font-semibold">
-                            {#if bar.message != "No Data"} ● {new Date(bar.timestamp * 1000).toLocaleDateString()} {bar.message} {:else} ● {new Date(bar.timestamp * 1000).toLocaleDateString()}
-                            {bar.message} {/if}
+							● {n(lang, new Date(bar.timestamp * 1000).toLocaleDateString())} {summaryTime(lang, bar.message)} 
                         </div>
                     </div>
                     {/each}
@@ -295,9 +300,16 @@
                     <div data-index="{bar.index}" class="h-[10px] bg-{bar.cssClass} w-[10px] today-sq m-[1px]"></div>
                     <div class="hiddenx relative">
                         <div data-index="{ts.index}" class="p-2 text-sm rounded font-semibold message bg-black text-white border">
-                            <p><span class="text-{bar.cssClass}">●</span> {new Date(bar.timestamp * 1000).toLocaleTimeString()}</p>
+                            <p>
+								<span class="text-{bar.cssClass}">
+									●
+								</span> 
+								{ampm(lang, n(lang, new Date(bar.timestamp * 1000).toLocaleTimeString()))}
+							</p>
                             {#if bar.status != 'NO_DATA'}
-                            <p class="pl-4">{bar.status}</p>
+                            <p class="pl-4">
+								{l(lang,'statuses.' + bar.status)}
+							</p>
                             {:else}
                             <p class="pl-4">-</p>
                             {/if}

@@ -103,7 +103,7 @@ const GetDayStartWithOffset = function (timeStampInSeconds, offsetInMinutes) {
 
     
 }
-const BeginingOfDay = (options = {}) => {
+const BeginningOfDay = (options = {}) => {
     const { date = new Date(), timeZone } = options;
     const parts = Intl.DateTimeFormat("en-US", {
         timeZone,
@@ -129,5 +129,5 @@ export {
     GetMinuteStartNowTimestampUTC,
     DurationInMinutes,
     GetDayStartWithOffset,
-    BeginingOfDay,
+    BeginningOfDay,
 };

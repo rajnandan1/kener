@@ -5,6 +5,8 @@
     import { Separator } from "$lib/components/ui/separator";
     import { Badge } from "$lib/components/ui/badge";
     import { page } from "$app/stores";
+	import { l } from "$lib/i18n/client";
+
     export let data;
 
     let category = data.site.categories.find((c) => c.name === $page.params.category);
@@ -12,7 +14,7 @@
 </script>
 <svelte:head>
 	{#if category}
-	<title>{category.name} Categorry Page</title>
+	<title>{category.name} {l(data.lang, 'root.category')}</title>
 	{#if category.description}
 	<meta name="description" content="{category.description}" />
 	{/if}
@@ -36,7 +38,9 @@
 <section class="mx-auto bg-transparent mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id="">
     <div class="grid w-full grid-cols-2 gap-4">
         <div class="col-span-2 md:col-span-1 text-center md:text-left">
-            <Badge variant="outline">Ongoing Incidents </Badge>
+            <Badge variant="outline">
+				{l(data.lang, 'root.ongoing_incidents')}
+			</Badge>
         </div>
     </div>
 </section>
@@ -49,18 +53,26 @@
 <section class="mx-auto bg-transparent mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center" id="">
     <div class="grid w-full grid-cols-2 gap-4">
         <div class="col-span-2 md:col-span-1 text-center md:text-left">
-            <Badge class="" variant="outline"> Availability per Component </Badge>
+            <Badge class="" variant="outline"> 
+				{l(data.lang, 'root.availability_per_component')}
+			</Badge>
         </div>
         <div class="col-span-2 md:col-span-1 text-center md:text-right">
             <Badge variant="outline">
                 <span class="w-[8px] h-[8px] inline-flex rounded-full bg-api-up opacity-75 mr-1"></span>
-                <span class="mr-3">UP</span>
+                <span class="mr-3">
+					{l(data.lang, 'statuses.UP')}
+				</span>
 
                 <span class="w-[8px] h-[8px] inline-flex rounded-full bg-api-degraded opacity-75 mr-1"></span>
-                <span class="mr-3">DEGRADED</span>
+                <span class="mr-3">
+					{l(data.lang, 'statuses.DEGRADED')}
+				</span>
 
                 <span class="w-[8px] h-[8px] inline-flex rounded-full bg-api-down opacity-75 mr-1"></span>
-                <span class="mr-3">DOWN</span>
+                <span class="mr-3">
+					{l(data.lang, 'statuses.DOWN')}
+				</span>
             </Badge>
         </div>
     </div>
@@ -69,7 +81,7 @@
     <Card.Root class="w-full">
         <Card.Content class="p-0 monitors-card">
             {#each data.monitors as monitor}
-            <Monitor {monitor} localTz="{data.localTz}" />
+            <Monitor {monitor} localTz="{data.localTz}" lang="{data.lang}" />
             {/each}
         </Card.Content>
     </Card.Root>
@@ -79,11 +91,13 @@
     <Card.Root class="mx-auto">
         <Card.Content class="pt-4">
             <h1 class="scroll-m-20 text-2xl font-extrabold tracking-tight lg:text-2xl text-center">
-				No Monitor Found.
+				{l(data.lang, 'root.no_monitors')}
 			</h1>
 			<p class="mt-3 text-center">
-				Please read the documentation on how to add monitors 
-				<a href="https://kener.ing/docs#h1add-monitors" target="_blank" class="underline">here</a>.
+				{l(data.lang, 'root.read_doc_monitor')}
+				<a href="https://kener.ing/docs#h1add-monitors" target="_blank" class="underline">
+					{l(data.lang, 'root.here')}
+				</a>
 			</p>
         </Card.Content>
     </Card.Root>

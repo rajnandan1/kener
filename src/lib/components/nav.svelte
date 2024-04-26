@@ -1,7 +1,25 @@
 <script>
     import { Button } from "$lib/components/ui/button";
     import { buttonVariants } from "$lib/components/ui/button";
+	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+	import { Languages } from "lucide-svelte";
+
     export let data;
+	let defaultLocaleKey = data.selectedLang;
+	const allLocales = data.site.i18n?.locales;
+
+	let defaultLocaleValue;
+	if (!allLocales) {
+		defaultLocaleValue = "English";
+	} else {
+		defaultLocaleValue = allLocales[defaultLocaleKey];
+	}
+	function setLanguage(locale) {
+		document.cookie = `localLang=${locale};max-age=${60 * 60 * 24 * 365 * 30}`;
+		if (locale === defaultLocaleKey) return;
+		defaultLocaleValue = allLocales[locale];
+		location.reload();
+	}
 </script>
 <div class="one"></div>
 
@@ -21,6 +39,22 @@
                 {#each data.site.nav as navItem}
                 <a href="{navItem.url}"> {navItem.name} </a>
                 {/each}
+				{#if data.site.i18n && data.site.i18n.locales && Object.keys(data.site.i18n.locales).length > 1}
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger>
+						<Button variant="outline" size="sm">
+							<Languages size="{14}" class="mr-2" /> {defaultLocaleValue}
+						</Button>
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content>
+						<DropdownMenu.Group>
+							{#each Object.entries(allLocales) as [key, value]}
+								<DropdownMenu.Item on:click="{(e) => {setLanguage(key)}}">{value}</DropdownMenu.Item>
+							{/each}
+						</DropdownMenu.Group>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+				{/if}
             </nav>
 			{/if}
         </div>

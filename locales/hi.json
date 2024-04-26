@@ -1,24 +1,46 @@
 {
-  "root": {
-    "Ongoing_Incidents": "चल रही घटनाएँ",
-    "Availability_per_Component": "प्रति कंपोनेंट उपलब्धता",
-    "Other_Monitors": "अन्य मॉनिटर्स"
-  },
-  "statuses": {
-    "UP": "उप",
-    "DOWN": "डाउन",
-    "DEGRADED": "डिग्रडेड"
-  },
-  "monitor": {
-    "share": "शेयर",
-    "share_desc": "इस मॉनिटर को एक लिंक का उपयोग करके दूसरों के साथ साझा करें।",
-    "cp_link": "कॉपी लिंक",
-    "cpd_link": "लिंक कॉपीइड",
-    "embed": "एम्बेड",
-    "embed_desc": "&#x3C;script&#x3E; या &#x3C;iframe&#x3E; का उपयोग करके मॉनिटर एंबेड करें",
-    "theme": "थीम",
-    "theme_light": "लाइट",
-    "theme_dark": "डार्क",
-    "mode": "मोड"
-  }
+    "monitor": {
+        "90_day": "९० दिन",
+        "badge": "बैज",
+        "badge_desc": "इस मॉनिटर के लिए SVG बैज प्राप्त करें",
+        "copied": "कोपीएड",
+        "cp_code": "कॉपी कोड",
+        "cp_link": "लिंक कॉपी करें",
+        "cpd_code": "कोड कॉपी किया गया",
+        "cpd_link": "लिंक कॉपी किया गया",
+        "embed": "एम्बेड",
+        "embed_desc": "इस मॉनीटर को एम्बेड करें<script> या<iframe> अपने ऐप में.",
+        "mode": "मोड",
+        "recent_incidents": "हाल की घटनाएँ",
+        "share": "शेयर",
+        "share_desc": "लिंक का उपयोग करके इस मॉनिटर को अन्य लोगों के साथ शेयर करें",
+        "status": "स्टेटस",
+        "status_no_data": "कोई डेटा नहीं",
+        "status_ok": "स्थिति ठीक है",
+        "status_x_hour_y_minute": "%hour घंटा %minute मिनट के लिए %status",
+        "status_x_minute": "%minute मिनट के लिए %status",
+        "status_x_minutes": "%minute मिनट के लिए %status",
+        "theme": "थीम",
+        "theme_dark": "डार्क",
+        "theme_light": "लाइट",
+        "today": "आज",
+        "uptime": "अपटाइम",
+        "am": "पूर्वाह्न",
+        "pm": "मध्याह्न"
+    },
+    "numbers": ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"],
+    "root": {
+        "availability_per_component": "प्रति कॉम्पोनेन्ट उपलब्धता",
+        "category": "केटेगरी",
+        "here": "यहाँ",
+        "no_monitors": "कोई मॉनिटर नहीं मिला",
+        "ongoing_incidents": "चल रही घटनाएँ",
+        "other_monitors": "अन्य मॉनिटर",
+        "read_doc_monitor": "अपना पहला मॉनिटर जोड़ने के लिए डॉक्यूमेंटेशन पढ़ें"
+    },
+    "statuses": {
+        "DEGRADED": "डेग्रेडेड",
+        "DOWN": "डाउन",
+        "UP": "उप"
+    }
 }
