@@ -3,8 +3,12 @@
     import "../kener.css";
     import Nav from "$lib/components/nav.svelte";
     import { onMount } from "svelte";
+	
     export let data;
+
+
     onMount(() => {
+		
         let localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         if (localTz != data.localTz) {
             

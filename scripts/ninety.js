@@ -1,6 +1,7 @@
 import fs from "fs-extra";
-import { GetMinuteStartNowTimestampUTC, BeginingOfDay } from "./tool.js";
+import { GetMinuteStartNowTimestampUTC, BeginningOfDay } from "./tool.js";
 import { StatusObj, ParseUptime } from "../src/lib/helpers.js";
+
 function getDayMessage(type, numOfMinute){
 	if(numOfMinute > 59){
 		let hour = Math.floor(numOfMinute / 60);
@@ -10,6 +11,7 @@ function getDayMessage(type, numOfMinute){
 		return `${type} for ${numOfMinute} minute${numOfMinute > 1 ? "s" : ""}`;
 	}
 }
+const NO_DATA = "No Data";
 
 function getDayData(day0, startTime, endTime) {
     let dayData = {
@@ -18,9 +20,9 @@ function getDayData(day0, startTime, endTime) {
         DOWN: 0,
         timestamp: startTime,
         cssClass: StatusObj.NO_DATA,
-        message: "No Data",
+        message: NO_DATA,
     };
-    //loop thorugh the ts range
+    //loop through the ts range
     for (let i = startTime; i <= endTime; i += 60) {
         //if the ts is in the day0 then add up, down degraded data, if not initialize it
         if (day0[i] === undefined) {
@@ -41,11 +43,11 @@ function getDayData(day0, startTime, endTime) {
 
     if (dayData.DEGRADED > 0) {
         cssClass = StatusObj.DEGRADED; 
-        message = getDayMessage("Degraded", dayData.DEGRADED);
+        message = getDayMessage("DEGRADED", dayData.DEGRADED);
     }
     if (dayData.DOWN > 0) {
         cssClass = StatusObj.DOWN;
-        message = getDayMessage("Down", dayData.DOWN);
+        message = getDayMessage("DOWN", dayData.DOWN);
     }
     if (dayData.DEGRADED + dayData.DOWN + dayData.UP > 0) {
         dayData.message = message;
@@ -68,7 +70,7 @@ const Ninety = async (monitor) => {
 
 	const secondsInDay = 24 * 60 * 60;
 	const now = GetMinuteStartNowTimestampUTC();  
-	const midnight = BeginingOfDay({ timeZone: "GMT" });
+	const midnight = BeginningOfDay({ timeZone: "GMT" });
     const midnight90DaysAgo = midnight - 90 * 24 * 60 * 60;
     const midnightTomorrow = midnight + secondsInDay;
 
@@ -113,7 +115,7 @@ const Ninety = async (monitor) => {
         delete _90Day[key].UP;
         delete _90Day[key].DEGRADED;
         delete _90Day[key].DOWN;
-        if (element.message == "No Data") continue;
+        if (element.message == NO_DATA) continue;
     }
     uptime0Day = ParseUptime(dailyUps + dailyDegraded, dailyUps + dailyDown + dailyDegraded);
 

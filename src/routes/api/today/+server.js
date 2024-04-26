@@ -2,7 +2,7 @@
 // @ts-ignore
 import fs from "fs-extra";
 import { json } from "@sveltejs/kit";
-import { GetMinuteStartNowTimestampUTC, BeginingOfDay } from "../../../../scripts/tool.js";
+import { GetMinuteStartNowTimestampUTC, BeginningOfDay } from "../../../../scripts/tool.js";
 import { StatusObj } from "$lib/helpers.js";
 
  
@@ -13,7 +13,7 @@ export async function POST({ request }) {
     let _0Day = {};
 
     const now = GetMinuteStartNowTimestampUTC();
-    const midnight = BeginingOfDay({ timeZone: localTz });
+    const midnight = BeginningOfDay({ timeZone: localTz });
 
     for (let i = midnight; i <= now; i += 60) {
         _0Day[i] = {

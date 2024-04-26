@@ -1,4 +1,4 @@
-import { GetMinuteStartNowTimestampUTC, GetDayStartWithOffset, beginingOfDay } from "./tool.js";
+import { GetMinuteStartNowTimestampUTC, GetDayStartWithOffset, BeginningOfDay } from "./tool.js";
 let tzOffset = -330;
 let ts = GetMinuteStartNowTimestampUTC();
 console.log("GetMinuteStartNowTimestampUTC India 12AM: " + ts);
@@ -8,5 +8,5 @@ console.log(`getUTCTimestampAtStartOfDayForOffset(${GetMinuteStartNowTimestampUT
 
 
 
-console.log(beginingOfDay({ timeZone: "GMT" }));
-console.log(beginingOfDay({ timeZone: "Asia/Kolkata", date: new Date(1703223388000) }));
+console.log(BeginningOfDay({ timeZone: "GMT" }));
+console.log(BeginningOfDay({ timeZone: "Asia/Kolkata", date: new Date(1703223388000) }));

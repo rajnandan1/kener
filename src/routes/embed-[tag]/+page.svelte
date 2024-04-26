@@ -5,6 +5,7 @@
     import { Badge } from "$lib/components/ui/badge";
     import { page } from "$app/stores";
     import { onMount, afterUpdate, onDestroy } from "svelte";
+	import { l } from "$lib/i18n/client";
 
     let element;
     let previousHeight = 0;
@@ -45,7 +46,7 @@
     <Card.Root class="w-[580px] border-0 shadow-none">
         <Card.Content class="p-0 monitors-card ">
             {#each data.monitors as monitor}
-            <Monitor {monitor} localTz="{data.localTz}"  on:heightChange={handleHeightChange}/>
+            <Monitor {monitor} localTz="{data.localTz}" lang="{data.lang}" on:heightChange={handleHeightChange}/>
             {/each}
         </Card.Content>
     </Card.Root>
@@ -56,9 +57,11 @@
         <Card.Content class="pt-4">
             <h1 class="scroll-m-20 text-2xl font-extrabold tracking-tight lg:text-2xl text-center">No Monitor Found.</h1>
             <p class="mt-3 text-center">
-                Please read the documentation on how to add monitors
-                <a href="https://kener.ing/docs#h1add-monitors" target="_blank" class="underline">here</a>.
-            </p>
+				{l(data.lang, 'root.read_doc_monitor')}
+				<a href="https://kener.ing/docs#h1add-monitors" target="_blank" class="underline">
+					{l(data.lang, 'root.here')}
+				</a>
+			</p>
         </Card.Content>
     </Card.Root>
 </section>

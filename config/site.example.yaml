@@ -33,4 +33,9 @@ footerHTML: |
     Kener
   </a>
   an open source status page system built with Svelte and TailwindCSS.
+i18n:
+  defaultLocale: "en"
+  locales:
+    en: "English"
+    hi: "Hindi"
     

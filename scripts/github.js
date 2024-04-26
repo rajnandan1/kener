@@ -58,7 +58,7 @@ const GetAllGHLabels = async function (owner, repo) {
         const response = await axios.request(options);
         labels = response.data.map((label) => label.name);
     } catch (error) {
-        console.log(error.response.data);
+        console.log(error.response?.data);
         return [];
     }
     return labels;
@@ -148,7 +148,7 @@ const GetIncidents = async function (tagName, githubConfig, state = "all") {
         });
         return issues;
     } catch (error) {
-        console.log(error.response.data);
+        console.log(error.response?.data);
         return [];
     }
 };
@@ -171,7 +171,7 @@ const GetOpenIncidents = async function (githubConfig) {
         });
         return issues;
     } catch (error) {
-        console.log(error.response.data);
+        console.log(error.response?.data);
         return [];
     }
 };

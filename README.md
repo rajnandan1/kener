@@ -38,6 +38,7 @@ It uses files to store the data. Other adapters are coming soon
 - Support for custom domains
 - Embed Monitor as an iframe or widget
 - Light + Dark Theme
+- Internationalization support
 
 **Incident Management:**
 - Create Incidents using Github Issues - Rich Text
