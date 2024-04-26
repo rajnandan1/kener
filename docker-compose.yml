@@ -1,6 +1,6 @@
 services:
   kener:
-    image: nnjgonzalez/kenner:1.2.0
+    image: nnjgonzalez/kener:1.2.0
     build: .
     container_name: kener
     environment:
