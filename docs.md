@@ -316,6 +316,26 @@ nav:
     url: "/home"
 ```
 
+## i18n
+
+You can add translations to your site. By default it is set to `en`. Available translations are present in `locales/` folders in the root directory. You can add more translations by adding a new file in the `locales` folder. 
+
+### How to enable a translation
+
+```yaml
+i18n:
+  defaultLocale: "en"
+  locales:
+    en: English
+    hi: Hindi
+```
+
+- defaultLocale: The default locale to be used. This will be the language used when a user visits the site for the first time. It is important to note that the default locale json file should be present in the locales folder.
+- locales: A list of locales that you want to enable. The key is the locale code and the value is the name of the language. The locale code should be the same as the json file name in the locales folder. `en` means `en.json` should be present in the locales folder.
+- Adding more than one locales will enable a dropdown in the navbar to select the language.
+- Selected languages are stored in cookies and will be used when the user visits the site again.
+- There is no auto detection of the language. The user has to manually select the language.
+
 ## categories
 
 You can define categories for your monitors. Each category can have a description. The monitors can be grouped by categories. 
