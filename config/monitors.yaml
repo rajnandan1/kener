@@ -175,7 +175,7 @@
 - name: The Developer Portal Midgard DEV
   description: The Developer Portal Midgard UI for DEV
   tag: "midgard-ui"
-  image: "/midgard.png"
+  image: "/midgardlogo.png"
   cron: "* * * * *"
   defaultStatus: "UP"
   api:
