@@ -13,6 +13,8 @@
     export let variant = "title+body+comments+monitor";
     export let state = "open";
     export let monitor;
+	export let lang;
+	
     let blinker = "bg-transparent";
     let incidentPriority = "";
     let incidentDuration = 0;
@@ -99,9 +101,13 @@
 
                     <p class="mt-2 leading-8">
                         {#if incident.labels.includes("identified")}
-                        <span class="mt-1 text-xs font-semibold me-2 px-2.5 py-1 uppercase leading-3 inline-block  rounded tag-indetified">Identified</span>
+                        <span class="mt-1 text-xs font-semibold me-2 px-2.5 py-1 uppercase leading-3 inline-block  rounded tag-indetified">
+							Identified
+						</span>
                         {/if} {#if incident.labels.includes("resolved")}
-                        <span class=" text-xs font-semibold me-2 px-2.5 py-1 leading-3 inline-block rounded uppercase tag-resolved">Resolved</span>
+                        <span class=" text-xs font-semibold me-2 px-2.5 py-1 leading-3 inline-block rounded uppercase tag-resolved">
+							Resolved
+						</span>
                         {/if} {#if incident.labels.includes("maintenance")}
                         <span class="text-xs font-semibold me-2 px-2.5 py-1 leading-3 inline-block rounded uppercase tag-maintenance">
 							Maintenance

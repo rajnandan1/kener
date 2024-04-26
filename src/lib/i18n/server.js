@@ -8,9 +8,18 @@ const langMap = {};
 
 const files = fs.readdirSync("./locales");
 for (const file of files) {
+	
+	if(!file.endsWith(".json")){
+		continue;
+	}
     const lang = file.split(".")[0];
     const data = fs.readFileSync(`./locales/${file}`, "utf8");
-    langMap[lang] = JSON.parse(data);
+	try {
+		langMap[lang] = JSON.parse(data);
+	} catch(err){
+		console.log(`Error parsing ${file}: ${err}`);
+	}
+    
 }
 /**
  * @param {{ [x: string]: any; }} language

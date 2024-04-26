@@ -1,6 +1,6 @@
 const l = function (
     /** @type {any} */ sessionLangMap,
-    /** @type {string} */ key
+    /** @type {string} */ key,
 ) {
     const keys = key.split(".");
     let obj = sessionLangMap;
@@ -16,7 +16,7 @@ const l = function (
 
 const summaryTime = function (
     /** @type {any} */ sessionLangMap,
-    /** @type {string} */ message
+    /** @type {string} */ message,
 ) {
     if (message == "No Data") {
         return sessionLangMap.monitor.status_no_data;
@@ -31,7 +31,7 @@ const summaryTime = function (
             s: sessionLangMap.monitor.status_x_minute,
             output: function (
                 /** @type {string} */ message,
-                /** @type {{ statuses: { [x: string]: any; }; numbers: { [x: string]: any; }; }} */ sessionLangMap
+                /** @type {{ statuses: { [x: string]: any; }; numbers: { [x: string]: any; }; }} */ sessionLangMap,
             ) {
                 let match = message.match(this.regexes[0]);
                 const status = match ? match[0] : null;
@@ -61,7 +61,7 @@ const summaryTime = function (
             s: sessionLangMap.monitor.status_x_minutes,
             output: function (
                 /** @type {string} */ message,
-                /** @type {{ statuses: { [x: string]: any; }; numbers: { [x: string]: any; }; }} */ sessionLangMap
+                /** @type {{ statuses: { [x: string]: any; }; numbers: { [x: string]: any; }; }} */ sessionLangMap,
             ) {
                 let match = message.match(this.regexes[0]);
                 const status = match ? match[0] : null;
@@ -86,7 +86,7 @@ const summaryTime = function (
 
                 let res = this.s
                     .replace(/%status/g, sessionLangMap.statuses[status])
-                    .replace(/%minute/, digits);
+                    .replace(/%minutes/, digits);
                 return res;
             },
         },
@@ -95,7 +95,7 @@ const summaryTime = function (
             s: sessionLangMap.monitor.status_x_hour_y_minute,
             output: function (
                 /** @type {string} */ message,
-                /** @type {{ statuses: { [x: string]: any; }; numbers: { [x: string]: any; }; }} */ sessionLangMap
+                /** @type {{ statuses: { [x: string]: any; }; numbers: { [x: string]: any; }; }} */ sessionLangMap,
             ) {
                 let match = message.match(this.regexes[0]);
                 const status = match ? match[0] : null;
@@ -130,8 +130,31 @@ const summaryTime = function (
 
                 return this.s
                     .replace(/%status/g, sessionLangMap.statuses[status])
-                    .replace(/%hour/g, digits)
-                    .replace(/%minute/, digits2);
+                    .replace(/%hours/g, digits)
+                    .replace(/%minutes/, digits2);
+            },
+        },
+        {
+            regexes: [/^Last \d+ hours$/g],
+            s: sessionLangMap.root.last_x_hours,
+            output: function (
+                /** @type {string} */ message,
+                /** @type {{ statuses: { [x: string]: any; }; numbers: { [x: string]: any; }; }} */ sessionLangMap,
+            ) {
+                //extract the number out of message
+                let match = message.match(/\d+/g);
+                const hours = match ? match[0] : null;
+                if (!hours) {
+                    return message;
+                }
+                const digits = hours
+                    .split("")
+                    .map((elem) => {
+                        return sessionLangMap.numbers[String(elem)];
+                    })
+                    .join("");
+
+                return this.s.replace(/%hours/g, digits);
             },
         },
     ];
@@ -160,19 +183,19 @@ const summaryTime = function (
 
 const n = function (
     /** @type {{ numbers: { [x: string]: any; }; }} */ sessionLangMap,
-    /** @type {string} */ inputString
+    /** @type {string} */ inputString,
 ) {
     const translations = sessionLangMap.numbers;
 
     // @ts-ignore
     return inputString.replace(
         /\d/g,
-        (/** @type {string | number} */ match) => translations[match] || match
+        (/** @type {string | number} */ match) => translations[match] || match,
     );
 };
 const ampm = function (
     /** @type {{ monitor: { [x: string]: any; }; }} */ sessionLangMap,
-    /** @type {string} */ inputString
+    /** @type {string} */ inputString,
 ) {
     const translations = sessionLangMap.monitor;
 
@@ -181,7 +204,7 @@ const ampm = function (
         /(am|pm)/g,
         function (/** @type {string | number} */ match) {
             return translations[match] || match;
-        }
+        },
     );
 
     return resp;

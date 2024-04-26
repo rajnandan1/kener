@@ -37,7 +37,7 @@
 </section>
 <section class="mx-auto mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center backdrop-blur-[2px]" id="">
     {#each data.openIncidents as incident, i}
-    <Incident {incident} state="close" variant="title+body+comments+monitor" monitor="{incident.monitor}" />
+    <Incident {incident} state="close" variant="title+body+comments+monitor" monitor="{incident.monitor}" lang="{data.lang}" />
     {/each}
 </section>
 {/if} {#if data.monitors.length > 0}

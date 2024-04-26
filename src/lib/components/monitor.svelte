@@ -249,7 +249,7 @@
             <div class="grid grid-cols-2 gap-0">
                 <div class="col-span-1 -mt-2">
                     <a href="/incident/{monitor.folderName}#past_incident" class="pt-0 pl-0 pb-0 text-indigo-500 text-left {buttonVariants({ variant: 'link' })}">
-                        {l(lang,'monitor.recent_incidents')} <ArrowRight size="{16}" />
+                        {l(lang,'root.recent_incidents')} <ArrowRight size="{16}" />
                     </a>
                 </div>
             </div>
