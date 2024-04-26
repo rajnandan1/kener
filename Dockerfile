@@ -50,6 +50,7 @@ COPY --from=base /usr/local/bin /usr/local/bin
 COPY --from=base /usr/local/lib /usr/local/lib
 COPY --chown=abc:abc scripts /app/scripts
 COPY --chown=abc:abc static /app/static
+COPY --chown=abc:abc locales /app/locales
 COPY --chown=abc:abc config /app/config
 COPY --chown=abc:abc src/lib/helpers.js /app/src/lib/helpers.js
 COPY --from=build --chown=abc:abc /app/build /app/build
