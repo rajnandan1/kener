@@ -31,6 +31,8 @@ It uses files to store the data. Other adapters are coming soon
 - Flexible monitor configuration using YAML. Define your own parsing for monitor being UP/DOWN/DEGRADED
 - Construct complex API Polls - Chain, Secrets etc
 - Supports a Default Status for Monitors. Example defaultStatus=DOWN if you dont hit API per minute with Status UP
+- Supports base path for hosting in k8s
+- Pre-built docker image for easy deployment
 
 **Customization and Branding:**
 - Customizable status page using yaml or code
