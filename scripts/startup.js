@@ -95,7 +95,9 @@ const Startup = async () => {
             } else {
                 method = "GET";
             }
+
             monitors[i].api.method = method;
+
             //headers
             if (headers === undefined || headers === null) {
                 monitors[i].api.headers = undefined;
@@ -108,6 +110,7 @@ const Startup = async () => {
                     process.exit(1);
                 }
             }
+
             //eval
             if (evaluator === undefined || evaluator === null) {
                 monitors[i].api.eval = defaultEval;
@@ -120,6 +123,7 @@ const Startup = async () => {
                 }
 				monitors[i].api.eval = evaluator;
             }
+
             //body
             if (body === undefined || body === null) {
                 monitors[i].api.body = undefined;
@@ -130,6 +134,7 @@ const Startup = async () => {
                     process.exit(1);
                 }
             }
+
             //timeout
             if (timeout === undefined || timeout === null) {
                 monitors[i].api.timeout = API_TIMEOUT;
@@ -144,8 +149,7 @@ const Startup = async () => {
             //add a description to the monitor if it is website using api.url and method = GET and headers == undefined
             //call the it to see if recevied content-type is text/html
             //if yes, append to description
-            if ((headers === undefined || headers === null) && url !== undefined && method === "GET") {
-                
+            if ((headers === undefined || headers === null) && url !== undefined && method === "GET") {                
                 try {
                     const response = await axios({
                         method: "GET",
@@ -185,10 +189,12 @@ const Startup = async () => {
             }
         }
     }
+
     if (site.github === undefined || site.github[0].owner === undefined || site.github[0].repo === undefined) {
-        console.log("github owner and repo are required");
+        console.log("minumum one github owner and repo are required");
         process.exit(1);
     }
+
     if (site.github[0].incidentSince === undefined || site.github[0].incidentSince === null) {
         site.github[0].incidentSince = 48;
     }
@@ -212,41 +218,54 @@ const Startup = async () => {
         process.exit(1);
     }
 
-    if (!!site.github && !!site.github[0].owner && !!site.github[0].repo) {
-        const ghowner = site.github[0].owner;
-        const ghrepo = site.github[0].repo;
-        const ghlabels = await GetAllGHLabels(ghowner, ghrepo);
+    if (site.github) {
+        let ghlabels = [];
+
         const tagsAndDescription = monitors.map((monitor) => {
             return { tag: monitor.tag, description: monitor.name };
         });
-        //add incident label if does not exist
 
-        if (ghlabels.indexOf("incident") === -1) {
-            await CreateGHLabel(ghowner, ghrepo, "incident", "Status of the site");
-        }
-        if (ghlabels.indexOf("resolved") === -1) {
-            await CreateGHLabel(ghowner, ghrepo, "resolved", "Incident is resolved", "65dba6");
-        }
-        if (ghlabels.indexOf("identified") === -1) {
-            await CreateGHLabel(ghowner, ghrepo, "identified", "Incident is Identified", "EBE3D5");
-        }
-        if (ghlabels.indexOf("investigating") === -1) {
-            await CreateGHLabel(ghowner, ghrepo, "investigating", "Incident is investigated", "D4E2D4");
-        }
-        if (ghlabels.indexOf("incident-degraded") === -1) {
-            await CreateGHLabel(ghowner, ghrepo, "incident-degraded", "Status is degraded of the site", "f5ba60");
-        }
-        if (ghlabels.indexOf("incident-down") === -1) {
-            await CreateGHLabel(ghowner, ghrepo, "incident-down", "Status is down of the site", "ea3462");
-        }
-        //add tags if does not exist
-        for (let i = 0; i < tagsAndDescription.length; i++) {
-            const tag = tagsAndDescription[i].tag;
-            const description = tagsAndDescription[i].description;
-            if (ghlabels.indexOf(tag) === -1) {
-                await CreateGHLabel(ghowner, ghrepo, tag, description);
+        for(let j = 0; j < site.github.length; j++) {
+            const labels = await GetAllGHLabels(site.github[j].owner, site.github[j].repo);
+            
+            if (labels.indexOf("incident") === -1) {
+                await CreateGHLabel(site.github[j].owner, site.github[j].repo, "incident", "Status of the site");
             }
+
+            if (labels.indexOf("resolved") === -1) {
+                await CreateGHLabel(site.github[j].owner, site.github[j].repo, "resolved", "Incident is resolved", "65dba6");
+            }
+
+            if (labels.indexOf("identified") === -1) {
+                await CreateGHLabel(site.github[j].owner, site.github[j].repo, "identified", "Incident is Identified", "EBE3D5");
+            }
+
+            if (labels.indexOf("investigating") === -1) {
+                await CreateGHLabel(site.github[j].owner, site.github[j].repo, "investigating", "Incident is investigated", "D4E2D4");
+            }
+
+            if (labels.indexOf("incident-degraded") === -1) {
+                await CreateGHLabel(site.github[j].owner, site.github[j].repo, "incident-degraded", "Status is degraded of the site", "f5ba60");
+            }
+
+            if (labels.indexOf("incident-down") === -1) {
+                await CreateGHLabel(site.github[j].owner, site.github[j].repo, "incident-down", "Status is down of the site", "ea3462");
+            }
+
+            //add tags if does not exist
+            for (let i = 0; i < tagsAndDescription.length; i++) {
+                const tag = tagsAndDescription[i].tag;
+                const description = tagsAndDescription[i].description;
+
+                if (labels.indexOf(tag) === -1) {
+                    await CreateGHLabel(site.github[j].owner, site.github[j].repo, tag, description);
+                }
+            }
+            
+            // TODO: We might need to eliminate duplicates. TBD
+            ghlabels = ghlabels.concat(labels);
         }
+
     }
 
     // init monitors
@@ -262,7 +281,11 @@ const Startup = async () => {
         }
 
         console.log("Initial Fetch for ", monitor.name);
-        await Minuter(envSecrets, monitor, site.github);
+
+        for(let j = 0; j < site.github.length; j++) {
+            await Minuter(envSecrets, monitor, site.github[j].owner, site.github[j].repo, site.github[j].incidentSince);
+        }
+
 		await Ninety(monitor);
     }
 
@@ -277,7 +300,9 @@ const Startup = async () => {
         }
         console.log("Staring " + cronExpession + " Cron for ", monitor.name);
         Cron(cronExpession, async () => {
-            await Minuter(envSecrets, monitor, site.github);
+            for(let j = 0; j < site.github.length; j++) {
+                await Minuter(envSecrets, monitor, site.github[j].owner, site.github[j].repo, site.github[j].incidentSince);
+            }    
         });
     }
 

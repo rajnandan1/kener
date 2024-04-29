@@ -13,17 +13,19 @@ const apiQueue = new Queue({
     autostart: true, // Automatically start the queue (optional)
 });
 
-async function manualIncident(monitor, githubConfig){
-    let incidentsResp = await GetIncidents(monitor.tag, githubConfig, "open");
-	
+async function manualIncident(monitor, owner, repo, incidentSince){
+    let incidentsResp = await GetIncidents(monitor.tag, owner, repo, incidentSince, "open");	
 	let manualData = {};
+
     if (incidentsResp.length == 0) {
         return manualData;
     }
+
     let timeDownStart = +Infinity;
     let timeDownEnd = 0;
     let timeDegradedStart = +Infinity;
     let timeDegradedEnd = 0;
+
     for (let i = 0; i < incidentsResp.length; i++) {
         const incident = incidentsResp[i];
 		const incidentNumber = incident.number;
@@ -46,21 +48,19 @@ async function manualIncident(monitor, githubConfig){
 			if(end_time <= GetNowTimestampUTC() && incident.state === "open"){
 				//close the issue after 30 secs
 				setTimeout(async () => {
-					await CloseIssue(githubConfig, incidentNumber)
+					await CloseIssue(owner, repo, incidentNumber)
 				}, 30000)
 			}
         } else {
             newIncident.end_time = GetNowTimestampUTC();
         }
 
-        
         //check if labels has incident-degraded
-		
-
         if (allLabels.indexOf("incident-degraded") !== -1) {
             timeDegradedStart = Math.min(timeDegradedStart, newIncident.start_time);
             timeDegradedEnd = Math.max(timeDegradedEnd, newIncident.end_time);
         }
+
         if (allLabels.indexOf("incident-down") !== -1) {
             timeDownStart = Math.min(timeDownStart, newIncident.start_time);
             timeDownEnd = Math.max(timeDownEnd, newIncident.end_time);
@@ -82,6 +82,7 @@ async function manualIncident(monitor, githubConfig){
 	
 	start = GetMinuteStartTimestampUTC(timeDownStart);
     end = GetMinuteStartTimestampUTC(timeDownEnd);
+
     for (let i = start; i <= end; i += 60) {
         manualData[i] = {
             status: DOWN,
@@ -89,6 +90,7 @@ async function manualIncident(monitor, githubConfig){
 			type: "manual"
         };
     }
+
     return manualData;
 }
 
@@ -101,22 +103,28 @@ function replaceAllOccurrences(originalString, searchString, replacement) {
 
 const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorEval) => {
     let axiosHeaders = {};
+    // TODO: This user agent header does not correctly reflect the version of the code. It should be set based on configuration
     axiosHeaders["User-Agent"] = "Kener/0.0.1";
     axiosHeaders["Accept"] = "*/*";
     const start = Date.now();
+
     //replace all secrets
     for (let i = 0; i < envSecrets.length; i++) {
         const secret = envSecrets[i];
+
         if (!!body) {
             body = replaceAllOccurrences(body, secret.find, secret.replace);
         }
+
         if (!!url) {
             url = replaceAllOccurrences(url, secret.find, secret.replace);
         }
+
         if (!!headers) {
             headers = replaceAllOccurrences(headers, secret.find, secret.replace);
         }
     }
+
     if (!!headers) {
         headers = JSON.parse(headers);
         axiosHeaders = { ...axiosHeaders, ...headers };
@@ -128,16 +136,20 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
         timeout: timeout,
         transformResponse: (r) => r,
     };
+
     if (!!headers) {
         options.headers = headers;
     }
+
     if (!!body) {
         options.data = body;
     }
+
     let statusCode = 500;
     let latency = 0;
     let resp = "";
     let timeoutError = false;
+
     try {
         let data = await axios(url, options);
         statusCode = data.status;
@@ -157,8 +169,10 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
         const end = Date.now();
         latency = end - start;
     }
+
     resp = Buffer.from(resp).toString("base64");
     let evalResp = eval(monitorEval + `(${statusCode}, ${latency}, "${resp}")`);
+
     if (evalResp === undefined || evalResp === null) {
         evalResp = {
             status: DOWN,
@@ -180,26 +194,32 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
         latency: latency,
         type: "error",
     };
+
     if (evalResp.status !== undefined && evalResp.status !== null) {
         toWrite.status = evalResp.status;
     }
+
     if (evalResp.latency !== undefined && evalResp.latency !== null) {
         toWrite.latency = evalResp.latency;
     }
+
     if (evalResp.type !== undefined && evalResp.type !== null) {
         toWrite.type = evalResp.type;
     }
+
     if (timeoutError) {
         toWrite.type = "timeout";
     }
 	
     return toWrite;
 };
+
 const getWebhookData = async (monitor) => {
     let originalData = {};
 
     let files = fs.readdirSync(Kener_folder);
     files = files.filter((file) => file.startsWith(monitor.folderName + ".webhook"));
+
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
         let webhookData = {};
@@ -217,8 +237,8 @@ const getWebhookData = async (monitor) => {
     }
     return originalData;
 };
-const updateDayData = async (mergedData, startOfMinute, monitor) => {
 
+const updateDayData = async (mergedData, startOfMinute, monitor) => {
 	let dayData = JSON.parse(fs.readFileSync(monitor.path0Day, "utf8"));
 
 	for (const timestamp in mergedData) {
@@ -228,6 +248,7 @@ const updateDayData = async (mergedData, startOfMinute, monitor) => {
 	let since = 24*91;
     let mxBackDate = startOfMinute - since * 3600;
 	let _0Day = {};
+
     for (const ts in dayData) {
         const element = dayData[ts];
         if (ts >= mxBackDate) {
@@ -242,6 +263,7 @@ const updateDayData = async (mergedData, startOfMinute, monitor) => {
     keys.reverse().forEach((key) => {
         sortedDay0[key] = _0Day[key];
     });
+
     try {
         fs.writeFileSync(monitor.path0Day, JSON.stringify(sortedDay0, null, 2));
     } catch (error) {
@@ -249,7 +271,7 @@ const updateDayData = async (mergedData, startOfMinute, monitor) => {
     }
 };
 
-const Minuter = async (envSecrets, monitor, githubConfig) => {
+const Minuter = async (envSecrets, monitor, owner, repo, incidentSince) => {
     if (apiQueue.length > 0) console.log("Queue length is " + apiQueue.length);
     let apiData = {};
     let webhookData = {};
@@ -272,10 +294,13 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
             });
         }
     }
+
     webhookData = await getWebhookData(monitor);
-	manualData = await manualIncident(monitor, githubConfig[0]);
+    manualData = await manualIncident(monitor, owner, repo, incidentSince);
+    
     //merge noData, apiData, webhookData, dayData
     let mergedData = {};
+
 	if (monitor.defaultStatus !== undefined && monitor.defaultStatus !== null) {
         if ([UP, DOWN, DEGRADED].indexOf(monitor.defaultStatus) !== -1) {
             mergedData[startOfMinute] = {
@@ -285,12 +310,15 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
             };
         }
     }
+
     for (const timestamp in apiData) {
         mergedData[timestamp] = apiData[timestamp];
     }
+
     for (const timestamp in webhookData) {
         mergedData[timestamp] = webhookData[timestamp];
     }
+
     for (const timestamp in manualData) {
         mergedData[timestamp] = manualData[timestamp];
     }
@@ -298,6 +326,7 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
     //update day data
     await updateDayData(mergedData, startOfMinute, monitor);
 };
+
 apiQueue.start((err) => {
     if (err) {
         console.error("Error occurred:", err);
@@ -305,4 +334,5 @@ apiQueue.start((err) => {
         console.log("All tasks completed");
     }
 });
+
 export { Minuter };

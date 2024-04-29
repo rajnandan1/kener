@@ -1,233 +1,26 @@
-### PROD 
-- name: Bifrost Grafana
-  description: Bifrost Grafana
-  tag: "bifrost-grafana"
-  image: "/grafana.png"
-  cron: "* * * * *"
-  defaultStatus: "UP"
+- name: Google Search
+  description: Search the world's information, including webpages, images, videos and more.
+  tag: "google-search"
+  image: "/google.png"
   api:
-    timeout: 4000
     method: GET
-    url: https://heimdall.dfplatformtool-prd.pub.azure.novonordisk.com/health/grafana
-    eval: |
-        (function(statusCode, responseTime, responseDataBase64){
-        console.log(statusCode)
-        return {
-            status: statusCode == 200 ? 'UP':'DOWN',
-            latency: responseTime,
-        }
-        })
-
-- name: Bifrost OpenTelemetry
-  description: Bifrost Open Telemetry collector for PRD
-  tag: "bifrost-otel"
-  image: "/otel.png"
-  cron: "* * * * *"
-  defaultStatus: "UP"
+    url: https://www.google.com/webhp
+- name: Svelte Website
+  description: Cybernetically enhanced web apps
+  tag: "svelte-website"
   api:
-    timeout: 4000
     method: GET
-    url: https://heimdall.dfplatformtool-prd.pub.azure.novonordisk.com/health/otlp/http
-    eval: |
-        (function(statusCode, responseTime, responseDataBase64){
-        console.log(statusCode)
-        return {
-            status: statusCode == 200 ? 'UP':'DOWN',
-            latency: responseTime,
-        }
-        })
-
-- name: Developer Portal - Midgard
-  description: The Developer Portal Midgard UI
-  tag: "midgard-ui"
-  image: "/midgard.png"
-  cron: "* * * * *"
+    url: https://svelte.dev/
+  image: "/svelte.svg"
+- name: Earth
+  description: Our blue planet
+  tag: "earth"
   defaultStatus: "UP"
+  image: "/earth.png"
+- name: Frogment
+  description: A free openAPI spec editor and linter that breaks down your spec into fragments to make editing easier and more intuitive. Visit https://www.frogment.com
+  tag: "frogment"
+  image: "/frogment.png"
   api:
-    timeout: 4000
     method: GET
-    url: https://midgard.heimdall.novonordisk.cloud/healthcheck
-    eval: |
-        (function(statusCode, responseTime, responseDataBase64){
-        console.log(statusCode)
-        return {
-            status: statusCode == 200 ? 'UP':'DOWN',
-            latency: responseTime,
-        }
-        })
-
-### NON PROD
-- name: Bifrost Grafana VAL
-  description: Bifrost Grafana VAL
-  tag: "bifrost-grafana-val"
-  image: "/grafana.png"
-  cron: "* * * * *"
-  defaultStatus: "UP"
-  api:
-    timeout: 4000
-    method: GET
-    url: https://heimdall.dfplatformtool-val.pub.azure.novonordisk.com/health/grafana
-    eval: |
-        (function(statusCode, responseTime, responseDataBase64){
-        return {
-            status: statusCode == 200 ? 'UP':'DOWN',
-            latency: responseTime,
-        }
-        })
-  category: Non-Production
-
-- name: Bifrost Open Telemetry VAL
-  description: Bifrost Open Telemetry collector for VAL
-  tag: "bifrost-otel-val"
-  image: "/otel.png"
-  cron: "* * * * *"
-  defaultStatus: "UP"
-  api:
-    timeout: 4000
-    method: GET
-    url: https://heimdall.dfplatformtool-val.pub.azure.novonordisk.com/health/otlp/http
-    eval: |
-        (function(statusCode, responseTime, responseDataBase64){
-        return {
-            status: statusCode == 200 ? 'UP':'DOWN',
-            latency: responseTime,
-        }
-        })
-  category: Non-Production
-
-- name: Bifrost Grafana TST
-  description: Bifrost Grafana TST
-  tag: "bifrost-grafana-tst"
-  image: "/grafana.png"
-  cron: "* * * * *"
-  defaultStatus: "UP"
-  api:
-    timeout: 4000
-    method: GET
-    url: https://heimdall.dfplatformtool-tst.pub.azure.novonordisk.com/health/grafana
-    eval: |
-        (function(statusCode, responseTime, responseDataBase64){
-        return {
-            status: statusCode == 200 ? 'UP':'DOWN',
-            latency: responseTime,
-        }
-        })
-  category: Non-Production
-
-- name: Bifrost Open Telemetry TST
-  description: Bifrost Open Telemetry collector for TST
-  tag: "bifrost-otel-tst"
-  image: "/otel.png"
-  cron: "* * * * *"
-  defaultStatus: "UP"
-  api:
-    timeout: 4000
-    method: GET
-    url: https://heimdall.dfplatformtool-tst.pub.azure.novonordisk.com/health/otlp/http
-    eval: |
-        (function(statusCode, responseTime, responseDataBase64){
-        return {
-            status: statusCode == 200 ? 'UP':'DOWN',
-            latency: responseTime,
-        }
-        })
-  category: Non-Production
-
-
-- name: Bifrost Grafana DEV
-  description: Bifrost Grafana DEV
-  tag: "bifrost-grafana-dev"
-  image: "/grafana.png"
-  cron: "* * * * *"
-  defaultStatus: "UP"
-  api:
-    timeout: 4000
-    method: GET
-    url: https://heimdall.dfplatformtool-dev.pub.azure.novonordisk.com/health/grafana
-    eval: |
-        (function(statusCode, responseTime, responseDataBase64){
-        return {
-            status: statusCode == 200 ? 'UP':'DOWN',
-            latency: responseTime,
-        }
-        })
-  category: Non-Production
-
-- name: Bifrost OpenTelemetry DEV
-  description: Bifrost Open Telemetry collector for DEV
-  tag: "bifrost-otel-dev"
-  image: "/otel.png"
-  cron: "* * * * *"
-  defaultStatus: "UP"
-  api:
-    timeout: 4000
-    method: GET
-    url: https://heimdall.dfplatformtool-dev.pub.azure.novonordisk.com/health/otlp/http
-    eval: |
-        (function(statusCode, responseTime, responseDataBase64){
-        return {
-            status: statusCode == 200 ? 'UP':'DOWN',
-            latency: responseTime,
-        }
-        })
-  category: Non-Production
-
-- name: Developer Portal - Midgard DEV
-  description: The Developer Portal Midgard UI for DEV
-  tag: "midgard-ui-dev"
-  image: "/midgardlogo.png"
-  cron: "* * * * *"
-  defaultStatus: "UP"
-  api:
-    timeout: 4000
-    method: GET
-    url: https://midgard-dev.heimdall.novonordisk.cloud/healthcheck
-    eval: |
-        (function(statusCode, responseTime, responseDataBase64){
-        console.log(statusCode)
-        return {
-            status: statusCode == 200 ? 'UP':'DOWN',
-            latency: responseTime,
-        }
-        })
-  category: Non-Production
-
-- name: Developer Portal - Midgard TST
-  description: The Developer Portal Midgard UI for TST
-  tag: "midgard-ui-tst"
-  image: "/midgard.png"
-  cron: "* * * * *"
-  defaultStatus: "UP"
-  api:
-    timeout: 4000
-    method: GET
-    url: https://midgard-tst.heimdall.novonordisk.cloud/healthcheck
-    eval: |
-        (function(statusCode, responseTime, responseDataBase64){
-        console.log(statusCode)
-        return {
-            status: statusCode == 200 ? 'UP':'DOWN',
-            latency: responseTime,
-        }
-        })
-  category: Non-Production
-
-- name: Developer Portal - Midgard VAL
-  description: The Developer Portal Midgard UI for VAL
-  tag: "midgard-ui-val"
-  image: "/midgard.png"
-  cron: "* * * * *"
-  defaultStatus: "UP"
-  api:
-    timeout: 4000
-    method: GET
-    url: https://midgard-val.heimdall.novonordisk.cloud/healthcheck
-    eval: |
-        (function(statusCode, responseTime, responseDataBase64){
-        console.log(statusCode)
-        return {
-            status: statusCode == 200 ? 'UP':'DOWN',
-            latency: responseTime,
-        }
-        })
-  category: Non-Production
+    url: https://www.frogment.com

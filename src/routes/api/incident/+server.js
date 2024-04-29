@@ -3,12 +3,28 @@
 import { json } from "@sveltejs/kit";
 import { ParseIncidentPayload, auth, GHIssueToKenerIncident } from "$lib/server/webhook";
 import { CreateIssue, SearchIssue } from "../../../../scripts/github";
-import { env } from "$env/dynamic/public";
-import fs from "fs-extra";
 
-export async function POST({ request }) {
-    const payload = await request.json();
+export async function POST({ request, params }) {
+	if (!params.owner) {
+        return json(
+            { error: "Invalid github owner" },
+            {
+                status: 400,
+            }
+        );
+    }
+    
+	if (!params.repo) {
+        return json(
+            { error: "Invalid github repo" },
+            {
+                status: 400,
+            }
+        );
+    }
+
     const authError = auth(request);
+
     if (authError !== null) {
         return json(
             { error: authError.message },
@@ -18,7 +34,10 @@ export async function POST({ request }) {
         );
     }
 
+    const payload = await request.json();
+
     let { title, body, githubLabels, error } = ParseIncidentPayload(payload);
+
 	if (error) {
 		return json(
 			{ error },
@@ -27,9 +46,9 @@ export async function POST({ request }) {
 			}
 		);
 	}
-	let site = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
-    let github = site.github;
-    let resp = await CreateIssue(github, title, body, githubLabels);
+    
+    let resp = await CreateIssue(params.owner, params.repo, title, body, githubLabels);
+
     if (resp === null) {
 		
         return json(
@@ -47,6 +66,7 @@ export async function POST({ request }) {
 
 export async function GET({ request, url }) {
     const authError = auth(request);
+
     if (authError !== null) {
         return json(
             { error: authError.message },
@@ -57,16 +77,16 @@ export async function GET({ request, url }) {
     }
 
     const query = url.searchParams;
-
+	const owner = query.get("owner");
+	const repo = query.get("repo");
+	const state = query.get("state") || "open";
 	const state = query.get("state") || "open";
 	const tags = query.get("tags") || ""; //comma separated list of tags
 	const page = query.get("page") || 1;
 	const per_page = query.get("per_page") || 10;
 	const createdAfter = query.get("created_after_utc") || "";
 	const createdBefore = query.get("created_before_utc") || "";
-	const titleLike = query.get("title_like") || "";
-	
-	
+	const titleLike = query.get("title_like") || "";	
 
 	//if state is not open or closed, return 400
 	if (state !== "open" && state !== "closed") {
@@ -77,14 +97,9 @@ export async function GET({ request, url }) {
 			}
 		);
 	}
-	let site = JSON.parse(
-        fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8")
-    );
-    let github = site.github;
-	const repo = `${github.owner}/${github.repo}`;
+
+	const repo = `${owner}/${repo}`;
 	const is = "issue";
-
-
 	const filterArray = [
         `repo:${repo}`,
         `is:${is}`,
@@ -94,6 +109,7 @@ export async function GET({ request, url }) {
 		`label:${tags.split(",").map((tag) => tag.trim()).join(",")}`
 
     ];
+
 	//if createdAfter and createdBefore are both set, use the range filter
 	if (createdBefore && createdAfter) {
 		let dateFilter = "";
@@ -109,12 +125,12 @@ export async function GET({ request, url }) {
 		let iso = new Date(createdBefore * 1000).toISOString();
 		filterArray.push(`created:<=${iso}`);
 	}
+
 	if(titleLike){
 		filterArray.unshift(`${titleLike} in:title`);
 	}
 
 	const resp = await SearchIssue(filterArray, page, per_page);
-
 	const incidents = resp.items.map((issue) => GHIssueToKenerIncident(issue));
 
     return json(
@@ -123,7 +139,4 @@ export async function GET({ request, url }) {
             status: 200,
         }
     );
-
-
-
 }

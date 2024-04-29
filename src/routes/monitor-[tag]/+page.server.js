@@ -21,8 +21,15 @@ export async function load({ params, route, url, parent }) {
         monitors[i].pageData = data;
         monitorsActive.push(monitors[i]);
     }
-    let openIncidents = await GetOpenIncidents(github);
+
+	let openIncidents = [];
+
+    for(let i = 0; i < github.length; i++) {
+        openIncidents = openIncidents.concat(await GetOpenIncidents(github[i].owner, github[i].repo, github[i].incidentSince));
+    }
+
     let openIncidentsReduced = openIncidents.map(Mapper);
+
     return {
         monitors: monitorsActive,
         openIncidents: FilterAndInsertMonitorInIncident(openIncidentsReduced, monitorsActive),

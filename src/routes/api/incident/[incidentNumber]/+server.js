@@ -2,12 +2,38 @@
 // @ts-ignore
 import { json } from "@sveltejs/kit";
 import { auth, ParseIncidentPayload, GHIssueToKenerIncident } from "$lib/server/webhook";
-import { GetIncidentByNumber, GetStartTimeFromBody, GetEndTimeFromBody, UpdateIssue } from "../../../../../scripts/github";
-import { env } from "$env/dynamic/public";
-import fs from "fs-extra";
+import { GetIncidentByNumber, UpdateIssue } from "../../../../../scripts/github";
 
 export async function PATCH({ request, params }) {
+	if (!params.incidentNumber || isNaN(params.incidentNumber)) {
+        return json(
+            { error: "Invalid incidentNumber" },
+            {
+                status: 400,
+            }
+        );
+    }
+
+	if (!params.owner) {
+        return json(
+            { error: "Invalid github owner" },
+            {
+                status: 400,
+            }
+        );
+    }
+    
+	if (!params.repo) {
+        return json(
+            { error: "Invalid github repo" },
+            {
+                status: 400,
+            }
+        );
+    }
+
     const authError = auth(request);
+
     if (authError !== null) {
         return json(
             { error: authError.message },
@@ -16,17 +42,11 @@ export async function PATCH({ request, params }) {
             }
         );
     }
-    const incidentNumber = params.incidentNumber; //number required
+
 	const payload = await request.json();
-	if (!incidentNumber || isNaN(incidentNumber)) {
-        return json(
-            { error: "Invalid incidentNumber" },
-            {
-                status: 400,
-            }
-        );
-    }
+
 	let { title, body, githubLabels, error } = ParseIncidentPayload(payload);
+
     if (error) {
         return json(
             { error },
@@ -36,9 +56,8 @@ export async function PATCH({ request, params }) {
         );
     }
 	
-	let site = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
-	let github = site.github;
-	let resp = await UpdateIssue(github, incidentNumber, title, body, githubLabels);
+	let resp = await UpdateIssue(params.owner, params.repo, params.incidentNumber, title, body, githubLabels);
+
 	if (resp === null) {
 		return json(
 			{ error: "github error" },
@@ -47,13 +66,42 @@ export async function PATCH({ request, params }) {
 			}
 		);
 	}
+
 	return json(GHIssueToKenerIncident(resp), {
         status: 200,
     });
 }
 
 export async function GET({ request, params }) {
+    if (!params.incidentNumber || isNaN(params.incidentNumber)) {
+        return json(
+            { error: "Invalid incidentNumber" },
+            {
+                status: 400,
+            }
+        );
+    }
+
+	if (!params.owner) {
+        return json(
+            { error: "Invalid github owner" },
+            {
+                status: 400,
+            }
+        );
+    }
+    
+	if (!params.repo) {
+        return json(
+            { error: "Invalid github repo" },
+            {
+                status: 400,
+            }
+        );
+    }
+
 	const authError = auth(request);
+
     if (authError !== null) {
         return json(
             { error: authError.message },
@@ -62,12 +110,9 @@ export async function GET({ request, params }) {
             }
         );
     }
-    const incidentNumber = params.incidentNumber; //number required
-    // const headers = await request.headers();
-    
-	let site = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
-    let github = site.github;
-	let issue = await GetIncidentByNumber(github, incidentNumber);
+
+	let issue = await GetIncidentByNumber(params.owner, params.repo, incidentNumber);
+
 	if(issue === null){
 		return json(
 			{ error: "incident not found" },
@@ -75,8 +120,7 @@ export async function GET({ request, params }) {
 				status: 404,
 			}
 		);
-	}
-	
+	}	
 
     return json(GHIssueToKenerIncident(issue), {
         status: 200,

@@ -11,6 +11,7 @@ const StatusColor = {
     DOWN: "ff0060",
     NO_DATA: "b8bcbe",
 };
+
 // @ts-ignore
 const ParseUptime = function (up, all) {
     if (all === 0) return String("-");
@@ -24,6 +25,7 @@ const ParseUptime = function (up, all) {
     }
     return String(((up / all) * parseFloat(100)).toFixed(4));
 };
+
 const ParsePercentage = function (n) {
     if (isNaN(n)) return "-";
     if (n == 0) {
@@ -34,4 +36,5 @@ const ParsePercentage = function (n) {
     }
     return n.toFixed(4);
 };
+
 export { StatusObj, StatusColor, ParseUptime, ParsePercentage };

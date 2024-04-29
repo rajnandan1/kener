@@ -30,7 +30,7 @@ export async function load({ parent }) {
     let openIncidents = [];
     
     for(let i = 0; i < github.length; i++) {
-        openIncidents = openIncidents.concat(await GetOpenIncidents(github[i]));
+        openIncidents = openIncidents.concat(await GetOpenIncidents(github[i].owner, github[i].repo, github[i].incidentSince));
     }
     
     let openIncidentsReduced = openIncidents.map(Mapper);    

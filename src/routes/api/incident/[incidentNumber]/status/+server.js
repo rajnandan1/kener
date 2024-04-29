@@ -3,14 +3,37 @@
 import { json } from "@sveltejs/kit";
 import { auth, GHIssueToKenerIncident } from "$lib/server/webhook";
 import { UpdateIssueLabels, GetIncidentByNumber } from "../../../../../../scripts/github";
-import { env } from "$env/dynamic/public";
-import fs from "fs-extra";
 
 export async function POST({ request, params }) {
-    const payload = await request.json();
-    const incidentNumber = params.incidentNumber; //number required
-    // const headers = await request.headers();
+    if (!params.incidentNumber || isNaN(params.incidentNumber)) {
+        return json(
+            { error: "Invalid incidentNumber" },
+            {
+                status: 400,
+            }
+        );
+    }
+
+	if (!params.owner) {
+        return json(
+            { error: "Invalid github owner" },
+            {
+                status: 400,
+            }
+        );
+    }
+    
+	if (!params.repo) {
+        return json(
+            { error: "Invalid github repo" },
+            {
+                status: 400,
+            }
+        );
+    }
+
     const authError = auth(request);
+
     if (authError !== null) {
         return json(
             { error: authError.message },
@@ -20,19 +43,11 @@ export async function POST({ request, params }) {
         );
     }
 
+    const payload = await request.json();
+
     let isIdentified = payload.isIdentified; //string required and can be resolved or identified
     let isResolved = payload.isResolved; //string required and can be resolved or identified
     let endDatetime = payload.endDatetime; //in utc seconds optional
-
-    // Perform validations
-    if (!incidentNumber || isNaN(incidentNumber)) {
-        return json(
-            { error: "Invalid incidentNumber" },
-            {
-                status: 400,
-            }
-        );
-    }
 
     if (endDatetime && typeof endDatetime !== "number") {
         return json(
@@ -43,9 +58,8 @@ export async function POST({ request, params }) {
         );
     }
 
-    let site = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
-    let github = site.github;
-    let issue = await GetIncidentByNumber(github, incidentNumber);
+    let issue = await GetIncidentByNumber(params.owner, params.repo, incidentNumber);
+
     if (issue === null) {
         return json(
             { error: "github error" },
@@ -54,15 +68,18 @@ export async function POST({ request, params }) {
             }
         );
     }
+
     let labels = issue.labels.map((label) => {
 		return label.name;
 	});
+
 	if(isIdentified !== undefined) {
 		labels = labels.filter((label) => label !== "identified");
 		if(isIdentified === true){
 			labels.push("identified");
 		}
 	}
+
 	if(isResolved !== undefined) {
 		labels = labels.filter((label) => label !== "resolved");
 		if(isResolved === true){
@@ -86,6 +103,7 @@ export async function POST({ request, params }) {
             }
         );
     }
+    
     return json(GHIssueToKenerIncident(resp), {
         status: 200,
     });

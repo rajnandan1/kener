@@ -9,7 +9,12 @@ import { marked } from "marked";
 export async function GET({ params, }) {
     const incidentNumber = params.id;
 	let siteData = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
-    let comments = await GetCommentsForIssue(incidentNumber, siteData.github);
+    let comments = [];
+
+    for(let i = 0; i < siteData.github.length; i++) {
+        comments = comments.concat(await GetCommentsForIssue(incidentNumber, siteData.github[i].owner, siteData.github[i].repo));
+    }
+        
     comments = comments.map((/** @type {{ body: string | import("markdown-it/lib/token")[]; created_at: any; updated_at: any; html_url: any; }} */ comment) => {
         const html = marked.parse(comment.body);
         return {

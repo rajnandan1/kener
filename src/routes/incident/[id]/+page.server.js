@@ -14,15 +14,13 @@ export async function load({ params, route, url, parent }) {
     const siteData = await parent();
     const github = siteData.site.github;
 
-    console.log(github)
-
     // @ts-ignore
     const { description, name, tag, image } = monitors.find((monitor) => monitor.folderName === params.id);
 
     let allIncidents = [];
 
     for(let i = 0; i < github.length; i++) {
-	    allIncidents = allIncidents.concat(await GetIncidents(tag, github[i], "all"));
+	    allIncidents = allIncidents.concat(await GetIncidents(tag, github[i].owner, github[i].repo, github[i].incidentSince, "all"));
     }    
     
     const gitHubActiveIssues = allIncidents.filter((issue) => {
