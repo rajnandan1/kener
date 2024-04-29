@@ -80,6 +80,17 @@ export MONITOR_YAML_PATH=/your/path/monitors.yaml
 export SITE_YAML_PATH=/your/path/site.yaml
 ```
 
+#### KENER_BASE_PATH
+
+By default kener runs on `/` but you can change it to `/status` or any other path.
+- Important: The base path should not have a trailing slash and should start with `/`
+- Important: This env variable should be present during both build and run time
+- If you are using docker you will have to do your own build and set this env variable during `docker build`
+
+```shell
+export KENER_BASE_PATH=/status
+```
+
 If you do not specify MONITOR_YAML_PATH or SITE_YAML_PATH it will take the values from /config/site.yaml and /config/monitor.yaml respectively
 
 ## Production Deployment
@@ -156,13 +167,13 @@ or substitute them in [docker-compose.yml](https://raw.githubusercontent.com/raj
 
 ## Github Setup
 Kener uses github for incident management. Issues created in github using certain tags go to kener as incidents.
-### Step 1: Github Repositiory and Add to site.yaml
-Create a Github Repositiory. It can be either public or private. After you have created a repository open `site.yaml` and add them like this
+### Step 1: Github Repository and Add to site.yaml
+Create a Github Repository. It can be either public or private. After you have created a repository open `site.yaml` and add them like this
 
 ```yaml
 github:
   owner: "username"
-  repo: "respository"
+  repo: "repository"
 ```
 ### Step 2: Create Github Token
 You can create either a classic token or personal access token
@@ -266,7 +277,7 @@ For incident kener uses github comments. Create an empty [github](https://github
 ```yaml
 github:
   owner: "username"
-  repo: "respository"
+  repo: "repository"
   incidentSince: 72
 ```
 `incidentSince` is in hours. It means if an issue is created before 72 hours then kener would not honor it. Default is 24
@@ -346,7 +357,7 @@ categories:
   - name: API
     description: "Kener provides a simple API for you to use to update your status page."
   - name: home
-    description: "lroem ipsum lorem ipsum"
+    description: "loroem ipsum lorem ipsum"
 ```
 
 ## Custom Scripts
@@ -397,7 +408,7 @@ Sample
 | description   | Optional          | This will be show below your name                                                                         |
 | tag           | Required + Unique | This is used to tag incidents created in Github using comments                                            |
 | image         | Optional          | To show a logo before the name                                                                            |
-| cron          | Optinal           | Use cron expression to specify the interval to run the monitors. Defaults to `* * * * *` i.e every minute |
+| cron          | Optional           | Use cron expression to specify the interval to run the monitors. Defaults to `* * * * *` i.e every minute |
 | api.timeout        | Optional          | timeout for the api in milliseconds.  Default is 10000(10 secs)                                                                                           |
 | api.method        | Optional          | HTTP Method                                                                                               |
 | api.url           | Optional          | HTTP URL                                                                                                  |
@@ -686,7 +697,7 @@ Can be use to create an incident from a remote server
 | body               | `Optional` Body of the incident        				                                |
 | tags               | `Required` Array of String, Monitor Tags of the incident                             |
 | impact             | `Optional` Can be only DOWN/DEGRADED     			                                |
-| isMaintenance      | `Optional` Boolean if incident is a maitainance                                      |
+| isMaintenance      | `Optional` Boolean if incident is a maintenance                                      |
 | isIdentified       | `Optional` Incident identified                                                       |
 | isResolved         | `Optional` Incident resolved   			                                            |
 
@@ -741,7 +752,7 @@ Can be use to update an incident from a remote server. It will clear values if n
 | body               | `Optional` Body of the incident        				                                |
 | tags               | `Required` Array of String, Monitor Tags of the incident                            |
 | impact             | `Optional` Can be only DOWN/DEGRADED     			                                |
-| isMaintenance      | `Optional` Boolean if incident is a maitainance                                      |
+| isMaintenance      | `Optional` Boolean if incident is a maintenance                                      |
 | isIdentified       | `Optional` Incident identified                                                       |
 | isResolved         | `Optional` Incident resolved   			                                            |
 
