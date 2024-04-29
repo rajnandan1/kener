@@ -10,6 +10,8 @@
 	import { l } from '$lib/i18n/client';
 	import axios from "axios";
 	import { Skeleton } from "$lib/components/ui/skeleton";
+	import { base } from '$app/paths';
+
     export let incident;
     export let variant = "title+body+comments+monitor";
     export let state = "open";
@@ -54,7 +56,7 @@
 		state = (state=='open'? 'close':'open');
 		if(incident.comments.length > 0) return;
 		if(commentsLoading === false) return;
-		axios.get(`/incident/${incident.number}/comments`).then((response) => {
+		axios.get(`${base}/incident/${incident.number}/comments`).then((response) => {
 			incident.comments = response.data;
 			commentsLoading = false;
 		}).catch((error) => {

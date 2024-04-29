@@ -24,7 +24,7 @@ COPY docker/root/ /
 # Dir ENVs need to be set before building or else build throws errors
 ENV PUBLIC_KENER_FOLDER=/config/static \
     MONITOR_YAML_PATH=/config/monitors.yaml \
-    SITE_YAML_PATH=/config/site.yaml
+    SITE_YAML_PATH=/config/site.yaml 
 
 # build requires devDependencies which are not used by production deploy
 # so build in a stage so we can copy results to clean "deploy" stage later

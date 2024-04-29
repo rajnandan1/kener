@@ -5,6 +5,8 @@
     import Incident from "$lib/components/incident.svelte";
     import { Badge } from "$lib/components/ui/badge";
 	import { l } from "$lib/i18n/client";
+	import { base } from '$app/paths';
+
     export let data;
     let hasActiveIncidents = data.openIncidents.length > 0;
 	
@@ -88,7 +90,7 @@
             <Card.Title>{category.name}</Card.Title>
             <Card.Description class="relative pr-[100px]">
                 {#if category.description} {category.description} {/if}
-                <a href="/category-{category.name}" class="{buttonVariants({ variant: 'secondary', })} absolute -top-4 right-2"> View </a>
+                <a href="{base}/category-{category.name}" class="{buttonVariants({ variant: 'secondary', })} absolute -top-4 right-2"> View </a>
             </Card.Description>
         </Card.Header>
     </Card.Root>

@@ -3,6 +3,7 @@
     import * as Popover from "$lib/components/ui/popover";
     import { onMount } from "svelte";
     import { Button } from "$lib/components/ui/button";
+	import { base } from '$app/paths';
     import {
         ArrowRight,
         Share2,
@@ -51,7 +52,7 @@
         let domain = window.location.host;
         //get protocol
         let protocol = window.location.protocol;
-        let path = "/monitor-" + monitor.tag;
+        let path = `${base}/monitor-${monitor.tag}`;
         navigator.clipboard.writeText(protocol + "//" + domain + path);
         copiedLink = true;
         setTimeout(function () {
@@ -61,7 +62,7 @@
     function copyUptimeBadge() {
         let domain = window.location.host;
         let protocol = window.location.protocol;
-        let path = `/badge/${monitor.tag}/uptime`;
+        let path = `${base}/badge/${monitor.tag}/uptime`;
         navigator.clipboard.writeText(protocol + "//" + domain + path);
         copiedBadgeUptime = true;
         setTimeout(function () {
@@ -71,7 +72,7 @@
     function copyStatusBadge() {
         let domain = window.location.host;
         let protocol = window.location.protocol;
-        let path = `/badge/${monitor.tag}/status`;
+        let path = `${base}/badge/${monitor.tag}/status`;
         navigator.clipboard.writeText(protocol + "//" + domain + path);
         copiedBadgeStatus = true;
         setTimeout(function () {
@@ -84,7 +85,7 @@
         let domain = window.location.host;
         //get protocol
         let protocol = window.location.protocol;
-        let path = "/embed-" + monitor.tag;
+        let path = `${base}/embed-${monitor.tag}`;
         let scriptTag =
             `<script async src="${protocol + "//" + domain + path}/js?theme=${theme}&monitor=${protocol + "//" + domain + path}"><` +
             "/script>";
@@ -103,7 +104,7 @@
         //axios post using options application json
         setTimeout(() => {
             axios
-                .post("/api/today", {
+                .post(`${base}/api/today`, {
                     monitor: monitor,
                     localTz: localTz,
                 })
@@ -371,7 +372,7 @@
                 <div class="grid grid-cols-2 gap-0">
                     <div class="col-span-1 -mt-2">
                         <a
-                            href="/incident/{monitor.folderName}#past_incident"
+                            href="{base}/incident/{monitor.folderName}#past_incident"
                             class="pt-0 pl-0 pb-0 text-indigo-500 text-left {buttonVariants(
                                 { variant: 'link' },
                             )}"
