@@ -2,7 +2,7 @@
     import { Button } from "$lib/components/ui/button";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
     import { Languages } from "lucide-svelte";
-
+	import { base } from '$app/paths';
     export let data;
     let defaultLocaleKey = data.selectedLang;
     const allLocales = data.site.i18n?.locales;
@@ -33,7 +33,7 @@
     <div class="container flex h-14 items-center">
         <div class="mr-4 flex blurry-bg w-full justify-between">
             <a
-                href={data.site.home ? data.site.home : "/"}
+                href={data.site.home ? data.site.home : base}
                 class="mr-6 flex items-center space-x-2"
             >
                 {#if data.site.logo}

@@ -37,7 +37,7 @@ i18n:
   defaultLocale: "en"
   locales:
     en: "English"
-    hi: "Hindi"
+    hi: "हिन्दी"
     zh-CN: "中文"
     ja: "日本語"
     

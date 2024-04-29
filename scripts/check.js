@@ -1,4 +1,6 @@
 import { FOLDER, FOLDER_MONITOR, FOLDER_SITE, ENV } from "./constants.js";
+import { IsStringURLSafe } from "./tool.js";
+
 import fs from "fs-extra";
 let STATUS_OK = false;
 if (!!process.env.PUBLIC_KENER_FOLDER) {
@@ -64,6 +66,22 @@ if (process.env.PORT === undefined) {
 } else {
     console.log(`✅ PORT is set. Value is ${process.env.PORT}`);
 }
+
+if (process.env.KENER_BASE_PATH !== undefined) {
+	if (process.env.KENER_BASE_PATH[0] !== "/") {
+        console.log("❌ KENER_BASE_PATH should start with /");
+        process.exit(1);
+    }
+    if (process.env.KENER_BASE_PATH[process.env.KENER_BASE_PATH.length - 1] === "/") {
+        console.log("❌ KENER_BASE_PATH should not end with /");
+        process.exit(1);
+    }
+    if (!IsStringURLSafe(process.env.KENER_BASE_PATH.substr(1))) {
+        console.log("❌ KENER_BASE_PATH is not url safe");
+        process.exit(1);
+    }
+}
+
 
 STATUS_OK = true;
 export { STATUS_OK };
