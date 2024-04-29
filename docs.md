@@ -360,6 +360,12 @@ categories:
     description: "loroem ipsum lorem ipsum"
 ```
 
+## Base Path
+
+To set the base path of your kener instance you can set the `KENER_BASE_PATH` environment variable. This will be used to prefix all the routes in the application. The env variable should not have a trailing slash and should start with `/`
+
+It should be present during both build and run time. If you are using docker you will have to do your own build and set this env variable during `docker build`
+
 ## Custom Scripts
 You can include any script in the `app.html` file like google analytics etc
 
