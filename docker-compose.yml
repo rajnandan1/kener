@@ -23,3 +23,9 @@ services:
       #- PUBLIC_KENER_FOLDER=/config/static
       #- MONITOR_YAML_PATH=/config/monitors.yaml
       #- SITE_YAML_PATH=/config/site.yaml
+      #- KENER_BASE_PATH=/status
+
+    ports:
+      - '3000:3000/tcp'
+    volumes:
+      - '/host/path/to/config:/config:rw'

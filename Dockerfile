@@ -24,7 +24,7 @@ COPY docker/root/ /
 # Dir ENVs need to be set before building or else build throws errors
 ENV PUBLIC_KENER_FOLDER=/config/static \
     MONITOR_YAML_PATH=/config/monitors.yaml \
-    SITE_YAML_PATH=/config/site.yaml
+    SITE_YAML_PATH=/config/site.yaml 
 
 # build requires devDependencies which are not used by production deploy
 # so build in a stage so we can copy results to clean "deploy" stage later
@@ -50,6 +50,7 @@ COPY --from=base /usr/local/bin /usr/local/bin
 COPY --from=base /usr/local/lib /usr/local/lib
 COPY --chown=abc:abc scripts /app/scripts
 COPY --chown=abc:abc static /app/static
+COPY --chown=abc:abc locales /app/locales
 COPY --chown=abc:abc config /app/config
 COPY --chown=abc:abc src/lib/helpers.js /app/src/lib/helpers.js
 COPY --chown=abc:abc /config/monitors.yaml /config

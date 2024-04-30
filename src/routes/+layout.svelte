@@ -3,8 +3,14 @@
     import "../kener.css";
     import Nav from "$lib/components/nav.svelte";
     import { onMount } from "svelte";
+	import { base } from '$app/paths';
+	
+	
     export let data;
+
+
     onMount(() => {
+		
         let localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
         if (localTz != data.localTz) {
             
@@ -21,6 +27,7 @@
 {/if}
 <svelte:head>
     <title>{data.site.title}</title>
+	<link rel="icon" id="kener-app-favicon" href="{base}/logo96.png" />
     {#each Object.entries(data.site.metaTags) as [key, value]}
     <meta name="{key}" content="{value}" />
     {/each}

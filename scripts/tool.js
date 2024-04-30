@@ -4,6 +4,10 @@ import { MONITOR, SITE } from "./constants.js";
 const IsValidURL = function (url) {
     return /^(http|https):\/\/[^ "]+$/.test(url);
 };
+const IsStringURLSafe = function (str) {
+    const regex = /^[A-Za-z0-9\-_.~]+$/;
+    return regex.test(str);
+};
 const IsValidHTTPMethod = function (method) {
     return /^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH)$/.test(method);
 };
@@ -103,7 +107,7 @@ const GetDayStartWithOffset = function (timeStampInSeconds, offsetInMinutes) {
 
     
 }
-const BeginingOfDay = (options = {}) => {
+const BeginningOfDay = (options = {}) => {
     const { date = new Date(), timeZone } = options;
     const parts = Intl.DateTimeFormat("en-US", {
         timeZone,
@@ -129,5 +133,6 @@ export {
     GetMinuteStartNowTimestampUTC,
     DurationInMinutes,
     GetDayStartWithOffset,
-    BeginingOfDay,
+    BeginningOfDay,
+    IsStringURLSafe,
 };

@@ -7,12 +7,17 @@
     import { Badge } from "$lib/components/ui/badge";
     import {  ChevronDown } from "lucide-svelte";
     import * as Collapsible from "$lib/components/ui/collapsible";
+	import { l } from '$lib/i18n/client';
 	import axios from "axios";
 	import { Skeleton } from "$lib/components/ui/skeleton";
+	import { base } from '$app/paths';
+
     export let incident;
     export let variant = "title+body+comments+monitor";
     export let state = "open";
     export let monitor;
+	export let lang;
+	
     let blinker = "bg-transparent";
     let incidentPriority = "";
     let incidentDuration = 0;
@@ -51,7 +56,7 @@
 		state = (state=='open'? 'close':'open');
 		if(incident.comments.length > 0) return;
 		if(commentsLoading === false) return;
-		axios.get(`/incident/${incident.number}/comments`).then((response) => {
+		axios.get(`${base}/incident/${incident.number}/comments`).then((response) => {
 			incident.comments = response.data;
 			commentsLoading = false;
 		}).catch((error) => {
@@ -99,12 +104,16 @@
 
                     <p class="mt-2 leading-8">
                         {#if incident.labels.includes("identified")}
-                        <span class="mt-1 text-xs font-semibold me-2 px-2.5 py-1 uppercase leading-3 inline-block  rounded tag-indetified">Identified</span>
+                        <span class="mt-1 text-xs font-semibold me-2 px-2.5 py-1 uppercase leading-3 inline-block  rounded tag-indetified">
+							{l(lang,'incident.identified')}
+						</span>
                         {/if} {#if incident.labels.includes("resolved")}
-                        <span class=" text-xs font-semibold me-2 px-2.5 py-1 leading-3 inline-block rounded uppercase tag-resolved">Resolved</span>
+                        <span class=" text-xs font-semibold me-2 px-2.5 py-1 leading-3 inline-block rounded uppercase tag-resolved">
+							{l(lang,'incident.resolved')}
+						</span>
                         {/if} {#if incident.labels.includes("maintenance")}
                         <span class="text-xs font-semibold me-2 px-2.5 py-1 leading-3 inline-block rounded uppercase tag-maintenance">
-							Maintenance
+							{l(lang,'incident.maintenance')}
 						</span>
                         {/if}
                     </p>

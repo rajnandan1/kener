@@ -80,6 +80,17 @@ export MONITOR_YAML_PATH=/your/path/monitors.yaml
 export SITE_YAML_PATH=/your/path/site.yaml
 ```
 
+#### KENER_BASE_PATH
+
+By default kener runs on `/` but you can change it to `/status` or any other path.
+- Important: The base path should not have a trailing slash and should start with `/`
+- Important: This env variable should be present during both build and run time
+- If you are using docker you will have to do your own build and set this env variable during `docker build`
+
+```shell
+export KENER_BASE_PATH=/status
+```
+
 If you do not specify MONITOR_YAML_PATH or SITE_YAML_PATH it will take the values from /config/site.yaml and /config/monitor.yaml respectively
 
 ## Production Deployment
@@ -156,13 +167,13 @@ or substitute them in [docker-compose.yml](https://raw.githubusercontent.com/raj
 
 ## Github Setup
 Kener uses github for incident management. Issues created in github using certain tags go to kener as incidents.
-### Step 1: Github Repositiory and Add to site.yaml
-Create a Github Repositiory. It can be either public or private. After you have created a repository open `site.yaml` and add them like this
+### Step 1: Github Repository and Add to site.yaml
+Create a Github Repository. It can be either public or private. After you have created a repository open `site.yaml` and add them like this
 
 ```yaml
 github:
   owner: "username"
-  repo: "respository"
+  repo: "repository"
 ```
 ### Step 2: Create Github Token
 You can create either a classic token or personal access token
@@ -266,7 +277,7 @@ For incident kener uses github comments. Create an empty [github](https://github
 ```yaml
 github:
   owner: "username"
-  repo: "respository"
+  repo: "repository"
   incidentSince: 72
 ```
 `incidentSince` is in hours. It means if an issue is created before 72 hours then kener would not honor it. Default is 24
@@ -316,6 +327,26 @@ nav:
     url: "/home"
 ```
 
+## i18n
+
+You can add translations to your site. By default it is set to `en`. Available translations are present in `locales/` folders in the root directory. You can add more translations by adding a new file in the `locales` folder. 
+
+### How to enable a translation
+
+```yaml
+i18n:
+  defaultLocale: en
+  locales:
+    en: English
+    hi: Hindi
+```
+
+- defaultLocale: The default locale to be used. This will be the language used when a user visits the site for the first time. It is important to note that the default locale json file should be present in the locales folder.
+- locales: A list of locales that you want to enable. The key is the locale code and the value is the name of the language. The locale code should be the same as the json file name in the locales folder. `en` means `en.json` should be present in the locales folder.
+- Adding more than one locales will enable a dropdown in the navbar to select the language.
+- Selected languages are stored in cookies and will be used when the user visits the site again.
+- There is no auto detection of the language. The user has to manually select the language.
+
 ## categories
 
 You can define categories for your monitors. Each category can have a description. The monitors can be grouped by categories. 
@@ -326,8 +357,17 @@ categories:
   - name: API
     description: "Kener provides a simple API for you to use to update your status page."
   - name: home
-    description: "lroem ipsum lorem ipsum"
+    description: "loroem ipsum lorem ipsum"
 ```
+
+## Base Path
+
+To set the base path of your kener instance you can set the `KENER_BASE_PATH` environment variable. This will be used to prefix all the routes in the application. The env variable should not have a trailing slash and should start with `/`
+
+It should be present during both build and run time. If you are using docker you will have to do your own build and set this env variable during `docker build`
+
+Please also adjust files in static folder by prefixing them with the base path. For example if you set `KENER_BASE_PATH=/status` then the logo should be `/status/logo.png`
+
 
 ## Custom Scripts
 You can include any script in the `app.html` file like google analytics etc
@@ -377,7 +417,7 @@ Sample
 | description   | Optional          | This will be show below your name                                                                         |
 | tag           | Required + Unique | This is used to tag incidents created in Github using comments                                            |
 | image         | Optional          | To show a logo before the name                                                                            |
-| cron          | Optinal           | Use cron expression to specify the interval to run the monitors. Defaults to `* * * * *` i.e every minute |
+| cron          | Optional           | Use cron expression to specify the interval to run the monitors. Defaults to `* * * * *` i.e every minute |
 | api.timeout        | Optional          | timeout for the api in milliseconds.  Default is 10000(10 secs)                                                                                           |
 | api.method        | Optional          | HTTP Method                                                                                               |
 | api.url           | Optional          | HTTP URL                                                                                                  |
@@ -387,6 +427,9 @@ Sample
 | defaultStatus | Optional          | If no API is given this will be the default status. can be UP/DOWN/DEGRADED                               |
 | hidden | Optional          | If set to `true` will not show the monitor in the UI                                                             |
 | category | Optional          | Use this to group your monitors. Make sure you have defined category in `site.yaml` and use the `name` attribute here                                                        |
+| dayDegradedMinimumCount | Optional          | Default is 1. It means minimum this number of count for the day to be classified as DEGRADED(Yellow Bar) in 90 day view. Has to be `number` greater than 0                                                    |
+| dayDownMinimumCount | Optional          | Default is 1. It means minimum this number of count for the day to be classified as DOWN(Red Bar) in 90 day view. Has to be `number` greater than 0                                                     |
+| includeDegradedInDowntime | Optional          | By deafault uptime percentage is calculated as (UP+DEGRADED/UP+DEGRADED+DOWN). Setting it as `true` will change the calculation to     (UP/UP+DEGRADED+DOWN)                                          |
 
 ## cron
 
@@ -666,7 +709,7 @@ Can be use to create an incident from a remote server
 | body               | `Optional` Body of the incident        				                                |
 | tags               | `Required` Array of String, Monitor Tags of the incident                             |
 | impact             | `Optional` Can be only DOWN/DEGRADED     			                                |
-| isMaintenance      | `Optional` Boolean if incident is a maitainance                                      |
+| isMaintenance      | `Optional` Boolean if incident is a maintenance                                      |
 | isIdentified       | `Optional` Incident identified                                                       |
 | isResolved         | `Optional` Incident resolved   			                                            |
 
@@ -721,7 +764,7 @@ Can be use to update an incident from a remote server. It will clear values if n
 | body               | `Optional` Body of the incident        				                                |
 | tags               | `Required` Array of String, Monitor Tags of the incident                            |
 | impact             | `Optional` Can be only DOWN/DEGRADED     			                                |
-| isMaintenance      | `Optional` Boolean if incident is a maitainance                                      |
+| isMaintenance      | `Optional` Boolean if incident is a maintenance                                      |
 | isIdentified       | `Optional` Incident identified                                                       |
 | isResolved         | `Optional` Incident resolved   			                                            |
 

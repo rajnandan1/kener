@@ -1,6 +1,7 @@
 import fs from "fs-extra";
-import { GetMinuteStartNowTimestampUTC, BeginingOfDay } from "./tool.js";
+import { GetMinuteStartNowTimestampUTC, BeginningOfDay } from "./tool.js";
 import { StatusObj, ParseUptime } from "../src/lib/helpers.js";
+
 function getDayMessage(type, numOfMinute){
 	if(numOfMinute > 59){
 		let hour = Math.floor(numOfMinute / 60);
@@ -10,17 +11,24 @@ function getDayMessage(type, numOfMinute){
 		return `${type} for ${numOfMinute} minute${numOfMinute > 1 ? "s" : ""}`;
 	}
 }
+const NO_DATA = "No Data";
 
-function getDayData(day0, startTime, endTime) {
+function getDayData(
+    day0,
+    startTime,
+    endTime,
+    dayDownMinimumCount,
+    dayDegradedMinimumCount
+) {
     let dayData = {
         UP: 0,
         DEGRADED: 0,
         DOWN: 0,
         timestamp: startTime,
         cssClass: StatusObj.NO_DATA,
-        message: "No Data",
+        message: NO_DATA,
     };
-    //loop thorugh the ts range
+    //loop through the ts range
     for (let i = startTime; i <= endTime; i += 60) {
         //if the ts is in the day0 then add up, down degraded data, if not initialize it
         if (day0[i] === undefined) {
@@ -39,15 +47,15 @@ function getDayData(day0, startTime, endTime) {
     let cssClass = StatusObj.UP;
     let message = "Status OK";
 
-    if (dayData.DEGRADED > 0) {
-        cssClass = StatusObj.DEGRADED; 
-        message = getDayMessage("Degraded", dayData.DEGRADED);
+    if (dayData.DEGRADED >= dayDegradedMinimumCount) {
+        cssClass = StatusObj.DEGRADED;
+        message = getDayMessage("DEGRADED", dayData.DEGRADED);
     }
-    if (dayData.DOWN > 5) {
+    if (dayData.DOWN >= dayDownMinimumCount) {
         cssClass = StatusObj.DOWN;
-        message = getDayMessage("Down", dayData.DOWN);
+        message = getDayMessage("DOWN", dayData.DOWN);
     }
-    if (dayData.DEGRADED + dayData.DOWN + dayData.UP > 0) {
+    if (dayData.DEGRADED + dayData.DOWN + dayData.UP >= Math.min(dayDownMinimumCount, dayDegradedMinimumCount)) {
         dayData.message = message;
         dayData.cssClass = cssClass;
     }
@@ -66,9 +74,10 @@ const Ninety = async (monitor) => {
     let completeDown = 0;
     let completeDegraded = 0;
 
+
 	const secondsInDay = 24 * 60 * 60;
 	const now = GetMinuteStartNowTimestampUTC();  
-	const midnight = BeginingOfDay({ timeZone: "GMT" });
+	const midnight = BeginningOfDay({ timeZone: "GMT" });
     const midnight90DaysAgo = midnight - 90 * 24 * 60 * 60;
     const midnightTomorrow = midnight + secondsInDay;
 
@@ -105,7 +114,13 @@ const Ninety = async (monitor) => {
     }
 
 	for (let i = midnight90DaysAgo; i < midnightTomorrow; i += secondsInDay) {
-        _90Day[i] = getDayData(day0, i, i + secondsInDay - 1);
+        _90Day[i] = getDayData(
+            day0,
+            i,
+            i + secondsInDay - 1,
+            monitor.dayDownMinimumCount,
+            monitor.dayDegradedMinimumCount
+        );
     }
 
     for (const key in _90Day) {
@@ -113,14 +128,24 @@ const Ninety = async (monitor) => {
         delete _90Day[key].UP;
         delete _90Day[key].DEGRADED;
         delete _90Day[key].DOWN;
-        if (element.message == "No Data") continue;
+        if (element.message == NO_DATA) continue;
     }
-    uptime0Day = ParseUptime(dailyUps + dailyDegraded, dailyUps + dailyDown + dailyDegraded);
+
+	let uptime0DayNumerator = dailyUps + dailyDegraded;
+	let uptime0DayDenominator = dailyUps + dailyDown + dailyDegraded;
+	let uptime90DayNumerator = completeUps + completeDegraded;
+	let uptime90DayDenominator = completeUps + completeDown + completeDegraded;
+
+	if(monitor.includeDegradedInDowntime === true) {
+		uptime0DayNumerator = dailyUps;
+		uptime90DayNumerator = completeUps;
+	}
+    uptime0Day = ParseUptime(uptime0DayNumerator, uptime0DayDenominator);
 
 	const dataToWrite = {
         _90Day: _90Day,
         uptime0Day,
-        uptime90Day: ParseUptime(completeUps + completeDegraded, completeUps + completeDegraded + completeDown),
+        uptime90Day: ParseUptime(uptime90DayNumerator, uptime90DayDenominator),
         dailyUps,
         dailyDown,
         dailyDegraded,
