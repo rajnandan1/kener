@@ -366,6 +366,9 @@ To set the base path of your kener instance you can set the `KENER_BASE_PATH` en
 
 It should be present during both build and run time. If you are using docker you will have to do your own build and set this env variable during `docker build`
 
+Please also adjust files in static folder by prefixing them with the base path. For example if you set `KENER_BASE_PATH=/status` then the logo should be `/status/logo.png`
+
+
 ## Custom Scripts
 You can include any script in the `app.html` file like google analytics etc
 
@@ -424,6 +427,9 @@ Sample
 | defaultStatus | Optional          | If no API is given this will be the default status. can be UP/DOWN/DEGRADED                               |
 | hidden | Optional          | If set to `true` will not show the monitor in the UI                                                             |
 | category | Optional          | Use this to group your monitors. Make sure you have defined category in `site.yaml` and use the `name` attribute here                                                        |
+| dayDegradedMinimumCount | Optional          | Default is 1. It means minimum this number of count for the day to be classified as DEGRADED(Yellow Bar) in 90 day view. Has to be `number` greater than 0                                                    |
+| dayDownMinimumCount | Optional          | Default is 1. It means minimum this number of count for the day to be classified as DOWN(Red Bar) in 90 day view. Has to be `number` greater than 0                                                     |
+| includeDegradedInDowntime | Optional          | By deafault uptime percentage is calculated as (UP+DEGRADED/UP+DEGRADED+DOWN). Setting it as `true` will change the calculation to     (UP/UP+DEGRADED+DOWN)                                          |
 
 ## cron
 
