@@ -72,6 +72,24 @@ const Startup = async () => {
             process.exit(1);
         }
 
+		if(monitor.dayDegradedMinimumCount && (isNaN(monitor.dayDegradedMinimumCount) || monitor.dayDegradedMinimumCount < 1)){
+			console.log("dayDegradedMinimumCount is not a number or it is less than 1");
+			process.exit(1);
+		} else if(monitor.dayDegradedMinimumCount === undefined) {
+			monitors[i].dayDegradedMinimumCount = 1;
+		}
+
+		if(monitor.dayDownMinimumCount && (isNaN(monitor.dayDownMinimumCount) || monitor.dayDownMinimumCount < 1)){
+			console.log("dayDownMinimumCount is not a number or it is less than 1");
+			process.exit(1);
+		} else if(monitor.dayDownMinimumCount === undefined) {
+			monitors[i].dayDownMinimumCount = 1;
+		}
+
+		if (monitor.includeDegradedInDowntime === undefined ||  monitor.includeDegradedInDowntime !== true) {
+			monitors[i].includeDegradedInDowntime = false;
+        } 
+
 		if(hasAPI) {
             let url = monitor.api.url;
             let method = monitor.api.method;
@@ -184,6 +202,8 @@ const Startup = async () => {
                 });
             }
         }
+
+		
     }
     if (site.github === undefined || site.github.owner === undefined || site.github.repo === undefined) {
         console.log("github owner and repo are required");

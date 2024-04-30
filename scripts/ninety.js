@@ -13,7 +13,13 @@ function getDayMessage(type, numOfMinute){
 }
 const NO_DATA = "No Data";
 
-function getDayData(day0, startTime, endTime) {
+function getDayData(
+    day0,
+    startTime,
+    endTime,
+    dayDownMinimumCount,
+    dayDegradedMinimumCount
+) {
     let dayData = {
         UP: 0,
         DEGRADED: 0,
@@ -41,15 +47,15 @@ function getDayData(day0, startTime, endTime) {
     let cssClass = StatusObj.UP;
     let message = "Status OK";
 
-    if (dayData.DEGRADED > 0) {
-        cssClass = StatusObj.DEGRADED; 
+    if (dayData.DEGRADED >= dayDegradedMinimumCount) {
+        cssClass = StatusObj.DEGRADED;
         message = getDayMessage("DEGRADED", dayData.DEGRADED);
     }
-    if (dayData.DOWN > 0) {
+    if (dayData.DOWN >= dayDownMinimumCount) {
         cssClass = StatusObj.DOWN;
         message = getDayMessage("DOWN", dayData.DOWN);
     }
-    if (dayData.DEGRADED + dayData.DOWN + dayData.UP > 0) {
+    if (dayData.DEGRADED + dayData.DOWN + dayData.UP >= Math.min(dayDownMinimumCount, dayDegradedMinimumCount)) {
         dayData.message = message;
         dayData.cssClass = cssClass;
     }
@@ -67,6 +73,7 @@ const Ninety = async (monitor) => {
     let completeUps = 0;
     let completeDown = 0;
     let completeDegraded = 0;
+
 
 	const secondsInDay = 24 * 60 * 60;
 	const now = GetMinuteStartNowTimestampUTC();  
@@ -107,7 +114,13 @@ const Ninety = async (monitor) => {
     }
 
 	for (let i = midnight90DaysAgo; i < midnightTomorrow; i += secondsInDay) {
-        _90Day[i] = getDayData(day0, i, i + secondsInDay - 1);
+        _90Day[i] = getDayData(
+            day0,
+            i,
+            i + secondsInDay - 1,
+            monitor.dayDownMinimumCount,
+            monitor.dayDegradedMinimumCount
+        );
     }
 
     for (const key in _90Day) {
@@ -117,12 +130,22 @@ const Ninety = async (monitor) => {
         delete _90Day[key].DOWN;
         if (element.message == NO_DATA) continue;
     }
-    uptime0Day = ParseUptime(dailyUps + dailyDegraded, dailyUps + dailyDown + dailyDegraded);
+
+	let uptime0DayNumerator = dailyUps + dailyDegraded;
+	let uptime0DayDenominator = dailyUps + dailyDown + dailyDegraded;
+	let uptime90DayNumerator = completeUps + completeDegraded;
+	let uptime90DayDenominator = completeUps + completeDown + completeDegraded;
+
+	if(monitor.includeDegradedInDowntime === true) {
+		uptime0DayNumerator = dailyUps;
+		uptime90DayNumerator = completeUps;
+	}
+    uptime0Day = ParseUptime(uptime0DayNumerator, uptime0DayDenominator);
 
 	const dataToWrite = {
         _90Day: _90Day,
         uptime0Day,
-        uptime90Day: ParseUptime(completeUps + completeDegraded, completeUps + completeDegraded + completeDown),
+        uptime90Day: ParseUptime(uptime90DayNumerator, uptime90DayDenominator),
         dailyUps,
         dailyDown,
         dailyDegraded,
