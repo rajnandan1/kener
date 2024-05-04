@@ -1,4 +1,3 @@
-
 // Define your constants
 const FOLDER = process.env.PUBLIC_KENER_FOLDER;
 const ENV = process.env.NODE_ENV;

@@ -3,14 +3,14 @@
   tag: "google-search"
   image: "/google.png"
   api:
-    method: GET
-    url: https://www.google.com/webhp
+      method: GET
+      url: https://www.google.com/webhp
 - name: Svelte Website
   description: Cybernetically enhanced web apps
   tag: "svelte-website"
   api:
-    method: GET
-    url: https://svelte.dev/
+      method: GET
+      url: https://svelte.dev/
   image: "/svelte.svg"
 - name: Earth
   description: Our blue planet
@@ -22,5 +22,5 @@
   tag: "frogment"
   image: "/frogment.png"
   api:
-    method: GET
-    url: https://www.frogment.com
+      method: GET
+      url: https://www.frogment.com

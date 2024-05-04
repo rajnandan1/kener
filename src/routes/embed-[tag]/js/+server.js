@@ -4,7 +4,7 @@ import { env } from "$env/dynamic/public";
 import fs from "fs-extra";
 const siteData = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
 export async function GET({ url, params }) {
-    const { tag } = params;
+	const { tag } = params;
 	const query = url.searchParams;
 	const uriEmbedded = query.get("monitor");
 	const theme = query.get("theme") || "light";
@@ -67,9 +67,9 @@ export async function GET({ url, params }) {
 }).call(this);
 
 	`;
-    return new Response(js, {
-        headers: {
-            "Content-Type": "application/javascript",
-        },
-    });
+	return new Response(js, {
+		headers: {
+			"Content-Type": "application/javascript"
+		}
+	});
 }
