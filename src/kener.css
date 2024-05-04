@@ -1,85 +1,80 @@
 /*one is the class for dotted background*/
 .one {
-    position: absolute;
-    top: 0px;
-    left: 0;
-    width: 100%;
-    z-index: 0;
-    background-repeat: no-repeat;
-    background-size: 100%;
-    height: 100svh;
-    background: linear-gradient(177deg, rgba(255, 137, 131, 0.5) 0%, rgba(35, 136, 224, 0.05) 60%);
-    clip-path: polygon(0 0, 100% 0, 100% 54%, 0% 100%);
+	position: absolute;
+	top: 0px;
+	left: 0;
+	width: 100%;
+	z-index: 0;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	height: 100svh;
+	background: linear-gradient(177deg, rgba(255, 137, 131, 0.5) 0%, rgba(35, 136, 224, 0.05) 60%);
+	clip-path: polygon(0 0, 100% 0, 100% 54%, 0% 100%);
 }
 
 .one::after {
-    content: "";
-    position: absolute;
-    background-image: radial-gradient(rgba(0, 0, 0, 0) 1.5px, var(--background-kener) 1px);
-    background-size: 14px 14px;
-    width: 100%;
-    height: 100vh;
-    top: 0;
-    transform: blur(3px);
-    left: 0;
+	content: "";
+	position: absolute;
+	background-image: radial-gradient(rgba(0, 0, 0, 0) 1.5px, var(--background-kener) 1px);
+	background-size: 14px 14px;
+	width: 100%;
+	height: 100vh;
+	top: 0;
+	transform: blur(3px);
+	left: 0;
 }
 
 /*Needed to overlay content on top of dotted bg*/
 section {
-    position: relative;
-    z-index: 1;
+	position: relative;
+	z-index: 1;
 }
 /*Needed overlay content on top of dotted bg*/
 .blurry-bg {
-    background-color: var(--background-kener-rgba);
-    box-shadow: 0 0 64px 64px var(--background-kener-rgba);
+	background-color: var(--background-kener-rgba);
+	box-shadow: 0 0 64px 64px var(--background-kener-rgba);
 }
-
-
 
 /*Colors for something UP*/
 .bg-api-up {
-    background-color: #00dfa2;
+	background-color: #00dfa2;
 }
 .text-api-up {
-    color: #0aca97;
+	color: #0aca97;
 }
 /*Colors for something DOWN*/
 .bg-api-down {
-    background-color: #ff0060;
+	background-color: #ff0060;
 }
 .text-api-down {
-    color: #ff0060;
+	color: #ff0060;
 }
 /*Colors for something Not there*/
 .bg-api-nodata {
-    background-color:#f1f5f8;
+	background-color: #f1f5f8;
 }
 .text-api-nodata {
-    color: #b8bcbe;
+	color: #b8bcbe;
 }
 .dark .bg-api-nodata {
-    background-color: rgba(100, 100, 100, .4);
+	background-color: rgba(100, 100, 100, 0.4);
 }
 
 /*Colors for something degraded*/
 .bg-api-degraded {
-    background-color: #ffb84c;
+	background-color: #ffb84c;
 }
 .text-api-degraded {
-    color: #ffb84c;
+	color: #ffb84c;
 }
-
-
 
 /*Needed to show markdown properly*/
-.prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::before{
+.prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::before {
 	content: "";
 }
-.prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::after{
+.prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::after {
 	content: "";
 }
-
 
 /*Needed to show monitor stacked properly*/
 .monitors-card .monitor {
@@ -92,15 +87,15 @@ section {
 }
 
 /*Tag Color*/
-.tag-maintenance{
-	background-color: #A076F9;
+.tag-maintenance {
+	background-color: #a076f9;
 	color: #09090b;
 }
-.tag-resolved{
-	background-color: #2CD3E1;
+.tag-resolved {
+	background-color: #2cd3e1;
 	color: #09090b;
 }
-.tag-indetified{
-	background-color: #FEFFAC;
+.tag-indetified {
+	background-color: #feffac;
 	color: #09090b;
 }

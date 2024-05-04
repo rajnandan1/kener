@@ -9,13 +9,13 @@ Startup();
 
 const app = express();
 app.use((req, res, next) => {
-    if (req.path.startsWith("/embed")) {
-        res.setHeader("X-Frame-Options", "None");
-    }
-    next();
+	if (req.path.startsWith("/embed")) {
+		res.setHeader("X-Frame-Options", "None");
+	}
+	next();
 });
 app.get("/healthcheck", (req, res) => {
-    res.end("ok");
+	res.end("ok");
 });
 
 app.get("/sitemap.xml", (req, res) => {
@@ -26,5 +26,5 @@ app.get("/sitemap.xml", (req, res) => {
 app.use(handler);
 
 app.listen(PORT, () => {
-    console.log("Kener is running on port " + PORT + "!");
+	console.log("Kener is running on port " + PORT + "!");
 });

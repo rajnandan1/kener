@@ -2,11 +2,13 @@
 //read from process.env.PUBLIC_KENER_FOLDER / monitors.json
 // create sitemap.xml
 import fs from "fs-extra";
-let siteMap = ""
+let siteMap = "";
 const site = JSON.parse(fs.readFileSync(process.env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
-const monitors = JSON.parse(fs.readFileSync(process.env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
-if(site.siteURL !== undefined && site.siteURL !== null && site.siteURL !== ""){
-	if(monitors.length > 0){
+const monitors = JSON.parse(
+	fs.readFileSync(process.env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8")
+);
+if (site.siteURL !== undefined && site.siteURL !== null && site.siteURL !== "") {
+	if (monitors.length > 0) {
 		siteMap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset
 	xmlns="https://www.sitemaps.org/schemas/sitemap/0.9"
@@ -14,28 +16,27 @@ if(site.siteURL !== undefined && site.siteURL !== null && site.siteURL !== ""){
 	xsi:schemaLocation="https://www.sitemaps.org/schemas/sitemap/0.9
 	https://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 	${monitors
-        .map((monitor) => {
-            return `<url>
+		.map((monitor) => {
+			return `<url>
 		<loc>${site.siteURL}/incident/${monitor.folderName}</loc>
 		<lastmod>${new Date().toISOString()}</lastmod>
 		<changefreq>daily</changefreq>
 		<priority>0.8</priority>
 	</url>`;
-        })
-        .join("\n")}
+		})
+		.join("\n")}
 	${monitors
-        .map((monitor) => {
-            return `<url>
+		.map((monitor) => {
+			return `<url>
 		<loc>${site.siteURL}/monitor-${encodeURIComponent(monitor.tag)}</loc>
 		<lastmod>${new Date().toISOString()}</lastmod>
 		<changefreq>daily</changefreq>
 		<priority>0.8</priority>
 	</url>`;
-        })
-        .join("\n")}
+		})
+		.join("\n")}
 </urlset>`;
 	}
-	
 }
 
 //export default siteMap
