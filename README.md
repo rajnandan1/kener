@@ -85,7 +85,7 @@ It uses files to store the data. Other adapters are coming soon
 
 ## Support Me
 
-<iframe src="https://github.com/sponsors/rajnandan1/card" title="Sponsor rajnandan1" height="225" width="600" style="border: 0;"></iframe>
+[Sponsor Me](https://github.com/sponsors/rajnandan1)
 
 <a href="https://www.buymeacoffee.com/rajnandan1"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=rajnandan1&button_colour=5F7FFF&font_colour=ffffff&font_family=Poppins&outline_colour=000000&coffee_colour=FFDD00" /></a>
 
