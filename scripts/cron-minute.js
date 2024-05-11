@@ -1,4 +1,5 @@
 import axios from "axios";
+import ping from "ping";
 import fs from "fs-extra";
 import { UP, DOWN, DEGRADED } from "./constants.js";
 import {
@@ -101,7 +102,45 @@ function replaceAllOccurrences(originalString, searchString, replacement) {
 	const replacedString = originalString.replace(regex, replacement);
 	return replacedString;
 }
+const pingCall = async (hostsV4, hostsV6) => {
+	
+	let alive = true;
+	let latencyTotal = 0;
+	let countHosts = hostsV4.length + hostsV6.length;
 
+
+	for (let i = 0; i < hostsV4.length; i++) {
+		const host = hostsV4[i].trim();
+		try {
+			let res = await ping.promise.probe(host);
+			alive =  alive && res.alive;
+			latencyTotal += res.time;
+		} catch (error) {
+			alive = alive && false;
+			latencyTotal += 30;
+		}
+	}
+
+	for (let i = 0; i < hostsV6.length; i++) {
+		const host = hostsV6[i].trim();
+		try {
+			let res = await ping.promise.probe(host, {
+				v6: true,
+				timeout: false
+			});
+			alive = alive && res.alive;
+			latencyTotal += res.time;
+		} catch (error) {
+			alive = alive && false;
+			latencyTotal += 30;
+		}
+	}
+	return {
+		status: alive ? UP : DOWN,
+		latency: parseInt(latencyTotal / countHosts),
+		type: "realtime"
+	};
+}
 const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorEval) => {
 	let axiosHeaders = {};
 	axiosHeaders["User-Agent"] = "Kener/0.0.1";
@@ -258,6 +297,7 @@ const updateDayData = async (mergedData, startOfMinute, monitor) => {
 const Minuter = async (envSecrets, monitor, githubConfig) => {
 	if (apiQueue.length > 0) console.log("Queue length is " + apiQueue.length);
 	let apiData = {};
+	let pingData = {};
 	let webhookData = {};
 	let manualData = {};
 	const startOfMinute = GetMinuteStartNowTimestampUTC();
@@ -300,6 +340,13 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
 			});
 		}
 	}
+
+	if (monitor.hasPing) {
+		let pingResponse = await pingCall(monitor.ping.hostsV4, monitor.ping.hostsV6);
+		console.log('>>>>>>----  cron-minute:348 ', pingResponse);
+		pingData[startOfMinute] = pingResponse;
+	}
+		
 	webhookData = await getWebhookData(monitor);
 	manualData = await manualIncident(monitor, githubConfig);
 	//merge noData, apiData, webhookData, dayData
@@ -313,6 +360,11 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
 			};
 		}
 	}
+
+	for (const timestamp in pingData) {
+		mergedData[timestamp] = pingData[timestamp];
+	}
+
 	for (const timestamp in apiData) {
 		mergedData[timestamp] = apiData[timestamp];
 	}
