@@ -343,7 +343,6 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
 
 	if (monitor.hasPing) {
 		let pingResponse = await pingCall(monitor.ping.hostsV4, monitor.ping.hostsV6);
-		console.log('>>>>>>----  cron-minute:348 ', pingResponse);
 		pingData[startOfMinute] = pingResponse;
 	}
 		
