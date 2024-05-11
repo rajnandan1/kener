@@ -702,6 +702,20 @@ Add this monitor to the API category instead of the default home category
 
 If both ping and api monitors are present then API data will overwrite ping data
 
+## Custom Thresholds
+
+Add this monitor to the API category instead of the default home category
+
+```yaml
+- name: Earth
+  description: Our blue planet
+  tag: "earth"
+  defaultStatus: "UP"
+  dayDegradedMinimumCount: 3
+  dayDownMinimumCount: 2
+  includeDegradedInDowntime: true
+```
+
 ---
 
 # Incident Management
