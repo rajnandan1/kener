@@ -9,7 +9,13 @@ import fs from "fs-extra";
 import yaml from "js-yaml";
 import { Cron } from "croner";
 import { FOLDER, FOLDER_MONITOR, FOLDER_SITE, API_TIMEOUT } from "./constants.js";
-import { IsValidURL, IsValidHTTPMethod, LoadMonitorsPath, LoadSitePath } from "./tool.js";
+import {
+	IsValidURL,
+	IsValidHTTPMethod,
+	LoadMonitorsPath,
+	LoadSitePath,
+	ValidateIpAddress
+} from "./tool.js";
 import { GetAllGHLabels, CreateGHLabel } from "./github.js";
 import { Minuter } from "./cron-minute.js";
 import axios from "axios";
@@ -64,6 +70,7 @@ const Startup = async () => {
 		let name = monitor.name;
 		let tag = monitor.tag;
 		let hasAPI = monitor.api !== undefined && monitor.api !== null;
+		let hasPing = monitor.ping !== undefined && monitor.ping !== null;
 		let folderName = name.replace(/[^a-z0-9]/gi, "-").toLowerCase();
 		monitors[i].folderName = folderName;
 
@@ -98,7 +105,37 @@ const Startup = async () => {
 		) {
 			monitors[i].includeDegradedInDowntime = false;
 		}
+		if(hasPing) {
+			let hostsV4 = monitor.ping.hostsV4;
+			let hostsV6 = monitor.ping.hostsV6;
+			let hasV4 = false;
+			let hasV6 = false;
+			if (hostsV4 && Array.isArray(hostsV4) && hostsV4.length > 0) {
+				hostsV4.forEach((host) => {
+					if (ValidateIpAddress(host) == "Invalid") {
+						console.log(`hostsV4 ${host} is not valid`);
+						process.exit(1);
+					}
+				});
+				hasV4 = true;
+			}
+			if (hostsV6 && Array.isArray(hostsV6) && hostsV6.length > 0) {
+				hostsV6.forEach((host) => {
+					if (ValidateIpAddress(host) == "Invalid") {
+						console.log(`hostsV6 ${host} is not valid`);
+						process.exit(1);
+					}
+				});
+				hasV6 = true;
+			}
 
+			if (!hasV4 && !hasV6) {
+				console.log("hostsV4 or hostsV6 is required");
+				process.exit(1);
+			}
+			monitors[i].hasPing = true;
+			
+		}
 		if (hasAPI) {
 			let url = monitor.api.url;
 			let method = monitor.api.method;

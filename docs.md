@@ -492,6 +492,8 @@ Sample
 | dayDegradedMinimumCount   | Optional          | Default is 1. It means minimum this number of count for the day to be classified as DEGRADED(Yellow Bar) in 90 day view. Has to be `number` greater than 0 |
 | dayDownMinimumCount       | Optional          | Default is 1. It means minimum this number of count for the day to be classified as DOWN(Red Bar) in 90 day view. Has to be `number` greater than 0        |
 | includeDegradedInDowntime | Optional          | By deafault uptime percentage is calculated as (UP+DEGRADED/UP+DEGRADED+DOWN). Setting it as `true` will change the calculation to (UP/UP+DEGRADED+DOWN)   |
+| ping.hostsV4 | Optional          | Array of hosts / IP to monitor ping response. Either domain name or IP4 |
+| ping.hostsV6 | Optional          | Array of hosts / IP to monitor ping response. Either domain name or IP6 |
 
 ## cron
 
@@ -681,6 +683,24 @@ Add this monitor to the API category instead of the default home category
   tag: "earth"
   category: API
 ```
+
+## Ping Monitor
+
+Add this monitor to the API category instead of the default home category
+
+```yaml
+- name: Earth
+  description: Our Planent
+  tag: "earth"
+  ping: 
+    hostsV4: 
+      - www.frogment.com
+      - 52.84.205.24
+    hostsV6:
+      - ipv6.google.com
+```
+
+If both ping and api monitors are present then API data will overwrite ping data
 
 ---
 
