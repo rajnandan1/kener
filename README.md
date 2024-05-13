@@ -10,7 +10,7 @@
 
 #### 👉 Visit a live server [here](https://kener.ing)
 
-#### 👉 Read the documentation [here](https://kener.ing/docs)
+#### 👉 Read the documentation [here](https://kener.ing/kener-docs)
 
 # Kener - Status Page System
 
