@@ -11,6 +11,7 @@ import { GetStartTimeFromBody, GetEndTimeFromBody } from "../../../scripts/githu
 import Randomstring from "randomstring";
 const API_TOKEN = process.env.API_TOKEN;
 const API_IP = process.env.API_IP;
+const API_IP_REGEX = process.env.API_IP_REGEX;
 
 const GetAllTags = function () {
 	let tags = [];
@@ -39,7 +40,7 @@ const CheckIfValidTag = function (tag) {
 };
 const auth = function (request) {
 	const authHeader = request.headers.get("authorization");
-	const authToken = authHeader.replace("Bearer ", "");
+	const authToken = authHeader?.replace("Bearer ", "");
 	let ip = "";
 	try {
 		//ip can be in x-forwarded-for or x-real-ip or remoteAddress
@@ -58,8 +59,16 @@ const auth = function (request) {
 	if (authToken !== API_TOKEN) {
 		return new Error("invalid token");
 	}
-	if (API_IP !== undefined && ip != "" && ip !== API_IP) {
-		return new Error("invalid ip");
+	if (API_IP !== undefined && ip != "") {
+		if (API_IP !== ip) {
+			return new Error(`invalid ip: ${ip}`);
+		}
+	}
+	if (API_IP_REGEX !== undefined && ip != "") {
+		const regex = new RegExp(API_IP_REGEX);
+		if (!regex.test(ip)) {
+			return new Error(`invalid ip regex: ${ip}`);
+		}
 	}
 	return null;
 };
