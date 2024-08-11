@@ -1,8 +1,8 @@
 // @ts-nocheck
 // @ts-ignore
-import { env } from "$env/dynamic/public";
+import { PUBLIC_KENER_FOLDER } from "$env/static/public";
 import fs from "fs-extra";
-const siteData = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
+const siteData = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
 export async function GET({ url, params }) {
 	const { tag } = params;
 	const query = url.searchParams;

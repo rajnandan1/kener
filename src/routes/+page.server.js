@@ -5,11 +5,11 @@ import {
 	FilterAndInsertMonitorInIncident
 } from "../../scripts/github.js";
 import { FetchData } from "$lib/server/page";
-import { env } from "$env/dynamic/public";
+import { PUBLIC_KENER_FOLDER } from "$env/static/public";
 import fs from "fs-extra";
 
 export async function load({ parent }) {
-	let monitors = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+	let monitors = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
 	const parentData = await parent();
 	const siteData = parentData.site;
 	const github = siteData.github;

@@ -3,7 +3,6 @@ import { PUBLIC_KENER_FOLDER } from "$env/static/public";
 import i18n from "$lib/i18n/server";
 
 export async function load({ params, route, url, cookies, request }) {
-	console.log(">>>>>>----  +layout.server:6 ", PUBLIC_KENER_FOLDER);
 	let site = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
 	const headers = request.headers;
 	const userAgent = headers.get("user-agent");

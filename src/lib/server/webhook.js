@@ -1,6 +1,6 @@
 // @ts-nocheck
 import fs from "fs-extra";
-import { env } from "$env/dynamic/public";
+import { PUBLIC_KENER_FOLDER } from "$env/static/public";
 import { ParseUptime } from "$lib/helpers.js";
 import {
 	GetMinuteStartNowTimestampUTC,
@@ -17,7 +17,7 @@ const GetAllTags = function () {
 	let tags = [];
 	let monitors = [];
 	try {
-		monitors = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+		monitors = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
 		tags = monitors.map((monitor) => monitor.tag);
 	} catch (err) {
 		return [];
@@ -28,7 +28,7 @@ const CheckIfValidTag = function (tag) {
 	let tags = [];
 	let monitors = [];
 	try {
-		monitors = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+		monitors = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
 		tags = monitors.map((monitor) => monitor.tag);
 		if (tags.indexOf(tag) == -1) {
 			throw new Error("not a valid tag");
@@ -112,7 +112,7 @@ const store = function (data) {
 	}
 
 	//get the monitor object matching the tag
-	let monitors = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+	let monitors = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
 	const monitor = monitors.find((monitor) => monitor.tag === tag);
 
 	//read the monitor.path0Day file
@@ -126,7 +126,7 @@ const store = function (data) {
 
 	//write the monitor.path0Day file
 	fs.writeFileSync(
-		env.PUBLIC_KENER_FOLDER + `/${monitor.folderName}.webhook.${Randomstring.generate()}.json`,
+		PUBLIC_KENER_FOLDER + `/${monitor.folderName}.webhook.${Randomstring.generate()}.json`,
 		JSON.stringify(day0, null, 2)
 	);
 
@@ -259,7 +259,7 @@ const GetMonitorStatusByTag = function (tag) {
 		uptime: null,
 		lastUpdatedAt: null
 	};
-	let monitors = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+	let monitors = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
 	const { path0Day } = monitors.find((monitor) => monitor.tag === tag);
 	const dayData = JSON.parse(fs.readFileSync(path0Day, "utf8"));
 	const lastUpdatedAt = Object.keys(dayData)[Object.keys(dayData).length - 1];

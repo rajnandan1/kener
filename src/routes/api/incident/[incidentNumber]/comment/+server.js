@@ -3,7 +3,7 @@
 import { json } from "@sveltejs/kit";
 import { auth } from "$lib/server/webhook";
 import { AddComment, GetCommentsForIssue } from "../../../../../../scripts/github";
-import { env } from "$env/dynamic/public";
+import { PUBLIC_KENER_FOLDER } from "$env/static/public";
 import fs from "fs-extra";
 
 export async function GET({ request, params }) {
@@ -27,7 +27,7 @@ export async function GET({ request, params }) {
 		);
 	}
 
-	let site = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
+	let site = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
 	let github = site.github;
 	let resp = await GetCommentsForIssue(incidentNumber, github);
 	return json(
@@ -75,7 +75,7 @@ export async function POST({ request, params }) {
 		);
 	}
 
-	let site = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
+	let site = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
 	let github = site.github;
 
 	let resp = await AddComment(github, incidentNumber, body);
