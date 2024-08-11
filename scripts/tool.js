@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { MONITOR, SITE } from "./constants.js";
-
+import dotenv from "dotenv";
+dotenv.config();
 const IsValidURL = function (url) {
 	return /^(http|https):\/\/[^ "]+$/.test(url);
 };
@@ -142,7 +143,7 @@ const BeginningOfDay = (options = {}) => {
 	);
 	return dt.getTime() / 1000;
 };
-const ValidateIpAddress = function(input) {
+const ValidateIpAddress = function (input) {
 	// Check if input is a valid IPv4 address
 	const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
 	if (ipv4Regex.test(input)) {
@@ -163,7 +164,7 @@ const ValidateIpAddress = function(input) {
 
 	// If none of the above conditions match, the input is invalid
 	return "Invalid";
-}
+};
 export {
 	IsValidURL,
 	IsValidHTTPMethod,
