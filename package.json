@@ -29,8 +29,8 @@
 	"scripts": {
 		"build": "node scripts/check.js && vite build",
 		"serve": "node prod.js",
-		"kener:dev": "cross-env node scripts/check.js && concurrently \"cross-env  node dev.js\" \"cross-env vite dev\"",
-		"kener:dev-monitor": "cross-env node dev.js",
+		"kener:dev": "cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener node scripts/check.js && concurrently \"cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener node dev.js\" \"cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener vite dev\"",
+		"kener:dev-monitor": "cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener  node dev.js",
 		"kener:build": "cross-env NODE_ENV=production node scripts/check.js && cross-env NODE_ENV=production vite build",
 		"kener": "cross-env NODE_ENV=production node prod.js",
 		"prettify": "prettier --write ."
