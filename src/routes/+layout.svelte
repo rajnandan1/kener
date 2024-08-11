@@ -27,6 +27,11 @@
 	{#each Object.entries(data.site.metaTags) as [key, value]}
 		<meta name={key} content={value} />
 	{/each}
+	{#if !!data.site.theme && data.site.theme === "dark"}
+		<script>
+			document.documentElement.classList.add("dark");
+		</script>
+	{/if}
 </svelte:head>
 
 <slot />

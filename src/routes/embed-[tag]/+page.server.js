@@ -1,10 +1,10 @@
 // @ts-nocheck
 import { FetchData } from "$lib/server/page";
-import { env } from "$env/dynamic/public";
+import { PUBLIC_KENER_FOLDER } from "$env/static/public";
 import fs from "fs-extra";
 
 export async function load({ params, route, url, parent }) {
-	let monitors = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+	let monitors = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
 	const parentData = await parent();
 
 	const monitorsActive = [];

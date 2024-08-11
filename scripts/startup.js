@@ -5,6 +5,7 @@ if it does, it will read the file and parse it into a json array of objects
 each objects will have a name, url, method: required
 name of each of these objects need to be unique
 */
+import * as dotenv from "dotenv";
 import fs from "fs-extra";
 import yaml from "js-yaml";
 import { Cron } from "croner";
@@ -105,7 +106,7 @@ const Startup = async () => {
 		) {
 			monitors[i].includeDegradedInDowntime = false;
 		}
-		if(hasPing) {
+		if (hasPing) {
 			let hostsV4 = monitor.ping.hostsV4;
 			let hostsV6 = monitor.ping.hostsV6;
 			let hasV4 = false;
@@ -134,7 +135,6 @@ const Startup = async () => {
 				process.exit(1);
 			}
 			monitors[i].hasPing = true;
-			
 		}
 		if (hasAPI) {
 			let url = monitor.api.url;

@@ -3,6 +3,8 @@
 // create sitemap.xml
 import fs from "fs-extra";
 let siteMap = "";
+import dotenv from "dotenv";
+dotenv.config();
 const site = JSON.parse(fs.readFileSync(process.env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
 const monitors = JSON.parse(
 	fs.readFileSync(process.env.PUBLIC_KENER_FOLDER + "/monitors.json", "utf8")

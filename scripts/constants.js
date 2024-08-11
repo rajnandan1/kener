@@ -1,4 +1,6 @@
 // Define your constants
+import dotenv from "dotenv";
+dotenv.config();
 const FOLDER = process.env.PUBLIC_KENER_FOLDER;
 const ENV = process.env.NODE_ENV;
 const MONITOR = "./config/monitors.yaml";

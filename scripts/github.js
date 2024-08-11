@@ -2,6 +2,10 @@
 import axios from "axios";
 import { GetMinuteStartNowTimestampUTC } from "./tool.js";
 import { marked } from "marked";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+import dotenv from "dotenv";
+dotenv.config();
 const GH_TOKEN = process.env.GH_TOKEN;
 const GhnotconfireguredMsg =
 	"owner or repo or GH_TOKEN is undefined. Read the docs to configure github: https://kener.ing/docs#h2github-setup";

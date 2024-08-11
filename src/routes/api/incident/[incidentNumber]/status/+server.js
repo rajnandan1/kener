@@ -3,7 +3,7 @@
 import { json } from "@sveltejs/kit";
 import { auth, GHIssueToKenerIncident } from "$lib/server/webhook";
 import { UpdateIssueLabels, GetIncidentByNumber } from "../../../../../../scripts/github";
-import { env } from "$env/dynamic/public";
+import { PUBLIC_KENER_FOLDER } from "$env/static/public";
 import fs from "fs-extra";
 
 export async function POST({ request, params }) {
@@ -43,7 +43,7 @@ export async function POST({ request, params }) {
 		);
 	}
 
-	let site = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
+	let site = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
 	let github = site.github;
 
 	let issue = await GetIncidentByNumber(github, incidentNumber);

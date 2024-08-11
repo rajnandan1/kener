@@ -10,6 +10,8 @@ import {
 import { GetIncidents, GetEndTimeFromBody, GetStartTimeFromBody, CloseIssue } from "./github.js";
 import Randomstring from "randomstring";
 import Queue from "queue";
+import dotenv from "dotenv";
+dotenv.config();
 
 const Kener_folder = process.env.PUBLIC_KENER_FOLDER;
 const apiQueue = new Queue({
@@ -103,17 +105,15 @@ function replaceAllOccurrences(originalString, searchString, replacement) {
 	return replacedString;
 }
 const pingCall = async (hostsV4, hostsV6) => {
-	
 	let alive = true;
 	let latencyTotal = 0;
 	let countHosts = hostsV4.length + hostsV6.length;
-
 
 	for (let i = 0; i < hostsV4.length; i++) {
 		const host = hostsV4[i].trim();
 		try {
 			let res = await ping.promise.probe(host);
-			alive =  alive && res.alive;
+			alive = alive && res.alive;
 			latencyTotal += res.time;
 		} catch (error) {
 			alive = alive && false;
@@ -140,7 +140,7 @@ const pingCall = async (hostsV4, hostsV6) => {
 		latency: parseInt(latencyTotal / countHosts),
 		type: "realtime"
 	};
-}
+};
 const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorEval) => {
 	let axiosHeaders = {};
 	axiosHeaders["User-Agent"] = "Kener/0.0.1";
@@ -345,7 +345,7 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
 		let pingResponse = await pingCall(monitor.ping.hostsV4, monitor.ping.hostsV6);
 		pingData[startOfMinute] = pingResponse;
 	}
-		
+
 	webhookData = await getWebhookData(monitor);
 	manualData = await manualIncident(monitor, githubConfig);
 	//merge noData, apiData, webhookData, dayData

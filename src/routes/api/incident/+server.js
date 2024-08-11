@@ -3,7 +3,7 @@
 import { json } from "@sveltejs/kit";
 import { ParseIncidentPayload, auth, GHIssueToKenerIncident } from "$lib/server/webhook";
 import { CreateIssue, SearchIssue } from "../../../../scripts/github";
-import { env } from "$env/dynamic/public";
+import { PUBLIC_KENER_FOLDER } from "$env/static/public";
 import fs from "fs-extra";
 
 export async function POST({ request }) {
@@ -27,7 +27,7 @@ export async function POST({ request }) {
 			}
 		);
 	}
-	let site = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
+	let site = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
 	let github = site.github;
 	let resp = await CreateIssue(github, title, body, githubLabels);
 	if (resp === null) {
@@ -74,7 +74,7 @@ export async function GET({ request, url }) {
 			}
 		);
 	}
-	let site = JSON.parse(fs.readFileSync(env.PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
+	let site = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
 	let github = site.github;
 	const repo = `${github.owner}/${github.repo}`;
 	const is = "issue";
