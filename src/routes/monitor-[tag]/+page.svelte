@@ -20,7 +20,7 @@
 <div class="mt-32"></div>
 {#if hasActiveIncidents}
 	<section
-		class="mx-auto mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center bg-transparent"
+		class="mx-auto mb-4 flex w-full max-w-[840px] flex-1 flex-col items-start justify-center bg-transparent"
 		id=""
 	>
 		<div class="grid w-full grid-cols-2 gap-4">
@@ -32,7 +32,7 @@
 		</div>
 	</section>
 	<section
-		class="mx-auto mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center"
+		class="mx-auto mb-8 flex w-full max-w-[840px] flex-1 flex-col items-start justify-center"
 		id=""
 	>
 		{#each data.openIncidents as incident, i}
@@ -48,16 +48,11 @@
 {/if}
 {#if data.monitors.length > 0}
 	<section
-		class="mx-auto mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center bg-transparent"
+		class="mx-auto mb-4 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent"
 		id=""
 	>
-		<div class="grid w-full grid-cols-2 gap-4">
-			<div class="col-span-2 text-center md:col-span-1 md:text-left">
-				<Badge class="" variant="outline">
-					{l(data.lang, "root.availability_per_component")}
-				</Badge>
-			</div>
-			<div class="col-span-2 text-center md:col-span-1 md:text-right">
+		<div class="grid w-full grid-cols-1 justify-end gap-4">
+			<div class="col-span-1 text-center md:col-span-1 md:text-right">
 				<Badge variant="outline">
 					<span class="bg-api-up mr-1 inline-flex h-[8px] w-[8px] rounded-full opacity-75"
 					></span>
@@ -83,7 +78,7 @@
 		</div>
 	</section>
 	<section
-		class="mx-auto mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center backdrop-blur-[2px]"
+		class="mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center backdrop-blur-[2px]"
 	>
 		<Card.Root class="w-full">
 			<Card.Content class="monitors-card p-0">

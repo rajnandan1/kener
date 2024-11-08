@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { PUBLIC_KENER_FOLDER } from "$env/static/public";
-import { GetIncidents, Mapper } from "../../../../scripts/github.js";
+import monitorJSON from "$lib/server/data/monitors.json?raw";
+import { GetIncidents, Mapper } from "$lib/server/github.js";
 import fs from "fs-extra";
 
 /**
@@ -10,7 +10,7 @@ import fs from "fs-extra";
 
 // @ts-ignore
 export async function load({ params, route, url, parent }) {
-	let monitors = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+	let monitors = JSON.parse(monitorJSON);
 	const siteData = await parent();
 	const github = siteData.site.github;
 	// @ts-ignore

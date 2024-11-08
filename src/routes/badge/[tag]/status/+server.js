@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { PUBLIC_KENER_FOLDER } from "$env/static/public";
+import monitorJSON from "$lib/server/data/monitors.json?raw";
 import fs from "fs-extra";
 import { StatusColor } from "$lib/helpers.js";
 import { makeBadge } from "badge-maker";
-const monitors = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+const monitors = JSON.parse(monitorJSON);
 export async function GET({ params, setHeaders, url }) {
 	// @ts-ignore
 	const { path0Day, name } = monitors.find((monitor) => monitor.tag === params.tag);

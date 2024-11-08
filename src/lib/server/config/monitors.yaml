@@ -5,6 +5,7 @@
   api:
       method: GET
       url: https://www.google.com/webhp
+      hideURLForGet: true
 - name: Svelte Website
   description: Cybernetically enhanced web apps
   tag: "svelte-website"
@@ -17,6 +18,7 @@
   tag: "earth"
   defaultStatus: "UP"
   image: "/earth.png"
+  cron: "*/2 * * * *"
 - name: Frogment
   description: A free openAPI spec editor and linter that breaks down your spec into fragments to make editing easier and more intuitive. Visit https://www.frogment.com
   tag: "frogment"
@@ -24,3 +26,10 @@
   api:
       method: GET
       url: https://www.frogment.com
+- name: OkBookmarks
+  description: Stop forgetting about your bookmarks 
+  tag: "okbookmarks"
+  image: "https://okbookmarks.com/app/mybookmark.png"
+  api:
+      method: GET
+      url: https://okbookmarks.com/

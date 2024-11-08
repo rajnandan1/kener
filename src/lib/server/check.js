@@ -1,36 +1,13 @@
-import { FOLDER, FOLDER_MONITOR, FOLDER_SITE, ENV } from "./constants.js";
-import { IsStringURLSafe } from "./tool.js";
+// @ts-nocheck
+import { ENV } from "$lib/server/constants.js";
+import { IsStringURLSafe } from "$lib/server/tool.js";
 import dotenv from "dotenv";
 dotenv.config();
 import fs from "fs-extra";
 let STATUS_OK = false;
-if (!!process.env.PUBLIC_KENER_FOLDER) {
-	console.log(`✅ PUBLIC_KENER_FOLDER is  ${process.env.PUBLIC_KENER_FOLDER}`);
-} else {
-	console.log(`❌ process.env.PUBLIC_KENER_FOLDER is not set
-Set PUBLIC_KENER_FOLDER as an environment variable. Value should be the path to a directory where kener will store its data.
-Example:
-export PUBLIC_KENER_FOLDER=${process.cwd()}/static/kener`);
-	process.exit(1);
-}
-
-if (!fs.existsSync(FOLDER)) {
-	console.log(`❌ Directory does not exist\n\nRun:\nmkdir -p ${FOLDER}`);
-	process.exit(1);
-}
-
-if (!fs.existsSync(FOLDER_SITE)) {
-	fs.writeFileSync(FOLDER_SITE, JSON.stringify({}));
-	console.log("✅ site.json file created successfully!");
-}
-
-if (!fs.existsSync(FOLDER_MONITOR)) {
-	fs.writeFileSync(FOLDER_MONITOR, JSON.stringify([]));
-	console.log("✅ monitors.json file created successfully!");
-}
 
 if (ENV === undefined) {
-	console.log(`❗ process.env.NODE_ENV is not set`);
+	console.log(`❗ process.env.NODE_ENV is not set. Defaulting to development`);
 } else {
 	console.log(`✅ process.env.NODE_ENV is set. Value is ${ENV}`);
 }

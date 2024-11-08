@@ -27,7 +27,7 @@
 		</div>
 	</div>
 </section>
-<section class="mx-auto mb-4 mt-8 flex w-full flex-1 flex-col">
+<section class="mx-auto mb-4 mt-8 flex w-full max-w-[840px] flex-1 flex-col">
 	<div class="container">
 		<h1 class="mb-4 text-2xl font-bold leading-none">
 			<Badge variant="outline">
@@ -57,7 +57,7 @@
 
 <Separator class="container mb-4 w-[400px]" />
 
-<section class="mx-auto mb-4 mt-8 flex w-full flex-1 flex-col">
+<section class="mx-auto mb-4 mt-8 flex w-full max-w-[840px] flex-1 flex-col">
 	<div class="container">
 		<h1 class="mb-4 text-2xl font-bold leading-none">
 			<Badge variant="outline">

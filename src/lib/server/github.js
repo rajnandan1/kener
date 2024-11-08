@@ -1,6 +1,6 @@
 // @ts-nocheck
 import axios from "axios";
-import { GetMinuteStartNowTimestampUTC } from "./tool.js";
+import { GetMinuteStartNowTimestampUTC } from "$lib/server/tool.js";
 import { marked } from "marked";
 import { fileURLToPath } from "url";
 import { dirname } from "path";

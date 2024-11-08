@@ -1,9 +1,10 @@
+// @ts-nocheck
 import fs from "fs-extra";
-import { PUBLIC_KENER_FOLDER } from "$env/static/public";
 import i18n from "$lib/i18n/server";
+import siteJSON from "$lib/server/data/site.json?raw";
 
 export async function load({ params, route, url, cookies, request }) {
-	let site = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
+	let site = JSON.parse(siteJSON);
 	const headers = request.headers;
 	const userAgent = headers.get("user-agent");
 	let localTz = "GMT";

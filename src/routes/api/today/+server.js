@@ -2,7 +2,7 @@
 // @ts-ignore
 import fs from "fs-extra";
 import { json } from "@sveltejs/kit";
-import { GetMinuteStartNowTimestampUTC, BeginningOfDay } from "../../../../scripts/tool.js";
+import { GetMinuteStartNowTimestampUTC, BeginningOfDay } from "$lib/server/tool.js";
 import { StatusObj } from "$lib/helpers.js";
 
 export async function POST({ request }) {

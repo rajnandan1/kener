@@ -1,14 +1,14 @@
 // @ts-nocheck
 // @ts-ignore
 import { json } from "@sveltejs/kit";
-import { PUBLIC_KENER_FOLDER } from "$env/static/public";
 import fs from "fs-extra";
-import { GetCommentsForIssue } from "../../../../../scripts/github.js";
+import { GetCommentsForIssue } from "$lib/server/github.js";
 import { marked } from "marked";
+import siteJSON from "$lib/server/data/site.json?raw";
 
 export async function GET({ params }) {
 	const incidentNumber = params.id;
-	let siteData = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
+	let siteData = JSON.parse(siteJSON);
 	let comments = await GetCommentsForIssue(incidentNumber, siteData.github);
 	comments = comments.map(
 		(

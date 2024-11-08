@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { MONITOR, SITE } from "./constants.js";
+import { MONITOR, SITE } from "$lib/server/constants.js";
 import dotenv from "dotenv";
 dotenv.config();
 const IsValidURL = function (url) {

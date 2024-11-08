@@ -1,5 +1,6 @@
 /*one is the class for dotted background*/
-.one {
+
+.dots-pattern {
 	position: absolute;
 	top: 0px;
 	left: 0;
@@ -12,7 +13,7 @@
 	clip-path: polygon(0 0, 100% 0, 100% 54%, 0% 100%);
 }
 
-.one::after {
+.dots-pattern::after {
 	content: "";
 	position: absolute;
 	background-image: radial-gradient(rgba(0, 0, 0, 0) 1.5px, var(--background-kener) 1px);
@@ -22,6 +23,55 @@
 	top: 0;
 	transform: blur(3px);
 	left: 0;
+}
+
+.squares-pattern {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	z-index: 0;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	height: 100svh;
+
+	clip-path: polygon(0 0, 100% 0, 100% 54%, 0% 100%);
+	transform: blur(3px);
+}
+
+.squares-pattern::after {
+	content: "";
+	position: absolute;
+	background-image: linear-gradient(#444cf7 1px, transparent 1px),
+		linear-gradient(to right, #444cf7 1px, var(--background-kener) 1px);
+	-webkit-mask-image: linear-gradient(
+		to bottom,
+		rgba(0, 0, 0, 1) 0%,
+		rgba(0, 0, 0, 0.8) 20%,
+		rgba(0, 0, 0, 0.6) 40%,
+		rgba(0, 0, 0, 0.4) 60%,
+		rgba(0, 0, 0, 0.2) 80%,
+		rgba(0, 0, 0, 0) 100%
+	);
+	mask-image: linear-gradient(
+		180deg,
+		rgba(0, 0, 0, 0.2) 0%,
+		rgba(0, 0, 0, 0.1) 20%,
+		rgba(0, 0, 0, 0.05) 40%,
+		rgba(0, 0, 0, 0.025) 60%,
+		rgba(0, 0, 0, 0.0125) 80%,
+		rgba(0, 0, 0, 0) 100%
+	);
+	background-size: 32px 32px;
+	width: 100%;
+	height: 100vh;
+	top: 0;
+
+	left: 0;
+}
+.dark .squares-pattern::after {
+	background-image: linear-gradient(#677489 1px, transparent 1px),
+		linear-gradient(to right, #677489 1px, var(--background-kener) 1px);
 }
 
 /*Needed to overlay content on top of dotted bg*/
@@ -78,7 +128,7 @@ section {
 
 /*Needed to show monitor stacked properly*/
 .monitors-card .monitor {
-	padding: 1.3em 1em;
+	padding: 1.2em 3.4em 0.875em 3.4em;
 	border-bottom: 1px solid;
 	border-color: hsl(var(--border) / var(--tw-border-opacity));
 }

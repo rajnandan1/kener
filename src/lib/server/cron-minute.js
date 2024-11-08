@@ -1,19 +1,26 @@
+// @ts-nocheck
 import axios from "axios";
 import ping from "ping";
 import fs from "fs-extra";
-import { UP, DOWN, DEGRADED } from "./constants.js";
+import { UP, DOWN, DEGRADED } from "$lib/server/constants.js";
 import {
 	GetNowTimestampUTC,
 	GetMinuteStartNowTimestampUTC,
 	GetMinuteStartTimestampUTC
-} from "./tool.js";
-import { GetIncidents, GetEndTimeFromBody, GetStartTimeFromBody, CloseIssue } from "./github.js";
+} from "$lib/server/tool.js";
+import {
+	GetIncidents,
+	GetEndTimeFromBody,
+	GetStartTimeFromBody,
+	CloseIssue
+} from "$lib/server/github.js";
 import Randomstring from "randomstring";
 import Queue from "queue";
 import dotenv from "dotenv";
+import path from "path";
 dotenv.config();
 
-const Kener_folder = process.env.PUBLIC_KENER_FOLDER;
+const Kener_folder = path.resolve("src/lib/server/data");
 const apiQueue = new Queue({
 	concurrency: 10, // Number of tasks that can run concurrently
 	timeout: 10000, // Timeout in ms after which a task will be considered as failed (optional)
@@ -295,7 +302,9 @@ const updateDayData = async (mergedData, startOfMinute, monitor) => {
 };
 
 const Minuter = async (envSecrets, monitor, githubConfig) => {
-	if (apiQueue.length > 0) console.log("Queue length is " + apiQueue.length);
+	if (apiQueue.length > 0) {
+		console.log("Queue length is " + apiQueue.length);
+	}
 	let apiData = {};
 	let pingData = {};
 	let webhookData = {};

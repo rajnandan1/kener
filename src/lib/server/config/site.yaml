@@ -1,4 +1,5 @@
-title: "Kener"
+title: "Kener - Open-Source and Modern looking Node.js Status Page for Effortless Incident Management"
+siteName: "Kener.ing"
 home: "/"
 logo: "/logo.png"
 github:
@@ -23,7 +24,11 @@ nav:
     - name: "Documentation"
       url: "/docs"
     - name: "Github"
+      iconURL: "/github.svg"
       url: "https://github.com/rajnandan1/kener"
+    - name: "Buy me a coffee"
+      iconURL: "/buymeacoffee.svg"
+      url: "https://buymeacoffee.com/rajnandan1"
 hero:
     title: Kener is a Open-Source Status Page System
     subtitle: Let your users know what's going on.
@@ -42,3 +47,7 @@ i18n:
         ja: "日本語"
         vi: "Tiếng Việt"
 theme: dark
+pattern: "squares"
+font:
+  cssSrc: "https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap"
+  family: "\"Lato\", sans-serif"

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /*
 The startup js script will
 check if monitors.yaml exists
@@ -7,20 +8,25 @@ name of each of these objects need to be unique
 */
 import * as dotenv from "dotenv";
 import fs from "fs-extra";
+import path from "path";
+
 import yaml from "js-yaml";
 import { Cron } from "croner";
-import { FOLDER, FOLDER_MONITOR, FOLDER_SITE, API_TIMEOUT } from "./constants.js";
+import { API_TIMEOUT } from "$lib/server/constants.js";
+import siteDataRaw from "$lib/server/config/site.yaml?raw";
+import monitorDataRaw from "$lib/server/config/monitors.yaml?raw";
+
 import {
 	IsValidURL,
 	IsValidHTTPMethod,
 	LoadMonitorsPath,
 	LoadSitePath,
 	ValidateIpAddress
-} from "./tool.js";
-import { GetAllGHLabels, CreateGHLabel } from "./github.js";
-import { Minuter } from "./cron-minute.js";
+} from "$lib/server/tool.js";
+import { GetAllGHLabels, CreateGHLabel } from "$lib/server/github.js";
+import { Minuter } from "$lib/server/cron-minute.js";
 import axios from "axios";
-import { Ninety } from "./ninety.js";
+import { Ninety } from "$lib/server/ninety.js";
 let monitors = [];
 let site = {};
 const envSecrets = [];
@@ -37,7 +43,6 @@ const defaultEval = `(function (statusCode, responseTime, responseData) {
 		latency: responseTime,
 	}
 })`;
-
 function checkIfDuplicateExists(arr) {
 	return new Set(arr).size !== arr.length;
 }
@@ -46,20 +51,18 @@ function getWordsStartingWithDollar(text) {
 	const wordsArray = text.match(regex);
 	return wordsArray || [];
 }
-if (!fs.existsSync(FOLDER)) {
-	fs.mkdirSync(FOLDER);
-	console.log(".kener folder created successfully!");
-}
 
 const Startup = async () => {
 	try {
-		const fileContent = fs.readFileSync(LoadMonitorsPath(), "utf8");
-		site = yaml.load(fs.readFileSync(LoadSitePath(), "utf8"));
-		monitors = yaml.load(fileContent);
+		site = yaml.load(siteDataRaw);
+		monitors = yaml.load(monitorDataRaw);
 	} catch (error) {
 		console.log(error);
 		process.exit(1);
 	}
+	const FOLDER = path.resolve("src/lib/server/data");
+	const FOLDER_SITE = path.resolve(FOLDER + "/site.json");
+	const FOLDER_MONITOR = path.resolve(FOLDER + "/monitors.json");
 
 	// Use the 'monitors' array of JSON objects as needed
 	//check if each object has name, url, method
@@ -143,6 +146,7 @@ const Startup = async () => {
 			let evaluator = monitor.api.eval;
 			let body = monitor.api.body;
 			let timeout = monitor.api.timeout;
+			let hideURLForGet = !!monitor.api.hideURLForGet;
 			//url
 			if (!!url) {
 				if (!IsValidURL(url)) {
@@ -168,7 +172,7 @@ const Startup = async () => {
 				try {
 					JSON.parse(JSON.stringify(headers));
 				} catch (error) {
-					console.log("headers are not valid. Quiting");
+					console.log("headers are not valid. Quitting");
 					process.exit(1);
 				}
 			}
@@ -213,9 +217,10 @@ const Startup = async () => {
 			}
 
 			//add a description to the monitor if it is website using api.url and method = GET and headers == undefined
-			//call the it to see if recevied content-type is text/html
+			//call the it to see if received content-type is text/html
 			//if yes, append to description
 			if (
+				!hideURLForGet &&
 				(headers === undefined || headers === null) &&
 				url !== undefined &&
 				method === "GET"
@@ -260,6 +265,7 @@ const Startup = async () => {
 			}
 		}
 	}
+
 	if (
 		site.github === undefined ||
 		site.github.owner === undefined ||
@@ -270,6 +276,12 @@ const Startup = async () => {
 	}
 	if (site.github.incidentSince === undefined || site.github.incidentSince === null) {
 		site.github.incidentSince = 48;
+	}
+	if (!!!site.font || !!!site.font.cssSrc || !!!site.font.family) {
+		site.font = {
+			cssSrc: "https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,100..900;1,100..900&display=swap",
+			family: "Albert Sans"
+		};
 	}
 	if (checkIfDuplicateExists(monitors.map((monitor) => monitor.folderName)) === true) {
 		console.log("duplicate monitor detected");
@@ -345,7 +357,6 @@ const Startup = async () => {
 			}
 		}
 	}
-
 	// init monitors
 	for (let i = 0; i < monitors.length; i++) {
 		const monitor = monitors[i];
@@ -362,7 +373,6 @@ const Startup = async () => {
 		await Minuter(envSecrets, monitor, site.github);
 		await Ninety(monitor);
 	}
-
 	//trigger minute cron
 
 	for (let i = 0; i < monitors.length; i++) {

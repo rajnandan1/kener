@@ -7,8 +7,8 @@ import {
 	GetStartTimeFromBody,
 	GetEndTimeFromBody,
 	UpdateIssue
-} from "../../../../../scripts/github";
-import { PUBLIC_KENER_FOLDER } from "$env/static/public";
+} from "$lib/server/github";
+import siteJSON from "$lib/server/data/site.json?raw";
 import fs from "fs-extra";
 
 export async function PATCH({ request, params }) {
@@ -41,7 +41,7 @@ export async function PATCH({ request, params }) {
 		);
 	}
 
-	let site = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
+	let site = JSON.parse(siteJSON);
 	let github = site.github;
 	let resp = await UpdateIssue(github, incidentNumber, title, body, githubLabels);
 	if (resp === null) {
@@ -70,7 +70,7 @@ export async function GET({ request, params }) {
 	const incidentNumber = params.incidentNumber; //number required
 	// const headers = await request.headers();
 
-	let site = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/site.json", "utf8"));
+	let site = JSON.parse(siteJSON);
 	let github = site.github;
 	let issue = await GetIncidentByNumber(github, incidentNumber);
 	if (issue === null) {

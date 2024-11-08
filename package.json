@@ -29,6 +29,7 @@
 	"scripts": {
 		"build": "node scripts/check.js && vite build",
 		"serve": "node prod.js",
+		"dev": "vite dev",
 		"kener:dev": "cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener node scripts/check.js && concurrently \"cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener node dev.js\" \"cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener vite dev\"",
 		"kener:dev-monitor": "cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener  node dev.js",
 		"kener:build": "cross-env NODE_ENV=production node scripts/check.js && cross-env NODE_ENV=production vite build",
@@ -67,6 +68,7 @@
 		"js-yaml": "^4.1.0",
 		"lucide-svelte": "^0.292.0",
 		"marked": "^11.1.1",
+		"mode-watcher": "^0.4.1",
 		"moment": "^2.29.4",
 		"moment-timezone": "^0.5.43",
 		"node-cache": "^5.1.2",

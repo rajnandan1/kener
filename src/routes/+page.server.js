@@ -1,15 +1,12 @@
 // @ts-nocheck
-import {
-	Mapper,
-	GetOpenIncidents,
-	FilterAndInsertMonitorInIncident
-} from "../../scripts/github.js";
+import { Mapper, GetOpenIncidents, FilterAndInsertMonitorInIncident } from "$lib/server/github.js";
 import { FetchData } from "$lib/server/page";
-import { PUBLIC_KENER_FOLDER } from "$env/static/public";
 import fs from "fs-extra";
 
+import monitorJSON from "$lib/server/data/monitors.json?raw";
+
 export async function load({ parent }) {
-	let monitors = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+	let monitors = JSON.parse(monitorJSON);
 	const parentData = await parent();
 	const siteData = parentData.site;
 	const github = siteData.github;

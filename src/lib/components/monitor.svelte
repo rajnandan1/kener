@@ -46,45 +46,60 @@
 	let copiedEmbed = false;
 	let copiedBadgeStatus = false;
 	let copiedBadgeUptime = false;
+	let copiedBadgeDotStandard = false;
+	let copiedBadgeDotPing = false;
 
+	let protocol;
+	let domain;
+
+	let pathMonitorLink;
 	function copyLinkToClipboard() {
-		//get domain with port number
-		let domain = window.location.host;
-		//get protocol
-		let protocol = window.location.protocol;
-		let path = `${base}/monitor-${monitor.tag}`;
-		navigator.clipboard.writeText(protocol + "//" + domain + path);
+		navigator.clipboard.writeText(pathMonitorLink);
 		copiedLink = true;
 		setTimeout(function () {
 			copiedLink = false;
 		}, 1500);
 	}
+
+	let pathMonitorBadgeUptime;
 	function copyUptimeBadge() {
-		let domain = window.location.host;
-		let protocol = window.location.protocol;
-		let path = `${base}/badge/${monitor.tag}/uptime`;
-		navigator.clipboard.writeText(protocol + "//" + domain + path);
+		navigator.clipboard.writeText(pathMonitorBadgeUptime);
 		copiedBadgeUptime = true;
 		setTimeout(function () {
 			copiedBadgeUptime = false;
 		}, 1500);
 	}
+
+	let pathMonitorBadgeStatus;
 	function copyStatusBadge() {
-		let domain = window.location.host;
-		let protocol = window.location.protocol;
-		let path = `${base}/badge/${monitor.tag}/status`;
-		navigator.clipboard.writeText(protocol + "//" + domain + path);
+		navigator.clipboard.writeText(pathMonitorBadgeStatus);
 		copiedBadgeStatus = true;
 		setTimeout(function () {
 			copiedBadgeStatus = false;
 		}, 1500);
 	}
 
+	let pathMonitorBadgeDot;
+	function copyDotStandard() {
+		navigator.clipboard.writeText(pathMonitorBadgeDot);
+		copiedBadgeDotStandard = true;
+		setTimeout(function () {
+			copiedBadgeDotStandard = false;
+		}, 1500);
+	}
+
+	let pathMonitorBadgeDotPing;
+	function copyDotPing() {
+		navigator.clipboard.writeText(pathMonitorBadgeDotPing);
+		copiedBadgeDotPing = true;
+		setTimeout(function () {
+			copiedBadgeDotPing = false;
+		}, 1500);
+	}
+
 	function copyScriptTagToClipboard() {
 		//get domain with port number
-		let domain = window.location.host;
-		//get protocol
-		let protocol = window.location.protocol;
+
 		let path = `${base}/embed-${monitor.tag}`;
 		let scriptTag =
 			`<script async src="${protocol + "//" + domain + path}/js?theme=${theme}&monitor=${protocol + "//" + domain + path}"><` +
@@ -138,102 +153,98 @@
 	}
 
 	onMount(async () => {
-		//getToday();
-		//for each div with class 90daygrid scroll to right most
+		//for each div with class 90daygrid scroll to right most for mobile view needed
 		scrollToRight();
+		protocol = window.location.protocol;
+		domain = window.location.host;
+		pathMonitorLink = `${protocol}//${domain}${base}/monitor-${monitor.tag}`;
+		pathMonitorBadgeUptime = `${protocol}//${domain}${base}/badge/${monitor.tag}/uptime`;
+		pathMonitorBadgeStatus = `${protocol}//${domain}${base}/badge/${monitor.tag}/status`;
+		pathMonitorBadgeDot = `${protocol}//${domain}${base}/badge/${monitor.tag}/dot`;
+		pathMonitorBadgeDotPing = `${protocol}//${domain}${base}/badge/${monitor.tag}/dot?animate=ping`;
 	});
 	afterUpdate(() => {
 		dispatch("heightChange", {});
 	});
 </script>
 
-<div class="monitor grid w-full grid-cols-12 gap-4 pb-4 md:w-[890px]">
-	{#if monitor.embed === undefined}
-		<div class="col-span-12 md:col-span-4">
-			<div class="pt-1">
-				<div class="scroll-m-20 text-2xl font-semibold tracking-tight">
-					{#if monitor.image}
-						<img
-							src={monitor.image}
-							class="inline h-6 w-6"
-							alt={monitor.name}
-							srcset=""
-						/>
+<div class="monitor relative grid w-full grid-cols-12 gap-2 pb-2 md:w-[655px]">
+	<div class="col-span-12 md:w-[546px]">
+		<div class="pt-0">
+			<div class=" scroll-m-20 pr-5 text-xl font-medium tracking-tight">
+				{#if monitor.image}
+					<img
+						src={monitor.image}
+						class="absolute left-6 top-6 inline h-5 w-5"
+						alt={monitor.name}
+						srcset=""
+					/>
+				{/if}
+				<p class="overflow-hidden text-ellipsis whitespace-nowrap">
+					{monitor.name}
+				</p>
+
+				<p class="mt-1 text-xs font-medium text-muted-foreground">
+					{#if !!monitor.description}
+						{@html monitor.description}
 					{/if}
-					<span> {monitor.name} </span>
-					<br />
-					{#if monitor.description}
-						<Popover.Root>
-							<Popover.Trigger>
-								<span
-									class="menu-monitor pb-0 pl-1 pr-0 pt-0 {buttonVariants({
-										variant: 'link'
-									})}"
-								>
-									<Info size={12} class="text-muted-foreground" />
-								</span>
-							</Popover.Trigger>
-							<Popover.Content class="text-sm">
-								<h2 class="mb-2 text-lg font-semibold">
-									{monitor.name}
-								</h2>
-								<span class="text-sm text-muted-foreground">
-									{@html monitor.description}
-								</span>
-							</Popover.Content>
-						</Popover.Root>
-					{/if}
-					<Popover.Root>
-						<Popover.Trigger>
-							<span
-								class="menu-monitor pb-0 pl-1 pr-0 pt-0 {buttonVariants({
-									variant: 'link'
-								})}"
-							>
-								<Share2 size={12} class="text-muted-foreground" />
-							</span>
-						</Popover.Trigger>
-						<Popover.Content class="w-[375px] max-w-full pb-1 pl-1 pr-1">
-							<h2 class="mb-1 px-2 text-lg font-semibold">
+				</p>
+
+				<Popover.Root>
+					<Popover.Trigger class="absolute right-14 top-5 h-5 w-5 p-0">
+						<Button class="h-5 p-0" variant="link">
+							<Share2 class="h-4 w-4 text-muted-foreground" />
+						</Button>
+					</Popover.Trigger>
+					<Popover.Content class="w-[375px] max-w-full p-0">
+						<div class="p-4">
+							<h2 class="mb-1 text-sm font-semibold">
 								{l(lang, "monitor.share")}
 							</h2>
-							<p class="mb-2 pl-2 text-sm text-muted-foreground">
+							<p class="mb-2 text-xs text-muted-foreground">
 								{l(lang, "monitor.share_desc")}
 							</p>
-							<Button class="ml-2" variant="secondary" on:click={copyLinkToClipboard}>
+							<Button
+								class="h-8 text-xs"
+								variant="secondary"
+								on:click={copyLinkToClipboard}
+							>
 								{#if !copiedLink}
 									<Link class="mr-2 inline" size={12} />
-									<span class="text-sm font-medium">
+									<span class="font-medium">
 										{l(lang, "monitor.cp_link")}
 									</span>
 								{:else}
 									<CopyCheck class="mr-2 inline" size={12} />
-									<span class="text-sm font-medium">
+									<span class="font-medium">
 										{l(lang, "monitor.cpd_link")}
 									</span>
 								{/if}
 							</Button>
-							<h2 class="mb-2 mt-4 px-2 text-lg font-semibold">
+						</div>
+						<hr />
+						<div class="p-4">
+							<h2 class="mb-1 text-sm font-semibold">
 								{l(lang, "monitor.embed")}
 							</h2>
-							<p class="mb-2 pl-2 text-sm text-muted-foreground">
+							<p class="mb-1 text-xs text-muted-foreground">
 								{l(lang, "monitor.embed_desc")}
 							</p>
-							<div class="grid grid-cols-2 gap-2">
-								<div class="col-span-1 pl-4">
-									<h3 class="mb-2 text-sm text-muted-foreground">
+							<div class="mb-4 grid grid-cols-2 gap-2">
+								<div class="col-span-1">
+									<h3 class="mb-2 text-xs">
 										{l(lang, "monitor.theme")}
 									</h3>
-									<RadioGroup.Root bind:value={theme}>
+									<RadioGroup.Root bind:value={theme} class=" flex">
 										<div class="flex items-center space-x-2">
 											<RadioGroup.Item value="light" id="light-theme" />
-											<Label for="light-theme"
+											<Label class="text-xs" for="light-theme"
 												>{l(lang, "monitor.theme_light")}</Label
 											>
 										</div>
 										<div class="flex items-center space-x-2">
 											<RadioGroup.Item value="dark" id="dark-theme" />
-											<Label for="dark-theme"
+											<Label class="text-xs" for="dark-theme"
 												>{l(lang, "monitor.theme_dark")}</Label
 											>
 										</div>
@@ -241,107 +252,144 @@
 									</RadioGroup.Root>
 								</div>
 								<div class="col-span-1 pl-2">
-									<h3 class="mb-2 text-sm text-muted-foreground">
+									<h3 class="mb-2 text-xs">
 										{l(lang, "monitor.mode")}
 									</h3>
-									<RadioGroup.Root bind:value={embedType}>
+									<RadioGroup.Root bind:value={embedType} class="flex">
 										<div class="flex items-center space-x-2">
 											<RadioGroup.Item value="js" id="js-embed" />
-											<Label for="js-embed">&#x3C;script&#x3E;</Label>
+											<Label class="text-xs" for="js-embed"
+												>&#x3C;script&#x3E;</Label
+											>
 										</div>
 										<div class="flex items-center space-x-2">
 											<RadioGroup.Item value="iframe" id="iframe-embed" />
-											<Label for="iframe-embed">&#x3C;iframe&#x3E;</Label>
+											<Label class="text-xs" for="iframe-embed"
+												>&#x3C;iframe&#x3E;</Label
+											>
 										</div>
 										<RadioGroup.Input name="embed" />
 									</RadioGroup.Root>
 								</div>
 							</div>
 							<Button
-								class="mb-2 ml-2 mt-4"
+								class="h-8  px-2 text-xs"
 								variant="secondary"
 								on:click={copyScriptTagToClipboard}
 							>
 								{#if !copiedEmbed}
 									<Code class="mr-2 inline" size={12} />
-									<span class="text-sm font-medium">
+									<span class=" font-medium">
 										{l(lang, "monitor.cp_code")}
 									</span>
 								{:else}
 									<CopyCheck class="mr-2 inline" size={12} />
-									<span class="text-sm font-medium">
+									<span class="font-medium">
 										{l(lang, "monitor.cpd_code")}
 									</span>
 								{/if}
 							</Button>
-							<h2 class="mb-2 mt-2 px-2 text-lg font-semibold">
+						</div>
+
+						<hr />
+						<div class="p-4">
+							<h2 class="mb-1 text-sm font-semibold">
 								{l(lang, "monitor.badge")}
 							</h2>
-							<p class="mb-2 pl-2 text-sm text-muted-foreground">
+							<p class="mb-2 text-xs text-muted-foreground">
 								{l(lang, "monitor.badge_desc")}
 							</p>
 							<Button
-								class="mb-2 ml-2 mt-2"
+								class="h-8  px-2 text-xs"
 								variant="secondary"
 								on:click={copyStatusBadge}
 							>
 								{#if !copiedBadgeStatus}
 									<TrendingUp class="mr-2 inline" size={12} />
-									<span class="text-sm font-medium">
+									<span class="font-medium">
 										{l(lang, "monitor.status")}
 										{l(lang, "monitor.badge")}</span
 									>
 								{:else}
 									<CopyCheck class="mr-2 inline" size={12} />
-									<span class="text-sm font-medium">
+									<span class="font-medium">
 										{l(lang, "monitor.copied")}
 										{l(lang, "monitor.badge")}
 									</span>
 								{/if}
 							</Button>
 							<Button
-								class="mb-2 ml-2 mt-2"
+								class="h-8  px-2 text-xs"
 								variant="secondary"
 								on:click={copyUptimeBadge}
 							>
 								{#if !copiedBadgeUptime}
 									<Percent class="mr-2 inline" size={12} />
-									<span class="text-sm font-medium">
+									<span class="font-medium">
 										{l(lang, "monitor.uptime")}
 										{l(lang, "monitor.badge")}
 									</span>
 								{:else}
 									<CopyCheck class="mr-2 inline" size={12} />
-									<span class="text-sm font-medium">
+									<span class="font-medium">
 										{l(lang, "monitor.copied")}
 										{l(lang, "monitor.badge")}
 									</span>
 								{/if}
 							</Button>
-						</Popover.Content>
-					</Popover.Root>
-				</div>
-			</div>
-			<div class="">
-				<div class="grid grid-cols-2 gap-0">
-					<div class="col-span-1 -mt-2">
-						<a
-							href="{base}/incident/{monitor.folderName}#past_incident"
-							class="pb-0 pl-0 pt-0 text-left text-indigo-500 {buttonVariants({
-								variant: 'link'
-							})}"
-						>
-							{l(lang, "root.recent_incidents")}
-							<ArrowRight size={16} />
-						</a>
-					</div>
-				</div>
+						</div>
+
+						<hr />
+
+						<div class="p-4">
+							<h2 class="mb-1 text-sm font-semibold">
+								{l(lang, "monitor.status_svg")}
+							</h2>
+							<p class="mb-2 text-xs text-muted-foreground">
+								{l(lang, "monitor.status_svg_desc")}
+							</p>
+							<Button
+								class="h-8  px-2 text-xs"
+								variant="secondary"
+								on:click={copyDotStandard}
+							>
+								{#if !copiedBadgeDotStandard}
+									<img src={pathMonitorBadgeDot} class="mr-1 inline h-5" />
+									<span class="font-medium">
+										{l(lang, "monitor.standard")}
+									</span>
+								{:else}
+									<CopyCheck class="mr-2 inline h-5 w-5" />
+									<span class="font-medium">
+										{l(lang, "monitor.standard")}
+									</span>
+								{/if}
+							</Button>
+							<Button
+								class="h-8  px-2 text-xs"
+								variant="secondary"
+								on:click={copyDotPing}
+							>
+								{#if !copiedBadgeDotPing}
+									<img src={pathMonitorBadgeDotPing} class="mr-1 inline h-5" />
+									<span class="font-medium">
+										{l(lang, "monitor.pinging")}
+									</span>
+								{:else}
+									<CopyCheck class="mr-2 inline h-5 w-5" />
+									<span class="font-medium"> {l(lang, "monitor.pinging")} </span>
+								{/if}
+							</Button>
+						</div>
+					</Popover.Content>
+				</Popover.Root>
 			</div>
 		</div>
-	{/if}
+	</div>
+
 	<div
 		class="col-span-12 md:w-[546px] {monitor.embed === undefined
-			? 'md:col-span-8'
+			? 'md:col-span-12'
 			: 'overflow-hidden'} pt-2"
 	>
 		<div class="col-span-12">
@@ -349,36 +397,37 @@
 				<div
 					class="{monitor.embed === undefined
 						? 'col-span-12'
-						: 'col-span-8'} h-[32px] md:col-span-8"
+						: 'col-span-8'}   md:col-span-8"
 				>
 					<button
-						class="inline-block"
+						class="inline-block border-r pr-3 text-xs font-semibold {view != '90day'
+							? 'text-muted-foreground opacity-70'
+							: 'text-primary'}"
 						on:click={(e) => {
 							switchView("90day");
 						}}
 					>
-						<Badge variant={view != "90day" ? "outline" : ""}>
-							{l(lang, "monitor.90_day")} ► {n(lang, uptime90Day)}%
-						</Badge>
+						{l(lang, "monitor.90_day")} ► {n(lang, uptime90Day)}%
 					</button>
 					<button
+						class="ml-2 inline-block text-xs font-semibold {view != '0day'
+							? 'text-muted-foreground opacity-70'
+							: 'text-primary'}"
 						on:click={(e) => {
 							switchView("0day");
 						}}
 					>
-						<Badge variant={view != "0day" ? "outline" : ""}>
-							{l(lang, "monitor.today")} ► {n(lang, uptime0Day)}%
-						</Badge>
+						{l(lang, "monitor.today")} ► {n(lang, uptime0Day)}%
 					</button>
 				</div>
 				<div
 					class="{monitor.embed === undefined
 						? 'col-span-12'
-						: 'col-span-4'} h-[32px] text-right md:col-span-4"
+						: 'col-span-4'}   text-right md:col-span-4"
 				>
 					{#if _90Day[todayDD]}
 						<div
-							class="text-api-up mt-[4px] truncate text-sm font-semibold text-{_90Day[
+							class="text-api-up mt-[4px] truncate text-xs font-semibold text-{_90Day[
 								todayDD
 							].cssClass}"
 							title={_90Day[todayDD].message}
@@ -398,7 +447,7 @@
 								></div>
 							</div>
 							<div class="show-hover absolute bg-background text-sm">
-								<div class="text-{bar.cssClass} font-semibold">
+								<div class="text-{bar.cssClass} pt-1 text-xs font-semibold">
 									● {n(lang, new Date(bar.timestamp * 1000).toLocaleDateString())}
 									{summaryTime(lang, bar.message)}
 								</div>
@@ -445,6 +494,14 @@
 					</div>
 				</div>
 			{/if}
+			<p class="text-right">
+				<a
+					href="{base}/incident/{monitor.folderName}#past_incident"
+					class="text-xs font-semibold text-primary"
+				>
+					{l(lang, "root.recent_incidents")}
+				</a>
+			</p>
 		</div>
 	</div>
 </div>
