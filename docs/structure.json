@@ -1,0 +1,89 @@
+{
+	"sidebar": [
+		{
+			"sectionTitle": "Getting Started",
+			"children": [
+				{
+					"title": "Introduction",
+					"link": "/docs/home",
+					"file": "/home.md"
+				},
+				{
+					"title": "Quick Start",
+					"link": "/docs/quick-start",
+					"file": "/docs/quick-start.md"
+				},
+				{
+					"title": "How it works",
+					"link": "/docs/how-it-works",
+					"file": "/how-it-works.md"
+				}
+			]
+		},
+		{
+			"sectionTitle": "Core Concepts",
+			"children": [
+				{
+					"title": "Site Configuration",
+					"link": "/docs/customize-site",
+					"file": "/customize-site.md"
+				},
+				{
+					"title": "Monitors",
+					"link": "/docs/monitors",
+					"file": "/monitors.md"
+				},
+				{
+					"title": "Monitors Examples",
+					"link": "/docs/monitor-examples",
+					"file": "/monitor-examples.md"
+				},
+				{
+					"title": "Incident Management",
+					"link": "/docs/incident-management",
+					"file": "/incident-management.md"
+				},
+				{
+					"title": "Localization",
+					"link": "/docs/i18n",
+					"file": "/i18n.md"
+				},
+				{
+					"title": "Badges",
+					"link": "/docs/status-badges",
+					"file": "/status-badges.md"
+				}
+			]
+		},
+		{
+			"sectionTitle": "Deployment",
+			"children": [
+				{
+					"title": "Environment Setup",
+					"link": "/docs/environment-vars",
+					"file": "/environment-vars.md"
+				},
+				{
+					"title": "Deployment",
+					"link": "/docs/deployment",
+					"file": "/deployment.md"
+				},
+				{
+					"title": "Github Setup",
+					"link": "/docs/gh-setup",
+					"file": "/gh-setup.md"
+				}
+			]
+		},
+		{
+			"sectionTitle": "API Reference",
+			"children": [
+				{
+					"title": "Kener APIs",
+					"link": "/docs/kener-apis",
+					"file": "/kener-apis.md"
+				}
+			]
+		}
+	]
+}

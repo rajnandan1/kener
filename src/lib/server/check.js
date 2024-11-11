@@ -33,20 +33,7 @@ if (process.env.API_IP === undefined) {
 } else {
 	console.log(`✅ API_IP is set`);
 }
-if (process.env.MONITOR_YAML_PATH === undefined) {
-	console.log(
-		`❗ MONITOR_YAML_PATH is not set. Go to https://kener.ing/docs#h2environment-variable to learn how to set it up. Defaulting to config/monitors.yaml`
-	);
-} else {
-	console.log(`✅ MONITOR_YAML_PATH is set`);
-}
-if (process.env.SITE_YAML_PATH === undefined) {
-	console.log(
-		`❗ SITE_YAML_PATH is not set. Go to https://kener.ing/docs#h2environment-variable to learn how to set it up. Defaulting to config/site.yaml`
-	);
-} else {
-	console.log(`✅ SITE_YAML_PATH is set`);
-}
+
 if (process.env.PORT === undefined) {
 	console.log(`❗ PORT is not set. Defaulting to 3000`);
 } else {

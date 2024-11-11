@@ -35,19 +35,19 @@
 {/if}
 {#if hasActiveIncidents}
 	<section
-		class="mx-auto mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center bg-transparent"
+		class="mx-auto mb-4 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent"
 		id=""
 	>
 		<div class="grid w-full grid-cols-2 gap-4">
 			<div class="col-span-2 text-center md:col-span-1 md:text-left">
-				<Badge variant="outline">
+				<Badge variant="outline" class="border-0 pl-0">
 					{l(data.lang, "root.ongoing_incidents")}
 				</Badge>
 			</div>
 		</div>
 	</section>
 	<section
-		class="mx-auto mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center backdrop-blur-[2px]"
+		class="mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center backdrop-blur-[2px]"
 		id=""
 	>
 		{#each data.openIncidents as incident, i}

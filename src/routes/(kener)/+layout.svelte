@@ -1,6 +1,6 @@
 <script>
-	import "../app.postcss";
-	import "../kener.css";
+	import "../../app.postcss";
+	import "../../kener.css";
 	import Nav from "$lib/components/nav.svelte";
 	import { onMount } from "svelte";
 	import { base } from "$app/paths";
@@ -67,7 +67,11 @@
 
 <svelte:head>
 	<title>{data.site.title}</title>
-	<link rel="icon" id="kener-app-favicon" href="{base}/logo96.png" />
+	{#if data.site.favicon && data.site.favicon[0] == "/"}
+		<link rel="icon" id="kener-app-favicon" href="{base}{data.site.favicon}" />
+	{:else if data.site.favicon}
+		<link rel="icon" id="kener-app-favicon" href={data.site.favicon} />
+	{/if}
 	<link href={data.site.font.cssSrc} rel="stylesheet" />
 	{#each Object.entries(data.site.metaTags) as [key, value]}
 		<meta name={key} content={value} />

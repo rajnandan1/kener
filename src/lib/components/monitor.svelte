@@ -171,7 +171,7 @@
 <div class="monitor relative grid w-full grid-cols-12 gap-2 pb-2 md:w-[655px]">
 	<div class="col-span-12 md:w-[546px]">
 		<div class="pt-0">
-			<div class=" scroll-m-20 pr-5 text-xl font-medium tracking-tight">
+			<div class="scroll-m-20 pr-5 text-xl font-medium tracking-tight">
 				{#if monitor.image}
 					<img
 						src={monitor.image}
@@ -464,7 +464,7 @@
 						{#each Object.entries(_0Day) as [ts, bar]}
 							<div
 								data-index={bar.index}
-								class="h-[10px] bg-{bar.cssClass} today-sq m-[1px] w-[10px]"
+								class="bg-{bar.cssClass} today-sq m-[1px] h-[10px] w-[10px]"
 							></div>
 							<div class="hiddenx relative">
 								<div

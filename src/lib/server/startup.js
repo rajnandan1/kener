@@ -16,13 +16,7 @@ import { API_TIMEOUT } from "$lib/server/constants.js";
 import siteDataRaw from "$lib/server/config/site.yaml?raw";
 import monitorDataRaw from "$lib/server/config/monitors.yaml?raw";
 
-import {
-	IsValidURL,
-	IsValidHTTPMethod,
-	LoadMonitorsPath,
-	LoadSitePath,
-	ValidateIpAddress
-} from "$lib/server/tool.js";
+import { IsValidURL, IsValidHTTPMethod, ValidateIpAddress } from "$lib/server/tool.js";
 import { GetAllGHLabels, CreateGHLabel } from "$lib/server/github.js";
 import { Minuter } from "$lib/server/cron-minute.js";
 import axios from "axios";
