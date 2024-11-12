@@ -67,7 +67,7 @@ This is a anonymous JS function, by default it looks like this.
 > **_NOTE:_** The eval function should always return a json object. The json object can have only status(UP/DOWN/DEGRADED) and lantecy(number)
 > `{status:"DEGRADED", latency: 200}`.
 
-```js
+```javascript
 (function (statusCode, responseTime, responseDataBase64) {
 	let statusCodeShort = Math.floor(statusCode/100);
 	let status = 'DOWN'

@@ -29,12 +29,10 @@
 	"scripts": {
 		"build": "vite build",
 		"preview": "vite preview",
-		"serve": "node prod.js",
-		"dev": "vite dev",
-		"kener:dev": "cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener node scripts/check.js && concurrently \"cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener node dev.js\" \"cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener vite dev\"",
-		"kener:dev-monitor": "cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener  node dev.js",
-		"kener:build": "cross-env NODE_ENV=production node scripts/check.js && cross-env NODE_ENV=production vite build",
-		"kener": "cross-env NODE_ENV=production node prod.js",
+		"preschedule": "node build.js",
+		"schedule": "vite-node src/lib/server/startup.js",
+		"development": "vite dev",
+		"dev": "npm-run-all --parallel schedule development",
 		"prettify": "prettier --write ."
 	},
 	"devDependencies": {
@@ -58,6 +56,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@types/prismjs": "^1.26.5",
 		"axios": "^1.6.2",
 		"badge-maker": "^3.3.1",
 		"bits-ui": "^0.9.9",
@@ -73,10 +72,17 @@
 		"moment": "^2.29.4",
 		"moment-timezone": "^0.5.43",
 		"node-cache": "^5.1.2",
+		"npm-run-all": "^4.1.5",
 		"ping": "^0.4.4",
+		"prismjs": "^1.29.0",
 		"queue": "^7.0.0",
 		"randomstring": "^1.3.0",
+		"remark": "^15.0.1",
+		"remark-html": "^16.0.1",
+		"remark-parse": "^11.0.0",
+		"remark-prism": "^1.3.6",
 		"tailwind-merge": "^2.0.0",
-		"tailwind-variants": "^0.1.18"
+		"tailwind-variants": "^0.1.18",
+		"vite-node": "^2.1.4"
 	}
 }

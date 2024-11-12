@@ -1,74 +1,67 @@
-FROM lsiobase/alpine:3.18 as base
+# Stage 1: Base image
+FROM lsiobase/alpine:3.18 AS build
 
+# Set timezone and user
 ENV TZ=Etc/GMT
+ENV PUID=911
+ENV PGID=911
 
-RUN \
-  echo "**** install build packages ****" && \
-  apk add --no-cache \
+# Install Node.js and npm
+RUN echo "**** install build packages ****" && \
+    apk add --no-cache \
     nodejs \
     npm && \
-  echo "**** cleanup ****" && \
-  rm -rf \
+    echo "**** cleanup ****" && \
+    rm -rf \
     /root/.cache \
     /tmp/*
 
-# set OS timezone specified by docker ENV
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# Configure timezone
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && \
+    echo $TZ > /etc/timezone
 
-ARG data_dir=/config
-VOLUME $data_dir
-ENV CONFIG_DIR=$data_dir
-
-COPY docker/root/ /
-
-# Dir ENVs need to be set before building or else build throws errors
-ENV PUBLIC_KENER_FOLDER=/config/static \
-    MONITOR_YAML_PATH=/config/monitors.yaml \
-    SITE_YAML_PATH=/config/site.yaml 
-
-# build requires devDependencies which are not used by production deploy
-# so build in a stage so we can copy results to clean "deploy" stage later
-FROM base as build
-
+# Set working directory
 WORKDIR /app
 
-COPY --chown=abc:abc . /app
-
-# build requires PUBLIC_KENER_FOLDER dir exists so create temporarily
-# -- it is non-existent in final stage to allow proper startup and chown'ing/example population
-RUN mkdir -p "${CONFIG_DIR}"/static \
-    && npm install \
-    && chown -R root:root node_modules \
-    && npm run kener:build
-
-FROM base as app
-
-# copy package, required libs (npm,nodejs) results of build, prod entrypoint, and examples to be used to populate config dir
-# to clean, new stage
-COPY --chown=abc:abc package*.json ./
-COPY --from=base /usr/local/bin /usr/local/bin
-COPY --from=base /usr/local/lib /usr/local/lib
-COPY --chown=abc:abc scripts /app/scripts
-COPY --chown=abc:abc static /app/static
-COPY --chown=abc:abc locales /app/locales
-COPY --chown=abc:abc config /app/config
-COPY --chown=abc:abc src/lib/helpers.js /app/src/lib/helpers.js
-COPY --from=build --chown=abc:abc /app/build /app/build
-COPY --from=build --chown=abc:abc /app/prod.js /app/prod.js
 
 
-ENV NODE_ENV=production
+# Copy package files first for better caching
+COPY package*.json ./
 
-# install prod depdendencies and clean cache
-RUN npm install --omit=dev \
-    && npm cache clean --force \
-    && chown -R abc:abc node_modules
+# Install dependencies
+RUN npm install
 
-ARG webPort=3000
-ENV PORT=$webPort
+# Copy project files
+COPY . .
+
+# Create database directory
+RUN mkdir -p /app/database && \
+    chown -R $PUID:$PGID /app/database && \
+    chmod -R 755 /app/database
+
+# Set production environment
+ENV NODE_ENV=production \
+    PORT=3000 \
+    TZ=Etc/GMT \
+    PUID=911 \
+    PGID=911
+# Copy database contents if they exist
+# Declare volume for persistence
+VOLUME /app/database
+
+
+# Build application
+RUN node build.js && \
+    npm run build
+
+RUN npm install -g vite-node
+
+# Use PORT env variable
 EXPOSE $PORT
 
-# leave entrypoint blank!
-# uses LSIO s6-init entrypoint with scripts
-# that populate CONFIG_DIR with static dir, monitor/site.yaml when dir is empty
-# and chown's all files so they are owned by proper user based on PUID/GUID env
+# Print PORT env variable
+RUN echo "PORT: $PORT"
+
+# Set startup command
+
+CMD ["sh", "-c", "vite-node src/lib/server/startup.js & node main.js & wait"]

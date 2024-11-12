@@ -1,10 +1,12 @@
 // @ts-nocheck
 import { FetchData } from "$lib/server/page";
-import monitorJSON from "$lib/server/data/monitors.json?raw";
+import { monitorsStore } from "$lib/server/stores/monitors";
+import { get } from "svelte/store";
+
 import fs from "fs-extra";
 
 export async function load({ params, route, url, parent }) {
-	let monitors = JSON.parse(monitorJSON);
+	let monitors = get(monitorsStore);
 	const parentData = await parent();
 
 	const monitorsActive = [];

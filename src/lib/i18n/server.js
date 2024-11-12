@@ -1,24 +1,21 @@
-import fs from "fs-extra";
+import en from "$lib/locales/en.json";
+import hi from "$lib/locales/hi.json";
+import ja from "$lib/locales/ja.json";
+import vi from "$lib/locales/vi.json";
+import zhCN from "$lib/locales/zh-CN.json";
 
 /**
  * Map of language codes to their corresponding values.
  * @type {Record<string, any>}
  */
-const langMap = {};
+const langMap = {
+	en,
+	hi,
+	ja,
+	vi,
+	"zh-CN": zhCN
+};
 
-const files = fs.readdirSync("./locales");
-for (const file of files) {
-	if (!file.endsWith(".json")) {
-		continue;
-	}
-	const lang = file.split(".")[0];
-	const data = fs.readFileSync(`./locales/${file}`, "utf8");
-	try {
-		langMap[lang] = JSON.parse(data);
-	} catch (err) {
-		console.log(`Error parsing ${file}: ${err}`);
-	}
-}
 /**
  * @param {{ [x: string]: any; }} language
  * @param {{ [x: string]: any; }} english

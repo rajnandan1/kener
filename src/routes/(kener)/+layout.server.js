@@ -1,10 +1,10 @@
 // @ts-nocheck
 import fs from "fs-extra";
 import i18n from "$lib/i18n/server";
-import siteJSON from "$lib/server/data/site.json?raw";
-
+import { siteStore } from "$lib/server/stores/site";
+import { get } from "svelte/store";
 export async function load({ params, route, url, cookies, request }) {
-	let site = JSON.parse(siteJSON);
+	let site = get(siteStore);
 	const headers = request.headers;
 	const userAgent = headers.get("user-agent");
 	let localTz = "GMT";

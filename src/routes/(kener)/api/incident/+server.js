@@ -3,7 +3,8 @@
 import { json } from "@sveltejs/kit";
 import { ParseIncidentPayload, auth, GHIssueToKenerIncident } from "$lib/server/webhook";
 import { CreateIssue, SearchIssue } from "$lib/server/github";
-import siteJSON from "$lib/server/data/site.json?raw";
+import { siteStore } from "$lib/server/stores/site";
+import { get } from "svelte/store";
 import fs from "fs-extra";
 
 export async function POST({ request }) {
@@ -27,7 +28,7 @@ export async function POST({ request }) {
 			}
 		);
 	}
-	let site = JSON.parse(siteJSON);
+	let site = get(siteStore);
 	let github = site.github;
 	let resp = await CreateIssue(github, title, body, githubLabels);
 	if (resp === null) {
@@ -74,7 +75,7 @@ export async function GET({ request, url }) {
 			}
 		);
 	}
-	let site = JSON.parse(siteJSON);
+	let site = get(siteStore);
 	let github = site.github;
 	const repo = `${github.owner}/${github.repo}`;
 	const is = "issue";

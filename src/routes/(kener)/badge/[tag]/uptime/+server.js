@@ -1,10 +1,11 @@
 // @ts-nocheck
-import monitorJSON from "$lib/server/data/monitors.json?raw";
+import { monitorsStore } from "$lib/server/stores/monitors";
 import fs from "fs-extra";
 import { ParseUptime } from "$lib/helpers.js";
 import { makeBadge } from "badge-maker";
+import { get } from "svelte/store";
 
-const monitors = JSON.parse(monitorJSON);
+let monitors = get(monitorsStore);
 export async function GET({ params, url }) {
 	// @ts-ignore
 	const { path0Day, name } = monitors.find((monitor) => monitor.tag === params.tag);

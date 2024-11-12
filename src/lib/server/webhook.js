@@ -1,6 +1,7 @@
 // @ts-nocheck
 import fs from "fs-extra";
-import monitorJSON from "$lib/server/data/monitors.json?raw";
+import { monitorsStore } from "$lib/server/stores/monitors";
+import { get } from "svelte/store";
 import { ParseUptime } from "$lib/helpers.js";
 import {
 	GetMinuteStartNowTimestampUTC,
@@ -18,7 +19,7 @@ const GetAllTags = function () {
 	let tags = [];
 	let monitors = [];
 	try {
-		monitors = JSON.parse(monitorJSON);
+		monitors = get(monitorsStore);
 		tags = monitors.map((monitor) => monitor.tag);
 	} catch (err) {
 		return [];
@@ -29,7 +30,7 @@ const CheckIfValidTag = function (tag) {
 	let tags = [];
 	let monitors = [];
 	try {
-		monitors = JSON.parse(monitorJSON);
+		monitors = get(monitorsStore);
 		tags = monitors.map((monitor) => monitor.tag);
 		if (tags.indexOf(tag) == -1) {
 			throw new Error("not a valid tag");
@@ -113,7 +114,7 @@ const store = function (data) {
 	}
 
 	//get the monitor object matching the tag
-	let monitors = JSON.parse(monitorJSON);
+	let monitors = get(monitorsStore);
 	const monitor = monitors.find((monitor) => monitor.tag === tag);
 
 	//read the monitor.path0Day file
@@ -124,7 +125,7 @@ const store = function (data) {
 
 	//create a random string with high cardinlity
 	//to avoid cache
-	const Kener_folder = path.resolve("src/lib/server/data");
+	const Kener_folder = "./database";
 	//write the monitor.path0Day file
 	fs.writeFileSync(
 		Kener_folder + `/${monitor.folderName}.webhook.${Randomstring.generate()}.json`,
@@ -260,7 +261,7 @@ const GetMonitorStatusByTag = function (tag) {
 		uptime: null,
 		lastUpdatedAt: null
 	};
-	let monitors = JSON.parse(monitorJSON);
+	let monitors = get(monitorsStore);
 	const { path0Day } = monitors.find((monitor) => monitor.tag === tag);
 	const dayData = JSON.parse(fs.readFileSync(path0Day, "utf8"));
 	const lastUpdatedAt = Object.keys(dayData)[Object.keys(dayData).length - 1];

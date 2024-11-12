@@ -1,8 +1,9 @@
 // @ts-nocheck
 // @ts-ignore
-import siteJSON from "$lib/server/data/site.json?raw";
 import fs from "fs-extra";
-const siteData = JSON.parse(siteJSON);
+import { siteStore } from "$lib/server/stores/site";
+import { get } from "svelte/store";
+let siteData = get(siteStore);
 export async function GET({ url, params }) {
 	const { tag } = params;
 	const query = url.searchParams;

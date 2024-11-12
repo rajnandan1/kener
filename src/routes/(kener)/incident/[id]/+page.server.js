@@ -1,7 +1,8 @@
 // @ts-nocheck
-import monitorJSON from "$lib/server/data/monitors.json?raw";
+import { monitorsStore } from "$lib/server/stores/monitors";
 import { GetIncidents, Mapper } from "$lib/server/github.js";
 import fs from "fs-extra";
+import { get } from "svelte/store";
 
 /**
  * @param {{body: string | import("markdown-it/lib/token")[];number: any;title: any;created_at: any;updated_at: any;comments: any;html_url: any;}} issue
@@ -10,7 +11,7 @@ import fs from "fs-extra";
 
 // @ts-ignore
 export async function load({ params, route, url, parent }) {
-	let monitors = JSON.parse(monitorJSON);
+	let monitors = get(monitorsStore);
 	const siteData = await parent();
 	const github = siteData.site.github;
 	// @ts-ignore

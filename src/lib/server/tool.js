@@ -1,5 +1,4 @@
 // @ts-nocheck
-import { MONITOR, SITE } from "$lib/server/constants.js";
 import dotenv from "dotenv";
 dotenv.config();
 const IsValidURL = function (url) {
@@ -134,6 +133,14 @@ const ValidateIpAddress = function (input) {
 	// If none of the above conditions match, the input is invalid
 	return "Invalid";
 };
+function checkIfDuplicateExists(arr) {
+	return new Set(arr).size !== arr.length;
+}
+function getWordsStartingWithDollar(text) {
+	const regex = /\$\w+/g;
+	const wordsArray = text.match(regex);
+	return wordsArray || [];
+}
 export {
 	IsValidURL,
 	IsValidHTTPMethod,
@@ -145,5 +152,7 @@ export {
 	GetDayStartWithOffset,
 	BeginningOfDay,
 	IsStringURLSafe,
-	ValidateIpAddress
+	ValidateIpAddress,
+	checkIfDuplicateExists,
+	getWordsStartingWithDollar
 };

@@ -27,7 +27,10 @@
 					class="mr-4 hidden flex-wrap items-center space-x-6 text-sm font-medium md:flex"
 				>
 					{#each data.site.nav as navItem}
-						<a href={navItem.url} class="flex">
+						<a
+							href={navItem.url.startsWith("/") ? base + navItem.url : navItem.url}
+							class="flex"
+						>
 							{#if navItem.iconURL}
 								<img
 									src={navItem.iconURL}

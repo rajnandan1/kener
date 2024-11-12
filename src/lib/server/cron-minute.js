@@ -20,7 +20,7 @@ import dotenv from "dotenv";
 import path from "path";
 dotenv.config();
 
-const Kener_folder = path.resolve("src/lib/server/data");
+const Kener_folder = "./database";
 const apiQueue = new Queue({
 	concurrency: 10, // Number of tasks that can run concurrently
 	timeout: 10000, // Timeout in ms after which a task will be considered as failed (optional)

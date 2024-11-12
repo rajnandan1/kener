@@ -1,0 +1,64 @@
+{
+    "title": "Kener - Open-Source and Modern looking Node.js Status Page for Effortless Incident Management",
+    "siteName": "Kener.ing",
+    "home": "/",
+    "logo": "/logo.png",
+    "favicon": "/logo96.png",
+    "github": {
+        "owner": "rajnandan1",
+        "repo": "kener",
+        "incidentSince": 720
+    },
+    "metaTags": {
+        "description": "Kener: Open-source modern looking Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. And the best part? Kener integrates seamlessly with GitHub, making incident management a team effort—making it easier for us to track and fix issues together in a collaborative and friendly environment.",
+        "keywords": "Node.js status page, Incident management tool, Service monitoring, Service outage tracking, Real-time status updates, GitHub integration for incidents, Open-source status page, Node.js monitoring application, Service reliability, User-friendly incident management, Collaborative incident resolution, Seamless outage communication, Service disruption tracker, Real-time incident alerts, Node.js status reporting",
+        "og:description": "Kener: Open-source Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. And the best part? Kener integrates seamlessly with GitHub, making incident management a team effort—making it easier for us to track and fix issues together in a collaborative and friendly environment.",
+        "og:image": "https://kener.ing/ss.png",
+        "og:title": "Kener - Open-Source and Modern looking Node.js Status Page for Effortless Incident Management",
+        "og:type": "website",
+        "og:site_name": "Kener",
+        "twitter:card": "summary_large_image",
+        "twitter:site": "@_rajnandan_",
+        "twitter:creator": "@_rajnandan_",
+        "twitter:image": "https://kener.ing/ss.png",
+        "twitter:title": "Kener: Open-Source and Modern looking Node.js Status Page for Effortless Incident Management",
+        "twitter:description": "Kener: Open-source Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. And the best part? Kener integrates seamlessly with GitHub, making incident management a team effort—making it easier for us to track and fix issues together in a collaborative and friendly environment."
+    },
+    "nav": [
+        {
+            "name": "Documentation",
+            "url": "/docs/home"
+        },
+        {
+            "name": "Github",
+            "iconURL": "/github.svg",
+            "url": "https://github.com/rajnandan1/kener"
+        },
+        {
+            "name": "Buy me a coffee",
+            "iconURL": "/buymeacoffee.svg",
+            "url": "https://buymeacoffee.com/rajnandan1"
+        }
+    ],
+    "hero": {
+        "title": "Kener is a Modern Open-Source Status Page System",
+        "subtitle": "Let your users know what's going on."
+    },
+    "footerHTML": "Made using \n<a href=\"https://github.com/rajnandan1/kener\" target=\"_blank\" rel=\"noreferrer\" class=\"font-medium underline underline-offset-4\">\n  Kener\n</a>\nan open source status page system built with Svelte and TailwindCSS.\n",
+    "i18n": {
+        "defaultLocale": "en",
+        "locales": {
+            "en": "English",
+            "hi": "हिन्दी",
+            "zh-CN": "中文",
+            "ja": "日本語",
+            "vi": "Tiếng Việt"
+        }
+    },
+    "theme": "dark",
+    "pattern": "squares",
+    "font": {
+        "cssSrc": "https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap",
+        "family": "\"Lato\", sans-serif"
+    }
+}

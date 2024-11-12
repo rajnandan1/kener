@@ -121,7 +121,7 @@
 				<div class="">
 					{#each item.children as child}
 						<a
-							href={child.link}
+							href={child.link.startsWith("/") ? base + child.link : child.link}
 							class="group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:underline {!!child.active
 								? 'bg-muted'
 								: ''}"

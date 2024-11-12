@@ -4,11 +4,11 @@ import { json } from "@sveltejs/kit";
 import fs from "fs-extra";
 import { GetCommentsForIssue } from "$lib/server/github.js";
 import { marked } from "marked";
-import siteJSON from "$lib/server/data/site.json?raw";
-
+import { siteStore } from "$lib/server/stores/site";
+import { get } from "svelte/store";
 export async function GET({ params }) {
 	const incidentNumber = params.id;
-	let siteData = JSON.parse(siteJSON);
+	let siteData = get(siteStore);
 	let comments = await GetCommentsForIssue(incidentNumber, siteData.github);
 	comments = comments.map(
 		(

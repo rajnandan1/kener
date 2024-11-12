@@ -8,7 +8,8 @@ import {
 	GetEndTimeFromBody,
 	UpdateIssue
 } from "$lib/server/github";
-import siteJSON from "$lib/server/data/site.json?raw";
+import { siteStore } from "$lib/server/stores/site";
+import { get } from "svelte/store";
 import fs from "fs-extra";
 
 export async function PATCH({ request, params }) {
@@ -41,7 +42,7 @@ export async function PATCH({ request, params }) {
 		);
 	}
 
-	let site = JSON.parse(siteJSON);
+	let site = get(siteStore);
 	let github = site.github;
 	let resp = await UpdateIssue(github, incidentNumber, title, body, githubLabels);
 	if (resp === null) {
@@ -70,7 +71,7 @@ export async function GET({ request, params }) {
 	const incidentNumber = params.incidentNumber; //number required
 	// const headers = await request.headers();
 
-	let site = JSON.parse(siteJSON);
+	let site = get(siteStore);
 	let github = site.github;
 	let issue = await GetIncidentByNumber(github, incidentNumber);
 	if (issue === null) {

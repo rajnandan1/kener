@@ -3,8 +3,20 @@
 	import { Separator } from "$lib/components/ui/separator";
 	import { Badge } from "$lib/components/ui/badge";
 	import { l, summaryTime } from "$lib/i18n/client";
+	import moment from "moment";
 
 	export let data;
+
+	const formatDuration = (hours) => {
+		const duration = moment.duration(hours, "hours");
+		const days = Math.floor(duration.asDays());
+		const remainingHours = duration.hours();
+
+		if (days > 0) {
+			return `${days}d ${remainingHours}h`;
+		}
+		return `${hours}h`;
+	};
 </script>
 
 <svelte:head>
@@ -30,7 +42,7 @@
 <section class="mx-auto mb-4 mt-8 flex w-full max-w-[840px] flex-1 flex-col">
 	<div class="container">
 		<h1 class="mb-4 text-2xl font-bold leading-none">
-			<Badge variant="outline">
+			<Badge variant="outline" class="border-0 pl-0">
 				{l(data.lang, "root.active_incidents")}
 			</Badge>
 		</h1>
@@ -60,10 +72,10 @@
 <section class="mx-auto mb-4 mt-8 flex w-full max-w-[840px] flex-1 flex-col">
 	<div class="container">
 		<h1 class="mb-4 text-2xl font-bold leading-none">
-			<Badge variant="outline">
+			<Badge variant="outline" class="border-0 pl-0">
 				{l(data.lang, "root.recent_incidents")} - {summaryTime(
 					data.lang,
-					`Last ${data.site.github.incidentSince} hours`
+					`Last ${formatDuration(data.site.github.incidentSince)}`
 				)}
 			</Badge>
 		</h1>

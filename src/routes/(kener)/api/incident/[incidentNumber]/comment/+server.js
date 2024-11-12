@@ -3,7 +3,8 @@
 import { json } from "@sveltejs/kit";
 import { auth } from "$lib/server/webhook";
 import { AddComment, GetCommentsForIssue } from "$lib/server/github";
-import siteJSON from "$lib/server/data/site.json?raw";
+import { siteStore } from "$lib/server/stores/site";
+import { get } from "svelte/store";
 import fs from "fs-extra";
 
 export async function GET({ request, params }) {
@@ -27,7 +28,7 @@ export async function GET({ request, params }) {
 		);
 	}
 
-	let site = JSON.parse(siteJSON);
+	let site = get(siteStore);
 	let github = site.github;
 	let resp = await GetCommentsForIssue(incidentNumber, github);
 	return json(
@@ -75,7 +76,7 @@ export async function POST({ request, params }) {
 		);
 	}
 
-	let site = JSON.parse(siteJSON);
+	let site = get(siteStore);
 	let github = site.github;
 
 	let resp = await AddComment(github, incidentNumber, body);
