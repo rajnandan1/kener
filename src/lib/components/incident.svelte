@@ -92,7 +92,9 @@
 					{/if}
 					{#if monitor.image}
 						<img
-							src={monitor.image}
+							src={monitor.image.startsWith("/")
+								? base + monitor.image
+								: monitor.image}
 							class="absolute left-0 top-1 inline h-5 w-5"
 							alt=""
 							srcset=""

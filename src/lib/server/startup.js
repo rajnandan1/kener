@@ -12,15 +12,13 @@ import path from "path";
 
 import yaml from "js-yaml";
 import { Cron } from "croner";
-import { API_TIMEOUT } from "$lib/server/constants.js";
-import siteDataRaw from "$lib/server/config/site.yaml?raw";
-import monitorDataRaw from "$lib/server/config/monitors.yaml?raw";
+import { API_TIMEOUT } from "./constants.js";
 
-import { IsValidURL, IsValidHTTPMethod, ValidateIpAddress } from "$lib/server/tool.js";
-import { GetAllGHLabels, CreateGHLabel } from "$lib/server/github.js";
-import { Minuter } from "$lib/server/cron-minute.js";
+import { IsValidURL, IsValidHTTPMethod, ValidateIpAddress } from "./tool.js";
+import { GetAllGHLabels, CreateGHLabel } from "./github.js";
+import { Minuter } from "./cron-minute.js";
 import axios from "axios";
-import { Ninety } from "$lib/server/ninety.js";
+import { Ninety } from "./ninety.js";
 let monitors = [];
 let site = {};
 const envSecrets = [];

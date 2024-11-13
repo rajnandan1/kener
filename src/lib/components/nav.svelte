@@ -13,7 +13,12 @@
 	<div class="container flex h-14 items-center">
 		<a href={data.site.home ? data.site.home : base} class="mr-6 flex items-center space-x-2">
 			{#if data.site.logo}
-				<img src={data.site.logo} class="h-8" alt={data.site.title} srcset="" />
+				<img
+					src={data.site.logo.startsWith("/") ? base + data.site.logo : data.site.logo}
+					class="h-8"
+					alt={data.site.title}
+					srcset=""
+				/>
 			{/if}
 			{#if data.site.siteName}
 				<span class="hidden text-[15px] font-bold md:inline-block lg:text-base">
@@ -33,7 +38,9 @@
 						>
 							{#if navItem.iconURL}
 								<img
-									src={navItem.iconURL}
+									src={navItem.iconURL.startsWith("/")
+										? base + navItem.iconURL
+										: navItem.iconURL}
 									class="mr-1.5 inline h-4"
 									alt={navItem.name}
 								/>

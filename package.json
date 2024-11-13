@@ -30,7 +30,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"preschedule": "node build.js",
-		"schedule": "vite-node src/lib/server/startup.js",
+		"schedule": "node src/lib/server/startup.js",
 		"development": "vite dev",
 		"dev": "npm-run-all --parallel schedule development",
 		"prettify": "prettier --write ."

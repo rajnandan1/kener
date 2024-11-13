@@ -1,14 +1,14 @@
 // @ts-nocheck
 import fs from "fs-extra";
-import { monitorsStore } from "$lib/server/stores/monitors";
+import { monitorsStore } from "./stores/monitors";
 import { get } from "svelte/store";
 import { ParseUptime } from "$lib/helpers.js";
 import {
 	GetMinuteStartNowTimestampUTC,
 	GetNowTimestampUTC,
 	GetMinuteStartTimestampUTC
-} from "$lib/server/tool.js";
-import { GetStartTimeFromBody, GetEndTimeFromBody } from "$lib/server/github.js";
+} from "./tool.js";
+import { GetStartTimeFromBody, GetEndTimeFromBody } from "./github.js";
 import Randomstring from "randomstring";
 const API_TOKEN = process.env.API_TOKEN;
 const API_IP = process.env.API_IP;

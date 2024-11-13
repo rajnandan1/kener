@@ -1,7 +1,7 @@
 // @ts-nocheck
 import fs from "fs-extra";
-import { GetMinuteStartNowTimestampUTC, BeginningOfDay } from "$lib/server/tool.js";
-import { StatusObj, ParseUptime } from "$lib/helpers.js";
+import { GetMinuteStartNowTimestampUTC, BeginningOfDay } from "./tool.js";
+import { StatusObj, ParseUptime } from "../helpers.js";
 
 function getDayMessage(type, numOfMinute) {
 	if (numOfMinute > 59) {

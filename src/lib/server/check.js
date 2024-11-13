@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { ENV } from "$lib/server/constants.js";
-import { IsStringURLSafe } from "$lib/server/tool.js";
+import { ENV } from "./constants.js";
+import { IsStringURLSafe } from "./tool.js";
 import dotenv from "dotenv";
 dotenv.config();
 import fs from "fs-extra";

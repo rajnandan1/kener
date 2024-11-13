@@ -174,7 +174,7 @@
 			<div class="scroll-m-20 pr-5 text-xl font-medium tracking-tight">
 				{#if monitor.image}
 					<img
-						src={monitor.image}
+						src={monitor.image.startsWith("/") ? base + monitor.image : monitor.image}
 						class="absolute left-6 top-6 inline h-5 w-5"
 						alt={monitor.name}
 						srcset=""
