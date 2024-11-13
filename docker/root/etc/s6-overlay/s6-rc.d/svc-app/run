@@ -1,0 +1,14 @@
+#!/usr/bin/with-contenv bash
+
+echo -e "\nApp is starting!"
+export NODE_ENV=production
+cd /app || exit
+
+# Run build first
+s6-setuidgid abc /usr/bin/node $NODE_ARGS /app/build.js && (
+    # Run startup and main in parallel 
+    s6-setuidgid abc /usr/bin/node $NODE_ARGS /app/src/lib/server/startup.js &
+    s6-setuidgid abc /usr/bin/node $NODE_ARGS /app/main.js &
+    # Wait for both processes
+    wait
+)
