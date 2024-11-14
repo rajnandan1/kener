@@ -1,3 +1,8 @@
+---
+title: Quick Start | Kener
+description: Get started with Kener
+---
+
 # Quick Start
 
 Please make sure you have [Node](https://nodejs.org/en) installed in your system. Minimum version required is `v16.17.0`.

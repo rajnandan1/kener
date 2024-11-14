@@ -1,3 +1,8 @@
 code:not([class^="language-"]) {
-	@apply rounded bg-gray-100 px-1.5 py-0.5 font-mono text-sm text-xs dark:bg-gray-800;
+	@apply rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-800;
+}
+
+.sidebar-item.active,
+.sidebar-item:hover {
+	color: #ed702d;
 }

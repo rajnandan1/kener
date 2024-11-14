@@ -6,6 +6,7 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import { l } from "$lib/i18n/client";
 	import { base } from "$app/paths";
+	import { ArrowRight } from "lucide-svelte";
 
 	export let data;
 	let hasActiveIncidents = data.openIncidents.length > 0;
@@ -111,26 +112,23 @@
 {/if}
 {#if data.site.categories}
 	<section
-		class="mx-auto mb-8 w-full max-w-[890px] flex-1 flex-col items-start backdrop-blur-[2px]"
+		class="mx-auto mb-8 w-full max-w-[890px] flex-1 flex-col items-start backdrop-blur-[2px] md:w-[655px]"
 	>
-		<h2 class="mb-2 mt-2 px-2 text-xl font-semibold">
-			{l(data.lang, "root.other_monitors")}
-		</h2>
 		{#each data.site.categories as category}
 			<Card.Root class="mb-2 w-full">
-				<Card.Header>
-					<Card.Title>{category.name}</Card.Title>
-					<Card.Description class="relative pr-[100px]">
+				<Card.Header class="relative pr-[100px]">
+					<Card.Title class="">{category.name}</Card.Title>
+					<Card.Description>
 						{#if category.description}
-							{category.description}
+							{@html category.description}
 						{/if}
 						<a
 							href="{base}/category-{category.name}"
 							class="{buttonVariants({
-								variant: 'secondary'
-							})} absolute -top-4 right-2"
+								variant: 'ghost'
+							})} absolute right-2 top-1/2 -translate-y-1/2 transform"
 						>
-							View
+							<ArrowRight class="h-4 w-4" />
 						</a>
 					</Card.Description>
 				</Card.Header>

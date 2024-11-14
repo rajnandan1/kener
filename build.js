@@ -8,7 +8,7 @@ import {
 	IsValidHTTPMethod,
 	ValidateIpAddress
 } from "./src/lib/server/tool.js";
-import { API_TIMEOUT } from "./src/lib/server/constants.js";
+import { API_TIMEOUT, AnalyticsProviders } from "./src/lib/server/constants.js";
 
 const configPathFolder = "./config";
 const databaseFolder = process.argv[2] || "./database";
@@ -250,6 +250,22 @@ async function Build() {
 
 	if (site.github.incidentSince === undefined || site.github.incidentSince === null) {
 		site.github.incidentSince = 48;
+	}
+	if (!!site.analytics) {
+		const providers = {};
+
+		for (let i = 0; i < site.analytics.length; i++) {
+			const element = site.analytics[i];
+			if (!!AnalyticsProviders[element.type]) {
+				if (providers[element.type] === undefined) {
+					providers[element.type] = {};
+					providers[element.type].measurementIds = [];
+					providers[element.type].script = AnalyticsProviders[element.type];
+				}
+				providers[element.type].measurementIds.push(element.id);
+			}
+		}
+		site.analytics = providers;
 	}
 	if (!!!site.font || !!!site.font.cssSrc || !!!site.font.family) {
 		site.font = {

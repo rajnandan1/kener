@@ -1,3 +1,8 @@
+---
+title: Monitors | monitors.yaml | Kener
+description: Monitors are the heart of Kener. This is where you define the monitors you want to show on your site.
+---
+
 # Monitors
 
 Inside `config/` folder there is a file called `monitors.yaml`. We will be adding our monitors here. Please note that your yaml must be valid. It is an array.
@@ -53,7 +58,7 @@ Sample
 | api.eval                  | Optional          | Evaluator written in JS, to parse HTTP response and calculate uptime and latency                                                                                                                                    |
 | defaultStatus             | Optional          | If no API is given this will be the default status. can be UP/DOWN/DEGRADED                                                                                                                                         |
 | hidden                    | Optional          | If set to `true` will not show the monitor in the UI                                                                                                                                                                |
-| category                  | Optional          | Use this to group your monitors. Make sure you have defined category in `site.yaml` and use the `name` attribute here                                                                                               |
+| category                  | Optional          | Use this to group your monitors. Make sure you have defined category in `site.yaml` and use the `name` attribute. More about it [here](/docs/customize-site#categories).                                            |
 | dayDegradedMinimumCount   | Optional          | Default is 1. It means minimum this number of count for the day to be classified as DEGRADED(Yellow Bar) in 90 day view. Has to be `number` greater than 0                                                          |
 | dayDownMinimumCount       | Optional          | Default is 1. It means minimum this number of count for the day to be classified as DOWN(Red Bar) in 90 day view. Has to be `number` greater than 0                                                                 |
 | includeDegradedInDowntime | Optional          | By deafault uptime percentage is calculated as (UP+DEGRADED/UP+DEGRADED+DOWN). Setting it as `true` will change the calculation to (UP/UP+DEGRADED+DOWN)                                                            |

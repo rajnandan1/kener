@@ -42,7 +42,7 @@
 {/if}
 {#if hasActiveIncidents}
 	<section
-		class="mx-auto mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center bg-transparent"
+		class="mx-auto mb-4 flex w-full flex-1 flex-col items-start justify-center bg-transparent backdrop-blur-[2px] md:w-[655px]"
 		id=""
 	>
 		<div class="grid w-full grid-cols-2 gap-4">
@@ -54,7 +54,7 @@
 		</div>
 	</section>
 	<section
-		class="mx-auto mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center backdrop-blur-[2px]"
+		class="mx-auto mb-8 flex w-full flex-1 flex-col items-start justify-center backdrop-blur-[2px] md:w-[655px]"
 		id=""
 	>
 		{#each data.openIncidents as incident, i}
@@ -70,17 +70,17 @@
 {/if}
 {#if data.monitors.length > 0}
 	<section
-		class="mx-auto mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center bg-transparent"
+		class="mx-auto mb-2 flex w-full flex-1 flex-col items-start justify-center bg-transparent md:w-[655px]"
 		id=""
 	>
 		<div class="grid w-full grid-cols-2 gap-4">
 			<div class="col-span-2 text-center md:col-span-1 md:text-left">
-				<Badge class="" variant="outline">
+				<Badge class="border-0 pl-0" variant="outline">
 					{l(data.lang, "root.availability_per_component")}
 				</Badge>
 			</div>
 			<div class="col-span-2 text-center md:col-span-1 md:text-right">
-				<Badge variant="outline">
+				<Badge variant="outline" class="border-0 pr-0">
 					<span class="bg-api-up mr-1 inline-flex h-[8px] w-[8px] rounded-full opacity-75"
 					></span>
 					<span class="mr-3">
@@ -105,7 +105,7 @@
 		</div>
 	</section>
 	<section
-		class="mx-auto mb-8 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center backdrop-blur-[2px]"
+		class="mx-auto mb-8 flex w-full flex-1 flex-col items-start justify-center backdrop-blur-[2px] md:w-[655px]"
 	>
 		<Card.Root class="w-full">
 			<Card.Content class="monitors-card p-0">

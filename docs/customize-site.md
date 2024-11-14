@@ -1,6 +1,11 @@
+---
+title: Customize Site - Site.yaml - Kener
+description: Customize your Kener site using site.yaml
+---
+
 # Customize Site
 
-There is a folder called `src/lib/server/config`. Inside which there is a `site.yaml` file. You can modify this file to have your own branding and do few other things.
+There is a folder called `./config`. Inside which there is a `site.yaml` file. You can modify this file to have your own branding and do few other things.
 
 ## Sample site.yaml
 
@@ -46,6 +51,13 @@ pattern: "squares"
 font:
   cssSrc: "https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap"
   family: '"Lato", sans-serif'
+analytics:
+  - id: "G-QsFT"
+    type: "GA"
+  - id: "deasf0d350"
+    type: "AMPLITUDE"
+  - id: "FKOdsKener"
+    type: "MIXPANEL"
 ```
 
 ---
@@ -299,3 +311,19 @@ URL of the font css
 ### family
 
 Font family
+
+---
+
+## analytics
+
+You can add analytics to your site. You can add multiple analytics. Supported analytics are `GA`, `AMPLITUDE`, `MIXPANEL`
+
+```yaml
+analytics:
+	- id: "G-QsFT"
+	  type: "GA"
+	- id: "deasf0d350"
+	  type: "AMPLITUDE"
+	- id: "FKOdsKener"
+	  type: "MIXPANEL"
+```

@@ -1,3 +1,8 @@
+---
+title: Status Badges | Kener
+description: Status badges for your monitors
+---
+
 # Status Badges
 
 There are three types of badges
@@ -13,8 +18,6 @@ http://[hostname]/badge/[tag]/uptime
 ---
 
 ## Status
-
-### Badge SVG
 
 Shows the last health check was UP/DOWN/DEGRADED
 
@@ -32,21 +35,29 @@ Example in MarkDown
 ![Status Badge](https://kener.ing/badge/[monitor.tag]/status)
 ```
 
-### Icon SVG
+---
+
+## Live
 
 Shows the last health check was UP/DOWN/DEGRADED as SVG dot
 
-#### Standard
+```shell
+http://[hostname]/badge/[tag]/dot
+#or
+http://[hostname]/badge/[tag]/dot?animate=ping
+```
 
-![Earth Status](http://localhost:3000/badge/google-search/dot)
+### Standard
+
+![Earth Status](/badge/earth/dot)
 
 ```html
 <img src="https://kener.ing/badge/earth/dot" />
 ```
 
-#### Animated
+### Animated
 
-![Earth Status](http://localhost:3000/badge/google-search/dot?animate=ping)
+![Earth Status](/badge/earth/dot?animate=ping)
 
 ```html
 <img src="https://kener.ing/badge/earth/dot?animate=ping" />

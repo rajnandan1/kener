@@ -17,6 +17,11 @@
 					"title": "How it works",
 					"link": "/docs/how-it-works",
 					"file": "/how-it-works.md"
+				},
+				{
+					"title": "Changelogs",
+					"link": "/docs/changelogs",
+					"file": "/changelogs.md"
 				}
 			]
 		},
@@ -52,6 +57,16 @@
 					"title": "Badges",
 					"link": "/docs/status-badges",
 					"file": "/status-badges.md"
+				},
+				{
+					"title": "Embed",
+					"link": "/docs/embed",
+					"file": "/embed.md"
+				},
+				{
+					"title": "Analytics",
+					"link": "/docs/site-analytics",
+					"file": "/site-analytics.md"
 				}
 			]
 		},
@@ -82,6 +97,21 @@
 					"title": "Kener APIs",
 					"link": "/docs/kener-apis",
 					"file": "/kener-apis.md"
+				}
+			]
+		},
+		{
+			"sectionTitle": "Guides",
+			"children": [
+				{
+					"title": "Categorize Monitors",
+					"link": "/docs/categorize-guide",
+					"file": "/categorize-guide.md"
+				},
+				{
+					"title": "Custom JS/CSS",
+					"link": "/docs/custom-js-css-guide",
+					"file": "/custom-js-css-guide.md"
 				}
 			]
 		}

@@ -1,3 +1,8 @@
+---
+title: How it works | Kener
+description: Folder structure and how Kener works
+---
+
 # How it works
 
 Kener has two parts.
@@ -27,3 +32,7 @@ This is the configuration file for your site. This is where you define the name 
 ## Monitors.yaml
 
 This is the configuration file for your monitors. This is where you define the monitors you want to show on your site. Read more about it [here](/docs/monitors)
+
+## Data
+
+Kener stores its data in a folder which is `./database`. This is where all the data is stored. You can delete this folder if you want to start fresh.

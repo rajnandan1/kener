@@ -10,6 +10,7 @@
 	import Moon from "lucide-svelte/icons/moon";
 	import { Languages } from "lucide-svelte";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+	import { analyticsEvent } from "$lib/analytics";
 
 	export let data;
 
@@ -27,6 +28,10 @@
 			classList.add("dark");
 			localStorage.setItem("theme", "dark");
 		}
+
+		analyticsEvent("theme_change", {
+			theme: classList.contains("dark") ? "light" : "dark"
+		});
 	}
 	let defaultLocaleValue;
 	if (!allLocales) {
@@ -41,6 +46,9 @@
 		document.cookie = `localLang=${locale};max-age=${60 * 60 * 24 * 365 * 30}`;
 		if (locale === defaultLocaleKey) return;
 		defaultLocaleValue = allLocales[locale];
+		analyticsEvent("language_change", {
+			locale: locale
+		});
 		location.reload();
 	}
 
@@ -52,8 +60,8 @@
 			document.documentElement.classList.remove("dark");
 		}
 	}
-
-	onMount(() => {
+	let Analytics;
+	onMount(async () => {
 		let localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 		if (localTz != data.localTz) {
 			if (data.isBot === false) {
@@ -62,9 +70,55 @@
 			}
 		}
 		setTheme();
+
+		const providers = data.site.analytics;
+		const analyticsPlugins = [];
+		if (providers) {
+			//loop object
+			Object.keys(providers).forEach((key) => {
+				const provider = providers[key];
+				if (key == "GA") {
+					analyticsPlugins.push(
+						analyticsGa.default({
+							measurementIds: provider.measurementIds
+						})
+					);
+				} else if (key == "AMPLITUDE") {
+					analyticsPlugins.push(
+						analyticsAmplitude({
+							apiKey: provider.measurementIds[0],
+							options: {
+								trackingOptions: {
+									ip_address: false
+								}
+							}
+						})
+					);
+				} else if (key == "MIXPANEL") {
+					analyticsPlugins.push(
+						analyticsMixpanel({
+							token: provider.measurementIds[0]
+						})
+					);
+				}
+			});
+		}
+		Analytics = _analytics.init({
+			app: "kener",
+			debug: true,
+			version: 100,
+			plugins: analyticsPlugins
+		});
+		Analytics.page();
+		//import googleAnalyticsV3 from '@analytics/google-analytics-v3'
 	});
+	function captureAnalytics(e) {
+		const { event, data } = e.detail;
+		Analytics.track(event, data);
+	}
 </script>
 
+<svelte:window on:analyticsEvent={captureAnalytics} />
 <svelte:head>
 	<title>{data.site.title}</title>
 	{#if data.site.favicon && data.site.favicon[0] == "/"}
@@ -76,12 +130,19 @@
 	{#each Object.entries(data.site.metaTags) as [key, value]}
 		<meta name={key} content={value} />
 	{/each}
+	<script src="https://unpkg.com/analytics/dist/analytics.min.js"></script>
+
+	{#if data.site.analytics}
+		{#each Object.entries(data.site.analytics) as [key, value]}
+			<script data-type={key} src={value.script}></script>
+		{/each}
+	{/if}
 </svelte:head>
 <main style="--font-family: {data.site.font.family}">
 	{#if data.showNav}
 		<Nav {data} />
 	{/if}
-	<div class="min-h-screen">
+	<div class="min-h-[70vh]">
 		<slot />
 	</div>
 

@@ -1,3 +1,8 @@
+---
+title: Github Setup | Kener
+description: Kener uses github for incident management. Issues created in github using certain tags go to kener as incidents.
+---
+
 # Github Setup
 
 Kener uses github for incident management. Issues created in github using certain tags go to kener as incidents.
@@ -35,7 +40,6 @@ You can create either a classic token or personal access token
 -   Click on generate token
 
 ## Step 3: Set environment
-
 
 ```shell
 export GH_TOKEN=github_pat_11AD3ZA3Y0

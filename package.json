@@ -1,6 +1,6 @@
 {
 	"name": "kener",
-	"version": "0.0.15",
+	"version": "0.0.16",
 	"private": false,
 	"license": "MIT",
 	"description": "Kener: An open-source Node.js status page application for real-time service monitoring, incident management, and customizable reporting. Simplify service outage tracking, enhance incident communication, and ensure a seamless user experience.",
@@ -58,7 +58,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@types/prismjs": "^1.26.5",
+		"analytics": "^0.8.14",
 		"axios": "^1.6.2",
 		"badge-maker": "^3.3.1",
 		"bits-ui": "^0.9.9",
@@ -79,12 +79,8 @@
 		"prismjs": "^1.29.0",
 		"queue": "^7.0.0",
 		"randomstring": "^1.3.0",
-		"remark": "^15.0.1",
-		"remark-html": "^16.0.1",
-		"remark-parse": "^11.0.0",
-		"remark-prism": "^1.3.6",
+		"svelte-legos": "^0.2.5",
 		"tailwind-merge": "^2.0.0",
-		"tailwind-variants": "^0.1.18",
-		"vite-node": "^2.1.4"
+		"tailwind-variants": "^0.1.18"
 	}
 }

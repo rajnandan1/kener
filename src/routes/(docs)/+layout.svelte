@@ -68,9 +68,20 @@
 <svelte:window on:pagechange={pageChange} on:rightbar={updateTableOfContents} />
 <svelte:head>
 	<link rel="icon" id="kener-app-favicon" href="{base}/logo96.png" />
+	<!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q3MLRXCBFT"></script>
+	<script>
+		window.dataLayer = window.dataLayer || [];
+		function gtag() {
+			dataLayer.push(arguments);
+		}
+		gtag("js", new Date());
+
+		gtag("config", "G-Q3MLRXCBFT");
+	</script>
 </svelte:head>
-<div class="squares-pattern"></div>
-<nav class="fixed left-0 right-0 top-0 z-30 h-16 border-b bg-background">
+<div class="squares-pattern z-0"></div>
+<nav class="z-2 fixed left-0 right-0 top-0 z-30 h-16 bg-background shadow-sm">
 	<div class="mx-auto h-full px-4 sm:px-6 lg:px-8">
 		<div class="flex h-full items-center justify-between">
 			<!-- Logo/Brand -->
@@ -78,7 +89,7 @@
 				<a href="/" class="flex items-center space-x-3">
 					<!-- Document Icon - Replace with your own logo -->
 					<img src="https://kener.ing/logo.png" class="h-8 w-8" alt="" />
-					<span class="text-xl font-semibold">Kener Documentation</span>
+					<span class="text-xl font-medium">Kener Documentation</span>
 					<span
 						class="me-2 rounded bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300"
 					>
@@ -96,8 +107,14 @@
 							src="https://img.shields.io/github/stars/rajnandan1/kener?label=Star%20Repo&style=social"
 						/>
 					</a>
+					<a
+						href="https://github.com/rajnandan1/kener/issues"
+						class="text-sm font-medium"
+					>
+						Report Issue
+					</a>
 					<a href="https://github.com/sponsors/rajnandan1" class="text-sm font-medium">
-						Support
+						Sponsor
 					</a>
 				</div>
 			</div>
@@ -120,8 +137,8 @@
 </nav>
 
 <!-- Sidebar -->
-<aside class="fixed bottom-0 left-0 top-16 w-72 overflow-y-auto">
-	<nav class="p-6">
+<aside class="z-2 fixed bottom-0 left-0 top-16 w-72 overflow-y-auto">
+	<nav class="bg-background p-6">
 		<!-- Getting Started Section -->
 		{#each sidebar as item}
 			<div class="mb-4">
@@ -134,8 +151,8 @@
 					{#each item.children as child}
 						<a
 							href={child.link.startsWith("/") ? base + child.link : child.link}
-							class="group flex items-center rounded-md px-3 py-2 text-sm font-medium hover:underline {!!child.active
-								? 'bg-muted'
+							class="sidebar-item group flex items-center rounded-md px-3 py-2 text-sm font-medium {!!child.active
+								? 'active'
 								: ''}"
 						>
 							{child.title}
@@ -148,18 +165,20 @@
 </aside>
 
 <!-- Main Content -->
-<main class="z-1 ml-72 min-h-screen pt-16">
+<main class="z-2 relative ml-72 min-h-screen pt-16">
 	<div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8 lg:pr-64">
 		<!-- Content Header -->
 		<div
-			class="prose prose-stone max-w-none dark:prose-invert prose-code:rounded prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:font-normal dark:prose-pre:bg-neutral-900"
+			class="prose prose-stone max-w-none dark:prose-invert prose-code:rounded prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:font-normal prose-pre:bg-opacity-0 dark:prose-pre:bg-neutral-900"
 		>
 			<slot />
 		</div>
 	</div>
 </main>
 {#if tableOfContents.length > 0}
-	<div class="fixed bottom-0 right-0 top-16 hidden w-64 overflow-y-auto px-6 py-10 lg:block">
+	<div
+		class="blurry-bg fixed bottom-0 right-0 top-16 hidden w-64 overflow-y-auto px-6 py-10 lg:block"
+	>
 		<h4 class="mb-3 text-sm font-semibold uppercase tracking-wider">On this page</h4>
 		<nav class="space-y-2">
 			{#each tableOfContents as item}
@@ -176,7 +195,7 @@
 		</nav>
 	</div>
 {/if}
-<div class="fixed bottom-4 right-4">
+<div class=" fixed bottom-4 right-4">
 	<Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
 		<Sun
 			class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"

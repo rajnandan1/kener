@@ -22,6 +22,8 @@
 	import { Label } from "$lib/components/ui/label";
 	import axios from "axios";
 	import { l, summaryTime, n, ampm } from "$lib/i18n/client";
+	import { analyticsEvent } from "$lib/analytics";
+	import { hoverAction } from "svelte-legos";
 	const dispatch = createEventDispatcher();
 
 	/**
@@ -54,6 +56,9 @@
 
 	let pathMonitorLink;
 	function copyLinkToClipboard() {
+		analyticsEvent("monitor_link_copied", {
+			tag: monitor.tag
+		});
 		navigator.clipboard.writeText(pathMonitorLink);
 		copiedLink = true;
 		setTimeout(function () {
@@ -63,6 +68,9 @@
 
 	let pathMonitorBadgeUptime;
 	function copyUptimeBadge() {
+		analyticsEvent("monitor_uptime_badge_copied", {
+			tag: monitor.tag
+		});
 		navigator.clipboard.writeText(pathMonitorBadgeUptime);
 		copiedBadgeUptime = true;
 		setTimeout(function () {
@@ -72,6 +80,9 @@
 
 	let pathMonitorBadgeStatus;
 	function copyStatusBadge() {
+		analyticsEvent("monitor_status_badge_copied", {
+			tag: monitor.tag
+		});
 		navigator.clipboard.writeText(pathMonitorBadgeStatus);
 		copiedBadgeStatus = true;
 		setTimeout(function () {
@@ -81,6 +92,10 @@
 
 	let pathMonitorBadgeDot;
 	function copyDotStandard() {
+		analyticsEvent("monitor_svg_standard_copied", {
+			tag: monitor.tag
+		});
+
 		navigator.clipboard.writeText(pathMonitorBadgeDot);
 		copiedBadgeDotStandard = true;
 		setTimeout(function () {
@@ -90,6 +105,9 @@
 
 	let pathMonitorBadgeDotPing;
 	function copyDotPing() {
+		analyticsEvent("monitor_svg_pinging_copied", {
+			tag: monitor.tag
+		});
 		navigator.clipboard.writeText(pathMonitorBadgeDotPing);
 		copiedBadgeDotPing = true;
 		setTimeout(function () {
@@ -99,6 +117,11 @@
 
 	function copyScriptTagToClipboard() {
 		//get domain with port number
+
+		analyticsEvent("monitor_embed_copied", {
+			tag: monitor.tag,
+			type: embedType
+		});
 
 		let path = `${base}/embed-${monitor.tag}`;
 		let scriptTag =
@@ -145,9 +168,15 @@
 	function switchView(s) {
 		view = s;
 		if (Object.keys(_0Day).length == 0) {
+			analyticsEvent("monitor_view_today", {
+				tag: monitor.tag
+			});
 			getToday();
 		}
 		if (view == "90day") {
+			analyticsEvent("monitor_view_90day", {
+				tag: monitor.tag
+			});
 			scrollToRight();
 		}
 	}
@@ -166,6 +195,13 @@
 	afterUpdate(() => {
 		dispatch("heightChange", {});
 	});
+	function show90Inline(e, bar) {
+		if (e.detail.hover) {
+			_90Day[bar.timestamp].showDetails = true;
+		} else {
+			_90Day[bar.timestamp].showDetails = false;
+		}
+	}
 </script>
 
 <div class="monitor relative grid w-full grid-cols-12 gap-2 pb-2 md:w-[655px]">
@@ -192,7 +228,15 @@
 
 				<Popover.Root>
 					<Popover.Trigger class="absolute right-14 top-5 h-5 w-5 p-0">
-						<Button class="h-5 p-0" variant="link">
+						<Button
+							class="h-5 p-0"
+							variant="link"
+							on:click={(e) => {
+								analyticsEvent("monitor_share_menu_open", {
+									tag: monitor.tag
+								});
+							}}
+						>
 							<Share2 class="h-4 w-4 text-muted-foreground" />
 						</Button>
 					</Popover.Trigger>
@@ -205,7 +249,7 @@
 								{l(lang, "monitor.share_desc")}
 							</p>
 							<Button
-								class="h-8 text-xs"
+								class="h-8 pr-4 text-xs"
 								variant="secondary"
 								on:click={copyLinkToClipboard}
 							>
@@ -273,7 +317,7 @@
 								</div>
 							</div>
 							<Button
-								class="h-8  px-2 text-xs"
+								class="h-8  px-2 pr-4 text-xs"
 								variant="secondary"
 								on:click={copyScriptTagToClipboard}
 							>
@@ -300,7 +344,7 @@
 								{l(lang, "monitor.badge_desc")}
 							</p>
 							<Button
-								class="h-8  px-2 text-xs"
+								class="h-8  px-2 pr-4 text-xs"
 								variant="secondary"
 								on:click={copyStatusBadge}
 							>
@@ -319,7 +363,7 @@
 								{/if}
 							</Button>
 							<Button
-								class="h-8  px-2 text-xs"
+								class="h-8  px-2 pr-4 text-xs"
 								variant="secondary"
 								on:click={copyUptimeBadge}
 							>
@@ -349,7 +393,7 @@
 								{l(lang, "monitor.status_svg_desc")}
 							</p>
 							<Button
-								class="h-8  px-2 text-xs"
+								class="h-8  px-2 pr-4 text-xs"
 								variant="secondary"
 								on:click={copyDotStandard}
 							>
@@ -370,7 +414,7 @@
 								{/if}
 							</Button>
 							<Button
-								class="h-8  px-2 text-xs"
+								class="h-8  px-2 pr-4 text-xs"
 								variant="secondary"
 								on:click={copyDotPing}
 							>
@@ -449,17 +493,28 @@
 				<div class="chart-status relative col-span-12 mt-1">
 					<div class="daygrid90 flex overflow-x-auto overflow-y-hidden py-1">
 						{#each Object.entries(_90Day) as [ts, bar]}
-							<div class="oneline h-[30px] w-[6px] rounded-sm">
+							<div
+								use:hoverAction
+								on:hover={(e) => {
+									show90Inline(e, bar);
+								}}
+								class="oneline h-[30px] w-[6px] rounded-sm"
+							>
 								<div
 									class="h-[30px] bg-{bar.cssClass} mr-[2px] w-[4px] rounded-sm"
 								></div>
 							</div>
-							<div class="show-hover absolute bg-background text-sm">
-								<div class="text-{bar.cssClass} pt-1 text-xs font-semibold">
-									● {n(lang, new Date(bar.timestamp * 1000).toLocaleDateString())}
-									{summaryTime(lang, bar.message)}
+							{#if bar.showDetails}
+								<div class="show-hover absolute bg-background text-sm">
+									<div class="text-{bar.cssClass} pt-1 text-xs font-semibold">
+										{n(
+											lang,
+											new Date(bar.timestamp * 1000).toLocaleDateString()
+										)}
+										{summaryTime(lang, bar.message)}
+									</div>
 								</div>
-							</div>
+							{/if}
 						{/each}
 					</div>
 				</div>
@@ -477,7 +532,7 @@
 							<div class="hiddenx relative">
 								<div
 									data-index={ts.index}
-									class="message rounded border bg-black p-2 text-sm font-semibold text-white"
+									class="message rounded border bg-black p-2 text-xs font-semibold text-white"
 								>
 									<p>
 										<span class="text-{bar.cssClass}"> ● </span>
@@ -490,11 +545,11 @@
 										)}
 									</p>
 									{#if bar.status != "NO_DATA"}
-										<p class="pl-4">
+										<p class="pl-2">
 											{l(lang, "statuses." + bar.status)}
 										</p>
 									{:else}
-										<p class="pl-4">-</p>
+										<p class="pl-2">-</p>
 									{/if}
 								</div>
 							</div>
@@ -530,12 +585,7 @@
 		transform: scaleY(1.2);
 	}
 
-	.oneline:hover + .show-hover {
-		display: block !important;
-	}
-
 	.show-hover {
-		display: none;
 		top: 40px;
 		padding: 0px;
 		text-align: left;

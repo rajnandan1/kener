@@ -1,0 +1,67 @@
+---
+title: Embed Monitor | Kener
+description: Embed your monitor in your website
+---
+
+# Embed Monitor
+
+There are two ways to embed your monitor in your website
+
+## Javascript
+
+You can embed your monitor in your website using javascript. We recommend using this method as it takes care of the height of the embedded monitor.
+
+```html
+<script
+	async
+	src="http://[hostname]/embed-[tag]/js?theme=light&monitor=http://[hostname]/embed-[tag]"
+></script>
+```
+
+Here is an example
+
+```html
+<script
+	async
+	src="https://kener.ing/embed-okbookmarks/js?theme=light&monitor=http://localhost:3000/embed-okbookmarks"
+></script>
+```
+
+Replace `[hostname]` with your kener hostname and `[tag]` with your monitor tag.
+
+## Iframe
+
+This is the simplest way to embed your monitor in your website. You can use the following code to embed your monitor in your website.
+
+```html
+<iframe
+	src="http://[hostname]/embed-[tag]?theme=light"
+	width="100%"
+	height="200"
+	allowfullscreen="allowfullscreen"
+	allowpaymentrequest
+	frameborder="0"
+></iframe>
+```
+
+Here is an example
+
+```html
+<iframe
+	src="http://localhost:3000/embed-okbookmarks?theme=light"
+	width="100%"
+	height="200"
+	allowfullscreen="allowfullscreen"
+	allowpaymentrequest
+	frameborder="0"
+></iframe>
+```
+
+Replace `[hostname]` with your kener hostname and `[tag]` with your monitor tag.
+
+## Parameters
+
+You can pass the following parameters to the embed code
+
+-   `theme`: You can pass `light` or `dark` theme
+-   `monitor`: The monitor url

@@ -1,3 +1,8 @@
+---
+title: Monitor Examples | Kener
+description: Here are some exhaustive examples for monitors
+---
+
 # Monitor Examples
 
 Here are some exhaustive examples for monitors

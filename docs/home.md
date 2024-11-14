@@ -1,3 +1,8 @@
+---
+title: Kener - A Sveltekit NodeJS Status Page System
+description: Kener is an open-source Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents.
+---
+
 # Kener - A Sveltekit NodeJS Status Page System
 
 <p align="center">
