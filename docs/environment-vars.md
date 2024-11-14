@@ -57,3 +57,16 @@ By default kener runs on `/` but you can change it to `/status` or any other pat
 ```shell
 export KENER_BASE_PATH=/status
 ```
+
+## Using .env
+
+You can also use a `.env` file to set these variables. Create a `.env` file in the root of the project and add the variables like below
+
+```shell
+PORT=4242
+GH_TOKEN=your-github-token
+API_TOKEN=sometoken
+API_IP=
+API_IP_REGEX=
+KENER_BASE_PATH=/status
+```

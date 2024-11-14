@@ -22,8 +22,8 @@ Kener has two parts.
 
 ## Site.yaml
 
-This is the configuration file for your site. This is where you define the name of your site, the look and feel of your site etc
+This is the configuration file for your site. This is where you define the name of your site, the look and feel of your site etc. Read more about it [here](/docs/customize-site)
 
 ## Monitors.yaml
 
-This is the configuration file for your monitors. This is where you define the monitors you want to show on your site.
+This is the configuration file for your monitors. This is where you define the monitors you want to show on your site. Read more about it [here](/docs/monitors)

@@ -1,4 +1,4 @@
-# Kener - Status Page System
+# Kener - A Sveltekit NodeJS Status Page System
 
 <p align="center">
 	<img src="/newbg.png" width="100%" height="auto" class="rounded-lg shadow-lg" alt="kener example illustration">
@@ -19,7 +19,7 @@
 
 #### 👉 Visit a live server [here](https://kener.ing)
 
-#### 👉 Quick Start [here](https://rajnandan1.github.io/kener-docs/docs/quick-start)
+#### 👉 Quick Start [here](/docs/quick-start)
 
 Kener: Open-source Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. And the best part? Kener integrates seamlessly with GitHub, making incident management a team effort—making it easier for us to track and fix issues together in a collaborative and friendly environment.
 
@@ -36,7 +36,7 @@ It uses files to store the data. Other adapters are coming soon
 -   Cron-based scheduling for monitors. Minimum per minute
 -   Flexible monitor configuration using YAML. Define your own parsing for monitor being UP/DOWN/DEGRADED
 -   Construct complex API Polls - Chain, Secrets etc
--   Supports a Default Status for Monitors. Example defaultStatus=DOWN if you dont hit API per minute with Status UP
+-   Supports a Default Status for Monitors. Example defaultStatus=DOWN if you don't hit API per minute with Status UP
 -   Supports base path for hosting in k8s
 -   Pre-built docker image for easy deployment
 
@@ -70,13 +70,6 @@ It uses files to store the data. Other adapters are coming soon
 ## Inspired from
 
 -   [Upptime](https://upptime.js.org/)
-
-## Roadmap
-
--   [x] Add api to create incident
--   [x] Add docker file
--   [ ] Add notification
--   [ ] Add Mysql adapter
 
 ## Support Me
 

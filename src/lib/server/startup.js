@@ -23,7 +23,6 @@ let monitors = [];
 let site = {};
 const envSecrets = [];
 const DATABASE_PATH = "./database";
-console.log(process.env);
 const Startup = async () => {
 	const FOLDER_MONITOR_JSON = DATABASE_PATH + "/monitors.json";
 	const monitors = fs.readJSONSync(FOLDER_MONITOR_JSON);

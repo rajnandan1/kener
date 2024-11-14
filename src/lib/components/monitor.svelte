@@ -354,7 +354,11 @@
 								on:click={copyDotStandard}
 							>
 								{#if !copiedBadgeDotStandard}
-									<img src={pathMonitorBadgeDot} class="mr-1 inline h-5" />
+									<img
+										src={pathMonitorBadgeDot}
+										class="mr-1 inline h-5"
+										alt="status"
+									/>
 									<span class="font-medium">
 										{l(lang, "monitor.standard")}
 									</span>
@@ -371,7 +375,11 @@
 								on:click={copyDotPing}
 							>
 								{#if !copiedBadgeDotPing}
-									<img src={pathMonitorBadgeDotPing} class="mr-1 inline h-5" />
+									<img
+										src={pathMonitorBadgeDotPing}
+										class="mr-1 inline h-5"
+										alt="status"
+									/>
 									<span class="font-medium">
 										{l(lang, "monitor.pinging")}
 									</span>

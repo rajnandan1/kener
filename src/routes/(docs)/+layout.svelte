@@ -1,6 +1,7 @@
 <script>
 	import "../../app.postcss";
 	import "../../kener.css";
+	import "../../docs.css";
 	import { Button } from "$lib/components/ui/button";
 	import Sun from "lucide-svelte/icons/sun";
 	import Moon from "lucide-svelte/icons/moon";
@@ -68,6 +69,7 @@
 <svelte:head>
 	<link rel="icon" id="kener-app-favicon" href="{base}/logo96.png" />
 </svelte:head>
+<div class="squares-pattern"></div>
 <nav class="fixed left-0 right-0 top-0 z-30 h-16 border-b bg-background">
 	<div class="mx-auto h-full px-4 sm:px-6 lg:px-8">
 		<div class="flex h-full items-center justify-between">
@@ -76,17 +78,27 @@
 				<a href="/" class="flex items-center space-x-3">
 					<!-- Document Icon - Replace with your own logo -->
 					<img src="https://kener.ing/logo.png" class="h-8 w-8" alt="" />
-					<span class="text-xl font-semibold">Docs</span>
+					<span class="text-xl font-semibold">Kener Documentation</span>
+					<span
+						class="me-2 rounded bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+					>
+						v0.0.16
+					</span>
 				</a>
 			</div>
 
 			<!-- Navigation Links -->
 			<div class="hidden md:block">
 				<div class="flex items-center space-x-8">
-					<a href="/docs" class="text-sm font-medium">Documentation</a>
-					<a href="/api" class="text-sm font-medium">API</a>
-					<a href="/examples" class="text-sm font-medium">Examples</a>
-					<a href="/support" class="text-sm font-medium">Support</a>
+					<a href="https://github.com/rajnandan1/kener" class="text-sm font-medium">
+						<img
+							alt="GitHub Repo stars"
+							src="https://img.shields.io/github/stars/rajnandan1/kener?label=Star%20Repo&style=social"
+						/>
+					</a>
+					<a href="https://github.com/sponsors/rajnandan1" class="text-sm font-medium">
+						Support
+					</a>
 				</div>
 			</div>
 
@@ -108,7 +120,7 @@
 </nav>
 
 <!-- Sidebar -->
-<aside class="fixed bottom-0 left-0 top-16 w-72 overflow-y-auto border-r">
+<aside class="fixed bottom-0 left-0 top-16 w-72 overflow-y-auto">
 	<nav class="p-6">
 		<!-- Getting Started Section -->
 		{#each sidebar as item}
@@ -136,7 +148,7 @@
 </aside>
 
 <!-- Main Content -->
-<main class="ml-72 min-h-screen pt-16">
+<main class="z-1 ml-72 min-h-screen pt-16">
 	<div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8 lg:pr-64">
 		<!-- Content Header -->
 		<div

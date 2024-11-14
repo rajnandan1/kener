@@ -1,33 +1,31 @@
+---
+title: Kener Deployment - From Source or Docker
+description: Kener can be deployed in multiple ways. You can use the pre-built docker image or build from source.
+---
+
 # Deployment
 
+Kener can be deployed in multiple ways. You can use the pre-built docker image or build from source.
+
+## Prerequisites
+
+Make sure you have the following installed:
+
+-   [Node.js](https://nodejs.org/en/download/)
+-   [npm](https://www.npmjs.com/get-npm)
+-   [config/site.yaml](/docs/customize-site) Contains information about the site
+-   [config/monitors.yaml](/docs/monitors) Contains your monitors and their related specifications
+-   [Set up Environment Variables](/docs/environment-vars)
+
+## Source
+
 ```shell
-export NODE_ENV=production
 npm i
 npm run build
-npm run serve
+npm run prod
 ```
 
-It also needs 2 yaml files to work
-
--   site.yaml: Contains information about the site
--   monitors.yaml: Contains your monitors and their related specifications
-
-By default these are present in `config/`. However you can use different location either passing them as argument or having the path as enviorment variable
-
-## Add as Environment variables
-
-```shell
-export MONITOR_YAML_PATH=/your/path/monitors.yaml
-export SITE_YAML_PATH=/your/path/site.yaml
-```
-
-## Add as argument to prod.js
-
-```shell
-npm run serve -- --monitors /your/path/monitors.yaml --site /your/path/site.yaml
-```
-
-## Install using Docker
+## Docker
 
 [Dockerhub](https://hub.docker.com/r/rajnandan1/kener)
 
@@ -41,12 +39,26 @@ docker.io/rajnandan1/kener:latest
 ghcr.io/rajnandan1/kener:latest
 ```
 
-You should mount a host directory to persist your configuration and expose the web port. [Environmental variables](https://rajnandan1.github.io/kener-docs/docs/environment-vars) can be passed with `-e` An example `docker run` command:
-
-Make sure you have a `/static` folder inside your config folder
+You should mount two host directories to persist your configuration and database. [Environmental variables](https://rajnandan1.github.io/kener-docs/docs/environment-vars) can be passed with `-e` An example `docker run` command:
 
 ```shell
-docker run -d -v /path/on/host/config:/config -p 3000:3000 -e "GH_TOKEN=1234" rajnandan1/kener
+docker run \
+  -v $(pwd)/database:/app/database \
+  -v $(pwd)/config:/app/config \
+  -p 3000:3000 \
+  -e "GH_TOKEN=1234" \
+  rajnandan1/kener
+```
+
+You can also use a .env file
+
+```shell
+docker run \
+  -v $(pwd)/database:/app/database \
+  -v $(pwd)/config:/app/config \
+  --env-file .env \
+  -p 3000:3000 \
+  rajnandan1/kener
 ```
 
 Or use **Docker Compose** with the example [docker-compose.yaml](https://raw.githubusercontent.com/rajnandan1/kener/main/docker-compose.yml)
@@ -72,3 +84,7 @@ docker run -d ... -e "PUID=1000" -e "PGID=1000" ... rajnandan1/kener
 ```
 
 or substitute them in [docker-compose.yml](https://raw.githubusercontent.com/rajnandan1/kener/main/docker-compose.yml)
+
+## Base path
+
+By default kener runs on `/` but you can change it to `/status` or any other path. Read more about it [here](/docs/environment-vars/#kener-base-path)

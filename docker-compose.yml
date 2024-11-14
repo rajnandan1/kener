@@ -1,22 +1,27 @@
 version: '3.7'
 services:
   kener:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: kener
-    env_file: .env
+    image: rajnandan1/kener:release-candidate-0.0.16 # assuming this is final namespace/image
+    container_name: kener-rc
+    #env_file: .env #uncomment this, if you are using .env file
     environment:
       - TZ=Etc/GMT
-      - PUID=911
-      - PGID=911
+      #- GH_TOKEN=
+      #- API_TOKEN=
+      #- API_IP=
+      #- API_IP_REGEX=
+      #- KENER_BASE_PATH=
+
+      # If running on a LINUX HOST and not podman rootless these MUST BE SET
+      # run "id $user" from command line and replace numbers below with output from command
+      #- PUID=1000 # gid
+      #- PGID=1000 # uid
+
+      ### Most likely DO NOT need to change anything below this ###
+
+      #- PORT=3000 Port app listens on IN CONTAINER
     ports:
-      - "3001:3001"
+      - '3000:3000/tcp'
     volumes:
-      - ./database:/app/database:rw
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "http://localhost:3001"]
-      interval: 30s
-      timeout: 30s
-      retries: 3
+      - './database:/app/database:rw'
+      - './config:/app/config'
