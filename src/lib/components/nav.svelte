@@ -21,7 +21,7 @@
 				/>
 			{/if}
 			{#if data.site.siteName}
-				<span class="hidden text-[15px] font-bold md:inline-block lg:text-base">
+				<span class="  inline-block text-[15px] font-bold lg:text-base">
 					{data.site.siteName}
 				</span>
 			{/if}

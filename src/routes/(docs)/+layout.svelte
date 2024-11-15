@@ -125,7 +125,7 @@
 
 	<!-- Sidebar -->
 	<aside class="z-2 fixed bottom-0 left-0 top-16 w-72 overflow-y-auto">
-		<nav class="bg-background p-6">
+		<nav class="bg-background bg-opacity-20 p-6">
 			<!-- Getting Started Section -->
 			{#each sidebar as item}
 				<div class="mb-4">

@@ -69,12 +69,12 @@
 	>
 		<div class="grid w-full grid-cols-2 gap-4">
 			<div class="col-span-2 text-center md:col-span-1 md:text-left">
-				<Badge class="border-0 pl-0" variant="outline">
+				<Badge class="border-0 md:pl-0" variant="outline">
 					{l(data.lang, "root.availability_per_component")}
 				</Badge>
 			</div>
 			<div class="col-span-2 text-center md:col-span-1 md:text-right">
-				<Badge variant="outline" class="border-0 pr-0">
+				<Badge variant="outline" class="border-0 md:pr-0">
 					<span class="bg-api-up mr-1 inline-flex h-[8px] w-[8px] rounded-full opacity-75"
 					></span>
 					<span class="mr-3">
