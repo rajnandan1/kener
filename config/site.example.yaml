@@ -2,6 +2,7 @@ title: "Kener - Open-Source and Modern looking Node.js Status Page for Effortles
 siteName: "Kener.ing"
 home: "/"
 logo: "/logo.png"
+siteURL: "https://kener.ing"
 favicon: "/logo96.png"
 github:
     owner: "rajnandan1"

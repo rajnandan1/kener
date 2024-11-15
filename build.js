@@ -249,7 +249,7 @@ async function Build() {
 	}
 
 	if (site.github.incidentSince === undefined || site.github.incidentSince === null) {
-		site.github.incidentSince = 48;
+		site.github.incidentSince = 720;
 	}
 	if (!!site.analytics) {
 		const providers = {};

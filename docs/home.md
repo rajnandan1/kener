@@ -26,9 +26,13 @@ description: Kener is an open-source Node.js status page tool, designed to make 
 
 #### 👉 Quick Start [here](/docs/quick-start)
 
-Kener: Open-source Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. And the best part? Kener integrates seamlessly with GitHub, making incident management a team effort—making it easier for us to track and fix issues together in a collaborative and friendly environment.
+## What is Kener?
 
-It uses files to store the data. Other adapters are coming soon
+Kener: Open-source sveltekit status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. Kener integrates seamlessly with GitHub, making incident management a team effort—making.
+
+It uses files to store the data.
+
+Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing is added to make cooler.
 
 ## Features
 

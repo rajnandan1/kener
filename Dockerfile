@@ -44,6 +44,7 @@ COPY --from=base /usr/local/lib /usr/local/lib
 COPY --chown=abc:abc static /app/static
 COPY --chown=abc:abc database /app/database
 COPY --chown=abc:abc build.js /app/build.js
+COPY --chown=abc:abc sitemap.js /app/sitemap.js
 COPY --chown=abc:abc src/lib/server /app/src/lib/server
 COPY --chown=abc:abc src/lib/helpers.js /app/src/lib/helpers.js
 
