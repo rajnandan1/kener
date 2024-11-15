@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - release-candidate/0.0.*
     tags:
       - "*.*.*"
     paths-ignore:

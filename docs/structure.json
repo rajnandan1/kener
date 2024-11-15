@@ -22,6 +22,11 @@
 					"title": "Changelogs",
 					"link": "/docs/changelogs",
 					"file": "/changelogs.md"
+				},
+				{
+					"title": "Roadmap",
+					"link": "/docs/roadmap",
+					"file": "/roadmap.md"
 				}
 			]
 		},

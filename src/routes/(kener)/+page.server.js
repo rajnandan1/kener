@@ -25,6 +25,8 @@ export async function load({ parent }) {
 		delete monitors[i].defaultStatus;
 		let data = await FetchData(monitors[i], parentData.localTz);
 		monitors[i].pageData = data;
+		monitors[i].embed = false;
+
 		monitors[i].activeIncidents = [];
 		monitorsActive.push(monitors[i]);
 	}

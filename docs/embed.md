@@ -37,6 +37,12 @@ You can pass the following parameters to the embed code
 
 Replace `[hostname]` with your kener hostname and `[tag]` with your monitor tag.
 
+### Demo
+
+<div class="border mx-auto rounded-sm w-585px">
+	<script async src="/embed-okbookmarks/js?theme=dark&monitor=/embed-okbookmarks"></script>
+</div>
+
 ## Iframe
 
 This is the simplest way to embed your monitor in your website. You can use the following code to embed your monitor in your website.
@@ -67,9 +73,15 @@ Here is an example
 
 Replace `[hostname]` with your kener hostname and `[tag]` with your monitor tag.
 
-## Parameters
+### Parameters
 
 You can pass the following parameters to the embed code
 
 -   `theme`: You can pass `light` or `dark` theme
 -   `bgc`: Background color of the monitor. Only supports hex color codes. DO NOT include the `#` symbol
+
+### Demo
+
+<div class="border mx-auto rounded-sm w-585px">
+	<iframe src="/embed-okbookmarks?theme=dark" width="100%" height="200" allowfullscreen="allowfullscreen" allowpaymentrequest frameborder="0"></iframe>
+</div>

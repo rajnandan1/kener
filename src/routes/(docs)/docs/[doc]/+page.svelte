@@ -3,12 +3,17 @@
 	import { afterNavigate } from "$app/navigation";
 	export let data;
 	let subHeadings = [];
-
+	let previousH2 = null;
 	function fillSubHeadings() {
 		subHeadings = [];
 		const headings = document.querySelectorAll("#markdown h2, #markdown h3");
 		headings.forEach((heading) => {
-			const id = heading.textContent.replace(/[^a-z0-9]/gi, "-").toLowerCase();
+			let id = heading.textContent.replace(/[^a-z0-9]/gi, "-").toLowerCase();
+			if (heading.tagName === "H2") {
+				previousH2 = id;
+			} else {
+				id = `${previousH2}-${id}`;
+			}
 			heading.id = id;
 			subHeadings.push({
 				id,
