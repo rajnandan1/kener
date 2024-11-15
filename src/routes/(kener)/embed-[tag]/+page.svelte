@@ -28,18 +28,16 @@
 	onMount(() => {
 		if (data.theme === "dark") {
 			document.documentElement.classList.add("dark");
-			document.documentElement.classList.add("dark:bg-background");
 		} else {
 			document.documentElement.classList.remove("dark");
-			document.documentElement.classList.remove("dark:bg-background");
 		}
 	});
 </script>
 
 {#if data.monitors.length > 0}
 	<section class="w-fit p-0" bind:this={element}>
-		<Card.Root class="w-[580px] border-0 shadow-none">
-			<Card.Content class="monitors-card p-0 ">
+		<Card.Root class="w-[575px] rounded-none border-0 bg-transparent pt-0 shadow-none">
+			<Card.Content class="monitors-card embed p-0 pt-0">
 				{#each data.monitors as monitor}
 					<Monitor
 						{monitor}
@@ -53,11 +51,11 @@
 	</section>
 {:else}
 	<section
-		class="mx-auto mb-4 flex w-full max-w-[890px] flex-1 flex-col items-start justify-center bg-transparent"
+		class="mx-auto mb-4 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent"
 		id=""
 	>
-		<Card.Root class="mx-auto">
-			<Card.Content class="pt-4">
+		<Card.Root class="mx-auto bg-transparent">
+			<Card.Content class="bg-transparent pt-4">
 				<h1
 					class="scroll-m-20 text-center text-2xl font-extrabold tracking-tight lg:text-2xl"
 				>

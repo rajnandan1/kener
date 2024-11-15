@@ -5,7 +5,6 @@
 	import { onMount } from "svelte";
 	import { base } from "$app/paths";
 	import { Button } from "$lib/components/ui/button";
-	import { ModeWatcher } from "mode-watcher";
 	import Sun from "lucide-svelte/icons/sun";
 	import Moon from "lucide-svelte/icons/moon";
 	import { Languages } from "lucide-svelte";
@@ -15,18 +14,15 @@
 	export let data;
 
 	let defaultLocaleKey = data.selectedLang;
-	let defaultTheme = data.site?.theme || "light";
 
 	const allLocales = data.site.i18n?.locales;
 
-	function toggleMode(defaultTheme) {
+	function toggleMode() {
 		let classList = document.documentElement.classList;
 		if (classList.contains("dark")) {
 			classList.remove("dark");
-			localStorage.setItem("theme", "light");
 		} else {
 			classList.add("dark");
-			localStorage.setItem("theme", "dark");
 		}
 
 		analyticsEvent("theme_change", {
@@ -52,14 +48,6 @@
 		location.reload();
 	}
 
-	function setTheme() {
-		let theme = localStorage.getItem("theme") || defaultTheme;
-		if (theme === "dark") {
-			document.documentElement.classList.add("dark");
-		} else {
-			document.documentElement.classList.remove("dark");
-		}
-	}
 	let Analytics;
 	onMount(async () => {
 		let localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -69,7 +57,6 @@
 				location.reload();
 			}
 		}
-		setTheme();
 
 		const providers = data.site.analytics;
 		const analyticsPlugins = [];
@@ -110,7 +97,9 @@
 			plugins: analyticsPlugins
 		});
 		Analytics.page();
-		//import googleAnalyticsV3 from '@analytics/google-analytics-v3'
+		if (!!data.bgc && data.bgc[0] == "#") {
+			document.body.style.backgroundColor = data.bgc;
+		}
 	});
 	function captureAnalytics(e) {
 		const { event, data } = e.detail;
@@ -138,7 +127,7 @@
 		{/each}
 	{/if}
 </svelte:head>
-<main style="--font-family: {data.site.font.family}">
+<main style="--font-family: {data.site.font.family};--bg-custom: {data.bgc};">
 	{#if data.showNav}
 		<Nav {data} />
 	{/if}
@@ -159,43 +148,48 @@
 			</div>
 		</footer>
 	{/if}
-	<div class="fixed bottom-4 right-4">
-		{#if data.site.i18n && data.site.i18n.locales && Object.keys(data.site.i18n.locales).length > 1}
-			<DropdownMenu.Root>
-				<DropdownMenu.Trigger>
-					<Button variant="ghost" size="icon" class="flex">
-						<Languages class="h-[1.2rem] w-[1.2rem]" />
-					</Button>
-				</DropdownMenu.Trigger>
-				<DropdownMenu.Content>
-					<DropdownMenu.Group>
-						{#each Object.entries(allLocales) as [key, value]}
-							<DropdownMenu.Item
-								on:click={(e) => {
-									setLanguage(key);
-								}}>{value}</DropdownMenu.Item
-							>
-						{/each}
-					</DropdownMenu.Group>
-				</DropdownMenu.Content>
-			</DropdownMenu.Root>
-		{/if}
+	{#if !!!data.embed}
+		<div class="fixed bottom-4 right-4">
+			{#if data.site.i18n && data.site.i18n.locales && Object.keys(data.site.i18n.locales).length > 1}
+				<DropdownMenu.Root>
+					<DropdownMenu.Trigger>
+						<Button variant="ghost" size="icon" class="flex">
+							<Languages class="h-[1.2rem] w-[1.2rem]" />
+						</Button>
+					</DropdownMenu.Trigger>
+					<DropdownMenu.Content>
+						<DropdownMenu.Group>
+							{#each Object.entries(allLocales) as [key, value]}
+								<DropdownMenu.Item
+									on:click={(e) => {
+										setLanguage(key);
+									}}>{value}</DropdownMenu.Item
+								>
+							{/each}
+						</DropdownMenu.Group>
+					</DropdownMenu.Content>
+				</DropdownMenu.Root>
+			{/if}
 
-		<Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
-			<Sun
-				class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
-			/>
-			<Moon
-				class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
-			/>
-			<span class="sr-only">Toggle theme</span>
-		</Button>
-	</div>
+			<Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
+				<Sun
+					class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
+				/>
+				<Moon
+					class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
+				/>
+				<span class="sr-only">Toggle theme</span>
+			</Button>
+		</div>
+	{/if}
 </main>
 
 <style>
 	/* Apply the global font family using the CSS variable */
 	* {
 		font-family: var(--font-family);
+	}
+	main {
+		background-color: var(--bg-custom);
 	}
 </style>

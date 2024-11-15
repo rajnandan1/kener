@@ -15,7 +15,7 @@
 			{#if data.site.logo}
 				<img
 					src={data.site.logo.startsWith("/") ? base + data.site.logo : data.site.logo}
-					class="h-8"
+					class="w-8"
 					alt={data.site.title}
 					srcset=""
 				/>

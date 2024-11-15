@@ -135,6 +135,10 @@ section {
 .monitors-card .monitor:last-child {
 	border-bottom: none;
 }
+.monitors-card.embed .monitor {
+	padding: 0em 0.87em 0.875em 0.87em;
+	border-bottom: none;
+}
 
 /*Tag Color*/
 .tag-maintenance {

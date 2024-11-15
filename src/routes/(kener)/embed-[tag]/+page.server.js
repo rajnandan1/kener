@@ -24,7 +24,6 @@ export async function load({ params, route, url, parent }) {
 		monitors[i].pageData = data;
 		monitorsActive.push(monitors[i]);
 	}
-
 	return {
 		monitors: monitorsActive,
 		theme,

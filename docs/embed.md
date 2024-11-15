@@ -23,9 +23,17 @@ Here is an example
 ```html
 <script
 	async
-	src="https://kener.ing/embed-okbookmarks/js?theme=light&monitor=http://localhost:3000/embed-okbookmarks"
+	src="https://kener.ing/embed-okbookmarks/js?theme=light&monitor=https://kener.ing/embed-okbookmarks"
 ></script>
 ```
+
+### Parameters
+
+You can pass the following parameters to the embed code
+
+-   `theme`: You can pass `light` or `dark` theme
+-   `monitor`: The monitor url
+-   `bgc`: Background color of the monitor. Only supports hex color codes. DO NOT include the `#` symbol
 
 Replace `[hostname]` with your kener hostname and `[tag]` with your monitor tag.
 
@@ -48,7 +56,7 @@ Here is an example
 
 ```html
 <iframe
-	src="http://localhost:3000/embed-okbookmarks?theme=light"
+	src="https://kener.ing/embed-okbookmarks?theme=light"
 	width="100%"
 	height="200"
 	allowfullscreen="allowfullscreen"
@@ -64,4 +72,4 @@ Replace `[hostname]` with your kener hostname and `[tag]` with your monitor tag.
 You can pass the following parameters to the embed code
 
 -   `theme`: You can pass `light` or `dark` theme
--   `monitor`: The monitor url
+-   `bgc`: Background color of the monitor. Only supports hex color codes. DO NOT include the `#` symbol

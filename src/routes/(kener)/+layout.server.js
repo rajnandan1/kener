@@ -31,12 +31,20 @@ export async function load({ params, route, url, cookies, request }) {
 	} else if (site.i18n?.defaultLocale && site.i18n?.locales[site.i18n.defaultLocale]) {
 		selectedLang = site.i18n.defaultLocale;
 	}
+	let embed = false;
+	if (route.id.endsWith("embed-[tag]")) {
+		embed = true;
+	}
+	const query = url.searchParams;
+	const bgc = query.get("bgc") ? "#" + query.get("bgc") : "";
 	return {
 		site: site,
 		localTz: localTz,
 		showNav,
 		isBot,
 		lang: i18n(String(selectedLang)),
-		selectedLang: selectedLang
+		selectedLang: selectedLang,
+		embed,
+		bgc
 	};
 }
