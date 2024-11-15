@@ -10,6 +10,7 @@ app.use((req, res, next) => {
 	if (req.path.startsWith("/embed")) {
 		res.setHeader("Content-Security-Policy", "frame-ancestors *");
 	}
+	res.setHeader("X-Powered-By", "Kener");
 	next();
 });
 app.get("/healthcheck", (req, res) => {
