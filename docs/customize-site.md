@@ -128,7 +128,7 @@ Repository name of the github repository. If the repository is `https://github.c
 
 ### incidentSince
 
-`incidentSince` is in hours. It means if an issue is created before X hours then kener would not honor it. What it means is that kener would not show it active incident pages nor it will update the uptime. Default is 48 hours.
+`incidentSince` is in hours. It means if an issue is created before X hours then kener would not honor it. What it means is that kener would not show it active incident pages nor it will update the uptime. Default is 30\*24 hours.
 
 ---
 

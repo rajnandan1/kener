@@ -8,7 +8,7 @@ import dotenv from "dotenv";
 dotenv.config();
 const GH_TOKEN = process.env.GH_TOKEN;
 const GhnotconfireguredMsg =
-	"owner or repo or GH_TOKEN is undefined. Read the docs to configure github: https://kener.ing/docs#h2github-setup";
+	"owner or repo or GH_TOKEN is undefined. Read the docs to configure github: https://kener.ing/docs/gh-setup";
 /**
  * @param {any} url
  */

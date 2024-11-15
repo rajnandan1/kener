@@ -9,8 +9,8 @@
 
 <div class="{defaultPattern}-pattern"></div>
 
-<header class="blurry-bg relative z-50 mx-auto mt-4 max-w-[840px]">
-	<div class="container flex h-14 items-center">
+<header class="blurry-bg relative z-50 mx-auto mt-2">
+	<div class="container flex h-14 max-w-[840px] items-center">
 		<a href={data.site.home ? data.site.home : base} class="mr-6 flex items-center space-x-2">
 			{#if data.site.logo}
 				<img
