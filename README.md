@@ -77,6 +77,18 @@ Kener name is derived from the word "Kene" which means "how is it going" in Assa
 
 -   [Upptime](https://upptime.js.org/)
 
+## Screenshots
+
+![image](static/marken_90.png)
+![image](static/marken_api.png)
+![image](static/marken_badge.png)
+![image](static/marken_embed.png)
+![image](static/marken_inci.png)
+![image](static/marken_share.png)
+![image](static/marken_td.png)
+![image](static/marken_tl.png)
+![image](static/marken_theme.png)
+
 ## Support Me
 
 If you are using Kener and want to support me, you can do so by sponsoring me on GitHub or buying me a coffee.
