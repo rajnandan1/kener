@@ -3,6 +3,7 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import { Languages, Menu } from "lucide-svelte";
 	import { base } from "$app/paths";
+	import { analyticsEvent } from "$lib/analytics";
 	export let data;
 	let defaultPattern = data.site?.pattern || "squares";
 </script>
@@ -35,6 +36,7 @@
 						<a
 							href={navItem.url.startsWith("/") ? base + navItem.url : navItem.url}
 							class="flex"
+							on:click={() => analyticsEvent("nav", navItem.name)}
 						>
 							{#if navItem.iconURL}
 								<img

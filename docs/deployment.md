@@ -51,7 +51,13 @@ ghcr.io/rajnandan1/kener:latest
 
 You should mount two host directories to persist your configuration and database. [Environmental variables](https://rajnandan1.github.io/kener-docs/docs/environment-vars) can be passed with `-e` An example `docker run` command:
 
+Make sure `./database` and `./config` directories are present in the root directory
+
 ```shell
+mkdir database
+mkdir config
+curl -o config/site.yaml https://raw.githubusercontent.com/rajnandan1/kener/refs/heads/main/config/site.example.yaml
+curl -o config/monitors.yaml https://raw.githubusercontent.com/rajnandan1/kener/refs/heads/main/config/monitors.example.yaml
 docker run \
   -v $(pwd)/database:/app/database \
   -v $(pwd)/config:/app/config \

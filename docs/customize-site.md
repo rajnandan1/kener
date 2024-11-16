@@ -327,11 +327,3 @@ analytics:
 	- id: "FKOdsKener"
 	  type: "MIXPANEL"
 ```
-
-## siteURL
-
-This is required for sitemap generation
-
-```yaml
-siteURL: https://kener.ing
-```

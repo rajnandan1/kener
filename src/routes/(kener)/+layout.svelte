@@ -149,7 +149,7 @@
 		</footer>
 	{/if}
 	{#if !!!data.embed}
-		<div class="fixed bottom-4 right-4">
+		<div class="blurry-bg fixed bottom-4 right-4 z-20">
 			{#if data.site.i18n && data.site.i18n.locales && Object.keys(data.site.i18n.locales).length > 1}
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger>
