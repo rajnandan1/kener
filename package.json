@@ -1,6 +1,6 @@
 {
 	"name": "kener",
-	"version": "0.0.15",
+	"version": "0.0.16",
 	"private": false,
 	"license": "MIT",
 	"description": "Kener: An open-source Node.js status page application for real-time service monitoring, incident management, and customizable reporting. Simplify service outage tracking, enhance incident communication, and ensure a seamless user experience.",
@@ -27,13 +27,15 @@
 		"url": "https://github.com/rajnandan1/kener.git"
 	},
 	"scripts": {
-		"build": "node scripts/check.js && vite build",
-		"serve": "node prod.js",
-		"kener:dev": "cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener node scripts/check.js && concurrently \"cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener node dev.js\" \"cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener vite dev\"",
-		"kener:dev-monitor": "cross-env NODE_ENV=development PUBLIC_KENER_FOLDER=./static/kener  node dev.js",
-		"kener:build": "cross-env NODE_ENV=production node scripts/check.js && cross-env NODE_ENV=production vite build",
-		"kener": "cross-env NODE_ENV=production node prod.js",
-		"prettify": "prettier --write ."
+		"build": "vite build",
+		"preview": "vite preview",
+		"preschedule": "node build.js",
+		"schedule": "node src/lib/server/startup.js",
+		"development": "vite dev",
+		"dev": "npm-run-all --parallel schedule development",
+		"prettify": "prettier --write .",
+		"start": "node main.js",
+		"prod": "npm-run-all --parallel schedule start"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^2.0.0",
@@ -56,6 +58,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"analytics": "^0.8.14",
 		"axios": "^1.6.2",
 		"badge-maker": "^3.3.1",
 		"bits-ui": "^0.9.9",
@@ -67,12 +70,16 @@
 		"js-yaml": "^4.1.0",
 		"lucide-svelte": "^0.292.0",
 		"marked": "^11.1.1",
+		"mode-watcher": "^0.4.1",
 		"moment": "^2.29.4",
 		"moment-timezone": "^0.5.43",
 		"node-cache": "^5.1.2",
+		"npm-run-all": "^4.1.5",
 		"ping": "^0.4.4",
+		"prismjs": "^1.29.0",
 		"queue": "^7.0.0",
 		"randomstring": "^1.3.0",
+		"svelte-legos": "^0.2.5",
 		"tailwind-merge": "^2.0.0",
 		"tailwind-variants": "^0.1.18"
 	}

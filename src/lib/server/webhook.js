@@ -1,23 +1,25 @@
 // @ts-nocheck
 import fs from "fs-extra";
-import { PUBLIC_KENER_FOLDER } from "$env/static/public";
+import { monitorsStore } from "./stores/monitors";
+import { get } from "svelte/store";
 import { ParseUptime } from "$lib/helpers.js";
 import {
 	GetMinuteStartNowTimestampUTC,
 	GetNowTimestampUTC,
 	GetMinuteStartTimestampUTC
-} from "../../../scripts/tool.js";
-import { GetStartTimeFromBody, GetEndTimeFromBody } from "../../../scripts/github.js";
+} from "./tool.js";
+import { GetStartTimeFromBody, GetEndTimeFromBody } from "./github.js";
 import Randomstring from "randomstring";
 const API_TOKEN = process.env.API_TOKEN;
 const API_IP = process.env.API_IP;
 const API_IP_REGEX = process.env.API_IP_REGEX;
+import path from "path";
 
 const GetAllTags = function () {
 	let tags = [];
 	let monitors = [];
 	try {
-		monitors = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+		monitors = get(monitorsStore);
 		tags = monitors.map((monitor) => monitor.tag);
 	} catch (err) {
 		return [];
@@ -28,7 +30,7 @@ const CheckIfValidTag = function (tag) {
 	let tags = [];
 	let monitors = [];
 	try {
-		monitors = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+		monitors = get(monitorsStore);
 		tags = monitors.map((monitor) => monitor.tag);
 		if (tags.indexOf(tag) == -1) {
 			throw new Error("not a valid tag");
@@ -112,7 +114,7 @@ const store = function (data) {
 	}
 
 	//get the monitor object matching the tag
-	let monitors = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+	let monitors = get(monitorsStore);
 	const monitor = monitors.find((monitor) => monitor.tag === tag);
 
 	//read the monitor.path0Day file
@@ -123,10 +125,10 @@ const store = function (data) {
 
 	//create a random string with high cardinlity
 	//to avoid cache
-
+	const Kener_folder = "./database";
 	//write the monitor.path0Day file
 	fs.writeFileSync(
-		PUBLIC_KENER_FOLDER + `/${monitor.folderName}.webhook.${Randomstring.generate()}.json`,
+		Kener_folder + `/${monitor.folderName}.webhook.${Randomstring.generate()}.json`,
 		JSON.stringify(day0, null, 2)
 	);
 
@@ -259,7 +261,7 @@ const GetMonitorStatusByTag = function (tag) {
 		uptime: null,
 		lastUpdatedAt: null
 	};
-	let monitors = JSON.parse(fs.readFileSync(PUBLIC_KENER_FOLDER + "/monitors.json", "utf8"));
+	let monitors = get(monitorsStore);
 	const { path0Day } = monitors.find((monitor) => monitor.tag === tag);
 	const dayData = JSON.parse(fs.readFileSync(path0Day, "utf8"));
 	const lastUpdatedAt = Object.keys(dayData)[Object.keys(dayData).length - 1];

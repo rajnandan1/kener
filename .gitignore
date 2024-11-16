@@ -16,3 +16,9 @@ nodemon.json
 .okgit/
 config/static/*
 !config/static/.kener
+db/*
+!db/.kener
+database/*
+!database/.kener
+src/lib/server/config/monitors.yaml
+src/lib/server/config/site.yaml

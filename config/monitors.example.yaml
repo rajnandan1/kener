@@ -1,17 +1,10 @@
-- name: Google Search
-  description: Search the world's information, including webpages, images, videos and more.
-  tag: "google-search"
-  image: "/google.png"
+- name: OkBookmarks
+  description: A free bookmark manager that lets you save and search your bookmarks in the cloud.
+  tag: "okbookmarks"
+  image: "https://okbookmarks.com/assets/img/extension_icon128.png"
   api:
       method: GET
-      url: https://www.google.com/webhp
-- name: Svelte Website
-  description: Cybernetically enhanced web apps
-  tag: "svelte-website"
-  api:
-      method: GET
-      url: https://svelte.dev/
-  image: "/svelte.svg"
+      url: https://okbookmarks.com
 - name: Earth
   description: Our blue planet
   tag: "earth"
