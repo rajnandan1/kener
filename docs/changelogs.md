@@ -7,6 +7,11 @@ description: Changelogs for Kener
 
 ## v0.0.16
 
+<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.webp" type="image/webp">
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.gif" alt="🚀" width="32" height="32">
+</picture>
+
 Here are the changes in this release
 
 ### Features
@@ -19,8 +24,10 @@ Here are the changes in this release
 -   Added support for home page pattern. Read more [here](/docs/customize-site#pattern)
 -   Added support for adding your analytics provider. Read more [here](/docs/site-analytics)
 -   New Documentation Site
+-   Addes support for `sqaures` pattern in home page. Read more [here](/docs/customize-site#pattern)
 -   Redesigned the UI for better consistency
 -   Embed now supports background color using a parameter `bgc`. Read more [here](/docs/embed#javascript-parameters)
+-   Now title in `site.yaml` is `<title>` and `siteName` is actually the name of the site. Read more [here](/docs/customize-site#siteName)
 
 ### Migration
 

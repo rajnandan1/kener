@@ -251,6 +251,9 @@ async function Build() {
 	if (site.github.incidentSince === undefined || site.github.incidentSince === null) {
 		site.github.incidentSince = 720;
 	}
+	if (site.siteName === undefined) {
+		site.siteName = site.title;
+	}
 	if (!!site.analytics) {
 		const providers = {};
 

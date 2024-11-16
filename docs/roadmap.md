@@ -5,6 +5,11 @@ description: Roadmap for Kener
 
 # Roadmap
 
+<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f331/512.webp" type="image/webp">
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f331/512.gif" alt="🌱" width="32" height="32">
+</picture>
+
 -   Move from file system to sqlite3
 -   Add support for webhooks
 -   Support DNS probe

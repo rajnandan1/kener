@@ -119,9 +119,9 @@
 	{#each Object.entries(data.site.metaTags) as [key, value]}
 		<meta name={key} content={value} />
 	{/each}
-	<script src="https://unpkg.com/analytics/dist/analytics.min.js"></script>
 
 	{#if data.site.analytics}
+		<script src="https://unpkg.com/analytics/dist/analytics.min.js"></script>
 		{#each Object.entries(data.site.analytics) as [key, value]}
 			<script data-type={key} src={value.script}></script>
 		{/each}

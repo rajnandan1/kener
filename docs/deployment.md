@@ -13,16 +13,26 @@ Make sure you have the following installed:
 
 -   [Node.js](https://nodejs.org/en/download/)
 -   [npm](https://www.npmjs.com/get-npm)
+-   Make sure `./database` and `./config` directories are present in the root directory
 -   [config/site.yaml](/docs/customize-site) Contains information about the site
 -   [config/monitors.yaml](/docs/monitors) Contains your monitors and their related specifications
--   [Set up Environment Variables](/docs/environment-vars)
+-   [Set up Environment Variables](/docs/environment-vars). You can use a `.env` file or pass them as arguments. Be sure to add `NODE_ENV=production` for production deployment
 
-## Source
+## NPM
 
 ```shell
 npm i
 npm run build
 npm run prod
+```
+
+## PM2
+
+```shell
+npm i
+node build.js
+pm2 start src/lib/server/startup.js
+pm2 start main.js
 ```
 
 ## Docker

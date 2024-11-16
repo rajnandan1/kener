@@ -21,10 +21,37 @@ description: Kener is an open-source Node.js status page tool, designed to make 
 		<img src="https://img.shields.io/docker/pulls/rajnandan1/kener" alt="Docker Kener" />
 	</a>
 </p>
-
-#### 👉 Visit a live server [here](https://kener.ing)
-
-#### 👉 Quick Start [here](/docs/quick-start)
+<div class="flex gap-4 justify-center">
+	<picture>
+		<source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f38a/512.webp" type="image/webp">
+		<img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f38a/512.gif" alt="🎊" width="32" height="32">
+	</picture>
+	<picture>
+		<source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f514/512.webp" type="image/webp">
+		<img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f514/512.gif" alt="🔔" width="32" height="32">
+	</picture>
+	<picture>
+  		<source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/2049_fe0f/512.webp" type="image/webp">
+  		<img src="https://fonts.gstatic.com/s/e/notoemoji/latest/2049_fe0f/512.gif" alt="⁉" width="32" height="32">
+	</picture>
+</div>
+<div class="flex gap-2">
+	<div class="flex-1 border rounded-md py-4 px-2 text-center">
+		<a href="https://kener.ing">Live Demo</a>
+	</div>
+	<div class="flex-1 border rounded-md  py-4 px-2 text-center">
+		<a href="https://kener.ing/docs/quick-start">Quick Start</a>
+	</div>
+	<div class="flex-1 border rounded-md  py-4 px-2 text-center">
+		<a href="https://kener.ing/docs/quick-start">Clone</a>
+	</div>
+	<div class="flex-1 border rounded-md  py-4 px-2 text-center">
+		<a href="https://kener.ing/docs/deployment">Deploy</a>
+	</div>
+	<div class="flex-1 border rounded-md  py-4 px-2 text-center">
+		<a href="https://kener.ing/docs/kener-apis">APIs</a>
+	</div>
+</div>
 
 ## What is Kener?
 
