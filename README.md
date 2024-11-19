@@ -30,7 +30,7 @@
 
 #### [👉 Quick Start](https://kener.ing/docs/quick-start)
 
-#### [👉 Documentation](https://kener.ing/docs)
+#### [👉 Documentation](https://kener.ing/docs/home)
 
 ## What is Kener?
 
