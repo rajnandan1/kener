@@ -91,6 +91,7 @@
 								src="https://img.shields.io/github/stars/rajnandan1/kener?label=Star%20Repo&style=social"
 							/>
 						</a>
+						<a href="/api-reference" class="text-sm font-medium"> API Reference </a>
 						<a
 							href="https://github.com/rajnandan1/kener/issues"
 							class="text-sm font-medium"

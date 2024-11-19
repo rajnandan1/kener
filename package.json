@@ -58,6 +58,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@scalar/express-api-reference": "^0.4.167",
 		"analytics": "^0.8.14",
 		"axios": "^1.6.2",
 		"badge-maker": "^3.3.1",

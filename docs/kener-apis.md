@@ -13,6 +13,24 @@ export API_TOKEN=some-token-set-by-you
 
 Additonally you can set IP whitelisting by setting another environment token called `API_IP` or `API_IP_REGEX`. If you set both `API_IP` and `API_IP_REGEX`, `API_IP` will be given preference. Read more [here](/docs/environment-vars#api_ip)
 
+## Interactive API Reference
+
+<p class="border p-4 rounded-md">
+	<picture class="inline">
+	<source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f916/512.webp" type="image/webp">
+	<img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f916/512.gif" alt="🤖" width="32" height="32">
+	</picture> 
+	<a href="/api-reference">
+		Click here to view the interactive API reference
+	</a>
+
+</p>
+
+You can download the openapi spec
+
+-   [JSON](https://raw.githubusercontent.com/rajnandan1/kener/main/openapi.json)
+-   [YAML](https://raw.githubusercontent.com/rajnandan1/kener/main/openapi.yaml)
+
 ---
 
 ## Update Status - API
