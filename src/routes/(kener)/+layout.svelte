@@ -10,23 +10,24 @@
 	import { Languages } from "lucide-svelte";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import { analyticsEvent } from "$lib/analytics";
+	import { setMode, mode, ModeWatcher } from "mode-watcher";
 
 	export let data;
 
 	let defaultLocaleKey = data.selectedLang;
+	let defaultTheme = data.site.theme;
 
 	const allLocales = data.site.i18n?.locales;
 
 	function toggleMode() {
-		let classList = document.documentElement.classList;
-		if (classList.contains("dark")) {
-			classList.remove("dark");
+		if ($mode === "light") {
+			setMode("dark");
 		} else {
-			classList.add("dark");
+			setMode("light");
 		}
 
 		analyticsEvent("theme_change", {
-			theme: classList.contains("dark") ? "light" : "dark"
+			theme: $mode
 		});
 	}
 	let defaultLocaleValue;
@@ -57,7 +58,7 @@
 				location.reload();
 			}
 		}
-
+		setMode(defaultTheme);
 		const providers = data.site.analytics;
 		const analyticsPlugins = [];
 		if (providers) {
@@ -127,6 +128,7 @@
 		{/each}
 	{/if}
 </svelte:head>
+<ModeWatcher />
 <main style="--font-family: {data.site.font.family};--bg-custom: {data.bgc};">
 	{#if data.showNav}
 		<Nav {data} />
@@ -170,16 +172,17 @@
 					</DropdownMenu.Content>
 				</DropdownMenu.Root>
 			{/if}
-
-			<Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
-				<Sun
-					class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
-				/>
-				<Moon
-					class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
-				/>
-				<span class="sr-only">Toggle theme</span>
-			</Button>
+			{#if !!data.site.themeToggle}
+				<Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
+					<Sun
+						class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
+					/>
+					<Moon
+						class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
+					/>
+					<span class="sr-only">Toggle theme</span>
+				</Button>
+			{/if}
 		</div>
 	{/if}
 </main>
