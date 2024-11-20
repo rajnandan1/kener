@@ -254,6 +254,12 @@ async function Build() {
 	if (site.siteName === undefined) {
 		site.siteName = site.title;
 	}
+	if (site.theme === undefined) {
+		site.theme = "system";
+	}
+	if (site.themeToggle === undefined) {
+		site.themeToggle = true;
+	}
 	if (!!site.analytics) {
 		const providers = {};
 

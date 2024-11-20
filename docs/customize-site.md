@@ -16,6 +16,7 @@ logo: "/logo.svg"
 favicon: "/logo96.png"
 home: "/"
 theme: dark
+themeToggle: true
 github:
     owner: "rajnandan1"
     repo: "kener"
@@ -90,7 +91,11 @@ This is the location where someone will be taken when they click on the site nam
 
 ## theme
 
-This is the default theme of the site that will be used when a user lands for the first time. It can be `light` or `dark`. Defaults to `light`. The user still gets the option to change the theme.
+This is the default theme of the site that will be used when a user lands for the first time. It can be `light` or `dark` or `system`. Defaults to `system`. The user still gets the option to change the theme.
+
+## themeToggle
+
+This is the option to show the theme toggle. It can be `true` or `false`. Defaults to `true`.
 
 As of now there is no option to change the colors of the theme using `site.yaml`. If you still want to change the colors you can do so by modifying the `src/app.postcss` file.
 

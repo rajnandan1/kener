@@ -32,7 +32,7 @@ nav:
       iconURL: "/buymeacoffee.svg"
       url: "https://buymeacoffee.com/rajnandan1"
 hero:
-    title: Kener is a Modern Open-Source Status Page System
+    title: Kener is an Modern Open-Source Status Page System
     subtitle: Let your users know what's going on.
 footerHTML: |
     Made using 
