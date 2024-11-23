@@ -10,10 +10,7 @@
 	<a href="https://hub.docker.com/r/rajnandan1/kener"><img src="https://img.shields.io/docker/pulls/rajnandan1/kener" alt="Docker Kener" /></a>
 	<img alt="GitHub Repo Updated" src="https://badges.pufler.dev/updated/rajnandan1/kener">
 </p>
-  <div align="center">
-        <img alt="Visitor Stats" 
-            src="https://widgetbite.com/stats/rajnandan"/>  
-    </div>
+  
 <p align="center">
 	<picture>
   		<source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f514/512.webp" type="image/webp">
@@ -43,7 +40,10 @@ Kener: Open-source sveltekit status page tool, designed to make service monitori
 It uses files to store the data.
 
 Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing is added to make cooler.
-
+<div align="left">
+        <img alt="Visitor Stats" 
+            src="https://widgetbite.com/stats/rajnandan"/>  
+    </div>
 ## Features
 
 ### Monitoring and Tracking
