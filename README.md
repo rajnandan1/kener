@@ -8,6 +8,8 @@
 	<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/rajnandan1/kener?label=Star%20Repo&style=social">
 	<a href="https://github.com/ivbeg/awesome-status-pages"><img src="https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg" alt="Awesome status page" /></a>
 	<a href="https://hub.docker.com/r/rajnandan1/kener"><img src="https://img.shields.io/docker/pulls/rajnandan1/kener" alt="Docker Kener" /></a>
+	<img alt="GitHub Repo stars" src="https://badges.pufler.dev/visits/rajnandan1/kener">
+	<img alt="GitHub Repo stars" src="https://badges.pufler.dev/updated/rajnandan1/kener">
 </p>
 
 <p align="center">
