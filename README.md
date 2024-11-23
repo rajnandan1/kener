@@ -8,8 +8,8 @@
 	<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/rajnandan1/kener?label=Star%20Repo&style=social">
 	<a href="https://github.com/ivbeg/awesome-status-pages"><img src="https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg" alt="Awesome status page" /></a>
 	<a href="https://hub.docker.com/r/rajnandan1/kener"><img src="https://img.shields.io/docker/pulls/rajnandan1/kener" alt="Docker Kener" /></a>
-	<img alt="GitHub Repo stars" src="https://badges.pufler.dev/visits/rajnandan1/kener">
-	<img alt="GitHub Repo stars" src="https://badges.pufler.dev/updated/rajnandan1/kener">
+	<img alt="GitHub Repo Visits" src="https://badges.pufler.dev/visits/rajnandan1/kener">
+	<img alt="GitHub Repo Updated" src="https://badges.pufler.dev/updated/rajnandan1/kener">
 </p>
 
 <p align="center">
@@ -107,3 +107,5 @@ If you are using Kener and want to support me, you can do so by sponsoring me on
 [Sponsor Me Using Github](https://github.com/sponsors/rajnandan1)
 
 [Buy Me a Coffee](https://www.buymeacoffee.com/rajnandan1)
+
+![image](https://badges.pufler.dev/visits/rajnandan1/kener)
