@@ -41,10 +41,12 @@ It uses files to store the data.
 
 Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing is added to make cooler.
 <div align="left">
-        <img alt="Visitor Stats" 
-            src="https://widgetbite.com/stats/rajnandan"/>  
-    </div>
+    <img alt="Visitor Stats" src="https://widgetbite.com/stats/rajnandan"/>  
+</div>
+    
 ## Features
+
+Here are some of the features that you get out of the box. Please read the documentation to know how to use them.
 
 ### Monitoring and Tracking
 
