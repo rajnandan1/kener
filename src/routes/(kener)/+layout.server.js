@@ -1,5 +1,4 @@
 // @ts-nocheck
-import fs from "fs-extra";
 import i18n from "$lib/i18n/server";
 import { siteStore } from "$lib/server/stores/site";
 import { get } from "svelte/store";

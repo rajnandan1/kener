@@ -167,6 +167,35 @@ const GetIncidents = async function (tagName, githubConfig, state = "all") {
 		return [];
 	}
 };
+const GetIncidentsManual = async function (tagName, githubConfig, state = "all") {
+	if (
+		githubConfig.owner === undefined ||
+		githubConfig.repo === undefined ||
+		GH_TOKEN === undefined
+	) {
+		console.log(GhnotconfireguredMsg);
+		return [];
+	}
+	if (tagName === undefined) {
+		return [];
+	}
+	const since = GetMinuteStartNowTimestampUTC() - githubConfig.incidentSince * 60 * 60;
+	const sinceISO = new Date(since * 1000).toISOString();
+	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues?state=${state}&labels=${tagName},incident,manual&sort=created&direction=desc&since=${sinceISO}`;
+	const options = getAxiosOptions(url);
+	try {
+		const response = await axios.request(options);
+		let issues = response.data;
+		//issues.createAt should be after sinceISO
+		issues = issues.filter((issue) => {
+			return new Date(issue.created_at) >= new Date(sinceISO);
+		});
+		return issues;
+	} catch (error) {
+		console.log(error.response?.data);
+		return [];
+	}
+};
 const GetOpenIncidents = async function (githubConfig) {
 	if (
 		githubConfig.owner === undefined ||
@@ -442,5 +471,6 @@ export {
 	CloseIssue,
 	GetOpenIncidents,
 	FilterAndInsertMonitorInIncident,
-	SearchIssue
+	SearchIssue,
+	GetIncidentsManual
 };

@@ -36,7 +36,7 @@
 {/if}
 {#if hasActiveIncidents}
 	<section
-		class="mx-auto mb-4 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent"
+		class="mx-auto mb-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent"
 		id=""
 	>
 		<div class="grid w-full grid-cols-2 gap-4">

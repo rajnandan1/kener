@@ -5,7 +5,6 @@ import { ParseIncidentPayload, auth, GHIssueToKenerIncident } from "$lib/server/
 import { CreateIssue, SearchIssue } from "$lib/server/github";
 import { siteStore } from "$lib/server/stores/site";
 import { get } from "svelte/store";
-import fs from "fs-extra";
 
 export async function POST({ request }) {
 	const payload = await request.json();
@@ -30,6 +29,7 @@ export async function POST({ request }) {
 	}
 	let site = get(siteStore);
 	let github = site.github;
+	githubLabels.push("manual");
 	let resp = await CreateIssue(github, title, body, githubLabels);
 	if (resp === null) {
 		return json(

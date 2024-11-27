@@ -1,19 +1,18 @@
 // @ts-nocheck
-import fs from "fs-extra";
-import { monitorsStore } from "./stores/monitors";
+import { monitorsStore } from "./stores/monitors.js";
 import { get } from "svelte/store";
-import { ParseUptime } from "$lib/helpers.js";
 import {
 	GetMinuteStartNowTimestampUTC,
 	GetNowTimestampUTC,
-	GetMinuteStartTimestampUTC
+	GetMinuteStartTimestampUTC,
+	ParseUptime,
+	GetDayStartTimestampUTC
 } from "./tool.js";
 import { GetStartTimeFromBody, GetEndTimeFromBody } from "./github.js";
-import Randomstring from "randomstring";
 const API_TOKEN = process.env.API_TOKEN;
 const API_IP = process.env.API_IP;
 const API_IP_REGEX = process.env.API_IP_REGEX;
-import path from "path";
+import db from "./db/db.js";
 
 const GetAllTags = function () {
 	let tags = [];
@@ -117,21 +116,13 @@ const store = function (data) {
 	let monitors = get(monitorsStore);
 	const monitor = monitors.find((monitor) => monitor.tag === tag);
 
-	//read the monitor.path0Day file
-	let day0 = {};
-
-	day0[data.timestampInSeconds] = resp;
-	//sort the keys
-
-	//create a random string with high cardinlity
-	//to avoid cache
-	const Kener_folder = "./database";
-	//write the monitor.path0Day file
-	fs.writeFileSync(
-		Kener_folder + `/${monitor.folderName}.webhook.${Randomstring.generate()}.json`,
-		JSON.stringify(day0, null, 2)
-	);
-
+	db.insertData({
+		monitorTag: tag,
+		timestamp: data.timestampInSeconds,
+		status: resp.status,
+		latency: resp.latency,
+		type: "webhook"
+	});
 	return { status: 200, message: "success at " + data.timestampInSeconds };
 };
 const GHIssueToKenerIncident = function (issue) {
@@ -252,7 +243,7 @@ const ParseIncidentPayload = function (payload) {
 
 	return { title, body, githubLabels };
 };
-const GetMonitorStatusByTag = function (tag) {
+const GetMonitorStatusByTag = function (tag, timestamp) {
 	if (!CheckIfValidTag(tag)) {
 		return { error: "invalid tag", status: 400 };
 	}
@@ -262,29 +253,38 @@ const GetMonitorStatusByTag = function (tag) {
 		lastUpdatedAt: null
 	};
 	let monitors = get(monitorsStore);
-	const { path0Day } = monitors.find((monitor) => monitor.tag === tag);
-	const dayData = JSON.parse(fs.readFileSync(path0Day, "utf8"));
-	const lastUpdatedAt = Object.keys(dayData)[Object.keys(dayData).length - 1];
-	const lastObj = dayData[lastUpdatedAt];
-	resp.status = lastObj.status;
-	//add all status up, degraded, down
+	const { includeDegradedInDowntime } = monitors.find((monitor) => monitor.tag === tag);
+
+	let now = GetMinuteStartNowTimestampUTC();
+	if (timestamp !== null && timestamp !== undefined) {
+		now = timestamp;
+	}
+	let start = GetDayStartTimestampUTC(now);
+
+	let dayDataNew = db.getData(tag, start, now);
 	let ups = 0;
 	let downs = 0;
 	let degradeds = 0;
+	let lastData = dayDataNew[dayDataNew.length - 1];
 
-	for (const timestamp in dayData) {
-		const obj = dayData[timestamp];
-		if (obj.status == "UP") {
+	for (let i = 0; i < dayDataNew.length; i++) {
+		let row = dayDataNew[i];
+		if (row.status == "UP") {
 			ups++;
-		} else if (obj.status == "DEGRADED") {
+		} else if (row.status == "DEGRADED") {
 			degradeds++;
-		} else if (obj.status == "DOWN") {
+		} else if (row.status == "DOWN") {
 			downs++;
 		}
 	}
+	let numerator = ups + degradeds;
+	if (includeDegradedInDowntime === true) {
+		numerator = ups;
+	}
 
-	resp.uptime = ParseUptime(ups + degradeds, ups + degradeds + downs);
-	resp.lastUpdatedAt = Number(lastUpdatedAt);
+	resp.uptime = ParseUptime(numerator, ups + degradeds + downs);
+	resp.lastUpdatedAt = Number(lastData.timestamp);
+	resp.status = lastData.status;
 	return { status: 200, ...resp };
 };
 export {

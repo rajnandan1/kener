@@ -1,26 +1,28 @@
 // @ts-nocheck
 import { monitorsStore } from "$lib/server/stores/monitors";
-import fs from "fs-extra";
-import { StatusColor } from "$lib/helpers.js";
+import { StatusColor } from "$lib/server/tool.js";
 import { makeBadge } from "badge-maker";
 import { get } from "svelte/store";
+import db from "$lib/server/db/db.js";
 
 let monitors = get(monitorsStore);
 
 export async function GET({ params, setHeaders, url }) {
 	// @ts-ignore
-	const { path0Day, name } = monitors.find((monitor) => monitor.tag === params.tag);
-	const dayData = JSON.parse(fs.readFileSync(path0Day, "utf8"));
-	const lastObj = dayData[Object.keys(dayData)[Object.keys(dayData).length - 1]];
+	const { tag, name } = monitors.find((monitor) => monitor.tag === params.tag);
+	const lastObj = db.getLatestData(tag);
 
 	//read query params
 	const query = url.searchParams;
 	const labelColor = query.get("labelColor") || "#333";
-	const color = query.get("color") || StatusColor[lastObj.status];
+	let label = query.get("label") || name;
+	const color = query.get("color") || StatusColor[lastObj.status].substr(1);
 	const style = query.get("style") || "flat";
 
+	label = label.trim();
+
 	const format = {
-		label: name,
+		label: label,
 		message: lastObj.status,
 		color: color,
 		labelColor: labelColor,

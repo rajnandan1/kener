@@ -1,47 +1,61 @@
 // @ts-nocheck
 import { monitorsStore } from "$lib/server/stores/monitors";
-import fs from "fs-extra";
-import { ParseUptime } from "$lib/helpers.js";
+import { ParseUptime, GetMinuteStartNowTimestampUTC } from "$lib/server/tool.js";
 import { makeBadge } from "badge-maker";
 import { get } from "svelte/store";
+import moment from "moment";
+import db from "$lib/server/db/db.js";
 
 let monitors = get(monitorsStore);
 export async function GET({ params, url }) {
 	// @ts-ignore
-	const { path0Day, name } = monitors.find((monitor) => monitor.tag === params.tag);
-	const dayData = JSON.parse(fs.readFileSync(path0Day, "utf8"));
+	const { name, tag, includeDegradedInDowntime } = monitors.find(
+		(monitor) => monitor.tag === params.tag
+	);
 	const query = url.searchParams;
-	const rangeInSeconds = query.get("sinceLast") || 90 * 24 * 60 * 60;
+	let sinceLast = query.get("sinceLast");
+	if (sinceLast == undefined || isNaN(sinceLast) || sinceLast < 60) {
+		sinceLast = 90 * 24 * 60 * 60;
+	}
+	const rangeInSeconds = sinceLast;
 	const now = Math.floor(Date.now() / 1000);
-	const since = now - rangeInSeconds;
+	const since = GetMinuteStartNowTimestampUTC() - rangeInSeconds;
+	let label = query.get("label") || name;
+	const hideDuration = query.get("hideDuration") === "true";
 
 	//add all status up, degraded, down
 	let ups = 0;
 	let downs = 0;
 	let degradeds = 0;
 
-	for (const timestamp in dayData) {
-		if (timestamp < since) {
-			continue;
-		}
-		const obj = dayData[timestamp];
-		if (obj.status == "UP") {
-			ups++;
-		} else if (obj.status == "DEGRADED") {
-			degradeds++;
-		} else if (obj.status == "DOWN") {
-			downs++;
-		}
+	const duration = moment.duration(rangeInSeconds, "seconds");
+	let formatted = "";
+	if (duration.days() > 0 || duration.minutes() < 1) {
+		formatted = `${Math.floor(rangeInSeconds / 86400)}d`;
+	} else if (duration.hours() > 0) {
+		formatted = `${duration.hours()}h`;
+	} else if (duration.minutes() > 0) {
+		formatted = `${duration.minutes()}m`;
 	}
 
-	let uptime = ParseUptime(ups + degradeds, ups + degradeds + downs) + "%";
+	let dbData = db.getAggregatedData(tag, since, now);
+	let numerator = dbData.UP + dbData.DEGRADED;
+	let denominator = dbData.UP + dbData.DEGRADED + dbData.DOWN;
+	if (includeDegradedInDowntime === true) {
+		numerator = dbData.UP;
+	}
+
+	let uptime = ParseUptime(numerator, denominator) + "%";
 
 	const labelColor = query.get("labelColor") || "#333";
 	const color = query.get("color") || "#0079FF";
 	const style = query.get("style") || "flat";
 
+	label = label + (hideDuration ? "" : ` ${formatted}`);
+	label = label.trim();
+
 	const format = {
-		label: name,
+		label: label,
 		message: uptime,
 		color: color,
 		labelColor: labelColor,

@@ -4,8 +4,6 @@ import { FetchData } from "$lib/server/page";
 import { monitorsStore } from "$lib/server/stores/monitors";
 import { get } from "svelte/store";
 
-import fs from "fs-extra";
-
 export async function load({ params, route, url, parent }) {
 	let monitors = get(monitorsStore);
 

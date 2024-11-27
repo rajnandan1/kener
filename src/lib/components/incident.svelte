@@ -1,7 +1,6 @@
 <script>
 	import * as Card from "$lib/components/ui/card";
 	import { Separator } from "$lib/components/ui/separator";
-	import { StatusObj } from "$lib/helpers.js";
 	import moment from "moment";
 	import { Button } from "$lib/components/ui/button";
 	import { Badge } from "$lib/components/ui/badge";
@@ -17,7 +16,12 @@
 	export let state = "open";
 	export let monitor;
 	export let lang;
-
+	const StatusObj = {
+		UP: "api-up",
+		DEGRADED: "api-degraded",
+		DOWN: "api-down",
+		NO_DATA: "api-nodata"
+	};
 	let blinker = "bg-transparent";
 	let incidentPriority = "";
 	let incidentDuration = 0;
@@ -114,7 +118,7 @@
 
 					{#if incidentState == "open"}
 						<span
-							class="absolute -left-[24px] -top-[24px] inline-flex h-[8px] w-[8px] animate-ping rounded-full {blinker} opacity-75"
+							class="absolute -left-[26px] -top-[16px] inline-flex h-[8px] w-[8px] animate-ping rounded-full {blinker} opacity-75"
 						></span>
 					{/if}
 					{#if variant.includes("body") || variant.includes("comments")}
@@ -138,21 +142,21 @@
 					<p class="mt-2 leading-8">
 						{#if incident.labels.includes("identified")}
 							<span
-								class="tag-indetified me-2 mt-1 inline-block rounded px-2.5 py-1 text-xs font-semibold uppercase leading-3"
+								class="tag-indetified me-2 mt-1 inline-block rounded-sm px-1 py-0.5 text-xs font-semibold uppercase leading-3"
 							>
 								{l(lang, "incident.identified")}
 							</span>
 						{/if}
 						{#if incident.labels.includes("resolved")}
 							<span
-								class=" tag-resolved me-2 inline-block rounded px-2.5 py-1 text-xs font-semibold uppercase leading-3"
+								class=" tag-resolved me-2 inline-block rounded px-1 py-0.5 text-xs font-semibold uppercase leading-3"
 							>
 								{l(lang, "incident.resolved")}
 							</span>
 						{/if}
 						{#if incident.labels.includes("maintenance")}
 							<span
-								class="tag-maintenance me-2 inline-block rounded px-2.5 py-1 text-xs font-semibold uppercase leading-3"
+								class="tag-maintenance me-2 inline-block rounded px-1 py-0.5 text-xs font-semibold uppercase leading-3"
 							>
 								{l(lang, "incident.maintenance")}
 							</span>
@@ -164,7 +168,7 @@
 				<Card.Content class="px-14">
 					{#if variant.includes("body")}
 						<div
-							class="prose prose-stone max-w-none dark:prose-invert prose-code:rounded prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm"
+							class="prose prose-stone max-w-none text-sm dark:prose-invert prose-code:rounded prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm"
 						>
 							{@html incident.body}
 						</div>
@@ -185,7 +189,7 @@
 											)}
 										</time>
 										<div
-											class="wysiwyg prose prose-stone mb-4 max-w-none text-base font-normal dark:prose-invert prose-code:rounded prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm"
+											class="wysiwyg prose prose-stone mb-4 max-w-none text-base text-sm font-normal dark:prose-invert prose-code:rounded prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm"
 										>
 											{@html comment.body}
 										</div>

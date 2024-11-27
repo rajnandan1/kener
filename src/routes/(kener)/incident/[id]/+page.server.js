@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { monitorsStore } from "$lib/server/stores/monitors";
 import { GetIncidents, Mapper } from "$lib/server/github.js";
-import fs from "fs-extra";
 import { get } from "svelte/store";
 
 /**

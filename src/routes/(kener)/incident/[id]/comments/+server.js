@@ -1,7 +1,6 @@
 // @ts-nocheck
 // @ts-ignore
 import { json } from "@sveltejs/kit";
-import fs from "fs-extra";
 import { GetCommentsForIssue } from "$lib/server/github.js";
 import { marked } from "marked";
 import { siteStore } from "$lib/server/stores/site";

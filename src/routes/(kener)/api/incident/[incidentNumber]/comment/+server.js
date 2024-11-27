@@ -5,7 +5,6 @@ import { auth } from "$lib/server/webhook";
 import { AddComment, GetCommentsForIssue } from "$lib/server/github";
 import { siteStore } from "$lib/server/stores/site";
 import { get } from "svelte/store";
-import fs from "fs-extra";
 
 export async function GET({ request, params }) {
 	const authError = auth(request);

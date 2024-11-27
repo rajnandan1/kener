@@ -91,7 +91,12 @@ This is the location where someone will be taken when they click on the site nam
 
 ## theme
 
-This is the default theme of the site that will be used when a user lands for the first time. It can be `light` or `dark` or `system`. Defaults to `system`. The user still gets the option to change the theme.
+This is the default theme of the site that will be used when a user lands for the first time. It can be `light` or `dark` or `system` or `none`. Defaults to `system`. The user still gets the option to change the theme.
+
+-   setting it to `light` will always set the theme to light when page loads
+-   setting it to `dark` will always set the theme to dark when page loads
+-   setting it to `system` will set the theme based on the system preference
+-   setting it to `none` will set the theme to last selected theme by the user
 
 ## themeToggle
 

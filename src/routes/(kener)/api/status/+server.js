@@ -30,6 +30,7 @@ export async function GET({ request, url }) {
 	}
 	const query = url.searchParams;
 	const tag = query.get("tag");
+	const timestamp = query.get("timestamp");
 	if (!!!tag) {
 		return json(
 			{ error: "tag missing" },
@@ -38,7 +39,7 @@ export async function GET({ request, url }) {
 			}
 		);
 	}
-	return json(GetMonitorStatusByTag(tag), {
+	return json(GetMonitorStatusByTag(tag, timestamp), {
 		status: 200
 	});
 }

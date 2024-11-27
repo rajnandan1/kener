@@ -1,30 +1,28 @@
 // @ts-nocheck
 import { monitorsStore } from "$lib/server/stores/monitors";
-import fs from "fs-extra";
-import { StatusColor } from "$lib/helpers.js";
+import { StatusColor } from "$lib/server/tool.js";
 import { makeBadge } from "badge-maker";
 import { get } from "svelte/store";
+import db from "$lib/server/db/db.js";
 
 let monitors = get(monitorsStore);
 export async function GET({ params, setHeaders, url }) {
 	// @ts-ignore
-	const { path0Day, name } = monitors.find((monitor) => monitor.tag === params.tag);
-	const dayData = JSON.parse(fs.readFileSync(path0Day, "utf8"));
-	const lastObj = dayData[Object.keys(dayData)[Object.keys(dayData).length - 1]];
-
+	const { tag } = monitors.find((monitor) => monitor.tag === params.tag);
+	const lastObj = db.getLatestData(tag);
 	//read query params
 	const query = url.searchParams;
 	const animate = query.get("animate") || "";
 
 	let svg = `
 	<svg width="32" height="32"  xmlns="http://www.w3.org/2000/svg">
-		<circle cx="16" cy="16" r="8" fill="#${StatusColor[lastObj.status]}" />
+		<circle cx="16" cy="16" r="8" fill="${StatusColor[lastObj.status]}" />
 	</svg>
 	`;
 	if (animate == "ping") {
 		svg = `
 	<svg width="32" height="32"  xmlns="http://www.w3.org/2000/svg">
-		<circle cx="16" cy="16" r="8" fill="#${StatusColor[lastObj.status]}" opacity="0.5">
+		<circle cx="16" cy="16" r="8" fill="${StatusColor[lastObj.status]}" opacity="0.5">
 			<animate 
 				attributeName="r" 
 				from="8" 
@@ -38,7 +36,7 @@ export async function GET({ params, setHeaders, url }) {
 				dur="1s" 
 				repeatCount="indefinite" />
 		</circle>
-		<circle cx="16" cy="16" r="8" fill="#${StatusColor[lastObj.status]}" />
+		<circle cx="16" cy="16" r="8" fill="${StatusColor[lastObj.status]}" />
 </svg>
 	`;
 	}

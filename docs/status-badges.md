@@ -35,6 +35,16 @@ Example in MarkDown
 ![Status Badge](https://kener.ing/badge/[monitor.tag]/status)
 ```
 
+### Custom Label
+
+You can set custom label for the status badge. If you do not set a label it will default to the monitor name.
+
+![Earth Status](https://kener.ing/badge/earth/status?label=Gotcha)
+
+```md
+![Earth Status](https://kener.ing/badge/earth/status?label=Gotcha)
+```
+
 ---
 
 ## Live
@@ -87,6 +97,8 @@ Example in MarkDown
 
 ### 15 Minute Uptime
 
+Set `sinceLast` as query param to get uptime since last x seconds.
+
 Example in HTML
 
 ```html
@@ -99,11 +111,31 @@ Example in MarkDown
 ![Uptime Badge](https://kener.ing/badge/[monitor.tag]/uptime?sinceLast=900)
 ```
 
+### Custom Label
+
+You can set custom label for the uptime badge. If you do not set a label it will default to the **monitor name**.
+
+![Earth Uptime](https://kener.ing/badge/earth/uptime?label=Gotcha)
+
+```md
+![Earth Uptime](https://kener.ing/badge/earth/uptime?label=Gotcha)
+```
+
+### Hide Duration
+
+You can hide the duration by setting `hideDuration=true`
+
+![Earth Uptime](https://kener.ing/badge/earth/uptime?hideDuration=true)
+
+```md
+![Earth Uptime](https://kener.ing/badge/earth/uptime?hideDuration=true)
+```
+
 ---
 
 ## Customize Badges
 
-You can set different colors for badges and style.
+You can set different colors for badges and style. It only works for `status` and `uptime` badges.
 
 ### With Custom Label Color
 

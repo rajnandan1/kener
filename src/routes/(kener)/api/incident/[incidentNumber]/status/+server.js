@@ -6,8 +6,6 @@ import { UpdateIssueLabels, GetIncidentByNumber } from "$lib/server/github";
 import { siteStore } from "$lib/server/stores/site";
 import { get } from "svelte/store";
 
-import fs from "fs-extra";
-
 export async function POST({ request, params }) {
 	const payload = await request.json();
 	const incidentNumber = params.incidentNumber; //number required

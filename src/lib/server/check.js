@@ -3,7 +3,6 @@ import { ENV } from "./constants.js";
 import { IsStringURLSafe } from "./tool.js";
 import dotenv from "dotenv";
 dotenv.config();
-import fs from "fs-extra";
 let STATUS_OK = false;
 
 if (ENV === undefined) {

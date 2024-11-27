@@ -1,4 +1,8 @@
 // @ts-nocheck
+import { AllRecordTypes } from "./constants.js";
+import { siteStore } from "./stores/site.js";
+import { get } from "svelte/store";
+const site = get(siteStore);
 import dotenv from "dotenv";
 dotenv.config();
 const IsValidURL = function (url) {
@@ -136,11 +140,84 @@ const ValidateIpAddress = function (input) {
 function checkIfDuplicateExists(arr) {
 	return new Set(arr).size !== arr.length;
 }
-function getWordsStartingWithDollar(text) {
+function GetWordsStartingWithDollar(text) {
 	const regex = /\$\w+/g;
 	const wordsArray = text.match(regex);
 	return wordsArray || [];
 }
+const StatusObj = {
+	UP: "api-up",
+	DEGRADED: "api-degraded",
+	DOWN: "api-down",
+	NO_DATA: "api-nodata"
+};
+const StatusColor = {
+	UP: site.colors.UP || "#00dfa2",
+	DEGRADED: site.colors.DEGRADED || "#e6ca61",
+	DOWN: site.colors.DOWN || "#ca3038",
+	NO_DATA: "#f1f5f8"
+};
+// @ts-ignore
+const ParseUptime = function (up, all) {
+	if (all === 0) return String("-");
+	if (up == 0) return String("0");
+	if (up == all) {
+		return String(((up / all) * parseFloat(100)).toFixed(0));
+	}
+	//return 50% as 50% and not 50.0000%
+	if (((up / all) * 100) % 10 == 0) {
+		return String(((up / all) * parseFloat(100)).toFixed(0));
+	}
+	return String(((up / all) * parseFloat(100)).toFixed(4));
+};
+const ParsePercentage = function (n) {
+	if (isNaN(n)) return "-";
+	if (n == 0) {
+		return "0";
+	}
+	if (n == 100) {
+		return "100";
+	}
+	return n.toFixed(4);
+};
+
+//valid domain name
+function IsValidHost(domain) {
+	const regex = /^[a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,}$/;
+	return regex.test(domain);
+}
+
+//valid nameserver
+function IsValidNameServer(nameServer) {
+	//8.8.8.8 example
+	const regex = /^([0-9]{1,3}\.){3}[0-9]{1,3}$/;
+	return regex.test(nameServer);
+}
+
+//valid dns record type
+function IsValidRecordType(recordType) {
+	return AllRecordTypes.hasOwnProperty(recordType);
+}
+function ReplaceAllOccurrences(originalString, searchString, replacement) {
+	const regex = new RegExp(`\\${searchString}`, "g");
+	const replacedString = originalString.replace(regex, replacement);
+	return replacedString;
+}
+
+function GetRequiredSecrets(str) {
+	let envSecrets = [];
+	const requiredSecrets = GetWordsStartingWithDollar(str).map((x) => x.substr(1));
+	for (const [key, value] of Object.entries(process.env)) {
+		if (requiredSecrets.indexOf(key) !== -1) {
+			envSecrets.push({
+				find: `$${key}`,
+				replace: value
+			});
+		}
+	}
+	return envSecrets;
+}
+
 export {
 	IsValidURL,
 	IsValidHTTPMethod,
@@ -154,5 +231,14 @@ export {
 	IsStringURLSafe,
 	ValidateIpAddress,
 	checkIfDuplicateExists,
-	getWordsStartingWithDollar
+	GetWordsStartingWithDollar,
+	StatusObj,
+	StatusColor,
+	ParseUptime,
+	ParsePercentage,
+	IsValidHost,
+	IsValidRecordType,
+	IsValidNameServer,
+	ReplaceAllOccurrences,
+	GetRequiredSecrets
 };

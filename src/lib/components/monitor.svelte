@@ -4,16 +4,7 @@
 	import { onMount } from "svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { base } from "$app/paths";
-	import {
-		ArrowRight,
-		Share2,
-		Info,
-		Link,
-		CopyCheck,
-		Code,
-		TrendingUp,
-		Percent
-	} from "lucide-svelte";
+	import { Share2, Link, CopyCheck, Code, TrendingUp, Percent } from "lucide-svelte";
 	import { buttonVariants } from "$lib/components/ui/button";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { createEventDispatcher } from "svelte";
@@ -228,217 +219,225 @@
 							{@html monitor.description}
 						{/if}
 					</p>
-					<Popover.Root>
-						<Popover.Trigger class="absolute right-14 top-5 h-5 w-5 p-0">
-							<Button
-								class="h-5 p-0"
-								variant="link"
-								on:click={(e) => {
-									analyticsEvent("monitor_share_menu_open", {
-										tag: monitor.tag
-									});
-								}}
-							>
-								<Share2 class="h-4 w-4 text-muted-foreground" />
-							</Button>
-						</Popover.Trigger>
-						<Popover.Content class="w-[375px] max-w-full p-0">
-							<div class="p-4">
-								<h2 class="mb-1 text-sm font-semibold">
-									{l(lang, "monitor.share")}
-								</h2>
-								<p class="mb-2 text-xs text-muted-foreground">
-									{l(lang, "monitor.share_desc")}
-								</p>
+					<div class="absolute right-14 top-5">
+						<Popover.Root>
+							<Popover.Trigger class=" h-5 w-5 p-0">
 								<Button
-									class="h-8 pr-4 text-xs"
-									variant="secondary"
-									on:click={copyLinkToClipboard}
+									class="wiggle h-5 p-0 text-muted-foreground hover:text-primary"
+									variant="link"
+									on:click={(e) => {
+										analyticsEvent("monitor_share_menu_open", {
+											tag: monitor.tag
+										});
+									}}
 								>
-									{#if !copiedLink}
-										<Link class="mr-2 inline" size={12} />
-										<span class="font-medium">
-											{l(lang, "monitor.cp_link")}
-										</span>
-									{:else}
-										<CopyCheck class="mr-2 inline" size={12} />
-										<span class="font-medium">
-											{l(lang, "monitor.cpd_link")}
-										</span>
-									{/if}
+									<Share2 class="h-4 w-4 " />
 								</Button>
-							</div>
-							<hr />
-							<div class="p-4">
-								<h2 class="mb-1 text-sm font-semibold">
-									{l(lang, "monitor.embed")}
-								</h2>
-								<p class="mb-1 text-xs text-muted-foreground">
-									{l(lang, "monitor.embed_desc")}
-								</p>
-								<div class="mb-4 grid grid-cols-2 gap-2">
-									<div class="col-span-1">
-										<h3 class="mb-2 text-xs">
-											{l(lang, "monitor.theme")}
-										</h3>
-										<RadioGroup.Root bind:value={theme} class=" flex">
-											<div class="flex items-center space-x-2">
-												<RadioGroup.Item value="light" id="light-theme" />
-												<Label class="text-xs" for="light-theme"
-													>{l(lang, "monitor.theme_light")}</Label
-												>
-											</div>
-											<div class="flex items-center space-x-2">
-												<RadioGroup.Item value="dark" id="dark-theme" />
-												<Label class="text-xs" for="dark-theme"
-													>{l(lang, "monitor.theme_dark")}</Label
-												>
-											</div>
-											<RadioGroup.Input name="theme" />
-										</RadioGroup.Root>
-									</div>
-									<div class="col-span-1 pl-2">
-										<h3 class="mb-2 text-xs">
-											{l(lang, "monitor.mode")}
-										</h3>
-										<RadioGroup.Root bind:value={embedType} class="flex">
-											<div class="flex items-center space-x-2">
-												<RadioGroup.Item value="js" id="js-embed" />
-												<Label class="text-xs" for="js-embed"
-													>&#x3C;script&#x3E;</Label
-												>
-											</div>
-											<div class="flex items-center space-x-2">
-												<RadioGroup.Item value="iframe" id="iframe-embed" />
-												<Label class="text-xs" for="iframe-embed"
-													>&#x3C;iframe&#x3E;</Label
-												>
-											</div>
-											<RadioGroup.Input name="embed" />
-										</RadioGroup.Root>
-									</div>
+							</Popover.Trigger>
+							<Popover.Content class="w-[375px] max-w-full p-0">
+								<div class="p-4">
+									<h2 class="mb-1 text-sm font-semibold">
+										{l(lang, "monitor.share")}
+									</h2>
+									<p class="mb-2 text-xs text-muted-foreground">
+										{l(lang, "monitor.share_desc")}
+									</p>
+									<Button
+										class="h-8 pr-4 text-xs"
+										variant="secondary"
+										on:click={copyLinkToClipboard}
+									>
+										{#if !copiedLink}
+											<Link class="mr-2 inline" size={12} />
+											<span class="font-medium">
+												{l(lang, "monitor.cp_link")}
+											</span>
+										{:else}
+											<CopyCheck class="mr-2 inline" size={12} />
+											<span class="font-medium">
+												{l(lang, "monitor.cpd_link")}
+											</span>
+										{/if}
+									</Button>
 								</div>
-								<Button
-									class="h-8  px-2 pr-4 text-xs"
-									variant="secondary"
-									on:click={copyScriptTagToClipboard}
-								>
-									{#if !copiedEmbed}
-										<Code class="mr-2 inline" size={12} />
-										<span class=" font-medium">
-											{l(lang, "monitor.cp_code")}
-										</span>
-									{:else}
-										<CopyCheck class="mr-2 inline" size={12} />
-										<span class="font-medium">
-											{l(lang, "monitor.cpd_code")}
-										</span>
-									{/if}
-								</Button>
-							</div>
+								<hr />
+								<div class="p-4">
+									<h2 class="mb-1 text-sm font-semibold">
+										{l(lang, "monitor.embed")}
+									</h2>
+									<p class="mb-1 text-xs text-muted-foreground">
+										{l(lang, "monitor.embed_desc")}
+									</p>
+									<div class="mb-4 grid grid-cols-2 gap-2">
+										<div class="col-span-1">
+											<h3 class="mb-2 text-xs">
+												{l(lang, "monitor.theme")}
+											</h3>
+											<RadioGroup.Root bind:value={theme} class=" flex">
+												<div class="flex items-center space-x-2">
+													<RadioGroup.Item
+														value="light"
+														id="light-theme"
+													/>
+													<Label class="text-xs" for="light-theme"
+														>{l(lang, "monitor.theme_light")}</Label
+													>
+												</div>
+												<div class="flex items-center space-x-2">
+													<RadioGroup.Item value="dark" id="dark-theme" />
+													<Label class="text-xs" for="dark-theme"
+														>{l(lang, "monitor.theme_dark")}</Label
+													>
+												</div>
+												<RadioGroup.Input name="theme" />
+											</RadioGroup.Root>
+										</div>
+										<div class="col-span-1 pl-2">
+											<h3 class="mb-2 text-xs">
+												{l(lang, "monitor.mode")}
+											</h3>
+											<RadioGroup.Root bind:value={embedType} class="flex">
+												<div class="flex items-center space-x-2">
+													<RadioGroup.Item value="js" id="js-embed" />
+													<Label class="text-xs" for="js-embed"
+														>&#x3C;script&#x3E;</Label
+													>
+												</div>
+												<div class="flex items-center space-x-2">
+													<RadioGroup.Item
+														value="iframe"
+														id="iframe-embed"
+													/>
+													<Label class="text-xs" for="iframe-embed"
+														>&#x3C;iframe&#x3E;</Label
+													>
+												</div>
+												<RadioGroup.Input name="embed" />
+											</RadioGroup.Root>
+										</div>
+									</div>
+									<Button
+										class="h-8  px-2 pr-4 text-xs"
+										variant="secondary"
+										on:click={copyScriptTagToClipboard}
+									>
+										{#if !copiedEmbed}
+											<Code class="mr-2 inline" size={12} />
+											<span class=" font-medium">
+												{l(lang, "monitor.cp_code")}
+											</span>
+										{:else}
+											<CopyCheck class="mr-2 inline" size={12} />
+											<span class="font-medium">
+												{l(lang, "monitor.cpd_code")}
+											</span>
+										{/if}
+									</Button>
+								</div>
 
-							<hr />
-							<div class="p-4">
-								<h2 class="mb-1 text-sm font-semibold">
-									{l(lang, "monitor.badge")}
-								</h2>
-								<p class="mb-2 text-xs text-muted-foreground">
-									{l(lang, "monitor.badge_desc")}
-								</p>
-								<Button
-									class="h-8  px-2 pr-4 text-xs"
-									variant="secondary"
-									on:click={copyStatusBadge}
-								>
-									{#if !copiedBadgeStatus}
-										<TrendingUp class="mr-2 inline" size={12} />
-										<span class="font-medium">
-											{l(lang, "monitor.status")}
-											{l(lang, "monitor.badge")}</span
-										>
-									{:else}
-										<CopyCheck class="mr-2 inline" size={12} />
-										<span class="font-medium">
-											{l(lang, "monitor.copied")}
-											{l(lang, "monitor.badge")}
-										</span>
-									{/if}
-								</Button>
-								<Button
-									class="h-8  px-2 pr-4 text-xs"
-									variant="secondary"
-									on:click={copyUptimeBadge}
-								>
-									{#if !copiedBadgeUptime}
-										<Percent class="mr-2 inline" size={12} />
-										<span class="font-medium">
-											{l(lang, "monitor.uptime")}
-											{l(lang, "monitor.badge")}
-										</span>
-									{:else}
-										<CopyCheck class="mr-2 inline" size={12} />
-										<span class="font-medium">
-											{l(lang, "monitor.copied")}
-											{l(lang, "monitor.badge")}
-										</span>
-									{/if}
-								</Button>
-							</div>
+								<hr />
+								<div class="p-4">
+									<h2 class="mb-1 text-sm font-semibold">
+										{l(lang, "monitor.badge")}
+									</h2>
+									<p class="mb-2 text-xs text-muted-foreground">
+										{l(lang, "monitor.badge_desc")}
+									</p>
+									<Button
+										class="h-8  px-2 pr-4 text-xs"
+										variant="secondary"
+										on:click={copyStatusBadge}
+									>
+										{#if !copiedBadgeStatus}
+											<TrendingUp class="mr-2 inline" size={12} />
+											<span class="font-medium">
+												{l(lang, "monitor.status")}
+												{l(lang, "monitor.badge")}</span
+											>
+										{:else}
+											<CopyCheck class="mr-2 inline" size={12} />
+											<span class="font-medium">
+												{l(lang, "monitor.copied")}
+												{l(lang, "monitor.badge")}
+											</span>
+										{/if}
+									</Button>
+									<Button
+										class="h-8  px-2 pr-4 text-xs"
+										variant="secondary"
+										on:click={copyUptimeBadge}
+									>
+										{#if !copiedBadgeUptime}
+											<Percent class="mr-2 inline" size={12} />
+											<span class="font-medium">
+												{l(lang, "monitor.uptime")}
+												{l(lang, "monitor.badge")}
+											</span>
+										{:else}
+											<CopyCheck class="mr-2 inline" size={12} />
+											<span class="font-medium">
+												{l(lang, "monitor.copied")}
+												{l(lang, "monitor.badge")}
+											</span>
+										{/if}
+									</Button>
+								</div>
 
-							<hr />
+								<hr />
 
-							<div class="p-4">
-								<h2 class="mb-1 text-sm font-semibold">
-									{l(lang, "monitor.status_svg")}
-								</h2>
-								<p class="mb-2 text-xs text-muted-foreground">
-									{l(lang, "monitor.status_svg_desc")}
-								</p>
-								<Button
-									class="h-8  px-2 pr-4 text-xs"
-									variant="secondary"
-									on:click={copyDotStandard}
-								>
-									{#if !copiedBadgeDotStandard}
-										<img
-											src={pathMonitorBadgeDot}
-											class="mr-1 inline h-5"
-											alt="status"
-										/>
-										<span class="font-medium">
-											{l(lang, "monitor.standard")}
-										</span>
-									{:else}
-										<CopyCheck class="mr-2 inline h-5 w-5" />
-										<span class="font-medium">
-											{l(lang, "monitor.standard")}
-										</span>
-									{/if}
-								</Button>
-								<Button
-									class="h-8  px-2 pr-4 text-xs"
-									variant="secondary"
-									on:click={copyDotPing}
-								>
-									{#if !copiedBadgeDotPing}
-										<img
-											src={pathMonitorBadgeDotPing}
-											class="mr-1 inline h-5"
-											alt="status"
-										/>
-										<span class="font-medium">
-											{l(lang, "monitor.pinging")}
-										</span>
-									{:else}
-										<CopyCheck class="mr-2 inline h-5 w-5" />
-										<span class="font-medium">
-											{l(lang, "monitor.pinging")}
-										</span>
-									{/if}
-								</Button>
-							</div>
-						</Popover.Content>
-					</Popover.Root>
+								<div class="p-4">
+									<h2 class="mb-1 text-sm font-semibold">
+										{l(lang, "monitor.status_svg")}
+									</h2>
+									<p class="mb-2 text-xs text-muted-foreground">
+										{l(lang, "monitor.status_svg_desc")}
+									</p>
+									<Button
+										class="h-8  px-2 pr-4 text-xs"
+										variant="secondary"
+										on:click={copyDotStandard}
+									>
+										{#if !copiedBadgeDotStandard}
+											<img
+												src={pathMonitorBadgeDot}
+												class="mr-1 inline h-5"
+												alt="status"
+											/>
+											<span class="font-medium">
+												{l(lang, "monitor.standard")}
+											</span>
+										{:else}
+											<CopyCheck class="mr-2 inline h-5 w-5" />
+											<span class="font-medium">
+												{l(lang, "monitor.standard")}
+											</span>
+										{/if}
+									</Button>
+									<Button
+										class="h-8  px-2 pr-4 text-xs"
+										variant="secondary"
+										on:click={copyDotPing}
+									>
+										{#if !copiedBadgeDotPing}
+											<img
+												src={pathMonitorBadgeDotPing}
+												class="mr-1 inline h-5"
+												alt="status"
+											/>
+											<span class="font-medium">
+												{l(lang, "monitor.pinging")}
+											</span>
+										{:else}
+											<CopyCheck class="mr-2 inline h-5 w-5" />
+											<span class="font-medium">
+												{l(lang, "monitor.pinging")}
+											</span>
+										{/if}
+									</Button>
+								</div>
+							</Popover.Content>
+						</Popover.Root>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -456,8 +455,9 @@
 						: 'col-span-8'}   md:col-span-8"
 				>
 					<button
-						class="inline-block border-r pr-3 text-xs font-semibold {view != '90day'
-							? 'text-muted-foreground opacity-70'
+						class="inline-block border-r pr-3 text-xs font-semibold hover:text-primary {view !=
+						'90day'
+							? 'text-muted-foreground'
 							: 'text-primary'}"
 						on:click={(e) => {
 							switchView("90day");
@@ -466,8 +466,9 @@
 						{l(lang, "monitor.90_day")} ► {n(lang, uptime90Day)}%
 					</button>
 					<button
-						class="ml-2 inline-block text-xs font-semibold {view != '0day'
-							? 'text-muted-foreground opacity-70'
+						class="ml-2 inline-block text-xs font-semibold hover:text-primary {view !=
+						'0day'
+							? 'text-muted-foreground '
 							: 'text-primary'}"
 						on:click={(e) => {
 							switchView("0day");
@@ -483,12 +484,11 @@
 				>
 					{#if _90Day[todayDD]}
 						<div
-							class="text-api-up mt-[4px] truncate text-xs font-semibold text-{_90Day[
-								todayDD
-							].cssClass}"
+							class="text-api-up mt-[4px] truncate text-xs font-semibold text-{monitor
+								.pageData.summaryColorClass}"
 							title={_90Day[todayDD].message}
 						>
-							{summaryTime(lang, _90Day[todayDD].message)}
+							{summaryTime(lang, monitor.pageData.summaryText)}
 						</div>
 					{/if}
 				</div>
@@ -505,12 +505,13 @@
 								class="oneline h-[30px] w-[6px] rounded-sm"
 							>
 								<div
-									class="h-[30px] bg-{bar.cssClass} mr-[2px] w-[4px] rounded-sm"
+									class="h-[30px] bg-{bar.cssClass} mr-[2px] w-[4px] rounded-{monitor
+										.pageData.barRoundness}"
 								></div>
 							</div>
 							{#if bar.showDetails}
 								<div class="show-hover absolute text-sm">
-									<div class="text-{bar.cssClass} pt-1 text-xs font-semibold">
+									<div class="text-{bar.textClass} pt-1 text-xs font-semibold">
 										{n(
 											lang,
 											new Date(bar.timestamp * 1000).toLocaleDateString()
@@ -565,7 +566,7 @@
 				<p class="text-right">
 					<a
 						href="{base}/incident/{monitor.folderName}#past_incident"
-						class="text-xs font-semibold text-primary"
+						class="text-xs font-semibold text-muted-foreground hover:text-primary"
 					>
 						{l(lang, "root.recent_incidents")}
 					</a>
@@ -574,53 +575,3 @@
 		</div>
 	</div>
 </div>
-
-<style>
-	.daygrid90 {
-		-ms-overflow-style: none; /* Internet Explorer 10+ */
-		scrollbar-width: none; /* Firefox */
-	}
-	.daygrid90::-webkit-scrollbar {
-		display: none; /* Safari and Chrome */
-	}
-	.oneline {
-		transition: transform 0.1s ease-in;
-		cursor: pointer;
-	}
-	.oneline:hover {
-		transform: scaleY(1.2);
-	}
-
-	.show-hover {
-		top: 40px;
-		padding: 0px;
-		text-align: left;
-	}
-
-	.today-sq + .hiddenx .message {
-		position: absolute;
-		white-space: nowrap;
-	}
-
-	.today-sq + .hiddenx {
-		visibility: hidden;
-		z-index: 30;
-	}
-	.today-sq:hover + .hiddenx {
-		visibility: visible;
-	}
-	.today-sq:hover {
-		/* transform: scale(1.1); */
-		box-shadow:
-			rgba(50, 50, 105, 0.15) 0px 2px 5px 0px,
-			rgba(0, 0, 0, 0.05) 0px 1px 1px 0px;
-		opacity: 0.75;
-		transition: all 0.1s ease-in;
-		cursor: pointer;
-	}
-
-	.today-sq {
-		position: relative;
-		z-index: 0;
-	}
-</style>
