@@ -337,3 +337,33 @@ analytics:
 	- id: "FKOdsKener"
 	  type: "MIXPANEL"
 ```
+
+## barStyle
+
+Kener shows a bar for a day. By default if any downtime or degradation is there the bar will be red or yellow respectively.
+
+If you want to only show a part of the bar as red or yellow then you can set the `barStyle` to `PARTIAL`. Default is `FULL`
+
+```yaml
+barStyle: PARTIAL
+```
+
+---
+
+## barRoundness
+
+You can set the roundness of the bar. It can be `none` or `sm`. Default is `sm`
+
+```yaml
+barRoundness: none
+```
+
+---
+
+## summaryStyle
+
+The summary of the monitor today is shown in the monitor page. By default it shows the the whole day summary. If you want to show the current status then you can set the `summaryStyle` to `CURRENT`. Default is `DAY`.
+
+```yaml
+summaryStyle: CURRENT
+```
