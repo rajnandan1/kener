@@ -58,6 +58,8 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@formkit/auto-animate": "^0.8.2",
+		"@number-flow/svelte": "^0.2.1",
 		"@scalar/express-api-reference": "^0.4.167",
 		"analytics": "^0.8.14",
 		"axios": "^1.6.2",

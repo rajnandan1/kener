@@ -71,6 +71,7 @@ const FetchData = async function (monitor, localTz) {
 	let offsetInMinutes = parseInt((GetDayStartTimestampUTC(now) - midnight) / 60);
 	const _90Day = {};
 	let latestTimestamp = 0;
+	let ij = 0;
 	for (let i = midnight90DaysAgo; i < midnightTomorrow; i += secondsInDay) {
 		_90Day[i] = {
 			UP: 0,
@@ -79,8 +80,11 @@ const FetchData = async function (monitor, localTz) {
 			timestamp: i,
 			cssClass: StatusObj.NO_DATA,
 			textClass: StatusObj.NO_DATA,
-			message: NO_DATA
+			message: NO_DATA,
+			border: true,
+			ij: ij
 		};
+		ij++;
 		latestTimestamp = i;
 	}
 
@@ -126,18 +130,12 @@ const FetchData = async function (monitor, localTz) {
 	let uptime90DayNumerator = totalUpCount + totalDegradedCount;
 	let uptime90DayDenominator = totalUpCount + totalDownCount + totalDegradedCount;
 
-	let todayData = dbData[dbData.length - 1];
-	let uptime0DayNumerator = todayData.UP + todayData.DEGRADED;
-	let uptime0DayDenominator = todayData.UP + todayData.DOWN + todayData.DEGRADED;
-
 	//remove degraded from uptime
 	if (monitor.includeDegradedInDowntime === true) {
-		uptime0DayNumerator = todayData.UP;
 		uptime90DayNumerator = totalUpCount;
 	}
 	// return _90Day;
 	let uptime90Day = ParseUptime(uptime90DayNumerator, uptime90DayDenominator);
-	let uptime0Day = ParseUptime(uptime0DayNumerator, uptime0DayDenominator);
 
 	if (site.summaryStyle === "CURRENT") {
 		let lastDbData = db.getData(monitor.tag, latestTimestamp, latestTimestamp + secondsInDay);
@@ -159,7 +157,6 @@ const FetchData = async function (monitor, localTz) {
 	}
 	return {
 		_90Day: _90Day,
-		uptime0Day: uptime0Day,
 		uptime90Day: uptime90Day,
 		summaryText: summaryText,
 		summaryColorClass: summaryColorClass,

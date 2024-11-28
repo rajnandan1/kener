@@ -324,3 +324,31 @@ section {
 		transform: rotate(0deg);
 	}
 }
+
+/* animate background color between three colors */
+
+@keyframes changeColor {
+	0% {
+		background-color: #b8bcbe;
+	}
+	50% {
+		background-color: #f1f5f8;
+	}
+}
+
+.dark .animatebg {
+	animation: changeColorDark 2s infinite;
+}
+
+@keyframes changeColorDark {
+	0% {
+		background-color: #333;
+	}
+	50% {
+		background-color: #2d2d2f;
+	}
+}
+
+.animatebg {
+	animation: changeColor 2s infinite;
+}
