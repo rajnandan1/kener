@@ -136,7 +136,6 @@ const FetchData = async function (monitor, localTz) {
 	}
 	// return _90Day;
 	let uptime90Day = ParseUptime(uptime90DayNumerator, uptime90DayDenominator);
-
 	if (site.summaryStyle === "CURRENT") {
 		let lastDbData = db.getData(monitor.tag, latestTimestamp, latestTimestamp + secondsInDay);
 		let lastData = lastDbData[lastDbData.length - 1];

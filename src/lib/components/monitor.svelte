@@ -569,8 +569,10 @@
 								: 'border-transparent'}  pb-1"
 						>
 							<div
-								class="h-[30px] bg-{bar.cssClass} mx-auto w-[4px] rounded-{monitor
-									.pageData.barRoundness}"
+								class="h-[30px] bg-{bar.cssClass} mx-auto w-[4px] rounded-{monitor.pageData.barRoundness.toUpperCase() ==
+								'SHARP'
+									? 'none'
+									: 'sm'}"
 							></div>
 						</a>
 						{#if bar.showDetails}

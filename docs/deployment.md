@@ -49,7 +49,7 @@ docker.io/rajnandan1/kener:latest
 ghcr.io/rajnandan1/kener:latest
 ```
 
-You should mount two host directories to persist your configuration and database. [Environmental variables](https://rajnandan1.github.io/kener-docs/docs/environment-vars) can be passed with `-e` An example `docker run` command:
+You should mount two host directories to persist your configuration and database. [Environmental variables](/docs/environment-vars) can be passed with `-e` An example `docker run` command:
 
 Make sure `./database` and `./config` directories are present in the root directory
 

@@ -13,7 +13,7 @@ Each monitor runs at 1 minute interval by default. Monitor runs in below priorty
 
 -   defaultStatus Data
 -   API call Data overrides above data(if specified)
--   Pushed Status Data overrides API Data using [Kener Update Statue API](https://rajnandan1.github.io/kener-docs/docs/kener-apis#update-status)
+-   Pushed Status Data overrides API Data using [Kener Update Statue API](/docs/kener-apis/#update-incident-status---api)
 -   Manual Incident Data overrides Pushed Status Data
 
 Sample

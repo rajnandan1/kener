@@ -26,8 +26,8 @@ npm install
 -   Rename `config/monitors.example.yaml` -> `config/monitors.yaml`
 
 ```shell
-mv config/site.example.yaml config/site.yaml
-mv config/monitors.example.yaml config/monitors.yaml
+cp config/site.example.yaml config/site.yaml
+cp config/monitors.example.yaml config/monitors.yaml
 ```
 
 ## Start Kener Development Server

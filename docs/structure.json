@@ -44,6 +44,11 @@
 					"file": "/monitors.md"
 				},
 				{
+					"title": "Alerting",
+					"link": "/docs/set-up-alerts",
+					"file": "/set-up-alerts.md"
+				},
+				{
 					"title": "Monitors Examples",
 					"link": "/docs/monitor-examples",
 					"file": "/monitor-examples.md"

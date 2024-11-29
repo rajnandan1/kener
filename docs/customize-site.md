@@ -352,7 +352,7 @@ barStyle: PARTIAL
 
 ## barRoundness
 
-You can set the roundness of the bar. It can be `none` or `sm`. Default is `sm`
+You can set the roundness of the bar. It can be `SHARP` or `ROUNDED`. Default is `ROUNDED`
 
 ```yaml
 barRoundness: none
@@ -366,4 +366,17 @@ The summary of the monitor today is shown in the monitor page. By default it sho
 
 ```yaml
 summaryStyle: CURRENT
+```
+
+---
+
+## colors
+
+You can set the colors of UP, DOWN, DEGRADED
+
+```yaml
+colors:
+	UP: "#4ead94"
+	DOWN: "#ca3038"
+	DEGRADED: "#e6ca61"
 ```

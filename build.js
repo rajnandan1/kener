@@ -291,7 +291,7 @@ async function Build() {
 		site.barStyle = "FULL";
 	}
 	if (site.barRoundness === undefined) {
-		site.barRoundness = "none";
+		site.barRoundness = "ROUNDED";
 	} else {
 		site.barRoundness = site.barRoundness.toLowerCase();
 	}
