@@ -29,7 +29,7 @@ export async function load({ parent }) {
 		monitors[i].activeIncidents = [];
 		monitorsActive.push(monitors[i]);
 	}
-	let openIncidents = await GetOpenIncidents(github);
+	let openIncidents = await GetOpenIncidents();
 	let openIncidentsReduced = openIncidents.map(Mapper);
 
 	return {

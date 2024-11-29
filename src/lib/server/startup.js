@@ -9,6 +9,7 @@ name of each of these objects need to be unique
 import * as dotenv from "dotenv";
 import fs from "fs-extra";
 import path from "path";
+import figlet from "figlet";
 
 import yaml from "js-yaml";
 import { Cron } from "croner";
@@ -53,6 +54,14 @@ const Startup = async () => {
 			protect: true
 		}
 	);
+
+	figlet("Kener UP!", function (err, data) {
+		if (err) {
+			console.log("Something went wrong...");
+			return;
+		}
+		console.log(data);
+	});
 	return 1;
 };
 

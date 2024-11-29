@@ -44,7 +44,7 @@ const alertingQueue = new Queue({
 });
 
 async function manualIncident(monitor, githubConfig) {
-	let incidentsResp = await GetIncidentsManual(monitor.tag, githubConfig, "open");
+	let incidentsResp = await GetIncidentsManual(monitor.tag, "open");
 
 	let manualData = {};
 	if (incidentsResp.length == 0) {
@@ -80,7 +80,7 @@ async function manualIncident(monitor, githubConfig) {
 			if (end_time <= GetNowTimestampUTC() && incident.state === "open") {
 				//close the issue after 30 secs
 				setTimeout(async () => {
-					await CloseIssue(githubConfig, incidentNumber);
+					await CloseIssue(incidentNumber);
 				}, 30000);
 			}
 		} else {

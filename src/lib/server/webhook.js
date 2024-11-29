@@ -126,6 +126,10 @@ const store = function (data) {
 	return { status: 200, message: "success at " + data.timestampInSeconds };
 };
 const GHIssueToKenerIncident = function (issue) {
+	if (!!!issue) {
+		return null;
+	}
+
 	let issueLabels = issue.labels.map((label) => {
 		return label.name;
 	});

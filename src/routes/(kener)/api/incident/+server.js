@@ -30,7 +30,7 @@ export async function POST({ request }) {
 	let site = get(siteStore);
 	let github = site.github;
 	githubLabels.push("manual");
-	let resp = await CreateIssue(github, title, body, githubLabels);
+	let resp = await CreateIssue(title, body, githubLabels);
 	if (resp === null) {
 		return json(
 			{ error: "github error" },

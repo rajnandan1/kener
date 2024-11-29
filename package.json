@@ -71,6 +71,7 @@
 		"dns2": "^2.1.0",
 		"dotenv": "^16.4.5",
 		"express": "^4.18.2",
+		"figlet": "^1.8.0",
 		"fs-extra": "^11.1.1",
 		"js-yaml": "^4.1.0",
 		"lucide-svelte": "^0.292.0",

@@ -52,6 +52,13 @@ async function Build() {
 		site.hasGithub = true;
 	}
 
+	if (site.hasGithub && !!!site.github.incidentSince) {
+		site.github.incidentSince = 720;
+	}
+	if (site.hasGithub && !!!site.github.apiURL) {
+		site.github.apiURL = "https://api.github.com";
+	}
+
 	const FOLDER_DB = databaseFolder;
 	const FOLDER_SITE = FOLDER_DB + "/site.json";
 	const FOLDER_MONITOR = FOLDER_DB + "/monitors.json";
@@ -275,9 +282,6 @@ async function Build() {
 		monitors[i].hasAPI = hasAPI;
 	}
 
-	if (site.github.incidentSince === undefined || site.github.incidentSince === null) {
-		site.github.incidentSince = 720;
-	}
 	if (site.siteName === undefined) {
 		site.siteName = site.title;
 	}
@@ -336,7 +340,6 @@ async function Build() {
 
 	fs.ensureFileSync(FOLDER_MONITOR);
 	fs.ensureFileSync(FOLDER_SITE);
-
 	try {
 		fs.writeFileSync(FOLDER_MONITOR, JSON.stringify(monitors, null, 4));
 		fs.writeFileSync(FOLDER_SITE, JSON.stringify(site, null, 4));
@@ -346,68 +349,47 @@ async function Build() {
 	}
 
 	if (site.hasGithub) {
-		const ghowner = site.github.owner;
-		const ghrepo = site.github.repo;
-		const ghlabels = await GetAllGHLabels(ghowner, ghrepo);
+		const ghLabels = await GetAllGHLabels(site);
 		const tagsAndDescription = monitors.map((monitor) => {
 			return { tag: monitor.tag, description: monitor.name };
 		});
 		//add incident label if does not exist
 
-		if (ghlabels.indexOf("incident") === -1) {
-			await CreateGHLabel(ghowner, ghrepo, "incident", "Status of the site");
+		if (ghLabels.indexOf("incident") === -1) {
+			await CreateGHLabel(site, "incident", "Status of the site");
 		}
-		if (ghlabels.indexOf("resolved") === -1) {
-			await CreateGHLabel(ghowner, ghrepo, "resolved", "Incident is resolved", "65dba6");
+		if (ghLabels.indexOf("resolved") === -1) {
+			await CreateGHLabel(site, "resolved", "Incident is resolved", "65dba6");
 		}
-		if (ghlabels.indexOf("identified") === -1) {
-			await CreateGHLabel(ghowner, ghrepo, "identified", "Incident is Identified", "EBE3D5");
+		if (ghLabels.indexOf("identified") === -1) {
+			await CreateGHLabel(site, "identified", "Incident is Identified", "EBE3D5");
 		}
-		if (ghlabels.indexOf("manual") === -1) {
-			await CreateGHLabel(ghowner, ghrepo, "manual", "Manually Created Incident", "6499E9");
+		if (ghLabels.indexOf("manual") === -1) {
+			await CreateGHLabel(site, "manual", "Manually Created Incident", "6499E9");
 		}
-		if (ghlabels.indexOf("auto") === -1) {
+		if (ghLabels.indexOf("auto") === -1) {
+			await CreateGHLabel(site, "auto", "Automatically Created Incident", "D6C0B3");
+		}
+		if (ghLabels.indexOf("investigating") === -1) {
+			await CreateGHLabel(site, "investigating", "Incident is investigated", "D4E2D4");
+		}
+		if (ghLabels.indexOf("incident-degraded") === -1) {
 			await CreateGHLabel(
-				ghowner,
-				ghrepo,
-				"auto",
-				"Automatically Created Incident",
-				"D6C0B3"
-			);
-		}
-		if (ghlabels.indexOf("investigating") === -1) {
-			await CreateGHLabel(
-				ghowner,
-				ghrepo,
-				"investigating",
-				"Incident is investigated",
-				"D4E2D4"
-			);
-		}
-		if (ghlabels.indexOf("incident-degraded") === -1) {
-			await CreateGHLabel(
-				ghowner,
-				ghrepo,
+				site,
 				"incident-degraded",
 				"Status is degraded of the site",
 				"f5ba60"
 			);
 		}
-		if (ghlabels.indexOf("incident-down") === -1) {
-			await CreateGHLabel(
-				ghowner,
-				ghrepo,
-				"incident-down",
-				"Status is down of the site",
-				"ea3462"
-			);
+		if (ghLabels.indexOf("incident-down") === -1) {
+			await CreateGHLabel(site, "incident-down", "Status is down of the site", "ea3462");
 		}
 		//add tags if does not exist
 		for (let i = 0; i < tagsAndDescription.length; i++) {
 			const tag = tagsAndDescription[i].tag;
 			const description = tagsAndDescription[i].description;
-			if (ghlabels.indexOf(tag) === -1) {
-				await CreateGHLabel(ghowner, ghrepo, tag, description);
+			if (ghLabels.indexOf(tag) === -1) {
+				await CreateGHLabel(site, tag, description);
 			}
 		}
 	}
