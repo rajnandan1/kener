@@ -5,10 +5,10 @@ import {
 	GetMinuteStartNowTimestampUTC,
 	BeginningOfDay,
 	StatusObj,
-	StatusColor,
 	ParseUptime,
 	GetDayStartTimestampUTC
 } from "$lib/server/tool.js";
+import StatusColor from "$lib/color.js";
 import { siteStore } from "$lib/server/stores/site";
 import { get } from "svelte/store";
 

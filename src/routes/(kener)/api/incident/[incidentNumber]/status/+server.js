@@ -46,7 +46,7 @@ export async function POST({ request, params }) {
 	let site = get(siteStore);
 	let github = site.github;
 
-	let issue = await GetIncidentByNumber(incidentNumber);
+	let issue = await GetIncidentByNumber(site, incidentNumber);
 	if (issue === null) {
 		return json(
 			{ error: "github error" },
@@ -78,7 +78,7 @@ export async function POST({ request, params }) {
 		body = body + " " + `[end_datetime:${endDatetime}]`;
 	}
 
-	let resp = await UpdateIssueLabels(incidentNumber, labels, body);
+	let resp = await UpdateIssueLabels(site, incidentNumber, labels, body);
 	if (resp === null) {
 		return json(
 			{ error: "github error" },

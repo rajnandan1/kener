@@ -77,14 +77,14 @@ async function createGHIncident(monitor, alert, commonData) {
 	}
 
 	githubLabels.push("auto");
-	let resp = await CreateIssue(title, body, githubLabels);
+	let resp = await CreateIssue(siteData, title, body, githubLabels);
 
 	return GHIssueToKenerIncident(resp);
 }
 
 async function closeGHIncident(alert) {
 	let incidentNumber = alert.incidentNumber;
-	let issue = await GetIncidentByNumber(incidentNumber);
+	let issue = await GetIncidentByNumber(siteData, incidentNumber);
 	if (issue === null) {
 		return;
 	}
@@ -100,17 +100,17 @@ async function closeGHIncident(alert) {
 	body = body.trim();
 	body = body + " " + `[end_datetime:${endDatetime}]`;
 
-	let resp = await UpdateIssueLabels(incidentNumber, labels, body);
+	let resp = await UpdateIssueLabels(siteData, incidentNumber, labels, body);
 	if (resp === null) {
 		return;
 	}
-	await CloseIssue(incidentNumber);
+	await CloseIssue(siteData, incidentNumber);
 	return GHIssueToKenerIncident(resp);
 }
 
 //add comment to incident
 async function addCommentToIncident(alert, comment) {
-	let resp = await AddComment(alert.incidentNumber, comment);
+	let resp = await AddComment(siteData, alert.incidentNumber, comment);
 	return resp;
 }
 

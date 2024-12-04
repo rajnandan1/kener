@@ -30,7 +30,7 @@ const Startup = async () => {
 	// init monitors
 	for (let i = 0; i < monitors.length; i++) {
 		const monitor = monitors[i];
-		await Minuter(monitor, site.github, site);
+		await Minuter(monitor, site);
 		startUPLog[monitor.name] = {
 			"Initial Fetch": "✅"
 		};
@@ -44,7 +44,7 @@ const Startup = async () => {
 			cronExpression = monitor.cron;
 		}
 		Cron(cronExpression, async () => {
-			await Minuter(monitor, site.github, site);
+			await Minuter(monitor, site);
 		});
 		startUPLog[monitor.name]["Monitoring At"] = cronExpression;
 		if (monitor.alerts && ValidateMonitorAlerts(monitor.alerts)) {

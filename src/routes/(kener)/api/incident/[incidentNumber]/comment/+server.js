@@ -29,7 +29,7 @@ export async function GET({ request, params }) {
 
 	let site = get(siteStore);
 	let github = site.github;
-	let resp = await GetCommentsForIssue(incidentNumber);
+	let resp = await GetCommentsForIssue(site, incidentNumber);
 	return json(
 		resp.map((comment) => {
 			return {
@@ -78,7 +78,7 @@ export async function POST({ request, params }) {
 	let site = get(siteStore);
 	let github = site.github;
 
-	let resp = await AddComment(incidentNumber, body);
+	let resp = await AddComment(site, incidentNumber, body);
 	if (resp === null) {
 		return json(
 			{ error: "github error" },

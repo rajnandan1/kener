@@ -43,7 +43,7 @@ export async function PATCH({ request, params }) {
 
 	let site = get(siteStore);
 	let github = site.github;
-	let resp = await UpdateIssue(incidentNumber, title, body, githubLabels);
+	let resp = await UpdateIssue(site, incidentNumber, title, body, githubLabels);
 	if (resp === null) {
 		return json(
 			{ error: "github error" },

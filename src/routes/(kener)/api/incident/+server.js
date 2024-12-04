@@ -30,7 +30,7 @@ export async function POST({ request }) {
 	let site = get(siteStore);
 	let github = site.github;
 	githubLabels.push("manual");
-	let resp = await CreateIssue(title, body, githubLabels);
+	let resp = await CreateIssue(site, title, body, githubLabels);
 	if (resp === null) {
 		return json(
 			{ error: "github error" },
@@ -111,8 +111,7 @@ export async function GET({ request, url }) {
 	if (titleLike) {
 		filterArray.unshift(`${titleLike} in:title`);
 	}
-
-	const resp = await SearchIssue(filterArray, page, per_page);
+	const resp = await SearchIssue(site, filterArray, page, per_page);
 
 	const incidents = resp.items.map((issue) => GHIssueToKenerIncident(issue));
 

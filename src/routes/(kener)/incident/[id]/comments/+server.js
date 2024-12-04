@@ -8,7 +8,7 @@ import { get } from "svelte/store";
 export async function GET({ params }) {
 	const incidentNumber = params.id;
 	let siteData = get(siteStore);
-	let comments = await GetCommentsForIssue(incidentNumber);
+	let comments = await GetCommentsForIssue(siteData, incidentNumber);
 	comments = comments.map(
 		(
 			/** @type {{ body: string | import("markdown-it/lib/token")[]; created_at: any; updated_at: any; html_url: any; }} */ comment
