@@ -5,7 +5,7 @@ services:
     container_name: kener-rc
     #env_file: .env #uncomment this, if you are using .env file
     environment:
-      - TZ=Etc/GMT
+      - TZ=Etc/UTC
       #- GH_TOKEN=
       #- API_TOKEN=
       #- API_IP=

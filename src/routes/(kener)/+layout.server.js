@@ -6,7 +6,7 @@ export async function load({ params, route, url, cookies, request }) {
 	let site = get(siteStore);
 	const headers = request.headers;
 	const userAgent = headers.get("user-agent");
-	let localTz = "GMT";
+	let localTz = "UTC";
 	const localTzCookie = cookies.get("localTz");
 	if (!!localTzCookie) {
 		localTz = localTzCookie;

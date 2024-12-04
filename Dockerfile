@@ -1,6 +1,6 @@
 FROM lsiobase/alpine:3.18 as base
 
-ENV TZ=Etc/GMT
+ENV TZ=Etc/UTC
 
 RUN \
   echo "**** install build packages ****" && \
