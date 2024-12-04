@@ -13,11 +13,6 @@ const IsStringURLSafe = function (str) {
 const IsValidHTTPMethod = function (method) {
 	return /^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH)$/.test(method);
 };
-function GenerateRandomColor() {
-	var randomColor = Math.floor(Math.random() * 16777215).toString(16);
-	return randomColor;
-	//random color will be freshly served
-}
 
 //return given timestamp in UTC
 const GetNowTimestampUTC = function () {
