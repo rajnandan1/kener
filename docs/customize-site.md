@@ -119,14 +119,19 @@ Example add a png called `logo.png` file in `static/` and then
 
 ## github
 
-For incident kener uses github comments. Create an empty [github](https://github.com) repo and add them to `site.yaml`
+For incident kener uses github issues. Create an empty [github](https://github.com) repo and add them to `site.yaml`
 
 ```yaml
 github:
+	apiURL: "https://api.github.com"
     owner: "username"
     repo: "repository"
-    incidentSince: 72
+    incidentSince: 720
 ```
+
+### apiURL
+
+API URL of the github. Default is `https://api.github.com`. If you are using github enterprise then you can change it to your github enterprise api url.
 
 ### owner
 
@@ -138,7 +143,11 @@ Repository name of the github repository. If the repository is `https://github.c
 
 ### incidentSince
 
-`incidentSince` is in hours. It means if an issue is created before X hours then kener would not honor it. What it means is that kener would not show it active incident pages nor it will update the uptime. Default is 30\*24 hours.
+`incidentSince` is in hours. It means if an issue is created before X hours then kener would not honor it. What it means is that kener would not show it active incident pages nor it will update the uptime. Default is 30\*24 hours = 720 hours.
+
+To read how to set up github for kener [click here](/docs/gh-setup)
+
+To see how to create an issue [click here](/docs/incident-management)
 
 ---
 
