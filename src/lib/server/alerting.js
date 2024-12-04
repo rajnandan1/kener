@@ -28,7 +28,7 @@ function createJSONCommonAlert(monitor, config, alert) {
 	let severity = alert.monitorStatus === "DEGRADED" ? "warning" : "critical";
 	let source = "Kener";
 	let timestamp = new Date().toISOString();
-	let description = config.description;
+	let description = config.description || "Monitor has failed";
 	let status = alert.alertStatus;
 	let details = {
 		metric: monitor.name,
