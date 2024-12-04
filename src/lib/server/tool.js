@@ -1,8 +1,6 @@
 // @ts-nocheck
 import { AllRecordTypes } from "./constants.js";
-import { siteStore } from "./stores/site.js";
-import { get } from "svelte/store";
-const site = get(siteStore);
+
 import dotenv from "dotenv";
 dotenv.config();
 const IsValidURL = function (url) {
@@ -15,7 +13,7 @@ const IsStringURLSafe = function (str) {
 const IsValidHTTPMethod = function (method) {
 	return /^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH)$/.test(method);
 };
-function generateRandomColor() {
+function GenerateRandomColor() {
 	var randomColor = Math.floor(Math.random() * 16777215).toString(16);
 	return randomColor;
 	//random color will be freshly served
@@ -151,12 +149,6 @@ const StatusObj = {
 	DOWN: "api-down",
 	NO_DATA: "api-nodata"
 };
-const StatusColor = {
-	UP: site.colors?.UP || "#00dfa2",
-	DEGRADED: site.colors?.DEGRADED || "#e6ca61",
-	DOWN: site.colors?.DOWN || "#ca3038",
-	NO_DATA: "#f1f5f8"
-};
 // @ts-ignore
 const ParseUptime = function (up, all) {
 	if (all === 0) return String("-");
@@ -285,7 +277,10 @@ function ValidateMonitorAlerts(alerts) {
 	}
 	return true;
 }
-
+function GenerateRandomColor() {
+	var randomColor = Math.floor(Math.random() * 16777215).toString(16);
+	return randomColor;
+}
 export {
 	IsValidURL,
 	IsValidHTTPMethod,
@@ -301,7 +296,6 @@ export {
 	checkIfDuplicateExists,
 	GetWordsStartingWithDollar,
 	StatusObj,
-	StatusColor,
 	ParseUptime,
 	ParsePercentage,
 	IsValidHost,
@@ -309,5 +303,6 @@ export {
 	IsValidNameServer,
 	ReplaceAllOccurrences,
 	GetRequiredSecrets,
-	ValidateMonitorAlerts
+	ValidateMonitorAlerts,
+	GenerateRandomColor
 };

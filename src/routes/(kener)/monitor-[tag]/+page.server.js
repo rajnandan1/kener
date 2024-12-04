@@ -23,7 +23,7 @@ export async function load({ params, route, url, parent }) {
 		monitors[i].embed = false;
 		monitorsActive.push(monitors[i]);
 	}
-	let openIncidents = await GetOpenIncidents();
+	let openIncidents = await GetOpenIncidents(siteData);
 	let openIncidentsReduced = openIncidents.map(Mapper);
 	return {
 		monitors: monitorsActive,

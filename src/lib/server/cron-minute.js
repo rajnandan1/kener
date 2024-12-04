@@ -44,8 +44,8 @@ const alertingQueue = new Queue({
 	autostart: true // Automatically start the queue (optional)
 });
 
-async function manualIncident(monitor, githubConfig) {
-	let incidentsResp = await GetIncidentsManual(monitor.tag, "open");
+async function manualIncident(monitor, site) {
+	let incidentsResp = await GetIncidentsManual(site, monitor.tag, "open");
 
 	let manualData = {};
 	if (incidentsResp.length == 0) {
@@ -81,7 +81,7 @@ async function manualIncident(monitor, githubConfig) {
 			if (end_time <= GetNowTimestampUTC() && incident.state === "open") {
 				//close the issue after 30 secs
 				setTimeout(async () => {
-					await CloseIssue(incidentNumber);
+					await CloseIssue(site, incidentNumber);
 				}, 30000);
 			}
 		} else {
@@ -325,7 +325,7 @@ async function dsnChecker(dnsResolver, host, recordType, matchType, values) {
 	}
 }
 
-const Minuter = async (monitor, githubConfig) => {
+const Minuter = async (monitor, site) => {
 	if (apiQueue.length > 0) {
 		console.log("Queue length is " + apiQueue.length);
 	}
@@ -396,7 +396,7 @@ const Minuter = async (monitor, githubConfig) => {
 		dnsData[startOfMinute] = dnsResponse;
 	}
 
-	manualData = await manualIncident(monitor, githubConfig);
+	manualData = await manualIncident(monitor, site);
 	//merge noData, apiData, webhookData, dayData
 	let mergedData = {};
 	if (monitor.defaultStatus !== undefined && monitor.defaultStatus !== null) {

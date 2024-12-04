@@ -1,15 +1,12 @@
 // @ts-nocheck
 import axios from "axios";
-import { GetMinuteStartNowTimestampUTC } from "./tool.js";
+import { GetMinuteStartNowTimestampUTC, GenerateRandomColor } from "./tool.js";
 import { marked } from "marked";
 import { fileURLToPath } from "url";
-import { siteStore } from "./stores/site.js";
-import { get } from "svelte/store";
 import { dirname } from "path";
 import dotenv from "dotenv";
 
 dotenv.config();
-let site = get(siteStore);
 
 const GH_TOKEN = process.env.GH_TOKEN;
 
@@ -76,18 +73,14 @@ const GetAllGHLabels = async function (site) {
 	}
 	return labels;
 };
-function generateRandomColor() {
-	var randomColor = Math.floor(Math.random() * 16777215).toString(16);
-	return randomColor;
-}
+
 const CreateGHLabel = async function (site, label, description, color) {
-	site = get(siteStore);
 	if (!site.hasGithub || GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return null;
 	}
 	if (color === undefined) {
-		color = generateRandomColor();
+		color = GenerateRandomColor();
 	}
 
 	const options = postAxiosOptions(
@@ -128,7 +121,7 @@ const GetEndTimeFromBody = function (text) {
 	}
 	return null;
 };
-const GetIncidentByNumber = async function (incidentNumber) {
+const GetIncidentByNumber = async function (site, incidentNumber) {
 	if (!site.hasGithub || GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return null;
@@ -143,7 +136,7 @@ const GetIncidentByNumber = async function (incidentNumber) {
 		return null;
 	}
 };
-const GetIncidents = async function (tagName, state = "all") {
+const GetIncidents = async function (site, tagName, state = "all") {
 	if (!site.hasGithub || GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return [];
@@ -168,7 +161,7 @@ const GetIncidents = async function (tagName, state = "all") {
 		return [];
 	}
 };
-const GetIncidentsManual = async function (tagName, state = "all") {
+const GetIncidentsManual = async function (site, tagName, state = "all") {
 	if (!site.hasGithub || GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return [];
@@ -193,7 +186,7 @@ const GetIncidentsManual = async function (tagName, state = "all") {
 		return [];
 	}
 };
-const GetOpenIncidents = async function () {
+const GetOpenIncidents = async function (site) {
 	if (!site.hasGithub || GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return [];
@@ -273,7 +266,7 @@ function Mapper(issue) {
 
 	return res;
 }
-async function GetCommentsForIssue(issueID) {
+async function GetCommentsForIssue(site, issueID) {
 	if (!site.hasGithub || GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return [];
@@ -287,7 +280,7 @@ async function GetCommentsForIssue(issueID) {
 		return [];
 	}
 }
-async function CreateIssue(issueTitle, issueBody, issueLabels) {
+async function CreateIssue(site, issueTitle, issueBody, issueLabels) {
 	if (!site.hasGithub || GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return null;
@@ -306,7 +299,14 @@ async function CreateIssue(issueTitle, issueBody, issueLabels) {
 		return null;
 	}
 }
-async function UpdateIssue(incidentNumber, issueTitle, issueBody, issueLabels, state = "open") {
+async function UpdateIssue(
+	site,
+	incidentNumber,
+	issueTitle,
+	issueBody,
+	issueLabels,
+	state = "open"
+) {
 	if (!site.hasGithub || GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return null;
@@ -326,7 +326,7 @@ async function UpdateIssue(incidentNumber, issueTitle, issueBody, issueLabels, s
 		return null;
 	}
 }
-async function CloseIssue(incidentNumber) {
+async function CloseIssue(site, incidentNumber) {
 	if (!site.hasGithub || GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return null;
@@ -343,7 +343,7 @@ async function CloseIssue(incidentNumber) {
 		return null;
 	}
 }
-async function AddComment(incidentNumber, commentBody) {
+async function AddComment(site, incidentNumber, commentBody) {
 	if (!site.hasGithub || GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return null;
@@ -361,7 +361,7 @@ async function AddComment(incidentNumber, commentBody) {
 	}
 }
 //update issue labels
-async function UpdateIssueLabels(incidentNumber, issueLabels, body, state = "open") {
+async function UpdateIssueLabels(site, incidentNumber, issueLabels, body, state = "open") {
 	if (!site.hasGithub || GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return null;
@@ -382,7 +382,7 @@ async function UpdateIssueLabels(incidentNumber, issueLabels, body, state = "ope
 }
 
 //search issue
-async function SearchIssue(query, page, per_page) {
+async function SearchIssue(site, query, page, per_page) {
 	if (GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return null;

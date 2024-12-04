@@ -17,7 +17,7 @@ export async function load({ params, route, url, parent }) {
 	const { description, name, tag, image } = monitors.find(
 		(monitor) => monitor.folderName === params.id
 	);
-	const allIncidents = await GetIncidents(tag, "all");
+	const allIncidents = await GetIncidents(siteData, tag, "all");
 	const gitHubActiveIssues = allIncidents.filter((issue) => {
 		return issue.state === "open";
 	});
