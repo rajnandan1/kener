@@ -15,22 +15,25 @@ import yaml from "js-yaml";
 import { Cron } from "croner";
 import { API_TIMEOUT } from "./constants.js";
 
-import { IsValidURL, IsValidHTTPMethod, ValidateIpAddress } from "./tool.js";
+import { IsValidURL, IsValidHTTPMethod, ValidateIpAddress, ValidateMonitorAlerts } from "./tool.js";
 
 import { Minuter } from "./cron-minute.js";
 import axios from "axios";
 import db from "./db/db.js";
-let monitors = [];
-let site = {};
+import Queue from "queue";
+
 const DATABASE_PATH = "./database";
 const Startup = async () => {
 	const monitors = fs.readJSONSync(DATABASE_PATH + "/monitors.json");
 	const site = fs.readJSONSync(DATABASE_PATH + "/site.json");
+	const startUPLog = {};
 	// init monitors
 	for (let i = 0; i < monitors.length; i++) {
 		const monitor = monitors[i];
-		console.log("Initial Fetch for ", monitor.name);
 		await Minuter(monitor, site.github, site);
+		startUPLog[monitor.name] = {
+			"Initial Fetch": "✅"
+		};
 	}
 
 	for (let i = 0; i < monitors.length; i++) {
@@ -40,22 +43,33 @@ const Startup = async () => {
 		if (monitor.cron !== undefined && monitor.cron !== null) {
 			cronExpression = monitor.cron;
 		}
-		console.log("Staring " + cronExpression + " Cron for ", monitor.name);
 		Cron(cronExpression, async () => {
 			await Minuter(monitor, site.github, site);
 		});
+		startUPLog[monitor.name]["Monitoring At"] = cronExpression;
+		if (monitor.alerts && ValidateMonitorAlerts(monitor.alerts)) {
+			startUPLog[monitor.name]["Alerting"] = "✅";
+		} else {
+			startUPLog[monitor.name]["Alerting"] = "❗";
+		}
 	}
+	const tableData = Object.entries(startUPLog).map(([name, details]) => ({
+		Monitor: name,
+		...details
+	}));
+
+	console.table(tableData);
 	Cron(
 		"* * * * *",
 		async () => {
-			db.background();
+			await db.background();
 		},
 		{
 			protect: true
 		}
 	);
 
-	figlet("Kener UP!", function (err, data) {
+	figlet("Kener is UP!", function (err, data) {
 		if (err) {
 			console.log("Something went wrong...");
 			return;

@@ -1,13 +1,15 @@
 ---
-title: Set up Alerts | Kener
+title: Alert Config | Server.yaml | Kener
 description: Alerts are the heart of Kener. This is where you define the alerts you want to show on your site.
 ---
 
-# Set up Alerts
+# Add Alert Config
 
-Kener supports multiple alerting mechanisms. You can set up alerts in the `site.yaml` file.
+Use the `config/server.yaml` file to configure the alert settings.
 
-## Supported Alerting Mechanisms
+## Alert Triggers
+
+Kener supports multiple alerting mechanisms.
 
 Currently, Kener supports the following alerting mechanisms:
 
@@ -17,27 +19,44 @@ Currently, Kener supports the following alerting mechanisms:
 
 We are adding more alerting mechanisms in the future.
 
-## Configure Alerts
+### Configure Alerts
 
-In the `site.yaml` file, you can add the alerting mechanisms under the `alertingChannels` key. It accepts an array of objects.
+In the `server.yaml` file, you can add the alerting mechanisms under the `triggers` key. It accepts an array of objects.
 
 ```yaml
-alertingChannels:
+triggers:
   - name: Awesome Webhook
-  	type: "webhook"
+	type: "webhook"
 	url: "https://webhook.site/e0b7f471-adae-4153-b81b-4f977f65ad4a"
 	method: "POST"
 	headers:
       Authorization: Bearer $SOME_TOKEN_FROM_ENV
   - name: My Discord Channel
-  	type: "discord"
+	type: "discord"
 	url: "https://discord.com/api/webhooks/your-webhook-url"
   - name: Some Slack Channel
 	type: slack
     url: https://hooks.slack.com/services/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
 ```
 
-Please make sure `name` is present.
+| Key  | Description                                                             |
+| ---- | ----------------------------------------------------------------------- |
+| name | Name of the alerting mechanism. This will be used in the monitor config |
+| type | Type of the alerting mechanism. Can be `webhook`, `discord`, `slack`    |
+| url  | URL of the webhook or discord or slack channel                          |
+
+There may be additional keys based on the type of alerting mechanism.
+
+In webhook alerting, you can also add headers and method to the request.
+
+```yaml
+- name: Awesome Webhook
+  type: "webhook"
+  url: "https://webhook.site/e0b7f471-adae-4153-b81b-4f977f65ad4a"
+  method: "POST"
+  headers:
+      Authorization: Bearer $SOME_TOKEN_FROM_ENV
+```
 
 ### Webhook
 
@@ -101,9 +120,9 @@ The slack message when alert is `RESOLVED` will look like this
 
 ![Slack](/slack_resolved.png)
 
-## Add Alerts to Monitors
+### Add Alerts to Monitors
 
-Once you have set up the alerts, you can add them to your monitors in the `config/monitors.yaml` file.
+Once you have set up the triggers, you can add them to your monitors in the `config/monitors.yaml` file.
 
 ```yaml
 - name: OkBookmarks
@@ -112,13 +131,13 @@ Once you have set up the alerts, you can add them to your monitors in the `confi
   api:
       method: GET
       url: https://okbookmarks.com
-  alerting:
+  alerts:
       DOWN:
           failureThreshold: 1
           successThreshold: 1
           createIncident: true
           description: "🚨 **Service Alert**. This is a custom message"
-          alertingChannels:
+          triggers:
               - Awesome Webhook
               - My Discord Channel
               - Some Slack Channel
@@ -130,4 +149,12 @@ The `alerting` object lets you define the alerting mechanism for the monitor. It
 -   `successThreshold`: Number of consecutive successes before resolving the alert
 -   `createIncident`: If set to `true`, Kener will create an incident that will be shown on the status page
 -   `description`: Custom message for the alert
--   `alertingChannels`: Array of alerting channels to send the alert to
+-   `triggers`: Array of alerting triggers to send the alert to. The name should match the name in the `server.yaml` file.
+
+<div class="rounded border px-4 py-0 ">
+	<p class="text-sm font-medium">
+		It will send alerts to the webhook, discord, and slack channels.
+		The alert will be set when the monitor goes down for 1 health check.
+    	There will be one more alert when the monitor is up again after, 1 health check is successful.
+	</p>
+</div>

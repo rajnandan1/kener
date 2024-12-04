@@ -6,10 +6,32 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import { l } from "$lib/i18n/client";
 	import { base } from "$app/paths";
-	import { ArrowRight } from "lucide-svelte";
+	import { ArrowRight, X } from "lucide-svelte";
+	import { hotKeyAction, slide, clickOutsideAction } from "svelte-legos";
+	import { onMount } from "svelte";
+	import ShareMenu from "$lib/components/shareMenu.svelte";
 
 	export let data;
 	let hasActiveIncidents = data.openIncidents.length > 0;
+	let shareMenusToggle = false;
+	function showShareMenu(e) {
+		shareMenusToggle = true;
+		activeMonitor = e.detail.monitor;
+	}
+	let activeMonitor = null;
+	let pageLoaded = false;
+	$: {
+		if (pageLoaded) {
+			if (shareMenusToggle) {
+				document.body.style.overflow = "hidden";
+			} else {
+				document.body.style.overflow = "auto";
+			}
+		}
+	}
+	onMount(() => {
+		pageLoaded = true;
+	});
 </script>
 
 <div class="mt-32"></div>
@@ -22,7 +44,7 @@
 				{/if}
 				{#if data.site.hero.title}
 					<h1
-						class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold leading-snug text-transparent"
+						class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold leading-tight text-transparent"
 					>
 						{data.site.hero.title}
 					</h1>
@@ -104,7 +126,12 @@
 		<Card.Root>
 			<Card.Content class="monitors-card  p-0">
 				{#each data.monitors as monitor}
-					<Monitor {monitor} localTz={data.localTz} lang={data.lang} />
+					<Monitor
+						on:show_shareMenu={showShareMenu}
+						{monitor}
+						localTz={data.localTz}
+						lang={data.lang}
+					/>
 				{/each}
 			</Card.Content>
 		</Card.Root>
@@ -135,4 +162,36 @@
 			</Card.Root>
 		{/each}
 	</section>
+{/if}
+
+{#if shareMenusToggle}
+	<div
+		transition:slide={{ direction: "right" }}
+		use:hotKeyAction={{
+			code: "Escape",
+			cb: () => (shareMenusToggle = false)
+		}}
+		class="moldal-container fixed left-0 top-0 z-30 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm"
+	>
+		<div
+			use:clickOutsideAction
+			on:clickoutside={() => {
+				shareMenusToggle = false;
+			}}
+			class="absolute left-1/2 top-1/2 h-fit w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background shadow-lg backdrop-blur-lg md:w-[568px]"
+		>
+			<Button
+				variant="ghost"
+				on:click={() => {
+					shareMenusToggle = false;
+				}}
+				class="absolute right-2 top-2 z-40 h-6 w-6   rounded-full border bg-background p-1"
+			>
+				<X class="h-4 w-4   text-muted-foreground" />
+			</Button>
+			<div class="content">
+				<ShareMenu monitor={activeMonitor} lang={data.lang} />
+			</div>
+		</div>
+	</div>
 {/if}

@@ -14,11 +14,6 @@
 					"file": "/docs/quick-start.md"
 				},
 				{
-					"title": "How it works",
-					"link": "/docs/how-it-works",
-					"file": "/how-it-works.md"
-				},
-				{
 					"title": "Changelogs",
 					"link": "/docs/changelogs",
 					"file": "/changelogs.md"
@@ -34,19 +29,24 @@
 			"sectionTitle": "Core Concepts",
 			"children": [
 				{
-					"title": "Site Configuration",
+					"title": "Customization (site.yaml)",
 					"link": "/docs/customize-site",
 					"file": "/customize-site.md"
 				},
 				{
-					"title": "Monitors",
+					"title": "Monitors (monitors.yaml)",
 					"link": "/docs/monitors",
 					"file": "/monitors.md"
 				},
 				{
-					"title": "Alerting",
-					"link": "/docs/set-up-alerts",
-					"file": "/set-up-alerts.md"
+					"title": "Alerting (server.yaml)",
+					"link": "/docs/alerting",
+					"file": "/alerting.md"
+				},
+				{
+					"title": "Database (server.yaml)",
+					"link": "/docs/database",
+					"file": "/database.md"
 				},
 				{
 					"title": "Monitors Examples",

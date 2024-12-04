@@ -35,7 +35,7 @@ description: Kener is an open-source Node.js status page tool, designed to make 
   		<img src="https://fonts.gstatic.com/s/e/notoemoji/latest/2049_fe0f/512.gif" alt="⁉" width="32" height="32">
 	</picture>
 </div>
-<div class="flex gap-2">
+<div class="flex gap-2 kener-home-links">
 	<div class="flex-1 border rounded-md py-4 px-2 text-center">
 		<a href="https://kener.ing">Live Demo</a>
 	</div>

@@ -152,9 +152,9 @@ const StatusObj = {
 	NO_DATA: "api-nodata"
 };
 const StatusColor = {
-	UP: site.colors.UP || "#00dfa2",
-	DEGRADED: site.colors.DEGRADED || "#e6ca61",
-	DOWN: site.colors.DOWN || "#ca3038",
+	UP: site.colors?.UP || "#00dfa2",
+	DEGRADED: site.colors?.DEGRADED || "#e6ca61",
+	DOWN: site.colors?.DOWN || "#ca3038",
 	NO_DATA: "#f1f5f8"
 };
 // @ts-ignore
@@ -218,6 +218,74 @@ function GetRequiredSecrets(str) {
 	return envSecrets;
 }
 
+function ValidateMonitorAlerts(alerts) {
+	if (!alerts) {
+		console.log("Alerts object is not provided.");
+		return false;
+	}
+	// if down degraded not present return false
+	if (!alerts.hasOwnProperty("DOWN") && !alerts.hasOwnProperty("DEGRADED")) {
+		console.log("Alerts object does not have DOWN or DEGRADED properties.");
+		return false;
+	}
+	let statues = Object.keys(alerts);
+	//can be either DOWN or DEGRADED
+	let validKeys = ["DOWN", "DEGRADED"];
+	for (let i = 0; i < statues.length; i++) {
+		const keyName = statues[i];
+		if (!validKeys.includes(keyName)) {
+			console.log(`Invalid key found in alerts: ${keyName}`);
+			return false;
+		}
+	}
+	for (const key in alerts) {
+		if (Object.prototype.hasOwnProperty.call(alerts, key)) {
+			const element = alerts[key];
+			const triggers = element.triggers;
+			//if triggers not present return false
+			if (!element.hasOwnProperty("triggers")) {
+				console.log(`Triggers not present for key: ${key}`);
+				return false;
+			}
+			//if length of triggers is 0 return false
+			if (triggers.length === 0) {
+				console.log(`Triggers length is 0 for key: ${key}`);
+				return false;
+			}
+			if (
+				!element.hasOwnProperty("failureThreshold") ||
+				!element.hasOwnProperty("successThreshold")
+			) {
+				console.log(`Thresholds not present for key: ${key}`);
+				return false;
+			}
+			if (
+				element.hasOwnProperty("failureThreshold") &&
+				!Number.isInteger(element.failureThreshold)
+			) {
+				console.log(`Failure threshold is not an integer for key: ${key}`);
+				return false;
+			}
+			if (
+				element.hasOwnProperty("successThreshold") &&
+				!Number.isInteger(element.successThreshold)
+			) {
+				console.log(`Success threshold is not an integer for key: ${key}`);
+				return false;
+			}
+			if (element.hasOwnProperty("failureThreshold") && element.failureThreshold <= 0) {
+				console.log(`Failure threshold is less than or equal to 0 for key: ${key}`);
+				return false;
+			}
+			if (element.hasOwnProperty("successThreshold") && element.successThreshold <= 0) {
+				console.log(`Success threshold is less than or equal to 0 for key: ${key}`);
+				return false;
+			}
+		}
+	}
+	return true;
+}
+
 export {
 	IsValidURL,
 	IsValidHTTPMethod,
@@ -240,5 +308,6 @@ export {
 	IsValidRecordType,
 	IsValidNameServer,
 	ReplaceAllOccurrences,
-	GetRequiredSecrets
+	GetRequiredSecrets,
+	ValidateMonitorAlerts
 };

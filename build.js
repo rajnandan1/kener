@@ -28,9 +28,55 @@ const defaultEval = `(function (statusCode, responseTime, responseData) {
 		latency: responseTime,
 	}
 })`;
+
+function validateServerFile(server) {
+	//if empty return true
+	if (Object.keys(server).length === 0) {
+		return true;
+	}
+	//server.triggers is present then it should be an array
+	if (server.triggers !== undefined && !Array.isArray(server.triggers)) {
+		console.log("triggers should be an array");
+		return false;
+	}
+	///each trigger should have a name, type, and url
+	if (server.triggers !== undefined) {
+		for (let i = 0; i < server.triggers.length; i++) {
+			const trigger = server.triggers[i];
+			if (
+				trigger.name === undefined ||
+				trigger.type === undefined ||
+				trigger.url === undefined
+			) {
+				console.log("trigger should have name, type, and url");
+				return false;
+			}
+		}
+	}
+	//if database is present then it should be an object, and they key can be either postgres or sqlite
+	if (server.database !== undefined && typeof server.database !== "object") {
+		console.log("database should be an object");
+		return false;
+	}
+	if (server.database !== undefined) {
+		let dbtype = Object.keys(server.database);
+		if (dbtype.length !== 1) {
+			console.log("database should have only one key");
+			return false;
+		}
+		if (dbtype[0] !== "postgres" && dbtype[0] !== "sqlite") {
+			console.log("database should be either postgres or sqlite");
+			return false;
+		}
+	}
+
+	return true;
+}
+
 async function Build() {
-	console.log("Building Kener...");
+	console.log("ℹ️ Building Kener...");
 	let site = {};
+	let server = {};
 	let monitors = [];
 	try {
 		site = yaml.load(fs.readFileSync(configPathFolder + "/site.yaml", "utf8"));
@@ -38,6 +84,15 @@ async function Build() {
 	} catch (error) {
 		console.log(error);
 		process.exit(1);
+	}
+	try {
+		server = yaml.load(fs.readFileSync(configPathFolder + "/server.yaml", "utf8"));
+		if (!validateServerFile(server)) {
+			process.exit(1);
+		}
+	} catch (error) {
+		console.warn("server.yaml not found");
+		server = {};
 	}
 
 	if (
@@ -62,6 +117,7 @@ async function Build() {
 	const FOLDER_DB = databaseFolder;
 	const FOLDER_SITE = FOLDER_DB + "/site.json";
 	const FOLDER_MONITOR = FOLDER_DB + "/monitors.json";
+	const FOLDER_SERVER = FOLDER_DB + "/server.json";
 
 	for (let i = 0; i < monitors.length; i++) {
 		const monitor = monitors[i];
@@ -274,7 +330,7 @@ async function Build() {
 						}
 					}
 				} catch (error) {
-					console.log(error);
+					console.log(`error while fetching ${url}`);
 				}
 			}
 		}
@@ -340,13 +396,17 @@ async function Build() {
 
 	fs.ensureFileSync(FOLDER_MONITOR);
 	fs.ensureFileSync(FOLDER_SITE);
+	fs.ensureFileSync(FOLDER_SERVER);
 	try {
 		fs.writeFileSync(FOLDER_MONITOR, JSON.stringify(monitors, null, 4));
 		fs.writeFileSync(FOLDER_SITE, JSON.stringify(site, null, 4));
+		fs.writeFileSync(FOLDER_SERVER, JSON.stringify(server, null, 4));
 	} catch (error) {
 		console.log(error);
 		process.exit(1);
 	}
+
+	console.log("✅ Kener built successfully");
 
 	if (site.hasGithub) {
 		const ghLabels = await GetAllGHLabels(site);
@@ -392,6 +452,8 @@ async function Build() {
 				await CreateGHLabel(site, tag, description);
 			}
 		}
+
+		console.log("✅ Github labels created successfully");
 	}
 }
 

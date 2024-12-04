@@ -13,7 +13,7 @@ export async function POST({ request }) {
 			}
 		);
 	}
-	let resp = store(payload);
+	let resp = await store(payload);
 	return json(resp, {
 		status: resp.status
 	});

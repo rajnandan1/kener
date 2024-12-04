@@ -10,7 +10,7 @@ let monitors = get(monitorsStore);
 export async function GET({ params, setHeaders, url }) {
 	// @ts-ignore
 	const { tag, name } = monitors.find((monitor) => monitor.tag === params.tag);
-	const lastObj = db.getLatestData(tag);
+	const lastObj = await db.getLatestData(tag);
 
 	//read query params
 	const query = url.searchParams;

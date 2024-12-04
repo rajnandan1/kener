@@ -19,6 +19,9 @@ class Notification {
 			this.client = new Discord(config.url, siteData, monitorData);
 		} else if (config.type === "slack") {
 			this.client = new Slack(config.url, siteData, monitorData);
+		} else {
+			console.log("Invalid Notification");
+			process.exit(1);
 		}
 	}
 

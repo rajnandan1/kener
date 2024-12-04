@@ -355,7 +355,7 @@ barStyle: PARTIAL
 You can set the roundness of the bar. It can be `SHARP` or `ROUNDED`. Default is `ROUNDED`
 
 ```yaml
-barRoundness: none
+barRoundness: ROUNDED
 ```
 
 ---

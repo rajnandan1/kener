@@ -38,7 +38,10 @@ export async function GET({ params, url }) {
 		formatted = `${duration.minutes()}m`;
 	}
 
-	let dbData = db.getAggregatedData(tag, since, now);
+	let dbData = await db.getAggregatedData(tag, since, now);
+	dbData.UP = Number(dbData.UP);
+	dbData.DOWN = Number(dbData.DOWN);
+	dbData.DEGRADED = Number(dbData.DEGRADED);
 	let numerator = dbData.UP + dbData.DEGRADED;
 	let denominator = dbData.UP + dbData.DEGRADED + dbData.DOWN;
 	if (includeDegradedInDowntime === true) {

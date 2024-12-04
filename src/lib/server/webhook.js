@@ -73,7 +73,7 @@ const auth = function (request) {
 	}
 	return null;
 };
-const store = function (data) {
+const store = async function (data) {
 	const tag = data.tag;
 	//remove Bearer from start in authHeader
 
@@ -116,7 +116,7 @@ const store = function (data) {
 	let monitors = get(monitorsStore);
 	const monitor = monitors.find((monitor) => monitor.tag === tag);
 
-	db.insertData({
+	await db.insertData({
 		monitorTag: tag,
 		timestamp: data.timestampInSeconds,
 		status: resp.status,

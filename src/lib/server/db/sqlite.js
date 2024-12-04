@@ -18,8 +18,9 @@ class Sqlite {
 		this.init();
 	}
 
-	init() {
+	async init() {
 		this.db.exec(`
+
 			CREATE TABLE IF NOT EXISTS MonitoringData (
 				monitorTag TEXT NOT NULL,
 				timestamp INTEGER NOT NULL,
@@ -46,7 +47,7 @@ class Sqlite {
 		`);
 	}
 
-	insertData(data) {
+	async insertData(data) {
 		let stmt = this.db.prepare(`
 			INSERT INTO MonitoringData (monitorTag, timestamp, status, latency, type)
 			VALUES (@monitorTag, @timestamp, @status, @latency, @type)
@@ -59,7 +60,7 @@ class Sqlite {
 	}
 
 	//given monitorTag, start and end timestamp in utc seconds return data
-	getData(monitorTag, start, end) {
+	async getData(monitorTag, start, end) {
 		let stmt = this.db.prepare(`
 			SELECT * FROM MonitoringData
 			WHERE monitorTag = @monitorTag AND timestamp >= @start AND timestamp <= @end
@@ -69,7 +70,7 @@ class Sqlite {
 	}
 
 	//get latest data for a monitorTag
-	getLatestData(monitorTag) {
+	async getLatestData(monitorTag) {
 		let stmt = this.db.prepare(`
 			SELECT * FROM MonitoringData
 			WHERE monitorTag = @monitorTag
@@ -80,7 +81,7 @@ class Sqlite {
 	}
 
 	//given monitorTag, start and end timestamp in utc seconds return total degraded, up, down, avg(latency), max(latency), min(latency)
-	getAggregatedData(monitorTag, start, end) {
+	async getAggregatedData(monitorTag, start, end) {
 		let stmt = this.db.prepare(`
 			SELECT 
 				COUNT(*) AS total,
@@ -96,7 +97,7 @@ class Sqlite {
 		return stmt.get({ monitorTag, start, end });
 	}
 
-	getDataGroupByDayAlternative(monitorTag, start, end, timezoneOffsetMinutes = 0) {
+	async getDataGroupByDayAlternative(monitorTag, start, end, timezoneOffsetMinutes = 0) {
 		// Validate and normalize timezone offset
 		const offsetMinutes = Number(timezoneOffsetMinutes);
 		if (isNaN(offsetMinutes)) {
@@ -119,13 +120,11 @@ class Sqlite {
         ORDER BY timestamp ASC;
     `);
 
-		const rawData = stmt.all(monitorTag, start, end);
-
+		const rawData = stmt.all(monitorTag, start, end); //{ timestamp: 1732900380, status: 'UP', latency: 42 }
 		// Group manually in JavaScript
 		const groupedData = rawData.reduce((acc, row) => {
 			// Calculate day group considering timezone offset
 			const dayGroup = Math.floor((row.timestamp + offsetSeconds) / 86400);
-
 			if (!acc[dayGroup]) {
 				acc[dayGroup] = {
 					timestamp: dayGroup * 86400 - offsetSeconds, // start of day in UTC
@@ -169,7 +168,7 @@ class Sqlite {
 			.sort((a, b) => a.timestamp - b.timestamp);
 	}
 
-	background() {
+	async background() {
 		//clear data older than 90 days
 		let ninetyDaysAgo = GetMinuteStartNowTimestampUTC() - 86400 * 90;
 		let stmt = this.db.prepare(`
@@ -178,7 +177,7 @@ class Sqlite {
 		`);
 	}
 
-	consecutivelyStatusFor(monitorTag, status, lastX) {
+	async consecutivelyStatusFor(monitorTag, status, lastX) {
 		let stmt = this.db.prepare(`
 			SELECT 
 				CASE 
@@ -197,9 +196,10 @@ class Sqlite {
 	}
 
 	//insert alert
-	insertAlert(data) {
+	async insertAlert(data) {
 		//if alert exists return
-		if (this.alertExists(data.monitorTag, data.monitorStatus, data.alertStatus)) {
+
+		if (await this.alertExists(data.monitorTag, data.monitorStatus, data.alertStatus)) {
 			return;
 		}
 
@@ -207,24 +207,26 @@ class Sqlite {
 			INSERT INTO MonitorAlerts (monitorTag, monitorStatus, alertStatus, healthChecks)
 			VALUES (@monitorTag, @monitorStatus, @alertStatus, @healthChecks);
 		`);
-		stmt.run(data);
+		let x = stmt.run(data);
 
 		// Return the created row
-		return this.getActiveAlert(data.monitorTag, data.monitorStatus, data.alertStatus);
+		return await this.getActiveAlert(data.monitorTag, data.monitorStatus, data.alertStatus);
 	}
 
 	//check if alert exists given monitorTag, monitorStatus, alertStatus
-	alertExists(monitorTag, monitorStatus, alertStatus) {
+	async alertExists(monitorTag, monitorStatus, alertStatus) {
 		let stmt = this.db.prepare(`
 			SELECT COUNT(*) AS count
 			FROM MonitorAlerts
 			WHERE monitorTag = @monitorTag AND monitorStatus = @monitorStatus AND alertStatus = @alertStatus;
 		`);
-		return stmt.get({ monitorTag, monitorStatus, alertStatus }).count > 0;
+
+		let res = stmt.get({ monitorTag, monitorStatus, alertStatus });
+		return res.count > 0;
 	}
 
 	//return active alert for a monitorTag, monitorStatus, alertStatus = ACTIVE
-	getActiveAlert(monitorTag, monitorStatus, alertStatus) {
+	async getActiveAlert(monitorTag, monitorStatus, alertStatus) {
 		let stmt = this.db.prepare(`
 			SELECT * FROM MonitorAlerts
 			WHERE monitorTag = @monitorTag AND monitorStatus = @monitorStatus AND alertStatus = @alertStatus;
@@ -233,7 +235,7 @@ class Sqlite {
 	}
 
 	//update alert to inactive given monitorTag, monitorStatus, given id
-	updateAlertStatus(id, status) {
+	async updateAlertStatus(id, status) {
 		let stmt = this.db.prepare(`
 			UPDATE MonitorAlerts
 			SET alertStatus = @status, updatedAt = CURRENT_TIMESTAMP
@@ -243,7 +245,7 @@ class Sqlite {
 	}
 
 	//increment healthChecks for an alert given id
-	incrementAlertHealthChecks(id) {
+	async incrementAlertHealthChecks(id) {
 		let stmt = this.db.prepare(`
 			UPDATE MonitorAlerts
 			SET healthChecks = healthChecks + 1, updatedAt = CURRENT_TIMESTAMP
@@ -253,13 +255,18 @@ class Sqlite {
 	}
 
 	//add incidentNumber to an alert given id
-	addIncidentNumberToAlert(id, incidentNumber) {
+	async addIncidentNumberToAlert(id, incidentNumber) {
 		let stmt = this.db.prepare(`
 			UPDATE MonitorAlerts
 			SET incidentNumber = @incidentNumber, updatedAt = CURRENT_TIMESTAMP
 			WHERE id = @id;
 		`);
 		stmt.run({ id, incidentNumber });
+	}
+
+	//close
+	close() {
+		this.db.close();
 	}
 }
 

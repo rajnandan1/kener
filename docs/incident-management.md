@@ -35,4 +35,4 @@ Here is a [sample incident](https://github.com/rajnandan1/kener/issues/15) for y
 
 ### Using API
 
-You can also create incidents using the API. See the API [here](/kener-apis#create-an-incident---api)
+You can also create incidents using the API. See the API [here](/docs/kener-apis#create-an-incident---api)

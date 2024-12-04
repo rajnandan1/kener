@@ -17,7 +17,7 @@ class Webhook {
 
 		this.url = url;
 		this.headers = Object.assign(kenerHeader, headers);
-		this.method = method;
+		this.method = method || "POST";
 		this.siteData = siteData;
 		this.monitorData = monitorData;
 
@@ -34,6 +34,10 @@ class Webhook {
 
 	transformData(data) {
 		return data;
+	}
+
+	type() {
+		return "webhook";
 	}
 
 	async send(data) {

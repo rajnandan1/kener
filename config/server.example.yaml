@@ -1,0 +1,10 @@
+triggers:
+  - name: MyWebhook
+    type: webhook
+    url: https://teeny-gold-88.webhook.cool
+    method: POST
+    headers:
+      Authorization: Bearer $API_TOKEN
+database:
+  sqlite:
+    dbName: kener.db

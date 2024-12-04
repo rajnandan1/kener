@@ -14,10 +14,10 @@ export async function POST({ request }) {
 	const monitor = payload.monitor;
 	const start = payload.startTs;
 	let end = GetMinuteStartNowTimestampUTC();
-	let aggregatedData = db.getAggregatedData(monitor.tag, start, end);
-	let ups = aggregatedData.UP;
-	let downs = aggregatedData.DOWN;
-	let degradeds = aggregatedData.DEGRADED;
+	let aggregatedData = await db.getAggregatedData(monitor.tag, start, end);
+	let ups = Number(aggregatedData.UP);
+	let downs = Number(aggregatedData.DOWN);
+	let degradeds = Number(aggregatedData.DEGRADED);
 
 	let total = ups + downs + degradeds;
 	let uptime = ParseUptime(ups + degradeds, total);

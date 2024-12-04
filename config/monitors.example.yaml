@@ -17,3 +17,11 @@
   api:
       method: GET
       url: https://www.frogment.com
+  alerts:
+    DOWN: 
+      failureThreshold: 5
+      successThreshold: 2
+      createIncident: false
+      description: "Write a description here please"
+      triggers:
+        - MyWebhook

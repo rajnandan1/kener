@@ -17,7 +17,7 @@ export async function POST({ request }) {
 	const localTz = payload.localTz;
 	let _0Day = {};
 
-	const now = GetMinuteStartNowTimestampUTC();
+	const now = GetMinuteStartNowTimestampUTC() + 60;
 	const start = payload.startTs;
 	let end = Math.min(payload.startTs + 24 * 60 * 60, now);
 
@@ -30,7 +30,7 @@ export async function POST({ request }) {
 		};
 	}
 
-	let dayData = db.getData(monitor.tag, payload.startTs, end);
+	let dayData = await db.getData(monitor.tag, payload.startTs, end);
 	let siteData = get(siteStore);
 
 	let ups = 0;

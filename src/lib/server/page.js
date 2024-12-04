@@ -49,12 +49,26 @@ function returnStatusClass(val, c, barStyle) {
 			cl = c + "-60";
 		} else if (val > 0.6 * totalHeight && val <= 0.8 * totalHeight) {
 			cl = c + "-80";
-		} else if (val > 0.8 * totalHeight && val <= totalHeight) {
+		} else if (val > 0.8 * totalHeight && val < totalHeight) {
+			cl = c + "-90";
+		} else if (val == totalHeight) {
 			cl = c;
 		}
 		return cl;
 	}
 	return c;
+}
+
+function getCountOfSimilarStatuesEnd(arr, statusType) {
+	let count = 0;
+	for (let i = arr.length - 1; i >= 0; i--) {
+		if (arr[i].status === statusType) {
+			count++;
+		} else {
+			break;
+		}
+	}
+	return count;
 }
 
 const FetchData = async function (monitor, localTz) {
@@ -63,7 +77,7 @@ const FetchData = async function (monitor, localTz) {
 	let site = get(siteStore);
 	//get offset from utc in minutes
 
-	const now = GetMinuteStartNowTimestampUTC();
+	const now = GetMinuteStartNowTimestampUTC() + 60;
 	const midnight = BeginningOfDay({ timeZone: localTz });
 	const midnight90DaysAgo = midnight - 90 * 24 * 60 * 60;
 	const NO_DATA = "No Data";
@@ -88,7 +102,7 @@ const FetchData = async function (monitor, localTz) {
 		latestTimestamp = i;
 	}
 
-	let dbData = db.getDataGroupByDayAlternative(
+	let dbData = await db.getDataGroupByDayAlternative(
 		monitor.tag,
 		midnight90DaysAgo,
 		midnightTomorrow,
@@ -137,16 +151,26 @@ const FetchData = async function (monitor, localTz) {
 	// return _90Day;
 	let uptime90Day = ParseUptime(uptime90DayNumerator, uptime90DayDenominator);
 	if (site.summaryStyle === "CURRENT") {
-		let lastDbData = db.getData(monitor.tag, latestTimestamp, latestTimestamp + secondsInDay);
-		let lastData = lastDbData[lastDbData.length - 1];
+		let todayDataDb = await db.getData(
+			monitor.tag,
+			latestTimestamp,
+			latestTimestamp + secondsInDay
+		);
+
 		summaryText = "Status OK";
 		summaryColorClass = "api-up";
-		if (lastData.DEGRADED >= monitor.dayDegradedMinimumCount) {
-			summaryText = getDayMessage("DEGRADED", lastData.DEGRADED);
+
+		let lastRow = todayDataDb[todayDataDb.length - 1];
+
+		if (!!lastRow && lastRow.status == "DEGRADED") {
+			summaryText = getDayMessage(
+				"DEGRADED",
+				getCountOfSimilarStatuesEnd(todayDataDb, "DEGRADED")
+			);
 			summaryColorClass = "api-degraded";
 		}
-		if (lastData.DOWN >= monitor.dayDownMinimumCount) {
-			summaryText = getDayMessage("DOWN", lastData.DOWN);
+		if (!!lastRow && lastRow.status == "DOWN") {
+			summaryText = getDayMessage("DOWN", getCountOfSimilarStatuesEnd(todayDataDb, "DOWN"));
 			summaryColorClass = "api-down";
 		}
 	} else {

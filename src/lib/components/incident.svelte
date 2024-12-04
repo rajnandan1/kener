@@ -4,12 +4,14 @@
 	import moment from "moment";
 	import { Button } from "$lib/components/ui/button";
 	import { Badge } from "$lib/components/ui/badge";
-	import { ChevronDown } from "lucide-svelte";
+	import { ChevronDown, Info, CalendarCheck, Hammer } from "lucide-svelte";
 	import * as Collapsible from "$lib/components/ui/collapsible";
 	import { l } from "$lib/i18n/client";
 	import axios from "axios";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { base } from "$app/paths";
+
+	import { tooltipAction } from "svelte-legos";
 
 	export let incident;
 	export let variant = "title+body+comments+monitor";
@@ -139,26 +141,26 @@
 				<Card.Description class="-mt-4 px-8 text-xs ">
 					{moment(incidentCreatedAt * 1000).format("MMMM Do YYYY, h:mm:ss a")}
 
-					<p class="mt-2 leading-8">
+					<p class="mt-0 flex gap-2 leading-8">
 						{#if incident.labels.includes("identified")}
 							<span
-								class="tag-indetified me-2 mt-1 inline-block rounded-sm px-1 py-0.5 text-xs font-semibold uppercase leading-3"
+								class="tag-identified-text"
+								title={l(lang, "incident.identified")}
 							>
-								{l(lang, "incident.identified")}
+								<Info class="inline h-4 w-4" />
 							</span>
 						{/if}
 						{#if incident.labels.includes("resolved")}
-							<span
-								class=" tag-resolved me-2 inline-block rounded px-1 py-0.5 text-xs font-semibold uppercase leading-3"
-							>
-								{l(lang, "incident.resolved")}
+							<span class="tag-resolved-text" title={l(lang, "incident.resolved")}>
+								<CalendarCheck class="inline h-4 w-4" />
 							</span>
 						{/if}
 						{#if incident.labels.includes("maintenance")}
 							<span
-								class="tag-maintenance me-2 inline-block rounded px-1 py-0.5 text-xs font-semibold uppercase leading-3"
+								class="tag-maintenance-text"
+								title={l(lang, "incident.maintenance")}
 							>
-								{l(lang, "incident.maintenance")}
+								<Hammer class="inline h-4 w-4" />
 							</span>
 						{/if}
 					</p>

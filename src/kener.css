@@ -135,6 +135,9 @@ section {
 .bg-api-down-80 {
 	background: linear-gradient(0deg, var(--down-color) 80%, var(--up-color) 1%);
 }
+.bg-api-down-90 {
+	background: linear-gradient(0deg, var(--down-color) 90%, var(--up-color) 1%);
+}
 .text-api-down {
 	color: var(--down-color);
 }
@@ -172,6 +175,9 @@ section {
 .bg-api-degraded-80 {
 	background: linear-gradient(0deg, var(--degraded-color) 20%, var(--up-color) 1%);
 }
+.bg-api-degraded-90 {
+	background: linear-gradient(0deg, var(--degraded-color) 20%, var(--up-color) 1%);
+}
 
 /*Needed to show markdown properly*/
 .prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::before {
@@ -200,13 +206,22 @@ section {
 	background-color: #a076f9;
 	color: #09090b;
 }
+.tag-maintenance-text {
+	color: #a076f9;
+}
 .tag-resolved {
 	background-color: #2cd3e1;
 	color: #09090b;
 }
+.tag-resolved-text {
+	color: #1fbac8;
+}
 .tag-indetified {
 	background-color: #feffac;
 	color: #09090b;
+}
+.tag-identified-text {
+	color: #ddac25;
 }
 .daygrid90 {
 	-ms-overflow-style: none; /* Internet Explorer 10+ */

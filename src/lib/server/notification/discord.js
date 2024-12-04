@@ -28,7 +28,7 @@ class Discord {
 			: this.siteData.logo;
 
 		let color = 13250616; //down;
-		if (data.severity === "warn") {
+		if (data.severity === "warning") {
 			color = 15125089;
 		}
 		if (data.status === "RESOLVED") {
@@ -48,6 +48,11 @@ class Discord {
 						{
 							name: "Monitor",
 							value: data.details.metric,
+							inline: false
+						},
+						{
+							name: "Alert ID",
+							value: data.id,
 							inline: false
 						},
 						{

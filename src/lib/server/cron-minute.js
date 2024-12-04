@@ -7,7 +7,8 @@ import {
 	GetMinuteStartNowTimestampUTC,
 	GetMinuteStartTimestampUTC,
 	ReplaceAllOccurrences,
-	GetRequiredSecrets
+	GetRequiredSecrets,
+	ValidateMonitorAlerts
 } from "./tool.js";
 import {
 	GetIncidentsManual,
@@ -16,13 +17,13 @@ import {
 	CloseIssue
 } from "./github.js";
 import Randomstring from "randomstring";
+import alerting from "./alerting.js";
 import Queue from "queue";
 import dotenv from "dotenv";
 import path from "path";
 import db from "./db/db.js";
 import notification from "./notification/notif.js";
 import DNSResolver from "./dns.js";
-import alerting from "./alerting.js";
 
 dotenv.config();
 
@@ -124,6 +125,8 @@ async function manualIncident(monitor, githubConfig) {
 }
 
 const pingCall = async (hostsV4, hostsV6) => {
+	if (hostsV4 === undefined) hostsV4 = [];
+	if (hostsV6 === undefined) hostsV6 = [];
 	let alive = true;
 	let latencyTotal = 0;
 	let countHosts = hostsV4.length + hostsV6.length;
@@ -317,7 +320,7 @@ async function dsnChecker(dnsResolver, host, recordType, matchType, values) {
 	}
 }
 
-const Minuter = async (monitor, githubConfig, siteData) => {
+const Minuter = async (monitor, githubConfig) => {
 	if (apiQueue.length > 0) {
 		console.log("Queue length is " + apiQueue.length);
 	}
@@ -358,7 +361,7 @@ const Minuter = async (monitor, githubConfig, siteData) => {
 					monitor.api.timeout,
 					monitor.api.eval
 				).then(async (data) => {
-					db.insertData({
+					await db.insertData({
 						monitorTag: monitor.tag,
 						timestamp: startOfMinute,
 						status: data.status,
@@ -427,11 +430,12 @@ const Minuter = async (monitor, githubConfig, siteData) => {
 			type: element.type
 		});
 	}
-
-	if (monitor.alerting) {
+	if (monitor.alerts && ValidateMonitorAlerts(monitor.alerts)) {
 		alertingQueue.push(async (cb) => {
-			alerting(monitor, siteData);
-			cb();
+			setTimeout(async () => {
+				await alerting(monitor);
+				cb();
+			}, 1042);
 		});
 	}
 };
