@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { monitorsStore } from "$lib/server/stores/monitors";
-import { StatusColor } from "$lib/color.js";
+import StatusColor from "$lib/color.js";
 import { makeBadge } from "badge-maker";
 import { get } from "svelte/store";
 import db from "$lib/server/db/db.js";
