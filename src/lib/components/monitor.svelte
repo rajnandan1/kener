@@ -135,6 +135,9 @@
 	let dayUptime = "NA";
 	let loadingDayData = false;
 	function dailyDataGetter(e, bar) {
+		if (monitor.embed) {
+			return;
+		}
 		dayUptime = "NA";
 		dateFetchedFor = moment(new Date(bar.timestamp * 1000)).format("dddd, MMMM Do, YYYY");
 		showDailyDataModal = true;
@@ -242,7 +245,7 @@
 				</div>
 			</div>
 			<div class="chart-status relative col-span-12 mt-1">
-				<div class="daygrid90 flex overflow-x-auto overflow-y-hidden py-1">
+				<div class="daygrid90 flex min-h-[60px] overflow-x-auto overflow-y-hidden py-1">
 					{#each Object.entries(_90Day) as [ts, bar]}
 						<a
 							data-ts={ts}
@@ -344,7 +347,7 @@
 			</div>
 
 			{#if !!!monitor.embed}
-				<p class="text-right">
+				<p class="z-4 absolute bottom-3 right-14 float-right text-right">
 					<a
 						href="{base}/incident/{monitor.folderName}#past_incident"
 						class="text-xs font-medium text-muted-foreground hover:text-primary"
