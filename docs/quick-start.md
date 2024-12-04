@@ -5,7 +5,13 @@ description: Get started with Kener
 
 # Quick Start
 
-Please make sure you have [Node](https://nodejs.org/en) installed in your system. Minimum version required is `v16.17.0`.
+Here is a demonstration of how to get started with Kener in seconds
+
+## Requirements
+
+-   Node.js Minimum version required is `v22.12.0`.
+-   Git
+-   sqlite3
 
 ## Clone the repository
 

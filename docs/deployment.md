@@ -30,7 +30,7 @@ npm run prod
 
 ```shell
 npm i
-node build.js
+npm run build
 pm2 start src/lib/server/startup.js
 pm2 start main.js
 ```

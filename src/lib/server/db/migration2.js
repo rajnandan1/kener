@@ -9,7 +9,7 @@ export default async function migration2(db, _path) {
 	const files = await fs.readdir(_path);
 	const data = {};
 	for (const file of files) {
-		if (file.endsWith("0day.utc.json")) {
+		if (file.endsWith(".0day.utc.json")) {
 			const content = await fs.readJson(`${_path}/${file}`);
 			//get the first part
 			const parts = file.split(".");

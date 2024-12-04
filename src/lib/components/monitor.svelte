@@ -29,7 +29,7 @@
 
 	function getToday(startTs) {
 		//axios post using options application json
-		loadingDayData = true;
+
 		axios
 			.post(`${base}/api/today`, {
 				monitor: monitor,
@@ -141,7 +141,10 @@
 		dayUptime = "NA";
 		dateFetchedFor = moment(new Date(bar.timestamp * 1000)).format("dddd, MMMM Do, YYYY");
 		showDailyDataModal = true;
-		getToday(bar.timestamp);
+		loadingDayData = true;
+		setTimeout(() => {
+			getToday(bar.timestamp);
+		}, 1000);
 	}
 </script>
 

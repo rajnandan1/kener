@@ -27,6 +27,7 @@
 		"url": "https://github.com/rajnandan1/kener.git"
 	},
 	"scripts": {
+		"prebuild": "node build.js",
 		"build": "vite build",
 		"preview": "vite preview",
 		"preschedule": "node build.js",
