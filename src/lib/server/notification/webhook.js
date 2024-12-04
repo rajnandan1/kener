@@ -12,7 +12,7 @@ class Webhook {
 	constructor(url, headers, method, siteData, monitorData) {
 		const kenerHeader = {
 			"Content-Type": "application/json",
-			"User-Agent": "Kener"
+			"User-Agent": "Kener/2.0.0"
 		};
 
 		this.url = url;

@@ -6,7 +6,14 @@ RUN \
   echo "**** install build packages ****" && \
   apk add --no-cache \
     nodejs \
-    npm && \
+    npm \
+    python3 \
+    make \
+    gcc \
+    g++ \
+    sqlite \
+    sqlite-dev \
+    libc6-compat && \
   echo "**** cleanup ****" && \
   rm -rf \
     /root/.cache \
@@ -15,11 +22,11 @@ RUN \
 # set OS timezone specified by docker ENV
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-
+# ARG data_dir=/config
+# VOLUME $data_dir
+# ENV CONFIG_DIR=$data_dir
 
 COPY docker/root/ /
-
-
 
 # build requires devDependencies which are not used by production deploy
 # so build in a stage so we can copy results to clean "deploy" stage later
@@ -29,7 +36,10 @@ WORKDIR /app
 
 COPY --chown=abc:abc . /app
 
-RUN npm install \
+RUN \
+  npm install node-gyp -g && \
+  npm_config_build_from_source=true npm install better-sqlite3 && \
+  npm install \
     && chown -R root:root node_modules \
     && npm run build
 
@@ -47,15 +57,13 @@ COPY --chown=abc:abc build.js /app/build.js
 COPY --chown=abc:abc sitemap.js /app/sitemap.js
 COPY --chown=abc:abc openapi.json /app/openapi.json
 COPY --chown=abc:abc src/lib/server /app/src/lib/server
-COPY --chown=abc:abc src/lib/helpers.js /app/src/lib/helpers.js
 
 COPY --from=build --chown=abc:abc /app/build /app/build
 COPY --from=build --chown=abc:abc /app/main.js /app/main.js
 
-
 ENV NODE_ENV=production
 
-# install prod depdendencies and clean cache
+# install prod dependencies and clean cache
 RUN npm install --omit=dev \
     && npm cache clean --force \
     && chown -R abc:abc node_modules

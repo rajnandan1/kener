@@ -165,7 +165,7 @@ const pingCall = async (hostsV4, hostsV6) => {
 };
 const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorEval) => {
 	let axiosHeaders = {};
-	axiosHeaders["User-Agent"] = "Kener/0.0.1";
+	axiosHeaders["User-Agent"] = "Kener/2.0.0";
 	axiosHeaders["Accept"] = "*/*";
 	const start = Date.now();
 	//replace all secrets
@@ -210,16 +210,21 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
 		if (err.message.startsWith("timeout of") && err.message.endsWith("exceeded")) {
 			timeoutError = true;
 		}
-
+		// console.log(">>>>>>----  cron-minute:21224 ", err.response);
 		if (err.response !== undefined && err.response.status !== undefined) {
 			statusCode = err.response.status;
 		}
 		if (err.response !== undefined && err.response.data !== undefined) {
 			resp = err.response.data;
+		} else {
+			resp = JSON.stringify(resp);
 		}
 	} finally {
 		const end = Date.now();
 		latency = end - start;
+		if (resp === undefined || resp === null) {
+			resp = "";
+		}
 	}
 	resp = Buffer.from(resp).toString("base64");
 	let evalResp = eval(monitorEval + `(${statusCode}, ${latency}, "${resp}")`);
@@ -442,15 +447,13 @@ const Minuter = async (monitor, githubConfig) => {
 apiQueue.start((err) => {
 	if (err) {
 		console.error("Error occurred:", err);
-	} else {
-		console.log("All tasks completed");
+		process.exit(1);
 	}
 });
 alertingQueue.start((err) => {
 	if (err) {
 		console.error("Error occurred:", err);
-	} else {
-		console.log("All tasks completed");
+		process.exit(1);
 	}
 });
 export { Minuter };

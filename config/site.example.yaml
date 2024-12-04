@@ -52,4 +52,7 @@ pattern: "squares"
 analytics:
   - id: "G-Q3MLRXCBFT"
     type: "GA"
+barRoundness: SHARP
+summaryStyle: CURRENT
+barStyle: PARTIAL
 
