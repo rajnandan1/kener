@@ -27,7 +27,7 @@ In the `server.yaml` file, you can add the alerting mechanisms under the `trigge
 triggers:
   - name: Awesome Webhook
 	type: "webhook"
-	url: "https://webhook.site/e0b7f471-adae-4153-b81b-4f977f65ad4a"
+	url: "https://kener.requestcatcher.com/test"
 	method: "POST"
 	headers:
       Authorization: Bearer $SOME_TOKEN_FROM_ENV
@@ -52,7 +52,7 @@ In webhook alerting, you can also add headers and method to the request.
 ```yaml
 - name: Awesome Webhook
   type: "webhook"
-  url: "https://webhook.site/e0b7f471-adae-4153-b81b-4f977f65ad4a"
+  url: "https://kener.requestcatcher.com/test"
   method: "POST"
   headers:
       Authorization: Bearer $SOME_TOKEN_FROM_ENV

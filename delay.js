@@ -26,8 +26,9 @@ let requiredFilesExist = allFilesExist();
 //create anonymous function to call the init function
 (async function init() {
 	while (!requiredFilesExist && waitTime < maxWait) {
-		requiredFilesExist = allFilesExist();
 		await delay(1000);
+		requiredFilesExist = allFilesExist();
+
 		waitTime += interval;
 	}
 	if (!requiredFilesExist) {

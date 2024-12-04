@@ -1,10 +1,13 @@
 triggers:
   - name: MyWebhook
     type: webhook
-    url: https://teeny-gold-88.webhook.cool
+    url: https://kener.requestcatcher.com/test
     method: POST
     headers:
-      Authorization: Bearer $API_TOKEN
+      Authorization: Bearer SomeToken
+  - name: Discord Test
+    type: discord
+    url: https://discord.com/api/webhooks/1310641119767302164/XJvq4MO2lz5yp9XRCJgfc4dbUfcQdHsttFUKTFJx4y_Oo1jNkUXf-CS3RSnamnNNv4Lx
 database:
   sqlite:
     dbName: kener.db
