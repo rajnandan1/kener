@@ -7,8 +7,7 @@ on:
     tags:
       - "*.*.*"
     paths-ignore:
-      - docs.md
-      - README.md
+      - "*.md"
 jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub

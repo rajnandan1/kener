@@ -24,7 +24,7 @@ Make sure you have the following installed:
 npm i
 npm run build #build the frontend
 npm run configure #build the backend
-npm run start
+npm run prod
 ```
 
 ## PM2
