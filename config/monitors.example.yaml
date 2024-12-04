@@ -17,3 +17,32 @@
   api:
       method: GET
       url: https://www.frogment.com
+  alerts:
+    DOWN: 
+      failureThreshold: 5
+      successThreshold: 2
+      createIncident: false
+      description: "Write a description here please"
+      triggers:
+        - MyWebhook
+        - Discord Test
+- name: CNAME Lookup
+  description: Monitor example showing how to lookup CNAME record for a domain. The site www.rajnandan.com is hosted on GitHub Pages.
+  tag: "cname-rajnandan"
+  image: "https://www.rajnandan.com/assets/images/me.jpg"
+  defaultStatus: "UP"
+  dns:
+      host: "www.rajnandan.com"
+      lookupRecord: "CNAME"
+      nameServer: "8.8.8.8"
+      matchType: "ANY" # ANY, ALL
+      values:
+          - "rajnandan1.github.io"
+- name: "Frogment APP Ping"
+  description: "Ping www.frogment.app"
+  image: https://www.frogment.app/icons/Square107x107Logo.png
+  tag: "pingFrogmentApp"
+  defaultStatus: "UP"
+  ping:
+    hostsV4:
+    - "www.frogment.app"

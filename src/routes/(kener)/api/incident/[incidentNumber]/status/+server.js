@@ -6,8 +6,6 @@ import { UpdateIssueLabels, GetIncidentByNumber } from "$lib/server/github";
 import { siteStore } from "$lib/server/stores/site";
 import { get } from "svelte/store";
 
-import fs from "fs-extra";
-
 export async function POST({ request, params }) {
 	const payload = await request.json();
 	const incidentNumber = params.incidentNumber; //number required
@@ -48,7 +46,7 @@ export async function POST({ request, params }) {
 	let site = get(siteStore);
 	let github = site.github;
 
-	let issue = await GetIncidentByNumber(github, incidentNumber);
+	let issue = await GetIncidentByNumber(incidentNumber);
 	if (issue === null) {
 		return json(
 			{ error: "github error" },
@@ -80,7 +78,7 @@ export async function POST({ request, params }) {
 		body = body + " " + `[end_datetime:${endDatetime}]`;
 	}
 
-	let resp = await UpdateIssueLabels(github, incidentNumber, labels, body);
+	let resp = await UpdateIssueLabels(incidentNumber, labels, body);
 	if (resp === null) {
 		return json(
 			{ error: "github error" },

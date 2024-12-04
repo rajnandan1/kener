@@ -1,6 +1,5 @@
 // @ts-nocheck
 // @ts-ignore
-import fs from "fs-extra";
 import { siteStore } from "$lib/server/stores/site";
 import { get } from "svelte/store";
 let siteData = get(siteStore);

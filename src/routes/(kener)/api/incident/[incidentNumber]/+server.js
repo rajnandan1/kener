@@ -10,7 +10,6 @@ import {
 } from "$lib/server/github";
 import { siteStore } from "$lib/server/stores/site";
 import { get } from "svelte/store";
-import fs from "fs-extra";
 
 export async function PATCH({ request, params }) {
 	const authError = auth(request);
@@ -44,7 +43,7 @@ export async function PATCH({ request, params }) {
 
 	let site = get(siteStore);
 	let github = site.github;
-	let resp = await UpdateIssue(github, incidentNumber, title, body, githubLabels);
+	let resp = await UpdateIssue(incidentNumber, title, body, githubLabels);
 	if (resp === null) {
 		return json(
 			{ error: "github error" },
@@ -73,7 +72,7 @@ export async function GET({ request, params }) {
 
 	let site = get(siteStore);
 	let github = site.github;
-	let issue = await GetIncidentByNumber(github, incidentNumber);
+	let issue = await GetIncidentByNumber(incidentNumber);
 	if (issue === null) {
 		return json(
 			{ error: "incident not found" },

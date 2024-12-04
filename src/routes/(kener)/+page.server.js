@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { Mapper, GetOpenIncidents, FilterAndInsertMonitorInIncident } from "$lib/server/github.js";
 import { FetchData } from "$lib/server/page";
-import fs from "fs-extra";
 import { monitorsStore } from "$lib/server/stores/monitors";
 import { get } from "svelte/store";
 
@@ -30,7 +29,7 @@ export async function load({ parent }) {
 		monitors[i].activeIncidents = [];
 		monitorsActive.push(monitors[i]);
 	}
-	let openIncidents = await GetOpenIncidents(github);
+	let openIncidents = await GetOpenIncidents();
 	let openIncidentsReduced = openIncidents.map(Mapper);
 
 	return {

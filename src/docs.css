@@ -14,3 +14,11 @@ code:not([class^="language-"]) {
 main {
 	scroll-behavior: smooth;
 }
+.kener-home-links a {
+	text-decoration: none;
+	background-color: var(--bg-background);
+}
+.kener-home-links > div:hover {
+	transition: all 0.3s;
+	box-shadow: 0 0 8px 1.5px #3e9a4b;
+}

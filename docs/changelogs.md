@@ -5,6 +5,30 @@ description: Changelogs for Kener
 
 # Changelogs
 
+## v2.0.0
+
+<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.webp" type="image/webp">
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.gif" alt="🚀" width="32" height="32">
+</picture>
+
+Here are the changes in this release
+
+### Features
+
+-   Added support for sqlite3 and removed dependency on file system
+-   Added support for postgres database. Read more [here](/docs/database)
+-   Added support for alerting. Read more [here](/docs/alerting)
+-   Added color customization. Read more [here](/docs/customize-site#color)
+-   Added three new customizations for home page. Read more [here](/docs/customize-site#barstyle)
+    -   `barStyle`
+    -   `barRoundness`
+    -   `summaryStyle`
+
+### Migration
+
+Kener will automatically migrate your data from file system to sqlite3. If you are using a custom domain, you need to update the `site.yaml` file with the new `siteURL` field. Read more [here](/docs/customize-site#siteURL)
+
 ## v0.0.16
 
 <picture>

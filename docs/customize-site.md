@@ -91,7 +91,12 @@ This is the location where someone will be taken when they click on the site nam
 
 ## theme
 
-This is the default theme of the site that will be used when a user lands for the first time. It can be `light` or `dark` or `system`. Defaults to `system`. The user still gets the option to change the theme.
+This is the default theme of the site that will be used when a user lands for the first time. It can be `light` or `dark` or `system` or `none`. Defaults to `system`. The user still gets the option to change the theme.
+
+-   setting it to `light` will always set the theme to light when page loads
+-   setting it to `dark` will always set the theme to dark when page loads
+-   setting it to `system` will set the theme based on the system preference
+-   setting it to `none` will set the theme to last selected theme by the user
 
 ## themeToggle
 
@@ -114,14 +119,19 @@ Example add a png called `logo.png` file in `static/` and then
 
 ## github
 
-For incident kener uses github comments. Create an empty [github](https://github.com) repo and add them to `site.yaml`
+For incident kener uses github issues. Create an empty [github](https://github.com) repo and add them to `site.yaml`
 
 ```yaml
 github:
+	apiURL: "https://api.github.com"
     owner: "username"
     repo: "repository"
-    incidentSince: 72
+    incidentSince: 720
 ```
+
+### apiURL
+
+API URL of the github. Default is `https://api.github.com`. If you are using github enterprise then you can change it to your github enterprise api url.
 
 ### owner
 
@@ -133,7 +143,11 @@ Repository name of the github repository. If the repository is `https://github.c
 
 ### incidentSince
 
-`incidentSince` is in hours. It means if an issue is created before X hours then kener would not honor it. What it means is that kener would not show it active incident pages nor it will update the uptime. Default is 30\*24 hours.
+`incidentSince` is in hours. It means if an issue is created before X hours then kener would not honor it. What it means is that kener would not show it active incident pages nor it will update the uptime. Default is 30\*24 hours = 720 hours.
+
+To read how to set up github for kener [click here](/docs/gh-setup)
+
+To see how to create an issue [click here](/docs/incident-management)
 
 ---
 
@@ -331,4 +345,47 @@ analytics:
 	  type: "AMPLITUDE"
 	- id: "FKOdsKener"
 	  type: "MIXPANEL"
+```
+
+## barStyle
+
+Kener shows a bar for a day. By default if any downtime or degradation is there the bar will be red or yellow respectively.
+
+If you want to only show a part of the bar as red or yellow then you can set the `barStyle` to `PARTIAL`. Default is `FULL`
+
+```yaml
+barStyle: PARTIAL
+```
+
+---
+
+## barRoundness
+
+You can set the roundness of the bar. It can be `SHARP` or `ROUNDED`. Default is `ROUNDED`
+
+```yaml
+barRoundness: ROUNDED
+```
+
+---
+
+## summaryStyle
+
+The summary of the monitor today is shown in the monitor page. By default it shows the the whole day summary. If you want to show the current status then you can set the `summaryStyle` to `CURRENT`. Default is `DAY`.
+
+```yaml
+summaryStyle: CURRENT
+```
+
+---
+
+## colors
+
+You can set the colors of UP, DOWN, DEGRADED
+
+```yaml
+colors:
+	UP: "#4ead94"
+	DOWN: "#ca3038"
+	DEGRADED: "#e6ca61"
 ```

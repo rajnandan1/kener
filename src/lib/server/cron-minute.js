@@ -1,29 +1,51 @@
 // @ts-nocheck
 import axios from "axios";
 import ping from "ping";
-import fs from "fs-extra";
 import { UP, DOWN, DEGRADED } from "./constants.js";
 import {
 	GetNowTimestampUTC,
 	GetMinuteStartNowTimestampUTC,
-	GetMinuteStartTimestampUTC
+	GetMinuteStartTimestampUTC,
+	ReplaceAllOccurrences,
+	GetRequiredSecrets,
+	ValidateMonitorAlerts
 } from "./tool.js";
-import { GetIncidents, GetEndTimeFromBody, GetStartTimeFromBody, CloseIssue } from "./github.js";
+import {
+	GetIncidentsManual,
+	GetEndTimeFromBody,
+	GetStartTimeFromBody,
+	CloseIssue
+} from "./github.js";
 import Randomstring from "randomstring";
+import alerting from "./alerting.js";
 import Queue from "queue";
 import dotenv from "dotenv";
 import path from "path";
+import db from "./db/db.js";
+import notification from "./notification/notif.js";
+import DNSResolver from "./dns.js";
+
 dotenv.config();
 
-const Kener_folder = "./database";
+const REALTIME = "realtime";
+const TIMEOUT = "timeout";
+const ERROR = "error";
+const MANUAL = "manual";
+
 const apiQueue = new Queue({
 	concurrency: 10, // Number of tasks that can run concurrently
 	timeout: 10000, // Timeout in ms after which a task will be considered as failed (optional)
 	autostart: true // Automatically start the queue (optional)
 });
 
+const alertingQueue = new Queue({
+	concurrency: 10, // Number of tasks that can run concurrently
+	timeout: 10000, // Timeout in ms after which a task will be considered as failed (optional)
+	autostart: true // Automatically start the queue (optional)
+});
+
 async function manualIncident(monitor, githubConfig) {
-	let incidentsResp = await GetIncidents(monitor.tag, githubConfig, "open");
+	let incidentsResp = await GetIncidentsManual(monitor.tag, "open");
 
 	let manualData = {};
 	if (incidentsResp.length == 0) {
@@ -33,6 +55,7 @@ async function manualIncident(monitor, githubConfig) {
 	let timeDownEnd = 0;
 	let timeDegradedStart = +Infinity;
 	let timeDegradedEnd = 0;
+
 	for (let i = 0; i < incidentsResp.length; i++) {
 		const incident = incidentsResp[i];
 		const incidentNumber = incident.number;
@@ -58,7 +81,7 @@ async function manualIncident(monitor, githubConfig) {
 			if (end_time <= GetNowTimestampUTC() && incident.state === "open") {
 				//close the issue after 30 secs
 				setTimeout(async () => {
-					await CloseIssue(githubConfig, incidentNumber);
+					await CloseIssue(incidentNumber);
 				}, 30000);
 			}
 		} else {
@@ -85,7 +108,7 @@ async function manualIncident(monitor, githubConfig) {
 		manualData[i] = {
 			status: DEGRADED,
 			latency: 0,
-			type: "manual"
+			type: MANUAL
 		};
 	}
 
@@ -95,18 +118,15 @@ async function manualIncident(monitor, githubConfig) {
 		manualData[i] = {
 			status: DOWN,
 			latency: 0,
-			type: "manual"
+			type: MANUAL
 		};
 	}
 	return manualData;
 }
 
-function replaceAllOccurrences(originalString, searchString, replacement) {
-	const regex = new RegExp(`\\${searchString}`, "g");
-	const replacedString = originalString.replace(regex, replacement);
-	return replacedString;
-}
 const pingCall = async (hostsV4, hostsV6) => {
+	if (hostsV4 === undefined) hostsV4 = [];
+	if (hostsV6 === undefined) hostsV6 = [];
 	let alive = true;
 	let latencyTotal = 0;
 	let countHosts = hostsV4.length + hostsV6.length;
@@ -140,25 +160,25 @@ const pingCall = async (hostsV4, hostsV6) => {
 	return {
 		status: alive ? UP : DOWN,
 		latency: parseInt(latencyTotal / countHosts),
-		type: "realtime"
+		type: REALTIME
 	};
 };
 const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorEval) => {
 	let axiosHeaders = {};
-	axiosHeaders["User-Agent"] = "Kener/0.0.1";
+	axiosHeaders["User-Agent"] = "Kener/2.0.0";
 	axiosHeaders["Accept"] = "*/*";
 	const start = Date.now();
 	//replace all secrets
 	for (let i = 0; i < envSecrets.length; i++) {
 		const secret = envSecrets[i];
 		if (!!body) {
-			body = replaceAllOccurrences(body, secret.find, secret.replace);
+			body = ReplaceAllOccurrences(body, secret.find, secret.replace);
 		}
 		if (!!url) {
-			url = replaceAllOccurrences(url, secret.find, secret.replace);
+			url = ReplaceAllOccurrences(url, secret.find, secret.replace);
 		}
 		if (!!headers) {
-			headers = replaceAllOccurrences(headers, secret.find, secret.replace);
+			headers = ReplaceAllOccurrences(headers, secret.find, secret.replace);
 		}
 	}
 	if (!!headers) {
@@ -190,16 +210,21 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
 		if (err.message.startsWith("timeout of") && err.message.endsWith("exceeded")) {
 			timeoutError = true;
 		}
-
+		// console.log(">>>>>>----  cron-minute:21224 ", err.response);
 		if (err.response !== undefined && err.response.status !== undefined) {
 			statusCode = err.response.status;
 		}
 		if (err.response !== undefined && err.response.data !== undefined) {
 			resp = err.response.data;
+		} else {
+			resp = JSON.stringify(resp);
 		}
 	} finally {
 		const end = Date.now();
 		latency = end - start;
+		if (resp === undefined || resp === null) {
+			resp = "";
+		}
 	}
 	resp = Buffer.from(resp).toString("base64");
 	let evalResp = eval(monitorEval + `(${statusCode}, ${latency}, "${resp}")`);
@@ -207,7 +232,7 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
 		evalResp = {
 			status: DOWN,
 			latency: latency,
-			type: "error"
+			type: ERROR
 		};
 	} else if (
 		evalResp.status === undefined ||
@@ -217,16 +242,16 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
 		evalResp = {
 			status: DOWN,
 			latency: latency,
-			type: "error"
+			type: ERROR
 		};
 	} else {
-		evalResp.type = "realtime";
+		evalResp.type = REALTIME;
 	}
 
 	let toWrite = {
 		status: DOWN,
 		latency: latency,
-		type: "error"
+		type: ERROR
 	};
 	if (evalResp.status !== undefined && evalResp.status !== null) {
 		toWrite.status = evalResp.status;
@@ -238,65 +263,69 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
 		toWrite.type = evalResp.type;
 	}
 	if (timeoutError) {
-		toWrite.type = "timeout";
+		toWrite.type = TIMEOUT;
 	}
 
 	return toWrite;
 };
-const getWebhookData = async (monitor) => {
-	let originalData = {};
 
-	let files = fs.readdirSync(Kener_folder);
-	files = files.filter((file) => file.startsWith(monitor.folderName + ".webhook"));
-	for (let i = 0; i < files.length; i++) {
-		const file = files[i];
-		let webhookData = {};
-		try {
-			let fd = fs.readFileSync(Kener_folder + "/" + file, "utf8");
-			webhookData = JSON.parse(fd);
-			for (const timestamp in webhookData) {
-				originalData[timestamp] = webhookData[timestamp];
-			}
-			//delete the file
-			fs.unlinkSync(Kener_folder + "/" + file);
-		} catch (error) {
-			console.error(error);
-		}
-	}
-	return originalData;
-};
-const updateDayData = async (mergedData, startOfMinute, monitor) => {
-	let dayData = JSON.parse(fs.readFileSync(monitor.path0Day, "utf8"));
-
-	for (const timestamp in mergedData) {
-		dayData[timestamp] = mergedData[timestamp];
-	}
-
-	let since = 24 * 91;
-	let mxBackDate = startOfMinute - since * 3600;
-	let _0Day = {};
-	for (const ts in dayData) {
-		const element = dayData[ts];
-		if (ts >= mxBackDate) {
-			_0Day[ts] = element;
-		}
-	}
-
-	//sort the keys
-	let keys = Object.keys(_0Day);
-	keys.sort();
-	let sortedDay0 = {};
-	keys.reverse().forEach((key) => {
-		sortedDay0[key] = _0Day[key];
-	});
+async function dsnChecker(dnsResolver, host, recordType, matchType, values) {
 	try {
-		fs.writeFileSync(monitor.path0Day, JSON.stringify(sortedDay0, null, 2));
-	} catch (error) {
-		console.error(error);
-	}
-};
+		let queryStartTime = Date.now();
+		let dnsRes = await dnsResolver.getRecord(host, recordType);
+		let latency = Date.now() - queryStartTime;
 
-const Minuter = async (envSecrets, monitor, githubConfig) => {
+		if (dnsRes[recordType] === undefined) {
+			return {
+				status: DOWN,
+				latency: latency,
+				type: REALTIME
+			};
+		}
+		let data = dnsRes[recordType];
+		let dnsData = data.map((d) => d.data);
+		if (matchType === "ALL") {
+			for (let i = 0; i < values.length; i++) {
+				if (dnsData.indexOf(values[i].trim()) === -1) {
+					return {
+						status: DOWN,
+						latency: latency,
+						type: REALTIME
+					};
+				}
+			}
+			return {
+				status: UP,
+				latency: latency,
+				type: REALTIME
+			};
+		} else if (matchType === "ANY") {
+			for (let i = 0; i < values.length; i++) {
+				if (dnsData.indexOf(values[i].trim()) !== -1) {
+					return {
+						status: UP,
+						latency: latency,
+						type: REALTIME
+					};
+				}
+			}
+			return {
+				status: DOWN,
+				latency: latency,
+				type: REALTIME
+			};
+		}
+	} catch (error) {
+		console.log("Error in dnsChecker", error);
+		return {
+			status: DOWN,
+			latency: 0,
+			type: REALTIME
+		};
+	}
+}
+
+const Minuter = async (monitor, githubConfig) => {
 	if (apiQueue.length > 0) {
 		console.log("Queue length is " + apiQueue.length);
 	}
@@ -304,6 +333,11 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
 	let pingData = {};
 	let webhookData = {};
 	let manualData = {};
+	let dnsData = {};
+	let envSecrets = GetRequiredSecrets(
+		`${monitor.url} ${monitor.body} ${JSON.stringify(monitor.headers)}`
+	);
+
 	const startOfMinute = GetMinuteStartNowTimestampUTC();
 
 	if (monitor.hasAPI) {
@@ -317,7 +351,7 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
 			monitor.api.eval
 		);
 		apiData[startOfMinute] = apiResponse;
-		if (apiResponse.type === "timeout") {
+		if (apiResponse.type === TIMEOUT) {
 			console.log(
 				"Retrying api call for " + monitor.name + " at " + startOfMinute + " due to timeout"
 			);
@@ -332,13 +366,13 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
 					monitor.api.timeout,
 					monitor.api.eval
 				).then(async (data) => {
-					let day0 = {};
-					day0[startOfMinute] = data;
-					fs.writeFileSync(
-						Kener_folder +
-							`/${monitor.folderName}.webhook.${Randomstring.generate()}.json`,
-						JSON.stringify(day0, null, 2)
-					);
+					await db.insertData({
+						monitorTag: monitor.tag,
+						timestamp: startOfMinute,
+						status: data.status,
+						latency: data.latency,
+						type: data.type
+					});
 					cb();
 				});
 			});
@@ -350,7 +384,18 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
 		pingData[startOfMinute] = pingResponse;
 	}
 
-	webhookData = await getWebhookData(monitor);
+	if (monitor.hasDNS) {
+		const dnsResolver = new DNSResolver(monitor.dns.nameServer);
+		let dnsResponse = await dsnChecker(
+			dnsResolver,
+			monitor.dns.host,
+			monitor.dns.lookupRecord,
+			monitor.dns.matchType,
+			monitor.dns.values
+		);
+		dnsData[startOfMinute] = dnsResponse;
+	}
+
 	manualData = await manualIncident(monitor, githubConfig);
 	//merge noData, apiData, webhookData, dayData
 	let mergedData = {};
@@ -371,21 +416,44 @@ const Minuter = async (envSecrets, monitor, githubConfig) => {
 	for (const timestamp in apiData) {
 		mergedData[timestamp] = apiData[timestamp];
 	}
-	for (const timestamp in webhookData) {
-		mergedData[timestamp] = webhookData[timestamp];
-	}
+
 	for (const timestamp in manualData) {
 		mergedData[timestamp] = manualData[timestamp];
 	}
 
-	//update day data
-	await updateDayData(mergedData, startOfMinute, monitor);
+	for (const timestamp in dnsData) {
+		mergedData[timestamp] = dnsData[timestamp];
+	}
+
+	for (const timestamp in mergedData) {
+		const element = mergedData[timestamp];
+		db.insertData({
+			monitorTag: monitor.tag,
+			timestamp: parseInt(timestamp),
+			status: element.status,
+			latency: element.latency,
+			type: element.type
+		});
+	}
+	if (monitor.alerts && ValidateMonitorAlerts(monitor.alerts)) {
+		alertingQueue.push(async (cb) => {
+			setTimeout(async () => {
+				await alerting(monitor);
+				cb();
+			}, 1042);
+		});
+	}
 };
 apiQueue.start((err) => {
 	if (err) {
 		console.error("Error occurred:", err);
-	} else {
-		console.log("All tasks completed");
+		process.exit(1);
+	}
+});
+alertingQueue.start((err) => {
+	if (err) {
+		console.error("Error occurred:", err);
+		process.exit(1);
 	}
 });
 export { Minuter };

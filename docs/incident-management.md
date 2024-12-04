@@ -17,7 +17,11 @@ Kener auto creates labels for your monitors using the `tag` parameter
 -   `resolved`: Use this tag to mark the incident has RESOLVED
 -   `identified`: Use this tag to show that the root cause of the incident has been identified
 
-## Creating your first incident
+## Creating Incident
+
+Kener uses Github issues to create incidents. Here is how you can create an incident
+
+### Using Github
 
 -   Go to your github repo of kener
 -   Go to issues
@@ -28,3 +32,7 @@ Kener auto creates labels for your monitors using the `tag` parameter
 If you clone the repo it gives you an issue template to create incidents
 
 Here is a [sample incident](https://github.com/rajnandan1/kener/issues/15) for your reference.
+
+### Using API
+
+You can also create incidents using the API. See the API [here](/docs/kener-apis#create-an-incident---api)

@@ -4,11 +4,14 @@ import axios from "axios";
 import {
 	IsValidURL,
 	checkIfDuplicateExists,
-	getWordsStartingWithDollar,
 	IsValidHTTPMethod,
-	ValidateIpAddress
+	ValidateIpAddress,
+	IsValidHost,
+	IsValidRecordType,
+	IsValidNameServer
 } from "./src/lib/server/tool.js";
 import { API_TIMEOUT, AnalyticsProviders } from "./src/lib/server/constants.js";
+import { GetAllGHLabels, CreateGHLabel } from "./src/lib/server/github.js";
 
 const configPathFolder = "./config";
 const databaseFolder = process.argv[2] || "./database";
@@ -25,9 +28,55 @@ const defaultEval = `(function (statusCode, responseTime, responseData) {
 		latency: responseTime,
 	}
 })`;
+
+function validateServerFile(server) {
+	//if empty return true
+	if (Object.keys(server).length === 0) {
+		return true;
+	}
+	//server.triggers is present then it should be an array
+	if (server.triggers !== undefined && !Array.isArray(server.triggers)) {
+		console.log("triggers should be an array");
+		return false;
+	}
+	///each trigger should have a name, type, and url
+	if (server.triggers !== undefined) {
+		for (let i = 0; i < server.triggers.length; i++) {
+			const trigger = server.triggers[i];
+			if (
+				trigger.name === undefined ||
+				trigger.type === undefined ||
+				trigger.url === undefined
+			) {
+				console.log("trigger should have name, type, and url");
+				return false;
+			}
+		}
+	}
+	//if database is present then it should be an object, and they key can be either postgres or sqlite
+	if (server.database !== undefined && typeof server.database !== "object") {
+		console.log("database should be an object");
+		return false;
+	}
+	if (server.database !== undefined) {
+		let dbtype = Object.keys(server.database);
+		if (dbtype.length !== 1) {
+			console.log("database should have only one key");
+			return false;
+		}
+		if (dbtype[0] !== "postgres" && dbtype[0] !== "sqlite") {
+			console.log("database should be either postgres or sqlite");
+			return false;
+		}
+	}
+
+	return true;
+}
+
 async function Build() {
-	console.log("Building Kener...");
+	console.log("ℹ️ Building Kener...");
 	let site = {};
+	let server = {};
 	let monitors = [];
 	try {
 		site = yaml.load(fs.readFileSync(configPathFolder + "/site.yaml", "utf8"));
@@ -36,6 +85,15 @@ async function Build() {
 		console.log(error);
 		process.exit(1);
 	}
+	try {
+		server = yaml.load(fs.readFileSync(configPathFolder + "/server.yaml", "utf8"));
+		if (!validateServerFile(server)) {
+			process.exit(1);
+		}
+	} catch (error) {
+		console.warn("server.yaml not found");
+		server = {};
+	}
 
 	if (
 		site.github === undefined ||
@@ -43,12 +101,23 @@ async function Build() {
 		site.github.repo === undefined
 	) {
 		console.log("github owner and repo are required");
-		process.exit(1);
+		site.hasGithub = false;
+		// process.exit(1);
+	} else {
+		site.hasGithub = true;
+	}
+
+	if (site.hasGithub && !!!site.github.incidentSince) {
+		site.github.incidentSince = 720;
+	}
+	if (site.hasGithub && !!!site.github.apiURL) {
+		site.github.apiURL = "https://api.github.com";
 	}
 
 	const FOLDER_DB = databaseFolder;
 	const FOLDER_SITE = FOLDER_DB + "/site.json";
 	const FOLDER_MONITOR = FOLDER_DB + "/monitors.json";
+	const FOLDER_SERVER = FOLDER_DB + "/server.json";
 
 	for (let i = 0; i < monitors.length; i++) {
 		const monitor = monitors[i];
@@ -57,6 +126,7 @@ async function Build() {
 		let tag = monitor.tag;
 		let hasAPI = monitor.api !== undefined && monitor.api !== null;
 		let hasPing = monitor.ping !== undefined && monitor.ping !== null;
+		let hasDNS = monitor.dns !== undefined && monitor.dns !== null;
 		let folderName = name.replace(/[^a-z0-9]/gi, "-").toLowerCase();
 		monitors[i].folderName = folderName;
 
@@ -120,6 +190,44 @@ async function Build() {
 				process.exit(1);
 			}
 			monitors[i].hasPing = true;
+		}
+		if (hasDNS) {
+			let dnsData = monitor.dns;
+			let domain = dnsData.host;
+			//check if domain is valid
+			if (!!!domain || !IsValidHost(domain)) {
+				console.log("domain is not valid");
+				process.exit(1);
+			}
+
+			let recordType = dnsData.lookupRecord;
+			//check if recordType is valid
+			if (!!!recordType || !IsValidRecordType(recordType)) {
+				console.log("recordType is not valid");
+				process.exit(1);
+			}
+
+			let nameServer = dnsData.nameServer;
+			//check if nameserver is valid
+			if (!!nameServer && !IsValidNameServer(nameServer)) {
+				console.log("nameServer is not valid");
+				process.exit(1);
+			}
+
+			// matchType: "ANY" # ANY, ALL
+			let matchType = dnsData.matchType;
+			if (!!!matchType || (matchType !== "ANY" && matchType !== "ALL")) {
+				console.log("matchType is not valid");
+				process.exit(1);
+			}
+
+			//values array of string at least one
+			let values = dnsData.values;
+			if (!!!values || !Array.isArray(values) || values.length === 0) {
+				console.log("values is not valid");
+				process.exit(1);
+			}
+			monitors[i].hasDNS = true;
 		}
 		if (hasAPI) {
 			let url = monitor.api.url;
@@ -222,35 +330,14 @@ async function Build() {
 						}
 					}
 				} catch (error) {
-					console.log(error);
+					console.log(`error while fetching ${url}`);
 				}
 			}
 		}
 
-		monitors[i].path0Day = `${FOLDER_DB}/${folderName}.0day.utc.json`;
-		monitors[i].path90Day = `${FOLDER_DB}/${folderName}.90day.utc.json`;
 		monitors[i].hasAPI = hasAPI;
-
-		//secrets can be in url/body/headers
-		//match in monitor.url if a words starts with $, get the word
-		const requiredSecrets = getWordsStartingWithDollar(
-			`${monitor.url} ${monitor.body} ${JSON.stringify(monitor.headers)}`
-		).map((x) => x.substr(1));
-
-		//iterate over process.env
-		for (const [key, value] of Object.entries(process.env)) {
-			if (requiredSecrets.indexOf(key) !== -1) {
-				envSecrets.push({
-					find: `$${key}`,
-					replace: value
-				});
-			}
-		}
 	}
 
-	if (site.github.incidentSince === undefined || site.github.incidentSince === null) {
-		site.github.incidentSince = 720;
-	}
 	if (site.siteName === undefined) {
 		site.siteName = site.title;
 	}
@@ -260,6 +347,22 @@ async function Build() {
 	if (site.themeToggle === undefined) {
 		site.themeToggle = true;
 	}
+	if (site.barStyle === undefined) {
+		site.barStyle = "FULL";
+	}
+	if (site.barRoundness === undefined) {
+		site.barRoundness = "ROUNDED";
+	} else {
+		site.barRoundness = site.barRoundness.toLowerCase();
+	}
+	if (site.summaryStyle === undefined) {
+		site.summaryStyle = "DAY";
+	}
+	site.colors = {
+		UP: site.colors?.UP || "#4ead94",
+		DOWN: site.colors?.DOWN || "#ca3038",
+		DEGRADED: site.colors?.DEGRADED || "#e6ca61"
+	};
 	if (!!site.analytics) {
 		const providers = {};
 
@@ -293,13 +396,64 @@ async function Build() {
 
 	fs.ensureFileSync(FOLDER_MONITOR);
 	fs.ensureFileSync(FOLDER_SITE);
-
+	fs.ensureFileSync(FOLDER_SERVER);
 	try {
 		fs.writeFileSync(FOLDER_MONITOR, JSON.stringify(monitors, null, 4));
 		fs.writeFileSync(FOLDER_SITE, JSON.stringify(site, null, 4));
+		fs.writeFileSync(FOLDER_SERVER, JSON.stringify(server, null, 4));
 	} catch (error) {
 		console.log(error);
 		process.exit(1);
+	}
+
+	console.log("✅ Kener built successfully");
+
+	if (site.hasGithub) {
+		const ghLabels = await GetAllGHLabels(site);
+		const tagsAndDescription = monitors.map((monitor) => {
+			return { tag: monitor.tag, description: monitor.name };
+		});
+		//add incident label if does not exist
+
+		if (ghLabels.indexOf("incident") === -1) {
+			await CreateGHLabel(site, "incident", "Status of the site");
+		}
+		if (ghLabels.indexOf("resolved") === -1) {
+			await CreateGHLabel(site, "resolved", "Incident is resolved", "65dba6");
+		}
+		if (ghLabels.indexOf("identified") === -1) {
+			await CreateGHLabel(site, "identified", "Incident is Identified", "EBE3D5");
+		}
+		if (ghLabels.indexOf("manual") === -1) {
+			await CreateGHLabel(site, "manual", "Manually Created Incident", "6499E9");
+		}
+		if (ghLabels.indexOf("auto") === -1) {
+			await CreateGHLabel(site, "auto", "Automatically Created Incident", "D6C0B3");
+		}
+		if (ghLabels.indexOf("investigating") === -1) {
+			await CreateGHLabel(site, "investigating", "Incident is investigated", "D4E2D4");
+		}
+		if (ghLabels.indexOf("incident-degraded") === -1) {
+			await CreateGHLabel(
+				site,
+				"incident-degraded",
+				"Status is degraded of the site",
+				"f5ba60"
+			);
+		}
+		if (ghLabels.indexOf("incident-down") === -1) {
+			await CreateGHLabel(site, "incident-down", "Status is down of the site", "ea3462");
+		}
+		//add tags if does not exist
+		for (let i = 0; i < tagsAndDescription.length; i++) {
+			const tag = tagsAndDescription[i].tag;
+			const description = tagsAndDescription[i].description;
+			if (ghLabels.indexOf(tag) === -1) {
+				await CreateGHLabel(site, tag, description);
+			}
+		}
+
+		console.log("✅ Github labels created successfully");
 	}
 }
 

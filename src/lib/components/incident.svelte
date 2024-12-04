@@ -1,23 +1,29 @@
 <script>
 	import * as Card from "$lib/components/ui/card";
 	import { Separator } from "$lib/components/ui/separator";
-	import { StatusObj } from "$lib/helpers.js";
 	import moment from "moment";
 	import { Button } from "$lib/components/ui/button";
 	import { Badge } from "$lib/components/ui/badge";
-	import { ChevronDown } from "lucide-svelte";
+	import { ChevronDown, Info, CalendarCheck, Hammer } from "lucide-svelte";
 	import * as Collapsible from "$lib/components/ui/collapsible";
 	import { l } from "$lib/i18n/client";
 	import axios from "axios";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { base } from "$app/paths";
 
+	import { tooltipAction } from "svelte-legos";
+
 	export let incident;
 	export let variant = "title+body+comments+monitor";
 	export let state = "open";
 	export let monitor;
 	export let lang;
-
+	const StatusObj = {
+		UP: "api-up",
+		DEGRADED: "api-degraded",
+		DOWN: "api-down",
+		NO_DATA: "api-nodata"
+	};
 	let blinker = "bg-transparent";
 	let incidentPriority = "";
 	let incidentDuration = 0;
@@ -114,7 +120,7 @@
 
 					{#if incidentState == "open"}
 						<span
-							class="absolute -left-[24px] -top-[24px] inline-flex h-[8px] w-[8px] animate-ping rounded-full {blinker} opacity-75"
+							class="absolute -left-[26px] -top-[16px] inline-flex h-[8px] w-[8px] animate-ping rounded-full {blinker} opacity-75"
 						></span>
 					{/if}
 					{#if variant.includes("body") || variant.includes("comments")}
@@ -135,26 +141,26 @@
 				<Card.Description class="-mt-4 px-8 text-xs ">
 					{moment(incidentCreatedAt * 1000).format("MMMM Do YYYY, h:mm:ss a")}
 
-					<p class="mt-2 leading-8">
+					<p class="mt-0 flex gap-2 leading-8">
 						{#if incident.labels.includes("identified")}
 							<span
-								class="tag-indetified me-2 mt-1 inline-block rounded px-2.5 py-1 text-xs font-semibold uppercase leading-3"
+								class="tag-identified-text"
+								title={l(lang, "incident.identified")}
 							>
-								{l(lang, "incident.identified")}
+								<Info class="inline h-4 w-4" />
 							</span>
 						{/if}
 						{#if incident.labels.includes("resolved")}
-							<span
-								class=" tag-resolved me-2 inline-block rounded px-2.5 py-1 text-xs font-semibold uppercase leading-3"
-							>
-								{l(lang, "incident.resolved")}
+							<span class="tag-resolved-text" title={l(lang, "incident.resolved")}>
+								<CalendarCheck class="inline h-4 w-4" />
 							</span>
 						{/if}
 						{#if incident.labels.includes("maintenance")}
 							<span
-								class="tag-maintenance me-2 inline-block rounded px-2.5 py-1 text-xs font-semibold uppercase leading-3"
+								class="tag-maintenance-text"
+								title={l(lang, "incident.maintenance")}
 							>
-								{l(lang, "incident.maintenance")}
+								<Hammer class="inline h-4 w-4" />
 							</span>
 						{/if}
 					</p>
@@ -164,7 +170,7 @@
 				<Card.Content class="px-14">
 					{#if variant.includes("body")}
 						<div
-							class="prose prose-stone max-w-none dark:prose-invert prose-code:rounded prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm"
+							class="prose prose-stone max-w-none text-sm dark:prose-invert prose-code:rounded prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm"
 						>
 							{@html incident.body}
 						</div>
@@ -185,7 +191,7 @@
 											)}
 										</time>
 										<div
-											class="wysiwyg prose prose-stone mb-4 max-w-none text-base font-normal dark:prose-invert prose-code:rounded prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm"
+											class="wysiwyg prose prose-stone mb-4 max-w-none text-base text-sm font-normal dark:prose-invert prose-code:rounded prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm"
 										>
 											{@html comment.body}
 										</div>

@@ -58,7 +58,10 @@
 				location.reload();
 			}
 		}
-		setMode(defaultTheme);
+		if (defaultTheme != "none") {
+			setMode(defaultTheme);
+		}
+		//
 		const providers = data.site.analytics;
 		const analyticsPlugins = [];
 		if (providers) {
@@ -129,7 +132,15 @@
 	{/if}
 </svelte:head>
 <ModeWatcher />
-<main style="--font-family: {data.site.font.family};--bg-custom: {data.bgc};">
+<main
+	style="
+	--font-family: {data.site.font.family};
+	--bg-custom: {data.bgc};
+	--up-color: {data.site.colors.UP};
+	--down-color: {data.site.colors.DOWN};
+	--degraded-color: {data.site.colors.DEGRADED}
+	"
+>
 	{#if data.showNav}
 		<Nav {data} />
 	{/if}
@@ -140,7 +151,7 @@
 	{#if data.showNav && !!data.site.footerHTML}
 		<footer class="z-10 py-6 md:px-8 md:py-0">
 			<div
-				class="container relative flex max-w-[840px] flex-col items-center justify-center gap-4 pl-0 md:h-24 md:flex-row"
+				class="container relative flex max-w-[655px] flex-col items-center justify-center gap-4 pl-0 md:h-24 md:flex-row"
 			>
 				<div class="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
 					<p class="text-center text-sm leading-loose text-muted-foreground md:text-left">

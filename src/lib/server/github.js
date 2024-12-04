@@ -3,12 +3,18 @@ import axios from "axios";
 import { GetMinuteStartNowTimestampUTC } from "./tool.js";
 import { marked } from "marked";
 import { fileURLToPath } from "url";
+import { siteStore } from "./stores/site.js";
+import { get } from "svelte/store";
 import { dirname } from "path";
 import dotenv from "dotenv";
+
 dotenv.config();
+let site = get(siteStore);
+
 const GH_TOKEN = process.env.GH_TOKEN;
-const GhnotconfireguredMsg =
-	"owner or repo or GH_TOKEN is undefined. Read the docs to configure github: https://kener.ing/docs/gh-setup";
+
+const GhNotConfiguredMsg =
+	"Github owner or repo or GH_TOKEN is undefined. Read the docs to configure github: https://kener.ing/docs/gh-setup/";
 /**
  * @param {any} url
  */
@@ -51,13 +57,13 @@ function patchAxiosOptions(url, data) {
 	return options;
 }
 
-const GetAllGHLabels = async function (owner, repo) {
-	if (owner === undefined || repo === undefined || GH_TOKEN === undefined) {
-		console.log(GhnotconfireguredMsg);
+const GetAllGHLabels = async function (site) {
+	if (!site.hasGithub || GH_TOKEN === undefined) {
+		console.warn(GhNotConfiguredMsg);
 		return [];
 	}
 	const options = getAxiosOptions(
-		`https://api.github.com/repos/${owner}/${repo}/labels?per_page=1000`
+		`${site.github.apiURL}/repos/${site.github.owner}/${site.github.repo}/labels?per_page=1000`
 	);
 
 	let labels = [];
@@ -73,22 +79,25 @@ const GetAllGHLabels = async function (owner, repo) {
 function generateRandomColor() {
 	var randomColor = Math.floor(Math.random() * 16777215).toString(16);
 	return randomColor;
-	//random color will be freshly served
 }
-const CreateGHLabel = async function (owner, repo, label, description, color) {
-	if (owner === undefined || repo === undefined || GH_TOKEN === undefined) {
-		console.log(GhnotconfireguredMsg);
+const CreateGHLabel = async function (site, label, description, color) {
+	site = get(siteStore);
+	if (!site.hasGithub || GH_TOKEN === undefined) {
+		console.warn(GhNotConfiguredMsg);
 		return null;
 	}
 	if (color === undefined) {
 		color = generateRandomColor();
 	}
 
-	const options = postAxiosOptions(`https://api.github.com/repos/${owner}/${repo}/labels`, {
-		name: label,
-		color: color,
-		description: description
-	});
+	const options = postAxiosOptions(
+		`${site.github.apiURL}/repos/${site.github.owner}/${site.github.repo}/labels`,
+		{
+			name: label,
+			color: color,
+			description: description
+		}
+	);
 	try {
 		const response = await axios.request(options);
 		return response.data;
@@ -119,16 +128,12 @@ const GetEndTimeFromBody = function (text) {
 	}
 	return null;
 };
-const GetIncidentByNumber = async function (githubConfig, incidentNumber) {
-	if (
-		githubConfig.owner === undefined ||
-		githubConfig.repo === undefined ||
-		GH_TOKEN === undefined
-	) {
-		console.log(GhnotconfireguredMsg);
+const GetIncidentByNumber = async function (incidentNumber) {
+	if (!site.hasGithub || GH_TOKEN === undefined) {
+		console.warn(GhNotConfiguredMsg);
 		return null;
 	}
-	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues/${incidentNumber}`;
+	const url = `${site.github.apiURL}/repos/${site.github.owner}/${site.github.repo}/issues/${incidentNumber}`;
 	const options = getAxiosOptions(url);
 	try {
 		const response = await axios.request(options);
@@ -138,21 +143,17 @@ const GetIncidentByNumber = async function (githubConfig, incidentNumber) {
 		return null;
 	}
 };
-const GetIncidents = async function (tagName, githubConfig, state = "all") {
-	if (
-		githubConfig.owner === undefined ||
-		githubConfig.repo === undefined ||
-		GH_TOKEN === undefined
-	) {
-		console.log(GhnotconfireguredMsg);
+const GetIncidents = async function (tagName, state = "all") {
+	if (!site.hasGithub || GH_TOKEN === undefined) {
+		console.warn(GhNotConfiguredMsg);
 		return [];
 	}
 	if (tagName === undefined) {
 		return [];
 	}
-	const since = GetMinuteStartNowTimestampUTC() - githubConfig.incidentSince * 60 * 60;
+	const since = GetMinuteStartNowTimestampUTC() - site.github.incidentSince * 60 * 60;
 	const sinceISO = new Date(since * 1000).toISOString();
-	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues?state=${state}&labels=${tagName},incident&sort=created&direction=desc&since=${sinceISO}`;
+	const url = `${site.github.apiURL}/repos/${site.github.owner}/${site.github.repo}/issues?state=${state}&labels=${tagName},incident&sort=created&direction=desc&since=${sinceISO}`;
 	const options = getAxiosOptions(url);
 	try {
 		const response = await axios.request(options);
@@ -167,19 +168,40 @@ const GetIncidents = async function (tagName, githubConfig, state = "all") {
 		return [];
 	}
 };
-const GetOpenIncidents = async function (githubConfig) {
-	if (
-		githubConfig.owner === undefined ||
-		githubConfig.repo === undefined ||
-		GH_TOKEN === undefined
-	) {
-		console.log(GhnotconfireguredMsg);
+const GetIncidentsManual = async function (tagName, state = "all") {
+	if (!site.hasGithub || GH_TOKEN === undefined) {
+		console.warn(GhNotConfiguredMsg);
+		return [];
+	}
+	if (tagName === undefined) {
+		return [];
+	}
+	const since = GetMinuteStartNowTimestampUTC() - site.github.incidentSince * 60 * 60;
+	const sinceISO = new Date(since * 1000).toISOString();
+	const url = `${site.github.apiURL}/repos/${site.github.owner}/${site.github.repo}/issues?state=${state}&labels=${tagName},incident,manual&sort=created&direction=desc&since=${sinceISO}`;
+	const options = getAxiosOptions(url);
+	try {
+		const response = await axios.request(options);
+		let issues = response.data;
+		//issues.createAt should be after sinceISO
+		issues = issues.filter((issue) => {
+			return new Date(issue.created_at) >= new Date(sinceISO);
+		});
+		return issues;
+	} catch (error) {
+		console.log(error.response?.data);
+		return [];
+	}
+};
+const GetOpenIncidents = async function () {
+	if (!site.hasGithub || GH_TOKEN === undefined) {
+		console.warn(GhNotConfiguredMsg);
 		return [];
 	}
 
-	const since = GetMinuteStartNowTimestampUTC() - githubConfig.incidentSince * 60 * 60;
+	const since = GetMinuteStartNowTimestampUTC() - site.github.incidentSince * 60 * 60;
 	const sinceISO = new Date(since * 1000).toISOString();
-	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues?state=open&labels=incident&sort=created&direction=desc&since=${sinceISO}`;
+	const url = `${site.github.apiURL}/repos/${site.github.owner}/${site.github.repo}/issues?state=open&labels=incident&sort=created&direction=desc&since=${sinceISO}`;
 	const options = getAxiosOptions(url);
 	try {
 		const response = await axios.request(options);
@@ -251,16 +273,12 @@ function Mapper(issue) {
 
 	return res;
 }
-async function GetCommentsForIssue(issueID, githubConfig) {
-	if (
-		githubConfig.owner === undefined ||
-		githubConfig.repo === undefined ||
-		GH_TOKEN === undefined
-	) {
-		console.log(GhnotconfireguredMsg);
+async function GetCommentsForIssue(issueID) {
+	if (!site.hasGithub || GH_TOKEN === undefined) {
+		console.warn(GhNotConfiguredMsg);
 		return [];
 	}
-	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues/${issueID}/comments`;
+	const url = `${site.github.apiURL}/repos/${site.github.owner}/${site.github.repo}/issues/${issueID}/comments`;
 	try {
 		const response = await axios.request(getAxiosOptions(url));
 		return response.data;
@@ -269,16 +287,12 @@ async function GetCommentsForIssue(issueID, githubConfig) {
 		return [];
 	}
 }
-async function CreateIssue(githubConfig, issueTitle, issueBody, issueLabels) {
-	if (
-		githubConfig.owner === undefined ||
-		githubConfig.repo === undefined ||
-		GH_TOKEN === undefined
-	) {
-		console.log(GhnotconfireguredMsg);
+async function CreateIssue(issueTitle, issueBody, issueLabels) {
+	if (!site.hasGithub || GH_TOKEN === undefined) {
+		console.warn(GhNotConfiguredMsg);
 		return null;
 	}
-	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues`;
+	const url = `${site.github.apiURL}/repos/${site.github.owner}/${site.github.repo}/issues`;
 	try {
 		const payload = {
 			title: issueTitle,
@@ -292,23 +306,12 @@ async function CreateIssue(githubConfig, issueTitle, issueBody, issueLabels) {
 		return null;
 	}
 }
-async function UpdateIssue(
-	githubConfig,
-	incidentNumber,
-	issueTitle,
-	issueBody,
-	issueLabels,
-	state = "open"
-) {
-	if (
-		githubConfig.owner === undefined ||
-		githubConfig.repo === undefined ||
-		GH_TOKEN === undefined
-	) {
-		console.log(GhnotconfireguredMsg);
+async function UpdateIssue(incidentNumber, issueTitle, issueBody, issueLabels, state = "open") {
+	if (!site.hasGithub || GH_TOKEN === undefined) {
+		console.warn(GhNotConfiguredMsg);
 		return null;
 	}
-	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues/${incidentNumber}`;
+	const url = `${site.github.apiURL}/repos/${site.github.owner}/${site.github.repo}/issues/${incidentNumber}`;
 	try {
 		const payload = {
 			title: issueTitle,
@@ -323,16 +326,12 @@ async function UpdateIssue(
 		return null;
 	}
 }
-async function CloseIssue(githubConfig, incidentNumber) {
-	if (
-		githubConfig.owner === undefined ||
-		githubConfig.repo === undefined ||
-		GH_TOKEN === undefined
-	) {
-		console.log(GhnotconfireguredMsg);
+async function CloseIssue(incidentNumber) {
+	if (!site.hasGithub || GH_TOKEN === undefined) {
+		console.warn(GhNotConfiguredMsg);
 		return null;
 	}
-	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues/${incidentNumber}`;
+	const url = `${site.github.apiURL}/repos/${site.github.owner}/${site.github.repo}/issues/${incidentNumber}`;
 	try {
 		const payload = {
 			state: "closed"
@@ -344,16 +343,12 @@ async function CloseIssue(githubConfig, incidentNumber) {
 		return null;
 	}
 }
-async function AddComment(githubConfig, incidentNumber, commentBody) {
-	if (
-		githubConfig.owner === undefined ||
-		githubConfig.repo === undefined ||
-		GH_TOKEN === undefined
-	) {
-		console.log(GhnotconfireguredMsg);
+async function AddComment(incidentNumber, commentBody) {
+	if (!site.hasGithub || GH_TOKEN === undefined) {
+		console.warn(GhNotConfiguredMsg);
 		return null;
 	}
-	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues/${incidentNumber}/comments`;
+	const url = `${site.github.apiURL}/repos/${site.github.owner}/${site.github.repo}/issues/${incidentNumber}/comments`;
 	try {
 		const payload = {
 			body: commentBody
@@ -366,16 +361,12 @@ async function AddComment(githubConfig, incidentNumber, commentBody) {
 	}
 }
 //update issue labels
-async function UpdateIssueLabels(githubConfig, incidentNumber, issueLabels, body, state = "open") {
-	if (
-		githubConfig.owner === undefined ||
-		githubConfig.repo === undefined ||
-		GH_TOKEN === undefined
-	) {
-		console.log(GhnotconfireguredMsg);
+async function UpdateIssueLabels(incidentNumber, issueLabels, body, state = "open") {
+	if (!site.hasGithub || GH_TOKEN === undefined) {
+		console.warn(GhNotConfiguredMsg);
 		return null;
 	}
-	const url = `https://api.github.com/repos/${githubConfig.owner}/${githubConfig.repo}/issues/${incidentNumber}`;
+	const url = `${site.github.apiURL}/repos/${site.github.owner}/${site.github.repo}/issues/${incidentNumber}`;
 	try {
 		const payload = {
 			labels: issueLabels,
@@ -393,7 +384,7 @@ async function UpdateIssueLabels(githubConfig, incidentNumber, issueLabels, body
 //search issue
 async function SearchIssue(query, page, per_page) {
 	if (GH_TOKEN === undefined) {
-		console.log(GhnotconfireguredMsg);
+		console.warn(GhNotConfiguredMsg);
 		return null;
 	}
 
@@ -413,7 +404,7 @@ async function SearchIssue(query, page, per_page) {
 		})
 		.join(" ");
 
-	const url = `https://api.github.com/search/issues?q=${encodeURIComponent(
+	const url = `${site.github.apiURL}/search/issues?q=${encodeURIComponent(
 		searchQuery
 	)}&per_page=${per_page}&page=${page}`;
 
@@ -442,5 +433,6 @@ export {
 	CloseIssue,
 	GetOpenIncidents,
 	FilterAndInsertMonitorInIncident,
-	SearchIssue
+	SearchIssue,
+	GetIncidentsManual
 };

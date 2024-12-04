@@ -23,7 +23,7 @@ export async function load({ params, route, url, parent }) {
 		monitors[i].embed = false;
 		monitorsActive.push(monitors[i]);
 	}
-	let openIncidents = await GetOpenIncidents(github);
+	let openIncidents = await GetOpenIncidents();
 	let openIncidentsReduced = openIncidents.map(Mapper);
 	return {
 		monitors: monitorsActive,

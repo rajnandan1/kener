@@ -9,41 +9,32 @@ name of each of these objects need to be unique
 import * as dotenv from "dotenv";
 import fs from "fs-extra";
 import path from "path";
+import figlet from "figlet";
 
 import yaml from "js-yaml";
 import { Cron } from "croner";
 import { API_TIMEOUT } from "./constants.js";
 
-import { IsValidURL, IsValidHTTPMethod, ValidateIpAddress } from "./tool.js";
-import { GetAllGHLabels, CreateGHLabel } from "./github.js";
+import { IsValidURL, IsValidHTTPMethod, ValidateIpAddress, ValidateMonitorAlerts } from "./tool.js";
+
 import { Minuter } from "./cron-minute.js";
 import axios from "axios";
-import { Ninety } from "./ninety.js";
-let monitors = [];
-let site = {};
-const envSecrets = [];
+import db from "./db/db.js";
+import Queue from "queue";
+
 const DATABASE_PATH = "./database";
 const Startup = async () => {
-	const FOLDER_MONITOR_JSON = DATABASE_PATH + "/monitors.json";
-	const monitors = fs.readJSONSync(FOLDER_MONITOR_JSON);
+	const monitors = fs.readJSONSync(DATABASE_PATH + "/monitors.json");
 	const site = fs.readJSONSync(DATABASE_PATH + "/site.json");
+	const startUPLog = {};
 	// init monitors
 	for (let i = 0; i < monitors.length; i++) {
 		const monitor = monitors[i];
-		if (!fs.existsSync(monitor.path0Day)) {
-			fs.ensureFileSync(monitor.path0Day);
-			fs.writeFileSync(monitor.path0Day, JSON.stringify({}));
-		}
-		if (!fs.existsSync(monitor.path90Day)) {
-			fs.ensureFileSync(monitor.path90Day);
-			fs.writeFileSync(monitor.path90Day, JSON.stringify({}));
-		}
-
-		console.log("Initial Fetch for ", monitor.name);
-		await Minuter(envSecrets, monitor, site.github);
-		await Ninety(monitor);
+		await Minuter(monitor, site.github, site);
+		startUPLog[monitor.name] = {
+			"Initial Fetch": "✅"
+		};
 	}
-	//trigger minute cron
 
 	for (let i = 0; i < monitors.length; i++) {
 		const monitor = monitors[i];
@@ -52,26 +43,39 @@ const Startup = async () => {
 		if (monitor.cron !== undefined && monitor.cron !== null) {
 			cronExpression = monitor.cron;
 		}
-		console.log("Staring " + cronExpression + " Cron for ", monitor.name);
 		Cron(cronExpression, async () => {
-			await Minuter(envSecrets, monitor, site.github);
+			await Minuter(monitor, site.github, site);
 		});
+		startUPLog[monitor.name]["Monitoring At"] = cronExpression;
+		if (monitor.alerts && ValidateMonitorAlerts(monitor.alerts)) {
+			startUPLog[monitor.name]["Alerting"] = "✅";
+		} else {
+			startUPLog[monitor.name]["Alerting"] = "❗";
+		}
 	}
+	const tableData = Object.entries(startUPLog).map(([name, details]) => ({
+		Monitor: name,
+		...details
+	}));
 
-	//pre compute 90 day data at 1 minute interval
+	console.table(tableData);
 	Cron(
 		"* * * * *",
 		async () => {
-			for (let i = 0; i < monitors.length; i++) {
-				const monitor = monitors[i];
-				Ninety(monitor);
-			}
+			await db.background();
 		},
 		{
 			protect: true
 		}
 	);
 
+	figlet("Kener is UP!", function (err, data) {
+		if (err) {
+			console.log("Something went wrong...");
+			return;
+		}
+		console.log(data);
+	});
 	return 1;
 };
 

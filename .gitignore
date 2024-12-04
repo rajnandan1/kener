@@ -4,6 +4,7 @@ static/kener
 build
 config/monitors.yaml
 config/site.yaml
+config/server.yaml
 /.svelte-kit
 /src/lib/.kener
 /package
@@ -20,5 +21,3 @@ db/*
 !db/.kener
 database/*
 !database/.kener
-src/lib/server/config/monitors.yaml
-src/lib/server/config/site.yaml

@@ -5,7 +5,6 @@ import { auth } from "$lib/server/webhook";
 import { AddComment, GetCommentsForIssue } from "$lib/server/github";
 import { siteStore } from "$lib/server/stores/site";
 import { get } from "svelte/store";
-import fs from "fs-extra";
 
 export async function GET({ request, params }) {
 	const authError = auth(request);
@@ -30,7 +29,7 @@ export async function GET({ request, params }) {
 
 	let site = get(siteStore);
 	let github = site.github;
-	let resp = await GetCommentsForIssue(incidentNumber, github);
+	let resp = await GetCommentsForIssue(incidentNumber);
 	return json(
 		resp.map((comment) => {
 			return {
@@ -79,7 +78,7 @@ export async function POST({ request, params }) {
 	let site = get(siteStore);
 	let github = site.github;
 
-	let resp = await AddComment(github, incidentNumber, body);
+	let resp = await AddComment(incidentNumber, body);
 	if (resp === null) {
 		return json(
 			{ error: "github error" },

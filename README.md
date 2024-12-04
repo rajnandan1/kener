@@ -26,7 +26,6 @@
 	</picture>
 </p>
 
-
 #### [👉 Visit a live server](https://kener.ing)
 
 #### [👉 Quick Start](https://kener.ing/docs/quick-start)
@@ -35,9 +34,9 @@
 
 ## What is Kener?
 
-Kener: Open-source sveltekit status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. Kener integrates seamlessly with GitHub, making incident management a team effort—making.
+Kener: Open-source sveltekit status page system, crafted with lot of thought so that it looks modern.
 
-It uses files to store the data.
+It does not aim to replace the Datadogs of the world. It simply tries to help someone come with a status page for the world.
 
 Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing is added to make cooler.
 <div align="left">
@@ -60,6 +59,7 @@ Here are some of the features that you get out of the box. Please read the docum
 -   Supports a Default Status for Monitors. Example defaultStatus=DOWN if you don't hit API per minute with Status UP
 -   Supports base path for hosting in k8s
 -   Pre-built docker image for easy deployment
+-   Supports webhooks/discord/slack for notifications
 
 ### Customization and Branding
 

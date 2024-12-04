@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { monitorsStore } from "$lib/server/stores/monitors";
 import { GetIncidents, Mapper } from "$lib/server/github.js";
-import fs from "fs-extra";
 import { get } from "svelte/store";
 
 /**
@@ -18,7 +17,7 @@ export async function load({ params, route, url, parent }) {
 	const { description, name, tag, image } = monitors.find(
 		(monitor) => monitor.folderName === params.id
 	);
-	const allIncidents = await GetIncidents(tag, github, "all");
+	const allIncidents = await GetIncidents(tag, "all");
 	const gitHubActiveIssues = allIncidents.filter((issue) => {
 		return issue.state === "open";
 	});

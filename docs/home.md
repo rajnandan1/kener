@@ -35,7 +35,7 @@ description: Kener is an open-source Node.js status page tool, designed to make 
   		<img src="https://fonts.gstatic.com/s/e/notoemoji/latest/2049_fe0f/512.gif" alt="⁉" width="32" height="32">
 	</picture>
 </div>
-<div class="flex gap-2">
+<div class="flex gap-2 kener-home-links">
 	<div class="flex-1 border rounded-md py-4 px-2 text-center">
 		<a href="https://kener.ing">Live Demo</a>
 	</div>
@@ -55,24 +55,25 @@ description: Kener is an open-source Node.js status page tool, designed to make 
 
 ## What is Kener?
 
-Kener: Open-source sveltekit status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. Kener integrates seamlessly with GitHub, making incident management a team effort—making.
+Kener is an advanced open-source status page tool that serves as a comprehensive network monitoring solution and enterprise network monitoring tool. Designed to streamline application performance monitoring, it offers a robust observability solution for teams looking to simplify service monitoring and incident handling. Unlike traditional monitoring tools, Kener provides a sleek and user-friendly interface that makes tracking service outages and managing network performance intuitive.
 
-It uses files to store the data.
+As a sophisticated net monitoring software, Kener integrates seamlessly with GitHub, transforming incident management into a collaborative team effort. While solutions like Datadog focus on complex enterprise network monitoring tools, Kener offers a lightweight, accessible alternative for teams of all sizes seeking powerful server monitoring software.
 
-Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing is added to make cooler.
+Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing because it was a cheaply available domain.
 
 ## Features
 
 ### Monitoring and Tracking
 
--   Real-time monitoring
+-   Advanced application performance monitoring tools
+-   Real-time network monitor software capabilities
 -   Polls HTTP endpoint or Push data to monitor using Rest APIs
 -   Handles Timezones for visitors
 -   Categorize Monitors into different Sections
 -   Cron-based scheduling for monitors. Minimum per minute
--   Flexible monitor configuration using YAML. Define your own parsing for monitor being UP/DOWN/DEGRADED
+-   Flexible monitor configuration using YAML
 -   Construct complex API Polls - Chain, Secrets etc
--   Supports a Default Status for Monitors. Example defaultStatus=DOWN if you don't hit API per minute with Status UP
+-   Supports a Default Status for Monitors
 -   Supports base path for hosting in k8s
 -   Pre-built docker image for easy deployment
 
@@ -105,7 +106,39 @@ Kener name is derived from the word "Kene" which means "how is it going" in Assa
 
 ## Inspired from
 
--   [Upptime](https://upptime.js.org/)
+Kener draws inspiration from a comprehensive ecosystem of monitoring and status page solutions, reflecting the diverse landscape of network and application performance tools:
+Uptime and Status Page Platforms
+
+-   Upptime - GitHub-powered uptime monitoring
+-   Statuspage - Incident communication platform
+-   Cachet - Open-source status page system
+-   Upptrends - Global website monitoring
+-   Hexometer - Website monitoring and performance tracking
+
+Enterprise Monitoring Solutions
+
+-   Pingdom - Website monitoring service
+-   New Relic - Application performance monitoring
+-   Datadog - Observability and monitoring platform
+-   AppDynamics - Application performance management
+-   Dynatrace - AI-powered full stack monitoring
+
+Network and Infrastructure Monitoring
+
+-   StatusCake - Uptime and performance monitoring
+-   UptimeRobot - Free website monitoring
+-   Better Uptime - Monitoring and incident management
+-   Site24x7 - Comprehensive monitoring solution
+-   Nagios - Infrastructure and network monitoring
+-   Zabbix - Enterprise-class monitoring solution
+-   Prometheus - Monitoring and alerting toolkit
+-   Sentry - Error tracking and performance monitoring
+
+Cloud and Hybrid Monitoring Platforms
+
+-   CloudWatch - AWS monitoring service
+-   Azure Monitor - Microsoft's monitoring solution
+-   Google Cloud Monitoring - Cloud-native monitoring
 
 ## Support Me
 

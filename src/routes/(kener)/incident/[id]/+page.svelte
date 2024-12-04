@@ -67,7 +67,7 @@
 	</div>
 </section>
 
-<Separator class="container mb-4 w-[400px]" />
+<Separator class="container mb-4 max-w-[780px]" />
 
 <section class="mx-auto mb-4 mt-8 flex w-full max-w-[840px] flex-1 flex-col">
 	<div class="container">
