@@ -22,15 +22,17 @@ Make sure you have the following installed:
 
 ```shell
 npm i
-npm run build
-npm run prod
+npm run build #build the frontend
+npm run configure #build the backend
+npm run start
 ```
 
 ## PM2
 
 ```shell
 npm i
-npm run build
+npm run build #build the frontend
+npm run configure #build the backend
 pm2 start src/lib/server/startup.js
 pm2 start main.js
 ```

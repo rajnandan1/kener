@@ -27,14 +27,15 @@
 		"url": "https://github.com/rajnandan1/kener.git"
 	},
 	"scripts": {
-		"prebuild": "node build.js",
 		"build": "vite build",
 		"preview": "vite preview",
-		"preschedule": "node build.js",
+		"predevschedule": "node build.js",
+		"configure": "node build.js",
+		"devschedule": "node src/lib/server/startup.js",
 		"schedule": "node src/lib/server/startup.js",
 		"predevelopment": "node delay.js",
 		"development": "vite dev",
-		"dev": "npm-run-all --parallel schedule development",
+		"dev": "npm-run-all --parallel devschedule development",
 		"prettify": "prettier --write .",
 		"start": "node main.js",
 		"prod": "npm-run-all --parallel schedule start"
