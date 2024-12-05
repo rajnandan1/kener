@@ -1,8 +1,8 @@
 version: '3.7'
 services:
   kener:
-    image: rajnandan1/kener:release-candidate-0.0.16 # assuming this is final namespace/image
-    container_name: kener-rc
+    image: rajnandan1/kener:latest 
+    container_name: kener
     #env_file: .env #uncomment this, if you are using .env file
     environment:
       - TZ=Etc/UTC
