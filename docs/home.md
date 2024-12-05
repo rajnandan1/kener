@@ -55,9 +55,9 @@ description: Kener is an open-source Node.js status page tool, designed to make 
 
 ## What is Kener?
 
-Kener is an advanced open-source status page tool that serves as a comprehensive network monitoring solution and enterprise network monitoring tool. Designed to streamline application performance monitoring, it offers a robust observability solution for teams looking to simplify service monitoring and incident handling. Unlike traditional monitoring tools, Kener provides a sleek and user-friendly interface that makes tracking service outages and managing network performance intuitive.
+Kener is status page system built with Sveltekit and NodeJS. It does not try to replace the Datadogs and Atlassian of the world. It tries to help some who wants to come up with a status page that looks nice and minimum overhead, in a modern way.
 
-As a sophisticated net monitoring software, Kener integrates seamlessly with GitHub, transforming incident management into a collaborative team effort. While solutions like Datadog focus on complex enterprise network monitoring tools, Kener offers a lightweight, accessible alternative for teams of all sizes seeking powerful server monitoring software.
+It comes with all the basic asks for a status page. It is open-source and free to use.
 
 Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing because it was a cheaply available domain.
 
