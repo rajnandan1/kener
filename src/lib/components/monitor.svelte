@@ -144,7 +144,7 @@
 		loadingDayData = true;
 		setTimeout(() => {
 			getToday(bar.timestamp);
-		}, 1000);
+		}, 750);
 	}
 </script>
 

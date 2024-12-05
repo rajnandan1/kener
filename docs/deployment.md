@@ -22,8 +22,8 @@ Make sure you have the following installed:
 
 ```shell
 npm i
-npm run build #build the frontend
-npm run configure #build the backend
+npm run build
+npm run configure
 npm run prod
 ```
 
@@ -60,6 +60,7 @@ mkdir database
 mkdir config
 curl -o config/site.yaml https://raw.githubusercontent.com/rajnandan1/kener/refs/heads/main/config/site.example.yaml
 curl -o config/monitors.yaml https://raw.githubusercontent.com/rajnandan1/kener/refs/heads/main/config/monitors.example.yaml
+curl -o config/server.yaml https://raw.githubusercontent.com/rajnandan1/kener/refs/heads/main/config/server.example.yaml
 docker run \
   -v $(pwd)/database:/app/database \
   -v $(pwd)/config:/app/config \
