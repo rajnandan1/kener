@@ -19,10 +19,6 @@
 		} else {
 			setMode("light");
 		}
-
-		analyticsEvent("theme_change", {
-			theme: $mode
-		});
 	}
 
 	setMode("dark");

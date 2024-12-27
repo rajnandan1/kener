@@ -67,7 +67,7 @@ async function createGHIncident(monitor, alert, commonData) {
 
 	payload.body = description;
 
-	let { title, body, githubLabels, error } = ParseIncidentPayload(payload);
+	let { title, body, githubLabels, error } = await ParseIncidentPayload(payload);
 	if (error) {
 		return;
 	}
@@ -75,7 +75,7 @@ async function createGHIncident(monitor, alert, commonData) {
 	githubLabels.push("auto");
 	let resp = await CreateIssue(title, body, githubLabels);
 
-	return GHIssueToKenerIncident(resp);
+	return await GHIssueToKenerIncident(resp);
 }
 
 async function closeGHIncident(alert) {
@@ -101,7 +101,7 @@ async function closeGHIncident(alert) {
 		return;
 	}
 	await CloseIssue(incidentNumber);
-	return GHIssueToKenerIncident(resp);
+	return await GHIssueToKenerIncident(resp);
 }
 
 //add comment to incident
@@ -117,7 +117,8 @@ function createClosureComment(alert, commonJSON) {
 	return comment;
 }
 
-async function alerting(monitor) {
+async function alerting(m) {
+	let monitor = await db.getMonitorByTag(m.tag);
 	let siteData = await GetAllSiteData();
 	const githubData = await GetGithubData();
 	const triggers = await GetAllTriggers({
@@ -155,6 +156,10 @@ async function alerting(monitor) {
 						console.error(
 							`Triggers ${triggerID} not found in server triggers for monitor ${monitorTag}`
 						);
+						continue;
+					}
+					if (trigger.triggerStatus !== "ACTIVE") {
+						console.error(`Triggers ${triggerID} is not active`);
 						continue;
 					}
 					const notificationClient = new notification(trigger, siteData, monitor);

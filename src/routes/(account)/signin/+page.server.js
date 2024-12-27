@@ -10,6 +10,9 @@ export async function load({ params, route, url, cookies }) {
 	let tokenData = cookies.get("kener-user");
 	if (!!tokenData) {
 		let tokenUser = await VerifyToken(tokenData);
+		if (!!!tokenUser) {
+			throw redirect(302, base + "/signin/logout");
+		}
 		let userDB = await db.getUserByEmail(tokenUser.email);
 		if (!!userDB) {
 			throw redirect(302, base + "/manage");

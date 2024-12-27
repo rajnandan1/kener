@@ -99,8 +99,8 @@ section {
 }
 /*Needed overlay content on top of dotted bg*/
 .blurry-bg {
-	background-color: var(--background-kener-rgba);
-	box-shadow: 0 0 64px 64px var(--background-kener-rgba);
+	/* background-color: var(--background-kener-rgba);
+	box-shadow: 0 0 64px 64px var(--background-kener-rgba); */
 }
 
 :root {

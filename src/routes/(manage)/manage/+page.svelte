@@ -12,6 +12,7 @@
 	import MonitorsAdd from "$lib/components/manage/monitorsAdd.svelte";
 	import TriggerInfo from "$lib/components/manage/triggerInfo.svelte";
 	import AlertsInfo from "$lib/components/manage/alertsInfo.svelte";
+	import APIKeys from "$lib/components/manage/apiKeys.svelte";
 	import { Tabs } from "bits-ui";
 	import { Plane } from "lucide-svelte";
 	import { onMount } from "svelte";
@@ -84,6 +85,12 @@
 			>
 				Alerts
 			</Tabs.Trigger>
+			<Tabs.Trigger
+				value="APIKeys"
+				class="border-b-2 border-transparent px-2 pb-1 text-sm font-medium"
+			>
+				API Keys
+			</Tabs.Trigger>
 		</Tabs.List>
 		<Tabs.Content value="SiteInfo" class="min-h-[70vh] pt-3">
 			<SiteInfo {data} />
@@ -101,13 +108,20 @@
 			<ThemeInfo {data} />
 		</Tabs.Content>
 		<Tabs.Content value="MonitorsAdd" class="min-h-[70vh] pt-3">
-			<MonitorsAdd categories={data.siteData?.categories} />
+			<MonitorsAdd
+				categories={data.siteData?.categories}
+				colorDown={data.siteData?.colors.DOWN}
+				colorDegraded={data.siteData?.colors.DEGRADED}
+			/>
 		</Tabs.Content>
 		<Tabs.Content value="TriggerInfo" class="min-h-[70vh] pt-3">
 			<TriggerInfo />
 		</Tabs.Content>
 		<Tabs.Content value="AlertsInfo" class="min-h-[70vh] pt-3">
 			<AlertsInfo {data} />
+		</Tabs.Content>
+		<Tabs.Content value="APIKeys" class="min-h-[70vh] pt-3">
+			<APIKeys />
 		</Tabs.Content>
 	</Tabs.Root>
 </div>

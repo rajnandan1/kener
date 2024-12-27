@@ -98,6 +98,17 @@ class Sqlite {
 				updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
 			);
 
+			-- create table ApiKeys
+			CREATE TABLE IF NOT EXISTS ApiKeys (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				name TEXT NOT NULL,
+				hashedKey TEXT NOT NULL UNIQUE,
+				maskedKey TEXT NOT NULL,
+				status TEXT DEFAULT 'ACTIVE',
+				createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+				updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+			);
+
 		`);
 	}
 
@@ -455,6 +466,15 @@ class Sqlite {
 		return stmt.all({ status: data.status });
 	}
 
+	//get monitor by tag
+	async getMonitorByTag(tag) {
+		let stmt = this.db.prepare(`
+			SELECT * FROM Monitors
+			WHERE tag = @tag;
+		`);
+		return stmt.get({ tag });
+	}
+
 	//insert alert
 	async createNewTrigger(data) {
 		let stmt = this.db.prepare(`
@@ -522,6 +542,42 @@ class Sqlite {
 			VALUES (@email, @name, @password_hash, @role);
 		`);
 		return stmt.run(data);
+	}
+
+	//new api key
+	async createNewApiKey(data) {
+		let stmt = this.db.prepare(`
+			INSERT INTO ApiKeys (name, hashedKey, maskedKey)
+			VALUES (@name, @hashedKey, @maskedKey);
+		`);
+		return stmt.run(data);
+	}
+
+	//update status of api key
+	async updateApiKeyStatus(data) {
+		let stmt = this.db.prepare(`
+			UPDATE ApiKeys
+			SET status = @status, updatedAt = CURRENT_TIMESTAMP
+			WHERE id = @id;
+		`);
+		return stmt.run(data);
+	}
+
+	//get key by hashedKey
+	async getApiKeyByHashedKey(hashedKey) {
+		let stmt = this.db.prepare(`
+			SELECT * FROM ApiKeys
+			WHERE hashedKey = @hashedKey;
+		`);
+		return stmt.get({ hashedKey });
+	}
+
+	//get all api keys
+	async getAllApiKeys() {
+		let stmt = this.db.prepare(`
+			SELECT * FROM ApiKeys order by id desc;
+		`);
+		return stmt.all();
 	}
 
 	//close

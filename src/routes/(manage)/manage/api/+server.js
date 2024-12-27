@@ -8,12 +8,15 @@ import {
 	CreateUpdateTrigger,
 	GetAllTriggers,
 	UpdateTriggerData,
-	GetAllAlertsPaginated
+	GetAllAlertsPaginated,
+	GetAllAPIKeys,
+	CreateNewAPIKey,
+	UpdateApiKeyStatus
 } from "$lib/server/controllers/controller.js";
 export async function POST({ request }) {
 	const payload = await request.json();
 	let action = payload.action;
-	let data = payload.data;
+	let data = payload.data || {};
 	let resp = {};
 	try {
 		if (action === "storeSiteData") {
@@ -30,6 +33,12 @@ export async function POST({ request }) {
 			resp = await UpdateTriggerData(data);
 		} else if (action == "getAllAlertsPaginated") {
 			resp = await GetAllAlertsPaginated(data);
+		} else if (action == "getAPIKeys") {
+			resp = await GetAllAPIKeys();
+		} else if (action == "createNewApiKey") {
+			resp = await CreateNewAPIKey(data);
+		} else if (action == "updateApiKeyStatus") {
+			resp = await UpdateApiKeyStatus(data);
 		}
 	} catch (error) {
 		resp = { error: error.message };

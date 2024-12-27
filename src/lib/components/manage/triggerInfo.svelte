@@ -393,7 +393,7 @@
 							<div class="rounded-md border bg-card p-2 text-xs">
 								<p class="text-sm font-semibold">Email Trigger</p>
 								<p class="text-xs">
-									Kener used <a
+									Kener uses <a
 										href="https://resend.com/"
 										class="text-blue-500"
 										target="_blank">resend</a

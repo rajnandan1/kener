@@ -107,7 +107,7 @@
 						/>
 					{/if}
 
-					<div class="px-8">
+					<div class="">
 						<div class="scroll-m-20 text-xl font-medium tracking-tight">
 							{#if variant.includes("monitor")}
 								{monitor.name} -
@@ -138,7 +138,7 @@
 						</div>
 					{/if}
 				</Card.Title>
-				<Card.Description class="-mt-4 px-8 text-xs ">
+				<Card.Description class="-mt-4  text-xs ">
 					{moment(incidentCreatedAt * 1000).format("MMMM Do YYYY, h:mm:ss a")}
 
 					<p class="mt-0 flex gap-2 leading-8">
@@ -167,7 +167,7 @@
 				</Card.Description>
 			</Card.Header>
 			{#if (variant.includes("body") || variant.includes("comments")) && state == "open"}
-				<Card.Content class="px-14">
+				<Card.Content class="px-7">
 					{#if variant.includes("body")}
 						<div
 							class="prose prose-stone max-w-none text-sm dark:prose-invert prose-code:rounded prose-code:px-[0.3rem] prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm"

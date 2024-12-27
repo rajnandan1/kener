@@ -10,6 +10,8 @@
 	import * as Select from "$lib/components/ui/select";
 
 	export let categories = [];
+	export let colorDown = "#777";
+	export let colorDegraded = "#777";
 	let monitors = [];
 	let status = "ACTIVE";
 	let showAddMonitor = false;
@@ -313,8 +315,11 @@
 				<hr class="my-4" />
 				{#each Object.entries(monitorTriggers) as [key, data]}
 					<div class="flex justify-between">
-						<h3 class="font-semibold">
-							{data.triggerType}
+						<h3
+							class="font-semibold"
+							style="color:{data.triggerType == 'DOWN' ? colorDown : colorDegraded};"
+						>
+							If Monitor {data.triggerType}
 						</h3>
 						<div>
 							<label class="inline-flex cursor-pointer items-center">
@@ -409,7 +414,9 @@
 							/>
 						</div>
 						{#each triggers as trigger}
-							<div class="col-span-1 mt-2">
+							<div
+								class="col-span-1 mt-2 overflow-hidden overflow-ellipsis whitespace-nowrap"
+							>
 								<label class="cursor-pointer">
 									<input
 										type="checkbox"

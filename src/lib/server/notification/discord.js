@@ -5,9 +5,8 @@ class Discord {
 	method;
 	siteData;
 	monitorData;
-	envSecrets;
 
-	constructor(url, siteData, monitorData, envSecrets) {
+	constructor(url, siteData, monitorData) {
 		const kenerHeader = {
 			"Content-Type": "application/json",
 			"User-Agent": "Kener"
@@ -18,7 +17,6 @@ class Discord {
 		this.method = "POST";
 		this.siteData = siteData;
 		this.monitorData = monitorData;
-		this.envSecrets = envSecrets;
 	}
 
 	transformData(data) {
@@ -36,7 +34,6 @@ class Discord {
 		}
 		return {
 			username: this.siteData.siteName,
-			avatar_url: logo,
 			content: `## ${data.alert_name}\n${data.status === "TRIGGERED" ? "🔴 Triggered" : "🟢 Resolved"}\n${data.description}\nClick [here](${data.actions[0].url}) for more.`,
 			embeds: [
 				{
@@ -67,8 +64,7 @@ class Discord {
 						}
 					],
 					footer: {
-						text: "Kener",
-						icon_url: logo
+						text: "Kener"
 					},
 					timestamp: data.timestamp
 				}

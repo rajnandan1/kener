@@ -10,7 +10,7 @@ import {
 } from "$lib/server/github";
 
 export async function PATCH({ request, params }) {
-	const authError = auth(request);
+	const authError = await auth(request);
 	if (authError !== null) {
 		return json(
 			{ error: authError.message },
@@ -29,7 +29,7 @@ export async function PATCH({ request, params }) {
 			}
 		);
 	}
-	let { title, body, githubLabels, error } = ParseIncidentPayload(payload);
+	let { title, body, githubLabels, error } = await ParseIncidentPayload(payload);
 	if (error) {
 		return json(
 			{ error },
@@ -48,13 +48,13 @@ export async function PATCH({ request, params }) {
 			}
 		);
 	}
-	return json(GHIssueToKenerIncident(resp), {
+	return json(await GHIssueToKenerIncident(resp), {
 		status: 200
 	});
 }
 
 export async function GET({ request, params }) {
-	const authError = auth(request);
+	const authError = await auth(request);
 	if (authError !== null) {
 		return json(
 			{ error: authError.message },
@@ -76,7 +76,7 @@ export async function GET({ request, params }) {
 		);
 	}
 
-	return json(GHIssueToKenerIncident(issue), {
+	return json(await GHIssueToKenerIncident(issue), {
 		status: 200
 	});
 }

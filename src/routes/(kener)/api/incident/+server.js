@@ -6,7 +6,7 @@ import { CreateIssue, SearchIssue } from "$lib/server/github";
 
 export async function POST({ request }) {
 	const payload = await request.json();
-	const authError = auth(request);
+	const authError = await auth(request);
 	if (authError !== null) {
 		return json(
 			{ error: authError.message },
@@ -16,7 +16,7 @@ export async function POST({ request }) {
 		);
 	}
 
-	let { title, body, githubLabels, error } = ParseIncidentPayload(payload);
+	let { title, body, githubLabels, error } = await ParseIncidentPayload(payload);
 	if (error) {
 		return json(
 			{ error },
@@ -25,8 +25,6 @@ export async function POST({ request }) {
 			}
 		);
 	}
-	let site = get(siteStore);
-	let github = site.github;
 	githubLabels.push("manual");
 	let resp = await CreateIssue(title, body, githubLabels);
 	if (resp === null) {
@@ -38,13 +36,13 @@ export async function POST({ request }) {
 		);
 	}
 
-	return json(GHIssueToKenerIncident(resp), {
+	return json(await GHIssueToKenerIncident(resp), {
 		status: 200
 	});
 }
 
 export async function GET({ request, url }) {
-	const authError = auth(request);
+	const authError = await auth(request);
 	if (authError !== null) {
 		return json(
 			{ error: authError.message },
@@ -107,7 +105,9 @@ export async function GET({ request, url }) {
 	}
 	const resp = await SearchIssue(filterArray, page, per_page);
 
-	const incidents = resp.items.map((issue) => GHIssueToKenerIncident(issue));
+	const incidents = await Promise.all(
+		resp.items.map(async (issue) => await GHIssueToKenerIncident(issue))
+	);
 
 	return json(incidents, {
 		status: 200

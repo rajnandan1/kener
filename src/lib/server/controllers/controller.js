@@ -14,6 +14,7 @@ import {
 import db from "../db/db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 const saltRounds = 10;
 const DUMMY_SECRET = "DUMMY_SECRET";
@@ -254,7 +255,9 @@ export const VerifyPassword = async (plainTextPassword, hashedPassword) => {
 
 export const GenerateToken = async (data) => {
 	try {
-		const token = jwt.sign(data, process.env.JWT_SECRET || DUMMY_SECRET, { expiresIn: "1y" });
+		const token = jwt.sign(data, process.env.KENER_SECRET_KEY || DUMMY_SECRET, {
+			expiresIn: "1y"
+		});
 		return token;
 	} catch (err) {
 		console.error("Error generating token:", err);
@@ -264,11 +267,11 @@ export const GenerateToken = async (data) => {
 
 export const VerifyToken = async (token) => {
 	try {
-		const decoded = jwt.verify(token, process.env.JWT_SECRET || DUMMY_SECRET);
+		const decoded = jwt.verify(token, process.env.KENER_SECRET_KEY || DUMMY_SECRET);
 		return decoded; // Returns the decoded payload if the token is valid
 	} catch (err) {
 		console.error("Error verifying token:", err);
-		throw new Error("Invalid or expired token");
+		return undefined; // Returns null if the token is invalid
 	}
 };
 
@@ -277,4 +280,59 @@ export const GetAllAlertsPaginated = async (data) => {
 		alerts: await db.getMonitorAlertsPaginated(data.page, data.limit),
 		total: await db.getMonitorAlertsCount()
 	};
+};
+function generateApiKey() {
+	const prefix = "kener_";
+	const randomKey = crypto.randomBytes(32).toString("hex"); // 64-character hexadecimal string
+	return prefix + randomKey;
+}
+function createHash(apiKey) {
+	return crypto
+		.createHmac("sha256", process.env.KENER_SECRET_KEY || DUMMY_SECRET)
+		.update(apiKey)
+		.digest("hex");
+}
+
+export const MaskString = (str) => {
+	const len = str.length;
+	const mask = "*";
+	const masked = mask.repeat(len - 4) + str.substring(len - 4);
+	return masked;
+};
+
+export const CreateNewAPIKey = async (data) => {
+	//generate a new key
+	const apiKey = generateApiKey();
+	const hashedKey = await createHash(apiKey);
+	//insert into db
+	await db.createNewApiKey({
+		name: data.name,
+		hashedKey: hashedKey,
+		maskedKey: MaskString(apiKey)
+	});
+
+	return {
+		apiKey: apiKey,
+		name: data.name
+	};
+};
+
+export const GetAllAPIKeys = async () => {
+	return await db.getAllApiKeys();
+};
+
+//update status of api key
+export const UpdateApiKeyStatus = async (data) => {
+	return await db.updateApiKeyStatus(data);
+};
+
+export const VerifyAPIKey = async (apiKey) => {
+	const hashedKey = createHash(apiKey);
+	// Check if the hash exists in the database
+	const record = await db.getApiKeyByHashedKey(hashedKey);
+
+	if (!!record) {
+		return record.status == "ACTIVE";
+	} // Adjust this for your DB query
+	return false;
 };

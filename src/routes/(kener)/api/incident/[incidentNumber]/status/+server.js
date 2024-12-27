@@ -8,7 +8,7 @@ export async function POST({ request, params }) {
 	const payload = await request.json();
 	const incidentNumber = params.incidentNumber; //number required
 	// const headers = await request.headers();
-	const authError = auth(request);
+	const authError = await auth(request);
 	if (authError !== null) {
 		return json(
 			{ error: authError.message },
@@ -82,7 +82,7 @@ export async function POST({ request, params }) {
 			}
 		);
 	}
-	return json(GHIssueToKenerIncident(resp), {
+	return json(await GHIssueToKenerIncident(resp), {
 		status: 200
 	});
 }

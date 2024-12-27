@@ -5,7 +5,7 @@ import { auth } from "$lib/server/webhook";
 import { AddComment, GetCommentsForIssue } from "$lib/server/github";
 
 export async function GET({ request, params }) {
-	const authError = auth(request);
+	const authError = await auth(request);
 	if (authError !== null) {
 		return json(
 			{ error: authError.message },
@@ -41,7 +41,7 @@ export async function GET({ request, params }) {
 }
 export async function POST({ request, params }) {
 	// const headers = await request.headers();
-	const authError = auth(request);
+	const authError = await auth(request);
 	if (authError !== null) {
 		return json(
 			{ error: authError.message },

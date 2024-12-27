@@ -4,7 +4,7 @@ import { json } from "@sveltejs/kit";
 import { store, auth, GetMonitorStatusByTag } from "$lib/server/webhook";
 export async function POST({ request }) {
 	const payload = await request.json();
-	const authError = auth(request);
+	const authError = await auth(request);
 	if (authError !== null) {
 		return json(
 			{ error: authError.message },
@@ -19,7 +19,7 @@ export async function POST({ request }) {
 	});
 }
 export async function GET({ request, url }) {
-	const authError = auth(request);
+	const authError = await auth(request);
 	if (authError !== null) {
 		return json(
 			{ error: authError.message },
@@ -39,7 +39,7 @@ export async function GET({ request, url }) {
 			}
 		);
 	}
-	return json(GetMonitorStatusByTag(tag, timestamp), {
+	return json(await GetMonitorStatusByTag(tag, timestamp), {
 		status: 200
 	});
 }

@@ -1,3 +1,24 @@
 .tabs [data-state="active"] {
 	border-color: orange;
 }
+.copybtn .copy-btn {
+	transform: scale(1);
+}
+.copybtn .check-btn {
+	transform: scale(0);
+}
+.copybtn:focus .copy-btn {
+	transform: scale(0);
+}
+.copybtn:focus .check-btn {
+	transform: scale(1);
+}
+
+input,
+textarea {
+	background-color: rgba(0, 0, 0, 0.02) !important;
+}
+.dark input,
+.dark textarea {
+	background-color: rgba(0, 0, 0, 0.1) !important;
+}
