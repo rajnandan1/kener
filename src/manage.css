@@ -1,0 +1,3 @@
+.tabs [data-state="active"] {
+	border-color: orange;
+}

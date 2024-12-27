@@ -3,8 +3,6 @@
 import { json } from "@sveltejs/kit";
 import { auth, GHIssueToKenerIncident } from "$lib/server/webhook";
 import { UpdateIssueLabels, GetIncidentByNumber } from "$lib/server/github";
-import { siteStore } from "$lib/server/stores/site";
-import { get } from "svelte/store";
 
 export async function POST({ request, params }) {
 	const payload = await request.json();
@@ -43,10 +41,7 @@ export async function POST({ request, params }) {
 		);
 	}
 
-	let site = get(siteStore);
-	let github = site.github;
-
-	let issue = await GetIncidentByNumber(site, incidentNumber);
+	let issue = await GetIncidentByNumber(incidentNumber);
 	if (issue === null) {
 		return json(
 			{ error: "github error" },
@@ -78,7 +73,7 @@ export async function POST({ request, params }) {
 		body = body + " " + `[end_datetime:${endDatetime}]`;
 	}
 
-	let resp = await UpdateIssueLabels(site, incidentNumber, labels, body);
+	let resp = await UpdateIssueLabels(incidentNumber, labels, body);
 	if (resp === null) {
 		return json(
 			{ error: "github error" },

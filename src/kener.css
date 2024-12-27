@@ -143,10 +143,10 @@ section {
 }
 /*Colors for something Not there*/
 .bg-api-nodata {
-	background-color: #f1f5f8;
+	background-color: #ededed;
 }
 .text-api-nodata {
-	color: #b8bcbe;
+	color: #a0a0a0;
 }
 .dark .bg-api-nodata {
 	background-color: rgba(100, 100, 100, 0.4);

@@ -121,7 +121,7 @@
 		</div>
 	</section>
 	<section
-		class="mx-auto mb-8 flex w-full flex-1 flex-col items-start justify-center backdrop-blur-[2px] md:w-[655px]"
+		class="z-20 mx-auto mb-8 flex w-full flex-1 flex-col items-start justify-center backdrop-blur-[2px] md:w-[655px]"
 	>
 		<Card.Root>
 			<Card.Content class="monitors-card  p-0">
@@ -139,9 +139,9 @@
 {/if}
 {#if data.site.categories}
 	<section
-		class="mx-auto mb-8 w-full max-w-[890px] flex-1 flex-col items-start backdrop-blur-[2px] md:w-[655px]"
+		class="relative z-10 mx-auto mb-8 w-full max-w-[890px] flex-1 flex-col items-start backdrop-blur-[2px] md:w-[655px]"
 	>
-		{#each data.site.categories as category}
+		{#each data.site.categories.filter((e) => e.name != "Home") as category}
 			<Card.Root class="mb-2 w-full">
 				<Card.Header class="relative pr-[100px]">
 					<Card.Title class="">{category.name}</Card.Title>

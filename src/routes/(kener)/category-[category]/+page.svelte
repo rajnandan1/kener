@@ -3,11 +3,21 @@
 	import * as Card from "$lib/components/ui/card";
 	import Incident from "$lib/components/incident.svelte";
 	import { Separator } from "$lib/components/ui/separator";
+	import { Button } from "$lib/components/ui/button";
+	import { ArrowRight, X } from "lucide-svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import { page } from "$app/stores";
 	import { l } from "$lib/i18n/client";
+	import ShareMenu from "$lib/components/shareMenu.svelte";
+	import { hotKeyAction, slide, clickOutsideAction } from "svelte-legos";
 
 	export let data;
+	let shareMenusToggle = false;
+	let activeMonitor = null;
+	function showShareMenu(e) {
+		shareMenusToggle = true;
+		activeMonitor = e.detail.monitor;
+	}
 
 	let category = data.site.categories.find((c) => c.name === $page.params.category);
 	let hasActiveIncidents = data.openIncidents.length > 0;
@@ -110,7 +120,12 @@
 		<Card.Root class="w-full">
 			<Card.Content class="monitors-card p-0">
 				{#each data.monitors as monitor}
-					<Monitor {monitor} localTz={data.localTz} lang={data.lang} />
+					<Monitor
+						on:show_shareMenu={showShareMenu}
+						{monitor}
+						localTz={data.localTz}
+						lang={data.lang}
+					/>
 				{/each}
 			</Card.Content>
 		</Card.Root>
@@ -140,4 +155,36 @@
 			</Card.Content>
 		</Card.Root>
 	</section>
+{/if}
+
+{#if shareMenusToggle}
+	<div
+		transition:slide={{ direction: "right" }}
+		use:hotKeyAction={{
+			code: "Escape",
+			cb: () => (shareMenusToggle = false)
+		}}
+		class="moldal-container fixed left-0 top-0 z-30 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm"
+	>
+		<div
+			use:clickOutsideAction
+			on:clickoutside={() => {
+				shareMenusToggle = false;
+			}}
+			class="absolute left-1/2 top-1/2 h-fit w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background shadow-lg backdrop-blur-lg md:w-[568px]"
+		>
+			<Button
+				variant="ghost"
+				on:click={() => {
+					shareMenusToggle = false;
+				}}
+				class="absolute right-2 top-2 z-40 h-6 w-6   rounded-full border bg-background p-1"
+			>
+				<X class="h-4 w-4   text-muted-foreground" />
+			</Button>
+			<div class="content">
+				<ShareMenu monitor={activeMonitor} lang={data.lang} />
+			</div>
+		</div>
+	</div>
 {/if}

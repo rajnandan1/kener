@@ -1,23 +1,15 @@
 // @ts-nocheck
-import { monitorsStore } from "$lib/server/stores/monitors";
 import { GetIncidents, Mapper } from "$lib/server/github.js";
-import { get } from "svelte/store";
-
-/**
- * @param {{body: string | import("markdown-it/lib/token")[];number: any;title: any;created_at: any;updated_at: any;comments: any;html_url: any;}} issue
- * @this {any}
- */
+import { GetMonitors } from "$lib/server/controllers/controller.js";
 
 // @ts-ignore
 export async function load({ params, route, url, parent }) {
-	let monitors = get(monitorsStore);
+	let monitors = await GetMonitors({ status: "ACTIVE" });
 	const siteData = await parent();
 	const github = siteData.site.github;
 	// @ts-ignore
-	const { description, name, tag, image } = monitors.find(
-		(monitor) => monitor.folderName === params.id
-	);
-	const allIncidents = await GetIncidents(siteData, tag, "all");
+	const { description, name, tag, image } = monitors.find((monitor) => monitor.tag === params.id);
+	const allIncidents = await GetIncidents(tag, "all");
 	const gitHubActiveIssues = allIncidents.filter((issue) => {
 		return issue.state === "open";
 	});

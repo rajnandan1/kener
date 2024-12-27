@@ -1,11 +1,5 @@
 // @ts-nocheck
-/*
-The startup js script will
-check if monitors.yaml exists
-if it does, it will read the file and parse it into a json array of objects
-each objects will have a name, url, method: required
-name of each of these objects need to be unique
-*/
+
 import * as dotenv from "dotenv";
 import fs from "fs-extra";
 import path from "path";
@@ -15,57 +9,65 @@ import yaml from "js-yaml";
 import { Cron } from "croner";
 import { API_TIMEOUT } from "./constants.js";
 
-import { IsValidURL, IsValidHTTPMethod, ValidateIpAddress, ValidateMonitorAlerts } from "./tool.js";
-
 import { Minuter } from "./cron-minute.js";
 import axios from "axios";
 import db from "./db/db.js";
 import Queue from "queue";
+import { GetAllSiteData, GetMonitorsParsed } from "./controllers/controller.js";
 
-const DATABASE_PATH = "./database";
-const Startup = async () => {
-	const monitors = fs.readJSONSync(DATABASE_PATH + "/monitors.json");
-	const site = fs.readJSONSync(DATABASE_PATH + "/site.json");
-	const startUPLog = {};
-	// init monitors
-	for (let i = 0; i < monitors.length; i++) {
-		const monitor = monitors[i];
-		await Minuter(monitor, site);
-		startUPLog[monitor.name] = {
-			"Initial Fetch": "✅"
-		};
-	}
+const jobs = [];
 
-	for (let i = 0; i < monitors.length; i++) {
-		const monitor = monitors[i];
+const jobSchedule = async () => {
+	const activeMonitors = await GetMonitorsParsed({ status: "ACTIVE" });
 
-		let cronExpression = "* * * * *";
-		if (monitor.cron !== undefined && monitor.cron !== null) {
-			cronExpression = monitor.cron;
-		}
-		Cron(cronExpression, async () => {
-			await Minuter(monitor, site);
-		});
-		startUPLog[monitor.name]["Monitoring At"] = cronExpression;
-		if (monitor.alerts && ValidateMonitorAlerts(monitor.alerts)) {
-			startUPLog[monitor.name]["Alerting"] = "✅";
-		} else {
-			startUPLog[monitor.name]["Alerting"] = "❗";
+	//stop and remove jobs not present in activeMonitors
+	for (let i = 0; i < jobs.length; i++) {
+		const job = jobs[i];
+		const monitor = activeMonitors.find((m) => m.tag === job.name);
+		if (!monitor) {
+			job.stop();
+			jobs.splice(i, 1);
+			i--;
+			console.log("REMOVING JOB WITH NAME " + job.name);
 		}
 	}
-	const tableData = Object.entries(startUPLog).map(([name, details]) => ({
-		Monitor: name,
-		...details
-	}));
 
-	console.table(tableData);
-	Cron(
+	//add new jobs from activeMonitors if not present already in jobs
+	for (let i = 0; i < activeMonitors.length; i++) {
+		const monitor = activeMonitors[i];
+		const job = jobs.find((j) => j.name === monitor.tag);
+		if (!job) {
+			const j = Cron(
+				monitor.cron,
+				async () => {
+					await Minuter(monitor);
+				},
+				{
+					protect: true,
+					name: monitor.tag
+				}
+			);
+			console.log("ADDING NEW JOB WITH NAME " + j.name);
+			jobs.push(j);
+		}
+	}
+};
+
+async function Startup() {
+	const activeMonitors = await GetMonitorsParsed({ status: "ACTIVE" });
+	for (let i = 0; i < activeMonitors.length; i++) {
+		let m = activeMonitors[i];
+		await Minuter(m);
+	}
+	await jobSchedule();
+	const mainJob = Cron(
 		"* * * * *",
 		async () => {
-			await db.background();
+			await jobSchedule();
 		},
 		{
-			protect: true
+			protect: true,
+			name: "Main Job"
 		}
 	);
 
@@ -76,7 +78,7 @@ const Startup = async () => {
 		}
 		console.log(data);
 	});
-	return 1;
-};
-
+}
 Startup();
+
+// console.log(">>>>>>----  startup:96 ", mainJob.name);

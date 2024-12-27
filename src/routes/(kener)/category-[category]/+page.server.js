@@ -1,11 +1,10 @@
 // @ts-nocheck
 import { Mapper, GetOpenIncidents, FilterAndInsertMonitorInIncident } from "$lib/server/github.js";
 import { FetchData } from "$lib/server/page";
-import { monitorsStore } from "$lib/server/stores/monitors";
-import { get } from "svelte/store";
+import { GetMonitors } from "$lib/server/controllers/controller.js";
 
 export async function load({ params, route, url, parent }) {
-	let monitors = get(monitorsStore);
+	let monitors = await GetMonitors({ status: "ACTIVE" });
 
 	const parentData = await parent();
 	const siteData = parentData.site;
@@ -15,18 +14,20 @@ export async function load({ params, route, url, parent }) {
 		if (monitors[i].hidden !== undefined && monitors[i].hidden === true) {
 			continue;
 		}
-		//only return monitors that have category as home or category is not present
-		if (monitors[i].category === undefined || monitors[i].category !== params.category) {
+		if (
+			monitors[i].categoryName === undefined ||
+			monitors[i].categoryName !== params.category
+		) {
 			continue;
 		}
 		delete monitors[i].api;
 		delete monitors[i].defaultStatus;
-		let data = await FetchData(monitors[i], parentData.localTz);
+		let data = await FetchData(siteData, monitors[i], parentData.localTz);
 		monitors[i].pageData = data;
 		monitors[i].embed = false;
 		monitorsActive.push(monitors[i]);
 	}
-	let openIncidents = await GetOpenIncidents(siteData);
+	let openIncidents = await GetOpenIncidents();
 	let openIncidentsReduced = openIncidents.map(Mapper);
 	return {
 		monitors: monitorsActive,

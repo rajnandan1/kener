@@ -1,9 +1,9 @@
 // @ts-nocheck
 import i18n from "$lib/i18n/server";
-import { siteStore } from "$lib/server/stores/site";
-import { get } from "svelte/store";
+import { GetAllSiteData } from "$lib/server/controllers/controller.js";
+
 export async function load({ params, route, url, cookies, request }) {
-	let site = get(siteStore);
+	let site = await GetAllSiteData();
 	const headers = request.headers;
 	const userAgent = headers.get("user-agent");
 	let localTz = "UTC";
@@ -25,7 +25,8 @@ export async function load({ params, route, url, cookies, request }) {
 	//load all files from lib locales folder
 	let selectedLang = "en";
 	const localLangCookie = cookies.get("localLang");
-	if (!!localLangCookie && site.i18n?.locales[localLangCookie]) {
+
+	if (!!localLangCookie && site.i18n?.locales.find((l) => l.code === localLangCookie)) {
 		selectedLang = localLangCookie;
 	} else if (site.i18n?.defaultLocale && site.i18n?.locales[site.i18n.defaultLocale]) {
 		selectedLang = site.i18n.defaultLocale;

@@ -211,11 +211,11 @@
 							rollSummary();
 						}}
 					>
-						<span class="w-16 text-left">
+						<span class="text-left">
 							{uptimesRollers[rolledAt].text}
 						</span>
 
-						<span class="block w-full text-right">
+						<span class="block w-full pl-2 text-right">
 							{#if rollerLoading}
 								<Loader class="mx-1 inline h-4 w-4 animate-spin" />
 							{:else}
@@ -248,7 +248,13 @@
 				</div>
 			</div>
 			<div class="chart-status relative col-span-12 mt-1">
-				<div class="daygrid90 flex min-h-[60px] overflow-x-auto overflow-y-hidden py-1">
+				<div
+					class="daygrid90 flex min-h-[60px] overflow-x-auto overflow-y-hidden py-1"
+					use:clickOutsideAction
+					on:clickoutside={(e) => {
+						showDailyDataModal = false;
+					}}
+				>
 					{#each Object.entries(_90Day) as [ts, bar]}
 						<a
 							data-ts={ts}
@@ -287,16 +293,7 @@
 				{#if showDailyDataModal}
 					<div
 						transition:slide={{ direction: "bottom" }}
-						use:clickOutsideAction
-						on:clickoutside={(e) => {
-							let classList = JSON.stringify(e.explicitOriginalTarget.classList);
-
-							if (classList.indexOf("oneline") != -1) {
-								return;
-							}
-							showDailyDataModal = false;
-						}}
-						class="absolute -left-2 top-10 z-10 mx-auto rounded-sm border bg-card px-[7px] py-[7px] shadow-lg md:w-[560px]"
+						class="okclass absolute -left-2 top-10 z-10 mx-auto rounded-sm border bg-card px-[7px] py-[7px] shadow-lg md:w-[560px]"
 					>
 						<div class="mb-2 flex justify-between text-xs font-semibold">
 							<span>{dateFetchedFor}</span>
@@ -352,7 +349,7 @@
 			{#if !!!monitor.embed}
 				<p class="z-4 absolute bottom-3 right-14 float-right text-right">
 					<a
-						href="{base}/incident/{monitor.folderName}#past_incident"
+						href="{base}/incident/{monitor.tag}#past_incident"
 						class="text-xs font-medium text-muted-foreground hover:text-primary"
 					>
 						{l(lang, "root.recent_incidents")}

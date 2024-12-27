@@ -43,7 +43,7 @@ description: Kener is an open-source Node.js status page tool, designed to make 
 		<a href="https://kener.ing/docs/quick-start">Quick Start</a>
 	</div>
 	<div class="flex-1 border rounded-md  py-4 px-2 text-center">
-		<a href="https://kener.ing/docs/quick-start">Clone</a>
+		<a href="https://github.com/rajnandan1/kener">Clone</a>
 	</div>
 	<div class="flex-1 border rounded-md  py-4 px-2 text-center">
 		<a href="https://kener.ing/docs/deployment">Deploy</a>

@@ -44,8 +44,22 @@ const alertingQueue = new Queue({
 	autostart: true // Automatically start the queue (optional)
 });
 
-async function manualIncident(monitor, site) {
-	let incidentsResp = await GetIncidentsManual(site, monitor.tag, "open");
+const defaultEval = `(function (statusCode, responseTime, responseData) {
+	let statusCodeShort = Math.floor(statusCode/100);
+    if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {
+        return {
+			status: 'UP',
+			latency: responseTime,
+        }
+    } 
+	return {
+		status: 'DOWN',
+		latency: responseTime,
+	}
+})`;
+
+async function manualIncident(monitor) {
+	let incidentsResp = await GetIncidentsManual(monitor.tag, "open");
 
 	let manualData = {};
 	if (incidentsResp.length == 0) {
@@ -81,7 +95,7 @@ async function manualIncident(monitor, site) {
 			if (end_time <= GetNowTimestampUTC() && incident.state === "open") {
 				//close the issue after 30 secs
 				setTimeout(async () => {
-					await CloseIssue(site, incidentNumber);
+					await CloseIssue(incidentNumber);
 				}, 30000);
 			}
 		} else {
@@ -183,6 +197,10 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
 	}
 	if (!!headers) {
 		headers = JSON.parse(headers);
+		headers = headers.reduce((acc, header) => {
+			acc[header.key] = header.value;
+			return acc;
+		}, {});
 		axiosHeaders = { ...axiosHeaders, ...headers };
 	}
 
@@ -210,7 +228,6 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
 		if (err.message.startsWith("timeout of") && err.message.endsWith("exceeded")) {
 			timeoutError = true;
 		}
-		// console.log(">>>>>>----  cron-minute:21224 ", err.response);
 		if (err.response !== undefined && err.response.status !== undefined) {
 			statusCode = err.response.status;
 		}
@@ -325,32 +342,35 @@ async function dsnChecker(dnsResolver, host, recordType, matchType, values) {
 	}
 }
 
-const Minuter = async (monitor, site) => {
+const Minuter = async (monitor) => {
 	if (apiQueue.length > 0) {
 		console.log("Queue length is " + apiQueue.length);
 	}
-	let apiData = {};
-	let pingData = {};
-	let webhookData = {};
+	let realTimeData = {};
 	let manualData = {};
-	let dnsData = {};
-	let envSecrets = GetRequiredSecrets(
-		`${monitor.url} ${monitor.body} ${JSON.stringify(monitor.headers)}`
-	);
 
 	const startOfMinute = GetMinuteStartNowTimestampUTC();
 
-	if (monitor.hasAPI) {
+	if (monitor.monitorType === "API") {
+		let envSecrets = GetRequiredSecrets(
+			`${monitor.typeData.url} ${monitor.typeData.body} ${JSON.stringify(monitor.typeData.headers)}`
+		);
+
+		if (monitor.typeData.eval === "") {
+			monitor.typeData.eval = defaultEval;
+		}
+
 		let apiResponse = await apiCall(
 			envSecrets,
-			monitor.api.url,
-			monitor.api.method,
-			JSON.stringify(monitor.api.headers),
-			monitor.api.body,
-			monitor.api.timeout,
-			monitor.api.eval
+			monitor.typeData.url,
+			monitor.typeData.method,
+			JSON.stringify(monitor.typeData.headers),
+			monitor.typeData.body,
+			monitor.typeData.timeout,
+			monitor.typeData.eval
 		);
-		apiData[startOfMinute] = apiResponse;
+
+		realTimeData[startOfMinute] = apiResponse;
 		if (apiResponse.type === TIMEOUT) {
 			console.log(
 				"Retrying api call for " + monitor.name + " at " + startOfMinute + " due to timeout"
@@ -359,12 +379,12 @@ const Minuter = async (monitor, site) => {
 			apiQueue.push(async (cb) => {
 				apiCall(
 					envSecrets,
-					monitor.api.url,
-					monitor.api.method,
-					JSON.stringify(monitor.api.headers),
-					monitor.api.body,
-					monitor.api.timeout,
-					monitor.api.eval
+					monitor.typeData.url,
+					monitor.typeData.method,
+					JSON.stringify(monitor.typeData.headers),
+					monitor.typeData.body,
+					monitor.typeData.timeout,
+					monitor.typeData.eval
 				).then(async (data) => {
 					await db.insertData({
 						monitorTag: monitor.tag,
@@ -377,28 +397,25 @@ const Minuter = async (monitor, site) => {
 				});
 			});
 		}
-	}
-
-	if (monitor.hasPing) {
-		let pingResponse = await pingCall(monitor.ping.hostsV4, monitor.ping.hostsV6);
-		pingData[startOfMinute] = pingResponse;
-	}
-
-	if (monitor.hasDNS) {
-		const dnsResolver = new DNSResolver(monitor.dns.nameServer);
+	} else if (monitor.monitorType === "PING") {
+		let pingResponse = await pingCall(monitor.typeData.hostsV4, monitor.typeData.hostsV6);
+		realTimeData[startOfMinute] = pingResponse;
+	} else if (monitor.monitorType === "PING") {
+		const dnsResolver = new DNSResolver(monitor.typeData.nameServer);
 		let dnsResponse = await dsnChecker(
 			dnsResolver,
-			monitor.dns.host,
-			monitor.dns.lookupRecord,
-			monitor.dns.matchType,
-			monitor.dns.values
+			monitor.typeData.host,
+			monitor.typeData.lookupRecord,
+			monitor.typeData.matchType,
+			monitor.typeData.values
 		);
-		dnsData[startOfMinute] = dnsResponse;
+		realTimeData[startOfMinute] = dnsResponse;
 	}
 
-	manualData = await manualIncident(monitor, site);
+	manualData = await manualIncident(monitor);
 	//merge noData, apiData, webhookData, dayData
 	let mergedData = {};
+
 	if (monitor.defaultStatus !== undefined && monitor.defaultStatus !== null) {
 		if ([UP, DOWN, DEGRADED].indexOf(monitor.defaultStatus) !== -1) {
 			mergedData[startOfMinute] = {
@@ -409,20 +426,12 @@ const Minuter = async (monitor, site) => {
 		}
 	}
 
-	for (const timestamp in pingData) {
-		mergedData[timestamp] = pingData[timestamp];
-	}
-
-	for (const timestamp in apiData) {
-		mergedData[timestamp] = apiData[timestamp];
+	for (const timestamp in realTimeData) {
+		mergedData[timestamp] = realTimeData[timestamp];
 	}
 
 	for (const timestamp in manualData) {
 		mergedData[timestamp] = manualData[timestamp];
-	}
-
-	for (const timestamp in dnsData) {
-		mergedData[timestamp] = dnsData[timestamp];
 	}
 
 	for (const timestamp in mergedData) {
@@ -435,14 +444,12 @@ const Minuter = async (monitor, site) => {
 			type: element.type
 		});
 	}
-	if (monitor.alerts && ValidateMonitorAlerts(monitor.alerts)) {
-		alertingQueue.push(async (cb) => {
-			setTimeout(async () => {
-				await alerting(monitor);
-				cb();
-			}, 1042);
-		});
-	}
+	alertingQueue.push(async (cb) => {
+		setTimeout(async () => {
+			await alerting(monitor);
+			cb();
+		}, 1042);
+	});
 };
 apiQueue.start((err) => {
 	if (err) {

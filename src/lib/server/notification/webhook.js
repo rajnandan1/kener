@@ -12,12 +12,16 @@ class Webhook {
 	constructor(url, headers, method, siteData, monitorData) {
 		const kenerHeader = {
 			"Content-Type": "application/json",
-			"User-Agent": "Kener/2.0.0"
+			"User-Agent": "Kener/3.0.0"
 		};
 
 		this.url = url;
-		this.headers = Object.assign(kenerHeader, headers);
-		this.method = method || "POST";
+		this.headers = kenerHeader;
+		for (let i = 0; i < headers.length; i++) {
+			const header = headers[i];
+			this.headers[header.key] = header.value;
+		}
+		this.method = "POST";
 		this.siteData = siteData;
 		this.monitorData = monitorData;
 

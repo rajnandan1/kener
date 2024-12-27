@@ -8,9 +8,6 @@ import {
 	ParseUptime,
 	GetDayStartTimestampUTC
 } from "$lib/server/tool.js";
-import StatusColor from "$lib/color.js";
-import { siteStore } from "$lib/server/stores/site";
-import { get } from "svelte/store";
 
 function getDayMessage(type, numOfMinute) {
 	if (numOfMinute > 59) {
@@ -71,10 +68,9 @@ function getCountOfSimilarStatuesEnd(arr, statusType) {
 	return count;
 }
 
-const FetchData = async function (monitor, localTz) {
+const FetchData = async function (site, monitor, localTz) {
 	const secondsInDay = 24 * 60 * 60;
 
-	let site = get(siteStore);
 	//get offset from utc in minutes
 
 	const now = GetMinuteStartNowTimestampUTC() + 60;
@@ -114,7 +110,6 @@ const FetchData = async function (monitor, localTz) {
 
 	let summaryText = NO_DATA;
 	let summaryColorClass = "api-nodata";
-
 	for (let i = 0; i < dbData.length; i++) {
 		let dayData = dbData[i];
 		let ts = dayData.timestamp;
@@ -125,11 +120,11 @@ const FetchData = async function (monitor, localTz) {
 		totalDownCount += dayData.DOWN;
 		totalUpCount += dayData.UP;
 
-		if (dayData.DEGRADED >= monitor.dayDegradedMinimumCount) {
+		if (dayData.DEGRADED > monitor.dayDegradedMinimumCount) {
 			cssClass = returnStatusClass(dayData.DEGRADED, StatusObj.DEGRADED, site.barStyle);
 			message = getDayMessage("DEGRADED", dayData.DEGRADED);
 		}
-		if (dayData.DOWN >= monitor.dayDownMinimumCount) {
+		if (dayData.DOWN > monitor.dayDownMinimumCount) {
 			cssClass = returnStatusClass(dayData.DOWN, StatusObj.DOWN, site.barStyle);
 			message = getDayMessage("DOWN", dayData.DOWN);
 		}
@@ -145,7 +140,7 @@ const FetchData = async function (monitor, localTz) {
 	let uptime90DayDenominator = totalUpCount + totalDownCount + totalDegradedCount;
 
 	//remove degraded from uptime
-	if (monitor.includeDegradedInDowntime === true) {
+	if (monitor.includeDegradedInDowntime === "YES") {
 		uptime90DayNumerator = totalUpCount;
 	}
 	// return _90Day;

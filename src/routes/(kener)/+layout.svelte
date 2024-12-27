@@ -11,13 +11,13 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import { analyticsEvent } from "$lib/analytics";
 	import { setMode, mode, ModeWatcher } from "mode-watcher";
-
+	// import { Termo } from "termo";
 	export let data;
 
 	let defaultLocaleKey = data.selectedLang;
 	let defaultTheme = data.site.theme;
 
-	const allLocales = data.site.i18n?.locales;
+	const allLocales = data.site.i18n?.locales.filter((locale) => locale.selected === true);
 
 	function toggleMode() {
 		if ($mode === "light") {
@@ -34,7 +34,7 @@
 	if (!allLocales) {
 		defaultLocaleValue = "English";
 	} else {
-		defaultLocaleValue = allLocales[defaultLocaleKey];
+		defaultLocaleValue = allLocales.find((locale) => locale.code === defaultLocaleKey).name;
 	}
 	/**
 	 * @param {string} locale
@@ -66,15 +66,20 @@
 		const analyticsPlugins = [];
 		if (providers) {
 			//loop object
-			Object.keys(providers).forEach((key) => {
-				const provider = providers[key];
-				if (key == "GA") {
+
+			for (let i = 0; i < providers.length; i++) {
+				const provider = providers[i];
+				if (!!!provider.id) {
+					continue;
+				}
+
+				if (provider.type == "GA") {
 					analyticsPlugins.push(
 						analyticsGa.default({
-							measurementIds: provider.measurementIds
+							measurementIds: provider.id
 						})
 					);
-				} else if (key == "AMPLITUDE") {
+				} else if (provider.type == "AMPLITUDE") {
 					analyticsPlugins.push(
 						analyticsAmplitude({
 							apiKey: provider.measurementIds[0],
@@ -85,14 +90,14 @@
 							}
 						})
 					);
-				} else if (key == "MIXPANEL") {
+				} else if (provider.type == "MIXPANEL") {
 					analyticsPlugins.push(
 						analyticsMixpanel({
 							token: provider.measurementIds[0]
 						})
 					);
 				}
-			});
+			}
 		}
 		Analytics = _analytics.init({
 			app: "kener",
@@ -124,10 +129,12 @@
 		<meta name={key} content={value} />
 	{/each}
 
-	{#if data.site.analytics}
+	{#if data.site.analytics && data.site.analytics.length > 0}
 		<script src="https://unpkg.com/analytics/dist/analytics.min.js"></script>
-		{#each Object.entries(data.site.analytics) as [key, value]}
-			<script data-type={key} src={value.script}></script>
+		{#each data.site.analytics as { id, type, script }}
+			{#if !!id}
+				<script data-type={type} src={script}></script>
+			{/if}
 		{/each}
 	{/if}
 </svelte:head>
@@ -163,7 +170,7 @@
 	{/if}
 	{#if !!!data.embed}
 		<div class="blurry-bg fixed bottom-4 right-4 z-20">
-			{#if data.site.i18n && data.site.i18n.locales && Object.keys(data.site.i18n.locales).length > 1}
+			{#if data.site.i18n && data.site.i18n.locales && allLocales.length > 1}
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger>
 						<Button variant="ghost" size="icon" class="flex">
@@ -172,11 +179,11 @@
 					</DropdownMenu.Trigger>
 					<DropdownMenu.Content>
 						<DropdownMenu.Group>
-							{#each Object.entries(allLocales) as [key, value]}
+							{#each allLocales as locale}
 								<DropdownMenu.Item
 									on:click={(e) => {
-										setLanguage(key);
-									}}>{value}</DropdownMenu.Item
+										setLanguage(locale.code);
+									}}>{locale.name}</DropdownMenu.Item
 								>
 							{/each}
 						</DropdownMenu.Group>

@@ -1,6 +1,7 @@
 // @ts-nocheck
 import Database from "better-sqlite3";
 import { GetMinuteStartNowTimestampUTC } from "../tool.js";
+
 class Sqlite {
 	db;
 	constructor(opts) {
@@ -34,17 +35,78 @@ class Sqlite {
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				monitorTag TEXT NOT NULL,
 				monitorStatus TEXT NOT NULL,
-				alertStatus TEXT NOT NULL,
+				triggerStatus TEXT NOT NULL,
 				healthChecks INTEGER NOT NULL,
 				incidentNumber INTEGER DEFAULT 0,
 				createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
 				updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
 			);
 
-			-- Create index on monitorTag and createdAt for MonitorAlerts
 			CREATE INDEX IF NOT EXISTS idx_monitor_tag_created_at
 			ON MonitorAlerts (monitorTag, createdAt);
+
+			CREATE TABLE IF NOT EXISTS SiteData (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				key TEXT NOT NULL UNIQUE,
+				value TEXT NOT NULL,
+				dataType TEXT NOT NULL,
+				createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+				updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+			);
+
+			CREATE TABLE IF NOT EXISTS Monitors (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				tag TEXT NOT NULL UNIQUE,
+				name TEXT NOT NULL UNIQUE,
+				description TEXT,
+				image TEXT,
+				cron TEXT,
+				defaultStatus TEXT,
+				status TEXT,
+				categoryName TEXT,
+				monitorType TEXT,
+				downTrigger TEXT,
+				degradedTrigger TEXT,
+				typeData TEXT,
+				dayDegradedMinimumCount INTEGER,
+				dayDownMinimumCount INTEGER,
+				includeDegradedInDowntime INTEGER,
+				createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+				updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+			);
+
+			CREATE TABLE IF NOT EXISTS Triggers (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				name TEXT NOT NULL UNIQUE,
+				triggerType TEXT,
+				triggerDesc TEXT,
+				triggerStatus TEXT,
+				triggerMeta TEXT,
+				createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+				updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+			);
+
+			CREATE TABLE IF NOT EXISTS Users (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				email TEXT NOT NULL UNIQUE,
+				name TEXT NOT NULL UNIQUE,
+				password_hash TEXT NOT NULL,
+				isActive INTEGER DEFAULT 1,
+				isVerified INTEGER DEFAULT 0,
+				role TEXT DEFAULT 'user',
+				createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+				updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+			);
+
 		`);
+	}
+
+	//check if all all the tables are created
+	async checkTables() {
+		let stmt = this.db.prepare(`
+			SELECT name FROM sqlite_master WHERE type='table';
+		`);
+		return stmt.all();
 	}
 
 	async insertData(data) {
@@ -213,7 +275,7 @@ class Sqlite {
 		return await this.getActiveAlert(data.monitorTag, data.monitorStatus, data.alertStatus);
 	}
 
-	//check if alert exists given monitorTag, monitorStatus, alertStatus
+	//check if alert exists given monitorTag, monitorStatus, triggerStatus
 	async alertExists(monitorTag, monitorStatus, alertStatus) {
 		let stmt = this.db.prepare(`
 			SELECT COUNT(*) AS count
@@ -225,7 +287,7 @@ class Sqlite {
 		return res.count > 0;
 	}
 
-	//return active alert for a monitorTag, monitorStatus, alertStatus = ACTIVE
+	//return active alert for a monitorTag, monitorStatus, triggerStatus = ACTIVE
 	async getActiveAlert(monitorTag, monitorStatus, alertStatus) {
 		let stmt = this.db.prepare(`
 			SELECT * FROM MonitorAlerts
@@ -234,14 +296,32 @@ class Sqlite {
 		return stmt.get({ monitorTag, monitorStatus, alertStatus });
 	}
 
+	//get all MonitorAlerts paginated descending order
+	async getMonitorAlertsPaginated(page, limit) {
+		let stmt = this.db.prepare(`
+			SELECT * FROM MonitorAlerts
+			ORDER BY id DESC
+			LIMIT @limit OFFSET @offset;
+		`);
+		return stmt.all({ limit, offset: (page - 1) * limit });
+	}
+
+	//get total count of MonitorAlerts
+	async getMonitorAlertsCount() {
+		let stmt = this.db.prepare(`
+			SELECT COUNT(*) AS count FROM MonitorAlerts;
+		`);
+		return stmt.get();
+	}
+
 	//update alert to inactive given monitorTag, monitorStatus, given id
-	async updateAlertStatus(id, status) {
+	async updateAlertStatus(id, alertStatus) {
 		let stmt = this.db.prepare(`
 			UPDATE MonitorAlerts
-			SET alertStatus = @status, updatedAt = CURRENT_TIMESTAMP
+			SET alertStatus = @alertStatus, updatedAt = CURRENT_TIMESTAMP
 			WHERE id = @id;
 		`);
-		stmt.run({ id, status });
+		stmt.run({ id, alertStatus });
 	}
 
 	//increment healthChecks for an alert given id
@@ -262,6 +342,186 @@ class Sqlite {
 			WHERE id = @id;
 		`);
 		stmt.run({ id, incidentNumber });
+	}
+
+	//insert or update site data
+	async insertOrUpdateSiteData(key, value, dataType) {
+		let stmt = this.db.prepare(`
+			INSERT INTO SiteData (key, value, dataType)
+			VALUES (@key, @value, @dataType)
+			ON CONFLICT(key) DO UPDATE SET
+				value = excluded.value,
+				updatedAt = CURRENT_TIMESTAMP;
+		`);
+		stmt.run({ key, value, dataType });
+	}
+	//get all site data
+	async getAllSiteData() {
+		let stmt = this.db.prepare(`
+			SELECT * FROM SiteData;
+		`);
+		return stmt.all();
+	}
+
+	//given key get data
+	async getSiteData(key) {
+		let stmt = this.db.prepare(`
+			SELECT value FROM SiteData
+			WHERE key = @key
+			LIMIT 1;
+		`);
+		return stmt.get({ key });
+	}
+
+	//insert into Monitors
+	async insertMonitor(data) {
+		let stmt = this.db.prepare(`
+			INSERT INTO Monitors (
+				tag,
+				name,
+				description,
+				image,
+				cron,
+				defaultStatus,
+				status,
+				categoryName,
+				monitorType,
+				typeData,
+				dayDegradedMinimumCount,
+				dayDownMinimumCount,
+				includeDegradedInDowntime
+			)
+			VALUES (
+				@tag,
+				@name,
+				@description,
+				@image,
+				@cron,
+				@defaultStatus,
+				@status,
+				@categoryName,
+				@monitorType,
+				@typeData,
+				@dayDegradedMinimumCount,
+				@dayDownMinimumCount,
+				@includeDegradedInDowntime
+			);
+		`);
+		return stmt.run(data);
+	}
+
+	//update monitor by id
+	async updateMonitor(data) {
+		let stmt = this.db.prepare(`
+			UPDATE Monitors
+			SET
+				tag = @tag,
+				name = @name,
+				description = @description,
+				image = @image,
+				cron = @cron,
+				defaultStatus = @defaultStatus,
+				status = @status,
+				categoryName = @categoryName,
+				monitorType = @monitorType,
+				typeData = @typeData,
+				dayDegradedMinimumCount = @dayDegradedMinimumCount,
+				dayDownMinimumCount = @dayDownMinimumCount,
+				includeDegradedInDowntime = @includeDegradedInDowntime,
+				updatedAt = CURRENT_TIMESTAMP
+			WHERE id = @id;
+		`);
+		return stmt.run(data);
+	}
+
+	async updateMonitorTrigger(data) {
+		let stmt = this.db.prepare(`
+			UPDATE Monitors
+			SET
+				downTrigger = @downTrigger,
+				degradedTrigger = @degradedTrigger,
+				updatedAt = CURRENT_TIMESTAMP
+			WHERE id = @id;
+		`);
+		return stmt.run(data);
+	}
+
+	//get monitors given status
+	async getMonitors(data) {
+		let stmt = this.db.prepare(`
+			SELECT * FROM Monitors
+			WHERE status = @status order by id desc;
+		`);
+		return stmt.all({ status: data.status });
+	}
+
+	//insert alert
+	async createNewTrigger(data) {
+		let stmt = this.db.prepare(`
+			INSERT INTO Triggers (name, triggerType, triggerStatus, triggerMeta, triggerDesc)
+			VALUES (@name, @triggerType, @triggerStatus, @triggerMeta, @triggerDesc);
+		`);
+		return stmt.run(data);
+	}
+
+	//update alert
+	async updateTrigger(data) {
+		let stmt = this.db.prepare(`
+			UPDATE Triggers
+			SET
+				name = @name,
+				triggerType = @triggerType,
+				triggerStatus = @triggerStatus,
+				triggerDesc = @triggerDesc,
+				triggerMeta = @triggerMeta,
+				updatedAt = CURRENT_TIMESTAMP
+			WHERE id = @id;
+		`);
+		return stmt.run(data);
+	}
+
+	//get all alerts with given status
+	async getTriggers(data) {
+		let stmt = this.db.prepare(`
+			SELECT * FROM Triggers
+			WHERE triggerStatus = @triggerStatus order by id desc;
+		`);
+		return stmt.all({ triggerStatus: data.status });
+	}
+
+	//get count of users
+	async getUsersCount() {
+		let stmt = this.db.prepare(`
+			SELECT COUNT(*) AS count FROM Users;
+		`);
+		return stmt.get();
+	}
+
+	// get user by email, do not return password_hash
+	async getUserByEmail(email) {
+		let stmt = this.db.prepare(`
+			SELECT id, email, name, isActive, isVerified, role, createdAt, updatedAt
+			FROM Users
+			WHERE email = @email;
+		`);
+		return stmt.get({ email });
+	}
+	async getUserPasswordHashById(id) {
+		let stmt = this.db.prepare(`
+			SELECT password_hash
+			FROM Users
+			WHERE id = @id;
+		`);
+		return stmt.get({ id });
+	}
+
+	//insert user
+	async insertUser(data) {
+		let stmt = this.db.prepare(`
+			INSERT INTO Users (email, name, password_hash, role)
+			VALUES (@email, @name, @password_hash, @role);
+		`);
+		return stmt.run(data);
 	}
 
 	//close

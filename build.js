@@ -409,47 +409,42 @@ async function Build() {
 	console.log("✅ Kener built successfully");
 
 	if (site.hasGithub) {
-		const ghLabels = await GetAllGHLabels(site);
+		const ghLabels = await GetAllGHLabels();
 		const tagsAndDescription = monitors.map((monitor) => {
 			return { tag: monitor.tag, description: monitor.name };
 		});
 		//add incident label if does not exist
 
 		if (ghLabels.indexOf("incident") === -1) {
-			await CreateGHLabel(site, "incident", "Status of the site");
+			await CreateGHLabel("incident", "Status of the site");
 		}
 		if (ghLabels.indexOf("resolved") === -1) {
-			await CreateGHLabel(site, "resolved", "Incident is resolved", "65dba6");
+			await CreateGHLabel("resolved", "Incident is resolved", "65dba6");
 		}
 		if (ghLabels.indexOf("identified") === -1) {
-			await CreateGHLabel(site, "identified", "Incident is Identified", "EBE3D5");
+			await CreateGHLabel("identified", "Incident is Identified", "EBE3D5");
 		}
 		if (ghLabels.indexOf("manual") === -1) {
-			await CreateGHLabel(site, "manual", "Manually Created Incident", "6499E9");
+			await CreateGHLabel("manual", "Manually Created Incident", "6499E9");
 		}
 		if (ghLabels.indexOf("auto") === -1) {
-			await CreateGHLabel(site, "auto", "Automatically Created Incident", "D6C0B3");
+			await CreateGHLabel("auto", "Automatically Created Incident", "D6C0B3");
 		}
 		if (ghLabels.indexOf("investigating") === -1) {
-			await CreateGHLabel(site, "investigating", "Incident is investigated", "D4E2D4");
+			await CreateGHLabel("investigating", "Incident is investigated", "D4E2D4");
 		}
 		if (ghLabels.indexOf("incident-degraded") === -1) {
-			await CreateGHLabel(
-				site,
-				"incident-degraded",
-				"Status is degraded of the site",
-				"f5ba60"
-			);
+			await CreateGHLabel("incident-degraded", "Status is degraded of the site", "f5ba60");
 		}
 		if (ghLabels.indexOf("incident-down") === -1) {
-			await CreateGHLabel(site, "incident-down", "Status is down of the site", "ea3462");
+			await CreateGHLabel("incident-down", "Status is down of the site", "ea3462");
 		}
 		//add tags if does not exist
 		for (let i = 0; i < tagsAndDescription.length; i++) {
 			const tag = tagsAndDescription[i].tag;
 			const description = tagsAndDescription[i].description;
 			if (ghLabels.indexOf(tag) === -1) {
-				await CreateGHLabel(site, tag, description);
+				await CreateGHLabel(tag, description);
 			}
 		}
 

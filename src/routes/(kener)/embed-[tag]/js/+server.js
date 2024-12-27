@@ -1,8 +1,5 @@
 // @ts-nocheck
 // @ts-ignore
-import { siteStore } from "$lib/server/stores/site";
-import { get } from "svelte/store";
-let siteData = get(siteStore);
 export async function GET({ url, params }) {
 	const { tag } = params;
 	const query = url.searchParams;

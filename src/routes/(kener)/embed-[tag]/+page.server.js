@@ -1,10 +1,9 @@
 // @ts-nocheck
 import { FetchData } from "$lib/server/page";
-import { monitorsStore } from "$lib/server/stores/monitors";
-import { get } from "svelte/store";
+import { GetMonitors } from "$lib/server/controllers/controller.js";
 
 export async function load({ params, route, url, parent }) {
-	let monitors = get(monitorsStore);
+	let monitors = await GetMonitors({ status: "ACTIVE" });
 	const parentData = await parent();
 
 	const monitorsActive = [];

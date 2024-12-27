@@ -9,19 +9,15 @@ import {
 	CloseIssue
 } from "./github.js";
 import moment from "moment";
-import { serverStore } from "../server/stores/server.js";
-import { siteStore } from "../server/stores/site.js";
-import { get } from "svelte/store";
+import { GetAllSiteData, GetGithubData, GetAllTriggers } from "./controllers/controller.js";
 
 import db from "./db/db.js";
 
-const server = get(serverStore);
-const siteData = get(siteStore);
 const TRIGGERED = "TRIGGERED";
 const RESOLVED = "RESOLVED";
-const serverTriggers = server.triggers;
 
-function createJSONCommonAlert(monitor, config, alert) {
+async function createJSONCommonAlert(monitor, config, alert) {
+	let siteData = await GetAllSiteData();
 	let siteURL = siteData.siteURL;
 	let id = monitor.tag + "-" + alert.id;
 	let alert_name = monitor.name + " " + alert.monitorStatus;
@@ -77,14 +73,14 @@ async function createGHIncident(monitor, alert, commonData) {
 	}
 
 	githubLabels.push("auto");
-	let resp = await CreateIssue(siteData, title, body, githubLabels);
+	let resp = await CreateIssue(title, body, githubLabels);
 
 	return GHIssueToKenerIncident(resp);
 }
 
 async function closeGHIncident(alert) {
 	let incidentNumber = alert.incidentNumber;
-	let issue = await GetIncidentByNumber(siteData, incidentNumber);
+	let issue = await GetIncidentByNumber(incidentNumber);
 	if (issue === null) {
 		return;
 	}
@@ -100,17 +96,17 @@ async function closeGHIncident(alert) {
 	body = body.trim();
 	body = body + " " + `[end_datetime:${endDatetime}]`;
 
-	let resp = await UpdateIssueLabels(siteData, incidentNumber, labels, body);
+	let resp = await UpdateIssueLabels(incidentNumber, labels, body);
 	if (resp === null) {
 		return;
 	}
-	await CloseIssue(siteData, incidentNumber);
+	await CloseIssue(incidentNumber);
 	return GHIssueToKenerIncident(resp);
 }
 
 //add comment to incident
 async function addCommentToIncident(alert, comment) {
-	let resp = await AddComment(siteData, alert.incidentNumber, comment);
+	let resp = await AddComment(alert.incidentNumber, comment);
 	return resp;
 }
 
@@ -122,32 +118,46 @@ function createClosureComment(alert, commonJSON) {
 }
 
 async function alerting(monitor) {
-	if (serverTriggers === undefined) {
-		console.error("No triggers found in server configuration");
-		return;
+	let siteData = await GetAllSiteData();
+	const githubData = await GetGithubData();
+	const triggers = await GetAllTriggers({
+		status: "ACTIVE"
+	});
+	const triggerObj = {};
+	if (!!monitor.downTrigger) {
+		triggerObj.downTrigger = JSON.parse(monitor.downTrigger);
 	}
-	for (const key in monitor.alerts) {
-		if (Object.prototype.hasOwnProperty.call(monitor.alerts, key)) {
-			const alertConfig = monitor.alerts[key];
-			const monitorStatus = key;
+	if (!!monitor.degradedTrigger) {
+		triggerObj.degradedTrigger = JSON.parse(monitor.degradedTrigger);
+	}
+
+	for (const key in triggerObj) {
+		if (Object.prototype.hasOwnProperty.call(triggerObj, key)) {
+			const alertConfig = triggerObj[key];
+			const monitorStatus = alertConfig.triggerType;
+
 			const failureThreshold = alertConfig.failureThreshold;
 			const successThreshold = alertConfig.successThreshold;
 			const monitorTag = monitor.tag;
-			const alertingChannels = alertConfig.triggers;
-			const createIncident = alertConfig.createIncident && siteData.hasGithub;
+			const alertingChannels = alertConfig.triggers; //array of numbers of trigger ids
+			const createIncident = alertConfig.createIncident === "YES" && !!githubData;
 			const allMonitorClients = [];
+			const sendTrigger = alertConfig.active;
 
+			if (!sendTrigger) {
+				continue;
+			}
 			if (alertingChannels.length > 0) {
 				for (let i = 0; i < alertingChannels.length; i++) {
-					const channelName = alertingChannels[i];
-					const channel = serverTriggers.find((c) => c.name === channelName);
-					if (!channel) {
+					const triggerID = alertingChannels[i];
+					const trigger = triggers.find((c) => c.id === triggerID);
+					if (!trigger) {
 						console.error(
-							`Triggers ${channelName} not found in server triggers for monitor ${monitorTag}`
+							`Triggers ${triggerID} not found in server triggers for monitor ${monitorTag}`
 						);
 						continue;
 					}
-					const notificationClient = new notification(channel, siteData, monitor);
+					const notificationClient = new notification(trigger, siteData, monitor);
 					allMonitorClients.push(notificationClient);
 				}
 			}
@@ -169,7 +179,7 @@ async function alerting(monitor) {
 					alertStatus: TRIGGERED,
 					healthChecks: failureThreshold
 				});
-				let commonJSON = createJSONCommonAlert(monitor, alertConfig, activeAlert);
+				let commonJSON = await createJSONCommonAlert(monitor, alertConfig, activeAlert);
 				if (allMonitorClients.length > 0) {
 					for (let i = 0; i < allMonitorClients.length; i++) {
 						const client = allMonitorClients[i];
@@ -191,7 +201,7 @@ async function alerting(monitor) {
 				if (isUp) {
 					await db.updateAlertStatus(activeAlert.id, RESOLVED);
 					activeAlert.alertStatus = RESOLVED;
-					let commonJSON = createJSONCommonAlert(monitor, alertConfig, activeAlert);
+					let commonJSON = await createJSONCommonAlert(monitor, alertConfig, activeAlert);
 					if (allMonitorClients.length > 0) {
 						for (let i = 0; i < allMonitorClients.length; i++) {
 							const client = allMonitorClients[i];

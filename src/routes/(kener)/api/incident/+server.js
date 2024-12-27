@@ -3,8 +3,6 @@
 import { json } from "@sveltejs/kit";
 import { ParseIncidentPayload, auth, GHIssueToKenerIncident } from "$lib/server/webhook";
 import { CreateIssue, SearchIssue } from "$lib/server/github";
-import { siteStore } from "$lib/server/stores/site";
-import { get } from "svelte/store";
 
 export async function POST({ request }) {
 	const payload = await request.json();
@@ -30,7 +28,7 @@ export async function POST({ request }) {
 	let site = get(siteStore);
 	let github = site.github;
 	githubLabels.push("manual");
-	let resp = await CreateIssue(site, title, body, githubLabels);
+	let resp = await CreateIssue(title, body, githubLabels);
 	if (resp === null) {
 		return json(
 			{ error: "github error" },
@@ -75,13 +73,9 @@ export async function GET({ request, url }) {
 			}
 		);
 	}
-	let site = get(siteStore);
-	let github = site.github;
-	const repo = `${github.owner}/${github.repo}`;
 	const is = "issue";
 
 	const filterArray = [
-		`repo:${repo}`,
 		`is:${is}`,
 		`state:${state}`,
 		`label:incident`,
@@ -111,7 +105,7 @@ export async function GET({ request, url }) {
 	if (titleLike) {
 		filterArray.unshift(`${titleLike} in:title`);
 	}
-	const resp = await SearchIssue(site, filterArray, page, per_page);
+	const resp = await SearchIssue(filterArray, page, per_page);
 
 	const incidents = resp.items.map((issue) => GHIssueToKenerIncident(issue));
 
