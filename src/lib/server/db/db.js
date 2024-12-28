@@ -1,22 +1,15 @@
 // @ts-nocheck
 import Sqlite from "./sqlite.js";
 import Postgres from "./postgres.js";
-import migration2 from "./migration2.js";
-import { serverStore } from "../stores/server.js";
-import { get } from "svelte/store";
 
 let instance = null;
 
-const server = get(serverStore);
-let database = server.database;
-if (database === undefined) {
-	database = {
-		sqlite: {
-			dbName: "kener.db"
-		}
-	};
-}
-const supportedDatabases = ["sqlite", "postgres"];
+let database = {
+	sqlite: {
+		dbName: "kener.local3.db"
+	}
+};
+const supportedDatabases = ["sqlite"];
 const dbType = Object.keys(database)[0] || "sqlite";
 const dbConfig = database[dbType];
 
@@ -57,7 +50,7 @@ if (dbType === "sqlite") {
 	instance = new Postgres(dbConfig);
 }
 
-migration2(instance, "./database");
+//migration2(instance, "./database");
 
 //create anonymous function to call the init function
 

@@ -10,8 +10,8 @@
 
 <div class="{defaultPattern}-pattern"></div>
 
-<header class="blurry-bg relative z-50 mx-auto mt-2">
-	<div class="container flex h-14 max-w-[840px] items-center">
+<header class="blurry-bg sticky top-0 z-50 mx-auto mt-2">
+	<div class="container flex h-14 max-w-[820px] items-center rounded-md border bg-card px-3">
 		<a href={data.site.home ? data.site.home : base} class="mr-6 flex items-center space-x-2">
 			{#if data.site.logo}
 				<img
@@ -34,15 +34,13 @@
 				>
 					{#each data.site.nav as navItem}
 						<a
-							href={navItem.url.startsWith("/") ? base + navItem.url : navItem.url}
-							class="flex"
+							href={navItem.url}
+							class="flex decoration-1 hover:underline"
 							on:click={() => analyticsEvent("nav", navItem.name)}
 						>
 							{#if navItem.iconURL}
 								<img
-									src={navItem.iconURL.startsWith("/")
-										? base + navItem.iconURL
-										: navItem.iconURL}
+									src={navItem.iconURL}
 									class="mr-1.5 inline h-4"
 									alt={navItem.name}
 								/>

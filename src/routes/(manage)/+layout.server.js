@@ -11,7 +11,11 @@ function maskString(str) {
 export async function load({ params, route, url, cookies, request }) {
 	let siteData = await GetAllSiteData();
 	//check if user is authenticated using cookies
+	if (process.env.KENER_SECRET_KEY === undefined) {
+		throw redirect(302, base + "/setup");
+	}
 	let tokenData = cookies.get("kener-user");
+
 	if (!!!tokenData) {
 		//redirect to signin page if user is not authenticated
 		throw redirect(302, base + "/signin");

@@ -22,3 +22,15 @@ textarea {
 .dark textarea {
 	background-color: rgba(0, 0, 0, 0.1) !important;
 }
+
+input[type="file"]::file-selector-button {
+	display: none;
+}
+input[type="file"] {
+	font-weight: 500;
+	padding-top: 10px;
+}
+
+.image-upload .has-bg:hover .invisible {
+	visibility: visible !important;
+}

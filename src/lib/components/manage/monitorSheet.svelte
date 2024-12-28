@@ -33,17 +33,42 @@
 	let formState = "idle";
 
 	export let newMonitor;
+	let loadingLogo = false;
 
 	let selectedCategory = categories.find((category) => category.name === newMonitor.categoryName);
 
-	function handleFileChangeLogo(event) {
+	async function handleFileChangeLogo(event) {
 		const file = event.target.files[0];
-		if (file) {
-			const reader = new FileReader();
-			reader.onload = () => {
-				newMonitor.image = reader.result;
-			};
-			reader.readAsDataURL(file);
+		if (!file) {
+			event.target.value = "";
+			alert("Please select a file to upload.");
+			return;
+		}
+		if (file.size > 100000) {
+			event.target.value = "";
+			alert("File size should be less than 100KB");
+			return;
+		}
+
+		loadingLogo = true;
+		const formData = new FormData();
+		formData.append("image", file);
+		try {
+			const response = await fetch("/manage/upload", {
+				method: "POST",
+				body: formData
+			});
+
+			if (response.ok) {
+				const result = await response.json();
+				newMonitor.image = base + "/uploads/" + result.filename;
+			} else {
+				alert("Failed to upload file.");
+			}
+		} catch (error) {
+			alert("An error occurred while uploading the file.");
+		} finally {
+			loadingLogo = false;
 		}
 	}
 	function addHeader() {
@@ -257,6 +282,7 @@
 						class="w-1/2"
 						id="logo"
 						type="file"
+						disabled={loadingLogo}
 						accept=".jpg, .jpeg, .png"
 						on:change={(e) => {
 							handleFileChangeLogo(e);

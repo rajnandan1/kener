@@ -247,9 +247,9 @@
 					</div>
 				</div>
 			</div>
-			<div class="chart-status relative col-span-12 mt-1">
+			<div class="relative col-span-12 mt-1">
 				<div
-					class="daygrid90 flex min-h-[60px] overflow-x-auto overflow-y-hidden py-1"
+					class="daygrid90 flex min-h-[60px] justify-start overflow-x-auto overflow-y-hidden py-1"
 					use:clickOutsideAction
 					on:clickoutside={(e) => {
 						showDailyDataModal = false;
@@ -269,7 +269,7 @@
 							href="#"
 							class="oneline h-[34px] w-[6px] border-b-2 {bar.border
 								? 'border-indigo-400'
-								: 'border-transparent'}  pb-1"
+								: 'border-transparent'} pb-1"
 						>
 							<div
 								class="oneline-in h-[30px] bg-{bar.cssClass} mx-auto w-[4px] rounded-{monitor.pageData.barRoundness.toUpperCase() ==
@@ -293,7 +293,7 @@
 				{#if showDailyDataModal}
 					<div
 						transition:slide={{ direction: "bottom" }}
-						class="okclass absolute -left-2 top-10 z-10 mx-auto rounded-sm border bg-card px-[7px] py-[7px] shadow-lg md:w-[560px]"
+						class="absolute -left-2 top-10 z-10 mx-auto rounded-sm border bg-card px-[7px] py-[7px] shadow-lg md:w-[560px]"
 					>
 						<div class="mb-2 flex justify-between text-xs font-semibold">
 							<span>{dateFetchedFor}</span>

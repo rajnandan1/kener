@@ -3,7 +3,24 @@ import { json, redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
 import db from "$lib/server/db/db.js";
 import seedSiteData from "$lib/server/db/seedSiteData.js";
+import seedMonitorData from "$lib/server/db/seedMonitorData.js";
 import { HashPassword, GenerateSalt } from "$lib/server/controllers/controller.js";
+
+//function to validate a strong password
+/**
+ * Validates a password to ensure it meets the following criteria:
+ * - Contains at least one digit.
+ * - Contains at least one lowercase letter.
+ * - Contains at least one uppercase letter.
+ * - Contains at least one letter (either lowercase or uppercase).
+ * - Has a minimum length of 8 characters.
+ *
+ * @param {string} password - The password to validate.
+ * @returns {boolean} - Returns true if the password meets the criteria, otherwise false.
+ */
+function validatePassword(password) {
+	return /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/.test(password);
+}
 
 export async function POST({ request }) {
 	//read form post data email and passowrd
@@ -26,6 +43,14 @@ export async function POST({ request }) {
 		name: name,
 		role: "admin"
 	};
+
+	//validate password
+	if (!validatePassword(password)) {
+		let errorMessage =
+			"Password must contain at least one digit, one lowercase letter, one uppercase letter, and have a minimum length of 8 characters.";
+		throw redirect(302, base + "/setup?error=" + errorMessage);
+	}
+
 	await db.insertUser(user);
 
 	for (const key in seedSiteData) {
@@ -35,8 +60,12 @@ export async function POST({ request }) {
 			if (dataType === "object") {
 				value = JSON.stringify(value);
 			}
-			await this.insertOrUpdateSiteData(key, value, dataType);
+			await db.insertOrUpdateSiteData(key, value, dataType);
 		}
+	}
+	//loop through array seedMonitorData
+	for (const monitor of seedMonitorData) {
+		await db.insertMonitor(monitor);
 	}
 
 	throw redirect(302, base + "/signin");

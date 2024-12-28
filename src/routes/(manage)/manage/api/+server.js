@@ -11,13 +11,37 @@ import {
 	GetAllAlertsPaginated,
 	GetAllAPIKeys,
 	CreateNewAPIKey,
-	UpdateApiKeyStatus
+	UpdateApiKeyStatus,
+	VerifyToken
 } from "$lib/server/controllers/controller.js";
-export async function POST({ request }) {
+export async function POST({ request, cookies }) {
 	const payload = await request.json();
 	let action = payload.action;
 	let data = payload.data || {};
 	let resp = {};
+
+	let tokenData = cookies.get("kener-user");
+
+	if (!!!tokenData) {
+		return json(
+			{
+				error: "Unauthorized"
+			},
+			{ status: 401 }
+		);
+	}
+
+	let tokenUser = await VerifyToken(tokenData);
+	if (!!!tokenUser) {
+		//redirect to signin page if user is not authenticated
+		return json(
+			{
+				error: "Unauthorized"
+			},
+			{ status: 401 }
+		);
+	}
+
 	try {
 		if (action === "storeSiteData") {
 			resp = await storeSiteData(data);

@@ -147,6 +147,7 @@ function IsValidNameServer(nameServer) {
 const IsValidURL = function (url) {
 	return /^(http|https):\/\/[^ "]+$/.test(url);
 };
+
 export {
 	siteDataExtractFromDb,
 	storeSiteData,

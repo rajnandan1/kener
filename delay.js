@@ -1,17 +1,20 @@
-import fs from "fs-extra";
-import path from "path";
 import db from "./src/lib/server/db/db.js";
 
 let maxWait = 5000;
 let interval = 1000;
 let waitTime = 0;
-let serverDataPath = path.join(process.cwd(), "database", "server.json");
-let siteDataPath = path.join(process.cwd(), "database", "site.json");
-let monitorsDataPath = path.join(process.cwd(), "database", "monitors.json");
 
 async function allFilesExist() {
 	let tablesCreated = (await db.checkTables()).map((table) => table.name);
-	let tablesRequired = ["MonitoringData", "MonitorAlerts", "SiteData", "Monitors", "Alerts"];
+	let tablesRequired = [
+		"MonitoringData",
+		"MonitorAlerts",
+		"SiteData",
+		"Monitors",
+		"Triggers",
+		"Users",
+		"ApiKeys"
+	];
 
 	for (let table of tablesRequired) {
 		let tableExists = tablesCreated.includes(table);

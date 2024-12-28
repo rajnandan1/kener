@@ -149,7 +149,7 @@
 	<Card.Content>
 		<form class="mx-auto mt-4 space-y-4" use:autoAnimate on:submit|preventDefault={formSubmit}>
 			{#each metaTags as metaTag, i}
-				<div class="flex w-full flex-row justify-evenly gap-2">
+				<div class="flex w-full flex-row justify-between gap-2">
 					<div class="grid grid-cols-12 gap-x-2">
 						<div class="col-span-4">
 							<Label for="key">

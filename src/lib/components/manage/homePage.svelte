@@ -140,20 +140,38 @@
 		}
 	}
 
-	function handleFileChangeLogo(event, i) {
+	async function handleFileChangeLogo(event, i) {
 		const file = event.target.files[0];
 
-		if (file) {
-			if (file.size > 100000) {
-				alert("File size should be less than 100KB");
-				return;
-			}
+		if (!file) {
+			alert("Please select a file to upload.");
+			return;
+		}
 
-			const reader = new FileReader();
-			reader.onload = () => {
-				nav[i].iconURL = reader.result;
-			};
-			reader.readAsDataURL(file);
+		if (file.size > 100000) {
+			alert("File size should be less than 100KB");
+			return;
+		}
+
+		nav[i].uploading = true;
+		const formData = new FormData();
+		formData.append("image", file);
+		try {
+			const response = await fetch("/manage/upload", {
+				method: "POST",
+				body: formData
+			});
+
+			if (response.ok) {
+				const result = await response.json();
+				nav[i].iconURL = base + "/uploads/" + result.filename;
+			} else {
+				alert("Failed to upload file.");
+			}
+		} catch (error) {
+			alert("An error occurred while uploading the file.");
+		} finally {
+			nav[i].uploading = false;
 		}
 	}
 	function addNewRow() {
@@ -307,6 +325,7 @@
 							<Input
 								class=""
 								id="logo"
+								disabled={!!navItem.uploading}
 								type="file"
 								accept=".jpg, .jpeg, .png"
 								on:change={(e) => {

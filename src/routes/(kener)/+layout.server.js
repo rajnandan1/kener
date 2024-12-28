@@ -1,8 +1,19 @@
 // @ts-nocheck
 import i18n from "$lib/i18n/server";
-import { GetAllSiteData } from "$lib/server/controllers/controller.js";
+import { redirect } from "@sveltejs/kit";
+import { base } from "$app/paths";
+import { GetAllSiteData, IsSetupComplete } from "$lib/server/controllers/controller.js";
 
 export async function load({ params, route, url, cookies, request }) {
+	let isSetupComplete = await IsSetupComplete();
+	if (!isSetupComplete) {
+		throw redirect(302, base + "/setup");
+	}
+
+	if (process.env.KENER_SECRET_KEY === undefined) {
+		throw redirect(302, base + "/setup");
+	}
+
 	let site = await GetAllSiteData();
 	const headers = request.headers;
 	const userAgent = headers.get("user-agent");

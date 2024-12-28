@@ -11,7 +11,6 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import { analyticsEvent } from "$lib/analytics";
 	import { setMode, mode, ModeWatcher } from "mode-watcher";
-	// import { Termo } from "termo";
 	export let data;
 
 	let defaultLocaleKey = data.selectedLang;

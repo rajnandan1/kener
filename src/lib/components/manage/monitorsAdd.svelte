@@ -260,25 +260,27 @@
 			<Card.Content>
 				<div class="flex justify-between gap-4">
 					<div class="">
-						<Label class="text-xs">Tag</Label>
+						<Label class="text-xs font-semibold text-muted-foreground">Tag</Label>
 						<p class="text-sm font-semibold">
 							{monitor.tag}
 						</p>
 					</div>
 					<div class="">
-						<Label class="text-xs">Monitor Type</Label>
+						<Label class="text-xs font-semibold text-muted-foreground"
+							>Monitor Type</Label
+						>
 						<p class="text-sm font-semibold">
 							{monitor.monitorType}
 						</p>
 					</div>
 					<div class="">
-						<Label class="text-xs">Cron</Label>
+						<Label class="text-xs font-semibold text-muted-foreground">Cron</Label>
 						<p class="text-sm font-semibold">
 							{monitor.cron}
 						</p>
 					</div>
 					<div class="">
-						<Label class="text-xs">Category</Label>
+						<Label class="text-xs font-semibold text-muted-foreground">Category</Label>
 						<p class="text-sm font-semibold">
 							{!!monitor.categoryName ? monitor.categoryName : "-"}
 						</p>

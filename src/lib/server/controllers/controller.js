@@ -336,3 +336,12 @@ export const VerifyAPIKey = async (apiKey) => {
 	} // Adjust this for your DB query
 	return false;
 };
+
+export const IsSetupComplete = async () => {
+	let data = await db.getAllSiteData();
+
+	if (!data) {
+		return false;
+	}
+	return data.length > 0;
+};

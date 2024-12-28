@@ -28,9 +28,11 @@
 <svelte:head>
 	<title>Manage Kener</title>
 	<meta name="description" content="Manage your Kener project" />
+	<meta name="robots" content="noindex" />
+	<link rel="icon" href="{base}/logo96.png" />
 </svelte:head>
-<header class="sticky inset-x-0 top-0 z-50 mx-auto flex max-w-4xl px-8">
-	<div class="mt-4 flex w-full justify-between rounded-lg border bg-card px-5 py-4">
+<header class="sticky inset-x-0 top-0 z-50 mx-auto mt-4 flex max-w-4xl px-8">
+	<div class=" flex w-full justify-between rounded-lg border bg-card px-5 py-4">
 		<div class="mt-2 flex gap-x-1.5">
 			<img src="{base}/logo.png" alt="Kener" class="inline h-6 w-6" />
 			<h1 class="font-semibold">Manage Kener</h1>
