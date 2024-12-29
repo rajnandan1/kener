@@ -22,3 +22,31 @@ main {
 	transition: all 0.3s;
 	box-shadow: 0 0 8px 1.5px #3e9a4b;
 }
+
+.accm input:checked ~ div {
+	display: block;
+}
+.accm input ~ div {
+	display: none;
+}
+
+.accm input {
+	visibility: hidden;
+}
+
+.accmt {
+	background-color: hsl(223, 10%, 14%);
+}
+
+.accm input:checked ~ .showaccm span:first-child {
+	display: none;
+}
+.accm input:checked ~ .showaccm span:last-child {
+	display: block;
+}
+.accm input ~ .showaccm span:first-child {
+	display: block;
+}
+.accm input ~ .showaccm span:last-child {
+	display: none;
+}

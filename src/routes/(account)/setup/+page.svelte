@@ -91,6 +91,12 @@
 
 				<div>
 					<Button type="submit" class="w-full">Let's Go</Button>
+					<p class="mt-4 text-center text-xs font-semibold">
+						Already set up done? Please go to <a
+							href="{base}/signin"
+							class="text-primary underline decoration-1">signin page</a
+						>
+					</p>
 				</div>
 			</form>
 		</div>

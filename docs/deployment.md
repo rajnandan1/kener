@@ -20,7 +20,7 @@ Make sure you have the following installed:
 
 ## NPM
 
-```shell
+```bash
 npm i
 npm run build
 npm run configure
@@ -29,7 +29,7 @@ npm run prod
 
 ## PM2
 
-```shell
+```bash
 npm i
 npm run build #build the frontend
 npm run configure #build the backend
@@ -41,13 +41,13 @@ pm2 start main.js
 
 [Dockerhub](https://hub.docker.com/r/rajnandan1/kener)
 
-```shell
+```bash
 docker.io/rajnandan1/kener:latest
 ```
 
 [Github Packages](https://github.com/rajnandan1/kener/pkgs/container/kener)
 
-```shell
+```bash
 ghcr.io/rajnandan1/kener:latest
 ```
 
@@ -55,7 +55,7 @@ You should mount two host directories to persist your configuration and database
 
 Make sure `./database` and `./config` directories are present in the root directory
 
-```shell
+```bash
 mkdir database
 mkdir config
 curl -o config/site.yaml https://raw.githubusercontent.com/rajnandan1/kener/refs/heads/main/config/site.example.yaml
@@ -71,7 +71,7 @@ docker run \
 
 You can also use a .env file
 
-```shell
+```bash
 docker run \
   -v $(pwd)/database:/app/database \
   -v $(pwd)/config:/app/config \
@@ -98,7 +98,7 @@ Run these commands from your terminal
 
 Then add to your docker command like so:
 
-```shell
+```bash
 docker run -d ... -e "PUID=1000" -e "PGID=1000" ... rajnandan1/kener
 ```
 

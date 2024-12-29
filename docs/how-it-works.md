@@ -12,7 +12,7 @@ Kener has two parts.
 
 ## Folder structure
 
-```shell
+```bash
 ├── src (svelte frontend files)
 ├── static (things put here can be referenced directly example static/logo.png -> /logo.png)
 ├── src

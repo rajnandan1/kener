@@ -70,7 +70,7 @@ class Sqlite {
 				typeData TEXT,
 				dayDegradedMinimumCount INTEGER,
 				dayDownMinimumCount INTEGER,
-				includeDegradedInDowntime INTEGER,
+				includeDegradedInDowntime TEXT DEFAULT 'NO',
 				createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
 				updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
 			);

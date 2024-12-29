@@ -21,7 +21,7 @@ export async function POST({ request }) {
 
 	let total = ups + downs + degradeds;
 	let uptime = ParseUptime(ups + degradeds, total);
-	if (monitor.includeDegradedInDowntime === true) {
+	if (monitor.includeDegradedInDowntime === "YES") {
 		uptime = ParseUptime(ups, total);
 	}
 

@@ -9,13 +9,7 @@ Kener uses github for incident management. Issues created in github using certai
 
 ## Step 1: Create Github Repository
 
-Create a Github Repository. It can be either public or private. After you have created a repository open `site.yaml` and add them like this
-
-```yaml
-github:
-    owner: "username"
-    repo: "repository"
-```
+Create a [Github Repository](https://github.com/new). It can be either public or private.
 
 ## Step 2: Create Github Token
 
@@ -41,6 +35,28 @@ You can create either a classic token or personal access token
 
 ## Step 3: Set environment
 
-```shell
+```bash
 export GH_TOKEN=github_pat_11AD3ZA3Y0
 ```
+
+## Step 4: Add to Kener
+
+Add your repository details to kener.
+
+![Monitors API](/gh_s.png)
+
+### Github API URL
+
+If you are on github enterprise you can set the github api url. For most users, it will be `https://api.github.com`
+
+### Github Repo
+
+The repository name you created in step 1
+
+### Github Username
+
+Your github username
+
+### Incident History
+
+It is in hours. It means if an issue is created before X hours then kener would not honor it. What it means, is that kener would not show it under active incidents nor it will update the uptime. Default is 30\*24 hours = 720 hours.

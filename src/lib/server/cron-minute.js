@@ -244,7 +244,15 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
 		}
 	}
 	resp = Buffer.from(resp).toString("base64");
-	let evalResp = eval(monitorEval + `(${statusCode}, ${latency}, "${resp}")`);
+
+	let evalResp = undefined;
+
+	try {
+		evalResp = eval(monitorEval + `(${statusCode}, ${latency}, "${resp}")`);
+	} catch (error) {
+		console.log("Error in monitorEval", error.message);
+	}
+
 	if (evalResp === undefined || evalResp === null) {
 		evalResp = {
 			status: DOWN,
@@ -350,7 +358,6 @@ const Minuter = async (monitor) => {
 	let manualData = {};
 
 	const startOfMinute = GetMinuteStartNowTimestampUTC();
-
 	if (monitor.monitorType === "API") {
 		let envSecrets = GetRequiredSecrets(
 			`${monitor.typeData.url} ${monitor.typeData.body} ${JSON.stringify(monitor.typeData.headers)}`
@@ -400,7 +407,7 @@ const Minuter = async (monitor) => {
 	} else if (monitor.monitorType === "PING") {
 		let pingResponse = await pingCall(monitor.typeData.hostsV4, monitor.typeData.hostsV6);
 		realTimeData[startOfMinute] = pingResponse;
-	} else if (monitor.monitorType === "PING") {
+	} else if (monitor.monitorType === "DNS") {
 		const dnsResolver = new DNSResolver(monitor.typeData.nameServer);
 		let dnsResponse = await dsnChecker(
 			dnsResolver,

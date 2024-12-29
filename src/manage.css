@@ -15,10 +15,12 @@
 }
 
 input,
+[data-bits-select-trigger],
 textarea {
 	background-color: rgba(0, 0, 0, 0.02) !important;
 }
 .dark input,
+.dark [data-bits-select-trigger],
 .dark textarea {
 	background-color: rgba(0, 0, 0, 0.1) !important;
 }

@@ -345,3 +345,9 @@ export const IsSetupComplete = async () => {
 	}
 	return data.length > 0;
 };
+
+export const HashString = (str) => {
+	const hash = crypto.createHash("sha256");
+	hash.update(str);
+	return hash.digest("hex");
+};

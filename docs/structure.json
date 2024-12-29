@@ -9,9 +9,14 @@
 					"file": "/home.md"
 				},
 				{
-					"title": "Quick Start",
+					"title": "Get Started",
 					"link": "/docs/quick-start",
-					"file": "/docs/quick-start.md"
+					"file": "/quick-start.md"
+				},
+				{
+					"title": "Concepts",
+					"link": "/docs/concepts",
+					"file": "/concepts.md"
 				},
 				{
 					"title": "Changelogs",
@@ -26,17 +31,47 @@
 			]
 		},
 		{
-			"sectionTitle": "Core Concepts",
+			"sectionTitle": "Guides",
 			"children": [
 				{
-					"title": "Customization (site.yaml)",
-					"link": "/docs/customize-site",
-					"file": "/customize-site.md"
+					"title": "Setup Github",
+					"link": "/docs/gh-setup",
+					"file": "/gh-setup.md"
 				},
 				{
-					"title": "Monitors (monitors.yaml)",
+					"title": "Setup Environment",
+					"link": "/docs/environment-vars",
+					"file": "/environment-vars.md"
+				},
+				{
+					"title": "Use Badges",
+					"link": "/docs/status-badges",
+					"file": "/status-badges.md"
+				},
+				{
+					"title": "Setup Monitors",
 					"link": "/docs/monitors",
 					"file": "/monitors.md"
+				},
+				{
+					"title": "API/Website Monitor",
+					"link": "/docs/monitors-api",
+					"file": "/monitors-api.md"
+				},
+				{
+					"title": "Ping Monitor",
+					"link": "/docs/monitors-ping",
+					"file": "/monitors-ping.md"
+				},
+				{
+					"title": "DNS Monitor",
+					"link": "/docs/monitors-dns",
+					"file": "/monitors-dns.md"
+				},
+				{
+					"title": "Setup Triggers",
+					"link": "/docs/triggers",
+					"file": "/triggers.md"
 				},
 				{
 					"title": "Alerting (server.yaml)",
@@ -64,11 +99,6 @@
 					"file": "/i18n.md"
 				},
 				{
-					"title": "Badges",
-					"link": "/docs/status-badges",
-					"file": "/status-badges.md"
-				},
-				{
 					"title": "Embed",
 					"link": "/docs/embed",
 					"file": "/embed.md"
@@ -92,11 +122,6 @@
 					"title": "Deployment",
 					"link": "/docs/deployment",
 					"file": "/deployment.md"
-				},
-				{
-					"title": "Github Setup",
-					"link": "/docs/gh-setup",
-					"file": "/gh-setup.md"
 				}
 			]
 		},

@@ -115,7 +115,7 @@
 			/>
 		</Tabs.Content>
 		<Tabs.Content value="TriggerInfo" class="min-h-[70vh] pt-3">
-			<TriggerInfo />
+			<TriggerInfo {data} />
 		</Tabs.Content>
 		<Tabs.Content value="AlertsInfo" class="min-h-[70vh] pt-3">
 			<AlertsInfo {data} />

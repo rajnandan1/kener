@@ -1,181 +1,100 @@
 ---
-title: Monitors | monitors.yaml | Kener
+title: Monitors | Kener
 description: Monitors are the heart of Kener. This is where you define the monitors you want to show on your site.
 ---
 
 # Monitors
 
-Inside `config/` folder there is a file called `monitors.yaml`. We will be adding our monitors here. Please note that your yaml must be valid. It is an array.
+Monitors are the heart of Kener. This is where you define the monitors you want to show on your site.
 
-## Understanding monitors
+<div class="border rounded-md">
 
-Each monitor runs at 1 minute interval by default. Monitor runs in below priority order.
+![Monitors Main](/m_main.png)
 
--   `defaultStatus` Data. Used to set the default status of the monitor
--   PING/API/DNS call Data overrides above data(if present)
--   Pushed Status Data overrides status Data using [Kener Update Statue API](/docs/kener-apis#update-status---api)
--   [Manual Incident](/docs/incident-management) Data overrides Pushed Status Data
+</div>
 
-## General Attributes
+## Tag
 
-A list of attributes that can be used in all types of monitors.
+<span class="text-red-500 text-xs font-semibold">
+	UNIQUE
+</span>
+&
+<span class="text-red-500 text-xs font-semibold">
+	REQUIRED
+</span>
 
-| Key                       | Required?         | Explanation                                                                                                                                                              |
-| ------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| name                      | Required + Unique | This will be shown in the UI to your users. Keep it short and unique                                                                                                     |
-| description               | Optional          | This is a breif description for the monitor                                                                                                                              |
-| tag                       | Required + Unique | This is used to tag incidents created in Github using comments                                                                                                           |
-| image                     | Optional          | To show a logo before the name                                                                                                                                           |
-| cron                      | Optional          | Use a valid cron expression to specify the interval to run the monitors. Defaults to `* * * * *` i.e every minute                                                        |
-| defaultStatus             | Optional          | This will be the default status if no other way is specified to check the monitor. can be `UP`/`DOWN`/`DEGRADED`                                                         |
-| hidden                    | Optional          | If set to `true` will not show the monitor in the UI                                                                                                                     |
-| category                  | Optional          | Use this to group your monitors. Make sure you have defined category in `site.yaml` and use the `name` attribute. More about it [here](/docs/customize-site#categories). |
-| dayDegradedMinimumCount   | Optional          | Default is 1. It means, minimum this number of count for the day to be classified as DEGRADED(Yellow Bar) in 90 day view. Has to be `number` greater than 0              |
-| dayDownMinimumCount       | Optional          | Default is 1. It means, minimum this number of count for the day to be classified as DOWN(Red Bar) in 90 day view. Has to be `number` greater than 0                     |
-| includeDegradedInDowntime | Optional          | By deafault uptime percentage is calculated as (UP+DEGRADED/UP+DEGRADED+DOWN). Setting it as `true` will change the calculation to (UP/UP+DEGRADED+DOWN)                 |
+The tag is unique to each monitor and is used to identify the monitor in the code. It is also used to generate the URL for the monitor.
 
-### Example
+## Name
 
-```yaml
-- name: "Google"
-  description: "Google Search Engine"
-  tag: "google"
-  image: "https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png"
-  defaultStatus: "UP"
-  hidden: false
-  dayDegradedMinimumCount: 2
-  dayDownMinimumCount: 3
-  includeDegradedInDowntime: false
-```
+<span class="text-red-500 text-xs font-semibold">
+	UNIQUE
+</span>
+&
+<span class="text-red-500 text-xs font-semibold">
+	REQUIRED
+</span>
 
-`dayDegradedMinimumCount` and `dayDownMinimumCount` only works when `summaryStyle` is set as `DAY` in `site.yaml`. More about it [here](/docs/customize-site#summarystyle)
+Name is also unique to each monitor and is used to identify the monitor in the admin panel or in the status page.
 
-## API Monitor Attributes
+## Image
 
-A list of attributes that can be used in API monitors.
+The image is used to display a logo or an image for the monitor. It is displayed on the status page and in the admin panel. It is optional.
 
-| Key               | Required? | Explanation                                                                                                                                                                                                           |
-| ----------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| api.url           | Required  | HTTP URL                                                                                                                                                                                                              |
-| api.method        | Optional  | HTTP Method. Default is `GET`                                                                                                                                                                                         |
-| api.headers       | Optional  | HTTP headers                                                                                                                                                                                                          |
-| api.body          | Optional  | HTTP Body as string                                                                                                                                                                                                   |
-| api.timeout       | Optional  | timeout for the api in milliseconds. Default is 10000(10 secs)                                                                                                                                                        |
-| api.eval          | Optional  | Evaluator written in JS, to parse HTTP response and calculate uptime and latency                                                                                                                                      |
-| api.hideURLForGet | Optional  | if the monitor is a GET URL and no headers are specified and the response body content-type is a text/html then kener shows a GET hyperlink in monitor description. To hide that set this as false. Default is `true` |
+## Description
 
-### Eval
+The description is used to describe the monitor. It is displayed on the status page and in the admin panel. It is optional.
 
-This is a anonymous JS function, by default it looks like this.
+## Cron
 
-> **_NOTE:_** The eval function should always return a json object. The json object can have only status(UP/DOWN/DEGRADED) and lantecy(number)
-> `{status:"DEGRADED", latency: 200}`.
+<span class="text-red-500 text-xs font-semibold">
+	REQUIRED
+</span>
 
-```javascript
-(function (statusCode, responseTime, responseDataBase64) {
-	let statusCodeShort = Math.floor(statusCode/100);
-	let status = 'DOWN'
-    if(statusCodeShort >=2 && statusCodeShort <= 3) {
-        status = 'UP',
-    }
-	return {
-		status: 'DOWN',
-		latency: responseTime,
-	}
-})
-```
+The cron is used to define the interval at which the monitor should run. It is a cron expression. For example, `* * * * *` will run the monitor every minute.
 
--   `statusCode` **REQUIRED** is a number. It is the HTTP status code
--   `responseTime` **REQUIRED**is a number. It is the latency in milliseconds
--   `responseDataBase64` **REQUIRED** is a string. It is the base64 encoded response data. To use it you will have to decode it
+## Default Status
 
-```js
-let decodedResp = atob(responseDataBase64);
-//let jsonResp = JSON.parse(decodedResp)
-```
+Using default status you can set a predefined status for the monitor. The predefined status can be `UP`, `DOWN`, or `DEGRADED`. If the monitor does not have api/dns/ping or if the monitor status is not updated using webbhook, manual incident this will the status of the monitor.
 
-### Example
+## Category Name
 
-```yaml
-- name: "Google"
-  description: "Google Search Engine"
-  tag: "google"
-  image: "https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png"
-  defaultStatus: "UP"
-  hidden: false
-  api:
-	url: "https://www.google.com"
-	method: "GET"
-	headers:
-	  "Content-Type": "application/json"
-	body: ""
-	timeout: 10000
-	eval: |
-	  (function (statusCode, responseTime, responseDataBase64) {
-		let statusCodeShort = Math.floor(statusCode/100);
-		let status = 'DOWN'
-		if(statusCodeShort >=2 && statusCodeShort <= 3) {
-			status = 'UP',
-		}
-		return {
-			status: 'DOWN',
-			latency: responseTime,
-		}
-	  })
-```
+The category name is used to group monitors. It is displayed on the status page and in the admin panel. It is optional. By a home category is already present. Adding monitor to the home category will show the monitor on the home page.
 
-To view more examples of API monitors, please visit [here](/docs/monitors-examples)
+## Day Degraded Min Count
 
-## PING Monitor Attributes
+<span class="text-red-500 text-xs font-semibold">
+	REQUIRED
+</span>
 
-A list of attributes that can be used in PING monitors.
+The day degraded minimum count is used to define the minimum number of degraded incidents in a day to mark the monitor as degraded for the day. A degraded day means if you are using Monitor Style as FULL under Theme, the whole bar will be shown as Degraded (yellow color) . It is optional. It has to be more than equal to 1
 
-| Key          | Required? | Explanation                                                             |
-| ------------ | --------- | ----------------------------------------------------------------------- |
-| ping.hostsV4 | Required  | Array of hosts / IP to monitor ping response. Either domain name or IP4 |
-| ping.hostsV6 | Required  | Array of hosts / IP to monitor ping response. Either domain name or IP6 |
+## Day Down Min Count
 
-Either one of `hostsV4` or `hostsV6` is required
+<span class="text-red-500 text-xs font-semibold">
+	REQUIRED
+</span>
 
-### Example
+The day down minimum count is used to define the minimum number of down incidents in a day to mark the monitor as down for the day. A down day means if you are using Monitor Style as FULL under Theme, the whole bar will be shown as Down (red color) . It is optional. It has to be more than equal to 1
 
-```yaml
-- name: "Ping All"
-  description: "Ping All is where I ping all the hosts"
-  tag: "pingall"
-  defaultStatus: "UP"
-  ping:
-	hostsV4:
-		- "www.rajnandan.com"
-	  	- "103.125.217.243"
-```
+## Include Degraded
 
-You can find more examples of PING monitors [here](/docs/monitor-examples#ping-monitor)
+The include degraded is used to include the degraded checks in the total bad checks count. It is optional. By default uptime percentage is calculated as (UP+DEGRADED/UP+DEGRADED+DOWN). Setting it as `YES` will change the calculation to (UP/UP+DEGRADED+DOWN)
 
-## DNS Monitor Attributes
+## Monitor Type
 
-A list of attributes that can be used in DNS monitors.
+<span class="text-red-500 text-xs font-semibold">
+	REQUIRED
+</span>
 
-| Key              | Required? | Explanation                                                              |
-| ---------------- | --------- | ------------------------------------------------------------------------ |
-| dns.hosts        | Required  | Array of hosts to monitor DNS response. Either domain name or IP4 or IP6 |
-| dns.lookupRecord | Required  | DNS record type.                                                         |
-| dns.nameServer   | Required  | DNS server to use.                                                       |
-| dns.matchType    | Required  | Match type for DNS response. Can be `ANY` or `ALL`. Default is `ALL`     |
-| dns.values       | Required  | Expected values for the DNS response. Array of string                    |
+### API
 
-### Example
+To monitor an API, you need to provide the URL of the API and the expected status code. If the status code is not received, the monitor will be marked as down. You can read more about API monitoring [here](/docs/monitors-api).
 
-```yaml
-- name: "DNS All"
-  description: "DNS All is where I check all the DNS"
-  tag: "dnsall"
-  defaultStatus: "UP"
-  dns:
-      host: "www.rajnandan.com"
-      lookupRecord: "CNAME"
-      nameServer: "8.8.8.8"
-      matchType: "ANY"
-      values:
-          - "rajnandan1.github.io"
-```
+### DNS
+
+To monitor the DNS records, you need to provide the domain name and the record type. If the record is not found, the monitor will be marked as down. You can read more about DNS monitoring [here](/docs/monitors-dns).
+
+### PING
+
+To monitor the ping, you need to provide the IP address or the domain name. If the ping is not successful, the monitor will be marked as down. You can read more about PING monitoring [here](/docs/monitors-ping).

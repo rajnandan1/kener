@@ -29,19 +29,17 @@
 		</a>
 		<div class="flex w-full justify-end">
 			{#if data.site.nav}
-				<nav
-					class="mr-4 hidden flex-wrap items-center space-x-6 text-sm font-medium md:flex"
-				>
+				<nav class="mr-4 hidden flex-wrap items-center text-sm font-medium md:flex">
 					{#each data.site.nav as navItem}
 						<a
 							href={navItem.url}
-							class="flex decoration-1 hover:underline"
+							class="flex rounded-md px-3 py-2 text-card-foreground transition-all ease-linear hover:bg-background"
 							on:click={() => analyticsEvent("nav", navItem.name)}
 						>
 							{#if navItem.iconURL}
 								<img
 									src={navItem.iconURL}
-									class="mr-1.5 inline h-4"
+									class="mr-1.5 mt-0.5 inline h-4"
 									alt={navItem.name}
 								/>
 							{/if}

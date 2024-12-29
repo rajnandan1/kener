@@ -7,7 +7,7 @@ description: Kener gives APIs to push data and create incident.
 
 Kener also gives APIs to push data and create incident. Before you use kener apis you will have to set an authorization token called `API_TOKEN`. This also has to be set as an environment variable.
 
-```shell
+```bash
 export API_TOKEN=some-token-set-by-you
 ```
 
@@ -48,7 +48,7 @@ The update status API can be used to manually update the state of a monitor from
 | timestampInSeconds | `Optional` Timestamp in UTC seconds. Defaults to now. Should between 90 Days and now |
 | tag                | `Required` Monitor Tag set in monitors.yaml                                          |
 
-```shell
+```bash
 curl --request POST \
   --url http://your-kener.host/api/status \
   --header 'Authorization: Bearer some-token-set-by-you' \
@@ -84,7 +84,7 @@ Use this API to get the status of a monitor.
 
 Replace `google-search` with your monitor tag in query param
 
-```shell
+```bash
 curl --request GET \
   --url 'http://your-kener.host/api/status?tag=google-search' \
   --header 'Authorization: Bearer some-token-set-by-you'
@@ -122,7 +122,7 @@ Can be use to create an incident from a remote server
 | isIdentified  | `Optional` Incident identified                           |
 | isResolved    | `Optional` Incident resolved                             |
 
-```shell
+```bash
 curl --request POST \
   --url http://your-kener.host/api/incident \
   --header 'Authorization: Bearer some-token-set-by-you' \
@@ -185,7 +185,7 @@ Can be use to update an incident from a remote server. It will clear values if n
 | isIdentified  | `Optional` Incident identified                           |
 | isResolved    | `Optional` Incident resolved                             |
 
-```shell
+```bash
 curl --request PATCH \
   --url http://your-kener.host/api/incident/{incidentNumber} \
   --header 'Authorization: Bearer some-token-set-by-you' \
@@ -232,7 +232,7 @@ Use `incidentNumber` to fetch an incident
 
 ### Request Body
 
-```shell
+```bash
 curl --request GET \
   --url http://your-kener.host/api/incident/{incidentNumber} \
   --header 'Authorization: Bearer some-token-set-by-you' \
@@ -267,7 +267,7 @@ Add comments for incident using `incidentNumber`
 
 ### Request
 
-```shell
+```bash
 curl --request POST \
   --url http://your-kener.host/api/incident/{incidentNumber}/comment \
   --header 'Authorization: Bearer some-token-set-by-you' \
@@ -297,7 +297,7 @@ Use this API to fetch all the comments for an incident
 
 ### Request
 
-```shell
+```bash
 curl --request GET \
   --url http://your-kener.host/api/incident/{incidentNumber}/comment \
   --header 'Authorization: Bearer some-token-set-by-you' \
@@ -338,7 +338,7 @@ Use this to API to update the status of an ongoing incident.
 
 ### Request
 
-```shell
+```bash
 curl --request POST \
   --url http://your-kener.host/api/incident/{incidentNumber}/status \
   --header 'Authorization: Bearer some-token-set-by-you' \
@@ -393,7 +393,7 @@ Use this to API to search incidents.
 
 Search incidents that are closed and title contains `hello incident`
 
-```shell
+```bash
 curl --request POST \
   --url http://your-kener.host/api/incident?state=closed&title_like=Hello%20Incident \
   --header 'Authorization: Bearer some-token-set-by-you' \

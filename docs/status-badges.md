@@ -51,7 +51,7 @@ You can set custom label for the status badge. If you do not set a label it will
 
 Shows the last health check was UP/DOWN/DEGRADED as SVG dot
 
-```shell
+```bash
 http://[hostname]/badge/[tag]/dot
 #or
 http://[hostname]/badge/[tag]/dot?animate=ping

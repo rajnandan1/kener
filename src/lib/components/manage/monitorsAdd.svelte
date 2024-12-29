@@ -37,8 +37,8 @@
 			categoryName: "Home",
 			monitorType: "NONE",
 			typeData: "",
-			dayDegradedMinimumCount: 0,
-			dayDownMinimumCount: 0,
+			dayDegradedMinimumCount: 1,
+			dayDownMinimumCount: 1,
 			includeDegradedInDowntime: "NO",
 			apiConfig: {
 				url: "",
@@ -56,8 +56,8 @@
 			dnsConfig: {
 				host: "",
 				lookupRecord: "",
-				nameServer: "",
-				matchType: "",
+				nameServer: "8.8.8.8",
+				matchType: "ANY",
 				values: []
 			}
 		};

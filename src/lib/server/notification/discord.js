@@ -34,6 +34,7 @@ class Discord {
 		}
 		return {
 			username: this.siteData.siteName,
+			avatar_url: logo,
 			content: `## ${data.alert_name}\n${data.status === "TRIGGERED" ? "🔴 Triggered" : "🟢 Resolved"}\n${data.description}\nClick [here](${data.actions[0].url}) for more.`,
 			embeds: [
 				{
@@ -64,7 +65,8 @@ class Discord {
 						}
 					],
 					footer: {
-						text: "Kener"
+						text: "Kener",
+						icon_url: logo
 					},
 					timestamp: data.timestamp
 				}

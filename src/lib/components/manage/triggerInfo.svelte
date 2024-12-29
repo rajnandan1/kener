@@ -15,6 +15,7 @@
 	let showAddTrigger = false;
 	let triggers = [];
 	let loadingData = false;
+	export let data;
 
 	let newTrigger = {
 		id: 0,
@@ -56,6 +57,24 @@
 		];
 	}
 
+	//validate this pattern Alerts <alert@example.com>
+	function validateNameEmailPattern(input) {
+		const pattern = /^([\w\s]+)\s*<([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>$/;
+		const match = input.match(pattern);
+		if (match) {
+			return {
+				isValid: true,
+				name: match[1].trim(),
+				email: match[2]
+			};
+		}
+		return {
+			isValid: false,
+			name: null,
+			email: null
+		};
+	}
+
 	async function addNewTrigger() {
 		invalidFormMessage = "";
 		formState = "loading";
@@ -68,6 +87,13 @@
 
 		if (newTrigger.triggerType == "email") {
 			newTrigger.triggerMeta.url = "";
+
+			let emValid = validateNameEmailPattern(newTrigger.triggerMeta.from);
+			if (!emValid.isValid) {
+				invalidFormMessage = "Invalid Name and Email Address for Sender";
+				formState = "idle";
+				return;
+			}
 		}
 		//newTrigger.name present not empty
 		if (newTrigger.name == "") {
@@ -382,9 +408,9 @@
 								<Button
 									on:click={addHeader}
 									variant="secondary"
-									class="absolute left-1/2 h-8 w-8 -translate-x-1/2 p-0  "
+									class="absolute left-1/2 h-8  -translate-x-1/2   p-2 text-xs  "
 								>
-									<Plus class="h-4 w-4 " />
+									<Plus class="mr-1 h-4 w-4" /> Add Headers
 								</Button>
 							</div>
 						</div>
@@ -400,7 +426,13 @@
 									>
 									to send emails. Please make sure you have created an account with
 									resend. Also add the resend api key as environment variable
-									<span class="font-mono">RESEND_API_KEY</span>
+									<span class="font-mono">RESEND_API_KEY</span>.
+									{#if !!!data.RESEND_API_KEY}
+										<span class="text-red-500"
+											>The RESEND_API_KEY is not set in your environment
+											variable. Please set it and restart the server</span
+										>.
+									{/if}
 								</p>
 							</div>
 						</div>

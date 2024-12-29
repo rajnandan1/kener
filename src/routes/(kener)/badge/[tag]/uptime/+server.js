@@ -43,7 +43,7 @@ export async function GET({ params, url }) {
 	dbData.DEGRADED = Number(dbData.DEGRADED);
 	let numerator = dbData.UP + dbData.DEGRADED;
 	let denominator = dbData.UP + dbData.DEGRADED + dbData.DOWN;
-	if (includeDegradedInDowntime === true) {
+	if (includeDegradedInDowntime === "YES") {
 		numerator = dbData.UP;
 	}
 

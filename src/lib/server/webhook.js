@@ -45,35 +45,35 @@ const CheckIfValidTag = async function (tag) {
 const auth = async function (request) {
 	const authHeader = request.headers.get("authorization");
 	const authToken = authHeader?.replace("Bearer ", "");
-	let ip = "";
-	try {
-		//ip can be in x-forwarded-for or x-real-ip or remoteAddress
-		if (request.headers.get("x-forwarded-for") !== null) {
-			ip = request.headers.get("x-forwarded-for").split(",")[0];
-		} else if (request.headers.get("x-real-ip") !== null) {
-			ip = request.headers.get("x-real-ip");
-		} else if (request.connection && request.connection.remoteAddress !== null) {
-			ip = request.connection.remoteAddress;
-		} else if (request.socket && request.socket.remoteAddress !== null) {
-			ip = request.socket.remoteAddress;
-		}
-	} catch (err) {
-		console.log("IP Not Found " + err.message);
-	}
+	// let ip = "";
+	// try {
+	// 	//ip can be in x-forwarded-for or x-real-ip or remoteAddress
+	// 	if (request.headers.get("x-forwarded-for") !== null) {
+	// 		ip = request.headers.get("x-forwarded-for").split(",")[0];
+	// 	} else if (request.headers.get("x-real-ip") !== null) {
+	// 		ip = request.headers.get("x-real-ip");
+	// 	} else if (request.connection && request.connection.remoteAddress !== null) {
+	// 		ip = request.connection.remoteAddress;
+	// 	} else if (request.socket && request.socket.remoteAddress !== null) {
+	// 		ip = request.socket.remoteAddress;
+	// 	}
+	// } catch (err) {
+	// 	console.log("IP Not Found " + err.message);
+	// }
 	if ((await VerifyAPIKey(authToken)) === false) {
 		return new Error("invalid token");
 	}
-	if (API_IP !== undefined && ip != "") {
-		if (API_IP !== ip) {
-			return new Error(`invalid ip: ${ip}`);
-		}
-	}
-	if (API_IP_REGEX !== undefined && ip != "") {
-		const regex = new RegExp(API_IP_REGEX);
-		if (!regex.test(ip)) {
-			return new Error(`invalid ip regex: ${ip}`);
-		}
-	}
+	// if (API_IP !== undefined && ip != "") {
+	// 	if (API_IP !== ip) {
+	// 		return new Error(`invalid ip: ${ip}`);
+	// 	}
+	// }
+	// if (API_IP_REGEX !== undefined && ip != "") {
+	// 	const regex = new RegExp(API_IP_REGEX);
+	// 	if (!regex.test(ip)) {
+	// 		return new Error(`invalid ip regex: ${ip}`);
+	// 	}
+	// }
 	return null;
 };
 const store = async function (data) {
@@ -265,11 +265,8 @@ const GetMonitorStatusByTag = async function (tag, timestamp) {
 		uptime: null,
 		lastUpdatedAt: null
 	};
-	let monitors = await GetMonitors({
-		status: "ACTIVE"
-	});
 
-	const { includeDegradedInDowntime } = monitors.find((monitor) => monitor.tag === tag);
+	const { includeDegradedInDowntime } = monitor;
 
 	let now = GetMinuteStartNowTimestampUTC();
 	if (timestamp !== null && timestamp !== undefined) {
@@ -294,7 +291,7 @@ const GetMonitorStatusByTag = async function (tag, timestamp) {
 		}
 	}
 	let numerator = ups + degradeds;
-	if (includeDegradedInDowntime === true) {
+	if (includeDegradedInDowntime === "YES") {
 		numerator = ups;
 	}
 

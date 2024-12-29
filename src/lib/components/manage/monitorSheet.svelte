@@ -115,13 +115,13 @@
 			return;
 		}
 		//dayDegradedMinimumCount should be positive number
-		if (newMonitor.dayDegradedMinimumCount < 0) {
-			invalidFormMessage = "Day Degraded Minimum Count should be positive number";
+		if (newMonitor.dayDegradedMinimumCount < 1) {
+			invalidFormMessage = "Day Degraded Minimum Count should be greater than 0";
 			return;
 		}
 		//dayDownMinimumCount should be positive number
-		if (newMonitor.dayDownMinimumCount < 0) {
-			invalidFormMessage = "Day Down Minimum Count should be positive number";
+		if (newMonitor.dayDownMinimumCount < 1) {
+			invalidFormMessage = "Day Down Minimum Count should be greater than 0";
 			return;
 		}
 
@@ -145,11 +145,25 @@
 				invalidFormMessage = "Invalid URL";
 				return;
 			}
+
+			//timeout should be positive number
+			if (newMonitor.apiConfig.timeout < 1) {
+				invalidFormMessage = "Timeout should be greater than 0";
+				return;
+			}
+
+			//if evali ends with semicolor throw error
+			if (!!newMonitor.apiConfig.eval && newMonitor.apiConfig.eval.endsWith(";")) {
+				invalidFormMessage = "Eval should not end with semicolon";
+				return;
+			}
+
 			//validating eval
 			if (!!newMonitor.apiConfig.eval && !isValidEval()) {
 				invalidFormMessage = "Invalid eval";
 				return;
 			}
+
 			newMonitor.typeData = JSON.stringify(newMonitor.apiConfig);
 		} else if (newMonitor.monitorType === "PING") {
 			//validating hostsV4
@@ -371,14 +385,18 @@
 				</div>
 
 				<div class="col-span-1">
-					<Label for="dayDegradedMinimumCount">Day Degraded Minimum Count</Label>
+					<Label for="dayDegradedMinimumCount">
+						Day Degraded Minimum Count <span class="text-red-500">*</span>
+					</Label>
 					<Input
 						bind:value={newMonitor.dayDegradedMinimumCount}
 						id="dayDegradedMinimumCount"
 					/>
 				</div>
 				<div class="col-span-1">
-					<Label for="dayDownMinimumCount">Day Down Minimum Count</Label>
+					<Label for="dayDownMinimumCount">
+						Day Down Minimum Count <span class="text-red-500">*</span>
+					</Label>
 					<Input bind:value={newMonitor.dayDownMinimumCount} id="dayDownMinimumCount" />
 				</div>
 				<div class="col-span-1">
@@ -435,7 +453,10 @@
 			{#if newMonitor.monitorType === "API"}
 				<div class="mt-4 grid grid-cols-6 gap-2">
 					<div class="col-span-1">
-						<Label for="timeout">Timeout(ms)</Label>
+						<Label for="timeout">
+							Timeout(ms)
+							<span class="text-red-500">*</span>
+						</Label>
 						<Input bind:value={newMonitor.apiConfig.timeout} id="timeout" />
 					</div>
 					<div class="col-span-1">
@@ -490,14 +511,14 @@
 						</Select.Root>
 					</div>
 					<div class="col-span-4">
-						<Label for="url">URL</Label>
+						<Label for="url">URL <span class="text-red-500">*</span></Label>
 						<Input
 							bind:value={newMonitor.apiConfig.url}
 							id="url"
 							placeholder="https://example.com/api/users"
 						/>
 					</div>
-					<div class="col-span-6">
+					<div class="col-span-6 mt-2">
 						<Label for="url">Headers</Label>
 						<div class="grid grid-cols-6 gap-2">
 							{#each newMonitor.apiConfig.headers as header, index}
@@ -539,9 +560,9 @@
 							<Button
 								on:click={addHeader}
 								variant="secondary"
-								class="absolute left-1/2 h-8 w-8 -translate-x-1/2 p-0  "
+								class="absolute left-1/2 h-8 -translate-x-1/2  p-2 text-xs  "
 							>
-								<Plus class="h-4 w-4 " />
+								<Plus class="mr-2 h-4 w-4" /> Add Header
 							</Button>
 						</div>
 					</div>
@@ -563,7 +584,7 @@
 							bind:value={newMonitor.apiConfig.eval}
 							id="eval"
 							class="h-96 w-full rounded-sm border p-2"
-							placeholder={defaultEval}
+							placeholder="Leave blank or write a custom eval function"
 						></textarea>
 					</div>
 				</div>
@@ -571,7 +592,7 @@
 				<div class="mt-4 grid grid-cols-6 gap-2">
 					<div class="col-span-6">
 						<Label for="hostsV4">Hosts V4</Label>
-						<div class="grid grid-cols-7 gap-2">
+						<div class="mb-2 grid grid-cols-7 gap-2">
 							{#each newMonitor.pingConfig.hostsV4 as host, index}
 								<div class="relative col-span-2">
 									<Input
@@ -717,7 +738,7 @@
 					</div>
 
 					<div class="col-span-4">
-						<Label for="values">Values</Label>
+						<Label for="values">Expected Values</Label>
 						<div class="grid grid-cols-7 gap-2">
 							{#each newMonitor.dnsConfig.values as value, index}
 								<div class="relative col-span-3">

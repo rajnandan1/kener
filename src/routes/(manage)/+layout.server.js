@@ -34,9 +34,12 @@ export async function load({ params, route, url, cookies, request }) {
 	}
 
 	//
-
 	return {
 		siteData,
-		GH_TOKEN: !!process.env.GH_TOKEN ? maskString(process.env.GH_TOKEN) : ""
+		GH_TOKEN: !!process.env.GH_TOKEN ? maskString(process.env.GH_TOKEN) : "",
+		KENER_SECRET_KEY: !!process.env.KENER_SECRET_KEY
+			? maskString(process.env.KENER_SECRET_KEY)
+			: "",
+		RESEND_API_KEY: !!process.env.RESEND_API_KEY ? maskString(process.env.RESEND_API_KEY) : ""
 	};
 }

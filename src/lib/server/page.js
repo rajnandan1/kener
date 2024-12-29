@@ -120,11 +120,11 @@ const FetchData = async function (site, monitor, localTz) {
 		totalDownCount += dayData.DOWN;
 		totalUpCount += dayData.UP;
 
-		if (dayData.DEGRADED > monitor.dayDegradedMinimumCount) {
+		if (dayData.DEGRADED >= monitor.dayDegradedMinimumCount) {
 			cssClass = returnStatusClass(dayData.DEGRADED, StatusObj.DEGRADED, site.barStyle);
 			message = getDayMessage("DEGRADED", dayData.DEGRADED);
 		}
-		if (dayData.DOWN > monitor.dayDownMinimumCount) {
+		if (dayData.DOWN >= monitor.dayDownMinimumCount) {
 			cssClass = returnStatusClass(dayData.DOWN, StatusObj.DOWN, site.barStyle);
 			message = getDayMessage("DOWN", dayData.DOWN);
 		}
