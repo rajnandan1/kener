@@ -7,6 +7,10 @@ description: Monitors are the heart of Kener. This is where you define the monit
 
 Monitors are the heart of Kener. This is where you define the monitors you want to show on your site.
 
+## Add Monitors
+
+Click on the ➕ to add a monitor.
+
 <div class="border rounded-md">
 
 ![Monitors Main](/m_main.png)
@@ -98,3 +102,38 @@ To monitor the DNS records, you need to provide the domain name and the record t
 ### PING
 
 To monitor the ping, you need to provide the IP address or the domain name. If the ping is not successful, the monitor will be marked as down. You can read more about PING monitoring [here](/docs/monitors-ping).
+
+---
+
+## Triggers
+
+To add a trigger to a monitor make sure you have created a trigger. You can read more about triggers [here](/docs/triggers).
+
+-   Click on the 🔔 icon on the top right corner of the monitor.
+-   Add details for either DOWN or DEGRADED.
+    -   Failure Threshold(Required): The number of consecutive failures before the trigger is activated.
+    -   Success Threshold(Required): The number of consecutive successes before the trigger is deactivated.
+    -   Create Incident: Chose whether to create an incident or not when the trigger is activated. The incident will be created in Github. So make sure you have set up the Github token in the environment variables. The incident will be closed when the monitor is back to UP.
+    -   Custom Message (Required): Add your owner alert message.
+    -   Choose Triggers: Choose the triggers you want to activate the trigger. You can choose multiple triggers.
+    -   It will take upto 1 minute for the trigger to be activated.
+
+---
+
+## Edit Monitors
+
+Click on the ⚙️ to edit the monitor.
+
+### Deactivate Monitor
+
+You can deactivate the monitor by switching the toggle to off. Deactivation a monitor will stop the monitor from running. It will take one minute to deactivate.
+
+### Activate Monitor
+
+You can activate the monitor by switching the toggle to on. Activation a monitor will start the monitor. It will take one minute to activate.
+
+<div class="border px-2 rounded-md">
+
+Any changes in the a live monitor will take one minute to reflect.
+
+</div>

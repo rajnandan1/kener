@@ -67,20 +67,11 @@ KENER_BASE_PATH=/status
 
 ## Secrets
 
-Kener supports secrets in monitors. Let us say you have a monitor that is API based and you want to keep the API key secret. You can use the `secrets` key in the monitor to keep the API key secret.
+Kener supports secrets in monitors. Let us say you have a monitor that is API based and you want to keep the API key secret.
 
-```yaml
-- name: Example Secret Monitor
-  description: Monitor to show how to use secrets
-  tag: "secret"
-  api:
-      method: GET
-      url: https://api.example.com/users
-      headers:
-          Authorization: Bearer $CLIENT_SECRET
-```
+Example: `https://api.example.com/users` with a header `Authorization: Bearer $CLIENT_SECRET`
 
-In the above example, the `CLIENT_SECRET` is a secret that you can set in the monitor. To properly make this work you will have to set up environment variables like below
+You should set the `CLIENT_SECRET` in the your environment variables.
 
 ```bash
 export CLIENT_SECRET=your-api-key

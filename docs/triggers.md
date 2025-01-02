@@ -105,5 +105,148 @@ Body of the webhook will be sent as below:
 | details               | Details of the alert.                                       |
 | details.metric        | Name of the monitor                                         |
 | details.current_value | Current value of the monitor                                |
-| details.threshold     | Alert trigger hreshold of the monitor                       |
+| details.threshold     | Alert trigger threshold of the monitor                      |
 | actions               | Actions to be taken. Link to view the monitor.              |
+
+## Discord
+
+Discord triggers are used to send a message to a discord channel when a monitor goes down or up.
+
+<div class="border rounded-md">
+
+![Trigger API](/trig_2.png)
+
+</div>
+
+### Discord URL
+
+<span class="text-red-500 text-xs font-semibold">
+	REQUIRED
+</span>
+
+The Discord URL is used to define the URL of the discord webhook. It is required and has to be a valid URL.
+
+#### How to get the Discord URL?
+
+1.  Go to your discord server
+2.  Right-click on the channel you want to send the messages
+3.  Click on `Edit Channel`
+4.  Go to `Integrations`
+5.  Click on `Create Webhook`
+6.  Copy the URL
+
+#### Discord Message
+
+The discord message when alert is `TRIGGERED` will look like this
+
+![Discord](/discord.png)
+
+The discord message when alert is `RESOLVED` will look like this
+
+![Discord](/discord_resolved.png)
+
+## Slack
+
+Slack triggers are used to send a message to a slack channel when a monitor goes down or up.
+
+<div class="border rounded-md">
+
+![Trigger API](/trig_3.png)
+
+</div>
+
+### Slack URL
+
+<span class="text-red-500 text-xs font-semibold">
+	REQUIRED
+</span>
+
+The Slack URL is used to define the URL of the slack webhook. It is required and has to be a valid URL.
+
+#### How to get the Slack URL?
+
+1.  Go to your slack workspace
+2.  Click on `Apps` on the left sidebar
+3.  Search for `Incoming Webhooks`
+4.  Click on `Add to Slack`
+5.  Select the channel you want to send the messages
+6.  Click on `Add Incoming Webhook Integration`
+7.  Copy the URL
+
+#### Slack Message
+
+The slack message when alert is `TRIGGERED` will look like this
+
+![Slack](/slack.png)
+
+The slack message when alert is `RESOLVED` will look like this
+
+![Slack](/slack_resolved.png)
+
+## Email
+
+Email triggers are used to send an email when a monitor goes down or up.
+
+<div class="border rounded-md">
+
+![Trigger API](/trig_4.png)
+
+</div>
+
+<div class="border px-2 rounded-md mt-4">
+
+#### Note
+
+Please make sure you have set the `RESEND_API_KEY` in the environment variables.
+
+</div>
+
+### To
+
+<span class="text-red-500 text-xs font-semibold">
+	REQUIRED
+</span>
+
+The email addresses to which the email should be sent. It is required and has to be a valid email addresses. You can pass multiple email addresses separated by a comma.
+
+### Sender
+
+The email address from which the email should be sent.
+
+It should be in the format `Name <email@address.com>`
+
+If you have not connected your domain with resend, then use `Some Name <onboarding@resend.dev>`
+
+### Subject
+
+Subject of the email when `TRIGGERED`
+
+```text
+[TRIGGERED] Mockoon DOWN at 2024-12-27T04:42:01.430Z
+```
+
+Subject of the email when `RESOLVED`
+
+```text
+[RESOLVED] Mockoon DOWN at 2024-12-27T04:42:01.430Z
+```
+
+### Body
+
+The emaik message when alert is `TRIGGERED` will look like this
+
+![Slack](/em_t.png)
+
+The emaik message when alert is `RESOLVED` will look like this
+
+![Slack](/em_r.png)
+
+---
+
+## Edit Triggers
+
+Click on the ⚙️ to edit the trigger.
+
+### Deactivate Trigger
+
+You can deactivate the trigger by switching the toggle to off. You cannot send message to a deactivated trigger. Any monitor with this trigger will not send any notifications.

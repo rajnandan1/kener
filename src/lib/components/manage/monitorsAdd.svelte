@@ -293,7 +293,7 @@
 
 {#if shareMenusToggle}
 	<div
-		class="moldal-container fixed left-0 top-0 z-30 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm"
+		class="moldal-container fixed left-0 top-0 z-50 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm"
 	>
 		<div
 			class="absolute left-1/2 top-1/2 h-fit w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background shadow-lg backdrop-blur-lg"
@@ -357,7 +357,7 @@
 						<div class="col-span-1">
 							<div class="col-span-1">
 								<Label for="{key}successThreshold">
-									Failure Threshold
+									Success Threshold
 									<span class="text-red-500">*</span>
 								</Label>
 								<Input
@@ -415,14 +415,15 @@
 								type="text"
 							/>
 						</div>
+						<p class="col-span-4 mt-2 text-sm font-medium">Choose Triggers</p>
 						{#each triggers as trigger}
 							<div
-								class="col-span-1 mt-2 overflow-hidden overflow-ellipsis whitespace-nowrap"
+								class="col-span-1 overflow-hidden overflow-ellipsis whitespace-nowrap"
 							>
 								<label class="cursor-pointer">
 									<input
 										type="checkbox"
-										class=""
+										class="text-sm"
 										checked={data.triggers.indexOf(trigger.id) > -1}
 										on:change={() => {
 											data.triggers = data.triggers.includes(trigger.id)

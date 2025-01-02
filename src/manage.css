@@ -36,3 +36,7 @@ input[type="file"] {
 .image-upload .has-bg:hover .invisible {
 	visibility: visible !important;
 }
+
+[aria-label="color picker"] input {
+	color: rgba(0, 0, 0, 0.5) !important;
+}

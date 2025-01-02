@@ -34,11 +34,6 @@
 			"sectionTitle": "Guides",
 			"children": [
 				{
-					"title": "Setup Github",
-					"link": "/docs/gh-setup",
-					"file": "/gh-setup.md"
-				},
-				{
 					"title": "Setup Environment",
 					"link": "/docs/environment-vars",
 					"file": "/environment-vars.md"
@@ -74,14 +69,39 @@
 					"file": "/triggers.md"
 				},
 				{
-					"title": "Alerting (server.yaml)",
-					"link": "/docs/alerting",
-					"file": "/alerting.md"
+					"title": "Setup Site",
+					"link": "/docs/site",
+					"file": "/site.md"
 				},
 				{
-					"title": "Database (server.yaml)",
-					"link": "/docs/database",
-					"file": "/database.md"
+					"title": "Setup Github",
+					"link": "/docs/gh-setup",
+					"file": "/gh-setup.md"
+				},
+				{
+					"title": "Setup SEO",
+					"link": "/docs/seo",
+					"file": "/seo.md"
+				},
+				{
+					"title": "Setup Home",
+					"link": "/docs/home-page",
+					"file": "/home-page.md"
+				},
+				{
+					"title": "Setup Theme",
+					"link": "/docs/theme",
+					"file": "/theme.md"
+				},
+				{
+					"title": "View Alerts",
+					"link": "/docs/alerts",
+					"file": "/alerts.md"
+				},
+				{
+					"title": "API Keys",
+					"link": "/docs/apikeys",
+					"file": "/apikeys.md"
 				},
 				{
 					"title": "Monitors Examples",

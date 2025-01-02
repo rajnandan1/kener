@@ -97,7 +97,9 @@
 <Card.Root class="mt-4">
 	<Card.Header class="border-b">
 		<Card.Title>Analytics</Card.Title>
-		<Card.Description>Deploy your new project in one-click.</Card.Description>
+		<Card.Description>
+			Add your analytics ID/Key here. You can add multiple analytics providers.
+		</Card.Description>
 	</Card.Header>
 	<Card.Content>
 		<form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitAnalytics}>
@@ -144,7 +146,9 @@
 <Card.Root class="mt-4">
 	<Card.Header class="border-b">
 		<Card.Title>Search Engine Optimization</Card.Title>
-		<Card.Description>Deploy your new project in one-click.</Card.Description>
+		<Card.Description>
+			Add your meta tags here. You can add multiple meta tags.
+		</Card.Description>
 	</Card.Header>
 	<Card.Content>
 		<form class="mx-auto mt-4 space-y-4" use:autoAnimate on:submit|preventDefault={formSubmit}>
