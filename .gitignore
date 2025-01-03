@@ -24,3 +24,4 @@ database/*
 
 static/uploads/*
 !static/uploads/upload.dir
+temp.txt

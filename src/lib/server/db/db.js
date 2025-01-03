@@ -26,28 +26,6 @@ if (dbType === "sqlite") {
 	instance = new Sqlite({
 		dbName: `./database/${dbConfig.dbName}`
 	});
-} else if (dbType == "postgres") {
-	if (dbConfig.user === undefined) {
-		console.error("user is required for postgres database");
-		process.exit(1);
-	}
-	if (dbConfig.host === undefined) {
-		console.error("host is required for postgres database");
-		process.exit(1);
-	}
-	if (dbConfig.port === undefined) {
-		console.error("port is required for postgres database");
-		process.exit(1);
-	}
-	if (dbConfig.database === undefined) {
-		console.error("database is required for postgres database");
-		process.exit(1);
-	}
-	if (dbConfig.password === undefined) {
-		console.error("password is required for postgres database");
-		process.exit(1);
-	}
-	instance = new Postgres(dbConfig);
 }
 
 //migration2(instance, "./database");

@@ -4,6 +4,7 @@
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import * as Alert from "$lib/components/ui/alert";
+	import { onMount } from "svelte";
 
 	let form = {
 		email: "",
@@ -14,7 +15,12 @@
 		error: null,
 		isSecretSet: false
 	};
-	console.log(">>>>>>----  +page:17 ", data);
+
+	let httpDomainPort = "";
+
+	onMount(() => {
+		httpDomainPort = window.location.protocol + "//" + window.location.host;
+	});
 </script>
 
 <div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
@@ -23,7 +29,7 @@
 		<h2 class="mt-10 text-center text-2xl/9 font-bold tracking-tight">Set up Kener.ing</h2>
 		<p class="mt-4 text-center">Welcome to Kener.ing! Let's get you set up.</p>
 	</div>
-	{#if data.isSecretSet}
+	{#if data.isSecretSet && data.isOriginSet}
 		<div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
 			{#if data.error}
 				<Alert.Root variant="destructive" class="my-4">
@@ -102,25 +108,47 @@
 		</div>
 	{:else}
 		<div class="mt-10 sm:mx-auto sm:w-full sm:max-w-md">
-			<div class="rounded-md bg-card p-4">
-				<p class="text-lg/6">
-					Environment variable <span class="font-mono text-yellow-500"
-						>KENER_SECRET_KEY</span
-					>
-					not found.
-				</p>
-				<hr class="my-2" />
-				<p class="text-muted-foreground">
-					Please set the environment variable <span class="font-mono"
-						>KENER_SECRET_KEY</span
-					>. Then restart the server / refresh this page. Check the
-					<a
-						href="https://kener.ing/docs/environment-vars"
-						target="_blank"
-						class="text-primary">documentation</a
-					> for more Information.
-				</p>
-			</div>
+			{#if !!!data.isSecretSet}
+				<div class="rounded-md bg-card p-4">
+					<p class="text-lg/6">
+						Environment variable <span class="font-mono text-yellow-500"
+							>KENER_SECRET_KEY</span
+						>
+						not found.
+					</p>
+					<hr class="my-2" />
+					<p class="text-muted-foreground">
+						Please set the environment variable <span class="font-mono"
+							>KENER_SECRET_KEY</span
+						>. Then restart the server / refresh this page. Check the
+						<a
+							href="https://kener.ing/docs/environment-vars"
+							target="_blank"
+							class="text-primary">documentation</a
+						> for more Information.
+					</p>
+				</div>
+			{/if}
+			{#if !!!data.isOriginSet}
+				<div class="mt-3 rounded-md bg-card p-4">
+					<p class="text-lg/6">
+						Environment variable <span class="font-mono text-yellow-500">ORIGIN</span>
+						not found.
+					</p>
+					<hr class="my-2" />
+					<p class="text-muted-foreground">
+						Please set the environment variable <span
+							class="block font-mono text-primary">ORIGIN={httpDomainPort}</span
+						>
+						Then restart the server / refresh this page. Check the
+						<a
+							href="https://kener.ing/docs/environment-vars"
+							target="_blank"
+							class="text-primary">documentation</a
+						> for more Information.
+					</p>
+				</div>
+			{/if}
 		</div>
 	{/if}
 </div>

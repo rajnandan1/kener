@@ -17,6 +17,14 @@ Please set a strong secret key for Kener to use for encrypting the data. This is
 export KENER_SECRET_KEY=a-strong-secret-key
 ```
 
+## ORIGIN [Required]
+
+Set this to the origin of your website(protocl + hostname + port if there). This is required for CORS.
+
+```bash
+export ORIGIN=http://localhost:3000
+```
+
 ## PORT
 
 Defaults to 3000 if not specified
@@ -63,6 +71,7 @@ PORT=4242
 GH_TOKEN=your-github-token
 RESEND_API_KEY=re_sometoken
 KENER_BASE_PATH=/status
+ORIGIN=http://localhost:3000
 ```
 
 ## Secrets

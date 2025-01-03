@@ -1,12 +1,14 @@
 import { vitePreprocess } from "@sveltejs/kit/vite";
 import adapter from "@sveltejs/adapter-node";
 
+const basePath = !!process.env.KENER_BASE_PATH ? process.env.KENER_BASE_PATH : "";
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
 		adapter: adapter(),
 		paths: {
-			base: process.env.KENER_BASE_PATH || ""
+			base: basePath
 		}
 	},
 

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { writeFileSync } from "fs-extra";
+import { writeFileSync } from "fs";
 import { randomUUID } from "crypto";
 import { json } from "@sveltejs/kit";
 import { VerifyToken } from "$lib/server/controllers/controller.js";

@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import sitemap from "./sitemap.js";
+import Startup from "./src/lib/server/startup.js";
 import fs from "fs-extra";
 const PORT = process.env.PORT || 3000;
 
@@ -58,3 +59,5 @@ app.use(handler);
 app.listen(PORT, () => {
 	console.log("Kener is running on port " + PORT + "!");
 });
+
+Startup();

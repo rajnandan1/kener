@@ -16,12 +16,11 @@ import db from "./db/db.js";
 const TRIGGERED = "TRIGGERED";
 const RESOLVED = "RESOLVED";
 
-async function createJSONCommonAlert(monitor, config, alert) {
+async function createJSONCommonAlert(monitor, config, alert, severity) {
 	let siteData = await GetAllSiteData();
 	let siteURL = siteData.siteURL;
 	let id = monitor.tag + "-" + alert.id;
 	let alert_name = monitor.name + " " + alert.monitorStatus;
-	let severity = alert.monitorStatus === "DEGRADED" ? "warning" : "critical";
 	let source = "Kener";
 	let timestamp = new Date().toISOString();
 	let description = config.description || "Monitor has failed";
@@ -144,7 +143,7 @@ async function alerting(m) {
 			const createIncident = alertConfig.createIncident === "YES" && !!githubData;
 			const allMonitorClients = [];
 			const sendTrigger = alertConfig.active;
-
+			const severity = alertConfig.severity;
 			if (!sendTrigger) {
 				continue;
 			}
@@ -184,7 +183,13 @@ async function alerting(m) {
 					alertStatus: TRIGGERED,
 					healthChecks: failureThreshold
 				});
-				let commonJSON = await createJSONCommonAlert(monitor, alertConfig, activeAlert);
+				let commonJSON = await createJSONCommonAlert(
+					monitor,
+					alertConfig,
+					activeAlert,
+					severity
+				);
+
 				if (allMonitorClients.length > 0) {
 					for (let i = 0; i < allMonitorClients.length; i++) {
 						const client = allMonitorClients[i];
@@ -206,7 +211,12 @@ async function alerting(m) {
 				if (isUp) {
 					await db.updateAlertStatus(activeAlert.id, RESOLVED);
 					activeAlert.alertStatus = RESOLVED;
-					let commonJSON = await createJSONCommonAlert(monitor, alertConfig, activeAlert);
+					let commonJSON = await createJSONCommonAlert(
+						monitor,
+						alertConfig,
+						activeAlert,
+						severity
+					);
 					if (allMonitorClients.length > 0) {
 						for (let i = 0; i < allMonitorClients.length; i++) {
 							const client = allMonitorClients[i];

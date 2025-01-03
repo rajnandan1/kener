@@ -1,19 +1,14 @@
 // @ts-nocheck
 
-import * as dotenv from "dotenv";
-import fs from "fs-extra";
-import path from "path";
 import figlet from "figlet";
 
-import yaml from "js-yaml";
 import { Cron } from "croner";
-import { API_TIMEOUT } from "./constants.js";
 
 import { Minuter } from "./cron-minute.js";
-import axios from "axios";
 import db from "./db/db.js";
-import Queue from "queue";
 import { GetAllSiteData, GetMonitorsParsed, HashString } from "./controllers/controller.js";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
 
 const jobs = [];
 
@@ -53,18 +48,13 @@ const jobSchedule = async () => {
 				}
 			);
 			console.log("ADDING NEW JOB WITH NAME " + j.name);
+			j.trigger();
 			jobs.push(j);
 		}
 	}
 };
 
 async function Startup() {
-	const activeMonitors = await GetMonitorsParsed({ status: "ACTIVE" });
-	for (let i = 0; i < activeMonitors.length; i++) {
-		let m = activeMonitors[i];
-		await Minuter(m);
-	}
-	await jobSchedule();
 	const mainJob = Cron(
 		"* * * * *",
 		async () => {
@@ -76,6 +66,8 @@ async function Startup() {
 		}
 	);
 
+	mainJob.trigger();
+
 	figlet("Kener is UP!", function (err, data) {
 		if (err) {
 			console.log("Something went wrong...");
@@ -84,6 +76,13 @@ async function Startup() {
 		console.log(data);
 	});
 }
-Startup();
 
-// console.log(">>>>>>----  startup:96 ", mainJob.name);
+// Call Startup() if not imported as a module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+if (process.argv[1] === __filename) {
+	Startup();
+}
+
+export default Startup;

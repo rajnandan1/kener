@@ -19,14 +19,14 @@
 					"file": "/concepts.md"
 				},
 				{
-					"title": "Changelogs",
-					"link": "/docs/changelogs",
-					"file": "/changelogs.md"
+					"title": "Environment Setup",
+					"link": "/docs/environment-vars",
+					"file": "/environment-vars.md"
 				},
 				{
-					"title": "Roadmap",
-					"link": "/docs/roadmap",
-					"file": "/roadmap.md"
+					"title": "Deployment",
+					"link": "/docs/deployment",
+					"file": "/deployment.md"
 				}
 			]
 		},
@@ -103,20 +103,11 @@
 					"link": "/docs/apikeys",
 					"file": "/apikeys.md"
 				},
-				{
-					"title": "Monitors Examples",
-					"link": "/docs/monitor-examples",
-					"file": "/monitor-examples.md"
-				},
+
 				{
 					"title": "Incident Management",
 					"link": "/docs/incident-management",
 					"file": "/incident-management.md"
-				},
-				{
-					"title": "Localization",
-					"link": "/docs/i18n",
-					"file": "/i18n.md"
 				},
 				{
 					"title": "Embed",
@@ -124,24 +115,9 @@
 					"file": "/embed.md"
 				},
 				{
-					"title": "Analytics",
-					"link": "/docs/site-analytics",
-					"file": "/site-analytics.md"
-				}
-			]
-		},
-		{
-			"sectionTitle": "Deployment",
-			"children": [
-				{
-					"title": "Environment Setup",
-					"link": "/docs/environment-vars",
-					"file": "/environment-vars.md"
-				},
-				{
-					"title": "Deployment",
-					"link": "/docs/deployment",
-					"file": "/deployment.md"
+					"title": "Custom JS/CSS",
+					"link": "/docs/custom-js-css-guide",
+					"file": "/custom-js-css-guide.md"
 				}
 			]
 		},
@@ -156,17 +132,17 @@
 			]
 		},
 		{
-			"sectionTitle": "Guides",
+			"sectionTitle": "Help",
 			"children": [
 				{
-					"title": "Categorize Monitors",
-					"link": "/docs/categorize-guide",
-					"file": "/categorize-guide.md"
+					"title": "Changelogs",
+					"link": "/docs/changelogs",
+					"file": "/changelogs.md"
 				},
 				{
-					"title": "Custom JS/CSS",
-					"link": "/docs/custom-js-css-guide",
-					"file": "/custom-js-css-guide.md"
+					"title": "Roadmap",
+					"link": "/docs/roadmap",
+					"file": "/roadmap.md"
 				}
 			]
 		}

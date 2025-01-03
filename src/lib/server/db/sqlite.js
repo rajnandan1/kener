@@ -35,7 +35,7 @@ class Sqlite {
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				monitorTag TEXT NOT NULL,
 				monitorStatus TEXT NOT NULL,
-				triggerStatus TEXT NOT NULL,
+				alertStatus TEXT NOT NULL,
 				healthChecks INTEGER NOT NULL,
 				incidentNumber INTEGER DEFAULT 0,
 				createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,

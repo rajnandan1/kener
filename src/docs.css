@@ -50,3 +50,7 @@ main {
 .accm input ~ .showaccm span:last-child {
 	display: none;
 }
+
+.hljs {
+	background: transparent !important;
+}

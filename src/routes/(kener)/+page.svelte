@@ -7,9 +7,10 @@
 	import { l } from "$lib/i18n/client";
 	import { base } from "$app/paths";
 	import { ArrowRight, X } from "lucide-svelte";
-	import { hotKeyAction, slide, clickOutsideAction } from "svelte-legos";
+	import { hotKeyAction, clickOutsideAction } from "svelte-legos";
 	import { onMount } from "svelte";
 	import ShareMenu from "$lib/components/shareMenu.svelte";
+	import { scale } from "svelte/transition";
 
 	export let data;
 	let hasActiveIncidents = data.openIncidents.length > 0;
@@ -166,7 +167,7 @@
 
 {#if shareMenusToggle}
 	<div
-		transition:slide={{ direction: "right" }}
+		transition:scale={{ duration: 100 }}
 		use:hotKeyAction={{
 			code: "Escape",
 			cb: () => (shareMenusToggle = false)

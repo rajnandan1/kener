@@ -128,7 +128,8 @@
 			description: "The monitor is down",
 			createIncident: "NO",
 			active: false,
-			triggers: []
+			triggers: [],
+			severity: "critical"
 		},
 		degradedTrigger: {
 			failureThreshold: 1,
@@ -137,7 +138,8 @@
 			active: true,
 			description: "The monitor is degraded",
 			createIncident: "NO",
-			triggers: []
+			triggers: [],
+			severity: "warning"
 		}
 	};
 
@@ -399,6 +401,45 @@
 											class="text-sm font-medium"
 										>
 											NO
+										</Select.Item>
+									</Select.Group>
+								</Select.Content>
+							</Select.Root>
+						</div>
+						<div class="col-span-1">
+							<Label for="{key}createInseveritycident">
+								Severity
+								<span class="text-red-500">*</span>
+							</Label>
+							<Select.Root
+								portal={null}
+								onSelectedChange={(e) => (data.severity = e.value)}
+								selected={{
+									value: data.severity,
+									label: data.severity.toUpperCase()
+								}}
+							>
+								<Select.Trigger id="{key}severity">
+									<Select.Value
+										bind:value={data.severity}
+										placeholder={data.severity}
+									/>
+								</Select.Trigger>
+								<Select.Content>
+									<Select.Group>
+										<Select.Item
+											value="critical"
+											label="CRITICAL"
+											class="text-sm font-medium"
+										>
+											CRITICAL
+										</Select.Item>
+										<Select.Item
+											value="warning"
+											label="WARNING"
+											class="text-sm font-medium"
+										>
+											WARNING
 										</Select.Item>
 									</Select.Group>
 								</Select.Content>
