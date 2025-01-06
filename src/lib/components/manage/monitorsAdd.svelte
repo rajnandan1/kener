@@ -32,14 +32,14 @@
 			description: "",
 			image: "",
 			cron: "* * * * *",
-			defaultStatus: "NONE",
+			default_status: "NONE",
 			status: "ACTIVE",
-			categoryName: "Home",
-			monitorType: "NONE",
-			typeData: "",
-			dayDegradedMinimumCount: 1,
-			dayDownMinimumCount: 1,
-			includeDegradedInDowntime: "NO",
+			category_name: "Home",
+			monitor_type: "NONE",
+			type_data: "",
+			day_degraded_minimum_count: 1,
+			day_down_minimum_count: 1,
+			include_degraded_in_downtime: "NO",
 			apiConfig: {
 				url: "",
 				method: "GET",
@@ -67,12 +67,12 @@
 		resetNewMonitor();
 		newMonitor = { ...newMonitor, ...m };
 
-		if (newMonitor.monitorType == "API") {
-			newMonitor.apiConfig = JSON.parse(newMonitor.typeData);
-		} else if (newMonitor.monitorType == "PING") {
-			newMonitor.pingConfig = JSON.parse(newMonitor.typeData);
-		} else if (newMonitor.monitorType == "DNS") {
-			newMonitor.dnsConfig = JSON.parse(newMonitor.typeData);
+		if (newMonitor.monitor_type == "API") {
+			newMonitor.apiConfig = JSON.parse(newMonitor.type_data);
+		} else if (newMonitor.monitor_type == "PING") {
+			newMonitor.pingConfig = JSON.parse(newMonitor.type_data);
+		} else if (newMonitor.monitor_type == "DNS") {
+			newMonitor.dnsConfig = JSON.parse(newMonitor.type_data);
 		}
 		showAddMonitor = true;
 	}
@@ -89,12 +89,12 @@
 			});
 			let resp = await apiResp.json();
 			monitors = resp.map((m) => {
-				m.downTrigger = JSON.parse(m.downTrigger);
-				m.degradedTrigger = JSON.parse(m.degradedTrigger);
+				m.down_trigger = JSON.parse(m.down_trigger);
+				m.degraded_trigger = JSON.parse(m.degraded_trigger);
 				return m;
 			});
 		} catch (error) {
-			alert("Error: " + error);
+			alert("Err2or: " + error);
 		} finally {
 			loadingData = false;
 		}
@@ -121,9 +121,9 @@
 	let shareMenusToggle = false;
 
 	let monitorTriggers = {
-		downTrigger: {
+		down_trigger: {
 			failureThreshold: 1,
-			triggerType: "DOWN",
+			trigger_type: "DOWN",
 			successThreshold: 1,
 			description: "The monitor is down",
 			createIncident: "NO",
@@ -131,11 +131,11 @@
 			triggers: [],
 			severity: "critical"
 		},
-		degradedTrigger: {
+		degraded_trigger: {
 			failureThreshold: 1,
-			triggerType: "DEGRADED",
+			trigger_type: "DEGRADED",
 			successThreshold: 1,
-			active: true,
+			active: false,
 			description: "The monitor is degraded",
 			createIncident: "NO",
 			triggers: [],
@@ -146,8 +146,8 @@
 	async function saveTriggers() {
 		let data = {
 			id: currentAlertMonitor.id,
-			downTrigger: JSON.stringify(monitorTriggers.downTrigger),
-			degradedTrigger: JSON.stringify(monitorTriggers.degradedTrigger)
+			down_trigger: JSON.stringify(monitorTriggers.down_trigger),
+			degraded_trigger: JSON.stringify(monitorTriggers.degraded_trigger)
 		};
 		formState = "loading";
 		//updateMonitorTriggers
@@ -170,11 +170,11 @@
 	let currentAlertMonitor;
 	function openAlertMenu(m) {
 		currentAlertMonitor = m;
-		if (m.downTrigger) {
-			monitorTriggers.downTrigger = m.downTrigger;
+		if (m.down_trigger) {
+			monitorTriggers.down_trigger = m.down_trigger;
 		}
-		if (m.degradedTrigger) {
-			monitorTriggers.degradedTrigger = m.degradedTrigger;
+		if (m.degraded_trigger) {
+			monitorTriggers.degraded_trigger = m.degraded_trigger;
 		}
 		shareMenusToggle = true;
 	}
@@ -272,7 +272,7 @@
 							>Monitor Type</Label
 						>
 						<p class="text-sm font-semibold">
-							{monitor.monitorType}
+							{monitor.monitor_type}
 						</p>
 					</div>
 					<div class="">
@@ -284,7 +284,7 @@
 					<div class="">
 						<Label class="text-xs font-semibold text-muted-foreground">Category</Label>
 						<p class="text-sm font-semibold">
-							{!!monitor.categoryName ? monitor.categoryName : "-"}
+							{!!monitor.category_name ? monitor.category_name : "-"}
 						</p>
 					</div>
 				</div>
@@ -321,9 +321,9 @@
 					<div class="flex justify-between">
 						<h3
 							class="font-semibold"
-							style="color:{data.triggerType == 'DOWN' ? colorDown : colorDegraded};"
+							style="color:{data.trigger_type == 'DOWN' ? colorDown : colorDegraded};"
 						>
-							If Monitor {data.triggerType}
+							If Monitor {data.trigger_type}
 						</h3>
 						<div>
 							<label class="inline-flex cursor-pointer items-center">
@@ -472,22 +472,28 @@
 												: [...data.triggers, trigger.id];
 										}}
 									/>
-									{#if trigger.triggerType == "webhook"}
+									{#if trigger.trigger_type == "webhook"}
 										<img
 											src={base + "/webhooks.svg"}
-											alt={trigger.triggerType}
+											alt={trigger.trigger_type}
 											class="ml-2 inline-block h-4 w-4"
 										/>
-									{:else if trigger.triggerType == "slack"}
+									{:else if trigger.trigger_type == "email"}
+										<img
+											src={base + "/email.png"}
+											alt={trigger.trigger_type}
+											class="ml-2 inline-block h-4 w-4"
+										/>
+									{:else if trigger.trigger_type == "slack"}
 										<img
 											src={base + "/slack.svg"}
-											alt={trigger.triggerType}
+											alt={trigger.trigger_type}
 											class="ml-2 inline-block h-4 w-4"
 										/>
-									{:else if trigger.triggerType == "discord"}
+									{:else if trigger.trigger_type == "discord"}
 										<img
 											src={base + "/discord.svg"}
-											alt={trigger.triggerType}
+											alt={trigger.trigger_type}
 											class="ml-2 inline-block h-4 w-4"
 										/>
 									{/if}

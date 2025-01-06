@@ -221,15 +221,19 @@
 							{:else}
 								<TrendingUp class="ml-1 mr-1 inline h-3 w-3" />
 							{/if}
-							<NumberFlow
-								value={uptimesRollers[rolledAt].value}
-								format={{
-									notation: "standard",
-									minimumFractionDigits: 4,
-									maximumFractionDigits: 4
-								}}
-								suffix="%"
-							/>
+							{#if isNaN(uptimesRollers[rolledAt].value)}
+								<span class="text-muted-foreground">-</span>
+							{:else}
+								<NumberFlow
+									value={uptimesRollers[rolledAt].value}
+									format={{
+										notation: "standard",
+										minimumFractionDigits: 4,
+										maximumFractionDigits: 4
+									}}
+									suffix="%"
+								/>
+							{/if}
 						</span>
 					</Button>
 				</div>

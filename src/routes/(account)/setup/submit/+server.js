@@ -56,11 +56,11 @@ export async function POST({ request }) {
 	for (const key in seedSiteData) {
 		if (Object.prototype.hasOwnProperty.call(seedSiteData, key)) {
 			let value = seedSiteData[key];
-			let dataType = typeof value;
-			if (dataType === "object") {
+			let data_type = typeof value;
+			if (data_type === "object") {
 				value = JSON.stringify(value);
 			}
-			await db.insertOrUpdateSiteData(key, value, dataType);
+			await db.insertOrUpdateSiteData(key, value, data_type);
 		}
 	}
 	//loop through array seedMonitorData
@@ -68,5 +68,5 @@ export async function POST({ request }) {
 		await db.insertMonitor(monitor);
 	}
 
-	throw redirect(302, base + "/signin");
+	throw redirect(302, base + "");
 }

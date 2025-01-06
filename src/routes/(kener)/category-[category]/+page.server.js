@@ -15,13 +15,13 @@ export async function load({ params, route, url, parent }) {
 			continue;
 		}
 		if (
-			monitors[i].categoryName === undefined ||
-			monitors[i].categoryName !== params.category
+			monitors[i].category_name === undefined ||
+			monitors[i].category_name !== params.category
 		) {
 			continue;
 		}
 		delete monitors[i].api;
-		delete monitors[i].defaultStatus;
+		delete monitors[i].default_status;
 		let data = await FetchData(siteData, monitors[i], parentData.localTz);
 		monitors[i].pageData = data;
 		monitors[i].embed = false;

@@ -8,21 +8,21 @@ class Notification {
 	client;
 
 	constructor(trigger, siteData, monitorData) {
-		let triggerMeta = JSON.parse(trigger.triggerMeta);
-		if (trigger.triggerType === "webhook") {
+		let trigger_meta = JSON.parse(trigger.trigger_meta);
+		if (trigger.trigger_type === "webhook") {
 			this.client = new Webhook(
-				triggerMeta.url,
-				triggerMeta.headers,
+				trigger_meta.url,
+				trigger_meta.headers,
 				"POST",
 				siteData,
 				monitorData
 			);
-		} else if (trigger.triggerType === "discord") {
-			this.client = new Discord(triggerMeta.url, siteData, monitorData);
-		} else if (trigger.triggerType === "slack") {
-			this.client = new Slack(triggerMeta.url, siteData, monitorData);
-		} else if (trigger.triggerType === "email") {
-			this.client = new Email(triggerMeta, siteData, monitorData);
+		} else if (trigger.trigger_type === "discord") {
+			this.client = new Discord(trigger_meta.url, siteData, monitorData);
+		} else if (trigger.trigger_type === "slack") {
+			this.client = new Slack(trigger_meta.url, siteData, monitorData);
+		} else if (trigger.trigger_type === "email") {
+			this.client = new Email(trigger_meta, siteData, monitorData);
 		} else {
 			console.log("Invalid Notification");
 			process.exit(1);

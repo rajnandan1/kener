@@ -29,7 +29,7 @@ export async function POST({ request }) {
 		};
 	}
 
-	let dayData = await db.getData(monitor.tag, payload.startTs, end);
+	let dayData = await db.getMonitoringData(monitor.tag, payload.startTs, end);
 	let siteData = await GetAllSiteData();
 
 	let ups = 0;
@@ -64,7 +64,7 @@ export async function POST({ request }) {
 
 	let total = ups + downs + degradeds;
 	let uptime = ParseUptime(ups + degradeds, total);
-	if (monitor.includeDegradedInDowntime === "YES") {
+	if (monitor.include_degraded_in_downtime === "YES") {
 		uptime = ParseUptime(ups, total);
 	}
 
@@ -84,7 +84,7 @@ export async function GET({ request }) {
 
 	let total = ups + downs + degradeds;
 	let uptime = ParseUptime(ups + degradeds, total);
-	if (monitor.includeDegradedInDowntime === "YES") {
+	if (monitor.include_degraded_in_downtime === "YES") {
 		uptime = ParseUptime(ups, total);
 	}
 

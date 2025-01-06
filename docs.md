@@ -442,7 +442,7 @@ Inside `config/` folder there is a file called `monitors.yaml`. We will be addin
 
 Each monitor runs at 1 minute interval by default. Monitor runs in below priorty order.
 
--   defaultStatus Data
+-   default_status Data
 -   API call Data overrides above data(if specified)
 -   Pushed Status Data overrides API Data using [Kener Update Statue API](https://kener.ing/docs#h2update-status)
 -   Manual Incident Data overrides Pushed Status Data
@@ -455,7 +455,7 @@ Sample
   tag: "google-search"
   image: "/google.png"
   cron: "* * * * *"
-  defaultStatus: "UP"
+  default_status: "UP"
   api:
 	timeout: 4000
 	method: POST
@@ -473,27 +473,27 @@ Sample
 		})
 ```
 
-| name                      | Required          | This will be shown in the UI to your users. Keep it short and unique                                                                                       |
-| ------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| name                      | Required + Unique | This will be shown in the UI to your users. Keep it short and unique                                                                                       |
-| description               | Optional          | This will be show below your name                                                                                                                          |
-| tag                       | Required + Unique | This is used to tag incidents created in Github using comments                                                                                             |
-| image                     | Optional          | To show a logo before the name                                                                                                                             |
-| cron                      | Optional          | Use cron expression to specify the interval to run the monitors. Defaults to `* * * * *` i.e every minute                                                  |
-| api.timeout               | Optional          | timeout for the api in milliseconds. Default is 10000(10 secs)                                                                                             |
-| api.method                | Optional          | HTTP Method                                                                                                                                                |
-| api.url                   | Optional          | HTTP URL                                                                                                                                                   |
-| api.headers               | Optional          | HTTP headers                                                                                                                                               |
-| api.body                  | Optional          | HTTP Body as string                                                                                                                                        |
-| api.eval                  | Optional          | Evaluator written in JS, to parse HTTP response and calculate uptime and latency                                                                           |
-| defaultStatus             | Optional          | If no API is given this will be the default status. can be UP/DOWN/DEGRADED                                                                                |
-| hidden                    | Optional          | If set to `true` will not show the monitor in the UI                                                                                                       |
-| category                  | Optional          | Use this to group your monitors. Make sure you have defined category in `site.yaml` and use the `name` attribute here                                      |
-| dayDegradedMinimumCount   | Optional          | Default is 1. It means minimum this number of count for the day to be classified as DEGRADED(Yellow Bar) in 90 day view. Has to be `number` greater than 0 |
-| dayDownMinimumCount       | Optional          | Default is 1. It means minimum this number of count for the day to be classified as DOWN(Red Bar) in 90 day view. Has to be `number` greater than 0        |
-| includeDegradedInDowntime | Optional          | By deafault uptime percentage is calculated as (UP+DEGRADED/UP+DEGRADED+DOWN). Setting it as `true` will change the calculation to (UP/UP+DEGRADED+DOWN)   |
-| ping.hostsV4 | Optional          | Array of hosts / IP to monitor ping response. Either domain name or IP4 |
-| ping.hostsV6 | Optional          | Array of hosts / IP to monitor ping response. Either domain name or IP6 |
+| name                         | Required          | This will be shown in the UI to your users. Keep it short and unique                                                                                       |
+| ---------------------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| name                         | Required + Unique | This will be shown in the UI to your users. Keep it short and unique                                                                                       |
+| description                  | Optional          | This will be show below your name                                                                                                                          |
+| tag                          | Required + Unique | This is used to tag incidents created in Github using comments                                                                                             |
+| image                        | Optional          | To show a logo before the name                                                                                                                             |
+| cron                         | Optional          | Use cron expression to specify the interval to run the monitors. Defaults to `* * * * *` i.e every minute                                                  |
+| api.timeout                  | Optional          | timeout for the api in milliseconds. Default is 10000(10 secs)                                                                                             |
+| api.method                   | Optional          | HTTP Method                                                                                                                                                |
+| api.url                      | Optional          | HTTP URL                                                                                                                                                   |
+| api.headers                  | Optional          | HTTP headers                                                                                                                                               |
+| api.body                     | Optional          | HTTP Body as string                                                                                                                                        |
+| api.eval                     | Optional          | Evaluator written in JS, to parse HTTP response and calculate uptime and latency                                                                           |
+| default_status               | Optional          | If no API is given this will be the default status. can be UP/DOWN/DEGRADED                                                                                |
+| hidden                       | Optional          | If set to `true` will not show the monitor in the UI                                                                                                       |
+| category                     | Optional          | Use this to group your monitors. Make sure you have defined category in `site.yaml` and use the `name` attribute here                                      |
+| day_degraded_minimum_count   | Optional          | Default is 1. It means minimum this number of count for the day to be classified as DEGRADED(Yellow Bar) in 90 day view. Has to be `number` greater than 0 |
+| day_down_minimum_count       | Optional          | Default is 1. It means minimum this number of count for the day to be classified as DOWN(Red Bar) in 90 day view. Has to be `number` greater than 0        |
+| include_degraded_in_downtime | Optional          | By deafault uptime percentage is calculated as (UP+DEGRADED/UP+DEGRADED+DOWN). Setting it as `true` will change the calculation to (UP/UP+DEGRADED+DOWN)   |
+| ping.hostsV4                 | Optional          | Array of hosts / IP to monitor ping response. Either domain name or IP4                                                                                    |
+| ping.hostsV6                 | Optional          | Array of hosts / IP to monitor ping response. Either domain name or IP6                                                                                    |
 
 ## cron
 
@@ -662,7 +662,7 @@ Read more about [eval](https://kener.ing/docs#h2eval-body)
 		})
 ```
 
-## With defaultStatus UP
+## With default_status UP
 
 Each minute it will set the status as UP
 
@@ -670,7 +670,7 @@ Each minute it will set the status as UP
 - name: Earth
   description: Our Planent
   tag: "earth"
-  defaultStatus: UP
+  default_status: UP
 ```
 
 ## With Category
@@ -692,12 +692,12 @@ Add this monitor to the API category instead of the default home category
 - name: Earth
   description: Our Planent
   tag: "earth"
-  ping: 
-    hostsV4: 
-      - www.frogment.com
-      - 52.84.205.24
-    hostsV6:
-      - ipv6.google.com
+  ping:
+      hostsV4:
+          - www.frogment.com
+          - 52.84.205.24
+      hostsV6:
+          - ipv6.google.com
 ```
 
 If both ping and api monitors are present then API data will overwrite ping data
@@ -710,10 +710,10 @@ Add this monitor to the API category instead of the default home category
 - name: Earth
   description: Our blue planet
   tag: "earth"
-  defaultStatus: "UP"
-  dayDegradedMinimumCount: 3
-  dayDownMinimumCount: 2
-  includeDegradedInDowntime: true
+  default_status: "UP"
+  day_degraded_minimum_count: 3
+  day_down_minimum_count: 2
+  include_degraded_in_downtime: true
 ```
 
 ---
@@ -859,11 +859,11 @@ curl --request POST \
 
 ```json
 {
-	"createdAt": 1703940450,
+	"created_at": 1703940450,
 	"closedAt": null,
 	"title": "Outage in Mumbai",
 	"tags": ["google-search"],
-	"incidentNumber": 12,
+	"incident_number": 12,
 	"startDatetime": 1702405740,
 	"endDatetime": 1702405920,
 	"body": "Login cluster is down in mumbai region",
@@ -880,7 +880,7 @@ Can be use to update an incident from a remote server. It will clear values if n
 
 ### Request Param
 
--   `incidentNumber`: Number of the incident
+-   `incident_number`: Number of the incident
 
 ### Request Body
 
@@ -898,7 +898,7 @@ Can be use to update an incident from a remote server. It will clear values if n
 
 ```shell
 curl --request PATCH \
-  --url http://your-kener.host/api/incident/{incidentNumber} \
+  --url http://your-kener.host/api/incident/{incident_number} \
   --header 'Authorization: Bearer some-token-set-by-you' \
   --header 'Content-Type: application/json' \
   --data '{
@@ -918,11 +918,11 @@ curl --request PATCH \
 
 ```json
 {
-	"createdAt": 1703940450,
+	"created_at": 1703940450,
 	"closedAt": null,
 	"title": "Outage in Mumbai",
 	"tags": ["google-search"],
-	"incidentNumber": 12,
+	"incident_number": 12,
 	"startDatetime": 1702405740,
 	"endDatetime": 1702405920,
 	"body": "Login cluster is down in mumbai region",
@@ -935,13 +935,13 @@ curl --request PATCH \
 
 ## Get an Incident
 
-Use `incidentNumber` to fetch an incident
+Use `incident_number` to fetch an incident
 
 ### Request Body
 
 ```shell
 curl --request GET \
-  --url http://your-kener.host/api/incident/{incidentNumber} \
+  --url http://your-kener.host/api/incident/{incident_number} \
   --header 'Authorization: Bearer some-token-set-by-you' \
 ```
 
@@ -949,11 +949,11 @@ curl --request GET \
 
 ```json
 {
-	"createdAt": 1703940450,
+	"created_at": 1703940450,
 	"closedAt": null,
 	"title": "Outage in Mumbai",
 	"tags": ["google-search"],
-	"incidentNumber": 12,
+	"incident_number": 12,
 	"startDatetime": 1702405740,
 	"endDatetime": 1702405920,
 	"body": "Login cluster is down in mumbai region",
@@ -966,13 +966,13 @@ curl --request GET \
 
 ## Add Comment
 
-Add comments for incident using `incidentNumber`
+Add comments for incident using `incident_number`
 
 ### Request
 
 ```shell
 curl --request POST \
-  --url http://your-kener.host/api/incident/{incidentNumber}/comment \
+  --url http://your-kener.host/api/incident/{incident_number}/comment \
   --header 'Authorization: Bearer some-token-set-by-you' \
   --header 'Content-Type: application/json' \
   --data '{
@@ -986,7 +986,7 @@ curl --request POST \
 {
 	"commentID": 1873376745,
 	"body": "comment 1",
-	"createdAt": 1704123938
+	"created_at": 1704123938
 }
 ```
 
@@ -998,7 +998,7 @@ Use this API to fetch all the comments for an incident
 
 ```shell
 curl --request GET \
-  --url http://your-kener.host/api/incident/{incidentNumber}/comment \
+  --url http://your-kener.host/api/incident/{incident_number}/comment \
   --header 'Authorization: Bearer some-token-set-by-you' \
 ```
 
@@ -1009,12 +1009,12 @@ curl --request GET \
 	{
 		"commentID": 1873372042,
 		"body": "comment 1",
-		"createdAt": 1704123116
+		"created_at": 1704123116
 	},
 	{
 		"commentID": 1873372169,
 		"body": "comment 2",
-		"createdAt": 1704123139
+		"created_at": 1704123139
 	}
 ]
 ```
@@ -1035,7 +1035,7 @@ Use this to API to update the status of an ongoing incident.
 
 ```shell
 curl --request POST \
-  --url http://your-kener.host/api/incident/{incidentNumber}/status \
+  --url http://your-kener.host/api/incident/{incident_number}/status \
   --header 'Authorization: Bearer some-token-set-by-you' \
   --header 'Content-Type: application/json' \
   --data '{
@@ -1049,11 +1049,11 @@ curl --request POST \
 
 ```json
 {
-	"createdAt": 1703940450,
+	"created_at": 1703940450,
 	"closedAt": null,
 	"title": "Outage in Mumbai",
 	"tags": ["google-search"],
-	"incidentNumber": 12,
+	"incident_number": 12,
 	"startDatetime": 1702405740,
 	"endDatetime": 1702405920,
 	"body": "Login cluster is down in mumbai region",
@@ -1101,11 +1101,11 @@ curl --request POST \
 ```json
 [
 	{
-		"createdAt": 1703940450,
+		"created_at": 1703940450,
 		"closedAt": null,
 		"title": "Outage in Mumbai - Hello Incident",
 		"tags": ["google-search"],
-		"incidentNumber": 12,
+		"incident_number": 12,
 		"startDatetime": 1702405740,
 		"endDatetime": 1702405920,
 		"body": "Login cluster is down in mumbai region",

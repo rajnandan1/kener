@@ -15,7 +15,7 @@ export async function load({ params, route, url, cookies }) {
 		}
 		let userDB = await db.getUserByEmail(tokenUser.email);
 		if (!!userDB) {
-			throw redirect(302, base + "/manage");
+			throw redirect(302, base + "/manage/site");
 		}
 	}
 	const query = url.searchParams;

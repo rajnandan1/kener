@@ -45,7 +45,7 @@ export async function POST({ request, cookies }) {
 		sameSite: "lax"
 	});
 
-	throw redirect(302, base + "/manage");
+	throw redirect(302, base + "/manage/site");
 
 	// return json({ success: true });
 }

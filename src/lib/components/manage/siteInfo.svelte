@@ -159,7 +159,7 @@
 							</Tooltip.Trigger>
 							<Tooltip.Content>
 								<div
-									class=" flex items-center justify-center rounded border bg-gray-800 p-1.5 text-xs font-medium text-gray-300 shadow-popover outline-none"
+									class=" flex items-center justify-center rounded border bg-input p-1.5 text-xs font-medium text-gray-300 shadow-popover outline-none"
 								>
 									Site Title will be the page title of your site.
 									&lt;title&gt;&lt;/title&gt;
@@ -187,7 +187,7 @@
 							</Tooltip.Trigger>
 							<Tooltip.Content>
 								<div
-									class=" flex items-center justify-center rounded border bg-gray-800 p-1.5 text-xs font-medium text-gray-300 shadow-popover outline-none"
+									class=" flex items-center justify-center rounded border bg-input p-1.5 text-xs font-medium text-gray-300 shadow-popover outline-none"
 								>
 									This is the name of your site.<br /> It will be shown in the nav
 									bar as brand name.
@@ -216,7 +216,7 @@
 							</Tooltip.Trigger>
 							<Tooltip.Content>
 								<div
-									class=" flex items-center justify-center rounded border bg-gray-800 p-1.5 text-xs font-medium text-gray-300 shadow-popover outline-none"
+									class=" flex items-center justify-center rounded border bg-input p-1.5 text-xs font-medium text-gray-300 shadow-popover outline-none"
 								>
 									The URL your kener is hosted on.
 								</div>
@@ -244,7 +244,7 @@
 							</Tooltip.Trigger>
 							<Tooltip.Content>
 								<div
-									class=" flex items-center justify-center rounded border bg-gray-800 p-1.5 text-xs font-medium text-gray-300 shadow-popover outline-none"
+									class=" flex items-center justify-center rounded border bg-input p-1.5 text-xs font-medium text-gray-300 shadow-popover outline-none"
 								>
 									Where to go when someone clicks on the brand logo in the navbar.
 								</div>

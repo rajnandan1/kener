@@ -45,7 +45,7 @@ const seedSiteData = {
 		}
 	],
 	nav: [
-		{ name: "Login", url: "/signin", iconURL: "" },
+		{ name: "Manage", url: "/manage", iconURL: "" },
 		{ name: "Documentation", url: "/docs/home", iconURL: "" },
 		{ name: "Github", iconURL: "", url: "https://github.com/rajnandan1/kener" },
 		{ name: "Buy me a coffee", iconURL: "", url: "https://buymeacoffee.com/rajnandan1" }

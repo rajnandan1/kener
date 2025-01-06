@@ -174,7 +174,7 @@
 					{
 						"type": "object",
 						"properties": {
-							"createdAt": {
+							"created_at": {
 								"type": "integer",
 								"description": "UTC timestamp in seconds, incident created at",
 								"example": 1731901920
@@ -185,16 +185,16 @@
 								"description": "UTC timestamp in seconds, incident closed at",
 								"example": 1731901920
 							},
-							"incidentNumber": {
+							"incident_number": {
 								"type": "integer",
 								"description": "id of the incident",
 								"example": 4
 							}
 						},
 						"example": {
-							"createdAt": 1731901920,
+							"created_at": 1731901920,
 							"closedAt": 1731901920,
-							"incidentNumber": 4
+							"incident_number": 4
 						}
 					}
 				]
@@ -227,7 +227,7 @@
 						"description": "body of the comment",
 						"example": "comment 3"
 					},
-					"createdAt": {
+					"created_at": {
 						"type": "integer",
 						"description": "timestamp when comment was created",
 						"example": 1704123938
@@ -236,7 +236,7 @@
 				"example": {
 					"commentID": 1873376745,
 					"body": "comment 4",
-					"createdAt": 1704123938
+					"created_at": 1704123938
 				}
 			},
 			"IncidentStatus": {
@@ -332,9 +332,9 @@
 				"summary": "create incident response",
 				"description": "create incident response",
 				"value": {
-					"createdAt": 1731901920,
+					"created_at": 1731901920,
 					"closedAt": 1731901920,
-					"incidentNumber": 4,
+					"incident_number": 4,
 					"startDatetime": 1731901920,
 					"endDatetime": 1704123938,
 					"title": "title of the incident",
@@ -366,9 +366,9 @@
 				"description": "Some Description",
 				"value": [
 					{
-						"createdAt": 1731901920,
+						"created_at": 1731901920,
 						"closedAt": 1731901920,
-						"incidentNumber": 4,
+						"incident_number": 4,
 						"startDatetime": 1731901920,
 						"endDatetime": 1704123938,
 						"title": "title of the incident",
@@ -380,9 +380,9 @@
 						"isResolved": true
 					},
 					{
-						"createdAt": 1731901920,
+						"created_at": 1731901920,
 						"closedAt": 1731901920,
-						"incidentNumber": 4,
+						"incident_number": 4,
 						"startDatetime": 1731901920,
 						"endDatetime": 1704123938,
 						"title": "title of the incident",
@@ -402,12 +402,12 @@
 					{
 						"commentID": 1873376745,
 						"body": "comment 4",
-						"createdAt": 1704123938
+						"created_at": 1704123938
 					},
 					{
 						"commentID": 1873376745,
 						"body": "comment 4",
-						"createdAt": 1704123938
+						"created_at": 1704123938
 					}
 				]
 			},
@@ -424,7 +424,7 @@
 				"value": {
 					"commentID": 1873376745,
 					"body": "comment 4",
-					"createdAt": 1704123938
+					"created_at": 1704123938
 				}
 			}
 		}
@@ -704,10 +704,10 @@
 				}
 			}
 		},
-		"/api/incident/{incidentNumber}": {
+		"/api/incident/{incident_number}": {
 			"parameters": [
 				{
-					"name": "incidentNumber",
+					"name": "incident_number",
 					"in": "path",
 					"required": true,
 					"description": "incident number as an integer to get incident by id",
@@ -802,10 +802,10 @@
 				}
 			}
 		},
-		"/api/incident/{incidentNumber}/comment": {
+		"/api/incident/{incident_number}/comment": {
 			"parameters": [
 				{
-					"name": "incidentNumber",
+					"name": "incident_number",
 					"in": "path",
 					"required": true,
 					"description": "incident number to fetch comment for",
@@ -903,10 +903,10 @@
 				}
 			}
 		},
-		"/api/incident/{incidentNumber}/status": {
+		"/api/incident/{incident_number}/status": {
 			"parameters": [
 				{
-					"name": "incidentNumber",
+					"name": "incident_number",
 					"in": "path",
 					"required": true,
 					"description": "incident number to fetch status for",

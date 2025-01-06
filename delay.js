@@ -7,13 +7,13 @@ let waitTime = 0;
 async function allFilesExist() {
 	let tablesCreated = (await db.checkTables()).map((table) => table.name);
 	let tablesRequired = [
-		"MonitoringData",
-		"MonitorAlerts",
-		"SiteData",
-		"Monitors",
-		"Triggers",
-		"Users",
-		"ApiKeys"
+		"monitoring_data",
+		"monitor_alerts",
+		"site_data",
+		"monitors",
+		"triggers",
+		"users",
+		"api_keys"
 	];
 
 	for (let table of tablesRequired) {

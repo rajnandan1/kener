@@ -6,7 +6,7 @@ let instance = null;
 
 let database = {
 	sqlite: {
-		dbName: "kener.local3.db"
+		dbName: "kener.local5.db"
 	}
 };
 const supportedDatabases = ["sqlite"];

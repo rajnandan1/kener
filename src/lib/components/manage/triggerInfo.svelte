@@ -20,10 +20,10 @@
 	let newTrigger = {
 		id: 0,
 		name: "some name",
-		triggerType: "webhook",
-		triggerDesc: "",
-		triggerStatus: "ACTIVE",
-		triggerMeta: {
+		trigger_type: "webhook",
+		trigger_desc: "",
+		trigger_status: "ACTIVE",
+		trigger_meta: {
 			url: "",
 			headers: [],
 			to: "",
@@ -35,10 +35,10 @@
 		newTrigger = {
 			id: 0,
 			name: "",
-			triggerType: "webhook",
-			triggerDesc: "",
-			triggerStatus: "ACTIVE",
-			triggerMeta: {
+			trigger_type: "webhook",
+			trigger_desc: "",
+			trigger_status: "ACTIVE",
+			trigger_meta: {
 				url: "",
 				headers: [],
 				to: "",
@@ -51,8 +51,8 @@
 		loadData();
 	}
 	function addHeader() {
-		newTrigger.triggerMeta.headers = [
-			...newTrigger.triggerMeta.headers,
+		newTrigger.trigger_meta.headers = [
+			...newTrigger.trigger_meta.headers,
 			{ key: "", value: "" }
 		];
 	}
@@ -78,17 +78,17 @@
 	async function addNewTrigger() {
 		invalidFormMessage = "";
 		formState = "loading";
-		//newTrigger.triggerType present not empty
-		if (newTrigger.triggerType == "") {
+		//newTrigger.trigger_type present not empty
+		if (newTrigger.trigger_type == "") {
 			invalidFormMessage = "Trigger Type is required";
 			formState = "idle";
 			return;
 		}
 
-		if (newTrigger.triggerType == "email") {
-			newTrigger.triggerMeta.url = "";
+		if (newTrigger.trigger_type == "email") {
+			newTrigger.trigger_meta.url = "";
 
-			let emValid = validateNameEmailPattern(newTrigger.triggerMeta.from);
+			let emValid = validateNameEmailPattern(newTrigger.trigger_meta.from);
 			if (!emValid.isValid) {
 				invalidFormMessage = "Invalid Name and Email Address for Sender";
 				formState = "idle";
@@ -101,14 +101,14 @@
 			formState = "idle";
 			return;
 		}
-		//newTrigger.triggerMeta.url present not empty
-		if (newTrigger.triggerType != "email" && newTrigger.triggerMeta.url == "") {
+		//newTrigger.trigger_meta.url present not empty
+		if (newTrigger.trigger_type != "email" && newTrigger.trigger_meta.url == "") {
 			invalidFormMessage = "Trigger URL is required";
 			formState = "idle";
 			return;
 		}
 
-		if (newTrigger.triggerMeta.url != "" && !IsValidURL(newTrigger.triggerMeta.url)) {
+		if (newTrigger.trigger_meta.url != "" && !IsValidURL(newTrigger.trigger_meta.url)) {
 			invalidFormMessage = "Invalid URL";
 			formState = "idle";
 			return;
@@ -117,10 +117,10 @@
 		let toPost = {
 			id: newTrigger.id,
 			name: newTrigger.name,
-			triggerType: newTrigger.triggerType,
-			triggerStatus: newTrigger.triggerStatus,
-			triggerDesc: newTrigger.triggerDesc,
-			triggerMeta: JSON.stringify(newTrigger.triggerMeta)
+			trigger_type: newTrigger.trigger_type,
+			trigger_status: newTrigger.trigger_status,
+			trigger_desc: newTrigger.trigger_desc,
+			trigger_meta: JSON.stringify(newTrigger.trigger_meta)
 		};
 
 		try {
@@ -152,7 +152,7 @@
 
 	function showUpdateSheet(m) {
 		newTrigger = { ...newTrigger, ...m };
-		newTrigger.triggerMeta = JSON.parse(newTrigger.triggerMeta);
+		newTrigger.trigger_meta = JSON.parse(newTrigger.trigger_meta);
 		showAddTrigger = true;
 	}
 
@@ -213,28 +213,28 @@
 		<Card.Root class="mb-4">
 			<Card.Header class="relative">
 				<Card.Title>
-					{#if trigger.triggerType == "webhook"}
+					{#if trigger.trigger_type == "webhook"}
 						<img
 							src={base + "/webhooks.svg"}
-							alt={trigger.triggerType}
+							alt={trigger.trigger_type}
 							class="mr-2 inline-block h-6 w-6"
 						/>
-					{:else if trigger.triggerType == "slack"}
+					{:else if trigger.trigger_type == "slack"}
 						<img
 							src={base + "/slack.svg"}
-							alt={trigger.triggerType}
+							alt={trigger.trigger_type}
 							class="mr-2 inline-block h-6 w-6"
 						/>
-					{:else if trigger.triggerType == "discord"}
+					{:else if trigger.trigger_type == "discord"}
 						<img
 							src={base + "/discord.svg"}
-							alt={trigger.triggerType}
+							alt={trigger.trigger_type}
 							class="mr-2 inline-block h-6 w-6"
 						/>
-					{:else if trigger.triggerType == "email"}
+					{:else if trigger.trigger_type == "email"}
 						<img
 							src={base + "/email.png"}
-							alt={trigger.triggerType}
+							alt={trigger.trigger_type}
 							class="mr-2 inline-block h-6 w-6"
 						/>
 					{/if}
@@ -269,10 +269,10 @@
 							type="checkbox"
 							value=""
 							class="peer sr-only"
-							checked={newTrigger.triggerStatus == "ACTIVE"}
+							checked={newTrigger.trigger_status == "ACTIVE"}
 							on:change={() => {
-								newTrigger.triggerStatus =
-									newTrigger.triggerStatus == "ACTIVE" ? "INACTIVE" : "ACTIVE";
+								newTrigger.trigger_status =
+									newTrigger.trigger_status == "ACTIVE" ? "INACTIVE" : "ACTIVE";
 							}}
 						/>
 						<div
@@ -288,30 +288,30 @@
 				</p>
 				<div class="flex justify-stretch gap-4">
 					<Button
-						variant={newTrigger.triggerType != "webhook" ? "outline" : "secondary"}
+						variant={newTrigger.trigger_type != "webhook" ? "outline" : "secondary"}
 						class="border"
 						on:click={() => {
-							newTrigger.triggerType = "webhook";
+							newTrigger.trigger_type = "webhook";
 						}}
 					>
 						<img src="{base}/webhooks.svg" title="webhook" class="mr-4 w-6" />
 						Webhooks
 					</Button>
 					<Button
-						variant={newTrigger.triggerType != "discord" ? "outline" : "secondary"}
+						variant={newTrigger.trigger_type != "discord" ? "outline" : "secondary"}
 						class="border"
 						on:click={() => {
-							newTrigger.triggerType = "discord";
+							newTrigger.trigger_type = "discord";
 						}}
 					>
 						<img src="{base}/discord.svg" title="discord" class="mr-4 w-6" />
 						Discord
 					</Button>
 					<Button
-						variant={newTrigger.triggerType != "slack" ? "outline" : "secondary"}
+						variant={newTrigger.trigger_type != "slack" ? "outline" : "secondary"}
 						class="border"
 						on:click={() => {
-							newTrigger.triggerType = "slack";
+							newTrigger.trigger_type = "slack";
 						}}
 					>
 						<img src="{base}/slack.svg" title="slack" class="mr-4 w-6" />
@@ -319,10 +319,10 @@
 					</Button>
 
 					<Button
-						variant={newTrigger.triggerType != "email" ? "outline" : "secondary"}
+						variant={newTrigger.trigger_type != "email" ? "outline" : "secondary"}
 						class="border"
 						on:click={() => {
-							newTrigger.triggerType = "email";
+							newTrigger.trigger_type = "email";
 						}}
 					>
 						<img src="{base}/email.png" title="email" class="mr-4 w-6" />
@@ -335,41 +335,53 @@
 						<div class="w-[300px]">
 							<Label class="text-sm">
 								Add a name for your <span class="underline"
-									>{newTrigger.triggerType}</span
+									>{newTrigger.trigger_type}</span
 								>
 								Trigger
 								<span class="text-red-500">*</span>
 							</Label>
-							<Input class="mt-2" bind:value={newTrigger.name} />
+							<Input
+								class="mt-2"
+								bind:value={newTrigger.name}
+								placeholder="My Trigger"
+							/>
 						</div>
 					</div>
 
 					<div class="mt-4 w-full">
 						<Label class="text-sm">
-							Add description for your <span class="underline"
-								>{newTrigger.triggerType}</span
-							>
+							Add description for your <span class="underline">
+								{newTrigger.trigger_type}
+							</span>
 							Trigger
 						</Label>
-						<Input class="mt-2" bind:value={newTrigger.triggerDesc} />
+						<Input
+							class="mt-2"
+							bind:value={newTrigger.trigger_desc}
+							placeholder="Example: This is a trigger."
+						/>
 					</div>
-					{#if newTrigger.triggerType != "email"}
+					{#if newTrigger.trigger_type != "email"}
 						<div class="mt-4 w-full">
 							<Label class="text-sm">
 								Add URL for your <span class="underline"
-									>{newTrigger.triggerType}</span
+									>{newTrigger.trigger_type}</span
 								>
 								Trigger
 								<span class="text-red-500">*</span>
 							</Label>
-							<Input class="mt-2" bind:value={newTrigger.triggerMeta.url} />
+							<Input
+								class="mt-2"
+								bind:value={newTrigger.trigger_meta.url}
+								placeholder="https://example.com/url"
+							/>
 						</div>
 					{/if}
-					{#if newTrigger.triggerType == "webhook"}
+					{#if newTrigger.trigger_type == "webhook"}
 						<div class="mt-4 w-full">
 							<Label for="url">Add Optional Headers for Webhooks</Label>
 							<div class="grid grid-cols-6 gap-2">
-								{#each newTrigger.triggerMeta.headers as header, index}
+								{#each newTrigger.trigger_meta.headers as header, index}
 									<div class="col-span-2">
 										<Input
 											bind:value={header.key}
@@ -389,8 +401,8 @@
 											class=" h-6 w-6 p-1"
 											variant="secondary"
 											on:click={() => {
-												newTrigger.triggerMeta.headers =
-													newTrigger.triggerMeta.headers.filter(
+												newTrigger.trigger_meta.headers =
+													newTrigger.trigger_meta.headers.filter(
 														(_, i) => i !== index
 													);
 											}}
@@ -414,27 +426,27 @@
 								</Button>
 							</div>
 						</div>
-					{:else if newTrigger.triggerType == "email"}
+					{:else if newTrigger.trigger_type == "email"}
 						<div class="mt-4 w-full">
-							<div class="rounded-md border bg-card p-2 text-xs">
-								<p class="text-sm font-semibold">Email Trigger</p>
-								<p class="text-xs">
-									Kener uses <a
-										href="https://resend.com/"
-										class="text-blue-500"
-										target="_blank">resend</a
-									>
-									to send emails. Please make sure you have created an account with
-									resend. Also add the resend api key as environment variable
-									<span class="font-mono">RESEND_API_KEY</span>.
-									{#if !!!data.RESEND_API_KEY}
+							{#if !!!data.RESEND_API_KEY}
+								<div class="rounded-md border bg-card p-2 text-xs">
+									<p class="text-sm font-semibold">Email Trigger</p>
+									<p class="text-xs">
+										Kener uses <a
+											href="https://resend.com/"
+											class="text-blue-500"
+											target="_blank">resend</a
+										>
+										to send emails. Please make sure you have created an account
+										with resend. Also add the resend api key as environment variable
+										<span class="font-mono">RESEND_API_KEY</span>.
 										<span class="text-red-500"
 											>The RESEND_API_KEY is not set in your environment
 											variable. Please set it and restart the server</span
 										>.
-									{/if}
-								</p>
-							</div>
+									</p>
+								</div>
+							{/if}
 						</div>
 						<div class="mt-4 w-full">
 							<Label class="text-sm">
@@ -443,7 +455,7 @@
 							</Label>
 							<Input
 								class="mt-2"
-								bind:value={newTrigger.triggerMeta.to}
+								bind:value={newTrigger.trigger_meta.to}
 								placeholder="john@example.com, jane@example.com"
 							/>
 						</div>
@@ -454,7 +466,7 @@
 							</Label>
 							<Input
 								class="mt-2"
-								bind:value={newTrigger.triggerMeta.from}
+								bind:value={newTrigger.trigger_meta.from}
 								placeholder="Alerts <alert@example.com>"
 							/>
 						</div>

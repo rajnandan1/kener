@@ -6,7 +6,7 @@ import { UpdateIssueLabels, GetIncidentByNumber } from "$lib/server/github";
 
 export async function POST({ request, params }) {
 	const payload = await request.json();
-	const incidentNumber = params.incidentNumber; //number required
+	const incident_number = params.incident_number; //number required
 	// const headers = await request.headers();
 	const authError = await auth(request);
 	if (authError !== null) {
@@ -23,9 +23,9 @@ export async function POST({ request, params }) {
 	let endDatetime = payload.endDatetime; //in utc seconds optional
 
 	// Perform validations
-	if (!incidentNumber || isNaN(incidentNumber)) {
+	if (!incident_number || isNaN(incident_number)) {
 		return json(
-			{ error: "Invalid incidentNumber" },
+			{ error: "Invalid incident_number" },
 			{
 				status: 400
 			}
@@ -41,7 +41,7 @@ export async function POST({ request, params }) {
 		);
 	}
 
-	let issue = await GetIncidentByNumber(incidentNumber);
+	let issue = await GetIncidentByNumber(incident_number);
 	if (issue === null) {
 		return json(
 			{ error: "github error" },
@@ -73,7 +73,7 @@ export async function POST({ request, params }) {
 		body = body + " " + `[end_datetime:${endDatetime}]`;
 	}
 
-	let resp = await UpdateIssueLabels(incidentNumber, labels, body);
+	let resp = await UpdateIssueLabels(incident_number, labels, body);
 	if (resp === null) {
 		return json(
 			{ error: "github error" },

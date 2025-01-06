@@ -152,7 +152,7 @@ components:
       - "$ref": "#/components/schemas/Incident"
       - type: object
         properties:
-          createdAt:
+          created_at:
             type: integer
             description: UTC timestamp in seconds, incident created at
             example: 1731901920
@@ -161,14 +161,14 @@ components:
             nullable: true
             description: UTC timestamp in seconds, incident closed at
             example: 1731901920
-          incidentNumber:
+          incident_number:
             type: integer
             description: id of the incident
             example: 4
         example:
-          createdAt: 1731901920
+          created_at: 1731901920
           closedAt: 1731901920
-          incidentNumber: 4
+          incident_number: 4
     Comment:
       type: object
       description: Comment of an incident
@@ -192,14 +192,14 @@ components:
           type: string
           description: body of the comment
           example: comment 3
-        createdAt:
+        created_at:
           type: integer
           description: timestamp when comment was created
           example: 1704123938
       example:
         commentID: 1873376745
         body: comment 4
-        createdAt: 1704123938
+        created_at: 1704123938
     IncidentStatus:
       type: object
       description: Status of the incident
@@ -267,9 +267,9 @@ components:
       summary: create incident response
       description: create incident response
       value:
-        createdAt: 1731901920
+        created_at: 1731901920
         closedAt: 1731901920
-        incidentNumber: 4
+        incident_number: 4
         startDatetime: 1731901920
         endDatetime: 1704123938
         title: title of the incident
@@ -300,9 +300,9 @@ components:
       summary: array of incidents
       description: Some Description
       value:
-      - createdAt: 1731901920
+      - created_at: 1731901920
         closedAt: 1731901920
-        incidentNumber: 4
+        incident_number: 4
         startDatetime: 1731901920
         endDatetime: 1704123938
         title: title of the incident
@@ -314,9 +314,9 @@ components:
         isMaintenance: false
         isIdentified: true
         isResolved: true
-      - createdAt: 1731901920
+      - created_at: 1731901920
         closedAt: 1731901920
-        incidentNumber: 4
+        incident_number: 4
         startDatetime: 1731901920
         endDatetime: 1704123938
         title: title of the incident
@@ -334,10 +334,10 @@ components:
       value:
       - commentID: 1873376745
         body: comment 4
-        createdAt: 1704123938
+        created_at: 1704123938
       - commentID: 1873376745
         body: comment 4
-        createdAt: 1704123938
+        created_at: 1704123938
     CommentRequestBody:
       summary: request body for a comment
       description: request body for a comment to add in an incident
@@ -349,7 +349,7 @@ components:
       value:
         commentID: 1873376745
         body: comment 4
-        createdAt: 1704123938
+        created_at: 1704123938
 paths:
   "/api/status":
     post:
@@ -536,9 +536,9 @@ paths:
           "$ref": "#/components/responses/Response400"
         '401':
           "$ref": "#/components/responses/Response401"
-  "/api/incident/{incidentNumber}":
+  "/api/incident/{incident_number}":
     parameters:
-    - name: incidentNumber
+    - name: incident_number
       in: path
       required: true
       description: incident number as an integer to get incident by id
@@ -599,9 +599,9 @@ paths:
           "$ref": "#/components/responses/Response400"
         '401':
           "$ref": "#/components/responses/Response401"
-  "/api/incident/{incidentNumber}/comment":
+  "/api/incident/{incident_number}/comment":
     parameters:
-    - name: incidentNumber
+    - name: incident_number
       in: path
       required: true
       description: incident number to fetch comment for
@@ -664,9 +664,9 @@ paths:
           "$ref": "#/components/responses/Response400"
         '401':
           "$ref": "#/components/responses/Response401"
-  "/api/incident/{incidentNumber}/status":
+  "/api/incident/{incident_number}/status":
     parameters:
-    - name: incidentNumber
+    - name: incident_number
       in: path
       required: true
       description: incident number to fetch status for

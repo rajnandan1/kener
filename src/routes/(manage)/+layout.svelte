@@ -6,7 +6,9 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import Sun from "lucide-svelte/icons/sun";
 	import Moon from "lucide-svelte/icons/moon";
+	import Github from "lucide-svelte/icons/github";
 	import { Button } from "$lib/components/ui/button";
+	import { afterNavigate } from "$app/navigation";
 
 	import { Play, User } from "lucide-svelte";
 	import { setMode, mode, ModeWatcher } from "mode-watcher";
@@ -22,6 +24,24 @@
 	}
 
 	setMode("dark");
+
+	let nav = [
+		{ name: "Site", url: `${base}/manage/site`, id: "/(manage)/manage/site" },
+		{ name: "SEO", url: `${base}/manage/seo`, id: "/(manage)/manage/seo" },
+		{ name: "Home", url: `${base}/manage/home`, id: "/(manage)/manage/home" },
+		{ name: "Theme", url: `${base}/manage/theme`, id: "/(manage)/manage/theme" },
+		{ name: "Monitors", url: `${base}/manage/monitors`, id: "/(manage)/manage/monitors" },
+		{ name: "Triggers", url: `${base}/manage/triggers`, id: "/(manage)/manage/triggers" },
+		{ name: "Alerts", url: `${base}/manage/alerts`, id: "/(manage)/manage/alerts" },
+		{ name: "Incidents", url: `${base}/manage/incidents`, id: "/(manage)/manage/incidents" },
+		{ name: "API Keys", url: `${base}/manage/api-keys`, id: "/(manage)/manage/api-keys" }
+	];
+
+	let activeTab = "";
+
+	afterNavigate((e) => {
+		activeTab = e.to.route.id;
+	});
 </script>
 
 <ModeWatcher />
@@ -31,13 +51,22 @@
 	<meta name="robots" content="noindex" />
 	<link rel="icon" href="{base}/logo96.png" />
 </svelte:head>
-<header class="sticky inset-x-0 top-0 z-50 mx-auto mt-4 flex max-w-4xl px-8">
+<header class="sticky inset-x-0 top-0 z-50 mx-auto mt-4 flex max-w-5xl px-8">
 	<div class=" flex w-full justify-between rounded-lg border bg-card px-5 py-4">
 		<div class="mt-2 flex gap-x-1.5">
 			<img src="{base}/logo.png" alt="Kener" class="inline h-6 w-6" />
 			<h1 class="font-semibold">Manage Kener</h1>
 		</div>
 		<div class="flex">
+			<Button
+				variant="ghost"
+				size="icon"
+				target="_blank"
+				href="https://github.com/rajnandan1/kener"
+				class="flex"
+			>
+				<Github class="h-4 w-4 " />
+			</Button>
 			<Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
 				<Sun
 					class="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
@@ -71,12 +100,19 @@
 	</div>
 </header>
 <main class="manage">
-	<!-- ========== HEADER ========== -->
-	<!-- ========== HEADER ========== -->
+	<div class="container my-4 max-w-5xl">
+		<nav class="flex justify-start gap-x-2">
+			{#each nav as item}
+				<Button
+					variant={item.id.includes(activeTab) ? "secondary" : "ghost"}
+					href={item.url}
+					class="flex-1r">{item.name}</Button
+				>
+			{/each}
+		</nav>
+	</div>
 
-	<!-- ========== END HEADER ========== -->
-	<!-- ========== END HEADER ========== -->
-	<div class="container max-w-4xl pt-0">
+	<div class="container max-w-5xl pt-0">
 		<slot></slot>
 	</div>
 </main>

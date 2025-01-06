@@ -4,8 +4,8 @@ import { json } from "@sveltejs/kit";
 import { GetCommentsForIssue } from "$lib/server/github.js";
 import { marked } from "marked";
 export async function GET({ params }) {
-	const incidentNumber = params.id;
-	let comments = await GetCommentsForIssue(incidentNumber);
+	const incident_number = params.id;
+	let comments = await GetCommentsForIssue(incident_number);
 	comments = comments.map(
 		(
 			/** @type {{ body: string | import("markdown-it/lib/token")[]; created_at: any; updated_at: any; html_url: any; }} */ comment

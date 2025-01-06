@@ -144,11 +144,11 @@ curl --request POST \
 
 ```json
 {
-	"createdAt": 1703940450,
+	"created_at": 1703940450,
 	"closedAt": null,
 	"title": "Outage in Mumbai",
 	"tags": ["google-search"],
-	"incidentNumber": 12,
+	"incident_number": 12,
 	"startDatetime": 1702405740,
 	"endDatetime": 1702405920,
 	"body": "Login cluster is down in mumbai region",
@@ -169,7 +169,7 @@ Can be use to update an incident from a remote server. It will clear values if n
 
 ### Request Param
 
--   `incidentNumber`: Number of the incident
+-   `incident_number`: Number of the incident
 
 ### Request Body
 
@@ -187,7 +187,7 @@ Can be use to update an incident from a remote server. It will clear values if n
 
 ```bash
 curl --request PATCH \
-  --url http://your-kener.host/api/incident/{incidentNumber} \
+  --url http://your-kener.host/api/incident/{incident_number} \
   --header 'Authorization: Bearer some-token-set-by-you' \
   --header 'Content-Type: application/json' \
   --data '{
@@ -207,11 +207,11 @@ curl --request PATCH \
 
 ```json
 {
-	"createdAt": 1703940450,
+	"created_at": 1703940450,
 	"closedAt": null,
 	"title": "Outage in Mumbai",
 	"tags": ["google-search"],
-	"incidentNumber": 12,
+	"incident_number": 12,
 	"startDatetime": 1702405740,
 	"endDatetime": 1702405920,
 	"body": "Login cluster is down in mumbai region",
@@ -228,13 +228,13 @@ curl --request PATCH \
 
 ![Static Badge](https://img.shields.io/badge/METHOD-GET-green?style=flat-square)
 
-Use `incidentNumber` to fetch an incident
+Use `incident_number` to fetch an incident
 
 ### Request Body
 
 ```bash
 curl --request GET \
-  --url http://your-kener.host/api/incident/{incidentNumber} \
+  --url http://your-kener.host/api/incident/{incident_number} \
   --header 'Authorization: Bearer some-token-set-by-you' \
 ```
 
@@ -242,11 +242,11 @@ curl --request GET \
 
 ```json
 {
-	"createdAt": 1703940450,
+	"created_at": 1703940450,
 	"closedAt": null,
 	"title": "Outage in Mumbai",
 	"tags": ["google-search"],
-	"incidentNumber": 12,
+	"incident_number": 12,
 	"startDatetime": 1702405740,
 	"endDatetime": 1702405920,
 	"body": "Login cluster is down in mumbai region",
@@ -263,13 +263,13 @@ curl --request GET \
 
 ![Static Badge](https://img.shields.io/badge/METHOD-POST-blue?style=flat-square)
 
-Add comments for incident using `incidentNumber`
+Add comments for incident using `incident_number`
 
 ### Request
 
 ```bash
 curl --request POST \
-  --url http://your-kener.host/api/incident/{incidentNumber}/comment \
+  --url http://your-kener.host/api/incident/{incident_number}/comment \
   --header 'Authorization: Bearer some-token-set-by-you' \
   --header 'Content-Type: application/json' \
   --data '{
@@ -283,7 +283,7 @@ curl --request POST \
 {
 	"commentID": 1873376745,
 	"body": "comment 1",
-	"createdAt": 1704123938
+	"created_at": 1704123938
 }
 ```
 
@@ -299,7 +299,7 @@ Use this API to fetch all the comments for an incident
 
 ```bash
 curl --request GET \
-  --url http://your-kener.host/api/incident/{incidentNumber}/comment \
+  --url http://your-kener.host/api/incident/{incident_number}/comment \
   --header 'Authorization: Bearer some-token-set-by-you' \
 ```
 
@@ -310,12 +310,12 @@ curl --request GET \
 	{
 		"commentID": 1873372042,
 		"body": "comment 1",
-		"createdAt": 1704123116
+		"created_at": 1704123116
 	},
 	{
 		"commentID": 1873372169,
 		"body": "comment 2",
-		"createdAt": 1704123139
+		"created_at": 1704123139
 	}
 ]
 ```
@@ -340,7 +340,7 @@ Use this to API to update the status of an ongoing incident.
 
 ```bash
 curl --request POST \
-  --url http://your-kener.host/api/incident/{incidentNumber}/status \
+  --url http://your-kener.host/api/incident/{incident_number}/status \
   --header 'Authorization: Bearer some-token-set-by-you' \
   --header 'Content-Type: application/json' \
   --data '{
@@ -354,11 +354,11 @@ curl --request POST \
 
 ```json
 {
-	"createdAt": 1703940450,
+	"created_at": 1703940450,
 	"closedAt": null,
 	"title": "Outage in Mumbai",
 	"tags": ["google-search"],
-	"incidentNumber": 12,
+	"incident_number": 12,
 	"startDatetime": 1702405740,
 	"endDatetime": 1702405920,
 	"body": "Login cluster is down in mumbai region",
@@ -410,11 +410,11 @@ curl --request POST \
 ```json
 [
 	{
-		"createdAt": 1703940450,
+		"created_at": 1703940450,
 		"closedAt": null,
 		"title": "Outage in Mumbai - Hello Incident",
 		"tags": ["google-search"],
-		"incidentNumber": 12,
+		"incident_number": 12,
 		"startDatetime": 1702405740,
 		"endDatetime": 1702405920,
 		"body": "Login cluster is down in mumbai region",

@@ -9,6 +9,8 @@ import {
 	GetDayStartTimestampUTC
 } from "$lib/server/tool.js";
 
+import { GetDataGroupByDayAlternative } from "$lib/server/controllers/controller.js";
+
 function getDayMessage(type, numOfMinute) {
 	if (numOfMinute > 59) {
 		let hour = Math.floor(numOfMinute / 60);
@@ -98,7 +100,7 @@ const FetchData = async function (site, monitor, localTz) {
 		latestTimestamp = i;
 	}
 
-	let dbData = await db.getDataGroupByDayAlternative(
+	let dbData = await GetDataGroupByDayAlternative(
 		monitor.tag,
 		midnight90DaysAgo,
 		midnightTomorrow,
@@ -120,11 +122,11 @@ const FetchData = async function (site, monitor, localTz) {
 		totalDownCount += dayData.DOWN;
 		totalUpCount += dayData.UP;
 
-		if (dayData.DEGRADED >= monitor.dayDegradedMinimumCount) {
+		if (dayData.DEGRADED >= monitor.day_degraded_minimum_count) {
 			cssClass = returnStatusClass(dayData.DEGRADED, StatusObj.DEGRADED, site.barStyle);
 			message = getDayMessage("DEGRADED", dayData.DEGRADED);
 		}
-		if (dayData.DOWN >= monitor.dayDownMinimumCount) {
+		if (dayData.DOWN >= monitor.day_down_minimum_count) {
 			cssClass = returnStatusClass(dayData.DOWN, StatusObj.DOWN, site.barStyle);
 			message = getDayMessage("DOWN", dayData.DOWN);
 		}
@@ -140,13 +142,13 @@ const FetchData = async function (site, monitor, localTz) {
 	let uptime90DayDenominator = totalUpCount + totalDownCount + totalDegradedCount;
 
 	//remove degraded from uptime
-	if (monitor.includeDegradedInDowntime === "YES") {
+	if (monitor.include_degraded_in_downtime === "YES") {
 		uptime90DayNumerator = totalUpCount;
 	}
 	// return _90Day;
 	let uptime90Day = ParseUptime(uptime90DayNumerator, uptime90DayDenominator);
 	if (site.summaryStyle === "CURRENT") {
-		let todayDataDb = await db.getData(
+		let todayDataDb = await db.getMonitoringData(
 			monitor.tag,
 			latestTimestamp,
 			latestTimestamp + secondsInDay

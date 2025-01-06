@@ -20,14 +20,14 @@ async function createJSONCommonAlert(monitor, config, alert, severity) {
 	let siteData = await GetAllSiteData();
 	let siteURL = siteData.siteURL;
 	let id = monitor.tag + "-" + alert.id;
-	let alert_name = monitor.name + " " + alert.monitorStatus;
+	let alert_name = monitor.name + " " + alert.monitor_status;
 	let source = "Kener";
 	let timestamp = new Date().toISOString();
 	let description = config.description || "Monitor has failed";
-	let status = alert.alertStatus;
+	let status = alert.alert_status;
 	let details = {
 		metric: monitor.name,
-		current_value: alert.healthChecks,
+		current_value: alert.health_checks,
 		threshold: config.failureThreshold
 	};
 	let actions = [
@@ -54,7 +54,7 @@ async function createGHIncident(monitor, alert, commonData) {
 		startDatetime: moment(alert.createAt).unix(),
 		title: commonData.alert_name,
 		tags: [monitor.tag],
-		impact: alert.monitorStatus,
+		impact: alert.monitor_status,
 		body: commonData.description,
 		isIdentified: true
 	};
@@ -62,7 +62,7 @@ async function createGHIncident(monitor, alert, commonData) {
 	let description = commonData.description;
 	description =
 		description +
-		`\n\n ### Monitor Details \n\n - Monitor Name: ${monitor.name} \n- Incident Status: ${commonData.status} \n- Severity: ${commonData.severity} \n - Monitor Status: ${alert.monitorStatus} \n - Monitor Health Checks: ${alert.healthChecks} \n - Monitor Failure Threshold: ${commonData.details.threshold} \n\n ### Actions \n\n - [${commonData.actions[0].text}](${commonData.actions[0].url}) \n\n`;
+		`\n\n ### Monitor Details \n\n - Monitor Name: ${monitor.name} \n- Incident Status: ${commonData.status} \n- Severity: ${commonData.severity} \n - Monitor Status: ${alert.monitor_status} \n - Monitor Health Checks: ${alert.health_checks} \n - Monitor Failure Threshold: ${commonData.details.threshold} \n\n ### Actions \n\n - [${commonData.actions[0].text}](${commonData.actions[0].url}) \n\n`;
 
 	payload.body = description;
 
@@ -78,8 +78,8 @@ async function createGHIncident(monitor, alert, commonData) {
 }
 
 async function closeGHIncident(alert) {
-	let incidentNumber = alert.incidentNumber;
-	let issue = await GetIncidentByNumber(incidentNumber);
+	let incident_number = alert.incident_number;
+	let issue = await GetIncidentByNumber(incident_number);
 	if (issue === null) {
 		return;
 	}
@@ -89,29 +89,29 @@ async function closeGHIncident(alert) {
 	labels = labels.filter((label) => label !== "resolved");
 	labels.push("resolved");
 
-	let endDatetime = moment(alert.updatedAt).unix();
+	let endDatetime = moment(alert.updated_at).unix();
 	let body = issue.body;
 	body = body.replace(/\[end_datetime:(\d+)\]/g, "");
 	body = body.trim();
 	body = body + " " + `[end_datetime:${endDatetime}]`;
 
-	let resp = await UpdateIssueLabels(incidentNumber, labels, body);
+	let resp = await UpdateIssueLabels(incident_number, labels, body);
 	if (resp === null) {
 		return;
 	}
-	await CloseIssue(incidentNumber);
+	await CloseIssue(incident_number);
 	return await GHIssueToKenerIncident(resp);
 }
 
 //add comment to incident
 async function addCommentToIncident(alert, comment) {
-	let resp = await AddComment(alert.incidentNumber, comment);
+	let resp = await AddComment(alert.incident_number, comment);
 	return resp;
 }
 
 function createClosureComment(alert, commonJSON) {
 	let comment = "The incident has been auto resolved";
-	let downtimeDuration = moment(alert.updatedAt).diff(moment(alert.createdAt), "minutes");
+	let downtimeDuration = moment(alert.updated_at).diff(moment(alert.created_at), "minutes");
 	comment = comment + `\n\nTotal downtime: ` + downtimeDuration + ` minutes`;
 	return comment;
 }
@@ -124,21 +124,21 @@ async function alerting(m) {
 		status: "ACTIVE"
 	});
 	const triggerObj = {};
-	if (!!monitor.downTrigger) {
-		triggerObj.downTrigger = JSON.parse(monitor.downTrigger);
+	if (!!monitor.down_trigger) {
+		triggerObj.down_trigger = JSON.parse(monitor.down_trigger);
 	}
-	if (!!monitor.degradedTrigger) {
-		triggerObj.degradedTrigger = JSON.parse(monitor.degradedTrigger);
+	if (!!monitor.degraded_trigger) {
+		triggerObj.degraded_trigger = JSON.parse(monitor.degraded_trigger);
 	}
 
 	for (const key in triggerObj) {
 		if (Object.prototype.hasOwnProperty.call(triggerObj, key)) {
 			const alertConfig = triggerObj[key];
-			const monitorStatus = alertConfig.triggerType;
+			const monitor_status = alertConfig.trigger_type;
 
 			const failureThreshold = alertConfig.failureThreshold;
 			const successThreshold = alertConfig.successThreshold;
-			const monitorTag = monitor.tag;
+			const monitor_tag = monitor.tag;
 			const alertingChannels = alertConfig.triggers; //array of numbers of trigger ids
 			const createIncident = alertConfig.createIncident === "YES" && !!githubData;
 			const allMonitorClients = [];
@@ -153,11 +153,11 @@ async function alerting(m) {
 					const trigger = triggers.find((c) => c.id === triggerID);
 					if (!trigger) {
 						console.error(
-							`Triggers ${triggerID} not found in server triggers for monitor ${monitorTag}`
+							`Triggers ${triggerID} not found in server triggers for monitor ${monitor_tag}`
 						);
 						continue;
 					}
-					if (trigger.triggerStatus !== "ACTIVE") {
+					if (trigger.trigger_status !== "ACTIVE") {
 						console.error(`Triggers ${triggerID} is not active`);
 						continue;
 					}
@@ -167,21 +167,21 @@ async function alerting(m) {
 			}
 
 			let isAffected = await db.consecutivelyStatusFor(
-				monitorTag,
-				monitorStatus,
+				monitor_tag,
+				monitor_status,
 				failureThreshold
 			);
-			let alertExists = await db.alertExists(monitorTag, monitorStatus, TRIGGERED);
+			let alertExists = await db.alertExists(monitor_tag, monitor_status, TRIGGERED);
 			let activeAlert = null;
 			if (alertExists) {
-				activeAlert = await db.getActiveAlert(monitorTag, monitorStatus, TRIGGERED);
+				activeAlert = await db.getActiveAlert(monitor_tag, monitor_status, TRIGGERED);
 			}
 			if (isAffected && !alertExists) {
 				activeAlert = await db.insertAlert({
-					monitorTag: monitorTag,
-					monitorStatus: monitorStatus,
-					alertStatus: TRIGGERED,
-					healthChecks: failureThreshold
+					monitor_tag: monitor_tag,
+					monitor_status: monitor_status,
+					alert_status: TRIGGERED,
+					health_checks: failureThreshold
 				});
 				let commonJSON = await createJSONCommonAlert(
 					monitor,
@@ -201,16 +201,16 @@ async function alerting(m) {
 
 					if (!!incident) {
 						//send incident to incident channel
-						await db.addIncidentNumberToAlert(activeAlert.id, incident.incidentNumber);
+						await db.addIncidentNumberToAlert(activeAlert.id, incident.incident_number);
 					}
 				}
 			} else if (isAffected && alertExists) {
 				await db.incrementAlertHealthChecks(activeAlert.id);
 			} else if (!isAffected && alertExists) {
-				let isUp = await db.consecutivelyStatusFor(monitorTag, "UP", successThreshold);
+				let isUp = await db.consecutivelyStatusFor(monitor_tag, "UP", successThreshold);
 				if (isUp) {
 					await db.updateAlertStatus(activeAlert.id, RESOLVED);
-					activeAlert.alertStatus = RESOLVED;
+					activeAlert.alert_status = RESOLVED;
 					let commonJSON = await createJSONCommonAlert(
 						monitor,
 						alertConfig,
@@ -223,7 +223,7 @@ async function alerting(m) {
 							client.send(commonJSON);
 						}
 					}
-					if (!!activeAlert.incidentNumber) {
+					if (!!activeAlert.incident_number) {
 						let comment = createClosureComment(activeAlert, commonJSON);
 
 						try {

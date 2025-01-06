@@ -11,11 +11,11 @@ export async function load({ parent }) {
 	const monitorsActive = [];
 	for (let i = 0; i < monitors.length; i++) {
 		//only return monitors that have category as home or category is not present
-		if (!!monitors[i].categoryName && monitors[i].categoryName !== "Home") {
+		if (!!monitors[i].category_name && monitors[i].category_name !== "Home") {
 			continue;
 		}
 		delete monitors[i].api;
-		delete monitors[i].defaultStatus;
+		delete monitors[i].default_status;
 
 		let data = await FetchData(siteData, monitors[i], parentData.localTz);
 		monitors[i].pageData = data;

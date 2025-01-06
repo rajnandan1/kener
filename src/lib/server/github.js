@@ -124,13 +124,13 @@ const GetEndTimeFromBody = function (text) {
 	}
 	return null;
 };
-const GetIncidentByNumber = async function (incidentNumber) {
+const GetIncidentByNumber = async function (incident_number) {
 	const githubData = await GetGithubData();
 	if (githubData === null || GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return null;
 	}
-	const url = `${githubData.apiURL}/repos/${githubData.owner}/${githubData.repo}/issues/${incidentNumber}`;
+	const url = `${githubData.apiURL}/repos/${githubData.owner}/${githubData.repo}/issues/${incident_number}`;
 	const options = getAxiosOptions(url);
 	try {
 		const response = await axios.request(options);
@@ -308,13 +308,13 @@ async function CreateIssue(issueTitle, issueBody, issueLabels) {
 		return null;
 	}
 }
-async function UpdateIssue(incidentNumber, issueTitle, issueBody, issueLabels, state = "open") {
+async function UpdateIssue(incident_number, issueTitle, issueBody, issueLabels, state = "open") {
 	const githubData = await GetGithubData();
 	if (githubData === null || GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return null;
 	}
-	const url = `${githubData.apiURL}/repos/${githubData.owner}/${githubData.repo}/issues/${incidentNumber}`;
+	const url = `${githubData.apiURL}/repos/${githubData.owner}/${githubData.repo}/issues/${incident_number}`;
 	try {
 		const payload = {
 			title: issueTitle,
@@ -329,13 +329,13 @@ async function UpdateIssue(incidentNumber, issueTitle, issueBody, issueLabels, s
 		return null;
 	}
 }
-async function CloseIssue(incidentNumber) {
+async function CloseIssue(incident_number) {
 	const githubData = await GetGithubData();
 	if (githubData === null || GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return null;
 	}
-	const url = `${githubData.apiURL}/repos/${githubData.owner}/${githubData.repo}/issues/${incidentNumber}`;
+	const url = `${githubData.apiURL}/repos/${githubData.owner}/${githubData.repo}/issues/${incident_number}`;
 	try {
 		const payload = {
 			state: "closed"
@@ -347,13 +347,13 @@ async function CloseIssue(incidentNumber) {
 		return null;
 	}
 }
-async function AddComment(incidentNumber, commentBody) {
+async function AddComment(incident_number, commentBody) {
 	const githubData = await GetGithubData();
 	if (githubData === null || GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return null;
 	}
-	const url = `${githubData.apiURL}/repos/${githubData.owner}/${githubData.repo}/issues/${incidentNumber}/comments`;
+	const url = `${githubData.apiURL}/repos/${githubData.owner}/${githubData.repo}/issues/${incident_number}/comments`;
 	try {
 		const payload = {
 			body: commentBody
@@ -366,13 +366,13 @@ async function AddComment(incidentNumber, commentBody) {
 	}
 }
 //update issue labels
-async function UpdateIssueLabels(incidentNumber, issueLabels, body, state = "open") {
+async function UpdateIssueLabels(incident_number, issueLabels, body, state = "open") {
 	const githubData = await GetGithubData();
 	if (githubData === null || GH_TOKEN === undefined) {
 		console.warn(GhNotConfiguredMsg);
 		return null;
 	}
-	const url = `${githubData.apiURL}/repos/${githubData.owner}/${githubData.repo}/issues/${incidentNumber}`;
+	const url = `${githubData.apiURL}/repos/${githubData.owner}/${githubData.repo}/issues/${incident_number}`;
 	try {
 		const payload = {
 			labels: issueLabels,

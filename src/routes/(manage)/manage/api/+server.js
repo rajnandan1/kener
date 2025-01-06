@@ -12,7 +12,16 @@ import {
 	GetAllAPIKeys,
 	CreateNewAPIKey,
 	UpdateApiKeyStatus,
-	VerifyToken
+	VerifyToken,
+	GetIncidentsDashboard,
+	CreateIncident,
+	AddIncidentMonitor,
+	RemoveIncidentMonitor,
+	GetIncidentActiveComments,
+	UpdateCommentStatusByID,
+	AddIncidentComment,
+	UpdateCommentByID,
+	UpdateIncident
 } from "$lib/server/controllers/controller.js";
 export async function POST({ request, cookies }) {
 	const payload = await request.json();
@@ -63,6 +72,28 @@ export async function POST({ request, cookies }) {
 			resp = await CreateNewAPIKey(data);
 		} else if (action == "updateApiKeyStatus") {
 			resp = await UpdateApiKeyStatus(data);
+		} else if (action == "getIncidents") {
+			resp = await GetIncidentsDashboard(data);
+		} else if (action == "createIncident") {
+			resp = await CreateIncident(data);
+		} else if (action == "updateIncident") {
+			resp = await UpdateIncident(data.id, data);
+		} else if (action == "addMonitor") {
+			resp = await AddIncidentMonitor(
+				data.incident_id,
+				data.monitor_tag,
+				data.monitor_impact
+			);
+		} else if (action == "removeMonitor") {
+			resp = await RemoveIncidentMonitor(data.incident_id, data.monitor_tag);
+		} else if (action == "getComments") {
+			resp = await GetIncidentActiveComments(data.incident_id);
+		} else if (action == "addComment") {
+			resp = await AddIncidentComment(data.incident_id, data.comment, data.state);
+		} else if (action == "deleteComment") {
+			resp = await UpdateCommentStatusByID(data.incident_id, data.comment_id, "INACTIVE");
+		} else if (action == "updateComment") {
+			resp = await UpdateCommentByID(data.incident_id, data.comment_id, data.comment);
 		}
 	} catch (error) {
 		resp = { error: error.message };

@@ -47,6 +47,7 @@
 		"autoprefixer": "^10.4.14",
 		"concurrently": "^8.2.2",
 		"cross-env": "^7.0.3",
+		"date-picker-svelte": "^2.15.1",
 		"postcss": "^8.4.24",
 		"postcss-load-config": "^4.0.1",
 		"prettier": "^3.2.5",

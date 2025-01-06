@@ -152,7 +152,7 @@ Below example will call https://api.github.com/repos/rajnandan1/kener/issues. If
 		})
 ```
 
-## With defaultStatus UP
+## With default_status UP
 
 Each minute it will set the status as UP
 
@@ -160,7 +160,7 @@ Each minute it will set the status as UP
 - name: Earth
   description: Our Planet
   tag: "earth"
-  defaultStatus: UP
+  default_status: UP
 ```
 
 ## With Category
@@ -200,10 +200,10 @@ The below monitor will show DEGRADED if 3 or more degraded status in a day and D
 - name: Earth
   description: Our blue planet
   tag: "earth"
-  defaultStatus: "UP"
-  dayDegradedMinimumCount: 3
-  dayDownMinimumCount: 2
-  includeDegradedInDowntime: true
+  default_status: "UP"
+  day_degraded_minimum_count: 3
+  day_down_minimum_count: 2
+  include_degraded_in_downtime: true
 ```
 
 ## Monitor with Alerts
@@ -216,8 +216,8 @@ The below example will trigger an alert if the monitor is DOWN for 10 consecutiv
 - name: Earth
   description: Our blue planet
   tag: "earth"
-  defaultStatus: "UP"
-  includeDegradedInDowntime: true
+  default_status: "UP"
+  include_degraded_in_downtime: true
   alerts:
       DOWN:
           failureThreshold: 10

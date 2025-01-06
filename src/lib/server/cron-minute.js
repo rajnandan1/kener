@@ -32,12 +32,6 @@ const TIMEOUT = "timeout";
 const ERROR = "error";
 const MANUAL = "manual";
 
-const apiQueue = new Queue({
-	concurrency: 10, // Number of tasks that can run concurrently
-	timeout: 10000, // Timeout in ms after which a task will be considered as failed (optional)
-	autostart: true // Automatically start the queue (optional)
-});
-
 const alertingQueue = new Queue({
 	concurrency: 10, // Number of tasks that can run concurrently
 	timeout: 10000, // Timeout in ms after which a task will be considered as failed (optional)
@@ -72,7 +66,7 @@ async function manualIncident(monitor) {
 
 	for (let i = 0; i < incidentsResp.length; i++) {
 		const incident = incidentsResp[i];
-		const incidentNumber = incident.number;
+		const incident_number = incident.number;
 		let start_time = GetStartTimeFromBody(incident.body);
 		let allLabels = incident.labels.map((label) => label.name);
 		if (
@@ -95,7 +89,7 @@ async function manualIncident(monitor) {
 			if (end_time <= GetNowTimestampUTC() && incident.state === "open") {
 				//close the issue after 30 secs
 				setTimeout(async () => {
-					await CloseIssue(incidentNumber);
+					await CloseIssue(incident_number);
 				}, 30000);
 			}
 		} else {
@@ -351,70 +345,41 @@ async function dsnChecker(dnsResolver, host, recordType, matchType, values) {
 }
 
 const Minuter = async (monitor) => {
-	if (apiQueue.length > 0) {
-		console.log("Queue length is " + apiQueue.length);
-	}
 	let realTimeData = {};
 	let manualData = {};
 
 	const startOfMinute = GetMinuteStartNowTimestampUTC();
-	if (monitor.monitorType === "API") {
+	if (monitor.monitor_type === "API") {
 		let envSecrets = GetRequiredSecrets(
-			`${monitor.typeData.url} ${monitor.typeData.body} ${JSON.stringify(monitor.typeData.headers)}`
+			`${monitor.type_data.url} ${monitor.type_data.body} ${JSON.stringify(monitor.type_data.headers)}`
 		);
 
-		if (monitor.typeData.eval === "") {
-			monitor.typeData.eval = defaultEval;
+		if (monitor.type_data.eval === "") {
+			monitor.type_data.eval = defaultEval;
 		}
 
 		let apiResponse = await apiCall(
 			envSecrets,
-			monitor.typeData.url,
-			monitor.typeData.method,
-			JSON.stringify(monitor.typeData.headers),
-			monitor.typeData.body,
-			monitor.typeData.timeout,
-			monitor.typeData.eval
+			monitor.type_data.url,
+			monitor.type_data.method,
+			JSON.stringify(monitor.type_data.headers),
+			monitor.type_data.body,
+			monitor.type_data.timeout,
+			monitor.type_data.eval
 		);
 
 		realTimeData[startOfMinute] = apiResponse;
-		if (apiResponse.type === TIMEOUT) {
-			console.log(
-				"Retrying api call for " + monitor.name + " at " + startOfMinute + " due to timeout"
-			);
-			//retry
-			apiQueue.push(async (cb) => {
-				apiCall(
-					envSecrets,
-					monitor.typeData.url,
-					monitor.typeData.method,
-					JSON.stringify(monitor.typeData.headers),
-					monitor.typeData.body,
-					monitor.typeData.timeout,
-					monitor.typeData.eval
-				).then(async (data) => {
-					await db.insertData({
-						monitorTag: monitor.tag,
-						timestamp: startOfMinute,
-						status: data.status,
-						latency: data.latency,
-						type: data.type
-					});
-					cb();
-				});
-			});
-		}
-	} else if (monitor.monitorType === "PING") {
-		let pingResponse = await pingCall(monitor.typeData.hostsV4, monitor.typeData.hostsV6);
+	} else if (monitor.monitor_type === "PING") {
+		let pingResponse = await pingCall(monitor.type_data.hostsV4, monitor.type_data.hostsV6);
 		realTimeData[startOfMinute] = pingResponse;
-	} else if (monitor.monitorType === "DNS") {
-		const dnsResolver = new DNSResolver(monitor.typeData.nameServer);
+	} else if (monitor.monitor_type === "DNS") {
+		const dnsResolver = new DNSResolver(monitor.type_data.nameServer);
 		let dnsResponse = await dsnChecker(
 			dnsResolver,
-			monitor.typeData.host,
-			monitor.typeData.lookupRecord,
-			monitor.typeData.matchType,
-			monitor.typeData.values
+			monitor.type_data.host,
+			monitor.type_data.lookupRecord,
+			monitor.type_data.matchType,
+			monitor.type_data.values
 		);
 		realTimeData[startOfMinute] = dnsResponse;
 	}
@@ -423,12 +388,12 @@ const Minuter = async (monitor) => {
 	//merge noData, apiData, webhookData, dayData
 	let mergedData = {};
 
-	if (monitor.defaultStatus !== undefined && monitor.defaultStatus !== null) {
-		if ([UP, DOWN, DEGRADED].indexOf(monitor.defaultStatus) !== -1) {
+	if (monitor.default_status !== undefined && monitor.default_status !== null) {
+		if ([UP, DOWN, DEGRADED].indexOf(monitor.default_status) !== -1) {
 			mergedData[startOfMinute] = {
-				status: monitor.defaultStatus,
+				status: monitor.default_status,
 				latency: 0,
-				type: "defaultStatus"
+				type: "default_status"
 			};
 		}
 	}
@@ -443,8 +408,8 @@ const Minuter = async (monitor) => {
 
 	for (const timestamp in mergedData) {
 		const element = mergedData[timestamp];
-		db.insertData({
-			monitorTag: monitor.tag,
+		db.insertMonitoringData({
+			monitor_tag: monitor.tag,
 			timestamp: parseInt(timestamp),
 			status: element.status,
 			latency: element.latency,
@@ -458,12 +423,7 @@ const Minuter = async (monitor) => {
 		}, 1042);
 	});
 };
-apiQueue.start((err) => {
-	if (err) {
-		console.error("Error occurred:", err);
-		process.exit(1);
-	}
-});
+
 alertingQueue.start((err) => {
 	if (err) {
 		console.error("Error occurred:", err);

@@ -8,7 +8,7 @@ export async function GET({ params, setHeaders, url }) {
 	// @ts-ignore
 	let monitors = await GetMonitors({ status: "ACTIVE" });
 	const { tag, name } = monitors.find((monitor) => monitor.tag === params.tag);
-	const lastObj = await db.getLatestData(tag);
+	const lastObj = await db.getLatestMonitoringData(tag);
 
 	//read query params
 	let myColors = await StatusColor();

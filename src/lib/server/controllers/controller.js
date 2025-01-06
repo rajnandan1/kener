@@ -23,120 +23,120 @@ const siteDataKeys = [
 	{
 		key: "title",
 		isValid: (value) => typeof value === "string" && value.trim().length > 0,
-		dataType: "string"
+		data_type: "string"
 	},
 	{
 		key: "siteName",
 		isValid: (value) => typeof value === "string" && value.trim().length > 0,
-		dataType: "string"
+		data_type: "string"
 	},
 	{
 		key: "siteURL",
 		isValid: IsValidURL,
-		dataType: "string"
+		data_type: "string"
 	},
 	{
 		key: "home",
 		isValid: (value) => typeof value === "string" && value.trim().length > 0,
-		dataType: "string"
+		data_type: "string"
 	},
 	{
 		key: "favicon",
 		isValid: (value) => typeof value === "string" && value.trim().length > 0,
-		dataType: "string"
+		data_type: "string"
 	},
 	{
 		key: "logo",
 		isValid: (value) => typeof value === "string" && value.trim().length > 0,
-		dataType: "string"
+		data_type: "string"
 	},
 	{
 		key: "github",
 		isValid: IsValidGHObject,
-		dataType: "object"
+		data_type: "object"
 	},
 	{
 		key: "metaTags",
 		isValid: IsValidJSONString,
-		dataType: "object"
+		data_type: "object"
 	},
 	{
 		key: "nav",
 		isValid: IsValidNav,
-		dataType: "object"
+		data_type: "object"
 	},
 	{
 		key: "hero",
 		isValid: IsValidHero,
-		dataType: "object"
+		data_type: "object"
 	},
 	{
 		key: "footerHTML",
 		isValid: (value) => typeof value === "string",
-		dataType: "string"
+		data_type: "string"
 	},
 	{
 		key: "i18n",
 		isValid: IsValidI18n,
-		dataType: "object"
+		data_type: "object"
 	},
 	{
 		key: "pattern",
 		//string dots or sqaures or circ
 		isValid: (value) =>
 			typeof value === "string" && ["dots", "squares", "none"].includes(value),
-		dataType: "string"
+		data_type: "string"
 	},
 	{
 		key: "analytics",
 		isValid: IsValidAnalytics,
-		dataType: "object"
+		data_type: "object"
 	},
 	{
 		key: "theme",
 		//light dark system none
 		isValid: (value) =>
 			typeof value === "string" && ["light", "dark", "system", "none"].includes(value),
-		dataType: "string"
+		data_type: "string"
 	},
 	{
 		key: "themeToggle",
 		//boolean
 		isValid: (value) => typeof value === "string",
-		dataType: "string"
+		data_type: "string"
 	},
 	{
 		key: "barStyle",
 		//PARTIAL or FULL
 		isValid: (value) => typeof value === "string" && ["PARTIAL", "FULL"].includes(value),
-		dataType: "string"
+		data_type: "string"
 	},
 	{
 		key: "barRoundness",
 		//SHARP or ROUNDED
 		isValid: (value) => typeof value === "string" && ["SHARP", "ROUNDED"].includes(value),
-		dataType: "string"
+		data_type: "string"
 	},
 	{
 		key: "summaryStyle",
 		//CURRENT or DAY
 		isValid: (value) => typeof value === "string" && ["CURRENT", "DAY"].includes(value),
-		dataType: "string"
+		data_type: "string"
 	},
 	{
 		key: "colors",
 		isValid: IsValidColors,
-		dataType: "object"
+		data_type: "object"
 	},
 	{
 		key: "font",
 		isValid: IsValidJSONString,
-		dataType: "object"
+		data_type: "object"
 	},
 	{
 		key: "categories",
 		isValid: IsValidJSONString,
-		dataType: "object"
+		data_type: "object"
 	}
 ];
 
@@ -155,15 +155,15 @@ export function InsertKeyValue(key, value) {
 		console.trace(`Invalid value for key: ${key}`);
 		throw new Error(`Invalid value for key: ${key}`);
 	}
-	return db.insertOrUpdateSiteData(key, value, f.dataType);
+	return db.insertOrUpdateSiteData(key, value, f.data_type);
 }
 
 export async function GetAllSiteData() {
 	let data = await db.getAllSiteData();
-	//return all data as key value pairs, tranform using dataType
+	//return all data as key value pairs, transform using data_type
 	let transformedData = {};
 	for (const d of data) {
-		if (d.dataType === "object") {
+		if (d.data_type === "object") {
 			transformedData[d.key] = JSON.parse(d.value);
 		} else {
 			transformedData[d.key] = d.value;
@@ -196,10 +196,10 @@ export const GetMonitorsParsed = async (data) => {
 	let monitors = await db.getMonitors(data);
 	let parsedMonitors = monitors.map((m) => {
 		let parsedMonitor = { ...m };
-		if (!!parsedMonitor.typeData) {
-			parsedMonitor.typeData = JSON.parse(parsedMonitor.typeData);
+		if (!!parsedMonitor.type_data) {
+			parsedMonitor.type_data = JSON.parse(parsedMonitor.type_data);
 		} else {
-			parsedMonitor.typeData = {};
+			parsedMonitor.type_data = {};
 		}
 		return parsedMonitor;
 	});
@@ -303,12 +303,12 @@ export const MaskString = (str) => {
 export const CreateNewAPIKey = async (data) => {
 	//generate a new key
 	const apiKey = generateApiKey();
-	const hashedKey = await createHash(apiKey);
+	const hashed_key = await createHash(apiKey);
 	//insert into db
 	await db.createNewApiKey({
 		name: data.name,
-		hashedKey: hashedKey,
-		maskedKey: MaskString(apiKey)
+		hashed_key: hashed_key,
+		masked_key: MaskString(apiKey)
 	});
 
 	return {
@@ -327,9 +327,9 @@ export const UpdateApiKeyStatus = async (data) => {
 };
 
 export const VerifyAPIKey = async (apiKey) => {
-	const hashedKey = createHash(apiKey);
+	const hashed_key = createHash(apiKey);
 	// Check if the hash exists in the database
-	const record = await db.getApiKeyByHashedKey(hashedKey);
+	const record = await db.getApiKeyByHashedKey(hashed_key);
 
 	if (!!record) {
 		return record.status == "ACTIVE";
@@ -350,4 +350,231 @@ export const HashString = (str) => {
 	const hash = crypto.createHash("sha256");
 	hash.update(str);
 	return hash.digest("hex");
+};
+
+export const GetDataGroupByDayAlternative = async (
+	monitor_tag,
+	start,
+	end,
+	timezoneOffsetMinutes = 0
+) => {
+	const offsetMinutes = Number(timezoneOffsetMinutes);
+	if (isNaN(offsetMinutes)) {
+		throw new Error("Invalid timezone offset. Must be a number representing minutes from UTC.");
+	}
+
+	const offsetSeconds = offsetMinutes * 60;
+
+	const rawData = await db.getDataGroupByDayAlternative(monitor_tag, start, end);
+
+	const groupedData = rawData.reduce((acc, row) => {
+		// Calculate day group considering timezone offset
+		const dayGroup = Math.floor((row.timestamp + offsetSeconds) / 86400);
+		if (!acc[dayGroup]) {
+			acc[dayGroup] = {
+				timestamp: dayGroup * 86400 - offsetSeconds, // start of day in UTC
+				total: 0,
+				UP: 0,
+				DOWN: 0,
+				DEGRADED: 0,
+				latencySum: 0,
+				latencies: []
+			};
+		}
+
+		const group = acc[dayGroup];
+		group.total++;
+		group[row.status]++;
+		group.latencySum += row.latency;
+		group.latencies.push(row.latency);
+
+		return acc;
+	}, {});
+
+	// Transform grouped data to final format
+	return Object.values(groupedData)
+		.map((group) => ({
+			timestamp: group.timestamp,
+			total: group.total,
+			UP: group.UP,
+			DOWN: group.DOWN,
+			DEGRADED: group.DEGRADED,
+			avgLatency:
+				group.total > 0 ? Number((group.latencySum / group.total).toFixed(3)) : null,
+			maxLatency:
+				group.latencies.length > 0 ? Number(Math.max(...group.latencies).toFixed(3)) : null,
+			minLatency:
+				group.latencies.length > 0 ? Number(Math.min(...group.latencies).toFixed(3)) : null
+		}))
+		.sort((a, b) => a.timestamp - b.timestamp);
+};
+
+export const CreateIncident = async (data) => {
+	//return error if no title or startDateTime
+	if (!data.title || !data.start_date_time) {
+		throw new Error("Title and startDateTime are required");
+	}
+
+	let incident = {
+		title: data.title,
+		start_date_time: data.start_date_time,
+		status: !!data.status ? data.status : "ACTIVE",
+		end_date_time: !!data.end_date_time ? data.end_date_time : null,
+		state: !!data.state ? data.state : "INVESTIGATING"
+	};
+
+	//if endDateTime is provided and it is less than startDateTime, throw error
+	if (incident.end_date_time && incident.end_date_time < incident.start_date_time) {
+		throw new Error("End date time cannot be less than start date time");
+	}
+
+	let newIncident = await db.createIncident(incident);
+
+	return {
+		incident_id: newIncident.lastInsertRowid
+	};
+};
+
+export const UpdateIncident = async (incident_id, data) => {
+	let incidentExists = await db.getIncidentById(incident_id);
+
+	if (!incidentExists) {
+		throw new Error(`Incident with id ${incident_id} does not exist`);
+	}
+
+	let updateObject = {
+		id: incident_id,
+		title: data.title || incidentExists.title,
+		start_date_time: data.start_date_time || incidentExists.start_date_time,
+		status: data.status || incidentExists.status,
+		state: data.state || incidentExists.state,
+		end_date_time: data.end_date_time || incidentExists.end_date_time
+	};
+	return await db.updateIncident(updateObject);
+};
+
+export const ParseIncidentToAPIResp = async (incident_id) => {
+	let incident = await db.getIncidentById(incident_id);
+	if (!incident) {
+		throw new Error(`Incident with id ${incident_id} not found`);
+	}
+	let resp = {
+		id: incident.id,
+		start_date_time: incident.start_date_time,
+		end_date_time: incident.end_date_time,
+		created_at: incident.created_at,
+		updated_at: incident.updated_at,
+		title: incident.title,
+		status: incident.status,
+		state: incident.state
+	};
+
+	return resp;
+};
+
+export const GetIncidentMonitors = async (incident_id) => {
+	let incidentExists = await db.getIncidentById(incident_id);
+	if (!incidentExists) {
+		throw new Error(`Incident with id ${incident_id} does not exist`);
+	}
+	let incidentMonitors = await db.getIncidentMonitorsByIncidentID(incident_id);
+	return incidentMonitors.map((m) => ({
+		monitor_tag: m.monitor_tag,
+		monitor_impact: m.monitor_impact
+	}));
+};
+
+export const RemoveIncidentMonitor = async (incident_id, monitor_tag) => {
+	let incidentExists = await db.getIncidentById(incident_id);
+	if (!incidentExists) {
+		throw new Error(`Incident with id ${incident_id} does not exist`);
+	}
+	return await db.removeIncidentMonitor(incident_id, monitor_tag);
+};
+
+export const AddIncidentMonitor = async (incident_id, monitor_tag, monitor_impact) => {
+	//monitor_impact must be DOWN or DEGRADED or NONE
+	if (!["DOWN", "DEGRADED"].includes(monitor_impact)) {
+		throw new Error("Monitor impact must be either DOWN, DEGRADED ");
+	}
+
+	//check if monitor exists
+	let monitorExists = await db.getMonitorByTag(monitor_tag);
+	if (!monitorExists) {
+		throw new Error(`Monitor with tag ${monitor_tag} does not exist`);
+	}
+
+	//check if incident exists
+	let incidentExists = await db.getIncidentById(incident_id);
+	if (!incidentExists) {
+		throw new Error(`Incident with id ${incident_id} does not exist`);
+	}
+
+	return await db.insertIncidentMonitor(incident_id, monitor_tag, monitor_impact);
+};
+
+export const AddIncidentComment = async (incident_id, comment, state) => {
+	let incidentExists = await db.getIncidentById(incident_id);
+	if (!incidentExists) {
+		throw new Error(`Incident with id ${incident_id} does not exist`);
+	}
+
+	let c = await db.insertIncidentComment(incident_id, comment, state);
+
+	//update incident state
+	if (c) {
+		await UpdateIncident(incident_id, { state: state });
+	}
+
+	return c;
+};
+
+export const GetIncidentComments = async (incident_id) => {
+	let incidentExists = await db.getIncidentById(incident_id);
+	if (!incidentExists) {
+		throw new Error(`Incident with id ${incident_id} does not exist`);
+	}
+	return await db.getIncidentComments(incident_id);
+};
+export const GetIncidentActiveComments = async (incident_id) => {
+	let incidentExists = await db.getIncidentById(incident_id);
+	if (!incidentExists) {
+		throw new Error(`Incident with id ${incident_id} does not exist`);
+	}
+	return await db.getActiveIncidentComments(incident_id);
+};
+
+export const UpdateCommentByID = async (incident_id, comment_id, comment) => {
+	let commentExists = await db.getIncidentCommentByIDAndIncident(incident_id, comment_id);
+	if (!commentExists) {
+		throw new Error(`Comment with id ${comment_id} does not exist`);
+	}
+	return await db.updateIncidentCommentByID(comment_id, comment);
+};
+
+export const UpdateCommentStatusByID = async (incident_id, comment_id, status) => {
+	let commentExists = await db.getIncidentCommentByIDAndIncident(incident_id, comment_id);
+	if (!commentExists) {
+		throw new Error(`Comment with id ${comment_id} does not exist`);
+	}
+	return await db.updateIncidentCommentStatusByID(comment_id, status);
+};
+
+export const GetIncidentsDashboard = async (data) => {
+	let filter = {};
+	if (data.filter.status != "ALL") {
+		filter = { status: data.filter.status };
+	}
+
+	let incidents = await db.getIncidentsPaginatedDesc(data.page, data.limit, filter);
+	let total = await db.getIncidentsCount(filter);
+
+	for (let i = 0; i < incidents.length; i++) {
+		incidents[i].monitors = await GetIncidentMonitors(incidents[i].id);
+	}
+
+	return {
+		incidents: incidents,
+		total: total
+	};
 };

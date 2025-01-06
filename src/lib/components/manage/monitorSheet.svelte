@@ -35,7 +35,9 @@
 	export let newMonitor;
 	let loadingLogo = false;
 
-	let selectedCategory = categories.find((category) => category.name === newMonitor.categoryName);
+	let selectedCategory = categories.find(
+		(category) => category.name === newMonitor.category_name
+	);
 
 	async function handleFileChangeLogo(event) {
 		const file = event.target.files[0];
@@ -114,13 +116,13 @@
 			invalidFormMessage = "Name is required";
 			return;
 		}
-		//dayDegradedMinimumCount should be positive number
-		if (newMonitor.dayDegradedMinimumCount < 1) {
+		//day_degraded_minimum_count should be positive number
+		if (newMonitor.day_degraded_minimum_count < 1) {
 			invalidFormMessage = "Day Degraded Minimum Count should be greater than 0";
 			return;
 		}
-		//dayDownMinimumCount should be positive number
-		if (newMonitor.dayDownMinimumCount < 1) {
+		//day_down_minimum_count should be positive number
+		if (newMonitor.day_down_minimum_count < 1) {
 			invalidFormMessage = "Day Down Minimum Count should be greater than 0";
 			return;
 		}
@@ -135,7 +137,7 @@
 		}
 
 		//if monitor type is API
-		if (newMonitor.monitorType === "API") {
+		if (newMonitor.monitor_type === "API") {
 			//validating url
 			if (!newMonitor.apiConfig.url) {
 				invalidFormMessage = "URL is required";
@@ -164,8 +166,8 @@
 				return;
 			}
 
-			newMonitor.typeData = JSON.stringify(newMonitor.apiConfig);
-		} else if (newMonitor.monitorType === "PING") {
+			newMonitor.type_data = JSON.stringify(newMonitor.apiConfig);
+		} else if (newMonitor.monitor_type === "PING") {
 			//validating hostsV4
 
 			let hostsV4 = newMonitor.pingConfig.hostsV4;
@@ -195,8 +197,8 @@
 				invalidFormMessage = "hostsV4 or hostsV6 is required";
 				return;
 			}
-			newMonitor.typeData = JSON.stringify(newMonitor.pingConfig);
-		} else if (newMonitor.monitorType === "DNS") {
+			newMonitor.type_data = JSON.stringify(newMonitor.pingConfig);
+		} else if (newMonitor.monitor_type === "DNS") {
 			//validating host
 			if (!newMonitor.dnsConfig.host) {
 				invalidFormMessage = "Host is required";
@@ -224,7 +226,7 @@
 				invalidFormMessage = "Atleast one value is required";
 				return;
 			}
-			newMonitor.typeData = JSON.stringify(newMonitor.dnsConfig);
+			newMonitor.type_data = JSON.stringify(newMonitor.dnsConfig);
 		}
 		formState = "loading";
 
@@ -308,15 +310,19 @@
 						Tag
 						<span class="text-red-500">*</span>
 					</Label>
-					<Input bind:value={newMonitor.tag} id="tag" />
+					<Input bind:value={newMonitor.tag} id="tag" placeholder="Add a Tag" />
 				</div>
 				<div class="col-span-1">
 					<Label for="name">Name <span class="text-red-500">*</span></Label>
-					<Input bind:value={newMonitor.name} id="name" />
+					<Input bind:value={newMonitor.name} id="name" placeholder="Add a Name" />
 				</div>
 				<div class="col-span-3">
 					<Label for="description">Description</Label>
-					<Input bind:value={newMonitor.description} id="description" />
+					<Input
+						bind:value={newMonitor.description}
+						id="description"
+						placeholder="Add a description for the monitor"
+					/>
 				</div>
 
 				<div class="col-span-1">
@@ -324,13 +330,13 @@
 					<Input bind:value={newMonitor.cron} id="cron" />
 				</div>
 				<div class="col-span-1">
-					<Label for="defaultStatus">Default Status</Label>
+					<Label for="default_status">Default Status</Label>
 					<Select.Root
 						portal={null}
-						onSelectedChange={(e) => (newMonitor.defaultStatus = e.value)}
+						onSelectedChange={(e) => (newMonitor.default_status = e.value)}
 					>
-						<Select.Trigger id="defaultStatus">
-							<Select.Value placeholder={newMonitor.defaultStatus} />
+						<Select.Trigger id="default_status">
+							<Select.Value placeholder={newMonitor.default_status} />
 						</Select.Trigger>
 						<Select.Content>
 							<Select.Group>
@@ -357,14 +363,14 @@
 				</div>
 
 				<div class="col-span-1">
-					<Label for="categoryName">Category Name</Label>
+					<Label for="category_name">Category Name</Label>
 					<Select.Root
 						portal={null}
 						bind:value={selectedCategory}
-						onSelectedChange={(e) => (newMonitor.categoryName = e.value)}
+						onSelectedChange={(e) => (newMonitor.category_name = e.value)}
 					>
-						<Select.Trigger id="categoryName">
-							<Select.Value placeholder={newMonitor.categoryName} />
+						<Select.Trigger id="category_name">
+							<Select.Value placeholder={newMonitor.category_name} />
 						</Select.Trigger>
 						<Select.Content>
 							<Select.Group>
@@ -385,28 +391,32 @@
 				</div>
 
 				<div class="col-span-1">
-					<Label for="dayDegradedMinimumCount">
+					<Label for="day_degraded_minimum_count">
 						Day Degraded Minimum Count <span class="text-red-500">*</span>
 					</Label>
 					<Input
-						bind:value={newMonitor.dayDegradedMinimumCount}
-						id="dayDegradedMinimumCount"
+						bind:value={newMonitor.day_degraded_minimum_count}
+						id="day_degraded_minimum_count"
 					/>
 				</div>
 				<div class="col-span-1">
-					<Label for="dayDownMinimumCount">
+					<Label for="day_down_minimum_count">
 						Day Down Minimum Count <span class="text-red-500">*</span>
 					</Label>
-					<Input bind:value={newMonitor.dayDownMinimumCount} id="dayDownMinimumCount" />
+					<Input
+						bind:value={newMonitor.day_down_minimum_count}
+						id="day_down_minimum_count"
+					/>
 				</div>
 				<div class="col-span-1">
-					<Label for="includeDegradedInDowntime">Include Degraded In Downtime</Label>
+					<Label for="include_degraded_in_downtime">Include Degraded In Downtime</Label>
 					<Select.Root
 						portal={null}
-						onSelectedChange={(e) => (newMonitor.includeDegradedInDowntime = e.value)}
+						onSelectedChange={(e) =>
+							(newMonitor.include_degraded_in_downtime = e.value)}
 					>
-						<Select.Trigger id="includeDegradedInDowntime">
-							<Select.Value placeholder={newMonitor.includeDegradedInDowntime} />
+						<Select.Trigger id="include_degraded_in_downtime">
+							<Select.Value placeholder={newMonitor.include_degraded_in_downtime} />
 						</Select.Trigger>
 						<Select.Content>
 							<Select.Group>
@@ -422,13 +432,13 @@
 					</Select.Root>
 				</div>
 				<div class="col-span-1">
-					<Label for="monitorType">Monitor Type</Label>
+					<Label for="monitor_type">Monitor Type</Label>
 					<Select.Root
 						portal={null}
-						onSelectedChange={(e) => (newMonitor.monitorType = e.value)}
+						onSelectedChange={(e) => (newMonitor.monitor_type = e.value)}
 					>
-						<Select.Trigger id="monitorType">
-							<Select.Value placeholder={newMonitor.monitorType} />
+						<Select.Trigger id="monitor_type">
+							<Select.Value placeholder={newMonitor.monitor_type} />
 						</Select.Trigger>
 						<Select.Content>
 							<Select.Group>
@@ -450,7 +460,7 @@
 					</Select.Root>
 				</div>
 			</div>
-			{#if newMonitor.monitorType === "API"}
+			{#if newMonitor.monitor_type === "API"}
 				<div class="mt-4 grid grid-cols-6 gap-2">
 					<div class="col-span-1">
 						<Label for="timeout">
@@ -588,7 +598,7 @@
 						></textarea>
 					</div>
 				</div>
-			{:else if newMonitor.monitorType == "PING"}
+			{:else if newMonitor.monitor_type == "PING"}
 				<div class="mt-4 grid grid-cols-6 gap-2">
 					<div class="col-span-6">
 						<Label for="hostsV4">Hosts V4</Label>
@@ -671,7 +681,7 @@
 						</div>
 					</div>
 				</div>
-			{:else if newMonitor.monitorType == "DNS"}
+			{:else if newMonitor.monitor_type == "DNS"}
 				<div class="mt-4 grid grid-cols-4 gap-2">
 					<div class="col-span-2">
 						<Label for="host">Host</Label>

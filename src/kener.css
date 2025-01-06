@@ -223,6 +223,9 @@ section {
 .tag-identified-text {
 	color: #ddac25;
 }
+.tag-siren-text {
+	color: #dd256f;
+}
 .daygrid90 {
 	-ms-overflow-style: none; /* Internet Explorer 10+ */
 	scrollbar-width: none; /* Firefox */
@@ -366,4 +369,11 @@ section {
 
 .animatebg {
 	animation: changeColor 2s infinite;
+}
+
+textarea::placeholder {
+	color: hsl(219, 14%, 47%);
+}
+.dark textarea::placeholder {
+	color: hsl(0, 0%, 40%);
 }

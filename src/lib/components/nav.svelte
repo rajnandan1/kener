@@ -29,7 +29,7 @@
 		</a>
 		<div class="flex w-full justify-end">
 			{#if data.site.nav}
-				<nav class="mr-4 hidden flex-wrap items-center text-sm font-medium md:flex">
+				<nav class=" hidden flex-wrap items-center text-sm font-medium md:flex">
 					{#each data.site.nav as navItem}
 						<a
 							href={navItem.url}

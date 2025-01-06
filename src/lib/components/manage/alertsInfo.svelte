@@ -156,49 +156,49 @@
 									<td
 										class="whitespace-nowrap px-6 py-4 text-xs font-semibold text-gray-800 dark:text-neutral-200"
 									>
-										{#if alert.monitorStatus === "DOWN"}
+										{#if alert.monitor_status === "DOWN"}
 											<span class="text-red-500">
-												{alert.monitorStatus}
+												{alert.monitor_status}
 											</span>
 										{:else}
 											<span class="text-yellow-500">
-												{alert.monitorStatus}
+												{alert.monitor_status}
 											</span>
 										{/if}
 									</td>
 									<td
 										class="whitespace-nowrap px-6 py-4 text-sm text-gray-800 dark:text-neutral-200"
 									>
-										{alert.monitorTag}
+										{alert.monitor_tag}
 									</td>
 									<td
 										class="whitespace-nowrap px-6 py-4 text-xs font-semibold text-gray-800 dark:text-neutral-200"
 									>
-										{#if alert.alertStatus === "RESOLVED"}
+										{#if alert.alert_status === "RESOLVED"}
 											<span class="text-blue-500">
-												{alert.alertStatus}
+												{alert.alert_status}
 											</span>
 										{:else}
 											<span class="text-fuchsia-500">
-												{alert.alertStatus}
+												{alert.alert_status}
 											</span>
 										{/if}
 									</td>
 									<td
 										class="whitespace-nowrap px-6 py-4 text-sm text-gray-800 dark:text-neutral-200"
 									>
-										{alert.healthChecks}
+										{alert.health_checks}
 									</td>
 									<td
 										class="whitespace-nowrap px-6 py-4 text-xs font-semibold text-gray-800 dark:text-neutral-200"
 									>
-										{#if !!alert.incidentNumber}
+										{#if !!alert.incident_number}
 											<a
 												target="_blank"
-												href="{incidentURL}/{alert.incidentNumber}"
+												href="{incidentURL}/{alert.incident_number}"
 												class="text-cyan-500 hover:underline focus:outline-none"
 											>
-												{alert.incidentNumber}
+												{alert.incident_number}
 											</a>
 										{:else}
 											-
@@ -207,7 +207,7 @@
 									<td
 										class="whitespace-nowrap px-6 py-4 text-sm text-gray-800 dark:text-neutral-200"
 									>
-										{moment(alert.createdAt).format("YYYY-MM-DD HH:mm:ss")}
+										{moment(alert.created_at).format("YYYY-MM-DD HH:mm:ss")}
 									</td>
 								</tr>
 							{/each}

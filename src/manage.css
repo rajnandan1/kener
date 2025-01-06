@@ -40,3 +40,68 @@ input[type="file"] {
 [aria-label="color picker"] input {
 	color: rgba(0, 0, 0, 0.5) !important;
 }
+#start_date_time,
+#end_date_time {
+	width: 100%;
+	padding: 8px 12px;
+	border-radius: 6px;
+	font-size: 14px;
+	font-weight: 500;
+}
+
+#start_date_time::placeholder,
+#end_date_time::placeholder {
+	color: hsl(219, 14%, 47%);
+}
+.dark #start_date_time::placeholder,
+.dark #end_date_time::placeholder {
+	color: hsl(0, 0%, 40%);
+}
+
+.bg-hover {
+	background-image: linear-gradient(to right, #d0f5be, #d0f5be);
+	background-size: 25%;
+	background-repeat: no-repeat;
+	transition: background 0.3s;
+	opacity: 0.5;
+}
+.bg-hover.id-0 {
+	opacity: 1;
+}
+.dark .bg-hover {
+	background-image: linear-gradient(to right, #6f61c0, #6f61c0);
+}
+.bg-hover:has(div:first-child:hover),
+.bg-hover.state-INVESTIGATING {
+	background-size: 25%;
+}
+.bg-hover:has(div:nth-child(2):hover),
+.bg-hover.state-IDENTIFIED {
+	background-size: 50%;
+}
+.bg-hover:has(div:nth-child(3):hover),
+.bg-hover.state-MONITORING {
+	background-size: 75%;
+}
+.bg-hover:has(div:nth-child(4):hover),
+.bg-hover.state-RESOLVED {
+	background-size: 100%;
+}
+
+.badge-MONITORING {
+	background-color: #ffaf4d;
+	color: #111;
+}
+.badge-INVESTIGATING {
+	background-color: #fe588a;
+	color: #111;
+}
+
+.badge-RESOLVED {
+	background-color: #7aba78;
+	color: #111;
+}
+.badge-IDENTIFIED {
+	background-color: #b987f7;
+	color: #111;
+}

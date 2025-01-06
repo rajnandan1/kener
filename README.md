@@ -39,6 +39,7 @@ Kener: Open-source sveltekit status page system, crafted with lot of thought so 
 It does not aim to replace the Datadogs of the world. It simply tries to help someone come with a status page for the world.
 
 Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing is added to make cooler.
+
 <div align="left">
     <img alt="Visitor Stats" src="https://widgetbite.com/stats/rajnandan"/>  
 </div>
@@ -56,7 +57,7 @@ Here are some of the features that you get out of the box. Please read the docum
 -   Cron-based scheduling for monitors. Minimum per minute
 -   Flexible monitor configuration using YAML. Define your own parsing for monitor being UP/DOWN/DEGRADED
 -   Construct complex API Polls - Chain, Secrets etc
--   Supports a Default Status for Monitors. Example defaultStatus=DOWN if you don't hit API per minute with Status UP
+-   Supports a Default Status for Monitors. Example default_status=DOWN if you don't hit API per minute with Status UP
 -   Supports base path for hosting in k8s
 -   Pre-built docker image for easy deployment
 -   Supports webhooks/discord/slack for notifications

@@ -121,8 +121,8 @@ const store = async function (data) {
 
 	//get the monitor object matching the tag
 
-	await db.insertData({
-		monitorTag: tag,
+	await db.insertMonitoringData({
+		monitor_tag: tag,
 		timestamp: data.timestampInSeconds,
 		status: resp.status,
 		latency: resp.latency,
@@ -144,11 +144,11 @@ const GHIssueToKenerIncident = async function (issue) {
 	let commonTags = tagsAvailable.filter((tag) => issueLabels.includes(tag));
 
 	let resp = {
-		createdAt: Math.floor(new Date(issue.created_at).getTime() / 1000), //in seconds
+		created_at: Math.floor(new Date(issue.created_at).getTime() / 1000), //in seconds
 		closedAt: issue.closed_at ? Math.floor(new Date(issue.closed_at).getTime() / 1000) : null,
 		title: issue.title,
 		tags: commonTags,
-		incidentNumber: issue.number
+		incident_number: issue.number
 	};
 	resp.startDatetime = GetStartTimeFromBody(issue.body);
 	resp.endDatetime = GetEndTimeFromBody(issue.body);
@@ -266,7 +266,7 @@ const GetMonitorStatusByTag = async function (tag, timestamp) {
 		lastUpdatedAt: null
 	};
 
-	const { includeDegradedInDowntime } = monitor;
+	const { include_degraded_in_downtime } = monitor;
 
 	let now = GetMinuteStartNowTimestampUTC();
 	if (timestamp !== null && timestamp !== undefined) {
@@ -274,7 +274,7 @@ const GetMonitorStatusByTag = async function (tag, timestamp) {
 	}
 	let start = GetDayStartTimestampUTC(now);
 
-	let dayDataNew = await db.getData(tag, start, now);
+	let dayDataNew = await db.getMonitoringData(tag, start, now);
 	let ups = 0;
 	let downs = 0;
 	let degradeds = 0;
@@ -291,7 +291,7 @@ const GetMonitorStatusByTag = async function (tag, timestamp) {
 		}
 	}
 	let numerator = ups + degradeds;
-	if (includeDegradedInDowntime === "YES") {
+	if (include_degraded_in_downtime === "YES") {
 		numerator = ups;
 	}
 

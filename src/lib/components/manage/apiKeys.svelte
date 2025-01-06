@@ -182,12 +182,12 @@
 								<td
 									class="whitespace-nowrap px-6 py-4 text-xs font-semibold text-gray-800 dark:text-neutral-200"
 								>
-									{apiKey.maskedKey.slice(-32)}
+									{apiKey.masked_key.slice(-32)}
 								</td>
 								<td
 									class="whitespace-nowrap px-6 py-4 text-sm text-gray-800 dark:text-neutral-200"
 								>
-									{moment(apiKey.createdAt).format("YYYY-MM-DD HH:mm:ss")}
+									{moment(apiKey.created_at).format("YYYY-MM-DD HH:mm:ss")}
 								</td>
 								<td
 									class="whitespace-nowrap px-6 py-4 text-xs font-semibold text-gray-800 dark:text-neutral-200"
