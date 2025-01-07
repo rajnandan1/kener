@@ -15,20 +15,16 @@
 	let formStateHero = "idle";
 	let formStateNav = "idle";
 	let formStateFooter = "idle";
+	let formStateIncident = "idle";
 	let formStatei18n = "idle";
 	let formStateCategories = "idle";
 
-	let githubInfo = {
-		repo: "",
-		owner: "",
-		incidentSince: "",
-		apiURL: "https://api.github.com"
-	};
 	let hero = {
 		title: "",
 		subtitle: ""
 	};
 	let footerHTML = "";
+	let homeIncidentCount = 10;
 	let nav = [];
 	let categories = [];
 	let i18n = {
@@ -77,6 +73,9 @@
 		hero = data.siteData.hero;
 	}
 
+	if (data.siteData.homeIncidentCount) {
+		homeIncidentCount = data.siteData.homeIncidentCount;
+	}
 	if (data.siteData.footerHTML) {
 		footerHTML = data.siteData.footerHTML;
 	}
@@ -134,6 +133,19 @@
 		//print data
 		let data = await resp.json();
 		formStateFooter = "idle";
+		if (data.error) {
+			alert(data.error);
+			return;
+		}
+	}
+	async function formSubmitIncident() {
+		formStateIncident = "loading";
+		let resp = await storeSiteData({
+			homeIncidentCount: homeIncidentCount
+		});
+		//print data
+		let data = await resp.json();
+		formStateIncident = "idle";
 		if (data.error) {
 			alert(data.error);
 			return;
@@ -287,6 +299,39 @@
 						<Loader class="ml-2 inline h-4 w-4 animate-spin" />
 					{/if}
 				</Button>
+			</div>
+		</form>
+	</Card.Content>
+</Card.Root>
+<Card.Root class="mt-4">
+	<Card.Header class="border-b">
+		<Card.Title>Incidents</Card.Title>
+		<Card.Description>
+			Control how many recent updated incidents you want to show on the homepage.
+		</Card.Description>
+	</Card.Header>
+	<Card.Content>
+		<form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitIncident}>
+			<div class="flex max-w-md flex-row justify-start gap-2">
+				<div class="">
+					<Label for="hero_title">Number of Incidents to Show</Label>
+					<Input
+						bind:value={homeIncidentCount}
+						class="mt-2"
+						type="text"
+						min="0"
+						id="homeIncidentCount"
+						placeholder="10"
+					/>
+				</div>
+				<div class="pt-8">
+					<Button type="submit" disabled={formStateIncident === "loading"}>
+						Save
+						{#if formStateIncident === "loading"}
+							<Loader class="ml-2 inline h-4 w-4 animate-spin" />
+						{/if}
+					</Button>
+				</div>
 			</div>
 		</form>
 	</Card.Content>

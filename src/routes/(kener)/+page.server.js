@@ -1,7 +1,6 @@
 // @ts-nocheck
-import { Mapper, GetOpenIncidents, FilterAndInsertMonitorInIncident } from "$lib/server/github.js";
 import { FetchData } from "$lib/server/page";
-import { GetMonitors } from "$lib/server/controllers/controller.js";
+import { GetMonitors, GetIncidentsOpenHome } from "$lib/server/controllers/controller.js";
 
 export async function load({ parent }) {
 	let monitors = await GetMonitors({ status: "ACTIVE" });
@@ -24,11 +23,13 @@ export async function load({ parent }) {
 		monitors[i].activeIncidents = [];
 		monitorsActive.push(monitors[i]);
 	}
-	let openIncidents = await GetOpenIncidents();
-	let openIncidentsReduced = openIncidents.map(Mapper);
+	let allOpenIncidents = await GetIncidentsOpenHome(siteData.homeIncidentCount);
+	let resolvedIncidents = allOpenIncidents.filter((incident) => incident.state === "RESOLVED");
+	let unresolvedIncidents = allOpenIncidents.filter((incident) => incident.state !== "RESOLVED");
 
 	return {
 		monitors: monitorsActive,
-		openIncidents: FilterAndInsertMonitorInIncident(openIncidentsReduced, monitorsActive)
+		resolvedIncidents: resolvedIncidents,
+		unresolvedIncidents: unresolvedIncidents
 	};
 }

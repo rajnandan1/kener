@@ -137,6 +137,11 @@ const siteDataKeys = [
 		key: "categories",
 		isValid: IsValidJSONString,
 		data_type: "object"
+	},
+	{
+		key: "homeIncidentCount",
+		isValid: (value) => parseInt(value) >= 0,
+		data_type: "string"
 	}
 ];
 
@@ -442,6 +447,11 @@ export const UpdateIncident = async (incident_id, data) => {
 		throw new Error(`Incident with id ${incident_id} does not exist`);
 	}
 
+	let endDateTime = data.end_date_time;
+	if (endDateTime && endDateTime < incidentExists.start_date_time) {
+		throw new Error("End date time cannot be less than start date time");
+	}
+
 	let updateObject = {
 		id: incident_id,
 		title: data.title || incidentExists.title,
@@ -513,22 +523,6 @@ export const AddIncidentMonitor = async (incident_id, monitor_tag, monitor_impac
 	return await db.insertIncidentMonitor(incident_id, monitor_tag, monitor_impact);
 };
 
-export const AddIncidentComment = async (incident_id, comment, state) => {
-	let incidentExists = await db.getIncidentById(incident_id);
-	if (!incidentExists) {
-		throw new Error(`Incident with id ${incident_id} does not exist`);
-	}
-
-	let c = await db.insertIncidentComment(incident_id, comment, state);
-
-	//update incident state
-	if (c) {
-		await UpdateIncident(incident_id, { state: state });
-	}
-
-	return c;
-};
-
 export const GetIncidentComments = async (incident_id) => {
 	let incidentExists = await db.getIncidentById(incident_id);
 	if (!incidentExists) {
@@ -544,12 +538,55 @@ export const GetIncidentActiveComments = async (incident_id) => {
 	return await db.getActiveIncidentComments(incident_id);
 };
 
-export const UpdateCommentByID = async (incident_id, comment_id, comment) => {
+export const UpdateCommentByID = async (incident_id, comment_id, comment, state, commented_at) => {
+	let incidentExists = await db.getIncidentById(incident_id);
+	if (!incidentExists) {
+		throw new Error(`Incident with id ${incident_id} does not exist`);
+	}
 	let commentExists = await db.getIncidentCommentByIDAndIncident(incident_id, comment_id);
 	if (!commentExists) {
 		throw new Error(`Comment with id ${comment_id} does not exist`);
 	}
-	return await db.updateIncidentCommentByID(comment_id, comment);
+	let c = await db.updateIncidentCommentByID(comment_id, comment, state, commented_at);
+	if (c) {
+		let incidentUpdate = {
+			state: state
+		};
+		if (state === "RESOLVED") {
+			incidentUpdate.end_date_time = commented_at;
+		} else {
+			if (incidentExists.state === "RESOLVED") {
+				await db.setIncidentEndTimeToNull(incident_id);
+			}
+		}
+		await UpdateIncident(incident_id, incidentUpdate);
+	}
+	return c;
+};
+export const AddIncidentComment = async (incident_id, comment, state, commented_at) => {
+	let incidentExists = await db.getIncidentById(incident_id);
+	if (!incidentExists) {
+		throw new Error(`Incident with id ${incident_id} does not exist`);
+	}
+
+	let c = await db.insertIncidentComment(incident_id, comment, state, commented_at);
+
+	//update incident state
+	if (c) {
+		let incidentUpdate = {
+			state: state
+		};
+		if (state === "RESOLVED") {
+			incidentUpdate.end_date_time = commented_at;
+		} else {
+			if (incidentExists.state === "RESOLVED") {
+				await db.setIncidentEndTimeToNull(incident_id);
+			}
+		}
+		await UpdateIncident(incident_id, incidentUpdate);
+	}
+
+	return c;
 };
 
 export const UpdateCommentStatusByID = async (incident_id, comment_id, status) => {
@@ -577,4 +614,28 @@ export const GetIncidentsDashboard = async (data) => {
 		incidents: incidents,
 		total: total
 	};
+};
+
+export const GetIncidentsOpenHome = async (homeIncidentCount) => {
+	homeIncidentCount = parseInt(homeIncidentCount);
+
+	if (homeIncidentCount < 0) {
+		homeIncidentCount = 0;
+	}
+
+	if (homeIncidentCount === 0) {
+		return [];
+	}
+
+	let incidents = await db.getRecentUpdatedIncidents(parseInt(homeIncidentCount));
+	for (let i = 0; i < incidents.length; i++) {
+		incidents[i].monitors = await GetIncidentMonitors(incidents[i].id);
+	}
+
+	//get comments
+	for (let i = 0; i < incidents.length; i++) {
+		incidents[i].comments = await GetIncidentActiveComments(incidents[i].id);
+	}
+
+	return incidents;
 };

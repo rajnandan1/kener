@@ -136,6 +136,7 @@ class Sqlite {
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
 				comment TEXT NOT NULL,
 				incident_id INTEGER NOT NULL,
+				commented_at INTEGER NOT NULL,
 				created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 				updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 				status TEXT DEFAULT 'ACTIVE',
@@ -589,6 +590,19 @@ class Sqlite {
 		return stmt.all(params);
 	}
 
+	//get last 10 recent updated incidents
+	async getRecentUpdatedIncidents(limit) {
+		let stmt = this.db.prepare(`
+			SELECT * FROM incidents
+			where status = 'OPEN'
+			ORDER BY updated_at DESC
+			LIMIT @limit;
+		`);
+		return stmt.all({
+			limit
+		});
+	}
+
 	//get total incident count
 	async getIncidentsCount(filter) {
 		let query = `
@@ -618,6 +632,16 @@ class Sqlite {
 			WHERE id = @id;
 		`);
 		return stmt.run(data);
+	}
+
+	//set incident end time to null
+	async setIncidentEndTimeToNull(id) {
+		let stmt = this.db.prepare(`
+			UPDATE incidents
+			SET end_date_time = NULL, updated_at = CURRENT_TIMESTAMP
+			WHERE id = @id;
+		`);
+		return stmt.run({ id });
 	}
 
 	async insertIncidentMonitor(data) {
@@ -703,19 +727,19 @@ class Sqlite {
 	}
 
 	//insert incident_comment
-	async insertIncidentComment(incident_id, comment, state) {
+	async insertIncidentComment(incident_id, comment, state, commented_at) {
 		let stmt = this.db.prepare(`
-			INSERT INTO incident_comments (comment, incident_id, state)
-			VALUES (@comment, @incident_id, @state);
+			INSERT INTO incident_comments (comment, incident_id, state, commented_at)
+			VALUES (@comment, @incident_id, @state, @commented_at);
 		`);
-		return stmt.run({ comment, incident_id, state });
+		return stmt.run({ comment, incident_id, state, commented_at });
 	}
 
 	//get comments for an incident
 	async getIncidentComments(incident_id) {
 		let stmt = this.db.prepare(`
 			SELECT * FROM incident_comments
-			WHERE incident_id = @incident_id order by id desc;
+			WHERE incident_id = @incident_id order by commented_at desc;
 		`);
 		return stmt.all({ incident_id });
 	}
@@ -724,7 +748,7 @@ class Sqlite {
 	async getActiveIncidentComments(incident_id) {
 		let stmt = this.db.prepare(`
 			SELECT * FROM incident_comments
-			WHERE incident_id = @incident_id AND status = 'ACTIVE' order by id desc;
+			WHERE incident_id = @incident_id AND status = 'ACTIVE' order by commented_at desc;
 		`);
 		return stmt.all({ incident_id });
 	}
@@ -739,13 +763,13 @@ class Sqlite {
 	}
 
 	//update incident comment
-	async updateIncidentCommentByID(id, comment, state) {
+	async updateIncidentCommentByID(id, comment, state, commented_at) {
 		let stmt = this.db.prepare(`
 			UPDATE incident_comments
-			SET comment = @comment, state = @state, updated_at = CURRENT_TIMESTAMP
+			SET comment = @comment, state = @state, commented_at = @commented_at,  updated_at = CURRENT_TIMESTAMP
 			WHERE id = @id;
 		`);
-		return stmt.run({ id, comment, state });
+		return stmt.run({ id, comment, state, commented_at });
 	}
 
 	//update status of incident comment

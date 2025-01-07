@@ -214,7 +214,8 @@
 	let newComment = {
 		comment: "",
 		id: 0,
-		state: "INVESTIGATING"
+		state: "INVESTIGATING",
+		commented_at: new Date()
 	};
 	let addCommentError = "";
 
@@ -234,6 +235,10 @@
 				})
 			});
 			let resp = await data.json();
+			if (resp.error) {
+				addCommentError = resp.error;
+			}
+
 			comments = resp;
 		} catch (error) {
 			addCommentError = "Error while fetching comments";
@@ -247,12 +252,21 @@
 		showCommentModal = true;
 		comments = [];
 		newComment.state = i.state;
+		newComment.id = 0;
+		newComment.comment = "";
+		newComment.commented_at = null;
 		fetchComments();
 	}
 
 	async function addNewComment() {
 		addCommentError = "";
 		if (newComment.comment.trim().length == 0 || loadingComments) {
+			return;
+		}
+
+		//if newComment.commented_at is null, error
+		if (!!!newComment.commented_at) {
+			addCommentError = "Time stamp is required";
 			return;
 		}
 
@@ -269,7 +283,8 @@
 						incident_id: currentIncident.id,
 						comment: newComment.comment,
 						comment_id: newComment.id,
-						state: newComment.state
+						state: newComment.state,
+						commented_at: parseInt(new Date(newComment.commented_at).getTime() / 1000)
 					}
 				})
 			});
@@ -280,6 +295,7 @@
 				await fetchComments();
 				newComment.comment = "";
 				newComment.id = 0;
+				newComment.commented_at = null;
 				await fetchData();
 			}
 		} catch (error) {
@@ -324,15 +340,13 @@
 		showModal = true;
 	}
 	function setCommentState(s) {
-		if (!!newComment.id) {
-			return;
-		}
 		newComment.state = s;
 		currentIncident.state = s;
 	}
 
 	function setCommentEdit(c) {
-		newComment = c;
+		newComment = { ...c };
+		newComment.commented_at = new Date(Number(c.commented_at) * 1000);
 	}
 </script>
 
@@ -633,16 +647,6 @@
 							class=" mt-2 text-sm"
 						/>
 					</div>
-					<div class="col-span-1">
-						<Label class="mb-2 text-sm" for="start_date_time">End Date Time</Label>
-						<DateInput
-							bind:value={newIncident.endDatetime}
-							id="end_date_time"
-							min={newIncident.startDatetime}
-							timePrecision="minute"
-							class="mt-2 text-sm"
-						/>
-					</div>
 				</div>
 				<div class="mt-4 flex gap-4">
 					<p class="font-medium">
@@ -714,7 +718,7 @@
 				</h2>
 				<form class="mt-4" on:submit|preventDefault={addNewComment}>
 					<div
-						class="bg-hover id-{newComment.id} state-{newComment.state} mt-2 grid grid-cols-4 overflow-hidden rounded-md border text-xs font-medium"
+						class="bg-hover state-{newComment.state} mt-2 grid grid-cols-4 overflow-hidden rounded-md border text-xs font-medium"
 					>
 						<div
 							class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
@@ -749,6 +753,16 @@
 							RESOLVED
 						</div>
 					</div>
+					<div class="mt-4 flex w-full gap-4">
+						<div class="text-sm font-medium leading-7">Time Stamp</div>
+						<DateInput
+							bind:value={newComment.commented_at}
+							id="newcomment_commented_at"
+							timePrecision="minute"
+							min={new Date(currentIncident.start_date_time * 1000)}
+							class="w-[200px] text-sm"
+						/>
+					</div>
 					<div class="mt-4">
 						<textarea
 							bind:value={newComment.comment}
@@ -768,7 +782,7 @@
 								<p class="mt-4 text-xs text-red-500">{addCommentError}</p>
 							{/if}
 						</div>
-						<div>
+						<div class="flex gap-x-2">
 							{#if !!newComment.id}
 								<Button
 									type="reset"
@@ -784,6 +798,7 @@
 									Cancel
 								</Button>
 							{/if}
+
 							<Button
 								type="submit"
 								disabled={newComment.comment.trim().length == 0 || loadingComments}
@@ -808,15 +823,22 @@
 							>
 								<p class="mb-2 text-xs font-medium">{comment.comment}</p>
 								<div class="flex w-full justify-between gap-x-2">
-									<div class="text-xs text-muted-foreground">
-										{moment(comment.created_at).format("YYYY-MM-DD HH:mm:ss")}
+									<div class="text-xs font-semibold text-muted-foreground">
+										<span class="badge-{comment.state}">
+											{comment.state}
+										</span>
+										{moment(comment.commented_at * 1000).format(
+											"YYYY-MM-DD HH:mm:ss"
+										)}
 									</div>
 									<div class="flex gap-x-2 pr-2">
 										<Button
 											variant="ghost"
 											size="icon"
 											class="h-5 w-5 p-1"
-											on:click={() => (newComment = comment)}
+											on:click={() => {
+												setCommentEdit(comment);
+											}}
 										>
 											<PenLine class="inline h-4 w-4 text-muted-foreground" />
 										</Button>

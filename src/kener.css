@@ -377,3 +377,21 @@ textarea::placeholder {
 .dark textarea::placeholder {
 	color: hsl(0, 0%, 40%);
 }
+
+.badge-MONITORING {
+	color: #ffaf4d;
+}
+.badge-INVESTIGATING {
+	color: #fe588a;
+}
+
+.badge-RESOLVED {
+	color: #7aba78;
+}
+.badge-IDENTIFIED {
+	color: #b987f7;
+}
+
+.newincidents .newincident:last-child .accor .border-b {
+	border-bottom: none !important;
+}

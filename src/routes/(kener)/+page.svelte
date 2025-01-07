@@ -2,7 +2,7 @@
 	import Monitor from "$lib/components/monitor.svelte";
 	import * as Card from "$lib/components/ui/card";
 	import { Button, buttonVariants } from "$lib/components/ui/button";
-	import Incident from "$lib/components/incident.svelte";
+	import Incident from "$lib/components/IncidentNew.svelte";
 	import { Badge } from "$lib/components/ui/badge";
 	import { l } from "$lib/i18n/client";
 	import { base } from "$app/paths";
@@ -13,7 +13,6 @@
 	import { scale } from "svelte/transition";
 
 	export let data;
-	let hasActiveIncidents = data.openIncidents.length > 0;
 	let shareMenusToggle = false;
 	function showShareMenu(e) {
 		shareMenusToggle = true;
@@ -57,7 +56,7 @@
 		</div>
 	</section>
 {/if}
-{#if hasActiveIncidents}
+{#if data.unresolvedIncidents.length > 0}
 	<section
 		class="mx-auto mb-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent"
 		id=""
@@ -74,15 +73,13 @@
 		class="mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center backdrop-blur-[2px]"
 		id=""
 	>
-		{#each data.openIncidents as incident, i}
-			<Incident
-				{incident}
-				state="close"
-				variant="title+body+comments+monitor"
-				monitor={incident.monitor}
-				lang={data.lang}
-			/>
-		{/each}
+		<Card.Root>
+			<Card.Content class=" newincidents p-0">
+				{#each data.unresolvedIncidents as incident, index}
+					<Incident {incident} lang={data.lang} index="incident-{index}" />
+				{/each}
+			</Card.Content>
+		</Card.Root>
 	</section>
 {/if}
 {#if data.monitors.length > 0}
@@ -164,7 +161,32 @@
 		{/each}
 	</section>
 {/if}
-
+{#if data.resolvedIncidents.length > 0}
+	<section
+		class="mx-auto mb-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent"
+		id=""
+	>
+		<div class="grid w-full grid-cols-2 gap-4">
+			<div class="col-span-2 text-center md:col-span-1 md:text-left">
+				<Badge variant="outline" class="border-0 pl-0">
+					{l(data.lang, "root.recent_incidents")}
+				</Badge>
+			</div>
+		</div>
+	</section>
+	<section
+		class="mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center backdrop-blur-[2px]"
+		id=""
+	>
+		<Card.Root>
+			<Card.Content class="newincidents  p-0">
+				{#each data.resolvedIncidents as incident, index}
+					<Incident {incident} lang={data.lang} index="incidentx-{index}" />
+				{/each}
+			</Card.Content>
+		</Card.Root>
+	</section>
+{/if}
 {#if shareMenusToggle}
 	<div
 		transition:scale={{ duration: 100 }}
