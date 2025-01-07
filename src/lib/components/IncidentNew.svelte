@@ -21,7 +21,7 @@
 	<div class="col-span-12">
 		<Accordion.Root bind:value={index} class="accor">
 			<Accordion.Item value="incident-0">
-				<Accordion.Trigger class="px-4 hover:no-underline">
+				<Accordion.Trigger class="px-4 hover:bg-muted hover:no-underline">
 					<div class="justify-start text-left hover:no-underline">
 						<p
 							class="scroll-m-20 text-xs font-semibold leading-5 tracking-normal badge-{incident.state}"
@@ -48,7 +48,7 @@
 					</div>
 				</Accordion.Trigger>
 				<Accordion.Content>
-					<div class="px-4">
+					<div class="mt-2 px-4">
 						<ol class="relative pl-14">
 							{#each incident.comments as comment}
 								<li class="relative border-l pb-4 pl-[4.5rem] last:border-0">
