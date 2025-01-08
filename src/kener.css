@@ -1,106 +1,369 @@
 /*one is the class for dotted background*/
-.one {
-    position: absolute;
-    top: 0px;
-    left: 0;
-    width: 100%;
-    z-index: 0;
-    background-repeat: no-repeat;
-    background-size: 100%;
-    height: 100svh;
-    background: linear-gradient(177deg, rgba(255, 137, 131, 0.5) 0%, rgba(35, 136, 224, 0.05) 60%);
-    clip-path: polygon(0 0, 100% 0, 100% 54%, 0% 100%);
+
+.dots-pattern {
+	position: absolute;
+	top: 0px;
+	left: 0;
+	width: 100%;
+	z-index: 0;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	height: 100svh;
+	background: linear-gradient(177deg, rgba(255, 137, 131, 0.5) 0%, rgba(35, 136, 224, 0.05) 60%);
+	clip-path: polygon(0 0, 100% 0, 100% 54%, 0% 100%);
 }
 
-.one::after {
-    content: "";
-    position: absolute;
-    background-image: radial-gradient(rgba(0, 0, 0, 0) 1.5px, var(--background-kener) 1px);
-    background-size: 14px 14px;
-    width: 100%;
-    height: 100vh;
-    top: 0;
-    transform: blur(3px);
-    left: 0;
+.dots-pattern::after {
+	content: "";
+	position: absolute;
+	background-image: radial-gradient(rgba(0, 0, 0, 0) 1.5px, var(--background-kener) 1px);
+	background-size: 14px 14px;
+	width: 100%;
+	height: 100vh;
+	top: 0;
+	transform: blur(3px);
+	left: 0;
+}
+
+.squares-pattern {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100%;
+	z-index: 0;
+	background-repeat: no-repeat;
+	background-size: 100%;
+	height: 100svh;
+
+	clip-path: polygon(0 0, 100% 0, 100% 54%, 0% 100%);
+	transform: blur(3px);
+}
+
+.squares-pattern::after {
+	content: "";
+	position: absolute;
+	background-image: linear-gradient(#444cf7 1px, transparent 1px),
+		linear-gradient(to right, #444cf7 1px, var(--background-kener) 1px);
+	-webkit-mask-image: linear-gradient(
+		180deg,
+		rgba(0, 0, 0, 1) 0%,
+		rgba(0, 0, 0, 0.8) 20%,
+		rgba(0, 0, 0, 0.6) 40%,
+		rgba(0, 0, 0, 0.4) 60%,
+		rgba(0, 0, 0, 0.2) 80%,
+		rgba(0, 0, 0, 0) 100%
+	);
+	mask-image: linear-gradient(
+		180deg,
+		rgba(0, 0, 0, 0.2) 0%,
+		rgba(0, 0, 0, 0.1) 20%,
+		rgba(0, 0, 0, 0.05) 40%,
+		rgba(0, 0, 0, 0.025) 60%,
+		rgba(0, 0, 0, 0.0125) 80%,
+		rgba(0, 0, 0, 0) 100%
+	);
+	background-size: 32px 32px;
+	width: 100%;
+	height: 100vh;
+	top: 0;
+
+	left: 0;
+}
+.dark .squares-pattern::after {
+	-webkit-mask-image: linear-gradient(
+		to bottom,
+		rgba(0, 0, 0, 0.5) 0%,
+		rgba(0, 0, 0, 0.25) 20%,
+		rgba(0, 0, 0, 0.125) 40%,
+		rgba(0, 0, 0, 0.0625) 60%,
+		rgba(0, 0, 0, 0.03125) 80%,
+		rgba(0, 0, 0, 0) 100%
+	);
+	mask-image: linear-gradient(
+		180deg,
+		rgba(0, 0, 0, 0.5) 0%,
+		rgba(0, 0, 0, 0.25) 20%,
+		rgba(0, 0, 0, 0.125) 40%,
+		rgba(0, 0, 0, 0.0625) 60%,
+		rgba(0, 0, 0, 0.03125) 80%,
+		rgba(0, 0, 0, 0) 100%
+	);
+	background-image: linear-gradient(#616fbf 1px, transparent 1px),
+		linear-gradient(to right, #616fbf 1px, var(--background-kener) 1px);
 }
 
 /*Needed to overlay content on top of dotted bg*/
 section {
-    position: relative;
-    z-index: 1;
+	position: relative;
+	z-index: 1;
 }
 /*Needed overlay content on top of dotted bg*/
 .blurry-bg {
-    background-color: var(--background-kener-rgba);
-    box-shadow: 0 0 64px 64px var(--background-kener-rgba);
+	background-color: var(--background-kener-rgba);
+	box-shadow: 0 0 64px 64px var(--background-kener-rgba);
 }
 
-
+:root {
+	--up-color: #4ead94;
+	--down-color: #ca3038;
+	--degraded-color: #e6ca61;
+}
 
 /*Colors for something UP*/
 .bg-api-up {
-    background-color: #00dfa2;
+	background-color: var(--up-color);
 }
 .text-api-up {
-    color: #0aca97;
+	color: var(--up-color);
 }
 /*Colors for something DOWN*/
 .bg-api-down {
-    background-color: #ff0060;
+	background-color: var(--down-color);
+}
+.bg-api-down-10 {
+	background: linear-gradient(0deg, var(--down-color) 10%, var(--up-color) 1%);
+}
+.bg-api-down-20 {
+	background: linear-gradient(0deg, var(--down-color) 20%, var(--up-color) 1%);
+}
+.bg-api-down-40 {
+	background: linear-gradient(0deg, var(--down-color) 40%, var(--up-color) 1%);
+}
+.bg-api-down-60 {
+	background: linear-gradient(0deg, var(--down-color) 60%, var(--up-color) 1%);
+}
+.bg-api-down-80 {
+	background: linear-gradient(0deg, var(--down-color) 80%, var(--up-color) 1%);
+}
+.bg-api-down-90 {
+	background: linear-gradient(0deg, var(--down-color) 90%, var(--up-color) 1%);
 }
 .text-api-down {
-    color: #ff0060;
+	color: var(--down-color);
 }
 /*Colors for something Not there*/
 .bg-api-nodata {
-    background-color:#f1f5f8;
+	background-color: #f1f5f8;
 }
 .text-api-nodata {
-    color: #b8bcbe;
+	color: #b8bcbe;
 }
 .dark .bg-api-nodata {
-    background-color: rgba(100, 100, 100, .4);
+	background-color: rgba(100, 100, 100, 0.4);
 }
 
 /*Colors for something degraded*/
 .bg-api-degraded {
-    background-color: #ffb84c;
+	background-color: var(--degraded-color);
 }
 .text-api-degraded {
-    color: #ffb84c;
+	color: var(--degraded-color);
 }
 
-
+.bg-api-degraded-10 {
+	background: linear-gradient(0deg, var(--degraded-color) 10%, var(--up-color) 1%);
+}
+.bg-api-degraded-20 {
+	background: linear-gradient(0deg, var(--degraded-color) 20%, var(--up-color) 1%);
+}
+.bg-api-degraded-40 {
+	background: linear-gradient(0deg, var(--degraded-color) 20%, var(--up-color) 1%);
+}
+.bg-api-degraded-60 {
+	background: linear-gradient(0deg, var(--degraded-color) 20%, var(--up-color) 1%);
+}
+.bg-api-degraded-80 {
+	background: linear-gradient(0deg, var(--degraded-color) 20%, var(--up-color) 1%);
+}
+.bg-api-degraded-90 {
+	background: linear-gradient(0deg, var(--degraded-color) 20%, var(--up-color) 1%);
+}
 
 /*Needed to show markdown properly*/
-.prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::before{
+.prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::before {
 	content: "";
 }
-.prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::after{
+.prose :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::after {
 	content: "";
 }
-
 
 /*Needed to show monitor stacked properly*/
 .monitors-card .monitor {
-	padding: 1.3em 1em;
+	padding: 1.2em 3.4em 0.875em 3.4em;
 	border-bottom: 1px solid;
 	border-color: hsl(var(--border) / var(--tw-border-opacity));
 }
 .monitors-card .monitor:last-child {
 	border-bottom: none;
 }
+.monitors-card.embed .monitor {
+	padding: 0em 0.87em 0.875em 0.87em;
+	border-bottom: none;
+}
 
 /*Tag Color*/
-.tag-maintenance{
-	background-color: #A076F9;
+.tag-maintenance {
+	background-color: #a076f9;
 	color: #09090b;
 }
-.tag-resolved{
-	background-color: #2CD3E1;
+.tag-maintenance-text {
+	color: #a076f9;
+}
+.tag-resolved {
+	background-color: #2cd3e1;
 	color: #09090b;
 }
-.tag-indetified{
-	background-color: #FEFFAC;
+.tag-resolved-text {
+	color: #1fbac8;
+}
+.tag-indetified {
+	background-color: #feffac;
 	color: #09090b;
+}
+.tag-identified-text {
+	color: #ddac25;
+}
+.daygrid90 {
+	-ms-overflow-style: none; /* Internet Explorer 10+ */
+	scrollbar-width: none; /* Firefox */
+}
+.daygrid90::-webkit-scrollbar {
+	display: none; /* Safari and Chrome */
+}
+.oneline {
+	transition: transform 0.1s ease-in;
+	cursor: pointer;
+}
+.oneline:hover {
+	transform: scaleY(1.2);
+}
+
+.show-hover {
+	top: 40px;
+	padding: 0px;
+	text-align: left;
+}
+
+.today-sq + .hiddenx .message {
+	position: absolute;
+	white-space: nowrap;
+}
+
+.today-sq + .hiddenx {
+	visibility: hidden;
+	z-index: 30;
+}
+.today-sq:hover + .hiddenx {
+	visibility: visible;
+}
+.today-sq:hover {
+	/* transform: scale(1.1); */
+	box-shadow:
+		rgba(50, 50, 105, 0.15) 0px 2px 5px 0px,
+		rgba(0, 0, 0, 0.05) 0px 1px 1px 0px;
+	opacity: 0.75;
+	transition: all 0.1s ease-in;
+	cursor: pointer;
+}
+
+.today-sq {
+	position: relative;
+	z-index: 0;
+}
+
+.wiggle:hover {
+	-webkit-animation-name: wiggle;
+	-ms-animation-name: wiggle;
+	animation-name: wiggle;
+	animation-duration: 1000ms;
+	-ms-animation-duration: 1000ms;
+	-webkit-animation-duration: 1000ms;
+	animation-iteration-count: 1;
+	-webkit-animation-iteration-count: 1;
+	-ms-animation-iteration-count: 1;
+	animation-timing-function: ease-in-out;
+	-webkit-animation-timing-function: ease-in-out;
+	-ms-animation-timing-function: ease-in-out;
+}
+
+@-webkit-keyframes wiggle {
+	0% {
+		-webkit-transform: rotate(10deg);
+	}
+	25% {
+		-webkit-transform: rotate(-10deg);
+	}
+	50% {
+		-webkit-transform: rotate(20deg);
+	}
+	75% {
+		-webkit-transform: rotate(-5deg);
+	}
+	100% {
+		-webkit-transform: rotate(0deg);
+	}
+}
+
+@-ms-keyframes wiggle {
+	0% {
+		-ms-transform: rotate(1deg);
+	}
+	25% {
+		-ms-transform: rotate(-1deg);
+	}
+	50% {
+		-ms-transform: rotate(1.5deg);
+	}
+	75% {
+		-ms-transform: rotate(-5deg);
+	}
+	100% {
+		-ms-transform: rotate(0deg);
+	}
+}
+
+@keyframes wiggle {
+	0% {
+		transform: rotate(10deg);
+	}
+	25% {
+		transform: rotate(-10deg);
+	}
+	50% {
+		transform: rotate(20deg);
+	}
+	75% {
+		transform: rotate(-5deg);
+	}
+	100% {
+		transform: rotate(0deg);
+	}
+}
+
+/* animate background color between three colors */
+
+@keyframes changeColor {
+	0% {
+		background-color: #b8bcbe;
+	}
+	50% {
+		background-color: #f1f5f8;
+	}
+}
+
+.dark .animatebg {
+	animation: changeColorDark 2s infinite;
+}
+
+@keyframes changeColorDark {
+	0% {
+		background-color: #333;
+	}
+	50% {
+		background-color: #2d2d2f;
+	}
+}
+
+.animatebg {
+	animation: changeColor 2s infinite;
 }

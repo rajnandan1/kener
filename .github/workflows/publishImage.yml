@@ -1,40 +1,32 @@
+---
 name: Publish Docker image to Dockerhub and GHCR
-
 on:
   push:
     branches:
-      - 'main'
-      # add additional branches that should build to images here
-      # they will be tagged based on the branch name IE kener:test
-      #- 'test'
+      - main
     tags:
-      - '*.*.*'
-    # don't trigger if just updating docs
+      - "*.*.*"
     paths-ignore:
-      - 'docs.md'
-      - 'README.md'
-
+      - '**/*.md'  
+      - 'docs/**' 
 jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
-    # only run if we've specified image tag to push to
     if: ${{ vars.DOCKERHUB_IMAGE_NAME != '' ||  vars.GHCR_IMAGE_NAME != '' }}
-    # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
       packages: write
       contents: read
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
-
       - name: Log in to Docker Hub
-        if: ${{ github.event_name != 'pull_request' && vars.DOCKERHUB_IMAGE_NAME != '' }}
+        if: ${{ github.event_name != 'pull_request' && vars.DOCKERHUB_IMAGE_NAME != ''
+          }}
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-
       - name: Login to GitHub Container Registry
         if: ${{ github.event_name != 'pull_request' && vars.GHCR_IMAGE_NAME != '' }}
         uses: docker/login-action@v2
@@ -42,7 +34,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v3
@@ -50,20 +41,16 @@ jobs:
           images: |
             ${{ vars.DOCKERHUB_IMAGE_NAME }}
             ${{ vars.GHCR_IMAGE_NAME }}
-          # generate Docker tags based on the following events/attributes
           tags: |
             type=raw,value=latest,enable=${{ endsWith(github.ref, 'main') }}
             type=ref,event=branch,enable=${{ !endsWith(github.ref, 'main') }}
             type=semver,pattern={{version}}
           flavor: |
             latest=false
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:

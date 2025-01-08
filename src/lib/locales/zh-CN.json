@@ -1,0 +1,57 @@
+{
+	"root": {
+		"ongoing_incidents": "正在进行的事件",
+		"availability_per_component": "每个服务的可用性",
+		"other_monitors": "其他显示器",
+		"no_monitors": "未找到显示器",
+		"read_doc_monitor": "阅读文档以添加您的第一个显示器",
+		"here": "这里",
+		"category": "类别",
+		"incident": "事件",
+		"incidents": "事件",
+		"no_recent_incident": "最近没有发生事件",
+		"recent_incidents": "最近发生的事件",
+		"active_incidents": "活跃事件",
+		"no_active_incident": "没有活跃事件",
+		"last_x_hours": "最近%hours个小时"
+	},
+	"statuses": {
+		"UP": "正常",
+		"DOWN": "故障",
+		"DEGRADED": "异常"
+	},
+	"incident": {
+		"identified": "确认",
+		"resolved": "解决",
+		"maintenance": "维护"
+	},
+	"monitor": {
+		"share": "分享",
+		"badge": "徽章",
+		"embed": "嵌入",
+		"mode": "模式",
+		"status": "状态",
+		"copied": "已复制",
+		"uptime": "正常运行时间",
+		"theme": "主题",
+		"theme_light": "Light",
+		"theme_dark": "Dark",
+		"today": "今天",
+		"90_day": "90 天",
+		"share_desc": "使用链接与其他人共享此显示器",
+		"badge_desc": "获取此显示器的 SVG 徽章",
+		"embed_desc": "在您的应用程序中使用 <script> 或 <iframe> 嵌入此监视器。",
+		"cp_link": "复制链接",
+		"cpd_link": "链接已复制",
+		"cp_code": "复制代码",
+		"cpd_code": "代码已复制",
+		"status_x_minute": "%minute分钟的%status",
+		"status_x_minutes": "%minutes分钟的%status",
+		"status_x_hour_y_minute": "%hours小时%minutes分钟的%status",
+		"status_no_data": "没有数据",
+		"status_ok": "状态正常",
+		"am": "上午",
+		"pm": "下午"
+	},
+	"numbers": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+}

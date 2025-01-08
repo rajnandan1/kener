@@ -1,12 +1,19 @@
 FROM lsiobase/alpine:3.18 as base
 
-ENV TZ=Etc/GMT
+ENV TZ=Etc/UTC
 
 RUN \
   echo "**** install build packages ****" && \
   apk add --no-cache \
     nodejs \
-    npm && \
+    npm \
+    python3 \
+    make \
+    gcc \
+    g++ \
+    sqlite \
+    sqlite-dev \
+    libc6-compat && \
   echo "**** cleanup ****" && \
   rm -rf \
     /root/.cache \
@@ -15,16 +22,11 @@ RUN \
 # set OS timezone specified by docker ENV
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-ARG data_dir=/config
-VOLUME $data_dir
-ENV CONFIG_DIR=$data_dir
+# ARG data_dir=/config
+# VOLUME $data_dir
+# ENV CONFIG_DIR=$data_dir
 
 COPY docker/root/ /
-
-# Dir ENVs need to be set before building or else build throws errors
-ENV PUBLIC_KENER_FOLDER=/config/static \
-    MONITOR_YAML_PATH=/config/monitors.yaml \
-    SITE_YAML_PATH=/config/site.yaml 
 
 # build requires devDependencies which are not used by production deploy
 # so build in a stage so we can copy results to clean "deploy" stage later
@@ -34,12 +36,12 @@ WORKDIR /app
 
 COPY --chown=abc:abc . /app
 
-# build requires PUBLIC_KENER_FOLDER dir exists so create temporarily
-# -- it is non-existent in final stage to allow proper startup and chown'ing/example population
-RUN mkdir -p "${CONFIG_DIR}"/static \
-    && npm install \
+RUN \
+  npm install node-gyp -g && \
+  npm_config_build_from_source=true npm install better-sqlite3 && \
+  npm install \
     && chown -R root:root node_modules \
-    && npm run kener:build
+    && npm run build
 
 FROM base as app
 
@@ -48,24 +50,25 @@ FROM base as app
 COPY --chown=abc:abc package*.json ./
 COPY --from=base /usr/local/bin /usr/local/bin
 COPY --from=base /usr/local/lib /usr/local/lib
-COPY --chown=abc:abc scripts /app/scripts
+
 COPY --chown=abc:abc static /app/static
-COPY --chown=abc:abc locales /app/locales
-COPY --chown=abc:abc config /app/config
-COPY --chown=abc:abc src/lib/helpers.js /app/src/lib/helpers.js
+COPY --chown=abc:abc database /app/database
+COPY --chown=abc:abc build.js /app/build.js
+COPY --chown=abc:abc sitemap.js /app/sitemap.js
+COPY --chown=abc:abc openapi.json /app/openapi.json
+COPY --chown=abc:abc src/lib/server /app/src/lib/server
+
 COPY --chown=abc:abc /config/monitors.yaml /config
 COPY --chown=abc:abc /config/site.yaml /config
 COPY --from=build --chown=abc:abc /app/build /app/build
-COPY --from=build --chown=abc:abc /app/prod.js /app/prod.js
-
+COPY --from=build --chown=abc:abc /app/main.js /app/main.js
 
 ENV NODE_ENV=production
 
-# install prod depdendencies and clean cache
+# install prod dependencies and clean cache
 RUN npm install --omit=dev \
     && npm cache clean --force \
-    && chown -R abc:abc node_modules \
-    && mkdir -p /config/static
+    && chown -R abc:abc node_modules
 
 ARG webPort=3000
 ENV PORT=$webPort

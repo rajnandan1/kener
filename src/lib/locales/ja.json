@@ -1,0 +1,57 @@
+{
+	"root": {
+		"ongoing_incidents": "進行中のインシデント",
+		"availability_per_component": "コンポーネントごとの可用性",
+		"other_monitors": "その他のモニター",
+		"no_monitors": "モニターはありません",
+		"read_doc_monitor": "最初のモニターを追加するには、ドキュメントをお読みください",
+		"here": "ここ",
+		"category": "カテゴリー",
+		"incident": "インシデント",
+		"incidents": "インシデント",
+		"no_recent_incident": "最近のインシデントはありません",
+		"recent_incidents": "最近のインシデント",
+		"active_incidents": "現在のインシデント",
+		"no_active_incident": "現在のインシデントはありません",
+		"last_x_hours": "最近%hours時間"
+	},
+	"statuses": {
+		"UP": "正常",
+		"DOWN": "ダウン",
+		"DEGRADED": "縮退"
+	},
+	"incident": {
+		"identified": "確認済み",
+		"resolved": "解決済み",
+		"maintenance": "メンテナンス"
+	},
+	"monitor": {
+		"share": "シェア",
+		"badge": "バッジ",
+		"embed": "埋め込み",
+		"mode": "モード",
+		"status": "ステータス",
+		"copied": "コピーしました",
+		"uptime": "稼働時間",
+		"theme": "テーマ",
+		"theme_light": "ライト",
+		"theme_dark": "ダーク",
+		"today": "今日",
+		"90_day": "90日間",
+		"share_desc": "このモニターをリンクで他の人にシェア",
+		"badge_desc": "このモニターのSVGバッジを取得",
+		"embed_desc": "このモニターを <script> や <iframe> で埋め込む",
+		"cp_link": "リンクをコピー",
+		"cpd_link": "リンクをコピーしました",
+		"cp_code": "コードをコピー",
+		"cpd_code": "コードをコピーしました",
+		"status_x_minute": "%minute分間の%status",
+		"status_x_minutes": "%minutes分間の%status",
+		"status_x_hour_y_minute": "%hours時間%minutes分間の%status",
+		"status_no_data": "データはありません",
+		"status_ok": "正常",
+		"am": "午前",
+		"pm": "午後"
+	},
+	"numbers": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+}

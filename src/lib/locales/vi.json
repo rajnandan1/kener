@@ -1,0 +1,57 @@
+{
+	"root": {
+		"ongoing_incidents": "Sự Cố Đang Xảy Ra",
+		"availability_per_component": "Độ Sẵn Sàng Của Từng Thành Phần",
+		"other_monitors": "Các Giám Sát Khác",
+		"no_monitors": "Không tìm thấy giám sát nào",
+		"read_doc_monitor": "Đọc tài liệu để thêm giám sát đầu tiên của bạn",
+		"here": "tại đây",
+		"category": "Danh Mục",
+		"incident": "Sự Cố",
+		"incidents": "Các Sự Cố",
+		"no_recent_incident": "Không có sự cố gần đây",
+		"recent_incidents": "Các Sự Cố Gần Đây",
+		"active_incidents": "Các Sự Cố Đang Hoạt Động",
+		"no_active_incident": "Không Có Sự Cố Đang Hoạt Động",
+		"last_x_hours": "Trong %hours giờ qua"
+	},
+	"statuses": {
+		"UP": "HOẠT ĐỘNG",
+		"DOWN": "NGỪNG HOẠT ĐỘNG",
+		"DEGRADED": "SUY GIẢM"
+	},
+	"incident": {
+		"identified": "Đã Xác Định",
+		"resolved": "Đã Giải Quyết",
+		"maintenance": "Bảo Trì"
+	},
+	"monitor": {
+		"share": "Chia Sẻ",
+		"badge": "Huy Hiệu",
+		"embed": "Nhúng",
+		"mode": "Chế Độ",
+		"status": "Trạng Thái",
+		"copied": "Đã Sao Chép",
+		"uptime": "Thời Gian Hoạt Động",
+		"theme": "Chủ Đề",
+		"theme_light": "Sáng",
+		"theme_dark": "Tối",
+		"today": "Hôm Nay",
+		"90_day": "90 Ngày",
+		"share_desc": "Chia sẻ giám sát này bằng một liên kết với người khác",
+		"badge_desc": "Nhận huy hiệu SVG cho giám sát này",
+		"embed_desc": "Nhúng giám sát này bằng <script> hoặc <iframe> vào ứng dụng của bạn.",
+		"cp_link": "Sao Chép Liên Kết",
+		"cpd_link": "Liên Kết Đã Được Sao Chép",
+		"cp_code": "Sao Chép Mã",
+		"cpd_code": "Mã Đã Được Sao Chép",
+		"status_x_minute": "%status trong %minute phút",
+		"status_x_minutes": "%status trong %minutes phút",
+		"status_x_hour_y_minute": "%status trong %hours giờ và %minutes phút",
+		"status_no_data": "Không Có Dữ Liệu",
+		"status_ok": "Trạng Thái OK",
+		"am": "sáng",
+		"pm": "chiều"
+	},
+	"numbers": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+}

@@ -4,6 +4,7 @@ static/kener
 build
 config/monitors.yaml
 config/site.yaml
+config/server.yaml
 /.svelte-kit
 /src/lib/.kener
 /package
@@ -16,3 +17,7 @@ nodemon.json
 .okgit/
 config/static/*
 !config/static/.kener
+db/*
+!db/.kener
+database/*
+!database/.kener

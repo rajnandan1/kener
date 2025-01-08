@@ -1,0 +1,971 @@
+{
+	"info": {
+		"title": "Kener API",
+		"version": "1.0.0",
+		"description": "# Kener Self-hosted node js status page\n![Kener](https://kener.ing/newbg.png \"kener\")\nAPI specification for Kener status page and incident management system. This API spec was created using [Frogment](https://www.frogment.app)\n",
+		"contact": {
+			"name": "Raj Nandan Sharma",
+			"email": "rajnandan1@gmail.com",
+			"url": "https://github.com/rajnandan1/kener/issues"
+		},
+		"license": {
+			"name": "MIT",
+			"url": "https://opensource.org/licenses/MIT"
+		}
+	},
+	"openapi": "3.0.0",
+	"servers": [
+		{
+			"url": "https://your-kener-host.com",
+			"description": "Kener host URL"
+		}
+	],
+	"tags": [
+		{
+			"name": "Monitors",
+			"description": "APIs to interact with monitors"
+		},
+		{
+			"name": "Incidents",
+			"description": "APIs to integrate incidents"
+		}
+	],
+	"components": {
+		"securitySchemes": {
+			"bearerAuth": {
+				"type": "http",
+				"scheme": "bearer",
+				"bearerFormat": "JWT",
+				"description": "enter your api key here"
+			}
+		},
+		"schemas": {
+			"MonitorStatus": {
+				"type": "object",
+				"description": "Monitor Status",
+				"required": ["status", "latency", "tag"],
+				"properties": {
+					"status": {
+						"type": "string",
+						"example": "UP",
+						"enum": ["UP", "DOWN", "DEGRADED"]
+					},
+					"latency": {
+						"type": "number",
+						"description": "In seconds",
+						"example": 100
+					},
+					"timestampInSeconds": {
+						"type": "integer",
+						"description": "UTC timestamp in seconds",
+						"example": 1731251760
+					},
+					"tag": {
+						"type": "string",
+						"example": "earth",
+						"description": "Tag of a monitor"
+					}
+				},
+				"example": {
+					"status": "UP",
+					"timestampInSeconds": 1731251760,
+					"latency": 100,
+					"tag": "earth"
+				}
+			},
+			"StatusResponse": {
+				"type": "object",
+				"description": "Status of a monitor given a tag",
+				"properties": {
+					"status": {
+						"type": "string",
+						"example": "UP",
+						"enum": ["UP", "DOWN", "DEGRADED"]
+					},
+					"uptime": {
+						"type": "string",
+						"example": "100"
+					},
+					"lastUpdatedAt": {
+						"type": "integer",
+						"example": 1731251760
+					}
+				},
+				"example": {
+					"status": "UP",
+					"lastUpdatedAt": 1731251760,
+					"uptime": "100"
+				}
+			},
+			"Incident": {
+				"type": "object",
+				"description": "body of an incident",
+				"required": ["title", "tags"],
+				"properties": {
+					"startDatetime": {
+						"type": "integer",
+						"description": "UTC timestamp in seconds",
+						"example": 1731901920
+					},
+					"endDatetime": {
+						"type": "integer",
+						"description": "UTC timestamp in seconds",
+						"example": 1704123938
+					},
+					"title": {
+						"type": "string",
+						"example": "Outage in mumbai",
+						"description": "title of the incident"
+					},
+					"body": {
+						"type": "string",
+						"example": "body of the incident",
+						"description": "body of the incident"
+					},
+					"tags": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"example": "earth"
+						},
+						"description": "comma separated tags of monitors",
+						"example": ["earth", "google"]
+					},
+					"impact": {
+						"type": "string",
+						"example": "DOWN",
+						"description": "Impact of the incident",
+						"enum": ["DOWN", "DEGRADED"]
+					},
+					"isMaintenance": {
+						"type": "boolean",
+						"description": "is this incident because of maintenance",
+						"example": false
+					},
+					"isIdentified": {
+						"type": "boolean",
+						"description": "has the incident been indentified",
+						"example": true
+					},
+					"isResolved": {
+						"type": "boolean",
+						"description": "has the incident been resovled",
+						"example": true
+					}
+				},
+				"example": {
+					"startDatetime": 1731901920,
+					"endDatetime": 1704123938,
+					"title": "title of the incident",
+					"body": "body of the incident",
+					"tags": ["earth", "google"],
+					"impact": "DOWN",
+					"isMaintenance": false,
+					"isIdentified": true,
+					"isResolved": true
+				}
+			},
+			"IncidentResponse": {
+				"description": "Incident response schema",
+				"allOf": [
+					{
+						"$ref": "#/components/schemas/Incident"
+					},
+					{
+						"type": "object",
+						"properties": {
+							"createdAt": {
+								"type": "integer",
+								"description": "UTC timestamp in seconds, incident created at",
+								"example": 1731901920
+							},
+							"closedAt": {
+								"type": "integer",
+								"nullable": true,
+								"description": "UTC timestamp in seconds, incident closed at",
+								"example": 1731901920
+							},
+							"incidentNumber": {
+								"type": "integer",
+								"description": "id of the incident",
+								"example": 4
+							}
+						},
+						"example": {
+							"createdAt": 1731901920,
+							"closedAt": 1731901920,
+							"incidentNumber": 4
+						}
+					}
+				]
+			},
+			"Comment": {
+				"type": "object",
+				"description": "Comment of an incident",
+				"required": ["body"],
+				"properties": {
+					"body": {
+						"type": "string",
+						"example": "comment 1"
+					}
+				},
+				"example": {
+					"body": "comment 2"
+				}
+			},
+			"CommentResponse": {
+				"type": "object",
+				"description": "Comment Response",
+				"properties": {
+					"commentID": {
+						"type": "integer",
+						"description": "ID of the comment",
+						"example": 1873376745
+					},
+					"body": {
+						"type": "string",
+						"description": "body of the comment",
+						"example": "comment 3"
+					},
+					"createdAt": {
+						"type": "integer",
+						"description": "timestamp when comment was created",
+						"example": 1704123938
+					}
+				},
+				"example": {
+					"commentID": 1873376745,
+					"body": "comment 4",
+					"createdAt": 1704123938
+				}
+			},
+			"IncidentStatus": {
+				"type": "object",
+				"description": "Status of the incident",
+				"properties": {
+					"isIdentified": {
+						"type": "boolean",
+						"description": "Has the incident been indetified",
+						"example": true
+					},
+					"isResolved": {
+						"type": "boolean",
+						"description": "has the incident been resolved",
+						"example": true
+					},
+					"endDatetime": {
+						"type": "integer",
+						"description": "Incident end time",
+						"example": 1731901920
+					}
+				},
+				"example": {
+					"isIdentified": true,
+					"isResolved": true,
+					"endDatetime": 1731901920
+				}
+			}
+		},
+		"responses": {
+			"Response401": {
+				"description": "Bad API keys response",
+				"content": {
+					"application/json": {
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"description": "Invalid token response",
+									"example": "invalid token"
+								}
+							}
+						},
+						"example": {
+							"error": "invalid token"
+						}
+					}
+				}
+			},
+			"Response400": {
+				"description": "bad request",
+				"content": {
+					"application/json": {
+						"schema": {
+							"type": "object",
+							"properties": {
+								"error": {
+									"type": "string",
+									"description": "bad request while calling kener apis",
+									"example": "unknown tags"
+								}
+							}
+						},
+						"example": {
+							"error": "unknown tags"
+						}
+					}
+				}
+			}
+		},
+		"examples": {
+			"GetMonitorStatusExample200": {
+				"summary": "response of get status of a monitor",
+				"description": "Some Description",
+				"value": {
+					"status": "UP",
+					"uptime": "100",
+					"lastUpdatedAt": 1731901920
+				}
+			},
+			"DegradedRequestBody": {
+				"summary": "update to degraded",
+				"description": "Some Description",
+				"value": {
+					"status": "DEGRADED",
+					"timestampInSeconds": 1731251760,
+					"latency": 100,
+					"tag": "earth"
+				}
+			},
+			"CreateIncidentResponse": {
+				"summary": "create incident response",
+				"description": "create incident response",
+				"value": {
+					"createdAt": 1731901920,
+					"closedAt": 1731901920,
+					"incidentNumber": 4,
+					"startDatetime": 1731901920,
+					"endDatetime": 1704123938,
+					"title": "title of the incident",
+					"body": "body of the incident",
+					"tags": ["earth", "google"],
+					"impact": "DOWN",
+					"isMaintenance": false,
+					"isIdentified": true,
+					"isResolved": true
+				}
+			},
+			"CreateIncidentRequest": {
+				"summary": "create incident request body",
+				"description": "Some Description",
+				"value": {
+					"startDatetime": 1731901920,
+					"endDatetime": 1704123938,
+					"title": "title of the incident",
+					"body": "body of the incident",
+					"tags": ["earth", "google"],
+					"impact": "DOWN",
+					"isMaintenance": false,
+					"isIdentified": true,
+					"isResolved": true
+				}
+			},
+			"SearchIncidentsResponse": {
+				"summary": "array of incidents",
+				"description": "Some Description",
+				"value": [
+					{
+						"createdAt": 1731901920,
+						"closedAt": 1731901920,
+						"incidentNumber": 4,
+						"startDatetime": 1731901920,
+						"endDatetime": 1704123938,
+						"title": "title of the incident",
+						"body": "body of the incident",
+						"tags": ["earth", "google"],
+						"impact": "DOWN",
+						"isMaintenance": false,
+						"isIdentified": true,
+						"isResolved": true
+					},
+					{
+						"createdAt": 1731901920,
+						"closedAt": 1731901920,
+						"incidentNumber": 4,
+						"startDatetime": 1731901920,
+						"endDatetime": 1704123938,
+						"title": "title of the incident",
+						"body": "body of the incident",
+						"tags": ["earth", "google"],
+						"impact": "DOWN",
+						"isMaintenance": false,
+						"isIdentified": true,
+						"isResolved": true
+					}
+				]
+			},
+			"CommentsResponse": {
+				"summary": "list of comments",
+				"description": "Some Description",
+				"value": [
+					{
+						"commentID": 1873376745,
+						"body": "comment 4",
+						"createdAt": 1704123938
+					},
+					{
+						"commentID": 1873376745,
+						"body": "comment 4",
+						"createdAt": 1704123938
+					}
+				]
+			},
+			"CommentRequestBody": {
+				"summary": "request body for a comment",
+				"description": "request body for a comment to add in an incident",
+				"value": {
+					"body": "This is a comment"
+				}
+			},
+			"CreateCommentResponse": {
+				"summary": "create comment response body sample",
+				"description": "create comment response body sample",
+				"value": {
+					"commentID": 1873376745,
+					"body": "comment 4",
+					"createdAt": 1704123938
+				}
+			}
+		}
+	},
+	"paths": {
+		"/api/status": {
+			"post": {
+				"operationId": "updateMonitorStatus",
+				"summary": "Update status of a monitor",
+				"description": "Update status of an incident at a given timestamp",
+				"tags": ["Monitors"],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"description": "request body to update an incident",
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/MonitorStatus"
+							},
+							"examples": {
+								"degraded": {
+									"$ref": "#/components/examples/DegradedRequestBody"
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Status updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "object",
+									"properties": {
+										"status": {
+											"type": "integer",
+											"example": 200
+										},
+										"message": {
+											"type": "string",
+											"example": "success at 1731251760"
+										}
+									}
+								},
+								"example": {
+									"status": 200,
+									"message": "success at 1731251760"
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/Response400"
+					},
+					"401": {
+						"$ref": "#/components/responses/Response401"
+					}
+				}
+			},
+			"get": {
+				"operationId": "getMonitorStatus",
+				"summary": "Get status of a monitor",
+				"description": "get status of a monitor at timestamp",
+				"tags": ["Monitors"],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "tag",
+						"in": "query",
+						"required": true,
+						"description": "monitor tag to get an incident",
+						"schema": {
+							"type": "string",
+							"example": "earth"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Monitor status retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/StatusResponse"
+								},
+								"examples": {
+									"successExample": {
+										"$ref": "#/components/examples/GetMonitorStatusExample200"
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/Response400"
+					},
+					"401": {
+						"$ref": "#/components/responses/Response401"
+					}
+				}
+			}
+		},
+		"/api/incident": {
+			"post": {
+				"operationId": "createIncident",
+				"summary": "Create a new incident",
+				"description": "API to create incidents",
+				"tags": ["Incidents"],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"description": "request body to manually create an incident",
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Incident"
+							},
+							"examples": {
+								"sample": {
+									"$ref": "#/components/examples/CreateIncidentRequest"
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Incident created successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/IncidentResponse"
+								},
+								"examples": {
+									"success": {
+										"$ref": "#/components/examples/CreateIncidentResponse"
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/Response400"
+					},
+					"401": {
+						"$ref": "#/components/responses/Response401"
+					}
+				}
+			},
+			"get": {
+				"operationId": "searchIncidents",
+				"summary": "Search for incidents",
+				"description": "API to get incidents",
+				"tags": ["Incidents"],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"parameters": [
+					{
+						"name": "state",
+						"in": "query",
+						"description": "state of the incident. Can be open or close",
+						"schema": {
+							"type": "string",
+							"description": "state of the incident. Can be open or close",
+							"enum": ["open", "closed"],
+							"default": "open",
+							"example": "open"
+						}
+					},
+					{
+						"name": "tags",
+						"in": "query",
+						"description": "Comma separated monitor tags",
+						"schema": {
+							"type": "string",
+							"description": "Comma separated monitor tags",
+							"example": "earth,google"
+						}
+					},
+					{
+						"name": "page",
+						"in": "query",
+						"description": "page number",
+						"schema": {
+							"type": "integer",
+							"description": "page number",
+							"default": 1,
+							"minimum": 1,
+							"example": 1
+						}
+					},
+					{
+						"name": "per_page",
+						"in": "query",
+						"description": "how many per page",
+						"schema": {
+							"type": "integer",
+							"default": 10,
+							"description": "how many per page",
+							"maximum": 100,
+							"example": 10
+						}
+					},
+					{
+						"name": "created_after_utc",
+						"description": "start time",
+						"in": "query",
+						"schema": {
+							"type": "integer",
+							"description": "start time",
+							"example": 1731866475
+						}
+					},
+					{
+						"name": "created_before_utc",
+						"description": "end time",
+						"in": "query",
+						"schema": {
+							"type": "integer",
+							"description": "end time",
+							"example": 1731866475
+						}
+					},
+					{
+						"name": "title_like",
+						"description": "title of the incident",
+						"in": "query",
+						"schema": {
+							"type": "string",
+							"description": "title of the incident",
+							"example": "outage"
+						}
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Search results retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/IncidentResponse"
+									}
+								},
+								"examples": {
+									"success": {
+										"$ref": "#/components/examples/SearchIncidentsResponse"
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/Response400"
+					},
+					"401": {
+						"$ref": "#/components/responses/Response401"
+					}
+				}
+			}
+		},
+		"/api/incident/{incidentNumber}": {
+			"parameters": [
+				{
+					"name": "incidentNumber",
+					"in": "path",
+					"required": true,
+					"description": "incident number as an integer to get incident by id",
+					"schema": {
+						"type": "integer",
+						"example": 4
+					}
+				}
+			],
+			"get": {
+				"operationId": "getIncident",
+				"summary": "Get an incident by number",
+				"description": "API to get an incident by incident number",
+				"tags": ["Incidents"],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Incident retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/IncidentResponse"
+								},
+								"examples": {
+									"success": {
+										"$ref": "#/components/examples/CreateIncidentResponse"
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/Response400"
+					},
+					"401": {
+						"$ref": "#/components/responses/Response401"
+					}
+				}
+			},
+			"patch": {
+				"operationId": "updateIncident",
+				"summary": "Update an incident",
+				"description": "API to update an incident by incident number",
+				"tags": ["Incidents"],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"description": "search for an incident",
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Incident"
+							},
+							"examples": {
+								"sample": {
+									"$ref": "#/components/examples/CreateIncidentRequest"
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Incident updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/IncidentResponse"
+								},
+								"examples": {
+									"success": {
+										"$ref": "#/components/examples/CreateIncidentResponse"
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/Response400"
+					},
+					"401": {
+						"$ref": "#/components/responses/Response401"
+					}
+				}
+			}
+		},
+		"/api/incident/{incidentNumber}/comment": {
+			"parameters": [
+				{
+					"name": "incidentNumber",
+					"in": "path",
+					"required": true,
+					"description": "incident number to fetch comment for",
+					"schema": {
+						"type": "integer",
+						"example": 4
+					}
+				}
+			],
+			"post": {
+				"operationId": "addIncidentComment",
+				"summary": "Add a comment to an incident",
+				"description": "API to create comment for an incident",
+				"tags": ["Incidents"],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"description": "body to add a comment",
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/Comment"
+							},
+							"examples": {
+								"sample": {
+									"$ref": "#/components/examples/CommentRequestBody"
+								}
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Comment added successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/CommentResponse"
+								},
+								"examples": {
+									"sample": {
+										"$ref": "#/components/examples/CreateCommentResponse"
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/Response400"
+					},
+					"401": {
+						"$ref": "#/components/responses/Response401"
+					}
+				}
+			},
+			"get": {
+				"operationId": "getIncidentComments",
+				"summary": "Get comments for an incident",
+				"description": "API to get comments for an incident",
+				"tags": ["Incidents"],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"responses": {
+					"200": {
+						"description": "Comments retrieved successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"type": "array",
+									"items": {
+										"$ref": "#/components/schemas/CommentResponse"
+									}
+								},
+								"examples": {
+									"success": {
+										"$ref": "#/components/examples/CommentsResponse"
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/Response400"
+					},
+					"401": {
+						"$ref": "#/components/responses/Response401"
+					}
+				}
+			}
+		},
+		"/api/incident/{incidentNumber}/status": {
+			"parameters": [
+				{
+					"name": "incidentNumber",
+					"in": "path",
+					"required": true,
+					"description": "incident number to fetch status for",
+					"schema": {
+						"type": "integer",
+						"example": 4
+					}
+				}
+			],
+			"post": {
+				"operationId": "updateIncidentStatus",
+				"summary": "Update the status of an incident",
+				"description": "API to update status of an incident",
+				"tags": ["Incidents"],
+				"security": [
+					{
+						"bearerAuth": []
+					}
+				],
+				"requestBody": {
+					"required": true,
+					"description": "request body to update status of an incident",
+					"content": {
+						"application/json": {
+							"schema": {
+								"$ref": "#/components/schemas/IncidentStatus"
+							},
+							"example": {
+								"isIdentified": true,
+								"isResolved": true,
+								"endDatetime": 1731901920
+							}
+						}
+					}
+				},
+				"responses": {
+					"200": {
+						"description": "Incident status updated successfully",
+						"content": {
+							"application/json": {
+								"schema": {
+									"$ref": "#/components/schemas/IncidentResponse"
+								},
+								"examples": {
+									"success": {
+										"$ref": "#/components/examples/CreateIncidentResponse"
+									}
+								}
+							}
+						}
+					},
+					"400": {
+						"$ref": "#/components/responses/Response400"
+					},
+					"401": {
+						"$ref": "#/components/responses/Response401"
+					}
+				}
+			}
+		}
+	}
+}

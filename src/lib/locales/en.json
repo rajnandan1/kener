@@ -1,0 +1,61 @@
+{
+	"root": {
+		"ongoing_incidents": "Ongoing Incidents",
+		"availability_per_component": "Availability per Component",
+		"other_monitors": "Other Monitors",
+		"no_monitors": "No monitors found",
+		"read_doc_monitor": "Read the documentation to add your first monitor",
+		"here": "here",
+		"category": "Category",
+		"incident": "Incident",
+		"incidents": "Incidents",
+		"no_recent_incident": "No recent incident",
+		"recent_incidents": "Recent Incidents",
+		"active_incidents": "Active Incidents",
+		"no_active_incident": "No Active Incident",
+		"last_x_hours": "Last %hours hours"
+	},
+	"statuses": {
+		"UP": "UP",
+		"DOWN": "DOWN",
+		"DEGRADED": "DEGRADED"
+	},
+	"incident": {
+		"identified": "Identified",
+		"resolved": "Resolved",
+		"maintenance": "Maintenance"
+	},
+	"monitor": {
+		"share": "Share",
+		"badge": "Badge",
+		"embed": "Embed",
+		"mode": "Mode",
+		"status": "Status",
+		"copied": "Copied",
+		"uptime": "Uptime",
+		"theme": "Theme",
+		"theme_light": "Light",
+		"theme_dark": "Dark",
+		"today": "Today",
+		"90_day": "90 Day",
+		"share_desc": "Share this monitor using a link with others",
+		"badge_desc": "Get SVG badge for this monitor",
+		"embed_desc": "Embed this monitor using <script> or <iframe> in your app.",
+		"cp_link": "Copy Link",
+		"cpd_link": "Link Copied",
+		"cp_code": "Copy Code",
+		"cpd_code": "Code Copied",
+		"status_x_minute": "%status for %minute minute",
+		"status_x_minutes": "%status for %minutes minutes",
+		"status_x_hour_y_minute": "%status for %hours h and %minutes m",
+		"status_no_data": "No Data",
+		"status_ok": "Status OK",
+		"am": "am",
+		"pm": "pm",
+		"standard": "Standard",
+		"pinging": "Pinging",
+		"status_svg": "Live Status",
+		"status_svg_desc": "Get a LIVE Status for this monitor"
+	},
+	"numbers": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+}

@@ -1,0 +1,57 @@
+{
+	"incident": {
+		"identified": "डेंटिफ़िएड",
+		"maintenance": "मेंटेनेंस",
+		"resolved": "रेसोल्वेड"
+	},
+	"monitor": {
+		"90_day": "90 दिन",
+		"am": "ऍम",
+		"badge": "बैज",
+		"badge_desc": "इस मॉनिटर के लिए SVG बैज प्राप्त करें",
+		"copied": "कोपीएड",
+		"cp_code": "कॉपी कोड",
+		"cp_link": "लिंक कॉपी करें",
+		"cpd_code": "कोड कॉपी किया गया",
+		"cpd_link": "लिंक कॉपी किया गया",
+		"embed": "एम्बेड",
+		"embed_desc": "इस मॉनीटर को एम्बेड करें<script> या<iframe> अपने ऐप में.",
+		"mode": "मोड",
+		"pm": "पं",
+		"share": "शेयर",
+		"share_desc": "लिंक का उपयोग करके इस मॉनिटर को अन्य लोगों के साथ शेयर करें",
+		"status": "स्टेटस",
+		"status_no_data": "कोई डेटा नहीं",
+		"status_ok": "स्थिति ठीक है",
+		"status_x_hour_y_minute": "%hours घंटा %minutes मिनट के लिए %status",
+		"status_x_minute": "%minute मिनट के लिए %status",
+		"status_x_minutes": "%minutes मिनट के लिए %status",
+		"theme": "थीम",
+		"theme_dark": "डार्क",
+		"theme_light": "लाइट",
+		"today": "आज",
+		"uptime": "अपटाइम"
+	},
+	"numbers": ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+	"root": {
+		"active_incidents": "सक्रिय घटनाएं",
+		"availability_per_component": "प्रति कॉम्पोनेन्ट उपलब्धता",
+		"category": "श्रेणी",
+		"here": "यहाँ",
+		"incident": "हादसा",
+		"incidents": "घटनाएं",
+		"last_x_hours": "अंतिम %hours घंटे",
+		"no_active_incident": "कोई सक्रिय घटना नहीं",
+		"no_monitors": "कोई मॉनिटर नहीं मिला",
+		"no_recent_incident": "कोई हालिया घटना नहीं",
+		"ongoing_incidents": "चल रही घटनाएँ",
+		"other_monitors": "अन्य मॉनिटर",
+		"read_doc_monitor": "अपना पहला मॉनिटर जोड़ने के लिए डॉक्यूमेंटेशन पढ़ें",
+		"recent_incidents": "हाल की घटनाएँ"
+	},
+	"statuses": {
+		"DEGRADED": "डेग्रेडेड",
+		"DOWN": "डाउन",
+		"UP": "उप"
+	}
+}

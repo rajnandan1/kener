@@ -25,8 +25,8 @@ if [ "$POPULATE_EXAMPLES" = true ]; then
   echo "Directory is empty, adding defaults..."
   mkdir -p "${CONFIG_DIR}"/static
   cp -r /app/static/. "${CONFIG_DIR}"/static
-  mv /app/config/monitors.example.yaml "${CONFIG_DIR}"/monitors.yaml
-  mv /app/config/site.example.yaml "${CONFIG_DIR}"/site.yaml
+  cp /app/config/monitors.example.yaml "${CONFIG_DIR}"/monitors.yaml
+  cp /app/config/site.example.yaml "${CONFIG_DIR}"/site.yaml
 fi
 
 # permissions

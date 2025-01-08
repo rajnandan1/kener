@@ -1,73 +1,96 @@
+# Kener - A Sveltekit NodeJS Status Page System
 
 <p align="center">
-	<img src="https://kener.ing/ss.png" width="100%" height="auto" alt="kener example illustration">
+	<img src="https://kener.ing/newbg.png" width="100%" height="auto" class="rounded-lg shadow-lg" alt="kener example illustration">
 </p>
- 
 
 <p align="center">
 	<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/rajnandan1/kener?label=Star%20Repo&style=social">
 	<a href="https://github.com/ivbeg/awesome-status-pages"><img src="https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg" alt="Awesome status page" /></a>
 	<a href="https://hub.docker.com/r/rajnandan1/kener"><img src="https://img.shields.io/docker/pulls/rajnandan1/kener" alt="Docker Kener" /></a>
+	<img alt="GitHub Repo Updated" src="https://badges.pufler.dev/updated/rajnandan1/kener">
+</p>
+  
+<p align="center">
+	<picture>
+  		<source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f514/512.webp" type="image/webp">
+  		<img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f514/512.gif" alt="🔔" width="32" height="32">
+	</picture>
+	<picture>
+  		<source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.webp" type="image/webp">
+  		<img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.gif" alt="🚀" width="32" height="32">
+	</picture>
+	<picture>
+  		<source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f6a7/512.webp" type="image/webp">
+ 		<img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f6a7/512.gif" alt="🚧" width="32" height="32">
+	</picture>
 </p>
 
-#### 👉 Visit a live server [here](https://kener.ing)
+#### [👉 Visit a live server](https://kener.ing)
 
-#### 👉 Read the documentation [here](https://kener.ing/docs) 
+#### [👉 Quick Start](https://kener.ing/docs/quick-start)
 
-# Kener - Status Page System
-Kener: Open-source Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. And the best part? Kener integrates seamlessly with GitHub, making incident management a team effort—making it easier for us to track and fix issues together in a collaborative and friendly environment.
+#### [👉 Documentation](https://kener.ing/docs/home)
 
-It uses files to store the data. Other adapters are coming soon
-  
+## What is Kener?
 
+Kener: Open-source sveltekit status page system, crafted with lot of thought so that it looks modern.
+
+It does not aim to replace the Datadogs of the world. It simply tries to help someone come with a status page for the world.
+
+Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing is added to make cooler.
+<div align="left">
+    <img alt="Visitor Stats" src="https://widgetbite.com/stats/rajnandan"/>  
+</div>
+    
 ## Features
 
-**Monitoring and Tracking:**
-- Real-time monitoring
-- Polls HTTP endpoint or Push data to monitor using Rest APIs
-- Handles Timezones for visitors
-- Categorize Monitors into different Sections
-- Cron-based scheduling for monitors. Minimum per minute
-- Flexible monitor configuration using YAML. Define your own parsing for monitor being UP/DOWN/DEGRADED
-- Construct complex API Polls - Chain, Secrets etc
-- Supports a Default Status for Monitors. Example defaultStatus=DOWN if you dont hit API per minute with Status UP
-- Supports base path for hosting in k8s
-- Pre-built docker image for easy deployment
+Here are some of the features that you get out of the box. Please read the documentation to know how to use them.
 
-**Customization and Branding:**
-- Customizable status page using yaml or code
-- Badge generation for status and uptime of Monitors
-- Support for custom domains
-- Embed Monitor as an iframe or widget
-- Light + Dark Theme
-- Internationalization support
+### Monitoring and Tracking
 
-**Incident Management:**
-- Create Incidents using Github Issues - Rich Text
-- Or use APIs to create Incidents
+-   Real-time monitoring
+-   Polls HTTP endpoint or Push data to monitor using Rest APIs
+-   Handles Timezones for visitors
+-   Categorize Monitors into different Sections
+-   Cron-based scheduling for monitors. Minimum per minute
+-   Flexible monitor configuration using YAML. Define your own parsing for monitor being UP/DOWN/DEGRADED
+-   Construct complex API Polls - Chain, Secrets etc
+-   Supports a Default Status for Monitors. Example defaultStatus=DOWN if you don't hit API per minute with Status UP
+-   Supports base path for hosting in k8s
+-   Pre-built docker image for easy deployment
+-   Supports webhooks/discord/slack for notifications
 
-**User Experience and Design:**
-- 100% Accessibility Score
-- Easy installation and setup
-- User-friendly interface
-- Responsive design for various devices
-- Auto SEO and Social Media ready
+### Customization and Branding
 
+-   Customizable status page using yaml or code
+-   Badge generation for status and uptime of Monitors
+-   Support for custom domains
+-   Embed Monitor as an iframe or widget
+-   Light + Dark Theme
+-   Internationalization support
 
+### Incident Management
+
+-   Create Incidents using Github Issues - Rich Text
+-   Or use APIs to create Incidents
+
+### User Experience and Design
+
+-   100% Accessibility Score
+-   Easy installation and setup
+-   User-friendly interface
+-   Responsive design for various devices
+-   Auto SEO and Social Media ready
 
 ## Technologies used
-- [SvelteKit](https://kit.svelte.dev/)
-- [shadcn-svelte](https://www.shadcn-svelte.com/)
 
-## Inspired from 
-- [Upptime](https://upptime.js.org/)
+-   [SvelteKit](https://kit.svelte.dev/)
+-   [shadcn-svelte](https://www.shadcn-svelte.com/)
 
-## Roadmap
+## Inspired from
 
-- [x] Add api to create incident
-- [x] Add docker file
-- [ ] Add notification
-- [ ] Add Mysql adapter
+-   [Upptime](https://upptime.js.org/)
 
 ## Screenshots
 
@@ -81,13 +104,12 @@ It uses files to store the data. Other adapters are coming soon
 ![image](static/marken_tl.png)
 ![image](static/marken_theme.png)
 
+## Support Me
 
-## Support
+If you are using Kener and want to support me, you can do so by sponsoring me on GitHub or buying me a coffee.
 
-<a href="https://stackexchange.com/users/3713933"><img src="https://stackexchange.com/users/flair/3713933.png" width="108" height="28" alt="profile for Raj Nandan Sharma on Stack Exchange, a network of free, community-driven Q&amp;A sites" title="profile for Raj Nandan Sharma on Stack Exchange, a network of free, community-driven Q&amp;A sites"></a>
+[Sponsor Me Using Github](https://github.com/sponsors/rajnandan1)
 
-<a href="https://www.buymeacoffee.com/rajnandan1"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=rajnandan1&button_colour=5F7FFF&font_colour=ffffff&font_family=Poppins&outline_colour=000000&coffee_colour=FFDD00" /></a>
+[Buy Me a Coffee](https://www.buymeacoffee.com/rajnandan1)
 
-<a href="https://www.paypal.com/paypalme/rajnandan1"><img style="height:90px;margin-left:-15px" src="static/paypal.png" /></a>
-
-
+![image](https://badges.pufler.dev/visits/rajnandan1/kener)
