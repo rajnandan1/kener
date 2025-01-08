@@ -1,21 +1,13 @@
 ---
 info:
-  title: Kener API
+  title: Heimdall Statuspage API
   version: 1.0.0
   description: |
-    # Kener Self-hosted node js status page
-    ![Kener](https://kener.ing/newbg.png "kener")
-    API specification for Kener status page and incident management system. This API spec was created using [Frogment](https://www.frogment.app)
-  contact:
-    name: Raj Nandan Sharma
-    email: rajnandan1@gmail.com
-    url: https://github.com/rajnandan1/kener/issues
-  license:
-    name: MIT
-    url: https://opensource.org/licenses/MIT
+    # Heimdall Statuspage API
+    API specification for Heimdall Statuspage and incident management system.
 openapi: 3.0.0
 servers:
-- url: https://your-kener-host.com
+- url: https://status.novonordisk.cloud/
   description: Kener host URL
 tags:
 - name: Monitors
