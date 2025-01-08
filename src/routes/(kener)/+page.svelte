@@ -6,7 +6,7 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import { l } from "$lib/i18n/client";
 	import { base } from "$app/paths";
-	import { ArrowRight, X } from "lucide-svelte";
+	import { ArrowRight, ChevronLeft, X } from "lucide-svelte";
 	import { hotKeyAction, clickOutsideAction } from "svelte-legos";
 	import { onMount } from "svelte";
 	import ShareMenu from "$lib/components/shareMenu.svelte";
@@ -29,14 +29,25 @@
 			}
 		}
 	}
+
+	let isHome = !data.isCategoryPage && !data.isMonitorPage;
+
+	if (data.isCategoryPage) {
+		let category = data.site.categories.find((e) => e.name == data.categoryName);
+		data.site.hero.title = category.name;
+		data.site.hero.subtitle = category.description;
+	}
+
 	onMount(() => {
 		pageLoaded = true;
 	});
 </script>
 
 <div class="mt-12"></div>
-{#if data.site.hero}
-	<section class="mx-auto mb-8 flex w-full max-w-4xl flex-1 flex-col items-start justify-center">
+{#if data.site.hero && !data.isMonitorPage}
+	<section
+		class="mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center"
+	>
 		<div class="mx-auto max-w-screen-xl px-4 lg:flex lg:items-center">
 			<div class="blurry-bg mx-auto max-w-3xl text-center">
 				{#if data.site.hero.image}
@@ -56,6 +67,26 @@
 		</div>
 	</section>
 {/if}
+{#if !isHome}
+	<section
+		class="mx-auto my-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center"
+	>
+		<Button
+			variant="secondary"
+			class="bounce-left h-8   justify-start  pl-1.5"
+			on:click={() => {
+				if (data.isCategoryPage) {
+					return window.history.back();
+				}
+				if (data.isMonitorPage) {
+					return (window.location.href = `${base}/`);
+				}
+			}}
+		>
+			<ChevronLeft class="arrow mr-1 h-5 w-5" /> Back
+		</Button>
+	</section>
+{/if}
 {#if data.unresolvedIncidents.length > 0}
 	<section
 		class="mx-auto mb-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent"
@@ -73,8 +104,8 @@
 		class="mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center backdrop-blur-[2px]"
 		id=""
 	>
-		<Card.Root>
-			<Card.Content class=" newincidents p-0">
+		<Card.Root class="w-full">
+			<Card.Content class=" newincidents w-full overflow-hidden p-0">
 				{#each data.unresolvedIncidents as incident, index}
 					<Incident {incident} lang={data.lang} index="incident-{index}" />
 				{/each}
@@ -135,58 +166,59 @@
 		</Card.Root>
 	</section>
 {/if}
-{#if data.site.categories}
+{#if data.site.categories && isHome}
 	<section
 		class="relative z-10 mx-auto mb-8 w-full max-w-[890px] flex-1 flex-col items-start backdrop-blur-[2px] md:w-[655px]"
 	>
 		{#each data.site.categories.filter((e) => e.name != "Home") as category}
-			<Card.Root class="mb-2 w-full">
-				<Card.Header class="relative pr-[100px]">
-					<Card.Title class="">{category.name}</Card.Title>
-					<Card.Description>
-						{#if category.description}
-							{@html category.description}
-						{/if}
-						<a
-							href="{base}/category-{category.name}"
-							class="{buttonVariants({
-								variant: 'ghost'
-							})} absolute right-2 top-1/2 -translate-y-1/2 transform"
-						>
-							<ArrowRight class="h-4 w-4" />
-						</a>
-					</Card.Description>
-				</Card.Header>
-			</Card.Root>
+			<div
+				on:click={() => {
+					window.location.href = `?category=${category.name}`;
+				}}
+			>
+				<Card.Root class="hover:bg-secondary">
+					<Card.Header class="bounce-right relative w-full cursor-pointer px-4  ">
+						<Card.Title class="w-full ">
+							{category.name}
+							<Button
+								variant="ghost"
+								class="arrow absolute right-4 top-9 h-5 w-5 p-0"
+								size="icon"
+							>
+								<ArrowRight class="h-4 w-4" />
+							</Button>
+						</Card.Title>
+						<Card.Description>
+							{#if category.description}
+								{@html category.description}
+							{/if}
+						</Card.Description>
+					</Card.Header>
+				</Card.Root>
+			</div>
 		{/each}
 	</section>
 {/if}
-{#if data.resolvedIncidents.length > 0}
-	<section
-		class="mx-auto mb-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent"
-		id=""
+<section
+	class="mx-auto mb-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent"
+	id=""
+>
+	<div
+		on:click={() => {
+			window.location.href = `${base}/incidents`;
+		}}
+		class="bounce-right grid w-full cursor-pointer grid-cols-2 justify-between gap-4 rounded-md border bg-card px-4 py-2 text-sm font-medium hover:bg-secondary"
 	>
-		<div class="grid w-full grid-cols-2 gap-4">
-			<div class="col-span-2 text-center md:col-span-1 md:text-left">
-				<Badge variant="outline" class="border-0 pl-0">
-					{l(data.lang, "root.recent_incidents")}
-				</Badge>
-			</div>
+		<div class="col-span-1 text-left">
+			{l(data.lang, "root.recent_incidents")}
 		</div>
-	</section>
-	<section
-		class="mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center backdrop-blur-[2px]"
-		id=""
-	>
-		<Card.Root>
-			<Card.Content class="newincidents  p-0">
-				{#each data.resolvedIncidents as incident, index}
-					<Incident {incident} lang={data.lang} index="incidentx-{index}" />
-				{/each}
-			</Card.Content>
-		</Card.Root>
-	</section>
-{/if}
+		<div class="text-right">
+			<span class="arrow float-right mt-0.5">
+				<ArrowRight class="h-4 w-4" />
+			</span>
+		</div>
+	</div>
+</section>
 {#if shareMenusToggle}
 	<div
 		transition:scale={{ duration: 100 }}

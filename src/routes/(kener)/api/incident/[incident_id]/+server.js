@@ -2,12 +2,6 @@
 // @ts-ignore
 import { json } from "@sveltejs/kit";
 import { auth, ParseIncidentPayload, GHIssueToKenerIncident } from "$lib/server/webhook";
-import {
-	GetIncidentByNumber,
-	GetStartTimeFromBody,
-	GetEndTimeFromBody,
-	UpdateIssue
-} from "$lib/server/github";
 
 import {
 	CreateIncident,

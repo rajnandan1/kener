@@ -180,7 +180,9 @@ const FetchData = async function (site, monitor, localTz) {
 		uptime90Day: uptime90Day,
 		summaryText: summaryText,
 		summaryColorClass: summaryColorClass,
-		barRoundness: site.barRoundness
+		barRoundness: site.barRoundness,
+		midnight90DaysAgo: midnight90DaysAgo,
+		midnightTomorrow: midnightTomorrow
 	};
 };
 export { FetchData };

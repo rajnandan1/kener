@@ -23,7 +23,7 @@ Here is an example
 ```html
 <script
 	async
-	src="https://kener.ing/embed-okbookmarks/js?theme=light&monitor=https://kener.ing/embed-okbookmarks"
+	src="https://kener.ing/embed-earth/js?theme=light&monitor=https://kener.ing/embed-earth"
 ></script>
 ```
 
@@ -40,7 +40,7 @@ Replace `[hostname]` with your kener hostname and `[tag]` with your monitor tag.
 ### Demo
 
 <div class="border mx-auto rounded-sm w-585px">
-	<script async src="/embed-okbookmarks/js?theme=dark&monitor=/embed-okbookmarks"></script>
+	<script async src="/embed-earth/js?theme=dark&monitor=/embed-earth"></script>
 </div>
 
 ## Iframe
@@ -62,7 +62,7 @@ Here is an example
 
 ```html
 <iframe
-	src="https://kener.ing/embed-okbookmarks?theme=light"
+	src="https://kener.ing/embed-earth?theme=light"
 	width="100%"
 	height="200"
 	allowfullscreen="allowfullscreen"
@@ -83,5 +83,5 @@ You can pass the following parameters to the embed code
 ### Demo
 
 <div class="border mx-auto rounded-sm w-585px">
-	<iframe src="/embed-okbookmarks?theme=dark" width="100%" height="200" allowfullscreen="allowfullscreen" allowpaymentrequest frameborder="0"></iframe>
+	<iframe src="/embed-earth?theme=dark" width="100%" height="200" allowfullscreen="allowfullscreen" allowpaymentrequest frameborder="0"></iframe>
 </div>

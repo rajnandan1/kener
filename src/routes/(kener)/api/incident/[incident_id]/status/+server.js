@@ -2,7 +2,6 @@
 // @ts-ignore
 import { json } from "@sveltejs/kit";
 import { auth, GHIssueToKenerIncident } from "$lib/server/webhook";
-import { UpdateIssueLabels, GetIncidentByNumber } from "$lib/server/github";
 
 export async function POST({ request, params }) {
 	const payload = await request.json();
@@ -41,7 +40,7 @@ export async function POST({ request, params }) {
 		);
 	}
 
-	let issue = await GetIncidentByNumber(incident_number);
+	let issue = null;
 	if (issue === null) {
 		return json(
 			{ error: "github error" },
@@ -73,7 +72,7 @@ export async function POST({ request, params }) {
 		body = body + " " + `[end_datetime:${endDatetime}]`;
 	}
 
-	let resp = await UpdateIssueLabels(incident_number, labels, body);
+	let resp = null;
 	if (resp === null) {
 		return json(
 			{ error: "github error" },

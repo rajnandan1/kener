@@ -4,8 +4,11 @@
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import { Button } from "$lib/components/ui/button";
+	import * as Alert from "$lib/components/ui/alert";
+
 	import moment from "moment";
 	import { DateInput } from "date-picker-svelte";
+	import { clickOutsideAction, slide } from "svelte-legos";
 	import { Tooltip } from "bits-ui";
 	import {
 		Plus,
@@ -14,7 +17,6 @@
 		Bell,
 		Loader,
 		ChevronLeft,
-		ChevronRight,
 		Info,
 		Hammer,
 		CalendarCheck,
@@ -22,6 +24,7 @@
 		Siren,
 		PenLine,
 		MessageSquarePlus,
+		ChevronRight,
 		Trash
 	} from "lucide-svelte";
 	import * as Select from "$lib/components/ui/select";
@@ -99,7 +102,8 @@
 			startDatetime: null,
 			start_date_time: null,
 			status: "OPEN",
-			state: "INVESTIGATING"
+			state: "INVESTIGATING",
+			firstComment: ""
 		};
 	}
 
@@ -145,8 +149,17 @@
 			if (resp.error) {
 				invalidFormMessage = resp.error;
 			} else {
+				await fetchData();
+
+				if (!!!newIncident.id) {
+					newComment.comment = newIncident.firstComment;
+					newComment.id = 0;
+					newComment.state = newIncident.state;
+					newComment.commented_at = newIncident.startDatetime;
+
+					await addNewComment(resp.incident_id);
+				}
 				showModal = false;
-				fetchData();
 			}
 		} catch (error) {
 			invalidFormMessage = "Error while saving data";
@@ -249,7 +262,6 @@
 
 	function showComments(i) {
 		currentIncident = i;
-		showCommentModal = true;
 		comments = [];
 		newComment.state = i.state;
 		newComment.id = 0;
@@ -258,7 +270,7 @@
 		fetchComments();
 	}
 
-	async function addNewComment() {
+	async function addNewComment(i) {
 		addCommentError = "";
 		if (newComment.comment.trim().length == 0 || loadingComments) {
 			return;
@@ -280,7 +292,7 @@
 				body: JSON.stringify({
 					action: newComment.id == 0 ? "addComment" : "updateComment",
 					data: {
-						incident_id: currentIncident.id,
+						incident_id: !!i ? i : currentIncident.id,
 						comment: newComment.comment,
 						comment_id: newComment.id,
 						state: newComment.state,
@@ -296,6 +308,7 @@
 				newComment.comment = "";
 				newComment.id = 0;
 				newComment.commented_at = null;
+				newIncident.state = newComment.state;
 				await fetchData();
 			}
 		} catch (error) {
@@ -338,6 +351,8 @@
 			newIncident.endDatetime = new Date(Number(i.end_date_time) * 1000);
 		}
 		showModal = true;
+
+		showComments(i);
 	}
 	function setCommentState(s) {
 		newComment.state = s;
@@ -579,24 +594,15 @@
 									<td class="whitespace-nowrap px-6 py-4 text-xs font-semibold">
 										<div class="flex gap-x-1.5">
 											<Button
-												variant="ghost"
-												size="icon"
-												class="h-6 w-6 p-1"
+												variant="secondary"
+												class="h-8 text-xs"
 												on:click={(e) => {
 													openIncidentSettings(incident);
 												}}
 											>
-												<Settings class="inline h-5 w-5" />
-											</Button>
-											<Button
-												variant="ghost"
-												size="icon"
-												class="h-6 w-6 p-1"
-												on:click={(e) => {
-													showComments(incident);
-												}}
-											>
-												<MessageSquarePlus class="inline h-5 w-5" />
+												Update <MessageSquarePlus
+													class="ml-2 inline h-4 w-4"
+												/>
 											</Button>
 										</div>
 									</td>
@@ -611,252 +617,303 @@
 </div>
 {#if showModal}
 	<div class="fixed left-0 top-0 z-50 h-screen w-screen bg-card bg-opacity-20 backdrop-blur-sm">
-		<div class="absolute right-0 top-0 h-screen w-[800px] bg-background shadow-xl">
-			<div class="absolute top-0 flex h-12 w-full justify-between gap-2 border-b p-3">
-				{#if newIncident.id}
-					<h2 class="text-lg font-medium">Edit Incident</h2>
-				{:else}
-					<h2 class="text-lg font-medium">Add Incident</h2>
-				{/if}
-			</div>
-			<div class="mt-12 w-full overflow-y-auto p-3" style="height: calc(100vh - 7rem);">
-				<div class="flex flex-row gap-4">
-					<div class="w-full">
-						<Label class="text-sm">
-							Incident Title
-							<span class="text-red-500">*</span>
-						</Label>
-						<Input
-							class="mt-2"
-							bind:value={newIncident.title}
-							placeholder="Outage in all servers"
-						/>
-					</div>
-				</div>
-
-				<div class="mt-4 flex gap-4">
-					<div class="col-span-1">
-						<Label class="mb-2 text-sm" for="start_date_time">
-							Incident Start Date Time
-							<span class="text-red-500">*</span>
-						</Label>
-						<DateInput
-							bind:value={newIncident.startDatetime}
-							id="start_date_time"
-							timePrecision="minute"
-							class=" mt-2 text-sm"
-						/>
-					</div>
-				</div>
-				<div class="mt-4 flex gap-4">
-					<p class="font-medium">
-						<label>
-							<input
-								on:change={(e) => {
-									newIncident.status =
-										e.target.checked === true ? "CLOSED" : "OPEN";
-								}}
-								type="checkbox"
-								checked={newIncident.status === "CLOSED"}
-							/>
-							Close/Delete this incident
-						</label>
-					</p>
-				</div>
-			</div>
-			<div class="absolute bottom-0 grid h-16 w-full grid-cols-6 gap-2 border-t p-3">
-				<div class="col-span-1">
-					<Button
-						variant="ghost"
-						class="col-span-1 w-full"
-						on:click={(e) => {
-							showModal = false;
-						}}>Cancel</Button
-					>
-				</div>
-				<div class="col-span-4 py-2.5">
-					<p class="text-right text-xs font-medium text-red-500">
-						{invalidFormMessage}
-					</p>
-				</div>
-				<div class="col-span-1">
-					<Button
-						class="col-span-1 w-full"
-						on:click={createIncident}
-						disabled={formStateCreate === "loading"}
-					>
-						Save
-						{#if formStateCreate === "loading"}
-							<Loader class="ml-2 inline h-4 w-4 animate-spin" />
-						{/if}
-					</Button>
-				</div>
-			</div>
-		</div>
-	</div>
-{/if}
-
-{#if showCommentModal}
-	<div
-		class="moldal-container fixed left-0 top-0 z-50 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm"
-	>
 		<div
-			class="absolute left-1/2 top-1/2 h-fit w-full max-w-xl -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background shadow-lg backdrop-blur-lg"
+			transition:slide={{ direction: "right", duration: 200 }}
+			use:clickOutsideAction
+			on:clickoutside={(e) => {
+				showModal = false;
+			}}
+			class="absolute right-0 top-0 h-screen w-[800px] border-l bg-background p-4 shadow-xl"
 		>
-			<Button
-				variant="ghost"
-				on:click={() => {
-					showCommentModal = false;
-				}}
-				class="absolute right-2 top-2 z-40 h-6 w-6   rounded-full border bg-background p-1"
-			>
-				<X class="h-4 w-4   text-muted-foreground" />
-			</Button>
-			<div class="content px-4 py-4">
-				<h2 class="text-lg font-semibold">
-					Add Updates for <span class="underline">{currentIncident.title}</span>
-				</h2>
-				<form class="mt-4" on:submit|preventDefault={addNewComment}>
-					<div
-						class="bg-hover state-{newComment.state} mt-2 grid grid-cols-4 overflow-hidden rounded-md border text-xs font-medium"
-					>
-						<div
-							class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
-							on:click={() => {
-								setCommentState("INVESTIGATING");
-							}}
-						>
-							INVESTIGATING
-						</div>
-						<div
-							class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
-							on:click={() => {
-								setCommentState("IDENTIFIED");
-							}}
-						>
-							IDENTIFIED
-						</div>
-						<div
-							class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
-							on:click={() => {
-								setCommentState("MONITORING");
-							}}
-						>
-							MONITORING
-						</div>
-						<div
-							class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
-							on:click={() => {
-								setCommentState("RESOLVED");
-							}}
-						>
-							RESOLVED
-						</div>
+			<div class="mt-0 w-full overflow-y-auto p-3" style="height: 100vh;">
+				<div class="rounded-md border p-4">
+					<div>
+						{#if newIncident.id}
+							<h2 class="text-lg font-medium">Edit Incident</h2>
+						{:else}
+							<h2 class="text-lg font-medium">Add New Incident</h2>
+						{/if}
 					</div>
-					<div class="mt-4 flex w-full gap-4">
-						<div class="text-sm font-medium leading-7">Time Stamp</div>
-						<DateInput
-							bind:value={newComment.commented_at}
-							id="newcomment_commented_at"
-							timePrecision="minute"
-							min={new Date(currentIncident.start_date_time * 1000)}
-							class="w-[200px] text-sm"
-						/>
-					</div>
-					<div class="mt-4">
-						<textarea
-							bind:value={newComment.comment}
-							class="h-24 w-full rounded-sm border p-2 text-sm"
-							placeholder="There is an outage in all server. Our best minds are on it. We will update you soon."
-						></textarea>
-					</div>
-
-					<div class="flex justify-between">
-						<div>
-							{#if loadingComments}
-								<Loader class="mt-2 inline h-6 w-6 animate-spin" />
-							{/if}
-						</div>
-						<div>
-							{#if addCommentError}
-								<p class="mt-4 text-xs text-red-500">{addCommentError}</p>
-							{/if}
-						</div>
-						<div class="flex gap-x-2">
-							{#if !!newComment.id}
-								<Button
-									type="reset"
-									variant="ghost"
-									on:click={() =>
-										(newComment = {
-											comment: "",
-											id: 0,
-											state: currentIncident.state
-										})}
-									class="mt-2 h-8 p-1 px-2 text-xs"
+					<div class="mt-4 flex flex-row gap-4">
+						<div class="w-full">
+							<Label class="text-sm">
+								Incident Title
+								<span class="text-red-500">*</span>
+								<span
+									class="float-right mt-2 text-xs font-semibold badge-{newIncident.state}"
 								>
-									Cancel
-								</Button>
-							{/if}
+									{newIncident.state}
+								</span>
+							</Label>
+							<Input
+								class="mt-2"
+								bind:value={newIncident.title}
+								placeholder="Outage in all servers"
+							/>
+						</div>
+					</div>
 
+					{#if !!!newIncident.id}
+						<div class="mt-4 flex flex-row gap-4">
+							<div class="w-full">
+								<Label class="text-sm">
+									Incident Summary
+									<span class="text-red-500">*</span>
+								</Label>
+								<Input
+									class="mt-2"
+									bind:value={newIncident.firstComment}
+									placeholder="We are facing degraded service in all servers"
+								/>
+							</div>
+						</div>
+					{/if}
+					<div class="mt-4 flex gap-4">
+						<div class="col-span-1">
+							<Label class="mb-2 text-sm" for="start_date_time">
+								Incident Start Date Time
+								<span class="text-red-500">*</span>
+							</Label>
+							<DateInput
+								bind:value={newIncident.startDatetime}
+								id="start_date_time"
+								timePrecision="minute"
+								disabled={!!newIncident.id}
+								class="mt-2 text-sm"
+							/>
+						</div>
+					</div>
+
+					<div class="mt-4 grid h-16 w-full grid-cols-6 gap-2 border-t pt-4">
+						<div class="col-span-4 py-2.5">
+							<p class="text-right text-xs font-medium text-red-500">
+								{invalidFormMessage}
+							</p>
+						</div>
+						<div class="col-span-2 justify-end">
 							<Button
-								type="submit"
-								disabled={newComment.comment.trim().length == 0 || loadingComments}
-								class="mt-2 h-8 p-1 px-2.5 text-xs"
+								class="float-right"
+								on:click={createIncident}
+								disabled={formStateCreate === "loading" ||
+									newIncident.title.trim().length == 0 ||
+									!!!newIncident.startDatetime ||
+									(!!!newIncident.id &&
+										newIncident.firstComment.trim().length == 0)}
 							>
-								{#if !!newComment.id}
-									Update Comment
-								{:else}
-									Add Comment
+								Save
+								{#if formStateCreate === "loading"}
+									<Loader class="ml-2 inline h-4 w-4 animate-spin" />
 								{/if}
 							</Button>
 						</div>
 					</div>
-				</form>
-				<div class="mt-4 max-h-[400px] overflow-y-auto border-t">
-					{#each comments as comment}
-						<div class="flex items-center justify-between gap-2 border-b py-2">
+				</div>
+
+				{#if newIncident.id}
+					<div class="mt-4 rounded-md border px-4 py-4">
+						<h2 class="text-lg font-semibold">
+							Add Updates for <span class="underline">{currentIncident.title}</span>
+						</h2>
+						<form
+							class="mt-4"
+							on:submit|preventDefault={(e) => {
+								addNewComment();
+							}}
+						>
 							<div
-								class="w-full rounded px-2 py-2 {newComment.id == comment.id
-									? 'bg-input'
-									: ''}"
+								class="bg-hover state-{newComment.state} mt-2 grid grid-cols-4 overflow-hidden rounded-md border text-xs font-medium"
 							>
-								<p class="mb-2 text-xs font-medium">{comment.comment}</p>
-								<div class="flex w-full justify-between gap-x-2">
-									<div class="text-xs font-semibold text-muted-foreground">
-										<span class="badge-{comment.state}">
-											{comment.state}
-										</span>
-										{moment(comment.commented_at * 1000).format(
-											"YYYY-MM-DD HH:mm:ss"
-										)}
-									</div>
-									<div class="flex gap-x-2 pr-2">
-										<Button
-											variant="ghost"
-											size="icon"
-											class="h-5 w-5 p-1"
-											on:click={() => {
-												setCommentEdit(comment);
-											}}
-										>
-											<PenLine class="inline h-4 w-4 text-muted-foreground" />
-										</Button>
-										<Button
-											variant="ghost"
-											size="icon"
-											class="h-5 w-5 p-1"
-											on:click={() => deleteComment(comment)}
-										>
-											<Trash class="inline h-4 w-4 text-muted-foreground" />
-										</Button>
-									</div>
+								<div
+									class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
+									on:click={() => {
+										setCommentState("INVESTIGATING");
+									}}
+								>
+									INVESTIGATING
+								</div>
+								<div
+									class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
+									on:click={() => {
+										setCommentState("IDENTIFIED");
+									}}
+								>
+									IDENTIFIED
+								</div>
+								<div
+									class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
+									on:click={() => {
+										setCommentState("MONITORING");
+									}}
+								>
+									MONITORING
+								</div>
+								<div
+									class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
+									on:click={() => {
+										setCommentState("RESOLVED");
+									}}
+								>
+									RESOLVED
 								</div>
 							</div>
+							<div class="mt-4 flex w-full gap-4">
+								<div class="text-sm font-medium leading-7">Time Stamp</div>
+								<DateInput
+									bind:value={newComment.commented_at}
+									id="newcomment_commented_at"
+									timePrecision="minute"
+									min={new Date(currentIncident.start_date_time * 1000)}
+									class="w-[200px] text-sm"
+								/>
+							</div>
+							<div class="mt-4">
+								<textarea
+									bind:value={newComment.comment}
+									class="h-24 w-full rounded-sm border p-2 text-sm"
+									placeholder="There is an outage in all server. Our best minds are on it. We will update you soon."
+								></textarea>
+							</div>
+
+							<div class="flex justify-between">
+								<div>
+									{#if loadingComments}
+										<Loader class="mt-2 inline h-6 w-6 animate-spin" />
+									{/if}
+								</div>
+								<div>
+									{#if addCommentError}
+										<p class="mt-4 text-xs text-red-500">{addCommentError}</p>
+									{/if}
+								</div>
+								<div class="flex gap-x-2">
+									{#if !!newComment.id}
+										<Button
+											type="reset"
+											variant="ghost"
+											on:click={() =>
+												(newComment = {
+													comment: "",
+													id: 0,
+													state: currentIncident.state
+												})}
+											class="mt-2"
+										>
+											Cancel Update
+										</Button>
+									{/if}
+
+									<Button
+										type="submit"
+										disabled={newComment.comment.trim().length == 0 ||
+											loadingComments}
+										class="mt-2"
+									>
+										{#if !!newComment.id}
+											Update Comment
+										{:else}
+											Add Comment
+										{/if}
+									</Button>
+								</div>
+							</div>
+						</form>
+						<div class="mt-4 border-t">
+							{#each comments as comment}
+								<div class="flex items-center justify-between gap-2 border-b py-2">
+									<div
+										class="w-full rounded px-2 py-2 {newComment.id == comment.id
+											? 'bg-input'
+											: ''}"
+									>
+										<p class="mb-2 text-xs font-medium">{comment.comment}</p>
+										<div class="flex w-full justify-between gap-x-2">
+											<div
+												class="text-xs font-semibold text-muted-foreground"
+											>
+												<span class="badge-{comment.state}">
+													{comment.state}
+												</span>
+												{moment(comment.commented_at * 1000).format(
+													"YYYY-MM-DD HH:mm:ss"
+												)}
+											</div>
+											<div class="flex gap-x-2 pr-2">
+												<Button
+													variant="ghost"
+													size="icon"
+													class="h-5 w-5 p-1"
+													on:click={() => {
+														setCommentEdit(comment);
+													}}
+												>
+													<PenLine
+														class="inline h-4 w-4 text-muted-foreground"
+													/>
+												</Button>
+												<Button
+													variant="ghost"
+													size="icon"
+													class="h-5 w-5 p-1"
+													on:click={() => deleteComment(comment)}
+												>
+													<Trash
+														class="inline h-4 w-4 text-muted-foreground"
+													/>
+												</Button>
+											</div>
+										</div>
+									</div>
+								</div>
+							{/each}
 						</div>
-					{/each}
-				</div>
+					</div>
+					{#if newIncident.status == "OPEN"}
+						<Alert.Root variant="destructive" class="relative mt-4">
+							<Alert.Title>Delete Incident</Alert.Title>
+							<Alert.Description>
+								You can delete the incident. This will stop showing up in the status
+								page.
+							</Alert.Description>
+							<Button
+								variant="destructive"
+								class="absolute right-4 top-4"
+								on:click={() => {
+									newIncident.status = "CLOSED";
+									createIncident();
+								}}
+							>
+								Delete
+							</Button>
+						</Alert.Root>
+					{:else}
+						<Alert.Root class="relative mt-4">
+							<Alert.Title>Restore Incident</Alert.Title>
+							<Alert.Description>
+								Restore the incident. This will start showing up in the status page.
+							</Alert.Description>
+							<Button
+								class="absolute right-4 top-4"
+								on:click={() => {
+									newIncident.status = "OPEN";
+									createIncident();
+								}}
+							>
+								Restore
+							</Button>
+						</Alert.Root>
+					{/if}
+				{/if}
 			</div>
+			<Button
+				variant="outline"
+				size="icon"
+				class="absolute right-[785px] top-7  h-8 w-8 rounded-md"
+				on:click={(e) => {
+					showModal = false;
+				}}
+			>
+				<ChevronRight class="h-6 w-6 " />
+			</Button>
 		</div>
 	</div>
 {/if}

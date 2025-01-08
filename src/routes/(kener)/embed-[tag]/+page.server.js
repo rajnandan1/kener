@@ -5,7 +5,7 @@ import { GetMonitors } from "$lib/server/controllers/controller.js";
 export async function load({ params, route, url, parent }) {
 	let monitors = await GetMonitors({ status: "ACTIVE" });
 	const parentData = await parent();
-
+	const siteData = parentData.site;
 	const monitorsActive = [];
 	const query = url.searchParams;
 	const theme = query.get("theme");
@@ -17,7 +17,7 @@ export async function load({ params, route, url, parent }) {
 		delete monitors[i].api;
 		delete monitors[i].default_status;
 		monitors[i].embed = true;
-		let data = await FetchData(monitors[i], parentData.localTz);
+		let data = await FetchData(siteData, monitors[i], parentData.localTz);
 		monitors[i].pageData = data;
 		monitorsActive.push(monitors[i]);
 	}

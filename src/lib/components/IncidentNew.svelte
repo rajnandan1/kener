@@ -10,14 +10,16 @@
 	if (incident.end_date_time) {
 		endTime = incident.end_date_time;
 	}
-
 	let lastedFor = moment.duration(endTime - startTime, "seconds").humanize();
 	let startedAt = moment.duration(nowTime - startTime, "seconds").humanize();
+	let isFuture = false;
+	//is future incident
+	if (nowTime < startTime) {
+		isFuture = true;
+	}
 </script>
 
-<div
-	class="newincident relative grid w-full grid-cols-12 gap-2 px-0 py-0 last:border-b-0 md:w-[655px]"
->
+<div class="newincident relative grid w-full grid-cols-12 gap-2 px-0 py-0 last:border-b-0">
 	<div class="col-span-12">
 		<Accordion.Root bind:value={index} class="accor">
 			<Accordion.Item value="incident-0">
@@ -35,42 +37,78 @@
 						<p
 							class="scroll-m-20 text-sm font-medium tracking-wide text-muted-foreground"
 						>
-							{#if incident.state != "RESOLVED"}
+							{#if !isFuture && incident.state != "RESOLVED"}
 								<span>
 									Started about {startedAt} ago, still ongoing
 								</span>
-							{:else}
+							{:else if !isFuture && incident.state == "RESOLVED"}
 								<span>
 									Started about {startedAt} ago, lasted for about {lastedFor}
+								</span>
+							{:else if isFuture && incident.state != "RESOLVED"}
+								<span>
+									Starts in {startedAt}
+								</span>
+							{:else if isFuture && incident.state == "RESOLVED"}
+								<span>
+									Starts in {startedAt}, will last for about {lastedFor}
 								</span>
 							{/if}
 						</p>
 					</div>
 				</Accordion.Trigger>
 				<Accordion.Content>
-					<div class="mt-2 px-4">
-						<ol class="relative pl-14">
-							{#each incident.comments as comment}
-								<li class="relative border-l pb-4 pl-[4.5rem] last:border-0">
+					<div class="px-4 pt-2">
+						{#if incident.monitors.length > 0}
+							<div class="flex gap-2">
+								{#each incident.monitors as monitor}
 									<div
-										class="absolute top-0 w-28 -translate-x-32 rounded border bg-secondary px-1.5 py-1 text-center text-xs font-semibold"
+										class="tag-affected-text flex gap-x-2 rounded-md bg-secondary px-1 py-1 pr-2"
 									>
-										{comment.state}
+										<div
+											class="bg-api-{monitor.impact_type.toLowerCase()} rounded px-1.5 py-1 text-xs font-semibold text-primary-foreground"
+										>
+											{monitor.impact_type}
+										</div>
+										{#if monitor.image}
+											<img src={monitor.image} class="mt-1 h-4 w-4" />
+										{/if}
+										<div class="mt-0.5 font-medium">
+											{monitor.name}
+										</div>
 									</div>
-									<time
-										class=" mb-1 text-sm font-normal leading-none text-muted-foreground"
-									>
-										{moment(comment.created_at).format(
-											"MMMM Do YYYY, h:mm:ss a"
-										)}
-									</time>
+								{/each}
+							</div>
+						{/if}
+						<p class="my-3 text-xs font-semibold uppercase text-muted-foreground">
+							Updates
+						</p>
+						{#if incident.comments.length > 0}
+							<ol class="relative mt-2 pl-14">
+								{#each incident.comments as comment}
+									<li class="relative border-l pb-4 pl-[4.5rem] last:border-0">
+										<div
+											class="absolute top-0 w-28 -translate-x-32 rounded border bg-secondary px-1.5 py-1 text-center text-xs font-semibold"
+										>
+											{comment.state}
+										</div>
+										<time
+											class=" mb-1 text-sm font-medium leading-none text-muted-foreground"
+										>
+											{moment(comment.created_at).format(
+												"MMMM Do YYYY, h:mm:ss a"
+											)}
+										</time>
 
-									<p class="mb-4 text-sm font-normal">
-										{comment.comment}
-									</p>
-								</li>
-							{/each}
-						</ol>
+										<p class="mb-4 text-sm font-normal">
+											{comment.comment}
+										</p>
+									</li>
+								{/each}
+							</ol>
+						{:else}
+							<p class="text-sm font-medium">No Updates Yet</p>
+						{/if}
 					</div>
 				</Accordion.Content>
 			</Accordion.Item>

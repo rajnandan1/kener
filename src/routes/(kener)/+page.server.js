@@ -2,15 +2,24 @@
 import { FetchData } from "$lib/server/page";
 import { GetMonitors, GetIncidentsOpenHome } from "$lib/server/controllers/controller.js";
 
-export async function load({ parent }) {
+export async function load({ parent, url }) {
 	let monitors = await GetMonitors({ status: "ACTIVE" });
+
+	const query = url.searchParams;
+	const requiredCategory = query.get("category") || "Home";
 	const parentData = await parent();
 	const siteData = parentData.site;
-	const github = siteData.github;
 	const monitorsActive = [];
 	for (let i = 0; i < monitors.length; i++) {
 		//only return monitors that have category as home or category is not present
-		if (!!monitors[i].category_name && monitors[i].category_name !== "Home") {
+		if (
+			!!!query.get("monitor") &&
+			!!monitors[i].category_name &&
+			monitors[i].category_name !== requiredCategory
+		) {
+			continue;
+		}
+		if (query.get("monitor") && query.get("monitor") !== monitors[i].tag) {
 			continue;
 		}
 		delete monitors[i].api;
@@ -24,12 +33,43 @@ export async function load({ parent }) {
 		monitorsActive.push(monitors[i]);
 	}
 	let allOpenIncidents = await GetIncidentsOpenHome(siteData.homeIncidentCount);
-	let resolvedIncidents = allOpenIncidents.filter((incident) => incident.state === "RESOLVED");
-	let unresolvedIncidents = allOpenIncidents.filter((incident) => incident.state !== "RESOLVED");
+	let eligibleTags = monitorsActive.map((monitor) => monitor.tag);
+	//filter incidents that have monitor_tag in monitors
+	allOpenIncidents = allOpenIncidents.filter((incident) => {
+		let incidentMonitors = incident.monitors;
+		let monitorTags = incidentMonitors.map((monitor) => monitor.monitor_tag);
+		let isPresent = false;
+		monitorTags.forEach((tag) => {
+			if (eligibleTags.includes(tag)) {
+				isPresent = true;
+			}
+		});
+		return isPresent;
+	});
 
+	allOpenIncidents = allOpenIncidents.map((incident) => {
+		let incidentMonitors = incident.monitors;
+		let monitorTags = incidentMonitors.map((monitor) => monitor.monitor_tag);
+		let xm = monitors.filter((monitor) => monitorTags.includes(monitor.tag));
+
+		incident.monitors = xm.map((monitor) => {
+			return {
+				tag: monitor.tag,
+				name: monitor.name,
+				description: monitor.description,
+				image: monitor.image,
+				impact_type: incidentMonitors.filter((m) => m.monitor_tag === monitor.tag)[0]
+					.monitor_impact
+			};
+		});
+		return incident;
+	});
+	let unresolvedIncidents = allOpenIncidents.filter((incident) => incident.state !== "RESOLVED");
 	return {
 		monitors: monitorsActive,
-		resolvedIncidents: resolvedIncidents,
-		unresolvedIncidents: unresolvedIncidents
+		unresolvedIncidents: allOpenIncidents,
+		categoryName: requiredCategory,
+		isCategoryPage: !!query.get("category") && query.get("category") !== "Home",
+		isMonitorPage: !!query.get("monitor")
 	};
 }

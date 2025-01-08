@@ -44,10 +44,11 @@ input[type="file"] {
 #end_date_time,
 #newcomment_commented_at {
 	width: 100%;
-	padding: 6px 8px;
+	padding: 8px 12px;
 	border-radius: 6px;
 	font-size: 14px;
-	height: 2rem;
+	height: 40px;
+	line-height: 20px;
 	font-weight: 500;
 	width: 100%;
 }

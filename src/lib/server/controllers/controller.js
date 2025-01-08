@@ -397,21 +397,18 @@ export const GetDataGroupByDayAlternative = async (
 	}, {});
 
 	// Transform grouped data to final format
-	return Object.values(groupedData)
-		.map((group) => ({
-			timestamp: group.timestamp,
-			total: group.total,
-			UP: group.UP,
-			DOWN: group.DOWN,
-			DEGRADED: group.DEGRADED,
-			avgLatency:
-				group.total > 0 ? Number((group.latencySum / group.total).toFixed(3)) : null,
-			maxLatency:
-				group.latencies.length > 0 ? Number(Math.max(...group.latencies).toFixed(3)) : null,
-			minLatency:
-				group.latencies.length > 0 ? Number(Math.min(...group.latencies).toFixed(3)) : null
-		}))
-		.sort((a, b) => a.timestamp - b.timestamp);
+	return Object.values(groupedData).map((group) => ({
+		timestamp: group.timestamp,
+		total: group.total,
+		UP: group.UP,
+		DOWN: group.DOWN,
+		DEGRADED: group.DEGRADED,
+		avgLatency: group.total > 0 ? Number((group.latencySum / group.total).toFixed(3)) : null,
+		maxLatency:
+			group.latencies.length > 0 ? Number(Math.max(...group.latencies).toFixed(3)) : null,
+		minLatency:
+			group.latencies.length > 0 ? Number(Math.min(...group.latencies).toFixed(3)) : null
+	}));
 };
 
 export const CreateIncident = async (data) => {
@@ -630,6 +627,35 @@ export const GetIncidentsOpenHome = async (homeIncidentCount) => {
 	let incidents = await db.getRecentUpdatedIncidents(parseInt(homeIncidentCount));
 	for (let i = 0; i < incidents.length; i++) {
 		incidents[i].monitors = await GetIncidentMonitors(incidents[i].id);
+	}
+
+	//get comments
+	for (let i = 0; i < incidents.length; i++) {
+		incidents[i].comments = await GetIncidentActiveComments(incidents[i].id);
+	}
+
+	return incidents;
+};
+export const GetIncidentsPage = async (start, open) => {
+	let incidents = await db.getIncidentsBetween(start, open);
+	for (let i = 0; i < incidents.length; i++) {
+		incidents[i].monitors = await GetIncidentMonitors(incidents[i].id);
+	}
+
+	//get comments
+	for (let i = 0; i < incidents.length; i++) {
+		incidents[i].comments = await GetIncidentActiveComments(incidents[i].id);
+	}
+
+	return incidents;
+};
+export const GetIncidentsByIDS = async (ids) => {
+	if (ids.length == 0) {
+		return [];
+	}
+	let incidents = await db.getIncidentsByIds(ids);
+	for (let i = 0; i < incidents.length; i++) {
+		incidents[i].monitors = [];
 	}
 
 	//get comments

@@ -109,7 +109,7 @@
 	onMount(async () => {
 		protocol = window.location.protocol;
 		domain = window.location.host;
-		pathMonitorLink = `${protocol}//${domain}${base}/monitor-${monitor.tag}`;
+		pathMonitorLink = `${protocol}//${domain}${base}/?monitor=${monitor.tag}`;
 		pathMonitorBadgeUptime = `${protocol}//${domain}${base}/badge/${monitor.tag}/uptime`;
 		pathMonitorBadgeStatus = `${protocol}//${domain}${base}/badge/${monitor.tag}/status`;
 		pathMonitorBadgeDot = `${protocol}//${domain}${base}/badge/${monitor.tag}/dot`;

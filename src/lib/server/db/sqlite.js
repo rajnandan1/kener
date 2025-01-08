@@ -603,6 +603,26 @@ class Sqlite {
 		});
 	}
 
+	//get id of first incident less than given start_date_time
+	async getPreviousIncidentId(start_date_time) {
+		let stmt = this.db.prepare(`
+			SELECT id FROM incidents
+			WHERE start_date_time < @start_date_time
+			ORDER BY start_date_time DESC
+			LIMIT 1;
+		`);
+		return stmt.get({ start_date_time });
+	}
+
+	//get incidents where ts between start and end
+	async getIncidentsBetween(start, end) {
+		let stmt = this.db.prepare(`
+			SELECT * FROM incidents
+			WHERE status = 'OPEN' AND start_date_time >= @start AND start_date_time <= @end order by start_date_time ASC;
+		`);
+		return stmt.all({ start, end });
+	}
+
 	//get total incident count
 	async getIncidentsCount(filter) {
 		let query = `
@@ -676,6 +696,52 @@ class Sqlite {
 			WHERE incident_id = @incident_id;
 		`);
 		return stmt.all({ incident_id });
+	}
+
+	//given a monitor tag get incidents last 90 days status = OPEN
+	async getIncidentsByMonitorTag(monitor_tag, start, end) {
+		let stmt = this.db.prepare(`
+			SELECT 
+				i.id AS id,
+				i.title AS title,
+				i.start_date_time AS start_date_time,
+				i.end_date_time AS end_date_time,
+				i.created_at AS created_at,
+				i.updated_at AS updated_at,
+				i.status AS status,
+				i.state AS state,
+				im.monitor_impact
+			FROM incidents i
+			INNER JOIN incident_monitors im
+			ON i.id = im.incident_id
+			WHERE im.monitor_tag = @monitor_tag AND i.start_date_time >= @start AND i.start_date_time <= @end AND i.status='OPEN';
+		`);
+		return stmt.all({ monitor_tag, start, end });
+	}
+
+	//given a timestamp get incidents that are open and start time is less than given timestamp
+	async getIncidentsByMonitorTagRealtime(monitor_tag, timestamp) {
+		let stmt = this.db.prepare(`
+			SELECT 
+				i.id AS id,
+				i.start_date_time AS start_date_time,
+				i.end_date_time AS end_date_time,
+				im.monitor_impact
+			FROM incidents i
+			INNER JOIN incident_monitors im
+			ON i.id = im.incident_id
+			WHERE im.monitor_tag = @monitor_tag AND i.start_date_time < @timestamp AND i.status = 'OPEN' AND i.state != 'RESOLVED';
+		`);
+		return stmt.all({ monitor_tag, timestamp });
+	}
+
+	//given array of ids get incidents
+	async getIncidentsByIds(ids) {
+		let stmt = this.db.prepare(`
+			SELECT * FROM incidents
+			WHERE status='OPEN' AND id IN (${ids.map(() => "?").join(",")});
+		`);
+		return stmt.all(ids);
 	}
 
 	//remove monitor tag from incident given incident_id and monitor_tag

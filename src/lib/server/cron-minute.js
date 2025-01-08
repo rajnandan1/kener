@@ -3,20 +3,11 @@ import axios from "axios";
 import ping from "ping";
 import { UP, DOWN, DEGRADED } from "./constants.js";
 import {
-	GetNowTimestampUTC,
 	GetMinuteStartNowTimestampUTC,
-	GetMinuteStartTimestampUTC,
 	ReplaceAllOccurrences,
-	GetRequiredSecrets,
-	ValidateMonitorAlerts
+	GetRequiredSecrets
 } from "./tool.js";
-import {
-	GetIncidentsManual,
-	GetEndTimeFromBody,
-	GetStartTimeFromBody,
-	CloseIssue
-} from "./github.js";
-import Randomstring from "randomstring";
+
 import alerting from "./alerting.js";
 import Queue from "queue";
 import dotenv from "dotenv";
@@ -53,82 +44,32 @@ const defaultEval = `(function (statusCode, responseTime, responseData) {
 })`;
 
 async function manualIncident(monitor) {
-	let incidentsResp = await GetIncidentsManual(monitor.tag, "open");
+	let startTs = GetMinuteStartNowTimestampUTC();
+	let impactArr = await db.getIncidentsByMonitorTagRealtime(monitor.tag, startTs);
 
-	let manualData = {};
-	if (incidentsResp.length == 0) {
-		return manualData;
+	let impact = "";
+	if (impactArr.length == 0) {
+		return {};
 	}
-	let timeDownStart = +Infinity;
-	let timeDownEnd = 0;
-	let timeDegradedStart = +Infinity;
-	let timeDegradedEnd = 0;
 
-	for (let i = 0; i < incidentsResp.length; i++) {
-		const incident = incidentsResp[i];
-		const incident_number = incident.number;
-		let start_time = GetStartTimeFromBody(incident.body);
-		let allLabels = incident.labels.map((label) => label.name);
-		if (
-			allLabels.indexOf("incident-degraded") == -1 &&
-			allLabels.indexOf("incident-down") == -1
-		) {
-			continue;
+	for (let i = 0; i < impactArr.length; i++) {
+		const element = impactArr[i];
+		if (element.monitor_impact === "DOWN") {
+			impact = "DOWN";
+			break;
 		}
-
-		if (start_time === null) {
-			continue;
-		}
-		let newIncident = {
-			start_time: start_time
-		};
-		let end_time = GetEndTimeFromBody(incident.body);
-
-		if (end_time !== null) {
-			newIncident.end_time = end_time;
-			if (end_time <= GetNowTimestampUTC() && incident.state === "open") {
-				//close the issue after 30 secs
-				setTimeout(async () => {
-					await CloseIssue(incident_number);
-				}, 30000);
-			}
-		} else {
-			newIncident.end_time = GetNowTimestampUTC();
-		}
-
-		//check if labels has incident-degraded
-
-		if (allLabels.indexOf("incident-degraded") !== -1) {
-			timeDegradedStart = Math.min(timeDegradedStart, newIncident.start_time);
-			timeDegradedEnd = Math.max(timeDegradedEnd, newIncident.end_time);
-		}
-		if (allLabels.indexOf("incident-down") !== -1) {
-			timeDownStart = Math.min(timeDownStart, newIncident.start_time);
-			timeDownEnd = Math.max(timeDownEnd, newIncident.end_time);
+		if (element.monitor_impact === "DEGRADED") {
+			impact = "DEGRADED";
 		}
 	}
 
-	//start from start of minute if unix timeDownStart to timeDownEnd, step each minute
-	let start = GetMinuteStartTimestampUTC(timeDegradedStart);
-	let end = GetMinuteStartTimestampUTC(timeDegradedEnd);
-
-	for (let i = start; i <= end; i += 60) {
-		manualData[i] = {
-			status: DEGRADED,
+	let manualData = {
+		[startTs]: {
+			status: impact,
 			latency: 0,
 			type: MANUAL
-		};
-	}
-
-	start = GetMinuteStartTimestampUTC(timeDownStart);
-	end = GetMinuteStartTimestampUTC(timeDownEnd);
-	for (let i = start; i <= end; i += 60) {
-		manualData[i] = {
-			status: DOWN,
-			latency: 0,
-			type: MANUAL
-		};
-	}
+		}
+	};
 	return manualData;
 }
 

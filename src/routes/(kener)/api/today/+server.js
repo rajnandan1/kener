@@ -8,12 +8,13 @@ import {
 	ParseUptime
 } from "$lib/server/tool.js";
 import db from "$lib/server/db/db.js";
-import { GetAllSiteData } from "$lib/server/controllers/controller.js";
+import { GetAllSiteData, GetIncidentsByIDS } from "$lib/server/controllers/controller.js";
 
 export async function POST({ request }) {
 	const payload = await request.json();
 	const monitor = payload.monitor;
 	const localTz = payload.localTz;
+	const incidentIDs = payload.incidentIDs || [];
 	let _0Day = {};
 
 	const now = GetMinuteStartNowTimestampUTC() + 60;
@@ -68,7 +69,7 @@ export async function POST({ request }) {
 		uptime = ParseUptime(ups, total);
 	}
 
-	return json({ _0Day, uptime });
+	return json({ _0Day, uptime, incidents: await GetIncidentsByIDS(incidentIDs) });
 }
 
 export async function GET({ request }) {
