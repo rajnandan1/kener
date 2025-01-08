@@ -46,12 +46,13 @@
   api:
     timeout: 4000
     method: GET
-    url: https://midgard.heimdall.novonordisk.cloud/healthcheck
+    url: https://midgard.heimdall.novonordisk.cloud/.backstage/health/v1/liveness
     eval: |
         (function(statusCode, responseTime, responseDataBase64){
         console.log(statusCode)
+        const resp = JSON.parse(atob(responseDataBase64));
         return {
-            status: statusCode == 200 ? 'UP':'DOWN',
+            status: statusCode == 200 && resp.status === 'ok' ? 'UP':'DOWN',
             latency: responseTime,
         }
         })
@@ -181,12 +182,13 @@
   api:
     timeout: 4000
     method: GET
-    url: https://midgard-dev.heimdall.novonordisk.cloud/healthcheck
+    url: https://midgard-dev.heimdall.novonordisk.cloud/.backstage/health/v1/liveness
     eval: |
         (function(statusCode, responseTime, responseDataBase64){
         console.log(statusCode)
+        const resp = JSON.parse(atob(responseDataBase64));
         return {
-            status: statusCode == 200 ? 'UP':'DOWN',
+            status: statusCode == 200 && resp.status === 'ok' ? 'UP':'DOWN',
             latency: responseTime,
         }
         })
@@ -201,12 +203,13 @@
   api:
     timeout: 4000
     method: GET
-    url: https://midgard-tst.heimdall.novonordisk.cloud/healthcheck
+    url: https://midgard-tst.heimdall.novonordisk.cloud/.backstage/health/v1/liveness
     eval: |
         (function(statusCode, responseTime, responseDataBase64){
         console.log(statusCode)
+        const resp = JSON.parse(atob(responseDataBase64));
         return {
-            status: statusCode == 200 ? 'UP':'DOWN',
+            status: statusCode == 200 && resp.status === 'ok' ? 'UP':'DOWN',
             latency: responseTime,
         }
         })
@@ -221,12 +224,13 @@
   api:
     timeout: 4000
     method: GET
-    url: https://midgard-val.heimdall.novonordisk.cloud/healthcheck
+    url: https://midgard-val.heimdall.novonordisk.cloud/.backstage/health/v1/liveness
     eval: |
         (function(statusCode, responseTime, responseDataBase64){
         console.log(statusCode)
+        const resp = JSON.parse(atob(responseDataBase64));
         return {
-            status: statusCode == 200 ? 'UP':'DOWN',
+            status: statusCode == 200 && resp.status === 'ok' ? 'UP':'DOWN',
             latency: responseTime,
         }
         })
