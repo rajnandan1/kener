@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: status-page
+  title: Heimdall Status Page
+  description: Statuspage monitoring of Heimdall and Heimdall Services
+  tags:
+    - statuspage
+    - uptime
+  annotations:
+    backstage.io/techdocs-entity: system:default/heimdall
+spec:
+  targets:
+    - ./entities/components.yaml
+    - ./entities/api.yaml

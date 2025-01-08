@@ -1,0 +1,12 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: status-page
+  description: Statuspage monitoring of Heimdall and Heimdall Services
+  annotations:
+    github.com/project-slug: "NovoNordisk-OpenSource/kener"
+spec:
+  type: service
+  lifecycle: production
+  owner: heimdall-team
+  system: heimdall

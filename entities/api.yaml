@@ -1,0 +1,18 @@
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: statuspage-api
+  description: Heimdall Statuspage API
+  links:
+    - url: https://status.heimdall.novonordisk.cloud/
+      title: HTTP API
+      icon: api
+spec:
+  type: openapi
+  system: heimdall
+  owner: heimdall-team
+  lifecycle: production
+  paths:
+    - '/api/'
+  definition:
+    $text: https://github.com/NovoNordisk-OpenSource/kener/blob/main/openapi.yaml
