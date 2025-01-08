@@ -1,4 +1,4 @@
-FROM lsiobase/alpine:3.18 as base
+FROM lsiobase/alpine:3.21-version-7eb9c29e as base
 
 ENV TZ=Etc/UTC
 
@@ -58,8 +58,8 @@ COPY --chown=abc:abc sitemap.js /app/sitemap.js
 COPY --chown=abc:abc openapi.json /app/openapi.json
 COPY --chown=abc:abc src/lib/server /app/src/lib/server
 
-COPY --chown=abc:abc /config/monitors.yaml /config
-COPY --chown=abc:abc /config/site.yaml /config
+COPY --chown=abc:abc /config/monitors.yaml /app/config/monitors.yaml
+COPY --chown=abc:abc /config/site.yaml /app/config/site.yaml
 COPY --from=build --chown=abc:abc /app/build /app/build
 COPY --from=build --chown=abc:abc /app/main.js /app/main.js
 

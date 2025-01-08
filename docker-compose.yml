@@ -13,8 +13,8 @@ services:
 
       # If running on a LINUX HOST and not podman rootless these MUST BE SET
       # run "id $user" from command line and replace numbers below with output from command
-      #- PUID=1000 # gid
-      #- PGID=1000 # uid
+      - PUID=911 # gid
+      - PGID=1001 # uid
 
       ### Most likely DO NOT need to change anything below this ###
 

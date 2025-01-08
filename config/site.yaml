@@ -16,3 +16,15 @@ categories:
 hero:
   title: Heimdall Status Page
   subtitle: Check the status of all Heimdall capabilities
+i18n:
+    defaultLocale: "en"
+    locales:
+        en: "English"
+        hi: "हिन्दी"
+        zh-CN: "中文"
+        ja: "日本語"
+        vi: "Tiếng Việt"
+pattern: "squares"
+barRoundness: SHARP
+summaryStyle: CURRENT
+barStyle: PARTIAL
