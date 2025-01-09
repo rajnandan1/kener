@@ -8,6 +8,7 @@ import {
 	UpdateCommentByID,
 	UpdateCommentStatusByID
 } from "$lib/server/controllers/controller";
+import db from "$lib/server/db/db.js";
 
 export async function GET({ request, params }) {
 	const authError = await auth(request);
@@ -58,8 +59,18 @@ export async function POST({ request, params }) {
 		);
 	}
 
+	if (!!!payload.commented_at) {
+		//unix timestamp
+		payload.commented_at = Math.floor(Date.now() / 1000);
+	}
+
 	try {
-		let resp = await AddIncidentComment(incident_id, payload.comment);
+		let resp = await AddIncidentComment(
+			incident_id,
+			payload.comment,
+			payload.state,
+			payload.commented_at
+		);
 		return json(await GetIncidentComments(incident_id), {
 			status: 201
 		});
@@ -107,10 +118,22 @@ export async function PATCH({ request, params, url }) {
 		);
 	}
 
+	let comment = await db.getIncidentCommentByID(comment_id);
+	if (!!!comment) {
+		return json(
+			{ error: "Invalid comment_id" },
+			{
+				status: 400
+			}
+		);
+	}
+
+	let state = payload.state || comment.state;
+	let commented_at = payload.commented_at || comment.commented_at;
+	let commentString = payload.comment || comment.comment;
+
 	try {
-		if (!!payload.comment) {
-			await UpdateCommentByID(incident_id, comment_id, payload.comment);
-		}
+		await UpdateCommentByID(incident_id, comment_id, commentString, state, commented_at);
 
 		if (!!payload.status) {
 			await UpdateCommentStatusByID(incident_id, comment_id, payload.status);

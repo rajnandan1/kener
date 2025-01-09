@@ -68,12 +68,9 @@ export async function DELETE({ request, params, url }) {
 				}
 			);
 		}
-		return json(
-			{ message: "Monitor deleted successfully" },
-			{
-				status: 200
-			}
-		);
+		return json(await GetIncidentMonitors(incident_id), {
+			status: 200
+		});
 	} catch (e) {
 		return json(
 			{ error: e.message },

@@ -276,6 +276,15 @@ class Sqlite {
 		return res.count > 0;
 	}
 
+	//get active alert given incident id, monitor tag, monitor status
+	async getActiveAlertIncident(monitor_tag, monitor_status, incident_number) {
+		let stmt = this.db.prepare(`
+			SELECT * FROM monitor_alerts
+			WHERE monitor_tag = @monitor_tag AND monitor_status = @monitor_status AND incident_number = @incident_number;
+		`);
+		return stmt.get({ monitor_tag, monitor_status, incident_number });
+	}
+
 	//return active alert for a monitor_tag, monitor_status, trigger_status = ACTIVE
 	async getActiveAlert(monitor_tag, monitor_status, alert_status) {
 		let stmt = this.db.prepare(`
@@ -574,13 +583,26 @@ class Sqlite {
 	//get incidents paginated
 	async getIncidentsPaginatedDesc(page, limit, filter) {
 		let query = `
-			SELECT * FROM incidents
+			SELECT * FROM incidents WHERE 1=1
 		`;
 		let params = { limit, offset: (page - 1) * limit };
 		if (filter && filter.status) {
 			params.status = filter.status;
-			query += ` WHERE status = @status `;
+			query += ` AND status = @status `;
 		}
+
+		//if filter.start then it shuld be greater than filter.start
+		if (filter && filter.start) {
+			params.start = filter.start;
+			query += ` AND start_date_time >= @start `;
+		}
+
+		//if filter.end then it should be less than filter.end
+		if (filter && filter.end) {
+			params.end = filter.end;
+			query += ` AND start_date_time <= @end `;
+		}
+
 		query += `
 			ORDER BY id DESC
 			LIMIT @limit OFFSET @offset;
@@ -591,15 +613,17 @@ class Sqlite {
 	}
 
 	//get last 10 recent updated incidents
-	async getRecentUpdatedIncidents(limit) {
+	async getRecentUpdatedIncidents(limit, start, end) {
 		let stmt = this.db.prepare(`
 			SELECT * FROM incidents
-			where status = 'OPEN'
+			where status = 'OPEN' AND start_date_time >= @start AND start_date_time <= @end
 			ORDER BY updated_at DESC
 			LIMIT @limit;
 		`);
 		return stmt.all({
-			limit
+			limit,
+			start,
+			end
 		});
 	}
 

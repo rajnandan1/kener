@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { FetchData } from "$lib/server/page";
 import { GetMonitors, GetIncidentsOpenHome } from "$lib/server/controllers/controller.js";
+import moment from "moment";
 
 export async function load({ parent, url }) {
 	let monitors = await GetMonitors({ status: "ACTIVE" });
@@ -32,20 +33,32 @@ export async function load({ parent, url }) {
 		monitors[i].activeIncidents = [];
 		monitorsActive.push(monitors[i]);
 	}
-	let allOpenIncidents = await GetIncidentsOpenHome(siteData.homeIncidentCount);
-	let eligibleTags = monitorsActive.map((monitor) => monitor.tag);
-	//filter incidents that have monitor_tag in monitors
-	allOpenIncidents = allOpenIncidents.filter((incident) => {
-		let incidentMonitors = incident.monitors;
-		let monitorTags = incidentMonitors.map((monitor) => monitor.monitor_tag);
-		let isPresent = false;
-		monitorTags.forEach((tag) => {
-			if (eligibleTags.includes(tag)) {
-				isPresent = true;
-			}
+	let startWithin = moment().subtract(siteData.homeIncidentStartTimeWithin, "days").unix();
+	let endWithin = moment().add(siteData.homeIncidentStartTimeWithin, "days").unix();
+	let allOpenIncidents = await GetIncidentsOpenHome(
+		siteData.homeIncidentCount,
+		startWithin,
+		endWithin
+	);
+
+	//if not home page
+	let isCategoryPage = !!query.get("category") && query.get("category") !== "Home";
+	let isMonitorPage = !!query.get("monitor");
+	if (isCategoryPage || isMonitorPage) {
+		let eligibleTags = monitorsActive.map((monitor) => monitor.tag);
+		//filter incidents that have monitor_tag in monitors
+		allOpenIncidents = allOpenIncidents.filter((incident) => {
+			let incidentMonitors = incident.monitors;
+			let monitorTags = incidentMonitors.map((monitor) => monitor.monitor_tag);
+			let isPresent = false;
+			monitorTags.forEach((tag) => {
+				if (eligibleTags.includes(tag)) {
+					isPresent = true;
+				}
+			});
+			return isPresent;
 		});
-		return isPresent;
-	});
+	}
 
 	allOpenIncidents = allOpenIncidents.map((incident) => {
 		let incidentMonitors = incident.monitors;
@@ -69,7 +82,7 @@ export async function load({ parent, url }) {
 		monitors: monitorsActive,
 		unresolvedIncidents: allOpenIncidents,
 		categoryName: requiredCategory,
-		isCategoryPage: !!query.get("category") && query.get("category") !== "Home",
-		isMonitorPage: !!query.get("monitor")
+		isCategoryPage: isCategoryPage,
+		isMonitorPage: isMonitorPage
 	};
 }

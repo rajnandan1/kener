@@ -142,6 +142,11 @@ const siteDataKeys = [
 		key: "homeIncidentCount",
 		isValid: (value) => parseInt(value) >= 0,
 		data_type: "string"
+	},
+	{
+		key: "homeIncidentStartTimeWithin",
+		isValid: (value) => parseInt(value) >= 1,
+		data_type: "string"
 	}
 ];
 
@@ -420,7 +425,7 @@ export const CreateIncident = async (data) => {
 	let incident = {
 		title: data.title,
 		start_date_time: data.start_date_time,
-		status: !!data.status ? data.status : "ACTIVE",
+		status: !!data.status ? data.status : "OPEN",
 		end_date_time: !!data.end_date_time ? data.end_date_time : null,
 		state: !!data.state ? data.state : "INVESTIGATING"
 	};
@@ -566,6 +571,10 @@ export const AddIncidentComment = async (incident_id, comment, state, commented_
 		throw new Error(`Incident with id ${incident_id} does not exist`);
 	}
 
+	if (!!!state) {
+		state = incidentExists.state;
+	}
+
 	let c = await db.insertIncidentComment(incident_id, comment, state, commented_at);
 
 	//update incident state
@@ -613,7 +622,7 @@ export const GetIncidentsDashboard = async (data) => {
 	};
 };
 
-export const GetIncidentsOpenHome = async (homeIncidentCount) => {
+export const GetIncidentsOpenHome = async (homeIncidentCount, start, end) => {
 	homeIncidentCount = parseInt(homeIncidentCount);
 
 	if (homeIncidentCount < 0) {
@@ -623,8 +632,7 @@ export const GetIncidentsOpenHome = async (homeIncidentCount) => {
 	if (homeIncidentCount === 0) {
 		return [];
 	}
-
-	let incidents = await db.getRecentUpdatedIncidents(parseInt(homeIncidentCount));
+	let incidents = await db.getRecentUpdatedIncidents(homeIncidentCount, start, end);
 	for (let i = 0; i < incidents.length; i++) {
 		incidents[i].monitors = await GetIncidentMonitors(incidents[i].id);
 	}

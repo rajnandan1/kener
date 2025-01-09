@@ -25,6 +25,7 @@
 	};
 	let footerHTML = "";
 	let homeIncidentCount = 10;
+	let homeIncidentStartTimeWithin = 30;
 	let nav = [];
 	let categories = [];
 	let i18n = {
@@ -75,6 +76,9 @@
 
 	if (data.siteData.homeIncidentCount) {
 		homeIncidentCount = data.siteData.homeIncidentCount;
+	}
+	if (data.siteData.homeIncidentStartTimeWithin) {
+		homeIncidentStartTimeWithin = data.siteData.homeIncidentStartTimeWithin;
 	}
 	if (data.siteData.footerHTML) {
 		footerHTML = data.siteData.footerHTML;
@@ -141,7 +145,8 @@
 	async function formSubmitIncident() {
 		formStateIncident = "loading";
 		let resp = await storeSiteData({
-			homeIncidentCount: homeIncidentCount
+			homeIncidentCount: homeIncidentCount,
+			homeIncidentStartTimeWithin: homeIncidentStartTimeWithin
 		});
 		//print data
 		let data = await resp.json();
@@ -314,14 +319,23 @@
 		<form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitIncident}>
 			<div class="flex max-w-md flex-row justify-start gap-2">
 				<div class="">
-					<Label for="hero_title">Number of Incidents to Show</Label>
+					<Label for="hero_title">Maximum Number to Show</Label>
 					<Input
 						bind:value={homeIncidentCount}
 						class="mt-2"
 						type="text"
-						min="0"
 						id="homeIncidentCount"
 						placeholder="10"
+					/>
+				</div>
+				<div class="">
+					<Label for="hero_title">Start time within x days</Label>
+					<Input
+						bind:value={homeIncidentStartTimeWithin}
+						class="mt-2"
+						type="text"
+						id="homeIncidentStartTimeWithin"
+						placeholder="2 days"
 					/>
 				</div>
 				<div class="pt-8">
@@ -333,6 +347,10 @@
 					</Button>
 				</div>
 			</div>
+			<p class="text-sm text-muted-foreground">
+				Translates to "Show {homeIncidentCount} incidents that have started in the last {homeIncidentStartTimeWithin}
+				days in the past or going to start in {homeIncidentStartTimeWithin} days in the future"
+			</p>
 		</form>
 	</Card.Content>
 </Card.Root>

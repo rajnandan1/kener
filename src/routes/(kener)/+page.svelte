@@ -72,7 +72,7 @@
 		class="mx-auto my-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center"
 	>
 		<Button
-			variant="secondary"
+			variant="outline"
 			class="bounce-left h-8   justify-start  pl-1.5"
 			on:click={() => {
 				if (data.isCategoryPage) {

@@ -54,6 +54,17 @@ async function manualIncident(monitor) {
 
 	for (let i = 0; i < impactArr.length; i++) {
 		const element = impactArr[i];
+
+		let autoIncidents = await db.getActiveAlertIncident(
+			monitor.tag,
+			element.monitor_impact,
+			element.id
+		);
+
+		if (!!autoIncidents) {
+			continue;
+		}
+
 		if (element.monitor_impact === "DOWN") {
 			impact = "DOWN";
 			break;
@@ -61,6 +72,10 @@ async function manualIncident(monitor) {
 		if (element.monitor_impact === "DEGRADED") {
 			impact = "DEGRADED";
 		}
+	}
+
+	if (impact === "") {
+		return {};
 	}
 
 	let manualData = {

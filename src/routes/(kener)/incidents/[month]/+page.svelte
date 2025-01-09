@@ -64,10 +64,10 @@
 <div class="mt-12"></div>
 <section class="mx-auto my-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center">
 	<Button
-		variant="secondary"
+		variant="outline"
 		class="bounce-left h-8   justify-start  pl-1.5"
 		on:click={() => {
-			return window.history.back();
+			return (window.location.href = `${base}/`);
 		}}
 	>
 		<ChevronLeft class="arrow mr-1 h-5 w-5" /> Back
@@ -90,12 +90,26 @@
 	>
 		{#if sortedIncidentSmartDates.length == 0}
 			<div
-				class="mx-auto w-full rounded-md p-12 text-center"
+				class="mx-auto w-full rounded-md bg-clip-text p-12 text-center text-transparent"
 				style="background-image: linear-gradient( 135deg, #2AFADF 10%, #4C83FF 100%);"
 			>
-				<CalendarCheck2 class="mx-auto mb-4 h-12 w-12 text-green-700" />
-				<h1 class=" text-xl font-semibold leading-tight text-[rgba(0,0,0,0.44)]">
-					No Incidents on {data.thisMonthName.replace("-", ", ")}
+				<div class="mx-auto mb-4 h-[32px] w-[32px] text-primary">
+					<picture>
+						<source
+							srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.webp"
+							type="image/webp"
+						/>
+						<img
+							src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f389/512.gif"
+							alt="🎉"
+							width="32"
+							height="32"
+						/>
+					</picture>
+				</div>
+
+				<h1 class=" text-xl font-semibold leading-tight">
+					No Incident on {data.thisMonthName.replace("-", ", ")}
 				</h1>
 			</div>
 		{/if}
