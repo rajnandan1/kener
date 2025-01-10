@@ -3,7 +3,8 @@
 	import { Plus, X, Loader } from "lucide-svelte";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
-
+	import { clickOutsideAction, slide } from "svelte-legos";
+	import { ChevronRight, Trash } from "lucide-svelte";
 	import { base } from "$app/paths";
 	import * as Select from "$lib/components/ui/select";
 	import { createEventDispatcher } from "svelte";
@@ -253,8 +254,25 @@
 </script>
 
 <div class="fixed left-0 top-0 z-50 h-screen w-screen bg-card bg-opacity-20 backdrop-blur-sm">
-	<div class="absolute right-0 top-0 h-screen w-[800px] bg-background shadow-xl">
-		<div class=" absolute top-0 flex h-12 w-full justify-between gap-2 border-b p-3">
+	<div
+		transition:slide={{ direction: "right", duration: 200 }}
+		use:clickOutsideAction
+		on:clickoutside={(e) => {
+			dispatch("closeModal", {});
+		}}
+		class="absolute right-0 top-0 h-screen w-[800px] bg-background px-3 shadow-xl"
+	>
+		<Button
+			variant="outline"
+			size="icon"
+			class="absolute right-[785px] top-8  z-10 h-8 w-8 rounded-md"
+			on:click={(e) => {
+				dispatch("closeModal", {});
+			}}
+		>
+			<ChevronRight class="h-6 w-6 " />
+		</Button>
+		<div class="absolute top-0 flex h-12 w-full justify-between gap-2 border-b p-3">
 			{#if newMonitor.id}
 				<h2 class="text-lg font-medium">Edit Monitor</h2>
 			{:else}
@@ -791,22 +809,13 @@
 				</div>
 			{/if}
 		</div>
-		<div class="absolute bottom-0 grid h-16 w-full grid-cols-6 gap-2 border-t p-3">
-			<div class="col-span-1">
-				<Button
-					variant="ghost"
-					on:click={(e) => {
-						dispatch("closeModal", {});
-					}}
-					class="col-span-1 w-full">Cancel</Button
-				>
-			</div>
-			<div class="col-span-4 py-2.5">
+		<div class="absolute bottom-0 grid h-16 w-full grid-cols-6 justify-end gap-2 border-t p-3">
+			<div class="col-span-5 py-2.5">
 				<p class="text-right text-xs font-medium text-red-500">{invalidFormMessage}</p>
 			</div>
 			<div class="col-span-1">
 				<Button
-					class="col-span-1 w-full"
+					class=" w-full"
 					on:click={saveOrUpdateMonitor}
 					disabled={formState === "loading"}
 				>

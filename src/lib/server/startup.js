@@ -11,6 +11,7 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 
 const jobs = [];
+process.env.TZ = "UTC";
 
 const jobSchedule = async () => {
 	const activeMonitors = (await GetMonitorsParsed({ status: "ACTIVE" })).map((m) => {

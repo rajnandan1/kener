@@ -1,15 +1,16 @@
 // @ts-nocheck
 import notification from "./notification/notif.js";
 import { ParseIncidentPayload, GHIssueToKenerIncident } from "./webhook.js";
-import {
-	CreateIssue,
-	GetIncidentByNumber,
-	UpdateIssueLabels,
-	AddComment,
-	CloseIssue
-} from "./github.js";
+
 import moment from "moment";
-import { GetAllSiteData, GetGithubData, GetAllTriggers } from "./controllers/controller.js";
+import {
+	GetAllSiteData,
+	GetGithubData,
+	GetAllTriggers,
+	CreateIncident,
+	AddIncidentComment,
+	AddIncidentMonitor
+} from "./controllers/controller.js";
 
 import db from "./db/db.js";
 
@@ -49,70 +50,43 @@ async function createJSONCommonAlert(monitor, config, alert, severity) {
 	};
 }
 
-async function createGHIncident(monitor, alert, commonData) {
+async function createNewIncident(monitor, alert, commonData) {
+	let startDateTime = moment(alert.created_at).unix();
 	let payload = {
-		startDatetime: moment(alert.createAt).unix(),
-		title: commonData.alert_name,
-		tags: [monitor.tag],
-		impact: alert.monitor_status,
-		body: commonData.description,
-		isIdentified: true
+		start_date_time: startDateTime,
+		title: commonData.alert_name
 	};
 
-	let description = commonData.description;
-	description =
-		description +
-		`\n\n ### Monitor Details \n\n - Monitor Name: ${monitor.name} \n- Incident Status: ${commonData.status} \n- Severity: ${commonData.severity} \n - Monitor Status: ${alert.monitor_status} \n - Monitor Health Checks: ${alert.health_checks} \n - Monitor Failure Threshold: ${commonData.details.threshold} \n\n ### Actions \n\n - [${commonData.actions[0].text}](${commonData.actions[0].url}) \n\n`;
+	let update = commonData.description;
+	update =
+		update +
+		`. Monitor Name: ${monitor.name}, Incident Status: ${commonData.status}, Severity: ${commonData.severity}, Monitor Status: ${alert.monitor_status}, Monitor Health Checks: ${alert.health_checks}, Monitor Failure Threshold: ${commonData.details.threshold}, Visit - ${commonData.actions[0].url}`;
 
-	payload.body = description;
+	let newIncident = await CreateIncident(payload);
 
-	let { title, body, githubLabels, error } = await ParseIncidentPayload(payload);
-	if (error) {
-		return;
-	}
+	//add update to incident
+	await AddIncidentComment(newIncident.incident_id, update, "INVESTIGATING", startDateTime);
 
-	githubLabels.push("auto");
-	let resp = await CreateIssue(title, body, githubLabels);
+	//add monitor to incident
+	await AddIncidentMonitor(newIncident.incident_id, monitor.tag, alert.monitor_status);
 
-	return await GHIssueToKenerIncident(resp);
+	return newIncident;
 }
 
-async function closeGHIncident(alert) {
-	let incident_number = alert.incident_number;
-	let issue = await GetIncidentByNumber(incident_number);
-	if (issue === null) {
-		return;
-	}
-	let labels = issue.labels.map((label) => {
-		return label.name;
-	});
-	labels = labels.filter((label) => label !== "resolved");
-	labels.push("resolved");
-
-	let endDatetime = moment(alert.updated_at).unix();
-	let body = issue.body;
-	body = body.replace(/\[end_datetime:(\d+)\]/g, "");
-	body = body.trim();
-	body = body + " " + `[end_datetime:${endDatetime}]`;
-
-	let resp = await UpdateIssueLabels(incident_number, labels, body);
-	if (resp === null) {
-		return;
-	}
-	await CloseIssue(incident_number);
-	return await GHIssueToKenerIncident(resp);
-}
-
-//add comment to incident
-async function addCommentToIncident(alert, comment) {
-	let resp = await AddComment(alert.incident_number, comment);
-	return resp;
+async function closeIncident(alert, comment) {
+	let incident_id = alert.incident_number;
+	return await AddIncidentComment(
+		incident_id,
+		comment,
+		"RESOLVED",
+		moment(alert.updated_at).unix()
+	);
 }
 
 function createClosureComment(alert, commonJSON) {
 	let comment = "The incident has been auto resolved";
 	let downtimeDuration = moment(alert.updated_at).diff(moment(alert.created_at), "minutes");
-	comment = comment + `\n\nTotal downtime: ` + downtimeDuration + ` minutes`;
+	comment = comment + `, Total downtime: ` + downtimeDuration + ` minutes`;
 	return comment;
 }
 
@@ -197,11 +171,11 @@ async function alerting(m) {
 					}
 				}
 				if (createIncident) {
-					let incident = await createGHIncident(monitor, activeAlert, commonJSON);
+					let incident = await createNewIncident(monitor, activeAlert, commonJSON);
 
 					if (!!incident) {
 						//send incident to incident channel
-						await db.addIncidentNumberToAlert(activeAlert.id, incident.incident_number);
+						await db.addIncidentNumberToAlert(activeAlert.id, incident.incident_id);
 					}
 				}
 			} else if (isAffected && alertExists) {
@@ -227,8 +201,7 @@ async function alerting(m) {
 						let comment = createClosureComment(activeAlert, commonJSON);
 
 						try {
-							await addCommentToIncident(activeAlert, comment);
-							await closeGHIncident(activeAlert);
+							await closeIncident(activeAlert, comment);
 						} catch (error) {
 							console.log(error);
 						}

@@ -507,7 +507,7 @@
 
 				<div class="flex justify-end">
 					<Button
-						variant="secondary"
+						class="w-full"
 						on:click={saveTriggers}
 						disabled={formState === "loading"}
 					>

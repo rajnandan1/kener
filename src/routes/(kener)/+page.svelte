@@ -182,7 +182,7 @@
 							{category.name}
 							<Button
 								variant="ghost"
-								class="arrow absolute right-4 top-9 h-5 w-5 p-0"
+								class="arrow absolute right-4 top-9 h-5 w-5 p-0 text-muted-foreground"
 								size="icon"
 							>
 								<ArrowRight class="h-4 w-4" />
@@ -214,7 +214,7 @@
 		</div>
 		<div class="text-right">
 			<span class="arrow float-right mt-0.5">
-				<ArrowRight class="h-4 w-4" />
+				<ArrowRight class="h-4 w-4 text-muted-foreground hover:text-primary" />
 			</span>
 		</div>
 	</div>

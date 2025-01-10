@@ -95,7 +95,7 @@
 										<time
 											class=" mb-1 text-sm font-medium leading-none text-muted-foreground"
 										>
-											{moment(comment.created_at).format(
+											{moment(comment.commented_at * 1000).format(
 												"MMMM Do YYYY, h:mm:ss a"
 											)}
 										</time>
