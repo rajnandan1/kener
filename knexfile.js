@@ -2,12 +2,16 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-const dbType = process.env.DATABASE_TYPE || "sqlite";
+const databaseURL = process.env.DATABASE_URL || "sqlite://./database/kener.sqlite.db";
+
+const databaseURLParts = databaseURL.split("://");
+const databaseType = databaseURLParts[0];
+const databasePath = databaseURLParts[1];
 
 const knexOb = {
 	client: "better-sqlite3",
 	connection: {
-		filename: process.env.SQLITE_FILEPATH || "./database/kener.local7.db"
+		filename: databasePath
 	},
 	useNullAsDefault: true,
 	migrations: {
@@ -18,9 +22,9 @@ const knexOb = {
 	}
 };
 
-if (dbType === "postgres") {
+if (databaseType === "postgresql") {
 	knexOb.client = "pg";
-	knexOb.connection = process.env.POSTGRES_DATABASE_URL;
+	knexOb.connection = process.env.DATABASE_URL;
 }
 
 export default knexOb;
