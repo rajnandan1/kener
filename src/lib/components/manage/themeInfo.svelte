@@ -17,7 +17,7 @@
 	let formState = "idle";
 
 	let themeData = {
-		pattern: "dots",
+		pattern: "none",
 		theme: "light",
 		themeToggle: "YES",
 		barStyle: "PARTIAL",
@@ -37,7 +37,7 @@
 	};
 
 	themeData = siteDataExtractFromDb(data.siteData, themeData);
-	themeData.colorsJ = data.siteData.colors;
+
 	if (data.siteData.colors) {
 		themeData.colorsJ = data.siteData.colors;
 	}

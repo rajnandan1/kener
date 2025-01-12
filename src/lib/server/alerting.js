@@ -9,7 +9,8 @@ import {
 	GetAllTriggers,
 	CreateIncident,
 	AddIncidentComment,
-	AddIncidentMonitor
+	AddIncidentMonitor,
+	InsertNewAlert
 } from "./controllers/controller.js";
 
 import db from "./db/db.js";
@@ -151,7 +152,7 @@ async function alerting(m) {
 				activeAlert = await db.getActiveAlert(monitor_tag, monitor_status, TRIGGERED);
 			}
 			if (isAffected && !alertExists) {
-				activeAlert = await db.insertAlert({
+				activeAlert = await InsertNewAlert({
 					monitor_tag: monitor_tag,
 					monitor_status: monitor_status,
 					alert_status: TRIGGERED,

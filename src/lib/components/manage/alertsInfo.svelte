@@ -148,14 +148,10 @@
 						<tbody class="divide-y divide-gray-200 dark:divide-neutral-700">
 							{#each alerts as alert}
 								<tr>
-									<td
-										class="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-800 dark:text-neutral-200"
-									>
+									<td class="whitespace-nowrap px-6 py-4 text-sm font-medium">
 										{alert.id}
 									</td>
-									<td
-										class="whitespace-nowrap px-6 py-4 text-xs font-semibold text-gray-800 dark:text-neutral-200"
-									>
+									<td class="whitespace-nowrap px-6 py-4 text-xs font-semibold">
 										{#if alert.monitor_status === "DOWN"}
 											<span class="text-red-500">
 												{alert.monitor_status}
@@ -166,14 +162,10 @@
 											</span>
 										{/if}
 									</td>
-									<td
-										class="whitespace-nowrap px-6 py-4 text-sm text-gray-800 dark:text-neutral-200"
-									>
+									<td class="whitespace-nowrap px-6 py-4 text-sm">
 										{alert.monitor_tag}
 									</td>
-									<td
-										class="whitespace-nowrap px-6 py-4 text-xs font-semibold text-gray-800 dark:text-neutral-200"
-									>
+									<td class="whitespace-nowrap px-6 py-4 text-xs font-semibold">
 										{#if alert.alert_status === "RESOLVED"}
 											<span class="text-blue-500">
 												{alert.alert_status}
@@ -184,14 +176,10 @@
 											</span>
 										{/if}
 									</td>
-									<td
-										class="whitespace-nowrap px-6 py-4 text-sm text-gray-800 dark:text-neutral-200"
-									>
+									<td class="whitespace-nowrap px-6 py-4 text-sm">
 										{alert.health_checks}
 									</td>
-									<td
-										class="whitespace-nowrap px-6 py-4 text-xs font-semibold text-gray-800 dark:text-neutral-200"
-									>
+									<td class="whitespace-nowrap px-6 py-4 text-xs font-semibold">
 										{#if !!alert.incident_number}
 											<a
 												target="_blank"
@@ -204,10 +192,11 @@
 											-
 										{/if}
 									</td>
-									<td
-										class="whitespace-nowrap px-6 py-4 text-sm text-gray-800 dark:text-neutral-200"
-									>
-										{moment(alert.created_at).format("YYYY-MM-DD HH:mm:ss")}
+									<td class="whitespace-nowrap px-6 py-4 text-sm">
+										{moment
+											.utc(alert.created_at, "YYYY-MM-DD HH:mm:ss")
+											.local()
+											.format("YYYY-MM-DD HH:mm:ss")}
 									</td>
 								</tr>
 							{/each}

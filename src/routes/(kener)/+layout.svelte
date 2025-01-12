@@ -202,6 +202,11 @@
 			{/if}
 		</div>
 	{/if}
+	{#if data.isLoggedIn}
+		<a href="{base}/manage/site" class="button-77 fixed bottom-8 left-8" role="button">
+			Manage
+		</a>
+	{/if}
 </main>
 
 <style>

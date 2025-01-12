@@ -376,7 +376,6 @@ export const GetDataGroupByDayAlternative = async (
 	const offsetSeconds = offsetMinutes * 60;
 
 	const rawData = await db.getDataGroupByDayAlternative(monitor_tag, start, end);
-
 	const groupedData = rawData.reduce((acc, row) => {
 		// Calculate day group considering timezone offset
 		const dayGroup = Math.floor((row.timestamp + offsetSeconds) / 86400);
@@ -672,4 +671,48 @@ export const GetIncidentsByIDS = async (ids) => {
 	}
 
 	return incidents;
+};
+
+export const InsertNewAlert = async (data) => {
+	if (await db.alertExists(data.monitor_tag, data.monitor_status, data.alert_status)) {
+		return;
+	}
+	await db.insertAlert(data);
+	return await db.getActiveAlert(data.monitor_tag, data.monitor_status, data.alert_status);
+};
+
+export const IsLoggedInSession = async (cookies) => {
+	let tokenData = cookies.get("kener-user");
+	if (!!!tokenData) {
+		//redirect to signin page if user is not authenticated
+		//throw redirect(302, base + "/signin");
+		return {
+			error: "User not authenticated",
+			action: "redirect",
+			location: "/signin"
+		};
+	}
+	let tokenUser = await VerifyToken(tokenData);
+	if (!!!tokenUser) {
+		//redirect to signin page if user is not authenticated
+		// throw redirect(302, base + "/signin/logout");
+		return {
+			error: "User not authenticated",
+			action: "redirect",
+			location: "/signin/logout"
+		};
+	}
+	let userDB = await db.getUserByEmail(tokenUser.email);
+	if (!!!userDB) {
+		//redirect to signin page if user is not authenticated
+		// throw redirect(302, base + "/signin");
+		return {
+			error: "User not authenticated",
+			action: "redirect",
+			location: "/signin"
+		};
+	}
+	return {
+		user: userDB
+	};
 };

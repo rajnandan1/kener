@@ -2,8 +2,6 @@
 import { json, redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
 import db from "$lib/server/db/db.js";
-import seedSiteData from "$lib/server/db/seedSiteData.js";
-import seedMonitorData from "$lib/server/db/seedMonitorData.js";
 import { HashPassword, GenerateSalt } from "$lib/server/controllers/controller.js";
 
 //function to validate a strong password
@@ -52,21 +50,5 @@ export async function POST({ request }) {
 	}
 
 	await db.insertUser(user);
-
-	for (const key in seedSiteData) {
-		if (Object.prototype.hasOwnProperty.call(seedSiteData, key)) {
-			let value = seedSiteData[key];
-			let data_type = typeof value;
-			if (data_type === "object") {
-				value = JSON.stringify(value);
-			}
-			await db.insertOrUpdateSiteData(key, value, data_type);
-		}
-	}
-	//loop through array seedMonitorData
-	for (const monitor of seedMonitorData) {
-		await db.insertMonitor(monitor);
-	}
-
-	throw redirect(302, base + "");
+	throw redirect(302, base + "/");
 }

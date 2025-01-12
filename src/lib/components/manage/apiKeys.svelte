@@ -139,7 +139,9 @@
 			</Button>
 		</p>
 		<p class="text-xs text-muted-foreground">
-			Your new API key has been created. It will be not shown again, so make sure to save it.
+			Your new API key has been created. It will be <b class="uppercase underline"
+				>not be shown again</b
+			>, so make sure to save it.
 		</p>
 	</div>
 {/if}
@@ -187,7 +189,10 @@
 								<td
 									class="whitespace-nowrap px-6 py-4 text-sm text-gray-800 dark:text-neutral-200"
 								>
-									{moment(apiKey.created_at).format("YYYY-MM-DD HH:mm:ss")}
+									{moment
+										.utc(apiKey.created_at, "YYYY-MM-DD HH:mm:ss")
+										.local()
+										.format("YYYY-MM-DD HH:mm:ss")}
 								</td>
 								<td
 									class="whitespace-nowrap px-6 py-4 text-xs font-semibold text-gray-800 dark:text-neutral-200"

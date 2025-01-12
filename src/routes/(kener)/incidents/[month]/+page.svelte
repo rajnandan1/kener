@@ -89,10 +89,7 @@
 		class="mx-auto mb-2 mt-4 flex w-full flex-1 flex-col items-start justify-center bg-transparent md:w-[655px]"
 	>
 		{#if sortedIncidentSmartDates.length == 0}
-			<div
-				class="mx-auto w-full rounded-md bg-clip-text p-12 text-center text-transparent"
-				style="background-image: linear-gradient( 135deg, #2AFADF 10%, #4C83FF 100%);"
-			>
+			<div class="mx-auto w-full rounded-md bg-clip-text p-12 text-center">
 				<div class="mx-auto mb-4 h-[32px] w-[32px] text-primary">
 					<picture>
 						<source

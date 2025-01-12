@@ -8,7 +8,7 @@
 <div class="min-h-[70vh]">
 	<MonitorsAdd
 		categories={data.siteData?.categories}
-		colorDown={data.siteData?.colors.DOWN}
-		colorDegraded={data.siteData?.colors.DEGRADED}
+		colorDown={data.siteData?.colors?.DOWN || "#ca3038"}
+		colorDegraded={data.siteData?.colors?.DEGRADED || "#e6ca61"}
 	/>
 </div>

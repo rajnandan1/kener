@@ -2,7 +2,11 @@
 import i18n from "$lib/i18n/server";
 import { redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
-import { GetAllSiteData, IsSetupComplete } from "$lib/server/controllers/controller.js";
+import {
+	GetAllSiteData,
+	IsSetupComplete,
+	IsLoggedInSession
+} from "$lib/server/controllers/controller.js";
 
 export async function load({ params, route, url, cookies, request }) {
 	let isSetupComplete = await IsSetupComplete();
@@ -13,6 +17,8 @@ export async function load({ params, route, url, cookies, request }) {
 	if (process.env.KENER_SECRET_KEY === undefined) {
 		throw redirect(302, base + "/setup");
 	}
+
+	let isLoggedIn = await IsLoggedInSession(cookies);
 
 	let site = await GetAllSiteData();
 	const headers = request.headers;
@@ -56,6 +62,7 @@ export async function load({ params, route, url, cookies, request }) {
 		lang: i18n(String(selectedLang)),
 		selectedLang: selectedLang,
 		embed,
-		bgc
+		bgc,
+		isLoggedIn: !!isLoggedIn.user
 	};
 }

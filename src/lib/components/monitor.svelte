@@ -4,7 +4,17 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import { base } from "$app/paths";
-	import { Share2, Link, CopyCheck, Code, TrendingUp, Percent, Loader } from "lucide-svelte";
+	import {
+		Share2,
+		Link,
+		CopyCheck,
+		Code,
+		TrendingUp,
+		Percent,
+		Loader,
+		ChevronLeft,
+		ChevronRight
+	} from "lucide-svelte";
 	import { buttonVariants } from "$lib/components/ui/button";
 	import { createEventDispatcher } from "svelte";
 	import { afterUpdate } from "svelte";
@@ -111,7 +121,7 @@
 	let rolledAt = 0;
 	let rollerLoading = false;
 	async function rollSummary(r) {
-		let newRolledAt = (rolledAt + 1) % uptimesRollers.length;
+		let newRolledAt = (rolledAt + r) % uptimesRollers.length;
 
 		if (uptimesRollers[newRolledAt].value === undefined) {
 			rollerLoading = true;
@@ -218,56 +228,67 @@
 			: 'overflow-hidden'} min-h-[94px] pt-2"
 	>
 		<div class="col-span-12">
-			<div class="grid grid-cols-12">
+			<div class="gap- flex justify-between">
 				<div
-					class="{monitor.embed === undefined
+					class=" {monitor.embed === undefined
 						? 'col-span-12'
 						: 'col-span-8'}   md:col-span-8"
 				>
-					<Button
-						class="h-8  justify-start text-xs font-semibold transition-all"
-						variant="secondary"
-						disabled={rollerLoading}
-						style="transition: width 2s ease-in;"
-						on:click={() => {
-							scrollToRight();
-							rollSummary();
-						}}
-					>
-						<span class="text-left">
-							{uptimesRollers[rolledAt].text}
-						</span>
+					<div class="flex gap-x-1">
+						{#if rolledAt > 0}
+							<Button
+								variant="ghost"
+								class="h-5 w-5 p-0"
+								on:click={() => rollSummary(-1)}
+							>
+								<ChevronLeft class="h-4 w-4" />
+							</Button>
+						{/if}
+						<div class="flex text-xs font-semibold">
+							<span>
+								{uptimesRollers[rolledAt].text}
+							</span>
 
-						<span class="block w-full pl-2 text-right">
-							{#if rollerLoading}
-								<Loader class="mx-1 inline h-4 w-4 animate-spin" />
-							{:else}
-								<TrendingUp class="ml-1 mr-1 inline h-3 w-3" />
-							{/if}
-							{#if isNaN(uptimesRollers[rolledAt].value)}
-								<span class="text-muted-foreground">-</span>
-							{:else}
-								<NumberFlow
-									value={uptimesRollers[rolledAt].value}
-									format={{
-										notation: "standard",
-										minimumFractionDigits: 4,
-										maximumFractionDigits: 4
-									}}
-									suffix="%"
-								/>
-							{/if}
-						</span>
-					</Button>
+							<span class="">
+								{#if rollerLoading}
+									<Loader class="mx-1 -mt-0.5 inline h-4 w-4 animate-spin" />
+								{:else}
+									<TrendingUp class="mx-1 -mt-0.5 inline h-3 w-3" />
+								{/if}
+								{#if isNaN(uptimesRollers[rolledAt].value)}
+									<span class="text-muted-foreground">-</span>
+								{:else}
+									<NumberFlow
+										value={uptimesRollers[rolledAt].value}
+										format={{
+											notation: "standard",
+											minimumFractionDigits: 4,
+											maximumFractionDigits: 4
+										}}
+										suffix="%"
+									/>
+								{/if}
+							</span>
+						</div>
+						{#if rolledAt < uptimesRollers.length - 1}
+							<Button
+								variant="ghost"
+								class="h-5 w-5 p-0"
+								on:click={() => rollSummary(1)}
+							>
+								<ChevronRight class="h-4 w-4" />
+							</Button>
+						{/if}
+					</div>
 				</div>
 				<div
-					class="{monitor.embed === undefined
+					class="pt-0.5 {monitor.embed === undefined
 						? 'col-span-12'
-						: 'col-span-4'}   text-right md:col-span-4"
+						: 'col-span-4'} text-right md:col-span-4"
 				>
 					<div
-						class="text-api-up mt-3 truncate text-xs font-semibold text-{monitor
-							.pageData.summaryColorClass}"
+						class="text-api-up truncate text-xs font-semibold text-{monitor.pageData
+							.summaryColorClass}"
 						title={monitor.pageData.summaryText}
 					>
 						{summaryTime(lang, monitor.pageData.summaryText)}

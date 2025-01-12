@@ -5,24 +5,7 @@ let interval = 1000;
 let waitTime = 0;
 
 async function allFilesExist() {
-	let tablesCreated = (await db.checkTables()).map((table) => table.name);
-	let tablesRequired = [
-		"monitoring_data",
-		"monitor_alerts",
-		"site_data",
-		"monitors",
-		"triggers",
-		"users",
-		"api_keys"
-	];
-
-	for (let table of tablesRequired) {
-		let tableExists = tablesCreated.includes(table);
-		if (!tableExists) {
-			return false;
-		}
-	}
-	return true;
+	return await db.checkTables();
 }
 
 //use setTimeout to create a delay promise
@@ -37,13 +20,13 @@ let requiredFilesExist = false;
 	while (!requiredFilesExist && waitTime < maxWait) {
 		await delay(1000);
 		requiredFilesExist = await allFilesExist();
-
 		waitTime += interval;
 	}
 	if (!requiredFilesExist) {
 		console.error("Error loading site data");
 		process.exit(1);
 	} else {
-		console.log("✅ All files exist. Starting Frontend server...");
+		console.log("✅ All files exist. Starting server...");
+		process.exit(0);
 	}
 })();

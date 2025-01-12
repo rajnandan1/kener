@@ -5,12 +5,6 @@ const seedSiteData = {
 	home: "/",
 	logo: "https://kener.ing/logo.png",
 	favicon: "https://kener.ing/logo96.png",
-	github: {
-		apiURL: "https://api.github.com",
-		owner: "rajnandan1",
-		repo: "kener",
-		incidentSince: 720
-	},
 	metaTags: [
 		{
 			key: "description",
@@ -45,7 +39,6 @@ const seedSiteData = {
 		}
 	],
 	nav: [
-		{ name: "Manage", url: "/manage", iconURL: "" },
 		{ name: "Documentation", url: "/docs/home", iconURL: "" },
 		{ name: "Github", iconURL: "", url: "https://github.com/rajnandan1/kener" },
 		{ name: "Buy me a coffee", iconURL: "", url: "https://buymeacoffee.com/rajnandan1" }
@@ -66,7 +59,7 @@ const seedSiteData = {
 			{ code: "vi", name: "Tiếng Việt", selected: true, disabled: false }
 		]
 	},
-	pattern: "squares",
+	pattern: "none",
 	analytics: [
 		{
 			id: "G-Q3MLRXCBFT",
@@ -101,7 +94,9 @@ const seedSiteData = {
 		cssSrc: "https://fonts.googleapis.com/css2?family=Albert+Sans:ital,wght@0,100..900;1,100..900&display=swap",
 		family: "Albert Sans"
 	},
-	categories: [{ name: "Home", description: "Monitors for Home Page" }]
+	categories: [{ name: "Home", description: "Monitors for Home Page" }],
+	homeIncidentCount: 5,
+	homeIncidentStartTimeWithin: 30
 };
 
 export default seedSiteData;

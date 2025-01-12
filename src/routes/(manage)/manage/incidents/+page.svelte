@@ -366,7 +366,7 @@
 </script>
 
 <div class="min-h-[70vh]">
-	<div class="mt-4 flex justify-between">
+	<div class="mt-4 flex justify-end">
 		<div class="flex w-40">
 			<Select.Root
 				portal={null}
@@ -375,7 +375,7 @@
 					fetchData();
 				}}
 			>
-				<Select.Trigger id="statusmonitor">
+				<Select.Trigger class="hidden" id="statusmonitor">
 					<Select.Value bind:value={status} placeholder={status} />
 				</Select.Trigger>
 				<Select.Content>
@@ -385,10 +385,10 @@
 							ALL
 						</Select.Item>
 						<Select.Item value="OPEN" label="OPEN" class="text-sm font-medium">
-							OPEN
+							ACTIVE
 						</Select.Item>
 						<Select.Item value="CLOSED" label="CLOSED" class="text-sm font-medium">
-							CLOSED
+							DELETED
 						</Select.Item>
 					</Select.Group>
 				</Select.Content>

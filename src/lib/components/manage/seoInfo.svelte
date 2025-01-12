@@ -51,7 +51,7 @@
 	}).metaTags;
 
 	let analytics = siteDataExtractFromDb(data.siteData, {
-		analytics: "[]"
+		analytics: []
 	}).analytics;
 
 	//merge analyticsSupported with analytics
