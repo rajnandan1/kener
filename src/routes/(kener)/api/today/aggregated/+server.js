@@ -15,9 +15,14 @@ export async function POST({ request }) {
 	const start = payload.startTs;
 	let end = GetMinuteStartNowTimestampUTC();
 	let aggregatedData = await db.getAggregatedMonitoringData(monitor.tag, start, end);
-	let ups = Number(aggregatedData.UP || aggregatedData.up);
-	let downs = Number(aggregatedData.DOWN || aggregatedData.down);
-	let degradeds = Number(aggregatedData.DEGRADED || aggregatedData.degraded);
+	//covert all keys to uppercase
+	aggregatedData = Object.keys(aggregatedData).reduce((acc, key) => {
+		acc[key.toUpperCase()] = aggregatedData[key];
+		return acc;
+	}, {});
+	let ups = Number(aggregatedData.UP);
+	let downs = Number(aggregatedData.DOWN);
+	let degradeds = Number(aggregatedData.DEGRADED);
 
 	let total = ups + downs + degradeds;
 	let uptime = ParseUptime(ups + degradeds, total);

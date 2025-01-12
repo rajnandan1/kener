@@ -2,7 +2,7 @@
 import { GetMinuteStartNowTimestampUTC } from "../tool.js";
 import Knex from "knex";
 
-class Sqlite {
+class DbImpl {
 	knex;
 	constructor(opts) {
 		// Initialize Knex
@@ -151,33 +151,6 @@ class Sqlite {
 		// 		table.text("state").defaultTo("INVESTIGATING");
 		// 	});
 		// }
-	}
-
-	//check if all all the tables are created
-	async checkTables() {
-		const hasMonitoringDataTable = await this.knex.schema.hasTable("monitoring_data");
-		const hasMonitorAlertsTable = await this.knex.schema.hasTable("monitor_alerts");
-		const hasSiteDataTable = await this.knex.schema.hasTable("site_data");
-		const hasMonitorsTable = await this.knex.schema.hasTable("monitors");
-		const hasTriggersTable = await this.knex.schema.hasTable("triggers");
-		const hasUsersTable = await this.knex.schema.hasTable("users");
-		const hasApiKeysTable = await this.knex.schema.hasTable("api_keys");
-		const hasIncidentsTable = await this.knex.schema.hasTable("incidents");
-		const hasIncidentMonitorsTable = await this.knex.schema.hasTable("incident_monitors");
-		const hasIncidentCommentsTable = await this.knex.schema.hasTable("incident_comments");
-
-		return (
-			hasMonitoringDataTable &&
-			hasMonitorAlertsTable &&
-			hasSiteDataTable &&
-			hasMonitorsTable &&
-			hasTriggersTable &&
-			hasUsersTable &&
-			hasApiKeysTable &&
-			hasIncidentsTable &&
-			hasIncidentMonitorsTable &&
-			hasIncidentCommentsTable
-		);
 	}
 
 	async insertMonitoringData(data) {
@@ -784,4 +757,4 @@ class Sqlite {
 	}
 }
 
-export default Sqlite;
+export default DbImpl;

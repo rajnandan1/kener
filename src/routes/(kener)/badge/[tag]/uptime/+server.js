@@ -38,9 +38,14 @@ export async function GET({ params, url }) {
 	}
 
 	let dbData = await db.getAggregatedMonitoringData(tag, since, now);
-	dbData.UP = Number(dbData.UP || dbData.up);
-	dbData.DOWN = Number(dbData.DOWN || dbData.down);
-	dbData.DEGRADED = Number(dbData.DEGRADED || dbData.degraded);
+	dbData = Object.keys(dbData).reduce((acc, key) => {
+		acc[key.toUpperCase()] = dbData[key];
+		return acc;
+	}, {});
+	dbData.UP = Number(dbData.UP);
+	dbData.DOWN = Number(dbData.DOWN);
+	dbData.DEGRADED = Number(dbData.DEGRADED);
+
 	let numerator = dbData.UP + dbData.DEGRADED;
 	let denominator = dbData.UP + dbData.DEGRADED + dbData.DOWN;
 	if (include_degraded_in_downtime === "YES") {

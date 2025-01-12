@@ -1,6 +1,6 @@
 // @ts-nocheck
-import Sqlite from "./sqlite.js";
+import DbImpl from "./dbimpl.js";
 import knexOb from "../../../../knexfile.js";
 
-let instance = new Sqlite(knexOb);
+let instance = new DbImpl(knexOb);
 export default instance;

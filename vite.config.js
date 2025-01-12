@@ -5,7 +5,22 @@ import dotenv from "dotenv";
 dotenv.config();
 const PORT = Number(process.env.PORT) || 3000;
 export default defineConfig({
-	plugins: [sveltekit()],
+	logLevel: "silent",
+	plugins: [
+		sveltekit(),
+		{
+			name: "kener-startup-message",
+			configureServer(server) {
+				server.httpServer?.once("listening", () => {
+					const address = server.httpServer?.address();
+					const host = "localhost";
+					const port = address?.port;
+					console.log("\n🚀 Kener is running");
+					console.log(`⚙️ Manage Kener: http://${host}:${port}/manage/site\n`);
+				});
+			}
+		}
+	],
 	server: {
 		port: PORT,
 		watch: {

@@ -5,19 +5,19 @@ export function up(knex) {
 		knex.schema
 			// Create monitoring_data table
 			.createTable("monitoring_data", (table) => {
-				table.text("monitor_tag").notNullable();
+				table.string("monitor_tag", 255).notNullable();
 				table.integer("timestamp").notNullable();
 				table.text("status");
-				table.float("latency");
+				table.float("latency", 8, 2);
 				table.text("type");
 				table.primary(["monitor_tag", "timestamp"]);
 			})
 			// Create monitor_alerts table
 			.createTable("monitor_alerts", (table) => {
 				table.increments("id").primary();
-				table.text("monitor_tag").notNullable();
-				table.text("monitor_status").notNullable();
-				table.text("alert_status").notNullable();
+				table.string("monitor_tag", 255).notNullable();
+				table.string("monitor_status", 255).notNullable();
+				table.string("alert_status", 255).notNullable();
 				table.integer("health_checks").notNullable();
 				table.integer("incident_number").defaultTo(0);
 				table.timestamp("created_at").defaultTo(knex.fn.now());
@@ -29,76 +29,76 @@ export function up(knex) {
 			)
 			.createTable("site_data", (table) => {
 				table.increments("id").primary();
-				table.text("key").notNullable().unique();
+				table.string("key", 255).notNullable().unique();
 				table.text("value").notNullable();
-				table.text("data_type").notNullable();
+				table.string("data_type", 255).notNullable();
 				table.timestamp("created_at").defaultTo(knex.fn.now());
 				table.timestamp("updated_at").defaultTo(knex.fn.now());
 			})
 			.createTable("monitors", (table) => {
 				table.increments("id").primary();
-				table.text("tag").notNullable().unique();
-				table.text("name").notNullable().unique();
+				table.string("tag", 255).notNullable().unique();
+				table.string("name", 255).notNullable().unique();
 				table.text("description");
 				table.text("image");
-				table.text("cron");
-				table.text("default_status");
-				table.text("status");
-				table.text("category_name");
-				table.text("monitor_type");
-				table.text("down_trigger");
-				table.text("degraded_trigger");
+				table.string("cron", 255);
+				table.string("default_status", 255);
+				table.string("status", 255);
+				table.string("category_name", 255);
+				table.string("monitor_type", 255);
+				table.string("down_trigger", 255);
+				table.string("degraded_trigger", 255);
 				table.text("type_data");
 				table.integer("day_degraded_minimum_count");
 				table.integer("day_down_minimum_count");
-				table.text("include_degraded_in_downtime").defaultTo("NO");
+				table.string("include_degraded_in_downtime", 255).defaultTo("NO");
 				table.timestamp("created_at").defaultTo(knex.fn.now());
 				table.timestamp("updated_at").defaultTo(knex.fn.now());
 			})
 			.createTable("triggers", (table) => {
 				table.increments("id").primary();
-				table.text("name").notNullable().unique();
-				table.text("trigger_type");
+				table.string("name", 255).notNullable().unique();
+				table.string("trigger_type", 255);
 				table.text("trigger_desc");
-				table.text("trigger_status");
+				table.string("trigger_status", 255);
 				table.text("trigger_meta");
 				table.timestamp("created_at").defaultTo(knex.fn.now());
 				table.timestamp("updated_at").defaultTo(knex.fn.now());
 			})
 			.createTable("users", (table) => {
 				table.increments("id").primary();
-				table.text("email").notNullable().unique();
-				table.text("name").notNullable();
-				table.text("password_hash").notNullable();
+				table.string("email", 255).notNullable().unique();
+				table.string("name", 255).notNullable();
+				table.string("password_hash", 255).notNullable();
 				table.integer("is_active").defaultTo(1);
 				table.integer("is_verified").defaultTo(0);
-				table.text("role").defaultTo("user");
+				table.string("role", 255).defaultTo("user");
 				table.timestamp("created_at").defaultTo(knex.fn.now());
 				table.timestamp("updated_at").defaultTo(knex.fn.now());
 			})
 			.createTable("api_keys", (table) => {
 				table.increments("id").primary();
-				table.text("name").notNullable().unique();
-				table.text("hashed_key").notNullable().unique();
-				table.text("masked_key").notNullable();
-				table.text("status").defaultTo("ACTIVE");
+				table.string("name", 255).notNullable().unique();
+				table.string("hashed_key", 255).notNullable().unique();
+				table.string("masked_key", 255).notNullable();
+				table.string("status", 255).defaultTo("ACTIVE");
 				table.timestamp("created_at").defaultTo(knex.fn.now());
 				table.timestamp("updated_at").defaultTo(knex.fn.now());
 			})
 			.createTable("incidents", (table) => {
 				table.increments("id").primary();
-				table.text("title").notNullable();
+				table.string("title", 255).notNullable();
 				table.integer("start_date_time").notNullable();
 				table.integer("end_date_time");
 				table.timestamp("created_at").defaultTo(knex.fn.now());
 				table.timestamp("updated_at").defaultTo(knex.fn.now());
-				table.text("status").defaultTo("ACTIVE");
-				table.text("state").defaultTo("INVESTIGATING");
+				table.string("status", 255).defaultTo("ACTIVE");
+				table.string("state", 255).defaultTo("INVESTIGATING");
 			})
 			.createTable("incident_monitors", (table) => {
 				table.increments("id").primary();
-				table.text("monitor_tag").notNullable();
-				table.text("monitor_impact");
+				table.string("monitor_tag", 255).notNullable();
+				table.string("monitor_impact", 255);
 				table.timestamp("created_at").defaultTo(knex.fn.now());
 				table.timestamp("updated_at").defaultTo(knex.fn.now());
 				table.integer("incident_id").notNullable();
@@ -111,8 +111,8 @@ export function up(knex) {
 				table.integer("commented_at").notNullable();
 				table.timestamp("created_at").defaultTo(knex.fn.now());
 				table.timestamp("updated_at").defaultTo(knex.fn.now());
-				table.text("status").defaultTo("ACTIVE");
-				table.text("state").defaultTo("INVESTIGATING");
+				table.string("status", 255).defaultTo("ACTIVE");
+				table.string("state", 255).defaultTo("INVESTIGATING");
 			})
 	);
 }

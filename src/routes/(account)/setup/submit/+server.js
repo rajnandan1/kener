@@ -2,7 +2,7 @@
 import { json, redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
 import db from "$lib/server/db/db.js";
-import { HashPassword, GenerateSalt } from "$lib/server/controllers/controller.js";
+import { HashPassword, GenerateSalt, GenerateToken } from "$lib/server/controllers/controller.js";
 
 //function to validate a strong password
 /**
@@ -20,7 +20,7 @@ function validatePassword(password) {
 	return /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/.test(password);
 }
 
-export async function POST({ request }) {
+export async function POST({ request, cookies }) {
 	//read form post data email and passowrd
 	const formdata = await request.formData();
 	const email = formdata.get("email");
@@ -50,5 +50,18 @@ export async function POST({ request }) {
 	}
 
 	await db.insertUser(user);
+	let userDB = await db.getUserByEmail(email);
+	if (!!!userDB) {
+		let errorMessage = "User does not exist";
+		throw redirect(302, base + "/signin?error=" + errorMessage);
+	}
+	let token = await GenerateToken(userDB);
+	cookies.set("kener-user", token, {
+		path: "/" + base,
+		maxAge: 365 * 24 * 60 * 60, // 1 year in seconds
+		httpOnly: true,
+		secure: true,
+		sameSite: "lax"
+	});
 	throw redirect(302, base + "/");
 }
