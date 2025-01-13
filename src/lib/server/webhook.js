@@ -6,10 +6,6 @@ import {
 	ParseUptime,
 	GetDayStartTimestampUTC
 } from "./tool.js";
-import { GetStartTimeFromBody, GetEndTimeFromBody } from "./github.js";
-const API_TOKEN = process.env.API_TOKEN;
-const API_IP = process.env.API_IP;
-const API_IP_REGEX = process.env.API_IP_REGEX;
 import db from "./db/db.js";
 
 import { GetMonitors, VerifyAPIKey } from "./controllers/controller.js";
@@ -45,35 +41,11 @@ const CheckIfValidTag = async function (tag) {
 const auth = async function (request) {
 	const authHeader = request.headers.get("authorization");
 	const authToken = authHeader?.replace("Bearer ", "");
-	// let ip = "";
-	// try {
-	// 	//ip can be in x-forwarded-for or x-real-ip or remoteAddress
-	// 	if (request.headers.get("x-forwarded-for") !== null) {
-	// 		ip = request.headers.get("x-forwarded-for").split(",")[0];
-	// 	} else if (request.headers.get("x-real-ip") !== null) {
-	// 		ip = request.headers.get("x-real-ip");
-	// 	} else if (request.connection && request.connection.remoteAddress !== null) {
-	// 		ip = request.connection.remoteAddress;
-	// 	} else if (request.socket && request.socket.remoteAddress !== null) {
-	// 		ip = request.socket.remoteAddress;
-	// 	}
-	// } catch (err) {
-	// 	console.log("IP Not Found " + err.message);
-	// }
+
 	if ((await VerifyAPIKey(authToken)) === false) {
 		return new Error("invalid token");
 	}
-	// if (API_IP !== undefined && ip != "") {
-	// 	if (API_IP !== ip) {
-	// 		return new Error(`invalid ip: ${ip}`);
-	// 	}
-	// }
-	// if (API_IP_REGEX !== undefined && ip != "") {
-	// 	const regex = new RegExp(API_IP_REGEX);
-	// 	if (!regex.test(ip)) {
-	// 		return new Error(`invalid ip regex: ${ip}`);
-	// 	}
-	// }
+
 	return null;
 };
 const store = async function (data) {
@@ -130,128 +102,7 @@ const store = async function (data) {
 	});
 	return { status: 200, message: "success at " + data.timestampInSeconds };
 };
-const GHIssueToKenerIncident = async function (issue) {
-	if (!!!issue) {
-		return null;
-	}
 
-	let issueLabels = issue.labels.map((label) => {
-		return label.name;
-	});
-	let tagsAvailable = await GetAllTags();
-
-	//get common tags as array
-	let commonTags = tagsAvailable.filter((tag) => issueLabels.includes(tag));
-
-	let resp = {
-		created_at: Math.floor(new Date(issue.created_at).getTime() / 1000), //in seconds
-		closedAt: issue.closed_at ? Math.floor(new Date(issue.closed_at).getTime() / 1000) : null,
-		title: issue.title,
-		tags: commonTags,
-		incident_number: issue.number
-	};
-	resp.startDatetime = GetStartTimeFromBody(issue.body);
-	resp.endDatetime = GetEndTimeFromBody(issue.body);
-
-	let body = issue.body;
-	body = body.replace(/\[start_datetime:(\d+)\]/g, "");
-	body = body.replace(/\[end_datetime:(\d+)\]/g, "");
-	resp.body = body.trim();
-
-	resp.impact = null;
-	if (issueLabels.includes("incident-down")) {
-		resp.impact = "DOWN";
-	} else if (issueLabels.includes("incident-degraded")) {
-		resp.impact = "DEGRADED";
-	}
-	resp.isMaintenance = false;
-	if (issueLabels.includes("maintenance")) {
-		resp.isMaintenance = true;
-	}
-	resp.isIdentified = false;
-	resp.isResolved = false;
-
-	if (issueLabels.includes("identified")) {
-		resp.isIdentified = true;
-	}
-	if (issueLabels.includes("resolved")) {
-		resp.isResolved = true;
-	}
-	return resp;
-};
-const ParseIncidentPayload = async function (payload) {
-	let startDatetime = payload.startDatetime; //in utc seconds optional
-	let endDatetime = payload.endDatetime; //in utc seconds optional
-	let title = payload.title; //string required
-	let body = payload.body || ""; //string optional
-	let tags = payload.tags; //string and required
-	let impact = payload.impact; //string and optional
-	let isMaintenance = payload.isMaintenance; //boolean and optional
-	let isIdentified = payload.isIdentified; //string and optional and if present can be resolved or identified
-	let isResolved = payload.isResolved; //string and optional and if present can be resolved or identified
-
-	// Perform validations
-
-	if (startDatetime && typeof startDatetime !== "number") {
-		return { error: "Invalid startDatetime" };
-	}
-	if (endDatetime && (typeof endDatetime !== "number" || endDatetime <= startDatetime)) {
-		return { error: "Invalid endDatetime" };
-	}
-
-	if (!title || typeof title !== "string") {
-		return { error: "Invalid title" };
-	}
-	//tags should be an array of string with atleast one element
-	if (
-		!tags ||
-		!Array.isArray(tags) ||
-		tags.length === 0 ||
-		tags.some((tag) => typeof tag !== "string")
-	) {
-		return { error: "Invalid tags" };
-	}
-
-	// Optional validation for body and impact
-	if (body && typeof body !== "string") {
-		return { error: "Invalid body" };
-	}
-
-	if (impact && (typeof impact !== "string" || ["DOWN", "DEGRADED"].indexOf(impact) === -1)) {
-		return { error: "Invalid impact" };
-	}
-	//check if tags are valid
-	const allTags = await GetAllTags();
-	if (tags.some((tag) => allTags.indexOf(tag) === -1)) {
-		return { error: "Unknown tags" };
-	}
-	// Optional validation for isMaintenance
-	if (isMaintenance && typeof isMaintenance !== "boolean") {
-		return { error: "Invalid isMaintenance" };
-	}
-
-	let githubLabels = ["incident"];
-	tags.forEach((tag) => {
-		githubLabels.push(tag);
-	});
-	if (impact) {
-		githubLabels.push("incident-" + impact.toLowerCase());
-	}
-	if (isMaintenance) {
-		githubLabels.push("maintenance");
-	}
-	if (isResolved !== undefined && isResolved === true) {
-		githubLabels.push("resolved");
-	}
-	if (isIdentified !== undefined && isIdentified === true) {
-		githubLabels.push("identified");
-	}
-
-	if (startDatetime) body = body + " " + `[start_datetime:${startDatetime}]`;
-	if (endDatetime) body = body + " " + `[end_datetime:${endDatetime}]`;
-
-	return { title, body, githubLabels };
-};
 const GetMonitorStatusByTag = async function (tag, timestamp) {
 	let monitor = await db.getMonitorByTag(tag);
 	if (!!!monitor) {
@@ -300,12 +151,4 @@ const GetMonitorStatusByTag = async function (tag, timestamp) {
 	resp.status = lastData.status;
 	return { status: 200, ...resp };
 };
-export {
-	store,
-	auth,
-	CheckIfValidTag,
-	GHIssueToKenerIncident,
-	ParseIncidentPayload,
-	GetAllTags,
-	GetMonitorStatusByTag
-};
+export { store, auth, CheckIfValidTag, GetAllTags, GetMonitorStatusByTag };

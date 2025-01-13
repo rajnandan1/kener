@@ -59,18 +59,8 @@
 				<h1
 					class="scroll-m-20 text-center text-2xl font-extrabold tracking-tight lg:text-2xl"
 				>
-					No Monitor Found.
+					{l(data.lang, "No Monitor Found")}
 				</h1>
-				<p class="mt-3 text-center">
-					{l(data.lang, "root.read_doc_monitor")}
-					<a
-						href="https://kener.ing/docs#h1add-monitors"
-						target="_blank"
-						class="underline"
-					>
-						{l(data.lang, "root.here")}
-					</a>
-				</p>
 			</Card.Content>
 		</Card.Root>
 	</section>

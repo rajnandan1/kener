@@ -6,6 +6,7 @@
 	import { siteDataExtractFromDb, storeSiteData } from "$lib/clientTools.js";
 	import { base } from "$app/paths";
 	import * as Select from "$lib/components/ui/select";
+	import locales from "$lib/locales/locales.json?raw";
 
 	import { Loader, X, Plus, Info, Play } from "lucide-svelte";
 	import { Tooltip } from "bits-ui";
@@ -30,38 +31,14 @@
 	let categories = [];
 	let i18n = {
 		defaultLocale: "en",
-		locales: [
-			{
-				code: "en",
-				name: "English",
+		locales: JSON.parse(locales).map((el) => {
+			return {
+				code: el.code,
+				name: el.name,
 				selected: true,
 				disabled: false
-			},
-			{
-				code: "hi",
-				name: "हिन्दी",
-				selected: true,
-				disabled: false
-			},
-			{
-				code: "zh_CN",
-				name: "中文",
-				selected: true,
-				disabled: false
-			},
-			{
-				code: "ja",
-				name: "日本語",
-				selected: true,
-				disabled: false
-			},
-			{
-				code: "vi",
-				name: "Tiếng Việt",
-				selected: true,
-				disabled: false
-			}
-		]
+			};
+		})
 	};
 
 	if (data.siteData?.nav) {
@@ -85,6 +62,17 @@
 	}
 	if (data.siteData.i18n) {
 		i18n = data.siteData.i18n;
+		//add locales that are not present in the data
+		JSON.parse(locales).forEach((el) => {
+			if (!i18n.locales.find((locale) => locale.code === el.code)) {
+				i18n.locales.push({
+					code: el.code,
+					name: el.name,
+					selected: false,
+					disabled: false
+				});
+			}
+		});
 	}
 
 	async function formSubmitHero() {

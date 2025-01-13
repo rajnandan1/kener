@@ -51,11 +51,6 @@ const siteDataKeys = [
 		data_type: "string"
 	},
 	{
-		key: "github",
-		isValid: IsValidGHObject,
-		data_type: "object"
-	},
-	{
 		key: "metaTags",
 		isValid: IsValidJSONString,
 		data_type: "object"
@@ -180,14 +175,6 @@ export async function GetAllSiteData() {
 		}
 	}
 	return transformedData;
-}
-
-export async function GetGithubData() {
-	let data = await db.getSiteData("github");
-	if (!data) {
-		return null;
-	}
-	return JSON.parse(data.value);
 }
 
 export const CreateUpdateMonitor = async (monitor) => {

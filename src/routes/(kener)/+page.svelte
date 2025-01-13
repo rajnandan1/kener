@@ -95,7 +95,7 @@
 		<div class="grid w-full grid-cols-2 gap-4">
 			<div class="col-span-2 text-center md:col-span-1 md:text-left">
 				<Badge variant="outline" class="border-0 pl-0">
-					{l(data.lang, "root.ongoing_incidents")}
+					{l(data.lang, "Ongoing Incidents")}
 				</Badge>
 			</div>
 		</div>
@@ -121,7 +121,7 @@
 		<div class="grid w-full grid-cols-2 gap-4">
 			<div class="col-span-2 text-center md:col-span-1 md:text-left">
 				<Badge class="border-0 md:pl-0" variant="outline">
-					{l(data.lang, "root.availability_per_component")}
+					{l(data.lang, "Availability per Component")}
 				</Badge>
 			</div>
 			<div class="col-span-2 text-center md:col-span-1 md:text-right">
@@ -129,21 +129,21 @@
 					<span class="bg-api-up mr-1 inline-flex h-[8px] w-[8px] rounded-full opacity-75"
 					></span>
 					<span class="mr-3">
-						{l(data.lang, "statuses.UP")}
+						{l(data.lang, "UP")}
 					</span>
 
 					<span
 						class="bg-api-degraded mr-1 inline-flex h-[8px] w-[8px] rounded-full opacity-75"
 					></span>
 					<span class="mr-3">
-						{l(data.lang, "statuses.DEGRADED")}
+						{l(data.lang, "DEGRADED")}
 					</span>
 
 					<span
 						class="bg-api-down mr-1 inline-flex h-[8px] w-[8px] rounded-full opacity-75"
 					></span>
 					<span class="">
-						{l(data.lang, "statuses.DOWN")}
+						{l(data.lang, "DOWN")}
 					</span>
 				</Badge>
 			</div>
@@ -210,7 +210,7 @@
 		class="bounce-right grid w-full cursor-pointer grid-cols-2 justify-between gap-4 rounded-md border bg-card px-4 py-2 text-sm font-medium hover:bg-secondary"
 	>
 		<div class="col-span-1 text-left">
-			{l(data.lang, "root.recent_incidents")}
+			{l(data.lang, "Recent Incidents")}
 		</div>
 		<div class="text-right">
 			<span class="arrow float-right mt-0.5">

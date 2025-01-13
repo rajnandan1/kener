@@ -1,8 +1,10 @@
 <script>
 	import moment from "moment";
 	import * as Accordion from "$lib/components/ui/accordion";
+	import { l } from "$lib/i18n/client";
 	export let incident;
 	export let index;
+	export let lang;
 	let startTime = incident.start_date_time;
 	// let startTime = moment(incident.incident_start_time * 1000).format("MMMM Do YYYY, h:mm:ss a");
 	let endTime = parseInt(new Date() / 1000);
@@ -28,7 +30,7 @@
 						<p
 							class="scroll-m-20 text-xs font-semibold leading-5 tracking-normal badge-{incident.state}"
 						>
-							{incident.state}
+							{l(lang, incident.state)}
 						</p>
 						<p class="scroll-m-20 text-lg font-medium tracking-tight">
 							{incident.title}
@@ -39,19 +41,29 @@
 						>
 							{#if !isFuture && incident.state != "RESOLVED"}
 								<span>
-									Started about {startedAt} ago, still ongoing
+									{l(lang, "Started about %startedAt ago, still ongoing", {
+										startedAt
+									})}
 								</span>
 							{:else if !isFuture && incident.state == "RESOLVED"}
 								<span>
-									Started about {startedAt} ago, lasted for about {lastedFor}
+									{l(
+										lang,
+										"Started about %startedAt ago, lasted for about %lastedFor",
+										{ startedAt, lastedFor }
+									)}
 								</span>
 							{:else if isFuture && incident.state != "RESOLVED"}
 								<span>
-									Starts in {startedAt}
+									{l(lang, "Starts in %startedAt", { startedAt })}
 								</span>
 							{:else if isFuture && incident.state == "RESOLVED"}
 								<span>
-									Starts in {startedAt}, will last for about {lastedFor}
+									{l(
+										lang,
+										"Starts in %startedAt, will last for about %lastedFor",
+										{ startedAt, lastedFor }
+									)}
 								</span>
 							{/if}
 						</p>
@@ -90,7 +102,7 @@
 										<div
 											class="absolute top-0 w-28 -translate-x-32 rounded border bg-secondary px-1.5 py-1 text-center text-xs font-semibold"
 										>
-											{comment.state}
+											{l(lang, comment.state)}
 										</div>
 										<time
 											class=" mb-1 text-sm font-medium leading-none text-muted-foreground"
@@ -107,7 +119,9 @@
 								{/each}
 							</ol>
 						{:else}
-							<p class="text-sm font-medium">No Updates Yet</p>
+							<p class="text-sm font-medium">
+								{l(lang, "No Updates Yet")}
+							</p>
 						{/if}
 					</div>
 				</Accordion.Content>

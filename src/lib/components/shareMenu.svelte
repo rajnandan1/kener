@@ -139,10 +139,10 @@
 </div>
 <div class="px-4">
 	<h2 class="mb-1 text-sm font-semibold">
-		{l(lang, "monitor.share")}
+		{l(lang, "Share")}
 	</h2>
 	<p class="mb-2 text-xs text-muted-foreground">
-		{l(lang, "monitor.share_desc")}
+		{l(lang, "Share this monitor using a link with others")}
 	</p>
 	<Button
 		class="h-8 px-2 pr-4 text-xs font-semibold"
@@ -152,12 +152,12 @@
 		{#if !copiedLink}
 			<Link class="mr-2 inline" size={12} />
 			<span class="font-semibold">
-				{l(lang, "monitor.cp_link")}
+				{l(lang, "Copy Link")}
 			</span>
 		{:else}
 			<CopyCheck class="mr-2 inline" size={12} />
 			<span class="font-semibold">
-				{l(lang, "monitor.cpd_link")}
+				{l(lang, "Link Copied")}
 			</span>
 		{/if}
 	</Button>
@@ -165,32 +165,34 @@
 <hr class="my-4" />
 <div class="px-4">
 	<h2 class="mb-1 text-sm font-semibold">
-		{l(lang, "monitor.embed")}
+		{l(lang, "Embed")}
 	</h2>
 	<p class="mb-1 text-xs text-muted-foreground">
-		{l(lang, "monitor.embed_desc")}
+		{@html l(
+			lang,
+			"Embed this moni2tor using &#x3C;script&#x3E; or &#x3C;iframe&#x3E; in your app."
+		)}
 	</p>
 	<div class="mb-4 grid grid-cols-2 gap-2">
 		<div class="col-span-1">
 			<h3 class="mb-2 text-xs">
-				{l(lang, "monitor.theme")}
+				{l(lang, "Theme")}
 			</h3>
 			<RadioGroup.Root bind:value={theme} class=" flex">
 				<div class="flex items-center space-x-2">
 					<RadioGroup.Item value="light" id="light-theme" />
-					<Label class="text-xs" for="light-theme">{l(lang, "monitor.theme_light")}</Label
-					>
+					<Label class="text-xs" for="light-theme">{l(lang, "Light")}</Label>
 				</div>
 				<div class="flex items-center space-x-2">
 					<RadioGroup.Item value="dark" id="dark-theme" />
-					<Label class="text-xs" for="dark-theme">{l(lang, "monitor.theme_dark")}</Label>
+					<Label class="text-xs" for="dark-theme">{l(lang, "Dark")}</Label>
 				</div>
 				<RadioGroup.Input name="theme" />
 			</RadioGroup.Root>
 		</div>
 		<div class="col-span-1 pl-2">
 			<h3 class="mb-2 text-xs">
-				{l(lang, "monitor.mode")}
+				{l(lang, "Mode")}
 			</h3>
 			<RadioGroup.Root bind:value={embedType} class="flex">
 				<div class="flex items-center space-x-2">
@@ -209,12 +211,12 @@
 		{#if !copiedEmbed}
 			<Code class="mr-2 inline" size={12} />
 			<span class=" font-semibold">
-				{l(lang, "monitor.cp_code")}
+				{l(lang, "Copy Code")}
 			</span>
 		{:else}
 			<CopyCheck class="mr-2 inline" size={12} />
 			<span class="font-semibold">
-				{l(lang, "monitor.cpd_code")}
+				{l(lang, "Code Copied")}
 			</span>
 		{/if}
 	</Button>
@@ -222,23 +224,22 @@
 <hr class="my-4" />
 <div class="px-4">
 	<h2 class="mb-1 text-sm font-semibold">
-		{l(lang, "monitor.badge")}
+		{l(lang, "Badge")}
 	</h2>
 	<p class="mb-2 text-xs text-muted-foreground">
-		{l(lang, "monitor.badge_desc")}
+		{l(lang, "Get SVG badge for this monitor")}
 	</p>
 	<Button class="h-8  px-2 pr-4 text-xs" variant="secondary" on:click={copyStatusBadge}>
 		{#if !copiedBadgeStatus}
 			<TrendingUp class="mr-2 inline" size={12} />
 			<span class="font-semibold">
-				{l(lang, "monitor.status")}
-				{l(lang, "monitor.badge")}</span
-			>
+				{l(lang, "Status")}
+				{l(lang, "Badge")}
+			</span>
 		{:else}
 			<CopyCheck class="mr-2 inline" size={12} />
 			<span class="font-semibold">
-				{l(lang, "monitor.copied")}
-				{l(lang, "monitor.badge")}
+				{l(lang, "Badge Copied")}
 			</span>
 		{/if}
 	</Button>
@@ -246,14 +247,13 @@
 		{#if !copiedBadgeUptime}
 			<Percent class="mr-2 inline" size={12} />
 			<span class="font-semibold">
-				{l(lang, "monitor.uptime")}
-				{l(lang, "monitor.badge")}
+				{l(lang, "Uptime")}
+				{l(lang, "Badge")}
 			</span>
 		{:else}
 			<CopyCheck class="mr-2 inline" size={12} />
 			<span class="font-semibold">
-				{l(lang, "monitor.copied")}
-				{l(lang, "monitor.badge")}
+				{l(lang, "Badge Copied")}
 			</span>
 		{/if}
 	</Button>
@@ -261,21 +261,21 @@
 <hr class="my-4" />
 <div class="mb-4 px-4">
 	<h2 class="mb-1 text-sm font-semibold">
-		{l(lang, "monitor.status_svg")}
+		{l(lang, "LIVE Status")}
 	</h2>
 	<p class="mb-2 text-xs text-muted-foreground">
-		{l(lang, "monitor.status_svg_desc")}
+		{l(lang, "Get a LIVE Status for this monitor")}
 	</p>
 	<Button class="h-8  px-2 pr-4 text-xs" variant="secondary" on:click={copyDotStandard}>
 		{#if !copiedBadgeDotStandard}
 			<img src={pathMonitorBadgeDot} class="mr-1 inline h-5" alt="status" />
 			<span class="font-semibold">
-				{l(lang, "monitor.standard")}
+				{l(lang, "Standard")}
 			</span>
 		{:else}
 			<CopyCheck class="mr-2 inline h-5 w-5" />
 			<span class="font-semibold">
-				{l(lang, "monitor.standard")}
+				{l(lang, "Standard")}
 			</span>
 		{/if}
 	</Button>
@@ -283,12 +283,12 @@
 		{#if !copiedBadgeDotPing}
 			<img src={pathMonitorBadgeDotPing} class="mr-1 inline h-5" alt="status" />
 			<span class="font-semibold">
-				{l(lang, "monitor.pinging")}
+				{l(lang, "Pinging")}
 			</span>
 		{:else}
 			<CopyCheck class="mr-2 inline h-5 w-5" />
 			<span class="font-semibold">
-				{l(lang, "monitor.pinging")}
+				{l(lang, "Pinging")}
 			</span>
 		{/if}
 	</Button>

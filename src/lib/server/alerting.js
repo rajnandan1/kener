@@ -1,11 +1,9 @@
 // @ts-nocheck
 import notification from "./notification/notif.js";
-import { ParseIncidentPayload, GHIssueToKenerIncident } from "./webhook.js";
 
 import moment from "moment";
 import {
 	GetAllSiteData,
-	GetGithubData,
 	GetAllTriggers,
 	CreateIncident,
 	AddIncidentComment,
@@ -94,7 +92,6 @@ function createClosureComment(alert, commonJSON) {
 async function alerting(m) {
 	let monitor = await db.getMonitorByTag(m.tag);
 	let siteData = await GetAllSiteData();
-	const githubData = await GetGithubData();
 	const triggers = await GetAllTriggers({
 		status: "ACTIVE"
 	});
@@ -115,7 +112,7 @@ async function alerting(m) {
 			const successThreshold = alertConfig.successThreshold;
 			const monitor_tag = monitor.tag;
 			const alertingChannels = alertConfig.triggers; //array of numbers of trigger ids
-			const createIncident = alertConfig.createIncident === "YES" && !!githubData;
+			const createIncident = alertConfig.createIncident === "YES";
 			const allMonitorClients = [];
 			const sendTrigger = alertConfig.active;
 			const severity = alertConfig.severity;

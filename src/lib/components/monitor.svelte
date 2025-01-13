@@ -91,29 +91,30 @@
 
 	let uptimesRollers = [
 		{
-			text: "90 Days",
+			text: `${l(lang, "90 Days")}`,
 			startTs: moment().subtract(90, "days").startOf("day").unix(),
 			value: uptime90Day
 		},
 		{
-			text: "Today",
-			startTs: moment().startOf("day").unix()
+			text: `${l(lang, "60 Days")}`,
+			startTs: moment().subtract(59, "days").startOf("day").unix(),
+			value: uptime90Day
 		},
 		{
-			text: "This Week",
-			startTs: moment().startOf("week").unix()
+			text: `${l(lang, "30 Days")}`,
+			startTs: moment().subtract(29, "days").startOf("day").unix()
 		},
 		{
-			text: "7 Days",
+			text: `${l(lang, "14 Days")}`,
+			startTs: moment().subtract(13, "days").startOf("day").unix()
+		},
+		{
+			text: `${l(lang, "7 Days")}`,
 			startTs: moment().subtract(6, "days").startOf("day").unix()
 		},
 		{
-			text: "This Month",
-			startTs: moment().startOf("month").unix()
-		},
-		{
-			text: "30 Days",
-			startTs: moment().subtract(29, "days").startOf("day").unix()
+			text: l(lang, "Today"),
+			startTs: moment().startOf("day").unix()
 		}
 	];
 
@@ -289,9 +290,11 @@
 					<div
 						class="text-api-up truncate text-xs font-semibold text-{monitor.pageData
 							.summaryColorClass}"
-						title={monitor.pageData.summaryText}
 					>
-						{summaryTime(lang, monitor.pageData.summaryText)}
+						{l(lang, summaryTime(monitor.pageData.summaryStatus), {
+							status: monitor.pageData.summaryStatus,
+							duration: monitor.pageData.summaryDuration
+						})}
 					</div>
 				</div>
 			</div>
@@ -343,7 +346,10 @@
 									{moment(new Date(bar.timestamp * 1000)).format(
 										"dddd, MMMM Do, YYYY"
 									)} -
-									{summaryTime(lang, bar.message)}
+									{l(lang, summaryTime(bar.summaryStatus), {
+										status: bar.summaryStatus,
+										duration: bar.summaryDuration
+									})}
 								</div>
 							</div>
 						{/if}
@@ -367,7 +373,7 @@
 							<div class="-mx-2 mb-4 grid grid-cols-1">
 								<div class="col-span-1 px-2">
 									<Badge variant="outline" class="border-0 pl-0">
-										{l(lang, "root.incidents")}
+										{l(lang, "Incident Updates")}
 									</Badge>
 								</div>
 								{#each dayIncidentsFull as incident, index}
@@ -393,19 +399,13 @@
 										>
 											<p>
 												<span class="text-{bar.cssClass}"> ● </span>
-												{ampm(
-													lang,
-													n(
-														lang,
-														new Date(
-															bar.timestamp * 1000
-														).toLocaleTimeString()
-													)
-												)}
+												{new Date(
+													bar.timestamp * 1000
+												).toLocaleTimeString()}
 											</p>
 											{#if bar.status != "NO_DATA"}
 												<p class="pl-2">
-													{l(lang, "statuses." + bar.status)}
+													{l(lang, bar.status)}
 												</p>
 											{:else}
 												<p class="pl-2">-</p>
