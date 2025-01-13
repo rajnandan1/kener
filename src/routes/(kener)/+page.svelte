@@ -83,7 +83,8 @@
 				}
 			}}
 		>
-			<ChevronLeft class="arrow mr-1 h-5 w-5" /> Back
+			<ChevronLeft class="arrow mr-1 h-5 w-5" />
+			{l(data.lang, "Back")}
 		</Button>
 	</section>
 {/if}

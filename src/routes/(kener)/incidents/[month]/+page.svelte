@@ -6,6 +6,7 @@
 	import { ArrowRight, ArrowLeft, CalendarCheck2, ChevronLeft } from "lucide-svelte";
 	import { base } from "$app/paths";
 	import { goto } from "$app/navigation";
+	import { l } from "$lib/i18n/client";
 
 	export let data;
 	let incidents = data.incidents;
@@ -70,18 +71,21 @@
 			return (window.location.href = `${base}/`);
 		}}
 	>
-		<ChevronLeft class="arrow mr-1 h-5 w-5" /> Back
+		<ChevronLeft class="arrow mr-1 h-5 w-5" />
+		{l(data.lang, "Back")}
 	</Button>
 </section>
-<section class="mx-auto mb-8 flex w-full max-w-4xl flex-1 flex-col items-start justify-center">
+<section class="mx-auto mb-8 flex max-w-[655px] flex-1 flex-col items-start justify-center">
 	<div
-		class="mesh mx-auto w-[655px] max-w-screen-xl rounded-md px-4 py-12 lg:flex lg:items-center"
+		class="mesh mx-auto min-w-full max-w-[655px] rounded-md px-4 py-12 lg:flex lg:items-center"
 	>
 		<div class="blurry-bg mx-auto max-w-3xl text-center text-muted">
 			<h1 class="    text-5xl font-extrabold leading-tight">
 				{data.thisMonthName.replace("-", ", ")}
 			</h1>
-			<p class="mx-auto mt-4 max-w-xl font-medium sm:text-xl">Incidents</p>
+			<p class="mx-auto mt-4 max-w-xl font-medium sm:text-xl">
+				{l(data.lang, "Incident Updates")}
+			</p>
 		</div>
 	</div>
 
@@ -106,7 +110,9 @@
 				</div>
 
 				<h1 class=" text-xl font-semibold leading-tight">
-					No Incident on {data.thisMonthName.replace("-", ", ")}
+					{l(data.lang, "No Incident On %date", {
+						date: data.thisMonthName.replace("-", ", ")
+					})}
 				</h1>
 			</div>
 		{/if}
@@ -117,7 +123,7 @@
 				</div>
 				{#if incidentSmartDates[date].length === 0}
 					<div class="col-span-2 p-2 px-4 text-sm font-medium text-muted-foreground">
-						No incidents
+						{l(data.lang, "No Incidents")}
 					</div>
 				{/if}
 				{#each incidentSmartDates[date] as incident, index}

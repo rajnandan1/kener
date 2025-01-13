@@ -15,7 +15,6 @@
 
 	let defaultLocaleKey = data.selectedLang;
 	let defaultTheme = data.site.theme;
-
 	const allLocales = data.site.i18n?.locales.filter((locale) => locale.selected === true);
 
 	function toggleMode() {
@@ -150,7 +149,7 @@
 	{#if data.showNav}
 		<Nav {data} />
 	{/if}
-	<div class="min-h-[70vh]">
+	<div class="main-content min-h-[70vh]">
 		<slot />
 	</div>
 
@@ -168,7 +167,7 @@
 		</footer>
 	{/if}
 	{#if !!!data.embed}
-		<div class="blurry-bg fixed bottom-4 right-4 z-20">
+		<div class="fixed bottom-4 right-4 z-20 rounded-md bg-background">
 			{#if data.site.i18n && data.site.i18n.locales && allLocales.length > 1}
 				<DropdownMenu.Root>
 					<DropdownMenu.Trigger>
@@ -180,6 +179,7 @@
 						<DropdownMenu.Group>
 							{#each allLocales as locale}
 								<DropdownMenu.Item
+									class={defaultLocaleKey == locale.code ? "bg-input" : ""}
 									on:click={(e) => {
 										setLanguage(locale.code);
 									}}>{locale.name}</DropdownMenu.Item

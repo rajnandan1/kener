@@ -827,3 +827,10 @@ textarea::placeholder {
 	cursor: default;
 	opacity: 0.24;
 }
+
+@media (max-width: 767px) {
+	.main-content {
+		padding-left: 8px;
+		padding-right: 8px;
+	}
+}
