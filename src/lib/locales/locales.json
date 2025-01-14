@@ -24,6 +24,10 @@
 		"name": "Français"
 	},
 	{
+		"code": "de",
+		"name": "Deutsch"
+	},
+  {
 		"code": "dk",
 		"name": "Dansk"
 	}
