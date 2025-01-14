@@ -51,7 +51,11 @@ The URL to redirect to when the link is clicked.
 
 ## Internationalization
 
-Add multiple languages to your status page. Currently, Kener supports English, हिन्दी, 中文, 日本語, Tiếng Việt. More will be added. If you want to add your own language please create a PR.
+Add multiple languages to your status page. You can add a new language and add translations for all the text that is shown on the status page by following the steps [here](/docs/i18n).
+
+-   Adding more than one locales will enable a dropdown in the navbar to select the language.
+-   Selected languages are stored in cookies and will be used when the user visits the site again.
+-   There is no auto detection of the language. The user has to manually select the language.
 
 ### Default Language
 

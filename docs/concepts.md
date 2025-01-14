@@ -97,8 +97,16 @@ Body of the webhook will be sent as below:
 
 ## Incidents
 
-Incidents are the ones that are created when something goes wrong. They can be created using Github Issues or using APIs.
+Incidents are the ones that are created when something goes wrong. They can be created using Manage portal or using APIs.
 
-There can be two types of incidents - `DOWN` and `DEGRADED`. Incident can have a title, description, severity and status. Status can be `OPEN`, `RESOLVED`.
+There can be two types of incidents - `DOWN` and `DEGRADED`. Incident can have a title, description, severity and status. Status can be `INVESTIGATING`, `IDENTIFIED`, `MONITORING` and `RESOLVED`.
 
-To learn more about incidents, click [here](/docs/aleincident-managementrting).
+To learn more about incidents, click [here](/docs/incident-management).
+
+### Incident Updates
+
+Incident updates are done using comment. Each comment has a status and a timestamp. The status of the latest added comment becomes the current status of the incident.
+
+### Incident Monitors
+
+Monitors can be added as affected components for an incident. Depending on the severity of the incident the status of the monitor also changes.

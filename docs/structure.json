@@ -18,15 +18,16 @@
 					"link": "/docs/concepts",
 					"file": "/concepts.md"
 				},
-				{
-					"title": "Environment Setup",
-					"link": "/docs/environment-vars",
-					"file": "/environment-vars.md"
-				},
+
 				{
 					"title": "Deployment",
 					"link": "/docs/deployment",
 					"file": "/deployment.md"
+				},
+				{
+					"title": "Databases",
+					"link": "/docs/database",
+					"file": "/database.md"
 				}
 			]
 		},
@@ -118,6 +119,11 @@
 					"title": "Custom JS/CSS",
 					"link": "/docs/custom-js-css-guide",
 					"file": "/custom-js-css-guide.md"
+				},
+				{
+					"title": "Internationalization",
+					"link": "/docs/i18n",
+					"file": "/i18n.md"
 				}
 			]
 		},

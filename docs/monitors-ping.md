@@ -21,6 +21,6 @@ You can add as many IP addresses as you want to monitor. The IP address should b
 
 You can add as many IP addresses as you want to monitor. The IP address should be a valid IPv6 address. Example of IP6 address is `2001:0db8:85a3:0000:0000:8a2e:0370:7334`.
 
-<p class="rounded border px-4 py-2">
+<p class="note danger">
 	Please note that atleast one of the Host V4 or Host V6 is required.
 <p>

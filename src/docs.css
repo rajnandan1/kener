@@ -54,3 +54,16 @@ main {
 .hljs {
 	background: transparent !important;
 }
+
+.note {
+	@apply mt-4 rounded-md border bg-background p-3 text-sm shadow-sm;
+}
+.note.danger {
+	border: 1px solid #e3342f;
+	color: #e3342f;
+}
+
+.note.info {
+	border: 1px solid #3490dc;
+	color: #3490dc;
+}

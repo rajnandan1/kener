@@ -47,7 +47,6 @@ By default kener runs on `/` but you can change it to `/status` or any other pat
 
 -   Important: The base path should _**NOT**_ have a trailing slash and should start with `/`
 -   Important: This env variable should be present during both build and run time
--   If you are using docker you will have to do your own build and set this env variable during `docker build`
 
 ```bash
 export KENER_BASE_PATH=/status
@@ -59,6 +58,34 @@ Kener uses [resend.com](https://resend.com) to send emails. Please make sure to 
 
 ```bash
 export RESEND_API_KEY=re_sometoken
+```
+
+## RESEND_SENDER_EMAIL
+
+Set the sender email for the emails that are sent by Kener. This is required for sending emails. If you have not added a domain in resend, you can se something like `Some Name <onboarding@resend.dev>`. We recommend adding a domain in resend and using that email domain.
+
+```bash
+export RESEND_SENDER_EMAIL=Some Name <email@domain.com>
+```
+
+<div class="  note danger ">
+	Please note that the RESEND_API_KEY is required for sending emails. If you do not set this, Kener will not be able to send emails. RESEND_SENDER_EMAIL is a must if you forget your password.
+</div>
+
+## DATABASE_URL
+
+Kener uses a database to store its data. By default, Kener uses sqlite. You can change the database by setting the `DATABASE_URL` environment variable. The connection string has to start with `sqlite`, `postgresql`, or `mysql`. Read more about [database configuration](/docs/database).
+
+```bash
+export DATABASE_URL=sqlite://./database/awesomeKener.db
+```
+
+## TZ
+
+Set the timezone for the server. Set it to UTC.
+
+```bash
+export TZ=UTC
 ```
 
 ## Using .env

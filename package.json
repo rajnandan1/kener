@@ -30,6 +30,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"configure": "node build.js",
+		"migrate": "npx knex migrate:latest",
 		"preseed": "npx knex migrate:latest",
 		"seed": "npx knex seed:run",
 		"predev": "npm run seed",

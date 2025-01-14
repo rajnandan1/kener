@@ -14,6 +14,7 @@
 		Plus,
 		X,
 		Settings,
+		ExternalLink,
 		Bell,
 		Loader,
 		ChevronLeft,
@@ -366,6 +367,15 @@
 </script>
 
 <div class="min-h-[70vh]">
+	<div class="flex justify-end">
+		<Button
+			variant="outline"
+			href="https://kener.ing/docs/incident-management"
+			class=" text-sm"
+		>
+			Documentation <ExternalLink size="12" class="ml-1" />
+		</Button>
+	</div>
 	<div class="mt-4 flex justify-end">
 		<div class="flex w-40">
 			<Select.Root

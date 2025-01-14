@@ -14,7 +14,7 @@ You can embed your monitor in your website using javascript. We recommend using 
 ```html
 <script
 	async
-	src="http://[hostname]/embed-[tag]/js?theme=light&monitor=http://[hostname]/embed-[tag]"
+	src="http://[hostname]/embed/monitor-[tag]/js?theme=light&monitor=http://[hostname]/embed/monitor-[tag]"
 ></script>
 ```
 
@@ -23,7 +23,7 @@ Here is an example
 ```html
 <script
 	async
-	src="https://kener.ing/embed-earth/js?theme=light&monitor=https://kener.ing/embed-earth"
+	src="https://kener.ing/embed/monitor-earth/js?theme=light&monitor=https://kener.ing/embed/monitor-earth"
 ></script>
 ```
 
@@ -40,7 +40,7 @@ Replace `[hostname]` with your kener hostname and `[tag]` with your monitor tag.
 ### Demo
 
 <div class="border mx-auto rounded-sm w-585px">
-	<script async src="/embed-earth/js?theme=dark&monitor=/embed-earth"></script>
+	<script async src="/embed/monitor-earth/js?theme=dark&monitor=/embed/monitor-earth"></script>
 </div>
 
 ## Iframe
@@ -49,7 +49,7 @@ This is the simplest way to embed your monitor in your website. You can use the 
 
 ```html
 <iframe
-	src="http://[hostname]/embed-[tag]?theme=light"
+	src="http://[hostname]/embed/monitor-[tag]?theme=light"
 	width="100%"
 	height="200"
 	allowfullscreen="allowfullscreen"
@@ -62,9 +62,9 @@ Here is an example
 
 ```html
 <iframe
-	src="https://kener.ing/embed-earth?theme=light"
+	src="https://kener.ing/embed/monitor-earth?theme=light"
 	width="100%"
-	height="200"
+	height="100"
 	allowfullscreen="allowfullscreen"
 	allowpaymentrequest
 	frameborder="0"
@@ -83,5 +83,5 @@ You can pass the following parameters to the embed code
 ### Demo
 
 <div class="border mx-auto rounded-sm w-585px">
-	<iframe src="/embed-earth?theme=dark" width="100%" height="200" allowfullscreen="allowfullscreen" allowpaymentrequest frameborder="0"></iframe>
+	<iframe src="/embed/monitor-earth?theme=dark" width="100%" height="100" allowfullscreen="allowfullscreen" allowpaymentrequest frameborder="0"></iframe>
 </div>

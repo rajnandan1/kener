@@ -1,9 +1,9 @@
 ---
 info:
   title: Kener API
-  version: 1.0.0
+  version: 3.0.0
   description: |
-    # Kener Self-hosted node js status page
+    # Kener Selfhost node js status page
     ![Kener](https://kener.ing/newbg.png "kener")
     API specification for Kener status page and incident management system. This API spec was created using [Frogment](https://www.frogment.app)
   contact:
@@ -15,7 +15,7 @@ info:
     url: https://opensource.org/licenses/MIT
 openapi: 3.0.0
 servers:
-- url: https://your-kener-host.com
+- url: https://{host}
   description: Kener host URL
 tags:
 - name: Monitors
@@ -76,130 +76,138 @@ components:
         uptime:
           type: string
           example: '100'
-        lastUpdatedAt:
+        last_updated_at:
           type: integer
           example: 1731251760
       example:
         status: UP
-        lastUpdatedAt: 1731251760
+        last_updated_at: 1731251760
         uptime: '100'
     Incident:
       type: object
       description: body of an incident
-      required:
-      - title
-      - tags
       properties:
-        startDatetime:
+        start_date_time:
           type: integer
           description: UTC timestamp in seconds
           example: 1731901920
-        endDatetime:
+        end_date_time:
           type: integer
           description: UTC timestamp in seconds
+          nullable: true
           example: 1704123938
         title:
           type: string
           example: Outage in mumbai
           description: title of the incident
-        body:
+        created_at:
           type: string
-          example: body of the incident
-          description: body of the incident
-        tags:
-          type: array
-          items:
-            type: string
-            example: earth
-          description: comma separated tags of monitors
-          example:
-          - earth
-          - google
-        impact:
+          example: '2025-01-09 04:12:01'
+          description: created at time
+        updated_at:
           type: string
-          example: DOWN
-          description: Impact of the incident
+          example: '2025-01-09 06:10:00'
+          description: updated at time
+        status:
+          type: string
+          example: OPEN
+          description: delete or not deleted incident
           enum:
-          - DOWN
-          - DEGRADED
-        isMaintenance:
-          type: boolean
-          description: is this incident because of maintenance
-          example: false
-        isIdentified:
-          type: boolean
-          description: has the incident been indentified
-          example: true
-        isResolved:
-          type: boolean
-          description: has the incident been resovled
-          example: true
+          - OPEN
+          - CLOSED
+        state:
+          type: string
+          description: the current status of the incident
+          example: INVESTIGATING
+          enum:
+          - INVESTIGATING
+          - IDENTIFIED
+          - MONITORING
+          - RESOLVED
       example:
-        startDatetime: 1731901920
-        endDatetime: 1704123938
+        start_date_time: 1731901920
+        end_date_time: 1704123938
         title: title of the incident
-        body: body of the incident
-        tags:
-        - earth
-        - google
-        impact: DOWN
-        isMaintenance: false
-        isIdentified: true
-        isResolved: true
+        created_at: '2025-01-09 04:12:01'
+        updated_at: '2025-01-09 04:12:01'
+        state: INVESTIGATING
+        status: OPEN
+        id: 4
     IncidentResponse:
       description: Incident response schema
       allOf:
       - "$ref": "#/components/schemas/Incident"
-      - type: object
-        properties:
-          created_at:
-            type: integer
-            description: UTC timestamp in seconds, incident created at
-            example: 1731901920
-          closedAt:
-            type: integer
-            nullable: true
-            description: UTC timestamp in seconds, incident closed at
-            example: 1731901920
-          incident_number:
-            type: integer
-            description: id of the incident
-            example: 4
-        example:
-          created_at: 1731901920
-          closedAt: 1731901920
-          incident_number: 4
     Comment:
       type: object
       description: Comment of an incident
-      required:
-      - body
       properties:
-        body:
+        comment:
           type: string
           example: comment 1
+        commented_at:
+          type: integer
+          example: 1736398336
+        state:
+          type: string
+          example: IDENTIFIED
       example:
         body: comment 2
+        commented_at: 1736398336
+        state: IDENTIFIED
     CommentResponse:
       type: object
       description: Comment Response
       properties:
-        commentID:
+        id:
           type: integer
           description: ID of the comment
-          example: 1873376745
-        body:
+          example: 60
+        comment:
           type: string
-          description: body of the comment
-          example: comment 3
-        created_at:
+          description: The content of the comment
+          example: Sometimes, you want all the goodness of moment#from but you don't
+            want to have to create two moments, you just want to display a length
+            of time.
+        incident_id:
           type: integer
-          description: timestamp when comment was created
-          example: 1704123938
+          description: ID of the associated incident
+          example: 24
+        commented_at:
+          type: integer
+          description: Timestamp when the comment was added
+          example: 1736398336
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the comment was created in ISO 8601 format
+          example: '2025-01-09 04:52:16'
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the comment was last updated in ISO 8601 format
+          example: '2025-01-09 04:52:16'
+        status:
+          type: string
+          description: Current status of the comment
+          example: ACTIVE
+        state:
+          type: string
+          description: the current status of the incident
+          example: INVESTIGATING
+          enum:
+          - INVESTIGATING
+          - IDENTIFIED
+          - MONITORING
+          - RESOLVED
       example:
-        commentID: 1873376745
-        body: comment 4
-        created_at: 1704123938
+        id: 60
+        comment: Sometimes, you want all the goodness of moment
+        incident_id: 24
+        commented_at: 1736398336
+        created_at: '2025-01-09 04:52:16'
+        updated_at: '2025-01-09 04:52:16'
+        status: ACTIVE
+        state: MONITORING
     IncidentStatus:
       type: object
       description: Status of the incident
@@ -220,6 +228,25 @@ components:
         isIdentified: true
         isResolved: true
         endDatetime: 1731901920
+    IncidentCreateRequest:
+      title: Incident Create Request Body
+      type: object
+      description: body of an incident
+      required:
+      - title
+      - start_date_time
+      properties:
+        start_date_time:
+          type: integer
+          description: UTC timestamp in seconds
+          example: 1731901920
+        title:
+          type: string
+          example: Outage in mumbai
+          description: title of the incident
+      example:
+        start_date_time: 1731901920
+        title: title of the incident
   responses:
     Response401:
       description: Bad API keys response
@@ -267,102 +294,94 @@ components:
       summary: create incident response
       description: create incident response
       value:
-        created_at: 1731901920
-        closedAt: 1731901920
-        incident_number: 4
-        startDatetime: 1731901920
-        endDatetime: 1704123938
+        start_date_time: 1731901920
+        end_date_time: 1731901920
+        id: 4
+        created_at: '2025-01-09 04:12:01'
+        updated_at: '2025-01-10 04:12:01'
         title: title of the incident
-        body: body of the incident
-        tags:
-        - earth
-        - google
-        impact: DOWN
-        isMaintenance: false
-        isIdentified: true
-        isResolved: true
+        status: OPEN
+        state: INVESTIGATING
     CreateIncidentRequest:
       summary: create incident request body
-      description: Some Description
+      description: create incident request body
       value:
-        startDatetime: 1731901920
-        endDatetime: 1704123938
+        start_date_time: 1731901920
         title: title of the incident
-        body: body of the incident
-        tags:
-        - earth
-        - google
-        impact: DOWN
-        isMaintenance: false
-        isIdentified: true
-        isResolved: true
     SearchIncidentsResponse:
       summary: array of incidents
       description: Some Description
       value:
-      - created_at: 1731901920
-        closedAt: 1731901920
-        incident_number: 4
-        startDatetime: 1731901920
-        endDatetime: 1704123938
-        title: title of the incident
-        body: body of the incident
-        tags:
-        - earth
-        - google
-        impact: DOWN
-        isMaintenance: false
-        isIdentified: true
-        isResolved: true
-      - created_at: 1731901920
-        closedAt: 1731901920
-        incident_number: 4
-        startDatetime: 1731901920
-        endDatetime: 1704123938
-        title: title of the incident
-        body: body of the incident
-        tags:
-        - earth
-        - google
-        impact: DOWN
-        isMaintenance: false
-        isIdentified: true
-        isResolved: true
+      - id: 2
+        title: future wala
+        start_date_time: 1736774486
+        end_date_time: 1737033787
+        created_at: '2025-01-12 13:21:32'
+        updated_at: '2025-01-12 13:23:15'
+        status: OPEN
+        state: RESOLVED
+      - id: 1
+        title: internatiinal asda
+        start_date_time: 1736684329
+        end_date_time: 
+        created_at: '2025-01-12 12:18:53'
+        updated_at: '2025-01-12 13:21:32'
+        status: OPEN
+        state: INVESTIGATING
     CommentsResponse:
       summary: list of comments
       description: Some Description
       value:
-      - commentID: 1873376745
-        body: comment 4
-        created_at: 1704123938
-      - commentID: 1873376745
-        body: comment 4
-        created_at: 1704123938
+      - id: 58
+        comment: idensad
+        incident_id: 24
+        commented_at: 1736398295
+        created_at: '2025-01-09 04:51:37'
+        updated_at: '2025-01-09 04:51:37'
+        status: ACTIVE
+        state: IDENTIFIED
+      - id: 57
+        comment: Sometimes, you want all the goodness of moment#from but you don't
+          want to have to create two moments, you just want to display a length of
+          time.
+        incident_id: 24
+        commented_at: 1736398279
+        created_at: '2025-01-09 04:51:19'
+        updated_at: '2025-01-09 04:51:19'
+        status: ACTIVE
+        state: INVESTIGATING
     CommentRequestBody:
-      summary: request body for a comment
-      description: request body for a comment to add in an incident
+      summary: request body for a update
+      description: request body for a update to add in an incident
       value:
-        body: This is a comment
+        comment: This is a comment
+        commented_at: 1736398336
+        state: IDENTIFIED
     CreateCommentResponse:
-      summary: create comment response body sample
-      description: create comment response body sample
+      summary: create update response body sample
+      description: create update response body sample
       value:
-        commentID: 1873376745
-        body: comment 4
-        created_at: 1704123938
+        id: 60
+        comment: Sometimes, you want all the goodness of moment
+        incident_id: 24
+        commented_at: 1736398336
+        created_at: '2025-01-09 04:52:16'
+        updated_at: '2025-01-09 04:52:16'
+        status: ACTIVE
+        state: MONITORING
 paths:
   "/api/status":
     post:
       operationId: updateMonitorStatus
       summary: Update status of a monitor
-      description: Update status of an incident at a given timestamp
+      description: Update status of a monitor at a given timestamp UTC
       tags:
       - Monitors
       security:
       - bearerAuth: []
       requestBody:
         required: true
-        description: request body to update an incident
+        description: request body to update status of a monitor
         content:
           application/json:
             schema:
@@ -403,7 +422,7 @@ paths:
       - name: tag
         in: query
         required: true
-        description: monitor tag to get an incident
+        description: monitor tag to get status of it
         schema:
           type: string
           example: earth
@@ -436,7 +455,7 @@ paths:
         content:
           application/json:
             schema:
-              "$ref": "#/components/schemas/Incident"
+              "$ref": "#/components/schemas/IncidentCreateRequest"
             examples:
               sample:
                 "$ref": "#/components/examples/CreateIncidentRequest"
@@ -463,6 +482,17 @@ paths:
       security:
       - bearerAuth: []
       parameters:
+      - name: status
+        in: query
+        description: status of the incident. Can be open or close. close means deleted
+        schema:
+          type: string
+          description: status of the incident. Can be open or close. close means deleted
+          enum:
+          - OPEN
+          - CLOSED
+          default: OPEN
+          example: OPEN
       - name: state
         in: query
         description: state of the incident. Can be open or close
@@ -470,17 +500,12 @@ paths:
           type: string
           description: state of the incident. Can be open or close
           enum:
-          - open
-          - closed
-          default: open
-          example: open
-      - name: tags
-        in: query
-        description: Comma separated monitor tags
-        schema:
-          type: string
-          description: Comma separated monitor tags
-          example: earth,google
+          - INVESTIGATING
+          - IDENTIFIED
+          - MONITORING
+          - RESOLVED
+          default: INVESTIGATING
+          example: IDENTIFIED
       - name: page
         in: query
         description: page number
@@ -490,7 +515,7 @@ paths:
           default: 1
           minimum: 1
           example: 1
-      - name: per_page
+      - name: limit
         in: query
         description: how many per page
         schema:
@@ -499,27 +524,20 @@ paths:
           description: how many per page
           maximum: 100
           example: 10
-      - name: created_after_utc
+      - name: start_date_time
         description: start time
         in: query
         schema:
           type: integer
           description: start time
           example: 1731866475
-      - name: created_before_utc
+      - name: end_date_time
         description: end time
         in: query
         schema:
           type: integer
           description: end time
           example: 1731866475
-      - name: title_like
-        description: title of the incident
-        in: query
-        schema:
-          type: string
-          description: title of the incident
-          example: outage
       responses:
         '200':
           description: Search results retrieved successfully
@@ -536,19 +554,19 @@ paths:
           "$ref": "#/components/responses/Response400"
         '401':
           "$ref": "#/components/responses/Response401"
-  "/api/incident/{incident_number}":
+  "/api/incident/{incident_id}":
     parameters:
-    - name: incident_number
+    - name: incident_id
       in: path
       required: true
-      description: incident number as an integer to get incident by id
+      description: incident id as an integer to get incident by id
       schema:
         type: integer
         example: 4
     get:
       operationId: getIncident
-      summary: Get an incident by number
-      description: API to get an incident by incident number
+      summary: Get an incident by id
+      description: API to get an incident by incident id
       tags:
       - Incidents
       security:
@@ -570,7 +588,7 @@ paths:
     patch:
       operationId: updateIncident
       summary: Update an incident
-      description: API to update an incident by incident number
+      description: API to update an incident by incident id
       tags:
       - Incidents
       security:
@@ -599,26 +617,26 @@ paths:
           "$ref": "#/components/responses/Response400"
         '401':
           "$ref": "#/components/responses/Response401"
-  "/api/incident/{incident_number}/comment":
+  "/api/incident/{incident_id}/updates":
     parameters:
-    - name: incident_number
+    - name: incident_id
       in: path
       required: true
-      description: incident number to fetch comment for
+      description: incident id to fetch comment for
       schema:
         type: integer
         example: 4
     post:
       operationId: addIncidentComment
-      summary: Add a comment to an incident
-      description: API to create comment for an incident
+      summary: Add an update to an incident
+      description: API to create update for an incident
       tags:
       - Incidents
       security:
       - bearerAuth: []
       requestBody:
         required: true
-        description: body to add a comment
+        description: body to add an update
         content:
           application/json:
             schema:
@@ -642,15 +660,15 @@ paths:
           "$ref": "#/components/responses/Response401"
     get:
       operationId: getIncidentComments
-      summary: Get comments for an incident
-      description: API to get comments for an incident
+      summary: Get updates for an incident
+      description: API to get updates for an incident
       tags:
       - Incidents
       security:
       - bearerAuth: []
       responses:
         '200':
-          description: Comments retrieved successfully
+          description: updates retrieved successfully
           content:
             application/json:
               schema:
@@ -664,45 +682,123 @@ paths:
           "$ref": "#/components/responses/Response400"
         '401':
           "$ref": "#/components/responses/Response401"
-  "/api/incident/{incident_number}/status":
+  "/api/incident/{incident_id}/monitors":
     parameters:
-    - name: incident_number
+    - name: incident_id
       in: path
       required: true
-      description: incident number to fetch status for
+      description: incident id to fetch comment for
       schema:
         type: integer
         example: 4
-    post:
-      operationId: updateIncidentStatus
-      summary: Update the status of an incident
-      description: API to update status of an incident
+    get:
+      summary: Get monitors for an incident
+      operationId: getIncidentMonitors
       tags:
       - Incidents
-      security:
-      - bearerAuth: []
-      requestBody:
+      parameters:
+      - name: incident_id
+        in: path
         required: true
-        description: request body to update status of an incident
-        content:
-          application/json:
-            schema:
-              "$ref": "#/components/schemas/IncidentStatus"
-            example:
-              isIdentified: true
-              isResolved: true
-              endDatetime: 1731901920
+        schema:
+          type: integer
+        description: The ID of the incident
       responses:
         '200':
-          description: Incident status updated successfully
+          description: List of monitors for the incident
           content:
             application/json:
               schema:
-                "$ref": "#/components/schemas/IncidentResponse"
-              examples:
-                success:
-                  "$ref": "#/components/examples/CreateIncidentResponse"
-        '400':
-          "$ref": "#/components/responses/Response400"
-        '401':
-          "$ref": "#/components/responses/Response401"
+                type: array
+                items:
+                  type: object
+                  properties:
+                    monitor_tag:
+                      type: string
+                      description: The tag of the monitor
+                      example: earth
+                    monitor_impact:
+                      type: string
+                      description: The impact status of the monitor
+                      example: DOWN
+      security:
+      - bearerAuth: []
+    post:
+      summary: Add a monitor to an incident
+      operationId: addIncidentMonitor
+      tags:
+      - Incidents
+      parameters:
+      - name: incident_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: The ID of the incident
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                tag:
+                  type: string
+                  description: The tag for the monitor
+                  example: okbookmarks
+                impact:
+                  type: string
+                  description: The impact status of the monitor
+                  example: DEGRADED
+      responses:
+        '200':
+          description: Monitor added successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    monitor_tag:
+                      type: string
+                      description: The tag of the monitor
+                      example: okbookmarks
+                    monitor_impact:
+                      type: string
+                      description: The impact status of the monitor
+                      example: DEGRADED
+      security:
+      - bearerAuth: []
+    delete:
+      summary: Delete a monitor from an incident
+      operationId: deleteIncidentMonitor
+      tags:
+      - Incidents
+      parameters:
+      - name: incident_id
+        in: path
+        required: true
+        schema:
+          type: integer
+        description: The ID of the incident
+      - name: tag
+        in: query
+        required: true
+        schema:
+          type: string
+        description: The tag of the monitor to delete
+      responses:
+        '200':
+          description: Monitor deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Confirmation message
+                    example: Monitor deleted successfully
+      security:
+      - bearerAuth: []

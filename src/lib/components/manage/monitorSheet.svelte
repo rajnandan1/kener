@@ -608,6 +608,13 @@
 					{/if}
 					<div class="col-span-6">
 						<Label for="eval">Eval</Label>
+						<p class="my-1 text-xs text-muted-foreground">
+							You can write a custom eval function to evaluate the response. The
+							function should return an object with status and latency. <a
+								class="font-medium text-primary"
+								href="https://kener.ing/docs/monitors-api#eval">Read the docs</a
+							> to learn
+						</p>
 						<textarea
 							bind:value={newMonitor.apiConfig.eval}
 							id="eval"

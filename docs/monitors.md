@@ -133,7 +133,7 @@ You can deactivate the monitor by switching the toggle to off. Deactivation a mo
 
 You can activate the monitor by switching the toggle to on. Activation a monitor will start the monitor. It will take one minute to activate.
 
-<div class="border px-2 rounded-md">
+<div class="note info">
 
 Any changes in the a live monitor will take one minute to reflect.
 

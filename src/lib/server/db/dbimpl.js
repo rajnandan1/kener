@@ -399,6 +399,10 @@ class DbImpl {
 			query = query.andWhere("start_date_time", "<=", filter.end);
 		}
 
+		if (filter && filter.state) {
+			query = query.andWhere("state", filter.state);
+		}
+
 		query = query
 			.orderBy("id", "desc")
 			.limit(limit)

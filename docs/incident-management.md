@@ -5,34 +5,72 @@ description: Kener uses Github to power incident management using labels
 
 # Incident Management
 
-Kener uses Github to power incident management using labels
+Kener lets you manage incidents using its dashboard or APIs.
 
-## Labels
+## Create Incident
 
-Kener auto creates labels for your monitors using the `tag` parameter
+### Incident Title
 
--   `incident`: If an issue is marked as incident it will show up in kener home page
--   `incident-down`: If an issue is marked as incident-down and incident kener would make that monitor down
--   `incident-degraded`: If an issue is marked as incident-degraded and incident then kener would make the monitor degraded
--   `resolved`: Use this tag to mark the incident has RESOLVED
--   `identified`: Use this tag to show that the root cause of the incident has been identified
+<span class="text-red-500 text-xs font-semibold">
+	REQUIRED
+</span>
 
-## Creating Incident
+The title of the incident. This is used to identify the incident in the dashboard.
 
-Kener uses Github issues to create incidents. Here is how you can create an incident
+### Incident Summary
 
-### Using Github
+<span class="text-red-500 text-xs font-semibold">
+	REQUIRED
+</span>
 
--   Go to your github repo of kener
--   Go to issues
--   Create an issue. Give it a title
--   In the body add [start_datetime:1702651340] and [end_datetime:1702651140] and add some description. Time is UTC
--   Add `incident`, `incident-down` and the monitor tag. This will make the monitor down for 4 minutes
+A brief summary of the incident. This is used to give a brief overview of the incident.
 
-If you clone the repo it gives you an issue template to create incidents
+### Incident Start Date Time
 
-Here is a [sample incident](https://github.com/rajnandan1/kener/issues/15) for your reference.
+<span class="text-red-500 text-xs font-semibold">
+	REQUIRED
+</span>
 
-### Using API
+The start date and time of the incident.
 
-You can also create incidents using the API. See the API [here](/docs/kener-apis#create-an-incident---api)
+<div class="note info">
+Each incident once created will be in INVESTIGATING status. You can update the status of the incident by adding updates as discussed below
+</div>
+
+---
+
+## Update Incident
+
+Add comments to the incident to update the status of the incident.
+
+### Time Stamp
+
+<span class="text-red-500 text-xs font-semibold">
+	REQUIRED
+</span>
+
+### Message
+
+<span class="text-red-500 text-xs font-semibold">
+	REQUIRED
+</span>
+
+The message to be added to the incident.
+
+### Status
+
+<span class="text-red-500 text-xs font-semibold">
+	REQUIRED
+</span>
+
+The status of the incident. This can be `INVESTIGATING`, `IDENTIFIED`, `MONITORING`, `RESOLVED`.
+
+### Close Incident
+
+To close an incident, you need to add a message and set the status to `RESOLVED`.
+
+---
+
+## Add Monitors
+
+To add monitors to the incident, you need to add the monitor tag to the incident. This will automatically add the monitor to the incident. You will also get the status of the monitor in the incident. This can be `DEGRADED` or `DOWN`.

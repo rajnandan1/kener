@@ -114,7 +114,7 @@ const GetMonitorStatusByTag = async function (tag, timestamp) {
 	const resp = {
 		status: null,
 		uptime: null,
-		lastUpdatedAt: null
+		last_updated_at: null
 	};
 
 	const { include_degraded_in_downtime } = monitor;
@@ -147,7 +147,7 @@ const GetMonitorStatusByTag = async function (tag, timestamp) {
 	}
 
 	resp.uptime = ParseUptime(numerator, ups + degradeds + downs);
-	resp.lastUpdatedAt = Number(lastData.timestamp);
+	resp.last_updated_at = Number(lastData.timestamp);
 	resp.status = lastData.status;
 	return { status: 200, ...resp };
 };

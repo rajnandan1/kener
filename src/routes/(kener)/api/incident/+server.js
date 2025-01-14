@@ -59,6 +59,9 @@ export async function GET({ request, url }) {
 	if (!!url.searchParams.get("end_date_time")) {
 		filter.end = url.searchParams.get("end_date_time");
 	}
+	if (!!url.searchParams.get("state")) {
+		filter.state = url.searchParams.get("state");
+	}
 
 	let page = url.searchParams.get("page") || 1;
 	let limit = url.searchParams.get("limit") || 10;
