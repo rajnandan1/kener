@@ -112,6 +112,7 @@
 		const { event, data } = e.detail;
 		Analytics.track(event, data);
 	}
+	console.log(">>>>>>----  +layout:115 ", data.site.metaTags);
 </script>
 
 <svelte:window on:analyticsEvent={captureAnalytics} />
@@ -123,10 +124,11 @@
 		<link rel="icon" id="kener-app-favicon" href={data.site.favicon} />
 	{/if}
 	<link href={data.site.font.cssSrc} rel="stylesheet" />
-	{#each Object.entries(data.site.metaTags) as [key, value]}
-		<meta name={key} content={value} />
-	{/each}
-
+	{#if data.site.metaTags}
+		{#each data.site.metaTags as metaTag}
+			<meta name={metaTag.key} content={metaTag.value} />
+		{/each}
+	{/if}
 	{#if data.site.analytics && data.site.analytics.length > 0}
 		<script src="https://unpkg.com/analytics/dist/analytics.min.js"></script>
 		{#each data.site.analytics as { id, type, script }}
