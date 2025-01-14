@@ -22,5 +22,9 @@
 	{
 		"code": "fr",
 		"name": "Français"
+	},
+	{
+		"code": "de",
+		"name": "Deutsch"
 	}
 ]
