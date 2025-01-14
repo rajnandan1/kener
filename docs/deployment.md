@@ -49,7 +49,9 @@ ghcr.io/rajnandan1/kener:latest
 
 You should mount two host directories to persist your configuration and database. [Environmental variables](/docs/environment-vars) can be passed with `-e` An example `docker run` command:
 
-Make sure `./database` directory is present in the root directory
+Make sure `./database` directory is present in the root directory.
+
+This example is for sqlite. You can also use postgres. Read more about it [here](/docs/environment-vars/#database-url)
 
 ```bash
 mkdir database
