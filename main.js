@@ -24,6 +24,9 @@ app.get("/healthcheck", (req, res) => {
 	res.end("ok");
 });
 
+//part /uploads server static files from static/uploads
+app.use("/uploads", express.static("static/uploads"));
+
 try {
 	const openapiJSON = fs.readFileSync("./openapi.json", "utf-8");
 	app.use(
