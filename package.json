@@ -39,8 +39,7 @@
 		"development": "vite dev",
 		"dev": "npm-run-all --parallel devschedule development",
 		"prettify": "prettier --write .",
-		"start": "node main.js",
-		"prod": "npm-run-all --parallel schedule start"
+		"start": "node main.js"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-auto": "^2.0.0",

@@ -2,12 +2,7 @@
 import { json, redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
 import db from "$lib/server/db/db.js";
-import {
-	HashPassword,
-	GenerateSalt,
-	GenerateToken,
-	VerifyToken
-} from "$lib/server/controllers/controller.js";
+import { HashPassword, VerifyToken } from "$lib/server/controllers/controller.js";
 
 export async function POST({ request, cookies }) {
 	//read form post data email and passowrd

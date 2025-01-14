@@ -4,6 +4,7 @@ import { defineConfig } from "vite";
 import dotenv from "dotenv";
 dotenv.config();
 const PORT = Number(process.env.PORT) || 3000;
+const base = process.env.KENER_BASE_PATH || "";
 export default defineConfig({
 	logLevel: "silent",
 	plugins: [
@@ -16,9 +17,7 @@ export default defineConfig({
 					const host = "localhost";
 					const port = address?.port;
 					console.log("\n🚀 Kener is running");
-					console.log(
-						`⚙️ Manage Kener: http://${host}:${port}${process.env.KENER_BASE_PATH}/manage/app/site\n`
-					);
+					console.log(`⚙️ Manage Kener: http://${host}:${port}${base}/manage/app/site\n`);
 				});
 			}
 		}

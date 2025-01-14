@@ -58,7 +58,6 @@ docker run \
   -p 3000:3000 \
   -e "KENER_SECRET_KEY=somesecretkey" \
   -e "ORIGIN=http://localhost:3000" \
-  -e "GH_TOKEN=ghp_gJ6dhpVa7asdgsarandomtoken" \
   rajnandan1/kener
 ```
 
@@ -77,3 +76,12 @@ Or use **Docker Compose** with the example [docker-compose.yaml](https://raw.git
 ## Base path
 
 By default kener runs on `/` but you can change it to `/status` or any other path. Read more about it [here](/docs/environment-vars/#kener-base-path)
+
+## Postgres
+
+docker run \
+ -p 3000:3000 \
+ -e "KENER_SECRET_KEY=somesecretkey" \
+ -e "DATABASE_URL=postgresql://myuser:mypassword@localhost:5432/mydatabase" \
+ -e "ORIGIN=http://localhost:3000" \
+ rajnandan1/kener
