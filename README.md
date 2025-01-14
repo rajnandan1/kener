@@ -34,11 +34,11 @@
 
 ## What is Kener?
 
-Kener: Open-source sveltekit status page system, crafted with lot of thought so that it looks modern.
+Kener is status page system built with Sveltekit and NodeJS. It does not try to replace the Datadogs and Atlassian of the world. It tries to help some who wants to come up with a status page that looks nice and minimum overhead, in a modern way.
 
-It does not aim to replace the Datadogs of the world. It simply tries to help someone come with a status page for the world.
+It comes with all the basic asks for a status page. It is open-source and free to use.
 
-Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing is added to make cooler.
+Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing because it was a cheaply available domain.
 
 <div align="left">
     <img alt="Visitor Stats" src="https://widgetbite.com/stats/rajnandan"/>  
