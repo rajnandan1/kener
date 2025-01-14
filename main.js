@@ -3,7 +3,6 @@ import { apiReference } from "@scalar/express-api-reference";
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
-import sitemap from "./sitemap.js";
 import Startup from "./src/lib/server/startup.js";
 import fs from "fs-extra";
 import knex from "knex";
@@ -54,10 +53,6 @@ try {
 } catch (e) {
 	console.warn("Error loading openapi.json, but that is okay.");
 }
-app.get("/sitemap.xml", (req, res) => {
-	res.setHeader("Content-Type", "application/xml");
-	res.end(sitemap);
-});
 
 app.use(handler);
 
