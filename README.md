@@ -1,14 +1,13 @@
-# Kener - A Sveltekit NodeJS Status Page System
+# Kener - A Beautiful Status Page System
 
 <p align="center">
-	<img src="https://kener.ing/newbg.png" width="100%" height="auto" class="rounded-lg shadow-lg" alt="kener example illustration">
+	<img src="https://kener.ing/newbg.png?v=1" width="100%" height="auto" class="rounded-lg shadow-lg" alt="kener example illustration">
 </p>
 
 <p align="center">
 	<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/rajnandan1/kener?label=Star%20Repo&style=social">
 	<a href="https://github.com/ivbeg/awesome-status-pages"><img src="https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg" alt="Awesome status page" /></a>
 	<a href="https://hub.docker.com/r/rajnandan1/kener"><img src="https://img.shields.io/docker/pulls/rajnandan1/kener" alt="Docker Kener" /></a>
-	<img alt="GitHub Repo Updated" src="https://badges.pufler.dev/updated/rajnandan1/kener">
 </p>
   
 <p align="center">
@@ -36,6 +35,8 @@
 
 Kener is status page system built with Sveltekit and NodeJS. It does not try to replace the Datadogs and Atlassian of the world. It tries to help some who wants to come up with a status page that looks nice and minimum overhead, in a modern way.
 
+It is carefully crafted to be easy to use and customize.
+
 It comes with all the basic asks for a status page. It is open-source and free to use.
 
 Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing because it was a cheaply available domain.
@@ -50,31 +51,32 @@ Here are some of the features that you get out of the box. Please read the docum
 
 ### Monitoring and Tracking
 
--   Real-time monitoring
+-   Advanced application performance monitoring tools
+-   Real-time network monitor software capabilities
 -   Polls HTTP endpoint or Push data to monitor using Rest APIs
 -   Handles Timezones for visitors
 -   Categorize Monitors into different Sections
 -   Cron-based scheduling for monitors. Minimum per minute
--   Flexible monitor configuration using YAML. Define your own parsing for monitor being UP/DOWN/DEGRADED
+-   Flexible monitor configuration using YAML
 -   Construct complex API Polls - Chain, Secrets etc
--   Supports a Default Status for Monitors. Example default_status=DOWN if you don't hit API per minute with Status UP
+-   Supports a Default Status for Monitors
 -   Supports base path for hosting in k8s
 -   Pre-built docker image for easy deployment
--   Supports webhooks/discord/slack for notifications
 
 ### Customization and Branding
 
--   Customizable status page using yaml or code
+-   Customizable status page
 -   Badge generation for status and uptime of Monitors
 -   Support for custom domains
 -   Embed Monitor as an iframe or widget
 -   Light + Dark Theme
 -   Internationalization support
+-   Beautifully Crafted Status Page
 
 ### Incident Management
 
--   Create Incidents using Github Issues - Rich Text
--   Or use APIs to create Incidents
+-   Incident Management
+-   Incident Communication
 
 ### User Experience and Design
 
