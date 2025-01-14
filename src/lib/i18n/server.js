@@ -1,20 +1,16 @@
-import en from "$lib/locales/en.json";
-import hi from "$lib/locales/hi.json";
-import ja from "$lib/locales/ja.json";
-import vi from "$lib/locales/vi.json";
-import zhCN from "$lib/locales/zh-CN.json";
-
+//read $lib/locales/locales.json and dynamic import all the locales
 /**
  * Map of language codes to their corresponding values.
  * @type {Record<string, any>}
  */
-const langMap = {
-	en,
-	hi,
-	ja,
-	vi,
-	"zh-CN": zhCN
-};
+const langMap = {};
+import localesStr from "$lib/locales/locales.json?raw";
+const locales = JSON.parse(localesStr);
+locales.forEach((/** @type {{ code: string; }} */ locale) => {
+	import(`$lib/locales/${locale.code}.json`).then((data) => {
+		langMap[locale.code] = data.default;
+	});
+});
 
 /**
  * @param {{ [x: string]: any; }} language

@@ -1,39 +1,87 @@
 // @ts-nocheck
-import { Mapper, GetOpenIncidents, FilterAndInsertMonitorInIncident } from "$lib/server/github.js";
 import { FetchData } from "$lib/server/page";
-import { monitorsStore } from "$lib/server/stores/monitors";
-import { get } from "svelte/store";
+import { GetMonitors, GetIncidentsOpenHome } from "$lib/server/controllers/controller.js";
+import moment from "moment";
 
-export async function load({ parent }) {
-	let monitors = get(monitorsStore);
+export async function load({ parent, url }) {
+	let monitors = await GetMonitors({ status: "ACTIVE" });
 
+	const query = url.searchParams;
+	const requiredCategory = query.get("category") || "Home";
 	const parentData = await parent();
 	const siteData = parentData.site;
-	const github = siteData.github;
 	const monitorsActive = [];
 	for (let i = 0; i < monitors.length; i++) {
-		//skip hidden monitors
-		if (monitors[i].hidden !== undefined && monitors[i].hidden === true) {
+		//only return monitors that have category as home or category is not present
+		if (
+			!!!query.get("monitor") &&
+			!!monitors[i].category_name &&
+			monitors[i].category_name !== requiredCategory
+		) {
 			continue;
 		}
-		//only return monitors that have category as home or category is not present
-		if (monitors[i].category !== undefined && monitors[i].category !== "home") {
+		if (query.get("monitor") && query.get("monitor") !== monitors[i].tag) {
 			continue;
 		}
 		delete monitors[i].api;
-		delete monitors[i].defaultStatus;
-		let data = await FetchData(monitors[i], parentData.localTz);
+		delete monitors[i].default_status;
+
+		let data = await FetchData(siteData, monitors[i], parentData.localTz);
 		monitors[i].pageData = data;
-		monitors[i].embed = false;
 
 		monitors[i].activeIncidents = [];
 		monitorsActive.push(monitors[i]);
 	}
-	let openIncidents = await GetOpenIncidents(siteData);
-	let openIncidentsReduced = openIncidents.map(Mapper);
+	let startWithin = moment().subtract(siteData.homeIncidentStartTimeWithin, "days").unix();
+	let endWithin = moment().add(siteData.homeIncidentStartTimeWithin, "days").unix();
+	let allOpenIncidents = await GetIncidentsOpenHome(
+		siteData.homeIncidentCount,
+		startWithin,
+		endWithin
+	);
 
+	//if not home page
+	let isCategoryPage = !!query.get("category") && query.get("category") !== "Home";
+	let isMonitorPage = !!query.get("monitor");
+	if (isCategoryPage || isMonitorPage) {
+		let eligibleTags = monitorsActive.map((monitor) => monitor.tag);
+		//filter incidents that have monitor_tag in monitors
+		allOpenIncidents = allOpenIncidents.filter((incident) => {
+			let incidentMonitors = incident.monitors;
+			let monitorTags = incidentMonitors.map((monitor) => monitor.monitor_tag);
+			let isPresent = false;
+			monitorTags.forEach((tag) => {
+				if (eligibleTags.includes(tag)) {
+					isPresent = true;
+				}
+			});
+			return isPresent;
+		});
+	}
+
+	allOpenIncidents = allOpenIncidents.map((incident) => {
+		let incidentMonitors = incident.monitors;
+		let monitorTags = incidentMonitors.map((monitor) => monitor.monitor_tag);
+		let xm = monitors.filter((monitor) => monitorTags.includes(monitor.tag));
+
+		incident.monitors = xm.map((monitor) => {
+			return {
+				tag: monitor.tag,
+				name: monitor.name,
+				description: monitor.description,
+				image: monitor.image,
+				impact_type: incidentMonitors.filter((m) => m.monitor_tag === monitor.tag)[0]
+					.monitor_impact
+			};
+		});
+		return incident;
+	});
+	let unresolvedIncidents = allOpenIncidents.filter((incident) => incident.state !== "RESOLVED");
 	return {
 		monitors: monitorsActive,
-		openIncidents: FilterAndInsertMonitorInIncident(openIncidentsReduced, monitorsActive)
+		unresolvedIncidents: allOpenIncidents,
+		categoryName: requiredCategory,
+		isCategoryPage: isCategoryPage,
+		isMonitorPage: isMonitorPage
 	};
 }

@@ -30,7 +30,7 @@ description: Roadmap for Kener
 
 ☐ Add support for custom themes
 
-☐ Create Admin UI
+☑ ~~Create Admin UI~~ Released in (3.0.0)
 
 ---
 

@@ -41,6 +41,7 @@
 				}
 			})
 		);
+		hljs.highlightAll();
 	});
 	onMount(async () => {});
 </script>

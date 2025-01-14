@@ -34,11 +34,12 @@
 
 ## What is Kener?
 
-Kener: Open-source sveltekit status page system, crafted with lot of thought so that it looks modern.
+Kener is status page system built with Sveltekit and NodeJS. It does not try to replace the Datadogs and Atlassian of the world. It tries to help some who wants to come up with a status page that looks nice and minimum overhead, in a modern way.
 
-It does not aim to replace the Datadogs of the world. It simply tries to help someone come with a status page for the world.
+It comes with all the basic asks for a status page. It is open-source and free to use.
 
-Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing is added to make cooler.
+Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing because it was a cheaply available domain.
+
 <div align="left">
     <img alt="Visitor Stats" src="https://widgetbite.com/stats/rajnandan"/>  
 </div>
@@ -56,7 +57,7 @@ Here are some of the features that you get out of the box. Please read the docum
 -   Cron-based scheduling for monitors. Minimum per minute
 -   Flexible monitor configuration using YAML. Define your own parsing for monitor being UP/DOWN/DEGRADED
 -   Construct complex API Polls - Chain, Secrets etc
--   Supports a Default Status for Monitors. Example defaultStatus=DOWN if you don't hit API per minute with Status UP
+-   Supports a Default Status for Monitors. Example default_status=DOWN if you don't hit API per minute with Status UP
 -   Supports base path for hosting in k8s
 -   Pre-built docker image for easy deployment
 -   Supports webhooks/discord/slack for notifications

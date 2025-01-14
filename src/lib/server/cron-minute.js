@@ -3,20 +3,11 @@ import axios from "axios";
 import ping from "ping";
 import { UP, DOWN, DEGRADED } from "./constants.js";
 import {
-	GetNowTimestampUTC,
 	GetMinuteStartNowTimestampUTC,
-	GetMinuteStartTimestampUTC,
 	ReplaceAllOccurrences,
-	GetRequiredSecrets,
-	ValidateMonitorAlerts
+	GetRequiredSecrets
 } from "./tool.js";
-import {
-	GetIncidentsManual,
-	GetEndTimeFromBody,
-	GetStartTimeFromBody,
-	CloseIssue
-} from "./github.js";
-import Randomstring from "randomstring";
+
 import alerting from "./alerting.js";
 import Queue from "queue";
 import dotenv from "dotenv";
@@ -32,95 +23,68 @@ const TIMEOUT = "timeout";
 const ERROR = "error";
 const MANUAL = "manual";
 
-const apiQueue = new Queue({
-	concurrency: 10, // Number of tasks that can run concurrently
-	timeout: 10000, // Timeout in ms after which a task will be considered as failed (optional)
-	autostart: true // Automatically start the queue (optional)
-});
-
 const alertingQueue = new Queue({
 	concurrency: 10, // Number of tasks that can run concurrently
 	timeout: 10000, // Timeout in ms after which a task will be considered as failed (optional)
 	autostart: true // Automatically start the queue (optional)
 });
 
-async function manualIncident(monitor, site) {
-	let incidentsResp = await GetIncidentsManual(site, monitor.tag, "open");
-
-	let manualData = {};
-	if (incidentsResp.length == 0) {
-		return manualData;
+const defaultEval = `(function (statusCode, responseTime, responseData) {
+	let statusCodeShort = Math.floor(statusCode/100);
+    if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {
+        return {
+			status: 'UP',
+			latency: responseTime,
+        }
+    } 
+	return {
+		status: 'DOWN',
+		latency: responseTime,
 	}
-	let timeDownStart = +Infinity;
-	let timeDownEnd = 0;
-	let timeDegradedStart = +Infinity;
-	let timeDegradedEnd = 0;
+})`;
 
-	for (let i = 0; i < incidentsResp.length; i++) {
-		const incident = incidentsResp[i];
-		const incidentNumber = incident.number;
-		let start_time = GetStartTimeFromBody(incident.body);
-		let allLabels = incident.labels.map((label) => label.name);
-		if (
-			allLabels.indexOf("incident-degraded") == -1 &&
-			allLabels.indexOf("incident-down") == -1
-		) {
+async function manualIncident(monitor) {
+	let startTs = GetMinuteStartNowTimestampUTC();
+	let impactArr = await db.getIncidentsByMonitorTagRealtime(monitor.tag, startTs);
+
+	let impact = "";
+	if (impactArr.length == 0) {
+		return {};
+	}
+
+	for (let i = 0; i < impactArr.length; i++) {
+		const element = impactArr[i];
+
+		let autoIncidents = await db.getActiveAlertIncident(
+			monitor.tag,
+			element.monitor_impact,
+			element.id
+		);
+
+		if (!!autoIncidents) {
 			continue;
 		}
 
-		if (start_time === null) {
-			continue;
+		if (element.monitor_impact === "DOWN") {
+			impact = "DOWN";
+			break;
 		}
-		let newIncident = {
-			start_time: start_time
-		};
-		let end_time = GetEndTimeFromBody(incident.body);
-
-		if (end_time !== null) {
-			newIncident.end_time = end_time;
-			if (end_time <= GetNowTimestampUTC() && incident.state === "open") {
-				//close the issue after 30 secs
-				setTimeout(async () => {
-					await CloseIssue(site, incidentNumber);
-				}, 30000);
-			}
-		} else {
-			newIncident.end_time = GetNowTimestampUTC();
-		}
-
-		//check if labels has incident-degraded
-
-		if (allLabels.indexOf("incident-degraded") !== -1) {
-			timeDegradedStart = Math.min(timeDegradedStart, newIncident.start_time);
-			timeDegradedEnd = Math.max(timeDegradedEnd, newIncident.end_time);
-		}
-		if (allLabels.indexOf("incident-down") !== -1) {
-			timeDownStart = Math.min(timeDownStart, newIncident.start_time);
-			timeDownEnd = Math.max(timeDownEnd, newIncident.end_time);
+		if (element.monitor_impact === "DEGRADED") {
+			impact = "DEGRADED";
 		}
 	}
 
-	//start from start of minute if unix timeDownStart to timeDownEnd, step each minute
-	let start = GetMinuteStartTimestampUTC(timeDegradedStart);
-	let end = GetMinuteStartTimestampUTC(timeDegradedEnd);
+	if (impact === "") {
+		return {};
+	}
 
-	for (let i = start; i <= end; i += 60) {
-		manualData[i] = {
-			status: DEGRADED,
+	let manualData = {
+		[startTs]: {
+			status: impact,
 			latency: 0,
 			type: MANUAL
-		};
-	}
-
-	start = GetMinuteStartTimestampUTC(timeDownStart);
-	end = GetMinuteStartTimestampUTC(timeDownEnd);
-	for (let i = start; i <= end; i += 60) {
-		manualData[i] = {
-			status: DOWN,
-			latency: 0,
-			type: MANUAL
-		};
-	}
+		}
+	};
 	return manualData;
 }
 
@@ -183,6 +147,10 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
 	}
 	if (!!headers) {
 		headers = JSON.parse(headers);
+		headers = headers.reduce((acc, header) => {
+			acc[header.key] = header.value;
+			return acc;
+		}, {});
 		axiosHeaders = { ...axiosHeaders, ...headers };
 	}
 
@@ -210,7 +178,6 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
 		if (err.message.startsWith("timeout of") && err.message.endsWith("exceeded")) {
 			timeoutError = true;
 		}
-		// console.log(">>>>>>----  cron-minute:21224 ", err.response);
 		if (err.response !== undefined && err.response.status !== undefined) {
 			statusCode = err.response.status;
 		}
@@ -227,7 +194,15 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
 		}
 	}
 	resp = Buffer.from(resp).toString("base64");
-	let evalResp = eval(monitorEval + `(${statusCode}, ${latency}, "${resp}")`);
+
+	let evalResp = undefined;
+
+	try {
+		evalResp = eval(monitorEval + `(${statusCode}, ${latency}, "${resp}")`);
+	} catch (error) {
+		console.log("Error in monitorEval", error.message);
+	}
+
 	if (evalResp === undefined || evalResp === null) {
 		evalResp = {
 			status: DOWN,
@@ -325,131 +300,86 @@ async function dsnChecker(dnsResolver, host, recordType, matchType, values) {
 	}
 }
 
-const Minuter = async (monitor, site) => {
-	if (apiQueue.length > 0) {
-		console.log("Queue length is " + apiQueue.length);
-	}
-	let apiData = {};
-	let pingData = {};
-	let webhookData = {};
+const Minuter = async (monitor) => {
+	let realTimeData = {};
 	let manualData = {};
-	let dnsData = {};
-	let envSecrets = GetRequiredSecrets(
-		`${monitor.url} ${monitor.body} ${JSON.stringify(monitor.headers)}`
-	);
 
 	const startOfMinute = GetMinuteStartNowTimestampUTC();
+	if (monitor.monitor_type === "API") {
+		let envSecrets = GetRequiredSecrets(
+			`${monitor.type_data.url} ${monitor.type_data.body} ${JSON.stringify(monitor.type_data.headers)}`
+		);
 
-	if (monitor.hasAPI) {
+		if (monitor.type_data.eval === "") {
+			monitor.type_data.eval = defaultEval;
+		}
+
 		let apiResponse = await apiCall(
 			envSecrets,
-			monitor.api.url,
-			monitor.api.method,
-			JSON.stringify(monitor.api.headers),
-			monitor.api.body,
-			monitor.api.timeout,
-			monitor.api.eval
+			monitor.type_data.url,
+			monitor.type_data.method,
+			JSON.stringify(monitor.type_data.headers),
+			monitor.type_data.body,
+			monitor.type_data.timeout,
+			monitor.type_data.eval
 		);
-		apiData[startOfMinute] = apiResponse;
-		if (apiResponse.type === TIMEOUT) {
-			console.log(
-				"Retrying api call for " + monitor.name + " at " + startOfMinute + " due to timeout"
-			);
-			//retry
-			apiQueue.push(async (cb) => {
-				apiCall(
-					envSecrets,
-					monitor.api.url,
-					monitor.api.method,
-					JSON.stringify(monitor.api.headers),
-					monitor.api.body,
-					monitor.api.timeout,
-					monitor.api.eval
-				).then(async (data) => {
-					await db.insertData({
-						monitorTag: monitor.tag,
-						timestamp: startOfMinute,
-						status: data.status,
-						latency: data.latency,
-						type: data.type
-					});
-					cb();
-				});
-			});
-		}
-	}
 
-	if (monitor.hasPing) {
-		let pingResponse = await pingCall(monitor.ping.hostsV4, monitor.ping.hostsV6);
-		pingData[startOfMinute] = pingResponse;
-	}
-
-	if (monitor.hasDNS) {
-		const dnsResolver = new DNSResolver(monitor.dns.nameServer);
+		realTimeData[startOfMinute] = apiResponse;
+	} else if (monitor.monitor_type === "PING") {
+		let pingResponse = await pingCall(monitor.type_data.hostsV4, monitor.type_data.hostsV6);
+		realTimeData[startOfMinute] = pingResponse;
+	} else if (monitor.monitor_type === "DNS") {
+		const dnsResolver = new DNSResolver(monitor.type_data.nameServer);
 		let dnsResponse = await dsnChecker(
 			dnsResolver,
-			monitor.dns.host,
-			monitor.dns.lookupRecord,
-			monitor.dns.matchType,
-			monitor.dns.values
+			monitor.type_data.host,
+			monitor.type_data.lookupRecord,
+			monitor.type_data.matchType,
+			monitor.type_data.values
 		);
-		dnsData[startOfMinute] = dnsResponse;
+		realTimeData[startOfMinute] = dnsResponse;
 	}
 
-	manualData = await manualIncident(monitor, site);
+	manualData = await manualIncident(monitor);
 	//merge noData, apiData, webhookData, dayData
 	let mergedData = {};
-	if (monitor.defaultStatus !== undefined && monitor.defaultStatus !== null) {
-		if ([UP, DOWN, DEGRADED].indexOf(monitor.defaultStatus) !== -1) {
+
+	if (monitor.default_status !== undefined && monitor.default_status !== null) {
+		if ([UP, DOWN, DEGRADED].indexOf(monitor.default_status) !== -1) {
 			mergedData[startOfMinute] = {
-				status: monitor.defaultStatus,
+				status: monitor.default_status,
 				latency: 0,
-				type: "defaultStatus"
+				type: "default_status"
 			};
 		}
 	}
 
-	for (const timestamp in pingData) {
-		mergedData[timestamp] = pingData[timestamp];
-	}
-
-	for (const timestamp in apiData) {
-		mergedData[timestamp] = apiData[timestamp];
+	for (const timestamp in realTimeData) {
+		mergedData[timestamp] = realTimeData[timestamp];
 	}
 
 	for (const timestamp in manualData) {
 		mergedData[timestamp] = manualData[timestamp];
 	}
 
-	for (const timestamp in dnsData) {
-		mergedData[timestamp] = dnsData[timestamp];
-	}
-
 	for (const timestamp in mergedData) {
 		const element = mergedData[timestamp];
-		db.insertData({
-			monitorTag: monitor.tag,
+		db.insertMonitoringData({
+			monitor_tag: monitor.tag,
 			timestamp: parseInt(timestamp),
 			status: element.status,
 			latency: element.latency,
 			type: element.type
 		});
 	}
-	if (monitor.alerts && ValidateMonitorAlerts(monitor.alerts)) {
-		alertingQueue.push(async (cb) => {
-			setTimeout(async () => {
-				await alerting(monitor);
-				cb();
-			}, 1042);
-		});
-	}
+	alertingQueue.push(async (cb) => {
+		setTimeout(async () => {
+			await alerting(monitor);
+			cb();
+		}, 1042);
+	});
 };
-apiQueue.start((err) => {
-	if (err) {
-		console.error("Error occurred:", err);
-		process.exit(1);
-	}
-});
+
 alertingQueue.start((err) => {
 	if (err) {
 		console.error("Error occurred:", err);

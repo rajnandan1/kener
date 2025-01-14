@@ -4,10 +4,16 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import sitemap from "./sitemap.js";
+import Startup from "./src/lib/server/startup.js";
 import fs from "fs-extra";
+import knex from "knex";
+import knexOb from "./knexfile.js";
+
 const PORT = process.env.PORT || 3000;
 
 const app = express();
+const db = knex(knexOb);
+
 app.use((req, res, next) => {
 	if (req.path.startsWith("/embed")) {
 		res.setHeader("Content-Security-Policy", "frame-ancestors *");
@@ -55,6 +61,34 @@ app.get("/sitemap.xml", (req, res) => {
 
 app.use(handler);
 
-app.listen(PORT, () => {
+//migrations
+async function runMigrations() {
+	try {
+		console.log("Running migrations...");
+		await db.migrate.latest(); // Runs migrations to the latest state
+		console.log("Migrations completed successfully!");
+	} catch (err) {
+		console.error("Error running migrations:", err);
+	}
+}
+
+//seed
+async function runSeed() {
+	try {
+		console.log("Running seed...");
+		await db.seed.run(); // Runs seed to the latest state
+		console.log("Seed completed successfully!");
+	} catch (err) {
+		console.error("Error running seed:", err);
+	}
+}
+
+app.listen(PORT, async () => {
+	await runMigrations();
+	await runSeed();
+	await db.destroy();
+
 	console.log("Kener is running on port " + PORT + "!");
 });
+
+Startup();

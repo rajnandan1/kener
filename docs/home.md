@@ -3,7 +3,7 @@ title: Kener - A Sveltekit NodeJS Status Page System
 description: Kener is an open-source Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents.
 ---
 
-# Kener - A Sveltekit NodeJS Status Page System
+# Kener - A Feature Rich & Modern Status Page
 
 <p align="center">
 	<img src="/newbg.png" width="100%" height="auto" class="rounded-lg shadow-lg" alt="kener example illustration">
@@ -43,7 +43,7 @@ description: Kener is an open-source Node.js status page tool, designed to make 
 		<a href="https://kener.ing/docs/quick-start">Quick Start</a>
 	</div>
 	<div class="flex-1 border rounded-md  py-4 px-2 text-center">
-		<a href="https://kener.ing/docs/quick-start">Clone</a>
+		<a href="https://github.com/rajnandan1/kener">Clone</a>
 	</div>
 	<div class="flex-1 border rounded-md  py-4 px-2 text-center">
 		<a href="https://kener.ing/docs/deployment">Deploy</a>
@@ -79,17 +79,18 @@ Kener name is derived from the word "Kene" which means "how is it going" in Assa
 
 ### Customization and Branding
 
--   Customizable status page using yaml or code
+-   Customizable status page
 -   Badge generation for status and uptime of Monitors
 -   Support for custom domains
 -   Embed Monitor as an iframe or widget
 -   Light + Dark Theme
 -   Internationalization support
+-   Beautifully Crafted Status Page
 
 ### Incident Management
 
--   Create Incidents using Github Issues - Rich Text
--   Or use APIs to create Incidents
+-   Incident Management
+-   Incident Communication
 
 ### User Experience and Design
 
@@ -103,42 +104,6 @@ Kener name is derived from the word "Kene" which means "how is it going" in Assa
 
 -   [SvelteKit](https://kit.svelte.dev/)
 -   [shadcn-svelte](https://www.shadcn-svelte.com/)
-
-## Inspired from
-
-Kener draws inspiration from a comprehensive ecosystem of monitoring and status page solutions, reflecting the diverse landscape of network and application performance tools:
-Uptime and Status Page Platforms
-
--   Upptime - GitHub-powered uptime monitoring
--   Statuspage - Incident communication platform
--   Cachet - Open-source status page system
--   Upptrends - Global website monitoring
--   Hexometer - Website monitoring and performance tracking
-
-Enterprise Monitoring Solutions
-
--   Pingdom - Website monitoring service
--   New Relic - Application performance monitoring
--   Datadog - Observability and monitoring platform
--   AppDynamics - Application performance management
--   Dynatrace - AI-powered full stack monitoring
-
-Network and Infrastructure Monitoring
-
--   StatusCake - Uptime and performance monitoring
--   UptimeRobot - Free website monitoring
--   Better Uptime - Monitoring and incident management
--   Site24x7 - Comprehensive monitoring solution
--   Nagios - Infrastructure and network monitoring
--   Zabbix - Enterprise-class monitoring solution
--   Prometheus - Monitoring and alerting toolkit
--   Sentry - Error tracking and performance monitoring
-
-Cloud and Hybrid Monitoring Platforms
-
--   CloudWatch - AWS monitoring service
--   Azure Monitor - Microsoft's monitoring solution
--   Google Cloud Monitoring - Cloud-native monitoring
 
 ## Support Me
 

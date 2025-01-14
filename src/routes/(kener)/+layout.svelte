@@ -9,15 +9,13 @@
 	import Moon from "lucide-svelte/icons/moon";
 	import { Languages } from "lucide-svelte";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-	import { analyticsEvent } from "$lib/analytics";
+	import { analyticsEvent } from "$lib/boringOne";
 	import { setMode, mode, ModeWatcher } from "mode-watcher";
-
 	export let data;
 
 	let defaultLocaleKey = data.selectedLang;
 	let defaultTheme = data.site.theme;
-
-	const allLocales = data.site.i18n?.locales;
+	const allLocales = data.site.i18n?.locales.filter((locale) => locale.selected === true);
 
 	function toggleMode() {
 		if ($mode === "light") {
@@ -34,7 +32,7 @@
 	if (!allLocales) {
 		defaultLocaleValue = "English";
 	} else {
-		defaultLocaleValue = allLocales[defaultLocaleKey];
+		defaultLocaleValue = allLocales.find((locale) => locale.code === defaultLocaleKey).name;
 	}
 	/**
 	 * @param {string} locale
@@ -66,15 +64,20 @@
 		const analyticsPlugins = [];
 		if (providers) {
 			//loop object
-			Object.keys(providers).forEach((key) => {
-				const provider = providers[key];
-				if (key == "GA") {
+
+			for (let i = 0; i < providers.length; i++) {
+				const provider = providers[i];
+				if (!!!provider.id) {
+					continue;
+				}
+
+				if (provider.type == "GA") {
 					analyticsPlugins.push(
 						analyticsGa.default({
-							measurementIds: provider.measurementIds
+							measurementIds: provider.id
 						})
 					);
-				} else if (key == "AMPLITUDE") {
+				} else if (provider.type == "AMPLITUDE") {
 					analyticsPlugins.push(
 						analyticsAmplitude({
 							apiKey: provider.measurementIds[0],
@@ -85,14 +88,14 @@
 							}
 						})
 					);
-				} else if (key == "MIXPANEL") {
+				} else if (provider.type == "MIXPANEL") {
 					analyticsPlugins.push(
 						analyticsMixpanel({
 							token: provider.measurementIds[0]
 						})
 					);
 				}
-			});
+			}
 		}
 		Analytics = _analytics.init({
 			app: "kener",
@@ -124,10 +127,12 @@
 		<meta name={key} content={value} />
 	{/each}
 
-	{#if data.site.analytics}
+	{#if data.site.analytics && data.site.analytics.length > 0}
 		<script src="https://unpkg.com/analytics/dist/analytics.min.js"></script>
-		{#each Object.entries(data.site.analytics) as [key, value]}
-			<script data-type={key} src={value.script}></script>
+		{#each data.site.analytics as { id, type, script }}
+			{#if !!id}
+				<script data-type={type} src={script}></script>
+			{/if}
 		{/each}
 	{/if}
 </svelte:head>
@@ -141,14 +146,12 @@
 	--degraded-color: {data.site.colors.DEGRADED}
 	"
 >
-	{#if data.showNav}
-		<Nav {data} />
-	{/if}
-	<div class="min-h-[70vh]">
+	<Nav {data} />
+	<div class="main-content min-h-[70vh]">
 		<slot />
 	</div>
 
-	{#if data.showNav && !!data.site.footerHTML}
+	{#if !!data.site.footerHTML}
 		<footer class="z-10 py-6 md:px-8 md:py-0">
 			<div
 				class="container relative flex max-w-[655px] flex-col items-center justify-center gap-4 pl-0 md:h-24 md:flex-row"
@@ -161,40 +164,51 @@
 			</div>
 		</footer>
 	{/if}
-	{#if !!!data.embed}
-		<div class="blurry-bg fixed bottom-4 right-4 z-20">
-			{#if data.site.i18n && data.site.i18n.locales && Object.keys(data.site.i18n.locales).length > 1}
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger>
-						<Button variant="ghost" size="icon" class="flex">
-							<Languages class="h-[1.2rem] w-[1.2rem]" />
-						</Button>
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Content>
-						<DropdownMenu.Group>
-							{#each Object.entries(allLocales) as [key, value]}
-								<DropdownMenu.Item
-									on:click={(e) => {
-										setLanguage(key);
-									}}>{value}</DropdownMenu.Item
-								>
-							{/each}
-						</DropdownMenu.Group>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
-			{/if}
-			{#if !!data.site.themeToggle}
-				<Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
-					<Sun
-						class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
-					/>
-					<Moon
-						class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
-					/>
-					<span class="sr-only">Toggle theme</span>
-				</Button>
-			{/if}
-		</div>
+	<div class="fixed bottom-4 right-4 z-20 rounded-md bg-background">
+		{#if data.site.i18n && data.site.i18n.locales && allLocales.length > 1}
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					<Button variant="ghost" size="icon" class="flex">
+						<Languages class="h-[1.2rem] w-[1.2rem]" />
+					</Button>
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content>
+					<DropdownMenu.Group>
+						{#each allLocales as locale}
+							<DropdownMenu.Item
+								class={defaultLocaleKey == locale.code ? "bg-input" : ""}
+								on:click={(e) => {
+									setLanguage(locale.code);
+								}}>{locale.name}</DropdownMenu.Item
+							>
+						{/each}
+					</DropdownMenu.Group>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+		{/if}
+		{#if !!data.site.themeToggle}
+			<Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
+				<Sun
+					class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
+				/>
+				<Moon
+					class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
+				/>
+				<span class="sr-only">Toggle theme</span>
+			</Button>
+		{/if}
+	</div>
+	{#if data.isLoggedIn}
+		<a
+			href="{base}/manage/app/site"
+			on:click|preventDefault={(e) => {
+				location.href = `${base}/manage/app/site`;
+			}}
+			class="button-77 fixed bottom-8 left-8"
+			role="button"
+		>
+			Manage
+		</a>
 	{/if}
 </main>
 
@@ -202,8 +216,5 @@
 	/* Apply the global font family using the CSS variable */
 	* {
 		font-family: var(--font-family);
-	}
-	main {
-		background-color: var(--bg-custom);
 	}
 </style>

@@ -20,7 +20,7 @@ Let us add a category to our monitors.
 - name: Earth
   description: Our blue planet
   tag: "earth"
-  defaultStatus: "UP"
+  default_status: "UP"
   image: "/earth.png"
   category: "Hello"
 - name: Frogment

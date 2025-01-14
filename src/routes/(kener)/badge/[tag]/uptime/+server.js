@@ -1,15 +1,14 @@
 // @ts-nocheck
-import { monitorsStore } from "$lib/server/stores/monitors";
 import { ParseUptime, GetMinuteStartNowTimestampUTC } from "$lib/server/tool.js";
 import { makeBadge } from "badge-maker";
-import { get } from "svelte/store";
 import moment from "moment";
 import db from "$lib/server/db/db.js";
+import { GetMonitors } from "$lib/server/controllers/controller.js";
 
-let monitors = get(monitorsStore);
 export async function GET({ params, url }) {
 	// @ts-ignore
-	const { name, tag, includeDegradedInDowntime } = monitors.find(
+	let monitors = await GetMonitors({ status: "ACTIVE" });
+	const { name, tag, include_degraded_in_downtime } = monitors.find(
 		(monitor) => monitor.tag === params.tag
 	);
 	const query = url.searchParams;
@@ -38,13 +37,18 @@ export async function GET({ params, url }) {
 		formatted = `${duration.minutes()}m`;
 	}
 
-	let dbData = await db.getAggregatedData(tag, since, now);
+	let dbData = await db.getAggregatedMonitoringData(tag, since, now);
+	dbData = Object.keys(dbData).reduce((acc, key) => {
+		acc[key.toUpperCase()] = dbData[key];
+		return acc;
+	}, {});
 	dbData.UP = Number(dbData.UP);
 	dbData.DOWN = Number(dbData.DOWN);
 	dbData.DEGRADED = Number(dbData.DEGRADED);
+
 	let numerator = dbData.UP + dbData.DEGRADED;
 	let denominator = dbData.UP + dbData.DEGRADED + dbData.DOWN;
-	if (includeDegradedInDowntime === true) {
+	if (include_degraded_in_downtime === "YES") {
 		numerator = dbData.UP;
 	}
 

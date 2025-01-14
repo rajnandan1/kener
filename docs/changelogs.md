@@ -5,6 +5,30 @@ description: Changelogs for Kener
 
 # Changelogs
 
+## v3.0.0
+
+<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.webp" type="image/webp">
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.gif" alt="🚀" width="32" height="32">
+</picture>
+
+Here are the changes in this release
+
+### Features
+
+-   New APIs for creating incidents and pushing updates. Read more [here](/docs/kener-apis)
+-   Incident management is now part of the admin UI and removed from the config file.
+-   The UI colors have been updated to be more muted.
+-   Email Notifications for incidents using [resend](https://resend.com).
+-   New Kener management portal. No monitors.yaml or site.yaml needed anymore
+-   Login Page and Setup Page
+-   Remove Github dependency
+-   Options to disable square or dot pattern
+-   Support for new languages
+-   Multiple DB support (mysql, postgres, sqlite3)
+-   New API reference
+-   New documentation site
+
 ## v2.0.0
 
 <picture>

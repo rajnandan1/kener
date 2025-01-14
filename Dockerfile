@@ -1,78 +1,35 @@
-FROM lsiobase/alpine:3.18 as base
+FROM node:23
 
+# Install necessary packages including tzdata for timezone setting
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libnode108 \
+    nodejs \
+    python3 \
+    sqlite3 \
+    libsqlite3-dev \
+    make \
+    node-gyp \
+    g++ \
+    tzdata && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set the timezone environment variable
 ENV TZ=Etc/UTC
 
-RUN \
-  echo "**** install build packages ****" && \
-  apk add --no-cache \
-    nodejs \
-    npm \
-    python3 \
-    make \
-    gcc \
-    g++ \
-    sqlite \
-    sqlite-dev \
-    libc6-compat && \
-  echo "**** cleanup ****" && \
-  rm -rf \
-    /root/.cache \
-    /tmp/*
-
-# set OS timezone specified by docker ENV
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-# ARG data_dir=/config
-# VOLUME $data_dir
-# ENV CONFIG_DIR=$data_dir
-
-COPY docker/root/ /
-
-# build requires devDependencies which are not used by production deploy
-# so build in a stage so we can copy results to clean "deploy" stage later
-FROM base as build
-
+# Set the working directory
 WORKDIR /app
 
-COPY --chown=abc:abc . /app
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install && npm cache clean --force
 
-RUN \
-  npm install node-gyp -g && \
-  npm_config_build_from_source=true npm install better-sqlite3 && \
-  npm install \
-    && chown -R root:root node_modules \
-    && npm run build
+# Copy the rest of the application code
+COPY . .
 
-FROM base as app
+# Build the application
+RUN npm run build
 
-# copy package, required libs (npm,nodejs) results of build, prod entrypoint, and examples to be used to populate config dir
-# to clean, new stage
-COPY --chown=abc:abc package*.json ./
-COPY --from=base /usr/local/bin /usr/local/bin
-COPY --from=base /usr/local/lib /usr/local/lib
 
-COPY --chown=abc:abc static /app/static
-COPY --chown=abc:abc database /app/database
-COPY --chown=abc:abc build.js /app/build.js
-COPY --chown=abc:abc sitemap.js /app/sitemap.js
-COPY --chown=abc:abc openapi.json /app/openapi.json
-COPY --chown=abc:abc src/lib/server /app/src/lib/server
-
-COPY --from=build --chown=abc:abc /app/build /app/build
-COPY --from=build --chown=abc:abc /app/main.js /app/main.js
-
-ENV NODE_ENV=production
-
-# install prod dependencies and clean cache
-RUN npm install --omit=dev \
-    && npm cache clean --force \
-    && chown -R abc:abc node_modules
-
-ARG webPort=3000
-ENV PORT=$webPort
-EXPOSE $PORT
-
-# leave entrypoint blank!
-# uses LSIO s6-init entrypoint with scripts
-# that populate CONFIG_DIR with static dir, monitor/site.yaml when dir is empty
-# and chown's all files so they are owned by proper user based on PUID/GUID env
+# Set the command to run the application
+CMD ["node", "main"]

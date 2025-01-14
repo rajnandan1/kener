@@ -3,23 +3,18 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import { Languages, Menu } from "lucide-svelte";
 	import { base } from "$app/paths";
-	import { analyticsEvent } from "$lib/analytics";
+	import { analyticsEvent } from "$lib/boringOne";
 	export let data;
 	let defaultPattern = data.site?.pattern || "squares";
 </script>
 
 <div class="{defaultPattern}-pattern"></div>
 
-<header class="blurry-bg relative z-50 mx-auto mt-2">
-	<div class="container flex h-14 max-w-[840px] items-center">
+<header class="blurry-bg sticky top-0 z-50 mx-auto md:mt-2">
+	<div class="container flex h-14 max-w-[820px] items-center border bg-card px-3 md:rounded-md">
 		<a href={data.site.home ? data.site.home : base} class="mr-6 flex items-center space-x-2">
 			{#if data.site.logo}
-				<img
-					src={data.site.logo.startsWith("/") ? base + data.site.logo : data.site.logo}
-					class="w-8"
-					alt={data.site.title}
-					srcset=""
-				/>
+				<img src={base + data.site.logo} class="w-8" alt={data.site.title} srcset="" />
 			{/if}
 			{#if data.site.siteName}
 				<span class="  inline-block text-[15px] font-bold lg:text-base">
@@ -29,21 +24,17 @@
 		</a>
 		<div class="flex w-full justify-end">
 			{#if data.site.nav}
-				<nav
-					class="mr-4 hidden flex-wrap items-center space-x-6 text-sm font-medium md:flex"
-				>
+				<nav class=" hidden flex-wrap items-center text-sm font-medium md:flex">
 					{#each data.site.nav as navItem}
 						<a
-							href={navItem.url.startsWith("/") ? base + navItem.url : navItem.url}
-							class="flex"
+							href={navItem.url}
+							class="flex rounded-md px-3 py-2 text-card-foreground transition-all ease-linear hover:bg-background"
 							on:click={() => analyticsEvent("nav", navItem.name)}
 						>
 							{#if navItem.iconURL}
 								<img
-									src={navItem.iconURL.startsWith("/")
-										? base + navItem.iconURL
-										: navItem.iconURL}
-									class="mr-1.5 inline h-4"
+									src={base + navItem.iconURL}
+									class="mr-1.5 mt-0.5 inline h-4"
 									alt={navItem.name}
 								/>
 							{/if}

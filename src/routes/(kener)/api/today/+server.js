@@ -8,13 +8,13 @@ import {
 	ParseUptime
 } from "$lib/server/tool.js";
 import db from "$lib/server/db/db.js";
-import { siteStore } from "$lib/server/stores/site";
-import { get } from "svelte/store";
+import { GetAllSiteData, GetIncidentsByIDS } from "$lib/server/controllers/controller.js";
 
 export async function POST({ request }) {
 	const payload = await request.json();
 	const monitor = payload.monitor;
 	const localTz = payload.localTz;
+	const incidentIDs = payload.incidentIDs || [];
 	let _0Day = {};
 
 	const now = GetMinuteStartNowTimestampUTC() + 60;
@@ -30,8 +30,8 @@ export async function POST({ request }) {
 		};
 	}
 
-	let dayData = await db.getData(monitor.tag, payload.startTs, end);
-	let siteData = get(siteStore);
+	let dayData = await db.getMonitoringData(monitor.tag, payload.startTs, end);
+	let siteData = await GetAllSiteData();
 
 	let ups = 0;
 	let downs = 0;
@@ -65,11 +65,11 @@ export async function POST({ request }) {
 
 	let total = ups + downs + degradeds;
 	let uptime = ParseUptime(ups + degradeds, total);
-	if (monitor.includeDegradedInDowntime === true) {
+	if (monitor.include_degraded_in_downtime === "YES") {
 		uptime = ParseUptime(ups, total);
 	}
 
-	return json({ _0Day, uptime });
+	return json({ _0Day, uptime, incidents: await GetIncidentsByIDS(incidentIDs) });
 }
 
 export async function GET({ request }) {
@@ -78,7 +78,6 @@ export async function GET({ request }) {
 	const now = GetMinuteStartNowTimestampUTC();
 	const start = payload.startTs;
 	let end = Math.min(payload.startTs + 24 * 60 * 60, now);
-	console.log(">>>>>>----  +server:81 ", monitor);
 	let aggregatedData = db.getDataGroupByMinute(monitor.tag, start, end);
 	let ups = aggregatedData.UP;
 	let downs = aggregatedData.DOWN;
@@ -86,7 +85,7 @@ export async function GET({ request }) {
 
 	let total = ups + downs + degradeds;
 	let uptime = ParseUptime(ups + degradeds, total);
-	if (monitor.includeDegradedInDowntime === true) {
+	if (monitor.include_degraded_in_downtime === "YES") {
 		uptime = ParseUptime(ups, total);
 	}
 

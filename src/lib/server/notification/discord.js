@@ -5,9 +5,8 @@ class Discord {
 	method;
 	siteData;
 	monitorData;
-	envSecrets;
 
-	constructor(url, siteData, monitorData, envSecrets) {
+	constructor(url, siteData, monitorData) {
 		const kenerHeader = {
 			"Content-Type": "application/json",
 			"User-Agent": "Kener"
@@ -18,14 +17,11 @@ class Discord {
 		this.method = "POST";
 		this.siteData = siteData;
 		this.monitorData = monitorData;
-		this.envSecrets = envSecrets;
 	}
 
 	transformData(data) {
 		let siteURL = this.siteData.siteURL;
-		let logo = this.siteData.logo.startsWith("/")
-			? siteURL + this.siteData.logo
-			: this.siteData.logo;
+		let logo = this.siteData.logo;
 
 		let color = 13250616; //down;
 		if (data.severity === "warning") {

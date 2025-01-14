@@ -64,11 +64,19 @@
 
 		gtag("config", "G-Q3MLRXCBFT");
 	</script>
+	<link
+		rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css"
+	/>
+
+	<!-- Highlight.js JS -->
+	<script
+		src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"
+	></script>
 </svelte:head>
 <div class="dark">
-	<div class="squares-pattern z-0" style="position: fixed;"></div>
-	<nav class="z-2 fixed left-0 right-0 top-0 z-30 h-16 bg-background shadow-sm">
-		<div class="mx-auto h-full px-4 sm:px-6 lg:px-8">
+	<nav class="z-2 fixed left-0 right-0 top-0 z-30 h-16 bg-card">
+		<div class="mx-auto h-full border-b bg-card px-4 sm:px-6 lg:px-8">
 			<div class="flex h-full items-center justify-between">
 				<!-- Logo/Brand -->
 				<div class="flex items-center space-x-3">
@@ -77,7 +85,7 @@
 						<img src="https://kener.ing/logo.png" class="h-8 w-8" alt="" />
 						<span class="text-xl font-medium">Kener Documentation</span>
 						<span class="me-2 rounded border px-2.5 py-0.5 text-xs font-medium">
-							v2.0.0
+							v3.0.0
 						</span>
 					</a>
 				</div>
@@ -126,7 +134,7 @@
 
 	<!-- Sidebar -->
 	<aside class="z-2 fixed bottom-0 left-0 top-16 w-72 overflow-y-auto">
-		<nav class="bg-background bg-opacity-20 p-6">
+		<nav class="border-r bg-card p-6">
 			<!-- Getting Started Section -->
 			{#each sidebar as item}
 				<div class="mb-4">
@@ -157,7 +165,7 @@
 		<div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8 lg:pr-64">
 			<!-- Content Header -->
 			<div
-				class="blurry-bg prose prose-stone max-w-none dark:prose-invert prose-code:rounded prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:font-normal prose-pre:bg-opacity-0 dark:prose-pre:bg-neutral-900"
+				class="prose prose-stone max-w-none dark:prose-invert prose-code:rounded prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:font-normal prose-pre:bg-opacity-0 dark:prose-pre:bg-neutral-900"
 			>
 				<slot />
 			</div>

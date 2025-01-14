@@ -1,4 +1,4 @@
-version: '3.7'
+version: '3.8'
 services:
   kener:
     image: rajnandan1/kener:latest 
@@ -6,11 +6,13 @@ services:
     #env_file: .env #uncomment this, if you are using .env file
     environment:
       - TZ=Etc/UTC
+      - NODE_ENV=production
       #- GH_TOKEN=
-      #- API_TOKEN=
-      #- API_IP=
-      #- API_IP_REGEX=
+      #- PORT=3000
       #- KENER_BASE_PATH=
+      #- RESEND_API_KEY=
+      #- ORIGIN=
+      #- KENER_SECRET_KEY=
 
       # If running on a LINUX HOST and not podman rootless these MUST BE SET
       # run "id $user" from command line and replace numbers below with output from command
@@ -23,5 +25,4 @@ services:
     ports:
       - '3000:3000/tcp'
     volumes:
-      - './database:/app/database:rw'
-      - './config:/app/config'
+      - '.:/app/database:rw'

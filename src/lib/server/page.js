@@ -8,17 +8,16 @@ import {
 	ParseUptime,
 	GetDayStartTimestampUTC
 } from "$lib/server/tool.js";
-import StatusColor from "$lib/color.js";
-import { siteStore } from "$lib/server/stores/site";
-import { get } from "svelte/store";
 
-function getDayMessage(type, numOfMinute) {
+import { GetDataGroupByDayAlternative } from "$lib/server/controllers/controller.js";
+
+function getSummaryDuration(numOfMinute) {
 	if (numOfMinute > 59) {
 		let hour = Math.floor(numOfMinute / 60);
 		let minute = numOfMinute % 60;
-		return `${type} for ${hour}h:${minute}m`;
+		return `${hour} hours ${minute} minute${minute > 1 ? "s" : ""}`;
 	} else {
-		return `${type} for ${numOfMinute} minute${numOfMinute > 1 ? "s" : ""}`;
+		return `${numOfMinute} minute${numOfMinute > 1 ? "s" : ""}`;
 	}
 }
 function getTimezoneOffset(timeZone) {
@@ -71,10 +70,9 @@ function getCountOfSimilarStatuesEnd(arr, statusType) {
 	return count;
 }
 
-const FetchData = async function (monitor, localTz) {
+const FetchData = async function (site, monitor, localTz) {
 	const secondsInDay = 24 * 60 * 60;
 
-	let site = get(siteStore);
 	//get offset from utc in minutes
 
 	const now = GetMinuteStartNowTimestampUTC() + 60;
@@ -94,6 +92,8 @@ const FetchData = async function (monitor, localTz) {
 			timestamp: i,
 			cssClass: StatusObj.NO_DATA,
 			textClass: StatusObj.NO_DATA,
+			summaryDuration: 0,
+			summaryStatus: NO_DATA,
 			message: NO_DATA,
 			border: true,
 			ij: ij
@@ -102,7 +102,7 @@ const FetchData = async function (monitor, localTz) {
 		latestTimestamp = i;
 	}
 
-	let dbData = await db.getDataGroupByDayAlternative(
+	let dbData = await GetDataGroupByDayAlternative(
 		monitor.tag,
 		midnight90DaysAgo,
 		midnightTomorrow,
@@ -112,32 +112,38 @@ const FetchData = async function (monitor, localTz) {
 	let totalDownCount = 0;
 	let totalUpCount = 0;
 
-	let summaryText = NO_DATA;
-	let summaryColorClass = "api-nodata";
+	let summaryDuration = 0;
+	let summaryStatus = "UP";
 
+	let summaryColorClass = "api-nodata";
 	for (let i = 0; i < dbData.length; i++) {
 		let dayData = dbData[i];
 		let ts = dayData.timestamp;
 		let cssClass = StatusObj.UP;
 		let message = "Status OK";
+		let summaryDuration = 0;
+		let summaryStatus = "UP";
 
 		totalDegradedCount += dayData.DEGRADED;
 		totalDownCount += dayData.DOWN;
 		totalUpCount += dayData.UP;
 
-		if (dayData.DEGRADED >= monitor.dayDegradedMinimumCount) {
+		if (dayData.DEGRADED >= monitor.day_degraded_minimum_count) {
 			cssClass = returnStatusClass(dayData.DEGRADED, StatusObj.DEGRADED, site.barStyle);
-			message = getDayMessage("DEGRADED", dayData.DEGRADED);
+			summaryDuration = getSummaryDuration(dayData.DEGRADED);
+			summaryStatus = "DEGRADED";
 		}
-		if (dayData.DOWN >= monitor.dayDownMinimumCount) {
+		if (dayData.DOWN >= monitor.day_down_minimum_count) {
 			cssClass = returnStatusClass(dayData.DOWN, StatusObj.DOWN, site.barStyle);
-			message = getDayMessage("DOWN", dayData.DOWN);
+			summaryDuration = getSummaryDuration(dayData.DOWN);
+			summaryStatus = "DOWN";
 		}
 
 		if (!!_90Day[ts]) {
 			_90Day[ts].timestamp = ts;
 			_90Day[ts].cssClass = cssClass;
-			_90Day[ts].message = message;
+			_90Day[ts].summaryDuration = summaryDuration;
+			_90Day[ts].summaryStatus = summaryStatus;
 			_90Day[ts].textClass = cssClass.replace(/-\d+$/, "");
 		}
 	}
@@ -145,45 +151,49 @@ const FetchData = async function (monitor, localTz) {
 	let uptime90DayDenominator = totalUpCount + totalDownCount + totalDegradedCount;
 
 	//remove degraded from uptime
-	if (monitor.includeDegradedInDowntime === true) {
+	if (monitor.include_degraded_in_downtime === "YES") {
 		uptime90DayNumerator = totalUpCount;
 	}
 	// return _90Day;
 	let uptime90Day = ParseUptime(uptime90DayNumerator, uptime90DayDenominator);
 	if (site.summaryStyle === "CURRENT") {
-		let todayDataDb = await db.getData(
+		let todayDataDb = await db.getMonitoringData(
 			monitor.tag,
 			latestTimestamp,
 			latestTimestamp + secondsInDay
 		);
 
-		summaryText = "Status OK";
 		summaryColorClass = "api-up";
 
 		let lastRow = todayDataDb[todayDataDb.length - 1];
 
 		if (!!lastRow && lastRow.status == "DEGRADED") {
-			summaryText = getDayMessage(
-				"DEGRADED",
+			summaryDuration = getSummaryDuration(
 				getCountOfSimilarStatuesEnd(todayDataDb, "DEGRADED")
 			);
+			summaryStatus = "DEGRADED";
 			summaryColorClass = "api-degraded";
 		}
 		if (!!lastRow && lastRow.status == "DOWN") {
-			summaryText = getDayMessage("DOWN", getCountOfSimilarStatuesEnd(todayDataDb, "DOWN"));
+			summaryDuration = getSummaryDuration(getCountOfSimilarStatuesEnd(todayDataDb, "DOWN"));
+			summaryStatus = "DOWN";
 			summaryColorClass = "api-down";
 		}
 	} else {
 		let lastData = _90Day[latestTimestamp];
-		summaryText = lastData.message;
 		summaryColorClass = lastData.cssClass.replace(/-\d+$/, "");
+		summaryDuration = lastData.summaryDuration;
+		summaryStatus = lastData.summaryStatus;
 	}
 	return {
 		_90Day: _90Day,
 		uptime90Day: uptime90Day,
-		summaryText: summaryText,
+		summaryDuration: summaryDuration,
+		summaryStatus: summaryStatus,
 		summaryColorClass: summaryColorClass,
-		barRoundness: site.barRoundness
+		barRoundness: site.barRoundness,
+		midnight90DaysAgo: midnight90DaysAgo,
+		midnightTomorrow: midnightTomorrow
 	};
 };
 export { FetchData };

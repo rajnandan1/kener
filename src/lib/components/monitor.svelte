@@ -1,20 +1,30 @@
 <script>
-	import { Badge } from "$lib/components/ui/badge";
 	import * as Popover from "$lib/components/ui/popover";
 	import { onMount } from "svelte";
+	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import { base } from "$app/paths";
-	import { Share2, Link, CopyCheck, Code, TrendingUp, Percent, Loader } from "lucide-svelte";
+	import {
+		Share2,
+		Link,
+		CopyCheck,
+		Code,
+		TrendingUp,
+		Percent,
+		Loader,
+		ChevronLeft,
+		ChevronRight
+	} from "lucide-svelte";
 	import { buttonVariants } from "$lib/components/ui/button";
 	import { createEventDispatcher } from "svelte";
 	import { afterUpdate } from "svelte";
 	import axios from "axios";
 	import { l, summaryTime, n, ampm } from "$lib/i18n/client";
-	import { analyticsEvent } from "$lib/analytics";
 	import { hoverAction, clickOutsideAction, slide } from "svelte-legos";
 	import LoaderBoxes from "$lib/components/loaderbox.svelte";
 	import moment from "moment";
 	import NumberFlow from "@number-flow/svelte";
+	import Incident from "$lib/components/IncidentNew.svelte";
 
 	const dispatch = createEventDispatcher();
 
@@ -22,24 +32,44 @@
 
 	export let localTz;
 	export let lang;
-
+	export let embed = false;
 	let _0Day = {};
 	let _90Day = monitor.pageData._90Day;
 	let uptime90Day = monitor.pageData.uptime90Day;
+	let incidents = {};
+	let dayIncidentsFull = [];
 
-	function getToday(startTs) {
-		//axios post using options application json
+	function loadIncidents() {
+		axios
+			.post(`${base}/api/today/incidents`, {
+				tag: monitor.tag,
+				startTs: monitor.pageData.midnight90DaysAgo,
+				endTs: monitor.pageData.midnightTomorrow,
+				localTz: localTz
+			})
+			.then((response) => {
+				if (response.data) {
+					incidents = response.data;
+				}
+			})
+			.catch((error) => {
+				console.log(error);
+			});
+	}
 
+	function getToday(startTs, incidentIDs) {
 		axios
 			.post(`${base}/api/today`, {
 				monitor: monitor,
 				localTz: localTz,
-				startTs: startTs
+				startTs: startTs,
+				incidentIDs: incidentIDs
 			})
 			.then((response) => {
 				if (response.data) {
 					_0Day = response.data._0Day;
 					dayUptime = response.data.uptime;
+					dayIncidentsFull = response.data.incidents;
 				}
 				loadingDayData = false;
 			})
@@ -60,29 +90,30 @@
 
 	let uptimesRollers = [
 		{
-			text: "90 Days",
+			text: `${l(lang, "90 Days")}`,
 			startTs: moment().subtract(90, "days").startOf("day").unix(),
 			value: uptime90Day
 		},
 		{
-			text: "Today",
-			startTs: moment().startOf("day").unix()
+			text: `${l(lang, "60 Days")}`,
+			startTs: moment().subtract(59, "days").startOf("day").unix(),
+			value: uptime90Day
 		},
 		{
-			text: "This Week",
-			startTs: moment().startOf("week").unix()
+			text: `${l(lang, "30 Days")}`,
+			startTs: moment().subtract(29, "days").startOf("day").unix()
 		},
 		{
-			text: "7 Days",
+			text: `${l(lang, "14 Days")}`,
+			startTs: moment().subtract(13, "days").startOf("day").unix()
+		},
+		{
+			text: `${l(lang, "7 Days")}`,
 			startTs: moment().subtract(6, "days").startOf("day").unix()
 		},
 		{
-			text: "This Month",
-			startTs: moment().startOf("month").unix()
-		},
-		{
-			text: "30 Days",
-			startTs: moment().subtract(29, "days").startOf("day").unix()
+			text: l(lang, "Today"),
+			startTs: moment().startOf("day").unix()
 		}
 	];
 
@@ -90,7 +121,7 @@
 	let rolledAt = 0;
 	let rollerLoading = false;
 	async function rollSummary(r) {
-		let newRolledAt = (rolledAt + 1) % uptimesRollers.length;
+		let newRolledAt = (rolledAt + r) % uptimesRollers.length;
 
 		if (uptimesRollers[newRolledAt].value === undefined) {
 			rollerLoading = true;
@@ -117,8 +148,8 @@
 	}
 
 	onMount(async () => {
-		//for each div with class 90daygrid scroll to right most for mobile view needed
 		scrollToRight();
+		loadIncidents();
 	});
 	afterUpdate(() => {
 		dispatch("heightChange", {});
@@ -134,30 +165,30 @@
 	let dateFetchedFor = "";
 	let dayUptime = "NA";
 	let loadingDayData = false;
-	function dailyDataGetter(e, bar) {
-		if (monitor.embed) {
+	function dailyDataGetter(e, bar, incidentObj) {
+		if (embed) {
 			return;
 		}
+		let incidentIDs = incidentObj?.ids || [];
 		dayUptime = "NA";
 		dateFetchedFor = moment(new Date(bar.timestamp * 1000)).format("dddd, MMMM Do, YYYY");
 		showDailyDataModal = true;
 		loadingDayData = true;
+		dayIncidentsFull = [];
 		setTimeout(() => {
-			getToday(bar.timestamp);
+			getToday(bar.timestamp, incidentIDs);
 		}, 750);
 	}
 </script>
 
 <div class="monitor relative grid w-full grid-cols-12 gap-2 pb-2 pt-0 md:w-[655px]">
-	{#if !!!monitor.embed}
+	{#if !!!embed}
 		<div class="col-span-12 md:w-[546px]">
 			<div class="pt-0">
 				<div class="scroll-m-20 pr-5 text-xl font-medium tracking-tight">
 					{#if monitor.image}
 						<img
-							src={monitor.image.startsWith("/")
-								? base + monitor.image
-								: monitor.image}
+							src={base + monitor.image}
 							class="absolute left-6 top-6 inline h-5 w-5"
 							alt={monitor.name}
 							srcset=""
@@ -189,66 +220,79 @@
 			</div>
 		</div>
 	{/if}
-	<div
-		class="col-span-12 md:w-[546px] {!!!monitor.embed
-			? 'md:col-span-12'
-			: 'overflow-hidden'} min-h-[94px] pt-2"
-	>
+	<div class="col-span-12 min-h-[94px] pt-2 md:w-[546px]">
 		<div class="col-span-12">
-			<div class="grid grid-cols-12">
-				<div
-					class="{monitor.embed === undefined
-						? 'col-span-12'
-						: 'col-span-8'}   md:col-span-8"
-				>
-					<Button
-						class="h-8  justify-start text-xs font-semibold transition-all"
-						variant="secondary"
-						disabled={rollerLoading}
-						style="transition: width 2s ease-in;"
-						on:click={() => {
-							scrollToRight();
-							rollSummary();
-						}}
-					>
-						<span class="w-16 text-left">
-							{uptimesRollers[rolledAt].text}
-						</span>
+			<div class="flex justify-between">
+				<div class=" ">
+					<div class="flex gap-x-1">
+						{#if rolledAt > 0}
+							<Button
+								variant="ghost"
+								class="h-5 w-5 p-0"
+								on:click={() => rollSummary(-1)}
+							>
+								<ChevronLeft class="h-4 w-4" />
+							</Button>
+						{/if}
+						<div class="flex text-xs font-semibold">
+							<span>
+								{uptimesRollers[rolledAt].text}
+							</span>
 
-						<span class="block w-full text-right">
-							{#if rollerLoading}
-								<Loader class="mx-1 inline h-4 w-4 animate-spin" />
-							{:else}
-								<TrendingUp class="ml-1 mr-1 inline h-3 w-3" />
-							{/if}
-							<NumberFlow
-								value={uptimesRollers[rolledAt].value}
-								format={{
-									notation: "standard",
-									minimumFractionDigits: 4,
-									maximumFractionDigits: 4
-								}}
-								suffix="%"
-							/>
-						</span>
-					</Button>
+							<span class="">
+								{#if rollerLoading}
+									<Loader class="mx-1 -mt-0.5 inline h-4 w-4 animate-spin" />
+								{:else}
+									<TrendingUp class="mx-1 -mt-0.5 inline h-3 w-3" />
+								{/if}
+								{#if isNaN(uptimesRollers[rolledAt].value)}
+									<span class="text-muted-foreground">-</span>
+								{:else}
+									<NumberFlow
+										value={uptimesRollers[rolledAt].value}
+										format={{
+											notation: "standard",
+											minimumFractionDigits: 4,
+											maximumFractionDigits: 4
+										}}
+										suffix="%"
+									/>
+								{/if}
+							</span>
+						</div>
+						{#if rolledAt < uptimesRollers.length - 1}
+							<Button
+								variant="ghost"
+								class="h-5 w-5 p-0"
+								on:click={() => rollSummary(1)}
+							>
+								<ChevronRight class="h-4 w-4" />
+							</Button>
+						{/if}
+					</div>
 				</div>
-				<div
-					class="{monitor.embed === undefined
-						? 'col-span-12'
-						: 'col-span-4'}   text-right md:col-span-4"
-				>
+				<div class="pt-0.5 text-right">
 					<div
-						class="text-api-up mt-3 truncate text-xs font-semibold text-{monitor
-							.pageData.summaryColorClass}"
-						title={monitor.pageData.summaryText}
+						class="text-api-up truncate text-xs font-semibold text-{monitor.pageData
+							.summaryColorClass}"
 					>
-						{summaryTime(lang, monitor.pageData.summaryText)}
+						{l(lang, summaryTime(monitor.pageData.summaryStatus), {
+							status: monitor.pageData.summaryStatus,
+							duration: monitor.pageData.summaryDuration
+						})}
 					</div>
 				</div>
 			</div>
-			<div class="chart-status relative col-span-12 mt-1">
-				<div class="daygrid90 flex min-h-[60px] overflow-x-auto overflow-y-hidden py-1">
+			<div
+				class="relative col-span-12 mt-1"
+				use:clickOutsideAction
+				on:clickoutside={(e) => {
+					showDailyDataModal = false;
+				}}
+			>
+				<div
+					class="daygrid90 flex min-h-[60px] justify-start overflow-x-auto overflow-y-hidden py-1"
+				>
 					{#each Object.entries(_90Day) as [ts, bar]}
 						<a
 							data-ts={ts}
@@ -257,13 +301,12 @@
 								show90Inline(e, bar);
 							}}
 							on:click={(e) => {
-								dailyDataGetter(e, bar);
+								dailyDataGetter(e, bar, incidents[ts]);
 							}}
-							style="transition: border-color {bar.ij * 2 + 100}ms ease-in;"
+							style="transition: opacity {bar.ij * 2 + 100}ms ease-in;"
 							href="#"
-							class="oneline h-[34px] w-[6px] border-b-2 {bar.border
-								? 'border-indigo-400'
-								: 'border-transparent'}  pb-1"
+							class="oneline h-[34px] w-[6px]
+							{bar.border ? 'opacity-100' : 'opacity-20'} pb-1"
 						>
 							<div
 								class="oneline-in h-[30px] bg-{bar.cssClass} mx-auto w-[4px] rounded-{monitor.pageData.barRoundness.toUpperCase() ==
@@ -271,14 +314,27 @@
 									? 'none'
 									: 'sm'}"
 							></div>
+							{#if !!incidents[ts]}
+								<div
+									style="transition-delay: {Math.floor(
+										Math.random() * (1500 - 500 + 1)
+									) + 500}ms;"
+									class="bg-api-{incidents[
+										ts
+									].monitor_impact.toLowerCase()} comein absolute -bottom-[3px] left-[1px] h-[4px] w-[4px] rounded-full"
+								></div>
+							{/if}
 						</a>
 						{#if bar.showDetails}
 							<div class="show-hover absolute text-sm">
-								<div class="text-{bar.textClass} pt-1 text-xs font-semibold">
+								<div class="text-{bar.textClass} text-xs font-semibold">
 									{moment(new Date(bar.timestamp * 1000)).format(
 										"dddd, MMMM Do, YYYY"
 									)} -
-									{summaryTime(lang, bar.message)}
+									{l(lang, summaryTime(bar.summaryStatus), {
+										status: bar.summaryStatus,
+										duration: bar.summaryDuration
+									})}
 								</div>
 							</div>
 						{/if}
@@ -287,15 +343,6 @@
 				{#if showDailyDataModal}
 					<div
 						transition:slide={{ direction: "bottom" }}
-						use:clickOutsideAction
-						on:clickoutside={(e) => {
-							let classList = JSON.stringify(e.explicitOriginalTarget.classList);
-
-							if (classList.indexOf("oneline") != -1) {
-								return;
-							}
-							showDailyDataModal = false;
-						}}
 						class="absolute -left-2 top-10 z-10 mx-auto rounded-sm border bg-card px-[7px] py-[7px] shadow-lg md:w-[560px]"
 					>
 						<div class="mb-2 flex justify-between text-xs font-semibold">
@@ -307,6 +354,20 @@
 								>
 							{/if}
 						</div>
+						{#if dayIncidentsFull.length > 0}
+							<div class="-mx-2 mb-4 grid grid-cols-1">
+								<div class="col-span-1 px-2">
+									<Badge variant="outline" class="border-0 pl-0">
+										{l(lang, "Incident Updates")}
+									</Badge>
+								</div>
+								{#each dayIncidentsFull as incident, index}
+									<div class="col-span-1">
+										<Incident {incident} {lang} index="incident-{index}" />
+									</div>
+								{/each}
+							</div>
+						{/if}
 						<div class="flex flex-wrap">
 							{#if loadingDayData}
 								<LoaderBoxes />
@@ -323,19 +384,13 @@
 										>
 											<p>
 												<span class="text-{bar.cssClass}"> ● </span>
-												{ampm(
-													lang,
-													n(
-														lang,
-														new Date(
-															bar.timestamp * 1000
-														).toLocaleTimeString()
-													)
-												)}
+												{new Date(
+													bar.timestamp * 1000
+												).toLocaleTimeString()}
 											</p>
 											{#if bar.status != "NO_DATA"}
 												<p class="pl-2">
-													{l(lang, "statuses." + bar.status)}
+													{l(lang, bar.status)}
 												</p>
 											{:else}
 												<p class="pl-2">-</p>
@@ -348,17 +403,6 @@
 					</div>
 				{/if}
 			</div>
-
-			{#if !!!monitor.embed}
-				<p class="z-4 absolute bottom-3 right-14 float-right text-right">
-					<a
-						href="{base}/incident/{monitor.folderName}#past_incident"
-						class="text-xs font-medium text-muted-foreground hover:text-primary"
-					>
-						{l(lang, "root.recent_incidents")}
-					</a>
-				</p>
-			{/if}
 		</div>
 	</div>
 </div>
