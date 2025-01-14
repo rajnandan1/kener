@@ -26,5 +26,9 @@
 	{
 		"code": "de",
 		"name": "Deutsch"
+	},
+	{
+		"code": "ru",
+		"name": "Русский"
 	}
 ]
