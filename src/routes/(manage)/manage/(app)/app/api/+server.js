@@ -1,6 +1,7 @@
 // @ts-nocheck
 // @ts-ignore
 import { json } from "@sveltejs/kit";
+import notification from "$lib/server/notification/notif.js";
 import {
 	CreateUpdateMonitor,
 	InsertKeyValue,
@@ -10,6 +11,7 @@ import {
 	UpdateTriggerData,
 	GetAllAlertsPaginated,
 	GetAllAPIKeys,
+	GetAllSiteData,
 	CreateNewAPIKey,
 	UpdateApiKeyStatus,
 	VerifyToken,
@@ -21,8 +23,10 @@ import {
 	UpdateCommentStatusByID,
 	AddIncidentComment,
 	UpdateCommentByID,
-	UpdateIncident
+	UpdateIncident,
+	GetTriggerByID
 } from "$lib/server/controllers/controller.js";
+
 export async function POST({ request, cookies }) {
 	const payload = await request.json();
 	let action = payload.action;
@@ -105,6 +109,34 @@ export async function POST({ request, cookies }) {
 				data.state,
 				data.commented_at
 			);
+		} else if (action == "testTrigger") {
+			let trigger = await GetTriggerByID(data.trigger_id);
+			let siteData = await GetAllSiteData();
+			const notificationClient = new notification(trigger, siteData, {});
+			const testObj = {
+				id: "test",
+				alert_name:
+					"Test Alert " + (Math.floor(Math.random() * 100) % 2) == 0
+						? "DOWN"
+						: "DEGRADED",
+				severity: Math.floor(Math.random() * 100) % 2 == 0 ? "critical" : "warning",
+				status: Math.floor(Math.random() * 100) % 2 == 0 ? "TRIGGERED" : "RESOLVED",
+				source: "Kener",
+				timestamp: new Date().toISOString(),
+				description: "Monitor has failed",
+				details: {
+					metric: "Test",
+					current_value: Math.floor(Math.random() * 100),
+					threshold: Math.floor(Math.random() * 100)
+				},
+				actions: [
+					{
+						text: "View Monitor",
+						url: siteData.siteURL + "/monitor-test"
+					}
+				]
+			};
+			resp = await notificationClient.send(testObj);
 		}
 	} catch (error) {
 		resp = { error: error.message };

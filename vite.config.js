@@ -16,7 +16,9 @@ export default defineConfig({
 					const host = "localhost";
 					const port = address?.port;
 					console.log("\n🚀 Kener is running");
-					console.log(`⚙️ Manage Kener: http://${host}:${port}/manage/site\n`);
+					console.log(
+						`⚙️ Manage Kener: http://${host}:${port}${process.env.KENER_BASE_PATH}/manage/app/site\n`
+					);
 				});
 			}
 		}

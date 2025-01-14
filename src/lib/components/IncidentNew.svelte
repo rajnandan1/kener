@@ -2,6 +2,7 @@
 	import moment from "moment";
 	import * as Accordion from "$lib/components/ui/accordion";
 	import { l } from "$lib/i18n/client";
+	import { base } from "$app/paths";
 	export let incident;
 	export let index;
 	export let lang;
@@ -83,7 +84,7 @@
 											{monitor.impact_type}
 										</div>
 										{#if monitor.image}
-											<img src={monitor.image} class="mt-1 h-4 w-4" />
+											<img src={base + monitor.image} class="mt-1 h-4 w-4" />
 										{/if}
 										<div class="mt-0.5 font-medium">
 											{monitor.name}

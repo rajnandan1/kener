@@ -21,9 +21,7 @@ class Discord {
 
 	transformData(data) {
 		let siteURL = this.siteData.siteURL;
-		let logo = this.siteData.logo.startsWith("/")
-			? siteURL + this.siteData.logo
-			: this.siteData.logo;
+		let logo = this.siteData.logo;
 
 		let color = 13250616; //down;
 		if (data.severity === "warning") {

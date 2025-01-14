@@ -11,7 +11,7 @@ import {
 } from "$lib/server/controllers/controller.js";
 
 export async function POST({ request, cookies }) {
-	//read form post data email and passowrd
+	//read form post data email and password
 	const formdata = await request.formData();
 	const email = formdata.get("email");
 	const senderEmail = process.env.RESEND_SENDER_EMAIL;

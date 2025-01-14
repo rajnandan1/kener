@@ -40,6 +40,7 @@ export async function load({ params, route, url, cookies, request }) {
 		KENER_SECRET_KEY: !!process.env.KENER_SECRET_KEY
 			? maskString(process.env.KENER_SECRET_KEY)
 			: "",
-		RESEND_API_KEY: !!process.env.RESEND_API_KEY ? maskString(process.env.RESEND_API_KEY) : ""
+		RESEND_API_KEY: !!process.env.RESEND_API_KEY ? maskString(process.env.RESEND_API_KEY) : "",
+		RESEND_SENDER_EMAIL: process.env.RESEND_SENDER_EMAIL
 	};
 }

@@ -11,6 +11,7 @@
 	let previousHeight = 0;
 	let previousWidth = 0;
 	export let data;
+	let embed = true;
 
 	function handleHeightChange(event) {
 		//use window.postMessage to send the height to the parent
@@ -35,14 +36,15 @@
 </script>
 
 {#if data.monitors.length > 0}
-	<section class="w-fit p-0" bind:this={element}>
-		<Card.Root class="w-[575px] rounded-none border-0 bg-transparent pt-0 shadow-none">
+	<section class="w-fit p-0.5" bind:this={element}>
+		<Card.Root class="w-[575px]      pt-0 shadow-none">
 			<Card.Content class="monitors-card embed p-0 pt-0">
 				{#each data.monitors as monitor}
 					<Monitor
 						{monitor}
 						localTz={data.localTz}
 						lang={data.lang}
+						{embed}
 						on:heightChange={handleHeightChange}
 					/>
 				{/each}

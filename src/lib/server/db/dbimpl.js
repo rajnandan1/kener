@@ -287,6 +287,11 @@ class DbImpl {
 			.orderBy("id", "desc");
 	}
 
+	//get trigger by id
+	async getTriggerByID(id) {
+		return await this.knex("triggers").where("id", id).first();
+	}
+
 	//get count of users
 	async getUsersCount() {
 		return await this.knex("users").count("* as count").first();

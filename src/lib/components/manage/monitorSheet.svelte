@@ -57,14 +57,14 @@
 		const formData = new FormData();
 		formData.append("image", file);
 		try {
-			const response = await fetch("/manage/app/upload", {
+			const response = await fetch(base + "/manage/app/upload", {
 				method: "POST",
 				body: formData
 			});
 
 			if (response.ok) {
 				const result = await response.json();
-				newMonitor.image = base + "/uploads/" + result.filename;
+				newMonitor.image = "/uploads/" + result.filename;
 			} else {
 				alert("Failed to upload file.");
 			}

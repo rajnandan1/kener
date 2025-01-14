@@ -9,7 +9,7 @@
 	import Moon from "lucide-svelte/icons/moon";
 	import { Languages } from "lucide-svelte";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-	import { analyticsEvent } from "$lib/analytics";
+	import { analyticsEvent } from "$lib/boringOne";
 	import { setMode, mode, ModeWatcher } from "mode-watcher";
 	export let data;
 
@@ -146,14 +146,12 @@
 	--degraded-color: {data.site.colors.DEGRADED}
 	"
 >
-	{#if data.showNav}
-		<Nav {data} />
-	{/if}
+	<Nav {data} />
 	<div class="main-content min-h-[70vh]">
 		<slot />
 	</div>
 
-	{#if data.showNav && !!data.site.footerHTML}
+	{#if !!data.site.footerHTML}
 		<footer class="z-10 py-6 md:px-8 md:py-0">
 			<div
 				class="container relative flex max-w-[655px] flex-col items-center justify-center gap-4 pl-0 md:h-24 md:flex-row"
@@ -166,47 +164,45 @@
 			</div>
 		</footer>
 	{/if}
-	{#if !!!data.embed}
-		<div class="fixed bottom-4 right-4 z-20 rounded-md bg-background">
-			{#if data.site.i18n && data.site.i18n.locales && allLocales.length > 1}
-				<DropdownMenu.Root>
-					<DropdownMenu.Trigger>
-						<Button variant="ghost" size="icon" class="flex">
-							<Languages class="h-[1.2rem] w-[1.2rem]" />
-						</Button>
-					</DropdownMenu.Trigger>
-					<DropdownMenu.Content>
-						<DropdownMenu.Group>
-							{#each allLocales as locale}
-								<DropdownMenu.Item
-									class={defaultLocaleKey == locale.code ? "bg-input" : ""}
-									on:click={(e) => {
-										setLanguage(locale.code);
-									}}>{locale.name}</DropdownMenu.Item
-								>
-							{/each}
-						</DropdownMenu.Group>
-					</DropdownMenu.Content>
-				</DropdownMenu.Root>
-			{/if}
-			{#if !!data.site.themeToggle}
-				<Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
-					<Sun
-						class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
-					/>
-					<Moon
-						class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
-					/>
-					<span class="sr-only">Toggle theme</span>
-				</Button>
-			{/if}
-		</div>
-	{/if}
+	<div class="fixed bottom-4 right-4 z-20 rounded-md bg-background">
+		{#if data.site.i18n && data.site.i18n.locales && allLocales.length > 1}
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger>
+					<Button variant="ghost" size="icon" class="flex">
+						<Languages class="h-[1.2rem] w-[1.2rem]" />
+					</Button>
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content>
+					<DropdownMenu.Group>
+						{#each allLocales as locale}
+							<DropdownMenu.Item
+								class={defaultLocaleKey == locale.code ? "bg-input" : ""}
+								on:click={(e) => {
+									setLanguage(locale.code);
+								}}>{locale.name}</DropdownMenu.Item
+							>
+						{/each}
+					</DropdownMenu.Group>
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
+		{/if}
+		{#if !!data.site.themeToggle}
+			<Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
+				<Sun
+					class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
+				/>
+				<Moon
+					class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
+				/>
+				<span class="sr-only">Toggle theme</span>
+			</Button>
+		{/if}
+	</div>
 	{#if data.isLoggedIn}
 		<a
-			href="{base}/manage/site"
+			href="{base}/manage/app/site"
 			on:click|preventDefault={(e) => {
-				location.href = `${base}/manage/site`;
+				location.href = `${base}/manage/app/site`;
 			}}
 			class="button-77 fixed bottom-8 left-8"
 			role="button"
@@ -220,8 +216,5 @@
 	/* Apply the global font family using the CSS variable */
 	* {
 		font-family: var(--font-family);
-	}
-	main {
-		background-color: var(--bg-custom);
 	}
 </style>

@@ -1,6 +1,6 @@
 <script>
 	import { Button } from "$lib/components/ui/button";
-	import { Plus, X, Loader, Settings } from "lucide-svelte";
+	import { Plus, X, Loader, Settings, Check } from "lucide-svelte";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import { base } from "$app/paths";
@@ -9,7 +9,6 @@
 	import { onMount } from "svelte";
 	import { IsValidURL } from "$lib/clientTools.js";
 	import * as Card from "$lib/components/ui/card";
-
 	let status = "ACTIVE";
 	let formState = "idle";
 	let showAddTrigger = false;
@@ -27,7 +26,7 @@
 			url: "",
 			headers: [],
 			to: "",
-			from: ""
+			from: data.RESEND_SENDER_EMAIL || ""
 		}
 	};
 	let invalidFormMessage = "";
@@ -42,7 +41,7 @@
 				url: "",
 				headers: [],
 				to: "",
-				from: ""
+				from: data.RESEND_SENDER_EMAIL || ""
 			}
 		};
 	}
@@ -156,6 +155,27 @@
 		showAddTrigger = true;
 	}
 
+	async function testTrigger(i, trigger_id, status) {
+		triggers[i].testLoaders = "loading";
+		try {
+			let data = await fetch(base + "/manage/app/api/", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json"
+				},
+				body: JSON.stringify({ action: "testTrigger", data: { trigger_id, status } })
+			});
+			let resp = await data.json();
+		} catch (error) {
+			alert("Error: " + error);
+		} finally {
+			triggers[i].testLoaders = "success";
+			setTimeout(() => {
+				triggers[i].testLoaders = "idle";
+			}, 3000);
+		}
+	}
+
 	async function loadData() {
 		//fetch data
 		loadingData = true;
@@ -168,6 +188,10 @@
 				body: JSON.stringify({ action: "getTriggers", data: { status: status } })
 			});
 			triggers = await apiResp.json();
+			triggers = triggers.map((t) => {
+				t.testLoaders = "idle";
+				return t;
+			});
 		} catch (error) {
 			alert("Error: " + error);
 		} finally {
@@ -209,7 +233,7 @@
 </div>
 
 <div class="mt-4">
-	{#each triggers as trigger}
+	{#each triggers as trigger, i}
 		<Card.Root class="mb-4">
 			<Card.Header class="relative">
 				<Card.Title>
@@ -241,7 +265,22 @@
 					{trigger.name}
 				</Card.Title>
 
-				<div class="absolute right-3 top-3">
+				<div class="absolute right-3 top-3 flex gap-x-2">
+					<Button
+						variant="secondary"
+						class="h-8   p-2 "
+						disabled={trigger.testLoaders == "loading"}
+						on:click={() => testTrigger(i, trigger.id, "TRIGGERED")}
+					>
+						{#if trigger.testLoaders == "loading"}
+							<Loader class="mr-1 inline h-3 w-3 animate-spin" />
+						{/if}
+						{#if trigger.testLoaders == "success"}
+							<Check class="mr-1 inline h-3 w-3 text-green-500 " />
+						{/if}
+						<span class="h-4 text-xs font-medium"> TEST </span>
+					</Button>
+
 					<Button
 						variant="secondary"
 						class=" h-8 w-8 p-2"

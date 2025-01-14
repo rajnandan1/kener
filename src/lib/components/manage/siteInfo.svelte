@@ -82,14 +82,14 @@
 		formData.append("image", file);
 		uploadingLogo = true;
 		try {
-			const response = await fetch("/manage/app/upload", {
+			const response = await fetch(base + "/manage/app/upload", {
 				method: "POST",
 				body: formData
 			});
 
 			if (response.ok) {
 				const result = await response.json();
-				siteInformation.logo = base + "/uploads/" + result.filename;
+				siteInformation.logo = "/uploads/" + result.filename;
 			} else {
 				uploadLogoStatus = "Failed to upload file.";
 			}
@@ -121,14 +121,14 @@
 		formData.append("image", file);
 		uploadingFavicon = true;
 		try {
-			const response = await fetch("/manage/app/upload", {
+			const response = await fetch(base + "/manage/app/upload", {
 				method: "POST",
 				body: formData
 			});
 
 			if (response.ok) {
 				const result = await response.json();
-				siteInformation.favicon = base + "/uploads/" + result.filename;
+				siteInformation.favicon = "/uploads/" + result.filename;
 			} else {
 				uploadFaviconStatus = "Failed to upload file.";
 			}

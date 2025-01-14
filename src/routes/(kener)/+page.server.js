@@ -28,7 +28,6 @@ export async function load({ parent, url }) {
 
 		let data = await FetchData(siteData, monitors[i], parentData.localTz);
 		monitors[i].pageData = data;
-		monitors[i].embed = false;
 
 		monitors[i].activeIncidents = [];
 		monitorsActive.push(monitors[i]);

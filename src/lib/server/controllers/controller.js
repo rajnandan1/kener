@@ -216,6 +216,10 @@ export const GetAllTriggers = async (data) => {
 	return await db.getTriggers(data);
 };
 
+export const GetTriggerByID = async (id) => {
+	return await db.getTriggerByID(id);
+};
+
 export const UpdateTriggerData = async (data) => {
 	return await db.updateMonitorTrigger(data);
 };

@@ -199,6 +199,7 @@ section {
 .monitors-card.embed .monitor {
 	padding: 0em 0.87em 0.875em 0.87em;
 	border-bottom: none;
+	padding-bottom: 0;
 }
 
 /*Tag Color*/

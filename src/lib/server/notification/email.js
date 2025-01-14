@@ -1,4 +1,5 @@
 // @ts-nocheck
+import { Resend } from "resend";
 
 class Email {
 	to;
@@ -178,16 +179,10 @@ class Email {
 	}
 
 	async send(data) {
+		const resend = new Resend(process.env.RESEND_API_KEY);
+
 		try {
-			const response = await fetch("https://api.resend.com/emails", {
-				method: "POST",
-				headers: {
-					Authorization: "Bearer " + process.env.RESEND_API_KEY,
-					"Content-Type": "application/json"
-				},
-				body: JSON.stringify(this.transformData(data))
-			});
-			return response;
+			return await resend.emails.send(this.transformData(data));
 		} catch (error) {
 			console.error("Error sending webhook", error);
 			return error;

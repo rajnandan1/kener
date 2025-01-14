@@ -20,7 +20,6 @@
 	import { afterUpdate } from "svelte";
 	import axios from "axios";
 	import { l, summaryTime, n, ampm } from "$lib/i18n/client";
-	import { analyticsEvent } from "$lib/analytics";
 	import { hoverAction, clickOutsideAction, slide } from "svelte-legos";
 	import LoaderBoxes from "$lib/components/loaderbox.svelte";
 	import moment from "moment";
@@ -33,7 +32,7 @@
 
 	export let localTz;
 	export let lang;
-
+	export let embed = false;
 	let _0Day = {};
 	let _90Day = monitor.pageData._90Day;
 	let uptime90Day = monitor.pageData.uptime90Day;
@@ -167,7 +166,7 @@
 	let dayUptime = "NA";
 	let loadingDayData = false;
 	function dailyDataGetter(e, bar, incidentObj) {
-		if (monitor.embed) {
+		if (embed) {
 			return;
 		}
 		let incidentIDs = incidentObj?.ids || [];
@@ -183,15 +182,13 @@
 </script>
 
 <div class="monitor relative grid w-full grid-cols-12 gap-2 pb-2 pt-0 md:w-[655px]">
-	{#if !!!monitor.embed}
+	{#if !!!embed}
 		<div class="col-span-12 md:w-[546px]">
 			<div class="pt-0">
 				<div class="scroll-m-20 pr-5 text-xl font-medium tracking-tight">
 					{#if monitor.image}
 						<img
-							src={monitor.image.startsWith("/")
-								? base + monitor.image
-								: monitor.image}
+							src={base + monitor.image}
 							class="absolute left-6 top-6 inline h-5 w-5"
 							alt={monitor.name}
 							srcset=""
@@ -223,18 +220,10 @@
 			</div>
 		</div>
 	{/if}
-	<div
-		class="col-span-12 md:w-[546px] {!!!monitor.embed
-			? 'md:col-span-12'
-			: 'overflow-hidden'} min-h-[94px] pt-2"
-	>
+	<div class="col-span-12 min-h-[94px] pt-2 md:w-[546px]">
 		<div class="col-span-12">
-			<div class="gap- flex justify-between">
-				<div
-					class=" {monitor.embed === undefined
-						? 'col-span-12'
-						: 'col-span-8'}   md:col-span-8"
-				>
+			<div class="flex justify-between">
+				<div class=" ">
 					<div class="flex gap-x-1">
 						{#if rolledAt > 0}
 							<Button
@@ -282,11 +271,7 @@
 						{/if}
 					</div>
 				</div>
-				<div
-					class="pt-0.5 {monitor.embed === undefined
-						? 'col-span-12'
-						: 'col-span-4'} text-right md:col-span-4"
-				>
+				<div class="pt-0.5 text-right">
 					<div
 						class="text-api-up truncate text-xs font-semibold text-{monitor.pageData
 							.summaryColorClass}"

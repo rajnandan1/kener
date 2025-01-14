@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Document</title>
+		<style>
+			body {
+				background-color: #111;
+			}
+		</style>
+	</head>
+	<body>
+		Hello world
+		<div>
+			<script
+				async
+				src="http://localhost:3000/status/embed/monitor-earth/js?theme=dark&bgc=111&monitor=http://localhost:3000/status/embed/monitor-earth"
+			></script>
+		</div>
+		<p>script2</p>
+		<script
+			async
+			src="http://localhost:3000/status/embed/monitor-earth/js?theme=light&monitor=http://localhost:3000/status/embed/monitor-earth"
+		></script>
+		<p>iframe</p>
+		<div>
+			<iframe
+				src="http://localhost:3000/status/embed/monitor-earth?theme=light"
+				width="100%"
+				height="200"
+				allowfullscreen="allowfullscreen"
+				allowpaymentrequest
+				frameborder="0"
+			></iframe>
+		</div>
+	</body>
+</html>

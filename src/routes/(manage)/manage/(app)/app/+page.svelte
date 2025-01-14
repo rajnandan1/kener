@@ -3,6 +3,6 @@
 	import { base } from "$app/paths";
 
 	afterNavigate((e) => {
-		goto(base + "/manage/site");
+		goto(base + "/manage/app/site");
 	});
 </script>

@@ -3,7 +3,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import { base } from "$app/paths";
 	import { onMount } from "svelte";
-	import { analyticsEvent } from "$lib/analytics";
+	import { analyticsEvent } from "$lib/boringOne";
 	import { l, summaryTime, n, ampm } from "$lib/i18n/client";
 	import * as RadioGroup from "$lib/components/ui/radio-group";
 	import { Label } from "$lib/components/ui/label";
@@ -91,7 +91,7 @@
 			type: embedType
 		});
 
-		let path = `${base}/embed-${monitor.tag}`;
+		let path = `${base}/embed/monitor-${monitor.tag}`;
 		let scriptTag =
 			`<script async src="${protocol + "//" + domain + path}/js?theme=${theme}&monitor=${protocol + "//" + domain + path}"><` +
 			"/script>";
