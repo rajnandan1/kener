@@ -89,7 +89,7 @@
 
 			if (response.ok) {
 				const result = await response.json();
-				siteInformation.logo = "/uploads/" + result.filename;
+				siteInformation.logo = base + "/uploads/" + result.filename;
 			} else {
 				uploadLogoStatus = "Failed to upload file.";
 			}
@@ -275,7 +275,7 @@
 								class="inline-block h-[60px] w-[60px] cursor-pointer rounded-sm border p-1"
 							>
 								<img
-									src={siteInformation.logo}
+									src={base + siteInformation.logo}
 									class="w-fit hover:scale-95"
 									alt=""
 								/>
@@ -328,7 +328,7 @@
 								class="inline-block h-[40px] w-[40px] cursor-pointer rounded-sm border p-1"
 							>
 								<img
-									src={siteInformation.favicon}
+									src={base + siteInformation.favicon}
 									class="w-fit hover:scale-95"
 									alt=""
 								/>

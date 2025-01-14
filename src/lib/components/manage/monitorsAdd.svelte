@@ -232,7 +232,7 @@
 				<Card.Title>
 					{#if !!monitor.image}
 						<img
-							src={monitor.image}
+							src={base + monitor.image}
 							alt={monitor.name}
 							class="mr-2 inline-block h-8 w-8"
 						/>

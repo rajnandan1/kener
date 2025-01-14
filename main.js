@@ -9,6 +9,7 @@ import knex from "knex";
 import knexOb from "./knexfile.js";
 
 const PORT = process.env.PORT || 3000;
+const base = process.env.KENER_BASE_PATH || "";
 
 const app = express();
 const db = knex(knexOb);
@@ -20,12 +21,11 @@ app.use((req, res, next) => {
 	res.setHeader("X-Powered-By", "Kener");
 	next();
 });
-app.get("/healthcheck", (req, res) => {
+app.get(base + "/healthcheck", (req, res) => {
 	res.end("ok");
 });
-
 //part /uploads server static files from static/uploads
-app.use("/uploads", express.static("static/uploads"));
+app.use(base + "/uploads", express.static("static/uploads"));
 
 try {
 	const openapiJSON = fs.readFileSync("./openapi.json", "utf-8");

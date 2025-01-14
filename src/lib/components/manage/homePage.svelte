@@ -361,7 +361,7 @@
 								<div
 									class="absolute left-0 top-5 mt-2 h-[30px] w-[30px] rounded-sm border p-1"
 								>
-									<img src={navItem.iconURL} class="" alt="" />
+									<img src={base + navItem.iconURL} class="" alt="" />
 									<Button
 										variant="secondary"
 										class="absolute -right-2.5 -top-1.5 h-4 w-4 rounded-full p-0"

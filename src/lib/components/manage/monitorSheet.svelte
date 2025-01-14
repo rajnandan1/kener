@@ -302,7 +302,7 @@
 					<Label for="logo">Image</Label>
 					{#if !!newMonitor.image}
 						<div class="relative mb-2 h-[48px] w-[48px] rounded-sm border p-1">
-							<img src={newMonitor.image} class="" alt="" />
+							<img src={base + newMonitor.image} class="" alt="" />
 							<Button
 								variant="secondary"
 								class="absolute -right-2.5 -top-1.5 h-5 w-5 rounded-full p-0"
