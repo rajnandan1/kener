@@ -1,7 +1,7 @@
 <script>
-	import "../../app.postcss";
-	import "../../kener.css";
-	import "../../manage.css";
+	import "../../../../app.postcss";
+	import "../../../../kener.css";
+	import "../../../../manage.css";
 	import { base } from "$app/paths";
 	import { setMode, mode, ModeWatcher } from "mode-watcher";
 	setMode("dark");

@@ -80,7 +80,7 @@
 	async function loadData() {
 		loadingData = true;
 		try {
-			let apiResp = await fetch(base + "/manage/api/", {
+			let apiResp = await fetch(base + "/manage/app/api/", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json"
@@ -102,7 +102,7 @@
 
 	async function loadTriggersData() {
 		try {
-			let apiResp = await fetch(base + "/manage/api/", {
+			let apiResp = await fetch(base + "/manage/app/api/", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json"
@@ -152,7 +152,7 @@
 		formState = "loading";
 		//updateMonitorTriggers
 		try {
-			let apiResp = await fetch(base + "/manage/api/", {
+			let apiResp = await fetch(base + "/manage/app/api/", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json"

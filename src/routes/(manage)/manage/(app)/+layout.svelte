@@ -1,7 +1,7 @@
 <script>
-	import "../../app.postcss";
-	import "../../kener.css";
-	import "../../manage.css";
+	import "../../../../app.postcss";
+	import "../../../../kener.css";
+	import "../../../../manage.css";
 	import { base } from "$app/paths";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import Sun from "lucide-svelte/icons/sun";
@@ -26,15 +26,35 @@
 	setMode("dark");
 
 	let nav = [
-		{ name: "Site", url: `${base}/manage/site`, id: "/(manage)/manage/site" },
-		{ name: "SEO", url: `${base}/manage/seo`, id: "/(manage)/manage/seo" },
-		{ name: "Home", url: `${base}/manage/home`, id: "/(manage)/manage/home" },
-		{ name: "Theme", url: `${base}/manage/theme`, id: "/(manage)/manage/theme" },
-		{ name: "Monitors", url: `${base}/manage/monitors`, id: "/(manage)/manage/monitors" },
-		{ name: "Triggers", url: `${base}/manage/triggers`, id: "/(manage)/manage/triggers" },
-		{ name: "Alerts", url: `${base}/manage/alerts`, id: "/(manage)/manage/alerts" },
-		{ name: "Incidents", url: `${base}/manage/incidents`, id: "/(manage)/manage/incidents" },
-		{ name: "API Keys", url: `${base}/manage/api-keys`, id: "/(manage)/manage/api-keys" }
+		{ name: "Site", url: `${base}/manage/app/site`, id: "/(manage)/manage/(app)/app/site" },
+		{ name: "SEO", url: `${base}/manage/app/seo`, id: "/(manage)/manage/(app)/app/seo" },
+		{ name: "Home", url: `${base}/manage/app/home`, id: "/(manage)/manage/(app)/app/home" },
+		{ name: "Theme", url: `${base}/manage/app/theme`, id: "/(manage)/manage/(app)/app/theme" },
+		{
+			name: "Monitors",
+			url: `${base}/manage/app/monitors`,
+			id: "/(manage)/manage/(app)/app/monitors"
+		},
+		{
+			name: "Triggers",
+			url: `${base}/manage/app/triggers`,
+			id: "/(manage)/manage/(app)/app/triggers"
+		},
+		{
+			name: "Alerts",
+			url: `${base}/manage/app/alerts`,
+			id: "/(manage)/manage/(app)/app/alerts"
+		},
+		{
+			name: "Incidents",
+			url: `${base}/manage/app/incidents`,
+			id: "/(manage)/manage/(app)/app/incidents"
+		},
+		{
+			name: "API Keys",
+			url: `${base}/manage/app/api-keys`,
+			id: "/(manage)/manage/(app)/app/api-keys"
+		}
 	];
 
 	let activeTab = "";
@@ -87,7 +107,7 @@
 						<DropdownMenu.Label class="text-xs">My Account</DropdownMenu.Label>
 						<DropdownMenu.Separator />
 						<DropdownMenu.Item class="text-xs font-semibold">
-							<a href="{base}/signin/logout">Logout</a>
+							<a href="{base}/manage/signin/logout">Logout</a>
 						</DropdownMenu.Item>
 					</DropdownMenu.Group>
 				</DropdownMenu.Content>

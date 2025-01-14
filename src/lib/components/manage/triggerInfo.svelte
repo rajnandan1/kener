@@ -124,7 +124,7 @@
 		};
 
 		try {
-			let data = await fetch(base + "/manage/api/", {
+			let data = await fetch(base + "/manage/app/api/", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json"
@@ -160,7 +160,7 @@
 		//fetch data
 		loadingData = true;
 		try {
-			let apiResp = await fetch(base + "/manage/api/", {
+			let apiResp = await fetch(base + "/manage/app/api/", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json"

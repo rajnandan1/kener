@@ -11,11 +11,11 @@ export async function load({ params, route, url, cookies }) {
 	if (!!tokenData) {
 		let tokenUser = await VerifyToken(tokenData);
 		if (!!!tokenUser) {
-			throw redirect(302, base + "/signin/logout");
+			throw redirect(302, base + "/manage/signin/logout");
 		}
 		let userDB = await db.getUserByEmail(tokenUser.email);
 		if (!!userDB) {
-			throw redirect(302, base + "/manage/site");
+			throw redirect(302, base + "/manage/app/site");
 		}
 	}
 	const query = url.searchParams;

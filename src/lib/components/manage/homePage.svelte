@@ -162,7 +162,7 @@
 		const formData = new FormData();
 		formData.append("image", file);
 		try {
-			const response = await fetch("/manage/upload", {
+			const response = await fetch("/manage/app/upload", {
 				method: "POST",
 				body: formData
 			});

@@ -17,7 +17,7 @@
 	async function loadAPIKeys() {
 		loaderLoadingAll = true;
 		try {
-			let apiResp = await fetch(base + "/manage/api/", {
+			let apiResp = await fetch(base + "/manage/app/api/", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json"
@@ -40,7 +40,7 @@
 		newKeyResp = {};
 		loaderCreateNew = true;
 		try {
-			let apiResp = await fetch(base + "/manage/api/", {
+			let apiResp = await fetch(base + "/manage/app/api/", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json"
@@ -72,7 +72,7 @@
 
 	function updateStatus(apiKey) {
 		apiKey.status = apiKey.status == "ACTIVE" ? "INACTIVE" : "ACTIVE";
-		fetch(base + "/manage/api/", {
+		fetch(base + "/manage/app/api/", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json"

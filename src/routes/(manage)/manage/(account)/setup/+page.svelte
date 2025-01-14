@@ -38,7 +38,7 @@
 				</Alert.Root>
 			{/if}
 
-			<form class="space-y-6" action="{base}/setup/submit" method="POST">
+			<form class="space-y-6" action="{base}/manage/setup/submit" method="POST">
 				<div>
 					<label for="email" class="block text-sm/6 font-medium">Your Name</label>
 					<div class="mt-2">
@@ -99,7 +99,7 @@
 					<Button type="submit" class="w-full">Let's Go</Button>
 					<p class="mt-4 text-center text-xs font-semibold">
 						Already set up done? Please go to <a
-							href="{base}/signin"
+							href="{base}/manage/signin"
 							class="text-primary underline decoration-1">signin page</a
 						>
 					</p>

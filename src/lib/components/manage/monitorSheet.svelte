@@ -57,7 +57,7 @@
 		const formData = new FormData();
 		formData.append("image", file);
 		try {
-			const response = await fetch("/manage/upload", {
+			const response = await fetch("/manage/app/upload", {
 				method: "POST",
 				body: formData
 			});
@@ -232,7 +232,7 @@
 		formState = "loading";
 
 		try {
-			let data = await fetch(base + "/manage/api/", {
+			let data = await fetch(base + "/manage/app/api/", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json"

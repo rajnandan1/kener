@@ -262,6 +262,18 @@ export const GenerateToken = async (data) => {
 	}
 };
 
+export const ForgotPasswordJWT = async (data) => {
+	try {
+		const token = jwt.sign(data, process.env.KENER_SECRET_KEY || DUMMY_SECRET, {
+			expiresIn: "1h"
+		});
+		return token;
+	} catch (err) {
+		console.error("Error generating token:", err);
+		throw err;
+	}
+};
+
 export const VerifyToken = async (token) => {
 	try {
 		const decoded = jwt.verify(token, process.env.KENER_SECRET_KEY || DUMMY_SECRET);
@@ -676,7 +688,7 @@ export const IsLoggedInSession = async (cookies) => {
 		return {
 			error: "User not authenticated",
 			action: "redirect",
-			location: "/signin"
+			location: "/manage/signin"
 		};
 	}
 	let tokenUser = await VerifyToken(tokenData);
@@ -686,7 +698,7 @@ export const IsLoggedInSession = async (cookies) => {
 		return {
 			error: "User not authenticated",
 			action: "redirect",
-			location: "/signin/logout"
+			location: "/manage/signin/logout"
 		};
 	}
 	let userDB = await db.getUserByEmail(tokenUser.email);
@@ -696,7 +708,7 @@ export const IsLoggedInSession = async (cookies) => {
 		return {
 			error: "User not authenticated",
 			action: "redirect",
-			location: "/signin"
+			location: "/manage/signin"
 		};
 	}
 	return {

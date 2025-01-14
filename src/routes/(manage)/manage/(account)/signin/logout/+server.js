@@ -12,5 +12,5 @@ export async function GET({ request, cookies }) {
 		path: "/" + base
 	});
 
-	throw redirect(302, base + "/signin");
+	throw redirect(302, base + "/manage/signin");
 }

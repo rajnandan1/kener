@@ -11,147 +11,7 @@ class DbImpl {
 		this.init();
 	}
 
-	async init() {
-		// Check if the table exists before creating it
-		// const hasMonitoringDataTable = await this.knex.schema.hasTable("monitoring_data");
-		// if (!hasMonitoringDataTable) {
-		// 	await this.knex.schema.createTable("monitoring_data", (table) => {
-		// 		table.text("monitor_tag").notNullable();
-		// 		table.integer("timestamp").notNullable();
-		// 		table.text("status");
-		// 		table.float("latency");
-		// 		table.text("type");
-		// 		table.primary(["monitor_tag", "timestamp"]);
-		// 	});
-		// }
-		// const hasMonitorAlertsTable = await this.knex.schema.hasTable("monitor_alerts");
-		// if (!hasMonitorAlertsTable) {
-		// 	await this.knex.schema.createTable("monitor_alerts", (table) => {
-		// 		table.increments("id").primary();
-		// 		table.text("monitor_tag").notNullable();
-		// 		table.text("monitor_status").notNullable();
-		// 		table.text("alert_status").notNullable();
-		// 		table.integer("health_checks").notNullable();
-		// 		table.integer("incident_number").defaultTo(0);
-		// 		table.timestamp("created_at").defaultTo(this.knex.fn.now());
-		// 		table.timestamp("updated_at").defaultTo(this.knex.fn.now());
-		// 	});
-		// 	await this.knex.schema.alterTable("monitor_alerts", (table) => {
-		// 		table.index(["monitor_tag", "created_at"], "idx_monitor_tag_created_at");
-		// 	});
-		// }
-		// const hasSiteDataTable = await this.knex.schema.hasTable("site_data");
-		// if (!hasSiteDataTable) {
-		// 	await this.knex.schema.createTable("site_data", (table) => {
-		// 		table.increments("id").primary();
-		// 		table.text("key").notNullable().unique();
-		// 		table.text("value").notNullable();
-		// 		table.text("data_type").notNullable();
-		// 		table.timestamp("created_at").defaultTo(this.knex.fn.now());
-		// 		table.timestamp("updated_at").defaultTo(this.knex.fn.now());
-		// 	});
-		// }
-		// const hasMonitorsTable = await this.knex.schema.hasTable("monitors");
-		// if (!hasMonitorsTable) {
-		// 	await this.knex.schema.createTable("monitors", (table) => {
-		// 		table.increments("id").primary();
-		// 		table.text("tag").notNullable().unique();
-		// 		table.text("name").notNullable().unique();
-		// 		table.text("description");
-		// 		table.text("image");
-		// 		table.text("cron");
-		// 		table.text("default_status");
-		// 		table.text("status");
-		// 		table.text("category_name");
-		// 		table.text("monitor_type");
-		// 		table.text("down_trigger");
-		// 		table.text("degraded_trigger");
-		// 		table.text("type_data");
-		// 		table.integer("day_degraded_minimum_count");
-		// 		table.integer("day_down_minimum_count");
-		// 		table.text("include_degraded_in_downtime").defaultTo("NO");
-		// 		table.timestamp("created_at").defaultTo(this.knex.fn.now());
-		// 		table.timestamp("updated_at").defaultTo(this.knex.fn.now());
-		// 	});
-		// }
-		// const hasTriggersTable = await this.knex.schema.hasTable("triggers");
-		// if (!hasTriggersTable) {
-		// 	await this.knex.schema.createTable("triggers", (table) => {
-		// 		table.increments("id").primary();
-		// 		table.text("name").notNullable().unique();
-		// 		table.text("trigger_type");
-		// 		table.text("trigger_desc");
-		// 		table.text("trigger_status");
-		// 		table.text("trigger_meta");
-		// 		table.timestamp("created_at").defaultTo(this.knex.fn.now());
-		// 		table.timestamp("updated_at").defaultTo(this.knex.fn.now());
-		// 	});
-		// }
-		// const hasUsersTable = await this.knex.schema.hasTable("users");
-		// if (!hasUsersTable) {
-		// 	await this.knex.schema.createTable("users", (table) => {
-		// 		table.increments("id").primary();
-		// 		table.text("email").notNullable().unique();
-		// 		table.text("name").notNullable();
-		// 		table.text("password_hash").notNullable();
-		// 		table.integer("is_active").defaultTo(1);
-		// 		table.integer("is_verified").defaultTo(0);
-		// 		table.text("role").defaultTo("user");
-		// 		table.timestamp("created_at").defaultTo(this.knex.fn.now());
-		// 		table.timestamp("updated_at").defaultTo(this.knex.fn.now());
-		// 	});
-		// }
-		// const hasApiKeysTable = await this.knex.schema.hasTable("api_keys");
-		// if (!hasApiKeysTable) {
-		// 	await this.knex.schema.createTable("api_keys", (table) => {
-		// 		table.increments("id").primary();
-		// 		table.text("name").notNullable().unique();
-		// 		table.text("hashed_key").notNullable().unique();
-		// 		table.text("masked_key").notNullable();
-		// 		table.text("status").defaultTo("ACTIVE");
-		// 		table.timestamp("created_at").defaultTo(this.knex.fn.now());
-		// 		table.timestamp("updated_at").defaultTo(this.knex.fn.now());
-		// 	});
-		// }
-		// const hasIncidentsTable = await this.knex.schema.hasTable("incidents");
-		// if (!hasIncidentsTable) {
-		// 	await this.knex.schema.createTable("incidents", (table) => {
-		// 		table.increments("id").primary();
-		// 		table.text("title").notNullable();
-		// 		table.integer("start_date_time").notNullable();
-		// 		table.integer("end_date_time");
-		// 		table.timestamp("created_at").defaultTo(this.knex.fn.now());
-		// 		table.timestamp("updated_at").defaultTo(this.knex.fn.now());
-		// 		table.text("status").defaultTo("ACTIVE");
-		// 		table.text("state").defaultTo("INVESTIGATING");
-		// 	});
-		// }
-		// const hasIncidentMonitorsTable = await this.knex.schema.hasTable("incident_monitors");
-		// if (!hasIncidentMonitorsTable) {
-		// 	await this.knex.schema.createTable("incident_monitors", (table) => {
-		// 		table.increments("id").primary();
-		// 		table.text("monitor_tag").notNullable();
-		// 		table.text("monitor_impact");
-		// 		table.timestamp("created_at").defaultTo(this.knex.fn.now());
-		// 		table.timestamp("updated_at").defaultTo(this.knex.fn.now());
-		// 		table.integer("incident_id").notNullable();
-		// 		table.unique(["monitor_tag", "incident_id"]);
-		// 	});
-		// }
-		// const hasIncidentCommentsTable = await this.knex.schema.hasTable("incident_comments");
-		// if (!hasIncidentCommentsTable) {
-		// 	await this.knex.schema.createTable("incident_comments", (table) => {
-		// 		table.increments("id").primary();
-		// 		table.text("comment").notNullable();
-		// 		table.integer("incident_id").notNullable();
-		// 		table.integer("commented_at").notNullable();
-		// 		table.timestamp("created_at").defaultTo(this.knex.fn.now());
-		// 		table.timestamp("updated_at").defaultTo(this.knex.fn.now());
-		// 		table.text("status").defaultTo("ACTIVE");
-		// 		table.text("state").defaultTo("INVESTIGATING");
-		// 	});
-		// }
-	}
+	async init() {}
 
 	async insertMonitoringData(data) {
 		const { monitor_tag, timestamp, status, latency, type } = data;
@@ -460,6 +320,14 @@ class DbImpl {
 			password_hash: data.password_hash,
 			role: data.role,
 			created_at: this.knex.fn.now(),
+			updated_at: this.knex.fn.now()
+		});
+	}
+
+	//update password
+	async updateUserPassword(data) {
+		return await this.knex("users").where({ id: data.id }).update({
+			password_hash: data.password_hash,
 			updated_at: this.knex.fn.now()
 		});
 	}

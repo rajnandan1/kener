@@ -32,7 +32,7 @@
 			</Alert.Root>
 		{/if}
 
-		<form class="space-y-6" action="{base}/signin/submit" method="POST">
+		<form class="space-y-6" action="{base}/manage/signin/submit" method="POST">
 			<div>
 				<label for="email" class="block text-sm/6 font-medium">Email address</label>
 				<div class="mt-2">
@@ -68,6 +68,14 @@
 			</div>
 
 			<div>
+				<p class="mb-2 text-right">
+					<a
+						href="{base}/manage/forgot"
+						class="text-xs font-semibold text-muted-foreground hover:text-primary"
+					>
+						Forgot your password?
+					</a>
+				</p>
 				<Button type="submit" class="w-full">Sign In</Button>
 			</div>
 		</form>

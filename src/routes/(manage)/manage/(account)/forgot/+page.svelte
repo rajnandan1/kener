@@ -1,0 +1,114 @@
+<script>
+	import { base } from "$app/paths";
+	import { Button } from "$lib/components/ui/button";
+	import { Input } from "$lib/components/ui/input";
+	import { Label } from "$lib/components/ui/label";
+	import * as Alert from "$lib/components/ui/alert";
+
+	let form = {
+		email: ""
+	};
+	export let data;
+
+	if (data.isSecretSet === false || data.isResendSet === false) {
+		data.view = "error";
+		data.error =
+			"Environment variables are not set. Read the documentation to set them. https://kener.ing/docs/environment-vars";
+	}
+
+	if (data.isSiteURLSet === false) {
+		data.view = "error";
+		data.error =
+			"Site URL is not set. Read the documentation to set it. https://kener.ing/docs/site";
+	}
+</script>
+
+<svelte:head>
+	<title>Forgot password Kener</title>
+</svelte:head>
+<div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
+	<div class="sm:mx-auto sm:w-full sm:max-w-sm">
+		<img class="mx-auto h-10 w-auto" src="{base}/logo.png" alt="Your Company" />
+		<h2 class="mt-10 text-center text-2xl/9 font-bold tracking-tight">Reset Password</h2>
+		<p class="mt-4 text-center">Follow instructions to reset your password</p>
+	</div>
+
+	<div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+		{#if data.view == "error"}
+			<Alert.Root variant="destructive" class="my-4">
+				<Alert.Title>Error</Alert.Title>
+				<Alert.Description>{data.error}</Alert.Description>
+			</Alert.Root>
+		{/if}
+		{#if data.view == "forgot"}
+			<form class="space-y-6" action="{base}/manage/forgot/submit" method="POST">
+				<div>
+					<label for="email" class="block text-sm/6 font-medium">Email address</label>
+					<div class="mt-2">
+						<Input
+							bind:value={form.email}
+							type="email"
+							name="email"
+							id="form_email"
+							autocomplete="email"
+							placeholder="user@example.com"
+							required
+						/>
+					</div>
+				</div>
+
+				<div>
+					<Button type="submit" class="w-full">Reset Password</Button>
+				</div>
+			</form>
+		{/if}
+		{#if data.view == "sent"}
+			<Alert.Root variant="success" class="my-4">
+				<Alert.Title>Success</Alert.Title>
+				<Alert.Description
+					>An email has been sent to {data.email} with instructions on how to reset your password.</Alert.Description
+				>
+			</Alert.Root>
+		{/if}
+
+		{#if data.view == "token"}
+			<form class="space-y-6" action="{base}/manage/forgot/reset" method="POST">
+				<div>
+					<label for="password" class="block text-sm/6 font-medium">New password</label>
+					<div class="mt-2">
+						<Input
+							type="password"
+							name="password"
+							id="form_password"
+							autocomplete="new-password"
+							placeholder="********"
+							required
+						/>
+					</div>
+					<Input
+						type="hidden"
+						name="token"
+						id="form_password"
+						bind:value={data.token}
+						required
+					/>
+				</div>
+
+				<div>
+					<Button type="submit" class="w-full">Confirm Password</Button>
+				</div>
+			</form>
+		{/if}
+		{#if data.view == "success"}
+			<Alert.Root variant="success" class="my-4">
+				<Alert.Title>Success</Alert.Title>
+				<Alert.Description
+					>Your password has been reset successfully. <a
+						class="font-semibold text-blue-500"
+						href="{base}/manage/signin">Login</a
+					> with you new password</Alert.Description
+				>
+			</Alert.Root>
+		{/if}
+	</div>
+</div>

@@ -32,9 +32,14 @@ export async function POST({ request, cookies }) {
 	if (userCount.count != 0) {
 		let errorMessage =
 			"Set up already done. Please login with the email and password you have set up.";
+		throw redirect(302, base + "/manage/setup?error=" + errorMessage);
+	}
+	//validate password
+	if (!validatePassword(password)) {
+		let errorMessage =
+			"Password must contain at least one digit, one lowercase letter, one uppercase letter, and have a minimum length of 8 characters.";
 		throw redirect(302, base + "/setup?error=" + errorMessage);
 	}
-
 	let user = {
 		email: email,
 		password_hash: await HashPassword(password),
@@ -42,18 +47,11 @@ export async function POST({ request, cookies }) {
 		role: "admin"
 	};
 
-	//validate password
-	if (!validatePassword(password)) {
-		let errorMessage =
-			"Password must contain at least one digit, one lowercase letter, one uppercase letter, and have a minimum length of 8 characters.";
-		throw redirect(302, base + "/setup?error=" + errorMessage);
-	}
-
 	await db.insertUser(user);
 	let userDB = await db.getUserByEmail(email);
 	if (!!!userDB) {
 		let errorMessage = "User does not exist";
-		throw redirect(302, base + "/signin?error=" + errorMessage);
+		throw redirect(302, base + "/manage/signin?error=" + errorMessage);
 	}
 	let token = await GenerateToken(userDB);
 	cookies.set("kener-user", token, {

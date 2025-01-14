@@ -82,7 +82,7 @@
 		formData.append("image", file);
 		uploadingLogo = true;
 		try {
-			const response = await fetch("/manage/upload", {
+			const response = await fetch("/manage/app/upload", {
 				method: "POST",
 				body: formData
 			});
@@ -121,7 +121,7 @@
 		formData.append("image", file);
 		uploadingFavicon = true;
 		try {
-			const response = await fetch("/manage/upload", {
+			const response = await fetch("/manage/app/upload", {
 				method: "POST",
 				body: formData
 			});

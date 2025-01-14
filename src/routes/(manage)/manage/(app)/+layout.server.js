@@ -18,19 +18,19 @@ export async function load({ params, route, url, cookies, request }) {
 
 	if (!!!tokenData) {
 		//redirect to signin page if user is not authenticated
-		throw redirect(302, base + "/signin");
+		throw redirect(302, base + "/manage/signin");
 	}
 
 	//get user by email
 	let tokenUser = await VerifyToken(tokenData);
 	if (!!!tokenUser) {
 		//redirect to signin page if user is not authenticated
-		throw redirect(302, base + "/signin/logout");
+		throw redirect(302, base + "/manage/signin/logout");
 	}
 	let userDB = await db.getUserByEmail(tokenUser.email);
 	if (!!!userDB) {
 		//redirect to signin page if user is not authenticated
-		throw redirect(302, base + "/signin");
+		throw redirect(302, base + "/manage/signin");
 	}
 
 	//

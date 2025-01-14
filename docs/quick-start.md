@@ -54,7 +54,7 @@ Please remember your password as it is not recoverable.
 
 ## Login
 
-Once you have created the user, you can login with the credentials you have provided by going to the [login page](/signin)
+Once you have created the user, you can login with the credentials you have provided by going to the [login page](/manage/signin)
 
 ## Next Steps
 
