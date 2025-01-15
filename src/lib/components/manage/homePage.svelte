@@ -448,7 +448,7 @@
 	<Card.Content>
 		<form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmiti18n}>
 			<p class="text-sm font-medium">All available languages</p>
-			<div class="mb-8 flex w-full flex-row gap-x-4">
+			<div class="mb-8 flex w-full flex-row flex-wrap gap-x-4">
 				{#each i18n.locales as locale}
 					<div>
 						<label>
