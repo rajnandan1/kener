@@ -112,7 +112,6 @@
 		const { event, data } = e.detail;
 		Analytics.track(event, data);
 	}
-	console.log(">>>>>>----  +layout:115 ", data.site.metaTags);
 </script>
 
 <svelte:window on:analyticsEvent={captureAnalytics} />
