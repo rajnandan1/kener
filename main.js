@@ -85,8 +85,6 @@ app.listen(PORT, async () => {
 	await runMigrations();
 	await runSeed();
 	await db.destroy();
-
+	Startup();
 	console.log("Kener is running on port " + PORT + "!");
 });
-
-Startup();

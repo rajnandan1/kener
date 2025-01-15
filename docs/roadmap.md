@@ -30,6 +30,10 @@ description: Roadmap for Kener
 
 ☐ Add support for custom themes
 
+☐ Handle uploaded images for docker containers
+
+☐ Introduce sitemap.xml
+
 ☑ ~~Create Admin UI~~ Released in (3.0.0)
 
 ---

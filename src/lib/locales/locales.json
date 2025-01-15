@@ -27,6 +27,10 @@
 		"code": "de",
 		"name": "Deutsch"
 	},
+	{
+		"code": "ru",
+		"name": "Русский"
+	},
   {
 		"code": "dk",
 		"name": "Dansk"
