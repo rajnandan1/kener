@@ -11,11 +11,11 @@ import {
 export async function load({ params, route, url, cookies, request }) {
 	let isSetupComplete = await IsSetupComplete();
 	if (!isSetupComplete) {
-		throw redirect(302, base + "/setup");
+		throw redirect(302, base + "/manage/setup");
 	}
 
 	if (process.env.KENER_SECRET_KEY === undefined) {
-		throw redirect(302, base + "/setup");
+		throw redirect(302, base + "/manage/setup");
 	}
 
 	let isLoggedIn = await IsLoggedInSession(cookies);

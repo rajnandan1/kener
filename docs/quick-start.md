@@ -40,7 +40,7 @@ cp .env.example .env
 npm run dev
 ```
 
-Kener Development Server would be running at PORT 3000. Go to [http://localhost:3000](http://localhost:3000)
+Kener Development Server would be running at PORT 3000. Go to [http://localhost:3000](http://localhost:3000) to see the Kener in action.
 
 ## Create a new User
 

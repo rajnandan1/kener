@@ -38,7 +38,7 @@ export async function POST({ request, cookies }) {
 	if (!validatePassword(password)) {
 		let errorMessage =
 			"Password must contain at least one digit, one lowercase letter, one uppercase letter, and have a minimum length of 8 characters.";
-		throw redirect(302, base + "/setup?error=" + errorMessage);
+		throw redirect(302, base + "/manage/setup?error=" + errorMessage);
 	}
 	let user = {
 		email: email,
