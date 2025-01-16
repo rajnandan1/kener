@@ -196,6 +196,11 @@ class DbImpl {
 		return await this.knex("site_data").select("value").where("key", key).first();
 	}
 
+	async getSiteDataByKey(key) {
+		//select all
+		return await this.knex("site_data").where("key", key).first();
+	}
+
 	//insert into monitors
 	async insertMonitor(data) {
 		return await this.knex("monitors").insert({

@@ -101,9 +101,13 @@ const pingCall = async (hostsV4, hostsV6) => {
 			let res = await ping.promise.probe(host);
 			alive = alive && res.alive;
 			latencyTotal += res.time;
+			if (!res.alive) {
+				throw new Error(JSON.stringify(res));
+			}
 		} catch (error) {
 			alive = alive && false;
 			latencyTotal += 30;
+			console.log(`Error in pingCall IP4 for ${host}`, error);
 		}
 	}
 
@@ -115,10 +119,14 @@ const pingCall = async (hostsV4, hostsV6) => {
 				timeout: false
 			});
 			alive = alive && res.alive;
+			if (!res.alive) {
+				throw new Error(JSON.stringify(res));
+			}
 			latencyTotal += res.time;
 		} catch (error) {
 			alive = alive && false;
 			latencyTotal += 30;
+			console.log(`Error in pingCall IP6 for ${host}`, error);
 		}
 	}
 	return {
@@ -175,6 +183,7 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
 		statusCode = data.status;
 		resp = data.data;
 	} catch (err) {
+		console.log("Error in apiCall", err.message);
 		if (err.message.startsWith("timeout of") && err.message.endsWith("exceeded")) {
 			timeoutError = true;
 		}

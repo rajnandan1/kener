@@ -21,6 +21,7 @@ db/*
 !db/.kener
 database/*
 !database/.kener
+!database/uploads/upload.dir
 
 static/uploads/*
 !static/uploads/upload.dir

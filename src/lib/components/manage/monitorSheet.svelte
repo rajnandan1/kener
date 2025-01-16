@@ -104,7 +104,6 @@
 	};
 
 	async function saveOrUpdateMonitor() {
-		console.log(newMonitor);
 		invalidFormMessage = "";
 		//tag should alphanumeric hyphen underscore only
 		const tagRegex = /^[a-zA-Z0-9_-]+$/;
@@ -176,21 +175,22 @@
 			let hasV4 = false;
 			let hasV6 = false;
 			if (hostsV4 && Array.isArray(hostsV4) && hostsV4.length > 0) {
-				hostsV4.forEach((host) => {
-					if (ValidateIpAddress(host) == "Invalid") {
-						invalidFormMessage = `hostsV4 ${host} is not valid`;
+				for (let i = 0; i < hostsV4.length; i++) {
+					if (ValidateIpAddress(hostsV4[i]) == "Invalid") {
+						invalidFormMessage = `hostsV4 ${hostsV4[i]} is not valid`;
 						return;
 					}
-				});
+				}
+
 				hasV4 = true;
 			}
 			if (hostsV6 && Array.isArray(hostsV6) && hostsV6.length > 0) {
-				hostsV6.forEach((host) => {
-					if (ValidateIpAddress(host) == "Invalid") {
-						invalidFormMessage = `hostsV6 ${host} is not valid`;
+				for (let i = 0; i < hostsV6.length; i++) {
+					if (ValidateIpAddress(hostsV6[i]) == "Invalid") {
+						invalidFormMessage = `hostsV6 ${hostsV6[i]} is not valid`;
 						return;
 					}
-				});
+				}
 				hasV6 = true;
 			}
 

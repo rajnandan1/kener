@@ -13,7 +13,6 @@
 	import { Play, User } from "lucide-svelte";
 	import { setMode, mode, ModeWatcher } from "mode-watcher";
 
-	export let data;
 	let thisYear = new Date().getFullYear();
 	function toggleMode() {
 		if ($mode === "light") {
@@ -112,7 +111,15 @@
 					</DropdownMenu.Group>
 				</DropdownMenu.Content>
 			</DropdownMenu.Root>
-			<Button variant="secondary" class="ml-4" target="_blank" href="{base}/">
+			<Button
+				variant="secondary"
+				class="ml-4"
+				href="{base}/"
+				on:click={(e) => {
+					e.preventDefault();
+					window.open(base + "/", "_blank");
+				}}
+			>
 				<Play class="mr-2 h-4 w-4" />
 				<span>Preview</span>
 			</Button>

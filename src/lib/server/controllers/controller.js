@@ -220,6 +220,17 @@ export const GetTriggerByID = async (id) => {
 	return await db.getTriggerByID(id);
 };
 
+export const GetSiteDataByKey = async (key) => {
+	let data = await db.getSiteDataByKey(key);
+	if (!data) {
+		return null;
+	}
+	if (data.data_type == "object") {
+		return JSON.parse(data.value);
+	}
+	return data.value;
+};
+
 export const UpdateTriggerData = async (data) => {
 	return await db.updateMonitorTrigger(data);
 };
