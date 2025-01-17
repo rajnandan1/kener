@@ -51,5 +51,17 @@
 	"UP": "可用",
 	"Updates": "更新",
 	"Uptime": "正常运行时间",
-	"%status for %duration": "%duration 内的 %status"
+	"%status for %duration": "%duration 内的 %status",
+	"January": "一月份",
+	"February": "二月",
+	"March": "三月",
+	"April": "四月",
+	"May": "五月",
+	"June": "六月",
+	"July": "七月",
+	"August": "八月",
+	"September": "九月",
+	"October": "十月",
+	"November": "十一月",
+	"December": "十二月"
 }

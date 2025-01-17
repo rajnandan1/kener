@@ -51,5 +51,17 @@
 	"UP": "En ligne",
 	"Updates": "Mises à jour",
 	"Uptime": "Temps de fonctionnement",
-	"%status for %duration": "%status pendant %duration"
+	"%status for %duration": "%status pendant %duration",
+	"January": "Janvier",
+	"February": "Février",
+	"March": "Mars",
+	"April": "Avril",
+	"May": "Mai",
+	"June": "Juin",
+	"July": "Juillet",
+	"August": "Août",
+	"September": "Septembre",
+	"October": "Octobre",
+	"November": "Novembre",
+	"December": "Décembre"
 }

@@ -51,5 +51,17 @@
 	"UP": "अप",
 	"Updates": "अपडेट्स",
 	"Uptime": "अपटाइम",
-	"%status for %duration": "%duration के लिए %status"
+	"%status for %duration": "%duration के लिए %status",
+	"January": "जनवरी",
+	"February": "फरवरी",
+	"March": "मार्च",
+	"April": "अप्रैल",
+	"May": "मई",
+	"June": "जून",
+	"July": "जुलाई",
+	"August": "आगस्त",
+	"September": "सितंबर",
+	"October": "ок्टोबर",
+	"November": "नवंबर",
+	"December": "दिसंबर"
 }

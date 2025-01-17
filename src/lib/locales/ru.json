@@ -51,5 +51,17 @@
 	"UP": "РАБОТАЕТ",
 	"Updates": "Обновления",
 	"Uptime": "Время работы",
-	"%status for %duration": "%status в течение %duration"
+	"%status for %duration": "%status в течение %duration",
+	"January": "Январь",
+	"February": "Февраль",
+	"March": "март",
+	"April": "Апрель",
+	"May": "май",
+	"June": "июнь",
+	"July": "Июль",
+	"August": "Август",
+	"September": "Сентябрь",
+	"October": "Октябрь",
+	"November": "Ноябрь",
+	"December": "Декабрь"
 }

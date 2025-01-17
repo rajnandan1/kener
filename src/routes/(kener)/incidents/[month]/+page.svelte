@@ -80,8 +80,8 @@
 		class="mesh mx-auto min-w-full max-w-[655px] rounded-md px-4 py-12 lg:flex lg:items-center"
 	>
 		<div class="blurry-bg mx-auto max-w-3xl text-center text-muted">
-			<h1 class="    text-5xl font-extrabold leading-tight">
-				{data.thisMonthName.replace("-", ", ")}
+			<h1 class="text-5xl font-extrabold leading-tight">
+				{l(data.lang, data.thisMonthName.split("-")[0])}, {data.thisMonthName.split("-")[1]}
 			</h1>
 			<p class="mx-auto mt-4 max-w-xl font-medium sm:text-xl">
 				{l(data.lang, "Incident Updates")}
@@ -111,7 +111,7 @@
 
 				<h1 class=" text-xl font-semibold leading-tight">
 					{l(data.lang, "No Incident On %date", {
-						date: data.thisMonthName.replace("-", ", ")
+						date: l(data.lang, data.thisMonthName.split("-")[0]) + ", " + data.thisMonthName.split("-")[1]
 					})}
 				</h1>
 			</div>
@@ -147,7 +147,7 @@
 				}}
 			>
 				<ArrowLeft class="arrow mr-2 h-4 w-4" />
-				{data.prevMonthName.replace("-", ", ")}
+				{l(data.lang, data.prevMonthName.split("-")[0]) + " " + data.prevMonthName.split("-")[1]}
 			</Button>
 			<Button
 				variant="secondary"
@@ -156,7 +156,7 @@
 					window.location.href = `${base}/incidents/${data.nextMonthName}`;
 				}}
 			>
-				{data.nextMonthName.replace("-", ", ")}
+				{l(data.lang, data.nextMonthName.split("-")[0]) + " " + data.nextMonthName.split("-")[1]}
 				<ArrowRight class="arrow ml-2 h-4 w-4" />
 			</Button>
 		</div>

@@ -51,5 +51,17 @@
 	"UP": "Hoạt động",
 	"Updates": "Cập nhật",
 	"Uptime": "Thời gian hoạt động",
-	"%status for %duration": "%status trong %duration"
+	"%status for %duration": "%status trong %duration",
+	"January": "Tháng Mười Một",
+	"February": "Tháng Mười Hai",
+	"March": "Tháng Bảy",
+	"April": "Tháng Tám",
+	"May": "Tháng Chín",
+	"June": "Tháng Hùng",
+	"July": "Tháng Sáu",
+	"August": "Tháng Tám",
+	"September": "Tháng Chín",
+	"October": "Tháng Mười Một",
+	"November": "Tháng Bảy",
+	"December": "Tháng Hùng"
 }

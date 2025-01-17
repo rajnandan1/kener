@@ -51,5 +51,17 @@
 	"UP": "OPPE",
 	"Updates": "Opdateringer",
 	"Uptime": "Oppetid",
-	"%status for %duration": "%status i %duration"
+	"%status for %duration": "%status i %duration",
+	"January": "Januar",
+	"February": "Februar",
+	"March": "March",
+	"April": "April",
+	"May": "Maj",
+	"June": "June",
+	"July": "Juli",
+	"August": "August",
+	"September": "September",
+	"October": "Oktober",
+	"November": "November",
+	"December": "December"
 }

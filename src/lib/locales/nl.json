@@ -51,5 +51,17 @@
 	"UP": "BEREIKBAAR",
 	"Updates": "Updates",
 	"Uptime": "Uptime",
-	"%status for %duration": "%status voor %duration"
+	"%status for %duration": "%status voor %duration",
+	"January": "Januari",
+	"February": "februari",
+	"March": "maart",
+	"April": "april",
+	"May": "mei",
+	"June": "Juni",
+	"July": "juli",
+	"August": "Augustus",
+	"September": "September",
+	"October": "Oktober",
+	"November": "November",
+	"December": "December"
 }
