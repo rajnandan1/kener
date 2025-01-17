@@ -18,8 +18,10 @@ export async function load({ params, route, url, cookies }) {
 			throw redirect(302, base + "/manage/app/site");
 		}
 	}
+	let userCount = await db.getUsersCount();
 	const query = url.searchParams;
 	return {
-		error: query.get("error")
+		error: query.get("error"),
+		firstUser: userCount.count === 0
 	};
 }

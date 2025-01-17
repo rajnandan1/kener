@@ -10,7 +10,8 @@
 		password: ""
 	};
 	export let data = {
-		error: null
+		error: null,
+		firstUser: false
 	};
 </script>
 
@@ -29,6 +30,30 @@
 			<Alert.Root variant="destructive" class="my-4">
 				<Alert.Title>Error</Alert.Title>
 				<Alert.Description>{data.error}</Alert.Description>
+			</Alert.Root>
+		{/if}
+		{#if data.firstUser}
+			<Alert.Root variant="destructive" class="my-4">
+				<Alert.Title class="flex justify-center text-center">
+					<picture>
+						<source
+							srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f973/512.webp"
+							type="image/webp"
+						/>
+						<img
+							src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f973/512.gif"
+							alt="🥳"
+							width="32"
+							height="32"
+						/>
+					</picture>
+				</Alert.Title>
+				<Alert.Description class="mt-4 text-center font-medium">
+					It looks like this is the first time you are signing in. Please <a
+						href="{base}/manage/setup"
+						class="text-blue-600">sign up</a
+					> first.
+				</Alert.Description>
 			</Alert.Root>
 		{/if}
 

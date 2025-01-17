@@ -106,7 +106,13 @@
 						<DropdownMenu.Label class="text-xs">My Account</DropdownMenu.Label>
 						<DropdownMenu.Separator />
 						<DropdownMenu.Item class="text-xs font-semibold">
-							<a href="{base}/manage/signin/logout">Logout</a>
+							<a
+								href="{base}/manage/signin/logout"
+								on:click={(e) => {
+									e.preventDefault();
+									window.location = base + "/manage/signin/logout";
+								}}>Logout</a
+							>
 						</DropdownMenu.Item>
 					</DropdownMenu.Group>
 				</DropdownMenu.Content>
