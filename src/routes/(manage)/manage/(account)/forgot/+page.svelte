@@ -13,7 +13,7 @@
 	if (data.isSecretSet === false || data.isResendSet === false) {
 		data.view = "error";
 		data.error =
-			"Environment variables are not set. Read the documentation to set them. https://kener.ing/docs/environment-vars";
+			"Environment variables(RESEND_API_KEY, RESEND_SENDER_EMAIL) are not set. Read the documentation to set them. https://kener.ing/docs/environment-vars";
 	}
 
 	if (data.isSiteURLSet === false) {

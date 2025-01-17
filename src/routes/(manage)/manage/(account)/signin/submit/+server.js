@@ -1,9 +1,11 @@
 // @ts-nocheck
 import { json, redirect } from "@sveltejs/kit";
+import dotenv from "dotenv";
+
 import { base } from "$app/paths";
 import db from "$lib/server/db/db.js";
 import { VerifyPassword, GenerateToken, VerifyToken } from "$lib/server/controllers/controller.js";
-
+dotenv.config();
 export async function POST({ request, cookies }) {
 	//read form post data email and passowrd
 	const formdata = await request.formData();
@@ -38,7 +40,7 @@ export async function POST({ request, cookies }) {
 		path: "/" + base,
 		maxAge: 365 * 24 * 60 * 60, // 1 year in seconds
 		httpOnly: true,
-		secure: true,
+		secure: process.env.NODE_ENV === "production",
 		sameSite: "lax"
 	});
 
