@@ -700,6 +700,20 @@ export const InsertNewAlert = async (data) => {
 	return await db.getActiveAlert(data.monitor_tag, data.monitor_status, data.alert_status);
 };
 
+export const CookieConfig = () => {
+	let isSecuredDomain = false;
+	if (!!process.env.ORIGIN) {
+		isSecuredDomain = process.env.ORIGIN.startsWith("https://");
+	}
+	return {
+		name: "kener-user",
+		secure: isSecuredDomain,
+		maxAge: 365 * 24 * 60 * 60, // 1 year in seconds
+		httpOnly: true,
+		sameSite: "lax"
+	};
+};
+
 export const IsLoggedInSession = async (cookies) => {
 	let tokenData = cookies.get("kener-user");
 	if (!!!tokenData) {

@@ -1,11 +1,14 @@
 // @ts-nocheck
 import { json, redirect } from "@sveltejs/kit";
-import dotenv from "dotenv";
 
 import { base } from "$app/paths";
 import db from "$lib/server/db/db.js";
-import { VerifyPassword, GenerateToken, VerifyToken } from "$lib/server/controllers/controller.js";
-dotenv.config();
+import {
+	VerifyPassword,
+	GenerateToken,
+	VerifyToken,
+	CookieConfig
+} from "$lib/server/controllers/controller.js";
 export async function POST({ request, cookies }) {
 	//read form post data email and passowrd
 	const formdata = await request.formData();
@@ -35,13 +38,14 @@ export async function POST({ request, cookies }) {
 	//generate token
 	let token = await GenerateToken(userDB);
 
+	let cookieConfig = CookieConfig();
 	//set server side cookie with 1 year expiry
-	cookies.set("kener-user", token, {
+	cookies.set(cookieConfig.name, token, {
 		path: "/" + base,
-		maxAge: 365 * 24 * 60 * 60, // 1 year in seconds
-		httpOnly: true,
-		secure: process.env.NODE_ENV === "production",
-		sameSite: "lax"
+		maxAge: cookieConfig.maxAge, // 1 year in seconds
+		httpOnly: cookieConfig.httpOnly,
+		secure: cookieConfig.secure,
+		sameSite: cookieConfig.sameSite
 	});
 
 	throw redirect(302, base + "/manage/app/site");

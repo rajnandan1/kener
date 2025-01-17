@@ -2,7 +2,12 @@
 import { json, redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
 import db from "$lib/server/db/db.js";
-import { HashPassword, GenerateSalt, GenerateToken } from "$lib/server/controllers/controller.js";
+import {
+	HashPassword,
+	GenerateSalt,
+	GenerateToken,
+	CookieConfig
+} from "$lib/server/controllers/controller.js";
 
 //function to validate a strong password
 /**
@@ -54,12 +59,13 @@ export async function POST({ request, cookies }) {
 		throw redirect(302, base + "/manage/signin?error=" + errorMessage);
 	}
 	let token = await GenerateToken(userDB);
-	cookies.set("kener-user", token, {
+	let cookieConfig = CookieConfig();
+	cookies.set(cookieConfig.name, token, {
 		path: "/" + base,
-		maxAge: 365 * 24 * 60 * 60, // 1 year in seconds
-		httpOnly: true,
-		secure: true,
-		sameSite: "lax"
+		maxAge: cookieConfig.maxAge, // 1 year in seconds
+		httpOnly: cookieConfig.httpOnly,
+		secure: cookieConfig.secure,
+		sameSite: cookieConfig.sameSite
 	});
 	throw redirect(302, base + "/");
 }
