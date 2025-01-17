@@ -27,9 +27,20 @@ RUN npm install && npm cache clean --force
 # Copy the rest of the application code
 COPY . .
 
+# Ensure /app/uploads and /app/database have rw permissions
+RUN mkdir -p /app/uploads /app/database && \
+    chmod -R 777 /app/uploads /app/database
+
 # Build the application
 RUN npm run build
 
+# Argument for the port
+ARG PORT=3000
+# Set the environment variable for the port
+ENV PORT=$PORT
+
+# Expose the application port
+EXPOSE $PORT
 
 # Set the command to run the application
 CMD ["node", "main"]

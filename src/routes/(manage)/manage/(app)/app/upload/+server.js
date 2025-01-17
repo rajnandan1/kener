@@ -38,8 +38,9 @@ export async function POST({ request, cookies }) {
 	// Read the file as a buffer
 	const fileBuffer = await imageFile.arrayBuffer();
 
+	let uploadPath = process.env.UPLOAD_PATH || "./static/uploads";
 	// Save the file to the static directory
-	writeFileSync(`./static/uploads/${filename}`, Buffer.from(fileBuffer));
+	writeFileSync(`${uploadPath}/${filename}`, Buffer.from(fileBuffer));
 
 	// Return a response
 	return json({ filename });

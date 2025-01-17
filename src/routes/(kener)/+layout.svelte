@@ -120,6 +120,7 @@
 			Analytics.track(event, data);
 		}
 	}
+	let customCSS = `<style>${data.site.customCSS}</style>`;
 </script>
 
 <svelte:window on:analyticsEvent={captureAnalytics} />
@@ -137,12 +138,15 @@
 		{/each}
 	{/if}
 	{#if hasConfiguredAnalytics}
-		<script src="https://unpkg.com/analytics/dist/analytics.min.js"></script>
+		<script src="https://unpkg.com/analytics/dist/analytics.min.js" defer></script>
 		{#each data.site.analytics as { id, type, script }}
 			{#if !!id}
-				<script data-type={type} src={script}></script>
+				<script data-type={type} src={script} defer></script>
 			{/if}
 		{/each}
+	{/if}
+	{#if !!data.site.customCSS}
+		{@html customCSS}
 	{/if}
 </svelte:head>
 <ModeWatcher />

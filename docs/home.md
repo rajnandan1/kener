@@ -71,7 +71,6 @@ Kener name is derived from the word "Kene" which means "how is it going" in Assa
 -   Handles Timezones for visitors
 -   Categorize Monitors into different Sections
 -   Cron-based scheduling for monitors. Minimum per minute
--   Flexible monitor configuration using YAML
 -   Construct complex API Polls - Chain, Secrets etc
 -   Supports a Default Status for Monitors
 -   Supports base path for hosting in k8s
@@ -91,6 +90,7 @@ Kener name is derived from the word "Kene" which means "how is it going" in Assa
 
 -   Incident Management
 -   Incident Communication
+-   Comprehensive APIs for Incident Management
 
 ### User Experience and Design
 
@@ -99,6 +99,7 @@ Kener name is derived from the word "Kene" which means "how is it going" in Assa
 -   User-friendly interface
 -   Responsive design for various devices
 -   Auto SEO and Social Media ready
+-   Server Side Rendering
 
 ## Technologies used
 

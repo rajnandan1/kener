@@ -15,6 +15,10 @@ Add your custom JS to `static/` file. And in the `src/app.html` file, add the fo
 
 ## Adding Custom CSS
 
+Three are two ways you can add custom CSS to your Kener instance.
+
+### CSS file
+
 Add your custom CSS to `static/` file. And in the `src/app.html` file, add the following line:
 
 ```html
@@ -22,3 +26,7 @@ Add your custom CSS to `static/` file. And in the `src/app.html` file, add the f
 ```
 
 Do not forget to add the base path if you are using a subpath. For example, if you are using a subpath `/kener`, then the path should be `/kener/your-custom-js-file.js`.
+
+### Inline CSS
+
+To add inline css go to Manage kener -> Theme -> Custom CSS and add your CSS there. Do not include `<style>` tags.

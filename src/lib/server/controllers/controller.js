@@ -71,6 +71,11 @@ const siteDataKeys = [
 		data_type: "string"
 	},
 	{
+		key: "customCSS",
+		isValid: (value) => typeof value === "string",
+		data_type: "string"
+	},
+	{
 		key: "i18n",
 		isValid: IsValidI18n,
 		data_type: "object"

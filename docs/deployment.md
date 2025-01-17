@@ -47,27 +47,42 @@ docker.io/rajnandan1/kener:latest
 ghcr.io/rajnandan1/kener:latest
 ```
 
-You should mount two host directories to persist your configuration and database. [Environmental variables](/docs/environment-vars) can be passed with `-e` An example `docker run` command:
+### Volumes
+
+-   `$(pwd)/uploads` You should mount one host directories to persist your image uploads.
+-   `$(pwd)/database` If you are using sqlite, you should mount one host directory to persist your database.
+
+### Environment Variables
+
+[Environment variables](/docs/environment-vars) can be passed with `-e` An example `docker run` command:
 
 Make sure `./database` directory is present in the root directory.
 
-This example is for sqlite. You can also use postgres. Read more about it [here](/docs/environment-vars/#database-url)
+### Examples
+
+This example is for sqlite. You can also use postgres. Read more about it [here](/docs/environment-vars#database-url)
+
+#### sqlite
 
 ```bash
 mkdir database
 docker run \
   -v $(pwd)/database:/app/database \
+  -v $(pwd)/uploads:/app/uploads \
   -p 3000:3000 \
   -e "KENER_SECRET_KEY=somesecretkey" \
   -e "ORIGIN=http://localhost:3000" \
   rajnandan1/kener
 ```
 
+#### .env
+
 You can also use a .env file
 
 ```bash
 docker run \
   -v $(pwd)/database:/app/database \
+  -v $(pwd)/uploads:/app/uploads \
   --env-file .env \
   -p 3000:3000 \
   rajnandan1/kener
@@ -75,15 +90,45 @@ docker run \
 
 Or use **Docker Compose** with the example [docker-compose.yaml](https://raw.githubusercontent.com/rajnandan1/kener/main/docker-compose.yml)
 
-## Base path
+#### Base path
 
 By default kener runs on `/` but you can change it to `/status` or any other path. Read more about it [here](/docs/environment-vars/#kener-base-path)
 
-## Postgres
+#### Postgres
 
+```bash
 docker run \
  -p 3000:3000 \
+ -v $(pwd)/uploads:/app/uploads \
  -e "KENER_SECRET_KEY=somesecretkey" \
  -e "DATABASE_URL=postgresql://myuser:mypassword@localhost:5432/mydatabase" \
  -e "ORIGIN=http://localhost:3000" \
  rajnandan1/kener
+```
+
+#### MySQL
+
+```bash
+docker run \
+ -p 3000:3000 \
+ -v $(pwd)/uploads:/app/uploads \
+ -e "KENER_SECRET_KEY=somesecretkey" \
+ -e "DATABASE_URL=mysql://root:password@mysql-container-2.orb.local:3306/kener-2" \
+ -e "ORIGIN=http://localhost:3000" \
+ rajnandan1/kener
+```
+
+#### Base Path
+
+Let us say you are running kener on a subpath `/status`. You can set the base path like this:
+
+```bash
+docker run \
+ -p 3000:3000 \
+ -v $(pwd)/uploads:/app/uploads \
+ -e "KENER_BASE_PATH=/status" \
+ -e "KENER_SECRET_KEY=somesecretkey" \
+ -e "DATABASE_URL=mysql://root:password@mysql-container-2.orb.local:3306/kener-2" \
+ -e "ORIGIN=https://www.example.com" \
+ rajnandan1/kener
+```
