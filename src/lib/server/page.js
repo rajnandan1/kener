@@ -32,8 +32,9 @@ function getTimezoneOffset(timeZone) {
 	return parseInt(hours) * 60 + parseInt(minutes);
 }
 
-function returnStatusClass(val, c, barStyle) {
-	if (barStyle === undefined || barStyle == "FULL") {
+function returnStatusClass(val, up, c, barStyle) {
+	// return "api-degraded-10";
+	if (barStyle === undefined || barStyle == "FULL" || up == 0) {
 		return c;
 	} else if (barStyle == "PARTIAL") {
 		let totalHeight = 24 * 60;
@@ -129,12 +130,17 @@ const FetchData = async function (site, monitor, localTz) {
 		totalUpCount += dayData.UP;
 
 		if (dayData.DEGRADED >= monitor.day_degraded_minimum_count) {
-			cssClass = returnStatusClass(dayData.DEGRADED, StatusObj.DEGRADED, site.barStyle);
+			cssClass = returnStatusClass(
+				dayData.DEGRADED,
+				dayData.UP,
+				StatusObj.DEGRADED,
+				site.barStyle
+			);
 			summaryDuration = getSummaryDuration(dayData.DEGRADED);
 			summaryStatus = "DEGRADED";
 		}
 		if (dayData.DOWN >= monitor.day_down_minimum_count) {
-			cssClass = returnStatusClass(dayData.DOWN, StatusObj.DOWN, site.barStyle);
+			cssClass = returnStatusClass(dayData.DOWN, dayData.UP, StatusObj.DOWN, site.barStyle);
 			summaryDuration = getSummaryDuration(dayData.DOWN);
 			summaryStatus = "DOWN";
 		}

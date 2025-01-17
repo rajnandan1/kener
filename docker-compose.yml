@@ -7,17 +7,14 @@ services:
     environment:
       - TZ=Etc/UTC
       - NODE_ENV=production
-      #- GH_TOKEN=
       #- PORT=3000
       #- KENER_BASE_PATH=
       #- RESEND_API_KEY=
       #- ORIGIN=
       #- KENER_SECRET_KEY=
+      #- RESEND_SENDER_EMAIL=
+      #- DATABASE_URL=
 
-      # If running on a LINUX HOST and not podman rootless these MUST BE SET
-      # run "id $user" from command line and replace numbers below with output from command
-      #- PUID=1000 # gid
-      #- PGID=1000 # uid
 
       ### Most likely DO NOT need to change anything below this ###
 
@@ -26,3 +23,4 @@ services:
       - '3000:3000/tcp'
     volumes:
       - '.:/app/database:rw'
+      - '.:/app/uploads:rw'

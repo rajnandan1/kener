@@ -42,6 +42,14 @@ npm run dev
 
 Kener Development Server would be running at PORT 3000. Go to [http://localhost:3000](http://localhost:3000) to see the Kener in action.
 
+<div class="note info">
+
+Status page will be at [http://localhost:3000](http://localhost:3000)
+
+Status Page Manage Portal will be at [http://localhost:3000/manage/app/site](http://localhost:3000/manage/app/site)
+
+</div>
+
 ## Create a new User
 
 If this is the first time your are launching kener then you would be redirected to the [set up page](/manage/setup). Fill in the details and click on `Let's Go` button.
@@ -63,6 +71,6 @@ Learn how to configure kener by going through one of the topics
 -   [Monitors](/docs/monitors): Learn how to set up and work with monitors in kener.
 -   [Triggers](/docs/triggers): Learn how to set up and work with triggers in kener.
 -   [Environment Variables](/docs/environment-vars): Learn how to set up and work with environment variables in kener.
--   [API](/docs/api): Learn how to use the API in kener.
+-   [API](/docs/kener-apis): Learn how to use the API in kener.
 -   [Databases](/docs/database): Learn how to set up and work with databases in kener.
 -   [Theme](/docs/theme): Learn how to set up and work with theme in kener.

@@ -25,7 +25,11 @@ app.get(base + "/healthcheck", (req, res) => {
 	res.end("ok");
 });
 //part /uploads server static files from static/uploads
-app.use(base + "/uploads", express.static("static/uploads"));
+
+//set env variable for upload path
+process.env.UPLOAD_PATH = "./uploads";
+
+app.use(base + "/uploads", express.static("uploads"));
 
 try {
 	const openapiJSON = fs.readFileSync("./openapi.json", "utf-8");

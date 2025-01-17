@@ -33,7 +33,8 @@
 			family: "Albert Sans"
 		},
 		colors: "",
-		font: ""
+		font: "",
+		customCSS: ""
 	};
 
 	themeData = siteDataExtractFromDb(data.siteData, themeData);
@@ -351,6 +352,19 @@
 					/>
 				</div>
 			</div>
+			<hr />
+			<div class="flex w-full flex-row justify-start gap-2">
+				<div class="w-full">
+					<Label for="customCSS" class="text-sm text-muted-foreground">Custom CSS</Label>
+					<textarea
+						bind:value={themeData.customCSS}
+						id="customCSS"
+						class="h-48 w-full rounded-sm border p-2"
+						placeholder=".className&#123;color: red;&#125;"
+					></textarea>
+				</div>
+			</div>
+			<hr />
 			<div class="flex w-full justify-end">
 				<Button type="submit" disabled={formState === "loading"}>
 					Save

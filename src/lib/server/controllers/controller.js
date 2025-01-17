@@ -71,6 +71,11 @@ const siteDataKeys = [
 		data_type: "string"
 	},
 	{
+		key: "customCSS",
+		isValid: (value) => typeof value === "string",
+		data_type: "string"
+	},
+	{
 		key: "i18n",
 		isValid: IsValidI18n,
 		data_type: "object"
@@ -218,6 +223,17 @@ export const GetAllTriggers = async (data) => {
 
 export const GetTriggerByID = async (id) => {
 	return await db.getTriggerByID(id);
+};
+
+export const GetSiteDataByKey = async (key) => {
+	let data = await db.getSiteDataByKey(key);
+	if (!data) {
+		return null;
+	}
+	if (data.data_type == "object") {
+		return JSON.parse(data.value);
+	}
+	return data.value;
 };
 
 export const UpdateTriggerData = async (data) => {

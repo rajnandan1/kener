@@ -16,6 +16,8 @@
 	let defaultLocaleKey = data.selectedLang;
 	let defaultTheme = data.site.theme;
 	const allLocales = data.site.i18n?.locales.filter((locale) => locale.selected === true);
+	let hasConfiguredAnalytics =
+		!!data.site.analytics && data.site.analytics.filter((provider) => !!provider.id).length > 0;
 
 	function toggleMode() {
 		if ($mode === "light") {
@@ -48,6 +50,7 @@
 	}
 
 	let Analytics;
+
 	onMount(async () => {
 		let localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 		if (localTz != data.localTz) {
@@ -62,7 +65,7 @@
 		//
 		const providers = data.site.analytics;
 		const analyticsPlugins = [];
-		if (providers) {
+		if (hasConfiguredAnalytics) {
 			//loop object
 
 			for (let i = 0; i < providers.length; i++) {
@@ -97,21 +100,27 @@
 				}
 			}
 		}
-		Analytics = _analytics.init({
-			app: "kener",
-			debug: true,
-			version: 100,
-			plugins: analyticsPlugins
-		});
-		Analytics.page();
+		if (hasConfiguredAnalytics) {
+			Analytics = _analytics.init({
+				app: "kener",
+				debug: true,
+				version: 100,
+				plugins: analyticsPlugins
+			});
+			Analytics.page();
+		}
+
 		if (!!data.bgc && data.bgc[0] == "#") {
 			document.body.style.backgroundColor = data.bgc;
 		}
 	});
 	function captureAnalytics(e) {
-		const { event, data } = e.detail;
-		Analytics.track(event, data);
+		if (hasConfiguredAnalytics) {
+			const { event, data } = e.detail;
+			Analytics.track(event, data);
+		}
 	}
+	let customCSS = `<style>${data.site.customCSS}</style>`;
 </script>
 
 <svelte:window on:analyticsEvent={captureAnalytics} />
@@ -128,13 +137,16 @@
 			<meta name={metaTag.key} content={metaTag.value} />
 		{/each}
 	{/if}
-	{#if data.site.analytics && data.site.analytics.length > 0}
-		<script src="https://unpkg.com/analytics/dist/analytics.min.js"></script>
+	{#if hasConfiguredAnalytics}
+		<script src="https://unpkg.com/analytics/dist/analytics.min.js" defer></script>
 		{#each data.site.analytics as { id, type, script }}
 			{#if !!id}
-				<script data-type={type} src={script}></script>
+				<script data-type={type} src={script} defer></script>
 			{/if}
 		{/each}
+	{/if}
+	{#if !!data.site.customCSS}
+		{@html customCSS}
 	{/if}
 </svelte:head>
 <ModeWatcher />

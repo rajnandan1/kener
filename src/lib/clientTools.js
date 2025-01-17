@@ -114,20 +114,21 @@ const allRecordTypes = {
 	ANY: 255
 };
 const ValidateIpAddress = function (input) {
-	// Check if input is a valid IPv4 address
-	const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+	// Check if input is a valid IPv4 address with an optional port
+	const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}(:\d{1,5})?$/;
 	if (ipv4Regex.test(input)) {
 		return "IPv4";
 	}
 
-	// Check if input is a valid IPv6 address
-	const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
+	// Improved IPv6 regex that better handles compressed notation
+	const ipv6Regex =
+		/^(?:(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){0,7}:|(?:[0-9a-fA-F]{1,4}:){1,7}:|(?:[0-9a-fA-F]{1,4}:){6}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])|:(?:(?::[0-9a-fA-F]{1,4}){1,7}|:)|(?:[0-9a-fA-F]{1,4}:){1,7}(?::|:[0-9a-fA-F]{1,4})|(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,5}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){1,4}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){1,3}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){1,2}(?::[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:(?:(?::[0-9a-fA-F]{1,4}){1,6})|:(?:(?::[0-9a-fA-F]{1,4}){1,7}|:))(?::\d{1,5})?$/;
 	if (ipv6Regex.test(input)) {
 		return "IPv6";
 	}
 
-	// Check if input is a valid domain name
-	const domainRegex = /^[a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,}$/;
+	// Check if input is a valid domain name with an optional port
+	const domainRegex = /^[a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,}(:\d{1,5})?$/;
 	if (domainRegex.test(input)) {
 		return "Domain Name";
 	}
@@ -135,6 +136,7 @@ const ValidateIpAddress = function (input) {
 	// If none of the above conditions match, the input is invalid
 	return "Invalid";
 };
+
 function IsValidHost(domain) {
 	const regex = /^[a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,}$/;
 	return regex.test(domain);

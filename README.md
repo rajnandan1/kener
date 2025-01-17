@@ -54,14 +54,14 @@ Here are some of the features that you get out of the box. Please read the docum
 -   Advanced application performance monitoring tools
 -   Real-time network monitor software capabilities
 -   Polls HTTP endpoint or Push data to monitor using Rest APIs
--   Handles Timezones for visitors
+-   Adjusts Timezones for visitors
 -   Categorize Monitors into different Sections
 -   Cron-based scheduling for monitors. Minimum per minute
--   Flexible monitor configuration using YAML
 -   Construct complex API Polls - Chain, Secrets etc
 -   Supports a Default Status for Monitors
 -   Supports base path for hosting in k8s
 -   Pre-built docker image for easy deployment
+-   Automatically adjusts timezones for visitors
 
 ### Customization and Branding
 
@@ -77,35 +77,21 @@ Here are some of the features that you get out of the box. Please read the docum
 
 -   Incident Management
 -   Incident Communication
+-   Comprehensive APIs for Incident Management
 
 ### User Experience and Design
 
--   100% Accessibility Score
+-   Good Accessibility Score
 -   Easy installation and setup
 -   User-friendly interface
 -   Responsive design for various devices
 -   Auto SEO and Social Media ready
+-   Server Side Rendering
 
 ## Technologies used
 
 -   [SvelteKit](https://kit.svelte.dev/)
 -   [shadcn-svelte](https://www.shadcn-svelte.com/)
-
-## Inspired from
-
--   [Upptime](https://upptime.js.org/)
-
-## Screenshots
-
-![image](static/marken_90.png)
-![image](static/marken_api.png)
-![image](static/marken_badge.png)
-![image](static/marken_embed.png)
-![image](static/marken_inci.png)
-![image](static/marken_share.png)
-![image](static/marken_td.png)
-![image](static/marken_tl.png)
-![image](static/marken_theme.png)
 
 ## Support Me
 
@@ -116,3 +102,7 @@ If you are using Kener and want to support me, you can do so by sponsoring me on
 [Buy Me a Coffee](https://www.buymeacoffee.com/rajnandan1)
 
 ![image](https://badges.pufler.dev/visits/rajnandan1/kener)
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=rajnandan1/kener&type=Date)](https://star-history.com/#rajnandan1/kener&Date)
