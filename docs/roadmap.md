@@ -30,7 +30,7 @@ description: Roadmap for Kener
 
 ☐ Add support for custom themes
 
-☐ Handle uploaded images for docker containers
+☑ Handle uploaded images for docker containers
 
 ☐ Introduce sitemap.xml
 
