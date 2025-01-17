@@ -161,7 +161,7 @@ section {
 }
 
 .bg-api-degraded-10 {
-	background: linear-gradient(0deg, var(--degraded-color) 30%, var(--up-color) 1%);
+	background: linear-gradient(0deg, var(--degraded-color) 10%, var(--up-color) 1%);
 }
 .bg-api-degraded-20 {
 	background: linear-gradient(0deg, var(--degraded-color) 20%, var(--up-color) 1%);
