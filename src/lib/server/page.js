@@ -8,17 +8,18 @@ import {
 	ParseUptime,
 	GetDayStartTimestampUTC
 } from "$lib/server/tool.js";
-
+import { formatDuration, intervalToDuration } from "date-fns";
+import { fdm } from "$lib/i18n/client";
 import { GetDataGroupByDayAlternative } from "$lib/server/controllers/controller.js";
 
-function getSummaryDuration(numOfMinute) {
-	if (numOfMinute > 59) {
-		let hour = Math.floor(numOfMinute / 60);
-		let minute = numOfMinute % 60;
-		return `${hour} hours ${minute} minute${minute > 1 ? "s" : ""}`;
-	} else {
-		return `${numOfMinute} minute${numOfMinute > 1 ? "s" : ""}`;
-	}
+function getSummaryDuration(numOfMinute, selectedLang) {
+	// Convert minutes to milliseconds and create duration object
+	const duration = intervalToDuration({
+		start: new Date(0),
+		end: new Date(numOfMinute * 60 * 1000)
+	});
+
+	return fdm(duration, selectedLang);
 }
 function getTimezoneOffset(timeZone) {
 	const formatter = new Intl.DateTimeFormat("en-US", { timeZone, timeZoneName: "short" });
@@ -71,9 +72,8 @@ function getCountOfSimilarStatuesEnd(arr, statusType) {
 	return count;
 }
 
-const FetchData = async function (site, monitor, localTz) {
+const FetchData = async function (site, monitor, localTz, selectedLang) {
 	const secondsInDay = 24 * 60 * 60;
-
 	//get offset from utc in minutes
 
 	const now = GetMinuteStartNowTimestampUTC() + 60;
@@ -136,12 +136,12 @@ const FetchData = async function (site, monitor, localTz) {
 				StatusObj.DEGRADED,
 				site.barStyle
 			);
-			summaryDuration = getSummaryDuration(dayData.DEGRADED);
+			summaryDuration = getSummaryDuration(dayData.DEGRADED, selectedLang);
 			summaryStatus = "DEGRADED";
 		}
 		if (dayData.DOWN >= monitor.day_down_minimum_count) {
 			cssClass = returnStatusClass(dayData.DOWN, dayData.UP, StatusObj.DOWN, site.barStyle);
-			summaryDuration = getSummaryDuration(dayData.DOWN);
+			summaryDuration = getSummaryDuration(dayData.DOWN, selectedLang);
 			summaryStatus = "DOWN";
 		}
 
@@ -175,13 +175,17 @@ const FetchData = async function (site, monitor, localTz) {
 
 		if (!!lastRow && lastRow.status == "DEGRADED") {
 			summaryDuration = getSummaryDuration(
-				getCountOfSimilarStatuesEnd(todayDataDb, "DEGRADED")
+				getCountOfSimilarStatuesEnd(todayDataDb, "DEGRADED"),
+				selectedLang
 			);
 			summaryStatus = "DEGRADED";
 			summaryColorClass = "api-degraded";
 		}
 		if (!!lastRow && lastRow.status == "DOWN") {
-			summaryDuration = getSummaryDuration(getCountOfSimilarStatuesEnd(todayDataDb, "DOWN"));
+			summaryDuration = getSummaryDuration(
+				getCountOfSimilarStatuesEnd(todayDataDb, "DOWN"),
+				selectedLang
+			);
 			summaryStatus = "DOWN";
 			summaryColorClass = "api-down";
 		}

@@ -34,7 +34,10 @@
 	if (!allLocales) {
 		defaultLocaleValue = "English";
 	} else {
-		defaultLocaleValue = allLocales.find((locale) => locale.code === defaultLocaleKey).name;
+		let lclFi = allLocales.find((locale) => locale.code === defaultLocaleKey);
+		if (lclFi) {
+			defaultLocaleValue = lclFi.name;
+		}
 	}
 	/**
 	 * @param {string} locale
@@ -217,7 +220,7 @@
 			on:click|preventDefault={(e) => {
 				location.href = `${base}/manage/app/site`;
 			}}
-			class="button-77 fixed bottom-8 left-8"
+			class="button-77 fixed bottom-8 left-8 z-50"
 			role="button"
 		>
 			Manage

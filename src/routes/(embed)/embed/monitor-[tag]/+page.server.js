@@ -17,7 +17,12 @@ export async function load({ params, route, url, parent }) {
 		delete monitors[i].api;
 		delete monitors[i].default_status;
 		monitors[i].embed = true;
-		let data = await FetchData(siteData, monitors[i], parentData.localTz);
+		let data = await FetchData(
+			siteData,
+			monitors[i],
+			parentData.localTz,
+			parentData.selectedLang
+		);
 		monitors[i].pageData = data;
 		monitorsActive.push(monitors[i]);
 	}

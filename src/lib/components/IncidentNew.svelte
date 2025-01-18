@@ -1,20 +1,23 @@
 <script>
-	import moment from "moment";
+	import { formatDistanceToNow, formatDistance } from "date-fns";
+
 	import * as Accordion from "$lib/components/ui/accordion";
-	import { l } from "$lib/i18n/client";
+	import { l, f, fd, fdn } from "$lib/i18n/client";
 	import { base } from "$app/paths";
 	export let incident;
 	export let index;
 	export let lang;
-	let startTime = incident.start_date_time;
-	// let startTime = moment(incident.incident_start_time * 1000).format("MMMM Do YYYY, h:mm:ss a");
-	let endTime = parseInt(new Date() / 1000);
-	let nowTime = parseInt(new Date() / 1000);
+	export let selectedLang = "en";
+	let startTime = new Date(incident.start_date_time * 1000);
+	let endTime = new Date();
+	let nowTime = new Date();
 	if (incident.end_date_time) {
-		endTime = incident.end_date_time;
+		endTime = new Date(incident.end_date_time * 1000);
 	}
-	let lastedFor = moment.duration(endTime - startTime, "seconds").humanize();
-	let startedAt = moment.duration(nowTime - startTime, "seconds").humanize();
+
+	const lastedFor = fd(startTime, endTime, selectedLang);
+	const startedAt = fdn(startTime, selectedLang);
+
 	let isFuture = false;
 	//is future incident
 	if (nowTime < startTime) {
@@ -94,7 +97,7 @@
 							</div>
 						{/if}
 						<p class="my-3 text-xs font-semibold uppercase text-muted-foreground">
-							Updates
+							{l(lang, "Updates")}
 						</p>
 						{#if incident.comments.length > 0}
 							<ol class="relative mt-2 pl-14">
@@ -108,8 +111,10 @@
 										<time
 											class=" mb-1 text-sm font-medium leading-none text-muted-foreground"
 										>
-											{moment(comment.commented_at * 1000).format(
-												"MMMM Do YYYY, h:mm:ss a"
+											{f(
+												new Date(comment.commented_at * 1000),
+												"MMMM do yyyy, h:mm:ss a",
+												selectedLang
 											)}
 										</time>
 

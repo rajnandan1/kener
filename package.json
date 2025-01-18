@@ -1,6 +1,6 @@
 {
 	"name": "kener",
-	"version": "3.0.0",
+	"version": "3.0.1",
 	"private": false,
 	"license": "MIT",
 	"description": "Kener: An open-source Node.js status page application for real-time service monitoring, incident management, and customizable reporting. Simplify service outage tracking, enhance incident communication, and ensure a seamless user experience.",
@@ -76,6 +76,7 @@
 		"bits-ui": "^0.9.9",
 		"clsx": "^2.0.0",
 		"croner": "^7.0.5",
+		"date-fns": "^4.1.0",
 		"dns2": "^2.1.0",
 		"dotenv": "^16.4.5",
 		"express": "^4.18.2",

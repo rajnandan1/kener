@@ -1,14 +1,15 @@
 <script>
-	import moment from "moment";
 	import { Badge } from "$lib/components/ui/badge";
 	import Incident from "$lib/components/IncidentNew.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { ArrowRight, ArrowLeft, CalendarCheck2, ChevronLeft } from "lucide-svelte";
 	import { base } from "$app/paths";
 	import { goto } from "$app/navigation";
-	import { l } from "$lib/i18n/client";
+	import { l, f } from "$lib/i18n/client";
+	import { startOfDay, addDays, subDays, getUnixTime, parse } from "date-fns";
 
 	export let data;
+	let selectedLang = data.selectedLang;
 	let incidents = data.incidents;
 
 	let incidentSmartDates = {};
@@ -19,25 +20,12 @@
 
 	incidents.forEach((incident) => {
 		let startTime = incident.start_date_time;
-		let today = moment(startTime * 1000)
-			.startOf("day")
-			.unix();
-		let tomorrow = moment(startTime * 1000)
-			.add(1, "days")
-			.startOf("day")
-			.unix();
-		let dayAfterTomorrow = moment(startTime * 1000)
-			.add(2, "days")
-			.startOf("day")
-			.unix();
-		let yesterday = moment(startTime * 1000)
-			.subtract(1, "days")
-			.startOf("day")
-			.unix();
-		let dayBeforeYesterday = moment(startTime * 1000)
-			.subtract(2, "days")
-			.startOf("day")
-			.unix();
+
+		const today = getUnixTime(startOfDay(new Date(startTime * 1000)));
+		const tomorrow = getUnixTime(startOfDay(addDays(new Date(startTime * 1000), 1)));
+		const dayAfterTomorrow = getUnixTime(startOfDay(addDays(new Date(startTime * 1000), 2)));
+		const yesterday = getUnixTime(startOfDay(subDays(new Date(startTime * 1000), 1)));
+		const dayBeforeYesterday = getUnixTime(startOfDay(subDays(new Date(startTime * 1000), 2)));
 
 		if (!incidentSmartDates[today]) {
 			incidentSmartDates[today] = [];
@@ -81,7 +69,7 @@
 	>
 		<div class="blurry-bg mx-auto max-w-3xl text-center text-muted">
 			<h1 class="    text-5xl font-extrabold leading-tight">
-				{data.thisMonthName.replace("-", ", ")}
+				{f(parse(data.thisMonthName, "MMMM-yyyy", new Date()), "MMMM, yyyy", selectedLang)}
 			</h1>
 			<p class="mx-auto mt-4 max-w-xl font-medium sm:text-xl">
 				{l(data.lang, "Incident Updates")}
@@ -119,7 +107,7 @@
 		{#each sortedIncidentSmartDates as date}
 			<div class="mb-4 grid w-full grid-cols-2 gap-x-4 rounded-md border bg-card">
 				<div class="text-md col-span-2 border-b p-2 px-4 font-medium">
-					{moment.unix(date).format("dddd, MMMM Do")}
+					{f(new Date(date * 1000), "EEEE, MMMM do", data.selectedLang)}
 				</div>
 				{#if incidentSmartDates[date].length === 0}
 					<div class="col-span-2 p-2 px-4 text-sm font-medium text-muted-foreground">
@@ -128,7 +116,12 @@
 				{/if}
 				{#each incidentSmartDates[date] as incident, index}
 					<div class="newincidents col-span-2">
-						<Incident {incident} lang={data.lang} index="incident-{index}" />
+						<Incident
+							{incident}
+							lang={data.lang}
+							index="incident-{index}"
+							{selectedLang}
+						/>
 					</div>
 				{/each}
 			</div>
@@ -147,7 +140,7 @@
 				}}
 			>
 				<ArrowLeft class="arrow mr-2 h-4 w-4" />
-				{data.prevMonthName.replace("-", ", ")}
+				{f(parse(data.prevMonthName, "MMMM-yyyy", new Date()), "MMMM, yyyy", selectedLang)}
 			</Button>
 			<Button
 				variant="secondary"
@@ -156,7 +149,7 @@
 					window.location.href = `${base}/incidents/${data.nextMonthName}`;
 				}}
 			>
-				{data.nextMonthName.replace("-", ", ")}
+				{f(parse(data.nextMonthName, "MMMM-yyyy", new Date()), "MMMM, yyyy", selectedLang)}
 				<ArrowRight class="arrow ml-2 h-4 w-4" />
 			</Button>
 		</div>

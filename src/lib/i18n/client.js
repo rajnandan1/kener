@@ -1,4 +1,31 @@
 // @ts-nocheck
+
+import { format, formatDistance, formatDistanceToNow, formatDuration } from "date-fns";
+import { ru, enUS, hi, de, zhCN, vi, ja, nl, da, fr, ko } from "date-fns/locale";
+
+const locales = { ru, en: enUS, hi, de, "zh-CN": zhCN, vi, ja, nl, dk: da, fr, ko };
+
+const f = function (date, formatStr, locale) {
+	return format(date, formatStr, {
+		locale: locales[locale] || enUS
+	});
+};
+
+const fd = function (start, end, locale) {
+	return formatDistance(start, end, { addSuffix: false, locale: locales[locale] });
+};
+const fdn = function (start, locale) {
+	return formatDistanceToNow(start, { addSuffix: true, locale: locales[locale] });
+};
+const fdm = function (duration, locale) {
+	return formatDuration(duration, {
+		format: ["hours", "minutes"],
+		zero: false,
+		delimiter: " ",
+		locale: locales[locale]
+	});
+};
+
 const l = function (sessionLangMap, key, args = {}) {
 	const keys = key.split(".");
 	let obj = sessionLangMap;
@@ -31,30 +58,4 @@ const summaryTime = function (summaryStatus) {
 	return "%status for %duration";
 };
 
-const n = function (
-	/** @type {{ numbers: { [x: string]: any; }; }} */ sessionLangMap,
-	/** @type {string} */ inputString
-) {
-	const translations = sessionLangMap.numbers;
-	console.trace("translations", translations);
-	// @ts-ignore
-	return inputString.replace(
-		/\d/g,
-		(/** @type {string | number} */ match) => translations[match] || match
-	);
-};
-const ampm = function (
-	/** @type {{ monitor: { [x: string]: any; }; }} */ sessionLangMap,
-	/** @type {string} */ inputString
-) {
-	const translations = sessionLangMap.monitor;
-
-	// @ts-ignore
-	let resp = inputString.replace(/(am|pm)/g, function (/** @type {string | number} */ match) {
-		return translations[match] || match;
-	});
-
-	return resp;
-};
-
-export { l, summaryTime, n, ampm };
+export { l, summaryTime, f, formatDistance, fd, fdn, fdm };

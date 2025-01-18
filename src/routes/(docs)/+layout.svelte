@@ -53,6 +53,7 @@
 <svelte:window on:pagechange={pageChange} on:rightbar={updateTableOfContents} />
 <svelte:head>
 	<link rel="icon" id="kener-app-favicon" href="{base}/logo96.png" />
+
 	<!-- Google tag (gtag.js) -->
 	<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q3MLRXCBFT"></script>
 	<script>

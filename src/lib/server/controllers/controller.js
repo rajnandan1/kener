@@ -454,9 +454,8 @@ export const CreateIncident = async (data) => {
 	}
 
 	let newIncident = await db.createIncident(incident);
-
 	return {
-		incident_id: newIncident.lastInsertRowid
+		incident_id: newIncident[0]
 	};
 };
 
@@ -713,7 +712,17 @@ export const CookieConfig = () => {
 		sameSite: "lax"
 	};
 };
+export const GetLocaleFromCookie = (site, cookies) => {
+	let selectedLang = "en";
+	const localLangCookie = cookies.get("localLang");
 
+	if (!!localLangCookie && site.i18n?.locales.find((l) => l.code === localLangCookie)) {
+		selectedLang = localLangCookie;
+	} else if (site.i18n?.defaultLocale && site.i18n?.locales[site.i18n.defaultLocale]) {
+		selectedLang = site.i18n.defaultLocale;
+	}
+	return selectedLang;
+};
 export const IsLoggedInSession = async (cookies) => {
 	let tokenData = cookies.get("kener-user");
 	if (!!!tokenData) {

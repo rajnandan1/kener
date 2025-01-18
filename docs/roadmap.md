@@ -28,9 +28,15 @@ description: Roadmap for Kener
 
 ☐ Introduce sitemap.xml
 
-☐ Migrate from moment to date-fns
+☑ ~~Migrate from moment to date-fns for status page~~ (moment remains in dashboard. Will remove later)
 
 ☑ ~~Create Admin UI~~ Released in (3.0.0)
+
+☐ Webhook customization
+
+☐ Monitor Update Screen
+
+☐ i18n for admin dashboard
 
 ---
 

@@ -761,7 +761,7 @@ textarea::placeholder {
 	vertical-align: middle;
 	width: auto;
 	word-break: keep-all;
-	z-index: 0;
+	z-index: 10;
 }
 
 @media (min-width: 768px) {

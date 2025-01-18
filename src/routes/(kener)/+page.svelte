@@ -108,7 +108,12 @@
 		<Card.Root class="w-full">
 			<Card.Content class=" newincidents w-full overflow-hidden p-0">
 				{#each data.unresolvedIncidents as incident, index}
-					<Incident {incident} lang={data.lang} index="incident-{index}" />
+					<Incident
+						{incident}
+						lang={data.lang}
+						index="incident-{index}"
+						selectedLang={data.selectedLang}
+					/>
 				{/each}
 			</Card.Content>
 		</Card.Root>
@@ -161,6 +166,7 @@
 						{monitor}
 						localTz={data.localTz}
 						lang={data.lang}
+						selectedLang={data.selectedLang}
 					/>
 				{/each}
 			</Card.Content>
@@ -246,7 +252,11 @@
 				<X class="h-4 w-4   text-muted-foreground" />
 			</Button>
 			<div class="content">
-				<ShareMenu monitor={activeMonitor} lang={data.lang} />
+				<ShareMenu
+					monitor={activeMonitor}
+					lang={data.lang}
+					selectedLang={data.selectedLang}
+				/>
 			</div>
 		</div>
 	</div>

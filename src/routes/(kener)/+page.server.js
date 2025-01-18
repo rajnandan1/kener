@@ -26,7 +26,12 @@ export async function load({ parent, url }) {
 		delete monitors[i].api;
 		delete monitors[i].default_status;
 
-		let data = await FetchData(siteData, monitors[i], parentData.localTz);
+		let data = await FetchData(
+			siteData,
+			monitors[i],
+			parentData.localTz,
+			parentData.selectedLang
+		);
 		monitors[i].pageData = data;
 
 		monitors[i].activeIncidents = [];

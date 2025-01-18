@@ -4,6 +4,8 @@
 	import { Badge } from "$lib/components/ui/badge";
 	import { Button } from "$lib/components/ui/button";
 	import { base } from "$app/paths";
+	import { sub, startOfDay, getUnixTime } from "date-fns";
+
 	import {
 		Share2,
 		Link,
@@ -19,10 +21,9 @@
 	import { createEventDispatcher } from "svelte";
 	import { afterUpdate } from "svelte";
 	import axios from "axios";
-	import { l, summaryTime, n, ampm } from "$lib/i18n/client";
+	import { l, summaryTime, f } from "$lib/i18n/client";
 	import { hoverAction, clickOutsideAction, slide } from "svelte-legos";
 	import LoaderBoxes from "$lib/components/loaderbox.svelte";
-	import moment from "moment";
 	import NumberFlow from "@number-flow/svelte";
 	import Incident from "$lib/components/IncidentNew.svelte";
 
@@ -33,6 +34,8 @@
 	export let localTz;
 	export let lang;
 	export let embed = false;
+	export let selectedLang = "en";
+
 	let _0Day = {};
 	let _90Day = monitor.pageData._90Day;
 	let uptime90Day = monitor.pageData.uptime90Day;
@@ -87,33 +90,31 @@
 			});
 		}, 1000 * 0.2);
 	}
-
 	let uptimesRollers = [
 		{
 			text: `${l(lang, "90 Days")}`,
-			startTs: moment().subtract(90, "days").startOf("day").unix(),
+			startTs: getUnixTime(startOfDay(sub(new Date(), { days: 90 }))),
 			value: uptime90Day
 		},
 		{
 			text: `${l(lang, "60 Days")}`,
-			startTs: moment().subtract(59, "days").startOf("day").unix(),
-			value: uptime90Day
+			startTs: getUnixTime(startOfDay(sub(new Date(), { days: 59 })))
 		},
 		{
 			text: `${l(lang, "30 Days")}`,
-			startTs: moment().subtract(29, "days").startOf("day").unix()
+			startTs: getUnixTime(startOfDay(sub(new Date(), { days: 29 })))
 		},
 		{
 			text: `${l(lang, "14 Days")}`,
-			startTs: moment().subtract(13, "days").startOf("day").unix()
+			startTs: getUnixTime(startOfDay(sub(new Date(), { days: 13 })))
 		},
 		{
 			text: `${l(lang, "7 Days")}`,
-			startTs: moment().subtract(6, "days").startOf("day").unix()
+			startTs: getUnixTime(startOfDay(sub(new Date(), { days: 6 })))
 		},
 		{
 			text: l(lang, "Today"),
-			startTs: moment().startOf("day").unix()
+			startTs: getUnixTime(startOfDay(new Date()))
 		}
 	];
 
@@ -171,7 +172,7 @@
 		}
 		let incidentIDs = incidentObj?.ids || [];
 		dayUptime = "NA";
-		dateFetchedFor = moment(new Date(bar.timestamp * 1000)).format("dddd, MMMM Do, YYYY");
+		dateFetchedFor = f(new Date(bar.timestamp * 1000), "EEEE, MMMM do, yyyy", selectedLang);
 		showDailyDataModal = true;
 		loadingDayData = true;
 		dayIncidentsFull = [];
@@ -328,9 +329,12 @@
 						{#if bar.showDetails}
 							<div class="show-hover absolute text-sm">
 								<div class="text-{bar.textClass} text-xs font-semibold">
-									{moment(new Date(bar.timestamp * 1000)).format(
-										"dddd, MMMM Do, YYYY"
-									)} -
+									{f(
+										new Date(bar.timestamp * 1000),
+										"EEEE, MMMM do, yyyy",
+										selectedLang
+									)}
+									-
 									{l(lang, summaryTime(bar.summaryStatus), {
 										status: bar.summaryStatus,
 										duration: bar.summaryDuration

@@ -4,12 +4,13 @@
 	import { base } from "$app/paths";
 	import { onMount } from "svelte";
 	import { analyticsEvent } from "$lib/boringOne";
-	import { l, summaryTime, n, ampm } from "$lib/i18n/client";
+	import { l, summaryTime } from "$lib/i18n/client";
 	import * as RadioGroup from "$lib/components/ui/radio-group";
 	import { Label } from "$lib/components/ui/label";
 
 	export let monitor;
 	export let lang;
+	export let selectedLang = "en";
 	let theme = "light";
 	let copiedLink = false;
 	let embedType = "js";

@@ -38,21 +38,15 @@ export async function load({ params, route, url, cookies, request }) {
 	if (userAgent?.includes("Chrome-Lighthouse") || userAgent?.includes("bot")) {
 		isBot = true;
 	}
-
+	const query = url.searchParams;
 	//load all files from lib locales folder
-	let selectedLang = "en";
-	const localLangCookie = cookies.get("localLang");
+	let selectedLang = query.get("locale") ? query.get("locale") : "en";
 
-	if (!!localLangCookie && site.i18n?.locales.find((l) => l.code === localLangCookie)) {
-		selectedLang = localLangCookie;
-	} else if (site.i18n?.defaultLocale && site.i18n?.locales[site.i18n.defaultLocale]) {
-		selectedLang = site.i18n.defaultLocale;
-	}
 	let embed = false;
 	if (route.id.endsWith("monitor-[tag]")) {
 		embed = true;
 	}
-	const query = url.searchParams;
+
 	const bgc = query.get("bgc") ? "#" + query.get("bgc") : "";
 	return {
 		site: site,
