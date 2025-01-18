@@ -38,5 +38,9 @@
   {
 		"code": "nl",
 		"name": "Nederlands"
+	},
+  {
+		"code": "ko",
+		"name": "한국어"
 	}
 ]
