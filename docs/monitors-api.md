@@ -47,7 +47,7 @@ The eval is used to define the JavaScript code that should be used to evaluate t
 
 This is a anonymous JS function, by default it looks like this.
 
-> **_NOTE:_** The eval function should always return a json object. The json object can have only status(UP/DOWN/DEGRADED) and lantecy(number)
+> **_NOTE:_** The eval function should always return a json object. The json object can have only status(UP/DOWN/DEGRADED) and latency(number)
 > `{status:"DEGRADED", latency: 200}`.
 
 ```javascript
@@ -73,6 +73,10 @@ let decodedResp = atob(responseDataBase64);
 //if the response is a json object
 //let jsonResp = JSON.parse(decodedResp)
 ```
+
+<div class="note danger">
+    The eval is validated against (200, 1000, "e30=") which translates to (200, 1000, '{}') within the function. So whatever function you write should be able to handle these values otherwise you won't be able to save the monitor.
+</div>
 
 #### Example
 

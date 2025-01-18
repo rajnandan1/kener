@@ -95,6 +95,7 @@
 				return false;
 			}
 		} catch (error) {
+			invalidFormMessage = error.message + " in eval.";
 			return false;
 		}
 		return true;
@@ -162,7 +163,7 @@
 
 			//validating eval
 			if (!!newMonitor.apiConfig.eval && !isValidEval()) {
-				invalidFormMessage = "Invalid eval";
+				invalidFormMessage = invalidFormMessage + "Invalid eval";
 				return;
 			}
 
