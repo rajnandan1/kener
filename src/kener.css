@@ -167,16 +167,16 @@ section {
 	background: linear-gradient(0deg, var(--degraded-color) 20%, var(--up-color) 1%);
 }
 .bg-api-degraded-40 {
-	background: linear-gradient(0deg, var(--degraded-color) 20%, var(--up-color) 1%);
+	background: linear-gradient(0deg, var(--degraded-color) 40%, var(--up-color) 1%);
 }
 .bg-api-degraded-60 {
-	background: linear-gradient(0deg, var(--degraded-color) 20%, var(--up-color) 1%);
+	background: linear-gradient(0deg, var(--degraded-color) 60%, var(--up-color) 1%);
 }
 .bg-api-degraded-80 {
-	background: linear-gradient(0deg, var(--degraded-color) 20%, var(--up-color) 1%);
+	background: linear-gradient(0deg, var(--degraded-color) 80%, var(--up-color) 1%);
 }
 .bg-api-degraded-90 {
-	background: linear-gradient(0deg, var(--degraded-color) 20%, var(--up-color) 1%);
+	background: linear-gradient(0deg, var(--degraded-color) 90%, var(--up-color) 1%);
 }
 
 /*Needed to show markdown properly*/

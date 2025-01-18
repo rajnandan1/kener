@@ -584,7 +584,6 @@ export const UpdateCommentByID = async (incident_id, comment_id, comment, state,
 };
 export const AddIncidentComment = async (incident_id, comment, state, commented_at) => {
 	let incidentExists = await db.getIncidentById(incident_id);
-	console.log(">>>>>>----  controller:588 ", incidentExists);
 	if (!incidentExists) {
 		throw new Error(`Incident with id ${incident_id} does not exist`);
 	}
