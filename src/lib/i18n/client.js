@@ -1,6 +1,6 @@
 // @ts-nocheck
 
-import { format, formatDistance, formatDistanceToNow } from "date-fns";
+import { format, formatDistance, formatDistanceToNow, formatDuration } from "date-fns";
 import { ru, enUS, hi, de, zhCN, vi, ja, nl, da, fr, ko } from "date-fns/locale";
 
 const locales = { ru, en: enUS, hi, de, "zh-CN": zhCN, vi, ja, nl, dk: da, fr, ko };
@@ -16,6 +16,14 @@ const fd = function (start, end, locale) {
 };
 const fdn = function (start, locale) {
 	return formatDistanceToNow(start, { addSuffix: true, locale: locales[locale] });
+};
+const fdm = function (duration, locale) {
+	return formatDuration(duration, {
+		format: ["hours", "minutes"],
+		zero: false,
+		delimiter: " ",
+		locale: locales[locale]
+	});
 };
 
 const l = function (sessionLangMap, key, args = {}) {
@@ -50,4 +58,4 @@ const summaryTime = function (summaryStatus) {
 	return "%status for %duration";
 };
 
-export { l, summaryTime, f, formatDistance, fd, fdn };
+export { l, summaryTime, f, formatDistance, fd, fdn, fdm };

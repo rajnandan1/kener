@@ -6,7 +6,6 @@
 	import { base } from "$app/paths";
 	import { goto } from "$app/navigation";
 	import { l, f } from "$lib/i18n/client";
-	import { onMount } from "svelte";
 	import { startOfDay, addDays, subDays, getUnixTime, parse } from "date-fns";
 
 	export let data;

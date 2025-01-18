@@ -252,7 +252,11 @@
 				<X class="h-4 w-4   text-muted-foreground" />
 			</Button>
 			<div class="content">
-				<ShareMenu monitor={activeMonitor} lang={data.lang} />
+				<ShareMenu
+					monitor={activeMonitor}
+					lang={data.lang}
+					selectedLang={data.selectedLang}
+				/>
 			</div>
 		</div>
 	</div>
