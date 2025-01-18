@@ -6,6 +6,7 @@ export async function GET({ url, params }) {
 	const uriEmbedded = query.get("monitor");
 	const theme = query.get("theme") || "light";
 	const bgc = query.get("bgc") || "transparent";
+	const locale = query.get("locale") || "en";
 	const uriOriginal = uriEmbedded;
 
 	const currentSlug = tag;
@@ -15,7 +16,7 @@ export async function GET({ url, params }) {
         var uid = "KENER_" + ~~(new Date().getTime() / 86400000);
         var uriOriginal = "${uriOriginal}";
         var uriOriginalNoProtocol = uriOriginal.split("//").pop();
-        var uriEmbedded = "${uriEmbedded}?theme=${theme}&bgc=${bgc}";
+        var uriEmbedded = "${uriEmbedded}?theme=${theme}&bgc=${bgc}&locale=${locale}";
         var currentSlug = "${currentSlug}";
         var target = document.querySelector("script[src*='" + uriOriginalNoProtocol + "']");
         var iframe = document.createElement("iframe");

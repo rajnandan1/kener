@@ -34,6 +34,7 @@ You can pass the following parameters to the embed code
 -   `theme`: You can pass `light` or `dark` theme
 -   `monitor`: The monitor url
 -   `bgc`: Background color of the monitor. Only supports hex color codes. DO NOT include the `#` symbol
+-   `locale`: The locale of the monitor. You can pass the code of the locale you have enabled in your kener settings
 
 Replace `[hostname]` with your kener hostname and `[tag]` with your monitor tag.
 
