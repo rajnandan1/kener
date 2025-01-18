@@ -20,19 +20,15 @@ description: Roadmap for Kener
 
 ☑ ~~Support for github enterprise~~
 
-☐ Add support for fly.io deployment
-
-☐ Add to digital ocean marketplace
-
-☐ Add to aws marketplace
-
 ☐ Add Rate limiting to APIs
 
 ☐ Add support for custom themes
 
-☑ Handle uploaded images for docker containers
+☑ ~~Handle uploaded images for docker containers~~
 
 ☐ Introduce sitemap.xml
+
+☐ Migrate from moment to date-fns
 
 ☑ ~~Create Admin UI~~ Released in (3.0.0)
 

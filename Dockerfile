@@ -11,7 +11,8 @@ RUN apt-get update && apt-get install -y \
     make \
     node-gyp \
     g++ \
-    tzdata && \
+    tzdata \
+	iputils-ping && \
     rm -rf /var/lib/apt/lists/*
 
 # Set the timezone environment variable
