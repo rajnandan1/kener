@@ -2,8 +2,8 @@
 
 import { redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
-import moment from "moment";
+import { format } from "date-fns";
 
 export async function load({ parent, url }) {
-	throw redirect(302, base + "/incidents/" + moment().format("MMMM-YYYY"));
+	throw redirect(302, base + "/incidents/" + format(new Date(), "MMMM-yyyy"));
 }

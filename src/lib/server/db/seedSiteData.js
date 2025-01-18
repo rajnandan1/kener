@@ -41,7 +41,7 @@ const seedSiteData = {
 	nav: [
 		{ name: "Documentation", url: "/docs/home", iconURL: "" },
 		{ name: "Github", iconURL: "", url: "https://github.com/rajnandan1/kener" },
-		{ name: "Buy me a coffee", iconURL: "", url: "https://buymeacoffee.com/rajnandan1" }
+		{ name: "Login", iconURL: "", url: "/manage/signin" }
 	],
 	hero: {
 		title: "Kener is a Modern Open-Source Status Page System",
@@ -51,13 +51,7 @@ const seedSiteData = {
 		'<p class="text-center">\nMade using \n<a href="https://github.com/rajnandan1/kener" target="_blank" rel="noreferrer" class="font-medium underline underline-offset-4">\n  Kener\n</a>\nan open source status page system built with Svelte and TailwindCSS.<br/>\nCreated with ❤️ by <a href="https://rajnandan.com" target="_blank" rel="noreferrer" class="font-medium underline underline-offset-4">Raj Nandan Sharma</a>.\n</p>\n',
 	i18n: {
 		defaultLocale: "en",
-		locales: [
-			{ code: "en", name: "English", selected: true, disabled: false },
-			{ code: "hi", name: "हिन्दी", selected: true, disabled: false },
-			{ code: "zh_CN", name: "中文", selected: true, disabled: false },
-			{ code: "ja", name: "日本語", selected: true, disabled: false },
-			{ code: "vi", name: "Tiếng Việt", selected: true, disabled: false }
-		]
+		locales: [{ code: "en", name: "English", selected: true, disabled: false }]
 	},
 	pattern: "none",
 	analytics: [

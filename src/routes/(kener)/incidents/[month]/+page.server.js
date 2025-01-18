@@ -3,27 +3,38 @@
 import {
 	GetMonitors,
 	GetIncidentsOpenHome,
-	GetIncidentsPage
+	GetIncidentsPage,
+	GetLocaleFromCookie
 } from "$lib/server/controllers/controller.js";
 import { BeginningOfDay } from "$lib/server/tool.js";
 import db from "$lib/server/db/db.js";
-import moment from "moment";
+import {
+	format,
+	addMonths,
+	parse,
+	subMonths,
+	getUnixTime,
+	startOfMonth,
+	endOfMonth
+} from "date-fns";
+import { f } from "$lib/i18n/client";
 
-export async function load({ parent, url, params }) {
+export async function load({ parent, url, params, cookies }) {
 	const parentData = await parent();
+
 	let monitors = await GetMonitors({ status: "ACTIVE" });
 	const query = url.searchParams;
 	let todayStart = BeginningOfDay({ timeZone: parentData.localTz });
 	let tomorrowStart = todayStart + 86400;
-
-	let month = params.month;
+	let locale = GetLocaleFromCookie(parentData.site, cookies);
+	let month = params.month; //January-2021
 	if (!!!month) {
-		month = moment().format("MMMM-YYYY");
+		month = format(new Date(), "MMMM-yyyy");
 	}
 
-	let monthStartTs = moment(month, "MMMM-YYYY").unix();
+	let monthStartTs = getUnixTime(startOfMonth(parse(month, "MMMM-yyyy", new Date())));
 
-	let monthEndTs = moment(month, "MMMM-YYYY").endOf("month").unix();
+	let monthEndTs = getUnixTime(endOfMonth(parse(month, "MMMM-yyyy", new Date())));
 
 	let incidents = await GetIncidentsPage(monthStartTs, monthEndTs);
 
@@ -47,8 +58,8 @@ export async function load({ parent, url, params }) {
 
 	return {
 		incidents: incidents,
-		nextMonthName: moment(month, "MMMM-YYYY").add(1, "months").format("MMMM-YYYY"),
-		prevMonthName: moment(month, "MMMM-YYYY").subtract(1, "months").format("MMMM-YYYY"),
-		thisMonthName: month
+		nextMonthName: f(addMonths(parse(month, "MMMM-yyyy", new Date()), 1), "MMMM-yyyy", "en"),
+		prevMonthName: f(subMonths(parse(month, "MMMM-yyyy", new Date()), 1), "MMMM-yyyy", "en"),
+		thisMonthName: f(parse(month, "MMMM-yyyy", new Date()), "MMMM-yyyy", "en")
 	};
 }

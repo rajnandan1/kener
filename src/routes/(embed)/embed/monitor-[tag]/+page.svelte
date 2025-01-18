@@ -43,6 +43,7 @@
 					<Monitor
 						{monitor}
 						localTz={data.localTz}
+						selectedLang={data.selectedLang}
 						lang={data.lang}
 						{embed}
 						on:heightChange={handleHeightChange}
