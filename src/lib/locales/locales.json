@@ -42,5 +42,9 @@
 	{
 		"code": "ko",
 		"name": "한국어"
+	},
+	{
+		"code": "pt-BR",
+		"name": "Português Brasileiro"
 	}
 ]
