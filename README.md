@@ -103,6 +103,10 @@ If you are using Kener and want to support me, you can do so by sponsoring me on
 
 ![image](https://badges.pufler.dev/visits/rajnandan1/kener)
 
+## Contributing
+
+If you want to contribute to Kener, please read the [Contributing Guide](https://github.com/rajnandan1/kener/blob/main/.github/CONTRIBUTING.md).
+
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=rajnandan1/kener&type=Date)](https://star-history.com/#rajnandan1/kener&Date)
