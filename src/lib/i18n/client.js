@@ -1,9 +1,9 @@
 // @ts-nocheck
 
 import { format, formatDistance, formatDistanceToNow, formatDuration } from "date-fns";
-import { ru, enUS, hi, de, zhCN, vi, ja, nl, da, fr, ko } from "date-fns/locale";
+import { ru, enUS, hi, de, zhCN, vi, ja, nl, da, fr, ko, ptBR } from "date-fns/locale";
 
-const locales = { ru, en: enUS, hi, de, "zh-CN": zhCN, vi, ja, nl, dk: da, fr, ko };
+const locales = { ru, en: enUS, hi, de, "zh-CN": zhCN, vi, ja, nl, dk: da, fr, ko, "pt-BR": ptBR };
 
 const f = function (date, formatStr, locale) {
 	return format(date, formatStr, {
