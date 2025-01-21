@@ -10,7 +10,7 @@ export async function GET({ request, cookies }) {
 
 	//delete cookie from browser
 	cookies.set(cookieConfig.name, "", {
-		path: "/" + base,
+		path: cookieConfig.path,
 		maxAge: 0,
 		httpOnly: cookieConfig.httpOnly,
 		secure: cookieConfig.secure,

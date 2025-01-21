@@ -700,6 +700,9 @@ export const InsertNewAlert = async (data) => {
 };
 
 export const CookieConfig = () => {
+	//get base path from env
+	let cookiePath = !!process.env.KENER_BASE_PATH ? process.env.KENER_BASE_PATH : "/";
+
 	let isSecuredDomain = false;
 	if (!!process.env.ORIGIN) {
 		isSecuredDomain = process.env.ORIGIN.startsWith("https://");
@@ -709,7 +712,8 @@ export const CookieConfig = () => {
 		secure: isSecuredDomain,
 		maxAge: 365 * 24 * 60 * 60, // 1 year in seconds
 		httpOnly: true,
-		sameSite: "lax"
+		sameSite: "lax",
+		path: cookiePath
 	};
 };
 export const GetLocaleFromCookie = (site, cookies) => {

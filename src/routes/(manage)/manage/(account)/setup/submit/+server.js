@@ -61,7 +61,7 @@ export async function POST({ request, cookies }) {
 	let token = await GenerateToken(userDB);
 	let cookieConfig = CookieConfig();
 	cookies.set(cookieConfig.name, token, {
-		path: "/" + base,
+		path: cookieConfig.path,
 		maxAge: cookieConfig.maxAge, // 1 year in seconds
 		httpOnly: cookieConfig.httpOnly,
 		secure: cookieConfig.secure,
