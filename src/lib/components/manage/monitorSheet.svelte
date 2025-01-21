@@ -11,6 +11,7 @@
 	import {
 		allRecordTypes,
 		ValidateIpAddress,
+		ValidateCronExpression,
 		IsValidHost,
 		IsValidNameServer
 	} from "$lib/clientTools.js";
@@ -130,13 +131,11 @@
 
 		//validating cron
 		const cron = newMonitor.cron;
-		const cronRegex =
-			/^((\*|([0-5]?\d)(-[0-5]?\d)?(\/[1-9]\d*)?|([0-5]?\d(,[0-5]?\d)*))\s+){4}(\*|([0-7](,[0-7])*|([0-7]-[0-7])))$/;
-		if (!cronRegex.test(cron)) {
-			invalidFormMessage = "Invalid Cron";
+		let cronValidation = ValidateCronExpression(cron);
+		if (cronValidation.isValid === false) {
+			invalidFormMessage = "Cron invalid: " + cronValidation.message;
 			return;
 		}
-
 		//if monitor type is API
 		if (newMonitor.monitor_type === "API") {
 			//validating url
