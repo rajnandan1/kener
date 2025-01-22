@@ -717,9 +717,8 @@ export const CookieConfig = () => {
 	};
 };
 export const GetLocaleFromCookie = (site, cookies) => {
-	let selectedLang = "en";
+	let selectedLang = site.i18n?.defaultLocale || "en";
 	const localLangCookie = cookies.get("localLang");
-
 	if (!!localLangCookie && site.i18n?.locales.find((l) => l.code === localLangCookie)) {
 		selectedLang = localLangCookie;
 	} else if (site.i18n?.defaultLocale && site.i18n?.locales[site.i18n.defaultLocale]) {
