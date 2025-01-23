@@ -77,6 +77,21 @@
 		showAddMonitor = true;
 	}
 
+	function moveMonitorUp(index) {
+		if (index > 0) {
+		// Swap the monitor at the current index with the one above it
+		[monitors[index - 1], monitors[index]] = [monitors[index], monitors[index - 1]];
+	}
+	}
+
+	function moveMonitorDown(index) {
+		if (index < monitors.length - 1) {
+		// Swap the monitor at the current index with the one below it
+		[monitors[index], monitors[index + 1]] = [monitors[index + 1], monitors[index]];
+	}
+	}
+
+
 	async function loadData() {
 		loadingData = true;
 		try {
@@ -226,61 +241,98 @@
 </div>
 
 <div class="mt-4">
-	{#each monitors as monitor}
-		<Card.Root class="mb-4">
-			<Card.Header class="relative">
-				<Card.Title>
-					{#if !!monitor.image}
-						<img
-							src={base + monitor.image}
-							alt={monitor.name}
-							class="mr-2 inline-block h-8 w-8"
-						/>
-					{/if}
-					{monitor.name}
-				</Card.Title>
-				{#if !!monitor.description}
-					<Card.Description>{monitor.description}</Card.Description>
-				{/if}
-				<div class="absolute right-2 top-0.5">
-					<Button
-						variant="secondary"
-						class="h-8 w-8 p-2"
-						on:click={() => openAlertMenu(monitor)}
-					>
-						<Bell class="inline h-4 w-4" />
-					</Button>
-					<Button
-						variant="secondary"
-						class="h-8 w-8 p-2"
-						on:click={() => showUpdateMonitorSheet(monitor)}
-					>
-						<Settings class="inline h-4 w-4" />
-					</Button>
-				</div>
-			</Card.Header>
-			<Card.Content>
-				<div class="flex justify-between gap-4">
-					<div class="">
-						<Label class="text-xs font-semibold text-muted-foreground">Tag</Label>
-						<p class="text-sm font-semibold">
-							{monitor.tag}
-						</p>
-					</div>
-					<div class="">
-						<Label class="text-xs font-semibold text-muted-foreground"
-							>Monitor Type</Label
-						>
-						<p class="text-sm font-semibold">
-							{monitor.monitor_type}
-						</p>
-					</div>
-					<div class="">
-						<Label class="text-xs font-semibold text-muted-foreground">Cron</Label>
-						<p class="text-sm font-semibold">
-							{monitor.cron}
-						</p>
-					</div>
+{#each monitors as monitor, index}
+<Card.Root class="mb-4">
+    <Card.Header class="relative">
+        <Card.Title>
+            {#if !!monitor.image}
+                <img
+                    src={base + monitor.image}
+                    alt={monitor.name}
+                    class="mr-2 inline-block h-8 w-8"
+                />
+            {/if}
+            {monitor.name}
+        </Card.Title>
+        {#if !!monitor.description}
+            <Card.Description>{monitor.description}</Card.Description>
+        {/if}
+        <div class="absolute right-2 top-0.5 flex items-center gap-2">
+    <Button
+        variant="secondary"
+        class="h-8 w-8 p-2"
+        on:click={() => openAlertMenu(monitor)}
+    >
+        <Bell class="inline h-4 w-4" />
+    </Button>
+    <Button
+        variant="secondary"
+        class="h-8 w-8 p-2"
+        on:click={() => showUpdateMonitorSheet(monitor)}
+    >
+        <Settings class="inline h-4 w-4" />
+    </Button>
+	<!-- Disable if it's the first monitor -->
+    <Button
+        variant="secondary"
+        class="h-8 w-8 p-2"
+        on:click={() => moveMonitorUp(index)}
+        disabled={index === 0} >
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M5 15l7-7 7 7" />
+        </svg>
+    </Button>
+	<!-- Disable if it's the last monitor -->
+    <Button
+        variant="secondary"
+        class="h-8 w-8 p-2"
+        on:click={() => moveMonitorDown(index)}
+        disabled={index === monitors.length - 1} 
+    >
+        <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+        >
+            <path d="M19 9l-7 7-7-7" />
+        </svg>
+    </Button>
+</div>
+
+    </Card.Header>
+    <Card.Content>
+        <div class="flex justify-between gap-4">
+            <div>
+                <Label class="text-xs font-semibold text-muted-foreground">Tag</Label>
+                <p class="text-sm font-semibold">
+                    {monitor.tag}
+                </p>
+            </div>
+            <div>
+                <Label class="text-xs font-semibold text-muted-foreground">Monitor Type</Label>
+                <p class="text-sm font-semibold">
+                    {monitor.monitor_type}
+                </p>
+            </div>
+            <div>
+                <Label class="text-xs font-semibold text-muted-foreground">Cron</Label>
+                <p class="text-sm font-semibold">
+                    {monitor.cron}
+                </p>
+            </div>
 					<div class="">
 						<Label class="text-xs font-semibold text-muted-foreground">Category</Label>
 						<p class="text-sm font-semibold">
@@ -291,7 +343,7 @@
 			</Card.Content>
 		</Card.Root>
 	{/each}
-</div>
+	</div>
 
 {#if shareMenusToggle}
 	<div
