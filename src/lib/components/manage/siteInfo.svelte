@@ -40,16 +40,6 @@
 		}
 	}
 
-	// function handleFileChangeLogo(event) {
-	// 	const file = event.target.files[0];
-	// 	if (file) {
-	// 		const reader = new FileReader();
-	// 		reader.onload = () => {
-	// 			siteInformation.logo = reader.result;
-	// 		};
-	// 		reader.readAsDataURL(file);
-	// 	}
-	// }
 	function handleFileChangeFavicon(event) {
 		const file = event.target.files[0];
 		if (file) {
@@ -89,7 +79,7 @@
 
 			if (response.ok) {
 				const result = await response.json();
-				siteInformation.logo = base + "/uploads/" + result.filename;
+				siteInformation.logo = "/uploads/" + result.filename;
 			} else {
 				uploadLogoStatus = "Failed to upload file.";
 			}
