@@ -276,6 +276,11 @@ function GenerateRandomColor() {
 	var randomColor = Math.floor(Math.random() * 16777215).toString(16);
 	return randomColor;
 }
+
+//wait for x ms promise
+function Wait(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
 export {
 	IsValidURL,
 	IsValidHTTPMethod,
@@ -299,5 +304,6 @@ export {
 	ReplaceAllOccurrences,
 	GetRequiredSecrets,
 	ValidateMonitorAlerts,
-	GenerateRandomColor
+	GenerateRandomColor,
+	Wait
 };

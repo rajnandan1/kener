@@ -5,7 +5,8 @@ import { UP, DOWN, DEGRADED } from "./constants.js";
 import {
 	GetMinuteStartNowTimestampUTC,
 	ReplaceAllOccurrences,
-	GetRequiredSecrets
+	GetRequiredSecrets,
+	Wait
 } from "./tool.js";
 
 import alerting from "./alerting.js";
@@ -24,6 +25,11 @@ const ERROR = "error";
 const MANUAL = "manual";
 
 const alertingQueue = new Queue({
+	concurrency: 10, // Number of tasks that can run concurrently
+	timeout: 10000, // Timeout in ms after which a task will be considered as failed (optional)
+	autostart: true // Automatically start the queue (optional)
+});
+const apiQueue = new Queue({
 	concurrency: 10, // Number of tasks that can run concurrently
 	timeout: 10000, // Timeout in ms after which a task will be considered as failed (optional)
 	autostart: true // Automatically start the queue (optional)
@@ -137,7 +143,7 @@ const pingCall = async (hostsV4, hostsV6) => {
 };
 const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorEval) => {
 	let axiosHeaders = {};
-	axiosHeaders["User-Agent"] = "Kener/2.0.0";
+	axiosHeaders["User-Agent"] = "Kener/3.0.2";
 	axiosHeaders["Accept"] = "*/*";
 	const start = Date.now();
 	//replace all secrets
@@ -334,6 +340,36 @@ const Minuter = async (monitor) => {
 		);
 
 		realTimeData[startOfMinute] = apiResponse;
+		if (apiResponse.type === TIMEOUT) {
+			apiQueue.push(async (cb) => {
+				await Wait(4000);
+				console.log(
+					"Retrying api call for " +
+						monitor.name +
+						" at " +
+						startOfMinute +
+						" due to timeout"
+				);
+				apiCall(
+					envSecrets,
+					monitor.type_data.url,
+					monitor.type_data.method,
+					JSON.stringify(monitor.type_data.headers),
+					monitor.type_data.body,
+					monitor.type_data.timeout,
+					monitor.type_data.eval
+				).then(async (data) => {
+					await db.insertMonitoringData({
+						monitor_tag: monitor.tag,
+						timestamp: startOfMinute,
+						status: data.status,
+						latency: data.latency,
+						type: data.type
+					});
+					cb();
+				});
+			});
+		}
 	} else if (monitor.monitor_type === "PING") {
 		let pingResponse = await pingCall(monitor.type_data.hostsV4, monitor.type_data.hostsV6);
 		realTimeData[startOfMinute] = pingResponse;
@@ -390,6 +426,12 @@ const Minuter = async (monitor) => {
 };
 
 alertingQueue.start((err) => {
+	if (err) {
+		console.error("Error occurred:", err);
+		process.exit(1);
+	}
+});
+apiQueue.start((err) => {
 	if (err) {
 		console.error("Error occurred:", err);
 		process.exit(1);
