@@ -381,6 +381,29 @@ export const HashString = (str) => {
 	return hash.digest("hex");
 };
 
+export const InterpolateData = (data, start, anchorStatus, e) => {
+	let finalData = [];
+	let status = anchorStatus || "UP";
+	let end = e || data[data.length - 1].timestamp;
+	for (let i = start; i <= end; i += 60) {
+		let nowData = data.find((d) => d.timestamp === i);
+		if (!!nowData) {
+			status = nowData.status;
+		}
+
+		finalData.push({ timestamp: i, status: status });
+	}
+	return finalData;
+};
+
+export const GetLastStatusBefore = async (monitor_tag, timestamp) => {
+	let data = await db.getLastStatusBefore(monitor_tag, timestamp);
+	if (data) {
+		return data.status;
+	}
+	return "UP";
+};
+
 export const GetDataGroupByDayAlternative = async (
 	monitor_tag,
 	start,
@@ -394,7 +417,9 @@ export const GetDataGroupByDayAlternative = async (
 
 	const offsetSeconds = offsetMinutes * 60;
 
-	const rawData = await db.getDataGroupByDayAlternative(monitor_tag, start, end);
+	let rawData = await db.getDataGroupByDayAlternative(monitor_tag, start, end);
+	let anchorStatus = await GetLastStatusBefore(monitor_tag, start);
+	rawData = InterpolateData(rawData, start, anchorStatus);
 	const groupedData = rawData.reduce((acc, row) => {
 		// Calculate day group considering timezone offset
 		const dayGroup = Math.floor((row.timestamp + offsetSeconds) / 86400);

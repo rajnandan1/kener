@@ -8,7 +8,12 @@ import {
 	ParseUptime
 } from "$lib/server/tool.js";
 import db from "$lib/server/db/db.js";
-import { GetAllSiteData, GetIncidentsByIDS } from "$lib/server/controllers/controller.js";
+import {
+	GetAllSiteData,
+	GetIncidentsByIDS,
+	InterpolateData,
+	GetLastStatusBefore
+} from "$lib/server/controllers/controller.js";
 
 export async function POST({ request }) {
 	const payload = await request.json();
@@ -31,6 +36,8 @@ export async function POST({ request }) {
 	}
 
 	let dayData = await db.getMonitoringData(monitor.tag, payload.startTs, end);
+	let anchorStatus = await GetLastStatusBefore(monitor.tag, start);
+	dayData = InterpolateData(dayData, payload.startTs, anchorStatus, end);
 	let siteData = await GetAllSiteData();
 
 	let ups = 0;

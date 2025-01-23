@@ -278,7 +278,7 @@
 							.summaryColorClass}"
 					>
 						{l(lang, summaryTime(monitor.pageData.summaryStatus), {
-							status: monitor.pageData.summaryStatus,
+							status: l(lang, monitor.pageData.summaryStatus),
 							duration: monitor.pageData.summaryDuration
 						})}
 					</div>
@@ -304,7 +304,6 @@
 							on:click={(e) => {
 								dailyDataGetter(e, bar, incidents[ts]);
 							}}
-							style="transition: opacity {bar.ij * 2 + 100}ms ease-in;"
 							href="#"
 							class="oneline h-[34px] w-[6px]
 							{bar.border ? 'opacity-100' : 'opacity-20'} pb-1"
@@ -336,7 +335,7 @@
 									)}
 									-
 									{l(lang, summaryTime(bar.summaryStatus), {
-										status: bar.summaryStatus,
+										status: l(lang, bar.summaryStatus),
 										duration: bar.summaryDuration
 									})}
 								</div>
