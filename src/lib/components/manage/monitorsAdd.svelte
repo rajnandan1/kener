@@ -1,6 +1,6 @@
 <script>
 	import { Button } from "$lib/components/ui/button";
-	import { Plus, X, Settings, Bell, Loader } from "lucide-svelte";
+	import { Plus, X, Settings, Bell, Loader, ArrowDownUp, Grip } from "lucide-svelte";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import { base } from "$app/paths";
@@ -8,10 +8,14 @@
 	import { onMount } from "svelte";
 	import * as Card from "$lib/components/ui/card";
 	import * as Select from "$lib/components/ui/select";
+	import { storeSiteData, SortMonitor } from "$lib/clientTools.js";
+	import { dndzone } from "svelte-dnd-action";
+	import { flip } from "svelte/animate";
 
 	export let categories = [];
 	export let colorDown = "#777";
 	export let colorDegraded = "#777";
+	export let monitorSort = [];
 	let monitors = [];
 	let status = "ACTIVE";
 	let showAddMonitor = false;
@@ -88,11 +92,13 @@
 				body: JSON.stringify({ action: "getMonitors", data: { status: status } })
 			});
 			let resp = await apiResp.json();
-			monitors = resp.map((m) => {
+			resp = resp.map((m) => {
 				m.down_trigger = JSON.parse(m.down_trigger);
 				m.degraded_trigger = JSON.parse(m.degraded_trigger);
 				return m;
 			});
+
+			monitors = SortMonitor(monitorSort, resp);
 		} catch (error) {
 			alert("Err2or: " + error);
 		} finally {
@@ -178,6 +184,19 @@
 		}
 		shareMenusToggle = true;
 	}
+	const flipDurationMs = 200;
+	function handleSort(e) {
+		dropTargetStyle = {
+			border: "1px solid transparent"
+		};
+		monitors = e.detail.items;
+		monitorSort = monitors.map((m) => m.id);
+		storeSiteData({
+			monitorSort: JSON.stringify(monitorSort)
+		});
+	}
+	let dropTargetStyle;
+	let draggableMenu = false;
 </script>
 
 {#if showAddMonitor}
@@ -190,7 +209,51 @@
 		}}
 	/>
 {/if}
-
+{#if draggableMenu}
+	<div
+		class="moldal-container fixed left-0 top-0 z-50 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm"
+	>
+		<div
+			class="absolute left-1/2 top-1/2 h-fit w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background shadow-lg backdrop-blur-lg"
+		>
+			<Button
+				variant="ghost"
+				on:click={() => {
+					draggableMenu = false;
+				}}
+				class="absolute right-2 top-2 z-40 h-6 w-6   rounded-full border bg-background p-1"
+			>
+				<X class="h-4 w-4   text-muted-foreground" />
+			</Button>
+			<div class="content px-4 py-4">
+				<h2 class="text-lg font-semibold">Rearrange Monitors</h2>
+				<div
+					class="mt-4"
+					use:dndzone={{ items: monitors, flipDurationMs, dropTargetStyle }}
+					on:consider={handleSort}
+					on:finalize={handleSort}
+				>
+					{#each monitors as monitor (monitor.id)}
+						<div
+							animate:flip={{ duration: flipDurationMs }}
+							class="mb-2 rounded-md bg-card p-2"
+						>
+							<Grip class="mr-2 inline h-4 w-4" />
+							{#if !!monitor.image}
+								<img
+									src={base + monitor.image}
+									alt={monitor.name}
+									class="mr-1 inline-block h-4 w-4"
+								/>
+							{/if}
+							{monitor.name}
+						</div>
+					{/each}
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
 <div class="mt-4 flex justify-between">
 	<div class="flex w-40">
 		<Select.Root
@@ -219,10 +282,21 @@
 			<Loader class="ml-2 mt-2 inline h-6 w-6 animate-spin" />
 		{/if}
 	</div>
-	<Button on:click={showAddMonitorSheet}>
-		<Plus class="mr-2 inline h-6 w-6" />
-		Add Monitor
-	</Button>
+	<div>
+		{#if status == "ACTIVE"}
+			<Button
+				size="icon"
+				variant="secondary"
+				on:click={() => (draggableMenu = !draggableMenu)}
+			>
+				<ArrowDownUp class=" " />
+			</Button>
+		{/if}
+		<Button on:click={showAddMonitorSheet}>
+			<Plus class="mr-2 inline h-6 w-6" />
+			Add Monitor
+		</Button>
+	</div>
 </div>
 
 <div class="mt-4">
@@ -240,7 +314,7 @@
 					{monitor.name}
 				</Card.Title>
 				{#if !!monitor.description}
-					<Card.Description>{monitor.description}</Card.Description>
+					<Card.Description>{@html monitor.description}</Card.Description>
 				{/if}
 				<div class="absolute right-2 top-0.5">
 					<Button

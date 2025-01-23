@@ -9,7 +9,8 @@ import {
 	IsValidI18n,
 	IsValidAnalytics,
 	IsValidColors,
-	IsValidJSONString
+	IsValidJSONString,
+	IsValidJSONArray
 } from "./validators.js";
 import db from "../db/db.js";
 import bcrypt from "bcrypt";
@@ -131,6 +132,11 @@ const siteDataKeys = [
 	{
 		key: "font",
 		isValid: IsValidJSONString,
+		data_type: "object"
+	},
+	{
+		key: "monitorSort",
+		isValid: IsValidJSONArray,
 		data_type: "object"
 	},
 	{

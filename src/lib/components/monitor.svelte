@@ -277,10 +277,7 @@
 						class="text-api-up truncate text-xs font-semibold text-{monitor.pageData
 							.summaryColorClass}"
 					>
-						{l(lang, summaryTime(monitor.pageData.summaryStatus), {
-							status: l(lang, monitor.pageData.summaryStatus),
-							duration: monitor.pageData.summaryDuration
-						})}
+						{monitor.pageData.summaryStatus}
 					</div>
 				</div>
 			</div>
@@ -334,10 +331,7 @@
 										selectedLang
 									)}
 									-
-									{l(lang, summaryTime(bar.summaryStatus), {
-										status: l(lang, bar.summaryStatus),
-										duration: bar.summaryDuration
-									})}
+									{bar.summaryStatus}
 								</div>
 							</div>
 						{/if}
