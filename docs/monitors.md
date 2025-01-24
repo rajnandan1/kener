@@ -47,7 +47,7 @@ The image is used to display a logo or an image for the monitor. It is displayed
 
 ## Description
 
-The description is used to describe the monitor. It is displayed on the status page and in the admin panel. It is optional.
+The description is used to describe the monitor. It is displayed on the status page and in the admin panel. It is optional. You can also write html in the description and can use tailwind classes.
 
 ## Cron
 

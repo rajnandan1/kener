@@ -56,6 +56,16 @@ class DbImpl {
 			.first();
 	}
 
+	//get the last status before the timestamp given monitor_tag and start timestamp
+	async getLastStatusBefore(monitor_tag, timestamp) {
+		return await this.knex("monitoring_data")
+			.where("monitor_tag", monitor_tag)
+			.where("timestamp", "<", timestamp)
+			.orderBy("timestamp", "desc")
+			.limit(1)
+			.first();
+	}
+
 	async getDataGroupByDayAlternative(monitor_tag, start, end) {
 		// Fetch all raw data
 		//{ timestamp: 1732900380, status: 'UP', latency: 42 }

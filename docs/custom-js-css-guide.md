@@ -29,4 +29,14 @@ Do not forget to add the base path if you are using a subpath. For example, if y
 
 ### Inline CSS
 
-To add inline css go to Manage kener -> Theme -> Custom CSS and add your CSS there. Do not include `<style>` tags.
+To add inline css go to Manage kener -> Theme -> Custom CSS and add your CSS there.
+
+```css
+.my-class {
+	color: red;
+}
+```
+
+<div class="note danger">
+	Do not include &#x3C;style&#x3E; tags.
+</div>

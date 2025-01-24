@@ -37,6 +37,16 @@ export function IsValidJSONString(data) {
 	return true;
 }
 
+//IsValidJSONArray
+export function IsValidJSONArray(data) {
+	try {
+		data = JSON.parse(data);
+	} catch (error) {
+		return false;
+	}
+	return Array.isArray(data);
+}
+
 export function IsValidNav(nav) {
 	try {
 		nav = JSON.parse(nav);

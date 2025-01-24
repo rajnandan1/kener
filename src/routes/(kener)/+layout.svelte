@@ -141,10 +141,10 @@
 		{/each}
 	{/if}
 	{#if hasConfiguredAnalytics}
-		<script src="https://unpkg.com/analytics/dist/analytics.min.js" defer></script>
+		<script src="https://unpkg.com/analytics/dist/analytics.min.js"></script>
 		{#each data.site.analytics as { id, type, script }}
 			{#if !!id}
-				<script data-type={type} src={script} defer></script>
+				<script data-type={type} src={script}></script>
 			{/if}
 		{/each}
 	{/if}

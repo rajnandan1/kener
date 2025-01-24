@@ -277,10 +277,7 @@
 						class="text-api-up truncate text-xs font-semibold text-{monitor.pageData
 							.summaryColorClass}"
 					>
-						{l(lang, summaryTime(monitor.pageData.summaryStatus), {
-							status: monitor.pageData.summaryStatus,
-							duration: monitor.pageData.summaryDuration
-						})}
+						{monitor.pageData.summaryStatus}
 					</div>
 				</div>
 			</div>
@@ -304,7 +301,6 @@
 							on:click={(e) => {
 								dailyDataGetter(e, bar, incidents[ts]);
 							}}
-							style="transition: opacity {bar.ij * 2 + 100}ms ease-in;"
 							href="#"
 							class="oneline h-[34px] w-[6px]
 							{bar.border ? 'opacity-100' : 'opacity-20'} pb-1"
@@ -335,10 +331,7 @@
 										selectedLang
 									)}
 									-
-									{l(lang, summaryTime(bar.summaryStatus), {
-										status: bar.summaryStatus,
-										duration: bar.summaryDuration
-									})}
+									{bar.summaryStatus}
 								</div>
 							</div>
 						{/if}
@@ -388,9 +381,12 @@
 										>
 											<p>
 												<span class="text-{bar.cssClass}"> ● </span>
-												{new Date(
-													bar.timestamp * 1000
-												).toLocaleTimeString()}
+
+												{f(
+													new Date(bar.timestamp * 1000),
+													"hh:mm a",
+													selectedLang
+												)}
 											</p>
 											{#if bar.status != "NO_DATA"}
 												<p class="pl-2">

@@ -19,7 +19,7 @@ const fdn = function (start, locale) {
 };
 const fdm = function (duration, locale) {
 	return formatDuration(duration, {
-		format: ["hours", "minutes"],
+		format: ["days", "hours", "minutes"],
 		zero: false,
 		delimiter: " ",
 		locale: locales[locale]
@@ -36,7 +36,6 @@ const l = function (sessionLangMap, key, args = {}) {
 			break;
 		}
 	}
-
 	// Replace placeholders in the string using the args object
 	if (obj && typeof obj === "string") {
 		obj = obj.replace(/%\w+/g, (placeholder) => {

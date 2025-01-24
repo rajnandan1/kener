@@ -9,8 +9,12 @@ import {
 	GetDayStartTimestampUTC
 } from "$lib/server/tool.js";
 import { formatDuration, intervalToDuration } from "date-fns";
-import { fdm } from "$lib/i18n/client";
-import { GetDataGroupByDayAlternative } from "$lib/server/controllers/controller.js";
+import { fdm, l, summaryTime } from "$lib/i18n/client";
+import {
+	GetDataGroupByDayAlternative,
+	InterpolateData,
+	GetLastStatusBefore
+} from "$lib/server/controllers/controller.js";
 
 function getSummaryDuration(numOfMinute, selectedLang) {
 	// Convert minutes to milliseconds and create duration object
@@ -33,12 +37,12 @@ function getTimezoneOffset(timeZone) {
 	return parseInt(hours) * 60 + parseInt(minutes);
 }
 
-function returnStatusClass(val, up, c, barStyle) {
+function returnStatusClass(val, total, c, barStyle) {
 	// return "api-degraded-10";
-	if (barStyle === undefined || barStyle == "FULL" || up == 0) {
+	if (barStyle === undefined || barStyle == "FULL") {
 		return c;
 	} else if (barStyle == "PARTIAL") {
-		let totalHeight = 24 * 60;
+		let totalHeight = total;
 		let cl = `api-up`;
 		if (val > 0 && val <= 0.1 * totalHeight) {
 			cl = c + "-10";
@@ -72,10 +76,9 @@ function getCountOfSimilarStatuesEnd(arr, statusType) {
 	return count;
 }
 
-const FetchData = async function (site, monitor, localTz, selectedLang) {
+const FetchData = async function (site, monitor, localTz, selectedLang, lang) {
 	const secondsInDay = 24 * 60 * 60;
 	//get offset from utc in minutes
-
 	const now = GetMinuteStartNowTimestampUTC() + 60;
 	const midnight = BeginningOfDay({ timeZone: localTz });
 	const midnight90DaysAgo = midnight - 90 * 24 * 60 * 60;
@@ -84,24 +87,6 @@ const FetchData = async function (site, monitor, localTz, selectedLang) {
 	let offsetInMinutes = parseInt((GetDayStartTimestampUTC(now) - midnight) / 60);
 	const _90Day = {};
 	let latestTimestamp = 0;
-	let ij = 0;
-	for (let i = midnight90DaysAgo; i < midnightTomorrow; i += secondsInDay) {
-		_90Day[i] = {
-			UP: 0,
-			DEGRADED: 0,
-			DOWN: 0,
-			timestamp: i,
-			cssClass: StatusObj.NO_DATA,
-			textClass: StatusObj.NO_DATA,
-			summaryDuration: 0,
-			summaryStatus: NO_DATA,
-			message: NO_DATA,
-			border: true,
-			ij: ij
-		};
-		ij++;
-		latestTimestamp = i;
-	}
 
 	let dbData = await GetDataGroupByDayAlternative(
 		monitor.tag,
@@ -113,18 +98,13 @@ const FetchData = async function (site, monitor, localTz, selectedLang) {
 	let totalDownCount = 0;
 	let totalUpCount = 0;
 
-	let summaryDuration = 0;
-	let summaryStatus = "UP";
-
-	let summaryColorClass = "api-nodata";
 	for (let i = 0; i < dbData.length; i++) {
 		let dayData = dbData[i];
 		let ts = dayData.timestamp;
 		let cssClass = StatusObj.UP;
-		let message = "Status OK";
 		let summaryDuration = 0;
 		let summaryStatus = "UP";
-
+		latestTimestamp = ts;
 		totalDegradedCount += dayData.DEGRADED;
 		totalDownCount += dayData.DOWN;
 		totalUpCount += dayData.UP;
@@ -132,7 +112,7 @@ const FetchData = async function (site, monitor, localTz, selectedLang) {
 		if (dayData.DEGRADED >= monitor.day_degraded_minimum_count) {
 			cssClass = returnStatusClass(
 				dayData.DEGRADED,
-				dayData.UP,
+				dayData.total,
 				StatusObj.DEGRADED,
 				site.barStyle
 			);
@@ -140,18 +120,30 @@ const FetchData = async function (site, monitor, localTz, selectedLang) {
 			summaryStatus = "DEGRADED";
 		}
 		if (dayData.DOWN >= monitor.day_down_minimum_count) {
-			cssClass = returnStatusClass(dayData.DOWN, dayData.UP, StatusObj.DOWN, site.barStyle);
+			cssClass = returnStatusClass(
+				dayData.DOWN,
+				dayData.total,
+				StatusObj.DOWN,
+				site.barStyle
+			);
+
 			summaryDuration = getSummaryDuration(dayData.DOWN, selectedLang);
 			summaryStatus = "DOWN";
 		}
 
-		if (!!_90Day[ts]) {
-			_90Day[ts].timestamp = ts;
-			_90Day[ts].cssClass = cssClass;
-			_90Day[ts].summaryDuration = summaryDuration;
-			_90Day[ts].summaryStatus = summaryStatus;
-			_90Day[ts].textClass = cssClass.replace(/-\d+$/, "");
-		}
+		_90Day[ts] = {
+			border: true
+		};
+
+		_90Day[ts].timestamp = ts;
+		_90Day[ts].cssClass = cssClass;
+
+		_90Day[ts].summaryStatus = l(lang, summaryTime(summaryStatus), {
+			status: l(lang, summaryStatus),
+			duration: summaryDuration
+		});
+
+		_90Day[ts].textClass = cssClass.replace(/-\d+$/, "");
 	}
 	let uptime90DayNumerator = totalUpCount + totalDegradedCount;
 	let uptime90DayDenominator = totalUpCount + totalDownCount + totalDegradedCount;
@@ -162,13 +154,22 @@ const FetchData = async function (site, monitor, localTz, selectedLang) {
 	}
 	// return _90Day;
 	let uptime90Day = ParseUptime(uptime90DayNumerator, uptime90DayDenominator);
-	if (site.summaryStyle === "CURRENT") {
-		let todayDataDb = await db.getMonitoringData(
-			monitor.tag,
-			latestTimestamp,
-			latestTimestamp + secondsInDay
-		);
 
+	let summaryDuration = 0;
+	let summaryStatus = "UP";
+
+	let summaryColorClass = "api-nodata";
+
+	let todayDataDb = await db.getMonitoringData(monitor.tag, midnight, midnight + secondsInDay);
+	let anchorStatus = await GetLastStatusBefore(monitor.tag, midnight);
+	todayDataDb = InterpolateData(
+		todayDataDb,
+		midnight,
+		anchorStatus,
+		todayDataDb.length == 0 ? midnight + secondsInDay : null
+	);
+
+	if (site.summaryStyle === "CURRENT") {
 		summaryColorClass = "api-up";
 
 		let lastRow = todayDataDb[todayDataDb.length - 1];
@@ -189,6 +190,10 @@ const FetchData = async function (site, monitor, localTz, selectedLang) {
 			summaryStatus = "DOWN";
 			summaryColorClass = "api-down";
 		}
+		summaryStatus = l(lang, summaryTime(summaryStatus), {
+			status: l(lang, summaryStatus),
+			duration: summaryDuration
+		});
 	} else {
 		let lastData = _90Day[latestTimestamp];
 		summaryColorClass = lastData.cssClass.replace(/-\d+$/, "");
@@ -198,7 +203,6 @@ const FetchData = async function (site, monitor, localTz, selectedLang) {
 	return {
 		_90Day: _90Day,
 		uptime90Day: uptime90Day,
-		summaryDuration: summaryDuration,
 		summaryStatus: summaryStatus,
 		summaryColorClass: summaryColorClass,
 		barRoundness: site.barRoundness,

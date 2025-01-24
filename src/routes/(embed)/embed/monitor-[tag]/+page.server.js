@@ -21,7 +21,8 @@ export async function load({ params, route, url, parent }) {
 			siteData,
 			monitors[i],
 			parentData.localTz,
-			parentData.selectedLang
+			parentData.selectedLang,
+			parentData.lang
 		);
 		monitors[i].pageData = data;
 		monitorsActive.push(monitors[i]);

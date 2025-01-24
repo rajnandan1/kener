@@ -108,6 +108,17 @@ const BeginningOfDay = (options = {}) => {
 	);
 	return dt.getTime() / 1000;
 };
+const BeginningOfMinute = (options = {}) => {
+	const { date = new Date(), timeZone } = options;
+	const parts = Intl.DateTimeFormat("en-US", {
+		timeZone,
+		hourCycle: "h23",
+		second: "numeric"
+	}).formatToParts(date);
+	const second = parseInt(parts.find((i) => i.type === "second").value);
+	const dt = new Date(1000 * Math.floor((date - second * 1000) / 1000));
+	return dt.getTime() / 1000;
+};
 const ValidateIpAddress = function (input) {
 	// Check if input is a valid IPv4 address
 	const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
@@ -276,6 +287,11 @@ function GenerateRandomColor() {
 	var randomColor = Math.floor(Math.random() * 16777215).toString(16);
 	return randomColor;
 }
+
+//wait for x ms promise
+function Wait(ms) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
 export {
 	IsValidURL,
 	IsValidHTTPMethod,
@@ -299,5 +315,7 @@ export {
 	ReplaceAllOccurrences,
 	GetRequiredSecrets,
 	ValidateMonitorAlerts,
-	GenerateRandomColor
+	GenerateRandomColor,
+	BeginningOfMinute,
+	Wait
 };

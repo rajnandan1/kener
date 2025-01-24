@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { FetchData } from "$lib/server/page";
 import { GetMonitors, GetIncidentsOpenHome } from "$lib/server/controllers/controller.js";
+import { SortMonitor } from "$lib/clientTools.js";
 import moment from "moment";
 
 export async function load({ parent, url }) {
@@ -10,6 +11,7 @@ export async function load({ parent, url }) {
 	const requiredCategory = query.get("category") || "Home";
 	const parentData = await parent();
 	const siteData = parentData.site;
+	monitors = SortMonitor(siteData.monitorSort, monitors);
 	const monitorsActive = [];
 	for (let i = 0; i < monitors.length; i++) {
 		//only return monitors that have category as home or category is not present
@@ -30,7 +32,8 @@ export async function load({ parent, url }) {
 			siteData,
 			monitors[i],
 			parentData.localTz,
-			parentData.selectedLang
+			parentData.selectedLang,
+			parentData.lang
 		);
 		monitors[i].pageData = data;
 

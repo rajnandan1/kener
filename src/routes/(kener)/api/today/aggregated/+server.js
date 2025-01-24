@@ -8,18 +8,29 @@ import {
 	ParseUptime
 } from "$lib/server/tool.js";
 import db from "$lib/server/db/db.js";
+import { InterpolateData, GetLastStatusBefore } from "$lib/server/controllers/controller.js";
 
 export async function POST({ request }) {
 	const payload = await request.json();
 	const monitor = payload.monitor;
 	const start = payload.startTs;
 	let end = GetMinuteStartNowTimestampUTC();
-	let aggregatedData = await db.getAggregatedMonitoringData(monitor.tag, start, end);
+	let rawData = await db.getMonitoringData(monitor.tag, start, end);
+	let anchorStatus = await GetLastStatusBefore(monitor.tag, start);
+	rawData = InterpolateData(rawData, start, anchorStatus, rawData.length == 0 ? end : null);
+
+	let aggregatedData = rawData.reduce(
+		(acc, row) => {
+			acc[row.status] = (acc[row.status] || 0) + 1;
+			return acc;
+		},
+		{
+			UP: 0,
+			DOWN: 0,
+			DEGRADED: 0
+		}
+	);
 	//covert all keys to uppercase
-	aggregatedData = Object.keys(aggregatedData).reduce((acc, key) => {
-		acc[key.toUpperCase()] = aggregatedData[key];
-		return acc;
-	}, {});
 	let ups = Number(aggregatedData.UP);
 	let downs = Number(aggregatedData.DOWN);
 	let degradeds = Number(aggregatedData.DEGRADED);

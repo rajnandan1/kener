@@ -90,3 +90,17 @@ Add font url
 ### Font Family
 
 Add font family name
+
+### Custom CSS
+
+You can add custom CSS to your status page. This will be added to the head of the page. You can add custom CSS to your status page. This will be added to the head of the page.
+
+```css
+.my-class {
+	color: red;
+}
+```
+
+<div class="note danger">
+	Do not include &#x3C;style&#x3E; tags.
+</div>

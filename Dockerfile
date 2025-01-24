@@ -15,8 +15,10 @@ RUN apt-get update && apt-get install -y \
 	iputils-ping && \
     rm -rf /var/lib/apt/lists/*
 
-# Set the timezone environment variable
+# Set the timezone environment variable and the application environment
+ARG KENER_BASE_PATH=
 ENV TZ=Etc/UTC
+ENV KENER_BASE_PATH=${KENER_BASE_PATH}
 
 # Set the working directory
 WORKDIR /app

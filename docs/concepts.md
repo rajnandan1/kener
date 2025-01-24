@@ -27,6 +27,10 @@ DNS Monitor is used to check the status of a DNS server. It can be configured to
 
 Ping Monitor is used to check the status of a server. It can be configured to check the status of the server at different intervals.
 
+### Data Interpolation
+
+Kener interpolates the data for missing intervals. For example, suppose if you have a cron monitor of 5 minutes and it has run twice at 10AM and 10:05AM and the monitor is `DOWN` at 10AM. Kener will interpolate the data for 10:01AM, 10:02AM, 10:03AM and 10:04AM as `DOWN`. Similarly, if the monitor is UP at 10:05AM, Kener will interpolate the data for 10:06AM, 10:07AM, 10:08AM and 10:09AM as UP. Similarly for missing data points it will consider the previous data point. If there is no previous data point, it will consider it as `UP`.
+
 ---
 
 ## Triggers

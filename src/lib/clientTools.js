@@ -264,6 +264,17 @@ function isValidRange(value, min, max) {
 	const num = Number(value);
 	return !isNaN(num) && num >= min && num <= max;
 }
+function SortMonitor(monitorSort, resp) {
+	let monitors = [];
+	if (!!monitorSort && monitorSort.length > 0) {
+		monitors = monitorSort.map((id) => resp.find((m) => m.id == id)).filter((m) => !!m);
+		//append any new monitors
+		monitors = [...monitors, ...resp.filter((m) => !monitorSort.includes(m.id))];
+	} else {
+		monitors = resp;
+	}
+	return monitors;
+}
 export {
 	siteDataExtractFromDb,
 	storeSiteData,
@@ -272,5 +283,6 @@ export {
 	IsValidHost,
 	IsValidNameServer,
 	IsValidURL,
-	ValidateCronExpression
+	ValidateCronExpression,
+	SortMonitor
 };
