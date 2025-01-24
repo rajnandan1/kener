@@ -162,7 +162,12 @@ const FetchData = async function (site, monitor, localTz, selectedLang, lang) {
 
 	let todayDataDb = await db.getMonitoringData(monitor.tag, midnight, midnight + secondsInDay);
 	let anchorStatus = await GetLastStatusBefore(monitor.tag, midnight);
-	todayDataDb = InterpolateData(todayDataDb, midnight, anchorStatus);
+	todayDataDb = InterpolateData(
+		todayDataDb,
+		midnight,
+		anchorStatus,
+		todayDataDb.length == 0 ? midnight + secondsInDay : null
+	);
 
 	if (site.summaryStyle === "CURRENT") {
 		summaryColorClass = "api-up";

@@ -390,7 +390,14 @@ export const HashString = (str) => {
 export const InterpolateData = (data, start, anchorStatus, e) => {
 	let finalData = [];
 	let status = anchorStatus || "UP";
-	let end = e || data[data.length - 1].timestamp;
+	let end = start;
+	if (!!data && data.length > 0) {
+		end = data[data.length - 1].timestamp;
+	}
+
+	if (e) {
+		end = e;
+	}
 	for (let i = start; i <= end; i += 60) {
 		let nowData = data.find((d) => d.timestamp === i);
 		if (!!nowData) {
@@ -425,7 +432,8 @@ export const GetDataGroupByDayAlternative = async (
 
 	let rawData = await db.getDataGroupByDayAlternative(monitor_tag, start, end);
 	let anchorStatus = await GetLastStatusBefore(monitor_tag, start);
-	rawData = InterpolateData(rawData, start, anchorStatus);
+	rawData = InterpolateData(rawData, start, anchorStatus, rawData.length == 0 ? end - 60 : null);
+
 	const groupedData = rawData.reduce((acc, row) => {
 		// Calculate day group considering timezone offset
 		const dayGroup = Math.floor((row.timestamp + offsetSeconds) / 86400);

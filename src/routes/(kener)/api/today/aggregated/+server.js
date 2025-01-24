@@ -17,7 +17,7 @@ export async function POST({ request }) {
 	let end = GetMinuteStartNowTimestampUTC();
 	let rawData = await db.getMonitoringData(monitor.tag, start, end);
 	let anchorStatus = await GetLastStatusBefore(monitor.tag, start);
-	rawData = InterpolateData(rawData, start, anchorStatus);
+	rawData = InterpolateData(rawData, start, anchorStatus, rawData.length == 0 ? end : null);
 
 	let aggregatedData = rawData.reduce(
 		(acc, row) => {

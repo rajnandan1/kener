@@ -108,6 +108,17 @@ const BeginningOfDay = (options = {}) => {
 	);
 	return dt.getTime() / 1000;
 };
+const BeginningOfMinute = (options = {}) => {
+	const { date = new Date(), timeZone } = options;
+	const parts = Intl.DateTimeFormat("en-US", {
+		timeZone,
+		hourCycle: "h23",
+		second: "numeric"
+	}).formatToParts(date);
+	const second = parseInt(parts.find((i) => i.type === "second").value);
+	const dt = new Date(1000 * Math.floor((date - second * 1000) / 1000));
+	return dt.getTime() / 1000;
+};
 const ValidateIpAddress = function (input) {
 	// Check if input is a valid IPv4 address
 	const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
@@ -305,5 +316,6 @@ export {
 	GetRequiredSecrets,
 	ValidateMonitorAlerts,
 	GenerateRandomColor,
+	BeginningOfMinute,
 	Wait
 };
