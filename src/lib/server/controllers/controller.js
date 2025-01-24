@@ -398,8 +398,13 @@ export const InterpolateData = (data, start, anchorStatus, e) => {
 	if (e) {
 		end = e;
 	}
+	let dataMap = data.reduce((acc, d) => {
+		acc[d.timestamp] = d;
+		return acc;
+	}, {});
+
 	for (let i = start; i <= end; i += 60) {
-		let nowData = data.find((d) => d.timestamp === i);
+		let nowData = dataMap[i];
 		if (!!nowData) {
 			status = nowData.status;
 		}
