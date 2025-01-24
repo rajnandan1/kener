@@ -342,7 +342,7 @@ const Minuter = async (monitor) => {
 		realTimeData[startOfMinute] = apiResponse;
 		if (apiResponse.type === TIMEOUT) {
 			apiQueue.push(async (cb) => {
-				await Wait(4000);
+				await Wait(500); //wait for 500ms
 				console.log(
 					"Retrying api call for " +
 						monitor.name +
