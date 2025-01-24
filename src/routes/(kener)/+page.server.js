@@ -6,7 +6,6 @@ import moment from "moment";
 
 export async function load({ parent, url }) {
 	let monitors = await GetMonitors({ status: "ACTIVE" });
-
 	const query = url.searchParams;
 	const requiredCategory = query.get("category") || "Home";
 	const parentData = await parent();
@@ -85,6 +84,7 @@ export async function load({ parent, url }) {
 		return incident;
 	});
 	let unresolvedIncidents = allOpenIncidents.filter((incident) => incident.state !== "RESOLVED");
+
 	return {
 		monitors: monitorsActive,
 		unresolvedIncidents: allOpenIncidents,
