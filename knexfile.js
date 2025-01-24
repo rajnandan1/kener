@@ -2,7 +2,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-const databaseURL = process.env.DATABASE_URL || "sqlite://./database/kener.sqlite.db";
+const databaseURL = process.env.DATABASE_URL || "sqlite://./database/kener.sqlasdite.db";
 
 const databaseURLParts = databaseURL.split("://");
 const databaseType = databaseURLParts[0];

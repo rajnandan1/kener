@@ -381,9 +381,12 @@
 										>
 											<p>
 												<span class="text-{bar.cssClass}"> ● </span>
-												{new Date(
-													bar.timestamp * 1000
-												).toLocaleTimeString()}
+
+												{f(
+													new Date(bar.timestamp * 1000),
+													"hh:mm a",
+													selectedLang
+												)}
 											</p>
 											{#if bar.status != "NO_DATA"}
 												<p class="pl-2">
