@@ -98,7 +98,7 @@
 				</div>
 
 				<h1 class=" text-xl font-semibold leading-tight">
-					{l(data.lang, "No Incident On %date", {
+					{l(data.lang, "No Incident in %date", {
 						date: data.thisMonthName.replace("-", ", ")
 					})}
 				</h1>

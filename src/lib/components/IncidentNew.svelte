@@ -45,7 +45,7 @@
 						>
 							{#if !isFuture && incident.state != "RESOLVED"}
 								<span>
-									{l(lang, "Started about %startedAt ago, still ongoing", {
+									{l(lang, "Started about %startedAt, still ongoing", {
 										startedAt
 									})}
 								</span>
@@ -53,7 +53,7 @@
 								<span>
 									{l(
 										lang,
-										"Started about %startedAt ago, lasted for about %lastedFor",
+										"Started about %startedAt, lasted for about %lastedFor",
 										{ startedAt, lastedFor }
 									)}
 								</span>
