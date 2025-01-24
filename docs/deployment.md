@@ -90,10 +90,6 @@ docker run \
 
 Or use **Docker Compose** with the example [docker-compose.yaml](https://raw.githubusercontent.com/rajnandan1/kener/main/docker-compose.yml)
 
-#### Base path
-
-By default kener runs on `/` but you can change it to `/status` or any other path. Read more about it [here](/docs/environment-vars/#kener-base-path)
-
 #### Postgres
 
 ```bash
@@ -118,17 +114,23 @@ docker run \
  rajnandan1/kener
 ```
 
-#### Base Path
+#### Base path
+
+By default kener runs on `/` but you can change it to `/status` or any other path. Read more about it [here](/docs/environment-vars/#kener-base-path).
+
+<div class="note info">
+
+-   Important: The base path should _**NOT**_ have a trailing slash and should start with `/`
+-   Important: This env variable should be present during both build and run time
+
+</div>
 
 Let us say you are running kener on a subpath `/status`. You can set the base path like this:
 
 ```bash
-docker run \
- -p 3000:3000 \
- -v $(pwd)/uploads:/app/uploads \
- -e "KENER_BASE_PATH=/status" \
- -e "KENER_SECRET_KEY=somesecretkey" \
- -e "DATABASE_URL=mysql://root:password@mysql-container-2.orb.local:3306/kener-2" \
- -e "ORIGIN=https://www.example.com" \
- rajnandan1/kener
+docker build  --build-arg KENER_BASE_PATH=/status -t kener .
+```
+
+```bash
+ docker run  -p 3000:3000 --env-file .env -v $(pwd)/database:/app/uploads -v $(pwd)/database:/app/database kener
 ```
