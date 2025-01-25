@@ -30,6 +30,9 @@ RUN npm install && npm cache clean --force
 # Copy the rest of the application code
 COPY . .
 
+# remove dir src/routes/(docs)
+RUN rm -rf src/routes/\(docs\)
+
 # Ensure /app/uploads and /app/database have rw permissions
 RUN mkdir -p /app/uploads /app/database && \
     chmod -R 777 /app/uploads /app/database
