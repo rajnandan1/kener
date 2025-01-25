@@ -26,7 +26,7 @@ description: Roadmap for Kener
 
 ☑ ~~Handle uploaded images for docker containers~~
 
-☐ Introduce sitemap.xml
+☑ ~~Introduce sitemap.xml~~
 
 ☑ ~~Migrate from moment to date-fns for status page~~ (moment remains in dashboard. Will remove later)
 

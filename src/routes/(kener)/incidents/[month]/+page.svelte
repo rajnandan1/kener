@@ -50,6 +50,13 @@
 	let sortedIncidentSmartDates = Object.keys(incidentSmartDates).sort((a, b) => a - b);
 </script>
 
+<svelte:head>
+	<title>
+		{f(parse(data.thisMonthName, "MMMM-yyyy", new Date()), "MMMM, yyyy", selectedLang)}
+		{l(data.lang, "Incident Updates")} |
+		{data.site.title}
+	</title>
+</svelte:head>
 <div class="mt-12"></div>
 <section class="mx-auto my-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center">
 	<Button

@@ -34,8 +34,10 @@
 
 	if (data.isCategoryPage) {
 		let category = data.site.categories.find((e) => e.name == data.categoryName);
-		data.site.hero.title = category.name;
-		data.site.hero.subtitle = category.description;
+		if (!!category) {
+			data.site.hero.title = category.name;
+			data.site.hero.subtitle = category.description;
+		}
 	}
 
 	onMount(() => {
@@ -43,6 +45,12 @@
 	});
 </script>
 
+<svelte:head>
+	<title>{data.pageTitle}</title>
+	{#if !!data.pageDescription}
+		<meta name="description" content={data.pageDescription} />
+	{/if}
+</svelte:head>
 <div class="mt-12"></div>
 {#if data.site.hero && !data.isMonitorPage}
 	<section
@@ -183,7 +191,7 @@
 					window.location.href = `?category=${category.name}`;
 				}}
 			>
-				<Card.Root class="hover:bg-secondary">
+				<Card.Root class="mb-4 hover:bg-secondary">
 					<Card.Header class="bounce-right relative w-full cursor-pointer px-4  ">
 						<Card.Title class="w-full ">
 							{category.name}

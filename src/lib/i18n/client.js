@@ -27,15 +27,8 @@ const fdm = function (duration, locale) {
 };
 
 const l = function (sessionLangMap, key, args = {}) {
-	const keys = key.split(".");
-	let obj = sessionLangMap;
+	let obj = sessionLangMap[key];
 
-	for (const keyPart of keys) {
-		obj = obj?.[keyPart];
-		if (!obj) {
-			break;
-		}
-	}
 	// Replace placeholders in the string using the args object
 	if (obj && typeof obj === "string") {
 		obj = obj.replace(/%\w+/g, (placeholder) => {
@@ -43,7 +36,6 @@ const l = function (sessionLangMap, key, args = {}) {
 			return args[argKey] !== undefined ? args[argKey] : placeholder;
 		});
 	}
-
 	return obj || key;
 };
 const summaryTime = function (summaryStatus) {

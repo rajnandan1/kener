@@ -169,10 +169,7 @@
 		{l(lang, "Embed")}
 	</h2>
 	<p class="mb-1 text-xs text-muted-foreground">
-		{@html l(
-			lang,
-			"Embed this moni2tor using &#x3C;script&#x3E; or &#x3C;iframe&#x3E; in your app."
-		)}
+		{l(lang, "Embed this monitor using &#x3C;script&#x3E; or &#x3C;iframe&#x3E; in your app.")}
 	</p>
 	<div class="mb-4 grid grid-cols-2 gap-2">
 		<div class="col-span-1">
