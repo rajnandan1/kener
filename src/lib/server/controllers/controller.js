@@ -16,6 +16,7 @@ import db from "../db/db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import { format, subMonths, addMonths, startOfMonth } from "date-fns";
 
 const saltRounds = 10;
 const DUMMY_SECRET = "DUMMY_SECRET";
@@ -804,4 +805,94 @@ export const IsLoggedInSession = async (cookies) => {
 	return {
 		user: userDB
 	};
+};
+
+export const GetSiteMap = async (cookies) => {
+	let siteMapData = [];
+	let siteURLData = await GetSiteDataByKey("siteURL");
+	let categories = await GetSiteDataByKey("categories");
+	let navs = await GetSiteDataByKey("nav");
+	if (!!siteURLData) {
+		siteMapData.push({
+			url: siteURLData,
+			lastmod: new Date().toISOString(),
+			priority: 1
+		});
+	}
+
+	//get today's date in January-2025 format date-fns
+	const today = format(new Date(), "MMMM-yyyy");
+	//last month
+	const lastMonth = format(subMonths(new Date(), 1), "MMMM-yyyy", { addMonths: -1 });
+	const nextMonth = format(addMonths(new Date(), 1), "MMMM-yyyy", { addMonths: -1 });
+
+	siteMapData.push({
+		url: siteURLData + "/incidents/" + today,
+		lastmod: startOfMonth(new Date()).toISOString(),
+		priority: 0.9
+	});
+	siteMapData.push({
+		url: siteURLData + "/incidents/" + lastMonth,
+		lastmod: startOfMonth(new Date()).toISOString(),
+		priority: 0.9
+	});
+	siteMapData.push({
+		url: siteURLData + "/incidents/" + nextMonth,
+		lastmod: startOfMonth(new Date()).toISOString(),
+		priority: 0.9
+	});
+
+	if (!!categories) {
+		for (let i = 0; i < categories.length; i++) {
+			if (categories[i].name !== "Home") {
+				siteMapData.push({
+					url: siteURLData + "?category=" + categories[i].name,
+					lastmod: new Date().toISOString(),
+					priority: 0.9
+				});
+			}
+		}
+	}
+	if (!!navs) {
+		for (let i = 0; i < navs.length; i++) {
+			if (navs[i].url.startsWith(siteURLData)) {
+				siteMapData.push({
+					url: navs[i].url,
+					lastmod: new Date().toISOString(),
+					priority: 0.9
+				});
+			} else if (navs[i].url.startsWith("/")) {
+				siteMapData.push({
+					url: siteURLData + navs[i].url,
+					lastmod: new Date().toISOString(),
+					priority: 0.9
+				});
+			}
+		}
+	}
+
+	let monitors = await GetMonitors({ status: "ACTIVE" });
+
+	for (let i = 0; i < monitors.length; i++) {
+		siteMapData.push({
+			url: siteURLData + "?monitor=?" + monitors[i].tag,
+			lastmod: new Date(monitors[i].updated_at).toISOString(),
+			priority: 0.8
+		});
+	}
+
+	return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+	${siteMapData
+		.map(
+			(page) => `
+	<url>
+		<loc>${page.url}</loc>
+		<lastmod>${page.lastmod}</lastmod>
+		<priority>${page.priority}</priority>
+	</url>
+	`
+		)
+		.join("")}
+</urlset>`;
 };

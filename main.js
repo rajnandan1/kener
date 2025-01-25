@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import Startup from "./src/lib/server/startup.js";
+import { GetSiteMap } from "./src/lib/server/controllers/controller.js";
 import fs from "fs-extra";
 import knex from "knex";
 import knexOb from "./knexfile.js";
@@ -23,6 +24,10 @@ app.use((req, res, next) => {
 });
 app.get(base + "/healthcheck", (req, res) => {
 	res.end("ok");
+});
+app.get(base + "/sitemap.xml", async (req, res) => {
+	res.header("Content-Type", "application/xml");
+	res.send(await GetSiteMap());
 });
 //part /uploads server static files from static/uploads
 

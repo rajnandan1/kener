@@ -10,6 +10,8 @@ export async function load({ parent, url }) {
 	const requiredCategory = query.get("category") || "Home";
 	const parentData = await parent();
 	const siteData = parentData.site;
+	let pageTitle = siteData.title;
+	let pageDescription = "";
 	monitors = SortMonitor(siteData.monitorSort, monitors);
 	const monitorsActive = [];
 	for (let i = 0; i < monitors.length; i++) {
@@ -50,6 +52,19 @@ export async function load({ parent, url }) {
 	//if not home page
 	let isCategoryPage = !!query.get("category") && query.get("category") !== "Home";
 	let isMonitorPage = !!query.get("monitor");
+	if (isMonitorPage && monitorsActive.length > 0) {
+		pageTitle = monitorsActive[0].name + " - " + pageTitle;
+		pageDescription = monitorsActive[0].description;
+	}
+	//if category page
+	if (isCategoryPage) {
+		let allCategories = siteData.categories;
+		let selectedCategory = allCategories.find((category) => category.name === requiredCategory);
+		if (selectedCategory) {
+			pageTitle = selectedCategory.name + " - " + pageTitle;
+			pageDescription = selectedCategory.description;
+		}
+	}
 	if (isCategoryPage || isMonitorPage) {
 		let eligibleTags = monitorsActive.map((monitor) => monitor.tag);
 		//filter incidents that have monitor_tag in monitors
@@ -90,6 +105,8 @@ export async function load({ parent, url }) {
 		unresolvedIncidents: allOpenIncidents,
 		categoryName: requiredCategory,
 		isCategoryPage: isCategoryPage,
-		isMonitorPage: isMonitorPage
+		isMonitorPage: isMonitorPage,
+		pageTitle: pageTitle,
+		pageDescription: pageDescription
 	};
 }
