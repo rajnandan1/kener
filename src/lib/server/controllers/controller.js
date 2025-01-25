@@ -875,7 +875,7 @@ export const GetSiteMap = async (cookies) => {
 
 	for (let i = 0; i < monitors.length; i++) {
 		siteMapData.push({
-			url: siteURLData + "?monitor=?" + monitors[i].tag,
+			url: siteURLData + "?monitor=" + monitors[i].tag,
 			lastmod: new Date(monitors[i].updated_at).toISOString(),
 			priority: 0.8
 		});
