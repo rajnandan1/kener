@@ -48,6 +48,7 @@ git clone https://github.com/rajnandan1/kener.git
 cd kener
 npm install
 cp .env.example .env
+npm run build
 npm run dev
 ```
 
