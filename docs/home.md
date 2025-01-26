@@ -59,7 +59,12 @@ Kener is status page system built with Sveltekit and NodeJS. It does not try to 
 
 It comes with all the basic asks for a status page. It is open-source and free to use.
 
-Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing because it was a cheaply available domain.
+Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing because it was a
+cheaply available domain.
+
+## Quick Deployment
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/spSvic?referralCode=1Pn7vs)
 
 ## Features
 

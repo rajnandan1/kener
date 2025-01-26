@@ -33,14 +33,6 @@ Defaults to 3000 if not specified
 export PORT=4242
 ```
 
-## GH_TOKEN
-
-A github token to read issues and create labels. This is required for **incident management**
-
-```bash
-export GH_TOKEN=your-github-token
-```
-
 ## KENER_BASE_PATH
 
 By default kener runs on `/` but you can change it to `/status` or any other path.

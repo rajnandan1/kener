@@ -1,4 +1,4 @@
-# Kener - A Beautiful Status Page System
+# Kener - Stunning Status Pages
 
 <p align="center">
 	<img src="https://kener.ing/newbg.png?v=1" width="100%" height="auto" class="rounded-lg shadow-lg" alt="kener example illustration">
@@ -25,11 +25,8 @@
 	</picture>
 </p>
 
-#### [👉 Visit a live server](https://kener.ing)
-
-#### [👉 Quick Start](https://kener.ing/docs/quick-start)
-
-#### [👉 Documentation](https://kener.ing/docs/home)
+| [🌍 Live Server](https://kener.ing) | [🎉 Quick Start](https://kener.ing/docs/quick-start) | [🗄 Documentation](https://kener.ing/docs/home) |
+| ----------------------------------- | ---------------------------------------------------- | ----------------------------------------------- |
 
 ## What is Kener?
 
@@ -41,10 +38,28 @@ It comes with all the basic asks for a status page. It is open-source and free t
 
 Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing because it was a cheaply available domain.
 
-<div align="left">
-    <img alt="Visitor Stats" src="https://widgetbite.com/stats/rajnandan"/>  
-</div>
-    
+## Installation
+
+### Manual
+
+```shell
+# Clone the repository
+git clone https://github.com/rajnandan1/kener.git
+cd kener
+npm install
+cp .env.example .env
+npm run dev
+```
+
+### Docker
+
+The latest image is available on DockerHub at [`rajnandan1/kener:latest`](https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=latest).
+Download and use the sample [docker-compose.yml](https://github.com/rajnandan1/kener/blob/main/docker-compose.yml).
+
+### One Click
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/spSvic?referralCode=1Pn7vs)
+
 ## Features
 
 Here are some of the features that you get out of the box. Please read the documentation to know how to use them.
