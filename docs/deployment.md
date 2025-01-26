@@ -134,3 +134,9 @@ docker build  --build-arg KENER_BASE_PATH=/status -t kener .
 ```bash
  docker run  -p 3000:3000 --env-file .env -v $(pwd)/database:/app/uploads -v $(pwd)/database:/app/database kener
 ```
+
+## Railway
+
+You can deploy Kener on [Railway](https://railway.app) with a single click.
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/spSvic?referralCode=1Pn7vs)
