@@ -53,19 +53,19 @@
 								<span>
 									{l(
 										lang,
-										"Started about %startedAt, lasted for about %lastedFor",
+										"Started %startedAt, lasted for %lastedFor",
 										{ startedAt, lastedFor }
 									)}
 								</span>
 							{:else if isFuture && incident.state != "RESOLVED"}
 								<span>
-									{l(lang, "Starts in %startedAt", { startedAt })}
+									{l(lang, "Starts %startedAt", { startedAt })}
 								</span>
 							{:else if isFuture && incident.state == "RESOLVED"}
 								<span>
 									{l(
 										lang,
-										"Starts in %startedAt, will last for about %lastedFor",
+										"Starts %startedAt, will last for %lastedFor",
 										{ startedAt, lastedFor }
 									)}
 								</span>
