@@ -104,6 +104,12 @@ Here are some of the features that you get out of the box. Please read the docum
 -   Auto SEO and Social Media ready
 -   Server Side Rendering
 
+
+<div align="left">
+    <img alt="Visitor Stats" src="https://widgetbite.com/stats/rajnandan"/>  
+</div>
+
+
 ## Technologies used
 
 -   [SvelteKit](https://kit.svelte.dev/)
