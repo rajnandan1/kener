@@ -106,7 +106,11 @@
 
 				<h1 class=" text-xl font-semibold leading-tight">
 					{l(data.lang, "No Incident in %date", {
-						date: data.thisMonthName.replace("-", ", ")
+						date: f(
+							parse(data.thisMonthName, "MMMM-yyyy", new Date()),
+							"MMMM, yyyy",
+							selectedLang
+						)
 					})}
 				</h1>
 			</div>
