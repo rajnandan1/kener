@@ -35,7 +35,7 @@ const apiQueue = new Queue({
 	autostart: true // Automatically start the queue (optional)
 });
 
-const defaultEval = `(function (statusCode, responseTime, responseData) {
+const defaultEval = `(async function (statusCode, responseTime, responseData) {
 	let statusCodeShort = Math.floor(statusCode/100);
     if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {
         return {
@@ -141,7 +141,7 @@ const pingCall = async (hostsV4, hostsV6) => {
 		type: REALTIME
 	};
 };
-const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorEval) => {
+const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorEval, tag) => {
 	let axiosHeaders = {};
 	axiosHeaders["User-Agent"] = "Kener/3.0.2";
 	axiosHeaders["Accept"] = "*/*";
@@ -189,7 +189,7 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
 		statusCode = data.status;
 		resp = data.data;
 	} catch (err) {
-		console.log(`Error in apiCall ${url}`, err.message);
+		console.log(`Error in apiCall ${tag}`, err.message);
 		if (err.message.startsWith("timeout of") && err.message.endsWith("exceeded")) {
 			timeoutError = true;
 		}
@@ -213,9 +213,9 @@ const apiCall = async (envSecrets, url, method, headers, body, timeout, monitorE
 	let evalResp = undefined;
 
 	try {
-		evalResp = eval(monitorEval + `(${statusCode}, ${latency}, "${resp}")`);
+		evalResp = await eval(monitorEval + `(${statusCode}, ${latency}, "${resp}")`);
 	} catch (error) {
-		console.log("Error in monitorEval", error.message);
+		console.log(`Error in monitorEval for ${tag}`, error.message);
 	}
 
 	if (evalResp === undefined || evalResp === null) {
@@ -336,7 +336,8 @@ const Minuter = async (monitor) => {
 			JSON.stringify(monitor.type_data.headers),
 			monitor.type_data.body,
 			monitor.type_data.timeout,
-			monitor.type_data.eval
+			monitor.type_data.eval,
+			monitor.tag
 		);
 
 		realTimeData[startOfMinute] = apiResponse;
@@ -357,7 +358,8 @@ const Minuter = async (monitor) => {
 					JSON.stringify(monitor.type_data.headers),
 					monitor.type_data.body,
 					monitor.type_data.timeout,
-					monitor.type_data.eval
+					monitor.type_data.eval,
+					monitor.tag
 				).then(async (data) => {
 					await db.insertMonitoringData({
 						monitor_tag: monitor.tag,
