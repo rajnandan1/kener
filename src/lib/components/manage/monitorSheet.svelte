@@ -18,7 +18,7 @@
 
 	const dispatch = createEventDispatcher();
 
-	const defaultEval = `(function (statusCode, responseTime, responseData) {
+	const defaultEval = `(async function (statusCode, responseTime, responseData) {
 	let statusCodeShort = Math.floor(statusCode/100);
     if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {
         return {
@@ -81,25 +81,25 @@
 
 	let invalidFormMessage = "";
 
-	function isValidEval() {
+	async function isValidEval() {
 		try {
-			let evalResp = eval(newMonitor.apiConfig.eval + `(200, 1000, "e30=")`);
-
-			if (
-				evalResp === undefined ||
-				evalResp === null ||
-				evalResp.status === undefined ||
-				evalResp.status === null ||
-				evalResp.latency === undefined ||
-				evalResp.latency === null
-			) {
-				return false;
-			}
+			// let evalResp = await eval(newMonitor.apiConfig.eval + `(200, 1000, "e30=")`);
+			new Function(newMonitor.apiConfig.eval);
+			return true; // The code is valid
+			// if (
+			// 	evalResp === undefined ||
+			// 	evalResp === null ||
+			// 	evalResp.status === undefined ||
+			// 	evalResp.status === null ||
+			// 	evalResp.latency === undefined ||
+			// 	evalResp.latency === null
+			// ) {
+			// 	return false;
+			// }
 		} catch (error) {
 			invalidFormMessage = error.message + " in eval.";
 			return false;
 		}
-		return true;
 	}
 	const IsValidURL = function (url) {
 		return /^(http|https):\/\/[^ "]+$/.test(url);
@@ -154,18 +154,28 @@
 				return;
 			}
 
-			//if evali ends with semicolor throw error
-			if (!!newMonitor.apiConfig.eval && newMonitor.apiConfig.eval.endsWith(";")) {
-				invalidFormMessage = "Eval should not end with semicolon";
-				return;
-			}
-
 			//validating eval
-			if (!!newMonitor.apiConfig.eval && !isValidEval()) {
-				invalidFormMessage = invalidFormMessage + "Invalid eval";
-				return;
-			}
+			if (!!newMonitor.apiConfig.eval) {
+				newMonitor.apiConfig.eval = newMonitor.apiConfig.eval.trim();
+				if (newMonitor.apiConfig.eval.endsWith(";")) {
+					invalidFormMessage = "Eval should not end with semicolon";
+					return;
+				}
+				//has to start with ( and end with )
+				if (
+					!newMonitor.apiConfig.eval.startsWith("(") ||
+					!newMonitor.apiConfig.eval.endsWith(")")
+				) {
+					invalidFormMessage =
+						"Eval should start with ( and end with ). It is an anonymous function";
+					return;
+				}
 
+				if (!(await isValidEval())) {
+					invalidFormMessage = invalidFormMessage + "Invalid eval";
+					return;
+				}
+			}
 			newMonitor.type_data = JSON.stringify(newMonitor.apiConfig);
 		} else if (newMonitor.monitor_type === "PING") {
 			//validating hostsV4

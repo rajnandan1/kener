@@ -45,13 +45,13 @@ The headers are used to define the headers that should be sent with the request.
 
 The eval is used to define the JavaScript code that should be used to evaluate the response. It is optional and has be a valid JavaScript code.
 
-This is a anonymous JS function, by default it looks like this.
+This is an anonymous JS function, it should return a **Promise**, that resolves or rejects to `{status, latency}`, by default it looks like this.
 
 > **_NOTE:_** The eval function should always return a json object. The json object can have only status(UP/DOWN/DEGRADED) and latency(number)
 > `{status:"DEGRADED", latency: 200}`.
 
 ```javascript
-(function (statusCode, responseTime, responseDataBase64) {
+(async function (statusCode, responseTime, responseDataBase64) {
 	let statusCodeShort = Math.floor(statusCode/100);
 	let status = 'DOWN'
     if(statusCodeShort >=2 && statusCodeShort <= 3) {
@@ -74,16 +74,12 @@ let decodedResp = atob(responseDataBase64);
 //let jsonResp = JSON.parse(decodedResp)
 ```
 
-<div class="note danger">
-    The eval is validated against (200, 1000, "e30=") which translates to (200, 1000, '{}') within the function. So whatever function you write should be able to handle these values otherwise you won't be able to save the monitor.
-</div>
-
 #### Example
 
 The following example shows how to use the eval function to evaluate the response. The function checks if the status code is 2XX then the status is UP, if the status code is 5XX then the status is DOWN. If the response contains the word `Unknown Error` then the status is DOWN. If the response time is greater than 2000 then the status is DEGRADED.
 
 ```javascript
-(function (statusCode, responseTime, responseDataBase64) {
+(async function (statusCode, responseTime, responseDataBase64) {
 	const resp = atob(responseDataBase64); //convert base64 to string
 
 	let status = "DOWN";
@@ -105,6 +101,36 @@ The following example shows how to use the eval function to evaluate the respons
 
 	return {
 		status: status,
+		latency: responseTime
+	};
+});
+```
+
+This next example shows how to call another API withing eval. It is scrapping the second last script tag from the response and checking if the heading is "No recent issues" then the status is UP else it is DOWN.
+
+```javascript
+(async function raj(statusCode, responseTime, responseDataBase64) {
+	let htmlString = atob(responseDataBase64);
+	const scriptTags = htmlString.match(/<script[^>]*src="([^"]+)"[^>]*>/g);
+	if (scriptTags && scriptTags.length >= 2) {
+		// Extract the second last script tag's src attribute
+		const secondLastScript = scriptTags[scriptTags.length - 2];
+		const srcMatch = secondLastScript.match(/src="([^"]+)"/);
+		const secondLastScriptSrc = srcMatch ? srcMatch[1] : null;
+
+		let jsResp = await fetch(secondLastScriptSrc); //api call
+		let jsRespText = await jsResp.text();
+		//check if heading":"No recent issues" exists
+		let noRecentIssues = jsRespText.indexOf('heading":"No recent issues"');
+		if (noRecentIssues != -1) {
+			return {
+				status: "UP",
+				latency: responseTime
+			};
+		}
+	}
+	return {
+		status: "DOWN",
 		latency: responseTime
 	};
 });
