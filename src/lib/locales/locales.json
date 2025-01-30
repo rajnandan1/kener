@@ -46,5 +46,9 @@
 	{
 		"code": "pt-BR",
 		"name": "Português Brasileiro"
+	},
+	{
+		"code": "tr",
+		"name": "Türkçe"
 	}
 ]
