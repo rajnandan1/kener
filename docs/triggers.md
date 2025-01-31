@@ -93,20 +93,24 @@ Body of the webhook will be sent as below:
 }
 ```
 
-| Key                   | Description                                                 |
-| --------------------- | ----------------------------------------------------------- |
-| id                    | Unique ID of the alert                                      |
-| alert_name            | Name of the alert                                           |
-| severity              | Severity of the alert. Can be `critical`, `warn`            |
-| status                | Status of the alert. Can be `TRIGGERED`, `RESOLVED`         |
-| source                | Source of the alert. Can be `Kener`                         |
-| timestamp             | Timestamp of the alert                                      |
-| description           | Description of the alert. This you can customize. See below |
-| details               | Details of the alert.                                       |
-| details.metric        | Name of the monitor                                         |
-| details.current_value | Current value of the monitor                                |
-| details.threshold     | Alert trigger threshold of the monitor                      |
-| actions               | Actions to be taken. Link to view the monitor.              |
+| Key                   | Description                                                 | Variable                      |
+| --------------------- | ----------------------------------------------------------- | ----------------------------- |
+| id                    | Unique ID of the alert                                      | ${id}                         |
+| alert_name            | Name of the alert                                           | ${alert_name}                 |
+| severity              | Severity of the alert. Can be `critical`, `warn`            | ${severity}                   |
+| status                | Status of the alert. Can be `TRIGGERED`, `RESOLVED`         | ${status}                     |
+| source                | Source of the alert. Can be `Kener`                         | ${source}                     |
+| timestamp             | Timestamp of the alert                                      | ${timestamp}                  |
+| description           | Description of the alert. This you can customize. See below | ${description}                |
+| details               | Details of the alert.                                       | ${details}                    |
+| details.metric        | Name of the monitor                                         | ${details.metric}             |
+| details.current_value | Current value of the monitor                                | ${current_value}              |
+| details.threshold     | Alert trigger threshold of the monitor                      | ${threshold}                  |
+| actions               | Actions to be taken. Link to view the monitor.              | ${action_text}, ${action_url} |
+
+### Custom Body
+
+You can customize the body of the webhook. You can use the variables mentioned above. If you are not using a json body then please make sure you are using the right content-type by setting custom headers. See examples below.
 
 ## Discord
 
@@ -250,3 +254,25 @@ Click on the ⚙️ to edit the trigger.
 ### Deactivate Trigger
 
 You can deactivate the trigger by switching the toggle to off. You cannot send message to a deactivated trigger. Any monitor with this trigger will not send any notifications.
+
+---
+
+## Examples
+
+### Telegram
+
+You can use the webhook trigger to send a message to a telegram channel. Enable `Use a custom webhook body`.
+
+Set the URL to `https://api.telegram.org/bot[BOT_TOKEN]/sendMessage`. Replace [BOT_TOKEN] with your bot token.
+
+```json
+{
+	"chat_id": "[CHAT_ID]", // Replace [CHAT_ID] with your chat id
+	"text": "<b>${alert_name}</b>\n\n<b>Severity:</b> <code>${severity}</code>\n<b>Status:</b> ${status}\n<b>Source:</b> Kener\n<b>Time:</b> ${timestamp}\n\n📌 <b>Details:</b>\n- <b>Metric:</b>${metric}\n- <b>Current Value:</b> <code>${current_value}</code>\n- <b>Threshold:</b> <code>${threshold}</code>\n\n🔍 <a href=\"${action_url}\">${action_text}</a>",
+	"parse_mode": "HTML"
+}
+```
+
+If you want to send a message to a group, then replace `[CHAT_ID]` with the group id.
+
+You can also use environment variables to store the bot token and chat id. In that case the URL will be `https://api.telegram.org/bot$BOT_TOKEN/sendMessage`. In the body you can use `"chat_id": "$CHAT_ID"`. Make sure you have set the `BOT_TOKEN` and `CHAT_ID` in the <a href="/docs/environment-vars#secrets">environment variables</a>.
