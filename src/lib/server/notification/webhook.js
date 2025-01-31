@@ -55,6 +55,7 @@ class Webhook {
 
 	transformData(data) {
 		if (!!!this.trigger_meta.has_webhook_body) return JSON.stringify(data);
+		if (!!!this.trigger_meta.webhook_body) return JSON.stringify(data);
 		let body = this.trigger_meta.webhook_body;
 		body = ReplaceAllOccurrences(body, "${id}", data.id);
 		body = ReplaceAllOccurrences(body, "${alert_name}", data.alert_name);
