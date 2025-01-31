@@ -10,13 +10,7 @@ class Notification {
 	constructor(trigger, siteData, monitorData) {
 		let trigger_meta = JSON.parse(trigger.trigger_meta);
 		if (trigger.trigger_type === "webhook") {
-			this.client = new Webhook(
-				trigger_meta.url,
-				trigger_meta.headers,
-				"POST",
-				siteData,
-				monitorData
-			);
+			this.client = new Webhook(trigger_meta, "POST", siteData, monitorData);
 		} else if (trigger.trigger_type === "discord") {
 			this.client = new Discord(trigger_meta.url, siteData, monitorData);
 		} else if (trigger.trigger_type === "slack") {

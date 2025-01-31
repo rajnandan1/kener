@@ -26,7 +26,9 @@
 			url: "",
 			headers: [],
 			to: "",
-			from: data.RESEND_SENDER_EMAIL || ""
+			from: data.RESEND_SENDER_EMAIL || "",
+			webhook_body: "",
+			has_webhook_body: false
 		}
 	};
 	let invalidFormMessage = "";
@@ -41,7 +43,9 @@
 				url: "",
 				headers: [],
 				to: "",
-				from: data.RESEND_SENDER_EMAIL || ""
+				from: data.RESEND_SENDER_EMAIL || "",
+				webhook_body: "",
+				has_webhook_body: false
 			}
 		};
 	}
@@ -92,6 +96,23 @@
 				invalidFormMessage = "Invalid Name and Email Address for Sender";
 				formState = "idle";
 				return;
+			}
+		}
+		if (newTrigger.trigger_type == "webhook") {
+			//headers elements key value should not be empty
+			if (newTrigger.trigger_meta.headers.length > 0) {
+				for (let i = 0; i < newTrigger.trigger_meta.headers.length; i++) {
+					if (newTrigger.trigger_meta.headers[i].key == "") {
+						invalidFormMessage = "Header Key is required";
+						formState = "idle";
+						return;
+					}
+					if (newTrigger.trigger_meta.headers[i].value == "") {
+						invalidFormMessage = "Header Value is required";
+						formState = "idle";
+						return;
+					}
+				}
 			}
 		}
 		//newTrigger.name present not empty
@@ -202,6 +223,30 @@
 	onMount(() => {
 		loadData();
 	});
+	let placeholderWebhookBody = JSON.stringify(
+		{
+			id: "${id}",
+			alert_name: "${alert_name}",
+			severity: "${severity}",
+			status: "${status}",
+			source: "${source}",
+			timestamp: "${timestamp}",
+			description: "${description}",
+			details: {
+				metric: "${metric}",
+				current_value: "${current_value}",
+				threshold: "${threshold}"
+			},
+			actions: [
+				{
+					text: "${action_text}",
+					url: "${action_url}"
+				}
+			]
+		},
+		null,
+		2
+	);
 </script>
 
 <div class="mt-4 flex justify-between">
@@ -419,7 +464,7 @@
 					{#if newTrigger.trigger_type == "webhook"}
 						<div class="mt-4 w-full">
 							<Label for="url">Add Optional Headers for Webhooks</Label>
-							<div class="grid grid-cols-6 gap-2">
+							<div class="mt-2 grid grid-cols-6 gap-2">
 								{#each newTrigger.trigger_meta.headers as header, index}
 									<div class="col-span-2">
 										<Input
@@ -463,6 +508,41 @@
 								>
 									<Plus class="mr-1 h-4 w-4" /> Add Headers
 								</Button>
+							</div>
+							<div>
+								<label>
+									<input
+										on:change={(e) => {
+											newTrigger.trigger_meta.has_webhook_body =
+												e.target.checked;
+										}}
+										type="checkbox"
+										checked={newTrigger.trigger_meta.has_webhook_body}
+									/>
+									Use a Custom Webhook Body
+								</label>
+								{#if !!newTrigger.trigger_meta.has_webhook_body}
+									<p class="my-2 text-xs text-muted-foreground">
+										You can use a custom webhook body. The body should be a
+										valid for the Content-Type header you have set. The default
+										is JSON. There are <a
+											target="_blank"
+											class="text-blue-500"
+											href="https://kener.ing/docs/triggers#webhook-body"
+											>variables</a
+										>
+										that you can use for the webhook body. To use a variable wrap
+										it like
+										<code>$&#123;variable&#125;</code>
+									</p>
+									<div class="w-full">
+										<textarea
+											bind:value={newTrigger.trigger_meta.webhook_body}
+											class="mt-2 h-[500px] w-full rounded-sm border p-2"
+											placeholder={placeholderWebhookBody}
+										></textarea>
+									</div>
+								{/if}
 							</div>
 						</div>
 					{:else if newTrigger.trigger_type == "email"}

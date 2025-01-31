@@ -8,14 +8,16 @@ class Webhook {
 	method;
 	siteData;
 	monitorData;
+	trigger_meta;
 
-	constructor(url, headers, method, siteData, monitorData) {
+	constructor(trigger_meta, method, siteData, monitorData) {
 		const kenerHeader = {
 			"Content-Type": "application/json",
 			"User-Agent": "Kener/3.0.0"
 		};
-
-		this.url = url;
+		let headers = trigger_meta.headers;
+		this.trigger_meta = trigger_meta;
+		this.url = trigger_meta.url;
 		this.headers = kenerHeader;
 		for (let i = 0; i < headers.length; i++) {
 			const header = headers[i];
@@ -25,19 +27,49 @@ class Webhook {
 		this.siteData = siteData;
 		this.monitorData = monitorData;
 
-		let envSecrets = GetRequiredSecrets(`${this.url} ${JSON.stringify(this.headers)}`);
+		let envSecrets = GetRequiredSecrets(
+			`${this.url} ${JSON.stringify(this.headers)} ${JSON.stringify(this.trigger_meta.webhook_body)}`
+		);
+		//replace secrets in url and headers
 
 		for (let i = 0; i < envSecrets.length; i++) {
 			const secret = envSecrets[i];
-			this.url = ReplaceAllOccurrences(this.url, secret.key, secret.value);
+			this.url = ReplaceAllOccurrences(this.url, secret.find, secret.replace);
 			this.headers = JSON.parse(
 				ReplaceAllOccurrences(JSON.stringify(this.headers), secret.find, secret.replace)
 			);
 		}
+
+		if (!!this.trigger_meta.has_webhook_body && !!this.trigger_meta.webhook_body) {
+			envSecrets = GetRequiredSecrets(this.trigger_meta.webhook_body);
+			for (let i = 0; i < envSecrets.length; i++) {
+				const secret = envSecrets[i];
+				this.trigger_meta.webhook_body = ReplaceAllOccurrences(
+					this.trigger_meta.webhook_body,
+					secret.find,
+					secret.replace
+				);
+			}
+		}
 	}
 
 	transformData(data) {
-		return data;
+		if (!!!this.trigger_meta.has_webhook_body) return JSON.stringify(data);
+		if (!!!this.trigger_meta.webhook_body) return JSON.stringify(data);
+		let body = this.trigger_meta.webhook_body;
+		body = ReplaceAllOccurrences(body, "${id}", data.id);
+		body = ReplaceAllOccurrences(body, "${alert_name}", data.alert_name);
+		body = ReplaceAllOccurrences(body, "${severity}", data.severity);
+		body = ReplaceAllOccurrences(body, "${status}", data.status);
+		body = ReplaceAllOccurrences(body, "${source}", data.source);
+		body = ReplaceAllOccurrences(body, "${timestamp}", data.timestamp);
+		body = ReplaceAllOccurrences(body, "${description}", data.description);
+		body = ReplaceAllOccurrences(body, "${metric}", data.details.metric);
+		body = ReplaceAllOccurrences(body, "${current_value}", data.details.current_value);
+		body = ReplaceAllOccurrences(body, "${threshold}", data.details.threshold);
+		body = ReplaceAllOccurrences(body, "${action_text}", data.actions[0].text);
+		body = ReplaceAllOccurrences(body, "${action_url}", data.actions[0].url);
+		return body;
 	}
 
 	type() {
@@ -49,7 +81,7 @@ class Webhook {
 			const response = await fetch(this.url, {
 				method: this.method,
 				headers: this.headers,
-				body: JSON.stringify(this.transformData(data))
+				body: this.transformData(data)
 			});
 			return response;
 		} catch (error) {
