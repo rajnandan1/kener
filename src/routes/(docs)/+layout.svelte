@@ -87,7 +87,7 @@
 						<img src="https://kener.ing/logo.png" class="h-8 w-8" alt="" />
 						<span class="text-xl font-medium">Kener Documentation</span>
 						<span class="me-2 rounded border px-2.5 py-0.5 text-xs font-medium">
-							v3.0.7
+							v3.0.8
 						</span>
 					</a>
 				</div>

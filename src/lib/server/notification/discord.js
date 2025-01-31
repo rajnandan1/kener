@@ -21,7 +21,10 @@ class Discord {
 
 	transformData(data) {
 		let siteURL = this.siteData.siteURL;
-		let logo = this.siteData.logo;
+		let logo =
+			this.siteData.siteURL +
+			(!!process.env.KENER_BASE_PATH ? process.env.KENER_BASE_PATH : "") +
+			this.siteData.logo;
 
 		let color = 13250616; //down;
 		if (data.severity === "warning") {
