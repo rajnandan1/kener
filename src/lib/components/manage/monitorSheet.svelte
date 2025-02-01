@@ -282,7 +282,7 @@
 		>
 			<ChevronRight class="h-6 w-6 " />
 		</Button>
-		<div class="absolute top-0 flex h-12 w-full justify-between gap-2 border-b p-3">
+		<div class="absolute top-0 flex h-12 w-full justify-between gap-2 border-b p-3 pr-6">
 			{#if newMonitor.id}
 				<h2 class="text-lg font-medium">Edit Monitor</h2>
 			{:else}
@@ -826,7 +826,9 @@
 				</div>
 			{/if}
 		</div>
-		<div class="absolute bottom-0 grid h-16 w-full grid-cols-6 justify-end gap-2 border-t p-3">
+		<div
+			class="absolute bottom-0 grid h-16 w-full grid-cols-6 justify-end gap-2 border-t p-3 pr-6"
+		>
 			<div class="col-span-5 py-2.5">
 				<p class="text-right text-xs font-medium text-red-500">{invalidFormMessage}</p>
 			</div>
