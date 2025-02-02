@@ -26,6 +26,7 @@
 	"Light": "लाइट",
 	"Link Copied": "लिंक कॉपी किया गया",
 	"LIVE Status": "लाइव स्टेटस",
+	"MAINTENANCE": "मेंटेनेंस",
 	"Mode": "मोड",
 	"MONITORING": "निगरानी",
 	"No Data": "कोई डेटा नहीं",
@@ -36,6 +37,7 @@
 	"Ongoing Incidents": "चल रही घटनाएँ",
 	"Pinging": "पिंगिंग",
 	"Recent Incidents": "हाल की घटनाएँ",
+	"Recent Maintenances": "हाल की मेंटेनेंस",
 	"RESOLVED": "सुलझाया गया",
 	"Share": "साझा करें",
 	"Share this monitor using a link with others": "इस मॉनिटर को दूसरों के साथ लिंक के माध्यम से साझा करें",
@@ -51,5 +53,9 @@
 	"UP": "अप",
 	"Updates": "अपडेट्स",
 	"Uptime": "अपटाइम",
-	"%status for %duration": "%duration के लिए %status"
+	"%status for %duration": "%duration के लिए %status",
+	"Maintenance in Progress": "मेंटेनेंस जारी है",
+	"Maintenance Completed": "मेंटेनेंस पूर्ण हुआ",
+	"Upcoming Maintenance": "आगामी मेंटेनेंस",
+	"Browse Events": "ईवेंट ब्राउज़ करें"
 }

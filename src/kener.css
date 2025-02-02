@@ -834,3 +834,18 @@ textarea::placeholder {
 		padding-right: 8px;
 	}
 }
+
+.bg-maintenance-in-progress {
+	background-color: #f9f3c2;
+}
+
+.text-maintenance-in-progress-text {
+	color: #ff6868;
+}
+.text-upcoming-maintenance {
+	color: #f0a04b;
+}
+
+.text-maintenance-completed {
+	color: #6499e9;
+}

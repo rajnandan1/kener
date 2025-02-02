@@ -11,6 +11,7 @@
 	import { onMount } from "svelte";
 	import ShareMenu from "$lib/components/shareMenu.svelte";
 	import { scale } from "svelte/transition";
+	import { format } from "date-fns";
 
 	export let data;
 	let shareMenusToggle = false;
@@ -43,6 +44,14 @@
 	onMount(() => {
 		pageLoaded = true;
 	});
+	let kindFilter = "INCIDENT";
+	function kindOfIncidents(kind) {
+		kindFilter = kind;
+	}
+
+	if (data.allRecentIncidents.length == 0) {
+		kindOfIncidents("MAINTENANCE");
+	}
 </script>
 
 <svelte:head>
@@ -96,16 +105,47 @@
 		</Button>
 	</section>
 {/if}
-{#if data.unresolvedIncidents.length > 0}
+{#if data.allRecentIncidents.length + data.allRecentMaintenances.length > 0}
 	<section
 		class="mx-auto mb-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent"
 		id=""
 	>
 		<div class="grid w-full grid-cols-2 gap-4">
 			<div class="col-span-2 text-center md:col-span-1 md:text-left">
-				<Badge variant="outline" class="border-0 pl-0">
-					{l(data.lang, "Ongoing Incidents")}
-				</Badge>
+				{#if kindFilter == "INCIDENT"}
+					{#if data.allRecentIncidents.length > 0}
+						<Button class="h-8 text-sm" on:click={() => kindOfIncidents("INCIDENT")}>
+							{l(data.lang, "Recent Incidents")}
+						</Button>
+					{/if}
+					{#if data.allRecentMaintenances.length > 0}
+						<Button
+							variant="secondary"
+							class="h-8  text-sm"
+							on:click={() => kindOfIncidents("MAINTENANCE")}
+						>
+							{l(data.lang, "Recent Maintenances")}
+						</Button>
+					{/if}
+				{:else}
+					{#if data.allRecentIncidents.length > 0}
+						<Button
+							variant="secondary"
+							class="h-8 text-sm"
+							on:click={() => kindOfIncidents("INCIDENT")}
+						>
+							{l(data.lang, "Recent Incidents")}
+						</Button>
+					{/if}
+					{#if data.allRecentMaintenances.length > 0}
+						<Button
+							class="h-8  text-sm"
+							on:click={() => kindOfIncidents("MAINTENANCE")}
+						>
+							{l(data.lang, "Recent Maintenances")}
+						</Button>
+					{/if}
+				{/if}
 			</div>
 		</div>
 	</section>
@@ -114,8 +154,19 @@
 		id=""
 	>
 		<Card.Root class="w-full">
-			<Card.Content class=" newincidents w-full overflow-hidden p-0">
-				{#each data.unresolvedIncidents as incident, index}
+			{#if kindFilter == "INCIDENT"}
+				<Card.Content class=" newincidents w-full overflow-hidden p-0">
+					{#each data.allRecentIncidents as incident, index}
+						<Incident
+							{incident}
+							lang={data.lang}
+							index="incident-{index}"
+							selectedLang={data.selectedLang}
+						/>
+					{/each}
+				</Card.Content>
+			{:else if kindFilter == "MAINTENANCE"}
+				{#each data.allRecentMaintenances as incident, index}
 					<Incident
 						{incident}
 						lang={data.lang}
@@ -123,7 +174,7 @@
 						selectedLang={data.selectedLang}
 					/>
 				{/each}
-			</Card.Content>
+			{/if}
 		</Card.Root>
 	</section>
 {/if}
@@ -186,8 +237,10 @@
 		class="relative z-10 mx-auto mb-8 w-full max-w-[890px] flex-1 flex-col items-start backdrop-blur-[2px] md:w-[655px]"
 	>
 		{#each data.site.categories.filter((e) => e.name != "Home") as category}
-			<div
-				on:click={() => {
+			<a
+				href={`?category=${category.name}`}
+				on:click={(e) => {
+					e.preventDefault();
 					window.location.href = `?category=${category.name}`;
 				}}
 			>
@@ -210,7 +263,7 @@
 						</Card.Description>
 					</Card.Header>
 				</Card.Root>
-			</div>
+			</a>
 		{/each}
 	</section>
 {/if}
@@ -218,21 +271,23 @@
 	class="mx-auto mb-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent"
 	id=""
 >
-	<div
-		on:click={() => {
-			window.location.href = `${base}/incidents`;
+	<a
+		href="{base}/incidents/{format(new Date(), 'MMMM-yyyy')}"
+		on:click={(e) => {
+			e.preventDefault();
+			window.location.href = `${base}/incidents/${format(new Date(), "MMMM-yyyy")}`;
 		}}
 		class="bounce-right grid w-full cursor-pointer grid-cols-2 justify-between gap-4 rounded-md border bg-card px-4 py-2 text-sm font-medium hover:bg-secondary"
 	>
 		<div class="col-span-1 text-left">
-			{l(data.lang, "Recent Incidents")}
+			{l(data.lang, "Browse Events")}
 		</div>
 		<div class="text-right">
 			<span class="arrow float-right mt-0.5">
 				<ArrowRight class="h-4 w-4 text-muted-foreground hover:text-primary" />
 			</span>
 		</div>
-	</div>
+	</a>
 </section>
 {#if shareMenusToggle}
 	<div

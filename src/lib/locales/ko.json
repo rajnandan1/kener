@@ -26,6 +26,7 @@
 	"Light": "라이트",
 	"Link Copied": "링크 복사됨",
 	"LIVE Status": "실시간 상태",
+	"MAINTENANCE": "유지보수",
 	"Mode": "모드",
 	"MONITORING": "감시 중",
 	"No Data": "데이터 없음",
@@ -36,6 +37,7 @@
 	"Ongoing Incidents": "진행중 사건",
 	"Pinging": "핑 요청",
 	"Recent Incidents": "최근 사건",
+	"Recent Maintenances": "최근 유지보수",
 	"RESOLVED": "해결됨",
 	"Share": "공유",
 	"Share this monitor using a link with others": "링크를 사용하여 다른 사람들과 이 모니터링 데이터를 공유해보세요",
@@ -51,5 +53,9 @@
 	"UP": "작동 중",
 	"Updates": "업데이트",
 	"Uptime": "업타임",
-	"%status for %duration": "%duration 동안 %status 상태였음"
+	"%status for %duration": "%duration 동안 %status 상태였음",
+	"Maintenance in Progress": "유지보수 진행 중",
+	"Maintenance Completed": "유지보수 완료",
+	"Upcoming Maintenance": "예정된 유지보수",
+	"Browse Events": "이벤트 찾아보기"
 }

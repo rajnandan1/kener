@@ -26,6 +26,7 @@
 	"Light": "Hell",
 	"Link Copied": "Link kopiert",
 	"LIVE Status": "LIVE-Status",
+	"MAINTENANCE": "WARTUNG",
 	"Mode": "Modus",
 	"MONITORING": "ÜBERWACHUNG",
 	"No Data": "Keine Daten",
@@ -36,6 +37,7 @@
 	"Ongoing Incidents": "Laufende Vorfälle",
 	"Pinging": "Pingen",
 	"Recent Incidents": "Kürzliche Vorfälle",
+	"Recent Maintenances": "Kürzliche Wartungen",
 	"RESOLVED": "GELÖST",
 	"Share": "Teilen",
 	"Share this monitor using a link with others": "Teilen Sie diesen Monitor mit einem Link mit anderen",
@@ -51,5 +53,9 @@
 	"UP": "VERFÜGBAR",
 	"Updates": "Updates",
 	"Uptime": "Verfügbarkeit",
-	"%status for %duration": "%status für %duration"
+	"%status for %duration": "%status für %duration",
+	"Maintenance in Progress": "Wartung läuft",
+	"Maintenance Completed": "Wartung abgeschlossen",
+	"Upcoming Maintenance": "Bevorstehende Wartung",
+	"Browse Events": "Ereignisse durchsuchen"
 }

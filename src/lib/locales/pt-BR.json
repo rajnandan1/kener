@@ -26,6 +26,7 @@
 	"Light": "Claro",
 	"Link Copied": "Link Copiado",
 	"LIVE Status": "Status AO VIVO",
+	"MAINTENANCE": "MANUTENÇÃO",
 	"Mode": "Modo",
 	"MONITORING": "MONITORANDO",
 	"No Data": "Sem dados",
@@ -36,6 +37,7 @@
 	"Ongoing Incidents": "Incidentes em Andamento",
 	"Pinging": "Animado",
 	"Recent Incidents": "Incidentes Recentes",
+	"Recent Maintenances": "Manutenções Recentes",
 	"RESOLVED": "RESOLVIDO",
 	"Share": "Compartilhar",
 	"Share this monitor using a link with others": "Compartilhar este monitor através do link",
@@ -51,5 +53,9 @@
 	"UP": "OPERACIONAL",
 	"Updates": "Atualizações",
 	"Uptime": "Tempo de Atividade",
-	"%status for %duration": "%status por %duration"
+	"%status for %duration": "%status por %duration",
+	"Maintenance in Progress": "Manutenção em Progresso",
+	"Maintenance Completed": "Manutenção Concluída",
+	"Upcoming Maintenance": "Manutenção Agendada",
+	"Browse Events": "Navegar Eventos"
 }

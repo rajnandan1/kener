@@ -26,6 +26,7 @@
 	"Light": "Светлая",
 	"Link Copied": "Ссылка скопирована",
 	"LIVE Status": "ЖИВОЙ статус",
+	"MAINTENANCE": "ОБСЛУЖИВАНИЕ",
 	"Mode": "Режим",
 	"MONITORING": "МОНИТОРИНГ",
 	"No Data": "Нет данных",
@@ -36,6 +37,7 @@
 	"Ongoing Incidents": "Текущие инциденты",
 	"Pinging": "Пингуется",
 	"Recent Incidents": "Недавние инциденты",
+	"Recent Maintenances": "Последние обслуживания",
 	"RESOLVED": "РЕШЕНО",
 	"Share": "Поделиться",
 	"Share this monitor using a link with others": "Поделитесь этим монитором с другими по ссылке",
@@ -51,5 +53,9 @@
 	"UP": "РАБОТАЕТ",
 	"Updates": "Обновления",
 	"Uptime": "Время работы",
-	"%status for %duration": "%status в течение %duration"
+	"%status for %duration": "%status в течение %duration",
+	"Maintenance in Progress": "Техническое обслуживание",
+	"Maintenance Completed": "Техническое обслуживание завершено",
+	"Upcoming Maintenance": "Предстоящее техническое обслуживание",
+	"Browse Events": "Просмотр событий"
 }

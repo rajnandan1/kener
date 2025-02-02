@@ -26,6 +26,7 @@
 	"Light": "Sáng",
 	"Link Copied": "Liên kết đã được sao chép",
 	"LIVE Status": "Trạng thái TRỰC TIẾP",
+	"MAINTENANCE": "Bảo trì",
 	"Mode": "Chế độ",
 	"MONITORING": "Đang giám sát",
 	"No Data": "Không có dữ liệu",
@@ -36,6 +37,7 @@
 	"Ongoing Incidents": "Sự cố đang diễn ra",
 	"Pinging": "Đang kiểm tra",
 	"Recent Incidents": "Sự cố gần đây",
+	"Recent Maintenances": "Bảo trì gần đây",
 	"RESOLVED": "Đã giải quyết",
 	"Share": "Chia sẻ",
 	"Share this monitor using a link with others": "Chia sẻ trình theo dõi này với người khác bằng liên kết",
@@ -51,5 +53,9 @@
 	"UP": "Hoạt động",
 	"Updates": "Cập nhật",
 	"Uptime": "Thời gian hoạt động",
-	"%status for %duration": "%status trong %duration"
+	"%status for %duration": "%status trong %duration",
+	"Maintenance in Progress": "Bảo trì đang diễn ra",
+	"Maintenance Completed": "Bảo trì đã hoàn thành",
+	"Upcoming Maintenance": "Bảo trì sắp tới",
+	"Browse Events": "Duyệt sự kiện"
 }

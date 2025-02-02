@@ -26,6 +26,7 @@
 	"Light": "Lys",
 	"Link Copied": "Link Kopieret",
 	"LIVE Status": "LIVE-status",
+	"MAINTENANCE": "VEDLIGEHOLDELSE",
 	"Mode": "Tilstand",
 	"MONITORING": "OVERVÅGNING",
 	"No Data": "Ingen Data",
@@ -36,6 +37,7 @@
 	"Ongoing Incidents": "Igangværende Hændelser",
 	"Pinging": "Pinger",
 	"Recent Incidents": "Seneste Hændelser",
+	"Recent Maintenances": "Seneste Vedligeholdelser",
 	"RESOLVED": "LØST",
 	"Share": "Del",
 	"Share this monitor using a link with others": "Del denne monitor ved hjælp af et link med andre",
@@ -51,5 +53,9 @@
 	"UP": "OPPE",
 	"Updates": "Opdateringer",
 	"Uptime": "Oppetid",
-	"%status for %duration": "%status i %duration"
+	"%status for %duration": "%status i %duration",
+	"Maintenance in Progress": "Vedligeholdelse i gang",
+	"Maintenance Completed": "Vedligeholdelse afsluttet",
+	"Upcoming Maintenance": "Kommende vedligeholdelse",
+	"Browse Events": "Gennemse begivenheder"
 }

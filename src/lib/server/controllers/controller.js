@@ -490,11 +490,17 @@ export const CreateIncident = async (data) => {
 		start_date_time: data.start_date_time,
 		status: !!data.status ? data.status : "OPEN",
 		end_date_time: !!data.end_date_time ? data.end_date_time : null,
-		state: !!data.state ? data.state : "INVESTIGATING"
+		state: !!data.state ? data.state : "INVESTIGATING",
+		incident_type: !!data.incident_type ? data.incident_type : "INCIDENT"
 	};
 
+	//incident_type == INCIDENT delete endDateTime
+	if (incident.incident_type === "INCIDENT") {
+		incident.end_date_time = null;
+	}
+
 	//if endDateTime is provided and it is less than startDateTime, throw error
-	if (incident.end_date_time && incident.end_date_time < incident.start_date_time) {
+	if (!!incident.end_date_time && incident.end_date_time < incident.start_date_time) {
 		throw new Error("End date time cannot be less than start date time");
 	}
 
@@ -638,9 +644,9 @@ export const AddIncidentComment = async (incident_id, comment, state, commented_
 	}
 
 	let c = await db.insertIncidentComment(incident_id, comment, state, commented_at);
-
+	let incidentType = incidentExists.incident_type;
 	//update incident state
-	if (c) {
+	if (c && incidentType === "INCIDENT") {
 		let incidentUpdate = {
 			state: state
 		};

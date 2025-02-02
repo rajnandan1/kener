@@ -26,6 +26,7 @@
 	"Light": "Licht",
 	"Link Copied": "Link gekopieerd",
 	"LIVE Status": "LIVE status",
+	"MAINTENANCE": "ONDERHOUD",
 	"Mode": "Modus",
 	"MONITORING": "MONITOREN",
 	"No Data": "Geen gegevens",
@@ -36,6 +37,7 @@
 	"Ongoing Incidents": "Lopende incidenten",
 	"Pinging": "Pingen",
 	"Recent Incidents": "Recente incidenten",
+	"Recent Maintenances": "Recente onderhoudsbeurten",
 	"RESOLVED": "OPGELOST",
 	"Share": "Delen",
 	"Share this monitor using a link with others": "Deel deze monitor met anderen via een link",
@@ -51,5 +53,9 @@
 	"UP": "BEREIKBAAR",
 	"Updates": "Updates",
 	"Uptime": "Uptime",
-	"%status for %duration": "%status voor %duration"
+	"%status for %duration": "%status voor %duration",
+	"Maintenance in Progress": "Onderhoud bezig",
+	"Maintenance Completed": "Onderhoud voltooid",
+	"Upcoming Maintenance": "Aankomend onderhoud",
+	"Browse Events": "Evenementen bekijken"
 }

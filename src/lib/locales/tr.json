@@ -26,6 +26,7 @@
 	"Light": "Açık",
 	"Link Copied": "Bağlantı Kopyalandı",
 	"LIVE Status": "CANLI Durum",
+	"MAINTENANCE": "BAKIM",
 	"Mode": "Mod",
 	"MONITORING": "İZLEME",
 	"No Data": "Veri Yok",
@@ -36,6 +37,7 @@
 	"Ongoing Incidents": "Devam Eden Olaylar",
 	"Pinging": "Pinging",
 	"Recent Incidents": "Son Olaylar",
+	"Recent Maintenances": "Son Bakımlar",
 	"RESOLVED": "ÇÖZÜLDÜ",
 	"Share": "Paylaş",
 	"Share this monitor using a link with others": "Bu servisi bir bağlantı kullanarak başkalarıyla paylaşın",
@@ -51,5 +53,9 @@
 	"UP": "ÇALIŞIYOR",
 	"Updates": "Güncellemeler",
 	"Uptime": "Çalışma Süresi",
-	"%status for %duration": "%duration boyunca %status"
+	"%status for %duration": "%duration boyunca %status",
+	"Maintenance in Progress": "Bakım Devam Ediyor",
+	"Maintenance Completed": "Bakım Tamamlandı",
+	"Upcoming Maintenance": "Yaklaşan Bakım",
+	"Browse Events": "Etkinliklere Göz At"
 }

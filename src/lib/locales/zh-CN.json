@@ -26,6 +26,7 @@
 	"Light": "浅色",
 	"Link Copied": "链接已复制",
 	"LIVE Status": "实时状态",
+	"MAINTENANCE": "维护",
 	"Mode": "模式",
 	"MONITORING": "正在监控",
 	"No Data": "无数据",
@@ -36,6 +37,7 @@
 	"Ongoing Incidents": "正在处理的事件",
 	"Pinging": "正在测试",
 	"Recent Incidents": "最近的事件",
+	"Recent Maintenances": "最近的维护",
 	"RESOLVED": "已解决",
 	"Share": "分享",
 	"Share this monitor using a link with others": "通过链接与他人分享此监控",
@@ -51,5 +53,9 @@
 	"UP": "可用",
 	"Updates": "更新",
 	"Uptime": "正常运行时间",
-	"%status for %duration": "%duration 内的 %status"
+	"%status for %duration": "%duration 内的 %status",
+	"Maintenance in Progress": "维护进行中",
+	"Maintenance Completed": "维护已完成",
+	"Upcoming Maintenance": "即将进行的维护",
+	"Browse Events": "浏览事件"
 }

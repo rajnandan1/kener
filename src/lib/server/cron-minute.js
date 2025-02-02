@@ -51,7 +51,10 @@ const defaultEval = `(async function (statusCode, responseTime, responseData) {
 
 async function manualIncident(monitor) {
 	let startTs = GetMinuteStartNowTimestampUTC();
-	let impactArr = await db.getIncidentsByMonitorTagRealtime(monitor.tag, startTs);
+	let incidentArr = await db.getIncidentsByMonitorTagRealtime(monitor.tag, startTs);
+	let maintenanceArr = await db.getMaintenanceByMonitorTagRealtime(monitor.tag, startTs);
+
+	let impactArr = incidentArr.concat(maintenanceArr);
 
 	let impact = "";
 	if (impactArr.length == 0) {
