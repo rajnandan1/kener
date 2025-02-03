@@ -17,6 +17,7 @@
 	let triggers = [];
 	let loadingData = false;
 	export let data;
+	console.log(">>>>>>----  triggerInfo:20 ", data);
 
 	let newTrigger = {
 		id: 0,
@@ -28,15 +29,15 @@
 			url: "",
 			headers: [],
 			to: "",
-			from: data.RESEND_SENDER_EMAIL || "",
+			from: data.fromEmail,
 			webhook_body: "",
 			has_webhook_body: false,
-			email_type: "resend",
-			smtp_host: "",
-			smtp_port: "",
-			smtp_user: "",
-			smtp_pass: "",
-			smtp_secure: false
+			email_type: data.preferredModeEmail,
+			smtp_host: data.smtp?.smtp_host ? data.smtp.smtp_host : "",
+			smtp_port: data.smtp?.smtp_port ? data.smtp.smtp_port : "",
+			smtp_user: data.smtp?.smtp_user ? data.smtp.smtp_user : "",
+			smtp_pass: data.smtp?.smtp_pass ? data.smtp.smtp_pass : "",
+			smtp_secure: data.smtp?.smtp_secure ? data.smtp.smtp_secure : ""
 		}
 	};
 	let invalidFormMessage = "";
@@ -51,10 +52,15 @@
 				url: "",
 				headers: [],
 				to: "",
-				from: data.RESEND_SENDER_EMAIL || "",
+				from: data.fromEmail,
 				webhook_body: "",
 				has_webhook_body: false,
-				email_type: "resend"
+				email_type: data.preferredModeEmail,
+				smtp_host: data.smtp?.smtp_host ? data.smtp.smtp_host : "",
+				smtp_port: data.smtp?.smtp_port ? data.smtp.smtp_port : "",
+				smtp_user: data.smtp?.smtp_user ? data.smtp.smtp_user : "",
+				smtp_pass: data.smtp?.smtp_pass ? data.smtp.smtp_pass : "",
+				smtp_secure: data.smtp?.smtp_secure ? data.smtp.smtp_secure : ""
 			}
 		};
 	}

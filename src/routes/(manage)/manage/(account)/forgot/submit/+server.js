@@ -3,11 +3,13 @@ import { json, redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
 import db from "$lib/server/db/db.js";
 import { Resend } from "resend";
+import getSMTPTransport from "$lib/server/notification/smtps.js";
 import {
 	HashPassword,
 	GenerateSalt,
 	GenerateToken,
-	VerifyToken
+	VerifyToken,
+	GetSMTPFromENV
 } from "$lib/server/controllers/controller.js";
 
 export async function POST({ request, cookies }) {
@@ -48,15 +50,40 @@ export async function POST({ request, cookies }) {
 		</body>
 		</html>
 	`;
+	let emailText = `
+		Click on the link below to reset your password:
+		${link}
+		This link will expire in 1 hour.
+		If you did not request a password reset, please ignore this email.
+	`;
 	let mail = {
 		from: senderEmail,
 		to: [email],
 		subject: subject,
+		text: emailText,
 		html: message
 	};
 
-	const resend = new Resend(resendKey);
-	await resend.emails.send(mail);
+	let smtpData = GetSMTPFromENV();
+	if (!!smtpData) {
+		const transporter = getSMTPTransport(smtpData);
+		const mailOptions = {
+			from: smtpData.smtp_from_email,
+			to: email,
+			subject: mail.subject,
+			html: mail.html,
+			text: mail.text
+		};
+		try {
+			await transporter.sendMail(mailOptions);
+		} catch (error) {
+			console.error("Error sending email via SMTP", error);
+			return;
+		}
+	} else {
+		const resend = new Resend(resendKey);
+		await resend.emails.send(mail);
+	}
 
 	throw redirect(302, base + "/manage/forgot?view=sent&email=" + email);
 }

@@ -292,6 +292,9 @@ function GenerateRandomColor() {
 function Wait(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
 }
+function MaskString(str) {
+	return "*".repeat(str.length - 4) + str.slice(-4);
+}
 export {
 	IsValidURL,
 	IsValidHTTPMethod,
@@ -317,5 +320,6 @@ export {
 	ValidateMonitorAlerts,
 	GenerateRandomColor,
 	BeginningOfMinute,
-	Wait
+	Wait,
+	MaskString
 };

@@ -9,11 +9,14 @@
 		email: ""
 	};
 	export let data;
-
-	if (data.isSecretSet === false || data.isResendSet === false) {
+	let isResendSet = data.isResendSet && data.isSecretSet;
+	if (!isResendSet && !data.isSMTPSet) {
 		data.view = "error";
-		data.error =
-			"Environment variables(RESEND_API_KEY, RESEND_SENDER_EMAIL) are not set. Read the documentation to set them. https://kener.ing/docs/environment-vars";
+		data.error = `<p>Environment variables are not set. Read the documentation to set them. https://kener.ing/docs/environment-vars</p>
+		<br/>
+		<p>Either Set RESEND_API_KEY, RESEND_SENDER_EMAIL <br>or<br> Set SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, SMTP_FROM_EMAIL</p>
+		<br/>
+		<p>If both are set then SMTP will take priority</p>`;
 	}
 
 	if (data.isSiteURLSet === false) {
@@ -24,7 +27,7 @@
 </script>
 
 <svelte:head>
-	<title>Forgot password Kener</title>
+	<title>Forgot Password Kener</title>
 </svelte:head>
 <div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
 	<div class="sm:mx-auto sm:w-full sm:max-w-sm">
@@ -37,7 +40,7 @@
 		{#if data.view == "error"}
 			<Alert.Root variant="destructive" class="my-4">
 				<Alert.Title>Error</Alert.Title>
-				<Alert.Description>{data.error}</Alert.Description>
+				<Alert.Description>{@html data.error}</Alert.Description>
 			</Alert.Root>
 		{/if}
 		{#if data.view == "forgot"}

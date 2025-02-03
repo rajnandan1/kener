@@ -813,6 +813,28 @@ export const IsLoggedInSession = async (cookies) => {
 	};
 };
 
+export const GetSMTPFromENV = () => {
+	//if variables are not return null
+	if (
+		!!!process.env.SMTP_HOST ||
+		!!!process.env.SMTP_PORT ||
+		!!!process.env.SMTP_USER ||
+		!!!process.env.SMTP_FROM_EMAIL ||
+		!!!process.env.SMTP_PASS
+	) {
+		return null;
+	}
+
+	return {
+		smtp_host: process.env.SMTP_HOST,
+		smtp_port: process.env.SMTP_PORT,
+		smtp_user: process.env.SMTP_USER,
+		smtp_from_email: process.env.SMTP_FROM_EMAIL,
+		smtp_pass: process.env.SMTP_PASS,
+		smtp_secure: !!process.env.SMTP_SECURE
+	};
+};
+
 export const GetSiteMap = async (cookies) => {
 	let siteMapData = [];
 	let siteURLData = await GetSiteDataByKey("siteURL");
