@@ -102,8 +102,8 @@ Body of the webhook will be sent as below:
 | source                | Source of the alert. Can be `Kener`                         | ${source}                     |
 | timestamp             | Timestamp of the alert                                      | ${timestamp}                  |
 | description           | Description of the alert. This you can customize. See below | ${description}                |
-| details               | Details of the alert.                                       | ${details}                    |
-| details.metric        | Name of the monitor                                         | ${details.metric}             |
+| details               | Details of the alert.                                       | -                             |
+| details.metric        | Name of the monitor                                         | ${metric}                     |
 | details.current_value | Current value of the monitor                                | ${current_value}              |
 | details.threshold     | Alert trigger threshold of the monitor                      | ${threshold}                  |
 | actions               | Actions to be taken. Link to view the monitor.              | ${action_text}, ${action_url} |
