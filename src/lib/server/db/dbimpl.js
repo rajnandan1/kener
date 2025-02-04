@@ -262,7 +262,11 @@ class DbImpl {
 
 	//get monitors given status
 	async getMonitors(data) {
-		return await this.knex("monitors").where("status", data.status).orderBy("id", "desc");
+		let query = this.knex("monitors").where("status", data.status);
+		if (data.category_name && data.category_name !== "All Categories") {
+			query = query.andWhere("category_name", data.category_name);
+		}
+		return await query.orderBy("id", "desc");
 	}
 
 	//get monitor by tag
