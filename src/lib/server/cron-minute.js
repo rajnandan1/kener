@@ -1,6 +1,6 @@
 // @ts-nocheck
 import axios from "axios";
-import ping from "ping";
+import { Ping, ExtractIPv6HostAndPort } from "./ping.js";
 import { UP, DOWN, DEGRADED } from "./constants.js";
 import {
 	GetMinuteStartNowTimestampUTC,
@@ -46,6 +46,26 @@ const defaultEval = `(async function (statusCode, responseTime, responseData) {
 	return {
 		status: 'DOWN',
 		latency: responseTime,
+	}
+})`;
+
+const defaultPingEval = `(async function (responseDataBase64) {
+	let arrayOfPings = JSON.parse(atob(responseDataBase64));
+	let latencyTotal = arrayOfPings.reduce((acc, ping) => {
+		return acc + ping.latency;
+	}, 0);
+
+	let alive = arrayOfPings.reduce((acc, ping) => {
+		if (ping.status === "open") {
+			return acc && true;
+		} else {
+			return false;
+		}
+	}, true);
+
+	return {
+		status: alive ? 'UP' : 'DOWN',
+		latency: parseInt(latencyTotal / arrayOfPings.length),
 	}
 })`;
 
@@ -97,50 +117,65 @@ async function manualIncident(monitor) {
 	return manualData;
 }
 
-const pingCall = async (hostsV4, hostsV6) => {
+const pingCall = async (hostsV4, hostsV6, pingEval, tag) => {
 	if (hostsV4 === undefined) hostsV4 = [];
 	if (hostsV6 === undefined) hostsV6 = [];
-	let alive = true;
-	let latencyTotal = 0;
-	let countHosts = hostsV4.length + hostsV6.length;
-
+	let arrayOfPings = [];
 	for (let i = 0; i < hostsV4.length; i++) {
-		const host = hostsV4[i].trim();
+		const hostFull = hostsV4[i].trim();
+		let res;
+		let splitHost = hostFull.split(":");
+		let host = splitHost[0];
+		let port = 80;
+		if (splitHost.length > 1) {
+			port = parseInt(splitHost[1]);
+		}
 		try {
-			let res = await ping.promise.probe(host);
-			alive = alive && res.alive;
-			latencyTotal += res.time;
-			if (!res.alive) {
-				throw new Error(JSON.stringify(res));
-			}
+			res = await Ping(host, port, 3000);
 		} catch (error) {
-			alive = alive && false;
-			latencyTotal += 30;
-			console.log(`Error in pingCall IP4 for ${host}`, error);
+			console.log(`Error in pingCall IP4 for ${hostFull}`, error);
+		} finally {
+			arrayOfPings.push({
+				host: host,
+				port: port,
+				type: "IP4",
+				status: res.status,
+				latency: res.latency
+			});
 		}
 	}
 
 	for (let i = 0; i < hostsV6.length; i++) {
-		const host = hostsV6[i].trim();
+		const hostFull = hostsV6[i].trim();
+		let { host, port } = ExtractIPv6HostAndPort(hostFull);
+		let res;
 		try {
-			let res = await ping.promise.probe(host, {
-				v6: true,
-				timeout: false
-			});
-			alive = alive && res.alive;
-			if (!res.alive) {
-				throw new Error(JSON.stringify(res));
-			}
-			latencyTotal += res.time;
+			res = await Ping(host, port, 3000);
 		} catch (error) {
-			alive = alive && false;
-			latencyTotal += 30;
-			console.log(`Error in pingCall IP6 for ${host}`, error);
+			console.log(`Error in pingCall IP6 for ${hostFull}`, error);
+		} finally {
+			arrayOfPings.push({
+				host: host,
+				port: port,
+				status: res.status,
+				type: "IP6",
+				latency: res.latency
+			});
 		}
 	}
+	let respBase64 = Buffer.from(JSON.stringify(arrayOfPings)).toString("base64");
+
+	let evalResp = undefined;
+
+	try {
+		evalResp = await eval(pingEval + `("${respBase64}")`);
+	} catch (error) {
+		console.log(`Error in pingEval for ${tag}`, error.message);
+	}
+	//reduce to get the status
 	return {
-		status: alive ? UP : DOWN,
-		latency: parseInt(latencyTotal / countHosts),
+		status: evalResp.status,
+		latency: evalResp.latency,
 		type: REALTIME
 	};
 };
@@ -376,7 +411,15 @@ const Minuter = async (monitor) => {
 			});
 		}
 	} else if (monitor.monitor_type === "PING") {
-		let pingResponse = await pingCall(monitor.type_data.hostsV4, monitor.type_data.hostsV6);
+		if (!!!monitor.type_data.pingEval) {
+			monitor.type_data.pingEval = defaultPingEval;
+		}
+		let pingResponse = await pingCall(
+			monitor.type_data.hostsV4,
+			monitor.type_data.hostsV6,
+			monitor.type_data.pingEval,
+			monitor.tag
+		);
 		realTimeData[startOfMinute] = pingResponse;
 	} else if (monitor.monitor_type === "DNS") {
 		const dnsResolver = new DNSResolver(monitor.type_data.nameServer);

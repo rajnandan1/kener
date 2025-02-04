@@ -55,7 +55,8 @@
 			},
 			pingConfig: {
 				hostsV4: [],
-				hostsV6: []
+				hostsV6: [],
+				pingEval: ""
 			},
 			dnsConfig: {
 				host: "",
