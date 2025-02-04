@@ -39,6 +39,13 @@
 			data.site.hero.title = category.name;
 			data.site.hero.subtitle = category.description;
 		}
+	} else if (data.isMonitorPage) {
+		let monitor = data.monitors[0];
+		if (!!monitor) {
+			data.site.hero.title = monitor.name;
+			data.site.hero.subtitle = monitor.description;
+			data.site.hero.image = monitor.image;
+		}
 	}
 
 	onMount(() => {
@@ -61,24 +68,31 @@
 	{/if}
 </svelte:head>
 <div class="mt-12"></div>
-{#if data.site.hero && !data.isMonitorPage}
+{#if data.site.hero}
 	<section
 		class="mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center"
 	>
 		<div class="mx-auto max-w-screen-xl px-4 lg:flex lg:items-center">
 			<div class="blurry-bg mx-auto max-w-3xl text-center">
 				{#if data.site.hero.image}
-					<img src={data.site.hero.image} class="m-auto h-16 w-16" alt="" srcset="" />
+					<img
+						src={base + data.site.hero.image}
+						class="m-auto mb-2 h-14 w-14"
+						alt=""
+						srcset=""
+					/>
 				{/if}
 				{#if data.site.hero.title}
 					<h1
 						class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold leading-tight text-transparent"
 					>
-						{data.site.hero.title}
+						{@html data.site.hero.title}
 					</h1>
 				{/if}
 				{#if data.site.hero.subtitle}
-					<p class="mx-auto mt-4 max-w-xl sm:text-xl">{data.site.hero.subtitle}</p>
+					<h2 class="mx-auto mt-4 max-w-xl sm:text-xl">
+						{@html data.site.hero.subtitle}
+					</h2>
 				{/if}
 			</div>
 		</div>
@@ -111,17 +125,20 @@
 		id=""
 	>
 		<div class="grid w-full grid-cols-2 gap-4">
-			<div class="col-span-2 text-center md:col-span-1 md:text-left">
+			<div class="col-span-2 flex gap-x-2 text-center md:text-left">
 				{#if kindFilter == "INCIDENT"}
 					{#if data.allRecentIncidents.length > 0}
-						<Button class="h-8 text-sm" on:click={() => kindOfIncidents("INCIDENT")}>
+						<Button
+							class="h-8   text-sm  "
+							on:click={() => kindOfIncidents("INCIDENT")}
+						>
 							{l(data.lang, "Recent Incidents")}
 						</Button>
 					{/if}
 					{#if data.allRecentMaintenances.length > 0}
 						<Button
 							variant="secondary"
-							class="h-8  text-sm"
+							class=" h-8 text-sm"
 							on:click={() => kindOfIncidents("MAINTENANCE")}
 						>
 							{l(data.lang, "Recent Maintenances")}
@@ -131,7 +148,7 @@
 					{#if data.allRecentIncidents.length > 0}
 						<Button
 							variant="secondary"
-							class="h-8 text-sm"
+							class="h-8  text-sm "
 							on:click={() => kindOfIncidents("INCIDENT")}
 						>
 							{l(data.lang, "Recent Incidents")}

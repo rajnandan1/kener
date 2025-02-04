@@ -17,7 +17,6 @@
 	let triggers = [];
 	let loadingData = false;
 	export let data;
-	console.log(">>>>>>----  triggerInfo:20 ", data);
 
 	let newTrigger = {
 		id: 0,
