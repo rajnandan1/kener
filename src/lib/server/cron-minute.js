@@ -148,6 +148,9 @@ const pingCall = async (hostsV4, hostsV6, pingEval, tag) => {
 	for (let i = 0; i < hostsV6.length; i++) {
 		const hostFull = hostsV6[i].trim();
 		let { host, port } = ExtractIPv6HostAndPort(hostFull);
+		if (!!!port) {
+			port = 80;
+		}
 		let res;
 		try {
 			res = await Ping(host, port, 3000);

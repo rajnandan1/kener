@@ -53,7 +53,6 @@ const l = function (sessionLangMap, key, args = {}) {
 		}
 		return obj || key;
 	} catch (e) {
-		console.log(e);
 		return key;
 	}
 };
