@@ -28,7 +28,7 @@
 	let maintenanceBadge = "";
 	let maintenanceBadgeColor = "";
 	if (!isFuture && incident.state != "RESOLVED") {
-		incidentDateSummary = l(lang, "Started about %startedAt, still ongoing", {
+		incidentDateSummary = l(lang, "Started %startedAt, still ongoing", {
 			startedAt
 		});
 		maintenanceBadge = "Maintenance in Progress";
