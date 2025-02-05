@@ -1,52 +1,125 @@
-FROM node:23
+# syntax=docker/dockerfile:1
 
-# Install necessary packages including tzdata for timezone setting
+# Global build arguments
+ARG NODE_ALPINE_VERSION=23-alpine
+ARG NODE_DEBIAN_VERSION=23-slim
+ARG VARIANT=debian
+
+#==========================================================#
+#                   STAGE 1: BUILD STAGE                   #
+#==========================================================#
+
+FROM node:${NODE_DEBIAN_VERSION} AS builder-debian
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    libnode108 \
-    nodejs \
-    python3 \
-    sqlite3 \
-    libsqlite3-dev \
-    make \
-    node-gyp \
-    g++ \
-    tzdata \
-	iputils-ping && \
+        build-essential \
+        python3 \
+        sqlite3 \
+        libsqlite3-dev \
+        make \
+        node-gyp \
+        g++ \
+        tzdata \
+        iputils-ping && \
     rm -rf /var/lib/apt/lists/*
 
-# Set the timezone environment variable and the application environment
-ARG KENER_BASE_PATH=
-ENV TZ=Etc/UTC
-ENV KENER_BASE_PATH=${KENER_BASE_PATH}
+FROM node:${NODE_ALPINE_VERSION} AS builder-alpine
+RUN apk add --no-cache \
+        build-base \
+        python3 \
+        py3-pip \
+        make \
+        g++ \
+        sqlite \
+        sqlite-dev \
+        tzdata \
+        iputils
+
+FROM builder-${VARIANT} AS builder
+
+# Set timezone and application environment
+ARG KENER_BASE_PATH
+ENV TZ=Etc/UTC \
+    KENER_BASE_PATH=${KENER_BASE_PATH} \
+    VITE_BUILD_ENV=production
 
 # Set the working directory
 WORKDIR /app
 
-# Copy package files and install dependencies
+# Copy package files for dependency installation
 COPY package*.json ./
-RUN npm install && npm cache clean --force
 
-# Copy the rest of the application code
+# Install all dependencies, including `devDependencies` (cache enabled for faster builds)
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci && \
+    npm cache clean --force
+
+# Copy application source code
 COPY . .
 
-# remove dir src/routes/(docs)
-RUN rm -rf src/routes/\(docs\)
+# Remove docs directory and ensure required directories exist
+RUN rm -rf src/routes/\(docs\) && \
+    mkdir -p uploads database && \
+    chmod -R 755 uploads database
 
-# Ensure /app/uploads and /app/database have rw permissions
-RUN mkdir -p /app/uploads /app/database && \
-    chmod -R 777 /app/uploads /app/database
+# Build the application and remove `devDependencies`
+RUN npm run build && \
+    npm prune --omit=dev
 
-# Build the application
-RUN npm run build
+#==========================================================#
+#                STAGE 2: PRODUCTION STAGE                 #
+#==========================================================#
 
-# Argument for the port
+FROM node:${NODE_DEBIAN_VERSION} AS final-debian
+RUN apt-get update && apt-get install -y \
+        sqlite3 \
+        tzdata \
+        iputils-ping && \
+    rm -rf /var/lib/apt/lists/*
+
+FROM node:${NODE_ALPINE_VERSION} AS final-alpine
+RUN apk add --no-cache sqlite tzdata iputils
+
+FROM final-${VARIANT} AS final
+
+# Set the working directory
+WORKDIR /app
+
+# Copy package files and necessary build artifacts from builder stage
+COPY --from=builder /app/package.json /app/package-lock.json ./
+COPY --from=builder \
+    /app/src/lib/i18n \
+    /app/src/lib/locales \
+    /app/src/lib/server \
+    /app/src/lib/boringOne.js \
+    /app/src/lib/clientTools.js \
+    /app/src/lib/color.js \
+    /app/src/lib/index.js \
+    /app/src/lib/site.js \
+    ./src/lib/
+COPY --from=builder \
+    /app/build \
+    /app/uploads \
+    /app/database \
+    /app/node_modules \
+    /app/migrations \
+    /app/seeds \
+    /app/static \
+    /app/embed.html \
+    /app/knexfile.js \
+    /app/main.js \
+    /app/openapi.json \
+    /app/openapi.yaml \
+    /app/sitemap.js.bk \
+    /app/utils.js \
+    ./
+
+# Set environment variables
 ARG PORT=3000
-# Set the environment variable for the port
-ENV PORT=$PORT
+ENV PORT=$PORT \
+    NODE_ENV=production
 
 # Expose the application port
 EXPOSE $PORT
 
-# Set the command to run the application
+# Run the application
 CMD ["node", "main"]
