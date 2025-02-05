@@ -1,15 +1,15 @@
 # syntax=docker/dockerfile:1
 
 # Global build arguments
-ARG NODE_ALPINE_VERSION=23-alpine
-ARG NODE_DEBIAN_VERSION=23-slim
+ARG ALPINE_VERSION=23-alpine
+ARG DEBIAN_VERSION=23-slim
 ARG VARIANT=debian
 
 #==========================================================#
 #                   STAGE 1: BUILD STAGE                   #
 #==========================================================#
 
-FROM node:${NODE_DEBIAN_VERSION} AS builder-debian
+FROM node:${DEBIAN_VERSION} AS builder-debian
 RUN apt-get update && apt-get install -y \
         build-essential \
         python3 \
@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y \
         iputils-ping && \
     rm -rf /var/lib/apt/lists/*
 
-FROM node:${NODE_ALPINE_VERSION} AS builder-alpine
+FROM node:${ALPINE_VERSION} AS builder-alpine
 RUN apk add --no-cache \
         build-base \
         python3 \
@@ -69,14 +69,14 @@ RUN npm run build && \
 #                STAGE 2: PRODUCTION STAGE                 #
 #==========================================================#
 
-FROM node:${NODE_DEBIAN_VERSION} AS final-debian
+FROM node:${DEBIAN_VERSION} AS final-debian
 RUN apt-get update && apt-get install -y \
         sqlite3 \
         tzdata \
         iputils-ping && \
     rm -rf /var/lib/apt/lists/*
 
-FROM node:${NODE_ALPINE_VERSION} AS final-alpine
+FROM node:${ALPINE_VERSION} AS final-alpine
 RUN apk add --no-cache sqlite tzdata iputils
 
 FROM final-${VARIANT} AS final
