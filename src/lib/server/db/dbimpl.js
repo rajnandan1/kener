@@ -562,6 +562,7 @@ class DbImpl {
 			.andWhere("i.state", "!=", "RESOLVED");
 	}
 
+	//get maintenance incidents by monitor tag
 	async getMaintenanceByMonitorTagRealtime(monitor_tag, timestamp) {
 		return await this.knex("incidents as i")
 			.select(
