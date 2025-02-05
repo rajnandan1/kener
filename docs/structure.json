@@ -141,6 +141,11 @@
 			"sectionTitle": "Help",
 			"children": [
 				{
+					"title": "Fonts",
+					"link": "/docs/custom-fonts",
+					"file": "/custom-fonts.md"
+				},
+				{
 					"title": "Changelogs",
 					"link": "/docs/changelogs",
 					"file": "/changelogs.md"

@@ -81,21 +81,11 @@
 
 	let invalidFormMessage = "";
 
-	async function isValidEval() {
+	async function isValidEval(ev) {
 		try {
 			// let evalResp = await eval(newMonitor.apiConfig.eval + `(200, 1000, "e30=")`);
-			new Function(newMonitor.apiConfig.eval);
+			new Function(ev);
 			return true; // The code is valid
-			// if (
-			// 	evalResp === undefined ||
-			// 	evalResp === null ||
-			// 	evalResp.status === undefined ||
-			// 	evalResp.status === null ||
-			// 	evalResp.latency === undefined ||
-			// 	evalResp.latency === null
-			// ) {
-			// 	return false;
-			// }
 		} catch (error) {
 			invalidFormMessage = error.message + " in eval.";
 			return false;
@@ -171,7 +161,7 @@
 					return;
 				}
 
-				if (!(await isValidEval())) {
+				if (!(await isValidEval(newMonitor.apiConfig.eval))) {
 					invalidFormMessage = invalidFormMessage + "Invalid eval";
 					return;
 				}
@@ -207,6 +197,27 @@
 			if (!hasV4 && !hasV6) {
 				invalidFormMessage = "hostsV4 or hostsV6 is required";
 				return;
+			}
+			if (!!newMonitor.pingConfig.pingEval) {
+				newMonitor.pingConfig.pingEval = newMonitor.pingConfig.pingEval.trim();
+				if (newMonitor.pingConfig.pingEval.endsWith(";")) {
+					invalidFormMessage = "Eval should not end with semicolon";
+					return;
+				}
+				//has to start with ( and end with )
+				if (
+					!newMonitor.pingConfig.pingEval.startsWith("(") ||
+					!newMonitor.pingConfig.pingEval.endsWith(")")
+				) {
+					invalidFormMessage =
+						"Eval should start with ( and end with ). It is an anonymous function";
+					return;
+				}
+
+				if (!(await isValidEval(newMonitor.pingConfig.pingEval))) {
+					invalidFormMessage = invalidFormMessage + "Invalid eval";
+					return;
+				}
 			}
 			newMonitor.type_data = JSON.stringify(newMonitor.pingConfig);
 		} else if (newMonitor.monitor_type === "DNS") {
@@ -282,7 +293,7 @@
 		>
 			<ChevronRight class="h-6 w-6 " />
 		</Button>
-		<div class="absolute top-0 flex h-12 w-full justify-between gap-2 border-b p-3">
+		<div class="absolute top-0 flex h-12 w-full justify-between gap-2 border-b p-3 pr-6">
 			{#if newMonitor.id}
 				<h2 class="text-lg font-medium">Edit Monitor</h2>
 			{:else}
@@ -620,7 +631,9 @@
 						<Label for="eval">Eval</Label>
 						<p class="my-1 text-xs text-muted-foreground">
 							You can write a custom eval function to evaluate the response. The
-							function should return an object with status and latency. <a
+							function should return a promise that resolves to an object with status
+							and latency. <a
+								target="_blank"
 								class="font-medium text-primary"
 								href="https://kener.ing/docs/monitors-api#eval">Read the docs</a
 							> to learn
@@ -713,6 +726,25 @@
 									<Plus class="h-5 w-5" />
 								</Button>
 							</div>
+						</div>
+						<div class="mt-2">
+							<Label for="pingEval">Eval</Label>
+							<p class="my-1 text-xs text-muted-foreground">
+								You can write a custom eval function to evaluate the response. The
+								function should return a promise that resolves to an object with
+								status and latency. <a
+									target="_blank"
+									class="font-medium text-primary"
+									href="https://kener.ing/docs/monitors-ping#eval"
+									>Read the docs</a
+								> to learn
+							</p>
+							<textarea
+								bind:value={newMonitor.pingConfig.pingEval}
+								id="pingEval"
+								class="h-96 w-full rounded-sm border p-2"
+								placeholder="Leave blank or write a custom eval function"
+							></textarea>
 						</div>
 					</div>
 				</div>
@@ -826,7 +858,9 @@
 				</div>
 			{/if}
 		</div>
-		<div class="absolute bottom-0 grid h-16 w-full grid-cols-6 justify-end gap-2 border-t p-3">
+		<div
+			class="absolute bottom-0 grid h-16 w-full grid-cols-6 justify-end gap-2 border-t p-3 pr-6"
+		>
 			<div class="col-span-5 py-2.5">
 				<p class="text-right text-xs font-medium text-red-500">{invalidFormMessage}</p>
 			</div>

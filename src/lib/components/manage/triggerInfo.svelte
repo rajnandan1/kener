@@ -1,13 +1,15 @@
 <script>
 	import { Button } from "$lib/components/ui/button";
-	import { Plus, X, Loader, Settings, Check } from "lucide-svelte";
+	import { Plus, X, Loader, Settings, Check, ChevronRight } from "lucide-svelte";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import { base } from "$app/paths";
 	import * as Select from "$lib/components/ui/select";
+	import * as RadioGroup from "$lib/components/ui/radio-group";
 	import { createEventDispatcher } from "svelte";
 	import { onMount } from "svelte";
 	import { IsValidURL } from "$lib/clientTools.js";
+	import { clickOutsideAction, slide } from "svelte-legos";
 	import * as Card from "$lib/components/ui/card";
 	let status = "ACTIVE";
 	let formState = "idle";
@@ -26,9 +28,15 @@
 			url: "",
 			headers: [],
 			to: "",
-			from: data.RESEND_SENDER_EMAIL || "",
+			from: data.fromEmail,
 			webhook_body: "",
-			has_webhook_body: false
+			has_webhook_body: false,
+			email_type: data.preferredModeEmail,
+			smtp_host: data.smtp?.smtp_host ? data.smtp.smtp_host : "",
+			smtp_port: data.smtp?.smtp_port ? data.smtp.smtp_port : "",
+			smtp_user: data.smtp?.smtp_user ? data.smtp.smtp_user : "",
+			smtp_pass: data.smtp?.smtp_pass ? data.smtp.smtp_pass : "",
+			smtp_secure: data.smtp?.smtp_secure ? data.smtp.smtp_secure : ""
 		}
 	};
 	let invalidFormMessage = "";
@@ -43,9 +51,15 @@
 				url: "",
 				headers: [],
 				to: "",
-				from: data.RESEND_SENDER_EMAIL || "",
+				from: data.fromEmail,
 				webhook_body: "",
-				has_webhook_body: false
+				has_webhook_body: false,
+				email_type: data.preferredModeEmail,
+				smtp_host: data.smtp?.smtp_host ? data.smtp.smtp_host : "",
+				smtp_port: data.smtp?.smtp_port ? data.smtp.smtp_port : "",
+				smtp_user: data.smtp?.smtp_user ? data.smtp.smtp_user : "",
+				smtp_pass: data.smtp?.smtp_pass ? data.smtp.smtp_pass : "",
+				smtp_secure: data.smtp?.smtp_secure ? data.smtp.smtp_secure : ""
 			}
 		};
 	}
@@ -93,9 +107,33 @@
 
 			let emValid = validateNameEmailPattern(newTrigger.trigger_meta.from);
 			if (!emValid.isValid) {
-				invalidFormMessage = "Invalid Name and Email Address for Sender";
+				invalidFormMessage =
+					"Invalid Name and Email Address for Sender. It should be like this: Name <email@example.com>";
 				formState = "idle";
 				return;
+			}
+
+			if (newTrigger.trigger_meta.email_type == "smtp") {
+				if (newTrigger.trigger_meta.smtp_host == "") {
+					invalidFormMessage = "SMTP Host is required";
+					formState = "idle";
+					return;
+				}
+				if (newTrigger.trigger_meta.smtp_port == "") {
+					invalidFormMessage = "SMTP Port is required";
+					formState = "idle";
+					return;
+				}
+				if (newTrigger.trigger_meta.smtp_user == "") {
+					invalidFormMessage = "SMTP User is required";
+					formState = "idle";
+					return;
+				}
+				if (newTrigger.trigger_meta.smtp_pass == "") {
+					invalidFormMessage = "SMTP Password is required";
+					formState = "idle";
+					return;
+				}
 			}
 		}
 		if (newTrigger.trigger_type == "webhook") {
@@ -173,6 +211,9 @@
 	function showUpdateSheet(m) {
 		newTrigger = { ...newTrigger, ...m };
 		newTrigger.trigger_meta = JSON.parse(newTrigger.trigger_meta);
+		if (newTrigger.trigger_type === "email" && !!!newTrigger.trigger_meta.email_type) {
+			newTrigger.trigger_meta.email_type = "resend";
+		}
 		showAddTrigger = true;
 	}
 
@@ -340,8 +381,25 @@
 </div>
 {#if showAddTrigger}
 	<div class="fixed left-0 top-0 z-50 h-screen w-screen bg-card bg-opacity-20 backdrop-blur-sm">
-		<div class="absolute right-0 top-0 h-screen w-[800px] bg-background shadow-xl">
-			<div class="absolute top-0 flex h-12 w-full justify-between gap-2 border-b p-3">
+		<div
+			transition:slide={{ direction: "right", duration: 200 }}
+			use:clickOutsideAction
+			on:clickoutside={(e) => {
+				showAddTrigger = false;
+			}}
+			class="absolute right-0 top-0 h-screen w-[800px] bg-background px-3 shadow-xl"
+		>
+			<Button
+				variant="outline"
+				size="icon"
+				class="absolute right-[785px] top-8  z-10 h-8 w-8 rounded-md"
+				on:click={(e) => {
+					showAddTrigger = false;
+				}}
+			>
+				<ChevronRight class="h-6 w-6 " />
+			</Button>
+			<div class="absolute top-0 flex h-12 w-full justify-between gap-2 border-b p-3 pr-6">
 				{#if newTrigger.id}
 					<h2 class="text-lg font-medium">Edit Trigger</h2>
 				{:else}
@@ -547,7 +605,22 @@
 						</div>
 					{:else if newTrigger.trigger_type == "email"}
 						<div class="mt-4 w-full">
-							{#if !!!data.RESEND_API_KEY}
+							<RadioGroup.Root
+								class="my-4 flex"
+								bind:value={newTrigger.trigger_meta.email_type}
+							>
+								<div class="flex items-center space-x-2">
+									<RadioGroup.Item value="resend" id="email-resend" />
+									<Label for="email-resend" class="cursor-pointer">
+										Use Resend
+									</Label>
+								</div>
+								<div class="flex items-center space-x-2">
+									<RadioGroup.Item value="smtp" id="email-smtp" />
+									<Label for="email-smtp" class="cursor-pointer">Use SMTP</Label>
+								</div>
+							</RadioGroup.Root>
+							{#if !!!data.RESEND_API_KEY && newTrigger.trigger_meta.email_type == "resend"}
 								<div class="rounded-md border bg-card p-2 text-xs">
 									<p class="text-sm font-semibold">Email Trigger</p>
 									<p class="text-xs">
@@ -564,6 +637,66 @@
 											variable. Please set it and restart the server</span
 										>.
 									</p>
+								</div>
+							{:else if newTrigger.trigger_meta.email_type == "smtp"}
+								<div class="flex gap-x-2">
+									<div>
+										<Label class="text-sm">
+											Host
+											<span class="text-red-500">*</span>
+										</Label>
+										<Input
+											class="mt-2"
+											bind:value={newTrigger.trigger_meta.smtp_host}
+											placeholder="smtp.example.com"
+										/>
+									</div>
+									<div>
+										<Label class="text-sm">
+											Port
+											<span class="text-red-500">*</span>
+										</Label>
+										<Input
+											class="mt-2"
+											bind:value={newTrigger.trigger_meta.smtp_port}
+											placeholder="587"
+										/>
+									</div>
+									<div>
+										<Label class="text-sm">
+											User
+											<span class="text-red-500">*</span>
+										</Label>
+										<Input
+											class="mt-2"
+											bind:value={newTrigger.trigger_meta.smtp_user}
+											placeholder="raj@example.com"
+										/>
+									</div>
+									<div>
+										<Label class="text-sm">
+											Password
+											<span class="text-red-500">*</span>
+										</Label>
+										<Input
+											class="mt-2"
+											bind:value={newTrigger.trigger_meta.smtp_pass}
+											placeholder="*******"
+										/>
+									</div>
+								</div>
+								<div class="my-2">
+									<label class="text-sm">
+										<input
+											on:change={(e) => {
+												newTrigger.trigger_meta.smtp_secure =
+													e.target.checked;
+											}}
+											type="checkbox"
+											checked={newTrigger.trigger_meta.smtp_secure}
+										/>
+										Use Secure Connection
+									</label>
 								</div>
 							{/if}
 						</div>
@@ -592,17 +725,10 @@
 					{/if}
 				</div>
 			</div>
-			<div class="absolute bottom-0 grid h-16 w-full grid-cols-6 gap-2 border-t p-3">
-				<div class="col-span-1">
-					<Button
-						variant="ghost"
-						class="col-span-1 w-full"
-						on:click={(e) => {
-							showAddTrigger = false;
-						}}>Cancel</Button
-					>
-				</div>
-				<div class="col-span-4 py-2.5">
+			<div
+				class="absolute bottom-0 grid h-16 w-full grid-cols-6 justify-end gap-2 border-t p-3 pr-6"
+			>
+				<div class="col-span-5 py-2.5">
 					<p class="text-right text-xs font-medium text-red-500">{invalidFormMessage}</p>
 				</div>
 				<div class="col-span-1">

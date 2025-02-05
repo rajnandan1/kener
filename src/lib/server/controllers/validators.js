@@ -3,7 +3,7 @@
 
 export function IsValidURL(url) {
 	const regex =
-		/^(https?:\/\/)?((localhost|[\da-z.-]+\.[a-z]{2,6})(:[0-9]{1,5})?)?(\/[\w .-]*)*\/?$/i;
+		/^(https?:\/\/)?((localhost|[\da-z.-]+\.[a-z]{2,10})(:[0-9]{1,5})?)?(\/[\w .-]*)*\/?$/i;
 	return regex.test(url);
 }
 

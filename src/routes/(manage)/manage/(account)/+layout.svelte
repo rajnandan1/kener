@@ -9,7 +9,6 @@
 
 <ModeWatcher />
 <svelte:head>
-	<title>Setup Kener</title>
 	<meta name="description" content="Set up Kener" />
 	<meta name="robots" content="noindex" />
 	<link rel="icon" href="{base}/logo96.png" />

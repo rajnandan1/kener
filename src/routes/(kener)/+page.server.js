@@ -98,11 +98,17 @@ export async function load({ parent, url }) {
 		});
 		return incident;
 	});
-	let unresolvedIncidents = allOpenIncidents.filter((incident) => incident.state !== "RESOLVED");
 
+	let allRecentIncidents = allOpenIncidents.filter(
+		(incident) => incident.incident_type == "INCIDENT"
+	);
+	let allRecentMaintenances = allOpenIncidents.filter(
+		(incident) => incident.incident_type == "MAINTENANCE"
+	);
 	return {
 		monitors: monitorsActive,
-		unresolvedIncidents: allOpenIncidents,
+		allRecentIncidents,
+		allRecentMaintenances,
 		categoryName: requiredCategory,
 		isCategoryPage: isCategoryPage,
 		isMonitorPage: isMonitorPage,

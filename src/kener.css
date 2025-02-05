@@ -35,8 +35,7 @@
 	background-size: 100%;
 	height: 100svh;
 
-	clip-path: polygon(0 0, 100% 0, 100% 54%, 0% 100%);
-	transform: blur(3px);
+	/* clip-path: polygon(0 0, 100% 0, 100% 54%, 0% 100%); */
 }
 
 .squares-pattern::after {
@@ -834,4 +833,19 @@ textarea::placeholder {
 		padding-left: 8px;
 		padding-right: 8px;
 	}
+}
+
+.bg-maintenance-in-progress {
+	background-color: #f9f3c2;
+}
+
+.text-maintenance-in-progress-text {
+	color: #ff6868;
+}
+.text-upcoming-maintenance {
+	color: #f0a04b;
+}
+
+.text-maintenance-completed {
+	color: #6499e9;
 }
