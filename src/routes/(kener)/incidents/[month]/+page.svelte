@@ -48,6 +48,7 @@
 
 	//sort the incidentSmartDates ascending
 	let sortedIncidentSmartDates = Object.keys(incidentSmartDates).sort((a, b) => a - b);
+	let canonical = data.canonical;
 </script>
 
 <svelte:head>
@@ -56,6 +57,15 @@
 		{l(data.lang, "Incident Updates")} |
 		{data.site.title}
 	</title>
+	<meta
+		name="description"
+		content="{l(data.lang, 'Incident Updates')} | {l(data.lang, 'Recent Incidents')} | {l(
+			data.lang,
+			'Recent Maintenances'
+		)} {f(parse(data.thisMonthName, 'MMMM-yyyy', new Date()), 'MMMM, yyyy', selectedLang)} |
+		{data.site.title}"
+	/>
+	<link rel="canonical" href={canonical} />
 </svelte:head>
 <div class="mt-12"></div>
 <section class="mx-auto my-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center">

@@ -3,7 +3,15 @@ import { FetchData } from "$lib/server/page";
 import { GetMonitors, GetIncidentsOpenHome } from "$lib/server/controllers/controller.js";
 import { SortMonitor } from "$lib/clientTools.js";
 import moment from "moment";
+function removeTags(str) {
+	if (str === null || str === "") return false;
+	else str = str.toString();
 
+	// Regular expression to identify HTML tags in
+	// the input string. Replacing the identified
+	// HTML tag with a null string.
+	return str.replace(/(<([^>]+)>)/gi, "");
+}
 export async function load({ parent, url }) {
 	let monitors = await GetMonitors({ status: "ACTIVE" });
 	const query = url.searchParams;
@@ -11,7 +19,8 @@ export async function load({ parent, url }) {
 	const parentData = await parent();
 	const siteData = parentData.site;
 	let pageTitle = siteData.title;
-	let pageDescription = "";
+	let canonical = siteData.siteURL;
+	let pageDescription = siteData.metaTags.find((tag) => tag.key === "description").value;
 	monitors = SortMonitor(siteData.monitorSort, monitors);
 	const monitorsActive = [];
 	for (let i = 0; i < monitors.length; i++) {
@@ -55,6 +64,7 @@ export async function load({ parent, url }) {
 	if (isMonitorPage && monitorsActive.length > 0) {
 		pageTitle = monitorsActive[0].name + " - " + pageTitle;
 		pageDescription = monitorsActive[0].description;
+		canonical = canonical + "?monitor=" + monitorsActive[0].tag;
 	}
 	//if category page
 	if (isCategoryPage) {
@@ -63,6 +73,7 @@ export async function load({ parent, url }) {
 		if (selectedCategory) {
 			pageTitle = selectedCategory.name + " - " + pageTitle;
 			pageDescription = selectedCategory.description;
+			canonical = canonical + "?category=" + requiredCategory;
 		}
 	}
 	if (isCategoryPage || isMonitorPage) {
@@ -113,6 +124,7 @@ export async function load({ parent, url }) {
 		isCategoryPage: isCategoryPage,
 		isMonitorPage: isMonitorPage,
 		pageTitle: pageTitle,
-		pageDescription: pageDescription
+		pageDescription: removeTags(pageDescription),
+		canonical
 	};
 }
