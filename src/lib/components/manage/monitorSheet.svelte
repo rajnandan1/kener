@@ -82,6 +82,16 @@
 	let invalidFormMessage = "";
 
 	async function isValidEval(ev) {
+		if (ev.endsWith(";")) {
+			invalidFormMessage = "Eval should not end with semicolon";
+			return false;
+		}
+		//has to start with ( and end with )
+		if (!ev.startsWith("(") || !ev.endsWith(")")) {
+			invalidFormMessage =
+				"Eval should start with ( and end with ). It is an anonymous function";
+			return false;
+		}
 		try {
 			// let evalResp = await eval(newMonitor.apiConfig.eval + `(200, 1000, "e30=")`);
 			new Function(ev);
@@ -147,19 +157,6 @@
 			//validating eval
 			if (!!newMonitor.apiConfig.eval) {
 				newMonitor.apiConfig.eval = newMonitor.apiConfig.eval.trim();
-				if (newMonitor.apiConfig.eval.endsWith(";")) {
-					invalidFormMessage = "Eval should not end with semicolon";
-					return;
-				}
-				//has to start with ( and end with )
-				if (
-					!newMonitor.apiConfig.eval.startsWith("(") ||
-					!newMonitor.apiConfig.eval.endsWith(")")
-				) {
-					invalidFormMessage =
-						"Eval should start with ( and end with ). It is an anonymous function";
-					return;
-				}
 
 				if (!(await isValidEval(newMonitor.apiConfig.eval))) {
 					invalidFormMessage = invalidFormMessage + "Invalid eval";
@@ -168,58 +165,71 @@
 			}
 			newMonitor.type_data = JSON.stringify(newMonitor.apiConfig);
 		} else if (newMonitor.monitor_type === "PING") {
-			//validating hostsV4
-
-			let hostsV4 = newMonitor.pingConfig.hostsV4;
-			let hostsV6 = newMonitor.pingConfig.hostsV6;
-			let hasV4 = false;
-			let hasV6 = false;
-			if (hostsV4 && Array.isArray(hostsV4) && hostsV4.length > 0) {
-				for (let i = 0; i < hostsV4.length; i++) {
-					if (ValidateIpAddress(hostsV4[i]) == "Invalid") {
-						invalidFormMessage = `hostsV4 ${hostsV4[i]} is not valid`;
+			let hosts = newMonitor.pingConfig.hosts;
+			if (hosts && Array.isArray(hosts) && hosts.length > 0) {
+				for (let i = 0; i < hosts.length; i++) {
+					if (ValidateIpAddress(hosts[i].host) != hosts[i].type) {
+						invalidFormMessage = `Host ${hosts[i].host} is not of type ${hosts[i].type}`;
+						return;
+					}
+					//validating timeout
+					if (hosts[i].timeout < 1) {
+						invalidFormMessage = "Timeout should be greater than 0";
+						return;
+					}
+					//validating count
+					if (hosts[i].count < 1) {
+						invalidFormMessage = "Count should be greater than 0";
 						return;
 					}
 				}
-
-				hasV4 = true;
-			}
-			if (hostsV6 && Array.isArray(hostsV6) && hostsV6.length > 0) {
-				for (let i = 0; i < hostsV6.length; i++) {
-					if (ValidateIpAddress(hostsV6[i]) == "Invalid") {
-						invalidFormMessage = `hostsV6 ${hostsV6[i]} is not valid`;
-						return;
-					}
-				}
-				hasV6 = true;
-			}
-
-			if (!hasV4 && !hasV6) {
-				invalidFormMessage = "hostsV4 or hostsV6 is required";
+			} else {
+				invalidFormMessage = "Host is required";
 				return;
 			}
 			if (!!newMonitor.pingConfig.pingEval) {
 				newMonitor.pingConfig.pingEval = newMonitor.pingConfig.pingEval.trim();
-				if (newMonitor.pingConfig.pingEval.endsWith(";")) {
-					invalidFormMessage = "Eval should not end with semicolon";
-					return;
-				}
-				//has to start with ( and end with )
-				if (
-					!newMonitor.pingConfig.pingEval.startsWith("(") ||
-					!newMonitor.pingConfig.pingEval.endsWith(")")
-				) {
-					invalidFormMessage =
-						"Eval should start with ( and end with ). It is an anonymous function";
-					return;
-				}
-
 				if (!(await isValidEval(newMonitor.pingConfig.pingEval))) {
 					invalidFormMessage = invalidFormMessage + "Invalid eval";
 					return;
 				}
 			}
+
 			newMonitor.type_data = JSON.stringify(newMonitor.pingConfig);
+		} else if (newMonitor.monitor_type === "TCP") {
+			//validating hostsV4
+
+			let hosts = newMonitor.tcpConfig.hosts;
+			if (hosts && Array.isArray(hosts) && hosts.length > 0) {
+				for (let i = 0; i < hosts.length; i++) {
+					if (ValidateIpAddress(hosts[i].host) != hosts[i].type) {
+						invalidFormMessage = `Host ${hosts[i].host} is not of type ${hosts[i].type}`;
+						return;
+					}
+					//validating timeout
+					if (hosts[i].timeout < 1) {
+						invalidFormMessage = "Timeout should be greater than 0";
+						return;
+					}
+					//validating port
+					if (hosts[i].port < 1 || hosts[i].port > 65535) {
+						invalidFormMessage = "Port should valid";
+						return;
+					}
+				}
+			} else {
+				invalidFormMessage = "Host is required";
+				return;
+			}
+			if (!!newMonitor.tcpConfig.tcpEval) {
+				newMonitor.tcpConfig.tcpEval = newMonitor.tcpConfig.tcpEval.trim();
+				if (!(await isValidEval(newMonitor.tcpConfig.tcpEval))) {
+					invalidFormMessage = invalidFormMessage + "Invalid eval";
+					return;
+				}
+			}
+
+			newMonitor.type_data = JSON.stringify(newMonitor.tcpConfig);
 		} else if (newMonitor.monitor_type === "DNS") {
 			//validating host
 			if (!newMonitor.dnsConfig.host) {
@@ -475,9 +485,16 @@
 					<Select.Root
 						portal={null}
 						onSelectedChange={(e) => (newMonitor.monitor_type = e.value)}
+						selected={{
+							value: newMonitor.monitor_type,
+							label: newMonitor.monitor_type
+						}}
 					>
 						<Select.Trigger id="monitor_type">
-							<Select.Value placeholder={newMonitor.monitor_type} />
+							<Select.Value
+								bind:value={newMonitor.monitor_type}
+								placeholder="Monitor Type"
+							/>
 						</Select.Trigger>
 						<Select.Content>
 							<Select.Group>
@@ -493,6 +510,9 @@
 								</Select.Item>
 								<Select.Item value="DNS" label="DNS" class="text-sm font-medium">
 									DNS
+								</Select.Item>
+								<Select.Item value="TCP" label="TCP" class="text-sm font-medium">
+									TCP
 								</Select.Item>
 							</Select.Group>
 						</Select.Content>
@@ -649,86 +669,114 @@
 			{:else if newMonitor.monitor_type == "PING"}
 				<div class="mt-4 grid grid-cols-6 gap-2">
 					<div class="col-span-6">
-						<Label for="hostsV4">Hosts V4</Label>
-						<div class="mb-2 grid grid-cols-7 gap-2">
-							{#each newMonitor.pingConfig.hostsV4 as host, index}
-								<div class="relative col-span-2">
-									<Input
-										bind:value={host}
-										id="hostsV4"
-										class="pr-10"
-										placeholder="172.12.14.42"
-									/>
-									<Button
-										class="absolute right-3 top-2 h-6 w-6 p-1"
-										variant="secondary"
-										on:click={() => {
-											newMonitor.pingConfig.hostsV4 =
-												newMonitor.pingConfig.hostsV4.filter(
-													(_, i) => i !== index
-												);
-										}}
-									>
-										<X class="h-5 w-5" />
-									</Button>
+						<div class=" grid grid-cols-7 gap-2">
+							{#each newMonitor.pingConfig.hosts as host, index}
+								<div class="relative col-span-7 flex gap-x-2">
+									<div>
+										<Label for="xconfig_ip_type">Type</Label>
+										<Select.Root
+											portal={null}
+											onSelectedChange={(e) => (host.type = e.value)}
+											selected={{
+												value: host.type,
+												label: host.type
+											}}
+										>
+											<Select.Trigger class="w-[150px]" id="xconfig_ip_type">
+												<Select.Value
+													bind:value={host.type}
+													placeholder="IP Type"
+												/>
+											</Select.Trigger>
+											<Select.Content>
+												<Select.Group>
+													<Select.Label>Type</Select.Label>
+													<Select.Item
+														value="IP4"
+														label="IP4"
+														class="text-sm font-medium"
+													>
+														IP4
+													</Select.Item>
+													<Select.Item
+														value="IP6"
+														label="IP6"
+														class="text-sm font-medium"
+													>
+														IP6
+													</Select.Item>
+													<Select.Item
+														value="DOMAIN"
+														label="DOMAIN"
+														class="text-sm font-medium"
+													>
+														DOMAIN
+													</Select.Item>
+												</Select.Group>
+											</Select.Content>
+										</Select.Root>
+									</div>
+									<div>
+										<Label for="hostsV4">Host</Label>
+										<Input
+											bind:value={host.host}
+											id="hostsV4"
+											placeholder="172.12.14.42"
+										/>
+									</div>
+									<div>
+										<Label for="hostsV4timeout">Timeout</Label>
+										<Input
+											disabled={host.type == "IP6"}
+											bind:value={host.timeout}
+											id="hostsV4timeout"
+											placeholder="timeout in ms ex 3000"
+										/>
+									</div>
+									<div>
+										<Label for="hostsV4count">Count</Label>
+										<Input
+											bind:value={host.count}
+											id="hostsV4count"
+											placeholder="number of pings ex 4"
+										/>
+									</div>
+									<div>
+										<Button
+											class=" right-3 top-2 mt-8 h-6 w-6 p-1"
+											variant="secondary"
+											on:click={() => {
+												newMonitor.pingConfig.hosts =
+													newMonitor.pingConfig.hosts.filter(
+														(_, i) => i !== index
+													);
+											}}
+										>
+											<X class="h-5 w-5" />
+										</Button>
+									</div>
 								</div>
 							{/each}
-							<div class="col-span-1 pt-2">
-								<Button
-									class="h-6 w-6 p-1"
-									variant="secondary"
-									on:click={() => {
-										newMonitor.pingConfig.hostsV4 = [
-											...newMonitor.pingConfig.hostsV4,
-											""
-										];
-									}}
-								>
-									<Plus class="h-5 w-5" />
-								</Button>
-							</div>
 						</div>
-						<Label for="hostsV6">Hosts V6</Label>
-						<div class="grid grid-cols-5 gap-2">
-							{#each newMonitor.pingConfig.hostsV6 as host, index}
-								<div class="relative col-span-2">
-									<Input
-										bind:value={host}
-										id="hostsV6"
-										class="pr-10"
-										placeholder="2001:0db8:85a3:0000:0000:8a2e:0370:7334"
-									/>
-									<Button
-										class="absolute right-3 top-2 h-6 w-6 p-1"
-										variant="secondary"
-										on:click={() => {
-											newMonitor.pingConfig.hostsV6 =
-												newMonitor.pingConfig.hostsV6.filter(
-													(_, i) => i !== index
-												);
-										}}
-									>
-										<X class="h-5 w-5" />
-									</Button>
-								</div>
-							{/each}
-							<div class="col-span-1 pt-2">
+
+						<div class="">
+							<div class="">
 								<Button
-									class="h-6 w-6 p-1"
+									class="mt-4 text-xs"
 									variant="secondary"
 									on:click={() => {
-										newMonitor.pingConfig.hostsV6 = [
-											...newMonitor.pingConfig.hostsV6,
-											""
+										newMonitor.pingConfig.hosts = [
+											...newMonitor.pingConfig.hosts,
+											{ host: "", timeout: 3000, count: 4, type: "IP4" }
 										];
 									}}
 								>
-									<Plus class="h-5 w-5" />
+									<Plus class="h-5 w-5" /> Add New
 								</Button>
 							</div>
 						</div>
 						<div class="mt-2">
-							<Label for="pingEval">Eval</Label>
+							<Label for="pingEval">PING Eval</Label>
 							<p class="my-1 text-xs text-muted-foreground">
 								You can write a custom eval function to evaluate the response. The
 								function should return a promise that resolves to an object with
@@ -742,6 +790,134 @@
 							<textarea
 								bind:value={newMonitor.pingConfig.pingEval}
 								id="pingEval"
+								class="h-96 w-full rounded-sm border p-2"
+								placeholder="Leave blank or write a custom eval function"
+							></textarea>
+						</div>
+					</div>
+				</div>
+			{:else if newMonitor.monitor_type == "TCP"}
+				<div class="mt-4 grid grid-cols-6 gap-2">
+					<div class="col-span-6">
+						<div class=" grid grid-cols-7 gap-2">
+							{#each newMonitor.tcpConfig.hosts as host, index}
+								<div class="relative col-span-7 flex gap-x-2">
+									<div>
+										<Label for="xconfig_ip_type">Type</Label>
+										<Select.Root
+											portal={null}
+											onSelectedChange={(e) => (host.type = e.value)}
+											selected={{
+												value: host.type,
+												label: host.type
+											}}
+										>
+											<Select.Trigger class="w-[150px]" id="xconfig_ip_type">
+												<Select.Value
+													bind:value={host.type}
+													placeholder="IP Type"
+												/>
+											</Select.Trigger>
+											<Select.Content>
+												<Select.Group>
+													<Select.Label>Type</Select.Label>
+													<Select.Item
+														value="IP4"
+														label="IP4"
+														class="text-sm font-medium"
+													>
+														IP4
+													</Select.Item>
+													<Select.Item
+														value="IP6"
+														label="IP6"
+														class="text-sm font-medium"
+													>
+														IP6
+													</Select.Item>
+													<Select.Item
+														value="DOMAIN"
+														label="DOMAIN"
+														class="text-sm font-medium"
+													>
+														DOMAIN
+													</Select.Item>
+												</Select.Group>
+											</Select.Content>
+										</Select.Root>
+									</div>
+									<div>
+										<Label for="hostsV4">Host</Label>
+										<Input
+											bind:value={host.host}
+											id="hostsV4"
+											placeholder="172.12.14.42"
+										/>
+									</div>
+									<div>
+										<Label for="hostsV4port">Port</Label>
+										<Input
+											bind:value={host.port}
+											id="hostsV4port"
+											placeholder="port number ex 8080"
+										/>
+									</div>
+									<div>
+										<Label for="hostsV4timeout">Timeout</Label>
+										<Input
+											bind:value={host.timeout}
+											id="hostsV4timeout"
+											placeholder="timeout in ms ex 3000"
+										/>
+									</div>
+									<div>
+										<Button
+											class="right-3 top-2 mt-8 h-6 w-6 p-1"
+											variant="secondary"
+											on:click={() => {
+												newMonitor.tcpConfig.hosts =
+													newMonitor.tcpConfig.hosts.filter(
+														(_, i) => i !== index
+													);
+											}}
+										>
+											<X class="h-5 w-5" />
+										</Button>
+									</div>
+								</div>
+							{/each}
+						</div>
+
+						<div class="">
+							<div class="">
+								<Button
+									class="mt-4 text-xs"
+									variant="secondary"
+									on:click={() => {
+										newMonitor.tcpConfig.hosts = [
+											...newMonitor.tcpConfig.hosts,
+											{ host: "", timeout: 3000, type: "IP4", port: "" }
+										];
+									}}
+								>
+									<Plus class="h-5 w-5" /> Add New
+								</Button>
+							</div>
+						</div>
+						<div class="mt-2">
+							<Label for="tcpEval">TCP Eval</Label>
+							<p class="my-1 text-xs text-muted-foreground">
+								You can write a custom eval function to evaluate the response. The
+								function should return a promise that resolves to an object with
+								status and latency. <a
+									target="_blank"
+									class="font-medium text-primary"
+									href="https://kener.ing/docs/monitors-tcp#eval">Read the docs</a
+								> to learn
+							</p>
+							<textarea
+								bind:value={newMonitor.tcpConfig.tcpEval}
+								id="tcpEval"
 								class="h-96 w-full rounded-sm border p-2"
 								placeholder="Leave blank or write a custom eval function"
 							></textarea>
@@ -862,7 +1038,12 @@
 			class="absolute bottom-0 grid h-16 w-full grid-cols-6 justify-end gap-2 border-t p-3 pr-6"
 		>
 			<div class="col-span-5 py-2.5">
-				<p class="text-right text-xs font-medium text-red-500">{invalidFormMessage}</p>
+				<p
+					title={invalidFormMessage}
+					class="overflow-x-hidden text-ellipsis whitespace-nowrap text-right text-xs font-medium text-red-500"
+				>
+					{invalidFormMessage}
+				</p>
 			</div>
 			<div class="col-span-1">
 				<Button

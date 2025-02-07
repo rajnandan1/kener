@@ -54,9 +54,12 @@
 				eval: "",
 				hideURLForGet: "NO"
 			},
+			tcpConfig: {
+				hosts: [], //{timeout: 1000, host: "", type:""}
+				tcpEval: ""
+			},
 			pingConfig: {
-				hostsV4: [],
-				hostsV6: [],
+				hosts: [], //{timeout: 1000, host: "", count: "", type:""}
 				pingEval: ""
 			},
 			dnsConfig: {
@@ -79,6 +82,8 @@
 			newMonitor.pingConfig = JSON.parse(newMonitor.type_data);
 		} else if (newMonitor.monitor_type == "DNS") {
 			newMonitor.dnsConfig = JSON.parse(newMonitor.type_data);
+		} else if (newMonitor.monitor_type == "TCP") {
+			newMonitor.tcpConfig = JSON.parse(newMonitor.type_data);
 		}
 		showAddMonitor = true;
 	}
