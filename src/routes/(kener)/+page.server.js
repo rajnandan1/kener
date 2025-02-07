@@ -20,7 +20,7 @@ export async function load({ parent, url }) {
 	const siteData = parentData.site;
 	let pageTitle = siteData.title;
 	let canonical = siteData.siteURL;
-	let pageDescription = "";
+	let pageDescription = siteData.metaTags.find((tag) => tag.key === "description").value;
 	monitors = SortMonitor(siteData.monitorSort, monitors);
 	const monitorsActive = [];
 	for (let i = 0; i < monitors.length; i++) {
