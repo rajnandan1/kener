@@ -11,17 +11,15 @@ on:
       - 'docs/**'
 
 env:
+  ALPINE_VERSION: "23-alpine"
+  DEBIAN_VERSION: "23-slim"
   # Registry URLs
   DOCKERHUB_REGISTRY: docker.io
   GITHUB_REGISTRY: ghcr.io
-
   # Docker Hub image name (using Docker Hub username)
   DOCKERHUB_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name }}
   # GitHub image name (formatted as `account/repo`)
   GITHUB_IMAGE_NAME: ${{ github.repository }}
-
-  ALPINE_VERSION: "23-alpine"
-  DEBIAN_VERSION: "23-slim"
 
 jobs:
   build_and_push_to_registries:
