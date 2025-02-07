@@ -71,6 +71,7 @@ cheaply available domain.
 ### Monitoring and Tracking
 
 -   Advanced application performance monitoring tools
+-   Types of Monitors: HTTP, TCP, DNS, ICMP etc
 -   Real-time network monitor software capabilities
 -   Polls HTTP endpoint or Push data to monitor using Rest APIs
 -   Handles Timezones for visitors

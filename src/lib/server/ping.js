@@ -1,15 +1,9 @@
 // @ts-nocheck
 import net from "net"; // Use import instead of require
+import ping from "ping";
 
-/**
- * Check if a TCP port is open on a given IPv4/IPv6 host and measure latency.
- *
- * @param {string} host - The IP address or hostname (IPv4 or IPv6) to check.
- * @param {number} port - The port number to check.
- * @param {number} timeout - Connection timeout in milliseconds.
- * @returns {Promise<{ status: string, latency: number }>} - Resolves to an object with status ("open" or "closed") and latency in ms.
- */
-const Ping = function (host, port, timeout = 3000) {
+const TCP = function (type, host, port, timeout) {
+	port = parseInt(port, 10);
 	return new Promise((resolve) => {
 		const socket = new net.Socket();
 		const start = process.hrtime.bigint(); // High-precision timestamp
@@ -21,7 +15,7 @@ const Ping = function (host, port, timeout = 3000) {
 				const end = process.hrtime.bigint();
 				const latency = Number(end - start) / 1e6; // Convert nanoseconds to milliseconds
 				socket.destroy();
-				resolve({ status, latency });
+				resolve({ status, latency, host, port, type });
 			}
 		};
 
@@ -31,9 +25,43 @@ const Ping = function (host, port, timeout = 3000) {
 		socket.once("error", () => onFinish("error"));
 
 		// Check if it's an IPv6 address (contains ':')
-		const options = host.includes(":") ? { host, port, family: 6 } : { host, port };
+		const options = {
+			host,
+			port,
+			family: type === "IP6" ? 6 : 4
+		}; //host.includes(":") ? { host, port, family: 6 } : { host, port };
 		socket.connect(options);
 	});
+};
+
+const Ping = async function (type, host, timeout, count) {
+	let output = {
+		alive: false,
+		min: null,
+		max: null,
+		avg: null,
+		latencies: [],
+		latency: null,
+		host: host,
+		type: type
+	};
+
+	try {
+		let res = await ping.promise.probe(host, {
+			v6: type === "IP6",
+			timeout: type === "IP6" ? false : Math.floor(timeout / 1000),
+			min_reply: count
+		});
+		output.alive = res.alive;
+		output.min = res.min;
+		output.max = res.max;
+		output.avg = res.avg;
+		output.latencies = res.times;
+		output.latency = res.time;
+	} catch (error) {
+		console.log(`Error in pingCall IP4 for ${host}`, error);
+	}
+	return output;
 };
 
 /**
@@ -56,4 +84,4 @@ function ExtractIPv6HostAndPort(input) {
 	return null; // Return null if the format is incorrect
 }
 
-export { Ping, ExtractIPv6HostAndPort };
+export { TCP, ExtractIPv6HostAndPort, Ping };

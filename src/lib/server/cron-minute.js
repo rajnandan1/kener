@@ -1,6 +1,6 @@
 // @ts-nocheck
 import axios from "axios";
-import { Ping, ExtractIPv6HostAndPort } from "./ping.js";
+import { Ping, ExtractIPv6HostAndPort, TCP } from "./ping.js";
 import { UP, DOWN, DEGRADED } from "./constants.js";
 import {
 	GetMinuteStartNowTimestampUTC,
@@ -56,6 +56,21 @@ const defaultPingEval = `(async function (responseDataBase64) {
 	}, 0);
 
 	let alive = arrayOfPings.reduce((acc, ping) => {
+		return acc && ping.alive;
+	}, true);
+
+	return {
+		status: alive ? 'UP' : 'DOWN',
+		latency: latencyTotal / arrayOfPings.length,
+	}
+})`;
+const defaultTcpEval = `(async function (responseDataBase64) {
+	let arrayOfPings = JSON.parse(atob(responseDataBase64));
+	let latencyTotal = arrayOfPings.reduce((acc, ping) => {
+		return acc + ping.latency;
+	}, 0);
+
+	let alive = arrayOfPings.reduce((acc, ping) => {
 		if (ping.status === "open") {
 			return acc && true;
 		} else {
@@ -65,7 +80,7 @@ const defaultPingEval = `(async function (responseDataBase64) {
 
 	return {
 		status: alive ? 'UP' : 'DOWN',
-		latency: parseInt(latencyTotal / arrayOfPings.length),
+		latency: latencyTotal / arrayOfPings.length,
 	}
 })`;
 
@@ -117,54 +132,33 @@ async function manualIncident(monitor) {
 	return manualData;
 }
 
-const pingCall = async (hostsV4, hostsV6, pingEval, tag) => {
-	if (hostsV4 === undefined) hostsV4 = [];
-	if (hostsV6 === undefined) hostsV6 = [];
+const tcpCall = async (hosts, tcpEval, tag) => {
 	let arrayOfPings = [];
-	for (let i = 0; i < hostsV4.length; i++) {
-		const hostFull = hostsV4[i].trim();
-		let res;
-		let splitHost = hostFull.split(":");
-		let host = splitHost[0];
-		let port = 80;
-		if (splitHost.length > 1) {
-			port = parseInt(splitHost[1]);
-		}
-		try {
-			res = await Ping(host, port, 3000);
-		} catch (error) {
-			console.log(`Error in pingCall IP4 for ${hostFull}`, error);
-		} finally {
-			arrayOfPings.push({
-				host: host,
-				port: port,
-				type: "IP4",
-				status: res.status,
-				latency: res.latency
-			});
-		}
+	for (let i = 0; i < hosts.length; i++) {
+		const host = hosts[i];
+		arrayOfPings.push(await TCP(host.type, host.host, host.port, host.timeout));
 	}
+	let respBase64 = Buffer.from(JSON.stringify(arrayOfPings)).toString("base64");
 
-	for (let i = 0; i < hostsV6.length; i++) {
-		const hostFull = hostsV6[i].trim();
-		let { host, port } = ExtractIPv6HostAndPort(hostFull);
-		if (!!!port) {
-			port = 80;
-		}
-		let res;
-		try {
-			res = await Ping(host, port, 3000);
-		} catch (error) {
-			console.log(`Error in pingCall IP6 for ${hostFull}`, error);
-		} finally {
-			arrayOfPings.push({
-				host: host,
-				port: port,
-				status: res.status,
-				type: "IP6",
-				latency: res.latency
-			});
-		}
+	let evalResp = undefined;
+
+	try {
+		evalResp = await eval(tcpEval + `("${respBase64}")`);
+	} catch (error) {
+		console.log(`Error in tcpEval for ${tag}`, error.message);
+	}
+	//reduce to get the status
+	return {
+		status: evalResp.status,
+		latency: evalResp.latency,
+		type: REALTIME
+	};
+};
+const pingCall = async (hosts, pingEval, tag) => {
+	let arrayOfPings = [];
+	for (let i = 0; i < hosts.length; i++) {
+		const host = hosts[i];
+		arrayOfPings.push(await Ping(host.type, host.host, host.timeout, host.count));
 	}
 	let respBase64 = Buffer.from(JSON.stringify(arrayOfPings)).toString("base64");
 
@@ -418,9 +412,18 @@ const Minuter = async (monitor) => {
 			monitor.type_data.pingEval = defaultPingEval;
 		}
 		let pingResponse = await pingCall(
-			monitor.type_data.hostsV4,
-			monitor.type_data.hostsV6,
+			monitor.type_data.hosts,
 			monitor.type_data.pingEval,
+			monitor.tag
+		);
+		realTimeData[startOfMinute] = pingResponse;
+	} else if (monitor.monitor_type === "TCP") {
+		if (!!!monitor.type_data.tcpEval) {
+			monitor.type_data.tcpEval = defaultTcpEval;
+		}
+		let pingResponse = await tcpCall(
+			monitor.type_data.hosts,
+			monitor.type_data.tcpEval,
 			monitor.tag
 		);
 		realTimeData[startOfMinute] = pingResponse;
