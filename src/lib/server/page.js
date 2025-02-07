@@ -137,7 +137,6 @@ const FetchData = async function (site, monitor, localTz, selectedLang, lang) {
 
 		_90Day[ts].timestamp = ts;
 		_90Day[ts].cssClass = cssClass;
-
 		_90Day[ts].summaryStatus = l(lang, summaryTime(summaryStatus), {
 			status: l(lang, summaryStatus),
 			duration: summaryDuration

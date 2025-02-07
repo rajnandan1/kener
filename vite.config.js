@@ -7,8 +7,33 @@ dotenv.config();
 
 const PORT = Number(process.env.PORT) || 3000;
 const base = process.env.KENER_BASE_PATH || "";
-export default defineConfig({
-	plugins: [sveltekit()],
+const VITE_BUILD_ENV = process.env.VITE_BUILD_ENV || "development"; // Default to "development"
+const isProduction = VITE_BUILD_ENV === "production";
+
+export default defineConfig(({ mode }) => ({
+	plugins: [
+		sveltekit({
+			compilerOptions: {
+				dev: mode === "development"
+			},
+			onwarn: (warning, handler) => {
+				// Suppress specific warnings in production
+				const ignoredWarnings = [
+					"a11y-", // Accessibility warnings
+					"unused-export-let", // Suppresses "unused export property" warnings
+					"empty-chunk", // Suppresses empty chunk warnings
+					"module-unused-import", // Suppresses unused imports like "default" from auto-animate
+					"conflicting-svelte-resolve" // Suppresses conflicting resolve warnings
+				];
+
+				if (isProduction && ignoredWarnings.some((w) => warning.code && warning.code.startsWith(w))) {
+					return; // Ignore these warnings in production builds
+				}
+
+				handler(warning);
+			}
+		})
+	],
 	server: {
 		port: PORT,
 		watch: {
@@ -16,4 +41,4 @@ export default defineConfig({
 		}
 	},
 	assetsInclude: ["**/*.yaml"]
-});
+}));

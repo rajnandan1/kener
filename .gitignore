@@ -27,3 +27,4 @@ uploads/*
 static/uploads/*
 !static/uploads/upload.dir
 temp.txt
+temp.js

@@ -353,13 +353,16 @@
 				</div>
 			</div>
 			<hr />
+			<p class="font-medium">Custom CSS</p>
 			<div class="flex w-full flex-row justify-start gap-2">
 				<div class="w-full">
-					<Label for="customCSS" class="text-sm text-muted-foreground">Custom CSS</Label>
+					<Label for="customCSS" class="text-sm text-muted-foreground">
+						You can add custom CSS to style your site. Do not include style tags.
+					</Label>
 					<textarea
 						bind:value={themeData.customCSS}
 						id="customCSS"
-						class="h-48 w-full rounded-sm border p-2"
+						class="mt-1 h-48 w-full rounded-sm border p-2"
 						placeholder=".className&#123;color: red;&#125;"
 					></textarea>
 				</div>

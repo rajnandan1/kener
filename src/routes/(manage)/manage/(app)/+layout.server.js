@@ -2,11 +2,9 @@
 import { GetAllSiteData, VerifyToken } from "$lib/server/controllers/controller.js";
 import { redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
+import { MaskString } from "$lib/server/tool.js";
 import db from "$lib/server/db/db.js";
 //write a function to mask a string, just have last 4 characters visible
-function maskString(str) {
-	return "*".repeat(str.length - 4) + str.slice(-4);
-}
 
 export async function load({ params, route, url, cookies, request }) {
 	let siteData = await GetAllSiteData();
@@ -33,14 +31,10 @@ export async function load({ params, route, url, cookies, request }) {
 		throw redirect(302, base + "/manage/signin");
 	}
 
-	//
 	return {
 		siteData,
-		GH_TOKEN: !!process.env.GH_TOKEN ? maskString(process.env.GH_TOKEN) : "",
 		KENER_SECRET_KEY: !!process.env.KENER_SECRET_KEY
-			? maskString(process.env.KENER_SECRET_KEY)
-			: "",
-		RESEND_API_KEY: !!process.env.RESEND_API_KEY ? maskString(process.env.RESEND_API_KEY) : "",
-		RESEND_SENDER_EMAIL: process.env.RESEND_SENDER_EMAIL
+			? MaskString(process.env.KENER_SECRET_KEY)
+			: ""
 	};
 }

@@ -1,5 +1,8 @@
 // @ts-nocheck
 import { Resend } from "resend";
+import nodemailer from "nodemailer";
+import getSMTPTransport from "./smtps.js";
+import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 
 class Email {
 	to;
@@ -7,12 +10,24 @@ class Email {
 	method;
 	siteData;
 	monitorData;
+	meta;
 
 	constructor(meta, siteData, monitorData) {
 		this.to = meta.to;
 		this.from = meta.from;
 		this.siteData = siteData;
 		this.monitorData = monitorData;
+
+		let metaString = JSON.stringify(meta);
+
+		let envSecrets = GetRequiredSecrets(`${JSON.stringify(meta)}`);
+
+		for (let i = 0; i < envSecrets.length; i++) {
+			const secret = envSecrets[i];
+			metaString = ReplaceAllOccurrences(metaString, secret.find, secret.replace);
+		}
+
+		this.meta = JSON.parse(metaString);
 	}
 
 	transformData(data) {
@@ -179,13 +194,34 @@ class Email {
 	}
 
 	async send(data) {
-		const resend = new Resend(process.env.RESEND_API_KEY);
+		let emailBody = this.transformData(data); // object containing email data (to, subject, text, html, etc)
+		if (!this.meta.email_type || this.meta.email_type === "resend") {
+			const resend = new Resend(process.env.RESEND_API_KEY);
+			try {
+				return await resend.emails.send(emailBody);
+			} catch (error) {
+				console.error("Error sending webhook", error);
+				return error;
+			}
+		}
+		if (this.meta.email_type === "smtp") {
+			// Configure the SMTP transporter using environment variables
+			const transporter = getSMTPTransport(this.meta);
 
-		try {
-			return await resend.emails.send(this.transformData(data));
-		} catch (error) {
-			console.error("Error sending webhook", error);
-			return error;
+			const mailOptions = {
+				from: emailBody.from, // sender address
+				to: Array.isArray(emailBody.to) ? emailBody.to.join(",") : emailBody.to, // recipient address(es)
+				subject: emailBody.subject, // email subject
+				text: emailBody.text, // plain text body
+				html: emailBody.html // HTML body (if any)
+			};
+
+			try {
+				return await transporter.sendMail(mailOptions);
+			} catch (error) {
+				console.error("Error sending email via SMTP", error);
+				return error;
+			}
 		}
 	}
 }

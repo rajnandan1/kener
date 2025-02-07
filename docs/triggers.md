@@ -102,8 +102,8 @@ Body of the webhook will be sent as below:
 | source                | Source of the alert. Can be `Kener`                         | ${source}                     |
 | timestamp             | Timestamp of the alert                                      | ${timestamp}                  |
 | description           | Description of the alert. This you can customize. See below | ${description}                |
-| details               | Details of the alert.                                       | ${details}                    |
-| details.metric        | Name of the monitor                                         | ${details.metric}             |
+| details               | Details of the alert.                                       | -                             |
+| details.metric        | Name of the monitor                                         | ${metric}                     |
 | details.current_value | Current value of the monitor                                | ${current_value}              |
 | details.threshold     | Alert trigger threshold of the monitor                      | ${threshold}                  |
 | actions               | Actions to be taken. Link to view the monitor.              | ${action_text}, ${action_url} |
@@ -189,7 +189,7 @@ The slack message when alert is `RESOLVED` will look like this
 
 ## Email
 
-Email triggers are used to send an email when a monitor goes down or up.
+Email triggers are used to send an email when a monitor goes down or up. Kener supports sending emails via [resend](https://resend.com) or over SMTP.
 
 <div class="border rounded-md">
 
@@ -197,11 +197,22 @@ Email triggers are used to send an email when a monitor goes down or up.
 
 </div>
 
-<div class="border px-2 rounded-md mt-4">
+### Resend
 
-#### Note
+To send emails using Resend you just need to set `RESEND_API_KEY` in the environment variables.
 
-Please make sure you have set the `RESEND_API_KEY` in the environment variables.
+### SMTP
+
+To send emails using SMTP, please enter
+
+-   Host: SMTP server host
+-   Port: SMTP server port
+-   User: SMTP server username
+-   Password: SMTP server password
+
+<div class="note danger">
+
+Since the password will be stored as plain text we encourage to use environment variables for the password. Let us say if you have an environment variable `SMTP_PASSWORD` then you can use it as `$SMTP_PASSWORD`.
 
 </div>
 

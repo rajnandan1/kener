@@ -78,34 +78,3 @@ class DNSResolver {
 }
 
 export default DNSResolver;
-// const resolver = new DNSResolver();
-// const domain = process.argv[2] || "google.com";
-// const recordType = process.argv[3] || "A";
-// resolver.getRecord(domain, recordType).then(
-// 	function (records) {
-// 		Object.entries(records).forEach(([type, records]) => {
-// 			if (records.length === 0) return []; // Skip empty records
-// 			return records;
-// 			console.log(">>>>>>----  dns:167 ", records);
-// 			console.log(`\n${type} Records:`);
-// 			records.forEach((record) => {
-// 				console.log("----------------------------------------");
-// 				console.log(`Type: ${type}`);
-// 				console.log(`Name: ${record.name}`);
-// 				console.log(`TTL: ${record.ttl}`);
-
-// 				// Format the output based on record type
-// 				if (type === "MX") {
-// 					console.log(`Priority: ${record.data.priority}`);
-// 					console.log(`Exchange: ${record.data.exchange}`);
-// 				} else {
-// 					console.log(`Data: ${record.data}`);
-// 					// console.log(">>>>>>----  dns-resolver:120 ", record);
-// 				}
-// 			});
-// 		});
-// 	},
-// 	function (err) {
-// 		console.error(err);
-// 	}
-// );

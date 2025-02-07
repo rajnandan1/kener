@@ -32,7 +32,7 @@ description: Roadmap for Kener
 
 ☑ ~~Create Admin UI~~ Released in (3.0.0)
 
-☐ Webhook customization
+☐ ~~Webhook customization~~
 
 ☐ Monitor Update Screen
 

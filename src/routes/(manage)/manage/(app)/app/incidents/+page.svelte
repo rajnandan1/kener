@@ -5,7 +5,7 @@
 	import { Label } from "$lib/components/ui/label";
 	import { Button } from "$lib/components/ui/button";
 	import * as Alert from "$lib/components/ui/alert";
-
+	import * as RadioGroup from "$lib/components/ui/radio-group";
 	import moment from "moment";
 	import { DateInput } from "date-picker-svelte";
 	import { clickOutsideAction, slide } from "svelte-legos";
@@ -81,7 +81,6 @@
 				}
 				return i;
 			});
-
 			totalPages = Math.ceil(resp.total.count / limit);
 		} catch (error) {
 			alert("Error: " + error);
@@ -102,9 +101,12 @@
 			endDatetime: null,
 			startDatetime: null,
 			start_date_time: null,
+			endDatetime: null,
+			ent_date_time: null,
 			status: "OPEN",
 			state: "INVESTIGATING",
-			firstComment: ""
+			firstComment: "",
+			incident_type: "INCIDENT"
 		};
 	}
 
@@ -120,7 +122,8 @@
 			end_date_time: newIncident.endDatetime,
 			status: newIncident.status,
 			state: newIncident.state,
-			id: newIncident.id
+			id: newIncident.id,
+			incident_type: newIncident.incident_type
 		};
 		//convert data.start_date_time to timestamp
 		if (!!!toPost.start_date_time) {
@@ -128,10 +131,12 @@
 			return;
 		}
 		toPost.start_date_time = parseInt(new Date(toPost.start_date_time).getTime() / 1000);
-		if (!!!toPost.end_date_time) {
-			delete toPost.end_date_time;
-		} else {
+		if (!!toPost.end_date_time) {
 			toPost.end_date_time = parseInt(new Date(toPost.end_date_time).getTime() / 1000);
+		}
+
+		if (toPost.incident_type == "MAINTENANCE") {
+			toPost.state = "RESOLVED";
 		}
 
 		formStateCreate = "loading";
@@ -155,7 +160,7 @@
 				if (!!!newIncident.id) {
 					newComment.comment = newIncident.firstComment;
 					newComment.id = 0;
-					newComment.state = newIncident.state;
+					newComment.state = toPost.state;
 					newComment.commented_at = newIncident.startDatetime;
 
 					await addNewComment(resp.incident_id);
@@ -403,8 +408,10 @@
 					</Select.Group>
 				</Select.Content>
 			</Select.Root>
+		</div>
+		<div class="mx-2">
 			{#if loadingData}
-				<Loader class="ml-2 mt-2 inline h-6 w-6 animate-spin" />
+				<Loader class="float-right ml-2 mt-2 inline h-6 w-6 animate-spin" />
 			{/if}
 		</div>
 		<Button
@@ -414,7 +421,7 @@
 			}}
 		>
 			<Plus class="mr-2 inline h-6 w-6" />
-			New Incident
+			New Event
 		</Button>
 	</div>
 
@@ -563,9 +570,17 @@
 									</td>
 
 									<td class="whitespace-nowrap px-6 py-4 text-xs font-semibold">
-										<span class="badge-{incident.state} rounded px-1.5 py-1"
-											>{incident.state}</span
-										>
+										{#if incident.incident_type == "MAINTENANCE"}
+											<span class="badge-MAINTENANCE rounded px-1.5 py-1">
+												MAINTENANCE
+											</span>
+										{:else}
+											<span
+												class="badge-{incident.state} rounded px-1.5 py-1"
+											>
+												{incident.state}
+											</span>
+										{/if}
 									</td>
 									<td class="whitespace-nowrap px-6 py-4 text-xs font-semibold">
 										<div class="flex gap-x-1.5">
@@ -639,21 +654,53 @@
 				<div class="rounded-md border p-4">
 					<div>
 						{#if newIncident.id}
-							<h2 class="text-lg font-medium">Edit Incident</h2>
+							<h2 class="text-lg font-medium">Edit Event</h2>
 						{:else}
-							<h2 class="text-lg font-medium">Add New Incident</h2>
+							<h2 class="text-lg font-medium">Add New Event</h2>
 						{/if}
+					</div>
+					<p class="mt-4 text-sm font-medium">Event Type</p>
+					<div class="mt-2 flex gap-4">
+						<RadioGroup.Root
+							class=" flex gap-x-2 {!!newIncident.id ? 'opacity-70' : ''}"
+							bind:value={newIncident.incident_type}
+							disabled={!!newIncident.id}
+						>
+							<Label
+								for="type-INCIDENT"
+								class="flex cursor-pointer items-center space-x-2 rounded-md border {newIncident.incident_type ==
+								'INCIDENT'
+									? 'bg-secondary shadow-md'
+									: ''}  p-3"
+							>
+								<RadioGroup.Item value="INCIDENT" id="type-INCIDENT" />
+								<span>Incident</span>
+							</Label>
+							<Label
+								for="type-MAINTENANCE"
+								class="flex cursor-pointer items-center space-x-2 rounded-md border p-3 {newIncident.incident_type ==
+								'MAINTENANCE'
+									? 'bg-secondary shadow-md'
+									: ''}"
+							>
+								<RadioGroup.Item value="MAINTENANCE" id="type-MAINTENANCE" />
+								<span> Maintenance </span>
+							</Label>
+						</RadioGroup.Root>
 					</div>
 					<div class="mt-4 flex flex-row gap-4">
 						<div class="w-full">
 							<Label class="text-sm">
-								Incident Title
+								<span class="capitalize">{newIncident.incident_type}</span>
+								Title
 								<span class="text-red-500">*</span>
-								<span
-									class="float-right mt-2 text-xs font-semibold badge-{newIncident.state}"
-								>
-									{newIncident.state}
-								</span>
+								{#if newIncident.incident_type == "INCIDENT"}
+									<span
+										class="float-right mt-2 text-xs font-semibold badge-{newIncident.state}"
+									>
+										{newIncident.state}
+									</span>
+								{/if}
 							</Label>
 							<Input
 								class="mt-2"
@@ -667,7 +714,8 @@
 						<div class="mt-4 flex flex-row gap-4">
 							<div class="w-full">
 								<Label class="text-sm">
-									Incident Summary
+									<span class="capitalize">{newIncident.incident_type}</span>
+									Summary
 									<span class="text-red-500">*</span>
 								</Label>
 								<Input
@@ -678,20 +726,37 @@
 							</div>
 						</div>
 					{/if}
+
 					<div class="mt-4 flex gap-4">
 						<div class="col-span-1">
 							<Label class="mb-2 text-sm" for="start_date_time">
-								Incident Start Date Time
+								<span class="capitalize">{newIncident.incident_type}</span> Start
+								Date Time
 								<span class="text-red-500">*</span>
 							</Label>
 							<DateInput
 								bind:value={newIncident.startDatetime}
 								id="start_date_time"
 								timePrecision="minute"
-								disabled={!!newIncident.id}
 								class="mt-2 text-sm"
 							/>
 						</div>
+						{#if newIncident.incident_type == "MAINTENANCE"}
+							<div class="col-span-1">
+								<Label class="mb-2 text-sm" for="start_date_time">
+									<span class="capitalize">{newIncident.incident_type}</span> End
+									Date Time
+									<span class="text-red-500">*</span>
+								</Label>
+								<DateInput
+									bind:value={newIncident.endDatetime}
+									id="end_date_time"
+									timePrecision="minute"
+									class="mt-2 text-sm"
+									min={newIncident.startDatetime}
+								/>
+							</div>
+						{/if}
 					</div>
 
 					<div class="mt-4 grid h-16 w-full grid-cols-6 gap-2 border-t pt-4">
@@ -708,7 +773,9 @@
 									newIncident.title.trim().length == 0 ||
 									!!!newIncident.startDatetime ||
 									(!!!newIncident.id &&
-										newIncident.firstComment.trim().length == 0)}
+										newIncident.firstComment.trim().length == 0) ||
+									(!!!newIncident.endDatetime &&
+										newIncident.incident_type == "MAINTENANCE")}
 							>
 								Save
 								{#if formStateCreate === "loading"}
@@ -730,42 +797,44 @@
 								addNewComment();
 							}}
 						>
-							<div
-								class="bg-hover state-{newComment.state} mt-2 grid grid-cols-4 overflow-hidden rounded-md border text-xs font-medium"
-							>
+							{#if currentIncident.incident_type == "INCIDENT"}
 								<div
-									class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
-									on:click={() => {
-										setCommentState("INVESTIGATING");
-									}}
+									class="bg-hover state-{newComment.state} mt-2 grid grid-cols-4 overflow-hidden rounded-md border text-xs font-medium"
 								>
-									INVESTIGATING
+									<div
+										class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
+										on:click={() => {
+											setCommentState("INVESTIGATING");
+										}}
+									>
+										INVESTIGATING
+									</div>
+									<div
+										class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
+										on:click={() => {
+											setCommentState("IDENTIFIED");
+										}}
+									>
+										IDENTIFIED
+									</div>
+									<div
+										class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
+										on:click={() => {
+											setCommentState("MONITORING");
+										}}
+									>
+										MONITORING
+									</div>
+									<div
+										class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
+										on:click={() => {
+											setCommentState("RESOLVED");
+										}}
+									>
+										RESOLVED
+									</div>
 								</div>
-								<div
-									class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
-									on:click={() => {
-										setCommentState("IDENTIFIED");
-									}}
-								>
-									IDENTIFIED
-								</div>
-								<div
-									class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
-									on:click={() => {
-										setCommentState("MONITORING");
-									}}
-								>
-									MONITORING
-								</div>
-								<div
-									class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
-									on:click={() => {
-										setCommentState("RESOLVED");
-									}}
-								>
-									RESOLVED
-								</div>
-							</div>
+							{/if}
 							<div class="mt-4 flex w-full gap-4">
 								<div class="text-sm font-medium leading-7">Time Stamp</div>
 								<DateInput
@@ -840,9 +909,11 @@
 											<div
 												class="text-xs font-semibold text-muted-foreground"
 											>
-												<span class="badge-{comment.state}">
-													{comment.state}
-												</span>
+												{#if currentIncident.incident_type == "INCIDENT"}
+													<span class="badge-{comment.state}">
+														{comment.state}
+													</span>
+												{/if}
 												{moment(comment.commented_at * 1000).format(
 													"YYYY-MM-DD HH:mm:ss"
 												)}

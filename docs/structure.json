@@ -60,6 +60,11 @@
 					"file": "/monitors-ping.md"
 				},
 				{
+					"title": "TCP Monitor",
+					"link": "/docs/monitors-tcp",
+					"file": "/monitors-tcp.md"
+				},
+				{
 					"title": "DNS Monitor",
 					"link": "/docs/monitors-dns",
 					"file": "/monitors-dns.md"
@@ -140,6 +145,11 @@
 		{
 			"sectionTitle": "Help",
 			"children": [
+				{
+					"title": "Fonts",
+					"link": "/docs/custom-fonts",
+					"file": "/custom-fonts.md"
+				},
 				{
 					"title": "Changelogs",
 					"link": "/docs/changelogs",

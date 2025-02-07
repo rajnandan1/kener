@@ -61,7 +61,7 @@ export RESEND_SENDER_EMAIL=Some Name <email@domain.com>
 ```
 
 <div class="  note danger ">
-	Please note that the RESEND_API_KEY is required for sending emails. If you do not set this, Kener will not be able to send emails. RESEND_SENDER_EMAIL is a must if you forget your password.
+	Please note that the RESEND_API_KEY is required for sending emails. If you do not set this, Kener will not be able to send emails. RESEND_SENDER_EMAIL is a must if you forget your password. If you do not want to use resend, you can set SMTP variables.
 </div>
 
 ## DATABASE_URL
@@ -79,6 +79,23 @@ Set the timezone for the server. Set it to UTC.
 ```bash
 export TZ=UTC
 ```
+
+## SMTP
+
+Kener can also use SMTP to send emails. You can set the SMTP server details in the environment variables.
+
+```bash
+export SMTP_HOST=smtp.example.com
+export SMTP_PORT=587
+export SMTP_USER=username
+export SMTP_PASS=password
+export SMTP_SECURE=0
+export SMTP_FROM_EMAIL=Some Name <user@example.com>
+```
+
+<div class="  note danger ">
+	If you set SMTP variables, Kener will use SMTP to send emails. If you set RESEND_API_KEY, Kener will use resend to send emails. If you do both Kener will use SMTP.
+</div>
 
 ## Using .env
 

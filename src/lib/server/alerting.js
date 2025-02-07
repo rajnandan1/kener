@@ -33,7 +33,7 @@ async function createJSONCommonAlert(monitor, config, alert, severity) {
 	let actions = [
 		{
 			text: "View Monitor",
-			url: siteURL + "/monitor-" + monitor.tag
+			url: siteURL + "?monitor=" + monitor.tag
 		}
 	];
 	return {

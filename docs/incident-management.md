@@ -74,3 +74,7 @@ To close an incident, you need to add a message and set the status to `RESOLVED`
 ## Add Monitors
 
 To add monitors to the incident, you need to add the monitor tag to the incident. This will automatically add the monitor to the incident. You will also get the status of the monitor in the incident. This can be `DEGRADED` or `DOWN`.
+
+## Maintenance
+
+You can also create a maintenance incident. This is similar to an incident but is used to notify users about maintenance activities. Both start and end date and time are required for maintenance incidents.

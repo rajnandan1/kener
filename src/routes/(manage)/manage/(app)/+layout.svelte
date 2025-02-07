@@ -45,7 +45,7 @@
 			id: "/(manage)/manage/(app)/app/alerts"
 		},
 		{
-			name: "Incidents",
+			name: "Events",
 			url: `${base}/manage/app/incidents`,
 			id: "/(manage)/manage/(app)/app/incidents"
 		},

@@ -49,6 +49,7 @@
 <svelte:head>
 	<title>{data.title}</title>
 	<meta name="description" content={data.description} />
+	<link rel="canonical" href="https://kener.ing/docs{data.docFilePath.split('.md')[0]}" />
 </svelte:head>
 
 <div id="markdown">

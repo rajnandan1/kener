@@ -1,6 +1,6 @@
 // @ts-nocheck
 import axios from "axios";
-import ping from "ping";
+import { Ping, ExtractIPv6HostAndPort, TCP } from "./ping.js";
 import { UP, DOWN, DEGRADED } from "./constants.js";
 import {
 	GetMinuteStartNowTimestampUTC,
@@ -49,9 +49,47 @@ const defaultEval = `(async function (statusCode, responseTime, responseData) {
 	}
 })`;
 
+const defaultPingEval = `(async function (responseDataBase64) {
+	let arrayOfPings = JSON.parse(atob(responseDataBase64));
+	let latencyTotal = arrayOfPings.reduce((acc, ping) => {
+		return acc + ping.latency;
+	}, 0);
+
+	let alive = arrayOfPings.reduce((acc, ping) => {
+		return acc && ping.alive;
+	}, true);
+
+	return {
+		status: alive ? 'UP' : 'DOWN',
+		latency: latencyTotal / arrayOfPings.length,
+	}
+})`;
+const defaultTcpEval = `(async function (responseDataBase64) {
+	let arrayOfPings = JSON.parse(atob(responseDataBase64));
+	let latencyTotal = arrayOfPings.reduce((acc, ping) => {
+		return acc + ping.latency;
+	}, 0);
+
+	let alive = arrayOfPings.reduce((acc, ping) => {
+		if (ping.status === "open") {
+			return acc && true;
+		} else {
+			return false;
+		}
+	}, true);
+
+	return {
+		status: alive ? 'UP' : 'DOWN',
+		latency: latencyTotal / arrayOfPings.length,
+	}
+})`;
+
 async function manualIncident(monitor) {
 	let startTs = GetMinuteStartNowTimestampUTC();
-	let impactArr = await db.getIncidentsByMonitorTagRealtime(monitor.tag, startTs);
+	let incidentArr = await db.getIncidentsByMonitorTagRealtime(monitor.tag, startTs);
+	let maintenanceArr = await db.getMaintenanceByMonitorTagRealtime(monitor.tag, startTs);
+
+	let impactArr = incidentArr.concat(maintenanceArr);
 
 	let impact = "";
 	if (impactArr.length == 0) {
@@ -94,50 +132,47 @@ async function manualIncident(monitor) {
 	return manualData;
 }
 
-const pingCall = async (hostsV4, hostsV6) => {
-	if (hostsV4 === undefined) hostsV4 = [];
-	if (hostsV6 === undefined) hostsV6 = [];
-	let alive = true;
-	let latencyTotal = 0;
-	let countHosts = hostsV4.length + hostsV6.length;
-
-	for (let i = 0; i < hostsV4.length; i++) {
-		const host = hostsV4[i].trim();
-		try {
-			let res = await ping.promise.probe(host);
-			alive = alive && res.alive;
-			latencyTotal += res.time;
-			if (!res.alive) {
-				throw new Error(JSON.stringify(res));
-			}
-		} catch (error) {
-			alive = alive && false;
-			latencyTotal += 30;
-			console.log(`Error in pingCall IP4 for ${host}`, error);
-		}
+const tcpCall = async (hosts, tcpEval, tag) => {
+	let arrayOfPings = [];
+	for (let i = 0; i < hosts.length; i++) {
+		const host = hosts[i];
+		arrayOfPings.push(await TCP(host.type, host.host, host.port, host.timeout));
 	}
+	let respBase64 = Buffer.from(JSON.stringify(arrayOfPings)).toString("base64");
 
-	for (let i = 0; i < hostsV6.length; i++) {
-		const host = hostsV6[i].trim();
-		try {
-			let res = await ping.promise.probe(host, {
-				v6: true,
-				timeout: false
-			});
-			alive = alive && res.alive;
-			if (!res.alive) {
-				throw new Error(JSON.stringify(res));
-			}
-			latencyTotal += res.time;
-		} catch (error) {
-			alive = alive && false;
-			latencyTotal += 30;
-			console.log(`Error in pingCall IP6 for ${host}`, error);
-		}
+	let evalResp = undefined;
+
+	try {
+		evalResp = await eval(tcpEval + `("${respBase64}")`);
+	} catch (error) {
+		console.log(`Error in tcpEval for ${tag}`, error.message);
 	}
+	//reduce to get the status
 	return {
-		status: alive ? UP : DOWN,
-		latency: parseInt(latencyTotal / countHosts),
+		status: evalResp.status,
+		latency: evalResp.latency,
+		type: REALTIME
+	};
+};
+const pingCall = async (hosts, pingEval, tag) => {
+	let arrayOfPings = [];
+	for (let i = 0; i < hosts.length; i++) {
+		const host = hosts[i];
+		arrayOfPings.push(await Ping(host.type, host.host, host.timeout, host.count));
+	}
+	let respBase64 = Buffer.from(JSON.stringify(arrayOfPings)).toString("base64");
+
+	let evalResp = undefined;
+
+	try {
+		evalResp = await eval(pingEval + `("${respBase64}")`);
+	} catch (error) {
+		console.log(`Error in pingEval for ${tag}`, error.message);
+	}
+	//reduce to get the status
+	return {
+		status: evalResp.status,
+		latency: evalResp.latency,
 		type: REALTIME
 	};
 };
@@ -373,7 +408,24 @@ const Minuter = async (monitor) => {
 			});
 		}
 	} else if (monitor.monitor_type === "PING") {
-		let pingResponse = await pingCall(monitor.type_data.hostsV4, monitor.type_data.hostsV6);
+		if (!!!monitor.type_data.pingEval) {
+			monitor.type_data.pingEval = defaultPingEval;
+		}
+		let pingResponse = await pingCall(
+			monitor.type_data.hosts,
+			monitor.type_data.pingEval,
+			monitor.tag
+		);
+		realTimeData[startOfMinute] = pingResponse;
+	} else if (monitor.monitor_type === "TCP") {
+		if (!!!monitor.type_data.tcpEval) {
+			monitor.type_data.tcpEval = defaultTcpEval;
+		}
+		let pingResponse = await tcpCall(
+			monitor.type_data.hosts,
+			monitor.type_data.tcpEval,
+			monitor.tag
+		);
 		realTimeData[startOfMinute] = pingResponse;
 	} else if (monitor.monitor_type === "DNS") {
 		const dnsResolver = new DNSResolver(monitor.type_data.nameServer);

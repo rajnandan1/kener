@@ -262,7 +262,11 @@ class DbImpl {
 
 	//get monitors given status
 	async getMonitors(data) {
-		return await this.knex("monitors").where("status", data.status).orderBy("id", "desc");
+		let query = this.knex("monitors").where("status", data.status);
+		if (data.category_name && data.category_name !== "All Categories") {
+			query = query.andWhere("category_name", data.category_name);
+		}
+		return await query.orderBy("id", "desc");
 	}
 
 	//get monitor by tag
@@ -394,7 +398,8 @@ class DbImpl {
 			status: data.status,
 			state: data.state,
 			created_at: this.knex.fn.now(),
-			updated_at: this.knex.fn.now()
+			updated_at: this.knex.fn.now(),
+			incident_type: data.incident_type
 		});
 	}
 
@@ -504,7 +509,8 @@ class DbImpl {
 				"created_at",
 				"updated_at",
 				"status",
-				"state"
+				"state",
+				"incident_type"
 			)
 			.where("id", id)
 			.first();
@@ -529,6 +535,7 @@ class DbImpl {
 				"i.updated_at as updated_at",
 				"i.status as status",
 				"i.state as state",
+				"i.incident_type as incident_type",
 				"im.monitor_impact"
 			)
 			.innerJoin("incident_monitors as im", "i.id", "im.incident_id")
@@ -549,9 +556,28 @@ class DbImpl {
 			)
 			.innerJoin("incident_monitors as im", "i.id", "im.incident_id")
 			.where("im.monitor_tag", monitor_tag)
-			.andWhere("i.start_date_time", "<", timestamp)
+			.andWhere("i.start_date_time", "<=", timestamp)
 			.andWhere("i.status", "OPEN")
+			.andWhere("i.incident_type", "INCIDENT")
 			.andWhere("i.state", "!=", "RESOLVED");
+	}
+
+	//get maintenance incidents by monitor tag
+	async getMaintenanceByMonitorTagRealtime(monitor_tag, timestamp) {
+		return await this.knex("incidents as i")
+			.select(
+				"i.id as id",
+				"i.start_date_time as start_date_time",
+				"i.end_date_time as end_date_time",
+				"im.monitor_impact"
+			)
+			.innerJoin("incident_monitors as im", "i.id", "im.incident_id")
+			.where("im.monitor_tag", monitor_tag)
+			.andWhere("i.start_date_time", "<=", timestamp)
+			.andWhere("i.end_date_time", ">=", timestamp)
+			.andWhere("i.status", "OPEN")
+			.andWhere("i.incident_type", "MAINTENANCE")
+			.andWhere("i.state", "=", "RESOLVED");
 	}
 
 	//given array of ids get incidents
@@ -570,27 +596,6 @@ class DbImpl {
 			.insert({ monitor_tag, monitor_impact, incident_id })
 			.onConflict(["monitor_tag", "incident_id"])
 			.merge({ monitor_impact, updated_at: this.knex.fn.now() });
-	}
-
-	//return monitor tags with incidents using join incidents & incident_monitors
-	async getIncidentCompleteByIncidentID(incident_id) {
-		return await this.knex("incidents as i")
-			.select(
-				"i.id as incident_id",
-				"i.title as incident_title",
-				"i.description as incident_description",
-				"i.start_date_time as incident_start_date_time",
-				"i.end_date_time as incident_end_date_time",
-				"i.created_at as incident_created_at",
-				"i.updated_at as incident_updated_at",
-				"i.status as incident_status",
-				"i.identified as incident_identified",
-				"i.maintenance as incident_maintenance",
-				"im.monitor_tag",
-				"im.monitor_impact"
-			)
-			.innerJoin("incident_monitors as im", "i.id", "im.incident_id")
-			.where("i.id", incident_id);
 	}
 
 	//insert incident_comment

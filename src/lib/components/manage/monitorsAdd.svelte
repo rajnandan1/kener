@@ -22,6 +22,7 @@
 	let formState = "idle";
 	let loadingData = false;
 	let triggers = [];
+	let selectedCategory = "All Categories";
 
 	function showAddMonitorSheet() {
 		resetNewMonitor();
@@ -53,9 +54,13 @@
 				eval: "",
 				hideURLForGet: "NO"
 			},
+			tcpConfig: {
+				hosts: [], //{timeout: 1000, host: "", type:""}
+				tcpEval: ""
+			},
 			pingConfig: {
-				hostsV4: [],
-				hostsV6: []
+				hosts: [], //{timeout: 1000, host: "", count: "", type:""}
+				pingEval: ""
 			},
 			dnsConfig: {
 				host: "",
@@ -77,6 +82,8 @@
 			newMonitor.pingConfig = JSON.parse(newMonitor.type_data);
 		} else if (newMonitor.monitor_type == "DNS") {
 			newMonitor.dnsConfig = JSON.parse(newMonitor.type_data);
+		} else if (newMonitor.monitor_type == "TCP") {
+			newMonitor.tcpConfig = JSON.parse(newMonitor.type_data);
 		}
 		showAddMonitor = true;
 	}
@@ -89,7 +96,10 @@
 				headers: {
 					"Content-Type": "application/json"
 				},
-				body: JSON.stringify({ action: "getMonitors", data: { status: status } })
+				body: JSON.stringify({
+					action: "getMonitors",
+					data: { status: status, category_name: selectedCategory }
+				})
 			});
 			let resp = await apiResp.json();
 			resp = resp.map((m) => {
@@ -255,16 +265,20 @@
 	</div>
 {/if}
 <div class="mt-4 flex justify-between">
-	<div class="flex w-40">
+	<div class="flex w-1/3 gap-x-2">
 		<Select.Root
 			portal={null}
 			onSelectedChange={(e) => {
 				status = e.value;
 				loadData();
 			}}
+			selected={{
+				value: status,
+				label: status
+			}}
 		>
 			<Select.Trigger id="statusmonitor">
-				<Select.Value placeholder={status} />
+				<Select.Value bind:value={status} placeholder="Status" />
 			</Select.Trigger>
 			<Select.Content>
 				<Select.Group>
@@ -278,9 +292,48 @@
 				</Select.Group>
 			</Select.Content>
 		</Select.Root>
-		{#if loadingData}
-			<Loader class="ml-2 mt-2 inline h-6 w-6 animate-spin" />
-		{/if}
+
+		<Select.Root
+			portal={null}
+			onSelectedChange={(e) => {
+				selectedCategory = e.value;
+				loadData();
+			}}
+			selected={{
+				value: selectedCategory,
+				label: selectedCategory
+			}}
+		>
+			<Select.Trigger id="catemonitor">
+				<Select.Value bind:value={selectedCategory} placeholder="Category" />
+			</Select.Trigger>
+			<Select.Content>
+				<Select.Group>
+					<Select.Label>Category</Select.Label>
+					<Select.Item
+						value="All Categories"
+						label="All Categories"
+						class="text-sm font-medium"
+					>
+						All Categories
+					</Select.Item>
+					{#each categories as category}
+						<Select.Item
+							value={category.name}
+							label={category.name}
+							class="text-sm font-medium"
+						>
+							{category.name}
+						</Select.Item>
+					{/each}
+				</Select.Group>
+			</Select.Content>
+		</Select.Root>
+		<div>
+			{#if loadingData}
+				<Loader class="ml-2 mt-2 inline h-6 w-6 animate-spin" />
+			{/if}
+		</div>
 	</div>
 	<div>
 		{#if status == "ACTIVE"}
