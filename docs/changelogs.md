@@ -7,6 +7,25 @@ description: Changelogs for Kener
 
 Here are the changelogs for Kener. Changelogs are only published when there are new features or breaking changes.
 
+## v3.0.10
+
+<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.webp" type="image/webp">
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.gif" alt="🚀" width="32" height="32">
+</picture>
+
+### Features
+
+-   Added TCP monitors
+
+### Breaking Changes
+
+-   Ping monitors will break.
+
+### Fixes
+
+-   Bug fixes in the UI
+
 ## v3.0.9
 
 <picture>

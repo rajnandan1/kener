@@ -159,7 +159,7 @@
 				newMonitor.apiConfig.eval = newMonitor.apiConfig.eval.trim();
 
 				if (!(await isValidEval(newMonitor.apiConfig.eval))) {
-					invalidFormMessage = invalidFormMessage + "Invalid eval";
+					invalidFormMessage = invalidFormMessage + ". Invalid eval";
 					return;
 				}
 			}
@@ -190,7 +190,7 @@
 			if (!!newMonitor.pingConfig.pingEval) {
 				newMonitor.pingConfig.pingEval = newMonitor.pingConfig.pingEval.trim();
 				if (!(await isValidEval(newMonitor.pingConfig.pingEval))) {
-					invalidFormMessage = invalidFormMessage + "Invalid eval";
+					invalidFormMessage = invalidFormMessage + ". Invalid eval";
 					return;
 				}
 			}
@@ -213,7 +213,7 @@
 					}
 					//validating port
 					if (hosts[i].port < 1 || hosts[i].port > 65535) {
-						invalidFormMessage = "Port should valid";
+						invalidFormMessage = "Port should be valid";
 						return;
 					}
 				}
@@ -224,7 +224,7 @@
 			if (!!newMonitor.tcpConfig.tcpEval) {
 				newMonitor.tcpConfig.tcpEval = newMonitor.tcpConfig.tcpEval.trim();
 				if (!(await isValidEval(newMonitor.tcpConfig.tcpEval))) {
-					invalidFormMessage = invalidFormMessage + "Invalid eval";
+					invalidFormMessage = invalidFormMessage + ". Invalid eval";
 					return;
 				}
 			}
