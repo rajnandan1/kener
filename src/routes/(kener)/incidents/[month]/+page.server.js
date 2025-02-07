@@ -21,7 +21,7 @@ import { f } from "$lib/i18n/client";
 
 export async function load({ parent, url, params, cookies }) {
 	const parentData = await parent();
-
+	const siteData = parentData.site;
 	let monitors = await GetMonitors({ status: "ACTIVE" });
 	const query = url.searchParams;
 	let todayStart = BeginningOfDay({ timeZone: parentData.localTz });
@@ -60,6 +60,7 @@ export async function load({ parent, url, params, cookies }) {
 		incidents: incidents,
 		nextMonthName: f(addMonths(parse(month, "MMMM-yyyy", new Date()), 1), "MMMM-yyyy", "en"),
 		prevMonthName: f(subMonths(parse(month, "MMMM-yyyy", new Date()), 1), "MMMM-yyyy", "en"),
-		thisMonthName: f(parse(month, "MMMM-yyyy", new Date()), "MMMM-yyyy", "en")
+		thisMonthName: f(parse(month, "MMMM-yyyy", new Date()), "MMMM-yyyy", "en"),
+		canonical: siteData.siteURL + "/incidents/" + month
 	};
 }

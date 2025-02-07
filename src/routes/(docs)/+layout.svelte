@@ -52,7 +52,6 @@
 
 <svelte:window on:pagechange={pageChange} on:rightbar={updateTableOfContents} />
 <svelte:head>
-	<title>Kener Documentation</title>
 	<link rel="icon" id="kener-app-favicon" href="{base}/logo96.png" />
 
 	<!-- Google tag (gtag.js) -->

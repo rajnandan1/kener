@@ -128,18 +128,13 @@
 
 <svelte:window on:analyticsEvent={captureAnalytics} />
 <svelte:head>
-	<title>{data.site.title}</title>
-	{#if data.site.favicon && data.site.favicon[0] == "/"}
-		<link rel="icon" id="kener-app-favicon" href="{base}{data.site.favicon}" />
-	{:else if data.site.favicon}
-		<link rel="icon" id="kener-app-favicon" href={data.site.favicon} />
+	{#if data.site.favicon}
+		<link rel="icon" id="kener-app-favicon" href={base + data.site.favicon} />
 	{/if}
-	<link href={data.site.font.cssSrc} rel="stylesheet" />
-	{#if data.site.metaTags}
-		{#each data.site.metaTags as metaTag}
-			<meta name={metaTag.key} content={metaTag.value} />
-		{/each}
+	{#if !!data.site.font.cssSrc}
+		<link href={data.site.font.cssSrc} rel="stylesheet" />
 	{/if}
+
 	{#if hasConfiguredAnalytics}
 		<script src="https://unpkg.com/analytics/dist/analytics.min.js"></script>
 		{#each data.site.analytics as { id, type, script }}
