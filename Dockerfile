@@ -81,37 +81,29 @@ RUN apk add --no-cache sqlite tzdata iputils
 
 FROM final-${VARIANT} AS final
 
+# Use a non-root user (recommended for security)
+USER node
+
 # Set the working directory
 WORKDIR /app
 
-# Copy package files and necessary build artifacts from builder stage
-COPY --from=builder /app/package.json /app/package-lock.json ./
-COPY --from=builder \
-    /app/src/lib/i18n \
-    /app/src/lib/locales \
-    /app/src/lib/server \
-    /app/src/lib/boringOne.js \
-    /app/src/lib/clientTools.js \
-    /app/src/lib/color.js \
-    /app/src/lib/index.js \
-    /app/src/lib/site.js \
-    ./src/lib/
-COPY --from=builder \
-    /app/build \
-    /app/uploads \
-    /app/database \
-    /app/node_modules \
-    /app/migrations \
-    /app/seeds \
-    /app/static \
-    /app/embed.html \
-    /app/knexfile.js \
-    /app/main.js \
-    /app/openapi.json \
-    /app/openapi.yaml \
-    /app/sitemap.js.bk \
-    /app/utils.js \
-    ./
+# Copy package files build artifacts, and necessary files from builder stage
+COPY --chown=node:node --from=builder /app/package*.json ./
+COPY --chown=node:node --from=builder /app/src/lib/ ./src/lib/
+COPY --chown=node:node --from=builder /app/build ./build
+COPY --chown=node:node --from=builder /app/uploads ./uploads
+COPY --chown=node:node --from=builder /app/database ./database
+COPY --chown=node:node --from=builder /app/node_modules ./node_modules
+COPY --chown=node:node --from=builder /app/migrations ./migrations
+COPY --chown=node:node --from=builder /app/seeds ./seeds
+COPY --chown=node:node --from=builder /app/static ./static
+COPY --chown=node:node --from=builder /app/embed.html ./embed.html
+COPY --chown=node:node --from=builder /app/knexfile.js ./knexfile.js
+COPY --chown=node:node --from=builder /app/main.js ./main.js
+COPY --chown=node:node --from=builder /app/openapi.json ./openapi.json
+COPY --chown=node:node --from=builder /app/openapi.yaml ./openapi.yaml
+COPY --chown=node:node --from=builder /app/sitemap.js.bk ./sitemap.js.bk
+COPY --chown=node:node --from=builder /app/utils.js ./utils.js
 
 # Set environment variables
 ARG PORT=3000
