@@ -66,6 +66,16 @@
 	{#if !!data.pageDescription}
 		<meta name="description" content={data.pageDescription} />
 	{/if}
+	{#if !!data.canonical}
+		<link rel="canonical" href={data.canonical} />
+	{/if}
+	{#if data.site.metaTags}
+		{#each data.site.metaTags as metaTag}
+			{#if metaTag.key != "description"}
+				<meta name={metaTag.key} content={metaTag.value} />
+			{/if}
+		{/each}
+	{/if}
 </svelte:head>
 <div class="mt-12"></div>
 {#if data.site.hero}

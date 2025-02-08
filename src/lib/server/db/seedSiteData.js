@@ -11,10 +11,6 @@ const seedSiteData = {
 			value: "Kener: Open-source modern looking Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. And the best part? Kener integrates seamlessly with GitHub, making incident management a team effort—making it easier for us to track and fix issues together in a collaborative and friendly environment."
 		},
 		{
-			key: "keywords",
-			value: "Node.js status page, Incident management tool, Service monitoring, Service outage tracking, Real-time status updates, GitHub integration for incidents, Open-source status page, Node.js monitoring application, Service reliability, User-friendly incident management, Collaborative incident resolution, Seamless outage communication, Service disruption tracker, Real-time incident alerts, Node.js status reporting"
-		},
-		{
 			key: "og:description",
 			value: "Kener: Open-source Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. And the best part? Kener integrates seamlessly with GitHub, making incident management a team effort—making it easier for us to track and fix issues together in a collaborative and friendly environment."
 		},

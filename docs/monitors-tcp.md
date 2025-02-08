@@ -1,15 +1,15 @@
 ---
-title: Ping Monitors | Kener
-description: Learn how to set up and work with Ping monitors in kener.
+title: TCP Monitors | Kener
+description: Learn how to set up and work with TCP monitors in kener.
 ---
 
-# Ping Monitors
+# TCP Monitors
 
-Ping monitors are used to monitor livenees of your servers. You can use Ping monitors to monitor the uptime of your servers and get notified when they are down.
+TCP monitors are used to monitor the livenees of your servers. You can use TCP monitors to monitor the uptime of your servers and get notified when they are down.
 
 <div class="border rounded-md">
 
-![Monitors Ping](/m_ping.png)
+![Monitors TCP](/m_tcp.png)
 
 </div>
 
@@ -19,8 +19,8 @@ You can add as many hosts as you want to monitor. The host can be an IP(IP4 and 
 
 -   Type: Choose the type of host you want to monitor. It can be either `IP4` or `IP6` or `DOMAIN`.
 -   Host: Enter the IP address or domain name of the host you want to monitor.
--   Timeout: Enter the timeout in milliseconds for each ping request of each host. For IP6 timeout is not supported.
--   Count: The number of pings you want to do for each host. The average latency of all the pings will be used to evaluate the response.
+-   Port: Enter the port number of the host you want to monitor.
+-   Timeout: Enter the timeout in milliseconds for each ping request of each host
 
 ## Eval
 
@@ -39,7 +39,11 @@ This is an anonymous JS function, it should return a **Promise**, that resolves 
 	}, 0);
 
 	let alive = arrayOfPings.reduce((acc, ping) => {
-		return acc && ping.alive;
+		if (ping.status === "open") {
+			return acc && true;
+		} else {
+			return false;
+		}
 	}, true);
 
 	return {
@@ -58,34 +62,25 @@ console.log(jsonResp);
 /*
 [
   {
-    alive: true,
-    min: '145.121',
-    max: '149.740',
-    avg: '147.430',
-    latencies: [ 145.121, 149.74 ],
-    latency: 145.121,
-    host: '45.91.169.49',
+    status: 'open',
+    latency: 31.93,
+    host: '66.51.120.219',
+    port: 465,
     type: 'IP4'
   },
   {
-    alive: true,
-    min: '145.348',
-    max: '149.143',
-    avg: '147.245',
-    latencies: [ 145.348, 149.143 ],
-    latency: 145.348,
-    host: 'kener.ing',
-    type: 'DOMAIN'
+    status: 'open',
+    latency: 47.041417,
+    host: '2404:6800:4003:c1c::66',
+    port: 80,
+    type: 'IP6'
   },
   {
-    alive: true,
-    min: '57.696',
-    max: '58.330',
-    avg: '58.013',
-    latencies: [ 57.696, 58.33 ],
-    latency: 57.696,
-    host: '2404:6800:4003:c1c::66',
-    type: 'IP6'
+    status: 'open',
+    latency: 82.1865,
+    host: 'rajnandan.com',
+    port: 80,
+    type: 'DOMAIN'
   }
 ]
 */
@@ -95,14 +90,14 @@ console.log(jsonResp);
 
 The input to the eval function is a base64 encoded string. You will have to decode it and then parse it to get the array of objects. Each object in the array represents the ping response of a host.
 
--   `alive` is a boolean. It is true if the host is alive and false if the host is down.
--   `min` is a string. It is the minimum latency of the pings.
--   `max` is a string. It is the maximum latency of the pings.
--   `avg` is a string. It is the average latency of the pings.
--   `latencies` is an array of numbers. It is the latency of each ping.
--   `latency` is a number. It is the average latency of the pings.
--   `host` is a string. It is the host that was pinged.
--   `type` is a string. It is the type of the host. It can be either `IP4` or `IP6` or `DOMAIN`.
+-   `host`: The host that was pinged.
+-   `port`: The port that was pinged. Defaults to 80 if not provided.
+-   `type`: The type of IP address. Can be `IP4` or `IP6`.
+-   `status`: The status of the ping. Can be `open` , `error` or `timeout`.
+    -   `open`: The host is reachable.
+    -   `error`: There was an error while pinging the host.
+    -   `timeout`: The host did not respond in time.
+-   `latency`: The time taken to ping the host. This is in milliseconds.
 
 ### Example
 
@@ -116,7 +111,11 @@ The following example shows how to use the eval function to evaluate the respons
 	}, 0);
 
 	let areAllOpen = arrayOfPings.reduce((acc, ping) => {
-		return acc && ping.alive;
+		if (ping.status === "open") {
+			return acc && true;
+		} else {
+			return false;
+		}
 	}, true);
 
 	let avgLatency = latencyTotal / arrayOfPings.length;

@@ -52,7 +52,6 @@
 
 <svelte:window on:pagechange={pageChange} on:rightbar={updateTableOfContents} />
 <svelte:head>
-	<title>Kener Documentation</title>
 	<link rel="icon" id="kener-app-favicon" href="{base}/logo96.png" />
 
 	<!-- Google tag (gtag.js) -->
@@ -87,7 +86,7 @@
 						<img src="https://kener.ing/logo.png" class="h-8 w-8" alt="" />
 						<span class="text-xl font-medium">Kener Documentation</span>
 						<span class="me-2 rounded border px-2.5 py-0.5 text-xs font-medium">
-							3.0.9
+							3.0.10
 						</span>
 					</a>
 				</div>
