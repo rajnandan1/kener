@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1
 
 # Global build arguments
-ARG ALPINE_VERSION=23-alpine
-ARG DEBIAN_VERSION=23-slim
+ARG ALPINE_VERSION=23.7.0-alpine3.21
+ARG DEBIAN_VERSION=23.7.0-bookworm-slim
 ARG VARIANT=debian
 
 #==========================================================#
@@ -11,36 +11,30 @@ ARG VARIANT=debian
 
 FROM node:${DEBIAN_VERSION} AS builder-debian
 RUN apt-get update && apt-get install -y \
-        build-essential \
-        python3 \
-        sqlite3 \
-        libsqlite3-dev \
-        make \
-        node-gyp \
-        g++ \
-        tzdata \
-        iputils-ping && \
+        build-essential=12.9 \
+        python3=3.11.2-1+b1 \
+        sqlite3=3.40.1-2+deb12u1 \
+        libsqlite3-dev=3.40.1-2+deb12u1 \
+        make=4.3-4.1 \
+        node-gyp=9.3.0-2 \
+        g++=4:12.2.0-3 \
+        tzdata=2024b-0+deb12u1 \
+        iputils-ping=3:20221126-1+deb12u1 && \
     rm -rf /var/lib/apt/lists/*
 
 FROM node:${ALPINE_VERSION} AS builder-alpine
-RUN apk add --no-cache \
-        build-base \
-        python3 \
-        py3-pip \
-        make \
-        g++ \
-        sqlite \
-        sqlite-dev \
-        tzdata \
-        iputils
+RUN apk add --no-cache --update \
+        build-base=0.5-r3 \
+        python3=3.12.9-r0 \
+        py3-pip=24.3.1-r0 \
+        make=4.4.1-r2 \
+        g++=14.2.0-r4 \
+        sqlite=3.48.0-r0 \
+        sqlite-dev=3.48.0-r0 \
+        tzdata=2024b-r1 \
+        iputils=20240905-r0
 
 FROM builder-${VARIANT} AS builder
-
-# Set timezone and application environment
-ARG KENER_BASE_PATH
-ENV TZ=Etc/UTC \
-    KENER_BASE_PATH=${KENER_BASE_PATH} \
-    VITE_BUILD_ENV=production
 
 # Set the working directory
 WORKDIR /app
@@ -59,9 +53,10 @@ COPY . .
 # Remove docs directory and ensure required directories exist
 RUN rm -rf src/routes/\(docs\) && \
     mkdir -p uploads database && \
-    chmod -R 755 uploads database
+    chmod -R 750 uploads database
 
 # Build the application and remove `devDependencies`
+ENV VITE_BUILD_ENV=production
 RUN npm run build && \
     npm prune --omit=dev
 
@@ -70,19 +65,28 @@ RUN npm run build && \
 #==========================================================#
 
 FROM node:${DEBIAN_VERSION} AS final-debian
-RUN apt-get update && apt-get install -y \
-        sqlite3 \
-        tzdata \
-        iputils-ping && \
+RUN apt-get update && apt-get install --no-install-recommends -y \
+        iputils-ping=3:20221126-1+deb12u1 \
+        sqlite3=3.40.1-2+deb12u1 \
+        tzdata=2024b-0+deb12u1 \
+        wget=1.21.3-1+b1 && \
     rm -rf /var/lib/apt/lists/*
 
 FROM node:${ALPINE_VERSION} AS final-alpine
-RUN apk add --no-cache sqlite tzdata iputils
+RUN apk add --no-cache --update \
+    iputils=20240905-r0 \
+    sqlite=3.48.0-r0 \
+    tzdata=2024b-r1
 
 FROM final-${VARIANT} AS final
 
-# Use a non-root user (recommended for security)
-USER node
+ARG PORT=3000 \
+    USERNAME=node
+
+# Set environment variables
+ENV NODE_ENV=production \
+    PORT=$PORT \
+    TZ=Etc/UTC
 
 # Set the working directory
 WORKDIR /app
@@ -98,6 +102,7 @@ COPY --chown=node:node --from=builder /app/migrations ./migrations
 COPY --chown=node:node --from=builder /app/seeds ./seeds
 COPY --chown=node:node --from=builder /app/static ./static
 COPY --chown=node:node --from=builder /app/embed.html ./embed.html
+COPY --chown=node:node --from=builder /app/entrypoint.sh ./entrypoint.sh
 COPY --chown=node:node --from=builder /app/knexfile.js ./knexfile.js
 COPY --chown=node:node --from=builder /app/main.js ./main.js
 COPY --chown=node:node --from=builder /app/openapi.json ./openapi.json
@@ -105,13 +110,21 @@ COPY --chown=node:node --from=builder /app/openapi.yaml ./openapi.yaml
 COPY --chown=node:node --from=builder /app/sitemap.js.bk ./sitemap.js.bk
 COPY --chown=node:node --from=builder /app/utils.js ./utils.js
 
-# Set environment variables
-ARG PORT=3000
-ENV PORT=$PORT \
-    NODE_ENV=production
+# Ensure necessary directories are writable
+VOLUME ["/uploads", "/database"]
+
+# Set container timezone and make entrypoint script executable
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
+    chmod +x ./entrypoint.sh
 
 # Expose the application port
 EXPOSE $PORT
 
-# Run the application
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+    CMD wget --method=HEAD --quiet --spider http://localhost:$PORT || exit 1
+
+# Use a non-root user (recommended for security)
+USER $USERNAME
+
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["node", "main"]
