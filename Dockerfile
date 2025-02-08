@@ -36,6 +36,10 @@ RUN apk add --no-cache --update \
 
 FROM builder-${VARIANT} AS builder
 
+# Set environment variables
+ENV NPM_CONFIG_LOGLEVEL=error \
+    VITE_BUILD_ENV=production
+
 # Set the working directory
 WORKDIR /app
 
@@ -56,7 +60,6 @@ RUN rm -rf src/routes/\(docs\) && \
     chmod -R 750 uploads database
 
 # Build the application and remove `devDependencies`
-ENV VITE_BUILD_ENV=production
 RUN npm run build && \
     npm prune --omit=dev
 
@@ -84,7 +87,10 @@ ARG PORT=3000 \
     USERNAME=node
 
 # Set environment variables
-ENV NODE_ENV=production \
+ENV HEALTHCHECK_PORT=$PORT \
+    HEALTHCHECK_PATH= \
+    NODE_ENV=production \
+    NPM_CONFIG_LOGLEVEL=error \
     PORT=$PORT \
     TZ=Etc/UTC
 
@@ -121,7 +127,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
 EXPOSE $PORT
 
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-    CMD wget --method=HEAD --quiet --spider http://localhost:$PORT || exit 1
+    CMD wget --quiet --spider http://localhost:$HEALTHCHECK_PORT$HEALTHCHECK_PATH || exit 1
 
 # Use a non-root user (recommended for security)
 USER $USERNAME
