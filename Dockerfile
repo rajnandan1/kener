@@ -54,6 +54,7 @@ RUN --mount=type=cache,target=/root/.npm \
 # Copy application source code
 COPY . .
 
+# TODO: Reevaluate permissions...
 # Remove docs directory and ensure required directories exist
 RUN rm -rf src/routes/\(docs\) && \
     mkdir -p uploads database && \
@@ -67,6 +68,7 @@ RUN npm run build && \
 #                STAGE 2: PRODUCTION STAGE                 #
 #==========================================================#
 
+# TODO: Confirm with @rajnandan1 which of these packages are necessary for the Debian (default), production build
 FROM node:${DEBIAN_VERSION} AS final-debian
 RUN apt-get update && apt-get install --no-install-recommends -y \
         iputils-ping=3:20221126-1+deb12u1 \
@@ -75,6 +77,7 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
         wget=1.21.3-1+b1 && \
     rm -rf /var/lib/apt/lists/*
 
+# TODO: Confirm with @rajnandan1 which of these packages are necessary for the Alpine Linux, production build
 FROM node:${ALPINE_VERSION} AS final-alpine
 RUN apk add --no-cache --update \
     iputils=20240905-r0 \
@@ -97,12 +100,14 @@ ENV HEALTHCHECK_PORT=$PORT \
 # Set the working directory
 WORKDIR /app
 
+# TODO: Confirm with @rajnandan1 which files/directories are absolutely necessary for production build
 # Copy package files build artifacts, and necessary files from builder stage
 COPY --chown=node:node --from=builder /app/package*.json ./
 COPY --chown=node:node --from=builder /app/src/lib/ ./src/lib/
 COPY --chown=node:node --from=builder /app/build ./build
 COPY --chown=node:node --from=builder /app/uploads ./uploads
 COPY --chown=node:node --from=builder /app/database ./database
+# TODO: Consider changing from copying `node_modules` to instead letting `npm ci --omit=dev` handle production dependencies. Right now, copying `node_modules` is leading to a smaller image, whereas letting `npm ci` handle the install in final image is slightly faster, but leads to larger image size. IMO, having a slightly longer build time (e.g. ~10 sec.) is better in the end to have a smaller image.
 COPY --chown=node:node --from=builder /app/node_modules ./node_modules
 COPY --chown=node:node --from=builder /app/migrations ./migrations
 COPY --chown=node:node --from=builder /app/seeds ./seeds
@@ -126,9 +131,11 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
 # Expose the application port
 EXPOSE $PORT
 
+# TODO: Consider switching to lighter-weight `nc` (Netcat) command-line utility (would remove `wget` in Debian build, however, it's already pretty small, so probably doesn't matter as `wget` is more powerful)
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
     CMD wget --quiet --spider http://localhost:$HEALTHCHECK_PORT$HEALTHCHECK_PATH || exit 1
 
+# TODO: Revisit letting user define $PUID & $PGID overrides as well as `addgroup -g $PGID newgroup && adduser -D -G newgroup -u $PUID node` functionality
 # Use a non-root user (recommended for security)
 USER $USERNAME
 
