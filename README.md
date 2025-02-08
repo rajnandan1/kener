@@ -47,7 +47,7 @@ Designed with **ease of use** and **customization in mind**, Kener provides all 
 
 ### What's in a Name?
 
-“Kener” is inspired by the Assamese word _“Kene”_, meaning _“how’s it going?”_. The _‘.ing’_ was added because, well… the domain was available. 😄
+“Kener” is inspired by the Assamese word _“Kene”_, meaning _“how’s it going?”_. The _‘.ing’_ was added because, well… that domain was available. 😄
 
 ## Installation
 
