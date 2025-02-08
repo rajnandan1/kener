@@ -50,5 +50,9 @@
 	{
 		"code": "tr",
 		"name": "Türkçe"
+	},
+	{
+		"code": "nb-NO",
+		"name": "Norsk Bokmål"
 	}
 ]
