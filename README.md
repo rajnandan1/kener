@@ -35,13 +35,19 @@
 
 ## What is Kener?
 
-Kener is status page system built with Sveltekit and NodeJS. It does not try to replace the Datadogs and Atlassian of the world. It tries to help some who wants to come up with a status page that looks nice and minimum overhead, in a modern way.
+**Kener** is a sleek and lightweight status page system built with **SvelteKit** and **NodeJS**. It’s not here to replace heavyweights like Datadog or Atlassian but rather to offer a simple, modern, and hassle-free way to set up a great-looking status page with minimal effort.
 
-It is carefully crafted to be easy to use and customize.
+Designed with **ease of use** and **customization in mind**, Kener provides all the essential features you’d expect from a status page—without unnecessary complexity.
 
-It comes with all the basic asks for a status page. It is open-source and free to use.
+### Why Kener?
 
-Kener name is derived from the word "Kene" which means "how is it going" in Assamese, then .ing because it was a cheaply available domain.
+✅ &nbsp;Minimal overhead &ndash; Set up quickly with a clean, modern UI<br>
+✅ &nbsp;Customizable &ndash; Easily tailor it to match your brand<br>
+✅ &nbsp;Open-source & free &ndash; Because great tools should be accessible to everyone
+
+### What's in a Name?
+
+“Kener” is inspired by the Assamese word _“Kene”_, meaning _“how’s it going?”_. The _‘.ing’_ was added because, well… the domain was available. 😄
 
 ## Installation
 
@@ -125,7 +131,7 @@ docker pull rajnandan1/kener:alpine
 ```
 
 For a production setup, refer to the sample [docker-compose.yml](https://github.com/rajnandan1/kener/blob/main/docker-compose.yml).
-This keeps things clean, structured, and easy to read while preserving all the details. Let me know if you want any refinements! 🚀
+This keeps things clean, structured, and easy to read while preserving all the details.
 
 ### One Click
 
@@ -135,44 +141,41 @@ This keeps things clean, structured, and easy to read while preserving all the d
 
 Here are some of the features that you get out of the box. Please read the documentation to know how to use them.
 
-### Monitoring and Tracking
+### 📊 Monitoring and Tracking
 
--   Advanced application performance monitoring tools
--   Real-time network monitor software capabilities
--   Polls HTTP endpoint or Push data to monitor using Rest APIs
--   Adjusts Timezones for visitors
--   Categorize Monitors into different Sections
--   Cron-based scheduling for monitors. Minimum per minute
--   Construct complex API Polls - Chain, Secrets etc
--   Supports a Default Status for Monitors
--   Supports base path for hosting in k8s
--   Pre-built docker image for easy deployment
--   Automatically adjusts timezones for visitors
+- Advanced **application performance monitoring** tools
+- **Real-time network monitoring** capabilities
+- Supports **polling HTTP endpoints** or **pushing data** via REST APIs
+- **Timezone auto-adjustment** for visitors
+- Organize monitors into **custom sections**
+- **Cron-based scheduling** (minimum: **every minute**)
+- **Create complex API polls** (chaining, secrets, etc.)
+- Set a **default status** for monitors
+- Supports **base path hosting in Kubernetes (k8s)**
+- **Pre-built Docker images** for easy deployment
 
-### Customization and Branding
+### 🎨 Customization and Branding
 
--   Customizable status page
--   Badge generation for status and uptime of Monitors
--   Support for custom domains
--   Embed Monitor as an iframe or widget
--   Light + Dark Theme
--   Internationalization support
--   Beautifully Crafted Status Page
+- Fully **customizable status page**
+- **Badge generation** for status and uptime tracking
+- Support for **custom domains**
+- Embed monitors as **iframes or widgets**
+- **Light & Dark Mode**
+- **Internationalization (i18n) support**
+- **Sleek, beautifully crafted UI**
 
-### Incident Management
+### 🚨 Incident Management
 
--   Incident Management
--   Incident Communication
--   Comprehensive APIs for Incident Management
+- **Incident tracking & communication** tools
+- **Comprehensive APIs** for incident management
 
-### User Experience and Design
+### 🧑‍💻 User Experience and Design
 
--   Good Accessibility Score
--   Easy installation and setup
--   User-friendly interface
--   Responsive design for various devices
--   Auto SEO and Social Media ready
--   Server Side Rendering
+- **Accessible & user-friendly interface**
+- **Quick & easy installation**
+- **Responsive design** for all devices
+- **Auto SEO & Social Media ready**
+- **Server-Side Rendering (SSR) for better performance**
 
 
 <div align="left">
@@ -180,24 +183,24 @@ Here are some of the features that you get out of the box. Please read the docum
 </div>
 
 
-## Technologies used
+## Technologies Used
 
 -   [SvelteKit](https://kit.svelte.dev/)
 -   [shadcn-svelte](https://www.shadcn-svelte.com/)
 
 ## Support Me
 
-If you are using Kener and want to support me, you can do so by sponsoring me on GitHub or buying me a coffee.
+If you’re enjoying Kener and want to support its development, consider sponsoring me on GitHub or treating me to a coffee. Your support helps keep the project growing! 🚀
 
 [Sponsor Me Using Github](https://github.com/sponsors/rajnandan1)
 
-[Buy Me a Coffee](https://www.buymeacoffee.com/rajnandan1)
+☕ [Buy Me a Coffee](https://www.buymeacoffee.com/rajnandan1)
 
 ![image](https://badges.pufler.dev/visits/rajnandan1/kener)
 
 ## Contributing
 
-If you want to contribute to Kener, please read the [Contributing Guide](https://github.com/rajnandan1/kener/blob/main/.github/CONTRIBUTING.md).
+If you want to contribute to Kener, please read the [Contribution Guide](https://github.com/rajnandan1/kener/blob/main/.github/CONTRIBUTING.md).
 
 ## Star History
 
