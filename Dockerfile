@@ -54,10 +54,11 @@ RUN --mount=type=cache,target=/root/.npm \
 # Copy application source code
 COPY . .
 
-# TODO: Reevaluate permissions...
+# TODO: Reevaluate permissions (possibly reduce?)...
 # Remove docs directory and ensure required directories exist
 RUN rm -rf src/routes/\(docs\) && \
     mkdir -p uploads database && \
+	# TODO: Consider changing below to `chmod -R u-rwX,g=rX,o= uploads database`
     chmod -R 750 uploads database
 
 # Build the application and remove `devDependencies`
@@ -65,11 +66,11 @@ RUN npm run build && \
     npm prune --omit=dev
 
 #==========================================================#
-#                STAGE 2: PRODUCTION STAGE                 #
+#             STAGE 2: PRODUCTION/FINAL STAGE              #
 #==========================================================#
 
-# TODO: Confirm with @rajnandan1 which of these packages are necessary for the Debian (default), production build
 FROM node:${DEBIAN_VERSION} AS final-debian
+# TODO: Confirm with @rajnandan1 which of these packages are necessary for the Debian (default), final stage
 RUN apt-get update && apt-get install --no-install-recommends -y \
         iputils-ping=3:20221126-1+deb12u1 \
         sqlite3=3.40.1-2+deb12u1 \
@@ -77,8 +78,8 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
         wget=1.21.3-1+b1 && \
     rm -rf /var/lib/apt/lists/*
 
-# TODO: Confirm with @rajnandan1 which of these packages are necessary for the Alpine Linux, production build
 FROM node:${ALPINE_VERSION} AS final-alpine
+# TODO: Confirm with @rajnandan1 which of these packages are necessary for the Alpine Linux, final stage
 RUN apk add --no-cache --update \
     iputils=20240905-r0 \
     sqlite=3.48.0-r0 \
@@ -127,6 +128,12 @@ VOLUME ["/uploads", "/database"]
 # Set container timezone and make entrypoint script executable
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     chmod +x ./entrypoint.sh
+	# TODO: To improve security, consider dropping unnecessary capabilities instead of granting image all network capabilities of host. (Maybe `setcap cap_net_raw+p /usr/bin/ping`, etc.) Could also drop all and then grant only the capabilities that are explicitly needed. Some examples are commented out below...
+	# setcap cap_net_bind_service=+ep /usr/local/bin/node
+	# setcap cap_net_bind_service=+ep /usr/bin/ping
+	# setcap cap_net_bind_service=+ep /usr/bin/ping6
+	# setcap cap_net_bind_service=+ep /usr/bin/tracepath
+	# setcap cap_net_bind_service=+ep /usr/bin/clockdiff
 
 # Expose the application port
 EXPOSE $PORT
@@ -135,7 +142,7 @@ EXPOSE $PORT
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
     CMD wget --quiet --spider http://localhost:$HEALTHCHECK_PORT$HEALTHCHECK_PATH || exit 1
 
-# TODO: Revisit letting user define $PUID & $PGID overrides as well as `addgroup -g $PGID newgroup && adduser -D -G newgroup -u $PUID node` functionality
+# TODO: Revisit letting user define $PUID & $PGID overrides (e.g. `addgroup -g $PGID newgroup && adduser -D -G newgroup -u $PUID node`) as well as potentially ensure no root user exists. (Make sure no processes are running as root, first!)
 # Use a non-root user (recommended for security)
 USER $USERNAME
 
