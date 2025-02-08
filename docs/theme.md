@@ -81,7 +81,7 @@ You can change the colors of UP/DEGRADED/DOWN states of the monitor. You show ha
 
 ## Font
 
-You can change the font of the status page. You can choose from a list of google fonts.
+You can change the font of the status page. You can choose from a list of google, or [bunny fonts](https://fonts.bunny.net/) (which is a fully GDPR-compliant, zero-tracking/no-logging CDN font service).
 
 ### Font URL
 
