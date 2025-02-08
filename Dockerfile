@@ -49,7 +49,7 @@ ENV PORT=$PORT
 EXPOSE $PORT
 
 # Make entrypoint script executable
-RUN chmod +x entrypoint.sh
+RUN chmod +x ./entrypoint.sh
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["node", "main"]
