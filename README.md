@@ -71,7 +71,7 @@ Official Docker images for **Kener** are available on [Docker Hub](https://hub.d
 		<th>Description</th>
 	</tr>
 	<tr>
-		<td align="left" colspan="2" style="color:#A81D33;">Debian 12 <small>(Bookwork Slim)</small> w/ Node.js v23.7.0 &nbsp;<strong><em>(default)</em></strong></td>
+		<td align="left" colspan="2" style="color:#A81D33;text-align:left;">Debian 12 <small>(Bookwork Slim)</small> w/ Node.js v23.7.0 &nbsp;<strong><em>(default)</em></strong></td>
 	</tr>
 	<tr>
 		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=latest" target="_blank"><code>latest</code></td>
@@ -90,7 +90,7 @@ Official Docker images for **Kener** are available on [Docker Hub](https://hub.d
 		<td>Major version tag pointing to the latest stable (KENER_SEMVER_VERSION_PLACEHOLDER) release within that major version (KENER_MAJOR_VERSION_PLACEHOLDER.x.x)</td>
 	</tr>
 	<tr>
-		<td align="left" colspan="2" style="color:#0D597F;">Alpine Linux 3.21 w/ Node.js v23.7.0 &nbsp;<strong><em>(smallest image size)</em></strong></td>
+		<td align="left" colspan="2" style="color:#0D597F;text-align:left;">Alpine Linux 3.21 w/ Node.js v23.7.0 &nbsp;<strong><em>(smallest image size)</em></strong></td>
 	</tr>
 	<tr>
 		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=alpine" target="_blank"><code>alpine</code></td>
