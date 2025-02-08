@@ -29,7 +29,9 @@
 		Trash
 	} from "lucide-svelte";
 	import * as Select from "$lib/components/ui/select";
+	import { env } from '$env/dynamic/public';
 	export let data;
+	const isWhiteLabeled = env.PUBLIC_WHITE_LABEL === 'true';
 	let status = "OPEN";
 	let loadingData = false;
 	let editMonitorsModal = false;
@@ -373,13 +375,15 @@
 
 <div class="min-h-[70vh]">
 	<div class="flex justify-end">
-		<Button
-			variant="outline"
-			href="https://kener.ing/docs/incident-management"
-			class=" text-sm"
-		>
-			Documentation <ExternalLink size="12" class="ml-1" />
-		</Button>
+		{#if !isWhiteLabeled}
+			<Button
+				variant="outline"
+				href="https://kener.ing/docs/incident-management"
+				class=" text-sm"
+			>
+				Documentation <ExternalLink size="12" class="ml-1" />
+			</Button>
+		{/if}
 	</div>
 	<div class="mt-4 flex justify-end">
 		<div class="flex w-40">

@@ -48,5 +48,8 @@ ENV PORT=$PORT
 # Expose the application port
 EXPOSE $PORT
 
-# Set the command to run the application
+# Make entrypoint script executable
+RUN chmod +x entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["node", "main"]

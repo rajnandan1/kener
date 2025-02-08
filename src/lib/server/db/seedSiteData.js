@@ -48,7 +48,7 @@ const seedSiteData = {
 		subtitle: "Let your users know what's going on."
 	},
 	footerHTML:
-		'<p class="text-center">\nMade using \n<a href="https://github.com/rajnandan1/kener" target="_blank" rel="noreferrer" class="font-medium underline underline-offset-4">\n  Kener\n</a>\nan open source status page system built with Svelte and TailwindCSS.<br/>\nCreated with ❤️ by <a href="https://rajnandan.com" target="_blank" rel="noreferrer" class="font-medium underline underline-offset-4">Raj Nandan Sharma</a>.\n</p>\n',
+		'<p class="text-center">\nMade using \n<a href="https://github.com/rajnandan1/kener" target="_blank" rel="noreferrer" class="font-medium underline underline-offset-4">\n  Kener\n</a>\nan open source status page system built with Svelte and TailwindCSS.<span data-white-label><br/>\nCreated with ❤️ by <a href="https://rajnandan.com" target="_blank" rel="noreferrer" class="font-medium underline underline-offset-4">Raj Nandan Sharma</a>.\n</span></p>\n',
 	i18n: {
 		defaultLocale: "en",
 		locales: [{ code: "en", name: "English", selected: true, disabled: false }]
