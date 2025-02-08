@@ -141,7 +141,7 @@ This keeps things clean, structured, and easy to read while preserving all the d
 
 Here are some of the features that you get out of the box. Please read the documentation to know how to use them.
 
-### 📊 Monitoring and Tracking
+### 📊 &nbsp;Monitoring and Tracking
 
 - Advanced **application performance monitoring** tools
 - **Real-time network monitoring** capabilities
@@ -154,7 +154,7 @@ Here are some of the features that you get out of the box. Please read the docum
 - Supports **base path hosting in Kubernetes (k8s)**
 - **Pre-built Docker images** for easy deployment
 
-### 🎨 Customization and Branding
+### 🎨 &nbsp;Customization and Branding
 
 - Fully **customizable status page**
 - **Badge generation** for status and uptime tracking
@@ -164,12 +164,12 @@ Here are some of the features that you get out of the box. Please read the docum
 - **Internationalization (i18n) support**
 - **Sleek, beautifully crafted UI**
 
-### 🚨 Incident Management
+### 🚨 &nbsp;Incident Management
 
 - **Incident tracking & communication** tools
 - **Comprehensive APIs** for incident management
 
-### 🧑‍💻 User Experience and Design
+### 🧑‍💻 &nbsp;User Experience and Design
 
 - **Accessible & user-friendly interface**
 - **Quick & easy installation**
@@ -194,7 +194,7 @@ If you’re enjoying Kener and want to support its development, consider sponsor
 
 [Sponsor Me Using Github](https://github.com/sponsors/rajnandan1)
 
-☕ [Buy Me a Coffee](https://www.buymeacoffee.com/rajnandan1)
+☕ &nbsp;[Buy Me a Coffee](https://www.buymeacoffee.com/rajnandan1)
 
 ![image](https://badges.pufler.dev/visits/rajnandan1/kener)
 
