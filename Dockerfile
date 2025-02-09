@@ -103,7 +103,6 @@ WORKDIR /app
 
 # TODO: Confirm with @rajnandan1 which files/directories are absolutely necessary for production build
 # Copy package files build artifacts, and necessary files from builder stage
-COPY --chown=node:node --from=builder /app/package*.json ./
 COPY --chown=node:node --from=builder /app/src/lib/ ./src/lib/
 COPY --chown=node:node --from=builder /app/build ./build
 COPY --chown=node:node --from=builder /app/uploads ./uploads
@@ -113,14 +112,11 @@ COPY --chown=node:node --from=builder /app/node_modules ./node_modules
 COPY --chown=node:node --from=builder /app/migrations ./migrations
 COPY --chown=node:node --from=builder /app/seeds ./seeds
 COPY --chown=node:node --from=builder /app/static ./static
-COPY --chown=node:node --from=builder /app/embed.html ./embed.html
 COPY --chown=node:node --from=builder /app/entrypoint.sh ./entrypoint.sh
 COPY --chown=node:node --from=builder /app/knexfile.js ./knexfile.js
 COPY --chown=node:node --from=builder /app/main.js ./main.js
 COPY --chown=node:node --from=builder /app/openapi.json ./openapi.json
 COPY --chown=node:node --from=builder /app/openapi.yaml ./openapi.yaml
-COPY --chown=node:node --from=builder /app/sitemap.js.bk ./sitemap.js.bk
-COPY --chown=node:node --from=builder /app/utils.js ./utils.js
 
 # Ensure necessary directories are writable
 VOLUME ["/uploads", "/database"]
