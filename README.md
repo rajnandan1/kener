@@ -8,6 +8,7 @@
 	<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/rajnandan1/kener?label=Star%20Repo&style=social">
 	<a href="https://github.com/ivbeg/awesome-status-pages"><img src="https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg" alt="Awesome status page" /></a>
 	<a href="https://hub.docker.com/r/rajnandan1/kener"><img src="https://img.shields.io/docker/pulls/rajnandan1/kener" alt="Docker Kener" /></a>
+	<a href="https://awesome-selfhosted.net/tags/status--uptime-pages.html#kener"><img src="https://awesome.re/mentioned-badge.svg" alt="Awesome self hosted" /></a>
 </p>
 
 <p align="center">
@@ -16,6 +17,12 @@
   <a href="https://github.com/rajnandan1/kener/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/rajnandan1/kener.svg" /></a>
 </p>
   
+<p align="center">
+	<a href="https://www.producthunt.com/posts/kener-2" target="_blank">
+		<img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=kener-2&theme=light" alt="Kener on Product Hunt">
+	</a>
+</p>
+
 <p align="center">
 	<picture>
   		<source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f514/512.webp" type="image/webp">
@@ -54,7 +61,6 @@ git clone https://github.com/rajnandan1/kener.git
 cd kener
 npm install
 cp .env.example .env
-npm run build
 npm run dev
 ```
 
@@ -110,11 +116,9 @@ Here are some of the features that you get out of the box. Please read the docum
 -   Auto SEO and Social Media ready
 -   Server Side Rendering
 
-
 <div align="left">
     <img alt="Visitor Stats" src="https://widgetbite.com/stats/rajnandan"/>  
 </div>
-
 
 ## Technologies used
 
