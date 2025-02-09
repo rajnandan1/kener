@@ -3,6 +3,7 @@
 	import "../../../../kener.css";
 	import "../../../../manage.css";
 	import { base } from "$app/paths";
+	import { env } from '$env/dynamic/public';
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import Sun from "lucide-svelte/icons/sun";
 	import Moon from "lucide-svelte/icons/moon";
@@ -12,6 +13,8 @@
 
 	import { Play, User } from "lucide-svelte";
 	import { setMode, mode, ModeWatcher } from "mode-watcher";
+
+	const isWhiteLabeled = env.PUBLIC_WHITE_LABEL === 'true';
 
 	let thisYear = new Date().getFullYear();
 	function toggleMode() {
@@ -74,18 +77,20 @@
 	<div class=" flex w-full justify-between rounded-lg border bg-card px-5 py-4">
 		<div class="mt-2 flex gap-x-1.5">
 			<img src="{base}/logo.png" alt="Kener" class="inline h-6 w-6" />
-			<h1 class="font-semibold">Manage Kener</h1>
+			<h1 class="font-semibold">Manage <a class="hover:border-b hover:border-dotted hover:border-b-foreground/50" href="https://github.com/rajnandan1/kener" target="_blank">Kener</a></h1>
 		</div>
 		<div class="flex">
-			<Button
-				variant="ghost"
-				size="icon"
-				target="_blank"
-				href="https://github.com/rajnandan1/kener"
-				class="flex"
-			>
-				<Github class="h-4 w-4 " />
-			</Button>
+			{#if !isWhiteLabeled}
+				<Button
+					variant="ghost"
+					size="icon"
+					target="_blank"
+					href="https://github.com/rajnandan1/kener"
+					class="flex"
+				>
+					<Github class="h-4 w-4 " />
+				</Button>
+			{/if}
 			<Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
 				<Sun
 					class="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
@@ -151,68 +156,70 @@
 </main>
 
 <!-- ========== FOOTER ========== -->
-<footer class="mx-auto mt-8 w-full max-w-2xl px-4 sm:px-6 lg:px-8">
-	<div class="border-t py-6 dark:border-neutral-700">
-		<div class="flex flex-wrap items-center justify-between gap-2">
-			<div>
-				<p class="text-xs text-muted-foreground">
-					Kener.ing by <a
-						class="text-xs font-semibold text-muted-foreground hover:underline"
-						href="https://www.rajnandan.com">Raj Nandan Sharma</a
-					>
-				</p>
-			</div>
-			<!-- End Col -->
+{#if !isWhiteLabeled}
+	<footer class="mx-auto mt-8 w-full max-w-2xl px-4 sm:px-6 lg:px-8">
+		<div class="border-t py-6 dark:border-neutral-700">
+			<div class="flex flex-wrap items-center justify-between gap-2">
+				<div>
+					<p class="text-xs text-muted-foreground">
+						Kener.ing by <a
+							class="text-xs font-semibold text-muted-foreground hover:underline"
+							href="https://www.rajnandan.com">Raj Nandan Sharma</a
+						>
+					</p>
+				</div>
+				<!-- End Col -->
 
-			<!-- List -->
-			<ul class="flex flex-wrap items-center">
-				<li
-					class="before:size-[3px] relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
-				>
-					<a
-						target="_blank"
-						class="text-xs font-medium text-muted-foreground hover:underline hover:decoration-1 focus:decoration-1 focus:outline-none"
-						href="https://github.com/sponsors/rajnandan1"
+				<!-- List -->
+				<ul class="flex flex-wrap items-center">
+					<li
+						class="before:size-[3px] relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
 					>
-						Donate
-					</a>
-				</li>
-				<li
-					class="before:size-[3px] relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
-				>
-					<a
-						target="_blank"
-						class="text-xs font-medium text-muted-foreground hover:underline hover:decoration-1 focus:decoration-1 focus:outline-none"
-						href="https://twitter.com/_rajnandan_"
+						<a
+							target="_blank"
+							class="text-xs font-medium text-muted-foreground hover:underline hover:decoration-1 focus:decoration-1 focus:outline-none"
+							href="https://github.com/sponsors/rajnandan1"
+						>
+							Donate
+						</a>
+					</li>
+					<li
+						class="before:size-[3px] relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
 					>
-						Contact
-					</a>
-				</li>
-				<li
-					class="before:size-[3px] relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
-				>
-					<a
-						target="_blank"
-						class="text-xs font-medium text-muted-foreground hover:underline hover:decoration-1 focus:decoration-1 focus:outline-none"
-						href="https://discord.gg/uSTpnuK9XR"
+						<a
+							target="_blank"
+							class="text-xs font-medium text-muted-foreground hover:underline hover:decoration-1 focus:decoration-1 focus:outline-none"
+							href="https://twitter.com/_rajnandan_"
+						>
+							Contact
+						</a>
+					</li>
+					<li
+						class="before:size-[3px] relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
 					>
-						Discord
-					</a>
-				</li>
-				<li
-					class="before:size-[3px] relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
-				>
-					<a
-						target="_blank"
-						class="text-xs font-medium text-muted-foreground hover:underline hover:decoration-1 focus:decoration-1 focus:outline-none"
-						href="https://github.com/rajnandan1/kener"
+						<a
+							target="_blank"
+							class="text-xs font-medium text-muted-foreground hover:underline hover:decoration-1 focus:decoration-1 focus:outline-none"
+							href="https://discord.gg/uSTpnuK9XR"
+						>
+							Discord
+						</a>
+					</li>
+					<li
+						class="before:size-[3px] relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
 					>
-						Github
-					</a>
-				</li>
-			</ul>
-			<!-- End List -->
+						<a
+							target="_blank"
+							class="text-xs font-medium text-muted-foreground hover:underline hover:decoration-1 focus:decoration-1 focus:outline-none"
+							href="https://github.com/rajnandan1/kener"
+						>
+							Github
+						</a>
+					</li>
+				</ul>
+				<!-- End List -->
+			</div>
 		</div>
-	</div>
-</footer>
+	</footer>
+{/if}
 <!-- ========== END FOOTER ========== -->
