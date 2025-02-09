@@ -291,7 +291,7 @@
     on:clickoutside={(e) => {
       dispatch("closeModal", {})
     }}
-    class="absolute right-0 top-0 h-screen w-[800px] bg-background px-3 shadow-xl"
+    class="absolute right-0 top-0 h-screen w-screen bg-background px-3 shadow-xl md:w-[800px]"
   >
     <Button
       variant="outline"

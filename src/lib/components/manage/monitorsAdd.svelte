@@ -1,34 +1,46 @@
 <script>
-  import { Button } from "$lib/components/ui/button"
-  import { Plus, X, Settings, Bell, Loader, ArrowDownUp, Grip } from "lucide-svelte"
-  import { Input } from "$lib/components/ui/input"
-  import { Label } from "$lib/components/ui/label"
-  import { base } from "$app/paths"
-  import MonitorsSheet from "$lib/components/manage/monitorSheet.svelte"
-  import { onMount } from "svelte"
-  import * as Card from "$lib/components/ui/card"
-  import * as Select from "$lib/components/ui/select"
-  import { storeSiteData, SortMonitor } from "$lib/clientTools.js"
-  import { dndzone } from "svelte-dnd-action"
-  import { flip } from "svelte/animate"
+  import { Button } from "$lib/components/ui/button";
+  import { Plus, X, Settings, Bell, Loader, ArrowDownUp, Grip } from "lucide-svelte";
+  import { Input } from "$lib/components/ui/input";
+  import { Label } from "$lib/components/ui/label";
+  import { base } from "$app/paths";
+  import MonitorsSheet from "$lib/components/manage/monitorSheet.svelte";
+  import { onMount } from "svelte";
+  import * as Card from "$lib/components/ui/card";
+  import * as Select from "$lib/components/ui/select";
+  import { storeSiteData, SortMonitor } from "$lib/clientTools.js";
+  import { dndzone } from "svelte-dnd-action";
+  import { flip } from "svelte/animate";
 
-  export let categories = []
-  export let colorDown = "#777"
-  export let colorDegraded = "#777"
-  export let monitorSort = []
-  let monitors = []
-  let status = "ACTIVE"
-  let showAddMonitor = false
-  let formState = "idle"
-  let loadingData = false
-  let triggers = []
-  let selectedCategory = "All Categories"
+  export let categories = [];
+  export let colorDown = "#777";
+  export let colorDegraded = "#777";
+  export let monitorSort = [];
+  let monitors = [];
+  let status = "ACTIVE";
+  let showAddMonitor = false;
+  let formState = "idle";
+  let loadingData = false;
+  let triggers = [];
+  let selectedCategory = "All Categories";
+
+  //listen for hash change
+
+  $: {
+    //broadcast a custom event named blockScroll
+    if (!!isMounted) {
+      const noScrollEvent = new CustomEvent("noScroll", {
+        detail: showAddMonitor
+      });
+      window.dispatchEvent(noScrollEvent);
+    }
+  }
 
   function showAddMonitorSheet() {
-    resetNewMonitor()
-    showAddMonitor = true
+    resetNewMonitor();
+    showAddMonitor = true;
   }
-  let newMonitor
+  let newMonitor;
   function resetNewMonitor() {
     newMonitor = {
       id: 0,
@@ -69,27 +81,27 @@
         matchType: "ANY",
         values: []
       }
-    }
+    };
   }
 
   function showUpdateMonitorSheet(m) {
-    resetNewMonitor()
-    newMonitor = { ...newMonitor, ...m }
+    resetNewMonitor();
+    newMonitor = { ...newMonitor, ...m };
 
     if (newMonitor.monitor_type == "API") {
-      newMonitor.apiConfig = JSON.parse(newMonitor.type_data)
+      newMonitor.apiConfig = JSON.parse(newMonitor.type_data);
     } else if (newMonitor.monitor_type == "PING") {
-      newMonitor.pingConfig = JSON.parse(newMonitor.type_data)
+      newMonitor.pingConfig = JSON.parse(newMonitor.type_data);
     } else if (newMonitor.monitor_type == "DNS") {
-      newMonitor.dnsConfig = JSON.parse(newMonitor.type_data)
+      newMonitor.dnsConfig = JSON.parse(newMonitor.type_data);
     } else if (newMonitor.monitor_type == "TCP") {
-      newMonitor.tcpConfig = JSON.parse(newMonitor.type_data)
+      newMonitor.tcpConfig = JSON.parse(newMonitor.type_data);
     }
-    showAddMonitor = true
+    showAddMonitor = true;
   }
 
   async function loadData() {
-    loadingData = true
+    loadingData = true;
     try {
       let apiResp = await fetch(base + "/manage/app/api/", {
         method: "POST",
@@ -100,19 +112,19 @@
           action: "getMonitors",
           data: { status: status, category_name: selectedCategory }
         })
-      })
-      let resp = await apiResp.json()
+      });
+      let resp = await apiResp.json();
       resp = resp.map((m) => {
-        m.down_trigger = JSON.parse(m.down_trigger)
-        m.degraded_trigger = JSON.parse(m.degraded_trigger)
-        return m
-      })
+        m.down_trigger = JSON.parse(m.down_trigger);
+        m.degraded_trigger = JSON.parse(m.degraded_trigger);
+        return m;
+      });
 
-      monitors = SortMonitor(monitorSort, resp)
+      monitors = SortMonitor(monitorSort, resp);
     } catch (error) {
-      alert("Err2or: " + error)
+      alert("Err2or: " + error);
     } finally {
-      loadingData = false
+      loadingData = false;
     }
   }
 
@@ -124,17 +136,37 @@
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ action: "getTriggers", data: { status: "ACTIVE" } })
-      })
-      triggers = await apiResp.json()
+      });
+      triggers = await apiResp.json();
     } catch (error) {
-      alert("Error: " + error)
+      alert("Error: " + error);
     }
   }
+
+  //find by tag and showUpdateMonitorSheet
+  function findMonitorByTagAndOpenModal(tag) {
+    let monitor = monitors.find((m) => m.tag == tag);
+    if (monitor) {
+      showUpdateMonitorSheet(monitor);
+    }
+  }
+
+  let isMounted = false;
   onMount(async () => {
-    loadData()
-    loadTriggersData()
-  })
-  let shareMenusToggle = false
+    await loadData();
+    await loadTriggersData();
+    isMounted = true;
+    //check if there is a hash
+    if (window.location.hash) {
+      let tag = window.location.hash.replace("#", "");
+      findMonitorByTagAndOpenModal(tag);
+    }
+    window.onhashchange = function () {
+      let tag = window.location.hash.replace("#", "");
+      findMonitorByTagAndOpenModal(tag);
+    };
+  });
+  let shareMenusToggle = false;
 
   let monitorTriggers = {
     down_trigger: {
@@ -157,15 +189,15 @@
       triggers: [],
       severity: "warning"
     }
-  }
+  };
 
   async function saveTriggers() {
     let data = {
       id: currentAlertMonitor.id,
       down_trigger: JSON.stringify(monitorTriggers.down_trigger),
       degraded_trigger: JSON.stringify(monitorTriggers.degraded_trigger)
-    }
-    formState = "loading"
+    };
+    formState = "loading";
     //updateMonitorTriggers
     try {
       let apiResp = await fetch(base + "/manage/app/api/", {
@@ -174,39 +206,39 @@
           "Content-Type": "application/json"
         },
         body: JSON.stringify({ action: "updateMonitorTriggers", data })
-      })
+      });
     } catch (error) {
-      alert("Error: " + error)
+      alert("Error: " + error);
     } finally {
-      formState = "idle"
-      loadData()
-      shareMenusToggle = false
+      formState = "idle";
+      loadData();
+      shareMenusToggle = false;
     }
   }
-  let currentAlertMonitor
+  let currentAlertMonitor;
   function openAlertMenu(m) {
-    currentAlertMonitor = m
+    currentAlertMonitor = m;
     if (m.down_trigger) {
-      monitorTriggers.down_trigger = m.down_trigger
+      monitorTriggers.down_trigger = m.down_trigger;
     }
     if (m.degraded_trigger) {
-      monitorTriggers.degraded_trigger = m.degraded_trigger
+      monitorTriggers.degraded_trigger = m.degraded_trigger;
     }
-    shareMenusToggle = true
+    shareMenusToggle = true;
   }
-  const flipDurationMs = 200
+  const flipDurationMs = 200;
   function handleSort(e) {
     dropTargetStyle = {
       border: "1px solid transparent"
-    }
-    monitors = e.detail.items
-    monitorSort = monitors.map((m) => m.id)
+    };
+    monitors = e.detail.items;
+    monitorSort = monitors.map((m) => m.id);
     storeSiteData({
       monitorSort: JSON.stringify(monitorSort)
-    })
+    });
   }
-  let dropTargetStyle
-  let draggableMenu = false
+  let dropTargetStyle;
+  let draggableMenu = false;
 </script>
 
 {#if showAddMonitor}
@@ -214,8 +246,8 @@
     {categories}
     {newMonitor}
     on:closeModal={(e) => {
-      showAddMonitor = false
-      loadData()
+      showAddMonitor = false;
+      loadData();
     }}
   />
 {/if}
@@ -229,7 +261,7 @@
       <Button
         variant="ghost"
         on:click={() => {
-          draggableMenu = false
+          draggableMenu = false;
         }}
         class="absolute right-2 top-2 z-40 h-6 w-6   rounded-full border bg-background p-1"
       >
@@ -266,8 +298,8 @@
     <Select.Root
       portal={null}
       onSelectedChange={(e) => {
-        status = e.value
-        loadData()
+        status = e.value;
+        loadData();
       }}
       selected={{
         value: status,
@@ -293,8 +325,8 @@
     <Select.Root
       portal={null}
       onSelectedChange={(e) => {
-        selectedCategory = e.value
-        loadData()
+        selectedCategory = e.value;
+        loadData();
       }}
       selected={{
         value: selectedCategory,
@@ -354,11 +386,7 @@
           <Button variant="secondary" class="h-8 w-8 p-2" on:click={() => openAlertMenu(monitor)}>
             <Bell class="inline h-4 w-4" />
           </Button>
-          <Button
-            variant="secondary"
-            class="h-8 w-8 p-2"
-            on:click={() => showUpdateMonitorSheet(monitor)}
-          >
+          <Button variant="secondary" class="h-8 w-8 p-2" href="#{monitor.tag}">
             <Settings class="inline h-4 w-4" />
           </Button>
         </div>
@@ -405,7 +433,7 @@
       <Button
         variant="ghost"
         on:click={() => {
-          shareMenusToggle = false
+          shareMenusToggle = false;
         }}
         class="absolute right-2 top-2 z-40 h-6 w-6   rounded-full border bg-background p-1"
       >
@@ -435,7 +463,7 @@
                   class="peer sr-only"
                   checked={data.active}
                   on:change={() => {
-                    data.active = !data.active
+                    data.active = !data.active;
                   }}
                 />
                 <div
@@ -544,7 +572,7 @@
                     on:change={() => {
                       data.triggers = data.triggers.includes(trigger.id)
                         ? data.triggers.filter((t) => t != trigger.id)
-                        : [...data.triggers, trigger.id]
+                        : [...data.triggers, trigger.id];
                     }}
                   />
                   {#if trigger.trigger_type == "webhook"}

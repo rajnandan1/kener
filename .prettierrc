@@ -11,7 +11,7 @@
       "options": {
         "parser": "svelte",
         "useTabs": false,
-        "semi": false,
+        "semi": true,
         "tabWidth": 2,
         "trailingComma": "none",
         "printWidth": 100
