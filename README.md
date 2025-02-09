@@ -6,7 +6,7 @@
 
 <p align="center">
 	<img alt="GitHub Repo stars" src="https://img.shields.io/github/stars/rajnandan1/kener?label=Star%20Repo&style=social">
-	<a href="https://github.com/ivbeg/awesome-status-pages"><img src="https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg" alt="Awesome status page" /></a>
+	<a href="https://awesome-selfhosted.net/tags/status--uptime-pages.html#kener"><img src="https://awesome.re/mentioned-badge.svg" alt="Awesome self hosted" /></a>
 </p>
 
 <p align="center">
@@ -14,7 +14,19 @@
   <a href="https://hub.docker.com/r/rajnandan1/kener"><img alt="Docker Image Size" src="https://img.shields.io/docker/image-size/rajnandan1/kener/latest?logo=docker&logoColor=white&label=debian" /></a>
   <a href="https://hub.docker.com/r/rajnandan1/kener"><img alt="Docker Image Size" src="https://img.shields.io/docker/image-size/rajnandan1/kener/alpine?logo=docker&logoColor=white&label=alpine" /></a>
 </p>
+
+<p align="center">
+  <a href="https://github.com/rajnandan1/kener/actions/workflows/publishImage.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/rajnandan1/kener/publishImage.yml" /></a>
+  <a href="https://github.com/rajnandan1/kener/commit/HEAD"><img src="https://img.shields.io/github/last-commit/rajnandan1/kener/main" alt="" /></a>
+  <a href="https://github.com/rajnandan1/kener/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/rajnandan1/kener.svg" /></a>
+</p>
   
+<p align="center">
+	<a href="https://www.producthunt.com/posts/kener-2" target="_blank">
+		<img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=kener-2&theme=light" alt="Kener on Product Hunt">
+	</a>
+</p>
+
 <p align="center">
 	<picture>
   		<source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f514/512.webp" type="image/webp">
@@ -59,7 +71,6 @@ git clone https://github.com/rajnandan1/kener.git
 cd kener
 npm install
 cp .env.example .env
-npm run build
 npm run dev
 ```
 
@@ -177,11 +188,9 @@ Here are some of the features that you get out of the box. Please read the docum
 - **Auto SEO & Social Media ready**
 - **Server-Side Rendering (SSR) for better performance**
 
-
 <div align="left">
     <img alt="Visitor Stats" src="https://widgetbite.com/stats/rajnandan"/>  
 </div>
-
 
 ## Technologies Used
 

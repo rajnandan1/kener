@@ -50,7 +50,7 @@ i18n:
         vi: "Tiếng Việt"
 pattern: "squares"
 font:
-  cssSrc: "https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap"
+  cssSrc: "https://fonts.bunny.net/css?family=lato:100,100i,300,300i,400,400i,700,700i,900,900i&display=swap"
   family: '"Lato", sans-serif'
 analytics:
   - id: "G-QsFT"
@@ -315,11 +315,11 @@ You can set the background pattern of the site. It can be `squares`, `dots`, `no
 
 ## font
 
-You can set the font of the site. You can use google fonts or any other font.
+You can set the font of the site. You can use google fonts, [bunny fonts](https://fonts.bunny.net/) (which is a fully GDPR-compliant, zero-tracking/no-logging CDN font service), or any other font.
 
 ```yaml
 font:
-    cssSrc: "https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap"
+    cssSrc: "https://fonts.bunny.net/css?family=lato:100,100i,300,300i,400,400i,700,700i,900,900i&display=swap"
     family: '"Lato", sans-serif'
 ```
 
