@@ -40,4 +40,4 @@ description: Roadmap for Kener
 
 ---
 
-Request a feature or start a discussion [here](https://github.com/rajnandan1/kener/discussions/119)
+Request a feature or start a discussion [here](https://github.com/rajnandan1/kener/discussions/new/choose)
