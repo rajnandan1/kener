@@ -12,8 +12,6 @@ on:
   workflow_dispatch:  # Allows manual execution
 
 env:
-  ALPINE_VERSION: "23-alpine"
-  DEBIAN_VERSION: "23-slim"
   # Registry URLs
   DOCKERHUB_REGISTRY: docker.io
   GITHUB_REGISTRY: ghcr.io
@@ -46,6 +44,20 @@ jobs:
         uses: sigstore/cosign-installer@v3.8.0
         with:
           cosign-release: 'v2.2.4'
+
+      - name: Load environment variables from .env.build
+        run: |
+          # If .env.build is missing, use default full image names (should match Dockerfile ARG defaults)
+          export ALPINE_VERSION="node:23.7.0-alpine3.21"
+          export DEBIAN_VERSION="node:23.7.0-bookworm-slim"
+
+          # If .env.build exists, override fallback values with Dependabot-updated values
+          if [ -f .env.build ]; then
+            export $(grep -v '^#' .env.build | xargs)
+          fi
+
+          echo "ALPINE_VERSION=$ALPINE_VERSION" >> $GITHUB_ENV
+          echo "DEBIAN_VERSION=$DEBIAN_VERSION" >> $GITHUB_ENV
 
       # Set up BuildKit Docker container builder to be able to build multi-platform images and export cache
       # https://github.com/docker/setup-buildx-action
@@ -152,7 +164,7 @@ jobs:
           KENER_SEMVER_VERSION_ESCAPED=$(printf '%s\n' "${{ env.KENER_SEMVER_VERSION }}" | sed 's/[&/\]/\\&/g')
           KENER_MAJOR_MINOR_VERSION_ESCAPED=$(printf '%s\n' "${{ env.KENER_MAJOR_MINOR_VERSION }}" | sed 's/[&/\]/\\&/g')
           KENER_MAJOR_VERSION_ESCAPED=$(printf '%s\n' "${{ env.KENER_MAJOR_VERSION }}" | sed 's/[&/\]/\\&/g')
-          
+
           sed -i "s/KENER_SEMVER_VERSION_PLACEHOLDER/${KENER_SEMVER_VERSION_ESCAPED}/g" README.md
           sed -i "s/KENER_MAJOR_MINOR_VERSION_PLACEHOLDER/${KENER_MAJOR_MINOR_VERSION_ESCAPED}/g" README.md
           sed -i "s/KENER_MAJOR_VERSION_PLACEHOLDER/${KENER_MAJOR_VERSION_ESCAPED}/g" README.md
