@@ -1,0 +1,165 @@
+---
+name: Publish Docker image to Docker Hub and GitHub Container Registry
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "*.*.*"
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+  workflow_dispatch:  # Allows manual execution
+
+env:
+  ALPINE_VERSION: "23-alpine"
+  DEBIAN_VERSION: "23-slim"
+  # Registry URLs
+  DOCKERHUB_REGISTRY: docker.io
+  GITHUB_REGISTRY: ghcr.io
+  # Docker Hub image name (using Docker Hub username)
+  DOCKERHUB_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name }}
+  # GitHub image name (formatted as `account/repo`)
+  GITHUB_IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build_and_push_to_registries:
+    name: Push Docker images to Docker Hub and GitHub Container Registry
+    strategy:
+      matrix:
+        variant: [alpine, debian]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      # This is used to complete the identity challenge with sigstore/fulcio when running outside of PRs.
+      id-token: write
+
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4.2.2
+
+      # Install the cosign tool (except on PR)
+      # https://github.com/sigstore/cosign-installer
+      - name: Install cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@v3.8.0
+        with:
+          cosign-release: 'v2.2.4'
+
+      # Set up BuildKit Docker container builder to be able to build multi-platform images and export cache
+      # https://github.com/docker/setup-buildx-action
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.8.0
+
+      # Log in to Docker Hub (except on PR)
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3.3.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Log in to GitHub Container Registry (except on PR)
+      - name: Log in to GitHub Container Registry
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3.3.0
+        with:
+          registry: ${{ env.GITHUB_REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Combined metadata extraction for both registries
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5.6.1
+        with:
+          images: |
+            ${{ env.DOCKERHUB_IMAGE_NAME }}
+            ${{ env.GITHUB_REGISTRY }}/${{ env.GITHUB_IMAGE_NAME }}
+          tags: |
+            # Tag branches as type=ref,event=branch
+            # For Alpine variant, add suffix
+            type=ref,event=branch,suffix=-${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' }}
+            type=ref,event=branch,enable=${{ matrix.variant == 'debian' }}
+            # Tag matrix.variant (Alpine) releases as version (1.0.0), major.minor (1.0), major (1), and matrix.variant (alpine)
+            type=semver,pattern={{version}},suffix=-${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' }}
+            type=semver,pattern={{major}}.{{minor}},suffix=-${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' }}
+            type=semver,pattern={{major}},suffix=-${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' }}
+            type=raw,value=${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' && github.ref == 'refs/heads/main' }}
+            # Tag default (Debian) releases as version (1.0.0), major.minor (1.0), major (1), and latest
+            type=semver,pattern={{version}},enable=${{ matrix.variant == 'debian' }}
+            type=semver,pattern={{major}}.{{minor}},enable=${{ matrix.variant == 'debian' }}
+            type=semver,pattern={{major}},enable=${{ matrix.variant == 'debian' }}
+            type=raw,value=latest,enable=${{ matrix.variant == 'debian' && github.ref == 'refs/heads/main' }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3.3.0
+
+      # Build and push Docker image with Buildx to both registries (don't push on PR)
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v6.13.0
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VARIANT=${{ matrix.variant }}
+            ALPINE_VERSION=${{ env.ALPINE_VERSION }}
+            DEBIAN_VERSION=${{ env.DEBIAN_VERSION }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # Sign the resulting Docker image digests
+      - name: Sign the published Docker images
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: |
+          echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+
+  generate_readme:
+    needs: build_and_push_to_registries  # Runs only after build_and_push_to_registries completes successfully
+    name: Generate README from template
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Extract Release Versions
+        id: meta
+        uses: docker/metadata-action@v5.6.1
+        with:
+          images: rajnandan1/kener
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.2.0
+        with:
+          node-version: "20"
+
+      - name: Install Dependencies
+        run: npm install mustache dotenv
+
+      - name: Generate README.md
+        env:
+          KENER_BUILD_FULL_VERSION: ${{ steps.meta.outputs.tags[0] }}  # e.g., 1.2.3
+          KENER_BUILD_MAJOR_MINOR_VERSION: ${{ steps.meta.outputs.tags[1] }}  # e.g., 1.2
+          KENER_BUILD_MAJOR_VERSION: ${{ steps.meta.outputs.tags[2] }}  # e.g., 1
+        run: node scripts/generate-readme.js
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add README.md
+          git commit -m "Auto-generate README.md with release versions" || echo "No changes to commit"
+          git push
