@@ -5,21 +5,21 @@ import { makeBadge } from "badge-maker";
 import db from "$lib/server/db/db.js";
 
 export async function GET({ params, setHeaders, url }) {
-	// @ts-ignore
-	let monitors = await GetMonitors({ status: "ACTIVE" });
-	const { tag } = monitors.find((monitor) => monitor.tag === params.tag);
-	const lastObj = await db.getLatestMonitoringData(tag);
-	//read query params
-	const query = url.searchParams;
-	const animate = query.get("animate") || "";
-	let myColors = await StatusColor();
-	let svg = `
+  // @ts-ignore
+  let monitors = await GetMonitors({ status: "ACTIVE" });
+  const { tag } = monitors.find((monitor) => monitor.tag === params.tag);
+  const lastObj = await db.getLatestMonitoringData(tag);
+  //read query params
+  const query = url.searchParams;
+  const animate = query.get("animate") || "";
+  let myColors = await StatusColor();
+  let svg = `
 	<svg width="32" height="32"  xmlns="http://www.w3.org/2000/svg">
 		<circle cx="16" cy="16" r="8" fill="${myColors[lastObj.status]}" />
 	</svg>
 	`;
-	if (animate == "ping") {
-		svg = `
+  if (animate == "ping") {
+    svg = `
 	<svg width="32" height="32"  xmlns="http://www.w3.org/2000/svg">
 		<circle cx="16" cy="16" r="8" fill="${myColors[lastObj.status]}" opacity="0.5">
 			<animate 
@@ -38,11 +38,11 @@ export async function GET({ params, setHeaders, url }) {
 		<circle cx="16" cy="16" r="8" fill="${myColors[lastObj.status]}" />
 </svg>
 	`;
-	}
+  }
 
-	return new Response(svg, {
-		headers: {
-			"Content-Type": "image/svg+xml"
-		}
-	});
+  return new Response(svg, {
+    headers: {
+      "Content-Type": "image/svg+xml",
+    },
+  });
 }
