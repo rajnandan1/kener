@@ -10,16 +10,16 @@ ARG VARIANT=debian
 #==========================================================#
 
 FROM node:${DEBIAN_VERSION} AS builder-debian
-RUN apt-get update && apt-get install -y \
-        build-essential=12.9 \
-        python3=3.11.2-1+b1 \
-        sqlite3=3.40.1-2+deb12u1 \
-        libsqlite3-dev=3.40.1-2+deb12u1 \
-        make=4.3-4.1 \
-        node-gyp=9.3.0-2 \
-        g++=4:12.2.0-3 \
-        tzdata=2024b-0+deb12u1 \
-        iputils-ping=3:20221126-1+deb12u1 && \
+RUN apt-get update && apt-get install --no-install-recommends -y \
+        build-essential \
+        python3 \
+        sqlite3 \
+        libsqlite3-dev \
+        make \
+        node-gyp \
+        g++ \
+        tzdata \
+        iputils-ping && \
     rm -rf /var/lib/apt/lists/*
 
 FROM node:${ALPINE_VERSION} AS builder-alpine
@@ -57,11 +57,9 @@ RUN --mount=type=cache,target=/root/.npm \
 # Copy application source code
 COPY . .
 
-# TODO: Reevaluate permissions (possibly reduce?)...
 # Remove docs directory and ensure required directories exist
 RUN rm -rf src/routes/\(docs\) && \
     mkdir -p uploads database && \
-	# TODO: Consider changing below to `chmod -R u-rwX,g=rX,o= uploads database`
     chmod -R 750 uploads database
 
 # Build the application and remove `devDependencies`
@@ -73,20 +71,21 @@ RUN npm run build && \
 #==========================================================#
 
 FROM node:${DEBIAN_VERSION} AS final-debian
-# TODO: Confirm with @rajnandan1 which of these packages are necessary for the Debian (default), final stage
 RUN apt-get update && apt-get install --no-install-recommends -y \
-        iputils-ping=3:20221126-1+deb12u1 \
-        sqlite3=3.40.1-2+deb12u1 \
-        tzdata=2024b-0+deb12u1 \
-        wget=1.21.3-1+b1 && \
+        iputils-ping \
+        sqlite3 \
+        tzdata \
+        wget && \
     rm -rf /var/lib/apt/lists/*
 
 FROM node:${ALPINE_VERSION} AS final-alpine
-# TODO: Confirm with @rajnandan1 which of these packages are necessary for the Alpine Linux, final stage
-RUN apk add --no-cache --update \
-    iputils=20240905-r0 \
-    sqlite=3.48.0-r0 \
-    tzdata=2024b-r1
+RUN apk update && \
+    apk upgrade && \
+    apk add --no-cache \
+        iputils \
+        sqlite \
+        tzdata && \
+    rm -rf /var/cache/apk/*
 
 FROM final-${VARIANT} AS final
 
@@ -104,13 +103,11 @@ ENV HEALTHCHECK_PORT=$PORT \
 # Set the working directory
 WORKDIR /app
 
-# TODO: Confirm with @rajnandan1 which files/directories are absolutely necessary for production build
 # Copy package files build artifacts, and necessary files from builder stage
 COPY --chown=node:node --from=builder /app/src/lib/ ./src/lib/
 COPY --chown=node:node --from=builder /app/build ./build
 COPY --chown=node:node --from=builder /app/uploads ./uploads
 COPY --chown=node:node --from=builder /app/database ./database
-# TODO: Consider changing from copying `node_modules` to instead letting `npm ci --omit=dev` handle production dependencies. Right now, copying `node_modules` is leading to a smaller image, whereas letting `npm ci` handle the install in final image is slightly faster, but leads to larger image size. IMO, having a slightly longer build time (e.g. ~10 sec.) is better in the end to have a smaller image.
 COPY --chown=node:node --from=builder /app/node_modules ./node_modules
 COPY --chown=node:node --from=builder /app/migrations ./migrations
 COPY --chown=node:node --from=builder /app/seeds ./seeds
@@ -127,21 +124,13 @@ VOLUME ["/uploads", "/database"]
 # Set container timezone and make entrypoint script executable
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     chmod +x ./entrypoint.sh
-	# TODO: To improve security, consider dropping unnecessary capabilities instead of granting image all network capabilities of host. (Maybe `setcap cap_net_raw+p /usr/bin/ping`, etc.) Could also drop all and then grant only the capabilities that are explicitly needed. Some examples are commented out below...
-	# setcap cap_net_bind_service=+ep /usr/local/bin/node
-	# setcap cap_net_bind_service=+ep /usr/bin/ping
-	# setcap cap_net_bind_service=+ep /usr/bin/ping6
-	# setcap cap_net_bind_service=+ep /usr/bin/tracepath
-	# setcap cap_net_bind_service=+ep /usr/bin/clockdiff
 
 # Expose the application port
 EXPOSE $PORT
 
-# TODO: Consider switching to lighter-weight `nc` (Netcat) command-line utility (would remove `wget` in Debian build, however, it's already pretty small, so probably doesn't matter as `wget` is more powerful)
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
     CMD wget --quiet --spider http://localhost:$HEALTHCHECK_PORT$HEALTHCHECK_PATH || exit 1
 
-# TODO: Revisit letting user define $PUID & $PGID overrides (e.g. `addgroup -g $PGID newgroup && adduser -D -G newgroup -u $PUID node`) as well as potentially ensure no root user exists. (Make sure no processes are running as root, first!)
 # Use a non-root user (recommended for security)
 USER $USERNAME
 
