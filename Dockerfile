@@ -48,6 +48,7 @@ COPY package*.json ./
 
 # Install all dependencies, including `devDependencies` (cache enabled for faster builds)
 RUN --mount=type=cache,target=/root/.npm \
+		npm install && \
     npm ci && \
     npm cache clean --force
 
