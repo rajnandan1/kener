@@ -17,7 +17,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/rajnandan1/kener/actions/workflows/publishImage.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/rajnandan1/kener/publishImage.yml" /></a>
+  <a href="https://github.com/rajnandan1/kener/actions/workflows/publish-images.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/rajnandan1/kener/publish-images.yml" /></a>
   <a href="https://github.com/rajnandan1/kener/commit/HEAD"><img src="https://img.shields.io/github/last-commit/rajnandan1/kener/main" alt="" /></a>
   <a href="https://github.com/rajnandan1/kener/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/rajnandan1/kener.svg" /></a>
 </p>
@@ -79,7 +79,7 @@ npm run dev
 
 Official Docker images for **Kener** are available on [Docker Hub](https://hub.docker.com/r/rajnandan1/kener). Multiple versions are maintained to support different use cases.
 
-![Docker Image Version (latest semver)](https://img.shields.io/docker/v/rajnandan1/kener?sort=semver&label=Latest%20Stable%20Release)
+![Docker Image Version (latest semver)](https://img.shields.io/docker/v/rajnandan1/kener/latest?sort=semver&label=Latest%20Stable%20Release)
 
 #### Available Tags
 

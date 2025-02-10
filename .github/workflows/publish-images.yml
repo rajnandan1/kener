@@ -1,5 +1,5 @@
----
 name: Publish Docker image to Docker Hub and GitHub Container Registry
+
 on:
   push:
     branches:
@@ -23,7 +23,29 @@ env:
   GITHUB_IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build_and_push_to_registries:
+  check-lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'  # Adjust as needed
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for lockfile changes
+        run: |
+          git diff --exit-code package-lock.json || (
+            echo "🫥 package-lock.json is outdated or missing. Please run 'npm install' and commit the updated lockfile."
+            exit 1
+          )
+
+  build-and-push-to-registries:
+    needs: check-lockfile  # Runs only after `check-lockfile` completes successfully
     name: Push Docker images to Docker Hub and GitHub Container Registry
     strategy:
       matrix:
@@ -52,22 +74,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3.8.0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4.2.0
-        with:
-          node-version: "20"
-
-      # Install dependencies and generate lock file
-      - name: Install dependencies
-        run: |
-          npm install
-          git status
-          if [[ -n $(git status -s) ]]; then
-            echo "Warning: package-lock.json was modified. This indicates a mismatch between package.json and package-lock.json"
-            echo "Changes:"
-            git diff package-lock.json
-          fi			
-
       # Log in to Docker Hub (except on PR)
       - name: Log in to Docker Hub
         if: github.event_name != 'pull_request'
@@ -94,10 +100,9 @@ jobs:
             ${{ env.DOCKERHUB_IMAGE_NAME }}
             ${{ env.GITHUB_REGISTRY }}/${{ env.GITHUB_IMAGE_NAME }}
           tags: |
-            # Tag branches as type=ref,event=branch
-            # For Alpine variant, add suffix
-            type=ref,event=branch,suffix=-${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' }}
-            type=ref,event=branch,enable=${{ matrix.variant == 'debian' }}
+            # Tag non-main branches (...for Alpine variant, add suffix)
+            type=ref,event=branch,suffix=-${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' && github.ref != 'refs/heads/main' }}
+            type=ref,event=branch,enable=${{ matrix.variant == 'debian' && github.ref != 'refs/heads/main' }}
             # Tag matrix.variant (Alpine) releases as version (1.0.0), major.minor (1.0), major (1), and matrix.variant (alpine)
             type=semver,pattern={{version}},suffix=-${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' }}
             type=semver,pattern={{major}}.{{minor}},suffix=-${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' }}
@@ -139,7 +144,7 @@ jobs:
           echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
   generate_readme:
-    needs: build_and_push_to_registries  # Runs only after build_and_push_to_registries completes successfully
+    needs: build-and-push-to-registries  # Runs only after build-and-push-to-registries completes successfully
     name: Generate README from template
     runs-on: ubuntu-latest
 
