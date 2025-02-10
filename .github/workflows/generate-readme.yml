@@ -20,8 +20,6 @@ jobs:
   generate-readme:
     name: Generate README from template
     runs-on: ubuntu-latest
-    # permissions:
-    #   contents: write  # Explicitly allow pushing changes
 
     steps:
       - name: Checkout Repository

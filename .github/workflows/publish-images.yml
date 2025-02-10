@@ -1,9 +1,6 @@
 name: Publish Docker image to Docker Hub and GitHub Container Registry
 
 on:
-  # push:
-  #   tags:
-  #     - "*.*.*"  # Only trigger when a version tag (e.g., 1.2.3) is pushed
   release:
     types:
       - published  # Runs only when a GitHub Release is published
@@ -35,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check for lockfile changes
+      - name: Check for lock-file changes
         run: |
           git diff --exit-code package-lock.json || (
             echo "🫥 package-lock.json is outdated or missing. Please run 'npm install' and commit the updated lockfile."
