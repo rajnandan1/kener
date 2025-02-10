@@ -81,7 +81,8 @@ Official Docker images for **Kener** are available on [Docker Hub](https://hub.d
 
 ![Docker Image Version (latest semver)](https://img.shields.io/docker/v/rajnandan1/kener?sort=semver&label=Latest%20Stable%20Release)
 
-#### Available Tags
+<!-- FIXME: Currently with this setup, job will only update versioning the FIRST time, but then once the inline placeholders are updated, future job runs will fail. Need to revisit with a more robust approach. Commenting out (for now) -->
+<!-- #### Available Tags
 
 <table>
 	<tr>
@@ -126,7 +127,7 @@ Official Docker images for **Kener** are available on [Docker Hub](https://hub.d
 		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=KENER_MAJOR_VERSION_PLACEHOLDER-alpine" target="_blank"><code>KENER_MAJOR_VERSION_PLACEHOLDER-alpine</code></a></td>
 		<td>Major version tag pointing to the latest stable (KENER_SEMVER_VERSION_PLACEHOLDER) release within that major version (KENER_MAJOR_VERSION_PLACEHOLDER.x.x)</td>
 	</tr>
-</table>
+</table> -->
 
 #### Usage
 

@@ -122,45 +122,46 @@ jobs:
         run: |
           echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
-  update_readme:
-    needs: build_and_push_to_registries  # Runs only after build_and_push_to_registries completes successfully
-    name: Update README with release versions
-    runs-on: ubuntu-latest
+  # FIXME: Currently with this setup, job will only update versioning listed under README Docker section the FIRST time, but then once those inline placeholders are updated, future job runs will fail. Need to revisit with a more robust approach. Commenting out (for now)
+  # update_readme:
+  #   needs: build_and_push_to_registries  # Runs only after build_and_push_to_registries completes successfully
+  #   name: Update README with release versions
+  #   runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4.4.2
+  #   steps:
+  #     - name: Checkout Repository
+  #       uses: actions/checkout@v4.4.2
 
-      - name: Extract Release Versions
-        id: meta
-        uses: docker/metadata-action@v5.6.1
-        with:
-          images: rajnandan1/kener
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
+  #     - name: Extract Release Versions
+  #       id: meta
+  #       uses: docker/metadata-action@v5.6.1
+  #       with:
+  #         images: rajnandan1/kener
+  #         tags: |
+  #           type=semver,pattern={{version}}
+  #           type=semver,pattern={{major}}.{{minor}}
+  #           type=semver,pattern={{major}}
 
-      - name: Set Environment Variables
-        run: |
-          echo "KENER_SEMVER_VERSION=${{ steps.meta.outputs.version }}" >> $GITHUB_ENV
-          echo "KENER_MAJOR_MINOR_VERSION=${{ steps.meta.outputs.major }}.${{ steps.meta.outputs.minor }}" >> $GITHUB_ENV
-          echo "KENER_MAJOR_VERSION=${{ steps.meta.outputs.major }}" >> $GITHUB_ENV
+  #     - name: Set Environment Variables
+  #       run: |
+  #         echo "KENER_SEMVER_VERSION=${{ steps.meta.outputs.version }}" >> $GITHUB_ENV
+  #         echo "KENER_MAJOR_MINOR_VERSION=${{ steps.meta.outputs.major }}.${{ steps.meta.outputs.minor }}" >> $GITHUB_ENV
+  #         echo "KENER_MAJOR_VERSION=${{ steps.meta.outputs.major }}" >> $GITHUB_ENV
 
-      - name: Safetly Update README.md
-        run: |
-          KENER_SEMVER_VERSION_ESCAPED=$(printf '%s\n' "${{ env.KENER_SEMVER_VERSION }}" | sed 's/[&/\]/\\&/g')
-          KENER_MAJOR_MINOR_VERSION_ESCAPED=$(printf '%s\n' "${{ env.KENER_MAJOR_MINOR_VERSION }}" | sed 's/[&/\]/\\&/g')
-          KENER_MAJOR_VERSION_ESCAPED=$(printf '%s\n' "${{ env.KENER_MAJOR_VERSION }}" | sed 's/[&/\]/\\&/g')
-          
-          sed -i "s/KENER_SEMVER_VERSION_PLACEHOLDER/${KENER_SEMVER_VERSION_ESCAPED}/g" README.md
-          sed -i "s/KENER_MAJOR_MINOR_VERSION_PLACEHOLDER/${KENER_MAJOR_MINOR_VERSION_ESCAPED}/g" README.md
-          sed -i "s/KENER_MAJOR_VERSION_PLACEHOLDER/${KENER_MAJOR_VERSION_ESCAPED}/g" README.md
+  #     - name: Safetly Update README.md
+  #       run: |
+  #         KENER_SEMVER_VERSION_ESCAPED=$(printf '%s\n' "${{ env.KENER_SEMVER_VERSION }}" | sed 's/[&/\]/\\&/g')
+  #         KENER_MAJOR_MINOR_VERSION_ESCAPED=$(printf '%s\n' "${{ env.KENER_MAJOR_MINOR_VERSION }}" | sed 's/[&/\]/\\&/g')
+  #         KENER_MAJOR_VERSION_ESCAPED=$(printf '%s\n' "${{ env.KENER_MAJOR_VERSION }}" | sed 's/[&/\]/\\&/g')
 
-      - name: Commit and Push Changes
-        run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git add README.md
-          git commit -m "Update README with latest versions: ${{ env.KENER_SEMVER_VERSION }}" || exit 0
-          git push
+  #         sed -i "s/KENER_SEMVER_VERSION_PLACEHOLDER/${KENER_SEMVER_VERSION_ESCAPED}/g" README.md
+  #         sed -i "s/KENER_MAJOR_MINOR_VERSION_PLACEHOLDER/${KENER_MAJOR_MINOR_VERSION_ESCAPED}/g" README.md
+  #         sed -i "s/KENER_MAJOR_VERSION_PLACEHOLDER/${KENER_MAJOR_VERSION_ESCAPED}/g" README.md
+
+  #     - name: Commit and Push Changes
+  #       run: |
+  #         git config --global user.name 'github-actions'
+  #         git config --global user.email 'github-actions@github.com'
+  #         git add README.md
+  #         git commit -m "Update README with latest versions: ${{ env.KENER_SEMVER_VERSION }}" || exit 0
+  #         git push
