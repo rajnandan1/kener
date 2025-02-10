@@ -52,6 +52,22 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3.8.0
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.2.0
+        with:
+          node-version: "20"
+
+      # Install dependencies and generate lock file
+      - name: Install dependencies
+        run: |
+          npm install
+          git status
+          if [[ -n $(git status -s) ]]; then
+            echo "Warning: package-lock.json was modified. This indicates a mismatch between package.json and package-lock.json"
+            echo "Changes:"
+            git diff package-lock.json
+          fi			
+
       # Log in to Docker Hub (except on PR)
       - name: Log in to Docker Hub
         if: github.event_name != 'pull_request'
