@@ -1,14 +1,12 @@
 name: Publish Docker image to Docker Hub and GitHub Container Registry
 
 on:
-  push:
-    branches:
-      - main
-    tags:
-      - "*.*.*"
-    paths-ignore:
-      - '**/*.md'
-      - 'docs/**'
+  # push:
+  #   tags:
+  #     - "*.*.*"  # Only trigger when a version tag (e.g., 1.2.3) is pushed
+  release:
+    types:
+      - published  # Runs only when a GitHub Release is published
   workflow_dispatch:  # Allows manual execution
 
 env:
@@ -142,45 +140,3 @@ jobs:
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
         run: |
           echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
-
-  generate_readme:
-    needs: build-and-push-to-registries  # Runs only after build-and-push-to-registries completes successfully
-    name: Generate README from template
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4.2.2
-
-      - name: Extract Release Versions
-        id: meta
-        uses: docker/metadata-action@v5.6.1
-        with:
-          images: rajnandan1/kener
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4.2.0
-        with:
-          node-version: "20"
-
-      - name: Install Dependencies
-        run: npm install mustache dotenv
-
-      - name: Generate README.md
-        env:
-          KENER_BUILD_FULL_VERSION: ${{ steps.meta.outputs.tags[0] }}  # e.g., 1.2.3
-          KENER_BUILD_MAJOR_MINOR_VERSION: ${{ steps.meta.outputs.tags[1] }}  # e.g., 1.2
-          KENER_BUILD_MAJOR_VERSION: ${{ steps.meta.outputs.tags[2] }}  # e.g., 1
-        run: node scripts/generate-readme.js
-
-      - name: Commit and Push Changes
-        run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git add README.md
-          git commit -m "Auto-generate README.md with release versions" || echo "No changes to commit"
-          git push
