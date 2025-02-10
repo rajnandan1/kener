@@ -6,7 +6,7 @@ ARG DEBIAN_VERSION=23.7.0-bookworm-slim
 ARG VARIANT=debian
 
 #==========================================================#
-#                   STAGE 1: BUILD STAGE                   #
+#                   STAGE 1: BUILD STAGE                    #
 #==========================================================#
 
 FROM node:${DEBIAN_VERSION} AS builder-debian
@@ -23,16 +23,19 @@ RUN apt-get update && apt-get install -y \
     rm -rf /var/lib/apt/lists/*
 
 FROM node:${ALPINE_VERSION} AS builder-alpine
-RUN apk add --no-cache --update \
-        build-base=0.5-r3 \
-        python3=3.12.9-r0 \
-        py3-pip=24.3.1-r0 \
-        make=4.4.1-r2 \
-        g++=14.2.0-r4 \
-        sqlite=3.48.0-r0 \
-        sqlite-dev=3.48.0-r0 \
-        tzdata=2024b-r1 \
-        iputils=20240905-r0
+RUN apk update && \
+    apk upgrade && \
+    apk add --no-cache \
+        build-base \
+        python3 \
+        py3-pip \
+        make \
+        g++ \
+        sqlite \
+        sqlite-dev \
+        tzdata \
+        iputils && \
+    rm -rf /var/cache/apk/*
 
 FROM builder-${VARIANT} AS builder
 
