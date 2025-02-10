@@ -37,7 +37,7 @@ jobs:
 
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4.4.2
+        uses: actions/checkout@v4.2.2
 
       # Install the cosign tool (except on PR)
       # https://github.com/sigstore/cosign-installer
@@ -129,7 +129,7 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4.4.2
+        uses: actions/checkout@v4.2.2
 
       - name: Extract Release Versions
         id: meta
