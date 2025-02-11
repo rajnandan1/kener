@@ -25,22 +25,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4.2.2
         with:
+          fetch-depth: 0  # Fetch full history, including tags
           persist-credentials: false  # We'll manually authenticate
 
       - name: Configure Git
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
-
-      - name: Extract Release Versions
-        id: meta
-        uses: docker/metadata-action@v5.6.1
-        with:
-          images: rajnandan1/kener
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4.2.0
@@ -50,11 +41,22 @@ jobs:
       - name: Install Dependencies
         run: npm install mustache dotenv
 
+      - name: Download Version File
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: version-metadata
+
+      - name: Load Variables from File
+        run: |
+          while IFS='=' read -r key value; do
+            echo "$key=$value" >> $GITHUB_ENV
+          done < versions.txt
+
       - name: Generate README.md
         env:
-          KENER_BUILD_FULL_VERSION: ${{ steps.meta.outputs.tags[0] }}  # e.g., 1.2.3
-          KENER_BUILD_MAJOR_MINOR_VERSION: ${{ steps.meta.outputs.tags[1] }}  # e.g., 1.2
-          KENER_BUILD_MAJOR_VERSION: ${{ steps.meta.outputs.tags[2] }}  # e.g., 1
+          BUILD_FULL_VERSION: ${{ env.BUILD_FULL_VERSION }}  # e.g., 1.2.3
+          BUILD_MAJOR_MINOR_VERSION: ${{ env.BUILD_MAJOR_MINOR_VERSION }}  # e.g., 1.2
+          BUILD_MAJOR_VERSION: ${{ env.BUILD_MAJOR_VERSION }}  # e.g., 1
         run: node scripts/generate-readme.js
 
       - name: Commit and Push Changes
