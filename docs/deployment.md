@@ -56,7 +56,7 @@ ghcr.io/rajnandan1/kener:latest
 
 [Environment variables](/docs/environment-vars) can be passed with `-e` An example `docker run` command:
 
-Make sure `./database` directory is present in the root directory.
+Make sure `./database` and `./uploads` directories are present in the root directory.
 
 ### Examples
 
@@ -65,7 +65,10 @@ This example is for sqlite. You can also use postgres. Read more about it [here]
 #### sqlite
 
 ```bash
-mkdir database
+mkdir database uploads
+```
+
+```bash
 docker run \
   -v $(pwd)/database:/app/database \
   -v $(pwd)/uploads:/app/uploads \
@@ -78,6 +81,10 @@ docker run \
 #### .env
 
 You can also use a .env file
+
+```bash
+mkdir database uploads
+```
 
 ```bash
 docker run \
@@ -93,6 +100,12 @@ Or use **Docker Compose** with the example [docker-compose.yaml](https://raw.git
 #### Postgres
 
 ```bash
+mkdir uploads
+```
+
+Database folder is not required for postgres.
+
+```bash
 docker run \
  -p 3000:3000 \
  -v $(pwd)/uploads:/app/uploads \
@@ -103,6 +116,12 @@ docker run \
 ```
 
 #### MySQL
+
+```bash
+mkdir uploads
+```
+
+Database folder is not required for mysql.
 
 ```bash
 docker run \
@@ -122,6 +141,7 @@ By default kener runs on `/` but you can change it to `/status` or any other pat
 
 -   Important: The base path should _**NOT**_ have a trailing slash and should start with `/`
 -   Important: This env variable should be present during both build and run time
+-   Important: You will have to build the frontend with the same base path
 
 </div>
 
