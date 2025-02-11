@@ -47,7 +47,7 @@ jobs:
         variant: [alpine, debian]
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
       # This is used to complete the identity challenge with sigstore/fulcio when running outside of PRs.
       id-token: write
@@ -119,7 +119,14 @@ jobs:
         run: cat versions.txt
 
       - name: Delete Existing Version Artifact (If Exists)
-        run: gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$(gh api repos/${{ github.repository }}/actions/artifacts --jq '.artifacts[] | select(.name=="version-metadata") | .id')
+        run: |
+          ARTIFACT_ID=$(gh api repos/${{ github.repository }}/actions/artifacts --jq '.artifacts[] | select(.name=="version-metadata") | .id' || echo "not_found")
+          if [[ "$ARTIFACT_ID" != "not_found" ]]; then
+            echo "Deleting existing artifact with ID: $ARTIFACT_ID"
+            gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID
+          else
+            echo "No existing artifact found. Skipping deletion."
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
