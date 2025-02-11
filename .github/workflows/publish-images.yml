@@ -39,7 +39,7 @@ jobs:
 
   build-and-push-to-registries:
     needs: check-lockfile  # Runs only after `check-lockfile` completes successfully
-    name: Push Docker Images to Docker Hub and GitHub Container Registry
+    name: Push Docker images to Docker Hub and GitHub Container Registry
     strategy:
       matrix:
         variant: [alpine, debian]
@@ -126,7 +126,7 @@ jobs:
           echo "DEBIAN_VERSION=$DEBIAN_VERSION" >> $GITHUB_ENV
 
       # Build and push Docker image with Buildx to both registries (don't push on PR)
-      - name: Build and push Docker image
+      - name: Build and push Docker images
         id: build-and-push
         uses: docker/build-push-action@v6.13.0
         with:
@@ -152,7 +152,7 @@ jobs:
           echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
       # For use in other workflows (e.g. 'generate-readme', etc.)
-      - name: Save Build Version to Repository Variable
+      - name: Save release's build version number to repository variable
         if: matrix.variant == 'debian' && github.run_attempt == 1
         run: |
           VERSION="${{ steps.meta.outputs.version }}"
