@@ -17,9 +17,9 @@ const template = fs.readFileSync(templatePath, "utf-8");
 
 // Load environment variables and provide default values
 const data = {
-  kener_full_version: process.env.KENER_BUILD_FULL_VERSION || "N/A",
-  kener_major_minor_version: process.env.KENER_BUILD_MAJOR_MINOR_VERSION || "N/A",
-  kener_major_version: process.env.KENER_BUILD_MAJOR_VERSION || "N/A",
+  kener_full_version: process.env.BUILD_FULL_VERSION || "N/A",
+  kener_major_minor_version: process.env.BUILD_MAJOR_MINOR_VERSION || "N/A",
+  kener_major_version: process.env.BUILD_MAJOR_VERSION || "N/A",
 };
 
 // Render README.md
