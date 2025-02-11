@@ -79,7 +79,7 @@ npm run dev
 
 Official Docker images for **Kener** are available on [Docker Hub](https://hub.docker.com/r/rajnandan1/kener). Multiple versions are maintained to support different use cases.
 
-![Docker Image Version (latest semver)](https://img.shields.io/docker/v/rajnandan1/kener/latest?sort=semver&label=Latest%20Stable%20Release)
+![Docker Image Version (latest semver)](https://img.shields.io/docker/v/rajnandan1/kener/latest?label=Latest%20Stable%20Release)
 
 #### Available Tags
 
@@ -93,38 +93,38 @@ Official Docker images for **Kener** are available on [Docker Hub](https://hub.d
 	</tr>
 	<tr>
 		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=latest" target="_blank"><code>latest</code></td>
-		<td>Latest stable release (aka N&#x2F;A)</td>
+		<td>Latest stable release (aka 3.1.0)</td>
 	</tr>
 	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=N&#x2F;A" target="_blank"><code>N&#x2F;A</code></a></td>
+		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.1.0" target="_blank"><code>3.1.0</code></a></td>
 		<td>Specific release version</td>
 	</tr>
 	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=N&#x2F;A" target="_blank"><code>N&#x2F;A</code></a></td>
-		<td>Major-minor version tag pointing to the latest patch (N&#x2F;A) release within that minor version (N&#x2F;A.x)</td>
+		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.1" target="_blank"><code>3.1</code></a></td>
+		<td>Major-minor version tag pointing to the latest patch (3.1.0) release within that minor version (3.1.x)</td>
 	</tr>
 	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=N&#x2F;A" target="_blank"><code>N&#x2F;A</code></a></td>
-		<td>Major version tag pointing to the latest stable (N&#x2F;A) release within that major version (N&#x2F;A.x.x)</td>
+		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3" target="_blank"><code>3</code></a></td>
+		<td>Major version tag pointing to the latest stable (3.1.0) release within that major version (3.x.x)</td>
 	</tr>
 	<tr>
 		<td align="left" colspan="2" style="color:#0D597F;text-align:left;">Alpine Linux 3.21 w/ Node.js v23.7.0 &nbsp;<strong><em>(smallest image size)</em></strong></td>
 	</tr>
 	<tr>
 		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=alpine" target="_blank"><code>alpine</code></td>
-		<td>Latest stable release (aka N&#x2F;A)</td>
+		<td>Latest stable release (aka 3.1.0)</td>
 	</tr>
 	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=N&#x2F;A-alpine" target="_blank"><code>N&#x2F;A-alpine</code></a></td>
+		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.1.0-alpine" target="_blank"><code>3.1.0-alpine</code></a></td>
 		<td>Specific release version</td>
 	</tr>
 	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=N&#x2F;A-alpine" target="_blank"><code>N&#x2F;A-alpine</code></a></td>
-		<td>Major-minor version tag pointing to the latest patch (N&#x2F;A) release within that minor version (N&#x2F;A.x)</td>
+		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.1-alpine" target="_blank"><code>3.1-alpine</code></a></td>
+		<td>Major-minor version tag pointing to the latest patch (3.1.0) release within that minor version (3.1.x)</td>
 	</tr>
 	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=N&#x2F;A-alpine" target="_blank"><code>N&#x2F;A-alpine</code></a></td>
-		<td>Major version tag pointing to the latest stable (N&#x2F;A) release within that major version (N&#x2F;A.x.x)</td>
+		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3-alpine" target="_blank"><code>3-alpine</code></a></td>
+		<td>Major version tag pointing to the latest stable (3.1.0) release within that major version (3.x.x)</td>
 	</tr>
 </table>
 
