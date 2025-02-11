@@ -1,34 +1,34 @@
 <script>
-  import "../../app.postcss"
-  import "../../kener.css"
-  import "../../docs.css"
-  import { Button } from "$lib/components/ui/button"
-  import Sun from "lucide-svelte/icons/sun"
-  import Moon from "lucide-svelte/icons/moon"
-  import { onMount } from "svelte"
-  import { base } from "$app/paths"
-  let defaultTheme = "light"
-  export let data
-  let siteStructure = data.siteStructure
-  let sidebar = siteStructure.sidebar
-  let docFilePath = data.docFilePath
-  let tableOfContents = []
+  import "../../app.postcss";
+  import "../../kener.css";
+  import "../../docs.css";
+  import { Button } from "$lib/components/ui/button";
+  import Sun from "lucide-svelte/icons/sun";
+  import Moon from "lucide-svelte/icons/moon";
+  import { onMount } from "svelte";
+  import { base } from "$app/paths";
+  let defaultTheme = "light";
+  export let data;
+  let siteStructure = data.siteStructure;
+  let sidebar = siteStructure.sidebar;
+  let docFilePath = data.docFilePath;
+  let tableOfContents = [];
 
   function setTheme() {
-    document.documentElement.classList.add("dark")
+    document.documentElement.classList.add("dark");
   }
 
   function activateSidebar(selectedDoc) {
     for (let i = 0; i < sidebar.length; i++) {
-      const item = sidebar[i]
+      const item = sidebar[i];
       for (let j = 0; j < item.children.length; j++) {
-        const subItem = item.children[j]
+        const subItem = item.children[j];
         if (subItem.file == selectedDoc) {
-          subItem.active = true
-          sidebar[i].children[j].active = true
+          subItem.active = true;
+          sidebar[i].children[j].active = true;
         } else {
-          subItem.active = false
-          sidebar[i].children[j].active = false
+          subItem.active = false;
+          sidebar[i].children[j].active = false;
         }
       }
     }
@@ -36,18 +36,18 @@
 
   function pageChange(e) {
     if (e.detail.docFilePath) {
-      activateSidebar(e.detail.docFilePath)
+      activateSidebar(e.detail.docFilePath);
     }
   }
   function updateTableOfContents(e) {
     if (e.detail.rightbar) {
-      tableOfContents = e.detail.rightbar
+      tableOfContents = e.detail.rightbar;
     }
   }
 
   onMount(() => {
-    setTheme()
-  })
+    setTheme();
+  });
 </script>
 
 <svelte:window on:pagechange={pageChange} on:rightbar={updateTableOfContents} />
@@ -57,13 +57,13 @@
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q3MLRXCBFT"></script>
   <script>
-    window.dataLayer = window.dataLayer || []
+    window.dataLayer = window.dataLayer || [];
     function gtag() {
-      dataLayer.push(arguments)
+      dataLayer.push(arguments);
     }
-    gtag("js", new Date())
+    gtag("js", new Date());
 
-    gtag("config", "G-Q3MLRXCBFT")
+    gtag("config", "G-Q3MLRXCBFT");
   </script>
   <link
     rel="stylesheet"
@@ -71,9 +71,7 @@
   />
 
   <!-- Highlight.js JS -->
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"
-  ></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 </svelte:head>
 <div class="dark">
   <nav class="z-2 fixed left-0 right-0 top-0 z-30 h-16 bg-card">
@@ -85,7 +83,7 @@
             <!-- Document Icon - Replace with your own logo -->
             <img src="https://kener.ing/logo.png" class="h-8 w-8" alt="" />
             <span class="text-xl font-medium">Kener Documentation</span>
-            <span class="me-2 rounded border px-2.5 py-0.5 text-xs font-medium"> 3.0.12 </span>
+            <span class="me-2 rounded border px-2.5 py-0.5 text-xs font-medium"> 3.1.0 </span>
           </a>
         </div>
 
@@ -99,12 +97,8 @@
               />
             </a>
             <a href="/api-reference" class="text-sm font-medium"> API Reference </a>
-            <a href="https://github.com/rajnandan1/kener/issues" class="text-sm font-medium">
-              Report Issue
-            </a>
-            <a href="https://github.com/sponsors/rajnandan1" class="text-sm font-medium">
-              Sponsor
-            </a>
+            <a href="https://github.com/rajnandan1/kener/issues" class="text-sm font-medium"> Report Issue </a>
+            <a href="https://github.com/sponsors/rajnandan1" class="text-sm font-medium"> Sponsor </a>
           </div>
         </div>
 
@@ -112,12 +106,7 @@
         <div class="md:hidden">
           <button type="button" class="hover: text-muted-foreground">
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M4 6h16M4 12h16M4 18h16"
-              />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
         </div>
@@ -163,9 +152,7 @@
     </div>
   </main>
   {#if tableOfContents.length > 0}
-    <div
-      class="blurry-bg fixed bottom-0 right-0 top-16 hidden w-64 overflow-y-auto px-6 py-10 lg:block"
-    >
+    <div class="blurry-bg fixed bottom-0 right-0 top-16 hidden w-64 overflow-y-auto px-6 py-10 lg:block">
       <h4 class="mb-3 text-sm font-semibold uppercase tracking-wider">On this page</h4>
       <nav class="space-y-2">
         {#each tableOfContents as item}

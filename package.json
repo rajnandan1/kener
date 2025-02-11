@@ -1,6 +1,6 @@
 {
   "name": "kener",
-  "version": "3.0.12",
+  "version": "3.1.0",
   "private": false,
   "license": "MIT",
   "description": "Kener: An open-source Node.js status page application for real-time service monitoring, incident management, and customizable reporting. Simplify service outage tracking, enhance incident communication, and ensure a seamless user experience.",
@@ -37,6 +37,7 @@
     "devschedule": "node src/lib/server/startup.js",
     "schedule": "node src/lib/server/startup.js",
     "development": "vite dev",
+    "generate-readme": "node scripts/generate-readme.js",
     "dev": "npm-run-all --parallel devschedule development",
     "prettify": "prettier --write .",
     "start": "node main.js"
@@ -51,6 +52,7 @@
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "date-picker-svelte": "^2.15.1",
+    "mustache": "^4.2.0",
     "postcss": "^8.4.24",
     "postcss-load-config": "^4.0.1",
     "prettier": "^3.2.5",

@@ -6,7 +6,7 @@ ARG DEBIAN_VERSION=node:23.7.0-bookworm-slim
 ARG VARIANT=debian
 
 #==========================================================#
-#                   STAGE 1: BUILD STAGE                   #
+#                   STAGE 1: BUILD STAGE                    #
 #==========================================================#
 
 FROM ${DEBIAN_VERSION} AS builder-debian
@@ -47,8 +47,9 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install all dependencies, including `devDependencies` (cache enabled for faster builds)
+# TODO: Possibly add `--no-audit` flag to `npm ci` to prevent `npm` from running a security audit on installed packages. (By default, `npm install` performs an audit to check for vulnerabilities in dependencies, which can slow down installation. Adding this flag would skip the audit, thus making `npm install` significantly faster for the CI/CD pipeline.)
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci && \
+    npm ci --no-fund && \
     npm cache clean --force
 
 # Copy application source code
@@ -69,21 +70,21 @@ RUN npm run build && \
 #             STAGE 2: PRODUCTION/FINAL STAGE              #
 #==========================================================#
 
-FROM ${DEBIAN_VERSION} AS final-debian
-# TODO: Confirm with @rajnandan1 which of these packages are necessary for the Debian (default), final stage
-RUN apt-get update && apt-get install --no-install-recommends -y \
+FROM node:${DEBIAN_VERSION} AS final-debian
+# TODO: Consider adding `--no-install-recommends`, but will need testing (may further help reduce final build size)
+RUN apt-get update && apt-get install -y \
         iputils-ping=3:20221126-1+deb12u1 \
         sqlite3=3.40.1-2+deb12u1 \
         tzdata=2024b-0+deb12u1 \
-        wget=1.21.3-1+b1 && \
+		# TODO: Is it ok to change to `curl` here so that we don't have to maintain `wget` version mismatch between Debian architectures? (`curl` is only used for the container healthcheck and because there is an Alpine variant (best!) we probably don't care if the Debian image ends up building bigger due to `curl`.)
+		curl=7.88.1-10+deb12u8 && \
     rm -rf /var/lib/apt/lists/*
 
-FROM ${ALPINE_VERSION} AS final-alpine
-# TODO: Confirm with @rajnandan1 which of these packages are necessary for the Alpine Linux, final stage
+FROM node:${ALPINE_VERSION} AS final-alpine
 RUN apk add --no-cache --update \
-    iputils=20240905-r0 \
-    sqlite=3.48.0-r0 \
-    tzdata=2024b-r1
+	iputils=20240905-r0 \
+	sqlite=3.48.0-r0 \
+	tzdata=2024b-r1
 
 FROM final-${VARIANT} AS final
 
@@ -101,7 +102,6 @@ ENV HEALTHCHECK_PORT=$PORT \
 # Set the working directory
 WORKDIR /app
 
-# TODO: Confirm with @rajnandan1 which files/directories are absolutely necessary for production build
 # Copy package files build artifacts, and necessary files from builder stage
 COPY --chown=node:node --from=builder /app/src/lib/ ./src/lib/
 COPY --chown=node:node --from=builder /app/build ./build
@@ -134,9 +134,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
 # Expose the application port
 EXPOSE $PORT
 
-# TODO: Consider switching to lighter-weight `nc` (Netcat) command-line utility (would remove `wget` in Debian build, however, it's already pretty small, so probably doesn't matter as `wget` is more powerful)
+# Add a healthcheck to the container; `wget` vs. `curl` depending on base image. Using this approach because `wget` does not actually maintain versioning across architectures, so we cannot pin a `wget` version (in above `final-debian` base, `apt-get install`) between differing architectures (e.g. arm64, amd64)
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-    CMD wget --quiet --spider http://localhost:$HEALTHCHECK_PORT$HEALTHCHECK_PATH || exit 1
+	CMD sh -c 'if [ -f "/etc/alpine-release" ]; then wget --quiet --spider http://localhost:$HEALTHCHECK_PORT$HEALTHCHECK_PATH || exit 1; else curl --silent --head --fail http://localhost:$HEALTHCHECK_PORT$HEALTHCHECK_PATH || exit 1; fi'
 
 # TODO: Revisit letting user define $PUID & $PGID overrides (e.g. `addgroup -g $PGID newgroup && adduser -D -G newgroup -u $PUID node`) as well as potentially ensure no root user exists. (Make sure no processes are running as root, first!)
 # Use a non-root user (recommended for security)
