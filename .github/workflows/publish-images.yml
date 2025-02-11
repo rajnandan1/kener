@@ -1,10 +1,10 @@
-name: Publish Docker image to Docker Hub and GitHub Container Registry
+name: Publish Docker Image to Registries
 
 on:
   release:
     types:
       - published  # Runs only when a GitHub Release is published
-  workflow_dispatch:  # Allows manual execution
+  workflow_dispatch:  # Allows for manual execution
 
 env:
   ALPINE_VERSION: "23-alpine"
@@ -47,6 +47,7 @@ jobs:
         variant: [alpine, debian]
     runs-on: ubuntu-latest
     permissions:
+      actions: write
       contents: write
       packages: write
       # This is used to complete the identity challenge with sigstore/fulcio when running outside of PRs.
@@ -109,35 +110,6 @@ jobs:
             type=semver,pattern={{major}},enable=${{ matrix.variant == 'debian' }}
             type=raw,value=latest,enable=${{ matrix.variant == 'debian' && github.ref == 'refs/heads/main' }}
 
-      - name: Save Version Output
-        run: |
-          echo "BUILD_FULL_VERSION=${{ steps.meta.outputs.version }}" >> versions.txt
-          echo "BUILD_MAJOR_MINOR_VERSION=${{ steps.meta.outputs.major }}.${{ steps.meta.outputs.minor }}" >> versions.txt
-          echo "BUILD_MAJOR_VERSION=${{ steps.meta.outputs.major }}" >> versions.txt
-
-      - name: Verify Saved Versions
-        run: cat versions.txt
-
-      - name: Delete Existing Version Artifact (If Exists)
-        run: |
-          ARTIFACT_ID=$(gh api repos/${{ github.repository }}/actions/artifacts --jq '.artifacts[] | select(.name=="version-metadata") | .id' || echo "not_found")
-          if [[ "$ARTIFACT_ID" != "not_found" ]]; then
-            echo "Deleting existing artifact with ID: $ARTIFACT_ID"
-            gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID
-          else
-            echo "No existing artifact found. Skipping deletion."
-          fi
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Version File
-        # Always run this on the first successful job only
-        if: github.run_attempt == 1
-        uses: actions/upload-artifact@v4.6.0
-        with:
-          name: version-metadata
-          path: versions.txt
-
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.3.0
 
@@ -166,3 +138,20 @@ jobs:
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
         run: |
           echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
+
+      # For use in other workflows (e.g. 'generate-readme', etc.)
+      - name: Save Build Version to Repository Variable
+        if: matrix.variant == 'debian' && github.run_attempt == 1
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+
+          # Check if VERSION is empty and set a fallback value
+          if [ -z "$VERSION" ]; then
+            # Fetch the latest release using Git
+            git tag -l --sort=-v:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1
+          fi
+
+          echo "Setting BUILD_VERSION to $VERSION"
+          gh variable set BUILD_VERSION --body "$VERSION"
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}  # Needs to be PAT w/ Read access to metadata and secrets & Read and Write access to actions, actions variables, and code
