@@ -79,7 +79,7 @@ npm run dev
 
 Official Docker images for **Kener** are available on [Docker Hub](https://hub.docker.com/r/rajnandan1/kener). Multiple versions are maintained to support different use cases.
 
-![Docker Image Version (latest semver)](https://img.shields.io/docker/v/rajnandan1/kener/latest?sort=semver&label=Latest%20Stable%20Release)
+![Docker Image Version (latest semver)](https://img.shields.io/docker/v/rajnandan1/kener/latest?label=Latest%20Stable%20Release)
 
 #### Available Tags
 
