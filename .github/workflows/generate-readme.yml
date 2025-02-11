@@ -45,7 +45,6 @@ jobs:
       - name: Install Dependencies
         run: npm install mustache dotenv
 
-
       - name: Extract Major and Major-Minor Versions
         run: |
           VERSION="${{ vars.BUILD_VERSION }}"
