@@ -1,15 +1,7 @@
 // @ts-nocheck
 import axios from "axios";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
-import {
-  UP,
-  DOWN,
-  DEGRADED,
-  REALTIME,
-  TIMEOUT,
-  ERROR,
-  MANUAL,
-} from "../constants.js";
+import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
 
 const defaultEval = `(async function (statusCode, responseTime, responseData) {
 	let statusCodeShort = Math.floor(statusCode/100);
@@ -38,7 +30,7 @@ class ApiCall {
 
   async execute() {
     let axiosHeaders = {};
-    axiosHeaders["User-Agent"] = "Kener/" + "3.0.13";
+    axiosHeaders["User-Agent"] = "Kener/" + "3.1.0";
     axiosHeaders["Accept"] = "*/*";
 
     let body = this.monitor.type_data.body;
@@ -53,9 +45,7 @@ class ApiCall {
     let method = this.monitor.type_data.method;
     let timeout = this.monitor.type_data.timeout || 5000;
     let tag = this.monitor.tag;
-    let monitorEval = !!this.monitor.type_data.monitorEval
-      ? this.monitor.type_data.monitorEval
-      : defaultEval;
+    let monitorEval = !!this.monitor.type_data.monitorEval ? this.monitor.type_data.monitorEval : defaultEval;
 
     for (let i = 0; i < this.envSecrets.length; i++) {
       const secret = this.envSecrets[i];
@@ -104,10 +94,7 @@ class ApiCall {
       resp = data.data;
     } catch (err) {
       console.log(`Error in apiCall ${tag}`, err.message);
-      if (
-        err.message.startsWith("timeout of") &&
-        err.message.endsWith("exceeded")
-      ) {
+      if (err.message.startsWith("timeout of") && err.message.endsWith("exceeded")) {
         timeoutError = true;
       }
       if (err.response !== undefined && err.response.status !== undefined) {
@@ -131,9 +118,7 @@ class ApiCall {
     let evalResp = undefined;
 
     try {
-      evalResp = await eval(
-        monitorEval + `(${statusCode}, ${latency}, "${resp}")`,
-      );
+      evalResp = await eval(monitorEval + `(${statusCode}, ${latency}, "${resp}")`);
     } catch (error) {
       console.log(`Error in monitorEval for ${tag}`, error.message);
     }
