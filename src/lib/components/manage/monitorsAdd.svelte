@@ -9,6 +9,7 @@
   import * as Card from "$lib/components/ui/card";
   import * as Select from "$lib/components/ui/select";
   import { storeSiteData, SortMonitor } from "$lib/clientTools.js";
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
 
@@ -239,6 +240,32 @@
   }
   let dropTargetStyle;
   let draggableMenu = false;
+
+  function testMonitor(i) {
+    if (monitors[i].isTestRunning) {
+      return;
+    }
+    monitors[i].isTestRunning = true;
+    fetch(base + "/manage/app/api/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        action: "testMonitor",
+        data: { monitor_id: monitors[i].id }
+      })
+    })
+      .then((resp) => resp.json())
+      .then((data) => {
+        monitors[i].isTestRunning = false;
+        monitors[i].testResult = data;
+      })
+      .catch((error) => {
+        monitors[i].isTestRunning = false;
+        monitors[i].testResult = data;
+      });
+  }
 </script>
 
 {#if showAddMonitor}
@@ -252,9 +279,7 @@
   />
 {/if}
 {#if draggableMenu}
-  <div
-    class="moldal-container fixed left-0 top-0 z-50 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm"
-  >
+  <div class="moldal-container fixed left-0 top-0 z-50 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm">
     <div
       class="absolute left-1/2 top-1/2 h-fit w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background shadow-lg backdrop-blur-lg"
     >
@@ -279,11 +304,7 @@
             <div animate:flip={{ duration: flipDurationMs }} class="mb-2 rounded-md bg-card p-2">
               <Grip class="mr-2 inline h-4 w-4" />
               {#if !!monitor.image}
-                <img
-                  src={base + monitor.image}
-                  alt={monitor.name}
-                  class="mr-1 inline-block h-4 w-4"
-                />
+                <img src={base + monitor.image} alt={monitor.name} class="mr-1 inline-block h-4 w-4" />
               {/if}
               {monitor.name}
             </div>
@@ -312,12 +333,8 @@
       <Select.Content>
         <Select.Group>
           <Select.Label>Status</Select.Label>
-          <Select.Item value="ACTIVE" label="ACTIVE" class="text-sm font-medium">
-            ACTIVE
-          </Select.Item>
-          <Select.Item value="INACTIVE" label="INACTIVE" class="text-sm font-medium">
-            INACTIVE
-          </Select.Item>
+          <Select.Item value="ACTIVE" label="ACTIVE" class="text-sm font-medium">ACTIVE</Select.Item>
+          <Select.Item value="INACTIVE" label="INACTIVE" class="text-sm font-medium">INACTIVE</Select.Item>
         </Select.Group>
       </Select.Content>
     </Select.Root>
@@ -370,7 +387,7 @@
 </div>
 
 <div class="mt-4">
-  {#each monitors as monitor}
+  {#each monitors as monitor, i}
     <Card.Root class="mb-4">
       <Card.Header class="relative">
         <Card.Title>
@@ -382,8 +399,41 @@
         {#if !!monitor.description}
           <Card.Description>{@html monitor.description}</Card.Description>
         {/if}
-        <div class="absolute right-2 top-0.5">
-          <Button variant="secondary" class="h-8 w-8 p-2" on:click={() => openAlertMenu(monitor)}>
+        <div class="absolute right-2 top-0.5 flex gap-x-1">
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              <Button variant="secondary" class="h-8 p-2 text-xs" on:click={() => testMonitor(i)}>TEST</Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content class="max-w-md">
+              <DropdownMenu.Group>
+                <DropdownMenu.Label class="text-xs">Test Result</DropdownMenu.Label>
+                <DropdownMenu.Separator />
+                <div class="px-2 text-xs">
+                  {#if monitor.isTestRunning}
+                    <div class="text-center">
+                      <Loader class="mx-auto inline h-4 w-4 animate-spin" />
+                    </div>
+                  {:else if !!monitor.testResult}
+                    {#if !!monitor.testResult.error}
+                      <div class="text-red-500">
+                        {monitor.testResult.error}
+                      </div>
+                    {:else if !!monitor.testResult.status && !!monitor.testResult.latency}
+                      <p class="text-muted-foreground">
+                        Status: <span class="text-api-{monitor.testResult.status.toLowerCase()}"
+                          >{monitor.testResult.status}</span
+                        ><br /> Response Time: <span class="text-card-foreground">{monitor.testResult.latency}ms</span>
+                      </p>
+                    {:else}
+                      <div class="text-muted-foreground">No Test Result</div>
+                    {/if}
+                  {/if}
+                </div>
+              </DropdownMenu.Group>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+
+          <Button variant="secondary" class="h-8 w-8 p-2 " on:click={() => openAlertMenu(monitor)}>
             <Bell class="inline h-4 w-4" />
           </Button>
           <Button variant="secondary" class="h-8 w-8 p-2" href="#{monitor.tag}">
@@ -424,9 +474,7 @@
 </div>
 
 {#if shareMenusToggle}
-  <div
-    class="moldal-container fixed left-0 top-0 z-50 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm"
-  >
+  <div class="moldal-container fixed left-0 top-0 z-50 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm">
     <div
       class="absolute left-1/2 top-1/2 h-fit w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background shadow-lg backdrop-blur-lg"
     >
@@ -449,10 +497,7 @@
         <hr class="my-4" />
         {#each Object.entries(monitorTriggers) as [key, data]}
           <div class="flex justify-between">
-            <h3
-              class="font-semibold"
-              style="color:{data.trigger_type == 'DOWN' ? colorDown : colorDegraded};"
-            >
+            <h3 class="font-semibold" style="color:{data.trigger_type == 'DOWN' ? colorDown : colorDegraded};">
               If Monitor {data.trigger_type}
             </h3>
             <div>
@@ -479,12 +524,7 @@
                 Failure Threshold
                 <span class="text-red-500">*</span>
               </Label>
-              <Input
-                bind:value={data.failureThreshold}
-                min="1"
-                id="{key}failureThreshold"
-                type="number"
-              />
+              <Input bind:value={data.failureThreshold} min="1" id="{key}failureThreshold" type="number" />
             </div>
             <div class="col-span-1">
               <div class="col-span-1">
@@ -492,12 +532,7 @@
                   Success Threshold
                   <span class="text-red-500">*</span>
                 </Label>
-                <Input
-                  bind:value={data.successThreshold}
-                  min="1"
-                  id="{key}successThreshold"
-                  type="number"
-                />
+                <Input bind:value={data.successThreshold} min="1" id="{key}successThreshold" type="number" />
               </div>
             </div>
             <div class="col-span-1">
@@ -511,16 +546,11 @@
                 }}
               >
                 <Select.Trigger id="{key}createIncident">
-                  <Select.Value
-                    bind:value={data.createIncident}
-                    placeholder={data.createIncident}
-                  />
+                  <Select.Value bind:value={data.createIncident} placeholder={data.createIncident} />
                 </Select.Trigger>
                 <Select.Content>
                   <Select.Group>
-                    <Select.Item value="YES" label="YES" class="text-sm font-medium">
-                      YES
-                    </Select.Item>
+                    <Select.Item value="YES" label="YES" class="text-sm font-medium">YES</Select.Item>
                     <Select.Item value="NO" label="NO" class="text-sm font-medium">NO</Select.Item>
                   </Select.Group>
                 </Select.Content>
@@ -544,12 +574,8 @@
                 </Select.Trigger>
                 <Select.Content>
                   <Select.Group>
-                    <Select.Item value="critical" label="CRITICAL" class="text-sm font-medium">
-                      CRITICAL
-                    </Select.Item>
-                    <Select.Item value="warning" label="WARNING" class="text-sm font-medium">
-                      WARNING
-                    </Select.Item>
+                    <Select.Item value="critical" label="CRITICAL" class="text-sm font-medium">CRITICAL</Select.Item>
+                    <Select.Item value="warning" label="WARNING" class="text-sm font-medium">WARNING</Select.Item>
                   </Select.Group>
                 </Select.Content>
               </Select.Root>
@@ -576,29 +602,13 @@
                     }}
                   />
                   {#if trigger.trigger_type == "webhook"}
-                    <img
-                      src={base + "/webhooks.svg"}
-                      alt={trigger.trigger_type}
-                      class="ml-2 inline-block h-4 w-4"
-                    />
+                    <img src={base + "/webhooks.svg"} alt={trigger.trigger_type} class="ml-2 inline-block h-4 w-4" />
                   {:else if trigger.trigger_type == "email"}
-                    <img
-                      src={base + "/email.png"}
-                      alt={trigger.trigger_type}
-                      class="ml-2 inline-block h-4 w-4"
-                    />
+                    <img src={base + "/email.png"} alt={trigger.trigger_type} class="ml-2 inline-block h-4 w-4" />
                   {:else if trigger.trigger_type == "slack"}
-                    <img
-                      src={base + "/slack.svg"}
-                      alt={trigger.trigger_type}
-                      class="ml-2 inline-block h-4 w-4"
-                    />
+                    <img src={base + "/slack.svg"} alt={trigger.trigger_type} class="ml-2 inline-block h-4 w-4" />
                   {:else if trigger.trigger_type == "discord"}
-                    <img
-                      src={base + "/discord.svg"}
-                      alt={trigger.trigger_type}
-                      class="ml-2 inline-block h-4 w-4"
-                    />
+                    <img src={base + "/discord.svg"} alt={trigger.trigger_type} class="ml-2 inline-block h-4 w-4" />
                   {/if}
                   {trigger.name}
                 </label>

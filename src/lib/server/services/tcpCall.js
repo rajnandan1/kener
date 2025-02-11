@@ -1,0 +1,72 @@
+// @ts-nocheck
+import axios from "axios";
+import { TCP } from "../ping.js";
+import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
+
+const defaultTcpEval = `(async function (responseDataBase64) {
+	let arrayOfPings = JSON.parse(atob(responseDataBase64));
+	let latencyTotal = arrayOfPings.reduce((acc, ping) => {
+		return acc + ping.latency;
+	}, 0);
+
+	let alive = arrayOfPings.reduce((acc, ping) => {
+		if (ping.status === "open") {
+			return acc && true;
+		} else {
+			return false;
+		}
+	}, true);
+
+	return {
+		status: alive ? 'UP' : 'DOWN',
+		latency: latencyTotal / arrayOfPings.length,
+	}
+})`;
+
+class TcpCall {
+  monitor;
+
+  constructor(monitor) {
+    this.monitor = monitor;
+  }
+
+  async execute() {
+    let hosts = this.monitor.type_data.hosts;
+    let tcpEval = !!this.monitor.type_data.tcpEval ? this.monitor.type_data.tcpEval : defaultTcpEval;
+    let tag = this.monitor.tag;
+
+    if (hosts === undefined) {
+      console.log(
+        "Hosts is undefined. The ping monitor has changed in version 3.0.10. Please update your monitor with tag",
+        tag,
+      );
+      return {
+        status: DOWN,
+        latency: 0,
+        type: ERROR,
+      };
+    }
+    let arrayOfPings = [];
+    for (let i = 0; i < hosts.length; i++) {
+      const host = hosts[i];
+      arrayOfPings.push(await TCP(host.type, host.host, host.port, host.timeout));
+    }
+    let respBase64 = Buffer.from(JSON.stringify(arrayOfPings)).toString("base64");
+
+    let evalResp = undefined;
+
+    try {
+      evalResp = await eval(tcpEval + `("${respBase64}")`);
+    } catch (error) {
+      console.log(`Error in tcpEval for ${tag}`, error.message);
+    }
+    //reduce to get the status
+    return {
+      status: evalResp.status,
+      latency: evalResp.latency,
+      type: REALTIME,
+    };
+  }
+}
+
+export default TcpCall;
