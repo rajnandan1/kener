@@ -118,7 +118,14 @@ jobs:
       - name: Verify Saved Versions
         run: cat versions.txt
 
+      - name: Delete Existing Version Artifact (If Exists)
+        run: gh api -X DELETE repos/${{ github.repository }}/actions/artifacts/$(gh api repos/${{ github.repository }}/actions/artifacts --jq '.artifacts[] | select(.name=="version-metadata") | .id')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Upload Version File
+        # Always run this on the first successful job only
+        if: github.run_attempt == 1
         uses: actions/upload-artifact@v4.6.0
         with:
           name: version-metadata
