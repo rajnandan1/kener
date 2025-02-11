@@ -22,16 +22,17 @@ updates:
       include: "scope"
 
   # Monitor Node.js dependencies from package.json
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "npm"
-    commit-message:
-      prefix: "npm"
-      include: "scope"
+  # TODO: Uncomment below if we want to begin letting Dependabot monitor & open PRs for Node.js project dependencies
+  # - package-ecosystem: "npm"
+  #   directory: "/"
+  #   schedule:
+  #     interval: "weekly"
+  #   labels:
+  #     - "dependencies"
+  #     - "npm"
+  #   commit-message:
+  #     prefix: "npm"
+  #     include: "scope"
 
   # Monitor GitHub Actions dependencies
   - package-ecosystem: "github-actions"
