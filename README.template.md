@@ -17,11 +17,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/rajnandan1/kener/actions/workflows/publishImage.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/rajnandan1/kener/publishImage.yml" /></a>
+  <a href="https://github.com/rajnandan1/kener/actions/workflows/publish-images.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/actions/workflow/status/rajnandan1/kener/publish-images.yml" /></a>
   <a href="https://github.com/rajnandan1/kener/commit/HEAD"><img src="https://img.shields.io/github/last-commit/rajnandan1/kener/main" alt="" /></a>
   <a href="https://github.com/rajnandan1/kener/issues"><img alt="GitHub issues" src="https://img.shields.io/github/issues/rajnandan1/kener.svg" /></a>
 </p>
-  
+
 <p align="center">
 	<a href="https://www.producthunt.com/posts/kener-2" target="_blank">
 		<img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=kener-2&theme=light" alt="Kener on Product Hunt">
@@ -79,10 +79,9 @@ npm run dev
 
 Official Docker images for **Kener** are available on [Docker Hub](https://hub.docker.com/r/rajnandan1/kener). Multiple versions are maintained to support different use cases.
 
-![Docker Image Version (latest semver)](https://img.shields.io/docker/v/rajnandan1/kener?sort=semver&label=Latest%20Stable%20Release)
+![Docker Image Version (latest semver)](https://img.shields.io/docker/v/rajnandan1/kener/latest?sort=semver&label=Latest%20Stable%20Release)
 
-<!-- FIXME: Currently with this setup, job will only update versioning the FIRST time, but then once the inline placeholders are updated, future job runs will fail. Need to revisit with a more robust approach. Commenting out (for now) -->
-<!-- #### Available Tags
+#### Available Tags
 
 <table>
 	<tr>
@@ -94,40 +93,40 @@ Official Docker images for **Kener** are available on [Docker Hub](https://hub.d
 	</tr>
 	<tr>
 		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=latest" target="_blank"><code>latest</code></td>
-		<td>Latest stable release (aka KENER_SEMVER_VERSION_PLACEHOLDER)</td>
+		<td>Latest stable release (aka {{kener_full_version}})</td>
 	</tr>
 	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=KENER_SEMVER_VERSION_PLACEHOLDER" target="_blank"><code>KENER_SEMVER_VERSION_PLACEHOLDER</code></a></td>
+		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name={{kener_full_version}}" target="_blank"><code>{{kener_full_version}}</code></a></td>
 		<td>Specific release version</td>
 	</tr>
 	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=KENER_MAJOR_MINOR_VERSION_PLACEHOLDER" target="_blank"><code>KENER_MAJOR_MINOR_VERSION_PLACEHOLDER</code></a></td>
-		<td>Major-minor version tag pointing to the latest patch (KENER_SEMVER_VERSION_PLACEHOLDER) release within that minor version (KENER_MAJOR_MINOR_VERSION_PLACEHOLDER.x)</td>
+		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name={{kener_major_minor_version}}" target="_blank"><code>{{kener_major_minor_version}}</code></a></td>
+		<td>Major-minor version tag pointing to the latest patch ({{kener_full_version}}) release within that minor version ({{kener_major_minor_version}}.x)</td>
 	</tr>
 	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=KENER_MAJOR_VERSION_PLACEHOLDER" target="_blank"><code>KENER_MAJOR_VERSION_PLACEHOLDER</code></a></td>
-		<td>Major version tag pointing to the latest stable (KENER_SEMVER_VERSION_PLACEHOLDER) release within that major version (KENER_MAJOR_VERSION_PLACEHOLDER.x.x)</td>
+		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name={{kener_major_version}}" target="_blank"><code>{{kener_major_version}}</code></a></td>
+		<td>Major version tag pointing to the latest stable ({{kener_full_version}}) release within that major version ({{kener_major_version}}.x.x)</td>
 	</tr>
 	<tr>
 		<td align="left" colspan="2" style="color:#0D597F;text-align:left;">Alpine Linux 3.21 w/ Node.js v23.7.0 &nbsp;<strong><em>(smallest image size)</em></strong></td>
 	</tr>
 	<tr>
 		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=alpine" target="_blank"><code>alpine</code></td>
-		<td>Latest stable release (aka KENER_SEMVER_VERSION_PLACEHOLDER)</td>
+		<td>Latest stable release (aka {{kener_full_version}})</td>
 	</tr>
 	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=KENER_SEMVER_VERSION_PLACEHOLDER-alpine" target="_blank"><code>KENER_SEMVER_VERSION_PLACEHOLDER-alpine</code></a></td>
+		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name={{kener_full_version}}-alpine" target="_blank"><code>{{kener_full_version}}-alpine</code></a></td>
 		<td>Specific release version</td>
 	</tr>
 	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=KENER_MAJOR_MINOR_VERSION_PLACEHOLDER-alpine" target="_blank"><code>KENER_MAJOR_MINOR_VERSION_PLACEHOLDER-alpine</code></a></td>
-		<td>Major-minor version tag pointing to the latest patch (KENER_SEMVER_VERSION_PLACEHOLDER) release within that minor version (KENER_MAJOR_MINOR_VERSION_PLACEHOLDER.x)</td>
+		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name={{kener_major_minor_version}}-alpine" target="_blank"><code>{{kener_major_minor_version}}-alpine</code></a></td>
+		<td>Major-minor version tag pointing to the latest patch ({{kener_full_version}}) release within that minor version ({{kener_major_minor_version}}.x)</td>
 	</tr>
 	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=KENER_MAJOR_VERSION_PLACEHOLDER-alpine" target="_blank"><code>KENER_MAJOR_VERSION_PLACEHOLDER-alpine</code></a></td>
-		<td>Major version tag pointing to the latest stable (KENER_SEMVER_VERSION_PLACEHOLDER) release within that major version (KENER_MAJOR_VERSION_PLACEHOLDER.x.x)</td>
+		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name={{kener_major_version}}-alpine" target="_blank"><code>{{kener_major_version}}-alpine</code></a></td>
+		<td>Major version tag pointing to the latest stable ({{kener_full_version}}) release within that major version ({{kener_major_version}}.x.x)</td>
 	</tr>
-</table> -->
+</table>
 
 #### Usage
 
@@ -191,7 +190,7 @@ Here are some of the features that you get out of the box. Please read the docum
 - **Server-Side Rendering (SSR) for better performance**
 
 <div align="left">
-    <img alt="Visitor Stats" src="https://widgetbite.com/stats/rajnandan"/>  
+    <img alt="Visitor Stats" src="https://widgetbite.com/stats/rajnandan"/>
 </div>
 
 ## Technologies Used
