@@ -48,6 +48,13 @@ jobs:
       - name: Extract Major and Major-Minor Versions
         run: |
           VERSION="${{ vars.BUILD_VERSION }}"
+
+          # Check if VERSION is empty and set a fallback value
+          if [ -z "$VERSION" ]; then
+            # Fetch the latest release using Git
+            VERSION=$(git tag -l --sort=-v:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || echo "3.1.0")
+          fi
+
           MAJOR=$(echo "$VERSION" | cut -d. -f1)
           MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1,2)
 
