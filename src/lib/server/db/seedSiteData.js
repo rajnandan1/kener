@@ -19,7 +19,7 @@ const seedSiteData = {
     { key: "og:image", value: "https://kener.ing/ss.png" },
     {
       key: "og:title",
-      value: "Kener - Open-Source and Modern looking Node.js Status Page for Effortless Incident Management",
+      value: "Kener - Open source status page system",
     },
     { key: "og:type", value: "website" },
     { key: "og:site_name", value: "Kener" },
@@ -29,7 +29,7 @@ const seedSiteData = {
     { key: "twitter:image", value: "https://kener.ing/ss.png" },
     {
       key: "twitter:title",
-      value: "Kener: Open-Source and Modern looking Node.js Status Page for Effortless Incident Management",
+      value: "Kener - Open source status page system",
     },
     {
       key: "twitter:description",
