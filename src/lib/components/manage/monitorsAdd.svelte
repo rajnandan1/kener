@@ -12,6 +12,7 @@
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
+  import GMI from "$lib/components/gmi.svelte";
 
   export let categories = [];
   export let colorDown = "#777";
@@ -304,7 +305,7 @@
             <div animate:flip={{ duration: flipDurationMs }} class="mb-2 rounded-md bg-card p-2">
               <Grip class="mr-2 inline h-4 w-4" />
               {#if !!monitor.image}
-                <img src={base + monitor.image} alt={monitor.name} class="mr-1 inline-block h-4 w-4" />
+                <GMI src={monitor.image} alt={monitor.name} classList="mr-1 inline-block h-4 w-4" />
               {/if}
               {monitor.name}
             </div>
@@ -392,7 +393,7 @@
       <Card.Header class="relative">
         <Card.Title>
           {#if !!monitor.image}
-            <img src={base + monitor.image} alt={monitor.name} class="mr-2 inline-block h-8 w-8" />
+            <GMI src={monitor.image} alt={monitor.name} classList="mr-2 inline-block h-8 w-8" />
           {/if}
           {monitor.name}
         </Card.Title>

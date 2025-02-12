@@ -1,9 +1,6 @@
 // @ts-nocheck
 import { FetchData } from "$lib/server/page";
-import {
-  GetMonitors,
-  GetIncidentsOpenHome,
-} from "$lib/server/controllers/controller.js";
+import { GetMonitors, GetIncidentsOpenHome } from "$lib/server/controllers/controller.js";
 import { SortMonitor } from "$lib/clientTools.js";
 import moment from "moment";
 function removeTags(str) {
@@ -32,11 +29,7 @@ export async function load({ parent, url }) {
   const monitorsActive = [];
   for (let i = 0; i < monitors.length; i++) {
     //only return monitors that have category as home or category is not present
-    if (
-      !!!query.get("monitor") &&
-      !!monitors[i].category_name &&
-      monitors[i].category_name !== requiredCategory
-    ) {
+    if (!!!query.get("monitor") && !!monitors[i].category_name && monitors[i].category_name !== requiredCategory) {
       continue;
     }
     if (query.get("monitor") && query.get("monitor") !== monitors[i].tag) {
@@ -45,33 +38,18 @@ export async function load({ parent, url }) {
     delete monitors[i].api;
     delete monitors[i].default_status;
 
-    let data = await FetchData(
-      siteData,
-      monitors[i],
-      parentData.localTz,
-      parentData.selectedLang,
-      parentData.lang,
-    );
+    let data = await FetchData(siteData, monitors[i], parentData.localTz, parentData.selectedLang, parentData.lang);
     monitors[i].pageData = data;
 
     monitors[i].activeIncidents = [];
     monitorsActive.push(monitors[i]);
   }
-  let startWithin = moment()
-    .subtract(siteData.homeIncidentStartTimeWithin, "days")
-    .unix();
-  let endWithin = moment()
-    .add(siteData.homeIncidentStartTimeWithin, "days")
-    .unix();
-  let allOpenIncidents = await GetIncidentsOpenHome(
-    siteData.homeIncidentCount,
-    startWithin,
-    endWithin,
-  );
+  let startWithin = moment().subtract(siteData.homeIncidentStartTimeWithin, "days").unix();
+  let endWithin = moment().add(siteData.homeIncidentStartTimeWithin, "days").unix();
+  let allOpenIncidents = await GetIncidentsOpenHome(siteData.homeIncidentCount, startWithin, endWithin);
 
   //if not home page
-  let isCategoryPage =
-    !!query.get("category") && query.get("category") !== "Home";
+  let isCategoryPage = !!query.get("category") && query.get("category") !== "Home";
   let isMonitorPage = !!query.get("monitor");
   if (isMonitorPage && monitorsActive.length > 0) {
     pageTitle = monitorsActive[0].name + " - " + pageTitle;
@@ -81,9 +59,7 @@ export async function load({ parent, url }) {
   //if category page
   if (isCategoryPage) {
     let allCategories = siteData.categories;
-    let selectedCategory = allCategories.find(
-      (category) => category.name === requiredCategory,
-    );
+    let selectedCategory = allCategories.find((category) => category.name === requiredCategory);
     if (selectedCategory) {
       pageTitle = selectedCategory.name + " - " + pageTitle;
       pageDescription = selectedCategory.description;
@@ -117,20 +93,14 @@ export async function load({ parent, url }) {
         name: monitor.name,
         description: monitor.description,
         image: monitor.image,
-        impact_type: incidentMonitors.filter(
-          (m) => m.monitor_tag === monitor.tag,
-        )[0].monitor_impact,
+        impact_type: incidentMonitors.filter((m) => m.monitor_tag === monitor.tag)[0].monitor_impact,
       };
     });
     return incident;
   });
 
-  let allRecentIncidents = allOpenIncidents.filter(
-    (incident) => incident.incident_type == "INCIDENT",
-  );
-  let allRecentMaintenances = allOpenIncidents.filter(
-    (incident) => incident.incident_type == "MAINTENANCE",
-  );
+  let allRecentIncidents = allOpenIncidents.filter((incident) => incident.incident_type == "INCIDENT");
+  let allRecentMaintenances = allOpenIncidents.filter((incident) => incident.incident_type == "MAINTENANCE");
   return {
     monitors: monitorsActive,
     allRecentIncidents,

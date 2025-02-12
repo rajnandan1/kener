@@ -88,20 +88,12 @@
       <h1 class="font-semibold">Manage Kener</h1>
     </div>
     <div class="flex">
-      <Button
-        variant="ghost"
-        size="icon"
-        target="_blank"
-        href="https://github.com/rajnandan1/kener"
-        class="flex"
-      >
+      <Button variant="ghost" size="icon" target="_blank" href="https://github.com/rajnandan1/kener" class="flex">
         <Github class="h-4 w-4 " />
       </Button>
       <Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
         <Sun class="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-        <Moon
-          class="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
-        />
+        <Moon class="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
         <span class="sr-only">Toggle theme</span>
       </Button>
       <DropdownMenu.Root>
@@ -126,15 +118,7 @@
           </DropdownMenu.Group>
         </DropdownMenu.Content>
       </DropdownMenu.Root>
-      <Button
-        variant="secondary"
-        class="ml-4"
-        href="{base}/"
-        on:click={(e) => {
-          e.preventDefault();
-          window.open(base + "/", "_blank");
-        }}
-      >
+      <Button variant="secondary" class="ml-4" href="{base}/" rel="external">
         <Play class="mr-2 h-4 w-4" />
         <span>Preview</span>
       </Button>
@@ -145,10 +129,8 @@
   <div class="container my-4 max-w-5xl">
     <nav class="flex justify-start gap-x-2">
       {#each nav as item}
-        <Button
-          variant={item.id.includes(activeTab) ? "secondary" : "ghost"}
-          href={item.url}
-          class="flex-1r">{item.name}</Button
+        <Button variant={item.id.includes(activeTab) ? "secondary" : "ghost"} href={item.url} class="flex-1r"
+          >{item.name}</Button
         >
       {/each}
     </nav>
