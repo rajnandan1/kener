@@ -208,6 +208,7 @@
                 href="{base}/manage/app/monitors#{monitor.tag}"
                 class=" rotate-once h-5 p-0 text-muted-foreground hover:text-primary"
                 variant="link"
+                rel="external"
               >
                 <Settings class="h-4 w-4 " />
               </Button>
