@@ -1,5 +1,5 @@
 const seedSiteData = {
-  title: "Kener - Open-Source and Modern looking Node.js Status Page for Effortless Incident Management",
+  title: "Kener - Open source status page system",
   siteName: "Kener.ing",
   siteURL: "https://kener.ing",
   home: "/",
