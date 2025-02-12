@@ -36,6 +36,7 @@ export async function GET({ request, params }) {
 		);
 	}
 }
+
 export async function POST({ request, params }) {
 	// const headers = await request.headers();
 	const authError = await auth(request);
@@ -149,5 +150,24 @@ export async function PATCH({ request, params, url }) {
 				status: 400
 			}
 		);
+	}
+}
+
+export async function HEAD({ request, params }) {
+	const authError = await auth(request);
+	if (authError !== null) {
+    return new Response(null, { status: 401 });
+	}
+	const incident_id = params.incident_id; // number required
+
+	try {
+    // Fetch the incident comments to verify existence but discard body
+		let resp = await GetIncidentComments(incident_id);
+    // Return only headers with a 200 status
+    return json(null, {
+			status: 200
+		});
+	} catch (e) {
+		return new Response(null, { status: 400 });
 	}
 }

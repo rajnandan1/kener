@@ -527,6 +527,9 @@
                   <Select.Item value="DELETE" label="DELETE" class="text-sm font-medium">
                     DELETE
                   </Select.Item>
+                  <Select.Item value="HEAD" label="HEAD" class="text-sm font-medium">
+                    HEAD
+                  </Select.Item>
                 </Select.Group>
               </Select.Content>
             </Select.Root>
