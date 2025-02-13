@@ -8,15 +8,13 @@ const seedSiteData = {
   metaTags: [
     {
       key: "description",
-      value:
-        "Kener: Open-source modern looking Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. And the best part? Kener integrates seamlessly with GitHub, making incident management a team effort—making it easier for us to track and fix issues together in a collaborative and friendly environment.",
+      value: "Add your description here",
     },
     {
       key: "og:description",
-      value:
-        "Kener: Open-source Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. And the best part? Kener integrates seamlessly with GitHub, making incident management a team effort—making it easier for us to track and fix issues together in a collaborative and friendly environment.",
+      value: "Add your description here",
     },
-    { key: "og:image", value: "https://kener.ing/ss.png" },
+    { key: "og:image", value: "https://kener.ing/newbg.png" },
     {
       key: "og:title",
       value: "Kener - Open source status page system",
@@ -26,21 +24,20 @@ const seedSiteData = {
     { key: "twitter:card", value: "summary_large_image" },
     { key: "twitter:site", value: "@_rajnandan_" },
     { key: "twitter:creator", value: "@_rajnandan_" },
-    { key: "twitter:image", value: "https://kener.ing/ss.png" },
+    { key: "twitter:image", value: "https://kener.ing/newbg.png" },
     {
       key: "twitter:title",
       value: "Kener - Open source status page system",
     },
     {
       key: "twitter:description",
-      value:
-        "Kener: Open-source Node.js status page tool, designed to make service monitoring and incident handling a breeze. It offers a sleek and user-friendly interface that simplifies tracking service outages and improves how we communicate during incidents. And the best part? Kener integrates seamlessly with GitHub, making incident management a team effort—making it easier for us to track and fix issues together in a collaborative and friendly environment.",
+      value: "Add your description here",
     },
   ],
   nav: [
     { name: "Documentation", url: "https://kener.ing/docs/home", iconURL: "" },
     { name: "Github", iconURL: "", url: "https://github.com/rajnandan1/kener" },
-    { name: "Login", iconURL: "", url: "/manage/signin" },
+    { name: "Setup Kener", iconURL: "", url: "/manage/signin" },
   ],
   hero: {
     title: "Build stunning status pages in minutes",
@@ -55,7 +52,7 @@ const seedSiteData = {
   pattern: "none",
   analytics: [
     {
-      id: "G-Q3MLRXCBFT",
+      id: "",
       type: "GA",
       name: "Google Analytics",
       script: "https://unpkg.com/@analytics/google-analytics@1.0.7/dist/@analytics/google-analytics.min.js",
@@ -84,9 +81,8 @@ const seedSiteData = {
     DEGRADED: "#e6ca61",
   },
   font: {
-    cssSrc:
-      "https://fonts.bunny.net/css?family=albert-sans:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i&display=swap",
-    family: "Albert Sans",
+    cssSrc: "",
+    family: "",
   },
   categories: [{ name: "Home", description: "Monitors for Home Page" }],
   homeIncidentCount: 5,
