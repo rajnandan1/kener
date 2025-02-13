@@ -106,6 +106,9 @@
   //find by id and open modal
   async function findEventByIdAndOpenModal(id) {
     id = parseInt(id);
+    if (isNaN(id)) {
+      return;
+    }
     let incident = incidents.find((i) => i.id == id);
     if (!!incident) {
       openIncidentSettings(incident);
@@ -413,6 +416,10 @@
         detail: showModal
       });
       window.dispatchEvent(noScrollEvent);
+    }
+    //if modal closed then clear url hashed
+    if (!showModal) {
+      window.location.hash = "";
     }
   }
 </script>

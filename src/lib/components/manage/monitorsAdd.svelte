@@ -36,6 +36,11 @@
       });
       window.dispatchEvent(noScrollEvent);
     }
+
+    //if modal closed then clear url hashed
+    if (!showAddMonitor) {
+      window.location.hash = "";
+    }
   }
 
   function showAddMonitorSheet() {
