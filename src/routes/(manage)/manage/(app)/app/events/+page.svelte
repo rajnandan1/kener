@@ -418,9 +418,10 @@
       window.dispatchEvent(noScrollEvent);
     }
     //if modal closed then clear url hashed
-    if (!showModal) {
-      window.location.hash = "";
-    }
+  }
+  function closeModal() {
+    showModal = false;
+    window.location.hash = "";
   }
 </script>
 
@@ -660,9 +661,7 @@
     <div
       transition:slide={{ direction: "right", duration: 200 }}
       use:clickOutsideAction
-      on:clickoutside={(e) => {
-        showModal = false;
-      }}
+      on:clickoutside={closeModal}
       class="absolute right-0 top-0 h-screen w-[800px] border-l bg-background p-4 shadow-xl"
     >
       <div class="mt-0 w-full overflow-y-auto p-3" style="height: 100vh;">
@@ -975,9 +974,7 @@
         variant="outline"
         size="icon"
         class="absolute right-[785px] top-7  h-8 w-8 rounded-md"
-        on:click={(e) => {
-          showModal = false;
-        }}
+        on:click={closeModal}
       >
         <ChevronRight class="h-6 w-6 " />
       </Button>

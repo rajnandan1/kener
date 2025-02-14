@@ -312,11 +312,11 @@
         detail: showAddTrigger
       });
       window.dispatchEvent(noScrollEvent);
+      if (!showAddTrigger) {
+        window.location.hash = "";
+      }
     }
     //if modal closed then clear url hashed
-    if (!showAddTrigger) {
-      window.location.hash = "";
-    }
   }
 </script>
 
