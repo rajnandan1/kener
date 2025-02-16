@@ -87,8 +87,27 @@
         nameServer: "8.8.8.8",
         matchType: "ANY",
         values: []
-      }
+      },
+      groupConfig: createGroupConfig({
+        monitors: [],
+        timeout: 10000,
+        hideMonitors: false
+      })
     };
+  }
+
+  function createGroupConfig(groupConfig) {
+    let eligibleMonitors = monitors
+      .filter((m) => m.monitor_type != "GROUP" && m.status == "ACTIVE")
+      .map((m) => {
+        let isSelected = false;
+        if (groupConfig.monitors) {
+          isSelected = !!groupConfig.monitors.find((tm) => tm.id == m.id);
+        }
+
+        return { id: m.id, name: m.name, tag: m.tag, selected: isSelected };
+      });
+    return { monitors: eligibleMonitors, timeout: groupConfig.timeout, hideMonitors: groupConfig.hideMonitors };
   }
 
   function showUpdateMonitorSheet(m) {
@@ -103,6 +122,8 @@
       newMonitor.dnsConfig = JSON.parse(newMonitor.type_data);
     } else if (newMonitor.monitor_type == "TCP") {
       newMonitor.tcpConfig = JSON.parse(newMonitor.type_data);
+    } else if (newMonitor.monitor_type == "GROUP") {
+      newMonitor.groupConfig = createGroupConfig(JSON.parse(newMonitor.type_data));
     }
     showAddMonitor = true;
   }
@@ -439,7 +460,13 @@
             </DropdownMenu.Content>
           </DropdownMenu.Root>
 
-          <Button variant="secondary" class="h-8 w-8 p-2 " on:click={() => openAlertMenu(monitor)}>
+          <Button
+            variant="secondary"
+            class="h-8 w-8 p-2 {monitor.down_trigger?.active || monitor.degraded_trigger?.active
+              ? 'text-yellow-500'
+              : ''}"
+            on:click={() => openAlertMenu(monitor)}
+          >
             <Bell class="inline h-4 w-4" />
           </Button>
           <Button variant="secondary" class="h-8 w-8 p-2" href="#{monitor.tag}">

@@ -32,23 +32,6 @@
     }
   }
 
-  let isHome = !data.isCategoryPage && !data.isMonitorPage;
-
-  if (data.isCategoryPage) {
-    let category = data.site.categories.find((e) => e.name == data.categoryName);
-    if (!!category) {
-      data.site.hero.title = category.name;
-      data.site.hero.subtitle = category.description;
-    }
-  } else if (data.isMonitorPage) {
-    let monitor = data.monitors[0];
-    if (!!monitor) {
-      data.site.hero.title = monitor.name;
-      data.site.hero.subtitle = monitor.description;
-      data.site.hero.image = monitor.image;
-    }
-  }
-
   onMount(() => {
     pageLoaded = true;
   });
@@ -79,39 +62,40 @@
   {/if}
 </svelte:head>
 <div class="mt-12"></div>
-{#if data.site.hero}
+{#if data.hero}
   <section class="mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center">
     <div class="mx-auto max-w-screen-xl px-4 lg:flex lg:items-center">
       <div class="blurry-bg mx-auto max-w-3xl text-center">
-        {#if data.site.hero.image}
+        {#if data.hero.image}
           <GMI src={data.site.hero.image} classList="m-auto mb-2 h-14 w-14" alt="" srcset="" />
         {/if}
-        {#if data.site.hero.title}
+        {#if data.hero.title}
           <h1
             class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold leading-tight text-transparent"
           >
-            {@html data.site.hero.title}
+            {@html data.hero.title}
           </h1>
         {/if}
-        {#if data.site.hero.subtitle}
+        {#if data.hero.subtitle}
           <h2 class="mx-auto mt-4 max-w-xl sm:text-xl">
-            {@html data.site.hero.subtitle}
+            {@html data.hero.subtitle}
           </h2>
         {/if}
       </div>
     </div>
   </section>
 {/if}
-{#if !isHome}
+{#if data.pageType != "home"}
   <section class="mx-auto my-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center">
     <Button
       variant="outline"
       class="bounce-left h-8   justify-start  pl-1.5"
       on:click={() => {
-        if (data.isCategoryPage) {
+        if (data.pageType == "category") {
           return window.history.back();
-        }
-        if (data.isMonitorPage) {
+        } else if (data.pageType == "monitor") {
+          return (window.location.href = `${base}/`);
+        } else if (data.pageType == "group") {
           return (window.location.href = `${base}/`);
         }
       }}
@@ -222,7 +206,7 @@
     </Card.Root>
   </section>
 {/if}
-{#if data.site.categories && isHome}
+{#if data.site.categories && data.pageType == "home"}
   <section
     class="relative z-10 mx-auto mb-8 w-full max-w-[890px] flex-1 flex-col items-start backdrop-blur-[2px] md:w-[655px]"
   >

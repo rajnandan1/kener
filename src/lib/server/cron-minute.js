@@ -27,7 +27,7 @@ const alertingQueue = new Queue({
 });
 const apiQueue = new Queue({
   concurrency: 10, // Number of tasks that can run concurrently
-  timeout: 10000, // Timeout in ms after which a task will be considered as failed (optional)
+  timeout: 2 * 60 * 1000, // Timeout in ms after which a task will be considered as failed (optional)
   autostart: true, // Automatically start the queue (optional)
 });
 
@@ -75,29 +75,6 @@ async function manualIncident(monitor) {
   return manualData;
 }
 
-const tcpCall = async (hosts, tcpEval, tag) => {
-  let arrayOfPings = [];
-  for (let i = 0; i < hosts.length; i++) {
-    const host = hosts[i];
-    arrayOfPings.push(await TCP(host.type, host.host, host.port, host.timeout));
-  }
-  let respBase64 = Buffer.from(JSON.stringify(arrayOfPings)).toString("base64");
-
-  let evalResp = undefined;
-
-  try {
-    evalResp = await eval(tcpEval + `("${respBase64}")`);
-  } catch (error) {
-    console.log(`Error in tcpEval for ${tag}`, error.message);
-  }
-  //reduce to get the status
-  return {
-    status: evalResp.status,
-    latency: evalResp.latency,
-    type: REALTIME,
-  };
-};
-
 const Minuter = async (monitor) => {
   let realTimeData = {};
   let manualData = {};
@@ -132,6 +109,8 @@ const Minuter = async (monitor) => {
     realTimeData[startOfMinute] = await serviceClient.execute();
   } else if (monitor.monitor_type === "DNS") {
     realTimeData[startOfMinute] = await serviceClient.execute();
+  } else if (monitor.monitor_type === "GROUP") {
+    realTimeData[startOfMinute] = await serviceClient.execute(startOfMinute);
   }
 
   manualData = await manualIncident(monitor);

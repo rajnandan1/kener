@@ -8,18 +8,7 @@
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
 
-  import {
-    Share2,
-    Link,
-    CopyCheck,
-    Code,
-    Settings,
-    TrendingUp,
-    Percent,
-    Loader,
-    ChevronLeft,
-    ChevronRight
-  } from "lucide-svelte";
+  import { Share2, ArrowRight, Settings, TrendingUp, Loader, ChevronLeft, ChevronRight } from "lucide-svelte";
   import { buttonVariants } from "$lib/components/ui/button";
   import { createEventDispatcher } from "svelte";
   import { afterUpdate } from "svelte";
@@ -33,7 +22,6 @@
   const dispatch = createEventDispatcher();
 
   export let monitor;
-
   export let localTz;
   export let lang;
   export let embed = false;
@@ -224,6 +212,16 @@
             >
               <Share2 class="h-4 w-4 " />
             </Button>
+            {#if monitor.monitor_type === "GROUP"}
+              <Button
+                class="bounce-right h-5 p-0 text-muted-foreground hover:text-primary"
+                variant="link"
+                href="{base}?group={monitor.tag}"
+                rel="external"
+              >
+                <ArrowRight class="arrow h-4 w-4" />
+              </Button>
+            {/if}
           </div>
         </div>
       </div>

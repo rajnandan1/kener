@@ -36,6 +36,7 @@
   let formState = "idle";
 
   export let newMonitor;
+
   if (!!newMonitor && newMonitor.monitor_type == "PING" && !!!newMonitor.pingConfig.hosts) {
     newMonitor.pingConfig.hosts = [];
   }
@@ -250,17 +251,34 @@
         invalidFormMessage = "Invalid Name Server";
         return;
       }
-      //atleast one value should be present
+      //at least one value should be present
       if (
         !newMonitor.dnsConfig.values ||
         !Array.isArray(newMonitor.dnsConfig.values) ||
         newMonitor.dnsConfig.values.length === 0
       ) {
-        invalidFormMessage = "Atleast one value is required";
+        invalidFormMessage = "At least one value is required";
         return;
       }
       newMonitor.type_data = JSON.stringify(newMonitor.dnsConfig);
+    } else if (newMonitor.monitor_type === "GROUP") {
+      let selectedOnly = newMonitor.groupConfig.monitors.filter((monitor) => monitor.selected);
+      if (selectedOnly.length < 2) {
+        invalidFormMessage = "Select at least 2 monitors";
+        return;
+      }
+      //timeout >=1000
+      if (newMonitor.groupConfig.timeout < 1000) {
+        invalidFormMessage = "Timeout should be greater than or equal to 1000";
+        return;
+      }
+      newMonitor.type_data = JSON.stringify({
+        monitors: selectedOnly,
+        timeout: parseInt(newMonitor.groupConfig.timeout),
+        hideMonitors: newMonitor.groupConfig.hideMonitors
+      });
     }
+
     formState = "loading";
 
     try {
@@ -385,7 +403,7 @@
                 id="logo"
                 type="file"
                 disabled={loadingLogo}
-                accept=".jpg, .jpeg, .png"
+                accept=".jpg, .jpeg, .png, .svg"
                 on:change={(e) => {
                   handleFileChangeLogo(e);
                 }}
@@ -504,6 +522,7 @@
                 <Select.Item value="PING" label="PING" class="text-sm font-medium">PING</Select.Item>
                 <Select.Item value="DNS" label="DNS" class="text-sm font-medium">DNS</Select.Item>
                 <Select.Item value="TCP" label="TCP" class="text-sm font-medium">TCP</Select.Item>
+                <Select.Item value="GROUP" label="GROUP" class="text-sm font-medium">GROUP</Select.Item>
               </Select.Group>
             </Select.Content>
           </Select.Root>
@@ -866,6 +885,54 @@
                 </Button>
               </div>
             </div>
+          </div>
+        </div>
+      {:else if newMonitor.monitor_type == "GROUP"}
+        <div class="mt-4 grid grid-cols-6 gap-2">
+          <div class="col-span-6 mb-1">
+            <Label for="timeout">
+              Timeout(ms)
+              <span class="text-red-500">*</span>
+            </Label>
+            <Input bind:value={newMonitor.groupConfig.timeout} class="w-40" id="timeout" />
+            <p class="my-1 text-xs text-muted-foreground">
+              Maximum Time in milliseconds it will wait for all the monitors to resolved in that particular timestamp
+            </p>
+          </div>
+          <div class="col-span-6">
+            <Label class="text-sm">Monitors</Label>
+          </div>
+          {#each newMonitor.groupConfig.monitors as monitor}
+            <div class="col-span-3">
+              <label class="cursor-pointer">
+                <input
+                  type="checkbox"
+                  on:change={(e) => {
+                    monitor.selected = e.target.checked;
+                  }}
+                  checked={monitor.selected}
+                />
+                {monitor.name}
+                <span class="text-muted-foreground">({monitor.tag})</span>
+              </label>
+            </div>
+          {/each}
+          <div class="col-span-6 mt-2 rounded-sm border p-2">
+            <label class="cursor-pointer">
+              <input
+                type="checkbox"
+                on:change={(e) => {
+                  newMonitor.groupConfig.hideMonitors = e.target.checked;
+                }}
+                checked={newMonitor.groupConfig.hideMonitors}
+              />
+              Hide Grouped Monitors from Home View
+            </label>
+          </div>
+          <div class="col-span-6 mt-2">
+            <ul class="text-xs font-medium leading-5 text-muted-foreground">
+              <li>- The group status will be the worst status of the monitors in the group.</li>
+            </ul>
           </div>
         </div>
       {/if}
