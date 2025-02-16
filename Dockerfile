@@ -58,7 +58,7 @@ COPY . .
 # TODO: Reevaluate permissions (possibly reduce?)...
 # Remove docs directory and ensure required directories exist
 RUN rm -rf src/routes/\(docs\) && \
-    rm -rf src/static/documentation && \
+    rm -rf static/documentation && \
 		mkdir -p uploads database && \
 	# TODO: Consider changing below to `chmod -R u-rwX,g=rX,o= uploads database`
     chmod -R 750 uploads database
