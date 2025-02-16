@@ -32,7 +32,7 @@
     //broadcast a custom event named blockScroll
     if (!!isMounted) {
       const noScrollEvent = new CustomEvent("noScroll", {
-        detail: showAddMonitor
+        detail: showAddMonitor || draggableMenu || shareMenusToggle
       });
       window.dispatchEvent(noScrollEvent);
 
@@ -163,7 +163,7 @@
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ action: "getTriggers", data: { status: "ACTIVE" } })
+        body: JSON.stringify({ action: "getTriggers", data: {} })
       });
       triggers = await apiResp.json();
     } catch (error) {
@@ -623,7 +623,7 @@
             <p class="col-span-4 mt-2 text-sm font-medium">Choose Triggers</p>
             {#each triggers as trigger}
               <div class="col-span-1 overflow-hidden overflow-ellipsis whitespace-nowrap">
-                <label class="cursor-pointer">
+                <label class="cursor-pointer" class:line-through={trigger.trigger_status != "ACTIVE"}>
                   <input
                     type="checkbox"
                     class="text-sm"

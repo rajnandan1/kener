@@ -9,7 +9,7 @@ Ping monitors are used to monitor livenees of your servers. You can use Ping mon
 
 <div class="border rounded-md">
 
-![Monitors Ping](/m_ping.png)
+![Monitors Ping](/documentation/m_ping.png)
 
 </div>
 
@@ -32,29 +32,29 @@ This is an anonymous JS function, it should return a **Promise**, that resolves 
 > `{status:"DEGRADED", latency: 200}`.
 
 ```javascript
-(async function (responseDataBase64) {
-	let arrayOfPings = JSON.parse(atob(responseDataBase64));
-	let latencyTotal = arrayOfPings.reduce((acc, ping) => {
-		return acc + ping.latency;
-	}, 0);
+;(async function (responseDataBase64) {
+    let arrayOfPings = JSON.parse(atob(responseDataBase64))
+    let latencyTotal = arrayOfPings.reduce((acc, ping) => {
+        return acc + ping.latency
+    }, 0)
 
-	let alive = arrayOfPings.reduce((acc, ping) => {
-		return acc && ping.alive;
-	}, true);
+    let alive = arrayOfPings.reduce((acc, ping) => {
+        return acc && ping.alive
+    }, true)
 
-	return {
-		status: alive ? "UP" : "DOWN",
-		latency: latencyTotal / arrayOfPings.length
-	};
-});
+    return {
+        status: alive ? "UP" : "DOWN",
+        latency: latencyTotal / arrayOfPings.length
+    }
+})
 ```
 
 -   `responseDataBase64` **REQUIRED** is a string. It is the base64 encoded response data. To use it you will have to decode it and the JSON parse it. Once parse it will be an array of objects.
 
 ```js
-let decodedResp = atob(responseDataBase64);
-let jsonResp = JSON.parse(decodedResp);
-console.log(jsonResp);
+let decodedResp = atob(responseDataBase64)
+let jsonResp = JSON.parse(decodedResp)
+console.log(jsonResp)
 /*
 [
   {
@@ -109,28 +109,28 @@ The input to the eval function is a base64 encoded string. You will have to deco
 The following example shows how to use the eval function to evaluate the response. The function checks if the combined latency is more 10ms then returns `DEGRADED`.
 
 ```javascript
-(async function (responseDataBase64) {
-	let arrayOfPings = JSON.parse(atob(responseDataBase64));
-	let latencyTotal = arrayOfPings.reduce((acc, ping) => {
-		return acc + ping.latency;
-	}, 0);
+;(async function (responseDataBase64) {
+    let arrayOfPings = JSON.parse(atob(responseDataBase64))
+    let latencyTotal = arrayOfPings.reduce((acc, ping) => {
+        return acc + ping.latency
+    }, 0)
 
-	let areAllOpen = arrayOfPings.reduce((acc, ping) => {
-		return acc && ping.alive;
-	}, true);
+    let areAllOpen = arrayOfPings.reduce((acc, ping) => {
+        return acc && ping.alive
+    }, true)
 
-	let avgLatency = latencyTotal / arrayOfPings.length;
+    let avgLatency = latencyTotal / arrayOfPings.length
 
-	if (areAllOpen && avgLatency > 10) {
-		return {
-			status: "DEGRADED",
-			latency: avgLatency
-		};
-	}
+    if (areAllOpen && avgLatency > 10) {
+        return {
+            status: "DEGRADED",
+            latency: avgLatency
+        }
+    }
 
-	return {
-		status: areAllOpen ? "UP" : "DOWN",
-		latency: avgLatency
-	};
-});
+    return {
+        status: areAllOpen ? "UP" : "DOWN",
+        latency: avgLatency
+    }
+})
 ```

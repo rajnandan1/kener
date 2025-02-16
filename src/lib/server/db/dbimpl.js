@@ -339,7 +339,14 @@ class DbImpl {
 
   //get all alerts with given status
   async getTriggers(data) {
-    return await this.knex("triggers").where("trigger_status", data.status).orderBy("id", "desc");
+    let query = this.knex("triggers").whereRaw("1=1");
+    if (!!data.status) {
+      query = query.andWhere("trigger_status", data.status);
+    }
+    if (!!data.id) {
+      query = query.andWhere("id", data.id);
+    }
+    return await query.orderBy("id", "desc");
   }
 
   //get trigger by id

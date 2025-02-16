@@ -1,166 +1,166 @@
 {
-	"sidebar": [
-		{
-			"sectionTitle": "Getting Started",
-			"children": [
-				{
-					"title": "Introduction",
-					"link": "/docs/home",
-					"file": "/home.md"
-				},
-				{
-					"title": "Get Started",
-					"link": "/docs/quick-start",
-					"file": "/quick-start.md"
-				},
-				{
-					"title": "Concepts",
-					"link": "/docs/concepts",
-					"file": "/concepts.md"
-				},
+  "sidebar": [
+    {
+      "sectionTitle": "Getting Started",
+      "children": [
+        {
+          "title": "Introduction",
+          "link": "/docs/home",
+          "file": "/home.md"
+        },
+        {
+          "title": "Get Started",
+          "link": "/docs/quick-start",
+          "file": "/quick-start.md"
+        },
+        {
+          "title": "Concepts",
+          "link": "/docs/concepts",
+          "file": "/concepts.md"
+        },
 
-				{
-					"title": "Deployment",
-					"link": "/docs/deployment",
-					"file": "/deployment.md"
-				},
-				{
-					"title": "Databases",
-					"link": "/docs/database",
-					"file": "/database.md"
-				}
-			]
-		},
-		{
-			"sectionTitle": "Guides",
-			"children": [
-				{
-					"title": "Setup Environment",
-					"link": "/docs/environment-vars",
-					"file": "/environment-vars.md"
-				},
-				{
-					"title": "Use Badges",
-					"link": "/docs/status-badges",
-					"file": "/status-badges.md"
-				},
-				{
-					"title": "Setup Monitors",
-					"link": "/docs/monitors",
-					"file": "/monitors.md"
-				},
-				{
-					"title": "API/Website Monitor",
-					"link": "/docs/monitors-api",
-					"file": "/monitors-api.md"
-				},
-				{
-					"title": "Ping Monitor",
-					"link": "/docs/monitors-ping",
-					"file": "/monitors-ping.md"
-				},
-				{
-					"title": "TCP Monitor",
-					"link": "/docs/monitors-tcp",
-					"file": "/monitors-tcp.md"
-				},
-				{
-					"title": "DNS Monitor",
-					"link": "/docs/monitors-dns",
-					"file": "/monitors-dns.md"
-				},
-				{
-					"title": "Setup Triggers",
-					"link": "/docs/triggers",
-					"file": "/triggers.md"
-				},
-				{
-					"title": "Setup Site",
-					"link": "/docs/site",
-					"file": "/site.md"
-				},
-				{
-					"title": "Setup Github",
-					"link": "/docs/gh-setup",
-					"file": "/gh-setup.md"
-				},
-				{
-					"title": "Setup SEO",
-					"link": "/docs/seo",
-					"file": "/seo.md"
-				},
-				{
-					"title": "Setup Home",
-					"link": "/docs/home-page",
-					"file": "/home-page.md"
-				},
-				{
-					"title": "Setup Theme",
-					"link": "/docs/theme",
-					"file": "/theme.md"
-				},
-				{
-					"title": "View Alerts",
-					"link": "/docs/alerts",
-					"file": "/alerts.md"
-				},
-				{
-					"title": "API Keys",
-					"link": "/docs/apikeys",
-					"file": "/apikeys.md"
-				},
+        {
+          "title": "Deployment",
+          "link": "/docs/deployment",
+          "file": "/deployment.md"
+        },
+        {
+          "title": "Databases",
+          "link": "/docs/database",
+          "file": "/database.md"
+        }
+      ]
+    },
+    {
+      "sectionTitle": "Guides",
+      "children": [
+        {
+          "title": "Setup Environment",
+          "link": "/docs/environment-vars",
+          "file": "/environment-vars.md"
+        },
+        {
+          "title": "Use Badges",
+          "link": "/docs/status-badges",
+          "file": "/status-badges.md"
+        },
+        {
+          "title": "Setup Monitors",
+          "link": "/docs/monitors",
+          "file": "/monitors.md"
+        },
+        {
+          "title": "API/Website Monitor",
+          "link": "/docs/monitors-api",
+          "file": "/monitors-api.md"
+        },
+        {
+          "title": "Ping Monitor",
+          "link": "/docs/monitors-ping",
+          "file": "/monitors-ping.md"
+        },
+        {
+          "title": "TCP Monitor",
+          "link": "/docs/monitors-tcp",
+          "file": "/monitors-tcp.md"
+        },
+        {
+          "title": "DNS Monitor",
+          "link": "/docs/monitors-dns",
+          "file": "/monitors-dns.md"
+        },
+        {
+          "title": "Group Monitor",
+          "link": "/docs/monitors-group",
+          "file": "/monitors-group.md"
+        },
+        {
+          "title": "Setup Triggers",
+          "link": "/docs/triggers",
+          "file": "/triggers.md"
+        },
+        {
+          "title": "Setup Site",
+          "link": "/docs/site",
+          "file": "/site.md"
+        },
+        {
+          "title": "Setup SEO",
+          "link": "/docs/seo",
+          "file": "/seo.md"
+        },
+        {
+          "title": "Setup Home",
+          "link": "/docs/home-page",
+          "file": "/home-page.md"
+        },
+        {
+          "title": "Setup Theme",
+          "link": "/docs/theme",
+          "file": "/theme.md"
+        },
+        {
+          "title": "View Alerts",
+          "link": "/docs/alerts",
+          "file": "/alerts.md"
+        },
+        {
+          "title": "API Keys",
+          "link": "/docs/apikeys",
+          "file": "/apikeys.md"
+        },
 
-				{
-					"title": "Incident Management",
-					"link": "/docs/incident-management",
-					"file": "/incident-management.md"
-				},
-				{
-					"title": "Embed",
-					"link": "/docs/embed",
-					"file": "/embed.md"
-				},
-				{
-					"title": "Custom JS/CSS",
-					"link": "/docs/custom-js-css-guide",
-					"file": "/custom-js-css-guide.md"
-				},
-				{
-					"title": "Internationalization",
-					"link": "/docs/i18n",
-					"file": "/i18n.md"
-				}
-			]
-		},
-		{
-			"sectionTitle": "API Reference",
-			"children": [
-				{
-					"title": "Kener APIs",
-					"link": "/docs/kener-apis",
-					"file": "/kener-apis.md"
-				}
-			]
-		},
-		{
-			"sectionTitle": "Help",
-			"children": [
-				{
-					"title": "Fonts",
-					"link": "/docs/custom-fonts",
-					"file": "/custom-fonts.md"
-				},
-				{
-					"title": "Changelogs",
-					"link": "/docs/changelogs",
-					"file": "/changelogs.md"
-				},
-				{
-					"title": "Roadmap",
-					"link": "/docs/roadmap",
-					"file": "/roadmap.md"
-				}
-			]
-		}
-	]
+        {
+          "title": "Incident Management",
+          "link": "/docs/incident-management",
+          "file": "/incident-management.md"
+        },
+        {
+          "title": "Embed",
+          "link": "/docs/embed",
+          "file": "/embed.md"
+        },
+        {
+          "title": "Custom JS/CSS",
+          "link": "/docs/custom-js-css-guide",
+          "file": "/custom-js-css-guide.md"
+        },
+        {
+          "title": "Internationalization",
+          "link": "/docs/i18n",
+          "file": "/i18n.md"
+        }
+      ]
+    },
+    {
+      "sectionTitle": "API Reference",
+      "children": [
+        {
+          "title": "Kener APIs",
+          "link": "/docs/kener-apis",
+          "file": "/kener-apis.md"
+        }
+      ]
+    },
+    {
+      "sectionTitle": "Help",
+      "children": [
+        {
+          "title": "Fonts",
+          "link": "/docs/custom-fonts",
+          "file": "/custom-fonts.md"
+        },
+        {
+          "title": "Changelogs",
+          "link": "/docs/changelogs",
+          "file": "/changelogs.md"
+        },
+        {
+          "title": "Roadmap",
+          "link": "/docs/roadmap",
+          "file": "/roadmap.md"
+        }
+      ]
+    }
+  ]
 }
