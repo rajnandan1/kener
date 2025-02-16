@@ -9,7 +9,7 @@ Triggers are used to trigger actions based on the status of your monitors. You c
 
 <div class="border rounded-md">
 
-![Trigger API](/trig_1.png)
+![Trigger API](/documentation/trig_1.png)
 
 </div>
 
@@ -38,7 +38,7 @@ Webhook triggers are used to send a HTTP POST request to a URL when a monitor go
 
 <div class="border rounded-md">
 
-![Trigger API](/trig_web.png)
+![Trigger API](/documentation/trig_web.png)
 
 </div>
 
@@ -72,24 +72,24 @@ Body of the webhook will be sent as below:
 
 ```json
 {
-	"id": "mockoon-9",
-	"alert_name": "Mockoon DOWN",
-	"severity": "critical",
-	"status": "TRIGGERED",
-	"source": "Kener",
-	"timestamp": "2024-11-27T04:55:00.369Z",
-	"description": "🚨 **Service Alert**: Check the details below",
-	"details": {
-		"metric": "Mockoon",
-		"current_value": 1,
-		"threshold": 1
-	},
-	"actions": [
-		{
-			"text": "View Monitor",
-			"url": "https://kener.ing/monitor-mockoon"
-		}
-	]
+    "id": "mockoon-9",
+    "alert_name": "Mockoon DOWN",
+    "severity": "critical",
+    "status": "TRIGGERED",
+    "source": "Kener",
+    "timestamp": "2024-11-27T04:55:00.369Z",
+    "description": "🚨 **Service Alert**: Check the details below",
+    "details": {
+        "metric": "Mockoon",
+        "current_value": 1,
+        "threshold": 1
+    },
+    "actions": [
+        {
+            "text": "View Monitor",
+            "url": "https://kener.ing/monitor-mockoon"
+        }
+    ]
 }
 ```
 
@@ -118,7 +118,7 @@ Discord triggers are used to send a message to a discord channel when a monitor 
 
 <div class="border rounded-md">
 
-![Trigger API](/trig_2.png)
+![Trigger API](/documentation/trig_2.png)
 
 </div>
 
@@ -147,7 +147,7 @@ The discord message when alert is `TRIGGERED` will look like this
 
 The discord message when alert is `RESOLVED` will look like this
 
-![Discord](/discord_resolved.png)
+![Discord](/documentation/discord_resolved.png)
 
 ## Slack
 
@@ -155,7 +155,7 @@ Slack triggers are used to send a message to a slack channel when a monitor goes
 
 <div class="border rounded-md">
 
-![Trigger API](/trig_3.png)
+![Trigger API](/documentation/trig_3.png)
 
 </div>
 
@@ -185,7 +185,7 @@ The slack message when alert is `TRIGGERED` will look like this
 
 The slack message when alert is `RESOLVED` will look like this
 
-![Slack](/slack_resolved.png)
+![Slack](/documentation/slack_resolved.png)
 
 ## Email
 
@@ -193,7 +193,7 @@ Email triggers are used to send an email when a monitor goes down or up. Kener s
 
 <div class="border rounded-md">
 
-![Trigger API](/trig_4.png)
+![Trigger API](/documentation/trig_4.png)
 
 </div>
 
@@ -250,11 +250,11 @@ Subject of the email when `RESOLVED`
 
 The emaik message when alert is `TRIGGERED` will look like this
 
-![Slack](/em_t.png)
+![Slack](/documentation/em_t.png)
 
 The emaik message when alert is `RESOLVED` will look like this
 
-![Slack](/em_r.png)
+![Slack](/documentation/em_r.png)
 
 ---
 
@@ -278,9 +278,9 @@ Set the URL to `https://api.telegram.org/bot[BOT_TOKEN]/sendMessage`. Replace [B
 
 ```json
 {
-	"chat_id": "[CHAT_ID]", // Replace [CHAT_ID] with your chat id
-	"text": "<b>${alert_name}</b>\n\n<b>Severity:</b> <code>${severity}</code>\n<b>Status:</b> ${status}\n<b>Source:</b> Kener\n<b>Time:</b> ${timestamp}\n\n📌 <b>Details:</b>\n- <b>Metric:</b>${metric}\n- <b>Current Value:</b> <code>${current_value}</code>\n- <b>Threshold:</b> <code>${threshold}</code>\n\n🔍 <a href=\"${action_url}\">${action_text}</a>",
-	"parse_mode": "HTML"
+    "chat_id": "[CHAT_ID]", // Replace [CHAT_ID] with your chat id
+    "text": "<b>${alert_name}</b>\n\n<b>Severity:</b> <code>${severity}</code>\n<b>Status:</b> ${status}\n<b>Source:</b> Kener\n<b>Time:</b> ${timestamp}\n\n📌 <b>Details:</b>\n- <b>Metric:</b>${metric}\n- <b>Current Value:</b> <code>${current_value}</code>\n- <b>Threshold:</b> <code>${threshold}</code>\n\n🔍 <a href=\"${action_url}\">${action_text}</a>",
+    "parse_mode": "HTML"
 }
 ```
 

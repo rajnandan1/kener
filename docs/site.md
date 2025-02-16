@@ -19,11 +19,11 @@ Example: `Kener - Open-Source and Modern looking Node.js Status Page for Effortl
 
 ```html
 <title>
-	Kener - Open-Source and Modern looking Node.js Status Page for Effortless Incident Management
+    Kener - Open-Source and Modern looking Node.js Status Page for Effortless Incident Management
 </title>
 ```
 
-![Site Title](/ms_1.png)
+![Site Title](/documentation/ms_1.png)
 
 ## Site Name
 
@@ -33,7 +33,7 @@ Example: `Kener - Open-Source and Modern looking Node.js Status Page for Effortl
 
 This will be shown as a brand name on the status page on the nav bar top left.
 
-![Site Name](/s_2.png)
+![Site Name](/documentation/s_2.png)
 
 ## Home Location
 

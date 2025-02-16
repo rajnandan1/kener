@@ -9,7 +9,7 @@ API monitors are used to monitor APIs. You can use API monitors to monitor the u
 
 <div class="border rounded-md">
 
-![Monitors API](/m_api.png)
+![Monitors API](/documentation/m_api.png)
 
 </div>
 
@@ -69,7 +69,7 @@ This is an anonymous JS function, it should return a **Promise**, that resolves 
 -   `responseDataBase64` **REQUIRED** is a string. It is the base64 encoded response data. To use it you will have to decode it
 
 ```js
-let decodedResp = atob(responseDataBase64);
+let decodedResp = atob(responseDataBase64)
 //if the response is a json object
 //let jsonResp = JSON.parse(decodedResp)
 ```
@@ -79,61 +79,61 @@ let decodedResp = atob(responseDataBase64);
 The following example shows how to use the eval function to evaluate the response. The function checks if the status code is 2XX then the status is UP, if the status code is 5XX then the status is DOWN. If the response contains the word `Unknown Error` then the status is DOWN. If the response time is greater than 2000 then the status is DEGRADED.
 
 ```javascript
-(async function (statusCode, responseTime, responseDataBase64) {
-	const resp = atob(responseDataBase64); //convert base64 to string
+;(async function (statusCode, responseTime, responseDataBase64) {
+    const resp = atob(responseDataBase64) //convert base64 to string
 
-	let status = "DOWN";
+    let status = "DOWN"
 
-	//if the status code is 2XX then the status is UP
-	if (/^[2]\d{2}$/.test(statusCode)) {
-		status = "UP";
-		if (responseTime > 2000) {
-			status = "DEGRADED";
-		}
-	}
+    //if the status code is 2XX then the status is UP
+    if (/^[2]\d{2}$/.test(statusCode)) {
+        status = "UP"
+        if (responseTime > 2000) {
+            status = "DEGRADED"
+        }
+    }
 
-	//if the status code is 5XX then the status is DOWN
-	if (/^[5]\d{2}$/.test(statusCode)) status = "DOWN";
+    //if the status code is 5XX then the status is DOWN
+    if (/^[5]\d{2}$/.test(statusCode)) status = "DOWN"
 
-	if (resp.includes("Unknown Error")) {
-		status = "DOWN";
-	}
+    if (resp.includes("Unknown Error")) {
+        status = "DOWN"
+    }
 
-	return {
-		status: status,
-		latency: responseTime
-	};
-});
+    return {
+        status: status,
+        latency: responseTime
+    }
+})
 ```
 
 This next example shows how to call another API withing eval. It is scrapping the second last script tag from the response and checking if the heading is "No recent issues" then the status is UP else it is DOWN.
 
 ```javascript
-(async function raj(statusCode, responseTime, responseDataBase64) {
-	let htmlString = atob(responseDataBase64);
-	const scriptTags = htmlString.match(/<script[^>]*src="([^"]+)"[^>]*>/g);
-	if (scriptTags && scriptTags.length >= 2) {
-		// Extract the second last script tag's src attribute
-		const secondLastScript = scriptTags[scriptTags.length - 2];
-		const srcMatch = secondLastScript.match(/src="([^"]+)"/);
-		const secondLastScriptSrc = srcMatch ? srcMatch[1] : null;
+;(async function raj(statusCode, responseTime, responseDataBase64) {
+    let htmlString = atob(responseDataBase64)
+    const scriptTags = htmlString.match(/<script[^>]*src="([^"]+)"[^>]*>/g)
+    if (scriptTags && scriptTags.length >= 2) {
+        // Extract the second last script tag's src attribute
+        const secondLastScript = scriptTags[scriptTags.length - 2]
+        const srcMatch = secondLastScript.match(/src="([^"]+)"/)
+        const secondLastScriptSrc = srcMatch ? srcMatch[1] : null
 
-		let jsResp = await fetch(secondLastScriptSrc); //api call
-		let jsRespText = await jsResp.text();
-		//check if heading":"No recent issues" exists
-		let noRecentIssues = jsRespText.indexOf('heading":"No recent issues"');
-		if (noRecentIssues != -1) {
-			return {
-				status: "UP",
-				latency: responseTime
-			};
-		}
-	}
-	return {
-		status: "DOWN",
-		latency: responseTime
-	};
-});
+        let jsResp = await fetch(secondLastScriptSrc) //api call
+        let jsRespText = await jsResp.text()
+        //check if heading":"No recent issues" exists
+        let noRecentIssues = jsRespText.indexOf('heading":"No recent issues"')
+        if (noRecentIssues != -1) {
+            return {
+                status: "UP",
+                latency: responseTime
+            }
+        }
+    }
+    return {
+        status: "DOWN",
+        latency: responseTime
+    }
+})
 ```
 
 ## Examples
@@ -153,7 +153,7 @@ This is an example to monitor google every 5 minute.
 
 <div class="border rounded-md">
 
-![Monitors API](/m_ex_website.png)
+![Monitors API](/documentation/m_ex_website.png)
 
 </div>
 
@@ -180,7 +180,7 @@ export SOME_TOKEN=some-token-example
 
 <div class="border rounded-md p-1">
 
-![Monitors API](/m_ex_2.png)
+![Monitors API](/documentation/m_ex_2.png)
 
 </div>
 
@@ -201,7 +201,7 @@ Example showing setting up a POST request every minute with a timeout of 2 secon
 
 <div class="border rounded-md p-1">
 
-![Monitors API](/m_ex_3.png)
+![Monitors API](/documentation/m_ex_3.png)
 
 </div>
 
@@ -228,7 +228,7 @@ export SERVICE_SECRET=secret2_secret
 
 <div class="border rounded-md p-1">
 
-![Monitors API](/m_ex_4.png)
+![Monitors API](/documentation/m_ex_4.png)
 
 </div>
 

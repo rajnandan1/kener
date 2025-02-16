@@ -3,6 +3,7 @@ import ApiCall from "./apiCall.js";
 import PingCall from "./pingCall.js";
 import TcpCall from "./tcpCall.js";
 import DnsCall from "./dnsCall.js";
+import GroupCall from "./groupCall.js";
 
 class Service {
   service;
@@ -18,13 +19,15 @@ class Service {
       this.service = new DnsCall(monitor);
     } else if (monitor.monitor_type === "NONE") {
       this.service = null;
+    } else if (monitor.monitor_type === "GROUP") {
+      this.service = new GroupCall(monitor);
     } else {
       console.log("Invalid monitor.monitor_type ", monitor.monitor_type);
       process.exit(1);
     }
   }
-  async execute() {
-    return await this.service.execute();
+  async execute(...p) {
+    return await this.service.execute(...p);
   }
 }
 
