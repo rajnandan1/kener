@@ -33,6 +33,11 @@ trim_trailing_whitespace = false
 indent_style = space
 indent_size = 2
 
+# CSS & PostCSS files
+[*.{css,postcss}]
+indent_style = space
+indent_size = 2
+
 # Markdown files
 [*.md]
 indent_style = space
