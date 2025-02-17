@@ -97,7 +97,7 @@ class DbImpl {
       .whereIn("monitor_tag", monitor_tags_arr)
       .where("timestamp", "=", timestamp)
       .groupBy("timestamp")
-      .having("total_entries", "=", monitor_tags_arr.length)
+      .havingRaw("COUNT(*) = ?", [monitor_tags_arr.length])
       .orderBy("timestamp", "desc")
       .limit(1)
       .first();
