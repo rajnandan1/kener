@@ -67,7 +67,7 @@
     <div class="mx-auto max-w-screen-xl px-4 lg:flex lg:items-center">
       <div class="blurry-bg mx-auto max-w-3xl text-center">
         {#if data.hero.image}
-          <GMI src={data.site.hero.image} classList="m-auto mb-2 h-14 w-14" alt="" srcset="" />
+          <GMI src={data.hero.image} classList="m-auto mb-2 h-14 w-14" alt="" srcset="" />
         {/if}
         {#if data.hero.title}
           <h1

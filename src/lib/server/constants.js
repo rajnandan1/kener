@@ -8,13 +8,12 @@ const SITE = "./config/site.yaml";
 const UP = "UP";
 const DOWN = "DOWN";
 const DEGRADED = "DEGRADED";
+const NO_DATA = "NO_DATA";
 const API_TIMEOUT = 10 * 1000; // 10 seconds
 const AnalyticsProviders = {
   GA: "https://unpkg.com/@analytics/google-analytics@1.0.7/dist/@analytics/google-analytics.min.js",
-  AMPLITUDE:
-    "https://unpkg.com/@analytics/amplitude@0.1.3/dist/@analytics/amplitude.min.js",
-  MIXPANEL:
-    "https://unpkg.com/@analytics/mixpanel@0.4.0/dist/@analytics/mixpanel.min.js",
+  AMPLITUDE: "https://unpkg.com/@analytics/amplitude@0.1.3/dist/@analytics/amplitude.min.js",
+  MIXPANEL: "https://unpkg.com/@analytics/mixpanel@0.4.0/dist/@analytics/mixpanel.min.js",
 };
 const AllRecordTypes = {
   A: 1,
@@ -117,4 +116,5 @@ export {
   TIMEOUT,
   ERROR,
   MANUAL,
+  NO_DATA,
 };
