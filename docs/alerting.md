@@ -64,24 +64,24 @@ Body of the webhook will be sent as below:
 
 ```json
 {
-	"id": "mockoon-9",
-	"alert_name": "Mockoon DOWN",
-	"severity": "critical",
-	"status": "TRIGGERED",
-	"source": "Kener",
-	"timestamp": "2024-11-27T04:55:00.369Z",
-	"description": "🚨 **Service Alert**: Check the details below",
-	"details": {
-		"metric": "Mockoon",
-		"current_value": 1,
-		"threshold": 1
-	},
-	"actions": [
-		{
-			"text": "View Monitor",
-			"url": "https://kener.ing/monitor-mockoon"
-		}
-	]
+    "id": "mockoon-9",
+    "alert_name": "Mockoon DOWN",
+    "severity": "critical",
+    "status": "TRIGGERED",
+    "source": "Kener",
+    "timestamp": "2024-11-27T04:55:00.369Z",
+    "description": "🚨 **Service Alert**: Check the details below",
+    "details": {
+        "metric": "Mockoon",
+        "current_value": 1,
+        "threshold": 1
+    },
+    "actions": [
+        {
+            "text": "View Monitor",
+            "url": "https://kener.ing/monitor-mockoon"
+        }
+    ]
 }
 ```
 
@@ -108,7 +108,7 @@ The discord message when alert is `TRIGGERED` will look like this
 
 The discord message when alert is `RESOLVED` will look like this
 
-![Discord](/discord_resolved.png)
+![Discord](/documentation/discord_resolved.png)
 
 ### Slack
 
@@ -118,7 +118,7 @@ The slack message when alert is `TRIGGERED` will look like this
 
 The slack message when alert is `RESOLVED` will look like this
 
-![Slack](/slack_resolved.png)
+![Slack](/documentation/slack_resolved.png)
 
 ### Add Alerts to Monitors
 

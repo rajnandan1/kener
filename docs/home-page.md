@@ -21,7 +21,7 @@ A small text that will be shown below the title.
 
 <div class="border rounded-md">
 
-![Hero Section](/home_1.png)
+![Hero Section](/documentation/home_1.png)
 
 </div>
 
@@ -31,7 +31,7 @@ A small text that will be shown below the title.
 
 You can navigation links to other urls. You can add as many as you want.
 
-![Nav Section](/home_2.png)
+![Nav Section](/documentation/home_2.png)
 
 ### Icon
 
@@ -45,7 +45,7 @@ The title of the link.
 
 The URL to redirect to when the link is clicked.
 
-![Nav Section](/home_3.png)
+![Nav Section](/documentation/home_3.png)
 
 ---
 

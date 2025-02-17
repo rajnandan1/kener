@@ -11,7 +11,7 @@ Kener provides you with the ability to customize the theme of your status page. 
 
 ## Home Page Pattern
 
-Kener can show a subtle pattern in all your pages. It is either sqaure or dots. Right now you cannot modify the color of the pattern. However, you can disable it by choosing none
+Kener can show a subtle pattern in all your pages. It is either square or dots. Right now you cannot modify the color of the pattern. However, you can disable it by choosing none
 
 ---
 
@@ -35,13 +35,13 @@ You can change how the bars and summary of a monitor looks like.
 
 The status bar will be a gradient from green to red/yellow based on the status of the monitor.
 
-![Trigger API](/x1.png)
+![Trigger API](/documentation/x1.png)
 
 #### Full
 
 The status bar will be a solid color based on the status of the monitor.
 
-![Trigger API](/x2.png)
+![Trigger API](/documentation/x2.png)
 
 ---
 
@@ -51,11 +51,11 @@ Adjust the roundness of the status bar.
 
 #### SHARP
 
-![Trigger API](/x4.png)
+![Trigger API](/documentation/x4.png)
 
 #### ROUNDED
 
-![Trigger API](/x3.png)
+![Trigger API](/documentation/x3.png)
 
 ---
 
@@ -97,7 +97,7 @@ You can add custom CSS to your status page. This will be added to the head of th
 
 ```css
 .my-class {
-	color: red;
+    color: red;
 }
 ```
 

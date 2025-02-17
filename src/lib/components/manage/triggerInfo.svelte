@@ -312,7 +312,11 @@
         detail: showAddTrigger
       });
       window.dispatchEvent(noScrollEvent);
+      if (!showAddTrigger) {
+        window.location.hash = "";
+      }
     }
+    //if modal closed then clear url hashed
   }
 </script>
 
@@ -325,12 +329,8 @@
       <Select.Content>
         <Select.Group>
           <Select.Label>Status</Select.Label>
-          <Select.Item value="ACTIVE" label="ACTIVE" class="text-sm font-medium">
-            ACTIVE
-          </Select.Item>
-          <Select.Item value="INACTIVE" label="INACTIVE" class="text-sm font-medium">
-            INACTIVE
-          </Select.Item>
+          <Select.Item value="ACTIVE" label="ACTIVE" class="text-sm font-medium">ACTIVE</Select.Item>
+          <Select.Item value="INACTIVE" label="INACTIVE" class="text-sm font-medium">INACTIVE</Select.Item>
         </Select.Group>
       </Select.Content>
     </Select.Root>
@@ -350,29 +350,13 @@
       <Card.Header class="relative">
         <Card.Title>
           {#if trigger.trigger_type == "webhook"}
-            <img
-              src={base + "/webhooks.svg"}
-              alt={trigger.trigger_type}
-              class="mr-2 inline-block h-6 w-6"
-            />
+            <img src={base + "/webhooks.svg"} alt={trigger.trigger_type} class="mr-2 inline-block h-6 w-6" />
           {:else if trigger.trigger_type == "slack"}
-            <img
-              src={base + "/slack.svg"}
-              alt={trigger.trigger_type}
-              class="mr-2 inline-block h-6 w-6"
-            />
+            <img src={base + "/slack.svg"} alt={trigger.trigger_type} class="mr-2 inline-block h-6 w-6" />
           {:else if trigger.trigger_type == "discord"}
-            <img
-              src={base + "/discord.svg"}
-              alt={trigger.trigger_type}
-              class="mr-2 inline-block h-6 w-6"
-            />
+            <img src={base + "/discord.svg"} alt={trigger.trigger_type} class="mr-2 inline-block h-6 w-6" />
           {:else if trigger.trigger_type == "email"}
-            <img
-              src={base + "/email.png"}
-              alt={trigger.trigger_type}
-              class="mr-2 inline-block h-6 w-6"
-            />
+            <img src={base + "/email.png"} alt={trigger.trigger_type} class="mr-2 inline-block h-6 w-6" />
           {/if}
           {trigger.name}
         </Card.Title>
@@ -435,8 +419,7 @@
               class="peer sr-only"
               checked={newTrigger.trigger_status == "ACTIVE"}
               on:change={() => {
-                newTrigger.trigger_status =
-                  newTrigger.trigger_status == "ACTIVE" ? "INACTIVE" : "ACTIVE";
+                newTrigger.trigger_status = newTrigger.trigger_status == "ACTIVE" ? "INACTIVE" : "ACTIVE";
               }}
             />
             <div
@@ -447,8 +430,7 @@
       </div>
       <div class="mt-12 w-full overflow-y-auto p-3" style="height: calc(100vh - 7rem);">
         <p class="mb-4">
-          Select the type of Trigger you want to add. You can add multiple Triggers of different
-          types.
+          Select the type of Trigger you want to add. You can add multiple Triggers of different types.
         </p>
         <div class="flex justify-stretch gap-4">
           <Button
@@ -513,11 +495,7 @@
               </span>
               Trigger
             </Label>
-            <Input
-              class="mt-2"
-              bind:value={newTrigger.trigger_desc}
-              placeholder="Example: This is a trigger."
-            />
+            <Input class="mt-2" bind:value={newTrigger.trigger_desc} placeholder="Example: This is a trigger." />
           </div>
           {#if newTrigger.trigger_type != "email"}
             <div class="mt-4 w-full">
@@ -526,11 +504,7 @@
                 Trigger
                 <span class="text-red-500">*</span>
               </Label>
-              <Input
-                class="mt-2"
-                bind:value={newTrigger.trigger_meta.url}
-                placeholder="https://example.com/url"
-              />
+              <Input class="mt-2" bind:value={newTrigger.trigger_meta.url} placeholder="https://example.com/url" />
             </div>
           {/if}
           {#if newTrigger.trigger_type == "webhook"}
@@ -549,9 +523,7 @@
                       class=" h-6 w-6 p-1"
                       variant="secondary"
                       on:click={() => {
-                        newTrigger.trigger_meta.headers = newTrigger.trigger_meta.headers.filter(
-                          (_, i) => i !== index
-                        );
+                        newTrigger.trigger_meta.headers = newTrigger.trigger_meta.headers.filter((_, i) => i !== index);
                       }}
                     >
                       <X class="h-5 w-5" />
@@ -583,8 +555,8 @@
                 </label>
                 {#if !!newTrigger.trigger_meta.has_webhook_body}
                   <p class="my-2 text-xs text-muted-foreground">
-                    You can use a custom webhook body. The body should be a valid for the
-                    Content-Type header you have set. The default is JSON. There are <a
+                    You can use a custom webhook body. The body should be a valid for the Content-Type header you have
+                    set. The default is JSON. There are <a
                       target="_blank"
                       class="text-blue-500"
                       href="https://kener.ing/docs/triggers#webhook-body">variables</a
@@ -618,15 +590,12 @@
                 <div class="rounded-md border bg-card p-2 text-xs">
                   <p class="text-sm font-semibold">Email Trigger</p>
                   <p class="text-xs">
-                    Kener uses <a href="https://resend.com/" class="text-blue-500" target="_blank"
-                      >resend</a
-                    >
-                    to send emails. Please make sure you have created an account with resend. Also add
-                    the resend api key as environment variable
+                    Kener uses <a href="https://resend.com/" class="text-blue-500" target="_blank">resend</a>
+                    to send emails. Please make sure you have created an account with resend. Also add the resend api key
+                    as environment variable
                     <span class="font-mono">RESEND_API_KEY</span>.
                     <span class="text-red-500"
-                      >The RESEND_API_KEY is not set in your environment variable. Please set it and
-                      restart the server</span
+                      >The RESEND_API_KEY is not set in your environment variable. Please set it and restart the server</span
                     >.
                   </p>
                 </div>
@@ -637,44 +606,28 @@
                       Host
                       <span class="text-red-500">*</span>
                     </Label>
-                    <Input
-                      class="mt-2"
-                      bind:value={newTrigger.trigger_meta.smtp_host}
-                      placeholder="smtp.example.com"
-                    />
+                    <Input class="mt-2" bind:value={newTrigger.trigger_meta.smtp_host} placeholder="smtp.example.com" />
                   </div>
                   <div>
                     <Label class="text-sm">
                       Port
                       <span class="text-red-500">*</span>
                     </Label>
-                    <Input
-                      class="mt-2"
-                      bind:value={newTrigger.trigger_meta.smtp_port}
-                      placeholder="587"
-                    />
+                    <Input class="mt-2" bind:value={newTrigger.trigger_meta.smtp_port} placeholder="587" />
                   </div>
                   <div>
                     <Label class="text-sm">
                       User
                       <span class="text-red-500">*</span>
                     </Label>
-                    <Input
-                      class="mt-2"
-                      bind:value={newTrigger.trigger_meta.smtp_user}
-                      placeholder="raj@example.com"
-                    />
+                    <Input class="mt-2" bind:value={newTrigger.trigger_meta.smtp_user} placeholder="raj@example.com" />
                   </div>
                   <div>
                     <Label class="text-sm">
                       Password
                       <span class="text-red-500">*</span>
                     </Label>
-                    <Input
-                      class="mt-2"
-                      bind:value={newTrigger.trigger_meta.smtp_pass}
-                      placeholder="*******"
-                    />
+                    <Input class="mt-2" bind:value={newTrigger.trigger_meta.smtp_pass} placeholder="*******" />
                   </div>
                 </div>
                 <div class="my-2">
@@ -707,27 +660,17 @@
                 Add Name and Sender Email Address
                 <span class="text-red-500">*</span>
               </Label>
-              <Input
-                class="mt-2"
-                bind:value={newTrigger.trigger_meta.from}
-                placeholder="Alerts <alert@example.com>"
-              />
+              <Input class="mt-2" bind:value={newTrigger.trigger_meta.from} placeholder="Alerts <alert@example.com>" />
             </div>
           {/if}
         </div>
       </div>
-      <div
-        class="absolute bottom-0 grid h-16 w-full grid-cols-6 justify-end gap-2 border-t p-3 pr-6"
-      >
+      <div class="absolute bottom-0 grid h-16 w-full grid-cols-6 justify-end gap-2 border-t p-3 pr-6">
         <div class="col-span-5 py-2.5">
           <p class="text-right text-xs font-medium text-red-500">{invalidFormMessage}</p>
         </div>
         <div class="col-span-1">
-          <Button
-            class="col-span-1 w-full"
-            disabled={formState === "loading"}
-            on:click={addNewTrigger}
-          >
+          <Button class="col-span-1 w-full" disabled={formState === "loading"} on:click={addNewTrigger}>
             Save
             {#if formState === "loading"}
               <Loader class="ml-2 inline h-4 w-4 animate-spin" />

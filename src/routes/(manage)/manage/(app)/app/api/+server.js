@@ -11,6 +11,7 @@ import {
   GetAllTriggers,
   UpdateTriggerData,
   GetAllAlertsPaginated,
+  GetIncidentByIDDashboard,
   GetMonitorsParsed,
   GetAllAPIKeys,
   GetAllSiteData,
@@ -80,6 +81,11 @@ export async function POST({ request, cookies }) {
       resp = await UpdateApiKeyStatus(data);
     } else if (action == "getIncidents") {
       resp = await GetIncidentsDashboard(data);
+    } else if (action == "getIncident") {
+      resp = await GetIncidentByIDDashboard(data);
+      if (!!!resp) {
+        throw new Error("Incident not found");
+      }
     } else if (action == "createIncident") {
       resp = await CreateIncident(data);
     } else if (action == "updateIncident") {

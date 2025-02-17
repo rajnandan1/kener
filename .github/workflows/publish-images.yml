@@ -160,7 +160,7 @@ jobs:
           # Check if VERSION is empty and set a fallback value
           if [ -z "$VERSION" ]; then
             # Fetch the latest release using Git
-            git tag -l --sort=-v:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1
+            VERSION=$(git tag -l --sort=-v:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || echo "3.1.0")
           fi
 
           echo "Setting BUILD_VERSION to $VERSION"

@@ -31,7 +31,7 @@ RUN apk add --no-cache --update \
         g++=14.2.0-r4 \
         sqlite=3.48.0-r0 \
         sqlite-dev=3.48.0-r0 \
-        tzdata=2024b-r1 \
+        tzdata \
         iputils=20240905-r0
 
 FROM builder-${VARIANT} AS builder
@@ -58,7 +58,8 @@ COPY . .
 # TODO: Reevaluate permissions (possibly reduce?)...
 # Remove docs directory and ensure required directories exist
 RUN rm -rf src/routes/\(docs\) && \
-    mkdir -p uploads database && \
+    rm -rf static/documentation && \
+		mkdir -p uploads database && \
 	# TODO: Consider changing below to `chmod -R u-rwX,g=rX,o= uploads database`
     chmod -R 750 uploads database
 
@@ -84,7 +85,7 @@ FROM node:${ALPINE_VERSION} AS final-alpine
 RUN apk add --no-cache --update \
 	iputils=20240905-r0 \
 	sqlite=3.48.0-r0 \
-	tzdata=2024b-r1
+	tzdata
 
 FROM final-${VARIANT} AS final
 

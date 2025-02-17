@@ -9,7 +9,7 @@ DNS monitors are used to monitor DNS servers. Verify DNS queries for your server
 
 <div class="border rounded-md">
 
-![Monitors Ping](/m_dns.png)
+![Monitors Ping](/documentation/m_dns.png)
 
 </div>
 

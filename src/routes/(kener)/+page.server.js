@@ -1,26 +1,83 @@
 // @ts-nocheck
 import { FetchData } from "$lib/server/page";
-import {
-  GetMonitors,
-  GetIncidentsOpenHome,
-} from "$lib/server/controllers/controller.js";
+import { GetMonitors, GetIncidentsOpenHome } from "$lib/server/controllers/controller.js";
 import { SortMonitor } from "$lib/clientTools.js";
 import moment from "moment";
 function removeTags(str) {
   if (str === null || str === "") return false;
   else str = str.toString();
 
-  // Regular expression to identify HTML tags in
-  // the input string. Replacing the identified
-  // HTML tag with a null string.
   return str.replace(/(<([^>]+)>)/gi, "");
 }
-export async function load({ parent, url }) {
-  let monitors = await GetMonitors({ status: "ACTIVE" });
+
+async function returnTypeOfMonitorsPageMeta(url) {
   const query = url.searchParams;
-  const requiredCategory = query.get("category") || "Home";
+  let filter = {
+    status: "ACTIVE",
+  };
+
+  let pageType = "home";
+  let group;
+  if (!!query.get("category") && query.get("category") !== "Home") {
+    filter.category_name = query.get("category");
+    pageType = "category";
+  }
+
+  if (!!query.get("monitor")) {
+    filter.tag = query.get("monitor");
+    pageType = "monitor";
+  }
+
+  if (!!query.get("group")) {
+    let g = await GetMonitors({ status: "ACTIVE", tag: query.get("group") });
+    if (g.length > 0) {
+      group = g[0];
+      let typeData = JSON.parse(g[0].type_data);
+      let groupPresentMonitorTags = typeData.monitors.map((monitor) => monitor.tag);
+      filter.tags = groupPresentMonitorTags;
+      pageType = "group";
+    }
+  }
+
+  let monitors = await GetMonitors(filter);
+  return { monitors, pageType, group };
+}
+
+export async function load({ parent, url }) {
+  const query = url.searchParams;
+
+  let { monitors, pageType, group } = await returnTypeOfMonitorsPageMeta(url);
+  let hiddenGroupedMonitorsTags = [];
+  for (let i = 0; i < monitors.length; i++) {
+    if (pageType === "home" && monitors[i].monitor_type === "GROUP") {
+      let typeData = JSON.parse(monitors[i].type_data);
+      if (typeData.monitors && typeData.hideMonitors) {
+        hiddenGroupedMonitorsTags = hiddenGroupedMonitorsTags.concat(typeData.monitors.map((monitor) => monitor.tag));
+      }
+    }
+  }
+  monitors = monitors
+    .map((monitor) => {
+      return {
+        tag: monitor.tag,
+        name: monitor.name,
+        description: monitor.description,
+        monitor_type: monitor.monitor_type,
+        image: monitor.image,
+        category_name: monitor.category_name,
+        day_degraded_minimum_count: monitor.day_degraded_minimum_count,
+        day_down_minimum_count: monitor.day_down_minimum_count,
+        id: monitor.id,
+        image: monitor.image,
+        include_degraded_in_downtime: monitor.include_degraded_in_downtime,
+      };
+    })
+    .filter((monitor) => !hiddenGroupedMonitorsTags.includes(monitor.tag));
+
   const parentData = await parent();
   const siteData = parentData.site;
+  let hero = siteData.hero;
+
   let pageTitle = siteData.title;
   let canonical = siteData.siteURL;
   let pageDescription = "";
@@ -28,69 +85,66 @@ export async function load({ parent, url }) {
   if (descDb) {
     pageDescription = descDb.value;
   }
+
   monitors = SortMonitor(siteData.monitorSort, monitors);
   const monitorsActive = [];
   for (let i = 0; i < monitors.length; i++) {
-    //only return monitors that have category as home or category is not present
-    if (
-      !!!query.get("monitor") &&
-      !!monitors[i].category_name &&
-      monitors[i].category_name !== requiredCategory
-    ) {
-      continue;
-    }
-    if (query.get("monitor") && query.get("monitor") !== monitors[i].tag) {
-      continue;
-    }
-    delete monitors[i].api;
-    delete monitors[i].default_status;
-
-    let data = await FetchData(
-      siteData,
-      monitors[i],
-      parentData.localTz,
-      parentData.selectedLang,
-      parentData.lang,
-    );
+    let data = await FetchData(siteData, monitors[i], parentData.localTz, parentData.selectedLang, parentData.lang);
     monitors[i].pageData = data;
 
     monitors[i].activeIncidents = [];
     monitorsActive.push(monitors[i]);
   }
-  let startWithin = moment()
-    .subtract(siteData.homeIncidentStartTimeWithin, "days")
-    .unix();
-  let endWithin = moment()
-    .add(siteData.homeIncidentStartTimeWithin, "days")
-    .unix();
-  let allOpenIncidents = await GetIncidentsOpenHome(
-    siteData.homeIncidentCount,
-    startWithin,
-    endWithin,
-  );
+
+  let startWithin = moment().subtract(siteData.homeIncidentStartTimeWithin, "days").unix();
+  let endWithin = moment().add(siteData.homeIncidentStartTimeWithin, "days").unix();
+  let allOpenIncidents = await GetIncidentsOpenHome(siteData.homeIncidentCount, startWithin, endWithin);
 
   //if not home page
-  let isCategoryPage =
-    !!query.get("category") && query.get("category") !== "Home";
-  let isMonitorPage = !!query.get("monitor");
-  if (isMonitorPage && monitorsActive.length > 0) {
+  let isCategoryPage = pageType === "category";
+  let isMonitorPage = pageType === "monitor";
+  let isGroupPage = pageType === "group";
+
+  if (isMonitorPage) {
     pageTitle = monitorsActive[0].name + " - " + pageTitle;
     pageDescription = monitorsActive[0].description;
     canonical = canonical + "?monitor=" + monitorsActive[0].tag;
+    hero = {
+      title: monitorsActive[0].name,
+      subtitle: monitorsActive[0].description,
+      image: monitorsActive[0].image,
+    };
   }
+
+  if (isGroupPage) {
+    pageTitle = group.name + " - " + pageTitle;
+    pageDescription = group.description;
+    canonical = canonical + "?group=" + group.tag;
+
+    hero = {
+      title: group.name,
+      subtitle: group.description,
+      image: group.image,
+    };
+  }
+
   //if category page
   if (isCategoryPage) {
     let allCategories = siteData.categories;
-    let selectedCategory = allCategories.find(
-      (category) => category.name === requiredCategory,
-    );
+    let selectedCategory = allCategories.find((category) => category.name === query.get("category"));
     if (selectedCategory) {
       pageTitle = selectedCategory.name + " - " + pageTitle;
       pageDescription = selectedCategory.description;
-      canonical = canonical + "?category=" + requiredCategory;
+      canonical = canonical + "?category=" + query.get("category");
+
+      hero = {
+        title: selectedCategory.name,
+        subtitle: selectedCategory.description,
+        image: selectedCategory.image,
+      };
     }
   }
-  if (isCategoryPage || isMonitorPage) {
+  if (isCategoryPage || isMonitorPage || isGroupPage) {
     let eligibleTags = monitorsActive.map((monitor) => monitor.tag);
     //filter incidents that have monitor_tag in monitors
     allOpenIncidents = allOpenIncidents.filter((incident) => {
@@ -117,29 +171,23 @@ export async function load({ parent, url }) {
         name: monitor.name,
         description: monitor.description,
         image: monitor.image,
-        impact_type: incidentMonitors.filter(
-          (m) => m.monitor_tag === monitor.tag,
-        )[0].monitor_impact,
+        impact_type: incidentMonitors.filter((m) => m.monitor_tag === monitor.tag)[0].monitor_impact,
       };
     });
     return incident;
   });
 
-  let allRecentIncidents = allOpenIncidents.filter(
-    (incident) => incident.incident_type == "INCIDENT",
-  );
-  let allRecentMaintenances = allOpenIncidents.filter(
-    (incident) => incident.incident_type == "MAINTENANCE",
-  );
+  let allRecentIncidents = allOpenIncidents.filter((incident) => incident.incident_type == "INCIDENT");
+  let allRecentMaintenances = allOpenIncidents.filter((incident) => incident.incident_type == "MAINTENANCE");
   return {
     monitors: monitorsActive,
     allRecentIncidents,
     allRecentMaintenances,
-    categoryName: requiredCategory,
-    isCategoryPage: isCategoryPage,
-    isMonitorPage: isMonitorPage,
+    pageType,
     pageTitle: pageTitle,
     pageDescription: removeTags(pageDescription),
+    hero,
+    categoryName: query.get("category"),
     canonical,
   };
 }

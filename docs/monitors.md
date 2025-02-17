@@ -13,7 +13,7 @@ Click on the ➕ to add a monitor.
 
 <div class="border rounded-md">
 
-![Monitors Main](/m_main.png)
+![Monitors Main](/documentation/m_main.png)
 
 </div>
 

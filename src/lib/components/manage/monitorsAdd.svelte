@@ -12,6 +12,7 @@
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
+  import GMI from "$lib/components/gmi.svelte";
 
   export let categories = [];
   export let colorDown = "#777";
@@ -31,9 +32,14 @@
     //broadcast a custom event named blockScroll
     if (!!isMounted) {
       const noScrollEvent = new CustomEvent("noScroll", {
-        detail: showAddMonitor
+        detail: showAddMonitor || draggableMenu || shareMenusToggle
       });
       window.dispatchEvent(noScrollEvent);
+
+      //if modal closed then clear url hashed
+      if (!showAddMonitor) {
+        window.location.hash = "";
+      }
     }
   }
 
@@ -81,8 +87,27 @@
         nameServer: "8.8.8.8",
         matchType: "ANY",
         values: []
-      }
+      },
+      groupConfig: createGroupConfig({
+        monitors: [],
+        timeout: 10000,
+        hideMonitors: false
+      })
     };
+  }
+
+  function createGroupConfig(groupConfig) {
+    let eligibleMonitors = monitors
+      .filter((m) => m.monitor_type != "GROUP" && m.status == "ACTIVE")
+      .map((m) => {
+        let isSelected = false;
+        if (groupConfig.monitors) {
+          isSelected = !!groupConfig.monitors.find((tm) => tm.id == m.id);
+        }
+
+        return { id: m.id, name: m.name, tag: m.tag, selected: isSelected };
+      });
+    return { monitors: eligibleMonitors, timeout: groupConfig.timeout, hideMonitors: groupConfig.hideMonitors };
   }
 
   function showUpdateMonitorSheet(m) {
@@ -97,6 +122,8 @@
       newMonitor.dnsConfig = JSON.parse(newMonitor.type_data);
     } else if (newMonitor.monitor_type == "TCP") {
       newMonitor.tcpConfig = JSON.parse(newMonitor.type_data);
+    } else if (newMonitor.monitor_type == "GROUP") {
+      newMonitor.groupConfig = createGroupConfig(JSON.parse(newMonitor.type_data));
     }
     showAddMonitor = true;
   }
@@ -136,7 +163,7 @@
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ action: "getTriggers", data: { status: "ACTIVE" } })
+        body: JSON.stringify({ action: "getTriggers", data: {} })
       });
       triggers = await apiResp.json();
     } catch (error) {
@@ -304,7 +331,7 @@
             <div animate:flip={{ duration: flipDurationMs }} class="mb-2 rounded-md bg-card p-2">
               <Grip class="mr-2 inline h-4 w-4" />
               {#if !!monitor.image}
-                <img src={base + monitor.image} alt={monitor.name} class="mr-1 inline-block h-4 w-4" />
+                <GMI src={monitor.image} alt={monitor.name} classList="mr-1 inline-block h-4 w-4" />
               {/if}
               {monitor.name}
             </div>
@@ -392,7 +419,7 @@
       <Card.Header class="relative">
         <Card.Title>
           {#if !!monitor.image}
-            <img src={base + monitor.image} alt={monitor.name} class="mr-2 inline-block h-8 w-8" />
+            <GMI src={monitor.image} alt={monitor.name} classList="mr-2 inline-block h-8 w-8" />
           {/if}
           {monitor.name}
         </Card.Title>
@@ -433,7 +460,13 @@
             </DropdownMenu.Content>
           </DropdownMenu.Root>
 
-          <Button variant="secondary" class="h-8 w-8 p-2 " on:click={() => openAlertMenu(monitor)}>
+          <Button
+            variant="secondary"
+            class="h-8 w-8 p-2 {monitor.down_trigger?.active || monitor.degraded_trigger?.active
+              ? 'text-yellow-500'
+              : ''}"
+            on:click={() => openAlertMenu(monitor)}
+          >
             <Bell class="inline h-4 w-4" />
           </Button>
           <Button variant="secondary" class="h-8 w-8 p-2" href="#{monitor.tag}">
@@ -590,7 +623,7 @@
             <p class="col-span-4 mt-2 text-sm font-medium">Choose Triggers</p>
             {#each triggers as trigger}
               <div class="col-span-1 overflow-hidden overflow-ellipsis whitespace-nowrap">
-                <label class="cursor-pointer">
+                <label class="cursor-pointer" class:line-through={trigger.trigger_status != "ACTIVE"}>
                   <input
                     type="checkbox"
                     class="text-sm"

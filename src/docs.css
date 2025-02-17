@@ -1,69 +1,82 @@
 code:not([class^="language-"]) {
-	@apply rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-800;
+  @apply rounded bg-gray-100 px-1.5 py-0.5 font-mono text-xs dark:bg-gray-800;
 }
 
 .sidebar-item.active,
 .sidebar-item:hover {
-	color: #ed702d;
+  color: #ed702d;
 }
 
 .w-585px {
-	width: 585px;
+  width: 585px;
 }
 
 main {
-	scroll-behavior: smooth;
+  scroll-behavior: smooth;
 }
 .kener-home-links a {
-	text-decoration: none;
-	background-color: var(--bg-background);
+  text-decoration: none;
+  background-color: var(--bg-background);
 }
 .kener-home-links > div:hover {
-	transition: all 0.3s;
-	box-shadow: 0 0 8px 1.5px #3e9a4b;
+  transition: all 0.3s;
+  box-shadow: 0 0 8px 1.5px #3e9a4b;
 }
 
 .accm input:checked ~ div {
-	display: block;
+  display: block;
 }
 .accm input ~ div {
-	display: none;
+  display: none;
 }
 
 .accm input {
-	visibility: hidden;
+  visibility: hidden;
 }
 
 .accmt {
-	background-color: hsl(223, 10%, 14%);
+  background-color: hsl(223, 10%, 14%);
 }
 
 .accm input:checked ~ .showaccm span:first-child {
-	display: none;
+  display: none;
 }
 .accm input:checked ~ .showaccm span:last-child {
-	display: block;
+  display: block;
 }
 .accm input ~ .showaccm span:first-child {
-	display: block;
+  display: block;
 }
 .accm input ~ .showaccm span:last-child {
-	display: none;
+  display: none;
 }
 
 .hljs {
-	background: transparent !important;
+  background: transparent !important;
 }
 
 .note {
-	@apply mt-4 rounded-md border bg-background p-3 text-sm shadow-sm;
+  @apply mt-4 rounded-md border bg-background p-3 text-sm shadow-sm;
 }
 .note.danger {
-	border: 1px solid #e3342f;
-	color: #e3342f;
+  border: 1px solid #e3342f;
+  color: #e3342f;
 }
 
 .note.info {
-	border: 1px solid #3490dc;
-	color: #3490dc;
+  border: 1px solid #3490dc;
+  color: #3490dc;
+}
+
+.copybtn .copy-btn {
+  transform: scale(1);
+}
+.copybtn .check-btn {
+  transform: scale(0);
+}
+.copybtn:focus .copy-btn {
+  transform: scale(0);
+}
+.copybtn:focus .check-btn {
+  transform: scale(1);
 }

@@ -23,6 +23,9 @@ Which version of kener you are using.
 **Environment**
 Which environment you are using or where is it deployed. `docker`, `kubernetes`, `bare-metal`, `development`, `pm2` etc
 
+**Database**
+Which database you are using. `sqlite`, `mysql`, `postgres`
+
 **Expected behavior**
 A clear and concise description of what you expected to happen.
 

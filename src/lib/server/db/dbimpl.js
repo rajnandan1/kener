@@ -79,6 +79,30 @@ class DbImpl {
     return data;
   }
 
+  async getLastStatusBeforeCombined(monitor_tags_arr, timestamp) {
+    //monitor_tag_arr is an array of string
+    return await this.knex("monitoring_data")
+      .select(
+        "timestamp",
+        this.knex.raw("COUNT(*) as total_entries"),
+        this.knex.raw("AVG(latency) as latency"),
+        this.knex.raw(`
+				CASE 
+				WHEN SUM(CASE WHEN status = 'DOWN' THEN 1 ELSE 0 END) > 0 THEN 'DOWN'
+				WHEN SUM(CASE WHEN status = 'DEGRADED' THEN 1 ELSE 0 END) > 0 THEN 'DEGRADED'
+				ELSE 'UP'
+				END as status
+			`),
+      )
+      .whereIn("monitor_tag", monitor_tags_arr)
+      .where("timestamp", "=", timestamp)
+      .groupBy("timestamp")
+      .havingRaw("COUNT(*) = ?", [monitor_tags_arr.length])
+      .orderBy("timestamp", "desc")
+      .limit(1)
+      .first();
+  }
+
   async background() {
     //clear data older than 90 days
     let ninetyDaysAgo = GetMinuteStartNowTimestampUTC() - 86400 * 100;
@@ -272,6 +296,14 @@ class DbImpl {
     if (!!data.id) {
       query = query.andWhere("id", data.id);
     }
+    if (!!data.tag) {
+      query = query.andWhere("tag", data.tag);
+    }
+    if (!!data.tags) {
+      query = query.andWhere((builder) => {
+        builder.whereIn("tag", data.tags);
+      });
+    }
     return await query.orderBy("id", "desc");
   }
 
@@ -307,7 +339,14 @@ class DbImpl {
 
   //get all alerts with given status
   async getTriggers(data) {
-    return await this.knex("triggers").where("trigger_status", data.status).orderBy("id", "desc");
+    let query = this.knex("triggers").whereRaw("1=1");
+    if (!!data.status) {
+      query = query.andWhere("trigger_status", data.status);
+    }
+    if (!!data.id) {
+      query = query.andWhere("id", data.id);
+    }
+    return await query.orderBy("id", "desc");
   }
 
   //get trigger by id

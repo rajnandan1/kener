@@ -66,15 +66,10 @@
         let i = { ...incident };
         if (!!!i.end_date_time) {
           i.duration = moment
-            .duration(
-              parseInt(new Date().getTime() / 1000) - parseInt(i.start_date_time),
-              "seconds"
-            )
+            .duration(parseInt(new Date().getTime() / 1000) - parseInt(i.start_date_time), "seconds")
             .humanize();
         } else {
-          i.duration = moment
-            .duration(parseInt(i.end_date_time) - parseInt(i.start_date_time), "seconds")
-            .humanize();
+          i.duration = moment.duration(parseInt(i.end_date_time) - parseInt(i.start_date_time), "seconds").humanize();
         }
         return i;
       });
@@ -109,11 +104,40 @@
   let isMounted = false;
 
   //find by id and open modal
-  function findEventByIdAndOpenModal(id) {
+  async function findEventByIdAndOpenModal(id) {
     id = parseInt(id);
+    if (isNaN(id)) {
+      return;
+    }
     let incident = incidents.find((i) => i.id == id);
     if (!!incident) {
       openIncidentSettings(incident);
+    } else {
+      loadingData = true;
+
+      try {
+        let resp = await fetch(base + "/manage/app/api/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            action: "getIncident",
+            data: {
+              incident_id: id
+            }
+          })
+        });
+        let data = await resp.json();
+        if (!!data.error) {
+          throw new Error(data.error);
+        }
+        openIncidentSettings(data);
+      } catch (e) {
+        alert(e);
+      } finally {
+        loadingData = false;
+      }
     }
   }
 
@@ -393,6 +417,11 @@
       });
       window.dispatchEvent(noScrollEvent);
     }
+    //if modal closed then clear url hashed
+  }
+  function closeModal() {
+    showModal = false;
+    window.location.hash = "";
   }
 </script>
 
@@ -419,9 +448,7 @@
             <Select.Label>Status</Select.Label>
             <Select.Item value="ALL" label="ALL" class="text-sm font-medium">ALL</Select.Item>
             <Select.Item value="OPEN" label="OPEN" class="text-sm font-medium">ACTIVE</Select.Item>
-            <Select.Item value="CLOSED" label="CLOSED" class="text-sm font-medium">
-              DELETED
-            </Select.Item>
+            <Select.Item value="CLOSED" label="CLOSED" class="text-sm font-medium">DELETED</Select.Item>
           </Select.Group>
         </Select.Content>
       </Select.Root>
@@ -537,9 +564,7 @@
                   </td>
                   <td class=" px-6 py-4 text-xs font-semibold">
                     <Tooltip.Root openDelay={100}>
-                      <Tooltip.Trigger
-                        class="max-w-[12rem] overflow-hidden text-ellipsis whitespace-nowrap"
-                      >
+                      <Tooltip.Trigger class="max-w-[12rem] overflow-hidden text-ellipsis whitespace-nowrap">
                         {incident.title}
                       </Tooltip.Trigger>
                       <Tooltip.Content>
@@ -562,14 +587,10 @@
                           class=" flex items-center justify-center rounded border bg-card p-1.5 text-xs font-medium shadow-popover outline-none"
                         >
                           <span class="mr-1 inline-block text-muted-foreground">From</span>
-                          {moment(Number(incident.start_date_time) * 1000).format(
-                            "YYYY-MM-DD HH:mm:ss"
-                          )}
+                          {moment(Number(incident.start_date_time) * 1000).format("YYYY-MM-DD HH:mm:ss")}
                           <span class="mx-1 inline-block text-muted-foreground">To</span>
                           {#if incident.end_date_time}
-                            {moment(Number(incident.end_date_time) * 1000).format(
-                              "YYYY-MM-DD HH:mm:ss"
-                            )}
+                            {moment(Number(incident.end_date_time) * 1000).format("YYYY-MM-DD HH:mm:ss")}
                           {:else}
                             Now
                           {/if}
@@ -640,9 +661,7 @@
     <div
       transition:slide={{ direction: "right", duration: 200 }}
       use:clickOutsideAction
-      on:clickoutside={(e) => {
-        showModal = false;
-      }}
+      on:clickoutside={closeModal}
       class="absolute right-0 top-0 h-screen w-[800px] border-l bg-background p-4 shadow-xl"
     >
       <div class="mt-0 w-full overflow-y-auto p-3" style="height: 100vh;">
@@ -695,11 +714,7 @@
                   </span>
                 {/if}
               </Label>
-              <Input
-                class="mt-2"
-                bind:value={newIncident.title}
-                placeholder="Outage in all servers"
-              />
+              <Input class="mt-2" bind:value={newIncident.title} placeholder="Outage in all servers" />
             </div>
           </div>
 
@@ -887,9 +902,7 @@
             <div class="mt-4 border-t">
               {#each comments as comment}
                 <div class="flex items-center justify-between gap-2 border-b py-2">
-                  <div
-                    class="w-full rounded px-2 py-2 {newComment.id == comment.id ? 'bg-input' : ''}"
-                  >
+                  <div class="w-full rounded px-2 py-2 {newComment.id == comment.id ? 'bg-input' : ''}">
                     <p class="mb-2 text-xs font-medium">{comment.comment}</p>
                     <div class="flex w-full justify-between gap-x-2">
                       <div class="text-xs font-semibold text-muted-foreground">
@@ -911,12 +924,7 @@
                         >
                           <PenLine class="inline h-4 w-4 text-muted-foreground" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          class="h-5 w-5 p-1"
-                          on:click={() => deleteComment(comment)}
-                        >
+                        <Button variant="ghost" size="icon" class="h-5 w-5 p-1" on:click={() => deleteComment(comment)}>
                           <Trash class="inline h-4 w-4 text-muted-foreground" />
                         </Button>
                       </div>
@@ -966,9 +974,7 @@
         variant="outline"
         size="icon"
         class="absolute right-[785px] top-7  h-8 w-8 rounded-md"
-        on:click={(e) => {
-          showModal = false;
-        }}
+        on:click={closeModal}
       >
         <ChevronRight class="h-6 w-6 " />
       </Button>
@@ -977,9 +983,7 @@
 {/if}
 
 {#if editMonitorsModal}
-  <div
-    class="moldal-container fixed left-0 top-0 z-50 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm"
-  >
+  <div class="moldal-container fixed left-0 top-0 z-50 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm">
     <div
       class="absolute left-1/2 top-1/2 h-fit w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background shadow-lg backdrop-blur-lg"
     >
@@ -1022,26 +1026,15 @@
                   }}
                 >
                   <Select.Trigger id="impact-{monitor.tag}">
-                    <Select.Value
-                      bind:value={monitor.monitor_impact}
-                      placeholder={monitor.monitor_impact}
-                    />
+                    <Select.Value bind:value={monitor.monitor_impact} placeholder={monitor.monitor_impact} />
                   </Select.Trigger>
                   <Select.Content>
                     <Select.Group>
                       <Select.Label>Impact</Select.Label>
-                      <Select.Item
-                        value="DOWN"
-                        label="DOWN"
-                        class="text-api-down text-sm font-medium"
-                      >
+                      <Select.Item value="DOWN" label="DOWN" class="text-api-down text-sm font-medium">
                         DOWN
                       </Select.Item>
-                      <Select.Item
-                        value="DEGRADED"
-                        label="DEGRADED"
-                        class="text-api-degraded text-sm font-medium"
-                      >
+                      <Select.Item value="DEGRADED" label="DEGRADED" class="text-api-degraded text-sm font-medium">
                         DEGRADED
                       </Select.Item>
                     </Select.Group>
