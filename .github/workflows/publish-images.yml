@@ -37,9 +37,31 @@ jobs:
             exit 1
           )
 
+  check-dependabot-prs:
+    runs-on: ubuntu-latest
+    outputs:
+      has_dependabot_prs: ${{ steps.check.outputs.has_dependabot_prs }}
+    steps:
+      - name: Check for Open Dependabot PRs
+        id: check
+        run: |
+          PRS=$(gh pr list --repo ${{ github.repository }} --author "dependabot[bot]" --state open --json number --jq 'length')
+          echo "Open Dependabot PRs: $PRS"
+          if [ "$PRS" -gt 0 ]; then
+            echo "has_dependabot_prs=true" >> $GITHUB_ENV
+            exit 1  # Fail the workflow
+          else
+            echo "has_dependabot_prs=false" >> $GITHUB_ENV
+          fi
+          env:
+            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build-and-push-to-registries:
-    needs: check-lockfile  # Runs only after `check-lockfile` completes successfully
+    # Runs only after `check-lockfile` and `check-dependabot-prs` jobs complete successfully
+    needs: [check-lockfile, check-dependabot-prs]
     name: Push Docker images to Docker Hub and GitHub Container Registry
+    # Ensures that there are no open Dependabot PRs before building Docker images
+    if: needs.check-dependabot-prs.outputs.has_dependabot_prs == 'false'
     strategy:
       matrix:
         variant: [alpine, debian]
