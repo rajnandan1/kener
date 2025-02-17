@@ -31,7 +31,7 @@ RUN apk add --no-cache --update \
         g++=14.2.0-r4 \
         sqlite=3.48.0-r0 \
         sqlite-dev=3.48.0-r0 \
-        tzdata \
+        tzdata=2025a-r0 \
         iputils=20240905-r0
 
 FROM builder-${VARIANT} AS builder
@@ -85,7 +85,7 @@ FROM node:${ALPINE_VERSION} AS final-alpine
 RUN apk add --no-cache --update \
 	iputils=20240905-r0 \
 	sqlite=3.48.0-r0 \
-	tzdata
+	tzdata=2025a-r0
 
 FROM final-${VARIANT} AS final
 
