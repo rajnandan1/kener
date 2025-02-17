@@ -6,7 +6,7 @@
   export let data;
   let subHeadings = [];
   let previousH2 = null;
-  let subPath = data.docFilePath.split(".md")[0];
+
   function fillSubHeadings() {
     subHeadings = [];
     const headings = document.querySelectorAll("#markdown h2, #markdown h3");
@@ -48,7 +48,7 @@
 				<svg class="check-btn absolute left-0 top-0" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="green" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check"><path d="M20 6 9 17l-5-5"/></svg>`;
       button.style = "margin-left: 10px;height:16px;width:16px background-color: transparent; cursor: pointer;";
       button.onclick = () => {
-        navigator.clipboard.writeText(`https://kener.ing/docs${subPath}#` + heading.id);
+        navigator.clipboard.writeText(`https://kener.ing/docs${data.docFilePath.split(".md")[0]}#` + heading.id);
       };
       heading.appendChild(button);
     });
@@ -121,7 +121,7 @@
 <svelte:head>
   <title>{data.title}</title>
   <meta name="description" content={data.description} />
-  <link rel="canonical" href="https://kener.ing/docs{subPath}" />
+  <link rel="canonical" href="https://kener.ing/docs{data.docFilePath.split('.md')[0]}" />
 </svelte:head>
 
 <div id="markdown">

@@ -17,6 +17,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { format, subMonths, addMonths, startOfMonth } from "date-fns";
+import { UP, DOWN, DEGRADED, NO_DATA } from "../constants.js";
 
 const saltRounds = 10;
 const DUMMY_SECRET = "DUMMY_SECRET";
@@ -199,17 +200,28 @@ export const CreateUpdateMonitor = async (monitor) => {
 export const GetMonitors = async (data) => {
   return await db.getMonitors(data);
 };
-export const GetMonitorsParsed = async (data) => {
-  let monitors = await db.getMonitors(data);
-  let parsedMonitors = monitors.map((m) => {
-    let parsedMonitor = { ...m };
-    if (!!parsedMonitor.type_data) {
-      parsedMonitor.type_data = JSON.parse(parsedMonitor.type_data);
+export const GetMonitorsParsed = async (query) => {
+  // Retrieve monitors from the database based on the provided query
+  const rawMonitors = await db.getMonitors(query);
+
+  // Parse type_data if available for each monitor
+  const parsedMonitors = rawMonitors.map((monitor) => {
+    const monitorData = { ...monitor };
+
+    if (monitorData.type_data) {
+      try {
+        monitorData.type_data = JSON.parse(monitorData.type_data);
+      } catch (error) {
+        // Fallback to an empty object if JSON parsing fails
+        monitorData.type_data = {};
+      }
     } else {
-      parsedMonitor.type_data = {};
+      monitorData.type_data = {};
     }
-    return parsedMonitor;
+
+    return monitorData;
   });
+
   return parsedMonitors;
 };
 
@@ -386,31 +398,32 @@ export const HashString = (str) => {
   return hash.digest("hex");
 };
 
-export const InterpolateData = (data, start, anchorStatus, e) => {
-  let finalData = [];
-  let status = anchorStatus || "UP";
-  let end = start;
-  if (!!data && data.length > 0) {
-    end = data[data.length - 1].timestamp;
+export const InterpolateData = (rawData, startTimestamp, initialStatus, overrideEndTimestamp) => {
+  const interpolatedData = [];
+  let currentStatus = initialStatus || "UP";
+  let endTimestamp = startTimestamp;
+
+  if (rawData && rawData.length > 0) {
+    endTimestamp = rawData[rawData.length - 1].timestamp;
+  }
+  if (overrideEndTimestamp) {
+    endTimestamp = overrideEndTimestamp;
   }
 
-  if (e) {
-    end = e;
-  }
-  let dataMap = data.reduce((acc, d) => {
-    acc[d.timestamp] = d;
-    return acc;
+  const dataByTimestamp = rawData.reduce((accumulator, entry) => {
+    accumulator[entry.timestamp] = entry;
+    return accumulator;
   }, {});
 
-  for (let i = start; i <= end; i += 60) {
-    let nowData = dataMap[i];
-    if (!!nowData) {
-      status = nowData.status;
+  for (let timestamp = startTimestamp; timestamp <= endTimestamp; timestamp += 60) {
+    const currentEntry = dataByTimestamp[timestamp];
+    if (currentEntry) {
+      currentStatus = currentEntry.status;
     }
-
-    finalData.push({ timestamp: i, status: status });
+    interpolatedData.push({ timestamp, status: currentStatus });
   }
-  return finalData;
+
+  return interpolatedData;
 };
 
 export const GetLastStatusBefore = async (monitor_tag, timestamp) => {
@@ -418,7 +431,7 @@ export const GetLastStatusBefore = async (monitor_tag, timestamp) => {
   if (data) {
     return data.status;
   }
-  return "UP";
+  return NO_DATA;
 };
 
 export const GetDataGroupByDayAlternative = async (monitor_tag, start, end, timezoneOffsetMinutes = 0) => {
@@ -443,16 +456,13 @@ export const GetDataGroupByDayAlternative = async (monitor_tag, start, end, time
         UP: 0,
         DOWN: 0,
         DEGRADED: 0,
-        latencySum: 0,
-        latencies: [],
+        NO_DATA: 0,
       };
     }
 
     const group = acc[dayGroup];
     group.total++;
     group[row.status]++;
-    group.latencySum += row.latency;
-    group.latencies.push(row.latency);
 
     return acc;
   }, {});
@@ -464,9 +474,7 @@ export const GetDataGroupByDayAlternative = async (monitor_tag, start, end, time
     UP: group.UP,
     DOWN: group.DOWN,
     DEGRADED: group.DEGRADED,
-    avgLatency: group.total > 0 ? Number((group.latencySum / group.total).toFixed(3)) : null,
-    maxLatency: group.latencies.length > 0 ? Number(Math.max(...group.latencies).toFixed(3)) : null,
-    minLatency: group.latencies.length > 0 ? Number(Math.min(...group.latencies).toFixed(3)) : null,
+    NO_DATA: group.NO_DATA,
   }));
 };
 
