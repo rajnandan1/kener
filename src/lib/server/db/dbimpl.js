@@ -121,14 +121,14 @@ class DbImpl {
       })
       .select(
         this.knex.raw(
-          "CASE WHEN COUNT(*) <= SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) THEN 1 ELSE 0 END as isAffected",
+          "CASE WHEN COUNT(*) <= SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) THEN 1 ELSE 0 END as is_affected",
           [status],
         ),
       )
       .from("last_records")
       .first();
 
-    return result.isAffected === 1;
+    return result.is_affected === 1;
   }
 
   //insert alert
