@@ -87,6 +87,15 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Debug values
+        run: |
+          echo "Branch ref: ${{ github.ref }}"
+          echo "Matrix variant: ${{ matrix.variant }}"
+
+      - name: Debug tag evaluation
+        run: |
+          echo "Alpine tag enabled: ${{ matrix.variant == 'alpine' && github.ref == 'refs/heads/main' }}"
+
       # Combined metadata extraction for both registries
       - name: Extract Docker metadata
         id: meta
@@ -99,11 +108,15 @@ jobs:
             # Tag non-main branches (...for Alpine variant, add suffix)
             type=ref,event=branch,suffix=-${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' && github.ref != 'refs/heads/main' }}
             type=ref,event=branch,enable=${{ matrix.variant == 'debian' && github.ref != 'refs/heads/main' }}
+
             # Tag matrix.variant (Alpine) releases as version (1.0.0), major.minor (1.0), major (1), and matrix.variant (alpine)
             type=semver,pattern={{version}},suffix=-${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' }}
             type=semver,pattern={{major}}.{{minor}},suffix=-${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' }}
             type=semver,pattern={{major}},suffix=-${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' }}
-            type=raw,value=${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' && github.ref == 'refs/heads/main' }}
+            # type=raw,value=${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' && github.ref == 'refs/heads/main' }}
+            type=raw,value=alpine,enable=${{ matrix.variant == 'alpine' && github.ref == 'refs/heads/main' }}
+            # type=raw,value=alpine,enable=${{ (matrix.variant == 'alpine' && github.ref == 'refs/heads/main') && 'true' || 'false' }}
+
             # Tag default (Debian) releases as version (1.0.0), major.minor (1.0), major (1), and latest
             type=semver,pattern={{version}},enable=${{ matrix.variant == 'debian' }}
             type=semver,pattern={{major}}.{{minor}},enable=${{ matrix.variant == 'debian' }}
