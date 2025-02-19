@@ -72,7 +72,13 @@ export async function load({ parent, url }) {
         include_degraded_in_downtime: monitor.include_degraded_in_downtime,
       };
     })
-    .filter((monitor) => !hiddenGroupedMonitorsTags.includes(monitor.tag));
+    .filter((monitor) => !hiddenGroupedMonitorsTags.includes(monitor.tag))
+    .filter((monitor) => {
+      if (pageType == "home") {
+        return monitor.category_name == "Home";
+      }
+      return true;
+    });
 
   const parentData = await parent();
   const siteData = parentData.site;

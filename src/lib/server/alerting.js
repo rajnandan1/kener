@@ -59,10 +59,19 @@ async function createNewIncident(monitor, alert, commonData) {
   let update = commonData.description;
   update =
     update +
-    `. Monitor Name: ${monitor.name}, Incident Status: ${commonData.status}, Severity: ${commonData.severity}, Monitor Status: ${alert.monitor_status}, Monitor Health Checks: ${alert.health_checks}, Monitor Failure Threshold: ${commonData.details.threshold}, Visit - ${commonData.actions[0].url}`;
+    `
+		<div style="line-height: 1.5;">
+			<p><strong>Monitor Name:</strong> ${monitor.name}</p>
+			<p><strong>Incident Status:</strong> ${commonData.status}</p>
+			<p><strong>Severity:</strong> ${commonData.severity}</p>
+			<p><strong>Monitor Status:</strong> ${alert.monitor_status}</p>
+			<p><strong>Monitor Health Checks:</strong> ${alert.health_checks}</p>
+			<p><strong>Monitor Failure Threshold:</strong> ${commonData.details.threshold}</p>
+			<p><strong>Visit:</strong> <a href="${commonData.actions[0].url}">${commonData.actions[0].url}</a></p>
+		</div>
+		`;
 
   let newIncident = await CreateIncident(payload);
-
   //add update to incident
   await AddIncidentComment(newIncident.incident_id, update, "INVESTIGATING", startDateTime);
 

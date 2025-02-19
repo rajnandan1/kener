@@ -28,6 +28,8 @@
   let footerHTML = "";
   let homeIncidentCount = 10;
   let homeIncidentStartTimeWithin = 30;
+  let incidentGroupView = "EXPAND_FIRST";
+
   let nav = [];
   let categories = [];
   let i18n = {
@@ -60,6 +62,9 @@
   }
   if (data.siteData.homeIncidentStartTimeWithin) {
     homeIncidentStartTimeWithin = data.siteData.homeIncidentStartTimeWithin;
+  }
+  if (data.siteData.incidentGroupView) {
+    incidentGroupView = data.siteData.incidentGroupView;
   }
   if (data.siteData.footerHTML) {
     footerHTML = data.siteData.footerHTML;
@@ -138,7 +143,8 @@
     formStateIncident = "loading";
     let resp = await storeSiteData({
       homeIncidentCount: homeIncidentCount,
-      homeIncidentStartTimeWithin: homeIncidentStartTimeWithin
+      homeIncidentStartTimeWithin: homeIncidentStartTimeWithin,
+      incidentGroupView: incidentGroupView
     });
     //print data
     let data = await resp.json();
@@ -298,7 +304,7 @@
   </Card.Header>
   <Card.Content>
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitIncident}>
-      <div class="flex max-w-md flex-row justify-start gap-2">
+      <div class="flex flex-row justify-start gap-2">
         <div class="">
           <Label for="hero_title">Maximum Number to Show</Label>
           <Input bind:value={homeIncidentCount} class="mt-2" type="text" id="homeIncidentCount" placeholder="10" />
@@ -312,6 +318,33 @@
             id="homeIncidentStartTimeWithin"
             placeholder="2 days"
           />
+        </div>
+        <div>
+          <Label for="incidentGroupView" class="text-sm font-medium">Incident Group View</Label>
+          <Select.Root
+            portal={null}
+            onSelectedChange={(e) => {
+              incidentGroupView = e.value;
+            }}
+            selected={{
+              value: incidentGroupView,
+              label: incidentGroupView.replace("_", " ")
+            }}
+          >
+            <Select.Trigger class="	mt-2 w-[200px]" id="incidentGroupView">
+              <Select.Value bind:value={incidentGroupView} placeholder="Favicon Type" />
+            </Select.Trigger>
+            <Select.Content>
+              <Select.Group>
+                <Select.Label>Favicon Type</Select.Label>
+                <Select.Item value="EXPAND_FIRST" label="EXPAND_FIRST" class="text-sm font-medium"
+                  >EXPAND FIRST</Select.Item
+                >
+                <Select.Item value="COLLAPSED" label="COLLAPSED" class="text-sm font-medium">COLLAPSED</Select.Item>
+                <Select.Item value="EXPANDED" label="EXPANDED" class="text-sm font-medium">EXPANDED</Select.Item>
+              </Select.Group>
+            </Select.Content>
+          </Select.Root>
         </div>
         <div class="pt-8">
           <Button type="submit" disabled={formStateIncident === "loading"}>
