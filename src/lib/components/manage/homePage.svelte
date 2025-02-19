@@ -337,7 +337,7 @@
             <Select.Content>
               <Select.Group>
                 <Select.Label>Favicon Type</Select.Label>
-                <Select.Item value="EXPAND_FIRST" label="EXPAND_FIRST" class="text-sm font-medium"
+                <Select.Item value="EXPAND_FIRST" label="EXPAND FIRST" class="text-sm font-medium"
                   >EXPAND FIRST</Select.Item
                 >
                 <Select.Item value="COLLAPSED" label="COLLAPSED" class="text-sm font-medium">COLLAPSED</Select.Item>
