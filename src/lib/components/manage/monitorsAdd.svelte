@@ -1,6 +1,6 @@
 <script>
   import { Button } from "$lib/components/ui/button";
-  import { Plus, X, Settings, Bell, Loader, ArrowDownUp, Grip } from "lucide-svelte";
+  import { Plus, X, Settings, Bell, Loader, ArrowDownUp, Grip, ExternalLink } from "lucide-svelte";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { base } from "$app/paths";
@@ -468,6 +468,9 @@
             on:click={() => openAlertMenu(monitor)}
           >
             <Bell class="inline h-4 w-4" />
+          </Button>
+          <Button variant="secondary" class="h-8 w-8 p-2" rel="external" href="{base}/?monitor={monitor.tag}">
+            <ExternalLink class="inline h-4 w-4" />
           </Button>
           <Button variant="secondary" class="h-8 w-8 p-2" href="#{monitor.tag}">
             <Settings class="inline h-4 w-4" />

@@ -111,7 +111,7 @@ export async function load({ parent, url }) {
   let isMonitorPage = pageType === "monitor";
   let isGroupPage = pageType === "group";
 
-  if (isMonitorPage) {
+  if (isMonitorPage && monitorsActive.length > 0) {
     pageTitle = monitorsActive[0].name + " - " + pageTitle;
     pageDescription = monitorsActive[0].description;
     canonical = canonical + "?monitor=" + monitorsActive[0].tag;

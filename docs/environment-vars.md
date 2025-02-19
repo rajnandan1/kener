@@ -94,8 +94,11 @@ export SMTP_FROM_EMAIL=Some Name <user@example.com>
 ```
 
 <div class="  note info ">
-	Generally, port 465 expects implicit SSL (SMTP_SECURE: 1), while port 587 and port 25 usually use STARTTLS (SMTP_SECURE: 0).
-	So, if you are using SMTP on port 465, set SMTP_SECURE: 1; otherwise, for ports 25 or 587, set SMTP_SECURE: 0.
+
+Generally, port 465 expects implicit SSL (SMTP_SECURE: 1), while port 587 and port 25 usually use STARTTLS (SMTP_SECURE: 0).
+
+So, if you are using SMTP on port 465, set SMTP_SECURE: 1; otherwise, for ports 25 or 587, set SMTP_SECURE: 0.
+
 </div>
 
 <div class="  note danger ">
@@ -103,7 +106,9 @@ export SMTP_FROM_EMAIL=Some Name <user@example.com>
 </div>
 
 <div class="  note info ">
-	If your SMPT provider does require username and password, you can set `SMTP_USER` and `SMTP_PASS` to `-`.
+	
+If your SMTP provider does require username and password, you can set `SMTP_USER` and `SMTP_PASS` to `-`.
+
 </div>
 
 ## Using .env
