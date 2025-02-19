@@ -154,6 +154,11 @@ const siteDataKeys = [
     isValid: (value) => parseInt(value) >= 1,
     data_type: "string",
   },
+  {
+    key: "incidentGroupView",
+    isValid: (value) => typeof value === "string" && value.trim().length > 0,
+    data_type: "string",
+  },
 ];
 
 export function InsertKeyValue(key, value) {
@@ -505,7 +510,7 @@ export const CreateIncident = async (data) => {
 
   let newIncident = await db.createIncident(incident);
   return {
-    incident_id: newIncident[0],
+    incident_id: newIncident.id,
   };
 };
 
@@ -681,6 +686,7 @@ export const GetIncidentsDashboard = async (data) => {
 
   for (let i = 0; i < incidents.length; i++) {
     incidents[i].monitors = await GetIncidentMonitors(incidents[i].id);
+    incidents[i].isAutoCreated = await db.alertExistsIncident(incidents[i].id);
   }
 
   return {

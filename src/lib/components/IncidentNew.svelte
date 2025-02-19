@@ -27,6 +27,13 @@
     isFuture = true;
   }
 
+  let accordionValue = "incident-0";
+  if ($page.data.site.incidentGroupView == "COLLAPSED") {
+    accordionValue = "incident-collapse";
+  } else if ($page.data.site.incidentGroupView == "EXPANDED") {
+    accordionValue = index;
+  }
+
   let incidentDateSummary = "";
   let maintenanceBadge = "";
   let maintenanceBadgeColor = "";
@@ -60,7 +67,7 @@
 <div class="newincident relative grid w-full grid-cols-12 gap-2 px-0 py-0 last:border-b-0">
   <div class="col-span-12">
     <Accordion.Root bind:value={index} class="accor">
-      <Accordion.Item value="incident-0">
+      <Accordion.Item value={accordionValue}>
         <Accordion.Trigger class="px-4 hover:bg-muted hover:no-underline">
           <div class="w-full text-left hover:no-underline">
             <p class="flex gap-x-2 text-xs font-semibold">
@@ -133,9 +140,9 @@
                         {f(new Date(comment.commented_at * 1000), "MMMM do yyyy, h:mm:ss a", selectedLang)}
                       </time>
 
-                      <p class="mb-4 text-sm font-normal">
-                        {comment.comment}
-                      </p>
+                      <div class="mb-4 text-sm font-normal">
+                        {@html comment.comment}
+                      </div>
                     </li>
                   {/each}
                 </ol>

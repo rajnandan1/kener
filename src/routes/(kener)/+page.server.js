@@ -72,7 +72,13 @@ export async function load({ parent, url }) {
         include_degraded_in_downtime: monitor.include_degraded_in_downtime,
       };
     })
-    .filter((monitor) => !hiddenGroupedMonitorsTags.includes(monitor.tag));
+    .filter((monitor) => !hiddenGroupedMonitorsTags.includes(monitor.tag))
+    .filter((monitor) => {
+      if (pageType == "home") {
+        return monitor.category_name == "Home";
+      }
+      return true;
+    });
 
   const parentData = await parent();
   const siteData = parentData.site;
@@ -105,7 +111,7 @@ export async function load({ parent, url }) {
   let isMonitorPage = pageType === "monitor";
   let isGroupPage = pageType === "group";
 
-  if (isMonitorPage) {
+  if (isMonitorPage && monitorsActive.length > 0) {
     pageTitle = monitorsActive[0].name + " - " + pageTitle;
     pageDescription = monitorsActive[0].description;
     canonical = canonical + "?monitor=" + monitorsActive[0].tag;

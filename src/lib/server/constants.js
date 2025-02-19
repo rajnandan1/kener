@@ -101,6 +101,7 @@ const REALTIME = "realtime";
 const TIMEOUT = "timeout";
 const ERROR = "error";
 const MANUAL = "manual";
+const WEBHOOK = "webhook";
 
 export {
   MONITOR,
@@ -117,4 +118,5 @@ export {
   ERROR,
   MANUAL,
   NO_DATA,
+  WEBHOOK,
 };

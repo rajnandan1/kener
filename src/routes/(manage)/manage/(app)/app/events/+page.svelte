@@ -62,6 +62,7 @@
         })
       });
       let resp = await apiResp.json();
+
       incidents = resp.incidents.map((incident) => {
         let i = { ...incident };
         if (!!!i.end_date_time) {
@@ -632,6 +633,7 @@
                         variant="ghost"
                         class="h-5 w-5 p-1"
                         size="icon"
+                        disabled={incident.isAutoCreated}
                         on:click={(e) => {
                           showEditModal(incident);
                         }}
@@ -903,7 +905,7 @@
               {#each comments as comment}
                 <div class="flex items-center justify-between gap-2 border-b py-2">
                   <div class="w-full rounded px-2 py-2 {newComment.id == comment.id ? 'bg-input' : ''}">
-                    <p class="mb-2 text-xs font-medium">{comment.comment}</p>
+                    <p class="mb-2 text-xs font-medium">{@html comment.comment}</p>
                     <div class="flex w-full justify-between gap-x-2">
                       <div class="text-xs font-semibold text-muted-foreground">
                         {#if currentIncident.incident_type == "INCIDENT"}

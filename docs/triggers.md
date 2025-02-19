@@ -216,6 +216,12 @@ Since the password will be stored as plain text we encourage to use environment 
 
 </div>
 
+<div class="  note info ">
+
+If your SMTP provider does require username and password, you can set `SMTP_USER` and `SMTP_PASS` to `-`.
+
+</div>
+
 ### To
 
 <span class="text-red-500 text-xs font-semibold">
