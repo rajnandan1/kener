@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { GetMinuteStartNowTimestampUTC } from "../tool.js";
+import { MANUAL } from "../constants.js";
 import Knex from "knex";
 
 class DbImpl {
@@ -116,19 +117,20 @@ class DbImpl {
         qb.select("*")
           .from("monitoring_data")
           .where("monitor_tag", monitor_tag)
+          .andWhere("type", "!=", MANUAL)
           .orderBy("timestamp", "desc")
           .limit(lastX);
       })
       .select(
         this.knex.raw(
-          "CASE WHEN COUNT(*) <= SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) THEN 1 ELSE 0 END as isAffected",
+          "CASE WHEN COUNT(*) <= SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) THEN 1 ELSE 0 END as is_affected",
           [status],
         ),
       )
       .from("last_records")
       .first();
 
-    return result.isAffected === 1;
+    return result.is_affected === 1;
   }
 
   //insert alert
@@ -139,6 +141,17 @@ class DbImpl {
       alert_status: data.alert_status,
       health_checks: data.health_checks,
     });
+  }
+
+  //given incident_number check if there is an alert
+  async alertExistsIncident(incident_number) {
+    const result = await this.knex("monitor_alerts")
+      .count("* as count")
+      .where({
+        incident_number,
+      })
+      .first();
+    return result.count > 0;
   }
 
   //check if alert exists given monitor_tag, monitor_status, trigger_status
@@ -425,16 +438,19 @@ class DbImpl {
   }
 
   async createIncident(data) {
-    return await this.knex("incidents").insert({
-      title: data.title,
-      start_date_time: data.start_date_time,
-      end_date_time: data.end_date_time,
-      status: data.status,
-      state: data.state,
-      created_at: this.knex.fn.now(),
-      updated_at: this.knex.fn.now(),
-      incident_type: data.incident_type,
-    });
+    const [incident] = await this.knex("incidents")
+      .insert({
+        title: data.title,
+        start_date_time: data.start_date_time,
+        end_date_time: data.end_date_time,
+        status: data.status,
+        state: data.state,
+        created_at: this.knex.fn.now(),
+        updated_at: this.knex.fn.now(),
+        incident_type: data.incident_type,
+      })
+      .returning("*");
+    return incident;
   }
 
   //get incidents paginated
