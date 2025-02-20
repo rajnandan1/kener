@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { BASE_PATH } from "../constants.js";
+
 class Discord {
 	url;
 	headers;
@@ -23,7 +25,7 @@ class Discord {
 		let siteURL = this.siteData.siteURL;
 		let logo =
 			this.siteData.siteURL +
-			(!!process.env.KENER_BASE_PATH ? process.env.KENER_BASE_PATH : "") +
+			(!!BASE_PATH ? BASE_PATH : "") +
 			this.siteData.logo;
 
 		let color = 13250616; //down;

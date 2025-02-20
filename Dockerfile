@@ -96,6 +96,7 @@ ARG PORT=3000 \
 # Set environment variables
 ENV HEALTHCHECK_PORT=$PORT \
     HEALTHCHECK_PATH= \
+	KENER_BASE_PATH=/ \
     NODE_ENV=production \
     NPM_CONFIG_LOGLEVEL=error \
     PORT=$PORT \
