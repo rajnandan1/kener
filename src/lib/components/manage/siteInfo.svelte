@@ -143,8 +143,8 @@
   <Card.Content>
     {#if !!base}
       <Alert.Root class="my-2">
-        <Alert.Title>Sub path</Alert.Title>
-        <Alert.Description>Your site is running in a subpath <span class="">{base}</span></Alert.Description>
+        <Alert.Title>Base Path</Alert.Title>
+        <Alert.Description>Your site is accessible at the subpath <code class="text-orange-500">{base}</code>.</Alert.Description>
       </Alert.Root>
     {/if}
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmit}>
@@ -256,7 +256,7 @@
             class="mt-2"
             type="text"
             id="home"
-            placeholder="/ or https://example.com"
+            placeholder={base ? base : "/ or https://example.com"}
             required
           />
         </div>

@@ -1,8 +1,10 @@
+import { BASE_PATH } from "../constants.js";
+
 const seedSiteData = {
   title: "Kener - Open source status page system",
   siteName: "Kener.ing",
   siteURL: "https://kener.ing",
-  home: "/",
+  home: BASE_PATH || "/",
   logo: "https://kener.ing/logo.png",
   favicon: "https://kener.ing/logo96.png",
   metaTags: [
@@ -37,7 +39,7 @@ const seedSiteData = {
   nav: [
     { name: "Documentation", url: "https://kener.ing/docs/home", iconURL: "" },
     { name: "Github", iconURL: "", url: "https://github.com/rajnandan1/kener" },
-    { name: "Setup Kener", iconURL: "", url: "/manage/signin" },
+    { name: "Setup Kener", iconURL: "", url: BASE_PATH + "/manage/signin" },
   ],
   hero: {
     title: "Build stunning status pages in minutes",

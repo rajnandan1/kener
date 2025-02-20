@@ -8,9 +8,9 @@ import { GetSiteMap } from "./src/lib/server/controllers/controller.js";
 import fs from "fs-extra";
 import knex from "knex";
 import knexOb from "./knexfile.js";
+import { BASE_PATH } from "./src/lib/server/constants.js";
 
 const PORT = process.env.PORT || 3000;
-const base = process.env.KENER_BASE_PATH || "";
 
 const app = express();
 const db = knex(knexOb);
@@ -22,10 +22,10 @@ app.use((req, res, next) => {
 	res.setHeader("X-Powered-By", "Kener");
 	next();
 });
-app.get(base + "/healthcheck", (req, res) => {
+app.get(BASE_PATH + "/healthcheck", (req, res) => {
 	res.end("ok");
 });
-app.get(base + "/sitemap.xml", async (req, res) => {
+app.get(BASE_PATH + "/sitemap.xml", async (req, res) => {
 	res.header("Content-Type", "application/xml");
 	res.send(await GetSiteMap());
 });
@@ -34,7 +34,7 @@ app.get(base + "/sitemap.xml", async (req, res) => {
 //set env variable for upload path
 process.env.UPLOAD_PATH = "./uploads";
 
-app.use(base + "/uploads", express.static("uploads"));
+app.use(BASE_PATH + "/uploads", express.static("uploads"));
 
 try {
 	const openapiJSON = fs.readFileSync("./openapi.json", "utf-8");

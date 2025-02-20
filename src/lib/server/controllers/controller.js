@@ -17,7 +17,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { format, subMonths, addMonths, startOfMonth } from "date-fns";
-import { UP, DOWN, DEGRADED, NO_DATA } from "../constants.js";
+import { BASE_PATH, UP, DOWN, DEGRADED, NO_DATA } from "../constants.js";
 
 const saltRounds = 10;
 const DUMMY_SECRET = "DUMMY_SECRET";
@@ -762,7 +762,7 @@ export const InsertNewAlert = async (data) => {
 
 export const CookieConfig = () => {
   //get base path from env
-  let cookiePath = !!process.env.KENER_BASE_PATH ? process.env.KENER_BASE_PATH : "/";
+  let cookiePath = !!BASE_PATH ? BASE_PATH : "/";
 
   let isSecuredDomain = false;
   if (!!process.env.ORIGIN) {
@@ -795,7 +795,7 @@ export const IsLoggedInSession = async (cookies) => {
     return {
       error: "User not authenticated",
       action: "redirect",
-      location: "/manage/signin",
+      location: BASE_PATH + "/manage/signin",
     };
   }
   let tokenUser = await VerifyToken(tokenData);
@@ -805,7 +805,7 @@ export const IsLoggedInSession = async (cookies) => {
     return {
       error: "User not authenticated",
       action: "redirect",
-      location: "/manage/signin/logout",
+      location: BASE_PATH + "/manage/signin/logout",
     };
   }
   let userDB = await db.getUserByEmail(tokenUser.email);
@@ -815,7 +815,7 @@ export const IsLoggedInSession = async (cookies) => {
     return {
       error: "User not authenticated",
       action: "redirect",
-      location: "/manage/signin",
+      location: BASE_PATH + "/manage/signin",
     };
   }
   return {
