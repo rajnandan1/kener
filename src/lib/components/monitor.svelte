@@ -3,6 +3,7 @@
   import { onMount } from "svelte";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { base } from "$app/paths";
   import { sub, startOfDay, getUnixTime } from "date-fns";
   import GMI from "$lib/components/gmi.svelte";
@@ -38,7 +39,7 @@
       .post(`${base}/api/today/incidents`, {
         tag: monitor.tag,
         startTs: monitor.pageData.midnight90DaysAgo,
-        endTs: monitor.pageData.midnightTomorrow,
+        endTs: monitor.pageData.maxDateTodayTimestamp,
         localTz: localTz
       })
       .then((response) => {
@@ -85,27 +86,33 @@
     {
       text: `${l(lang, "90 Days")}`,
       startTs: getUnixTime(startOfDay(sub(new Date(), { days: 90 }))),
+      endTs: monitor.pageData.maxDateTodayTimestamp,
       value: uptime90Day
     },
     {
       text: `${l(lang, "60 Days")}`,
-      startTs: getUnixTime(startOfDay(sub(new Date(), { days: 59 })))
+      startTs: getUnixTime(startOfDay(sub(new Date(), { days: 59 }))),
+      endTs: monitor.pageData.maxDateTodayTimestamp
     },
     {
       text: `${l(lang, "30 Days")}`,
-      startTs: getUnixTime(startOfDay(sub(new Date(), { days: 29 })))
+      startTs: getUnixTime(startOfDay(sub(new Date(), { days: 29 }))),
+      endTs: monitor.pageData.maxDateTodayTimestamp
     },
     {
       text: `${l(lang, "14 Days")}`,
-      startTs: getUnixTime(startOfDay(sub(new Date(), { days: 13 })))
+      startTs: getUnixTime(startOfDay(sub(new Date(), { days: 13 }))),
+      endTs: monitor.pageData.maxDateTodayTimestamp
     },
     {
       text: `${l(lang, "7 Days")}`,
-      startTs: getUnixTime(startOfDay(sub(new Date(), { days: 6 })))
+      startTs: getUnixTime(startOfDay(sub(new Date(), { days: 6 }))),
+      endTs: monitor.pageData.maxDateTodayTimestamp
     },
     {
       text: l(lang, "Today"),
-      startTs: getUnixTime(startOfDay(new Date()))
+      startTs: getUnixTime(startOfDay(new Date())),
+      endTs: monitor.pageData.maxDateTodayTimestamp
     }
   ];
 
@@ -113,7 +120,7 @@
   let rolledAt = 0;
   let rollerLoading = false;
   async function rollSummary(r) {
-    let newRolledAt = (rolledAt + r) % uptimesRollers.length;
+    let newRolledAt = r;
 
     if (uptimesRollers[newRolledAt].value === undefined) {
       rollerLoading = true;
@@ -121,7 +128,8 @@
 
       let resp = await axios.post(`${base}/api/today/aggregated`, {
         monitor: monitor,
-        startTs: uptimesRollers[newRolledAt].startTs
+        startTs: uptimesRollers[newRolledAt].startTs,
+        endTs: uptimesRollers[newRolledAt].endTs
       });
       uptimesRollers[newRolledAt].value = resp.data.uptime;
       rollerLoading = false;
@@ -179,7 +187,12 @@
       <div class="pt-0">
         <div class="scroll-m-20 pr-5 text-xl font-medium tracking-tight">
           {#if monitor.image}
-            <GMI src={monitor.image} classList="absolute left-6 top-6 inline h-5 w-5" alt={monitor.name} srcset="" />
+            <GMI
+              src={monitor.image}
+              classList="absolute left-6 top-6 inline h-5 w-5 hidden md:block"
+              alt={monitor.name}
+              srcset=""
+            />
           {/if}
           <p class="overflow-hidden text-ellipsis whitespace-nowrap">
             {monitor.name}
@@ -229,55 +242,49 @@
   {/if}
   <div class="col-span-12 min-h-[94px] pt-2 md:w-[546px]">
     <div class="col-span-12">
-      <div class="flex justify-between">
-        <div class=" ">
-          <div class="flex gap-x-1">
-            {#if rolledAt > 0}
-              <Button variant="ghost" class="h-5 w-5 p-0" on:click={() => rollSummary(-1)}>
-                <ChevronLeft class="h-4 w-4" />
-              </Button>
-            {/if}
-            <div class="flex text-xs font-semibold">
-              <span>
+      <div class="flex flex-wrap justify-between gap-x-1">
+        <div class="">
+          <DropdownMenu.Root class="">
+            <DropdownMenu.Trigger class="mr-2 flex ">
+              <Button variant="secondary" class="h-6 px-2 py-2 text-xs">
                 {uptimesRollers[rolledAt].text}
-              </span>
-
-              <span class="">
-                {#if rollerLoading}
-                  <Loader class="mx-1 -mt-0.5 inline h-4 w-4 animate-spin" />
-                {:else}
-                  <TrendingUp class="mx-1 -mt-0.5 inline h-3 w-3" />
-                {/if}
-                {#if isNaN(uptimesRollers[rolledAt].value)}
-                  <span class="text-muted-foreground">-</span>
-                {:else}
-                  <NumberFlow
-                    value={uptimesRollers[rolledAt].value}
-                    format={{
-                      notation: "standard",
-                      minimumFractionDigits: 4,
-                      maximumFractionDigits: 4
-                    }}
-                    suffix="%"
-                  />
-                {/if}
-              </span>
-            </div>
-            {#if rolledAt < uptimesRollers.length - 1}
-              <Button variant="ghost" class="h-5 w-5 p-0" on:click={() => rollSummary(1)}>
-                <ChevronRight class="h-4 w-4" />
               </Button>
-            {/if}
-          </div>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              {#each uptimesRollers as roller, i}
+                <DropdownMenu.Group>
+                  <DropdownMenu.Item
+                    class="text-xs {rolledAt == i ? 'bg-secondary' : ''} font-semibold"
+                    on:click={() => rollSummary(i)}
+                  >
+                    {roller.text}
+                  </DropdownMenu.Item>
+                </DropdownMenu.Group>
+              {/each}
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
         </div>
-        <div class="pt-0.5 text-right">
-          <div class="text-api-up truncate text-xs font-semibold text-{monitor.pageData.summaryColorClass}">
+        <div class="flex gap-x-2 pt-2 text-right">
+          {#if rollerLoading}
+            <Loader class=" mt-0.5 inline h-3.5 w-3.5 animate-spin text-muted-foreground" />
+          {/if}
+          <NumberFlow
+            class="border-r pr-2 text-xs font-semibold"
+            value={uptimesRollers[rolledAt].value}
+            format={{
+              notation: "standard",
+              minimumFractionDigits: 4,
+              maximumFractionDigits: 4
+            }}
+            suffix="%"
+          />
+          <div class="truncate text-xs font-semibold text-{monitor.pageData.summaryColorClass}">
             {monitor.pageData.summaryStatus}
           </div>
         </div>
       </div>
       <div
-        class="relative col-span-12 mt-1"
+        class="relative col-span-12 mt-0.5"
         use:clickOutsideAction
         on:clickoutside={(e) => {
           showDailyDataModal = false;

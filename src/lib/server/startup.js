@@ -2,7 +2,7 @@
 
 import figlet from "figlet";
 
-import { Cron, scheduledJobs } from "croner";
+import { Cron } from "croner";
 
 import { Minuter } from "./cron-minute.js";
 import db from "./db/db.js";
@@ -49,11 +49,6 @@ const scheduleCronJobs = async () => {
       );
       console.log("ADDING NEW JOB WITH NAME " + newJob.name);
       if (isStartUP) {
-        newJob.trigger();
-      } else {
-        setTimeout(() => {
-          newJob.trigger();
-        }, 5000);
         newJob.trigger();
       }
 

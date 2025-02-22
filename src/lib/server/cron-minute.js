@@ -33,14 +33,6 @@ async function manualIncident(monitor) {
 
   let impactArr = incidentArr.concat(maintenanceArr);
 
-  //all auto incidents
-  let allAutoIncidents = await db.getAllActiveAlertIncidents(monitor.tag);
-
-  //filter out active incidents from impactArr
-  impactArr = impactArr.filter((incident) => {
-    return allAutoIncidents.findIndex((autoIncident) => autoIncident.incident_number === incident.id) === -1;
-  });
-
   let impact = "";
   if (impactArr.length == 0) {
     return {};
@@ -112,6 +104,7 @@ const Minuter = async (monitor) => {
   }
 
   manualData = await manualIncident(monitor);
+
   //merge noData, apiData, webhookData, dayData
   let mergedData = {};
 

@@ -459,6 +459,7 @@ class DbImpl {
         created_at: this.knex.fn.now(),
         updated_at: this.knex.fn.now(),
         incident_type: data.incident_type,
+        incident_source: data.incident_source,
       })
       .returning("*");
     return incident;
@@ -620,7 +621,8 @@ class DbImpl {
       .andWhere("i.start_date_time", "<=", timestamp)
       .andWhere("i.status", "OPEN")
       .andWhere("i.incident_type", "INCIDENT")
-      .andWhere("i.state", "!=", "RESOLVED");
+      .andWhere("i.state", "!=", "RESOLVED")
+      .andWhere("i.incident_source", "!=", "ALERT");
   }
 
   //get maintenance incidents by monitor tag
@@ -638,7 +640,8 @@ class DbImpl {
       .andWhere("i.end_date_time", ">=", timestamp)
       .andWhere("i.status", "OPEN")
       .andWhere("i.incident_type", "MAINTENANCE")
-      .andWhere("i.state", "=", "RESOLVED");
+      .andWhere("i.state", "=", "RESOLVED")
+      .andWhere("i.incident_source", "!=", "ALERT");
   }
 
   //given array of ids get incidents
