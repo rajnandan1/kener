@@ -449,8 +449,7 @@ export const GetDataGroupByDayAlternative = async (monitor_tag, start, end, time
 
   let rawData = await db.getDataGroupByDayAlternative(monitor_tag, start, end);
   let anchorStatus = await GetLastStatusBefore(monitor_tag, start);
-  rawData = InterpolateData(rawData, start, anchorStatus, rawData.length == 0 ? end - 60 : null);
-
+  rawData = InterpolateData(rawData, start, anchorStatus, end - 60);
   const groupedData = rawData.reduce((acc, row) => {
     // Calculate day group considering timezone offset
     const dayGroup = Math.floor((row.timestamp + offsetSeconds) / 86400);

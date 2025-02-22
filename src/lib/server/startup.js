@@ -2,7 +2,7 @@
 
 import figlet from "figlet";
 
-import { Cron } from "croner";
+import { Cron, scheduledJobs } from "croner";
 
 import { Minuter } from "./cron-minute.js";
 import db from "./db/db.js";
@@ -12,35 +12,34 @@ import { dirname } from "path";
 
 const jobs = [];
 process.env.TZ = "UTC";
+let isStartUP = true;
 
-const jobSchedule = async () => {
-  const activeMonitors = (await GetMonitorsParsed({ status: "ACTIVE" })).map((m) => {
-    return {
-      ...m,
-      hash: "Tag: " + m.tag + " Hash:" + HashString(JSON.stringify(m)),
-    };
-  });
+const scheduleCronJobs = async () => {
+  // Fetch and map all active monitors, creating a unique hash for each
+  const activeMonitors = (await GetMonitorsParsed({ status: "ACTIVE" })).map((monitor) => ({
+    ...monitor,
+    hash: "Tag: " + monitor.tag + " Hash:" + HashString(JSON.stringify(monitor)),
+  }));
 
-  //stop and remove jobs not present in activeMonitors
+  // Remove any cron jobs that are no longer in activeMonitors
   for (let i = 0; i < jobs.length; i++) {
-    const job = jobs[i];
-    const monitor = activeMonitors.find((m) => m.hash === job.name);
-    if (!monitor) {
-      job.stop();
+    const existingJob = jobs[i];
+    const matchingMonitor = activeMonitors.find((m) => m.hash === existingJob.name);
+    if (!matchingMonitor) {
+      existingJob.stop();
       jobs.splice(i, 1);
+      console.log("REMOVING JOB WITH NAME " + existingJob.name);
       i--;
-      console.log("REMOVING JOB WITH NAME " + job.name);
     }
   }
 
-  //add new jobs from activeMonitors if not present already in jobs
-  for (let i = 0; i < activeMonitors.length; i++) {
-    const monitor = activeMonitors[i];
-    const job = jobs.find((j) => j.name === monitor.hash);
-    if (!job) {
-      const j = Cron(
+  // Create new cron jobs for monitors that don't already have one
+  for (const monitor of activeMonitors) {
+    const existingJob = jobs.find((j) => j.name === monitor.hash);
+    if (!existingJob) {
+      const newJob = Cron(
         monitor.cron,
-        async () => {
+        async (job) => {
           await Minuter(monitor);
         },
         {
@@ -48,18 +47,27 @@ const jobSchedule = async () => {
           name: monitor.hash,
         },
       );
-      console.log("ADDING NEW JOB WITH NAME " + j.name);
-      j.trigger();
-      jobs.push(j);
+      console.log("ADDING NEW JOB WITH NAME " + newJob.name);
+      if (isStartUP) {
+        newJob.trigger();
+      } else {
+        setTimeout(() => {
+          newJob.trigger();
+        }, 5000);
+        newJob.trigger();
+      }
+
+      jobs.push(newJob);
     }
   }
+  isStartUP = false;
 };
 
 async function Startup() {
   const mainJob = Cron(
     "* * * * *",
     async () => {
-      await jobSchedule();
+      await scheduleCronJobs();
     },
     {
       protect: true,

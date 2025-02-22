@@ -178,6 +178,17 @@ class DbImpl {
       .first();
   }
 
+  //get active alert given incident id, monitor tag, monitor status
+  async getAllActiveAlertIncidents(monitor_tag) {
+    return await this.knex("monitor_alerts")
+      .where({
+        monitor_tag,
+        alert_status: "TRIGGERED",
+      })
+      .andWhere("incident_number", ">", 0)
+      .orderBy("id", "desc");
+  }
+
   //return active alert for a monitor_tag, monitor_status, trigger_status = ACTIVE
   async getActiveAlert(monitor_tag, monitor_status, alert_status) {
     return await this.knex("monitor_alerts")

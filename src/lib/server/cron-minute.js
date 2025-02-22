@@ -33,6 +33,14 @@ async function manualIncident(monitor) {
 
   let impactArr = incidentArr.concat(maintenanceArr);
 
+  //all auto incidents
+  let allAutoIncidents = await db.getAllActiveAlertIncidents(monitor.tag);
+
+  //filter out active incidents from impactArr
+  impactArr = impactArr.filter((incident) => {
+    return allAutoIncidents.findIndex((autoIncident) => autoIncident.incident_number === incident.id) === -1;
+  });
+
   let impact = "";
   if (impactArr.length == 0) {
     return {};
@@ -40,12 +48,6 @@ async function manualIncident(monitor) {
 
   for (let i = 0; i < impactArr.length; i++) {
     const element = impactArr[i];
-
-    let autoIncidents = await db.getActiveAlertIncident(monitor.tag, element.monitor_impact, element.id);
-
-    if (!!autoIncidents) {
-      continue;
-    }
 
     if (element.monitor_impact === "DOWN") {
       impact = "DOWN";
@@ -67,6 +69,7 @@ async function manualIncident(monitor) {
       type: MANUAL,
     },
   };
+
   return manualData;
 }
 
