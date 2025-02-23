@@ -13,6 +13,7 @@
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { analyticsEvent } from "$lib/boringOne";
   import { setMode, mode, ModeWatcher } from "mode-watcher";
+  import { l } from "$lib/i18n/client";
 
   export let data;
   let defaultLocaleKey = data.selectedLang;
@@ -197,7 +198,11 @@
           <Popover.Content class="px-0 py-2">
             <div class="flex flex-col gap-2">
               <div class="flex px-2 pb-1 text-xs font-semibold">
-                <span class="flex-1">Timezone set to <i>{data.localTz}</i> </span>
+                <span class="flex-1"
+                  >{@html l(data.lang, "Timezone set to %tz", {
+                    tz: "<i>" + data.localTz + "</i>"
+                  })}
+                </span>
               </div>
               <div class="flex flex-col gap-2">
                 <div class="border-b px-2 pb-2">
@@ -232,7 +237,7 @@
                       class="h-6 w-full bg-transparent px-2 text-xs"
                       on:click={() => setTz(myTimezone)}
                     >
-                      Switch to your timezone
+                      {l(data.lang, "Switch to your timezone")}
                     </Button>
                   </div>
                 {/if}
@@ -250,7 +255,7 @@
               <Languages class="h-[1.2rem] w-[1.2rem]" />
             </Button>
           </DropdownMenu.Trigger>
-          <DropdownMenu.Content class="max-h-[200px] overflow-y-auto">
+          <DropdownMenu.Content class="max-h-[250px] overflow-y-auto">
             <DropdownMenu.Group>
               {#each allLocales as locale}
                 <DropdownMenu.Item
