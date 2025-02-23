@@ -250,7 +250,7 @@
                 {uptimesRollers[rolledAt].text}
               </Button>
             </DropdownMenu.Trigger>
-            <DropdownMenu.Content>
+            <DropdownMenu.Content class={!!embed ? "h-[60px] overflow-y-auto" : ""}>
               {#each uptimesRollers as roller, i}
                 <DropdownMenu.Group>
                   <DropdownMenu.Item
