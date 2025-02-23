@@ -179,7 +179,7 @@
     if (toPost.incident_type == "MAINTENANCE") {
       toPost.state = "RESOLVED";
     }
-
+    toPost.incident_source = "DASHBOARD";
     formStateCreate = "loading";
     try {
       let data = await fetch(base + "/manage/app/api/", {

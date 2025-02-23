@@ -54,6 +54,7 @@ async function createNewIncident(monitor, alert, commonData) {
   let payload = {
     start_date_time: startDateTime,
     title: commonData.alert_name,
+    incident_source: "ALERT",
   };
 
   let update = commonData.description;

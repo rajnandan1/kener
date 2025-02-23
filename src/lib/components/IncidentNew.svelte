@@ -137,7 +137,12 @@
                       </div>
 
                       <time class=" mb-1 text-sm font-medium leading-none text-muted-foreground">
-                        {f(new Date(comment.commented_at * 1000), "MMMM do yyyy, h:mm:ss a", selectedLang)}
+                        {f(
+                          new Date(comment.commented_at * 1000),
+                          "MMMM do yyyy, h:mm:ss a",
+                          selectedLang,
+                          $page.data.localTz
+                        )}
                       </time>
 
                       <div class="mb-4 text-sm font-normal">
@@ -151,7 +156,12 @@
                   {#each incident.comments as comment}
                     <li class="relative pb-2 last:border-0">
                       <time class=" mb-1 text-sm font-medium leading-none text-muted-foreground">
-                        {f(new Date(comment.commented_at * 1000), "MMMM do yyyy, h:mm:ss a", selectedLang)}
+                        {f(
+                          new Date(comment.commented_at * 1000),
+                          "MMMM do yyyy, h:mm:ss a",
+                          selectedLang,
+                          $page.data.localTz
+                        )}
                       </time>
 
                       <p class="mb-2 text-sm font-normal">

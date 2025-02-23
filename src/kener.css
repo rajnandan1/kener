@@ -192,6 +192,12 @@ section {
   border-bottom: 1px solid;
   border-color: hsl(var(--border) / var(--tw-border-opacity));
 }
+@media (max-width: 767px) {
+  .monitors-card .monitor {
+    padding: 1.2em 1em 0.875em 1em;
+  }
+}
+
 .monitors-card .monitor:last-child {
   border-bottom: none;
 }

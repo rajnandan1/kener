@@ -92,7 +92,7 @@
             <!-- Document Icon - Replace with your own logo -->
             <img src="https://kener.ing/logo.png" class="h-8 w-8" alt="" />
             <span class="text-xl font-medium">Kener Documentation</span>
-            <span class="me-2 rounded border px-2.5 py-0.5 text-xs font-medium"> 3.1.7 </span>
+            <span class="me-2 rounded border px-2.5 py-0.5 text-xs font-medium"> 3.1.8 </span>
           </a>
         </div>
 
@@ -148,6 +148,7 @@
             <div class="">
               {#each item.children as child}
                 <a
+                  rel="external"
                   href={child.link.startsWith("/") ? base + child.link : child.link}
                   class="sidebar-item group flex items-center rounded-md px-3 py-2 text-sm font-medium {!!child.active
                     ? 'active'
@@ -181,7 +182,7 @@
         {#each tableOfContents as item}
           <a
             href="#{item.id}"
-            class="block overflow-hidden text-ellipsis whitespace-nowrap text-xs text-muted-foreground hover:underline {item.level ==
+            class="rlink block overflow-hidden text-ellipsis whitespace-nowrap text-xs text-muted-foreground hover:underline {item.level ==
             3
               ? 'ml-4'
               : ''}"

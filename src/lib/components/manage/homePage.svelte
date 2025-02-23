@@ -26,6 +26,7 @@
     subtitle: ""
   };
   let footerHTML = "";
+  let tzToggle = "NO";
   let homeIncidentCount = 10;
   let homeIncidentStartTimeWithin = 30;
   let incidentGroupView = "EXPAND_FIRST";
@@ -68,6 +69,9 @@
   }
   if (data.siteData.footerHTML) {
     footerHTML = data.siteData.footerHTML;
+  }
+  if (data.siteData.tzToggle) {
+    tzToggle = data.siteData.tzToggle;
   }
   if (data.siteData.i18n) {
     i18n = data.siteData.i18n;
@@ -219,7 +223,8 @@
   async function formSubmiti18n() {
     formStatei18n = "loading";
     let resp = await storeSiteData({
-      i18n: JSON.stringify(i18n)
+      i18n: JSON.stringify(i18n),
+      tzToggle: tzToggle
     });
     //print data
     let data = await resp.json();
@@ -234,9 +239,7 @@
 <Card.Root class="mt-4">
   <Card.Header class="border-b">
     <Card.Title>Hero Section</Card.Title>
-    <Card.Description>
-      Configure the hero section of your site. This is the first section that appears on your site.
-    </Card.Description>
+    <Card.Description>Configure the hero section of your site.</Card.Description>
   </Card.Header>
   <Card.Content>
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitHero}>
@@ -366,9 +369,7 @@
 <Card.Root class="mt-4">
   <Card.Header class="border-b">
     <Card.Title>Navigation</Card.Title>
-    <Card.Description>
-      Configure the navigation of your site. This is the first section that appears on your site.
-    </Card.Description>
+    <Card.Description>Configure the navigation of your site.</Card.Description>
   </Card.Header>
   <Card.Content>
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitNav}>
@@ -485,9 +486,7 @@
 <Card.Root class="mt-4">
   <Card.Header class="border-b">
     <Card.Title>Internationalization</Card.Title>
-    <Card.Description>
-      Configure the languages of your site. This is the first section that appears on your site.
-    </Card.Description>
+    <Card.Description>Configure the languages of your site.</Card.Description>
   </Card.Header>
   <Card.Content>
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmiti18n}>
@@ -530,6 +529,24 @@
           </Select.Group>
         </Select.Content>
       </Select.Root>
+      <p class="pt-4 text-lg font-medium">Timezone Switching</p>
+      <p class="text-sm font-medium text-muted-foreground">
+        Kener will automatically detect the user's timezone and show the status page in their timezone. You can let
+        users switch between different timezones if you want.
+      </p>
+
+      <p class="text-sm font-medium">
+        <label>
+          <input
+            on:change={(e) => {
+              tzToggle = e.target.checked === true ? "YES" : "NO";
+            }}
+            type="checkbox"
+            checked={tzToggle === "YES"}
+          />
+          Allow users to switch timezones
+        </label>
+      </p>
       <div class="flex w-full justify-end">
         <Button type="submit" disabled={formStatei18n === "loading"}>
           Save
@@ -545,9 +562,7 @@
 <Card.Root class="mt-4">
   <Card.Header class="border-b">
     <Card.Title>Site Categories</Card.Title>
-    <Card.Description>
-      Configure the categories of your site. This is the first section that appears on your site.
-    </Card.Description>
+    <Card.Description>Configure the categories of your site.</Card.Description>
   </Card.Header>
   <Card.Content>
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitCategories}>
@@ -607,9 +622,7 @@
 <Card.Root class="mt-4">
   <Card.Header class="border-b">
     <Card.Title>Site Footer</Card.Title>
-    <Card.Description>
-      Configure the footer of your site. This is the first section that appears on your site.
-    </Card.Description>
+    <Card.Description>Configure the footer of your site.</Card.Description>
   </Card.Header>
   <Card.Content>
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitFooter}>

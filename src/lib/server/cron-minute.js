@@ -41,12 +41,6 @@ async function manualIncident(monitor) {
   for (let i = 0; i < impactArr.length; i++) {
     const element = impactArr[i];
 
-    let autoIncidents = await db.getActiveAlertIncident(monitor.tag, element.monitor_impact, element.id);
-
-    if (!!autoIncidents) {
-      continue;
-    }
-
     if (element.monitor_impact === "DOWN") {
       impact = "DOWN";
       break;
@@ -67,6 +61,7 @@ async function manualIncident(monitor) {
       type: MANUAL,
     },
   };
+
   return manualData;
 }
 
@@ -109,6 +104,7 @@ const Minuter = async (monitor) => {
   }
 
   manualData = await manualIncident(monitor);
+
   //merge noData, apiData, webhookData, dayData
   let mergedData = {};
 

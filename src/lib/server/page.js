@@ -7,6 +7,7 @@ import {
   StatusObj,
   ParseUptime,
   GetDayStartTimestampUTC,
+  BeginningOfMinute,
 } from "$lib/server/tool.js";
 import { formatDuration, intervalToDuration } from "date-fns";
 import { fdm, l, summaryTime } from "$lib/i18n/client";
@@ -84,12 +85,17 @@ const FetchData = async function (site, monitor, localTz, selectedLang, lang) {
   const midnight = BeginningOfDay({ timeZone: localTz });
   const midnight90DaysAgo = midnight - 90 * 24 * 60 * 60;
   const NO_DATA = "No Data";
-  const midnightTomorrow = midnight + secondsInDay;
   let offsetInMinutes = parseInt((GetDayStartTimestampUTC(now) - midnight) / 60);
+  const maxDateTodayTimestamp = BeginningOfMinute({ timeZone: localTz });
   const _90Day = {};
   let latestTimestamp = 0;
 
-  let dbData = await GetDataGroupByDayAlternative(monitor.tag, midnight90DaysAgo, midnightTomorrow, offsetInMinutes);
+  let dbData = await GetDataGroupByDayAlternative(
+    monitor.tag,
+    midnight90DaysAgo,
+    maxDateTodayTimestamp,
+    offsetInMinutes,
+  );
   let totalDegradedCount = 0;
   let totalDownCount = 0;
   let totalUpCount = 0;
@@ -191,7 +197,7 @@ const FetchData = async function (site, monitor, localTz, selectedLang, lang) {
     summaryColorClass: summaryColorClass,
     barRoundness: site.barRoundness,
     midnight90DaysAgo: midnight90DaysAgo,
-    midnightTomorrow: midnightTomorrow,
+    maxDateTodayTimestamp: maxDateTodayTimestamp,
   };
 };
 export { FetchData };

@@ -72,6 +72,7 @@ const seedSiteData = {
   ],
   theme: "none",
   themeToggle: "YES",
+  tzToggle: "YES",
   barStyle: "PARTIAL",
   barRoundness: "SHARP",
   summaryStyle: "CURRENT",

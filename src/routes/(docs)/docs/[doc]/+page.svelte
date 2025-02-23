@@ -55,7 +55,7 @@
   }
 
   function handleRightBarClick(e) {
-    if (e.target.tagName === "A") {
+    if (e.target.tagName === "A" && e.target.classList.contains("rlink")) {
       e.preventDefault();
       const id = e.target.getAttribute("href").slice(1);
       scrollToId(id);
