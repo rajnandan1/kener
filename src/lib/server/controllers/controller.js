@@ -107,6 +107,12 @@ const siteDataKeys = [
     data_type: "string",
   },
   {
+    key: "tzToggle",
+    //boolean
+    isValid: (value) => typeof value === "string",
+    data_type: "string",
+  },
+  {
     key: "barStyle",
     //PARTIAL or FULL
     isValid: (value) => typeof value === "string" && ["PARTIAL", "FULL"].includes(value),

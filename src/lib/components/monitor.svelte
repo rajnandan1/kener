@@ -171,13 +171,13 @@
     }
     let incidentIDs = incidentObj?.ids || [];
     dayUptime = "NA";
-    dateFetchedFor = f(new Date(bar.timestamp * 1000), "EEEE, MMMM do, yyyy", selectedLang);
+    dateFetchedFor = f(new Date(bar.timestamp * 1000), "EEEE, MMMM do, yyyy", selectedLang, $page.data.localTz);
     showDailyDataModal = true;
     loadingDayData = true;
     dayIncidentsFull = [];
     setTimeout(() => {
       getToday(bar.timestamp, incidentIDs);
-    }, 750);
+    }, 50);
   }
 </script>
 
@@ -323,7 +323,7 @@
             {#if bar.showDetails}
               <div class="show-hover absolute text-sm">
                 <div class="text-{bar.textClass} text-xs font-semibold">
-                  {f(new Date(bar.timestamp * 1000), "EEEE, MMMM do, yyyy", selectedLang)}
+                  {f(new Date(bar.timestamp * 1000), "EEEE, MMMM do, yyyy", selectedLang, $page.data.localTz)}
                   -
                   {bar.summaryStatus}
                 </div>
@@ -373,7 +373,7 @@
                       <p>
                         <span class="text-{bar.cssClass}"> ● </span>
 
-                        {f(new Date(bar.timestamp * 1000), "hh:mm a", selectedLang)}
+                        {f(new Date(bar.timestamp * 1000), "hh:mm a", selectedLang, $page.data.localTz)}
                       </p>
                       {#if bar.status != "NO_DATA"}
                         <p class="pl-2">
