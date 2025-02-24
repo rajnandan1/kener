@@ -2,6 +2,7 @@
 import axios from "axios";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
+import * as cheerio from "cheerio";
 
 const defaultEval = `(async function (statusCode, responseTime, responseData) {
 	let statusCodeShort = Math.floor(statusCode/100);
