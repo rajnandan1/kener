@@ -64,9 +64,9 @@ This is an anonymous JS function, it should return a **Promise**, that resolves 
 })
 ```
 
--   `statusCode` **REQUIRED** is a number. It is the HTTP status code
--   `responseTime` **REQUIRED**is a number. It is the latency in milliseconds
--   `responseDataBase64` **REQUIRED** is a string. It is the base64 encoded response data. To use it you will have to decode it
+- `statusCode` **REQUIRED** is a number. It is the HTTP status code
+- `responseTime` **REQUIRED**is a number. It is the latency in milliseconds
+- `responseDataBase64` **REQUIRED** is a string. It is the base64 encoded response data. To use it you will have to decode it
 
 ```js
 let decodedResp = atob(responseDataBase64)
@@ -74,12 +74,12 @@ let decodedResp = atob(responseDataBase64)
 //let jsonResp = JSON.parse(decodedResp)
 ```
 
-#### Example
+### Example 1
 
 The following example shows how to use the eval function to evaluate the response. The function checks if the status code is 2XX then the status is UP, if the status code is 5XX then the status is DOWN. If the response contains the word `Unknown Error` then the status is DOWN. If the response time is greater than 2000 then the status is DEGRADED.
 
 ```javascript
-;(async function (statusCode, responseTime, responseDataBase64) {
+(async function (statusCode, responseTime, responseDataBase64) {
     const resp = atob(responseDataBase64) //convert base64 to string
 
     let status = "DOWN"
@@ -106,10 +106,12 @@ The following example shows how to use the eval function to evaluate the respons
 })
 ```
 
+### Example 2
+
 This next example shows how to call another API withing eval. It is scrapping the second last script tag from the response and checking if the heading is "No recent issues" then the status is UP else it is DOWN.
 
-```javascript
-;(async function raj(statusCode, responseTime, responseDataBase64) {
+```js
+(async function (statusCode, responseTime, responseDataBase64) {
     let htmlString = atob(responseDataBase64)
     const scriptTags = htmlString.match(/<script[^>]*src="([^"]+)"[^>]*>/g)
     if (scriptTags && scriptTags.length >= 2) {
@@ -131,6 +133,30 @@ This next example shows how to call another API withing eval. It is scrapping th
     }
     return {
         status: "DOWN",
+        latency: responseTime
+    }
+})
+```
+
+### Example 3
+
+The next example shows how to use cheerio to parse bitbucket status page and check if all the components are operational. If all the components are operational then the status is UP else it is DOWN.
+
+```js
+(async function (statusCode, responseTime, responseDataBase64) {
+    let html = atob(responseDataBase64)
+    const $ = cheerio.load(html)
+    const components = $(".components-section .components-container .component-container")
+    let status = true
+    components.each((index, element) => {
+        const name = $(element).find(".component-name").text().trim()
+        const statusText = $(element).find(".component-status").text().trim()
+        if (statusText !== "Operational") {
+            status = false
+        }
+    })
+    return {
+        status: status ? "UP" : "DOWN",
         latency: responseTime
     }
 })
