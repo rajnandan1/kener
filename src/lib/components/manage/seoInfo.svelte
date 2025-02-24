@@ -6,11 +6,11 @@
 	import { Plus, X } from "lucide-svelte";
 	import autoAnimate from "@formkit/auto-animate";
 	import { siteDataExtractFromDb, storeSiteData } from "$lib/clientTools.js";
-	import { base } from "$app/paths";
 	import { Loader, Info } from "lucide-svelte";
 	import { Tooltip } from "bits-ui";
 
 	export let data;
+  const basePath = data.basePath;
 
 	let metaTags = [];
 	function addNewRow() {
@@ -67,7 +67,7 @@
 	let formStateAnalytics = "idle";
 	async function formSubmit() {
 		formState = "loading";
-		let resp = await storeSiteData({
+		let resp = await storeSiteData(basePath, {
 			metaTags: JSON.stringify(metaTags)
 		});
 		//print data
@@ -81,7 +81,7 @@
 
 	async function formSubmitAnalytics() {
 		formStateAnalytics = "loading";
-		let resp = await storeSiteData({
+		let resp = await storeSiteData(basePath, {
 			analytics: JSON.stringify(analytics)
 		});
 		//print data

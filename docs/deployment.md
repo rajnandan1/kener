@@ -133,26 +133,24 @@ docker run \
  rajnandan1/kener
 ```
 
-#### Base path
+#### Base Path
 
-By default kener runs on `/` but you can change it to `/status` or any other path. Read more about it [here](/docs/environment-vars/#kener-base-path).
+By default Kener runs at the root path (`/`). However, you can configure it to run under a custom subpath. Learn more about this setting [here](/docs/environment-vars/#kener-base-path).
 
-<div class="note info">
+For example, if you want to run Kener under the `/status` subpath, you can set it as follows:
 
--   Important: The base path should _**NOT**_ have a trailing slash and should start with `/`
--   Important: This env variable should be present during both build and run time
--   Important: You will have to build the frontend with the same base path
-
-</div>
-
-Let us say you are running kener on a subpath `/status`. You can set the base path like this:
-
+**Docker:**
 ```bash
-docker build  --build-arg KENER_BASE_PATH=/status -t kener .
+ docker run  -p 3000:3000 -e KENER_BASE_PATH=/status -v $(pwd)/database:/app/uploads -v $(pwd)/database:/app/database kener
 ```
 
-```bash
- docker run  -p 3000:3000 --env-file .env -v $(pwd)/database:/app/uploads -v $(pwd)/database:/app/database kener
+**Docker Compose:**
+```yaml
+services:
+  kener:
+    image: rajnandan1/kener:latest
+    environment:
+      - KENER_BASE_PATH=/status
 ```
 
 ## Railway

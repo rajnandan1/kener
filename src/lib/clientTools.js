@@ -1,5 +1,4 @@
 // @ts-nocheck
-import { base } from "$app/paths";
 function siteDataExtractFromDb(data, obj) {
 	let requestedObject = { ...obj };
 	for (const key in requestedObject) {
@@ -23,8 +22,8 @@ function siteDataExtractFromDb(data, obj) {
 }
 
 //a function to make an api call to /manage/api/ to store site data
-function storeSiteData(data) {
-	return fetch(base + "/manage/app/api/", {
+function storeSiteData(basePath, data) {
+	return fetch(basePath + "/manage/app/api/", {
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json"

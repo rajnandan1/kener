@@ -5,7 +5,6 @@
   import { Label } from "$lib/components/ui/label";
   import { clickOutsideAction, slide } from "svelte-legos";
   import { ChevronRight, Trash } from "lucide-svelte";
-  import { base } from "$app/paths";
   import * as Select from "$lib/components/ui/select";
   import { createEventDispatcher } from "svelte";
   import GMI from "$lib/components/gmi.svelte";
@@ -32,6 +31,9 @@
 		latency: responseTime,
 	}
 })`;
+  export let data;
+  const basePath = data.basePath;
+
   export let categories = [];
   let formState = "idle";
 
@@ -61,7 +63,7 @@
     const formData = new FormData();
     formData.append("image", file);
     try {
-      const response = await fetch(base + "/manage/app/upload", {
+      const response = await fetch(basePath + "/manage/app/upload", {
         method: "POST",
         body: formData
       });
@@ -282,7 +284,7 @@
     formState = "loading";
 
     try {
-      let data = await fetch(base + "/manage/app/api/", {
+      let data = await fetch(basePath + "/manage/app/api/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -351,7 +353,7 @@
         <div class="col-span-3 flex gap-x-2">
           {#if !!newMonitor.image}
             <div class="relative mr-2 mt-3 h-[48px] w-[48px] rounded-sm border p-1">
-              <GMI src={newMonitor.image} alt="" />
+              <GMI data={data} src={newMonitor.image} alt="" />
               <Button
                 variant="secondary"
                 class="absolute -right-2.5 -top-1.5 h-5 w-5 rounded-full p-0"

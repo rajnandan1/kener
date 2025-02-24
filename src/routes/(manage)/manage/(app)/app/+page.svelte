@@ -1,8 +1,10 @@
 <script>
 	import { goto, afterNavigate } from "$app/navigation";
-	import { base } from "$app/paths";
+
+  export let data;
+  const basePath = data.basePath;
 
 	afterNavigate((e) => {
-		goto(base + "/manage/app/site");
+		goto(basePath + "/manage/app/site");
 	});
 </script>

@@ -3,7 +3,6 @@
   import { Settings } from "lucide-svelte";
   import * as Accordion from "$lib/components/ui/accordion";
   import { l, f, fd, fdn } from "$lib/i18n/client";
-  import { base } from "$app/paths";
   import { Button } from "$lib/components/ui/button";
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
@@ -11,6 +10,8 @@
   export let index;
   export let lang;
   export let selectedLang = "en";
+  export let data;
+  const basePath = data.basePath;
   let startTime = new Date(incident.start_date_time * 1000);
   let endTime = new Date();
   let nowTime = new Date();
@@ -82,7 +83,7 @@
               {/if}
               {#if $page.data.isLoggedIn}
                 <Button
-                  href="{base}/manage/app/events#{incident.id}"
+                  href="{basePath}/manage/app/events#{incident.id}"
                   class=" rotate-once  h-5 p-0 text-muted-foreground hover:text-primary"
                   variant="link"
                 >
@@ -113,7 +114,7 @@
                       {monitor.impact_type}
                     </div>
                     {#if monitor.image}
-                      <GMI src={monitor.image} classList="mt-1 h-4 w-4" />
+                      <GMI data={data} src={monitor.image} classList="mt-1 h-4 w-4" />
                     {/if}
                     <div class="mt-0.5 font-medium">
                       {monitor.name}

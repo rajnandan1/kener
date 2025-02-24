@@ -3,13 +3,13 @@
   import Incident from "$lib/components/IncidentNew.svelte";
   import { Button } from "$lib/components/ui/button";
   import { ArrowRight, ArrowLeft, CalendarCheck2, ChevronLeft } from "lucide-svelte";
-  import { base } from "$app/paths";
   import { goto } from "$app/navigation";
   import { l, f } from "$lib/i18n/client";
   import { startOfDay, addDays, subDays, getUnixTime, parse } from "date-fns";
   import { page } from "$app/stores";
 
   export let data;
+  const basePath = data.basePath;
   let selectedLang = data.selectedLang;
   let incidents = data.incidents;
 
@@ -74,7 +74,7 @@
     variant="outline"
     class="bounce-left h-8   justify-start  pl-1.5"
     on:click={() => {
-      return (window.location.href = `${base}/`);
+      return (window.location.href = `${basePath}/`);
     }}
   >
     <ChevronLeft class="arrow mr-1 h-5 w-5" />
@@ -122,7 +122,7 @@
         {/if}
         {#each incidentSmartDates[date] as incident, index}
           <div class="newincidents col-span-2">
-            <Incident {incident} lang={data.lang} index="incident-{index}" {selectedLang} />
+            <Incident {incident} lang={data.lang} index="incident-{index}" {selectedLang} data={data} />
           </div>
         {/each}
       </div>
@@ -135,7 +135,7 @@
         variant="secondary"
         class="bounce-left"
         on:click={() => {
-          window.location.href = `${base}/incidents/${data.prevMonthName}`;
+          window.location.href = `${basePath}/incidents/${data.prevMonthName}`;
         }}
       >
         <ArrowLeft class="arrow mr-2 h-4 w-4" />
@@ -145,7 +145,7 @@
         variant="secondary"
         class="bounce-right"
         on:click={() => {
-          window.location.href = `${base}/incidents/${data.nextMonthName}`;
+          window.location.href = `${basePath}/incidents/${data.nextMonthName}`;
         }}
       >
         {f(parse(data.nextMonthName, "MMMM-yyyy", new Date()), "MMMM, yyyy", selectedLang, $page.data.localTz)}

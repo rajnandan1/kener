@@ -1,10 +1,10 @@
 <script>
   import { onMount } from "svelte";
-  import { base } from "$app/paths";
   import moment from "moment";
   import { Loader, ChevronLeft, ChevronRight } from "lucide-svelte";
 
   export let data;
+  const basePath = data.basePath;
   let pageNo = 1;
   let limit = 20;
   let alerts = [];
@@ -19,7 +19,7 @@
   async function loadData() {
     loadingData = true;
     try {
-      let apiResp = await fetch(base + "/manage/app/api/", {
+      let apiResp = await fetch(basePath + "/manage/app/api/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -181,7 +181,7 @@
                     {#if !!alert.incident_number}
                       <a
                         rel="external"
-                        href="{base}/manage/app/events#{alert.incident_number}"
+                        href="{basePath}/manage/app/events#{alert.incident_number}"
                         class="text-cyan-500 hover:underline focus:outline-none"
                       >
                         {alert.incident_number}

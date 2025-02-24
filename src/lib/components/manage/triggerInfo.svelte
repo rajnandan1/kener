@@ -3,7 +3,6 @@
   import { Plus, X, Loader, Settings, Check, ChevronRight } from "lucide-svelte";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
-  import { base } from "$app/paths";
   import * as Select from "$lib/components/ui/select";
   import * as RadioGroup from "$lib/components/ui/radio-group";
   import { createEventDispatcher } from "svelte";
@@ -17,6 +16,7 @@
   let triggers = [];
   let loadingData = false;
   export let data;
+  const basePath = data.basePath;
 
   let newTrigger = {
     id: 0,
@@ -179,7 +179,7 @@
     };
 
     try {
-      let data = await fetch(base + "/manage/app/api/", {
+      let data = await fetch(basePath + "/manage/app/api/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -217,7 +217,7 @@
   async function testTrigger(i, trigger_id, status) {
     triggers[i].testLoaders = "loading";
     try {
-      let data = await fetch(base + "/manage/app/api/", {
+      let data = await fetch(basePath + "/manage/app/api/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -239,7 +239,7 @@
     //fetch data
     loadingData = true;
     try {
-      let apiResp = await fetch(base + "/manage/app/api/", {
+      let apiResp = await fetch(basePath + "/manage/app/api/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -350,13 +350,13 @@
       <Card.Header class="relative">
         <Card.Title>
           {#if trigger.trigger_type == "webhook"}
-            <img src={base + "/webhooks.svg"} alt={trigger.trigger_type} class="mr-2 inline-block h-6 w-6" />
+            <img src={basePath + "/webhooks.svg"} alt={trigger.trigger_type} class="mr-2 inline-block h-6 w-6" />
           {:else if trigger.trigger_type == "slack"}
-            <img src={base + "/slack.svg"} alt={trigger.trigger_type} class="mr-2 inline-block h-6 w-6" />
+            <img src={basePath + "/slack.svg"} alt={trigger.trigger_type} class="mr-2 inline-block h-6 w-6" />
           {:else if trigger.trigger_type == "discord"}
-            <img src={base + "/discord.svg"} alt={trigger.trigger_type} class="mr-2 inline-block h-6 w-6" />
+            <img src={basePath + "/discord.svg"} alt={trigger.trigger_type} class="mr-2 inline-block h-6 w-6" />
           {:else if trigger.trigger_type == "email"}
-            <img src={base + "/email.png"} alt={trigger.trigger_type} class="mr-2 inline-block h-6 w-6" />
+            <img src={basePath + "/email.png"} alt={trigger.trigger_type} class="mr-2 inline-block h-6 w-6" />
           {/if}
           {trigger.name}
         </Card.Title>
@@ -440,7 +440,7 @@
               newTrigger.trigger_type = "webhook";
             }}
           >
-            <img src="{base}/webhooks.svg" title="webhook" class="mr-4 w-6" />
+            <img src="{basePath}/webhooks.svg" title="webhook" class="mr-4 w-6" />
             Webhooks
           </Button>
           <Button
@@ -450,7 +450,7 @@
               newTrigger.trigger_type = "discord";
             }}
           >
-            <img src="{base}/discord.svg" title="discord" class="mr-4 w-6" />
+            <img src="{basePath}/discord.svg" title="discord" class="mr-4 w-6" />
             Discord
           </Button>
           <Button
@@ -460,7 +460,7 @@
               newTrigger.trigger_type = "slack";
             }}
           >
-            <img src="{base}/slack.svg" title="slack" class="mr-4 w-6" />
+            <img src="{basePath}/slack.svg" title="slack" class="mr-4 w-6" />
             Slack
           </Button>
 
@@ -471,7 +471,7 @@
               newTrigger.trigger_type = "email";
             }}
           >
-            <img src="{base}/email.png" title="email" class="mr-4 w-6" />
+            <img src="{basePath}/email.png" title="email" class="mr-4 w-6" />
             Email
           </Button>
         </div>

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import i18n from "$lib/i18n/server";
 import { redirect } from "@sveltejs/kit";
-import { base } from "$app/paths";
+import { BASE_PATH } from "$lib/server/constants.js";
 import {
 	GetAllSiteData,
 	IsSetupComplete,
@@ -11,11 +11,11 @@ import {
 export async function load({ params, route, url, cookies, request }) {
 	let isSetupComplete = await IsSetupComplete();
 	if (!isSetupComplete) {
-		throw redirect(302, base + "/manage/setup");
+		throw redirect(302, BASE_PATH + "/manage/setup");
 	}
 
 	if (process.env.KENER_SECRET_KEY === undefined) {
-		throw redirect(302, base + "/manage/setup");
+		throw redirect(302, BASE_PATH + "/manage/setup");
 	}
 
 	let isLoggedIn = await IsLoggedInSession(cookies);
@@ -50,6 +50,7 @@ export async function load({ params, route, url, cookies, request }) {
 	const bgc = query.get("bgc") ? "#" + query.get("bgc") : "";
 	return {
 		site: site,
+    basePath: BASE_PATH,
 		localTz: localTz,
 		showNav,
 		isBot,

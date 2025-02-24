@@ -3,7 +3,6 @@
 	import "../../kener.css";
 	import Nav from "$lib/components/nav.svelte";
 	import { onMount } from "svelte";
-	import { base } from "$app/paths";
 	import { Button } from "$lib/components/ui/button";
 	import Sun from "lucide-svelte/icons/sun";
 	import Moon from "lucide-svelte/icons/moon";
@@ -11,6 +10,7 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import { setMode, mode, ModeWatcher } from "mode-watcher";
 	export let data;
+  const basePath = data.basePath;
 
 	let defaultLocaleKey = data.selectedLang;
 	let defaultTheme = data.site.theme;
@@ -59,7 +59,7 @@
 <svelte:head>
 	<title>{data.site.title}</title>
 	{#if data.site.favicon && data.site.favicon[0] == "/"}
-		<link rel="icon" id="kener-app-favicon" href="{base}{data.site.favicon}" />
+		<link rel="icon" id="kener-app-favicon" href="{basePath}{data.site.favicon}" />
 	{:else if data.site.favicon}
 		<link rel="icon" id="kener-app-favicon" href={data.site.favicon} />
 	{/if}

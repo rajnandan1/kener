@@ -1,6 +1,5 @@
 <script>
   import { onMount } from "svelte";
-  import { base } from "$app/paths";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { Button } from "$lib/components/ui/button";
@@ -30,6 +29,7 @@
   } from "lucide-svelte";
   import * as Select from "$lib/components/ui/select";
   export let data;
+  const basePath = data.basePath;
   let status = "OPEN";
   let loadingData = false;
   let editMonitorsModal = false;
@@ -45,7 +45,7 @@
   async function fetchData() {
     loadingData = true;
     try {
-      let apiResp = await fetch(base + "/manage/app/api/", {
+      let apiResp = await fetch(basePath + "/manage/app/api/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -117,7 +117,7 @@
       loadingData = true;
 
       try {
-        let resp = await fetch(base + "/manage/app/api/", {
+        let resp = await fetch(basePath + "/manage/app/api/", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -182,7 +182,7 @@
     toPost.incident_source = "DASHBOARD";
     formStateCreate = "loading";
     try {
-      let data = await fetch(base + "/manage/app/api/", {
+      let data = await fetch(basePath + "/manage/app/api/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -250,7 +250,7 @@
     };
 
     try {
-      let data = await fetch(base + "/manage/app/api/", {
+      let data = await fetch(basePath + "/manage/app/api/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -282,7 +282,7 @@
   async function fetchComments() {
     loadingComments = true;
     try {
-      let data = await fetch(base + "/manage/app/api/", {
+      let data = await fetch(basePath + "/manage/app/api/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -331,7 +331,7 @@
 
     loadingComments = true;
     try {
-      let data = await fetch(base + "/manage/app/api/", {
+      let data = await fetch(basePath + "/manage/app/api/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -370,7 +370,7 @@
     addCommentError = "";
 
     try {
-      let data = await fetch(base + "/manage/app/api/", {
+      let data = await fetch(basePath + "/manage/app/api/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

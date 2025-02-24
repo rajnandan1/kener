@@ -1,7 +1,6 @@
 <script>
   import { Share2, Link, CopyCheck, Code, TrendingUp, Percent, Loader, ExternalLink } from "lucide-svelte";
   import { Button } from "$lib/components/ui/button";
-  import { base } from "$app/paths";
   import { onMount } from "svelte";
   import { analyticsEvent } from "$lib/boringOne";
   import { l, summaryTime } from "$lib/i18n/client";
@@ -12,6 +11,8 @@
   export let monitor;
   export let lang;
   export let selectedLang = "en";
+  export let data;
+  const basePath = data.basePath;
   let theme = "light";
   let copiedLink = false;
   let embedType = "js";
@@ -93,7 +94,7 @@
       type: embedType
     });
 
-    let path = `${base}/embed/monitor-${monitor.tag}`;
+    let path = `${basePath}/embed/monitor-${monitor.tag}`;
     let scriptTag =
       `<script async src="${protocol + "//" + domain + path}/js?theme=${theme}&monitor=${protocol + "//" + domain + path}"><` +
       "/script>";
@@ -111,11 +112,11 @@
   onMount(async () => {
     protocol = window.location.protocol;
     domain = window.location.host;
-    pathMonitorLink = `${protocol}//${domain}${base}/?monitor=${monitor.tag}`;
-    pathMonitorBadgeUptime = `${protocol}//${domain}${base}/badge/${monitor.tag}/uptime`;
-    pathMonitorBadgeStatus = `${protocol}//${domain}${base}/badge/${monitor.tag}/status`;
-    pathMonitorBadgeDot = `${protocol}//${domain}${base}/badge/${monitor.tag}/dot`;
-    pathMonitorBadgeDotPing = `${protocol}//${domain}${base}/badge/${monitor.tag}/dot?animate=ping`;
+    pathMonitorLink = `${protocol}//${domain}${basePath}/?monitor=${monitor.tag}`;
+    pathMonitorBadgeUptime = `${protocol}//${domain}${basePath}/badge/${monitor.tag}/uptime`;
+    pathMonitorBadgeStatus = `${protocol}//${domain}${basePath}/badge/${monitor.tag}/status`;
+    pathMonitorBadgeDot = `${protocol}//${domain}${basePath}/badge/${monitor.tag}/dot`;
+    pathMonitorBadgeDotPing = `${protocol}//${domain}${basePath}/badge/${monitor.tag}/dot?animate=ping`;
     analyticsEvent("monitor_share_menu_open", {
       tag: monitor.tag
     });
@@ -124,7 +125,7 @@
 
 <div class="relative mb-2 scroll-m-20 px-4 pt-4 {!!monitor.image ? 'pl-10' : ''} text-xl font-medium tracking-tight">
   {#if !!monitor.image}
-    <GMI src={monitor.image} classList="absolute left-4 top-5 inline h-5 w-5" alt={monitor.name} srcset="" />
+    <GMI data={data} src={monitor.image} classList="absolute left-4 top-5 inline h-5 w-5" alt={monitor.name} srcset="" />
   {/if}
   <p class="overflow-hidden text-ellipsis whitespace-nowrap">
     {monitor.name}

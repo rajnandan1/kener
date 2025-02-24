@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { json, redirect } from "@sveltejs/kit";
-import { base } from "$app/paths";
+import { BASE_PATH } from "$lib/server/constants.js";
 import db from "$lib/server/db/db.js";
 import { VerifyPassword, GenerateToken, CookieConfig } from "$lib/server/controllers/controller.js";
 
@@ -17,5 +17,5 @@ export async function GET({ request, cookies }) {
 		sameSite: cookieConfig.sameSite
 	});
 
-	throw redirect(302, base + "/manage/signin");
+	throw redirect(302, BASE_PATH + "/manage/signin");
 }

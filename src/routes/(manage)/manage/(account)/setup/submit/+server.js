@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { json, redirect } from "@sveltejs/kit";
-import { base } from "$app/paths";
+import { BASE_PATH } from "$lib/server/constants.js";
 import db from "$lib/server/db/db.js";
 import { HashPassword, GenerateSalt, GenerateToken, CookieConfig } from "$lib/server/controllers/controller.js";
 
@@ -31,13 +31,13 @@ export async function POST({ request, cookies }) {
   let userCount = await db.getUsersCount();
   if (userCount.count != 0) {
     let errorMessage = "Set up already done. Please login with the email and password you have set up.";
-    throw redirect(302, base + "/manage/setup?error=" + errorMessage);
+    throw redirect(302, BASE_PATH + "/manage/setup?error=" + errorMessage);
   }
   //validate password
   if (!validatePassword(password)) {
     let errorMessage =
       "Password must contain at least one digit, one lowercase letter, one uppercase letter, and have a minimum length of 8 characters.";
-    throw redirect(302, base + "/manage/setup?error=" + errorMessage);
+    throw redirect(302, BASE_PATH + "/manage/setup?error=" + errorMessage);
   }
   let user = {
     email: email,
@@ -50,7 +50,7 @@ export async function POST({ request, cookies }) {
   let userDB = await db.getUserByEmail(email);
   if (!!!userDB) {
     let errorMessage = "User does not exist";
-    throw redirect(302, base + "/manage/signin?error=" + errorMessage);
+    throw redirect(302, BASE_PATH + "/manage/signin?error=" + errorMessage);
   }
   let token = await GenerateToken(userDB);
   let cookieConfig = CookieConfig();
@@ -61,5 +61,5 @@ export async function POST({ request, cookies }) {
     secure: cookieConfig.secure,
     sameSite: cookieConfig.sameSite,
   });
-  throw redirect(302, base + "/manage/app/site");
+  throw redirect(302, BASE_PATH + "/manage/app/site");
 }

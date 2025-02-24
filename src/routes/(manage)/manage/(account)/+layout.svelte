@@ -2,8 +2,10 @@
 	import "../../../../app.postcss";
 	import "../../../../kener.css";
 	import "../../../../manage.css";
-	import { base } from "$app/paths";
 	import { setMode, mode, ModeWatcher } from "mode-watcher";
+
+  export let data;
+  const basePath = data.basePath;
 	setMode("dark");
 </script>
 
@@ -11,7 +13,7 @@
 <svelte:head>
 	<meta name="description" content="Set up Kener" />
 	<meta name="robots" content="noindex" />
-	<link rel="icon" href="{base}/logo96.png" />
+	<link rel="icon" href="{basePath}/logo96.png" />
 </svelte:head>
 
 <main class="setup">

@@ -2,10 +2,10 @@
   import { Button } from "$lib/components/ui/button";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { Languages, Menu } from "lucide-svelte";
-  import { base } from "$app/paths";
   import { analyticsEvent } from "$lib/boringOne";
   import GMI from "$lib/components/gmi.svelte";
   export let data;
+  const basePath = data.basePath;
   let defaultPattern = data.site?.pattern || "squares";
 </script>
 
@@ -13,9 +13,9 @@
 
 <header class="blurry-bg sticky top-0 z-50 mx-auto md:mt-2">
   <div class="container flex h-14 max-w-[820px] items-center border bg-card px-3 md:rounded-md">
-    <a rel="external" href={data.site.home ? data.site.home : base} class="mr-6 flex items-center space-x-2">
+    <a rel="external" href={data.site.home ? data.site.home : basePath} class="mr-6 flex items-center space-x-2">
       {#if data.site.logo}
-        <GMI src={data.site.logo} classList="w-8" alt={data.site.title} srcset="" />
+        <GMI data={data} src={data.site.logo} classList="w-8" alt={data.site.title} srcset="" />
       {/if}
       {#if data.site.siteName}
         <span class="  inline-block text-[15px] font-bold lg:text-base">
@@ -34,7 +34,7 @@
               on:click={() => analyticsEvent("nav", navItem.name)}
             >
               {#if navItem.iconURL}
-                <GMI src={navItem.iconURL} classList="mr-1.5 mt-0.5 inline h-4" alt={navItem.name} />
+                <GMI data={data} src={navItem.iconURL} classList="mr-1.5 mt-0.5 inline h-4" alt={navItem.name} />
               {/if}
               <span>{navItem.name}</span>
             </a>

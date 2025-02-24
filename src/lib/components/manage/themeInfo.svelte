@@ -6,13 +6,13 @@
   import { Plus, X, Info } from "lucide-svelte";
   import autoAnimate from "@formkit/auto-animate";
   import { siteDataExtractFromDb, storeSiteData } from "$lib/clientTools.js";
-  import { base } from "$app/paths";
   import { Loader } from "lucide-svelte";
   import * as RadioGroup from "$lib/components/ui/radio-group";
   import { Tooltip } from "bits-ui";
   import ColorPicker from "svelte-awesome-color-picker";
 
   export let data;
+  const basePath = data.basePath;
 
   let formState = "idle";
 
@@ -54,7 +54,7 @@
     themeDataAPI.font = JSON.stringify(themeDataAPI.fontJ);
     delete themeDataAPI.colorsJ;
     delete themeDataAPI.fontJ;
-    let resp = await storeSiteData(themeDataAPI);
+    let resp = await storeSiteData(basePath, themeDataAPI);
     //print data
     let data = await resp.json();
     formState = "idle";

@@ -1,7 +1,8 @@
 // @ts-nocheck
-// Define your constants
 import dotenv from "dotenv";
 dotenv.config();
+
+// Define your constants
 const ENV = process.env.NODE_ENV;
 const MONITOR = "./config/monitors.yaml";
 const SITE = "./config/site.yaml";
@@ -15,6 +16,7 @@ const AnalyticsProviders = {
   AMPLITUDE: "https://unpkg.com/@analytics/amplitude@0.1.3/dist/@analytics/amplitude.min.js",
   MIXPANEL: "https://unpkg.com/@analytics/mixpanel@0.4.0/dist/@analytics/mixpanel.min.js",
 };
+
 const AllRecordTypes = {
   A: 1,
   NS: 2,
@@ -96,13 +98,18 @@ const AllRecordTypes = {
   MAILA: 254,
   ANY: 255,
 };
-// Export the constants
+
 const REALTIME = "realtime";
 const TIMEOUT = "timeout";
 const ERROR = "error";
 const MANUAL = "manual";
 const WEBHOOK = "webhook";
 
+export const BASE_PATH = (process.env.KENER_BASE_PATH || '')
+  .replace(/\/+$/, '')  // Remove trailing slashes
+  .replace(/^([^/])/, '/$1');  // Ensure leading slash
+
+// Export the constants
 export {
   MONITOR,
   UP,

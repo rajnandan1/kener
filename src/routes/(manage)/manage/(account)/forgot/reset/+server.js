@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { json, redirect } from "@sveltejs/kit";
-import { base } from "$app/paths";
+import { BASE_PATH } from "$lib/server/constants.js";
 import db from "$lib/server/db/db.js";
 import { HashPassword, VerifyToken } from "$lib/server/controllers/controller.js";
 
@@ -18,7 +18,7 @@ export async function POST({ request, cookies }) {
 		let userDB = await db.getUserByEmail(email);
 		if (!!!userDB) {
 			let errorMessage = "User does not exist";
-			throw redirect(302, base + "/manage/signin?view=error&error=" + errorMessage);
+			throw redirect(302, BASE_PATH + "/manage/signin?view=error&error=" + errorMessage);
 		}
 		let password_hash = await HashPassword(password);
 		await db.updateUserPassword({
@@ -27,8 +27,8 @@ export async function POST({ request, cookies }) {
 		});
 	} catch (e) {
 		let errorMessage = "Invalid token";
-		throw redirect(302, base + "/manage/forgot?view=error&error=" + errorMessage);
+		throw redirect(302, BASE_PATH + "/manage/forgot?view=error&error=" + errorMessage);
 	}
 
-	throw redirect(302, base + "/manage/forgot?view=success");
+	throw redirect(302, BASE_PATH + "/manage/forgot?view=success");
 }

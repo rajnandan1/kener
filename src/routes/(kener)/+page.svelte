@@ -5,7 +5,6 @@
   import Incident from "$lib/components/IncidentNew.svelte";
   import { Badge } from "$lib/components/ui/badge";
   import { l } from "$lib/i18n/client";
-  import { base } from "$app/paths";
   import { ArrowRight, ChevronLeft, X } from "lucide-svelte";
   import { hotKeyAction, clickOutsideAction } from "svelte-legos";
   import { onMount } from "svelte";
@@ -15,6 +14,7 @@
   import GMI from "$lib/components/gmi.svelte";
 
   export let data;
+  const basePath = data.basePath;
   let shareMenusToggle = false;
   function showShareMenu(e) {
     shareMenusToggle = true;
@@ -67,7 +67,7 @@
     <div class="mx-auto max-w-screen-xl px-4 lg:flex lg:items-center">
       <div class="blurry-bg mx-auto max-w-3xl text-center">
         {#if data.hero.image}
-          <GMI src={data.hero.image} classList="m-auto mb-2 h-14 w-14" alt="" srcset="" />
+          <GMI data={data} src={data.hero.image} classList="m-auto mb-2 h-14 w-14" alt="" srcset="" />
         {/if}
         {#if data.hero.title}
           <h1
@@ -94,9 +94,9 @@
         if (data.pageType == "category") {
           return window.history.back();
         } else if (data.pageType == "monitor") {
-          return (window.location.href = `${base}/`);
+          return (window.location.href = `${basePath}/`);
         } else if (data.pageType == "group") {
-          return (window.location.href = `${base}/`);
+          return (window.location.href = `${basePath}/`);
         }
       }}
     >
@@ -146,12 +146,12 @@
       {#if kindFilter == "INCIDENT"}
         <Card.Content class=" newincidents w-full overflow-hidden p-0">
           {#each data.allRecentIncidents as incident, index}
-            <Incident {incident} lang={data.lang} index="incident-{index}" selectedLang={data.selectedLang} />
+            <Incident {incident} lang={data.lang} index="incident-{index}" selectedLang={data.selectedLang} data={data} />
           {/each}
         </Card.Content>
       {:else if kindFilter == "MAINTENANCE"}
         {#each data.allRecentMaintenances as incident, index}
-          <Incident {incident} lang={data.lang} index="incident-{index}" selectedLang={data.selectedLang} />
+          <Incident {incident} lang={data.lang} index="incident-{index}" selectedLang={data.selectedLang} data={data} />
         {/each}
       {/if}
     </Card.Root>
@@ -196,6 +196,7 @@
         {#each data.monitors as monitor}
           <Monitor
             on:show_shareMenu={showShareMenu}
+            data={data}
             {monitor}
             localTz={data.localTz}
             lang={data.lang}
@@ -237,7 +238,7 @@
 {/if}
 <section class="mx-auto mb-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent" id="">
   <a
-    href="{base}/incidents/{format(new Date(), 'MMMM-yyyy')}"
+    href="{basePath}/incidents/{format(new Date(), 'MMMM-yyyy')}"
     rel="external"
     class="bounce-right grid w-full cursor-pointer grid-cols-2 justify-between gap-4 rounded-md border bg-card px-4 py-2 text-sm font-medium hover:bg-secondary"
   >
@@ -277,7 +278,7 @@
         <X class="h-4 w-4   text-muted-foreground" />
       </Button>
       <div class="content">
-        <ShareMenu monitor={activeMonitor} lang={data.lang} selectedLang={data.selectedLang} />
+        <ShareMenu monitor={activeMonitor} lang={data.lang} selectedLang={data.selectedLang} data={data} />
       </div>
     </div>
   </div>

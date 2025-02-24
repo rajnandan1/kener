@@ -1,7 +1,8 @@
 // @ts-nocheck
 import { json, redirect } from "@sveltejs/kit";
 
-import { base } from "$app/paths";
+// import { base } from "$app/paths";
+import { BASE_PATH } from "$lib/server/constants.js";
 import db from "$lib/server/db/db.js";
 import {
 	VerifyPassword,
@@ -18,21 +19,21 @@ export async function POST({ request, cookies }) {
 	let userCount = await db.getUsersCount();
 	if (userCount.count == 0) {
 		let errorMessage = "Set up not done yet. Create a user first.";
-		throw redirect(302, base + "/manage/setup?error=" + errorMessage);
+		throw redirect(302, BASE_PATH + "/manage/setup?error=" + errorMessage);
 	}
 
 	//check if any entry in user table is already there
 	let userDB = await db.getUserByEmail(email);
 	if (!!!userDB) {
 		let errorMessage = "User does not exist";
-		throw redirect(302, base + "/manage/signin?error=" + errorMessage);
+		throw redirect(302, BASE_PATH + "/manage/signin?error=" + errorMessage);
 	}
 
 	let passwordStored = await db.getUserPasswordHashById(userDB.id);
 	let isMatch = await VerifyPassword(password, passwordStored.password_hash);
 	if (!isMatch) {
 		let errorMessage = "Invalid password or Email";
-		throw redirect(302, base + "/manage/signin?error=" + errorMessage);
+		throw redirect(302, BASE_PATH + "/manage/signin?error=" + errorMessage);
 	}
 
 	//generate token
@@ -48,5 +49,5 @@ export async function POST({ request, cookies }) {
 		sameSite: cookieConfig.sameSite
 	});
 
-	throw redirect(302, base + "/manage/app/site");
+	throw redirect(302, BASE_PATH + "/manage/app/site");
 }

@@ -1,10 +1,17 @@
+<!-- <script context="module">
+  export async function load({ data }) {
+    return {
+      basePath: data.basePath // Ensures basePath is accessible on client-side
+    };
+  }
+</script> -->
+
 <script>
   import "../../app.postcss";
   import "../../kener.css";
   import Nav from "$lib/components/nav.svelte";
   import { onMount } from "svelte";
   import { Input } from "$lib/components/ui/input";
-  import { base } from "$app/paths";
   import { Button } from "$lib/components/ui/button";
   import Sun from "lucide-svelte/icons/sun";
   import Moon from "lucide-svelte/icons/moon";
@@ -16,6 +23,7 @@
   import { l } from "$lib/i18n/client";
 
   export let data;
+  const basePath = data.basePath;
   let defaultLocaleKey = data.selectedLang;
   let allTimezones = Intl.supportedValuesOf("timeZone");
   let searchTzValue = "";
@@ -48,7 +56,7 @@
    * @param {string} locale
    */
   function setLanguage(locale) {
-    document.cookie = `localLang=${locale};max-age=${60 * 60 * 24 * 365 * 30};path=${base ? "base" : "/"};`;
+    document.cookie = `localLang=${locale};max-age=${60 * 60 * 24 * 365 * 30};path=${basePath ? "base" : "/"};`;
     if (locale === defaultLocaleKey) return;
     defaultLocaleValue = allLocales[locale];
     analyticsEvent("language_change", {
@@ -59,7 +67,7 @@
 
   //set timezone
   function setTz(tz) {
-    document.cookie = `localTz=${tz};max-age=${60 * 60 * 24 * 365 * 30};path=${base ? "base" : "/"};`;
+    document.cookie = `localTz=${tz};max-age=${60 * 60 * 24 * 365 * 30};path=${basePath ? "base" : "/"};`;
     location.reload();
   }
 
@@ -134,7 +142,7 @@
     }
   }
   let customCSS = `<style>${data.site.customCSS}</style>`;
-  if (!!data.site.favicon && !data.site.favicon.startsWith("http")) data.site.favicon = `${base}${data.site.favicon}`;
+  if (!!data.site.favicon && !data.site.favicon.startsWith("http")) data.site.favicon = `${basePath}${data.site.favicon}`;
 </script>
 
 <svelte:window on:analyticsEvent={captureAnalytics} />
@@ -279,7 +287,7 @@
     {/if}
   </div>
   {#if data.isLoggedIn}
-    <a href="{base}/manage/app/site" rel="external" class="button-77 fixed bottom-8 left-8 z-50" role="button">
+    <a href="{basePath}/manage/app/site" rel="external" class="button-77 fixed bottom-8 left-8 z-50" role="button">
       Manage
     </a>
   {/if}
