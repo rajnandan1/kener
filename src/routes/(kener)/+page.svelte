@@ -13,14 +13,14 @@
   import { scale } from "svelte/transition";
   import { format } from "date-fns";
   import GMI from "$lib/components/gmi.svelte";
-	import SubscribeModal from "$lib/components/subscribeModal.svelte";
-	import UnsubscribeModal from "$lib/components/unsubscribeModal.svelte";
+  import SubscribeModal from "$lib/components/subscribeModal.svelte";
+  import UnsubscribeModal from "$lib/components/unsubscribeModal.svelte";
 
   export let data;
-	let token;
-	let email;
+  let token;
+  let email;
   let shareMenusToggle = false;
-	let showUnsubscribe = false;
+  let showUnsubscribe = false;
   function showShareMenu(e) {
     shareMenusToggle = true;
     activeMonitor = e.detail.monitor;
@@ -48,35 +48,35 @@
   if (data.allRecentIncidents.length == 0) {
     kindOfIncidents("MAINTENANCE");
   }
-	let isMounted = false;
+  let isMounted = false;
 
-	onMount(async () => {
+  onMount(async () => {
     isMounted = true;
-    
-    function checkForToken() {
-        let params = new URLSearchParams(window.location.search);
-        token = params.get("token");
 
-        if (token) {
-            openUnsubscribe();
-        }
+    function checkForToken() {
+      let params = new URLSearchParams(window.location.search);
+      token = params.get("token");
+
+      if (token) {
+        openUnsubscribe();
+      }
     }
 
     checkForToken();
     window.onpopstate = () => {
-        checkForToken();
+      checkForToken();
     };
-});
+  });
 
-	function openUnsubscribe() {
-		showUnsubscribe = true;
-	}
-	let showSubscribe = false;
-	let selectedIncident;
-	function handleSubscription(incident) {
-		showSubscribe = true;
-		selectedIncident = incident;
-	}
+  function openUnsubscribe() {
+    showUnsubscribe = true;
+  }
+  let showSubscribe = false;
+  let selectedIncident;
+  function handleSubscription(incident) {
+    showSubscribe = true;
+    selectedIncident = incident;
+  }
 </script>
 
 <svelte:head>
@@ -175,26 +175,26 @@
       {#if kindFilter == "INCIDENT"}
         <Card.Content class=" newincidents w-full overflow-hidden p-0">
           {#each data.allRecentIncidents as incident, index}
-						<Incident
-							{incident}
-							lang={data.lang}
-							index="incident-{index}"
-							selectedLang={data.selectedLang}
-							on:subscribe={handleSubscription(incident)}
-							showSubButton={incident.state !== "RESOLVED"}
-						/>
+            <Incident
+              {incident}
+              lang={data.lang}
+              index="incident-{index}"
+              selectedLang={data.selectedLang}
+              on:subscribe={handleSubscription(incident)}
+              showSubButton={incident.state !== "RESOLVED"}
+            />
           {/each}
         </Card.Content>
       {:else if kindFilter == "MAINTENANCE"}
         {#each data.allRecentMaintenances as incident, index}
-					<Incident
-						{incident}
-						lang={data.lang}
-						index="incident-{index}"
-						selectedLang={data.selectedLang}
-						on:subscribe={handleSubscription(incident)}
-						showSubButton={true}
-					/>
+          <Incident
+            {incident}
+            lang={data.lang}
+            index="incident-{index}"
+            selectedLang={data.selectedLang}
+            on:subscribe={handleSubscription(incident)}
+            showSubButton={true}
+          />
         {/each}
       {/if}
     </Card.Root>
@@ -329,8 +329,8 @@
   </div>
 {/if}
 {#if showSubscribe}
-	<SubscribeModal bind:showSubscribe {selectedIncident} />
+  <SubscribeModal bind:showSubscribe {selectedIncident} />
 {/if}
 {#if showUnsubscribe}
-	<UnsubscribeModal bind:showUnsubscribe unsubtoken={token} />
+  <UnsubscribeModal bind:showUnsubscribe unsubtoken={token} />
 {/if}

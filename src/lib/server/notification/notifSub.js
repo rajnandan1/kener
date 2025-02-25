@@ -4,61 +4,61 @@ import nodemailer from "nodemailer";
 import getSMTPTransport from "./smtps.js";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import {
-	GetGlobalSubscribers,
-	GetSMTPFromENV,
-	GetSubscriberByIncidentID,
-	GetSubscribers
+  GetGlobalSubscribers,
+  GetSMTPFromENV,
+  GetSubscriberByIncidentID,
+  GetSubscribers,
 } from "../controllers/controller.js";
 class EmailingSub {
-	to = "";
-	from;
-	siteData;
-	subscribers = [];
-	meta = {
-		from: "",
-		smtp_host: "",
-		smtp_port: "",
-		smtp_secure: "",
-		smtp_user: "",
-		smtp_pass: ""
-	};
-	constructor(siteData) {
-		this.siteData = siteData;
-	}
+  to = "";
+  from;
+  siteData;
+  subscribers = [];
+  meta = {
+    from: "",
+    smtp_host: "",
+    smtp_port: "",
+    smtp_secure: "",
+    smtp_user: "",
+    smtp_pass: "",
+  };
+  constructor(siteData) {
+    this.siteData = siteData;
+  }
 
-	transformData(data, token) {
-		let formattedTime = new Date(data.timestamp*1000).toISOString();
-		let smtp = GetSMTPFromENV();
-		this.meta = {
-			from: smtp.smtp_from_email,
-			smtp_host: smtp.smtp_host,
-			smtp_port: smtp.smtp_port,
-			smtp_user: smtp.smtp_user,
-			smtp_pass: smtp.smtp_pass,
-			smtp_secure: smtp.smtp_secure,
-		}
-		let emailApiRequest = {
-			from: this.meta.from,
-			subject: `[${data.status}] ${data.incident_name}  at ${formattedTime}`,
-			text: `Incident Update: ${data.incident_name} — STATUS: ${data.status} (as of ${formattedTime}).`,
-			html: ""
-		};
+  transformData(data, token) {
+    let formattedTime = new Date(data.timestamp * 1000).toISOString();
+    let smtp = GetSMTPFromENV();
+    this.meta = {
+      from: smtp.smtp_from_email,
+      smtp_host: smtp.smtp_host,
+      smtp_port: smtp.smtp_port,
+      smtp_user: smtp.smtp_user,
+      smtp_pass: smtp.smtp_pass,
+      smtp_secure: smtp.smtp_secure,
+    };
+    let emailApiRequest = {
+      from: this.meta.from,
+      subject: `[${data.status}] ${data.incident_name}  at ${formattedTime}`,
+      text: `Incident Update: ${data.incident_name} — STATUS: ${data.status} (as of ${formattedTime}).`,
+      html: "",
+    };
 
-		let bgColor = "#f4f4f4";
-		if (data.status === "INVESTIGATING") {
-			bgColor = "#fe588a";
-		} else if (data.status === "MONITORING") {
-			bgColor = "#ffaf4d";
-		} else if (data.status === "IDENTIFIED") {
-			bgColor = "#b987f7";
-		} else if (data.status === "RESOLVED") {
-			bgColor = "#7aba78";
-		}
-		if (data.incident_type == "MAINTENANCE") {
-			data.status = "MAINTENANCE UPDATE";
-			bgColor = "#505050";
-		}
-		let html = `
+    let bgColor = "#f4f4f4";
+    if (data.status === "INVESTIGATING") {
+      bgColor = "#fe588a";
+    } else if (data.status === "MONITORING") {
+      bgColor = "#ffaf4d";
+    } else if (data.status === "IDENTIFIED") {
+      bgColor = "#b987f7";
+    } else if (data.status === "RESOLVED") {
+      bgColor = "#7aba78";
+    }
+    if (data.incident_type == "MAINTENANCE") {
+      data.status = "MAINTENANCE UPDATE";
+      bgColor = "#505050";
+    }
+    let html = `
 		<!DOCTYPE html>
 		<html>
 		<head>
@@ -183,61 +183,61 @@ class EmailingSub {
 		</html> 
 		`;
 
-		emailApiRequest.html = html;
+    emailApiRequest.html = html;
 
-		return emailApiRequest;
-	}
+    return emailApiRequest;
+  }
 
-	type() {
-		return "email";
-	}
+  type() {
+    return "email";
+  }
 
-	async send(data) {
-		// Configure the SMTP transporter using the stored SMTP details
+  async send(data) {
+    // Configure the SMTP transporter using the stored SMTP details
 
-		try {
-			// Fetch all subscribers for the given incidentID
-			let subscribers = await GetSubscriberByIncidentID(data);
-			let globalSubscribers = await GetGlobalSubscribers();
+    try {
+      // Fetch all subscribers for the given incidentID
+      let subscribers = await GetSubscriberByIncidentID(data);
+      let globalSubscribers = await GetGlobalSubscribers();
 
-			// Combine local and global subscribers
-			let subscriberList = [...subscribers, ...globalSubscribers].map(sub => ({
-				email: sub.email,
-				token: sub.token
-			}));
-			if (!subscriberList || subscriberList.length === 0) {
-				throw new Error("No subscribers found for this incident.");
-			}
-			// Loop through each subscriber and send an email individually
-			for (let i = 0; i < subscriberList.length; i++) {
-				const subscriberEmail = subscriberList[i].email;
-				const emailBody = this.transformData(data, subscriberList[i].token); // Generate email body for each subscriber
-				const transporter = getSMTPTransport(this.meta);
+      // Combine local and global subscribers
+      let subscriberList = [...subscribers, ...globalSubscribers].map((sub) => ({
+        email: sub.email,
+        token: sub.token,
+      }));
+      if (!subscriberList || subscriberList.length === 0) {
+        throw new Error("No subscribers found for this incident.");
+      }
+      // Loop through each subscriber and send an email individually
+      for (let i = 0; i < subscriberList.length; i++) {
+        const subscriberEmail = subscriberList[i].email;
+        const emailBody = this.transformData(data, subscriberList[i].token); // Generate email body for each subscriber
+        const transporter = getSMTPTransport(this.meta);
 
-				// Prepare email options for each subscriber
-				const mailOptions = {
-					from: emailBody.from, // Sender address
-					to: subscriberEmail, // Send email to one subscriber
-					subject: emailBody.subject, // Email subject
-					text: emailBody.text, // Plain text body
-					html: emailBody.html // HTML body
-				};
+        // Prepare email options for each subscriber
+        const mailOptions = {
+          from: emailBody.from, // Sender address
+          to: subscriberEmail, // Send email to one subscriber
+          subject: emailBody.subject, // Email subject
+          text: emailBody.text, // Plain text body
+          html: emailBody.html, // HTML body
+        };
 
-				try {
-					// Send email to individual subscriber
-					let result = await transporter.sendMail(mailOptions);
-					console.log(`Email sent successfully to ${subscriberEmail}:`, result);
-				} catch (error) {
-					console.error(`Error sending email to ${subscriberEmail}: ${error.message}`);
-					throw error;
-				}
-			}
+        try {
+          // Send email to individual subscriber
+          let result = await transporter.sendMail(mailOptions);
+          console.log(`Email sent successfully to ${subscriberEmail}:`, result);
+        } catch (error) {
+          console.error(`Error sending email to ${subscriberEmail}: ${error.message}`);
+          throw error;
+        }
+      }
 
-			return { message: "Emails sent individually", success: true };
-		} catch (error) {
-			console.error("Error sending email via SMTP: " + error.message);
-			throw error;
-		}
-	}
+      return { message: "Emails sent individually", success: true };
+    } catch (error) {
+      console.error("Error sending email via SMTP: " + error.message);
+      throw error;
+    }
+  }
 }
 export default EmailingSub;

@@ -663,7 +663,7 @@ export const AddIncidentComment = async (incident_id, comment, state, commented_
     comment,
     state,
     commented_at,
-  }
+  };
   let incidentExists = await db.getIncidentById(incident_id);
   if (!incidentExists) {
     throw new Error(`Incident with id ${incident_id} does not exist`);
@@ -688,16 +688,14 @@ export const AddIncidentComment = async (incident_id, comment, state, commented_
       }
     }
     await UpdateIncident(incident_id, incidentUpdate);
-  if(!!notifySubscribersBool){
-    
-    try {
-      await NotifySubscribers(toPass);
-    } catch (error) {
-      console.log(error);
-      return {error :true, message : error.message};
+    if (!!notifySubscribersBool) {
+      try {
+        await NotifySubscribers(toPass);
+      } catch (error) {
+        console.log(error);
+        return { error: true, message: error.message };
+      }
     }
-  }
-
   }
 
   return c;
@@ -712,13 +710,13 @@ async function NotifySubscribers(data) {
     status: incident.state,
     incident_name: incident.title,
     timestamp: data.commented_at,
-    description: data.comment
+    description: data.comment,
   };
-  
+
   try {
     let sendEmail = await SendEmailByIncidentID(incidentData);
-    console.log("Response from sending notification to subscribers... "+JSON.stringify(sendEmail.message));
-    
+    console.log("Response from sending notification to subscribers... " + JSON.stringify(sendEmail.message));
+
     if (sendEmail.error) {
       // Return an error response
       return { error: true, message: sendEmail.error || "Error in Email API response" };
@@ -728,11 +726,9 @@ async function NotifySubscribers(data) {
   } catch (error) {
     // Catch errors and return structured response
 
-    throw new Error("Failed to send emails, "+error.message);
+    throw new Error("Failed to send emails, " + error.message);
   }
 }
-
-
 
 export const UpdateCommentStatusByID = async (incident_id, comment_id, status) => {
   let commentExists = await db.getIncidentCommentByIDAndIncident(incident_id, comment_id);
@@ -1003,117 +999,117 @@ export const GetSiteMap = async (cookies) => {
 };
 
 function GenerateHash(value, salt) {
-	const hash = crypto.createHash("sha256");
-	hash.update(value + salt);
-	return hash.digest("hex");
+  const hash = crypto.createHash("sha256");
+  hash.update(value + salt);
+  return hash.digest("hex");
 }
 
 async function GenerateHashedToken(data) {
-	try {
-		const uniqueData = `${data.email}:${data.incident_id}`;
-		const salt = crypto.randomBytes(16).toString("hex");
-		const hashedToken = GenerateHash(uniqueData, salt);
-		return hashedToken;
-	} catch (err) {
-		console.error("Error generating token:", err.message);
-		throw new Error("Failed to generate hashed token");
-	}
+  try {
+    const uniqueData = `${data.email}:${data.incident_id}`;
+    const salt = crypto.randomBytes(16).toString("hex");
+    const hashedToken = GenerateHash(uniqueData, salt);
+    return hashedToken;
+  } catch (err) {
+    console.error("Error generating token:", err.message);
+    throw new Error("Failed to generate hashed token");
+  }
 }
 
 export const GetSubscribers = async () => {
-	try {
-		return await db.getSubscribers();
-	} catch (error) {
-		console.error("Error fetching subscribers:", error.message);
-		throw new Error("Failed to fetch subscribers: " + error.message);
-	}
+  try {
+    return await db.getSubscribers();
+  } catch (error) {
+    console.error("Error fetching subscribers:", error.message);
+    throw new Error("Failed to fetch subscribers: " + error.message);
+  }
 };
 
 export const SubscribeToIncidentID = async (data) => {
-	try {
-		if (await db.subscriberExists(data)) {
-			const subInactive = await db.subscriberIsInactive(data);
-			if (subInactive) {
-				return await db.activateSubscriberByID(data);
-			}
-			return {
-				error: true,
-				message: "Email already subscribed"
-			};
-		}
+  try {
+    if (await db.subscriberExists(data)) {
+      const subInactive = await db.subscriberIsInactive(data);
+      if (subInactive) {
+        return await db.activateSubscriberByID(data);
+      }
+      return {
+        error: true,
+        message: "Email already subscribed",
+      };
+    }
 
-		do {
-			data.token = await GenerateHashedToken(data);
-		} while (await db.tokenExists(data));
+    do {
+      data.token = await GenerateHashedToken(data);
+    } while (await db.tokenExists(data));
 
-		return await db.subscribeToIncidentID(data);
-	} catch (error) {
-		console.error("Error subscribing to incident ID:", error.message);
-		throw new Error("Failed to subscribe to incident ID: " + error.message);
-	}
+    return await db.subscribeToIncidentID(data);
+  } catch (error) {
+    console.error("Error subscribing to incident ID:", error.message);
+    throw new Error("Failed to subscribe to incident ID: " + error.message);
+  }
 };
 
 export const GetSubscriberByIncidentID = async (data) => {
-	try {
-		return await db.getSubscriberByIncidentID(data);
-	} catch (error) {
-		console.error("Error fetching subscriber by incident ID:", error.message);
-		throw new Error("Failed to fetch subscriber by incident ID: " + error.message);
-	}
+  try {
+    return await db.getSubscriberByIncidentID(data);
+  } catch (error) {
+    console.error("Error fetching subscriber by incident ID:", error.message);
+    throw new Error("Failed to fetch subscriber by incident ID: " + error.message);
+  }
 };
 
 export const SendEmailByIncidentID = async (data) => {
-	try {
-		let siteData = await GetAllSiteData();
-		const emailClient = new EmailingSub(siteData);
-		return await emailClient.send(data);
-	} catch (error) {
-		console.error("Error sending email by incident ID:", error.message);
-		throw error;
-	}
+  try {
+    let siteData = await GetAllSiteData();
+    const emailClient = new EmailingSub(siteData);
+    return await emailClient.send(data);
+  } catch (error) {
+    console.error("Error sending email by incident ID:", error.message);
+    throw error;
+  }
 };
 
 export const GetGlobalSubscribers = async () => {
-	try {
-		return await db.getGlobalSubscribers();
-	} catch (error) {
-		console.error("Error fetching global subscribers:", error.message);
-		throw new Error("Failed to fetch global subscribers: " + error.message);
-	}
+  try {
+    return await db.getGlobalSubscribers();
+  } catch (error) {
+    console.error("Error fetching global subscribers:", error.message);
+    throw new Error("Failed to fetch global subscribers: " + error.message);
+  }
 };
 
 export const UnsubscribeBySubscriberToken = async (data) => {
-	try {
-		return await db.unsubscribeBySubscriberToken(data);
-	} catch (error) {
-		console.error("Error unsubscribing by token:", error.message);
-		throw new Error("Failed to unsubscribe by token: " + error.message);
-	}
+  try {
+    return await db.unsubscribeBySubscriberToken(data);
+  } catch (error) {
+    console.error("Error unsubscribing by token:", error.message);
+    throw new Error("Failed to unsubscribe by token: " + error.message);
+  }
 };
 
 export const GetSubscriberByID = async (data) => {
-	try {
-		return await db.getSubscriberByID(data);
-	} catch (error) {
-		console.error("Error fetching subscriber by ID:", error.message);
-		throw new Error("Failed to fetch subscriber by ID: " + error.message);
-	}
+  try {
+    return await db.getSubscriberByID(data);
+  } catch (error) {
+    console.error("Error fetching subscriber by ID:", error.message);
+    throw new Error("Failed to fetch subscriber by ID: " + error.message);
+  }
 };
 
 export const GetIncidentByID = async (data) => {
-	try {
-		return await db.getIncidentById(data.id);
-	} catch (error) {
-		console.error("Error fetching incident by ID:", error.message);
-		throw new Error("Failed to fetch incident by ID: " + error.message);
-	}
+  try {
+    return await db.getIncidentById(data.id);
+  } catch (error) {
+    console.error("Error fetching incident by ID:", error.message);
+    throw new Error("Failed to fetch incident by ID: " + error.message);
+  }
 };
 
 export const GetSubscriberByToken = async (data) => {
-	try {
-		return await db.getSubscriberByToken(data);
-	} catch (error) {
-		console.error("Error fetching subscriber by token:", error.message);
-		throw new Error("Failed to fetch subscriber by token: " + error.message);
-	}
+  try {
+    return await db.getSubscriberByToken(data);
+  } catch (error) {
+    console.error("Error fetching subscriber by token:", error.message);
+    throw new Error("Failed to fetch subscriber by token: " + error.message);
+  }
 };

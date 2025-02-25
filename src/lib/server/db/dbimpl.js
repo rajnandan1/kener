@@ -715,86 +715,81 @@ class DbImpl {
   async getIncidentCommentByID(id) {
     return await this.knex("incident_comments").where({ id }).first();
   }
-	//getIncidentCommentByID
-	async getIncidentCommentByID(id) {
-		return await this.knex("incident_comments").where({ id }).first();
-	}
-	//validate if subscriber exists
-	async subscriberExists(data) {
-		const result = await this.knex("subscribers")
-			.where({
-				email: data.email,
-				incident_id: data.incident_id
-			})
-			.first();
-		return !!result;
-	}
+  //getIncidentCommentByID
+  async getIncidentCommentByID(id) {
+    return await this.knex("incident_comments").where({ id }).first();
+  }
+  //validate if subscriber exists
+  async subscriberExists(data) {
+    const result = await this.knex("subscribers")
+      .where({
+        email: data.email,
+        incident_id: data.incident_id,
+      })
+      .first();
+    return !!result;
+  }
 
-	async tokenExists(data) {
-		const result = await this.knex("subscribers").where("token", data.token).first();
-		return !!result;
-	}
+  async tokenExists(data) {
+    const result = await this.knex("subscribers").where("token", data.token).first();
+    return !!result;
+  }
 
-	//get all subscribers
-	async getSubscribers() {
-		return await this.knex("subscribers").orderBy("id", "desc");
-    ;
-	}
-	async getGlobalSubscribers() {
-		return await this.knex("subscribers").where("incident_id", 0).where("status", "ACTIVE");
-	}
+  //get all subscribers
+  async getSubscribers() {
+    return await this.knex("subscribers").orderBy("id", "desc");
+  }
+  async getGlobalSubscribers() {
+    return await this.knex("subscribers").where("incident_id", 0).where("status", "ACTIVE");
+  }
 
-	//subscriber subscribe to incident
-	async subscribeToIncidentID(data) {
-		return await this.knex("subscribers").insert({
-			email: data.email,
-			incident_id: data.incident_id,
-			token: data.token
-		});
-	}
+  //subscriber subscribe to incident
+  async subscribeToIncidentID(data) {
+    return await this.knex("subscribers").insert({
+      email: data.email,
+      incident_id: data.incident_id,
+      token: data.token,
+    });
+  }
 
-	async getSubscriberByIncidentID(data) {
-		return await this.knex("subscribers")
-			.where("incident_id", data.incident_id)
-			.where("status", "ACTIVE");
-	}
+  async getSubscriberByIncidentID(data) {
+    return await this.knex("subscribers").where("incident_id", data.incident_id).where("status", "ACTIVE");
+  }
 
-	async unsubscribeBySubscriberToken(data) {
-		return await this.knex("subscribers")
-			.where("token", data.token)
-			.update({ 
-        status: "INACTIVE",
-        updated_at: this.knex.fn.now()
-       });
-	}
+  async unsubscribeBySubscriberToken(data) {
+    return await this.knex("subscribers").where("token", data.token).update({
+      status: "INACTIVE",
+      updated_at: this.knex.fn.now(),
+    });
+  }
 
-	async getSubscriberByID(data) {
-		return await this.knex("subscribers").where("id", data.id).first();
-	}
+  async getSubscriberByID(data) {
+    return await this.knex("subscribers").where("id", data.id).first();
+  }
 
-	async subscriberIsInactive(data) {
-		const result = await this.knex("subscribers")
-			.where("email", data.email)
-			.where("status", "INACTIVE")
-			.where("incident_id", data.incident_id)
-			.first();
-		return !!result;
-	}
+  async subscriberIsInactive(data) {
+    const result = await this.knex("subscribers")
+      .where("email", data.email)
+      .where("status", "INACTIVE")
+      .where("incident_id", data.incident_id)
+      .first();
+    return !!result;
+  }
 
-	async activateSubscriberByID(data) {
-		let result = await this.knex("subscribers")
-			.where("email", data.email)
-			.where("incident_id", data.incident_id)
-			.update({
-				status: "ACTIVE",
-        updated_at: this.knex.fn.now()
-			});
-		return result;
-	}
+  async activateSubscriberByID(data) {
+    let result = await this.knex("subscribers")
+      .where("email", data.email)
+      .where("incident_id", data.incident_id)
+      .update({
+        status: "ACTIVE",
+        updated_at: this.knex.fn.now(),
+      });
+    return result;
+  }
 
-	async getSubscriberByToken(data) {
-		return await this.knex("subscribers").where("token", data.token).first();
-	}
+  async getSubscriberByToken(data) {
+    return await this.knex("subscribers").where("token", data.token).first();
+  }
 }
 
 export default DbImpl;
