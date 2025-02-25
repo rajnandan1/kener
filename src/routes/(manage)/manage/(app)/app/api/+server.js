@@ -28,6 +28,10 @@ import {
   UpdateCommentByID,
   UpdateIncident,
   GetTriggerByID,
+	GetSubscribers,
+	SubscribeToIncidentID,
+	GetSubscriberByIncidentID,
+	SendEmailByIncidentID,
 } from "$lib/server/controllers/controller.js";
 
 export async function POST({ request, cookies }) {
@@ -97,7 +101,7 @@ export async function POST({ request, cookies }) {
     } else if (action == "getComments") {
       resp = await GetIncidentActiveComments(data.incident_id);
     } else if (action == "addComment") {
-      resp = await AddIncidentComment(data.incident_id, data.comment, data.state, data.commented_at);
+      resp = await AddIncidentComment(data.incident_id, data.comment, data.state, data.commented_at, data.notifySubscribers);
     } else if (action == "deleteComment") {
       resp = await UpdateCommentStatusByID(data.incident_id, data.comment_id, "INACTIVE");
     } else if (action == "updateComment") {
@@ -136,7 +140,15 @@ export async function POST({ request, cookies }) {
       }
       const serviceClient = new Service(monitor);
       resp = await serviceClient.execute();
-    }
+		} else if (action == "subscribeToIncidentID") {
+			resp = await SubscribeToIncidentID(data);
+		} else if (action == "getSubscribers") {
+			resp = await GetSubscribers();
+		} else if (action == "getSubscriberByIncidentID") {
+			resp = await GetSubscriberByIncidentID(data);
+		} else if (action == "sendEmailByIncidentID") {
+			resp = await SendEmailByIncidentID(data);
+		}
   } catch (error) {
     resp = { error: error.message };
     return json(resp, { status: 500 });

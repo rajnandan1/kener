@@ -7,6 +7,7 @@
   import { Button } from "$lib/components/ui/button";
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
+  import { createEventDispatcher } from "svelte";
   export let incident;
   export let index;
   export let lang;
@@ -20,6 +21,8 @@
   let incidentType = incident.incident_type;
   const lastedFor = fd(startTime, endTime, selectedLang);
   const startedAt = fdn(startTime, selectedLang);
+
+  export let showSubButton = false;
 
   let isFuture = false;
   //is future incident
@@ -62,6 +65,10 @@
     maintenanceBadge = "Upcoming Maintenance";
     maintenanceBadgeColor = "text-upcoming-maintenance";
   }
+  let dispatch = createEventDispatcher();
+  function showSubscribeFn() {
+    dispatch("subscribe");
+  }
 </script>
 
 <div class="newincident relative grid w-full grid-cols-12 gap-2 px-0 py-0 last:border-b-0">
@@ -101,6 +108,11 @@
             {/if}
           </div>
         </Accordion.Trigger>
+        {#if showSubButton}
+          <div class="flex justify-end py-2 pr-2">
+            <Button class="h-8 text-sm" variant="outline" on:click={showSubscribeFn}>Subscribe</Button>
+          </div>
+        {/if}
         <Accordion.Content>
           <div class="px-4 pt-2">
             {#if incident.monitors.length > 0}

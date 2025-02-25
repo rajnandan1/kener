@@ -53,6 +53,11 @@
       name: "API Keys",
       url: `${base}/manage/app/api-keys`,
       id: "/(manage)/manage/(app)/app/api-keys"
+		},
+		{
+			name: "Subscribers",
+			url: `${base}/manage/app/subscribers`,
+			id: "/(manage)/manage/(app)/app/subscribers"
     }
   ];
 
