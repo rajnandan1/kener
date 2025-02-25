@@ -53,11 +53,11 @@
       name: "API Keys",
       url: `${base}/manage/app/api-keys`,
       id: "/(manage)/manage/(app)/app/api-keys"
-		},
-		{
-			name: "Subscribers",
-			url: `${base}/manage/app/subscribers`,
-			id: "/(manage)/manage/(app)/app/subscribers"
+    },
+    {
+      name: "Subscribers",
+      url: `${base}/manage/app/subscribers`,
+      id: "/(manage)/manage/(app)/app/subscribers"
     }
   ];
 
@@ -163,7 +163,7 @@
       <!-- List -->
       <ul class="flex flex-wrap items-center">
         <li
-          class="before:size-[3px] relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
+          class="relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:size-[3px] before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
         >
           <a
             target="_blank"
@@ -174,7 +174,7 @@
           </a>
         </li>
         <li
-          class="before:size-[3px] relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
+          class="relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:size-[3px] before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
         >
           <a
             target="_blank"
@@ -185,7 +185,7 @@
           </a>
         </li>
         <li
-          class="before:size-[3px] relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
+          class="relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:size-[3px] before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
         >
           <a
             target="_blank"
@@ -196,7 +196,7 @@
           </a>
         </li>
         <li
-          class="before:size-[3px] relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
+          class="relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:size-[3px] before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
         >
           <a
             target="_blank"

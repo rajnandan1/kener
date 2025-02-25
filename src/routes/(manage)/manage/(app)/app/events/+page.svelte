@@ -349,13 +349,13 @@
         })
       });
       let resp = await data.json();
-      addCommentError = resp.message;      
+      addCommentError = resp.message;
       await fetchComments();
       newComment.comment = "";
-        newComment.id = 0;
-        newComment.commented_at = null;
-        newIncident.state = newComment.state;
-        await fetchData();
+      newComment.id = 0;
+      newComment.commented_at = null;
+      newIncident.state = newComment.state;
+      await fetchData();
     } catch (error) {
       addCommentError = "Error while adding comment";
     } finally {
@@ -422,7 +422,7 @@
     showModal = false;
     window.location.hash = "";
   }
-	let notifySubscribersBool = true;
+  let notifySubscribersBool = true;
 </script>
 
 <div class="min-h-[70vh]">
@@ -858,23 +858,22 @@
                 ></textarea>
               </div>
               <div class="flex items-center pt-2">
-								<label class="inline-flex cursor-pointer items-center">
-									<input
-										type="checkbox"
-										value=""
-										class="peer sr-only"
-										checked={notifySubscribersBool}
-										on:change={() => {
-											notifySubscribersBool =
-												notifySubscribersBool == true ? false : true;
-										}}
-									/>
-									<div
-										class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rtl:peer-checked:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"
-									></div>
-								</label>
-								<p class="pl-2 text-sm font-medium leading-7">Notify Subscribers</p>
-							</div>
+                <label class="inline-flex cursor-pointer items-center">
+                  <input
+                    type="checkbox"
+                    value=""
+                    class="peer sr-only"
+                    checked={notifySubscribersBool}
+                    on:change={() => {
+                      notifySubscribersBool = notifySubscribersBool == true ? false : true;
+                    }}
+                  />
+                  <div
+                    class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 rtl:peer-checked:after:-translate-x-full"
+                  ></div>
+                </label>
+                <p class="pl-2 text-sm font-medium leading-7">Notify Subscribers</p>
+              </div>
               <div class="flex justify-between">
                 <div>
                   {#if loadingComments}
