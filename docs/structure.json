@@ -75,6 +75,11 @@
           "file": "/monitors-group.md"
         },
         {
+          "title": "SSL Monitor",
+          "link": "/docs/monitors-ssl",
+          "file": "/monitors-ssl.md"
+        },
+        {
           "title": "Setup Triggers",
           "link": "/docs/triggers",
           "file": "/triggers.md"
