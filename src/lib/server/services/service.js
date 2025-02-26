@@ -5,6 +5,7 @@ import TcpCall from "./tcpCall.js";
 import DnsCall from "./dnsCall.js";
 import GroupCall from "./groupCall.js";
 import SSLCall from "./sslCall.js";
+import SqlCall from "./sqlCall.js";
 
 class Service {
   service;
@@ -24,6 +25,8 @@ class Service {
       this.service = new GroupCall(monitor);
     } else if (monitor.monitor_type === "SSL") {
       this.service = new SSLCall(monitor);
+    } else if (monitor.monitor_type === "SQL") {
+      this.service = new SqlCall(monitor);
     } else {
       console.log("Invalid monitor.monitor_type ", monitor.monitor_type);
       process.exit(1);
