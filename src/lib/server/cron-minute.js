@@ -102,7 +102,9 @@ const Minuter = async (monitor) => {
   } else if (monitor.monitor_type === "GROUP") {
     realTimeData[startOfMinute] = await serviceClient.execute(startOfMinute);
   } else if (monitor.monitor_type === "SSL") {
-    realTimeData[startOfMinute] = await serviceClient.execute(startOfMinute);
+    realTimeData[startOfMinute] = await serviceClient.execute();
+  } else if (monitor.monitor_type === "SQL") {
+    realTimeData[startOfMinute] = await serviceClient.execute();
   }
 
   manualData = await manualIncident(monitor);

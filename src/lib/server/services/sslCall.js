@@ -1,5 +1,6 @@
 // @ts-nocheck
 import tls from "tls";
+import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
 
 const getSSLExpiry = (domain, port = 443) => {
   return new Promise((resolve, reject) => {
@@ -42,29 +43,29 @@ class SSLCall {
       const timeTillExpiryHours = timeTillExpiryMs / 1000 / 60 / 60;
       if (timeTillExpiryHours > degradedRemainingHours) {
         return {
-          status: "UP",
+          status: UP,
           latency: latency,
-          type: "REALTIME",
+          type: REALTIME,
         };
       } else if (timeTillExpiryHours > downRemainingHours) {
         return {
-          status: "DEGRADED",
+          status: DEGRADED,
           latency: latency,
-          type: "REALTIME",
+          type: REALTIME,
         };
       } else {
         return {
-          status: "DOWN",
+          status: DOWN,
           latency: latency,
-          type: "REALTIME",
+          type: REALTIME,
         };
       }
     } catch (error) {
       console.log(`Error checking SSL for ${domain}:`, error.message);
       return {
-        status: "DOWN",
+        status: DOWN,
         latency: 0,
-        type: "ERROR",
+        type: ERROR,
       };
     }
   }

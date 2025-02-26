@@ -9,7 +9,7 @@ SSL monitors are used to monitor the SSL certificate of a domain. You can monito
 
 <div class="border rounded-md">
 
-![Monitors Group](/documentation/m_ssl.png)
+![Monitors SSL](/documentation/m_ssl.png)
 
 </div>
 

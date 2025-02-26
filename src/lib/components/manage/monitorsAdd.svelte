@@ -98,6 +98,12 @@
         port: 443,
         degradedRemainingHours: 1,
         downRemainingHours: 0
+      },
+      sqlConfig: {
+        connectionString: "",
+        query: "SELECT 1",
+        timeout: 5000,
+        dbType: "pg" //mysql2
       }
     };
   }
@@ -132,6 +138,8 @@
       newMonitor.groupConfig = createGroupConfig(JSON.parse(newMonitor.type_data));
     } else if (newMonitor.monitor_type == "SSL") {
       newMonitor.sslConfig = JSON.parse(newMonitor.type_data);
+    } else if (newMonitor.monitor_type == "SQL") {
+      newMonitor.sqlConfig = JSON.parse(newMonitor.type_data);
     }
     showAddMonitor = true;
   }

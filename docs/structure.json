@@ -80,6 +80,11 @@
           "file": "/monitors-ssl.md"
         },
         {
+          "title": "SQL Monitor",
+          "link": "/docs/monitors-sql",
+          "file": "/monitors-sql.md"
+        },
+        {
           "title": "Setup Triggers",
           "link": "/docs/triggers",
           "file": "/triggers.md"

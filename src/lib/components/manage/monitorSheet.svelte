@@ -325,6 +325,35 @@
         return;
       }
       newMonitor.type_data = JSON.stringify(newMonitor.sslConfig);
+    } else if (newMonitor.monitor_type === "SQL") {
+      //connectionString cannot be empty
+      if (!!!newMonitor.sqlConfig.connectionString) {
+        invalidFormMessage = "Connection String is required";
+        return;
+      }
+
+      //connection string has to start with postgresql or mysql
+      if (
+        !newMonitor.sqlConfig.connectionString.startsWith("postgresql://") &&
+        !newMonitor.sqlConfig.connectionString.startsWith("mysql://")
+      ) {
+        invalidFormMessage = "Connection string should start with postgresql:// or mysql2://";
+        return;
+      }
+
+      //timeout should be positive number
+      if (newMonitor.sqlConfig.timeout < 1) {
+        invalidFormMessage = "Timeout should be greater than 0";
+        return;
+      }
+
+      //query cannot be empty
+      if (!!!newMonitor.sqlConfig.query) {
+        invalidFormMessage = "SQL Query is required";
+        return;
+      }
+
+      newMonitor.type_data = JSON.stringify(newMonitor.sqlConfig);
     }
 
     formState = "loading";
@@ -350,6 +379,11 @@
     }
   }
   let typeOfLogoUpload = newMonitor.image.startsWith("http") ? "URL" : "FILE";
+
+  let databaseTypes = {
+    pg: "PostgreSQL",
+    mysql2: "MySQL"
+  };
 </script>
 
 <div class="fixed left-0 top-0 z-50 h-screen w-screen bg-card bg-opacity-20 backdrop-blur-sm">
@@ -572,6 +606,7 @@
                 <Select.Item value="TCP" label="TCP" class="text-sm font-medium">TCP</Select.Item>
                 <Select.Item value="GROUP" label="GROUP" class="text-sm font-medium">GROUP</Select.Item>
                 <Select.Item value="SSL" label="SSL" class="text-sm font-medium">SSL</Select.Item>
+                <Select.Item value="SQL" label="SQL" class="text-sm font-medium">SQL</Select.Item>
               </Select.Group>
             </Select.Content>
           </Select.Root>
@@ -1019,15 +1054,81 @@
             />
             <span class="absolute left-2 top-9 -mt-0.5 text-sm font-medium text-muted-foreground">Expires In</span>
           </div>
+          <div class="col-span-7">
+            <span class="text-xs text-muted-foreground"
+              >Degraded Remaining Hours should be greater than Down Remaining Hours. Refer to the
+              <a target="_blank" class="font-medium text-primary" href="https://kener.ing/docs/monitors-ssl"
+                >documentation</a
+              >
+            </span>
+          </div>
         </div>
-        <p>
-          <span class="text-xs text-muted-foreground"
-            >Degraded Remaining Hours should be greater than Down Remaining Hours. Refer to the
-            <a target="_blank" class="font-medium text-primary" href="https://kener.ing/docs/monitors-ssl"
-              >documentation</a
-            >
-          </span>
-        </p>
+      {:else if newMonitor.monitor_type == "SQL"}
+        <div>
+          <div class="mt-4 flex gap-2">
+            <div class="w-36">
+              <Label for="sqlConfigdbType">Database Type</Label>
+              <Select.Root
+                portal={null}
+                onSelectedChange={(e) => {
+                  newMonitor.sqlConfig.dbType = e.value;
+                }}
+                selected={{
+                  value: newMonitor.sqlConfig.dbType,
+                  label: databaseTypes[newMonitor.sqlConfig.dbType]
+                }}
+              >
+                <Select.Trigger id="sqlConfigdbType">
+                  <Select.Value bind:value={newMonitor.sqlConfig.dbType} placeholder="DB" />
+                </Select.Trigger>
+                <Select.Content>
+                  <Select.Group>
+                    <Select.Label>Select DB</Select.Label>
+                    <Select.Item value="pg" label={databaseTypes.pg} class="text-sm font-medium">
+                      {databaseTypes.pg}
+                    </Select.Item>
+                    <Select.Item value="mysql2" label={databaseTypes.mysql2} class="text-sm font-medium">
+                      {databaseTypes.mysql2}
+                    </Select.Item>
+                  </Select.Group>
+                </Select.Content>
+              </Select.Root>
+            </div>
+            <div class="w-36">
+              <Label for="dbtimeout">Timeout(ms)</Label>
+              <Input
+                placeholder="in milliseconds"
+                type="number"
+                bind:value={newMonitor.sqlConfig.timeout}
+                id="dbtimeout"
+              />
+            </div>
+          </div>
+          <div class="mt-2 grid grid-cols-1">
+            <div class="col-span-1">
+              <Label for="connectionString">Connection String</Label>
+              <Input
+                bind:value={newMonitor.sqlConfig.connectionString}
+                id="connectionString"
+                placeholder="Enter the connection string"
+              />
+            </div>
+          </div>
+          <div class="mt-2 grid grid-cols-1">
+            <div class="col-span-1">
+              <Label for="sqlQuery">SQL Query</Label>
+              <Input bind:value={newMonitor.sqlConfig.query} id="sqlQuery" placeholder="SELECT 1" />
+            </div>
+          </div>
+          <div class="col-span-1">
+            <span class="text-xs text-muted-foreground"
+              >Refer to the
+              <a target="_blank" class="font-medium text-primary" href="https://kener.ing/docs/monitors-sql">
+                documentation
+              </a> for more details
+            </span>
+          </div>
+        </div>
       {/if}
     </div>
     <div class="absolute bottom-0 grid h-16 w-full grid-cols-6 justify-end gap-2 border-t p-3 pr-6">
