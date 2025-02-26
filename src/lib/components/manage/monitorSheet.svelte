@@ -288,7 +288,12 @@
         return;
       }
       //validating port
-      if (isNaN(newMonitor.sslConfig.port) || newMonitor.sslConfig.port < 1 || newMonitor.sslConfig.port > 65535) {
+      if (
+        !!!newMonitor.sslConfig.port ||
+        isNaN(newMonitor.sslConfig.port) ||
+        newMonitor.sslConfig.port < 1 ||
+        newMonitor.sslConfig.port > 65535
+      ) {
         invalidFormMessage = "Port should be valid";
         return;
       }
