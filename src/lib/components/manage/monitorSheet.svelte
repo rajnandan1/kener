@@ -320,8 +320,6 @@
         return;
       }
       newMonitor.type_data = JSON.stringify(newMonitor.sslConfig);
-    } else {
-      newMonitor.type_data = "";
     }
 
     formState = "loading";
