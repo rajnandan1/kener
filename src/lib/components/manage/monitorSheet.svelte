@@ -277,6 +277,54 @@
         timeout: parseInt(newMonitor.groupConfig.timeout),
         hideMonitors: newMonitor.groupConfig.hideMonitors
       });
+    } else if (newMonitor.monitor_type === "SSL") {
+      //validating host
+      if (!newMonitor.sslConfig.host) {
+        invalidFormMessage = "Host is required";
+        return;
+      }
+      if (!IsValidHost(newMonitor.sslConfig.host)) {
+        invalidFormMessage = "Invalid Host";
+        return;
+      }
+      //validating port
+      if (
+        !!!newMonitor.sslConfig.port ||
+        isNaN(newMonitor.sslConfig.port) ||
+        newMonitor.sslConfig.port < 1 ||
+        newMonitor.sslConfig.port > 65535
+      ) {
+        invalidFormMessage = "Port should be valid";
+        return;
+      }
+      //check if degradedRemainingHours > 0
+      if (
+        !!!newMonitor.sslConfig.degradedRemainingHours ||
+        isNaN(newMonitor.sslConfig.degradedRemainingHours) ||
+        newMonitor.sslConfig.degradedRemainingHours < 0
+      ) {
+        invalidFormMessage = "Degraded Remaining Hours should be greater than 0";
+        return;
+      }
+      //check if downRemainingHours > 0
+      if (
+        !!!newMonitor.sslConfig.downRemainingHours ||
+        isNaN(newMonitor.sslConfig.downRemainingHours) ||
+        newMonitor.sslConfig.downRemainingHours < 0
+      ) {
+        invalidFormMessage = "Down Remaining Hours should be greater than 0";
+        return;
+      }
+
+      newMonitor.sslConfig.degradedRemainingHours = Number(newMonitor.sslConfig.degradedRemainingHours);
+      newMonitor.sslConfig.downRemainingHours = Number(newMonitor.sslConfig.downRemainingHours);
+
+      //check if degradedRemainingHours > downRemainingHours
+      if (newMonitor.sslConfig.degradedRemainingHours <= newMonitor.sslConfig.downRemainingHours) {
+        invalidFormMessage = "Degraded Remaining Hours should be greater than Down Remaining Hours";
+        return;
+      }
+      newMonitor.type_data = JSON.stringify(newMonitor.sslConfig);
     }
 
     formState = "loading";
@@ -341,7 +389,7 @@
             }}
           />
           <div
-            class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rtl:peer-checked:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"
+            class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 rtl:peer-checked:after:-translate-x-full"
           ></div>
         </label>
       </div>
@@ -523,6 +571,7 @@
                 <Select.Item value="DNS" label="DNS" class="text-sm font-medium">DNS</Select.Item>
                 <Select.Item value="TCP" label="TCP" class="text-sm font-medium">TCP</Select.Item>
                 <Select.Item value="GROUP" label="GROUP" class="text-sm font-medium">GROUP</Select.Item>
+                <Select.Item value="SSL" label="SSL" class="text-sm font-medium">SSL</Select.Item>
               </Select.Group>
             </Select.Content>
           </Select.Root>
@@ -896,7 +945,10 @@
             </Label>
             <Input bind:value={newMonitor.groupConfig.timeout} class="w-40" id="timeout" />
             <p class="my-1 text-xs text-muted-foreground">
-              Maximum Time in milliseconds it will wait for all the monitors to resolved in that particular timestamp
+              Maximum Time in milliseconds it will wait for all the monitors to resolved in that particular timestamp.
+              Read the <a target="_blank" class="font-medium text-primary" href="https://kener.ing/docs/monitors-group">
+                docs
+              </a> to learn more
             </p>
           </div>
           <div class="col-span-6">
@@ -935,6 +987,47 @@
             </ul>
           </div>
         </div>
+      {:else if newMonitor.monitor_type == "SSL"}
+        <div class="mt-4 grid grid-cols-7 gap-2">
+          <div class="col-span-2">
+            <Label for="sslHost">Host</Label>
+            <Input placeholder="example.com" bind:value={newMonitor.sslConfig.host} id="sslHost" />
+          </div>
+          <div class="col-span-1">
+            <Label for="sslHost">Port</Label>
+            <Input placeholder="443" bind:value={newMonitor.sslConfig.port} id="sslPort" />
+          </div>
+          <div class="relative col-span-2">
+            <Label for="degradedRemainingHours">Degraded If (in hours)</Label>
+            <Input
+              class="pl-20"
+              type="number"
+              placeholder="x hours"
+              bind:value={newMonitor.sslConfig.degradedRemainingHours}
+              id="degradedRemainingHours"
+            />
+            <span class="absolute left-2 top-9 -mt-0.5 text-sm font-medium text-muted-foreground">Expires In</span>
+          </div>
+          <div class="relative col-span-2">
+            <Label for="downRemainingHours">Down If (in hours)</Label>
+            <Input
+              class="pl-20"
+              placeholder="x hours"
+              type="number"
+              bind:value={newMonitor.sslConfig.downRemainingHours}
+              id="downRemainingHours"
+            />
+            <span class="absolute left-2 top-9 -mt-0.5 text-sm font-medium text-muted-foreground">Expires In</span>
+          </div>
+        </div>
+        <p>
+          <span class="text-xs text-muted-foreground"
+            >Degraded Remaining Hours should be greater than Down Remaining Hours. Refer to the
+            <a target="_blank" class="font-medium text-primary" href="https://kener.ing/docs/monitors-ssl"
+              >documentation</a
+            >
+          </span>
+        </p>
       {/if}
     </div>
     <div class="absolute bottom-0 grid h-16 w-full grid-cols-6 justify-end gap-2 border-t p-3 pr-6">
