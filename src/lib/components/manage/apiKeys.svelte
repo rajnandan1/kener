@@ -1,12 +1,13 @@
 <script>
 	import { onMount } from "svelte";
-	import { base } from "$app/paths";
 	import moment from "moment";
 	import { Button } from "$lib/components/ui/button";
 	import { Plus, X, Settings, Bell, Loader, Copy, Check } from "lucide-svelte";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 
+  export let data;
+  const basePath = data.basePath;
 	let apiKeys = [];
 	let loaderLoadingAll = false;
 	let loaderCreateNew = false;
@@ -17,7 +18,7 @@
 	async function loadAPIKeys() {
 		loaderLoadingAll = true;
 		try {
-			let apiResp = await fetch(base + "/manage/app/api/", {
+			let apiResp = await fetch(basePath + "/manage/app/api/", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json"
@@ -40,7 +41,7 @@
 		newKeyResp = {};
 		loaderCreateNew = true;
 		try {
-			let apiResp = await fetch(base + "/manage/app/api/", {
+			let apiResp = await fetch(basePath + "/manage/app/api/", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json"
@@ -72,7 +73,7 @@
 
 	function updateStatus(apiKey) {
 		apiKey.status = apiKey.status == "ACTIVE" ? "INACTIVE" : "ACTIVE";
-		fetch(base + "/manage/app/api/", {
+		fetch(basePath + "/manage/app/api/", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json"

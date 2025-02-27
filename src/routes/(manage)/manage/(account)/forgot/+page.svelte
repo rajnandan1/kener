@@ -1,5 +1,4 @@
 <script>
-	import { base } from "$app/paths";
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
@@ -9,6 +8,7 @@
 		email: ""
 	};
 	export let data;
+  const basePath = data.basePath;
 	let isResendSet = data.isResendSet && data.isSecretSet;
 	if (!isResendSet && !data.isSMTPSet) {
 		data.view = "error";
@@ -31,7 +31,7 @@
 </svelte:head>
 <div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
 	<div class="sm:mx-auto sm:w-full sm:max-w-sm">
-		<img class="mx-auto h-10 w-auto" src="{base}/logo.png" alt="Your Company" />
+		<img class="mx-auto h-10 w-auto" src="{basePath}/logo.png" alt="Your Company" />
 		<h2 class="mt-10 text-center text-2xl/9 font-bold tracking-tight">Reset Password</h2>
 		<p class="mt-4 text-center">Follow instructions to reset your password</p>
 	</div>
@@ -44,7 +44,7 @@
 			</Alert.Root>
 		{/if}
 		{#if data.view == "forgot"}
-			<form class="space-y-6" action="{base}/manage/forgot/submit" method="POST">
+			<form class="space-y-6" action="{basePath}/manage/forgot/submit" method="POST">
 				<div>
 					<label for="email" class="block text-sm/6 font-medium">Email address</label>
 					<div class="mt-2">
@@ -75,7 +75,7 @@
 		{/if}
 
 		{#if data.view == "token"}
-			<form class="space-y-6" action="{base}/manage/forgot/reset" method="POST">
+			<form class="space-y-6" action="{basePath}/manage/forgot/reset" method="POST">
 				<div>
 					<label for="password" class="block text-sm/6 font-medium">New password</label>
 					<div class="mt-2">
@@ -108,7 +108,7 @@
 				<Alert.Description
 					>Your password has been reset successfully. <a
 						class="font-semibold text-blue-500"
-						href="{base}/manage/signin">Login</a
+						href="{basePath}/manage/signin">Login</a
 					> with you new password</Alert.Description
 				>
 			</Alert.Root>

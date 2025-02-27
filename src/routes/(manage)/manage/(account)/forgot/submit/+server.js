@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { json, redirect } from "@sveltejs/kit";
-import { base } from "$app/paths";
+import { BASE_PATH } from "$lib/server/constants.js";
 import db from "$lib/server/db/db.js";
 import { Resend } from "resend";
 import getSMTPTransport from "$lib/server/notification/smtps.js";
@@ -24,7 +24,7 @@ export async function POST({ request, cookies }) {
 	let userDB = await db.getUserByEmail(email);
 	if (!!!userDB) {
 		let errorMessage = "User does not exist";
-		throw redirect(302, base + "/manage/forgot?view=sent&email=" + email);
+		throw redirect(302, BASE_PATH + "/manage/forgot?view=sent&email=" + email);
 	}
 
 	//generate token
@@ -33,7 +33,7 @@ export async function POST({ request, cookies }) {
 	});
 
 	//send email with link to reset password
-	let link = siteURL.value + base + "/manage/forgot?view=token&token=" + token;
+	let link = siteURL.value + BASE_PATH + "/manage/forgot?view=token&token=" + token;
 	let subject = "[Reset Password] Kener Reset password request";
 	let message = `
 		<!DOCTYPE html>
@@ -85,5 +85,5 @@ export async function POST({ request, cookies }) {
 		await resend.emails.send(mail);
 	}
 
-	throw redirect(302, base + "/manage/forgot?view=sent&email=" + email);
+	throw redirect(302, BASE_PATH + "/manage/forgot?view=sent&email=" + email);
 }

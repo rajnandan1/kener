@@ -4,7 +4,6 @@
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { siteDataExtractFromDb, storeSiteData } from "$lib/clientTools.js";
-  import { base } from "$app/paths";
   import * as Select from "$lib/components/ui/select";
   import locales from "$lib/locales/locales.json?raw";
   import GMI from "$lib/components/gmi.svelte";
@@ -13,6 +12,7 @@
   import { Tooltip } from "bits-ui";
 
   export let data;
+  const basePath = data.basePath;
 
   let formStateHero = "idle";
   let formStateNav = "idle";
@@ -90,7 +90,7 @@
 
   async function formSubmitHero() {
     formStateHero = "loading";
-    let resp = await storeSiteData({
+    let resp = await storeSiteData(basePath, {
       hero: JSON.stringify(hero)
     });
     //print data
@@ -106,7 +106,7 @@
   async function formSubmitNav() {
     navErrorMessage = "";
     formStateNav = "loading";
-    let resp = await storeSiteData({
+    let resp = await storeSiteData(basePath, {
       nav: JSON.stringify(nav)
     });
     //print data
@@ -119,7 +119,7 @@
   }
   async function formSubmitCategories() {
     formStateCategories = "loading";
-    let resp = await storeSiteData({
+    let resp = await storeSiteData(basePath, {
       categories: JSON.stringify(categories)
     });
     //print data
@@ -132,7 +132,7 @@
   }
   async function formSubmitFooter() {
     formStateFooter = "loading";
-    let resp = await storeSiteData({
+    let resp = await storeSiteData(basePath, {
       footerHTML: footerHTML
     });
     //print data
@@ -145,7 +145,7 @@
   }
   async function formSubmitIncident() {
     formStateIncident = "loading";
-    let resp = await storeSiteData({
+    let resp = await storeSiteData(basePath, {
       homeIncidentCount: homeIncidentCount,
       homeIncidentStartTimeWithin: homeIncidentStartTimeWithin,
       incidentGroupView: incidentGroupView
@@ -176,7 +176,7 @@
     const formData = new FormData();
     formData.append("image", file);
     try {
-      const response = await fetch(base + "/manage/app/upload", {
+      const response = await fetch(basePath + "/manage/app/upload", {
         method: "POST",
         body: formData
       });
@@ -222,7 +222,7 @@
 
   async function formSubmiti18n() {
     formStatei18n = "loading";
-    let resp = await storeSiteData({
+    let resp = await storeSiteData(basePath, {
       i18n: JSON.stringify(i18n),
       tzToggle: tzToggle
     });
@@ -395,7 +395,7 @@
             <div class="relative col-span-12 mt-1 {!!navItem.iconURL ? 'pl-12' : ''}">
               {#if !!navItem.iconURL}
                 <div class="absolute left-0 top-5 mt-2 h-[30px] w-[30px] rounded-sm border p-1">
-                  <GMI src={navItem.iconURL} alt="" />
+                  <GMI data={data} src={navItem.iconURL} alt="" />
                   <Button
                     variant="secondary"
                     class="absolute -right-2.5 -top-1.5 h-4 w-4 rounded-full p-0"

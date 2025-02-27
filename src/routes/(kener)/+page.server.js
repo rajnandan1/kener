@@ -186,6 +186,7 @@ export async function load({ parent, url }) {
   let allRecentIncidents = allOpenIncidents.filter((incident) => incident.incident_type == "INCIDENT");
   let allRecentMaintenances = allOpenIncidents.filter((incident) => incident.incident_type == "MAINTENANCE");
   return {
+    // basePath: BASE_PATH,
     monitors: monitorsActive,
     allRecentIncidents,
     allRecentMaintenances,

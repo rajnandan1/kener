@@ -37,7 +37,7 @@ const seedSiteData = {
   nav: [
     { name: "Documentation", url: "https://kener.ing/docs/home", iconURL: "" },
     { name: "Github", iconURL: "", url: "https://github.com/rajnandan1/kener" },
-    { name: "Setup Kener", iconURL: "", url: "/manage/signin" },
+    { name: "Setup Kener", iconURL: "", url: "manage/signin" },
   ],
   hero: {
     title: "Build stunning status pages in minutes",

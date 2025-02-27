@@ -13,5 +13,5 @@
 			Documentation <ExternalLink size="12" class="ml-1" />
 		</Button>
 	</div>
-	<APIKeys />
+	<APIKeys {data} />
 </div>

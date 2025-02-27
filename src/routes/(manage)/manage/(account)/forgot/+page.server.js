@@ -1,7 +1,9 @@
 import dotenv from "dotenv";
-dotenv.config();
+import { BASE_PATH } from "$lib/server/constants.js";
 import db from "$lib/server/db/db.js";
 import { GetSMTPFromENV } from "$lib/server/controllers/controller.js";
+
+dotenv.config();
 
 export async function load({ params, route, url, parent }) {
 	//read query parameters
@@ -11,6 +13,7 @@ export async function load({ params, route, url, parent }) {
 	let view = query.get("view") || "forgot";
 	let siteURL = await db.getSiteData("siteURL");
 	return {
+    basePath: BASE_PATH,
 		error: query.get("error"),
 		isSecretSet: !!process.env.KENER_SECRET_KEY,
 		isResendSet: !!process.env.RESEND_API_KEY && !!process.env.RESEND_SENDER_EMAIL,

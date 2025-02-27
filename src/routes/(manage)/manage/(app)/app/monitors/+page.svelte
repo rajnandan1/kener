@@ -18,5 +18,6 @@
     categories={data.categories}
     colorDown={data.siteData?.colors?.DOWN || "#ca3038"}
     colorDegraded={data.siteData?.colors?.DEGRADED || "#e6ca61"}
+    data={data}
   />
 </div>

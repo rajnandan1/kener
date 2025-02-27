@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { ENV } from "./constants.js";
+import { BASE_PATH, ENV } from "./constants.js";
 import { IsStringURLSafe } from "./tool.js";
 import dotenv from "dotenv";
 dotenv.config();
@@ -39,16 +39,16 @@ if (process.env.PORT === undefined) {
 	console.log(`✅ PORT is set. Value is ${process.env.PORT}`);
 }
 
-if (process.env.KENER_BASE_PATH !== undefined) {
-	if (process.env.KENER_BASE_PATH[0] !== "/") {
+if (BASE_PATH !== undefined) {
+	if (BASE_PATH[0] !== "/") {
 		console.log("❌ KENER_BASE_PATH should start with /");
 		process.exit(1);
 	}
-	if (process.env.KENER_BASE_PATH[process.env.KENER_BASE_PATH.length - 1] === "/") {
+	if (BASE_PATH[BASE_PATH.length - 1] === "/") {
 		console.log("❌ KENER_BASE_PATH should not end with /");
 		process.exit(1);
 	}
-	if (!IsStringURLSafe(process.env.KENER_BASE_PATH.substr(1))) {
+	if (!IsStringURLSafe(BASE_PATH.substr(1))) {
 		console.log("❌ KENER_BASE_PATH is not url safe");
 		process.exit(1);
 	}
