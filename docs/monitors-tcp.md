@@ -5,7 +5,7 @@ description: Learn how to set up and work with TCP monitors in kener.
 
 # TCP Monitors
 
-TCP monitors are used to monitor the livenees of your servers. You can use TCP monitors to monitor the uptime of your servers and get notified when they are down.
+TCP monitors are used to monitor the liveness of your servers. You can use TCP monitors to monitor the uptime of your servers and get notified when they are down.
 
 <div class="border rounded-md">
 
@@ -17,10 +17,10 @@ TCP monitors are used to monitor the livenees of your servers. You can use TCP m
 
 You can add as many hosts as you want to monitor. The host can be an IP(IP4 and IP6) address or a domain name.
 
--   Type: Choose the type of host you want to monitor. It can be either `IP4` or `IP6` or `DOMAIN`.
--   Host: Enter the IP address or domain name of the host you want to monitor.
--   Port: Enter the port number of the host you want to monitor.
--   Timeout: Enter the timeout in milliseconds for each ping request of each host
+- Type: Choose the type of host you want to monitor. It can be either `IP4` or `IP6` or `DOMAIN`.
+- Host: Enter the IP address or domain name of the host you want to monitor.
+- Port: Enter the port number of the host you want to monitor.
+- Timeout: Enter the timeout in milliseconds for each ping request of each host
 
 ## Eval
 
@@ -32,8 +32,7 @@ This is an anonymous JS function, it should return a **Promise**, that resolves 
 > `{status:"DEGRADED", latency: 200}`.
 
 ```javascript
-;(async function (responseDataBase64) {
-    let arrayOfPings = JSON.parse(atob(responseDataBase64))
+(async function (arrayOfPings) {
     let latencyTotal = arrayOfPings.reduce((acc, ping) => {
         return acc + ping.latency
     }, 0)
@@ -53,12 +52,9 @@ This is an anonymous JS function, it should return a **Promise**, that resolves 
 })
 ```
 
--   `responseDataBase64` **REQUIRED** is a string. It is the base64 encoded response data. To use it you will have to decode it and the JSON parse it. Once parse it will be an array of objects.
+- `arrayOfPings` **REQUIRED** is an array of TCP Response Objects as shown below.
 
-```js
-let decodedResp = atob(responseDataBase64)
-let jsonResp = JSON.parse(decodedResp)
-console.log(jsonResp)
+```json
 /*
 [
   {
@@ -88,24 +84,23 @@ console.log(jsonResp)
 
 ### Understanding the Input
 
-The input to the eval function is a base64 encoded string. You will have to decode it and then parse it to get the array of objects. Each object in the array represents the ping response of a host.
+Each object in the array represents the tcp response of a host.
 
--   `host`: The host that was pinged.
--   `port`: The port that was pinged. Defaults to 80 if not provided.
--   `type`: The type of IP address. Can be `IP4` or `IP6`.
--   `status`: The status of the ping. Can be `open` , `error` or `timeout`.
-    -   `open`: The host is reachable.
-    -   `error`: There was an error while pinging the host.
-    -   `timeout`: The host did not respond in time.
--   `latency`: The time taken to ping the host. This is in milliseconds.
+- `host`: The host that was pinged.
+- `port`: The port that was pinged. Defaults to 80 if not provided.
+- `type`: The type of IP address. Can be `IP4` or `IP6`.
+- `status`: The status of the ping. Can be `open` , `error` or `timeout`.
+    - `open`: The host is reachable.
+    - `error`: There was an error while pinging the host.
+    - `timeout`: The host did not respond in time.
+- `latency`: The time taken to ping the host. This is in milliseconds.
 
 ### Example
 
 The following example shows how to use the eval function to evaluate the response. The function checks if the combined latency is more 10ms then returns `DEGRADED`.
 
 ```javascript
-;(async function (responseDataBase64) {
-    let arrayOfPings = JSON.parse(atob(responseDataBase64))
+(async function (arrayOfPings) {
     let latencyTotal = arrayOfPings.reduce((acc, ping) => {
         return acc + ping.latency
     }, 0)

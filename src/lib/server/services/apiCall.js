@@ -4,7 +4,7 @@ import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
 import * as cheerio from "cheerio";
 
-const defaultEval = `(async function (statusCode, responseTime, responseData) {
+const defaultEval = `(async function (statusCode, responseTime, responseRaw, modules) {
 	let statusCodeShort = Math.floor(statusCode/100);
     if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {
         return {
@@ -115,12 +115,18 @@ class ApiCall {
       }
     }
 
-    resp = Buffer.from(resp).toString("base64");
-
     let evalResp = undefined;
+    let modules = { cheerio };
 
     try {
-      evalResp = await eval(monitorEval + `(${statusCode}, ${latency}, "${resp}")`);
+      const evalFunction = new Function(
+        "statusCode",
+        "responseTime",
+        "responseRaw",
+        "modules",
+        `return (${monitorEval})(statusCode, responseTime, responseRaw, modules);`,
+      );
+      evalResp = await evalFunction(statusCode, latency, resp, modules);
     } catch (error) {
       console.log(`Error in monitorEval for ${tag}`, error.message);
     }
