@@ -46,7 +46,8 @@ class ApiCall {
     let method = this.monitor.type_data.method;
     let timeout = this.monitor.type_data.timeout || 5000;
     let tag = this.monitor.tag;
-    let monitorEval = !!this.monitor.type_data.monitorEval ? this.monitor.type_data.monitorEval : defaultEval;
+
+    let monitorEval = !!this.monitor.type_data.eval ? this.monitor.type_data.eval : defaultEval;
 
     for (let i = 0; i < this.envSecrets.length; i++) {
       const secret = this.envSecrets[i];
