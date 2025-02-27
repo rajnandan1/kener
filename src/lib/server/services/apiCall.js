@@ -122,9 +122,9 @@ class ApiCall {
       const evalFunction = new Function(
         "statusCode",
         "responseTime",
-        "responseData",
+        "responseRaw",
         "modules",
-        `return (${monitorEval})(statusCode, responseTime, responseData, modules);`,
+        `return (${monitorEval})(statusCode, responseTime, responseRaw, modules);`,
       );
       evalResp = await evalFunction(statusCode, latency, resp, modules);
     } catch (error) {
