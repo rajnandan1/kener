@@ -32,8 +32,7 @@ This is an anonymous JS function, it should return a **Promise**, that resolves 
 > `{status:"DEGRADED", latency: 200}`.
 
 ```javascript
-;(async function (responseDataBase64) {
-    let arrayOfPings = JSON.parse(atob(responseDataBase64))
+(async function (arrayOfPings) {
     let latencyTotal = arrayOfPings.reduce((acc, ping) => {
         return acc + ping.latency
     }, 0)
@@ -49,12 +48,9 @@ This is an anonymous JS function, it should return a **Promise**, that resolves 
 })
 ```
 
--   `responseDataBase64` **REQUIRED** is a string. It is the base64 encoded response data. To use it you will have to decode it and the JSON parse it. Once parse it will be an array of objects.
+-   `arrayOfPings` **REQUIRED** is an array of Ping Response Objects as shown below.
 
-```js
-let decodedResp = atob(responseDataBase64)
-let jsonResp = JSON.parse(decodedResp)
-console.log(jsonResp)
+```json
 /*
 [
   {
@@ -93,7 +89,7 @@ console.log(jsonResp)
 
 ### Understanding the Input
 
-The input to the eval function is a base64 encoded string. You will have to decode it and then parse it to get the array of objects. Each object in the array represents the ping response of a host.
+Each object in the array represents the ping response of a host.
 
 -   `alive` is a boolean. It is true if the host is alive and false if the host is down.
 -   `min` is a string. It is the minimum latency of the pings.
@@ -109,8 +105,7 @@ The input to the eval function is a base64 encoded string. You will have to deco
 The following example shows how to use the eval function to evaluate the response. The function checks if the combined latency is more 10ms then returns `DEGRADED`.
 
 ```javascript
-;(async function (responseDataBase64) {
-    let arrayOfPings = JSON.parse(atob(responseDataBase64))
+(async function (arrayOfPings) {
     let latencyTotal = arrayOfPings.reduce((acc, ping) => {
         return acc + ping.latency
     }, 0)

@@ -51,7 +51,7 @@ This is an anonymous JS function, it should return a **Promise**, that resolves 
 > `{status:"DEGRADED", latency: 200}`.
 
 ```javascript
-(async function (statusCode, responseTime, responseDataBase64) {
+(async function (statusCode, responseTime, responseRaw, modules) {
 	let statusCodeShort = Math.floor(statusCode/100);
 	let status = 'DOWN'
     if(statusCodeShort >=2 && statusCodeShort <= 3) {
@@ -66,21 +66,17 @@ This is an anonymous JS function, it should return a **Promise**, that resolves 
 
 - `statusCode` **REQUIRED** is a number. It is the HTTP status code
 - `responseTime` **REQUIRED**is a number. It is the latency in milliseconds
-- `responseDataBase64` **REQUIRED** is a string. It is the base64 encoded response data. To use it you will have to decode it
+- `responseRaw` **REQUIRED** is the raw response of the API
+- `modules` is an object that has [`cheerio`](https://www.npmjs.com/package/cheerio) that you can use to parse HTML. `const $ = modules.cheerio.load(responseRaw)` 
 
-```js
-let decodedResp = atob(responseDataBase64)
-//if the response is a json object
-//let jsonResp = JSON.parse(decodedResp)
-```
+
 
 ### Example 1
 
 The following example shows how to use the eval function to evaluate the response. The function checks if the status code is 2XX then the status is UP, if the status code is 5XX then the status is DOWN. If the response contains the word `Unknown Error` then the status is DOWN. If the response time is greater than 2000 then the status is DEGRADED.
 
 ```javascript
-(async function (statusCode, responseTime, responseDataBase64) {
-    const resp = atob(responseDataBase64) //convert base64 to string
+(async function (statusCode, responseTime, responseRaw, modules) {
 
     let status = "DOWN"
 
@@ -95,7 +91,7 @@ The following example shows how to use the eval function to evaluate the respons
     //if the status code is 5XX then the status is DOWN
     if (/^[5]\d{2}$/.test(statusCode)) status = "DOWN"
 
-    if (resp.includes("Unknown Error")) {
+    if (responseRaw.includes("Unknown Error")) {
         status = "DOWN"
     }
 
@@ -111,8 +107,8 @@ The following example shows how to use the eval function to evaluate the respons
 This next example shows how to call another API withing eval. It is scrapping the second last script tag from the response and checking if the heading is "No recent issues" then the status is UP else it is DOWN.
 
 ```js
-(async function (statusCode, responseTime, responseDataBase64) {
-    let htmlString = atob(responseDataBase64)
+(async function (statusCode, responseTime, responseRaw, modules) {
+    let htmlString = responseRaw;
     const scriptTags = htmlString.match(/<script[^>]*src="([^"]+)"[^>]*>/g)
     if (scriptTags && scriptTags.length >= 2) {
         // Extract the second last script tag's src attribute
@@ -143,9 +139,9 @@ This next example shows how to call another API withing eval. It is scrapping th
 The next example shows how to use cheerio to parse bitbucket status page and check if all the components are operational. If all the components are operational then the status is UP else it is DOWN.
 
 ```js
-(async function (statusCode, responseTime, responseDataBase64) {
+(async function (statusCode, responseTime, responseDataBase64, modules) {
     let html = atob(responseDataBase64)
-    const $ = cheerio.load(html)
+    const $ = modules.cheerio.load(html)
     const components = $(".components-section .components-container .component-container")
     let status = true
     components.each((index, element) => {

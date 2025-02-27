@@ -3,8 +3,7 @@ import axios from "axios";
 import { TCP } from "../ping.js";
 import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
 
-const defaultTcpEval = `(async function (responseDataBase64) {
-	let arrayOfPings = JSON.parse(atob(responseDataBase64));
+const defaultTcpEval = `(async function (arrayOfPings) {
 	let latencyTotal = arrayOfPings.reduce((acc, ping) => {
 		return acc + ping.latency;
 	}, 0);
@@ -51,14 +50,19 @@ class TcpCall {
       const host = hosts[i];
       arrayOfPings.push(await TCP(host.type, host.host, host.port, host.timeout));
     }
-    let respBase64 = Buffer.from(JSON.stringify(arrayOfPings)).toString("base64");
 
     let evalResp = undefined;
 
     try {
-      evalResp = await eval(tcpEval + `("${respBase64}")`);
+      const evalFunction = new Function("arrayOfPings", `return (${tcpEval})(arrayOfPings);`);
+      evalResp = await evalFunction(arrayOfPings);
     } catch (error) {
       console.log(`Error in tcpEval for ${tag}`, error.message);
+      return {
+        status: DOWN,
+        latency: 0,
+        type: ERROR,
+      };
     }
     //reduce to get the status
     return {
