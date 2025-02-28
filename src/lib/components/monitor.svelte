@@ -4,7 +4,6 @@
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-  import { base } from "$app/paths";
   import { sub, startOfDay, getUnixTime } from "date-fns";
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
@@ -22,6 +21,8 @@
 
   const dispatch = createEventDispatcher();
 
+  export let data;
+  const basePath = data.basePath;
   export let monitor;
   export let localTz;
   export let lang;
@@ -36,7 +37,7 @@
 
   function loadIncidents() {
     axios
-      .post(`${base}/api/today/incidents`, {
+      .post(`${basePath}/api/today/incidents`, {
         tag: monitor.tag,
         startTs: monitor.pageData.midnight90DaysAgo,
         endTs: monitor.pageData.maxDateTodayTimestamp,
@@ -54,7 +55,7 @@
 
   function getToday(startTs, incidentIDs) {
     axios
-      .post(`${base}/api/today`, {
+      .post(`${basePath}/api/today`, {
         monitor: monitor,
         localTz: localTz,
         startTs: startTs,
@@ -126,7 +127,7 @@
       rollerLoading = true;
       uptimesRollers[newRolledAt].loading = true;
 
-      let resp = await axios.post(`${base}/api/today/aggregated`, {
+      let resp = await axios.post(`${basePath}/api/today/aggregated`, {
         monitor: monitor,
         startTs: uptimesRollers[newRolledAt].startTs,
         endTs: uptimesRollers[newRolledAt].endTs
@@ -188,6 +189,7 @@
         <div class="scroll-m-20 pr-5 text-xl font-medium tracking-tight">
           {#if monitor.image}
             <GMI
+              data={data}
               src={monitor.image}
               classList="absolute left-6 top-6 inline h-5 w-5 hidden md:block"
               alt={monitor.name}
@@ -206,7 +208,7 @@
           <div class="absolute right-14 top-5 flex gap-x-2">
             {#if $page.data.isLoggedIn}
               <Button
-                href="{base}/manage/app/monitors#{monitor.tag}"
+                href="{basePath}/manage/app/monitors#{monitor.tag}"
                 class=" rotate-once h-5 p-0 text-muted-foreground hover:text-primary"
                 variant="link"
                 rel="external"
@@ -229,7 +231,7 @@
               <Button
                 class="bounce-right h-5 p-0 text-muted-foreground hover:text-primary"
                 variant="link"
-                href="{base}?group={monitor.tag}"
+                href="{basePath}?group={monitor.tag}"
                 rel="external"
               >
                 <ArrowRight class="arrow h-4 w-4" />
@@ -354,7 +356,7 @@
                 </div>
                 {#each dayIncidentsFull as incident, index}
                   <div class="col-span-1">
-                    <Incident {incident} {lang} index="incident-{index}" />
+                    <Incident {incident} {lang} index="incident-{index}" data={data} />
                   </div>
                 {/each}
               </div>

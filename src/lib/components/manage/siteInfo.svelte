@@ -5,7 +5,6 @@
   import { Label } from "$lib/components/ui/label";
   import { siteDataExtractFromDb, storeSiteData } from "$lib/clientTools.js";
   import { tooltipAction } from "svelte-legos";
-  import { base } from "$app/paths";
   import { Loader, Info, X } from "lucide-svelte";
   import * as Alert from "$lib/components/ui/alert";
   import { Tooltip } from "bits-ui";
@@ -13,6 +12,7 @@
   import GMI from "$lib/components/gmi.svelte";
 
   export let data;
+  const basePath = data.basePath;
 
   let siteInformation = {
     title: "",
@@ -33,7 +33,7 @@
   async function formSubmit() {
     formErrorMessage = "";
     formState = "loading";
-    let resp = await storeSiteData(siteInformation);
+    let resp = await storeSiteData(basePath, siteInformation);
     //print data
     let data = await resp.json();
     formState = "idle";
@@ -75,7 +75,7 @@
     formData.append("image", file);
     uploadingLogo = true;
     try {
-      const response = await fetch(base + "/manage/app/upload", {
+      const response = await fetch(basePath + "/manage/app/upload", {
         method: "POST",
         body: formData
       });
@@ -114,7 +114,7 @@
     formData.append("image", file);
     uploadingFavicon = true;
     try {
-      const response = await fetch(base + "/manage/app/upload", {
+      const response = await fetch(basePath + "/manage/app/upload", {
         method: "POST",
         body: formData
       });
@@ -141,10 +141,10 @@
     <Card.Description>Configure your site information here.</Card.Description>
   </Card.Header>
   <Card.Content>
-    {#if !!base}
+    {#if !!basePath}
       <Alert.Root class="my-2">
-        <Alert.Title>Sub path</Alert.Title>
-        <Alert.Description>Your site is running in a subpath <span class="">{base}</span></Alert.Description>
+        <Alert.Title>Base Path</Alert.Title>
+        <Alert.Description>Your site is accessible at the subpath <code class="text-orange-500">{basePath}</code></Alert.Description>
       </Alert.Root>
     {/if}
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmit}>
@@ -270,7 +270,7 @@
           {#if !!siteInformation.logo}
             <div class="relative mt-2.5">
               <Label for="logo" class="inline-block h-[60px] w-[60px] cursor-pointer rounded-sm border p-1">
-                <GMI src={siteInformation.logo} classList="w-fit hover:scale-95" alt="" />
+                <GMI data={data} src={siteInformation.logo} classList="w-fit hover:scale-95" alt="" />
               </Label>
 
               <div class="absolute -right-2 -top-2">
@@ -354,7 +354,7 @@
           {#if !!siteInformation.favicon}
             <div class="relative mt-8">
               <Label for="favicon" class="inline-block h-[40px] w-[40px] cursor-pointer rounded-sm border p-1">
-                <GMI src={siteInformation.favicon} classList="w-fit hover:scale-95" alt="" />
+                <GMI data={data} src={siteInformation.favicon} classList="w-fit hover:scale-95" alt="" />
               </Label>
 
               <div class="absolute -right-2 -top-2">

@@ -41,6 +41,7 @@
 			<Card.Content class="monitors-card embed p-0 pt-0">
 				{#each data.monitors as monitor}
 					<Monitor
+            data={data}
 						{monitor}
 						localTz={data.localTz}
 						selectedLang={data.selectedLang}

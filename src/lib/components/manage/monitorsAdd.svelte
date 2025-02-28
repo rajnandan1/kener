@@ -3,7 +3,6 @@
   import { Plus, X, Settings, Bell, Loader, ArrowDownUp, Grip, ExternalLink } from "lucide-svelte";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
-  import { base } from "$app/paths";
   import MonitorsSheet from "$lib/components/manage/monitorSheet.svelte";
   import { onMount } from "svelte";
   import * as Card from "$lib/components/ui/card";
@@ -14,6 +13,8 @@
   import { flip } from "svelte/animate";
   import GMI from "$lib/components/gmi.svelte";
 
+  export let data;
+  const basePath = data.basePath;
   export let categories = [];
   export let colorDown = "#777";
   export let colorDegraded = "#777";
@@ -147,7 +148,7 @@
   async function loadData() {
     loadingData = true;
     try {
-      let apiResp = await fetch(base + "/manage/app/api/", {
+      let apiResp = await fetch(basePath + "/manage/app/api/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -174,7 +175,7 @@
 
   async function loadTriggersData() {
     try {
-      let apiResp = await fetch(base + "/manage/app/api/", {
+      let apiResp = await fetch(basePath + "/manage/app/api/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -244,7 +245,7 @@
     formState = "loading";
     //updateMonitorTriggers
     try {
-      let apiResp = await fetch(base + "/manage/app/api/", {
+      let apiResp = await fetch(basePath + "/manage/app/api/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -277,7 +278,7 @@
     };
     monitors = e.detail.items;
     monitorSort = monitors.map((m) => m.id);
-    storeSiteData({
+    storeSiteData(basePath, {
       monitorSort: JSON.stringify(monitorSort)
     });
   }
@@ -289,7 +290,7 @@
       return;
     }
     monitors[i].isTestRunning = true;
-    fetch(base + "/manage/app/api/", {
+    fetch(basePath + "/manage/app/api/", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -313,6 +314,7 @@
 
 {#if showAddMonitor}
   <MonitorsSheet
+    {data}
     {categories}
     {newMonitor}
     on:closeModal={(e) => {
@@ -347,7 +349,7 @@
             <div animate:flip={{ duration: flipDurationMs }} class="mb-2 rounded-md bg-card p-2">
               <Grip class="mr-2 inline h-4 w-4" />
               {#if !!monitor.image}
-                <GMI src={monitor.image} alt={monitor.name} classList="mr-1 inline-block h-4 w-4" />
+                <GMI data={data} src={monitor.image} alt={monitor.name} classList="mr-1 inline-block h-4 w-4" />
               {/if}
               {monitor.name}
             </div>
@@ -435,7 +437,7 @@
       <Card.Header class="relative">
         <Card.Title>
           {#if !!monitor.image}
-            <GMI src={monitor.image} alt={monitor.name} classList="mr-2 inline-block h-8 w-8" />
+            <GMI data={data} src={monitor.image} alt={monitor.name} classList="mr-2 inline-block h-8 w-8" />
           {/if}
           {monitor.name}
         </Card.Title>
@@ -485,7 +487,7 @@
           >
             <Bell class="inline h-4 w-4" />
           </Button>
-          <Button variant="secondary" class="h-8 w-8 p-2" rel="external" href="{base}/?monitor={monitor.tag}">
+          <Button variant="secondary" class="h-8 w-8 p-2" rel="external" href="{basePath}/?monitor={monitor.tag}">
             <ExternalLink class="inline h-4 w-4" />
           </Button>
           <Button variant="secondary" class="h-8 w-8 p-2" href="#{monitor.tag}">
@@ -654,13 +656,13 @@
                     }}
                   />
                   {#if trigger.trigger_type == "webhook"}
-                    <img src={base + "/webhooks.svg"} alt={trigger.trigger_type} class="ml-2 inline-block h-4 w-4" />
+                    <img src={basePath + "/webhooks.svg"} alt={trigger.trigger_type} class="ml-2 inline-block h-4 w-4" />
                   {:else if trigger.trigger_type == "email"}
-                    <img src={base + "/email.png"} alt={trigger.trigger_type} class="ml-2 inline-block h-4 w-4" />
+                    <img src={basePath + "/email.png"} alt={trigger.trigger_type} class="ml-2 inline-block h-4 w-4" />
                   {:else if trigger.trigger_type == "slack"}
-                    <img src={base + "/slack.svg"} alt={trigger.trigger_type} class="ml-2 inline-block h-4 w-4" />
+                    <img src={basePath + "/slack.svg"} alt={trigger.trigger_type} class="ml-2 inline-block h-4 w-4" />
                   {:else if trigger.trigger_type == "discord"}
-                    <img src={base + "/discord.svg"} alt={trigger.trigger_type} class="ml-2 inline-block h-4 w-4" />
+                    <img src={basePath + "/discord.svg"} alt={trigger.trigger_type} class="ml-2 inline-block h-4 w-4" />
                   {/if}
                   {trigger.name}
                 </label>

@@ -1,5 +1,4 @@
 <script>
-	import { base } from "$app/paths";
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
@@ -13,6 +12,7 @@
 		error: null,
 		firstUser: false
 	};
+  const basePath = data.basePath;
 </script>
 
 <svelte:head>
@@ -20,7 +20,7 @@
 </svelte:head>
 <div class="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
 	<div class="sm:mx-auto sm:w-full sm:max-w-sm">
-		<img class="mx-auto h-10 w-auto" src="{base}/logo.png" alt="Your Company" />
+		<img class="mx-auto h-10 w-auto" src="{basePath}/logo.png" alt="Your Company" />
 		<h2 class="mt-10 text-center text-2xl/9 font-bold tracking-tight">Sign in</h2>
 		<p class="mt-4 text-center">Sign in to manage your kener instance.</p>
 	</div>
@@ -50,14 +50,14 @@
 				</Alert.Title>
 				<Alert.Description class="mt-4 text-center font-medium">
 					It looks like this is the first time you are signing in. Please <a
-						href="{base}/manage/setup"
+						href="{basePath}/manage/setup"
 						class="text-blue-600">sign up</a
 					> first.
 				</Alert.Description>
 			</Alert.Root>
 		{/if}
 
-		<form class="space-y-6" action="{base}/manage/signin/submit" method="POST">
+		<form class="space-y-6" action="{basePath}/manage/signin/submit" method="POST">
 			<div>
 				<label for="email" class="block text-sm/6 font-medium">Email address</label>
 				<div class="mt-2">
@@ -95,7 +95,7 @@
 			<div>
 				<p class="mb-2 text-right">
 					<a
-						href="{base}/manage/forgot"
+						href="{basePath}/manage/forgot"
 						class="text-xs font-semibold text-muted-foreground hover:text-primary"
 					>
 						Forgot your password?

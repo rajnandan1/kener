@@ -2,7 +2,6 @@
   import "../../../../app.postcss";
   import "../../../../kener.css";
   import "../../../../manage.css";
-  import { base } from "$app/paths";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import Sun from "lucide-svelte/icons/sun";
   import Moon from "lucide-svelte/icons/moon";
@@ -13,6 +12,8 @@
   import { Play, User } from "lucide-svelte";
   import { setMode, mode, ModeWatcher } from "mode-watcher";
 
+  export let data;
+  const basePath = data.basePath;
   let thisYear = new Date().getFullYear();
   function toggleMode() {
     if ($mode === "light") {
@@ -25,33 +26,33 @@
   setMode("dark");
 
   let nav = [
-    { name: "Site", url: `${base}/manage/app/site`, id: "/(manage)/manage/(app)/app/site" },
-    { name: "SEO", url: `${base}/manage/app/seo`, id: "/(manage)/manage/(app)/app/seo" },
-    { name: "Home", url: `${base}/manage/app/home`, id: "/(manage)/manage/(app)/app/home" },
-    { name: "Theme", url: `${base}/manage/app/theme`, id: "/(manage)/manage/(app)/app/theme" },
+    { name: "Site", url: `${basePath}/manage/app/site`, id: "/(manage)/manage/(app)/app/site" },
+    { name: "SEO", url: `${basePath}/manage/app/seo`, id: "/(manage)/manage/(app)/app/seo" },
+    { name: "Home", url: `${basePath}/manage/app/home`, id: "/(manage)/manage/(app)/app/home" },
+    { name: "Theme", url: `${basePath}/manage/app/theme`, id: "/(manage)/manage/(app)/app/theme" },
     {
       name: "Monitors",
-      url: `${base}/manage/app/monitors`,
+      url: `${basePath}/manage/app/monitors`,
       id: "/(manage)/manage/(app)/app/monitors"
     },
     {
       name: "Triggers",
-      url: `${base}/manage/app/triggers`,
+      url: `${basePath}/manage/app/triggers`,
       id: "/(manage)/manage/(app)/app/triggers"
     },
     {
       name: "Alerts",
-      url: `${base}/manage/app/alerts`,
+      url: `${basePath}/manage/app/alerts`,
       id: "/(manage)/manage/(app)/app/alerts"
     },
     {
       name: "Events",
-      url: `${base}/manage/app/events`,
+      url: `${basePath}/manage/app/events`,
       id: "/(manage)/manage/(app)/app/events"
     },
     {
       name: "API Keys",
-      url: `${base}/manage/app/api-keys`,
+      url: `${basePath}/manage/app/api-keys`,
       id: "/(manage)/manage/(app)/app/api-keys"
     }
   ];
@@ -79,12 +80,12 @@
   <title>Manage Kener</title>
   <meta name="description" content="Manage your Kener project" />
   <meta name="robots" content="noindex" />
-  <link rel="icon" href="{base}/logo96.png" />
+  <link rel="icon" href="{basePath}/logo96.png" />
 </svelte:head>
 <header class="sticky inset-x-0 top-0 z-50 mx-auto mt-4 flex max-w-5xl px-8">
   <div class=" flex w-full justify-between rounded-lg border bg-card px-5 py-4">
     <div class="mt-2 flex gap-x-1.5">
-      <img src="{base}/logo.png" alt="Kener" class="inline h-6 w-6" />
+      <img src="{basePath}/logo.png" alt="Kener" class="inline h-6 w-6" />
       <h1 class="font-semibold">Manage Kener</h1>
     </div>
     <div class="flex">
@@ -108,17 +109,17 @@
             <DropdownMenu.Separator />
             <DropdownMenu.Item class="text-xs font-semibold">
               <a
-                href="{base}/manage/signin/logout"
+                href="{basePath}/manage/signin/logout"
                 on:click={(e) => {
                   e.preventDefault();
-                  window.location = base + "/manage/signin/logout";
+                  window.location = basePath + "/manage/signin/logout";
                 }}>Logout</a
               >
             </DropdownMenu.Item>
           </DropdownMenu.Group>
         </DropdownMenu.Content>
       </DropdownMenu.Root>
-      <Button variant="secondary" class="ml-4" href="{base}/" rel="external">
+      <Button variant="secondary" class="ml-4" href="{basePath}/" rel="external">
         <Play class="mr-2 h-4 w-4" />
         <span>Preview</span>
       </Button>
