@@ -38,7 +38,7 @@ services:
   # Only use below section if you would like to utilize PostgreSQL instead of Kener's default SQLite database. (Don't forget to set `DATABASE_URL` in `kener` service to be: `DATABASE_URL=postgresql://db_user:db_password@localhost:5432/kener_db`)
   postgres:
     image: postgres:alpine
-    name: kener_db
+    container_name: postgres
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: some_super_random_secure_password   # Best to define this in `.env` or via Docker Secret!!
@@ -48,7 +48,7 @@ services:
   # Only use below section if you would like to utilize MySQL instead of Kener's default SQLite database. (Don't forget to set `DATABASE_URL` in `kener` service to be: `DATABASE_URL=mysql://db_user:db_password@localhost:3306/kener_db`)
   mysql:
     image: mariadb:11
-    name: kener_db
+    container_name: mysql
     environment:
       MYSQL_USER: user
       MYSQL_PASSWORD: some_super_random_secure_password   # Best to define this in `.env` or via Docker Secret!!
