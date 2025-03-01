@@ -40,22 +40,24 @@
             </a>
           {/each}
         </nav>
-        <DropdownMenu.Root class="">
-          <DropdownMenu.Trigger class="mr-2 flex md:hidden">
-            <Button variant="outline" size="sm">
-              <Menu size={14} />
-            </Button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content>
-            {#each data.site.nav as navItem}
-              <DropdownMenu.Group>
-                <DropdownMenu.Item>
-                  <a rel="external" href={navItem.url}> {navItem.name} </a>
-                </DropdownMenu.Item>
-              </DropdownMenu.Group>
-            {/each}
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
+        <div class="flex md:hidden">
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              <Button variant="outline" size="sm">
+                <Menu size={14} />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              {#each data.site.nav as navItem}
+                <DropdownMenu.Group>
+                  <DropdownMenu.Item>
+                    <a rel="external" href={navItem.url}> {navItem.name} </a>
+                  </DropdownMenu.Item>
+                </DropdownMenu.Group>
+              {/each}
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        </div>
       {/if}
     </div>
   </div>

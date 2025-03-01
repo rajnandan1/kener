@@ -8,7 +8,7 @@
   import { onMount } from "svelte";
   import * as Card from "$lib/components/ui/card";
   import * as Select from "$lib/components/ui/select";
-  import { storeSiteData, SortMonitor } from "$lib/clientTools.js";
+  import { storeSiteData, SortMonitor, RandomString } from "$lib/clientTools.js";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
@@ -59,7 +59,7 @@
       default_status: "NONE",
       status: "ACTIVE",
       category_name: "Home",
-      monitor_type: "NONE",
+      monitor_type: "HEARTBEAT",
       type_data: "",
       day_degraded_minimum_count: 1,
       day_down_minimum_count: 1,
@@ -104,6 +104,11 @@
         query: "SELECT 1",
         timeout: 5000,
         dbType: "pg" //mysql2
+      },
+      heartbeatConfig: {
+        degradedRemainingMinutes: 1,
+        downRemainingMinutes: 2,
+        secretString: RandomString(32)
       }
     };
   }
@@ -140,6 +145,8 @@
       newMonitor.sslConfig = JSON.parse(newMonitor.type_data);
     } else if (newMonitor.monitor_type == "SQL") {
       newMonitor.sqlConfig = JSON.parse(newMonitor.type_data);
+    } else if (newMonitor.monitor_type == "HEARTBEAT") {
+      newMonitor.heartbeatConfig = JSON.parse(newMonitor.type_data);
     }
     showAddMonitor = true;
   }
