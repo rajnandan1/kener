@@ -59,7 +59,7 @@
       default_status: "NONE",
       status: "ACTIVE",
       category_name: "Home",
-      monitor_type: "HEARTBEAT",
+      monitor_type: "NONE",
       type_data: "",
       day_degraded_minimum_count: 1,
       day_down_minimum_count: 1,
