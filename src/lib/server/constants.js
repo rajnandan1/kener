@@ -102,6 +102,8 @@ const TIMEOUT = "timeout";
 const ERROR = "error";
 const MANUAL = "manual";
 const WEBHOOK = "webhook";
+const DEFAULT_STATUS = "default_status";
+const SIGNAL = "signal";
 
 export {
   MONITOR,
@@ -119,4 +121,6 @@ export {
   MANUAL,
   NO_DATA,
   WEBHOOK,
+  DEFAULT_STATUS,
+  SIGNAL,
 };

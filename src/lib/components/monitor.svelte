@@ -53,10 +53,13 @@
   }
 
   function getToday(startTs, incidentIDs) {
+    let endTs = Math.min(startTs + 86400, monitor.pageData.maxDateTodayTimestamp);
+
     axios
       .post(`${base}/api/today`, {
         monitor: monitor,
         localTz: localTz,
+        endTs: endTs,
         startTs: startTs,
         incidentIDs: incidentIDs
       })
@@ -165,6 +168,7 @@
   let dateFetchedFor = "";
   let dayUptime = "NA";
   let loadingDayData = false;
+
   function dailyDataGetter(e, bar, incidentObj) {
     if (embed) {
       return;
@@ -268,16 +272,18 @@
           {#if rollerLoading}
             <Loader class=" mt-0.5 inline h-3.5 w-3.5 animate-spin text-muted-foreground" />
           {/if}
-          <NumberFlow
-            class="border-r pr-2 text-xs font-semibold"
-            value={uptimesRollers[rolledAt].value}
-            format={{
-              notation: "standard",
-              minimumFractionDigits: 4,
-              maximumFractionDigits: 4
-            }}
-            suffix="%"
-          />
+          {#if !isNaN(uptimesRollers[rolledAt].value)}
+            <NumberFlow
+              class="border-r pr-2 text-xs font-semibold"
+              value={uptimesRollers[rolledAt].value}
+              format={{
+                notation: "standard",
+                minimumFractionDigits: 4,
+                maximumFractionDigits: 4
+              }}
+              suffix="%"
+            />
+          {/if}
           <div class="truncate text-xs font-semibold text-{monitor.pageData.summaryColorClass}">
             {monitor.pageData.summaryStatus}
           </div>

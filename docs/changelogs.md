@@ -7,6 +7,45 @@ description: Changelogs for Kener
 
 Here are the changelogs for Kener. Changelogs are only published when there are new features or breaking changes.
 
+## v3.2.1
+
+<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.webp" type="image/webp">
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.gif" alt="🚀" width="32" height="32">
+</picture>
+
+### Features
+
+- **New Heartbeat Monitors**
+
+    - Added support for push-based monitoring via heartbeats
+    - Monitors systems that send periodic signals to confirm they're running
+    - Configurable thresholds for degraded and down states
+    - Secured with secret token authentication
+    - Accessible via simple HTTP API endpoints
+
+- **Data Interpolation Improvements**
+    - Fixed data interpolation issues for more accurate uptime calculations
+    - Improved handling of timestamp boundaries
+
+### Fixes & Improvements
+
+- **UI Enhancements**
+
+    - Better mobile responsiveness for theme toggles and controls
+    - Fixed layout issues with bottom navigation buttons
+    - Improved timezone selector display
+
+- **Data Processing**
+
+    - Fixed edge case issues with uptime calculations
+    - Improved handling of "No Data" status in summaries
+    - More accurate time range display across timezones
+
+- **Documentation**
+    - Added comprehensive documentation for Heartbeat Monitors
+    - Updated API documentation with new endpoints
+
 ## v3.2.0
 
 <picture>
@@ -59,7 +98,7 @@ If you're using custom evaluation functions in your monitors, you'll need to upd
 
 ```javascript
 // Old format
-(async function (statusCode, responseTime, responseDataBase64) {
+;(async function (statusCode, responseTime, responseDataBase64) {
     const resp = atob(responseDataBase64)
     // Your logic here
 })
@@ -67,7 +106,7 @@ If you're using custom evaluation functions in your monitors, you'll need to upd
 
 ```javascript
 // New format
-(async function (statusCode, responseTime, responseRaw, modules) {
+;(async function (statusCode, responseTime, responseRaw, modules) {
     // responseRaw is the direct response - no need to decode
     // Access cheerio with modules.cheerio
     // Your logic here
@@ -78,7 +117,7 @@ If you're using custom evaluation functions in your monitors, you'll need to upd
 
 ```javascript
 // Old format
-(async function (responseDataBase64) {
+;(async function (responseDataBase64) {
     let arrayOfPings = JSON.parse(atob(responseDataBase64))
     // Your logic here
 })
@@ -86,12 +125,11 @@ If you're using custom evaluation functions in your monitors, you'll need to upd
 
 ```javascript
 // New format
-(async function (arrayOfPings) {
+;(async function (arrayOfPings) {
     // arrayOfPings is directly available - no need to decode
     // Your logic here
 })
 ```
-
 
 ## v3.1.8
 

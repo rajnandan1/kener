@@ -81,19 +81,20 @@ function getCountOfSimilarStatuesEnd(arr, statusType) {
 const FetchData = async function (site, monitor, localTz, selectedLang, lang) {
   const secondsInDay = 24 * 60 * 60;
   //get offset from utc in minutes
-  const now = GetMinuteStartNowTimestampUTC() + 60;
-  const midnight = BeginningOfDay({ timeZone: localTz });
-  const midnight90DaysAgo = midnight - 90 * 24 * 60 * 60;
+  const nowUTC = GetMinuteStartNowTimestampUTC();
+  const midnightUTC = GetDayStartTimestampUTC(nowUTC);
+  const midnightTz = BeginningOfDay({ timeZone: localTz });
+  const midnight90DaysAgoTz = midnightTz - 90 * 24 * 60 * 60;
   const NO_DATA = "No Data";
-  let offsetInMinutes = parseInt((GetDayStartTimestampUTC(now) - midnight) / 60);
-  const maxDateTodayTimestamp = BeginningOfMinute({ timeZone: localTz });
+  let offsetInMinutes = parseInt((GetDayStartTimestampUTC(nowUTC) - midnightTz) / 60);
+  const maxDateTodayTimestampTz = BeginningOfMinute({ timeZone: localTz });
   const _90Day = {};
   let latestTimestamp = 0;
 
   let dbData = await GetDataGroupByDayAlternative(
     monitor.tag,
-    midnight90DaysAgo,
-    maxDateTodayTimestamp,
+    midnight90DaysAgoTz,
+    maxDateTodayTimestampTz,
     offsetInMinutes,
   );
   let totalDegradedCount = 0;
@@ -110,7 +111,6 @@ const FetchData = async function (site, monitor, localTz, selectedLang, lang) {
     totalDegradedCount += dayData.DEGRADED;
     totalDownCount += dayData.DOWN;
     totalUpCount += dayData.UP;
-
     if (dayData.DEGRADED >= monitor.day_degraded_minimum_count) {
       cssClass = returnStatusClass(dayData.DEGRADED, dayData.total, StatusObj.DEGRADED, site.barStyle);
       summaryDuration = getSummaryDuration(dayData.DEGRADED, selectedLang);
@@ -156,14 +156,9 @@ const FetchData = async function (site, monitor, localTz, selectedLang, lang) {
 
   let summaryColorClass = "api-nodata";
 
-  let todayDataDb = await db.getMonitoringData(monitor.tag, midnight, midnight + secondsInDay);
-  let anchorStatus = await GetLastStatusBefore(monitor.tag, midnight);
-  todayDataDb = InterpolateData(
-    todayDataDb,
-    midnight,
-    anchorStatus,
-    todayDataDb.length == 0 ? midnight + secondsInDay : null,
-  );
+  let todayDataDb = await db.getMonitoringData(monitor.tag, midnightTz, maxDateTodayTimestampTz);
+  let anchorStatus = await GetLastStatusBefore(monitor.tag, midnightTz);
+  todayDataDb = InterpolateData(todayDataDb, midnightTz, anchorStatus, maxDateTodayTimestampTz);
 
   if (site.summaryStyle === "CURRENT") {
     summaryColorClass = "api-up";
@@ -179,6 +174,10 @@ const FetchData = async function (site, monitor, localTz, selectedLang, lang) {
       summaryDuration = getSummaryDuration(getCountOfSimilarStatuesEnd(todayDataDb, "DOWN"), selectedLang);
       summaryStatus = "DOWN";
       summaryColorClass = "api-down";
+    }
+    if (lastRow.status === "NO_DATA") {
+      summaryStatus = NO_DATA;
+      summaryColorClass = "api-nodata";
     }
     summaryStatus = l(lang, summaryTime(summaryStatus), {
       status: l(lang, summaryStatus),
@@ -196,8 +195,8 @@ const FetchData = async function (site, monitor, localTz, selectedLang, lang) {
     summaryStatus: summaryStatus,
     summaryColorClass: summaryColorClass,
     barRoundness: site.barRoundness,
-    midnight90DaysAgo: midnight90DaysAgo,
-    maxDateTodayTimestamp: maxDateTodayTimestamp,
+    midnight90DaysAgo: midnight90DaysAgoTz,
+    maxDateTodayTimestamp: maxDateTodayTimestampTz,
   };
 };
 export { FetchData };

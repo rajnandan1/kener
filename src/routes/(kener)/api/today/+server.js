@@ -17,9 +17,8 @@ export async function POST({ request }) {
   const incidentIDs = payload.incidentIDs || [];
   let _0Day = {};
 
-  const now = GetMinuteStartNowTimestampUTC() + 60;
   const start = payload.startTs;
-  let end = Math.min(payload.startTs + 24 * 60 * 60, now);
+  let end = payload.endTs;
 
   for (let i = start; i < end; i += 60) {
     _0Day[i] = {
@@ -30,9 +29,9 @@ export async function POST({ request }) {
     };
   }
 
-  let dayData = await db.getMonitoringData(monitor.tag, payload.startTs, end);
+  let dayData = await db.getMonitoringData(monitor.tag, payload.startTs, payload.endTs);
   let anchorStatus = await GetLastStatusBefore(monitor.tag, start);
-  dayData = InterpolateData(dayData, payload.startTs, anchorStatus, end);
+  dayData = InterpolateData(dayData, payload.startTs, anchorStatus, payload.endTs);
   let siteData = await GetAllSiteData();
 
   let ups = 0;
@@ -60,7 +59,7 @@ export async function POST({ request }) {
       ups++;
     } else if (status == "DOWN") {
       downs++;
-    } else {
+    } else if (status == "DEGRADED") {
       degradeds++;
     }
   }

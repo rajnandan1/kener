@@ -109,15 +109,15 @@ To monitor the ping, you need to provide the IP address or the domain name. If t
 
 To add a trigger to a monitor make sure you have created a trigger. You can read more about triggers [here](/docs/triggers).
 
--   Click on the 🔔 icon on the top right corner of the monitor.
--   Add details for either DOWN or DEGRADED.
-    -   Failure Threshold(Required): The number of consecutive failures before the trigger is activated.
-    -   Success Threshold(Required): The number of consecutive successes before the trigger is deactivated.
-    -   Create Incident: Chose whether to create an incident or not when the trigger is activated. The incident will be created in Github. So make sure you have set up the Github token in the environment variables. The incident will be closed when the monitor is back to UP.
-    -   Severity (Required): The severity of the incident. It can be `Critcal` or `Warning`.
-    -   Custom Message (Required): Add your owner alert message.
-    -   Choose Triggers: Choose the triggers you want to activate the trigger. You can choose multiple triggers.
-    -   It will take upto 1 minute for the trigger to be activated.
+- Click on the 🔔 icon on the top right corner of the monitor.
+- Add details for either DOWN or DEGRADED.
+    - Failure Threshold(Required): The number of consecutive failures before the trigger is activated.
+    - Success Threshold(Required): The number of consecutive successes before the trigger is deactivated.
+    - Create Incident: Chose whether to create an incident or not when the trigger is activated. The incident will be created in Github. So make sure you have set up the Github token in the environment variables. The incident will be closed when the monitor is back to UP.
+    - Severity (Required): The severity of the incident. It can be `Critcal` or `Warning`.
+    - Custom Message (Required): Add your owner alert message.
+    - Choose Triggers: Choose the triggers you want to activate the trigger. You can choose multiple triggers.
+    - It will take upto 1 minute for the trigger to be activated.
 
 ---
 
@@ -135,6 +135,17 @@ You can activate the monitor by switching the toggle to on. Activation a monitor
 
 <div class="note info">
 
-Any changes in the a live monitor will take one minute to reflect.
+Any changes in the a live monitor will take 2 minutes to reflect.
 
 </div>
+
+## Supported Monitors
+
+- [API Monitors](/docs/monitors-api)
+- [DNS Monitors](/docs/monitors-dns)
+- [PING Monitors](/docs/monitors-ping)
+- [TCP Monitors](/docs/monitors-tcp)
+- [SQL Monitors](/docs/monitors-sql)
+- [SSL Monitors](/docs/monitors-ssl)
+- [HEARTBEAT Monitors](/docs/monitors-heartbeat)
+- [GROUP Monitors](/docs/monitors-group)

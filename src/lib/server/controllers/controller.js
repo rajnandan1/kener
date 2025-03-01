@@ -17,7 +17,8 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { format, subMonths, addMonths, startOfMonth } from "date-fns";
-import { UP, DOWN, DEGRADED, NO_DATA } from "../constants.js";
+import { UP, DOWN, DEGRADED, NO_DATA, REALTIME, SIGNAL } from "../constants.js";
+import { GetMinuteStartNowTimestampUTC, GetNowTimestampUTC } from "../tool.js";
 
 const saltRounds = 10;
 const DUMMY_SECRET = "DUMMY_SECRET";
@@ -298,6 +299,40 @@ export const VerifyPassword = async (plainTextPassword, hashedPassword) => {
   }
 };
 
+export const GetLatestMonitoringData = async (monitor_tag) => {
+  return await db.getLatestMonitoringData(monitor_tag);
+};
+export const GetLastHeartbeat = async (monitor_tag) => {
+  return await db.getLastHeartbeat(monitor_tag);
+};
+
+export const RegisterHeartbeat = async (tag, secret) => {
+  let monitor = await db.getMonitorByTag(tag);
+  if (!monitor) {
+    return null;
+  }
+  let typeData = monitor.type_data;
+  if (!typeData) {
+    return null;
+  }
+  try {
+    let heartbeatConfig = JSON.parse(typeData);
+    let heartbeatSecret = heartbeatConfig.secretString;
+    if (heartbeatSecret === secret) {
+      return await db.insertMonitoringData({
+        monitor_tag: monitor.tag,
+        timestamp: GetMinuteStartNowTimestampUTC(GetNowTimestampUTC()),
+        status: UP,
+        latency: 0,
+        type: SIGNAL,
+      });
+    }
+  } catch (e) {
+    console.error("Error registering heartbeat:", e);
+  }
+  return null;
+};
+
 export const GenerateToken = async (data) => {
   try {
     const token = jwt.sign(data, process.env.KENER_SECRET_KEY || DUMMY_SECRET, {
@@ -467,7 +502,7 @@ export const GetDataGroupByDayAlternative = async (monitor_tag, start, end, time
 
   let rawData = await db.getDataGroupByDayAlternative(monitor_tag, start, end);
   let anchorStatus = await GetLastStatusBefore(monitor_tag, start);
-  rawData = InterpolateData(rawData, start, anchorStatus, end - 60);
+  rawData = InterpolateData(rawData, start, anchorStatus, end);
 
   const groupedData = rawData.reduce((acc, row) => {
     // Calculate day group considering timezone offset

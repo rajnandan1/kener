@@ -13,7 +13,7 @@ export async function POST({ request }) {
 
   let rawData = await db.getMonitoringData(monitor.tag, start, end);
   let anchorStatus = await GetLastStatusBefore(monitor.tag, start);
-  rawData = InterpolateData(rawData, start, anchorStatus, end - 60);
+  rawData = InterpolateData(rawData, start, anchorStatus, end);
 
   let aggregatedData = rawData.reduce(
     (acc, row) => {
