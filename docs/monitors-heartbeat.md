@@ -1,6 +1,6 @@
 ---
 title: Heartbeat Monitors | Kener
-description: Monitor a heartbeat
+description: Heartbeat monitors allow you to monitor systems using a "push" based approach
 ---
 
 # Heartbeat Monitors

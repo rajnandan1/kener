@@ -83,13 +83,11 @@ const FetchData = async function (site, monitor, localTz, selectedLang, lang) {
   //get offset from utc in minutes
   const nowUTC = GetMinuteStartNowTimestampUTC();
   const midnightUTC = GetDayStartTimestampUTC(nowUTC);
-  // const now = 1740833640 + 60;
   const midnightTz = BeginningOfDay({ timeZone: localTz });
   const midnight90DaysAgoTz = midnightTz - 90 * 24 * 60 * 60;
   const NO_DATA = "No Data";
   let offsetInMinutes = parseInt((GetDayStartTimestampUTC(nowUTC) - midnightTz) / 60);
   const maxDateTodayTimestampTz = BeginningOfMinute({ timeZone: localTz });
-  // const maxDateTodayTimestamp = 1740833760;
   const _90Day = {};
   let latestTimestamp = 0;
 
