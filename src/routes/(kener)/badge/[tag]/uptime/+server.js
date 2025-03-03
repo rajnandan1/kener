@@ -37,7 +37,7 @@ export async function GET({ params, url }) {
 
   let todayDataDb = await db.getMonitoringData(tag, since, now);
   let anchorStatus = await GetLastStatusBefore(tag, since);
-  todayDataDb = InterpolateData(todayDataDb, since, anchorStatus, now - 60);
+  todayDataDb = InterpolateData(todayDataDb, since, anchorStatus, now);
 
   let calculatedData = AggregateData(todayDataDb);
 

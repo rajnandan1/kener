@@ -1,7 +1,7 @@
 // @ts-nocheck
 import axios from "axios";
 import { Ping, ExtractIPv6HostAndPort, TCP } from "./ping.js";
-import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "./constants.js";
+import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL, DEFAULT_STATUS } from "./constants.js";
 import Service from "./services/service.js";
 import { GetMinuteStartNowTimestampUTC, ReplaceAllOccurrences, GetRequiredSecrets, Wait } from "./tool.js";
 
@@ -101,6 +101,12 @@ const Minuter = async (monitor) => {
     realTimeData[startOfMinute] = await serviceClient.execute();
   } else if (monitor.monitor_type === "GROUP") {
     realTimeData[startOfMinute] = await serviceClient.execute(startOfMinute);
+  } else if (monitor.monitor_type === "SSL") {
+    realTimeData[startOfMinute] = await serviceClient.execute();
+  } else if (monitor.monitor_type === "SQL") {
+    realTimeData[startOfMinute] = await serviceClient.execute();
+  } else if (monitor.monitor_type === "HEARTBEAT") {
+    realTimeData[startOfMinute] = await serviceClient.execute();
   }
 
   manualData = await manualIncident(monitor);
@@ -113,17 +119,21 @@ const Minuter = async (monitor) => {
       mergedData[startOfMinute] = {
         status: monitor.default_status,
         latency: 0,
-        type: "default_status",
+        type: DEFAULT_STATUS,
       };
     }
   }
 
   for (const timestamp in realTimeData) {
-    mergedData[timestamp] = realTimeData[timestamp];
+    if (!!realTimeData[timestamp] && !!realTimeData[timestamp].status) {
+      mergedData[timestamp] = realTimeData[timestamp];
+    }
   }
 
   for (const timestamp in manualData) {
-    mergedData[timestamp] = manualData[timestamp];
+    if (!!manualData[timestamp] && !!manualData[timestamp].status) {
+      mergedData[timestamp] = manualData[timestamp];
+    }
   }
 
   for (const timestamp in mergedData) {

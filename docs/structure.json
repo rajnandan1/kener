@@ -49,31 +49,7 @@
           "link": "/docs/monitors",
           "file": "/monitors.md"
         },
-        {
-          "title": "API/Website Monitor",
-          "link": "/docs/monitors-api",
-          "file": "/monitors-api.md"
-        },
-        {
-          "title": "Ping Monitor",
-          "link": "/docs/monitors-ping",
-          "file": "/monitors-ping.md"
-        },
-        {
-          "title": "TCP Monitor",
-          "link": "/docs/monitors-tcp",
-          "file": "/monitors-tcp.md"
-        },
-        {
-          "title": "DNS Monitor",
-          "link": "/docs/monitors-dns",
-          "file": "/monitors-dns.md"
-        },
-        {
-          "title": "Group Monitor",
-          "link": "/docs/monitors-group",
-          "file": "/monitors-group.md"
-        },
+
         {
           "title": "Setup Triggers",
           "link": "/docs/triggers",
@@ -129,6 +105,51 @@
           "title": "Internationalization",
           "link": "/docs/i18n",
           "file": "/i18n.md"
+        }
+      ]
+    },
+    {
+      "sectionTitle": "Monitors",
+      "children": [
+        {
+          "title": "API/Website Monitor",
+          "link": "/docs/monitors-api",
+          "file": "/monitors-api.md"
+        },
+        {
+          "title": "Ping Monitor",
+          "link": "/docs/monitors-ping",
+          "file": "/monitors-ping.md"
+        },
+        {
+          "title": "TCP Monitor",
+          "link": "/docs/monitors-tcp",
+          "file": "/monitors-tcp.md"
+        },
+        {
+          "title": "DNS Monitor",
+          "link": "/docs/monitors-dns",
+          "file": "/monitors-dns.md"
+        },
+        {
+          "title": "Group Monitor",
+          "link": "/docs/monitors-group",
+          "file": "/monitors-group.md"
+        },
+        {
+          "title": "SSL Monitor",
+          "link": "/docs/monitors-ssl",
+          "file": "/monitors-ssl.md"
+        },
+        {
+          "title": "SQL Monitor",
+          "link": "/docs/monitors-sql",
+          "file": "/monitors-sql.md"
+        },
+        {
+          "title": "Heartbeat Monitor",
+          "link": "/docs/monitors-heartbeat",
+          "file": "/monitors-heartbeat.md"
         }
       ]
     },

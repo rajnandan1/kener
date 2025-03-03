@@ -6,6 +6,7 @@
   import Sun from "lucide-svelte/icons/sun";
   import Menu from "lucide-svelte/icons/menu";
   import X from "lucide-svelte/icons/x";
+  import Heart from "lucide-svelte/icons/heart";
   import { clickOutsideAction, slide } from "svelte-legos";
   import Moon from "lucide-svelte/icons/moon";
   import { onMount } from "svelte";
@@ -56,6 +57,23 @@
     if (window.innerWidth > 768) {
       sideBarHidden = false;
     }
+    const donationBanner = document.getElementById("donation-banner");
+    const closeButton = document.getElementById("close-donation");
+
+    // Check if we should show the banner today
+    const lastShown = localStorage.getItem("kener_donation_banner_closed");
+    const today = new Date().toDateString();
+
+    // Only show the banner if it hasn't been closed today
+    if (lastShown !== today) {
+      donationBanner.style.display = "block";
+    }
+
+    // Add close button handler
+    closeButton.addEventListener("click", () => {
+      donationBanner.style.display = "none";
+      localStorage.setItem("kener_donation_banner_closed", today);
+    });
   });
 </script>
 
@@ -92,7 +110,7 @@
             <!-- Document Icon - Replace with your own logo -->
             <img src="https://kener.ing/logo.png" class="h-8 w-8" alt="" />
             <span class="text-xl font-medium">Kener Documentation</span>
-            <span class="me-2 rounded border px-2.5 py-0.5 text-xs font-medium"> 3.1.8 </span>
+            <span class="me-2 rounded border px-2.5 py-0.5 text-xs font-medium"> 3.2.1 </span>
           </a>
         </div>
 
@@ -107,7 +125,6 @@
             </a>
             <a href="/api-reference" class="text-sm font-medium"> API Reference </a>
             <a href="https://github.com/rajnandan1/kener/issues" class="text-sm font-medium"> Report Issue </a>
-            <a href="https://github.com/sponsors/rajnandan1" class="text-sm font-medium"> Sponsor </a>
           </div>
         </div>
 
@@ -168,6 +185,34 @@
   <main class="dark relative z-10 min-h-screen pt-16 md:ml-72">
     <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 md:px-8 md:pr-64">
       <!-- Content Header -->
+      <div
+        id="donation-banner"
+        style="display: none;"
+        class="mb-8 rounded-lg bg-gradient-to-r from-blue-900 to-indigo-900 p-4 shadow-lg"
+      >
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-4">
+            <div class="rounded-full bg-amber-500 p-2">
+              <Heart class="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <h3 class="text-base font-medium text-white">Support Kener Development</h3>
+              <p class="text-sm text-blue-200">Help us keep this project running and improve it further</p>
+            </div>
+          </div>
+          <div class="flex items-center space-x-3">
+            <a
+              href="https://github.com/sponsors/rajnandan1"
+              class="rounded-md bg-amber-500 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-amber-600"
+            >
+              Sponsor
+            </a>
+            <button id="close-donation" class="rounded p-1 text-blue-300 hover:bg-blue-800 hover:text-white">
+              <X class="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </div>
       <div
         class="prose prose-stone max-w-none dark:prose-invert prose-code:rounded prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:font-normal prose-pre:bg-opacity-0 dark:prose-pre:bg-neutral-900"
       >

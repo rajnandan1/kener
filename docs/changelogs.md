@@ -7,6 +7,130 @@ description: Changelogs for Kener
 
 Here are the changelogs for Kener. Changelogs are only published when there are new features or breaking changes.
 
+## v3.2.1
+
+<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.webp" type="image/webp">
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.gif" alt="🚀" width="32" height="32">
+</picture>
+
+### Features
+
+- **New Heartbeat Monitors**
+
+    - Added support for push-based monitoring via heartbeats
+    - Monitors systems that send periodic signals to confirm they're running
+    - Configurable thresholds for degraded and down states
+    - Secured with secret token authentication
+    - Accessible via simple HTTP API endpoints
+
+- **Data Interpolation Improvements**
+    - Fixed data interpolation issues for more accurate uptime calculations
+    - Improved handling of timestamp boundaries
+
+### Fixes & Improvements
+
+- **UI Enhancements**
+
+    - Better mobile responsiveness for theme toggles and controls
+    - Fixed layout issues with bottom navigation buttons
+    - Improved timezone selector display
+
+- **Data Processing**
+
+    - Fixed edge case issues with uptime calculations
+    - Improved handling of "No Data" status in summaries
+    - More accurate time range display across timezones
+
+- **Documentation**
+    - Added comprehensive documentation for Heartbeat Monitors
+    - Updated API documentation with new endpoints
+
+## v3.2.0
+
+<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.webp" type="image/webp">
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.gif" alt="🚀" width="32" height="32">
+</picture>
+
+### Features
+
+- **Improved Monitor Evaluation Functions**
+
+    - Replaced unsafe `eval()` with secure `Function()` constructors across all monitor types
+    - Added support for using modules (like cheerio) directly in evaluation functions
+
+- **Enhanced API Monitors**
+
+    - Raw response data is now passed directly to eval functions instead of base64 encoded
+    - Added `modules` parameter with access to cheerio for HTML parsing
+    - Updated default evaluation function to use the new parameter structure
+
+- **Improved TCP & Ping Monitors**
+
+    - Simplified evaluation functions with direct access to ping/TCP data
+    - Removed unnecessary base64 encoding/decoding steps
+    - Better error handling for invalid evaluation functions
+
+- **Documentation Updates**
+    - Updated all examples and documentation for the new evaluation function signatures
+    - Added more detailed explanations of input parameters
+    - Improved examples showing usage with the new parameter structure
+
+### Breaking Changes
+
+- **Monitor Evaluation Functions**
+    - Custom evaluation functions will need to be updated to the new parameter structure
+    - API monitors: `(statusCode, responseTime, responseRaw, modules)` instead of `(statusCode, responseTime, responseDataBase64)`
+    - TCP/Ping monitors: `(arrayOfPings)` instead of `(responseDataBase64)`
+
+### Fixes
+
+- Fixed "cheerio is undefined" errors in API monitor evaluations
+- Improved error handling and logging for monitor evaluation failures
+- Security enhancements by removing `eval()` usage
+
+### Migration
+
+If you're using custom evaluation functions in your monitors, you'll need to update them to the new format:
+
+#### API Monitors
+
+```javascript
+// Old format
+;(async function (statusCode, responseTime, responseDataBase64) {
+    const resp = atob(responseDataBase64)
+    // Your logic here
+})
+```
+
+```javascript
+// New format
+;(async function (statusCode, responseTime, responseRaw, modules) {
+    // responseRaw is the direct response - no need to decode
+    // Access cheerio with modules.cheerio
+    // Your logic here
+})
+```
+
+#### TCP/Ping Monitors
+
+```javascript
+// Old format
+;(async function (responseDataBase64) {
+    let arrayOfPings = JSON.parse(atob(responseDataBase64))
+    // Your logic here
+})
+```
+
+```javascript
+// New format
+;(async function (arrayOfPings) {
+    // arrayOfPings is directly available - no need to decode
+    // Your logic here
+})
+```
+
 ## v3.1.8
 
 <picture>

@@ -8,7 +8,7 @@
   import { onMount } from "svelte";
   import * as Card from "$lib/components/ui/card";
   import * as Select from "$lib/components/ui/select";
-  import { storeSiteData, SortMonitor } from "$lib/clientTools.js";
+  import { storeSiteData, SortMonitor, RandomString } from "$lib/clientTools.js";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
@@ -92,7 +92,24 @@
         monitors: [],
         timeout: 10000,
         hideMonitors: false
-      })
+      }),
+      sslConfig: {
+        host: "",
+        port: 443,
+        degradedRemainingHours: 1,
+        downRemainingHours: 0
+      },
+      sqlConfig: {
+        connectionString: "",
+        query: "SELECT 1",
+        timeout: 5000,
+        dbType: "pg" //mysql2
+      },
+      heartbeatConfig: {
+        degradedRemainingMinutes: 1,
+        downRemainingMinutes: 2,
+        secretString: RandomString(32)
+      }
     };
   }
 
@@ -124,6 +141,12 @@
       newMonitor.tcpConfig = JSON.parse(newMonitor.type_data);
     } else if (newMonitor.monitor_type == "GROUP") {
       newMonitor.groupConfig = createGroupConfig(JSON.parse(newMonitor.type_data));
+    } else if (newMonitor.monitor_type == "SSL") {
+      newMonitor.sslConfig = JSON.parse(newMonitor.type_data);
+    } else if (newMonitor.monitor_type == "SQL") {
+      newMonitor.sqlConfig = JSON.parse(newMonitor.type_data);
+    } else if (newMonitor.monitor_type == "HEARTBEAT") {
+      newMonitor.heartbeatConfig = JSON.parse(newMonitor.type_data);
     }
     showAddMonitor = true;
   }
@@ -548,7 +571,7 @@
                   }}
                 />
                 <div
-                  class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rtl:peer-checked:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"
+                  class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 rtl:peer-checked:after:-translate-x-full"
                 ></div>
               </label>
             </div>

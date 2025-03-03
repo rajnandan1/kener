@@ -1,6 +1,6 @@
 <script>
   import { Button } from "$lib/components/ui/button";
-  import { Plus, X, Loader } from "lucide-svelte";
+  import { Plus, X, Loader, Clipboard, Check } from "lucide-svelte";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { clickOutsideAction, slide } from "svelte-legos";
@@ -9,6 +9,7 @@
   import * as Select from "$lib/components/ui/select";
   import { createEventDispatcher } from "svelte";
   import GMI from "$lib/components/gmi.svelte";
+  import { page } from "$app/stores";
   import {
     allRecordTypes,
     ValidateIpAddress,
@@ -83,6 +84,10 @@
   }
 
   let invalidFormMessage = "";
+
+  function copyToClipboard(t) {
+    navigator.clipboard.writeText(t);
+  }
 
   async function isValidEval(ev) {
     if (ev.endsWith(";")) {
@@ -277,8 +282,106 @@
         timeout: parseInt(newMonitor.groupConfig.timeout),
         hideMonitors: newMonitor.groupConfig.hideMonitors
       });
-    }
+    } else if (newMonitor.monitor_type === "SSL") {
+      //validating host
+      if (!newMonitor.sslConfig.host) {
+        invalidFormMessage = "Host is required";
+        return;
+      }
+      if (!IsValidHost(newMonitor.sslConfig.host)) {
+        invalidFormMessage = "Invalid Host";
+        return;
+      }
+      //validating port
+      if (
+        !!!newMonitor.sslConfig.port ||
+        isNaN(newMonitor.sslConfig.port) ||
+        newMonitor.sslConfig.port < 1 ||
+        newMonitor.sslConfig.port > 65535
+      ) {
+        invalidFormMessage = "Port should be valid";
+        return;
+      }
+      //check if degradedRemainingHours > 0
+      if (
+        !!!newMonitor.sslConfig.degradedRemainingHours ||
+        isNaN(newMonitor.sslConfig.degradedRemainingHours) ||
+        newMonitor.sslConfig.degradedRemainingHours < 0
+      ) {
+        invalidFormMessage = "Degraded Remaining Hours should be greater than 0";
+        return;
+      }
+      //check if downRemainingHours > 0
+      if (
+        !!!newMonitor.sslConfig.downRemainingHours ||
+        isNaN(newMonitor.sslConfig.downRemainingHours) ||
+        newMonitor.sslConfig.downRemainingHours < 0
+      ) {
+        invalidFormMessage = "Down Remaining Hours should be greater than 0";
+        return;
+      }
 
+      newMonitor.sslConfig.degradedRemainingHours = Number(newMonitor.sslConfig.degradedRemainingHours);
+      newMonitor.sslConfig.downRemainingHours = Number(newMonitor.sslConfig.downRemainingHours);
+
+      //check if degradedRemainingHours > downRemainingHours
+      if (newMonitor.sslConfig.degradedRemainingHours <= newMonitor.sslConfig.downRemainingHours) {
+        invalidFormMessage = "Degraded Remaining Hours should be greater than Down Remaining Hours";
+        return;
+      }
+      newMonitor.type_data = JSON.stringify(newMonitor.sslConfig);
+    } else if (newMonitor.monitor_type === "SQL") {
+      //connectionString cannot be empty
+      if (!!!newMonitor.sqlConfig.connectionString) {
+        invalidFormMessage = "Connection String is required";
+        return;
+      }
+
+      //connection string has to start with postgresql or mysql
+      if (
+        !newMonitor.sqlConfig.connectionString.startsWith("postgresql://") &&
+        !newMonitor.sqlConfig.connectionString.startsWith("mysql://")
+      ) {
+        invalidFormMessage = "Connection string should start with postgresql:// or mysql2://";
+        return;
+      }
+
+      //timeout should be positive number
+      if (newMonitor.sqlConfig.timeout < 1) {
+        invalidFormMessage = "Timeout should be greater than 0";
+        return;
+      }
+
+      //query cannot be empty
+      if (!!!newMonitor.sqlConfig.query) {
+        invalidFormMessage = "SQL Query is required";
+        return;
+      }
+
+      newMonitor.type_data = JSON.stringify(newMonitor.sqlConfig);
+    } else if (newMonitor.monitor_type === "HEARTBEAT") {
+      //newMonitor.heartbeatConfig.degradedRemainingMinutes should be a number and greater than equal to 1
+      if (
+        !!!newMonitor.heartbeatConfig.degradedRemainingMinutes ||
+        isNaN(newMonitor.heartbeatConfig.degradedRemainingMinutes) ||
+        newMonitor.heartbeatConfig.degradedRemainingMinutes < 1
+      ) {
+        invalidFormMessage = "Degraded or grace Period should at least be 1 minute";
+        return;
+      }
+
+      //newMonitor.heartbeatConfig.downRemainingMinutes should be a number and greater than degradedRemainingMinutes
+      if (
+        !!!newMonitor.heartbeatConfig.downRemainingMinutes ||
+        isNaN(newMonitor.heartbeatConfig.downRemainingMinutes) ||
+        newMonitor.heartbeatConfig.downRemainingMinutes <= newMonitor.heartbeatConfig.degradedRemainingMinutes
+      ) {
+        invalidFormMessage = "Down or impacted Period should be greater than Degraded or grace Period";
+        return;
+      }
+
+      newMonitor.type_data = JSON.stringify(newMonitor.heartbeatConfig);
+    }
     formState = "loading";
 
     try {
@@ -302,6 +405,11 @@
     }
   }
   let typeOfLogoUpload = newMonitor.image.startsWith("http") ? "URL" : "FILE";
+
+  let databaseTypes = {
+    pg: "PostgreSQL",
+    mysql2: "MySQL"
+  };
 </script>
 
 <div class="fixed left-0 top-0 z-50 h-screen w-screen bg-card bg-opacity-20 backdrop-blur-sm">
@@ -341,7 +449,7 @@
             }}
           />
           <div
-            class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rtl:peer-checked:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"
+            class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 rtl:peer-checked:after:-translate-x-full"
           ></div>
         </label>
       </div>
@@ -523,6 +631,9 @@
                 <Select.Item value="DNS" label="DNS" class="text-sm font-medium">DNS</Select.Item>
                 <Select.Item value="TCP" label="TCP" class="text-sm font-medium">TCP</Select.Item>
                 <Select.Item value="GROUP" label="GROUP" class="text-sm font-medium">GROUP</Select.Item>
+                <Select.Item value="SSL" label="SSL" class="text-sm font-medium">SSL</Select.Item>
+                <Select.Item value="SQL" label="SQL" class="text-sm font-medium">SQL</Select.Item>
+                <Select.Item value="HEARTBEAT" label="HEARTBEAT" class="text-sm font-medium">HEARTBEAT</Select.Item>
               </Select.Group>
             </Select.Content>
           </Select.Root>
@@ -896,7 +1007,10 @@
             </Label>
             <Input bind:value={newMonitor.groupConfig.timeout} class="w-40" id="timeout" />
             <p class="my-1 text-xs text-muted-foreground">
-              Maximum Time in milliseconds it will wait for all the monitors to resolved in that particular timestamp
+              Maximum Time in milliseconds it will wait for all the monitors to resolved in that particular timestamp.
+              Read the <a target="_blank" class="font-medium text-primary" href="https://kener.ing/docs/monitors-group">
+                docs
+              </a> to learn more
             </p>
           </div>
           <div class="col-span-6">
@@ -933,6 +1047,167 @@
             <ul class="text-xs font-medium leading-5 text-muted-foreground">
               <li>- The group status will be the worst status of the monitors in the group.</li>
             </ul>
+          </div>
+        </div>
+      {:else if newMonitor.monitor_type == "SSL"}
+        <div class="mt-4 grid grid-cols-7 gap-2">
+          <div class="col-span-2">
+            <Label for="sslHost">Host</Label>
+            <Input placeholder="example.com" bind:value={newMonitor.sslConfig.host} id="sslHost" />
+          </div>
+          <div class="col-span-1">
+            <Label for="sslHost">Port</Label>
+            <Input placeholder="443" bind:value={newMonitor.sslConfig.port} id="sslPort" />
+          </div>
+          <div class="relative col-span-2">
+            <Label for="degradedRemainingHours">Degraded If (in hours)</Label>
+            <Input
+              class="pl-20"
+              type="number"
+              placeholder="x hours"
+              bind:value={newMonitor.sslConfig.degradedRemainingHours}
+              id="degradedRemainingHours"
+            />
+            <span class="absolute left-2 top-9 -mt-0.5 text-sm font-medium text-muted-foreground">Expires In</span>
+          </div>
+          <div class="relative col-span-2">
+            <Label for="downRemainingHours">Down If (in hours)</Label>
+            <Input
+              class="pl-20"
+              placeholder="x hours"
+              type="number"
+              bind:value={newMonitor.sslConfig.downRemainingHours}
+              id="downRemainingHours"
+            />
+            <span class="absolute left-2 top-9 -mt-0.5 text-sm font-medium text-muted-foreground">Expires In</span>
+          </div>
+          <div class="col-span-7">
+            <span class="text-xs text-muted-foreground"
+              >Degraded Remaining Hours should be greater than Down Remaining Hours. Refer to the
+              <a target="_blank" class="font-medium text-primary" href="https://kener.ing/docs/monitors-ssl"
+                >documentation</a
+              >
+            </span>
+          </div>
+        </div>
+      {:else if newMonitor.monitor_type == "SQL"}
+        <div>
+          <div class="mt-4 flex gap-2">
+            <div class="w-36">
+              <Label for="sqlConfigdbType">Database Type</Label>
+              <Select.Root
+                portal={null}
+                onSelectedChange={(e) => {
+                  newMonitor.sqlConfig.dbType = e.value;
+                }}
+                selected={{
+                  value: newMonitor.sqlConfig.dbType,
+                  label: databaseTypes[newMonitor.sqlConfig.dbType]
+                }}
+              >
+                <Select.Trigger id="sqlConfigdbType">
+                  <Select.Value bind:value={newMonitor.sqlConfig.dbType} placeholder="DB" />
+                </Select.Trigger>
+                <Select.Content>
+                  <Select.Group>
+                    <Select.Label>Select DB</Select.Label>
+                    <Select.Item value="pg" label={databaseTypes.pg} class="text-sm font-medium">
+                      {databaseTypes.pg}
+                    </Select.Item>
+                    <Select.Item value="mysql2" label={databaseTypes.mysql2} class="text-sm font-medium">
+                      {databaseTypes.mysql2}
+                    </Select.Item>
+                  </Select.Group>
+                </Select.Content>
+              </Select.Root>
+            </div>
+            <div class="w-36">
+              <Label for="dbtimeout">Timeout(ms)</Label>
+              <Input
+                placeholder="in milliseconds"
+                type="number"
+                bind:value={newMonitor.sqlConfig.timeout}
+                id="dbtimeout"
+              />
+            </div>
+          </div>
+          <div class="mt-2 grid grid-cols-1">
+            <div class="col-span-1">
+              <Label for="connectionString">Connection String</Label>
+              <Input
+                bind:value={newMonitor.sqlConfig.connectionString}
+                id="connectionString"
+                placeholder="Enter the connection string"
+              />
+            </div>
+          </div>
+          <div class="mt-2 grid grid-cols-1">
+            <div class="col-span-1">
+              <Label for="sqlQuery">SQL Query</Label>
+              <Input bind:value={newMonitor.sqlConfig.query} id="sqlQuery" placeholder="SELECT 1" />
+            </div>
+          </div>
+          <div class="col-span-1">
+            <span class="text-xs text-muted-foreground"
+              >Refer to the
+              <a target="_blank" class="font-medium text-primary" href="https://kener.ing/docs/monitors-sql">
+                documentation
+              </a> for more details
+            </span>
+          </div>
+        </div>
+      {:else if newMonitor.monitor_type == "HEARTBEAT"}
+        <div>
+          <div class="relative mt-4 justify-start gap-x-4">
+            <p class="truncate rounded-md border bg-popover p-2 pr-8 text-sm font-medium">
+              Heart beat url: <span class="text-muted-foreground">
+                {$page.data.siteData.siteURL +
+                  `${base}/api/heartbeat/${newMonitor.tag}:${newMonitor.heartbeatConfig.secretString}`}</span
+              >
+            </p>
+            <Button
+              class="copybtn absolute right-2 top-2 flex h-6 w-6 justify-center p-1"
+              variant="ghost"
+              size="icon"
+              on:click={() =>
+                copyToClipboard(
+                  $page.data.siteData.siteURL +
+                    `${base}/api/heartbeat/${newMonitor.tag}:${newMonitor.heartbeatConfig.secretString}`
+                )}
+            >
+              <Check class="check-btn absolute  h-4 w-4 text-green-500" />
+              <Clipboard class="copy-btn absolute h-4 w-4" />
+            </Button>
+          </div>
+          <div class="mt-2 flex flex-row justify-start gap-x-4">
+            <div>
+              <Label for="degradedRemainingMinutes">Degraded or grace Period (in minutes)</Label>
+              <Input
+                placeholder="in minutes"
+                class="w-full"
+                type="number"
+                bind:value={newMonitor.heartbeatConfig.degradedRemainingMinutes}
+                id="degradedRemainingMinutes"
+              />
+            </div>
+            <div>
+              <Label for="downRemainingMinutes">Down or impacted Period (in minutes)</Label>
+              <Input
+                placeholder="in minutes"
+                type="number"
+                bind:value={newMonitor.heartbeatConfig.downRemainingMinutes}
+                id="downRemainingMinutes"
+              />
+            </div>
+          </div>
+
+          <div class="col-span-1">
+            <span class="text-xs text-muted-foreground"
+              >Refer to the
+              <a target="_blank" class="font-medium text-primary" href="https://kener.ing/docs/monitors-heartbeat">
+                documentation
+              </a> for more details
+            </span>
           </div>
         </div>
       {/if}

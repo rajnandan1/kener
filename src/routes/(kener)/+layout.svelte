@@ -186,7 +186,7 @@
       </div>
     </footer>
   {/if}
-  <div class="fixed bottom-4 right-4 z-20 rounded-md bg-background">
+  <div class="fixed bottom-4 right-4 z-20 flex flex-col rounded-md bg-background">
     {#if !!data.site.tzToggle && data.site.tzToggle === "YES"}
       <div>
         <Popover.Root>
@@ -198,8 +198,8 @@
           <Popover.Content class="px-0 py-2">
             <div class="flex flex-col gap-2">
               <div class="flex px-2 pb-1 text-xs font-semibold">
-                <span class="flex-1"
-                  >{@html l(data.lang, "Timezone set to %tz", {
+                <span class="flex-1">
+                  {@html l(data.lang, "Timezone set to %tz", {
                     tz: "<i>" + data.localTz + "</i>"
                   })}
                 </span>
@@ -271,17 +271,19 @@
       </div>
     {/if}
     {#if !!data.site.themeToggle && data.site.themeToggle === "YES"}
-      <Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
-        <Sun class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-        <Moon class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-        <span class="sr-only">Toggle theme</span>
-      </Button>
+      <div>
+        <Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
+          <Sun class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          <span class="sr-only">Toggle theme</span>
+        </Button>
+      </div>
     {/if}
   </div>
   {#if data.isLoggedIn}
-    <a href="{base}/manage/app/site" rel="external" class="button-77 fixed bottom-8 left-8 z-50" role="button">
-      Manage
-    </a>
+    <div class="fixed bottom-2 left-2 z-50 md:bottom-8 md:left-8">
+      <a href="{base}/manage/app/site" rel="external" class="button-77" role="button"> Manage </a>
+    </div>
   {/if}
 </main>
 

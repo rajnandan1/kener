@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { Database } from "lucide-svelte";
 import { GetMinuteStartNowTimestampUTC } from "../tool.js";
-import { MANUAL } from "../constants.js";
+import { MANUAL, SIGNAL } from "../constants.js";
 import Knex from "knex";
 
 class DbImpl {
@@ -36,6 +36,15 @@ class DbImpl {
   async getLatestMonitoringData(monitor_tag) {
     return await this.knex("monitoring_data")
       .where("monitor_tag", monitor_tag)
+      .orderBy("timestamp", "desc")
+      .limit(1)
+      .first();
+  }
+
+  async getLastHeartbeat(monitor_tag) {
+    return await this.knex("monitoring_data")
+      .where("monitor_tag", monitor_tag)
+      .where("type", SIGNAL)
       .orderBy("timestamp", "desc")
       .limit(1)
       .first();

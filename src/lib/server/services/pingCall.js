@@ -1,18 +1,9 @@
 // @ts-nocheck
 import axios from "axios";
 import { Ping } from "../ping.js";
-import {
-  UP,
-  DOWN,
-  DEGRADED,
-  REALTIME,
-  TIMEOUT,
-  ERROR,
-  MANUAL,
-} from "../constants.js";
+import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
 
-const defaultPingEval = `(async function (responseDataBase64) {
-	let arrayOfPings = JSON.parse(atob(responseDataBase64));
+const defaultPingEval = `(async function (arrayOfPings) {
 	let latencyTotal = arrayOfPings.reduce((acc, ping) => {
 		return acc + ping.latency;
 	}, 0);
@@ -36,9 +27,7 @@ class PingCall {
 
   async execute() {
     let hosts = this.monitor.type_data.hosts;
-    let pingEval = !!this.monitor.type_data.pingEval
-      ? this.monitor.type_data.pingEval
-      : defaultPingEval;
+    let pingEval = !!this.monitor.type_data.pingEval ? this.monitor.type_data.pingEval : defaultPingEval;
     let tag = this.monitor.tag;
     if (hosts === undefined) {
       console.log(
@@ -54,20 +43,21 @@ class PingCall {
     let arrayOfPings = [];
     for (let i = 0; i < hosts.length; i++) {
       const host = hosts[i];
-      arrayOfPings.push(
-        await Ping(host.type, host.host, host.timeout, host.count),
-      );
+      arrayOfPings.push(await Ping(host.type, host.host, host.timeout, host.count));
     }
-    let respBase64 = Buffer.from(JSON.stringify(arrayOfPings)).toString(
-      "base64",
-    );
 
     let evalResp = undefined;
 
     try {
-      evalResp = await eval(pingEval + `("${respBase64}")`);
+      const evalFunction = new Function("arrayOfPings", `return (${pingEval})(arrayOfPings);`);
+      evalResp = await evalFunction(arrayOfPings);
     } catch (error) {
       console.log(`Error in pingEval for ${tag}`, error.message);
+      return {
+        status: DOWN,
+        latency: 0,
+        type: ERROR,
+      };
     }
     //reduce to get the status
     return {
