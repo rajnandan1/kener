@@ -104,7 +104,7 @@
         <Accordion.Content>
           <div class="px-4 pt-2">
             {#if incident.monitors.length > 0}
-              <div class="flex gap-2">
+              <div class="flex flex-wrap gap-2">
                 {#each incident.monitors as monitor}
                   <div class="tag-affected-text flex gap-x-2 rounded-md bg-secondary px-1 py-1 pr-2">
                     <div
