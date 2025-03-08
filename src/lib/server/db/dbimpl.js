@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { GetMinuteStartNowTimestampUTC } from "../tool.js";
+import { GetMinuteStartNowTimestampUTC, GetDbType } from "../tool.js";
 import { MANUAL, SIGNAL } from "../constants.js";
 import Knex from "knex";
 
@@ -458,20 +458,39 @@ class DbImpl {
   }
 
   async createIncident(data) {
-    const [incident] = await this.knex("incidents")
-      .insert({
-        title: data.title,
-        start_date_time: data.start_date_time,
-        end_date_time: data.end_date_time,
-        status: data.status,
-        state: data.state,
-        created_at: this.knex.fn.now(),
-        updated_at: this.knex.fn.now(),
-        incident_type: data.incident_type,
-        incident_source: data.incident_source,
-      })
-      .returning("*");
-    return incident;
+    const dbType = GetDbType(); // sqlite, postgresql, mysql
+
+    // Common insert data
+    const insertData = {
+      title: data.title,
+      start_date_time: data.start_date_time,
+      end_date_time: data.end_date_time,
+      status: data.status,
+      state: data.state,
+      created_at: this.knex.fn.now(),
+      updated_at: this.knex.fn.now(),
+      incident_type: data.incident_type,
+      incident_source: data.incident_source,
+    };
+
+    // PostgreSQL supports returning clause
+    if (dbType === "postgresql") {
+      const [incident] = await this.knex("incidents").insert(insertData).returning("*");
+      return incident;
+    }
+    // MySQL and SQLite need different approaches
+    else {
+      // Insert and get the ID
+      const result = await this.knex("incidents").insert(insertData);
+
+      // Different handling for MySQL vs SQLite
+      let id = result[0];
+
+      // Fetch the newly created record
+      const incident = await this.knex("incidents").where("id", id).first();
+
+      return incident;
+    }
   }
 
   //get incidents paginated
