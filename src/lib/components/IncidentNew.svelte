@@ -31,18 +31,6 @@
     incidentTimeStatus = "COMPLETED";
   }
 
-  let isFuture = false;
-  let isOngoing = false;
-  //is future incident
-  if (nowTime < startTime) {
-    isFuture = true;
-  }
-
-  //is ongoing incident
-  if (nowTime > startTime && nowTime < endTime) {
-    isOngoing = true;
-  }
-
   let accordionValue = "incident-0";
   if ($page.data.site.incidentGroupView == "COLLAPSED") {
     accordionValue = "incident-collapse";
