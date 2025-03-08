@@ -633,7 +633,6 @@
                         variant="ghost"
                         class="h-5 w-5 p-1"
                         size="icon"
-                        disabled={incident.isAutoCreated}
                         on:click={(e) => {
                           showEditModal(incident);
                         }}

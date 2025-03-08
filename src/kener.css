@@ -41,7 +41,8 @@
 .squares-pattern::after {
   content: "";
   position: absolute;
-  background-image: linear-gradient(#444cf7 1px, transparent 1px),
+  background-image:
+    linear-gradient(#444cf7 1px, transparent 1px),
     linear-gradient(to right, #444cf7 1px, var(--background-kener) 1px);
   -webkit-mask-image: linear-gradient(
     180deg,
@@ -87,7 +88,8 @@
     rgba(0, 0, 0, 0.03125) 80%,
     rgba(0, 0, 0, 0) 100%
   );
-  background-image: linear-gradient(#616fbf 1px, transparent 1px),
+  background-image:
+    linear-gradient(#616fbf 1px, transparent 1px),
     linear-gradient(to right, #616fbf 1px, var(--background-kener) 1px);
 }
 
@@ -476,7 +478,8 @@ textarea::placeholder {
 }
 
 .mesh {
-  background-image: linear-gradient(
+  background-image:
+    linear-gradient(
       323deg,
       rgba(255, 255, 255, 0.01) 0%,
       rgba(255, 255, 255, 0.01) 16.667%,
@@ -607,7 +610,8 @@ textarea::placeholder {
 }
 
 .dark .mesh {
-  background-image: linear-gradient(
+  background-image:
+    linear-gradient(
       158deg,
       rgba(84, 84, 84, 0.03) 0%,
       rgba(84, 84, 84, 0.03) 20%,
@@ -821,7 +825,8 @@ textarea::placeholder {
 }
 
 .button-77:active:not(:disabled):after {
-  background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)),
+  background-image:
+    linear-gradient(0deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.2)),
     linear-gradient(92.83deg, #ff7426 0, #f93a13 100%);
   bottom: 4px;
   left: 4px;
@@ -870,5 +875,33 @@ textarea::placeholder {
   }
   to {
     transform: rotate(15deg);
+  }
+}
+.dots-animation::after {
+  content: ".";
+  animation: dots 1.5s steps(4) infinite;
+}
+
+@keyframes dots {
+  0% {
+    content: ".";
+  }
+  16% {
+    content: "..";
+  }
+  32% {
+    content: "...";
+  }
+  48% {
+    content: "....";
+  }
+  64% {
+    content: "...";
+  }
+  80% {
+    content: "..";
+  }
+  100% {
+    content: ".";
   }
 }

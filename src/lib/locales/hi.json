@@ -48,6 +48,7 @@
   "Standard": "मानक",
   "Started %startedAt, lasted for %lastedFor": "%startedAt शुरू हुआ, %lastedFor तक चला",
   "Started %startedAt, still ongoing": "%startedAt शुरू हुआ, अभी भी जारी है",
+  "Started %startedAt, will last for %lastedFor more": "%startedAt शुरू होगा, %lastedFor और चलेगा",
   "Starts %startedAt, will last for %lastedFor": "%startedAt में शुरू होगा, %lastedFor तक चलेगा",
   "Starts %startedAt": "%startedAt में शुरू होगा",
   "Status OK": "स्थिति ठीक है",

@@ -48,6 +48,7 @@
   "Standard": "標準",
   "Started %startedAt, lasted for %lastedFor": "%startedAt 前に開始し、約 %lastedFor 続きました",
   "Started %startedAt, still ongoing": "%startedAt 前に開始し、まだ進行中です",
+  "Started %startedAt, will last for %lastedFor more": "%startedAt 前に開始し、さらに %lastedFor 続きます",
   "Starts %startedAt, will last for %lastedFor": "%startedAt 後に開始し、約 %lastedFor 続きます",
   "Starts %startedAt": "%startedAt 後に開始",
   "Status OK": "ステータス正常",

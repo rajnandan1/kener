@@ -48,6 +48,7 @@
   "Standard": "标准",
   "Started %startedAt, lasted for %lastedFor": "大约 %startedAt 前开始，持续了约 %lastedFor",
   "Started %startedAt, still ongoing": "大约 %startedAt 前开始，目前仍在进行中",
+  "Started %startedAt, will last for %lastedFor more": "大约 %startedAt 前开始，将持续约 %lastedFor",
   "Starts %startedAt, will last for %lastedFor": "%startedAt 后开始，将持续约 %lastedFor",
   "Starts %startedAt": "%startedAt 后开始",
   "Status OK": "状态正常",

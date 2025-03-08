@@ -48,6 +48,7 @@
   "Standard": "Standard",
   "Started %startedAt, lasted for %lastedFor": "Begann vor etwa %startedAt und dauerte etwa %lastedFor",
   "Started %startedAt, still ongoing": "Begann vor etwa %startedAt und dauert noch an",
+  "Started %startedAt, will last for %lastedFor more": "Begann vor etwa %startedAt und wird noch etwa %lastedFor dauern",
   "Starts %startedAt, will last for %lastedFor": "Beginnt in %startedAt und wird etwa %lastedFor dauern",
   "Starts %startedAt": "Beginnt in %startedAt",
   "Status OK": "Status OK",

@@ -48,6 +48,7 @@
   "Standard": "Standaard",
   "Started %startedAt, lasted for %lastedFor": "Begonnen ongeveer %startedAt geleden, duurde ongeveer %lastedFor",
   "Started %startedAt, still ongoing": "Begonnen ongeveer %startedAt geleden, nog steeds bezig",
+  "Started %startedAt, will last for %lastedFor more": "Begint %startedAt, zal nog ongeveer %lastedFor duren",
   "Starts %startedAt, will last for %lastedFor": "Begint over %startedAt, zal ongeveer %lastedFor duren",
   "Starts %startedAt": "Begint over %startedAt",
   "Status OK": "Status OK",

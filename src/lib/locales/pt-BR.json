@@ -48,6 +48,7 @@
   "Standard": "Padrão",
   "Started %startedAt, lasted for %lastedFor": "Ocorreu faz %startedAt e durou %lastedFor",
   "Started %startedAt, still ongoing": "Iniciou faz %startedAt, ainda em andamento",
+  "Started %startedAt, will last for %lastedFor more": "Iniciará em %startedAt, durará mais %lastedFor",
   "Starts %startedAt, will last for %lastedFor": "Terá início em %startedAt, com duração de %lastedFor",
   "Starts %startedAt": "Inicia em %startedAt",
   "Status OK": "Status OK",

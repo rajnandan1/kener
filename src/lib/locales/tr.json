@@ -48,6 +48,7 @@
   "Standard": "Standart",
   "Started %startedAt, lasted for %lastedFor": "%startedAt başladı, %lastedFor sürdü",
   "Started %startedAt, still ongoing": "%startedAt başladı, devam ediyor",
+  "Started %startedAt, will last for %lastedFor more": "%startedAt başladı, %lastedFor daha sürecek",
   "Starts %startedAt, will last for %lastedFor": "%startedAt başlıyor, %lastedFor sürecek",
   "Starts %startedAt": "%startedAt başlıyor",
   "Status OK": "Durum UYGUN",

@@ -48,6 +48,7 @@
   "Standard": "Tiêu chuẩn",
   "Started %startedAt, lasted for %lastedFor": "Bắt đầu khoảng %startedAt trước, kéo dài khoảng %lastedFor",
   "Started %startedAt, still ongoing": "Bắt đầu khoảng %startedAt trước, vẫn đang diễn ra",
+  "Started %startedAt, will last for %lastedFor more": "Bắt đầu khoảng %startedAt trước, sẽ kéo dài thêm khoảng %lastedFor",
   "Starts %startedAt, will last for %lastedFor": "Bắt đầu trong %startedAt, sẽ kéo dài khoảng %lastedFor",
   "Starts %startedAt": "Bắt đầu trong %startedAt",
   "Status OK": "Trạng thái OK",
