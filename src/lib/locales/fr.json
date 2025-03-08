@@ -48,6 +48,7 @@
   "Standard": "Standard",
   "Started %startedAt, lasted for %lastedFor": "Commencé il y a environ %startedAt, a duré environ %lastedFor",
   "Started %startedAt, still ongoing": "Commencé il y a environ %startedAt, toujours en cours",
+  "Started %startedAt, will last for %lastedFor more": "Commencé il y a environ %startedAt, durera environ %lastedFor de plus",
   "Starts %startedAt, will last for %lastedFor": "Commence dans %startedAt, durera environ %lastedFor",
   "Starts %startedAt": "Commence dans %startedAt",
   "Status OK": "Statut OK",

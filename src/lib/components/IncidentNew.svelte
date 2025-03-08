@@ -1,16 +1,16 @@
 <script>
   import { formatDistanceToNow, formatDistance } from "date-fns";
-  import { Settings } from "lucide-svelte";
+  import { Settings, ArrowRight } from "lucide-svelte";
   import * as Accordion from "$lib/components/ui/accordion";
   import { l, f, fd, fdn } from "$lib/i18n/client";
   import { base } from "$app/paths";
   import { Button } from "$lib/components/ui/button";
+  import { Tooltip } from "bits-ui";
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
   export let incident;
   export let index;
   export let lang;
-  export let selectedLang = "en";
   let startTime = new Date(incident.start_date_time * 1000);
   let endTime = new Date();
   let nowTime = new Date();
@@ -18,13 +18,17 @@
     endTime = new Date(incident.end_date_time * 1000);
   }
   let incidentType = incident.incident_type;
-  const lastedFor = fd(startTime, endTime, selectedLang);
-  const startedAt = fdn(startTime, selectedLang);
+  const lastedFor = fd(startTime, endTime, $page.data.selectedLang);
+  const remainingTime = fd(nowTime, endTime, $page.data.selectedLang);
+  const startedAt = fdn(startTime, $page.data.selectedLang);
 
-  let isFuture = false;
-  //is future incident
+  let incidentTimeStatus = "";
   if (nowTime < startTime) {
-    isFuture = true;
+    incidentTimeStatus = "YET_TO_START";
+  } else if (nowTime >= startTime && nowTime <= endTime) {
+    incidentTimeStatus = "ONGOING";
+  } else if (nowTime > endTime) {
+    incidentTimeStatus = "COMPLETED";
   }
 
   let accordionValue = "incident-0";
@@ -37,30 +41,36 @@
   let incidentDateSummary = "";
   let maintenanceBadge = "";
   let maintenanceBadgeColor = "";
-  if (!isFuture && incident.state != "RESOLVED") {
-    incidentDateSummary = l(lang, "Started %startedAt, still ongoing", {
+
+  if (incidentTimeStatus == "YET_TO_START") {
+    incidentDateSummary = l($page.data.lang, "Starts %startedAt", { startedAt });
+    if (incidentType === "MAINTENANCE") {
+      incidentDateSummary = l($page.data.lang, "Starts %startedAt, will last for %lastedFor", {
+        startedAt,
+        lastedFor
+      });
+      maintenanceBadge = "Upcoming Maintenance";
+      maintenanceBadgeColor = "text-upcoming-maintenance";
+    }
+  } else if (incidentTimeStatus == "ONGOING") {
+    incidentDateSummary = l($page.data.lang, "Started %startedAt, still ongoing", {
       startedAt
     });
-    maintenanceBadge = "Maintenance in Progress";
-    maintenanceBadgeColor = "text-maintenance-in-progress";
-  } else if (!isFuture && incident.state == "RESOLVED") {
-    incidentDateSummary = l(lang, "Started %startedAt, lasted for %lastedFor", {
+    if (incidentType === "MAINTENANCE") {
+      incidentDateSummary = l($page.data.lang, "Started %startedAt, will last for %lastedFor more", {
+        startedAt,
+        lastedFor: remainingTime
+      });
+      maintenanceBadge = "Maintenance in Progress";
+      maintenanceBadgeColor = "text-maintenance-in-progress";
+    }
+  } else if (incidentTimeStatus == "COMPLETED") {
+    incidentDateSummary = l($page.data.lang, "Started %startedAt, lasted for %lastedFor", {
       startedAt,
       lastedFor
     });
     maintenanceBadge = "Maintenance Completed";
     maintenanceBadgeColor = "text-maintenance-completed";
-  } else if (isFuture && incident.state != "RESOLVED") {
-    incidentDateSummary = l(lang, "Starts %startedAt", { startedAt });
-    maintenanceBadge = "Upcoming Maintenance";
-    maintenanceBadgeColor = "text-upcoming-maintenance";
-  } else if (isFuture && incident.state == "RESOLVED") {
-    incidentDateSummary = l(lang, "Starts %startedAt, will last for %lastedFor", {
-      startedAt,
-      lastedFor
-    });
-    maintenanceBadge = "Upcoming Maintenance";
-    maintenanceBadgeColor = "text-upcoming-maintenance";
   }
 </script>
 
@@ -73,11 +83,11 @@
             <p class="flex gap-x-2 text-xs font-semibold">
               {#if incidentType == "INCIDENT"}
                 <span class="badge-{incident.state}">
-                  {l(lang, incident.state)}
+                  {l($page.data.lang, incident.state)}
                 </span>
               {:else if incidentType == "MAINTENANCE"}
                 <span class="{maintenanceBadgeColor}  ">
-                  {l(lang, maintenanceBadge)}
+                  {l($page.data.lang, maintenanceBadge)}
                 </span>
               {/if}
               {#if $page.data.isLoggedIn}
@@ -91,20 +101,48 @@
               {/if}
             </p>
 
-            <p class="scroll-m-20 text-lg font-medium tracking-tight">
+            <p class="font-medium">
               {incident.title}
             </p>
             {#if !!incidentDateSummary}
-              <p class="scroll-m-20 text-sm font-medium tracking-wide text-muted-foreground">
-                {incidentDateSummary}
-              </p>
+              <Tooltip.Root openDelay={100} side="bottom" align="end">
+                <Tooltip.Trigger
+                  class=" text-ellipsis whitespace-nowrap text-xs font-medium tracking-normal    text-muted-foreground"
+                >
+                  {incidentDateSummary}
+                </Tooltip.Trigger>
+                <Tooltip.Content class=" z-20 mt-11" side="bottom" align="end">
+                  <div
+                    class="items-center justify-center rounded border bg-primary px-1.5 py-1 text-xs font-medium text-primary-foreground shadow-popover"
+                  >
+                    {f(
+                      new Date(incident.start_date_time * 1000),
+                      "MMMM do yyyy, h:mm:ss a",
+                      $page.data.selectedLang,
+                      $page.data.localTz
+                    )}
+                    {#if incident.end_date_time}
+                      <ArrowRight class="mx-1 -mt-0.5 inline h-3 w-3" />
+                      {f(
+                        new Date(incident.end_date_time * 1000),
+                        "MMMM do yyyy, h:mm:ss a",
+                        $page.data.selectedLang,
+                        $page.data.localTz
+                      )}
+                    {:else}
+                      <ArrowRight class="mx-1 -mt-0.5 inline h-3 w-3" />
+                      <span class="dots-animation inline-block w-6 text-left"></span>
+                    {/if}
+                  </div>
+                </Tooltip.Content>
+              </Tooltip.Root>
             {/if}
           </div>
         </Accordion.Trigger>
         <Accordion.Content>
           <div class="px-4 pt-2">
             {#if incident.monitors.length > 0}
-              <div class="flex gap-2">
+              <div class="flex flex-wrap gap-2">
                 {#each incident.monitors as monitor}
                   <div class="tag-affected-text flex gap-x-2 rounded-md bg-secondary px-1 py-1 pr-2">
                     <div
@@ -123,7 +161,7 @@
               </div>
             {/if}
             <p class="my-3 text-xs font-semibold uppercase text-muted-foreground">
-              {l(lang, "Updates")}
+              {l($page.data.lang, "Updates")}
             </p>
             {#if incident.comments.length > 0}
               {#if incidentType == "INCIDENT"}
@@ -133,14 +171,14 @@
                       <div
                         class="absolute top-0 w-28 -translate-x-32 rounded border bg-secondary px-1.5 py-1 text-center text-xs font-semibold"
                       >
-                        {l(lang, comment.state)}
+                        {l($page.data.lang, comment.state)}
                       </div>
 
                       <time class=" mb-1 text-sm font-medium leading-none text-muted-foreground">
                         {f(
                           new Date(comment.commented_at * 1000),
                           "MMMM do yyyy, h:mm:ss a",
-                          selectedLang,
+                          $page.data.selectedLang,
                           $page.data.localTz
                         )}
                       </time>
@@ -159,7 +197,7 @@
                         {f(
                           new Date(comment.commented_at * 1000),
                           "MMMM do yyyy, h:mm:ss a",
-                          selectedLang,
+                          $page.data.selectedLang,
                           $page.data.localTz
                         )}
                       </time>
@@ -173,7 +211,7 @@
               {/if}
             {:else}
               <p class="text-sm font-medium">
-                {l(lang, "No Updates Yet")}
+                {l($page.data.lang, "No Updates Yet")}
               </p>
             {/if}
           </div>

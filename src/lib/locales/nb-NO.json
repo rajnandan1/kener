@@ -48,6 +48,7 @@
   "Standard": "Standard",
   "Started %startedAt, lasted for %lastedFor": "Startet %startedAt, varte i %lastedFor",
   "Started %startedAt, still ongoing": "Startet %startedAt, fortsatt pågår",
+  "Started %startedAt, will last for %lastedFor more": "Startet %startedAt, vil vare i %lastedFor til",
   "Starts %startedAt, will last for %lastedFor": "Starter %startedAt, vil vare i %lastedFor",
   "Starts %startedAt": "Starter %startedAt",
   "Status OK": "Status OK",

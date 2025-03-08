@@ -48,6 +48,7 @@
   "Standard": "Стандартная",
   "Started %startedAt, lasted for %lastedFor": "Началось около %startedAt назад, длилось около %lastedFor",
   "Started %startedAt, still ongoing": "Началось около %startedAt назад, все еще продолжается",
+  "Started %startedAt, will last for %lastedFor more": "Начнется около %startedAt, продлится еще около %lastedFor",
   "Starts %startedAt, will last for %lastedFor": "Начнется через %startedAt, продлится около %lastedFor",
   "Starts %startedAt": "Начнется через %startedAt",
   "Status OK": "Статус ОК",

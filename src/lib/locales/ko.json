@@ -48,6 +48,7 @@
   "Standard": "기본",
   "Started %startedAt, lasted for %lastedFor": "%startedAt 전에 시작되었으며, %lastedFor 동안 지속되었습니다",
   "Started %startedAt, still ongoing": "%startedAt 전에 시작되었으며, 아직 진행중입니다",
+  "Started %startedAt, will last for %lastedFor more": "%startedAt 전에 시작되었으며, %lastedFor 더 지속될 예정입니다",
   "Starts %startedAt, will last for %lastedFor": "%startedAt 전에 시작되었으며, %lastedFor 까지 지속될 예정입니다",
   "Starts %startedAt": "%startedAt 에 시작되었습니다",
   "Status OK": "양호",
