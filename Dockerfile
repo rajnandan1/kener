@@ -120,6 +120,13 @@ COPY --chown=node:node --from=builder /app/main.js ./main.js
 COPY --chown=node:node --from=builder /app/openapi.json ./openapi.json
 COPY --chown=node:node --from=builder /app/openapi.yaml ./openapi.yaml
 
+# Install libcap tools before setting capabilities
+RUN if [ -f "/etc/alpine-release" ]; then \
+      apk add --no-cache libcap; \
+    else \
+      apt-get update && apt-get install -y libcap2-bin && rm -rf /var/lib/apt/lists/*; \
+    fi
+
 # Set capabilities for ping (before changing to non-root user)
 RUN if [ -f "/etc/alpine-release" ]; then \
       # Alpine path
