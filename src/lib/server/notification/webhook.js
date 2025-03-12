@@ -13,7 +13,7 @@ class Webhook {
   constructor(trigger_meta, method, siteData, monitorData) {
     const kenerHeader = {
       "Content-Type": "application/json",
-      "User-Agent": "Kener/3.2.2",
+      "User-Agent": "Kener/3.2.3",
     };
     let headers = trigger_meta.headers;
     this.trigger_meta = trigger_meta;

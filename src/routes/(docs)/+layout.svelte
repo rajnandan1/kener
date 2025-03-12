@@ -110,7 +110,7 @@
             <!-- Document Icon - Replace with your own logo -->
             <img src="https://kener.ing/logo.png" class="h-8 w-8" alt="" />
             <span class="text-xl font-medium">Kener Documentation</span>
-            <span class="me-2 rounded border px-2.5 py-0.5 text-xs font-medium"> 3.2.2 </span>
+            <span class="me-2 rounded border px-2.5 py-0.5 text-xs font-medium"> 3.2.3 </span>
           </a>
         </div>
 
@@ -202,7 +202,7 @@
           </div>
           <div class="flex items-center space-x-3">
             <a
-              href="https://github.com/sponsors/rajnandan1"
+              href="https://buymeacoffee.com/rajnandan1"
               class="rounded-md bg-amber-500 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-amber-600"
             >
               Sponsor
