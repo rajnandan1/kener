@@ -202,7 +202,7 @@
           </div>
           <div class="flex items-center space-x-3">
             <a
-              href="https://github.com/sponsors/rajnandan1"
+              href="https://buymeacoffee.com/rajnandan1"
               class="rounded-md bg-amber-500 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-amber-600"
             >
               Sponsor

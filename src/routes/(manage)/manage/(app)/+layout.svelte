@@ -158,18 +158,18 @@
       <!-- List -->
       <ul class="flex flex-wrap items-center">
         <li
-          class="before:size-[3px] relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
+          class="relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:size-[3px] before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
         >
           <a
             target="_blank"
             class="text-xs font-medium text-muted-foreground hover:underline hover:decoration-1 focus:decoration-1 focus:outline-none"
-            href="https://github.com/sponsors/rajnandan1"
+            href="https://buymeacoffee.com/rajnandan1"
           >
             Donate
           </a>
         </li>
         <li
-          class="before:size-[3px] relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
+          class="relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:size-[3px] before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
         >
           <a
             target="_blank"
@@ -180,7 +180,7 @@
           </a>
         </li>
         <li
-          class="before:size-[3px] relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
+          class="relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:size-[3px] before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
         >
           <a
             target="_blank"
@@ -191,7 +191,7 @@
           </a>
         </li>
         <li
-          class="before:size-[3px] relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
+          class="relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:size-[3px] before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
         >
           <a
             target="_blank"
