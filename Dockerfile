@@ -119,6 +119,7 @@ COPY --chown=node:node --from=builder /app/knexfile.js ./knexfile.js
 COPY --chown=node:node --from=builder /app/main.js ./main.js
 COPY --chown=node:node --from=builder /app/openapi.json ./openapi.json
 COPY --chown=node:node --from=builder /app/openapi.yaml ./openapi.yaml
+COPY --chown=node:node --from=builder /app/package.json ./package.json
 
 # Install libcap tools before setting capabilities
 RUN if [ -f "/etc/alpine-release" ]; then \
