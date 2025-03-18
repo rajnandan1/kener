@@ -2,6 +2,7 @@
 import dotenv from "dotenv";
 import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vite";
+import version from "vite-plugin-package-version";
 
 dotenv.config();
 
@@ -11,34 +12,35 @@ const VITE_BUILD_ENV = process.env.VITE_BUILD_ENV || "development"; // Default t
 const isProduction = VITE_BUILD_ENV === "production";
 
 export default defineConfig(({ mode }) => ({
-	plugins: [
-		sveltekit({
-			compilerOptions: {
-				dev: mode === "development"
-			},
-			onwarn: (warning, handler) => {
-				// Suppress specific warnings in production
-				const ignoredWarnings = [
-					"a11y-", // Accessibility warnings
-					"unused-export-let", // Suppresses "unused export property" warnings
-					"empty-chunk", // Suppresses empty chunk warnings
-					"module-unused-import", // Suppresses unused imports like "default" from auto-animate
-					"conflicting-svelte-resolve" // Suppresses conflicting resolve warnings
-				];
+  plugins: [
+    sveltekit({
+      compilerOptions: {
+        dev: mode === "development",
+      },
+      onwarn: (warning, handler) => {
+        // Suppress specific warnings in production
+        const ignoredWarnings = [
+          "a11y-", // Accessibility warnings
+          "unused-export-let", // Suppresses "unused export property" warnings
+          "empty-chunk", // Suppresses empty chunk warnings
+          "module-unused-import", // Suppresses unused imports like "default" from auto-animate
+          "conflicting-svelte-resolve", // Suppresses conflicting resolve warnings
+        ];
 
-				if (isProduction && ignoredWarnings.some((w) => warning.code && warning.code.startsWith(w))) {
-					return; // Ignore these warnings in production builds
-				}
+        if (isProduction && ignoredWarnings.some((w) => warning.code && warning.code.startsWith(w))) {
+          return; // Ignore these warnings in production builds
+        }
 
-				handler(warning);
-			}
-		})
-	],
-	server: {
-		port: PORT,
-		watch: {
-			ignored: ["**/src/lib/server/data/**"] // Adjust the path to the file you want to ignore
-		}
-	},
-	assetsInclude: ["**/*.yaml"]
+        handler(warning);
+      },
+    }),
+    version(),
+  ],
+  server: {
+    port: PORT,
+    watch: {
+      ignored: ["**/src/lib/server/data/**"], // Adjust the path to the file you want to ignore
+    },
+  },
+  assetsInclude: ["**/*.yaml"],
 }));

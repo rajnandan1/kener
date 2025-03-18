@@ -10,6 +10,8 @@
   import { Button } from "$lib/components/ui/button";
   import { afterNavigate } from "$app/navigation";
 
+  const version = import.meta.env.PACKAGE_VERSION;
+
   import { Play, User } from "lucide-svelte";
   import { setMode, mode, ModeWatcher } from "mode-watcher";
 
@@ -22,7 +24,7 @@
     }
   }
 
-  setMode("dark");
+  // setMode("dark");
 
   let nav = [
     { name: "Site", url: `${base}/manage/app/site`, id: "/(manage)/manage/(app)/app/site" },
@@ -53,6 +55,16 @@
       name: "API Keys",
       url: `${base}/manage/app/api-keys`,
       id: "/(manage)/manage/(app)/app/api-keys"
+    },
+    {
+      name: "Users",
+      url: `${base}/manage/app/users`,
+      id: "/(manage)/manage/(app)/app/users"
+    },
+    {
+      name: "Profile",
+      url: `${base}/manage/app/profile`,
+      id: "/(manage)/manage/(app)/app/profile"
     }
   ];
 
@@ -107,6 +119,9 @@
             <DropdownMenu.Label class="text-xs">My Account</DropdownMenu.Label>
             <DropdownMenu.Separator />
             <DropdownMenu.Item class="text-xs font-semibold">
+              <a href="{base}/manage/app/profile">Profile</a>
+            </DropdownMenu.Item>
+            <DropdownMenu.Item class="text-xs font-semibold">
               <a
                 href="{base}/manage/signin/logout"
                 on:click={(e) => {
@@ -147,9 +162,9 @@
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div>
         <p class="text-xs text-muted-foreground">
-          Kener.ing by <a
-            class="text-xs font-semibold text-muted-foreground hover:underline"
-            href="https://www.rajnandan.com">Raj Nandan Sharma</a
+          Kener.ing v{version} by
+          <a class="text-xs font-semibold text-muted-foreground hover:underline" href="https://www.rajnandan.com"
+            >Raj Nandan Sharma</a
           >
         </p>
       </div>

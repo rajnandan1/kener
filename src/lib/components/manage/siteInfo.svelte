@@ -431,11 +431,9 @@
             {/if}
           </div>
         </div>
-        <div class="flex w-full justify-end">
-          <p class="px-4 pt-3 text-sm">
-            <span class="text-red-500">
-              {formErrorMessage}
-            </span>
+        <div class="flex w-full justify-end gap-x-2">
+          <p class="py-2 text-sm font-medium text-destructive">
+            {formErrorMessage}
           </p>
           <Button type="submit" disabled={formState === "loading"}>
             Save

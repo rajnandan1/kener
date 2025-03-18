@@ -3,6 +3,16 @@ import { FetchData } from "$lib/server/page";
 import { GetMonitors, GetIncidentsOpenHome } from "$lib/server/controllers/controller.js";
 import { SortMonitor } from "$lib/clientTools.js";
 import moment from "moment";
+import { performance } from "perf_hooks";
+
+// Helper function to log performance metrics
+function logPerformance(operation, startTime) {
+  const endTime = performance.now();
+  const timeSpent = (endTime - startTime).toFixed(2);
+  console.log(`[PERF] ${operation}: ${timeSpent}ms`);
+  return timeSpent;
+}
+
 function removeTags(str) {
   if (str === null || str === "") return false;
   else str = str.toString();
@@ -11,6 +21,8 @@ function removeTags(str) {
 }
 
 async function returnTypeOfMonitorsPageMeta(url) {
+  const perfStart = performance.now();
+
   const query = url.searchParams;
   let filter = {
     status: "ACTIVE",
@@ -29,7 +41,10 @@ async function returnTypeOfMonitorsPageMeta(url) {
   }
 
   if (!!query.get("group")) {
+    const groupStart = performance.now();
     let g = await GetMonitors({ status: "ACTIVE", tag: query.get("group") });
+    logPerformance(`GetMonitors for group ${query.get("group")}`, groupStart);
+
     if (g.length > 0) {
       group = g[0];
       let typeData = JSON.parse(g[0].type_data);
@@ -39,14 +54,25 @@ async function returnTypeOfMonitorsPageMeta(url) {
     }
   }
 
+  const monitorStart = performance.now();
   let monitors = await GetMonitors(filter);
+  logPerformance(`GetMonitors with filter ${JSON.stringify(filter)}`, monitorStart);
+
+  logPerformance("returnTypeOfMonitorsPageMeta total", perfStart);
   return { monitors, pageType, group };
 }
 
 export async function load({ parent, url }) {
+  const totalLoadStart = performance.now();
+  console.log("[PERF] Starting page load");
+
   const query = url.searchParams;
 
+  const metaStart = performance.now();
   let { monitors, pageType, group } = await returnTypeOfMonitorsPageMeta(url);
+  logPerformance("returnTypeOfMonitorsPageMeta", metaStart);
+
+  const processStart = performance.now();
   let hiddenGroupedMonitorsTags = [];
   for (let i = 0; i < monitors.length; i++) {
     if (pageType === "home" && monitors[i].monitor_type === "GROUP") {
@@ -101,11 +127,12 @@ export async function load({ parent, url }) {
     monitors[i].activeIncidents = [];
     monitorsActive.push(monitors[i]);
   }
+  logPerformance("process monitors", processStart);
 
   let startWithin = moment().subtract(siteData.homeIncidentStartTimeWithin, "days").unix();
   let endWithin = moment().add(siteData.homeIncidentStartTimeWithin, "days").unix();
   let allOpenIncidents = await GetIncidentsOpenHome(siteData.homeIncidentCount, startWithin, endWithin);
-
+  logPerformance("GetIncidentsOpenHome", processStart);
   //if not home page
   let isCategoryPage = pageType === "category";
   let isMonitorPage = pageType === "monitor";
@@ -185,6 +212,7 @@ export async function load({ parent, url }) {
 
   let allRecentIncidents = allOpenIncidents.filter((incident) => incident.incident_type == "INCIDENT");
   let allRecentMaintenances = allOpenIncidents.filter((incident) => incident.incident_type == "MAINTENANCE");
+  logPerformance("Total load", totalLoadStart);
   return {
     monitors: monitorsActive,
     allRecentIncidents,

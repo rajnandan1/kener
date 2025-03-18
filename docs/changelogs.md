@@ -7,6 +7,70 @@ description: Changelogs for Kener
 
 Here are the changelogs for Kener. Changelogs are only published when there are new features or breaking changes.
 
+## v3.2.5
+
+<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.webp" type="image/webp">
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.gif" alt="🚀" width="32" height="32">
+</picture>
+
+### Features
+
+- **Role-Based Access Control**
+
+    - Added comprehensive user management with 3 roles: admin, editor, and member
+    - Role-specific permissions for triggers, incidents, and settings
+    - Members have read-only access to most features while editors can manage content
+
+- **User Management System**
+
+    - New user profiles with account settings
+    - User activation/deactivation controls for admins
+    - Password strength validation and secure password reset flow
+    - Self-service profile management for all users
+
+- **Email Authentication System**
+
+    - Email verification workflow for new users
+    - Support for both Resend API and SMTP email delivery
+    - Password reset via email with secure token-based authentication
+    - Professionally designed HTML email templates
+
+- **Invitation System**
+    - Token-based invitation workflow for new users
+    - Secure invitation links with expiration dates
+    - Admin controls for managing invitations
+
+### Improvements
+
+- **Performance Enhancements**
+
+    - Added performance monitoring for critical page loads
+    - Improved data loading efficiency for monitors page
+    - Better caching and state management
+
+- **Security Upgrades**
+
+    - Improved password validation and security practices
+    - Secure token handling for authentication workflows
+    - Session management improvements
+
+- **UI Refinements**
+
+    - Consistent version display throughout the application
+    - Improved error messaging and form validation feedback
+    - Role-specific UI elements that adapt to user permissions
+    - Better modal designs for user management workflows
+
+- **Developer Experience**
+    - Refactored code structure for better maintainability
+    - Improved error handling across authentication flows
+    - Version information automatically pulled from package.json
+
+### Migration Notes
+
+This update is fully backward compatible with existing installations. User accounts created before this update will retain admin privileges by default.
+
 ## v3.2.1
 
 <picture>

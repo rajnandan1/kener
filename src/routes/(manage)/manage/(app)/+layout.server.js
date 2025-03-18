@@ -1,8 +1,5 @@
 // @ts-nocheck
-import {
-  GetAllSiteData,
-  VerifyToken,
-} from "$lib/server/controllers/controller.js";
+import { GetAllSiteData, VerifyToken, IsLoggedInSession } from "$lib/server/controllers/controller.js";
 import { redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
 import { MaskString } from "$lib/server/tool.js";
@@ -15,29 +12,18 @@ export async function load({ params, route, url, cookies, request }) {
   if (process.env.KENER_SECRET_KEY === undefined) {
     throw redirect(302, base + "/manage/setup");
   }
-  let tokenData = cookies.get("kener-user");
 
-  if (!!!tokenData) {
-    //redirect to signin page if user is not authenticated
-    throw redirect(302, base + "/manage/signin");
+  let userDB = null;
+  let isLoggedIn = await IsLoggedInSession(cookies);
+  if (!!isLoggedIn.error) {
+    throw redirect(302, base + isLoggedIn.location);
   }
 
-  //get user by email
-  let tokenUser = await VerifyToken(tokenData);
-  if (!!!tokenUser) {
-    //redirect to signin page if user is not authenticated
-    throw redirect(302, base + "/manage/signin/logout");
-  }
-  let userDB = await db.getUserByEmail(tokenUser.email);
-  if (!!!userDB) {
-    //redirect to signin page if user is not authenticated
-    throw redirect(302, base + "/manage/signin");
-  }
+  userDB = isLoggedIn.user;
 
   return {
     siteData,
-    KENER_SECRET_KEY: !!process.env.KENER_SECRET_KEY
-      ? MaskString(process.env.KENER_SECRET_KEY)
-      : "",
+    KENER_SECRET_KEY: !!process.env.KENER_SECRET_KEY ? MaskString(process.env.KENER_SECRET_KEY) : "",
+    user: userDB,
   };
 }

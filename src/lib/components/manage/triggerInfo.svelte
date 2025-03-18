@@ -1,5 +1,6 @@
 <script>
   import { Button } from "$lib/components/ui/button";
+  import { page } from "$app/stores";
   import { Plus, X, Loader, Settings, Check, ChevronRight } from "lucide-svelte";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
@@ -346,10 +347,12 @@
       <Loader class="ml-2 mt-2 inline h-6 w-6 animate-spin" />
     {/if}
   </div>
-  <Button on:click={addNewTriggerFn}>
-    <Plus class="mr-2 inline h-6 w-6" />
-    New Trigger
-  </Button>
+  {#if $page.data.user.role != "member"}
+    <Button on:click={addNewTriggerFn}>
+      <Plus class="mr-2 inline h-6 w-6" />
+      New Trigger
+    </Button>
+  {/if}
 </div>
 
 <div class="mt-4">
@@ -382,12 +385,13 @@
             {#if trigger.testLoaders == "success"}
               <Check class="mr-1 inline h-3 w-3 text-green-500 " />
             {/if}
-            <span class="h-4 text-xs font-medium"> TEST </span>
+            <span class="h-4 text-xs font-medium"> Test Trigger </span>
           </Button>
-
-          <Button variant="secondary" class=" h-8 w-8 p-2" href={"#" + trigger.id}>
-            <Settings class="inline h-4 w-4" />
-          </Button>
+          {#if $page.data.user.role != "member"}
+            <Button variant="secondary" class=" h-8 w-8 p-2" href={"#" + trigger.id}>
+              <Settings class="inline h-4 w-4" />
+            </Button>
+          {/if}
         </div>
       </Card.Header>
     </Card.Root>
@@ -675,11 +679,11 @@
       </div>
       <div class="absolute bottom-0 grid h-16 w-full grid-cols-6 justify-end gap-2 border-t p-3 pr-6">
         <div class="col-span-5 py-2.5">
-          <p class="text-right text-xs font-medium text-red-500">{invalidFormMessage}</p>
+          <p class="text-right text-sm font-medium text-destructive">{invalidFormMessage}</p>
         </div>
         <div class="col-span-1">
           <Button class="col-span-1 w-full" disabled={formState === "loading"} on:click={addNewTrigger}>
-            Save
+            Save Trigger
             {#if formState === "loading"}
               <Loader class="ml-2 inline h-4 w-4 animate-spin" />
             {/if}

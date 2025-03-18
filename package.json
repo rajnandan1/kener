@@ -107,7 +107,8 @@
     "resend": "^4.0.1",
     "svelte-legos": "^0.2.5",
     "tailwind-merge": "^2.0.0",
-    "tailwind-variants": "^0.1.18"
+    "tailwind-variants": "^0.1.18",
+    "vite-plugin-package-version": "^1.1.0"
   },
   "engines": {
     "node": ">=20.0.0"

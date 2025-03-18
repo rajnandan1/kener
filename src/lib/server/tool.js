@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { AllRecordTypes } from "./constants.js";
 import knexOb from "../../../knexfile.js";
+import crypto from "crypto";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -286,6 +287,11 @@ function GetDbType() {
   //sqlite, postgresql, mysql
   return knexOb.databaseType;
 }
+function HashString(str) {
+  const hash = crypto.createHash("sha256");
+  hash.update(str);
+  return hash.digest("hex");
+}
 
 export {
   IsValidURL,
@@ -315,4 +321,5 @@ export {
   Wait,
   MaskString,
   GetDbType,
+  HashString,
 };
