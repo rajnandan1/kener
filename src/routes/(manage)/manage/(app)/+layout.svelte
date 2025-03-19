@@ -100,9 +100,6 @@
       <h1 class="font-semibold">Manage Kener</h1>
     </div>
     <div class="flex">
-      <Button variant="ghost" size="icon" target="_blank" href="https://github.com/rajnandan1/kener" class="flex">
-        <Github class="h-4 w-4 " />
-      </Button>
       <Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
         <Sun class="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
         <Moon class="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
@@ -162,10 +159,20 @@
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div>
         <p class="text-xs text-muted-foreground">
-          Kener.ing v{version} by
-          <a class="text-xs font-semibold text-muted-foreground hover:underline" href="https://www.rajnandan.com"
-            >Raj Nandan Sharma</a
+          Kener.ing
+          <a
+            target="_blank"
+            class="text-xs font-semibold text-muted-foreground hover:underline"
+            href="https://kener.ing/docs/changelogs#v{version.replaceAll('.', '-')}">v{version}</a
           >
+          by
+          <a
+            target="_blank"
+            class="text-xs font-semibold text-muted-foreground hover:underline"
+            href="https://www.rajnandan.com"
+          >
+            Raj Nandan Sharma
+          </a>
         </p>
       </div>
       <!-- End Col -->
@@ -214,6 +221,17 @@
             href="https://github.com/rajnandan1/kener"
           >
             Github
+          </a>
+        </li>
+        <li
+          class="relative inline-block pe-4 text-xs before:absolute before:end-1.5 before:top-1/2 before:size-[3px] before:-translate-y-1/2 before:rounded-full before:bg-gray-400 last:pe-0 last-of-type:before:hidden dark:text-neutral-500 dark:before:bg-neutral-600"
+        >
+          <a
+            target="_blank"
+            class="text-xs font-medium text-muted-foreground hover:underline hover:decoration-1 focus:decoration-1 focus:outline-none"
+            href="https://kener.ing/docs/home"
+          >
+            Documentation
           </a>
         </li>
       </ul>

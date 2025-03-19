@@ -28,6 +28,7 @@
 
   async function saveName() {
     savingName = true;
+    invalidFormMessage = "";
     try {
       let data = await fetch(base + "/manage/app/api/", {
         method: "POST",
@@ -113,7 +114,31 @@
 <div class="min-h-[70vh]">
   <Card.Root class="mt-4">
     <Card.Header class="border-b">
-      <Card.Title>Your Profile</Card.Title>
+      <Card.Title class="flex justify-between">
+        <div>Your Profile</div>
+
+        <div class="text-sm font-medium uppercase text-muted-foreground">
+          {#if $page.data.user.role === "editor"}
+            <span
+              class="me-2 rounded-sm bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+            >
+              {$page.data.user.role}
+            </span>
+          {:else if $page.data.user.role === "member"}
+            <span
+              class="me-2 rounded-sm bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+            >
+              {$page.data.user.role}
+            </span>
+          {:else if $page.data.user.role === "admin"}
+            <span
+              class="me-2 rounded-sm bg-pink-100 px-2.5 py-0.5 text-xs font-medium text-pink-800 dark:bg-pink-900 dark:text-pink-300"
+            >
+              {$page.data.user.role}
+            </span>
+          {/if}
+        </div>
+      </Card.Title>
       <Card.Description>Configure your profile information here.</Card.Description>
     </Card.Header>
     <Card.Content class="flex flex-col gap-y-8 pt-4">
@@ -146,30 +171,7 @@
           </Button>
         </Alert.Root>
       {/if}
-      <div class="flex-col gap-y-2">
-        <div>Role</div>
-        <div class="text-sm font-medium uppercase text-muted-foreground">
-          {#if $page.data.user.role === "editor"}
-            <span
-              class="me-2 rounded-sm bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-            >
-              {$page.data.user.role}
-            </span>
-          {:else if $page.data.user.role === "member"}
-            <span
-              class="me-2 rounded-sm bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
-            >
-              {$page.data.user.role}
-            </span>
-          {:else if $page.data.user.role === "admin"}
-            <span
-              class="me-2 rounded-sm bg-pink-100 px-2.5 py-0.5 text-xs font-medium text-pink-800 dark:bg-pink-900 dark:text-pink-300"
-            >
-              {$page.data.user.role}
-            </span>
-          {/if}
-        </div>
-      </div>
+
       <div class="flex-col gap-y-2">
         <form class="flex flex-row gap-x-2" on:submit|preventDefault={saveName}>
           <div class="flex w-64 flex-col gap-y-2">
@@ -188,8 +190,7 @@
         </form>
         <p>
           {#if invalidFormMessage}
-            <div class="flex flex-row items-center gap-x-2 rounded-md py-2 text-sm font-medium text-red-500">
-              <Info class="h-4 w-4" />
+            <div class="flex flex-row items-center gap-x-2 rounded-md py-2 text-sm font-medium text-destructive">
               <span>{invalidFormMessage}</span>
             </div>
           {/if}
@@ -209,7 +210,7 @@
             />
           </div>
           <div class="flex w-64 flex-col gap-y-2">
-            <Label for="plainPassword">Re-Enter Password</Label>
+            <Label for="plainPassword">Confirm Password</Label>
             <Input
               disabled={resettingPass}
               type="text"

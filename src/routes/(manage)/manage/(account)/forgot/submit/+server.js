@@ -52,8 +52,6 @@ export async function POST({ request, cookies }) {
     brand_name: siteName.value,
   };
 
-  console.log(">>>>>>----  +server:54 ", emailData);
-
   await SendEmailWithTemplate(forgotPasswordTemplate, emailData, email, subject, emailText);
   throw redirect(302, base + "/manage/forgot?view=sent&email=" + email);
 }
