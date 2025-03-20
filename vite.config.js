@@ -12,6 +12,15 @@ const VITE_BUILD_ENV = process.env.VITE_BUILD_ENV || "development"; // Default t
 const isProduction = VITE_BUILD_ENV === "production";
 
 export default defineConfig(({ mode }) => ({
+  optimizeDeps: {
+    exclude: [
+      "svelte-codemirror-editor",
+      "codemirror",
+      "@codemirror/language-javascript",
+      "@uiw/codemirror-theme-github",
+      "@codemirror/language-json" /* ... */,
+    ],
+  },
   plugins: [
     sveltekit({
       compilerOptions: {

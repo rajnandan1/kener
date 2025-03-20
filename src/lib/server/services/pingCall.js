@@ -2,21 +2,7 @@
 import axios from "axios";
 import { Ping } from "../ping.js";
 import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
-
-const defaultPingEval = `(async function (arrayOfPings) {
-	let latencyTotal = arrayOfPings.reduce((acc, ping) => {
-		return acc + ping.latency;
-	}, 0);
-
-	let alive = arrayOfPings.reduce((acc, ping) => {
-		return acc && ping.alive;
-	}, true);
-
-	return {
-		status: alive ? 'UP' : 'DOWN',
-		latency: latencyTotal / arrayOfPings.length,
-	}
-})`;
+import { DefaultPingEval } from "../../anywhere.js";
 
 class PingCall {
   monitor;
@@ -27,7 +13,7 @@ class PingCall {
 
   async execute() {
     let hosts = this.monitor.type_data.hosts;
-    let pingEval = !!this.monitor.type_data.pingEval ? this.monitor.type_data.pingEval : defaultPingEval;
+    let pingEval = !!this.monitor.type_data.pingEval ? this.monitor.type_data.pingEval : DefaultPingEval;
     let tag = this.monitor.tag;
     if (hosts === undefined) {
       console.log(

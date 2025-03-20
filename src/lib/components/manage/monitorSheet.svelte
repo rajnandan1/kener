@@ -10,6 +10,10 @@
   import { createEventDispatcher } from "svelte";
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
+  import CodeMirror from "svelte-codemirror-editor";
+  import { javascript } from "@codemirror/lang-javascript";
+  import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
+  import { mode } from "mode-watcher";
   import {
     allRecordTypes,
     ValidateIpAddress,
@@ -100,8 +104,8 @@
       return false;
     }
     try {
-      // let evalResp = await eval(newMonitor.apiConfig.eval + `(200, 1000, "e30=")`);
       new Function(ev);
+
       return true; // The code is valid
     } catch (error) {
       invalidFormMessage = error.message + " in eval.";
@@ -728,12 +732,23 @@
                 href="https://kener.ing/docs/monitors-api#eval">Read the docs</a
               > to learn
             </p>
-            <textarea
-              bind:value={newMonitor.apiConfig.eval}
-              id="eval"
-              class="h-96 w-full rounded-sm border p-2"
-              placeholder="Leave blank or write a custom eval function"
-            ></textarea>
+
+            <div class="overflow-hidden rounded-md">
+              <CodeMirror
+                bind:value={newMonitor.apiConfig.eval}
+                lang={javascript()}
+                theme={$mode == "dark" ? githubDark : githubLight}
+                styles={{
+                  "&": {
+                    width: "100%",
+                    maxWidth: "100%",
+                    height: "18rem",
+                    border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                    borderRadius: "0.375rem"
+                  }
+                }}
+              />
+            </div>
           </div>
         </div>
       {:else if newMonitor.monitor_type == "PING"}
@@ -823,12 +838,23 @@
                   href="https://kener.ing/docs/monitors-ping#eval">Read the docs</a
                 > to learn
               </p>
-              <textarea
-                bind:value={newMonitor.pingConfig.pingEval}
-                id="pingEval"
-                class="h-96 w-full rounded-sm border p-2"
-                placeholder="Leave blank or write a custom eval function"
-              ></textarea>
+
+              <div class="overflow-hidden rounded-md">
+                <CodeMirror
+                  bind:value={newMonitor.pingConfig.pingEval}
+                  lang={javascript()}
+                  theme={$mode == "dark" ? githubDark : githubLight}
+                  styles={{
+                    "&": {
+                      width: "100%",
+                      maxWidth: "100%",
+                      height: "18rem",
+                      border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                      borderRadius: "0.375rem"
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -914,12 +940,22 @@
                   href="https://kener.ing/docs/monitors-tcp#eval">Read the docs</a
                 > to learn
               </p>
-              <textarea
-                bind:value={newMonitor.tcpConfig.tcpEval}
-                id="tcpEval"
-                class="h-96 w-full rounded-sm border p-2"
-                placeholder="Leave blank or write a custom eval function"
-              ></textarea>
+              <div class="overflow-hidden rounded-md">
+                <CodeMirror
+                  bind:value={newMonitor.tcpConfig.tcpEval}
+                  lang={javascript()}
+                  theme={$mode == "dark" ? githubDark : githubLight}
+                  styles={{
+                    "&": {
+                      width: "100%",
+                      maxWidth: "100%",
+                      height: "22rem",
+                      border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                      borderRadius: "0.375rem"
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>

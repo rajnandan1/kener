@@ -14,6 +14,7 @@
   import { flip } from "svelte/animate";
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
+  import { DefaultAPIEval, DefaultTCPEval, DefaultPingEval } from "$lib/anywhere.js";
 
   export let categories = [];
   export let colorDown = "#777";
@@ -71,16 +72,16 @@
         headers: [],
         body: "",
         timeout: 10000,
-        eval: "",
+        eval: DefaultAPIEval,
         hideURLForGet: "NO"
       },
       tcpConfig: {
         hosts: [], //{timeout: 1000, host: "", type:""}
-        tcpEval: ""
+        tcpEval: DefaultTCPEval
       },
       pingConfig: {
         hosts: [], //{timeout: 1000, host: "", count: "", type:""}
-        pingEval: ""
+        pingEval: DefaultPingEval
       },
       dnsConfig: {
         host: "",

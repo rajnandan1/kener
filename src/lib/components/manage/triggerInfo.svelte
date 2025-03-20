@@ -10,8 +10,14 @@
   import { createEventDispatcher } from "svelte";
   import { onMount } from "svelte";
   import { IsValidURL } from "$lib/clientTools.js";
+  import { DiscordJSONTemplate, WebhookJSONTemplate, SlackJSONTemplate } from "$lib/anywhere.js";
   import { clickOutsideAction, slide } from "svelte-legos";
   import * as Card from "$lib/components/ui/card";
+  import CodeMirror from "svelte-codemirror-editor";
+  import { json } from "@codemirror/lang-json";
+  import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
+  import { mode } from "mode-watcher";
+
   let status = "ACTIVE";
   let formState = "idle";
   let showAddTrigger = false;
@@ -30,8 +36,12 @@
       headers: [],
       to: "",
       from: data.fromEmail,
-      webhook_body: "",
+      webhook_body: WebhookJSONTemplate,
       has_webhook_body: false,
+      has_discord_body: false,
+      discord_body: DiscordJSONTemplate,
+      has_slack_body: false,
+      slack_body: SlackJSONTemplate,
       email_type: data.preferredModeEmail,
       smtp_host: data.smtp?.smtp_host ? data.smtp.smtp_host : "",
       smtp_port: data.smtp?.smtp_port ? data.smtp.smtp_port : "",
@@ -53,8 +63,12 @@
         headers: [],
         to: "",
         from: data.fromEmail,
-        webhook_body: "",
+        webhook_body: WebhookJSONTemplate,
         has_webhook_body: false,
+        has_discord_body: false,
+        discord_body: DiscordJSONTemplate,
+        has_slack_body: false,
+        slack_body: SlackJSONTemplate,
         email_type: data.preferredModeEmail,
         smtp_host: data.smtp?.smtp_host ? data.smtp.smtp_host : "",
         smtp_port: data.smtp?.smtp_port ? data.smtp.smtp_port : "",
@@ -92,12 +106,34 @@
 
   async function addNewTrigger() {
     invalidFormMessage = "";
-    formState = "loading";
+    // formState = "loading";
     //newTrigger.trigger_type present not empty
     if (newTrigger.trigger_type == "") {
       invalidFormMessage = "Trigger Type is required";
       formState = "idle";
       return;
+    }
+    if (newTrigger.trigger_type == "discord") {
+      if (newTrigger.trigger_meta.has_discord_body) {
+        try {
+          JSON.parse(newTrigger.trigger_meta.discord_body);
+        } catch (e) {
+          invalidFormMessage = "Invalid JSON in Discord Body";
+          formState = "idle";
+          return;
+        }
+      }
+    }
+    if (newTrigger.trigger_type == "slack") {
+      if (newTrigger.trigger_meta.has_slack_body) {
+        try {
+          JSON.parse(newTrigger.trigger_meta.slack_body);
+        } catch (e) {
+          invalidFormMessage = "Invalid JSON in Slack Body";
+          formState = "idle";
+          return;
+        }
+      }
     }
 
     if (newTrigger.trigger_type == "email") {
@@ -555,7 +591,7 @@
                 </Button>
               </div>
               <div>
-                <label>
+                <label class="text-sm font-medium">
                   <input
                     on:change={(e) => {
                       newTrigger.trigger_meta.has_webhook_body = e.target.checked;
@@ -576,15 +612,107 @@
                     that you can use for the webhook body. To use a variable wrap it like
                     <code>$&#123;variable&#125;</code>
                   </p>
-                  <div class="w-full">
-                    <textarea
+
+                  <div class="overflow-hidden rounded-md">
+                    <CodeMirror
                       bind:value={newTrigger.trigger_meta.webhook_body}
-                      class="mt-2 h-[500px] w-full rounded-sm border p-2"
-                      placeholder={placeholderWebhookBody}
-                    ></textarea>
+                      lang={json()}
+                      theme={$mode == "dark" ? githubDark : githubLight}
+                      styles={{
+                        "&": {
+                          width: "100%",
+                          maxWidth: "100%",
+                          height: "320px",
+                          border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                          borderRadius: "0.375rem"
+                        }
+                      }}
+                    />
                   </div>
                 {/if}
               </div>
+            </div>
+          {:else if newTrigger.trigger_type == "slack"}
+            <div class="mt-4 flex w-full flex-col gap-y-2">
+              <div>
+                <label class="text-sm font-medium">
+                  <input
+                    on:change={(e) => {
+                      newTrigger.trigger_meta.has_slack_body = e.target.checked;
+                    }}
+                    type="checkbox"
+                    checked={newTrigger.trigger_meta.has_slack_body}
+                  />
+                  Use Custom Slack Payload
+                </label>
+              </div>
+              {#if !!newTrigger.trigger_meta.has_slack_body}
+                <p class="my-2 text-xs text-muted-foreground">
+                  You can use a custom slack body. You can use mustache to generate a body. There are <a
+                    target="_blank"
+                    class="text-blue-500"
+                    href="https://kener.ing/docs/triggers#slack-body">variables</a
+                  >
+                  that you can use for the slack body.
+                </p>
+                <div class="overflow-hidden rounded-md">
+                  <CodeMirror
+                    bind:value={newTrigger.trigger_meta.slack_body}
+                    lang={json()}
+                    theme={$mode == "dark" ? githubDark : githubLight}
+                    styles={{
+                      "&": {
+                        width: "100%",
+                        maxWidth: "100%",
+                        height: "320px",
+                        border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                        borderRadius: "0.375rem"
+                      }
+                    }}
+                  />
+                </div>
+              {/if}
+            </div>
+          {:else if newTrigger.trigger_type == "discord"}
+            <div class="mt-4 flex w-full flex-col gap-y-2">
+              <div>
+                <label class="text-sm font-medium">
+                  <input
+                    on:change={(e) => {
+                      newTrigger.trigger_meta.has_discord_body = e.target.checked;
+                    }}
+                    type="checkbox"
+                    checked={newTrigger.trigger_meta.has_discord_body}
+                  />
+                  Use Custom Discord Payload
+                </label>
+              </div>
+              {#if !!newTrigger.trigger_meta.has_discord_body}
+                <p class="my-2 text-xs text-muted-foreground">
+                  You can use a custom discord body. You can use mustache to generate a body. There are <a
+                    target="_blank"
+                    class="text-blue-500"
+                    href="https://kener.ing/docs/triggers#discord-body">variables</a
+                  >
+                  that you can use for the discord body.
+                </p>
+                <div class="overflow-hidden rounded-md">
+                  <CodeMirror
+                    bind:value={newTrigger.trigger_meta.discord_body}
+                    lang={json()}
+                    theme={$mode == "dark" ? githubDark : githubLight}
+                    styles={{
+                      "&": {
+                        width: "100%",
+                        maxWidth: "100%",
+                        height: "320px",
+                        border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                        borderRadius: "0.375rem"
+                      }
+                    }}
+                  />
+                </div>
+              {/if}
             </div>
           {:else if newTrigger.trigger_type == "email"}
             <div class="mt-4 w-full">

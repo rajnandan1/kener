@@ -1,6 +1,9 @@
 // @ts-nocheck
 
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
+import Mustache from "mustache";
+import { WebhookJSONTemplate } from "../../anywhere.js";
+import variables from "./variables.js";
 
 class Webhook {
   url;
@@ -52,8 +55,13 @@ class Webhook {
   }
 
   transformData(data) {
-    if (!!!this.trigger_meta.has_webhook_body) return JSON.stringify(data);
-    if (!!!this.trigger_meta.webhook_body) return JSON.stringify(data);
+    let view = variables(this.siteData, data);
+
+    if (!!!this.trigger_meta.has_webhook_body || !!!this.trigger_meta.webhook_body) {
+      return Mustache.render(WebhookJSONTemplate, view);
+    }
+
+    //have to keep this for backward compatibility
     let body = this.trigger_meta.webhook_body;
     body = ReplaceAllOccurrences(body, "${id}", data.id);
     body = ReplaceAllOccurrences(body, "${alert_name}", data.alert_name);
@@ -67,7 +75,9 @@ class Webhook {
     body = ReplaceAllOccurrences(body, "${threshold}", data.details.threshold);
     body = ReplaceAllOccurrences(body, "${action_text}", data.actions[0].text);
     body = ReplaceAllOccurrences(body, "${action_url}", data.actions[0].url);
-    return body;
+    //have to keep this for backward compatibility
+
+    return Mustache.render(body, view);
   }
 
   type() {
@@ -81,6 +91,9 @@ class Webhook {
         headers: this.headers,
         body: this.transformData(data),
       });
+      if (!response.ok) {
+        throw new Error(`Error from webhook`);
+      }
       return response;
     } catch (error) {
       console.error("Error sending webhook", error);

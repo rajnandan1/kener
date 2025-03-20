@@ -16,6 +16,20 @@ Here are the changelogs for Kener. Changelogs are only published when there are 
 
 ### Features
 
+- **CodeMirror Editor Integration**
+
+    - Added professional code editing for all JavaScript and JSON fields
+    - Syntax highlighting and error checking for monitor evaluation functions
+    - Light and dark theme support that matches your application theme
+    - Improved editing experience for webhook, Slack, and Discord notification templates
+
+- **Enhanced Trigger Configuration**
+
+    - Redesigned JSON template editors for notification payloads
+    - Added support for custom Discord and Slack body templates
+    - Better visualization of webhook and notification payloads
+    - Improved variable templating for all notification types
+
 - **Role-Based Access Control**
 
     - Added comprehensive user management with 3 roles: admin, editor, and member
