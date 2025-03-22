@@ -207,7 +207,7 @@
 
           await addNewComment(resp.incident_id);
         }
-        showModal = false;
+        closeModal();
       }
     } catch (error) {
       invalidFormMessage = "Error while saving data";
