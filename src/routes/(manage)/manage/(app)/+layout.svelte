@@ -9,9 +9,7 @@
   import Github from "lucide-svelte/icons/github";
   import { Button } from "$lib/components/ui/button";
   import { afterNavigate } from "$app/navigation";
-
-  const version = import.meta.env.PACKAGE_VERSION;
-
+  import { page } from "$app/stores";
   import { Play, User } from "lucide-svelte";
   import { setMode, mode, ModeWatcher } from "mode-watcher";
 
@@ -23,7 +21,6 @@
       setMode("light");
     }
   }
-
   // setMode("dark");
 
   let nav = [
@@ -168,8 +165,10 @@
           <a
             target="_blank"
             class="text-xs font-semibold text-muted-foreground hover:underline"
-            href="https://kener.ing/docs/changelogs#v{version.replaceAll('.', '-')}">v{version}</a
+            href="https://kener.ing/docs/changelogs#v{$page.data.kenerVersion.replaceAll('.', '-')}"
           >
+            v{$page.data.kenerVersion}
+          </a>
           by
           <a
             target="_blank"

@@ -4,6 +4,7 @@ import { redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
 import { MaskString } from "$lib/server/tool.js";
 import db from "$lib/server/db/db.js";
+import version from "$lib/version.js";
 //write a function to mask a string, just have last 4 characters visible
 
 export async function load({ params, route, url, cookies, request }) {
@@ -25,5 +26,6 @@ export async function load({ params, route, url, cookies, request }) {
     siteData,
     KENER_SECRET_KEY: !!process.env.KENER_SECRET_KEY ? MaskString(process.env.KENER_SECRET_KEY) : "",
     user: userDB,
+    kenerVersion: version(),
   };
 }

@@ -11,6 +11,7 @@
   import Moon from "lucide-svelte/icons/moon";
   import { onMount } from "svelte";
   import { base } from "$app/paths";
+  import { page } from "$app/stores";
   let defaultTheme = "light";
   export let data;
   let siteStructure = data.siteStructure;
@@ -111,7 +112,7 @@
             <img src="https://kener.ing/logo.png" class="h-8 w-8" alt="" />
             <span class="text-xl font-medium">Kener Documentation</span>
             <span class="me-2 rounded border px-2.5 py-0.5 text-xs font-medium">
-              {import.meta.env.PACKAGE_VERSION}
+              {$page.data.kenerVersion}
             </span>
           </a>
         </div>

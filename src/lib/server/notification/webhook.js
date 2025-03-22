@@ -4,6 +4,7 @@ import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import Mustache from "mustache";
 import { WebhookJSONTemplate } from "../../anywhere.js";
 import variables from "./variables.js";
+import version from "../../version.js";
 
 class Webhook {
   url;
@@ -16,7 +17,7 @@ class Webhook {
   constructor(trigger_meta, method, siteData, monitorData) {
     const kenerHeader = {
       "Content-Type": "application/json",
-      "User-Agent": "Kener/3.2.5",
+      "User-Agent": `Kener/${version()}`,
     };
     let headers = trigger_meta.headers;
     this.trigger_meta = trigger_meta;

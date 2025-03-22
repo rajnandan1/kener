@@ -3,6 +3,7 @@ import variables from "./variables.js";
 import { SlackJSONTemplate } from "../../anywhere.js";
 import Mustache from "mustache";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
+import version from "../../version.js";
 
 class Slack {
   url;
@@ -15,7 +16,7 @@ class Slack {
   constructor(url, siteData, monitorData, trigger_meta) {
     const kenerHeader = {
       "Content-Type": "application/json",
-      "User-Agent": "Kener",
+      "User-Agent": `Kener/${version()}`,
     };
 
     this.url = url;

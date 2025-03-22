@@ -3,6 +3,7 @@ import Mustache from "mustache";
 import { DiscordJSONTemplate } from "../../anywhere.js";
 import variables from "./variables.js";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
+import version from "../../version.js";
 
 class Discord {
   url;
@@ -15,7 +16,7 @@ class Discord {
   constructor(url, siteData, monitorData, trigger_meta) {
     const kenerHeader = {
       "Content-Type": "application/json",
-      "User-Agent": "Kener",
+      "User-Agent": `Kener/${version()}`,
     };
 
     this.url = url;
