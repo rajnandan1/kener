@@ -65,20 +65,27 @@
   //function to find next and previous path
   function findNextAndPreviousPath() {
     let structure = data.siteStructure.sidebar;
-    for (let i = 0; i < structure.length; i++) {
-      let children = structure[i].children;
 
-      for (let j = 0; j < children.length; j++) {
-        if (children[j].file === data.docFilePath) {
-          if (j > 0) {
-            previousPath = children[j - 1];
-          }
-          if (j < children.length - 1) {
-            nextPath = children[j + 1];
-          }
-          break;
-        }
+    // Flatten the structure - combine all children arrays into one
+    const flattenedPages = [];
+
+    for (let i = 0; i < structure.length; i++) {
+      const section = structure[i];
+      if (section.children && Array.isArray(section.children)) {
+        flattenedPages.push(...section.children);
       }
+    }
+
+    // Find current page index in the flattened array
+    const currentIndex = flattenedPages.findIndex((page) => page.file === data.docFilePath);
+
+    // Set previous and next paths if they exist
+    if (currentIndex > 0) {
+      previousPath = flattenedPages[currentIndex - 1];
+    }
+
+    if (currentIndex < flattenedPages.length - 1) {
+      nextPath = flattenedPages[currentIndex + 1];
     }
   }
 

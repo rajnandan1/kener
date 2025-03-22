@@ -1,6 +1,6 @@
 // @ts-nocheck
 import nodemailer from "nodemailer";
-import { HashString } from "../controllers/controller.js";
+import { HashString } from "../tool.js";
 const transports = {};
 export default function getSMTPTransport(meta) {
   //convert meta to string and generate has id

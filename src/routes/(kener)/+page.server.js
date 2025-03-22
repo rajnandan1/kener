@@ -3,6 +3,7 @@ import { FetchData } from "$lib/server/page";
 import { GetMonitors, GetIncidentsOpenHome } from "$lib/server/controllers/controller.js";
 import { SortMonitor } from "$lib/clientTools.js";
 import moment from "moment";
+
 function removeTags(str) {
   if (str === null || str === "") return false;
   else str = str.toString();
@@ -29,7 +30,9 @@ async function returnTypeOfMonitorsPageMeta(url) {
   }
 
   if (!!query.get("group")) {
+    const groupStart = performance.now();
     let g = await GetMonitors({ status: "ACTIVE", tag: query.get("group") });
+
     if (g.length > 0) {
       group = g[0];
       let typeData = JSON.parse(g[0].type_data);
@@ -39,14 +42,20 @@ async function returnTypeOfMonitorsPageMeta(url) {
     }
   }
 
+  const monitorStart = performance.now();
   let monitors = await GetMonitors(filter);
   return { monitors, pageType, group };
 }
 
 export async function load({ parent, url }) {
+  const totalLoadStart = performance.now();
+
   const query = url.searchParams;
 
+  const metaStart = performance.now();
   let { monitors, pageType, group } = await returnTypeOfMonitorsPageMeta(url);
+
+  const processStart = performance.now();
   let hiddenGroupedMonitorsTags = [];
   for (let i = 0; i < monitors.length; i++) {
     if (pageType === "home" && monitors[i].monitor_type === "GROUP") {

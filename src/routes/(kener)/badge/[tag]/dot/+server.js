@@ -1,14 +1,34 @@
 // @ts-nocheck
-import { GetMonitors } from "$lib/server/controllers/controller.js";
+import { GetMonitors, GetLatestMonitoringData, GetLatestStatusActiveAll } from "$lib/server/controllers/controller.js";
 import StatusColor from "$lib/color.js";
 import { makeBadge } from "badge-maker";
-import db from "$lib/server/db/db.js";
+import { ErrorSvg } from "$lib/anywhere.js";
 
 export async function GET({ params, setHeaders, url }) {
   // @ts-ignore
   let monitors = await GetMonitors({ status: "ACTIVE" });
-  const { tag } = monitors.find((monitor) => monitor.tag === params.tag);
-  const lastObj = await db.getLatestMonitoringData(tag);
+  let lastObj;
+  let activeTags = monitors.map((monitor) => monitor.tag);
+  if (params.tag == "_") {
+    lastObj = await GetLatestStatusActiveAll(activeTags);
+  } else {
+    if (monitors.length === 0) {
+      return new Response(ErrorSvg, {
+        headers: {
+          "Content-Type": "image/svg+xml",
+        },
+      });
+    }
+    let m = monitors.find((monitor) => monitor.tag === params.tag);
+    if (!m) {
+      return new Response(ErrorSvg, {
+        headers: {
+          "Content-Type": "image/svg+xml",
+        },
+      });
+    }
+    lastObj = await GetLatestMonitoringData(params.tag);
+  }
   //read query params
   const query = url.searchParams;
   const animate = query.get("animate") || "";

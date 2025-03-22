@@ -2,25 +2,7 @@
 import axios from "axios";
 import { TCP } from "../ping.js";
 import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
-
-const defaultTcpEval = `(async function (arrayOfPings) {
-	let latencyTotal = arrayOfPings.reduce((acc, ping) => {
-		return acc + ping.latency;
-	}, 0);
-
-	let alive = arrayOfPings.reduce((acc, ping) => {
-		if (ping.status === "open") {
-			return acc && true;
-		} else {
-			return false;
-		}
-	}, true);
-
-	return {
-		status: alive ? 'UP' : 'DOWN',
-		latency: latencyTotal / arrayOfPings.length,
-	}
-})`;
+import { DefaultTCPEval } from "../../anywhere.js";
 
 class TcpCall {
   monitor;
@@ -31,7 +13,7 @@ class TcpCall {
 
   async execute() {
     let hosts = this.monitor.type_data.hosts;
-    let tcpEval = !!this.monitor.type_data.tcpEval ? this.monitor.type_data.tcpEval : defaultTcpEval;
+    let tcpEval = !!this.monitor.type_data.tcpEval ? this.monitor.type_data.tcpEval : DefaultTCPEval;
     let tag = this.monitor.tag;
 
     if (hosts === undefined) {

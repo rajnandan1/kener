@@ -7,36 +7,35 @@ const isProduction = VITE_BUILD_ENV === "production";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	kit: {
-		adapter: adapter(),
-		paths: {
-			base: basePath
-		}
-	},
+  kit: {
+    adapter: adapter(),
+    paths: {
+      base: basePath,
+    },
+  },
+  preprocess: [vitePreprocess({})],
 
-	preprocess: [vitePreprocess({})],
+  compilerOptions: {
+    dev: !isProduction, // Disable dev mode in production
+    enableSourcemap: !isProduction, // Disable sourcemaps in production
+  },
 
-	compilerOptions: {
-		dev: !isProduction, // Disable dev mode in production
-		enableSourcemap: !isProduction // Disable sourcemaps in production
-	},
+  onwarn: (warning, handler) => {
+    // Suppress specific warnings in production
+    const ignoredWarnings = [
+      "a11y-", // Accessibility warnings
+      "unused-export-let", // Suppresses "unused export property" warnings
+      "empty-chunk", // Suppresses empty chunk warnings
+      "module-unused-import", // Suppresses unused imports like "default" from auto-animate
+      "conflicting-svelte-resolve", // Suppresses conflicting resolve warnings
+    ];
 
-	onwarn: (warning, handler) => {
-		// Suppress specific warnings in production
-		const ignoredWarnings = [
-			"a11y-", // Accessibility warnings
-			"unused-export-let", // Suppresses "unused export property" warnings
-			"empty-chunk", // Suppresses empty chunk warnings
-			"module-unused-import", // Suppresses unused imports like "default" from auto-animate
-			"conflicting-svelte-resolve" // Suppresses conflicting resolve warnings
-		];
+    if (isProduction && ignoredWarnings.some((w) => warning.code && warning.code.startsWith(w))) {
+      return; // Ignore these warnings in production builds
+    }
 
-		if (isProduction && ignoredWarnings.some((w) => warning.code && warning.code.startsWith(w))) {
-			return; // Ignore these warnings in production builds
-		}
-
-		handler(warning); // Otherwise, show the warning
-	}
+    handler(warning); // Otherwise, show the warning
+  },
 };
 
 export default config;

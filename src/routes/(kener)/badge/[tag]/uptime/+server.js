@@ -2,18 +2,32 @@
 import { ParseUptime, GetMinuteStartNowTimestampUTC } from "$lib/server/tool.js";
 import { makeBadge } from "badge-maker";
 import moment from "moment";
-import db from "$lib/server/db/db.js";
 import {
   GetMonitors,
   GetLastStatusBefore,
   InterpolateData,
   AggregateData,
+  GetMonitoringData,
+  GetMonitoringDataAll,
+  GetSiteDataByKey,
+  GetLastStatusBeforeAll,
 } from "$lib/server/controllers/controller.js";
+import { ErrorSvg } from "$lib/anywhere.js";
 
 export async function GET({ params, url }) {
   // @ts-ignore
   let monitors = await GetMonitors({ status: "ACTIVE" });
-  const { name, tag, include_degraded_in_downtime } = monitors.find((monitor) => monitor.tag === params.tag);
+  if (monitors.length === 0) {
+    return new Response(ErrorSvg, {
+      headers: {
+        "Content-Type": "image/svg+xml",
+      },
+    });
+  }
+
+  let name, tag, include_degraded_in_downtime;
+  const siteName = await GetSiteDataByKey("siteName");
+
   const query = url.searchParams;
   let sinceLast = query.get("sinceLast");
   if (sinceLast == undefined || isNaN(sinceLast) || sinceLast < 60) {
@@ -22,7 +36,7 @@ export async function GET({ params, url }) {
   const rangeInSeconds = sinceLast;
   const now = Math.floor(Date.now() / 1000);
   const since = GetMinuteStartNowTimestampUTC() - rangeInSeconds;
-  let label = query.get("label") || name;
+
   const hideDuration = query.get("hideDuration") === "true";
 
   const duration = moment.duration(rangeInSeconds, "seconds");
@@ -35,10 +49,32 @@ export async function GET({ params, url }) {
     formatted = `${duration.minutes()}m`;
   }
 
-  let todayDataDb = await db.getMonitoringData(tag, since, now);
-  let anchorStatus = await GetLastStatusBefore(tag, since);
-  todayDataDb = InterpolateData(todayDataDb, since, anchorStatus, now);
+  let todayDataDb, anchorStatus;
+  if (params.tag == "_") {
+    name = siteName;
+    let activeTags = monitors.map((monitor) => monitor.tag);
+    //if anyone has include_degraded_in_downtime = "YES" then we will include degraded in downtime
+    let hasIncludeDowntime = monitors.find((monitor) => monitor.include_degraded_in_downtime === "YES");
+    include_degraded_in_downtime = hasIncludeDowntime ? "YES" : "NO";
+    todayDataDb = await GetMonitoringDataAll(activeTags, since, now);
+    anchorStatus = await GetLastStatusBeforeAll(activeTags, since);
+  } else {
+    const m = monitors.find((monitor) => monitor.tag === params.tag);
+    if (!!!m) {
+      return new Response(ErrorSvg, {
+        headers: {
+          "Content-Type": "image/svg+xml",
+        },
+      });
+    }
+    tag = m.tag;
+    name = m.name;
+    include_degraded_in_downtime = m.include_degraded_in_downtime;
 
+    todayDataDb = await GetMonitoringData(tag, since, now);
+    anchorStatus = await GetLastStatusBefore(tag, since);
+  }
+  todayDataDb = InterpolateData(todayDataDb, since, anchorStatus, now);
   let calculatedData = AggregateData(todayDataDb);
 
   let numerator = calculatedData.UPs + calculatedData.DEGRADEDs;
@@ -48,7 +84,7 @@ export async function GET({ params, url }) {
   }
 
   let uptime = ParseUptime(numerator, denominator) + "%";
-
+  let label = query.get("label") || name;
   const labelColor = query.get("labelColor") || "#333";
   const color = query.get("color") || "#0079FF";
   const style = query.get("style") || "flat";

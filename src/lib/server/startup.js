@@ -4,28 +4,16 @@ import figlet from "figlet";
 import { Cron } from "croner";
 import { Minuter } from "./cron-minute.js";
 import db from "./db/db.js";
-import { GetAllSiteData, GetMonitorsParsed, HashString } from "./controllers/controller.js";
+import { GetAllSiteData, GetMonitorsParsed } from "./controllers/controller.js";
+import { HashString } from "./tool.js";
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
 import fs from "fs";
+import version from "../version.js";
 
 const jobs = [];
 process.env.TZ = "UTC";
 let isStartUP = true;
-
-// Get the version from package.json
-const getVersion = () => {
-  try {
-    const __filename = fileURLToPath(import.meta.url);
-    const __dirname = dirname(__filename);
-    const packagePath = resolve(__dirname, "../../../package.json");
-    const packageJson = JSON.parse(fs.readFileSync(packagePath, "utf8"));
-    return packageJson.version;
-  } catch (error) {
-    console.error("Error reading version:", error);
-    return "unknown";
-  }
-};
 
 const scheduleCronJobs = async () => {
   // Fetch and map all active monitors, creating a unique hash for each
@@ -85,15 +73,13 @@ async function Startup() {
 
   mainJob.trigger();
 
-  const version = getVersion();
-
-  figlet("Kener v" + version, function (err, data) {
+  figlet("Kener v" + version(), function (err, data) {
     if (err) {
       console.log("Something went wrong...");
       return;
     }
     console.log(data);
-    console.log(`Kener version ${version} is running!`);
+    console.log(`Kener version ${version()} is running!`);
   });
 }
 

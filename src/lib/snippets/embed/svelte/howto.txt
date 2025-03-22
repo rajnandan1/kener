@@ -1,0 +1,5 @@
+<script>
+	import EmbedMonitor from "./EmbedMonitor.svelte";
+</script>
+
+<EmbedMonitor monitor="http://localhost:3000/embed/monitor-{selectedMonitor.value}" theme="{embedTheme}" bgc="{embedBgc.substr(1)}" locale="{embedLocale.value}"/>

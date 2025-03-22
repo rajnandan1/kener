@@ -15,6 +15,7 @@
   export let data;
 
   let formState = "idle";
+  let themeError = "";
 
   let themeData = {
     pattern: "none",
@@ -49,6 +50,7 @@
 
   async function formSubmit() {
     formState = "loading";
+    themeError = "";
     let themeDataAPI = { ...themeData };
     themeDataAPI.colors = JSON.stringify(themeDataAPI.colorsJ);
     themeDataAPI.font = JSON.stringify(themeDataAPI.fontJ);
@@ -59,7 +61,7 @@
     let data = await resp.json();
     formState = "idle";
     if (data.error) {
-      alert(data.error);
+      themeError = data.error;
       return;
     }
   }
@@ -345,7 +347,10 @@
         </div>
       </div>
       <hr />
-      <div class="flex w-full justify-end">
+      <div class="flex w-full justify-end gap-x-2">
+        {#if !!themeError}
+          <div class="py-2 text-sm font-medium text-destructive">{themeError}</div>
+        {/if}
         <Button type="submit" disabled={formState === "loading"}>
           Save
           {#if formState === "loading"}

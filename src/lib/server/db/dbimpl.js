@@ -30,6 +30,14 @@ class DbImpl {
       .where("timestamp", "<=", end)
       .orderBy("timestamp", "asc");
   }
+  //given monitor_tags array of string, start and end timestamp in utc seconds return data
+  async getMonitoringDataAll(monitor_tags, start, end) {
+    return await this.knex("monitoring_data")
+      .whereIn("monitor_tag", monitor_tags)
+      .where("timestamp", ">=", start)
+      .where("timestamp", "<=", end)
+      .orderBy("timestamp", "asc");
+  }
 
   //get latest data for a monitor_tag
   async getLatestMonitoringData(monitor_tag) {
@@ -38,6 +46,38 @@ class DbImpl {
       .orderBy("timestamp", "desc")
       .limit(1)
       .first();
+  }
+
+  //get latest data for all active monitors
+  async getLatestMonitoringDataAllActive(monitor_tags) {
+    // Find the latest timestamp for each provided monitor tag
+    const latestTimestamps = await this.knex("monitoring_data")
+      .select("monitor_tag")
+      .select(this.knex.raw("MAX(timestamp) as max_timestamp"))
+      .whereIn("monitor_tag", monitor_tags)
+      .groupBy("monitor_tag");
+
+    // Early exit if no results
+    if (!latestTimestamps || latestTimestamps.length === 0) {
+      return [];
+    }
+
+    // Then fetch the complete records using the timestamp pairs
+    const conditions = latestTimestamps.map((item) => {
+      return function () {
+        this.where(function () {
+          this.where("monitor_tag", item.monitor_tag).andWhere("timestamp", item.max_timestamp);
+        });
+      };
+    });
+
+    // Build query with OR conditions
+    let query = this.knex("monitoring_data").where(conditions[0]);
+    for (let i = 1; i < conditions.length; i++) {
+      query = query.orWhere(conditions[i]);
+    }
+
+    return await query;
   }
 
   async getLastHeartbeat(monitor_tag) {
@@ -70,6 +110,15 @@ class DbImpl {
   async getLastStatusBefore(monitor_tag, timestamp) {
     return await this.knex("monitoring_data")
       .where("monitor_tag", monitor_tag)
+      .where("timestamp", "<", timestamp)
+      .orderBy("timestamp", "desc")
+      .limit(1)
+      .first();
+  }
+  //get the last status before the timestamp given monitor_tag and start timestamp
+  async getLastStatusBeforeAll(monitor_tags, timestamp) {
+    return await this.knex("monitoring_data")
+      .whereIn("monitor_tag", monitor_tags)
       .where("timestamp", "<", timestamp)
       .orderBy("timestamp", "desc")
       .limit(1)
@@ -403,6 +452,14 @@ class DbImpl {
     return await this.knex("users").select("password_hash").where("id", id).first();
   }
 
+  //get user name, email from users given id
+  async getUserById(id) {
+    return await this.knex("users")
+      .select("id", "email", "name", "is_active", "is_verified", "role", "created_at", "updated_at")
+      .where("id", id)
+      .first();
+  }
+
   //insert user
   async insertUser(data) {
     return await this.knex("users").insert({
@@ -421,6 +478,27 @@ class DbImpl {
       password_hash: data.password_hash,
       updated_at: this.knex.fn.now(),
     });
+  }
+
+  //get all columns of users except password_hash order by create at
+  async getAllUsers() {
+    return await this.knex("users")
+      .select("id", "email", "name", "role", "is_active", "is_verified", "created_at", "updated_at")
+      .orderBy("created_at", "desc");
+  }
+
+  //get all users paginated
+  async getUsersPaginated(page, limit) {
+    return await this.knex("users")
+      .select("id", "email", "name", "role", "is_active", "is_verified", "created_at", "updated_at")
+      .orderBy("created_at", "desc")
+      .limit(limit)
+      .offset((page - 1) * limit);
+  }
+
+  //getTotalUsers
+  async getTotalUsers() {
+    return await this.knex("users").count("* as count").first();
   }
 
   //new api key
@@ -741,6 +819,97 @@ class DbImpl {
   //getIncidentCommentByID
   async getIncidentCommentByID(id) {
     return await this.knex("incident_comments").where({ id }).first();
+  }
+
+  //update users.name by id
+  async updateUserName(id, name) {
+    return await this.knex("users").where({ id }).update({
+      name,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+  //updateUserRole
+  async updateUserRole(id, role) {
+    return await this.knex("users").where({ id }).update({
+      role,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //update is_active
+  async updateUserIsActive(id, is_active) {
+    return await this.knex("users").where({ id }).update({
+      is_active,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //update password
+  async updateUserPassword(data) {
+    return await this.knex("users").where({ id: data.id }).update({
+      password_hash: data.password_hash,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  async updateIsVerified(id, is_verified) {
+    return await this.knex("users").where({ id }).update({
+      is_verified: is_verified,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //insert into invitations
+  async insertInvitation(data) {
+    return await this.knex("invitations").insert({
+      invitation_token: data.invitation_token,
+      invitation_type: data.invitation_type,
+      invited_user_id: data.invited_user_id,
+      invited_by_user_id: data.invited_by_user_id,
+      invitation_meta: data.invitation_meta,
+      invitation_expiry: data.invitation_expiry,
+      invitation_status: data.invitation_status,
+      created_at: this.knex.fn.now(),
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //update invitation_status of all invitations for invited_user_id, given invitation_type to VOID
+  async updateInvitationStatusToVoid(invited_user_id, invitation_type) {
+    return await this.knex("invitations").where({ invited_user_id, invitation_type }).update({
+      invitation_status: "VOID",
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //check if there is a row for given invited_user_id,invitation_type and invitation_status = PENDING
+  async invitationExists(invited_user_id, invitation_type) {
+    const result = await this.knex("invitations")
+      .count("* as count")
+      .where({
+        invited_user_id,
+        invitation_type,
+        invitation_status: "PENDING",
+      })
+      .first();
+    return result.count > 0;
+  }
+
+  //update invitation_status of invitation given invitation_token to ACCEPTED
+  async updateInvitationStatusToAccepted(invitation_token) {
+    return await this.knex("invitations").where({ invitation_token }).update({
+      invitation_status: "ACCEPTED",
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //get invitations by token, the invitation should be PENDING, and it should not be expired
+  async getActiveInvitationByToken(invitation_token) {
+    return await this.knex("invitations")
+      .where("invitation_token", invitation_token)
+      .andWhere("invitation_status", "PENDING")
+      .andWhere("invitation_expiry", ">", this.knex.fn.now())
+      .first();
   }
 }
 

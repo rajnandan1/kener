@@ -2,6 +2,7 @@
 import fs from "fs-extra";
 import path from "path";
 import { marked } from "marked";
+import version from "$lib/version.js";
 
 function extractMetadataAndContent(fileContent) {
   // Regular expression to match metadata section
@@ -15,9 +16,7 @@ function extractMetadataAndContent(fileContent) {
 
   if (match) {
     // Extract metadata section and remaining content
-    const metadataLines = match[1]
-      .split("\n")
-      .filter((line) => line.trim() !== "");
+    const metadataLines = match[1].split("\n").filter((line) => line.trim() !== "");
     result.content = fileContent.slice(match[0].length).trim(); // Remaining content after metadata
 
     metadataLines.forEach((line) => {
@@ -40,10 +39,7 @@ export async function load({ params, route, url, cookies, request }) {
     docFilePath = docFolderPath + `/${docFile}.md`;
   }
   const fileContents = await fs.readFileSync(docFilePath, "utf-8");
-  const siteStructure = await fs.readFileSync(
-    docFolderPath + "/structure.json",
-    "utf-8",
-  );
+  const siteStructure = await fs.readFileSync(docFolderPath + "/structure.json", "utf-8");
   const { metadata, content } = extractMetadataAndContent(fileContents);
 
   const selectedDoc = docFilePath.replace(docFolderPath, "");
@@ -54,5 +50,6 @@ export async function load({ params, route, url, cookies, request }) {
     title: metadata.title || "Kener Docs",
     description: metadata.description || "Kener Docs",
     siteStructure: siteStructureJSON,
+    kenerVersion: version(),
   };
 }

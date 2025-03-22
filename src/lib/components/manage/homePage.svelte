@@ -87,8 +87,9 @@
       }
     });
   }
-
+  let heroError = "";
   async function formSubmitHero() {
+    heroError = "";
     formStateHero = "loading";
     let resp = await storeSiteData({
       hero: JSON.stringify(hero)
@@ -97,7 +98,7 @@
     let data = await resp.json();
     formStateHero = "idle";
     if (data.error) {
-      alert(data.error);
+      heroError = data.error;
       return;
     }
   }
@@ -117,7 +118,10 @@
       return;
     }
   }
+
+  let categoriesErrorMessage = "";
   async function formSubmitCategories() {
+    categoriesErrorMessage = "";
     formStateCategories = "loading";
     let resp = await storeSiteData({
       categories: JSON.stringify(categories)
@@ -126,11 +130,14 @@
     let data = await resp.json();
     formStateCategories = "idle";
     if (data.error) {
-      alert(data.error);
+      categoriesErrorMessage = data.error;
       return;
     }
   }
+
+  let footerErrorMessage = "";
   async function formSubmitFooter() {
+    footerErrorMessage = "";
     formStateFooter = "loading";
     let resp = await storeSiteData({
       footerHTML: footerHTML
@@ -139,11 +146,14 @@
     let data = await resp.json();
     formStateFooter = "idle";
     if (data.error) {
-      alert(data.error);
+      footerErrorMessage = data.error;
       return;
     }
   }
+
+  let incidentErrorMessage = "";
   async function formSubmitIncident() {
+    incidentErrorMessage = "";
     formStateIncident = "loading";
     let resp = await storeSiteData({
       homeIncidentCount: homeIncidentCount,
@@ -154,7 +164,7 @@
     let data = await resp.json();
     formStateIncident = "idle";
     if (data.error) {
-      alert(data.error);
+      incidentErrorMessage = data.error;
       return;
     }
   }
@@ -220,7 +230,9 @@
     i18n.defaultLocale = e.value;
   }
 
+  let i18nErrorMessage = "";
   async function formSubmiti18n() {
+    i18nErrorMessage = "";
     formStatei18n = "loading";
     let resp = await storeSiteData({
       i18n: JSON.stringify(i18n),
@@ -230,7 +242,7 @@
     let data = await resp.json();
     formStatei18n = "idle";
     if (data.error) {
-      alert(data.error);
+      i18nErrorMessage = data.error;
       return;
     }
   }
@@ -289,7 +301,10 @@
           />
         </div>
       </div>
-      <div class="flex w-full justify-end">
+      <div class="flex w-full justify-end gap-x-2">
+        {#if !!heroError}
+          <div class="py-2 text-sm font-medium text-destructive">{heroError}</div>
+        {/if}
         <Button type="submit" disabled={formStateHero === "loading"}>
           Save
           {#if formStateHero === "loading"}
@@ -362,6 +377,9 @@
         Translates to "Show {homeIncidentCount} incidents that have started in the last {homeIncidentStartTimeWithin}
         days in the past or going to start in {homeIncidentStartTimeWithin} days in the future"
       </p>
+      {#if !!incidentErrorMessage}
+        <p class="text-sm font-medium text-destructive">{incidentErrorMessage}</p>
+      {/if}
     </form>
   </Card.Content>
 </Card.Root>
@@ -470,7 +488,7 @@
       </div>
       <div class="flex w-full justify-end" style="margin-top:32px">
         <p class="px-4 pt-1">
-          <span class="text-xs text-red-500"> {navErrorMessage} </span>
+          <span class="text-sm font-medium text-destructive"> {navErrorMessage} </span>
         </p>
         <Button type="submit" disabled={formStateHero === "loading"}>
           Save
@@ -547,7 +565,10 @@
           Allow users to switch timezones
         </label>
       </p>
-      <div class="flex w-full justify-end">
+      <div class="flex w-full justify-end gap-x-2">
+        {#if !!i18nErrorMessage}
+          <div class="py-2 text-sm font-medium text-destructive">{i18nErrorMessage}</div>
+        {/if}
         <Button type="submit" disabled={formStatei18n === "loading"}>
           Save
           {#if formStatei18n === "loading"}
@@ -607,7 +628,10 @@
           <Plus class="h-4 w-4 " />
         </Button>
       </div>
-      <div class="flex w-full justify-end">
+      <div class="flex w-full justify-end gap-x-2">
+        {#if !!categoriesErrorMessage}
+          <div class="py-2 text-sm font-medium text-destructive">{categoriesErrorMessage}</div>
+        {/if}
         <Button type="submit" disabled={formStateCategories === "loading"}>
           Save
           {#if formStateCategories === "loading"}
@@ -636,7 +660,10 @@
         </div>
       </div>
 
-      <div class="flex w-full justify-end">
+      <div class="flex w-full justify-end gap-x-2">
+        {#if !!footerErrorMessage}
+          <div class="py-2 text-sm font-medium text-destructive">{footerErrorMessage}</div>
+        {/if}
         <Button type="submit" disabled={formStateFooter === "loading"}>
           Save
           {#if formStateFooter === "loading"}

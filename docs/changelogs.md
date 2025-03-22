@@ -7,6 +7,102 @@ description: Changelogs for Kener
 
 Here are the changelogs for Kener. Changelogs are only published when there are new features or breaking changes.
 
+## v3.2.5
+
+<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.webp" type="image/webp">
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.gif" alt="🚀" width="32" height="32">
+</picture>
+
+### Features
+
+- **CodeMirror Editor Integration**
+
+    - Added professional code editing for all JavaScript and JSON fields
+    - Syntax highlighting and error checking for monitor evaluation functions
+    - Light and dark theme support that matches your application theme
+    - Improved editing experience for webhook, Slack, and Discord notification templates
+
+- **Enhanced Trigger Configuration**
+
+    - Redesigned JSON template editors for notification payloads
+    - Added support for custom Discord and Slack body templates
+    - Better visualization of webhook and notification payloads
+    - Improved variable templating for all notification types
+
+- **Role-Based Access Control**
+
+    - Added comprehensive user management with 3 roles: admin, editor, and member
+    - Role-specific permissions for triggers, incidents, and settings
+    - Members have read-only access to most features while editors can manage content
+
+- **User Management System**
+
+    - New user profiles with account settings
+    - User activation/deactivation controls for admins
+    - Password strength validation and secure password reset flow
+    - Self-service profile management for all users
+
+- **Email Authentication System**
+
+    - Email verification workflow for new users
+    - Support for both Resend API and SMTP email delivery
+    - Password reset via email with secure token-based authentication
+    - Professionally designed HTML email templates
+
+- **Invitation System**
+
+    - Token-based invitation workflow for new users
+    - Secure invitation links with expiration dates
+    - Admin controls for managing invitations
+
+- **Badges & Embed Features**
+    - Added dedicated Badges management page in the admin dashboard
+    - Support for status, uptime, and liveness badges for all monitors
+    - Site-wide status badges to show overall service health
+    - Customizable badge styles, colors, and labels
+    - Advanced embedding options for Svelte, React, Vue, Angular, HTML, and JavaScript
+    - Color picker for customizing badge and embed appearance
+    - Responsive embed components with automatic sizing
+
+### Improvements
+
+- **Performance Enhancements**
+
+    - Added performance monitoring for critical page loads
+    - Improved data loading efficiency for monitors page
+    - Better caching and state management
+
+- **Security Upgrades**
+
+    - Improved password validation and security practices
+    - Secure token handling for authentication workflows
+    - Session management improvements
+
+- **UI Refinements**
+
+    - Consistent version display throughout the application
+    - Improved error messaging and form validation feedback
+    - Role-specific UI elements that adapt to user permissions
+    - Better modal designs for user management workflows
+
+- **Developer Experience**
+    - Refactored code structure for better maintainability
+    - Improved error handling across authentication flows
+    - Version information automatically pulled from package.json
+- **Github Issues Resolved**
+    - Feature: Enhancement of Webhook Custom Body Functionality [#238](https://github.com/rajnandan1/kener/issues/238)
+    - Feature: Add LDAP for authentication [#210](https://github.com/rajnandan1/kener/issues/210)
+    - the event created by tigger can't update affects. [#309](https://github.com/rajnandan1/kener/issues/309)
+    - Multiple account or RBAC [#334](https://github.com/rajnandan1/kener/issues/334)
+    - The event that has been edited isn't clickable after you save it [#350](https://github.com/rajnandan1/kener/issues/350)
+    - /app/package.json ERROR on fresh install [#346](https://github.com/rajnandan1/kener/issues/346)
+    - Site stops when monitor processing throws an error [#345](https://github.com/rajnandan1/kener/issues/345)
+
+### Migration Notes
+
+This update is fully backward compatible with existing installations. User accounts created before this update will retain admin privileges by default.
+
 ## v3.2.1
 
 <picture>

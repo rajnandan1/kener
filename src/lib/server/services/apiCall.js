@@ -3,20 +3,7 @@ import axios from "axios";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
 import * as cheerio from "cheerio";
-
-const defaultEval = `(async function (statusCode, responseTime, responseRaw, modules) {
-	let statusCodeShort = Math.floor(statusCode/100);
-    if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {
-        return {
-			status: 'UP',
-			latency: responseTime,
-        }
-    } 
-	return {
-		status: 'DOWN',
-		latency: responseTime,
-	}
-})`;
+import { DefaultAPIEval } from "../../anywhere.js";
 
 class ApiCall {
   monitor;
@@ -47,7 +34,7 @@ class ApiCall {
     let timeout = this.monitor.type_data.timeout || 5000;
     let tag = this.monitor.tag;
 
-    let monitorEval = !!this.monitor.type_data.eval ? this.monitor.type_data.eval : defaultEval;
+    let monitorEval = !!this.monitor.type_data.eval ? this.monitor.type_data.eval : DefaultAPIEval;
 
     for (let i = 0; i < this.envSecrets.length; i++) {
       const secret = this.envSecrets[i];
