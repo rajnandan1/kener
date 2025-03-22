@@ -66,90 +66,100 @@ async function manualIncident(monitor) {
 }
 
 const Minuter = async (monitor) => {
-  let realTimeData = {};
-  let manualData = {};
+  try {
+    let realTimeData = {};
+    let manualData = {};
 
-  const startOfMinute = GetMinuteStartNowTimestampUTC();
-  const serviceClient = new Service(monitor);
-  if (monitor.monitor_type === "API") {
-    let apiResponse = await serviceClient.execute();
+    const startOfMinute = GetMinuteStartNowTimestampUTC();
+    const serviceClient = new Service(monitor);
+    if (monitor.monitor_type === "API") {
+      let apiResponse = await serviceClient.execute();
 
-    realTimeData[startOfMinute] = apiResponse;
+      realTimeData[startOfMinute] = apiResponse;
 
-    //if timeout, retry after 500ms
-    if (apiResponse.type === TIMEOUT) {
-      apiQueue.push(async (cb) => {
-        await Wait(500); //wait for 500ms
-        console.log("Retrying api call for " + monitor.name + " at " + startOfMinute + " due to timeout");
-        serviceClient.execute().then(async (data) => {
-          await db.insertMonitoringData({
-            monitor_tag: monitor.tag,
-            timestamp: startOfMinute,
-            status: data.status,
-            latency: data.latency,
-            type: data.type,
+      //if timeout, retry after 500ms
+      if (apiResponse.type === TIMEOUT) {
+        apiQueue.push(async (cb) => {
+          await Wait(500); //wait for 500ms
+          console.log("Retrying api call for " + monitor.name + " at " + startOfMinute + " due to timeout");
+          serviceClient.execute().then(async (data) => {
+            await db.insertMonitoringData({
+              monitor_tag: monitor.tag,
+              timestamp: startOfMinute,
+              status: data.status,
+              latency: data.latency,
+              type: data.type,
+            });
+            cb();
           });
-          cb();
         });
+      }
+    } else if (monitor.monitor_type === "PING") {
+      realTimeData[startOfMinute] = await serviceClient.execute();
+    } else if (monitor.monitor_type === "TCP") {
+      realTimeData[startOfMinute] = await serviceClient.execute();
+    } else if (monitor.monitor_type === "DNS") {
+      realTimeData[startOfMinute] = await serviceClient.execute();
+    } else if (monitor.monitor_type === "GROUP") {
+      realTimeData[startOfMinute] = await serviceClient.execute(startOfMinute);
+    } else if (monitor.monitor_type === "SSL") {
+      realTimeData[startOfMinute] = await serviceClient.execute();
+    } else if (monitor.monitor_type === "SQL") {
+      realTimeData[startOfMinute] = await serviceClient.execute();
+    } else if (monitor.monitor_type === "HEARTBEAT") {
+      realTimeData[startOfMinute] = await serviceClient.execute();
+    }
+
+    manualData = await manualIncident(monitor);
+
+    //merge noData, apiData, webhookData, dayData
+    let mergedData = {};
+
+    if (monitor.default_status !== undefined && monitor.default_status !== null) {
+      if ([UP, DOWN, DEGRADED].indexOf(monitor.default_status) !== -1) {
+        mergedData[startOfMinute] = {
+          status: monitor.default_status,
+          latency: 0,
+          type: DEFAULT_STATUS,
+        };
+      }
+    }
+
+    for (const timestamp in realTimeData) {
+      if (!!realTimeData[timestamp] && !!realTimeData[timestamp].status) {
+        mergedData[timestamp] = realTimeData[timestamp];
+      }
+    }
+
+    for (const timestamp in manualData) {
+      if (!!manualData[timestamp] && !!manualData[timestamp].status) {
+        mergedData[timestamp] = manualData[timestamp];
+      }
+    }
+
+    for (const timestamp in mergedData) {
+      const element = mergedData[timestamp];
+      db.insertMonitoringData({
+        monitor_tag: monitor.tag,
+        timestamp: parseInt(timestamp),
+        status: element.status,
+        latency: element.latency,
+        type: element.type,
       });
     }
-  } else if (monitor.monitor_type === "PING") {
-    realTimeData[startOfMinute] = await serviceClient.execute();
-  } else if (monitor.monitor_type === "TCP") {
-    realTimeData[startOfMinute] = await serviceClient.execute();
-  } else if (monitor.monitor_type === "DNS") {
-    realTimeData[startOfMinute] = await serviceClient.execute();
-  } else if (monitor.monitor_type === "GROUP") {
-    realTimeData[startOfMinute] = await serviceClient.execute(startOfMinute);
-  } else if (monitor.monitor_type === "SSL") {
-    realTimeData[startOfMinute] = await serviceClient.execute();
-  } else if (monitor.monitor_type === "SQL") {
-    realTimeData[startOfMinute] = await serviceClient.execute();
-  } else if (monitor.monitor_type === "HEARTBEAT") {
-    realTimeData[startOfMinute] = await serviceClient.execute();
+  } catch (e) {
+    console.log(`[Error] in Running Monitor name: ${monitor.name}, tag: ${monitor.tag} error:`, e);
   }
 
-  manualData = await manualIncident(monitor);
-
-  //merge noData, apiData, webhookData, dayData
-  let mergedData = {};
-
-  if (monitor.default_status !== undefined && monitor.default_status !== null) {
-    if ([UP, DOWN, DEGRADED].indexOf(monitor.default_status) !== -1) {
-      mergedData[startOfMinute] = {
-        status: monitor.default_status,
-        latency: 0,
-        type: DEFAULT_STATUS,
-      };
-    }
-  }
-
-  for (const timestamp in realTimeData) {
-    if (!!realTimeData[timestamp] && !!realTimeData[timestamp].status) {
-      mergedData[timestamp] = realTimeData[timestamp];
-    }
-  }
-
-  for (const timestamp in manualData) {
-    if (!!manualData[timestamp] && !!manualData[timestamp].status) {
-      mergedData[timestamp] = manualData[timestamp];
-    }
-  }
-
-  for (const timestamp in mergedData) {
-    const element = mergedData[timestamp];
-    db.insertMonitoringData({
-      monitor_tag: monitor.tag,
-      timestamp: parseInt(timestamp),
-      status: element.status,
-      latency: element.latency,
-      type: element.type,
-    });
-  }
   alertingQueue.push(async (cb) => {
     setTimeout(async () => {
-      await alerting(monitor);
-      cb();
+      try {
+        await alerting(monitor);
+        cb();
+      } catch (e) {
+        console.log(`[Error] in Running Alerting name: ${monitor.name}, tag: ${monitor.tag} error:`, e);
+        cb();
+      }
     }, 1042);
   });
 };
