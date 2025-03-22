@@ -90,6 +90,11 @@ Here are the changelogs for Kener. Changelogs are only published when there are 
     - Refactored code structure for better maintainability
     - Improved error handling across authentication flows
     - Version information automatically pulled from package.json
+- **Github Issues**
+    - Feature: Enhancement of Webhook Custom Body Functionality [#238](https://github.com/rajnandan1/kener/issues/238)
+    - Feature: Add LDAP for authentication [#210](https://github.com/rajnandan1/kener/issues/210)
+    - the event created by tigger can't update affects. [#309](https://github.com/rajnandan1/kener/issues/309)
+    - Multiple account or RBAC [#334](https://github.com/rajnandan1/kener/issues/334)
 
 ### Migration Notes
 
