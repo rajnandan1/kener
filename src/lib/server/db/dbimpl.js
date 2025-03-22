@@ -30,6 +30,14 @@ class DbImpl {
       .where("timestamp", "<=", end)
       .orderBy("timestamp", "asc");
   }
+  //given monitor_tags array of string, start and end timestamp in utc seconds return data
+  async getMonitoringDataAll(monitor_tags, start, end) {
+    return await this.knex("monitoring_data")
+      .whereIn("monitor_tag", monitor_tags)
+      .where("timestamp", ">=", start)
+      .where("timestamp", "<=", end)
+      .orderBy("timestamp", "asc");
+  }
 
   //get latest data for a monitor_tag
   async getLatestMonitoringData(monitor_tag) {
@@ -38,6 +46,38 @@ class DbImpl {
       .orderBy("timestamp", "desc")
       .limit(1)
       .first();
+  }
+
+  //get latest data for all active monitors
+  async getLatestMonitoringDataAllActive(monitor_tags) {
+    // Find the latest timestamp for each provided monitor tag
+    const latestTimestamps = await this.knex("monitoring_data")
+      .select("monitor_tag")
+      .select(this.knex.raw("MAX(timestamp) as max_timestamp"))
+      .whereIn("monitor_tag", monitor_tags)
+      .groupBy("monitor_tag");
+
+    // Early exit if no results
+    if (!latestTimestamps || latestTimestamps.length === 0) {
+      return [];
+    }
+
+    // Then fetch the complete records using the timestamp pairs
+    const conditions = latestTimestamps.map((item) => {
+      return function () {
+        this.where(function () {
+          this.where("monitor_tag", item.monitor_tag).andWhere("timestamp", item.max_timestamp);
+        });
+      };
+    });
+
+    // Build query with OR conditions
+    let query = this.knex("monitoring_data").where(conditions[0]);
+    for (let i = 1; i < conditions.length; i++) {
+      query = query.orWhere(conditions[i]);
+    }
+
+    return await query;
   }
 
   async getLastHeartbeat(monitor_tag) {
@@ -70,6 +110,15 @@ class DbImpl {
   async getLastStatusBefore(monitor_tag, timestamp) {
     return await this.knex("monitoring_data")
       .where("monitor_tag", monitor_tag)
+      .where("timestamp", "<", timestamp)
+      .orderBy("timestamp", "desc")
+      .limit(1)
+      .first();
+  }
+  //get the last status before the timestamp given monitor_tag and start timestamp
+  async getLastStatusBeforeAll(monitor_tags, timestamp) {
+    return await this.knex("monitoring_data")
+      .whereIn("monitor_tag", monitor_tags)
       .where("timestamp", "<", timestamp)
       .orderBy("timestamp", "desc")
       .limit(1)

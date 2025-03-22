@@ -51,9 +51,19 @@ Here are the changelogs for Kener. Changelogs are only published when there are 
     - Professionally designed HTML email templates
 
 - **Invitation System**
+
     - Token-based invitation workflow for new users
     - Secure invitation links with expiration dates
     - Admin controls for managing invitations
+
+- **Badges & Embed Features**
+    - Added dedicated Badges management page in the admin dashboard
+    - Support for status, uptime, and liveness badges for all monitors
+    - Site-wide status badges to show overall service health
+    - Customizable badge styles, colors, and labels
+    - Advanced embedding options for Svelte, React, Vue, Angular, HTML, and JavaScript
+    - Color picker for customizing badge and embed appearance
+    - Responsive embed components with automatic sizing
 
 ### Improvements
 

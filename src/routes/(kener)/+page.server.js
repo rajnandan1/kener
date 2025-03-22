@@ -49,7 +49,6 @@ async function returnTypeOfMonitorsPageMeta(url) {
 
 export async function load({ parent, url }) {
   const totalLoadStart = performance.now();
-  console.log("[PERF] Starting page load");
 
   const query = url.searchParams;
 

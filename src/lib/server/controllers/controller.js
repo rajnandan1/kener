@@ -305,6 +305,23 @@ export const VerifyPassword = async (plainTextPassword, hashedPassword) => {
 export const GetLatestMonitoringData = async (monitor_tag) => {
   return await db.getLatestMonitoringData(monitor_tag);
 };
+export const GetLatestStatusActiveAll = async (monitor_tags) => {
+  let latestData = await db.getLatestMonitoringDataAllActive(monitor_tags);
+  let status = "NO_DATA";
+  for (let i = 0; i < latestData.length; i++) {
+    //if any status is down then status = down, if any is degraded then status = degraded, down > degraded > up
+    if (latestData[i].status === "DOWN") {
+      status = "DOWN";
+    } else if (latestData[i].status === "DEGRADED" && status !== "DOWN") {
+      status = "DEGRADED";
+    } else if (latestData[i].status === "UP" && status !== "DOWN" && status !== "DEGRADED") {
+      status = "UP";
+    }
+  }
+  return {
+    status: status,
+  };
+};
 export const GetLastHeartbeat = async (monitor_tag) => {
   return await db.getLastHeartbeat(monitor_tag);
 };
@@ -477,6 +494,19 @@ export const InterpolateData = (rawData, startTimestamp, initialStatus, override
 
 export const GetLastStatusBefore = async (monitor_tag, timestamp) => {
   let data = await db.getLastStatusBefore(monitor_tag, timestamp);
+  if (data) {
+    return data.status;
+  }
+  return NO_DATA;
+};
+export const GetMonitoringData = async (tag, since, now) => {
+  return await db.getMonitoringData(tag, since, now);
+};
+export const GetMonitoringDataAll = async (tags, since, now) => {
+  return await db.getMonitoringDataAll(tags, since, now);
+};
+export const GetLastStatusBeforeAll = async (monitor_tags, timestamp) => {
+  let data = await db.getLastStatusBeforeAll(monitor_tags, timestamp);
   if (data) {
     return data.status;
   }

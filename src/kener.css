@@ -905,3 +905,37 @@ textarea::placeholder {
     content: ".";
   }
 }
+.dark {
+  --cp-bg-color: hsl(var(--background) / var(--tw-bg-opacity, 1));
+  --cp-border-color: hsl(var(--border) / var(--tw-border-opacity));
+  --cp-text-color: hsl(var(--card-foreground) / var(--tw-text-opacity, 1));
+}
+
+.color-picker .container {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+.color-picker .color {
+  border: 1px solid hsl(var(--border) / var(--tw-border-opacity));
+}
+.color-picker button {
+  display: none;
+}
+.color-picker [aria-label="color picker"] input {
+  color: hsl(var(--foreground) / var(--tw-border-opacity)) !important;
+  background-color: hsl(var(--input) / var(--tw-text-opacity, 1)) !important;
+}
+
+.dark .color-picker {
+  --cp-bg-color: hsl(var(--background) / var(--tw-bg-opacity, 1));
+  --cp-border-color: hsl(var(--border) / var(--tw-border-opacity));
+  --cp-text-color: hsl(var(--card-foreground) / var(--tw-text-opacity, 1));
+  --cp-input-color: hsl(var(--input) / var(--tw-text-opacity, 1));
+  --cp-button-hover-color: hsl(var(--input) / var(--tw-text-opacity, 1));
+}
+.like-input {
+  background-color: rgba(0, 0, 0, 0.02) !important;
+}
+.dark .like-input {
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}

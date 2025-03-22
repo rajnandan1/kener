@@ -52,6 +52,11 @@
       id: "/(manage)/manage/(app)/app/events"
     },
     {
+      name: "Badges",
+      url: `${base}/manage/app/badges`,
+      id: "/(manage)/manage/(app)/app/badges"
+    },
+    {
       name: "API Keys",
       url: `${base}/manage/app/api-keys`,
       id: "/(manage)/manage/(app)/app/api-keys"
@@ -93,7 +98,7 @@
   <meta name="robots" content="noindex" />
   <link rel="icon" href="{base}/logo96.png" />
 </svelte:head>
-<header class="sticky inset-x-0 top-0 z-50 mx-auto mt-4 flex max-w-5xl px-8">
+<header class="sticky inset-x-0 top-0 z-50 mx-auto mt-4 flex max-w-6xl px-8">
   <div class=" flex w-full justify-between rounded-lg border bg-card px-5 py-4">
     <div class="mt-2 flex gap-x-1.5">
       <img src="{base}/logo.png" alt="Kener" class="inline h-6 w-6" />
@@ -138,7 +143,7 @@
   </div>
 </header>
 <main class="manage">
-  <div class="container my-4 max-w-5xl">
+  <div class="container my-4 max-w-6xl">
     <nav class="flex justify-start gap-x-2">
       {#each nav as item}
         <Button variant={item.id.includes(activeTab) ? "secondary" : "ghost"} href={item.url} class="flex-1r"
@@ -148,13 +153,13 @@
     </nav>
   </div>
 
-  <div class="container max-w-5xl pt-0">
+  <div class="container max-w-6xl pt-0">
     <slot></slot>
   </div>
 </main>
 
 <!-- ========== FOOTER ========== -->
-<footer class="mx-auto mt-8 w-full max-w-2xl px-4 sm:px-6 lg:px-8">
+<footer class="mx-auto mt-8 w-full max-w-3xl px-4 sm:px-6 lg:px-8">
   <div class="border-t py-6 dark:border-neutral-700">
     <div class="flex flex-wrap items-center justify-between gap-2">
       <div>
