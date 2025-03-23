@@ -27,6 +27,10 @@ Here are the changelogs for Kener. Changelogs are only published when there are 
 - Site-wide status badges to show overall service health
 - Version information automatically pulled from package.json
 
+### Improvements
+
+- Improved build time by migrating lucid-svelte to individual components
+
 ### Github Issues Resolved
 
 - Feature: Enhancement of Webhook Custom Body Functionality [#238](https://github.com/rajnandan1/kener/issues/238)
