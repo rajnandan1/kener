@@ -11,24 +11,22 @@
   import { DateInput } from "date-picker-svelte";
   import { clickOutsideAction, slide } from "svelte-legos";
   import { Tooltip } from "bits-ui";
-  import {
-    Plus,
-    X,
-    Settings,
-    ExternalLink,
-    Bell,
-    Loader,
-    ChevronLeft,
-    Info,
-    Hammer,
-    CalendarCheck,
-    ArrowRight,
-    Siren,
-    PenLine,
-    MessageSquarePlus,
-    ChevronRight,
-    Trash
-  } from "lucide-svelte";
+  import Plus from "lucide-svelte/icons/plus";
+  import X from "lucide-svelte/icons/x";
+  import Settings from "lucide-svelte/icons/settings";
+  import ExternalLink from "lucide-svelte/icons/external-link";
+  import Bell from "lucide-svelte/icons/bell";
+  import Loader from "lucide-svelte/icons/loader";
+  import ChevronLeft from "lucide-svelte/icons/chevron-left";
+  import Info from "lucide-svelte/icons/info";
+  import Hammer from "lucide-svelte/icons/hammer";
+  import CalendarCheck from "lucide-svelte/icons/calendar-check";
+  import ArrowRight from "lucide-svelte/icons/arrow-right";
+  import Siren from "lucide-svelte/icons/siren";
+  import PenLine from "lucide-svelte/icons/pen-line";
+  import MessageSquarePlus from "lucide-svelte/icons/message-square-plus";
+  import ChevronRight from "lucide-svelte/icons/chevron-right";
+  import Trash from "lucide-svelte/icons/trash";
   import * as Select from "$lib/components/ui/select";
   export let data;
   let status = "OPEN";

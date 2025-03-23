@@ -4,7 +4,10 @@
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
-  import { Loader, Info, X, Check } from "lucide-svelte";
+  import Loader from "lucide-svelte/icons/loader";
+  import Info from "lucide-svelte/icons/info";
+  import X from "lucide-svelte/icons/x";
+  import Check from "lucide-svelte/icons/check";
   import { base } from "$app/paths";
   import * as Alert from "$lib/components/ui/alert";
 

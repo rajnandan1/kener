@@ -1,7 +1,12 @@
 <script>
   import { Button } from "$lib/components/ui/button";
   import { page } from "$app/stores";
-  import { Plus, X, Loader, Settings, Check, ChevronRight } from "lucide-svelte";
+  import Plus from "lucide-svelte/icons/plus";
+  import X from "lucide-svelte/icons/x";
+  import Loader from "lucide-svelte/icons/loader";
+  import Settings from "lucide-svelte/icons/settings";
+  import Check from "lucide-svelte/icons/check";
+  import ChevronRight from "lucide-svelte/icons/chevron-right";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { base } from "$app/paths";

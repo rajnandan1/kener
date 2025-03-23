@@ -6,7 +6,9 @@
   import { Badge } from "$lib/components/ui/badge";
   import { l } from "$lib/i18n/client";
   import { base } from "$app/paths";
-  import { ArrowRight, ChevronLeft, X } from "lucide-svelte";
+  import ArrowRight from "lucide-svelte/icons/arrow-right";
+  import ChevronLeft from "lucide-svelte/icons/chevron-left";
+  import X from "lucide-svelte/icons/x";
   import { hotKeyAction, clickOutsideAction } from "svelte-legos";
   import { onMount } from "svelte";
   import ShareMenu from "$lib/components/shareMenu.svelte";

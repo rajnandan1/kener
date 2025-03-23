@@ -7,7 +7,7 @@
   import { Button } from "$lib/components/ui/button";
   import Sun from "lucide-svelte/icons/sun";
   import Moon from "lucide-svelte/icons/moon";
-  import { Languages } from "lucide-svelte";
+  import Languages from "lucide-svelte/icons/languages";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { setMode, mode, ModeWatcher } from "mode-watcher";
   export let data;

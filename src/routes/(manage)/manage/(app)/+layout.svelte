@@ -10,7 +10,8 @@
   import { Button } from "$lib/components/ui/button";
   import { afterNavigate } from "$app/navigation";
   import { page } from "$app/stores";
-  import { Play, User } from "lucide-svelte";
+  import Play from "lucide-svelte/icons/play";
+  import User from "lucide-svelte/icons/user";
   import { setMode, mode, ModeWatcher } from "mode-watcher";
 
   let thisYear = new Date().getFullYear();

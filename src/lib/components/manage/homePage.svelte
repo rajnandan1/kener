@@ -9,7 +9,11 @@
   import locales from "$lib/locales/locales.json?raw";
   import GMI from "$lib/components/gmi.svelte";
 
-  import { Loader, X, Plus, Info, Play } from "lucide-svelte";
+  import Loader from "lucide-svelte/icons/loader";
+  import X from "lucide-svelte/icons/x";
+  import Plus from "lucide-svelte/icons/plus";
+  import Info from "lucide-svelte/icons/info";
+  import Play from "lucide-svelte/icons/play";
   import { Tooltip } from "bits-ui";
 
   export let data;

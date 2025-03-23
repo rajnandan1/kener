@@ -1,10 +1,15 @@
 <script>
   import { Button } from "$lib/components/ui/button";
-  import { Plus, X, Loader, Clipboard, Check } from "lucide-svelte";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { clickOutsideAction, slide } from "svelte-legos";
-  import { ChevronRight, Trash } from "lucide-svelte";
+  import Plus from "lucide-svelte/icons/plus";
+  import X from "lucide-svelte/icons/x";
+  import Loader from "lucide-svelte/icons/loader";
+  import Clipboard from "lucide-svelte/icons/clipboard";
+  import Check from "lucide-svelte/icons/check";
+  import ChevronRight from "lucide-svelte/icons/chevron-right";
+  import Trash from "lucide-svelte/icons/trash";
   import { base } from "$app/paths";
   import * as Select from "$lib/components/ui/select";
   import { createEventDispatcher } from "svelte";

@@ -1,6 +1,7 @@
 <script>
   import { formatDistanceToNow, formatDistance } from "date-fns";
-  import { Settings, ArrowRight } from "lucide-svelte";
+  import Settings from "lucide-svelte/icons/settings";
+  import ArrowRight from "lucide-svelte/icons/arrow-right";
   import * as Accordion from "$lib/components/ui/accordion";
   import { l, f, fd, fdn } from "$lib/i18n/client";
   import { base } from "$app/paths";

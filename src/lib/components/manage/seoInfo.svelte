@@ -3,11 +3,13 @@
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
-  import { Plus, X } from "lucide-svelte";
   import autoAnimate from "@formkit/auto-animate";
   import { siteDataExtractFromDb, storeSiteData } from "$lib/clientTools.js";
   import { base } from "$app/paths";
-  import { Loader, Info } from "lucide-svelte";
+  import Plus from "lucide-svelte/icons/plus";
+  import X from "lucide-svelte/icons/x";
+  import Loader from "lucide-svelte/icons/loader";
+  import Info from "lucide-svelte/icons/info";
   import { Tooltip } from "bits-ui";
 
   export let data;

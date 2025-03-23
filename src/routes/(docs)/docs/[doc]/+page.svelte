@@ -1,7 +1,9 @@
 <script>
   import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button";
-  import { ArrowLeft, ArrowRight } from "lucide-svelte";
+  import ArrowLeft from "lucide-svelte/icons/arrow-left";
+  import ArrowRight from "lucide-svelte/icons/arrow-right";
+
   import { afterNavigate } from "$app/navigation";
   export let data;
   let subHeadings = [];

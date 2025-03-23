@@ -8,7 +8,8 @@
   import { Button } from "$lib/components/ui/button";
   import Sun from "lucide-svelte/icons/sun";
   import Moon from "lucide-svelte/icons/moon";
-  import { Languages, Globe } from "lucide-svelte";
+  import Languages from "lucide-svelte/icons/languages";
+  import Globe from "lucide-svelte/icons/globe";
   import * as Popover from "$lib/components/ui/popover";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { analyticsEvent } from "$lib/boringOne";

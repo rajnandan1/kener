@@ -9,7 +9,13 @@
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
 
-  import { Share2, ArrowRight, Settings, TrendingUp, Loader, ChevronLeft, ChevronRight } from "lucide-svelte";
+  import Share2 from "lucide-svelte/icons/share-2";
+  import ArrowRight from "lucide-svelte/icons/arrow-right";
+  import Settings from "lucide-svelte/icons/settings";
+  import TrendingUp from "lucide-svelte/icons/trending-up";
+  import Loader from "lucide-svelte/icons/loader";
+  import ChevronLeft from "lucide-svelte/icons/chevron-left";
+  import ChevronRight from "lucide-svelte/icons/chevron-right";
   import { buttonVariants } from "$lib/components/ui/button";
   import { createEventDispatcher } from "svelte";
   import { afterUpdate } from "svelte";

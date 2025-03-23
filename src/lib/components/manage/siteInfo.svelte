@@ -6,7 +6,9 @@
   import { siteDataExtractFromDb, storeSiteData } from "$lib/clientTools.js";
   import { tooltipAction } from "svelte-legos";
   import { base } from "$app/paths";
-  import { Loader, Info, X } from "lucide-svelte";
+  import Loader from "lucide-svelte/icons/loader";
+  import Info from "lucide-svelte/icons/info";
+  import X from "lucide-svelte/icons/x";
   import * as Alert from "$lib/components/ui/alert";
   import { Tooltip } from "bits-ui";
   import * as Select from "$lib/components/ui/select";

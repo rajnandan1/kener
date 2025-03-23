@@ -1,5 +1,12 @@
 <script>
-  import { Share2, Link, CopyCheck, Code, TrendingUp, Percent, Loader, ExternalLink } from "lucide-svelte";
+  import Share2 from "lucide-svelte/icons/share-2";
+  import Link from "lucide-svelte/icons/link";
+  import CopyCheck from "lucide-svelte/icons/copy-check";
+  import Code from "lucide-svelte/icons/code";
+  import TrendingUp from "lucide-svelte/icons/trending-up";
+  import Percent from "lucide-svelte/icons/percent";
+  import Loader from "lucide-svelte/icons/loader";
+  import ExternalLink from "lucide-svelte/icons/external-link";
   import { Button } from "$lib/components/ui/button";
   import { base } from "$app/paths";
   import { onMount } from "svelte";

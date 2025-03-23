@@ -3,7 +3,13 @@
   import { base } from "$app/paths";
   import moment from "moment";
   import { Button } from "$lib/components/ui/button";
-  import { Plus, X, Settings, Bell, Loader, Copy, Check } from "lucide-svelte";
+  import Plus from "lucide-svelte/icons/plus";
+  import X from "lucide-svelte/icons/x";
+  import Settings from "lucide-svelte/icons/settings";
+  import Bell from "lucide-svelte/icons/bell";
+  import Loader from "lucide-svelte/icons/loader";
+  import Copy from "lucide-svelte/icons/copy";
+  import Check from "lucide-svelte/icons/check";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { page } from "$app/stores";

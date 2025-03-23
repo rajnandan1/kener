@@ -1,6 +1,13 @@
 <script>
   import { Button } from "$lib/components/ui/button";
-  import { Plus, X, Settings, Bell, Loader, ArrowDownUp, Grip, ExternalLink } from "lucide-svelte";
+  import Plus from "lucide-svelte/icons/plus";
+  import X from "lucide-svelte/icons/x";
+  import Settings from "lucide-svelte/icons/settings";
+  import Bell from "lucide-svelte/icons/bell";
+  import Loader from "lucide-svelte/icons/loader";
+  import ArrowDownUp from "lucide-svelte/icons/arrow-down-up";
+  import Grip from "lucide-svelte/icons/grip";
+  import ExternalLink from "lucide-svelte/icons/external-link";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { base } from "$app/paths";

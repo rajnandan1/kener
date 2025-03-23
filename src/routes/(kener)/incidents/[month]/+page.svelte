@@ -2,7 +2,9 @@
   import { Badge } from "$lib/components/ui/badge";
   import Incident from "$lib/components/IncidentNew.svelte";
   import { Button } from "$lib/components/ui/button";
-  import { ArrowRight, ArrowLeft, CalendarCheck2, ChevronLeft } from "lucide-svelte";
+  import ArrowRight from "lucide-svelte/icons/arrow-right";
+  import ArrowLeft from "lucide-svelte/icons/arrow-left";
+  import ChevronLeft from "lucide-svelte/icons/chevron-left";
   import { base } from "$app/paths";
   import { goto } from "$app/navigation";
   import { l, f } from "$lib/i18n/client";

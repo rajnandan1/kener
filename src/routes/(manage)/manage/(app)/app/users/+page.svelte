@@ -3,7 +3,14 @@
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
-  import { Loader, Info, X, CheckCheck, MailWarning, Settings, ArrowRight, ChevronRight } from "lucide-svelte";
+  import Loader from "lucide-svelte/icons/loader";
+  import Info from "lucide-svelte/icons/info";
+  import X from "lucide-svelte/icons/x";
+  import CheckCheck from "lucide-svelte/icons/check-check";
+  import MailWarning from "lucide-svelte/icons/mail-warning";
+  import Settings from "lucide-svelte/icons/settings";
+  import ArrowRight from "lucide-svelte/icons/arrow-right";
+  import ChevronRight from "lucide-svelte/icons/chevron-right";
   import { base } from "$app/paths";
   import * as Alert from "$lib/components/ui/alert";
   import * as Select from "$lib/components/ui/select";
