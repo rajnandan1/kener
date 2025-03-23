@@ -723,6 +723,18 @@
             </div>
           {/if}
           <div class="col-span-6">
+            <label class="cursor-pointer">
+              <input
+                type="checkbox"
+                on:change={(e) => {
+                  newMonitor.apiConfig.allowSelfSignedCert = e.target.checked;
+                }}
+                checked={newMonitor.apiConfig.allowSelfSignedCert}
+              />
+              <span class="ml-2 text-sm">Allow Self Signed Certificate</span>
+            </label>
+          </div>
+          <div class="col-span-6">
             <Label for="eval">Eval</Label>
             <p class="my-1 text-xs text-muted-foreground">
               You can write a custom eval function to evaluate the response. The function should return a promise that

@@ -78,7 +78,7 @@
   <div class="col-span-12">
     <Accordion.Root bind:value={index} class="accor">
       <Accordion.Item value={accordionValue}>
-        <Accordion.Trigger class="px-4 hover:bg-muted hover:no-underline">
+        <Accordion.Trigger class="rounded-md px-4 hover:bg-muted hover:no-underline">
           <div class="w-full text-left hover:no-underline">
             <p class="flex gap-x-2 text-xs font-semibold">
               {#if incidentType == "INCIDENT"}

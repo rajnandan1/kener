@@ -98,6 +98,7 @@ Here are the changelogs for Kener. Changelogs are only published when there are 
     - The event that has been edited isn't clickable after you save it [#350](https://github.com/rajnandan1/kener/issues/350)
     - /app/package.json ERROR on fresh install [#346](https://github.com/rajnandan1/kener/issues/346)
     - Site stops when monitor processing throws an error [#345](https://github.com/rajnandan1/kener/issues/345)
+    - Support for Self Signed Certificates [#351](https://github.com/rajnandan1/kener/issues/351)
 
 ### Migration Notes
 

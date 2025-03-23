@@ -73,7 +73,8 @@
         body: "",
         timeout: 10000,
         eval: DefaultAPIEval,
-        hideURLForGet: "NO"
+        hideURLForGet: "NO",
+        allowSelfSignedCert: false
       },
       tcpConfig: {
         hosts: [], //{timeout: 1000, host: "", type:""}

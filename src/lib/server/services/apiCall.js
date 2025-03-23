@@ -4,6 +4,8 @@ import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
 import * as cheerio from "cheerio";
 import { DefaultAPIEval } from "../../anywhere.js";
+import version from "../../version.js";
+import https from "https";
 
 class ApiCall {
   monitor;
@@ -18,7 +20,7 @@ class ApiCall {
 
   async execute() {
     let axiosHeaders = {};
-    axiosHeaders["User-Agent"] = "Kener/" + "3.1.0";
+    axiosHeaders["User-Agent"] = `Kener/${version()}`;
     axiosHeaders["Accept"] = "*/*";
 
     let body = this.monitor.type_data.body;
@@ -31,7 +33,7 @@ class ApiCall {
     }
 
     let method = this.monitor.type_data.method;
-    let timeout = this.monitor.type_data.timeout || 5000;
+    let timeout = this.monitor.type_data.timeout || 10000;
     let tag = this.monitor.tag;
 
     let monitorEval = !!this.monitor.type_data.eval ? this.monitor.type_data.eval : DefaultAPIEval;
@@ -68,6 +70,10 @@ class ApiCall {
       timeout: timeout,
       transformResponse: (r) => r,
     };
+
+    if (!!this.monitor.type_data.allowSelfSignedCert) {
+      options.httpsAgent = new https.Agent({ rejectUnauthorized: false });
+    }
 
     if (!!body) {
       options.data = body;
