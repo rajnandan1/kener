@@ -87,7 +87,7 @@
   <div class="mesh mx-auto min-w-full max-w-[655px] rounded-md px-4 py-12 lg:flex lg:items-center">
     <div class="blurry-bg mx-auto max-w-3xl text-center text-muted">
       <h1 class="    text-5xl font-extrabold leading-tight">
-        {f(parse(data.thisMonthName, "MMMM-yyyy", new Date()), "MMMM, yyyy", selectedLang, $page.data.localTz)}
+        {f(new Date(data.midnightMonthStartUTCTimestamp * 1000), "MMMM, yyyy", selectedLang, $page.data.localTz)}
       </h1>
       <p class="mx-auto mt-4 max-w-xl font-medium sm:text-xl">
         {l(data.lang, "Incident Updates")}
@@ -143,7 +143,7 @@
         }}
       >
         <ArrowLeft class="arrow mr-2 h-4 w-4" />
-        {f(parse(data.prevMonthName, "MMMM-yyyy", new Date()), "MMMM, yyyy", selectedLang, $page.data.localTz)}
+        {f(new Date(data.midnightPrevMonthUTCTimestamp * 1000), "MMMM, yyyy", selectedLang, $page.data.localTz)}
       </Button>
       <Button
         variant="secondary"
@@ -152,7 +152,7 @@
           window.location.href = `${base}/incidents/${data.nextMonthName}`;
         }}
       >
-        {f(parse(data.nextMonthName, "MMMM-yyyy", new Date()), "MMMM, yyyy", selectedLang, $page.data.localTz)}
+        {f(new Date(data.midnightNextMonthUTCTimestamp * 1000), "MMMM, yyyy", selectedLang, $page.data.localTz)}
         <ArrowRight class="arrow ml-2 h-4 w-4" />
       </Button>
     </div>

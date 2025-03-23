@@ -8,7 +8,7 @@ import {
 } from "$lib/server/controllers/controller.js";
 import { BeginningOfDay } from "$lib/server/tool.js";
 import db from "$lib/server/db/db.js";
-import { format, addMonths, parse, subMonths, getUnixTime, startOfMonth, endOfMonth } from "date-fns";
+import { format, addDays, subDays, parse, getUnixTime, startOfMonth, endOfMonth } from "date-fns";
 import { f } from "$lib/i18n/client";
 
 export async function load({ parent, url, params, cookies }) {
@@ -16,17 +16,33 @@ export async function load({ parent, url, params, cookies }) {
   const siteData = parentData.site;
   let monitors = await GetMonitors({ status: "ACTIVE" });
   const query = url.searchParams;
-  let todayStart = BeginningOfDay({ timeZone: parentData.localTz });
-  let tomorrowStart = todayStart + 86400;
   let locale = GetLocaleFromCookie(parentData.site, cookies);
   let month = params.month; //January-2021
+
   if (!!!month) {
     month = format(new Date(), "MMMM-yyyy");
   }
+  let monthStart = startOfMonth(parse(month, "MMMM-yyyy", new Date()));
+  let monthEnd = endOfMonth(parse(month, "MMMM-yyyy", new Date()));
+  let nextMonth = addDays(monthEnd, 1);
+  let prevMonth = subDays(monthStart, 1);
 
-  let monthStartTs = getUnixTime(startOfMonth(parse(month, "MMMM-yyyy", new Date())));
+  // let xx = parse(month, "MMMM-yyyy", new Date());
 
-  let monthEndTs = getUnixTime(endOfMonth(parse(month, "MMMM-yyyy", new Date())));
+  let midnightMonthStartUTCTimestamp = getUnixTime(monthStart);
+  let midnightMonthEndUTCTimestamp = getUnixTime(monthEnd);
+  let midnightNextMonthUTCTimestamp = getUnixTime(nextMonth);
+  let midnightPrevMonthUTCTimestamp = getUnixTime(prevMonth);
+
+  let monthStartTs = BeginningOfDay({
+    date: new Date(midnightMonthStartUTCTimestamp * 1000),
+    timeZone: parentData.localTz,
+  });
+
+  let monthEndTs = BeginningOfDay({
+    date: new Date(midnightMonthEndUTCTimestamp * 1000),
+    timeZone: parentData.localTz,
+  });
 
   let incidents = await GetIncidentsPage(monthStartTs, monthEndTs);
 
@@ -49,9 +65,12 @@ export async function load({ parent, url, params, cookies }) {
 
   return {
     incidents: incidents,
-    nextMonthName: f(addMonths(parse(month, "MMMM-yyyy", new Date()), 1), "MMMM-yyyy", "en", parentData.localTz),
-    prevMonthName: f(subMonths(parse(month, "MMMM-yyyy", new Date()), 1), "MMMM-yyyy", "en", parentData.localTz),
-    thisMonthName: f(parse(month, "MMMM-yyyy", new Date()), "MMMM-yyyy", "en", parentData.localTz),
+    nextMonthName: f(new Date(midnightNextMonthUTCTimestamp * 1000), "MMMM-yyyy", "en", parentData.localTz),
+    prevMonthName: f(new Date(midnightPrevMonthUTCTimestamp * 1000), "MMMM-yyyy", "en", parentData.localTz),
+    thisMonthName: f(monthEnd, "MMMM-yyyy", "en", parentData.localTz),
     canonical: siteData.siteURL + "/incidents/" + month,
+    midnightNextMonthUTCTimestamp: midnightNextMonthUTCTimestamp,
+    midnightPrevMonthUTCTimestamp: midnightPrevMonthUTCTimestamp,
+    midnightMonthStartUTCTimestamp: midnightMonthStartUTCTimestamp + 86400,
   };
 }

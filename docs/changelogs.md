@@ -41,6 +41,7 @@ Here are the changelogs for Kener. Changelogs are only published when there are 
 - /app/package.json ERROR on fresh install [#346](https://github.com/rajnandan1/kener/issues/346)
 - Site stops when monitor processing throws an error [#345](https://github.com/rajnandan1/kener/issues/345)
 - Support for Self Signed Certificates [#351](https://github.com/rajnandan1/kener/issues/351)
+- Wrong month is showing up after clicking on the 'Browse Events' link [#349](https://github.com/rajnandan1/kener/issues/349)
 
 ### Migration Notes
 
