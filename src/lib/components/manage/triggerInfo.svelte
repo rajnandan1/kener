@@ -607,10 +607,13 @@
                     set. The default is JSON. There are <a
                       target="_blank"
                       class="text-blue-500"
-                      href="https://kener.ing/docs/triggers#webhook-body">variables</a
+                      href="https://kener.ing/docs/triggers#triggers-trigger-variables">mustache variables</a
                     >
                     that you can use for the webhook body. To use a variable wrap it like
-                    <code>$&#123;variable&#125;</code>
+                    <code>&#123;&#123;variable&#125;&#125;</code>. There are some examples
+                    <a target="_blank" class="text-blue-500" href="https://kener.ing/docs/triggers#webhook-examples"
+                      >here</a
+                    >
                   </p>
 
                   <div class="overflow-hidden rounded-md">
@@ -648,10 +651,10 @@
               </div>
               {#if !!newTrigger.trigger_meta.has_slack_body}
                 <p class="my-2 text-xs text-muted-foreground">
-                  You can use a custom slack body. You can use mustache to generate a body. There are <a
+                  You can use a custom slack body. You can use mustache variable to generate a body. See the <a
                     target="_blank"
                     class="text-blue-500"
-                    href="https://kener.ing/docs/triggers#slack-body">variables</a
+                    href="https://kener.ing/docs/triggers#triggers-trigger-variables">variables</a
                   >
                   that you can use for the slack body.
                 </p>
@@ -689,10 +692,10 @@
               </div>
               {#if !!newTrigger.trigger_meta.has_discord_body}
                 <p class="my-2 text-xs text-muted-foreground">
-                  You can use a custom discord body. You can use mustache to generate a body. There are <a
+                  You can use a custom discord body. You can use mustache variable to generate a body. See the <a
                     target="_blank"
                     class="text-blue-500"
-                    href="https://kener.ing/docs/triggers#discord-body">variables</a
+                    href="https://kener.ing/docs/triggers#triggers-trigger-variables">variables</a
                   >
                   that you can use for the discord body.
                 </p>

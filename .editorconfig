@@ -43,6 +43,7 @@ indent_size = 2
 indent_style = space
 indent_size = 4
 trim_trailing_whitespace = false
+print_width = 180
 
 # Dockerfile
 [Dockerfile*]
