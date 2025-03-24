@@ -44,6 +44,8 @@ jobs:
     steps:
       - name: Check for Open Dependabot PRs
         id: check
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           PRS=$(gh pr list --repo ${{ github.repository }} --author "dependabot[bot]" --state open --json number --jq 'length')
           echo "Open Dependabot PRs: $PRS"
@@ -53,8 +55,6 @@ jobs:
           else
             echo "has_dependabot_prs=false" >> $GITHUB_ENV
           fi
-          env:
-            GH_TOKEN: ${{ secrets.GH_PAT }}
 
   build-and-push-to-registries:
     # Runs only after `check-lockfile` and `check-dependabot-prs` jobs complete successfully
