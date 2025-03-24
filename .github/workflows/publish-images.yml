@@ -1,4 +1,4 @@
-name: Publish Docker Images to Container Registries
+name: Publish Docker Image to Registries
 
 on:
   release:
@@ -7,6 +7,8 @@ on:
   workflow_dispatch:  # Allows for manual execution
 
 env:
+  ALPINE_VERSION: "23-alpine"
+  DEBIAN_VERSION: "23-slim"
   # Registry URLs
   DOCKERHUB_REGISTRY: docker.io
   GITHUB_REGISTRY: ghcr.io
@@ -37,31 +39,9 @@ jobs:
             exit 1
           )
 
-  check-dependabot-prs:
-    runs-on: ubuntu-latest
-    outputs:
-      has_dependabot_prs: ${{ steps.check.outputs.has_dependabot_prs }}
-    steps:
-      - name: Check for Open Dependabot PRs
-        id: check
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
-        run: |
-          PRS=$(gh pr list --repo ${{ github.repository }} --author "dependabot[bot]" --state open --json number --jq 'length')
-          echo "Open Dependabot PRs: $PRS"
-          if [ "$PRS" -gt 0 ]; then
-            echo "has_dependabot_prs=true" >> $GITHUB_ENV
-            exit 1  # Fail the workflow
-          else
-            echo "has_dependabot_prs=false" >> $GITHUB_ENV
-          fi
-
   build-and-push-to-registries:
-    # Runs only after `check-lockfile` and `check-dependabot-prs` jobs complete successfully
-    needs: [check-lockfile, check-dependabot-prs]
+    needs: check-lockfile  # Runs only after `check-lockfile` completes successfully
     name: Push Docker images to Docker Hub and GitHub Container Registry
-    # Ensures that there are no open Dependabot PRs before building Docker images
-    if: needs.check-dependabot-prs.outputs.has_dependabot_prs == 'false'
     strategy:
       matrix:
         variant: [alpine, debian]
@@ -105,7 +85,7 @@ jobs:
         with:
           registry: ${{ env.GITHUB_REGISTRY }}
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GH_PAT }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       # Combined metadata extraction for both registries
       - name: Extract Docker metadata
@@ -131,22 +111,8 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.3.0
 
-      - name: Load environment variables from .env.build
-        run: |
-          # If .env.build is missing, use default full image names (should match Dockerfile ARG defaults)
-          export ALPINE_VERSION="node:23.7.0-alpine3.21"
-          export DEBIAN_VERSION="node:23.7.0-bookworm-slim"
-
-          # If .env.build exists, override fallback values with Dependabot-updated values
-          if [ -f .env.build ]; then
-            export $(grep -v '^#' .env.build | xargs)
-          fi
-
-          echo "ALPINE_VERSION=$ALPINE_VERSION" >> $GITHUB_ENV
-          echo "DEBIAN_VERSION=$DEBIAN_VERSION" >> $GITHUB_ENV
-
       # Build and push Docker image with Buildx to both registries (don't push on PR)
-      - name: Build and push Docker images
+      - name: Build and push Docker image
         id: build-and-push
         uses: docker/build-push-action@v6.13.0
         with:
@@ -172,7 +138,7 @@ jobs:
           echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
 
       # For use in other workflows (e.g. 'generate-readme', etc.)
-      - name: Save release's build version number to repository variable
+      - name: Save Build Version to Repository Variable
         if: matrix.variant == 'debian' && github.run_attempt == 1
         run: |
           # VERSION="${{ steps.meta.outputs.version }}"
