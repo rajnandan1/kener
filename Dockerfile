@@ -1,15 +1,15 @@
 # syntax=docker/dockerfile:1
 
 # Global build arguments (defined default values in case `.env.build` isn't loaded)
-ARG ALPINE_VERSION=node:23.7.0-alpine3.21
-ARG DEBIAN_VERSION=node:23.7.0-bookworm-slim
+ARG ALPINE_VERSION_TAG=23.7.0-alpine3.21
+ARG DEBIAN_VERSION_TAG=23.7.0-bookworm-slim
 ARG VARIANT=debian
 
 #==========================================================#
 #                   STAGE 1: BUILD STAGE                    #
 #==========================================================#
 
-FROM ${DEBIAN_VERSION} AS builder-debian
+FROM node:${DEBIAN_VERSION_TAG} AS builder-debian
 RUN apt-get update && apt-get install -y \
         build-essential=12.9 \
         python3=3.11.2-1+b1 \
@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y \
         iputils-ping=3:20221126-1+deb12u1 && \
     rm -rf /var/lib/apt/lists/*
 
-FROM ${ALPINE_VERSION} AS builder-alpine
+FROM node:${ALPINE_VERSION_TAG} AS builder-alpine
 RUN apk add --no-cache --update \
         build-base=0.5-r3 \
         python3=3.12.9-r0 \
@@ -71,7 +71,7 @@ RUN npm run build && \
 #             STAGE 2: PRODUCTION/FINAL STAGE              #
 #==========================================================#
 
-FROM ${DEBIAN_VERSION} AS final-debian
+FROM node:${DEBIAN_VERSION_TAG} AS final-debian
 # TODO: Consider adding `--no-install-recommends`, but will need testing (may further help reduce final build size)
 RUN apt-get update && apt-get install -y \
         iputils-ping=3:20221126-1+deb12u1 \
@@ -81,7 +81,7 @@ RUN apt-get update && apt-get install -y \
     curl && \
     rm -rf /var/lib/apt/lists/*
 
-FROM ${ALPINE_VERSION} AS final-alpine
+FROM node:${ALPINE_VERSION_TAG} AS final-alpine
 RUN apk add --no-cache --update \
 	iputils=20240905-r0 \
 	sqlite=3.48.0-r0 \
