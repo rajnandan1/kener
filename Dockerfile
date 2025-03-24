@@ -1,15 +1,15 @@
 # syntax=docker/dockerfile:1
 
-# Global build arguments
-ARG ALPINE_VERSION=23.7.0-alpine3.21
-ARG DEBIAN_VERSION=23.7.0-bookworm-slim
+# Global build arguments (defined default values in case `.env.build` isn't loaded)
+ARG ALPINE_VERSION=node:23.7.0-alpine3.21
+ARG DEBIAN_VERSION=node:23.7.0-bookworm-slim
 ARG VARIANT=debian
 
 #==========================================================#
 #                   STAGE 1: BUILD STAGE                    #
 #==========================================================#
 
-FROM node:${DEBIAN_VERSION} AS builder-debian
+FROM ${DEBIAN_VERSION} AS builder-debian
 RUN apt-get update && apt-get install -y \
         build-essential=12.9 \
         python3=3.11.2-1+b1 \
@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y \
         iputils-ping=3:20221126-1+deb12u1 && \
     rm -rf /var/lib/apt/lists/*
 
-FROM node:${ALPINE_VERSION} AS builder-alpine
+FROM ${ALPINE_VERSION} AS builder-alpine
 RUN apk add --no-cache --update \
         build-base=0.5-r3 \
         python3=3.12.9-r0 \
@@ -31,7 +31,7 @@ RUN apk add --no-cache --update \
         g++=14.2.0-r4 \
         sqlite=3.48.0-r0 \
         sqlite-dev=3.48.0-r0 \
-        tzdata \
+        tzdata=2025a-r0 \
         iputils=20240905-r0
 
 FROM builder-${VARIANT} AS builder
@@ -58,9 +58,9 @@ COPY . .
 # TODO: Reevaluate permissions (possibly reduce?)...
 # Remove docs directory and ensure required directories exist
 RUN rm -rf src/routes/\(docs\) \
-    static/documentation \
+		static/documentation && \
     static/fonts/lato/full && \
-  mkdir -p uploads database && \
+	  mkdir -p uploads database && \
   # TODO: Consider changing below to `chmod -R u-rwX,g=rX,o= uploads database`
     chmod -R 750 uploads database
 
@@ -84,9 +84,9 @@ RUN apt-get update && apt-get install -y \
 
 FROM node:${ALPINE_VERSION} AS final-alpine
 RUN apk add --no-cache --update \
-  iputils=20240905-r0 \
-  sqlite=3.48.0-r0 \
-  tzdata
+	iputils=20240905-r0 \
+	sqlite=3.48.0-r0 \
+	tzdata=2025a-r0
 
 FROM final-${VARIANT} AS final
 
