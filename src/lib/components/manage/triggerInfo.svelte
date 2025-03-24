@@ -1,6 +1,12 @@
 <script>
   import { Button } from "$lib/components/ui/button";
-  import { Plus, X, Loader, Settings, Check, ChevronRight } from "lucide-svelte";
+  import { page } from "$app/stores";
+  import Plus from "lucide-svelte/icons/plus";
+  import X from "lucide-svelte/icons/x";
+  import Loader from "lucide-svelte/icons/loader";
+  import Settings from "lucide-svelte/icons/settings";
+  import Check from "lucide-svelte/icons/check";
+  import ChevronRight from "lucide-svelte/icons/chevron-right";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { base } from "$app/paths";
@@ -9,8 +15,14 @@
   import { createEventDispatcher } from "svelte";
   import { onMount } from "svelte";
   import { IsValidURL } from "$lib/clientTools.js";
+  import { DiscordJSONTemplate, WebhookJSONTemplate, SlackJSONTemplate } from "$lib/anywhere.js";
   import { clickOutsideAction, slide } from "svelte-legos";
   import * as Card from "$lib/components/ui/card";
+  import CodeMirror from "svelte-codemirror-editor";
+  import { json } from "@codemirror/lang-json";
+  import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
+  import { mode } from "mode-watcher";
+
   let status = "ACTIVE";
   let formState = "idle";
   let showAddTrigger = false;
@@ -29,8 +41,12 @@
       headers: [],
       to: "",
       from: data.fromEmail,
-      webhook_body: "",
+      webhook_body: WebhookJSONTemplate,
       has_webhook_body: false,
+      has_discord_body: false,
+      discord_body: DiscordJSONTemplate,
+      has_slack_body: false,
+      slack_body: SlackJSONTemplate,
       email_type: data.preferredModeEmail,
       smtp_host: data.smtp?.smtp_host ? data.smtp.smtp_host : "",
       smtp_port: data.smtp?.smtp_port ? data.smtp.smtp_port : "",
@@ -52,8 +68,12 @@
         headers: [],
         to: "",
         from: data.fromEmail,
-        webhook_body: "",
+        webhook_body: WebhookJSONTemplate,
         has_webhook_body: false,
+        has_discord_body: false,
+        discord_body: DiscordJSONTemplate,
+        has_slack_body: false,
+        slack_body: SlackJSONTemplate,
         email_type: data.preferredModeEmail,
         smtp_host: data.smtp?.smtp_host ? data.smtp.smtp_host : "",
         smtp_port: data.smtp?.smtp_port ? data.smtp.smtp_port : "",
@@ -91,12 +111,34 @@
 
   async function addNewTrigger() {
     invalidFormMessage = "";
-    formState = "loading";
+    // formState = "loading";
     //newTrigger.trigger_type present not empty
     if (newTrigger.trigger_type == "") {
       invalidFormMessage = "Trigger Type is required";
       formState = "idle";
       return;
+    }
+    if (newTrigger.trigger_type == "discord") {
+      if (newTrigger.trigger_meta.has_discord_body) {
+        try {
+          JSON.parse(newTrigger.trigger_meta.discord_body);
+        } catch (e) {
+          invalidFormMessage = "Invalid JSON in Discord Body";
+          formState = "idle";
+          return;
+        }
+      }
+    }
+    if (newTrigger.trigger_type == "slack") {
+      if (newTrigger.trigger_meta.has_slack_body) {
+        try {
+          JSON.parse(newTrigger.trigger_meta.slack_body);
+        } catch (e) {
+          invalidFormMessage = "Invalid JSON in Slack Body";
+          formState = "idle";
+          return;
+        }
+      }
     }
 
     if (newTrigger.trigger_type == "email") {
@@ -147,6 +189,14 @@
             formState = "idle";
             return;
           }
+        }
+      }
+
+      if (newTrigger.trigger_meta.has_webhook_body) {
+        if (newTrigger.trigger_meta.webhook_body == "") {
+          invalidFormMessage = "Webhook Body is required";
+          formState = "idle";
+          return;
         }
       }
     }
@@ -338,10 +388,12 @@
       <Loader class="ml-2 mt-2 inline h-6 w-6 animate-spin" />
     {/if}
   </div>
-  <Button on:click={addNewTriggerFn}>
-    <Plus class="mr-2 inline h-6 w-6" />
-    New Trigger
-  </Button>
+  {#if $page.data.user.role != "member"}
+    <Button on:click={addNewTriggerFn}>
+      <Plus class="mr-2 inline h-6 w-6" />
+      New Trigger
+    </Button>
+  {/if}
 </div>
 
 <div class="mt-4">
@@ -374,12 +426,13 @@
             {#if trigger.testLoaders == "success"}
               <Check class="mr-1 inline h-3 w-3 text-green-500 " />
             {/if}
-            <span class="h-4 text-xs font-medium"> TEST </span>
+            <span class="h-4 text-xs font-medium"> Test Trigger </span>
           </Button>
-
-          <Button variant="secondary" class=" h-8 w-8 p-2" href={"#" + trigger.id}>
-            <Settings class="inline h-4 w-4" />
-          </Button>
+          {#if $page.data.user.role != "member"}
+            <Button variant="secondary" class=" h-8 w-8 p-2" href={"#" + trigger.id}>
+              <Settings class="inline h-4 w-4" />
+            </Button>
+          {/if}
         </div>
       </Card.Header>
     </Card.Root>
@@ -423,7 +476,7 @@
               }}
             />
             <div
-              class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rtl:peer-checked:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"
+              class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 rtl:peer-checked:after:-translate-x-full"
             ></div>
           </label>
         </div>
@@ -543,7 +596,7 @@
                 </Button>
               </div>
               <div>
-                <label>
+                <label class="text-sm font-medium">
                   <input
                     on:change={(e) => {
                       newTrigger.trigger_meta.has_webhook_body = e.target.checked;
@@ -559,20 +612,115 @@
                     set. The default is JSON. There are <a
                       target="_blank"
                       class="text-blue-500"
-                      href="https://kener.ing/docs/triggers#webhook-body">variables</a
+                      href="https://kener.ing/docs/triggers#triggers-trigger-variables">mustache variables</a
                     >
                     that you can use for the webhook body. To use a variable wrap it like
-                    <code>$&#123;variable&#125;</code>
+                    <code>&#123;&#123;variable&#125;&#125;</code>. There are some examples
+                    <a target="_blank" class="text-blue-500" href="https://kener.ing/docs/triggers#webhook-examples"
+                      >here</a
+                    >
                   </p>
-                  <div class="w-full">
-                    <textarea
+
+                  <div class="overflow-hidden rounded-md">
+                    <CodeMirror
                       bind:value={newTrigger.trigger_meta.webhook_body}
-                      class="mt-2 h-[500px] w-full rounded-sm border p-2"
-                      placeholder={placeholderWebhookBody}
-                    ></textarea>
+                      lang={json()}
+                      theme={$mode == "dark" ? githubDark : githubLight}
+                      styles={{
+                        "&": {
+                          width: "100%",
+                          maxWidth: "100%",
+                          height: "320px",
+                          border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                          borderRadius: "0.375rem"
+                        }
+                      }}
+                    />
                   </div>
                 {/if}
               </div>
+            </div>
+          {:else if newTrigger.trigger_type == "slack"}
+            <div class="mt-4 flex w-full flex-col gap-y-2">
+              <div>
+                <label class="text-sm font-medium">
+                  <input
+                    on:change={(e) => {
+                      newTrigger.trigger_meta.has_slack_body = e.target.checked;
+                    }}
+                    type="checkbox"
+                    checked={newTrigger.trigger_meta.has_slack_body}
+                  />
+                  Use Custom Slack Payload
+                </label>
+              </div>
+              {#if !!newTrigger.trigger_meta.has_slack_body}
+                <p class="my-2 text-xs text-muted-foreground">
+                  You can use a custom slack body. You can use mustache variable to generate a body. See the <a
+                    target="_blank"
+                    class="text-blue-500"
+                    href="https://kener.ing/docs/triggers#triggers-trigger-variables">variables</a
+                  >
+                  that you can use for the slack body.
+                </p>
+                <div class="overflow-hidden rounded-md">
+                  <CodeMirror
+                    bind:value={newTrigger.trigger_meta.slack_body}
+                    lang={json()}
+                    theme={$mode == "dark" ? githubDark : githubLight}
+                    styles={{
+                      "&": {
+                        width: "100%",
+                        maxWidth: "100%",
+                        height: "320px",
+                        border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                        borderRadius: "0.375rem"
+                      }
+                    }}
+                  />
+                </div>
+              {/if}
+            </div>
+          {:else if newTrigger.trigger_type == "discord"}
+            <div class="mt-4 flex w-full flex-col gap-y-2">
+              <div>
+                <label class="text-sm font-medium">
+                  <input
+                    on:change={(e) => {
+                      newTrigger.trigger_meta.has_discord_body = e.target.checked;
+                    }}
+                    type="checkbox"
+                    checked={newTrigger.trigger_meta.has_discord_body}
+                  />
+                  Use Custom Discord Payload
+                </label>
+              </div>
+              {#if !!newTrigger.trigger_meta.has_discord_body}
+                <p class="my-2 text-xs text-muted-foreground">
+                  You can use a custom discord body. You can use mustache variable to generate a body. See the <a
+                    target="_blank"
+                    class="text-blue-500"
+                    href="https://kener.ing/docs/triggers#triggers-trigger-variables">variables</a
+                  >
+                  that you can use for the discord body.
+                </p>
+                <div class="overflow-hidden rounded-md">
+                  <CodeMirror
+                    bind:value={newTrigger.trigger_meta.discord_body}
+                    lang={json()}
+                    theme={$mode == "dark" ? githubDark : githubLight}
+                    styles={{
+                      "&": {
+                        width: "100%",
+                        maxWidth: "100%",
+                        height: "320px",
+                        border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                        borderRadius: "0.375rem"
+                      }
+                    }}
+                  />
+                </div>
+              {/if}
             </div>
           {:else if newTrigger.trigger_type == "email"}
             <div class="mt-4 w-full">
@@ -667,11 +815,11 @@
       </div>
       <div class="absolute bottom-0 grid h-16 w-full grid-cols-6 justify-end gap-2 border-t p-3 pr-6">
         <div class="col-span-5 py-2.5">
-          <p class="text-right text-xs font-medium text-red-500">{invalidFormMessage}</p>
+          <p class="text-right text-sm font-medium text-destructive">{invalidFormMessage}</p>
         </div>
         <div class="col-span-1">
           <Button class="col-span-1 w-full" disabled={formState === "loading"} on:click={addNewTrigger}>
-            Save
+            Save Trigger
             {#if formState === "loading"}
               <Loader class="ml-2 inline h-4 w-4 animate-spin" />
             {/if}

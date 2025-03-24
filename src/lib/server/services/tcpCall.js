@@ -2,26 +2,7 @@
 import axios from "axios";
 import { TCP } from "../ping.js";
 import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
-
-const defaultTcpEval = `(async function (responseDataBase64) {
-	let arrayOfPings = JSON.parse(atob(responseDataBase64));
-	let latencyTotal = arrayOfPings.reduce((acc, ping) => {
-		return acc + ping.latency;
-	}, 0);
-
-	let alive = arrayOfPings.reduce((acc, ping) => {
-		if (ping.status === "open") {
-			return acc && true;
-		} else {
-			return false;
-		}
-	}, true);
-
-	return {
-		status: alive ? 'UP' : 'DOWN',
-		latency: latencyTotal / arrayOfPings.length,
-	}
-})`;
+import { DefaultTCPEval } from "../../anywhere.js";
 
 class TcpCall {
   monitor;
@@ -32,7 +13,7 @@ class TcpCall {
 
   async execute() {
     let hosts = this.monitor.type_data.hosts;
-    let tcpEval = !!this.monitor.type_data.tcpEval ? this.monitor.type_data.tcpEval : defaultTcpEval;
+    let tcpEval = !!this.monitor.type_data.tcpEval ? this.monitor.type_data.tcpEval : DefaultTCPEval;
     let tag = this.monitor.tag;
 
     if (hosts === undefined) {
@@ -51,14 +32,19 @@ class TcpCall {
       const host = hosts[i];
       arrayOfPings.push(await TCP(host.type, host.host, host.port, host.timeout));
     }
-    let respBase64 = Buffer.from(JSON.stringify(arrayOfPings)).toString("base64");
 
     let evalResp = undefined;
 
     try {
-      evalResp = await eval(tcpEval + `("${respBase64}")`);
+      const evalFunction = new Function("arrayOfPings", `return (${tcpEval})(arrayOfPings);`);
+      evalResp = await evalFunction(arrayOfPings);
     } catch (error) {
       console.log(`Error in tcpEval for ${tag}`, error.message);
+      return {
+        status: DOWN,
+        latency: 0,
+        type: ERROR,
+      };
     }
     //reduce to get the status
     return {

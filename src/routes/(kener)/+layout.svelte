@@ -3,17 +3,23 @@
   import "../../kener.css";
   import Nav from "$lib/components/nav.svelte";
   import { onMount } from "svelte";
+  import { Input } from "$lib/components/ui/input";
   import { base } from "$app/paths";
   import { Button } from "$lib/components/ui/button";
   import Sun from "lucide-svelte/icons/sun";
   import Moon from "lucide-svelte/icons/moon";
-  import { Languages } from "lucide-svelte";
+  import Languages from "lucide-svelte/icons/languages";
+  import Globe from "lucide-svelte/icons/globe";
+  import * as Popover from "$lib/components/ui/popover";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { analyticsEvent } from "$lib/boringOne";
   import { setMode, mode, ModeWatcher } from "mode-watcher";
-  export let data;
+  import { l } from "$lib/i18n/client";
 
+  export let data;
   let defaultLocaleKey = data.selectedLang;
+  let allTimezones = Intl.supportedValuesOf("timeZone");
+  let searchTzValue = "";
   let defaultTheme = data.site.theme;
   const allLocales = data.site.i18n?.locales.filter((locale) => locale.selected === true);
   let hasConfiguredAnalytics =
@@ -52,15 +58,19 @@
     location.reload();
   }
 
-  let Analytics;
+  //set timezone
+  function setTz(tz) {
+    document.cookie = `localTz=${tz};max-age=${60 * 60 * 24 * 365 * 30};path=${base ? "base" : "/"};`;
+    location.reload();
+  }
 
+  let Analytics;
+  let myTimezone = data.localTz;
   onMount(async () => {
-    let localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (localTz != data.localTz) {
+    myTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (data.localTz === "UTC") {
       if (data.isBot === false) {
-        document.cookie =
-          "localTz=" + localTz + ";max-age=" + 60 * 60 * 24 * 365 * 30 + `;path=${base ? "base" : "/"};`;
-        location.reload();
+        setTz(myTimezone);
       }
     }
     if (defaultTheme != "none") {
@@ -177,40 +187,104 @@
       </div>
     </footer>
   {/if}
-  <div class="fixed bottom-4 right-4 z-20 rounded-md bg-background">
-    {#if data.site.i18n && data.site.i18n.locales && allLocales.length > 1}
-      <DropdownMenu.Root>
-        <DropdownMenu.Trigger>
-          <Button variant="ghost" size="icon" class="flex">
-            <Languages class="h-[1.2rem] w-[1.2rem]" />
-          </Button>
-        </DropdownMenu.Trigger>
-        <DropdownMenu.Content>
-          <DropdownMenu.Group>
-            {#each allLocales as locale}
-              <DropdownMenu.Item
-                class={defaultLocaleKey == locale.code ? "bg-input" : ""}
-                on:click={(e) => {
-                  setLanguage(locale.code);
-                }}>{locale.name}</DropdownMenu.Item
-              >
-            {/each}
-          </DropdownMenu.Group>
-        </DropdownMenu.Content>
-      </DropdownMenu.Root>
+  <div class="fixed bottom-4 right-4 z-20 flex flex-col rounded-md bg-background">
+    {#if !!data.site.tzToggle && data.site.tzToggle === "YES"}
+      <div>
+        <Popover.Root>
+          <Popover.Trigger>
+            <Button variant="ghost" size="icon" class="flex">
+              <Globe class="h-[1.2rem] w-[1.2rem]" />
+            </Button>
+          </Popover.Trigger>
+          <Popover.Content class="px-0 py-2">
+            <div class="flex flex-col gap-2">
+              <div class="flex px-2 pb-1 text-xs font-semibold">
+                <span class="flex-1">
+                  {@html l(data.lang, "Timezone set to %tz", {
+                    tz: "<i>" + data.localTz + "</i>"
+                  })}
+                </span>
+              </div>
+              <div class="flex flex-col gap-2">
+                <div class="border-b px-2 pb-2">
+                  <Input
+                    placeholder="Search for a timezone"
+                    class="h-8 px-2 py-1 text-xs"
+                    value={searchTzValue}
+                    on:input={(e) => {
+                      searchTzValue = e.target.value;
+                    }}
+                  />
+                </div>
+                <div class="flex h-[200px] flex-col overflow-y-auto">
+                  {#each allTimezones as tz}
+                    {#if tz.toLowerCase().includes(searchTzValue.toLowerCase())}
+                      <div class="text-xs font-semibold">
+                        <Button
+                          variant={tz === data.localTz ? "primary" : "ghost"}
+                          class="h-8 w-full justify-start rounded-none text-xs text-muted-foreground"
+                          on:click={() => setTz(tz)}
+                        >
+                          {tz}
+                        </Button>
+                      </div>
+                    {/if}
+                  {/each}
+                </div>
+                {#if myTimezone !== data.localTz}
+                  <div class="px-2">
+                    <Button
+                      variant="outline"
+                      class="h-6 w-full bg-transparent px-2 text-xs"
+                      on:click={() => setTz(myTimezone)}
+                    >
+                      {l(data.lang, "Switch to your timezone")}
+                    </Button>
+                  </div>
+                {/if}
+              </div>
+            </div>
+          </Popover.Content>
+        </Popover.Root>
+      </div>
     {/if}
-    {#if !!data.site.themeToggle}
-      <Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
-        <Sun class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-        <Moon class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-        <span class="sr-only">Toggle theme</span>
-      </Button>
+    {#if data.site.i18n && data.site.i18n.locales && allLocales.length > 1}
+      <div>
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            <Button variant="ghost" size="icon" class="flex">
+              <Languages class="h-[1.2rem] w-[1.2rem]" />
+            </Button>
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content class="max-h-[250px] overflow-y-auto">
+            <DropdownMenu.Group>
+              {#each allLocales as locale}
+                <DropdownMenu.Item
+                  class={defaultLocaleKey == locale.code ? "bg-input" : ""}
+                  on:click={(e) => {
+                    setLanguage(locale.code);
+                  }}>{locale.name}</DropdownMenu.Item
+                >
+              {/each}
+            </DropdownMenu.Group>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
+      </div>
+    {/if}
+    {#if !!data.site.themeToggle && data.site.themeToggle === "YES"}
+      <div>
+        <Button on:click={toggleMode} variant="ghost" size="icon" class="flex">
+          <Sun class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+          <Moon class="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          <span class="sr-only">Toggle theme</span>
+        </Button>
+      </div>
     {/if}
   </div>
   {#if data.isLoggedIn}
-    <a href="{base}/manage/app/site" rel="external" class="button-77 fixed bottom-8 left-8 z-50" role="button">
-      Manage
-    </a>
+    <div class="fixed bottom-2 left-2 z-50 md:bottom-8 md:left-8">
+      <a href="{base}/manage/app/site" rel="external" class="button-77" role="button"> Manage </a>
+    </div>
   {/if}
 </main>
 

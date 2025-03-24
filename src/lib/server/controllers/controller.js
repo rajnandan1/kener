@@ -15,9 +15,13 @@ import {
 import db from "../db/db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { Resend } from "resend";
+
 import crypto from "crypto";
 import { format, subMonths, addMonths, startOfMonth } from "date-fns";
-import { UP, DOWN, DEGRADED, NO_DATA } from "../constants.js";
+import { UP, DOWN, DEGRADED, NO_DATA, REALTIME, SIGNAL } from "../constants.js";
+import { GetMinuteStartNowTimestampUTC, GetNowTimestampUTC, ReplaceAllOccurrences } from "../tool.js";
+import getSMTPTransport from "../notification/smtps.js";
 
 const saltRounds = 10;
 const DUMMY_SECRET = "DUMMY_SECRET";
@@ -107,6 +111,12 @@ const siteDataKeys = [
     data_type: "string",
   },
   {
+    key: "tzToggle",
+    //boolean
+    isValid: (value) => typeof value === "string",
+    data_type: "string",
+  },
+  {
     key: "barStyle",
     //PARTIAL or FULL
     isValid: (value) => typeof value === "string" && ["PARTIAL", "FULL"].includes(value),
@@ -152,6 +162,11 @@ const siteDataKeys = [
   {
     key: "homeIncidentStartTimeWithin",
     isValid: (value) => parseInt(value) >= 1,
+    data_type: "string",
+  },
+  {
+    key: "incidentGroupView",
+    isValid: (value) => typeof value === "string" && value.trim().length > 0,
     data_type: "string",
   },
 ];
@@ -287,6 +302,57 @@ export const VerifyPassword = async (plainTextPassword, hashedPassword) => {
   }
 };
 
+export const GetLatestMonitoringData = async (monitor_tag) => {
+  return await db.getLatestMonitoringData(monitor_tag);
+};
+export const GetLatestStatusActiveAll = async (monitor_tags) => {
+  let latestData = await db.getLatestMonitoringDataAllActive(monitor_tags);
+  let status = "NO_DATA";
+  for (let i = 0; i < latestData.length; i++) {
+    //if any status is down then status = down, if any is degraded then status = degraded, down > degraded > up
+    if (latestData[i].status === "DOWN") {
+      status = "DOWN";
+    } else if (latestData[i].status === "DEGRADED" && status !== "DOWN") {
+      status = "DEGRADED";
+    } else if (latestData[i].status === "UP" && status !== "DOWN" && status !== "DEGRADED") {
+      status = "UP";
+    }
+  }
+  return {
+    status: status,
+  };
+};
+export const GetLastHeartbeat = async (monitor_tag) => {
+  return await db.getLastHeartbeat(monitor_tag);
+};
+
+export const RegisterHeartbeat = async (tag, secret) => {
+  let monitor = await db.getMonitorByTag(tag);
+  if (!monitor) {
+    return null;
+  }
+  let typeData = monitor.type_data;
+  if (!typeData) {
+    return null;
+  }
+  try {
+    let heartbeatConfig = JSON.parse(typeData);
+    let heartbeatSecret = heartbeatConfig.secretString;
+    if (heartbeatSecret === secret) {
+      return await db.insertMonitoringData({
+        monitor_tag: monitor.tag,
+        timestamp: GetMinuteStartNowTimestampUTC(GetNowTimestampUTC()),
+        status: UP,
+        latency: 0,
+        type: SIGNAL,
+      });
+    }
+  } catch (e) {
+    console.error("Error registering heartbeat:", e);
+  }
+  return null;
+};
+
 export const GenerateToken = async (data) => {
   try {
     const token = jwt.sign(data, process.env.KENER_SECRET_KEY || DUMMY_SECRET, {
@@ -351,6 +417,12 @@ export const CreateNewAPIKey = async (data) => {
   const apiKey = generateApiKey();
   const hashed_key = await createHash(apiKey);
   //insert into db
+
+  //data.name cant be empty
+  if (!data.name) {
+    throw new Error("Name is required");
+  }
+
   await db.createNewApiKey({
     name: data.name,
     hashed_key: hashed_key,
@@ -392,12 +464,6 @@ export const IsSetupComplete = async () => {
   return data.length > 0;
 };
 
-export const HashString = (str) => {
-  const hash = crypto.createHash("sha256");
-  hash.update(str);
-  return hash.digest("hex");
-};
-
 export const InterpolateData = (rawData, startTimestamp, initialStatus, overrideEndTimestamp) => {
   const interpolatedData = [];
   let currentStatus = initialStatus || "UP";
@@ -433,6 +499,31 @@ export const GetLastStatusBefore = async (monitor_tag, timestamp) => {
   }
   return NO_DATA;
 };
+export const GetMonitoringData = async (tag, since, now) => {
+  return await db.getMonitoringData(tag, since, now);
+};
+export const GetMonitoringDataAll = async (tags, since, now) => {
+  return await db.getMonitoringDataAll(tags, since, now);
+};
+export const GetLastStatusBeforeAll = async (monitor_tags, timestamp) => {
+  let data = await db.getLastStatusBeforeAll(monitor_tags, timestamp);
+  if (data) {
+    return data.status;
+  }
+  return NO_DATA;
+};
+
+export const AggregateData = (rawData) => {
+  //data like [{ timestamp: 1732435920, status: 'NO_DATA' }]
+  let rawDataWithStatus = rawData.filter((data) => data.status !== NO_DATA);
+  const total = rawDataWithStatus.length;
+  const UPs = rawDataWithStatus.filter((data) => data.status === UP).length;
+  const DOWNs = rawDataWithStatus.filter((data) => data.status === DOWN).length;
+  const DEGRADEDs = rawDataWithStatus.filter((data) => data.status === DEGRADED).length;
+  const NO_DATAs = total - (UPs + DOWNs + DEGRADEDs);
+
+  return { total, UPs, DOWNs, DEGRADEDs, NO_DATAs };
+};
 
 export const GetDataGroupByDayAlternative = async (monitor_tag, start, end, timezoneOffsetMinutes = 0) => {
   const offsetMinutes = Number(timezoneOffsetMinutes);
@@ -444,7 +535,7 @@ export const GetDataGroupByDayAlternative = async (monitor_tag, start, end, time
 
   let rawData = await db.getDataGroupByDayAlternative(monitor_tag, start, end);
   let anchorStatus = await GetLastStatusBefore(monitor_tag, start);
-  rawData = InterpolateData(rawData, start, anchorStatus, rawData.length == 0 ? end - 60 : null);
+  rawData = InterpolateData(rawData, start, anchorStatus, end);
 
   const groupedData = rawData.reduce((acc, row) => {
     // Calculate day group considering timezone offset
@@ -491,6 +582,7 @@ export const CreateIncident = async (data) => {
     end_date_time: !!data.end_date_time ? data.end_date_time : null,
     state: !!data.state ? data.state : "INVESTIGATING",
     incident_type: !!data.incident_type ? data.incident_type : "INCIDENT",
+    incident_source: !!data.incident_source ? data.incident_source : "DASHBOARD",
   };
 
   //incident_type == INCIDENT delete endDateTime
@@ -505,7 +597,7 @@ export const CreateIncident = async (data) => {
 
   let newIncident = await db.createIncident(incident);
   return {
-    incident_id: newIncident[0],
+    incident_id: newIncident.id,
   };
 };
 
@@ -681,6 +773,7 @@ export const GetIncidentsDashboard = async (data) => {
 
   for (let i = 0; i < incidents.length; i++) {
     incidents[i].monitors = await GetIncidentMonitors(incidents[i].id);
+    incidents[i].isAutoCreated = await db.alertExistsIncident(incidents[i].id);
   }
 
   return {
@@ -837,6 +930,250 @@ export const GetSMTPFromENV = () => {
     smtp_pass: process.env.SMTP_PASS,
     smtp_secure: !!process.env.SMTP_SECURE,
   };
+};
+
+export const IsResendSetup = () => {
+  return !!process.env.RESEND_API_KEY && !!process.env.RESEND_SENDER_EMAIL;
+};
+
+export const IsEmailSetup = () => {
+  return !!GetSMTPFromENV || IsResendSetup();
+};
+
+export const UpdateUserData = async (data) => {
+  let userID = data.userID;
+  let updateKey = data.updateKey;
+  let updateValue = data.updateValue;
+
+  //if updateKey is password, throw error
+  if (updateKey === "password") {
+    throw new Error("Password cannot be updated using this method");
+  }
+  //if updateValue is empty, throw error
+  if (!!!updateValue) {
+    throw new Error("Update value cannot be empty");
+  }
+
+  switch (updateKey) {
+    case "name":
+      return await db.updateUserName(userID, updateValue);
+    case "role":
+      return await db.updateUserRole(userID, updateValue);
+    case "is_verified":
+      return await db.updateIsVerified(userID, updateValue);
+    default:
+      throw new Error("Invalid update key");
+  }
+};
+
+export const CreateNewInvitation = async (data) => {
+  let invite = {};
+
+  //create a token
+  let token = crypto.randomBytes(32).toString("hex");
+  let hashedToken = createHash(token);
+  let invitation_token = data.invitation_type.toLowerCase() + "_" + hashedToken;
+
+  invite.invitation_token = invitation_token;
+  invite.invitation_type = data.invitation_type;
+  invite.invited_user_id = data.invited_user_id;
+  invite.invited_by_user_id = data.invited_by_user_id;
+  invite.invitation_meta = data.invitation_meta;
+  invite.invitation_expiry = data.invitation_expiry;
+  invite.invitation_status = "PENDING";
+
+  //update old invitations to VOID
+  await db.updateInvitationStatusToVoid(invite.invited_user_id, invite.invitation_type);
+
+  let res = await db.insertInvitation(invite);
+  return {
+    invitation_token,
+  };
+};
+
+//check if there is a row for given invited_user_id,invitation_type and invitation_status = PENDING
+export const CheckInvitationExists = async (invited_user_id, invitation_type) => {
+  let invitation = await db.invitationExists(invited_user_id, invitation_type);
+  return !!invitation;
+};
+
+//getInvitationByToken
+export const GetActiveInvitationByToken = async (invitation_token) => {
+  let invitation = await db.getActiveInvitationByToken(invitation_token);
+  return invitation;
+};
+
+//updateInvitationStatusToAccepted
+export const UpdateInvitationStatusToAccepted = async (invitation_token) => {
+  return await db.updateInvitationStatusToAccepted(invitation_token);
+};
+
+//getUserById
+export const GetUserByID = async (userID) => {
+  return await db.getUserById(userID);
+};
+
+//getUserByEmail
+export const GetUserByEmail = async (email) => {
+  return await db.getUserByEmail(email);
+};
+
+export const SendEmailWithTemplate = async (template, data, email, subject, emailText) => {
+  //for each key in data, replace the key in template with value
+  for (const key in data) {
+    if (Object.hasOwnProperty.call(data, key)) {
+      const value = data[key];
+      template = ReplaceAllOccurrences(template, `{{${key}}}`, value);
+    }
+  }
+
+  const senderEmail = process.env.RESEND_SENDER_EMAIL;
+  const resendKey = process.env.RESEND_API_KEY;
+
+  let mail = {
+    from: senderEmail,
+    to: [email],
+    subject: subject,
+    text: emailText,
+    html: template,
+  };
+
+  let smtpData = GetSMTPFromENV();
+
+  try {
+    if (!!smtpData) {
+      const transporter = getSMTPTransport(smtpData);
+      const mailOptions = {
+        from: smtpData.smtp_from_email,
+        to: email,
+        subject: mail.subject,
+        html: mail.html,
+        text: mail.text,
+      };
+      return await transporter.sendMail(mailOptions);
+    } else {
+      const resend = new Resend(resendKey);
+      return await resend.emails.send(mail);
+    }
+  } catch (error) {
+    console.error("Error sending email via SMTP", error);
+    throw new Error("Error sending email v");
+  }
+};
+
+export const GetSiteLogoURL = async (siteURL, logo, base) => {
+  if (logo.startsWith("http")) {
+    return logo;
+  }
+  return siteURL + base + logo;
+};
+export const GetAllUsers = async () => {
+  return await db.getAllUsers();
+};
+
+//get all users paginated
+export const GetAllUsersPaginated = async (data) => {
+  return await db.getUsersPaginated(data.page, data.limit);
+};
+
+//given a limit return total pages
+export const GetTotalUserPages = async (limit) => {
+  let totalUsers = await db.getTotalUsers();
+  let totalPages = Math.ceil(totalUsers.count / limit);
+  return totalPages;
+};
+
+export const ValidatePassword = (password) => {
+  return /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/.test(password);
+};
+
+export const UpdatePassword = async (data) => {
+  let { userID, newPassword, newPlainPassword } = data;
+  if (!ValidatePassword(newPassword)) {
+    throw new Error(
+      "Password must contain at least 8 characters, one uppercase letter, one lowercase letter and one number",
+    );
+  }
+  // newPassword should match newPlainPassword
+  if (newPassword !== newPlainPassword) {
+    throw new Error("Passwords do not match");
+  }
+
+  //hash the password
+  let hashedPassword = await HashPassword(newPassword);
+
+  return await db.updateUserPassword({
+    id: userID,
+    password_hash: hashedPassword,
+  });
+};
+
+export const ManualUpdateUserData = async (byUser, forUserId, data) => {
+  let forUser = await db.getUserById(forUserId);
+  //only admins can update
+  if (byUser.role !== "admin") {
+    throw new Error("You do not have permission to update user");
+  }
+  if (data.updateType == "role") {
+    return await db.updateUserRole(forUser.id, data.role);
+  } else if (data.updateType == "is_active") {
+    return await db.updateUserIsActive(forUser.id, data.is_active);
+  } else if (data.updateType == "password") {
+    return await UpdatePassword({
+      userID: forUser.id,
+      newPassword: data.password,
+      newPlainPassword: data.passwordPlain,
+    });
+  }
+};
+
+export const CreateNewUser = async (currentUser, data) => {
+  let acceptedRoles = ["member", "editor"];
+  if (!acceptedRoles.includes(data.role)) {
+    throw new Error("Invalid role");
+  }
+
+  if (currentUser.role === "member") {
+    throw new Error("Only admins and editors can create new users");
+  }
+
+  //if data.email empty, throw error
+  if (!!!data.email) {
+    throw new Error("Email cannot be empty");
+  }
+
+  //if data.name empty, throw error
+  if (!!!data.name) {
+    throw new Error("Name cannot be empty");
+  }
+
+  //if data.password empty, throw error
+  if (!!!data.password) {
+    throw new Error("Password cannot be empty");
+  }
+
+  //if data.role empty, throw error
+  if (!!!data.role) {
+    throw new Error("Role cannot be empty");
+  }
+
+  //if data.password not equal to data.plainPassword, throw error
+  if (data.password !== data.plainPassword) {
+    throw new Error("Passwords do not match");
+  }
+
+  if (!ValidatePassword(data.password)) {
+    throw new Error(
+      "Password must contain at least 8 characters, one uppercase letter, one lowercase letter and one number",
+    );
+  }
+  let user = {
+    email: data.email,
+    password_hash: await HashPassword(data.password),
+    name: data.name,
+    role: data.role,
+  };
+  return await db.insertUser(user);
 };
 
 export const GetSiteMap = async (cookies) => {

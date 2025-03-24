@@ -9,7 +9,11 @@
   import locales from "$lib/locales/locales.json?raw";
   import GMI from "$lib/components/gmi.svelte";
 
-  import { Loader, X, Plus, Info, Play } from "lucide-svelte";
+  import Loader from "lucide-svelte/icons/loader";
+  import X from "lucide-svelte/icons/x";
+  import Plus from "lucide-svelte/icons/plus";
+  import Info from "lucide-svelte/icons/info";
+  import Play from "lucide-svelte/icons/play";
   import { Tooltip } from "bits-ui";
 
   export let data;
@@ -26,8 +30,11 @@
     subtitle: ""
   };
   let footerHTML = "";
+  let tzToggle = "NO";
   let homeIncidentCount = 10;
   let homeIncidentStartTimeWithin = 30;
+  let incidentGroupView = "EXPAND_FIRST";
+
   let nav = [];
   let categories = [];
   let i18n = {
@@ -61,8 +68,14 @@
   if (data.siteData.homeIncidentStartTimeWithin) {
     homeIncidentStartTimeWithin = data.siteData.homeIncidentStartTimeWithin;
   }
+  if (data.siteData.incidentGroupView) {
+    incidentGroupView = data.siteData.incidentGroupView;
+  }
   if (data.siteData.footerHTML) {
     footerHTML = data.siteData.footerHTML;
+  }
+  if (data.siteData.tzToggle) {
+    tzToggle = data.siteData.tzToggle;
   }
   if (data.siteData.i18n) {
     i18n = data.siteData.i18n;
@@ -78,8 +91,9 @@
       }
     });
   }
-
+  let heroError = "";
   async function formSubmitHero() {
+    heroError = "";
     formStateHero = "loading";
     let resp = await storeSiteData({
       hero: JSON.stringify(hero)
@@ -88,7 +102,7 @@
     let data = await resp.json();
     formStateHero = "idle";
     if (data.error) {
-      alert(data.error);
+      heroError = data.error;
       return;
     }
   }
@@ -108,7 +122,10 @@
       return;
     }
   }
+
+  let categoriesErrorMessage = "";
   async function formSubmitCategories() {
+    categoriesErrorMessage = "";
     formStateCategories = "loading";
     let resp = await storeSiteData({
       categories: JSON.stringify(categories)
@@ -117,11 +134,14 @@
     let data = await resp.json();
     formStateCategories = "idle";
     if (data.error) {
-      alert(data.error);
+      categoriesErrorMessage = data.error;
       return;
     }
   }
+
+  let footerErrorMessage = "";
   async function formSubmitFooter() {
+    footerErrorMessage = "";
     formStateFooter = "loading";
     let resp = await storeSiteData({
       footerHTML: footerHTML
@@ -130,21 +150,25 @@
     let data = await resp.json();
     formStateFooter = "idle";
     if (data.error) {
-      alert(data.error);
+      footerErrorMessage = data.error;
       return;
     }
   }
+
+  let incidentErrorMessage = "";
   async function formSubmitIncident() {
+    incidentErrorMessage = "";
     formStateIncident = "loading";
     let resp = await storeSiteData({
       homeIncidentCount: homeIncidentCount,
-      homeIncidentStartTimeWithin: homeIncidentStartTimeWithin
+      homeIncidentStartTimeWithin: homeIncidentStartTimeWithin,
+      incidentGroupView: incidentGroupView
     });
     //print data
     let data = await resp.json();
     formStateIncident = "idle";
     if (data.error) {
-      alert(data.error);
+      incidentErrorMessage = data.error;
       return;
     }
   }
@@ -210,16 +234,19 @@
     i18n.defaultLocale = e.value;
   }
 
+  let i18nErrorMessage = "";
   async function formSubmiti18n() {
+    i18nErrorMessage = "";
     formStatei18n = "loading";
     let resp = await storeSiteData({
-      i18n: JSON.stringify(i18n)
+      i18n: JSON.stringify(i18n),
+      tzToggle: tzToggle
     });
     //print data
     let data = await resp.json();
     formStatei18n = "idle";
     if (data.error) {
-      alert(data.error);
+      i18nErrorMessage = data.error;
       return;
     }
   }
@@ -228,9 +255,7 @@
 <Card.Root class="mt-4">
   <Card.Header class="border-b">
     <Card.Title>Hero Section</Card.Title>
-    <Card.Description>
-      Configure the hero section of your site. This is the first section that appears on your site.
-    </Card.Description>
+    <Card.Description>Configure the hero section of your site.</Card.Description>
   </Card.Header>
   <Card.Content>
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitHero}>
@@ -280,7 +305,10 @@
           />
         </div>
       </div>
-      <div class="flex w-full justify-end">
+      <div class="flex w-full justify-end gap-x-2">
+        {#if !!heroError}
+          <div class="py-2 text-sm font-medium text-destructive">{heroError}</div>
+        {/if}
         <Button type="submit" disabled={formStateHero === "loading"}>
           Save
           {#if formStateHero === "loading"}
@@ -298,7 +326,7 @@
   </Card.Header>
   <Card.Content>
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitIncident}>
-      <div class="flex max-w-md flex-row justify-start gap-2">
+      <div class="flex flex-row justify-start gap-2">
         <div class="">
           <Label for="hero_title">Maximum Number to Show</Label>
           <Input bind:value={homeIncidentCount} class="mt-2" type="text" id="homeIncidentCount" placeholder="10" />
@@ -313,6 +341,33 @@
             placeholder="2 days"
           />
         </div>
+        <div>
+          <Label for="incidentGroupView" class="text-sm font-medium">Incident Group View</Label>
+          <Select.Root
+            portal={null}
+            onSelectedChange={(e) => {
+              incidentGroupView = e.value;
+            }}
+            selected={{
+              value: incidentGroupView,
+              label: incidentGroupView.replace("_", " ")
+            }}
+          >
+            <Select.Trigger class="	mt-2 w-[200px]" id="incidentGroupView">
+              <Select.Value bind:value={incidentGroupView} placeholder="Favicon Type" />
+            </Select.Trigger>
+            <Select.Content>
+              <Select.Group>
+                <Select.Label>Favicon Type</Select.Label>
+                <Select.Item value="EXPAND_FIRST" label="EXPAND FIRST" class="text-sm font-medium"
+                  >EXPAND FIRST</Select.Item
+                >
+                <Select.Item value="COLLAPSED" label="COLLAPSED" class="text-sm font-medium">COLLAPSED</Select.Item>
+                <Select.Item value="EXPANDED" label="EXPANDED" class="text-sm font-medium">EXPANDED</Select.Item>
+              </Select.Group>
+            </Select.Content>
+          </Select.Root>
+        </div>
         <div class="pt-8">
           <Button type="submit" disabled={formStateIncident === "loading"}>
             Save
@@ -326,6 +381,9 @@
         Translates to "Show {homeIncidentCount} incidents that have started in the last {homeIncidentStartTimeWithin}
         days in the past or going to start in {homeIncidentStartTimeWithin} days in the future"
       </p>
+      {#if !!incidentErrorMessage}
+        <p class="text-sm font-medium text-destructive">{incidentErrorMessage}</p>
+      {/if}
     </form>
   </Card.Content>
 </Card.Root>
@@ -333,9 +391,7 @@
 <Card.Root class="mt-4">
   <Card.Header class="border-b">
     <Card.Title>Navigation</Card.Title>
-    <Card.Description>
-      Configure the navigation of your site. This is the first section that appears on your site.
-    </Card.Description>
+    <Card.Description>Configure the navigation of your site.</Card.Description>
   </Card.Header>
   <Card.Content>
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitNav}>
@@ -436,7 +492,7 @@
       </div>
       <div class="flex w-full justify-end" style="margin-top:32px">
         <p class="px-4 pt-1">
-          <span class="text-xs text-red-500"> {navErrorMessage} </span>
+          <span class="text-sm font-medium text-destructive"> {navErrorMessage} </span>
         </p>
         <Button type="submit" disabled={formStateHero === "loading"}>
           Save
@@ -452,9 +508,7 @@
 <Card.Root class="mt-4">
   <Card.Header class="border-b">
     <Card.Title>Internationalization</Card.Title>
-    <Card.Description>
-      Configure the languages of your site. This is the first section that appears on your site.
-    </Card.Description>
+    <Card.Description>Configure the languages of your site.</Card.Description>
   </Card.Header>
   <Card.Content>
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmiti18n}>
@@ -497,7 +551,28 @@
           </Select.Group>
         </Select.Content>
       </Select.Root>
-      <div class="flex w-full justify-end">
+      <p class="pt-4 text-lg font-medium">Timezone Switching</p>
+      <p class="text-sm font-medium text-muted-foreground">
+        Kener will automatically detect the user's timezone and show the status page in their timezone. You can let
+        users switch between different timezones if you want.
+      </p>
+
+      <p class="text-sm font-medium">
+        <label>
+          <input
+            on:change={(e) => {
+              tzToggle = e.target.checked === true ? "YES" : "NO";
+            }}
+            type="checkbox"
+            checked={tzToggle === "YES"}
+          />
+          Allow users to switch timezones
+        </label>
+      </p>
+      <div class="flex w-full justify-end gap-x-2">
+        {#if !!i18nErrorMessage}
+          <div class="py-2 text-sm font-medium text-destructive">{i18nErrorMessage}</div>
+        {/if}
         <Button type="submit" disabled={formStatei18n === "loading"}>
           Save
           {#if formStatei18n === "loading"}
@@ -512,9 +587,7 @@
 <Card.Root class="mt-4">
   <Card.Header class="border-b">
     <Card.Title>Site Categories</Card.Title>
-    <Card.Description>
-      Configure the categories of your site. This is the first section that appears on your site.
-    </Card.Description>
+    <Card.Description>Configure the categories of your site.</Card.Description>
   </Card.Header>
   <Card.Content>
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitCategories}>
@@ -559,7 +632,10 @@
           <Plus class="h-4 w-4 " />
         </Button>
       </div>
-      <div class="flex w-full justify-end">
+      <div class="flex w-full justify-end gap-x-2">
+        {#if !!categoriesErrorMessage}
+          <div class="py-2 text-sm font-medium text-destructive">{categoriesErrorMessage}</div>
+        {/if}
         <Button type="submit" disabled={formStateCategories === "loading"}>
           Save
           {#if formStateCategories === "loading"}
@@ -574,9 +650,7 @@
 <Card.Root class="mt-4">
   <Card.Header class="border-b">
     <Card.Title>Site Footer</Card.Title>
-    <Card.Description>
-      Configure the footer of your site. This is the first section that appears on your site.
-    </Card.Description>
+    <Card.Description>Configure the footer of your site.</Card.Description>
   </Card.Header>
   <Card.Content>
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitFooter}>
@@ -590,7 +664,10 @@
         </div>
       </div>
 
-      <div class="flex w-full justify-end">
+      <div class="flex w-full justify-end gap-x-2">
+        {#if !!footerErrorMessage}
+          <div class="py-2 text-sm font-medium text-destructive">{footerErrorMessage}</div>
+        {/if}
         <Button type="submit" disabled={formStateFooter === "loading"}>
           Save
           {#if formStateFooter === "loading"}

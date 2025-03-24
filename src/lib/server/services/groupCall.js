@@ -1,6 +1,6 @@
 // @ts-nocheck
 import axios from "axios";
-import { GetRequiredSecrets, ReplaceAllOccurrences, Wait } from "../tool.js";
+import { GetRequiredSecrets, ReplaceAllOccurrences, Wait, GetMinuteStartNowTimestampUTC } from "../tool.js";
 import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
 import db from "../db/db.js";
 
@@ -29,6 +29,9 @@ class GroupCall {
   }
 
   async execute(startOfMinute) {
+    if (!!!startOfMinute) {
+      startOfMinute = GetMinuteStartNowTimestampUTC();
+    }
     let tagArr = this.monitor.type_data.monitors.map((m) => m.tag);
     return await waitForDataAndReturn(tagArr, startOfMinute, 500, this.monitor.type_data.timeout);
   }

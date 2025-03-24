@@ -3,7 +3,7 @@ title: Triggers | Kener
 description: Learn how to set up and work with triggers in kener.
 ---
 
-# Triggers
+## Triggers
 
 Triggers are used to trigger actions based on the status of your monitors. You can use triggers to send notifications, or call webhooks when a monitor goes down or up.
 
@@ -27,10 +27,36 @@ The description is used to define the description of the webhook. It is optional
 
 Kener supports the following triggers:
 
--   [Webhook](#webhook)
--   [Discord](#discord)
--   [Slack](#slack)
--   [Email](#email)
+- [Webhook](#webhook)
+- [Discord](#discord)
+- [Slack](#slack)
+- [Email](#email)
+
+### Trigger Variables
+
+You can use the following variables in the triggers using mustache syntax.
+
+| Key           | Description                                                  | Mustache Variable |
+| ------------- | ------------------------------------------------------------ | ----------------- |
+| site_name     | [string] Name of your site                                   | {{site_name}}     |
+| logo_url      | [string] Logo of your site                                   | {{logo_url}}      |
+| site_url      | [string] Url of your site                                    | {{site_url}}      |
+| alert_name    | [string] Name of the alert                                   | {{alert_name}}    |
+| status        | [string] Status of the alert. Can be `TRIGGERED`, `RESOLVED` | {{status}}        |
+| is_resolved   | [bool] True if alert is `RESOLVED`                           | {{is_resolved}}   |
+| is_triggered  | [bool] True if alert is `TRIGGERED`                          | {{is_triggered}}  |
+| description   | [string] Description of the alert.                           | {{description}}   |
+| action_text   | [string] CTA for next action on the alert                    | {{action_text}}   |
+| action_url    | [string] URL for next action on the alert                    | {{action_url}}    |
+| metric        | [string] Name of the monitor                                 | {{metric}}        |
+| severity      | [string] Severity of the alert. Can be `critical`, `warn`    | {{severity}}      |
+| id            | [string] Id of the alert                                     | {{id}}            |
+| current_value | [number] Current count of failures                           | {{current_value}} |
+| threshold     | [number] Threshold Failue                                    | {{threshold}}     |
+| source        | [string] Source of the alert                                 | {{source}}        |
+| timestamp     | [string] Timestamp **ISO 8601** formatted                    | {{timestamp}}     |
+
+---
 
 ## Webhook
 
@@ -93,24 +119,65 @@ Body of the webhook will be sent as below:
 }
 ```
 
-| Key                   | Description                                                 | Variable                      |
-| --------------------- | ----------------------------------------------------------- | ----------------------------- |
-| id                    | Unique ID of the alert                                      | ${id}                         |
-| alert_name            | Name of the alert                                           | ${alert_name}                 |
-| severity              | Severity of the alert. Can be `critical`, `warn`            | ${severity}                   |
-| status                | Status of the alert. Can be `TRIGGERED`, `RESOLVED`         | ${status}                     |
-| source                | Source of the alert. Can be `Kener`                         | ${source}                     |
-| timestamp             | Timestamp of the alert                                      | ${timestamp}                  |
-| description           | Description of the alert. This you can customize. See below | ${description}                |
-| details               | Details of the alert.                                       | -                             |
-| details.metric        | Name of the monitor                                         | ${metric}                     |
-| details.current_value | Current value of the monitor                                | ${current_value}              |
-| details.threshold     | Alert trigger threshold of the monitor                      | ${threshold}                  |
-| actions               | Actions to be taken. Link to view the monitor.              | ${action_text}, ${action_url} |
-
 ### Custom Body
 
-You can customize the body of the webhook. You can use the variables mentioned above. If you are not using a json body then please make sure you are using the right content-type by setting custom headers. See examples below.
+Using [mustache variables](#triggers-trigger-variables) you can customize the body of the webhook. If you are not using a json body then please make sure you are using the right content-type by setting custom headers.
+
+### Examples
+
+#### 1. Telegram
+
+You can use the webhook trigger to send a message to a telegram channel. Enable `Use a custom webhook body`.
+
+Set the URL to `https://api.telegram.org/bot[BOT_TOKEN]/sendMessage`. Replace [BOT_TOKEN] with your bot token.
+
+```json
+{
+    "chat_id": "[CHAT_ID]", // Replace [CHAT_ID] with your chat id
+    "text": "<b>{{alert_name}}</b>\n\n<b>Severity:</b> <code>{{severity}}</code>\n<b>Status:</b> {{status}}\n<b>Source:</b> Kener\n<b>Time:</b> {{timestamp}}\n\n📌 <b>Details:</b>\n- <b>Metric:</b>{{metric}}\n- <b>Current Value:</b> <code>{{current_value}}</code>\n- <b>Threshold:</b> <code>{{threshold}}</code>\n\n🔍 <a href=\"{{action_url}}\">{{action_text}}</a>",
+    "parse_mode": "HTML"
+}
+```
+
+If you want to send a message to a group, then replace `[CHAT_ID]` with the group id.
+
+You can also use environment variables to store the bot token and chat id. In that case the URL will be `https://api.telegram.org/bot$BOT_TOKEN/sendMessage`. In the body you can use `"chat_id": "$CHAT_ID"`. Make sure you have set the `BOT_TOKEN` and `CHAT_ID` in the <a href="/docs/environment-vars#secrets">environment variables</a>.
+
+#### 2. Conditional Webhook
+
+You can use `is_triggered` and `is_resolved` to create conditional webhooks.
+
+```json
+{
+    "title": "Monitor Alert for {{metric}} has been {{#is_triggered}}🔴 Triggered{{/is_triggered}}{{#is_resolved}}🟢 Resolved{{/is_resolved}}. Current value is {{current_value}} and threshold set is {{threshold}}"
+}
+```
+
+The output will be
+
+```json
+{
+    "title": "Monitor Alert for Mockoon has been 🔴 Triggered. Current value is 1 and threshold set is 1"
+}
+```
+
+```json
+{
+    "title": "Monitor Alert for Mockoon has been 🟢 Resolved. Current value is 0 and threshold set is 1"
+}
+```
+
+#### 3. Combing mustache with env variables
+
+Combine the above example with `NODE_ENV` environment variable.
+
+```json
+{
+    "title": "Monitor Alert for {{metric}} in environment $NODE_ENV has been {{#is_triggered}}🔴 Triggered{{/is_triggered}}{{#is_resolved}}🟢 Resolved{{/is_resolved}}. Current value is {{current_value}} and threshold set is {{threshold}}."
+}
+```
+
+---
 
 ## Discord
 
@@ -148,6 +215,60 @@ The discord message when alert is `TRIGGERED` will look like this
 The discord message when alert is `RESOLVED` will look like this
 
 ![Discord](/documentation/discord_resolved.png)
+
+### Modify Discord Message
+
+You can modify the discord message by using [mustache variables](#triggers-trigger-variables).
+
+```json
+{
+    "username": "{{site_name}}",
+    "avatar_url": "{{{logo_url}}}",
+    "content": "## {{alert_name}}\n{{#is_triggered}}🔴 Triggered{{/is_triggered}}{{#is_resolved}}🟢 Resolved{{/is_resolved}}\n{{description}}\nClick [MY CTA]({{{action_url}}}) for more.",
+    "embeds": [
+        {
+            "title": "❌{{alert_name}}❌",
+            "description": "{{description}}",
+            "url": "{{{action_url}}}",
+            "color": "{{#is_triggered}}13250616{{/is_triggered}}{{#is_resolved}}5156244{{/is_resolved}}",
+            "fields": [
+                {
+                    "name": "Monitor",
+                    "value": "{{metric}}",
+                    "inline": false
+                },
+                {
+                    "name": "Severity",
+                    "value": "{{severity}}",
+                    "inline": false
+                },
+                {
+                    "name": "Alert ID",
+                    "value": "{{id}}",
+                    "inline": false
+                },
+                {
+                    "name": "Current Value",
+                    "value": "{{current_value}}",
+                    "inline": true
+                },
+                {
+                    "name": "Threshold",
+                    "value": "{{threshold}}",
+                    "inline": true
+                }
+            ],
+            "footer": {
+                "text": "{{source}}",
+                "icon_url": "{{{logo_url}}}"
+            },
+            "timestamp": "{{timestamp}}"
+        }
+    ]
+}
+```
+
+---
 
 ## Slack
 
@@ -187,6 +308,81 @@ The slack message when alert is `RESOLVED` will look like this
 
 ![Slack](/documentation/slack_resolved.png)
 
+### Modify Slack Message
+
+You can modify the slack message by using [mustache variables](#triggers-trigger-variables).
+
+```json
+{
+    "blocks": [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": "Hello Alert {{alert_name}}",
+                "emoji": true
+            }
+        },
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": "{{#is_triggered}}🔴 Triggered{{/is_triggered}}{{#is_resolved}}🟢 Resolved{{/is_resolved}}",
+                "emoji": true
+            }
+        },
+        {
+            "type": "section",
+            "text": {
+                "type": "mrkdwn",
+                "text": "{{description}}\n*Source:* {{source}}\n*Severity:* {{severity}}\n*Status:* {{status}}"
+            }
+        },
+        {
+            "type": "section",
+            "fields": [
+                {
+                    "type": "mrkdwn",
+                    "text": "*Metric:*\n{{metric}}"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Current Value:*\n{{current_value}}"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Threshold:*\n{{threshold}}"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Environment:*\n$_NODE_ENV"
+                },
+                {
+                    "type": "mrkdwn",
+                    "text": "*Timestamp:*\n<!date^{{timestamp_unix}}^{date} at {time}|{{timestamp}}>"
+                }
+            ]
+        },
+        {
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "{{action_text}}"
+                    },
+                    "url": "{{{action_url}}}",
+                    "style": "primary"
+                }
+            ]
+        }
+    ]
+}
+```
+
+---
+
 ## Email
 
 Email triggers are used to send an email when a monitor goes down or up. Kener supports sending emails via [resend](https://resend.com) or over SMTP.
@@ -205,14 +401,20 @@ To send emails using Resend you just need to set `RESEND_API_KEY` in the environ
 
 To send emails using SMTP, please enter
 
--   Host: SMTP server host
--   Port: SMTP server port
--   User: SMTP server username
--   Password: SMTP server password
+- Host: SMTP server host
+- Port: SMTP server port
+- User: SMTP server username
+- Password: SMTP server password
 
 <div class="note danger">
 
 Since the password will be stored as plain text we encourage to use environment variables for the password. Let us say if you have an environment variable `SMTP_PASSWORD` then you can use it as `$SMTP_PASSWORD`.
+
+</div>
+
+<div class="  note info ">
+
+If your SMTP provider does require username and password, you can set `SMTP_USER` and `SMTP_PASS` to `-`.
 
 </div>
 
@@ -267,23 +469,3 @@ Click on the ⚙️ to edit the trigger.
 You can deactivate the trigger by switching the toggle to off. You cannot send message to a deactivated trigger. Any monitor with this trigger will not send any notifications.
 
 ---
-
-## Examples
-
-### Telegram
-
-You can use the webhook trigger to send a message to a telegram channel. Enable `Use a custom webhook body`.
-
-Set the URL to `https://api.telegram.org/bot[BOT_TOKEN]/sendMessage`. Replace [BOT_TOKEN] with your bot token.
-
-```json
-{
-    "chat_id": "[CHAT_ID]", // Replace [CHAT_ID] with your chat id
-    "text": "<b>${alert_name}</b>\n\n<b>Severity:</b> <code>${severity}</code>\n<b>Status:</b> ${status}\n<b>Source:</b> Kener\n<b>Time:</b> ${timestamp}\n\n📌 <b>Details:</b>\n- <b>Metric:</b>${metric}\n- <b>Current Value:</b> <code>${current_value}</code>\n- <b>Threshold:</b> <code>${threshold}</code>\n\n🔍 <a href=\"${action_url}\">${action_text}</a>",
-    "parse_mode": "HTML"
-}
-```
-
-If you want to send a message to a group, then replace `[CHAT_ID]` with the group id.
-
-You can also use environment variables to store the bot token and chat id. In that case the URL will be `https://api.telegram.org/bot$BOT_TOKEN/sendMessage`. In the body you can use `"chat_id": "$CHAT_ID"`. Make sure you have set the `BOT_TOKEN` and `CHAT_ID` in the <a href="/docs/environment-vars#secrets">environment variables</a>.

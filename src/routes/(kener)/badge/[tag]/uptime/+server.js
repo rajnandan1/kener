@@ -2,77 +2,108 @@
 import { ParseUptime, GetMinuteStartNowTimestampUTC } from "$lib/server/tool.js";
 import { makeBadge } from "badge-maker";
 import moment from "moment";
-import db from "$lib/server/db/db.js";
-import { GetMonitors } from "$lib/server/controllers/controller.js";
+import {
+  GetMonitors,
+  GetLastStatusBefore,
+  InterpolateData,
+  AggregateData,
+  GetMonitoringData,
+  GetMonitoringDataAll,
+  GetSiteDataByKey,
+  GetLastStatusBeforeAll,
+} from "$lib/server/controllers/controller.js";
+import { ErrorSvg } from "$lib/anywhere.js";
 
 export async function GET({ params, url }) {
-	// @ts-ignore
-	let monitors = await GetMonitors({ status: "ACTIVE" });
-	const { name, tag, include_degraded_in_downtime } = monitors.find(
-		(monitor) => monitor.tag === params.tag
-	);
-	const query = url.searchParams;
-	let sinceLast = query.get("sinceLast");
-	if (sinceLast == undefined || isNaN(sinceLast) || sinceLast < 60) {
-		sinceLast = 90 * 24 * 60 * 60;
-	}
-	const rangeInSeconds = sinceLast;
-	const now = Math.floor(Date.now() / 1000);
-	const since = GetMinuteStartNowTimestampUTC() - rangeInSeconds;
-	let label = query.get("label") || name;
-	const hideDuration = query.get("hideDuration") === "true";
+  // @ts-ignore
+  let monitors = await GetMonitors({ status: "ACTIVE" });
+  if (monitors.length === 0) {
+    return new Response(ErrorSvg, {
+      headers: {
+        "Content-Type": "image/svg+xml",
+      },
+    });
+  }
 
-	//add all status up, degraded, down
-	let ups = 0;
-	let downs = 0;
-	let degradeds = 0;
+  let name, tag, include_degraded_in_downtime;
+  const siteName = await GetSiteDataByKey("siteName");
 
-	const duration = moment.duration(rangeInSeconds, "seconds");
-	let formatted = "";
-	if (duration.days() > 0 || duration.minutes() < 1) {
-		formatted = `${Math.floor(rangeInSeconds / 86400)}d`;
-	} else if (duration.hours() > 0) {
-		formatted = `${duration.hours()}h`;
-	} else if (duration.minutes() > 0) {
-		formatted = `${duration.minutes()}m`;
-	}
+  const query = url.searchParams;
+  let sinceLast = query.get("sinceLast");
+  if (sinceLast == undefined || isNaN(sinceLast) || sinceLast < 60) {
+    sinceLast = 90 * 24 * 60 * 60;
+  }
+  const rangeInSeconds = sinceLast;
+  const now = Math.floor(Date.now() / 1000);
+  const since = GetMinuteStartNowTimestampUTC() - rangeInSeconds;
 
-	let dbData = await db.getAggregatedMonitoringData(tag, since, now);
-	dbData = Object.keys(dbData).reduce((acc, key) => {
-		acc[key.toUpperCase()] = dbData[key];
-		return acc;
-	}, {});
-	dbData.UP = Number(dbData.UP);
-	dbData.DOWN = Number(dbData.DOWN);
-	dbData.DEGRADED = Number(dbData.DEGRADED);
+  const hideDuration = query.get("hideDuration") === "true";
 
-	let numerator = dbData.UP + dbData.DEGRADED;
-	let denominator = dbData.UP + dbData.DEGRADED + dbData.DOWN;
-	if (include_degraded_in_downtime === "YES") {
-		numerator = dbData.UP;
-	}
+  const duration = moment.duration(rangeInSeconds, "seconds");
+  let formatted = "";
+  if (duration.days() > 0 || duration.minutes() < 1) {
+    formatted = `${Math.floor(rangeInSeconds / 86400)}d`;
+  } else if (duration.hours() > 0) {
+    formatted = `${duration.hours()}h`;
+  } else if (duration.minutes() > 0) {
+    formatted = `${duration.minutes()}m`;
+  }
 
-	let uptime = ParseUptime(numerator, denominator) + "%";
+  let todayDataDb, anchorStatus;
+  if (params.tag == "_") {
+    name = siteName;
+    let activeTags = monitors.map((monitor) => monitor.tag);
+    //if anyone has include_degraded_in_downtime = "YES" then we will include degraded in downtime
+    let hasIncludeDowntime = monitors.find((monitor) => monitor.include_degraded_in_downtime === "YES");
+    include_degraded_in_downtime = hasIncludeDowntime ? "YES" : "NO";
+    todayDataDb = await GetMonitoringDataAll(activeTags, since, now);
+    anchorStatus = await GetLastStatusBeforeAll(activeTags, since);
+  } else {
+    const m = monitors.find((monitor) => monitor.tag === params.tag);
+    if (!!!m) {
+      return new Response(ErrorSvg, {
+        headers: {
+          "Content-Type": "image/svg+xml",
+        },
+      });
+    }
+    tag = m.tag;
+    name = m.name;
+    include_degraded_in_downtime = m.include_degraded_in_downtime;
 
-	const labelColor = query.get("labelColor") || "#333";
-	const color = query.get("color") || "#0079FF";
-	const style = query.get("style") || "flat";
+    todayDataDb = await GetMonitoringData(tag, since, now);
+    anchorStatus = await GetLastStatusBefore(tag, since);
+  }
+  todayDataDb = InterpolateData(todayDataDb, since, anchorStatus, now);
+  let calculatedData = AggregateData(todayDataDb);
 
-	label = label + (hideDuration ? "" : ` ${formatted}`);
-	label = label.trim();
+  let numerator = calculatedData.UPs + calculatedData.DEGRADEDs;
+  let denominator = calculatedData.total;
+  if (include_degraded_in_downtime === "YES") {
+    numerator = calculatedData.UPs;
+  }
 
-	const format = {
-		label: label,
-		message: uptime,
-		color: color,
-		labelColor: labelColor,
-		style: style
-	};
-	const svg = makeBadge(format);
+  let uptime = ParseUptime(numerator, denominator) + "%";
+  let label = query.get("label") || name;
+  const labelColor = query.get("labelColor") || "#333";
+  const color = query.get("color") || "#0079FF";
+  const style = query.get("style") || "flat";
 
-	return new Response(svg, {
-		headers: {
-			"Content-Type": "image/svg+xml"
-		}
-	});
+  label = label + (hideDuration ? "" : ` ${formatted}`);
+  label = label.trim();
+
+  const format = {
+    label: label,
+    message: uptime,
+    color: color,
+    labelColor: labelColor,
+    style: style,
+  };
+  const svg = makeBadge(format);
+
+  return new Response(svg, {
+    headers: {
+      "Content-Type": "image/svg+xml",
+    },
+  });
 }

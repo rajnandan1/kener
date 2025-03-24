@@ -1,6 +1,13 @@
 <script>
   import { Button } from "$lib/components/ui/button";
-  import { Plus, X, Settings, Bell, Loader, ArrowDownUp, Grip } from "lucide-svelte";
+  import Plus from "lucide-svelte/icons/plus";
+  import X from "lucide-svelte/icons/x";
+  import Settings from "lucide-svelte/icons/settings";
+  import Bell from "lucide-svelte/icons/bell";
+  import Loader from "lucide-svelte/icons/loader";
+  import ArrowDownUp from "lucide-svelte/icons/arrow-down-up";
+  import Grip from "lucide-svelte/icons/grip";
+  import ExternalLink from "lucide-svelte/icons/external-link";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { base } from "$app/paths";
@@ -8,11 +15,13 @@
   import { onMount } from "svelte";
   import * as Card from "$lib/components/ui/card";
   import * as Select from "$lib/components/ui/select";
-  import { storeSiteData, SortMonitor } from "$lib/clientTools.js";
+  import { storeSiteData, SortMonitor, RandomString } from "$lib/clientTools.js";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
   import GMI from "$lib/components/gmi.svelte";
+  import { page } from "$app/stores";
+  import { DefaultAPIEval, DefaultTCPEval, DefaultPingEval } from "$lib/anywhere.js";
 
   export let categories = [];
   export let colorDown = "#777";
@@ -70,16 +79,17 @@
         headers: [],
         body: "",
         timeout: 10000,
-        eval: "",
-        hideURLForGet: "NO"
+        eval: DefaultAPIEval,
+        hideURLForGet: "NO",
+        allowSelfSignedCert: false
       },
       tcpConfig: {
         hosts: [], //{timeout: 1000, host: "", type:""}
-        tcpEval: ""
+        tcpEval: DefaultTCPEval
       },
       pingConfig: {
         hosts: [], //{timeout: 1000, host: "", count: "", type:""}
-        pingEval: ""
+        pingEval: DefaultPingEval
       },
       dnsConfig: {
         host: "",
@@ -92,7 +102,24 @@
         monitors: [],
         timeout: 10000,
         hideMonitors: false
-      })
+      }),
+      sslConfig: {
+        host: "",
+        port: 443,
+        degradedRemainingHours: 1,
+        downRemainingHours: 0
+      },
+      sqlConfig: {
+        connectionString: "",
+        query: "SELECT 1",
+        timeout: 5000,
+        dbType: "pg" //mysql2
+      },
+      heartbeatConfig: {
+        degradedRemainingMinutes: 1,
+        downRemainingMinutes: 2,
+        secretString: RandomString(32)
+      }
     };
   }
 
@@ -124,6 +151,12 @@
       newMonitor.tcpConfig = JSON.parse(newMonitor.type_data);
     } else if (newMonitor.monitor_type == "GROUP") {
       newMonitor.groupConfig = createGroupConfig(JSON.parse(newMonitor.type_data));
+    } else if (newMonitor.monitor_type == "SSL") {
+      newMonitor.sslConfig = JSON.parse(newMonitor.type_data);
+    } else if (newMonitor.monitor_type == "SQL") {
+      newMonitor.sqlConfig = JSON.parse(newMonitor.type_data);
+    } else if (newMonitor.monitor_type == "HEARTBEAT") {
+      newMonitor.heartbeatConfig = JSON.parse(newMonitor.type_data);
     }
     showAddMonitor = true;
   }
@@ -219,7 +252,9 @@
     }
   };
 
+  let saveTriggerError = "";
   async function saveTriggers() {
+    saveTriggerError = "";
     let data = {
       id: currentAlertMonitor.id,
       down_trigger: JSON.stringify(monitorTriggers.down_trigger),
@@ -235,12 +270,18 @@
         },
         body: JSON.stringify({ action: "updateMonitorTriggers", data })
       });
+
+      let resp = await apiResp.json();
+      if (resp.error) {
+        saveTriggerError = resp.error;
+      } else {
+        shareMenusToggle = false;
+        loadData();
+      }
     } catch (error) {
-      alert("Error: " + error);
+      saveTriggerError = "Error while saving triggers";
     } finally {
       formState = "idle";
-      loadData();
-      shareMenusToggle = false;
     }
   }
   let currentAlertMonitor;
@@ -255,15 +296,27 @@
     shareMenusToggle = true;
   }
   const flipDurationMs = 200;
+
+  let orderErrorMessage = "";
   function handleSort(e) {
     dropTargetStyle = {
       border: "1px solid transparent"
     };
     monitors = e.detail.items;
     monitorSort = monitors.map((m) => m.id);
+
     storeSiteData({
       monitorSort: JSON.stringify(monitorSort)
-    });
+    })
+      .then(async (resp) => {
+        let data = await resp.json();
+        if (data.error) {
+          orderErrorMessage = data.error;
+        }
+      })
+      .catch((error) => {
+        orderErrorMessage = "Error while saving order";
+      });
   }
   let dropTargetStyle;
   let draggableMenu = false;
@@ -337,6 +390,9 @@
             </div>
           {/each}
         </div>
+        {#if !!orderErrorMessage}
+          <p class="py-2 text-sm font-medium text-destructive">{orderErrorMessage}</p>
+        {/if}
       </div>
     </div>
   </div>
@@ -400,17 +456,19 @@
       {/if}
     </div>
   </div>
-  <div>
-    {#if status == "ACTIVE"}
-      <Button size="icon" variant="secondary" on:click={() => (draggableMenu = !draggableMenu)}>
-        <ArrowDownUp class=" " />
+  {#if $page.data.user.role != "member"}
+    <div>
+      {#if status == "ACTIVE"}
+        <Button size="icon" variant="secondary" on:click={() => (draggableMenu = !draggableMenu)}>
+          <ArrowDownUp class=" " />
+        </Button>
+      {/if}
+      <Button on:click={showAddMonitorSheet}>
+        <Plus class="mr-2 inline h-6 w-6" />
+        Add Monitor
       </Button>
-    {/if}
-    <Button on:click={showAddMonitorSheet}>
-      <Plus class="mr-2 inline h-6 w-6" />
-      Add Monitor
-    </Button>
-  </div>
+    </div>
+  {/if}
 </div>
 
 <div class="mt-4">
@@ -429,7 +487,7 @@
         <div class="absolute right-2 top-0.5 flex gap-x-1">
           <DropdownMenu.Root>
             <DropdownMenu.Trigger>
-              <Button variant="secondary" class="h-8 p-2 text-xs" on:click={() => testMonitor(i)}>TEST</Button>
+              <Button variant="secondary" class="h-8 p-2 text-xs" on:click={() => testMonitor(i)}>Test Monitor</Button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Content class="max-w-md">
               <DropdownMenu.Group>
@@ -459,19 +517,25 @@
               </DropdownMenu.Group>
             </DropdownMenu.Content>
           </DropdownMenu.Root>
-
-          <Button
-            variant="secondary"
-            class="h-8 w-8 p-2 {monitor.down_trigger?.active || monitor.degraded_trigger?.active
-              ? 'text-yellow-500'
-              : ''}"
-            on:click={() => openAlertMenu(monitor)}
-          >
-            <Bell class="inline h-4 w-4" />
+          {#if $page.data.user.role != "member"}
+            <Button
+              variant="secondary"
+              class="h-8 w-8 p-2 {monitor.down_trigger?.active || monitor.degraded_trigger?.active
+                ? 'text-yellow-500'
+                : ''}"
+              on:click={() => openAlertMenu(monitor)}
+            >
+              <Bell class="inline h-4 w-4" />
+            </Button>
+          {/if}
+          <Button variant="secondary" class="h-8 w-8 p-2" rel="external" href="{base}/?monitor={monitor.tag}">
+            <ExternalLink class="inline h-4 w-4" />
           </Button>
-          <Button variant="secondary" class="h-8 w-8 p-2" href="#{monitor.tag}">
-            <Settings class="inline h-4 w-4" />
-          </Button>
+          {#if $page.data.user.role != "member"}
+            <Button variant="secondary" class="h-8 w-8 p-2" href="#{monitor.tag}">
+              <Settings class="inline h-4 w-4" />
+            </Button>
+          {/if}
         </div>
       </Card.Header>
       <Card.Content>
@@ -545,7 +609,7 @@
                   }}
                 />
                 <div
-                  class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rtl:peer-checked:after:-translate-x-full dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800"
+                  class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 rtl:peer-checked:after:-translate-x-full"
                 ></div>
               </label>
             </div>
@@ -651,9 +715,12 @@
           <hr class="my-4" />
         {/each}
 
-        <div class="flex justify-end">
-          <Button class="w-full" on:click={saveTriggers} disabled={formState === "loading"}>
-            Save
+        <div class="flex justify-end gap-x-2">
+          {#if !!saveTriggerError}
+            <div class="py-2 text-sm font-medium text-destructive">{saveTriggerError}</div>
+          {/if}
+          <Button class="" on:click={saveTriggers} disabled={formState === "loading"}>
+            Save Alerts
             {#if formState === "loading"}
               <Loader class="ml-2 inline h-4 w-4 animate-spin" />
             {/if}

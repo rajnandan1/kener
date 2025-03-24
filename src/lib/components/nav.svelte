@@ -1,7 +1,8 @@
 <script>
   import { Button } from "$lib/components/ui/button";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-  import { Languages, Menu } from "lucide-svelte";
+  import Languages from "lucide-svelte/icons/languages";
+  import Menu from "lucide-svelte/icons/menu";
   import { base } from "$app/paths";
   import { analyticsEvent } from "$lib/boringOne";
   import GMI from "$lib/components/gmi.svelte";
@@ -40,22 +41,24 @@
             </a>
           {/each}
         </nav>
-        <DropdownMenu.Root class="">
-          <DropdownMenu.Trigger class="mr-2 flex md:hidden">
-            <Button variant="outline" size="sm">
-              <Menu size={14} />
-            </Button>
-          </DropdownMenu.Trigger>
-          <DropdownMenu.Content>
-            {#each data.site.nav as navItem}
-              <DropdownMenu.Group>
-                <DropdownMenu.Item>
-                  <a rel="external" href={navItem.url}> {navItem.name} </a>
-                </DropdownMenu.Item>
-              </DropdownMenu.Group>
-            {/each}
-          </DropdownMenu.Content>
-        </DropdownMenu.Root>
+        <div class="flex md:hidden">
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              <Button variant="outline" size="sm">
+                <Menu size={14} />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content>
+              {#each data.site.nav as navItem}
+                <DropdownMenu.Group>
+                  <DropdownMenu.Item>
+                    <a rel="external" href={navItem.url}> {navItem.name} </a>
+                  </DropdownMenu.Item>
+                </DropdownMenu.Group>
+              {/each}
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        </div>
       {/if}
     </div>
   </div>

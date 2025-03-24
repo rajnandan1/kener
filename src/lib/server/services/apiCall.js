@@ -2,20 +2,10 @@
 import axios from "axios";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
-
-const defaultEval = `(async function (statusCode, responseTime, responseData) {
-	let statusCodeShort = Math.floor(statusCode/100);
-    if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {
-        return {
-			status: 'UP',
-			latency: responseTime,
-        }
-    } 
-	return {
-		status: 'DOWN',
-		latency: responseTime,
-	}
-})`;
+import * as cheerio from "cheerio";
+import { DefaultAPIEval } from "../../anywhere.js";
+import version from "../../version.js";
+import https from "https";
 
 class ApiCall {
   monitor;
@@ -30,7 +20,7 @@ class ApiCall {
 
   async execute() {
     let axiosHeaders = {};
-    axiosHeaders["User-Agent"] = "Kener/" + "3.1.0";
+    axiosHeaders["User-Agent"] = `Kener/${version()}`;
     axiosHeaders["Accept"] = "*/*";
 
     let body = this.monitor.type_data.body;
@@ -43,9 +33,10 @@ class ApiCall {
     }
 
     let method = this.monitor.type_data.method;
-    let timeout = this.monitor.type_data.timeout || 5000;
+    let timeout = this.monitor.type_data.timeout || 10000;
     let tag = this.monitor.tag;
-    let monitorEval = !!this.monitor.type_data.monitorEval ? this.monitor.type_data.monitorEval : defaultEval;
+
+    let monitorEval = !!this.monitor.type_data.eval ? this.monitor.type_data.eval : DefaultAPIEval;
 
     for (let i = 0; i < this.envSecrets.length; i++) {
       const secret = this.envSecrets[i];
@@ -80,6 +71,10 @@ class ApiCall {
       transformResponse: (r) => r,
     };
 
+    if (!!this.monitor.type_data.allowSelfSignedCert) {
+      options.httpsAgent = new https.Agent({ rejectUnauthorized: false });
+    }
+
     if (!!body) {
       options.data = body;
     }
@@ -113,12 +108,18 @@ class ApiCall {
       }
     }
 
-    resp = Buffer.from(resp).toString("base64");
-
     let evalResp = undefined;
+    let modules = { cheerio };
 
     try {
-      evalResp = await eval(monitorEval + `(${statusCode}, ${latency}, "${resp}")`);
+      const evalFunction = new Function(
+        "statusCode",
+        "responseTime",
+        "responseRaw",
+        "modules",
+        `return (${monitorEval})(statusCode, responseTime, responseRaw, modules);`,
+      );
+      evalResp = await evalFunction(statusCode, latency, resp, modules);
     } catch (error) {
       console.log(`Error in monitorEval for ${tag}`, error.message);
     }

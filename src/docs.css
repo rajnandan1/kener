@@ -18,9 +18,10 @@ main {
   text-decoration: none;
   background-color: var(--bg-background);
 }
-.kener-home-links > div:hover {
+.kener-home-links > a:hover {
   transition: all 0.3s;
-  box-shadow: 0 0 8px 1.5px #3e9a4b;
+  border-color: #ed702d;
+  background-color: #ed702d;
 }
 
 .accm input:checked ~ div {

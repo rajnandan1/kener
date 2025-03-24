@@ -116,19 +116,17 @@ jobs:
             ${{ env.DOCKERHUB_IMAGE_NAME }}
             ${{ env.GITHUB_REGISTRY }}/${{ env.GITHUB_IMAGE_NAME }}
           tags: |
-            # Tag non-main branches (...for Alpine variant, add suffix)
-            type=ref,event=branch,suffix=-${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' && github.ref != 'refs/heads/main' }}
-            type=ref,event=branch,enable=${{ matrix.variant == 'debian' && github.ref != 'refs/heads/main' }}
-            # Tag matrix.variant (Alpine) releases as version (1.0.0), major.minor (1.0), major (1), and matrix.variant (alpine)
-            type=semver,pattern={{version}},suffix=-${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' }}
-            type=semver,pattern={{major}}.{{minor}},suffix=-${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' }}
-            type=semver,pattern={{major}},suffix=-${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' }}
-            type=raw,value=${{ matrix.variant }},enable=${{ matrix.variant == 'alpine' && github.ref == 'refs/heads/main' }}
-            # Tag default (Debian) releases as version (1.0.0), major.minor (1.0), major (1), and latest
+            # Debian Variant Tags
             type=semver,pattern={{version}},enable=${{ matrix.variant == 'debian' }}
             type=semver,pattern={{major}}.{{minor}},enable=${{ matrix.variant == 'debian' }}
             type=semver,pattern={{major}},enable=${{ matrix.variant == 'debian' }}
-            type=raw,value=latest,enable=${{ matrix.variant == 'debian' && github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ matrix.variant == 'debian' }}
+
+            # Alpine Variant Tags
+            type=semver,pattern={{version}},suffix=-alpine,enable=${{ matrix.variant == 'alpine' }}
+            type=semver,pattern={{major}}.{{minor}},suffix=-alpine,enable=${{ matrix.variant == 'alpine' }}
+            type=semver,pattern={{major}},suffix=-alpine,enable=${{ matrix.variant == 'alpine' }}
+            type=raw,value=alpine,enable=${{ matrix.variant == 'alpine' }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3.3.0
@@ -177,13 +175,14 @@ jobs:
       - name: Save release's build version number to repository variable
         if: matrix.variant == 'debian' && github.run_attempt == 1
         run: |
-          VERSION="${{ steps.meta.outputs.version }}"
+          # VERSION="${{ steps.meta.outputs.version }}"
+          VERSION=$(gh release view --json tagName -q .tagName 2>/dev/null || echo "")
 
           # Check if VERSION is empty and set a fallback value
           if [ -z "$VERSION" ]; then
-            # Fetch the latest release using Git
-            VERSION=$(git tag -l --sort=-v:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || echo "3.1.0")
+            VERSION=$(git tag -l --sort=-version:refname | grep -E '^(v)?[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || echo "3.1.0")
           fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
           echo "Setting BUILD_VERSION to $VERSION"
           gh variable set BUILD_VERSION --body "$VERSION"

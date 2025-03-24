@@ -3,6 +3,7 @@
   import { base } from "$app/paths";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
+  import { page } from "$app/stores";
   import { Button } from "$lib/components/ui/button";
   import * as Alert from "$lib/components/ui/alert";
   import * as RadioGroup from "$lib/components/ui/radio-group";
@@ -10,24 +11,22 @@
   import { DateInput } from "date-picker-svelte";
   import { clickOutsideAction, slide } from "svelte-legos";
   import { Tooltip } from "bits-ui";
-  import {
-    Plus,
-    X,
-    Settings,
-    ExternalLink,
-    Bell,
-    Loader,
-    ChevronLeft,
-    Info,
-    Hammer,
-    CalendarCheck,
-    ArrowRight,
-    Siren,
-    PenLine,
-    MessageSquarePlus,
-    ChevronRight,
-    Trash
-  } from "lucide-svelte";
+  import Plus from "lucide-svelte/icons/plus";
+  import X from "lucide-svelte/icons/x";
+  import Settings from "lucide-svelte/icons/settings";
+  import ExternalLink from "lucide-svelte/icons/external-link";
+  import Bell from "lucide-svelte/icons/bell";
+  import Loader from "lucide-svelte/icons/loader";
+  import ChevronLeft from "lucide-svelte/icons/chevron-left";
+  import Info from "lucide-svelte/icons/info";
+  import Hammer from "lucide-svelte/icons/hammer";
+  import CalendarCheck from "lucide-svelte/icons/calendar-check";
+  import ArrowRight from "lucide-svelte/icons/arrow-right";
+  import Siren from "lucide-svelte/icons/siren";
+  import PenLine from "lucide-svelte/icons/pen-line";
+  import MessageSquarePlus from "lucide-svelte/icons/message-square-plus";
+  import ChevronRight from "lucide-svelte/icons/chevron-right";
+  import Trash from "lucide-svelte/icons/trash";
   import * as Select from "$lib/components/ui/select";
   export let data;
   let status = "OPEN";
@@ -62,6 +61,7 @@
         })
       });
       let resp = await apiResp.json();
+
       incidents = resp.incidents.map((incident) => {
         let i = { ...incident };
         if (!!!i.end_date_time) {
@@ -178,7 +178,7 @@
     if (toPost.incident_type == "MAINTENANCE") {
       toPost.state = "RESOLVED";
     }
-
+    toPost.incident_source = "DASHBOARD";
     formStateCreate = "loading";
     try {
       let data = await fetch(base + "/manage/app/api/", {
@@ -205,7 +205,7 @@
 
           await addNewComment(resp.incident_id);
         }
-        showModal = false;
+        closeModal();
       }
     } catch (error) {
       invalidFormMessage = "Error while saving data";
@@ -218,6 +218,7 @@
     addingMonitorToIncident = false;
     currentIncident = i;
     editMonitorsModal = true;
+    formErrorMonitors = "";
 
     newIncidentMonitors = monitors.map((monitor) => {
       let m = { ...monitor };
@@ -231,7 +232,9 @@
     });
   }
   let addingMonitorToIncident = false;
+  let formErrorMonitors = "";
   async function addMonitorToIncident(m) {
+    formErrorMonitors = "";
     let action = "addMonitor";
     if (!m.selected) {
       action = "removeMonitor";
@@ -258,12 +261,12 @@
       });
       let resp = await data.json();
       if (resp.error) {
-        alert(resp.error);
+        formErrorMonitors = resp.error;
       } else {
         fetchData();
       }
     } catch (error) {
-      alert("Error: " + error);
+      formErrorMonitors = "Error: " + error;
     }
   }
 
@@ -391,6 +394,9 @@
   }
 
   function openIncidentSettings(i) {
+    invalidFormMessage = "";
+    addCommentError = "";
+
     newIncident = { ...i };
     newIncident.startDatetime = new Date(Number(i.start_date_time) * 1000);
     if (!!i.end_date_time) {
@@ -461,6 +467,8 @@
     <Button
       on:click={(e) => {
         newIncidentSet();
+        invalidFormMessage = "";
+        addCommentError = "";
         showModal = true;
       }}
     >
@@ -642,9 +650,11 @@
                   </td>
                   <td class="whitespace-nowrap px-6 py-4 text-xs font-semibold">
                     <div class="flex gap-x-1.5">
-                      <Button variant="secondary" class="h-8 text-xs" href={`#${incident.id}`}>
-                        Update <MessageSquarePlus class="ml-2 inline h-4 w-4" />
-                      </Button>
+                      {#if $page.data.user.role != "member"}
+                        <Button variant="secondary" class="h-8 text-xs" href={`#${incident.id}`}>
+                          Update <MessageSquarePlus class="ml-2 inline h-4 w-4" />
+                        </Button>
+                      {/if}
                     </div>
                   </td>
                 </tr>
@@ -765,9 +775,9 @@
             {/if}
           </div>
 
-          <div class="mt-4 grid h-16 w-full grid-cols-6 gap-2 border-t pt-4">
+          <div class="mt-4 flex h-16 w-full grid-cols-6 justify-end gap-2 border-t pt-4">
             <div class="col-span-4 py-2.5">
-              <p class="text-right text-xs font-medium text-red-500">
+              <p class="text-right text-sm font-medium text-destructive">
                 {invalidFormMessage}
               </p>
             </div>
@@ -781,7 +791,7 @@
                   (!!!newIncident.id && newIncident.firstComment.trim().length == 0) ||
                   (!!!newIncident.endDatetime && newIncident.incident_type == "MAINTENANCE")}
               >
-                Save
+                Save Event
                 {#if formStateCreate === "loading"}
                   <Loader class="ml-2 inline h-4 w-4 animate-spin" />
                 {/if}
@@ -857,7 +867,7 @@
                 ></textarea>
               </div>
 
-              <div class="flex justify-between">
+              <div class="flex justify-end gap-x-2">
                 <div>
                   {#if loadingComments}
                     <Loader class="mt-2 inline h-6 w-6 animate-spin" />
@@ -865,7 +875,7 @@
                 </div>
                 <div>
                   {#if addCommentError}
-                    <p class="mt-4 text-xs text-red-500">{addCommentError}</p>
+                    <p class="mt-4 text-sm font-medium text-destructive">{addCommentError}</p>
                   {/if}
                 </div>
                 <div class="flex gap-x-2">
@@ -903,7 +913,7 @@
               {#each comments as comment}
                 <div class="flex items-center justify-between gap-2 border-b py-2">
                   <div class="w-full rounded px-2 py-2 {newComment.id == comment.id ? 'bg-input' : ''}">
-                    <p class="mb-2 text-xs font-medium">{comment.comment}</p>
+                    <p class="mb-2 text-xs font-medium">{@html comment.comment}</p>
                     <div class="flex w-full justify-between gap-x-2">
                       <div class="text-xs font-semibold text-muted-foreground">
                         {#if currentIncident.incident_type == "INCIDENT"}
@@ -1007,6 +1017,7 @@
                 <input
                   id="monitor-{monitor.tag}"
                   type="checkbox"
+                  disabled={$page.data.user.role == "member"}
                   checked={monitor.selected}
                   on:change={(e) => {
                     monitor.selected = e.target.checked;
@@ -1019,6 +1030,7 @@
               </div>
               <div class="w-[155px]">
                 <Select.Root
+                  disabled={$page.data.user.role == "member"}
                   portal={null}
                   onSelectedChange={(e) => {
                     monitor.monitor_impact = e.value;
@@ -1044,6 +1056,9 @@
             </div>
           {/each}
         </div>
+        {#if !!formErrorMonitors}
+          <p class="mt-4 text-sm font-medium text-destructive">{formErrorMonitors}</p>
+        {/if}
       </div>
     </div>
   </div>

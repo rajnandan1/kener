@@ -101,6 +101,10 @@ const REALTIME = "realtime";
 const TIMEOUT = "timeout";
 const ERROR = "error";
 const MANUAL = "manual";
+const WEBHOOK = "webhook";
+const DEFAULT_STATUS = "default_status";
+const SIGNAL = "signal";
+const INVITE_VERIFY_EMAIL = "invite_verify_email";
 
 export {
   MONITOR,
@@ -117,4 +121,8 @@ export {
   ERROR,
   MANUAL,
   NO_DATA,
+  WEBHOOK,
+  DEFAULT_STATUS,
+  SIGNAL,
+  INVITE_VERIFY_EMAIL,
 };

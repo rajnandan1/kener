@@ -6,7 +6,9 @@
   import { Badge } from "$lib/components/ui/badge";
   import { l } from "$lib/i18n/client";
   import { base } from "$app/paths";
-  import { ArrowRight, ChevronLeft, X } from "lucide-svelte";
+  import ArrowRight from "lucide-svelte/icons/arrow-right";
+  import ChevronLeft from "lucide-svelte/icons/chevron-left";
+  import X from "lucide-svelte/icons/x";
   import { hotKeyAction, clickOutsideAction } from "svelte-legos";
   import { onMount } from "svelte";
   import ShareMenu from "$lib/components/shareMenu.svelte";
@@ -63,7 +65,7 @@
 </svelte:head>
 <div class="mt-12"></div>
 {#if data.hero}
-  <section class="mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center">
+  <section class="section-hero mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center">
     <div class="mx-auto max-w-screen-xl px-4 lg:flex lg:items-center">
       <div class="blurry-bg mx-auto max-w-3xl text-center">
         {#if data.hero.image}
@@ -86,7 +88,7 @@
   </section>
 {/if}
 {#if data.pageType != "home"}
-  <section class="mx-auto my-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center">
+  <section class="section-back mx-auto my-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center">
     <Button
       variant="outline"
       class="bounce-left h-8   justify-start  pl-1.5"
@@ -107,10 +109,10 @@
 {/if}
 {#if data.allRecentIncidents.length + data.allRecentMaintenances.length > 0}
   <section
-    class="mx-auto mb-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent"
+    class="section-events mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center backdrop-blur-[2px]"
     id=""
   >
-    <div class="grid w-full grid-cols-2 gap-4">
+    <div class="mb-2 grid w-full grid-cols-2 gap-4">
       <div class="col-span-2 flex gap-x-2 text-center md:text-left">
         {#if kindFilter == "INCIDENT"}
           {#if data.allRecentIncidents.length > 0}
@@ -137,11 +139,6 @@
         {/if}
       </div>
     </div>
-  </section>
-  <section
-    class="mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center backdrop-blur-[2px]"
-    id=""
-  >
     <Card.Root class="w-full">
       {#if kindFilter == "INCIDENT"}
         <Card.Content class=" newincidents w-full overflow-hidden p-0">
@@ -159,7 +156,7 @@
 {/if}
 {#if data.monitors.length > 0}
   <section
-    class="mx-auto mb-2 flex w-full flex-1 flex-col items-start justify-center bg-transparent md:w-[655px]"
+    class="section-legend mx-auto mb-2 flex w-full flex-1 flex-col items-start justify-center bg-transparent md:w-[655px]"
     id=""
   >
     <div class="grid w-full grid-cols-2 gap-4">
@@ -189,9 +186,9 @@
     </div>
   </section>
   <section
-    class="z-20 mx-auto mb-8 flex w-full flex-1 flex-col items-start justify-center backdrop-blur-[2px] md:w-[655px]"
+    class="section-monitors z-20 mx-auto mb-8 flex w-full flex-1 flex-col items-start justify-center backdrop-blur-[2px] md:w-[655px]"
   >
-    <Card.Root>
+    <Card.Root class="monitor-root">
       <Card.Content class="monitors-card  p-0">
         {#each data.monitors as monitor}
           <Monitor
@@ -208,7 +205,7 @@
 {/if}
 {#if data.site.categories && data.pageType == "home"}
   <section
-    class="relative z-10 mx-auto mb-8 w-full max-w-[890px] flex-1 flex-col items-start backdrop-blur-[2px] md:w-[655px]"
+    class="section-categories relative z-10 mx-auto mb-8 w-full max-w-[890px] flex-1 flex-col items-start backdrop-blur-[2px] md:w-[655px]"
   >
     {#each data.site.categories.filter((e) => e.name != "Home") as category}
       <a href={`?category=${category.name}`} rel="external">
@@ -235,7 +232,10 @@
     {/each}
   </section>
 {/if}
-<section class="mx-auto mb-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent" id="">
+<section
+  class="section-browser-events mx-auto mb-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent"
+  id=""
+>
   <a
     href="{base}/incidents/{format(new Date(), 'MMMM-yyyy')}"
     rel="external"
