@@ -172,6 +172,8 @@
     selectedDoc.howto = selectedDoc.howto.replaceAll("{embedBgc.substr(1)}", embedBgc.substr(1));
     selectedDoc.howto = selectedDoc.howto.replaceAll("{embedLocale.value}", embedLocale.value);
     selectedDoc.howto = selectedDoc.howto.replaceAll("{selectedMonitor.value}", selectedMonitor.value);
+    selectedDoc.howto = selectedDoc.howto.replaceAll("{siteURL}", data.siteURL);
+    selectedDoc.howto = selectedDoc.howto.replaceAll("{base}", base);
   }
 
   function embedUpdated() {
@@ -505,7 +507,7 @@
                 </div>
                 <div class="my-2">
                   <Embed
-                    monitor="http://localhost:3000/embed/monitor-{selectedMonitor.value}"
+                    monitor="{siteURL}{base}/embed/monitor-{selectedMonitor.value}"
                     theme={embedTheme}
                     bgc={embedBgc.substr(1)}
                     locale={embedLocale.value}

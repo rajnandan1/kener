@@ -73,19 +73,17 @@ RUN npm run build && \
 #==========================================================#
 
 FROM node:${DEBIAN_VERSION} AS final-debian
-# TODO: Consider adding `--no-install-recommends`, but will need testing (may further help reduce final build size)
 RUN apt-get update && apt-get install -y \
-        iputils-ping=3:20221126-1+deb12u1 \
-        sqlite3=3.40.1-2+deb12u1 \
-        tzdata=2024b-0+deb12u1 \
-    # TODO: Is it ok to change to `curl` here so that we don't have to maintain `wget` version mismatch between Debian architectures? (`curl` is only used for the container healthcheck and because there is an Alpine variant (best!) we probably don't care if the Debian image ends up building bigger due to `curl`.)
-    curl=7.88.1-10+deb12u8 && \
+        iputils-ping \
+        sqlite3 \
+        tzdata \
+        curl && \
     rm -rf /var/lib/apt/lists/*
 
 FROM node:${ALPINE_VERSION} AS final-alpine
 RUN apk add --no-cache --update \
-  iputils=20240905-r0 \
-  sqlite=3.48.0-r0 \
+  iputils \
+  sqlite \
   tzdata
 
 FROM final-${VARIANT} AS final
