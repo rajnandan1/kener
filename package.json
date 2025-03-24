@@ -52,7 +52,6 @@
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "date-picker-svelte": "^2.15.1",
-    "mustache": "^4.2.0",
     "postcss": "^8.4.24",
     "postcss-load-config": "^4.0.1",
     "prettier": "^3.2.5",
@@ -68,6 +67,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@babel/runtime": "^7.26.10",
     "@codemirror/lang-javascript": "^6.2.3",
     "@codemirror/lang-json": "^6.0.1",
     "@formkit/auto-animate": "^0.8.2",
@@ -98,6 +98,7 @@
     "mode-watcher": "^0.4.1",
     "moment": "^2.29.4",
     "moment-timezone": "^0.5.43",
+    "mustache": "^4.2.0",
     "mysql2": "^3.12.0",
     "node-cache": "^5.1.2",
     "nodemailer": "^6.10.0",

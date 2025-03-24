@@ -5,6 +5,7 @@ import notification from "$lib/server/notification/notif.js";
 import Service from "$lib/server/services/service.js";
 import verifyEmailTemplate from "$lib/server/templates/verify_email_template.html?raw";
 import { base } from "$app/paths";
+import { format } from "date-fns";
 
 import {
   CreateUpdateMonitor,
@@ -120,7 +121,8 @@ export async function POST({ request, cookies }) {
       });
       //create timestamp with 1 hour expiry
       const expiryTimestamp = GetNowTimestampUTC() + 3600;
-      data.invitation_expiry = new Date(expiryTimestamp * 1000).toISOString();
+      const expiryDate = new Date(expiryTimestamp * 1000);
+      data.invitation_expiry = format(expiryDate, "yyyy-MM-dd HH:mm:ss");
 
       resp = await CreateNewInvitation(data);
       let token = resp.invitation_token;

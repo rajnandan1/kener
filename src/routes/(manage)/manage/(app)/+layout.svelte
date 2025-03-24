@@ -142,7 +142,7 @@
 </header>
 <main class="manage">
   <div class="container my-4 max-w-6xl">
-    <nav class="flex justify-start gap-x-2">
+    <nav class="flex justify-start gap-x-2 overflow-x-auto">
       {#each nav as item}
         <Button variant={item.id.includes(activeTab) ? "secondary" : "ghost"} href={item.url} class="flex-1r"
           >{item.name}</Button
