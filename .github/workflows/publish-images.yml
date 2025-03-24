@@ -54,7 +54,7 @@ jobs:
             echo "has_dependabot_prs=false" >> $GITHUB_ENV
           fi
           env:
-            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GH_TOKEN: ${{ secrets.GH_PAT }}
 
   build-and-push-to-registries:
     # Runs only after `check-lockfile` and `check-dependabot-prs` jobs complete successfully
@@ -105,7 +105,7 @@ jobs:
         with:
           registry: ${{ env.GITHUB_REGISTRY }}
           username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GH_PAT }}
 
       # Combined metadata extraction for both registries
       - name: Extract Docker metadata
