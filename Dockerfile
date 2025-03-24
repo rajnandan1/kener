@@ -58,10 +58,9 @@ COPY . .
 # TODO: Reevaluate permissions (possibly reduce?)...
 # Remove docs directory and ensure required directories exist
 RUN rm -rf src/routes/\(docs\) \
-		static/documentation && \
-    static/fonts/lato/full && \
-	  mkdir -p uploads database && \
-  # TODO: Consider changing below to `chmod -R u-rwX,g=rX,o= uploads database`
+        static/documentation \
+        static/fonts/lato/full && \
+    mkdir -p uploads database && \
     chmod -R 750 uploads database
 
 # Build the application and remove `devDependencies`
@@ -72,17 +71,17 @@ RUN npm run build && \
 #             STAGE 2: PRODUCTION/FINAL STAGE              #
 #==========================================================#
 
-FROM node:${DEBIAN_VERSION} AS final-debian
+FROM ${DEBIAN_VERSION} AS final-debian
 # TODO: Consider adding `--no-install-recommends`, but will need testing (may further help reduce final build size)
 RUN apt-get update && apt-get install -y \
         iputils-ping=3:20221126-1+deb12u1 \
         sqlite3=3.40.1-2+deb12u1 \
         tzdata \
     # TODO: Is it ok to change to `curl` here so that we don't have to maintain `wget` version mismatch between Debian architectures? (`curl` is only used for the container healthcheck and because there is an Alpine variant (best!) we probably don't care if the Debian image ends up building bigger due to `curl`.)
-    curl=7.88.1-10+deb12u8 && \
+    curl && \
     rm -rf /var/lib/apt/lists/*
 
-FROM node:${ALPINE_VERSION} AS final-alpine
+FROM ${ALPINE_VERSION} AS final-alpine
 RUN apk add --no-cache --update \
 	iputils=20240905-r0 \
 	sqlite=3.48.0-r0 \
