@@ -7,6 +7,46 @@ description: Changelogs for Kener
 
 Here are the changelogs for Kener. Changelogs are only published when there are new features or breaking changes.
 
+## v3.2.5
+
+<picture>
+  <source srcset="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.webp" type="image/webp">
+  <img src="https://fonts.gstatic.com/s/e/notoemoji/latest/1f680/512.gif" alt="🚀" width="32" height="32">
+</picture>
+
+### Features
+
+- Added code editing for all JavaScript and JSON fields for trigger custom body and monitor `evals`.
+- Syntax highlighting and error checking for monitor evaluation functions
+- Added support for custom Discord and Slack body templates in triggers
+- Improved variable templating for all notification types
+- Added comprehensive user management with 3 roles: admin, editor, and member. Read more [here](/docs/rbac)
+- Self-service profile management for all users
+- User activation/deactivation controls for admins
+- Added dedicated Badges management page in the admin dashboard
+- Site-wide status badges to show overall service health
+- Version information automatically pulled from package.json
+
+### Improvements
+
+- Improved build time by migrating lucid-svelte to individual components
+
+### Github Issues Resolved
+
+- Feature: Enhancement of Webhook Custom Body Functionality [#238](https://github.com/rajnandan1/kener/issues/238)
+- Feature: Add LDAP for authentication [#210](https://github.com/rajnandan1/kener/issues/210)
+- the event created by tigger can't update affects. [#309](https://github.com/rajnandan1/kener/issues/309)
+- Multiple account or RBAC [#334](https://github.com/rajnandan1/kener/issues/334)
+- The event that has been edited isn't clickable after you save it [#350](https://github.com/rajnandan1/kener/issues/350)
+- /app/package.json ERROR on fresh install [#346](https://github.com/rajnandan1/kener/issues/346)
+- Site stops when monitor processing throws an error [#345](https://github.com/rajnandan1/kener/issues/345)
+- Support for Self Signed Certificates [#351](https://github.com/rajnandan1/kener/issues/351)
+- Wrong month is showing up after clicking on the 'Browse Events' link [#349](https://github.com/rajnandan1/kener/issues/349)
+
+### Migration Notes
+
+This update is fully backward compatible with existing installations. User accounts created before this update will retain admin privileges by default.
+
 ## v3.2.1
 
 <picture>

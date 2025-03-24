@@ -1,7 +1,8 @@
 <script>
   import { Button } from "$lib/components/ui/button";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-  import { Languages, Menu } from "lucide-svelte";
+  import Languages from "lucide-svelte/icons/languages";
+  import Menu from "lucide-svelte/icons/menu";
   import { base } from "$app/paths";
   import { analyticsEvent } from "$lib/boringOne";
   import GMI from "$lib/components/gmi.svelte";

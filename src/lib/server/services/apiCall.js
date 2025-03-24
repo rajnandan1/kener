@@ -3,20 +3,9 @@ import axios from "axios";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
 import * as cheerio from "cheerio";
-
-const defaultEval = `(async function (statusCode, responseTime, responseRaw, modules) {
-	let statusCodeShort = Math.floor(statusCode/100);
-    if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {
-        return {
-			status: 'UP',
-			latency: responseTime,
-        }
-    } 
-	return {
-		status: 'DOWN',
-		latency: responseTime,
-	}
-})`;
+import { DefaultAPIEval } from "../../anywhere.js";
+import version from "../../version.js";
+import https from "https";
 
 class ApiCall {
   monitor;
@@ -31,7 +20,7 @@ class ApiCall {
 
   async execute() {
     let axiosHeaders = {};
-    axiosHeaders["User-Agent"] = "Kener/" + "3.1.0";
+    axiosHeaders["User-Agent"] = `Kener/${version()}`;
     axiosHeaders["Accept"] = "*/*";
 
     let body = this.monitor.type_data.body;
@@ -44,10 +33,10 @@ class ApiCall {
     }
 
     let method = this.monitor.type_data.method;
-    let timeout = this.monitor.type_data.timeout || 5000;
+    let timeout = this.monitor.type_data.timeout || 10000;
     let tag = this.monitor.tag;
 
-    let monitorEval = !!this.monitor.type_data.eval ? this.monitor.type_data.eval : defaultEval;
+    let monitorEval = !!this.monitor.type_data.eval ? this.monitor.type_data.eval : DefaultAPIEval;
 
     for (let i = 0; i < this.envSecrets.length; i++) {
       const secret = this.envSecrets[i];
@@ -81,6 +70,10 @@ class ApiCall {
       timeout: timeout,
       transformResponse: (r) => r,
     };
+
+    if (!!this.monitor.type_data.allowSelfSignedCert) {
+      options.httpsAgent = new https.Agent({ rejectUnauthorized: false });
+    }
 
     if (!!body) {
       options.data = body;

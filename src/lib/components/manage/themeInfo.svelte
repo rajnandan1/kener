@@ -3,11 +3,13 @@
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
-  import { Plus, X, Info } from "lucide-svelte";
+  import Plus from "lucide-svelte/icons/plus";
+  import X from "lucide-svelte/icons/x";
+  import Info from "lucide-svelte/icons/info";
+  import Loader from "lucide-svelte/icons/loader";
   import autoAnimate from "@formkit/auto-animate";
   import { siteDataExtractFromDb, storeSiteData } from "$lib/clientTools.js";
   import { base } from "$app/paths";
-  import { Loader } from "lucide-svelte";
   import * as RadioGroup from "$lib/components/ui/radio-group";
   import { Tooltip } from "bits-ui";
   import ColorPicker from "svelte-awesome-color-picker";
@@ -15,6 +17,7 @@
   export let data;
 
   let formState = "idle";
+  let themeError = "";
 
   let themeData = {
     pattern: "none",
@@ -49,6 +52,7 @@
 
   async function formSubmit() {
     formState = "loading";
+    themeError = "";
     let themeDataAPI = { ...themeData };
     themeDataAPI.colors = JSON.stringify(themeDataAPI.colorsJ);
     themeDataAPI.font = JSON.stringify(themeDataAPI.fontJ);
@@ -59,7 +63,7 @@
     let data = await resp.json();
     formState = "idle";
     if (data.error) {
-      alert(data.error);
+      themeError = data.error;
       return;
     }
   }
@@ -345,7 +349,10 @@
         </div>
       </div>
       <hr />
-      <div class="flex w-full justify-end">
+      <div class="flex w-full justify-end gap-x-2">
+        {#if !!themeError}
+          <div class="py-2 text-sm font-medium text-destructive">{themeError}</div>
+        {/if}
         <Button type="submit" disabled={formState === "loading"}>
           Save
           {#if formState === "loading"}

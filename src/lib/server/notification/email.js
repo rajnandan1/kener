@@ -3,56 +3,57 @@ import { Resend } from "resend";
 import nodemailer from "nodemailer";
 import getSMTPTransport from "./smtps.js";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
+import version from "../../version.js";
 
 class Email {
-	to;
-	from;
-	method;
-	siteData;
-	monitorData;
-	meta;
+  to;
+  from;
+  method;
+  siteData;
+  monitorData;
+  meta;
 
-	constructor(meta, siteData, monitorData) {
-		this.to = meta.to;
-		this.from = meta.from;
-		this.siteData = siteData;
-		this.monitorData = monitorData;
+  constructor(meta, siteData, monitorData) {
+    this.to = meta.to;
+    this.from = meta.from;
+    this.siteData = siteData;
+    this.monitorData = monitorData;
 
-		let metaString = JSON.stringify(meta);
+    let metaString = JSON.stringify(meta);
 
-		let envSecrets = GetRequiredSecrets(`${JSON.stringify(meta)}`);
+    let envSecrets = GetRequiredSecrets(`${JSON.stringify(meta)}`);
 
-		for (let i = 0; i < envSecrets.length; i++) {
-			const secret = envSecrets[i];
-			metaString = ReplaceAllOccurrences(metaString, secret.find, secret.replace);
-		}
+    for (let i = 0; i < envSecrets.length; i++) {
+      const secret = envSecrets[i];
+      metaString = ReplaceAllOccurrences(metaString, secret.find, secret.replace);
+    }
 
-		this.meta = JSON.parse(metaString);
-	}
+    this.meta = JSON.parse(metaString);
+  }
 
-	transformData(data) {
-		let ctaLink = data.actions[0].url;
-		let ctaText = data.actions[0].text;
-		let emailApiRequest = {
-			from: this.from,
-			to: this.to.split(",").map((email) => email.trim()),
-			subject: `[${data.status}] ${data.alert_name}  at ${data.timestamp}`,
-			text: `Alert ${data.alert_name} has been ${data.status} at ${data.timestamp}. Click here to view the alert: ${ctaLink}`,
-			html: ""
-		};
+  transformData(data) {
+    let ctaLink = data.actions[0].url;
+    let ctaText = data.actions[0].text;
+    let emailApiRequest = {
+      from: this.from,
+      to: this.to.split(",").map((email) => email.trim()),
+      subject: `[${data.status}] ${data.alert_name}  at ${data.timestamp}`,
+      text: `Alert ${data.alert_name} has been ${data.status} at ${data.timestamp}. Click here to view the alert: ${ctaLink}`,
+      html: "",
+    };
 
-		let bgColor = "#f4f4f4";
-		if (data.severity == "critical") {
-			bgColor = this.siteData.colors.DOWN;
-		} else if (data.severity == "warning") {
-			bgColor = this.siteData.colors.DEGRADED;
-		}
+    let bgColor = "#f4f4f4";
+    if (data.severity == "critical") {
+      bgColor = this.siteData.colors.DOWN;
+    } else if (data.severity == "warning") {
+      bgColor = this.siteData.colors.DEGRADED;
+    }
 
-		if (data.status === "RESOLVED") {
-			bgColor = this.siteData.colors.UP;
-		}
+    if (data.status === "RESOLVED") {
+      bgColor = this.siteData.colors.UP;
+    }
 
-		let html = `
+    let html = `
 		<!DOCTYPE html>
 		<html>
 		<head>
@@ -177,53 +178,53 @@ class Email {
 				</table>
 				
 				<div class="footer">
-					This is an automated alert notification from ${this.siteData.siteName} monitoring system.
+					This is an automated alert notification from ${this.siteData.siteName} monitoring system. It is being powered by <a href='https://kener.ing'>Kener</a> v${version()}.
 				</div>
 			</div>
 		</body>
 		</html>
 		`;
 
-		emailApiRequest.html = html;
+    emailApiRequest.html = html;
 
-		return emailApiRequest;
-	}
+    return emailApiRequest;
+  }
 
-	type() {
-		return "email";
-	}
+  type() {
+    return "email";
+  }
 
-	async send(data) {
-		let emailBody = this.transformData(data); // object containing email data (to, subject, text, html, etc)
-		if (!this.meta.email_type || this.meta.email_type === "resend") {
-			const resend = new Resend(process.env.RESEND_API_KEY);
-			try {
-				return await resend.emails.send(emailBody);
-			} catch (error) {
-				console.error("Error sending webhook", error);
-				return error;
-			}
-		}
-		if (this.meta.email_type === "smtp") {
-			// Configure the SMTP transporter using environment variables
-			const transporter = getSMTPTransport(this.meta);
+  async send(data) {
+    let emailBody = this.transformData(data); // object containing email data (to, subject, text, html, etc)
+    if (!this.meta.email_type || this.meta.email_type === "resend") {
+      const resend = new Resend(process.env.RESEND_API_KEY);
+      try {
+        return await resend.emails.send(emailBody);
+      } catch (error) {
+        console.error("Error sending webhook", error);
+        return error;
+      }
+    }
+    if (this.meta.email_type === "smtp") {
+      // Configure the SMTP transporter using environment variables
+      const transporter = getSMTPTransport(this.meta);
 
-			const mailOptions = {
-				from: emailBody.from, // sender address
-				to: Array.isArray(emailBody.to) ? emailBody.to.join(",") : emailBody.to, // recipient address(es)
-				subject: emailBody.subject, // email subject
-				text: emailBody.text, // plain text body
-				html: emailBody.html // HTML body (if any)
-			};
+      const mailOptions = {
+        from: emailBody.from, // sender address
+        to: Array.isArray(emailBody.to) ? emailBody.to.join(",") : emailBody.to, // recipient address(es)
+        subject: emailBody.subject, // email subject
+        text: emailBody.text, // plain text body
+        html: emailBody.html, // HTML body (if any)
+      };
 
-			try {
-				return await transporter.sendMail(mailOptions);
-			} catch (error) {
-				console.error("Error sending email via SMTP", error);
-				return error;
-			}
-		}
-	}
+      try {
+        return await transporter.sendMail(mailOptions);
+      } catch (error) {
+        console.error("Error sending email via SMTP", error);
+        return error;
+      }
+    }
+  }
 }
 
 export default Email;

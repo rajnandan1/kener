@@ -1,15 +1,22 @@
 // @ts-nocheck
+import Mustache from "mustache";
+import { DiscordJSONTemplate } from "../../anywhere.js";
+import variables from "./variables.js";
+import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
+import version from "../../version.js";
+
 class Discord {
   url;
   headers;
   method;
   siteData;
   monitorData;
+  trigger_meta;
 
-  constructor(url, siteData, monitorData) {
+  constructor(url, siteData, monitorData, trigger_meta) {
     const kenerHeader = {
       "Content-Type": "application/json",
-      "User-Agent": "Kener",
+      "User-Agent": `Kener/${version()}`,
     };
 
     this.url = url;
@@ -17,77 +24,43 @@ class Discord {
     this.method = "POST";
     this.siteData = siteData;
     this.monitorData = monitorData;
+    this.trigger_meta = trigger_meta;
+
+    if (!!this.trigger_meta.has_discord_body && !!this.trigger_meta.discord_body) {
+      let envSecrets = GetRequiredSecrets(this.trigger_meta.discord_body);
+      for (let i = 0; i < envSecrets.length; i++) {
+        const secret = envSecrets[i];
+        this.trigger_meta.discord_body = ReplaceAllOccurrences(
+          this.trigger_meta.discord_body,
+          secret.find,
+          secret.replace,
+        );
+      }
+    }
   }
 
   transformData(data) {
-    let siteURL = this.siteData.siteURL;
+    let view = variables(this.siteData, data);
 
-    //remove / if there at the end of the url
-    if (siteURL.endsWith("/")) {
-      siteURL = siteURL.slice(0, -1);
+    let discordTemplate = DiscordJSONTemplate;
+    if (!!this.trigger_meta.has_discord_body && !!this.trigger_meta.discord_body) {
+      discordTemplate = this.trigger_meta.discord_body;
     }
-
-    if (!this.siteData.logo.startsWith("http"))
-      this.siteData.logo = `${siteURL}${!!process.env.KENER_BASE_PATH ? process.env.KENER_BASE_PATH : ""}${this.siteData.logo}`;
-
-    let logo = this.siteData.logo;
-
-    let color = 13250616; //down;
-    if (data.severity === "warning") {
-      color = 15125089;
-    }
-    if (data.status === "RESOLVED") {
-      color = 5156244;
-    }
-    return {
-      username: this.siteData.siteName,
-      avatar_url: logo,
-      content: `## ${data.alert_name}\n${data.status === "TRIGGERED" ? "🔴 Triggered" : "🟢 Resolved"}\n${data.description}\nClick [here](${data.actions[0].url}) for more.`,
-      embeds: [
-        {
-          title: data.alert_name,
-          description: data.description,
-          url: data.actions[0].url,
-          color: color,
-          fields: [
-            {
-              name: "Monitor",
-              value: data.details.metric,
-              inline: false,
-            },
-            {
-              name: "Alert ID",
-              value: data.id,
-              inline: false,
-            },
-            {
-              name: "Current Value",
-              value: data.details.current_value,
-              inline: true,
-            },
-            {
-              name: "Threshold",
-              value: data.details.threshold,
-              inline: true,
-            },
-          ],
-          footer: {
-            text: "Kener",
-            icon_url: logo,
-          },
-          timestamp: data.timestamp,
-        },
-      ],
-    };
+    return Mustache.render(discordTemplate, view);
   }
 
   async send(data) {
     try {
+      const toSend = this.transformData(data);
+
       const response = await fetch(this.url, {
         method: this.method,
         headers: this.headers,
-        body: JSON.stringify(this.transformData(data)),
+        body: toSend,
       });
+      if (!response.ok) {
+        throw new Error(`Error from discord`);
+      }
       return response;
     } catch (error) {
       console.error("Error sending webhook", error);

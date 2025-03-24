@@ -2,8 +2,9 @@
   import { onMount } from "svelte";
   import { base } from "$app/paths";
   import moment from "moment";
-  import { Loader, ChevronLeft, ChevronRight } from "lucide-svelte";
-
+  import Loader from "lucide-svelte/icons/loader";
+  import ChevronLeft from "lucide-svelte/icons/chevron-left";
+  import ChevronRight from "lucide-svelte/icons/chevron-right";
   export let data;
   let pageNo = 1;
   let limit = 20;

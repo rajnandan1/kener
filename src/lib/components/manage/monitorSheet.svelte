@@ -1,15 +1,24 @@
 <script>
   import { Button } from "$lib/components/ui/button";
-  import { Plus, X, Loader, Clipboard, Check } from "lucide-svelte";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { clickOutsideAction, slide } from "svelte-legos";
-  import { ChevronRight, Trash } from "lucide-svelte";
+  import Plus from "lucide-svelte/icons/plus";
+  import X from "lucide-svelte/icons/x";
+  import Loader from "lucide-svelte/icons/loader";
+  import Clipboard from "lucide-svelte/icons/clipboard";
+  import Check from "lucide-svelte/icons/check";
+  import ChevronRight from "lucide-svelte/icons/chevron-right";
+  import Trash from "lucide-svelte/icons/trash";
   import { base } from "$app/paths";
   import * as Select from "$lib/components/ui/select";
   import { createEventDispatcher } from "svelte";
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
+  import CodeMirror from "svelte-codemirror-editor";
+  import { javascript } from "@codemirror/lang-javascript";
+  import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
+  import { mode } from "mode-watcher";
   import {
     allRecordTypes,
     ValidateIpAddress,
@@ -100,8 +109,8 @@
       return false;
     }
     try {
-      // let evalResp = await eval(newMonitor.apiConfig.eval + `(200, 1000, "e30=")`);
       new Function(ev);
+
       return true; // The code is valid
     } catch (error) {
       invalidFormMessage = error.message + " in eval.";
@@ -719,6 +728,18 @@
             </div>
           {/if}
           <div class="col-span-6">
+            <label class="cursor-pointer">
+              <input
+                type="checkbox"
+                on:change={(e) => {
+                  newMonitor.apiConfig.allowSelfSignedCert = e.target.checked;
+                }}
+                checked={newMonitor.apiConfig.allowSelfSignedCert}
+              />
+              <span class="ml-2 text-sm">Allow Self Signed Certificate</span>
+            </label>
+          </div>
+          <div class="col-span-6">
             <Label for="eval">Eval</Label>
             <p class="my-1 text-xs text-muted-foreground">
               You can write a custom eval function to evaluate the response. The function should return a promise that
@@ -728,12 +749,23 @@
                 href="https://kener.ing/docs/monitors-api#eval">Read the docs</a
               > to learn
             </p>
-            <textarea
-              bind:value={newMonitor.apiConfig.eval}
-              id="eval"
-              class="h-96 w-full rounded-sm border p-2"
-              placeholder="Leave blank or write a custom eval function"
-            ></textarea>
+
+            <div class="overflow-hidden rounded-md">
+              <CodeMirror
+                bind:value={newMonitor.apiConfig.eval}
+                lang={javascript()}
+                theme={$mode == "dark" ? githubDark : githubLight}
+                styles={{
+                  "&": {
+                    width: "100%",
+                    maxWidth: "100%",
+                    height: "18rem",
+                    border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                    borderRadius: "0.375rem"
+                  }
+                }}
+              />
+            </div>
           </div>
         </div>
       {:else if newMonitor.monitor_type == "PING"}
@@ -823,12 +855,23 @@
                   href="https://kener.ing/docs/monitors-ping#eval">Read the docs</a
                 > to learn
               </p>
-              <textarea
-                bind:value={newMonitor.pingConfig.pingEval}
-                id="pingEval"
-                class="h-96 w-full rounded-sm border p-2"
-                placeholder="Leave blank or write a custom eval function"
-              ></textarea>
+
+              <div class="overflow-hidden rounded-md">
+                <CodeMirror
+                  bind:value={newMonitor.pingConfig.pingEval}
+                  lang={javascript()}
+                  theme={$mode == "dark" ? githubDark : githubLight}
+                  styles={{
+                    "&": {
+                      width: "100%",
+                      maxWidth: "100%",
+                      height: "18rem",
+                      border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                      borderRadius: "0.375rem"
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -914,12 +957,22 @@
                   href="https://kener.ing/docs/monitors-tcp#eval">Read the docs</a
                 > to learn
               </p>
-              <textarea
-                bind:value={newMonitor.tcpConfig.tcpEval}
-                id="tcpEval"
-                class="h-96 w-full rounded-sm border p-2"
-                placeholder="Leave blank or write a custom eval function"
-              ></textarea>
+              <div class="overflow-hidden rounded-md">
+                <CodeMirror
+                  bind:value={newMonitor.tcpConfig.tcpEval}
+                  lang={javascript()}
+                  theme={$mode == "dark" ? githubDark : githubLight}
+                  styles={{
+                    "&": {
+                      width: "100%",
+                      maxWidth: "100%",
+                      height: "22rem",
+                      border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                      borderRadius: "0.375rem"
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>

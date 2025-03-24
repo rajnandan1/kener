@@ -1,0 +1,1 @@
+<script async src="http://localhost:3000/embed/monitor-{selectedMonitor.value}/js?bgc={embedBgc.substr(1)}&locale={embedLocale.value}&theme={embedTheme}&monitor=http://localhost:3000/embed/monitor-{selectedMonitor.value}"></script>

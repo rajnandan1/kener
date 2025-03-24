@@ -2,7 +2,13 @@
 import { json, redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
 import db from "$lib/server/db/db.js";
-import { HashPassword, GenerateSalt, GenerateToken, CookieConfig } from "$lib/server/controllers/controller.js";
+import {
+  HashPassword,
+  GenerateSalt,
+  GenerateToken,
+  CookieConfig,
+  ValidatePassword,
+} from "$lib/server/controllers/controller.js";
 
 //function to validate a strong password
 /**
@@ -12,16 +18,10 @@ import { HashPassword, GenerateSalt, GenerateToken, CookieConfig } from "$lib/se
  * - Contains at least one uppercase letter.
  * - Contains at least one letter (either lowercase or uppercase).
  * - Has a minimum length of 8 characters.
- *
- * @param {string} password - The password to validate.
- * @returns {boolean} - Returns true if the password meets the criteria, otherwise false.
  */
-function validatePassword(password) {
-  return /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/.test(password);
-}
 
 export async function POST({ request, cookies }) {
-  //read form post data email and passowrd
+  //read form post data email and password
   const formdata = await request.formData();
   const email = formdata.get("email");
   const password = formdata.get("password");
@@ -34,7 +34,7 @@ export async function POST({ request, cookies }) {
     throw redirect(302, base + "/manage/setup?error=" + errorMessage);
   }
   //validate password
-  if (!validatePassword(password)) {
+  if (!ValidatePassword(password)) {
     let errorMessage =
       "Password must contain at least one digit, one lowercase letter, one uppercase letter, and have a minimum length of 8 characters.";
     throw redirect(302, base + "/manage/setup?error=" + errorMessage);

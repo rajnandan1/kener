@@ -9,7 +9,13 @@
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
 
-  import { Share2, ArrowRight, Settings, TrendingUp, Loader, ChevronLeft, ChevronRight } from "lucide-svelte";
+  import Share2 from "lucide-svelte/icons/share-2";
+  import ArrowRight from "lucide-svelte/icons/arrow-right";
+  import Settings from "lucide-svelte/icons/settings";
+  import TrendingUp from "lucide-svelte/icons/trending-up";
+  import Loader from "lucide-svelte/icons/loader";
+  import ChevronLeft from "lucide-svelte/icons/chevron-left";
+  import ChevronRight from "lucide-svelte/icons/chevron-right";
   import { buttonVariants } from "$lib/components/ui/button";
   import { createEventDispatcher } from "svelte";
   import { afterUpdate } from "svelte";
@@ -229,16 +235,6 @@
             >
               <Share2 class="h-4 w-4 " />
             </Button>
-            {#if monitor.monitor_type === "GROUP"}
-              <Button
-                class="bounce-right h-5 p-0 text-muted-foreground hover:text-primary"
-                variant="link"
-                href="{base}?group={monitor.tag}"
-                rel="external"
-              >
-                <ArrowRight class="arrow h-4 w-4" />
-              </Button>
-            {/if}
           </div>
         </div>
       </div>
@@ -319,7 +315,6 @@
               ></div>
               {#if !!incidents[ts]}
                 <div
-                  style="transition-delay: {Math.floor(Math.random() * (1500 - 500 + 1)) + 500}ms;"
                   class="bg-api-{incidents[
                     ts
                   ].monitor_impact.toLowerCase()} comein absolute -bottom-[3px] left-[1px] h-[4px] w-[4px] rounded-full"
@@ -337,6 +332,21 @@
             {/if}
           {/each}
         </div>
+        {#if monitor.monitor_type === "GROUP" && !!!embed}
+          <div class="-mt-4 flex justify-end">
+            <Button
+              variant="secondary"
+              href="{base}?group={monitor.tag}"
+              rel="external"
+              class="bounce-right h-8 text-xs"
+              on:click={scrollToRight}
+            >
+              {l(lang, "View in detail")}
+              <ArrowRight class="arrow ml-1.5 h-4 w-4" />
+            </Button>
+          </div>
+        {/if}
+
         {#if showDailyDataModal}
           <div
             transition:slide={{ direction: "bottom" }}

@@ -28,6 +28,11 @@
           "title": "Databases",
           "link": "/docs/database",
           "file": "/database.md"
+        },
+        {
+          "title": "Access Control",
+          "link": "/docs/rbac",
+          "file": "/rbac.md"
         }
       ]
     },
