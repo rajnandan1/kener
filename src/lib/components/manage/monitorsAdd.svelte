@@ -229,28 +229,33 @@
   });
   let shareMenusToggle = false;
 
-  let monitorTriggers = {
-    down_trigger: {
-      failureThreshold: 1,
-      trigger_type: "DOWN",
-      successThreshold: 1,
-      description: "The monitor is down",
-      createIncident: "NO",
-      active: false,
-      triggers: [],
-      severity: "critical"
-    },
-    degraded_trigger: {
-      failureThreshold: 1,
-      trigger_type: "DEGRADED",
-      successThreshold: 1,
-      active: false,
-      description: "The monitor is degraded",
-      createIncident: "NO",
-      triggers: [],
-      severity: "warning"
-    }
-  };
+  function initMonitorTriggers() {
+    monitorTriggers = {
+      down_trigger: {
+        failureThreshold: 1,
+        trigger_type: "DOWN",
+        successThreshold: 1,
+        description: "The monitor is down",
+        createIncident: "NO",
+        active: false,
+        triggers: [],
+        severity: "critical"
+      },
+      degraded_trigger: {
+        failureThreshold: 1,
+        trigger_type: "DEGRADED",
+        successThreshold: 1,
+        active: false,
+        description: "The monitor is degraded",
+        createIncident: "NO",
+        triggers: [],
+        severity: "warning"
+      }
+    };
+  }
+
+  let monitorTriggers;
+  initMonitorTriggers();
 
   let saveTriggerError = "";
   async function saveTriggers() {
@@ -286,6 +291,7 @@
   }
   let currentAlertMonitor;
   function openAlertMenu(m) {
+    initMonitorTriggers();
     currentAlertMonitor = m;
     if (m.down_trigger) {
       monitorTriggers.down_trigger = m.down_trigger;
