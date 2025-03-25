@@ -189,6 +189,12 @@
             return;
           }
           //validating timeout
+          if (!!hosts[i].timeout && isNaN(hosts[i].timeout)) {
+            invalidFormMessage = "Timeout should be a number";
+            return;
+          }
+          hosts[i].timeout = parseInt(hosts[i].timeout);
+          //validating timeout
           if (hosts[i].timeout < 1) {
             invalidFormMessage = "Timeout should be greater than 0";
             return;
@@ -222,6 +228,11 @@
             invalidFormMessage = `Host ${hosts[i].host} is not of type ${hosts[i].type}`;
             return;
           }
+          if (!!hosts[i].timeout && isNaN(hosts[i].timeout)) {
+            invalidFormMessage = "Timeout should be a number";
+            return;
+          }
+          hosts[i].timeout = parseInt(hosts[i].timeout);
           //validating timeout
           if (hosts[i].timeout < 1) {
             invalidFormMessage = "Timeout should be greater than 0";
@@ -943,7 +954,7 @@
                     ];
                   }}
                 >
-                  <Plus class="h-5 w-5" /> Add New
+                  <Plus class="mr-1 h-5 w-5" /> Add New
                 </Button>
               </div>
             </div>
