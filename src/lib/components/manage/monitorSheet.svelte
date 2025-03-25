@@ -188,7 +188,7 @@
             invalidFormMessage = `Host ${hosts[i].host} is not of type ${hosts[i].type}`;
             return;
           }
-          //validating timeout
+          //validating timeout for ping
           if (!!hosts[i].timeout && isNaN(hosts[i].timeout)) {
             invalidFormMessage = "Timeout should be a number";
             return;
@@ -228,6 +228,7 @@
             invalidFormMessage = `Host ${hosts[i].host} is not of type ${hosts[i].type}`;
             return;
           }
+          //validating timeout for tcp
           if (!!hosts[i].timeout && isNaN(hosts[i].timeout)) {
             invalidFormMessage = "Timeout should be a number";
             return;
