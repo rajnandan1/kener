@@ -6,11 +6,16 @@ import db from "../db/db.js";
 
 async function waitForDataAndReturn(arr, ts, d, maxTime) {
   await Wait(d);
+
   let data = await db.getLastStatusBeforeCombined(arr, ts);
   if (data) {
     data.type = REALTIME;
     return data;
   } else if (d > maxTime) {
+    data = await db.getLastStatusBeforeCombined(arr, ts, ts - 86400);
+    if (data) {
+      return data;
+    }
     return {
       status: DOWN,
       latency: 0,
