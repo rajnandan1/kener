@@ -188,6 +188,12 @@
             invalidFormMessage = `Host ${hosts[i].host} is not of type ${hosts[i].type}`;
             return;
           }
+          //validating timeout for ping
+          if (!!hosts[i].timeout && isNaN(hosts[i].timeout)) {
+            invalidFormMessage = "Timeout should be a number";
+            return;
+          }
+          hosts[i].timeout = Number(hosts[i].timeout);
           //validating timeout
           if (hosts[i].timeout < 1) {
             invalidFormMessage = "Timeout should be greater than 0";
@@ -222,6 +228,12 @@
             invalidFormMessage = `Host ${hosts[i].host} is not of type ${hosts[i].type}`;
             return;
           }
+          //validating timeout for tcp
+          if (!!hosts[i].timeout && isNaN(hosts[i].timeout)) {
+            invalidFormMessage = "Timeout should be a number";
+            return;
+          }
+          hosts[i].timeout = Number(hosts[i].timeout);
           //validating timeout
           if (hosts[i].timeout < 1) {
             invalidFormMessage = "Timeout should be greater than 0";
@@ -943,7 +955,7 @@
                     ];
                   }}
                 >
-                  <Plus class="h-5 w-5" /> Add New
+                  <Plus class="mr-1 h-5 w-5" /> Add New
                 </Button>
               </div>
             </div>
