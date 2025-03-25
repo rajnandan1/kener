@@ -138,9 +138,9 @@ class DbImpl {
     return data;
   }
 
-  async getLastStatusBeforeCombined(monitor_tags_arr, timestamp) {
+  async getLastStatusBeforeCombined(monitor_tags_arr, timestamp, minTimestamp) {
     //monitor_tag_arr is an array of string
-    return await this.knex("monitoring_data")
+    let query = this.knex("monitoring_data")
       .select(
         "timestamp",
         this.knex.raw("COUNT(*) as total_entries"),
@@ -153,13 +153,22 @@ class DbImpl {
 				END as status
 			`),
       )
-      .whereIn("monitor_tag", monitor_tags_arr)
-      .where("timestamp", "=", timestamp)
+      .whereIn("monitor_tag", monitor_tags_arr);
+
+    if (!!minTimestamp) {
+      query = query.whereBetween("timestamp", [minTimestamp, timestamp]);
+    } else {
+      query = query.where("timestamp", "=", timestamp);
+    }
+
+    query = query
       .groupBy("timestamp")
       .havingRaw("COUNT(*) = ?", [monitor_tags_arr.length])
       .orderBy("timestamp", "desc")
       .limit(1)
       .first();
+
+    return await query;
   }
 
   async background() {

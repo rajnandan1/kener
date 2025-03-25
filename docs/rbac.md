@@ -119,7 +119,7 @@ Admins can manage user accounts through the user settings page:
 
 ## Role Limitations
 
-- The Admin role can only be assigned during initial setup or by existing Admins
+- The Admin role can only be assigned during initial setup
 - Members cannot create or modify content
 - Users cannot modify their own role (only an Admin can change roles)
 

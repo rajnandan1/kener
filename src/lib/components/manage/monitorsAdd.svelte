@@ -503,7 +503,7 @@
                       <div class="text-red-500">
                         {monitor.testResult.error}
                       </div>
-                    {:else if !!monitor.testResult.status && !!monitor.testResult.latency}
+                    {:else if monitor.testResult.status != undefined && monitor.testResult.latency != undefined}
                       <p class="text-muted-foreground">
                         Status: <span class="text-api-{monitor.testResult.status.toLowerCase()}"
                           >{monitor.testResult.status}</span
