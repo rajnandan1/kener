@@ -193,7 +193,7 @@
             invalidFormMessage = "Timeout should be a number";
             return;
           }
-          hosts[i].timeout = parseInt(hosts[i].timeout);
+          hosts[i].timeout = Number(hosts[i].timeout);
           //validating timeout
           if (hosts[i].timeout < 1) {
             invalidFormMessage = "Timeout should be greater than 0";
@@ -233,7 +233,7 @@
             invalidFormMessage = "Timeout should be a number";
             return;
           }
-          hosts[i].timeout = parseInt(hosts[i].timeout);
+          hosts[i].timeout = Number(hosts[i].timeout);
           //validating timeout
           if (hosts[i].timeout < 1) {
             invalidFormMessage = "Timeout should be greater than 0";
