@@ -161,14 +161,12 @@ class DbImpl {
       query = query.where("timestamp", "=", timestamp);
     }
 
-    query = query
+    return await query
       .groupBy("timestamp")
       .havingRaw("COUNT(*) = ?", [monitor_tags_arr.length])
       .orderBy("timestamp", "desc")
       .limit(1)
       .first();
-
-    return await query;
   }
 
   async background() {
