@@ -918,6 +918,23 @@ class DbImpl {
       .andWhere("invitation_expiry", ">", this.knex.fn.now())
       .first();
   }
+
+  //delete from monitor_data using tag
+  async deleteMonitorDataByTag(tag) {
+    return await this.knex("monitoring_data").where("monitor_tag", tag).del();
+  }
+  //delete from incident monitors using tag
+  async deleteIncidentMonitorsByTag(tag) {
+    return await this.knex("incident_monitors").where("monitor_tag", tag).del();
+  }
+  //delete from monitor alerts using tag
+  async deleteMonitorAlertsByTag(tag) {
+    return await this.knex("monitor_alerts").where("monitor_tag", tag).del();
+  }
+  //delete from monitors using tag
+  async deleteMonitorsByTag(tag) {
+    return await this.knex("monitors").where("tag", tag).del();
+  }
 }
 
 export default DbImpl;

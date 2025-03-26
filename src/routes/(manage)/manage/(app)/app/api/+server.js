@@ -43,6 +43,7 @@ import {
   GetUserByID,
   GetUserByEmail,
   ManualUpdateUserData,
+  DeleteMonitorCompletelyUsingTag,
 } from "$lib/server/controllers/controller.js";
 
 import { INVITE_VERIFY_EMAIL } from "$lib/server/constants.js";
@@ -148,6 +149,9 @@ export async function POST({ request, cookies }) {
       resp = await CreateUpdateMonitor(data);
     } else if (action == "getMonitors") {
       resp = await GetMonitors(data);
+    } else if (action == "deleteMonitor") {
+      AdminEditorCan(userDB.role);
+      resp = await DeleteMonitorCompletelyUsingTag(data.tag);
     } else if (action == "createUpdateTrigger") {
       AdminEditorCan(userDB.role);
       resp = await CreateUpdateTrigger(data);

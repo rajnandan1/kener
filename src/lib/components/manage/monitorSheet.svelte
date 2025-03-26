@@ -431,6 +431,35 @@
     pg: "PostgreSQL",
     mysql2: "MySQL"
   };
+  let deleteMonitorConfirmText = "";
+  let deletingMonitor = false;
+
+  async function deleteMonitor() {
+    if (deleteMonitorConfirmText != `delete ${newMonitor.tag}`) {
+      invalidFormMessage = "Please type the correct text to delete the monitor";
+      return;
+    }
+    deletingMonitor = true;
+    try {
+      let data = await fetch(base + "/manage/app/api/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ action: "deleteMonitor", data: { tag: newMonitor.tag } })
+      });
+      let resp = await data.json();
+      if (resp.error) {
+        invalidFormMessage = resp.error;
+      } else {
+        dispatch("closeModal", {});
+      }
+    } catch (error) {
+      invalidFormMessage = "Error while deleting monitor";
+    } finally {
+      deletingMonitor = false;
+    }
+  }
 </script>
 
 <div class="fixed left-0 top-0 z-50 h-screen w-screen bg-card bg-opacity-20 backdrop-blur-sm">
@@ -1276,6 +1305,33 @@
           </div>
         </div>
       {/if}
+      <div class="mt-4 flex">
+        <div class="flex w-full flex-col rounded-md border border-destructive bg-destructive p-2">
+          <div class="w-full">
+            <h2 class="flex justify-between text-lg">
+              <span>Danger Zone</span>
+            </h2>
+            <p class="text-sm">Deleting a monitor is irreversible. Please be sure before deleting.</p>
+          </div>
+          <form class="flex gap-x-2" on:submit|preventDefault={deleteMonitor}>
+            <div class="mt-1">
+              <Label for="deleteMonitor">Type <i class="text-background">delete {newMonitor.tag}</i> to confirm</Label>
+              <Input bind:value={deleteMonitorConfirmText} id="deleteMonitor" required />
+            </div>
+            <Button
+              variant=""
+              type="submit"
+              class="mt-7"
+              disabled={deleteMonitorConfirmText != `delete ${newMonitor.tag}`}
+            >
+              Delete
+              {#if deletingMonitor}
+                <Loader class="ml-2 inline h-4 w-4 animate-spin" />
+              {/if}
+            </Button>
+          </form>
+        </div>
+      </div>
     </div>
     <div class="absolute bottom-0 grid h-16 w-full grid-cols-6 justify-end gap-2 border-t p-3 pr-6">
       <div class="col-span-5 py-2.5">

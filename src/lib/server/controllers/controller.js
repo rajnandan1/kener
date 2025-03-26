@@ -1186,6 +1186,13 @@ export const CreateNewUser = async (currentUser, data) => {
   return await db.insertUser(user);
 };
 
+export const DeleteMonitorCompletelyUsingTag = async (tag) => {
+  await db.deleteMonitorDataByTag(tag);
+  await db.deleteIncidentMonitorsByTag(tag);
+  await db.deleteMonitorAlertsByTag(tag);
+  return await db.deleteMonitorsByTag(tag);
+};
+
 export const GetSiteMap = async (cookies) => {
   let siteMapData = [];
   let siteURLData = await GetSiteDataByKey("siteURL");
