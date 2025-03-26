@@ -20,7 +20,7 @@ import { Resend } from "resend";
 import crypto from "crypto";
 import { format, subMonths, addMonths, startOfMonth } from "date-fns";
 import { UP, DOWN, DEGRADED, NO_DATA, REALTIME, SIGNAL } from "../constants.js";
-import { GetMinuteStartNowTimestampUTC, GetNowTimestampUTC, ReplaceAllOccurrences } from "../tool.js";
+import { GetMinuteStartNowTimestampUTC, GetNowTimestampUTC, ReplaceAllOccurrences, ValidateEmail } from "../tool.js";
 import getSMTPTransport from "../notification/smtps.js";
 
 const saltRounds = 10;
@@ -242,6 +242,16 @@ export const GetMonitorsParsed = async (query) => {
 
 export const CreateUpdateTrigger = async (alert) => {
   let alertData = { ...alert };
+  let alertMetaJSON = JSON.parse(alertData.trigger_meta);
+  if (alertData.trigger_type === "email") {
+    let emailsArray = alertMetaJSON.to.split(",").map((email) => email.trim());
+    for (let i = 0; i < emailsArray.length; i++) {
+      if (!ValidateEmail(emailsArray[i])) {
+        throw new Error(`Invalid email: ${emailsArray[i]}`);
+      }
+    }
+  }
+
   if (alertData.id) {
     return await db.updateTrigger(alertData);
   } else {

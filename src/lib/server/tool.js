@@ -293,6 +293,13 @@ function HashString(str) {
   return hash.digest("hex");
 }
 
+//function to validate email address
+function ValidateEmail(email) {
+  const regex =
+    /^(?:(?:[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+\.)*[a-zA-Z0-9!#$%&'*+\-/=?^_`{|}~]+)@(?:(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}|(?:\[(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)(?:\.(?!$)|$)){4}\]))$/;
+  return regex.test(email);
+}
+
 export {
   IsValidURL,
   IsValidHTTPMethod,
@@ -322,4 +329,5 @@ export {
   MaskString,
   GetDbType,
   HashString,
+  ValidateEmail,
 };
