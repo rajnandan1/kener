@@ -32,7 +32,10 @@
               rel="external"
               href={navItem.url}
               class="flex rounded-md px-3 py-2 text-card-foreground transition-all ease-linear hover:bg-background"
-              on:click={() => analyticsEvent("nav", navItem.name)}
+              on:click={() =>
+                analyticsEvent("navigation", {
+                  name: navItem.name
+                })}
             >
               {#if navItem.iconURL}
                 <GMI src={navItem.iconURL} classList="mr-1.5 mt-0.5 inline h-4" alt={navItem.name} />

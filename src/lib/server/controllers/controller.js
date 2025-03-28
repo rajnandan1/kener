@@ -169,6 +169,31 @@ const siteDataKeys = [
     isValid: (value) => typeof value === "string" && value.trim().length > 0,
     data_type: "string",
   },
+  {
+    key: "analytics.googleTagManager",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
+  {
+    key: "analytics.plausible",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
+  {
+    key: "analytics.mixpanel",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
+  {
+    key: "analytics.amplitude",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
+  {
+    key: "analytics.clarity",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
 ];
 
 export function InsertKeyValue(key, value) {
@@ -199,6 +224,20 @@ export async function GetAllSiteData() {
     } else {
       transformedData[d.key] = d.value;
     }
+  }
+  return transformedData;
+}
+
+//get all analytics data as json
+export async function GetAllAnalyticsData() {
+  let data = await db.getAllSiteDataAnalytics();
+  //return all data as key value pairs, transform using data_type
+  let transformedData = [];
+  for (const d of data) {
+    transformedData.push({
+      key: d.key,
+      value: JSON.parse(d.value),
+    });
   }
   return transformedData;
 }
@@ -392,7 +431,6 @@ export const VerifyToken = async (token) => {
     const decoded = jwt.verify(token, process.env.KENER_SECRET_KEY || DUMMY_SECRET);
     return decoded; // Returns the decoded payload if the token is valid
   } catch (err) {
-    console.error("Error verifying token:", err);
     return undefined; // Returns null if the token is invalid
   }
 };

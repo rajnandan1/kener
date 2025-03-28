@@ -9,6 +9,7 @@ config/server.yaml
 /src/lib/.kener
 /package
 .env
+.vscode
 .env.*
 !.env.example
 vite.config.js.timestamp-*

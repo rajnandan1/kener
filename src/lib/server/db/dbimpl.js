@@ -324,6 +324,11 @@ class DbImpl {
     return await this.knex("site_data").where("key", key).first();
   }
 
+  //get site data that starts with analytics.
+  async getAllSiteDataAnalytics() {
+    return await this.knex("site_data").where("key", "like", "analytics.%");
+  }
+
   //insert into monitors
   async insertMonitor(data) {
     return await this.knex("monitors").insert({

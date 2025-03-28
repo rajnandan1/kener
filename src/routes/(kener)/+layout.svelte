@@ -22,8 +22,6 @@
   let searchTzValue = "";
   let defaultTheme = data.site.theme;
   const allLocales = data.site.i18n?.locales.filter((locale) => locale.selected === true);
-  let hasConfiguredAnalytics =
-    !!data.site.analytics && data.site.analytics.filter((provider) => !!provider.id).length > 0;
 
   function toggleMode() {
     if ($mode === "light") {
@@ -61,10 +59,12 @@
   //set timezone
   function setTz(tz) {
     document.cookie = `localTz=${tz};max-age=${60 * 60 * 24 * 365 * 30};path=${base ? "base" : "/"};`;
+    analyticsEvent("timezone_changed", {
+      time_zone: tz
+    });
     location.reload();
   }
 
-  let Analytics;
   let myTimezone = data.localTz;
   onMount(async () => {
     myTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -76,70 +76,18 @@
     if (defaultTheme != "none") {
       setMode(defaultTheme);
     }
-    //
-    const providers = data.site.analytics;
-    const analyticsPlugins = [];
-    if (hasConfiguredAnalytics) {
-      //loop object
-
-      for (let i = 0; i < providers.length; i++) {
-        const provider = providers[i];
-        if (!!!provider.id) {
-          continue;
-        }
-
-        if (provider.type == "GA") {
-          analyticsPlugins.push(
-            analyticsGa.default({
-              measurementIds: provider.id
-            })
-          );
-        } else if (provider.type == "AMPLITUDE") {
-          analyticsPlugins.push(
-            analyticsAmplitude({
-              apiKey: provider.measurementIds[0],
-              options: {
-                trackingOptions: {
-                  ip_address: false
-                }
-              }
-            })
-          );
-        } else if (provider.type == "MIXPANEL") {
-          analyticsPlugins.push(
-            analyticsMixpanel({
-              token: provider.measurementIds[0]
-            })
-          );
-        }
-      }
-    }
-    if (hasConfiguredAnalytics) {
-      Analytics = _analytics.init({
-        app: "kener",
-        debug: true,
-        version: 100,
-        plugins: analyticsPlugins
-      });
-      Analytics.page();
-    }
 
     if (!!data.bgc && data.bgc[0] == "#") {
       document.body.style.backgroundColor = data.bgc;
     }
   });
-  function captureAnalytics(e) {
-    if (hasConfiguredAnalytics) {
-      const { event, data } = e.detail;
-      Analytics.track(event, data);
-    }
-  }
+
   let customCSS = `<style>${data.site.customCSS}</style>`;
   if (!!data.site.favicon && !data.site.favicon.startsWith("http")) data.site.favicon = `${base}${data.site.favicon}`;
 </script>
 
-<svelte:window on:analyticsEvent={captureAnalytics} />
 <svelte:head>
+  <script src="{base}/api/js/capture.js"></script>
   {#if data.site.favicon}
     <link rel="icon" id="kener-app-favicon" href={data.site.favicon} />
   {/if}
@@ -147,14 +95,6 @@
     <link href={data.site.font.cssSrc} rel="stylesheet" />
   {/if}
 
-  {#if hasConfiguredAnalytics}
-    <script src="https://unpkg.com/analytics/dist/analytics.min.js"></script>
-    {#each data.site.analytics as { id, type, script }}
-      {#if !!id}
-        <script data-type={type} src={script}></script>
-      {/if}
-    {/each}
-  {/if}
   {#if !!data.site.customCSS}
     {@html customCSS}
   {/if}
@@ -222,7 +162,9 @@
                       <div class="text-xs font-semibold">
                         <Button
                           variant={tz === data.localTz ? "primary" : "ghost"}
-                          class="h-8 w-full justify-start rounded-none text-xs text-muted-foreground"
+                          class="h-8 w-full justify-start rounded-none text-xs {tz === data.localTz
+                            ? 'text-background'
+                            : 'text-muted-foreground'}"
                           on:click={() => setTz(tz)}
                         >
                           {tz}

@@ -2,6 +2,7 @@
   import { formatDistanceToNow, formatDistance } from "date-fns";
   import Settings from "lucide-svelte/icons/settings";
   import ArrowRight from "lucide-svelte/icons/arrow-right";
+  import { analyticsEvent } from "$lib/boringOne";
   import * as Accordion from "$lib/components/ui/accordion";
   import { l, f, fd, fdn } from "$lib/i18n/client";
   import { base } from "$app/paths";
@@ -79,7 +80,10 @@
   <div class="col-span-12">
     <Accordion.Root bind:value={index} class="accor">
       <Accordion.Item value={accordionValue}>
-        <Accordion.Trigger class="rounded-md px-4 hover:bg-muted hover:no-underline">
+        <Accordion.Trigger
+          class="rounded-md px-4 hover:bg-muted hover:no-underline"
+          on:click={() => analyticsEvent("incident_open", { incident_title: incident.title })}
+        >
           <div class="w-full text-left hover:no-underline">
             <p class="flex gap-x-2 text-xs font-semibold">
               {#if incidentType == "INCIDENT"}
