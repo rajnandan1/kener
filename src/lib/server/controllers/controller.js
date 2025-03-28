@@ -20,7 +20,7 @@ import { Resend } from "resend";
 import crypto from "crypto";
 import { format, subMonths, addMonths, startOfMonth } from "date-fns";
 import { UP, DOWN, DEGRADED, NO_DATA, REALTIME, SIGNAL } from "../constants.js";
-import { GetMinuteStartNowTimestampUTC, GetNowTimestampUTC, ReplaceAllOccurrences } from "../tool.js";
+import { GetMinuteStartNowTimestampUTC, GetNowTimestampUTC, ReplaceAllOccurrences, ValidateEmail } from "../tool.js";
 import getSMTPTransport from "../notification/smtps.js";
 
 const saltRounds = 10;
@@ -169,6 +169,31 @@ const siteDataKeys = [
     isValid: (value) => typeof value === "string" && value.trim().length > 0,
     data_type: "string",
   },
+  {
+    key: "analytics.googleTagManager",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
+  {
+    key: "analytics.plausible",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
+  {
+    key: "analytics.mixpanel",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
+  {
+    key: "analytics.amplitude",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
+  {
+    key: "analytics.clarity",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
 ];
 
 export function InsertKeyValue(key, value) {
@@ -199,6 +224,20 @@ export async function GetAllSiteData() {
     } else {
       transformedData[d.key] = d.value;
     }
+  }
+  return transformedData;
+}
+
+//get all analytics data as json
+export async function GetAllAnalyticsData() {
+  let data = await db.getAllSiteDataAnalytics();
+  //return all data as key value pairs, transform using data_type
+  let transformedData = [];
+  for (const d of data) {
+    transformedData.push({
+      key: d.key,
+      value: JSON.parse(d.value),
+    });
   }
   return transformedData;
 }
@@ -242,6 +281,16 @@ export const GetMonitorsParsed = async (query) => {
 
 export const CreateUpdateTrigger = async (alert) => {
   let alertData = { ...alert };
+  let alertMetaJSON = JSON.parse(alertData.trigger_meta);
+  if (alertData.trigger_type === "email") {
+    let emailsArray = alertMetaJSON.to.split(",").map((email) => email.trim());
+    for (let i = 0; i < emailsArray.length; i++) {
+      if (!ValidateEmail(emailsArray[i])) {
+        throw new Error(`Invalid email: ${emailsArray[i]}`);
+      }
+    }
+  }
+
   if (alertData.id) {
     return await db.updateTrigger(alertData);
   } else {
@@ -382,7 +431,6 @@ export const VerifyToken = async (token) => {
     const decoded = jwt.verify(token, process.env.KENER_SECRET_KEY || DUMMY_SECRET);
     return decoded; // Returns the decoded payload if the token is valid
   } catch (err) {
-    console.error("Error verifying token:", err);
     return undefined; // Returns null if the token is invalid
   }
 };
@@ -1174,6 +1222,13 @@ export const CreateNewUser = async (currentUser, data) => {
     role: data.role,
   };
   return await db.insertUser(user);
+};
+
+export const DeleteMonitorCompletelyUsingTag = async (tag) => {
+  await db.deleteMonitorDataByTag(tag);
+  await db.deleteIncidentMonitorsByTag(tag);
+  await db.deleteMonitorAlertsByTag(tag);
+  return await db.deleteMonitorsByTag(tag);
 };
 
 export const GetSiteMap = async (cookies) => {

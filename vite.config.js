@@ -18,7 +18,8 @@ export default defineConfig(({ mode }) => ({
       "codemirror",
       "@codemirror/language-javascript",
       "@uiw/codemirror-theme-github",
-      "@codemirror/language-json" /* ... */,
+      "@codemirror/language-json",
+      "@codemirror/language-markdown",
     ],
   },
   plugins: [

@@ -2,6 +2,7 @@
   import { Badge } from "$lib/components/ui/badge";
   import Incident from "$lib/components/IncidentNew.svelte";
   import { Button } from "$lib/components/ui/button";
+  import { analyticsEvent } from "$lib/boringOne";
   import ArrowRight from "lucide-svelte/icons/arrow-right";
   import ArrowLeft from "lucide-svelte/icons/arrow-left";
   import ChevronLeft from "lucide-svelte/icons/chevron-left";
@@ -76,6 +77,7 @@
     variant="outline"
     class="bounce-left h-8   justify-start  pl-1.5"
     on:click={() => {
+      analyticsEvent("incident_back_button_click");
       return (window.location.href = `${base}/`);
     }}
   >

@@ -939,3 +939,10 @@ textarea::placeholder {
 .dark .like-input {
   background-color: rgba(0, 0, 0, 0.1) !important;
 }
+.ͼo .cm-gutters {
+  border-top-left-radius: var(--radius);
+  border-bottom-left-radius: var(--radius);
+}
+.no-gutter .ͼo .cm-gutters {
+  display: none;
+}

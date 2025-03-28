@@ -27,6 +27,12 @@
   import MessageSquarePlus from "lucide-svelte/icons/message-square-plus";
   import ChevronRight from "lucide-svelte/icons/chevron-right";
   import Trash from "lucide-svelte/icons/trash";
+  import CodeMirror from "svelte-codemirror-editor";
+  import { markdown } from "@codemirror/lang-markdown";
+  import { marked } from "marked";
+  import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
+  import { mode } from "mode-watcher";
+
   import * as Select from "$lib/components/ui/select";
   export let data;
   let status = "OPEN";
@@ -414,6 +420,7 @@
   function setCommentEdit(c) {
     newComment = { ...c };
     newComment.commented_at = new Date(Number(c.commented_at) * 1000);
+    scrollToElementInsideContainer("incident-modal", "edit-comment-box");
   }
   $: {
     //broadcast a custom event named blockScroll
@@ -428,6 +435,17 @@
   function closeModal() {
     showModal = false;
     window.location.hash = "";
+  }
+  function scrollToElementInsideContainer(containerId, elementId) {
+    const container = document.getElementById(containerId);
+    const element = document.getElementById(elementId);
+
+    if (container && element) {
+      container.scrollTo({
+        top: element.offsetTop - container.offsetTop,
+        behavior: "smooth"
+      });
+    }
   }
 </script>
 
@@ -674,7 +692,7 @@
       on:clickoutside={closeModal}
       class="absolute right-0 top-0 h-screen w-[800px] border-l bg-background p-4 shadow-xl"
     >
-      <div class="mt-0 w-full overflow-y-auto p-3" style="height: 100vh;">
+      <div class="mt-0 w-full overflow-y-auto p-3" style="height: 100vh;" id="incident-modal">
         <div class="rounded-md border p-4">
           <div>
             {#if newIncident.id}
@@ -735,12 +753,24 @@
                   <span class="capitalize">{newIncident.incident_type}</span>
                   Summary
                   <span class="text-red-500">*</span>
+                  (supports Markdown)
                 </Label>
-                <Input
-                  class="mt-2"
-                  bind:value={newIncident.firstComment}
-                  placeholder="We are facing degraded service in all servers"
-                />
+                <div class="overflow-hidden rounded-md">
+                  <CodeMirror
+                    bind:value={newIncident.firstComment}
+                    lang={markdown()}
+                    theme={$mode == "dark" ? githubDark : githubLight}
+                    styles={{
+                      "&": {
+                        width: "100%",
+                        maxWidth: "100%",
+                        height: "320px",
+                        border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                        borderRadius: "var(--radius)"
+                      }
+                    }}
+                  />
+                </div>
               </div>
             </div>
           {/if}
@@ -860,11 +890,23 @@
                 />
               </div>
               <div class="mt-4">
-                <textarea
-                  bind:value={newComment.comment}
-                  class="h-24 w-full rounded-sm border p-2 text-sm"
-                  placeholder="There is an outage in all server. Our best minds are on it. We will update you soon."
-                ></textarea>
+                <p class="mb-1 text-right text-xs font-medium">Supports Markdown</p>
+                <div class="overflow-hidden rounded-md" id="edit-comment-box">
+                  <CodeMirror
+                    bind:value={newComment.comment}
+                    lang={markdown()}
+                    theme={$mode == "dark" ? githubDark : githubLight}
+                    styles={{
+                      "&": {
+                        width: "100%",
+                        maxWidth: "100%",
+                        height: "220px",
+                        border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                        borderRadius: "var(--radius)"
+                      }
+                    }}
+                  />
+                </div>
               </div>
 
               <div class="flex justify-end gap-x-2">
@@ -913,7 +955,14 @@
               {#each comments as comment}
                 <div class="flex items-center justify-between gap-2 border-b py-2">
                   <div class="w-full rounded px-2 py-2 {newComment.id == comment.id ? 'bg-input' : ''}">
-                    <p class="mb-2 text-xs font-medium">{@html comment.comment}</p>
+                    <div class="mb-2 max-h-[400px] overflow-y-auto rounded-md border bg-card p-2">
+                      <div
+                        class=" prose prose-stone max-w-none dark:prose-invert prose-code:rounded prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:font-normal prose-pre:bg-opacity-0 dark:prose-pre:bg-neutral-900"
+                      >
+                        {@html marked.parse(comment.comment)}
+                      </div>
+                    </div>
+
                     <div class="flex w-full justify-between gap-x-2">
                       <div class="text-xs font-semibold text-muted-foreground">
                         {#if currentIncident.incident_type == "INCIDENT"}

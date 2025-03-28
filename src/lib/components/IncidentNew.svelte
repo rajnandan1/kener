@@ -2,6 +2,7 @@
   import { formatDistanceToNow, formatDistance } from "date-fns";
   import Settings from "lucide-svelte/icons/settings";
   import ArrowRight from "lucide-svelte/icons/arrow-right";
+  import { analyticsEvent } from "$lib/boringOne";
   import * as Accordion from "$lib/components/ui/accordion";
   import { l, f, fd, fdn } from "$lib/i18n/client";
   import { base } from "$app/paths";
@@ -9,6 +10,7 @@
   import { Tooltip } from "bits-ui";
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
+  import { marked } from "marked";
   export let incident;
   export let index;
   export let lang;
@@ -79,7 +81,10 @@
   <div class="col-span-12">
     <Accordion.Root bind:value={index} class="accor">
       <Accordion.Item value={accordionValue}>
-        <Accordion.Trigger class="rounded-md px-4 hover:bg-muted hover:no-underline">
+        <Accordion.Trigger
+          class="rounded-md px-4 hover:bg-muted hover:no-underline"
+          on:click={() => analyticsEvent("incident_open", { incident_title: incident.title })}
+        >
           <div class="w-full text-left hover:no-underline">
             <p class="flex gap-x-2 text-xs font-semibold">
               {#if incidentType == "INCIDENT"}
@@ -185,7 +190,11 @@
                       </time>
 
                       <div class="mb-4 text-sm font-normal">
-                        {@html comment.comment}
+                        <div
+                          class="prose prose-stone max-w-none dark:prose-invert prose-code:rounded prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:font-normal prose-pre:bg-opacity-0 dark:prose-pre:bg-neutral-900"
+                        >
+                          {@html marked.parse(comment.comment)}
+                        </div>
                       </div>
                     </li>
                   {/each}

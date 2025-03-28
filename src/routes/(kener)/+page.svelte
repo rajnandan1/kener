@@ -12,6 +12,7 @@
   import { hotKeyAction, clickOutsideAction } from "svelte-legos";
   import { onMount } from "svelte";
   import ShareMenu from "$lib/components/shareMenu.svelte";
+  import { analyticsEvent } from "$lib/boringOne";
   import { scale } from "svelte/transition";
   import { format } from "date-fns";
   import GMI from "$lib/components/gmi.svelte";
@@ -39,11 +40,21 @@
   });
   let kindFilter = "INCIDENT";
   function kindOfIncidents(kind) {
+    analyticsEvent("monitor_incident_kind_filter", {
+      kind: kind
+    });
     kindFilter = kind;
   }
 
   if (data.allRecentIncidents.length == 0) {
     kindOfIncidents("MAINTENANCE");
+  }
+
+  function closeShareMenu() {
+    shareMenusToggle = false;
+    analyticsEvent("monitor_share_menu_close", {
+      tag: activeMonitor.tag
+    });
   }
 </script>
 
@@ -94,10 +105,13 @@
       class="bounce-left h-8   justify-start  pl-1.5"
       on:click={() => {
         if (data.pageType == "category") {
+          analyticsEvent("category_back_button_click");
           return window.history.back();
         } else if (data.pageType == "monitor") {
+          analyticsEvent("monitor_back_button_click");
           return (window.location.href = `${base}/`);
         } else if (data.pageType == "group") {
+          analyticsEvent("group_back_button_click");
           return (window.location.href = `${base}/`);
         }
       }}
@@ -256,21 +270,21 @@
     transition:scale={{ duration: 100 }}
     use:hotKeyAction={{
       code: "Escape",
-      cb: () => (shareMenusToggle = false)
+      cb: () => closeShareMenu()
     }}
     class="moldal-container fixed left-0 top-0 z-30 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm"
   >
     <div
       use:clickOutsideAction
       on:clickoutside={() => {
-        shareMenusToggle = false;
+        closeShareMenu();
       }}
       class="absolute left-1/2 top-1/2 h-fit w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background shadow-lg backdrop-blur-lg md:w-[568px]"
     >
       <Button
         variant="ghost"
         on:click={() => {
-          shareMenusToggle = false;
+          closeShareMenu();
         }}
         class="absolute right-2 top-2 z-40 h-6 w-6   rounded-full border bg-background p-1"
       >

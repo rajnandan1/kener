@@ -8,7 +8,7 @@
   import { sub, startOfDay, getUnixTime } from "date-fns";
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
-
+  import { analyticsEvent } from "$lib/boringOne";
   import Share2 from "lucide-svelte/icons/share-2";
   import ArrowRight from "lucide-svelte/icons/arrow-right";
   import Settings from "lucide-svelte/icons/settings";
@@ -130,6 +130,10 @@
   let rollerLoading = false;
   async function rollSummary(r) {
     let newRolledAt = r;
+    analyticsEvent("monitor_interval_switch", {
+      tag: monitor.tag,
+      interval: uptimesRollers[newRolledAt].text
+    });
 
     if (uptimesRollers[newRolledAt].value === undefined) {
       rollerLoading = true;
@@ -179,12 +183,18 @@
     if (embed) {
       return;
     }
+
     let incidentIDs = incidentObj?.ids || [];
     dayUptime = "NA";
     dateFetchedFor = f(new Date(bar.timestamp * 1000), "EEEE, MMMM do, yyyy", selectedLang, $page.data.localTz);
     showDailyDataModal = true;
+
     loadingDayData = true;
     dayIncidentsFull = [];
+    analyticsEvent("monitor_day_data", {
+      tag: monitor.tag,
+      data_date: dateFetchedFor
+    });
     setTimeout(() => {
       getToday(bar.timestamp, incidentIDs);
     }, 50);
