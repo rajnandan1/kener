@@ -1306,20 +1306,20 @@
         </div>
       {/if}
       <div class="mt-4 flex">
-        <div class="flex w-full flex-col rounded-md border border-destructive bg-destructive p-2">
+        <div class="flex w-full flex-col rounded-md border border-destructive p-2">
           <div class="w-full">
             <h2 class="flex justify-between text-lg">
-              <span>Danger Zone</span>
+              <span class="text-destructive">Danger Zone</span>
             </h2>
             <p class="text-sm">Deleting a monitor is irreversible. Please be sure before deleting.</p>
           </div>
           <form class="flex gap-x-2" on:submit|preventDefault={deleteMonitor}>
-            <div class="mt-1">
-              <Label for="deleteMonitor">Type <i class="text-background">delete {newMonitor.tag}</i> to confirm</Label>
+            <div class="mt-1 flex flex-col gap-y-2">
+              <Label for="deleteMonitor">Type <i class="text-destructive">delete {newMonitor.tag}</i> to confirm</Label>
               <Input bind:value={deleteMonitorConfirmText} id="deleteMonitor" required />
             </div>
             <Button
-              variant=""
+              variant="destructive"
               type="submit"
               class="mt-7"
               disabled={deleteMonitorConfirmText != `delete ${newMonitor.tag}`}

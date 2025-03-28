@@ -76,6 +76,7 @@
     variant="outline"
     class="bounce-left h-8   justify-start  pl-1.5"
     on:click={() => {
+      analyticsEvent("incident_back_button_click");
       return (window.location.href = `${base}/`);
     }}
   >
