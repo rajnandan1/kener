@@ -753,6 +753,7 @@
                   <span class="capitalize">{newIncident.incident_type}</span>
                   Summary
                   <span class="text-red-500">*</span>
+                  (supports Markdown)
                 </Label>
                 <div class="overflow-hidden rounded-md">
                   <CodeMirror
@@ -889,6 +890,7 @@
                 />
               </div>
               <div class="mt-4">
+                <p class="mb-1 text-right text-xs font-medium">Supports Markdown</p>
                 <div class="overflow-hidden rounded-md" id="edit-comment-box">
                   <CodeMirror
                     bind:value={newComment.comment}
