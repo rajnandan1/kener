@@ -10,6 +10,7 @@
   import { Tooltip } from "bits-ui";
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
+  import { marked } from "marked";
   export let incident;
   export let index;
   export let lang;
@@ -189,7 +190,11 @@
                       </time>
 
                       <div class="mb-4 text-sm font-normal">
-                        {@html comment.comment}
+                        <div
+                          class="prose prose-stone max-w-none dark:prose-invert prose-code:rounded prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:font-normal prose-pre:bg-opacity-0 dark:prose-pre:bg-neutral-900"
+                        >
+                          {@html marked.parse(comment.comment)}
+                        </div>
                       </div>
                     </li>
                   {/each}

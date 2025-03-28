@@ -70,6 +70,7 @@
     "@babel/runtime": "^7.26.10",
     "@codemirror/lang-javascript": "^6.2.3",
     "@codemirror/lang-json": "^6.0.1",
+    "@codemirror/lang-markdown": "^6.3.2",
     "@formkit/auto-animate": "^0.8.2",
     "@number-flow/svelte": "^0.2.1",
     "@scalar/express-api-reference": "^0.4.167",

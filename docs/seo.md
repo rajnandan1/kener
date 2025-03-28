@@ -21,7 +21,17 @@ Add API key of your Amplitude account
 
 ### Mixpanel
 
-Add token of your Mixpanel account.
+Add project token of your Mixpanel account.
+
+### Plausible
+
+- Add domain of your Plausible account. Example: `example.com`
+- Add API key of your Plausible account. Default is `https://plausible.io/api/event`
+- Add Script Source of your Plausible account. Default is `https://plausible.io/js/script.pageview-props.tagged-events.js`
+
+### Microsoft Clarity
+
+Add Project ID of your Microsoft Clarity account.
 
 ## Search Engine Optimization
 
