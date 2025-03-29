@@ -280,6 +280,9 @@ function Wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 function MaskString(str) {
+  if (str.length <= 4) {
+    return "*".repeat(str.length);
+  }
   return "*".repeat(str.length - 4) + str.slice(-4);
 }
 

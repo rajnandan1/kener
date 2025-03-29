@@ -1305,33 +1305,37 @@
           </div>
         </div>
       {/if}
-      <div class="mt-4 flex">
-        <div class="flex w-full flex-col rounded-md border border-destructive p-2">
-          <div class="w-full">
-            <h2 class="flex justify-between text-lg">
-              <span class="text-destructive">Danger Zone</span>
-            </h2>
-            <p class="text-sm">Deleting a monitor is irreversible. Please be sure before deleting.</p>
-          </div>
-          <form class="flex gap-x-2" on:submit|preventDefault={deleteMonitor}>
-            <div class="mt-1 flex flex-col gap-y-2">
-              <Label for="deleteMonitor">Type <i class="text-destructive">delete {newMonitor.tag}</i> to confirm</Label>
-              <Input bind:value={deleteMonitorConfirmText} id="deleteMonitor" required />
+      {#if !!newMonitor.id}
+        <div class="mt-4 flex">
+          <div class="flex w-full flex-col rounded-md border border-destructive p-2">
+            <div class="w-full">
+              <h2 class="flex justify-between text-lg">
+                <span class="text-destructive">Danger Zone</span>
+              </h2>
+              <p class="text-sm">Deleting a monitor is irreversible. Please be sure before deleting.</p>
             </div>
-            <Button
-              variant="destructive"
-              type="submit"
-              class="mt-7"
-              disabled={deleteMonitorConfirmText != `delete ${newMonitor.tag}`}
-            >
-              Delete
-              {#if deletingMonitor}
-                <Loader class="ml-2 inline h-4 w-4 animate-spin" />
-              {/if}
-            </Button>
-          </form>
+            <form class="flex gap-x-2" on:submit|preventDefault={deleteMonitor}>
+              <div class="mt-1 flex flex-col gap-y-2">
+                <Label for="deleteMonitor">
+                  Type <i class="text-destructive">delete {newMonitor.tag}</i> to confirm
+                </Label>
+                <Input bind:value={deleteMonitorConfirmText} id="deleteMonitor" required />
+              </div>
+              <Button
+                variant="destructive"
+                type="submit"
+                class="mt-7"
+                disabled={deleteMonitorConfirmText != `delete ${newMonitor.tag}`}
+              >
+                Delete
+                {#if deletingMonitor}
+                  <Loader class="ml-2 inline h-4 w-4 animate-spin" />
+                {/if}
+              </Button>
+            </form>
+          </div>
         </div>
-      </div>
+      {/if}
     </div>
     <div class="absolute bottom-0 grid h-16 w-full grid-cols-6 justify-end gap-2 border-t p-3 pr-6">
       <div class="col-span-5 py-2.5">

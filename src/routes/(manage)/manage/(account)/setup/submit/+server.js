@@ -2,23 +2,7 @@
 import { json, redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
 import db from "$lib/server/db/db.js";
-import {
-  HashPassword,
-  GenerateSalt,
-  GenerateToken,
-  CookieConfig,
-  ValidatePassword,
-} from "$lib/server/controllers/controller.js";
-
-//function to validate a strong password
-/**
- * Validates a password to ensure it meets the following criteria:
- * - Contains at least one digit.
- * - Contains at least one lowercase letter.
- * - Contains at least one uppercase letter.
- * - Contains at least one letter (either lowercase or uppercase).
- * - Has a minimum length of 8 characters.
- */
+import { HashPassword, GenerateToken, CookieConfig, ValidatePassword } from "$lib/server/controllers/controller.js";
 
 export async function POST({ request, cookies }) {
   //read form post data email and password

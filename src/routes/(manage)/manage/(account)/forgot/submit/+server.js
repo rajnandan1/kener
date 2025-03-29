@@ -5,13 +5,7 @@ import db from "$lib/server/db/db.js";
 import { SendEmailWithTemplate, GetSiteLogoURL } from "$lib/server/controllers/controller.js";
 import forgotPasswordTemplate from "$lib/server/templates/forgot_pass.html?raw";
 
-import {
-  HashPassword,
-  GenerateSalt,
-  GenerateToken,
-  VerifyToken,
-  GetSMTPFromENV,
-} from "$lib/server/controllers/controller.js";
+import { HashPassword, GenerateToken, VerifyToken, GetSMTPFromENV } from "$lib/server/controllers/controller.js";
 
 export async function POST({ request, cookies }) {
   //read form post data email and password

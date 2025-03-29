@@ -223,7 +223,7 @@
               {@html monitor.description}
             {/if}
           </p>
-          <div class="absolute right-14 top-5 flex gap-x-2">
+          <div class="absolute right-4 top-5 flex gap-x-2 md:right-14">
             {#if $page.data.isLoggedIn}
               <Button
                 href="{base}/manage/app/monitors#{monitor.tag}"

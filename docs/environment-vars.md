@@ -25,6 +25,13 @@ Set this to the origin of your website(protocl + hostname + port if there). This
 export ORIGIN=http://localhost:3000
 ```
 
+If your host is at let us say `https://example.com`, then set the ORIGIN to `https://example.com`. This is required for CORS.
+If you are using a reverse proxy like nginx, make sure to set the `ORIGIN` to the domain name of your website.
+
+```bash
+export ORIGIN=https://example.com
+```
+
 ## PORT
 
 Defaults to 3000 if not specified
@@ -37,8 +44,8 @@ export PORT=4242
 
 By default kener runs on `/` but you can change it to `/status` or any other path.
 
--   Important: The base path should _**NOT**_ have a trailing slash and should start with `/`
--   Important: This env variable should be present during both build and run time
+- Important: The base path should _**NOT**_ have a trailing slash and should start with `/`
+- Important: This env variable should be present during both build and run time
 
 ```bash
 export KENER_BASE_PATH=/status

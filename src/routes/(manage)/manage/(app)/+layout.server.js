@@ -21,7 +21,6 @@ export async function load({ params, route, url, cookies, request }) {
   }
 
   userDB = isLoggedIn.user;
-
   return {
     siteData,
     KENER_SECRET_KEY: !!process.env.KENER_SECRET_KEY ? MaskString(process.env.KENER_SECRET_KEY) : "",
