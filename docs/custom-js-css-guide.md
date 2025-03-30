@@ -33,10 +33,53 @@ To add inline css go to Manage kener -> Theme -> Custom CSS and add your CSS the
 
 ```css
 .my-class {
-	color: red;
+    color: red;
 }
 ```
 
 <div class="note danger">
 	Do not include &#x3C;style&#x3E; tags.
 </div>
+
+## Grid Layout
+
+To change from a column layout to a grid layout in your Kener instance, you can use the following CSS:
+
+```css
+@media (min-width: 1330px) {
+    .section-monitors,
+    .section-categories,
+    .section-hero,
+    .section-back,
+    .section-events,
+    .section-legend,
+    .section-categories,
+    .section-browser-events {
+        width: 1330px !important;
+        max-width: 1330px !important;
+    }
+
+    .section-monitors .monitor-root {
+        background-color: transparent;
+        border: none !important;
+        box-shadow: none;
+    }
+
+    .section-monitors .monitor-root .monitors-card {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    .section-monitors .monitor-root .monitors-card .monitor {
+        grid-column: span 1;
+        border-radius: 0.375rem;
+        background-color: hsl(var(--card) / var(--tw-bg-opacity, 1));
+        border-width: 1px;
+    }
+    .section-monitors .monitor-root .monitors-card .monitor:last-child {
+        border-bottom: inherit;
+        border-bottom-width: 1px !important;
+    }
+}
+```

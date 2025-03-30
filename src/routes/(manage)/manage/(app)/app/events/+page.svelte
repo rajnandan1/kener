@@ -957,7 +957,7 @@
                   <div class="w-full rounded px-2 py-2 {newComment.id == comment.id ? 'bg-input' : ''}">
                     <div class="mb-2 max-h-[400px] overflow-y-auto rounded-md border bg-card p-2">
                       <div
-                        class=" prose prose-stone max-w-none dark:prose-invert prose-code:rounded prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:font-normal prose-pre:bg-opacity-0 dark:prose-pre:bg-neutral-900"
+                        class="kener-md prose prose-stone max-w-none dark:prose-invert prose-code:rounded prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:font-normal prose-pre:bg-opacity-0 dark:prose-pre:bg-neutral-900"
                       >
                         {@html marked.parse(comment.comment)}
                       </div>

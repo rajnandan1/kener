@@ -946,3 +946,9 @@ textarea::placeholder {
 .no-gutter .ͼo .cm-gutters {
   display: none;
 }
+.kener-md {
+  @apply text-sm;
+}
+p code:not([class^="language-"]) {
+  @apply rounded-sm bg-yellow-100 px-1 py-0.5 font-mono text-xs dark:bg-neutral-700  dark:text-neutral-100;
+}
