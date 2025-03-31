@@ -43,8 +43,20 @@ const seedSiteData = {
     title: "Build stunning status pages in minutes",
     subtitle: "Let your users know what's going on.",
   },
-  footerHTML:
-    '<p class="text-center">\nMade using \n<a href="https://github.com/rajnandan1/kener" target="_blank" rel="noreferrer" class="font-medium underline underline-offset-4">\n  Kener\n</a>\nan open source status page system built with Svelte and TailwindCSS.<br/>\nCreated with ❤️ by <a href="https://rajnandan.com" target="_blank" rel="noreferrer" class="font-medium underline underline-offset-4">Raj Nandan Sharma</a>.\n</p>\n',
+  footerHTML: `<div
+   class="container relative mt-4 max-w-[655px]"
+   >
+   <div class="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
+      <p class="text-center text-sm leading-loose text-muted-foreground ">
+         Made using 
+         <a href="https://github.com/rajnandan1/kener" target="_blank"  class="font-medium underline underline-offset-4">
+         Kener
+         </a>
+         an open source status page system built with Svelte and TailwindCSS.<br/>
+         Created with ❤️ by <a href="https://rajnandan.com" target="_blank"  class="font-medium underline underline-offset-4">Raj Nandan Sharma</a>.
+      </p>
+   </div>
+</div>`,
   i18n: {
     defaultLocale: "en",
     locales: [{ code: "en", name: "English", selected: true, disabled: false }],
@@ -88,6 +100,7 @@ const seedSiteData = {
   categories: [{ name: "Home", description: "Monitors for Home Page" }],
   homeIncidentCount: 5,
   homeIncidentStartTimeWithin: 30,
+  kenerTheme: "default",
 };
 
 export default seedSiteData;

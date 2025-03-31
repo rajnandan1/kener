@@ -66,7 +66,7 @@ export const WebhookJSONTemplate = JSON.stringify(
     actions: [
       {
         text: "{{action_text}}",
-        url: "{{action_url}}",
+        url: "{{{action_url}}}",
       },
     ],
   },
