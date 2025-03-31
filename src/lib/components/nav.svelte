@@ -8,11 +8,62 @@
   import GMI from "$lib/components/gmi.svelte";
   export let data;
   let defaultPattern = data.site?.pattern || "squares";
+  let allPets = [
+    {
+      url: base + "/chicken.gif",
+      bottom: "-5"
+    },
+    {
+      url: base + "/dog.gif",
+      bottom: "-17"
+    },
+    {
+      url: base + "/cockatiel.gif",
+      bottom: "-10"
+    },
+    {
+      url: base + "/crab.gif",
+      bottom: "-20"
+    },
+    {
+      url: base + "/fox.gif",
+      bottom: "-9"
+    },
+    {
+      url: base + "/horse.gif",
+      bottom: "-11"
+    },
+    {
+      url: base + "/panda.gif",
+      bottom: "0"
+    },
+    {
+      url: base + "/totoro.gif",
+      bottom: "-27"
+    },
+    {
+      url: base + "/rabbit.gif",
+      bottom: "0"
+    },
+    {
+      url: base + "/duck.gif",
+      bottom: "-5"
+    },
+    {
+      url: base + "/snake.gif",
+      bottom: "0"
+    }
+  ];
+  let randomPet = allPets[Math.floor(Math.random() * allPets.length)];
 </script>
 
-<div class="{defaultPattern}-pattern"></div>
+{#if defaultPattern == "pets" && !!randomPet}
+  <div class="pets-pattern" style="background-image: url({randomPet.url});bottom: {randomPet.bottom}px"></div>
+{:else}
+  <div class="{defaultPattern}-pattern"></div>
+{/if}
 
-<header class="blurry-bg sticky top-0 z-50 mx-auto md:mt-2">
+<header class="sticky top-0 z-50 mx-auto md:mt-2">
   <div class="container flex h-14 max-w-[820px] items-center border bg-card px-3 md:rounded-md">
     <a rel="external" href={data.site.home ? data.site.home : base} class="mr-6 flex items-center space-x-2">
       {#if data.site.logo}

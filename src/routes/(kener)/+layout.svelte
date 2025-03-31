@@ -1,6 +1,7 @@
 <script>
   import "../../app.postcss";
   import "../../kener.css";
+  import "../../theme.css";
   import Nav from "$lib/components/nav.svelte";
   import { onMount } from "svelte";
   import { Input } from "$lib/components/ui/input";
@@ -84,6 +85,8 @@
 
   let customCSS = `<style>${data.site.customCSS}</style>`;
   if (!!data.site.favicon && !data.site.favicon.startsWith("http")) data.site.favicon = `${base}${data.site.favicon}`;
+
+  let kenerTheme = data.site.kenerTheme || "default";
 </script>
 
 <svelte:head>
@@ -108,6 +111,7 @@
 	--down-color: {data.site.colors.DOWN};
 	--degraded-color: {data.site.colors.DEGRADED}
 	"
+  class="kener-theme-{kenerTheme}"
 >
   <Nav {data} />
   <div class="main-content min-h-[70vh]">
@@ -115,16 +119,8 @@
   </div>
 
   {#if !!data.site.footerHTML}
-    <footer class="z-10 py-6 md:px-8 md:py-0">
-      <div
-        class="container relative flex max-w-[655px] flex-col items-center justify-center gap-4 pl-0 md:h-24 md:flex-row"
-      >
-        <div class="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
-          <p class="text-center text-sm leading-loose text-muted-foreground md:text-left">
-            {@html data.site.footerHTML}
-          </p>
-        </div>
-      </div>
+    <footer class="kener-footer z-10 py-6 md:px-8 md:py-0">
+      {@html data.site.footerHTML}
     </footer>
   {/if}
   <div class="fixed bottom-4 right-4 z-20 flex flex-col rounded-md bg-background">

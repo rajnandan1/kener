@@ -1,107 +1,9 @@
 /*one is the class for dotted background*/
 
-.dots-pattern {
-  position: absolute;
-  top: 0px;
-  left: 0;
-  width: 100%;
-  z-index: 0;
-  background-repeat: no-repeat;
-  background-size: 100%;
-  height: 100svh;
-  background: linear-gradient(177deg, rgba(255, 137, 131, 0.5) 0%, rgba(35, 136, 224, 0.05) 60%);
-  clip-path: polygon(0 0, 100% 0, 100% 54%, 0% 100%);
-}
-
-.dots-pattern::after {
-  content: "";
-  position: absolute;
-  background-image: radial-gradient(rgba(0, 0, 0, 0) 1.5px, var(--background-kener) 1px);
-  background-size: 14px 14px;
-  width: 100%;
-  height: 100vh;
-  top: 0;
-  transform: blur(3px);
-  left: 0;
-}
-
-.squares-pattern {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 0;
-  background-repeat: no-repeat;
-  background-size: 100%;
-  height: 100svh;
-
-  /* clip-path: polygon(0 0, 100% 0, 100% 54%, 0% 100%); */
-}
-
-.squares-pattern::after {
-  content: "";
-  position: absolute;
-  background-image:
-    linear-gradient(#444cf7 1px, transparent 1px),
-    linear-gradient(to right, #444cf7 1px, var(--background-kener) 1px);
-  -webkit-mask-image: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 1) 0%,
-    rgba(0, 0, 0, 0.8) 20%,
-    rgba(0, 0, 0, 0.6) 40%,
-    rgba(0, 0, 0, 0.4) 60%,
-    rgba(0, 0, 0, 0.2) 80%,
-    rgba(0, 0, 0, 0) 100%
-  );
-  mask-image: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.2) 0%,
-    rgba(0, 0, 0, 0.1) 20%,
-    rgba(0, 0, 0, 0.05) 40%,
-    rgba(0, 0, 0, 0.025) 60%,
-    rgba(0, 0, 0, 0.0125) 80%,
-    rgba(0, 0, 0, 0) 100%
-  );
-  background-size: 32px 32px;
-  width: 100%;
-  height: 100vh;
-  top: 0;
-
-  left: 0;
-}
-.dark .squares-pattern::after {
-  -webkit-mask-image: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.5) 0%,
-    rgba(0, 0, 0, 0.25) 20%,
-    rgba(0, 0, 0, 0.125) 40%,
-    rgba(0, 0, 0, 0.0625) 60%,
-    rgba(0, 0, 0, 0.03125) 80%,
-    rgba(0, 0, 0, 0) 100%
-  );
-  mask-image: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.5) 0%,
-    rgba(0, 0, 0, 0.25) 20%,
-    rgba(0, 0, 0, 0.125) 40%,
-    rgba(0, 0, 0, 0.0625) 60%,
-    rgba(0, 0, 0, 0.03125) 80%,
-    rgba(0, 0, 0, 0) 100%
-  );
-  background-image:
-    linear-gradient(#616fbf 1px, transparent 1px),
-    linear-gradient(to right, #616fbf 1px, var(--background-kener) 1px);
-}
-
 /*Needed to overlay content on top of dotted bg*/
 section {
   position: relative;
   z-index: 1;
-}
-/*Needed overlay content on top of dotted bg*/
-.blurry-bg {
-  /* background-color: var(--background-kener-rgba);
-	box-shadow: 0 0 64px 64px var(--background-kener-rgba); */
 }
 
 :root {
@@ -951,4 +853,26 @@ textarea::placeholder {
 }
 p code:not([class^="language-"]) {
   @apply rounded-sm bg-yellow-100 px-1 py-0.5 font-mono text-xs dark:bg-neutral-700  dark:text-neutral-100;
+}
+
+.kener-theme-mono .section-hero .h1,
+.kener-theme-mono-hero-h1 {
+  @apply text-foreground;
+}
+
+.kener-theme-default .section-hero .h1,
+.kener-theme-default-hero-h1 {
+  @apply bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-transparent;
+}
+.kener-theme-sunset .section-hero .h1,
+.kener-theme-sunset-hero-h1 {
+  @apply bg-gradient-to-r from-yellow-500 via-red-500 to-pink-500 bg-clip-text text-transparent;
+}
+.kener-theme-forest .section-hero .h1,
+.kener-theme-forest-hero-h1 {
+  @apply bg-gradient-to-l from-blue-500 via-teal-500 to-green-500 bg-clip-text text-transparent;
+}
+.kener-theme-ocean .section-hero .h1,
+.kener-theme-ocean-hero-h1 {
+  @apply bg-gradient-to-l from-cyan-500 via-blue-500 to-indigo-500 bg-clip-text text-transparent;
 }

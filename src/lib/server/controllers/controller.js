@@ -78,6 +78,11 @@ const siteDataKeys = [
     data_type: "string",
   },
   {
+    key: "kenerTheme",
+    isValid: (value) => typeof value === "string",
+    data_type: "string",
+  },
+  {
     key: "customCSS",
     isValid: (value) => typeof value === "string",
     data_type: "string",
@@ -89,8 +94,25 @@ const siteDataKeys = [
   },
   {
     key: "pattern",
-    //string dots or sqaures or circ
-    isValid: (value) => typeof value === "string" && ["dots", "squares", "none"].includes(value),
+    //string dots or squares or circle
+    isValid: (value) =>
+      typeof value === "string" &&
+      [
+        "dots",
+        "squares",
+        "tiles",
+        "none",
+        "radial-blue",
+        "radial-mono",
+        "radial-midnight",
+        "circle-mono",
+        "carbon-fibre",
+        "texture-sky",
+        "angular-mono",
+        "angular-spring",
+        "angular-bloom",
+        "pets",
+      ].includes(value),
     data_type: "string",
   },
   {

@@ -14,6 +14,11 @@
   import { Tooltip } from "bits-ui";
   import ColorPicker from "svelte-awesome-color-picker";
 
+  import CodeMirror from "svelte-codemirror-editor";
+  import { css } from "@codemirror/lang-css";
+  import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
+  import { mode } from "mode-watcher";
+
   export let data;
 
   let formState = "idle";
@@ -26,6 +31,7 @@
     barStyle: "PARTIAL",
     barRoundness: "ROUNDED",
     summaryStyle: "CURRENT",
+    kenerTheme: "default",
     colorsJ: {
       UP: "#4ead94",
       DOWN: "#ca3038",
@@ -95,16 +101,64 @@
       </p>
 
       <div class="flex">
-        <RadioGroup.Root bind:value={themeData.pattern} onValueChange={(e) => (themeData.pattern = e)}>
-          <div class="flex items-center space-x-2">
+        <RadioGroup.Root
+          class="flex flex-1 flex-wrap justify-start gap-4"
+          bind:value={themeData.pattern}
+          onValueChange={(e) => (themeData.pattern = e)}
+        >
+          <div class="flex w-1/6 items-center space-x-2">
             <RadioGroup.Item value="squares" id="rsq" />
             <Label for="rsq">Squares</Label>
           </div>
-          <div class="flex items-center space-x-2">
+          <div class="flex w-1/6 items-center space-x-2">
             <RadioGroup.Item value="dots" id="rdot" />
             <Label for="rdot">Dots</Label>
           </div>
-          <div class="flex items-center space-x-2">
+          <div class="flex w-1/6 items-center space-x-2">
+            <RadioGroup.Item value="tiles" id="tiles" />
+            <Label for="tiles">Tiles</Label>
+          </div>
+          <div class="flex w-1/6 items-center space-x-2">
+            <RadioGroup.Item value="radial-blue" id="radial-blue" />
+            <Label for="radial-blue">Radial Blue</Label>
+          </div>
+          <div class="flex w-1/6 items-center space-x-2">
+            <RadioGroup.Item value="radial-mono" id="radial-mono" />
+            <Label for="radial-mono">Radial Mono</Label>
+          </div>
+          <div class="flex w-1/6 items-center space-x-2">
+            <RadioGroup.Item value="radial-midnight" id="radial-midnight" />
+            <Label for="radial-midnight">Radial Midnight</Label>
+          </div>
+          <div class="flex w-1/6 items-center space-x-2">
+            <RadioGroup.Item value="circle-mono" id="circle-mono" />
+            <Label for="circle-mono">Circle Mono</Label>
+          </div>
+          <div class="flex w-1/6 items-center space-x-2">
+            <RadioGroup.Item value="carbon-fibre" id="carbon-fibre" />
+            <Label for="carbon-fibre">Carbon Fibre</Label>
+          </div>
+          <div class="flex w-1/6 items-center space-x-2">
+            <RadioGroup.Item value="texture-sky" id="texture-sky" />
+            <Label for="texture-sky">Texture Sky</Label>
+          </div>
+          <div class="flex w-1/6 items-center space-x-2">
+            <RadioGroup.Item value="angular-mono" id="angular-mono" />
+            <Label for="angular-mono">Angular Mono</Label>
+          </div>
+          <div class="flex w-1/6 items-center space-x-2">
+            <RadioGroup.Item value="angular-spring" id="angular-spring" />
+            <Label for="angular-spring">Angular Spring</Label>
+          </div>
+          <div class="flex w-1/6 items-center space-x-2">
+            <RadioGroup.Item value="angular-bloom" id="angular-bloom" />
+            <Label for="angular-bloom">Angular Bloom</Label>
+          </div>
+          <div class="flex w-1/6 items-center space-x-2">
+            <RadioGroup.Item value="pets" id="pets" />
+            <Label for="pets">Pets</Label>
+          </div>
+          <div class="flex w-1/6 items-center space-x-2">
             <RadioGroup.Item value="none" id="rnone" />
             <Label for="rnone">None</Label>
           </div>
@@ -239,53 +293,51 @@
         </RadioGroup.Root>
       </div>
       <hr />
-      <p class="font-medium">
-        Colors
-        <Tooltip.Root openDelay={100}>
-          <Tooltip.Trigger class="">
-            <Info class="inline-block h-4 w-4 text-muted-foreground" />
-          </Tooltip.Trigger>
-          <Tooltip.Content class="max-w-md">
-            <div
-              class=" flex items-center justify-center rounded border bg-gray-800 px-2 py-1.5 text-xs font-medium text-gray-300 shadow-popover outline-none"
-            >
-              Choose the colors for the monitor. You can choose between UP, DEGRADED, and DOWN.
-            </div>
-          </Tooltip.Content>
-        </Tooltip.Root>
-      </p>
-      <div class="flex w-full flex-row justify-evenly gap-2">
-        <div class="relative w-full">
+      <div>
+        <p class="font-medium">Status Colors</p>
+        <p class=" text-xs font-semibold text-muted-foreground">
+          Choose the colors for the monitor. You can choose between UP, DEGRADED, and DOWN.
+        </p>
+      </div>
+
+      <div class="flex w-full flex-row justify-start gap-x-8">
+        <div class="relative">
           <ColorPicker
             bind:hex={themeData.colorsJ.UP}
             position="responsive"
+            isAlpha={false}
+            isDark={$mode == "dark"}
+            --input-size="16px"
+            isTextInput={true}
             label="UP"
-            --cp-input-color="#777"
-            --cp-button-hover-color="#767676"
             on:input={(event) => {
               themeData.colorsJ.UP = event.detail.hex;
             }}
           />
         </div>
-        <div class="relative w-full">
+        <div class="relative">
           <ColorPicker
             bind:hex={themeData.colorsJ.DEGRADED}
             position="responsive"
+            isAlpha={false}
+            isDark={$mode == "dark"}
+            --input-size="16px"
+            isTextInput={true}
             label="DEGRADED"
-            --cp-input-color="#777"
-            --cp-button-hover-color="#767676"
             on:input={(event) => {
               themeData.colorsJ.DEGRADED = event.detail.hex;
             }}
           />
         </div>
-        <div class="relative w-full">
+        <div class="relative">
           <ColorPicker
             bind:hex={themeData.colorsJ.DOWN}
             position="responsive"
+            isAlpha={false}
+            isDark={$mode == "dark"}
+            --input-size="16px"
+            isTextInput={true}
             label="DOWN"
-            --cp-input-color="#777"
-            --cp-button-hover-color="#767676"
             on:input={(event) => {
               themeData.colorsJ.DOWN = event.detail.hex;
             }}
@@ -338,14 +390,28 @@
       <div class="flex w-full flex-row justify-start gap-2">
         <div class="w-full">
           <Label for="customCSS" class="text-sm text-muted-foreground">
-            You can add custom CSS to style your site. Do not include style tags.
+            You can add custom CSS to style your site. Do not include style tags. Go to <a
+              href="https://kener.ing/docs/custom-js-css-guide#grid-layout"
+              class="text-card-foreground"
+              target="_blank">this link</a
+            > to learn more about it.
           </Label>
-          <textarea
-            bind:value={themeData.customCSS}
-            id="customCSS"
-            class="mt-1 h-48 w-full rounded-sm border p-2"
-            placeholder=".className&#123;color: red;&#125;"
-          ></textarea>
+          <div class="overflow-hidden rounded-md">
+            <CodeMirror
+              bind:value={themeData.customCSS}
+              lang={css()}
+              theme={$mode == "dark" ? githubDark : githubLight}
+              styles={{
+                "&": {
+                  width: "100%",
+                  maxWidth: "100%",
+                  height: "320px",
+                  border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                  borderRadius: "0.375rem"
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
       <hr />
@@ -354,7 +420,7 @@
           <div class="py-2 text-sm font-medium text-destructive">{themeError}</div>
         {/if}
         <Button type="submit" disabled={formState === "loading"}>
-          Save
+          Save Theme Settings
           {#if formState === "loading"}
             <Loader class="ml-2 inline h-4 w-4 animate-spin" />
           {/if}

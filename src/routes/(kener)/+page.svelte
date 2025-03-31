@@ -77,24 +77,20 @@
 <div class="mt-12"></div>
 {#if data.hero}
   <section class="section-hero mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center">
-    <div class="mx-auto max-w-screen-xl px-4 lg:flex lg:items-center">
-      <div class="blurry-bg mx-auto max-w-3xl text-center">
-        {#if data.hero.image}
-          <GMI src={data.hero.image} classList="m-auto mb-2 h-14 w-14" alt="" srcset="" />
-        {/if}
-        {#if data.hero.title}
-          <h1
-            class="bg-gradient-to-r from-green-300 via-blue-500 to-purple-600 bg-clip-text text-5xl font-extrabold leading-tight text-transparent"
-          >
-            {@html data.hero.title}
-          </h1>
-        {/if}
-        {#if data.hero.subtitle}
-          <h2 class="mx-auto mt-4 max-w-xl sm:text-xl">
-            {@html data.hero.subtitle}
-          </h2>
-        {/if}
-      </div>
+    <div class="mx-auto max-w-3xl text-center">
+      {#if data.hero.image}
+        <GMI src={data.hero.image} classList="m-auto mb-2 h-14 w-14" alt="" srcset="" />
+      {/if}
+      {#if data.hero.title}
+        <h1 class="h1 text-5xl font-extrabold leading-tight">
+          {@html data.hero.title}
+        </h1>
+      {/if}
+      {#if data.hero.subtitle}
+        <h2 class="mx-auto mt-4 max-w-xl sm:text-xl">
+          {@html data.hero.subtitle}
+        </h2>
+      {/if}
     </div>
   </section>
 {/if}
@@ -123,7 +119,7 @@
 {/if}
 {#if data.allRecentIncidents.length + data.allRecentMaintenances.length > 0}
   <section
-    class="section-events mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center backdrop-blur-[2px]"
+    class="section-events mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center"
     id=""
   >
     <div class="mb-2 grid w-full grid-cols-2 gap-4">

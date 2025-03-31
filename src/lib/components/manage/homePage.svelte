@@ -8,6 +8,7 @@
   import * as Select from "$lib/components/ui/select";
   import locales from "$lib/locales/locales.json?raw";
   import GMI from "$lib/components/gmi.svelte";
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 
   import Loader from "lucide-svelte/icons/loader";
   import X from "lucide-svelte/icons/x";
@@ -15,6 +16,11 @@
   import Info from "lucide-svelte/icons/info";
   import Play from "lucide-svelte/icons/play";
   import { Tooltip } from "bits-ui";
+
+  import CodeMirror from "svelte-codemirror-editor";
+  import { html } from "@codemirror/lang-html";
+  import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
+  import { mode } from "mode-watcher";
 
   export let data;
 
@@ -34,6 +40,15 @@
   let homeIncidentCount = 10;
   let homeIncidentStartTimeWithin = 30;
   let incidentGroupView = "EXPAND_FIRST";
+  let kenerTheme = "default";
+
+  let availableThemes = [
+    { name: "Default", value: "default" },
+    { name: "Mono", value: "mono" },
+    { name: "Sunset", value: "sunset" },
+    { name: "Forest", value: "forest" },
+    { name: "Ocean", value: "ocean" }
+  ];
 
   let nav = [];
   let categories = [];
@@ -74,6 +89,9 @@
   if (data.siteData.footerHTML) {
     footerHTML = data.siteData.footerHTML;
   }
+  if (data.siteData.kenerTheme) {
+    kenerTheme = data.siteData.kenerTheme;
+  }
   if (data.siteData.tzToggle) {
     tzToggle = data.siteData.tzToggle;
   }
@@ -103,6 +121,19 @@
     formStateHero = "idle";
     if (data.error) {
       heroError = data.error;
+      return;
+    }
+    saveTheme();
+  }
+
+  async function saveTheme() {
+    let resp = await storeSiteData({
+      kenerTheme: kenerTheme
+    });
+    //print data
+    let data = await resp.json();
+    if (data.error) {
+      alert(data.error);
       return;
     }
   }
@@ -258,44 +289,16 @@
     <Card.Description>Configure the hero section of your site.</Card.Description>
   </Card.Header>
   <Card.Content>
-    <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitHero}>
+    <form class="mx-auto mt-4 flex flex-col gap-y-4" on:submit|preventDefault={formSubmitHero}>
       <div class="flex w-full flex-row justify-evenly gap-2">
         <div class="w-full">
-          <Label for="hero_title">
-            Title
-            <Tooltip.Root openDelay={100}>
-              <Tooltip.Trigger class="">
-                <Info class="inline-block h-4 w-4 text-muted-foreground" />
-              </Tooltip.Trigger>
-              <Tooltip.Content class="max-w-md">
-                <div
-                  class=" flex items-center justify-center rounded border bg-gray-800 px-2 py-1.5 text-xs font-medium text-gray-300 shadow-popover outline-none"
-                >
-                  You can set the title of the hero section here. This will be displayed on the top of the page.
-                </div>
-              </Tooltip.Content>
-            </Tooltip.Root>
-          </Label>
+          <Label for="hero_title">Title</Label>
           <Input bind:value={hero.title} class="mt-2" type="text" id="hero_title" placeholder="Status Page for Kener" />
         </div>
       </div>
       <div class="flex w-full flex-row justify-evenly gap-2">
         <div class="w-full">
-          <Label for="hero_subtitle">
-            Subtitle
-            <Tooltip.Root openDelay={100}>
-              <Tooltip.Trigger class="">
-                <Info class="inline-block h-4 w-4 text-muted-foreground" />
-              </Tooltip.Trigger>
-              <Tooltip.Content class="max-w-md">
-                <div
-                  class=" flex items-center justify-center rounded border bg-gray-800 px-2 py-1.5 text-xs font-medium text-gray-300 shadow-popover outline-none"
-                >
-                  You can set the subtitle of the hero section here. This will be displayed below the title.
-                </div>
-              </Tooltip.Content>
-            </Tooltip.Root>
-          </Label>
+          <Label for="hero_subtitle">Subtitle</Label>
           <Input
             bind:value={hero.subtitle}
             class="mt-2"
@@ -305,12 +308,49 @@
           />
         </div>
       </div>
+      <div class="flex flex-col gap-y-2">
+        <div>
+          <Label>Color</Label>
+        </div>
+        <div class="flex flex-row gap-x-2 rounded-md border p-2">
+          <div class="w-3/4 pt-2">
+            <span class="kener-theme-{kenerTheme}-hero-h1 font-medium">{hero.title}</span>
+          </div>
+          <div class="flex w-1/4 justify-end">
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger>
+                <Button variant="outline">
+                  {availableThemes.find((el) => el.value === kenerTheme)?.name || "Mono"}
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content>
+                {#each availableThemes as theme}
+                  <DropdownMenu.Group>
+                    <DropdownMenu.Item>
+                      <Button
+                        variant="ghost"
+                        class="h-6 w-full justify-start text-xs"
+                        on:click={() => {
+                          kenerTheme = theme.value;
+                        }}
+                      >
+                        {theme.name}
+                      </Button>
+                    </DropdownMenu.Item>
+                  </DropdownMenu.Group>
+                {/each}
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+          </div>
+        </div>
+      </div>
+
       <div class="flex w-full justify-end gap-x-2">
         {#if !!heroError}
           <div class="py-2 text-sm font-medium text-destructive">{heroError}</div>
         {/if}
         <Button type="submit" disabled={formStateHero === "loading"}>
-          Save
+          Save Hero Section
           {#if formStateHero === "loading"}
             <Loader class="ml-2 inline h-4 w-4 animate-spin" />
           {/if}
@@ -370,7 +410,7 @@
         </div>
         <div class="pt-8">
           <Button type="submit" disabled={formStateIncident === "loading"}>
-            Save
+            Save Incidents Settings
             {#if formStateIncident === "loading"}
               <Loader class="ml-2 inline h-4 w-4 animate-spin" />
             {/if}
@@ -495,7 +535,7 @@
           <span class="text-sm font-medium text-destructive"> {navErrorMessage} </span>
         </p>
         <Button type="submit" disabled={formStateHero === "loading"}>
-          Save
+          Save Navigation
           {#if formStateHero === "loading"}
             <Loader class="ml-2 inline h-4 w-4 animate-spin" />
           {/if}
@@ -574,7 +614,7 @@
           <div class="py-2 text-sm font-medium text-destructive">{i18nErrorMessage}</div>
         {/if}
         <Button type="submit" disabled={formStatei18n === "loading"}>
-          Save
+          Save Languages
           {#if formStatei18n === "loading"}
             <Loader class="ml-2 inline h-4 w-4 animate-spin" />
           {/if}
@@ -637,7 +677,7 @@
           <div class="py-2 text-sm font-medium text-destructive">{categoriesErrorMessage}</div>
         {/if}
         <Button type="submit" disabled={formStateCategories === "loading"}>
-          Save
+          Save Categories
           {#if formStateCategories === "loading"}
             <Loader class="ml-2 inline h-4 w-4 animate-spin" />
           {/if}
@@ -656,24 +696,42 @@
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitFooter}>
       <div class="flex w-full flex-row justify-evenly gap-2">
         <div class="w-full">
-          <textarea
-            bind:value={footerHTML}
-            class="mt-2 h-48 w-full rounded-sm border p-2"
-            placeholder="eg. <p>Powered by Kener</p>"
-          ></textarea>
+          <div class="overflow-hidden rounded-md">
+            <CodeMirror
+              bind:value={footerHTML}
+              lang={html()}
+              theme={$mode == "dark" ? githubDark : githubLight}
+              styles={{
+                "&": {
+                  width: "100%",
+                  maxWidth: "100%",
+                  height: "320px",
+                  border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                  borderRadius: "0.375rem"
+                }
+              }}
+            />
+          </div>
         </div>
       </div>
 
-      <div class="flex w-full justify-end gap-x-2">
-        {#if !!footerErrorMessage}
-          <div class="py-2 text-sm font-medium text-destructive">{footerErrorMessage}</div>
-        {/if}
-        <Button type="submit" disabled={formStateFooter === "loading"}>
-          Save
-          {#if formStateFooter === "loading"}
-            <Loader class="ml-2 inline h-4 w-4 animate-spin" />
+      <div class="flex w-full justify-between gap-x-2">
+        <div>
+          <Button variant="outline" class="mt-2" on:click={() => (footerHTML = data.defaultFooterHTML)}>
+            <span class="ml-2">Reset to default</span>
+          </Button>
+        </div>
+        <div class="flex flex-row justify-end gap-x-2">
+          {#if !!footerErrorMessage}
+            <div class="py-2 text-sm font-medium text-destructive">{footerErrorMessage}</div>
           {/if}
-        </Button>
+          <Button type="submit" disabled={formStateFooter === "loading"}>
+            Save Custom Footer
+            {#if formStateFooter === "loading"}
+              <Loader class="ml-2 inline h-4 w-4 animate-spin" />
+            {/if}
+          </Button>
+        </div>
       </div>
     </form>
   </Card.Content>
