@@ -197,6 +197,7 @@ const FetchData = async function (site, monitor, localTz, selectedLang, lang) {
     barRoundness: site.barRoundness,
     midnight90DaysAgo: midnight90DaysAgoTz,
     maxDateTodayTimestamp: maxDateTodayTimestampTz,
+    startOfTheDay: midnightTz,
   };
 };
 export { FetchData };

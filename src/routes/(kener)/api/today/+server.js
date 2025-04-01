@@ -29,14 +29,28 @@ export async function POST({ request }) {
     };
   }
 
-  let dayData = await db.getMonitoringData(monitor.tag, payload.startTs, payload.endTs);
-  let anchorStatus = await GetLastStatusBefore(monitor.tag, start);
-  dayData = InterpolateData(dayData, payload.startTs, anchorStatus, payload.endTs);
   let siteData = await GetAllSiteData();
 
-  let ups = 0;
-  let downs = 0;
-  let degradeds = 0;
+  let dayData = await db.getMonitoringData(monitor.tag, start, end);
+
+  let anchorStatus = await GetLastStatusBefore(monitor.tag, start);
+  dayData = InterpolateData(dayData, start, anchorStatus, end);
+
+  let aggregatedData = dayData.reduce(
+    (acc, row) => {
+      acc[row.status] = (acc[row.status] || 0) + 1;
+      return acc;
+    },
+    {
+      UP: 0,
+      DOWN: 0,
+      DEGRADED: 0,
+    },
+  );
+
+  let ups = Number(aggregatedData.UP);
+  let downs = Number(aggregatedData.DOWN);
+  let degradeds = Number(aggregatedData.DEGRADED);
 
   for (let i = 0; i < dayData.length; i++) {
     let row = dayData[i];
@@ -53,14 +67,6 @@ export async function POST({ request }) {
     if (_0Day[timestamp] !== undefined) {
       _0Day[timestamp].status = status;
       _0Day[timestamp].cssClass = StatusObj[status];
-    }
-
-    if (status == "UP") {
-      ups++;
-    } else if (status == "DOWN") {
-      downs++;
-    } else if (status == "DEGRADED") {
-      degradeds++;
     }
   }
 

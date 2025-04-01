@@ -94,33 +94,33 @@
   let uptimesRollers = [
     {
       text: `${l(lang, "90 Days")}`,
-      startTs: getUnixTime(startOfDay(sub(new Date(), { days: 90 }))),
+      startTs: monitor.pageData.startOfTheDay - 86400 * 89,
       endTs: monitor.pageData.maxDateTodayTimestamp,
       value: uptime90Day
     },
     {
       text: `${l(lang, "60 Days")}`,
-      startTs: getUnixTime(startOfDay(sub(new Date(), { days: 59 }))),
+      startTs: monitor.pageData.startOfTheDay - 86400 * 59,
       endTs: monitor.pageData.maxDateTodayTimestamp
     },
     {
       text: `${l(lang, "30 Days")}`,
-      startTs: getUnixTime(startOfDay(sub(new Date(), { days: 29 }))),
+      startTs: monitor.pageData.startOfTheDay - 86400 * 29,
       endTs: monitor.pageData.maxDateTodayTimestamp
     },
     {
       text: `${l(lang, "14 Days")}`,
-      startTs: getUnixTime(startOfDay(sub(new Date(), { days: 13 }))),
+      startTs: monitor.pageData.startOfTheDay - 86400 * 13,
       endTs: monitor.pageData.maxDateTodayTimestamp
     },
     {
       text: `${l(lang, "7 Days")}`,
-      startTs: getUnixTime(startOfDay(sub(new Date(), { days: 6 }))),
+      startTs: monitor.pageData.startOfTheDay - 86400 * 6,
       endTs: monitor.pageData.maxDateTodayTimestamp
     },
     {
       text: l(lang, "Today"),
-      startTs: getUnixTime(startOfDay(new Date())),
+      startTs: monitor.pageData.startOfTheDay,
       endTs: monitor.pageData.maxDateTodayTimestamp
     }
   ];
