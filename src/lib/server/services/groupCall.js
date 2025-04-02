@@ -14,6 +14,7 @@ async function waitForDataAndReturn(arr, ts, d, maxTime) {
   } else if (d > maxTime) {
     data = await db.getLastStatusBeforeCombined(arr, ts, ts - 86400);
     if (data) {
+      data.type = REALTIME;
       return data;
     }
     return {
@@ -22,7 +23,7 @@ async function waitForDataAndReturn(arr, ts, d, maxTime) {
       type: TIMEOUT,
     };
   } else {
-    return await waitForDataAndReturn(arr, ts, d * 2, maxTime);
+    return await waitForDataAndReturn(arr, ts, d + 500, maxTime);
   }
 }
 

@@ -4,6 +4,7 @@ import mx from "$lib/snippets/capture/mixpanel.js?raw";
 import am from "$lib/snippets/capture/amplitude.js?raw";
 import pl from "$lib/snippets/capture/plausible.js?raw";
 import mscl from "$lib/snippets/capture/clarity.js?raw";
+import um from "$lib/snippets/capture/umami.js?raw";
 import { GetAllAnalyticsData } from "$lib/server/controllers/controller.js";
 export async function GET({ params, setHeaders, url }) {
   let analyticsData = await GetAllAnalyticsData();
@@ -50,6 +51,10 @@ export async function GET({ params, setHeaders, url }) {
   if (!!analyticsData["analytics.clarity"]) {
     let project_id = analyticsData["analytics.clarity"].requirements["Project ID"];
     captureScript = captureScript + ";\n" + mscl.replaceAll("{{project_id}}", project_id);
+  }
+  if (!!analyticsData["analytics.umami"]) {
+    let website_id = analyticsData["analytics.umami"].requirements["Website ID"];
+    captureScript = captureScript + ";\n" + um.replaceAll("{{website_id}}", website_id);
   }
 
   return new Response(captureScript, {

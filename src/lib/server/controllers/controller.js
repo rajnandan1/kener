@@ -216,6 +216,11 @@ const siteDataKeys = [
     isValid: IsValidJSONString,
     data_type: "object",
   },
+  {
+    key: "analytics.umami",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
 ];
 
 export function InsertKeyValue(key, value) {

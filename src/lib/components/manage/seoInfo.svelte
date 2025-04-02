@@ -171,6 +171,21 @@
           value: ""
         }
       ]
+    },
+    {
+      label: "Umami",
+      logo: `/umami.png`,
+      key: "analytics.umami",
+      isEnabled: false,
+      requirements: [
+        {
+          label: "Website ID",
+          type: "text",
+          placeholder: "Website ID for your umami script and domain",
+          required: true,
+          value: ""
+        }
+      ]
     }
   ];
 
