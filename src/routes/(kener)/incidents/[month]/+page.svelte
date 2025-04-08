@@ -111,7 +111,12 @@
 
         <h1 class=" text-xl font-semibold leading-tight">
           {l(data.lang, "No Incident in %date", {
-            date: f(parse(data.thisMonthName, "MMMM-yyyy", new Date()), "MMMM, yyyy", selectedLang, $page.data.localTz)
+            date: f(
+              new Date(data.midnightMonthStartUTCTimestamp * 1000),
+              "MMMM, yyyy",
+              selectedLang,
+              $page.data.localTz
+            )
           })}
         </h1>
       </div>
