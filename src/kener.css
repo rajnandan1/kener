@@ -876,3 +876,8 @@ p code:not([class^="language-"]) {
 .kener-theme-ocean-hero-h1 {
   @apply bg-gradient-to-l from-cyan-500 via-blue-500 to-indigo-500 bg-clip-text text-transparent;
 }
+
+.prose :where(hr):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+  margin-top: 1.3em;
+  margin-bottom: 1.3em;
+}

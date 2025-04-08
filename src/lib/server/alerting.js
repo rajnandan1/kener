@@ -8,6 +8,7 @@ import {
   CreateIncident,
   AddIncidentComment,
   AddIncidentMonitor,
+  GetIncidentByIDDashboard,
   InsertNewAlert,
 } from "./controllers/controller.js";
 
@@ -15,6 +16,7 @@ import db from "./db/db.js";
 
 const TRIGGERED = "TRIGGERED";
 const RESOLVED = "RESOLVED";
+const CLOSED = "CLOSED";
 
 async function createJSONCommonAlert(monitor, config, alert, severity) {
   let siteData = await GetAllSiteData();
@@ -58,17 +60,22 @@ async function createNewIncident(monitor, alert, commonData) {
   };
 
   let update = commonData.description;
-  update =
-    update +
-    `<div style="line-height: 1.5;">
-	<p><strong>Monitor Name:</strong> ${monitor.name}</p>
-	<p><strong>Incident Status:</strong> ${commonData.status}</p>
-	<p><strong>Severity:</strong> ${commonData.severity}</p>
-	<p><strong>Monitor Status:</strong> ${alert.monitor_status}</p>
-	<p><strong>Monitor Health Checks:</strong> ${alert.health_checks}</p>
-	<p><strong>Monitor Failure Threshold:</strong> ${commonData.details.threshold}</p>
-	<p><strong>Visit:</strong> <a href="${commonData.actions[0].url}">${commonData.actions[0].url}</a></p>
-</div>`;
+  update = `#### ${update}
+---
+**Monitor Name:** ${monitor.name}
+
+**Incident Status:** ${commonData.status}
+
+**Severity:** ${commonData.severity}
+
+**Monitor Status:** ${alert.monitor_status}
+
+**Monitor Health Checks:** ${alert.health_checks}
+
+**Monitor Failure Threshold:** ${commonData.details.threshold}
+
+**Visit:** [${commonData.actions[0].url}](${commonData.actions[0].url})
+`;
 
   let newIncident = await CreateIncident(payload);
 
@@ -82,8 +89,17 @@ async function createNewIncident(monitor, alert, commonData) {
 }
 
 async function closeIncident(alert, comment) {
+  //check if incident is already resolved
+  let incident = await GetIncidentByIDDashboard({
+    incident_id: alert.incident_number,
+  });
+  if (incident.status === CLOSED || incident.state === RESOLVED) {
+    console.log("Incident is already resolved");
+    return;
+  }
+
   let incident_id = alert.incident_number;
-  return await AddIncidentComment(incident_id, comment, "RESOLVED", moment(alert.updated_at).unix());
+  return await AddIncidentComment(incident_id, comment, RESOLVED, moment(alert.updated_at).unix());
 }
 
 function createClosureComment(alert, commonJSON) {

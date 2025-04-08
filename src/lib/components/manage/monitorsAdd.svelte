@@ -196,7 +196,12 @@
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ action: "getTriggers", data: {} })
+        body: JSON.stringify({
+          action: "getTriggers",
+          data: {
+            status: "ACTIVE"
+          }
+        })
       });
       triggers = await apiResp.json();
     } catch (error) {
