@@ -5,6 +5,7 @@
   import Settings from "lucide-svelte/icons/settings";
   import Bell from "lucide-svelte/icons/bell";
   import Loader from "lucide-svelte/icons/loader";
+  import ChartLine from "lucide-svelte/icons/chart-line";
   import ArrowDownUp from "lucide-svelte/icons/arrow-down-up";
   import Grip from "lucide-svelte/icons/grip";
   import ExternalLink from "lucide-svelte/icons/external-link";
@@ -31,6 +32,7 @@
   let status = "ACTIVE";
   let showAddMonitor = false;
   let formState = "idle";
+  let modifyMonitoringDataFormState = "idle";
   let loadingData = false;
   let triggers = [];
   let selectedCategory = "All Categories";
@@ -233,6 +235,11 @@
     };
   });
   let shareMenusToggle = false;
+  let monitoringDataMenusToggle = false;
+  let monitorDataSelected;
+  let monitoringDataRequest = {
+    newStatus: "UP"
+  };
 
   function initMonitorTriggers() {
     monitorTriggers = {
@@ -257,6 +264,66 @@
         severity: "warning"
       }
     };
+  }
+
+  let modifyMonitoringDataError = "";
+  async function ModifyMonitoringDataTriggers() {
+    modifyMonitoringDataError = "";
+    if (!monitoringDataRequest.start) {
+           modifyMonitoringDataError = "Invalid start date"
+           return;
+    }
+    if (!monitoringDataRequest.end) {
+           modifyMonitoringDataError = "Invalid end date"
+           return;
+    }
+    if (!monitorDataSelected.tag) {
+           modifyMonitoringDataError = "Invalid monitor"
+           return;
+    }
+    if (!monitoringDataRequest.newStatus ||
+        (monitoringDataRequest.newStatus !== "UP" && monitoringDataRequest.newStatus !== "DOWN")) {
+        modifyMonitoringDataError = "Invalid status"
+        return;
+    }
+    let startTimestamp = +new Date(monitoringDataRequest.start)/1000;
+    let endTimestamp = +new Date(monitoringDataRequest.end)/1000;
+    if (startTimestamp >= endTimestamp) {
+        modifyMonitoringDataError = "The start date must be before the end date"
+        return;
+    }
+    let data = {
+      monitor_tag: monitorDataSelected.tag,
+      start: startTimestamp,
+      end: endTimestamp,
+      newStatus: monitoringDataRequest.newStatus
+    };
+    modifyMonitoringDataFormState = "loading";
+
+    try {
+      let apiResp = await fetch(base + "/manage/app/api/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ action: "updateMonitoringData", data })
+      });
+
+      let resp = await apiResp.json();
+      if (resp.error) {
+        modifyMonitoringDataError = resp.error;
+      } else {
+        monitoringDataMenusToggle = false;
+        monitoringDataRequest= {
+          newStatus: "UP"
+        };
+        loadData();
+      }
+    } catch (error) {
+      modifyMonitoringDataError = "Error while modifying monitoring data";
+    } finally {
+      modifyMonitoringDataFormState = "idle";
+    }
   }
 
   let monitorTriggers;
@@ -307,7 +374,10 @@
     shareMenusToggle = true;
   }
   const flipDurationMs = 200;
-
+  function openMonitoringDataMenu(m) {
+     monitoringDataMenusToggle = true;
+     monitorDataSelected = m;
+  }
   let orderErrorMessage = "";
   function handleSort(e) {
     dropTargetStyle = {
@@ -538,6 +608,13 @@
             >
               <Bell class="inline h-4 w-4" />
             </Button>
+            <Button
+              variant="secondary"
+              class="h-8 w-8 p-2"
+              on:click={() => openMonitoringDataMenu(monitor)}
+            >
+              <ChartLine class="inline h-4 w-4" />
+            </Button>
           {/if}
           <Button variant="secondary" class="h-8 w-8 p-2" rel="external" href="{base}/?monitor={monitor.tag}">
             <ExternalLink class="inline h-4 w-4" />
@@ -580,6 +657,79 @@
     </Card.Root>
   {/each}
 </div>
+
+
+{#if monitoringDataMenusToggle}
+
+  <div class="moldal-container fixed left-0 top-0 z-50 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm">
+    <div
+      class="absolute left-1/2 top-1/2 h-fit w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background shadow-lg backdrop-blur-lg">
+      <Button
+        variant="ghost"
+        on:click={() => {
+          monitoringDataMenusToggle = false;
+        }}
+        class="absolute right-2 top-2 z-40 h-6 w-6   rounded-full border bg-background p-1"
+      >
+        <X class="h-4 w-4   text-muted-foreground" />
+      </Button>
+      <div class="content px-4 py-4">
+        <h2 class="text-lg font-semibold">
+          Modify monitors data
+        </h2>
+        <p class="text-xs text-muted-foreground">
+          You can modify the monitor results for a given time range.
+        </p>
+        <div class="grid grid-cols-4 gap-2">
+            <div class="col-span-1">
+              <Label for="monitorDataStartTimestamp">
+                Start date
+                <span class="text-red-500">*</span>
+              </Label>
+              <Input bind:value={monitoringDataRequest.start} min="1" id="monitorDataStartTimestamp" type="datetime-local" />
+            </div>
+            <div class="col-span-1">
+              <Label for="monitorDataEndTimestamp">
+                End date
+                <span class="text-red-500">*</span>
+              </Label>
+              <Input bind:value={monitoringDataRequest.end} min="1" id="monitorDataEndTimestamp" type="datetime-local" />
+            </div>
+            <div class="col-span-1">
+
+              <Label for="monitorDataNewStatus">New status</Label>
+              <Select.Root
+                portal={null}
+                value="UP"
+                onSelectedChange={(e) => (monitoringDataRequest.newStatus = e.value)}
+                >
+                 <Select.Trigger id="monitorDataNewStatus">
+                   <Select.Value bind:value={monitoringDataRequest.newStatus} placeholder="UP" />
+                 </Select.Trigger>
+                 <Select.Content>
+                   <Select.Group>
+                     <Select.Item value="UP" label="UP" class="text-sm font-medium">UP</Select.Item>
+                     <Select.Item value="DOWN" label="DOWN" class="text-sm font-medium">DOWN</Select.Item>
+                   </Select.Group>
+                 </Select.Content>
+              </Select.Root>
+            </div>
+        </div>
+        <div class="flex justify-end gap-x-2">
+          {#if !!modifyMonitoringDataError}
+            <div class="py-2 text-sm font-medium text-destructive">{modifyMonitoringDataError}</div>
+          {/if}
+          <Button class="" on:click={ModifyMonitoringDataTriggers} disabled={modifyMonitoringDataFormState === "loading"}>
+            Save
+            {#if modifyMonitoringDataFormState === "loading"}
+              <Loader class="ml-2 inline h-4 w-4 animate-spin" />
+            {/if}
+          </Button>
+        </div>
+      </div>
+    </div>
+  </div>
+{/if}
 
 {#if shareMenusToggle}
   <div class="moldal-container fixed left-0 top-0 z-50 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm">
