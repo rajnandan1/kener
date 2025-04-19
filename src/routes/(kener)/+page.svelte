@@ -12,6 +12,7 @@
   import { hotKeyAction, clickOutsideAction } from "svelte-legos";
   import { onMount } from "svelte";
   import ShareMenu from "$lib/components/shareMenu.svelte";
+  import SubscribeMenu from "$lib/components/subscribeMenu.svelte";
   import { analyticsEvent } from "$lib/boringOne";
   import { scale } from "svelte/transition";
   import { format } from "date-fns";
@@ -56,6 +57,14 @@
       tag: activeMonitor.tag
     });
   }
+
+  let subscribeMenuToggle = false;
+  function openSubscribeMenu() {
+    subscribeMenuToggle = true;
+  }
+  function closeSubscribeMenu() {
+    subscribeMenuToggle = false;
+  }
 </script>
 
 <svelte:head>
@@ -94,6 +103,12 @@
     </div>
   </section>
 {/if}
+<div class="section-actions mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-center justify-center">
+  <div class="flex w-full flex-wrap gap-x-2 rounded-xl border">
+    <Button variant="ghost" class="h-11 rounded-xl" on:click={openSubscribeMenu}>Subscribe to Updates</Button>
+    <Button variant="ghost" class="h-11 rounded-xl">Upcoming Maintenances</Button>
+  </div>
+</div>
 {#if data.pageType != "home"}
   <section class="section-back mx-auto my-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center">
     <Button
@@ -288,6 +303,38 @@
       </Button>
       <div class="content">
         <ShareMenu monitor={activeMonitor} lang={data.lang} selectedLang={data.selectedLang} />
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#if subscribeMenuToggle}
+  <div
+    transition:scale={{ duration: 100 }}
+    use:hotKeyAction={{
+      code: "Escape",
+      cb: () => closeSubscribeMenu()
+    }}
+    class="moldal-container fixed left-0 top-0 z-30 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm"
+  >
+    <div
+      use:clickOutsideAction
+      on:clickoutside={() => {
+        closeSubscribeMenu();
+      }}
+      class="absolute left-1/2 top-1/2 h-fit w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background shadow-lg backdrop-blur-lg md:w-[568px]"
+    >
+      <Button
+        variant="ghost"
+        on:click={() => {
+          closeSubscribeMenu();
+        }}
+        class="absolute right-2 top-2 z-40 h-6 w-6   rounded-full border bg-background p-1"
+      >
+        <X class="h-4 w-4   text-muted-foreground" />
+      </Button>
+      <div class="content">
+        <SubscribeMenu lang={data.lang} selectedLang={data.selectedLang} />
       </div>
     </div>
   </div>

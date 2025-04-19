@@ -940,6 +940,99 @@ class DbImpl {
   async deleteMonitorsByTag(tag) {
     return await this.knex("monitors").where("tag", tag).del();
   }
+
+  //insert into subscribers
+  async insertSubscriber(data) {
+    return await this.knex("subscribers").insert({
+      subscriber_send: data.subscriber_send,
+      subscriber_meta: data.subscriber_meta,
+      subscriber_type: data.subscriber_type,
+      subscriber_status: data.subscriber_status,
+      created_at: this.knex.fn.now(),
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //update subscriber_meta given id
+  async updateSubscriberMeta(id, subscriber_meta) {
+    return await this.knex("subscribers").where({ id }).update({
+      subscriber_meta,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //update subscriber_status given id
+  async updateSubscriberStatus(id, subscriber_status) {
+    return await this.knex("subscribers").where({ id }).update({
+      subscriber_status,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //delete subscriber by id
+  async deleteSubscriberById(id) {
+    return await this.knex("subscribers").where({ id }).del();
+  }
+
+  //insert into subscriptions table
+  async insertSubscription(data) {
+    return await this.knex("subscriptions").insert({
+      subscriber_id: data.subscriber_id,
+      subscriptions_status: data.subscriptions_status,
+      subscriptions_monitors: data.subscriptions_monitors,
+      subscriptions_meta: data.subscriptions_meta,
+      created_at: this.knex.fn.now(),
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //given subscriber_id remove all data from subscriptions
+  async removeAllDataFromSubscriptions(subscriber_id) {
+    return await this.knex("subscriptions").where({ subscriber_id }).del();
+  }
+
+  //get subscriptions by subscriber_id
+  async getSubscriptionsBySubscriberId(subscriber_id) {
+    return await this.knex("subscriptions").where("subscriber_id", subscriber_id).orderBy("id", "desc");
+  }
+
+  //update subscription status
+  async updateSubscriptionStatus(id, subscriptions_status) {
+    return await this.knex("subscriptions").where({ id }).update({
+      subscriptions_status,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //get all subscribers with active status
+  async getAllActiveSubscribers() {
+    return await this.knex("subscribers").where("subscriber_status", "ACTIVE");
+  }
+
+  //get subscriptions for a monitor tag
+  async getSubscriptionsForMonitor(monitor_tag) {
+    return await this.knex("subscriptions as s")
+      .join("subscribers as sub", "s.subscriber_id", "sub.id")
+      .where("s.subscriptions_status", "ACTIVE")
+      .where("sub.subscriber_status", "ACTIVE")
+      .whereRaw("s.subscriptions_monitors = ? OR s.subscriptions_monitors = 'ALL'", [monitor_tag])
+      .select("sub.subscriber_send", "sub.subscriber_type", "sub.subscriber_meta", "s.subscriptions_meta");
+  }
+
+  //get subscriber by subscriber_send and subscriber_type
+  async getSubscriberByDetails(subscriber_send, subscriber_type) {
+    return await this.knex("subscribers")
+      .where({
+        subscriber_send,
+        subscriber_type,
+      })
+      .first();
+  }
+
+  //get all subscribers by type
+  async getSubscribersByType(subscriber_type) {
+    return await this.knex("subscribers").where("subscriber_type", subscriber_type).orderBy("id", "desc");
+  }
 }
 
 export default DbImpl;

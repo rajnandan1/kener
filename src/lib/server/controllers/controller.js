@@ -1258,6 +1258,69 @@ export const DeleteMonitorCompletelyUsingTag = async (tag) => {
   return await db.deleteMonitorsByTag(tag);
 };
 
+export const CreateNewSubscriber = async (data) => {
+  return await db.insertSubscriber(data);
+};
+
+export const GetSubscriberByEmailAndType = async (email, type) => {
+  return await db.getSubscriberByDetails(email, type);
+};
+
+//remove all subscriptions for a subscriber
+export const RemoveAllSubscriptions = async (subscriber_id) => {
+  return await db.removeAllDataFromSubscriptions(subscriber_id);
+};
+
+export const CreateNewSubscription = async (data) => {
+  let subscriber = await db.getSubscriberByDetails(data.email, data.type);
+  if (!subscriber) {
+    throw new Error("Subscriber not found");
+  }
+
+  let monitors = data.monitorTags;
+  if (!monitors || monitors.length === 0) {
+    throw new Error("No monitors found");
+  }
+
+  await db.removeAllDataFromSubscriptions(subscriber.id);
+
+  for (let i = 0; i < monitors.length; i++) {
+    let tag = monitors[i];
+    let subscription = {
+      subscriber_id: subscriber.id,
+      subscriptions_status: "ACTIVE",
+      subscriptions_monitors: tag,
+      subscriptions_meta: "",
+    };
+    await db.insertSubscription(subscription);
+  }
+
+  return {
+    message: "Subscriptions created successfully",
+    count: monitors.length,
+  };
+};
+
+//updateSubscriberMeta given id
+export const UpdateSubscriberMeta = async (id, meta) => {
+  return await db.updateSubscriberMeta(id, meta);
+};
+
+//updateSubscriberStatus
+export const UpdateSubscriberStatus = async (id, status) => {
+  return await db.updateSubscriberStatus(id, status);
+};
+
+//delete subscriber by id
+export const DeleteSubscriberByID = async (id) => {
+  return await db.deleteSubscriberById(id);
+};
+
+//get subscriptions by subscriber id
+export const GetSubscriptionsBySubscriberID = async (subscriber_id) => {
+  return await db.getSubscriptionsBySubscriberId(subscriber_id);
+};
+
 export const GetSiteMap = async (cookies) => {
   let siteMapData = [];
   let siteURLData = await GetSiteDataByKey("siteURL");
