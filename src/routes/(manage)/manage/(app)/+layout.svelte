@@ -65,6 +65,11 @@
       id: "/(manage)/manage/(app)/app/users"
     },
     {
+      name: "Subscription",
+      url: `${base}/manage/app/subscriptions`,
+      id: "/(manage)/manage/(app)/app/subscriptions"
+    },
+    {
       name: "Profile",
       url: `${base}/manage/app/profile`,
       id: "/(manage)/manage/(app)/app/profile"
@@ -96,7 +101,7 @@
   <meta name="robots" content="noindex" />
   <link rel="icon" href="{base}/logo96.png" />
 </svelte:head>
-<header class="sticky inset-x-0 top-0 z-50 mx-auto mt-4 flex max-w-6xl px-8">
+<header class="fixed inset-x-0 top-0 z-50 mx-auto mt-2 flex px-2">
   <div class=" flex w-full justify-between rounded-lg border bg-card px-5 py-4">
     <div class="mt-2 flex gap-x-1.5">
       <img src="{base}/logo.png" alt="Kener" class="inline h-6 w-6" />
@@ -141,17 +146,17 @@
   </div>
 </header>
 <main class="manage">
-  <div class="container my-4 max-w-6xl">
-    <nav class="flex justify-start gap-x-2 overflow-x-auto">
+  <div class="fixed left-2 top-[5.2rem] my-2 h-[calc(100vh-6.5rem)] w-56 rounded-lg border bg-card px-2 py-2 shadow-md">
+    <nav class="flex flex-col justify-start gap-x-2 overflow-x-auto">
       {#each nav as item}
-        <Button variant={item.id.includes(activeTab) ? "secondary" : "ghost"} href={item.url} class="flex-1r"
+        <Button variant={item.id.includes(activeTab) ? "secondary" : "ghost"} href={item.url} class="justify-start "
           >{item.name}</Button
         >
       {/each}
     </nav>
   </div>
 
-  <div class="container max-w-6xl pt-0">
+  <div class=" mx-auto my-2 w-full max-w-6xl pl-60 pr-2 pt-24">
     <slot></slot>
   </div>
 </main>
