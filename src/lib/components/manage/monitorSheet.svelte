@@ -24,7 +24,9 @@
     ValidateIpAddress,
     ValidateCronExpression,
     IsValidHost,
-    IsValidNameServer
+    IsValidNameServer,
+    AllGamesList,
+    getGameFromId
   } from "$lib/clientTools.js";
 
   const dispatch = createEventDispatcher();
@@ -402,6 +404,38 @@
       }
 
       newMonitor.type_data = JSON.stringify(newMonitor.heartbeatConfig);
+    } else if (newMonitor.monitor_type === "GAMEDIG") {
+      // validating host
+      if (!newMonitor.gamedigConfig.host) {
+        invalidFormMessage = "Host is required";
+        return;
+      }
+      if (ValidateIpAddress(newMonitor.gamedigConfig.host) === "Invalid") {
+        invalidFormMessage = "Invalid host";
+        return;
+      }
+      // validating port
+      // NOTE: refactoring this into a function so that it is defined only one time.
+      if (
+        !!!newMonitor.gamedigConfig.port ||
+        isNaN(newMonitor.gamedigConfig.port) ||
+        newMonitor.gamedigConfig.port < 1 ||
+        newMonitor.gamedigConfig.port > 65535
+      ) {
+        invalidFormMessage = "Port should be valid";
+        return;
+      }
+      // validating game
+      const game = getGameFromId(newMonitor.gamedigConfig.gameId);
+      if (!game) {
+        invalidFormMessage = "Invalid game/service";
+        return;
+      }
+      if (!game.isValve && newMonitor.gamedigConfig.requestRules) {
+        newMonitor.gamedigConfig.requestRules = false;
+      }
+
+      newMonitor.type_data = JSON.stringify(newMonitor.gamedigConfig);
     }
     formState = "loading";
 
@@ -684,6 +718,7 @@
                 <Select.Item value="SSL" label="SSL" class="text-sm font-medium">SSL</Select.Item>
                 <Select.Item value="SQL" label="SQL" class="text-sm font-medium">SQL</Select.Item>
                 <Select.Item value="HEARTBEAT" label="HEARTBEAT" class="text-sm font-medium">HEARTBEAT</Select.Item>
+                <Select.Item value="GAMEDIG" label="GAMEDIG" class="text-sm font-medium">GAMEDIG</Select.Item>
               </Select.Group>
             </Select.Content>
           </Select.Root>
@@ -1303,6 +1338,98 @@
               </a> for more details
             </span>
           </div>
+        </div>
+      {:else if newMonitor.monitor_type == "GAMEDIG"}
+        <div class="mt-4 grid grid-cols-6 gap-2">
+          <div class="col-span-4">
+            <Label for="gameId">
+              Game <span class="text-red-500">*</span>
+            </Label>
+            <Select.Root portal={null} onSelectedChange={(e) => (newMonitor.gamedigConfig.gameId = e.value)}>
+              <Select.Trigger id="gameId">
+                <Select.Value placeholder={getGameFromId(newMonitor.gamedigConfig.gameId).name || ""} />
+              </Select.Trigger>
+              <Select.Content class="max-h-56 overflow-y-auto">
+                <Select.Group>
+                  <Select.Label>Game</Select.Label>
+                  {#each AllGamesList as game}
+                    <Select.Item value={game.id} label={game.name} class="text-sm font-medium">{game.name}</Select.Item>
+                  {/each}
+                </Select.Group>
+              </Select.Content>
+            </Select.Root>
+          </div>
+          <div class="col-span-2 col-start-1">
+            <Label for="host">
+              Host <span class="text-red-500">*</span>
+            </Label>
+            <Input bind:value={newMonitor.gamedigConfig.host} id="host" placeholder="172.12.14.42" />
+          </div>
+          <div class="col-span-2">
+            <Label for="port">
+              Port <span class="text-red-500">*</span>
+            </Label>
+            <Input bind:value={newMonitor.gamedigConfig.port} id="port" placeholder="port number ex 8080" />
+          </div>
+
+          <div class="col-span-6">
+            <label class="cursor-pointer">
+              <input
+                type="checkbox"
+                on:change={(e) => {
+                  newMonitor.gamedigConfig.guessPort = e.target.checked;
+                }}
+                checked={newMonitor.gamedigConfig.guessPort}
+              />
+              <span class="ml-2 text-sm">Guess port</span>
+              <p class="my-1 text-xs text-muted-foreground">
+                Used port can be different from client port, depending on queried game. Try this if you have
+                unsuccessful responses.
+              </p>
+            </label>
+          </div>
+          {#if newMonitor.gamedigConfig.gameId && getGameFromId(newMonitor.gamedigConfig.gameId).isValve}
+            <div class="col-span-6">
+              <label class="cursor-pointer">
+                <input
+                  type="checkbox"
+                  on:change={(e) => {
+                    newMonitor.gamedigConfig.requestRules = e.target.checked;
+                  }}
+                  checked={newMonitor.gamedigConfig.requestRules}
+                />
+                <span class="ml-2 text-sm">Request additionnal rules</span>
+                <p class="my-1 text-xs text-muted-foreground">TODO</p>
+              </label>
+            </div>
+          {/if}
+
+          <!-- <Label for="eval">Eval</Label>
+          <p class="my-1 text-xs text-muted-foreground">
+            You can write a custom eval function to evaluate the response. The function should return a promise that
+            resolves to an object with status and latency. <a
+              target="_blank"
+              class="font-medium text-primary"
+              href="https://kener.ing/docs/monitors-gamedig#eval">Read the docs</a
+            > to learn
+          </p>
+
+          <div class="overflow-hidden rounded-md">
+            <CodeMirror
+              bind:value={newMonitor.gamedigConfig.eval}
+              lang={javascript()}
+              theme={$mode == "dark" ? githubDark : githubLight}
+              styles={{
+                "&": {
+                  width: "100%",
+                  maxWidth: "100%",
+                  height: "18rem",
+                  border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                  borderRadius: "0.375rem"
+                }
+              }}
+            />
+          </div> -->
         </div>
       {/if}
       {#if !!newMonitor.id}

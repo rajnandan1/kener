@@ -15,7 +15,7 @@
   import { onMount } from "svelte";
   import * as Card from "$lib/components/ui/card";
   import * as Select from "$lib/components/ui/select";
-  import { storeSiteData, SortMonitor, RandomString } from "$lib/clientTools.js";
+  import { storeSiteData, SortMonitor, RandomString, AllGamesList } from "$lib/clientTools.js";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
@@ -119,6 +119,13 @@
         degradedRemainingMinutes: 1,
         downRemainingMinutes: 2,
         secretString: RandomString(32)
+      },
+      gamedigConfig: {
+        gameId: AllGamesList[0].id,
+        host: "",
+        port: "",
+        guessPort: false,
+        // eval: DefaultPingEval
       }
     };
   }
@@ -157,6 +164,8 @@
       newMonitor.sqlConfig = JSON.parse(newMonitor.type_data);
     } else if (newMonitor.monitor_type == "HEARTBEAT") {
       newMonitor.heartbeatConfig = JSON.parse(newMonitor.type_data);
+    } else if (newMonitor.monitor_type == "GAMEDIG") {
+      newMonitor.gamedigConfig = JSON.parse(newMonitor.type_data);
     }
     showAddMonitor = true;
   }
