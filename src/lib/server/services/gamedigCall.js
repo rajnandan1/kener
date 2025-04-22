@@ -2,7 +2,7 @@
 import { error } from "@sveltejs/kit";
 import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
 import { GameDig } from 'gamedig';
-import { DefaultGamedigEval } from "../../anywhere.js";
+import { DefaultGamedigEval, GAMEDIG_SOCKET_TIMEOUT, GAMEDIG_TIMEOUT } from "../../anywhere.js";
 
 class GamedigCall {
   monitor;
@@ -15,6 +15,7 @@ class GamedigCall {
     const tag = this.monitor.tag;
     const host = this.monitor.type_data.host;
     const port = this.monitor.type_data.port;
+    const timeout = !!this.monitor.type_data.timeout ? this.monitor.type_data.timeout : GAMEDIG_TIMEOUT;
     const gamedigEval = !!this.monitor.type_data.eval ? this.monitor.type_data.eval : DefaultGamedigEval;
 
     // Query
@@ -24,6 +25,8 @@ class GamedigCall {
         type: this.monitor.type_data.gameId,
         host: host,
         port: port,
+        socketTimeout: GAMEDIG_SOCKET_TIMEOUT,
+        attemptTimeout: timeout,
         givenPortOnly: !this.monitor.type_data.guessPort,
         requestRules: this.monitor.type_data.requestRules,
       });

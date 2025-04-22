@@ -26,8 +26,9 @@
     IsValidHost,
     IsValidNameServer,
     AllGamesList,
-    getGameFromId
+    getGameFromId,
   } from "$lib/clientTools.js";
+  import { GAMEDIG_SOCKET_TIMEOUT } from "$lib/anywhere";
 
   const dispatch = createEventDispatcher();
 
@@ -433,6 +434,18 @@
       }
       if (!game.isValve && newMonitor.gamedigConfig.requestRules) {
         newMonitor.gamedigConfig.requestRules = false;
+      }
+
+      //validating timeout
+      if (!!newMonitor.gamedigConfig.timeout && isNaN(newMonitor.gamedigConfig.timeout)) {
+        invalidFormMessage = "Timeout should be a number";
+        return;
+      }
+
+      newMonitor.gamedigConfig.timeout = Number(newMonitor.gamedigConfig.timeout);
+      if (newMonitor.gamedigConfig.timeout < GAMEDIG_SOCKET_TIMEOUT) {
+        invalidFormMessage = `Timeout should be greater than ${GAMEDIG_SOCKET_TIMEOUT}`;
+        return;
       }
 
       // validating eval
@@ -1380,6 +1393,13 @@
               Port <span class="text-red-500">*</span>
             </Label>
             <Input bind:value={newMonitor.gamedigConfig.port} id="port" placeholder="port number ex 8080" />
+          </div>
+          <div class="col-span-2">
+            <Label for="timeout">
+              Timeout(ms)
+              <span class="text-red-500">*</span>
+            </Label>
+            <Input bind:value={newMonitor.gamedigConfig.timeout} id="timeout" />
           </div>
 
           <div class="col-span-6">

@@ -656,5 +656,5 @@ export {
     SortMonitor,
     RandomString,
     AllGamesList,
-    getGameFromId
+    getGameFromId,
 };

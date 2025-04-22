@@ -21,7 +21,7 @@
   import { flip } from "svelte/animate";
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
-  import { DefaultAPIEval, DefaultTCPEval, DefaultPingEval, DefaultGamedigEval } from "$lib/anywhere.js";
+  import { DefaultAPIEval, DefaultTCPEval, DefaultPingEval, DefaultGamedigEval, GAMEDIG_TIMEOUT } from "$lib/anywhere.js";
 
   export let categories = [];
   export let colorDown = "#777";
@@ -124,7 +124,9 @@
         gameId: AllGamesList[0].id,
         host: "",
         port: "",
+        timeout: GAMEDIG_TIMEOUT,
         guessPort: false,
+        requestRules: false,
         eval: DefaultGamedigEval
       }
     };
