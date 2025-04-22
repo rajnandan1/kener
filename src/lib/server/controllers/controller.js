@@ -441,6 +441,19 @@ export const GenerateToken = async (data) => {
   }
 };
 
+//generate token with expiry
+export const GenerateTokenWithExpiry = async (data, expiry) => {
+  try {
+    const token = jwt.sign(data, process.env.KENER_SECRET_KEY || DUMMY_SECRET, {
+      expiresIn: expiry,
+    });
+    return token;
+  } catch (err) {
+    console.error("Error generating token with expiry:", err);
+    throw err;
+  }
+};
+
 export const ForgotPasswordJWT = async (data) => {
   try {
     const token = jwt.sign(data, process.env.KENER_SECRET_KEY || DUMMY_SECRET, {
@@ -1259,11 +1272,17 @@ export const DeleteMonitorCompletelyUsingTag = async (tag) => {
 };
 
 export const CreateNewSubscriber = async (data) => {
-  return await db.insertSubscriber(data);
+  await db.insertSubscriber(data);
+  return await GetSubscriberByEmailAndType(data.subscriber_send, data.subscriber_type);
 };
 
 export const GetSubscriberByEmailAndType = async (email, type) => {
   return await db.getSubscriberByDetails(email, type);
+};
+
+//get subscriber by id
+export const GetSubscriberByID = async (id) => {
+  return await db.getSubscriberById(id);
 };
 
 //remove all subscriptions for a subscriber
@@ -1271,23 +1290,17 @@ export const RemoveAllSubscriptions = async (subscriber_id) => {
   return await db.removeAllDataFromSubscriptions(subscriber_id);
 };
 
-export const CreateNewSubscription = async (data) => {
-  let subscriber = await db.getSubscriberByDetails(data.email, data.type);
-  if (!subscriber) {
-    throw new Error("Subscriber not found");
-  }
-
-  let monitors = data.monitorTags;
+export const CreateNewSubscription = async (subscriber_id, monitors) => {
   if (!monitors || monitors.length === 0) {
     throw new Error("No monitors found");
   }
 
-  await db.removeAllDataFromSubscriptions(subscriber.id);
+  await db.removeAllDataFromSubscriptions(subscriber_id);
 
   for (let i = 0; i < monitors.length; i++) {
     let tag = monitors[i];
     let subscription = {
-      subscriber_id: subscriber.id,
+      subscriber_id: subscriber_id,
       subscriptions_status: "ACTIVE",
       subscriptions_monitors: tag,
       subscriptions_meta: "",
@@ -1409,4 +1422,86 @@ export const GetSiteMap = async (cookies) => {
     )
     .join("")}
 </urlset>`;
+};
+
+// fetch the single subscription_trigger (only type=email supported)
+export const GetSubscriptionTriggerByEmail = async () => {
+  return await db.getSubscriptionTriggerByType("email");
+};
+
+// create a subscription_trigger record for email type
+export const CreateSubscriptionTrigger = async (data) => {
+  // only email supported
+  if (data.subscription_trigger_type !== "email") {
+    throw new Error("Only email trigger type is supported");
+  }
+
+  //update subscription_trigger_status and subscription_trigger_id given subscription_trigger_type, if not present insert otherwise update
+  let subscriptionTrigger = await db.getSubscriptionTriggerByType(data.subscription_trigger_type);
+  if (!subscriptionTrigger) {
+    await db.insertSubscriptionTrigger({
+      subscription_trigger_type: data.subscription_trigger_type,
+      subscription_trigger_status: data.subscription_trigger_status,
+    });
+  } else {
+    await db.updateSubscriptionTrigger({
+      id: subscriptionTrigger.id,
+      subscription_trigger_status: data.subscription_trigger_status,
+      subscription_trigger_type: subscriptionTrigger.subscription_trigger_type,
+    });
+  }
+
+  return {
+    subscription_trigger_id: data.subscription_trigger_id,
+    subscription_trigger_type: data.subscription_trigger_type,
+    subscription_trigger_status: data.subscription_trigger_status,
+  };
+};
+
+// Get subscribers paginated
+export const GetSubscribersPaginated = async (data) => {
+  const page = parseInt(data.page) || 1;
+  const limit = parseInt(data.limit) || 10;
+  const subscriptions = await db.getSubscriptionsPaginated(page, limit);
+  const total = await db.getTotalSubscriptionCount();
+
+  //all monitor tags
+  let allTags = subscriptions.map((subscription) => subscription.subscriptions_monitors);
+  //get all monitors by tags
+  let monitors = await db.getMonitorsByTags(allTags);
+  let tagMonitor = {};
+  //convert monitors to map in tagMonitor
+  for (let i = 0; i < monitors.length; i++) {
+    let m = monitors[i];
+    tagMonitor[monitors[i].tag] = {
+      name: m.name,
+      tag: m.tag,
+      image: m.image,
+    };
+  }
+  let subscriberIDObj = {};
+  //for each subscription get subscriber details
+  for (let i = 0; i < subscriptions.length; i++) {
+    let subsID = subscriptions[i].subscriber_id;
+    if (!subscriberIDObj[subsID]) {
+      const subscriber = await db.getSubscriberById(subscriptions[i].subscriber_id);
+      subscriberIDObj[subsID] = {
+        id: subscriber.id,
+        email: subscriber.subscriber_send,
+        status: subscriber.subscriber_status,
+      };
+    }
+    subscriptions[i].subscriber = subscriberIDObj[subsID];
+    subscriptions[i].monitor = tagMonitor[subscriptions[i].subscriptions_monitors];
+  }
+
+  return {
+    subscriptions: subscriptions,
+    total: total,
+  };
+};
+
+//updateSubscriptionStatus
+export const UpdateSubscriptionStatus = async (subscription_id, status) => {
+  return await db.updateSubscriptionStatus(subscription_id, status);
 };

@@ -156,7 +156,7 @@
     </nav>
   </div>
 
-  <div class=" mx-auto my-2 w-full max-w-6xl pl-60 pr-2 pt-24">
+  <div class=" mx-auto my-2 w-full max-w-7xl pl-60 pr-2 pt-24">
     <slot></slot>
   </div>
 </main>

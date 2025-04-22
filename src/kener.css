@@ -881,3 +881,8 @@ p code:not([class^="language-"]) {
   margin-top: 1.3em;
   margin-bottom: 1.3em;
 }
+
+input[type="checkbox"]:disabled + .peer {
+  cursor: not-allowed;
+  opacity: 0.5;
+}

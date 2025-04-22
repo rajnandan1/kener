@@ -105,7 +105,9 @@
 {/if}
 <div class="section-actions mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-center justify-center">
   <div class="flex w-full flex-wrap gap-x-2 rounded-xl border">
-    <Button variant="ghost" class="h-11 rounded-xl" on:click={openSubscribeMenu}>Subscribe to Updates</Button>
+    {#if data.canSendEmail}
+      <Button variant="ghost" class="h-11 rounded-xl" on:click={openSubscribeMenu}>Subscribe to Updates</Button>
+    {/if}
     <Button variant="ghost" class="h-11 rounded-xl">Upcoming Maintenances</Button>
   </div>
 </div>

@@ -11,7 +11,7 @@ export function up(knex) {
 
       // Add unique constraint on subscriber_send and subscriber_type
       table.unique(["subscriber_send", "subscriber_type"]);
-      
+
       // Add index on subscriber_send for better query performance
       table.index(["subscriber_send"]);
     })
@@ -27,9 +27,19 @@ export function up(knex) {
       // Add unique constraint on subscriber_id and subscriptions_monitors
       // This constraint also creates an index that will be used for queries
       table.unique(["subscriber_id", "subscriptions_monitors"]);
+    })
+    .createTable("subscription_triggers", (table) => {
+      table.increments("id").primary();
+      table.string("subscription_trigger_type").notNullable().unique();
+      table.string("subscription_trigger_status").notNullable();
+      table.datetime("created_at").defaultTo(knex.fn.now());
+      table.datetime("updated_at").defaultTo(knex.fn.now());
     });
 }
 
 export function down(knex) {
-  return knex.schema.dropTableIfExists("subscriptions").dropTableIfExists("subscribers");
+  return knex.schema
+    .dropTableIfExists("subscription_triggers")
+    .dropTableIfExists("subscriptions")
+    .dropTableIfExists("subscribers");
 }

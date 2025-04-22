@@ -14,6 +14,8 @@ import {
   CreateUpdateTrigger,
   GetAllTriggers,
   UpdateTriggerData,
+  GetSubscriptionTriggerByEmail,
+  CreateSubscriptionTrigger,
   GetAllAlertsPaginated,
   GetIncidentByIDDashboard,
   GetMonitorsParsed,
@@ -44,6 +46,8 @@ import {
   GetUserByEmail,
   ManualUpdateUserData,
   DeleteMonitorCompletelyUsingTag,
+  GetSubscribersPaginated,
+  UpdateSubscriptionStatus,
 } from "$lib/server/controllers/controller.js";
 
 import { INVITE_VERIFY_EMAIL } from "$lib/server/constants.js";
@@ -234,6 +238,14 @@ export async function POST({ request, cookies }) {
       }
       const serviceClient = new Service(monitor);
       resp = await serviceClient.execute();
+    } else if (action == "createSubscriptionTrigger") {
+      resp = await CreateSubscriptionTrigger(data);
+    } else if (action == "getSubscriptionTrigger") {
+      resp = await GetSubscriptionTriggerByEmail();
+    } else if (action == "getSubscribers") {
+      resp = await GetSubscribersPaginated(data);
+    } else if (action == "updateSubscriptionStatus") {
+      resp = await UpdateSubscriptionStatus(data.id, data.status);
     }
   } catch (error) {
     resp = { error: error.message };

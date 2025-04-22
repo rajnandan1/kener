@@ -278,6 +278,10 @@ class DbImpl {
     return await this.knex("monitor_alerts").count("* as count").first();
   }
 
+  //getMonitorsByTags array of string
+  async getMonitorsByTags(tags) {
+    return await this.knex("monitors").whereIn("tag", tags);
+  }
   //update alert to inactive given monitor_tag, monitor_status, given id
   async updateAlertStatus(id, alert_status) {
     return await this.knex("monitor_alerts").where({ id }).update({
@@ -1032,6 +1036,127 @@ class DbImpl {
   //get all subscribers by type
   async getSubscribersByType(subscriber_type) {
     return await this.knex("subscribers").where("subscriber_type", subscriber_type).orderBy("id", "desc");
+  }
+
+  //get subscriptions paginated
+  async getSubscriptionsPaginated(page, limit) {
+    return await this.knex("subscriptions")
+      .select(
+        "id",
+        "subscriber_id",
+        "subscriptions_status",
+        "subscriptions_monitors",
+        "subscriptions_meta",
+        "created_at",
+      )
+      .orderBy("id", "desc")
+      .limit(limit)
+      .offset((page - 1) * limit);
+  }
+
+  //get total subscription count
+
+  async getTotalSubscriptionCount() {
+    const result = await this.knex("subscriptions").count("* as count").first();
+    return result.count || 0;
+  }
+
+  //getSubscriberById
+  async getSubscriberById(id) {
+    return await this.knex("subscribers")
+      .select("id", "subscriber_send", "subscriber_meta", "subscriber_type", "subscriber_status", "created_at")
+      .where("id", id)
+      .first();
+  }
+
+  // Get subscribers paginated
+  async getSubscribersPaginated(page, limit) {
+    // Use a subquery for pagination to apply limit/offset before joining
+    const subquery = this.knex("subscribers")
+      .select("id")
+      .orderBy("created_at", "desc")
+      .limit(limit)
+      .offset((page - 1) * limit)
+      .as("paginated_subscribers");
+
+    const dbType = GetDbType(); // Get the database type
+    const aggregationFunction = dbType === "postgresql" ? "STRING_AGG" : "GROUP_CONCAT";
+
+    const results = await this.knex("subscribers as s")
+      .select(
+        "s.id",
+        "s.subscriber_send",
+        "s.subscriber_status",
+        "s.created_at",
+        // Aggregate monitor tags based on DB type
+        this.knex.raw(`${aggregationFunction}(sub.subscriptions_monitors, ',') as monitors_agg`),
+      )
+      .innerJoin(subquery, "s.id", "paginated_subscribers.id") // Join with paginated IDs
+      .leftJoin("subscriptions as sub", "s.id", "sub.subscriber_id") // Left join to include subscribers with no subscriptions
+      .groupBy("s.id", "s.subscriber_send", "s.subscriber_status", "s.created_at") // Group by subscriber details
+      .orderBy("s.created_at", "desc"); // Ensure final order
+
+    // Process results to split the aggregated string into an array
+    return results.map((row) => ({
+      ...row,
+      subscriptions_monitors: row.monitors_agg ? row.monitors_agg.split(",") : [], // Split string into array, handle null
+      monitors_agg: undefined, // Remove the temporary aggregation field
+    }));
+  }
+
+  // Get total count of subscribers
+  async getSubscribersCount() {
+    const result = await this.knex("subscribers").count("* as count").first();
+    return result.count || 0; // Return count or 0 if no subscribers
+  }
+
+  // CRUD operations for subscription_triggers
+  async insertSubscriptionTrigger(data) {
+    return await this.knex("subscription_triggers").insert({
+      subscription_trigger_type: data.subscription_trigger_type,
+      subscription_trigger_status: data.subscription_trigger_status,
+      created_at: this.knex.fn.now(),
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  async getSubscriptionTriggerById(id) {
+    return await this.knex("subscription_triggers").where({ id }).first();
+  }
+
+  async getAllSubscriptionTriggers() {
+    return await this.knex("subscription_triggers").orderBy("id", "desc");
+  }
+
+  // get a single subscription_trigger by type
+  async getSubscriptionTriggerByType(subscription_trigger_type) {
+    return await this.knex("subscription_triggers")
+      .where("subscription_trigger_type", subscription_trigger_type)
+      .first();
+  }
+
+  async updateSubscriptionTrigger(data) {
+    return await this.knex("subscription_triggers").where({ id: data.id }).update({
+      subscription_trigger_type: data.subscription_trigger_type,
+      subscription_trigger_status: data.subscription_trigger_status,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  async updateSubscriptionTriggerStatus(id, subscription_trigger_status) {
+    return await this.knex("subscription_triggers").where({ id }).update({
+      subscription_trigger_status,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //deleteSubscriptionTriggerByType
+  async deleteSubscriptionTriggerByType(subscription_trigger_type) {
+    return await this.knex("subscription_triggers").where({ subscription_trigger_type }).del();
+  }
+
+  async deleteSubscriptionTriggerById(id) {
+    return await this.knex("subscription_triggers").where({ id }).del();
   }
 }
 

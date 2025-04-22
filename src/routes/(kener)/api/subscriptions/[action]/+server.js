@@ -15,235 +15,205 @@ import {
   GetSubscriptionsBySubscriberID,
   UpdateSubscriberStatus,
   DeleteSubscriberByID,
+  GenerateTokenWithExpiry,
+  GetSubscriberByID,
+  VerifyToken,
 } from "$lib/server/controllers/controller.js";
 import { base } from "$app/paths";
 
-async function enrollSubscriber(email, existingSubscriber, data) {
-  let emailCode = GenerateRandomNumber(6);
-  let siteData = await GetAllSiteData();
-
-  let newSubscriberData = {
-    subscriber_send: email,
-    subscriber_type: "email",
-    subscriber_status: "PENDING",
-    subscriber_meta: JSON.stringify({
-      email_code: emailCode,
-      generated_at: GetNowTimestampUTC() + 86400,
-    }),
-  };
-
-  try {
-    if (!!!existingSubscriber) {
-      await CreateNewSubscriber(newSubscriberData);
-    } else {
-      let subscriberMeta = JSON.parse(existingSubscriber.subscriber_meta);
-      let generateAt = parseInt(subscriberMeta.generated_at);
-      //return if the code is not expired
-      if (generateAt > GetNowTimestampUTC() && !!!data.forceSend) {
-        return;
-      }
-      await UpdateSubscriberMeta(existingSubscriber.id, newSubscriberData.subscriber_meta);
-    }
-  } catch (e) {
-    console.error("Error in CreateNewSubscriber: ", e);
-    throw new Error("Error in CreateNewSubscriber");
+async function subscribe(data) {
+  const decoded = await VerifyToken(data.token);
+  if (!!!decoded) {
+    return json({ message: "Invalid token" }, { status: 400 });
+  }
+  let email = decoded.email;
+  if (!!!email) {
+    return json({ message: "Invalid email" }, { status: 400 });
+  }
+  //subscriber_id
+  let subscriber_id = decoded.subscriber_id;
+  if (!!!subscriber_id) {
+    return json({ message: "Invalid subscriber_id" }, { status: 400 });
   }
 
-  let emailData = {
-    brand_name: siteData.siteName,
-    logo_url: await GetSiteLogoURL(siteData.siteURL, siteData.logo, base),
-    email_code: emailCode,
-    action: "subscription",
-  };
-
-  let resp = await SendEmailWithTemplate(
-    emailCodeTemplate,
-    emailData,
-    email,
-    `[Important] Verify code to subscribe for ${emailData.brand_name} updates`,
-    `Your verification code is: ${emailData.email_code}`,
-  );
-  if (resp.error) {
-    throw new Error("Error in SendEmailWithTemplate: " + resp.error);
-  }
-  return { message: "Email sent successfully" };
-}
-
-async function emailSubscribeNew(data) {
-  const type = data.type;
-  const email = data.userEmail;
-  if (!ValidateEmail(email)) {
-    return json({ message: "Invalid email address" }, { status: 400 });
+  //get subscriber by id
+  let existingSubscriber = await GetSubscriberByID(subscriber_id);
+  if (!!!existingSubscriber) {
+    return json({ message: "No active subscription found" }, { status: 400 });
   }
 
-  let existingSubscriber = await GetSubscriberByEmailAndType(email, type);
-  if (!!!existingSubscriber || existingSubscriber.subscriber_status != "ACTIVE") {
-    try {
-      await enrollSubscriber(email, existingSubscriber, data);
-    } catch (e) {
-      console.error("Error in enrollSubscriber: ", e);
-      return json({ message: "Error in enrollSubscriber" }, { status: 200 });
-    }
-  }
-
-  let newSubscriptionData = {
-    email: email,
-    type: type,
-    monitorTags: data.monitorTags,
-  };
+  let monitors = data.monitors;
 
   if (data.allMonitors) {
-    newSubscriptionData.monitorTags = "_";
+    monitors = ["_"];
+  }
+
+  if (!!!monitors || monitors.length == 0) {
+    //remove all subscriptions
+    await RemoveAllSubscriptions(existingSubscriber.id);
+    return json({ message: "Unsubscribed successfully" }, { status: 200 });
   }
 
   try {
-    await CreateNewSubscription(newSubscriptionData);
+    await CreateNewSubscription(subscriber_id, monitors);
   } catch (e) {
     console.error("Error in CreateNewSubscription: ", e);
+    return json({ message: "Error in CreateNewSubscription" }, { status: 500 });
   }
   return json({ message: "Subscription created successfully" }, { status: 200 });
 }
-
-async function emailUnsubscribe(data) {
-  const type = data.type;
-  const email = data.userEmail;
-  if (!ValidateEmail(email)) {
-    return json({ message: "Invalid email address" }, { status: 400 });
+async function unsubscribe(token) {
+  //decode token
+  const decoded = await VerifyToken(token);
+  if (!!!decoded) {
+    return json({ message: "Invalid token" }, { status: 400 });
+  }
+  let email = decoded.email;
+  if (!!!email) {
+    return json({ message: "Invalid email" }, { status: 400 });
+  }
+  //subscriber_id
+  let subscriber_id = decoded.subscriber_id;
+  if (!!!subscriber_id) {
+    return json({ message: "Invalid subscriber_id" }, { status: 400 });
   }
 
-  let existingSubscriber = await GetSubscriberByEmailAndType(email, type);
+  //get subscriber by id
+  let existingSubscriber = await GetSubscriberByID(subscriber_id);
   if (!!!existingSubscriber) {
-    return json({ message: "No active subscription 2found" }, { status: 400 });
+    return json({ message: "No active subscription found" }, { status: 400 });
   }
 
   await RemoveAllSubscriptions(existingSubscriber.id);
   return json({ message: "Unsubscribed successfully" }, { status: 200 });
 }
-async function fetchData(data) {
-  const type = data.type;
-  const email = data.userEmail;
-  if (!ValidateEmail(email)) {
-    return json({ message: "Invalid email address" }, { status: 400 });
+async function fetchData(token) {
+  //decode token
+  const decoded = await VerifyToken(token);
+  if (!!!decoded) {
+    return json({ message: "Invalid token" }, { status: 400 });
+  }
+  let email = decoded.email;
+  if (!!!email) {
+    return json({ message: "Invalid email" }, { status: 400 });
+  }
+  //subscriber_id
+  let subscriber_id = decoded.subscriber_id;
+  if (!!!subscriber_id) {
+    return json({ message: "Invalid subscriber_id" }, { status: 400 });
   }
 
-  let existingSubscriber = await GetSubscriberByEmailAndType(email, type);
+  //get subscriber by id
+  let existingSubscriber = await GetSubscriberByID(subscriber_id);
   if (!!!existingSubscriber) {
     return json({ message: "No active subscription found" }, { status: 400 });
   }
 
-  let subscriberMeta = JSON.parse(existingSubscriber.subscriber_meta);
-  let generateAt = parseInt(subscriberMeta.generated_at);
-  //generateAt has expired
-  if (generateAt < GetNowTimestampUTC()) {
-    existingSubscriber.subscriber_status = "";
-  }
-
   let monitors = [];
-  let allSubscriptions = await GetSubscriptionsBySubscriberID(existingSubscriber.id);
+  let allSubscriptions = await GetSubscriptionsBySubscriberID(subscriber_id);
   if (!!allSubscriptions) {
     monitors = allSubscriptions.map((item) => {
       return item.subscriptions_monitors;
     });
   }
 
-  return json({ email, status: existingSubscriber.subscriber_status, monitors }, { status: 200 });
+  return json({ monitors, email: existingSubscriber.subscriber_send }, { status: 200 });
 }
 
-async function confirmSubscription(data) {
-  const type = data.type;
-  const email = data.userEmail;
-  const code = data.confirmCode;
+async function login(email) {
+  //if the email does not exists then create the user, return 200
+  //if the email exists then return 200
 
-  let existingSubscriber = await GetSubscriberByEmailAndType(email, type);
-  if (!!!existingSubscriber) {
-    return json({ message: "No active subscription found" }, { status: 400 });
+  //validate email
+  if (!ValidateEmail(email)) {
+    return json({ message: "Invalid email address" }, { status: 400 });
   }
 
-  let subscriberMeta = JSON.parse(existingSubscriber.subscriber_meta);
-  let generateAt = parseInt(subscriberMeta.generated_at);
-  if (generateAt < GetNowTimestampUTC()) {
-    return json({ message: "Code expired" }, { status: 400 });
-  }
-  if (subscriberMeta.email_code != code) {
-    return json({ message: "Invalid code" }, { status: 400 });
-  }
-  await UpdateSubscriberStatus(existingSubscriber.id, "ACTIVE");
+  let subscriberMeta = {
+    email_code: GenerateRandomNumber(6),
+  };
 
-  return await fetchData(data);
-}
+  const existingUser = await GetSubscriberByEmailAndType(email, "email");
+  if (!!!existingUser) {
+    let newSubscriberData = {
+      subscriber_send: email,
+      subscriber_type: "email",
+      subscriber_status: "PENDING",
+      subscriber_meta: JSON.stringify(subscriberMeta),
+    };
+    let newSubscriber = await CreateNewSubscriber(newSubscriberData);
+    return json({ newUser: true, token: await GenerateTokenWithExpiry({ email }, "5m") }, { status: 200 });
+  } else {
+    await UpdateSubscriberMeta(existingUser.id, JSON.stringify(subscriberMeta));
+  }
 
-async function sendUnsubscribeCode(data) {
-  const type = data.type;
-  const email = data.userEmail;
-  let emailCode = GenerateRandomNumber(6);
+  //send email with code
   let siteData = await GetAllSiteData();
-
-  let existingSubscriber = await GetSubscriberByEmailAndType(email, type);
-  if (!!!existingSubscriber) {
-    return json({ message: "No active subscription found" }, { status: 400 });
-  }
-
-  let subscriberMeta = JSON.parse(existingSubscriber.subscriber_meta);
-  //if unsubscribe_code and unsubscribe_generated_at is present and not expired then return
-  if (subscriberMeta.unsubscribe_code && subscriberMeta.unsubscribe_generated_at) {
-    const generatedAt = parseInt(subscriberMeta.unsubscribe_generated_at);
-    if (generatedAt > GetNowTimestampUTC() && !!!data.forceSend2) {
-      return json({ message: "Unsubscribe code is valid", code: subscriberMeta.unsubscribe_code }, { status: 200 });
-    }
-  }
-
-  subscriberMeta.unsubscribe_code = emailCode;
-  subscriberMeta.unsubscribe_generated_at = GetNowTimestampUTC() + 86400;
-
-  try {
-    await UpdateSubscriberMeta(existingSubscriber.id, subscriberMeta);
-  } catch (e) {
-    console.error("Error in UpdateSubscriberMeta: ", e);
-    return json({ message: "Error in UpdateSubscriberMeta" }, { status: 500 });
-  }
-
   let emailData = {
     brand_name: siteData.siteName,
     logo_url: await GetSiteLogoURL(siteData.siteURL, siteData.logo, base),
-    email_code: emailCode,
-    action: "unsubscribe",
+    email_code: subscriberMeta.email_code,
+    action: "login",
   };
-
   let resp = await SendEmailWithTemplate(
     emailCodeTemplate,
     emailData,
     email,
-    `[Important] Verify code to unsubscribe from ${emailData.brand_name} updates`,
+    `[Important] Verify code to login to ${emailData.brand_name}`,
     `Your verification code is: ${emailData.email_code}`,
   );
   if (resp.error) {
     console.error("Error in SendEmailWithTemplate: ", resp.error);
-    return json({ message: "Error in SendEmailWithTemplate" }, { status: 500 });
+    return json({ message: "Error sending email" }, { status: 500 });
   }
-  return json({ message: "Unsubscribe code sent successfully" }, { status: 200 });
+
+  return json({ newUser: false, token: await GenerateTokenWithExpiry({ email }, "1m") }, { status: 200 });
 }
 
-async function confirmUnSubscription(data) {
-  const type = data.type;
-  const email = data.userEmail;
-  const code = data.unsubscribeCode;
+//verify token from jwt
+async function verifyToken(token, code) {
+  const decoded = await VerifyToken(token);
+  if (!!!decoded) {
+    return json({ message: "Invalid token" }, { status: 400 });
+  }
 
-  let existingSubscriber = await GetSubscriberByEmailAndType(email, type);
+  let email = decoded.email;
+  if (!!!email) {
+    return json({ message: "Invalid email" }, { status: 400 });
+  }
+
+  let existingSubscriber = await GetSubscriberByEmailAndType(email, "email");
   if (!!!existingSubscriber) {
-    return json({ message: "No active subscription found" }, { status: 400 });
+    return json({ message: "Invalid User" }, { status: 400 });
   }
 
   let subscriberMeta = JSON.parse(existingSubscriber.subscriber_meta);
-  let generateAt = parseInt(subscriberMeta.unsubscribe_generated_at);
-  if (generateAt < GetNowTimestampUTC()) {
-    return json({ message: "Code expired" }, { status: 400 });
+  let storeCode = subscriberMeta.email_code;
+  if (!!!storeCode) {
+    return json({ message: "Invalid Data" }, { status: 400 });
   }
-  if (subscriberMeta.unsubscribe_code != code) {
-    return json({ message: "Invalid code" }, { status: 400 });
+  if (storeCode != code) {
+    return json({ message: "Invalid Code" }, { status: 400 });
   }
-  await RemoveAllSubscriptions(existingSubscriber.id);
-  await DeleteSubscriberByID(existingSubscriber.id);
-  return json({ message: "Unsubscribed successfully" }, { status: 200 });
+
+  //update the subscriber status to active
+  await UpdateSubscriberStatus(existingSubscriber.id, "ACTIVE");
+  await UpdateSubscriberMeta(existingSubscriber.id, JSON.stringify({}));
+
+  //create a new token
+
+  return json(
+    {
+      token: await GenerateTokenWithExpiry(
+        {
+          email: email,
+          subscriber_id: existingSubscriber.id,
+        },
+        "1y",
+      ),
+    },
+    { status: 200 },
+  );
 }
 
 export async function POST({ request, params }) {
@@ -251,24 +221,19 @@ export async function POST({ request, params }) {
   const action = params.action;
   const type = data.type;
 
-  if (type != "email") {
-    return json({ message: "Invalid type" }, { status: 400 });
-  }
-
   try {
-    if (action == "subscribe") {
-      return await emailSubscribeNew(data);
+    if (action == "login") {
+      return await login(data.userEmail);
+    } else if (action == "verify") {
+      return await verifyToken(data.token, data.code);
+    } else if (action == "subscribe") {
+      return await subscribe(data);
     } else if (action == "unsubscribe") {
-      return await sendUnsubscribeCode(data);
+      return await unsubscribe(data.token);
     } else if (action == "fetch") {
-      return await fetchData(data);
-    } else if (action == "confirm_subscription") {
-      return await confirmSubscription(data);
-    } else if (action == "confirm_unsubscribe") {
-      return await confirmUnSubscription(data);
+      return await fetchData(data.token);
     }
   } catch (e) {
-    console.error("Error in emailSubscribeNew: ", e);
     return json({ message: "Error in creating email subscription" }, { status: 500 });
   }
 
