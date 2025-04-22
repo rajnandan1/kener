@@ -54,5 +54,9 @@
 	{
 		"code": "nb-NO",
 		"name": "Norsk Bokmål"
+	},
+	{
+		"code": "pl",
+		"name": "Polski"
 	}
 ]
