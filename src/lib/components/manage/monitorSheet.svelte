@@ -435,6 +435,16 @@
         newMonitor.gamedigConfig.requestRules = false;
       }
 
+      // validating eval
+      if (!!newMonitor.gamedigConfig.eval) {
+        newMonitor.gamedigConfig.eval = newMonitor.gamedigConfig.eval.trim();
+
+        if (!(await isValidEval(newMonitor.gamedigConfig.eval))) {
+          invalidFormMessage = invalidFormMessage + ". Invalid eval";
+          return;
+        }
+      }
+
       newMonitor.type_data = JSON.stringify(newMonitor.gamedigConfig);
     }
     formState = "loading";
@@ -1404,32 +1414,34 @@
             </div>
           {/if}
 
-          <!-- <Label for="eval">Eval</Label>
-          <p class="my-1 text-xs text-muted-foreground">
-            You can write a custom eval function to evaluate the response. The function should return a promise that
-            resolves to an object with status and latency. <a
-              target="_blank"
-              class="font-medium text-primary"
-              href="https://kener.ing/docs/monitors-gamedig#eval">Read the docs</a
-            > to learn
-          </p>
+          <div class="col-span-6 mt-2">
+            <Label for="eval">Eval</Label>
+            <p class="my-1 text-xs text-muted-foreground">
+              You can write a custom eval function to evaluate the response. The function should return a promise that
+              resolves to an object with status and latency. <a
+                target="_blank"
+                class="font-medium text-primary"
+                href="https://kener.ing/docs/monitors-gamedig#eval">Read the docs</a
+              > to learn
+            </p>
 
-          <div class="overflow-hidden rounded-md">
-            <CodeMirror
-              bind:value={newMonitor.gamedigConfig.eval}
-              lang={javascript()}
-              theme={$mode == "dark" ? githubDark : githubLight}
-              styles={{
-                "&": {
-                  width: "100%",
-                  maxWidth: "100%",
-                  height: "18rem",
-                  border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
-                  borderRadius: "0.375rem"
-                }
-              }}
-            />
-          </div> -->
+            <div class="overflow-hidden rounded-md">
+              <CodeMirror
+                bind:value={newMonitor.gamedigConfig.eval}
+                lang={javascript()}
+                theme={$mode == "dark" ? githubDark : githubLight}
+                styles={{
+                  "&": {
+                    width: "100%",
+                    maxWidth: "100%",
+                    height: "18rem",
+                    border: "1px solid hsl(var(--border) / var(--tw-border-opacity))",
+                    borderRadius: "0.375rem"
+                  }
+                }}
+              />
+            </div>
+          </div>
         </div>
       {/if}
       {#if !!newMonitor.id}
