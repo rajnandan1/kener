@@ -1115,6 +1115,7 @@ class DbImpl {
     return await this.knex("subscription_triggers").insert({
       subscription_trigger_type: data.subscription_trigger_type,
       subscription_trigger_status: data.subscription_trigger_status,
+      config: data.config,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     });
@@ -1139,6 +1140,7 @@ class DbImpl {
     return await this.knex("subscription_triggers").where({ id: data.id }).update({
       subscription_trigger_type: data.subscription_trigger_type,
       subscription_trigger_status: data.subscription_trigger_status,
+      config: data.config,
       updated_at: this.knex.fn.now(),
     });
   }

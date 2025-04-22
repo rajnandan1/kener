@@ -3,7 +3,7 @@ export function up(knex) {
     .createTable("subscribers", (table) => {
       table.increments("id").primary();
       table.string("subscriber_send").notNullable();
-      table.string("subscriber_meta").nullable();
+      table.text("subscriber_meta").nullable();
       table.string("subscriber_type").notNullable();
       table.string("subscriber_status").notNullable();
       table.datetime("created_at").defaultTo(knex.fn.now());
@@ -20,7 +20,7 @@ export function up(knex) {
       table.integer("subscriber_id").unsigned().notNullable();
       table.string("subscriptions_status").notNullable();
       table.string("subscriptions_monitors").notNullable();
-      table.string("subscriptions_meta").nullable();
+      table.text("subscriptions_meta").nullable();
       table.datetime("created_at").defaultTo(knex.fn.now());
       table.datetime("updated_at").defaultTo(knex.fn.now());
 
@@ -32,6 +32,7 @@ export function up(knex) {
       table.increments("id").primary();
       table.string("subscription_trigger_type").notNullable().unique();
       table.string("subscription_trigger_status").notNullable();
+      table.text("config").nullable();
       table.datetime("created_at").defaultTo(knex.fn.now());
       table.datetime("updated_at").defaultTo(knex.fn.now());
     });

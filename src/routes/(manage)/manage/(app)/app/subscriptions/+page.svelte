@@ -18,7 +18,14 @@
   let subscriptionTrigger = {
     subscription_trigger_id: null,
     subscription_trigger_status: "INACTIVE",
-    subscription_trigger_type: "email"
+    subscription_trigger_type: "email",
+    config: {
+      createIncident: false,
+      updateIncident: false,
+      insertIncidentMonitor: false,
+      updateIncidentComment: false,
+      insertIncidentComment: false
+    }
   };
   let selectedTriggerId = null;
   let subscriberListLoading = false;
@@ -32,9 +39,13 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getSubscriptionTrigger" })
       });
-      subscriptionTrigger = await res.json();
-      if (subscriptionTrigger && subscriptionTrigger.subscription_trigger_id) {
-        selectedTriggerId = subscriptionTrigger.subscription_trigger_id;
+      let data = await res.json();
+      if (data) {
+        if (!!data.config) {
+          data.config = JSON.parse(data.config);
+        }
+
+        subscriptionTrigger = data;
       }
     } catch (error) {
       console.log("Error fetching subscription trigger: " + error);
@@ -50,7 +61,8 @@
           action: "createSubscriptionTrigger",
           data: {
             subscription_trigger_type: "email",
-            subscription_trigger_status: subscriptionTrigger.subscription_trigger_status
+            subscription_trigger_status: subscriptionTrigger.subscription_trigger_status,
+            config: JSON.stringify(subscriptionTrigger.config)
           }
         })
       });
@@ -125,7 +137,7 @@
   <Card.Root class="mt-4">
     <Card.Header class="border-b">
       <Card.Title class="relative">
-        Updates Subscription
+        Events Subscription
         {#if pageLoading}
           <Loader size="16" class="absolute right-0 top-0 animate-spin text-gray-500" />
         {/if}
@@ -147,28 +159,97 @@
           </a>
         </div>
       {/if}
-      <div class="flex w-full gap-x-2">
-        <div class="mb-4">
-          <label class="  mt-5 flex w-[375px] cursor-pointer items-center justify-between rounded-md border p-2">
-            <span class="text-sm font-medium"> Send updates to your subscribers </span>
+      <div class="mt-5 grid grid-cols-2 gap-y-2">
+        <!-- Checkbox -->
+        <div class="border-b pb-3">
+          <label class="cursor-pointer">
             <input
-              type="checkbox"
-              disabled={!canSendEmail}
-              value=""
-              class="peer sr-only"
-              checked={subscriptionTrigger.subscription_trigger_status === "ACTIVE"}
               on:change={(e) => {
-                subscriptionTrigger.subscription_trigger_status = e.target.checked ? "ACTIVE" : "INACTIVE";
-                saveSubscriptionTrigger();
+                subscriptionTrigger.config.createIncident = e.target.checked;
+                saveSubscriptionTrigger(); // Save the subscription trigger after change
               }}
+              class="mr-1"
+              type="checkbox"
+              checked={subscriptionTrigger.config.createIncident}
+              disabled={!canSendEmail}
             />
-            <div
-              class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 rtl:peer-checked:after:-translate-x-full"
-            ></div>
+            Event Triggered
           </label>
+          <p class="pl-6 text-xs font-medium text-muted-foreground">
+            Send notification when a new event like incident or maintenance is created.
+          </p>
+        </div>
+        <div class="border-b pb-3">
+          <label class="cursor-pointer">
+            <input
+              on:change={(e) => {
+                subscriptionTrigger.config.updateIncident = e.target.checked;
+                saveSubscriptionTrigger(); // Save the subscription trigger after change
+              }}
+              class="mr-1"
+              type="checkbox"
+              checked={subscriptionTrigger.config.updateIncident}
+              disabled={!canSendEmail}
+            />
+            Event Updated
+          </label>
+          <p class="pl-6 text-xs font-medium text-muted-foreground">Send notification when an event is updated.</p>
+        </div>
+        <div class="border-b pb-3">
+          <label class="cursor-pointer">
+            <input
+              on:change={(e) => {
+                subscriptionTrigger.config.insertIncidentMonitor = e.target.checked;
+                saveSubscriptionTrigger(); // Save the subscription trigger after change
+              }}
+              class="mr-1"
+              type="checkbox"
+              checked={subscriptionTrigger.config.insertIncidentMonitor}
+              disabled={!canSendEmail}
+            />
+            Update Monitor in Event
+          </label>
+          <p class="pl-6 text-xs font-medium text-muted-foreground">
+            Send notification when a new monitor is added to an event.
+          </p>
+        </div>
+        <div class="border-b pb-3">
+          <label class="cursor-pointer">
+            <input
+              on:change={(e) => {
+                subscriptionTrigger.config.updateIncidentComment = e.target.checked;
+                saveSubscriptionTrigger(); // Save the subscription trigger after change
+              }}
+              class="mr-1"
+              type="checkbox"
+              checked={subscriptionTrigger.config.updateIncidentComment}
+              disabled={!canSendEmail}
+            />
+            Update Incident Comment
+          </label>
+          <p class="pl-6 text-xs font-medium text-muted-foreground">
+            Send notification when an event comment is updated.
+          </p>
+        </div>
+        <div class=" pb-3">
+          <label class="cursor-pointer">
+            <input
+              on:change={(e) => {
+                subscriptionTrigger.config.insertIncidentComment = e.target.checked;
+                saveSubscriptionTrigger(); // Save the subscription trigger after change
+              }}
+              class="mr-1"
+              type="checkbox"
+              checked={subscriptionTrigger.config.insertIncidentComment}
+              disabled={!canSendEmail}
+            />
+            Insert Incident Comment
+          </label>
+          <p class="pl-6 text-xs font-medium text-muted-foreground">
+            Send notification when a new comment is added to an event.
+          </p>
         </div>
       </div>
-      <div></div>
     </Card.Content>
   </Card.Root>
 

@@ -1441,20 +1441,22 @@ export const CreateSubscriptionTrigger = async (data) => {
   if (!subscriptionTrigger) {
     await db.insertSubscriptionTrigger({
       subscription_trigger_type: data.subscription_trigger_type,
-      subscription_trigger_status: data.subscription_trigger_status,
+      subscription_trigger_status: "ACTIVE",
+      config: data.config,
     });
   } else {
     await db.updateSubscriptionTrigger({
       id: subscriptionTrigger.id,
-      subscription_trigger_status: data.subscription_trigger_status,
+      subscription_trigger_status: "ACTIVE",
       subscription_trigger_type: subscriptionTrigger.subscription_trigger_type,
+      config: data.config,
     });
   }
 
   return {
-    subscription_trigger_id: data.subscription_trigger_id,
     subscription_trigger_type: data.subscription_trigger_type,
     subscription_trigger_status: data.subscription_trigger_status,
+    config: data.config,
   };
 };
 
