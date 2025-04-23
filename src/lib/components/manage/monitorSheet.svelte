@@ -1428,8 +1428,11 @@
                   }}
                   checked={newMonitor.gamedigConfig.requestRules}
                 />
-                <span class="ml-2 text-sm">Request additionnal rules</span>
-                <p class="my-1 text-xs text-muted-foreground">TODO</p>
+                <span class="ml-2 text-sm">Request additional rules</span>
+                <p class="my-1 text-xs text-muted-foreground">
+                  Valve games can provide additional 'rules' to Gamedig monitors. 
+                  If checked, they will be available in `reponseRaw.raw`, beware that it may increase query time.
+                </p>
               </label>
             </div>
           {/if}
