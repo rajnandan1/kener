@@ -36,6 +36,10 @@ export async function POST({ request }) {
     return json({ error: authError.message }, { status: 401 });
   }
 
+  if (payload.id) {
+    return json({ error: 'monitor id must be empty or 0' }, { status: 400 });
+  }
+
   try {
     await CreateMonitor(payload);
   } catch (error) {

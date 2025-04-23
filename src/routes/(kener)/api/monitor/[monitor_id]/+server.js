@@ -45,13 +45,24 @@ export async function PUT({ request, params }) {
     return json({ error: `id mismatch: payload: ${payload.id}, url: ${id}` }, { status: 400 });
   }
 
+  let resp;
+  try {
+    resp = await GetMonitors({ id: id });
+  } catch (error) {
+    resp = { error: error.message };
+    return json(resp, { status: 500 });
+  }
+
+  if (resp.length === 0) {
+    return json({ error: "monitor does not exist" }, { status: 404 });
+  }
+
   try {
     await UpdateMonitor(payload);
   } catch (error) {
     return json({ error: error.message }, { status: 500 });
   }
 
-  let resp;
   try {
     resp = await GetMonitors({ tag: payload.tag });
   } catch (error) {
