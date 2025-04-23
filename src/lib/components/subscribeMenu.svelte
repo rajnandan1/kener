@@ -9,6 +9,7 @@
   import autoAnimate from "@formkit/auto-animate";
   import Loader from "lucide-svelte/icons/loader";
   import AlarmClockCheck from "lucide-svelte/icons/alarm-clock-check";
+  import Logout from "lucide-svelte/icons/log-out";
   import ChevronLeft from "lucide-svelte/icons/chevron-left";
 
   let apiError = "";
@@ -231,16 +232,19 @@
     <div class="flex flex-col gap-2 px-4">
       {#if subsInfo.email}
         <div
-          class="flex justify-between rounded-md border stroke-secondary-foreground px-2 py-2 text-xs font-medium text-muted-foreground"
+          class="flex justify-between rounded-md stroke-secondary-foreground py-2 text-xs font-medium text-muted-foreground"
         >
           <span class="mt-1 text-xs font-semibold text-muted-foreground">You are logged in as {subsInfo.email}</span>
-          <Button
-            variant="secondary"
-            class="bounce-left  h-6 justify-start   text-xs font-semibold  text-muted-foreground"
-            on:click={doLogout}
-          >
-            Logout
-          </Button>
+          <div>
+            <Button
+              variant="ghost"
+              size="icon"
+              class="   h-6 w-6 justify-center   text-xs font-semibold  text-muted-foreground"
+              on:click={doLogout}
+            >
+              <Logout class="  h-4 w-4" />
+            </Button>
+          </div>
         </div>
       {/if}
       <div class="mt-2">
