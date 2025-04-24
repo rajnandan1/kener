@@ -258,6 +258,10 @@ function isValidRange(value, min, max) {
   const num = Number(value);
   return !isNaN(num) && num >= min && num <= max;
 }
+function IsValidPort(port) {
+  return isValidRange(port, 1, 65535);
+}
+
 function SortMonitor(monitorSort, resp) {
   let monitors = [];
   if (!!monitorSort && monitorSort.length > 0) {
@@ -652,6 +656,7 @@ export {
   IsValidHost,
   IsValidNameServer,
   IsValidURL,
+  IsValidPort,
   ValidateCronExpression,
   SortMonitor,
   RandomString,

@@ -27,6 +27,7 @@
     IsValidNameServer,
     AllGamesList,
     getGameFromId,
+    IsValidPort
   } from "$lib/clientTools.js";
   import { GAMEDIG_SOCKET_TIMEOUT } from "$lib/anywhere";
 
@@ -243,7 +244,7 @@
             return;
           }
           //validating port
-          if (hosts[i].port < 1 || hosts[i].port > 65535) {
+          if (!IsValidPort(hosts[i].port)) {
             invalidFormMessage = "Port should be valid";
             return;
           }
@@ -317,12 +318,7 @@
         return;
       }
       //validating port
-      if (
-        !!!newMonitor.sslConfig.port ||
-        isNaN(newMonitor.sslConfig.port) ||
-        newMonitor.sslConfig.port < 1 ||
-        newMonitor.sslConfig.port > 65535
-      ) {
+      if (!IsValidPort(newMonitor.sslConfig.port)) {
         invalidFormMessage = "Port should be valid";
         return;
       }
@@ -416,13 +412,7 @@
         return;
       }
       // validating port
-      // NOTE: refactoring this into a function so that it is defined only one time.
-      if (
-        !!!newMonitor.gamedigConfig.port ||
-        isNaN(newMonitor.gamedigConfig.port) ||
-        newMonitor.gamedigConfig.port < 1 ||
-        newMonitor.gamedigConfig.port > 65535
-      ) {
+      if (!IsValidPort(newMonitor.gamedigConfig.port)) {
         invalidFormMessage = "Port should be valid";
         return;
       }
@@ -1430,8 +1420,8 @@
                 />
                 <span class="ml-2 text-sm">Request additional rules</span>
                 <p class="my-1 text-xs text-muted-foreground">
-                  Valve games can provide additional 'rules' to Gamedig monitors. 
-                  If checked, they will be available in `reponseRaw.raw`, beware that it may increase query time.
+                  Valve games can provide additional 'rules' to Gamedig monitors. If checked, they will be available in
+                  `reponseRaw.raw`, beware that it may increase query time.
                 </p>
               </label>
             </div>
