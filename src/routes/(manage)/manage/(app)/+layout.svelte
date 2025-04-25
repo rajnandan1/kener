@@ -138,10 +138,17 @@
           </DropdownMenu.Group>
         </DropdownMenu.Content>
       </DropdownMenu.Root>
-      <Button variant="secondary" class="ml-4" href="{base}/" rel="external">
-        <Play class="mr-2 h-4 w-4" />
-        <span>Preview</span>
-      </Button>
+      <div class="ml-3">
+        <a
+          type="button"
+          href="{base}/"
+          rel="external"
+          class=" flex gap-x-1 rounded-lg bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700 px-3.5 py-2.5 text-center text-sm font-medium text-white hover:bg-gradient-to-br focus:ring-4 focus:ring-blue-300 dark:focus:ring-blue-800"
+        >
+          <Play class="mr-1 mt-0.5 inline-block h-4 w-4" />
+          <span> Preview </span>
+        </a>
+      </div>
     </div>
   </div>
 </header>

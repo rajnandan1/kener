@@ -1,5 +1,4 @@
 // @ts-nocheck
-// @ts-nocheck
 import {
   IsValidURL,
   IsValidGHObject,
@@ -16,15 +15,28 @@ import db from "../db/db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Resend } from "resend";
+import Queue from "queue";
 
 import crypto from "crypto";
 import { format, subMonths, addMonths, startOfMonth } from "date-fns";
 import { UP, DOWN, DEGRADED, NO_DATA, REALTIME, SIGNAL } from "../constants.js";
 import { GetMinuteStartNowTimestampUTC, GetNowTimestampUTC, ReplaceAllOccurrences, ValidateEmail } from "../tool.js";
 import getSMTPTransport from "../notification/smtps.js";
+import fs from "fs-extra";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const saltRounds = 10;
 const DUMMY_SECRET = "DUMMY_SECRET";
+
+const eventQueue = new Queue({
+  concurrency: 10, // Number of tasks that can run concurrently
+  timeout: 10000, // Timeout in ms after which a task will be considered as failed (optional)
+  autostart: true, // Automatically start the queue (optional)
+});
 
 const siteDataKeys = [
   {
@@ -222,6 +234,64 @@ const siteDataKeys = [
     data_type: "object",
   },
 ];
+
+export const PushDataToQueue = async (eventID, eventName, eventData) => {
+  //fetch subscription trigger config from db of email type
+  let subscription = await db.getSubscriptionTriggerByType("email");
+  if (!subscription) {
+    return;
+  }
+  let config;
+  try {
+    config = JSON.parse(subscription.config);
+  } catch (e) {
+    return;
+  }
+
+  if (!config[eventName]) {
+    return;
+  }
+
+  //get incident data from db using incident id
+  let tags = ["_"];
+  let monitors = await db.getIncidentMonitorsByIncidentID(eventID); //get email template
+  if (monitors) {
+    for (let i = 0; i < monitors.length; i++) {
+      const monitor = monitors[i];
+      tags.push(monitor.monitor_tag);
+    }
+  }
+  //get all the eligible emails that are there in subscription table
+
+  //get email template
+  const emailTemplate = fs.readFileSync(path.join(__dirname, "../templates/event_update.html"), "utf8");
+  let siteData = await GetAllSiteData();
+  let base = !!process.env.KENER_BASE_PATH ? process.env.KENER_BASE_PATH : "";
+  let emailData = {
+    brand_name: siteData.siteName,
+    logo_url: await GetSiteLogoURL(siteData.siteURL, siteData.logo, base),
+    incident_url: await GetSiteLogoURL(siteData.siteURL, `/event/${eventData.incident_type + "-" + eventID}`, base),
+    update_message: eventData.message,
+    title: `[${eventData.incident_type}] ` + eventData.title,
+  };
+
+  let eligibleEmails = await db.getSubscriberEmails(tags);
+  if (eligibleEmails) {
+    for (let i = 0; i < eligibleEmails.length; i++) {
+      let email = eligibleEmails[i];
+      eventQueue.push(async (cb) => {
+        await SendEmailWithTemplate(
+          emailTemplate,
+          emailData,
+          email.subscriber_send,
+          `[${eventData.incident_type}] ${eventData.title}`,
+          eventData.message,
+        );
+        cb(eventData);
+      });
+    }
+  }
+};
 
 export function InsertKeyValue(key, value) {
   let f = siteDataKeys.find((k) => k.key === key);
@@ -684,6 +754,10 @@ export const CreateIncident = async (data) => {
   }
 
   let newIncident = await db.createIncident(incident);
+  PushDataToQueue(newIncident.id, "createIncident", {
+    message: `${incident.incident_type} Created`,
+    ...incident,
+  });
   return {
     incident_id: newIncident.id,
   };
@@ -709,6 +783,26 @@ export const UpdateIncident = async (incident_id, data) => {
     state: data.state || incidentExists.state,
     end_date_time: data.end_date_time || incidentExists.end_date_time,
   };
+
+  //check if updateObject same as incidentExists
+  if (
+    JSON.stringify(updateObject) ===
+    JSON.stringify({
+      id: incidentExists.id,
+      title: incidentExists.title,
+      start_date_time: incidentExists.start_date_time,
+      status: incidentExists.status,
+      state: incidentExists.state,
+      end_date_time: incidentExists.end_date_time,
+    })
+  ) {
+    PushDataToQueue(incident_id, "updateIncident", {
+      message: `${incidentExists.incident_type} has been updated to ${updateObject.state}`,
+      ...incidentExists,
+      ...updateObject,
+    });
+  }
+
   return await db.updateIncident(updateObject);
 };
 
@@ -769,6 +863,11 @@ export const AddIncidentMonitor = async (incident_id, monitor_tag, monitor_impac
     throw new Error(`Incident with id ${incident_id} does not exist`);
   }
 
+  PushDataToQueue(incident_id, "insertIncidentMonitor", {
+    title: incidentExists.title,
+    message: `Monitor ${monitor_tag} added to ${incidentExists.incident_type}. Impact is ${monitor_impact}`,
+    ...incidentExists,
+  });
   return await db.insertIncidentMonitor(incident_id, monitor_tag, monitor_impact);
 };
 
@@ -796,6 +895,11 @@ export const UpdateCommentByID = async (incident_id, comment_id, comment, state,
   if (!commentExists) {
     throw new Error(`Comment with id ${comment_id} does not exist`);
   }
+  PushDataToQueue(incident_id, "updateIncidentComment", {
+    title: incidentExists.title,
+    message: `${comment}`,
+    ...incidentExists,
+  });
   let c = await db.updateIncidentCommentByID(comment_id, comment, state, commented_at);
   if (c) {
     let incidentUpdate = {
@@ -821,7 +925,11 @@ export const AddIncidentComment = async (incident_id, comment, state, commented_
   if (!!!state) {
     state = incidentExists.state;
   }
-
+  PushDataToQueue(incident_id, "insertIncidentComment", {
+    title: incidentExists.title,
+    message: `${comment}`,
+    ...incidentExists,
+  });
   let c = await db.insertIncidentComment(incident_id, comment, state, commented_at);
   let incidentType = incidentExists.incident_type;
   //update incident state

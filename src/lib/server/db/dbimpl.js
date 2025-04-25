@@ -1061,6 +1061,16 @@ class DbImpl {
     return result.count || 0;
   }
 
+  //get all subscriber emails from subscriptions table that are of given tag or = _
+  async getSubscriberEmails(monitor_tags) {
+    return await this.knex("subscriptions")
+      .join("subscribers", "subscribers.id", "subscriptions.subscriber_id")
+      .distinct("subscribers.subscriber_send as subscriber_send")
+      .where("subscriptions.subscriptions_status", "ACTIVE")
+      .whereIn("subscriptions.subscriptions_monitors", monitor_tags)
+      .orderBy("subscriber_send");
+  }
+
   //getSubscriberById
   async getSubscriberById(id) {
     return await this.knex("subscribers")
