@@ -3,7 +3,6 @@
   import { page } from "$app/stores";
   export let data;
   let incident = data.incident;
-  console.log(">>>>>>----  +page:6 ", $page);
 </script>
 
 <svelte:head>
