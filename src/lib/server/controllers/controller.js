@@ -1003,7 +1003,7 @@ export const GetSMTPFromENV = () => {
     smtp_user: process.env.SMTP_USER,
     smtp_from_email: process.env.SMTP_FROM_EMAIL,
     smtp_pass: process.env.SMTP_PASS,
-    smtp_secure: !!process.env.SMTP_SECURE,
+    smtp_secure: !!Number(process.env.SMTP_SECURE),
   };
 };
 
