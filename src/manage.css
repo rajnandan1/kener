@@ -1,20 +1,6 @@
 .tabs [data-state="active"] {
   border-color: orange;
 }
-.copybtn .copy-btn {
-  transform: scale(1);
-  transition: transform 0.15s;
-}
-.copybtn .check-btn {
-  transform: scale(0);
-  transition: transform 0.15s;
-}
-.copybtn:focus .copy-btn {
-  transform: scale(0);
-}
-.copybtn:focus .check-btn {
-  transform: scale(1);
-}
 
 input,
 [data-bits-select-trigger],

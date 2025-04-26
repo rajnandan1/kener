@@ -282,6 +282,11 @@ class DbImpl {
   async getMonitorsByTags(tags) {
     return await this.knex("monitors").whereIn("tag", tags);
   }
+
+  async getMonitorsByTag(tag) {
+    return await this.knex("monitors").where("tag", tag).first();
+  }
+
   //update alert to inactive given monitor_tag, monitor_status, given id
   async updateAlertStatus(id, alert_status) {
     return await this.knex("monitor_alerts").where({ id }).update({
@@ -605,6 +610,10 @@ class DbImpl {
 
     if (filter && filter.state) {
       query = query.andWhere("state", filter.state);
+    }
+
+    if (filter && filter.id) {
+      query = query.andWhere("id", filter.id);
     }
 
     query = query

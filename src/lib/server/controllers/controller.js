@@ -270,7 +270,11 @@ export const PushDataToQueue = async (eventID, eventName, eventData) => {
   let emailData = {
     brand_name: siteData.siteName,
     logo_url: await GetSiteLogoURL(siteData.siteURL, siteData.logo, base),
-    incident_url: await GetSiteLogoURL(siteData.siteURL, `/event/${eventData.incident_type + "-" + eventID}`, base),
+    incident_url: await GetSiteLogoURL(
+      siteData.siteURL,
+      `/view/event/${eventData.incident_type.toLowerCase()}-${eventID}`,
+      base,
+    ),
     update_message: eventData.message,
     title: `[${eventData.incident_type}] ` + eventData.title,
   };
@@ -1440,6 +1444,11 @@ export const DeleteSubscriberByID = async (id) => {
 //get subscriptions by subscriber id
 export const GetSubscriptionsBySubscriberID = async (subscriber_id) => {
   return await db.getSubscriptionsBySubscriberId(subscriber_id);
+};
+
+//getMonitorsByTag
+export const GetMonitorsByTag = async (tag) => {
+  return await db.getMonitorsByTag(tag);
 };
 
 export const GetSiteMap = async (cookies) => {
