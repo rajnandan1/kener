@@ -1,15 +1,13 @@
 // @ts-nocheck
 import {
-  IsValidURL,
-  IsValidGHObject,
-  IsValidObject,
-  IsValidNav,
-  IsValidHero,
-  IsValidI18n,
   IsValidAnalytics,
   IsValidColors,
-  IsValidJSONString,
+  IsValidHero,
+  IsValidI18n,
   IsValidJSONArray,
+  IsValidJSONString,
+  IsValidNav,
+  IsValidURL
 } from "./validators.js";
 import db from "../db/db.js";
 import bcrypt from "bcrypt";
@@ -18,8 +16,8 @@ import { Resend } from "resend";
 import Queue from "queue";
 
 import crypto from "crypto";
-import { format, subMonths, addMonths, startOfMonth } from "date-fns";
-import { UP, DOWN, DEGRADED, NO_DATA, REALTIME, SIGNAL } from "../constants.js";
+import { addMonths, format, startOfMonth, subMonths } from "date-fns";
+import { DEGRADED, DOWN, NO_DATA, SIGNAL, UP } from "../constants.js";
 import { GetMinuteStartNowTimestampUTC, GetNowTimestampUTC, ReplaceAllOccurrences, ValidateEmail } from "../tool.js";
 import getSMTPTransport from "../notification/smtps.js";
 import fs from "fs-extra";
@@ -352,6 +350,22 @@ export const CreateUpdateMonitor = async (monitor) => {
   }
 };
 
+export const CreateMonitor = async (monitor) => {
+  let monitorData = { ...monitor };
+  if (monitorData.id) {
+    throw new Error('monitor id must be empty or 0');
+  }
+  return await db.insertMonitor(monitorData);
+};
+
+export const UpdateMonitor = async (monitor) => {
+  let monitorData = { ...monitor };
+  if (!!!monitorData.id || monitorData.id === 0) {
+    throw new Error('monitor id cannot be empty or 0');
+  }
+  return await db.updateMonitor(monitorData);
+};
+
 export const GetMonitors = async (data) => {
   return await db.getMonitors(data);
 };
@@ -555,11 +569,13 @@ export const GetAllAlertsPaginated = async (data) => {
     total: await db.getMonitorAlertsCount(),
   };
 };
+
 function generateApiKey() {
   const prefix = "kener_";
   const randomKey = crypto.randomBytes(32).toString("hex"); // 64-character hexadecimal string
   return prefix + randomKey;
 }
+
 function createHash(apiKey) {
   return crypto
     .createHmac("sha256", process.env.KENER_SECRET_KEY || DUMMY_SECRET)
