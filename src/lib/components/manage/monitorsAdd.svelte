@@ -15,18 +15,26 @@
   import { onMount } from "svelte";
   import * as Card from "$lib/components/ui/card";
   import * as Select from "$lib/components/ui/select";
-  import { storeSiteData, SortMonitor, RandomString, AllGamesList } from "$lib/clientTools.js";
+  import AllGamesListRaw from "$lib/all-games-list.json?raw";
+  import { storeSiteData, SortMonitor, RandomString } from "$lib/clientTools.js";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
-  import { DefaultAPIEval, DefaultTCPEval, DefaultPingEval, DefaultGamedigEval, GAMEDIG_TIMEOUT } from "$lib/anywhere.js";
+  import {
+    DefaultAPIEval,
+    DefaultTCPEval,
+    DefaultPingEval,
+    DefaultGamedigEval,
+    GAMEDIG_TIMEOUT
+  } from "$lib/anywhere.js";
 
   export let categories = [];
   export let colorDown = "#777";
   export let colorDegraded = "#777";
   export let monitorSort = [];
+  let AllGamesList = JSON.parse(AllGamesListRaw);
   let monitors = [];
   let status = "ACTIVE";
   let showAddMonitor = false;

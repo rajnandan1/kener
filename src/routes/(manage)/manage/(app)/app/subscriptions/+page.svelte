@@ -156,7 +156,7 @@
             class="text-blue-600 underline"
           >
             here
-          </a>
+          </a>. You will either have to set up SMTP or use Resend.
         </div>
       {/if}
       <div class="mt-5 grid grid-cols-2 gap-y-2">

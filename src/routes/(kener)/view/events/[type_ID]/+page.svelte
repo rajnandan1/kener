@@ -14,6 +14,7 @@
   <title>
     {data.title}
   </title>
+  <meta name="description" content={data.title} />
 </svelte:head>
 
 <section class="section-view-event-id mx-auto mb-8 mt-20 flex max-w-[820px] flex-1 flex-col items-start justify-center">

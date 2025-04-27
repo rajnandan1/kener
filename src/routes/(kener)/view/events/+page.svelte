@@ -29,6 +29,11 @@
   // Additional logic can be added here
 </script>
 
+<svelte:head>
+  <title>{l(data.lang, "Upcoming Maintenances")}</title>
+  <meta name="description" content={l(data.lang, "Upcoming Maintenances")} />
+  <link rel="canonical" href={`${base}/view/events`} />
+</svelte:head>
 <div class="mt-10"></div>
 <section class="section-back mx-auto my-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center">
   <div class="  mx-auto min-w-full max-w-[655px] rounded-md px-4 py-12 lg:flex lg:items-center">
