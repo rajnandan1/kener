@@ -106,10 +106,12 @@
 <div class="section-actions mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-center justify-center">
   <div class="flex w-full flex-wrap gap-x-2 rounded-xl border">
     {#if data.canSendEmail}
-      <Button variant="ghost" class="h-11 rounded-xl" on:click={openSubscribeMenu}>Subscribe to Updates</Button>
+      <Button variant="ghost" class="h-11 rounded-xl" on:click={openSubscribeMenu}>
+        {l(data.lang, "Subscribe to Updates")}
+      </Button>
     {/if}
     <Button rel="external" href="{base}/view/events?incident_type=MAINTENANCE" variant="ghost" class="h-11 rounded-xl">
-      Upcoming Maintenances
+      {l(data.lang, "Upcoming Maintenances")}
     </Button>
   </div>
 </div>

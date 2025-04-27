@@ -11,6 +11,7 @@
   import AlarmClockCheck from "lucide-svelte/icons/alarm-clock-check";
   import Logout from "lucide-svelte/icons/log-out";
   import ChevronLeft from "lucide-svelte/icons/chevron-left";
+  import { l } from "$lib/i18n/client";
 
   let apiError = "";
   let view = "loading";
@@ -194,18 +195,23 @@
 
 <div class="flex flex-col gap-2 pb-4" use:autoAnimate>
   <div class="relative mb-2 scroll-m-20 px-4 pt-4 text-xl font-medium tracking-tight">
-    <p>Manage Subscription</p>
+    <p>
+      {l($page.data.lang, "Manage Subscription")}
+    </p>
   </div>
 
   {#if view === "login"}
     <div class="flex flex-col gap-2 px-4">
       <div>
         <p class="mb-2 text-xs font-semibold text-muted-foreground">
-          Enter your email to log in. If you are not subscribed, you will be prompted to subscribe.
+          {l(
+            $page.data.lang,
+            "Enter your email to log in. If you are not subscribed, you will be prompted to subscribe."
+          )}
         </p>
 
         <div class="relative">
-          <Input type="email" placeholder="Enter your email" bind:value={login.userEmail} />
+          <Input type="email" placeholder={l($page.data.lang, "Enter your email")} bind:value={login.userEmail} />
         </div>
       </div>
     </div>
@@ -215,7 +221,7 @@
         <p class="text-xs font-semibold text-destructive">{apiError}</p>
       {/if}
       <Button class="w-full" disabled={callingAPI || !login.userEmail} on:click={doLogin}>
-        Login
+        {l($page.data.lang, "Login")}
         {#if callingAPI}
           <Loader class="ml-2 h-4 w-4 animate-spin" />
         {/if}
@@ -234,7 +240,9 @@
         <div
           class="flex justify-between rounded-md stroke-secondary-foreground py-2 text-xs font-medium text-muted-foreground"
         >
-          <span class="mt-1 text-xs font-semibold text-muted-foreground">You are logged in as {subsInfo.email}</span>
+          <span class="mt-1 text-xs font-semibold text-muted-foreground">
+            {l($page.data.lang, "You are logged in as %email", { email: subsInfo.email })}
+          </span>
           <div>
             <Button
               variant="ghost"
@@ -249,7 +257,7 @@
       {/if}
       <div class="mt-2">
         <label class="flex w-full cursor-pointer items-center justify-between">
-          <span class="text-sm font-medium"> Subscribe to all monitors </span>
+          <span class="text-sm font-medium">{l($page.data.lang, "Subscribe to all monitors")}</span>
           <input
             type="checkbox"
             value=""
@@ -272,7 +280,7 @@
       <div class="flex flex-col gap-2">
         <p class="px-4">
           <span class="text-xs font-semibold text-muted-foreground">
-            Please select specific monitors to receive updates from.
+            {l($page.data.lang, "Please select specific monitors to receive updates from.")}
           </span>
         </p>
         <div class="flex max-h-96 flex-col gap-2 overflow-y-auto px-4">
@@ -307,9 +315,9 @@
       {/if}
       <Button class="w-full" disabled={callingAPI} on:click={createNewUserSubscription}>
         {#if subsInfo.monitors.length > 0}
-          Update Subscription
+          {l($page.data.lang, "Update Subscription")}
         {:else}
-          Subscribe
+          {l($page.data.lang, "Subscribe")}
         {/if}
 
         {#if callingAPI}
@@ -328,13 +336,13 @@
           on:click={() => (view = "login")}
         >
           <ChevronLeft class="arrow mr-1 h-5 w-5" />
-          Change Email
+          {l($page.data.lang, "Change Email")}
         </Button>
         <p class="mb-2 text-xs text-muted-foreground">
-          We have sent a code to your email. Please enter it below to confirm your login
+          {l($page.data.lang, "We have sent a code to your email. Please enter it below to confirm your login")}
         </p>
 
-        <Input type="text" placeholder="Enter the code" bind:value={login.verificationCode} />
+        <Input type="text" placeholder={l($page.data.lang, "Enter the code")} bind:value={login.verificationCode} />
       </div>
     </div>
     <div class="mt-2 flex flex-col gap-2 px-4">
@@ -342,7 +350,7 @@
         <p class="text-xs font-semibold text-destructive">{apiError}</p>
       {/if}
       <Button class="w-full" disabled={callingAPI || !login.verificationCode} on:click={verifyLogin}>
-        Confirm Login
+        {l($page.data.lang, "Confirm Login")}
 
         {#if callingAPI}
           <Loader class="ml-2 h-4 w-4 animate-spin" />
