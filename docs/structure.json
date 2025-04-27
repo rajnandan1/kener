@@ -155,6 +155,11 @@
           "title": "Heartbeat Monitor",
           "link": "/docs/monitors-heartbeat",
           "file": "/monitors-heartbeat.md"
+        },
+        {
+          "title": "Gamedig Monitor",
+          "link": "/docs/monitors-gamedig",
+          "file": "/monitors-gamedig.md"
         }
       ]
     },

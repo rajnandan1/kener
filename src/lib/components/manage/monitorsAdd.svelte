@@ -16,13 +16,13 @@
   import { onMount } from "svelte";
   import * as Card from "$lib/components/ui/card";
   import * as Select from "$lib/components/ui/select";
-  import { storeSiteData, SortMonitor, RandomString } from "$lib/clientTools.js";
+  import { storeSiteData, SortMonitor, RandomString, AllGamesList } from "$lib/clientTools.js";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
-  import { DefaultAPIEval, DefaultTCPEval, DefaultPingEval } from "$lib/anywhere.js";
+  import { DefaultAPIEval, DefaultTCPEval, DefaultPingEval, DefaultGamedigEval, GAMEDIG_TIMEOUT } from "$lib/anywhere.js";
 
   export let categories = [];
   export let colorDown = "#777";
@@ -121,6 +121,15 @@
         degradedRemainingMinutes: 1,
         downRemainingMinutes: 2,
         secretString: RandomString(32)
+      },
+      gamedigConfig: {
+        gameId: AllGamesList[0].id,
+        host: "",
+        port: "",
+        timeout: GAMEDIG_TIMEOUT,
+        guessPort: false,
+        requestRules: false,
+        eval: DefaultGamedigEval
       }
     };
   }
@@ -159,6 +168,8 @@
       newMonitor.sqlConfig = JSON.parse(newMonitor.type_data);
     } else if (newMonitor.monitor_type == "HEARTBEAT") {
       newMonitor.heartbeatConfig = JSON.parse(newMonitor.type_data);
+    } else if (newMonitor.monitor_type == "GAMEDIG") {
+      newMonitor.gamedigConfig = JSON.parse(newMonitor.type_data);
     }
     showAddMonitor = true;
   }

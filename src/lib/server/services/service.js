@@ -7,6 +7,7 @@ import GroupCall from "./groupCall.js";
 import SSLCall from "./sslCall.js";
 import SqlCall from "./sqlCall.js";
 import HeartbeatCall from "./heartbeatCall.js";
+import GamedigCall from "./gamedigCall.js";
 
 class Service {
   service;
@@ -30,6 +31,8 @@ class Service {
       this.service = new SqlCall(monitor);
     } else if (monitor.monitor_type === "HEARTBEAT") {
       this.service = new HeartbeatCall(monitor);
+    } else if (monitor.monitor_type === "GAMEDIG") {
+      this.service = new GamedigCall(monitor);
     } else {
       console.log("Invalid monitor.monitor_type ", monitor.monitor_type);
       process.exit(1);
