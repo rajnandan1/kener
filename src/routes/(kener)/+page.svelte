@@ -108,7 +108,9 @@
     {#if data.canSendEmail}
       <Button variant="ghost" class="h-11 rounded-xl" on:click={openSubscribeMenu}>Subscribe to Updates</Button>
     {/if}
-    <Button variant="ghost" class="h-11 rounded-xl">Upcoming Maintenances</Button>
+    <Button rel="external" href="{base}/view/events?incident_type=MAINTENANCE" variant="ghost" class="h-11 rounded-xl">
+      Upcoming Maintenances
+    </Button>
   </div>
 </div>
 {#if data.pageType != "home"}

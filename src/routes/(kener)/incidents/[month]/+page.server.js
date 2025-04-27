@@ -1,11 +1,6 @@
 // @ts-nocheck
 
-import {
-  GetMonitors,
-  GetIncidentsOpenHome,
-  GetIncidentsPage,
-  GetLocaleFromCookie,
-} from "$lib/server/controllers/controller.js";
+import { GetMonitors, GetIncidentsPage, GetLocaleFromCookie } from "$lib/server/controllers/controller.js";
 import { BeginningOfDay } from "$lib/server/tool.js";
 import db from "$lib/server/db/db.js";
 import { format, addDays, subDays, parse, getUnixTime, startOfMonth, endOfMonth } from "date-fns";

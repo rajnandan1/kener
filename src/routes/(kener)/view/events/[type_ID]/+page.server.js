@@ -7,6 +7,7 @@ export async function load({ parent, url, params, cookies }) {
   if (!!!typeID) {
     return {
       error: "Unknown event id",
+      title: "Unknown event id",
     };
   }
 
@@ -14,6 +15,7 @@ export async function load({ parent, url, params, cookies }) {
   if (typeID.split("-").length !== 2) {
     return {
       error: "Unknown event id",
+      title: "Unknown event id",
     };
   }
 
@@ -47,5 +49,5 @@ export async function load({ parent, url, params, cookies }) {
 
   incident.monitors = monitors;
 
-  return { incident };
+  return { incident, title: incident.title };
 }

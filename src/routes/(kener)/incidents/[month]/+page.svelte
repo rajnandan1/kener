@@ -18,10 +18,6 @@
 
   let incidentSmartDates = {};
 
-  function tsToDate(mnt) {
-    return mnt.unix();
-  }
-
   incidents.forEach((incident) => {
     let startTime = incident.start_date_time;
 

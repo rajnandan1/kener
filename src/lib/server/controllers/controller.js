@@ -272,7 +272,7 @@ export const PushDataToQueue = async (eventID, eventName, eventData) => {
     logo_url: await GetSiteLogoURL(siteData.siteURL, siteData.logo, base),
     incident_url: await GetSiteLogoURL(
       siteData.siteURL,
-      `/view/event/${eventData.incident_type.toLowerCase()}-${eventID}`,
+      `/view/events/${eventData.incident_type.toLowerCase()}-${eventID}`,
       base,
     ),
     update_message: eventData.message,
@@ -985,6 +985,45 @@ export const GetIncidentByIDDashboard = async (data) => {
   let incident = await db.getIncidentById(data.incident_id);
 
   return incident;
+};
+
+export const GetIncidentsPaginated = async (page, limit, filter, direction) => {
+  let incidents = await db.getIncidentsPaginated(page, limit, filter, direction);
+
+  let allMonitors = {};
+
+  for (let i = 0; i < incidents.length; i++) {
+    let incidentMonitors = await GetIncidentMonitors(incidents[i].id);
+    incidents[i].monitors = incidentMonitors;
+  }
+
+  //for each monitor tag, in monitorsTagAndImpact for every incident, call get monitor by tag
+  for (let i = 0; i < incidents.length; i++) {
+    for (let j = 0; j < incidents[i].monitors.length; j++) {
+      let monitorTag = incidents[i].monitors[j].monitor_tag;
+      let monitorImpact = incidents[i].monitors[j].monitor_impact;
+      if (!allMonitors[monitorTag]) {
+        let monitor = await db.getMonitorByTag(monitorTag);
+        if (monitor) {
+          allMonitors[monitorTag] = {
+            id: monitor.id,
+            tag: monitor.tag,
+            name: monitor.name,
+            image: monitor.image,
+            impact_type: monitorImpact,
+          };
+        }
+      }
+      incidents[i].monitors[j] = allMonitors[monitorTag];
+    }
+  }
+
+  //get comments
+  for (let i = 0; i < incidents.length; i++) {
+    incidents[i].comments = await GetIncidentActiveComments(incidents[i].id);
+  }
+
+  return incidents;
 };
 
 export const GetIncidentsOpenHome = async (homeIncidentCount, start, end) => {

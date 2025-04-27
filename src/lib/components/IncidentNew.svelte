@@ -83,7 +83,7 @@
   onMount(async () => {
     let protocol = window.location.protocol;
     let domain = window.location.host;
-    pathMonitorLink = `${protocol}//${domain}${base}/view/event/${incident.incident_type}-${incident.id}`;
+    pathMonitorLink = `${protocol}//${domain}${base}/view/events/${incident.incident_type}-${incident.id}`;
   });
 </script>
 

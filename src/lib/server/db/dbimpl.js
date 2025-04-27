@@ -287,6 +287,52 @@ class DbImpl {
     return await this.knex("monitors").where("tag", tag).first();
   }
 
+  //get incidents paginated and direction, given a start timestamp, also might have filter on incident_type, incident_source
+  async getIncidentsPaginated(page, limit, filter, direction = "after") {
+    let query = this.knex("incidents").select("*").whereRaw("1=1");
+    if (filter && filter.status) {
+      query = query.andWhere("status", filter.status);
+    }
+    if (filter && filter.start && direction === "after") {
+      query = query.andWhere("start_date_time", ">=", filter.start);
+    }
+    if (filter && filter.start && direction === "before") {
+      query = query.andWhere("start_date_time", "<=", filter.start);
+    }
+    if (filter && filter.end && direction === "after") {
+      query = query.andWhere("start_date_time", ">=", filter.end);
+    }
+    if (filter && filter.end && direction === "before") {
+      query = query.andWhere("start_date_time", "<=", filter.end);
+    }
+
+    if (filter && filter.state) {
+      query = query.andWhere("state", filter.state);
+    }
+    if (filter && filter.id) {
+      query = query.andWhere("id", filter.id);
+    }
+    if (filter && filter.incident_type) {
+      query = query.andWhere("incident_type", filter.incident_type);
+    }
+    if (filter && filter.incident_source) {
+      query = query.andWhere("incident_source", filter.incident_source);
+    }
+    if (direction === "after") {
+      query = query
+        .orderBy("start_date_time", "asc")
+        .limit(limit)
+        .offset((page - 1) * limit);
+    } else {
+      query = query
+        .orderBy("start_date_time", "desc")
+        .limit(limit)
+        .offset((page - 1) * limit);
+    }
+
+    return await query;
+  }
+
   //update alert to inactive given monitor_tag, monitor_status, given id
   async updateAlertStatus(id, alert_status) {
     return await this.knex("monitor_alerts").where({ id }).update({
