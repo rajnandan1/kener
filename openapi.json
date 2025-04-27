@@ -26,6 +26,10 @@
 			"description": "APIs to interact with monitors"
 		},
 		{
+			"name": "MonitorStatus",
+			"description": "APIs to interact with monitor status"
+		},
+		{
 			"name": "Incidents",
 			"description": "APIs to integrate incidents"
 		}
@@ -457,7 +461,7 @@
 				"operationId": "updateMonitorStatus",
 				"summary": "Update status of a monitor",
 				"description": "Update status of a monitor at a given timestamp UTC",
-				"tags": ["Monitors"],
+				"tags": ["MonitorStatus"],
 				"security": [
 					{
 						"bearerAuth": []
@@ -516,7 +520,7 @@
 				"operationId": "getMonitorStatus",
 				"summary": "Get status of a monitor",
 				"description": "get status of a monitor at timestamp",
-				"tags": ["Monitors"],
+				"tags": ["MonitorStatus"],
 				"security": [
 					{
 						"bearerAuth": []
@@ -1097,6 +1101,900 @@
 					}
 				]
 			}
-		}
+		},
+    "/api/monitor": {
+      "get": {
+        "summary": "Search Monitor",
+        "description": "Search Monitor",
+        "operationId": "searchMonitor",
+        "tags": ["Monitors"],
+        "parameters": [
+          {
+            "name": "tag",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "{{tag}}"
+            },
+            "description": "Optional tag to filter results"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "category_name": {
+                        "type": "string",
+                        "example": "Home"
+                      },
+                      "created_at": {
+                        "type": "string",
+                        "example": "2025-04-23T11:14:49.822Z"
+                      },
+                      "cron": {
+                        "type": "string",
+                        "example": "* * * * *"
+                      },
+                      "day_degraded_minimum_count": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "day_down_minimum_count": {
+                        "type": "number",
+                        "example": 1
+                      },
+                      "default_status": {
+                        "type": "string",
+                        "example": "NONE"
+                      },
+                      "degraded_trigger": {
+                        "nullable": true,
+                        "example": null
+                      },
+                      "description": {
+                        "type": "string",
+                        "example": ""
+                      },
+                      "down_trigger": {
+                        "nullable": true,
+                        "example": null
+                      },
+                      "id": {
+                        "type": "number",
+                        "example": 15
+                      },
+                      "image": {
+                        "type": "string",
+                        "example": ""
+                      },
+                      "include_degraded_in_downtime": {
+                        "type": "string",
+                        "example": "NO"
+                      },
+                      "monitor_type": {
+                        "type": "string",
+                        "example": "SSL"
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "Github SSL Certificate"
+                      },
+                      "status": {
+                        "type": "string",
+                        "example": "ACTIVE"
+                      },
+                      "tag": {
+                        "type": "string",
+                        "example": "GithubSSL"
+                      },
+                      "type_data": {
+                        "type": "string",
+                        "example": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}"
+                      },
+                      "updated_at": {
+                        "type": "string",
+                        "example": "2025-04-23T12:05:01.941Z"
+                      }
+                    }
+                  },
+                  "example": [
+                    {
+                      "category_name": "Home",
+                      "created_at": "2025-04-23T11:14:49.822Z",
+                      "cron": "* * * * *",
+                      "day_degraded_minimum_count": 1,
+                      "day_down_minimum_count": 1,
+                      "default_status": "NONE",
+                      "degraded_trigger": null,
+                      "description": "",
+                      "down_trigger": null,
+                      "id": 15,
+                      "image": "",
+                      "include_degraded_in_downtime": "NO",
+                      "monitor_type": "SSL",
+                      "name": "Github SSL Certificate",
+                      "status": "ACTIVE",
+                      "tag": "GithubSSL",
+                      "type_data": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}",
+                      "updated_at": "2025-04-23T12:05:01.941Z"
+                    }
+                  ]
+                },
+                "examples": {
+                  "Response200": {
+                    "value": [
+                      {
+                        "category_name": "Home",
+                        "created_at": "2025-04-23T11:14:49.822Z",
+                        "cron": "* * * * *",
+                        "day_degraded_minimum_count": 1,
+                        "day_down_minimum_count": 1,
+                        "default_status": "NONE",
+                        "degraded_trigger": null,
+                        "description": "",
+                        "down_trigger": null,
+                        "id": 15,
+                        "image": "",
+                        "include_degraded_in_downtime": "NO",
+                        "monitor_type": "SSL",
+                        "name": "Github SSL Certificate",
+                        "status": "ACTIVE",
+                        "tag": "GithubSSL",
+                        "type_data": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}",
+                        "updated_at": "2025-04-23T12:05:01.941Z"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "summary": "Create Monitor",
+        "description": "API to create monitors",
+        "operationId": "createMonitor",
+        "tags": ["Monitors"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "category_name": {
+                    "type": "string",
+                    "example": "Home"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "example": "2025-04-22T10:10:00.546Z"
+                  },
+                  "cron": {
+                    "type": "string",
+                    "example": "* * * * *"
+                  },
+                  "day_degraded_minimum_count": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "day_down_minimum_count": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "default_status": {
+                    "type": "string",
+                    "example": "NONE"
+                  },
+                  "degraded_trigger": {
+                    "nullable": true,
+                    "example": null
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": ""
+                  },
+                  "down_trigger": {
+                    "nullable": true,
+                    "example": null
+                  },
+                  "id": {
+                    "type": "number",
+                    "example": 15
+                  },
+                  "image": {
+                    "type": "string",
+                    "example": ""
+                  },
+                  "include_degraded_in_downtime": {
+                    "type": "string",
+                    "example": "NO"
+                  },
+                  "monitor_type": {
+                    "type": "string",
+                    "example": "API"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Github"
+                  },
+                  "status": {
+                    "type": "string",
+                    "example": "ACTIVE"
+                  },
+                  "tag": {
+                    "type": "string",
+                    "example": "Github"
+                  },
+                  "type_data": {
+                    "type": "string",
+                    "example": "{\"url\":\"https://github.com/\",\"method\":\"GET\",\"headers\":[],\"body\":\"\",\"timeout\":10000,\"eval\":\"(async function (statusCode, responseTime, responseRaw, modules) {\\n\\tlet statusCodeShort = Math.floor(statusCode/100);\\n    if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {\\n        return {\\n\\t\\t\\tstatus: 'UP',\\n\\t\\t\\tlatency: responseTime,\\n        }\\n    } \\n\\treturn {\\n\\t\\tstatus: 'DOWN',\\n\\t\\tlatency: responseTime,\\n\\t}\\n})\",\"hideURLForGet\":\"NO\",\"allowSelfSignedCert\":false}"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "example": "2025-04-22T10:10:00.546Z"
+                  }
+                }
+              },
+              "examples": {
+                "Create Monitor": {
+                  "value": {
+                    "category_name": "Home",
+                    "created_at": "2025-04-22T10:10:00.546Z",
+                    "cron": "* * * * *",
+                    "day_degraded_minimum_count": 1,
+                    "day_down_minimum_count": 1,
+                    "default_status": "NONE",
+                    "degraded_trigger": null,
+                    "description": "",
+                    "down_trigger": null,
+                    "id": 15,
+                    "image": "",
+                    "include_degraded_in_downtime": "NO",
+                    "monitor_type": "API",
+                    "name": "Github",
+                    "status": "ACTIVE",
+                    "tag": "Github",
+                    "type_data": "{\"url\":\"https://github.com/\",\"method\":\"GET\",\"headers\":[],\"body\":\"\",\"timeout\":10000,\"eval\":\"(async function (statusCode, responseTime, responseRaw, modules) {\\n\\tlet statusCodeShort = Math.floor(statusCode/100);\\n    if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {\\n        return {\\n\\t\\t\\tstatus: 'UP',\\n\\t\\t\\tlatency: responseTime,\\n        }\\n    } \\n\\treturn {\\n\\t\\tstatus: 'DOWN',\\n\\t\\tlatency: responseTime,\\n\\t}\\n})\",\"hideURLForGet\":\"NO\",\"allowSelfSignedCert\":false}",
+                    "updated_at": "2025-04-22T10:10:00.546Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Response201",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "category_name": {
+                      "type": "string",
+                      "example": "Home"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "example": "2025-04-23T12:35:21.030Z"
+                    },
+                    "cron": {
+                      "type": "string",
+                      "example": "* * * * *"
+                    },
+                    "day_degraded_minimum_count": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "day_down_minimum_count": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "default_status": {
+                      "type": "string",
+                      "example": "NONE"
+                    },
+                    "degraded_trigger": {
+                      "nullable": true,
+                      "example": null
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "down_trigger": {
+                      "nullable": true,
+                      "example": null
+                    },
+                    "id": {
+                      "type": "number",
+                      "example": 16
+                    },
+                    "image": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "include_degraded_in_downtime": {
+                      "type": "string",
+                      "example": "NO"
+                    },
+                    "monitor_type": {
+                      "type": "string",
+                      "example": "API"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Github"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ACTIVE"
+                    },
+                    "tag": {
+                      "type": "string",
+                      "example": "Github"
+                    },
+                    "type_data": {
+                      "type": "string",
+                      "example": "{\"url\":\"https://github.com/\",\"method\":\"GET\",\"headers\":[],\"body\":\"\",\"timeout\":10000,\"eval\":\"(async function (statusCode, responseTime, responseRaw, modules) {\\n\\tlet statusCodeShort = Math.floor(statusCode/100);\\n    if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {\\n        return {\\n\\t\\t\\tstatus: 'UP',\\n\\t\\t\\tlatency: responseTime,\\n        }\\n    } \\n\\treturn {\\n\\t\\tstatus: 'DOWN',\\n\\t\\tlatency: responseTime,\\n\\t}\\n})\",\"hideURLForGet\":\"NO\",\"allowSelfSignedCert\":false}"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "example": "2025-04-23T12:35:21.030Z"
+                    }
+                  }
+                },
+                "examples": {
+                  "Response201": {
+                    "value": {
+                      "category_name": "Home",
+                      "created_at": "2025-04-23T12:35:21.030Z",
+                      "cron": "* * * * *",
+                      "day_degraded_minimum_count": 1,
+                      "day_down_minimum_count": 1,
+                      "default_status": "NONE",
+                      "degraded_trigger": null,
+                      "description": "",
+                      "down_trigger": null,
+                      "id": 16,
+                      "image": "",
+                      "include_degraded_in_downtime": "NO",
+                      "monitor_type": "API",
+                      "name": "Github",
+                      "status": "ACTIVE",
+                      "tag": "Github",
+                      "type_data": "{\"url\":\"https://github.com/\",\"method\":\"GET\",\"headers\":[],\"body\":\"\",\"timeout\":10000,\"eval\":\"(async function (statusCode, responseTime, responseRaw, modules) {\\n\\tlet statusCodeShort = Math.floor(statusCode/100);\\n    if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {\\n        return {\\n\\t\\t\\tstatus: 'UP',\\n\\t\\t\\tlatency: responseTime,\\n        }\\n    } \\n\\treturn {\\n\\t\\tstatus: 'DOWN',\\n\\t\\tlatency: responseTime,\\n\\t}\\n})\",\"hideURLForGet\":\"NO\",\"allowSelfSignedCert\":false}",
+                      "updated_at": "2025-04-23T12:35:21.030Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Response400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "monitor id must be empty or 0"
+                    }
+                  }
+                },
+                "examples": {
+                  "Response400": {
+                    "value": {
+                      "error": "monitor id must be empty or 0"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/monitor/{monitorId}": {
+      "get": {
+        "summary": "Get Monitor",
+        "description": "API to get a specified monitor",
+        "operationId": "getMonitor",
+        "tags": ["Monitors"],
+        "responses": {
+          "200": {
+            "description": "Response200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "category_name": {
+                      "type": "string",
+                      "example": "Home"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "example": "2025-04-23T11:14:49.822Z"
+                    },
+                    "cron": {
+                      "type": "string",
+                      "example": "* * * * *"
+                    },
+                    "day_degraded_minimum_count": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "day_down_minimum_count": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "default_status": {
+                      "type": "string",
+                      "example": "NONE"
+                    },
+                    "degraded_trigger": {
+                      "nullable": true,
+                      "example": null
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "down_trigger": {
+                      "nullable": true,
+                      "example": null
+                    },
+                    "id": {
+                      "type": "number",
+                      "example": 15
+                    },
+                    "image": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "include_degraded_in_downtime": {
+                      "type": "string",
+                      "example": "NO"
+                    },
+                    "monitor_type": {
+                      "type": "string",
+                      "example": "SSL"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Github SSL Certificate"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ACTIVE"
+                    },
+                    "tag": {
+                      "type": "string",
+                      "example": "GithubSSL"
+                    },
+                    "type_data": {
+                      "type": "string",
+                      "example": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "example": "2025-04-23T12:05:01.941Z"
+                    }
+                  }
+                },
+                "examples": {
+                  "Response200": {
+                    "value": {
+                      "category_name": "Home",
+                      "created_at": "2025-04-23T11:14:49.822Z",
+                      "cron": "* * * * *",
+                      "day_degraded_minimum_count": 1,
+                      "day_down_minimum_count": 1,
+                      "default_status": "NONE",
+                      "degraded_trigger": null,
+                      "description": "",
+                      "down_trigger": null,
+                      "id": 15,
+                      "image": "",
+                      "include_degraded_in_downtime": "NO",
+                      "monitor_type": "SSL",
+                      "name": "Github SSL Certificate",
+                      "status": "ACTIVE",
+                      "tag": "GithubSSL",
+                      "type_data": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}",
+                      "updated_at": "2025-04-23T12:05:01.941Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Response404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "monitor does not exist"
+                    }
+                  }
+                },
+                "examples": {
+                  "Response404": {
+                    "value": {
+                      "error": "monitor does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "summary": "Update Monitor",
+        "description": "API to update a specified monitor",
+        "operationId": "updateMonitor",
+        "tags": ["Monitors"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "category_name": {
+                    "type": "string",
+                    "example": "Home"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "example": "2025-04-23T11:14:49.822Z"
+                  },
+                  "cron": {
+                    "type": "string",
+                    "example": "* * * * *"
+                  },
+                  "day_degraded_minimum_count": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "day_down_minimum_count": {
+                    "type": "number",
+                    "example": 1
+                  },
+                  "default_status": {
+                    "type": "string",
+                    "example": "NONE"
+                  },
+                  "degraded_trigger": {
+                    "nullable": true,
+                    "example": null
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": ""
+                  },
+                  "down_trigger": {
+                    "nullable": true,
+                    "example": null
+                  },
+                  "id": {
+                    "type": "number",
+                    "example": 20
+                  },
+                  "image": {
+                    "type": "string",
+                    "example": ""
+                  },
+                  "include_degraded_in_downtime": {
+                    "type": "string",
+                    "example": "NO"
+                  },
+                  "monitor_type": {
+                    "type": "string",
+                    "example": "SSL"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Github SSL Certificate"
+                  },
+                  "status": {
+                    "type": "string",
+                    "example": "ACTIVE"
+                  },
+                  "tag": {
+                    "type": "string",
+                    "example": "GithubSSL"
+                  },
+                  "type_data": {
+                    "type": "string",
+                    "example": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "example": "2025-04-23T12:05:01.941Z"
+                  }
+                }
+              },
+              "examples": {
+                "Update Monitor": {
+                  "value": {
+                    "category_name": "Home",
+                    "created_at": "2025-04-23T11:14:49.822Z",
+                    "cron": "* * * * *",
+                    "day_degraded_minimum_count": 1,
+                    "day_down_minimum_count": 1,
+                    "default_status": "NONE",
+                    "degraded_trigger": null,
+                    "description": "",
+                    "down_trigger": null,
+                    "id": 20,
+                    "image": "",
+                    "include_degraded_in_downtime": "NO",
+                    "monitor_type": "SSL",
+                    "name": "Github SSL Certificate",
+                    "status": "ACTIVE",
+                    "tag": "GithubSSL",
+                    "type_data": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}",
+                    "updated_at": "2025-04-23T12:05:01.941Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Response200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "category_name": {
+                      "type": "string",
+                      "example": "Home"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "example": "2025-04-23T11:14:49.822Z"
+                    },
+                    "cron": {
+                      "type": "string",
+                      "example": "* * * * *"
+                    },
+                    "day_degraded_minimum_count": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "day_down_minimum_count": {
+                      "type": "number",
+                      "example": 1
+                    },
+                    "default_status": {
+                      "type": "string",
+                      "example": "NONE"
+                    },
+                    "degraded_trigger": {
+                      "nullable": true,
+                      "example": null
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "down_trigger": {
+                      "nullable": true,
+                      "example": null
+                    },
+                    "id": {
+                      "type": "number",
+                      "example": 15
+                    },
+                    "image": {
+                      "type": "string",
+                      "example": ""
+                    },
+                    "include_degraded_in_downtime": {
+                      "type": "string",
+                      "example": "NO"
+                    },
+                    "monitor_type": {
+                      "type": "string",
+                      "example": "SSL"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Github SSL Certificate"
+                    },
+                    "status": {
+                      "type": "string",
+                      "example": "ACTIVE"
+                    },
+                    "tag": {
+                      "type": "string",
+                      "example": "GithubSSL"
+                    },
+                    "type_data": {
+                      "type": "string",
+                      "example": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "example": "2025-04-23T13:38:22.965Z"
+                    }
+                  }
+                },
+                "examples": {
+                  "Response200": {
+                    "value": {
+                      "category_name": "Home",
+                      "created_at": "2025-04-23T11:14:49.822Z",
+                      "cron": "* * * * *",
+                      "day_degraded_minimum_count": 1,
+                      "day_down_minimum_count": 1,
+                      "default_status": "NONE",
+                      "degraded_trigger": null,
+                      "description": "",
+                      "down_trigger": null,
+                      "id": 15,
+                      "image": "",
+                      "include_degraded_in_downtime": "NO",
+                      "monitor_type": "SSL",
+                      "name": "Github SSL Certificate",
+                      "status": "ACTIVE",
+                      "tag": "GithubSSL",
+                      "type_data": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}",
+                      "updated_at": "2025-04-23T13:38:22.965Z"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Response400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "id mismatch: payload: 15, url: 14"
+                    }
+                  }
+                },
+                "examples": {
+                  "Response400": {
+                    "value": {
+                      "error": "id mismatch: payload: 15, url: 14"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Response404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "monitor does not exist"
+                    }
+                  }
+                },
+                "examples": {
+                  "Response404": {
+                    "value": {
+                      "error": "monitor does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "summary": "Delete Monitor",
+        "description": "API to delete a specified monitor",
+        "operationId": "deleteMonitor",
+        "tags": ["Monitors"],
+        "responses": {
+          "200": {
+            "description": "Response200",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                },
+                "examples": {
+                  "Response200": {
+                    "value": {}
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Response404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "example": "monitor does not exist"
+                    }
+                  }
+                },
+                "examples": {
+                  "Response404": {
+                    "value": {
+                      "error": "monitor does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "parameters": [
+        {
+          "name": "monitorId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ]
+    }
 	}
 }
