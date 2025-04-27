@@ -370,6 +370,17 @@ class DbImpl {
     });
   }
 
+    //given monitor_tag, start and end timestamp and a status, update all monitoring data with this status
+    async updateMonitoringData(monitor_tag, start, end, newStatus) {
+      return await this.knex("monitoring_data")
+          .where("monitor_tag", monitor_tag)
+          .where("timestamp", ">=", start)
+          .where("timestamp", "<=", end)
+          .update({
+              status: newStatus
+          });
+  }
+
   async updateMonitorTrigger(data) {
     return await this.knex("monitors").where({ id: data.id }).update({
       down_trigger: data.down_trigger,

@@ -9,6 +9,7 @@ import { format } from "date-fns";
 
 import {
   CreateUpdateMonitor,
+  UpdateMonitoringData,
   InsertKeyValue,
   GetMonitors,
   CreateUpdateTrigger,
@@ -147,6 +148,8 @@ export async function POST({ request, cookies }) {
     } else if (action == "storeMonitorData") {
       AdminEditorCan(userDB.role);
       resp = await CreateUpdateMonitor(data);
+    } else if (action == "updateMonitoringData") {
+      resp = await UpdateMonitoringData(data);
     } else if (action == "getMonitors") {
       resp = await GetMonitors(data);
     } else if (action == "deleteMonitor") {

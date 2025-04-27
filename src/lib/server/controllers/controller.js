@@ -276,6 +276,16 @@ export const CreateUpdateMonitor = async (monitor) => {
   }
 };
 
+export const UpdateMonitoringData = async (data) => {
+  let queryData = { ...data };
+  return await db.updateMonitoringData(
+    queryData.monitor_tag,
+    queryData.start,
+    queryData.end,
+    queryData.newStatus
+  );
+};
+
 export const CreateMonitor = async (monitor) => {
   let monitorData = { ...monitor };
   if (monitorData.id) {
