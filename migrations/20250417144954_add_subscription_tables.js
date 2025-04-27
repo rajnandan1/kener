@@ -27,6 +27,9 @@ export function up(knex) {
       // Add unique constraint on subscriber_id and subscriptions_monitors
       // This constraint also creates an index that will be used for queries
       table.unique(["subscriber_id", "subscriptions_monitors"]);
+
+      // Add index to optimize queries filtering by status and monitors
+      table.index(["subscriptions_status", "subscriptions_monitors"]);
     })
     .createTable("subscription_triggers", (table) => {
       table.increments("id").primary();
