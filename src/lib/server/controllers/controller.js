@@ -7,7 +7,7 @@ import {
   IsValidJSONArray,
   IsValidJSONString,
   IsValidNav,
-  IsValidURL
+  IsValidURL,
 } from "./validators.js";
 import db from "../db/db.js";
 import bcrypt from "bcrypt";
@@ -18,7 +18,13 @@ import Queue from "queue";
 import crypto from "crypto";
 import { addMonths, format, startOfMonth, subMonths } from "date-fns";
 import { DEGRADED, DOWN, NO_DATA, SIGNAL, UP } from "../constants.js";
-import { GetMinuteStartNowTimestampUTC, GetNowTimestampUTC, ReplaceAllOccurrences, ValidateEmail } from "../tool.js";
+import {
+  GetMinuteStartNowTimestampUTC,
+  GetMinuteStartTimestampUTC,
+  GetNowTimestampUTC,
+  ReplaceAllOccurrences,
+  ValidateEmail,
+} from "../tool.js";
 import getSMTPTransport from "../notification/smtps.js";
 import fs from "fs-extra";
 import path from "path";
@@ -352,18 +358,19 @@ export const CreateUpdateMonitor = async (monitor) => {
 
 export const UpdateMonitoringData = async (data) => {
   let queryData = { ...data };
+
   return await db.updateMonitoringData(
     queryData.monitor_tag,
-    queryData.start,
-    queryData.end,
-    queryData.newStatus
+    GetMinuteStartTimestampUTC(queryData.start),
+    GetMinuteStartTimestampUTC(queryData.end),
+    queryData.newStatus,
   );
 };
 
 export const CreateMonitor = async (monitor) => {
   let monitorData = { ...monitor };
   if (monitorData.id) {
-    throw new Error('monitor id must be empty or 0');
+    throw new Error("monitor id must be empty or 0");
   }
   return await db.insertMonitor(monitorData);
 };
@@ -371,7 +378,7 @@ export const CreateMonitor = async (monitor) => {
 export const UpdateMonitor = async (monitor) => {
   let monitorData = { ...monitor };
   if (!!!monitorData.id || monitorData.id === 0) {
-    throw new Error('monitor id cannot be empty or 0');
+    throw new Error("monitor id cannot be empty or 0");
   }
   return await db.updateMonitor(monitorData);
 };

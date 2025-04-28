@@ -19,6 +19,7 @@
   import AllGamesListRaw from "$lib/all-games-list.json?raw";
   import { storeSiteData, SortMonitor, RandomString } from "$lib/clientTools.js";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
+  import { DateInput } from "date-picker-svelte";
   import { dndzone } from "svelte-dnd-action";
   import { flip } from "svelte/animate";
   import GMI from "$lib/components/gmi.svelte";
@@ -289,27 +290,32 @@
   async function ModifyMonitoringDataTriggers() {
     modifyMonitoringDataError = "";
     if (!monitoringDataRequest.start) {
-           modifyMonitoringDataError = "Invalid start date"
-           return;
+      modifyMonitoringDataError = "Invalid start date";
+      return;
     }
     if (!monitoringDataRequest.end) {
-           modifyMonitoringDataError = "Invalid end date"
-           return;
+      modifyMonitoringDataError = "Invalid end date";
+      return;
     }
     if (!monitorDataSelected.tag) {
-           modifyMonitoringDataError = "Invalid monitor"
-           return;
+      modifyMonitoringDataError = "Invalid monitor";
+      return;
     }
-    if (!monitoringDataRequest.newStatus ||
-        (monitoringDataRequest.newStatus !== "UP" && monitoringDataRequest.newStatus !== "DOWN")) {
-        modifyMonitoringDataError = "Invalid status"
-        return;
+    if (
+      !monitoringDataRequest.newStatus ||
+      (monitoringDataRequest.newStatus != "UP" &&
+        monitoringDataRequest.newStatus != "DEGRADED" &&
+        monitoringDataRequest.newStatus != "DOWN")
+    ) {
+      modifyMonitoringDataError = "Invalid status";
+      return;
     }
-    let startTimestamp = +new Date(monitoringDataRequest.start)/1000;
-    let endTimestamp = +new Date(monitoringDataRequest.end)/1000;
+
+    let startTimestamp = parseInt(new Date(monitoringDataRequest.start).getTime() / 1000);
+    let endTimestamp = parseInt(new Date(monitoringDataRequest.end).getTime() / 1000);
     if (startTimestamp >= endTimestamp) {
-        modifyMonitoringDataError = "The start date must be before the end date"
-        return;
+      modifyMonitoringDataError = "The start date must be before the end date";
+      return;
     }
     let data = {
       monitor_tag: monitorDataSelected.tag,
@@ -317,6 +323,7 @@
       end: endTimestamp,
       newStatus: monitoringDataRequest.newStatus
     };
+
     modifyMonitoringDataFormState = "loading";
 
     try {
@@ -333,7 +340,7 @@
         modifyMonitoringDataError = resp.error;
       } else {
         monitoringDataMenusToggle = false;
-        monitoringDataRequest= {
+        monitoringDataRequest = {
           newStatus: "UP"
         };
         loadData();
@@ -394,8 +401,8 @@
   }
   const flipDurationMs = 200;
   function openMonitoringDataMenu(m) {
-     monitoringDataMenusToggle = true;
-     monitorDataSelected = m;
+    monitoringDataMenusToggle = true;
+    monitorDataSelected = m;
   }
   let orderErrorMessage = "";
   function handleSort(e) {
@@ -627,11 +634,7 @@
             >
               <Bell class="inline h-4 w-4" />
             </Button>
-            <Button
-              variant="secondary"
-              class="h-8 w-8 p-2"
-              on:click={() => openMonitoringDataMenu(monitor)}
-            >
+            <Button variant="secondary" class="h-8 w-8 p-2" on:click={() => openMonitoringDataMenu(monitor)}>
               <ChartLine class="inline h-4 w-4" />
             </Button>
           {/if}
@@ -677,12 +680,11 @@
   {/each}
 </div>
 
-
 {#if monitoringDataMenusToggle}
-
   <div class="moldal-container fixed left-0 top-0 z-50 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm">
     <div
-      class="absolute left-1/2 top-1/2 h-fit w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background shadow-lg backdrop-blur-lg">
+      class="absolute left-1/2 top-1/2 h-fit w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background shadow-lg backdrop-blur-lg"
+    >
       <Button
         variant="ghost"
         on:click={() => {
@@ -693,52 +695,60 @@
         <X class="h-4 w-4   text-muted-foreground" />
       </Button>
       <div class="content px-4 py-4">
-        <h2 class="text-lg font-semibold">
-          Modify monitors data
-        </h2>
-        <p class="text-xs text-muted-foreground">
-          You can modify the monitor results for a given time range.
-        </p>
-        <div class="grid grid-cols-4 gap-2">
-            <div class="col-span-1">
-              <Label for="monitorDataStartTimestamp">
-                Start date
-                <span class="text-red-500">*</span>
-              </Label>
-              <Input bind:value={monitoringDataRequest.start} min="1" id="monitorDataStartTimestamp" type="datetime-local" />
-            </div>
-            <div class="col-span-1">
-              <Label for="monitorDataEndTimestamp">
-                End date
-                <span class="text-red-500">*</span>
-              </Label>
-              <Input bind:value={monitoringDataRequest.end} min="1" id="monitorDataEndTimestamp" type="datetime-local" />
-            </div>
-            <div class="col-span-1">
+        <h2 class="text-lg font-semibold">Modify monitors data</h2>
+        <p class="text-xs text-muted-foreground">You can modify the monitor results for a given time range.</p>
+        <div class="grid grid-cols-3 gap-2">
+          <div class="col-span-1">
+            <Label for="start_date_time">
+              Start date
+              <span class="text-red-500">*</span>
+            </Label>
 
-              <Label for="monitorDataNewStatus">New status</Label>
-              <Select.Root
-                portal={null}
-                value="UP"
-                onSelectedChange={(e) => (monitoringDataRequest.newStatus = e.value)}
-                >
-                 <Select.Trigger id="monitorDataNewStatus">
-                   <Select.Value bind:value={monitoringDataRequest.newStatus} placeholder="UP" />
-                 </Select.Trigger>
-                 <Select.Content>
-                   <Select.Group>
-                     <Select.Item value="UP" label="UP" class="text-sm font-medium">UP</Select.Item>
-                     <Select.Item value="DOWN" label="DOWN" class="text-sm font-medium">DOWN</Select.Item>
-                   </Select.Group>
-                 </Select.Content>
-              </Select.Root>
-            </div>
+            <DateInput
+              bind:value={monitoringDataRequest.start}
+              id="start_date_time"
+              timePrecision="minute"
+              class=" text-sm"
+            />
+          </div>
+          <div class="col-span-1">
+            <Label for="end_date_time">
+              End date
+              <span class="text-red-500">*</span>
+            </Label>
+            <DateInput
+              bind:value={monitoringDataRequest.end}
+              id="end_date_time"
+              timePrecision="minute"
+              class="text-sm"
+              min={monitoringDataRequest.start}
+            />
+          </div>
+          <div class="col-span-1">
+            <Label for="monitorDataNewStatus">New status</Label>
+            <Select.Root portal={null} value="UP" onSelectedChange={(e) => (monitoringDataRequest.newStatus = e.value)}>
+              <Select.Trigger id="monitorDataNewStatus">
+                <Select.Value bind:value={monitoringDataRequest.newStatus} placeholder="UP" />
+              </Select.Trigger>
+              <Select.Content>
+                <Select.Group>
+                  <Select.Item value="UP" label="UP" class="text-sm font-medium">UP</Select.Item>
+                  <Select.Item value="DEGRADED" label="DEGRADED" class="text-sm font-medium">DEGRADED</Select.Item>
+                  <Select.Item value="DOWN" label="DOWN" class="text-sm font-medium">DOWN</Select.Item>
+                </Select.Group>
+              </Select.Content>
+            </Select.Root>
+          </div>
         </div>
-        <div class="flex justify-end gap-x-2">
+        <div class="mt-4 flex justify-end gap-x-2">
           {#if !!modifyMonitoringDataError}
             <div class="py-2 text-sm font-medium text-destructive">{modifyMonitoringDataError}</div>
           {/if}
-          <Button class="" on:click={ModifyMonitoringDataTriggers} disabled={modifyMonitoringDataFormState === "loading"}>
+          <Button
+            class=""
+            on:click={ModifyMonitoringDataTriggers}
+            disabled={modifyMonitoringDataFormState === "loading"}
+          >
             Save
             {#if modifyMonitoringDataFormState === "loading"}
               <Loader class="ml-2 inline h-4 w-4 animate-spin" />

@@ -425,15 +425,22 @@ class DbImpl {
     });
   }
 
-    //given monitor_tag, start and end timestamp and a status, update all monitoring data with this status
-    async updateMonitoringData(monitor_tag, start, end, newStatus) {
-      return await this.knex("monitoring_data")
-          .where("monitor_tag", monitor_tag)
-          .where("timestamp", ">=", start)
-          .where("timestamp", "<=", end)
-          .update({
-              status: newStatus
-          });
+  //given monitor_tag, start and end timestamp and a status, update all monitoring data with this status
+  async updateMonitoringData(monitor_tag, start, end, newStatus) {
+    // build an array of all timestamps in the [start, end] range, incremented by 60 seconds
+    const count = Math.floor((end - start) / 60) + 1;
+    const timestamps = Array.from({ length: count }, (_, i) => start + i * 60);
+
+    const records = timestamps.map((ts) => ({
+      monitor_tag,
+      timestamp: ts,
+      status: newStatus,
+    }));
+
+    return await this.knex("monitoring_data")
+      .insert(records)
+      .onConflict(["monitor_tag", "timestamp"])
+      .merge({ status: newStatus });
   }
 
   async updateMonitorTrigger(data) {
