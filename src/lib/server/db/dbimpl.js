@@ -426,8 +426,7 @@ class DbImpl {
   }
 
   //given monitor_tag, start and end timestamp and a status, update all monitoring data with this status
-  async updateMonitoringData(monitor_tag, start, end, newStatus) {
-    // build an array of all timestamps in the [start, end] range, incremented by 60 seconds
+  async updateMonitoringData(monitor_tag, start, end, newStatus, type) {
     const count = Math.floor((end - start) / 60) + 1;
     const timestamps = Array.from({ length: count }, (_, i) => start + i * 60);
 
@@ -435,12 +434,28 @@ class DbImpl {
       monitor_tag,
       timestamp: ts,
       status: newStatus,
+      type,
+      latency: 0,
     }));
 
-    return await this.knex("monitoring_data")
-      .insert(records)
-      .onConflict(["monitor_tag", "timestamp"])
-      .merge({ status: newStatus });
+    // Use transaction for better performance with batches
+    const batchSize = 500;
+
+    return await this.knex.transaction(async (trx) => {
+      const results = [];
+
+      for (let i = 0; i < records.length; i += batchSize) {
+        const batch = records.slice(i, i + batchSize);
+        const result = await trx("monitoring_data")
+          .insert(batch)
+          .onConflict(["monitor_tag", "timestamp"])
+          .merge({ status: newStatus });
+
+        results.push(result);
+      }
+
+      return results;
+    });
   }
 
   async updateMonitorTrigger(data) {

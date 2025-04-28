@@ -5,7 +5,7 @@
   import Settings from "lucide-svelte/icons/settings";
   import Bell from "lucide-svelte/icons/bell";
   import Loader from "lucide-svelte/icons/loader";
-  import ChartLine from "lucide-svelte/icons/chart-line";
+  import DatabaseZap from "lucide-svelte/icons/database-zap";
   import ArrowDownUp from "lucide-svelte/icons/arrow-down-up";
   import Grip from "lucide-svelte/icons/grip";
   import ExternalLink from "lucide-svelte/icons/external-link";
@@ -343,7 +343,6 @@
         monitoringDataRequest = {
           newStatus: "UP"
         };
-        loadData();
       }
     } catch (error) {
       modifyMonitoringDataError = "Error while modifying monitoring data";
@@ -635,7 +634,7 @@
               <Bell class="inline h-4 w-4" />
             </Button>
             <Button variant="secondary" class="h-8 w-8 p-2" on:click={() => openMonitoringDataMenu(monitor)}>
-              <ChartLine class="inline h-4 w-4" />
+              <DatabaseZap class="inline h-4 w-4" />
             </Button>
           {/if}
           <Button variant="secondary" class="h-8 w-8 p-2" rel="external" href="{base}/?monitor={monitor.tag}">
@@ -742,7 +741,9 @@
         </div>
         <div class="mt-4 flex justify-end gap-x-2">
           {#if !!modifyMonitoringDataError}
-            <div class="py-2 text-sm font-medium text-destructive">{modifyMonitoringDataError}</div>
+            <div class="overflow-hidden text-ellipsis whitespace-nowrap py-2 text-sm font-medium text-destructive">
+              {modifyMonitoringDataError}
+            </div>
           {/if}
           <Button
             class=""

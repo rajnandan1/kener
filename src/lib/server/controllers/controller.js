@@ -364,6 +364,7 @@ export const UpdateMonitoringData = async (data) => {
     GetMinuteStartTimestampUTC(queryData.start),
     GetMinuteStartTimestampUTC(queryData.end),
     queryData.newStatus,
+    queryData.type,
   );
 };
 
