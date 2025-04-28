@@ -104,26 +104,27 @@
   </section>
 {/if}
 {#if !!data.systemDataMessage}
-  <div class="section-actions mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-center justify-center">
-    <div class=" relative flex w-full flex-wrap gap-x-2 rounded-md border bg-secondary px-3 pb-2 pt-1">
+  <div
+    class="section-actions status-color-banner relative mx-auto mb-10 flex w-full max-w-[655px] flex-1 flex-col items-center justify-center"
+  >
+    <div class="z-20 flex w-full flex-wrap gap-x-2 rounded-md border bg-card px-3 py-2 font-medium shadow-sm">
       {l(data.lang, data.systemDataMessage.text)}
-
-      <div
-        class="absolute -bottom-1.5 left-0 flex h-2 w-full overflow-hidden rounded-md rounded-tl-none rounded-tr-none"
-      >
-        <div class="bg-api-up h-2" style="width: {data.systemDataMessage.upsPercentage}%;"></div>
-        <div class="bg-api-degraded h-2" style="width: {data.systemDataMessage.degradedPercentage}%;"></div>
-        <div class="bg-api-down h-2" style="width: {data.systemDataMessage.downsPercentage}%;"></div>
-      </div>
+    </div>
+    <div
+      class="status-color-bar absolute -bottom-1.5 left-[2%] z-10 mx-auto flex h-4 w-[98%] -translate-x-[1%] overflow-hidden rounded-md rounded-tl-none rounded-tr-none shadow-sm"
+    >
+      <div class="bg-api-up h-4" style="width: {data.systemDataMessage.upsPercentage}%;"></div>
+      <div class="bg-api-degraded h-4" style="width: {data.systemDataMessage.degradedPercentage}%;"></div>
+      <div class="bg-api-down h-4" style="width: {data.systemDataMessage.downsPercentage}%;"></div>
     </div>
   </div>
 {/if}
 <div class="section-actions mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-center justify-center">
-  <div class="flex w-full flex-wrap rounded-md border border-accent">
+  <div class="flex w-full flex-wrap rounded-md border shadow-sm">
     {#if data.canSendEmail}
       <Button
         variant="ghost"
-        class="dash-after relative h-11 rounded-md text-sm font-medium"
+        class="dash-after relative h-10 rounded-md text-sm font-medium"
         on:click={openSubscribeMenu}
       >
         {l(data.lang, "Subscribe to Updates")}
@@ -133,7 +134,7 @@
       rel="external"
       href="{base}/view/events?incident_type=MAINTENANCE"
       variant="ghost"
-      class="h-11 rounded-md text-sm font-medium"
+      class="h-10 rounded-md text-sm font-medium"
     >
       {l(data.lang, "Upcoming Maintenances")}
     </Button>

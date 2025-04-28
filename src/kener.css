@@ -917,8 +917,18 @@ input[type="checkbox"]:disabled + .peer {
   display: inline-block;
   position: absolute;
   width: 1px;
-  height: 30px;
+  height: 24px;
   border-radius: 2px;
   background-color: hsl(var(--accent) / var(--tw-bg-opacity, 1));
   right: 0;
+}
+
+.status-color-bar {
+  transition: all 0.2s ease-in-out;
+}
+.status-color-banner:hover .status-color-bar {
+  bottom: -0.75rem;
+}
+.status-color-banner:hover > div {
+  @apply bg-secondary;
 }
