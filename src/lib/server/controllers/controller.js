@@ -155,6 +155,12 @@ const siteDataKeys = [
     data_type: "string",
   },
   {
+    key: "showSiteStatus",
+    //boolean
+    isValid: (value) => typeof value === "string",
+    data_type: "string",
+  },
+  {
     key: "barStyle",
     //PARTIAL or FULL
     isValid: (value) => typeof value === "string" && ["PARTIAL", "FULL"].includes(value),
@@ -387,6 +393,81 @@ export const UpdateMonitor = async (monitor) => {
 export const GetMonitors = async (data) => {
   return await db.getMonitors(data);
 };
+
+export const SystemDataMessage = async () => {
+  //get all active monitors
+  let monitors = await db.getMonitors({ status: "ACTIVE" });
+  //get last status using getLatestMonitoringData(monitor_tag)
+  let monitorTags = monitors.map((monitor) => monitor.tag);
+  let upsCount = 0;
+  let degradedCount = 0;
+  let downCount = 0;
+  for (let i = 0; i < monitors.length; i++) {
+    let status = await db.getLatestMonitoringData(monitors[i].tag);
+    if (status) {
+      if (status.status === "UP") {
+        upsCount++;
+      } else if (status.status === "DEGRADED") {
+        degradedCount++;
+      } else if (status.status === "DOWN") {
+        downCount++;
+      }
+    }
+  }
+
+  const total = upsCount + degradedCount + downCount;
+
+  if (total === 0) {
+    return {
+      text: "No Systems",
+      upsPercentage: 0,
+      degradedPercentage: 0,
+      downsPercentage: 0,
+    };
+  }
+
+  let upsPercentage = Math.round((upsCount / total) * 100);
+  let degradedPercentage = Math.round((degradedCount / total) * 100);
+  let downsPercentage = Math.round((downCount / total) * 100);
+
+  let message = "";
+
+  // Determine message based on the combination of system states
+  if (upsCount > 0 && degradedCount === 0 && downCount === 0) {
+    // UP=1|DOWN=0|DEGRADED=0
+    message = "All Systems are Operational";
+  } else if (upsCount === 0 && degradedCount > 0 && downCount === 0) {
+    // UP=0|DOWN=0|DEGRADED=1
+    message = "All Systems are Degraded";
+  } else if (upsCount === 0 && degradedCount === 0 && downCount > 0) {
+    // UP=0|DOWN=1|DEGRADED=0
+    message = "All Systems are Down";
+  } else if (
+    (upsCount > 0 && degradedCount > 0 && downCount > 0) ||
+    (upsCount === 0 && degradedCount > 0 && downCount > 0)
+  ) {
+    // UP=1|DOWN=1|DEGRADED=1 or UP=0|DOWN=1|DEGRADED=1
+    message = "Some Systems are not working as expected";
+  } else if (upsCount > 0 && degradedCount === 0 && downCount > 0) {
+    // UP=1|DOWN=1|DEGRADED=0
+    message = "Some Systems Down";
+  } else if (upsCount > 0 && degradedCount > 0 && downCount === 0) {
+    // UP=1|DOWN=0|DEGRADED=1
+    message = "Some Systems Degraded";
+  }
+
+  //if percentage is not 100 sum, then add remaining to up
+  if (upsPercentage + degradedPercentage + downsPercentage < 100) {
+    upsPercentage = 100 - (degradedPercentage + downsPercentage);
+  }
+  return {
+    text: message,
+    upsPercentage,
+    degradedPercentage,
+    downsPercentage,
+  };
+};
+
 export const GetMonitorsParsed = async (query) => {
   // Retrieve monitors from the database based on the provided query
   const rawMonitors = await db.getMonitors(query);

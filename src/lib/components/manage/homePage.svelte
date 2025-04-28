@@ -37,6 +37,7 @@
   };
   let footerHTML = "";
   let tzToggle = "NO";
+  let showSiteStatus = "NO";
   let homeIncidentCount = 10;
   let homeIncidentStartTimeWithin = 30;
   let incidentGroupView = "EXPAND_FIRST";
@@ -95,6 +96,10 @@
   if (data.siteData.tzToggle) {
     tzToggle = data.siteData.tzToggle;
   }
+
+  if (data.siteData.showSiteStatus) {
+    showSiteStatus = data.siteData.showSiteStatus;
+  }
   if (data.siteData.i18n) {
     i18n = data.siteData.i18n;
     //add locales that are not present in the data
@@ -128,7 +133,8 @@
 
   async function saveTheme() {
     let resp = await storeSiteData({
-      kenerTheme: kenerTheme
+      kenerTheme: kenerTheme,
+      showSiteStatus: showSiteStatus
     });
     //print data
     let data = await resp.json();
@@ -343,6 +349,20 @@
             </DropdownMenu.Root>
           </div>
         </div>
+      </div>
+      <div>
+        <p class=" font-medium">
+          <label>
+            <input
+              on:change={(e) => {
+                showSiteStatus = e.target.checked === true ? "YES" : "NO";
+              }}
+              type="checkbox"
+              checked={showSiteStatus === "YES"}
+            />
+            Show Site Status Banner
+          </label>
+        </p>
       </div>
 
       <div class="flex w-full justify-end gap-x-2">

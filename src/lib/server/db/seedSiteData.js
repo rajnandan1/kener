@@ -101,6 +101,7 @@ const seedSiteData = {
   homeIncidentCount: 5,
   homeIncidentStartTimeWithin: 30,
   kenerTheme: "default",
+  showSiteStatus: "NO",
 };
 
 export default seedSiteData;

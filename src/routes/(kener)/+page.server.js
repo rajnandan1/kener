@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { FetchData } from "$lib/server/page";
-import { GetMonitors, GetIncidentsOpenHome } from "$lib/server/controllers/controller.js";
+import { GetMonitors, GetIncidentsOpenHome, SystemDataMessage } from "$lib/server/controllers/controller.js";
 import { SortMonitor } from "$lib/clientTools.js";
 import moment from "moment";
 
@@ -196,6 +196,13 @@ export async function load({ parent, url }) {
 
   let allRecentIncidents = allOpenIncidents.filter((incident) => incident.incident_type == "INCIDENT");
   let allRecentMaintenances = allOpenIncidents.filter((incident) => incident.incident_type == "MAINTENANCE");
+
+  let systemDataMessage;
+
+  if (!!siteData.showSiteStatus && siteData.showSiteStatus == "YES") {
+    systemDataMessage = await SystemDataMessage();
+  }
+
   return {
     monitors: monitorsActive,
     subscribableMonitors,
@@ -207,5 +214,6 @@ export async function load({ parent, url }) {
     hero,
     categoryName: query.get("category"),
     canonical,
+    systemDataMessage,
   };
 }

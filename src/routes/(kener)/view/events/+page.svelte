@@ -35,7 +35,7 @@
   <link rel="canonical" href={`${base}/view/events`} />
 </svelte:head>
 <div class="mt-10"></div>
-<section class="section-back mx-auto my-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center">
+<section class="section-back mx-auto flex w-full max-w-[655px] flex-1 flex-col items-start justify-center">
   <div class="  mx-auto min-w-full max-w-[655px] rounded-md px-4 py-12 lg:flex lg:items-center">
     <div class=" mx-auto text-center">
       <h1 class="    text-3xl font-extrabold leading-tight">

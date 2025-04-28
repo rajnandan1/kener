@@ -912,3 +912,13 @@ input[type="checkbox"]:disabled + .peer {
 .copybtn:focus .check-btn {
   transform: scale(1);
 }
+.dash-after::after {
+  content: " ";
+  display: inline-block;
+  position: absolute;
+  width: 1px;
+  height: 30px;
+  border-radius: 2px;
+  background-color: hsl(var(--accent) / var(--tw-bg-opacity, 1));
+  right: 0;
+}
