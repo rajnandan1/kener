@@ -126,14 +126,6 @@
 </script>
 
 <div class="min-h-[70vh]">
-  <div class="flex justify-end">
-    <Button variant="outline" class=" text-sm">
-      <a href="https://kener.ing/docs/subscription" target="_blank" rel="noopener noreferrer">
-        Documentation <ExternalLink size="12" class="ml-1 inline" />
-      </a>
-    </Button>
-  </div>
-
   <Card.Root class="mt-4">
     <Card.Header class="border-b">
       <Card.Title class="relative">

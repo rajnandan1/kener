@@ -920,7 +920,11 @@ input[type="checkbox"]:disabled + .peer {
   height: 24px;
   border-radius: 2px;
   background-color: hsl(var(--accent) / var(--tw-bg-opacity, 1));
-  right: 0;
+  right: -1px;
+}
+
+.dash-after:hover::after {
+  display: none;
 }
 
 .status-color-bar {

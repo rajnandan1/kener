@@ -1,6 +1,6 @@
 {
   "name": "kener",
-  "version": "3.2.13",
+  "version": "3.2.14",
   "private": false,
   "license": "MIT",
   "description": "Kener is a modern, open-source status page application built with Node.js. It provides real-time monitoring, uptime tracking, incident management, and beautiful dashboards. Perfect for DevOps teams, SaaS providers, and businesses needing reliable service status communication with minimal setup.",

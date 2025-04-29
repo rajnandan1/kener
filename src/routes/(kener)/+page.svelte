@@ -28,7 +28,7 @@
   let pageLoaded = false;
   $: {
     if (pageLoaded) {
-      if (shareMenusToggle) {
+      if (shareMenusToggle || subscribeMenuToggle) {
         document.body.style.overflow = "hidden";
       } else {
         document.body.style.overflow = "auto";

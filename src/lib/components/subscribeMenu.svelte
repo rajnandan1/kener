@@ -8,6 +8,7 @@
   import GMI from "$lib/components/gmi.svelte";
   import autoAnimate from "@formkit/auto-animate";
   import Loader from "lucide-svelte/icons/loader";
+  import SquareChartGantt from "lucide-svelte/icons/square-chart-gantt";
   import AlarmClockCheck from "lucide-svelte/icons/alarm-clock-check";
   import Logout from "lucide-svelte/icons/log-out";
   import ChevronLeft from "lucide-svelte/icons/chevron-left";
@@ -287,7 +288,11 @@
           {#each subscribableMonitors as monitor}
             <div class="flex items-center justify-between gap-2 border-b pb-2 last:border-0">
               <label for={monitor.tag} class="flex gap-x-2 text-sm font-medium text-gray-900 dark:text-gray-300">
-                <GMI src={monitor.image} classList="mt-1 h-4 w-4" />
+                {#if !!monitor.image}
+                  <GMI src={monitor.image} classList="mt-1 h-4 w-4" />
+                {:else}
+                  <SquareChartGantt class="mt-1 h-4 w-4" />
+                {/if}
                 {monitor.name}
               </label>
               <input

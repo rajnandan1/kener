@@ -141,8 +141,7 @@ async function login(email) {
       subscriber_status: "PENDING",
       subscriber_meta: JSON.stringify(subscriberMeta),
     };
-    let newSubscriber = await CreateNewSubscriber(newSubscriberData);
-    return json({ newUser: true, token: await GenerateTokenWithExpiry({ email }, "5m") }, { status: 200 });
+    await CreateNewSubscriber(newSubscriberData);
   } else {
     await UpdateSubscriberMeta(existingUser.id, JSON.stringify(subscriberMeta));
   }
