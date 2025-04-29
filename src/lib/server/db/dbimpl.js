@@ -48,6 +48,16 @@ class DbImpl {
       .first();
   }
 
+  //get data at time stamp
+  async getMonitoringDataAt(monitor_tag, timestamp) {
+    return await this.knex("monitoring_data")
+      .where("monitor_tag", monitor_tag)
+      .where("timestamp", timestamp)
+      .orderBy("timestamp", "desc")
+      .limit(1)
+      .first();
+  }
+
   //get latest data for all active monitors
   async getLatestMonitoringDataAllActive(monitor_tags) {
     // Find the latest timestamp for each provided monitor tag
@@ -477,6 +487,10 @@ class DbImpl {
     }
     if (!!data.id) {
       query = query.andWhere("id", data.id);
+    }
+    //monitor_type
+    if (!!data.monitor_type) {
+      query = query.andWhere("monitor_type", data.monitor_type);
     }
     if (!!data.tag) {
       query = query.andWhere("tag", data.tag);

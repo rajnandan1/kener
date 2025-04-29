@@ -9,7 +9,7 @@ import {
 import db from "./db/db.js";
 import { WEBHOOK } from "./constants.js";
 
-import { GetMonitors, VerifyAPIKey } from "./controllers/controller.js";
+import { GetMonitors, VerifyAPIKey, InsertMonitoringData } from "./controllers/controller.js";
 
 const GetAllTags = async function () {
   let tags = [];
@@ -94,7 +94,7 @@ const store = async function (data) {
 
   //get the monitor object matching the tag
 
-  await db.insertMonitoringData({
+  await InsertMonitoringData({
     monitor_tag: tag,
     timestamp: data.timestampInSeconds,
     status: resp.status,

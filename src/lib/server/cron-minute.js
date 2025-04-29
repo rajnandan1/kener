@@ -12,6 +12,7 @@ import path from "path";
 import db from "./db/db.js";
 import notification from "./notification/notif.js";
 import DNSResolver from "./dns.js";
+import { InsertMonitoringData } from "./controllers/controller.js";
 
 dotenv.config();
 
@@ -83,7 +84,7 @@ const Minuter = async (monitor) => {
           await Wait(500); //wait for 500ms
           console.log("Retrying api call for " + monitor.name + " at " + startOfMinute + " due to timeout");
           serviceClient.execute().then(async (data) => {
-            await db.insertMonitoringData({
+            await InsertMonitoringData({
               monitor_tag: monitor.tag,
               timestamp: startOfMinute,
               status: data.status,
@@ -101,7 +102,8 @@ const Minuter = async (monitor) => {
     } else if (monitor.monitor_type === "DNS") {
       realTimeData[startOfMinute] = await serviceClient.execute();
     } else if (monitor.monitor_type === "GROUP") {
-      realTimeData[startOfMinute] = await serviceClient.execute(startOfMinute);
+      // realTimeData[startOfMinute] = await serviceClient.execute(startOfMinute);
+      realTimeData[startOfMinute] = null;
     } else if (monitor.monitor_type === "SSL") {
       realTimeData[startOfMinute] = await serviceClient.execute();
     } else if (monitor.monitor_type === "SQL") {
@@ -139,7 +141,7 @@ const Minuter = async (monitor) => {
 
     for (const timestamp in mergedData) {
       const element = mergedData[timestamp];
-      db.insertMonitoringData({
+      await InsertMonitoringData({
         monitor_tag: monitor.tag,
         timestamp: parseInt(timestamp),
         status: element.status,

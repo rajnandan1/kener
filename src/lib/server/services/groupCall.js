@@ -4,27 +4,16 @@ import { GetRequiredSecrets, ReplaceAllOccurrences, Wait, GetMinuteStartNowTimes
 import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
 import db from "../db/db.js";
 
-async function waitForDataAndReturn(arr, ts, d, maxTime) {
-  await Wait(d);
-
-  let data = await db.getLastStatusBeforeCombined(arr, ts);
-  if (data) {
-    data.type = REALTIME;
-    return data;
-  } else if (d > maxTime) {
-    data = await db.getLastStatusBeforeCombined(arr, ts, ts - 86400);
-    if (data) {
-      data.type = REALTIME;
-      return data;
-    }
+async function waitForDataAndReturn(tag) {
+  let res = await db.getLatestMonitoringData(tag);
+  if (!!res) {
     return {
-      status: DOWN,
-      latency: 0,
-      type: TIMEOUT,
+      status: res.status,
+      latency: res.latency,
+      type: REALTIME,
     };
-  } else {
-    return await waitForDataAndReturn(arr, ts, d + 500, maxTime);
   }
+  return null;
 }
 
 class GroupCall {
@@ -39,7 +28,7 @@ class GroupCall {
       startOfMinute = GetMinuteStartNowTimestampUTC();
     }
     let tagArr = this.monitor.type_data.monitors.map((m) => m.tag);
-    return await waitForDataAndReturn(tagArr, startOfMinute, 500, this.monitor.type_data.timeout);
+    return await waitForDataAndReturn(this.monitor.tag);
   }
 }
 
