@@ -9,16 +9,23 @@ Here are the changelogs for Kener. Changelogs are only published when there are 
 
 ## v3.2.14
 
+### ✨ Features
+
 - **Gamedig Monitor Functionality:** Introduced a new monitor type using Gamedig to monitor over 320+ games and services. Includes options for host, port, timeout, game/service selection, and documentation updates. ([#389](https://github.com/rajnandan1/kener/pull/389) by ToxykAuBleu)
 - **Event Subscription:** Added functionality for event subscriptions, involving new database tables (`subscribers`, `subscriptions`, `subscription_triggers`), UI enhancements, a comprehensive game list, and package version update (3.2.13 to 3.2.14). ([#385](https://github.com/rajnandan1/kener/pull/385) by rajnandan1)
 - **CRUD API for Monitors:** Implemented API endpoints for creating, reading, updating, and deleting monitors (`GET /api/monitor`, `POST /api/monitor`, `GET /api/monitor/[monitor_id]`, `PUT /api/monitor/[monitor_id]`, `DELETE /api/monitor/[monitor_id]`). Includes OpenAPI spec updates. ([#384](https://github.com/rajnandan1/kener/pull/384) by jensvandenreyt)
 - **Modify Monitor Data:** Added the ability for users to modify historical monitoring data via a new UI option and backend API, useful for correcting past statuses (e.g., false positives). ([#380](https://github.com/rajnandan1/kener/pull/380) by mcorbin)
+- **Site Status Banner:** Now you can choose to show a site status banner in the main home page. The setting has to be turned on in the Home section of the kener portal.
+- **Upcoming Maintenance**: Dedicated Page for upcoming maintenance events.
+- **Event Page**: Dedicated page for each event (incident/maintenance)
+- **Admin Portal UI Update**: Revamped kener management portal for better accessibility.
 
-## 🐛 Bug Fixes
+### 🐛 Bug Fixes
 
 - **SMTP Secure Variable Fix:** Corrected the evaluation of the `SMTP_SECURE` environment variable to properly handle values like '0' or empty strings, preventing SSL errors with STARTTLS. ([#392](https://github.com/rajnandan1/kener/pull/392) by myned)
+- **Group Monitor Fix:** Fix group monitor using queues
 
-## 🌍 Internationalization
+### 🌍 Internationalization
 
 - **Polish Translation:** Added Polish language support (`pl.json`) and integrated it into the application's localization framework. ([#386](https://github.com/rajnandan1/kener/pull/386) by lolen)
 
