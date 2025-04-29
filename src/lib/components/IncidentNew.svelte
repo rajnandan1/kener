@@ -2,6 +2,8 @@
   import { formatDistanceToNow, formatDistance } from "date-fns";
   import Settings from "lucide-svelte/icons/settings";
   import ArrowRight from "lucide-svelte/icons/arrow-right";
+  import Copy from "lucide-svelte/icons/copy";
+  import Check from "lucide-svelte/icons/check";
   import { analyticsEvent } from "$lib/boringOne";
   import * as Accordion from "$lib/components/ui/accordion";
   import { l, f, fd, fdn } from "$lib/i18n/client";
@@ -11,9 +13,11 @@
   import GMI from "$lib/components/gmi.svelte";
   import { page } from "$app/stores";
   import { marked } from "marked";
+  import { onMount } from "svelte";
+
   export let incident;
   export let index;
-  export let lang;
+  export let allowCollapse = true;
   let startTime = new Date(incident.start_date_time * 1000);
   let endTime = new Date();
   let nowTime = new Date();
@@ -35,7 +39,7 @@
   }
 
   let accordionValue = "incident-0";
-  if ($page.data.site.incidentGroupView == "COLLAPSED") {
+  if ($page.data.site.incidentGroupView == "COLLAPSED" && allowCollapse) {
     accordionValue = "incident-collapse";
   } else if ($page.data.site.incidentGroupView == "EXPANDED") {
     accordionValue = index;
@@ -75,37 +79,66 @@
     maintenanceBadge = "Maintenance Completed";
     maintenanceBadgeColor = "text-maintenance-completed";
   }
+  let pathMonitorLink = "";
+  onMount(async () => {
+    let protocol = window.location.protocol;
+    let domain = window.location.host;
+    pathMonitorLink = `${protocol}//${domain}${base}/view/events/${incident.incident_type}-${incident.id}`;
+  });
 </script>
 
 <div class="newincident relative grid w-full grid-cols-12 gap-2 px-0 py-0 last:border-b-0">
   <div class="col-span-12">
-    <Accordion.Root bind:value={index} class="accor">
+    <Accordion.Root
+      bind:value={index}
+      class="accor {allowCollapse === false ? 'hide-chevron' : ''}"
+      disabled={!allowCollapse}
+    >
       <Accordion.Item value={accordionValue}>
         <Accordion.Trigger
           class="rounded-md px-4 hover:bg-muted hover:no-underline"
           on:click={() => analyticsEvent("incident_open", { incident_title: incident.title })}
         >
           <div class="w-full text-left hover:no-underline">
-            <p class="flex gap-x-2 text-xs font-semibold">
-              {#if incidentType == "INCIDENT"}
-                <span class="badge-{incident.state}">
-                  {l($page.data.lang, incident.state)}
-                </span>
-              {:else if incidentType == "MAINTENANCE"}
-                <span class="{maintenanceBadgeColor}  ">
-                  {l($page.data.lang, maintenanceBadge)}
-                </span>
-              {/if}
-              {#if $page.data.isLoggedIn}
-                <Button
-                  href="{base}/manage/app/events#{incident.id}"
-                  class=" rotate-once  h-5 p-0 text-muted-foreground hover:text-primary"
-                  variant="link"
-                >
-                  <Settings class="h-4 w-4 " />
-                </Button>
-              {/if}
-            </p>
+            <div class="flex justify-start gap-x-2">
+              <p class="flex gap-x-2 text-xs font-semibold">
+                {#if incidentType == "INCIDENT"}
+                  <span class="badge-{incident.state}">
+                    {l($page.data.lang, incident.state)}
+                  </span>
+                {:else if incidentType == "MAINTENANCE"}
+                  <span class="{maintenanceBadgeColor}  ">
+                    {l($page.data.lang, maintenanceBadge)}
+                  </span>
+                {/if}
+              </p>
+              <div class="flex justify-end gap-x-2">
+                {#if $page.data.isLoggedIn}
+                  <Button
+                    href="{base}/manage/app/events#{incident.id}"
+                    class="rotate-once h-5 p-0 text-muted-foreground hover:text-primary"
+                    variant="link"
+                  >
+                    <Settings class="h-4 w-4 " />
+                  </Button>
+                {/if}
+                {#if !!pathMonitorLink}
+                  <Button
+                    size="icon"
+                    variant="link"
+                    class="copybtn relative h-5 p-0 text-muted-foreground hover:text-primary"
+                    on:click={(e) => {
+                      e.stopPropagation();
+                      navigator.clipboard.writeText(pathMonitorLink);
+                      analyticsEvent("incident_copy_link", { incident_title: incident.title });
+                    }}
+                  >
+                    <Check class="check-btn absolute left-0 top-0 h-4 w-4 text-green-500" />
+                    <Copy class="copy-btn absolute left-0 top-0 h-4 w-4 " />
+                  </Button>
+                {/if}
+              </div>
+            </div>
 
             <p class="font-medium">
               {incident.title}

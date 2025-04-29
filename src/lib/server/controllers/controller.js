@@ -1,5 +1,4 @@
 // @ts-nocheck
-// @ts-nocheck
 import {
   IsValidAnalytics,
   IsValidColors,
@@ -8,218 +7,109 @@ import {
   IsValidJSONArray,
   IsValidJSONString,
   IsValidNav,
-  IsValidURL
+  IsValidURL,
 } from "./validators.js";
+import { siteDataKeys } from "./siteDataKeys.js";
 import db from "../db/db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { Resend } from "resend";
+import Queue from "queue";
 
 import crypto from "crypto";
 import { addMonths, format, startOfMonth, subMonths } from "date-fns";
-import { DEGRADED, DOWN, NO_DATA, SIGNAL, UP } from "../constants.js";
-import { GetMinuteStartNowTimestampUTC, GetNowTimestampUTC, ReplaceAllOccurrences, ValidateEmail } from "../tool.js";
+import { DEGRADED, DOWN, NO_DATA, SIGNAL, UP, REALTIME } from "../constants.js";
+import {
+  GetMinuteStartNowTimestampUTC,
+  GetMinuteStartTimestampUTC,
+  GetNowTimestampUTC,
+  ReplaceAllOccurrences,
+  ValidateEmail,
+} from "../tool.js";
 import getSMTPTransport from "../notification/smtps.js";
+import fs from "fs-extra";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const saltRounds = 10;
 const DUMMY_SECRET = "DUMMY_SECRET";
 
-const siteDataKeys = [
-  {
-    key: "title",
-    isValid: (value) => typeof value === "string" && value.trim().length > 0,
-    data_type: "string",
-  },
-  {
-    key: "siteName",
-    isValid: (value) => typeof value === "string" && value.trim().length > 0,
-    data_type: "string",
-  },
-  {
-    key: "siteURL",
-    isValid: IsValidURL,
-    data_type: "string",
-  },
-  {
-    key: "home",
-    isValid: (value) => typeof value === "string" && value.trim().length > 0,
-    data_type: "string",
-  },
-  {
-    key: "favicon",
-    isValid: (value) => typeof value === "string" && value.trim().length > 0,
-    data_type: "string",
-  },
-  {
-    key: "logo",
-    isValid: (value) => typeof value === "string" && value.trim().length > 0,
-    data_type: "string",
-  },
-  {
-    key: "metaTags",
-    isValid: IsValidJSONString,
-    data_type: "object",
-  },
-  {
-    key: "nav",
-    isValid: IsValidNav,
-    data_type: "object",
-  },
-  {
-    key: "hero",
-    isValid: IsValidHero,
-    data_type: "object",
-  },
-  {
-    key: "footerHTML",
-    isValid: (value) => typeof value === "string",
-    data_type: "string",
-  },
-  {
-    key: "kenerTheme",
-    isValid: (value) => typeof value === "string",
-    data_type: "string",
-  },
-  {
-    key: "customCSS",
-    isValid: (value) => typeof value === "string",
-    data_type: "string",
-  },
-  {
-    key: "i18n",
-    isValid: IsValidI18n,
-    data_type: "object",
-  },
-  {
-    key: "pattern",
-    //string dots or squares or circle
-    isValid: (value) =>
-      typeof value === "string" &&
-      [
-        "dots",
-        "squares",
-        "tiles",
-        "none",
-        "radial-blue",
-        "radial-mono",
-        "radial-midnight",
-        "circle-mono",
-        "carbon-fibre",
-        "texture-sky",
-        "angular-mono",
-        "angular-spring",
-        "angular-bloom",
-        "pets",
-      ].includes(value),
-    data_type: "string",
-  },
-  {
-    key: "analytics",
-    isValid: IsValidAnalytics,
-    data_type: "object",
-  },
-  {
-    key: "theme",
-    //light dark system none
-    isValid: (value) => typeof value === "string" && ["light", "dark", "system", "none"].includes(value),
-    data_type: "string",
-  },
-  {
-    key: "themeToggle",
-    //boolean
-    isValid: (value) => typeof value === "string",
-    data_type: "string",
-  },
-  {
-    key: "tzToggle",
-    //boolean
-    isValid: (value) => typeof value === "string",
-    data_type: "string",
-  },
-  {
-    key: "barStyle",
-    //PARTIAL or FULL
-    isValid: (value) => typeof value === "string" && ["PARTIAL", "FULL"].includes(value),
-    data_type: "string",
-  },
-  {
-    key: "barRoundness",
-    //SHARP or ROUNDED
-    isValid: (value) => typeof value === "string" && ["SHARP", "ROUNDED"].includes(value),
-    data_type: "string",
-  },
-  {
-    key: "summaryStyle",
-    //CURRENT or DAY
-    isValid: (value) => typeof value === "string" && ["CURRENT", "DAY"].includes(value),
-    data_type: "string",
-  },
-  {
-    key: "colors",
-    isValid: IsValidColors,
-    data_type: "object",
-  },
-  {
-    key: "font",
-    isValid: IsValidJSONString,
-    data_type: "object",
-  },
-  {
-    key: "monitorSort",
-    isValid: IsValidJSONArray,
-    data_type: "object",
-  },
-  {
-    key: "categories",
-    isValid: IsValidJSONString,
-    data_type: "object",
-  },
-  {
-    key: "homeIncidentCount",
-    isValid: (value) => parseInt(value) >= 0,
-    data_type: "string",
-  },
-  {
-    key: "homeIncidentStartTimeWithin",
-    isValid: (value) => parseInt(value) >= 1,
-    data_type: "string",
-  },
-  {
-    key: "incidentGroupView",
-    isValid: (value) => typeof value === "string" && value.trim().length > 0,
-    data_type: "string",
-  },
-  {
-    key: "analytics.googleTagManager",
-    isValid: IsValidJSONString,
-    data_type: "object",
-  },
-  {
-    key: "analytics.plausible",
-    isValid: IsValidJSONString,
-    data_type: "object",
-  },
-  {
-    key: "analytics.mixpanel",
-    isValid: IsValidJSONString,
-    data_type: "object",
-  },
-  {
-    key: "analytics.amplitude",
-    isValid: IsValidJSONString,
-    data_type: "object",
-  },
-  {
-    key: "analytics.clarity",
-    isValid: IsValidJSONString,
-    data_type: "object",
-  },
-  {
-    key: "analytics.umami",
-    isValid: IsValidJSONString,
-    data_type: "object",
-  },
-];
+const eventQueue = new Queue({
+  concurrency: 10, // Number of tasks that can run concurrently
+  timeout: 10000, // Timeout in ms after which a task will be considered as failed (optional)
+  autostart: true, // Automatically start the queue (optional)
+});
+
+const insertStatusQueue = new Queue({
+  concurrency: 1, // Number of tasks that can run concurrently
+  timeout: 10000, // Timeout in ms after which a task will be considered as failed (optional)
+  autostart: true, // Automatically start the queue (optional)
+});
+
+export const PushDataToQueue = async (eventID, eventName, eventData) => {
+  //fetch subscription trigger config from db of email type
+  let subscription = await db.getSubscriptionTriggerByType("email");
+  if (!subscription) {
+    return;
+  }
+  let config;
+  try {
+    config = JSON.parse(subscription.config);
+  } catch (e) {
+    return;
+  }
+
+  if (!config[eventName]) {
+    return;
+  }
+
+  //get incident data from db using incident id
+  let tags = ["_"];
+  let monitors = await db.getIncidentMonitorsByIncidentID(eventID); //get email template
+  if (monitors) {
+    for (let i = 0; i < monitors.length; i++) {
+      const monitor = monitors[i];
+      tags.push(monitor.monitor_tag);
+    }
+  }
+  //get all the eligible emails that are there in subscription table
+
+  //get email template
+  const emailTemplate = fs.readFileSync(path.join(__dirname, "../templates/event_update.html"), "utf8");
+  let siteData = await GetAllSiteData();
+  let base = !!process.env.KENER_BASE_PATH ? process.env.KENER_BASE_PATH : "";
+  let emailData = {
+    brand_name: siteData.siteName,
+    logo_url: await GetSiteLogoURL(siteData.siteURL, siteData.logo, base),
+    incident_url: await GetSiteLogoURL(
+      siteData.siteURL,
+      `/view/events/${eventData.incident_type.toLowerCase()}-${eventID}`,
+      base,
+    ),
+    update_message: eventData.message,
+    title: `[${eventData.incident_type}] ` + eventData.title,
+  };
+
+  let eligibleEmails = await db.getSubscriberEmails(tags);
+  if (eligibleEmails) {
+    for (let i = 0; i < eligibleEmails.length; i++) {
+      let email = eligibleEmails[i];
+      eventQueue.push(async (cb) => {
+        await SendEmailWithTemplate(
+          emailTemplate,
+          emailData,
+          email.subscriber_send,
+          `[${eventData.incident_type}] ${eventData.title}`,
+          eventData.message,
+        );
+        cb(eventData);
+      });
+    }
+  }
+};
 
 export function InsertKeyValue(key, value) {
   let f = siteDataKeys.find((k) => k.key === key);
@@ -278,18 +168,20 @@ export const CreateUpdateMonitor = async (monitor) => {
 
 export const UpdateMonitoringData = async (data) => {
   let queryData = { ...data };
+
   return await db.updateMonitoringData(
     queryData.monitor_tag,
-    queryData.start,
-    queryData.end,
-    queryData.newStatus
+    GetMinuteStartTimestampUTC(queryData.start),
+    GetMinuteStartTimestampUTC(queryData.end),
+    queryData.newStatus,
+    queryData.type,
   );
 };
 
 export const CreateMonitor = async (monitor) => {
   let monitorData = { ...monitor };
   if (monitorData.id) {
-    throw new Error('monitor id must be empty or 0');
+    throw new Error("monitor id must be empty or 0");
   }
   return await db.insertMonitor(monitorData);
 };
@@ -297,7 +189,7 @@ export const CreateMonitor = async (monitor) => {
 export const UpdateMonitor = async (monitor) => {
   let monitorData = { ...monitor };
   if (!!!monitorData.id || monitorData.id === 0) {
-    throw new Error('monitor id cannot be empty or 0');
+    throw new Error("monitor id cannot be empty or 0");
   }
   return await db.updateMonitor(monitorData);
 };
@@ -305,6 +197,81 @@ export const UpdateMonitor = async (monitor) => {
 export const GetMonitors = async (data) => {
   return await db.getMonitors(data);
 };
+
+export const SystemDataMessage = async () => {
+  //get all active monitors
+  let monitors = await db.getMonitors({ status: "ACTIVE" });
+  //get last status using getLatestMonitoringData(monitor_tag)
+  let monitorTags = monitors.map((monitor) => monitor.tag);
+  let upsCount = 0;
+  let degradedCount = 0;
+  let downCount = 0;
+  for (let i = 0; i < monitors.length; i++) {
+    let status = await db.getLatestMonitoringData(monitors[i].tag);
+    if (status) {
+      if (status.status === "UP") {
+        upsCount++;
+      } else if (status.status === "DEGRADED") {
+        degradedCount++;
+      } else if (status.status === "DOWN") {
+        downCount++;
+      }
+    }
+  }
+
+  const total = upsCount + degradedCount + downCount;
+
+  if (total === 0) {
+    return {
+      text: "No Systems",
+      upsPercentage: 0,
+      degradedPercentage: 0,
+      downsPercentage: 0,
+    };
+  }
+
+  let upsPercentage = Math.round((upsCount / total) * 100);
+  let degradedPercentage = Math.round((degradedCount / total) * 100);
+  let downsPercentage = Math.round((downCount / total) * 100);
+
+  let message = "";
+
+  // Determine message based on the combination of system states
+  if (upsCount > 0 && degradedCount === 0 && downCount === 0) {
+    // UP=1|DOWN=0|DEGRADED=0
+    message = "All Systems are Operational";
+  } else if (upsCount === 0 && degradedCount > 0 && downCount === 0) {
+    // UP=0|DOWN=0|DEGRADED=1
+    message = "All Systems are Degraded";
+  } else if (upsCount === 0 && degradedCount === 0 && downCount > 0) {
+    // UP=0|DOWN=1|DEGRADED=0
+    message = "All Systems are Down";
+  } else if (
+    (upsCount > 0 && degradedCount > 0 && downCount > 0) ||
+    (upsCount === 0 && degradedCount > 0 && downCount > 0)
+  ) {
+    // UP=1|DOWN=1|DEGRADED=1 or UP=0|DOWN=1|DEGRADED=1
+    message = "Some Systems are not working as expected";
+  } else if (upsCount > 0 && degradedCount === 0 && downCount > 0) {
+    // UP=1|DOWN=1|DEGRADED=0
+    message = "Some Systems Down";
+  } else if (upsCount > 0 && degradedCount > 0 && downCount === 0) {
+    // UP=1|DOWN=0|DEGRADED=1
+    message = "Some Systems Degraded";
+  }
+
+  //if percentage is not 100 sum, then add remaining to up
+  if (upsPercentage + degradedPercentage + downsPercentage < 100) {
+    upsPercentage = 100 - (degradedPercentage + downsPercentage);
+  }
+  return {
+    text: message,
+    upsPercentage,
+    degradedPercentage,
+    downsPercentage,
+  };
+};
+
 export const GetMonitorsParsed = async (query) => {
   // Retrieve monitors from the database based on the provided query
   const rawMonitors = await db.getMonitors(query);
@@ -426,6 +393,100 @@ export const GetLastHeartbeat = async (monitor_tag) => {
   return await db.getLastHeartbeat(monitor_tag);
 };
 
+export const ProcessGroupUpdate = async (data) => {
+  //find all active monitor that are of type group
+  let groupActiveMonitors = await db.getMonitors({ status: "ACTIVE", monitor_type: "GROUP" });
+  let validMonitorTags = [];
+
+  for (let i = 0; i < groupActiveMonitors.length; i++) {
+    let groupActiveMonitor = groupActiveMonitors[i];
+    let typeData = JSON.parse(groupActiveMonitor.type_data);
+    let monitorsInGroup = typeData.monitors;
+    let selectedMonitorTags = monitorsInGroup
+      .filter((monitor) => {
+        if (!!monitor.selected) {
+          return monitor.tag;
+        }
+      })
+      .map((monitor) => monitor.tag);
+    validMonitorTags.push({
+      groupTag: groupActiveMonitor.tag,
+      selectedMonitorTags: selectedMonitorTags,
+    });
+  }
+
+  for (let i = 0; i < validMonitorTags.length; i++) {
+    let groupActiveMonitor = validMonitorTags[i];
+    if (groupActiveMonitor.selectedMonitorTags.indexOf(data.monitor_tag) !== -1) {
+      //do db insert
+      //get last status by tag for the group tag
+      let updateData = {};
+      let lastStatus = await db.getMonitoringDataAt(groupActiveMonitor.groupTag, data.timestamp);
+      if (!!lastStatus) {
+        let status = lastStatus.status;
+        let timestamp = lastStatus.timestamp;
+        let receivedStatus = data.status;
+        let receivedTimestamp = data.timestamp;
+        if (receivedStatus === DOWN) {
+          updateData = {
+            monitor_tag: groupActiveMonitor.groupTag,
+            timestamp: receivedTimestamp,
+            status: DOWN,
+            type: REALTIME,
+            latency: data.latency,
+          };
+        } else if (receivedStatus === DEGRADED && status !== DOWN) {
+          updateData = {
+            monitor_tag: groupActiveMonitor.groupTag,
+            timestamp: receivedTimestamp,
+            status: DEGRADED,
+            type: REALTIME,
+            latency: data.latency,
+          };
+        } else if (receivedStatus === UP && status !== DOWN && status !== DEGRADED) {
+          updateData = {
+            monitor_tag: groupActiveMonitor.groupTag,
+            timestamp: receivedTimestamp,
+            status: UP,
+            type: REALTIME,
+            latency: data.latency,
+          };
+        }
+      } else {
+        //if no last status then insert the new status
+        updateData = {
+          monitor_tag: groupActiveMonitor.groupTag,
+          timestamp: data.timestamp,
+          status: data.status,
+          type: REALTIME,
+          latency: data.latency,
+        };
+      }
+      if (!!updateData.status) {
+        await db.insertMonitoringData(updateData);
+      }
+    }
+  }
+};
+
+export const InsertMonitoringData = async (data) => {
+  //do validation if present all fields below
+  if (!data.monitor_tag || !data.timestamp || !data.status || !data.type) {
+    throw new Error("Invalid data");
+  }
+  insertStatusQueue.push(async (cb) => {
+    await ProcessGroupUpdate(data);
+    cb();
+  });
+  return await db.insertMonitoringData({
+    monitor_tag: data.monitor_tag,
+    timestamp: data.timestamp,
+    status: data.status,
+    latency: data.latency || 0,
+    type: data.type,
+  });
+};
+
 export const RegisterHeartbeat = async (tag, secret) => {
   let monitor = await db.getMonitorByTag(tag);
   if (!monitor) {
@@ -439,7 +500,7 @@ export const RegisterHeartbeat = async (tag, secret) => {
     let heartbeatConfig = JSON.parse(typeData);
     let heartbeatSecret = heartbeatConfig.secretString;
     if (heartbeatSecret === secret) {
-      return await db.insertMonitoringData({
+      return InsertMonitoringData({
         monitor_tag: monitor.tag,
         timestamp: GetMinuteStartNowTimestampUTC(GetNowTimestampUTC()),
         status: UP,
@@ -461,6 +522,19 @@ export const GenerateToken = async (data) => {
     return token;
   } catch (err) {
     console.error("Error generating token:", err);
+    throw err;
+  }
+};
+
+//generate token with expiry
+export const GenerateTokenWithExpiry = async (data, expiry) => {
+  try {
+    const token = jwt.sign(data, process.env.KENER_SECRET_KEY || DUMMY_SECRET, {
+      expiresIn: expiry,
+    });
+    return token;
+  } catch (err) {
+    console.error("Error generating token with expiry:", err);
     throw err;
   }
 };
@@ -697,6 +771,10 @@ export const CreateIncident = async (data) => {
   }
 
   let newIncident = await db.createIncident(incident);
+  PushDataToQueue(newIncident.id, "createIncident", {
+    message: `${incident.incident_type} Created`,
+    ...incident,
+  });
   return {
     incident_id: newIncident.id,
   };
@@ -722,6 +800,26 @@ export const UpdateIncident = async (incident_id, data) => {
     state: data.state || incidentExists.state,
     end_date_time: data.end_date_time || incidentExists.end_date_time,
   };
+
+  //check if updateObject same as incidentExists
+  if (
+    JSON.stringify(updateObject) ===
+    JSON.stringify({
+      id: incidentExists.id,
+      title: incidentExists.title,
+      start_date_time: incidentExists.start_date_time,
+      status: incidentExists.status,
+      state: incidentExists.state,
+      end_date_time: incidentExists.end_date_time,
+    })
+  ) {
+    PushDataToQueue(incident_id, "updateIncident", {
+      message: `${incidentExists.incident_type} has been updated to ${updateObject.state}`,
+      ...incidentExists,
+      ...updateObject,
+    });
+  }
+
   return await db.updateIncident(updateObject);
 };
 
@@ -782,6 +880,11 @@ export const AddIncidentMonitor = async (incident_id, monitor_tag, monitor_impac
     throw new Error(`Incident with id ${incident_id} does not exist`);
   }
 
+  PushDataToQueue(incident_id, "insertIncidentMonitor", {
+    title: incidentExists.title,
+    message: `Monitor ${monitor_tag} added to ${incidentExists.incident_type}. Impact is ${monitor_impact}`,
+    ...incidentExists,
+  });
   return await db.insertIncidentMonitor(incident_id, monitor_tag, monitor_impact);
 };
 
@@ -809,6 +912,11 @@ export const UpdateCommentByID = async (incident_id, comment_id, comment, state,
   if (!commentExists) {
     throw new Error(`Comment with id ${comment_id} does not exist`);
   }
+  PushDataToQueue(incident_id, "updateIncidentComment", {
+    title: incidentExists.title,
+    message: `${comment}`,
+    ...incidentExists,
+  });
   let c = await db.updateIncidentCommentByID(comment_id, comment, state, commented_at);
   if (c) {
     let incidentUpdate = {
@@ -834,7 +942,11 @@ export const AddIncidentComment = async (incident_id, comment, state, commented_
   if (!!!state) {
     state = incidentExists.state;
   }
-
+  PushDataToQueue(incident_id, "insertIncidentComment", {
+    title: incidentExists.title,
+    message: `${comment}`,
+    ...incidentExists,
+  });
   let c = await db.insertIncidentComment(incident_id, comment, state, commented_at);
   let incidentType = incidentExists.incident_type;
   //update incident state
@@ -886,6 +998,45 @@ export const GetIncidentByIDDashboard = async (data) => {
   let incident = await db.getIncidentById(data.incident_id);
 
   return incident;
+};
+
+export const GetIncidentsPaginated = async (page, limit, filter, direction) => {
+  let incidents = await db.getIncidentsPaginated(page, limit, filter, direction);
+
+  let allMonitors = {};
+
+  for (let i = 0; i < incidents.length; i++) {
+    let incidentMonitors = await GetIncidentMonitors(incidents[i].id);
+    incidents[i].monitors = incidentMonitors;
+  }
+
+  //for each monitor tag, in monitorsTagAndImpact for every incident, call get monitor by tag
+  for (let i = 0; i < incidents.length; i++) {
+    for (let j = 0; j < incidents[i].monitors.length; j++) {
+      let monitorTag = incidents[i].monitors[j].monitor_tag;
+      let monitorImpact = incidents[i].monitors[j].monitor_impact;
+      if (!allMonitors[monitorTag]) {
+        let monitor = await db.getMonitorByTag(monitorTag);
+        if (monitor) {
+          allMonitors[monitorTag] = {
+            id: monitor.id,
+            tag: monitor.tag,
+            name: monitor.name,
+            image: monitor.image,
+            impact_type: monitorImpact,
+          };
+        }
+      }
+      incidents[i].monitors[j] = allMonitors[monitorTag];
+    }
+  }
+
+  //get comments
+  for (let i = 0; i < incidents.length; i++) {
+    incidents[i].comments = await GetIncidentActiveComments(incidents[i].id);
+  }
+
+  return incidents;
 };
 
 export const GetIncidentsOpenHome = async (homeIncidentCount, start, end) => {
@@ -1284,6 +1435,74 @@ export const DeleteMonitorCompletelyUsingTag = async (tag) => {
   return await db.deleteMonitorsByTag(tag);
 };
 
+export const CreateNewSubscriber = async (data) => {
+  await db.insertSubscriber(data);
+  return await GetSubscriberByEmailAndType(data.subscriber_send, data.subscriber_type);
+};
+
+export const GetSubscriberByEmailAndType = async (email, type) => {
+  return await db.getSubscriberByDetails(email, type);
+};
+
+//get subscriber by id
+export const GetSubscriberByID = async (id) => {
+  return await db.getSubscriberById(id);
+};
+
+//remove all subscriptions for a subscriber
+export const RemoveAllSubscriptions = async (subscriber_id) => {
+  return await db.removeAllDataFromSubscriptions(subscriber_id);
+};
+
+export const CreateNewSubscription = async (subscriber_id, monitors) => {
+  if (!monitors || monitors.length === 0) {
+    throw new Error("No monitors found");
+  }
+
+  await db.removeAllDataFromSubscriptions(subscriber_id);
+
+  for (let i = 0; i < monitors.length; i++) {
+    let tag = monitors[i];
+    let subscription = {
+      subscriber_id: subscriber_id,
+      subscriptions_status: "ACTIVE",
+      subscriptions_monitors: tag,
+      subscriptions_meta: "",
+    };
+    await db.insertSubscription(subscription);
+  }
+
+  return {
+    message: "Subscriptions created successfully",
+    count: monitors.length,
+  };
+};
+
+//updateSubscriberMeta given id
+export const UpdateSubscriberMeta = async (id, meta) => {
+  return await db.updateSubscriberMeta(id, meta);
+};
+
+//updateSubscriberStatus
+export const UpdateSubscriberStatus = async (id, status) => {
+  return await db.updateSubscriberStatus(id, status);
+};
+
+//delete subscriber by id
+export const DeleteSubscriberByID = async (id) => {
+  return await db.deleteSubscriberById(id);
+};
+
+//get subscriptions by subscriber id
+export const GetSubscriptionsBySubscriberID = async (subscriber_id) => {
+  return await db.getSubscriptionsBySubscriberId(subscriber_id);
+};
+
+//getMonitorsByTag
+export const GetMonitorsByTag = async (tag) => {
+  return await db.getMonitorsByTag(tag);
+};
+
 export const GetSiteMap = async (cookies) => {
   let siteMapData = [];
   let siteURLData = await GetSiteDataByKey("siteURL");
@@ -1372,4 +1591,88 @@ export const GetSiteMap = async (cookies) => {
     )
     .join("")}
 </urlset>`;
+};
+
+// fetch the single subscription_trigger (only type=email supported)
+export const GetSubscriptionTriggerByEmail = async () => {
+  return await db.getSubscriptionTriggerByType("email");
+};
+
+// create a subscription_trigger record for email type
+export const CreateSubscriptionTrigger = async (data) => {
+  // only email supported
+  if (data.subscription_trigger_type !== "email") {
+    throw new Error("Only email trigger type is supported");
+  }
+
+  //update subscription_trigger_status and subscription_trigger_id given subscription_trigger_type, if not present insert otherwise update
+  let subscriptionTrigger = await db.getSubscriptionTriggerByType(data.subscription_trigger_type);
+  if (!subscriptionTrigger) {
+    await db.insertSubscriptionTrigger({
+      subscription_trigger_type: data.subscription_trigger_type,
+      subscription_trigger_status: "ACTIVE",
+      config: data.config,
+    });
+  } else {
+    await db.updateSubscriptionTrigger({
+      id: subscriptionTrigger.id,
+      subscription_trigger_status: "ACTIVE",
+      subscription_trigger_type: subscriptionTrigger.subscription_trigger_type,
+      config: data.config,
+    });
+  }
+
+  return {
+    subscription_trigger_type: data.subscription_trigger_type,
+    subscription_trigger_status: data.subscription_trigger_status,
+    config: data.config,
+  };
+};
+
+// Get subscribers paginated
+export const GetSubscribersPaginated = async (data) => {
+  const page = parseInt(data.page) || 1;
+  const limit = parseInt(data.limit) || 10;
+  const subscriptions = await db.getSubscriptionsPaginated(page, limit);
+  const total = await db.getTotalSubscriptionCount();
+
+  //all monitor tags
+  let allTags = subscriptions.map((subscription) => subscription.subscriptions_monitors);
+  //get all monitors by tags
+  let monitors = await db.getMonitorsByTags(allTags);
+  let tagMonitor = {};
+  //convert monitors to map in tagMonitor
+  for (let i = 0; i < monitors.length; i++) {
+    let m = monitors[i];
+    tagMonitor[monitors[i].tag] = {
+      name: m.name,
+      tag: m.tag,
+      image: m.image,
+    };
+  }
+  let subscriberIDObj = {};
+  //for each subscription get subscriber details
+  for (let i = 0; i < subscriptions.length; i++) {
+    let subsID = subscriptions[i].subscriber_id;
+    if (!subscriberIDObj[subsID]) {
+      const subscriber = await db.getSubscriberById(subscriptions[i].subscriber_id);
+      subscriberIDObj[subsID] = {
+        id: subscriber.id,
+        email: subscriber.subscriber_send,
+        status: subscriber.subscriber_status,
+      };
+    }
+    subscriptions[i].subscriber = subscriberIDObj[subsID];
+    subscriptions[i].monitor = tagMonitor[subscriptions[i].subscriptions_monitors];
+  }
+
+  return {
+    subscriptions: subscriptions,
+    total: total,
+  };
+};
+
+//updateSubscriptionStatus
+export const UpdateSubscriptionStatus = async (subscription_id, status) => {
+  return await db.updateSubscriptionStatus(subscription_id, status);
 };

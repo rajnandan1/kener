@@ -15,6 +15,8 @@ import {
   CreateUpdateTrigger,
   GetAllTriggers,
   UpdateTriggerData,
+  GetSubscriptionTriggerByEmail,
+  CreateSubscriptionTrigger,
   GetAllAlertsPaginated,
   GetIncidentByIDDashboard,
   GetMonitorsParsed,
@@ -45,9 +47,11 @@ import {
   GetUserByEmail,
   ManualUpdateUserData,
   DeleteMonitorCompletelyUsingTag,
+  GetSubscribersPaginated,
+  UpdateSubscriptionStatus,
 } from "$lib/server/controllers/controller.js";
 
-import { INVITE_VERIFY_EMAIL } from "$lib/server/constants.js";
+import { INVITE_VERIFY_EMAIL, MANUAL } from "$lib/server/constants.js";
 import { GetNowTimestampUTC } from "$lib/server/tool.js";
 
 function AdminCan(role) {
@@ -149,6 +153,7 @@ export async function POST({ request, cookies }) {
       AdminEditorCan(userDB.role);
       resp = await CreateUpdateMonitor(data);
     } else if (action == "updateMonitoringData") {
+      data.type = MANUAL;
       resp = await UpdateMonitoringData(data);
     } else if (action == "getMonitors") {
       resp = await GetMonitors(data);
@@ -237,8 +242,17 @@ export async function POST({ request, cookies }) {
       }
       const serviceClient = new Service(monitor);
       resp = await serviceClient.execute();
+    } else if (action == "createSubscriptionTrigger") {
+      resp = await CreateSubscriptionTrigger(data);
+    } else if (action == "getSubscriptionTrigger") {
+      resp = await GetSubscriptionTriggerByEmail();
+    } else if (action == "getSubscribers") {
+      resp = await GetSubscribersPaginated(data);
+    } else if (action == "updateSubscriptionStatus") {
+      resp = await UpdateSubscriptionStatus(data.id, data.status);
     }
   } catch (error) {
+    console.log(error);
     resp = { error: error.message };
     return json(resp, { status: 500 });
   }

@@ -12,6 +12,7 @@
   import { hotKeyAction, clickOutsideAction } from "svelte-legos";
   import { onMount } from "svelte";
   import ShareMenu from "$lib/components/shareMenu.svelte";
+  import SubscribeMenu from "$lib/components/subscribeMenu.svelte";
   import { analyticsEvent } from "$lib/boringOne";
   import { scale } from "svelte/transition";
   import { format } from "date-fns";
@@ -27,7 +28,7 @@
   let pageLoaded = false;
   $: {
     if (pageLoaded) {
-      if (shareMenusToggle) {
+      if (shareMenusToggle || subscribeMenuToggle) {
         document.body.style.overflow = "hidden";
       } else {
         document.body.style.overflow = "auto";
@@ -55,6 +56,14 @@
     analyticsEvent("monitor_share_menu_close", {
       tag: activeMonitor.tag
     });
+  }
+
+  let subscribeMenuToggle = false;
+  function openSubscribeMenu() {
+    subscribeMenuToggle = true;
+  }
+  function closeSubscribeMenu() {
+    subscribeMenuToggle = false;
   }
 </script>
 
@@ -94,6 +103,43 @@
     </div>
   </section>
 {/if}
+{#if !!data.systemDataMessage}
+  <div
+    class="section-actions status-color-banner relative mx-auto mb-10 flex w-full max-w-[655px] flex-1 flex-col items-center justify-center"
+  >
+    <div class="z-20 flex w-full flex-wrap gap-x-2 rounded-md border bg-card px-3 py-2 font-medium shadow-sm">
+      {l(data.lang, data.systemDataMessage.text)}
+    </div>
+    <div
+      class="status-color-bar absolute -bottom-1.5 left-[2%] z-10 mx-auto flex h-4 w-[98%] -translate-x-[1%] overflow-hidden rounded-md rounded-tl-none rounded-tr-none shadow-sm"
+    >
+      <div class="bg-api-up h-4" style="width: {data.systemDataMessage.upsPercentage}%;"></div>
+      <div class="bg-api-degraded h-4" style="width: {data.systemDataMessage.degradedPercentage}%;"></div>
+      <div class="bg-api-down h-4" style="width: {data.systemDataMessage.downsPercentage}%;"></div>
+    </div>
+  </div>
+{/if}
+<div class="section-actions mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-center justify-center">
+  <div class="flex w-full flex-wrap rounded-md border shadow-sm">
+    {#if data.canSendEmail}
+      <Button
+        variant="ghost"
+        class="dash-after relative h-10 rounded-md text-sm font-medium"
+        on:click={openSubscribeMenu}
+      >
+        {l(data.lang, "Subscribe to Updates")}
+      </Button>
+    {/if}
+    <Button
+      rel="external"
+      href="{base}/view/events?incident_type=MAINTENANCE"
+      variant="ghost"
+      class="h-10 rounded-md text-sm font-medium"
+    >
+      {l(data.lang, "Upcoming Maintenances")}
+    </Button>
+  </div>
+</div>
 {#if data.pageType != "home"}
   <section class="section-back mx-auto my-2 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center">
     <Button
@@ -288,6 +334,38 @@
       </Button>
       <div class="content">
         <ShareMenu monitor={activeMonitor} lang={data.lang} selectedLang={data.selectedLang} />
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#if subscribeMenuToggle}
+  <div
+    transition:scale={{ duration: 100 }}
+    use:hotKeyAction={{
+      code: "Escape",
+      cb: () => closeSubscribeMenu()
+    }}
+    class="moldal-container fixed left-0 top-0 z-30 h-screen w-full bg-card bg-opacity-30 backdrop-blur-sm"
+  >
+    <div
+      use:clickOutsideAction
+      on:clickoutside={() => {
+        closeSubscribeMenu();
+      }}
+      class="absolute left-1/2 top-1/2 h-fit w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-md border bg-background shadow-lg backdrop-blur-lg md:w-[568px]"
+    >
+      <Button
+        variant="ghost"
+        on:click={() => {
+          closeSubscribeMenu();
+        }}
+        class="absolute right-2 top-2 z-40 h-6 w-6   rounded-full border bg-background p-1"
+      >
+        <X class="h-4 w-4   text-muted-foreground" />
+      </Button>
+      <div class="content">
+        <SubscribeMenu lang={data.lang} selectedLang={data.selectedLang} />
       </div>
     </div>
   </div>

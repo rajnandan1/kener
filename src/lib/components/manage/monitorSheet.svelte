@@ -19,20 +19,20 @@
   import { javascript } from "@codemirror/lang-javascript";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
   import { mode } from "mode-watcher";
+  import AllGamesListRaw from "$lib/all-games-list.json?raw";
   import {
     allRecordTypes,
     ValidateIpAddress,
     ValidateCronExpression,
     IsValidHost,
     IsValidNameServer,
-    AllGamesList,
-    getGameFromId,
+    GetGameFromId,
     IsValidPort
   } from "$lib/clientTools.js";
   import { GAMEDIG_SOCKET_TIMEOUT } from "$lib/anywhere";
 
   const dispatch = createEventDispatcher();
-
+  let AllGamesList = JSON.parse(AllGamesListRaw);
   const defaultEval = `(async function (statusCode, responseTime, responseData) {
 	let statusCodeShort = Math.floor(statusCode/100);
     if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {
@@ -417,7 +417,7 @@
         return;
       }
       // validating game
-      const game = getGameFromId(newMonitor.gamedigConfig.gameId);
+      const game = GetGameFromId(AllGamesList, newMonitor.gamedigConfig.gameId);
       if (!game) {
         invalidFormMessage = "Invalid game/service";
         return;
@@ -1360,7 +1360,7 @@
             </Label>
             <Select.Root portal={null} onSelectedChange={(e) => (newMonitor.gamedigConfig.gameId = e.value)}>
               <Select.Trigger id="gameId">
-                <Select.Value placeholder={getGameFromId(newMonitor.gamedigConfig.gameId).name || ""} />
+                <Select.Value placeholder={GetGameFromId(AllGamesList, newMonitor.gamedigConfig.gameId).name || ""} />
               </Select.Trigger>
               <Select.Content class="max-h-56 overflow-y-auto">
                 <Select.Group>
@@ -1408,7 +1408,7 @@
               </p>
             </label>
           </div>
-          {#if newMonitor.gamedigConfig.gameId && getGameFromId(newMonitor.gamedigConfig.gameId).isValve}
+          {#if newMonitor.gamedigConfig.gameId && GetGameFromId(AllGamesList, newMonitor.gamedigConfig.gameId).isValve}
             <div class="col-span-6">
               <label class="cursor-pointer">
                 <input

@@ -4,7 +4,7 @@ import { IsEmailSetup, CheckInvitationExists } from "$lib/server/controllers/con
 import { INVITE_VERIFY_EMAIL } from "$lib/server/constants.js";
 
 export async function load({ parent }) {
-  let canSendEmail = await IsEmailSetup();
+  let canSendEmail = IsEmailSetup();
   const parentData = await parent();
   return {
     canSendEmail,

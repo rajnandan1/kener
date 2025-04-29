@@ -104,7 +104,7 @@ async function closeIncident(alert, comment) {
 
 function createClosureComment(alert, commonJSON) {
   let comment = "The incident has been auto resolved";
-  let downtimeDuration = moment(alert.updated_at).diff(moment(alert.created_at), "minutes");
+  let downtimeDuration = Math.round(moment(alert.updated_at).diff(moment(alert.created_at), "seconds") / 60);
   comment = comment + `, Total downtime: ` + downtimeDuration + ` minutes`;
   return comment;
 }

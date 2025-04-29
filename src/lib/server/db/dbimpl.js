@@ -48,6 +48,16 @@ class DbImpl {
       .first();
   }
 
+  //get data at time stamp
+  async getMonitoringDataAt(monitor_tag, timestamp) {
+    return await this.knex("monitoring_data")
+      .where("monitor_tag", monitor_tag)
+      .where("timestamp", timestamp)
+      .orderBy("timestamp", "desc")
+      .limit(1)
+      .first();
+  }
+
   //get latest data for all active monitors
   async getLatestMonitoringDataAllActive(monitor_tags) {
     // Find the latest timestamp for each provided monitor tag
@@ -278,6 +288,61 @@ class DbImpl {
     return await this.knex("monitor_alerts").count("* as count").first();
   }
 
+  //getMonitorsByTags array of string
+  async getMonitorsByTags(tags) {
+    return await this.knex("monitors").whereIn("tag", tags);
+  }
+
+  async getMonitorsByTag(tag) {
+    return await this.knex("monitors").where("tag", tag).first();
+  }
+
+  //get incidents paginated and direction, given a start timestamp, also might have filter on incident_type, incident_source
+  async getIncidentsPaginated(page, limit, filter, direction = "after") {
+    let query = this.knex("incidents").select("*").whereRaw("1=1");
+    if (filter && filter.status) {
+      query = query.andWhere("status", filter.status);
+    }
+    if (filter && filter.start && direction === "after") {
+      query = query.andWhere("start_date_time", ">=", filter.start);
+    }
+    if (filter && filter.start && direction === "before") {
+      query = query.andWhere("start_date_time", "<=", filter.start);
+    }
+    if (filter && filter.end && direction === "after") {
+      query = query.andWhere("start_date_time", ">=", filter.end);
+    }
+    if (filter && filter.end && direction === "before") {
+      query = query.andWhere("start_date_time", "<=", filter.end);
+    }
+
+    if (filter && filter.state) {
+      query = query.andWhere("state", filter.state);
+    }
+    if (filter && filter.id) {
+      query = query.andWhere("id", filter.id);
+    }
+    if (filter && filter.incident_type) {
+      query = query.andWhere("incident_type", filter.incident_type);
+    }
+    if (filter && filter.incident_source) {
+      query = query.andWhere("incident_source", filter.incident_source);
+    }
+    if (direction === "after") {
+      query = query
+        .orderBy("start_date_time", "asc")
+        .limit(limit)
+        .offset((page - 1) * limit);
+    } else {
+      query = query
+        .orderBy("start_date_time", "desc")
+        .limit(limit)
+        .offset((page - 1) * limit);
+    }
+
+    return await query;
+  }
+
   //update alert to inactive given monitor_tag, monitor_status, given id
   async updateAlertStatus(id, alert_status) {
     return await this.knex("monitor_alerts").where({ id }).update({
@@ -370,15 +435,37 @@ class DbImpl {
     });
   }
 
-    //given monitor_tag, start and end timestamp and a status, update all monitoring data with this status
-    async updateMonitoringData(monitor_tag, start, end, newStatus) {
-      return await this.knex("monitoring_data")
-          .where("monitor_tag", monitor_tag)
-          .where("timestamp", ">=", start)
-          .where("timestamp", "<=", end)
-          .update({
-              status: newStatus
-          });
+  //given monitor_tag, start and end timestamp and a status, update all monitoring data with this status
+  async updateMonitoringData(monitor_tag, start, end, newStatus, type) {
+    const count = Math.floor((end - start) / 60) + 1;
+    const timestamps = Array.from({ length: count }, (_, i) => start + i * 60);
+
+    const records = timestamps.map((ts) => ({
+      monitor_tag,
+      timestamp: ts,
+      status: newStatus,
+      type,
+      latency: 0,
+    }));
+
+    // Use transaction for better performance with batches
+    const batchSize = 500;
+
+    return await this.knex.transaction(async (trx) => {
+      const results = [];
+
+      for (let i = 0; i < records.length; i += batchSize) {
+        const batch = records.slice(i, i + batchSize);
+        const result = await trx("monitoring_data")
+          .insert(batch)
+          .onConflict(["monitor_tag", "timestamp"])
+          .merge({ status: newStatus });
+
+        results.push(result);
+      }
+
+      return results;
+    });
   }
 
   async updateMonitorTrigger(data) {
@@ -400,6 +487,10 @@ class DbImpl {
     }
     if (!!data.id) {
       query = query.andWhere("id", data.id);
+    }
+    //monitor_type
+    if (!!data.monitor_type) {
+      query = query.andWhere("monitor_type", data.monitor_type);
     }
     if (!!data.tag) {
       query = query.andWhere("tag", data.tag);
@@ -612,6 +703,10 @@ class DbImpl {
 
     if (filter && filter.state) {
       query = query.andWhere("state", filter.state);
+    }
+
+    if (filter && filter.id) {
+      query = query.andWhere("id", filter.id);
     }
 
     query = query
@@ -950,6 +1045,232 @@ class DbImpl {
   //delete from monitors using tag
   async deleteMonitorsByTag(tag) {
     return await this.knex("monitors").where("tag", tag).del();
+  }
+
+  //insert into subscribers
+  async insertSubscriber(data) {
+    return await this.knex("subscribers").insert({
+      subscriber_send: data.subscriber_send,
+      subscriber_meta: data.subscriber_meta,
+      subscriber_type: data.subscriber_type,
+      subscriber_status: data.subscriber_status,
+      created_at: this.knex.fn.now(),
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //update subscriber_meta given id
+  async updateSubscriberMeta(id, subscriber_meta) {
+    return await this.knex("subscribers").where({ id }).update({
+      subscriber_meta,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //update subscriber_status given id
+  async updateSubscriberStatus(id, subscriber_status) {
+    return await this.knex("subscribers").where({ id }).update({
+      subscriber_status,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //delete subscriber by id
+  async deleteSubscriberById(id) {
+    return await this.knex("subscribers").where({ id }).del();
+  }
+
+  //insert into subscriptions table
+  async insertSubscription(data) {
+    return await this.knex("subscriptions").insert({
+      subscriber_id: data.subscriber_id,
+      subscriptions_status: data.subscriptions_status,
+      subscriptions_monitors: data.subscriptions_monitors,
+      subscriptions_meta: data.subscriptions_meta,
+      created_at: this.knex.fn.now(),
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //given subscriber_id remove all data from subscriptions
+  async removeAllDataFromSubscriptions(subscriber_id) {
+    return await this.knex("subscriptions").where({ subscriber_id }).del();
+  }
+
+  //get subscriptions by subscriber_id
+  async getSubscriptionsBySubscriberId(subscriber_id) {
+    return await this.knex("subscriptions").where("subscriber_id", subscriber_id).orderBy("id", "desc");
+  }
+
+  //update subscription status
+  async updateSubscriptionStatus(id, subscriptions_status) {
+    return await this.knex("subscriptions").where({ id }).update({
+      subscriptions_status,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //get all subscribers with active status
+  async getAllActiveSubscribers() {
+    return await this.knex("subscribers").where("subscriber_status", "ACTIVE");
+  }
+
+  //get subscriptions for a monitor tag
+  async getSubscriptionsForMonitor(monitor_tag) {
+    return await this.knex("subscriptions as s")
+      .join("subscribers as sub", "s.subscriber_id", "sub.id")
+      .where("s.subscriptions_status", "ACTIVE")
+      .where("sub.subscriber_status", "ACTIVE")
+      .whereRaw("s.subscriptions_monitors = ? OR s.subscriptions_monitors = 'ALL'", [monitor_tag])
+      .select("sub.subscriber_send", "sub.subscriber_type", "sub.subscriber_meta", "s.subscriptions_meta");
+  }
+
+  //get subscriber by subscriber_send and subscriber_type
+  async getSubscriberByDetails(subscriber_send, subscriber_type) {
+    return await this.knex("subscribers")
+      .where({
+        subscriber_send,
+        subscriber_type,
+      })
+      .first();
+  }
+
+  //get all subscribers by type
+  async getSubscribersByType(subscriber_type) {
+    return await this.knex("subscribers").where("subscriber_type", subscriber_type).orderBy("id", "desc");
+  }
+
+  //get subscriptions paginated
+  async getSubscriptionsPaginated(page, limit) {
+    return await this.knex("subscriptions")
+      .select(
+        "id",
+        "subscriber_id",
+        "subscriptions_status",
+        "subscriptions_monitors",
+        "subscriptions_meta",
+        "created_at",
+      )
+      .orderBy("id", "desc")
+      .limit(limit)
+      .offset((page - 1) * limit);
+  }
+
+  //get total subscription count
+
+  async getTotalSubscriptionCount() {
+    const result = await this.knex("subscriptions").count("* as count").first();
+    return result.count || 0;
+  }
+
+  //get all subscriber emails from subscriptions table that are of given tag or = _
+  async getSubscriberEmails(monitor_tags) {
+    return await this.knex("subscriptions")
+      .join("subscribers", "subscribers.id", "subscriptions.subscriber_id")
+      .distinct("subscribers.subscriber_send as subscriber_send")
+      .where("subscriptions.subscriptions_status", "ACTIVE")
+      .whereIn("subscriptions.subscriptions_monitors", monitor_tags)
+      .orderBy("subscriber_send");
+  }
+
+  //getSubscriberById
+  async getSubscriberById(id) {
+    return await this.knex("subscribers")
+      .select("id", "subscriber_send", "subscriber_meta", "subscriber_type", "subscriber_status", "created_at")
+      .where("id", id)
+      .first();
+  }
+
+  // Get subscribers paginated
+  async getSubscribersPaginated(page, limit) {
+    // Use a subquery for pagination to apply limit/offset before joining
+    const subquery = this.knex("subscribers")
+      .select("id")
+      .orderBy("created_at", "desc")
+      .limit(limit)
+      .offset((page - 1) * limit)
+      .as("paginated_subscribers");
+
+    const dbType = GetDbType(); // Get the database type
+    const aggregationFunction = dbType === "postgresql" ? "STRING_AGG" : "GROUP_CONCAT";
+
+    const results = await this.knex("subscribers as s")
+      .select(
+        "s.id",
+        "s.subscriber_send",
+        "s.subscriber_status",
+        "s.created_at",
+        // Aggregate monitor tags based on DB type
+        this.knex.raw(`${aggregationFunction}(sub.subscriptions_monitors, ',') as monitors_agg`),
+      )
+      .innerJoin(subquery, "s.id", "paginated_subscribers.id") // Join with paginated IDs
+      .leftJoin("subscriptions as sub", "s.id", "sub.subscriber_id") // Left join to include subscribers with no subscriptions
+      .groupBy("s.id", "s.subscriber_send", "s.subscriber_status", "s.created_at") // Group by subscriber details
+      .orderBy("s.created_at", "desc"); // Ensure final order
+
+    // Process results to split the aggregated string into an array
+    return results.map((row) => ({
+      ...row,
+      subscriptions_monitors: row.monitors_agg ? row.monitors_agg.split(",") : [], // Split string into array, handle null
+      monitors_agg: undefined, // Remove the temporary aggregation field
+    }));
+  }
+
+  // Get total count of subscribers
+  async getSubscribersCount() {
+    const result = await this.knex("subscribers").count("* as count").first();
+    return result.count || 0; // Return count or 0 if no subscribers
+  }
+
+  // CRUD operations for subscription_triggers
+  async insertSubscriptionTrigger(data) {
+    return await this.knex("subscription_triggers").insert({
+      subscription_trigger_type: data.subscription_trigger_type,
+      subscription_trigger_status: data.subscription_trigger_status,
+      config: data.config,
+      created_at: this.knex.fn.now(),
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  async getSubscriptionTriggerById(id) {
+    return await this.knex("subscription_triggers").where({ id }).first();
+  }
+
+  async getAllSubscriptionTriggers() {
+    return await this.knex("subscription_triggers").orderBy("id", "desc");
+  }
+
+  // get a single subscription_trigger by type
+  async getSubscriptionTriggerByType(subscription_trigger_type) {
+    return await this.knex("subscription_triggers")
+      .where("subscription_trigger_type", subscription_trigger_type)
+      .first();
+  }
+
+  async updateSubscriptionTrigger(data) {
+    return await this.knex("subscription_triggers").where({ id: data.id }).update({
+      subscription_trigger_type: data.subscription_trigger_type,
+      subscription_trigger_status: data.subscription_trigger_status,
+      config: data.config,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  async updateSubscriptionTriggerStatus(id, subscription_trigger_status) {
+    return await this.knex("subscription_triggers").where({ id }).update({
+      subscription_trigger_status,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  //deleteSubscriptionTriggerByType
+  async deleteSubscriptionTriggerByType(subscription_trigger_type) {
+    return await this.knex("subscription_triggers").where({ subscription_trigger_type }).del();
+  }
+
+  async deleteSubscriptionTriggerById(id) {
+    return await this.knex("subscription_triggers").where({ id }).del();
   }
 }
 

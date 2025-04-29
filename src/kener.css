@@ -881,3 +881,58 @@ p code:not([class^="language-"]) {
   margin-top: 1.3em;
   margin-bottom: 1.3em;
 }
+
+input[type="checkbox"]:disabled + .peer {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Select any element whose class begins with "lucid-chevron" */
+.hide-chevron [data-bits-accordion-header] .lucide-chevron-down,
+.hide-chevron [data-bits-accordion-header] .lucide-chevron-up {
+  /* add your styles here */
+  display: none; /* Hides the chevron when the class 'hide-chevron' is applied */
+}
+
+.hide-chevron [data-bits-accordion-header] button:hover {
+  background-color: transparent;
+}
+
+.copybtn .copy-btn {
+  transform: scale(1);
+  transition: transform 0.15s;
+}
+.copybtn .check-btn {
+  transform: scale(0);
+  transition: transform 0.15s;
+}
+.copybtn:focus .copy-btn {
+  transform: scale(0);
+}
+.copybtn:focus .check-btn {
+  transform: scale(1);
+}
+.dash-after::after {
+  content: " ";
+  display: inline-block;
+  position: absolute;
+  width: 1px;
+  height: 24px;
+  border-radius: 2px;
+  background-color: hsl(var(--accent) / var(--tw-bg-opacity, 1));
+  right: -1px;
+}
+
+.dash-after:hover::after {
+  display: none;
+}
+
+.status-color-bar {
+  transition: all 0.2s ease-in-out;
+}
+.status-color-banner:hover .status-color-bar {
+  bottom: -0.75rem;
+}
+.status-color-banner:hover > div {
+  @apply bg-secondary;
+}

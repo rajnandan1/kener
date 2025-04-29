@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { FetchData } from "$lib/server/page";
-import { GetMonitors, GetIncidentsOpenHome } from "$lib/server/controllers/controller.js";
+import { GetMonitors, GetIncidentsOpenHome, SystemDataMessage } from "$lib/server/controllers/controller.js";
 import { SortMonitor } from "$lib/clientTools.js";
 import moment from "moment";
 
@@ -30,7 +30,6 @@ async function returnTypeOfMonitorsPageMeta(url) {
   }
 
   if (!!query.get("group")) {
-    const groupStart = performance.now();
     let g = await GetMonitors({ status: "ACTIVE", tag: query.get("group") });
 
     if (g.length > 0) {
@@ -42,20 +41,23 @@ async function returnTypeOfMonitorsPageMeta(url) {
     }
   }
 
-  const monitorStart = performance.now();
   let monitors = await GetMonitors(filter);
   return { monitors, pageType, group };
 }
 
 export async function load({ parent, url }) {
-  const totalLoadStart = performance.now();
-
+  let subscribableMonitors = await GetMonitors({ status: "ACTIVE" });
+  subscribableMonitors = subscribableMonitors.map((monitor) => {
+    return {
+      tag: monitor.tag,
+      name: monitor.name,
+      image: monitor.image,
+    };
+  });
   const query = url.searchParams;
 
-  const metaStart = performance.now();
   let { monitors, pageType, group } = await returnTypeOfMonitorsPageMeta(url);
 
-  const processStart = performance.now();
   let hiddenGroupedMonitorsTags = [];
   for (let i = 0; i < monitors.length; i++) {
     if (pageType === "home" && monitors[i].monitor_type === "GROUP") {
@@ -194,8 +196,16 @@ export async function load({ parent, url }) {
 
   let allRecentIncidents = allOpenIncidents.filter((incident) => incident.incident_type == "INCIDENT");
   let allRecentMaintenances = allOpenIncidents.filter((incident) => incident.incident_type == "MAINTENANCE");
+
+  let systemDataMessage;
+
+  if (!!siteData.showSiteStatus && siteData.showSiteStatus == "YES") {
+    systemDataMessage = await SystemDataMessage();
+  }
+
   return {
     monitors: monitorsActive,
+    subscribableMonitors,
     allRecentIncidents,
     allRecentMaintenances,
     pageType,
@@ -204,5 +214,6 @@ export async function load({ parent, url }) {
     hero,
     categoryName: query.get("category"),
     canonical,
+    systemDataMessage,
   };
 }
