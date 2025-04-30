@@ -25,12 +25,12 @@ RUN apt-get update && apt-get install -y \
 FROM node:${ALPINE_VERSION_TAG} AS builder-alpine
 RUN apk add --no-cache --update \
         build-base=0.5-r3 \
-        python3=3.12.9-r0 \
-        py3-pip=24.3.1-r0 \
+        python3 \
+        py3-pip \
         make=4.4.1-r2 \
         g++=14.2.0-r4 \
-        sqlite=3.48.0-r0 \
-        sqlite-dev=3.48.0-r0 \
+        sqlite \
+        sqlite-dev \
         tzdata \
         iputils
 
@@ -84,7 +84,7 @@ RUN apt-get update && apt-get install -y \
 FROM node:${ALPINE_VERSION_TAG} AS final-alpine
 RUN apk add --no-cache --update \
 	iputils \
-	sqlite=3.48.0-r0 \
+	sqlite \
 	tzdata
 
 FROM final-${VARIANT} AS final
