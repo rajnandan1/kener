@@ -493,7 +493,7 @@
               newTrigger.trigger_type = "webhook";
             }}
           >
-            <img src="{base}/webhooks.svg" title="webhook" class="mr-4 w-6" />
+            <img src="{base}/webhooks.svg" title="webhook" class="mr-4 w-6" alt="Icon that represents webhooks" />
             Webhooks
           </Button>
           <Button
@@ -503,7 +503,7 @@
               newTrigger.trigger_type = "discord";
             }}
           >
-            <img src="{base}/discord.svg" title="discord" class="mr-4 w-6" />
+            <img src="{base}/discord.svg" title="discord" class="mr-4 w-6" alt="Discord logo" />
             Discord
           </Button>
           <Button
@@ -513,7 +513,7 @@
               newTrigger.trigger_type = "slack";
             }}
           >
-            <img src="{base}/slack.svg" title="slack" class="mr-4 w-6" />
+            <img src="{base}/slack.svg" title="slack" class="mr-4 w-6" alt="Slack logo"/>
             Slack
           </Button>
 
@@ -524,7 +524,7 @@
               newTrigger.trigger_type = "email";
             }}
           >
-            <img src="{base}/email.png" title="email" class="mr-4 w-6" />
+            <img src="{base}/email.png" title="email" class="mr-4 w-6" alt="Icon that represents emails"/>
             Email
           </Button>
         </div>

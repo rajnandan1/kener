@@ -18,7 +18,6 @@
 
   export let monitor;
   export let lang;
-  export let selectedLang = "en";
   let theme = "light";
   let copiedLink = false;
   let embedType = "js";

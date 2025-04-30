@@ -304,7 +304,7 @@
       >
         <div class="daygrid90 flex min-h-[60px] justify-start overflow-x-auto overflow-y-hidden py-1">
           {#each Object.entries(_90Day) as [ts, bar]}
-            <a
+            <button
               data-ts={ts}
               use:hoverAction
               on:hover={(e) => {
@@ -313,7 +313,6 @@
               on:click={(e) => {
                 dailyDataGetter(e, bar, incidents[ts]);
               }}
-              href="#"
               class="oneline h-[34px] w-[6px]
 							{bar.border ? 'opacity-100' : 'opacity-20'} pb-1"
             >
@@ -330,7 +329,7 @@
                   ].monitor_impact.toLowerCase()} comein absolute -bottom-[3px] left-[1px] h-[4px] w-[4px] rounded-full"
                 ></div>
               {/if}
-            </a>
+            </button>
             {#if bar.showDetails}
               <div class="show-hover absolute text-sm">
                 <div class="text-{bar.textClass} text-xs font-semibold">

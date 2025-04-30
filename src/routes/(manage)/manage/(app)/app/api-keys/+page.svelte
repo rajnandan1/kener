@@ -3,8 +3,6 @@
   import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button";
   import ExternalLink from "lucide-svelte/icons/external-link";
-
-  export let data;
 </script>
 
 <div class="min-h-[70vh]">

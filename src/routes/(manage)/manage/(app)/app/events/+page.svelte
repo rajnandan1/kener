@@ -845,38 +845,38 @@
                 <div
                   class="bg-hover state-{newComment.state} mt-2 grid grid-cols-4 overflow-hidden rounded-md border text-xs font-medium"
                 >
-                  <div
+                  <button
                     class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
                     on:click={() => {
                       setCommentState("INVESTIGATING");
                     }}
                   >
                     INVESTIGATING
-                  </div>
-                  <div
+                  </button>
+                  <button
                     class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
                     on:click={() => {
                       setCommentState("IDENTIFIED");
                     }}
                   >
                     IDENTIFIED
-                  </div>
-                  <div
+                  </button>
+                  <button
                     class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
                     on:click={() => {
                       setCommentState("MONITORING");
                     }}
                   >
                     MONITORING
-                  </div>
-                  <div
+                  </button>
+                  <button
                     class="col-span-1 cursor-pointer px-2 py-2 text-center hover:underline"
                     on:click={() => {
                       setCommentState("RESOLVED");
                     }}
                   >
                     RESOLVED
-                  </div>
+                  </button>
                 </div>
               {/if}
               <div class="mt-4 flex w-full gap-4">
