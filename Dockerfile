@@ -32,7 +32,7 @@ RUN apk add --no-cache --update \
         sqlite=3.48.0-r0 \
         sqlite-dev=3.48.0-r0 \
         tzdata \
-        iputils=20240905-r0
+        iputils
 
 FROM builder-${VARIANT} AS builder
 
@@ -83,7 +83,7 @@ RUN apt-get update && apt-get install -y \
 
 FROM node:${ALPINE_VERSION_TAG} AS final-alpine
 RUN apk add --no-cache --update \
-	iputils=20240905-r0 \
+	iputils \
 	sqlite=3.48.0-r0 \
 	tzdata
 
