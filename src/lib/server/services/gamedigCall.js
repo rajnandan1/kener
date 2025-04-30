@@ -1,5 +1,4 @@
 // @ts-nocheck
-import { error } from "@sveltejs/kit";
 import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
 import { GameDig } from 'gamedig';
 import { DefaultGamedigEval, GAMEDIG_SOCKET_TIMEOUT, GAMEDIG_TIMEOUT } from "../../anywhere.js";
