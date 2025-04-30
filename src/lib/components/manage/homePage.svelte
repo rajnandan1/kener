@@ -259,7 +259,8 @@
       ...categories,
       {
         name: "",
-        description: ""
+        description: "",
+        visibility: true
       }
     ];
   }
@@ -652,8 +653,8 @@
   <Card.Content>
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitCategories}>
       {#each categories as cat, i}
-        <div class="grid grid-cols-4 gap-2">
-          <div class="col-span-1">
+        <div class="flex items-center gap-4">
+          <div class="flex-1">
             <Label for="{i}catkey" class="block w-full">Name</Label>
             <Input
               bind:value={cat.name}
@@ -664,7 +665,7 @@
               disabled={i === 0}
             />
           </div>
-          <div class="relative col-span-3 pr-8">
+          <div class="flex-1">
             <Label for="{i}catdsc" class="block w-full">Description</Label>
             <Input
               bind:value={cat.description}
@@ -674,9 +675,26 @@
               placeholder="Category Description"
               disabled={i === 0}
             />
+          </div>
+          <div class="relative flex items-center mt-4">
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger disabled={i === 0}>
+                <Button variant="outline" class="mr-2" disabled={i === 0}>
+                  {cat.visibility ? "Public" : "Private"}
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content>
+                <DropdownMenu.Group>
+                  <DropdownMenu.Item on:click={() => (cat.visibility = false)} disabled={i === 0}>Private</DropdownMenu.Item>
+                  <DropdownMenu.Item on:click={() => (cat.visibility = true)} disabled={i === 0}>Public</DropdownMenu.Item>
+                </DropdownMenu.Group>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+          </div>
+          <div class="flex items-center">
             <Button
               variant="ghost"
-              class="absolute right-0 top-8 ml-2 h-6 w-6 p-1 "
+              class="h-6 w-6 p-1"
               disabled={i === 0}
               on:click={() => (categories = categories.filter((_, index) => index !== i))}
             >

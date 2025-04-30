@@ -17,7 +17,8 @@
   import { scale } from "svelte/transition";
   import { format } from "date-fns";
   import GMI from "$lib/components/gmi.svelte";
-
+  import { page } from "$app/stores";
+  
   export let data;
   let shareMenusToggle = false;
   function showShareMenu(e) {
@@ -263,7 +264,9 @@
   <section
     class="section-categories relative z-10 mx-auto mb-8 w-full max-w-[890px] flex-1 flex-col items-start backdrop-blur-[2px] md:w-[655px]"
   >
-    {#each data.site.categories.filter((e) => e.name != "Home") as category}
+  {#each data.site.categories.filter((category) => 
+    category.name != "Home" && 
+    (category.visibility || $page.data.isLoggedIn)) as category}
       <a href={`?category=${category.name}`} rel="external">
         <Card.Root class="mb-4 hover:bg-secondary">
           <Card.Header class="bounce-right relative w-full cursor-pointer px-4  ">
