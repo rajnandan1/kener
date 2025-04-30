@@ -79,7 +79,7 @@ npm run dev
 
 Official Docker images for **Kener** are available on [Docker Hub](https://hub.docker.com/r/rajnandan1/kener). Multiple versions are maintained to support different use cases.
 
-<a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.2.13"><img src="https://img.shields.io/badge/Latest_Stable_Release-3.2.13-blue" alt="Kener latest stable version: 3.2.13" /></a>
+<a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.2.14"><img src="https://img.shields.io/badge/Latest_Stable_Release-3.2.14-blue" alt="Kener latest stable version: 3.2.14" /></a>
 
 #### Available Tags
 
@@ -93,38 +93,38 @@ Official Docker images for **Kener** are available on [Docker Hub](https://hub.d
 	</tr>
 	<tr>
 		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=latest" target="_blank"><code>latest</code></td>
-		<td>Latest stable release (aka 3.2.13)</td>
+		<td>Latest stable release (aka 3.2.14)</td>
 	</tr>
 	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.2.13" target="_blank"><code>3.2.13</code></a></td>
+		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.2.14" target="_blank"><code>3.2.14</code></a></td>
 		<td>Specific release version</td>
 	</tr>
 	<tr>
 		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.2" target="_blank"><code>3.2</code></a></td>
-		<td>Major-minor version tag pointing to the latest patch (3.2.13) release within that minor version (3.2.x)</td>
+		<td>Major-minor version tag pointing to the latest patch (3.2.14) release within that minor version (3.2.x)</td>
 	</tr>
 	<tr>
 		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3" target="_blank"><code>3</code></a></td>
-		<td>Major version tag pointing to the latest stable (3.2.13) release within that major version (3.x.x)</td>
+		<td>Major version tag pointing to the latest stable (3.2.14) release within that major version (3.x.x)</td>
 	</tr>
 	<tr>
 		<td align="left" colspan="2" style="color:#0D597F;text-align:left;">Alpine Linux 3.21 w/ Node.js v23.7.0 &nbsp;<strong><em>(smallest image size)</em></strong></td>
 	</tr>
 	<tr>
 		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=alpine" target="_blank"><code>alpine</code></td>
-		<td>Latest stable release (aka 3.2.13)</td>
+		<td>Latest stable release (aka 3.2.14)</td>
 	</tr>
 	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.2.13-alpine" target="_blank"><code>3.2.13-alpine</code></a></td>
+		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.2.14-alpine" target="_blank"><code>3.2.14-alpine</code></a></td>
 		<td>Specific release version</td>
 	</tr>
 	<tr>
 		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.2-alpine" target="_blank"><code>3.2-alpine</code></a></td>
-		<td>Major-minor version tag pointing to the latest patch (3.2.13) release within that minor version (3.2.x)</td>
+		<td>Major-minor version tag pointing to the latest patch (3.2.14) release within that minor version (3.2.x)</td>
 	</tr>
 	<tr>
 		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3-alpine" target="_blank"><code>3-alpine</code></a></td>
-		<td>Major version tag pointing to the latest stable (3.2.13) release within that major version (3.x.x)</td>
+		<td>Major version tag pointing to the latest stable (3.2.14) release within that major version (3.x.x)</td>
 	</tr>
 </table>
 
