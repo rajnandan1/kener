@@ -97,7 +97,7 @@ const seedSiteData = {
     cssSrc: "",
     family: "",
   },
-  categories: [{ name: "Home", description: "Monitors for Home Page" }],
+  categories: [{ name: "Home", description: "Monitors for Home Page", isHidden: false }],
   homeIncidentCount: 5,
   homeIncidentStartTimeWithin: 30,
   kenerTheme: "default",

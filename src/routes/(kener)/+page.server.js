@@ -4,7 +4,7 @@ import { GetMonitors, GetIncidentsOpenHome, SystemDataMessage } from "$lib/serve
 import { SortMonitor } from "$lib/clientTools.js";
 import moment from "moment";
 import { page } from "$app/stores";
-import { redirect, error } from '@sveltejs/kit';
+import { redirect, error } from "@sveltejs/kit";
 
 function removeTags(str) {
   if (str === null || str === "") return false;
@@ -152,8 +152,8 @@ export async function load({ parent, url }) {
     let allCategories = siteData.categories;
     let selectedCategory = allCategories.find((category) => category.name === query.get("category"));
     if (selectedCategory) {
-      if (!selectedCategory.visibility && !parentData.isLoggedIn) {
-        throw redirect(303, '/manage/app');
+      if (!!selectedCategory.isHidden && !parentData.isLoggedIn) {
+        throw error(404, "Category not found");
       }
       pageTitle = selectedCategory.name + " - " + pageTitle;
       pageDescription = selectedCategory.description;
@@ -164,9 +164,8 @@ export async function load({ parent, url }) {
         subtitle: selectedCategory.description,
         image: selectedCategory.image,
       };
-    }
-    else {
-      throw error(404, 'Category not found');
+    } else {
+      throw error(404, "Category not found");
     }
   }
   if (isCategoryPage || isMonitorPage || isGroupPage) {

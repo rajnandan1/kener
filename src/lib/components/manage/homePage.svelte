@@ -260,7 +260,7 @@
       {
         name: "",
         description: "",
-        visibility: true
+        isHidden: false
       }
     ];
   }
@@ -676,17 +676,18 @@
               disabled={i === 0}
             />
           </div>
-          <div class="relative flex items-center mt-4">
+          <div class="relative flex flex-col items-center gap-y-2">
+            <Label for="{i}vis" class="block w-full">Visibility</Label>
             <DropdownMenu.Root>
-              <DropdownMenu.Trigger disabled={i === 0}>
-                <Button variant="outline" class="mr-2" disabled={i === 0}>
-                  {cat.visibility ? "Public" : "Private"}
+              <DropdownMenu.Trigger disabled={i === 0} id="{i}vis">
+                <Button variant="outline" class="mr-2" disabled={cat.name === "Home"}>
+                  {cat.isHidden ? "Private" : "Public"}
                 </Button>
               </DropdownMenu.Trigger>
               <DropdownMenu.Content>
                 <DropdownMenu.Group>
-                  <DropdownMenu.Item on:click={() => (cat.visibility = false)} disabled={i === 0}>Private</DropdownMenu.Item>
-                  <DropdownMenu.Item on:click={() => (cat.visibility = true)} disabled={i === 0}>Public</DropdownMenu.Item>
+                  <DropdownMenu.Item on:click={() => (cat.isHidden = true)}>Private</DropdownMenu.Item>
+                  <DropdownMenu.Item on:click={() => (cat.isHidden = false)}>Public</DropdownMenu.Item>
                 </DropdownMenu.Group>
               </DropdownMenu.Content>
             </DropdownMenu.Root>
@@ -694,7 +695,7 @@
           <div class="flex items-center">
             <Button
               variant="ghost"
-              class="h-6 w-6 p-1"
+              class="mt-4 h-6 w-6 p-1"
               disabled={i === 0}
               on:click={() => (categories = categories.filter((_, index) => index !== i))}
             >
