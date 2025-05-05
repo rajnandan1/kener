@@ -109,7 +109,7 @@ export function IsValidColors(colors) {
 		return false;
 	}
 	if (typeof colors !== "object") return false;
-	const validColorKeys = ["UP", "DOWN", "DEGRADED"];
+	const validColorKeys = ["UP", "DOWN", "DEGRADED", "MAINTENANCE"];
 	for (const key of validColorKeys) {
 		if (typeof colors[key] !== "string" || !/^#[0-9A-Fa-f]{6}$/.test(colors[key])) return false;
 	}
