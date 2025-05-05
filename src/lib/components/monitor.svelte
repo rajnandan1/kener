@@ -321,12 +321,12 @@
                 dailyDataGetter(e, bar, incidents[ts]);
               }}
               href="#"
-              class="oneline h-[34px] w-[6px]
+              class="oneline h-[34px]
 							{bar.border ? 'opacity-100' : 'opacity-20'} pb-1"
               style="width: {dimension.x1}px"
             >
               <div
-                class="oneline-in h-[30px] bg-{bar.cssClass} mx-auto w-[4px] rounded-{monitor.pageData.barRoundness.toUpperCase() ==
+                class="oneline-in h-[30px] bg-{bar.cssClass} mx-auto rounded-{monitor.pageData.barRoundness.toUpperCase() ==
                 'SHARP'
                   ? 'none'
                   : 'sm'}"

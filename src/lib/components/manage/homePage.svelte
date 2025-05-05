@@ -138,7 +138,6 @@
     let resp = await storeSiteData({
       hero: JSON.stringify(hero)
     });
-    //print data
     let data = await resp.json();
     formStateHero = "idle";
     if (data.error) {
@@ -467,7 +466,6 @@
             </Select.Root>
           </div>
           <div class="border-b pb-4">
-            <!-- use checkboxes selectableDaysList -->
             <Label for="desktopdropdown" class="text-sm font-medium">Select Dropdown Range</Label>
             <div class="mt-2 flex flex-row flex-wrap gap-x-2">
               {#each selectableDaysList as day}
@@ -536,7 +534,6 @@
             </Select.Root>
           </div>
           <div class="border-b pb-4">
-            <!-- use checkboxes selectableDaysList -->
             <Label for="mobiledropdown" class="text-sm font-medium">Select Dropdown Range</Label>
             <div class="mt-2 flex flex-row flex-wrap gap-x-2">
               {#each selectableDaysList as day}
