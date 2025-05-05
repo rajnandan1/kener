@@ -78,13 +78,16 @@ function getCountOfSimilarStatuesEnd(arr, statusType) {
   return count;
 }
 
-const FetchData = async function (site, monitor, localTz, selectedLang, lang) {
+const FetchData = async function (site, monitor, localTz, selectedLang, lang, isMobile) {
   const secondsInDay = 24 * 60 * 60;
   //get offset from utc in minutes
   const nowUTC = GetMinuteStartNowTimestampUTC();
+
+  let deviceType = isMobile ? "mobile" : "desktop";
+  let homeDataMaxDays = site.homeDataMaxDays[deviceType];
   const midnightUTC = GetDayStartTimestampUTC(nowUTC);
   const midnightTz = BeginningOfDay({ timeZone: localTz });
-  const midnight90DaysAgoTz = midnightTz - 90 * 24 * 60 * 60;
+  const midnight90DaysAgoTz = midnightTz - homeDataMaxDays.maxDays * 24 * 60 * 60;
   const NO_DATA = "No Data";
   let offsetInMinutes = parseInt((GetDayStartTimestampUTC(nowUTC) - midnightTz) / 60);
   const maxDateTodayTimestampTz = BeginningOfMinute({ timeZone: localTz });
@@ -198,6 +201,7 @@ const FetchData = async function (site, monitor, localTz, selectedLang, lang) {
     midnight90DaysAgo: midnight90DaysAgoTz,
     maxDateTodayTimestamp: maxDateTodayTimestampTz,
     startOfTheDay: midnightTz,
+    homeDataMaxDays,
   };
 };
 export { FetchData };

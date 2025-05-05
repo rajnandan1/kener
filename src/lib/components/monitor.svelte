@@ -39,6 +39,15 @@
   let uptime90Day = monitor.pageData.uptime90Day;
   let incidents = {};
   let dayIncidentsFull = [];
+  let homeDataMaxDays = monitor.pageData.homeDataMaxDays;
+
+  let dimension = {
+    x1: 6,
+    x2: 4
+  };
+
+  dimension.x1 = ($page.data.isMobile ? 346 : 546) / homeDataMaxDays.maxDays;
+  dimension.x2 = (4 / 6) * dimension.x1;
 
   function loadIncidents() {
     axios
@@ -91,39 +100,37 @@
       });
     }, 1000 * 0.2);
   }
-  let uptimesRollers = [
-    {
-      text: `${l(lang, "90 Days")}`,
-      startTs: monitor.pageData.startOfTheDay - 86400 * 89,
-      endTs: monitor.pageData.maxDateTodayTimestamp,
-      value: uptime90Day
-    },
-    {
-      text: `${l(lang, "60 Days")}`,
-      startTs: monitor.pageData.startOfTheDay - 86400 * 59,
-      endTs: monitor.pageData.maxDateTodayTimestamp
-    },
-    {
-      text: `${l(lang, "30 Days")}`,
-      startTs: monitor.pageData.startOfTheDay - 86400 * 29,
-      endTs: monitor.pageData.maxDateTodayTimestamp
-    },
-    {
-      text: `${l(lang, "14 Days")}`,
-      startTs: monitor.pageData.startOfTheDay - 86400 * 13,
-      endTs: monitor.pageData.maxDateTodayTimestamp
-    },
-    {
-      text: `${l(lang, "7 Days")}`,
-      startTs: monitor.pageData.startOfTheDay - 86400 * 6,
-      endTs: monitor.pageData.maxDateTodayTimestamp
-    },
-    {
-      text: l(lang, "Today"),
-      startTs: monitor.pageData.startOfTheDay,
-      endTs: monitor.pageData.maxDateTodayTimestamp
+
+  function returnUptimeRollers() {
+    let rollers = homeDataMaxDays.selectableDays;
+    //sort descending
+    rollers.sort((a, b) => b - a);
+    let ret = [];
+    for (let i = 0; i < rollers.length; i++) {
+      let roller = rollers[i];
+      if (roller == 1) {
+        ret.push({
+          text: `${l(lang, "Today")}`,
+          startTs: monitor.pageData.startOfTheDay,
+          endTs: monitor.pageData.maxDateTodayTimestamp
+        });
+      } else {
+        ret.push({
+          text: `${roller} ${l(lang, "Days")}`,
+          startTs: monitor.pageData.startOfTheDay - 86400 * (roller - 1),
+          endTs: monitor.pageData.maxDateTodayTimestamp
+        });
+      }
+      //if last index
+      if (i == 0) {
+        ret[i].value = uptime90Day;
+      }
     }
-  ];
+
+    return ret;
+  }
+
+  let uptimesRollers = returnUptimeRollers();
 
   //start of the week moment
   let rolledAt = 0;
@@ -314,14 +321,16 @@
                 dailyDataGetter(e, bar, incidents[ts]);
               }}
               href="#"
-              class="oneline h-[34px] w-[6px]
+              class="oneline h-[34px]
 							{bar.border ? 'opacity-100' : 'opacity-20'} pb-1"
+              style="width: {dimension.x1}px"
             >
               <div
-                class="oneline-in h-[30px] bg-{bar.cssClass} mx-auto w-[4px] rounded-{monitor.pageData.barRoundness.toUpperCase() ==
+                class="oneline-in h-[30px] bg-{bar.cssClass} mx-auto rounded-{monitor.pageData.barRoundness.toUpperCase() ==
                 'SHARP'
                   ? 'none'
                   : 'sm'}"
+                style="width: {dimension.x2}px"
               ></div>
               {#if !!incidents[ts]}
                 <div

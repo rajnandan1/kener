@@ -7,6 +7,13 @@ description: Changelogs for Kener
 
 Here are the changelogs for Kener. Changelogs are only published when there are new features or breaking changes.
 
+## v3.2.16
+
+### ✨ Features
+
+- **Hidden Categories:** You can now create hidden categories that will not show up for users that are not logged in. All the monitors will also not show up. Some one however can directly get to see them if they visit the monitor link directly
+- **Configure data rage:** Now you can configure the data range in home page between 1 and 180 days. You can set different ranges for mobile and desktop devices.
+
 ## v3.2.14
 
 ### ✨ Features
