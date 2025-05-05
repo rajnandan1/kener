@@ -2,9 +2,13 @@
 import i18n from "$lib/i18n/server";
 import { redirect } from "@sveltejs/kit";
 import { base } from "$app/paths";
+import MobileDetect from "mobile-detect";
 import { GetAllSiteData, IsSetupComplete, IsLoggedInSession } from "$lib/server/controllers/controller.js";
 
 export async function load({ params, route, url, cookies, request }) {
+  const userAgent = request.headers.get("user-agent");
+  const md = new MobileDetect(userAgent);
+  const isMobile = !!md.mobile();
   let isSetupComplete = await IsSetupComplete();
   if (!isSetupComplete) {
     throw redirect(302, base + "/manage/setup");
@@ -18,7 +22,6 @@ export async function load({ params, route, url, cookies, request }) {
 
   let site = await GetAllSiteData();
   const headers = request.headers;
-  const userAgent = headers.get("user-agent");
   let localTz = "UTC";
 
   const localTzQuery = query.get("tz");
@@ -56,5 +59,6 @@ export async function load({ params, route, url, cookies, request }) {
     embed,
     bgc,
     isLoggedIn: !!isLoggedIn.user,
+    isMobile: isMobile,
   };
 }

@@ -3,7 +3,6 @@ import { FetchData } from "$lib/server/page";
 import { GetMonitors, GetIncidentsOpenHome, SystemDataMessage } from "$lib/server/controllers/controller.js";
 import { SortMonitor } from "$lib/clientTools.js";
 import moment from "moment";
-import { page } from "$app/stores";
 import { redirect, error } from "@sveltejs/kit";
 
 function removeTags(str) {
@@ -108,7 +107,14 @@ export async function load({ parent, url }) {
   monitors = SortMonitor(siteData.monitorSort, monitors);
   const monitorsActive = [];
   for (let i = 0; i < monitors.length; i++) {
-    let data = await FetchData(siteData, monitors[i], parentData.localTz, parentData.selectedLang, parentData.lang);
+    let data = await FetchData(
+      siteData,
+      monitors[i],
+      parentData.localTz,
+      parentData.selectedLang,
+      parentData.lang,
+      parentData.isMobile,
+    );
     monitors[i].pageData = data;
 
     monitors[i].activeIncidents = [];
@@ -183,7 +189,6 @@ export async function load({ parent, url }) {
       return isPresent;
     });
   }
-
   allOpenIncidents = allOpenIncidents.map((incident) => {
     let incidentMonitors = incident.monitors;
     let monitorTags = incidentMonitors.map((monitor) => monitor.monitor_tag);

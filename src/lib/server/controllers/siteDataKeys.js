@@ -27,6 +27,11 @@ export const siteDataKeys = [
     data_type: "string",
   },
   {
+    key: "homeDataMaxDays",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
+  {
     key: "home",
     isValid: (value) => typeof value === "string" && value.trim().length > 0,
     data_type: "string",
