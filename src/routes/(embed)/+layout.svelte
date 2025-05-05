@@ -29,24 +29,8 @@
   } else {
     defaultLocaleValue = allLocales.find((locale) => locale.code === defaultLocaleKey).name;
   }
-  /**
-   * @param {string} locale
-   */
-  function setLanguage(locale) {
-    document.cookie = `localLang=${locale};max-age=${60 * 60 * 24 * 365 * 30}`;
-    if (locale === defaultLocaleKey) return;
-    defaultLocaleValue = allLocales[locale];
-  }
 
-  let Analytics;
   onMount(async () => {
-    let localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (localTz != data.localTz) {
-      if (data.isBot === false) {
-        document.cookie = "localTz=" + localTz + ";max-age=" + 60 * 60 * 24 * 365 * 30;
-        location.reload();
-      }
-    }
     if (defaultTheme != "none") {
       setMode(defaultTheme);
     }

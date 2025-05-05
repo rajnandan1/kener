@@ -97,9 +97,19 @@ const seedSiteData = {
     cssSrc: "",
     family: "",
   },
-  categories: [{ name: "Home", description: "Monitors for Home Page" }],
+  categories: [{ name: "Home", description: "Monitors for Home Page", isHidden: false }],
   homeIncidentCount: 5,
   homeIncidentStartTimeWithin: 30,
+  homeDataMaxDays: {
+    desktop: {
+      maxDays: 90,
+      selectableDays: [1, 7, 14, 30, 60, 90],
+    },
+    mobile: {
+      maxDays: 90,
+      selectableDays: [1, 7, 14, 30, 60, 90],
+    },
+  },
   kenerTheme: "default",
   showSiteStatus: "NO",
 };

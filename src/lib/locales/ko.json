@@ -1,7 +1,10 @@
 {
   "%status for %duration": "%duration 동안 %status 상태였음",
+  "120 Days": "120 일",
   "14 Days": "14 일",
-  "30 Days": "30 ",
+  "150 Days": "150 일",
+  "180 Days": "180 일",
+  "30 Days": "30 일",
   "60 Days": "60 일",
   "7 Days": "7 일",
   "90 Days": "90 일",

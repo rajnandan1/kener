@@ -1,22 +1,34 @@
 // @ts-nocheck
 // @ts-ignore
 export async function GET({ url, params }) {
-	const { tag } = params;
-	const query = url.searchParams;
-	const uriEmbedded = query.get("monitor");
-	const theme = query.get("theme") || "light";
-	const bgc = query.get("bgc") || "transparent";
-	const locale = query.get("locale") || "en";
-	const uriOriginal = uriEmbedded;
+  const { tag } = params;
+  const query = url.searchParams;
+  const uriEmbedded = query.get("monitor");
+  const theme = query.get("theme") || "light";
+  const bgc = query.get("bgc") || "transparent";
+  const locale = query.get("locale") || "en";
+  const tz = query.get("tz") || "NONE";
+  const uriOriginal = uriEmbedded;
 
-	const currentSlug = tag;
-	const js = `
+  const currentSlug = tag;
+  const js = `
 	(function () {
+		//find user timezone
+		let localTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+		let tz = "${tz}";
+		if(tz === "NONE") {
+			if(!!localTz){
+				tz = localTz;
+			} else {
+				tz = "UTC";
+			}
+		} 
+		
     var createEmbedFrame = function () {
         var uid = "KENER_" + ~~(new Date().getTime() / 86400000);
         var uriOriginal = "${uriOriginal}";
         var uriOriginalNoProtocol = uriOriginal.split("//").pop();
-        var uriEmbedded = "${uriEmbedded}?theme=${theme}&bgc=${bgc}&locale=${locale}";
+        var uriEmbedded = "${uriEmbedded}?theme=${theme}&bgc=${bgc}&locale=${locale}&tz=" + tz;
         var currentSlug = "${currentSlug}";
         var target = document.querySelector("script[src*='" + uriOriginalNoProtocol + "']");
         var iframe = document.createElement("iframe");
@@ -66,9 +78,9 @@ export async function GET({ url, params }) {
 }).call(this);
 
 	`;
-	return new Response(js, {
-		headers: {
-			"Content-Type": "application/javascript"
-		}
-	});
+  return new Response(js, {
+    headers: {
+      "Content-Type": "application/javascript",
+    },
+  });
 }

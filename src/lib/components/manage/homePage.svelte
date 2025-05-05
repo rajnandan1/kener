@@ -11,6 +11,8 @@
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 
   import Loader from "lucide-svelte/icons/loader";
+  import LaptopMinimal from "lucide-svelte/icons/laptop-minimal";
+  import SmartPhone from "lucide-svelte/icons/smartphone";
   import X from "lucide-svelte/icons/x";
   import Plus from "lucide-svelte/icons/plus";
   import Info from "lucide-svelte/icons/info";
@@ -42,6 +44,18 @@
   let homeIncidentStartTimeWithin = 30;
   let incidentGroupView = "EXPAND_FIRST";
   let kenerTheme = "default";
+  let homeDataMaxDays = {
+    desktop: {
+      maxDays: 90,
+      selectableDays: [1, 7, 14, 30, 60, 90]
+    },
+    mobile: {
+      maxDays: 90,
+      selectableDays: [1, 7, 14, 30, 60, 90]
+    }
+  };
+
+  let selectableDaysList = [1, 7, 14, 30, 60, 90, 120, 150, 180];
 
   let availableThemes = [
     { name: "Default", value: "default" },
@@ -93,6 +107,9 @@
   if (data.siteData.kenerTheme) {
     kenerTheme = data.siteData.kenerTheme;
   }
+  if (data.siteData.homeDataMaxDays) {
+    homeDataMaxDays = data.siteData.homeDataMaxDays;
+  }
   if (data.siteData.tzToggle) {
     tzToggle = data.siteData.tzToggle;
   }
@@ -121,7 +138,6 @@
     let resp = await storeSiteData({
       hero: JSON.stringify(hero)
     });
-    //print data
     let data = await resp.json();
     formStateHero = "idle";
     if (data.error) {
@@ -259,7 +275,8 @@
       ...categories,
       {
         name: "",
-        description: ""
+        description: "",
+        isHidden: false
       }
     ];
   }
@@ -284,6 +301,23 @@
     formStatei18n = "idle";
     if (data.error) {
       i18nErrorMessage = data.error;
+      return;
+    }
+  }
+
+  let dataErrorMessage = "";
+  let formStateData = "idle";
+  async function formSubmitData() {
+    dataErrorMessage = "";
+    formStateData = "loading";
+    let resp = await storeSiteData({
+      homeDataMaxDays: JSON.stringify(homeDataMaxDays)
+    });
+    //print data
+    let data = await resp.json();
+    formStateData = "idle";
+    if (data.error) {
+      dataErrorMessage = data.error;
       return;
     }
   }
@@ -372,6 +406,173 @@
         <Button type="submit" disabled={formStateHero === "loading"}>
           Save Hero Section
           {#if formStateHero === "loading"}
+            <Loader class="ml-2 inline h-4 w-4 animate-spin" />
+          {/if}
+        </Button>
+      </div>
+    </form>
+  </Card.Content>
+</Card.Root>
+<Card.Root class="mt-4">
+  <Card.Header class="border-b">
+    <Card.Title>Data</Card.Title>
+    <Card.Description>
+      Configure the data shown on the homepage. This includes the time range for incidents.
+    </Card.Description>
+  </Card.Header>
+  <Card.Content>
+    <form class="mx-auto mt-4 flex flex-col space-y-4" on:submit|preventDefault={formSubmitData}>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="flex flex-col gap-y-2">
+          <Label class="text-lg">
+            <LaptopMinimal class="mr-2 inline h-4 w-4" />
+            Desktop
+          </Label>
+          <div class="border-b pb-4">
+            <Label for="desktopmaxdata" class="text-sm font-medium">Select Data Range</Label>
+            <Select.Root
+              portal={null}
+              onSelectedChange={(e) => {
+                homeDataMaxDays.desktop.maxDays = e.value;
+                //uncheck all checkboxes greater than maxDays
+                homeDataMaxDays.desktop.selectableDays = homeDataMaxDays.desktop.selectableDays.filter(
+                  (day) => day <= e.value
+                );
+                //push all days less than maxDays
+                selectableDaysList.forEach((day) => {
+                  if (day <= e.value && !homeDataMaxDays.desktop.selectableDays.includes(day)) {
+                    homeDataMaxDays.desktop.selectableDays.push(day);
+                  }
+                });
+              }}
+              selected={{
+                value: homeDataMaxDays.desktop.maxDays,
+                label: homeDataMaxDays.desktop.maxDays + " Days"
+              }}
+            >
+              <Select.Trigger class="	mt-2 w-[200px]" id="desktopmaxdata">
+                <Select.Value bind:value={homeDataMaxDays.desktop.maxDays} placeholder="Select Range" />
+              </Select.Trigger>
+              <Select.Content>
+                <Select.Group>
+                  <Select.Label>Max Days</Select.Label>
+                  {#each selectableDaysList as day}
+                    <Select.Item value={day} label={day + " Days"} class="text-sm font-medium">
+                      {day} Days
+                    </Select.Item>
+                  {/each}
+                </Select.Group>
+              </Select.Content>
+            </Select.Root>
+          </div>
+          <div class="border-b pb-4">
+            <Label for="desktopdropdown" class="text-sm font-medium">Select Dropdown Range</Label>
+            <div class="mt-2 flex flex-row flex-wrap gap-x-2">
+              {#each selectableDaysList as day}
+                <label>
+                  <input
+                    on:change={(e) => {
+                      if (e.target.checked) {
+                        homeDataMaxDays.desktop.selectableDays.push(day);
+                      } else {
+                        homeDataMaxDays.desktop.selectableDays = homeDataMaxDays.desktop.selectableDays.filter(
+                          (d) => d !== day
+                        );
+                      }
+                    }}
+                    type="checkbox"
+                    disabled={day >= homeDataMaxDays.desktop.maxDays}
+                    checked={homeDataMaxDays.desktop.selectableDays.includes(day)}
+                  />
+                  {day} Days
+                </label>
+              {/each}
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-y-2">
+          <Label class="text-lg">
+            <SmartPhone class="mr-2 inline h-4 w-4" />
+            Mobile
+          </Label>
+          <div class="border-b pb-4">
+            <Label for="mobilemaxdata" class="text-sm font-medium">Select Data Range</Label>
+            <Select.Root
+              portal={null}
+              onSelectedChange={(e) => {
+                homeDataMaxDays.mobile.maxDays = e.value;
+                //uncheck all checkboxes greater than maxDays
+                homeDataMaxDays.mobile.selectableDays = homeDataMaxDays.mobile.selectableDays.filter(
+                  (day) => day <= e.value
+                );
+                //push all days less than maxDays
+                selectableDaysList.forEach((day) => {
+                  if (day <= e.value && !homeDataMaxDays.mobile.selectableDays.includes(day)) {
+                    homeDataMaxDays.mobile.selectableDays.push(day);
+                  }
+                });
+              }}
+              selected={{
+                value: homeDataMaxDays.mobile.maxDays,
+                label: homeDataMaxDays.mobile.maxDays + " Days"
+              }}
+            >
+              <Select.Trigger class="	mt-2 w-[200px]" id="mobilemaxdata">
+                <Select.Value bind:value={homeDataMaxDays.mobile.maxDays} placeholder="Select Range" />
+              </Select.Trigger>
+              <Select.Content>
+                <Select.Group>
+                  <Select.Label>Max Days</Select.Label>
+                  {#each selectableDaysList as day}
+                    <Select.Item value={day} label={day + " Days"} class="text-sm font-medium">
+                      {day} Days
+                    </Select.Item>
+                  {/each}
+                </Select.Group>
+              </Select.Content>
+            </Select.Root>
+          </div>
+          <div class="border-b pb-4">
+            <Label for="mobiledropdown" class="text-sm font-medium">Select Dropdown Range</Label>
+            <div class="mt-2 flex flex-row flex-wrap gap-x-2">
+              {#each selectableDaysList as day}
+                <label>
+                  <input
+                    on:change={(e) => {
+                      if (e.target.checked) {
+                        homeDataMaxDays.mobile.selectableDays.push(day);
+                      } else {
+                        homeDataMaxDays.mobile.selectableDays = homeDataMaxDays.mobile.selectableDays.filter(
+                          (d) => d !== day
+                        );
+                      }
+                    }}
+                    type="checkbox"
+                    disabled={day >= homeDataMaxDays.mobile.maxDays}
+                    checked={homeDataMaxDays.mobile.selectableDays.includes(day)}
+                  />
+                  {day} Days
+                </label>
+              {/each}
+            </div>
+          </div>
+        </div>
+      </div>
+      <p>
+        <span class="text-xs font-medium text-muted-foreground">
+          Select the maximum number of days to show data for. This will be used to filter the data shown on the
+          homepage. The dropdown will show all the days that are less than or equal to the selected max days. The max
+          value in the dropdown will be the entire value of data range it cannot be changed
+        </span>
+      </p>
+      {#if !!dataErrorMessage}
+        <p class="text-sm font-medium text-destructive">{dataErrorMessage}</p>
+      {/if}
+      <div class="flex w-full justify-end gap-x-2">
+        <Button type="submit" disabled={formStateData === "loading"}>
+          Save Data Settings
+          {#if formStateData === "loading"}
             <Loader class="ml-2 inline h-4 w-4 animate-spin" />
           {/if}
         </Button>
@@ -652,8 +853,8 @@
   <Card.Content>
     <form class="mx-auto mt-4 space-y-4" on:submit|preventDefault={formSubmitCategories}>
       {#each categories as cat, i}
-        <div class="grid grid-cols-4 gap-2">
-          <div class="col-span-1">
+        <div class="flex items-center gap-4">
+          <div class="flex-1">
             <Label for="{i}catkey" class="block w-full">Name</Label>
             <Input
               bind:value={cat.name}
@@ -664,7 +865,7 @@
               disabled={i === 0}
             />
           </div>
-          <div class="relative col-span-3 pr-8">
+          <div class="flex-1">
             <Label for="{i}catdsc" class="block w-full">Description</Label>
             <Input
               bind:value={cat.description}
@@ -674,9 +875,27 @@
               placeholder="Category Description"
               disabled={i === 0}
             />
+          </div>
+          <div class="relative flex flex-col items-center gap-y-2">
+            <Label for="{i}vis" class="block w-full">Visibility</Label>
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger disabled={i === 0} id="{i}vis">
+                <Button variant="outline" class="mr-2" disabled={cat.name === "Home"}>
+                  {cat.isHidden ? "Private" : "Public"}
+                </Button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Content>
+                <DropdownMenu.Group>
+                  <DropdownMenu.Item on:click={() => (cat.isHidden = true)}>Private</DropdownMenu.Item>
+                  <DropdownMenu.Item on:click={() => (cat.isHidden = false)}>Public</DropdownMenu.Item>
+                </DropdownMenu.Group>
+              </DropdownMenu.Content>
+            </DropdownMenu.Root>
+          </div>
+          <div class="flex items-center">
             <Button
               variant="ghost"
-              class="absolute right-0 top-8 ml-2 h-6 w-6 p-1 "
+              class="mt-4 h-6 w-6 p-1"
               disabled={i === 0}
               on:click={() => (categories = categories.filter((_, index) => index !== i))}
             >
