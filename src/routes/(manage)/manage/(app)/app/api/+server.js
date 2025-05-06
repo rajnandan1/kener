@@ -233,6 +233,10 @@ export async function POST({ request, cookies }) {
         ],
       };
       resp = await notificationClient.send(testObj);
+      //check if resp is error
+      if (resp.error) {
+        throw new Error(resp.error);
+      }
     } else if (action == "testMonitor") {
       let monitorID = data.monitor_id;
       let monitors = await GetMonitorsParsed({ id: monitorID });

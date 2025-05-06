@@ -147,7 +147,10 @@
       uptimesRollers[newRolledAt].loading = true;
 
       let resp = await axios.post(`${base}/api/today/aggregated`, {
-        monitor: monitor,
+        monitor: {
+          tag: monitor.tag,
+          include_degraded_in_downtime: monitor.include_degraded_in_downtime
+        },
         startTs: uptimesRollers[newRolledAt].startTs,
         endTs: uptimesRollers[newRolledAt].endTs
       });
@@ -332,11 +335,13 @@
                   : 'sm'}"
                 style="width: {dimension.x2}px"
               ></div>
+              <!-- incident dot -->
               {#if !!incidents[ts]}
                 <div
                   class="bg-api-{incidents[
                     ts
-                  ].monitor_impact.toLowerCase()} comein absolute -bottom-[3px] left-[1px] h-[4px] w-[4px] rounded-full"
+                  ].monitor_impact.toLowerCase()} comein absolute -bottom-[3px] h-[4px] w-[4px] rounded-full"
+                  style="left: {dimension.x1 / 2 - 2}px"
                 ></div>
               {/if}
             </a>

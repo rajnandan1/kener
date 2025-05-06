@@ -85,9 +85,9 @@ const FetchData = async function (site, monitor, localTz, selectedLang, lang, is
 
   let deviceType = isMobile ? "mobile" : "desktop";
   let homeDataMaxDays = site.homeDataMaxDays[deviceType];
-  const midnightUTC = GetDayStartTimestampUTC(nowUTC);
+
   const midnightTz = BeginningOfDay({ timeZone: localTz });
-  const midnight90DaysAgoTz = midnightTz - homeDataMaxDays.maxDays * 24 * 60 * 60;
+  const midnight90DaysAgoTz = midnightTz - (homeDataMaxDays.maxDays - 1) * 24 * 60 * 60;
   const NO_DATA = "No Data";
   let offsetInMinutes = parseInt((GetDayStartTimestampUTC(nowUTC) - midnightTz) / 60);
   const maxDateTodayTimestampTz = BeginningOfMinute({ timeZone: localTz });

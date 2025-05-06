@@ -275,10 +275,19 @@
         body: JSON.stringify({ action: "testTrigger", data: { trigger_id, status } })
       });
       let resp = await data.json();
+      //check status code, if not 200 then show error
+      if (resp.error) {
+        triggers[i].testLoaders = "error";
+        alert(resp.error);
+      } else {
+        triggers[i].testLoaders = "success";
+        setTimeout(() => {
+          triggers[i].testLoaders = "idle";
+        }, 3000);
+      }
     } catch (error) {
       alert("Error: " + error);
     } finally {
-      triggers[i].testLoaders = "success";
       setTimeout(() => {
         triggers[i].testLoaders = "idle";
       }, 3000);
@@ -425,6 +434,9 @@
             {/if}
             {#if trigger.testLoaders == "success"}
               <Check class="mr-1 inline h-3 w-3 text-green-500 " />
+            {/if}
+            {#if trigger.testLoaders == "error"}
+              <X class="mr-1 inline h-3 w-3 text-red-500 " />
             {/if}
             <span class="h-4 text-xs font-medium"> Test Trigger </span>
           </Button>

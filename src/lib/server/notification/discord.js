@@ -64,7 +64,7 @@ class Discord {
       return response;
     } catch (error) {
       console.error("Error sending webhook", error);
-      return error;
+      return { error: error.message };
     }
   }
 }

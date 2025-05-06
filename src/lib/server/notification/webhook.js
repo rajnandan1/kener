@@ -93,12 +93,12 @@ class Webhook {
         body: this.transformData(data),
       });
       if (!response.ok) {
-        throw new Error(`Error from webhook`);
+        throw new Error(`Error from webhook: ${response.status} ${response.statusText}`);
       }
       return response;
     } catch (error) {
       console.error("Error sending webhook", error);
-      return error;
+      return { error: error.message };
     }
   }
 }
