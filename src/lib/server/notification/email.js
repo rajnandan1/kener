@@ -221,7 +221,7 @@ class Email {
         return await transporter.sendMail(mailOptions);
       } catch (error) {
         console.error("Error sending email via SMTP", error);
-        return error;
+        return { error: error.message };
       }
     }
   }
