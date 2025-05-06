@@ -281,9 +281,6 @@
         alert(resp.error);
       } else {
         triggers[i].testLoaders = "success";
-        setTimeout(() => {
-          triggers[i].testLoaders = "idle";
-        }, 3000);
       }
     } catch (error) {
       alert("Error: " + error);
@@ -525,7 +522,7 @@
               newTrigger.trigger_type = "slack";
             }}
           >
-            <img src="{base}/slack.svg" title="slack" class="mr-4 w-6" alt="Slack logo"/>
+            <img src="{base}/slack.svg" title="slack" class="mr-4 w-6" alt="Slack logo" />
             Slack
           </Button>
 
@@ -536,7 +533,7 @@
               newTrigger.trigger_type = "email";
             }}
           >
-            <img src="{base}/email.png" title="email" class="mr-4 w-6" alt="Icon that represents emails"/>
+            <img src="{base}/email.png" title="email" class="mr-4 w-6" alt="Icon that represents emails" />
             Email
           </Button>
         </div>
