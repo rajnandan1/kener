@@ -243,10 +243,10 @@
     </div>
   </section>
   <section
-    class="section-monitors z-20 mx-auto mb-8 flex w-full flex-1 flex-col items-start justify-center backdrop-blur-[2px] md:w-[655px]"
+    class="section-monitors z-20 mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-center justify-center"
   >
-    <Card.Root class="monitor-root">
-      <Card.Content class="monitors-card  p-0">
+    <Card.Root class="monitor-root w-full">
+      <Card.Content class="monitors-card  p-0 ">
         {#each data.monitors as monitor}
           <Monitor
             on:show_shareMenu={showShareMenu}
@@ -262,7 +262,7 @@
 {/if}
 {#if data.site.categories && data.pageType == "home"}
   <section
-    class="section-categories relative z-10 mx-auto mb-8 w-full max-w-[890px] flex-1 flex-col items-start backdrop-blur-[2px] md:w-[655px]"
+    class="section-categories relative z-10 mx-auto mb-8 w-full max-w-[655px] flex-1 flex-col items-start backdrop-blur-[2px] md:w-[655px]"
   >
     {#each data.site.categories.filter((category) => category.name != "Home" && (!!!category.isHidden || $page.data.isLoggedIn)) as category}
       <a href={`?category=${category.name}`} rel="external">
