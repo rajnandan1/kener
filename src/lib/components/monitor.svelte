@@ -211,7 +211,7 @@
   }
 </script>
 
-<div class="monitor relative grid w-full grid-cols-12 gap-2 pb-2 pt-0 md:w-[655px]">
+<div class="monitor relative grid w-full max-w-[655px] grid-cols-12 gap-2 pb-2 pt-0">
   {#if !!!embed}
     <div class="col-span-12 md:w-[546px]">
       <div class="pt-0">
@@ -312,7 +312,7 @@
           showDailyDataModal = false;
         }}
       >
-        <div class="daygrid90 flex min-h-[60px] justify-start overflow-x-auto overflow-y-hidden py-1">
+        <div class="daygrid90 flex min-h-[60px] justify-between overflow-x-auto overflow-y-hidden py-1">
           {#each Object.entries(_90Day) as [ts, bar]}
             <button
               data-ts={ts}
