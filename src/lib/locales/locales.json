@@ -58,5 +58,9 @@
 	{
 		"code": "pl",
 		"name": "Polski"
+	},
+	{
+		"code": "es",
+		"name": "Español"
 	}
 ]
