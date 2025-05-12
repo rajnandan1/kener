@@ -34,6 +34,7 @@
   import { mode } from "mode-watcher";
 
   import * as Select from "$lib/components/ui/select";
+  import { ValidateCronExpression } from "$lib/clientTools.js";
   export let data;
   let status = "OPEN";
   let loadingData = false;
@@ -99,12 +100,12 @@
       endDatetime: null,
       startDatetime: null,
       start_date_time: null,
-      endDatetime: null,
-      ent_date_time: null,
       status: "OPEN",
       state: "INVESTIGATING",
       firstComment: "",
-      incident_type: "INCIDENT"
+      incident_type: "INCIDENT",
+      maintenance_strategy: "SINGLE",
+      cron: null
     };
   }
   let isMounted = false;
@@ -169,16 +170,33 @@
       status: newIncident.status,
       state: newIncident.state,
       id: newIncident.id,
-      incident_type: newIncident.incident_type
+      incident_type: newIncident.incident_type,
+      maintenance_strategy: newIncident.maintenance_strategy,
+      cron: newIncident.cron
     };
-    //convert data.start_date_time to timestamp
-    if (!!!toPost.start_date_time) {
-      invalidFormMessage = "Start Date Time is required";
-      return;
+
+    if (
+      toPost.incident_type === "INCIDENT" ||
+      (toPost.maintenance_strategy && toPost.maintenance_strategy === "SINGLE")
+    ) {
+      if (!!!toPost.start_date_time) {
+        invalidFormMessage = "Start Date Time is required";
+        return;
+      }
+      //convert data.start_date_time to timestamp
+      toPost.start_date_time = parseInt(new Date(toPost.start_date_time).getTime() / 1000);
+      if (!!toPost.end_date_time) {
+        toPost.end_date_time = parseInt(new Date(toPost.end_date_time).getTime() / 1000);
+      }
     }
-    toPost.start_date_time = parseInt(new Date(toPost.start_date_time).getTime() / 1000);
-    if (!!toPost.end_date_time) {
-      toPost.end_date_time = parseInt(new Date(toPost.end_date_time).getTime() / 1000);
+
+    if (toPost.incident_type === "MAINTENANCE" && toPost.maintenance_strategy === "RECURRING") {
+      // Validate cron expression.
+      const cronValidation = ValidateCronExpression(toPost.cron);
+      if (cronValidation.isValid === false) {
+        invalidFormMessage = "Cron invalid: " + cronValidation.message;
+        return;
+      }
     }
 
     if (toPost.incident_type == "MAINTENANCE") {
@@ -775,33 +793,65 @@
             </div>
           {/if}
 
-          <div class="mt-4 flex gap-4">
-            <div class="col-span-1">
-              <Label class="mb-2 text-sm" for="start_date_time">
-                <span class="capitalize">{newIncident.incident_type}</span> Start Date Time
-                <span class="text-red-500">*</span>
-              </Label>
-              <DateInput
-                bind:value={newIncident.startDatetime}
-                id="start_date_time"
-                timePrecision="minute"
-                class="mt-2 text-sm"
-              />
-            </div>
+          <div class="mt-4 grid grid-cols-3 gap-4">
             {#if newIncident.incident_type == "MAINTENANCE"}
               <div class="col-span-1">
+                <Label class="mb-2 text-sm" for="strategy">
+                  <span class="capitalize">MAINTENANCE Strategy</span>
+                  <span class="text-red-500">*</span>
+                </Label>
+                <Select.Root portal={null} onSelectedChange={(e) => (newIncident.maintenance_strategy = e.value)}>
+                  <Select.Trigger id="maintenance_strategy">
+                    <Select.Value placeholder={newIncident.maintenance_strategy} />
+                  </Select.Trigger>
+                  <Select.Content>
+                    <Select.Group>
+                      <Select.Label>Maintenance Strategy</Select.Label>
+                      <Select.Item value="SINGLE" label="Single" class="text-sm font-medium">Single</Select.Item>
+                      <Select.Item value="RECURRING" label="Recurring interval" class="text-sm font-medium"
+                        >Reccuring interval</Select.Item
+                      >
+                    </Select.Group>
+                  </Select.Content>
+                </Select.Root>
+              </div>
+              {#if newIncident.maintenance_strategy == "RECURRING"}
+                <div class="col-span-1">
+                  <Label for="cron">
+                    Cron expression <span class="text-red-500">*</span>
+                  </Label>
+                  <Input bind:value={newIncident.cron} id="cron" placeholder="* * * * *" />
+                </div>
+              {/if}
+            {/if}
+            {#if newIncident.maintenance_strategy !== "RECURRING"}
+              <div class="col-span-1 col-start-1">
                 <Label class="mb-2 text-sm" for="start_date_time">
-                  <span class="capitalize">{newIncident.incident_type}</span> End Date Time
+                  <span class="capitalize">{newIncident.incident_type}</span> Start Date Time
                   <span class="text-red-500">*</span>
                 </Label>
                 <DateInput
-                  bind:value={newIncident.endDatetime}
-                  id="end_date_time"
+                  bind:value={newIncident.startDatetime}
+                  id="start_date_time"
                   timePrecision="minute"
                   class="mt-2 text-sm"
-                  min={newIncident.startDatetime}
                 />
               </div>
+              {#if newIncident.incident_type == "MAINTENANCE"}
+                <div class="col-span-1">
+                  <Label class="mb-2 text-sm" for="end_date_time">
+                    <span class="capitalize">{newIncident.incident_type}</span> End Date Time
+                    <span class="text-red-500">*</span>
+                  </Label>
+                  <DateInput
+                    bind:value={newIncident.endDatetime}
+                    id="end_date_time"
+                    timePrecision="minute"
+                    class="mt-2 text-sm"
+                    min={newIncident.startDatetime}
+                  />
+                </div>
+              {/if}
             {/if}
           </div>
 
@@ -817,9 +867,12 @@
                 on:click={createIncident}
                 disabled={formStateCreate === "loading" ||
                   newIncident.title.trim().length == 0 ||
-                  !!!newIncident.startDatetime ||
+                  (!!!newIncident.startDatetime && newIncident.maintenance_strategy !== "RECURRING") ||
                   (!!!newIncident.id && newIncident.firstComment.trim().length == 0) ||
-                  (!!!newIncident.endDatetime && newIncident.incident_type == "MAINTENANCE")}
+                  (!!!newIncident.endDatetime &&
+                    newIncident.incident_type == "MAINTENANCE" &&
+                    newIncident.maintenance_strategy !== "RECURRING") ||
+                  (!!!newIncident.cron && newIncident.maintenance_strategy === "RECURRING")}
               >
                 Save Event
                 {#if formStateCreate === "loading"}

@@ -745,6 +745,7 @@ export const GetDataGroupByDayAlternative = async (monitor_tag, start, end, time
 };
 
 export const CreateIncident = async (data) => {
+  // TODO: depending on incident_type && maintenance_strategy, we should make or not these next conditions.
   //return error if no title or startDateTime
   if (!data.title || !data.start_date_time) {
     throw new Error("Title and startDateTime are required");
