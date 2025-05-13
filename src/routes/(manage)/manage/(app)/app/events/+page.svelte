@@ -34,7 +34,7 @@
   import { mode } from "mode-watcher";
 
   import * as Select from "$lib/components/ui/select";
-  import { ValidateCronExpression } from "$lib/clientTools.js";
+  import { GetCronInterval, ValidateCronExpression } from "$lib/clientTools.js";
   export let data;
   let status = "OPEN";
   let loadingData = false;
@@ -172,7 +172,8 @@
       id: newIncident.id,
       incident_type: newIncident.incident_type,
       maintenance_strategy: newIncident.maintenance_strategy,
-      cron: newIncident.cron
+      cron: newIncident.cron,
+      maintenance_duration: newIncident.maintenance_duration
     };
 
     if (
@@ -197,6 +198,23 @@
         invalidFormMessage = "Cron invalid: " + cronValidation.message;
         return;
       }
+
+      // Validate maintenance duration.
+      if (!!!toPost.maintenance_duration) {
+        invalidFormMessage = "Maintenance duration is required";
+        return;
+      }
+
+      if (!!!toPost.maintenance_duration || isNaN(toPost.maintenance_duration) || toPost.maintenance_duration <= 0) {
+        invalidFormMessage = "Maintenance duration should be greater than 0";
+        return;
+      }
+      const maintenance_duration = GetCronInterval(toPost.cron);
+      if (toPost.maintenance_duration > maintenance_duration) {
+        invalidFormMessage = "Maintenance duration should be smaller than next scheduled maintenance";
+        return;
+      }
+      toPost.maintenance_duration = Number(toPost.maintenance_duration);
     }
 
     if (toPost.incident_type == "MAINTENANCE") {
@@ -807,7 +825,7 @@
                   <Select.Content>
                     <Select.Group>
                       <Select.Label>Maintenance Strategy</Select.Label>
-                      <Select.Item value="SINGLE" label="Single" class="text-sm font-medium">Single</Select.Item>
+                      <Select.Item value="SINGLE" label="Single time maintenance" class="text-sm font-medium">Single time maintenance</Select.Item>
                       <Select.Item value="RECURRING" label="Recurring interval" class="text-sm font-medium"
                         >Reccuring interval</Select.Item
                       >
@@ -816,11 +834,22 @@
                 </Select.Root>
               </div>
               {#if newIncident.maintenance_strategy == "RECURRING"}
-                <div class="col-span-1">
-                  <Label for="cron">
+                <div class="col-span-1 col-start-1">
+                  <Label for="cron" class="mb-2 text-sm">
                     Cron expression <span class="text-red-500">*</span>
                   </Label>
-                  <Input bind:value={newIncident.cron} id="cron" placeholder="* * * * *" />
+                  <Input bind:value={newIncident.cron} id="cron" placeholder="* * * * *" class="mt-2 text-sm" />
+                </div>
+                <div class="col-span-1">
+                  <Label for="maintenance_duration" class="mb-2 text-sm">
+                    Maintenance duration (minutes) <span class="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    bind:value={newIncident.maintenance_duration}
+                    id="maintenance_duration"
+                    placeholder="55"
+                    class="mt-2 text-sm"
+                  />
                 </div>
               {/if}
             {/if}
@@ -872,7 +901,8 @@
                   (!!!newIncident.endDatetime &&
                     newIncident.incident_type == "MAINTENANCE" &&
                     newIncident.maintenance_strategy !== "RECURRING") ||
-                  (!!!newIncident.cron && newIncident.maintenance_strategy === "RECURRING")}
+                  ((!!!newIncident.cron || !!!newIncident.maintenance_duration) &&
+                    newIncident.maintenance_strategy === "RECURRING")}
               >
                 Save Event
                 {#if formStateCreate === "loading"}

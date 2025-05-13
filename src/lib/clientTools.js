@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { base } from "$app/paths";
+import Cron from "croner";
 function siteDataExtractFromDb(data, obj) {
   let requestedObject = { ...obj };
   for (const key in requestedObject) {
@@ -254,6 +255,15 @@ function ValidateCronExpression(cronExp) {
   return { isValid: true, message: "Valid cron expression" };
 }
 
+/**
+ * Get minutes interval between two cron job.
+ * @param {string} cronExp Cron expression. Needs to be valid first.
+ */
+function GetCronInterval(cronExp) {
+  const cronDates = new Cron(cronExp, { paused: true }).nextRuns(2);
+  return Math.floor((cronDates[1].getTime() - cronDates[0].getTime()) / 60000);
+}
+
 function isValidRange(value, min, max) {
   const num = Number(value);
   return !isNaN(num) && num >= min && num <= max;
@@ -300,6 +310,7 @@ export {
   IsValidURL,
   IsValidPort,
   ValidateCronExpression,
+  GetCronInterval,
   SortMonitor,
   RandomString,
   GetGameFromId,
