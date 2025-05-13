@@ -745,25 +745,46 @@ export const GetDataGroupByDayAlternative = async (monitor_tag, start, end, time
 };
 
 export const CreateIncident = async (data) => {
-  // TODO: depending on incident_type && maintenance_strategy, we should make or not these next conditions.
-  //return error if no title or startDateTime
-  if (!data.title || !data.start_date_time) {
-    throw new Error("Title and startDateTime are required");
+  //return error if no title
+  if (!data.title) {
+    throw new Error("Title is required");
   }
 
   let incident = {
     title: data.title,
-    start_date_time: data.start_date_time,
-    status: !!data.status ? data.status : "OPEN",
-    end_date_time: !!data.end_date_time ? data.end_date_time : null,
-    state: !!data.state ? data.state : "INVESTIGATING",
-    incident_type: !!data.incident_type ? data.incident_type : "INCIDENT",
-    incident_source: !!data.incident_source ? data.incident_source : "DASHBOARD",
+    start_date_time: data.start_date_time ?? null,
+    status: data.status ?? "OPEN",
+    end_date_time: data.end_date_time ?? null,
+    state: data.state ?? "INVESTIGATING",
+    incident_type: data.incident_type ?? "INCIDENT",
+    incident_source: data.incident_source ?? "DASHBOARD",
+    maintenance_strategy: data.maintenance_strategy ?? null,
+    cron: data.cron ?? null,
+    maintenance_duration: data.maintenance_duration ?? null,
   };
 
-  //incident_type == INCIDENT delete endDateTime
+  // return error if no start_date_time depending on situation
+  if (
+    !data.start_date_time &&
+    (incident.incident_type === "INCIDENT" ||
+      (incident.incident_type === "MAINTENANCE" &&
+        !incident.maintenance_strategy &&
+        incident.maintenance_strategy !== "RECURRING"))
+  ) {
+    throw new Error("StartDateTime is required");
+  }
+
   if (incident.incident_type === "INCIDENT") {
+    // incident_type == INCIDENT delete endDateTime
     incident.end_date_time = null;
+    incident.maintenance_strategy = null;
+  } else if (incident.incident_type === "MAINTENANCE") {
+    if (incident.maintenance_strategy && incident.maintenance_strategy !== "RECURRING") {
+      incident.cron = null;
+    } else {
+      incident.start_date_time = null;
+      incident.end_date_time = null;
+    }
   }
 
   //if endDateTime is provided and it is less than startDateTime, throw error
@@ -771,6 +792,7 @@ export const CreateIncident = async (data) => {
     throw new Error("End date time cannot be less than start date time");
   }
 
+  console.log(incident);
   let newIncident = await db.createIncident(incident);
   PushDataToQueue(newIncident.id, "createIncident", {
     message: `${incident.incident_type} Created`,
