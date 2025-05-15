@@ -28,6 +28,8 @@
   import ChevronRight from "lucide-svelte/icons/chevron-right";
   import Trash from "lucide-svelte/icons/trash";
   import CodeMirror from "svelte-codemirror-editor";
+  import Calendar1 from "lucide-svelte/icons/calendar-1";
+  import CalendarSync from "lucide-svelte/icons/calendar-sync";
   import { markdown } from "@codemirror/lang-markdown";
   import { marked } from "marked";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
@@ -71,13 +73,16 @@
 
       incidents = resp.incidents.map((incident) => {
         let i = { ...incident };
-        if (!!!i.end_date_time) {
+        if (i.maintenance_strategy === "RECURRING") {
+          i.duration = moment.duration(i.maintenance_duration, "minutes").humanize();
+        } else if (!!!i.end_date_time) {
           i.duration = moment
             .duration(parseInt(new Date().getTime() / 1000) - parseInt(i.start_date_time), "seconds")
             .humanize();
         } else {
           i.duration = moment.duration(parseInt(i.end_date_time) - parseInt(i.start_date_time), "seconds").humanize();
         }
+        console.log("Incident: ", i);
         return i;
       });
       totalPages = Math.ceil(resp.total.count / limit);
@@ -648,13 +653,18 @@
                         <div
                           class=" flex items-center justify-center rounded border bg-card p-1.5 text-xs font-medium shadow-popover outline-none"
                         >
-                          <span class="mr-1 inline-block text-muted-foreground">From</span>
-                          {moment(Number(incident.start_date_time) * 1000).format("YYYY-MM-DD HH:mm:ss")}
-                          <span class="mx-1 inline-block text-muted-foreground">To</span>
-                          {#if incident.end_date_time}
-                            {moment(Number(incident.end_date_time) * 1000).format("YYYY-MM-DD HH:mm:ss")}
+                          {#if incident.maintenance_strategy == "RECURRING"}
+                            <span class="mx-1 inline-block text-muted-foreground">Triggers every</span>
+                            {incident.cron}
                           {:else}
-                            Now
+                            <span class="mr-1 inline-block text-muted-foreground">From</span>
+                            {moment(Number(incident.start_date_time) * 1000).format("YYYY-MM-DD HH:mm:ss")}
+                            <span class="mx-1 inline-block text-muted-foreground">To</span>
+                            {#if incident.end_date_time}
+                              {moment(Number(incident.end_date_time) * 1000).format("YYYY-MM-DD HH:mm:ss")}
+                            {:else}
+                              Now
+                            {/if}
                           {/if}
                         </div>
                       </Tooltip.Content>
@@ -664,6 +674,33 @@
                   <td class="whitespace-nowrap px-6 py-4 text-xs font-semibold">
                     {#if incident.incident_type == "MAINTENANCE"}
                       <span class="badge-MAINTENANCE rounded px-1.5 py-1"> MAINTENANCE </span>
+                      {#if incident.maintenance_strategy == "SINGLE"}
+                        <Tooltip.Root openDelay={100}>
+                          <Tooltip.Trigger class="">
+                            <Calendar1 class="inline h-4 w-4" />
+                          </Tooltip.Trigger>
+                          <Tooltip.Content>
+                            <div
+                              class=" flex items-center justify-center rounded border bg-card p-1.5 text-xs font-medium shadow-popover outline-none"
+                            >
+                              This maintenance will occur one time.
+                            </div>
+                          </Tooltip.Content>
+                        </Tooltip.Root>
+                      {:else if incident.maintenance_strategy == "RECURRING"}
+                        <Tooltip.Root openDelay={100}>
+                          <Tooltip.Trigger class="">
+                            <CalendarSync class="inline h-4 w-4" />
+                          </Tooltip.Trigger>
+                          <Tooltip.Content>
+                            <div
+                              class=" flex items-center justify-center rounded border bg-card p-1.5 text-xs font-medium shadow-popover outline-none"
+                            >
+                              This maintenance will occur multiple times.
+                            </div>
+                          </Tooltip.Content>
+                        </Tooltip.Root>
+                      {/if}
                     {:else}
                       <span class="badge-{incident.state} rounded px-1.5 py-1">
                         {incident.state}
@@ -825,7 +862,9 @@
                   <Select.Content>
                     <Select.Group>
                       <Select.Label>Maintenance Strategy</Select.Label>
-                      <Select.Item value="SINGLE" label="Single time maintenance" class="text-sm font-medium">Single time maintenance</Select.Item>
+                      <Select.Item value="SINGLE" label="Single time maintenance" class="text-sm font-medium"
+                        >Single time maintenance</Select.Item
+                      >
                       <Select.Item value="RECURRING" label="Recurring interval" class="text-sm font-medium"
                         >Reccuring interval</Select.Item
                       >
