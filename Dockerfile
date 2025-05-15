@@ -120,9 +120,6 @@ COPY --chown=node:node --from=builder /app/openapi.json ./openapi.json
 COPY --chown=node:node --from=builder /app/openapi.yaml ./openapi.yaml
 COPY --chown=node:node --from=builder /app/package.json ./package.json
 
-# Ensure necessary directories are writable
-VOLUME ["/uploads", "/database"]
-
 # Set container timezone and make entrypoint script executable
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     chmod +x ./entrypoint.sh
