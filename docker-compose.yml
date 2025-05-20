@@ -13,8 +13,8 @@ services:
     # env_file: custom.env              # Uncomment this if you are needing to export environment variables from a custom environment file. By default, Docker will import any variables that exist in `.env`
     environment:
       TZ: Etc/UTC
-      KENER_SECRET_KEY: replace_me_with_a_random_string   # Keep private!! - best to define in `.env` file or through Docker Secret
-      # DATABASE_URL: custom_db_url     # By default, a SQLite database is used - you may override the database url/type here
+      KENER_SECRET_KEY: woah_kener_and_trieve_are_really_cool   # Keep private!! - best to define in `.env` file or through Docker Secret
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/kener_db     # By default, a SQLite database is used - you may override the database url/type here
       # RESEND_API_KEY: 
       # RESEND_SENDER_EMAIL: 
 
@@ -22,13 +22,13 @@ services:
 
       # PORT: 3000                      # Port that app listens on in the container
       # KENER_BASE_PATH:                # By default, Kener runs at `/`. You may change this to be, e.g. `/status`, etc. Do NOT add a trailing slash!! (more info here: https://kener.ing/docs/deployment/#docker-environment-variables)
-      # ORIGIN: http://localhost:3000
+      ORIGIN: ${ORIGIN_URL}
       # NODE_ENV: production            # This is already set to "production" by default within the container
     ports:
       - '3000:3000/tcp'
     volumes:
       - data:/app/database              # We suggest using a Docker named volume, which is more performant for databases
-      - $(pwd)/uploads:/app/uploads
+      - ./uploads:/app/uploads
     # read_only: true                   # Uncommenting this fortifies security by marking the container's filesystem as read-only (aka no data can be written to the container's filesystem except for explicitly defined writable volumes and bind mounts, an exception has already been defined for `/database` and `/uploads`)
     restart: unless-stopped
     # depends_on:                       #  <-- Uncomment if you would like to use PostgreSQL or MySQL
@@ -40,8 +40,8 @@ services:
     image: postgres:alpine
     container_name: postgres
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: some_super_random_secure_password   # Best to define this in `.env` or via Docker Secret!!
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}   # Best to define this in `.env` or via Docker Secret!!
       POSTGRES_DB: kener_db
     restart: unless-stopped
 
