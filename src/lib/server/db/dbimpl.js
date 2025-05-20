@@ -1272,6 +1272,15 @@ class DbImpl {
   async deleteSubscriptionTriggerById(id) {
     return await this.knex("subscription_triggers").where({ id }).del();
   }
+
+  async getMonitoringDataByMonitorTag(monitor_tag, start, end) {
+    return await this.knex("monitoring_data")
+      .select("*")
+      .where("monitor_tag", monitor_tag)
+      .where("timestamp", ">=", start)
+      .where("timestamp", "<=", end)
+      .orderBy("timestamp", "asc");
+  }
 }
 
 export default DbImpl;

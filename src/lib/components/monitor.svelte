@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import * as Popover from "$lib/components/ui/popover";
   import { onMount } from "svelte";
   import { Badge } from "$lib/components/ui/badge";
@@ -25,26 +25,79 @@
   import LoaderBoxes from "$lib/components/loaderbox.svelte";
   import NumberFlow from "@number-flow/svelte";
   import Incident from "$lib/components/IncidentNew.svelte";
+  import { Line } from "svelte-chartjs";
+  import { Chart, registerables } from "chart.js";
+  Chart.register(...registerables);
 
   const dispatch = createEventDispatcher();
 
-  export let monitor;
-  export let localTz;
-  export let lang;
+  export let monitor: any;
+  export let localTz: string;
+  export let lang: string;
   export let embed = false;
   export let selectedLang = "en";
 
-  let _0Day = {};
+  let _0Day: Record<string, any> = {};
   let _90Day = monitor.pageData._90Day;
   let uptime90Day = monitor.pageData.uptime90Day;
-  let incidents = {};
-  let dayIncidentsFull = [];
+  let incidents: Record<string, any> = {};
+  let dayIncidentsFull: any[] = [];
   let homeDataMaxDays = monitor.pageData.homeDataMaxDays;
-
+  let showLatencyGraph = false;
   let dimension = {
     x1: 6,
     x2: 4
   };
+
+  interface LatencyDataPoint {
+    timestamp: number;
+    latency: number;
+  }
+
+  let latencyData = {
+    labels: [] as string[],
+    datasets: [
+      {
+        label: "Latency (ms)",
+        data: [] as number[],
+        borderColor: "#3b82f6",
+        tension: 0.4
+      }
+    ]
+  };
+
+  let latencyChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: "Latency (ms)"
+        }
+      },
+      x: {
+        title: {
+          display: true,
+          text: "Time"
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        display: false
+      }
+    }
+  };
+
+  let uptimesRollers: Array<{
+    text: string;
+    startTs: number;
+    endTs: number;
+    value?: number;
+    loading?: boolean;
+  }> = [];
 
   dimension.x1 = ($page.data.isMobile ? 346 : 546) / homeDataMaxDays.maxDays;
   dimension.x2 = (4 / 6) * dimension.x1;
@@ -67,7 +120,7 @@
       });
   }
 
-  function getToday(startTs, incidentIDs) {
+  function getToday(startTs: number, incidentIDs: string[]) {
     let endTs = Math.min(startTs + 86400, monitor.pageData.maxDateTodayTimestamp);
 
     axios
@@ -105,7 +158,13 @@
     let rollers = homeDataMaxDays.selectableDays;
     //sort descending
     rollers.sort((a, b) => b - a);
-    let ret = [];
+    let ret: Array<{
+      text: string;
+      startTs: number;
+      endTs: number;
+      value?: number;
+      loading?: boolean;
+    }> = [];
     for (let i = 0; i < rollers.length; i++) {
       let roller = rollers[i];
       if (roller == 1) {
@@ -130,12 +189,12 @@
     return ret;
   }
 
-  let uptimesRollers = returnUptimeRollers();
+  uptimesRollers = returnUptimeRollers();
 
   //start of the week moment
   let rolledAt = 0;
   let rollerLoading = false;
-  async function rollSummary(r) {
+  async function rollSummary(r: number) {
     let newRolledAt = r;
     analyticsEvent("monitor_interval_switch", {
       tag: monitor.tag,
@@ -161,7 +220,7 @@
     for (const key in _90Day) {
       if (Object.prototype.hasOwnProperty.call(_90Day, key)) {
         const element = _90Day[key];
-        if (key >= uptimesRollers[rolledAt].startTs) {
+        if (parseInt(key) >= uptimesRollers[rolledAt].startTs) {
           _90Day[key].border = true;
         } else {
           _90Day[key].border = false;
@@ -177,7 +236,7 @@
   afterUpdate(() => {
     dispatch("heightChange", {});
   });
-  function show90Inline(e, bar) {
+  function show90Inline(e: any, bar: any) {
     if (e.detail.hover) {
       _90Day[bar.timestamp].showDetails = true;
     } else {
@@ -189,7 +248,7 @@
   let dayUptime = "NA";
   let loadingDayData = false;
 
-  function dailyDataGetter(e, bar, incidentObj) {
+  function dailyDataGetter(e: any, bar: any, incidentObj: any) {
     if (embed) {
       return;
     }
@@ -208,6 +267,37 @@
     setTimeout(() => {
       getToday(bar.timestamp, incidentIDs);
     }, 50);
+  }
+
+  async function loadLatencyData() {
+    try {
+      const response = await fetch(`${base}/api/monitor/${monitor.tag}/latency`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      });
+      const data: Record<string, LatencyDataPoint> = await response.json();
+
+      // Process data for chart
+      const timestamps = Object.keys(data).sort();
+      const latencies = timestamps.map((ts) => data[ts].latency);
+      const formattedLabels = timestamps.map((ts) => f(new Date(parseInt(ts) * 1000), "HH:mm", selectedLang, localTz));
+
+      latencyData = {
+        labels: formattedLabels,
+        datasets: [
+          {
+            label: "Latency (ms)",
+            data: latencies,
+            borderColor: "#3b82f6",
+            tension: 0.4
+          }
+        ]
+      };
+    } catch (error) {
+      console.error("Error loading latency data:", error);
+    }
   }
 </script>
 
@@ -237,11 +327,11 @@
             {#if $page.data.isLoggedIn}
               <Button
                 href="{base}/manage/app/monitors#{monitor.tag}"
-                class=" rotate-once h-5 p-0 text-muted-foreground hover:text-primary"
+                class="rotate-once h-5 p-0 text-muted-foreground hover:text-primary"
                 variant="link"
                 rel="external"
               >
-                <Settings class="h-4 w-4 " />
+                <Settings class="h-4 w-4" />
               </Button>
             {/if}
             <Button
@@ -253,7 +343,7 @@
                 });
               }}
             >
-              <Share2 class="h-4 w-4 " />
+              <Share2 class="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -263,9 +353,9 @@
   <div class="col-span-12 min-h-[94px] pt-2 md:w-[546px]">
     <div class="col-span-12">
       <div class="flex flex-wrap justify-between gap-x-1">
-        <div class="">
-          <DropdownMenu.Root class="">
-            <DropdownMenu.Trigger class="mr-2 flex ">
+        <div>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger class="mr-2 flex">
               <Button variant="secondary" class="h-6 px-2 py-2 text-xs">
                 {uptimesRollers[rolledAt].text}
               </Button>
@@ -286,12 +376,12 @@
         </div>
         <div class="flex gap-x-2 pt-2 text-right">
           {#if rollerLoading}
-            <Loader class=" mt-0.5 inline h-3.5 w-3.5 animate-spin text-muted-foreground" />
+            <Loader class="mt-0.5 inline h-3.5 w-3.5 animate-spin text-muted-foreground" />
           {/if}
-          {#if !isNaN(uptimesRollers[rolledAt].value)}
+          {#if uptimesRollers[rolledAt].value !== undefined}
             <NumberFlow
               class="border-r pr-2 text-xs font-semibold"
-              value={uptimesRollers[rolledAt].value}
+              value={uptimesRollers[rolledAt].value || 0}
               format={{
                 notation: "standard",
                 minimumFractionDigits: 4,
@@ -323,8 +413,7 @@
               on:click={(e) => {
                 dailyDataGetter(e, bar, incidents[ts]);
               }}
-              class="oneline h-[34px]
-							{bar.border ? 'opacity-100' : 'opacity-20'} pb-1"
+              class="oneline h-[34px] {bar.border ? 'opacity-100' : 'opacity-20'} pb-1"
               style="width: {dimension.x1}px"
             >
               <div
@@ -334,7 +423,6 @@
                   : 'sm'}"
                 style="width: {dimension.x2}px"
               ></div>
-              <!-- incident dot -->
               {#if !!incidents[ts]}
                 <div
                   class="bg-api-{incidents[
@@ -393,7 +481,7 @@
                 </div>
                 {#each dayIncidentsFull as incident, index}
                   <div class="col-span-1">
-                    <Incident {incident} {lang} index="incident-{index}" />
+                    <Incident {incident} index="incident-{index}" />
                   </div>
                 {/each}
               </div>
@@ -406,12 +494,11 @@
                   <div data-index={bar.index} class="bg-{bar.cssClass} today-sq m-[1px] h-[10px] w-[10px]"></div>
                   <div class="hiddenx relative">
                     <div
-                      data-index={ts.index}
+                      data-index={bar.index}
                       class="message rounded border bg-black p-2 text-xs font-semibold text-white"
                     >
                       <p>
                         <span class="text-{bar.cssClass}"> ● </span>
-
                         {f(new Date(bar.timestamp * 1000), "hh:mm a", selectedLang, $page.data.localTz)}
                       </p>
                       {#if bar.status != "NO_DATA"}
@@ -429,6 +516,27 @@
           </div>
         {/if}
       </div>
+    </div>
+    <div class="mt-4">
+      <Button
+        variant="secondary"
+        class="h-8 text-xs"
+        on:click={() => {
+          showLatencyGraph = !showLatencyGraph;
+          if (showLatencyGraph) {
+            loadLatencyData();
+          }
+        }}
+      >
+        <TrendingUp class="mr-2 h-4 w-4" />
+        {showLatencyGraph ? "Hide Latency Graph" : "Show Latency Graph"}
+      </Button>
+
+      {#if showLatencyGraph}
+        <div class="mt-4 h-[200px] w-full">
+          <Line data={latencyData} options={latencyChartOptions} />
+        </div>
+      {/if}
     </div>
   </div>
 </div>

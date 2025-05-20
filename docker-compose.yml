@@ -31,8 +31,8 @@ services:
       - ./uploads:/app/uploads
     # read_only: true                   # Uncommenting this fortifies security by marking the container's filesystem as read-only (aka no data can be written to the container's filesystem except for explicitly defined writable volumes and bind mounts, an exception has already been defined for `/database` and `/uploads`)
     restart: unless-stopped
-    depends_on:                       #  <-- Uncomment if you would like to use PostgreSQL or MySQL
-      - postgres                      #       ...instead of SQLite
+    # depends_on:                       #  <-- Uncomment if you would like to use PostgreSQL or MySQL
+    #   - postgres                      #       ...instead of SQLite
     #   - mysql                         #
 
   # Only use below section if you would like to utilize PostgreSQL instead of Kener's default SQLite database. (Don't forget to set `DATABASE_URL` in `kener` service to be: `DATABASE_URL=postgresql://db_user:db_password@localhost:5432/kener_db`)
