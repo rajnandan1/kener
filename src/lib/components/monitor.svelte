@@ -66,6 +66,8 @@
     ]
   };
 
+  let latencyDataMap: Record<string, number> = {};
+
   let latencyChartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -74,13 +76,39 @@
         beginAtZero: true,
         title: {
           display: true,
-          text: "Latency (ms)"
+          text: "Latency (ms)",
+          color: "#64748b",
+          font: {
+            size: 12
+          }
+        },
+        grid: {
+          color: "rgba(100, 116, 139, 0.1)"
+        },
+        ticks: {
+          color: "#64748b",
+          font: {
+            size: 11
+          }
         }
       },
       x: {
         title: {
           display: true,
-          text: "Time"
+          text: "Time",
+          color: "#64748b",
+          font: {
+            size: 12
+          }
+        },
+        grid: {
+          color: "rgba(100, 116, 139, 0.1)"
+        },
+        ticks: {
+          color: "#64748b",
+          font: {
+            size: 11
+          }
         }
       }
     },
@@ -136,6 +164,8 @@
           _0Day = response.data._0Day;
           dayUptime = response.data.uptime;
           dayIncidentsFull = response.data.incidents;
+          // Load latency data after getting daily data
+          loadLatencyData();
         }
         loadingDayData = false;
       })
@@ -284,6 +314,9 @@
       const latencies = timestamps.map((ts) => data[ts].latency);
       const formattedLabels = timestamps.map((ts) => f(new Date(parseInt(ts) * 1000), "HH:mm", selectedLang, localTz));
 
+      // Create a map for quick latency lookups
+      latencyDataMap = Object.fromEntries(timestamps.map((ts) => [ts, data[ts].latency]));
+
       latencyData = {
         labels: formattedLabels,
         datasets: [
@@ -295,6 +328,11 @@
           }
         ]
       };
+
+      // If latency graph is visible, update it
+      if (showLatencyGraph) {
+        latencyData = { ...latencyData };
+      }
     } catch (error) {
       console.error("Error loading latency data:", error);
     }
@@ -508,6 +546,11 @@
                       {:else}
                         <p class="pl-2">-</p>
                       {/if}
+                      {#if latencyDataMap[bar.timestamp]}
+                        <p class="pl-2 text-blue-400">
+                          Latency: {latencyDataMap[bar.timestamp].toFixed(2)}ms
+                        </p>
+                      {/if}
                     </div>
                   </div>
                 {/each}
@@ -517,13 +560,13 @@
         {/if}
       </div>
     </div>
-    <div class="mt-4">
+    <div class="mt-2">
       <Button
         variant="secondary"
         class="h-8 text-xs"
         on:click={() => {
           showLatencyGraph = !showLatencyGraph;
-          if (showLatencyGraph) {
+          if (showLatencyGraph && Object.keys(latencyDataMap).length === 0) {
             loadLatencyData();
           }
         }}
@@ -533,7 +576,7 @@
       </Button>
 
       {#if showLatencyGraph}
-        <div class="mt-4 h-[200px] w-full">
+        <div class="mt-2 h-[200px] w-full rounded-md border bg-card p-2">
           <Line data={latencyData} options={latencyChartOptions} />
         </div>
       {/if}
