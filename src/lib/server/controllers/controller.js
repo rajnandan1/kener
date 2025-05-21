@@ -722,6 +722,7 @@ export const GetDataGroupByDayAlternative = async (monitor_tag, start, end, time
         UP: 0,
         DOWN: 0,
         DEGRADED: 0,
+        MAINTENANCE: 0,
         NO_DATA: 0,
       };
     }
@@ -740,6 +741,7 @@ export const GetDataGroupByDayAlternative = async (monitor_tag, start, end, time
     UP: group.UP,
     DOWN: group.DOWN,
     DEGRADED: group.DEGRADED,
+    MAINTENANCE: group.MAINTENANCE,
     NO_DATA: group.NO_DATA,
   }));
 };
@@ -886,9 +888,9 @@ export const RemoveIncidentMonitor = async (incident_id, monitor_tag) => {
 };
 
 export const AddIncidentMonitor = async (incident_id, monitor_tag, monitor_impact) => {
-  //monitor_impact must be DOWN or DEGRADED or NONE
-  if (!["DOWN", "DEGRADED"].includes(monitor_impact)) {
-    throw new Error("Monitor impact must be either DOWN, DEGRADED ");
+  //monitor_impact must be DOWN or DEGRADED or MAINTENANCE or NONE
+  if (!["DOWN", "DEGRADED", "MAINTENANCE"].includes(monitor_impact)) {
+    throw new Error("Monitor impact must be either DOWN, DEGRADED, MAINTENANCE");
   }
 
   //check if monitor exists

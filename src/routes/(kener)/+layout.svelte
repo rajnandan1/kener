@@ -109,7 +109,8 @@
 	--bg-custom: {data.bgc};
 	--up-color: {data.site.colors.UP};
 	--down-color: {data.site.colors.DOWN};
-	--degraded-color: {data.site.colors.DEGRADED}
+	--degraded-color: {data.site.colors.DEGRADED};
+	--maintenance-color: {data.site.colors.MAINTENANCE};
 	"
   class="kener-theme-{kenerTheme}"
 >

@@ -235,8 +235,13 @@
           </span>
 
           <span class="bg-api-down mr-1 inline-flex h-[8px] w-[8px] rounded-full opacity-75"></span>
-          <span class="">
+          <span class="mr-3">
             {l(data.lang, "DOWN")}
+          </span>
+
+          <span class="bg-api-maintenance mr-1 inline-flex h-[8px] w-[8px] rounded-full opacity-75"></span>
+          <span class="">
+            {l(data.lang, "MAINTENANCE")}
           </span>
         </Badge>
       </div>

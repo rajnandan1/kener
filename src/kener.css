@@ -10,6 +10,7 @@ section {
   --up-color: #4ead94;
   --down-color: #ca3038;
   --degraded-color: #e6ca61;
+  --maintenance-color: #6699cc;
 }
 
 /*Colors for something UP*/
@@ -80,6 +81,33 @@ section {
 }
 .bg-api-degraded-90 {
   background: linear-gradient(0deg, var(--degraded-color) 90%, var(--up-color) 1%);
+}
+
+/*Colors for something in maintenance*/
+.bg-api-maintenance {
+  background-color: var(--maintenance-color);
+}
+.text-api-maintenance {
+  color: var(--maintenance-color);
+}
+
+.bg-api-maintenance-10 {
+  background: linear-gradient(0deg, var(--maintenance-color) 10%, var(--up-color) 1%);
+}
+.bg-api-maintenance-20 {
+  background: linear-gradient(0deg, var(--maintenance-color) 20%, var(--up-color) 1%);
+}
+.bg-api-maintenance-40 {
+  background: linear-gradient(0deg, var(--maintenance-color) 40%, var(--up-color) 1%);
+}
+.bg-api-maintenance-60 {
+  background: linear-gradient(0deg, var(--maintenance-color) 60%, var(--up-color) 1%);
+}
+.bg-api-maintenance-80 {
+  background: linear-gradient(0deg, var(--maintenance-color) 80%, var(--up-color) 1%);
+}
+.bg-api-maintenance-90 {
+  background: linear-gradient(0deg, var(--maintenance-color) 90%, var(--up-color) 1%);
 }
 
 /*Needed to show markdown properly*/
