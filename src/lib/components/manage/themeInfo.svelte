@@ -36,7 +36,7 @@
       UP: "#4ead94",
       DOWN: "#ca3038",
       DEGRADED: "#e6ca61",
-      MAINTENANCE: "#6699cc",
+      MAINTENANCE: "#6679cc",
     },
     fontJ: {
       cssSrc:

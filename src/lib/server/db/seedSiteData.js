@@ -92,7 +92,7 @@ const seedSiteData = {
     UP: "#67ab95",
     DOWN: "#ca3038",
     DEGRADED: "#e6ca61",
-    MAINTENANCE: "#6699cc",
+    MAINTENANCE: "#6679cc",
   },
   font: {
     cssSrc: "",

@@ -6,7 +6,7 @@ export function up(knex) {
   return new Promise(async (resolve) => {
     await knex("site_data")
       .where("key", "colors")
-      .update({ value: knex.jsonInsert("value", "$.MAINTENANCE", "#6699cc") });
+      .update({ value: knex.jsonInsert("value", "$.MAINTENANCE", "#6679cc") });
 
     // Due to alter() limitations on columns (specialy with SQlite and Amazon Redshift),
     // we recreate the entire table with new modifications.
