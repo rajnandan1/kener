@@ -117,6 +117,7 @@
       <div class="bg-api-up h-4" style="width: {data.systemDataMessage.upsPercentage}%;"></div>
       <div class="bg-api-degraded h-4" style="width: {data.systemDataMessage.degradedPercentage}%;"></div>
       <div class="bg-api-down h-4" style="width: {data.systemDataMessage.downsPercentage}%;"></div>
+      <div class="bg-api-maintenance h-4" style="width: {data.systemDataMessage.maintenancePercentage}%;"></div>
     </div>
   </div>
 {/if}

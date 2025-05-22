@@ -206,6 +206,7 @@ export const SystemDataMessage = async () => {
   let upsCount = 0;
   let degradedCount = 0;
   let downCount = 0;
+  let maintenanceCount = 0;
   for (let i = 0; i < monitors.length; i++) {
     let status = await db.getLatestMonitoringData(monitors[i].tag);
     if (status) {
@@ -215,11 +216,13 @@ export const SystemDataMessage = async () => {
         degradedCount++;
       } else if (status.status === "DOWN") {
         downCount++;
+      } else if (status.status === "MAINTENANCE") {
+        maintenanceCount++;
       }
     }
   }
 
-  const total = upsCount + degradedCount + downCount;
+  const total = upsCount + degradedCount + downCount + maintenanceCount;
 
   if (total === 0) {
     return {
@@ -227,48 +230,56 @@ export const SystemDataMessage = async () => {
       upsPercentage: 0,
       degradedPercentage: 0,
       downsPercentage: 0,
+      maintenancePercentage: 0,
     };
   }
 
   let upsPercentage = Math.round((upsCount / total) * 100);
   let degradedPercentage = Math.round((degradedCount / total) * 100);
   let downsPercentage = Math.round((downCount / total) * 100);
+  let maintenancePercentage = Math.round((maintenanceCount / total) * 100);
 
   let message = "";
 
   // Determine message based on the combination of system states
-  if (upsCount > 0 && degradedCount === 0 && downCount === 0) {
-    // UP=1|DOWN=0|DEGRADED=0
+  if (upsCount > 0 && degradedCount === 0 && downCount === 0 && maintenanceCount == 0) {
+    // UP=1|DOWN=0|DEGRADED=0|MAINTENANCE=0
     message = "All Systems are Operational";
-  } else if (upsCount === 0 && degradedCount > 0 && downCount === 0) {
-    // UP=0|DOWN=0|DEGRADED=1
+  } else if (upsCount === 0 && degradedCount > 0 && downCount === 0 && maintenanceCount == 0) {
+    // UP=0|DOWN=0|DEGRADED=1|MAINTENANCE=0
     message = "All Systems are Degraded";
-  } else if (upsCount === 0 && degradedCount === 0 && downCount > 0) {
-    // UP=0|DOWN=1|DEGRADED=0
+  } else if (upsCount === 0 && degradedCount === 0 && downCount > 0 && maintenanceCount == 0) {
+    // UP=0|DOWN=1|DEGRADED=0|MAINTENANCE=0
     message = "All Systems are Down";
+  } else if (upsCount === 0 && degradedCount === 0 && downCount === 0 && maintenanceCount > 0) {
+    message = "All Systems are in Maintenance"; // TODO: add into locales.
   } else if (
-    (upsCount > 0 && degradedCount > 0 && downCount > 0) ||
-    (upsCount === 0 && degradedCount > 0 && downCount > 0)
+    (upsCount > 0 && degradedCount > 0 && downCount > 0 && maintenanceCount > 0) ||
+    (upsCount === 0 && degradedCount > 0 && downCount > 0 && maintenanceCount > 0)
   ) {
-    // UP=1|DOWN=1|DEGRADED=1 or UP=0|DOWN=1|DEGRADED=1
+    // UP=1|DOWN=1|DEGRADED=1|MAINTENANCE=1 or UP=0|DOWN=1|DEGRADED=1|MAINTENANCE=1
     message = "Some Systems are not working as expected";
-  } else if (upsCount > 0 && degradedCount === 0 && downCount > 0) {
-    // UP=1|DOWN=1|DEGRADED=0
+  } else if (upsCount > 0 && degradedCount === 0 && downCount > 0 && maintenanceCount == 0) {
+    // UP=1|DOWN=1|DEGRADED=0|MAINTENANCE=0
     message = "Some Systems Down";
-  } else if (upsCount > 0 && degradedCount > 0 && downCount === 0) {
-    // UP=1|DOWN=0|DEGRADED=1
+  } else if (upsCount > 0 && degradedCount > 0 && downCount === 0 && maintenanceCount == 0) {
+    // UP=1|DOWN=0|DEGRADED=1|MAINTENANCE=0
     message = "Some Systems Degraded";
+  } else if (upsCount > 0 && degradedCount === 0 && downCount === 0 && maintenanceCount > 0) {
+    // UP=1|DOWN=0|DEGRADED=0|MAINTENANCE=1
+    message = "Some Systems in Maintenance"; // TODO: add into locales.
   }
 
   //if percentage is not 100 sum, then add remaining to up
-  if (upsPercentage + degradedPercentage + downsPercentage < 100) {
-    upsPercentage = 100 - (degradedPercentage + downsPercentage);
+  if (upsPercentage + degradedPercentage + downsPercentage + maintenancePercentage < 100) {
+    upsPercentage = 100 - (degradedPercentage + downsPercentage + maintenancePercentage);
   }
   return {
     text: message,
     upsPercentage,
     degradedPercentage,
     downsPercentage,
+    maintenancePercentage
   };
 };
 
