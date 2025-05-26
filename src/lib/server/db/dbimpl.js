@@ -663,9 +663,6 @@ class DbImpl {
       updated_at: this.knex.fn.now(),
       incident_type: data.incident_type,
       incident_source: data.incident_source,
-      maintenance_strategy: data.maintenance_strategy,
-      cron: data.cron,
-      maintenance_duration: data.maintenance_duration,
     };
 
     // PostgreSQL supports returning clause
