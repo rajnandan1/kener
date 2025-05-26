@@ -217,13 +217,13 @@
     class="section-legend mx-auto mb-2 flex w-full flex-1 flex-col items-start justify-center bg-transparent md:w-[655px]"
     id=""
   >
-    <div class="grid w-full grid-cols-2 gap-4">
-      <div class="col-span-2 text-center md:col-span-1 md:text-left">
+    <div class="flex flex-col md:flex-row w-full gap-4 justify-between">
+      <div class="flex justify-center md:content-left">
         <Badge class="border-0 md:pl-0" variant="outline">
           {l(data.lang, "Availability per Component")}
         </Badge>
       </div>
-      <div class="col-span-2 text-center md:col-span-1 md:text-right">
+      <div class="flex justify-center md:justify-end">
         <Badge variant="outline" class="border-0 md:pr-0">
           <span class="bg-api-up mr-1 inline-flex h-[8px] w-[8px] rounded-full opacity-75"></span>
           <span class="mr-3">
