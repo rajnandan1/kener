@@ -75,7 +75,7 @@ Shows the day's impact. Example: If it was down at 10:00 AM and it is 11:00 AM, 
 
 ## Colors
 
-You can change the colors of UP/DEGRADED/DOWN states of the monitor. You show have a shade of green, yellow, and red respectively.
+You can change the colors of UP/DEGRADED/DOWN/MAINTENANCE states of the monitor. By default, it shows a shade of green, yellow, red and blue respectively.
 
 ---
 
