@@ -122,7 +122,7 @@
 {/if}
 <div class="section-actions mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-center justify-center">
   <div class="flex w-full flex-wrap rounded-md border shadow-sm">
-    {#if data.canSendEmail}
+    {#if data.canSendEmail && data.canUsersSubscribe}
       <Button
         variant="ghost"
         class="dash-after relative h-10 rounded-md text-sm font-medium"

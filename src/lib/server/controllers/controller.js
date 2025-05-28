@@ -1616,7 +1616,7 @@ export const CreateSubscriptionTrigger = async (data) => {
   } else {
     await db.updateSubscriptionTrigger({
       id: subscriptionTrigger.id,
-      subscription_trigger_status: "ACTIVE",
+      subscription_trigger_status: data.subscription_trigger_status || "ACTIVE",
       subscription_trigger_type: subscriptionTrigger.subscription_trigger_type,
       config: data.config,
     });
@@ -1627,6 +1627,11 @@ export const CreateSubscriptionTrigger = async (data) => {
     subscription_trigger_status: data.subscription_trigger_status,
     config: data.config,
   };
+};
+
+//updateSubscriptionTriggerStatus
+export const UpdateSubscriptionTriggerStatus = async (id, status) => {
+  return await db.updateSubscriptionTriggerStatus(id, status);
 };
 
 // Get subscribers paginated
