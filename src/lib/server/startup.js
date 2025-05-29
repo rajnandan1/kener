@@ -15,6 +15,7 @@ const jobs = [];
 process.env.TZ = "UTC";
 let isStartUP = true;
 
+// TODO: schedule maintenance relminder.
 const scheduleCronJobs = async () => {
   // Fetch and map all active monitors, creating a unique hash for each
   const activeMonitors = (await GetMonitorsParsed({ status: "ACTIVE" })).map((monitor) => ({

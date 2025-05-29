@@ -758,6 +758,7 @@ export const CreateIncident = async (data) => {
     state: !!data.state ? data.state : "INVESTIGATING",
     incident_type: !!data.incident_type ? data.incident_type : "INCIDENT",
     incident_source: !!data.incident_source ? data.incident_source : "DASHBOARD",
+    reminder_time: !!data.reminder_time ? data.reminder_time : null,
   };
 
   //incident_type == INCIDENT delete endDateTime
@@ -799,6 +800,7 @@ export const UpdateIncident = async (incident_id, data) => {
     status: data.status || incidentExists.status,
     state: data.state || incidentExists.state,
     end_date_time: data.end_date_time || incidentExists.end_date_time,
+    reminder_time: data.reminder_time === "" ? null : data.reminder_time || incidentExists.reminder_time,
   };
 
   //check if updateObject same as incidentExists
@@ -811,6 +813,7 @@ export const UpdateIncident = async (incident_id, data) => {
       status: incidentExists.status,
       state: incidentExists.state,
       end_date_time: incidentExists.end_date_time,
+      reminder_time: incidentExists.reminder_time,
     })
   ) {
     PushDataToQueue(incident_id, "updateIncident", {

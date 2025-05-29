@@ -663,6 +663,7 @@ class DbImpl {
       updated_at: this.knex.fn.now(),
       incident_type: data.incident_type,
       incident_source: data.incident_source,
+      reminder_time: data.reminder_time,
     };
 
     // PostgreSQL supports returning clause
@@ -765,6 +766,7 @@ class DbImpl {
       status: data.status,
       state: data.state,
       updated_at: this.knex.fn.now(),
+      reminder_time: data.reminder_time,
     });
   }
 
@@ -797,12 +799,14 @@ class DbImpl {
         "status",
         "state",
         "incident_type",
+        "reminder_time",
       )
       .where("id", id)
       .first();
   }
 
   //get incident_monitors by incident_id
+  // NOTE: to use.
   async getIncidentMonitorsByIncidentID(incident_id) {
     return await this.knex("incident_monitors")
       .select("monitor_tag", "monitor_impact")

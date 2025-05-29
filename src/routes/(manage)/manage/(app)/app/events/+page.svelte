@@ -104,7 +104,11 @@
       status: "OPEN",
       state: "INVESTIGATING",
       firstComment: "",
-      incident_type: "INCIDENT"
+      incident_type: "INCIDENT",
+      reminder_active: false,
+      reminder_before_start: false,
+      reminder_time: 0,
+      reminder_time_unit: "MINUTES"
     };
   }
   let isMounted = false;
@@ -169,7 +173,8 @@
       status: newIncident.status,
       state: newIncident.state,
       id: newIncident.id,
-      incident_type: newIncident.incident_type
+      incident_type: newIncident.incident_type,
+      reminder_time: `${newIncident.reminder_time} ${newIncident.reminder_time_unit}`
     };
     //convert data.start_date_time to timestamp
     if (!!!toPost.start_date_time) {
@@ -183,6 +188,18 @@
 
     if (toPost.incident_type == "MAINTENANCE") {
       toPost.state = "RESOLVED";
+      if (newIncident.reminder_active) {
+        if (newIncident.reminder_before_start) {
+          if (!!!newIncident.reminder_time || isNaN(newIncident.reminder_time) || newIncident.reminder_time <= 0) {
+            invalidFormMessage = "Reminder time should be greater than 0";
+            return;
+          }
+        } else {
+          toPost.reminder_time = "0";
+        }
+      } else {
+        toPost.reminder_time = "";
+      }
     }
     toPost.incident_source = "DASHBOARD";
     formStateCreate = "loading";
@@ -408,6 +425,15 @@
     if (!!i.end_date_time) {
       newIncident.endDatetime = new Date(Number(i.end_date_time) * 1000);
     }
+    newIncident.reminder_active = !!newIncident.reminder_time;
+    newIncident.reminder_before_start = newIncident.reminder_active && newIncident.reminder_time !== "0";
+    newIncident.reminder_time_unit = newIncident.reminder_before_start
+      ? newIncident.reminder_time.split(" ")[1]
+      : "MINUTES";
+    newIncident.reminder_time = newIncident.reminder_before_start
+      ? parseInt(newIncident.reminder_time.split(" ")[0])
+      : 0;
+    console.log(newIncident);
     showModal = true;
 
     showComments(i);
@@ -775,7 +801,7 @@
             </div>
           {/if}
 
-          <div class="mt-4 flex gap-4">
+          <div class="mt-4 grid grid-cols-3 gap-4">
             <div class="col-span-1">
               <Label class="mb-2 text-sm" for="start_date_time">
                 <span class="capitalize">{newIncident.incident_type}</span> Start Date Time
@@ -802,6 +828,78 @@
                   min={newIncident.startDatetime}
                 />
               </div>
+              <div class="col-span-3">
+                <label class="cursor-pointer">
+                  <input
+                    type="checkbox"
+                    on:change={(e) => {
+                      newIncident.reminder_active = e.target.checked;
+                    }}
+                    checked={newIncident.reminder_active}
+                  />
+                  <span class="ml-2 text-sm">Reminders when starting and ending</span>
+                  <p class="my-1 text-xs text-muted-foreground">
+                    If active, this will send reminders to all affected monitors when the maintenance is about to start,
+                    and when it is about to end.
+                  </p>
+                </label>
+              </div>
+              {#if newIncident.reminder_active}
+                <div class="col-span-3">
+                  <label class="cursor-pointer">
+                    <input
+                      type="checkbox"
+                      on:change={(e) => {
+                        newIncident.reminder_before_start = e.target.checked;
+                      }}
+                      checked={newIncident.reminder_before_start}
+                    />
+                    <span class="ml-2 text-sm">Reminder before starting</span>
+                    <p class="my-1 text-xs text-muted-foreground">
+                      If active, this will send a reminder to all affected monitors <b>
+                        {#if newIncident.reminder_before_start}
+                          {newIncident.reminder_time} {newIncident.reminder_time_unit.toLowerCase()}
+                        {:else}
+                          x time
+                        {/if}
+                      </b> before the maintenance starts.
+                    </p>
+                  </label>
+                </div>
+                {#if newIncident.reminder_before_start}
+                  <div class="col-span-1">
+                    <Label class="mb-2 text-sm" for="reminder_time">
+                      Reminder Time before start
+                      <span class="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      bind:value={newIncident.reminder_time}
+                      id="reminder_time"
+                      placeholder="0"
+                      class="mt-2 text-sm"
+                    />
+                  </div>
+                  <div class="col-span-1">
+                    <Label for="reminder_time_unit" class="mb-2 text-sm">
+                      Reminder time unit
+                      <span class="text-red-500">*</span>
+                    </Label>
+                    <Select.Root portal={null} onSelectedChange={(e) => (newIncident.reminder_time_unit = e.value)}>
+                      <Select.Trigger id="reminder_time_unit" class="mt-2">
+                        <Select.Value placeholder={newIncident.reminder_time_unit} />
+                      </Select.Trigger>
+                      <Select.Content>
+                        <Select.Group>
+                          <Select.Label>Reminder time unit</Select.Label>
+                          <Select.Item value="MINUTES" label="MINUTES" class="text-sm font-medium">MINUTES</Select.Item>
+                          <Select.Item value="HOURS" label="HOURS" class="text-sm font-medium">HOURS</Select.Item>
+                          <Select.Item value="DAYS" label="DAYS" class="text-sm font-medium">DAYS</Select.Item>
+                        </Select.Group>
+                      </Select.Content>
+                    </Select.Root>
+                  </div>
+                {/if}
+              {/if}
             {/if}
           </div>
 
@@ -819,7 +917,11 @@
                   newIncident.title.trim().length == 0 ||
                   !!!newIncident.startDatetime ||
                   (!!!newIncident.id && newIncident.firstComment.trim().length == 0) ||
-                  (!!!newIncident.endDatetime && newIncident.incident_type == "MAINTENANCE")}
+                  (!!!newIncident.endDatetime && newIncident.incident_type == "MAINTENANCE") ||
+                  (newIncident.incident_type == "MAINTENANCE" &&
+                    newIncident.reminder_active &&
+                    newIncident.reminder_before_start &&
+                    (isNaN(newIncident.reminder_time) || newIncident.reminder_time <= 0))}
               >
                 Save Event
                 {#if formStateCreate === "loading"}
