@@ -15,7 +15,7 @@ const jobs = [];
 process.env.TZ = "UTC";
 let isStartUP = true;
 
-// TODO: schedule maintenance relminder.
+// TODO: schedule maintenance reminder.
 const scheduleCronJobs = async () => {
   // Fetch and map all active monitors, creating a unique hash for each
   const activeMonitors = (await GetMonitorsParsed({ status: "ACTIVE" })).map((monitor) => ({
@@ -57,6 +57,55 @@ const scheduleCronJobs = async () => {
       jobs.push(newJob);
     }
   }
+
+  // Fetch all active maintenance.
+  const currentTime = Math.floor(Date.now() / 1000);
+  const activeMaintenances = await db.getActiveMaintenanceWithReminders();
+  for (const maintenance of activeMaintenances) {
+    const remindersSent = maintenance.reminders_sent_at.split(";").map(Number);
+    if (maintenance.reminder_time !== "0") {
+      // Parse reminder_time string, e.g. "10 MINUTES", "2 HOURS", "1 DAYS"
+      const [amountStr, unit] = maintenance.reminder_time.split(" ");
+      const amount = parseInt(amountStr, 10);
+      let minutes = 0;
+      if (unit === "MINUTES") {
+        minutes = amount;
+      } else if (unit === "HOURS") {
+        minutes = amount * 60;
+      } else if (unit === "DAYS") {
+        minutes = amount * 60 * 24;
+      }
+
+      // Check if the reminder for upcoming maintenance has been sent.
+      const reminderTime = maintenance.start_date_time - minutes * 60;
+      if (remindersSent[0] === 0 && reminderTime <= currentTime && maintenance.start_date_time > currentTime) {
+        remindersSent[0] = currentTime;
+        // TODO: Send the reminder notification.
+      }
+    }
+
+    // Check if the reminder for ongoing maintenance has been sent.
+    if (
+      remindersSent[1] === 0 &&
+      maintenance.start_date_time <= currentTime &&
+      maintenance.end_date_time >= currentTime
+    ) {
+      remindersSent[1] = currentTime;
+      // TODO: Send the reminder notification.
+    }
+
+    // Check if the reminder for completed maintenance has been sent.
+    if (remindersSent[2] === 0 && maintenance.end_date_time <= currentTime) {
+      remindersSent[2] = currentTime;
+      // TODO: Send the reminder notification.
+    }
+
+    // Check if we have sent reminders.
+    if (JSON.stringify(maintenance.reminders_sent_at) !== JSON.stringify(remindersSent.join(";"))) {
+      await db.updateMaintenanceRemindersSentAt(maintenance.id, remindersSent.join(";"));
+    }
+  }
+
   isStartUP = false;
 };
 

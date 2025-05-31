@@ -5,7 +5,7 @@
 export function up(knex) {
   return knex.schema.alterTable("incidents", (table) => {
     table.string("reminder_time").nullable();
-    table.integer("reminder_sent_at").nullable();
+    table.string("reminders_sent_at").defaultTo("0;0;0").notNullable();
   });
 }
 

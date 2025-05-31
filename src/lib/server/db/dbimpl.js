@@ -1276,6 +1276,21 @@ class DbImpl {
   async deleteSubscriptionTriggerById(id) {
     return await this.knex("subscription_triggers").where({ id }).del();
   }
+
+  async getActiveMaintenanceWithReminders() {
+    return await this.knex("incidents")
+      .where("incident_type", "MAINTENANCE")
+      .andWhere("status", "OPEN")
+      .andWhere("state", "RESOLVED")
+      .andWhereRaw("reminder_time IS NOT NULL")
+      .orderBy("start_date_time", "desc");
+  }
+
+  async updateMaintenanceRemindersSentAt(id, sent_at) {
+    return await this.knex("incidents").where({ id }).update({
+      reminders_sent_at: sent_at,
+    });
+  }
 }
 
 export default DbImpl;
