@@ -24,7 +24,8 @@
       updateIncident: false,
       insertIncidentMonitor: false,
       updateIncidentComment: false,
-      insertIncidentComment: false
+      insertIncidentComment: false,
+      sendMaintenanceReminders: false
     }
   };
   let selectedTriggerId = null;
@@ -223,7 +224,7 @@
             Send notification when an event comment is updated.
           </p>
         </div>
-        <div class=" pb-3">
+        <div class="pb-3">
           <label class="cursor-pointer">
             <input
               on:change={(e) => {
@@ -239,6 +240,25 @@
           </label>
           <p class="pl-6 text-xs font-medium text-muted-foreground">
             Send notification when a new comment is added to an event.
+          </p>
+        </div>
+        <div class="pb-3">
+          <label class="cursor-pointer">
+            <input
+              on:change={(e) => {
+                subscriptionTrigger.config.sendMaintenanceReminders = e.target.checked;
+                saveSubscriptionTrigger(); // Save the subscription trigger after change
+              }}
+              class="mr-1"
+              type="checkbox"
+              checked={subscriptionTrigger.config.sendMaintenanceReminders}
+              disabled={!canSendEmail}
+            />
+            Send Maintenance Reminders
+          </label>
+          <p class="pl-6 text-xs font-medium text-muted-foreground">
+            Send notification when a maintenance reminder is sent. <br />You can customise reminders' option while
+            creating the event.
           </p>
         </div>
       </div>
