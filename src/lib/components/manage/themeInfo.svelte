@@ -35,7 +35,8 @@
     colorsJ: {
       UP: "#4ead94",
       DOWN: "#ca3038",
-      DEGRADED: "#e6ca61"
+      DEGRADED: "#e6ca61",
+      MAINTENANCE: "#6679cc",
     },
     fontJ: {
       cssSrc:
@@ -296,7 +297,7 @@
       <div>
         <p class="font-medium">Status Colors</p>
         <p class=" text-xs font-semibold text-muted-foreground">
-          Choose the colors for the monitor. You can choose between UP, DEGRADED, and DOWN.
+          Choose the colors for the monitor. You can choose between UP, DEGRADED, DOWN and MAINTENANCE.
         </p>
       </div>
 
@@ -340,6 +341,20 @@
             label="DOWN"
             on:input={(event) => {
               themeData.colorsJ.DOWN = event.detail.hex;
+            }}
+          />
+        </div>
+        <div class="relative">
+          <ColorPicker
+            bind:hex={themeData.colorsJ.MAINTENANCE}
+            position="responsive"
+            isAlpha={false}
+            isDark={$mode == "dark"}
+            --input-size="16px"
+            isTextInput={true}
+            label="MAINTENANCE"
+            on:input={(event) => {
+              themeData.colorsJ.MAINTENANCE = event.detail.hex;
             }}
           />
         </div>

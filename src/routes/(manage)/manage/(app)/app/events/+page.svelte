@@ -1092,6 +1092,11 @@
                   <Select.Content>
                     <Select.Group>
                       <Select.Label>Impact</Select.Label>
+                      {#if currentIncident.incident_type == "MAINTENANCE"}
+                        <Select.Item value="MAINTENANCE" label="MAINTENANCE" class="text-api-maintenance text-sm font-medium">
+                          MAINTENANCE
+                        </Select.Item>
+                      {/if}
                       <Select.Item value="DOWN" label="DOWN" class="text-api-down text-sm font-medium">
                         DOWN
                       </Select.Item>

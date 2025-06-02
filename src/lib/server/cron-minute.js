@@ -42,6 +42,10 @@ async function manualIncident(monitor) {
   for (let i = 0; i < impactArr.length; i++) {
     const element = impactArr[i];
 
+    if (element.monitor_impact === "MAINTENANCE") {
+      impact = "MAINTENANCE";
+      break;
+    }
     if (element.monitor_impact === "DOWN") {
       impact = "DOWN";
       break;

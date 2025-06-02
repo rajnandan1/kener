@@ -125,6 +125,11 @@ const FetchData = async function (site, monitor, localTz, selectedLang, lang, is
       summaryDuration = getSummaryDuration(dayData.DOWN, selectedLang);
       summaryStatus = "DOWN";
     }
+    if (dayData.MAINTENANCE > 0) {
+      cssClass = returnStatusClass(dayData.MAINTENANCE, dayData.total, StatusObj.MAINTENANCE, site.barStyle);
+      summaryDuration = getSummaryDuration(dayData.MAINTENANCE, selectedLang);
+      summaryStatus = "MAINTENANCE";
+    }
     if (dayData.NO_DATA === dayData.total) {
       cssClass = StatusObj.NO_DATA;
       summaryStatus = NO_DATA;
@@ -177,6 +182,11 @@ const FetchData = async function (site, monitor, localTz, selectedLang, lang, is
       summaryDuration = getSummaryDuration(getCountOfSimilarStatuesEnd(todayDataDb, "DOWN"), selectedLang);
       summaryStatus = "DOWN";
       summaryColorClass = "api-down";
+    }
+    if (!!lastRow && lastRow.status == "MAINTENANCE") {
+      summaryDuration = getSummaryDuration(getCountOfSimilarStatuesEnd(todayDataDb, "MAINTENANCE"), selectedLang);
+      summaryStatus = "MAINTENANCE";
+      summaryColorClass = "api-maintenance";
     }
     if (lastRow.status === "NO_DATA") {
       summaryStatus = NO_DATA;

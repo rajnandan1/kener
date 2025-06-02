@@ -149,6 +149,7 @@ const StatusObj = {
   UP: "api-up",
   DEGRADED: "api-degraded",
   DOWN: "api-down",
+  MAINTENANCE: "api-maintenance",
   NO_DATA: "api-nodata",
 };
 // @ts-ignore

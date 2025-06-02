@@ -8,6 +8,7 @@ const SITE = "./config/site.yaml";
 const UP = "UP";
 const DOWN = "DOWN";
 const DEGRADED = "DEGRADED";
+const MAINTENANCE = "MAINTENANCE";
 const NO_DATA = "NO_DATA";
 const API_TIMEOUT = 10 * 1000; // 10 seconds
 const AnalyticsProviders = {

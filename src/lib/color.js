@@ -7,6 +7,7 @@ async function StatusColor(status) {
 		UP: site.colors?.UP || "#00dfa2",
 		DEGRADED: site.colors?.DEGRADED || "#e6ca61",
 		DOWN: site.colors?.DOWN || "#ca3038",
+		MAINTENANCE: site.colors?.MAINTENANCE || "#6679cc",
 		NO_DATA: "#f1f5f8"
 	};
 }
