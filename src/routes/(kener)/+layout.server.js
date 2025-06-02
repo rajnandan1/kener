@@ -10,6 +10,7 @@ import {
   IsLoggedInSession,
   GetLocaleFromCookie,
   IsEmailSetup,
+  GetSubscriptionTriggerByEmail,
 } from "$lib/server/controllers/controller.js";
 
 export async function load({ params, route, url, cookies, request }) {
@@ -47,6 +48,8 @@ export async function load({ params, route, url, cookies, request }) {
 
   const query = url.searchParams;
   const bgc = query.get("bgc") ? "#" + query.get("bgc") : "";
+  const emailSubscriptionTrigger = await GetSubscriptionTriggerByEmail();
+
   return {
     site: site,
     localTz: localTz,
@@ -55,6 +58,7 @@ export async function load({ params, route, url, cookies, request }) {
     selectedLang: selectedLang,
     isLoggedIn: !!isLoggedIn.user,
     canSendEmail: IsEmailSetup(),
+    canUsersSubscribe: !!emailSubscriptionTrigger && emailSubscriptionTrigger.subscription_trigger_status == "ACTIVE",
     isMobile: isMobile,
   };
 }
