@@ -54,30 +54,34 @@ const PushReminderToQueue = async (eventID, eventName, eventData) => {
     logo_url: await GetSiteLogoURL(siteData.siteURL, siteData.logo, base),
     incident_url: await GetSiteLogoURL(siteData.siteURL, `/view/events/maintenance-${eventID}`, base),
   };
-  const eventDate = new Date(eventData.date * 1000).toISOString();
+  const eventDate = new Date(eventData.date * 1000).toUTCString();
 
-  switch (eventName) {
-    case "upcoming_maintenance":
-      emailData.title = `Upcoming Maintenance: ${eventData.title}`;
-      emailData.message = `We would like to inform you that maintenance <b>${eventData.title}</b> is scheduled to start on ${eventDate}.`;
-      emailData.message +=
-        monitors.length > 0 ? ` It will affect the following services:` : ` It will not affect any services.`;
-      break;
-    case "starting_maintenance":
-      emailData.title = `Maintenance Starting: ${eventData.title}`;
-      emailData.message = `We would like to inform you that maintenance <b>${eventData.title}</b> is about to start on ${eventDate}.`;
-      emailData.message +=
-        monitors.length > 0 ? ` It will affect the following services:` : ` It will not affect any services.`;
-      break;
-    case "ending_maintenance":
-      emailData.title = `Maintenance Ended: ${eventData.title}`;
-      emailData.message = `We would like to inform you that maintenance <b>${eventData.title}</b> has ended on ${eventDate}.`;
-      emailData.message +=
-        monitors.length > 0 ? ` It affected the following services:` : ` It did not affect any services.`;
-      break;
+  const eventTemplates = {
+    upcoming_maintenance: {
+      title: `Upcoming Maintenance: ${eventData.title}`,
+      message: `We would like to inform you that maintenance <b>${eventData.title}</b> is scheduled to start on ${eventDate}, and 
+      will last for <b>${eventData.duration?.toLowerCase()}</b>.`,
+      services: monitors.length > 0 ? ` It will affect the following services:` : ` It will not affect any services.`,
+    },
+    starting_maintenance: {
+      title: `Maintenance Starting: ${eventData.title}`,
+      message: `We would like to inform you that maintenance <b>${eventData.title}</b> is about to start on ${eventDate}, and
+      will last for <b>${eventData.duration?.toLowerCase()}</b>.`,
+      services: monitors.length > 0 ? ` It will affect the following services:` : ` It will not affect any services.`,
+    },
+    ending_maintenance: {
+      title: `Maintenance Ended: ${eventData.title}`,
+      message: `We would like to inform you that maintenance <b>${eventData.title}</b> has ended on ${eventDate}.`,
+      services: monitors.length > 0 ? ` It affected the following services:` : ` It did not affect any services.`,
+    },
+  };
+
+  if (eventTemplates[eventName]) {
+    emailData.title = eventTemplates[eventName].title;
+    emailData.message = eventTemplates[eventName].message + eventTemplates[eventName].services;
   }
 
-  // Add monitor names to the message.
+  // Add monitors to the message.
   if (monitors.length > 0) {
     emailData.message += `<div class="tags">`;
     for (const monitor of monitors) {
@@ -177,6 +181,7 @@ const scheduleCronJobs = async () => {
         PushReminderToQueue(maintenance.id, "upcoming_maintenance", {
           title: maintenance.title,
           date: GetMinuteStartTimestampUTC(reminderTime),
+          duration: maintenance.reminder_time,
           message: "Maintenance is starting soon!",
         });
       }
@@ -192,6 +197,7 @@ const scheduleCronJobs = async () => {
       PushReminderToQueue(maintenance.id, "starting_maintenance", {
         title: maintenance.title,
         date: GetMinuteStartTimestampUTC(maintenance.start_date_time),
+        duration: maintenance.reminder_time,
         message: "Maintenance is ongoing!",
       });
     }
