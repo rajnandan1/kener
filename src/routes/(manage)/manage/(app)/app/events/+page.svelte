@@ -174,7 +174,7 @@
       state: newIncident.state,
       id: newIncident.id,
       incident_type: newIncident.incident_type,
-      reminder_time: `${newIncident.reminder_time} ${newIncident.reminder_time_unit}`
+      reminder_time: `${Number(newIncident.reminder_time)} ${newIncident.reminder_time_unit}`
     };
     //convert data.start_date_time to timestamp
     if (!!!toPost.start_date_time) {
@@ -433,7 +433,6 @@
     newIncident.reminder_time = newIncident.reminder_before_start
       ? parseInt(newIncident.reminder_time.split(" ")[0])
       : 0;
-    console.log(newIncident);
     showModal = true;
 
     showComments(i);
@@ -869,7 +868,7 @@
                 {#if newIncident.reminder_before_start}
                   <div class="col-span-1">
                     <Label class="mb-2 text-sm" for="reminder_time">
-                      Reminder Time before start
+                      Reminder time before start
                       <span class="text-red-500">*</span>
                     </Label>
                     <Input
