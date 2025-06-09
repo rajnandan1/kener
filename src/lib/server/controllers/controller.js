@@ -823,6 +823,31 @@ export const UpdateIncident = async (incident_id, data) => {
     });
   }
 
+  // Check if dates has changed and reset reminders if necessary.
+  const currentTime = Math.floor(Date.now() / 1000);
+  let reminders_sent_at = incidentExists.reminders_sent_at
+    ? incidentExists.reminders_sent_at.split(";")
+    : ["0", "0", "0"];
+
+  let resetReminders = false;
+  if (
+    data.start_date_time &&
+    data.start_date_time != incidentExists.start_date_time &&
+    data.start_date_time > currentTime
+  ) {
+    reminders_sent_at[1] = "0";
+    resetReminders = true;
+  }
+
+  if (data.end_date_time && data.end_date_time != incidentExists.end_date_time && data.end_date_time > currentTime) {
+    reminders_sent_at[2] = "0";
+    resetReminders = true;
+  }
+
+  if (resetReminders) {
+    await db.updateMaintenanceRemindersSentAt(incident_id, reminders_sent_at.join(";"));
+  }
+
   return await db.updateIncident(updateObject);
 };
 

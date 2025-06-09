@@ -800,6 +800,7 @@ class DbImpl {
         "state",
         "incident_type",
         "reminder_time",
+        "reminders_sent_at",
       )
       .where("id", id)
       .first();
