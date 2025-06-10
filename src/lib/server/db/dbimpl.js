@@ -807,7 +807,6 @@ class DbImpl {
   }
 
   //get incident_monitors by incident_id
-  // NOTE: to use.
   async getIncidentMonitorsByIncidentID(incident_id) {
     return await this.knex("incident_monitors")
       .select("monitor_tag", "monitor_impact")
