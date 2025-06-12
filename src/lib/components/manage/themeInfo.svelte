@@ -36,7 +36,7 @@
       UP: "#4ead94",
       DOWN: "#ca3038",
       DEGRADED: "#e6ca61",
-      MAINTENANCE: "#6679cc",
+      MAINTENANCE: "#6679cc"
     },
     fontJ: {
       cssSrc:
@@ -51,7 +51,10 @@
   themeData = siteDataExtractFromDb(data.siteData, themeData);
 
   if (data.siteData.colors) {
-    themeData.colorsJ = data.siteData.colors;
+    if (data.siteData.colors.MAINTENANCE === undefined) {
+      data.siteData.colors.MAINTENANCE = "#6679cc"; // default value for MAINTENANCE
+    }
+    themeData.colorsJ = JSON.parse(JSON.stringify(data.siteData.colors));
   }
   if (data.siteData.font) {
     themeData.fontJ = data.siteData.font;

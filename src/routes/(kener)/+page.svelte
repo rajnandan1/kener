@@ -121,8 +121,10 @@
     </div>
   </div>
 {/if}
-<div class="section-actions mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-center justify-center">
-  <div class="flex w-full flex-wrap rounded-md border shadow-sm">
+<div
+  class="section-actions relative mx-auto mb-8 flex w-full max-w-[655px] flex-1 flex-col items-center justify-center"
+>
+  <div class="flex w-full flex-wrap rounded-md border bg-background shadow-sm">
     {#if data.canSendEmail && data.canUsersSubscribe}
       <Button
         variant="ghost"
@@ -217,8 +219,8 @@
     class="section-legend mx-auto mb-2 flex w-full flex-1 flex-col items-start justify-center bg-transparent md:w-[655px]"
     id=""
   >
-    <div class="flex flex-col md:flex-row w-full gap-4 justify-between">
-      <div class="flex justify-center md:content-left">
+    <div class="flex w-full flex-col justify-between gap-4 md:flex-row">
+      <div class="md:content-left flex justify-center">
         <Badge class="border-0 md:pl-0" variant="outline">
           {l(data.lang, "Availability per Component")}
         </Badge>
