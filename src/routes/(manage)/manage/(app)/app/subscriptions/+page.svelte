@@ -16,7 +16,7 @@
   let total = 0; // Initialize total to 0
   let totalPages = 0; // Initialize totalPages
   let subscriptionTrigger = {
-    subscription_trigger_id: null,
+    id: null,
     subscription_trigger_status: "INACTIVE",
     subscription_trigger_type: "email",
     config: {
@@ -122,6 +122,21 @@
     });
   }
 
+  function updateSubscriptionTriggerStatus(id, status) {
+    // Call the API to update the subscription status
+    fetch(base + "/manage/app/api/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "updateSubscriptionTriggerStatus",
+        data: {
+          id: id,
+          status: status
+        }
+      })
+    });
+  }
+
   // Reactive statement to calculate totalPages
 </script>
 
@@ -132,6 +147,30 @@
         Events Subscription
         {#if pageLoading}
           <Loader size="16" class="absolute right-0 top-0 animate-spin text-gray-500" />
+        {:else if canSendEmail && !!subscriptionTrigger.id}
+          <label class="absolute right-0 top-0 flex cursor-pointer items-center justify-between gap-2 text-sm">
+            <Label class="text-xs font-medium ">
+              {subscriptionTrigger.subscription_trigger_status == "ACTIVE" ? "Active" : "Inactive"}
+            </Label>
+            <input
+              type="checkbox"
+              value=""
+              disabled={!canSendEmail}
+              class="peer sr-only"
+              checked={subscriptionTrigger.subscription_trigger_status == "ACTIVE"}
+              on:change={(e) => {
+                subscriptionTrigger.subscription_trigger_status = e.target.checked ? "ACTIVE" : "INACTIVE";
+                // Call the API to update the subscription status
+                updateSubscriptionTriggerStatus(
+                  subscriptionTrigger.id,
+                  subscriptionTrigger.subscription_trigger_status
+                );
+              }}
+            />
+            <div
+              class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 rtl:peer-checked:after:-translate-x-full"
+            ></div>
+          </label>
         {/if}
       </Card.Title>
       <Card.Description>Configure and view who have subscribed to updates for your status page.</Card.Description>
@@ -163,7 +202,7 @@
               class="mr-1"
               type="checkbox"
               checked={subscriptionTrigger.config.createIncident}
-              disabled={!canSendEmail}
+              disabled={!canSendEmail || subscriptionTrigger.subscription_trigger_status != "ACTIVE"}
             />
             Event Triggered
           </label>
@@ -181,7 +220,7 @@
               class="mr-1"
               type="checkbox"
               checked={subscriptionTrigger.config.updateIncident}
-              disabled={!canSendEmail}
+              disabled={!canSendEmail || subscriptionTrigger.subscription_trigger_status != "ACTIVE"}
             />
             Event Updated
           </label>
@@ -197,7 +236,7 @@
               class="mr-1"
               type="checkbox"
               checked={subscriptionTrigger.config.insertIncidentMonitor}
-              disabled={!canSendEmail}
+              disabled={!canSendEmail || subscriptionTrigger.subscription_trigger_status != "ACTIVE"}
             />
             Update Monitor in Event
           </label>
@@ -215,7 +254,7 @@
               class="mr-1"
               type="checkbox"
               checked={subscriptionTrigger.config.updateIncidentComment}
-              disabled={!canSendEmail}
+              disabled={!canSendEmail || subscriptionTrigger.subscription_trigger_status != "ACTIVE"}
             />
             Update Incident Comment
           </label>
@@ -233,7 +272,7 @@
               class="mr-1"
               type="checkbox"
               checked={subscriptionTrigger.config.insertIncidentComment}
-              disabled={!canSendEmail}
+              disabled={!canSendEmail || subscriptionTrigger.subscription_trigger_status != "ACTIVE"}
             />
             Insert Incident Comment
           </label>
@@ -363,7 +402,7 @@
                             <input
                               type="checkbox"
                               value=""
-                              disabled={!canSendEmail}
+                              disabled={!canSendEmail || subscriptionTrigger.subscription_trigger_status != "ACTIVE"}
                               class="peer sr-only"
                               checked={user.subscriptions_status == "ACTIVE"}
                               on:change={(e) => {

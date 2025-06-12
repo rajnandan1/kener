@@ -13,6 +13,7 @@ import {
   InsertKeyValue,
   GetMonitors,
   CreateUpdateTrigger,
+  UpdateSubscriptionTriggerStatus,
   GetAllTriggers,
   UpdateTriggerData,
   GetSubscriptionTriggerByEmail,
@@ -254,6 +255,8 @@ export async function POST({ request, cookies }) {
       resp = await GetSubscribersPaginated(data);
     } else if (action == "updateSubscriptionStatus") {
       resp = await UpdateSubscriptionStatus(data.id, data.status);
+    } else if (action == "updateSubscriptionTriggerStatus") {
+      resp = await UpdateSubscriptionTriggerStatus(data.id, data.status);
     }
   } catch (error) {
     console.log(error);

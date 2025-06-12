@@ -108,6 +108,7 @@ COPY --chown=node:node --from=builder /app/src/lib/ ./src/lib/
 COPY --chown=node:node --from=builder /app/build ./build
 COPY --chown=node:node --from=builder /app/uploads ./uploads
 COPY --chown=node:node --from=builder /app/database ./database
+COPY --chown=node:node --from=builder /app/src/lib/server/templates ./build/server/templates
 # TODO: Consider changing from copying `node_modules` to instead letting `npm ci --omit=dev` handle production dependencies. Right now, copying `node_modules` is leading to a smaller image, whereas letting `npm ci` handle the install in final image is slightly faster, but leads to larger image size. IMO, having a slightly longer build time (e.g. ~10 sec.) is better in the end to have a smaller image.
 COPY --chown=node:node --from=builder /app/node_modules ./node_modules
 COPY --chown=node:node --from=builder /app/migrations ./migrations
