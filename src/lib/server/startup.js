@@ -4,16 +4,115 @@ import figlet from "figlet";
 import { Cron } from "croner";
 import { Minuter } from "./cron-minute.js";
 import db from "./db/db.js";
-import { GetAllSiteData, GetMonitorsParsed } from "./controllers/controller.js";
-import { HashString } from "./tool.js";
+import { GetAllSiteData, GetMonitorsParsed, GetSiteLogoURL, SendEmailWithTemplate } from "./controllers/controller.js";
+import { GetMinuteStartTimestampUTC, GetNowTimestampUTC, HashString } from "./tool.js";
 import { fileURLToPath } from "url";
 import { dirname, resolve } from "path";
+import Queue from "queue";
+import { join } from "path";
 import fs from "fs";
 import version from "../version.js";
 
 const jobs = [];
 process.env.TZ = "UTC";
 let isStartUP = true;
+
+const reminderQueue = new Queue({
+  concurrency: 10,
+  timeout: 10000,
+  autostart: true,
+});
+
+const PushReminderToQueue = async (eventID, eventName, eventData) => {
+  let subscription = await db.getSubscriptionTriggerByType("email");
+  if (!subscription) return;
+
+  let config;
+  try {
+    config = JSON.parse(subscription.config);
+  } catch (e) {
+    return;
+  }
+  if (!config.sendMaintenanceReminders) return;
+
+  // Get all the monitors that are associated with this event.
+  let tags = ["_"];
+  let monitors = await db.getIncidentMonitorsByIncidentID(eventID);
+  if (monitors) {
+    for (let i = 0; i < monitors.length; i++) {
+      const monitor = monitors[i];
+      tags.push(monitor.monitor_tag);
+    }
+  }
+
+  // Prepare email data.
+  const emailTemplate = fs.readFileSync(join(__dirname, "./templates/maintenance_reminder.html"), "utf8");
+  const siteData = await GetAllSiteData();
+  const base = !!process.env.KENER_BASE_PATH ? process.env.KENER_BASE_PATH : "";
+  let emailData = {
+    brand_name: siteData.siteName,
+    logo_url: await GetSiteLogoURL(siteData.siteURL, siteData.logo, base),
+    incident_url: await GetSiteLogoURL(siteData.siteURL, `/view/events/maintenance-${eventID}`, base),
+  };
+  const eventDate = new Date(eventData.date * 1000).toUTCString();
+
+  const eventTemplates = {
+    upcoming_maintenance: {
+      title: `Upcoming Maintenance: ${eventData.title}`,
+      message: `We would like to inform you that maintenance <b>${eventData.title}</b> is scheduled to start on ${eventDate}, and 
+      will last for <b>${eventData.duration?.toLowerCase()}</b>.`,
+      services: monitors.length > 0 ? ` It will affect the following services:` : ` It will not affect any services.`,
+    },
+    starting_maintenance: {
+      title: `Maintenance Starting: ${eventData.title}`,
+      message: `We would like to inform you that maintenance <b>${eventData.title}</b> is about to start on ${eventDate}, and
+      will last for <b>${eventData.duration?.toLowerCase()}</b>.`,
+      services: monitors.length > 0 ? ` It will affect the following services:` : ` It will not affect any services.`,
+    },
+    ending_maintenance: {
+      title: `Maintenance Ended: ${eventData.title}`,
+      message: `We would like to inform you that maintenance <b>${eventData.title}</b> has ended on ${eventDate}.`,
+      services: monitors.length > 0 ? ` It affected the following services:` : ` It did not affect any services.`,
+    },
+  };
+
+  if (eventTemplates[eventName]) {
+    emailData.title = eventTemplates[eventName].title;
+    emailData.message = eventTemplates[eventName].message + eventTemplates[eventName].services;
+  }
+
+  // Add monitors to the message.
+  if (monitors.length > 0) {
+    emailData.message += `<div class="tags">`;
+    for (const monitor of monitors) {
+      emailData.message += `
+      <span class="tag-container">
+        <span class="tag-impact" style="background-color: ${siteData.colors[monitor.monitor_impact]}">${monitor.monitor_impact}</span>
+        <span class="tag-name">${monitor.monitor_tag}</span>
+      </span>
+      `;
+    }
+    emailData.message += `</div>`;
+  }
+
+  // Get all eligible emails for the reminder.
+  const eligibleEmails = await db.getSubscriberEmails(tags);
+  if (eligibleEmails) {
+    for (let i = 0; i < eligibleEmails.length; i++) {
+      let email = eligibleEmails[i];
+      reminderQueue.push(async (cb) => {
+        await SendEmailWithTemplate(
+          emailTemplate,
+          emailData,
+          email.subscriber_send,
+          emailData.title,
+          eventData.message,
+        );
+        cb(eventData);
+      });
+    }
+  }
+};
 
 const scheduleCronJobs = async () => {
   // Fetch and map all active monitors, creating a unique hash for each
@@ -56,6 +155,69 @@ const scheduleCronJobs = async () => {
       jobs.push(newJob);
     }
   }
+
+  // Fetch all active maintenance.
+  const currentTime = Math.floor(Date.now() / 1000);
+  const activeMaintenances = await db.getActiveMaintenanceWithReminders();
+  for (const maintenance of activeMaintenances) {
+    const remindersSent = maintenance.reminders_sent_at.split(";").map(Number);
+    if (maintenance.reminder_time !== "0") {
+      // Parse reminder_time string, e.g. "10 MINUTES", "2 HOURS", "1 DAYS"
+      const [amountStr, unit] = maintenance.reminder_time.split(" ");
+      const amount = parseInt(amountStr, 10);
+      let minutes = 0;
+      if (unit === "MINUTES") {
+        minutes = amount;
+      } else if (unit === "HOURS") {
+        minutes = amount * 60;
+      } else if (unit === "DAYS") {
+        minutes = amount * 60 * 24;
+      }
+
+      // Check if the reminder for upcoming maintenance has been sent.
+      const reminderTime = maintenance.start_date_time - minutes * 60;
+      if (remindersSent[0] === 0 && reminderTime <= currentTime && maintenance.start_date_time > currentTime) {
+        remindersSent[0] = currentTime;
+        PushReminderToQueue(maintenance.id, "upcoming_maintenance", {
+          title: maintenance.title,
+          date: GetMinuteStartTimestampUTC(reminderTime),
+          duration: maintenance.reminder_time,
+          message: "Maintenance is starting soon!",
+        });
+      }
+    }
+
+    // Check if the reminder for ongoing maintenance has been sent.
+    if (
+      remindersSent[1] === 0 &&
+      maintenance.start_date_time <= currentTime &&
+      maintenance.end_date_time >= currentTime
+    ) {
+      remindersSent[1] = currentTime;
+      PushReminderToQueue(maintenance.id, "starting_maintenance", {
+        title: maintenance.title,
+        date: GetMinuteStartTimestampUTC(maintenance.start_date_time),
+        duration: maintenance.reminder_time,
+        message: "Maintenance is ongoing!",
+      });
+    }
+
+    // Check if the reminder for completed maintenance has been sent.
+    if (remindersSent[2] === 0 && maintenance.end_date_time <= currentTime) {
+      remindersSent[2] = currentTime;
+      PushReminderToQueue(maintenance.id, "ending_maintenance", {
+        title: maintenance.title,
+        date: GetMinuteStartTimestampUTC(maintenance.end_date_time),
+        message: "Maintenance has ended!",
+      });
+    }
+
+    // Check if we have sent reminders.
+    if (JSON.stringify(maintenance.reminders_sent_at) !== JSON.stringify(remindersSent.join(";"))) {
+      await db.updateMaintenanceRemindersSentAt(maintenance.id, remindersSent.join(";"));
+    }
+  }
+
   isStartUP = false;
 };
 
