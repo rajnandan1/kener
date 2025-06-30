@@ -62,5 +62,9 @@
 	{
 		"code": "es",
 		"name": "Español"
+	},
+	{
+		"code": "it",
+		"name": "Italiano"
 	}
 ]
