@@ -18,7 +18,7 @@ class HeartbeatCall {
       return {};
     }
 
-    // 🛠️ FIX: Use cron to calculate expected heartbeat time
+    // Use cron to calculate expected heartbeat time
     let expectedTime;
     try {
       const interval = cronParser.parseExpression(this.monitor.cron, {
