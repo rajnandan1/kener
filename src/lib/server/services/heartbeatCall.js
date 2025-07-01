@@ -2,7 +2,7 @@
 import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
 import { GetMinuteStartNowTimestampUTC } from "../tool.js";
 import { GetLastHeartbeat } from "../controllers/controller.js";
-import cronParser from "cron-parser";
+import { Cron } from "croner";
 
 class HeartbeatCall {
   monitor;
@@ -18,13 +18,12 @@ class HeartbeatCall {
       return {};
     }
 
-    // Use cron to calculate expected heartbeat time
+    // Use croner to calculate expected heartbeat time
     let expectedTime;
     try {
-      const interval = cronParser.parseExpression(this.monitor.cron, {
-        currentDate: new Date(),
-      });
-      expectedTime = Math.floor(interval.prev().getTime() / 1000); // seconds
+      const cronJob = Cron(this.monitor.cron);
+      const prevDate = cronJob.prev();
+      expectedTime = Math.floor(prevDate.getTime() / 1000); // seconds
     } catch (err) {
       return {
         status: ERROR,
