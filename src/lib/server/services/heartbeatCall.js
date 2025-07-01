@@ -22,7 +22,7 @@ class HeartbeatCall {
     let expectedTime;
     try {
       const cronJob = Cron(this.monitor.cron);
-      const prevDate = cronJob.prev();
+      const prevDate = cronJob.previousRun();
       expectedTime = Math.floor(prevDate.getTime() / 1000); // seconds
     } catch (err) {
       return {
