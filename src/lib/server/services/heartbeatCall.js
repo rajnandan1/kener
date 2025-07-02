@@ -26,9 +26,9 @@ class HeartbeatCall {
       expectedTime = Math.floor(prevDate.getTime() / 1000); // seconds
     } catch (err) {
       return {
-        status: ERROR,
-        message: "Invalid cron format",
-        type: REALTIME,
+        status: DOWN,
+        latency: 0,
+        type: ERROR,
       };
     }
 
