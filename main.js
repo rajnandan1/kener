@@ -15,6 +15,10 @@ const base = process.env.KENER_BASE_PATH || "";
 const app = express();
 const db = knex(knexOb);
 
+if (process.env.ORIGIN) {
+       process.env.SVELTEKIT_ORIGIN = process.env.ORIGIN;
+}
+
 app.use((req, res, next) => {
 	if (req.path.startsWith("/embed")) {
 		res.setHeader("Content-Security-Policy", "frame-ancestors *");

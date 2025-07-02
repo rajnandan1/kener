@@ -10,6 +10,7 @@ const PORT = Number(process.env.PORT) || 3000;
 const base = process.env.KENER_BASE_PATH || "";
 const VITE_BUILD_ENV = process.env.VITE_BUILD_ENV || "development"; // Default to "development"
 const isProduction = VITE_BUILD_ENV === "production";
+const ORIGIN = process.env.ORIGIN || `http://localhost:${PORT}`;
 
 export default defineConfig(({ mode }) => ({
   optimizeDeps: {
@@ -49,6 +50,7 @@ export default defineConfig(({ mode }) => ({
     version(),
   ],
   server: {
+    allowedHosts: [new URL(ORIGIN).hostname],
     port: PORT,
     watch: {
       ignored: ["**/src/lib/server/data/**"], // Adjust the path to the file you want to ignore
