@@ -193,31 +193,43 @@ export async function load({ parent, url }) {
   }
 
   if (isCategoryPage || isMonitorPage || isGroupPage) {
-    const tags = monitorsActive.map((monitor) => monitor.tag);
-    allOpenIncidents = allOpenIncidents.filter((incident) =>
-      incident.monitors.some((mon) => tags.includes(mon.monitor_tag)),
-    );
+    let eligibleTags = monitorsActive.map((monitor) => monitor.tag);
+    //filter incidents that have monitor_tag in monitors
+    allOpenIncidents = allOpenIncidents.filter((incident) => {
+      let incidentMonitors = incident.monitors;
+      let monitorTags = incidentMonitors.map((monitor) => monitor.monitor_tag);
+      let isPresent = false;
+      monitorTags.forEach((tag) => {
+        if (eligibleTags.includes(tag)) {
+          isPresent = true;
+        }
+      });
+      return isPresent;
+    });
   }
-
   allOpenIncidents = allOpenIncidents.map((incident) => {
-    const tags = incident.monitors.map((c) => c.monitor_tag);
-    incident.monitors = monitors
-      .filter((monitor) => tags.includes(monitor.tag))
-      .map((monitor) => ({
+    let incidentMonitors = incident.monitors;
+    let monitorTags = incidentMonitors.map((monitor) => monitor.monitor_tag);
+    let xm = monitors.filter((monitor) => monitorTags.includes(monitor.tag));
+
+    incident.monitors = xm.map((monitor) => {
+      return {
         tag: monitor.tag,
         name: monitor.name,
         description: monitor.description,
         image: monitor.image,
-        impact_type: incident.monitors.find((c) => c.monitor_tag === monitor.tag).monitor_impact,
-      }));
-    return inc;
+        impact_type: incidentMonitors.filter((m) => m.monitor_tag === monitor.tag)[0].monitor_impact,
+      };
+    });
+    return incident;
   });
 
-  const allRecentIncidents = allOpenIncidents.filter((incident) => incident.incident_type === "INCIDENT");
-  const allRecentMaintenances = allOpenIncidents.filter((incident) => incident.incident_type === "MAINTENANCE");
+  let allRecentIncidents = allOpenIncidents.filter((incident) => incident.incident_type == "INCIDENT");
+  let allRecentMaintenances = allOpenIncidents.filter((incident) => incident.incident_type == "MAINTENANCE");
 
-  let systemDataMessage = null;
-  if (siteData.showSiteStatus === "YES") {
+  let systemDataMessage;
+
+  if (!!siteData.showSiteStatus && siteData.showSiteStatus == "YES") {
     systemDataMessage = await SystemDataMessage();
   }
 
