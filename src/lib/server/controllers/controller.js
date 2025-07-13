@@ -1,18 +1,24 @@
 // @ts-nocheck
+import {
+  IsValidAnalytics,
+  IsValidColors,
+  IsValidHero,
+  IsValidI18n,
+  IsValidJSONArray,
+  IsValidJSONString,
+  IsValidNav,
+  IsValidURL,
+} from "./validators.js";
+import { siteDataKeys } from "./siteDataKeys.js";
+import db from "../db/db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import Queue from "queue";
 import { Resend } from "resend";
-import db from "../db/db.js";
-import { siteDataKeys } from "./siteDataKeys.js";
+import Queue from "queue";
 
 import crypto from "crypto";
 import { addMonths, format, startOfMonth, subMonths } from "date-fns";
-import fs from "fs-extra";
-import path from "path";
-import { fileURLToPath } from "url";
-import { DEGRADED, DOWN, NO_DATA, REALTIME, SIGNAL, UP } from "../constants.js";
-import getSMTPTransport from "../notification/smtps.js";
+import { DEGRADED, DOWN, NO_DATA, SIGNAL, UP, REALTIME } from "../constants.js";
 import {
   GetMinuteStartNowTimestampUTC,
   GetMinuteStartTimestampUTC,
@@ -20,6 +26,10 @@ import {
   ReplaceAllOccurrences,
   ValidateEmail,
 } from "../tool.js";
+import getSMTPTransport from "../notification/smtps.js";
+import fs from "fs-extra";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -269,7 +279,7 @@ export const SystemDataMessage = async () => {
     upsPercentage,
     degradedPercentage,
     downsPercentage,
-    maintenancePercentage,
+    maintenancePercentage
   };
 };
 
