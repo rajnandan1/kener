@@ -1,3 +1,4 @@
+// src/routes/(kener)/+page.server.js
 // @ts-nocheck
 import { SortMonitor } from "$lib/clientTools.js";
 import { GetIncidentsOpenHome, GetMonitors, SystemDataMessage } from "$lib/server/controllers/controller.js";
@@ -13,7 +14,6 @@ function removeTags(str) {
 
 /**
  * Determines pageType + which monitors to load.
- * Does *not* compute hasVisibleMembers here.
  */
 async function returnTypeOfMonitorsPageMeta(url) {
   const query = url.searchParams;
@@ -39,19 +39,21 @@ async function returnTypeOfMonitorsPageMeta(url) {
     if (g.length > 0) {
       group = g[0];
       const typeData = JSON.parse(group.type_data);
-      const groupPresentMonitorTags = typeData.monitors.map((m) => m.tag);
-      filter.tags = groupPresentMonitorTags;
+      filter.tags = typeData.monitors.map((m) => m.tag);
       pageType = "group";
     }
   }
 
-  // Fetch them
-  let monitors = await GetMonitors(filter);
+  const monitors = await GetMonitors(filter);
   return { monitors, pageType, group };
 }
 
 export async function load({ parent, url }) {
-  // 1) Subscribable monitors (for sidebars, etc)
+  // 0) Get parent data including login state
+  const parentData = await parent();
+  const { site: siteData, isLoggedIn } = parentData;
+
+  // 1) Subscribable monitors for sidebar
   let subscribableMonitors = await GetMonitors({ status: "ACTIVE" });
   subscribableMonitors = subscribableMonitors.map((m) => ({
     tag: m.tag,
@@ -59,53 +61,58 @@ export async function load({ parent, url }) {
     image: m.image,
   }));
 
-  // 2) Determine which monitors + pageType + group context
+  // 2) Determine monitors + context
   const { monitors: rawMonitors, pageType, group } = await returnTypeOfMonitorsPageMeta(url);
 
-  // 3) Group-detail 404 guards
-  if (pageType === "group") {
-    // a) Group itself must allow details
+  // 3) Guard: group-detail 404 when logged-out
+  if (!isLoggedIn && pageType === "group") {
+    // a) Group detail disabled?
     if (!group.enable_details_to_be_examined) {
       throw error(404, "Group detail view disabled");
     }
-    // b) But we’ll compute per-monitor below and will 404 if none remain
+    // b) No visible children?
+    const typeData = JSON.parse(group.type_data);
+    const childTags = typeData.monitors.map((c) => c.tag);
+    const children = await GetMonitors({ status: "ACTIVE", tags: childTags });
+    const visibleCount = children.filter((c) => c.enable_individual_view_if_grouped).length;
+    if (visibleCount === 0) {
+      throw error(404, "No monitors available for detail view");
+    }
   }
 
-  // 4) Hide grouped-home monitors
+  // 4) Guard: direct-monitor page 404 when logged-out & individual-hidden
+  if (!isLoggedIn && pageType === "monitor") {
+    const requestedTag = url.searchParams.get("monitor");
+    const m = rawMonitors.find((x) => x.tag === requestedTag);
+    if (m && !m.enable_individual_view_if_grouped) {
+      throw error(404, "Monitor detail view disabled when logged-out");
+    }
+  }
+
+  // 5) Hide grouped-home monitors
   let hiddenGroupedMonitorsTags = [];
   if (pageType === "home") {
     for (const m of rawMonitors) {
       if (m.monitor_type === "GROUP") {
-        const typeData = JSON.parse(m.type_data);
-        if (typeData.hideMonitors) {
-          hiddenGroupedMonitorsTags.push(...typeData.monitors.map((c) => c.tag));
+        const td = JSON.parse(m.type_data);
+        if (td.hideMonitors) {
+          hiddenGroupedMonitorsTags.push(...td.monitors.map((c) => c.tag));
         }
       }
     }
   }
 
-  // 5) Enrich every monitor with has_visible_members if it’s a GROUP
+  // 6) Enrich each monitor with has_visible_members (for groups)
   const enriched = [];
   for (const m of rawMonitors) {
     let has_visible_members = undefined;
-
     if (m.monitor_type === "GROUP") {
-      // Parse child tags
-      const typeData = JSON.parse(m.type_data);
-      const childTags = typeData.monitors.map((c) => c.tag);
-
-      // Fetch all children and count those with the flag
+      const td = JSON.parse(m.type_data);
+      const childTags = td.monitors.map((c) => c.tag);
       const children = await GetMonitors({ status: "ACTIVE", tags: childTags });
       const visibleCount = children.filter((c) => c.enable_individual_view_if_grouped).length;
-
       has_visible_members = visibleCount > 0;
-
-      // If we’re on the group-detail page and none are visible, 404 now
-      if (pageType === "group" && visibleCount === 0) {
-        throw error(404, "No monitors available for detail view");
-      }
     }
-
     enriched.push({
       tag: m.tag,
       name: m.name,
@@ -123,31 +130,31 @@ export async function load({ parent, url }) {
     });
   }
 
-  // 6) Filter out hidden-group monitors on home
+  // 7) Filter out hidden-home monitors and, for group pages when logged-out,
+  //    filter out individual-hidden children
   let monitors = enriched
     .filter((m) => !hiddenGroupedMonitorsTags.includes(m.tag))
     .filter((m) => {
       if (pageType === "home") {
         return m.category_name === "Home";
       }
+      if (!isLoggedIn && pageType === "group") {
+        // on group page, remove children with individual view disabled
+        return m.enable_individual_view_if_grouped;
+      }
       return true;
     });
 
-  // 7) Prepare page metadata
-  const parentData = await parent();
-  const siteData = parentData.site;
+  // 8) Prepare page metadata
   let hero = siteData.hero;
-
   let pageTitle = siteData.title;
   let canonical = siteData.siteURL;
   let pageDescription = "";
   const descTag = siteData.metaTags.find((t) => t.key === "description");
   if (descTag) pageDescription = descTag.value;
 
-  // 8) Sort monitors as per user preference
+  // 9) Sort and fetch live data
   monitors = SortMonitor(siteData.monitorSort, monitors);
-
-  // 9) Fetch each monitor’s live data
   const monitorsActive = [];
   for (const m of monitors) {
     const data = await FetchData(
@@ -163,17 +170,17 @@ export async function load({ parent, url }) {
     monitorsActive.push(m);
   }
 
-  // 10) Fetch open incidents for home/category/monitor/group
+  // 10) Fetch open incidents
   const startWithin = moment().subtract(siteData.homeIncidentStartTimeWithin, "days").unix();
   const endWithin = moment().add(siteData.homeIncidentStartTimeWithin, "days").unix();
   let allOpenIncidents = await GetIncidentsOpenHome(siteData.homeIncidentCount, startWithin, endWithin);
 
-  // 11) Determine page context flags
+  // 11) Page-type flags
   const isCategoryPage = pageType === "category";
   const isMonitorPage = pageType === "monitor";
   const isGroupPage = pageType === "group";
 
-  // 12) Handle single-monitor page meta
+  // 12) Single-monitor page meta
   if (isMonitorPage && monitorsActive.length > 0) {
     const m = monitorsActive[0];
     pageTitle = `${m.name} - ${pageTitle}`;
@@ -182,7 +189,7 @@ export async function load({ parent, url }) {
     hero = { title: m.name, subtitle: m.description, image: m.image };
   }
 
-  // 13) Handle group page meta
+  // 13) Group page meta
   if (isGroupPage) {
     pageTitle = `${group.name} - ${pageTitle}`;
     pageDescription = group.description;
@@ -190,10 +197,10 @@ export async function load({ parent, url }) {
     hero = { title: group.name, subtitle: group.description, image: group.image };
   }
 
-  // 14) Handle category page meta
+  // 14) Category page meta
   if (isCategoryPage) {
     const selCat = siteData.categories.find((c) => c.name === url.searchParams.get("category"));
-    if (!selCat || (selCat.isHidden && !parentData.isLoggedIn)) {
+    if (!selCat || (selCat.isHidden && !isLoggedIn)) {
       throw error(404, "Category not found");
     }
     pageTitle = `${selCat.name} - ${pageTitle}`;
@@ -202,7 +209,7 @@ export async function load({ parent, url }) {
     hero = { title: selCat.name, subtitle: selCat.description, image: selCat.image };
   }
 
-  // 15) Filter incidents to only those monitorsActive covers
+  // 15) Filter incidents to only those matching monitorsActive
   if (isCategoryPage || isMonitorPage || isGroupPage) {
     const tags = monitorsActive.map((m) => m.tag);
     allOpenIncidents = allOpenIncidents.filter((inc) => inc.monitors.some((mon) => tags.includes(mon.monitor_tag)));
@@ -223,17 +230,17 @@ export async function load({ parent, url }) {
     return inc;
   });
 
-  // 17) Recent incidents/maintenances
+  // 17) Separate recent incidents/maintenances
   const allRecentIncidents = allOpenIncidents.filter((i) => i.incident_type === "INCIDENT");
   const allRecentMaintenances = allOpenIncidents.filter((i) => i.incident_type === "MAINTENANCE");
 
-  // 18) Optional site-wide status summary
-  let systemData;
+  // 18) Optional site-wide summary
+  let systemDataMessage = null;
   if (siteData.showSiteStatus === "YES") {
-    systemData = await SystemDataMessage();
+    systemDataMessage = await SystemDataMessage();
   }
 
-  // 19) Return everything to the page
+  // 19) Return to page
   return {
     monitors: monitorsActive,
     subscribableMonitors,
@@ -245,6 +252,6 @@ export async function load({ parent, url }) {
     hero,
     categoryName: url.searchParams.get("category"),
     canonical,
-    systemDataMessage: systemData,
+    systemDataMessage,
   };
 }
