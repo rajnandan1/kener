@@ -148,15 +148,9 @@ export async function GetAllAnalyticsData() {
 }
 
 export const CreateUpdateMonitor = async (monitor) => {
-  const { id, ...rest } = monitor;
-
-  const monitorData = {
-    ...rest,
-  };
-
-  if (id) {
-    // update existing
-    return await db.updateMonitor({ id, ...monitorData });
+  let monitorData = { ...monitor };
+  if (monitorData.id) {
+    return await db.updateMonitor(monitorData);
   } else {
     return await db.insertMonitor(monitorData);
   }
@@ -175,28 +169,19 @@ export const UpdateMonitoringData = async (data) => {
 };
 
 export const CreateMonitor = async (monitor) => {
-  const { id, ...rest } = monitor;
-
-  if (id) {
+  let monitorData = { ...monitor };
+  if (monitorData.id) {
     throw new Error("monitor id must be empty or 0");
   }
-
-  return await db.insertMonitor({
-    ...rest,
-  });
+  return await db.insertMonitor(monitorData);
 };
 
 export const UpdateMonitor = async (monitor) => {
-  const { id, ...rest } = monitor;
-
-  if (!id || id === 0) {
+  let monitorData = { ...monitor };
+  if (!!!monitorData.id || monitorData.id === 0) {
     throw new Error("monitor id cannot be empty or 0");
   }
-
-  return await db.updateMonitor({
-    id,
-    ...rest,
-  });
+  return await db.updateMonitor(monitorData);
 };
 
 export const GetMonitors = async (data) => {

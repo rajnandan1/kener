@@ -353,6 +353,7 @@
           {/each}
         </div>
         {#if monitor.monitor_type === "GROUP"
+            && !embed
             && monitor.enable_details_to_be_examined
             && monitor.has_visible_members }
           <div class="-mt-4 flex justify-end">

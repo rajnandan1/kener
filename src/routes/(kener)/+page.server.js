@@ -194,25 +194,27 @@ export async function load({ parent, url }) {
 
   if (isCategoryPage || isMonitorPage || isGroupPage) {
     const tags = monitorsActive.map((monitor) => monitor.tag);
-    allOpenIncidents = allOpenIncidents.filter((inc) => inc.monitors.some((mon) => tags.includes(mon.monitor_tag)));
+    allOpenIncidents = allOpenIncidents.filter((incident) =>
+      incident.monitors.some((mon) => tags.includes(mon.monitor_tag)),
+    );
   }
 
-  allOpenIncidents = allOpenIncidents.map((inc) => {
-    const tags = inc.monitors.map((c) => c.monitor_tag);
-    inc.monitors = monitors
+  allOpenIncidents = allOpenIncidents.map((incident) => {
+    const tags = incident.monitors.map((c) => c.monitor_tag);
+    incident.monitors = monitors
       .filter((monitor) => tags.includes(monitor.tag))
       .map((monitor) => ({
         tag: monitor.tag,
         name: monitor.name,
         description: monitor.description,
         image: monitor.image,
-        impact_type: inc.monitors.find((c) => c.monitor_tag === monitor.tag).monitor_impact,
+        impact_type: incident.monitors.find((c) => c.monitor_tag === monitor.tag).monitor_impact,
       }));
     return inc;
   });
 
-  const allRecentIncidents = allOpenIncidents.filter((i) => i.incident_type === "INCIDENT");
-  const allRecentMaintenances = allOpenIncidents.filter((i) => i.incident_type === "MAINTENANCE");
+  const allRecentIncidents = allOpenIncidents.filter((incident) => incident.incident_type === "INCIDENT");
+  const allRecentMaintenances = allOpenIncidents.filter((incident) => incident.incident_type === "MAINTENANCE");
 
   let systemDataMessage = null;
   if (siteData.showSiteStatus === "YES") {
