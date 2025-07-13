@@ -1,25 +1,27 @@
 <script>
-  import Monitor from "$lib/components/monitor.svelte";
-  import * as Card from "$lib/components/ui/card";
-  import { Button, buttonVariants } from "$lib/components/ui/button";
-  import Incident from "$lib/components/IncidentNew.svelte";
-  import { Badge } from "$lib/components/ui/badge";
-  import { l } from "$lib/i18n/client";
   import { base } from "$app/paths";
+  import { page } from "$app/stores";
+  import { analyticsEvent } from "$lib/boringOne";
+  import GMI from "$lib/components/gmi.svelte";
+  import Incident from "$lib/components/IncidentNew.svelte";
+  import Monitor from "$lib/components/monitor.svelte";
+  import ShareMenu from "$lib/components/shareMenu.svelte";
+  import SubscribeMenu from "$lib/components/subscribeMenu.svelte";
+  import { Badge } from "$lib/components/ui/badge";
+  import { Button } from "$lib/components/ui/button";
+  import * as Card from "$lib/components/ui/card";
+  import { l } from "$lib/i18n/client";
+  import { format } from "date-fns";
   import ArrowRight from "lucide-svelte/icons/arrow-right";
   import ChevronLeft from "lucide-svelte/icons/chevron-left";
   import X from "lucide-svelte/icons/x";
-  import { hotKeyAction, clickOutsideAction } from "svelte-legos";
   import { onMount } from "svelte";
-  import ShareMenu from "$lib/components/shareMenu.svelte";
-  import SubscribeMenu from "$lib/components/subscribeMenu.svelte";
-  import { analyticsEvent } from "$lib/boringOne";
+  import { clickOutsideAction, hotKeyAction } from "svelte-legos";
   import { scale } from "svelte/transition";
-  import { format } from "date-fns";
-  import GMI from "$lib/components/gmi.svelte";
-  import { page } from "$app/stores";
 
   export let data;
+  export let lang;
+
   let shareMenusToggle = false;
   function showShareMenu(e) {
     shareMenusToggle = true;
@@ -266,6 +268,11 @@
         {/each}
       </Card.Content>
     </Card.Root>
+    {#if data.pageType === 'group' && $page.data.isLoggedIn && data.monitors.some(m => m.hidden_publicly)}
+      <div class="text-red-500 text-xs mt-2">
+        * {l(lang, "These components are hidden publicly but contribute to the group health")}.
+      </div>
+    {/if}
   </section>
 {/if}
 {#if data.site.categories && data.pageType == "home"}

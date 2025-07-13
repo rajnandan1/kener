@@ -1,52 +1,49 @@
 // @ts-nocheck
-import { FetchData } from "$lib/server/page";
-import { GetMonitors, GetIncidentsOpenHome, SystemDataMessage } from "$lib/server/controllers/controller.js";
 import { SortMonitor } from "$lib/clientTools.js";
+import { GetIncidentsOpenHome, GetMonitors, SystemDataMessage } from "$lib/server/controllers/controller.js";
+import { FetchData } from "$lib/server/page";
+import { error } from "@sveltejs/kit";
 import moment from "moment";
-import { redirect, error } from "@sveltejs/kit";
 
 function removeTags(str) {
   if (str === null || str === "") return false;
   else str = str.toString();
-
   return str.replace(/(<([^>]+)>)/gi, "");
 }
 
 async function returnTypeOfMonitorsPageMeta(url) {
   const query = url.searchParams;
-  let filter = {
-    status: "ACTIVE",
-  };
-
+  let filter = { status: "ACTIVE" };
   let pageType = "home";
-  let group;
+  let group = null;
+
   if (!!query.get("category") && query.get("category") !== "Home") {
     filter.category_name = query.get("category");
     pageType = "category";
   }
-
   if (!!query.get("monitor")) {
     filter.tag = query.get("monitor");
     pageType = "monitor";
   }
-
   if (!!query.get("group")) {
-    let g = await GetMonitors({ status: "ACTIVE", tag: query.get("group") });
-
-    if (g.length > 0) {
+    const g = await GetMonitors({ status: "ACTIVE", tag: query.get("group") });
+    if (g.length) {
       group = g[0];
-      let typeData = JSON.parse(g[0].type_data);
+      const typeData = JSON.parse(group.type_data);
       let groupPresentMonitorTags = typeData.monitors.map((monitor) => monitor.tag);
       filter.tags = groupPresentMonitorTags;
       pageType = "group";
     }
   }
 
-  let monitors = await GetMonitors(filter);
+  const monitors = await GetMonitors(filter);
   return { monitors, pageType, group };
 }
 
 export async function load({ parent, url }) {
+  const parentData = await parent();
+  const { site: siteData, isLoggedIn } = parentData;
+
   let subscribableMonitors = await GetMonitors({ status: "ACTIVE" });
   subscribableMonitors = subscribableMonitors.map((monitor) => {
     return {
@@ -57,123 +54,144 @@ export async function load({ parent, url }) {
   });
   const query = url.searchParams;
 
-  let { monitors, pageType, group } = await returnTypeOfMonitorsPageMeta(url);
+  const { monitors: rawMonitors, pageType, group } = await returnTypeOfMonitorsPageMeta(url);
+
+  if (!isLoggedIn && pageType === "group") {
+    if (!group.enable_details_to_be_examined) {
+      throw error(404, "Group detail view disabled");
+    }
+    // also guard no‐children, but that’s done below
+  }
+
+  if (!isLoggedIn && pageType === "monitor") {
+    const requested = query.get("monitor");
+    // find any group that includes this monitor
+    const allGroups = await GetMonitors({ status: "ACTIVE", monitor_type: "GROUP" });
+    for (const g of allGroups) {
+      const typeData = JSON.parse(g.type_data);
+      if (typeData.monitors.some((c) => c.tag === requested) && !g.enable_details_to_be_examined) {
+        throw error(401, "Unauthorized; log in to view");
+      }
+    }
+    // existing individual‐hidden guard can remain or be removed if redundant
+    const monitor = rawMonitors.find((x) => x.tag === requested);
+    if (monitor && !monitor.enable_individual_view_if_grouped) {
+      throw error(401, "Unauthorized; log in to view");
+    }
+  }
 
   let hiddenGroupedMonitorsTags = [];
-  for (let i = 0; i < monitors.length; i++) {
-    if (pageType === "home" && monitors[i].monitor_type === "GROUP") {
-      let typeData = JSON.parse(monitors[i].type_data);
-      if (typeData.monitors && typeData.hideMonitors) {
-        hiddenGroupedMonitorsTags = hiddenGroupedMonitorsTags.concat(typeData.monitors.map((monitor) => monitor.tag));
+  if (pageType === "home") {
+    for (const monitor of rawMonitors) {
+      if (monitor.monitor_type === "GROUP") {
+        const typeData = JSON.parse(monitor.type_data);
+        if (typeData.hideMonitors) {
+          hiddenGroupedMonitorsTags.push(...typeData.monitors.map((c) => c.tag));
+        }
       }
     }
   }
-  monitors = monitors
-    .map((monitor) => {
-      return {
-        tag: monitor.tag,
-        name: monitor.name,
-        description: monitor.description,
-        monitor_type: monitor.monitor_type,
-        image: monitor.image,
-        category_name: monitor.category_name,
-        day_degraded_minimum_count: monitor.day_degraded_minimum_count,
-        day_down_minimum_count: monitor.day_down_minimum_count,
-        id: monitor.id,
-        image: monitor.image,
-        include_degraded_in_downtime: monitor.include_degraded_in_downtime,
-      };
-    })
+
+  const enriched = [];
+  for (const monitor of rawMonitors) {
+    let has_visible_members;
+    if (monitor.monitor_type === "GROUP") {
+      const typeData = JSON.parse(monitor.type_data);
+      const childTags = typeData.monitors.map((c) => c.tag);
+      const children = await GetMonitors({ status: "ACTIVE", tags: childTags });
+      const visibleCount = children.filter((c) => c.enable_individual_view_if_grouped).length;
+      has_visible_members = visibleCount > 0;
+
+      // Group‐detail no‐children => 404
+      if (!isLoggedIn && pageType === "group" && visibleCount === 0) {
+        throw error(404, "No monitors available for detail view");
+      }
+    }
+    enriched.push({
+      tag: monitor.tag,
+      name: monitor.name,
+      description: monitor.description,
+      monitor_type: monitor.monitor_type,
+      image: monitor.image,
+      category_name: monitor.category_name,
+      day_degraded_minimum_count: monitor.day_degraded_minimum_count,
+      day_down_minimum_count: monitor.day_down_minimum_count,
+      id: monitor.id,
+      include_degraded_in_downtime: monitor.include_degraded_in_downtime,
+      enable_details_to_be_examined: monitor.enable_details_to_be_examined,
+      enable_individual_view_if_grouped: monitor.enable_individual_view_if_grouped,
+      has_visible_members,
+      hidden_publicly: pageType === "group" && !monitor.enable_individual_view_if_grouped,
+    });
+  }
+
+  let monitors = enriched
     .filter((monitor) => !hiddenGroupedMonitorsTags.includes(monitor.tag))
     .filter((monitor) => {
-      if (pageType == "home") {
-        return monitor.category_name == "Home";
+      if (pageType === "home") return monitor.category_name === "Home";
+      if (!isLoggedIn && pageType === "group") {
+        return monitor.enable_individual_view_if_grouped;
       }
       return true;
     });
 
-  const parentData = await parent();
-  const siteData = parentData.site;
   let hero = siteData.hero;
-
   let pageTitle = siteData.title;
   let canonical = siteData.siteURL;
   let pageDescription = "";
-  let descDb = siteData.metaTags.find((tag) => tag.key === "description");
-  if (descDb) {
-    pageDescription = descDb.value;
-  }
+  const descTag = siteData.metaTags.find((t) => t.key === "description");
+  if (descTag) pageDescription = descTag.value;
 
   monitors = SortMonitor(siteData.monitorSort, monitors);
   const monitorsActive = [];
-  for (let i = 0; i < monitors.length; i++) {
-    let data = await FetchData(
+  for (const monitor of monitors) {
+    const data = await FetchData(
       siteData,
-      monitors[i],
+      monitor,
       parentData.localTz,
       parentData.selectedLang,
       parentData.lang,
       parentData.isMobile,
     );
-    monitors[i].pageData = data;
-
-    monitors[i].activeIncidents = [];
-    monitorsActive.push(monitors[i]);
+    monitor.pageData = data;
+    monitor.activeIncidents = [];
+    monitorsActive.push(monitor);
   }
 
-  let startWithin = moment().subtract(siteData.homeIncidentStartTimeWithin, "days").unix();
-  let endWithin = moment().add(siteData.homeIncidentStartTimeWithin, "days").unix();
+  const startWithin = moment().subtract(siteData.homeIncidentStartTimeWithin, "days").unix();
+  const endWithin = moment().add(siteData.homeIncidentStartTimeWithin, "days").unix();
   let allOpenIncidents = await GetIncidentsOpenHome(siteData.homeIncidentCount, startWithin, endWithin);
 
-  //if not home page
-  let isCategoryPage = pageType === "category";
-  let isMonitorPage = pageType === "monitor";
-  let isGroupPage = pageType === "group";
+  const isCategoryPage = pageType === "category";
+  const isMonitorPage = pageType === "monitor";
+  const isGroupPage = pageType === "group";
 
   if (isMonitorPage && monitorsActive.length > 0) {
-    pageTitle = monitorsActive[0].name + " - " + pageTitle;
-    pageDescription = monitorsActive[0].description;
-    canonical = canonical + "?monitor=" + monitorsActive[0].tag;
-    hero = {
-      title: monitorsActive[0].name,
-      subtitle: monitorsActive[0].description,
-      image: monitorsActive[0].image,
-    };
+    const monitor = monitorsActive[0];
+    pageTitle = `${monitor.name} - ${pageTitle}`;
+    pageDescription = monitor.description;
+    canonical = `${canonical}?monitor=${monitor.tag}`;
+    hero = { title: monitor.name, subtitle: monitor.description, image: monitor.image };
   }
 
   if (isGroupPage) {
-    pageTitle = group.name + " - " + pageTitle;
+    pageTitle = `${group.name} - ${pageTitle}`;
     pageDescription = group.description;
-    canonical = canonical + "?group=" + group.tag;
-
-    hero = {
-      title: group.name,
-      subtitle: group.description,
-      image: group.image,
-    };
+    canonical = `${canonical}?group=${group.tag}`;
+    hero = { title: group.name, subtitle: group.description, image: group.image };
   }
 
-  //if category page
   if (isCategoryPage) {
-    let allCategories = siteData.categories;
-    let selectedCategory = allCategories.find((category) => category.name === query.get("category"));
-    if (selectedCategory) {
-      if (!!selectedCategory.isHidden && !parentData.isLoggedIn) {
-        throw error(404, "Category not found");
-      }
-      pageTitle = selectedCategory.name + " - " + pageTitle;
-      pageDescription = selectedCategory.description;
-      canonical = canonical + "?category=" + query.get("category");
-
-      hero = {
-        title: selectedCategory.name,
-        subtitle: selectedCategory.description,
-        image: selectedCategory.image,
-      };
-    } else {
+    const selectedCategory = siteData.categories.find((c) => c.name === query.get("category"));
+    if (!selectedCategory || (selectedCategory.isHidden && !isLoggedIn)) {
       throw error(404, "Category not found");
     }
+    pageTitle = `${selectedCategory.name} - ${pageTitle}`;
+    pageDescription = selectedCategory.description;
+    canonical = `${canonical}?category=${selectedCategory.name}`;
+    hero = { title: selectedCategory.name, subtitle: selectedCategory.description, image: selectedCategory.image };
   }
+
   if (isCategoryPage || isMonitorPage || isGroupPage) {
     let eligibleTags = monitorsActive.map((monitor) => monitor.tag);
     //filter incidents that have monitor_tag in monitors
@@ -221,10 +239,10 @@ export async function load({ parent, url }) {
     allRecentIncidents,
     allRecentMaintenances,
     pageType,
-    pageTitle: pageTitle,
+    pageTitle,
     pageDescription: removeTags(pageDescription),
     hero,
-    categoryName: query.get("category"),
+    categoryName: url.searchParams.get("category"),
     canonical,
     systemDataMessage,
   };
