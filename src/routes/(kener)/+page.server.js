@@ -85,7 +85,7 @@ export async function load({ parent, url }) {
     const requestedTag = url.searchParams.get("monitor");
     const m = rawMonitors.find((x) => x.tag === requestedTag);
     if (m && !m.enable_individual_view_if_grouped) {
-      throw error(404, "Monitor detail view disabled when logged-out");
+      throw error(401, "Monitor detail view disabled when logged-out");
     }
   }
 
