@@ -64,7 +64,7 @@ export async function load({ parent, url }) {
   }
 
   if (!isLoggedIn && pageType === "monitor") {
-    const requested = url.searchParams.get("monitor");
+    const requested = query.get("monitor");
     // find any group that includes this monitor
     const allGroups = await GetMonitors({ status: "ACTIVE", monitor_type: "GROUP" });
     for (const g of allGroups) {
@@ -182,7 +182,7 @@ export async function load({ parent, url }) {
   }
 
   if (isCategoryPage) {
-    const selCat = siteData.categories.find((c) => c.name === url.searchParams.get("category"));
+    const selCat = siteData.categories.find((c) => c.name === query.get("category"));
     if (!selCat || (selCat.isHidden && !isLoggedIn)) {
       throw error(404, "Category not found");
     }
