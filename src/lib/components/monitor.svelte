@@ -22,7 +22,6 @@
   const dispatch = createEventDispatcher();
 
   export let monitor;
-  console.log("monitor=", monitor)
   export let localTz;
   export let lang;
   export let embed = false;

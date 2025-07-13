@@ -632,7 +632,6 @@
           <Input bind:value={newMonitor.description} id="description" placeholder="Add a description for the monitor" />
         </div>
 
-       <!-- new visibility toggles -->
        <div class="col-span-3 flex items-center">
          <label class="cursor-pointer flex items-center space-x-2">
            <input

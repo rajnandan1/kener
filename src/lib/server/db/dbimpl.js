@@ -410,11 +410,8 @@ class DbImpl {
       day_degraded_minimum_count: data.day_degraded_minimum_count,
       day_down_minimum_count: data.day_down_minimum_count,
       include_degraded_in_downtime: data.include_degraded_in_downtime,
-
-      // ← new visibility flags
       enable_details_to_be_examined: data.enable_details_to_be_examined,
       enable_individual_view_if_grouped: data.enable_individual_view_if_grouped,
-
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     });
@@ -436,11 +433,8 @@ class DbImpl {
       day_degraded_minimum_count: data.day_degraded_minimum_count,
       day_down_minimum_count: data.day_down_minimum_count,
       include_degraded_in_downtime: data.include_degraded_in_downtime,
-
-      // ← new visibility flags
       enable_details_to_be_examined: data.enable_details_to_be_examined,
       enable_individual_view_if_grouped: data.enable_individual_view_if_grouped,
-
       updated_at: this.knex.fn.now(),
     });
   }

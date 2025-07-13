@@ -147,11 +147,8 @@ export async function GetAllAnalyticsData() {
   return transformedData;
 }
 
-// Create or update in one call
 export const CreateUpdateMonitor = async (monitor) => {
   const { id, ...rest } = monitor;
-
-  console.log("[[CreateUpdateMonitor]] ...rest", rest);
 
   const monitorData = {
     ...rest,
@@ -166,11 +163,8 @@ export const CreateUpdateMonitor = async (monitor) => {
   }
 };
 
-// Used for writing back monitoring datapoints—unchanged
 export const UpdateMonitoringData = async (data) => {
   let queryData = { ...data };
-
-  console.log("[[UpdateMonitoringData]] ...queryData", queryData);
 
   return await db.updateMonitoringData(
     queryData.monitor_tag,
@@ -181,7 +175,6 @@ export const UpdateMonitoringData = async (data) => {
   );
 };
 
-// Strict create (throws if id supplied)
 export const CreateMonitor = async (monitor) => {
   const { id, ...rest } = monitor;
 
@@ -189,22 +182,17 @@ export const CreateMonitor = async (monitor) => {
     throw new Error("monitor id must be empty or 0");
   }
 
-  console.log("[[CreateMonitor]] ...rest", rest);
-
   return await db.insertMonitor({
     ...rest,
   });
 };
 
-// Strict update (throws if id missing or zero)
 export const UpdateMonitor = async (monitor) => {
   const { id, ...rest } = monitor;
 
   if (!id || id === 0) {
     throw new Error("monitor id cannot be empty or 0");
   }
-
-  console.log("[[UpdateMonitor]] ...rest", rest);
 
   return await db.updateMonitor({
     id,
@@ -704,11 +692,9 @@ export const GetLastStatusBefore = async (monitor_tag, timestamp) => {
   return NO_DATA;
 };
 export const GetMonitoringData = async (tag, since, now) => {
-  console.log("GetMonitoringData");
   return await db.getMonitoringData(tag, since, now);
 };
 export const GetMonitoringDataAll = async (tags, since, now) => {
-  console.log("GetMonitoringDataAll");
   return await db.getMonitoringDataAll(tags, since, now);
 };
 export const GetLastStatusBeforeAll = async (monitor_tags, timestamp) => {
@@ -1602,7 +1588,6 @@ export const GetSiteMap = async (cookies) => {
   }
 
   let monitors = await GetMonitors({ status: "ACTIVE" });
-  console.log("GetSiteMap");
 
   for (let i = 0; i < monitors.length; i++) {
     siteMapData.push({
