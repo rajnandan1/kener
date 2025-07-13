@@ -17,15 +17,15 @@ async function returnTypeOfMonitorsPageMeta(url) {
   let pageType = "home";
   let group = null;
 
-  if (query.get("category") && query.get("category") !== "Home") {
+  if (!!query.get("category") && query.get("category") !== "Home") {
     filter.category_name = query.get("category");
     pageType = "category";
   }
-  if (query.get("monitor")) {
+  if (!!query.get("monitor")) {
     filter.tag = query.get("monitor");
     pageType = "monitor";
   }
-  if (query.get("group")) {
+  if (!!query.get("group")) {
     const g = await GetMonitors({ status: "ACTIVE", tag: query.get("group") });
     if (g.length) {
       group = g[0];
@@ -182,14 +182,14 @@ export async function load({ parent, url }) {
   }
 
   if (isCategoryPage) {
-    const selCat = siteData.categories.find((c) => c.name === query.get("category"));
-    if (!selCat || (selCat.isHidden && !isLoggedIn)) {
+    const selectedCategory = siteData.categories.find((c) => c.name === query.get("category"));
+    if (!selectedCategory || (selectedCategory.isHidden && !isLoggedIn)) {
       throw error(404, "Category not found");
     }
-    pageTitle = `${selCat.name} - ${pageTitle}`;
-    pageDescription = selCat.description;
-    canonical = `${canonical}?category=${selCat.name}`;
-    hero = { title: selCat.name, subtitle: selCat.description, image: selCat.image };
+    pageTitle = `${selectedCategory.name} - ${pageTitle}`;
+    pageDescription = selectedCategory.description;
+    canonical = `${canonical}?category=${selectedCategory.name}`;
+    hero = { title: selectedCategory.name, subtitle: selectedCategory.description, image: selectedCategory.image };
   }
 
   if (isCategoryPage || isMonitorPage || isGroupPage) {
