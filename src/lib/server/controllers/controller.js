@@ -158,7 +158,6 @@ export const CreateUpdateMonitor = async (monitor) => {
     // update existing
     return await db.updateMonitor({ id, ...monitorData });
   } else {
-    // insert new
     return await db.insertMonitor(monitorData);
   }
 };
@@ -1519,7 +1518,6 @@ export const GetSubscriptionsBySubscriberID = async (subscriber_id) => {
 
 //getMonitorsByTag
 export const GetMonitorsByTag = async (tag) => {
-  console.log("GetMonitorsByTag");
   return await db.getMonitorsByTag(tag);
 };
 

@@ -217,8 +217,12 @@
               srcset=""
             />
           {/if}
+
           <p class="overflow-hidden text-ellipsis whitespace-nowrap">
             {monitor.name}
+            {#if $page.data.isLoggedIn && $page.data.pageType === 'group' && !monitor.enable_individual_view_if_grouped}
+              <span class="text-red-500">*</span>
+            {/if}
           </p>
 
           <p class="mt-1 text-xs font-medium text-muted-foreground">

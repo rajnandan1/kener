@@ -1,4 +1,3 @@
-// src/routes/(kener)/+page.server.js
 // @ts-nocheck
 import { SortMonitor } from "$lib/clientTools.js";
 import { GetIncidentsOpenHome, GetMonitors, SystemDataMessage } from "$lib/server/controllers/controller.js";
@@ -6,33 +5,33 @@ import { FetchData } from "$lib/server/page";
 import { error } from "@sveltejs/kit";
 import moment from "moment";
 
-/** Strip HTML tags */
 function removeTags(str) {
-  if (!str) return "";
-  return str.toString().replace(/(<([^>]+)>)/gi, "");
+  if (str === null || str === "") return false;
+  else str = str.toString();
+  return str.replace(/(<([^>]+)>)/gi, "");
 }
 
-/** Determine which monitors + page type */
 async function returnTypeOfMonitorsPageMeta(url) {
-  const q = url.searchParams;
+  const query = url.searchParams;
   let filter = { status: "ACTIVE" };
   let pageType = "home";
   let group = null;
 
-  if (q.get("category") && q.get("category") !== "Home") {
-    filter.category_name = q.get("category");
+  if (query.get("category") && query.get("category") !== "Home") {
+    filter.category_name = query.get("category");
     pageType = "category";
   }
-  if (q.get("monitor")) {
-    filter.tag = q.get("monitor");
+  if (query.get("monitor")) {
+    filter.tag = query.get("monitor");
     pageType = "monitor";
   }
-  if (q.get("group")) {
-    const g = await GetMonitors({ status: "ACTIVE", tag: q.get("group") });
+  if (query.get("group")) {
+    const g = await GetMonitors({ status: "ACTIVE", tag: query.get("group") });
     if (g.length) {
       group = g[0];
-      const td = JSON.parse(group.type_data);
-      filter.tags = td.monitors.map((m) => m.tag);
+      const typeData = JSON.parse(group.type_data);
+      let groupPresentMonitorTags = typeData.monitors.map((monitor) => monitor.tag);
+      filter.tags = groupPresentMonitorTags;
       pageType = "group";
     }
   }
@@ -42,22 +41,21 @@ async function returnTypeOfMonitorsPageMeta(url) {
 }
 
 export async function load({ parent, url }) {
-  // 0) Parent data (site + login state)
   const parentData = await parent();
   const { site: siteData, isLoggedIn } = parentData;
 
-  // 1) Subscribable monitors
   let subscribableMonitors = await GetMonitors({ status: "ACTIVE" });
-  subscribableMonitors = subscribableMonitors.map((m) => ({
-    tag: m.tag,
-    name: m.name,
-    image: m.image,
-  }));
+  subscribableMonitors = subscribableMonitors.map((monitor) => {
+    return {
+      tag: monitor.tag,
+      name: monitor.name,
+      image: monitor.image,
+    };
+  });
+  const query = url.searchParams;
 
-  // 2) Which monitors + context
   const { monitors: rawMonitors, pageType, group } = await returnTypeOfMonitorsPageMeta(url);
 
-  // 3) Group‐detail guard (404) when logged-out
   if (!isLoggedIn && pageType === "group") {
     if (!group.enable_details_to_be_examined) {
       throw error(404, "Group detail view disabled");
@@ -65,44 +63,41 @@ export async function load({ parent, url }) {
     // also guard no‐children, but that’s done below
   }
 
-  // 4) Single‐monitor guard (401) when logged-out & parent group hides details
   if (!isLoggedIn && pageType === "monitor") {
     const requested = url.searchParams.get("monitor");
     // find any group that includes this monitor
     const allGroups = await GetMonitors({ status: "ACTIVE", monitor_type: "GROUP" });
     for (const g of allGroups) {
-      const td = JSON.parse(g.type_data);
-      if (td.monitors.some((c) => c.tag === requested) && !g.enable_details_to_be_examined) {
+      const typeData = JSON.parse(g.type_data);
+      if (typeData.monitors.some((c) => c.tag === requested) && !g.enable_details_to_be_examined) {
         throw error(401, "Unauthorized; log in to view");
       }
     }
     // existing individual‐hidden guard can remain or be removed if redundant
-    const m = rawMonitors.find((x) => x.tag === requested);
-    if (m && !m.enable_individual_view_if_grouped) {
+    const monitor = rawMonitors.find((x) => x.tag === requested);
+    if (monitor && !monitor.enable_individual_view_if_grouped) {
       throw error(401, "Unauthorized; log in to view");
     }
   }
 
-  // 5) Hide grouped home‐children
   let hiddenGroupedMonitorsTags = [];
   if (pageType === "home") {
-    for (const m of rawMonitors) {
-      if (m.monitor_type === "GROUP") {
-        const td = JSON.parse(m.type_data);
-        if (td.hideMonitors) {
-          hiddenGroupedMonitorsTags.push(...td.monitors.map((c) => c.tag));
+    for (const monitor of rawMonitors) {
+      if (monitor.monitor_type === "GROUP") {
+        const typeData = JSON.parse(monitor.type_data);
+        if (typeData.hideMonitors) {
+          hiddenGroupedMonitorsTags.push(...typeData.monitors.map((c) => c.tag));
         }
       }
     }
   }
 
-  // 6) Enrich each monitor with has_visible_members
   const enriched = [];
-  for (const m of rawMonitors) {
+  for (const monitor of rawMonitors) {
     let has_visible_members;
-    if (m.monitor_type === "GROUP") {
-      const td = JSON.parse(m.type_data);
-      const childTags = td.monitors.map((c) => c.tag);
+    if (monitor.monitor_type === "GROUP") {
+      const typeData = JSON.parse(monitor.type_data);
+      const childTags = typeData.monitors.map((c) => c.tag);
       const children = await GetMonitors({ status: "ACTIVE", tags: childTags });
       const visibleCount = children.filter((c) => c.enable_individual_view_if_grouped).length;
       has_visible_members = visibleCount > 0;
@@ -113,34 +108,33 @@ export async function load({ parent, url }) {
       }
     }
     enriched.push({
-      tag: m.tag,
-      name: m.name,
-      description: m.description,
-      monitor_type: m.monitor_type,
-      image: m.image,
-      category_name: m.category_name,
-      day_degraded_minimum_count: m.day_degraded_minimum_count,
-      day_down_minimum_count: m.day_down_minimum_count,
-      id: m.id,
-      include_degraded_in_downtime: m.include_degraded_in_downtime,
-      enable_details_to_be_examined: m.enable_details_to_be_examined,
-      enable_individual_view_if_grouped: m.enable_individual_view_if_grouped,
+      tag: monitor.tag,
+      name: monitor.name,
+      description: monitor.description,
+      monitor_type: monitor.monitor_type,
+      image: monitor.image,
+      category_name: monitor.category_name,
+      day_degraded_minimum_count: monitor.day_degraded_minimum_count,
+      day_down_minimum_count: monitor.day_down_minimum_count,
+      id: monitor.id,
+      include_degraded_in_downtime: monitor.include_degraded_in_downtime,
+      enable_details_to_be_examined: monitor.enable_details_to_be_examined,
+      enable_individual_view_if_grouped: monitor.enable_individual_view_if_grouped,
       has_visible_members,
+      hidden_publicly: pageType === "group" && !monitor.enable_individual_view_if_grouped,
     });
   }
 
-  // 7) Final filters (home hides, group page hides children when logged-out)
   let monitors = enriched
-    .filter((m) => !hiddenGroupedMonitorsTags.includes(m.tag))
-    .filter((m) => {
-      if (pageType === "home") return m.category_name === "Home";
+    .filter((monitor) => !hiddenGroupedMonitorsTags.includes(monitor.tag))
+    .filter((monitor) => {
+      if (pageType === "home") return monitor.category_name === "Home";
       if (!isLoggedIn && pageType === "group") {
-        return m.enable_individual_view_if_grouped;
+        return monitor.enable_individual_view_if_grouped;
       }
       return true;
     });
 
-  // 8) Page metadata setup
   let hero = siteData.hero;
   let pageTitle = siteData.title;
   let canonical = siteData.siteURL;
@@ -148,43 +142,38 @@ export async function load({ parent, url }) {
   const descTag = siteData.metaTags.find((t) => t.key === "description");
   if (descTag) pageDescription = descTag.value;
 
-  // 9) Sort + fetch data
   monitors = SortMonitor(siteData.monitorSort, monitors);
   const monitorsActive = [];
-  for (const m of monitors) {
+  for (const monitor of monitors) {
     const data = await FetchData(
       siteData,
-      m,
+      monitor,
       parentData.localTz,
       parentData.selectedLang,
       parentData.lang,
       parentData.isMobile,
     );
-    m.pageData = data;
-    m.activeIncidents = [];
-    monitorsActive.push(m);
+    monitor.pageData = data;
+    monitor.activeIncidents = [];
+    monitorsActive.push(monitor);
   }
 
-  // 10) Open incidents
   const startWithin = moment().subtract(siteData.homeIncidentStartTimeWithin, "days").unix();
   const endWithin = moment().add(siteData.homeIncidentStartTimeWithin, "days").unix();
   let allOpenIncidents = await GetIncidentsOpenHome(siteData.homeIncidentCount, startWithin, endWithin);
 
-  // 11) Context flags
   const isCategoryPage = pageType === "category";
   const isMonitorPage = pageType === "monitor";
   const isGroupPage = pageType === "group";
 
-  // 12) Single-monitor meta
   if (isMonitorPage && monitorsActive.length > 0) {
-    const m = monitorsActive[0];
-    pageTitle = `${m.name} - ${pageTitle}`;
-    pageDescription = m.description;
-    canonical = `${canonical}?monitor=${m.tag}`;
-    hero = { title: m.name, subtitle: m.description, image: m.image };
+    const monitor = monitorsActive[0];
+    pageTitle = `${monitor.name} - ${pageTitle}`;
+    pageDescription = monitor.description;
+    canonical = `${canonical}?monitor=${monitor.tag}`;
+    hero = { title: monitor.name, subtitle: monitor.description, image: monitor.image };
   }
 
-  // 13) Group page meta
   if (isGroupPage) {
     pageTitle = `${group.name} - ${pageTitle}`;
     pageDescription = group.description;
@@ -192,7 +181,6 @@ export async function load({ parent, url }) {
     hero = { title: group.name, subtitle: group.description, image: group.image };
   }
 
-  // 14) Category page meta
   if (isCategoryPage) {
     const selCat = siteData.categories.find((c) => c.name === url.searchParams.get("category"));
     if (!selCat || (selCat.isHidden && !isLoggedIn)) {
@@ -204,38 +192,33 @@ export async function load({ parent, url }) {
     hero = { title: selCat.name, subtitle: selCat.description, image: selCat.image };
   }
 
-  // 15) Filter incidents by monitorsActive
   if (isCategoryPage || isMonitorPage || isGroupPage) {
-    const tags = monitorsActive.map((m) => m.tag);
+    const tags = monitorsActive.map((monitor) => monitor.tag);
     allOpenIncidents = allOpenIncidents.filter((inc) => inc.monitors.some((mon) => tags.includes(mon.monitor_tag)));
   }
 
-  // 16) Shape incident monitor details
   allOpenIncidents = allOpenIncidents.map((inc) => {
     const tags = inc.monitors.map((c) => c.monitor_tag);
     inc.monitors = monitors
-      .filter((m) => tags.includes(m.tag))
-      .map((m) => ({
-        tag: m.tag,
-        name: m.name,
-        description: m.description,
-        image: m.image,
-        impact_type: inc.monitors.find((c) => c.monitor_tag === m.tag).monitor_impact,
+      .filter((monitor) => tags.includes(monitor.tag))
+      .map((monitor) => ({
+        tag: monitor.tag,
+        name: monitor.name,
+        description: monitor.description,
+        image: monitor.image,
+        impact_type: inc.monitors.find((c) => c.monitor_tag === monitor.tag).monitor_impact,
       }));
     return inc;
   });
 
-  // 17) Recent vs maintenance
   const allRecentIncidents = allOpenIncidents.filter((i) => i.incident_type === "INCIDENT");
   const allRecentMaintenances = allOpenIncidents.filter((i) => i.incident_type === "MAINTENANCE");
 
-  // 18) Optional status summary
   let systemDataMessage = null;
   if (siteData.showSiteStatus === "YES") {
     systemDataMessage = await SystemDataMessage();
   }
 
-  // 19) Return data
   return {
     monitors: monitorsActive,
     subscribableMonitors,
