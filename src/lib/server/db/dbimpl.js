@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { GetMinuteStartNowTimestampUTC, GetDbType } from "../tool.js";
-import { MANUAL, SIGNAL } from "../constants.js";
 import Knex from "knex";
+import { MANUAL, SIGNAL } from "../constants.js";
+import { GetDbType, GetMinuteStartNowTimestampUTC } from "../tool.js";
 
 class DbImpl {
   knex;
@@ -156,7 +156,7 @@ class DbImpl {
         this.knex.raw("COUNT(*) as total_entries"),
         this.knex.raw("AVG(latency) as latency"),
         this.knex.raw(`
-				CASE 
+				CASE
 				WHEN SUM(CASE WHEN status = 'DOWN' THEN 1 ELSE 0 END) > 0 THEN 'DOWN'
 				WHEN SUM(CASE WHEN status = 'DEGRADED' THEN 1 ELSE 0 END) > 0 THEN 'DEGRADED'
 				ELSE 'UP'
@@ -410,6 +410,11 @@ class DbImpl {
       day_degraded_minimum_count: data.day_degraded_minimum_count,
       day_down_minimum_count: data.day_down_minimum_count,
       include_degraded_in_downtime: data.include_degraded_in_downtime,
+
+      // ← new visibility flags
+      enable_details_to_be_examined: data.enable_details_to_be_examined,
+      enable_individual_view_if_grouped: data.enable_individual_view_if_grouped,
+
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     });
@@ -431,8 +436,32 @@ class DbImpl {
       day_degraded_minimum_count: data.day_degraded_minimum_count,
       day_down_minimum_count: data.day_down_minimum_count,
       include_degraded_in_downtime: data.include_degraded_in_downtime,
+
+      // ← new visibility flags
+      enable_details_to_be_examined: data.enable_details_to_be_examined,
+      enable_individual_view_if_grouped: data.enable_individual_view_if_grouped,
+
       updated_at: this.knex.fn.now(),
     });
+  }
+
+  /**
+   * Count the number of child monitors in a group
+   * that are allowed to show on detail pages.
+   *
+   * @param {number} groupMonitorId
+   * @returns {Promise<number>}
+   */
+  async countGroupVisibleMembers(groupMonitorId) {
+    const result = await this.knex("monitor_group_members as mgm")
+      .join("monitors as m", "mgm.child_monitor_id", "m.id")
+      .where("mgm.group_monitor_id", groupMonitorId)
+      .andWhere("m.enable_individual_view_if_grouped", true)
+      .count("m.id as cnt")
+      .first();
+
+    // knex returns count as a string in some dialects
+    return Number(result.cnt || 0);
   }
 
   //given monitor_tag, start and end timestamp and a status, update all monitoring data with this status

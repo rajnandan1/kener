@@ -1,35 +1,34 @@
 <script>
+  import { base } from "$app/paths";
+  import { page } from "$app/stores";
+  import AllGamesListRaw from "$lib/all-games-list.json?raw";
+  import { GAMEDIG_SOCKET_TIMEOUT } from "$lib/anywhere";
+  import {
+    allRecordTypes,
+    GetGameFromId,
+    IsValidHost,
+    IsValidNameServer,
+    IsValidPort,
+    ValidateCronExpression,
+    ValidateIpAddress
+  } from "$lib/clientTools.js";
+  import GMI from "$lib/components/gmi.svelte";
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
-  import { clickOutsideAction, slide } from "svelte-legos";
-  import Plus from "lucide-svelte/icons/plus";
-  import X from "lucide-svelte/icons/x";
-  import Loader from "lucide-svelte/icons/loader";
-  import Clipboard from "lucide-svelte/icons/clipboard";
+  import * as Select from "$lib/components/ui/select";
+  import { javascript } from "@codemirror/lang-javascript";
+  import { githubDark, githubLight } from "@uiw/codemirror-theme-github";
   import Check from "lucide-svelte/icons/check";
   import ChevronRight from "lucide-svelte/icons/chevron-right";
-  import Trash from "lucide-svelte/icons/trash";
-  import { base } from "$app/paths";
-  import * as Select from "$lib/components/ui/select";
-  import { createEventDispatcher } from "svelte";
-  import GMI from "$lib/components/gmi.svelte";
-  import { page } from "$app/stores";
-  import CodeMirror from "svelte-codemirror-editor";
-  import { javascript } from "@codemirror/lang-javascript";
-  import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
+  import Clipboard from "lucide-svelte/icons/clipboard";
+  import Loader from "lucide-svelte/icons/loader";
+  import Plus from "lucide-svelte/icons/plus";
+  import X from "lucide-svelte/icons/x";
   import { mode } from "mode-watcher";
-  import AllGamesListRaw from "$lib/all-games-list.json?raw";
-  import {
-    allRecordTypes,
-    ValidateIpAddress,
-    ValidateCronExpression,
-    IsValidHost,
-    IsValidNameServer,
-    GetGameFromId,
-    IsValidPort
-  } from "$lib/clientTools.js";
-  import { GAMEDIG_SOCKET_TIMEOUT } from "$lib/anywhere";
+  import { createEventDispatcher } from "svelte";
+  import CodeMirror from "svelte-codemirror-editor";
+  import { clickOutsideAction, slide } from "svelte-legos";
 
   const dispatch = createEventDispatcher();
   let AllGamesList = JSON.parse(AllGamesListRaw);
@@ -40,7 +39,7 @@
 			status: 'UP',
 			latency: responseTime,
         }
-    } 
+    }
 	return {
 		status: 'DOWN',
 		latency: responseTime,
@@ -632,6 +631,29 @@
           <Label for="description">Description</Label>
           <Input bind:value={newMonitor.description} id="description" placeholder="Add a description for the monitor" />
         </div>
+
+       <!-- new visibility toggles -->
+       <div class="col-span-3 flex items-center">
+         <label class="cursor-pointer flex items-center space-x-2">
+           <input
+             type="checkbox"
+             bind:checked={newMonitor.enable_individual_view_if_grouped}
+           />
+           <span>Show this monitor on group detail pages</span>
+         </label>
+       </div>
+
+       {#if newMonitor.monitor_type === "GROUP"}
+         <div class="col-span-3 flex items-center">
+           <label class="cursor-pointer flex items-center space-x-2">
+             <input
+               type="checkbox"
+               bind:checked={newMonitor.enable_details_to_be_examined}
+             />
+             <span>Enable detail page for this group</span>
+           </label>
+         </div>
+       {/if}
 
         <div class="col-span-1">
           <Label for="cron">Cron <span class="text-red-500">*</span></Label>

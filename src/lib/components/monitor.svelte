@@ -1,34 +1,28 @@
 <script>
-  import * as Popover from "$lib/components/ui/popover";
-  import { onMount } from "svelte";
+  import { base } from "$app/paths";
+  import { page } from "$app/stores";
+  import { analyticsEvent } from "$lib/boringOne";
+  import GMI from "$lib/components/gmi.svelte";
+  import Incident from "$lib/components/IncidentNew.svelte";
+  import LoaderBoxes from "$lib/components/loaderbox.svelte";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-  import { base } from "$app/paths";
-  import { sub, startOfDay, getUnixTime } from "date-fns";
-  import GMI from "$lib/components/gmi.svelte";
-  import { page } from "$app/stores";
-  import { analyticsEvent } from "$lib/boringOne";
-  import Share2 from "lucide-svelte/icons/share-2";
-  import ArrowRight from "lucide-svelte/icons/arrow-right";
-  import Settings from "lucide-svelte/icons/settings";
-  import TrendingUp from "lucide-svelte/icons/trending-up";
-  import Loader from "lucide-svelte/icons/loader";
-  import ChevronLeft from "lucide-svelte/icons/chevron-left";
-  import ChevronRight from "lucide-svelte/icons/chevron-right";
-  import { buttonVariants } from "$lib/components/ui/button";
-  import { createEventDispatcher } from "svelte";
-  import { afterUpdate } from "svelte";
-  import axios from "axios";
-  import { l, summaryTime, f } from "$lib/i18n/client";
-  import { hoverAction, clickOutsideAction, slide } from "svelte-legos";
-  import LoaderBoxes from "$lib/components/loaderbox.svelte";
+  import { f, l } from "$lib/i18n/client";
   import NumberFlow from "@number-flow/svelte";
-  import Incident from "$lib/components/IncidentNew.svelte";
+  import axios from "axios";
+  import ArrowRight from "lucide-svelte/icons/arrow-right";
+  import Loader from "lucide-svelte/icons/loader";
+  import Settings from "lucide-svelte/icons/settings";
+  import Share2 from "lucide-svelte/icons/share-2";
+  import TrendingUp from "lucide-svelte/icons/trending-up";
+  import { afterUpdate, createEventDispatcher, onMount } from "svelte";
+  import { clickOutsideAction, hoverAction, slide } from "svelte-legos";
 
   const dispatch = createEventDispatcher();
 
   export let monitor;
+  console.log("monitor=", monitor)
   export let localTz;
   export let lang;
   export let embed = false;
@@ -355,7 +349,9 @@
             {/if}
           {/each}
         </div>
-        {#if monitor.monitor_type === "GROUP" && !!!embed}
+        {#if monitor.monitor_type === "GROUP"
+            && monitor.enable_details_to_be_examined
+            && monitor.has_visible_members }
           <div class="-mt-4 flex justify-end">
             <Button
               variant="secondary"

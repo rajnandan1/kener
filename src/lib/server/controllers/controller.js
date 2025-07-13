@@ -1,24 +1,18 @@
 // @ts-nocheck
-import {
-  IsValidAnalytics,
-  IsValidColors,
-  IsValidHero,
-  IsValidI18n,
-  IsValidJSONArray,
-  IsValidJSONString,
-  IsValidNav,
-  IsValidURL,
-} from "./validators.js";
-import { siteDataKeys } from "./siteDataKeys.js";
-import db from "../db/db.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { Resend } from "resend";
 import Queue from "queue";
+import { Resend } from "resend";
+import db from "../db/db.js";
+import { siteDataKeys } from "./siteDataKeys.js";
 
 import crypto from "crypto";
 import { addMonths, format, startOfMonth, subMonths } from "date-fns";
-import { DEGRADED, DOWN, NO_DATA, SIGNAL, UP, REALTIME } from "../constants.js";
+import fs from "fs-extra";
+import path from "path";
+import { fileURLToPath } from "url";
+import { DEGRADED, DOWN, NO_DATA, REALTIME, SIGNAL, UP } from "../constants.js";
+import getSMTPTransport from "../notification/smtps.js";
 import {
   GetMinuteStartNowTimestampUTC,
   GetMinuteStartTimestampUTC,
@@ -26,10 +20,6 @@ import {
   ReplaceAllOccurrences,
   ValidateEmail,
 } from "../tool.js";
-import getSMTPTransport from "../notification/smtps.js";
-import fs from "fs-extra";
-import path from "path";
-import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -157,17 +147,30 @@ export async function GetAllAnalyticsData() {
   return transformedData;
 }
 
+// Create or update in one call
 export const CreateUpdateMonitor = async (monitor) => {
-  let monitorData = { ...monitor };
-  if (monitorData.id) {
-    return await db.updateMonitor(monitorData);
+  const { id, ...rest } = monitor;
+
+  console.log("[[CreateUpdateMonitor]] ...rest", rest);
+
+  const monitorData = {
+    ...rest,
+  };
+
+  if (id) {
+    // update existing
+    return await db.updateMonitor({ id, ...monitorData });
   } else {
+    // insert new
     return await db.insertMonitor(monitorData);
   }
 };
 
+// Used for writing back monitoring datapoints—unchanged
 export const UpdateMonitoringData = async (data) => {
   let queryData = { ...data };
+
+  console.log("[[UpdateMonitoringData]] ...queryData", queryData);
 
   return await db.updateMonitoringData(
     queryData.monitor_tag,
@@ -178,20 +181,35 @@ export const UpdateMonitoringData = async (data) => {
   );
 };
 
+// Strict create (throws if id supplied)
 export const CreateMonitor = async (monitor) => {
-  let monitorData = { ...monitor };
-  if (monitorData.id) {
+  const { id, ...rest } = monitor;
+
+  if (id) {
     throw new Error("monitor id must be empty or 0");
   }
-  return await db.insertMonitor(monitorData);
+
+  console.log("[[CreateMonitor]] ...rest", rest);
+
+  return await db.insertMonitor({
+    ...rest,
+  });
 };
 
+// Strict update (throws if id missing or zero)
 export const UpdateMonitor = async (monitor) => {
-  let monitorData = { ...monitor };
-  if (!!!monitorData.id || monitorData.id === 0) {
+  const { id, ...rest } = monitor;
+
+  if (!id || id === 0) {
     throw new Error("monitor id cannot be empty or 0");
   }
-  return await db.updateMonitor(monitorData);
+
+  console.log("[[UpdateMonitor]] ...rest", rest);
+
+  return await db.updateMonitor({
+    id,
+    ...rest,
+  });
 };
 
 export const GetMonitors = async (data) => {
@@ -279,7 +297,7 @@ export const SystemDataMessage = async () => {
     upsPercentage,
     degradedPercentage,
     downsPercentage,
-    maintenancePercentage
+    maintenancePercentage,
   };
 };
 
@@ -686,9 +704,11 @@ export const GetLastStatusBefore = async (monitor_tag, timestamp) => {
   return NO_DATA;
 };
 export const GetMonitoringData = async (tag, since, now) => {
+  console.log("GetMonitoringData");
   return await db.getMonitoringData(tag, since, now);
 };
 export const GetMonitoringDataAll = async (tags, since, now) => {
+  console.log("GetMonitoringDataAll");
   return await db.getMonitoringDataAll(tags, since, now);
 };
 export const GetLastStatusBeforeAll = async (monitor_tags, timestamp) => {
@@ -1513,6 +1533,7 @@ export const GetSubscriptionsBySubscriberID = async (subscriber_id) => {
 
 //getMonitorsByTag
 export const GetMonitorsByTag = async (tag) => {
+  console.log("GetMonitorsByTag");
   return await db.getMonitorsByTag(tag);
 };
 
@@ -1581,6 +1602,7 @@ export const GetSiteMap = async (cookies) => {
   }
 
   let monitors = await GetMonitors({ status: "ACTIVE" });
+  console.log("GetSiteMap");
 
   for (let i = 0; i < monitors.length; i++) {
     siteMapData.push({
