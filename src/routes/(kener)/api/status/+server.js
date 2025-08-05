@@ -31,6 +31,8 @@ export async function GET({ request, url }) {
 	const query = url.searchParams;
 	const tag = query.get("tag");
 	const timestamp = query.get("timestamp");
+	const startDate = query.get("start_date");
+	const endDate = query.get("end_date");
 	if (!!!tag) {
 		return json(
 			{ error: "tag missing" },
@@ -39,7 +41,7 @@ export async function GET({ request, url }) {
 			}
 		);
 	}
-	return json(await GetMonitorStatusByTag(tag, timestamp), {
+	return json(await GetMonitorStatusByTag(tag, timestamp, startDate, endDate), {
 		status: 200
 	});
 }
