@@ -481,7 +481,7 @@
       <div class="content px-4 py-4">
         <h2 class="text-lg font-semibold">Rearrange Monitors</h2>
         <div
-          class="mt-4"
+          class="mt-4 max-h-[80vh] overflow-y-auto"
           use:dndzone={{ items: monitors, flipDurationMs, dropTargetStyle }}
           on:consider={handleSort}
           on:finalize={handleSort}
