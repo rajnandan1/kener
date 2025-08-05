@@ -63,8 +63,10 @@ RUN rm -rf src/routes/\(docs\) \
     mkdir -p uploads database && \
     chmod -R 750 uploads database
 
-# Build the application and remove `devDependencies`
+# Build the application and copy templates to build directory
 RUN npm run build && \
+    mkdir -p build/server/templates && \
+    cp -r src/lib/server/templates/* build/server/templates/ && \
     npm prune --omit=dev
 
 #==========================================================#
