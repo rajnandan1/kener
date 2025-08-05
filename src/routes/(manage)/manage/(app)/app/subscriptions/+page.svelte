@@ -137,6 +137,19 @@
     });
   }
 
+  async function handleActiveInactive(e) {
+    if (subscriptionTrigger.id) {
+      subscriptionTrigger.subscription_trigger_status = e.target.checked ? "ACTIVE" : "INACTIVE";
+      updateSubscriptionTriggerStatus(subscriptionTrigger.id, subscriptionTrigger.subscription_trigger_status);
+    } else {
+      await saveSubscriptionTrigger();
+      pageLoading = true;
+      await loadSubscriptionTrigger();
+      await loadSubscribers();
+      pageLoading = false;
+    }
+  }
+
   // Reactive statement to calculate totalPages
 </script>
 
@@ -147,7 +160,7 @@
         Events Subscription
         {#if pageLoading}
           <Loader size="16" class="absolute right-0 top-0 animate-spin text-gray-500" />
-        {:else if canSendEmail && !!subscriptionTrigger.id}
+        {:else if canSendEmail}
           <label class="absolute right-0 top-0 flex cursor-pointer items-center justify-between gap-2 text-sm">
             <Label class="text-xs font-medium ">
               {subscriptionTrigger.subscription_trigger_status == "ACTIVE" ? "Active" : "Inactive"}
@@ -158,14 +171,7 @@
               disabled={!canSendEmail}
               class="peer sr-only"
               checked={subscriptionTrigger.subscription_trigger_status == "ACTIVE"}
-              on:change={(e) => {
-                subscriptionTrigger.subscription_trigger_status = e.target.checked ? "ACTIVE" : "INACTIVE";
-                // Call the API to update the subscription status
-                updateSubscriptionTriggerStatus(
-                  subscriptionTrigger.id,
-                  subscriptionTrigger.subscription_trigger_status
-                );
-              }}
+              on:change={handleActiveInactive}
             />
             <div
               class="peer relative h-6 w-11 rounded-full bg-gray-200 after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-blue-800 rtl:peer-checked:after:-translate-x-full"
