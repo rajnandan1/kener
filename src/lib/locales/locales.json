@@ -66,5 +66,9 @@
 	{
 		"code": "it",
 		"name": "Italiano"
+	},
+	{
+		"code": "fa",
+		"name": "Persian (فارسی)"
 	}
 ]
