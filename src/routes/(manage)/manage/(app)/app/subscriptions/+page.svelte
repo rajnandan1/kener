@@ -138,7 +138,7 @@
   }
 
   async function handleActiveInactive(e) {
-    if (!!subscriptionTrigger.id) {
+    if (subscriptionTrigger.id) {
       subscriptionTrigger.subscription_trigger_status = e.target.checked ? "ACTIVE" : "INACTIVE";
       updateSubscriptionTriggerStatus(subscriptionTrigger.id, subscriptionTrigger.subscription_trigger_status);
     } else {
