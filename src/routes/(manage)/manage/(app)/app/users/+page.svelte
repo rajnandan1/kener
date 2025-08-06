@@ -431,7 +431,7 @@
               <div class="flex flex-col gap-y-2">
                 <Label for="plainPassword">Confirm Password</Label>
                 <Input
-                  type="text"
+                  type="password"
                   name="plainPassword"
                   id="plainPassword"
                   bind:value={newUser.plainPassword}
