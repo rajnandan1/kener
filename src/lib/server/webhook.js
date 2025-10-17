@@ -104,7 +104,7 @@ const store = async function (data) {
   return { status: 200, message: "success at " + data.timestampInSeconds };
 };
 
-const GetMonitorStatusByTag = async function (tag, timestamp) {
+const GetMonitorStatusByTag = async function (tag, timestamp, startDate, endDate) {
   let monitor = await db.getMonitorByTag(tag);
   if (!!!monitor) {
     return { error: "no monitor with tag found", status: 400 };
@@ -116,6 +116,10 @@ const GetMonitorStatusByTag = async function (tag, timestamp) {
     status: null,
     uptime: null,
     last_updated_at: null,
+    time_range: {
+      start: null,
+      end: null
+    }
   };
 
   const { include_degraded_in_downtime } = monitor;
@@ -124,9 +128,76 @@ const GetMonitorStatusByTag = async function (tag, timestamp) {
   if (timestamp !== null && timestamp !== undefined) {
     now = timestamp;
   }
-  let start = GetDayStartTimestampUTC(now);
+  
+  let start, end;
+  
+  // Handle date range parameters
+  if (startDate && endDate) {
+    // Parse start_date and end_date (expecting YYYY-MM-DD format)
+    try {
+      const startDateObj = new Date(startDate + 'T00:00:00.000Z');
+      const endDateObj = new Date(endDate + 'T23:59:59.999Z');
+      
+      if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+        return { error: "Invalid date format. Use YYYY-MM-DD", status: 400 };
+      }
+      
+      if (startDateObj > endDateObj) {
+        return { error: "start_date must be before or equal to end_date", status: 400 };
+      }
+      
+      start = Math.floor(startDateObj.getTime() / 1000);
+      end = Math.floor(endDateObj.getTime() / 1000);
+    } catch (err) {
+      return { error: "Invalid date format. Use YYYY-MM-DD", status: 400 };
+    }
+  } else if (startDate && !endDate) {
+    // If only start_date is provided, use it as start and current time as end
+    try {
+      const startDateObj = new Date(startDate + 'T00:00:00.000Z');
+      if (isNaN(startDateObj.getTime())) {
+        return { error: "Invalid start_date format. Use YYYY-MM-DD", status: 400 };
+      }
+      start = Math.floor(startDateObj.getTime() / 1000);
+      end = now;
+    } catch (err) {
+      return { error: "Invalid start_date format. Use YYYY-MM-DD", status: 400 };
+    }
+  } else if (!startDate && endDate) {
+    // If only end_date is provided, use start of that day as start
+    try {
+      const endDateObj = new Date(endDate + 'T23:59:59.999Z');
+      if (isNaN(endDateObj.getTime())) {
+        return { error: "Invalid end_date format. Use YYYY-MM-DD", status: 400 };
+      }
+      start = GetDayStartTimestampUTC(Math.floor(endDateObj.getTime() / 1000));
+      end = Math.floor(endDateObj.getTime() / 1000);
+    } catch (err) {
+      return { error: "Invalid end_date format. Use YYYY-MM-DD", status: 400 };
+    }
+  } else {
+    // Default behavior: current day
+    start = GetDayStartTimestampUTC(now);
+    end = now;
+  }
 
-  let dayDataNew = await db.getMonitoringData(tag, start, now);
+  // Set time range in response
+  resp.time_range.start = start;
+  resp.time_range.end = end;
+
+  let dayDataNew = await db.getMonitoringData(tag, start, end);
+  
+  if (dayDataNew.length === 0) {
+    return { 
+      status: 200, 
+      ...resp,
+      status: null,
+      uptime: null,
+      last_updated_at: null,
+      message: "No data available for the specified time range"
+    };
+  }
+  
   let ups = 0;
   let downs = 0;
   let degradeds = 0;
