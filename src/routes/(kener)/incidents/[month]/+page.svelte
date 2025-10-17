@@ -47,13 +47,13 @@
   });
 
   //sort the incidentSmartDates ascending
-  let sortedIncidentSmartDates = Object.keys(incidentSmartDates).sort((a, b) => a - b);
+  let sortedIncidentSmartDates = Object.keys(incidentSmartDates).sort((a, b) => parseInt(a) - parseInt(b));
   let canonical = data.canonical;
 </script>
 
 <svelte:head>
   <title>
-    {f(parse(data.thisMonthName, "MMMM-yyyy", new Date()), "MMMM, yyyy", selectedLang, $page.data.localTz)}
+    {f(parse(data.thisMonthName, "LLLL-yyyy", new Date()), "LLLL, yyyy", selectedLang, $page.data.localTz)}
     {l(data.lang, "Incident Updates")} |
     {data.site.title}
   </title>
@@ -62,7 +62,7 @@
     content="{l(data.lang, 'Incident Updates')} | {l(data.lang, 'Recent Incidents')} | {l(
       data.lang,
       'Recent Maintenances'
-    )} {f(parse(data.thisMonthName, 'MMMM-yyyy', new Date()), 'MMMM, yyyy', selectedLang, $page.data.localTz)} |
+    )} {f(parse(data.thisMonthName, 'LLLL-yyyy', new Date()), 'LLLL, yyyy', selectedLang, $page.data.localTz)} |
 		{data.site.title}"
   />
   <link rel="canonical" href={canonical} />
@@ -85,7 +85,7 @@
   <div class="mesh mx-auto min-w-full max-w-[655px] rounded-md px-4 py-12 lg:flex lg:items-center">
     <div class="blurry-bg mx-auto max-w-3xl text-center text-muted">
       <h1 class="    text-5xl font-extrabold leading-tight">
-        {f(new Date(data.midnightMonthStartUTCTimestamp * 1000), "MMMM, yyyy", selectedLang, $page.data.localTz)}
+        {f(new Date(data.midnightMonthStartUTCTimestamp * 1000), "LLLL, yyyy", selectedLang, $page.data.localTz)}
       </h1>
       <p class="mx-auto mt-4 max-w-xl font-medium sm:text-xl">
         {l(data.lang, "Incident Updates")}
@@ -109,7 +109,7 @@
           {l(data.lang, "No Incident in %date", {
             date: f(
               new Date(data.midnightMonthStartUTCTimestamp * 1000),
-              "MMMM, yyyy",
+              "LLLL, yyyy",
               selectedLang,
               $page.data.localTz
             )
@@ -120,7 +120,7 @@
     {#each sortedIncidentSmartDates as date}
       <div class="mb-4 grid w-full grid-cols-2 gap-x-4 rounded-md border bg-card">
         <div class="text-md col-span-2 border-b p-2 px-4 font-medium">
-          {f(new Date(date * 1000), "EEEE, MMMM do", data.selectedLang, $page.data.localTz)}
+          {f(new Date(parseInt(date) * 1000), "EEEE, MMMM do", data.selectedLang, $page.data.localTz)}
         </div>
         {#if incidentSmartDates[date].length === 0}
           <div class="col-span-2 p-2 px-4 text-sm font-medium text-muted-foreground">
@@ -129,7 +129,7 @@
         {/if}
         {#each incidentSmartDates[date] as incident, index}
           <div class="newincidents col-span-2">
-            <Incident {incident} lang={data.lang} index="incident-{index}" {selectedLang} />
+            <Incident {incident} index="incident-{index}" />
           </div>
         {/each}
       </div>
@@ -137,27 +137,35 @@
   </div>
   <div class="mx-auto mb-2 mt-4 flex w-full flex-1 flex-col items-start justify-center bg-transparent md:w-[655px]">
     <div class="flex w-full justify-between">
-      <Button
-        type="submit"
-        variant="secondary"
-        class="bounce-left"
-        on:click={() => {
-          window.location.href = `${base}/incidents/${data.prevMonthName}`;
-        }}
-      >
-        <ArrowLeft class="arrow mr-2 h-4 w-4" />
-        {f(new Date(data.midnightPrevMonthUTCTimestamp * 1000), "MMMM, yyyy", selectedLang, $page.data.localTz)}
-      </Button>
-      <Button
-        variant="secondary"
-        class="bounce-right"
-        on:click={() => {
-          window.location.href = `${base}/incidents/${data.nextMonthName}`;
-        }}
-      >
-        {f(new Date(data.midnightNextMonthUTCTimestamp * 1000), "MMMM, yyyy", selectedLang, $page.data.localTz)}
-        <ArrowRight class="arrow ml-2 h-4 w-4" />
-      </Button>
+      {#if data.showPrevButton}
+        <Button
+          type="submit"
+          variant="secondary"
+          class="bounce-left"
+          on:click={() => {
+            window.location.href = `${base}/incidents/${data.prevMonthName}`;
+          }}
+        >
+          <ArrowLeft class="arrow mr-2 h-4 w-4" />
+          {f(new Date(data.midnightPrevMonthUTCTimestamp * 1000), "LLLL, yyyy", selectedLang, $page.data.localTz)}
+        </Button>
+      {:else}
+        <div></div>
+      {/if}
+      {#if data.showNextButton}
+        <Button
+          variant="secondary"
+          class="bounce-right"
+          on:click={() => {
+            window.location.href = `${base}/incidents/${data.nextMonthName}`;
+          }}
+        >
+          {f(new Date(data.midnightNextMonthUTCTimestamp * 1000), "LLLL, yyyy", selectedLang, $page.data.localTz)}
+          <ArrowRight class="arrow ml-2 h-4 w-4" />
+        </Button>
+      {:else}
+        <div></div>
+      {/if}
     </div>
   </div>
 </section>

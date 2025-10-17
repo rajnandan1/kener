@@ -3,8 +3,11 @@
 import { GetMonitors, GetIncidentsPage, GetLocaleFromCookie } from "$lib/server/controllers/controller.js";
 import { BeginningOfDay } from "$lib/server/tool.js";
 import db from "$lib/server/db/db.js";
-import { format, addDays, subDays, parse, getUnixTime, startOfMonth, endOfMonth } from "date-fns";
+import { format, addDays, subDays, parse, getUnixTime, startOfMonth, endOfMonth, addMonths, getYear } from "date-fns";
 import { f } from "$lib/i18n/client";
+import { error } from "@sveltejs/kit";
+
+const MIN_YEAR = 2023;
 
 export async function load({ parent, url, params, cookies }) {
   const parentData = await parent();
@@ -15,10 +18,33 @@ export async function load({ parent, url, params, cookies }) {
   let month = params.month; //January-2021
 
   if (!!!month) {
-    month = format(new Date(), "MMMM-yyyy");
+    month = format(new Date(), "LLLL-yyyy");
   }
-  let monthStart = startOfMonth(parse(month, "MMMM-yyyy", new Date()));
-  let monthEnd = endOfMonth(parse(month, "MMMM-yyyy", new Date()));
+
+  let parsedDate;
+  try {
+    parsedDate = parse(month, "LLLL-yyyy", new Date());
+    if (isNaN(parsedDate.getTime())) {
+      throw error(404, "Invalid date format");
+    }
+  } catch (e) {
+    throw error(404, "Invalid date format");
+  }
+
+  const year = getYear(parsedDate);
+  const currentDate = new Date();
+  const maxDate = addMonths(currentDate, 12);
+  const maxYear = getYear(maxDate);
+
+  if (year < MIN_YEAR || year > maxYear) {
+    throw error(404, "Date out of allowed range");
+  }
+
+  if (year === maxYear && parsedDate > maxDate) {
+    throw error(404, "Date out of allowed range");
+  }
+  let monthStart = startOfMonth(parse(month, "LLLL-yyyy", new Date()));
+  let monthEnd = endOfMonth(parse(month, "LLLL-yyyy", new Date()));
   let nextMonth = addDays(monthEnd, 1);
   let prevMonth = subDays(monthStart, 1);
 
@@ -58,14 +84,24 @@ export async function load({ parent, url, params, cookies }) {
     return incident;
   });
 
+  const prevMonthDate = subDays(monthStart, 1);
+  const nextMonthDate = addDays(monthEnd, 1);
+
+  const minDate = new Date(MIN_YEAR, 0, 1);
+
+  const showPrevButton = prevMonthDate >= minDate;
+  const showNextButton = nextMonthDate <= maxDate;
+
   return {
     incidents: incidents,
-    nextMonthName: f(new Date(midnightNextMonthUTCTimestamp * 1000), "MMMM-yyyy", "en", parentData.localTz),
-    prevMonthName: f(new Date(midnightPrevMonthUTCTimestamp * 1000), "MMMM-yyyy", "en", parentData.localTz),
-    thisMonthName: f(monthEnd, "MMMM-yyyy", "en", parentData.localTz),
+    nextMonthName: f(new Date(midnightNextMonthUTCTimestamp * 1000), "LLLL-yyyy", "en", parentData.localTz),
+    prevMonthName: f(new Date(midnightPrevMonthUTCTimestamp * 1000), "LLLL-yyyy", "en", parentData.localTz),
+    thisMonthName: f(monthEnd, "LLLL-yyyy", "en", parentData.localTz),
     canonical: siteData.siteURL + "/incidents/" + month,
     midnightNextMonthUTCTimestamp: midnightNextMonthUTCTimestamp,
     midnightPrevMonthUTCTimestamp: midnightPrevMonthUTCTimestamp,
     midnightMonthStartUTCTimestamp: midnightMonthStartUTCTimestamp + 86400,
+    showPrevButton: showPrevButton,
+    showNextButton: showNextButton,
   };
 }

@@ -279,7 +279,7 @@ export const SystemDataMessage = async () => {
     upsPercentage,
     degradedPercentage,
     downsPercentage,
-    maintenancePercentage
+    maintenancePercentage,
   };
 };
 
@@ -1530,10 +1530,10 @@ export const GetSiteMap = async (cookies) => {
   }
 
   //get today's date in January-2025 format date-fns
-  const today = format(new Date(), "MMMM-yyyy");
+  const today = format(new Date(), "LLLL-yyyy");
   //last month
-  const lastMonth = format(subMonths(new Date(), 1), "MMMM-yyyy", { addMonths: -1 });
-  const nextMonth = format(addMonths(new Date(), 1), "MMMM-yyyy", { addMonths: -1 });
+  const lastMonth = format(subMonths(new Date(), 1), "LLLL-yyyy", { addMonths: -1 });
+  const nextMonth = format(addMonths(new Date(), 1), "LLLL-yyyy", { addMonths: -1 });
 
   siteMapData.push({
     url: siteURLData + "/incidents/" + today,
