@@ -1,6 +1,11 @@
 # Kubernetes deployment
 
-These manifests are used to deploy the application on a Kubernetes cluster. There are two variants, either deploy it with a SQLite database or via a CNPG Postgres database (CNPG required).
+These manifests are used to deploy the application on a Kubernetes cluster. 
+
+There are different ways to deploy the application, either deploy it with:
+- a SQLite database
+- via a CNPG Postgres database (CNPG required).
+- or a generic database (that is supported out of the box by Kener)
 
 
 ## Basic deployment on existing cluster
@@ -16,6 +21,22 @@ kubectl create namespace kener # Creating the appropriate namespace
 kubectl apply -k manifests -n kerner # Applying the manifests
 kubectl get pods -n kener # Checking if the pods are running
 ```
+
+## Deploying with a database
+
+If you have a database already running on your cluster or you want to use an external database, you can deploy the application with it. To do so, you can use the following steps:
+
+1. In the `deployment.yaml` file, uncomment the `DATABASE_URL` environment variable and comment out the `kener-db` volume mount and the `kener-db` volume.
+2. In the `kustomization.yaml` file, comment out the `kener-db-pvc.yaml` as we don't need that one anymore.
+4. Then update `kener-secret.yaml` with the appropriate values for the database.
+5. lastly, run the following commands:
+
+```shell
+kubectl create namespace kener # Creating the appropriate namespace
+kubectl apply -k manifests -n kerner # Applying the manifests
+kubectl get pods -n kener # Checking if the pods are running
+```
+
 
 ## Deploying with CNPG
 
