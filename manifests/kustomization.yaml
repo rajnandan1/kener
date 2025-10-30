@@ -7,7 +7,7 @@ metadata:
 resources:
   - kener-secret.yaml
   - smtp-secret.yaml
-  - kener-db-pvc.yaml
+  - kener-db-pvc.yaml # Comment out if you're using your own database
   - kener-pvc.yaml
   - deployment.yaml
   - service.yaml

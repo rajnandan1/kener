@@ -26,11 +26,11 @@ spec:
           env:
             - name: ORIGIN
               value: "http://localhost:3000"
-            - name: DATABASE_URL
-              valueFrom:
-                secretKeyRef:
-                  name: kener-secret
-                  key: DATABASE_URL
+#            - name: DATABASE_URL -> Uncomment if you want to use a database other than SQLite
+#              valueFrom:
+#                secretKeyRef:
+#                  name: kener-secret
+#                  key: DATABASE_URL
             - name: KENER_SECRET_KEY
               valueFrom:
                 secretKeyRef:
@@ -51,7 +51,7 @@ spec:
                   name: smtp-secret
                   key: SMTP_PASS
             - name: SMTP_SECURE
-              value: 1
+              value: "0"
             - name: SMTP_FROM_EMAIL
               valueFrom:
                 secretKeyRef:
