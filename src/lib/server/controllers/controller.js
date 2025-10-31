@@ -30,6 +30,7 @@ import getSMTPTransport from "../notification/smtps.js";
 import fs from "fs-extra";
 import path from "path";
 import { fileURLToPath } from "url";
+import { marked } from "marked";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -89,7 +90,7 @@ export const PushDataToQueue = async (eventID, eventName, eventData) => {
       `/view/events/${eventData.incident_type.toLowerCase()}-${eventID}`,
       base,
     ),
-    update_message: eventData.message,
+    update_message: marked.parse(eventData.message),
     title: `[${eventData.incident_type}] ` + eventData.title,
   };
 
