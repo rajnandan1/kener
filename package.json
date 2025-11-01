@@ -28,6 +28,7 @@
   },
   "scripts": {
     "build": "vite build",
+    "postbuild": "copyfiles -u 3 src/lib/server/templates/**/* build/server",
     "preview": "vite preview",
     "configure": "node build.js",
     "migrate": "npx knex migrate:latest",
@@ -50,6 +51,7 @@
     "@zerodevx/svelte-toast": "^0.9.6",
     "autoprefixer": "^10.4.14",
     "concurrently": "^8.2.2",
+    "copyfiles": "^2.4.1",
     "cross-env": "^7.0.3",
     "date-picker-svelte": "^2.15.1",
     "postcss": "^8.4.24",
