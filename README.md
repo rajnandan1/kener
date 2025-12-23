@@ -1,5 +1,10 @@
 # Kener - Stunning Status Pages
 
+<details>
+  <summary>Upcoming Version 4.0.0</summary>
+   Currently we are working on updating kener to the latest svelte version with typescript
+</details>
+
 <p align="center">
 	<img src="https://kener.ing/newbg.png?v=1" width="100%" height="auto" class="rounded-lg shadow-lg" alt="kener example illustration">
 </p>
