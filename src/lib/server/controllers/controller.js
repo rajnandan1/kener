@@ -773,6 +773,10 @@ export const CreateIncident = async (data) => {
     incident_source: !!data.incident_source ? data.incident_source : "DASHBOARD",
   };
 
+  if (!["INCIDENT", "MAINTENANCE"].includes(incident.incident_type)) {
+    throw new Error("Incident type must be either INCIDENT or MAINTENANCE");
+  }
+
   //incident_type == INCIDENT delete endDateTime
   if (incident.incident_type === "INCIDENT") {
     incident.end_date_time = null;

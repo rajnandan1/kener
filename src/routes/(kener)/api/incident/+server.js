@@ -20,7 +20,9 @@ export async function POST({ request }) {
   let incident = {
     title: payload.title,
     start_date_time: payload.start_date_time,
-    incident_source: "API",
+    end_date_time: payload.end_date_time || null,
+    incident_type: payload.incident_type || "INCIDENT",
+    incident_source: "API"
   };
 
   try {
