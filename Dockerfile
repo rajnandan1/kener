@@ -13,14 +13,14 @@ FROM node:${DEBIAN_VERSION_TAG} AS builder-debian
 RUN apt-get update && apt-get install -y \
         build-essential=12.9 \
         python3=3.11.2-1+b1 \
-        sqlite3=3.40.1-2+deb12u1 \
-        libsqlite3-dev=3.40.1-2+deb12u1 \
+        sqlite3 \
+        libsqlite3-dev \
         make=4.3-4.1 \
         node-gyp=9.3.0-2 \
         g++=4:12.2.0-3 \
         tzdata \
-        iputils-ping=3:20221126-1+deb12u1 && \
-    rm -rf /var/lib/apt/lists/*
+        iputils-ping \
+     && rm -rf /var/lib/apt/lists/*
 
 FROM node:${ALPINE_VERSION_TAG} AS builder-alpine
 RUN apk add --no-cache --update \
@@ -76,12 +76,12 @@ RUN npm run build && \
 FROM node:${DEBIAN_VERSION_TAG} AS final-debian
 # TODO: Consider adding `--no-install-recommends`, but will need testing (may further help reduce final build size)
 RUN apt-get update && apt-get install -y \
-        iputils-ping=3:20221126-1+deb12u1 \
-        sqlite3=3.40.1-2+deb12u1 \
+        iputils-ping \
+        sqlite3 \
         tzdata \
     # TODO: Is it ok to change to `curl` here so that we don't have to maintain `wget` version mismatch between Debian architectures? (`curl` is only used for the container healthcheck and because there is an Alpine variant (best!) we probably don't care if the Debian image ends up building bigger due to `curl`.)
-    curl && \
-    rm -rf /var/lib/apt/lists/*
+    curl \
+ && rm -rf /var/lib/apt/lists/*
 
 FROM node:${ALPINE_VERSION_TAG} AS final-alpine
 RUN apk add --no-cache --update \
@@ -117,6 +117,7 @@ COPY --chown=node:node --from=builder /app/migrations ./migrations
 COPY --chown=node:node --from=builder /app/seeds ./seeds
 COPY --chown=node:node --from=builder /app/static ./static
 COPY --chown=node:node --from=builder /app/entrypoint.sh ./entrypoint.sh
+COPY --chown=node:node healthcheck.sh /healthcheck.sh
 COPY --chown=node:node --from=builder /app/knexfile.js ./knexfile.js
 COPY --chown=node:node --from=builder /app/main.js ./main.js
 COPY --chown=node:node --from=builder /app/openapi.json ./openapi.json
@@ -125,7 +126,7 @@ COPY --chown=node:node --from=builder /app/package.json ./package.json
 
 # Set container timezone and make entrypoint script executable
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
-    chmod +x ./entrypoint.sh
+    chmod +x ./entrypoint.sh /healthcheck.sh
   # TODO: To improve security, consider dropping unnecessary capabilities instead of granting image all network capabilities of host. (Maybe `setcap cap_net_raw+p /usr/bin/ping`, etc.) Could also drop all and then grant only the capabilities that are explicitly needed. Some examples are commented out below...
   # setcap cap_net_bind_service=+ep /usr/local/bin/node
   # setcap cap_net_bind_service=+ep /usr/bin/ping
@@ -137,8 +138,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
 EXPOSE $PORT
 
 # Add a healthcheck to the container; `wget` vs. `curl` depending on base image. Using this approach because `wget` does not actually maintain versioning across architectures, so we cannot pin a `wget` version (in above `final-debian` base, `apt-get install`) between differing architectures (e.g. arm64, amd64)
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD sh -c 'if [ -f "/etc/alpine-release" ]; then wget --quiet --spider http://localhost:$HEALTHCHECK_PORT$HEALTHCHECK_PATH || exit 1; else curl --silent --head --fail http://localhost:$HEALTHCHECK_PORT$HEALTHCHECK_PATH || exit 1; fi'
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD sh /healthcheck.sh
 
 # TODO: Revisit letting user define $PUID & $PGID overrides (e.g. `addgroup -g $PGID newgroup && adduser -D -G newgroup -u $PUID node`) as well as potentially ensure no root user exists. (Make sure no processes are running as root, first!)
 # Use a non-root user (recommended for security)
