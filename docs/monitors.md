@@ -59,7 +59,7 @@ The cron is used to define the interval at which the monitor should run. It is a
 
 ## Default Status
 
-Using default status you can set a predefined status for the monitor. The predefined status can be `UP`, `DOWN`, or `DEGRADED`. If the monitor does not have api/dns/ping or if the monitor status is not updated using webbhook, manual incident this will the status of the monitor.
+Using default status you can set a predefined status for the monitor. The predefined status can be `UP`, `DOWN`, or `DEGRADED`. If the monitor does not have api/dns/ping or if the monitor status is not updated using webhook, manual incident this will the status of the monitor.
 
 ## Category Name
 
