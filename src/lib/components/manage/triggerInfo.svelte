@@ -301,7 +301,7 @@
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ action: "testTrigger", data: { trigger_id, status } })
+        body: JSON.stringify({ action: "testTrigger", data: { trigger_id, status: "TRIGGERED" } })
       });
       let resp = await data.json();
       //check status code, if not 200 then show error
@@ -449,12 +449,12 @@
           {trigger.name}
         </Card.Title>
 
-        <div class="absolute right-3 top-3 flex gap-x-2">
+        <div class="flex gap-x-2">
           <Button
             variant="secondary"
             class="h-8   p-2 "
             disabled={trigger.testLoaders == "loading"}
-            on:click={() => testTrigger(i, trigger.id, "TRIGGERED")}
+            on:click={() => testTrigger(i, trigger.id)}
           >
             {#if trigger.testLoaders == "loading"}
               <Loader class="mr-1 inline h-3 w-3 animate-spin" />
