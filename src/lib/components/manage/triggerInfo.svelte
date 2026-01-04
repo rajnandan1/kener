@@ -263,7 +263,37 @@
     showAddTrigger = true;
   }
 
-  async function testTrigger(i, trigger_id, status) {
+  async function deleteTrigger(i, trigger_id) {
+    triggers[i].deleteLoaders = "loading";
+    try {
+      let data = await fetch(base + "/manage/app/api/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ action: "deleteTrigger", data: { id: trigger_id } })
+      });
+      let resp = await data.json();
+
+      if (resp.error) {
+        triggers[i].deleteLoaders = "error";
+        alert(resp.error);
+      } else {
+        triggers[i].deleteLoaders = "success";
+        setTimeout(async () => {
+          await loadData();
+        }, 1000);
+      }
+    } catch (error) {
+      alert("Error: " + error);
+    } finally {
+      setTimeout(() => {
+        triggers[i].deleteLoaders = "idle";
+      }, 3000);
+    }
+  }
+
+  async function testTrigger(i, trigger_id) {
     triggers[i].testLoaders = "loading";
     try {
       let data = await fetch(base + "/manage/app/api/", {
@@ -304,6 +334,7 @@
       triggers = await apiResp.json();
       triggers = triggers.map((t) => {
         t.testLoaders = "idle";
+        t.deleteLoaders = "idle";
         return t;
       });
     } catch (error) {
@@ -435,6 +466,23 @@
               <X class="mr-1 inline h-3 w-3 text-red-500 " />
             {/if}
             <span class="h-4 text-xs font-medium"> Test Trigger </span>
+          </Button>
+          <Button
+            variant="destructive"
+            class="h-8   p-2 "
+            disabled={trigger.deleteLoaders == "loading"}
+            on:click={() => deleteTrigger(i, trigger.id)}
+          >
+            {#if trigger.deleteLoaders == "loading"}
+              <Loader class="mr-1 inline h-3 w-3 animate-spin" />
+            {/if}
+            {#if trigger.deleteLoaders == "success"}
+              <Check class="mr-1 inline h-3 w-3 text-green-500 " />
+            {/if}
+            {#if trigger.deleteLoaders == "error"}
+              <X class="mr-1 inline h-3 w-3 text-red-500 " />
+            {/if}
+            <span class="h-4 text-xs font-medium"> Delete Trigger </span>
           </Button>
           {#if $page.data.user.role != "member"}
             <Button variant="secondary" class=" h-8 w-8 p-2" href={"#" + trigger.id}>

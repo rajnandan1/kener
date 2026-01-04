@@ -317,6 +317,18 @@ export const CreateUpdateTrigger = async (alert) => {
   }
 };
 
+export const DeleteTrigger = async (alert) => {
+  let alertData = { ...alert };
+
+  if (!alertData.id) {
+    throw new Error("Invalid request, this trigger may no longer exist");
+  }
+
+  if (alertData.id) {
+    return await db.deleteTrigger(alertData);
+  }
+};
+
 export const GetAllTriggers = async (data) => {
   return await db.getTriggers(data);
 };

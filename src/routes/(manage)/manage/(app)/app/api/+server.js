@@ -163,6 +163,9 @@ export async function POST({ request, cookies }) {
     } else if (action == "createUpdateTrigger") {
       AdminEditorCan(userDB.role);
       resp = await CreateUpdateTrigger(data);
+    } else if (action == "deleteTrigger") {
+      AdminEditorCan(userDB.role);
+      resp = await DeleteTrigger(data);
     } else if (action == "getTriggers") {
       resp = await GetAllTriggers(data);
     } else if (action == "updateMonitorTriggers") {
