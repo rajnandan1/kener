@@ -12,7 +12,6 @@
   import { base } from "$app/paths";
   import * as Select from "$lib/components/ui/select";
   import * as RadioGroup from "$lib/components/ui/radio-group";
-  import { createEventDispatcher } from "svelte";
   import { onMount } from "svelte";
   import { IsValidURL } from "$lib/clientTools.js";
   import { DiscordJSONTemplate, WebhookJSONTemplate, SlackJSONTemplate } from "$lib/anywhere.js";
