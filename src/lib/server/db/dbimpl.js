@@ -156,7 +156,7 @@ class DbImpl {
         this.knex.raw("COUNT(*) as total_entries"),
         this.knex.raw("AVG(latency) as latency"),
         this.knex.raw(`
-				CASE 
+				CASE
 				WHEN SUM(CASE WHEN status = 'DOWN' THEN 1 ELSE 0 END) > 0 THEN 'DOWN'
 				WHEN SUM(CASE WHEN status = 'DEGRADED' THEN 1 ELSE 0 END) > 0 THEN 'DEGRADED'
 				ELSE 'UP'

@@ -402,9 +402,9 @@
 </div>
 
 <div class="mt-4">
-  {#each triggers as trigger, i}
+  {#each triggers as trigger, i (trigger.id)}
     <Card.Root class="mb-4">
-      <Card.Header class="relative">
+      <Card.Header class="relative flex flex-row items-center justify-between space-y-0">
         <Card.Title>
           {#if trigger.trigger_type == "webhook"}
             <img src={base + "/webhooks.svg"} alt={trigger.trigger_type} class="mr-2 inline-block h-6 w-6" />
