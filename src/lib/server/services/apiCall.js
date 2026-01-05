@@ -69,11 +69,23 @@ class ApiCall {
       headers: axiosHeaders,
       timeout: timeout,
       transformResponse: (r) => r,
+      maxRedirects: 5,
+      validateStatus: () => true,
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
     };
 
-    if (!!this.monitor.type_data.allowSelfSignedCert) {
-      options.httpsAgent = new https.Agent({ rejectUnauthorized: false });
-    }
+    // Always configure HTTPS agent for better connection handling
+    const httpsAgentOptions = {
+      keepAlive: true,
+      keepAliveMsecs: 30000,
+      maxSockets: 50,
+      maxFreeSockets: 10,
+      timeout: timeout,
+      rejectUnauthorized: !this.monitor.type_data.allowSelfSignedCert,
+    };
+
+    options.httpsAgent = new https.Agent(httpsAgentOptions);
 
     if (!!body) {
       options.data = body;
@@ -89,16 +101,21 @@ class ApiCall {
       resp = data.data;
     } catch (err) {
       console.log(`Error in apiCall ${tag}`, err.message);
-      if (err.message.startsWith("timeout of") && err.message.endsWith("exceeded")) {
+      
+      // Better timeout detection
+      if (err.code === 'ECONNABORTED' || 
+          (err.message && err.message.includes('timeout'))) {
         timeoutError = true;
+        console.log(`Retrying api call for ${tag} at ${Math.floor(Date.now()/1000)} due to timeout`);
       }
+      
       if (err.response !== undefined && err.response.status !== undefined) {
         statusCode = err.response.status;
       }
       if (err.response !== undefined && err.response.data !== undefined) {
         resp = err.response.data;
       } else {
-        resp = JSON.stringify(resp);
+        resp = err.message || "";
       }
     } finally {
       const end = Date.now();
