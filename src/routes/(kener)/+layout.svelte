@@ -3,7 +3,7 @@
   import "../../kener.css";
   import "../../theme.css";
   import Nav from "$lib/components/nav.svelte";
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import { Input } from "$lib/components/ui/input";
   import { base } from "$app/paths";
   import { Button } from "$lib/components/ui/button";
@@ -11,12 +11,15 @@
   import Moon from "lucide-svelte/icons/moon";
   import Languages from "lucide-svelte/icons/languages";
   import Globe from "lucide-svelte/icons/globe";
+  import Loader from "lucide-svelte/icons/loader";
+  import RefreshCw from "lucide-svelte/icons/refresh-cw";
   import * as Popover from "$lib/components/ui/popover";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
   import { analyticsEvent } from "$lib/boringOne";
   import { setMode, mode, ModeWatcher } from "mode-watcher";
   import { l } from "$lib/i18n/client";
-
+  import { refreshStore } from "$lib/stores/refreshStore.js";
+  
   export let data;
   let defaultLocaleKey = data.selectedLang;
   let allTimezones = Intl.supportedValuesOf("timeZone");
@@ -67,7 +70,77 @@
   }
 
   let myTimezone = data.localTz;
+  
+  // Global refresh configuration
+  let refreshInterval = 60;
+  let refreshIntervalId = null;
+
+  // Load refresh settings from localStorage
+  function loadRefreshSettings() {
+    if (typeof window === 'undefined') return;
+    
+    const savedInterval = localStorage.getItem('kener-global-refresh-interval');
+    if (savedInterval) {
+      refreshInterval = parseInt(savedInterval, 10);
+      refreshStore.setInterval(refreshInterval);
+    }
+    
+    const savedEnabled = localStorage.getItem('kener-global-refresh-enabled');
+    if (savedEnabled === 'true') {
+      refreshStore.enable();
+      startGlobalRefresh();
+    }
+  }
+
+  // Start global refresh
+  function startGlobalRefresh() {
+    if (refreshIntervalId) {
+      clearInterval(refreshIntervalId);
+    }
+    refreshIntervalId = setInterval(() => {
+      refreshStore.updateLastRefresh();
+    }, refreshInterval * 1000);
+  }
+
+  // Stop global refresh
+  function stopGlobalRefresh() {
+    if (refreshIntervalId) {
+      clearInterval(refreshIntervalId);
+      refreshIntervalId = null;
+    }
+  }
+
+  // Toggle global refresh
+  function toggleGlobalRefresh() {
+    refreshStore.toggle();
+    
+    if ($refreshStore.enabled) {
+      localStorage.setItem('kener-global-refresh-enabled', 'true');
+      startGlobalRefresh();
+      refreshStore.updateLastRefresh(); // Immediate refresh
+    } else {
+      localStorage.setItem('kener-global-refresh-enabled', 'false');
+      stopGlobalRefresh();
+    }
+  }
+
+  // Save interval to localStorage and update store
+  $: if (typeof window !== 'undefined' && refreshInterval) {
+    localStorage.setItem('kener-global-refresh-interval', String(refreshInterval));
+    refreshStore.setInterval(refreshInterval);
+  }
+
+  // Restart interval if changed while active
+  $: if ($refreshStore.enabled && refreshIntervalId && refreshInterval) {
+    startGlobalRefresh();
+  }
+
+  onDestroy(() => {
+    stopGlobalRefresh();
+  });
+
   onMount(async () => {
+    loadRefreshSettings();
     myTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     if (data.localTz === "UTC") {
       if (data.isBot === false) {
@@ -87,6 +160,7 @@
   if (!!data.site.favicon && !data.site.favicon.startsWith("http")) data.site.favicon = `${base}${data.site.favicon}`;
 
   let kenerTheme = data.site.kenerTheme || "default";
+
 </script>
 
 <svelte:head>
@@ -124,7 +198,42 @@
       {@html data.site.footerHTML}
     </footer>
   {/if}
-  <div class="fixed bottom-4 right-4 z-20 flex flex-col rounded-md bg-background">
+    <div class="fixed bottom-4 right-4 z-20 flex flex-col rounded-md bg-background">
+    <div>
+      <Popover.Root>
+        <Popover.Trigger>
+          <Button variant="ghost" size="icon" class="flex">
+            <RefreshCw class="h-[1.2rem] w-[1.2rem] {$refreshStore.enabled ? 'animate-spin' : ''}" />
+          </Button>
+        </Popover.Trigger>
+        <Popover.Content class="w-60">
+          <div class="grid gap-4">
+            <div class="space-y-2">
+              <h4 class="font-medium leading-none">{l(data.lang, 'Auto-Refresh')}</h4>
+              <p class="text-sm text-muted-foreground">
+                {l(data.lang, 'Configure automatic refresh for all monitors')}
+              </p>
+            </div>
+            <div class="grid gap-2">
+              <div class="grid grid-cols-3 items-center gap-4">
+                <label for="global-interval" class="text-xs">{l(data.lang, 'Interval')}</label>
+                <Input 
+                  id="global-interval" 
+                  type="number" 
+                  bind:value={refreshInterval} 
+                  min="5"
+                  class="col-span-2 h-8" 
+                  placeholder="{l(data.lang, 'Seconds')}" 
+                />
+              </div>
+              <Button on:click={toggleGlobalRefresh} size="sm">
+                {$refreshStore.enabled ? l(data.lang, 'Disable') : l(data.lang, 'Enable')}
+              </Button>
+            </div>
+          </div>
+        </Popover.Content>
+      </Popover.Root>
+    </div>
     {#if !!data.site.tzToggle && data.site.tzToggle === "YES"}
       <div>
         <Popover.Root>
@@ -158,7 +267,7 @@
                     {#if tz.toLowerCase().includes(searchTzValue.toLowerCase())}
                       <div class="text-xs font-semibold">
                         <Button
-                          variant={tz === data.localTz ? "primary" : "ghost"}
+                          variant={tz === data.localTz ? "secondary" : "ghost"}
                           class="h-8 w-full justify-start rounded-none text-xs {tz === data.localTz
                             ? 'text-background'
                             : 'text-muted-foreground'}"
