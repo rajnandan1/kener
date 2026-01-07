@@ -403,12 +403,12 @@
                 <LoaderBoxes />
               {:else}
                 {#each Object.entries(_0Day) as [ts, bar]}
-                  <div data-index={bar.index} class="bg-{bar.cssClass} today-sq m-[1px] h-[10px] w-[10px]"></div>
-                  <div class="hiddenx relative">
-                    <div
-                      data-index={ts.index}
-                      class="message rounded border bg-black p-2 text-xs font-semibold text-white"
-                    >
+                  <div
+                    data-index={bar.index}
+                    class="bg-{bar.cssClass} today-sq h-[12px] w-[12px] border border-background"
+                  ></div>
+                  <div class="hiddenx relative left-2 top-2">
+                    <div data-index={ts} class="message rounded border bg-black p-2 text-xs font-semibold text-white">
                       <p>
                         <span class="text-{bar.cssClass}"> ● </span>
 
