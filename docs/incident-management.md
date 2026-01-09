@@ -77,4 +77,5 @@ To add monitors to the incident, you need to add the monitor tag to the incident
 
 ## Maintenance
 
-You can also create a maintenance incident. This is similar to an incident but is used to notify users about maintenance activities. Both start and end date and time are required for maintenance incidents.
+You can also create a maintenance incident. This is similar to an incident but is used to notify users about maintenance activities. Both start and end date and time are required for maintenance incidents.  
+You can active reminders for this maintenance incident. If you do, make sure you have enabled `Send Maintenance Reminders` in Subscription page.

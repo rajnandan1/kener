@@ -663,6 +663,7 @@ class DbImpl {
       updated_at: this.knex.fn.now(),
       incident_type: data.incident_type,
       incident_source: data.incident_source,
+      reminder_time: data.reminder_time,
     };
 
     // PostgreSQL supports returning clause
@@ -765,6 +766,7 @@ class DbImpl {
       status: data.status,
       state: data.state,
       updated_at: this.knex.fn.now(),
+      reminder_time: data.reminder_time,
     });
   }
 
@@ -797,6 +799,8 @@ class DbImpl {
         "status",
         "state",
         "incident_type",
+        "reminder_time",
+        "reminders_sent_at",
       )
       .where("id", id)
       .first();
@@ -1271,6 +1275,21 @@ class DbImpl {
 
   async deleteSubscriptionTriggerById(id) {
     return await this.knex("subscription_triggers").where({ id }).del();
+  }
+
+  async getActiveMaintenanceWithReminders() {
+    return await this.knex("incidents")
+      .where("incident_type", "MAINTENANCE")
+      .andWhere("status", "OPEN")
+      .andWhere("state", "RESOLVED")
+      .andWhereRaw("reminder_time IS NOT NULL")
+      .orderBy("start_date_time", "desc");
+  }
+
+  async updateMaintenanceRemindersSentAt(id, sent_at) {
+    return await this.knex("incidents").where({ id }).update({
+      reminders_sent_at: sent_at,
+    });
   }
 }
 
