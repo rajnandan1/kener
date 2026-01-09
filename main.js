@@ -41,7 +41,7 @@ process.env.UPLOAD_PATH = "./uploads";
 app.use(base + "/uploads", express.static("uploads"));
 
 try {
-	const openapiJSON = fs.readFileSync("./openapi.json", "utf-8");
+	const openapiJSON = JSON.parse(fs.readFileSync("./openapi.json", "utf-8"));
 	app.use(
 		"/api-reference",
 		apiReference({
