@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { GetMinuteStartNowTimestampUTC, GetDbType } from "../tool.js";
-import { MANUAL, SIGNAL } from "../constants.js";
 import Knex from "knex";
+import { MANUAL, SIGNAL } from "../constants.js";
+import { GetDbType, GetMinuteStartNowTimestampUTC } from "../tool.js";
 
 class DbImpl {
   knex;
@@ -156,7 +156,7 @@ class DbImpl {
         this.knex.raw("COUNT(*) as total_entries"),
         this.knex.raw("AVG(latency) as latency"),
         this.knex.raw(`
-				CASE 
+				CASE
 				WHEN SUM(CASE WHEN status = 'DOWN' THEN 1 ELSE 0 END) > 0 THEN 'DOWN'
 				WHEN SUM(CASE WHEN status = 'DEGRADED' THEN 1 ELSE 0 END) > 0 THEN 'DEGRADED'
 				ELSE 'UP'
@@ -531,6 +531,11 @@ class DbImpl {
       trigger_meta: data.trigger_meta,
       updated_at: this.knex.fn.now(),
     });
+  }
+
+  //delete alert
+  async deleteTrigger(data) {
+    return await this.knex("triggers").where({ id: data.id }).delete();
   }
 
   //get all alerts with given status
