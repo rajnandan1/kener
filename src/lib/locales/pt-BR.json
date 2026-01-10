@@ -13,6 +13,8 @@
   "All Systems are Down": "Todos os Sistemas estão Indisponíveis",
   "All Systems are Operational": "Todos os Sistemas estão Operacionais",
   "All Systems are in Maintenance": "Todos os Sistemas estão em Manutenção",
+  "Auto-Refresh": "Atualização Automática",
+  "auto-refresh-description": "Ative para atualizar os dados da página periodicamente.",
   "Back": "Voltar",
   "Badge Copied": "Emblema Copiado",
   "Badge": "Emblema",

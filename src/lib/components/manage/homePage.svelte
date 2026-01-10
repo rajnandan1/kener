@@ -1,4 +1,5 @@
 <script>
+  import { mode } from "mode-watcher";
   import * as Card from "$lib/components/ui/card";
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
@@ -22,7 +23,7 @@
   import CodeMirror from "svelte-codemirror-editor";
   import { html } from "@codemirror/lang-html";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
-  import { mode } from "mode-watcher";
+  import { onDestroy } from 'svelte';
 
   export let data;
 
@@ -620,9 +621,9 @@
             <Select.Content>
               <Select.Group>
                 <Select.Label>Favicon Type</Select.Label>
-                <Select.Item value="EXPAND_FIRST" label="EXPAND FIRST" class="text-sm font-medium"
-                  >EXPAND FIRST</Select.Item
-                >
+                <Select.Item value="EXPAND_FIRST" label="EXPAND FIRST" class="text-sm font-medium">
+                  EXPAND FIRST
+                </Select.Item>
                 <Select.Item value="COLLAPSED" label="COLLAPSED" class="text-sm font-medium">COLLAPSED</Select.Item>
                 <Select.Item value="EXPANDED" label="EXPANDED" class="text-sm font-medium">EXPANDED</Select.Item>
               </Select.Group>

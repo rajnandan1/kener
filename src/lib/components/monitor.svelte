@@ -18,14 +18,15 @@
   import ChevronRight from "lucide-svelte/icons/chevron-right";
   import { buttonVariants } from "$lib/components/ui/button";
   import { createEventDispatcher } from "svelte";
-  import { afterUpdate } from "svelte";
+  import { afterUpdate, onDestroy } from "svelte";
+  import { refreshStore } from "$lib/stores/refreshStore.js";
   import axios from "axios";
   import { l, summaryTime, f } from "$lib/i18n/client";
-  import { hoverAction, clickOutsideAction, slide } from "svelte-legos";
+    import { hoverAction, clickOutsideAction, slide } from "svelte-legos";
   import LoaderBoxes from "$lib/components/loaderbox.svelte";
   import NumberFlow from "@number-flow/svelte";
   import Incident from "$lib/components/IncidentNew.svelte";
-
+    
   const dispatch = createEventDispatcher();
 
   export let monitor;
@@ -68,7 +69,9 @@
   }
 
   function getToday(startTs, incidentIDs) {
-    let endTs = Math.min(startTs + 86400, monitor.pageData.maxDateTodayTimestamp);
+    // Use current timestamp for endTs to get the most up-to-date data
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    let endTs = Math.min(startTs + 86400, currentTimestamp);
 
     axios
       .post(`${base}/api/today`, {
@@ -108,23 +111,28 @@
     let ret = [];
     for (let i = 0; i < rollers.length; i++) {
       let roller = rollers[i];
+      let item = {
+        text: '',
+        startTs: 0,
+        endTs: 0,
+        value: undefined,
+        loading: false
+      };
+
       if (roller == 1) {
-        ret.push({
-          text: `${l(lang, "Today")}`,
-          startTs: monitor.pageData.startOfTheDay,
-          endTs: monitor.pageData.maxDateTodayTimestamp
-        });
+        item.text = `${l(lang, "Today")}`;
+        item.startTs = monitor.pageData.startOfTheDay;
+        item.endTs = monitor.pageData.maxDateTodayTimestamp;
       } else {
-        ret.push({
-          text: `${roller} ${l(lang, "Days")}`,
-          startTs: monitor.pageData.startOfTheDay - 86400 * (roller - 1),
-          endTs: monitor.pageData.maxDateTodayTimestamp
-        });
+        item.text = `${roller} ${l(lang, "Days")}`;
+        item.startTs = monitor.pageData.startOfTheDay - 86400 * (roller - 1);
+        item.endTs = monitor.pageData.maxDateTodayTimestamp;
       }
       //if last index
       if (i == 0) {
-        ret[i].value = uptime90Day;
+        item.value = uptime90Day;
       }
+      ret.push(item);
     }
 
     return ret;
@@ -161,7 +169,7 @@
     for (const key in _90Day) {
       if (Object.prototype.hasOwnProperty.call(_90Day, key)) {
         const element = _90Day[key];
-        if (key >= uptimesRollers[rolledAt].startTs) {
+        if (parseInt(key) >= uptimesRollers[rolledAt].startTs) {
           _90Day[key].border = true;
         } else {
           _90Day[key].border = false;
@@ -170,6 +178,9 @@
     }
   }
 
+
+  
+  
   onMount(async () => {
     scrollToRight();
     loadIncidents();
@@ -188,26 +199,58 @@
   let dateFetchedFor = "";
   let dayUptime = "NA";
   let loadingDayData = false;
+  let lastRefreshTime = null;
+
+  // Refresh monitor data when global refresh is triggered
+  async function refreshMonitorData() {
+    lastRefreshTime = Date.now();
+    
+    // Reload incidents
+    loadIncidents();
+    
+    // If daily data modal is open, refresh it too
+    if (showDailyDataModal && dateFetchedFor) {
+      const currentBar = Object.values(_90Day).find(bar => 
+        f(new Date(bar.timestamp * 1000), "EEEE, MMMM do, yyyy", selectedLang, $page.data.localTz) === dateFetchedFor
+      );
+      
+      if (currentBar) {
+        const incidentIDs = incidents[currentBar.timestamp]?.ids || [];
+        getToday(currentBar.timestamp, incidentIDs);
+      }
+    }
+  }
+
+  // React to global refresh store changes
+  $: if ($refreshStore.lastRefresh && $refreshStore.lastRefresh !== lastRefreshTime) {
+    refreshMonitorData();
+  }
 
   function dailyDataGetter(e, bar, incidentObj) {
     if (embed) {
       return;
     }
 
-    let incidentIDs = incidentObj?.ids || [];
-    dayUptime = "NA";
-    dateFetchedFor = f(new Date(bar.timestamp * 1000), "EEEE, MMMM do, yyyy", selectedLang, $page.data.localTz);
-    showDailyDataModal = true;
+    if (showDailyDataModal && dateFetchedFor === f(new Date(bar.timestamp * 1000), "EEEE, MMMM do, yyyy", selectedLang, $page.data.localTz)) {
+      showDailyDataModal = false;
+      return;
+    }
 
-    loadingDayData = true;
+    // Limpa os dados antigos e mostra o loader
+    _0Day = {};
     dayIncidentsFull = [];
+    loadingDayData = true;
+    showDailyDataModal = true;
+    dateFetchedFor = f(new Date(bar.timestamp * 1000), "EEEE, MMMM do, yyyy", selectedLang, $page.data.localTz);
+
     analyticsEvent("monitor_day_data", {
       tag: monitor.tag,
       data_date: dateFetchedFor
     });
-    setTimeout(() => {
-      getToday(bar.timestamp, incidentIDs);
-    }, 50);
+
+    // Busca os novos dados
+    const incidentIDs = incidentObj?.ids || [];
+    getToday(bar.timestamp, incidentIDs);
   }
 </script>
 
@@ -288,10 +331,10 @@
           {#if rollerLoading}
             <Loader class=" mt-0.5 inline h-3.5 w-3.5 animate-spin text-muted-foreground" />
           {/if}
-          {#if !isNaN(uptimesRollers[rolledAt].value)}
+          {#if uptimesRollers[rolledAt]?.value !== undefined && uptimesRollers[rolledAt]?.value !== '-'}
             <NumberFlow
               class="border-r pr-2 text-xs font-semibold"
-              value={uptimesRollers[rolledAt].value}
+              value={parseFloat(uptimesRollers[rolledAt].value)}
               format={{
                 notation: "standard",
                 minimumFractionDigits: 4,
@@ -393,7 +436,7 @@
                 </div>
                 {#each dayIncidentsFull as incident, index}
                   <div class="col-span-1">
-                    <Incident {incident} {lang} index="incident-{index}" />
+                    <Incident incident={incident} index="incident-{index}" />
                   </div>
                 {/each}
               </div>
