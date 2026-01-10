@@ -331,10 +331,10 @@
           {#if rollerLoading}
             <Loader class=" mt-0.5 inline h-3.5 w-3.5 animate-spin text-muted-foreground" />
           {/if}
-          {#if typeof uptimesRollers[rolledAt]?.value === 'number'}
+          {#if uptimesRollers[rolledAt]?.value !== undefined && uptimesRollers[rolledAt]?.value !== '-'}
             <NumberFlow
               class="border-r pr-2 text-xs font-semibold"
-              value={uptimesRollers[rolledAt].value}
+              value={parseFloat(uptimesRollers[rolledAt].value)}
               format={{
                 notation: "standard",
                 minimumFractionDigits: 4,
