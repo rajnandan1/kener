@@ -377,15 +377,6 @@ export interface IncidentFilter {
   incident_source?: string;
 }
 
-export interface MonitorFilter {
-  status?: string;
-  category_name?: string;
-  id?: number;
-  monitor_type?: string;
-  tag?: string;
-  tags?: string[];
-}
-
 export interface TriggerFilter {
   status?: string;
 }

@@ -11,7 +11,6 @@ import type {
   MonitoringDataInsert,
   MonitorAlertInsert,
   IncidentFilter,
-  MonitorFilter,
   TriggerFilter,
   SubscriberRecordInsert,
   UserRecordInsert,
@@ -21,12 +20,14 @@ import type {
   MonitorAlert,
   MonitoringData,
 } from "../types/db.js";
+import type { MonitorFilter } from "../db/repositories/base.js";
 import Queue from "queue";
 import db from "../db/db.js";
 import { DEGRADED, DOWN, NO_DATA, SIGNAL, UP, REALTIME } from "../constants.js";
 import type { PaginationInput } from "../../types/common.js";
 import type { DayWiseStatus, NumberWithChange } from "../../types/monitor.js";
 import GC from "../../global-constants.js";
+import { GetLastMonitoringValue } from "../cache/setGet.js";
 
 interface GroupUpdateData {
   monitor_tag: string;
@@ -367,8 +368,20 @@ export const GetLatestMonitoringData = async (monitor_tag: string): Promise<Moni
 
   return latestData;
 };
-export const GetLatestStatusActiveAll = async (monitor_tags: string[]): Promise<{ status: string }> => {
-  let latestData = await db.getLatestMonitoringDataAllActive(monitor_tags);
+export const GetLatestStatusActiveAll = async (): Promise<{ status: string }> => {
+  //get all the active not hidden monitor tags
+  const monitors = await db.getMonitors({ status: "ACTIVE", is_hidden: "NO" });
+  const monitor_tags = monitors.map((m) => m.tag);
+
+  const latestData: MonitoringData[] = [];
+  for (let i = 0; i < monitor_tags.length; i++) {
+    const tag = monitor_tags[i];
+    const lastObj = await GetLastMonitoringValue(tag, () => GetLatestMonitoringData(tag));
+    if (lastObj) {
+      latestData.push(lastObj);
+    }
+  }
+
   let status = NO_DATA;
   for (let i = 0; i < latestData.length; i++) {
     //if any status is down then status = down, if any is degraded then status = degraded, down > degraded > up

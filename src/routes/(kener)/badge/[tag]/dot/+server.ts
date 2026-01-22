@@ -2,31 +2,23 @@ import { GetMonitors, GetLatestMonitoringData, GetLatestStatusActiveAll } from "
 import StatusColor, { type StatusColors } from "$lib/color.js";
 import { ErrorSvg } from "$lib/anywhere.js";
 import GC, { type StatusType } from "$lib/global-constants.js";
+import { GetLastMonitoringValue } from "$lib/server/cache/setGet.js";
 
 export async function GET({ params, setHeaders, url }) {
-  let monitors = await GetMonitors({ status: "ACTIVE" });
-  let lastObj;
-  let activeTags = monitors.map((monitor) => monitor.tag);
+  let lastObj: { status: string };
   const { tag } = params;
   if (tag == "_") {
-    lastObj = await GetLatestStatusActiveAll(activeTags);
+    lastObj = await GetLatestStatusActiveAll();
   } else {
-    if (monitors.length === 0) {
+    const ms = await GetMonitors({ tag: params.tag, status: "ACTIVE", is_hidden: "NO" });
+    if (ms.length === 0) {
       return new Response(ErrorSvg, {
         headers: {
           "Content-Type": "image/svg+xml",
         },
       });
     }
-    let m = monitors.find((monitor) => monitor.tag === tag);
-    if (!m) {
-      return new Response(ErrorSvg, {
-        headers: {
-          "Content-Type": "image/svg+xml",
-        },
-      });
-    }
-    lastObj = await GetLatestMonitoringData(tag);
+    lastObj = (await GetLastMonitoringValue(tag, () => GetLatestMonitoringData(tag))) as { status: string };
   }
   //read query params
   const query = url.searchParams;

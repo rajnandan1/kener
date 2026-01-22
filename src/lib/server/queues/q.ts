@@ -1,10 +1,18 @@
 import { redisIOConnection } from "../redisConnector.js";
-import { Queue, Worker, Job, type QueueOptions, type WorkerOptions, type Processor } from "bullmq";
+import {
+  Queue,
+  Worker,
+  Job,
+  type QueueOptions,
+  type WorkerOptions,
+  type Processor,
+  type ConnectionOptions,
+} from "bullmq";
 
 //create and return queue instance given name and options
 export const createQueue = (name: string, options?: Omit<QueueOptions, "connection" | "prefix">) => {
   let opts: QueueOptions = {
-    connection: redisIOConnection(),
+    connection: redisIOConnection() as ConnectionOptions,
     ...options,
   };
   opts.prefix = "kener"; //set prefix to name
@@ -27,7 +35,7 @@ export const createWorker = <T = unknown, R = unknown>(
   options?: Omit<WorkerOptions, "connection" | "prefix">,
 ) => {
   const opts: WorkerOptions = {
-    connection: redisIOConnection(),
+    connection: redisIOConnection() as ConnectionOptions,
     prefix: "kener",
     concurrency: 5,
     ...options,

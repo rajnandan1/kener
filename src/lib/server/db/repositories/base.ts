@@ -7,6 +7,7 @@ export interface MonitorFilter {
   id?: number;
   monitor_type?: string;
   tag?: string;
+  is_hidden?: string;
   tags?: string[];
 }
 

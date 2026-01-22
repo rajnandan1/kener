@@ -2,7 +2,7 @@ import type { MonitoringResult } from "../types/monitor.js";
 import { Queue, Worker, Job, type JobsOptions } from "bullmq";
 import q from "./q.js";
 import { InsertMonitoringData } from "../controllers/controller.js";
-
+import { SetLastMonitoringValue } from "../cache/setGet.js";
 let monitorResponseQueue: Queue | null = null;
 let worker: Worker | null = null;
 const queueName = "monitorResponseQueue";
@@ -28,13 +28,26 @@ const addWorker = () => {
 
   worker = q.createWorker(getQueue(), async (job: Job): Promise<number[]> => {
     const { monitorTag, ts, status, latency, type } = job.data as JobData;
-    return await InsertMonitoringData({
+
+    const dbRes = await InsertMonitoringData({
       monitor_tag: monitorTag,
       timestamp: ts,
       status: status,
       latency: latency,
       type: type,
     });
+
+    if (dbRes.length > 0) {
+      await SetLastMonitoringValue(monitorTag, {
+        monitor_tag: monitorTag,
+        timestamp: ts,
+        status: status,
+        latency: latency,
+        type: type,
+      });
+    }
+
+    return dbRes;
   });
 
   worker.on("completed", (job: Job, returnvalue: any) => {

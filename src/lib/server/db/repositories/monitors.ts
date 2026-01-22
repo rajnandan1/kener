@@ -74,6 +74,9 @@ export class MonitorsRepository extends BaseRepository {
     if (!!data.status) {
       query = query.andWhere("status", data.status);
     }
+    if (!!data.is_hidden) {
+      query = query.andWhere("is_hidden", data.is_hidden);
+    }
     if (data.category_name && data.category_name !== "All Categories") {
       query = query.andWhere("category_name", data.category_name);
     }

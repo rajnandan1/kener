@@ -8,6 +8,7 @@ import StatusColor, { type StatusColors } from "$lib/color.js";
 import { makeBadge } from "badge-maker";
 import { ErrorSvg } from "$lib/anywhere.js";
 import GC, { getBadgeStyle, type StatusType } from "$lib/global-constants.js";
+import { GetLastMonitoringValue } from "$lib/server/cache/setGet.js";
 
 export async function GET({ params, setHeaders, url }) {
   let lastObj;
@@ -15,31 +16,23 @@ export async function GET({ params, setHeaders, url }) {
   let tag: string;
 
   const siteName = await GetSiteDataByKey("siteName");
-  let monitors = await GetMonitors({ status: "ACTIVE" });
-  let activeTags = monitors.map((monitor) => monitor.tag);
   if (params.tag == "_") {
-    lastObj = await GetLatestStatusActiveAll(activeTags);
+    lastObj = await GetLatestStatusActiveAll();
     name = String(siteName || "");
     tag = "";
   } else {
-    if (monitors.length === 0) {
+    const ms = await GetMonitors({ tag: params.tag, status: "ACTIVE", is_hidden: "NO" });
+    if (ms.length === 0) {
       return new Response(ErrorSvg, {
         headers: {
           "Content-Type": "image/svg+xml",
         },
       });
     }
-    let m = monitors.find((monitor) => monitor.tag === params.tag);
-    if (!m) {
-      return new Response(ErrorSvg, {
-        headers: {
-          "Content-Type": "image/svg+xml",
-        },
-      });
-    }
+    const m = ms[0];
     tag = m.tag;
     name = m.name;
-    lastObj = await GetLatestMonitoringData(tag);
+    lastObj = (await GetLastMonitoringValue(tag, () => GetLatestMonitoringData(tag))) as { status: string };
   }
 
   //read query params

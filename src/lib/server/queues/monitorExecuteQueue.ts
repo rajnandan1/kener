@@ -6,8 +6,8 @@ import type { MonitorRecordTyped } from "../types/db.js";
 import Service, { type MonitorWithType } from "../services/service.js";
 import { GetMinuteStartNowTimestampUTC } from "../tool.js";
 import db from "../db/db.js";
-import { UP, DOWN, DEGRADED, TIMEOUT, MANUAL, DEFAULT_STATUS } from "../constants.js";
 import monitorResponseQueue from "./monitorResponseQueue";
+import GC from "../../global-constants.js";
 
 let monitorExecuteQueue: Queue | null = null;
 let worker: Worker | null = null;
@@ -47,16 +47,16 @@ async function manualIncident(monitor: MonitorRecordTyped): Promise<{ [timestamp
   for (let i = 0; i < impactArr.length; i++) {
     const element = impactArr[i];
 
-    if (element.monitor_impact === "MAINTENANCE") {
-      impact = "MAINTENANCE";
+    if (element.monitor_impact === GC.MAINTENANCE) {
+      impact = GC.MAINTENANCE;
       break;
     }
-    if (element.monitor_impact === "DOWN") {
-      impact = "DOWN";
+    if (element.monitor_impact === GC.DOWN) {
+      impact = GC.DOWN;
       break;
     }
-    if (element.monitor_impact === "DEGRADED") {
-      impact = "DEGRADED";
+    if (element.monitor_impact === GC.DEGRADED) {
+      impact = GC.DEGRADED;
     }
   }
 
@@ -68,7 +68,7 @@ async function manualIncident(monitor: MonitorRecordTyped): Promise<{ [timestamp
     [startTs]: {
       status: impact,
       latency: 0,
-      type: MANUAL,
+      type: GC.MANUAL,
     },
   };
 
@@ -82,7 +82,7 @@ const addWorker = () => {
     const serviceClient = new Service(monitor as MonitorWithType);
 
     const exeResult = await serviceClient.execute(ts);
-    if (exeResult && exeResult.type === TIMEOUT && monitor.monitor_type === "API") {
+    if (exeResult && exeResult.type === GC.TIMEOUT && monitor.monitor_type === "API") {
       let countTimeoutRetries = executeOptions?.countTimeoutRetries || 0;
       let maxTimeoutRetries = executeOptions?.maxTimeoutRetries || 3;
       if (countTimeoutRetries < maxTimeoutRetries) {
@@ -113,11 +113,11 @@ const addWorker = () => {
     let mergedData: MonitoringResultTS = {};
 
     if (monitor.default_status !== undefined && monitor.default_status !== null) {
-      if ([UP, DOWN, DEGRADED].indexOf(monitor.default_status) !== -1) {
+      if (([GC.UP, GC.DOWN, GC.DEGRADED] as string[]).indexOf(monitor.default_status) !== -1) {
         defaultData[ts] = {
           status: monitor.default_status,
           latency: 0,
-          type: DEFAULT_STATUS,
+          type: GC.DEFAULT_STATUS,
         };
       }
     }
