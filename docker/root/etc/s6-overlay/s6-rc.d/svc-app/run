@@ -1,9 +1,0 @@
-#!/usr/bin/with-contenv bash
-
-echo -e "\nApp is starting!"
-export NODE_ENV=production
-cd /app || exit
-
-# Run build first
-exec \
-	  s6-setuidgid abc /usr/bin/node $NODE_ARGS /app/main.js

@@ -1,8 +1,0 @@
-<iframe 
-	src="{siteURL}{base}/embed/monitor-{selectedMonitor.value}?bgc={embedBgc.substr(1)}&locale={embedLocale.value}&theme={embedTheme}" 
-	width="100%" 
-	height="200" 
-	allowfullscreen="allowfullscreen" 
-	allowpaymentrequest 
-	frameborder="0">
-</iframe>
