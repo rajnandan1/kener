@@ -4,6 +4,7 @@ export interface MonitoringResult {
   status: string;
   latency: number;
   type: string;
+  error_message?: string;
 }
 
 export interface MonitoringResultTS {

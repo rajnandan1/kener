@@ -29,7 +29,7 @@
   import { ValidateIpAddress, IsValidHost, IsValidNameServer, IsValidURL, IsValidPort } from "$lib/clientTools";
   import { GAMEDIG_SOCKET_TIMEOUT } from "$lib/anywhere";
   import * as InputGroup from "$lib/components/ui/input-group/index.js";
-
+  import type { MonitoringResult } from "$lib/server/types/monitor.js";
   // Type-specific components
   import {
     MonitorApi,
@@ -59,7 +59,7 @@
 
   // Test monitor state
   let testingMonitor = $state(false);
-  let testResult = $state<{ status?: string; latency?: number; error?: string } | null>(null);
+  let testResult = $state<MonitoringResult | null>(null);
 
   // Modify monitoring data state
   let modifyingData = $state(false);
@@ -311,7 +311,8 @@
         if (m.type_data) {
           try {
             typeData = JSON.parse(m.type_data);
-          } catch {
+          } catch (e: any) {
+            console.error("Failed to parse type_data:", e);
             typeData = {};
           }
         }
@@ -323,7 +324,8 @@
               uptime_formula_numerator: settings.uptime_formula_numerator || "up + maintenance",
               uptime_formula_denominator: settings.uptime_formula_denominator || "up + maintenance + down + degraded"
             };
-          } catch {
+          } catch (e: any) {
+            console.error("Failed to parse monitor_settings_json:", e);
             // Keep defaults
           }
         }
@@ -601,7 +603,7 @@
       const result = await response.json();
       testResult = result;
     } catch (e) {
-      testResult = { error: "Failed to test monitor" };
+      testResult = { error_message: "Failed to test monitor", status: "NO_DATA", latency: 0, type: "error" };
     } finally {
       testingMonitor = false;
     }
@@ -944,7 +946,73 @@
             {/if}
           </div>
         </Card.Content>
-        <Card.Footer class="flex justify-end">
+        <Card.Footer class="flex justify-between gap-2">
+          <Dialog.Root
+            onOpenChange={(e) => {
+              if (e) testMonitor();
+            }}
+          >
+            <Dialog.Trigger>
+              {#snippet child({ props })}
+                <Button {...props} variant="secondary">
+                  <PlayIcon class="size-4" />
+                  Test Monitor
+                </Button>
+              {/snippet}
+            </Dialog.Trigger>
+            <Dialog.Content>
+              <Dialog.Header>
+                <Dialog.Title>
+                  {#if testingMonitor}
+                    Running Test
+                  {:else if testResult}
+                    Test Result
+                  {:else}
+                    Test Monitor
+                  {/if}
+                </Dialog.Title>
+              </Dialog.Header>
+              <div class="flex flex-col justify-center gap-2">
+                {#if testingMonitor}
+                  <div class="flex flex-col items-center gap-2 py-8">
+                    <Loader class="size-8 animate-spin" />
+                    <p class="text-muted-foreground mt-4 text-center">
+                      Please wait while the test is being performed...
+                    </p>
+                  </div>
+                {:else if testResult}
+                  <div class="mt-4 flex flex-col gap-4">
+                    {#if testResult.error_message}
+                      <div class="bg-destructive/10 text-destructive rounded-md p-3 text-sm font-medium">
+                        {testResult.error_message}
+                      </div>
+                    {/if}
+                    <div class="grid grid-cols-2 gap-4">
+                      <div class="rounded-lg border p-4 text-center">
+                        <div class="text-muted-foreground text-xs uppercase">Status</div>
+                        <div class="mt-1 text-2xl font-bold text-{testResult.status.toLowerCase()}">
+                          {testResult.status}
+                        </div>
+                      </div>
+                      <div class="rounded-lg border p-4 text-center">
+                        <div class="text-muted-foreground text-xs uppercase">Response Time</div>
+                        <div class="mt-1 text-2xl font-bold">
+                          {testResult.latency}ms
+                        </div>
+                      </div>
+                    </div>
+                    <div class="flex justify-end">
+                      <Button variant="outline" size="sm" onclick={testMonitor} disabled={testingMonitor}>
+                        <PlayIcon class="mr-2 size-3" />
+                        Run Test Again
+                      </Button>
+                    </div>
+                  </div>
+                {/if}
+              </div>
+            </Dialog.Content>
+          </Dialog.Root>
+
           <Button onclick={saveTypeSettings} disabled={savingType || !isTypeSettingsValid}>
             {#if savingType}
               <Loader class="mr-2 size-4 animate-spin" />
@@ -1041,59 +1109,6 @@
               {/each}
             </div>
           {/if}
-        </Card.Content>
-      </Card.Root>
-    {/if}
-
-    <!-- Test Monitor Card -->
-    {#if !isNew && monitor.monitor_type && monitor.monitor_type !== "NONE"}
-      <Card.Root>
-        <Card.Header>
-          <Card.Title class="flex items-center gap-2">
-            <PlayIcon class="size-5" />
-            Test Monitor
-          </Card.Title>
-          <Card.Description>Run a test to check the current status of this monitor</Card.Description>
-        </Card.Header>
-        <Card.Content>
-          <div class="flex items-center gap-4">
-            <Button onclick={testMonitor} disabled={testingMonitor}>
-              {#if testingMonitor}
-                <Loader class="mr-2 size-4 animate-spin" />
-                Testing...
-              {:else}
-                <PlayIcon class="mr-2 size-4" />
-                Run Test
-              {/if}
-            </Button>
-            {#if testResult}
-              <div class="flex-1 rounded-md border p-3">
-                {#if testResult.error}
-                  <p class="text-destructive text-sm">{testResult.error}</p>
-                {:else if testResult.status !== undefined && testResult.latency !== undefined}
-                  <div class="flex items-center gap-4">
-                    <div>
-                      <p class="text-muted-foreground text-xs">Status</p>
-                      <p
-                        class="font-medium"
-                        class:text-green-500={testResult.status === "UP"}
-                        class:text-yellow-500={testResult.status === "DEGRADED"}
-                        class:text-red-500={testResult.status === "DOWN"}
-                      >
-                        {testResult.status}
-                      </p>
-                    </div>
-                    <div>
-                      <p class="text-muted-foreground text-xs">Response Time</p>
-                      <p class="font-medium">{testResult.latency}ms</p>
-                    </div>
-                  </div>
-                {:else}
-                  <p class="text-muted-foreground text-sm">No result available</p>
-                {/if}
-              </div>
-            {/if}
-          </div>
         </Card.Content>
       </Card.Root>
     {/if}

@@ -29,3 +29,4 @@ static/uploads/*
 !static/uploads/upload.dir
 temp.txt
 temp.js
+.DS_Store

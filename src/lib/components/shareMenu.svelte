@@ -140,7 +140,7 @@
   <h2 class="mb-1 text-sm font-semibold">
     {l(lang, "Share")}
   </h2>
-  <p class="mb-2 text-xs text-muted-foreground">
+  <p class="text-muted-foreground mb-2 text-xs">
     {l(lang, "Share this monitor using a link with others")}
   </p>
   <Button class="h-8 px-2 pr-4 text-xs font-semibold" variant="secondary" on:click={copyLinkToClipboard}>
@@ -160,7 +160,7 @@
     href={pathMonitorLink}
     target="_blank"
     variant="link"
-    class="h-8 px-3  text-xs font-semibold text-muted-foreground"
+    class="text-muted-foreground h-8  px-3 text-xs font-semibold"
   >
     <ExternalLink class="inline" size={12} />
   </Button>
@@ -170,7 +170,7 @@
   <h2 class="mb-1 text-sm font-semibold">
     {l(lang, "Embed")}
   </h2>
-  <p class="mb-1 text-xs text-muted-foreground">
+  <p class="text-muted-foreground mb-1 text-xs">
     {l(lang, "Embed this monitor using &#x3C;script&#x3E; or &#x3C;iframe&#x3E; in your app.")}
   </p>
   <div class="mb-4 grid grid-cols-2 gap-2">
@@ -226,7 +226,7 @@
   <h2 class="mb-1 text-sm font-semibold">
     {l(lang, "Badge")}
   </h2>
-  <p class="mb-2 text-xs text-muted-foreground">
+  <p class="text-muted-foreground mb-2 text-xs">
     {l(lang, "Get SVG badge for this monitor")}
   </p>
   <Button class="h-8  px-2 pr-4 text-xs" variant="secondary" on:click={copyStatusBadge}>
@@ -263,7 +263,7 @@
   <h2 class="mb-1 text-sm font-semibold">
     {l(lang, "LIVE Status")}
   </h2>
-  <p class="mb-2 text-xs text-muted-foreground">
+  <p class="text-muted-foreground mb-2 text-xs">
     {l(lang, "Get a LIVE Status for this monitor")}
   </p>
   <Button class="h-8  px-2 pr-4 text-xs" variant="secondary" on:click={copyDotStandard}>

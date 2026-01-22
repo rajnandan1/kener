@@ -5,15 +5,15 @@ import Provider from "./tooltip-provider.svelte";
 import Portal from "./tooltip-portal.svelte";
 
 export {
-	Root,
-	Trigger,
-	Content,
-	Provider,
-	Portal,
-	//
-	Root as Tooltip,
-	Content as TooltipContent,
-	Trigger as TooltipTrigger,
-	Provider as TooltipProvider,
-	Portal as TooltipPortal,
+  Root,
+  Trigger,
+  Content,
+  Provider,
+  Portal,
+  //
+  Root as Tooltip,
+  Content as TooltipContent,
+  Trigger as TooltipTrigger,
+  Provider as TooltipProvider,
+  Portal as TooltipPortal,
 };

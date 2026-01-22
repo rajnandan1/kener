@@ -53,7 +53,7 @@ main {
 }
 
 .note {
-  @apply mt-4 rounded-md border bg-background p-3 text-sm shadow-sm;
+  @apply bg-background mt-4 rounded-md border p-3 text-sm shadow-sm;
 }
 .note.danger {
   border: 1px solid #e3342f;

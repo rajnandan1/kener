@@ -2,6 +2,8 @@ import i18n from "$lib/i18n/server";
 import { redirect } from "@sveltejs/kit";
 import MobileDetect from "mobile-detect";
 import type { LayoutServerLoad } from "./$types";
+import { IsEmailSetup, CheckInvitationExists } from "$lib/server/controllers/controller.js";
+import { INVITE_VERIFY_EMAIL } from "$lib/server/constants.js";
 
 import { resolve } from "$app/paths";
 import {
@@ -23,6 +25,11 @@ export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
 
   let isLoggedIn = await IsLoggedInSession(cookies);
 
+  //if user not set throw redirect to signin
+  if (!isLoggedIn.user) {
+    throw redirect(302, "/account/logout");
+  }
+
   const siteData = await GetAllSiteData();
   let localTz = "UTC";
   const localTzCookie = cookies.get("localTz");
@@ -42,6 +49,9 @@ export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
 
   // const emailSubscriptionTrigger = await GetSubscriptionTriggerByEmail();
   return {
+    userDb: isLoggedIn.user,
     siteStatusColors,
+    canSendEmail: IsEmailSetup(),
+    activeInvitationExists: await CheckInvitationExists(isLoggedIn.user.id, INVITE_VERIFY_EMAIL),
   };
 };

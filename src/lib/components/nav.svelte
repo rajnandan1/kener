@@ -64,7 +64,7 @@
 {/if}
 
 <header class="sticky top-0 z-50 mx-auto md:mt-2">
-  <div class="container flex h-14 max-w-[820px] items-center border bg-card px-3 md:rounded-md">
+  <div class="bg-card container flex h-14 max-w-[820px] items-center border px-3 md:rounded-md">
     <a rel="external" href={data.site.home ? data.site.home : base} class="mr-6 flex items-center space-x-2">
       {#if data.site.logo}
         <GMI src={data.site.logo} classList="w-8" alt={data.site.title} srcset="" />
@@ -82,7 +82,7 @@
             <a
               rel="external"
               href={navItem.url}
-              class="flex rounded-md px-3 py-2 text-card-foreground transition-all ease-linear hover:bg-background"
+              class="text-card-foreground hover:bg-background flex rounded-md px-3 py-2 transition-all ease-linear"
               on:click={() =>
                 analyticsEvent("navigation", {
                   name: navItem.name

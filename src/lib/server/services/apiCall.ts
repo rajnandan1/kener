@@ -5,13 +5,7 @@ import * as cheerio from "cheerio";
 import { DefaultAPIEval } from "../../anywhere.js";
 import version from "../../version.js";
 import https from "https";
-import type { ApiMonitor, EvalResponse } from "../types/monitor.js";
-
-interface MonitoringResult {
-  status: string;
-  latency: number;
-  type: string;
-}
+import type { ApiMonitor, EvalResponse, MonitoringResult } from "../types/monitor.js";
 
 class ApiCall {
   monitor: ApiMonitor;
@@ -99,6 +93,7 @@ class ApiCall {
     }
     let statusCode = 500;
     let latency = 0;
+		let errorMessage = "";
     let resp = "";
     let timeoutError = false;
     const start = Date.now();
@@ -113,10 +108,11 @@ class ApiCall {
         response?: { status?: number; data?: string };
       };
       console.log(`Error in apiCall ${tag}`, error.message);
-
+			errorMessage = error.message || "Unknown error";
       // Better timeout detection
       if (error.code === "ECONNABORTED" || (error.message && error.message.includes("timeout"))) {
         timeoutError = true;
+				errorMessage = "Request timed out";
         console.log(`Timeout in api call for ${tag} at ${Math.floor(Date.now() / 1000)}`);
       }
 
@@ -149,6 +145,7 @@ class ApiCall {
       );
       evalResp = await evalFunction(statusCode, latency, resp, modules);
     } catch (error: unknown) {
+			errorMessage += ` | Eval error: ${(error as Error).message}`;
       console.log(`Error in monitorEval for ${tag}`, (error as Error).message);
     }
 
@@ -176,6 +173,7 @@ class ApiCall {
       status: DOWN,
       latency: latency,
       type: ERROR,
+			error_message: errorMessage,
     };
     if (evalResp.status !== undefined && evalResp.status !== null) {
       toWrite.status = evalResp.status;

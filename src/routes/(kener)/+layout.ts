@@ -11,7 +11,7 @@ export const load: LayoutLoad = async ({ data }) => {
   const startOfZonedDay = startOfDay(zonedTime);
   const startOfDayInUTC = fromZonedTime(startOfZonedDay, localTz);
   const startOfDayTodayAtTz = getUnixTime(startOfDayInUTC);
-	const nowAtTz = getUnixTime(fromZonedTime(now, localTz));
+  const nowAtTz = getUnixTime(fromZonedTime(now, localTz));
 
   return {
     ...data,

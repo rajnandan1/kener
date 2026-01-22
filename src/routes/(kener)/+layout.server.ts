@@ -22,7 +22,7 @@ export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
 
   let isSetupComplete = await IsSetupComplete();
   if (!isSetupComplete) {
-    throw redirect(302, resolve(`/manage/setup`));
+    throw redirect(302, resolve(`/account/signin`));
   }
 
   let isLoggedIn = await IsLoggedInSession(cookies);
