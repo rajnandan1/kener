@@ -1,0 +1,12 @@
+import EmbedMonitor from "./EmbedMonitor";
+
+function App() {
+  return (
+    <div>
+      <h2>React Embed</h2>
+      <EmbedMonitor monitor="{siteURL}{base}/embed/monitor-{selectedMonitor.value}" theme="{embedTheme}" bgc="{embedBgc.substr(1)}" locale="{embedLocale.value}"/>
+    </div>
+  );
+}
+
+export default App;

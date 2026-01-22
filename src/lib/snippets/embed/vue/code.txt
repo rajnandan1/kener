@@ -1,0 +1,67 @@
+<template>
+  <div :id="containerId" ref="containerRef"></div>
+</template>
+
+<script>
+import { ref, watchEffect, onMounted, onBeforeUnmount } from "vue";
+
+export default {
+  props: {
+    monitor: String,
+    theme: { type: String, default: "light" },
+    bgc: { type: String, default: "transparent" },
+    locale: { type: String, default: "en" }
+  },
+  setup(props) {
+    const containerRef = ref(null);
+    const iframeRef = ref(null);
+    const containerId = ref(`embed-container-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`);
+
+    let messageListener = null;
+
+    const createIframe = () => {
+      if (!props.monitor || !containerRef.value) return;
+
+      // Remove existing iframe if any
+      if (iframeRef.value) {
+        iframeRef.value.remove();
+      }
+
+      const iframe = document.createElement("iframe");
+      iframe.src = `${props.monitor}?theme=${props.theme}&bgc=${props.bgc}&locale=${props.locale}`;
+      iframe.width = "0%";
+      iframe.height = "0";
+      iframe.frameBorder = "0";
+      iframe.allowTransparency = true;
+      iframe.sandbox =
+        "allow-modals allow-forms allow-same-origin allow-scripts allow-popups allow-top-navigation-by-user-activation allow-downloads";
+      iframe.allow = "midi; geolocation; microphone; camera; display-capture; encrypted-media;";
+
+      containerRef.value.appendChild(iframe);
+      iframeRef.value = iframe;
+
+      messageListener = (event) => {
+        if (event.data?.height) iframe.height = event.data.height;
+        if (event.data?.width) iframe.width = event.data.width;
+      };
+
+      window.addEventListener("message", messageListener);
+    };
+
+    onMounted(createIframe);
+
+    watchEffect(() => {
+      createIframe();
+    });
+
+    onBeforeUnmount(() => {
+      window.removeEventListener("message", messageListener);
+      if (iframeRef.value) {
+        iframeRef.value.remove();
+      }
+    });
+
+    return { containerRef, containerId };
+  }
+};
+</script>

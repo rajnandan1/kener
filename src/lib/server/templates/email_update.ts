@@ -1,0 +1,249 @@
+export default `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" lang="en">
+  <head>
+    <link rel="preload" as="image" href="{{logo_url}}" />
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <meta name="x-apple-disable-message-reformatting" />
+  </head>
+  <body
+    style="
+      background-color: rgb(243, 244, 246);
+      font-family:
+        ui-sans-serif, system-ui, sans-serif, &quot;Apple Color Emoji&quot;,
+        &quot;Segoe UI Emoji&quot;, &quot;Segoe UI Symbol&quot;, &quot;Noto Color Emoji&quot;;
+      padding-top: 40px;
+      padding-bottom: 40px;
+    "
+  >
+    <!--$-->
+    <div
+      style="
+        display: none;
+        overflow: hidden;
+        line-height: 1px;
+        opacity: 0;
+        max-height: 0;
+        max-width: 0;
+      "
+    >
+      {{title}}
+    </div>
+    <table
+      align="center"
+      width="100%"
+      border="0"
+      cellpadding="0"
+      cellspacing="0"
+      role="presentation"
+      style="
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        background-color: rgb(255, 255, 255);
+        border-radius: 8px;
+        overflow: hidden;
+      "
+    >
+      <tbody>
+        <tr style="width: 100%">
+          <td>
+            <table
+              align="center"
+              width="100%"
+              border="0"
+              cellpadding="0"
+              cellspacing="0"
+              role="presentation"
+              style="
+                background-color: #e4e5ec;
+                padding-left: 24px;
+                padding-right: 24px;
+                padding-top: 24px;
+                padding-bottom: 24px;
+              "
+            >
+              <tbody>
+                <tr>
+                  <td>
+                    <table
+                      align="center"
+                      width="100%"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                      role="presentation"
+                    >
+                      <tbody style="width: 100%">
+                        <tr style="width: 100%">
+                          <td data-id="__react-email-column" style="text-align: center">
+                            <img
+                              alt="{{brand_name}}"
+                              src="{{logo_url}}"
+                              style="
+                                height: auto;
+                                display: block;
+                                outline: none;
+                                border: none;
+                                text-decoration: none;
+                                margin-left: auto;
+                                margin-right: auto;
+                              "
+                              width="80"
+                            />
+                            <p
+                              style="
+                                font-size: 20px;
+                                font-weight: bold;
+                                color: #191919;
+                                margin: 8px 0 0 0;
+                                text-align: center;
+                              "
+                            >
+                              {{brand_name}}
+                            </p>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <table
+              align="center"
+              width="100%"
+              border="0"
+              cellpadding="0"
+              cellspacing="0"
+              role="presentation"
+              style="
+                padding-left: 24px;
+                padding-right: 24px;
+                padding-top: 32px;
+                padding-bottom: 32px;
+              "
+            >
+              <tbody>
+                <tr>
+                  <td>
+                    <h1
+                      style="
+                        font-size: 24px;
+                        font-weight: 700;
+                        color: rgb(31, 41, 55);
+                        margin-bottom: 16px;
+                      "
+                    >
+                      {{title}}
+                    </h1>
+                    <p
+                      style="
+                        font-size: 16px;
+                        color: rgb(55, 65, 81);
+                        margin-bottom: 16px;
+                        line-height: 24px;
+                        margin-top: 16px;
+                      "
+                    >
+                      Dear Valued Customer,
+                    </p>
+                    <p
+                      style="
+                        font-size: 16px;
+                        color: rgb(55, 65, 81);
+                        margin-bottom: 16px;
+                        line-height: 24px;
+                        margin-top: 16px;
+                      "
+                    >
+                      We would like to provide you with an update regarding the current system
+                      status.
+                    </p>
+                    <p
+                      style="
+                        font-size: 16px;
+                        color: rgb(55, 65, 81);
+                        margin-bottom: 16px;
+                        line-height: 24px;
+                        margin-top: 16px;
+                      "
+                    >
+                      <strong>Update:</strong>
+                      {{update_message}}
+                    </p>
+
+                    <a
+                      href="{{incident_url}}"
+                      style="
+                        background-color: rgb(22, 163, 74);
+                        color: rgb(255, 255, 255);
+                        font-weight: 700;
+                        padding-top: 12px;
+                        padding-bottom: 12px;
+                        padding-left: 24px;
+                        padding-right: 24px;
+                        border-radius: 4px;
+                        font-size: 16px;
+                        text-decoration-line: none;
+                        text-align: center;
+                        display: block;
+                        box-sizing: border-box;
+                        line-height: 100%;
+                        text-decoration: none;
+                        max-width: 100%;
+                        mso-padding-alt: 0px;
+                        padding: 12px 24px 12px 24px;
+                      "
+                      target="_blank"
+                      ><span
+                        ><!--[if mso
+                          ]><i style="mso-font-width: 400%; mso-text-raise: 18" hidden
+                            >&#8202;&#8202;&#8202;</i
+                          ><!
+                        [endif]--></span
+                      ><span
+                        style="
+                          max-width: 100%;
+                          display: inline-block;
+                          line-height: 120%;
+                          mso-padding-alt: 0px;
+                          mso-text-raise: 9px;
+                        "
+                        >View Incident Details</span
+                      ><span
+                        ><!--[if mso
+                          ]><i style="mso-font-width: 400%" hidden
+                            >&#8202;&#8202;&#8202;&#8203;</i
+                          ><!
+                        [endif]--></span
+                      ></a
+                    >
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <hr
+              style="
+                border-top-width: 1px;
+                border-color: rgb(209, 213, 219);
+                margin-top: 8px;
+                margin-bottom: 8px;
+                width: 100%;
+                border: none;
+                border-top: 1px solid #eaeaea;
+              "
+            />
+            <footer>
+              <p style="text-align: center; color: #6b7280; font-size: 16px; margin: 24px 0 0 0">
+                Thank you,<br />The {{brand_name}} Team
+              </p>
+            </footer>
+            <div style="height: 32px"></div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <!--7--><!--/$-->
+  </body>
+</html>
+`;

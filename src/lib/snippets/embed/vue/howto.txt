@@ -1,0 +1,14 @@
+<template>
+  <div>
+    <h2>Vue Embed</h2>
+    <EmbedMonitor monitor="{siteURL}{base}/embed/monitor-{selectedMonitor.value}" theme="{embedTheme}" bgc="{embedBgc.substr(1)}" locale="{embedLocale.value}"/>
+  </div>
+</template>
+
+<script>
+import EmbedMonitor from "./EmbedMonitor.vue";
+
+export default {
+  components: { EmbedMonitor }
+};
+</script>

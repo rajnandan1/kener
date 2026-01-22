@@ -1,0 +1,223 @@
+@reference "../routes/layout.css";
+
+.bg-up {
+  background-color: var(--up);
+}
+
+.bg-degraded {
+  background-color: var(--degraded);
+}
+.bg-down {
+  background-color: var(--down);
+}
+.bg-maintenance {
+  background-color: var(--maintenance);
+}
+
+.bg-no-data {
+  background-color: var(--muted);
+}
+.bg-no_data {
+  background-color: var(--muted);
+}
+.stroke-up {
+  stroke: var(--up);
+}
+
+.stroke-degraded {
+  stroke: var(--degraded);
+}
+.stroke-down {
+  stroke: var(--down);
+}
+.stroke-maintenance {
+  stroke: var(--maintenance);
+}
+
+.border-up {
+  border-color: var(--up);
+}
+.border-degraded {
+  border-color: var(--degraded);
+}
+.border-down {
+  border-color: var(--down);
+}
+.border-maintenance {
+  border-color: var(--maintenance);
+}
+
+/* Partial coloring - gradient backgrounds for DOWN */
+.bg-down-10 {
+  background: linear-gradient(0deg, var(--down) 10%, var(--up) 10%);
+}
+.bg-down-20 {
+  background: linear-gradient(0deg, var(--down) 20%, var(--up) 20%);
+}
+.bg-down-40 {
+  background: linear-gradient(0deg, var(--down) 40%, var(--up) 40%);
+}
+.bg-down-60 {
+  background: linear-gradient(0deg, var(--down) 60%, var(--up) 60%);
+}
+.bg-down-80 {
+  background: linear-gradient(0deg, var(--down) 80%, var(--up) 80%);
+}
+.bg-down-90 {
+  background: linear-gradient(0deg, var(--down) 90%, var(--up) 90%);
+}
+
+/* Partial coloring - gradient backgrounds for DEGRADED */
+.bg-degraded-10 {
+  background: linear-gradient(0deg, var(--degraded) 10%, var(--up) 10%);
+}
+.bg-degraded-20 {
+  background: linear-gradient(0deg, var(--degraded) 20%, var(--up) 20%);
+}
+.bg-degraded-40 {
+  background: linear-gradient(0deg, var(--degraded) 40%, var(--up) 40%);
+}
+.bg-degraded-60 {
+  background: linear-gradient(0deg, var(--degraded) 60%, var(--up) 60%);
+}
+.bg-degraded-80 {
+  background: linear-gradient(0deg, var(--degraded) 80%, var(--up) 80%);
+}
+.bg-degraded-90 {
+  background: linear-gradient(0deg, var(--degraded) 90%, var(--up) 90%);
+}
+
+/* Partial coloring - gradient backgrounds for MAINTENANCE */
+.bg-maintenance-10 {
+  background: linear-gradient(0deg, var(--maintenance) 10%, var(--up) 10%);
+}
+.bg-maintenance-20 {
+  background: linear-gradient(0deg, var(--maintenance) 20%, var(--up) 20%);
+}
+.bg-maintenance-40 {
+  background: linear-gradient(0deg, var(--maintenance) 40%, var(--up) 40%);
+}
+.bg-maintenance-60 {
+  background: linear-gradient(0deg, var(--maintenance) 60%, var(--up) 60%);
+}
+.bg-maintenance-80 {
+  background: linear-gradient(0deg, var(--maintenance) 80%, var(--up) 80%);
+}
+.bg-maintenance-90 {
+  background: linear-gradient(0deg, var(--maintenance) 90%, var(--up) 90%);
+}
+
+.text-up {
+  color: var(--up);
+}
+.text-degraded {
+  color: var(--degraded);
+}
+.text-down {
+  color: var(--down);
+}
+.text-maintenance {
+  color: var(--maintenance);
+}
+
+/* Loading animation for minute boxes */
+@keyframes changeColor {
+  0% {
+    background-color: #b8bcbe;
+  }
+  50% {
+    background-color: #f1f5f8;
+  }
+}
+
+.dark .animatebg {
+  animation: changeColorDark 2s infinite;
+}
+
+@keyframes changeColorDark {
+  0% {
+    background-color: #333;
+  }
+  50% {
+    background-color: #2d2d2f;
+  }
+}
+
+.animatebg {
+  animation: changeColor 2s infinite;
+}
+
+.ktable thead tr th:first-child,
+.ktable tbody tr td:first-child {
+  padding-left: 1rem;
+}
+.ktable thead tr th:last-child,
+.ktable tbody tr td:last-child {
+  padding-right: 1rem;
+}
+
+:root {
+  --investigating: #f59e0b;
+  --identified: #3b82f6;
+  --monitoring: #10b981;
+  --resolved: #22c55e;
+}
+
+/* INVESTIGATING */
+.bg-investigating {
+  background-color: var(--investigating);
+}
+.text-investigating {
+  color: var(--investigating);
+}
+
+/* IDENTIFIED */
+.bg-identified {
+  background-color: var(--identified);
+}
+.text-identified {
+  color: var(--identified);
+}
+/* MONITORING */
+.bg-monitoring {
+  background-color: var(--monitoring);
+}
+.text-monitoring {
+  color: var(--monitoring);
+}
+/* RESOLVED */
+.bg-resolved {
+  background-color: var(--resolved);
+}
+.text-resolved {
+  color: var(--resolved);
+}
+.mdot:hover .tooltip {
+  opacity: 1;
+}
+
+.rounded-btn {
+  @apply cursor-pointer rounded-full shadow-none;
+}
+.kener-card {
+  @apply bg-background rounded-3xl shadow-none;
+}
+
+/* Hide scrollbar globally */
+html,
+body {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.scrollbar-hidden {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

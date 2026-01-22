@@ -1,0 +1,71 @@
+{
+  "useTabs": false,
+  "semi": true,
+  "tabWidth": 2,
+  "trailingComma": "none",
+  "printWidth": 100,
+  "plugins": ["prettier-plugin-svelte", "prettier-plugin-tailwindcss"],
+  "overrides": [
+    {
+      "files": "*.svelte",
+      "options": {
+        "parser": "svelte",
+        "useTabs": false,
+        "semi": true,
+        "tabWidth": 2,
+        "trailingComma": "none",
+        "printWidth": 120
+      }
+    },
+    {
+      "files": ["*.js", "*.ts", "*.tsx", "*.cjs", "*.mjs"],
+      "options": {
+        "useTabs": false,
+        "semi": true,
+        "tabWidth": 2,
+        "trailingComma": "all",
+        "printWidth": 120
+      }
+    },
+    {
+      "files": ["*.json", ".prettierrc"],
+      "options": {
+        "useTabs": false,
+        "semi": false,
+        "tabWidth": 2,
+        "trailingComma": "none",
+        "printWidth": 120
+      }
+    },
+    {
+      "files": ["*.yaml", "*.yml"],
+      "options": {
+        "useTabs": false,
+        "semi": false,
+        "tabWidth": 2,
+        "trailingComma": "none",
+        "printWidth": 80
+      }
+    },
+    {
+      "files": "*.md",
+      "options": {
+        "useTabs": false,
+        "semi": false,
+        "tabWidth": 4,
+        "trailingComma": "none",
+        "printWidth": 180
+      }
+    },
+    {
+      "files": "Dockerfile",
+      "options": {
+        "useTabs": true,
+        "tabWidth": 4,
+        "semi": false,
+        "trailingComma": "none",
+        "printWidth": 120
+      }
+    }
+  ]
+}

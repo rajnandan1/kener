@@ -1,0 +1,451 @@
+<script lang="ts">
+  import { onMount } from "svelte";
+  import { format } from "date-fns";
+  import { resolve } from "$app/paths";
+  import TrendingUp from "lucide-svelte/icons/trending-up";
+  import Clock from "lucide-svelte/icons/clock";
+  import Activity from "lucide-svelte/icons/activity";
+  import { Button } from "$lib/components/ui/button/index.js";
+  import * as Dialog from "$lib/components/ui/dialog/index.js";
+  import { Badge } from "$lib/components/ui/badge/index.js";
+  import { Skeleton } from "$lib/components/ui/skeleton/index.js";
+  import LoaderBoxes from "$lib/components/loaderbox.svelte";
+  import constants from "$lib/global-constants.js";
+  import * as Tabs from "$lib/components/ui/tabs/index.js";
+  import { page } from "$app/state";
+  import { AreaChart, Area, LinearGradient } from "layerchart";
+  import { curveCatmullRom } from "d3-shape";
+  import { scaleOrdinal, scaleSequential, scaleTime } from "d3-scale";
+  import IncidentItem from "$lib/components/IncidentItem.svelte";
+  import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
+
+  import * as Chart from "$lib/components/ui/chart/index.js";
+  import type { IncidentForMonitorList, MaintenanceEventsMonitorList } from "$lib/server/types/db";
+  interface DayDetailData {
+    minutes: Array<{
+      timestamp: number;
+      status: string;
+    }>;
+    uptime: string;
+  }
+
+  interface DayLatencyData {
+    minutes: Array<{
+      timestamp: number;
+      latency: number;
+    }>;
+    avgLatency: string;
+  }
+
+  interface Props {
+    open: boolean;
+    monitorTag: string;
+    selectedDay: {
+      timestamp: number;
+      status: string;
+    } | null;
+  }
+
+  let { open = $bindable(), monitorTag, selectedDay }: Props = $props();
+
+  let loading = $state(false);
+  let latencyLoading = $state(false);
+  let incidentsLoading = $state(false);
+  let maintenancesLoading = $state(false);
+  let activeView = $state<"status" | "latency" | "incidents" | "maintenances">("status");
+  let dayDetailData = $state<DayDetailData | null>(null);
+  let dayLatencyData = $state<DayLatencyData | null>(null);
+  let dayIncidentsData = $state<IncidentForMonitorList[]>([]);
+  let dayMaintenancesData = $state<MaintenanceEventsMonitorList[]>([]);
+  // Chart config for latency
+  const chartConfig = {
+    latency: {
+      label: "Latency",
+      color: "var(--chart-1)"
+    }
+  } satisfies Chart.ChartConfig;
+
+  // Transform latency data for chart
+  let chartData = $derived.by(() => {
+    if (!dayLatencyData?.minutes) return [];
+    return dayLatencyData.minutes
+      .filter((d) => d.latency > 0)
+      .map((d) => ({
+        date: new Date(d.timestamp * 1000),
+        latency: d.latency
+      }));
+  });
+
+  // Fetch day detail data
+  async function fetchDayDetail() {
+    if (!selectedDay) return;
+
+    loading = true;
+    dayDetailData = null;
+    try {
+      const response = await fetch(resolve("/dashboard-apis/monitor-day-status"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tag: monitorTag,
+          dayTimestamp: selectedDay.timestamp,
+          startOfDayTodayAtTz: selectedDay.timestamp,
+          nowAtTz: Math.min(selectedDay.timestamp + 86400 - 60, page.data.nowAtTz)
+        })
+      });
+      if (response.ok) {
+        dayDetailData = await response.json();
+      }
+    } catch (error) {
+      console.error("Failed to fetch day detail:", error);
+    } finally {
+      loading = false;
+    }
+  }
+
+  // Fetch day latency data
+  async function fetchDayLatency() {
+    if (!selectedDay) return;
+
+    latencyLoading = true;
+    dayLatencyData = null;
+    try {
+      const response = await fetch(resolve("/dashboard-apis/monitor-day-latency"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tag: monitorTag,
+          startOfDayTodayAtTz: selectedDay.timestamp,
+          nowAtTz: Math.min(selectedDay.timestamp + 86400 - 60, page.data.nowAtTz)
+        })
+      });
+      if (response.ok) {
+        dayLatencyData = await response.json();
+      }
+    } catch (error) {
+      console.error("Failed to fetch day latency:", error);
+    } finally {
+      latencyLoading = false;
+    }
+  }
+
+  //// Fetch day incident data
+  async function fetchDayIncidents() {
+    if (!selectedDay) return;
+
+    incidentsLoading = true;
+    dayIncidentsData = [];
+    try {
+      const response = await fetch(resolve("/dashboard-apis/monitor-day-incidents"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tag: monitorTag,
+          startOfDayTodayAtTz: selectedDay.timestamp,
+          nowAtTz: Math.min(selectedDay.timestamp + 86400 - 60, page.data.nowAtTz)
+        })
+      });
+      if (response.ok) {
+        const result = await response.json();
+        dayIncidentsData = result.incidents;
+      }
+    } catch (error) {
+      console.error("Failed to fetch day incidents:", error);
+    } finally {
+      incidentsLoading = false;
+    }
+  }
+
+  // Fetch day maintenance data
+  async function fetchDayMaintenances() {
+    if (!selectedDay) return;
+
+    maintenancesLoading = true;
+    dayMaintenancesData = [];
+    try {
+      const response = await fetch(resolve("/dashboard-apis/monitor-day-maintenances"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tag: monitorTag,
+          startOfDayTodayAtTz: selectedDay.timestamp,
+          nowAtTz: Math.min(selectedDay.timestamp + 86400 - 60, page.data.nowAtTz)
+        })
+      });
+      if (response.ok) {
+        const result = await response.json();
+        dayMaintenancesData = result.maintenances;
+      }
+    } catch (error) {
+      console.error("Failed to fetch day maintenances:", error);
+    } finally {
+      maintenancesLoading = false;
+    }
+  }
+  // Format date for display
+  function formatDate(timestamp: number): string {
+    return format(new Date(timestamp * 1000), "EEEE, MMMM do, yyyy");
+  }
+
+  function formatTime(timestamp: number): string {
+    return format(new Date(timestamp * 1000), "HH:mm");
+  }
+
+  // Fetch data when dialog opens with a new day
+  $effect(() => {
+    if (open && selectedDay) {
+      fetchDayDetail();
+      fetchDayLatency();
+      fetchDayIncidents();
+      fetchDayMaintenances();
+    }
+  });
+</script>
+
+<Dialog.Root bind:open>
+  <Dialog.Overlay class="backdrop-blur-[2px]" />
+  <Dialog.Content class="max-h-[80vh] overflow-y-auto rounded-3xl sm:max-w-2xl">
+    <Dialog.Header>
+      <Dialog.Title class="flex items-center gap-2">
+        <Activity class="h-5 w-5" />
+        {selectedDay ? formatDate(selectedDay.timestamp) : ""}
+      </Dialog.Title>
+      <Dialog.Description>Minute-by-minute status data for this day</Dialog.Description>
+    </Dialog.Header>
+
+    <Tabs.Root value={activeView} class="bg-background w-full overflow-hidden rounded-3xl border">
+      <Tabs.List class="h-auto w-full justify-end rounded-none px-2 py-2">
+        <Tabs.Trigger value="status" class="rounded-3xl py-2">Status</Tabs.Trigger>
+        <Tabs.Trigger value="latency" class="rounded-3xl py-2">Latency</Tabs.Trigger>
+        <Tabs.Trigger value="incidents" class="rounded-3xl py-2">Incidents</Tabs.Trigger>
+        <Tabs.Trigger value="maintenances" class="rounded-3xl py-2">Maintenances</Tabs.Trigger>
+      </Tabs.List>
+      <!-- status view -->
+      <Tabs.Content value="status" class="p-4">
+        {#if loading}
+          <!-- Loading state -->
+          <div class="space-y-4 py-4">
+            <div class="flex items-center justify-between">
+              <Skeleton class="h-6 w-32" />
+              <Skeleton class="h-6 w-24" />
+            </div>
+            <div class="flex flex-wrap">
+              <LoaderBoxes />
+            </div>
+          </div>
+        {:else if dayDetailData}
+          <div class="space-y-4">
+            <!-- Minute grid -->
+            <div>
+              <div class="text-muted-foreground mb-2 flex items-center justify-between text-sm font-medium">
+                <p class="">Per-Minute Status</p>
+                <div class="flex items-center gap-1">
+                  <TrendingUp class="h-3 w-3" />
+                  {dayDetailData.uptime}%
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-0.5">
+                {#each dayDetailData.minutes as minute, index (minute.timestamp)}
+                  <div class="group relative">
+                    <div
+                      class="h-2.5 w-2.5 cursor-pointer bg-{minute.status.toLowerCase()} rounded-[1px] transition-opacity hover:opacity-75"
+                      title="{formatTime(minute.timestamp)} - {minute.status} - {index}"
+                    ></div>
+
+                    <div
+                      class="bg-popover text-popover-foreground pointer-events-none absolute bottom-full left-1/2 z-50 mb-1 hidden -translate-x-1/2 rounded border px-2 py-1 text-xs whitespace-nowrap shadow-md group-hover:block"
+                    >
+                      {formatTime(minute.timestamp)}
+                    </div>
+                  </div>
+                {/each}
+              </div>
+              <div class="text-muted-foreground mt-2 flex justify-between text-xs">
+                <span>00:00</span>
+                <span>06:00</span>
+                <span>12:00</span>
+                <span>18:00</span>
+                <span>23:59</span>
+              </div>
+            </div>
+          </div>
+        {:else}
+          <div class="py-8 text-center">
+            <p class="text-muted-foreground">Failed to load data</p>
+          </div>
+        {/if}
+      </Tabs.Content>
+      <Tabs.Content value="latency" class="p-4">
+        {#if latencyLoading}
+          <!-- Loading state -->
+          <div class="space-y-4 py-4">
+            <div class="flex items-center justify-between">
+              <Skeleton class="h-6 w-32" />
+              <Skeleton class="h-6 w-24" />
+            </div>
+            <Skeleton class="h-64 w-full" />
+          </div>
+        {:else if dayLatencyData && chartData.length > 0}
+          <div class="space-y-4">
+            <!-- Average latency -->
+            <div class="text-muted-foreground mb-2 flex items-center justify-between text-sm font-medium">
+              <p>Latency Over Time</p>
+              <div class="flex items-center gap-1">
+                <Clock class="h-3 w-3" />
+                {dayLatencyData.avgLatency} Avg
+              </div>
+            </div>
+
+            <!-- Latency chart -->
+            <Chart.Container config={chartConfig} class="w-full" style="height: 256px;">
+              <AreaChart
+                data={chartData}
+                x="date"
+                xScale={scaleTime()}
+                y="latency"
+                yDomain={[0, null]}
+                yNice
+                axis="x"
+                grid={false}
+                series={[
+                  {
+                    key: "latency",
+                    label: "Latency",
+                    color: "var(--color-latency)"
+                  }
+                ]}
+                props={{
+                  area: {
+                    curve: curveCatmullRom,
+                    "fill-opacity": 0.4,
+                    line: { class: "stroke-1" }
+                  },
+                  xAxis: {
+                    format: (d: Date) => format(d, "HH:mm")
+                  }
+                }}
+              >
+                {#snippet marks({ series, getAreaProps })}
+                  {#each series as s, i (s.key)}
+                    <LinearGradient
+                      stops={[s.color ?? "", "color-mix(in lch, " + s.color + " 10%, transparent)"]}
+                      vertical
+                    >
+                      {#snippet children({ gradient })}
+                        <Area {...getAreaProps(s, i)} fill={gradient} />
+                      {/snippet}
+                    </LinearGradient>
+                  {/each}
+                {/snippet}
+                {#snippet tooltip()}
+                  <Chart.Tooltip hideLabel>
+                    {#snippet formatter({ value, name, item })}
+                      <div class="flex w-full items-start gap-2">
+                        <div
+                          style="--color-bg: {item.color}; --color-border: {item.color};"
+                          class="mt-0.5 size-2.5 shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)"
+                        ></div>
+                        <div class="flex flex-1 flex-col items-start justify-between gap-1 leading-none">
+                          <span class="text-muted-foreground text-xs"
+                            >{item.payload?.date ? format(item.payload.date, "HH:mm") : ""}</span
+                          >
+                          <div class="flex items-center gap-2">
+                            <span class="text-foreground font-mono font-medium tabular-nums">
+                              {Math.round(Number(value))} ms
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    {/snippet}
+                  </Chart.Tooltip>
+                {/snippet}
+              </AreaChart>
+            </Chart.Container>
+          </div>
+        {:else if dayLatencyData && chartData.length === 0}
+          <div class="py-8 text-center">
+            <p class="text-muted-foreground">No latency data available for this day</p>
+          </div>
+        {:else}
+          <div class="py-8 text-center">
+            <p class="text-muted-foreground">Failed to load latency data</p>
+          </div>
+        {/if}
+      </Tabs.Content>
+      <Tabs.Content value="incidents" class="p-4">
+        {#if incidentsLoading}
+          <!-- Loading state -->
+          <div class="space-y-4 py-4">
+            <div class="flex items-center justify-between">
+              <Skeleton class="h-6 w-32" />
+              <Skeleton class="h-6 w-24" />
+            </div>
+            <Skeleton class="h-64 w-full" />
+          </div>
+        {:else if dayIncidentsData.length > 0}
+          <div class="space-y-4">
+            <!-- Incident list -->
+            <div>
+              <div class="text-muted-foreground mb-2 flex items-center justify-between text-sm font-medium">
+                <p class="">Incidents</p>
+                <div class="flex items-center gap-1">
+                  <Clock class="h-3 w-3" />
+                  {dayIncidentsData.length} Total
+                </div>
+              </div>
+
+              <div class="scrollbar-hidden flex max-h-100 flex-col gap-4 overflow-y-auto">
+                {#each dayIncidentsData as incident (incident.id)}
+                  <div class="border-b pb-5 last:border-b-0">
+                    <IncidentItem {incident} hideMonitors={true} />
+                  </div>
+                {/each}
+              </div>
+            </div>
+          </div>
+        {:else}
+          <div class="py-8 text-center">
+            <p class="text-muted-foreground">No incidents for this day</p>
+          </div>
+        {/if}
+      </Tabs.Content>
+      <Tabs.Content value="maintenances" class="p-4">
+        {#if maintenancesLoading}
+          <!-- Loading state -->
+          <div class="space-y-4 py-4">
+            <div class="flex items-center justify-between">
+              <Skeleton class="h-6 w-32" />
+              <Skeleton class="h-6 w-24" />
+            </div>
+            <Skeleton class="h-64 w-full" />
+          </div>
+        {:else if dayMaintenancesData.length > 0}
+          <div class="space-y-4">
+            <!-- Maintenance list -->
+            <div>
+              <div class="text-muted-foreground mb-2 flex items-center justify-between text-sm font-medium">
+                <p class="">Maintenances</p>
+                <div class="flex items-center gap-1">
+                  <Clock class="h-3 w-3" />
+                  {dayMaintenancesData.length} Total
+                </div>
+              </div>
+              <div class="scrollbar-hidden flex max-h-100 flex-col gap-4 overflow-y-auto">
+                {#each dayMaintenancesData as maintenance (maintenance.id)}
+                  <div class="border-b pb-5 last:border-b-0">
+                    <MaintenanceItem {maintenance} hideMonitors={true} />
+                  </div>
+                {/each}
+              </div>
+            </div>
+          </div>
+        {:else}
+          <div class="py-8 text-center">
+            <p class="text-muted-foreground">No maintenances for this day</p>
+          </div>
+        {/if}
+      </Tabs.Content>
+    </Tabs.Root>
+  </Dialog.Content>
+</Dialog.Root>

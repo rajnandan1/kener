@@ -1,0 +1,83 @@
+name: Generate README
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'README.template.md'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'README.template.md'
+  workflow_dispatch:  # Allows for manual execution
+  workflow_run:  # Triggers this workflow to run when it recognizes 'publish-images' workflow has ran and successfully completed
+    workflows: ["Publish Docker Image to Registries"]
+    types:
+      - completed
+
+permissions:
+  contents: write  # Explicitly allow pushing changes
+
+jobs:
+  generate-readme:
+    name: Generate README from template
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4.2.2
+        with:
+          fetch-depth: 0  # Fetch full history, including tags
+          persist-credentials: false  # We'll manually authenticate
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4.2.0
+        with:
+          node-version: "20"
+
+      - name: Install Dependencies
+        run: npm install mustache dotenv
+
+      - name: Extract Major and Major-Minor Versions
+        run: |
+          VERSION="${{ vars.BUILD_VERSION }}"
+
+          # Check if VERSION is empty and set a fallback value
+          if [ -z "$VERSION" ]; then
+            # Fetch the latest release using Git
+            VERSION=$(git tag -l --sort=-v:refname | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || echo "3.1.0")
+          fi
+
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MAJOR_MINOR=$(echo "$VERSION" | cut -d. -f1,2)
+
+          echo "Full version: $VERSION"
+          echo "Major version: $MAJOR"
+          echo "Major-Minor version: $MAJOR_MINOR"
+
+          # Export all as environment variables
+          echo "LATEST_VERSION=$VERSION" >> $GITHUB_ENV
+          echo "LATEST_MAJOR_VERSION=$MAJOR" >> $GITHUB_ENV
+          echo "LATEST_MAJOR_MINOR_VERSION=$MAJOR_MINOR" >> $GITHUB_ENV
+
+      - name: Generate README.md
+        env:
+          BUILD_FULL_VERSION: ${{ env.LATEST_VERSION }}  # e.g., 1.2.3
+          BUILD_MAJOR_VERSION: ${{ env.LATEST_MAJOR_VERSION}}  # e.g., 1
+          BUILD_MAJOR_MINOR_VERSION: ${{ env.LATEST_MAJOR_MINOR_VERSION }}  # e.g., 1.2
+        run: node scripts/generate-readme.js
+
+      - name: Commit and Push Changes
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+        run: |
+          git add README.md
+          git commit -m "Auto-generate README.md with release versions" || echo "No changes to commit"
+          git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git HEAD:main
