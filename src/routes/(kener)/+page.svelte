@@ -68,7 +68,7 @@
         <Badge variant="secondary" class="gap-1">Available Components</Badge>
       </div>
       {#each data.monitorTags as tag, i}
-        <div class="{i < data.monitorTags.length - 1 ? 'border-b' : ''} py-2">
+        <div class="{i < data.monitorTags.length - 1 ? 'border-b' : ''} py-2 pb-4">
           <MonitorBar {tag} localTz={data.localTz} />
         </div>
       {/each}

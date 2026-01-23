@@ -250,7 +250,7 @@
                   <div class="group relative">
                     <div
                       class="h-2.5 w-2.5 cursor-pointer bg-{minute.status.toLowerCase()} rounded-[1px] transition-opacity hover:opacity-75"
-                      title="{formatTime(minute.timestamp)} - {minute.status} - {index}"
+                      title="{formatTime(minute.timestamp)} - {minute.status}"
                     ></div>
 
                     <div

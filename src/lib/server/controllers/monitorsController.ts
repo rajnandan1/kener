@@ -4,6 +4,7 @@ import {
   GetNowTimestampUTC,
   ReplaceAllOccurrences,
   ValidateEmail,
+  UptimeCalculator,
 } from "../tool.js";
 import type {
   MonitorRecordInsert,
@@ -19,6 +20,8 @@ import type {
   MonitorRecord,
   MonitorAlert,
   MonitoringData,
+  TimestampStatusCount,
+  UptimeCalculatorResult,
 } from "../types/db.js";
 import type { MonitorFilter } from "../db/repositories/base.js";
 import Queue from "queue";
@@ -26,7 +29,9 @@ import db from "../db/db.js";
 import { DEGRADED, DOWN, NO_DATA, SIGNAL, UP, REALTIME } from "../constants.js";
 import type { PaginationInput } from "../../types/common.js";
 import type { DayWiseStatus, NumberWithChange } from "../../types/monitor.js";
-import GC from "../../global-constants.js";
+import GC, { getBadgeStyle, type BadgeStyle } from "../../global-constants.js";
+import { makeBadge } from "badge-maker";
+import { ErrorSvg } from "../../anywhere.js";
 import { GetLastMonitoringValue } from "../cache/setGet.js";
 
 interface GroupUpdateData {
@@ -57,6 +62,8 @@ interface UpdateMonitoringDataInput {
   end: number;
   newStatus: string;
   type: string;
+  latencyMin?: number;
+  latencyMax?: number;
 }
 interface MonitoringDataInput {
   monitor_tag: string;
@@ -179,6 +186,8 @@ export const UpdateMonitoringData = async (data: UpdateMonitoringDataInput): Pro
     GetMinuteStartTimestampUTC(queryData.end),
     queryData.newStatus,
     queryData.type,
+    queryData.latencyMin ?? 0,
+    queryData.latencyMax ?? 0,
   );
 };
 
@@ -289,6 +298,7 @@ export const GetDataGroupByDayAlternative = async (
 };
 export const GetMonitorsParsed = async (query: MonitorFilter): Promise<Array<MonitorRecordTyped>> => {
   // Retrieve monitors from the database based on the provided query
+  console.log(">>>>>>----  monitorsController:297 ", query);
   const rawMonitors = await db.getMonitors(query);
 
   // Parse type_data if available for each monitor
@@ -511,4 +521,123 @@ export const InsertNewAlert = async (data: MonitorAlertInsert): Promise<MonitorA
   }
   await db.insertAlert(data);
   return await db.getActiveAlert(data.monitor_tag, data.monitor_status, data.alert_status);
+};
+
+//getStatusCountsByInterval
+export const GetStatusCountsByInterval = async (
+  monitor_tag: string | string[],
+  start: number,
+  interval: number,
+  numIntervals: number,
+): Promise<TimestampStatusCount[]> => {
+  return await db.getStatusCountsByInterval(monitor_tag, start, interval, numIntervals);
+};
+
+export type BadgeType = "uptime" | "latency";
+
+export interface BadgeParams {
+  tag: string;
+  sinceLast?: string | null;
+  hideDuration?: string | null;
+  label?: string | null;
+  labelColor?: string | null;
+  color?: string | null;
+  style?: string | null;
+}
+
+function formatDuration(rangeInSeconds: number): string {
+  const days = Math.floor(rangeInSeconds / 86400);
+  const hours = Math.floor((rangeInSeconds % 86400) / 3600);
+  const minutes = Math.floor((rangeInSeconds % 3600) / 60);
+
+  if (days > 0 || minutes < 1) {
+    return `${days}d`;
+  } else if (hours > 0) {
+    return `${hours}h`;
+  } else if (minutes > 0) {
+    return `${minutes}m`;
+  }
+  return "";
+}
+
+export const GetBadge = async (badgeType: BadgeType, params: BadgeParams): Promise<Response> => {
+  const { tag } = params;
+
+  if (!tag) {
+    return new Response(ErrorSvg, {
+      headers: { "Content-Type": "image/svg+xml" },
+    });
+  }
+
+  // Parse sinceLast parameter (default 90 days)
+  let sinceLast: number;
+  const sinceLastParam = params.sinceLast;
+  if (sinceLastParam == undefined || isNaN(Number(sinceLastParam)) || Number(sinceLastParam) < 60) {
+    sinceLast = 90 * 24 * 60 * 60;
+  } else {
+    sinceLast = Number(sinceLastParam);
+  }
+  const rangeInSeconds = sinceLast;
+  const now = Math.floor(Date.now() / 1000);
+  const since = GetMinuteStartNowTimestampUTC() - rangeInSeconds;
+
+  const hideDuration = params.hideDuration === "true";
+  const formatted = formatDuration(rangeInSeconds);
+
+  let name: string;
+  let stats: TimestampStatusCount[] = [];
+  let uptimeData: UptimeCalculatorResult = {
+    uptime: "-",
+    avgLatency: "-",
+  };
+
+  if (tag === "_") {
+    // All monitors badge
+    const siteData = await db.getSiteDataByKey("siteName");
+    const siteName = siteData?.value as string | undefined;
+    name = siteName || "All Monitors";
+    const goodMonitors = await GetMonitorsParsed({ status: "ACTIVE", is_hidden: "NO" });
+    const activeTags = goodMonitors.map((monitor) => monitor.tag);
+
+    stats = await db.getStatusCountsByInterval(activeTags, since, now - since, 1);
+    uptimeData = UptimeCalculator(stats);
+  } else {
+    // Single monitor badge
+    const monitors = await GetMonitorsParsed({ tag });
+    if (monitors.length === 0) {
+      return new Response(ErrorSvg, {
+        headers: { "Content-Type": "image/svg+xml" },
+      });
+    }
+    const m = monitors[0];
+    name = m.name;
+
+    stats = await db.getStatusCountsByInterval(m.tag, since, now - since, 1);
+    uptimeData = UptimeCalculator(
+      stats,
+      m.monitor_settings_json?.uptime_formula_numerator,
+      m.monitor_settings_json?.uptime_formula_denominator,
+    );
+  }
+
+  // Determine message based on badge type
+  const message = badgeType === "uptime" ? uptimeData.uptime : uptimeData.avgLatency;
+
+  // Build label
+  let label: string = params.label || name;
+  label = label + (hideDuration ? "" : ` ${formatted}`);
+  label = label.trim();
+
+  const format = {
+    label,
+    message,
+    color: params.color || "#0079FF",
+    labelColor: params.labelColor || "#333",
+    style: getBadgeStyle(params.style ?? null),
+  };
+  const svg = makeBadge(format);
+
+  return new Response(svg, {
+    headers: { "Content-Type": "image/svg+xml" },
+  });
 };

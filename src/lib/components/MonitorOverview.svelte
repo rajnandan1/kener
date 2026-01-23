@@ -174,7 +174,7 @@
 
       <!-- Latency Chart -->
       <div class="pt-2">
-        <p class="text-muted-foreground mb-2 text-xs font-medium">Latency Trend (Daily Average)</p>
+        <p class="text-muted-foreground mb-2 text-xs font-medium">Latency Trend</p>
         <LatencyTrendChart data={displayData} height={128} />
       </div>
     {/if}

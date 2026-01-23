@@ -76,13 +76,13 @@
           <p class="text-muted-foreground text-2xl font-semibold {data.textClass}">
             {data.monitorLastStatus}
           </p>
-          <p class="text-muted-foreground text-xs">Last Status</p>
+          <p class="text-muted-foreground text-xs">Latest Status</p>
         </div>
         <div class="flex flex-col items-end gap-1">
           <p class="text-right text-2xl font-semibold">
             {data.monitorLastLatency}
           </p>
-          <p class="text-muted-foreground text-xs">Avg Latency</p>
+          <p class="text-muted-foreground text-xs">Latest Latency</p>
         </div>
       </div>
     </div>

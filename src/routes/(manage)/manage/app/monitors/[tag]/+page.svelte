@@ -67,7 +67,9 @@
   let modifyDataForm = $state({
     start: "",
     end: "",
-    newStatus: "UP" as "UP" | "DEGRADED" | "DOWN"
+    newStatus: "UP" as "UP" | "DEGRADED" | "DOWN",
+    latencyMin: 0,
+    latencyMax: 0
   });
 
   // Uptime settings state
@@ -629,6 +631,16 @@
       return;
     }
 
+    // Validate latency range
+    if (modifyDataForm.latencyMin < 0 || modifyDataForm.latencyMax < 0) {
+      modifyDataError = "Latency values must be non-negative";
+      return;
+    }
+    if (modifyDataForm.latencyMin > modifyDataForm.latencyMax) {
+      modifyDataError = "Latency min must be less than or equal to max";
+      return;
+    }
+
     modifyingData = true;
     try {
       const response = await fetch("/manage/api", {
@@ -640,7 +652,9 @@
             monitor_tag: monitor.tag,
             start: startTimestamp,
             end: endTimestamp,
-            newStatus: modifyDataForm.newStatus
+            newStatus: modifyDataForm.newStatus,
+            latencyMin: modifyDataForm.latencyMin,
+            latencyMax: modifyDataForm.latencyMax
           }
         })
       });
@@ -650,7 +664,7 @@
         modifyDataError = result.error;
       } else {
         toast.success("Monitoring data updated successfully");
-        modifyDataForm = { start: "", end: "", newStatus: "UP" };
+        modifyDataForm = { start: "", end: "", newStatus: "UP", latencyMin: 0, latencyMax: 0 };
       }
     } catch (e) {
       modifyDataError = "Failed to update monitoring data";
@@ -1125,7 +1139,7 @@
         </Card.Header>
         <Card.Content>
           <div class="grid gap-4">
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-2 gap-4">
               <div class="space-y-2">
                 <Label for="start_date">Start Date & Time <span class="text-destructive">*</span></Label>
                 <Input id="start_date" type="datetime-local" bind:value={modifyDataForm.start} />
@@ -1134,6 +1148,8 @@
                 <Label for="end_date">End Date & Time <span class="text-destructive">*</span></Label>
                 <Input id="end_date" type="datetime-local" bind:value={modifyDataForm.end} min={modifyDataForm.start} />
               </div>
+            </div>
+            <div class="grid grid-cols-3 gap-4">
               <div class="space-y-2">
                 <Label for="new_status">New Status</Label>
                 <Select.Root
@@ -1153,7 +1169,19 @@
                   </Select.Content>
                 </Select.Root>
               </div>
+              <div class="space-y-2">
+                <Label for="latency_min">Latency Min (ms)</Label>
+                <Input id="latency_min" type="number" min="0" bind:value={modifyDataForm.latencyMin} placeholder="0" />
+              </div>
+              <div class="space-y-2">
+                <Label for="latency_max">Latency Max (ms)</Label>
+                <Input id="latency_max" type="number" min="0" bind:value={modifyDataForm.latencyMax} placeholder="0" />
+              </div>
             </div>
+            <p class="text-muted-foreground text-xs">
+              Latency will be randomly generated between min and max for each data point. Set both to the same value for
+              a fixed latency.
+            </p>
             {#if modifyDataError}
               <p class="text-destructive text-sm">{modifyDataError}</p>
             {/if}

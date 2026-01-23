@@ -228,16 +228,24 @@ export class MonitoringRepository extends BaseRepository {
     end: number,
     newStatus: string,
     type: string,
+    latencyMin: number = 0,
+    latencyMax: number = 0,
   ): Promise<unknown[]> {
     const count = Math.floor((end - start) / 60) + 1;
     const timestamps = Array.from({ length: count }, (_, i) => start + i * 60);
+
+    // Generate random latency between min and max for each record
+    const generateLatency = () => {
+      if (latencyMin === latencyMax) return latencyMin;
+      return Math.floor(Math.random() * (latencyMax - latencyMin + 1)) + latencyMin;
+    };
 
     const records = timestamps.map((ts) => ({
       monitor_tag,
       timestamp: ts,
       status: newStatus,
       type,
-      latency: 0,
+      latency: generateLatency(),
     }));
 
     const batchSize = 500;
@@ -247,10 +255,11 @@ export class MonitoringRepository extends BaseRepository {
 
       for (let i = 0; i < records.length; i += batchSize) {
         const batch = records.slice(i, i + batchSize);
+        // Use raw insert with ON CONFLICT to update all fields including latency
         const result = await trx("monitoring_data")
           .insert(batch)
           .onConflict(["monitor_tag", "timestamp"])
-          .merge({ status: newStatus, type });
+          .merge(["status", "type", "latency"]);
         results.push(result);
       }
 
@@ -264,14 +273,14 @@ export class MonitoringRepository extends BaseRepository {
 
   /**
    * Get aggregated status counts grouped by timestamp intervals
-   * @param monitorTag - The monitor tag to query
+   * @param monitorTag - The monitor tag(s) to query (single string or array of strings)
    * @param startTimestamp - The starting timestamp (UTC seconds)
    * @param intervalInSeconds - The interval size in seconds (e.g., 86400 for 1 day)
    * @param numberOfPoints - Number of intervals/points to return
    * @returns Array of { ts, countOfUp, countOfDown, countOfDegraded }
    */
   async getStatusCountsByInterval(
-    monitorTag: string,
+    monitorTag: string | string[],
     startTimestamp: number,
     intervalInSeconds: number,
     numberOfPoints: number,
@@ -290,6 +299,9 @@ export class MonitoringRepository extends BaseRepository {
       tsExpression = `FLOOR((timestamp - ?) / ?) * ? + ?`;
     }
 
+    // Handle single tag or array of tags
+    const isArray = Array.isArray(monitorTag);
+    const tagClause = isArray ? `monitor_tag IN (${monitorTag.map(() => "?").join(", ")})` : `monitor_tag = ?`;
     const sql = `
       SELECT 
         ${tsExpression} as ts,
@@ -299,20 +311,20 @@ export class MonitoringRepository extends BaseRepository {
         SUM(CASE WHEN status = 'MAINTENANCE' THEN 1 ELSE 0 END) AS countOfMaintenance,
         AVG(latency) AS avgLatency
       FROM monitoring_data
-      WHERE monitor_tag = ? AND timestamp >= ? AND timestamp < ?
+      WHERE ${tagClause} AND timestamp >= ? AND timestamp < ?
       GROUP BY ts
       ORDER BY ts ASC
     `;
 
     // Bindings:
     // 1-4: tsExpression parameters (start, interval, interval, start)
-    // 5-7: WHERE clause parameters (tag, start, end)
+    // 5+: WHERE clause parameters (tag(s), start, end)
     const bindings = [
       startTimestamp,
       intervalInSeconds,
       intervalInSeconds,
       startTimestamp,
-      monitorTag,
+      ...(isArray ? monitorTag : [monitorTag]),
       startTimestamp,
       endTimestamp,
     ];
