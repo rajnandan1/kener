@@ -27,7 +27,7 @@
   }
 </script>
 
-<Button {variant} {size} class="{className} relative" onclick={handleClick}>
+<Button {variant} {size} class="{className} relative cursor-pointer" onclick={handleClick}>
   <span
     class="absolute flex items-center transition-all duration-200 ease-out {clipboard.copied
       ? 'scale-100 opacity-100'

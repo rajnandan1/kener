@@ -228,16 +228,17 @@ export class MonitoringRepository extends BaseRepository {
     end: number,
     newStatus: string,
     type: string,
-    latencyMin: number = 0,
-    latencyMax: number = 0,
+    latency: number = 0,
+    deviation: number = 0,
   ): Promise<unknown[]> {
     const count = Math.floor((end - start) / 60) + 1;
     const timestamps = Array.from({ length: count }, (_, i) => start + i * 60);
 
-    // Generate random latency between min and max for each record
+    // Generate random latency as latency ± deviation (never below 0)
     const generateLatency = () => {
-      if (latencyMin === latencyMax) return latencyMin;
-      return Math.floor(Math.random() * (latencyMax - latencyMin + 1)) + latencyMin;
+      if (deviation === 0) return latency;
+      const randomOffset = Math.floor(Math.random() * (deviation * 2 + 1)) - deviation;
+      return Math.max(0, latency + randomOffset);
     };
 
     const records = timestamps.map((ts) => ({
@@ -302,14 +303,15 @@ export class MonitoringRepository extends BaseRepository {
     // Handle single tag or array of tags
     const isArray = Array.isArray(monitorTag);
     const tagClause = isArray ? `monitor_tag IN (${monitorTag.map(() => "?").join(", ")})` : `monitor_tag = ?`;
+    // Use snake_case aliases for cross-database compatibility (PostgreSQL lowercases unquoted identifiers)
     const sql = `
       SELECT 
         ${tsExpression} as ts,
-        SUM(CASE WHEN status = 'UP' THEN 1 ELSE 0 END) AS countOfUp,
-        SUM(CASE WHEN status = 'DOWN' THEN 1 ELSE 0 END) AS countOfDown,
-        SUM(CASE WHEN status = 'DEGRADED' THEN 1 ELSE 0 END) AS countOfDegraded,
-        SUM(CASE WHEN status = 'MAINTENANCE' THEN 1 ELSE 0 END) AS countOfMaintenance,
-        AVG(latency) AS avgLatency
+        SUM(CASE WHEN status = 'UP' THEN 1 ELSE 0 END) AS count_of_up,
+        SUM(CASE WHEN status = 'DOWN' THEN 1 ELSE 0 END) AS count_of_down,
+        SUM(CASE WHEN status = 'DEGRADED' THEN 1 ELSE 0 END) AS count_of_degraded,
+        SUM(CASE WHEN status = 'MAINTENANCE' THEN 1 ELSE 0 END) AS count_of_maintenance,
+        AVG(latency) AS avg_latency
       FROM monitoring_data
       WHERE ${tagClause} AND timestamp >= ? AND timestamp < ?
       GROUP BY ts
@@ -331,16 +333,26 @@ export class MonitoringRepository extends BaseRepository {
 
     const result = await this.knex.raw(sql, bindings);
 
-    // Handle different database drivers (sqlite returns array, pg/mysql returns { rows })
-    const rows = Array.isArray(result) ? result : result.rows || [];
+    // Handle different database drivers:
+    // - SQLite (better-sqlite3): returns array directly
+    // - PostgreSQL: returns { rows: [...] }
+    // - MySQL: returns [rows, fields] where rows is an array
+    let rows: any[];
+    if (Array.isArray(result)) {
+      // SQLite or MySQL (MySQL returns [rows, fields])
+      rows = Array.isArray(result[0]) ? result[0] : result;
+    } else {
+      // PostgreSQL
+      rows = result.rows || [];
+    }
 
-    return rows.map((row: TimestampStatusCount) => ({
+    return rows.map((row: any) => ({
       ts: Number(row.ts),
-      countOfUp: Number(row.countOfUp),
-      countOfDown: Number(row.countOfDown),
-      countOfDegraded: Number(row.countOfDegraded),
-      countOfMaintenance: Number(row.countOfMaintenance),
-      avgLatency: Number(row.avgLatency) || 0,
+      countOfUp: Number(row.count_of_up) || 0,
+      countOfDown: Number(row.count_of_down) || 0,
+      countOfDegraded: Number(row.count_of_degraded) || 0,
+      countOfMaintenance: Number(row.count_of_maintenance) || 0,
+      avgLatency: Number(row.avg_latency) || 0,
     }));
   }
 }

@@ -8,12 +8,6 @@
   type NavItem = { title: string; url: string; icon: Component };
 
   let { navItems, ...restProps }: { navItems: NavItem[] } & ComponentProps<typeof Sidebar.Root> = $props();
-
-  const user = {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg"
-  };
 </script>
 
 <Sidebar.Root collapsible="offcanvas" {...restProps}>
@@ -35,6 +29,6 @@
     <NavMain items={navItems} />
   </Sidebar.Content>
   <Sidebar.Footer>
-    <NavUser {user} />
+    <NavUser />
   </Sidebar.Footer>
 </Sidebar.Root>

@@ -50,7 +50,7 @@ export default async function get(req: APIServerRequest): Promise<Response> {
   }
   const monitor = monitors[0];
   const rawUptimeData = await db.getStatusCountsByInterval(monitor.tag, startTime, 86400, days);
-
+  console.log(">>>>>>----  get:53 ", rawUptimeData[0]);
   //for days that are missing, add 0 counts
   const uptimeData: TimestampStatusCount[] = [];
   const uptimeDataMap = new Map(rawUptimeData.map((d) => [d.ts, d]));

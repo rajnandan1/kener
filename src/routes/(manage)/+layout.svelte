@@ -13,10 +13,12 @@
   import Settings2Icon from "@lucide/svelte/icons/settings-2";
   import GlobeIcon from "@lucide/svelte/icons/globe";
   import SirenIcon from "@lucide/svelte/icons/siren";
-  import Bell from "@lucide/svelte/icons/bell";
+  import BellIcon from "@lucide/svelte/icons/bell";
+  import CodeIcon from "@lucide/svelte/icons/code";
   import ChartSplineIcon from "@lucide/svelte/icons/chart-spline";
   import CloudAlertIcon from "@lucide/svelte/icons/cloud-alert";
   import House from "@lucide/svelte/icons/house";
+  import BadgeIcon from "@lucide/svelte/icons/id-card";
   import ClockAlertIcon from "@lucide/svelte/icons/clock-alert";
   import BookOpenIcon from "@lucide/svelte/icons/book-open";
   import KeyIcon from "@lucide/svelte/icons/key";
@@ -42,8 +44,10 @@
     { title: "Maintenances", url: "/manage/app/maintenances", icon: ClockAlertIcon },
     { title: "Analytics Providers", url: "/manage/app/analytics-providers", icon: ChartSplineIcon },
     { title: "Alerts", url: "/manage/app/alerts", icon: SirenIcon },
-    { title: "Subscriptions", url: "/manage/app/subscriptions", icon: Bell },
-    { title: "Users", url: "/manage/app/users", icon: UsersIcon }
+    { title: "Subscriptions", url: "/manage/app/subscriptions", icon: BellIcon },
+    { title: "Users", url: "/manage/app/users", icon: UsersIcon },
+    { title: "Badges", url: "/manage/app/badges", icon: BadgeIcon },
+    { title: "Embed", url: "/manage/app/embed", icon: CodeIcon }
   ];
 
   // Derive page title from current URL

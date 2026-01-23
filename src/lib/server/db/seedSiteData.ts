@@ -1,7 +1,7 @@
 const seedSiteData = {
   title: "Kener - Open source status page system",
   siteName: "Kener.ing",
-  siteURL: "https://kener.ing",
+  siteURL: "http://localhost:3000",
   home: "/",
   logo: "https://kener.ing/logo.png",
   favicon: "https://kener.ing/logo96.png",

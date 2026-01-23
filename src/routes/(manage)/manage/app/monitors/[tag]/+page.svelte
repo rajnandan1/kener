@@ -68,8 +68,8 @@
     start: "",
     end: "",
     newStatus: "UP" as "UP" | "DEGRADED" | "DOWN",
-    latencyMin: 0,
-    latencyMax: 0
+    latency: 0,
+    deviation: 0
   });
 
   // Uptime settings state
@@ -631,13 +631,13 @@
       return;
     }
 
-    // Validate latency range
-    if (modifyDataForm.latencyMin < 0 || modifyDataForm.latencyMax < 0) {
-      modifyDataError = "Latency values must be non-negative";
+    // Validate latency and deviation
+    if (modifyDataForm.latency < 0) {
+      modifyDataError = "Latency must be non-negative";
       return;
     }
-    if (modifyDataForm.latencyMin > modifyDataForm.latencyMax) {
-      modifyDataError = "Latency min must be less than or equal to max";
+    if (modifyDataForm.deviation < 0) {
+      modifyDataError = "Deviation must be non-negative";
       return;
     }
 
@@ -653,8 +653,8 @@
             start: startTimestamp,
             end: endTimestamp,
             newStatus: modifyDataForm.newStatus,
-            latencyMin: modifyDataForm.latencyMin,
-            latencyMax: modifyDataForm.latencyMax
+            latency: modifyDataForm.latency,
+            deviation: modifyDataForm.deviation
           }
         })
       });
@@ -664,7 +664,7 @@
         modifyDataError = result.error;
       } else {
         toast.success("Monitoring data updated successfully");
-        modifyDataForm = { start: "", end: "", newStatus: "UP", latencyMin: 0, latencyMax: 0 };
+        modifyDataForm = { start: "", end: "", newStatus: "UP", latency: 0, deviation: 0 };
       }
     } catch (e) {
       modifyDataError = "Failed to update monitoring data";
@@ -1170,17 +1170,17 @@
                 </Select.Root>
               </div>
               <div class="space-y-2">
-                <Label for="latency_min">Latency Min (ms)</Label>
-                <Input id="latency_min" type="number" min="0" bind:value={modifyDataForm.latencyMin} placeholder="0" />
+                <Label for="latency">Latency (ms)</Label>
+                <Input id="latency" type="number" min="0" bind:value={modifyDataForm.latency} placeholder="100" />
               </div>
               <div class="space-y-2">
-                <Label for="latency_max">Latency Max (ms)</Label>
-                <Input id="latency_max" type="number" min="0" bind:value={modifyDataForm.latencyMax} placeholder="0" />
+                <Label for="deviation">Deviation (ms)</Label>
+                <Input id="deviation" type="number" min="0" bind:value={modifyDataForm.deviation} placeholder="0" />
               </div>
             </div>
             <p class="text-muted-foreground text-xs">
-              Latency will be randomly generated between min and max for each data point. Set both to the same value for
-              a fixed latency.
+              Latency will be randomly generated as latency ± deviation for each data point. Set deviation to 0 for a
+              fixed latency value.
             </p>
             {#if modifyDataError}
               <p class="text-destructive text-sm">{modifyDataError}</p>

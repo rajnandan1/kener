@@ -62,8 +62,8 @@ interface UpdateMonitoringDataInput {
   end: number;
   newStatus: string;
   type: string;
-  latencyMin?: number;
-  latencyMax?: number;
+  latency?: number;
+  deviation?: number;
 }
 interface MonitoringDataInput {
   monitor_tag: string;
@@ -186,8 +186,8 @@ export const UpdateMonitoringData = async (data: UpdateMonitoringDataInput): Pro
     GetMinuteStartTimestampUTC(queryData.end),
     queryData.newStatus,
     queryData.type,
-    queryData.latencyMin ?? 0,
-    queryData.latencyMax ?? 0,
+    queryData.latency ?? 0,
+    queryData.deviation ?? 0,
   );
 };
 
@@ -298,7 +298,6 @@ export const GetDataGroupByDayAlternative = async (
 };
 export const GetMonitorsParsed = async (query: MonitorFilter): Promise<Array<MonitorRecordTyped>> => {
   // Retrieve monitors from the database based on the provided query
-  console.log(">>>>>>----  monitorsController:297 ", query);
   const rawMonitors = await db.getMonitors(query);
 
   // Parse type_data if available for each monitor
@@ -533,7 +532,7 @@ export const GetStatusCountsByInterval = async (
   return await db.getStatusCountsByInterval(monitor_tag, start, interval, numIntervals);
 };
 
-export type BadgeType = "uptime" | "latency";
+export type BadgeType = "status" | "uptime" | "latency";
 
 export interface BadgeParams {
   tag: string;
@@ -569,69 +568,122 @@ export const GetBadge = async (badgeType: BadgeType, params: BadgeParams): Promi
     });
   }
 
-  // Parse sinceLast parameter (default 90 days)
-  let sinceLast: number;
-  const sinceLastParam = params.sinceLast;
-  if (sinceLastParam == undefined || isNaN(Number(sinceLastParam)) || Number(sinceLastParam) < 60) {
-    sinceLast = 90 * 24 * 60 * 60;
-  } else {
-    sinceLast = Number(sinceLastParam);
-  }
-  const rangeInSeconds = sinceLast;
-  const now = Math.floor(Date.now() / 1000);
-  const since = GetMinuteStartNowTimestampUTC() - rangeInSeconds;
-
-  const hideDuration = params.hideDuration === "true";
-  const formatted = formatDuration(rangeInSeconds);
-
   let name: string;
-  let stats: TimestampStatusCount[] = [];
-  let uptimeData: UptimeCalculatorResult = {
-    uptime: "-",
-    avgLatency: "-",
-  };
+  let message: string;
+  let badgeColor: string = params.color || "#0079FF";
 
-  if (tag === "_") {
-    // All monitors badge
-    const siteData = await db.getSiteDataByKey("siteName");
-    const siteName = siteData?.value as string | undefined;
-    name = siteName || "All Monitors";
-    const goodMonitors = await GetMonitorsParsed({ status: "ACTIVE", is_hidden: "NO" });
-    const activeTags = goodMonitors.map((monitor) => monitor.tag);
+  // For status badge, we get real-time status
+  if (badgeType === "status") {
+    let lastObj: { status: string } | undefined;
 
-    stats = await db.getStatusCountsByInterval(activeTags, since, now - since, 1);
-    uptimeData = UptimeCalculator(stats);
-  } else {
-    // Single monitor badge
-    const monitors = await GetMonitorsParsed({ tag });
-    if (monitors.length === 0) {
-      return new Response(ErrorSvg, {
-        headers: { "Content-Type": "image/svg+xml" },
-      });
+    if (tag === "_") {
+      // All monitors status
+      const siteData = await db.getSiteDataByKey("siteName");
+      name = (siteData?.value as string) || "All Monitors";
+      lastObj = await GetLatestStatusActiveAll();
+    } else {
+      // Single monitor status
+      const monitors = await GetMonitorsParsed({ tag, status: "ACTIVE", is_hidden: "NO" });
+      if (monitors.length === 0) {
+        return new Response(ErrorSvg, {
+          headers: { "Content-Type": "image/svg+xml" },
+        });
+      }
+      const m = monitors[0];
+      name = m.name;
+      lastObj = (await GetLastMonitoringValue(m.tag, () => GetLatestMonitoringData(m.tag))) as { status: string };
     }
-    const m = monitors[0];
-    name = m.name;
 
-    stats = await db.getStatusCountsByInterval(m.tag, since, now - since, 1);
-    uptimeData = UptimeCalculator(
-      stats,
-      m.monitor_settings_json?.uptime_formula_numerator,
-      m.monitor_settings_json?.uptime_formula_denominator,
-    );
+    const status = (lastObj?.status as string) || NO_DATA;
+    message = status;
+
+    // Use status-specific color if no custom color provided
+    if (!params.color) {
+      //get site colors
+      let myColors = {} as Record<string, string>;
+      const siteColorsData = await db.getSiteDataByKey("colors");
+      if (siteColorsData && siteColorsData.value) {
+        try {
+          myColors = JSON.parse(siteColorsData.value);
+        } catch (e) {
+          myColors = {};
+        }
+      }
+      const statusColors: Record<string, string> = {
+        UP: myColors.UP || "#00dfa2",
+        DEGRADED: myColors.DEGRADED || "#e6ca61",
+        DOWN: myColors.DOWN || "#ca3038",
+        MAINTENANCE: myColors.MAINTENANCE || "#6679cc",
+        NO_DATA: myColors.NO_DATA || "#9ca3af",
+      };
+      badgeColor = statusColors[status] || statusColors.NO_DATA;
+    }
+  } else {
+    // For uptime/latency badges, we calculate over a time period
+    let sinceLast: number;
+    const sinceLastParam = params.sinceLast;
+    if (sinceLastParam == undefined || isNaN(Number(sinceLastParam)) || Number(sinceLastParam) < 60) {
+      sinceLast = 90 * 24 * 60 * 60;
+    } else {
+      sinceLast = Number(sinceLastParam);
+    }
+    const rangeInSeconds = sinceLast;
+    const now = Math.floor(Date.now() / 1000);
+    const since = GetMinuteStartNowTimestampUTC() - rangeInSeconds;
+
+    const hideDuration = params.hideDuration === "true";
+    const formatted = formatDuration(rangeInSeconds);
+
+    let stats: TimestampStatusCount[] = [];
+    let uptimeData: UptimeCalculatorResult = {
+      uptime: "-",
+      avgLatency: "-",
+    };
+
+    if (tag === "_") {
+      // All monitors badge
+      const siteData = await db.getSiteDataByKey("siteName");
+      const siteName = siteData?.value as string | undefined;
+      name = siteName || "All Monitors";
+      const goodMonitors = await GetMonitorsParsed({ status: "ACTIVE", is_hidden: "NO" });
+      const activeTags = goodMonitors.map((monitor) => monitor.tag);
+
+      stats = await db.getStatusCountsByInterval(activeTags, since, now - since, 1);
+      uptimeData = UptimeCalculator(stats);
+    } else {
+      // Single monitor badge
+      const monitors = await GetMonitorsParsed({ tag });
+      if (monitors.length === 0) {
+        return new Response(ErrorSvg, {
+          headers: { "Content-Type": "image/svg+xml" },
+        });
+      }
+      const m = monitors[0];
+      name = m.name;
+
+      stats = await db.getStatusCountsByInterval(m.tag, since, now - since, 1);
+      uptimeData = UptimeCalculator(
+        stats,
+        m.monitor_settings_json?.uptime_formula_numerator,
+        m.monitor_settings_json?.uptime_formula_denominator,
+      );
+    }
+
+    // Determine message based on badge type
+    message = badgeType === "uptime" ? uptimeData.uptime : uptimeData.avgLatency;
+
+    // Build label with duration suffix for uptime/latency
+    name = name + (hideDuration ? "" : ` ${formatted}`);
   }
 
-  // Determine message based on badge type
-  const message = badgeType === "uptime" ? uptimeData.uptime : uptimeData.avgLatency;
-
-  // Build label
+  // Build final label
   let label: string = params.label || name;
-  label = label + (hideDuration ? "" : ` ${formatted}`);
   label = label.trim();
 
   const format = {
     label,
     message,
-    color: params.color || "#0079FF",
+    color: badgeColor,
     labelColor: params.labelColor || "#333",
     style: getBadgeStyle(params.style ?? null),
   };

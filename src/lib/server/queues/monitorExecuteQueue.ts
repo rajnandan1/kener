@@ -132,7 +132,7 @@ const addWorker = () => {
 
   worker.on("completed", (job: Job, returnvalue: any) => {
     const { monitor, ts } = job.data as JobData;
-    console.log(`Queue: ${queueName} for ${monitor.tag} at ${ts} has completed! Results:`, returnvalue);
+    console.log(`📀 Execute: ${monitor.tag} @ ${new Date(ts * 1000).toISOString()}`);
   });
 
   return worker;
