@@ -12,6 +12,7 @@ import { SubscribersRepository } from "./repositories/subscribers.js";
 import { ImagesRepository } from "./repositories/images.js";
 import { PagesRepository } from "./repositories/pages.js";
 import { MaintenancesRepository } from "./repositories/maintenances.js";
+import { MonitorAlertConfigRepository } from "./repositories/monitorAlertConfig.js";
 
 // Re-export types from base
 export type { MonitorFilter, TriggerFilter, IncidentFilter, CountResult } from "./repositories/base.js";
@@ -39,6 +40,7 @@ class DbImpl {
   private images!: ImagesRepository;
   private pages!: PagesRepository;
   private maintenances!: MaintenancesRepository;
+  private monitorAlertConfig!: MonitorAlertConfigRepository;
 
   // Method bindings - declared with definite assignment assertion
   // ============ Monitoring Data ============
@@ -272,6 +274,50 @@ class DbImpl {
   getMaintenanceEventsForEventsByDateRange!: MaintenancesRepository["getMaintenanceEventsForEventsByDateRange"];
   getMaintenanceEventsForEventsByDateRangeMonitor!: MaintenancesRepository["getMaintenanceEventsForEventsByDateRangeMonitor"];
 
+  // ============ Monitor Alert Config ============
+  insertMonitorAlertConfig!: MonitorAlertConfigRepository["insertMonitorAlertConfig"];
+  updateMonitorAlertConfig!: MonitorAlertConfigRepository["updateMonitorAlertConfig"];
+  getMonitorAlertConfigById!: MonitorAlertConfigRepository["getMonitorAlertConfigById"];
+  getMonitorAlertConfigs!: MonitorAlertConfigRepository["getMonitorAlertConfigs"];
+  getMonitorAlertConfigsByMonitorTag!: MonitorAlertConfigRepository["getMonitorAlertConfigsByMonitorTag"];
+  getActiveMonitorAlertConfigs!: MonitorAlertConfigRepository["getActiveMonitorAlertConfigs"];
+  getActiveMonitorAlertConfigsByMonitorTag!: MonitorAlertConfigRepository["getActiveMonitorAlertConfigsByMonitorTag"];
+  deleteMonitorAlertConfig!: MonitorAlertConfigRepository["deleteMonitorAlertConfig"];
+  deleteMonitorAlertConfigsByMonitorTag!: MonitorAlertConfigRepository["deleteMonitorAlertConfigsByMonitorTag"];
+  getMonitorAlertConfigsCount!: MonitorAlertConfigRepository["getMonitorAlertConfigsCount"];
+
+  // ============ Monitor Alert Config Triggers ============
+  addTriggerToMonitorAlertConfig!: MonitorAlertConfigRepository["addTriggerToMonitorAlertConfig"];
+  addTriggersToMonitorAlertConfig!: MonitorAlertConfigRepository["addTriggersToMonitorAlertConfig"];
+  removeTriggerFromMonitorAlertConfig!: MonitorAlertConfigRepository["removeTriggerFromMonitorAlertConfig"];
+  removeAllTriggersFromMonitorAlertConfig!: MonitorAlertConfigRepository["removeAllTriggersFromMonitorAlertConfig"];
+  getMonitorAlertConfigTriggers!: MonitorAlertConfigRepository["getMonitorAlertConfigTriggers"];
+  getMonitorAlertConfigTriggerIds!: MonitorAlertConfigRepository["getMonitorAlertConfigTriggerIds"];
+  replaceMonitorAlertConfigTriggers!: MonitorAlertConfigRepository["replaceMonitorAlertConfigTriggers"];
+  getMonitorAlertConfigWithTriggers!: MonitorAlertConfigRepository["getMonitorAlertConfigWithTriggers"];
+  getMonitorAlertConfigsWithTriggersByMonitorTag!: MonitorAlertConfigRepository["getMonitorAlertConfigsWithTriggersByMonitorTag"];
+  getActiveMonitorAlertConfigsWithTriggers!: MonitorAlertConfigRepository["getActiveMonitorAlertConfigsWithTriggers"];
+  isTriggerUsedInMonitorAlertConfig!: MonitorAlertConfigRepository["isTriggerUsedInMonitorAlertConfig"];
+  getMonitorAlertConfigsByTriggerId!: MonitorAlertConfigRepository["getMonitorAlertConfigsByTriggerId"];
+
+  // ============ Monitor Alerts V2 ============
+  insertMonitorAlertV2!: MonitorAlertConfigRepository["insertMonitorAlertV2"];
+  updateMonitorAlertV2!: MonitorAlertConfigRepository["updateMonitorAlertV2"];
+  updateMonitorAlertV2Status!: MonitorAlertConfigRepository["updateMonitorAlertV2Status"];
+  getMonitorAlertV2ById!: MonitorAlertConfigRepository["getMonitorAlertV2ById"];
+  getMonitorAlertsV2!: MonitorAlertConfigRepository["getMonitorAlertsV2"];
+  getMonitorAlertsV2ByConfigId!: MonitorAlertConfigRepository["getMonitorAlertsV2ByConfigId"];
+  hasTriggeredAlertForConfig!: MonitorAlertConfigRepository["hasTriggeredAlertForConfig"];
+  getActiveAlertForConfig!: MonitorAlertConfigRepository["getActiveAlertForConfig"];
+  getAllTriggeredAlerts!: MonitorAlertConfigRepository["getAllTriggeredAlerts"];
+  deleteMonitorAlertV2!: MonitorAlertConfigRepository["deleteMonitorAlertV2"];
+  deleteMonitorAlertsV2ByConfigId!: MonitorAlertConfigRepository["deleteMonitorAlertsV2ByConfigId"];
+  getMonitorAlertV2WithConfig!: MonitorAlertConfigRepository["getMonitorAlertV2WithConfig"];
+  getAllTriggeredAlertsWithConfig!: MonitorAlertConfigRepository["getAllTriggeredAlertsWithConfig"];
+  addIncidentToAlert!: MonitorAlertConfigRepository["addIncidentToAlert"];
+  getAlertsByIncidentId!: MonitorAlertConfigRepository["getAlertsByIncidentId"];
+  getMonitorAlertsV2Count!: MonitorAlertConfigRepository["getMonitorAlertsV2Count"];
+
   constructor(opts: KnexType.Config) {
     this.knex = Knex(opts);
 
@@ -286,6 +332,7 @@ class DbImpl {
     this.images = new ImagesRepository(this.knex);
     this.pages = new PagesRepository(this.knex);
     this.maintenances = new MaintenancesRepository(this.knex);
+    this.monitorAlertConfig = new MonitorAlertConfigRepository(this.knex);
 
     // Bind methods after repositories are initialized
     this.bindMonitoringMethods();
@@ -298,6 +345,7 @@ class DbImpl {
     this.bindImagesMethods();
     this.bindPagesMethods();
     this.bindMaintenancesMethods();
+    this.bindMonitorAlertConfigMethods();
 
     this.init();
   }
@@ -544,6 +592,93 @@ class DbImpl {
     );
     this.getMaintenanceEventsForEventsByDateRangeMonitor =
       this.maintenances.getMaintenanceEventsForEventsByDateRangeMonitor.bind(this.maintenances);
+  }
+
+  private bindMonitorAlertConfigMethods(): void {
+    // Monitor Alert Config CRUD
+    this.insertMonitorAlertConfig = this.monitorAlertConfig.insertMonitorAlertConfig.bind(this.monitorAlertConfig);
+    this.updateMonitorAlertConfig = this.monitorAlertConfig.updateMonitorAlertConfig.bind(this.monitorAlertConfig);
+    this.getMonitorAlertConfigById = this.monitorAlertConfig.getMonitorAlertConfigById.bind(this.monitorAlertConfig);
+    this.getMonitorAlertConfigs = this.monitorAlertConfig.getMonitorAlertConfigs.bind(this.monitorAlertConfig);
+    this.getMonitorAlertConfigsByMonitorTag = this.monitorAlertConfig.getMonitorAlertConfigsByMonitorTag.bind(
+      this.monitorAlertConfig,
+    );
+    this.getActiveMonitorAlertConfigs = this.monitorAlertConfig.getActiveMonitorAlertConfigs.bind(
+      this.monitorAlertConfig,
+    );
+    this.getActiveMonitorAlertConfigsByMonitorTag =
+      this.monitorAlertConfig.getActiveMonitorAlertConfigsByMonitorTag.bind(this.monitorAlertConfig);
+    this.deleteMonitorAlertConfig = this.monitorAlertConfig.deleteMonitorAlertConfig.bind(this.monitorAlertConfig);
+    this.deleteMonitorAlertConfigsByMonitorTag = this.monitorAlertConfig.deleteMonitorAlertConfigsByMonitorTag.bind(
+      this.monitorAlertConfig,
+    );
+    this.getMonitorAlertConfigsCount = this.monitorAlertConfig.getMonitorAlertConfigsCount.bind(
+      this.monitorAlertConfig,
+    );
+
+    // Monitor Alert Config Triggers
+    this.addTriggerToMonitorAlertConfig = this.monitorAlertConfig.addTriggerToMonitorAlertConfig.bind(
+      this.monitorAlertConfig,
+    );
+    this.addTriggersToMonitorAlertConfig = this.monitorAlertConfig.addTriggersToMonitorAlertConfig.bind(
+      this.monitorAlertConfig,
+    );
+    this.removeTriggerFromMonitorAlertConfig = this.monitorAlertConfig.removeTriggerFromMonitorAlertConfig.bind(
+      this.monitorAlertConfig,
+    );
+    this.removeAllTriggersFromMonitorAlertConfig = this.monitorAlertConfig.removeAllTriggersFromMonitorAlertConfig.bind(
+      this.monitorAlertConfig,
+    );
+    this.getMonitorAlertConfigTriggers = this.monitorAlertConfig.getMonitorAlertConfigTriggers.bind(
+      this.monitorAlertConfig,
+    );
+    this.getMonitorAlertConfigTriggerIds = this.monitorAlertConfig.getMonitorAlertConfigTriggerIds.bind(
+      this.monitorAlertConfig,
+    );
+    this.replaceMonitorAlertConfigTriggers = this.monitorAlertConfig.replaceMonitorAlertConfigTriggers.bind(
+      this.monitorAlertConfig,
+    );
+
+    // Composite operations
+    this.getMonitorAlertConfigWithTriggers = this.monitorAlertConfig.getMonitorAlertConfigWithTriggers.bind(
+      this.monitorAlertConfig,
+    );
+    this.getMonitorAlertConfigsWithTriggersByMonitorTag =
+      this.monitorAlertConfig.getMonitorAlertConfigsWithTriggersByMonitorTag.bind(this.monitorAlertConfig);
+    this.getActiveMonitorAlertConfigsWithTriggers =
+      this.monitorAlertConfig.getActiveMonitorAlertConfigsWithTriggers.bind(this.monitorAlertConfig);
+    this.isTriggerUsedInMonitorAlertConfig = this.monitorAlertConfig.isTriggerUsedInMonitorAlertConfig.bind(
+      this.monitorAlertConfig,
+    );
+    this.getMonitorAlertConfigsByTriggerId = this.monitorAlertConfig.getMonitorAlertConfigsByTriggerId.bind(
+      this.monitorAlertConfig,
+    );
+
+    // Monitor Alerts V2
+    this.insertMonitorAlertV2 = this.monitorAlertConfig.insertMonitorAlertV2.bind(this.monitorAlertConfig);
+    this.updateMonitorAlertV2 = this.monitorAlertConfig.updateMonitorAlertV2.bind(this.monitorAlertConfig);
+    this.updateMonitorAlertV2Status = this.monitorAlertConfig.updateMonitorAlertV2Status.bind(this.monitorAlertConfig);
+    this.getMonitorAlertV2ById = this.monitorAlertConfig.getMonitorAlertV2ById.bind(this.monitorAlertConfig);
+    this.getMonitorAlertsV2 = this.monitorAlertConfig.getMonitorAlertsV2.bind(this.monitorAlertConfig);
+    this.getMonitorAlertsV2ByConfigId = this.monitorAlertConfig.getMonitorAlertsV2ByConfigId.bind(
+      this.monitorAlertConfig,
+    );
+    this.hasTriggeredAlertForConfig = this.monitorAlertConfig.hasTriggeredAlertForConfig.bind(this.monitorAlertConfig);
+    this.getActiveAlertForConfig = this.monitorAlertConfig.getActiveAlertForConfig.bind(this.monitorAlertConfig);
+    this.getAllTriggeredAlerts = this.monitorAlertConfig.getAllTriggeredAlerts.bind(this.monitorAlertConfig);
+    this.deleteMonitorAlertV2 = this.monitorAlertConfig.deleteMonitorAlertV2.bind(this.monitorAlertConfig);
+    this.deleteMonitorAlertsV2ByConfigId = this.monitorAlertConfig.deleteMonitorAlertsV2ByConfigId.bind(
+      this.monitorAlertConfig,
+    );
+    this.getMonitorAlertV2WithConfig = this.monitorAlertConfig.getMonitorAlertV2WithConfig.bind(
+      this.monitorAlertConfig,
+    );
+    this.getAllTriggeredAlertsWithConfig = this.monitorAlertConfig.getAllTriggeredAlertsWithConfig.bind(
+      this.monitorAlertConfig,
+    );
+    this.addIncidentToAlert = this.monitorAlertConfig.addIncidentToAlert.bind(this.monitorAlertConfig);
+    this.getAlertsByIncidentId = this.monitorAlertConfig.getAlertsByIncidentId.bind(this.monitorAlertConfig);
+    this.getMonitorAlertsV2Count = this.monitorAlertConfig.getMonitorAlertsV2Count.bind(this.monitorAlertConfig);
   }
 
   async init(): Promise<void> {}

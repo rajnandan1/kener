@@ -82,6 +82,14 @@ import {
   GetMaintenanceMonitors,
   UpdateMaintenanceMonitorImpact,
 } from "$lib/server/controllers/maintenanceController.js";
+import {
+  CreateMonitorAlertConfig,
+  UpdateMonitorAlertConfig,
+  GetMonitorAlertConfigById,
+  GetMonitorAlertConfigsByMonitorTag,
+  DeleteMonitorAlertConfig,
+  ToggleMonitorAlertConfigStatus,
+} from "$lib/server/controllers/monitorAlertConfigController.js";
 import type { AlertData, SiteDataForNotification } from "$lib/server/notification/variables";
 
 function AdminCan(role: string) {
@@ -408,6 +416,28 @@ export async function POST({ request, cookies }) {
       AdminEditorCan(userDB.role);
       await UpdateMaintenanceMonitorImpact(data.maintenance_id, data.monitor_tag, data.monitor_impact);
       resp = { success: true };
+    }
+    // ============ Monitor Alert Config Actions ============
+    else if (action == "createMonitorAlertConfig") {
+      AdminEditorCan(userDB.role);
+      resp = await CreateMonitorAlertConfig(data);
+    } else if (action == "updateMonitorAlertConfig") {
+      AdminEditorCan(userDB.role);
+      resp = await UpdateMonitorAlertConfig(data);
+    } else if (action == "getMonitorAlertConfig") {
+      resp = await GetMonitorAlertConfigById(data.id);
+      if (!resp) {
+        throw new Error("Monitor alert config not found");
+      }
+    } else if (action == "getMonitorAlertConfigsByMonitorTag") {
+      resp = await GetMonitorAlertConfigsByMonitorTag(data.monitor_tag);
+    } else if (action == "deleteMonitorAlertConfig") {
+      AdminEditorCan(userDB.role);
+      await DeleteMonitorAlertConfig(data.id);
+      resp = { success: true };
+    } else if (action == "toggleMonitorAlertConfigStatus") {
+      AdminEditorCan(userDB.role);
+      resp = await ToggleMonitorAlertConfigStatus(data.id);
     }
   } catch (error: unknown) {
     console.log(error);

@@ -44,6 +44,7 @@ export interface MonitorAlertInsert {
   monitor_status: string;
   alert_status: string;
   health_checks: number;
+  config_id?: number;
 }
 
 // ============ site_data table ============
@@ -576,4 +577,133 @@ export interface MaintenanceEventsMonitorList {
   monitors: MaintenanceMonitorImpact[];
   created_at: Date;
   updated_at: Date;
+}
+
+// ============ monitor_alerts_config table ============
+export type AlertForType = "STATUS" | "LATENCY" | "UPTIME";
+export type AlertSeverityType = "CRITICAL" | "WARNING";
+export type YesNoType = "YES" | "NO";
+
+export interface MonitorAlertConfigRecord {
+  id: number;
+  monitor_tag: string;
+  alert_for: AlertForType;
+  alert_value: string;
+  failure_threshold: number;
+  success_threshold: number;
+  alert_description: string | null;
+  create_incident: YesNoType;
+  is_active: YesNoType;
+  severity: AlertSeverityType;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface MonitorAlertConfigInsert {
+  monitor_tag: string;
+  alert_for: AlertForType;
+  alert_value: string;
+  failure_threshold: number;
+  success_threshold: number;
+  alert_description?: string | null;
+  create_incident?: YesNoType;
+  is_active?: YesNoType;
+  severity?: AlertSeverityType;
+}
+
+export interface MonitorAlertConfigUpdate {
+  alert_for?: AlertForType;
+  alert_value?: string;
+  failure_threshold?: number;
+  success_threshold?: number;
+  alert_description?: string | null;
+  create_incident?: YesNoType;
+  is_active?: YesNoType;
+  severity?: AlertSeverityType;
+}
+
+export interface MonitorAlertConfigFilter {
+  id?: number;
+  monitor_tag?: string;
+  alert_for?: AlertForType;
+  is_active?: YesNoType;
+}
+
+// ============ monitor_alerts_config_triggers table ============
+export interface MonitorAlertConfigTriggerRecord {
+  monitor_alerts_id: number;
+  trigger_id: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface MonitorAlertConfigTriggerInsert {
+  monitor_alerts_id: number;
+  trigger_id: number;
+}
+
+// ============ Composite types for monitor_alerts_config ============
+export interface MonitorAlertConfigWithTriggers extends MonitorAlertConfigRecord {
+  triggers: TriggerRecord[];
+}
+
+export interface MonitorAlertConfigCreateInput {
+  monitor_tag: string;
+  alert_for: AlertForType;
+  alert_value: string;
+  failure_threshold: number;
+  success_threshold: number;
+  alert_description?: string | null;
+  create_incident?: YesNoType;
+  is_active?: YesNoType;
+  severity?: AlertSeverityType;
+  trigger_ids?: number[];
+}
+
+export interface MonitorAlertConfigUpdateInput {
+  id: number;
+  alert_for?: AlertForType;
+  alert_value?: string;
+  failure_threshold?: number;
+  success_threshold?: number;
+  alert_description?: string | null;
+  create_incident?: YesNoType;
+  is_active?: YesNoType;
+  severity?: AlertSeverityType;
+  trigger_ids?: number[];
+}
+
+// ============ monitor_alerts_v2 table ============
+export type MonitorAlertStatusType = "TRIGGERED" | "RESOLVED";
+
+export interface MonitorAlertV2Record {
+  id: number;
+  config_id: number;
+  incident_id: number | null;
+  alert_status: MonitorAlertStatusType;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface MonitorAlertV2Insert {
+  config_id: number;
+  incident_id?: number | null;
+  alert_status: MonitorAlertStatusType;
+}
+
+export interface MonitorAlertV2Update {
+  incident_id?: number | null;
+  alert_status?: MonitorAlertStatusType;
+}
+
+export interface MonitorAlertV2Filter {
+  id?: number;
+  config_id?: number;
+  incident_id?: number;
+  alert_status?: MonitorAlertStatusType;
+}
+
+// Composite type with config details
+export interface MonitorAlertV2WithConfig extends MonitorAlertV2Record {
+  config: MonitorAlertConfigRecord;
 }

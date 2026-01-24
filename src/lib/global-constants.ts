@@ -47,6 +47,12 @@ export default {
   IDENTIFIED: "IDENTIFIED",
   MONITORING: "MONITORING",
   RESOLVED: "RESOLVED",
+  YES: "YES",
+  NO: "NO",
+  TRIGGERED: "TRIGGERED",
+  CRITICAL: "CRITICAL",
+  CLOSED: "CLOSED",
+  WARNING: "WARNING",
   defaultNumeratorStr: "up + maintenance + degraded",
   defaultDenominatorStr: "up + down + degraded + maintenance",
 } as const;

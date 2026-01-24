@@ -1,19 +1,5 @@
 import db from "../db/db.js";
-import type {
-  MonitorRecordInsert,
-  TriggerRecordInsert,
-  MonitoringDataInsert,
-  MonitorAlertInsert,
-  IncidentFilter,
-  MonitorFilter,
-  TriggerFilter,
-  SubscriberRecordInsert,
-  UserRecordInsert,
-  UserRecord,
-  MonitorRecordTyped,
-  MonitorRecord,
-  TriggerRecord,
-} from "../types/db.js";
+import type { TriggerRecordInsert, TriggerFilter, TriggerRecord } from "../types/db.js";
 import { ValidateEmail } from "../tool.js";
 
 interface TriggerInput extends TriggerRecordInsert {

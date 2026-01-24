@@ -13,6 +13,7 @@
   import AllMaintenanceMonitorGrid from "$lib/components/AllMaintenanceMonitorGrid.svelte";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import mdToHTML from "$lib/marked.js";
+  import IncidentItem from "$lib/components/IncidentItem.svelte";
 
   let { data } = $props();
 </script>
@@ -75,4 +76,19 @@
       {/each}
     </div>
   </div>
+  <!-- Recent Concluded Incidents -->
+  {#if data.recentConcludedMaintenances && data.recentConcludedMaintenances.length > 0}
+    <div class="flex flex-col gap-3 rounded-3xl border">
+      <div class="p-4">
+        <Badge variant="secondary" class="gap-1">Recent Incidents</Badge>
+      </div>
+      <div class="flex flex-col gap-3">
+        {#each data.recentConcludedMaintenances as incident}
+          <div class="border-b p-4 last:border-0">
+            <IncidentItem {incident} />
+          </div>
+        {/each}
+      </div>
+    </div>
+  {/if}
 </div>

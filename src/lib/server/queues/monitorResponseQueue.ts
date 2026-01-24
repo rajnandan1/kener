@@ -3,6 +3,7 @@ import { Queue, Worker, Job, type JobsOptions } from "bullmq";
 import q from "./q.js";
 import { InsertMonitoringData } from "../controllers/controller.js";
 import { SetLastMonitoringValue } from "../cache/setGet.js";
+import alertingQueue from "./alertingQueue.js";
 let monitorResponseQueue: Queue | null = null;
 let worker: Worker | null = null;
 const queueName = "monitorResponseQueue";
@@ -45,6 +46,8 @@ const addWorker = () => {
         latency: latency,
         type: type,
       });
+
+      alertingQueue.push(monitorTag, ts, status);
     }
 
     return dbRes;

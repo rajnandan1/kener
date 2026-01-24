@@ -163,6 +163,7 @@ export interface PageNavItem {
 export interface PageDashboardData {
   pageStatus: { statusSummary: string; statusClass: string };
   ongoingIncidents: IncidentForMonitorList[];
+  recentConcludedMaintenances: IncidentForMonitorList[];
   ongoingMaintenances: MaintenanceEventRecordDetailed[];
   upcomingMaintenances: MaintenanceEventRecordDetailed[];
   pastMaintenances: MaintenanceEventsMonitorList[];
@@ -188,15 +189,23 @@ export const GetPageDashboardData = async (pagePath: string): Promise<PageDashbo
 
   const nowTs = GetMinuteStartNowTimestampUTC();
 
-  const [ongoingIncidents, ongoingMaintenances, upcomingMaintenances, pastMaintenances, latestData, allPagesData] =
-    await Promise.all([
-      GetOngoingIncidentsForMonitorList(monitorTags),
-      GetOngoingMaintenances(monitorTags, nowTs),
-      GetUpcomingMaintenances(monitorTags, 7, nowTs),
-      GetPastMaintenanceEventsForMonitorList(monitorTags),
-      GetLatestMonitoringDataAllActive(monitorTags),
-      GetAllPages(),
-    ]);
+  const [
+    ongoingIncidents,
+    ongoingMaintenances,
+    upcomingMaintenances,
+    pastMaintenances,
+    recentConcludedMaintenances,
+    latestData,
+    allPagesData,
+  ] = await Promise.all([
+    GetOngoingIncidentsForMonitorList(monitorTags),
+    GetOngoingMaintenances(monitorTags, nowTs),
+    GetUpcomingMaintenances(monitorTags, 7, nowTs),
+    GetPastMaintenanceEventsForMonitorList(monitorTags, 5, 7), // Recent concluded maintenance (last 7 days)
+    GetResolvedIncidentsForMonitorList(monitorTags, 5, 7), // Similar to how incidents are handled
+    GetLatestMonitoringDataAllActive(monitorTags),
+    GetAllPages(),
+  ]);
 
   // Map to lightweight page nav items
   const allPages: PageNavItem[] = allPagesData.map((p) => ({
@@ -228,6 +237,7 @@ export const GetPageDashboardData = async (pagePath: string): Promise<PageDashbo
   };
   return {
     pageStatus,
+    recentConcludedMaintenances,
     ongoingIncidents,
     ongoingMaintenances,
     upcomingMaintenances,

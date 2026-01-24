@@ -1,7 +1,6 @@
 import type { MonitoringResult, MonitoringResultTS } from "../types/monitor.js";
 import { Queue, Worker, Job, type JobsOptions } from "bullmq";
 import q from "./q.js";
-import { InsertMonitoringData } from "../controllers/controller.js";
 import type { MonitorRecordTyped } from "../types/db.js";
 import Service, { type MonitorWithType } from "../services/service.js";
 import { GetMinuteStartNowTimestampUTC } from "../tool.js";

@@ -25,7 +25,7 @@ interface IncidentsDashboardInput {
   };
 }
 
-interface IncidentInput {
+export interface IncidentInput {
   title: string;
   start_date_time: number;
   end_date_time?: number | null;
