@@ -32,7 +32,32 @@
 
   let { maintenance, class: className = "", hideMonitors = false }: Props = $props();
 
-  const Icon = STATUS_ICON.MAINTENANCE;
+  const STATUS_STROKE = {
+    UP: "stroke-up",
+    DOWN: "stroke-down",
+    DEGRADED: "stroke-degraded",
+    MAINTENANCE: "stroke-maintenance",
+    NO_DATA: "stroke-muted-foreground"
+  } as const;
+
+  const STATUS_BORDER = {
+    UP: "border-up",
+    DOWN: "border-down",
+    DEGRADED: "border-degraded",
+    MAINTENANCE: "border-maintenance",
+    NO_DATA: "border-muted-foreground"
+  } as const;
+
+  // Get the highest severity impact from monitors array
+  function getHighestImpact(monitors: MaintenanceMonitorImpact[]): keyof typeof STATUS_ICON {
+    const priority: (keyof typeof STATUS_ICON)[] = ["DOWN", "DEGRADED", "MAINTENANCE"];
+    for (const impact of priority) {
+      if (monitors.some((m) => m.monitor_impact === impact)) {
+        return impact;
+      }
+    }
+    return (monitors[0]?.monitor_impact as keyof typeof STATUS_ICON) || "MAINTENANCE";
+  }
 
   // Get initials from monitor name for avatar fallback
   function getInitials(name: string): string {
@@ -43,6 +68,12 @@
       .toUpperCase()
       .slice(0, 2);
   }
+
+  const highestImpact = $derived(getHighestImpact(maintenance.monitors));
+  const Icon = $derived(STATUS_ICON[highestImpact]);
+  const strokeClass = $derived(STATUS_STROKE[highestImpact as keyof typeof STATUS_STROKE] || "stroke-maintenance");
+  const borderClass = $derived(STATUS_BORDER[highestImpact as keyof typeof STATUS_BORDER] || "border-maintenance");
+  const textClass = $derived("text-" + highestImpact.toLowerCase());
 
   // Check if maintenance is ongoing (current time is between start and end)
   const isOngoing = $derived(() => {
@@ -67,7 +98,7 @@
 
 <Item.Root class="p-0 {className}">
   <Item.Media>
-    <Icon class="stroke-maintenance size-6" />
+    <Icon class="size-6 {strokeClass}" />
   </Item.Media>
   <Item.Content>
     <div class="flex items-center gap-2">
@@ -89,7 +120,7 @@
           <Popover.Root>
             <Popover.Trigger>
               <Avatar.Root
-                class="bg-background border-maintenance size-8 cursor-pointer border-2 transition-transform duration-100 ease-in-out hover:scale-[1.1] hover:border"
+                class="bg-background border-{monitor.monitor_impact.toLowerCase()} size-8 cursor-pointer border-2 transition-transform duration-100 ease-in-out hover:scale-[1.1] hover:border"
               >
                 {#if monitor.monitor_image}
                   <Avatar.Image src={monitor.monitor_image} alt={monitor.monitor_name} class="object-cover" />
@@ -112,10 +143,11 @@
                   </div>
                 </div>
                 <div class="flex items-center justify-between">
-                  <Badge variant="outline" class="text-maintenance">MAINTENANCE</Badge>
-                  <Button variant="outline" size="sm" href="/monitors/{monitor.monitor_tag}">
-                    View Monitor
-                    <ArrowRight class="ml-1 size-3" />
+                  <Badge variant="outline" class="text-{monitor.monitor_impact.toLowerCase()}">
+                    {monitor.monitor_impact}
+                  </Badge>
+                  <Button variant="outline" class="rounded-btn" size="icon-sm" href="/monitors/{monitor.monitor_tag}">
+                    <ArrowRight class="size-3" />
                   </Button>
                 </div>
               </div>
@@ -131,8 +163,8 @@
           {format(new Date(maintenance.start_date_time * 1000), "PPp")}
         </div>
         <div class="relative flex-1 text-center">
-          <div class="border-maintenance absolute top-1/2 right-0 left-0 border-t border-dashed"></div>
-          <span class="bg-background relative z-10 px-2 py-1">{duration()}</span>
+          <div class="absolute top-1/2 right-0 left-0 border-t border-solid"></div>
+          <span class="bg-background relative z-10 px-2 py-1 font-medium">{duration()}</span>
         </div>
         <div class="rounded-full border px-3 py-2">
           {format(new Date(maintenance.end_date_time * 1000), "PPp")}

@@ -112,9 +112,8 @@
                   <Badge variant="outline" class="text-{monitor.monitor_impact.toLowerCase()}">
                     {monitor.monitor_impact}
                   </Badge>
-                  <Button variant="outline" size="sm" href="/monitors/{monitor.monitor_tag}">
-                    View Monitor
-                    <ArrowRight class="ml-1 size-3" />
+                  <Button variant="outline" class="rounded-btn" size="icon-sm" href="/monitors/{monitor.monitor_tag}">
+                    <ArrowRight class="size-3" />
                   </Button>
                 </div>
               </div>

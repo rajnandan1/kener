@@ -8,7 +8,6 @@
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
-  import { Textarea } from "$lib/components/ui/textarea/index.js";
   import { toast } from "svelte-sonner";
   import Loader from "@lucide/svelte/icons/loader";
   import SaveIcon from "@lucide/svelte/icons/save";
@@ -18,6 +17,10 @@
   import ImageIcon from "@lucide/svelte/icons/image";
   import TrashIcon from "@lucide/svelte/icons/trash";
   import type { PageRecord, MonitorRecord } from "$lib/server/types/db.js";
+  import { mode } from "mode-watcher";
+  import CodeMirror from "svelte-codemirror-editor";
+  import { markdown } from "@codemirror/lang-markdown";
+  import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
 
   interface PageWithMonitors extends PageRecord {
     monitors?: { monitor_tag: string }[];
@@ -415,9 +418,22 @@
 
         <!-- Subheader -->
         <div class="space-y-2">
-          <Label for="page-subheader">Subheader</Label>
-          <Textarea id="page-subheader" bind:value={formData.page_subheader} placeholder="Status of all our services" />
-          <p class="text-muted-foreground text-xs">Optional subtitle below the header</p>
+          <Label for="page-subheader">Page Content</Label>
+          <div class="overflow-hidden rounded-md border">
+            <CodeMirror
+              bind:value={formData.page_subheader}
+              lang={markdown()}
+              theme={mode.current === "dark" ? githubDark : githubLight}
+              styles={{
+                "&": {
+                  width: "100%",
+                  maxWidth: "100%",
+                  height: "160px"
+                }
+              }}
+            />
+          </div>
+          <p class="text-muted-foreground text-xs">Supports Markdown. Optional content below the header.</p>
         </div>
 
         <!-- Logo Upload -->

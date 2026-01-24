@@ -12,6 +12,7 @@
   import IncidentMonitorList from "$lib/components/IncidentMonitorList.svelte";
   import AllMaintenanceMonitorGrid from "$lib/components/AllMaintenanceMonitorGrid.svelte";
   import { Badge } from "$lib/components/ui/badge/index.js";
+  import mdToHTML from "$lib/marked.js";
 
   let { data } = $props();
 </script>
@@ -23,32 +24,32 @@
 
 <!-- page title -->
 <div class="flex flex-col gap-3">
-  <div>
-    <Item.Root>
-      {#if data.pageDetails?.page_logo}
-        <Item.Media>
-          <Avatar.Root class="size-10">
-            <Avatar.Image src={data.pageDetails.page_logo} />
-            <Avatar.Fallback></Avatar.Fallback>
-          </Avatar.Root>
-        </Item.Media>
-      {/if}
-      <Item.Content>
-        {#if data.pageDetails?.page_header}
-          <Item.Title class="text-3xl">{data.pageDetails.page_header}</Item.Title>
-        {/if}
-        {#if data.pageDetails?.page_subheader}
-          <Item.Description class="text-muted-foreground">{data.pageDetails.page_subheader}</Item.Description>
-        {/if}
-      </Item.Content>
-    </Item.Root>
-  </div>
   <ThemePlus
     monitor_tags={data.monitorTags}
     showPagesDropdown={true}
     showEventsButton={true}
     currentPath={data.pageDetails?.page_path || "/"}
   />
+  <div class="px-4 py-2">
+    {#if data.pageDetails?.page_logo}
+      <img src={data.pageDetails.page_logo} alt="Page Logo" class="aspect-auto h-12 rounded object-cover" />
+    {/if}
+    <Item.Root class="px-0 py-0">
+      <Item.Content>
+        {#if data.pageDetails?.page_header}
+          <Item.Title class="text-3xl">{data.pageDetails.page_header}</Item.Title>
+        {/if}
+        {#if data.pageDetails?.page_subheader}
+          <div class="">
+            <div class="prose prose-sm dark:prose-invert max-w-none">
+              {@html mdToHTML(data.pageDetails.page_subheader)}
+            </div>
+          </div>
+        {/if}
+      </Item.Content>
+    </Item.Root>
+  </div>
+
   <EventsCard
     ongoingMaintenancesCount={data.ongoingMaintenances.length}
     ongoingIncidentsCount={data.ongoingIncidents.length}

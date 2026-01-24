@@ -14,14 +14,19 @@ import type {
 
 // ============ Input Interfaces ============
 
+export interface MonitorWithStatusInput {
+  monitor_tag: string;
+  monitor_impact: "UP" | "DOWN" | "DEGRADED" | "MAINTENANCE";
+}
+
 export interface CreateMaintenanceInput {
   title: string;
   description?: string | null;
   start_date_time: number; // Unix timestamp - when the first occurrence starts
   rrule: string; // iCalendar RRULE string (e.g., FREQ=WEEKLY;BYDAY=SU or FREQ=MINUTELY;COUNT=1)
   duration_seconds: number; // Duration of each maintenance window in seconds
-  // Monitor tags to attach to the maintenance
-  monitor_tags?: string[];
+  // Monitors with their status during maintenance
+  monitors?: MonitorWithStatusInput[];
 }
 
 export interface UpdateMaintenanceInput {
@@ -31,7 +36,7 @@ export interface UpdateMaintenanceInput {
   rrule?: string;
   duration_seconds?: number;
   status?: "ACTIVE" | "INACTIVE";
-  monitor_tags?: string[];
+  monitors?: MonitorWithStatusInput[];
 }
 
 export interface CreateMaintenanceEventInput {
@@ -40,8 +45,13 @@ export interface CreateMaintenanceEventInput {
   end_date_time: number;
 }
 
+export interface MaintenanceMonitorWithStatus {
+  monitor_tag: string;
+  monitor_impact: "UP" | "DOWN" | "DEGRADED" | "MAINTENANCE";
+}
+
 export interface MaintenanceWithMonitors extends MaintenanceRecord {
-  monitors?: Array<{ monitor_tag: string }>;
+  monitors?: MaintenanceMonitorWithStatus[];
 }
 
 export interface MaintenanceWithEvents extends MaintenanceWithMonitors {
@@ -151,9 +161,9 @@ export const CreateMaintenance = async (data: CreateMaintenanceInput): Promise<{
     status: "ACTIVE",
   });
 
-  // Add monitors to the maintenance if provided
-  if (data.monitor_tags && data.monitor_tags.length > 0) {
-    await db.addMonitorsToMaintenance(maintenance.id, data.monitor_tags);
+  // Add monitors with their status to the maintenance if provided
+  if (data.monitors && data.monitors.length > 0) {
+    await db.addMonitorsToMaintenanceWithStatus(maintenance.id, data.monitors);
   }
 
   // Generate initial events for the next 7 days
@@ -176,7 +186,7 @@ export const GetMaintenanceWithMonitors = async (id: number): Promise<Maintenanc
 
   return {
     ...maintenance,
-    monitors: monitorRecords.map((m) => ({ monitor_tag: m.monitor_tag })),
+    monitors: monitorRecords.map((m) => ({ monitor_tag: m.monitor_tag, monitor_impact: m.monitor_impact })),
   };
 };
 
@@ -198,7 +208,10 @@ export const GetMaintenanceWithEvents = async (
 
   return {
     ...maintenance,
-    monitors: monitorRecords.map((m) => ({ monitor_tag: m.monitor_tag })),
+    monitors: monitorRecords.map((m) => ({
+      monitor_tag: m.monitor_tag,
+      monitor_impact: m.monitor_impact,
+    })),
     events,
     upcoming_event: upcomingEvent || null,
   };
@@ -228,7 +241,10 @@ export const GetMaintenancesDashboard = async (data: {
     const upcomingEvent = events.find((e) => e.end_date_time > now);
     enriched.push({
       ...m,
-      monitors: monitorRecords.map((mr) => ({ monitor_tag: mr.monitor_tag })),
+      monitors: monitorRecords.map((mr) => ({
+        monitor_tag: mr.monitor_tag,
+        monitor_impact: mr.monitor_impact,
+      })),
       events,
       upcoming_event: upcomingEvent || null,
     });
@@ -243,8 +259,8 @@ export const UpdateMaintenance = async (id: number, data: UpdateMaintenanceInput
     throw new Error(`Maintenance with id ${id} does not exist`);
   }
 
-  // Extract monitor_tags separately as it's not part of the record
-  const { monitor_tags, ...updateData } = data;
+  // Extract monitors separately as it's not part of the record
+  const { monitors, ...updateData } = data;
 
   // Check if schedule has changed (start_date_time, rrule, or duration_seconds)
   const scheduleChanged =
@@ -256,10 +272,10 @@ export const UpdateMaintenance = async (id: number, data: UpdateMaintenanceInput
   const result = await db.updateMaintenance(id, updateData);
 
   // Update monitors if provided
-  if (monitor_tags !== undefined) {
+  if (monitors !== undefined) {
     await db.removeAllMonitorsFromMaintenance(id);
-    if (monitor_tags.length > 0) {
-      await db.addMonitorsToMaintenance(id, monitor_tags);
+    if (monitors.length > 0) {
+      await db.addMonitorsToMaintenanceWithStatus(id, monitors);
     }
   }
 
@@ -399,9 +415,31 @@ export const RemoveMonitorFromMaintenance = async (maintenance_id: number, monit
   return await db.removeMonitorFromMaintenance(maintenance_id, monitor_tag);
 };
 
-export const GetMaintenanceMonitors = async (maintenance_id: number): Promise<Array<{ monitor_tag: string }>> => {
+export const GetMaintenanceMonitors = async (
+  maintenance_id: number,
+): Promise<Array<{ monitor_tag: string; monitor_impact: string }>> => {
   const records = await db.getMaintenanceMonitors(maintenance_id);
-  return records.map((r) => ({ monitor_tag: r.monitor_tag }));
+  return records.map((r) => ({ monitor_tag: r.monitor_tag, monitor_impact: r.monitor_impact }));
+};
+
+export const UpdateMaintenanceMonitorImpact = async (
+  maintenance_id: number,
+  monitor_tag: string,
+  monitor_impact: "UP" | "DOWN" | "DEGRADED" | "MAINTENANCE",
+): Promise<number> => {
+  const maintenance = await db.getMaintenanceById(maintenance_id);
+  if (!maintenance) {
+    throw new Error(`Maintenance with id ${maintenance_id} does not exist`);
+  }
+
+  // Verify monitor is attached to this maintenance
+  const monitors = await db.getMaintenanceMonitors(maintenance_id);
+  const monitorExists = monitors.some((m) => m.monitor_tag === monitor_tag);
+  if (!monitorExists) {
+    throw new Error(`Monitor ${monitor_tag} is not attached to maintenance ${maintenance_id}`);
+  }
+
+  return await db.updateMonitorImpactInMaintenanceMonitors(maintenance_id, monitor_tag, monitor_impact);
 };
 
 // ============ Status Page Queries ============

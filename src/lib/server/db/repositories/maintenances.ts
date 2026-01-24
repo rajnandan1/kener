@@ -127,6 +127,26 @@ export class MaintenancesRepository extends BaseRepository {
     await this.knex("maintenance_monitors").insert(insertData).onConflict(["maintenance_id", "monitor_tag"]).ignore();
   }
 
+  async addMonitorsToMaintenanceWithStatus(
+    maintenance_id: number,
+    monitors: Array<{ monitor_tag: string; monitor_impact: "UP" | "DOWN" | "DEGRADED" | "MAINTENANCE" }>,
+  ): Promise<void> {
+    if (monitors.length === 0) return;
+
+    const insertData = monitors.map((m) => ({
+      maintenance_id,
+      monitor_tag: m.monitor_tag,
+      monitor_impact: m.monitor_impact,
+      created_at: this.knex.fn.now(),
+      updated_at: this.knex.fn.now(),
+    }));
+
+    await this.knex("maintenance_monitors")
+      .insert(insertData)
+      .onConflict(["maintenance_id", "monitor_tag"])
+      .merge(["monitor_impact", "updated_at"]);
+  }
+
   async removeMonitorFromMaintenance(maintenance_id: number, monitor_tag: string): Promise<number> {
     return await this.knex("maintenance_monitors").where({ maintenance_id, monitor_tag }).del();
   }
@@ -137,6 +157,18 @@ export class MaintenancesRepository extends BaseRepository {
 
   async deleteMaintenanceMonitorsByTag(monitor_tag: string): Promise<number> {
     return await this.knex("maintenance_monitors").where({ monitor_tag }).del();
+  }
+
+  //update monitor impact in maintenance_monitors table
+  async updateMonitorImpactInMaintenanceMonitors(
+    maintenance_id: number,
+    monitor_tag: string,
+    monitor_impact: "UP" | "DOWN" | "DEGRADED" | "MAINTENANCE",
+  ): Promise<number> {
+    return await this.knex("maintenance_monitors").where({ maintenance_id, monitor_tag }).update({
+      monitor_impact,
+      updated_at: this.knex.fn.now(),
+    });
   }
 
   async getMaintenanceMonitors(maintenance_id: number): Promise<MaintenanceMonitorRecord[]> {
@@ -436,6 +468,7 @@ export class MaintenancesRepository extends BaseRepository {
         "maintenances_events.start_date_time",
         "maintenances_events.end_date_time",
         "maintenance_monitors.monitor_tag",
+        "maintenance_monitors.monitor_impact",
         "monitors.name as monitor_name",
         "monitors.image as monitor_image",
         "monitors.is_hidden as monitor_is_hidden",
@@ -465,6 +498,7 @@ export class MaintenancesRepository extends BaseRepository {
         "maintenances_events.start_date_time",
         "maintenances_events.end_date_time",
         "maintenance_monitors.monitor_tag",
+        "maintenance_monitors.monitor_impact",
         "monitors.name as monitor_name",
         "monitors.image as monitor_image",
         "monitors.is_hidden as monitor_is_hidden",
@@ -510,7 +544,7 @@ export class MaintenancesRepository extends BaseRepository {
           monitor_tag: row.monitor_tag,
           monitor_name: row.monitor_name,
           monitor_image: row.monitor_image,
-          monitor_impact: GC.MAINTENANCE,
+          monitor_impact: row.monitor_impact,
         });
       }
     }

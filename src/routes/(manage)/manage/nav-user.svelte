@@ -14,9 +14,13 @@
   import { Label } from "$lib/components/ui/label/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import { page } from "$app/state";
-  import { base } from "$app/paths";
+  import { resolve } from "$app/paths";
   import type { UserRecordPublic } from "$lib/server/types/db";
+  import { toggleMode, mode } from "mode-watcher";
+  import Sun from "@lucide/svelte/icons/sun";
+  import Moon from "@lucide/svelte/icons/moon";
 
+  let base = resolve("/");
   let user = $state<UserRecordPublic>(page.data.userDb);
   let nameAbbr = $derived(
     user.name
@@ -184,6 +188,13 @@
           <DropdownMenu.Item onclick={openAccountDialog}>
             <UserCircleIcon />
             Account
+          </DropdownMenu.Item>
+          <DropdownMenu.Item class="relative" onclick={toggleMode}>
+            <Sun class="absolute left-2  scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+            <Moon class="absolute left-2  scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+            <span class="pl-6">
+              {mode.current === "light" ? "Light" : "Dark"}
+            </span>
           </DropdownMenu.Item>
         </DropdownMenu.Group>
         <DropdownMenu.Separator />

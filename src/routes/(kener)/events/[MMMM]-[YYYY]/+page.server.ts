@@ -9,7 +9,6 @@ const MIN_YEAR = 2023;
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const parentData = await parent();
-  const localTz = parentData.localTz;
 
   // Parse month parameter (format: MMMM-YYYY e.g. "January-2026")
   const monthParam = `${params.MMMM}-${params.YYYY}`;
@@ -53,6 +52,5 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     monthParam,
     monthStartTs,
     monthEndTs,
-    localTz,
   };
 };

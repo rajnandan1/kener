@@ -22,6 +22,10 @@
     insertIncidentMonitor: boolean;
     updateIncidentComment: boolean;
     insertIncidentComment: boolean;
+    maintenanceToStart: boolean;
+    maintenanceHasStarted: boolean;
+    maintenanceHasEnded: boolean;
+    maintenanceMonitorUpdated: boolean;
   }
 
   interface SubscriptionTrigger {
@@ -77,7 +81,11 @@
       updateIncident: false,
       insertIncidentMonitor: false,
       updateIncidentComment: false,
-      insertIncidentComment: false
+      insertIncidentComment: false,
+      maintenanceToStart: false,
+      maintenanceHasStarted: false,
+      maintenanceHasEnded: false,
+      maintenanceMonitorUpdated: false
     }
   });
 
@@ -276,11 +284,9 @@
               disabled={isDisabled}
               onCheckedChange={(checked) => handleConfigChange("createIncident", !!checked)}
             />
-            <Label class="font-medium">Event Triggered</Label>
+            <Label class="font-medium">Incident Triggered</Label>
           </div>
-          <p class="text-muted-foreground pl-6 text-xs">
-            Send notification when a new event like incident or maintenance is created.
-          </p>
+          <p class="text-muted-foreground pl-6 text-xs">Send notification when a new incident is created.</p>
         </div>
 
         <!-- Update Incident -->
@@ -291,9 +297,9 @@
               disabled={isDisabled}
               onCheckedChange={(checked) => handleConfigChange("updateIncident", !!checked)}
             />
-            <Label class="font-medium">Event Updated</Label>
+            <Label class="font-medium">Incident Updated</Label>
           </div>
-          <p class="text-muted-foreground pl-6 text-xs">Send notification when an event is updated.</p>
+          <p class="text-muted-foreground pl-6 text-xs">Send notification when an incident is updated.</p>
         </div>
 
         <!-- Insert Incident Monitor -->
@@ -304,9 +310,11 @@
               disabled={isDisabled}
               onCheckedChange={(checked) => handleConfigChange("insertIncidentMonitor", !!checked)}
             />
-            <Label class="font-medium">Update Monitor in Event</Label>
+            <Label class="font-medium">Update Monitor in Incident</Label>
           </div>
-          <p class="text-muted-foreground pl-6 text-xs">Send notification when a new monitor is added to an event.</p>
+          <p class="text-muted-foreground pl-6 text-xs">
+            Send notification when a new monitor is added to an incident.
+          </p>
         </div>
 
         <!-- Update Incident Comment -->
@@ -319,7 +327,7 @@
             />
             <Label class="font-medium">Update Incident Comment</Label>
           </div>
-          <p class="text-muted-foreground pl-6 text-xs">Send notification when an event comment is updated.</p>
+          <p class="text-muted-foreground pl-6 text-xs">Send notification when an incident comment is updated.</p>
         </div>
 
         <!-- Insert Incident Comment -->
@@ -332,7 +340,59 @@
             />
             <Label class="font-medium">Insert Incident Comment</Label>
           </div>
-          <p class="text-muted-foreground pl-6 text-xs">Send notification when a new comment is added to an event.</p>
+          <p class="text-muted-foreground pl-6 text-xs">
+            Send notification when a new comment is added to an incident.
+          </p>
+        </div>
+        <!-- Maintenance To Start -->
+        <div class="space-y-2 rounded-lg border p-4">
+          <div class="flex items-center gap-2">
+            <Checkbox
+              checked={subscriptionTrigger.config.maintenanceToStart}
+              disabled={isDisabled}
+              onCheckedChange={(checked) => handleConfigChange("maintenanceToStart", !!checked)}
+            />
+            <Label class="font-medium">Maintenance To Start</Label>
+          </div>
+          <p class="text-muted-foreground pl-6 text-xs">Send notification when a maintenance is about to start.</p>
+        </div>
+        <!-- Maintenance Has Started -->
+        <div class="space-y-2 rounded-lg border p-4">
+          <div class="flex items-center gap-2">
+            <Checkbox
+              checked={subscriptionTrigger.config.maintenanceHasStarted}
+              disabled={isDisabled}
+              onCheckedChange={(checked) => handleConfigChange("maintenanceHasStarted", !!checked)}
+            />
+            <Label class="font-medium">Maintenance Has Started</Label>
+          </div>
+          <p class="text-muted-foreground pl-6 text-xs">Send notification when a maintenance has started.</p>
+        </div>
+        <!-- Maintenance Has Ended -->
+        <div class="space-y-2 rounded-lg border p-4">
+          <div class="flex items-center gap-2">
+            <Checkbox
+              checked={subscriptionTrigger.config.maintenanceHasEnded}
+              disabled={isDisabled}
+              onCheckedChange={(checked) => handleConfigChange("maintenanceHasEnded", !!checked)}
+            />
+            <Label class="font-medium">Maintenance Has Ended</Label>
+          </div>
+          <p class="text-muted-foreground pl-6 text-xs">Send notification when a maintenance has ended.</p>
+        </div>
+        <!-- Maintenance Monitor Updated -->
+        <div class="space-y-2 rounded-lg border p-4">
+          <div class="flex items-center gap-2">
+            <Checkbox
+              checked={subscriptionTrigger.config.maintenanceMonitorUpdated}
+              disabled={isDisabled}
+              onCheckedChange={(checked) => handleConfigChange("maintenanceMonitorUpdated", !!checked)}
+            />
+            <Label class="font-medium">Maintenance Monitor Updated</Label>
+          </div>
+          <p class="text-muted-foreground pl-6 text-xs">
+            Send notification when a monitor is added or removed from a maintenance.
+          </p>
         </div>
       </div>
     </Card.Content>

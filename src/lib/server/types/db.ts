@@ -506,6 +506,7 @@ export interface MaintenanceMonitorRecord {
   id: number;
   maintenance_id: number;
   monitor_tag: string;
+  monitor_impact: "UP" | "DOWN" | "DEGRADED" | "MAINTENANCE";
   created_at: Date;
   updated_at: Date;
 }
@@ -513,6 +514,8 @@ export interface MaintenanceMonitorRecord {
 export interface MaintenanceMonitorRecordInsert {
   maintenance_id: number;
   monitor_tag: string;
+
+  monitor_impact?: "UP" | "DOWN" | "DEGRADED" | "MAINTENANCE";
 }
 
 // ============ maintenances_events table ============

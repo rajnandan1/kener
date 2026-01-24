@@ -186,7 +186,7 @@ export const GetPageDashboardData = async (pagePath: string): Promise<PageDashbo
   const { page: pageDetails, monitors: pageMonitors } = pageData;
   const monitorTags = pageMonitors.map((pm) => pm.monitor_tag);
 
-  const nowTs = BeginningOfDay();
+  const nowTs = GetMinuteStartNowTimestampUTC();
 
   const [ongoingIncidents, ongoingMaintenances, upcomingMaintenances, pastMaintenances, latestData, allPagesData] =
     await Promise.all([

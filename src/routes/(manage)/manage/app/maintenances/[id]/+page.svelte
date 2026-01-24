@@ -79,8 +79,16 @@
   let rruleInterval = $state(1);
 
   // Monitor selection
+  type MonitorStatus = "UP" | "DOWN" | "DEGRADED" | "MAINTENANCE";
+  interface SelectedMonitor {
+    tag: string;
+    status: MonitorStatus;
+  }
   let availableMonitors = $state<MonitorRecord[]>([]);
-  let selectedMonitorTags = $state<string[]>([]);
+  let selectedMonitors = $state<SelectedMonitor[]>([]);
+
+  // Derived for backward compatibility
+  const selectedMonitorTags = $derived(selectedMonitors.map((m) => m.tag));
 
   // Events for existing maintenance
   let events = $state<MaintenanceEvent[]>([]);
@@ -204,9 +212,12 @@
         startDateTimeLocal = timestampToLocalDatetime(result.start_date_time);
         updateDurationInputs(result.duration_seconds);
 
-        // Set monitors
+        // Set monitors with their statuses
         if (result.monitors) {
-          selectedMonitorTags = result.monitors.map((m: { monitor_tag: string }) => m.monitor_tag);
+          selectedMonitors = result.monitors.map((m: { monitor_tag: string; monitor_impact: MonitorStatus }) => ({
+            tag: m.monitor_tag,
+            status: m.monitor_impact || "MAINTENANCE"
+          }));
         }
 
         events = result.events || [];
@@ -274,7 +285,7 @@
           start_date_time: startTime,
           rrule,
           duration_seconds: calculatedDurationSeconds,
-          monitor_tags: selectedMonitorTags
+          monitors: selectedMonitors.map((m) => ({ monitor_tag: m.tag, monitor_impact: m.status }))
         };
 
         const response = await fetch("/manage/api", {
@@ -298,7 +309,7 @@
           rrule,
           duration_seconds: calculatedDurationSeconds,
           status: maintenance.status,
-          monitor_tags: selectedMonitorTags
+          monitors: selectedMonitors.map((m) => ({ monitor_tag: m.tag, monitor_impact: m.status }))
         };
 
         const response = await fetch("/manage/api", {
@@ -414,11 +425,23 @@
 
   // Toggle monitor selection
   function toggleMonitor(tag: string) {
-    if (selectedMonitorTags.includes(tag)) {
-      selectedMonitorTags = selectedMonitorTags.filter((t) => t !== tag);
+    const existing = selectedMonitors.find((m) => m.tag === tag);
+    if (existing) {
+      selectedMonitors = selectedMonitors.filter((m) => m.tag !== tag);
     } else {
-      selectedMonitorTags = [...selectedMonitorTags, tag];
+      selectedMonitors = [...selectedMonitors, { tag, status: "MAINTENANCE" }];
     }
+  }
+
+  // Update monitor status locally
+  function updateMonitorStatus(tag: string, status: MonitorStatus) {
+    selectedMonitors = selectedMonitors.map((m) => (m.tag === tag ? { ...m, status } : m));
+  }
+
+  // Get monitor name by tag
+  function getMonitorName(tag: string): string {
+    const monitor = availableMonitors.find((m) => m.tag === tag);
+    return monitor?.name || tag;
   }
 
   // Toggle day selection for RRULE
@@ -626,26 +649,68 @@
         {/if}
 
         <!-- Monitor Selection -->
-        <div class="flex flex-col gap-2">
+        <div class="flex flex-col gap-3">
           <Label>Affected Monitors</Label>
-          <div class="grid max-h-48 grid-cols-2 gap-2 overflow-y-auto rounded-md border p-3">
-            {#each availableMonitors as monitor}
-              <div class="flex items-center gap-2">
-                <Checkbox
-                  id="monitor-{monitor.tag}"
-                  checked={selectedMonitorTags.includes(monitor.tag)}
-                  onCheckedChange={() => toggleMonitor(monitor.tag)}
-                />
-                <Label for="monitor-{monitor.tag}" class="cursor-pointer text-sm font-normal">
-                  {monitor.name}
-                </Label>
-              </div>
-            {/each}
-            {#if availableMonitors.length === 0}
-              <p class="text-muted-foreground col-span-2 text-sm">No monitors available</p>
-            {/if}
+
+          <!-- Available monitors to add -->
+          <div class="rounded-md border p-3">
+            <Label class="text-muted-foreground mb-2 block text-xs">Select monitors to add:</Label>
+            <div class="grid max-h-32 grid-cols-2 gap-2 overflow-y-auto">
+              {#each availableMonitors as monitor}
+                <div class="flex items-center gap-2">
+                  <Checkbox
+                    id="monitor-{monitor.tag}"
+                    checked={selectedMonitorTags.includes(monitor.tag)}
+                    onCheckedChange={() => toggleMonitor(monitor.tag)}
+                  />
+                  <Label for="monitor-{monitor.tag}" class="cursor-pointer text-sm font-normal">
+                    {monitor.name}
+                  </Label>
+                </div>
+              {/each}
+              {#if availableMonitors.length === 0}
+                <p class="text-muted-foreground col-span-2 text-sm">No monitors available</p>
+              {/if}
+            </div>
           </div>
-          <p class="text-muted-foreground text-xs">Select monitors that will be affected by this maintenance</p>
+
+          <!-- Selected monitors with status -->
+          {#if selectedMonitors.length > 0}
+            <div class="rounded-md border p-3">
+              <Label class="text-muted-foreground mb-2 block text-xs">Monitor status during maintenance:</Label>
+              <div class="space-y-2">
+                {#each selectedMonitors as selectedMonitor, index}
+                  {@const currentStatus = selectedMonitor.status}
+                  <div class="bg-muted/30 flex items-center justify-between gap-3 rounded border p-2">
+                    <span class="text-sm font-medium">{getMonitorName(selectedMonitor.tag)}</span>
+                    <Select.Root
+                      type="single"
+                      value={currentStatus}
+                      onValueChange={(value) => {
+                        if (value) {
+                          selectedMonitors[index].status = value as MonitorStatus;
+                          selectedMonitors = [...selectedMonitors];
+                        }
+                      }}
+                    >
+                      <Select.Trigger class="h-8 w-36 text-xs">
+                        {currentStatus}
+                      </Select.Trigger>
+                      <Select.Content>
+                        <Select.Item value="UP">UP</Select.Item>
+                        <Select.Item value="DOWN">DOWN</Select.Item>
+                        <Select.Item value="DEGRADED">DEGRADED</Select.Item>
+                        <Select.Item value="MAINTENANCE">MAINTENANCE</Select.Item>
+                      </Select.Content>
+                    </Select.Root>
+                  </div>
+                {/each}
+              </div>
+            </div>
+          {/if}
+          <p class="text-muted-foreground text-xs">
+            Select monitors and set their status during the maintenance window
+          </p>
         </div>
 
         <!-- Status Toggle (only for existing) -->

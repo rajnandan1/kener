@@ -192,7 +192,7 @@
                   <Item.Media>
                     <Tooltip.Root>
                       <Tooltip.Trigger>
-                        <div class="bg-maintenance h-6 w-6 rounded-full"></div>
+                        <div class="bg-{monitor.monitor_impact.toLowerCase()} h-6 w-6 rounded-full"></div>
                       </Tooltip.Trigger>
                       <Tooltip.Content arrowClasses="bg-foreground">
                         <div class="text-xs font-medium">Under Maintenance</div>
@@ -202,7 +202,7 @@
                   <Item.Content>
                     <Item.Title>{monitor.monitor_name}</Item.Title>
                     <Item.Description>
-                      <span class="text-maintenance">MAINTENANCE</span>
+                      <span class="text-{monitor.monitor_impact.toLowerCase()}">{monitor.monitor_impact}</span>
                     </Item.Description>
                   </Item.Content>
                   <Item.Actions>

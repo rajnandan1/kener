@@ -9,7 +9,7 @@
 </script>
 
 <div class="fixed inset-x-0 top-0 z-50 py-2">
-  <div class="mx-auto max-w-5xl px-4">
+  <div class="mx-auto max-w-5xl">
     <div class="bg-background flex items-center justify-between rounded-3xl border p-1">
       <!-- Brand -->
       <a

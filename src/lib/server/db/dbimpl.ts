@@ -243,11 +243,13 @@ class DbImpl {
   // ============ Maintenance Monitors ============
   addMonitorToMaintenance!: MaintenancesRepository["addMonitorToMaintenance"];
   addMonitorsToMaintenance!: MaintenancesRepository["addMonitorsToMaintenance"];
+  addMonitorsToMaintenanceWithStatus!: MaintenancesRepository["addMonitorsToMaintenanceWithStatus"];
   removeMonitorFromMaintenance!: MaintenancesRepository["removeMonitorFromMaintenance"];
   removeAllMonitorsFromMaintenance!: MaintenancesRepository["removeAllMonitorsFromMaintenance"];
   getMaintenanceMonitors!: MaintenancesRepository["getMaintenanceMonitors"];
   getMaintenancesForMonitor!: MaintenancesRepository["getMaintenancesForMonitor"];
   deleteMaintenanceMonitorsByTag!: MaintenancesRepository["deleteMaintenanceMonitorsByTag"];
+  updateMonitorImpactInMaintenanceMonitors!: MaintenancesRepository["updateMonitorImpactInMaintenanceMonitors"];
 
   // ============ Maintenance Events ============
   createMaintenanceEvent!: MaintenancesRepository["createMaintenanceEvent"];
@@ -498,11 +500,17 @@ class DbImpl {
     this.deleteMaintenance = this.maintenances.deleteMaintenance.bind(this.maintenances);
     this.addMonitorToMaintenance = this.maintenances.addMonitorToMaintenance.bind(this.maintenances);
     this.addMonitorsToMaintenance = this.maintenances.addMonitorsToMaintenance.bind(this.maintenances);
+    this.addMonitorsToMaintenanceWithStatus = this.maintenances.addMonitorsToMaintenanceWithStatus.bind(
+      this.maintenances,
+    );
     this.removeMonitorFromMaintenance = this.maintenances.removeMonitorFromMaintenance.bind(this.maintenances);
     this.removeAllMonitorsFromMaintenance = this.maintenances.removeAllMonitorsFromMaintenance.bind(this.maintenances);
     this.getMaintenanceMonitors = this.maintenances.getMaintenanceMonitors.bind(this.maintenances);
     this.getMaintenancesForMonitor = this.maintenances.getMaintenancesForMonitor.bind(this.maintenances);
     this.deleteMaintenanceMonitorsByTag = this.maintenances.deleteMaintenanceMonitorsByTag.bind(this.maintenances);
+    this.updateMonitorImpactInMaintenanceMonitors = this.maintenances.updateMonitorImpactInMaintenanceMonitors.bind(
+      this.maintenances,
+    );
     this.createMaintenanceEvent = this.maintenances.createMaintenanceEvent.bind(this.maintenances);
     this.getMaintenanceEventById = this.maintenances.getMaintenanceEventById.bind(this.maintenances);
     this.getMaintenanceEventsByMaintenanceId = this.maintenances.getMaintenanceEventsByMaintenanceId.bind(

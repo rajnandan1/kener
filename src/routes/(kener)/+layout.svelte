@@ -26,7 +26,7 @@
   <!-- Nav -->
   <KenerNav />
   <!-- Body -->
-  <div class="mx-auto max-w-5xl pt-24">
+  <div class="mx-auto max-w-5xl pt-18">
     <Tooltip.Provider>
       {@render children()}
     </Tooltip.Provider>

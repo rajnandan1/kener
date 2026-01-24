@@ -80,6 +80,7 @@ import {
   AddMonitorToMaintenance,
   RemoveMonitorFromMaintenance,
   GetMaintenanceMonitors,
+  UpdateMaintenanceMonitorImpact,
 } from "$lib/server/controllers/maintenanceController.js";
 import type { AlertData, SiteDataForNotification } from "$lib/server/notification/variables";
 
@@ -403,6 +404,10 @@ export async function POST({ request, cookies }) {
       resp = { success: true };
     } else if (action == "getMaintenanceMonitors") {
       resp = await GetMaintenanceMonitors(data.maintenance_id);
+    } else if (action == "updateMaintenanceMonitorImpact") {
+      AdminEditorCan(userDB.role);
+      await UpdateMaintenanceMonitorImpact(data.maintenance_id, data.monitor_tag, data.monitor_impact);
+      resp = { success: true };
     }
   } catch (error: unknown) {
     console.log(error);
