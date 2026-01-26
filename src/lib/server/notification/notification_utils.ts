@@ -6,7 +6,7 @@ import type { SiteDataTransformed } from "../controllers/siteDataController.js";
 export function alertToVariables(config: MonitorAlertConfigRecord, alert: MonitorAlertV2Record): AlertVariableMap {
   // Ensure created_at is a Date object
   const createdAtDate = alert.created_at instanceof Date ? alert.created_at : new Date(alert.created_at);
-  const alert_name = `Alert for ${config.alert_for} ${config.alert_value} ${alert.alert_status} at ${createdAtDate.toISOString()}`;
+  const alert_name = `Alert ${config.monitor_tag} for ${config.alert_for} ${config.alert_value} ${alert.alert_status} at ${createdAtDate.toISOString()}`;
 
   return {
     alert_id: String(alert.id),

@@ -18,7 +18,7 @@
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import ICONS from "$lib/icons";
   import { format } from "date-fns";
-  import SubscribeMonitorMenu from "$lib/components/SubscribeMonitorMenu.svelte";
+  import SubscribeMenuV2 from "$lib/components/SubscribeMenuV2.svelte";
   import CopyButton from "$lib/components/CopyButton.svelte";
   import BadgesMenu from "$lib/components/BadgesMenu.svelte";
   import EmbedMenu from "$lib/components/EmbedMenu.svelte";
@@ -50,7 +50,6 @@
 
   let protocol = $state("");
   let domain = $state("");
-
   const pages = $derived<PageNavItem[]>(page.data.allPages || []);
   const currentPage = $derived(pages.find((p) => p.page_path === currentPath) || pages[0]);
   const eventsPath = $derived(`/events/${format(new Date(), "MMMM-yyyy")}`);
@@ -111,7 +110,7 @@
   </div>
   <div class="flex gap-2">
     <ButtonGroup.Root class="">
-      {#if monitor_tags.length > 0 && page.data.isEmailSubscriptionEnabled}
+      {#if monitor_tags.length > 0}
         <ButtonGroup.Root class="hidden sm:flex">
           <Button
             variant="outline"
@@ -178,6 +177,6 @@
   </div>
 </div>
 
-<SubscribeMonitorMenu bind:open={openSubscribeMenu} {monitor_tags} />
+<SubscribeMenuV2 bind:open={openSubscribeMenu} {monitor_tags} />
 <BadgesMenu bind:open={openBadgesMenu} monitorTag={embedMonitorTag} {protocol} {domain} />
 <EmbedMenu bind:open={openEmbedMenu} monitorTag={embedMonitorTag} {protocol} {domain} />

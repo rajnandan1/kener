@@ -310,6 +310,16 @@ function ValidateEmail(email: string): boolean {
   return regex.test(email);
 }
 
+//function to validate URL
+function ValidateURL(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 //function to generate 6 digit random number, number of digits as argument
 function GenerateRandomNumber(digits: number): number {
   const min = Math.pow(10, digits - 1);
@@ -531,6 +541,7 @@ export {
   GetDbType,
   HashString,
   ValidateEmail,
+  ValidateURL,
   GenerateRandomNumber,
   IsValidUptimeFormula,
 };

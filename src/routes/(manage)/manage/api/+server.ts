@@ -107,6 +107,19 @@ import {
   GetTemplatesByTypeAndUsage,
   DeleteTemplate,
 } from "$lib/server/controllers/templateController.js";
+import {
+  GetSubscriptionConfig,
+  UpdateSubscriptionConfigFull,
+  ValidateMethodTriggers,
+} from "$lib/server/controllers/subscriptionConfigController.js";
+import {
+  GetSubscribersByMethod,
+  GetSubscriberWithSubscriptions,
+  GetSubscriberWithSubscriptionsV2,
+  GetSubscriberCountsByMethod,
+  DeleteUserSubscription,
+  UpdateUserSubscriptionStatus,
+} from "$lib/server/controllers/userSubscriptionsController.js";
 import type { AlertData, SiteDataForNotification } from "$lib/server/notification/variables";
 import { alertToVariables, siteDataToVariables } from "$lib/server/notification/notification_utils";
 import type {
@@ -522,6 +535,99 @@ export async function POST({ request, cookies }) {
       AdminEditorCan(userDB.role);
       await DeleteTemplate(data.id);
       resp = { success: true };
+    }
+    // ============ Subscription Config ============
+    else if (action == "getSubscriptionConfig") {
+      resp = await GetSubscriptionConfig();
+      if (!resp) {
+        // Return default config structure if none exists yet
+        resp = {
+          events_enabled: {
+            incidentUpdatesAll: false,
+            maintenanceUpdatesAll: false,
+            monitorUpdatesAll: false,
+          },
+          methods_enabled: {
+            email: false,
+            webhook: false,
+            slack: false,
+            discord: false,
+          },
+          method_triggers: {
+            email: null,
+            webhook: null,
+            slack: null,
+            discord: null,
+          },
+        };
+      }
+    } else if (action == "updateSubscriptionConfig") {
+      AdminCan(userDB.role);
+      // Validate triggers if any are set
+      const validation = await ValidateMethodTriggers(data.method_triggers);
+      if (!validation.valid) {
+        throw new Error(validation.errors.join("; "));
+      }
+      resp = await UpdateSubscriptionConfigFull(data);
+    }
+    // ============ User Subscriptions (Admin) ============
+    else if (action == "getSubscribersByMethod") {
+      const { method, page = 1, limit = 25 } = data;
+      if (!method) {
+        throw new Error("Method is required");
+      }
+      resp = await GetSubscribersByMethod(method, page, limit);
+    } else if (action == "getSubscriberWithSubscriptions") {
+      // V2: subscriberId is actually the method_id from subscriber_methods table
+      const { subscriberId, method } = data;
+      if (!subscriberId || !method) {
+        throw new Error("subscriberId and method are required");
+      }
+      // Use V2 function which expects method_id
+      const result = await GetSubscriberWithSubscriptionsV2(subscriberId);
+      if (result) {
+        // Map V2 result to expected format for compatibility with existing UI
+        resp = {
+          subscriber: {
+            id: result.method.id,
+            subscriber_send: result.method.method_value,
+            subscriber_meta: result.user.email, // Store user email in meta for display
+            subscriber_type: result.method.method_type,
+            subscriber_status: result.method.status,
+            created_at: result.method.created_at,
+            updated_at: result.method.updated_at,
+          },
+          subscriptions: result.subscriptions.map((s) => ({
+            id: s.id,
+            subscriber_id: s.subscriber_method_id,
+            subscription_method: result.method.method_type,
+            event_type: s.event_type,
+            entity_type: s.entity_type,
+            entity_id: s.entity_id,
+            status: s.status,
+            created_at: s.created_at,
+            updated_at: s.updated_at,
+          })),
+        };
+      } else {
+        resp = { subscriber: null, subscriptions: [] };
+      }
+    } else if (action == "getSubscriberCountsByMethod") {
+      resp = await GetSubscriberCountsByMethod();
+    } else if (action == "deleteUserSubscription") {
+      AdminCan(userDB.role);
+      const { subscriptionId } = data;
+      if (!subscriptionId) {
+        throw new Error("subscriptionId is required");
+      }
+      resp = await DeleteUserSubscription(subscriptionId);
+    } else if (action == "updateUserSubscriptionStatus") {
+      AdminCan(userDB.role);
+      const { subscriptionId, status } = data;
+      if (!subscriptionId || !status) {
+        throw new Error("subscriptionId and status are required");
+      }
+      resp = await UpdateUserSubscriptionStatus(subscriptionId, status);
     }
   } catch (error: unknown) {
     console.log(error);

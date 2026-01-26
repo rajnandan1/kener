@@ -14,6 +14,9 @@ import { PagesRepository } from "./repositories/pages.js";
 import { MaintenancesRepository } from "./repositories/maintenances.js";
 import { MonitorAlertConfigRepository } from "./repositories/monitorAlertConfig.js";
 import { TemplatesRepository } from "./repositories/templates.js";
+import { SubscriptionConfigRepository } from "./repositories/subscriptionConfig.js";
+import { UserSubscriptionsRepository } from "./repositories/userSubscriptions.js";
+import { SubscriptionSystemRepository } from "./repositories/subscriptionSystem.js";
 
 // Re-export types from base
 export type { MonitorFilter, TriggerFilter, IncidentFilter, CountResult } from "./repositories/base.js";
@@ -43,6 +46,9 @@ class DbImpl {
   private maintenances!: MaintenancesRepository;
   private monitorAlertConfig!: MonitorAlertConfigRepository;
   private templates!: TemplatesRepository;
+  private subscriptionConfig!: SubscriptionConfigRepository;
+  private userSubscriptions!: UserSubscriptionsRepository;
+  private subscriptionSystem!: SubscriptionSystemRepository;
 
   // Method bindings - declared with definite assignment assertion
   // ============ Monitoring Data ============
@@ -238,6 +244,7 @@ class DbImpl {
   // ============ Maintenances ============
   createMaintenance!: MaintenancesRepository["createMaintenance"];
   getMaintenanceById!: MaintenancesRepository["getMaintenanceById"];
+  getMaintenancesByIds!: MaintenancesRepository["getMaintenancesByIds"];
   getAllMaintenances!: MaintenancesRepository["getAllMaintenances"];
   getMaintenancesPaginated!: MaintenancesRepository["getMaintenancesPaginated"];
   getMaintenancesCount!: MaintenancesRepository["getMaintenancesCount"];
@@ -333,6 +340,54 @@ class DbImpl {
   getTemplatesCount!: TemplatesRepository["getTemplatesCount"];
   templateNameExists!: TemplatesRepository["templateNameExists"];
 
+  // ============ Subscription Config ============
+  getSubscriptionConfig!: SubscriptionConfigRepository["getSubscriptionConfig"];
+  getSubscriptionConfigParsed!: SubscriptionConfigRepository["getSubscriptionConfigParsed"];
+  updateSubscriptionConfig!: SubscriptionConfigRepository["updateSubscriptionConfig"];
+  ensureSubscriptionConfig!: SubscriptionConfigRepository["ensureSubscriptionConfig"];
+
+  // ============ User Subscriptions ============
+  insertUserSubscription!: UserSubscriptionsRepository["insertUserSubscription"];
+  getUserSubscriptionById!: UserSubscriptionsRepository["getUserSubscriptionById"];
+  getUserSubscriptions!: UserSubscriptionsRepository["getUserSubscriptions"];
+  getSubscriptionsBySubscriberIdNew!: UserSubscriptionsRepository["getSubscriptionsBySubscriberId"];
+  updateUserSubscriptionStatus!: UserSubscriptionsRepository["updateUserSubscriptionStatus"];
+  deleteUserSubscription!: UserSubscriptionsRepository["deleteUserSubscription"];
+  deleteAllSubscriptionsBySubscriberId!: UserSubscriptionsRepository["deleteAllSubscriptionsBySubscriberId"];
+  subscriptionExists!: UserSubscriptionsRepository["subscriptionExists"];
+  getSubscribersByMethodPaginated!: UserSubscriptionsRepository["getSubscribersByMethodPaginated"];
+  getSubscribersCountByMethod!: UserSubscriptionsRepository["getSubscribersCountByMethod"];
+  getSubscriberWithSubscriptions!: UserSubscriptionsRepository["getSubscriberWithSubscriptions"];
+  getActiveSubscriptionsForEvent!: UserSubscriptionsRepository["getActiveSubscriptionsForEvent"];
+
+  // ============ Subscription System V2 (subscriber_users, subscriber_methods, user_subscriptions_v2) ============
+  createSubscriberUser!: SubscriptionSystemRepository["createSubscriberUser"];
+  getSubscriberUserById!: SubscriptionSystemRepository["getSubscriberUserById"];
+  getSubscriberUserByEmail!: SubscriptionSystemRepository["getSubscriberUserByEmail"];
+  updateSubscriberUser!: SubscriptionSystemRepository["updateSubscriberUser"];
+  deleteSubscriberUser!: SubscriptionSystemRepository["deleteSubscriberUser"];
+  getSubscriberUsersCount!: SubscriptionSystemRepository["getSubscriberUsersCount"];
+  getSubscriberUsersPaginated!: SubscriptionSystemRepository["getSubscriberUsersPaginated"];
+  createSubscriberMethod!: SubscriptionSystemRepository["createSubscriberMethod"];
+  getSubscriberMethodById!: SubscriptionSystemRepository["getSubscriberMethodById"];
+  getSubscriberMethodsByUserId!: SubscriptionSystemRepository["getSubscriberMethodsByUserId"];
+  getSubscriberMethodByUserAndType!: SubscriptionSystemRepository["getSubscriberMethodByUserAndType"];
+  updateSubscriberMethod!: SubscriptionSystemRepository["updateSubscriberMethod"];
+  deleteSubscriberMethod!: SubscriptionSystemRepository["deleteSubscriberMethod"];
+  getActiveMethodsByType!: SubscriptionSystemRepository["getActiveMethodsByType"];
+  createUserSubscriptionV2!: SubscriptionSystemRepository["createUserSubscriptionV2"];
+  getUserSubscriptionV2ById!: SubscriptionSystemRepository["getUserSubscriptionV2ById"];
+  getUserSubscriptionsV2!: SubscriptionSystemRepository["getUserSubscriptionsV2"];
+  updateUserSubscriptionV2!: SubscriptionSystemRepository["updateUserSubscriptionV2"];
+  deleteUserSubscriptionV2!: SubscriptionSystemRepository["deleteUserSubscriptionV2"];
+  subscriptionV2Exists!: SubscriptionSystemRepository["subscriptionV2Exists"];
+  getSubscriptionsWithMethodsForUser!: SubscriptionSystemRepository["getSubscriptionsWithMethodsForUser"];
+  getSubscribersForEvent!: SubscriptionSystemRepository["getSubscribersForEvent"];
+  getSubscribersSummary!: SubscriptionSystemRepository["getSubscribersSummary"];
+  getMethodsCountByType!: SubscriptionSystemRepository["getMethodsCountByType"];
+  getSubscribersByMethodTypeV2!: SubscriptionSystemRepository["getSubscribersByMethodTypeV2"];
+  getSubscriberDetailsByMethodId!: SubscriptionSystemRepository["getSubscriberDetailsByMethodId"];
+
   constructor(opts: KnexType.Config) {
     this.knex = Knex(opts);
 
@@ -349,6 +404,9 @@ class DbImpl {
     this.maintenances = new MaintenancesRepository(this.knex);
     this.monitorAlertConfig = new MonitorAlertConfigRepository(this.knex);
     this.templates = new TemplatesRepository(this.knex);
+    this.subscriptionConfig = new SubscriptionConfigRepository(this.knex);
+    this.userSubscriptions = new UserSubscriptionsRepository(this.knex);
+    this.subscriptionSystem = new SubscriptionSystemRepository(this.knex);
 
     // Bind methods after repositories are initialized
     this.bindMonitoringMethods();
@@ -363,6 +421,9 @@ class DbImpl {
     this.bindMaintenancesMethods();
     this.bindMonitorAlertConfigMethods();
     this.bindTemplatesMethods();
+    this.bindSubscriptionConfigMethods();
+    this.bindUserSubscriptionsMethods();
+    this.bindSubscriptionSystemMethods();
 
     this.init();
   }
@@ -558,6 +619,7 @@ class DbImpl {
   private bindMaintenancesMethods(): void {
     this.createMaintenance = this.maintenances.createMaintenance.bind(this.maintenances);
     this.getMaintenanceById = this.maintenances.getMaintenanceById.bind(this.maintenances);
+    this.getMaintenancesByIds = this.maintenances.getMaintenancesByIds.bind(this.maintenances);
     this.getAllMaintenances = this.maintenances.getAllMaintenances.bind(this.maintenances);
     this.getMaintenancesPaginated = this.maintenances.getMaintenancesPaginated.bind(this.maintenances);
     this.getMaintenancesCount = this.maintenances.getMaintenancesCount.bind(this.maintenances);
@@ -710,6 +772,92 @@ class DbImpl {
     this.deleteTemplate = this.templates.deleteTemplate.bind(this.templates);
     this.getTemplatesCount = this.templates.getTemplatesCount.bind(this.templates);
     this.templateNameExists = this.templates.templateNameExists.bind(this.templates);
+  }
+
+  private bindSubscriptionConfigMethods(): void {
+    this.getSubscriptionConfig = this.subscriptionConfig.getSubscriptionConfig.bind(this.subscriptionConfig);
+    this.getSubscriptionConfigParsed = this.subscriptionConfig.getSubscriptionConfigParsed.bind(
+      this.subscriptionConfig,
+    );
+    this.updateSubscriptionConfig = this.subscriptionConfig.updateSubscriptionConfig.bind(this.subscriptionConfig);
+    this.ensureSubscriptionConfig = this.subscriptionConfig.ensureSubscriptionConfig.bind(this.subscriptionConfig);
+  }
+
+  private bindUserSubscriptionsMethods(): void {
+    this.insertUserSubscription = this.userSubscriptions.insertUserSubscription.bind(this.userSubscriptions);
+    this.getUserSubscriptionById = this.userSubscriptions.getUserSubscriptionById.bind(this.userSubscriptions);
+    this.getUserSubscriptions = this.userSubscriptions.getUserSubscriptions.bind(this.userSubscriptions);
+    this.getSubscriptionsBySubscriberIdNew = this.userSubscriptions.getSubscriptionsBySubscriberId.bind(
+      this.userSubscriptions,
+    );
+    this.updateUserSubscriptionStatus = this.userSubscriptions.updateUserSubscriptionStatus.bind(
+      this.userSubscriptions,
+    );
+    this.deleteUserSubscription = this.userSubscriptions.deleteUserSubscription.bind(this.userSubscriptions);
+    this.deleteAllSubscriptionsBySubscriberId = this.userSubscriptions.deleteAllSubscriptionsBySubscriberId.bind(
+      this.userSubscriptions,
+    );
+    this.subscriptionExists = this.userSubscriptions.subscriptionExists.bind(this.userSubscriptions);
+    this.getSubscribersByMethodPaginated = this.userSubscriptions.getSubscribersByMethodPaginated.bind(
+      this.userSubscriptions,
+    );
+    this.getSubscribersCountByMethod = this.userSubscriptions.getSubscribersCountByMethod.bind(this.userSubscriptions);
+    this.getSubscriberWithSubscriptions = this.userSubscriptions.getSubscriberWithSubscriptions.bind(
+      this.userSubscriptions,
+    );
+    this.getActiveSubscriptionsForEvent = this.userSubscriptions.getActiveSubscriptionsForEvent.bind(
+      this.userSubscriptions,
+    );
+  }
+
+  private bindSubscriptionSystemMethods(): void {
+    // Subscriber Users
+    this.createSubscriberUser = this.subscriptionSystem.createSubscriberUser.bind(this.subscriptionSystem);
+    this.getSubscriberUserById = this.subscriptionSystem.getSubscriberUserById.bind(this.subscriptionSystem);
+    this.getSubscriberUserByEmail = this.subscriptionSystem.getSubscriberUserByEmail.bind(this.subscriptionSystem);
+    this.updateSubscriberUser = this.subscriptionSystem.updateSubscriberUser.bind(this.subscriptionSystem);
+    this.deleteSubscriberUser = this.subscriptionSystem.deleteSubscriberUser.bind(this.subscriptionSystem);
+    this.getSubscriberUsersCount = this.subscriptionSystem.getSubscriberUsersCount.bind(this.subscriptionSystem);
+    this.getSubscriberUsersPaginated = this.subscriptionSystem.getSubscriberUsersPaginated.bind(
+      this.subscriptionSystem,
+    );
+
+    // Subscriber Methods
+    this.createSubscriberMethod = this.subscriptionSystem.createSubscriberMethod.bind(this.subscriptionSystem);
+    this.getSubscriberMethodById = this.subscriptionSystem.getSubscriberMethodById.bind(this.subscriptionSystem);
+    this.getSubscriberMethodsByUserId = this.subscriptionSystem.getSubscriberMethodsByUserId.bind(
+      this.subscriptionSystem,
+    );
+    this.getSubscriberMethodByUserAndType = this.subscriptionSystem.getSubscriberMethodByUserAndType.bind(
+      this.subscriptionSystem,
+    );
+    this.updateSubscriberMethod = this.subscriptionSystem.updateSubscriberMethod.bind(this.subscriptionSystem);
+    this.deleteSubscriberMethod = this.subscriptionSystem.deleteSubscriberMethod.bind(this.subscriptionSystem);
+    this.getActiveMethodsByType = this.subscriptionSystem.getActiveMethodsByType.bind(this.subscriptionSystem);
+
+    // User Subscriptions V2
+    this.createUserSubscriptionV2 = this.subscriptionSystem.createUserSubscriptionV2.bind(this.subscriptionSystem);
+    this.getUserSubscriptionV2ById = this.subscriptionSystem.getUserSubscriptionV2ById.bind(this.subscriptionSystem);
+    this.getUserSubscriptionsV2 = this.subscriptionSystem.getUserSubscriptionsV2.bind(this.subscriptionSystem);
+    this.updateUserSubscriptionV2 = this.subscriptionSystem.updateUserSubscriptionV2.bind(this.subscriptionSystem);
+    this.deleteUserSubscriptionV2 = this.subscriptionSystem.deleteUserSubscriptionV2.bind(this.subscriptionSystem);
+    this.subscriptionV2Exists = this.subscriptionSystem.subscriptionV2Exists.bind(this.subscriptionSystem);
+
+    // Complex Queries
+    this.getSubscriptionsWithMethodsForUser = this.subscriptionSystem.getSubscriptionsWithMethodsForUser.bind(
+      this.subscriptionSystem,
+    );
+    this.getSubscribersForEvent = this.subscriptionSystem.getSubscribersForEvent.bind(this.subscriptionSystem);
+    this.getSubscribersSummary = this.subscriptionSystem.getSubscribersSummary.bind(this.subscriptionSystem);
+
+    // Admin methods for listing by method type
+    this.getMethodsCountByType = this.subscriptionSystem.getMethodsCountByType.bind(this.subscriptionSystem);
+    this.getSubscribersByMethodTypeV2 = this.subscriptionSystem.getSubscribersByMethodTypeV2.bind(
+      this.subscriptionSystem,
+    );
+    this.getSubscriberDetailsByMethodId = this.subscriptionSystem.getSubscriberDetailsByMethodId.bind(
+      this.subscriptionSystem,
+    );
   }
 
   async init(): Promise<void> {}

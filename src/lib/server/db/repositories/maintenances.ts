@@ -47,6 +47,11 @@ export class MaintenancesRepository extends BaseRepository {
     return await this.knex("maintenances").where("id", id).first();
   }
 
+  async getMaintenancesByIds(ids: number[]): Promise<MaintenanceRecord[]> {
+    if (ids.length === 0) return [];
+    return await this.knex("maintenances").whereIn("id", ids);
+  }
+
   async getAllMaintenances(filter?: MaintenanceFilter): Promise<MaintenanceRecord[]> {
     let query = this.knex("maintenances").select("*").whereRaw("1=1");
 

@@ -801,3 +801,173 @@ export interface TemplateParsed<T extends TemplateJsonType = TemplateJsonType> e
 > {
   template_json: T;
 }
+
+// ============ subscription_config table ============
+export interface SubscriptionEventsEnabled {
+  incidentUpdatesAll: boolean;
+  maintenanceUpdatesAll: boolean;
+  monitorUpdatesAll: boolean;
+}
+
+export interface SubscriptionMethodsEnabled {
+  email: boolean;
+  webhook: boolean;
+  slack: boolean;
+  discord: boolean;
+}
+
+export interface SubscriptionMethodTriggers {
+  email: number | null;
+  webhook: number | null;
+  slack: number | null;
+  discord: number | null;
+}
+
+export interface SubscriptionConfigRecord {
+  id: number;
+  events_enabled: string;
+  methods_enabled: string;
+  method_triggers: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface SubscriptionConfigParsed {
+  id: number;
+  events_enabled: SubscriptionEventsEnabled;
+  methods_enabled: SubscriptionMethodsEnabled;
+  method_triggers: SubscriptionMethodTriggers;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface SubscriptionConfigUpdate {
+  events_enabled?: string;
+  methods_enabled?: string;
+  method_triggers?: string;
+}
+
+// ============ New Subscription System (v2) ============
+
+export type SubscriptionMethodType = "email" | "webhook" | "slack" | "discord";
+export type SubscriptionEventType = "incidentUpdatesAll" | "maintenanceUpdatesAll" | "monitorUpdatesAll";
+export type SubscriptionEntityType = "monitor" | "incident" | "maintenance" | null;
+export type SubscriptionStatus = "ACTIVE" | "INACTIVE";
+export type SubscriberUserStatus = "PENDING" | "ACTIVE" | "INACTIVE";
+
+// ============ subscriber_users table ============
+export interface SubscriberUserRecord {
+  id: number;
+  email: string;
+  status: SubscriberUserStatus;
+  verification_code: string | null;
+  verification_expires_at: Date | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface SubscriberUserRecordInsert {
+  email: string;
+  status?: SubscriberUserStatus;
+  verification_code?: string | null;
+  verification_expires_at?: Date | null;
+}
+
+// ============ subscriber_methods table ============
+export interface SubscriberMethodRecord {
+  id: number;
+  subscriber_user_id: number;
+  method_type: SubscriptionMethodType;
+  method_value: string;
+  status: SubscriptionStatus;
+  meta: string | null; // JSON for extra config
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface SubscriberMethodRecordInsert {
+  subscriber_user_id: number;
+  method_type: SubscriptionMethodType;
+  method_value: string;
+  status?: SubscriptionStatus;
+  meta?: string | null;
+}
+
+// ============ user_subscriptions_v2 table ============
+export interface UserSubscriptionV2Record {
+  id: number;
+  subscriber_user_id: number;
+  subscriber_method_id: number;
+  event_type: SubscriptionEventType;
+  entity_type: SubscriptionEntityType;
+  entity_id: string | null;
+  status: SubscriptionStatus;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface UserSubscriptionV2RecordInsert {
+  subscriber_user_id: number;
+  subscriber_method_id: number;
+  event_type: SubscriptionEventType;
+  entity_type?: SubscriptionEntityType;
+  entity_id?: string | null;
+  status?: SubscriptionStatus;
+}
+
+export interface UserSubscriptionV2Filter {
+  subscriber_user_id?: number;
+  subscriber_method_id?: number;
+  event_type?: SubscriptionEventType;
+  entity_type?: SubscriptionEntityType;
+  entity_id?: string;
+  status?: SubscriptionStatus;
+}
+
+// ============ Old types (kept for compatibility) ============
+
+export interface UserSubscriptionRecord {
+  id: number;
+  subscriber_id: number;
+  subscription_method: SubscriptionMethodType;
+  event_type: SubscriptionEventType;
+  entity_type: SubscriptionEntityType;
+  entity_id: string | null;
+  status: SubscriptionStatus;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface UserSubscriptionRecordInsert {
+  subscriber_id: number;
+  subscription_method: SubscriptionMethodType;
+  event_type: SubscriptionEventType;
+  entity_type?: SubscriptionEntityType;
+  entity_id?: string | null;
+  status?: SubscriptionStatus;
+}
+
+export interface UserSubscriptionFilter {
+  subscriber_id?: number;
+  subscription_method?: SubscriptionMethodType;
+  event_type?: SubscriptionEventType;
+  entity_type?: SubscriptionEntityType;
+  entity_id?: string;
+  status?: SubscriptionStatus;
+}
+
+// Subscriber with their subscriptions
+export interface SubscriberWithSubscriptions extends SubscriberRecord {
+  subscriptions: UserSubscriptionRecord[];
+}
+
+// Aggregated view for admin
+export interface SubscriberSummary {
+  id: number;
+  subscriber_send: string;
+  subscriber_type: string;
+  subscriber_status: string;
+  created_at: Date;
+  subscription_count: number;
+  event_types: SubscriptionEventType[];
+}
