@@ -7,14 +7,26 @@ import {
   AddIncidentComment,
   AddIncidentMonitor,
   GetIncidentByIDDashboard,
+  GetAllSiteData,
 } from "../controllers/controller.js";
 import { SetLastMonitoringValue } from "../cache/setGet.js";
-import type { MonitorSettings, MonitorAlertConfigRecord, MonitorAlertV2Record } from "../types/db.js";
+import type {
+  MonitorSettings,
+  MonitorAlertConfigRecord,
+  MonitorAlertV2Record,
+  TriggerRecordParsed,
+  TriggerMetaEmailJson,
+  TriggerMetaWebhookJson,
+  TriggerMetaSlackJson,
+  TriggerMetaDiscordJson,
+} from "../types/db.js";
 import { GetMonitorsParsed } from "../controllers/controller.js";
 import {
   AddIncidentToAlert,
   CreateMonitorAlertV2,
   GetMonitorAlertConfigs,
+  GetTriggersByMonitorAlertConfigId,
+  GetTriggersParsedByMonitorAlertConfigId,
   UpdateMonitorAlertV2Status,
 } from "../controllers/monitorAlertConfigController.js";
 import type { IncidentInput } from "../controllers/incidentController.js";
@@ -24,6 +36,13 @@ import { GetMonitorAlertsV2 } from "../controllers/monitorAlertConfigController.
 import db from "../db/db.js";
 import { getUnixTime, differenceInSeconds } from "date-fns";
 import GC from "../../global-constants.js";
+import { alertToVariables, siteDataToVariables } from "../notification/notification_utils.js";
+import sendEmail from "../notification/email_notification.js";
+import sendWebhook from "$lib/server/notification/webhook_notification.js";
+import sendSlack from "$lib/server/notification/slack_notification.js";
+import sendDiscord from "$lib/server/notification/discord_notification.js";
+
+import { GetTemplateById } from "../controllers/templateController.js";
 
 let worker: Worker | null = null;
 const queueName = "alertingQueue";
@@ -58,7 +77,7 @@ async function createNewIncident(
   let newIncident = await CreateIncident(incidentInput);
   let incidentId = newIncident.incident_id;
   let update = config.alert_description || "Alert triggered";
-  update = `#### ${config.alert_description || "Alert triggered"}\n\n`;
+  update = `${config.alert_description || "Alert triggered"}\n\n`;
   update = update + `| Setting | Value |\n`;
   update = update + `| :--- | :--- |\n`;
   update = update + `| **Monitor Name** | ${monitorName} |\n`;
@@ -132,6 +151,61 @@ function createClosureComment(
   return comment;
 }
 
+async function sendAlertNotifications(
+  activeAlert: MonitorAlertV2Record,
+  monitor_alerts_configured: MonitorAlertConfigRecord,
+  templateSiteVars: any,
+): Promise<void> {
+  const templateAlertVars = alertToVariables(monitor_alerts_configured, activeAlert);
+  const triggers = await GetTriggersParsedByMonitorAlertConfigId(monitor_alerts_configured.id);
+
+  for (let i = 0; i < triggers.length; i++) {
+    const trigger = triggers[i];
+    if (!trigger.template_id) {
+      console.error(`No template associated with trigger ID ${trigger.id}`);
+      continue;
+    }
+
+    // Fetch trigger template
+    const template = await GetTemplateById(trigger.template_id);
+    if (!template) {
+      console.error(`Template not found for trigger ID ${trigger.id}`);
+      continue;
+    }
+
+    // Handle only email for now
+    if (trigger.trigger_type === "email") {
+      await sendEmail(
+        trigger as TriggerRecordParsed<TriggerMetaEmailJson>,
+        templateAlertVars,
+        template,
+        templateSiteVars,
+      );
+    } else if (trigger.trigger_type === "webhook") {
+      await sendWebhook(
+        trigger as TriggerRecordParsed<TriggerMetaWebhookJson>,
+        templateAlertVars,
+        template,
+        templateSiteVars,
+      );
+    } else if (trigger.trigger_type === "slack") {
+      await sendSlack(
+        trigger as TriggerRecordParsed<TriggerMetaSlackJson>,
+        templateAlertVars,
+        template,
+        templateSiteVars,
+      );
+    } else if (trigger.trigger_type === "discord") {
+      await sendDiscord(
+        trigger as TriggerRecordParsed<TriggerMetaDiscordJson>,
+        templateAlertVars,
+        template,
+        templateSiteVars,
+      );
+    }
+  }
+}
+
 const getQueue = () => {
   if (!alertingQueue) {
     alertingQueue = q.createQueue(queueName);
@@ -144,7 +218,8 @@ const addWorker = () => {
 
   worker = q.createWorker(getQueue(), async (job: Job): Promise<void> => {
     const { monitor_name, monitor_tag, ts, status, monitor_alerts_configured } = job.data as JobData;
-
+    const siteData = await GetAllSiteData();
+    const templateSiteVars = siteDataToVariables(siteData);
     try {
       const typeOfConfig = monitor_alerts_configured.alert_for;
       const alertValue = monitor_alerts_configured.alert_value;
@@ -176,6 +251,8 @@ const addWorker = () => {
                 activeAlert = await AddIncidentToAlert(activeAlert.id, newIncidentNumber.incident_id);
               }
             }
+            // Send triggered alert notifications
+            await sendAlertNotifications(activeAlert, monitor_alerts_configured, templateSiteVars);
           }
         } else {
           //all good, resolve any existing alert
@@ -187,6 +264,9 @@ const addWorker = () => {
             if (activeAlert.incident_id) {
               await closeIncident(activeAlert, monitor_alerts_configured, monitor_name, monitor_tag);
             }
+
+            // Send resolution notifications
+            await sendAlertNotifications(activeAlert, monitor_alerts_configured, templateSiteVars);
           }
         }
       }

@@ -159,6 +159,7 @@
     "resend": "^6.6.0",
     "rrule": "^2.8.1",
     "sharp": "^0.34.5",
+    "striptags": "^3.2.0",
     "style-to-object": "^1.0.14",
     "svelte-codemirror-editor": "^2.1.0",
     "vite-plugin-package-version": "^1.1.0",

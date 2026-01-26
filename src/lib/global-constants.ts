@@ -55,4 +55,8 @@ export default {
   WARNING: "WARNING",
   defaultNumeratorStr: "up + maintenance + degraded",
   defaultDenominatorStr: "up + down + degraded + maintenance",
+  DEFAULT_UP_COLOR: "#28a745",
+  DEFAULT_DOWN_COLOR: "#dc3545",
+  DEFAULT_DEGRADED_COLOR: "#ffc107",
+  DEFAULT_MAINTENANCE_COLOR: "#17a2b8",
 } as const;

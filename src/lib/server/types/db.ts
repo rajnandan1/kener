@@ -150,9 +150,39 @@ export interface TriggerRecord {
   trigger_desc: string | null;
   trigger_status: string | null;
   trigger_meta: string;
+  template_id?: number | null;
   created_at: Date;
   updated_at: Date;
 }
+
+export interface TriggerRecordParsed<T extends TriggerMetaJson = TriggerMetaJson> extends Omit<
+  TriggerRecord,
+  "trigger_meta"
+> {
+  trigger_meta: T;
+}
+
+export interface TriggerMetaEmailJson {
+  to: string[];
+  from: string;
+}
+
+export interface TriggerMetaWebhookJson {
+  url: string;
+  headers?: { key: string; value: string }[];
+}
+export interface TriggerMetaSlackJson {
+  url: string;
+}
+export interface TriggerMetaDiscordJson {
+  url: string;
+}
+
+export type TriggerMetaJson =
+  | TriggerMetaEmailJson
+  | TriggerMetaWebhookJson
+  | TriggerMetaSlackJson
+  | TriggerMetaDiscordJson;
 
 export interface TriggerRecordInsert {
   name: string;
@@ -160,6 +190,7 @@ export interface TriggerRecordInsert {
   trigger_desc?: string | null;
   trigger_status?: string | null;
   trigger_meta?: string | null;
+  template_id?: number | null;
 }
 
 // ============ users table ============
@@ -706,4 +737,67 @@ export interface MonitorAlertV2Filter {
 // Composite type with config details
 export interface MonitorAlertV2WithConfig extends MonitorAlertV2Record {
   config: MonitorAlertConfigRecord;
+}
+
+// ============ templates table ============
+export type TemplateType = "EMAIL" | "WEBHOOK" | "SLACK" | "DISCORD";
+export type TemplateUsageType = "ALERT" | "SUBSCRIPTION";
+
+// Template JSON types for each template type
+export interface EmailTemplateJson {
+  email_subject: string;
+  email_body: string; // HTML string
+}
+
+export interface WebhookTemplateJson {
+  webhook_body: string; // JSON string
+}
+
+export interface SlackTemplateJson {
+  slack_body: string; // JSON string
+}
+
+export interface DiscordTemplateJson {
+  discord_body: string; // JSON string
+}
+
+// Union type for all template JSON types
+export type TemplateJsonType = EmailTemplateJson | WebhookTemplateJson | SlackTemplateJson | DiscordTemplateJson;
+
+export interface TemplateRecord {
+  id: number;
+  template_name: string;
+  template_type: TemplateType;
+  template_usage: TemplateUsageType;
+  template_json: string; // Stored as text, parsed to TemplateJsonType
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface TemplateInsert {
+  template_name: string;
+  template_type: TemplateType;
+  template_usage: TemplateUsageType;
+  template_json: string;
+}
+
+export interface TemplateUpdate {
+  template_name?: string;
+  template_type?: TemplateType;
+  template_usage?: TemplateUsageType;
+  template_json?: string;
+}
+
+export interface TemplateFilter {
+  id?: number;
+  template_type?: TemplateType;
+  template_usage?: TemplateUsageType;
+}
+
+// Parsed template record with JSON already parsed
+export interface TemplateParsed<T extends TemplateJsonType = TemplateJsonType> extends Omit<
+  TemplateRecord,
+  "template_json"
+> {
+  template_json: T;
 }

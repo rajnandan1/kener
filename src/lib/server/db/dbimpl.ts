@@ -13,6 +13,7 @@ import { ImagesRepository } from "./repositories/images.js";
 import { PagesRepository } from "./repositories/pages.js";
 import { MaintenancesRepository } from "./repositories/maintenances.js";
 import { MonitorAlertConfigRepository } from "./repositories/monitorAlertConfig.js";
+import { TemplatesRepository } from "./repositories/templates.js";
 
 // Re-export types from base
 export type { MonitorFilter, TriggerFilter, IncidentFilter, CountResult } from "./repositories/base.js";
@@ -41,6 +42,7 @@ class DbImpl {
   private pages!: PagesRepository;
   private maintenances!: MaintenancesRepository;
   private monitorAlertConfig!: MonitorAlertConfigRepository;
+  private templates!: TemplatesRepository;
 
   // Method bindings - declared with definite assignment assertion
   // ============ Monitoring Data ============
@@ -318,6 +320,19 @@ class DbImpl {
   getAlertsByIncidentId!: MonitorAlertConfigRepository["getAlertsByIncidentId"];
   getMonitorAlertsV2Count!: MonitorAlertConfigRepository["getMonitorAlertsV2Count"];
 
+  // ============ Templates ============
+  insertTemplate!: TemplatesRepository["insertTemplate"];
+  updateTemplate!: TemplatesRepository["updateTemplate"];
+  getTemplateById!: TemplatesRepository["getTemplateById"];
+  getTemplates!: TemplatesRepository["getTemplates"];
+  getAllTemplates!: TemplatesRepository["getAllTemplates"];
+  getTemplatesByType!: TemplatesRepository["getTemplatesByType"];
+  getTemplatesByUsage!: TemplatesRepository["getTemplatesByUsage"];
+  getTemplatesByTypeAndUsage!: TemplatesRepository["getTemplatesByTypeAndUsage"];
+  deleteTemplate!: TemplatesRepository["deleteTemplate"];
+  getTemplatesCount!: TemplatesRepository["getTemplatesCount"];
+  templateNameExists!: TemplatesRepository["templateNameExists"];
+
   constructor(opts: KnexType.Config) {
     this.knex = Knex(opts);
 
@@ -333,6 +348,7 @@ class DbImpl {
     this.pages = new PagesRepository(this.knex);
     this.maintenances = new MaintenancesRepository(this.knex);
     this.monitorAlertConfig = new MonitorAlertConfigRepository(this.knex);
+    this.templates = new TemplatesRepository(this.knex);
 
     // Bind methods after repositories are initialized
     this.bindMonitoringMethods();
@@ -346,6 +362,7 @@ class DbImpl {
     this.bindPagesMethods();
     this.bindMaintenancesMethods();
     this.bindMonitorAlertConfigMethods();
+    this.bindTemplatesMethods();
 
     this.init();
   }
@@ -679,6 +696,20 @@ class DbImpl {
     this.addIncidentToAlert = this.monitorAlertConfig.addIncidentToAlert.bind(this.monitorAlertConfig);
     this.getAlertsByIncidentId = this.monitorAlertConfig.getAlertsByIncidentId.bind(this.monitorAlertConfig);
     this.getMonitorAlertsV2Count = this.monitorAlertConfig.getMonitorAlertsV2Count.bind(this.monitorAlertConfig);
+  }
+
+  private bindTemplatesMethods(): void {
+    this.insertTemplate = this.templates.insertTemplate.bind(this.templates);
+    this.updateTemplate = this.templates.updateTemplate.bind(this.templates);
+    this.getTemplateById = this.templates.getTemplateById.bind(this.templates);
+    this.getTemplates = this.templates.getTemplates.bind(this.templates);
+    this.getAllTemplates = this.templates.getAllTemplates.bind(this.templates);
+    this.getTemplatesByType = this.templates.getTemplatesByType.bind(this.templates);
+    this.getTemplatesByUsage = this.templates.getTemplatesByUsage.bind(this.templates);
+    this.getTemplatesByTypeAndUsage = this.templates.getTemplatesByTypeAndUsage.bind(this.templates);
+    this.deleteTemplate = this.templates.deleteTemplate.bind(this.templates);
+    this.getTemplatesCount = this.templates.getTemplatesCount.bind(this.templates);
+    this.templateNameExists = this.templates.templateNameExists.bind(this.templates);
   }
 
   async init(): Promise<void> {}

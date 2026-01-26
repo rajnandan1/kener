@@ -6,6 +6,7 @@
   import UserCircleIcon from "@lucide/svelte/icons/user-circle";
   import CheckIcon from "@lucide/svelte/icons/check";
   import LoaderIcon from "@lucide/svelte/icons/loader";
+
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";

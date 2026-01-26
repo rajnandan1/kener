@@ -16,39 +16,25 @@ export interface AlertAction {
 }
 
 export interface AlertData {
-  id: string;
+  alert_id: string;
   alert_name: string;
-  status: string;
-  severity: string;
-  description: string;
-  source: string;
-  timestamp: string;
-  actions: AlertAction[];
-  details: {
-    metric: string;
-    current_value: number;
-    threshold: number;
-  };
-}
-
-export interface AlertView {
+  alert_for: string;
+  alert_value: string;
+  alert_status: string;
+  alert_severity: string;
+  alert_message: string;
+  alert_source: string;
+  alert_timestamp: string;
+  alert_cta_url: string;
+  alert_cta_text: string;
+  alert_incident_id?: string;
+  alert_failure_threshold: number;
+  alert_success_threshold: number;
   site_name: string;
-  logo_url: string;
+  site_logo_url: string;
   site_url: string;
-  alert_name: string;
-  status: string;
   is_resolved: boolean;
   is_triggered: boolean;
-  description: string;
-  action_text: string;
-  action_url: string;
-  metric: string;
-  severity: string;
-  id: string;
-  current_value: number;
-  threshold: number;
-  source: string;
-  timestamp: string;
 }
 
 export default function variables(siteData: SiteDataForNotification, data: AlertData): AlertView {

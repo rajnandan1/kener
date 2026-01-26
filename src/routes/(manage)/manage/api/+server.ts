@@ -1,12 +1,16 @@
 import { json } from "@sveltejs/kit";
-import Notification from "$lib/server/notification/notif.js";
+import sendEmail from "$lib/server/notification/email_notification.js";
+import sendWebhook from "$lib/server/notification/webhook_notification.js";
+import sendSlack from "$lib/server/notification/slack_notification.js";
+import sendDiscord from "$lib/server/notification/discord_notification.js";
 import Service, { type MonitorWithType } from "$lib/server/services/service.js";
 import verifyEmailTemplate from "$lib/server/templates/verify_email";
 import { format } from "date-fns";
 import sharp from "sharp";
 import { nanoid } from "nanoid";
 import db from "$lib/server/db/db";
-
+import GC from "$lib/global-constants.js";
+import { EmailHTMLTemplate } from "$lib/anywhere.js";
 import {
   CreateUpdateMonitor,
   UpdateMonitoringData,
@@ -89,8 +93,30 @@ import {
   GetMonitorAlertConfigsByMonitorTag,
   DeleteMonitorAlertConfig,
   ToggleMonitorAlertConfigStatus,
+  type MonitorAlertConfigRecord,
+  type MonitorAlertV2Record,
 } from "$lib/server/controllers/monitorAlertConfigController.js";
+import {
+  CreateTemplate,
+  UpdateTemplate,
+  GetTemplateById,
+  GetTemplates,
+  GetAllTemplates,
+  GetTemplatesByType,
+  GetTemplatesByUsage,
+  GetTemplatesByTypeAndUsage,
+  DeleteTemplate,
+} from "$lib/server/controllers/templateController.js";
 import type { AlertData, SiteDataForNotification } from "$lib/server/notification/variables";
+import { alertToVariables, siteDataToVariables } from "$lib/server/notification/notification_utils";
+import type {
+  TriggerRecordParsed,
+  TriggerMetaEmailJson,
+  TemplateRecord,
+  TriggerMetaWebhookJson,
+  TriggerMetaSlackJson,
+  TriggerMetaDiscordJson,
+} from "../../../../lib/server/types/db";
 
 function AdminCan(role: string) {
   if (role !== "admin") {
@@ -260,47 +286,78 @@ export async function POST({ request, cookies }) {
       resp = await UpdateCommentByID(data.incident_id, data.comment_id, data.comment, data.state, data.commented_at);
     } else if (action == "testTrigger") {
       const trigger = await GetTriggerByID(data.trigger_id);
-
       const siteData = await GetAllSiteData();
       if (!trigger || !siteData) {
         throw new Error("Trigger not found");
       }
-      const siteDataForNotification: SiteDataForNotification = {
-        siteURL: siteData.siteURL,
-        siteName: siteData.siteName || "Kener",
-        logo: siteData.logo || "",
-        colors: {
-          UP: siteData.colors.UP || "#28a745",
-          DOWN: siteData.colors.DOWN || "#dc3545",
-          DEGRADED: siteData.colors.DEGRADED || "#ffc107",
-          MAINTENANCE: siteData.colors.MAINTENANCE || "#17a2b8",
-        },
+
+      const testAlert: MonitorAlertConfigRecord = {
+        id: 1,
+        monitor_tag: "test-monitor",
+        alert_for: "STATUS",
+        alert_value: "DOWN",
+        failure_threshold: 1,
+        success_threshold: 1,
+        alert_description: "This is a test alert",
+        create_incident: "NO",
+        is_active: "YES",
+        severity: "WARNING",
+        created_at: new Date(),
+        updated_at: new Date(),
       };
-      const notificationClient = new Notification(trigger, siteDataForNotification);
-      const testObj: AlertData = {
-        id: "test",
-        alert_name: "Test Alert " + (Math.floor(Math.random() * 100) % 2 === 0 ? "DOWN" : "DEGRADED"),
-        severity: Math.floor(Math.random() * 100) % 2 == 0 ? "critical" : "warning",
-        status: Math.floor(Math.random() * 100) % 2 == 0 ? "TRIGGERED" : "RESOLVED",
-        source: "Kener",
-        timestamp: new Date().toISOString(),
-        description: "Monitor has failed",
-        details: {
-          metric: "Test",
-          current_value: Math.floor(Math.random() * 100),
-          threshold: Math.floor(Math.random() * 100),
-        },
-        actions: [
-          {
-            text: "View Monitor",
-            url: siteData.siteURL + "/monitor-test",
-          },
-        ],
+      const testAlertData: MonitorAlertV2Record = {
+        id: 1,
+        config_id: 1,
+        alert_status: Math.random() > 0.5 ? "TRIGGERED" : "RESOLVED",
+        incident_id: null,
+        created_at: new Date(),
+        updated_at: new Date(),
       };
-      resp = await notificationClient.send(testObj);
-      //check if resp is error
-      if (resp.error) {
-        throw new Error(resp.error);
+      //throw error if not template id
+      if (!trigger.template_id) {
+        throw new Error("No template associated with this trigger");
+      }
+      //get template by id
+      const template = await GetTemplateById(trigger.template_id);
+      if (!template) {
+        throw new Error("No template found for this trigger");
+      }
+
+      const templateAlertVars = alertToVariables(testAlert, testAlertData);
+      const templateSiteVars = siteDataToVariables(siteData);
+
+      let triggerParsed: TriggerRecordParsed = {
+        ...trigger,
+        trigger_meta: trigger.trigger_meta ? JSON.parse(trigger.trigger_meta) : { to: [], from: "" },
+      };
+      if (trigger.trigger_type === "webhook") {
+        resp = await sendWebhook(
+          triggerParsed as TriggerRecordParsed<TriggerMetaWebhookJson>,
+          templateAlertVars as AlertData,
+          template,
+          templateSiteVars,
+        );
+      } else if (trigger.trigger_type === "email") {
+        resp = await sendEmail(
+          triggerParsed as TriggerRecordParsed<TriggerMetaEmailJson>,
+          templateAlertVars as AlertData,
+          template,
+          templateSiteVars,
+        );
+      } else if (trigger.trigger_type === "slack") {
+        resp = await sendSlack(
+          triggerParsed as TriggerRecordParsed<TriggerMetaSlackJson>,
+          templateAlertVars as AlertData,
+          template,
+          templateSiteVars,
+        );
+      } else if (trigger.trigger_type === "discord") {
+        resp = await sendDiscord(
+          triggerParsed as TriggerRecordParsed<TriggerMetaDiscordJson>,
+          templateAlertVars as AlertData,
+          template,
+          templateSiteVars,
+        );
       }
     } else if (action == "testMonitor") {
       let monitorID = data.monitor_id;
@@ -438,6 +495,33 @@ export async function POST({ request, cookies }) {
     } else if (action == "toggleMonitorAlertConfigStatus") {
       AdminEditorCan(userDB.role);
       resp = await ToggleMonitorAlertConfigStatus(data.id);
+    }
+    // ============ Template Actions ============
+    else if (action == "createTemplate") {
+      AdminEditorCan(userDB.role);
+      resp = await CreateTemplate(data);
+    } else if (action == "updateTemplate") {
+      AdminEditorCan(userDB.role);
+      resp = await UpdateTemplate(data);
+    } else if (action == "getTemplateById") {
+      resp = await GetTemplateById(data.id);
+      if (!resp) {
+        throw new Error("Template not found");
+      }
+    } else if (action == "getTemplates") {
+      resp = await GetTemplates(data || {});
+    } else if (action == "getAllTemplates") {
+      resp = await GetAllTemplates();
+    } else if (action == "getTemplatesByType") {
+      resp = await GetTemplatesByType(data.template_type);
+    } else if (action == "getTemplatesByUsage") {
+      resp = await GetTemplatesByUsage(data.template_usage);
+    } else if (action == "getTemplatesByTypeAndUsage") {
+      resp = await GetTemplatesByTypeAndUsage(data.template_type, data.template_usage);
+    } else if (action == "deleteTemplate") {
+      AdminEditorCan(userDB.role);
+      await DeleteTemplate(data.id);
+      resp = { success: true };
     }
   } catch (error: unknown) {
     console.log(error);

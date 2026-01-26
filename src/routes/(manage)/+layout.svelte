@@ -25,6 +25,7 @@
   import UsersIcon from "@lucide/svelte/icons/users";
   import Columns3CogIcon from "@lucide/svelte/icons/columns-3-cog";
   import SiteHeader from "./manage/site-header.svelte";
+  import TemplateIcon from "@lucide/svelte/icons/layout-template";
   import { Toaster } from "$lib/components/ui/sonner/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
 
@@ -47,7 +48,8 @@
     { title: "Subscriptions", url: "/manage/app/subscriptions", icon: BellIcon },
     { title: "Users", url: "/manage/app/users", icon: UsersIcon },
     { title: "Badges", url: "/manage/app/badges", icon: BadgeIcon },
-    { title: "Embed", url: "/manage/app/embed", icon: CodeIcon }
+    { title: "Embed", url: "/manage/app/embed", icon: CodeIcon },
+    { title: "Templates", url: "/manage/app/templates", icon: TemplateIcon }
   ];
 
   // Derive page title from current URL
