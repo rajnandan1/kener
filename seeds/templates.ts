@@ -7,7 +7,7 @@ import type { Knex } from "knex";
 
 export async function seed(knex: Knex): Promise<void> {
   const templateCount = await knex("templates").count("id as CNT").first();
-  if (templateCount && templateCount.CNT == 2) {
+  if (templateCount && templateCount.CNT == 0) {
     await knex("templates").insert({
       created_at: knex.fn.now(),
       updated_at: knex.fn.now(),
@@ -17,6 +17,16 @@ export async function seed(knex: Knex): Promise<void> {
       created_at: knex.fn.now(),
       updated_at: knex.fn.now(),
       ...defaultDiscordTemplate,
+    });
+    await knex("templates").insert({
+      created_at: knex.fn.now(),
+      updated_at: knex.fn.now(),
+      ...defaultWebhookTemplate,
+    });
+    await knex("templates").insert({
+      created_at: knex.fn.now(),
+      updated_at: knex.fn.now(),
+      ...defaultEmailTemplate,
     });
   }
 }
