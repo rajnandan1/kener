@@ -8,6 +8,7 @@ import {
   AddIncidentMonitor,
   GetIncidentByIDDashboard,
   GetAllSiteData,
+  CreateNewIncidentWithCommentAndMonitor,
 } from "../controllers/controller.js";
 import { SetLastMonitoringValue } from "../cache/setGet.js";
 import type {
@@ -36,11 +37,16 @@ import { GetMonitorAlertsV2 } from "../controllers/monitorAlertConfigController.
 import db from "../db/db.js";
 import { getUnixTime, differenceInSeconds } from "date-fns";
 import GC from "../../global-constants.js";
-import { alertToVariables, siteDataToVariables } from "../notification/notification_utils.js";
+import {
+  alertToVariables,
+  getEmailConfigFromTriggerMeta,
+  siteDataToVariables,
+} from "../notification/notification_utils.js";
 import sendEmail from "../notification/email_notification.js";
 import sendWebhook from "$lib/server/notification/webhook_notification.js";
 import sendSlack from "$lib/server/notification/slack_notification.js";
 import sendDiscord from "$lib/server/notification/discord_notification.js";
+import subscriberQueue from "./subscriberQueue.js";
 
 import { GetTemplateById } from "../controllers/templateController.js";
 
@@ -74,8 +80,6 @@ async function createNewIncident(
     incident_source: "ALERT",
   };
 
-  let newIncident = await CreateIncident(incidentInput);
-  let incidentId = newIncident.incident_id;
   let update = config.alert_description || "Alert triggered";
   update = `${config.alert_description || "Alert triggered"}\n\n`;
   update = update + `| Setting | Value |\n`;
@@ -88,13 +92,7 @@ async function createNewIncident(
   update = update + `| **Alert Value** | ${config.alert_value} |\n`;
   update = update + `| **Failure Threshold** | ${config.failure_threshold} |\n`;
 
-  //add update to incident
-  await AddIncidentComment(newIncident.incident_id, update, GC.INVESTIGATING, startDateTime);
-
-  //add monitor to incident
-  await AddIncidentMonitor(newIncident.incident_id, monitorTag, config.alert_value);
-
-  return { incident_id: incidentId };
+  return await CreateNewIncidentWithCommentAndMonitor(incidentInput, update, monitorTag, config.alert_value);
 }
 
 async function closeIncident(
@@ -175,36 +173,36 @@ async function sendAlertNotifications(
 
     // Handle only email for now
     if (trigger.trigger_type === "email") {
-      await sendEmail(
-        trigger as TriggerRecordParsed<TriggerMetaEmailJson>,
-        templateAlertVars,
-        template,
-        templateSiteVars,
-      );
-    } else if (trigger.trigger_type === "webhook") {
-      await sendWebhook(
-        trigger as TriggerRecordParsed<TriggerMetaWebhookJson>,
-        templateAlertVars,
-        template,
-        templateSiteVars,
-      );
-    } else if (trigger.trigger_type === "slack") {
-      await sendSlack(
-        trigger as TriggerRecordParsed<TriggerMetaSlackJson>,
-        templateAlertVars,
-        template,
-        templateSiteVars,
-      );
-    } else if (trigger.trigger_type === "discord") {
-      await sendDiscord(
-        trigger as TriggerRecordParsed<TriggerMetaDiscordJson>,
-        templateAlertVars,
-        template,
-        templateSiteVars,
-      );
+      const emailSendingConfig = getEmailConfigFromTriggerMeta(trigger.trigger_meta as TriggerMetaEmailJson);
+      const toAddresses = (trigger.trigger_meta as TriggerMetaEmailJson).to;
+      await sendEmail(emailSendingConfig, templateAlertVars, template, templateSiteVars, toAddresses);
     }
   }
 }
+
+/**
+ * Send notifications to subscribers when an alert is triggered or resolved
+ */
+// async function sendSubscriberNotifications(
+//   activeAlert: MonitorAlertV2Record,
+//   monitor_alerts_configured: MonitorAlertConfigRecord,
+//   monitor_name: string,
+//   monitor_tag: string,
+// ): Promise<void> {
+//   const isResolved = activeAlert.alert_status === GC.RESOLVED;
+//   const statusText = isResolved ? "Resolved" : "Triggered";
+
+//   const subscriptionVariables = {
+//     title: `${monitor_name} - Alert ${statusText}`,
+//     cta_url: "", // Can be populated with link to status page
+//     cta_text: "View Status Page",
+//     update_text: `Alert for ${monitor_name} (${monitor_tag}) has been ${statusText.toLowerCase()}. Alert type: ${monitor_alerts_configured.alert_for}, Value: ${monitor_alerts_configured.alert_value}, Severity: ${monitor_alerts_configured.severity}`,
+//     update_subject: `[${statusText}] ${monitor_name} - ${monitor_alerts_configured.alert_for} ${monitor_alerts_configured.alert_value}`,
+//   };
+
+//   // Push to subscriber queue with the monitor tag
+//   await subscriberQueue.push(subscriptionVariables, [monitor_tag]);
+// }
 
 const getQueue = () => {
   if (!alertingQueue) {
@@ -253,6 +251,8 @@ const addWorker = () => {
             }
             // Send triggered alert notifications
             await sendAlertNotifications(activeAlert, monitor_alerts_configured, templateSiteVars);
+            // Send subscriber notifications
+            //await sendSubscriberNotifications(activeAlert, monitor_alerts_configured, monitor_name, monitor_tag);
           }
         } else {
           //all good, resolve any existing alert
@@ -267,6 +267,8 @@ const addWorker = () => {
 
             // Send resolution notifications
             await sendAlertNotifications(activeAlert, monitor_alerts_configured, templateSiteVars);
+            // Send subscriber notifications
+            //await sendSubscriberNotifications(activeAlert, monitor_alerts_configured, monitor_name, monitor_tag);
           }
         }
       }

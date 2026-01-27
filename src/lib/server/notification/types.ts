@@ -26,7 +26,35 @@ export interface SiteDataForNotification {
   colors_maintenance: string;
 }
 export interface SubscriptionVariableMap {
-  my_name: string;
+  title: string;
+  cta_url: string;
+  cta_text: string;
+  update_text: string;
+  update_subject: string;
 }
 
-export type TemplateVariableMap = SubscriptionVariableMap | AlertVariableMap;
+export interface EmailCodeVariableMap {
+  email_code: string;
+  email_subject: string;
+  action: string;
+}
+
+export interface SMTPConfiguration {
+  smtp_host: string;
+  smtp_port?: string | number;
+  smtp_secure?: boolean;
+  smtp_user: string;
+  smtp_pass: string;
+  smtp_sender: string;
+}
+export interface WebhookConfiguration {
+  url: string;
+  headers: Record<string, string>;
+}
+
+export interface ResendAPIConfiguration {
+  resend_api_key: string;
+  resend_sender_email: string;
+}
+
+export type TemplateVariableMap = SubscriptionVariableMap | AlertVariableMap | EmailCodeVariableMap;

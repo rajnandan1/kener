@@ -30,7 +30,7 @@ export type {
 // ============ Validation ============
 
 const VALID_TEMPLATE_TYPES: TemplateType[] = ["EMAIL", "WEBHOOK", "SLACK", "DISCORD"];
-const VALID_TEMPLATE_USAGES: TemplateUsageType[] = ["ALERT", "SUBSCRIPTION"];
+const VALID_TEMPLATE_USAGES: TemplateUsageType[] = ["ALERT", "SUBSCRIPTION", "GENERAL"];
 
 function validateTemplateType(value: string): asserts value is TemplateType {
   if (!VALID_TEMPLATE_TYPES.includes(value as TemplateType)) {
@@ -272,11 +272,11 @@ export async function GetTemplatesByUsage(templateUsage: TemplateUsageType): Pro
  */
 export async function GetTemplatesByTypeAndUsage(
   templateType: TemplateType,
-  templateUsage: TemplateUsageType,
+  templateUsages: TemplateUsageType[],
 ): Promise<TemplateRecord[]> {
   validateTemplateType(templateType);
-  validateTemplateUsage(templateUsage);
-  return await db.getTemplatesByTypeAndUsage(templateType, templateUsage);
+  templateUsages.forEach((usage) => validateTemplateUsage(usage));
+  return await db.getTemplatesByTypeAndUsage(templateType, templateUsages);
 }
 
 /**

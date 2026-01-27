@@ -518,4 +518,89 @@ export class SubscriptionSystemRepository extends BaseRepository {
 
     return { user, method, subscriptions };
   }
+
+  /**
+   * Get subscription method details for a specific entity
+   * Returns all active subscriber methods that are subscribed to this entity
+   */
+  async getSubscriptionMethodsByEntity(
+    entityType: SubscriptionEntityType,
+    entityId: string,
+  ): Promise<
+    Array<{
+      method: SubscriberMethodRecord;
+      user: SubscriberUserRecord;
+      subscription: UserSubscriptionV2Record;
+    }>
+  > {
+    const rows = await this.knex("user_subscriptions_v2 as us")
+      .join("subscriber_methods as sm", "us.subscriber_method_id", "sm.id")
+      .join("subscriber_users as su", "us.subscriber_user_id", "su.id")
+      .where("us.status", "ACTIVE")
+      .andWhere("sm.status", "ACTIVE")
+      .andWhere("su.status", "ACTIVE")
+      .andWhere(function () {
+        // Match subscriptions for this specific entity OR global subscriptions (entity_type is null)
+        this.where(function () {
+          this.where("us.entity_type", entityType).andWhere("us.entity_id", entityId);
+        }).orWhereNull("us.entity_type");
+      })
+      .select(
+        "sm.id as method_id",
+        "sm.subscriber_user_id",
+        "sm.method_type",
+        "sm.method_value",
+        "sm.status as method_status",
+        "sm.meta as method_meta",
+        "sm.created_at as method_created_at",
+        "sm.updated_at as method_updated_at",
+        "su.id as user_id",
+        "su.email as user_email",
+        "su.status as user_status",
+        "su.verification_code",
+        "su.verification_expires_at",
+        "su.created_at as user_created_at",
+        "su.updated_at as user_updated_at",
+        "us.id as sub_id",
+        "us.event_type",
+        "us.entity_type",
+        "us.entity_id",
+        "us.status as sub_status",
+        "us.created_at as sub_created_at",
+        "us.updated_at as sub_updated_at",
+      );
+
+    return rows.map((row) => ({
+      method: {
+        id: row.method_id,
+        subscriber_user_id: row.subscriber_user_id,
+        method_type: row.method_type,
+        method_value: row.method_value,
+        status: row.method_status,
+        meta: row.method_meta,
+        created_at: row.method_created_at,
+        updated_at: row.method_updated_at,
+      },
+      user: {
+        id: row.user_id,
+        email: row.user_email,
+        status: row.user_status,
+        verification_code: row.verification_code,
+        verification_expires_at: row.verification_expires_at,
+        created_at: row.user_created_at,
+        updated_at: row.user_updated_at,
+      },
+      subscription: {
+        id: row.sub_id,
+        subscriber_user_id: row.subscriber_user_id,
+        subscriber_method_id: row.method_id,
+        event_type: row.event_type,
+        entity_type: row.entity_type,
+        entity_id: row.entity_id,
+        status: row.sub_status,
+        created_at: row.sub_created_at,
+        updated_at: row.sub_updated_at,
+      },
+    }));
+  }
 }

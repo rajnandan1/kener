@@ -16,6 +16,7 @@ import type {
 } from "../types/db.js";
 import * as queueController from "./queueController.js";
 import type { NumberWithChange } from "../../types/monitor.js";
+import GC from "../../global-constants.js";
 
 interface IncidentsDashboardInput {
   page: number;
@@ -225,6 +226,18 @@ export const GetIncidentsByIDS = async (ids: number[]): Promise<unknown[]> => {
   return incidents;
 };
 
+export const CreateNewIncidentWithCommentAndMonitor = async (
+  data: IncidentInput,
+  update: string,
+  monitorTag: string,
+  monitorStatus: string,
+): Promise<{ incident_id: number }> => {
+  let incidentCreation = await CreateIncident(data);
+  await AddIncidentComment(incidentCreation.incident_id, update, GC.INVESTIGATING, data.start_date_time);
+  await AddIncidentMonitor(incidentCreation.incident_id, monitorTag, monitorStatus);
+
+  return incidentCreation;
+};
 export const CreateIncident = async (data: IncidentInput): Promise<{ incident_id: number }> => {
   //return error if no title or startDateTime
   if (!data.title || !data.start_date_time) {
@@ -252,10 +265,12 @@ export const CreateIncident = async (data: IncidentInput): Promise<{ incident_id
   }
 
   let newIncident = await db.createIncident(incident);
-  queueController.PushDataToQueue(newIncident.id, "createIncident", {
-    message: `${incident.incident_type} Created`,
-    ...incident,
-  });
+
+  //we need to
+  // queueController.PushDataToQueue(newIncident.id, "createIncident", {
+  //   message: `${incident.incident_type} Created`,
+  //   ...incident,
+  // });
   return {
     incident_id: newIncident.id,
   };

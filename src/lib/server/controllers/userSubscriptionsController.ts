@@ -10,6 +10,7 @@ import type {
   UserSubscriptionV2Record,
   SubscriberUserRecord,
   SubscriberMethodRecord,
+  SubscriptionEntityType,
 } from "$lib/server/types/db.js";
 
 // ============ V2 Admin Functions ============
@@ -241,4 +242,18 @@ export function FormatEntityType(entityType: string | null): string {
     default:
       return entityType;
   }
+}
+
+//getSubscriptionMethodsByEntity
+export async function GetSubscriptionMethodsByEntity(
+  entity_type: string,
+  entity_id: string,
+): Promise<
+  Array<{
+    method: SubscriberMethodRecord;
+    user: SubscriberUserRecord;
+    subscription: UserSubscriptionV2Record;
+  }>
+> {
+  return await db.getSubscriptionMethodsByEntity(entity_type as SubscriptionEntityType, entity_id);
 }

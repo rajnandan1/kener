@@ -2,18 +2,11 @@ import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
 import { HashString } from "../tool.js";
 import type { TriggerRecord, MonitorRecord } from "../types/db.js";
-
-interface SMTPMeta {
-  smtp_host: string;
-  smtp_port?: string | number;
-  smtp_secure?: boolean;
-  smtp_user: string;
-  smtp_pass: string;
-}
+import type { SMTPConfiguration } from "./types.js";
 
 const transports: Record<string, Transporter> = {};
 
-export default function getSMTPTransport(meta: SMTPMeta): Transporter {
+export default function getSMTPTransport(meta: SMTPConfiguration): Transporter {
   //convert meta to string and generate has id
 
   let transportId = "smtp_" + HashString(JSON.stringify(meta));

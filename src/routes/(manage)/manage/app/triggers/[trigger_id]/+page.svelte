@@ -105,7 +105,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "getTemplatesByTypeAndUsage",
-          data: { template_type: templateType, template_usage: "ALERT" }
+          data: { template_type: templateType, template_usages: ["ALERT", "SUBSCRIPTION"] }
         })
       });
       const result = await response.json();

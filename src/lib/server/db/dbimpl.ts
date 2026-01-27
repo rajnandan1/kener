@@ -17,6 +17,8 @@ import { TemplatesRepository } from "./repositories/templates.js";
 import { SubscriptionConfigRepository } from "./repositories/subscriptionConfig.js";
 import { UserSubscriptionsRepository } from "./repositories/userSubscriptions.js";
 import { SubscriptionSystemRepository } from "./repositories/subscriptionSystem.js";
+import { EmailTemplateConfigRepository } from "./repositories/emailTemplateConfig.js";
+import { VaultRepository } from "./repositories/vault.js";
 
 // Re-export types from base
 export type { MonitorFilter, TriggerFilter, IncidentFilter, CountResult } from "./repositories/base.js";
@@ -49,6 +51,8 @@ class DbImpl {
   private subscriptionConfig!: SubscriptionConfigRepository;
   private userSubscriptions!: UserSubscriptionsRepository;
   private subscriptionSystem!: SubscriptionSystemRepository;
+  private emailTemplateConfig!: EmailTemplateConfigRepository;
+  private vault!: VaultRepository;
 
   // Method bindings - declared with definite assignment assertion
   // ============ Monitoring Data ============
@@ -387,6 +391,30 @@ class DbImpl {
   getMethodsCountByType!: SubscriptionSystemRepository["getMethodsCountByType"];
   getSubscribersByMethodTypeV2!: SubscriptionSystemRepository["getSubscribersByMethodTypeV2"];
   getSubscriberDetailsByMethodId!: SubscriptionSystemRepository["getSubscriberDetailsByMethodId"];
+  getSubscriptionMethodsByEntity!: SubscriptionSystemRepository["getSubscriptionMethodsByEntity"];
+
+  // ============ Email Template Config ============
+  getAllEmailTemplateConfigs!: EmailTemplateConfigRepository["getAllEmailTemplateConfigs"];
+  getAllEmailTemplateConfigsWithTemplates!: EmailTemplateConfigRepository["getAllEmailTemplateConfigsWithTemplates"];
+  getEmailTemplateConfigByType!: EmailTemplateConfigRepository["getEmailTemplateConfigByType"];
+  getEmailTemplateConfigById!: EmailTemplateConfigRepository["getEmailTemplateConfigById"];
+  updateEmailTemplateConfigByType!: EmailTemplateConfigRepository["updateEmailTemplateConfigByType"];
+  updateEmailTemplateConfigById!: EmailTemplateConfigRepository["updateEmailTemplateConfigById"];
+  getActiveEmailTemplateConfigs!: EmailTemplateConfigRepository["getActiveEmailTemplateConfigs"];
+  getActiveEmailTemplateConfigByType!: EmailTemplateConfigRepository["getActiveEmailTemplateConfigByType"];
+  ensureDefaultEmailTypes!: EmailTemplateConfigRepository["ensureDefaultEmailTypes"];
+
+  // ============ Vault ============
+  getAllSecrets!: VaultRepository["getAllSecrets"];
+  getSecretById!: VaultRepository["getSecretById"];
+  getSecretByName!: VaultRepository["getSecretByName"];
+  insertSecret!: VaultRepository["insertSecret"];
+  updateSecretById!: VaultRepository["updateSecretById"];
+  updateSecretByName!: VaultRepository["updateSecretByName"];
+  deleteSecretById!: VaultRepository["deleteSecretById"];
+  deleteSecretByName!: VaultRepository["deleteSecretByName"];
+  secretNameExists!: VaultRepository["secretNameExists"];
+  getSecretsCount!: VaultRepository["getSecretsCount"];
 
   constructor(opts: KnexType.Config) {
     this.knex = Knex(opts);
@@ -407,6 +435,8 @@ class DbImpl {
     this.subscriptionConfig = new SubscriptionConfigRepository(this.knex);
     this.userSubscriptions = new UserSubscriptionsRepository(this.knex);
     this.subscriptionSystem = new SubscriptionSystemRepository(this.knex);
+    this.emailTemplateConfig = new EmailTemplateConfigRepository(this.knex);
+    this.vault = new VaultRepository(this.knex);
 
     // Bind methods after repositories are initialized
     this.bindMonitoringMethods();
@@ -424,6 +454,8 @@ class DbImpl {
     this.bindSubscriptionConfigMethods();
     this.bindUserSubscriptionsMethods();
     this.bindSubscriptionSystemMethods();
+    this.bindEmailTemplateConfigMethods();
+    this.bindVaultMethods();
 
     this.init();
   }
@@ -858,6 +890,49 @@ class DbImpl {
     this.getSubscriberDetailsByMethodId = this.subscriptionSystem.getSubscriberDetailsByMethodId.bind(
       this.subscriptionSystem,
     );
+    this.getSubscriptionMethodsByEntity = this.subscriptionSystem.getSubscriptionMethodsByEntity.bind(
+      this.subscriptionSystem,
+    );
+  }
+
+  private bindEmailTemplateConfigMethods(): void {
+    this.getAllEmailTemplateConfigs = this.emailTemplateConfig.getAllEmailTemplateConfigs.bind(
+      this.emailTemplateConfig,
+    );
+    this.getAllEmailTemplateConfigsWithTemplates =
+      this.emailTemplateConfig.getAllEmailTemplateConfigsWithTemplates.bind(this.emailTemplateConfig);
+    this.getEmailTemplateConfigByType = this.emailTemplateConfig.getEmailTemplateConfigByType.bind(
+      this.emailTemplateConfig,
+    );
+    this.getEmailTemplateConfigById = this.emailTemplateConfig.getEmailTemplateConfigById.bind(
+      this.emailTemplateConfig,
+    );
+    this.updateEmailTemplateConfigByType = this.emailTemplateConfig.updateEmailTemplateConfigByType.bind(
+      this.emailTemplateConfig,
+    );
+    this.updateEmailTemplateConfigById = this.emailTemplateConfig.updateEmailTemplateConfigById.bind(
+      this.emailTemplateConfig,
+    );
+    this.getActiveEmailTemplateConfigs = this.emailTemplateConfig.getActiveEmailTemplateConfigs.bind(
+      this.emailTemplateConfig,
+    );
+    this.getActiveEmailTemplateConfigByType = this.emailTemplateConfig.getActiveEmailTemplateConfigByType.bind(
+      this.emailTemplateConfig,
+    );
+    this.ensureDefaultEmailTypes = this.emailTemplateConfig.ensureDefaultEmailTypes.bind(this.emailTemplateConfig);
+  }
+
+  private bindVaultMethods(): void {
+    this.getAllSecrets = this.vault.getAllSecrets.bind(this.vault);
+    this.getSecretById = this.vault.getSecretById.bind(this.vault);
+    this.getSecretByName = this.vault.getSecretByName.bind(this.vault);
+    this.insertSecret = this.vault.insertSecret.bind(this.vault);
+    this.updateSecretById = this.vault.updateSecretById.bind(this.vault);
+    this.updateSecretByName = this.vault.updateSecretByName.bind(this.vault);
+    this.deleteSecretById = this.vault.deleteSecretById.bind(this.vault);
+    this.deleteSecretByName = this.vault.deleteSecretByName.bind(this.vault);
+    this.secretNameExists = this.vault.secretNameExists.bind(this.vault);
+    this.getSecretsCount = this.vault.getSecretsCount.bind(this.vault);
   }
 
   async init(): Promise<void> {}

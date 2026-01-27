@@ -84,7 +84,7 @@
   interface Props {
     open: boolean;
     monitor_tags?: string[];
-    incident_ids?: string[];
+    incident_ids?: number[];
     maintenance_ids?: string[];
   }
   let { open = $bindable(false), monitor_tags = [], incident_ids = [], maintenance_ids = [] }: Props = $props();

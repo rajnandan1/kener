@@ -146,3 +146,8 @@ export const CreateHash = (apiKey: string): string => {
     .update(apiKey)
     .digest("hex");
 };
+
+//create md5 hash
+export const CreateMD5Hash = (data: string): string => {
+  return crypto.createHash("md5").update(data).digest("hex");
+};

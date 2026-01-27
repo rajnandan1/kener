@@ -120,8 +120,26 @@ import {
   DeleteUserSubscription,
   UpdateUserSubscriptionStatus,
 } from "$lib/server/controllers/userSubscriptionsController.js";
+import {
+  GetAllEmailTemplateConfigsWithTemplates,
+  UpdateAllEmailTemplateConfigs,
+  GetEmailTemplates,
+  EMAIL_TYPE_LABELS,
+  EMAIL_TYPE_DESCRIPTIONS,
+} from "$lib/server/controllers/emailTemplateConfigController.js";
+import {
+  GetAllSecrets,
+  GetSecretById,
+  CreateSecret,
+  UpdateSecret,
+  DeleteSecret,
+} from "$lib/server/controllers/vaultController.js";
 import type { AlertData, SiteDataForNotification } from "$lib/server/notification/variables";
-import { alertToVariables, siteDataToVariables } from "$lib/server/notification/notification_utils";
+import {
+  alertToVariables,
+  getEmailConfigFromTriggerMeta,
+  siteDataToVariables,
+} from "$lib/server/notification/notification_utils";
 import type {
   TriggerRecordParsed,
   TriggerMetaEmailJson,
@@ -351,11 +369,14 @@ export async function POST({ request, cookies }) {
           templateSiteVars,
         );
       } else if (trigger.trigger_type === "email") {
+        const emailSendingConfig = getEmailConfigFromTriggerMeta(triggerParsed.trigger_meta as TriggerMetaEmailJson);
+        const toAddresses = (triggerParsed.trigger_meta as TriggerMetaEmailJson).to;
         resp = await sendEmail(
-          triggerParsed as TriggerRecordParsed<TriggerMetaEmailJson>,
+          emailSendingConfig,
           templateAlertVars as AlertData,
           template,
           templateSiteVars,
+          toAddresses,
         );
       } else if (trigger.trigger_type === "slack") {
         resp = await sendSlack(
@@ -530,7 +551,7 @@ export async function POST({ request, cookies }) {
     } else if (action == "getTemplatesByUsage") {
       resp = await GetTemplatesByUsage(data.template_usage);
     } else if (action == "getTemplatesByTypeAndUsage") {
-      resp = await GetTemplatesByTypeAndUsage(data.template_type, data.template_usage);
+      resp = await GetTemplatesByTypeAndUsage(data.template_type, data.template_usages);
     } else if (action == "deleteTemplate") {
       AdminEditorCan(userDB.role);
       await DeleteTemplate(data.id);
@@ -628,6 +649,67 @@ export async function POST({ request, cookies }) {
         throw new Error("subscriptionId and status are required");
       }
       resp = await UpdateUserSubscriptionStatus(subscriptionId, status);
+    }
+    // ============ Email Template Config ============
+    else if (action == "getEmailTemplateConfigs") {
+      const configs = await GetAllEmailTemplateConfigsWithTemplates();
+      // Add labels and descriptions
+      resp = configs.map((config) => ({
+        ...config,
+        label: EMAIL_TYPE_LABELS[config.email_type as keyof typeof EMAIL_TYPE_LABELS] || config.email_type,
+        description: EMAIL_TYPE_DESCRIPTIONS[config.email_type as keyof typeof EMAIL_TYPE_DESCRIPTIONS] || "",
+      }));
+    } else if (action == "updateEmailTemplateConfigs") {
+      AdminCan(userDB.role);
+      const { configs } = data;
+      if (!configs || !Array.isArray(configs)) {
+        throw new Error("configs array is required");
+      }
+      resp = await UpdateAllEmailTemplateConfigs(configs);
+    } else if (action == "getEmailTemplates") {
+      resp = await GetEmailTemplates();
+    }
+    // ============ Vault ============
+    else if (action == "getVaultSecrets") {
+      AdminCan(userDB.role);
+      resp = await GetAllSecrets();
+    } else if (action == "getVaultSecret") {
+      AdminCan(userDB.role);
+      const { id } = data;
+      if (!id) {
+        throw new Error("Secret ID is required");
+      }
+      resp = await GetSecretById(id);
+      if (!resp) {
+        throw new Error("Secret not found");
+      }
+    } else if (action == "createVaultSecret") {
+      AdminCan(userDB.role);
+      const { secret_name, secret_value } = data;
+      resp = await CreateSecret(secret_name, secret_value);
+      if (!resp.success) {
+        throw new Error(resp.error);
+      }
+    } else if (action == "updateVaultSecret") {
+      AdminCan(userDB.role);
+      const { id, secret_name, secret_value } = data;
+      if (!id) {
+        throw new Error("Secret ID is required");
+      }
+      resp = await UpdateSecret(id, { secret_name, secret_value });
+      if (!resp.success) {
+        throw new Error(resp.error);
+      }
+    } else if (action == "deleteVaultSecret") {
+      AdminCan(userDB.role);
+      const { id } = data;
+      if (!id) {
+        throw new Error("Secret ID is required");
+      }
+      resp = await DeleteSecret(id);
+      if (!resp.success) {
+        throw new Error(resp.error);
+      }
     }
   } catch (error: unknown) {
     console.log(error);

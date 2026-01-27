@@ -8,6 +8,7 @@ import { HashString } from "../tool.js";
 import { getSchedulers, addJobToSchedulerQueue, removeJobFromSchedulerQueue } from "./monitorSchedulers.js";
 
 import { GetMonitorsParsed } from "../controllers/controller.js";
+import { GetAllSecrets } from "../controllers/vaultController.js";
 
 let appSchedulerQueue: Queue | null = null;
 let worker: Worker | null = null;
@@ -27,6 +28,16 @@ const addWorker = () => {
   if (worker) return worker;
 
   worker = q.createWorker(getQueue(), async (job: Job) => {
+    // Fetch secrets from vault and store in environment variables
+    try {
+      const secrets = await GetAllSecrets();
+      for (const secret of secrets) {
+        process.env[secret.secret_name] = secret.secret_value;
+      }
+    } catch (error) {
+      console.error("Failed to sync vault secrets to environment:", error);
+    }
+
     const activeMonitors = (await GetMonitorsParsed({ status: "ACTIVE" })).map((monitor) => ({
       ...monitor,
       hash: monitor.tag + "::" + HashString(JSON.stringify(monitor)),
@@ -91,7 +102,7 @@ export const start = async (options?: JobSchedulerTemplateOptions) => {
   await queue.upsertJobScheduler(
     jobNamePrefix + "_main_job",
     {
-      every: 10000, // Job will repeat every 1000 milliseconds (1 second)
+      every: 10000, // Job will repeat every 10000 milliseconds (10 seconds)
     },
     {
       opts: options,

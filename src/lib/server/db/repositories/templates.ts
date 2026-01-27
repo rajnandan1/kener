@@ -96,10 +96,11 @@ export class TemplatesRepository extends BaseRepository {
    */
   async getTemplatesByTypeAndUsage(
     templateType: TemplateType,
-    templateUsage: TemplateUsageType,
+    templateUsages: TemplateUsageType[],
   ): Promise<TemplateRecord[]> {
     return await this.knex("templates")
-      .where({ template_type: templateType, template_usage: templateUsage })
+      .where({ template_type: templateType })
+      .whereIn("template_usage", templateUsages)
       .orderBy("id", "desc");
   }
 

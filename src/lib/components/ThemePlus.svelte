@@ -32,6 +32,7 @@
     monitor_tags?: string[];
     shareLinkString?: string;
     embedMonitorTag?: string;
+    incident_ids?: number[];
   }
 
   let openSubscribeMenu = $state(false);
@@ -45,7 +46,8 @@
     showHomeButton = false,
     monitor_tags = [],
     shareLinkString = "",
-    embedMonitorTag = ""
+    embedMonitorTag = "",
+    incident_ids = []
   }: Props = $props();
 
   let protocol = $state("");
@@ -110,7 +112,7 @@
   </div>
   <div class="flex gap-2">
     <ButtonGroup.Root class="">
-      {#if monitor_tags.length > 0}
+      {#if monitor_tags.length > 0 || incident_ids.length > 0}
         <ButtonGroup.Root class="hidden sm:flex">
           <Button
             variant="outline"
@@ -177,6 +179,6 @@
   </div>
 </div>
 
-<SubscribeMenuV2 bind:open={openSubscribeMenu} {monitor_tags} />
+<SubscribeMenuV2 bind:open={openSubscribeMenu} {monitor_tags} {incident_ids} />
 <BadgesMenu bind:open={openBadgesMenu} monitorTag={embedMonitorTag} {protocol} {domain} />
 <EmbedMenu bind:open={openEmbedMenu} monitorTag={embedMonitorTag} {protocol} {domain} />

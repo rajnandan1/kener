@@ -165,6 +165,12 @@ export interface TriggerRecordParsed<T extends TriggerMetaJson = TriggerMetaJson
 export interface TriggerMetaEmailJson {
   to: string[];
   from: string;
+  email_type: string;
+  smtp_host?: string;
+  smtp_port?: string | number;
+  smtp_secure?: boolean;
+  smtp_user?: string;
+  smtp_pass?: string;
 }
 
 export interface TriggerMetaWebhookJson {
@@ -741,7 +747,7 @@ export interface MonitorAlertV2WithConfig extends MonitorAlertV2Record {
 
 // ============ templates table ============
 export type TemplateType = "EMAIL" | "WEBHOOK" | "SLACK" | "DISCORD";
-export type TemplateUsageType = "ALERT" | "SUBSCRIPTION";
+export type TemplateUsageType = "ALERT" | "SUBSCRIPTION" | "GENERAL";
 
 // Template JSON types for each template type
 export interface EmailTemplateJson {

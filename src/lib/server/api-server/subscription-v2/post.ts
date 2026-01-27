@@ -8,6 +8,10 @@ import { GetSubscriptionConfig } from "$lib/server/controllers/subscriptionConfi
 import db from "$lib/server/db/db";
 import emailCodeTemplate from "$lib/server/templates/email_code";
 import type { SubscriptionMethodType, SubscriptionEventType, SubscriptionEntityType } from "$lib/server/types/db";
+import { getPreferredEmailConfiguration, siteDataToVariables } from "$lib/server/notification/notification_utils";
+import type { EmailCodeVariableMap } from "$lib/server/notification/types";
+import sendEmail from "$lib/server/notification/email_notification.js";
+import { GetTemplateByEmailType } from "$lib/server/controllers/emailTemplateConfigController";
 
 interface SubscriptionV2RequestBody {
   action:
@@ -188,18 +192,20 @@ async function handleLogin(email?: string): Promise<Response> {
   const siteLogo = await GetSiteLogoURL(siteData.siteURL || "", siteData.logo || "", "/");
   const siteName = siteData.siteName || "Status Page";
 
-  await SendEmailWithTemplate(
-    emailCodeTemplate,
-    {
-      site_name: siteName,
-      logo_url: siteLogo,
-      code: code,
-      site_url: siteData.siteURL || "",
-    },
-    normalizedEmail,
-    `Your Verification Code - ${siteName}`,
-    `Your verification code is: ${code}`,
-  );
+  const templateSiteVars = siteDataToVariables(siteData);
+  const emailCodeVars: EmailCodeVariableMap = {
+    email_code: code,
+    email_subject: `Your Verification Code - ${siteName}`,
+    action: "login",
+  };
+
+  const emailConfig = getPreferredEmailConfiguration();
+  const template = await GetTemplateByEmailType("email_code");
+  if (!template) {
+    return error(500, { message: "Email template not found" });
+  }
+
+  await sendEmail(emailConfig, emailCodeVars, template, templateSiteVars, [normalizedEmail]);
 
   return json({
     success: true,
