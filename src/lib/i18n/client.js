@@ -1,7 +1,7 @@
 // @ts-nocheck
 
 import { format, formatDistance, formatDistanceToNow, formatDuration } from "date-fns";
-import { ru, enUS, hi, de, zhCN, vi, ja, nl, da, fr, ko, ptBR, tr, nb, pl, es, it, faIR } from "date-fns/locale";
+import { ru, enUS, hi, de, zhCN, vi, ja, nl, da, fr, ko, ptBR, tr, nb, pl, es, it, faIR, cs } from "date-fns/locale";
 import { formatInTimeZone } from "date-fns-tz";
 
 const locales = {
@@ -23,6 +23,7 @@ const locales = {
   es,
   it,
   fa: faIR,
+  cs,
 };
 
 const f = function (date, formatStr, locale, tz) {
