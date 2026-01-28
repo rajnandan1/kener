@@ -1,0 +1,232 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html dir="ltr" lang="en">
+  <head>
+    <link rel="preload" as="image" href="{{logo_url}}" />
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <style>
+      body.email-body {
+        background-color: rgb(243, 244, 246);
+        font-family:
+          ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+          "Segoe UI Symbol", "Noto Color Emoji";
+        padding-top: 40px;
+        padding-bottom: 40px;
+      }
+      .preheader {
+        display: none;
+        overflow: hidden;
+        line-height: 1px;
+        opacity: 0;
+        max-height: 0;
+        max-width: 0;
+      }
+      .main-table {
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+        background-color: rgb(255, 255, 255);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .header-table {
+        background-color: #e4e5ec;
+        padding-left: 24px;
+        padding-right: 24px;
+        padding-top: 24px;
+        padding-bottom: 24px;
+      }
+      .logo {
+        height: auto;
+        display: block;
+        outline: none;
+        border: none;
+        text-decoration: none;
+        margin-left: auto;
+        margin-right: auto;
+      }
+      .brand-name {
+        font-size: 20px;
+        font-weight: bold;
+        color: #191919;
+        margin: 8px 0 0 0;
+        text-align: center;
+      }
+      .content-table {
+        padding-left: 24px;
+        padding-right: 24px;
+        padding-top: 32px;
+        padding-bottom: 32px;
+      }
+      .title {
+        font-size: 24px;
+        font-weight: 700;
+        color: rgb(31, 41, 55);
+        margin-bottom: 16px;
+      }
+      .paragraph {
+        font-size: 16px;
+        color: rgb(55, 65, 81);
+        margin-bottom: 16px;
+        line-height: 24px;
+        margin-top: 16px;
+      }
+      .tags {
+        margin: 0;
+        padding: 0;
+      }
+      .tag-container {
+        display: inline-block;
+        padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+        background-color: rgb(237, 237, 237);
+        border-radius: calc(0.5rem - 2px);
+        margin-right: 8px;
+        margin-bottom: 8px;
+        vertical-align: top;
+      }
+      .tag-impact {
+        color: rgb(248, 250, 252);
+        background-color: rgb(239, 68, 68);
+        padding: 0.25rem 0.375rem;
+        border-radius: 0.25rem;
+      }
+      .tag-name {
+        font-weight: 500;
+        margin-top: 0.2rem;
+      }
+      .cta {
+        background-color: rgb(22, 163, 74);
+        color: #fff !important;
+        font-weight: 700;
+        border-radius: 4px;
+        font-size: 16px;
+        text-decoration-line: none;
+        text-align: center;
+        display: block;
+        box-sizing: border-box;
+        line-height: 100%;
+        text-decoration: none;
+        max-width: 100%;
+        padding: 12px 24px 12px 24px;
+      }
+      .cta span {
+        max-width: 100%;
+        display: inline-block;
+        line-height: 120%;
+      }
+      .divider {
+        border-top-width: 1px;
+        border-color: rgb(209, 213, 219);
+        margin-top: 8px;
+        margin-bottom: 8px;
+        width: 100%;
+        border: none;
+        border-top: 1px solid #eaeaea;
+      }
+      .footer {
+        text-align: center;
+        color: #6b7280;
+        font-size: 16px;
+        margin: 24px 0 0 0;
+      }
+      .spacer {
+        height: 32px;
+      }
+    </style>
+  </head>
+  <body class="email-body">
+    <!--$-->
+    <div class="preheader">{{title}}</div>
+    <table
+      align="center"
+      width="100%"
+      border="0"
+      cellpadding="0"
+      cellspacing="0"
+      role="presentation"
+      class="main-table"
+    >
+      <tbody>
+        <tr style="width: 100%">
+          <td>
+            <table
+              align="center"
+              width="100%"
+              border="0"
+              cellpadding="0"
+              cellspacing="0"
+              role="presentation"
+              class="header-table"
+            >
+              <tbody>
+                <tr>
+                  <td>
+                    <table
+                      align="center"
+                      width="100%"
+                      border="0"
+                      cellpadding="0"
+                      cellspacing="0"
+                      role="presentation"
+                    >
+                      <tbody style="width: 100%">
+                        <tr style="width: 100%">
+                          <td data-id="__react-email-column" style="text-align: center">
+                            <img alt="{{brand_name}}" src="{{logo_url}}" class="logo" width="80" />
+                            <p class="brand-name">{{brand_name}}</p>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <table
+              align="center"
+              width="100%"
+              border="0"
+              cellpadding="0"
+              cellspacing="0"
+              role="presentation"
+              class="content-table"
+            >
+              <tbody>
+                <tr>
+                  <td>
+                    <h1 class="title">{{title}}</h1>
+                    <p class="paragraph">Dear Valued Customer,</p>
+                    <p class="paragraph">{{message}}</p>
+
+                    <a href="{{incident_url}}" class="cta" target="_blank"
+                      ><span
+                        ><!--[if mso
+                          ]><i style="mso-font-width: 400%; mso-text-raise: 18" hidden
+                            >&#8202;&#8202;&#8202;</i
+                          ><!
+                        [endif]--></span
+                      ><span>View Maintenance Details</span
+                      ><span
+                        ><!--[if mso
+                          ]><i style="mso-font-width: 400%" hidden
+                            >&#8202;&#8202;&#8202;&#8203;</i
+                          ><!
+                        [endif]--></span
+                      ></a
+                    >
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <hr class="divider" />
+            <footer>
+              <p class="footer">Thank you,<br />The {{brand_name}} Team</p>
+            </footer>
+            <div class="spacer"></div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <!--7--><!--/$-->
+  </body>
+</html>
