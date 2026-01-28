@@ -112,7 +112,7 @@
   </div>
   <div class="flex gap-2">
     <ButtonGroup.Root class="">
-      {#if monitor_tags.length > 0 || incident_ids.length > 0}
+      {#if page.data.isSubsEnabled}
         <ButtonGroup.Root class="hidden sm:flex">
           <Button
             variant="outline"
@@ -179,6 +179,6 @@
   </div>
 </div>
 
-<SubscribeMenu bind:open={openSubscribeMenu} {monitor_tags} {incident_ids} />
+<SubscribeMenu bind:open={openSubscribeMenu} />
 <BadgesMenu bind:open={openBadgesMenu} monitorTag={embedMonitorTag} {protocol} {domain} />
 <EmbedMenu bind:open={openEmbedMenu} monitorTag={embedMonitorTag} {protocol} {domain} />

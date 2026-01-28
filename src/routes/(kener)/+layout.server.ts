@@ -37,6 +37,17 @@ export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
     page_path: p.page_path,
   }));
 
+  //is subscription enabled/
+  let isSubsEnabled = false;
+  let subsSetting = siteData.subscriptionsSettings;
+  if (
+    subsSetting &&
+    subsSetting.enable &&
+    (subsSetting.methods.emails.incidents || subsSetting.methods.emails.maintenance)
+  ) {
+    isSubsEnabled = true;
+  }
+
   return {
     isMobile,
     isSetupComplete,
@@ -50,5 +61,6 @@ export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
     logo: siteData.logo,
     favicon: siteData.favicon,
     footerHTML: siteData.footerHTML || "",
+    isSubsEnabled,
   };
 };

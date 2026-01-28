@@ -17,11 +17,9 @@
 
   interface Props {
     open: boolean;
-    monitor_tags?: string[];
-    incident_ids?: number[];
   }
 
-  let { open = $bindable(false), monitor_tags = [], incident_ids = [] }: Props = $props();
+  let { open = $bindable(false) }: Props = $props();
 
   const STORAGE_KEY = "subscriber_token";
 
