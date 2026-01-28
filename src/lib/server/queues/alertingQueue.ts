@@ -11,23 +11,13 @@ import {
   CreateNewIncidentWithCommentAndMonitor,
 } from "../controllers/controller.js";
 import { SetLastMonitoringValue } from "../cache/setGet.js";
-import type {
-  MonitorSettings,
-  MonitorAlertConfigRecord,
-  MonitorAlertV2Record,
-  TriggerRecordParsed,
-  TriggerMetaEmailJson,
-  TriggerMetaWebhookJson,
-  TriggerMetaSlackJson,
-  TriggerMetaDiscordJson,
-} from "../types/db.js";
+import type { MonitorSettings, MonitorAlertConfigRecord, MonitorAlertV2Record, TriggerMeta } from "../types/db.js";
 import { GetMonitorsParsed } from "../controllers/controller.js";
 import {
   AddIncidentToAlert,
   CreateMonitorAlertV2,
   GetMonitorAlertConfigs,
   GetTriggersByMonitorAlertConfigId,
-  GetTriggersParsedByMonitorAlertConfigId,
   UpdateMonitorAlertV2Status,
 } from "../controllers/monitorAlertConfigController.js";
 import type { IncidentInput } from "../controllers/incidentController.js";
@@ -37,18 +27,13 @@ import { GetMonitorAlertsV2 } from "../controllers/monitorAlertConfigController.
 import db from "../db/db.js";
 import { getUnixTime, differenceInSeconds } from "date-fns";
 import GC from "../../global-constants.js";
-import {
-  alertToVariables,
-  getEmailConfigFromTriggerMeta,
-  siteDataToVariables,
-} from "../notification/notification_utils.js";
+import { alertToVariables, siteDataToVariables } from "../notification/notification_utils.js";
 import sendEmail from "../notification/email_notification.js";
 import sendWebhook from "$lib/server/notification/webhook_notification.js";
 import sendSlack from "$lib/server/notification/slack_notification.js";
 import sendDiscord from "$lib/server/notification/discord_notification.js";
-import subscriberQueue from "./subscriberQueue.js";
 
-import { GetTemplateById } from "../controllers/templateController.js";
+import type { SiteDataForNotification } from "../notification/types.js";
 
 let worker: Worker | null = null;
 const queueName = "alertingQueue";
@@ -152,57 +137,37 @@ function createClosureComment(
 async function sendAlertNotifications(
   activeAlert: MonitorAlertV2Record,
   monitor_alerts_configured: MonitorAlertConfigRecord,
-  templateSiteVars: any,
+  templateSiteVars: SiteDataForNotification,
 ): Promise<void> {
   const templateAlertVars = alertToVariables(monitor_alerts_configured, activeAlert);
-  const triggers = await GetTriggersParsedByMonitorAlertConfigId(monitor_alerts_configured.id);
+  const triggers = await GetTriggersByMonitorAlertConfigId(monitor_alerts_configured.id);
 
   for (let i = 0; i < triggers.length; i++) {
     const trigger = triggers[i];
-    if (!trigger.template_id) {
-      console.error(`No template associated with trigger ID ${trigger.id}`);
-      continue;
-    }
 
     // Fetch trigger template
-    const template = await GetTemplateById(trigger.template_id);
-    if (!template) {
-      console.error(`Template not found for trigger ID ${trigger.id}`);
-      continue;
-    }
-
+    const triggerMetaParsed = JSON.parse(trigger.trigger_meta) as TriggerMeta;
     // Handle only email for now
     if (trigger.trigger_type === "email") {
-      const emailSendingConfig = getEmailConfigFromTriggerMeta(trigger.trigger_meta as TriggerMetaEmailJson);
-      const toAddresses = (trigger.trigger_meta as TriggerMetaEmailJson).to;
-      await sendEmail(emailSendingConfig, templateAlertVars, template, templateSiteVars, toAddresses);
+      const toAddresses = triggerMetaParsed.to
+        .trim()
+        .split(",")
+        .map((addr) => addr.trim())
+        .filter((addr) => addr.length > 0);
+      if (toAddresses.length === 0) {
+        continue;
+      }
+      await sendEmail(
+        triggerMetaParsed.email_body,
+        triggerMetaParsed.email_subject,
+        { ...templateAlertVars, ...templateSiteVars },
+        toAddresses,
+        triggerMetaParsed.from,
+      );
+      // await sendEmail(emailSendingConfig, templateAlertVars, template, templateSiteVars, toAddresses);
     }
   }
 }
-
-/**
- * Send notifications to subscribers when an alert is triggered or resolved
- */
-// async function sendSubscriberNotifications(
-//   activeAlert: MonitorAlertV2Record,
-//   monitor_alerts_configured: MonitorAlertConfigRecord,
-//   monitor_name: string,
-//   monitor_tag: string,
-// ): Promise<void> {
-//   const isResolved = activeAlert.alert_status === GC.RESOLVED;
-//   const statusText = isResolved ? "Resolved" : "Triggered";
-
-//   const subscriptionVariables = {
-//     title: `${monitor_name} - Alert ${statusText}`,
-//     cta_url: "", // Can be populated with link to status page
-//     cta_text: "View Status Page",
-//     update_text: `Alert for ${monitor_name} (${monitor_tag}) has been ${statusText.toLowerCase()}. Alert type: ${monitor_alerts_configured.alert_for}, Value: ${monitor_alerts_configured.alert_value}, Severity: ${monitor_alerts_configured.severity}`,
-//     update_subject: `[${statusText}] ${monitor_name} - ${monitor_alerts_configured.alert_for} ${monitor_alerts_configured.alert_value}`,
-//   };
-
-//   // Push to subscriber queue with the monitor tag
-//   await subscriberQueue.push(subscriptionVariables, [monitor_tag]);
-// }
 
 const getQueue = () => {
   if (!alertingQueue) {

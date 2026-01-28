@@ -16,7 +16,6 @@ import type {
   MonitorAlertStatusType,
   MonitorAlertV2WithConfig,
   TriggerRecord,
-  TriggerRecordParsed,
 } from "../types/db.js";
 
 // Re-export types for convenience
@@ -377,41 +376,12 @@ export async function GetMonitorAlertConfigsCount(filter: MonitorAlertConfigFilt
 }
 
 /**
- * Get all triggers for a monitor alert config
+ * Get all triggers for a monitor alert config with parsed trigger_meta
  */
 export async function GetTriggersByMonitorAlertConfigId(monitorAlertsId: number): Promise<TriggerRecord[]> {
   const triggerIds = await db.getMonitorAlertConfigTriggerIds(monitorAlertsId);
-  const triggers: TriggerRecord[] = [];
 
-  for (const triggerId of triggerIds) {
-    const trigger = await db.getTriggerByID(triggerId);
-    if (trigger) {
-      triggers.push(trigger);
-    }
-  }
-
-  return triggers;
-}
-
-/**
- * Get all triggers for a monitor alert config with parsed trigger_meta
- */
-export async function GetTriggersParsedByMonitorAlertConfigId(monitorAlertsId: number): Promise<TriggerRecordParsed[]> {
-  const triggerIds = await db.getMonitorAlertConfigTriggerIds(monitorAlertsId);
-  const triggers: TriggerRecordParsed[] = [];
-
-  for (const triggerId of triggerIds) {
-    const trigger = await db.getTriggerByID(triggerId);
-    if (trigger) {
-      const triggerParsed: TriggerRecordParsed = {
-        ...trigger,
-        trigger_meta: JSON.parse(trigger.trigger_meta),
-      };
-      triggers.push(triggerParsed);
-    }
-  }
-
-  return triggers;
+  return await db.getTriggersByIDs(triggerIds);
 }
 
 // ============ Monitor Alerts V2 Operations ============
@@ -451,9 +421,7 @@ export async function CreateMonitorAlertV2(
     alert_status: "TRIGGERED",
   };
 
-  const [id] = await db.insertMonitorAlertV2(insertData);
-
-  const result = await db.getMonitorAlertV2ById(id);
+  const result = await db.insertMonitorAlertV2(insertData);
   if (!result) {
     throw new Error("Failed to retrieve created monitor alert");
   }

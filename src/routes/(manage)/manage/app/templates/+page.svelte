@@ -4,65 +4,81 @@
   import { Badge } from "$lib/components/ui/badge/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
-  import PlusIcon from "@lucide/svelte/icons/plus";
-  import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
-  import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
-  import PencilIcon from "@lucide/svelte/icons/pencil";
+  import { Input } from "$lib/components/ui/input/index.js";
+  import { Textarea } from "$lib/components/ui/textarea/index.js";
+  import { Label } from "$lib/components/ui/label/index.js";
+  import SaveIcon from "@lucide/svelte/icons/save";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
-  import WebhookIcon from "@lucide/svelte/icons/webhook";
   import MailIcon from "@lucide/svelte/icons/mail";
-  import MessageSquareIcon from "@lucide/svelte/icons/message-square";
-  import HashIcon from "@lucide/svelte/icons/hash";
-  import TrashIcon from "@lucide/svelte/icons/trash";
+  import Loader from "@lucide/svelte/icons/loader";
   import { toast } from "svelte-sonner";
-  import { goto } from "$app/navigation";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
+  import { mode } from "mode-watcher";
+  import CodeMirror from "svelte-codemirror-editor";
+  import { html } from "@codemirror/lang-html";
+  import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
+  import { onMount } from "svelte";
 
-  // Types
-  interface Template {
-    id: number;
-    template_name: string;
-    template_type: "EMAIL" | "WEBHOOK" | "SLACK" | "DISCORD";
-    template_usage: "ALERT" | "SUBSCRIPTION";
-    template_json: string;
-    created_at: string;
-    updated_at: string;
+  interface GeneralEmailTemplate {
+    template_id: string;
+    template_subject: string | null;
+    template_html_body: string | null;
+    template_text_body: string | null;
   }
 
   // State
   let loading = $state(true);
-  let templates = $state<Template[]>([]);
-  let totalPages = $state(0);
-  let totalCount = $state(0);
-  let pageNo = $state(1);
-  let typeFilter = $state("ALL");
-  let usageFilter = $state("ALL");
-  let deleteDialogOpen = $state(false);
-  let templateToDelete = $state<Template | null>(null);
-  let deleting = $state(false);
-  const limit = 10;
+  let saving = $state(false);
+  let templates = $state<GeneralEmailTemplate[]>([]);
+  let selectedTemplateId = $state<string>("");
 
-  // Fetch templates
-  async function fetchData() {
+  // Form state for selected template
+  let templateSubject = $state("");
+  let templateHtmlBody = $state("");
+  let templateTextBody = $state("");
+
+  // Derived: selected template
+  let selectedTemplate = $derived(templates.find((t) => t.template_id === selectedTemplateId));
+
+  // Fetch templates on mount
+  onMount(() => {
+    fetchTemplates();
+  });
+
+  // Handle template selection change
+  function handleTemplateSelect(templateId: string) {
+    selectedTemplateId = templateId;
+    const template = templates.find((t) => t.template_id === templateId);
+    if (template) {
+      templateSubject = template.template_subject || "";
+      templateHtmlBody = template.template_html_body || "";
+      templateTextBody = template.template_text_body || "";
+    } else {
+      templateSubject = "";
+      templateHtmlBody = "";
+      templateTextBody = "";
+    }
+  }
+
+  async function fetchTemplates() {
     loading = true;
     try {
-      const filter: Record<string, string> = {};
-      if (typeFilter !== "ALL") filter.template_type = typeFilter;
-      if (usageFilter !== "ALL") filter.template_usage = usageFilter;
-
       const response = await fetch("/manage/api", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "getTemplates",
-          data: filter
+          action: "getGeneralEmailTemplates",
+          data: {}
         })
       });
       const result = await response.json();
-      if (!result.error) {
+      if (result.error) {
+        toast.error(result.error);
+      } else {
         templates = result;
-        totalCount = templates.length;
-        totalPages = Math.ceil(totalCount / limit);
+        // Auto-select first template if available
+        if (templates.length > 0 && !selectedTemplateId) {
+          handleTemplateSelect(templates[0].template_id);
+        }
       }
     } catch (error) {
       console.error("Error fetching templates:", error);
@@ -72,214 +88,169 @@
     }
   }
 
-  function handleTypeChange(value: string | undefined) {
-    if (value) {
-      typeFilter = value;
-      pageNo = 1;
-      fetchData();
+  async function updateTemplate() {
+    if (!selectedTemplateId) {
+      toast.error("Please select a template");
+      return;
     }
-  }
 
-  function handleUsageChange(value: string | undefined) {
-    if (value) {
-      usageFilter = value;
-      pageNo = 1;
-      fetchData();
-    }
-  }
-
-  function goToPage(page: number) {
-    pageNo = page;
-  }
-
-  function getTemplateIcon(type: string) {
-    switch (type) {
-      case "WEBHOOK":
-        return WebhookIcon;
-      case "EMAIL":
-        return MailIcon;
-      case "SLACK":
-        return HashIcon;
-      case "DISCORD":
-        return MessageSquareIcon;
-      default:
-        return FileTextIcon;
-    }
-  }
-
-  function confirmDelete(template: Template) {
-    templateToDelete = template;
-    deleteDialogOpen = true;
-  }
-
-  async function deleteTemplate() {
-    if (!templateToDelete) return;
-
-    deleting = true;
+    saving = true;
     try {
       const response = await fetch("/manage/api", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "deleteTemplate",
-          data: { id: templateToDelete.id }
+          action: "updateGeneralEmailTemplate",
+          data: {
+            templateId: selectedTemplateId,
+            template_subject: templateSubject,
+            template_html_body: templateHtmlBody,
+            template_text_body: templateTextBody
+          }
         })
       });
       const result = await response.json();
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Template deleted successfully");
-        await fetchData();
+        toast.success("Template updated successfully");
+        // Update local state
+        const index = templates.findIndex((t) => t.template_id === selectedTemplateId);
+        if (index !== -1) {
+          templates[index] = {
+            ...templates[index],
+            template_subject: templateSubject,
+            template_html_body: templateHtmlBody,
+            template_text_body: templateTextBody
+          };
+        }
       }
     } catch (error) {
-      toast.error("Failed to delete template");
+      console.error("Error updating template:", error);
+      toast.error("Failed to update template");
     } finally {
-      deleting = false;
-      deleteDialogOpen = false;
-      templateToDelete = null;
+      saving = false;
     }
   }
 
-  // Paginated templates
-  const paginatedTemplates = $derived(templates.slice((pageNo - 1) * limit, pageNo * limit));
-
-  $effect(() => {
-    fetchData();
-  });
+  function formatTemplateId(id: string): string {
+    // Convert snake_case or kebab-case to Title Case
+    return id.replace(/[-_]/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+  }
 </script>
 
 <div class="container mx-auto space-y-6 py-6">
-  <!-- Header -->
   <div class="flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <FileTextIcon class="text-muted-foreground size-6" />
-      <div>
-        <h1 class="text-2xl font-bold">Templates</h1>
-        <p class="text-muted-foreground text-sm">Manage notification templates for alerts and subscriptions</p>
-      </div>
-    </div>
-    <div class="flex items-center gap-3">
-      <Select.Root type="single" value={typeFilter} onValueChange={handleTypeChange}>
-        <Select.Trigger class="w-36">
-          {typeFilter === "ALL" ? "All Types" : typeFilter}
-        </Select.Trigger>
-        <Select.Content>
-          <Select.Item value="ALL">All Types</Select.Item>
-          <Select.Item value="EMAIL">Email</Select.Item>
-          <Select.Item value="WEBHOOK">Webhook</Select.Item>
-          <Select.Item value="SLACK">Slack</Select.Item>
-          <Select.Item value="DISCORD">Discord</Select.Item>
-        </Select.Content>
-      </Select.Root>
-      <Select.Root type="single" value={usageFilter} onValueChange={handleUsageChange}>
-        <Select.Trigger class="w-36">
-          {usageFilter === "ALL" ? "All Usage" : usageFilter}
-        </Select.Trigger>
-        <Select.Content>
-          <Select.Item value="ALL">All Usage</Select.Item>
-          <Select.Item value="ALERT">Alert</Select.Item>
-          <Select.Item value="SUBSCRIPTION">Subscription</Select.Item>
-        </Select.Content>
-      </Select.Root>
-      {#if loading}
-        <Spinner class="size-5" />
-      {/if}
-      <Button onclick={() => goto("/manage/app/templates/new")}>
-        <PlusIcon class="mr-2 size-4" />
-        New Template
-      </Button>
+    <div>
+      <h1 class="text-2xl font-bold tracking-tight">Email Templates</h1>
+      <p class="text-muted-foreground">Manage your email notification templates</p>
     </div>
   </div>
 
-  <!-- Templates List -->
-  <div class="grid gap-4">
-    {#if paginatedTemplates.length === 0 && !loading}
-      <Card.Root>
-        <Card.Content class="text-muted-foreground py-8 text-center">No templates found</Card.Content>
-      </Card.Root>
-    {:else}
-      {#each paginatedTemplates as template}
-        {@const TemplateIcon = getTemplateIcon(template.template_type)}
-        <Card.Root class="hover:bg-muted/30 transition-colors">
-          <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div class="flex items-center gap-3">
-              <div class="bg-muted flex size-10 items-center justify-center rounded-lg">
-                <TemplateIcon class="size-5" />
-              </div>
-              <div>
-                <Card.Title class="text-base">{template.template_name}</Card.Title>
-                <p class="text-muted-foreground text-xs">
-                  Created: {new Date(template.created_at).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <Badge variant="outline">{template.template_type}</Badge>
-              <Badge variant={template.template_usage === "ALERT" ? "default" : "secondary"}>
-                {template.template_usage}
-              </Badge>
-              <Button variant="ghost" size="icon" onclick={() => goto(`/manage/app/templates/${template.id}`)}>
-                <PencilIcon class="size-4" />
-              </Button>
-              <Button variant="ghost" size="icon" onclick={() => confirmDelete(template)}>
-                <TrashIcon class="text-destructive size-4" />
-              </Button>
-            </div>
-          </Card.Header>
-        </Card.Root>
-      {/each}
-    {/if}
-  </div>
-
-  <!-- Pagination -->
-  {#if totalCount > limit}
-    {@const startItem = (pageNo - 1) * limit + 1}
-    {@const endItem = Math.min(pageNo * limit, totalCount)}
-    <div class="flex items-center justify-between">
-      <span class="text-muted-foreground text-sm">Showing {startItem}-{endItem} of {totalCount}</span>
-      {#if totalPages > 1}
-        <div class="flex items-center gap-2">
-          <Button variant="outline" size="icon" disabled={pageNo === 1} onclick={() => goToPage(pageNo - 1)}>
-            <ChevronLeftIcon class="size-4" />
-          </Button>
-          <div class="flex items-center gap-1">
-            {#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
-              {#if page === 1 || page === totalPages || (page >= pageNo - 1 && page <= pageNo + 1)}
-                <Button variant={page === pageNo ? "default" : "ghost"} size="sm" onclick={() => goToPage(page)}>
-                  {page}
-                </Button>
-              {:else if page === pageNo - 2 || page === pageNo + 2}
-                <span class="text-muted-foreground px-1">...</span>
+  {#if loading}
+    <div class="flex items-center justify-center py-12">
+      <Spinner class="size-8" />
+    </div>
+  {:else if templates.length === 0}
+    <Card.Root>
+      <Card.Content class="flex flex-col items-center justify-center py-12">
+        <MailIcon class="text-muted-foreground mb-4 size-12" />
+        <h3 class="mb-2 text-lg font-semibold">No Templates Found</h3>
+        <p class="text-muted-foreground text-center">There are no email templates configured yet.</p>
+      </Card.Content>
+    </Card.Root>
+  {:else}
+    <Card.Root>
+      <Card.Header>
+        <Card.Title class="flex items-center gap-2">
+          <FileTextIcon class="size-5" />
+          Edit Template
+        </Card.Title>
+        <Card.Description>Select a template from the dropdown to view and edit its content</Card.Description>
+      </Card.Header>
+      <Card.Content class="space-y-6">
+        <!-- Template Selector -->
+        <div class="space-y-2">
+          <Label for="template-select">Select Template</Label>
+          <Select.Root
+            type="single"
+            value={selectedTemplateId}
+            onValueChange={(value) => {
+              if (value) handleTemplateSelect(value);
+            }}
+          >
+            <Select.Trigger class="w-full md:w-[400px]">
+              {#if selectedTemplateId}
+                {formatTemplateId(selectedTemplateId)}
+              {:else}
+                Select a template...
               {/if}
-            {/each}
-          </div>
-          <Button variant="outline" size="icon" disabled={pageNo === totalPages} onclick={() => goToPage(pageNo + 1)}>
-            <ChevronRightIcon class="size-4" />
-          </Button>
+            </Select.Trigger>
+            <Select.Content>
+              {#each templates as template (template.template_id)}
+                <Select.Item value={template.template_id}>
+                  {formatTemplateId(template.template_id)}
+                </Select.Item>
+              {/each}
+            </Select.Content>
+          </Select.Root>
         </div>
+
+        {#if selectedTemplateId}
+          <!-- Subject -->
+          <div class="space-y-2">
+            <Label for="template-subject">Subject</Label>
+            <Input id="template-subject" bind:value={templateSubject} placeholder="Email subject line" />
+            <p class="text-muted-foreground text-xs">
+              The subject line for the email. You can use Mustache variables like <code class="bg-muted rounded px-1"
+                >{"{{variable}}"}</code
+              >
+            </p>
+          </div>
+
+          <!-- HTML Body -->
+          <div class="space-y-2">
+            <Label>HTML Body</Label>
+            <p class="text-muted-foreground text-xs">
+              The HTML content of the email. Use Mustache variables for dynamic content.
+            </p>
+            <div class="overflow-hidden rounded-md border">
+              <CodeMirror
+                bind:value={templateHtmlBody}
+                lang={html()}
+                theme={mode.current === "dark" ? githubDark : githubLight}
+                styles={{ "&": { width: "100%", height: "400px" } }}
+              />
+            </div>
+          </div>
+
+          <!-- Text Body -->
+          <div class="space-y-2">
+            <Label for="template-text-body">Text Body</Label>
+            <p class="text-muted-foreground text-xs">
+              Plain text version of the email for clients that don't support HTML
+            </p>
+            <Textarea
+              id="template-text-body"
+              bind:value={templateTextBody}
+              placeholder="Plain text email content"
+              rows={8}
+            />
+          </div>
+        {/if}
+      </Card.Content>
+      {#if selectedTemplateId}
+        <Card.Footer class="flex justify-end">
+          <Button onclick={updateTemplate} disabled={saving}>
+            {#if saving}
+              <Loader class="mr-2 size-4 animate-spin" />
+            {:else}
+              <SaveIcon class="mr-2 size-4" />
+            {/if}
+            Update Template
+          </Button>
+        </Card.Footer>
       {/if}
-    </div>
+    </Card.Root>
   {/if}
 </div>
-
-<!-- Delete Confirmation Dialog -->
-<AlertDialog.Root bind:open={deleteDialogOpen}>
-  <AlertDialog.Content>
-    <AlertDialog.Header>
-      <AlertDialog.Title>Delete Template</AlertDialog.Title>
-      <AlertDialog.Description>
-        Are you sure you want to delete the template "{templateToDelete?.template_name}"? This action cannot be undone.
-      </AlertDialog.Description>
-    </AlertDialog.Header>
-    <AlertDialog.Footer>
-      <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-      <AlertDialog.Action onclick={deleteTemplate} disabled={deleting}>
-        {#if deleting}
-          <Spinner class="mr-2 size-4" />
-        {/if}
-        Delete
-      </AlertDialog.Action>
-    </AlertDialog.Footer>
-  </AlertDialog.Content>
-</AlertDialog.Root>

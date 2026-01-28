@@ -55,10 +55,5 @@ const template = `{
 }`;
 
 export default {
-  template_name: "Default Discord Alert",
-  template_type: "DISCORD",
-  template_usage: "ALERT",
-  template_json: {
-    discord_body: template,
-  },
+  discord_body: template,
 };

@@ -113,6 +113,15 @@ const seedSiteData = {
   },
   kenerTheme: "default",
   showSiteStatus: "NO",
+  subscriptionsSettings: {
+    enable: false,
+    methods: {
+      emails: {
+        incidents: false,
+        maintenances: false,
+      },
+    },
+  },
 };
 
 export default seedSiteData;

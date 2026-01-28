@@ -11,7 +11,6 @@ import type {
   UserSubscriptionV2RecordInsert,
   UserSubscriptionV2Filter,
   SubscriptionEventType,
-  SubscriptionEntityType,
 } from "../../types/db.js";
 import { GetDbType } from "../../tool.js";
 
@@ -168,8 +167,6 @@ export class SubscriptionSystemRepository extends BaseRepository {
       subscriber_user_id: data.subscriber_user_id,
       subscriber_method_id: data.subscriber_method_id,
       event_type: data.event_type,
-      entity_type: data.entity_type || null,
-      entity_id: data.entity_id || null,
       status: data.status || "ACTIVE",
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
@@ -201,16 +198,7 @@ export class SubscriptionSystemRepository extends BaseRepository {
     if (filter.event_type !== undefined) {
       query = query.where("event_type", filter.event_type);
     }
-    if (filter.entity_type !== undefined) {
-      if (filter.entity_type === null) {
-        query = query.whereNull("entity_type");
-      } else {
-        query = query.where("entity_type", filter.entity_type);
-      }
-    }
-    if (filter.entity_id !== undefined) {
-      query = query.where("entity_id", filter.entity_id);
-    }
+
     if (filter.status !== undefined) {
       query = query.where("status", filter.status);
     }
@@ -235,25 +223,11 @@ export class SubscriptionSystemRepository extends BaseRepository {
     subscriberUserId: number,
     subscriberMethodId: number,
     eventType: SubscriptionEventType,
-    entityType: SubscriptionEntityType,
-    entityId: string | null,
   ): Promise<boolean> {
     let query = this.knex("user_subscriptions_v2")
       .where("subscriber_user_id", subscriberUserId)
       .andWhere("subscriber_method_id", subscriberMethodId)
       .andWhere("event_type", eventType);
-
-    if (entityType === null) {
-      query = query.whereNull("entity_type");
-    } else {
-      query = query.where("entity_type", entityType);
-    }
-
-    if (entityId === null) {
-      query = query.whereNull("entity_id");
-    } else {
-      query = query.where("entity_id", entityId);
-    }
 
     const result = await query.first();
     return !!result;
@@ -304,11 +278,7 @@ export class SubscriptionSystemRepository extends BaseRepository {
   /**
    * Get subscribers for a specific event (for sending notifications)
    */
-  async getSubscribersForEvent(
-    eventType: SubscriptionEventType,
-    entityType?: SubscriptionEntityType,
-    entityId?: string,
-  ): Promise<
+  async getSubscribersForEvent(eventType: SubscriptionEventType): Promise<
     Array<{
       user: SubscriberUserRecord;
       method: SubscriberMethodRecord;
@@ -323,15 +293,6 @@ export class SubscriptionSystemRepository extends BaseRepository {
       .andWhere("su.status", "ACTIVE")
       .andWhere("sm.status", "ACTIVE");
 
-    // Match subscriptions that are for this specific entity OR for "all" (entity_type is null)
-    if (entityType && entityId) {
-      query = query.andWhere(function () {
-        this.whereNull("us.entity_type").orWhere(function () {
-          this.where("us.entity_type", entityType).andWhere("us.entity_id", entityId);
-        });
-      });
-    }
-
     const rows = await query.select(
       "su.id as user_id",
       "su.email as user_email",
@@ -344,8 +305,6 @@ export class SubscriptionSystemRepository extends BaseRepository {
       "sm.meta as method_meta",
       "us.id as sub_id",
       "us.event_type",
-      "us.entity_type",
-      "us.entity_id",
       "us.status as sub_status",
       "us.created_at as sub_created_at",
     );
@@ -517,90 +476,5 @@ export class SubscriptionSystemRepository extends BaseRepository {
       .orderBy("created_at", "desc");
 
     return { user, method, subscriptions };
-  }
-
-  /**
-   * Get subscription method details for a specific entity
-   * Returns all active subscriber methods that are subscribed to this entity
-   */
-  async getSubscriptionMethodsByEntity(
-    entityType: SubscriptionEntityType,
-    entityId: string,
-  ): Promise<
-    Array<{
-      method: SubscriberMethodRecord;
-      user: SubscriberUserRecord;
-      subscription: UserSubscriptionV2Record;
-    }>
-  > {
-    const rows = await this.knex("user_subscriptions_v2 as us")
-      .join("subscriber_methods as sm", "us.subscriber_method_id", "sm.id")
-      .join("subscriber_users as su", "us.subscriber_user_id", "su.id")
-      .where("us.status", "ACTIVE")
-      .andWhere("sm.status", "ACTIVE")
-      .andWhere("su.status", "ACTIVE")
-      .andWhere(function () {
-        // Match subscriptions for this specific entity OR global subscriptions (entity_type is null)
-        this.where(function () {
-          this.where("us.entity_type", entityType).andWhere("us.entity_id", entityId);
-        }).orWhereNull("us.entity_type");
-      })
-      .select(
-        "sm.id as method_id",
-        "sm.subscriber_user_id",
-        "sm.method_type",
-        "sm.method_value",
-        "sm.status as method_status",
-        "sm.meta as method_meta",
-        "sm.created_at as method_created_at",
-        "sm.updated_at as method_updated_at",
-        "su.id as user_id",
-        "su.email as user_email",
-        "su.status as user_status",
-        "su.verification_code",
-        "su.verification_expires_at",
-        "su.created_at as user_created_at",
-        "su.updated_at as user_updated_at",
-        "us.id as sub_id",
-        "us.event_type",
-        "us.entity_type",
-        "us.entity_id",
-        "us.status as sub_status",
-        "us.created_at as sub_created_at",
-        "us.updated_at as sub_updated_at",
-      );
-
-    return rows.map((row) => ({
-      method: {
-        id: row.method_id,
-        subscriber_user_id: row.subscriber_user_id,
-        method_type: row.method_type,
-        method_value: row.method_value,
-        status: row.method_status,
-        meta: row.method_meta,
-        created_at: row.method_created_at,
-        updated_at: row.method_updated_at,
-      },
-      user: {
-        id: row.user_id,
-        email: row.user_email,
-        status: row.user_status,
-        verification_code: row.verification_code,
-        verification_expires_at: row.verification_expires_at,
-        created_at: row.user_created_at,
-        updated_at: row.user_updated_at,
-      },
-      subscription: {
-        id: row.sub_id,
-        subscriber_user_id: row.subscriber_user_id,
-        subscriber_method_id: row.method_id,
-        event_type: row.event_type,
-        entity_type: row.entity_type,
-        entity_id: row.entity_id,
-        status: row.sub_status,
-        created_at: row.sub_created_at,
-        updated_at: row.sub_updated_at,
-      },
-    }));
   }
 }

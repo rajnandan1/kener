@@ -100,7 +100,6 @@ export class AlertsRepository extends BaseRepository {
       trigger_status: data.trigger_status,
       trigger_meta: data.trigger_meta,
       trigger_desc: data.trigger_desc,
-      template_id: data.template_id,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     });
@@ -113,7 +112,6 @@ export class AlertsRepository extends BaseRepository {
       trigger_status: data.trigger_status,
       trigger_desc: data.trigger_desc,
       trigger_meta: data.trigger_meta,
-      template_id: data.template_id,
       updated_at: this.knex.fn.now(),
     });
   }
@@ -131,5 +129,9 @@ export class AlertsRepository extends BaseRepository {
 
   async getTriggerByID(id: number): Promise<TriggerRecord | undefined> {
     return await this.knex("triggers").where("id", id).first();
+  }
+  //get by ids
+  async getTriggersByIDs(ids: number[]): Promise<TriggerRecord[]> {
+    return await this.knex("triggers").whereIn("id", ids);
   }
 }

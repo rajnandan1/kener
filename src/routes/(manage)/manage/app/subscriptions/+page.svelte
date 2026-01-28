@@ -1,576 +1,587 @@
 <script lang="ts">
-  import * as Card from "$lib/components/ui/card/index.js";
-  import * as Select from "$lib/components/ui/select/index.js";
-  import * as Alert from "$lib/components/ui/alert/index.js";
+  import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button/index.js";
-  import { Switch } from "$lib/components/ui/switch/index.js";
-  import { Label } from "$lib/components/ui/label/index.js";
+  import { Input } from "$lib/components/ui/input/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
-  import { Separator } from "$lib/components/ui/separator/index.js";
-  import BellIcon from "@lucide/svelte/icons/bell";
-  import MailIcon from "@lucide/svelte/icons/mail";
-  import WebhookIcon from "@lucide/svelte/icons/webhook";
-  import HashIcon from "@lucide/svelte/icons/hash";
-  import MessageSquareIcon from "@lucide/svelte/icons/message-square";
-  import AlertCircleIcon from "@lucide/svelte/icons/alert-circle";
-  import WrenchIcon from "@lucide/svelte/icons/wrench";
-  import ActivityIcon from "@lucide/svelte/icons/activity";
-  import SaveIcon from "@lucide/svelte/icons/save";
-  import UsersIcon from "@lucide/svelte/icons/users";
-  import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
+  import { Label } from "$lib/components/ui/label/index.js";
+  import { Switch } from "$lib/components/ui/switch/index.js";
+  import * as Card from "$lib/components/ui/card/index.js";
+  import * as Table from "$lib/components/ui/table/index.js";
+  import * as Dialog from "$lib/components/ui/dialog/index.js";
+  import * as Alert from "$lib/components/ui/alert/index.js";
   import { toast } from "svelte-sonner";
+  import { format } from "date-fns";
 
-  // Types
-  interface EventsEnabled {
-    incidentUpdatesAll: boolean;
-    maintenanceUpdatesAll: boolean;
-    monitorUpdatesAll: boolean;
-  }
+  import Bell from "@lucide/svelte/icons/bell";
+  import PlusIcon from "@lucide/svelte/icons/plus";
+  import Trash2Icon from "@lucide/svelte/icons/trash-2";
+  import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
+  import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
+  import AlertTriangle from "@lucide/svelte/icons/alert-triangle";
+  import Wrench from "@lucide/svelte/icons/wrench";
+  import Mail from "@lucide/svelte/icons/mail";
 
-  interface MethodsEnabled {
-    email: boolean;
-    webhook: boolean;
-    slack: boolean;
-    discord: boolean;
-  }
+  import type { SubscriptionsConfig } from "$lib/server/types/db.js";
 
-  interface MethodTriggers {
-    email: number | null;
-    webhook: number | null;
-    slack: number | null;
-    discord: number | null;
-  }
-
-  interface TriggerRecord {
-    id: number;
-    name: string;
-    trigger_type: string;
-    trigger_desc: string | null;
-    trigger_status: string | null;
-  }
-
-  interface MethodCounts {
-    email: number;
-    webhook: number;
-    slack: number;
-    discord: number;
-  }
-
-  // State
-  let loading = $state(true);
-  let saving = $state(false);
-  let triggers = $state<TriggerRecord[]>([]);
-  let methodCounts = $state<MethodCounts>({ email: 0, webhook: 0, slack: 0, discord: 0 });
-
-  let eventsEnabled = $state<EventsEnabled>({
-    incidentUpdatesAll: false,
-    maintenanceUpdatesAll: false,
-    monitorUpdatesAll: false
+  // Config state
+  let config = $state<SubscriptionsConfig>({
+    enable: false,
+    methods: {
+      emails: {
+        incidents: true,
+        maintenances: true
+      }
+    }
   });
+  let loadingConfig = $state(true);
+  let savingConfig = $state(false);
 
-  let methodsEnabled = $state<MethodsEnabled>({
-    email: false,
-    webhook: false,
-    slack: false,
-    discord: false
-  });
+  // Subscribers state
+  interface Subscriber {
+    user_id: number;
+    method_id: number;
+    email: string;
+    incidents_enabled: boolean;
+    maintenances_enabled: boolean;
+    incidents_subscription_id: number | null;
+    maintenances_subscription_id: number | null;
+    created_at: string;
+  }
 
-  let methodTriggers = $state<MethodTriggers>({
-    email: null,
-    webhook: null,
-    slack: null,
-    discord: null
-  });
+  let subscribers = $state<Subscriber[]>([]);
+  let loadingSubscribers = $state(true);
+  let page = $state(1);
+  let limit = $state(10);
+  let total = $state(0);
+  let totalPages = $state(0);
 
-  // Computed values
-  let emailTriggers = $derived(triggers.filter((t) => t.trigger_type === "email"));
-  let webhookTriggers = $derived(triggers.filter((t) => t.trigger_type === "webhook"));
-  let slackTriggers = $derived(triggers.filter((t) => t.trigger_type === "slack"));
-  let discordTriggers = $derived(triggers.filter((t) => t.trigger_type === "discord"));
+  // Add subscriber dialog
+  let showAddDialog = $state(false);
+  let addingSubscriber = $state(false);
+  let newEmail = $state("");
+  let newIncidents = $state(true);
+  let newMaintenances = $state(true);
+  let addError = $state("");
 
-  let hasAnyEventEnabled = $derived(
-    eventsEnabled.incidentUpdatesAll || eventsEnabled.maintenanceUpdatesAll || eventsEnabled.monitorUpdatesAll
-  );
+  // Delete confirmation
+  let showDeleteDialog = $state(false);
+  let deletingSubscriber = $state<Subscriber | null>(null);
+  let isDeleting = $state(false);
 
-  let hasAnyMethodEnabled = $derived(
-    methodsEnabled.email || methodsEnabled.webhook || methodsEnabled.slack || methodsEnabled.discord
-  );
+  // Updating toggles
+  let updatingToggle = $state<Record<string, boolean>>({});
 
-  // Check if each enabled method has a trigger assigned
-  let methodsWithMissingTriggers = $derived(() => {
-    const missing: string[] = [];
-    if (methodsEnabled.email && !methodTriggers.email) missing.push("Email");
-    if (methodsEnabled.webhook && !methodTriggers.webhook) missing.push("Webhook");
-    if (methodsEnabled.slack && !methodTriggers.slack) missing.push("Slack");
-    if (methodsEnabled.discord && !methodTriggers.discord) missing.push("Discord");
-    return missing;
-  });
-
-  // API functions
-  async function loadConfig() {
+  // Fetch config
+  async function fetchConfig() {
+    loadingConfig = true;
     try {
       const res = await fetch("/manage/api", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "getSubscriptionConfig" })
+        body: JSON.stringify({ action: "getSubscriptionsConfig" })
       });
-      const result = await res.json();
-      if (result && !result.error) {
-        eventsEnabled = result.events_enabled;
-        methodsEnabled = result.methods_enabled;
-        methodTriggers = result.method_triggers;
-      }
+      config = await res.json();
     } catch (error) {
-      console.error("Error loading subscription config:", error);
-      toast.error("Failed to load subscription configuration");
+      toast.error("Failed to load configuration");
+    } finally {
+      loadingConfig = false;
     }
   }
 
-  async function loadTriggers() {
-    try {
-      const res = await fetch("/manage/api", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "getTriggers" })
-      });
-      const result = await res.json();
-      if (!result.error && Array.isArray(result)) {
-        triggers = result;
-      }
-    } catch (error) {
-      console.error("Error loading triggers:", error);
-      toast.error("Failed to load triggers");
-    }
-  }
-
-  async function loadMethodCounts() {
-    try {
-      const res = await fetch("/manage/api", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "getSubscriberCountsByMethod" })
-      });
-      const result = await res.json();
-      if (!result.error) {
-        methodCounts = result;
-      }
-    } catch (error) {
-      console.error("Error loading subscriber counts:", error);
-    }
-  }
-
+  // Save config
   async function saveConfig() {
-    saving = true;
+    savingConfig = true;
+    try {
+      await fetch("/manage/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "updateSubscriptionsConfig",
+          data: config
+        })
+      });
+      toast.success("Configuration saved");
+    } catch (error) {
+      toast.error("Failed to save configuration");
+    } finally {
+      savingConfig = false;
+    }
+  }
+
+  // Fetch subscribers
+  async function fetchSubscribers() {
+    loadingSubscribers = true;
     try {
       const res = await fetch("/manage/api", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "updateSubscriptionConfig",
+          action: "getAdminSubscribers",
+          data: { page, limit }
+        })
+      });
+      const result = await res.json();
+      if (!result.error) {
+        subscribers = result.subscribers || [];
+        total = result.total || 0;
+        totalPages = result.totalPages || 0;
+      }
+    } catch (error) {
+      toast.error("Failed to load subscribers");
+    } finally {
+      loadingSubscribers = false;
+    }
+  }
+
+  // Toggle subscription status
+  async function toggleSubscription(subscriber: Subscriber, eventType: "incidents" | "maintenances", enabled: boolean) {
+    const key = `${subscriber.method_id}-${eventType}`;
+    updatingToggle[key] = true;
+
+    try {
+      const res = await fetch("/manage/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "adminUpdateSubscriptionStatus",
           data: {
-            events_enabled: eventsEnabled,
-            methods_enabled: methodsEnabled,
-            method_triggers: methodTriggers
+            methodId: subscriber.method_id,
+            eventType,
+            enabled
           }
         })
       });
       const result = await res.json();
       if (result.error) {
         toast.error(result.error);
+        // Revert toggle
+        if (eventType === "incidents") {
+          subscriber.incidents_enabled = !enabled;
+        } else {
+          subscriber.maintenances_enabled = !enabled;
+        }
       } else {
-        toast.success("Subscription configuration saved successfully");
+        // Update local state
+        if (eventType === "incidents") {
+          subscriber.incidents_enabled = enabled;
+        } else {
+          subscriber.maintenances_enabled = enabled;
+        }
       }
     } catch (error) {
-      console.error("Error saving subscription config:", error);
-      toast.error("Failed to save subscription configuration");
+      toast.error("Failed to update subscription");
+      // Revert
+      if (eventType === "incidents") {
+        subscriber.incidents_enabled = !enabled;
+      } else {
+        subscriber.maintenances_enabled = !enabled;
+      }
     } finally {
-      saving = false;
+      updatingToggle[key] = false;
     }
   }
 
-  function handleTriggerChange(method: keyof MethodTriggers, value: string) {
-    methodTriggers[method] = value === "none" ? null : parseInt(value);
+  // Add subscriber
+  async function addSubscriber() {
+    if (!newEmail.trim()) {
+      addError = "Email is required";
+      return;
+    }
+
+    addingSubscriber = true;
+    addError = "";
+
+    try {
+      const res = await fetch("/manage/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "adminAddSubscriber",
+          data: {
+            email: newEmail.trim(),
+            incidents: newIncidents,
+            maintenances: newMaintenances
+          }
+        })
+      });
+      const result = await res.json();
+      if (result.error) {
+        addError = result.error;
+      } else {
+        showAddDialog = false;
+        resetAddForm();
+        toast.success("Subscriber added successfully");
+        await fetchSubscribers();
+      }
+    } catch (error) {
+      addError = "Failed to add subscriber";
+    } finally {
+      addingSubscriber = false;
+    }
   }
 
-  function getTriggerName(triggerId: number | null, triggerList: TriggerRecord[]): string {
-    if (!triggerId) return "Not selected";
-    const trigger = triggerList.find((t) => t.id === triggerId);
-    return trigger?.name || "Unknown trigger";
+  function resetAddForm() {
+    newEmail = "";
+    newIncidents = true;
+    newMaintenances = true;
+    addError = "";
   }
 
-  // Initial load
-  $effect(() => {
-    (async () => {
-      await Promise.all([loadConfig(), loadTriggers(), loadMethodCounts()]);
-      loading = false;
-    })();
+  // Delete subscriber
+  async function deleteSubscriber() {
+    if (!deletingSubscriber) return;
+
+    isDeleting = true;
+    try {
+      const res = await fetch("/manage/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "adminDeleteSubscriber",
+          data: { methodId: deletingSubscriber.method_id }
+        })
+      });
+      const result = await res.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        showDeleteDialog = false;
+        deletingSubscriber = null;
+        toast.success("Subscriber deleted");
+        await fetchSubscribers();
+      }
+    } catch (error) {
+      toast.error("Failed to delete subscriber");
+    } finally {
+      isDeleting = false;
+    }
+  }
+
+  function confirmDelete(subscriber: Subscriber) {
+    deletingSubscriber = subscriber;
+    showDeleteDialog = true;
+  }
+
+  function goToPage(newPage: number) {
+    page = newPage;
+    fetchSubscribers();
+  }
+
+  function handleConfigChange() {
+    saveConfig();
+  }
+
+  onMount(() => {
+    fetchConfig();
+    fetchSubscribers();
   });
 </script>
 
 <div class="container mx-auto space-y-6 py-6">
-  <!-- Header -->
-  <div class="flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <BellIcon class="text-muted-foreground size-6" />
-      <div>
-        <h1 class="text-2xl font-bold">Subscriptions</h1>
-        <p class="text-muted-foreground text-sm">Configure subscription settings and view subscribers</p>
-      </div>
-    </div>
-  </div>
+  <!-- Settings Card -->
+  <Card.Root>
+    <Card.Header>
+      <Card.Title class="flex items-center gap-2">
+        <Bell class="h-5 w-5" />
+        Subscriptions Settings
+      </Card.Title>
+      <Card.Description>Configure subscription options for your status page</Card.Description>
+    </Card.Header>
+    <Card.Content class="space-y-4">
+      {#if loadingConfig}
+        <div class="flex justify-center py-10">
+          <Spinner />
+        </div>
+      {:else}
+        <div class="space-y-6">
+          <div class="flex items-center justify-between">
+            <Label for="enable-subscriptions" class="mb-0">Enable Subscriptions</Label>
+            <Switch
+              id="enable-subscriptions"
+              checked={config.enable}
+              onCheckedChange={(e) => {
+                config.enable = e;
+                config.methods.emails.incidents = e;
+                config.methods.emails.maintenances = e;
+                handleConfigChange();
+              }}
+            />
+          </div>
 
-  {#if loading}
-    <div class="flex h-96 items-center justify-center">
-      <Spinner class="size-8" />
-    </div>
-  {:else}
-    <!-- Combined Configuration Card -->
-    <Card.Root>
-      <Card.Header>
+          {#if config.enable}
+            <div class="space-y-4 border-l-2 pl-4">
+              <p class="flex items-center gap-2 text-sm font-semibold">
+                <Mail class="h-4 w-4" />
+                Email Notifications
+              </p>
+              <div class="space-y-4 pl-4">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <AlertTriangle class="h-4 w-4 text-orange-500" />
+                    <Label for="enable-email-incidents" class="mb-0">Incident Updates</Label>
+                  </div>
+                  <Switch
+                    id="enable-email-incidents"
+                    checked={config.methods.emails.incidents}
+                    onCheckedChange={(e) => {
+                      config.methods.emails.incidents = e;
+                      handleConfigChange();
+                    }}
+                  />
+                </div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <Wrench class="h-4 w-4 text-blue-500" />
+                    <Label for="enable-email-maintenances" class="mb-0">Maintenance Updates</Label>
+                  </div>
+                  <Switch
+                    id="enable-email-maintenances"
+                    checked={config.methods.emails.maintenances}
+                    onCheckedChange={(e) => {
+                      config.methods.emails.maintenances = e;
+                      handleConfigChange();
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          {/if}
+        </div>
+      {/if}
+    </Card.Content>
+  </Card.Root>
+
+  <!-- Subscribers Card -->
+  <Card.Root>
+    <Card.Header>
+      <div class="flex items-center justify-between">
+        <div>
+          <Card.Title>Subscribers</Card.Title>
+          <Card.Description>Manage email subscribers for notifications</Card.Description>
+        </div>
         <div class="flex items-center gap-2">
-          <BellIcon class="text-muted-foreground size-5" />
-          <div>
-            <Card.Title>Subscription Configuration</Card.Title>
-            <Card.Description>Configure which events users can subscribe to and notification methods</Card.Description>
-          </div>
-        </div>
-      </Card.Header>
-      <Card.Content class="space-y-6">
-        <!-- Subscribable Events Section -->
-        <div>
-          <h3 class="mb-4 text-sm font-medium">Subscribable Events</h3>
-          <div class="grid gap-4 md:grid-cols-3">
-            <!-- Incident Updates -->
-            <div class="flex items-start gap-4 rounded-lg border p-4">
-              <div class="rounded-lg bg-red-100 p-2 dark:bg-red-900/30">
-                <AlertCircleIcon class="size-5 text-red-600 dark:text-red-400" />
-              </div>
-              <div class="flex-1">
-                <div class="flex items-center justify-between">
-                  <Label class="font-medium">Incident Updates</Label>
-                  <Switch
-                    checked={eventsEnabled.incidentUpdatesAll}
-                    onCheckedChange={(checked) => (eventsEnabled.incidentUpdatesAll = checked)}
-                  />
-                </div>
-                <p class="text-muted-foreground mt-1 text-xs">
-                  Notify when incidents are created, updated, or resolved
-                </p>
-              </div>
-            </div>
-
-            <!-- Maintenance Updates -->
-            <div class="flex items-start gap-4 rounded-lg border p-4">
-              <div class="rounded-lg bg-yellow-100 p-2 dark:bg-yellow-900/30">
-                <WrenchIcon class="size-5 text-yellow-600 dark:text-yellow-400" />
-              </div>
-              <div class="flex-1">
-                <div class="flex items-center justify-between">
-                  <Label class="font-medium">Maintenance Updates</Label>
-                  <Switch
-                    checked={eventsEnabled.maintenanceUpdatesAll}
-                    onCheckedChange={(checked) => (eventsEnabled.maintenanceUpdatesAll = checked)}
-                  />
-                </div>
-                <p class="text-muted-foreground mt-1 text-xs">
-                  Notify when maintenance is scheduled, started, or completed
-                </p>
-              </div>
-            </div>
-
-            <!-- Monitor Updates -->
-            <div class="flex items-start gap-4 rounded-lg border p-4">
-              <div class="rounded-lg bg-blue-100 p-2 dark:bg-blue-900/30">
-                <ActivityIcon class="size-5 text-blue-600 dark:text-blue-400" />
-              </div>
-              <div class="flex-1">
-                <div class="flex items-center justify-between">
-                  <Label class="font-medium">Monitor Status Changes</Label>
-                  <Switch
-                    checked={eventsEnabled.monitorUpdatesAll}
-                    onCheckedChange={(checked) => (eventsEnabled.monitorUpdatesAll = checked)}
-                  />
-                </div>
-                <p class="text-muted-foreground mt-1 text-xs">
-                  Notify when monitor status changes (up, down, degraded)
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {#if !hasAnyEventEnabled}
-            <Alert.Root class="mt-4" variant="default">
-              <Alert.Description>
-                No events are enabled. Users won't be able to subscribe to any notifications until you enable at least
-                one event type.
-              </Alert.Description>
-            </Alert.Root>
+          {#if loadingSubscribers}
+            <Spinner class="size-5" />
           {/if}
+          <Button onclick={() => (showAddDialog = true)}>
+            <PlusIcon class="mr-2 h-4 w-4" />
+            Add Subscriber
+          </Button>
         </div>
-
-        <Separator />
-
-        <!-- Notification Methods Section -->
-        <div>
-          <h3 class="mb-4 text-sm font-medium">Notification Methods</h3>
-          <div class="space-y-4">
-            <!-- Email Method -->
-            <div class="rounded-lg border p-4">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="bg-primary/10 rounded-lg p-2">
-                    <MailIcon class="text-primary size-5" />
+      </div>
+    </Card.Header>
+    <Card.Content>
+      <div class="ktable rounded-xl border">
+        <Table.Root>
+          <Table.Header>
+            <Table.Row>
+              <Table.Head>Email</Table.Head>
+              <Table.Head class="text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <AlertTriangle class="h-4 w-4 text-orange-500" />
+                  Incidents
+                </div>
+              </Table.Head>
+              <Table.Head class="text-center">
+                <div class="flex items-center justify-center gap-1">
+                  <Wrench class="h-4 w-4 text-blue-500" />
+                  Maintenances
+                </div>
+              </Table.Head>
+              <Table.Head>Subscribed At</Table.Head>
+              <Table.Head class="w-20 text-center">Actions</Table.Head>
+            </Table.Row>
+          </Table.Header>
+          <Table.Body>
+            {#if loadingSubscribers && subscribers.length === 0}
+              <Table.Row>
+                <Table.Cell colspan={5} class="py-8 text-center">
+                  <div class="flex items-center justify-center gap-2">
+                    <Spinner class="size-4" />
+                    <span class="text-muted-foreground text-sm">Loading subscribers...</span>
                   </div>
-                  <div>
-                    <Label class="font-medium">Email</Label>
-                    <p class="text-muted-foreground text-xs">Send notifications via email</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-3">
-                  <a
-                    href="/manage/app/subscriptions/email"
-                    class="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
-                  >
-                    <UsersIcon class="size-3" />
-                    <span>{methodCounts.email} subscribers</span>
-                    <ChevronRightIcon class="size-3" />
-                  </a>
-                  <Switch
-                    checked={methodsEnabled.email}
-                    onCheckedChange={(checked) => (methodsEnabled.email = checked)}
-                  />
-                </div>
-              </div>
-              {#if methodsEnabled.email}
-                <Separator class="my-4" />
-                <div class="flex items-center gap-4">
-                  <Label class="min-w-32 text-sm">Trigger</Label>
-                  <Select.Root
-                    type="single"
-                    value={methodTriggers.email ? String(methodTriggers.email) : "none"}
-                    onValueChange={(v) => handleTriggerChange("email", v)}
-                  >
-                    <Select.Trigger class="w-full">
-                      {getTriggerName(methodTriggers.email, emailTriggers)}
-                    </Select.Trigger>
-                    <Select.Content>
-                      <Select.Item value="none">Not selected</Select.Item>
-                      {#each emailTriggers as trigger}
-                        <Select.Item value={String(trigger.id)}>{trigger.name}</Select.Item>
-                      {/each}
-                    </Select.Content>
-                  </Select.Root>
-                </div>
-                {#if emailTriggers.length === 0}
-                  <p class="text-muted-foreground mt-2 text-xs">
-                    No email triggers available. <a href="/manage/app/triggers/new" class="text-primary underline"
-                      >Create one</a
+                </Table.Cell>
+              </Table.Row>
+            {:else if subscribers.length === 0}
+              <Table.Row>
+                <Table.Cell colspan={5} class="text-muted-foreground py-8 text-center">
+                  No subscribers yet. Add your first subscriber above.
+                </Table.Cell>
+              </Table.Row>
+            {:else}
+              {#each subscribers as subscriber (subscriber.method_id)}
+                <Table.Row>
+                  <Table.Cell class="font-medium">{subscriber.email}</Table.Cell>
+                  <Table.Cell class="text-center">
+                    <Switch
+                      checked={subscriber.incidents_enabled}
+                      disabled={updatingToggle[`${subscriber.method_id}-incidents`]}
+                      onCheckedChange={(e) => toggleSubscription(subscriber, "incidents", e)}
+                    />
+                  </Table.Cell>
+                  <Table.Cell class="text-center">
+                    <Switch
+                      checked={subscriber.maintenances_enabled}
+                      disabled={updatingToggle[`${subscriber.method_id}-maintenances`]}
+                      onCheckedChange={(e) => toggleSubscription(subscriber, "maintenances", e)}
+                    />
+                  </Table.Cell>
+                  <Table.Cell>
+                    {format(new Date(subscriber.created_at), "MMM d, yyyy")}
+                  </Table.Cell>
+                  <Table.Cell class="text-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      class="text-destructive hover:bg-destructive/10 h-8 w-8"
+                      onclick={() => confirmDelete(subscriber)}
                     >
-                  </p>
-                {/if}
-              {/if}
-            </div>
-
-            <!-- Webhook Method -->
-            <div class="rounded-lg border p-4">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="bg-primary/10 rounded-lg p-2">
-                    <WebhookIcon class="text-primary size-5" />
-                  </div>
-                  <div>
-                    <Label class="font-medium">Webhook</Label>
-                    <p class="text-muted-foreground text-xs">Send notifications to a webhook endpoint</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-3">
-                  <a
-                    href="/manage/app/subscriptions/webhook"
-                    class="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
-                  >
-                    <UsersIcon class="size-3" />
-                    <span>{methodCounts.webhook} subscribers</span>
-                    <ChevronRightIcon class="size-3" />
-                  </a>
-                  <Switch
-                    checked={methodsEnabled.webhook}
-                    onCheckedChange={(checked) => (methodsEnabled.webhook = checked)}
-                  />
-                </div>
-              </div>
-              {#if methodsEnabled.webhook}
-                <Separator class="my-4" />
-                <div class="flex items-center gap-4">
-                  <Label class="min-w-32 text-sm">Trigger</Label>
-                  <Select.Root
-                    type="single"
-                    value={methodTriggers.webhook ? String(methodTriggers.webhook) : "none"}
-                    onValueChange={(v) => handleTriggerChange("webhook", v)}
-                  >
-                    <Select.Trigger class="w-full">
-                      {getTriggerName(methodTriggers.webhook, webhookTriggers)}
-                    </Select.Trigger>
-                    <Select.Content>
-                      <Select.Item value="none">Not selected</Select.Item>
-                      {#each webhookTriggers as trigger}
-                        <Select.Item value={String(trigger.id)}>{trigger.name}</Select.Item>
-                      {/each}
-                    </Select.Content>
-                  </Select.Root>
-                </div>
-                {#if webhookTriggers.length === 0}
-                  <p class="text-muted-foreground mt-2 text-xs">
-                    No webhook triggers available. <a href="/manage/app/triggers/new" class="text-primary underline"
-                      >Create one</a
-                    >
-                  </p>
-                {/if}
-              {/if}
-            </div>
-
-            <!-- Slack Method -->
-            <div class="rounded-lg border p-4">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="bg-primary/10 rounded-lg p-2">
-                    <HashIcon class="text-primary size-5" />
-                  </div>
-                  <div>
-                    <Label class="font-medium">Slack</Label>
-                    <p class="text-muted-foreground text-xs">Send notifications to a Slack channel</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-3">
-                  <a
-                    href="/manage/app/subscriptions/slack"
-                    class="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
-                  >
-                    <UsersIcon class="size-3" />
-                    <span>{methodCounts.slack} subscribers</span>
-                    <ChevronRightIcon class="size-3" />
-                  </a>
-                  <Switch
-                    checked={methodsEnabled.slack}
-                    onCheckedChange={(checked) => (methodsEnabled.slack = checked)}
-                  />
-                </div>
-              </div>
-              {#if methodsEnabled.slack}
-                <Separator class="my-4" />
-                <div class="flex items-center gap-4">
-                  <Label class="min-w-32 text-sm">Trigger</Label>
-                  <Select.Root
-                    type="single"
-                    value={methodTriggers.slack ? String(methodTriggers.slack) : "none"}
-                    onValueChange={(v) => handleTriggerChange("slack", v)}
-                  >
-                    <Select.Trigger class="w-full">
-                      {getTriggerName(methodTriggers.slack, slackTriggers)}
-                    </Select.Trigger>
-                    <Select.Content>
-                      <Select.Item value="none">Not selected</Select.Item>
-                      {#each slackTriggers as trigger}
-                        <Select.Item value={String(trigger.id)}>{trigger.name}</Select.Item>
-                      {/each}
-                    </Select.Content>
-                  </Select.Root>
-                </div>
-                {#if slackTriggers.length === 0}
-                  <p class="text-muted-foreground mt-2 text-xs">
-                    No Slack triggers available. <a href="/manage/app/triggers/new" class="text-primary underline"
-                      >Create one</a
-                    >
-                  </p>
-                {/if}
-              {/if}
-            </div>
-
-            <!-- Discord Method -->
-            <div class="rounded-lg border p-4">
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <div class="bg-primary/10 rounded-lg p-2">
-                    <MessageSquareIcon class="text-primary size-5" />
-                  </div>
-                  <div>
-                    <Label class="font-medium">Discord</Label>
-                    <p class="text-muted-foreground text-xs">Send notifications to a Discord channel</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-3">
-                  <a
-                    href="/manage/app/subscriptions/discord"
-                    class="text-muted-foreground hover:text-foreground flex items-center gap-1 text-xs transition-colors"
-                  >
-                    <UsersIcon class="size-3" />
-                    <span>{methodCounts.discord} subscribers</span>
-                    <ChevronRightIcon class="size-3" />
-                  </a>
-                  <Switch
-                    checked={methodsEnabled.discord}
-                    onCheckedChange={(checked) => (methodsEnabled.discord = checked)}
-                  />
-                </div>
-              </div>
-              {#if methodsEnabled.discord}
-                <Separator class="my-4" />
-                <div class="flex items-center gap-4">
-                  <Label class="min-w-32 text-sm">Trigger</Label>
-                  <Select.Root
-                    type="single"
-                    value={methodTriggers.discord ? String(methodTriggers.discord) : "none"}
-                    onValueChange={(v) => handleTriggerChange("discord", v)}
-                  >
-                    <Select.Trigger class="w-full">
-                      {getTriggerName(methodTriggers.discord, discordTriggers)}
-                    </Select.Trigger>
-                    <Select.Content>
-                      <Select.Item value="none">Not selected</Select.Item>
-                      {#each discordTriggers as trigger}
-                        <Select.Item value={String(trigger.id)}>{trigger.name}</Select.Item>
-                      {/each}
-                    </Select.Content>
-                  </Select.Root>
-                </div>
-                {#if discordTriggers.length === 0}
-                  <p class="text-muted-foreground mt-2 text-xs">
-                    No Discord triggers available. <a href="/manage/app/triggers/new" class="text-primary underline"
-                      >Create one</a
-                    >
-                  </p>
-                {/if}
-              {/if}
-            </div>
-
-            {#if !hasAnyMethodEnabled}
-              <Alert.Root variant="default">
-                <Alert.Description>
-                  No notification methods are enabled. Users won't be able to subscribe until you enable at least one
-                  method.
-                </Alert.Description>
-              </Alert.Root>
-            {:else if methodsWithMissingTriggers().length > 0}
-              <Alert.Root variant="default">
-                <Alert.Description>
-                  The following enabled methods don't have a trigger assigned: <strong
-                    >{methodsWithMissingTriggers().join(", ")}</strong
-                  >. Users won't receive notifications via these methods until triggers are assigned.
-                </Alert.Description>
-              </Alert.Root>
+                      <Trash2Icon class="h-4 w-4" />
+                    </Button>
+                  </Table.Cell>
+                </Table.Row>
+              {/each}
             {/if}
-          </div>
-        </div>
-      </Card.Content>
-      <Card.Footer class="flex justify-end">
-        <Button onclick={saveConfig} disabled={saving || loading}>
-          {#if saving}
-            <Spinner class="mr-2 size-4" />
-          {:else}
-            <SaveIcon class="mr-2 size-4" />
+          </Table.Body>
+        </Table.Root>
+      </div>
+
+      <!-- Pagination -->
+      {#if total > 0}
+        {@const startItem = (page - 1) * limit + 1}
+        {@const endItem = Math.min(page * limit, total)}
+        <div class="mt-4 flex items-center justify-between">
+          <span class="text-muted-foreground text-sm">Showing {startItem}-{endItem} of {total}</span>
+          {#if totalPages > 1}
+            <div class="flex items-center gap-2">
+              <Button variant="outline" size="icon" disabled={page === 1} onclick={() => goToPage(page - 1)}>
+                <ChevronLeftIcon class="size-4" />
+              </Button>
+              <div class="flex items-center gap-1">
+                {#each Array.from({ length: totalPages }, (_, i) => i + 1) as pageNum (pageNum)}
+                  {#if pageNum === 1 || pageNum === totalPages || (pageNum >= page - 1 && pageNum <= page + 1)}
+                    <Button
+                      variant={pageNum === page ? "default" : "ghost"}
+                      size="sm"
+                      onclick={() => goToPage(pageNum)}
+                    >
+                      {pageNum}
+                    </Button>
+                  {:else if pageNum === page - 2 || pageNum === page + 2}
+                    <span class="text-muted-foreground px-1">...</span>
+                  {/if}
+                {/each}
+              </div>
+              <Button variant="outline" size="icon" disabled={page === totalPages} onclick={() => goToPage(page + 1)}>
+                <ChevronRightIcon class="size-4" />
+              </Button>
+            </div>
           {/if}
-          Save Configuration
-        </Button>
-      </Card.Footer>
-    </Card.Root>
-  {/if}
+        </div>
+      {/if}
+    </Card.Content>
+  </Card.Root>
 </div>
+
+<!-- Add Subscriber Dialog -->
+<Dialog.Root bind:open={showAddDialog}>
+  <Dialog.Content class="sm:max-w-md">
+    <Dialog.Header>
+      <Dialog.Title>Add Subscriber</Dialog.Title>
+      <Dialog.Description>Add a new email subscriber for notifications</Dialog.Description>
+    </Dialog.Header>
+    <div class="space-y-4 py-4">
+      <div class="space-y-2">
+        <Label for="new-email">Email Address</Label>
+        <Input
+          id="new-email"
+          type="email"
+          placeholder="subscriber@example.com"
+          bind:value={newEmail}
+          disabled={addingSubscriber}
+        />
+      </div>
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <AlertTriangle class="h-4 w-4 text-orange-500" />
+            <Label for="new-incidents" class="mb-0">Subscribe to Incidents</Label>
+          </div>
+          <Switch id="new-incidents" bind:checked={newIncidents} disabled={addingSubscriber} />
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <Wrench class="h-4 w-4 text-blue-500" />
+            <Label for="new-maintenances" class="mb-0">Subscribe to Maintenances</Label>
+          </div>
+          <Switch id="new-maintenances" bind:checked={newMaintenances} disabled={addingSubscriber} />
+        </div>
+      </div>
+      {#if addError}
+        <Alert.Root variant="destructive">
+          <Alert.Description>{addError}</Alert.Description>
+        </Alert.Root>
+      {/if}
+    </div>
+    <Dialog.Footer>
+      <Button
+        variant="outline"
+        onclick={() => {
+          showAddDialog = false;
+          resetAddForm();
+        }}
+        disabled={addingSubscriber}
+      >
+        Cancel
+      </Button>
+      <Button onclick={addSubscriber} disabled={addingSubscriber}>
+        {#if addingSubscriber}
+          <Spinner class="mr-2 size-4" />
+          Adding...
+        {:else}
+          Add Subscriber
+        {/if}
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
+
+<!-- Delete Confirmation Dialog -->
+<Dialog.Root bind:open={showDeleteDialog}>
+  <Dialog.Content class="sm:max-w-md">
+    <Dialog.Header>
+      <Dialog.Title>Delete Subscriber</Dialog.Title>
+      <Dialog.Description>
+        Are you sure you want to delete this subscriber? This action cannot be undone.
+      </Dialog.Description>
+    </Dialog.Header>
+    {#if deletingSubscriber}
+      <div class="py-4">
+        <p class="text-sm">
+          <span class="text-muted-foreground">Email:</span>
+          <span class="font-medium">{deletingSubscriber.email}</span>
+        </p>
+      </div>
+    {/if}
+    <Dialog.Footer>
+      <Button
+        variant="outline"
+        onclick={() => {
+          showDeleteDialog = false;
+          deletingSubscriber = null;
+        }}
+        disabled={isDeleting}
+      >
+        Cancel
+      </Button>
+      <Button variant="destructive" onclick={deleteSubscriber} disabled={isDeleting}>
+        {#if isDeleting}
+          <Spinner class="mr-2 size-4" />
+          Deleting...
+        {:else}
+          Delete
+        {/if}
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>

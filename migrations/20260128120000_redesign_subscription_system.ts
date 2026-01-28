@@ -1,24 +1,5 @@
 import type { Knex } from "knex";
 
-/**
- * Redesign subscription system for better UX:
- *
- * OLD APPROACH:
- * - subscribers table mixed identity with subscription method
- * - Same user with email vs webhook = 2 different subscriber records
- * - Confusing for users who want multiple notification methods
- *
- * NEW APPROACH:
- * - subscriber_users: Core user identity (email-based, with verification)
- * - subscriber_methods: Methods a user has configured (email, webhook URL, slack, discord)
- * - user_subscriptions: What events/entities a user subscribes to, via which method
- *
- * Flow:
- * 1. User enters email -> verification code sent -> verified -> subscriber_user created
- * 2. User adds methods (their email is auto-added, can add webhook/slack/discord)
- * 3. User subscribes to events choosing which methods to use
- */
-
 export async function up(knex: Knex): Promise<void> {
   // 1. Create subscriber_users table - the actual user identity
   await knex.schema.createTable("subscriber_users", (table) => {
@@ -32,10 +13,10 @@ export async function up(knex: Knex): Promise<void> {
 
     // Verification code for email verification (6 digit)
     table.string("verification_code", 10).nullable();
-    table.datetime("verification_expires_at").nullable();
+    table.timestamp("verification_expires_at").nullable();
 
-    table.datetime("created_at").defaultTo(knex.fn.now());
-    table.datetime("updated_at").defaultTo(knex.fn.now());
+    table.timestamp("created_at").defaultTo(knex.fn.now());
+    table.timestamp("updated_at").defaultTo(knex.fn.now());
 
     // Indexes
     table.index(["status"]);
@@ -61,8 +42,8 @@ export async function up(knex: Knex): Promise<void> {
     // For webhook methods, we might want to store additional config
     table.text("meta").nullable(); // JSON for extra config like headers
 
-    table.datetime("created_at").defaultTo(knex.fn.now());
-    table.datetime("updated_at").defaultTo(knex.fn.now());
+    table.timestamp("created_at").defaultTo(knex.fn.now());
+    table.timestamp("updated_at").defaultTo(knex.fn.now());
 
     // Indexes
     table.index(["subscriber_user_id"]);
@@ -86,28 +67,23 @@ export async function up(knex: Knex): Promise<void> {
     // Link to subscriber_method (which method to use for this subscription)
     table.integer("subscriber_method_id").unsigned().notNullable();
 
-    // What event type: incidentUpdatesAll, maintenanceUpdatesAll, monitorUpdatesAll
+    // What event type: incidents, maintenance
     table.string("event_type", 50).notNullable();
-
-    // Reference to specific entity (optional - null means "all")
-    table.string("entity_type", 50).nullable(); // 'monitor', 'incident', 'maintenance', or null
-    table.string("entity_id").nullable(); // The specific ID/tag
 
     // Status: ACTIVE, INACTIVE
     table.string("status", 20).notNullable().defaultTo("ACTIVE");
 
-    table.datetime("created_at").defaultTo(knex.fn.now());
-    table.datetime("updated_at").defaultTo(knex.fn.now());
+    table.timestamp("created_at").defaultTo(knex.fn.now());
+    table.timestamp("updated_at").defaultTo(knex.fn.now());
 
     // Indexes
     table.index(["subscriber_user_id"]);
     table.index(["subscriber_method_id"]);
     table.index(["event_type"]);
-    table.index(["entity_type", "entity_id"]);
     table.index(["status"]);
 
     // Unique: one subscription per user-method-event-entity
-    table.unique(["subscriber_user_id", "subscriber_method_id", "event_type", "entity_type", "entity_id"]);
+    table.unique(["subscriber_user_id", "subscriber_method_id", "event_type"]);
 
     // Foreign keys
     table.foreign("subscriber_user_id").references("id").inTable("subscriber_users").onDelete("CASCADE");

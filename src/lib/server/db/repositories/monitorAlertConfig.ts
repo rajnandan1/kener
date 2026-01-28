@@ -15,6 +15,7 @@ import type {
   MonitorAlertStatusType,
   MonitorAlertV2WithConfig,
 } from "../../types/db.js";
+import { GetDbType } from "../../tool.js";
 
 /**
  * Repository for monitor alert configuration operations
@@ -315,14 +316,24 @@ export class MonitorAlertConfigRepository extends BaseRepository {
   /**
    * Insert a new monitor alert v2 record
    */
-  async insertMonitorAlertV2(data: MonitorAlertV2Insert): Promise<number[]> {
-    return await this.knex("monitor_alerts_v2").insert({
+  async insertMonitorAlertV2(data: MonitorAlertV2Insert): Promise<MonitorAlertV2Record> {
+    const dbType = GetDbType();
+    const insertData: Record<string, unknown> = {
       config_id: data.config_id,
       incident_id: data.incident_id || null,
       alert_status: data.alert_status,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
-    });
+    };
+
+    if (dbType === "postgresql") {
+      const [record] = await this.knex("monitor_alerts_v2").insert(insertData).returning("*");
+      return record;
+    } else {
+			const [id] = await this.knex("monitor_alerts_v2").insert(insertData);
+			const record = await this.knex("monitor_alerts_v2").where({ id }).first();
+			return record as MonitorAlertV2Record;
+    }
   }
 
   /**

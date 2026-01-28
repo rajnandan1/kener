@@ -135,15 +135,6 @@ const emailTemplate = `<!DOCTYPE html>
 </html>`;
 
 export default {
-  template_name: "Default Email Alert",
-  template_type: "EMAIL",
-  template_usage: "ALERT",
-  template_json: JSON.stringify(
-    {
-      email_subject: "{{alert_name}}",
-      email_body: emailTemplate,
-    },
-    null,
-    2,
-  ),
+  email_subject: "{{alert_name}}",
+  email_body: emailTemplate,
 };

@@ -59,6 +59,15 @@ export interface SiteDataTransformed {
     };
   };
   kenerTheme?: string;
+  subscriptionsSettings?: {
+    enable: boolean;
+    methods: {
+      emails: {
+        incidents: boolean;
+        maintenance: boolean;
+      };
+    };
+  };
   showSiteStatus?: string;
   monitorSort?: number[];
   [key: string]: unknown;

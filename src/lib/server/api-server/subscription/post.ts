@@ -1,223 +1,136 @@
 import { json, error } from "@sveltejs/kit";
 import type { APIServerRequest } from "$lib/server/types/api-server";
-import { ValidateEmail, GenerateRandomNumber } from "$lib/server/tool";
-import { GenerateTokenWithExpiry, VerifyToken } from "$lib/server/controllers/commonController";
-import { SendEmailWithTemplate } from "$lib/server/controllers/emailController";
-import { GetSiteLogoURL, GetAllSiteData } from "$lib/server/controllers/siteDataController";
+import type { SubscriptionsConfig } from "$lib/server/types/db.js";
+import { GetSiteDataByKey } from "$lib/server/controllers/siteDataController";
 import {
-  CreateNewSubscriber,
-  GetSubscriberByEmailAndType,
-  CreateNewSubscription,
-  UpdateSubscriberMeta,
-  RemoveAllSubscriptions,
-  GetSubscriptionsBySubscriberID,
-  UpdateSubscriberStatus,
-  GetSubscriberByID,
-} from "$lib/server/controllers/subscriberController";
-import emailCodeTemplate from "$lib/server/templates/email_code";
+  SubscriberLogin,
+  VerifySubscriberOTP,
+  VerifySubscriberToken,
+  UpdateSubscriberPreferences,
+} from "$lib/server/controllers/userSubscriptionsController";
 
-interface SubscriptionRequestBody {
-  action: "login" | "verify" | "fetch" | "subscribe" | "unsubscribe";
-  userEmail?: string;
-  token?: string;
-  code?: string;
-  monitors?: string[];
-  allMonitors?: boolean;
+interface LoginRequest {
+  action: "login";
+  email: string;
 }
 
-/**
- * POST /dashboard-apis/subscription
- * Handles all subscription-related actions: login, verify, fetch, subscribe, unsubscribe
- */
+interface VerifyRequest {
+  action: "verify";
+  email: string;
+  code: string;
+}
+
+interface GetPreferencesRequest {
+  action: "getPreferences";
+  token: string;
+}
+
+interface UpdatePreferencesRequest {
+  action: "updatePreferences";
+  token: string;
+  incidents?: boolean;
+  maintenances?: boolean;
+}
+
+type PostRequestBody = LoginRequest | VerifyRequest | GetPreferencesRequest | UpdatePreferencesRequest;
+
 export default async function post(req: APIServerRequest): Promise<Response> {
-  const body = req.body as SubscriptionRequestBody;
+  const body = req.body as PostRequestBody;
   const { action } = body;
 
-  try {
-    switch (action) {
-      case "login":
-        return await handleLogin(body.userEmail);
-      case "verify":
-        return await handleVerify(body.token, body.code);
-      case "fetch":
-        return await handleFetch(body.token);
-      case "subscribe":
-        return await handleSubscribe(body.token, body.monitors, body.allMonitors);
-      case "unsubscribe":
-        return await handleUnsubscribe(body.token);
-      default:
-        return error(400, { message: "Invalid action" });
-    }
-  } catch (e) {
-    console.error("Subscription API error:", e);
-    return error(500, { message: "Error processing subscription request" });
+  // Check if subscriptions are enabled
+  const config = await GetSubscriptionConfig();
+  if (!config || !config.enable) {
+    return error(400, { message: "Subscriptions are not enabled" });
+  }
+
+  const emailEnabled = config.methods?.emails?.incidents === true || config.methods?.emails?.maintenances === true;
+  if (!emailEnabled) {
+    return error(400, { message: "Email subscriptions are not enabled" });
+  }
+
+  switch (action) {
+    case "login":
+      return handleLogin((body as LoginRequest).email, config);
+    case "verify":
+      return handleVerify((body as VerifyRequest).email, (body as VerifyRequest).code);
+    case "getPreferences":
+      return handleGetPreferences((body as GetPreferencesRequest).token, config);
+    case "updatePreferences":
+      return handleUpdatePreferences(
+        (body as UpdatePreferencesRequest).token,
+        (body as UpdatePreferencesRequest).incidents,
+        (body as UpdatePreferencesRequest).maintenances,
+        config,
+      );
+    default:
+      return error(400, { message: "Invalid action" });
   }
 }
 
-async function handleLogin(email?: string): Promise<Response> {
-  if (!email || !ValidateEmail(email)) {
-    return error(400, { message: "Invalid email address" });
+async function GetSubscriptionConfig(): Promise<SubscriptionsConfig | null> {
+  const subscriptionsSettings = await GetSiteDataByKey("subscriptionsSettings");
+  if (!subscriptionsSettings) {
+    return null;
   }
-
-  const subscriberMeta = {
-    email_code: GenerateRandomNumber(6),
-  };
-
-  const existingUser = await GetSubscriberByEmailAndType(email, "email");
-  if (!existingUser) {
-    await CreateNewSubscriber({
-      subscriber_send: email,
-      subscriber_type: "email",
-      subscriber_status: "PENDING",
-      subscriber_meta: JSON.stringify(subscriberMeta),
-    });
-  } else {
-    await UpdateSubscriberMeta(existingUser.id, JSON.stringify(subscriberMeta));
-  }
-
-  // Send email with code
-  const siteData = await GetAllSiteData();
-  const emailData = {
-    brand_name: siteData.siteName || "Kener",
-    logo_url: await GetSiteLogoURL(siteData.siteURL || "", siteData.logo || "", "/"),
-    email_code: String(subscriberMeta.email_code),
-    action: "login",
-  };
-
-  try {
-    await SendEmailWithTemplate(
-      emailCodeTemplate,
-      emailData,
-      email,
-      `[Important] Verify code to login to ${emailData.brand_name}`,
-      `Your verification code is: ${emailData.email_code}`,
-    );
-  } catch (e) {
-    console.error("Error sending email:", e);
-    return error(500, { message: "Error sending email" });
-  }
-
-  const token = await GenerateTokenWithExpiry({ email }, "5m");
-  return json({ newUser: !existingUser, token });
+  return subscriptionsSettings as SubscriptionsConfig;
 }
 
-async function handleVerify(token?: string, code?: string): Promise<Response> {
-  if (!token || !code) {
-    return error(400, { message: "Token and code are required" });
+async function handleLogin(email: string, config: SubscriptionsConfig): Promise<Response> {
+  const result = await SubscriberLogin(email);
+  if (!result.success) {
+    return error(400, { message: result.error || "Failed to send verification code" });
   }
 
-  const decoded = await VerifyToken(token);
-  if (!decoded || !decoded.email) {
-    return error(400, { message: "Invalid or expired token" });
-  }
-
-  const email = decoded.email as string;
-  const existingSubscriber = await GetSubscriberByEmailAndType(email, "email");
-  if (!existingSubscriber) {
-    return error(400, { message: "Invalid user" });
-  }
-
-  const subscriberMeta = JSON.parse(existingSubscriber.subscriber_meta || "{}");
-  const storedCode = subscriberMeta.email_code;
-
-  if (!storedCode || String(storedCode) !== String(code)) {
-    return error(400, { message: "Invalid code" });
-  }
-
-  // Update subscriber status to active and clear the code
-  await UpdateSubscriberStatus(existingSubscriber.id, "ACTIVE");
-  await UpdateSubscriberMeta(existingSubscriber.id, JSON.stringify({}));
-
-  // Generate long-lived token
-  const authToken = await GenerateTokenWithExpiry(
-    {
-      email: email,
-      subscriber_id: existingSubscriber.id,
-    },
-    "1y",
-  );
-
-  return json({ token: authToken });
+  return json({ success: true, message: "Verification code sent" });
 }
 
-async function handleFetch(token?: string): Promise<Response> {
-  if (!token) {
-    return error(400, { message: "Token is required" });
+async function handleVerify(email: string, code: string): Promise<Response> {
+  const result = await VerifySubscriberOTP(email, code);
+  if (!result.success) {
+    return error(400, { message: result.error || "Verification failed" });
   }
 
-  const decoded = await VerifyToken(token);
-  if (!decoded || !decoded.email || !decoded.subscriber_id) {
-    return error(400, { message: "Invalid token" });
-  }
+  return json({ success: true, token: result.token });
+}
 
-  const subscriberId = decoded.subscriber_id as number;
-  const existingSubscriber = await GetSubscriberByID(subscriberId);
-  if (!existingSubscriber) {
-    return error(400, { message: "No active subscription found" });
+async function handleGetPreferences(token: string, config: SubscriptionsConfig): Promise<Response> {
+  const result = await VerifySubscriberToken(token);
+  if (!result.success) {
+    return error(401, { message: result.error || "Invalid token" });
   }
-
-  const allSubscriptions = await GetSubscriptionsBySubscriberID(subscriberId);
-  const monitors = allSubscriptions.map((item) => item.subscriptions_monitors);
 
   return json({
-    monitors,
-    email: existingSubscriber.subscriber_send,
+    success: true,
+    email: result.user?.email,
+    subscriptions: result.subscriptions,
+    availableSubscriptions: {
+      incidents: config.methods?.emails?.incidents === true,
+      maintenances: config.methods?.emails?.maintenances === true,
+    },
   });
 }
 
-async function handleSubscribe(token?: string, monitors?: string[], allMonitors?: boolean): Promise<Response> {
-  if (!token) {
-    return error(400, { message: "Token is required" });
+async function handleUpdatePreferences(
+  token: string,
+  incidents: boolean | undefined,
+  maintenances: boolean | undefined,
+  config: SubscriptionsConfig,
+): Promise<Response> {
+  // Only allow updating subscriptions that are enabled in config
+  const preferences: { incidents?: boolean; maintenances?: boolean } = {};
+
+  if (incidents !== undefined && config.methods?.emails?.incidents) {
+    preferences.incidents = incidents;
+  }
+  if (maintenances !== undefined && config.methods?.emails?.maintenances) {
+    preferences.maintenances = maintenances;
   }
 
-  const decoded = await VerifyToken(token);
-  if (!decoded || !decoded.email || !decoded.subscriber_id) {
-    return error(400, { message: "Invalid token" });
+  const result = await UpdateSubscriberPreferences(token, preferences);
+  if (!result.success) {
+    return error(400, { message: result.error || "Failed to update preferences" });
   }
 
-  const subscriberId = decoded.subscriber_id as number;
-  const existingSubscriber = await GetSubscriberByID(subscriberId);
-  if (!existingSubscriber) {
-    return error(400, { message: "No active subscription found" });
-  }
-
-  let monitorList = monitors || [];
-  if (allMonitors) {
-    monitorList = ["_"];
-  }
-
-  if (monitorList.length === 0) {
-    // Remove all subscriptions
-    await RemoveAllSubscriptions(subscriberId);
-    return json({ message: "Unsubscribed successfully" });
-  }
-
-  try {
-    await CreateNewSubscription(subscriberId, monitorList);
-  } catch (e) {
-    console.error("Error in CreateNewSubscription:", e);
-    return error(500, { message: "Error creating subscription" });
-  }
-
-  return json({ message: "Subscription updated successfully" });
-}
-
-async function handleUnsubscribe(token?: string): Promise<Response> {
-  if (!token) {
-    return error(400, { message: "Token is required" });
-  }
-
-  const decoded = await VerifyToken(token);
-  if (!decoded || !decoded.email || !decoded.subscriber_id) {
-    return error(400, { message: "Invalid token" });
-  }
-
-  const subscriberId = decoded.subscriber_id as number;
-  const existingSubscriber = await GetSubscriberByID(subscriberId);
-  if (!existingSubscriber) {
-    return error(400, { message: "No active subscription found" });
-  }
-
-  await RemoveAllSubscriptions(subscriberId);
-  return json({ message: "Unsubscribed successfully" });
+  return json({ success: true });
 }

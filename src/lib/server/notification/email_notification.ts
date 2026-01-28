@@ -1,65 +1,58 @@
-import type {
-  TriggerRecord,
-  TemplateRecord,
-  TemplateJsonType,
-  TriggerRecordParsed,
-  TriggerMetaEmailJson,
-  EmailTemplateJson,
-} from "../types/db";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import Mustache from "mustache";
 import striptags from "striptags";
 import { Resend, type CreateEmailOptions } from "resend";
-import type {
-  ResendAPIConfiguration,
-  SiteDataForNotification,
-  SMTPConfiguration,
-  TemplateVariableMap,
-} from "./types.js";
+import type { SiteDataForNotification, SMTPConfiguration, TemplateVariableMap } from "./types.js";
 import getSMTPTransport from "./smtps.js";
+import { GetSMTPFromENV } from "../controllers/commonController.js";
+import { IsEmailSetup, IsResendSetup } from "../controllers/emailController.js";
 
 export default async function send(
-  triggerRecord: SMTPConfiguration | ResendAPIConfiguration,
-  variables: TemplateVariableMap,
-  template: TemplateRecord,
-  siteData: SiteDataForNotification,
+  emailBody: string,
+  emailSubject: string,
+  variables: Record<string, string | number | boolean>,
   to: string[],
+  from?: string,
 ) {
   // Implementation for sending email notification using the provided triggerRecord, variables, and template
 
-  let emailBody = template.template_json;
-  let emailBodyJson = JSON.parse(emailBody) as EmailTemplateJson;
-
-  let envSecretsTemplate = GetRequiredSecrets(emailBody);
+  let envSecretsTemplate = GetRequiredSecrets(emailBody + emailSubject);
 
   for (let i = 0; i < envSecretsTemplate.length; i++) {
     const secret = envSecretsTemplate[i];
     if (secret.replace !== undefined) {
       emailBody = ReplaceAllOccurrences(emailBody, secret.find, secret.replace);
+      emailSubject = ReplaceAllOccurrences(emailSubject, secret.find, secret.replace);
     }
   }
 
-  const subject = Mustache.render(emailBodyJson.email_subject, { ...variables, ...siteData });
-  const htmlBody = Mustache.render(emailBodyJson.email_body, { ...variables, ...siteData });
+  const subject = Mustache.render(emailSubject, variables);
+  const htmlBody = Mustache.render(emailBody, variables);
   const textBody = striptags(htmlBody);
 
   try {
-    //check if triggerRecord is of type ResendAPIConfiguration
-    if ("resend_api_key" in triggerRecord) {
-      const resend = new Resend(triggerRecord.resend_api_key);
+    let isEmailSetupDone = IsEmailSetup();
+    if (!isEmailSetupDone) {
+      throw new Error("Email not configured properly. Please check SMTP or Resend configuration.");
+    }
+    let isResend = IsResendSetup();
+    let mySMTPData = GetSMTPFromENV();
+    if (isResend) {
+      //check if triggerRecord is of type ResendAPIConfiguration
+      const resend = new Resend(process.env.RESEND_API_KEY || "");
       const emailBody: CreateEmailOptions = {
-        from: triggerRecord.resend_sender_email,
+        from: from || process.env.RESEND_SENDER_EMAIL || "",
         to: to,
         subject: subject,
         html: htmlBody,
         text: textBody,
       };
       return await resend.emails.send(emailBody);
-    } else {
+    } else if (mySMTPData) {
       // SMTP Configuration
-      const transport = getSMTPTransport(triggerRecord as SMTPConfiguration);
+      const transport = getSMTPTransport(mySMTPData as SMTPConfiguration);
       const mailOptions = {
-        from: triggerRecord.smtp_sender, // sender address
+        from: from || mySMTPData.smtp_sender, // sender address
         to: to, // recipient address(es)
         subject: subject, // email subject
         text: textBody, // plain text body

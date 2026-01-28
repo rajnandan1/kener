@@ -10,7 +10,6 @@ import {
   IsLoggedInSession,
   GetLocaleFromCookie,
   GetAllPages,
-  GetSubscriptionTriggerByEmail,
 } from "$lib/server/controllers/controller.js";
 
 import type { PageNavItem } from "$lib/server/controllers/dashboardController";
@@ -38,7 +37,6 @@ export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
     page_path: p.page_path,
   }));
 
-  const emailSubscriptionTrigger = await GetSubscriptionTriggerByEmail();
   return {
     isMobile,
     isSetupComplete,
@@ -52,7 +50,5 @@ export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
     logo: siteData.logo,
     favicon: siteData.favicon,
     footerHTML: siteData.footerHTML || "",
-    isEmailSubscriptionEnabled:
-      !!emailSubscriptionTrigger && emailSubscriptionTrigger.subscription_trigger_status === "ACTIVE",
   };
 };

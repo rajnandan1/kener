@@ -39,6 +39,7 @@ export const VerifyPassword = async (plainTextPassword: string, hashedPassword: 
   }
 };
 import type { TokenPayload } from "$lib/server/types/auth.js";
+import type { SMTPConfiguration } from "../notification/types";
 
 export const VerifyToken = async (token: string): Promise<TokenPayload | undefined> => {
   try {
@@ -52,7 +53,7 @@ export const VerifyToken = async (token: string): Promise<TokenPayload | undefin
   }
 };
 
-export const GetSMTPFromENV = () => {
+export const GetSMTPFromENV = (): SMTPConfiguration | null => {
   //if variables are not return null
   if (
     !!!process.env.SMTP_HOST ||
@@ -68,7 +69,7 @@ export const GetSMTPFromENV = () => {
     smtp_host: process.env.SMTP_HOST,
     smtp_port: process.env.SMTP_PORT,
     smtp_user: process.env.SMTP_USER,
-    smtp_from_email: process.env.SMTP_FROM_EMAIL,
+    smtp_sender: process.env.SMTP_FROM_EMAIL,
     smtp_pass: process.env.SMTP_PASS,
     smtp_secure: !!Number(process.env.SMTP_SECURE),
   };

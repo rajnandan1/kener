@@ -17,11 +17,8 @@ import {
   InsertKeyValue,
   GetMonitors,
   CreateUpdateTrigger,
-  UpdateSubscriptionTriggerStatus,
   GetAllTriggers,
   UpdateTriggerData,
-  GetSubscriptionTriggerByEmail,
-  CreateSubscriptionTrigger,
   GetAllAlertsPaginated,
   GetIncidentByIDDashboard,
   GetMonitorsParsed,
@@ -54,8 +51,7 @@ import {
   GetUserByEmail,
   ManualUpdateUserData,
   DeleteMonitorCompletelyUsingTag,
-  GetSubscribersPaginated,
-  UpdateSubscriptionStatus,
+  GetSiteDataByKey,
 } from "$lib/server/controllers/controller.js";
 
 import { INVITE_VERIFY_EMAIL, MANUAL } from "$lib/server/constants.js";
@@ -96,29 +92,17 @@ import {
   type MonitorAlertConfigRecord,
   type MonitorAlertV2Record,
 } from "$lib/server/controllers/monitorAlertConfigController.js";
-import {
-  CreateTemplate,
-  UpdateTemplate,
-  GetTemplateById,
-  GetTemplates,
-  GetAllTemplates,
-  GetTemplatesByType,
-  GetTemplatesByUsage,
-  GetTemplatesByTypeAndUsage,
-  DeleteTemplate,
-} from "$lib/server/controllers/templateController.js";
-import {
-  GetSubscriptionConfig,
-  UpdateSubscriptionConfigFull,
-  ValidateMethodTriggers,
-} from "$lib/server/controllers/subscriptionConfigController.js";
+
 import {
   GetSubscribersByMethod,
-  GetSubscriberWithSubscriptions,
   GetSubscriberWithSubscriptionsV2,
   GetSubscriberCountsByMethod,
   DeleteUserSubscription,
   UpdateUserSubscriptionStatus,
+  GetAdminSubscribersPaginated,
+  AdminUpdateSubscriptionStatus,
+  AdminDeleteSubscriber,
+  AdminAddSubscriber,
 } from "$lib/server/controllers/userSubscriptionsController.js";
 import {
   GetAllEmailTemplateConfigsWithTemplates,
@@ -134,20 +118,13 @@ import {
   UpdateSecret,
   DeleteSecret,
 } from "$lib/server/controllers/vaultController.js";
-import type { AlertData, SiteDataForNotification } from "$lib/server/notification/variables";
 import {
-  alertToVariables,
-  getEmailConfigFromTriggerMeta,
-  siteDataToVariables,
-} from "$lib/server/notification/notification_utils";
-import type {
-  TriggerRecordParsed,
-  TriggerMetaEmailJson,
-  TemplateRecord,
-  TriggerMetaWebhookJson,
-  TriggerMetaSlackJson,
-  TriggerMetaDiscordJson,
-} from "../../../../lib/server/types/db";
+  GetAllGeneralEmailTemplates,
+  GetGeneralEmailTemplateById,
+  UpdateGeneralEmailTemplate,
+} from "$lib/server/controllers/generalTemplateController.js";
+import type { AlertData, SiteDataForNotification } from "$lib/server/notification/variables";
+import { alertToVariables, siteDataToVariables } from "$lib/server/notification/notification_utils";
 
 function AdminCan(role: string) {
   if (role !== "admin") {
@@ -345,54 +322,54 @@ export async function POST({ request, cookies }) {
         updated_at: new Date(),
       };
       //throw error if not template id
-      if (!trigger.template_id) {
-        throw new Error("No template associated with this trigger");
-      }
-      //get template by id
-      const template = await GetTemplateById(trigger.template_id);
-      if (!template) {
-        throw new Error("No template found for this trigger");
-      }
+      // if (!trigger.template_id) {
+      //   throw new Error("No template associated with this trigger");
+      // }
+      // //get template by id
+      // const template = await GetTemplateById(trigger.template_id);
+      // if (!template) {
+      //   throw new Error("No template found for this trigger");
+      // }
 
-      const templateAlertVars = alertToVariables(testAlert, testAlertData);
-      const templateSiteVars = siteDataToVariables(siteData);
+      // const templateAlertVars = alertToVariables(testAlert, testAlertData);
+      // const templateSiteVars = siteDataToVariables(siteData);
 
-      let triggerParsed: TriggerRecordParsed = {
-        ...trigger,
-        trigger_meta: trigger.trigger_meta ? JSON.parse(trigger.trigger_meta) : { to: [], from: "" },
-      };
-      if (trigger.trigger_type === "webhook") {
-        resp = await sendWebhook(
-          triggerParsed as TriggerRecordParsed<TriggerMetaWebhookJson>,
-          templateAlertVars as AlertData,
-          template,
-          templateSiteVars,
-        );
-      } else if (trigger.trigger_type === "email") {
-        const emailSendingConfig = getEmailConfigFromTriggerMeta(triggerParsed.trigger_meta as TriggerMetaEmailJson);
-        const toAddresses = (triggerParsed.trigger_meta as TriggerMetaEmailJson).to;
-        resp = await sendEmail(
-          emailSendingConfig,
-          templateAlertVars as AlertData,
-          template,
-          templateSiteVars,
-          toAddresses,
-        );
-      } else if (trigger.trigger_type === "slack") {
-        resp = await sendSlack(
-          triggerParsed as TriggerRecordParsed<TriggerMetaSlackJson>,
-          templateAlertVars as AlertData,
-          template,
-          templateSiteVars,
-        );
-      } else if (trigger.trigger_type === "discord") {
-        resp = await sendDiscord(
-          triggerParsed as TriggerRecordParsed<TriggerMetaDiscordJson>,
-          templateAlertVars as AlertData,
-          template,
-          templateSiteVars,
-        );
-      }
+      // let triggerParsed: TriggerRecordParsed = {
+      //   ...trigger,
+      //   trigger_meta: trigger.trigger_meta ? JSON.parse(trigger.trigger_meta) : { to: [], from: "" },
+      // };
+      // if (trigger.trigger_type === "webhook") {
+      //   resp = await sendWebhook(
+      //     triggerParsed as TriggerRecordParsed<TriggerMetaWebhookJson>,
+      //     templateAlertVars as AlertData,
+      //     template,
+      //     templateSiteVars,
+      //   );
+      // } else if (trigger.trigger_type === "email") {
+      //   const emailSendingConfig = getEmailConfigFromTriggerMeta(triggerParsed.trigger_meta as TriggerMetaEmailJson);
+      //   const toAddresses = (triggerParsed.trigger_meta as TriggerMetaEmailJson).to;
+      //   resp = await sendEmail(
+      //     emailSendingConfig,
+      //     templateAlertVars as AlertData,
+      //     template,
+      //     templateSiteVars,
+      //     toAddresses,
+      //   );
+      // } else if (trigger.trigger_type === "slack") {
+      //   resp = await sendSlack(
+      //     triggerParsed as TriggerRecordParsed<TriggerMetaSlackJson>,
+      //     templateAlertVars as AlertData,
+      //     template,
+      //     templateSiteVars,
+      //   );
+      // } else if (trigger.trigger_type === "discord") {
+      //   resp = await sendDiscord(
+      //     triggerParsed as TriggerRecordParsed<TriggerMetaDiscordJson>,
+      //     templateAlertVars as AlertData,
+      //     template,
+      //     templateSiteVars,
+      //   );
+      // }
     } else if (action == "testMonitor") {
       let monitorID = data.monitor_id;
       let monitors = await GetMonitorsParsed({ id: monitorID });
@@ -408,16 +385,6 @@ export async function POST({ request, cookies }) {
       };
       const serviceClient = new Service(monitorReducedType);
       resp = await serviceClient.execute();
-    } else if (action == "createSubscriptionTrigger") {
-      resp = await CreateSubscriptionTrigger(data);
-    } else if (action == "getSubscriptionTrigger") {
-      resp = await GetSubscriptionTriggerByEmail();
-    } else if (action == "getSubscribers") {
-      resp = await GetSubscribersPaginated(data);
-    } else if (action == "updateSubscriptionStatus") {
-      resp = await UpdateSubscriptionStatus(data.id, data.status);
-    } else if (action == "updateSubscriptionTriggerStatus") {
-      resp = await UpdateSubscriptionTriggerStatus(data.id, data.status);
     } else if (action == "uploadImage") {
       AdminEditorCan(userDB.role);
       resp = await uploadImage(data);
@@ -530,67 +497,7 @@ export async function POST({ request, cookies }) {
       AdminEditorCan(userDB.role);
       resp = await ToggleMonitorAlertConfigStatus(data.id);
     }
-    // ============ Template Actions ============
-    else if (action == "createTemplate") {
-      AdminEditorCan(userDB.role);
-      resp = await CreateTemplate(data);
-    } else if (action == "updateTemplate") {
-      AdminEditorCan(userDB.role);
-      resp = await UpdateTemplate(data);
-    } else if (action == "getTemplateById") {
-      resp = await GetTemplateById(data.id);
-      if (!resp) {
-        throw new Error("Template not found");
-      }
-    } else if (action == "getTemplates") {
-      resp = await GetTemplates(data || {});
-    } else if (action == "getAllTemplates") {
-      resp = await GetAllTemplates();
-    } else if (action == "getTemplatesByType") {
-      resp = await GetTemplatesByType(data.template_type);
-    } else if (action == "getTemplatesByUsage") {
-      resp = await GetTemplatesByUsage(data.template_usage);
-    } else if (action == "getTemplatesByTypeAndUsage") {
-      resp = await GetTemplatesByTypeAndUsage(data.template_type, data.template_usages);
-    } else if (action == "deleteTemplate") {
-      AdminEditorCan(userDB.role);
-      await DeleteTemplate(data.id);
-      resp = { success: true };
-    }
-    // ============ Subscription Config ============
-    else if (action == "getSubscriptionConfig") {
-      resp = await GetSubscriptionConfig();
-      if (!resp) {
-        // Return default config structure if none exists yet
-        resp = {
-          events_enabled: {
-            incidentUpdatesAll: false,
-            maintenanceUpdatesAll: false,
-            monitorUpdatesAll: false,
-          },
-          methods_enabled: {
-            email: false,
-            webhook: false,
-            slack: false,
-            discord: false,
-          },
-          method_triggers: {
-            email: null,
-            webhook: null,
-            slack: null,
-            discord: null,
-          },
-        };
-      }
-    } else if (action == "updateSubscriptionConfig") {
-      AdminCan(userDB.role);
-      // Validate triggers if any are set
-      const validation = await ValidateMethodTriggers(data.method_triggers);
-      if (!validation.valid) {
-        throw new Error(validation.errors.join("; "));
-      }
-      resp = await UpdateSubscriptionConfigFull(data);
-    }
+
     // ============ User Subscriptions (Admin) ============
     else if (action == "getSubscribersByMethod") {
       const { method, page = 1, limit = 25 } = data;
@@ -623,8 +530,6 @@ export async function POST({ request, cookies }) {
             subscriber_id: s.subscriber_method_id,
             subscription_method: result.method.method_type,
             event_type: s.event_type,
-            entity_type: s.entity_type,
-            entity_id: s.entity_id,
             status: s.status,
             created_at: s.created_at,
             updated_at: s.updated_at,
@@ -669,6 +574,69 @@ export async function POST({ request, cookies }) {
     } else if (action == "getEmailTemplates") {
       resp = await GetEmailTemplates();
     }
+    // ============ General Email Templates ============
+    else if (action == "getGeneralEmailTemplates") {
+      resp = await GetAllGeneralEmailTemplates();
+    } else if (action == "getGeneralEmailTemplateById") {
+      const { templateId } = data;
+      if (!templateId) {
+        throw new Error("Template ID is required");
+      }
+      resp = await GetGeneralEmailTemplateById(templateId);
+      if (!resp) {
+        throw new Error("Template not found");
+      }
+    } else if (action == "updateGeneralEmailTemplate") {
+      AdminEditorCan(userDB.role);
+      const { templateId, template_subject, template_html_body, template_text_body } = data;
+      if (!templateId) {
+        throw new Error("Template ID is required");
+      }
+      resp = await UpdateGeneralEmailTemplate(templateId, {
+        template_subject,
+        template_html_body,
+        template_text_body,
+      });
+      if (!resp.success) {
+        throw new Error(resp.error);
+      }
+    }
+    // ============ Admin Subscribers Management ============
+    else if (action == "getAdminSubscribers") {
+      const page = parseInt(String(data.page)) || 1;
+      const limit = parseInt(String(data.limit)) || 10;
+      resp = await GetAdminSubscribersPaginated(page, limit);
+    } else if (action == "adminUpdateSubscriptionStatus") {
+      AdminEditorCan(userDB.role);
+      const { methodId, eventType, enabled } = data;
+      if (!methodId || !eventType) {
+        throw new Error("Method ID and event type are required");
+      }
+      resp = await AdminUpdateSubscriptionStatus(methodId, eventType, enabled);
+      if (!resp.success) {
+        throw new Error(resp.error);
+      }
+    } else if (action == "adminDeleteSubscriber") {
+      AdminEditorCan(userDB.role);
+      const { methodId } = data;
+      if (!methodId) {
+        throw new Error("Method ID is required");
+      }
+      resp = await AdminDeleteSubscriber(methodId);
+      if (!resp.success) {
+        throw new Error(resp.error);
+      }
+    } else if (action == "adminAddSubscriber") {
+      AdminEditorCan(userDB.role);
+      const { email, incidents, maintenances } = data;
+      if (!email) {
+        throw new Error("Email is required");
+      }
+      resp = await AdminAddSubscriber(email, incidents ?? false, maintenances ?? false);
+      if (!resp.success) {
+        throw new Error(resp.error);
+      }
+    }
     // ============ Vault ============
     else if (action == "getVaultSecrets") {
       AdminCan(userDB.role);
@@ -710,6 +678,24 @@ export async function POST({ request, cookies }) {
       if (!resp.success) {
         throw new Error(resp.error);
       }
+    } else if (action == "getSubscriptionsConfig") {
+      AdminCan(userDB.role);
+      let subscriptionsSettings = await GetSiteDataByKey("subscriptionsSettings");
+      if (!!!subscriptionsSettings) {
+        subscriptionsSettings = {
+          enable: false,
+          methods: {
+            emails: {
+              incidents: true,
+              maintenances: true,
+            },
+          },
+        };
+      }
+      resp = subscriptionsSettings;
+    } else if (action == "updateSubscriptionsConfig") {
+      AdminCan(userDB.role);
+      resp = await InsertKeyValue("subscriptionsSettings", JSON.stringify(data));
     }
   } catch (error: unknown) {
     console.log(error);

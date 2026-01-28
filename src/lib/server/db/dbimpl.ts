@@ -8,14 +8,10 @@ import { AlertsRepository } from "./repositories/alerts.js";
 import { UsersRepository } from "./repositories/users.js";
 import { SiteDataRepository } from "./repositories/site-data.js";
 import { IncidentsRepository } from "./repositories/incidents.js";
-import { SubscribersRepository } from "./repositories/subscribers.js";
 import { ImagesRepository } from "./repositories/images.js";
 import { PagesRepository } from "./repositories/pages.js";
 import { MaintenancesRepository } from "./repositories/maintenances.js";
 import { MonitorAlertConfigRepository } from "./repositories/monitorAlertConfig.js";
-import { TemplatesRepository } from "./repositories/templates.js";
-import { SubscriptionConfigRepository } from "./repositories/subscriptionConfig.js";
-import { UserSubscriptionsRepository } from "./repositories/userSubscriptions.js";
 import { SubscriptionSystemRepository } from "./repositories/subscriptionSystem.js";
 import { EmailTemplateConfigRepository } from "./repositories/emailTemplateConfig.js";
 import { VaultRepository } from "./repositories/vault.js";
@@ -42,14 +38,10 @@ class DbImpl {
   private users!: UsersRepository;
   private siteData!: SiteDataRepository;
   private incidents!: IncidentsRepository;
-  private subscribers!: SubscribersRepository;
   private images!: ImagesRepository;
   private pages!: PagesRepository;
   private maintenances!: MaintenancesRepository;
   private monitorAlertConfig!: MonitorAlertConfigRepository;
-  private templates!: TemplatesRepository;
-  private subscriptionConfig!: SubscriptionConfigRepository;
-  private userSubscriptions!: UserSubscriptionsRepository;
   private subscriptionSystem!: SubscriptionSystemRepository;
   private emailTemplateConfig!: EmailTemplateConfigRepository;
   private vault!: VaultRepository;
@@ -104,6 +96,7 @@ class DbImpl {
   updateTrigger!: AlertsRepository["updateTrigger"];
   getTriggers!: AlertsRepository["getTriggers"];
   getTriggerByID!: AlertsRepository["getTriggerByID"];
+  getTriggersByIDs!: AlertsRepository["getTriggersByIDs"];
 
   // ============ Users ============
   getUsersCount!: UsersRepository["getUsersCount"];
@@ -188,38 +181,6 @@ class DbImpl {
   updateIncidentCommentByID!: IncidentsRepository["updateIncidentCommentByID"];
   updateIncidentCommentStatusByID!: IncidentsRepository["updateIncidentCommentStatusByID"];
   getIncidentCommentByID!: IncidentsRepository["getIncidentCommentByID"];
-
-  // ============ Subscribers ============
-  insertSubscriber!: SubscribersRepository["insertSubscriber"];
-  updateSubscriberMeta!: SubscribersRepository["updateSubscriberMeta"];
-  updateSubscriberStatus!: SubscribersRepository["updateSubscriberStatus"];
-  deleteSubscriberById!: SubscribersRepository["deleteSubscriberById"];
-  getAllActiveSubscribers!: SubscribersRepository["getAllActiveSubscribers"];
-  getSubscriberByDetails!: SubscribersRepository["getSubscriberByDetails"];
-  getSubscribersByType!: SubscribersRepository["getSubscribersByType"];
-  getSubscriberById!: SubscribersRepository["getSubscriberById"];
-  getSubscribersPaginated!: SubscribersRepository["getSubscribersPaginated"];
-  getSubscribersCount!: SubscribersRepository["getSubscribersCount"];
-
-  // ============ Subscriptions ============
-  insertSubscription!: SubscribersRepository["insertSubscription"];
-  removeAllDataFromSubscriptions!: SubscribersRepository["removeAllDataFromSubscriptions"];
-  getSubscriptionsBySubscriberId!: SubscribersRepository["getSubscriptionsBySubscriberId"];
-  updateSubscriptionStatus!: SubscribersRepository["updateSubscriptionStatus"];
-  getSubscriptionsForMonitor!: SubscribersRepository["getSubscriptionsForMonitor"];
-  getSubscriptionsPaginated!: SubscribersRepository["getSubscriptionsPaginated"];
-  getTotalSubscriptionCount!: SubscribersRepository["getTotalSubscriptionCount"];
-  getSubscriberEmails!: SubscribersRepository["getSubscriberEmails"];
-
-  // ============ Subscription Triggers ============
-  insertSubscriptionTrigger!: SubscribersRepository["insertSubscriptionTrigger"];
-  getSubscriptionTriggerById!: SubscribersRepository["getSubscriptionTriggerById"];
-  getAllSubscriptionTriggers!: SubscribersRepository["getAllSubscriptionTriggers"];
-  getSubscriptionTriggerByType!: SubscribersRepository["getSubscriptionTriggerByType"];
-  updateSubscriptionTrigger!: SubscribersRepository["updateSubscriptionTrigger"];
-  updateSubscriptionTriggerStatus!: SubscribersRepository["updateSubscriptionTriggerStatus"];
-  deleteSubscriptionTriggerByType!: SubscribersRepository["deleteSubscriptionTriggerByType"];
-  deleteSubscriptionTriggerById!: SubscribersRepository["deleteSubscriptionTriggerById"];
 
   // ============ Images ============
   insertImage!: ImagesRepository["insertImage"];
@@ -331,39 +292,6 @@ class DbImpl {
   getAlertsByIncidentId!: MonitorAlertConfigRepository["getAlertsByIncidentId"];
   getMonitorAlertsV2Count!: MonitorAlertConfigRepository["getMonitorAlertsV2Count"];
 
-  // ============ Templates ============
-  insertTemplate!: TemplatesRepository["insertTemplate"];
-  updateTemplate!: TemplatesRepository["updateTemplate"];
-  getTemplateById!: TemplatesRepository["getTemplateById"];
-  getTemplates!: TemplatesRepository["getTemplates"];
-  getAllTemplates!: TemplatesRepository["getAllTemplates"];
-  getTemplatesByType!: TemplatesRepository["getTemplatesByType"];
-  getTemplatesByUsage!: TemplatesRepository["getTemplatesByUsage"];
-  getTemplatesByTypeAndUsage!: TemplatesRepository["getTemplatesByTypeAndUsage"];
-  deleteTemplate!: TemplatesRepository["deleteTemplate"];
-  getTemplatesCount!: TemplatesRepository["getTemplatesCount"];
-  templateNameExists!: TemplatesRepository["templateNameExists"];
-
-  // ============ Subscription Config ============
-  getSubscriptionConfig!: SubscriptionConfigRepository["getSubscriptionConfig"];
-  getSubscriptionConfigParsed!: SubscriptionConfigRepository["getSubscriptionConfigParsed"];
-  updateSubscriptionConfig!: SubscriptionConfigRepository["updateSubscriptionConfig"];
-  ensureSubscriptionConfig!: SubscriptionConfigRepository["ensureSubscriptionConfig"];
-
-  // ============ User Subscriptions ============
-  insertUserSubscription!: UserSubscriptionsRepository["insertUserSubscription"];
-  getUserSubscriptionById!: UserSubscriptionsRepository["getUserSubscriptionById"];
-  getUserSubscriptions!: UserSubscriptionsRepository["getUserSubscriptions"];
-  getSubscriptionsBySubscriberIdNew!: UserSubscriptionsRepository["getSubscriptionsBySubscriberId"];
-  updateUserSubscriptionStatus!: UserSubscriptionsRepository["updateUserSubscriptionStatus"];
-  deleteUserSubscription!: UserSubscriptionsRepository["deleteUserSubscription"];
-  deleteAllSubscriptionsBySubscriberId!: UserSubscriptionsRepository["deleteAllSubscriptionsBySubscriberId"];
-  subscriptionExists!: UserSubscriptionsRepository["subscriptionExists"];
-  getSubscribersByMethodPaginated!: UserSubscriptionsRepository["getSubscribersByMethodPaginated"];
-  getSubscribersCountByMethod!: UserSubscriptionsRepository["getSubscribersCountByMethod"];
-  getSubscriberWithSubscriptions!: UserSubscriptionsRepository["getSubscriberWithSubscriptions"];
-  getActiveSubscriptionsForEvent!: UserSubscriptionsRepository["getActiveSubscriptionsForEvent"];
-
   // ============ Subscription System V2 (subscriber_users, subscriber_methods, user_subscriptions_v2) ============
   createSubscriberUser!: SubscriptionSystemRepository["createSubscriberUser"];
   getSubscriberUserById!: SubscriptionSystemRepository["getSubscriberUserById"];
@@ -391,18 +319,14 @@ class DbImpl {
   getMethodsCountByType!: SubscriptionSystemRepository["getMethodsCountByType"];
   getSubscribersByMethodTypeV2!: SubscriptionSystemRepository["getSubscribersByMethodTypeV2"];
   getSubscriberDetailsByMethodId!: SubscriptionSystemRepository["getSubscriberDetailsByMethodId"];
-  getSubscriptionMethodsByEntity!: SubscriptionSystemRepository["getSubscriptionMethodsByEntity"];
 
-  // ============ Email Template Config ============
-  getAllEmailTemplateConfigs!: EmailTemplateConfigRepository["getAllEmailTemplateConfigs"];
-  getAllEmailTemplateConfigsWithTemplates!: EmailTemplateConfigRepository["getAllEmailTemplateConfigsWithTemplates"];
-  getEmailTemplateConfigByType!: EmailTemplateConfigRepository["getEmailTemplateConfigByType"];
-  getEmailTemplateConfigById!: EmailTemplateConfigRepository["getEmailTemplateConfigById"];
-  updateEmailTemplateConfigByType!: EmailTemplateConfigRepository["updateEmailTemplateConfigByType"];
-  updateEmailTemplateConfigById!: EmailTemplateConfigRepository["updateEmailTemplateConfigById"];
-  getActiveEmailTemplateConfigs!: EmailTemplateConfigRepository["getActiveEmailTemplateConfigs"];
-  getActiveEmailTemplateConfigByType!: EmailTemplateConfigRepository["getActiveEmailTemplateConfigByType"];
-  ensureDefaultEmailTypes!: EmailTemplateConfigRepository["ensureDefaultEmailTypes"];
+  // ============ General Email Templates ============
+  insertEmailTemplate!: EmailTemplateConfigRepository["insertEmailTemplate"];
+  updateEmailTemplate!: EmailTemplateConfigRepository["updateEmailTemplate"];
+  getAllEmailTemplates!: EmailTemplateConfigRepository["getAllEmailTemplates"];
+  getEmailTemplateById!: EmailTemplateConfigRepository["getEmailTemplateById"];
+  deleteEmailTemplate!: EmailTemplateConfigRepository["deleteEmailTemplate"];
+  upsertEmailTemplate!: EmailTemplateConfigRepository["upsertEmailTemplate"];
 
   // ============ Vault ============
   getAllSecrets!: VaultRepository["getAllSecrets"];
@@ -426,14 +350,10 @@ class DbImpl {
     this.users = new UsersRepository(this.knex);
     this.siteData = new SiteDataRepository(this.knex);
     this.incidents = new IncidentsRepository(this.knex);
-    this.subscribers = new SubscribersRepository(this.knex);
     this.images = new ImagesRepository(this.knex);
     this.pages = new PagesRepository(this.knex);
     this.maintenances = new MaintenancesRepository(this.knex);
     this.monitorAlertConfig = new MonitorAlertConfigRepository(this.knex);
-    this.templates = new TemplatesRepository(this.knex);
-    this.subscriptionConfig = new SubscriptionConfigRepository(this.knex);
-    this.userSubscriptions = new UserSubscriptionsRepository(this.knex);
     this.subscriptionSystem = new SubscriptionSystemRepository(this.knex);
     this.emailTemplateConfig = new EmailTemplateConfigRepository(this.knex);
     this.vault = new VaultRepository(this.knex);
@@ -445,14 +365,10 @@ class DbImpl {
     this.bindUsersMethods();
     this.bindSiteDataMethods();
     this.bindIncidentsMethods();
-    this.bindSubscribersMethods();
     this.bindImagesMethods();
     this.bindPagesMethods();
     this.bindMaintenancesMethods();
     this.bindMonitorAlertConfigMethods();
-    this.bindTemplatesMethods();
-    this.bindSubscriptionConfigMethods();
-    this.bindUserSubscriptionsMethods();
     this.bindSubscriptionSystemMethods();
     this.bindEmailTemplateConfigMethods();
     this.bindVaultMethods();
@@ -509,6 +425,7 @@ class DbImpl {
     this.updateTrigger = this.alerts.updateTrigger.bind(this.alerts);
     this.getTriggers = this.alerts.getTriggers.bind(this.alerts);
     this.getTriggerByID = this.alerts.getTriggerByID.bind(this.alerts);
+    this.getTriggersByIDs = this.alerts.getTriggersByIDs.bind(this.alerts);
   }
 
   private bindUsersMethods(): void {
@@ -593,35 +510,6 @@ class DbImpl {
     this.updateIncidentCommentByID = this.incidents.updateIncidentCommentByID.bind(this.incidents);
     this.updateIncidentCommentStatusByID = this.incidents.updateIncidentCommentStatusByID.bind(this.incidents);
     this.getIncidentCommentByID = this.incidents.getIncidentCommentByID.bind(this.incidents);
-  }
-
-  private bindSubscribersMethods(): void {
-    this.insertSubscriber = this.subscribers.insertSubscriber.bind(this.subscribers);
-    this.updateSubscriberMeta = this.subscribers.updateSubscriberMeta.bind(this.subscribers);
-    this.updateSubscriberStatus = this.subscribers.updateSubscriberStatus.bind(this.subscribers);
-    this.deleteSubscriberById = this.subscribers.deleteSubscriberById.bind(this.subscribers);
-    this.getAllActiveSubscribers = this.subscribers.getAllActiveSubscribers.bind(this.subscribers);
-    this.getSubscriberByDetails = this.subscribers.getSubscriberByDetails.bind(this.subscribers);
-    this.getSubscribersByType = this.subscribers.getSubscribersByType.bind(this.subscribers);
-    this.getSubscriberById = this.subscribers.getSubscriberById.bind(this.subscribers);
-    this.getSubscribersPaginated = this.subscribers.getSubscribersPaginated.bind(this.subscribers);
-    this.getSubscribersCount = this.subscribers.getSubscribersCount.bind(this.subscribers);
-    this.insertSubscription = this.subscribers.insertSubscription.bind(this.subscribers);
-    this.removeAllDataFromSubscriptions = this.subscribers.removeAllDataFromSubscriptions.bind(this.subscribers);
-    this.getSubscriptionsBySubscriberId = this.subscribers.getSubscriptionsBySubscriberId.bind(this.subscribers);
-    this.updateSubscriptionStatus = this.subscribers.updateSubscriptionStatus.bind(this.subscribers);
-    this.getSubscriptionsForMonitor = this.subscribers.getSubscriptionsForMonitor.bind(this.subscribers);
-    this.getSubscriptionsPaginated = this.subscribers.getSubscriptionsPaginated.bind(this.subscribers);
-    this.getTotalSubscriptionCount = this.subscribers.getTotalSubscriptionCount.bind(this.subscribers);
-    this.getSubscriberEmails = this.subscribers.getSubscriberEmails.bind(this.subscribers);
-    this.insertSubscriptionTrigger = this.subscribers.insertSubscriptionTrigger.bind(this.subscribers);
-    this.getSubscriptionTriggerById = this.subscribers.getSubscriptionTriggerById.bind(this.subscribers);
-    this.getAllSubscriptionTriggers = this.subscribers.getAllSubscriptionTriggers.bind(this.subscribers);
-    this.getSubscriptionTriggerByType = this.subscribers.getSubscriptionTriggerByType.bind(this.subscribers);
-    this.updateSubscriptionTrigger = this.subscribers.updateSubscriptionTrigger.bind(this.subscribers);
-    this.updateSubscriptionTriggerStatus = this.subscribers.updateSubscriptionTriggerStatus.bind(this.subscribers);
-    this.deleteSubscriptionTriggerByType = this.subscribers.deleteSubscriptionTriggerByType.bind(this.subscribers);
-    this.deleteSubscriptionTriggerById = this.subscribers.deleteSubscriptionTriggerById.bind(this.subscribers);
   }
 
   private bindImagesMethods(): void {
@@ -792,56 +680,6 @@ class DbImpl {
     this.getMonitorAlertsV2Count = this.monitorAlertConfig.getMonitorAlertsV2Count.bind(this.monitorAlertConfig);
   }
 
-  private bindTemplatesMethods(): void {
-    this.insertTemplate = this.templates.insertTemplate.bind(this.templates);
-    this.updateTemplate = this.templates.updateTemplate.bind(this.templates);
-    this.getTemplateById = this.templates.getTemplateById.bind(this.templates);
-    this.getTemplates = this.templates.getTemplates.bind(this.templates);
-    this.getAllTemplates = this.templates.getAllTemplates.bind(this.templates);
-    this.getTemplatesByType = this.templates.getTemplatesByType.bind(this.templates);
-    this.getTemplatesByUsage = this.templates.getTemplatesByUsage.bind(this.templates);
-    this.getTemplatesByTypeAndUsage = this.templates.getTemplatesByTypeAndUsage.bind(this.templates);
-    this.deleteTemplate = this.templates.deleteTemplate.bind(this.templates);
-    this.getTemplatesCount = this.templates.getTemplatesCount.bind(this.templates);
-    this.templateNameExists = this.templates.templateNameExists.bind(this.templates);
-  }
-
-  private bindSubscriptionConfigMethods(): void {
-    this.getSubscriptionConfig = this.subscriptionConfig.getSubscriptionConfig.bind(this.subscriptionConfig);
-    this.getSubscriptionConfigParsed = this.subscriptionConfig.getSubscriptionConfigParsed.bind(
-      this.subscriptionConfig,
-    );
-    this.updateSubscriptionConfig = this.subscriptionConfig.updateSubscriptionConfig.bind(this.subscriptionConfig);
-    this.ensureSubscriptionConfig = this.subscriptionConfig.ensureSubscriptionConfig.bind(this.subscriptionConfig);
-  }
-
-  private bindUserSubscriptionsMethods(): void {
-    this.insertUserSubscription = this.userSubscriptions.insertUserSubscription.bind(this.userSubscriptions);
-    this.getUserSubscriptionById = this.userSubscriptions.getUserSubscriptionById.bind(this.userSubscriptions);
-    this.getUserSubscriptions = this.userSubscriptions.getUserSubscriptions.bind(this.userSubscriptions);
-    this.getSubscriptionsBySubscriberIdNew = this.userSubscriptions.getSubscriptionsBySubscriberId.bind(
-      this.userSubscriptions,
-    );
-    this.updateUserSubscriptionStatus = this.userSubscriptions.updateUserSubscriptionStatus.bind(
-      this.userSubscriptions,
-    );
-    this.deleteUserSubscription = this.userSubscriptions.deleteUserSubscription.bind(this.userSubscriptions);
-    this.deleteAllSubscriptionsBySubscriberId = this.userSubscriptions.deleteAllSubscriptionsBySubscriberId.bind(
-      this.userSubscriptions,
-    );
-    this.subscriptionExists = this.userSubscriptions.subscriptionExists.bind(this.userSubscriptions);
-    this.getSubscribersByMethodPaginated = this.userSubscriptions.getSubscribersByMethodPaginated.bind(
-      this.userSubscriptions,
-    );
-    this.getSubscribersCountByMethod = this.userSubscriptions.getSubscribersCountByMethod.bind(this.userSubscriptions);
-    this.getSubscriberWithSubscriptions = this.userSubscriptions.getSubscriberWithSubscriptions.bind(
-      this.userSubscriptions,
-    );
-    this.getActiveSubscriptionsForEvent = this.userSubscriptions.getActiveSubscriptionsForEvent.bind(
-      this.userSubscriptions,
-    );
-  }
-
   private bindSubscriptionSystemMethods(): void {
     // Subscriber Users
     this.createSubscriberUser = this.subscriptionSystem.createSubscriberUser.bind(this.subscriptionSystem);
@@ -890,36 +728,16 @@ class DbImpl {
     this.getSubscriberDetailsByMethodId = this.subscriptionSystem.getSubscriberDetailsByMethodId.bind(
       this.subscriptionSystem,
     );
-    this.getSubscriptionMethodsByEntity = this.subscriptionSystem.getSubscriptionMethodsByEntity.bind(
-      this.subscriptionSystem,
-    );
   }
 
   private bindEmailTemplateConfigMethods(): void {
-    this.getAllEmailTemplateConfigs = this.emailTemplateConfig.getAllEmailTemplateConfigs.bind(
-      this.emailTemplateConfig,
-    );
-    this.getAllEmailTemplateConfigsWithTemplates =
-      this.emailTemplateConfig.getAllEmailTemplateConfigsWithTemplates.bind(this.emailTemplateConfig);
-    this.getEmailTemplateConfigByType = this.emailTemplateConfig.getEmailTemplateConfigByType.bind(
-      this.emailTemplateConfig,
-    );
-    this.getEmailTemplateConfigById = this.emailTemplateConfig.getEmailTemplateConfigById.bind(
-      this.emailTemplateConfig,
-    );
-    this.updateEmailTemplateConfigByType = this.emailTemplateConfig.updateEmailTemplateConfigByType.bind(
-      this.emailTemplateConfig,
-    );
-    this.updateEmailTemplateConfigById = this.emailTemplateConfig.updateEmailTemplateConfigById.bind(
-      this.emailTemplateConfig,
-    );
-    this.getActiveEmailTemplateConfigs = this.emailTemplateConfig.getActiveEmailTemplateConfigs.bind(
-      this.emailTemplateConfig,
-    );
-    this.getActiveEmailTemplateConfigByType = this.emailTemplateConfig.getActiveEmailTemplateConfigByType.bind(
-      this.emailTemplateConfig,
-    );
-    this.ensureDefaultEmailTypes = this.emailTemplateConfig.ensureDefaultEmailTypes.bind(this.emailTemplateConfig);
+    // General Email Templates
+    this.insertEmailTemplate = this.emailTemplateConfig.insertEmailTemplate.bind(this.emailTemplateConfig);
+    this.updateEmailTemplate = this.emailTemplateConfig.updateEmailTemplate.bind(this.emailTemplateConfig);
+    this.getAllEmailTemplates = this.emailTemplateConfig.getAllEmailTemplates.bind(this.emailTemplateConfig);
+    this.getEmailTemplateById = this.emailTemplateConfig.getEmailTemplateById.bind(this.emailTemplateConfig);
+    this.deleteEmailTemplate = this.emailTemplateConfig.deleteEmailTemplate.bind(this.emailTemplateConfig);
+    this.upsertEmailTemplate = this.emailTemplateConfig.upsertEmailTemplate.bind(this.emailTemplateConfig);
   }
 
   private bindVaultMethods(): void {

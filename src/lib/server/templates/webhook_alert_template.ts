@@ -17,10 +17,5 @@ const template =
   ' "colors_maintenance": "{{colors_maintenance}}"\n}';
 
 export default {
-  template_name: "Default Webhook Alert",
-  template_type: "WEBHOOK",
-  template_usage: "ALERT",
-  template_json: {
-    webhook_body: template,
-  },
+  webhook_body: template,
 };

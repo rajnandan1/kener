@@ -99,10 +99,5 @@ const template = `{
 }`;
 
 export default {
-  template_name: "Default Slack Alert",
-  template_type: "SLACK",
-  template_usage: "ALERT",
-  template_json: {
-    slack_body: template,
-  },
+  slack_body: template,
 };

@@ -150,45 +150,38 @@ export interface TriggerRecord {
   trigger_desc: string | null;
   trigger_status: string | null;
   trigger_meta: string;
-  template_id?: number | null;
   created_at: Date;
   updated_at: Date;
 }
 
-export interface TriggerRecordParsed<T extends TriggerMetaJson = TriggerMetaJson> extends Omit<
-  TriggerRecord,
-  "trigger_meta"
-> {
-  trigger_meta: T;
+// Template JSON types for each template type
+export interface EmailTemplateJson {
+  email_subject: string;
+  email_body: string; // HTML string
 }
 
-export interface TriggerMetaEmailJson {
-  to: string[];
+export interface WebhookTemplateJson {
+  webhook_body: string; // JSON string
+}
+
+export interface SlackTemplateJson {
+  slack_body: string; // JSON string
+}
+
+export interface DiscordTemplateJson {
+  discord_body: string; // JSON string
+}
+
+export interface TriggerHeader {
+  key: string;
+  value: string;
+}
+export interface TriggerMeta extends EmailTemplateJson, WebhookTemplateJson, SlackTemplateJson, DiscordTemplateJson {
+  url: string;
+  headers: TriggerHeader[];
+  to: string;
   from: string;
-  email_type: string;
-  smtp_host?: string;
-  smtp_port?: string | number;
-  smtp_secure?: boolean;
-  smtp_user?: string;
-  smtp_pass?: string;
 }
-
-export interface TriggerMetaWebhookJson {
-  url: string;
-  headers?: { key: string; value: string }[];
-}
-export interface TriggerMetaSlackJson {
-  url: string;
-}
-export interface TriggerMetaDiscordJson {
-  url: string;
-}
-
-export type TriggerMetaJson =
-  | TriggerMetaEmailJson
-  | TriggerMetaWebhookJson
-  | TriggerMetaSlackJson
-  | TriggerMetaDiscordJson;
 
 export interface TriggerRecordInsert {
   name: string;
@@ -196,7 +189,21 @@ export interface TriggerRecordInsert {
   trigger_desc?: string | null;
   trigger_status?: string | null;
   trigger_meta?: string | null;
-  template_id?: number | null;
+}
+
+// ============ general_email_templates table ============
+export interface GeneralEmailTemplateRecord {
+  template_id: string;
+  template_subject: string | null;
+  template_html_body: string | null;
+  template_text_body: string | null;
+}
+
+export interface GeneralEmailTemplateRecordInsert {
+  template_id: string;
+  template_subject?: string | null;
+  template_html_body?: string | null;
+  template_text_body?: string | null;
 }
 
 // ============ users table ============
@@ -350,58 +357,6 @@ export interface InvitationRecordInsert {
   invitation_meta?: string | null;
   invitation_expiry: Date;
   invitation_status?: string;
-}
-
-// ============ subscribers table ============
-export interface SubscriberRecord {
-  id: number;
-  subscriber_send: string;
-  subscriber_meta: string | null;
-  subscriber_type: string;
-  subscriber_status: string;
-  created_at: Date;
-  updated_at: Date;
-}
-
-export interface SubscriberRecordInsert {
-  subscriber_send: string;
-  subscriber_meta?: string | null;
-  subscriber_type: string;
-  subscriber_status: string;
-}
-
-// ============ subscriptions table ============
-export interface SubscriptionRecord {
-  id: number;
-  subscriber_id: number;
-  subscriptions_status: string;
-  subscriptions_monitors: string;
-  subscriptions_meta: string | null;
-  created_at: Date;
-  updated_at: Date;
-}
-
-export interface SubscriptionRecordInsert {
-  subscriber_id: number;
-  subscriptions_status: string;
-  subscriptions_monitors: string;
-  subscriptions_meta?: string | null;
-}
-
-// ============ subscription_triggers table ============
-export interface SubscriptionTriggerRecord {
-  id: number;
-  subscription_trigger_type: string;
-  subscription_trigger_status: string;
-  config: string | null;
-  created_at: Date;
-  updated_at: Date;
-}
-
-export interface SubscriptionTriggerRecordInsert {
-  subscription_trigger_type: string;
-  subscription_trigger_status: string;
-  config?: string | null;
 }
 
 // ============ Filter types ============
@@ -745,69 +700,6 @@ export interface MonitorAlertV2WithConfig extends MonitorAlertV2Record {
   config: MonitorAlertConfigRecord;
 }
 
-// ============ templates table ============
-export type TemplateType = "EMAIL" | "WEBHOOK" | "SLACK" | "DISCORD";
-export type TemplateUsageType = "ALERT" | "SUBSCRIPTION" | "GENERAL";
-
-// Template JSON types for each template type
-export interface EmailTemplateJson {
-  email_subject: string;
-  email_body: string; // HTML string
-}
-
-export interface WebhookTemplateJson {
-  webhook_body: string; // JSON string
-}
-
-export interface SlackTemplateJson {
-  slack_body: string; // JSON string
-}
-
-export interface DiscordTemplateJson {
-  discord_body: string; // JSON string
-}
-
-// Union type for all template JSON types
-export type TemplateJsonType = EmailTemplateJson | WebhookTemplateJson | SlackTemplateJson | DiscordTemplateJson;
-
-export interface TemplateRecord {
-  id: number;
-  template_name: string;
-  template_type: TemplateType;
-  template_usage: TemplateUsageType;
-  template_json: string; // Stored as text, parsed to TemplateJsonType
-  created_at: Date;
-  updated_at: Date;
-}
-
-export interface TemplateInsert {
-  template_name: string;
-  template_type: TemplateType;
-  template_usage: TemplateUsageType;
-  template_json: string;
-}
-
-export interface TemplateUpdate {
-  template_name?: string;
-  template_type?: TemplateType;
-  template_usage?: TemplateUsageType;
-  template_json?: string;
-}
-
-export interface TemplateFilter {
-  id?: number;
-  template_type?: TemplateType;
-  template_usage?: TemplateUsageType;
-}
-
-// Parsed template record with JSON already parsed
-export interface TemplateParsed<T extends TemplateJsonType = TemplateJsonType> extends Omit<
-  TemplateRecord,
-  "template_json"
-> {
-  template_json: T;
-}
-
 // ============ subscription_config table ============
 export interface SubscriptionEventsEnabled {
   incidentUpdatesAll: boolean;
@@ -855,9 +747,8 @@ export interface SubscriptionConfigUpdate {
 
 // ============ New Subscription System (v2) ============
 
-export type SubscriptionMethodType = "email" | "webhook" | "slack" | "discord";
-export type SubscriptionEventType = "incidentUpdatesAll" | "maintenanceUpdatesAll" | "monitorUpdatesAll";
-export type SubscriptionEntityType = "monitor" | "incident" | "maintenance" | null;
+export type SubscriptionMethodType = "email";
+export type SubscriptionEventType = "incidents" | "maintenances";
 export type SubscriptionStatus = "ACTIVE" | "INACTIVE";
 export type SubscriberUserStatus = "PENDING" | "ACTIVE" | "INACTIVE";
 
@@ -905,8 +796,7 @@ export interface UserSubscriptionV2Record {
   subscriber_user_id: number;
   subscriber_method_id: number;
   event_type: SubscriptionEventType;
-  entity_type: SubscriptionEntityType;
-  entity_id: string | null;
+
   status: SubscriptionStatus;
   created_at: Date;
   updated_at: Date;
@@ -916,8 +806,7 @@ export interface UserSubscriptionV2RecordInsert {
   subscriber_user_id: number;
   subscriber_method_id: number;
   event_type: SubscriptionEventType;
-  entity_type?: SubscriptionEntityType;
-  entity_id?: string | null;
+
   status?: SubscriptionStatus;
 }
 
@@ -925,8 +814,7 @@ export interface UserSubscriptionV2Filter {
   subscriber_user_id?: number;
   subscriber_method_id?: number;
   event_type?: SubscriptionEventType;
-  entity_type?: SubscriptionEntityType;
-  entity_id?: string;
+
   status?: SubscriptionStatus;
 }
 
@@ -937,8 +825,7 @@ export interface UserSubscriptionRecord {
   subscriber_id: number;
   subscription_method: SubscriptionMethodType;
   event_type: SubscriptionEventType;
-  entity_type: SubscriptionEntityType;
-  entity_id: string | null;
+
   status: SubscriptionStatus;
   created_at: Date;
   updated_at: Date;
@@ -948,8 +835,7 @@ export interface UserSubscriptionRecordInsert {
   subscriber_id: number;
   subscription_method: SubscriptionMethodType;
   event_type: SubscriptionEventType;
-  entity_type?: SubscriptionEntityType;
-  entity_id?: string | null;
+
   status?: SubscriptionStatus;
 }
 
@@ -957,14 +843,8 @@ export interface UserSubscriptionFilter {
   subscriber_id?: number;
   subscription_method?: SubscriptionMethodType;
   event_type?: SubscriptionEventType;
-  entity_type?: SubscriptionEntityType;
-  entity_id?: string;
-  status?: SubscriptionStatus;
-}
 
-// Subscriber with their subscriptions
-export interface SubscriberWithSubscriptions extends SubscriberRecord {
-  subscriptions: UserSubscriptionRecord[];
+  status?: SubscriptionStatus;
 }
 
 // Aggregated view for admin
@@ -976,4 +856,43 @@ export interface SubscriberSummary {
   created_at: Date;
   subscription_count: number;
   event_types: SubscriptionEventType[];
+}
+
+// Template JSON types for each template type
+export interface EmailTemplateJson {
+  email_subject: string;
+  email_body: string; // HTML string
+}
+
+export interface WebhookTemplateJson {
+  webhook_body: string; // JSON string
+}
+
+export interface SlackTemplateJson {
+  slack_body: string; // JSON string
+}
+
+export interface DiscordTemplateJson {
+  discord_body: string; // JSON string
+}
+
+export interface TriggerHeader {
+  key: string;
+  value: string;
+}
+export interface TriggerMeta extends EmailTemplateJson, WebhookTemplateJson, SlackTemplateJson, DiscordTemplateJson {
+  url: string;
+  headers: TriggerHeader[];
+  to: string;
+  from: string;
+}
+
+export interface SubscriptionsConfig {
+  enable: boolean;
+  methods: {
+    emails: {
+      incidents: boolean;
+      maintenances: boolean;
+    };
+  };
 }

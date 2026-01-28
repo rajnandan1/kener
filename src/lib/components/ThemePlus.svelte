@@ -18,7 +18,7 @@
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import ICONS from "$lib/icons";
   import { format } from "date-fns";
-  import SubscribeMenuV2 from "$lib/components/SubscribeMenuV2.svelte";
+  import SubscribeMenu from "$lib/components/SubscribeMenu.svelte";
   import CopyButton from "$lib/components/CopyButton.svelte";
   import BadgesMenu from "$lib/components/BadgesMenu.svelte";
   import EmbedMenu from "$lib/components/EmbedMenu.svelte";
@@ -179,6 +179,6 @@
   </div>
 </div>
 
-<SubscribeMenuV2 bind:open={openSubscribeMenu} {monitor_tags} {incident_ids} />
+<SubscribeMenu bind:open={openSubscribeMenu} {monitor_tags} {incident_ids} />
 <BadgesMenu bind:open={openBadgesMenu} monitorTag={embedMonitorTag} {protocol} {domain} />
 <EmbedMenu bind:open={openEmbedMenu} monitorTag={embedMonitorTag} {protocol} {domain} />

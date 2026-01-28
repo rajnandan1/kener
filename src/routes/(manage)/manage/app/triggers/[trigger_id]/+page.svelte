@@ -1,62 +1,45 @@
 <script lang="ts">
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import { goto } from "$app/navigation";
   import { Button } from "$lib/components/ui/button/index.js";
+  import { Textarea } from "$lib/components/ui/textarea/index.js";
+
   import { Spinner } from "$lib/components/ui/spinner/index.js";
+  import { Badge } from "$lib/components/ui/badge/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
   import * as RadioGroup from "$lib/components/ui/radio-group/index.js";
-  import * as Select from "$lib/components/ui/select/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
   import SaveIcon from "@lucide/svelte/icons/save";
+  import ArrowLeftIcon from "@lucide/svelte/icons/arrow-left";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import XIcon from "@lucide/svelte/icons/x";
+  import WebhookIcon from "@lucide/svelte/icons/webhook";
+  import MailIcon from "@lucide/svelte/icons/mail";
+  import ZapIcon from "@lucide/svelte/icons/zap";
   import Loader from "@lucide/svelte/icons/loader";
   import CheckIcon from "@lucide/svelte/icons/check";
   import { toast } from "svelte-sonner";
+  import { mode } from "mode-watcher";
   import { IsValidURL } from "$lib/clientTools";
-
+  import CodeMirror from "svelte-codemirror-editor";
+  import { json } from "@codemirror/lang-json";
+  import { html } from "@codemirror/lang-html";
+  import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
+  import type { TriggerMeta } from "$lib/server/types/db";
+  let { data } = page;
   // Types
-  interface TriggerHeader {
-    key: string;
-    value: string;
-  }
-
-  interface TriggerMeta {
-    url: string;
-    headers: TriggerHeader[];
-    to: string;
-    from: string;
-    email_type: "resend" | "smtp";
-    smtp_host: string;
-    smtp_port: string;
-    smtp_user: string;
-    smtp_pass: string;
-    smtp_secure: boolean;
-  }
-
-  interface TemplateRecord {
-    id: number;
-    template_name: string;
-    template_type: string;
-    template_usage: string;
-    template_json: string;
-    created_at: string;
-    updated_at: string;
-  }
 
   // State
   let loading = $state(true);
   let saving = $state(false);
   let testing = $state<"idle" | "loading" | "success" | "error">("idle");
   let invalidFormMessage = $state("");
-  let templates = $state<TemplateRecord[]>([]);
-  let loadingTemplates = $state(false);
 
   // Get trigger ID from URL params
-  const triggerId = $derived($page.params.trigger_id);
+  const triggerId = $derived(data.trigger_id);
   const isNew = $derived(triggerId === "new");
 
   // Form state
@@ -66,7 +49,6 @@
     trigger_type: string;
     trigger_desc: string;
     trigger_status: string;
-    template_id: number | null;
     trigger_meta: TriggerMeta;
   }>({
     id: 0,
@@ -74,58 +56,22 @@
     trigger_type: "webhook",
     trigger_desc: "",
     trigger_status: "ACTIVE",
-    template_id: null,
     trigger_meta: {
       url: "",
       headers: [],
       to: "",
       from: "",
-      email_type: "resend",
-      smtp_host: "",
-      smtp_port: "",
-      smtp_user: "",
-      smtp_pass: "",
-      smtp_secure: false
+      webhook_body: data.webhook_template.webhook_body,
+      discord_body: data.discord_template.discord_body,
+      slack_body: data.slack_template.slack_body,
+      email_body: data.email_template.email_body,
+      email_subject: data.email_template.email_subject
     }
   });
-
-  const triggerTypes = [
-    { value: "webhook", label: "Webhook", icon: "/webhooks.svg" },
-    { value: "discord", label: "Discord", icon: "/discord.svg" },
-    { value: "slack", label: "Slack", icon: "/slack.svg" },
-    { value: "email", label: "Email", icon: "/email.png" }
-  ];
-
-  async function fetchTemplates(triggerType: string) {
-    loadingTemplates = true;
-    try {
-      const templateType = triggerType.toUpperCase();
-      const response = await fetch("/manage/api", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "getTemplatesByTypeAndUsage",
-          data: { template_type: templateType, template_usages: ["ALERT", "SUBSCRIPTION"] }
-        })
-      });
-      const result = await response.json();
-      if (result.error) {
-        templates = [];
-      } else {
-        templates = result;
-      }
-    } catch (error) {
-      console.error("Error fetching templates:", error);
-      templates = [];
-    } finally {
-      loadingTemplates = false;
-    }
-  }
 
   async function fetchTrigger() {
     if (isNew) {
       loading = false;
-      await fetchTemplates(trigger.trigger_type);
       return;
     }
 
@@ -149,21 +95,18 @@
           trigger_type: foundTrigger.trigger_type,
           trigger_desc: foundTrigger.trigger_desc || "",
           trigger_status: foundTrigger.trigger_status || "ACTIVE",
-          template_id: foundTrigger.template_id || null,
           trigger_meta: {
             url: meta.url || "",
             headers: meta.headers || [],
             to: meta.to || "",
             from: meta.from || "",
-            email_type: meta.email_type || "resend",
-            smtp_host: meta.smtp_host || "",
-            smtp_port: meta.smtp_port || "",
-            smtp_user: meta.smtp_user || "",
-            smtp_pass: meta.smtp_pass || "",
-            smtp_secure: meta.smtp_secure || false
+            webhook_body: meta.webhook_body || data.webhook_template.webhook_body,
+            discord_body: meta.discord_body || data.discord_template.discord_body,
+            slack_body: meta.slack_body || data.slack_template.slack_body,
+            email_body: meta.email_body || data.email_template.email_body,
+            email_subject: meta.email_subject || data.email_template.email_subject
           }
         };
-        await fetchTemplates(trigger.trigger_type);
       } else {
         toast.error("Trigger not found");
         goto("/manage/app/triggers");
@@ -176,6 +119,7 @@
     }
   }
 
+  // Validation
   function validateNameEmailPattern(input: string): { isValid: boolean; name: string | null; email: string | null } {
     const pattern = /^([\w\s]+)\s*<([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})>$/;
     const match = input.match(pattern);
@@ -188,6 +132,7 @@
   async function saveTrigger() {
     invalidFormMessage = "";
 
+    // Validation
     if (!trigger.name.trim()) {
       invalidFormMessage = "Trigger Name is required";
       return;
@@ -196,15 +141,6 @@
     if (!trigger.trigger_type) {
       invalidFormMessage = "Trigger Type is required";
       return;
-    }
-
-    if (trigger.trigger_type === "webhook") {
-      for (const header of trigger.trigger_meta.headers) {
-        if (!header.key.trim() || !header.value.trim()) {
-          invalidFormMessage = "All header keys and values are required";
-          return;
-        }
-      }
     }
 
     if (trigger.trigger_type === "email") {
@@ -216,27 +152,10 @@
         invalidFormMessage = "Invalid Sender. Format: Name <email@example.com>";
         return;
       }
-      if (trigger.trigger_meta.email_type === "smtp") {
-        if (!trigger.trigger_meta.smtp_host.trim()) {
-          invalidFormMessage = "SMTP Host is required";
-          return;
-        }
-        if (!trigger.trigger_meta.smtp_port.trim()) {
-          invalidFormMessage = "SMTP Port is required";
-          return;
-        }
-        if (!trigger.trigger_meta.smtp_user.trim()) {
-          invalidFormMessage = "SMTP User is required";
-          return;
-        }
-        if (!trigger.trigger_meta.smtp_pass.trim()) {
-          invalidFormMessage = "SMTP Password is required";
-          return;
-        }
-      }
     } else {
+      // URL validation for non-email triggers
       if (!trigger.trigger_meta.url.trim()) {
-        invalidFormMessage = "URL is required";
+        invalidFormMessage = "Trigger URL is required";
         return;
       }
       if (!IsValidURL(trigger.trigger_meta.url)) {
@@ -258,7 +177,6 @@
             trigger_type: trigger.trigger_type,
             trigger_status: trigger.trigger_status,
             trigger_desc: trigger.trigger_desc,
-            template_id: trigger.template_id,
             trigger_meta: JSON.stringify(trigger.trigger_meta)
           }
         })
@@ -321,128 +239,113 @@
     trigger.trigger_meta.headers = trigger.trigger_meta.headers.filter((_, i) => i !== index);
   }
 
-  async function handleTriggerTypeChange(value: string | undefined) {
-    if (!value) return;
-    trigger.trigger_type = value;
-    trigger.template_id = null;
-    await fetchTemplates(value);
-  }
-
-  function handleTemplateChange(value: string | undefined) {
-    trigger.template_id = value ? parseInt(value) : null;
-  }
-
   $effect(() => {
     fetchTrigger();
   });
 </script>
 
-<div class="container max-w-2xl space-y-6 py-6">
+<div class="container space-y-6 py-6">
+  <!-- Breadcrumb -->
+  <Breadcrumb.Root>
+    <Breadcrumb.List>
+      <Breadcrumb.Item>
+        <Breadcrumb.Link href="/manage/app">Dashboard</Breadcrumb.Link>
+      </Breadcrumb.Item>
+      <Breadcrumb.Separator />
+      <Breadcrumb.Item>
+        <Breadcrumb.Link href="/manage/app/triggers">Triggers</Breadcrumb.Link>
+      </Breadcrumb.Item>
+      <Breadcrumb.Separator />
+      <Breadcrumb.Item>
+        <Breadcrumb.Page>{isNew ? "New Trigger" : trigger.name || "Edit Trigger"}</Breadcrumb.Page>
+      </Breadcrumb.Item>
+    </Breadcrumb.List>
+  </Breadcrumb.Root>
+
   {#if loading}
     <div class="flex items-center justify-center py-12">
       <Spinner class="size-8" />
     </div>
   {:else}
-    <!-- Header -->
-    <Breadcrumb.Root>
-      <Breadcrumb.List>
-        <Breadcrumb.Item>
-          <Breadcrumb.Link href="/manage/app">Dashboard</Breadcrumb.Link>
-        </Breadcrumb.Item>
-        <Breadcrumb.Separator />
-        <Breadcrumb.Item>
-          <Breadcrumb.Link href="/manage/app/triggers">Triggers</Breadcrumb.Link>
-        </Breadcrumb.Item>
-        <Breadcrumb.Separator />
-        <Breadcrumb.Item>
-          <Breadcrumb.Page>{isNew ? "New Trigger" : trigger.name || "Edit Trigger"}</Breadcrumb.Page>
-        </Breadcrumb.Item>
-      </Breadcrumb.List>
-    </Breadcrumb.Root>
-
-    <!-- Error Message -->
-    {#if invalidFormMessage}
-      <div class="bg-destructive/10 text-destructive rounded-lg p-4 text-sm">{invalidFormMessage}</div>
-    {/if}
-
     <Card.Root>
       <Card.Header>
-        <Card.Title>{isNew ? "Create Trigger" : "Edit Trigger"}</Card.Title>
-        <Card.Description>Configure how alerts are sent when monitors fail</Card.Description>
+        <Card.Title>{isNew ? "New Trigger" : "Edit Trigger"}</Card.Title>
+        <Card.Description>Configure notification triggers for your monitors</Card.Description>
       </Card.Header>
       <Card.Content class="space-y-6">
-        <!-- Trigger Type -->
-        <div class="space-y-2">
-          <Label>Type <span class="text-destructive">*</span></Label>
-          <Select.Root type="single" value={trigger.trigger_type} onValueChange={handleTriggerTypeChange}>
-            <Select.Trigger class="w-full">
-              <div class="flex items-center gap-2">
-                {#if trigger.trigger_type}
-                  <img src={triggerTypes.find((t) => t.value === trigger.trigger_type)?.icon} class="size-5" alt="" />
+        <!-- Error Message -->
+        {#if invalidFormMessage}
+          <div class="bg-destructive/10 text-destructive rounded-lg p-4 text-sm">{invalidFormMessage}</div>
+        {/if}
+
+        <!-- Trigger Type Selection -->
+        <div class="space-y-3">
+          <Label>Trigger Type</Label>
+          <p class="text-muted-foreground text-sm">Select the type of notification to send</p>
+          <div class="grid grid-cols-4 gap-3">
+            {#each ["webhook", "discord", "slack", "email"] as type}
+              <Button
+                variant={trigger.trigger_type === type ? "default" : "outline"}
+                class="h-20 flex-col gap-2"
+                onclick={() => (trigger.trigger_type = type)}
+              >
+                {#if type === "webhook"}
+                  <img src="/webhooks.svg" class="size-6" alt="webhook" />
+                {:else if type === "slack"}
+                  <img src="/slack.svg" class="size-6" alt="slack" />
+                {:else if type === "discord"}
+                  <img src="/discord.svg" class="size-6" alt="discord" />
+                {:else if type === "email"}
+                  <img src="/email.png" class="size-6" alt="email" />
+                {:else}
+                  <ZapIcon class="size-6" />
                 {/if}
-                <span>{triggerTypes.find((t) => t.value === trigger.trigger_type)?.label || "Select trigger type"}</span
-                >
-              </div>
-            </Select.Trigger>
-            <Select.Content>
-              {#each triggerTypes as type}
-                <Select.Item value={type.value}>
-                  <div class="flex items-center gap-2">
-                    <img src={type.icon} class="size-5" alt="" />
-                    {type.label}
-                  </div>
-                </Select.Item>
-              {/each}
-            </Select.Content>
-          </Select.Root>
-        </div>
-
-        <!-- Basic Info -->
-        <div class="grid gap-4 sm:grid-cols-2">
-          <div class="space-y-2">
-            <Label for="trigger-name">Name <span class="text-destructive">*</span></Label>
-            <Input id="trigger-name" bind:value={trigger.name} placeholder="My Trigger" />
-          </div>
-          <div class="space-y-2">
-            <Label for="trigger-desc">Description</Label>
-            <Input id="trigger-desc" bind:value={trigger.trigger_desc} placeholder="Optional description" />
+                <span class="capitalize">{type}</span>
+              </Button>
+            {/each}
           </div>
         </div>
 
-        <!-- Status -->
-        <div class="flex items-center justify-between rounded-lg border p-3">
-          <Label>Active</Label>
+        <!-- Status Toggle -->
+        <div class="flex items-center justify-between rounded-lg border p-4">
+          <div>
+            <Label>Status</Label>
+            <p class="text-muted-foreground text-sm">Enable or disable this trigger</p>
+          </div>
           <Switch
             checked={trigger.trigger_status === "ACTIVE"}
             onCheckedChange={(checked) => (trigger.trigger_status = checked ? "ACTIVE" : "INACTIVE")}
           />
         </div>
 
-        <!-- URL (for non-email types) -->
+        <!-- Name -->
+        <div class="space-y-2">
+          <Label for="trigger-name">
+            Name <span class="text-destructive">*</span>
+          </Label>
+          <Input id="trigger-name" bind:value={trigger.name} placeholder="My Trigger" />
+        </div>
+
+        <!-- Description -->
+        <div class="space-y-2">
+          <Label for="trigger-desc">Description</Label>
+          <Input id="trigger-desc" bind:value={trigger.trigger_desc} placeholder="Optional description" />
+        </div>
+
+        <!-- URL (for non-email) -->
         {#if trigger.trigger_type !== "email"}
           <div class="space-y-2">
             <Label for="trigger-url">
-              {trigger.trigger_type === "discord"
-                ? "Discord Webhook URL"
-                : trigger.trigger_type === "slack"
-                  ? "Slack Webhook URL"
-                  : "Webhook URL"}
-              <span class="text-destructive">*</span>
+              URL <span class="text-destructive">*</span>
             </Label>
-            <Input
-              id="trigger-url"
-              bind:value={trigger.trigger_meta.url}
-              placeholder={trigger.trigger_type === "discord"
-                ? "https://discord.com/api/webhooks/..."
-                : trigger.trigger_type === "slack"
-                  ? "https://hooks.slack.com/services/..."
-                  : "https://example.com/webhook"}
-            />
+            <Input id="trigger-url" bind:value={trigger.trigger_meta.url} placeholder="https://example.com/webhook" />
+            <p class="text-muted-foreground text-xs">The URL to send notifications to</p>
           </div>
         {/if}
 
-        <!-- Webhook Headers -->
+        <!-- Webhook Specific -->
         {#if trigger.trigger_type === "webhook"}
+          <!-- Headers -->
           <div class="space-y-3">
             <Label>Headers</Label>
             <div class="space-y-2">
@@ -461,141 +364,121 @@
               Add Header
             </Button>
           </div>
+
+          <!-- Custom Body -->
+          <div class="space-y-3">
+            <div>
+              <Label>Custom Webhook Body</Label>
+              <p class="text-muted-foreground text-sm">Override the default JSON payload</p>
+            </div>
+            <p class="text-muted-foreground text-xs">
+              Use Mustache variables like <code class="bg-muted rounded px-1">{"{{variable}}"}</code>. Available: id,
+              alert_name, severity, status, source, timestamp, description, metric, current_value, threshold,
+              action_text, action_url
+            </p>
+            <div class="overflow-hidden rounded-md border">
+              <Textarea bind:value={trigger.trigger_meta.webhook_body} />
+            </div>
+          </div>
         {/if}
 
-        <!-- Email Settings -->
+        <!-- Discord Specific -->
+        {#if trigger.trigger_type === "discord"}
+          <div class="space-y-3">
+            <div>
+              <Label>Custom Discord Payload</Label>
+              <p class="text-muted-foreground text-sm">Override the default Discord message</p>
+            </div>
+            <p class="text-muted-foreground text-xs">
+              Use Mustache variables. Available: site_name, logo_url, alert_name, status, is_triggered, is_resolved,
+              description, metric, severity, id, current_value, threshold, source, action_text, action_url
+            </p>
+            <div class="overflow-hidden rounded-md border">
+              <Textarea bind:value={trigger.trigger_meta.discord_body} />
+            </div>
+          </div>
+        {/if}
+
+        <!-- Slack Specific -->
+        {#if trigger.trigger_type === "slack"}
+          <div class="space-y-3">
+            <div>
+              <Label>Custom Slack Payload</Label>
+              <p class="text-muted-foreground text-sm">Override the default Slack message</p>
+            </div>
+            <p class="text-muted-foreground text-xs">
+              Use Mustache variables. Available: site_name, logo_url, alert_name, status, is_triggered, is_resolved,
+              description, metric, severity, id, current_value, threshold, source, action_text, action_url
+            </p>
+            <div class="overflow-hidden rounded-md border">
+              <Textarea bind:value={trigger.trigger_meta.slack_body} />
+            </div>
+          </div>
+        {/if}
+
+        <!-- Email Specific -->
         {#if trigger.trigger_type === "email"}
-          <!-- Email Provider -->
+          <!-- Email Recipients -->
           <div class="space-y-2">
-            <Label>Email Provider</Label>
-            <RadioGroup.Root bind:value={trigger.trigger_meta.email_type} class="flex gap-6">
-              <div class="flex items-center gap-2">
-                <RadioGroup.Item value="resend" id="email-resend" />
-                <Label for="email-resend" class="cursor-pointer">Resend</Label>
-              </div>
-              <div class="flex items-center gap-2">
-                <RadioGroup.Item value="smtp" id="email-smtp" />
-                <Label for="email-smtp" class="cursor-pointer">SMTP</Label>
-              </div>
-            </RadioGroup.Root>
-            {#if trigger.trigger_meta.email_type === "resend"}
-              <p class="text-muted-foreground text-xs">
-                Make sure <code class="bg-muted rounded px-1">RESEND_API_KEY</code> environment variable is set.
-              </p>
-            {/if}
+            <Label for="email-to">
+              To (comma separated) <span class="text-destructive">*</span>
+            </Label>
+            <Input
+              id="email-to"
+              bind:value={trigger.trigger_meta.to}
+              placeholder="john@example.com, jane@example.com"
+            />
+          </div>
+          <div class="space-y-2">
+            <Label for="email-from">
+              From <span class="text-destructive">*</span>
+            </Label>
+            <Input id="email-from" bind:value={trigger.trigger_meta.from} placeholder="Alerts <alert@example.com>" />
+            <p class="text-muted-foreground text-xs">Format: Name &lt;email@example.com&gt;</p>
           </div>
 
-          <!-- SMTP Settings -->
-          {#if trigger.trigger_meta.email_type === "smtp"}
-            <div class="space-y-3 rounded-lg border p-4">
-              <Label class="text-sm font-medium">SMTP Settings</Label>
-              <div class="grid grid-cols-2 gap-3">
-                <div class="space-y-2">
-                  <Label for="smtp-host" class="text-xs">Host <span class="text-destructive">*</span></Label>
-                  <Input id="smtp-host" bind:value={trigger.trigger_meta.smtp_host} placeholder="smtp.example.com" />
-                </div>
-                <div class="space-y-2">
-                  <Label for="smtp-port" class="text-xs">Port <span class="text-destructive">*</span></Label>
-                  <Input id="smtp-port" bind:value={trigger.trigger_meta.smtp_port} placeholder="587" />
-                </div>
-                <div class="space-y-2">
-                  <Label for="smtp-user" class="text-xs">Username <span class="text-destructive">*</span></Label>
-                  <Input id="smtp-user" bind:value={trigger.trigger_meta.smtp_user} placeholder="user@example.com" />
-                </div>
-                <div class="space-y-2">
-                  <Label for="smtp-pass" class="text-xs">Password <span class="text-destructive">*</span></Label>
-                  <Input
-                    id="smtp-pass"
-                    type="password"
-                    bind:value={trigger.trigger_meta.smtp_pass}
-                    placeholder="********"
-                  />
-                </div>
-              </div>
-              <div class="flex items-center gap-2">
-                <Switch
-                  id="smtp-secure"
-                  checked={trigger.trigger_meta.smtp_secure}
-                  onCheckedChange={(checked) => (trigger.trigger_meta.smtp_secure = checked)}
-                />
-                <Label for="smtp-secure" class="text-xs">Use Secure Connection (TLS)</Label>
-              </div>
+          <!-- Custom Email Template -->
+          <div class="space-y-3">
+            <div>
+              <Label>Custom HTML Template</Label>
+              <p class="text-muted-foreground text-sm">Create your own email design</p>
             </div>
-          {/if}
-
-          <!-- Email Recipients -->
-          <div class="grid gap-4 sm:grid-cols-2">
-            <div class="space-y-2">
-              <Label for="email-to">To (comma separated) <span class="text-destructive">*</span></Label>
-              <Input
-                id="email-to"
-                bind:value={trigger.trigger_meta.to}
-                placeholder="john@example.com, jane@example.com"
+            <p class="text-muted-foreground text-xs">
+              Use Mustache variables. Available: site_name, site_url, logo_url, alert_name, status, severity,
+              description, metric, current_value, threshold, action_text, action_url, is_triggered, is_resolved,
+              color_up, color_down, color_degraded, color_maintenance
+            </p>
+            <div class="overflow-hidden rounded-md border">
+              <CodeMirror
+                bind:value={trigger.trigger_meta.email_body}
+                lang={html()}
+                theme={mode.current === "dark" ? githubDark : githubLight}
+                styles={{ "&": { width: "100%", height: "400px" } }}
               />
             </div>
-            <div class="space-y-2">
-              <Label for="email-from">From <span class="text-destructive">*</span></Label>
-              <Input id="email-from" bind:value={trigger.trigger_meta.from} placeholder="Alerts <alert@example.com>" />
-              <p class="text-muted-foreground text-xs">Format: Name &lt;email@example.com&gt;</p>
-            </div>
           </div>
         {/if}
-
-        <!-- Template Selection -->
-        <div class="space-y-2">
-          <Label>Template</Label>
-          {#if loadingTemplates}
-            <div class="text-muted-foreground flex items-center gap-2 text-sm">
-              <Loader class="size-4 animate-spin" />
-              Loading templates...
-            </div>
-          {:else if templates.length === 0}
-            <p class="text-muted-foreground text-sm">
-              No ALERT templates available for {trigger.trigger_type}.
-              <a href="/manage/app/templates/new" class="text-primary underline">Create one</a>
-            </p>
-          {:else}
-            <Select.Root
-              type="single"
-              value={trigger.template_id ? String(trigger.template_id) : undefined}
-              onValueChange={handleTemplateChange}
-            >
-              <Select.Trigger class="w-full">
-                {trigger.template_id
-                  ? templates.find((t) => t.id === trigger.template_id)?.template_name
-                  : "Select a template (optional)"}
-              </Select.Trigger>
-              <Select.Content>
-                {#each templates as template}
-                  <Select.Item value={String(template.id)}>{template.template_name}</Select.Item>
-                {/each}
-              </Select.Content>
-            </Select.Root>
-          {/if}
-        </div>
       </Card.Content>
-      <Card.Footer class="flex justify-between">
-        <div class="flex gap-2">
-          {#if !isNew}
-            <Button variant="outline" onclick={testTrigger} disabled={testing === "loading"}>
-              {#if testing === "loading"}
-                <Loader class="mr-2 size-4 animate-spin" />
-              {:else if testing === "success"}
-                <CheckIcon class="mr-2 size-4 text-green-500" />
-              {:else if testing === "error"}
-                <XIcon class="mr-2 size-4 text-red-500" />
-              {/if}
-              Test
-            </Button>
-          {/if}
-        </div>
+      <Card.Footer class="flex justify-end gap-2">
+        {#if !isNew}
+          <Button variant="outline" onclick={testTrigger} disabled={testing === "loading"}>
+            {#if testing === "loading"}
+              <Loader class="mr-2 size-4 animate-spin" />
+            {:else if testing === "success"}
+              <CheckIcon class="mr-2 size-4 text-green-500" />
+            {:else if testing === "error"}
+              <XIcon class="mr-2 size-4 text-red-500" />
+            {/if}
+            Test Trigger
+          </Button>
+        {/if}
         <Button onclick={saveTrigger} disabled={saving}>
           {#if saving}
             <Loader class="mr-2 size-4 animate-spin" />
           {:else}
             <SaveIcon class="mr-2 size-4" />
           {/if}
-          {isNew ? "Create" : "Save"}
+          {isNew ? "Create" : "Save"} Trigger
         </Button>
       </Card.Footer>
     </Card.Root>

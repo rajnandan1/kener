@@ -28,16 +28,6 @@ const addWorker = () => {
   if (worker) return worker;
 
   worker = q.createWorker(getQueue(), async (job: Job) => {
-    // Fetch secrets from vault and store in environment variables
-    try {
-      const secrets = await GetAllSecrets();
-      for (const secret of secrets) {
-        process.env[secret.secret_name] = secret.secret_value;
-      }
-    } catch (error) {
-      console.error("Failed to sync vault secrets to environment:", error);
-    }
-
     const activeMonitors = (await GetMonitorsParsed({ status: "ACTIVE" })).map((monitor) => ({
       ...monitor,
       hash: monitor.tag + "::" + HashString(JSON.stringify(monitor)),

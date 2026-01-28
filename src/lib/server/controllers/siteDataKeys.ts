@@ -226,4 +226,9 @@ export const siteDataKeys: SiteDataKey[] = [
     isValid: IsValidJSONString,
     data_type: "object",
   },
+  {
+    key: "subscriptionsSettings",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
 ];
