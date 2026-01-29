@@ -4,7 +4,6 @@ export * from "./emailController.js";
 export * from "./incidentController.js";
 export * from "./invitationController.js";
 export * from "./monitorsController.js";
-export * from "./queueController.js";
 export * from "./siteDataController.js";
 export * from "./siteDataKeys.js";
 export * from "./triggerController.js";

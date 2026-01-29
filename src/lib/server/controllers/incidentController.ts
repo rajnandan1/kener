@@ -7,16 +7,17 @@ import type {
   IncidentFilter,
   MonitorAlert,
   TriggerFilter,
-  SubscriberRecordInsert,
   UserRecordInsert,
   UserRecord,
   MonitorRecordTyped,
   IncidentRecord,
   IncidentCommentRecord,
+  MonitorAlertV2Record,
+  MonitorAlertConfigRecord,
 } from "../types/db.js";
-import * as queueController from "./queueController.js";
-import type { NumberWithChange } from "../../types/monitor.js";
 import GC from "../../global-constants.js";
+import type { SubscriptionVariableMap } from "../notification/types.js";
+import { getUnixTime, differenceInSeconds } from "date-fns";
 
 interface IncidentsDashboardInput {
   page: number;
@@ -238,6 +239,59 @@ export const CreateNewIncidentWithCommentAndMonitor = async (
 
   return incidentCreation;
 };
+
+export const IncidentCreateAlertMarkdown = (
+  alert: MonitorAlertV2Record,
+  config: MonitorAlertConfigRecord,
+  monitorName: string,
+  monitorTag: string,
+  incidentState: string,
+): string => {
+  let update = config.alert_description || "Alert triggered";
+  update = `${config.alert_description || "Alert triggered"}\n\n`;
+  update = update + `| Setting | Value |\n`;
+  update = update + `| :--- | :--- |\n`;
+  update = update + `| **Monitor Name** | ${monitorName} |\n`;
+  update = update + `| **Monitor Tag** | ${monitorTag} |\n`;
+  update = update + `| **Incident Status** | ${incidentState} |\n`;
+  update = update + `| **Severity** | ${config.severity} |\n`;
+  update = update + `| **Alert Type** | ${config.alert_for} |\n`;
+  update = update + `| **Alert Value** | ${config.alert_value} |\n`;
+  update = update + `| **Failure Threshold** | ${config.failure_threshold} |\n`;
+  return update;
+};
+
+export const ClosureCommentAlertMarkdown = (
+  alert: MonitorAlertV2Record,
+  config: MonitorAlertConfigRecord,
+  monitorName: string,
+  monitorTag: string,
+  incidentState: string,
+): string => {
+  let comment = "The alert has been resolved";
+
+  // Calculate duration in seconds between created_at and updated_at
+  const durationInSeconds = differenceInSeconds(new Date(alert.updated_at), new Date(alert.created_at));
+  const durationInMinutes = Math.round(durationInSeconds / 60);
+
+  comment = comment + `, Total duration: ${durationInMinutes} minutes`;
+
+  // Add alert details
+  comment = comment + `\n\n#### Alert Details\n\n`;
+  comment = comment + `| Setting | Value |\n`;
+  comment = comment + `| :--- | :--- |\n`;
+  comment = comment + `| **Monitor Name** | ${monitorName} |\n`;
+  comment = comment + `| **Incident Status** | ${incidentState} |\n`;
+  comment = comment + `| **Monitor Tag** | ${monitorTag} |\n`;
+  comment = comment + `| **Alert Type** | ${config.alert_for} |\n`;
+  comment = comment + `| **Alert Value** | ${config.alert_value} |\n`;
+  comment = comment + `| **Severity** | ${config.severity} |\n`;
+  comment = comment + `| **Failure Threshold** | ${config.failure_threshold} |\n`;
+  comment = comment + `| **Success Threshold** | ${config.success_threshold} |\n`;
+
+  return comment;
+};
+
 export const CreateIncident = async (data: IncidentInput): Promise<{ incident_id: number }> => {
   //return error if no title or startDateTime
   if (!data.title || !data.start_date_time) {
@@ -298,23 +352,23 @@ export const UpdateIncident = async (incident_id: number, data: IncidentUpdateIn
   };
 
   //check if updateObject same as incidentExists
-  if (
-    JSON.stringify(updateObject) ===
-    JSON.stringify({
-      id: incidentExists.id,
-      title: incidentExists.title,
-      start_date_time: incidentExists.start_date_time,
-      status: incidentExists.status,
-      state: incidentExists.state,
-      end_date_time: incidentExists.end_date_time,
-    })
-  ) {
-    queueController.PushDataToQueue(incident_id, "updateIncident", {
-      message: `${incidentExists.incident_type} has been updated to ${updateObject.state}`,
-      incident_type: incidentExists.incident_type,
-      title: incidentExists.title,
-    });
-  }
+  // if (
+  //   JSON.stringify(updateObject) ===
+  //   JSON.stringify({
+  //     id: incidentExists.id,
+  //     title: incidentExists.title,
+  //     start_date_time: incidentExists.start_date_time,
+  //     status: incidentExists.status,
+  //     state: incidentExists.state,
+  //     end_date_time: incidentExists.end_date_time,
+  //   })
+  // ) {
+  //   queueController.PushDataToQueue(incident_id, "updateIncident", {
+  //     message: `${incidentExists.incident_type} has been updated to ${updateObject.state}`,
+  //     incident_type: incidentExists.incident_type,
+  //     title: incidentExists.title,
+  //   });
+  // }
 
   return await db.updateIncident(updateObject as IncidentRecord);
 };
@@ -341,11 +395,11 @@ export const AddIncidentMonitor = async (
     throw new Error(`Incident with id ${incident_id} does not exist`);
   }
 
-  queueController.PushDataToQueue(incident_id, "insertIncidentMonitor", {
-    title: incidentExists.title,
-    message: `Monitor ${monitor_tag} added to ${incidentExists.incident_type}. Impact is ${monitor_impact}`,
-    incident_type: incidentExists.incident_type,
-  });
+  // queueController.PushDataToQueue(incident_id, "insertIncidentMonitor", {
+  //   title: incidentExists.title,
+  //   message: `Monitor ${monitor_tag} added to ${incidentExists.incident_type}. Impact is ${monitor_impact}`,
+  //   incident_type: incidentExists.incident_type,
+  // });
   return await db.insertIncidentMonitorWithMerge({
     incident_id,
     monitor_tag,
@@ -368,11 +422,11 @@ export const UpdateCommentByID = async (
   if (!commentExists) {
     throw new Error(`Comment with id ${comment_id} does not exist`);
   }
-  queueController.PushDataToQueue(incident_id, "updateIncidentComment", {
-    title: incidentExists.title,
-    message: `${comment}`,
-    incident_type: incidentExists.incident_type,
-  });
+  // queueController.PushDataToQueue(incident_id, "updateIncidentComment", {
+  //   title: incidentExists.title,
+  //   message: `${comment}`,
+  //   incident_type: incidentExists.incident_type,
+  // });
   let c = await db.updateIncidentCommentByID(comment_id, comment, state, commented_at);
   if (c) {
     let incidentUpdate: IncidentUpdateInput = {
@@ -403,11 +457,7 @@ export const AddIncidentComment = async (
   if (!!!state) {
     state = incidentExists.state;
   }
-  queueController.PushDataToQueue(incident_id, "insertIncidentComment", {
-    title: incidentExists.title,
-    message: `${comment}`,
-    incident_type: incidentExists.incident_type,
-  });
+
   let c = await db.insertIncidentComment(incident_id, comment, state, commented_at);
   let incidentType = incidentExists.incident_type;
   //update incident state

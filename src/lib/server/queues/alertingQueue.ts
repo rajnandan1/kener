@@ -9,6 +9,8 @@ import {
   GetIncidentByIDDashboard,
   GetAllSiteData,
   CreateNewIncidentWithCommentAndMonitor,
+  IncidentCreateAlertMarkdown,
+  ClosureCommentAlertMarkdown,
 } from "../controllers/controller.js";
 import { SetLastMonitoringValue } from "../cache/setGet.js";
 import type { MonitorSettings, MonitorAlertConfigRecord, MonitorAlertV2Record, TriggerMeta } from "../types/db.js";
@@ -33,7 +35,9 @@ import sendWebhook from "$lib/server/notification/webhook_notification.js";
 import sendSlack from "$lib/server/notification/slack_notification.js";
 import sendDiscord from "$lib/server/notification/discord_notification.js";
 
-import type { SiteDataForNotification } from "../notification/types.js";
+import type { SiteDataForNotification, SubscriptionVariableMap } from "../notification/types.js";
+import mdToHTML from "../../marked.js";
+import subscriberQueue from "./subscriberQueue.js";
 
 let worker: Worker | null = null;
 const queueName = "alertingQueue";
@@ -65,19 +69,31 @@ async function createNewIncident(
     incident_source: "ALERT",
   };
 
-  let update = config.alert_description || "Alert triggered";
-  update = `${config.alert_description || "Alert triggered"}\n\n`;
-  update = update + `| Setting | Value |\n`;
-  update = update + `| :--- | :--- |\n`;
-  update = update + `| **Monitor Name** | ${monitorName} |\n`;
-  update = update + `| **Monitor Tag** | ${monitorTag} |\n`;
-  update = update + `| **Incident Status** | ${alert.alert_status} |\n`;
-  update = update + `| **Severity** | ${config.severity} |\n`;
-  update = update + `| **Alert Type** | ${config.alert_for} |\n`;
-  update = update + `| **Alert Value** | ${config.alert_value} |\n`;
-  update = update + `| **Failure Threshold** | ${config.failure_threshold} |\n`;
+  let update = IncidentCreateAlertMarkdown(alert, config, monitorName, monitorTag, GC.TRIGGERED);
+  let incidentCreated = await CreateNewIncidentWithCommentAndMonitor(
+    incidentInput,
+    update,
+    monitorTag,
+    config.alert_value,
+  );
 
-  return await CreateNewIncidentWithCommentAndMonitor(incidentInput, update, monitorTag, config.alert_value);
+  const updateVariables: SubscriptionVariableMap = {
+    title: incidentInput.title,
+    cta_url: "/incidents/" + incidentCreated.incident_id,
+    cta_text: "View Incident",
+    update_text: mdToHTML(update),
+    update_subject: `[#${incidentCreated.incident_id}:${GC.TRIGGERED}] ${incidentInput.title}`,
+    update_id: String(incidentCreated.incident_id),
+    event_type: "incidents",
+  };
+  subscriberQueue.push(updateVariables);
+  return incidentCreated;
+
+  /*
+	
+	
+	
+		subscriberQueue.push(updateVariables);*/
 }
 
 async function closeIncident(
@@ -100,38 +116,19 @@ async function closeIncident(
   }
 
   let incident_id = alert.incident_id;
-  const comment = createClosureComment(alert, config, monitorName, monitorTag);
+  const comment = ClosureCommentAlertMarkdown(alert, config, monitorName, monitorTag, GC.RESOLVED);
   const updatedAt = getUnixTime(new Date(alert.updated_at));
+  const updateMessage: SubscriptionVariableMap = {
+    title: incident.title,
+    cta_url: `/incidents/${incident_id}`,
+    cta_text: "View Incident",
+    update_text: mdToHTML(comment),
+    update_subject: `[#${incident.id}:${GC.RESOLVED}] ${incident.title}`,
+    update_id: String(incident_id),
+    event_type: "incidents",
+  };
+  subscriberQueue.push(updateMessage);
   await AddIncidentComment(incident_id, comment, GC.RESOLVED, updatedAt);
-}
-
-function createClosureComment(
-  alert: MonitorAlertV2Record,
-  config: MonitorAlertConfigRecord,
-  monitorName: string,
-  monitorTag: string,
-): string {
-  let comment = "The alert has been auto resolved";
-
-  // Calculate duration in seconds between created_at and updated_at
-  const durationInSeconds = differenceInSeconds(new Date(alert.updated_at), new Date(alert.created_at));
-  const durationInMinutes = Math.round(durationInSeconds / 60);
-
-  comment = comment + `, Total duration: ${durationInMinutes} minutes`;
-
-  // Add alert details
-  comment = comment + `\n\n#### Alert Details\n\n`;
-  comment = comment + `| Setting | Value |\n`;
-  comment = comment + `| :--- | :--- |\n`;
-  comment = comment + `| **Monitor Name** | ${monitorName} |\n`;
-  comment = comment + `| **Monitor Tag** | ${monitorTag} |\n`;
-  comment = comment + `| **Alert Type** | ${config.alert_for} |\n`;
-  comment = comment + `| **Alert Value** | ${config.alert_value} |\n`;
-  comment = comment + `| **Severity** | ${config.severity} |\n`;
-  comment = comment + `| **Failure Threshold** | ${config.failure_threshold} |\n`;
-  comment = comment + `| **Success Threshold** | ${config.success_threshold} |\n`;
-
-  return comment;
 }
 
 async function sendAlertNotifications(

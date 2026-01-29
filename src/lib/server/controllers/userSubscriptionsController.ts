@@ -352,6 +352,20 @@ export async function AdminAddSubscriber(
   };
 }
 
+/**
+ * Get active email addresses for a given event type
+ * Used for sending notification emails to subscribers
+ */
+export async function GetActiveEmailsForEventType(eventType: SubscriptionEventType): Promise<string[]> {
+  const subscribers = await db.getSubscribersForEvent(eventType);
+
+  // Filter for email method type and extract unique email addresses
+  const emails = subscribers.filter((s) => s.method.method_type === "email").map((s) => s.method.method_value);
+
+  // Return unique emails
+  return [...new Set(emails)];
+}
+
 // ============ Public Subscription Functions ============
 
 import { GenerateTokenWithExpiry, VerifyToken } from "./commonController.js";

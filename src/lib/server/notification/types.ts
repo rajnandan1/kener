@@ -1,3 +1,5 @@
+import type { SubscriptionEventType } from "../db/dbimpl";
+
 export interface AlertVariableMap {
   alert_id: string;
   alert_name: string;
@@ -31,6 +33,8 @@ export interface SubscriptionVariableMap {
   cta_text: string;
   update_text: string;
   update_subject: string;
+  update_id: string;
+  event_type: SubscriptionEventType;
 }
 
 export interface EmailCodeVariableMap {
