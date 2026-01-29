@@ -31,20 +31,57 @@ const getQueue = () => {
   return monitorExecuteQueue;
 };
 
-async function manualIncident(monitor: MonitorRecordTyped): Promise<{ [timestamp: number]: MonitoringResult }> {
+async function manualMaintenance(monitor: MonitorRecordTyped): Promise<{ [timestamp: number]: MonitoringResult }> {
   let startTs = GetMinuteStartNowTimestampUTC();
-  let incidentArr = await db.getIncidentsByMonitorTagRealtime(monitor.tag, startTs);
-  let maintenanceArr = await db.getMaintenanceByMonitorTagRealtime(monitor.tag, startTs);
-
-  let impactArr = incidentArr.concat(maintenanceArr);
+  let maintenanceArr = await db.getMaintenancesByMonitorTagRealtime(monitor.tag, startTs);
 
   let impact = "";
-  if (impactArr.length == 0) {
+  if (maintenanceArr.length == 0) {
     return {};
   }
 
-  for (let i = 0; i < impactArr.length; i++) {
-    const element = impactArr[i];
+  for (let i = 0; i < maintenanceArr.length; i++) {
+    const element = maintenanceArr[i];
+
+    if (element.monitor_impact === GC.MAINTENANCE) {
+      impact = GC.MAINTENANCE;
+      break;
+    }
+    if (element.monitor_impact === GC.DOWN) {
+      impact = GC.DOWN;
+      break;
+    }
+    if (element.monitor_impact === GC.DEGRADED) {
+      impact = GC.DEGRADED;
+    }
+  }
+
+  if (impact === "") {
+    return {};
+  }
+
+  let manualData = {
+    [startTs]: {
+      status: impact,
+      latency: 0,
+      type: GC.MANUAL,
+    },
+  };
+
+  return manualData;
+}
+
+async function manualIncident(monitor: MonitorRecordTyped): Promise<{ [timestamp: number]: MonitoringResult }> {
+  let startTs = GetMinuteStartNowTimestampUTC();
+  let incidentArr = await db.getIncidentsByMonitorTagRealtime(monitor.tag, startTs);
+
+  let impact = "";
+  if (incidentArr.length == 0) {
+    return {};
+  }
+
+  for (let i = 0; i < incidentArr.length; i++) {
+    const element = incidentArr[i];
 
     if (element.monitor_impact === GC.MAINTENANCE) {
       impact = GC.MAINTENANCE;
@@ -108,6 +145,7 @@ const addWorker = () => {
       realtimeData[ts] = exeResult;
     }
     let incidentData: MonitoringResultTS = await manualIncident(monitor);
+    let maintenanceData: MonitoringResultTS = await manualMaintenance(monitor);
     let defaultData: MonitoringResultTS = {};
     let mergedData: MonitoringResultTS = {};
 
@@ -120,7 +158,7 @@ const addWorker = () => {
         };
       }
     }
-    mergedData = { ...defaultData, ...realtimeData, ...incidentData };
+    mergedData = { ...defaultData, ...realtimeData, ...incidentData, ...maintenanceData };
 
     for (const timestamp in mergedData) {
       monitorResponseQueue.push(monitor.tag, parseInt(timestamp), mergedData[timestamp]);

@@ -214,7 +214,7 @@
       <Dialog.Description>Minute-by-minute status data for this day</Dialog.Description>
     </Dialog.Header>
 
-    <Tabs.Root value={activeView} class="bg-background w-full overflow-hidden rounded-3xl border">
+    <Tabs.Root value={activeView} class="bg-background ktabs w-full overflow-hidden rounded-3xl border">
       <Tabs.List class="h-auto w-full justify-end rounded-none px-2 py-2">
         <Tabs.Trigger value="status" class="rounded-3xl py-2">Status</Tabs.Trigger>
         <Tabs.Trigger value="latency" class="rounded-3xl py-2">Latency</Tabs.Trigger>

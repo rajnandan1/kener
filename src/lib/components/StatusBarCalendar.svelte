@@ -69,7 +69,6 @@
   const colorDown = $derived(page.data.siteStatusColors?.DOWN || "#ef4444");
   const colorDegraded = $derived(page.data.siteStatusColors?.DEGRADED || "#eab308");
   const colorMaintenance = $derived(page.data.siteStatusColors?.MAINTENANCE || "#3b82f6");
-
   const gap = 0;
 
   function formatTimestamp(timestamp: number): string {
@@ -200,37 +199,50 @@
       }
 
       // Stacked bar: draw from bottom to top
-      // Order: down (bottom) -> degraded -> maintenance -> up (top)
+      // Order: maintenance (bottom) -> down -> degraded -> up (top)
       let currentY = yOffset + scaledBarHeight;
+      const minHeightPercent = 0.05; // 5% minimum height for visibility
 
-      // Draw down (red) at bottom
-      if (barItem.countOfDown > 0) {
-        const downHeight = Math.round((barItem.countOfDown / total) * scaledBarHeight);
+      // Helper to calculate segment height with minimum 5% visibility
+      const getSegmentHeight = (count: number): number => {
+        if (count === 0) return 0;
+        return Math.max(minHeightPercent * scaledBarHeight, Math.round((count / total) * scaledBarHeight));
+      };
+
+      // Calculate heights in reverse priority order (UP gets remaining)
+      const maintenanceHeight = getSegmentHeight(barItem.countOfMaintenance);
+      const downHeight = getSegmentHeight(barItem.countOfDown);
+      const degradedHeight = getSegmentHeight(barItem.countOfDegraded);
+
+      // Up fills the remaining space (back-calculated)
+      const usedHeight = maintenanceHeight + downHeight + degradedHeight;
+      const upHeight = barItem.countOfUp > 0 ? Math.max(0, scaledBarHeight - usedHeight) : 0;
+
+      // Draw maintenance (blue) at bottom
+      if (maintenanceHeight > 0) {
+        currentY -= maintenanceHeight;
+        ctx.fillStyle = colorMaintenance;
+        ctx.fillRect(x, currentY, roundedBarWidth, maintenanceHeight);
+      }
+
+      // Draw down (red)
+      if (downHeight > 0) {
         currentY -= downHeight;
         ctx.fillStyle = colorDown;
         ctx.fillRect(x, currentY, roundedBarWidth, downHeight);
       }
 
       // Draw degraded (yellow)
-      if (barItem.countOfDegraded > 0) {
-        const degradedHeight = Math.round((barItem.countOfDegraded / total) * scaledBarHeight);
+      if (degradedHeight > 0) {
         currentY -= degradedHeight;
         ctx.fillStyle = colorDegraded;
         ctx.fillRect(x, currentY, roundedBarWidth, degradedHeight);
       }
 
-      // Draw maintenance (blue)
-      if (barItem.countOfMaintenance > 0) {
-        const maintenanceHeight = Math.round((barItem.countOfMaintenance / total) * scaledBarHeight);
-        currentY -= maintenanceHeight;
-        ctx.fillStyle = colorMaintenance;
-        ctx.fillRect(x, currentY, roundedBarWidth, maintenanceHeight);
-      }
-
       // Draw up (green) at top - fill remaining height
-      if (barItem.countOfUp > 0) {
+      if (upHeight > 0) {
         ctx.fillStyle = colorUp;
-        ctx.fillRect(x, yOffset, roundedBarWidth, currentY - yOffset);
+        ctx.fillRect(x, yOffset, roundedBarWidth, upHeight);
       }
 
       ctx.restore();

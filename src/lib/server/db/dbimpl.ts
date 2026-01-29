@@ -240,6 +240,10 @@ class DbImpl {
   deleteMaintenanceEvent!: MaintenancesRepository["deleteMaintenanceEvent"];
   getOngoingMaintenanceEventsByMonitorTags!: MaintenancesRepository["getOngoingMaintenanceEventsByMonitorTags"];
   getUpcomingMaintenanceEventsByMonitorTags!: MaintenancesRepository["getUpcomingMaintenanceEventsByMonitorTags"];
+  getMaintenancesByMonitorTagRealtime!: MaintenancesRepository["getMaintenancesByMonitorTagRealtime"];
+  getScheduledEventsStartingSoon!: MaintenancesRepository["getScheduledEventsStartingSoon"];
+  getReadyEventsInProgress!: MaintenancesRepository["getReadyEventsInProgress"];
+  getOngoingEventsCompleted!: MaintenancesRepository["getOngoingEventsCompleted"];
 
   // ============ Maintenance Events for Monitor List ============
   getOngoingMaintenanceEventsForMonitorList!: MaintenancesRepository["getOngoingMaintenanceEventsForMonitorList"];
@@ -567,6 +571,9 @@ class DbImpl {
       this.maintenances.getMaintenanceEventsByMaintenanceIdWithLimits.bind(this.maintenances);
     this.getMaintenanceEvents = this.maintenances.getMaintenanceEvents.bind(this.maintenances);
     this.getActiveMaintenanceEvents = this.maintenances.getActiveMaintenanceEvents.bind(this.maintenances);
+    this.getMaintenancesByMonitorTagRealtime = this.maintenances.getMaintenancesByMonitorTagRealtime.bind(
+      this.maintenances,
+    );
     this.getMaintenanceEventsForMonitor = this.maintenances.getMaintenanceEventsForMonitor.bind(this.maintenances);
     this.updateMaintenanceEvent = this.maintenances.updateMaintenanceEvent.bind(this.maintenances);
     this.updateMaintenanceEventStatus = this.maintenances.updateMaintenanceEventStatus.bind(this.maintenances);
@@ -591,6 +598,9 @@ class DbImpl {
     );
     this.getMaintenanceEventsForEventsByDateRangeMonitor =
       this.maintenances.getMaintenanceEventsForEventsByDateRangeMonitor.bind(this.maintenances);
+    this.getScheduledEventsStartingSoon = this.maintenances.getScheduledEventsStartingSoon.bind(this.maintenances);
+    this.getReadyEventsInProgress = this.maintenances.getReadyEventsInProgress.bind(this.maintenances);
+    this.getOngoingEventsCompleted = this.maintenances.getOngoingEventsCompleted.bind(this.maintenances);
   }
 
   private bindMonitorAlertConfigMethods(): void {

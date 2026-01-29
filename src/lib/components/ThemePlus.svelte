@@ -44,10 +44,8 @@
     showPagesDropdown = false,
     showEventsButton = false,
     showHomeButton = false,
-    monitor_tags = [],
     shareLinkString = "",
-    embedMonitorTag = "",
-    incident_ids = []
+    embedMonitorTag = ""
   }: Props = $props();
 
   let protocol = $state("");
@@ -73,7 +71,7 @@
   });
 </script>
 
-<div class="flex w-full items-center justify-between gap-2">
+<div class=" flex w-full items-center justify-between gap-2">
   <div class="flex items-center gap-2">
     {#if showPagesDropdown && pages.length > 0}
       <DropdownMenu.Root>

@@ -13,7 +13,6 @@ import type {
   MonitorAlertInsert,
   IncidentFilter,
   TriggerFilter,
-  SubscriberRecordInsert,
   UserRecordInsert,
   UserRecord,
   MonitorRecordTyped,

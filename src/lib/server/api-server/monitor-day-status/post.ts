@@ -92,6 +92,8 @@ export default async function post(req: APIServerRequest): Promise<Response> {
     monitor.monitor_settings_json?.uptime_formula_denominator,
   );
 
+  // console.log(">>>>>>----  post:95 ", minuteData[minuteData.length - 10], uptimeCalculationResult);
+
   return json({
     minutes: minuteData,
     uptime: uptimeCalculationResult.uptime,

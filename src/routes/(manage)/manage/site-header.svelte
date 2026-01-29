@@ -17,13 +17,13 @@
     <div class="ms-auto flex items-center gap-2">
       <Button
         href="/"
-        variant="ghost"
+        variant="secondary"
         size="sm"
         class="dark:text-foreground hidden sm:flex"
         target="_blank"
         rel="noopener noreferrer"
       >
-        Preview
+        Status Page
       </Button>
     </div>
   </div>

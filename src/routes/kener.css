@@ -221,3 +221,15 @@ body::-webkit-scrollbar {
 .scrollbar-hidden::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
 }
+
+.ktabs [data-slot="tabs-list"] {
+  background-color: transparent;
+}
+.ktabs [data-slot="tabs-list"] button {
+  cursor: pointer;
+  background-color: transparent;
+  font-weight: 500;
+}
+.ktabs [data-slot="tabs-list"] button:hover {
+  color: var(--foreground);
+}
