@@ -18,6 +18,7 @@
   import { scaleOrdinal, scaleSequential, scaleTime } from "d3-scale";
   import IncidentItem from "$lib/components/IncidentItem.svelte";
   import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
+  import MinuteGrid from "$lib/components/MinuteGrid.svelte";
 
   import * as Chart from "$lib/components/ui/chart/index.js";
   import type { IncidentForMonitorList, MaintenanceEventsMonitorList } from "$lib/server/types/db";
@@ -204,7 +205,7 @@
 
 <Dialog.Root bind:open>
   <Dialog.Overlay class="backdrop-blur-[2px]" />
-  <Dialog.Content class="max-h-[80vh] overflow-y-auto rounded-3xl sm:max-w-2xl">
+  <Dialog.Content class="max-h-[80vh] overflow-y-auto rounded-3xl sm:max-w-[46.5rem]">
     <Dialog.Header>
       <Dialog.Title class="flex items-center gap-2">
         <Activity class="h-5 w-5" />
@@ -234,42 +235,7 @@
             </div>
           </div>
         {:else if dayDetailData}
-          <div class="space-y-4">
-            <!-- Minute grid -->
-            <div>
-              <div class="text-muted-foreground mb-2 flex items-center justify-between text-sm font-medium">
-                <p class="">Per-Minute Status</p>
-                <div class="flex items-center gap-1">
-                  <TrendingUp class="h-3 w-3" />
-                  {dayDetailData.uptime}%
-                </div>
-              </div>
-
-              <div class="flex flex-wrap gap-0.5">
-                {#each dayDetailData.minutes as minute, index (minute.timestamp)}
-                  <div class="group relative">
-                    <div
-                      class="h-2.5 w-2.5 cursor-pointer bg-{minute.status.toLowerCase()} rounded-[1px] transition-opacity hover:opacity-75"
-                      title="{formatTime(minute.timestamp)} - {minute.status}"
-                    ></div>
-
-                    <div
-                      class="bg-popover text-popover-foreground pointer-events-none absolute bottom-full left-1/2 z-50 mb-1 hidden -translate-x-1/2 rounded border px-2 py-1 text-xs whitespace-nowrap shadow-md group-hover:block"
-                    >
-                      {formatTime(minute.timestamp)}
-                    </div>
-                  </div>
-                {/each}
-              </div>
-              <div class="text-muted-foreground mt-2 flex justify-between text-xs">
-                <span>00:00</span>
-                <span>06:00</span>
-                <span>12:00</span>
-                <span>18:00</span>
-                <span>23:59</span>
-              </div>
-            </div>
-          </div>
+          <MinuteGrid minutes={dayDetailData.minutes} uptime={dayDetailData.uptime} />
         {:else}
           <div class="py-8 text-center">
             <p class="text-muted-foreground">Failed to load data</p>
