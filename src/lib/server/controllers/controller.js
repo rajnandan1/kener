@@ -771,6 +771,7 @@ export const CreateIncident = async (data) => {
     state: !!data.state ? data.state : "INVESTIGATING",
     incident_type: !!data.incident_type ? data.incident_type : "INCIDENT",
     incident_source: !!data.incident_source ? data.incident_source : "DASHBOARD",
+    reminder_time: !!data.reminder_time ? data.reminder_time : null,
   };
 
   //incident_type == INCIDENT delete endDateTime
@@ -812,6 +813,7 @@ export const UpdateIncident = async (incident_id, data) => {
     status: data.status || incidentExists.status,
     state: data.state || incidentExists.state,
     end_date_time: data.end_date_time || incidentExists.end_date_time,
+    reminder_time: data.reminder_time === "" ? null : data.reminder_time || incidentExists.reminder_time,
   };
 
   //check if updateObject same as incidentExists
@@ -824,6 +826,7 @@ export const UpdateIncident = async (incident_id, data) => {
       status: incidentExists.status,
       state: incidentExists.state,
       end_date_time: incidentExists.end_date_time,
+      reminder_time: incidentExists.reminder_time,
     })
   ) {
     PushDataToQueue(incident_id, "updateIncident", {
@@ -831,6 +834,31 @@ export const UpdateIncident = async (incident_id, data) => {
       ...incidentExists,
       ...updateObject,
     });
+  }
+
+  // Check if dates has changed and reset reminders if necessary.
+  const currentTime = Math.floor(Date.now() / 1000);
+  let reminders_sent_at = incidentExists.reminders_sent_at
+    ? incidentExists.reminders_sent_at.split(";")
+    : ["0", "0", "0"];
+
+  let resetReminders = false;
+  if (
+    data.start_date_time &&
+    data.start_date_time != incidentExists.start_date_time &&
+    data.start_date_time > currentTime
+  ) {
+    reminders_sent_at[1] = "0";
+    resetReminders = true;
+  }
+
+  if (data.end_date_time && data.end_date_time != incidentExists.end_date_time && data.end_date_time > currentTime) {
+    reminders_sent_at[2] = "0";
+    resetReminders = true;
+  }
+
+  if (resetReminders) {
+    await db.updateMaintenanceRemindersSentAt(incident_id, reminders_sent_at.join(";"));
   }
 
   return await db.updateIncident(updateObject);
