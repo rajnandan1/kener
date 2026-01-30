@@ -40,7 +40,7 @@ function siteDataExtractFromDb(data: Record<string, unknown>, obj: Record<string
 
 //a function to make an api call to /manage/api/ to store site data
 function storeSiteData(data: Record<string, unknown>): Promise<Response> {
-  return fetch(base + "/manage/app/api/", {
+  return fetch("/manage/app/api/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
