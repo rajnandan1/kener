@@ -1,0 +1,9 @@
+{
+  "Under Maintenance": "रखरखाव जारी है",
+  "All Systems Operational": "सभी सिस्टम चालू हैं",
+  "Degraded Performance": "प्रदर्शन घटा हुआ है",
+  "Partial Degraded Performance": "आंशिक रूप से प्रदर्शन घटा हुआ है",
+  "Partial System Outage": "आंशिक सिस्टम आउटेज",
+  "Major System Outage": "मुख्य सिस्टम आउटेज",
+  "No Status Available": "कोई स्थिति उपलब्ध नहीं"
+}

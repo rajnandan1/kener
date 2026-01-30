@@ -1,6 +1,7 @@
 <script lang="ts">
   import Check from "@lucide/svelte/icons/check";
   import type { PageSettingsType } from "$lib/server/types/db";
+  import { t } from "$lib/stores/i18n";
 
   interface Props {
     ongoingMaintenancesCount: number;
@@ -37,7 +38,7 @@
         </span>
       </div>
       <div class="flex flex-col items-start gap-2">
-        <p class=" text-2xl">{statusText}</p>
+        <p class=" text-2xl">{$t(statusText)}</p>
       </div>
     </div>
   </div>
@@ -54,8 +55,8 @@
               </p>
             {/if}
             <p class="text-xs leading-4 font-medium">
-              <span class="block">Ongoing</span>
-              <span class="block">Incidents</span>
+              <span class="block">{$t("Ongoing")}</span>
+              <span class="block">{$t("Incidents")}</span>
             </p>
           </div>
         {/if}
@@ -70,8 +71,8 @@
             {/if}
 
             <p class="text-xs leading-4 font-medium">
-              <span class="block">Ongoing</span>
-              <span class="block">Maintenances</span>
+              <span class="block">{$t("Ongoing")}</span>
+              <span class="block">{$t("Maintenances")}</span>
             </p>
           </div>
 
@@ -84,8 +85,8 @@
               </p>
             {/if}
             <p class="text-xs leading-4 font-medium">
-              <span class="block">Upcoming</span>
-              <span class="block">Maintenances</span>
+              <span class="block">{$t("Upcoming")}</span>
+              <span class="block">{$t("Maintenances")}</span>
             </p>
           </div>
         {/if}

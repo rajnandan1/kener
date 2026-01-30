@@ -1,4 +1,3 @@
-import i18n from "$lib/i18n/server";
 import { redirect } from "@sveltejs/kit";
 import MobileDetect from "mobile-detect";
 import type { LayoutServerLoad } from "./$types";
@@ -48,6 +47,8 @@ export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
     isSubsEnabled = true;
   }
 
+  const languageSetting = siteData.i18n;
+  languageSetting.locales = languageSetting.locales.filter((l) => l.selected);
   return {
     isMobile,
     isSetupComplete,
@@ -62,5 +63,6 @@ export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
     favicon: siteData.favicon,
     footerHTML: siteData.footerHTML || "",
     isSubsEnabled,
+    languageSetting,
   };
 };

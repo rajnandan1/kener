@@ -233,3 +233,6 @@ body::-webkit-scrollbar {
 .ktabs [data-slot="tabs-list"] button:hover {
   color: var(--foreground);
 }
+.ksel .lucide-chevron-down {
+  display: none;
+}

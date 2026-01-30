@@ -5,6 +5,7 @@
   import { setMode, mode } from "mode-watcher";
   import { page } from "$app/state";
   import { resolve } from "$app/paths";
+  import { t } from "$lib/stores/i18n";
 
   import Sun from "@lucide/svelte/icons/sun";
   import Moon from "@lucide/svelte/icons/moon";
@@ -23,6 +24,7 @@
   import BadgesMenu from "$lib/components/BadgesMenu.svelte";
   import EmbedMenu from "$lib/components/EmbedMenu.svelte";
   import { onMount } from "svelte";
+  import LanguageSelector from "./LanguageSelector.svelte";
 
   interface Props {
     currentPath?: string;
@@ -99,7 +101,8 @@
     {/if}
     {#if showHomeButton}
       <Button href="/" variant="outline" size="sm" class="rounded-full text-xs shadow-none">
-        <ChevronLeft class="h-4 w-4" /> Back
+        <ChevronLeft class="h-4 w-4" />
+        {$t("Home")}
       </Button>
     {/if}
     {#if showEventsButton}
@@ -123,33 +126,40 @@
           </Button>
         </ButtonGroup.Root>
       {/if}
-      <ButtonGroup.Root>
-        {#if !!shareLink}
-          <CopyButton variant="outline" text={shareLink} class="cursor-pointer rounded-full shadow-none" size="icon-sm">
-            <Share />
-          </CopyButton>
-        {/if}
-        {#if !!embedMonitorTag}
-          <!-- BadgeMenu -->
-          <Button
-            variant="outline"
-            class="relative cursor-pointer rounded-full shadow-none"
-            size="icon-sm"
-            onclick={() => (openBadgesMenu = true)}
-          >
-            <Sticker />
-          </Button>
-          <!-- Embed Menu -->
-          <Button
-            variant="outline"
-            class="relative cursor-pointer rounded-full shadow-none"
-            size="icon-sm"
-            onclick={() => (openEmbedMenu = true)}
-          >
-            <Code />
-          </Button>
-        {/if}
-      </ButtonGroup.Root>
+      {#if !!shareLink || !!embedMonitorTag}
+        <ButtonGroup.Root>
+          {#if !!shareLink}
+            <CopyButton
+              variant="outline"
+              text={shareLink}
+              class="cursor-pointer rounded-full shadow-none"
+              size="icon-sm"
+            >
+              <Share />
+            </CopyButton>
+          {/if}
+          {#if !!embedMonitorTag}
+            <!-- BadgeMenu -->
+            <Button
+              variant="outline"
+              class="relative cursor-pointer rounded-full shadow-none"
+              size="icon-sm"
+              onclick={() => (openBadgesMenu = true)}
+            >
+              <Sticker />
+            </Button>
+            <!-- Embed Menu -->
+            <Button
+              variant="outline"
+              class="relative cursor-pointer rounded-full shadow-none"
+              size="icon-sm"
+              onclick={() => (openEmbedMenu = true)}
+            >
+              <Code />
+            </Button>
+          {/if}
+        </ButtonGroup.Root>
+      {/if}
       <ButtonGroup.Root class=" hidden  sm:flex">
         <Button
           variant="outline"
@@ -165,9 +175,7 @@
             {mode.current === "light" ? "Light" : "Dark"}
           </span>
         </Button>
-        <Button variant="outline" size="icon-sm" onclick={toggleMode} class="shadow-none" aria-label="">
-          <Globe class="" />
-        </Button>
+        <LanguageSelector />
         <Button variant="outline" size="icon-sm" onclick={toggleMode} aria-label="" class="rounded-full shadow-none">
           <Languages class="" />
         </Button>

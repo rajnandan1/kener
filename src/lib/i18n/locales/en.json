@@ -1,0 +1,9 @@
+{
+  "Under Maintenance": "Under Maintenance",
+  "All Systems Operational": "All Systems Operational",
+  "Degraded Performance": "Degraded Performance",
+  "Partial Degraded Performance": "Partial Degraded Performance",
+  "Partial System Outage": "Partial System Outage",
+  "Major System Outage": "Major System Outage",
+  "No Status Available": "No Status Available"
+}
