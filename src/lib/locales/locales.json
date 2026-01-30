@@ -74,5 +74,9 @@
   {
 		"code": "cs",
 		"name": "Čeština"
+	},
+  {
+		"code": "sk",
+		"name": "Slovenčina"
 	}
 ]
