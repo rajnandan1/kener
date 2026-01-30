@@ -16,6 +16,7 @@
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import constants from "$lib/global-constants.js";
   import CloudAlertIcon from "@lucide/svelte/icons/cloud-alert";
+  import { t } from "$lib/stores/i18n";
 
   let { data } = $props();
 
@@ -77,7 +78,7 @@
     <div class="flex">
       <Badge class="gap-1">
         <Clock class="h-4 w-4" />
-        Timeline
+        {$t("Timeline")}
       </Badge>
     </div>
     <div class="flex w-full justify-between gap-2">
@@ -104,14 +105,14 @@
         <div class="flex items-center justify-between border-b p-4">
           <Badge variant="secondary" class="gap-1">
             <MessageSquare class="h-3 w-3" />
-            Updates ({data.comments.length})
+            {$t("Updates (%count)", { count: String(data.comments.length) })}
           </Badge>
         </div>
 
         {#if data.comments.length === 0}
           <div class="text-muted-foreground p-8 text-center">
             <MessageSquare class="mx-auto mb-2 h-8 w-8 opacity-50" />
-            <p>No updates yet</p>
+            <p>{$t("No updates yet")}</p>
           </div>
         {:else}
           <div class="divide-y">
@@ -141,14 +142,14 @@
         <div class="flex items-center justify-between border-b p-4">
           <Badge variant="secondary" class="gap-1">
             <Monitor class="h-3 w-3" />
-            Affected Monitors ({data.affectedMonitors.length})
+            {$t("Affected Monitors (%count)", { count: String(data.affectedMonitors.length) })}
           </Badge>
         </div>
 
         {#if data.affectedMonitors.length === 0}
           <div class="text-muted-foreground p-8 text-center">
             <Monitor class="mx-auto mb-2 h-8 w-8 opacity-50" />
-            <p>No monitors affected</p>
+            <p>{$t("No monitors affected")}</p>
           </div>
         {:else}
           <div class="">
@@ -162,7 +163,7 @@
                       </Tooltip.Trigger>
                       <Tooltip.Content arrowClasses="bg-foreground">
                         <div class="text-xs font-medium">
-                          Impact: {monitor.monitor_impact || "Unknown"}
+                          {$t("Impact")}: {monitor.monitor_impact || $t("Unknown impact")}
                         </div>
                       </Tooltip.Content>
                     </Tooltip.Root>
@@ -171,9 +172,11 @@
                     <Item.Title>{monitor.monitor_tag}</Item.Title>
                     <Item.Description>
                       {#if monitor.monitor_impact}
-                        <span class="text-{monitor.monitor_impact.toLowerCase()}">{monitor.monitor_impact}</span>
+                        <span class="text-{monitor.monitor_impact.toLowerCase()}">
+                          {$t(monitor.monitor_impact)}
+                        </span>
                       {:else}
-                        Unknown impact
+                        {$t("Unknown impact")}
                       {/if}
                     </Item.Description>
                   </Item.Content>

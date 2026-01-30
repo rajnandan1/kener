@@ -7,6 +7,7 @@
   import * as Popover from "$lib/components/ui/popover/index.js";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import STATUS_ICON from "$lib/icons";
+  import { t } from "$lib/stores/i18n";
 
   interface IncidentMonitorImpact {
     monitor_tag: string;
@@ -110,7 +111,7 @@
                 </div>
                 <div class="flex items-center justify-between">
                   <Badge variant="outline" class="text-{monitor.monitor_impact.toLowerCase()}">
-                    {monitor.monitor_impact}
+                    {$t(monitor.monitor_impact)}
                   </Badge>
                   <Button variant="outline" class="rounded-btn" size="icon-sm" href="/monitors/{monitor.monitor_tag}">
                     <ArrowRight class="size-3" />
@@ -123,23 +124,23 @@
       </div>
     {/if}
 
-    <Item.Description>
-      <div class="mt-2 flex items-center justify-between text-xs font-medium">
-        <div class="rounded-full border px-3 py-2">
-          {format(new Date(incident.start_date_time * 1000), "PPp")}
-        </div>
-        <div class="relative flex-1 text-center">
-          <div class="absolute top-1/2 right-0 left-0 border-t"></div>
-          <span class="bg-background relative z-10 px-2 py-1">{duration()}</span>
-        </div>
-        {#if incident.end_date_time}
-          <div class="rounded-full border px-3 py-2">
-            {format(new Date(incident.end_date_time * 1000), "PPp")}
-          </div>
-        {:else}
-          <div class=" rounded-full border px-3 py-2">Ongoing</div>
-        {/if}
-      </div>
+    <Item.Description class="mt-2 flex items-center justify-between text-xs font-medium">
+      <span class="rounded-full border px-3 py-2">
+        {format(new Date(incident.start_date_time * 1000), "PPp")}
+      </span>
+      <span class="relative flex-1 text-center">
+        <span class="absolute top-1/2 right-0 left-0 border-t"></span>
+        <span class="bg-background relative z-10 px-2 py-1">{duration()}</span>
+      </span>
+      {#if incident.end_date_time}
+        <span class="rounded-full border px-3 py-2">
+          {format(new Date(incident.end_date_time * 1000), "PPp")}
+        </span>
+      {:else}
+        <span class="rounded-full border px-3 py-2">
+          {$t("Ongoing")}
+        </span>
+      {/if}
     </Item.Description>
   </Item.Content>
   <Item.Actions>

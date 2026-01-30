@@ -5,6 +5,9 @@
   import { scaleTime } from "d3-scale";
   import * as Chart from "$lib/components/ui/chart/index.js";
   import type { TimestampStatusCount } from "$lib/server/types/db";
+  import { t } from "$lib/stores/i18n";
+  import { ta } from "date-fns/locale";
+  import { ParseLatency } from "$lib/clientTools";
 
   interface Props {
     data: TimestampStatusCount[];
@@ -17,7 +20,7 @@
   // Chart config
   const chartConfig = {
     avgLatency: {
-      label: "Avg Latency",
+      label: $t("Avg Latency"),
       color: "var(--chart-1)"
     }
   } satisfies Chart.ChartConfig;
@@ -49,7 +52,7 @@
         series={[
           {
             key: "avgLatency",
-            label: "Avg Latency",
+            label: $t("Avg Latency"),
             color: "var(--color-avgLatency)"
           }
         ]}
@@ -87,7 +90,7 @@
                   >
                   <div class="flex items-center gap-2">
                     <span class="text-foreground font-mono font-medium tabular-nums">
-                      {Math.round(Number(value))} ms
+                      {ParseLatency(Number(value))}
                     </span>
                   </div>
                 </div>
@@ -99,7 +102,7 @@
     </Chart.Container>
   {:else}
     <div class="flex items-center justify-center" style="height: {height}px;">
-      <p class="text-muted-foreground text-sm">No latency data available</p>
+      <p class="text-muted-foreground text-sm">{$t("No latency data available for this day")}</p>
     </div>
   {/if}
 </div>

@@ -1,4 +1,3 @@
-import i18n from "$lib/i18n/server";
 import { redirect } from "@sveltejs/kit";
 import MobileDetect from "mobile-detect";
 import type { LayoutServerLoad } from "./$types";
@@ -39,6 +38,9 @@ export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
   const siteStatusColors = siteData.colors;
   const userCounts = await GetUsersCount();
 
+  const languageSetting = siteData.i18n;
+  languageSetting.locales = languageSetting.locales.filter((l) => l.selected);
+
   // const emailSubscriptionTrigger = await GetSubscriptionTriggerByEmail();
   return {
     isMobile,
@@ -52,6 +54,7 @@ export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
     siteName: siteData.siteName || "Kener",
     siteUrl: siteData.siteURL || "",
     logo: siteData.logo,
+    languageSetting,
     // fontFamily: siteData.font?.family || "Inter",
   };
 };

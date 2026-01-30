@@ -15,6 +15,7 @@
   import mdToHTML from "$lib/marked";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import STATUS_ICON from "$lib/icons";
+  import { t } from "$lib/stores/i18n";
 
   let { data } = $props();
 
@@ -92,10 +93,10 @@
       {#if isRecurring(data.maintenance.rrule)}
         <Badge variant="secondary" class="gap-1">
           <Repeat class="h-3 w-3" />
-          Recurring
+          {$t("Recurring")}
         </Badge>
       {:else}
-        <Badge variant="secondary">One-time</Badge>
+        <Badge variant="secondary">{$t("One-time")}</Badge>
       {/if}
     </div>
     <div class="flex w-full justify-between gap-2">
@@ -175,14 +176,14 @@
         <div class="flex items-center justify-between border-b p-4">
           <Badge variant="secondary" class="gap-1">
             <Monitor class="h-3 w-3" />
-            Affected Monitors ({data.affectedMonitors.length})
+            {$t("Affected Monitors (%count)", { count: String(data.affectedMonitors.length) })}
           </Badge>
         </div>
 
         {#if data.affectedMonitors.length === 0}
           <div class="text-muted-foreground p-8 text-center">
             <Monitor class="mx-auto mb-2 h-8 w-8 opacity-50" />
-            <p>No monitors affected</p>
+            <p>{$t("No monitors affected")}</p>
           </div>
         {:else}
           <div class="">
@@ -195,14 +196,16 @@
                         <div class="bg-{monitor.monitor_impact.toLowerCase()} h-6 w-6 rounded-full"></div>
                       </Tooltip.Trigger>
                       <Tooltip.Content arrowClasses="bg-foreground">
-                        <div class="text-xs font-medium">Under Maintenance</div>
+                        <div class="text-xs font-medium">{$t("Under Maintenance")}</div>
                       </Tooltip.Content>
                     </Tooltip.Root>
                   </Item.Media>
                   <Item.Content>
                     <Item.Title>{monitor.monitor_name}</Item.Title>
                     <Item.Description>
-                      <span class="text-{monitor.monitor_impact.toLowerCase()}">{monitor.monitor_impact}</span>
+                      <span class="text-{monitor.monitor_impact.toLowerCase()}">
+                        {$t(monitor.monitor_impact)}
+                      </span>
                     </Item.Description>
                   </Item.Content>
                   <Item.Actions>

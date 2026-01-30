@@ -55,8 +55,7 @@
               </p>
             {/if}
             <p class="text-xs leading-4 font-medium">
-              <span class="block">{$t("Ongoing")}</span>
-              <span class="block">{$t("Incidents")}</span>
+              {@html $t("Ongoing <br /> Incidents")}
             </p>
           </div>
         {/if}
@@ -71,8 +70,7 @@
             {/if}
 
             <p class="text-xs leading-4 font-medium">
-              <span class="block">{$t("Ongoing")}</span>
-              <span class="block">{$t("Maintenances")}</span>
+              {@html $t("Ongoing <br /> Maintenances")}
             </p>
           </div>
 
@@ -85,8 +83,7 @@
               </p>
             {/if}
             <p class="text-xs leading-4 font-medium">
-              <span class="block">{$t("Upcoming")}</span>
-              <span class="block">{$t("Maintenances")}</span>
+              {@html $t("Upcoming <br /> Maintenances")}
             </p>
           </div>
         {/if}

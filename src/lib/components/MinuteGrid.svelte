@@ -4,6 +4,8 @@
   import { mode } from "mode-watcher";
   import { page } from "$app/state";
   import TrendingUp from "lucide-svelte/icons/trending-up";
+  import { t } from "$lib/stores/i18n";
+  import * as Tooltip from "$lib/components/ui/tooltip/index.js";
 
   interface MinuteData {
     timestamp: number;
@@ -101,22 +103,22 @@
 
   // Tooltip positioning
   let tooltipStyle = $derived.by(() => {
-    if (!hoveredMinute || !tooltipEl) {
+    if (!hoveredMinute || !tooltipEl || canvasWidth <= 0) {
       return `left: 0px; top: 0px; opacity: 0; pointer-events: none;`;
     }
 
-    const tooltipWidth = tooltipEl.offsetWidth;
+    const tooltipWidth = tooltipEl.offsetWidth || 0;
     const halfTooltip = tooltipWidth / 2;
     const padding = 4;
 
     let left = hoveredMinute.x;
     const minLeft = halfTooltip + padding;
-    const maxLeft = canvasWidth - halfTooltip - padding;
+    const maxLeft = Math.max(canvasWidth - halfTooltip - padding, minLeft);
 
     if (left < minLeft) left = minLeft;
     else if (left > maxLeft) left = maxLeft;
 
-    const top = hoveredMinute.y - 28;
+    const top = Math.max(hoveredMinute.y - 28, 0);
 
     return `left: ${left}px; top: ${top}px;`;
   });
@@ -174,7 +176,7 @@
     for (const section of sections) {
       // Draw section label
       ctx.fillStyle = labelColor;
-      ctx.font = "10px system-ui, -apple-system, sans-serif";
+      ctx.font = "600 10px system-ui, -apple-system, sans-serif";
       ctx.fillText(section.label, 0, currentY + SECTION_LABEL_HEIGHT / 2);
       currentY += SECTION_LABEL_HEIGHT;
 
@@ -277,23 +279,34 @@
 </script>
 
 <div class="space-y-4">
-  <div class="text-muted-foreground mb-2 flex items-center justify-between text-sm font-medium">
-    <p>Per-Minute Status</p>
+  <div class="text-foreground mb-2 flex items-center justify-between text-sm font-medium">
+    <p>{$t("Per-Minute Status")}</p>
     <div class="flex items-center gap-1">
-      <TrendingUp class="h-3 w-3" />
-      {uptime}%
+      <Tooltip.Root>
+        <Tooltip.Trigger class="flex items-center gap-1">
+          <TrendingUp class="h-3 w-3" />
+          {uptime}%
+        </Tooltip.Trigger>
+        <Tooltip.Content>
+          <p>{$t("Day Uptime")}</p>
+        </Tooltip.Content>
+      </Tooltip.Root>
     </div>
   </div>
 
   <div class="relative w-full" bind:this={container}>
-    <canvas
-      bind:this={canvas}
-      style="width: 100%; height: {canvasHeight}px;"
-      class="cursor-default"
-      onmousemove={handleMouseMove}
-      onmouseleave={handleMouseLeave}
-      aria-label="Per-minute status grid"
-    ></canvas>
+    {#if mounted && canvasHeight > 0}
+      <canvas
+        bind:this={canvas}
+        style="width: 100%; height: {canvasHeight}px;"
+        class="cursor-default"
+        onmousemove={handleMouseMove}
+        onmouseleave={handleMouseLeave}
+        aria-label={$t("Per-Minute Status")}
+      ></canvas>
+    {:else}
+      <div style="height: 50px;"></div>
+    {/if}
 
     {#if hoveredMinute}
       <div
@@ -301,7 +314,7 @@
         class="bg-foreground text-secondary pointer-events-none absolute z-20 w-max -translate-x-1/2 rounded-md px-2 py-1 text-xs font-medium whitespace-nowrap"
         style={tooltipStyle}
       >
-        {formatTime(hoveredMinute.data.timestamp)} - {hoveredMinute.data.status}
+        {formatTime(hoveredMinute.data.timestamp)} - {$t(hoveredMinute.data.status)}
       </div>
     {/if}
   </div>

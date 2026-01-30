@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { t } from "$lib/stores/i18n";
+  import * as Tooltip from "$lib/components/ui/tooltip/index.js";
+
   import { format } from "date-fns";
   import { resolve } from "$app/paths";
   import TrendingUp from "lucide-svelte/icons/trending-up";
@@ -211,15 +213,15 @@
         <Activity class="h-5 w-5" />
         {selectedDay ? formatDate(selectedDay.timestamp) : ""}
       </Dialog.Title>
-      <Dialog.Description>Minute-by-minute status data for this day</Dialog.Description>
+      <Dialog.Description>{$t("Minute-by-minute status data for this day")}</Dialog.Description>
     </Dialog.Header>
 
     <Tabs.Root value={activeView} class="bg-background ktabs w-full overflow-hidden rounded-3xl border">
       <Tabs.List class="h-auto w-full justify-end rounded-none px-2 py-2">
-        <Tabs.Trigger value="status" class="rounded-3xl py-2">Status</Tabs.Trigger>
-        <Tabs.Trigger value="latency" class="rounded-3xl py-2">Latency</Tabs.Trigger>
-        <Tabs.Trigger value="incidents" class="rounded-3xl py-2">Incidents</Tabs.Trigger>
-        <Tabs.Trigger value="maintenances" class="rounded-3xl py-2">Maintenances</Tabs.Trigger>
+        <Tabs.Trigger value="status" class="rounded-3xl py-2">{$t("Status")}</Tabs.Trigger>
+        <Tabs.Trigger value="latency" class="rounded-3xl py-2">{$t("Latency")}</Tabs.Trigger>
+        <Tabs.Trigger value="incidents" class="rounded-3xl py-2">{$t("Incidents")}</Tabs.Trigger>
+        <Tabs.Trigger value="maintenances" class="rounded-3xl py-2">{$t("Maintenances")}</Tabs.Trigger>
       </Tabs.List>
       <!-- status view -->
       <Tabs.Content value="status" class="p-4">
@@ -238,7 +240,9 @@
           <MinuteGrid minutes={dayDetailData.minutes} uptime={dayDetailData.uptime} />
         {:else}
           <div class="py-8 text-center">
-            <p class="text-muted-foreground">Failed to load data</p>
+            <p class="text-muted-foreground">
+              {$t("Failed to load status data for this day")}
+            </p>
           </div>
         {/if}
       </Tabs.Content>
@@ -255,16 +259,23 @@
         {:else if dayLatencyData && chartData.length > 0}
           <div class="space-y-4">
             <!-- Average latency -->
-            <div class="text-muted-foreground mb-2 flex items-center justify-between text-sm font-medium">
-              <p>Latency Over Time</p>
+            <div class="text-foreground mb-2 flex items-center justify-between text-sm font-medium">
+              <p>{$t("Latency Over Time")}</p>
               <div class="flex items-center gap-1">
-                <Clock class="h-3 w-3" />
-                {dayLatencyData.avgLatency} Avg
+                <Tooltip.Root>
+                  <Tooltip.Trigger class="flex items-center gap-1">
+                    <Clock class="h-3 w-3" />
+                    {dayLatencyData.avgLatency}
+                  </Tooltip.Trigger>
+                  <Tooltip.Content>
+                    <p>{$t("Average Latency")}</p>
+                  </Tooltip.Content>
+                </Tooltip.Root>
               </div>
             </div>
 
             <!-- Latency chart -->
-            <Chart.Container config={chartConfig} class="w-full" style="height: 256px;">
+            <Chart.Container config={chartConfig} class="min-h-64 w-full">
               <AreaChart
                 data={chartData}
                 x="date"
@@ -277,7 +288,7 @@
                 series={[
                   {
                     key: "latency",
-                    label: "Latency",
+                    label: $t("Latency"),
                     color: "var(--color-latency)"
                   }
                 ]}
@@ -331,11 +342,11 @@
           </div>
         {:else if dayLatencyData && chartData.length === 0}
           <div class="py-8 text-center">
-            <p class="text-muted-foreground">No latency data available for this day</p>
+            <p class="text-muted-foreground">{$t("No latency data available for this day")}</p>
           </div>
         {:else}
           <div class="py-8 text-center">
-            <p class="text-muted-foreground">Failed to load latency data</p>
+            <p class="text-muted-foreground">{$t("Failed to load latency data")}</p>
           </div>
         {/if}
       </Tabs.Content>
@@ -354,10 +365,11 @@
             <!-- Incident list -->
             <div>
               <div class="text-muted-foreground mb-2 flex items-center justify-between text-sm font-medium">
-                <p class="">Incidents</p>
+                <p class="">{$t("Incidents")}</p>
                 <div class="flex items-center gap-1">
                   <Clock class="h-3 w-3" />
-                  {dayIncidentsData.length} Total
+                  {dayIncidentsData.length}
+                  {$t("Total")}
                 </div>
               </div>
 
@@ -372,7 +384,7 @@
           </div>
         {:else}
           <div class="py-8 text-center">
-            <p class="text-muted-foreground">No incidents for this day</p>
+            <p class="text-muted-foreground">{$t("No incidents for this day")}</p>
           </div>
         {/if}
       </Tabs.Content>
@@ -391,7 +403,7 @@
             <!-- Maintenance list -->
             <div>
               <div class="text-muted-foreground mb-2 flex items-center justify-between text-sm font-medium">
-                <p class="">Maintenances</p>
+                <p class="">{$t("Maintenances")}</p>
                 <div class="flex items-center gap-1">
                   <Clock class="h-3 w-3" />
                   {dayMaintenancesData.length} Total
@@ -408,7 +420,7 @@
           </div>
         {:else}
           <div class="py-8 text-center">
-            <p class="text-muted-foreground">No maintenances for this day</p>
+            <p class="text-muted-foreground">{$t("No maintenances for this day")}</p>
           </div>
         {/if}
       </Tabs.Content>

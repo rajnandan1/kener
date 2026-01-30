@@ -9,8 +9,13 @@ const l = function (sessionLangMap: Record<string, string>, key: string, args: R
         return args[argKey] !== undefined ? args[argKey] : placeholder;
       });
     }
-    return obj || key;
+    if (obj && typeof obj === "string") {
+      return obj;
+    }
+    console.warn(`Missing localization for key: ${key}`);
+    return key;
   } catch (e) {
+    console.error("Error in localization function:", e);
     return key;
   }
 };

@@ -107,7 +107,8 @@
     {/if}
     {#if showEventsButton}
       <Button href={eventsPath} variant="outline" size="sm" class="rounded-full text-xs shadow-none">
-        <ICONS.Events class="h-4 w-4" /> Events
+        <ICONS.Events class="h-4 w-4" />
+        {$t("Events")}
       </Button>
     {/if}
   </div>
@@ -122,7 +123,8 @@
             aria-label="Go Back"
             onclick={() => (openSubscribeMenu = true)}
           >
-            <ICONS.Bell class="" /> Subscribe
+            <ICONS.Bell class="" />
+            {$t("Subscribe")}
           </Button>
         </ButtonGroup.Root>
       {/if}

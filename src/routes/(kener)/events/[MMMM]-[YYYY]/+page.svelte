@@ -13,6 +13,8 @@
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import Check from "@lucide/svelte/icons/check";
   import ICONS from "$lib/icons";
+  import { t } from "$lib/stores/i18n";
+
   import { format, parse, addMonths, subMonths, getUnixTime, startOfDay, formatDistanceStrict } from "date-fns";
 
   import type { IncidentForMonitorList, MaintenanceEventsMonitorList } from "$lib/server/types/db";
@@ -148,7 +150,7 @@
 </script>
 
 <svelte:head>
-  <title>{currentMonth} - Maintenances & Incidents}</title>
+  <title>{currentMonth} - Maintenances & Incidents</title>
 </svelte:head>
 
 <div class="flex flex-col gap-3">
@@ -192,7 +194,9 @@
               {numberOfIncidents}
             </p>
           {/if}
-          <p class="text-xs leading-4 opacity-50">Total <br /> Incidents</p>
+          <p class="text-xs leading-4 opacity-50">
+            {@html $t("Total <br /> Incidents")}
+          </p>
         </div>
         <!-- Maintenances in this page -->
         <div class="flex flex-1 flex-row items-center gap-2">
@@ -203,7 +207,7 @@
               {numberOfMaintenances}
             </p>
           {/if}
-          <p class="text-xs leading-4 opacity-50">Total <br /> Maintenances</p>
+          <p class="text-xs leading-4 opacity-50">{@html $t("Total <br /> Maintenances")}</p>
         </div>
       </div>
     </div>
@@ -219,8 +223,12 @@
     <Card.Root class="rounded-3xl border bg-transparent shadow-none">
       <Card.Content class=" py-12 text-center">
         <div class="mx-auto mb-4 text-4xl">🎉</div>
-        <h2 class="text-xl font-semibold">No Events in {currentMonth}</h2>
-        <p class="text-muted-foreground mt-2">Everything was running smoothly this month!</p>
+        <h2 class="text-xl font-semibold">
+          {$t("No Events in %currentMonth", { currentMonth })}
+        </h2>
+        <p class="text-muted-foreground mt-2">
+          {$t("There are no incidents or maintenances scheduled for this month.")}
+        </p>
       </Card.Content>
     </Card.Root>
   {:else}
@@ -249,7 +257,9 @@
               {:else}
                 <!-- Maintenance -->
                 <div class="pl-8">
-                  <Badge variant="secondary" class="text-xs">Maintenance</Badge>
+                  <Badge variant="secondary" class="text-xs">
+                    {$t("Maintenance")}
+                  </Badge>
                 </div>
                 <MaintenanceItem
                   maintenance={{
@@ -277,7 +287,7 @@
   <!-- Navigation buttons -->
   <div class="flex justify-between">
     {#if showPrevButton}
-      <Button variant="outline" class="rounded-full shadow-none" href="/events/{prevMonthPath}">
+      <Button variant="outline" rel="external" class="rounded-full shadow-none" href="/events/{prevMonthPath}">
         <ArrowLeft class="mr-2 h-4 w-4" />
         {format(prevMonth, "MMMM yyyy")}
       </Button>
@@ -285,7 +295,7 @@
       <div></div>
     {/if}
     {#if showNextButton}
-      <Button variant="outline" class="rounded-full shadow-none" href="/events/{nextMonthPath}">
+      <Button variant="outline" rel="external" class="rounded-full shadow-none" href="/events/{nextMonthPath}">
         {format(nextMonth, "MMMM yyyy")}
         <ArrowRight class="ml-2 h-4 w-4" />
       </Button>

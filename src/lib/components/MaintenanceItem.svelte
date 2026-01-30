@@ -7,6 +7,7 @@
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import STATUS_ICON from "$lib/icons";
+  import { t } from "$lib/stores/i18n";
 
   interface MaintenanceMonitorImpact {
     monitor_tag: string;
@@ -104,7 +105,7 @@
     <div class="flex items-center gap-2">
       <Item.Title>{maintenance.title}</Item.Title>
       {#if isOngoing()}
-        <Badge variant="outline" class="text-maintenance border-maintenance text-xs">In Progress</Badge>
+        <Badge variant="outline" class="text-maintenance border-maintenance text-xs">{$t("In Progress")}</Badge>
       {/if}
     </div>
 
@@ -144,7 +145,7 @@
                 </div>
                 <div class="flex items-center justify-between">
                   <Badge variant="outline" class="text-{monitor.monitor_impact.toLowerCase()}">
-                    {monitor.monitor_impact}
+                    {$t(monitor.monitor_impact)}
                   </Badge>
                   <Button variant="outline" class="rounded-btn" size="icon-sm" href="/monitors/{monitor.monitor_tag}">
                     <ArrowRight class="size-3" />

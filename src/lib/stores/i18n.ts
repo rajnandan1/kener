@@ -173,6 +173,11 @@ export const t = derived(i18n, ($i18n) => {
         });
       }
 
+      //warn if missing translation
+      if (!str) {
+        console.warn(`Missing translation for key: "${key}"`);
+      }
+
       return str || key;
     } catch (e) {
       return key;

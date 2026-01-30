@@ -4,6 +4,7 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import CopyButton from "$lib/components/CopyButton.svelte";
   import { resolve } from "$app/paths";
+  import { t } from "$lib/stores/i18n";
 
   import Code from "@lucide/svelte/icons/code";
   import ExternalLink from "@lucide/svelte/icons/external-link";
@@ -81,53 +82,53 @@
   <Dialog.Overlay class="backdrop-blur-[2px]" />
   <Dialog.Content class="min-w-157.5 rounded-3xl">
     <Dialog.Header>
-      <Dialog.Title>Embed Monitor</Dialog.Title>
-      <Dialog.Description>Embed this monitor in your website or app</Dialog.Description>
+      <Dialog.Title>{$t("Embed Monitor")}</Dialog.Title>
+      <Dialog.Description>{$t("Embed this monitor in your website or app")}</Dialog.Description>
     </Dialog.Header>
 
     <div class="flex flex-col gap-4">
       <!-- Status Embed -->
       <div>
-        <Label class="mb-2 block text-sm font-semibold">Status Embed</Label>
+        <Label class="mb-2 block text-sm font-semibold">{$t("Status Embed")}</Label>
         <div class="flex flex-col gap-4 rounded-3xl border p-4">
           <iframe title="status embed preview" src={monitorPreviewUrl()} width="100%" height="70" frameborder="0"
           ></iframe>
           <div class="flex items-center justify-between gap-4 p-2">
             <div>
-              <Label class="mb-2 block text-xs">Theme</Label>
+              <Label class="mb-2 block text-xs">{$t("Theme")}</Label>
               <div class="flex gap-2">
                 <Button
                   variant={monitorTheme === "light" ? "default" : "outline"}
                   size="sm"
                   onclick={() => (monitorTheme = "light")}
                 >
-                  Light
+                  {$t("Light")}
                 </Button>
                 <Button
                   variant={monitorTheme === "dark" ? "default" : "outline"}
                   size="sm"
                   onclick={() => (monitorTheme = "dark")}
                 >
-                  Dark
+                  {$t("Dark")}
                 </Button>
               </div>
             </div>
             <div>
-              <Label class="mb-2 block text-xs">Format</Label>
+              <Label class="mb-2 block text-xs">{$t("Format")}</Label>
               <div class="flex gap-2">
                 <Button
                   variant={monitorEmbedType === "iframe" ? "default" : "outline"}
                   size="sm"
                   onclick={() => (monitorEmbedType = "iframe")}
                 >
-                  iFrame
+                  {$t("iFrame")}
                 </Button>
                 <Button
                   variant={monitorEmbedType === "script" ? "default" : "outline"}
                   size="sm"
                   onclick={() => (monitorEmbedType = "script")}
                 >
-                  Script
+                  {$t("Script")}
                 </Button>
               </div>
             </div>
@@ -142,46 +143,46 @@
 
       <!-- Latency Embed -->
       <div>
-        <Label class="mb-2 block text-sm font-semibold">Latency Embed</Label>
+        <Label class="mb-2 block text-sm font-semibold">{$t("Latency Embed")}</Label>
         <div class="flex flex-col gap-4 rounded-3xl border p-4">
           <iframe title="latency embed preview" src={latencyPreviewUrl()} width="100%" height="200" frameborder="0"
           ></iframe>
           <div class="flex items-end justify-between gap-4 p-2">
             <div>
-              <Label class="mb-2 block text-xs">Theme</Label>
+              <Label class="mb-2 block text-xs">{$t("Theme")}</Label>
               <div class="flex gap-2">
                 <Button
                   variant={latencyTheme === "light" ? "default" : "outline"}
                   size="sm"
                   onclick={() => (latencyTheme = "light")}
                 >
-                  Light
+                  {$t("Light")}
                 </Button>
                 <Button
                   variant={latencyTheme === "dark" ? "default" : "outline"}
                   size="sm"
                   onclick={() => (latencyTheme = "dark")}
                 >
-                  Dark
+                  {$t("Dark")}
                 </Button>
               </div>
             </div>
             <div class="">
-              <Label class="mb-2 block text-xs">Format</Label>
+              <Label class="mb-2 block text-xs">{$t("Format")}</Label>
               <div class="flex gap-2">
                 <Button
                   variant={latencyEmbedType === "iframe" ? "default" : "outline"}
                   size="sm"
                   onclick={() => (latencyEmbedType = "iframe")}
                 >
-                  iFrame
+                  {$t("iFrame")}
                 </Button>
                 <Button
                   variant={latencyEmbedType === "script" ? "default" : "outline"}
                   size="sm"
                   onclick={() => (latencyEmbedType = "script")}
                 >
-                  Script
+                  {$t("Script")}
                 </Button>
               </div>
             </div>

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { format } from "date-fns";
   import * as Item from "$lib/components/ui/item/index.js";
+  import { t } from "$lib/stores/i18n";
 
   import { Badge } from "$lib/components/ui/badge/index.js";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
@@ -66,7 +67,7 @@
   <div class="mb-4">
     <div class="bg-background flex flex-col justify-start gap-y-3 rounded-3xl border p-4">
       <div class="flex flex-col px-2">
-        <h2 class="text-base font-medium">Last Updated</h2>
+        <h2 class="text-base font-medium">{$t("Last Updated")}</h2>
         <p class="text-muted-foreground text-xs">
           {format(new Date(data.monitorLastStatusTimestamp * 1000), "PPpp")}
         </p>
@@ -76,20 +77,22 @@
           <p class="text-muted-foreground text-2xl font-semibold {data.textClass}">
             {data.monitorLastStatus}
           </p>
-          <p class="text-muted-foreground text-xs">Latest Status</p>
+          <p class="text-muted-foreground text-xs">{$t("Latest Status")}</p>
         </div>
-        <div class="flex flex-col items-end gap-1">
-          <p class="text-right text-2xl font-semibold">
-            {data.monitorLastLatency}
-          </p>
-          <p class="text-muted-foreground text-xs">Latest Latency</p>
-        </div>
+        {#if !!data.monitorLastLatency}
+          <div class="flex flex-col items-end gap-1">
+            <p class="text-right text-2xl font-semibold">
+              {data.monitorLastLatency}
+            </p>
+            <p class="text-muted-foreground text-xs">{$t("Latest Latency")}</p>
+          </div>
+        {/if}
       </div>
     </div>
   </div>
 
   <!-- ongoing incidents -->
-  <IncidentMonitorList incidents={data.ongoingIncidents} title="Ongoing Incidents" class="mb-4" />
+  <IncidentMonitorList incidents={data.ongoingIncidents} title={$t("Ongoing Incidents")} class="mb-4" />
 
   <!-- Maintenance -->
   <AllMaintenanceMonitorGrid

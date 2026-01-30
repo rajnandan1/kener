@@ -1,5 +1,6 @@
 <script lang="ts">
   import Bell from "@lucide/svelte/icons/bell";
+  import { t } from "$lib/stores/i18n";
 
   import * as Item from "$lib/components/ui/item/index.js";
 
@@ -68,7 +69,7 @@
   <div class="flex flex-col">
     <div class="flex flex-col rounded-3xl border">
       <div class="flex items-center justify-between p-4">
-        <Badge variant="secondary" class="gap-1">Available Components</Badge>
+        <Badge variant="secondary" class="gap-1">{$t("Available Components")}</Badge>
       </div>
       {#each data.monitorTags as tag, i}
         <div class="{i < data.monitorTags.length - 1 ? 'border-b' : ''} py-2">
@@ -81,7 +82,7 @@
   {#if data.recentConcludedMaintenances && data.recentConcludedMaintenances.length > 0}
     <div class="flex flex-col gap-3 rounded-3xl border">
       <div class="p-4">
-        <Badge variant="secondary" class="gap-1">Recent Incidents</Badge>
+        <Badge variant="secondary" class="gap-1">{$t("Recent Incidents")}</Badge>
       </div>
       <div class="flex flex-col gap-3">
         {#each data.recentConcludedMaintenances as incident}

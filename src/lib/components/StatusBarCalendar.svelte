@@ -5,6 +5,7 @@
   import { GetStatusSummary, ParseLatency } from "$lib/clientTools";
   import MonitorDayDetail from "$lib/components/MonitorDayDetail.svelte";
   import type { TimestampStatusCount } from "$lib/server/types/db";
+  import { t } from "$lib/stores/i18n";
 
   interface Props {
     data: TimestampStatusCount[];
@@ -384,7 +385,7 @@
       class="bg-foreground text-secondary pointer-events-none absolute z-20 w-max -translate-x-1/2 rounded-md px-2 py-1 text-xs font-medium whitespace-nowrap"
       style={tooltipStyle}
     >
-      <span class={getStatusColor(hoveredBar.data)}>{GetStatusSummary(hoveredBar.data)}</span>
+      <span class={getStatusColor(hoveredBar.data)}>{$t(GetStatusSummary(hoveredBar.data))}</span>
       <span class="text-muted">@</span>
       {formatTimestamp(hoveredBar.data.ts)}
       {#if hoveredBar.data.avgLatency > 0}

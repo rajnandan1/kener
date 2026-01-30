@@ -11,6 +11,7 @@
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
   import { Button } from "$lib/components/ui/button";
+  import { t } from "$lib/stores/i18n";
 
   interface Props {
     monitorTag: string;
@@ -93,7 +94,9 @@
     <div class="flex items-center justify-between">
       <div>
         <Card.Title class="text-base font-medium">{dayOptions[selectedDayIndex].text} Overview</Card.Title>
-        <Card.Description class="text-xs">Status history and latency trend</Card.Description>
+        <Card.Description class="text-xs">
+          {$t("Status history and latency trend")}
+        </Card.Description>
       </div>
       {#if !loading && overviewData}
         <DropdownMenu.Root>
@@ -106,7 +109,7 @@
             {/snippet}
           </DropdownMenu.Trigger>
           <DropdownMenu.Content align="end">
-            <DropdownMenu.Label>Select Range</DropdownMenu.Label>
+            <DropdownMenu.Label>{$t("Select Range")}</DropdownMenu.Label>
             <DropdownMenu.Group>
               {#each dayOptions as option, i}
                 <DropdownMenu.Item
@@ -147,11 +150,11 @@
       <div class="flex gap-4">
         <div class="flex flex-1 flex-col items-start gap-1">
           <p class="text-2xl font-semibold">{displayUptime}%</p>
-          <p class="text-muted-foreground text-sm">Uptime</p>
+          <p class="text-muted-foreground text-sm">{$t("Uptime")}</p>
         </div>
         <div class="flex flex-1 flex-col items-end gap-1">
           <p class="text-2xl font-semibold">{displayAvgLatency}</p>
-          <p class="text-muted-foreground text-sm">Avg Latency</p>
+          <p class="text-muted-foreground text-sm">{$t("Avg Latency")}</p>
         </div>
       </div>
 
@@ -174,7 +177,9 @@
 
       <!-- Latency Chart -->
       <div class="pt-2">
-        <p class="text-muted-foreground mb-2 text-xs font-medium">Latency Trend</p>
+        <p class="text-muted-foreground mb-2 text-xs font-medium">
+          {$t("Latency Trend")}
+        </p>
         <LatencyTrendChart data={displayData} height={128} />
       </div>
     {/if}

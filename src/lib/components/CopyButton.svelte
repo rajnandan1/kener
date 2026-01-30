@@ -3,6 +3,7 @@
   import { UseClipboard } from "$lib/hooks/use-clipboard.svelte.js";
   import Check from "@lucide/svelte/icons/check";
   import type { Snippet } from "svelte";
+  import { t } from "$lib/stores/i18n";
 
   interface Props {
     variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
@@ -49,6 +50,6 @@
       ? 'scale-100 opacity-100'
       : 'pointer-events-none scale-75 opacity-0'}"
   >
-    Copied
+    {$t("Copied")}
   </span>
 </Button>
