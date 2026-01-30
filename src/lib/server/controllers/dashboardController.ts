@@ -2,7 +2,7 @@ import db from "../db/db.js";
 import { GetMinuteStartNowTimestampUTC, BeginningOfMinute, BeginningOfDay } from "../tool.js";
 import { GetPageByPathWithMonitors, GetLatestMonitoringDataAllActive } from "./controller.js";
 import { GetAllPages } from "./pagesController.js";
-import { GetStatusSummary, GetStatusColor, GetStatusBgColor } from "../../clientTools";
+import { GetStatusSummary, GetStatusBgColor } from "../../clientTools";
 import type {
   IncidentRecord,
   IncidentCommentRecord,
@@ -10,9 +10,28 @@ import type {
   IncidentForMonitorList,
   MaintenanceEventsMonitorList,
   PageRecord,
+  PageRecordTyped,
   TimestampStatusCount,
+  PageSettingsType,
 } from "../types/db.js";
 import GC from "../../global-constants.js";
+
+// Default page settings
+const defaultPageSettings: PageSettingsType = {
+  incidents: {
+    enabled: true,
+    ongoing: { show: true },
+    resolved: { show: true, maxCount: 5, daysInPast: 7 },
+  },
+  include_maintenances: {
+    enabled: true,
+    ongoing: {
+      show: true,
+      past: { show: true, maxCount: 5, daysInPast: 7 },
+      upcoming: { show: true, maxCount: 5, daysInFuture: 7 },
+    },
+  },
+};
 
 // Type for incident with comments
 export type IncidentWithComments = IncidentRecord & {
@@ -48,9 +67,15 @@ export const GetUpcomingMaintenances = async (
   monitor_tags: string[],
   numDays: number,
   nowTs: number,
+  maxCount: number = 10,
 ): Promise<MaintenanceEventRecordDetailed[]> => {
   const futureTimestamp = nowTs + numDays * 24 * 60 * 60;
-  const upcomingMaintenances = await db.getUpcomingMaintenanceEventsByMonitorTags(nowTs, futureTimestamp, monitor_tags);
+  const upcomingMaintenances = await db.getUpcomingMaintenanceEventsByMonitorTags(
+    nowTs,
+    futureTimestamp,
+    monitor_tags,
+    maxCount,
+  );
   return upcomingMaintenances;
 };
 
@@ -168,7 +193,7 @@ export interface PageDashboardData {
   upcomingMaintenances: MaintenanceEventRecordDetailed[];
   pastMaintenances: MaintenanceEventsMonitorList[];
   monitorTags: string[];
-  pageDetails: PageRecord;
+  pageDetails: PageRecordTyped;
   allPages: PageNavItem[];
 }
 
@@ -187,25 +212,65 @@ export const GetPageDashboardData = async (pagePath: string): Promise<PageDashbo
   const { page: pageDetails, monitors: pageMonitors } = pageData;
   const monitorTags = pageMonitors.map((pm) => pm.monitor_tag);
 
+  // Parse page settings with defaults
+  let settings: PageSettingsType = defaultPageSettings;
+  if (pageDetails.page_settings_json) {
+    try {
+      const parsed =
+        typeof pageDetails.page_settings_json === "string"
+          ? JSON.parse(pageDetails.page_settings_json)
+          : pageDetails.page_settings_json;
+      settings = { ...defaultPageSettings, ...parsed };
+    } catch {
+      settings = defaultPageSettings;
+    }
+  }
+
   const nowTs = GetMinuteStartNowTimestampUTC();
 
-  const [
-    ongoingIncidents,
-    ongoingMaintenances,
-    upcomingMaintenances,
-    pastMaintenances,
-    recentConcludedMaintenances,
-    latestData,
-    allPagesData,
-  ] = await Promise.all([
-    GetOngoingIncidentsForMonitorList(monitorTags),
-    GetOngoingMaintenances(monitorTags, nowTs),
-    GetUpcomingMaintenances(monitorTags, 7, nowTs),
-    GetPastMaintenanceEventsForMonitorList(monitorTags, 5, 7), // Recent concluded maintenance (last 7 days)
-    GetResolvedIncidentsForMonitorList(monitorTags, 5, 7), // Similar to how incidents are handled
-    GetLatestMonitoringDataAllActive(monitorTags),
-    GetAllPages(),
-  ]);
+  // Fetch data based on settings
+  const [latestData, allPagesData] = await Promise.all([GetLatestMonitoringDataAllActive(monitorTags), GetAllPages()]);
+
+  // Incidents - fetch based on settings
+  let ongoingIncidents: IncidentForMonitorList[] = [];
+  let recentConcludedMaintenances: IncidentForMonitorList[] = [];
+  if (settings.incidents.enabled) {
+    if (settings.incidents.ongoing.show) {
+      ongoingIncidents = await GetOngoingIncidentsForMonitorList(monitorTags);
+    }
+    if (settings.incidents.resolved.show) {
+      recentConcludedMaintenances = await GetResolvedIncidentsForMonitorList(
+        monitorTags,
+        settings.incidents.resolved.maxCount,
+        settings.incidents.resolved.daysInPast,
+      );
+    }
+  }
+
+  // Maintenances - fetch based on settings
+  let ongoingMaintenances: MaintenanceEventRecordDetailed[] = [];
+  let upcomingMaintenances: MaintenanceEventRecordDetailed[] = [];
+  let pastMaintenances: MaintenanceEventsMonitorList[] = [];
+  if (settings.include_maintenances.enabled) {
+    if (settings.include_maintenances.ongoing.show) {
+      ongoingMaintenances = await GetOngoingMaintenances(monitorTags, nowTs);
+    }
+    if (settings.include_maintenances.ongoing.past.show) {
+      pastMaintenances = await GetPastMaintenanceEventsForMonitorList(
+        monitorTags,
+        settings.include_maintenances.ongoing.past.maxCount,
+        settings.include_maintenances.ongoing.past.daysInPast,
+      );
+    }
+    if (settings.include_maintenances.ongoing.upcoming.show) {
+      upcomingMaintenances = await GetUpcomingMaintenances(
+        monitorTags,
+        settings.include_maintenances.ongoing.upcoming.daysInFuture,
+        nowTs,
+        settings.include_maintenances.ongoing.upcoming.maxCount,
+      );
+    }
+  }
 
   // Map to lightweight page nav items
   const allPages: PageNavItem[] = allPagesData.map((p) => ({
@@ -235,6 +300,20 @@ export const GetPageDashboardData = async (pagePath: string): Promise<PageDashbo
     statusSummary: statusSummary,
     statusClass: statusBgClass,
   };
+
+  // Convert to PageRecordTyped with parsed settings
+  const pageDetailsTyped: PageRecordTyped = {
+    id: pageDetails.id,
+    page_path: pageDetails.page_path,
+    page_title: pageDetails.page_title,
+    page_header: pageDetails.page_header,
+    page_subheader: pageDetails.page_subheader,
+    page_logo: pageDetails.page_logo,
+    page_settings: settings,
+    created_at: pageDetails.created_at,
+    updated_at: pageDetails.updated_at,
+  };
+
   return {
     pageStatus,
     recentConcludedMaintenances,
@@ -243,7 +322,7 @@ export const GetPageDashboardData = async (pagePath: string): Promise<PageDashbo
     upcomingMaintenances,
     pastMaintenances,
     monitorTags,
-    pageDetails,
+    pageDetails: pageDetailsTyped,
     allPages,
   };
 };

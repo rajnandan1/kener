@@ -1,16 +1,20 @@
 import db from "../db/db.js";
 import pkg from "rrule";
 const { RRule, rrulestr } = pkg;
-import { addDays } from "date-fns";
+import { addDays, formatDistanceStrict } from "date-fns";
 import type {
   MaintenanceRecord,
   MaintenanceRecordInsert,
   MaintenanceEventRecord,
   MaintenanceEventRecordInsert,
+  MaintenanceEventRecordDetailed,
   MaintenanceMonitorRecord,
   MaintenanceFilter,
   MaintenanceEventFilter,
 } from "../types/db.js";
+import { GetMinuteStartNowTimestampUTC } from "../tool.js";
+import { maintenanceToVariables } from "../notification/notification_utils.js";
+import subscriberQueue from "../queues/subscriberQueue.js";
 
 // ============ Input Interfaces ============
 
@@ -476,4 +480,76 @@ export const formatDurationSeconds = (seconds: number): string => {
   const mins = minutes % 60;
   if (mins === 0) return `${hours}h`;
   return `${hours}h ${mins}m`;
+};
+
+// ============ Scheduled Status Updates ============
+
+/**
+ * Update maintenance event statuses based on current time:
+ * 1. SCHEDULED events starting within 60 minutes → READY
+ * 2. READY events where current time is within start/end → ONGOING
+ * 3. ONGOING events where end_date_time has passed → COMPLETED
+ */
+export const UpdateMaintenanceEventStatuses = async (): Promise<void> => {
+  const currentTimestamp = GetMinuteStartNowTimestampUTC();
+  const sixtyMinutesInSeconds = 60 * 60;
+
+  try {
+    // 1. Mark SCHEDULED events starting within 60 minutes as READY
+    const scheduledEvents = await db.getScheduledEventsStartingSoon(currentTimestamp, sixtyMinutesInSeconds);
+    for (const event of scheduledEvents) {
+      await db.updateMaintenanceEventStatus(event.id, "READY");
+      console.log(`Maintenance event ${event.id} marked as READY (starts at ${event.start_date_time})`);
+      const monitors = await db.getMonitorsByMaintenanceId(event.maintenance_id);
+      const monitorNames = monitors.map((m) => `${m.monitor_name}(${m.monitor_impact})`).join(", ");
+      const timeUntilStart = formatDistanceStrict(
+        new Date(event.start_date_time * 1000),
+        new Date(currentTimestamp * 1000),
+      );
+      const update = maintenanceToVariables(
+        event,
+        monitorNames,
+        `**is starting in ${timeUntilStart}**`,
+        "starting_soon",
+        "Maintenance Starting Soon",
+      );
+      await subscriberQueue.push(update);
+    }
+
+    // 2. Mark READY events that are now in progress as ONGOING
+    const readyEvents = await db.getReadyEventsInProgress(currentTimestamp);
+    for (const event of readyEvents) {
+      await db.updateMaintenanceEventStatus(event.id, "ONGOING");
+      console.log(`Maintenance event ${event.id} marked as ONGOING`);
+      const monitors = await db.getMonitorsByMaintenanceId(event.maintenance_id);
+      const monitorNames = monitors.map((m) => `${m.monitor_name}(${m.monitor_impact})`).join(", ");
+      const update = maintenanceToVariables(
+        event,
+        monitorNames,
+        "**is now in progress**",
+        "ongoing",
+        "Maintenance In Progress",
+      );
+      await subscriberQueue.push(update);
+    }
+
+    // 3. Mark ONGOING events that have ended as COMPLETED
+    const ongoingEvents = await db.getOngoingEventsCompleted(currentTimestamp);
+    for (const event of ongoingEvents) {
+      await db.updateMaintenanceEventStatus(event.id, "COMPLETED");
+      console.log(`Maintenance event ${event.id} marked as COMPLETED`);
+      const monitors = await db.getMonitorsByMaintenanceId(event.maintenance_id);
+      const monitorNames = monitors.map((m) => `${m.monitor_name}(${m.monitor_impact})`).join(", ");
+      const update = maintenanceToVariables(
+        event,
+        monitorNames,
+        "**has been completed**",
+        "completed",
+        "Maintenance Completed",
+      );
+      await subscriberQueue.push(update);
+    }
+  } catch (error) {
+    console.error("Error updating maintenance event statuses:", error);
+  }
 };

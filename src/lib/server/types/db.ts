@@ -425,8 +425,33 @@ export interface PageRecordInsert {
 }
 
 export interface PageSettingsType {
-  include_incidents: boolean;
-  include_maintenances: boolean;
+  incidents: {
+    enabled: boolean;
+    ongoing: {
+      show: boolean;
+    };
+    resolved: {
+      show: boolean;
+      maxCount: number;
+      daysInPast: number;
+    };
+  };
+  include_maintenances: {
+    enabled: boolean;
+    ongoing: {
+      show: boolean;
+      past: {
+        show: boolean;
+        maxCount: number;
+        daysInPast: number;
+      };
+      upcoming: {
+        show: boolean;
+        maxCount: number;
+        daysInFuture: number;
+      };
+    };
+  };
 }
 
 export interface PageRecordTyped {
@@ -504,6 +529,30 @@ export interface MaintenanceMonitorRecord {
   updated_at: Date;
 }
 
+export interface MaintenanceMonitorDetailRecord {
+  id: number;
+  maintenance_id: number;
+  monitor_tag: string;
+  monitor_impact: "UP" | "DOWN" | "DEGRADED" | "MAINTENANCE";
+  monitor_name: string;
+  monitor_image: string | null;
+  monitor_description: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface MaintenanceMonitorDetailRecord {
+  id: number;
+  maintenance_id: number;
+  monitor_tag: string;
+  monitor_impact: "UP" | "DOWN" | "DEGRADED" | "MAINTENANCE";
+  monitor_name: string;
+  monitor_image: string | null;
+  monitor_description: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
 export interface MaintenanceMonitorRecordInsert {
   maintenance_id: number;
   monitor_tag: string;
@@ -517,7 +566,7 @@ export interface MaintenanceEventRecord {
   maintenance_id: number;
   start_date_time: number;
   end_date_time: number;
-  status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  status: "SCHEDULED" | "ONGOING" | "COMPLETED" | "CANCELLED";
   created_at: Date;
   updated_at: Date;
 }
@@ -527,7 +576,7 @@ export interface MaintenanceEventRecordDetailed {
   maintenance_id: number;
   start_date_time: number;
   end_date_time: number;
-  status: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  status: "SCHEDULED" | "ONGOING" | "COMPLETED" | "CANCELLED";
   created_at: Date;
   updated_at: Date;
   title: string;
@@ -538,7 +587,7 @@ export interface MaintenanceEventRecordInsert {
   maintenance_id: number;
   start_date_time: number;
   end_date_time: number;
-  status?: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  status?: "SCHEDULED" | "ONGOING" | "COMPLETED" | "CANCELLED";
 }
 
 // ============ Maintenance Filter ============
@@ -550,7 +599,7 @@ export interface MaintenanceFilter {
 export interface MaintenanceEventFilter {
   id?: number;
   maintenance_id?: number;
-  status?: "SCHEDULED" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  status?: "SCHEDULED" | "ONGOING" | "COMPLETED" | "CANCELLED";
 }
 
 export interface MaintenanceMonitorImpact {

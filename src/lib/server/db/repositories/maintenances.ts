@@ -11,6 +11,7 @@ import type {
   MaintenanceEventFilter,
   MaintenanceEventRecordDetailed,
   MaintenanceEventsMonitorList,
+  MaintenanceMonitorDetailRecord,
 } from "../../types/db.js";
 import GC from "../../../global-constants.js";
 
@@ -28,7 +29,7 @@ export class MaintenancesRepository extends BaseRepository {
       start_date_time: data.start_date_time,
       rrule: data.rrule,
       duration_seconds: data.duration_seconds,
-      status: data.status || "ACTIVE",
+      status: data.status || GC.ACTIVE,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     };
@@ -134,7 +135,7 @@ export class MaintenancesRepository extends BaseRepository {
 
   async addMonitorsToMaintenanceWithStatus(
     maintenance_id: number,
-    monitors: Array<{ monitor_tag: string; monitor_impact: "UP" | "DOWN" | "DEGRADED" | "MAINTENANCE" }>,
+    monitors: Array<{ monitor_tag: string; monitor_impact: string }>,
   ): Promise<void> {
     if (monitors.length === 0) return;
 
@@ -168,7 +169,7 @@ export class MaintenancesRepository extends BaseRepository {
   async updateMonitorImpactInMaintenanceMonitors(
     maintenance_id: number,
     monitor_tag: string,
-    monitor_impact: "UP" | "DOWN" | "DEGRADED" | "MAINTENANCE",
+    monitor_impact: string,
   ): Promise<number> {
     return await this.knex("maintenance_monitors").where({ maintenance_id, monitor_tag }).update({
       monitor_impact,
@@ -178,6 +179,18 @@ export class MaintenancesRepository extends BaseRepository {
 
   async getMaintenanceMonitors(maintenance_id: number): Promise<MaintenanceMonitorRecord[]> {
     return await this.knex("maintenance_monitors").where("maintenance_id", maintenance_id);
+  }
+
+  async getMonitorsByMaintenanceId(maintenance_id: number): Promise<MaintenanceMonitorDetailRecord[]> {
+    return await this.knex("maintenance_monitors")
+      .join("monitors", "maintenance_monitors.monitor_tag", "monitors.tag")
+      .where("maintenance_monitors.maintenance_id", maintenance_id)
+      .select(
+        "maintenance_monitors.*",
+        "monitors.name as monitor_name",
+        "monitors.image as monitor_image",
+        "monitors.description as monitor_description",
+      );
   }
 
   async getMaintenancesForMonitor(monitor_tag: string, status?: "ACTIVE" | "INACTIVE"): Promise<MaintenanceRecord[]> {
@@ -201,7 +214,7 @@ export class MaintenancesRepository extends BaseRepository {
       maintenance_id: data.maintenance_id,
       start_date_time: data.start_date_time,
       end_date_time: data.end_date_time,
-      status: data.status || "SCHEDULED",
+      status: data.status || GC.SCHEDULED,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     };
@@ -287,7 +300,7 @@ export class MaintenancesRepository extends BaseRepository {
 
   async getActiveMaintenanceEvents(start: number, end: number): Promise<MaintenanceEventRecord[]> {
     return await this.knex("maintenances_events")
-      .whereIn("status", ["SCHEDULED", "ONGOING"])
+      .whereIn("status", [GC.SCHEDULED, GC.ONGOING])
       .andWhere("start_date_time", "<=", end)
       .andWhere("end_date_time", ">=", start)
       .orderBy("start_date_time", "asc");
@@ -324,8 +337,8 @@ export class MaintenancesRepository extends BaseRepository {
       .where("mm.monitor_tag", monitor_tag)
       .andWhere("me.start_date_time", "<=", timestamp)
       .andWhere("me.end_date_time", ">=", timestamp)
-      .whereIn("me.status", ["SCHEDULED", "READY", "ONGOING"])
-      .andWhere("m.status", "ACTIVE");
+      .whereIn("me.status", [GC.SCHEDULED, GC.READY, GC.ONGOING])
+      .andWhere("m.status", GC.ACTIVE);
   }
 
   async updateMaintenanceEvent(id: number, data: Partial<MaintenanceEventRecordInsert>): Promise<number> {
@@ -351,40 +364,41 @@ export class MaintenancesRepository extends BaseRepository {
   async getScheduledEventsStartingSoon(
     currentTimestamp: number,
     withinSeconds: number,
-  ): Promise<MaintenanceEventRecord[]> {
+  ): Promise<MaintenanceEventRecordDetailed[]> {
     const futureTimestamp = currentTimestamp + withinSeconds;
     return await this.knex("maintenances_events")
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
-      .where("maintenances_events.status", "SCHEDULED")
-      .andWhere("maintenances.status", "ACTIVE")
+      .where("maintenances_events.status", GC.SCHEDULED)
+      .andWhere("maintenances.status", GC.ACTIVE)
       .andWhere("maintenances_events.start_date_time", ">", currentTimestamp)
       .andWhere("maintenances_events.start_date_time", "<=", futureTimestamp)
-      .select("maintenances_events.*");
+      .select("maintenances_events.*", "maintenances.title", "maintenances.description");
   }
 
   /**
    * Get READY maintenance events where current timestamp falls within start and end
    * These should be marked as ONGOING
    */
-  async getReadyEventsInProgress(currentTimestamp: number): Promise<MaintenanceEventRecord[]> {
+  async getReadyEventsInProgress(currentTimestamp: number): Promise<MaintenanceEventRecordDetailed[]> {
     return await this.knex("maintenances_events")
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
-      .where("maintenances_events.status", "READY")
-      .andWhere("maintenances.status", "ACTIVE")
+      .where("maintenances_events.status", GC.READY)
+      .andWhere("maintenances.status", GC.ACTIVE)
       .andWhere("maintenances_events.start_date_time", "<=", currentTimestamp)
       .andWhere("maintenances_events.end_date_time", ">=", currentTimestamp)
-      .select("maintenances_events.*");
+      .select("maintenances_events.*", "maintenances.title", "maintenances.description");
   }
 
   /**
    * Get ONGOING maintenance events where end_date_time has passed
    * These should be marked as COMPLETED
    */
-  async getOngoingEventsCompleted(currentTimestamp: number): Promise<MaintenanceEventRecord[]> {
+  async getOngoingEventsCompleted(currentTimestamp: number): Promise<MaintenanceEventRecordDetailed[]> {
     return await this.knex("maintenances_events")
-      .where("status", "ONGOING")
-      .andWhere("end_date_time", "<", currentTimestamp)
-      .select("*");
+      .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
+      .where("maintenances_events.status", GC.ONGOING)
+      .andWhere("maintenances_events.end_date_time", "<", currentTimestamp)
+      .select("maintenances_events.*", "maintenances.title", "maintenances.description");
   }
 
   async deleteMaintenanceEvent(id: number): Promise<number> {
@@ -400,8 +414,8 @@ export class MaintenancesRepository extends BaseRepository {
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
       .join("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
       .whereIn("maintenance_monitors.monitor_tag", monitorTags)
-      .andWhere("maintenances.status", "ACTIVE")
-      .whereIn("maintenances_events.status", ["SCHEDULED", "ONGOING"])
+      .andWhere("maintenances.status", GC.ACTIVE)
+      .whereIn("maintenances_events.status", [GC.ONGOING])
       .andWhere("maintenances_events.start_date_time", "<=", timestamp)
       .andWhere("maintenances_events.end_date_time", ">=", timestamp)
       .orderBy("maintenances_events.start_date_time", "desc");
@@ -411,17 +425,19 @@ export class MaintenancesRepository extends BaseRepository {
     currentTimestamp: number,
     futureTimestamp: number,
     monitorTags: string[],
+    maxCount: number = 10,
   ): Promise<MaintenanceEventRecordDetailed[]> {
     return await this.knex("maintenances_events")
       .distinct("maintenances_events.*", "maintenances.title", "maintenances.description")
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
       .join("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
       .whereIn("maintenance_monitors.monitor_tag", monitorTags)
-      .andWhere("maintenances.status", "ACTIVE")
-      .andWhere("maintenances_events.status", "SCHEDULED")
+      .andWhere("maintenances.status", GC.ACTIVE)
+      .andWhere("maintenances_events.status", GC.SCHEDULED)
       .andWhere("maintenances_events.start_date_time", ">", currentTimestamp)
       .andWhere("maintenances_events.start_date_time", "<=", futureTimestamp)
-      .orderBy("maintenances_events.start_date_time", "asc");
+      .orderBy("maintenances_events.start_date_time", "asc")
+      .limit(maxCount);
   }
 
   // ============ Maintenance Events for Monitor List ============
@@ -450,8 +466,8 @@ export class MaintenancesRepository extends BaseRepository {
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
       .join("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
       .whereIn("maintenance_monitors.monitor_tag", monitorTags)
-      .andWhere("maintenances.status", "ACTIVE")
-      .whereIn("maintenances_events.status", ["SCHEDULED", "ONGOING"])
+      .andWhere("maintenances.status", GC.ACTIVE)
+      .whereIn("maintenances_events.status", [GC.ONGOING])
       .andWhere("maintenances_events.start_date_time", "<=", timestamp)
       .andWhere("maintenances_events.end_date_time", ">=", timestamp)
       .orderBy("maintenances_events.start_date_time", "desc");
@@ -484,6 +500,7 @@ export class MaintenancesRepository extends BaseRepository {
       .whereIn("maintenance_monitors.monitor_tag", monitorTags)
       .andWhere("maintenances_events.end_date_time", "<", timestamp)
       .andWhere("maintenances_events.end_date_time", ">=", pastTimestamp)
+      .whereIn("maintenances_events.status", [GC.COMPLETED])
       .orderBy("maintenances_events.end_date_time", "desc")
       .limit(limit);
   }
@@ -513,8 +530,8 @@ export class MaintenancesRepository extends BaseRepository {
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
       .join("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
       .whereIn("maintenance_monitors.monitor_tag", monitorTags)
-      .andWhere("maintenances.status", "ACTIVE")
-      .andWhere("maintenances_events.status", "SCHEDULED")
+      .andWhere("maintenances.status", GC.ACTIVE)
+      .andWhere("maintenances_events.status", GC.SCHEDULED)
       .andWhere("maintenances_events.start_date_time", ">", timestamp)
       .andWhere("maintenances_events.start_date_time", "<=", futureTimestamp)
       .orderBy("maintenances_events.start_date_time", "asc")

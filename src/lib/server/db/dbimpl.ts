@@ -223,6 +223,7 @@ class DbImpl {
   removeMonitorFromMaintenance!: MaintenancesRepository["removeMonitorFromMaintenance"];
   removeAllMonitorsFromMaintenance!: MaintenancesRepository["removeAllMonitorsFromMaintenance"];
   getMaintenanceMonitors!: MaintenancesRepository["getMaintenanceMonitors"];
+  getMonitorsByMaintenanceId!: MaintenancesRepository["getMonitorsByMaintenanceId"];
   getMaintenancesForMonitor!: MaintenancesRepository["getMaintenancesForMonitor"];
   deleteMaintenanceMonitorsByTag!: MaintenancesRepository["deleteMaintenanceMonitorsByTag"];
   updateMonitorImpactInMaintenanceMonitors!: MaintenancesRepository["updateMonitorImpactInMaintenanceMonitors"];
@@ -557,6 +558,7 @@ class DbImpl {
     this.removeMonitorFromMaintenance = this.maintenances.removeMonitorFromMaintenance.bind(this.maintenances);
     this.removeAllMonitorsFromMaintenance = this.maintenances.removeAllMonitorsFromMaintenance.bind(this.maintenances);
     this.getMaintenanceMonitors = this.maintenances.getMaintenanceMonitors.bind(this.maintenances);
+    this.getMonitorsByMaintenanceId = this.maintenances.getMonitorsByMaintenanceId.bind(this.maintenances);
     this.getMaintenancesForMonitor = this.maintenances.getMaintenancesForMonitor.bind(this.maintenances);
     this.deleteMaintenanceMonitorsByTag = this.maintenances.deleteMaintenanceMonitorsByTag.bind(this.maintenances);
     this.updateMonitorImpactInMaintenanceMonitors = this.maintenances.updateMonitorImpactInMaintenanceMonitors.bind(

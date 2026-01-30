@@ -23,7 +23,6 @@ import {
   UpdateMonitorAlertV2Status,
 } from "../controllers/monitorAlertConfigController.js";
 import type { IncidentInput } from "../controllers/incidentController.js";
-let alertingQueue: Queue | null = null;
 import { InsertNewAlert } from "../controllers/controller.js";
 import { GetMonitorAlertsV2 } from "../controllers/monitorAlertConfigController.js";
 import db from "../db/db.js";
@@ -38,6 +37,7 @@ import sendDiscord from "$lib/server/notification/discord_notification.js";
 import type { SiteDataForNotification, SubscriptionVariableMap } from "../notification/types.js";
 import mdToHTML from "../../marked.js";
 import subscriberQueue from "./subscriberQueue.js";
+let alertingQueue: Queue | null = null;
 
 let worker: Worker | null = null;
 const queueName = "alertingQueue";

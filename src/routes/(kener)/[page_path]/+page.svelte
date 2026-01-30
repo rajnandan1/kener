@@ -52,6 +52,7 @@
   </div>
 
   <EventsCard
+    pageSettings={data.pageDetails.page_settings}
     ongoingMaintenancesCount={data.ongoingMaintenances.length}
     ongoingIncidentsCount={data.ongoingIncidents.length}
     upcomingMaintenancesCount={data.upcomingMaintenances.length}

@@ -8,6 +8,7 @@
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
+  import { Switch } from "$lib/components/ui/switch/index.js";
   import { toast } from "svelte-sonner";
   import Loader from "@lucide/svelte/icons/loader";
   import SaveIcon from "@lucide/svelte/icons/save";
@@ -16,11 +17,28 @@
   import UploadIcon from "@lucide/svelte/icons/upload";
   import ImageIcon from "@lucide/svelte/icons/image";
   import TrashIcon from "@lucide/svelte/icons/trash";
-  import type { PageRecord, MonitorRecord } from "$lib/server/types/db.js";
+  import type { PageRecord, MonitorRecord, PageSettingsType } from "$lib/server/types/db.js";
   import { mode } from "mode-watcher";
   import CodeMirror from "svelte-codemirror-editor";
   import { markdown } from "@codemirror/lang-markdown";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
+
+  // Default page settings
+  const defaultPageSettings: PageSettingsType = {
+    incidents: {
+      enabled: true,
+      ongoing: { show: true },
+      resolved: { show: true, maxCount: 5, daysInPast: 7 }
+    },
+    include_maintenances: {
+      enabled: true,
+      ongoing: {
+        show: true,
+        past: { show: true, maxCount: 5, daysInPast: 7 },
+        upcoming: { show: true, maxCount: 5, daysInFuture: 7 }
+      }
+    }
+  };
 
   interface PageWithMonitors extends PageRecord {
     monitors?: { monitor_tag: string }[];
@@ -62,6 +80,10 @@
     !isNew && currentPage && currentPage.page_path !== "/" && deleteConfirmText === `delete ${currentPage?.page_path}`
   );
 
+  // Page settings state
+  let pageSettings = $state<PageSettingsType>(structuredClone(defaultPageSettings));
+  let savingSettings = $state(false);
+
   // Validation
   const isFormValid = $derived(
     formData.page_path.trim().length > 0 &&
@@ -100,6 +122,20 @@
           page_logo: foundPage.page_logo || ""
         };
         selectedMonitors = foundPage.monitors?.map((m: { monitor_tag: string }) => m.monitor_tag) || [];
+        // Load page settings with defaults
+        if (foundPage.page_settings_json) {
+          try {
+            const parsed =
+              typeof foundPage.page_settings_json === "string"
+                ? JSON.parse(foundPage.page_settings_json)
+                : foundPage.page_settings_json;
+            pageSettings = { ...structuredClone(defaultPageSettings), ...parsed };
+          } catch {
+            pageSettings = structuredClone(defaultPageSettings);
+          }
+        } else {
+          pageSettings = structuredClone(defaultPageSettings);
+        }
       } else {
         toast.error("Page not found");
         goto("/manage/app/pages");
@@ -339,6 +375,36 @@
     formData.page_logo = "";
   }
 
+  async function savePageSettings() {
+    if (!currentPage) return;
+
+    savingSettings = true;
+    try {
+      const response = await fetch("/manage/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "updatePage",
+          data: {
+            id: currentPage.id,
+            page_settings_json: JSON.stringify(pageSettings)
+          }
+        })
+      });
+
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Page settings saved successfully");
+      }
+    } catch (e) {
+      toast.error("Failed to save page settings");
+    } finally {
+      savingSettings = false;
+    }
+  }
+
   $effect(() => {
     fetchPage();
     fetchMonitors();
@@ -566,6 +632,202 @@
             {/if}
           </div>
         </Card.Content>
+      </Card.Root>
+
+      <!-- Page Settings Card -->
+      <Card.Root>
+        <Card.Header>
+          <Card.Title>Display Settings</Card.Title>
+          <Card.Description>Configure what content is shown on this status page</Card.Description>
+        </Card.Header>
+        <Card.Content class="space-y-6">
+          <!-- Incidents Section -->
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <Label class="text-base font-medium">Incidents</Label>
+                <p class="text-muted-foreground text-sm">Show incident information on this page</p>
+              </div>
+              <Switch
+                checked={pageSettings.incidents.enabled}
+                onCheckedChange={(v) => (pageSettings.incidents.enabled = v)}
+              />
+            </div>
+
+            {#if pageSettings.incidents.enabled}
+              <div class="border-muted ml-4 space-y-4 border-l-2 pl-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <Label>Show Ongoing Incidents</Label>
+                    <p class="text-muted-foreground text-xs">Display currently active incidents</p>
+                  </div>
+                  <Switch
+                    checked={pageSettings.incidents.ongoing.show}
+                    onCheckedChange={(v) => (pageSettings.incidents.ongoing.show = v)}
+                  />
+                </div>
+
+                <div class="flex items-center justify-between">
+                  <div>
+                    <Label>Show Resolved Incidents</Label>
+                    <p class="text-muted-foreground text-xs">Display recently resolved incidents</p>
+                  </div>
+                  <Switch
+                    checked={pageSettings.incidents.resolved.show}
+                    onCheckedChange={(v) => (pageSettings.incidents.resolved.show = v)}
+                  />
+                </div>
+
+                {#if pageSettings.incidents.resolved.show}
+                  <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                      <Label for="incidents-max-count">Max Resolved Count</Label>
+                      <Input
+                        id="incidents-max-count"
+                        type="number"
+                        min="1"
+                        max="50"
+                        bind:value={pageSettings.incidents.resolved.maxCount}
+                      />
+                      <p class="text-muted-foreground text-xs">Maximum resolved incidents to display</p>
+                    </div>
+                    <div class="space-y-2">
+                      <Label for="incidents-days-past">Days in Past</Label>
+                      <Input
+                        id="incidents-days-past"
+                        type="number"
+                        min="1"
+                        max="90"
+                        bind:value={pageSettings.incidents.resolved.daysInPast}
+                      />
+                      <p class="text-muted-foreground text-xs">Look back period for resolved incidents</p>
+                    </div>
+                  </div>
+                {/if}
+              </div>
+            {/if}
+          </div>
+
+          <hr class="border-muted" />
+
+          <!-- Maintenances Section -->
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <Label class="text-base font-medium">Maintenances</Label>
+                <p class="text-muted-foreground text-sm">Show maintenance information on this page</p>
+              </div>
+              <Switch
+                checked={pageSettings.include_maintenances.enabled}
+                onCheckedChange={(v) => (pageSettings.include_maintenances.enabled = v)}
+              />
+            </div>
+
+            {#if pageSettings.include_maintenances.enabled}
+              <div class="border-muted ml-4 space-y-4 border-l-2 pl-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <Label>Show Ongoing Maintenances</Label>
+                    <p class="text-muted-foreground text-xs">Display currently active maintenance windows</p>
+                  </div>
+                  <Switch
+                    checked={pageSettings.include_maintenances.ongoing.show}
+                    onCheckedChange={(v) => (pageSettings.include_maintenances.ongoing.show = v)}
+                  />
+                </div>
+
+                <!-- Past Maintenances -->
+                <div class="flex items-center justify-between">
+                  <div>
+                    <Label>Show Past Maintenances</Label>
+                    <p class="text-muted-foreground text-xs">Display recently completed maintenances</p>
+                  </div>
+                  <Switch
+                    checked={pageSettings.include_maintenances.ongoing.past.show}
+                    onCheckedChange={(v) => (pageSettings.include_maintenances.ongoing.past.show = v)}
+                  />
+                </div>
+
+                {#if pageSettings.include_maintenances.ongoing.past.show}
+                  <div class="ml-4 grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                      <Label for="maint-past-max">Max Past Count</Label>
+                      <Input
+                        id="maint-past-max"
+                        type="number"
+                        min="1"
+                        max="50"
+                        bind:value={pageSettings.include_maintenances.ongoing.past.maxCount}
+                      />
+                      <p class="text-muted-foreground text-xs">Maximum past maintenances to display</p>
+                    </div>
+                    <div class="space-y-2">
+                      <Label for="maint-past-days">Days in Past</Label>
+                      <Input
+                        id="maint-past-days"
+                        type="number"
+                        min="1"
+                        max="90"
+                        bind:value={pageSettings.include_maintenances.ongoing.past.daysInPast}
+                      />
+                      <p class="text-muted-foreground text-xs">Look back period for past maintenances</p>
+                    </div>
+                  </div>
+                {/if}
+
+                <!-- Upcoming Maintenances -->
+                <div class="flex items-center justify-between">
+                  <div>
+                    <Label>Show Upcoming Maintenances</Label>
+                    <p class="text-muted-foreground text-xs">Display scheduled future maintenances</p>
+                  </div>
+                  <Switch
+                    checked={pageSettings.include_maintenances.ongoing.upcoming.show}
+                    onCheckedChange={(v) => (pageSettings.include_maintenances.ongoing.upcoming.show = v)}
+                  />
+                </div>
+
+                {#if pageSettings.include_maintenances.ongoing.upcoming.show}
+                  <div class="ml-4 grid grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                      <Label for="maint-upcoming-max">Max Upcoming Count</Label>
+                      <Input
+                        id="maint-upcoming-max"
+                        type="number"
+                        min="1"
+                        max="50"
+                        bind:value={pageSettings.include_maintenances.ongoing.upcoming.maxCount}
+                      />
+                      <p class="text-muted-foreground text-xs">Maximum upcoming maintenances to display</p>
+                    </div>
+                    <div class="space-y-2">
+                      <Label for="maint-upcoming-days">Days in Future</Label>
+                      <Input
+                        id="maint-upcoming-days"
+                        type="number"
+                        min="1"
+                        max="90"
+                        bind:value={pageSettings.include_maintenances.ongoing.upcoming.daysInFuture}
+                      />
+                      <p class="text-muted-foreground text-xs">Look ahead period for upcoming maintenances</p>
+                    </div>
+                  </div>
+                {/if}
+              </div>
+            {/if}
+          </div>
+        </Card.Content>
+        <Card.Footer class="flex justify-end">
+          <Button onclick={savePageSettings} disabled={savingSettings}>
+            {#if savingSettings}
+              <Loader class="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            {:else}
+              <SaveIcon class="mr-2 h-4 w-4" />
+              Save Preferences
+            {/if}
+          </Button>
+        </Card.Footer>
       </Card.Root>
 
       <!-- Danger Zone Card (only for non-home pages) -->

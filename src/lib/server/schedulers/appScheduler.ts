@@ -2,12 +2,11 @@ import type { MonitorRecordTyped } from "../types/db";
 
 import { Queue, Worker, Job, type JobsOptions, type JobSchedulerTemplateOptions } from "bullmq";
 import q from "../queues/q.js";
-import { InsertMonitoringData } from "../controllers/controller.js";
-import { GetMinuteStartNowTimestampUTC, GetNowTimestampUTC, HashString } from "../tool.js";
+import { HashString } from "../tool.js";
 import { getSchedulers, addJobToSchedulerQueue, removeJobFromSchedulerQueue } from "./monitorSchedulers.js";
-import db from "../db/db.js";
 
 import { GetMonitorsParsed } from "../controllers/controller.js";
+import { UpdateMaintenanceEventStatuses } from "../controllers/maintenanceController.js";
 
 let appSchedulerQueue: Queue | null = null;
 let worker: Worker | null = null;
@@ -72,7 +71,7 @@ const addWorker = () => {
     }
 
     //we have to update the maintenances events also
-    await updateMaintenanceEventStatuses();
+    await UpdateMaintenanceEventStatuses();
 
     return activeMonitors.length;
   });
@@ -100,42 +99,6 @@ export const start = async (options?: JobSchedulerTemplateOptions) => {
       opts: options,
     },
   );
-};
-
-/**
- * Update maintenance event statuses based on current time:
- * 1. SCHEDULED events starting within 60 minutes → READY
- * 2. READY events where current time is within start/end → ONGOING
- * 3. ONGOING events where end_date_time has passed → COMPLETED
- */
-const updateMaintenanceEventStatuses = async (): Promise<void> => {
-  const currentTimestamp = GetMinuteStartNowTimestampUTC();
-  const sixtyMinutesInSeconds = 60 * 60;
-
-  try {
-    // 1. Mark SCHEDULED events starting within 60 minutes as READY
-    const scheduledEvents = await db.getScheduledEventsStartingSoon(currentTimestamp, sixtyMinutesInSeconds);
-    for (const event of scheduledEvents) {
-      await db.updateMaintenanceEventStatus(event.id, "READY");
-      console.log(`Maintenance event ${event.id} marked as READY (starts at ${event.start_date_time})`);
-    }
-
-    // 2. Mark READY events that are now in progress as ONGOING
-    const readyEvents = await db.getReadyEventsInProgress(currentTimestamp);
-    for (const event of readyEvents) {
-      await db.updateMaintenanceEventStatus(event.id, "ONGOING");
-      console.log(`Maintenance event ${event.id} marked as ONGOING`);
-    }
-
-    // 3. Mark ONGOING events that have ended as COMPLETED
-    const ongoingEvents = await db.getOngoingEventsCompleted(currentTimestamp);
-    for (const event of ongoingEvents) {
-      await db.updateMaintenanceEventStatus(event.id, "COMPLETED");
-      console.log(`Maintenance event ${event.id} marked as COMPLETED`);
-    }
-  } catch (error) {
-    console.error("Error updating maintenance event statuses:", error);
-  }
 };
 
 //graceful shutdown
