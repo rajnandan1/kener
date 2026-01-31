@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { format, formatDistanceStrict } from "date-fns";
   import * as Item from "$lib/components/ui/item/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import ArrowRight from "@lucide/svelte/icons/arrow-right";
@@ -8,6 +7,7 @@
   import { Badge } from "$lib/components/ui/badge/index.js";
   import STATUS_ICON from "$lib/icons";
   import { t } from "$lib/stores/i18n";
+  import { formatDate, formatDuration } from "$lib/stores/datetime";
 
   interface MaintenanceMonitorImpact {
     monitor_tag: string;
@@ -82,13 +82,6 @@
     return now >= maintenance.start_date_time && now <= maintenance.end_date_time;
   });
 
-  // Calculate duration between start and end
-  const duration = $derived(() => {
-    const startDate = new Date(maintenance.start_date_time * 1000);
-    const endDate = new Date(maintenance.end_date_time * 1000);
-    return formatDistanceStrict(startDate, endDate);
-  });
-
   // Truncate description to approximately 2-3 lines
   function truncateDescription(text: string | null, maxLength: number = 150): string {
     if (!text) return "";
@@ -161,14 +154,16 @@
     <Item.Description>
       <div class="mt-2 flex items-center justify-between text-xs font-medium">
         <div class="rounded-full border px-3 py-2">
-          {format(new Date(maintenance.start_date_time * 1000), "PPp")}
+          {$formatDate(maintenance.start_date_time, "PPp")}
         </div>
         <div class="relative flex-1 text-center">
           <div class="absolute top-1/2 right-0 left-0 border-t border-solid"></div>
-          <span class="bg-background relative z-10 px-2 py-1 font-medium">{duration()}</span>
+          <span class="bg-background relative z-10 px-2 py-1 font-medium"
+            >{$formatDuration(maintenance.start_date_time, maintenance.end_date_time)}</span
+          >
         </div>
         <div class="rounded-full border px-3 py-2">
-          {format(new Date(maintenance.end_date_time * 1000), "PPp")}
+          {$formatDate(maintenance.end_date_time, "PPp")}
         </div>
       </div>
     </Item.Description>

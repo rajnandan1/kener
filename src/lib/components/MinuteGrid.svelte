@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import { format } from "date-fns";
   import { mode } from "mode-watcher";
   import { page } from "$app/state";
   import TrendingUp from "lucide-svelte/icons/trending-up";
   import { t } from "$lib/stores/i18n";
+  import { formatDate } from "$lib/stores/datetime";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
 
   interface MinuteData {
@@ -130,10 +130,6 @@
     if (s === "DEGRADED") return colorDegraded;
     if (s === "MAINTENANCE") return colorMaintenance;
     return mode.current === "dark" ? "#27272a" : "#e4e4e7";
-  }
-
-  function formatTime(timestamp: number): string {
-    return format(new Date(timestamp * 1000), "HH:mm");
   }
 
   // Build a lookup map for hit testing
@@ -314,7 +310,8 @@
         class="bg-foreground text-secondary pointer-events-none absolute z-20 w-max -translate-x-1/2 rounded-md px-2 py-1 text-xs font-medium whitespace-nowrap"
         style={tooltipStyle}
       >
-        {formatTime(hoveredMinute.data.timestamp)} - {$t(hoveredMinute.data.status)}
+        {$formatDate(hoveredMinute.data.timestamp, "HH:mm")} -
+        <span class="text-{hoveredMinute.data.status.toLowerCase()}">{$t(hoveredMinute.data.status)}</span>
       </div>
     {/if}
   </div>

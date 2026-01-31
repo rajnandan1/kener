@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { format } from "date-fns";
   import { resolve } from "$app/paths";
   import ChevronLeft from "lucide-svelte/icons/chevron-left";
   import Clock from "lucide-svelte/icons/clock";
@@ -17,6 +16,7 @@
   import constants from "$lib/global-constants.js";
   import CloudAlertIcon from "@lucide/svelte/icons/cloud-alert";
   import { t } from "$lib/stores/i18n";
+  import { formatDate, formatDuration } from "$lib/stores/datetime";
 
   let { data } = $props();
 
@@ -49,18 +49,6 @@
         return "bg-muted";
     }
   }
-
-  // Format duration between two timestamps
-  function formatDuration(start: number, end: number | null): string {
-    if (!end) return "Ongoing";
-    const durationSeconds = end - start;
-    const hours = Math.floor(durationSeconds / 3600);
-    const minutes = Math.floor((durationSeconds % 3600) / 60);
-    if (hours > 0 && minutes > 0) return `${hours}h ${minutes}min`;
-    if (hours > 0) return `${hours}h`;
-    if (minutes > 0) return `${minutes}min`;
-    return "< 1min";
-  }
 </script>
 
 <div class="container mx-auto px-4 py-8">
@@ -83,18 +71,18 @@
     </div>
     <div class="flex w-full justify-between gap-2">
       <div class="flex flex-col items-start gap-1.5">
-        <span class="text-muted-foreground">Start Time</span>
-        <span>{format(new Date(data.incident.start_date_time * 1000), "PPpp")}</span>
+        <span class="text-muted-foreground">{$t("Start Time")}</span>
+        <span>{$formatDate(data.incident.start_date_time, "PPpp")}</span>
       </div>
       {#if data.incident.end_date_time}
         <div class="flex flex-col items-center gap-1.5">
-          <span class="text-muted-foreground">End Time</span>
-          <span>{format(new Date(data.incident.end_date_time * 1000), "PPpp")}</span>
+          <span class="text-muted-foreground">{$t("End Time")}</span>
+          <span>{$formatDate(data.incident.end_date_time, "PPpp")}</span>
         </div>
       {/if}
       <div class="flex flex-col items-end gap-1.5">
-        <span class="text-muted-foreground">Duration</span>
-        <span>{formatDuration(data.incident.start_date_time, data.incident.end_date_time)}</span>
+        <span class="text-muted-foreground">{$t("Duration")}</span>
+        <span>{$formatDuration(data.incident.start_date_time, data.incident.end_date_time, $t("Ongoing"))}</span>
       </div>
     </div>
   </div>
@@ -120,10 +108,10 @@
               <div class="p-4">
                 <div class="mb-2 flex items-center justify-between gap-2">
                   <Badge variant="outline" class="text-{comment.state.toLowerCase()} rounded-none border-0 p-0">
-                    {comment.state}
+                    {$t(comment.state)}
                   </Badge>
                   <span class="text-muted-foreground text-xs">
-                    {format(new Date(comment.commented_at * 1000), "PPpp")}
+                    {$formatDate(comment.commented_at, "PPpp")}
                   </span>
                 </div>
                 <div class="prose prose-sm dark:prose-invert max-w-none">

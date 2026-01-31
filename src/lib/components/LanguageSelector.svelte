@@ -32,7 +32,7 @@
 
 {#if $i18n.availableLocales.length > 1}
   <Select.Root type="single" name="language" bind:value={selectedLang}>
-    <Select.Trigger size="sm" class="ksel text-xs font-medium">
+    <Select.Trigger size="sm" class="ksel rounded-full text-xs font-medium">
       <Languages class="text-foreground" />
       {triggerContent}
     </Select.Trigger>

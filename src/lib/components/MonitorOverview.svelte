@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import { resolve } from "$app/paths";
   import * as Card from "$lib/components/ui/card/index.js";
   import { Skeleton } from "$lib/components/ui/skeleton/index.js";
@@ -7,11 +7,13 @@
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import StatusBarCalendar from "$lib/components/StatusBarCalendar.svelte";
   import LatencyTrendChart from "$lib/components/LatencyTrendChart.svelte";
-  import { page } from "$app/state";
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
   import { Button } from "$lib/components/ui/button";
   import { t } from "$lib/stores/i18n";
+  import { selectedTimezone } from "$lib/stores/timezone";
+  import { getEndOfDayAtTz } from "$lib/client/datetime";
+  import { formatDate } from "$lib/stores/datetime";
 
   interface Props {
     monitorTag: string;
@@ -24,8 +26,6 @@
   let loading = $state(true);
   let overviewData = $state<MonitorBarResponse | null>(null);
   let error = $state<string | null>(null);
-
-  const localTz = $derived(page.data.localTz || "UTC");
 
   // Day range options
   const dayOptions = [
@@ -44,23 +44,14 @@
   // Data for calendar/chart comes directly from API
   let displayData = $derived(overviewData?.uptimeData ?? []);
 
-  function formatTimestamp(timestamp: number): string {
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleDateString("en-US", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      timeZone: localTz
-    });
-  }
-
   // Fetch data with days parameter
   async function fetchData(days: number) {
     loading = true;
     error = null;
 
     try {
-      const url = `${resolve("/dashboard-apis/monitor-bar")}?tag=${monitorTag}&endOfDayTodayAtTz=${page.data.endOfDayTodayAtTz}&days=${days}`;
+      const endOfDayTodayAtTz = getEndOfDayAtTz($selectedTimezone);
+      const url = `${resolve("/dashboard-apis/monitor-bar")}?tag=${monitorTag}&endOfDayTodayAtTz=${endOfDayTodayAtTz}&days=${days}`;
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -86,6 +77,22 @@
 
   onMount(() => {
     fetchData(dayOptions[selectedDayIndex].days);
+  });
+
+  // Re-fetch when timezone changes
+  let initialLoad = true;
+  $effect(() => {
+    // Track only the timezone - this is the dependency we care about
+    const tz = $selectedTimezone;
+
+    // Use untrack to avoid tracking loading/data state changes
+    untrack(() => {
+      if (initialLoad) {
+        initialLoad = false;
+        return;
+      }
+      fetchData(dayOptions[selectedDayIndex].days);
+    });
   });
 </script>
 
@@ -159,18 +166,18 @@
       </div>
 
       <!-- Status Bar Calendar -->
-      <StatusBarCalendar data={displayData} {monitorTag} {localTz} barHeight={40} radius={8} />
+      <StatusBarCalendar data={displayData} {monitorTag} barHeight={40} radius={8} />
 
       <!-- Date labels -->
       <div class="flex justify-between">
         <p class="text-muted-foreground text-xs font-medium">
           {#if displayData.length > 0}
-            {formatTimestamp(displayData[0].ts)}
+            {$formatDate(displayData[0].ts, "d MMM yyyy")}
           {/if}
         </p>
         <p class="text-muted-foreground text-xs font-medium">
           {#if displayData.length > 0}
-            {formatTimestamp(displayData[displayData.length - 1].ts)}
+            {$formatDate(displayData[displayData.length - 1].ts, "d MMM yyyy")}
           {/if}
         </p>
       </div>

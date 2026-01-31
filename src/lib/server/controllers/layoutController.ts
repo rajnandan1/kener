@@ -1,0 +1,102 @@
+import MobileDetect from "mobile-detect";
+import type { Cookies } from "@sveltejs/kit";
+import type { PageNavItem } from "./dashboardController";
+import type { UserRecordPublic } from "$lib/server/types/db";
+import seedSiteData from "$lib/server/db/seedSiteData";
+import {
+  GetAllSiteData,
+  IsSetupComplete,
+  IsLoggedInSession,
+  GetLocaleFromCookie,
+  GetUsersCount,
+  GetAllPages,
+} from "./controller.js";
+
+export interface LayoutServerData {
+  isMobile: boolean;
+  isSetupComplete: boolean;
+  isAdminAccountCreated: boolean;
+  isLoggedIn: {
+    error?: string;
+    action?: string;
+    location?: string;
+    user?: UserRecordPublic;
+  };
+  selectedLang: string;
+  siteStatusColors: {
+    UP: string;
+    DOWN: string;
+    DEGRADED: string;
+    MAINTENANCE: string;
+  };
+  navItems: Array<{ name: string; url: string; iconURL: string }>;
+  allPages: PageNavItem[];
+  siteName: string;
+  siteUrl: string;
+  logo: string | undefined;
+  favicon: string | undefined;
+  footerHTML: string;
+  isSubsEnabled: boolean;
+  languageSetting: {
+    defaultLocale: string;
+    locales: Array<{ code: string; name: string; selected: boolean; disabled: boolean }>;
+  };
+  subMenuOptions: {
+    showCopyCurrentPageLink: boolean;
+    showShareBadgeMonitor: boolean;
+    showShareEmbedMonitor: boolean;
+  };
+}
+
+export async function GetLayoutServerData(cookies: Cookies, request: Request): Promise<LayoutServerData> {
+  const userAgent = request.headers.get("user-agent") ?? "";
+  const md = new MobileDetect(userAgent);
+  const isMobile = !!md.mobile();
+
+  const isSetupComplete = await IsSetupComplete();
+  const isLoggedIn = await IsLoggedInSession(cookies);
+  const siteData = await GetAllSiteData();
+  const userCounts = await GetUsersCount();
+
+  const selectedLang = GetLocaleFromCookie(siteData, cookies);
+  const siteStatusColors = siteData.colors;
+
+  const allPagesData = await GetAllPages();
+  const allPages: PageNavItem[] = allPagesData.map((p) => ({
+    page_title: p.page_title,
+    page_path: p.page_path,
+  }));
+
+  // Check if subscription is enabled
+  let isSubsEnabled = false;
+  const subsSetting = siteData.subscriptionsSettings;
+  if (
+    subsSetting &&
+    subsSetting.enable &&
+    (subsSetting.methods.emails.incidents || subsSetting.methods.emails.maintenance)
+  ) {
+    isSubsEnabled = true;
+  }
+
+  const languageSetting = siteData.i18n;
+  languageSetting.locales = languageSetting.locales.filter((l) => l.selected);
+
+  return {
+    isMobile,
+    isSetupComplete,
+    isAdminAccountCreated: userCounts ? Number(userCounts.count) > 0 : false,
+    isLoggedIn,
+    selectedLang,
+    siteStatusColors,
+    navItems: siteData.nav || [],
+    allPages,
+    siteName: siteData.siteName || "Kener",
+    siteUrl: siteData.siteURL || "",
+    logo: siteData.logo,
+    favicon: siteData.favicon,
+    footerHTML: siteData.footerHTML || "",
+    isSubsEnabled,
+    languageSetting,
+    subMenuOptions: siteData.subMenuOptions || seedSiteData.subMenuOptions,
+  };
+}

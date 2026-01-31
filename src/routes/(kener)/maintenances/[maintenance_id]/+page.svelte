@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { format } from "date-fns";
   import { resolve } from "$app/paths";
   import { onMount } from "svelte";
   import Clock from "lucide-svelte/icons/clock";
@@ -16,6 +15,7 @@
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import STATUS_ICON from "$lib/icons";
   import { t } from "$lib/stores/i18n";
+  import { formatDate, formatDuration } from "$lib/stores/datetime";
 
   let { data } = $props();
 
@@ -38,17 +38,6 @@
       }
     }
   });
-
-  // Format duration between two timestamps
-  function formatDuration(start: number, end: number): string {
-    const durationSeconds = end - start;
-    const hours = Math.floor(durationSeconds / 3600);
-    const minutes = Math.floor((durationSeconds % 3600) / 60);
-    if (hours > 0 && minutes > 0) return `${hours}h ${minutes}min`;
-    if (hours > 0) return `${hours}h`;
-    if (minutes > 0) return `${minutes}min`;
-    return "< 1min";
-  }
 
   // Get status badge variant for event status
   function getEventStatusBadgeClass(status: string): string {
@@ -101,16 +90,16 @@
     </div>
     <div class="flex w-full justify-between gap-2">
       <div class="flex flex-col items-start gap-1.5">
-        <span class="text-muted-foreground">Start Time</span>
-        <span>{format(new Date(data.maintenanceEvent.start_date_time * 1000), "PPpp")}</span>
+        <span class="text-muted-foreground">{$t("Start Time")}</span>
+        <span>{$formatDate(data.maintenanceEvent.start_date_time, "PPpp")}</span>
       </div>
       <div class="flex flex-col items-center gap-1.5">
-        <span class="text-muted-foreground">End Time</span>
-        <span>{format(new Date(data.maintenanceEvent.end_date_time * 1000), "PPpp")}</span>
+        <span class="text-muted-foreground">{$t("End Time")}</span>
+        <span>{$formatDate(data.maintenanceEvent.end_date_time, "PPpp")}</span>
       </div>
       <div class="flex flex-col items-end gap-1.5">
-        <span class="text-muted-foreground">Duration</span>
-        <span>{formatDuration(data.maintenanceEvent.start_date_time, data.maintenanceEvent.end_date_time)}</span>
+        <span class="text-muted-foreground">{$t("Duration")}</span>
+        <span>{$formatDuration(data.maintenanceEvent.start_date_time, data.maintenanceEvent.end_date_time)}</span>
       </div>
     </div>
   </div>
@@ -155,13 +144,13 @@
                     {/if}
                   </div>
                   <span class="text-muted-foreground text-xs">
-                    {formatDuration(event.start_date_time, event.end_date_time)}
+                    {$formatDuration(event.start_date_time, event.end_date_time)}
                   </span>
                 </div>
                 <div class="text-muted-foreground flex items-center justify-between text-sm">
-                  <span>{format(new Date(event.start_date_time * 1000), "PPpp")}</span>
+                  <span>{$formatDate(event.start_date_time, "PPpp")}</span>
                   <span>→</span>
-                  <span>{format(new Date(event.end_date_time * 1000), "PPpp")}</span>
+                  <span>{$formatDate(event.end_date_time, "PPpp")}</span>
                 </div>
               </div>
             {/each}

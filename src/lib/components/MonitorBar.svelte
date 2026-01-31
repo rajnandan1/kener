@@ -1,22 +1,20 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, untrack } from "svelte";
   import * as Item from "$lib/components/ui/item/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Skeleton } from "$lib/components/ui/skeleton/index.js";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import ICONS from "$lib/icons";
-  import type { StatusType } from "$lib/global-constants";
-  import { getNowTimestampUTC } from "$lib/client/datetime";
+  import { getEndOfDayAtTz } from "$lib/client/datetime";
   import StatusBarCalendar from "$lib/components/StatusBarCalendar.svelte";
-  import { page } from "$app/state";
+  import { selectedTimezone } from "$lib/stores/timezone";
   import type { MonitorBarResponse, BarData } from "$lib/server/api-server/monitor-bar/get.js";
 
   interface Props {
     tag: string;
-    localTz?: string;
   }
 
-  let { tag, localTz = "UTC" }: Props = $props();
+  let { tag }: Props = $props();
 
   let loading = $state(true);
   let data = $state<MonitorBarResponse | null>(null);
@@ -44,16 +42,17 @@
       day: "numeric",
       month: "short",
       year: "numeric",
-      timeZone: localTz
+      timeZone: $selectedTimezone
     });
   }
 
-  onMount(async () => {
+  async function fetchData() {
+    loading = true;
+    error = null;
     try {
-      const utcTs = getNowTimestampUTC();
-
+      const endOfDayTodayAtTz = getEndOfDayAtTz($selectedTimezone);
       const response = await fetch(
-        `/dashboard-apis/monitor-bar?tag=${encodeURIComponent(tag)}&endOfDayTodayAtTz=${page.data.endOfDayTodayAtTz}`
+        `/dashboard-apis/monitor-bar?tag=${encodeURIComponent(tag)}&endOfDayTodayAtTz=${endOfDayTodayAtTz}`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch monitor data");
@@ -65,6 +64,23 @@
     } finally {
       loading = false;
     }
+  }
+
+  onMount(() => {
+    fetchData();
+  });
+
+  // Re-fetch when timezone changes
+  let initialLoad = true;
+  $effect(() => {
+    // Use untrack to avoid tracking loading/data state changes
+    untrack(() => {
+      if (initialLoad) {
+        initialLoad = false;
+        return;
+      }
+      fetchData();
+    });
   });
 </script>
 
@@ -141,7 +157,7 @@
       </Item.Actions>
     </Item.Root>
     <div class="mx-auto flex w-full flex-col gap-1 px-4">
-      <StatusBarCalendar data={data.uptimeData} monitorTag={tag} {localTz} barHeight={40} radius={8} />
+      <StatusBarCalendar data={data.uptimeData} monitorTag={tag} barHeight={40} radius={8} />
       <div class="flex justify-between">
         <p class="text-muted-foreground text-xs font-medium">
           {formatTimestamp(data.fromTimeStamp)}

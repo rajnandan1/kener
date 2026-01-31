@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { format, formatDistanceStrict } from "date-fns";
   import * as Item from "$lib/components/ui/item/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
@@ -8,6 +7,7 @@
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import STATUS_ICON from "$lib/icons";
   import { t } from "$lib/stores/i18n";
+  import { formatDate, formatDuration } from "$lib/stores/datetime";
 
   interface IncidentMonitorImpact {
     monitor_tag: string;
@@ -65,11 +65,8 @@
   const strokeClass = $derived(STATUS_STROKE[highestImpact as keyof typeof STATUS_STROKE] || "stroke-down");
 
   // Calculate duration between start and end (or now if ongoing)
-  const duration = $derived(() => {
-    const startDate = new Date(incident.start_date_time * 1000);
-    const endDate = incident.end_date_time ? new Date(incident.end_date_time * 1000) : new Date();
-    return formatDistanceStrict(startDate, endDate);
-  });
+  // If ongoing, use current timestamp for duration calculation
+  const endTimeForDuration = $derived(incident.end_date_time ?? Math.floor(Date.now() / 1000));
 </script>
 
 <Item.Root class="p-0 {className}">
@@ -126,15 +123,17 @@
 
     <Item.Description class="mt-2 flex items-center justify-between text-xs font-medium">
       <span class="rounded-full border px-3 py-2">
-        {format(new Date(incident.start_date_time * 1000), "PPp")}
+        {$formatDate(incident.start_date_time, "PPp")}
       </span>
       <span class="relative flex-1 text-center">
         <span class="absolute top-1/2 right-0 left-0 border-t"></span>
-        <span class="bg-background relative z-10 px-2 py-1">{duration()}</span>
+        <span class="bg-background relative z-10 px-2 py-1"
+          >{$formatDuration(incident.start_date_time, endTimeForDuration)}</span
+        >
       </span>
       {#if incident.end_date_time}
         <span class="rounded-full border px-3 py-2">
-          {format(new Date(incident.end_date_time * 1000), "PPp")}
+          {$formatDate(incident.end_date_time, "PPp")}
         </span>
       {:else}
         <span class="rounded-full border px-3 py-2">

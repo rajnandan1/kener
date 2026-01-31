@@ -14,6 +14,7 @@
   import Bell from "@lucide/svelte/icons/bell";
   import AlertTriangle from "@lucide/svelte/icons/alert-triangle";
   import Wrench from "@lucide/svelte/icons/wrench";
+  import { t } from "$lib/stores/i18n";
 
   interface Props {
     open: boolean;
@@ -90,7 +91,7 @@
 
   async function handleLogin() {
     if (!email.trim()) {
-      errorMessage = "Please enter your email address";
+      errorMessage = $t("Please enter a valid email address");
       return;
     }
 
@@ -106,14 +107,14 @@
 
       if (!response.ok) {
         const data = await response.json();
-        errorMessage = data.message || "Failed to send verification code";
+        errorMessage = $t("Failed to send verification code");
         return;
       }
 
       currentView = "otp";
       otpValue = "";
     } catch (err) {
-      errorMessage = "Network error. Please try again.";
+      errorMessage = $t("Network error. Please try again.");
     } finally {
       isSubmitting = false;
     }
@@ -121,7 +122,7 @@
 
   async function handleVerifyOTP() {
     if (otpValue.length !== 6) {
-      errorMessage = "Please enter the complete 6-digit code";
+      errorMessage = $t("Please enter the 6-digit verification code");
       return;
     }
 
@@ -137,7 +138,7 @@
 
       if (!response.ok) {
         const data = await response.json();
-        errorMessage = data.message || "Verification failed";
+        errorMessage = $t("Verification failed");
         return;
       }
 
@@ -145,7 +146,7 @@
       localStorage.setItem(STORAGE_KEY, data.token);
       await checkExistingToken();
     } catch (err) {
-      errorMessage = "Network error. Please try again.";
+      errorMessage = $t("Network error. Please try again.");
     } finally {
       isSubmitting = false;
     }
@@ -171,7 +172,7 @@
 
       if (!response.ok) {
         const data = await response.json();
-        errorMessage = data.message || "Failed to update preference";
+        errorMessage = $t("Failed to update preference");
         // Revert the toggle
         if (type === "incidents") {
           incidentsEnabled = !value;
@@ -188,7 +189,7 @@
         maintenancesEnabled = value;
       }
     } catch (err) {
-      errorMessage = "Network error. Please try again.";
+      errorMessage = $t("Network error. Please try again.");
       // Revert the toggle
       if (type === "incidents") {
         incidentsEnabled = !value;
@@ -227,17 +228,17 @@
     <Dialog.Header>
       <Dialog.Title class="flex items-center gap-2">
         <Bell class="h-5 w-5" />
-        Subscribe to Updates
+        {$t("Subscribe to Updates")}
       </Dialog.Title>
       <Dialog.Description>
         {#if currentView === "login"}
-          Get notified about incidents and scheduled maintenance.
+          {$t("Get notified about incidents and scheduled maintenance.")}
         {:else if currentView === "otp"}
-          Enter the verification code sent to your email.
+          {$t("Enter the verification code sent to your email.")}
         {:else if currentView === "preferences"}
-          Manage your notification preferences.
+          {$t("Manage your notification preferences.")}
         {:else if currentView === "loading"}
-          Loading your preferences...
+          {$t("Loading your preferences...")}
         {/if}
       </Dialog.Description>
     </Dialog.Header>
@@ -251,7 +252,7 @@
         <!-- Login View -->
         <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
-            <Label for="email">Email address</Label>
+            <Label for="email">{$t("Email address")}</Label>
             <div class="relative">
               <Mail class="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               <Input
@@ -273,9 +274,9 @@
           <Button onclick={handleLogin} disabled={isSubmitting} class="w-full">
             {#if isSubmitting}
               <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-              Sending...
+              {$t("Sending...")}
             {:else}
-              Continue
+              {$t("Continue")}
             {/if}
           </Button>
         </div>
@@ -284,7 +285,7 @@
         <div class="flex flex-col gap-4">
           <div class="flex flex-col items-center gap-4">
             <p class="text-muted-foreground text-center text-sm">
-              We sent a 6-digit code to <strong class="text-foreground">{email}</strong>
+              {$t("We sent a 6-digit code to")} <strong class="text-foreground">{email}</strong>
             </p>
 
             <InputOTP.Root maxlength={6} bind:value={otpValue}>
@@ -318,7 +319,7 @@
           </div>
 
           <Button variant="link" onclick={handleLogin} disabled={isSubmitting} class="text-xs">
-            Didn't receive the code? Resend
+            {$t("Didn't receive the code? Resend")}
           </Button>
         </div>
       {:else if currentView === "preferences"}
@@ -342,8 +343,8 @@
                 <div class="flex items-center gap-3">
                   <AlertTriangle class="h-5 w-5 text-orange-500" />
                   <div>
-                    <Label class="font-medium">Incident Updates</Label>
-                    <p class="text-muted-foreground text-xs">Get notified about incidents updates</p>
+                    <Label class="font-medium">{$t("Incident Updates")}</Label>
+                    <p class="text-muted-foreground text-xs">{$t("Get notified about incidents updates")}</p>
                   </div>
                 </div>
                 <Switch
@@ -358,8 +359,8 @@
                 <div class="flex items-center gap-3">
                   <Wrench class="h-5 w-5 text-blue-500" />
                   <div>
-                    <Label class="font-medium">Maintenance Updates</Label>
-                    <p class="text-muted-foreground text-xs">Get notified about scheduled maintenance</p>
+                    <Label class="font-medium">{$t("Maintenance Updates")}</Label>
+                    <p class="text-muted-foreground text-xs">{$t("Get notified about scheduled maintenance")}</p>
                   </div>
                 </div>
                 <Switch

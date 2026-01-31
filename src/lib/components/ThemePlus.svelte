@@ -25,6 +25,7 @@
   import EmbedMenu from "$lib/components/EmbedMenu.svelte";
   import { onMount } from "svelte";
   import LanguageSelector from "./LanguageSelector.svelte";
+  import TimezoneSelector from "./TimezoneSelector.svelte";
 
   interface Props {
     currentPath?: string;
@@ -112,71 +113,68 @@
     {/if}
   </div>
   <div class="flex gap-2">
-    <ButtonGroup.Root class="">
-      {#if page.data.isSubsEnabled}
-        <ButtonGroup.Root class="hidden sm:flex">
-          <Button
-            variant="outline"
-            size="sm"
-            class="rounded-btn text-xs"
-            aria-label="Go Back"
-            onclick={() => (openSubscribeMenu = true)}
-          >
-            <ICONS.Bell class="" />
-            {$t("Subscribe")}
-          </Button>
-        </ButtonGroup.Root>
-      {/if}
-
-      <ButtonGroup.Root>
-        {#if !!page.data.subMenuOptions?.showCopyCurrentPageLink}
-          <CopyButton variant="outline" text={shareLink} class="cursor-pointer rounded-full shadow-none" size="icon-sm">
-            <Share />
-          </CopyButton>
-        {/if}
-        {#if !!embedMonitorTag && page.data.subMenuOptions?.showShareBadgeMonitor}
-          <!-- BadgeMenu -->
-          <Button
-            variant="outline"
-            class="relative cursor-pointer rounded-full shadow-none"
-            size="icon-sm"
-            onclick={() => (openBadgesMenu = true)}
-          >
-            <Sticker />
-          </Button>
-        {/if}
-        {#if !!embedMonitorTag && page.data.subMenuOptions?.showShareEmbedMonitor}
-          <!-- Embed Menu -->
-          <Button
-            variant="outline"
-            class="relative cursor-pointer rounded-full shadow-none"
-            size="icon-sm"
-            onclick={() => (openEmbedMenu = true)}
-          >
-            <Code />
-          </Button>
-        {/if}
-      </ButtonGroup.Root>
-      <ButtonGroup.Root class=" hidden  sm:flex">
+    {#if page.data.isSubsEnabled}
+      <ButtonGroup.Root class="hidden sm:flex">
         <Button
           variant="outline"
           size="sm"
-          onclick={toggleMode}
-          aria-label="toggle theme mode "
-          class="relative rounded-full shadow-none"
+          class="rounded-btn text-xs"
+          aria-label="Go Back"
+          onclick={() => (openSubscribeMenu = true)}
         >
-          <Sun class="absolute left-2  scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-          <Moon class="absolute left-2  scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-          <!-- Show light / dark text -->
-          <span class="pl-5 text-xs">
-            {mode.current === "light" ? "Light" : "Dark"}
-          </span>
-        </Button>
-        <LanguageSelector />
-        <Button variant="outline" size="icon-sm" onclick={toggleMode} aria-label="" class="rounded-full shadow-none">
-          <Globe class="" />
+          <ICONS.Bell class="" />
+          {$t("Subscribe")}
         </Button>
       </ButtonGroup.Root>
+    {/if}
+
+    <ButtonGroup.Root class=" flex gap-1">
+      {#if !!page.data.subMenuOptions?.showCopyCurrentPageLink}
+        <CopyButton variant="outline" text={shareLink} class="cursor-pointer rounded-full shadow-none" size="icon-sm">
+          <Share />
+        </CopyButton>
+      {/if}
+      {#if !!embedMonitorTag && page.data.subMenuOptions?.showShareBadgeMonitor}
+        <!-- BadgeMenu -->
+        <Button
+          variant="outline"
+          class="relative cursor-pointer rounded-full shadow-none"
+          size="icon-sm"
+          onclick={() => (openBadgesMenu = true)}
+        >
+          <Sticker />
+        </Button>
+      {/if}
+      {#if !!embedMonitorTag && page.data.subMenuOptions?.showShareEmbedMonitor}
+        <!-- Embed Menu -->
+        <Button
+          variant="outline"
+          class="relative cursor-pointer rounded-full shadow-none"
+          size="icon-sm"
+          onclick={() => (openEmbedMenu = true)}
+        >
+          <Code />
+        </Button>
+      {/if}
+    </ButtonGroup.Root>
+
+    <ButtonGroup.Root class=" rounded-btn-grp hidden sm:flex">
+      <Button
+        variant="outline"
+        size="sm"
+        onclick={toggleMode}
+        aria-label="toggle theme mode "
+        class="relative rounded-full shadow-none"
+      >
+        <Sun class="absolute left-2  scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+        <Moon class="absolute left-2  scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+        <!-- Show light / dark text -->
+        <span class="pl-5 text-xs">
+          {mode.current === "light" ? $t("Light") : $t("Dark")}
+        </span>
+      </Button>
+      <LanguageSelector />
+      <TimezoneSelector />
     </ButtonGroup.Root>
   </div>
 </div>

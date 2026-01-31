@@ -6,26 +6,19 @@
   import MonitorDayDetail from "$lib/components/MonitorDayDetail.svelte";
   import type { TimestampStatusCount } from "$lib/server/types/db";
   import { t } from "$lib/stores/i18n";
+  import { selectedTimezone } from "$lib/stores/timezone";
+  import { formatDate } from "$lib/stores/datetime";
 
   interface Props {
     data: TimestampStatusCount[];
     monitorTag: string;
-    localTz: string;
     barHeight?: number;
     radius?: number;
     class?: string;
     disableClick?: boolean;
   }
 
-  let {
-    data,
-    monitorTag,
-    localTz,
-    barHeight = 40,
-    radius = 8,
-    class: className = "",
-    disableClick = false
-  }: Props = $props();
+  let { data, monitorTag, barHeight = 40, radius = 8, class: className = "", disableClick = false }: Props = $props();
 
   // Canvas state
   let canvas = $state<HTMLCanvasElement | null>(null);
@@ -71,16 +64,6 @@
   const colorDegraded = $derived(page.data.siteStatusColors?.DEGRADED || "#eab308");
   const colorMaintenance = $derived(page.data.siteStatusColors?.MAINTENANCE || "#3b82f6");
   const gap = 0;
-
-  function formatTimestamp(timestamp: number): string {
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleDateString("en-US", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      timeZone: localTz
-    });
-  }
 
   // Track hovered index separately for efficient redraw
   let hoveredIndex = $state<number | null>(null);
@@ -387,7 +370,7 @@
     >
       <span class={getStatusColor(hoveredBar.data)}>{$t(GetStatusSummary(hoveredBar.data))}</span>
       <span class="text-muted">@</span>
-      {formatTimestamp(hoveredBar.data.ts)}
+      {$formatDate(hoveredBar.data.ts, "d MMM yyyy")}
       {#if hoveredBar.data.avgLatency > 0}
         <span class="text-muted ml-1">|</span>
         <span class="ml-1">{ParseLatency(hoveredBar.data.avgLatency)}</span>

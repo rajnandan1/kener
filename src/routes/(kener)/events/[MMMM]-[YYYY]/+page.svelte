@@ -14,6 +14,7 @@
   import Check from "@lucide/svelte/icons/check";
   import ICONS from "$lib/icons";
   import { t } from "$lib/stores/i18n";
+  import { formatDate } from "$lib/stores/datetime";
 
   import { format, parse, addMonths, subMonths, getUnixTime, startOfDay, formatDistanceStrict } from "date-fns";
 
@@ -170,7 +171,7 @@
           >
             <ICONS.CHEVRON_LEFT class=" size-5" />
           </Button>
-          <p class="text-2xl">{currentMonth}</p>
+          <p class="text-2xl">{$formatDate(parsedDate, "MMMM yyyy")}</p>
           <Button
             rel="external"
             href="/events/{nextMonthPath}"
@@ -236,14 +237,16 @@
     {#each eventsByDay as day}
       <div class="flex flex-col gap-2">
         <div class="mt-4 w-fit rounded-3xl border px-4 py-2 text-xs font-medium">
-          {format(new Date(day.date * 1000), "EEEE, MMMM do")}
+          {$formatDate(day.date, "EEEE, MMMM do")}
         </div>
         <div class="rounded-3xl border">
           {#each day.events as event}
             <div class="flex flex-col gap-2 border-b p-4 last:border-b-0">
               {#if event.type === "incident"}
                 <div class="pl-8">
-                  <Badge variant="secondary" class="text-xs">Incident</Badge>
+                  <Badge variant="secondary" class="text-xs">
+                    {$t("Incident")}
+                  </Badge>
                 </div>
                 <IncidentItem
                   incident={{
@@ -289,14 +292,14 @@
     {#if showPrevButton}
       <Button variant="outline" rel="external" class="rounded-full shadow-none" href="/events/{prevMonthPath}">
         <ArrowLeft class="mr-2 h-4 w-4" />
-        {format(prevMonth, "MMMM yyyy")}
+        {$formatDate(prevMonth, "MMMM yyyy")}
       </Button>
     {:else}
       <div></div>
     {/if}
     {#if showNextButton}
       <Button variant="outline" rel="external" class="rounded-full shadow-none" href="/events/{nextMonthPath}">
-        {format(nextMonth, "MMMM yyyy")}
+        {$formatDate(nextMonth, "MMMM yyyy")}
         <ArrowRight class="ml-2 h-4 w-4" />
       </Button>
     {:else}

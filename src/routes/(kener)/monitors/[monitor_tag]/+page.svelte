@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { format } from "date-fns";
   import * as Item from "$lib/components/ui/item/index.js";
   import { t } from "$lib/stores/i18n";
+  import { formatDate } from "$lib/stores/datetime";
 
   import { Badge } from "$lib/components/ui/badge/index.js";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
@@ -37,13 +37,13 @@
         >
           {#if data.monitorDescription.length > 150 && !descriptionExpanded}
             {data.monitorDescription.slice(0, 150)}...
-            <button class="inline font-bold hover:underline" onclick={() => (descriptionExpanded = true)}
-              >Read more</button
-            >
+            <button class="inline font-bold hover:underline" onclick={() => (descriptionExpanded = true)}>
+              {$t("Read more")}
+            </button>
           {:else if data.monitorDescription.length > 150}
             {data.monitorDescription}
             <button class="inline font-bold hover:underline" onclick={() => (descriptionExpanded = false)}>
-              Read less
+              {$t("Read less")}
             </button>
           {:else}
             {data.monitorDescription}
@@ -69,13 +69,13 @@
       <div class="flex flex-col px-2">
         <h2 class="text-base font-medium">{$t("Last Updated")}</h2>
         <p class="text-muted-foreground text-xs">
-          {format(new Date(data.monitorLastStatusTimestamp * 1000), "PPpp")}
+          {$formatDate(data.monitorLastStatusTimestamp * 1000, "PPpp")}
         </p>
       </div>
       <div class="flex items-center justify-between px-2">
         <div class="flex flex-col items-start gap-1">
           <p class="text-muted-foreground text-2xl font-semibold {data.textClass}">
-            {data.monitorLastStatus}
+            {$t(data.monitorLastStatus)}
           </p>
           <p class="text-muted-foreground text-xs">{$t("Latest Status")}</p>
         </div>

@@ -46,7 +46,7 @@
     {/if}
   </span>
   <span
-    class="bg-popover text-popover-foreground absolute bottom-full left-1/2 mb-2 origin-bottom -translate-x-1/2 rounded-md border px-2 py-1 text-xs shadow-md transition-all duration-200 ease-out {clipboard.copied
+    class="bg-popover text-popover-foreground absolute bottom-full left-1/2 z-50 mb-2 origin-bottom -translate-x-1/2 rounded-md border px-2 py-1 text-xs shadow-md transition-all duration-200 ease-out {clipboard.copied
       ? 'scale-100 opacity-100'
       : 'pointer-events-none scale-75 opacity-0'}"
   >

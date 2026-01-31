@@ -82,13 +82,6 @@
     </div>
 
     <!-- Status bar calendar -->
-    <StatusBarCalendar
-      data={displayData}
-      monitorTag={data.monitorTag}
-      {localTz}
-      barHeight={30}
-      radius={4}
-      disableClick={true}
-    />
+    <StatusBarCalendar data={displayData} monitorTag={data.monitorTag} barHeight={30} radius={4} disableClick={true} />
   {/if}
 </div>

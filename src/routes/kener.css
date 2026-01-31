@@ -236,3 +236,11 @@ body::-webkit-scrollbar {
 .ksel .lucide-chevron-down {
   display: none;
 }
+.rounded-btn-grp > button:first-of-type {
+  border-top-left-radius: calc(infinity * 1px);
+  border-bottom-left-radius: calc(infinity * 1px);
+}
+.rounded-btn-grp > button:last-of-type {
+  border-top-right-radius: calc(infinity * 1px);
+  border-bottom-right-radius: calc(infinity * 1px);
+}
