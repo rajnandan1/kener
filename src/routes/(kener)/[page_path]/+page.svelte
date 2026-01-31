@@ -30,6 +30,7 @@
     monitor_tags={data.monitorTags}
     showPagesDropdown={true}
     showEventsButton={true}
+    shareLinkString={data.pageDetails?.page_path}
     currentPath={data.pageDetails?.page_path || "/"}
   />
   <div class="px-4 py-2">

@@ -70,6 +70,13 @@ export interface SiteDataTransformed {
   };
   showSiteStatus?: string;
   monitorSort?: number[];
+
+  subMenuOptions?: {
+    showCopyCurrentPageLink: boolean;
+    showShareBadgeMonitor: boolean;
+    showShareEmbedMonitor: boolean;
+  };
+
   [key: string]: unknown;
 }
 

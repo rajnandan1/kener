@@ -30,21 +30,23 @@
   );
 </script>
 
-<Select.Root type="single" name="language" bind:value={selectedLang}>
-  <Select.Trigger size="sm" class="ksel text-xs font-medium">
-    <Languages class="text-foreground" />
-    {triggerContent}
-  </Select.Trigger>
-  <Select.Content>
-    <Select.Group>
-      <Select.Label>
-        {$t("Select Language")}
-      </Select.Label>
-      {#each $i18n.availableLocales as locale (locale.code)}
-        <Select.Item class="text-xs" value={locale.code} label={locale.name} disabled={locale.disabled}>
-          {locale.name}
-        </Select.Item>
-      {/each}
-    </Select.Group>
-  </Select.Content>
-</Select.Root>
+{#if $i18n.availableLocales.length > 1}
+  <Select.Root type="single" name="language" bind:value={selectedLang}>
+    <Select.Trigger size="sm" class="ksel text-xs font-medium">
+      <Languages class="text-foreground" />
+      {triggerContent}
+    </Select.Trigger>
+    <Select.Content>
+      <Select.Group>
+        <Select.Label>
+          {$t("Select Language")}
+        </Select.Label>
+        {#each $i18n.availableLocales as locale (locale.code)}
+          <Select.Item class="text-xs" value={locale.code} label={locale.name} disabled={locale.disabled}>
+            {locale.name}
+          </Select.Item>
+        {/each}
+      </Select.Group>
+    </Select.Content>
+  </Select.Root>
+{/if}

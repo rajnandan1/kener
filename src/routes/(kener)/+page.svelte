@@ -29,6 +29,7 @@
     showPagesDropdown={true}
     showEventsButton={true}
     currentPath={data.pageDetails?.page_path || "/"}
+    shareLinkString={data.pageDetails?.page_path}
   />
   <div class="px-4 py-2">
     {#if data.pageDetails?.page_logo}

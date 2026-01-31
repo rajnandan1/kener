@@ -231,4 +231,9 @@ export const siteDataKeys: SiteDataKey[] = [
     isValid: IsValidJSONString,
     data_type: "object",
   },
+  {
+    key: "subMenuOptions",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
 ];

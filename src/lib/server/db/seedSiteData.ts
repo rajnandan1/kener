@@ -122,6 +122,11 @@ const seedSiteData = {
       },
     },
   },
+  subMenuOptions: {
+    showCopyCurrentPageLink: true,
+    showShareBadgeMonitor: true,
+    showShareEmbedMonitor: true,
+  },
 };
 
 export default seedSiteData;

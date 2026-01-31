@@ -71,7 +71,7 @@
     </Item.Content>
   </Item.Root>
   <div class="my-4 flex justify-end gap-2">
-    <ThemePlus showEventsButton={true} showHomeButton={true} incident_ids={[data.incident.id]} />
+    <ThemePlus showEventsButton={true} showHomeButton={true} shareLinkString={`/incidents/${data.incident.id}`} />
   </div>
   <!-- Incident Meta -->
   <div class="mb-4 flex flex-col items-start gap-4 rounded-3xl border p-4 text-sm">

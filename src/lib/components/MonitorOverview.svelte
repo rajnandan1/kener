@@ -29,10 +29,10 @@
 
   // Day range options
   const dayOptions = [
-    { days: 90, text: "90 Days" },
-    { days: 30, text: "30 Days" },
-    { days: 7, text: "7 Days" },
-    { days: 1, text: "Today" }
+    { days: 90, text: $t("90 Days") },
+    { days: 30, text: $t("30 Days") },
+    { days: 7, text: $t("7 Days") },
+    { days: 1, text: $t("24 Hours") }
   ];
   let selectedDayIndex = $state(0);
 
@@ -93,7 +93,7 @@
   <Card.Header class="pb-2">
     <div class="flex items-center justify-between">
       <div>
-        <Card.Title class="text-base font-medium">{dayOptions[selectedDayIndex].text} Overview</Card.Title>
+        <Card.Title class="text-base font-medium">{dayOptions[selectedDayIndex].text}</Card.Title>
         <Card.Description class="text-xs">
           {$t("Status history and latency trend")}
         </Card.Description>

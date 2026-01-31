@@ -3,6 +3,7 @@
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
+  import { Switch } from "$lib/components/ui/switch/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
   import SaveIcon from "@lucide/svelte/icons/save";
@@ -27,6 +28,7 @@
   let savingLogo = $state(false);
   let savingFavicon = $state(false);
   let savingNav = $state(false);
+  let savingSubMenuOptions = $state(false);
   let uploadingLogo = $state(false);
   let uploadingFavicon = $state(false);
 
@@ -41,6 +43,13 @@
 
   // Navigation data
   let nav = $state<NavItem[]>([]);
+
+  // Sub Menu Options
+  let subMenuOptions = $state({
+    showCopyCurrentPageLink: true,
+    showShareBadgeMonitor: true,
+    showShareEmbedMonitor: true
+  });
 
   // Validation
   const isValidSiteInfo = $derived(
@@ -73,6 +82,13 @@
             url: item.url || "",
             iconURL: item.iconURL || ""
           }));
+        }
+        if (data.subMenuOptions) {
+          subMenuOptions = {
+            showCopyCurrentPageLink: data.subMenuOptions.showCopyCurrentPageLink ?? true,
+            showShareBadgeMonitor: data.subMenuOptions.showShareBadgeMonitor ?? true,
+            showShareEmbedMonitor: data.subMenuOptions.showShareEmbedMonitor ?? true
+          };
         }
       }
     } catch (e) {
@@ -189,6 +205,30 @@
       toast.error("Failed to save navigation");
     } finally {
       savingNav = false;
+    }
+  }
+
+  async function saveSubMenuOptions() {
+    savingSubMenuOptions = true;
+    try {
+      const response = await fetch("/manage/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "storeSiteData",
+          data: { subMenuOptions: JSON.stringify(subMenuOptions) }
+        })
+      });
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Sub menu options saved successfully");
+      }
+    } catch (e) {
+      toast.error("Failed to save sub menu options");
+    } finally {
+      savingSubMenuOptions = false;
     }
   }
 
@@ -596,6 +636,50 @@
       <Card.Footer class="flex justify-end">
         <Button onclick={saveNavigation} disabled={savingNav} class="cursor-pointer">
           {#if savingNav}
+            <Loader class="mr-2 h-4 w-4 animate-spin" />
+            Saving...
+          {:else}
+            <SaveIcon class="mr-2 h-4 w-4" />
+            Save
+          {/if}
+        </Button>
+      </Card.Footer>
+    </Card.Root>
+
+    <!-- Sub Menu Options Card -->
+    <Card.Root>
+      <Card.Header>
+        <Card.Title>Monitor Sub Menu Options</Card.Title>
+        <Card.Description>Configure which options appear in the monitor sub menu on the status page</Card.Description>
+      </Card.Header>
+      <Card.Content class="space-y-6">
+        <div class="flex items-center justify-between">
+          <div class="space-y-0.5">
+            <Label>Copy Current Page Link</Label>
+            <p class="text-muted-foreground text-xs">Allow users to copy the direct link to the current monitor page</p>
+          </div>
+          <Switch bind:checked={subMenuOptions.showCopyCurrentPageLink} />
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="space-y-0.5">
+            <Label>Share Badge</Label>
+            <p class="text-muted-foreground text-xs">
+              Show option to get embeddable status and uptime badges for the monitor
+            </p>
+          </div>
+          <Switch bind:checked={subMenuOptions.showShareBadgeMonitor} />
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="space-y-0.5">
+            <Label>Share Embed</Label>
+            <p class="text-muted-foreground text-xs">Show option to get iframe or script embed code for the monitor</p>
+          </div>
+          <Switch bind:checked={subMenuOptions.showShareEmbedMonitor} />
+        </div>
+      </Card.Content>
+      <Card.Footer class="flex justify-end">
+        <Button onclick={saveSubMenuOptions} disabled={savingSubMenuOptions} class="cursor-pointer">
+          {#if savingSubMenuOptions}
             <Loader class="mr-2 h-4 w-4 animate-spin" />
             Saving...
           {:else}

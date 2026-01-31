@@ -34,7 +34,6 @@
     monitor_tags?: string[];
     shareLinkString?: string;
     embedMonitorTag?: string;
-    incident_ids?: number[];
   }
 
   let openSubscribeMenu = $state(false);
@@ -56,7 +55,7 @@
   const currentPage = $derived(pages.find((p) => p.page_path === currentPath) || pages[0]);
   const eventsPath = $derived(`/events/${format(new Date(), "MMMM-yyyy")}`);
   const shareLink = $derived(
-    protocol && domain && shareLinkString ? `${protocol}://${domain}${resolve("/")}monitors/${shareLinkString}` : ""
+    protocol && domain && shareLinkString ? `${protocol}://${domain}${resolve(shareLinkString as `/${string}`)}` : ""
   );
 
   function toggleMode() {
@@ -128,40 +127,36 @@
           </Button>
         </ButtonGroup.Root>
       {/if}
-      {#if !!shareLink || !!embedMonitorTag}
-        <ButtonGroup.Root>
-          {#if !!shareLink}
-            <CopyButton
-              variant="outline"
-              text={shareLink}
-              class="cursor-pointer rounded-full shadow-none"
-              size="icon-sm"
-            >
-              <Share />
-            </CopyButton>
-          {/if}
-          {#if !!embedMonitorTag}
-            <!-- BadgeMenu -->
-            <Button
-              variant="outline"
-              class="relative cursor-pointer rounded-full shadow-none"
-              size="icon-sm"
-              onclick={() => (openBadgesMenu = true)}
-            >
-              <Sticker />
-            </Button>
-            <!-- Embed Menu -->
-            <Button
-              variant="outline"
-              class="relative cursor-pointer rounded-full shadow-none"
-              size="icon-sm"
-              onclick={() => (openEmbedMenu = true)}
-            >
-              <Code />
-            </Button>
-          {/if}
-        </ButtonGroup.Root>
-      {/if}
+
+      <ButtonGroup.Root>
+        {#if !!page.data.subMenuOptions?.showCopyCurrentPageLink}
+          <CopyButton variant="outline" text={shareLink} class="cursor-pointer rounded-full shadow-none" size="icon-sm">
+            <Share />
+          </CopyButton>
+        {/if}
+        {#if !!embedMonitorTag && page.data.subMenuOptions?.showShareBadgeMonitor}
+          <!-- BadgeMenu -->
+          <Button
+            variant="outline"
+            class="relative cursor-pointer rounded-full shadow-none"
+            size="icon-sm"
+            onclick={() => (openBadgesMenu = true)}
+          >
+            <Sticker />
+          </Button>
+        {/if}
+        {#if !!embedMonitorTag && page.data.subMenuOptions?.showShareEmbedMonitor}
+          <!-- Embed Menu -->
+          <Button
+            variant="outline"
+            class="relative cursor-pointer rounded-full shadow-none"
+            size="icon-sm"
+            onclick={() => (openEmbedMenu = true)}
+          >
+            <Code />
+          </Button>
+        {/if}
+      </ButtonGroup.Root>
       <ButtonGroup.Root class=" hidden  sm:flex">
         <Button
           variant="outline"
@@ -179,10 +174,9 @@
         </Button>
         <LanguageSelector />
         <Button variant="outline" size="icon-sm" onclick={toggleMode} aria-label="" class="rounded-full shadow-none">
-          <Languages class="" />
+          <Globe class="" />
         </Button>
       </ButtonGroup.Root>
-      <ButtonGroup.Root class="hidden sm:flex"></ButtonGroup.Root>
     </ButtonGroup.Root>
   </div>
 </div>

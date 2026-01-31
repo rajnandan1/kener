@@ -86,5 +86,9 @@
   "Format": "Format",
   "iFrame": "iFrame",
   "Script": "Script",
-  "Failed to load data": "Failed to load data"
+  "Failed to load data": "Failed to load data",
+  "90 Days": "90 Days",
+  "30 Days": "30 Days",
+  "7 Days": "7 Days",
+  "24 Hours": "24 Hours"
 }

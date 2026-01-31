@@ -1,6 +1,7 @@
 import { redirect } from "@sveltejs/kit";
 import MobileDetect from "mobile-detect";
 import type { LayoutServerLoad } from "./$types";
+import seedSiteData from "$lib/server/db/seedSiteData";
 
 import { resolve } from "$app/paths";
 import {
@@ -64,5 +65,6 @@ export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
     footerHTML: siteData.footerHTML || "",
     isSubsEnabled,
     languageSetting,
+    subMenuOptions: siteData.subMenuOptions || seedSiteData.subMenuOptions,
   };
 };

@@ -1,4 +1,5 @@
 import { writable, derived, get } from "svelte/store";
+import { asset } from "$app/paths";
 
 const LOCALE_STORAGE_KEY = "kener_preferred_locale";
 
@@ -70,7 +71,7 @@ function createI18nStore() {
       update((state) => ({ ...state, isLoading: true }));
 
       try {
-        const response = await storedFetch(`/locales/${locale}.json`);
+        const response = await storedFetch(asset(`/locales/${locale}.json`));
         if (!response.ok) {
           console.error(`Failed to load locale ${locale}, falling back to en`);
           // Try to load English as fallback
