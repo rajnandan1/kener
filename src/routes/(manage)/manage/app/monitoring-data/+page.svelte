@@ -71,12 +71,12 @@
   function validateAndFetch() {
     const start = new Date(startDateTime);
     const end = new Date(endDateTime);
-    
+
     // Ensure start is before end
     if (start > end) {
       startDateTime = endDateTime;
     }
-    
+
     // Check if range exceeds 30 days
     const daysDiff = Math.abs((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
     if (daysDiff > 30) {
@@ -89,7 +89,7 @@
         endDateTime = formatDateTimeForInput(newEnd);
       }
     }
-    
+
     pageNo = 1;
     fetchData();
   }
@@ -211,7 +211,7 @@
       <!-- Date Time Range Inputs -->
       <div class="flex items-center gap-2">
         <div class="flex items-center gap-1.5">
-          <Label for="start-datetime" class="text-sm text-muted-foreground">From</Label>
+          <Label for="start-datetime" class="text-muted-foreground text-sm">From</Label>
           <Input
             id="start-datetime"
             type="datetime-local"
@@ -223,7 +223,7 @@
           />
         </div>
         <div class="flex items-center gap-1.5">
-          <Label for="end-datetime" class="text-sm text-muted-foreground">To</Label>
+          <Label for="end-datetime" class="text-muted-foreground text-sm">To</Label>
           <Input
             id="end-datetime"
             type="datetime-local"
@@ -273,7 +273,7 @@
             <Table.Cell colspan={6} class="text-muted-foreground py-8 text-center">No monitoring data found</Table.Cell>
           </Table.Row>
         {:else}
-          {#each monitoringData as row (row.monitor_tag + '_' + row.timestamp)}
+          {#each monitoringData as row (row.monitor_tag + "_" + row.timestamp)}
             <Table.Row class="hover:bg-muted/50">
               <Table.Cell>
                 <Tooltip.Root>

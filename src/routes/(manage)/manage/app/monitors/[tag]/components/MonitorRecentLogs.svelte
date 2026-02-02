@@ -117,9 +117,7 @@
         <Spinner class="size-6" />
       </div>
     {:else if logs.length === 0}
-      <div class="text-muted-foreground py-8 text-center text-sm">
-        No monitoring data found for this monitor
-      </div>
+      <div class="text-muted-foreground py-8 text-center text-sm">No monitoring data found for this monitor</div>
     {:else}
       <div class="ktable rounded-lg border">
         <Table.Root>

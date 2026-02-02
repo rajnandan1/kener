@@ -90,7 +90,11 @@ export class MonitoringRepository extends BaseRepository {
       .offset((page - 1) * limit);
   }
 
-  async getMonitoringDataCount(filter?: { monitor_tag?: string; start_time?: number; end_time?: number }): Promise<{ count: number }> {
+  async getMonitoringDataCount(filter?: {
+    monitor_tag?: string;
+    start_time?: number;
+    end_time?: number;
+  }): Promise<{ count: number }> {
     let query = this.knex("monitoring_data").count("* as count");
 
     if (filter?.monitor_tag) {
