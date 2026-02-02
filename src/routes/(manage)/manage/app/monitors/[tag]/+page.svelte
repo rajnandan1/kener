@@ -103,9 +103,6 @@
     status: "ACTIVE",
     category_name: "Home",
     monitor_type: "" as MonitorType,
-    day_degraded_minimum_count: 1,
-    day_down_minimum_count: 1,
-    include_degraded_in_downtime: "NO",
     is_hidden: "NO"
   });
 
@@ -306,9 +303,6 @@
           status: m.status || "ACTIVE",
           category_name: m.category_name || "Home",
           monitor_type: m.monitor_type || "",
-          day_degraded_minimum_count: m.day_degraded_minimum_count || 1,
-          day_down_minimum_count: m.day_down_minimum_count || 1,
-          include_degraded_in_downtime: m.include_degraded_in_downtime || "NO",
           is_hidden: m.is_hidden || "NO"
         };
         // Parse type_data
