@@ -128,7 +128,7 @@
       </ButtonGroup.Root>
     {/if}
 
-    <ButtonGroup.Root class=" flex gap-1">
+    <ButtonGroup.Root class=" rounded-btn-grp ">
       {#if !!page.data.subMenuOptions?.showCopyCurrentPageLink}
         <CopyButton variant="outline" text={shareLink} class="cursor-pointer rounded-full shadow-none" size="icon-sm">
           <Share />
@@ -159,20 +159,22 @@
     </ButtonGroup.Root>
 
     <ButtonGroup.Root class=" rounded-btn-grp hidden sm:flex">
-      <Button
-        variant="outline"
-        size="sm"
-        onclick={toggleMode}
-        aria-label="toggle theme mode "
-        class="relative rounded-full shadow-none"
-      >
-        <Sun class="absolute left-2  scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-        <Moon class="absolute left-2  scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-        <!-- Show light / dark text -->
-        <span class="pl-5 text-xs">
-          {mode.current === "light" ? $t("Light") : $t("Dark")}
-        </span>
-      </Button>
+      {#if page.data.isThemeToggleEnabled}
+        <Button
+          variant="outline"
+          size="sm"
+          onclick={toggleMode}
+          aria-label="toggle theme mode "
+          class="relative rounded-full shadow-none"
+        >
+          <Sun class="absolute left-2  scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
+          <Moon class="absolute left-2  scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
+          <!-- Show light / dark text -->
+          <span class="pl-5 text-xs">
+            {mode.current === "light" ? $t("Light") : $t("Dark")}
+          </span>
+        </Button>
+      {/if}
       <LanguageSelector />
       <TimezoneSelector />
     </ButtonGroup.Root>

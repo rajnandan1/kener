@@ -46,6 +46,13 @@ export interface LayoutServerData {
     showShareBadgeMonitor: boolean;
     showShareEmbedMonitor: boolean;
   };
+  isTimezoneEnabled: boolean;
+  isThemeToggleEnabled: boolean;
+  defaultSiteTheme: string;
+  font: {
+    cssSrc: string;
+    family: string;
+  };
 }
 
 export async function GetLayoutServerData(cookies: Cookies, request: Request): Promise<LayoutServerData> {
@@ -80,7 +87,10 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
 
   const languageSetting = siteData.i18n;
   languageSetting.locales = languageSetting.locales.filter((l) => l.selected);
-
+  const isTimezoneEnabled = !!siteData.tzToggle && siteData.tzToggle !== "NO";
+  const isThemeToggleEnabled = !!siteData.themeToggle && siteData.themeToggle !== "NO";
+  const defaultSiteTheme = siteData.theme || "system";
+  const font = siteData.font || { cssSrc: "", family: "" };
   return {
     isMobile,
     isSetupComplete,
@@ -98,5 +108,9 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     isSubsEnabled,
     languageSetting,
     subMenuOptions: siteData.subMenuOptions || seedSiteData.subMenuOptions,
+    isTimezoneEnabled,
+    isThemeToggleEnabled,
+    defaultSiteTheme,
+    font,
   };
 }

@@ -5,6 +5,8 @@
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
+  import * as RadioGroup from "$lib/components/ui/radio-group/index.js";
+  import { Checkbox } from "$lib/components/ui/checkbox/index.js";
   import Loader from "@lucide/svelte/icons/loader";
   import Info from "@lucide/svelte/icons/info";
   import { toast } from "svelte-sonner";
@@ -35,10 +37,13 @@
   let savingColors = $state(false);
   let savingFont = $state(false);
   let savingCSS = $state(false);
+  let savingTheme = $state(false);
 
   // Data
   let footerHTML = $state("");
   let defaultFooterHTML = $state("");
+  let theme = $state<"light" | "dark" | "system">("system");
+  let themeToggle = $state<"YES" | "NO">("YES");
   let colors = $state<StatusColors>({
     UP: "#67ab95",
     DOWN: "#ca3038",
@@ -82,6 +87,12 @@
         }
         if (result.customCSS) {
           customCSS = result.customCSS;
+        }
+        if (result.theme) {
+          theme = result.theme as "light" | "dark" | "system";
+        }
+        if (result.themeToggle) {
+          themeToggle = result.themeToggle as "YES" | "NO";
         }
       }
       // Set default footer HTML
@@ -197,6 +208,30 @@
       toast.error("Failed to save custom CSS");
     } finally {
       savingCSS = false;
+    }
+  }
+
+  async function saveTheme() {
+    savingTheme = true;
+    try {
+      const response = await fetch("/manage/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "storeSiteData",
+          data: { theme, themeToggle }
+        })
+      });
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Theme settings saved successfully");
+      }
+    } catch (e) {
+      toast.error("Failed to save theme settings");
+    } finally {
+      savingTheme = false;
     }
   }
 
@@ -381,14 +416,7 @@
             <p class="text-muted-foreground mt-1 text-xs">The name of the font family as defined in the CSS</p>
           </div>
         </div>
-        {#if font.family}
-          <div class="mt-4 rounded-lg border p-4">
-            <p class="text-muted-foreground text-sm">Preview:</p>
-            <p class="mt-2 text-lg" style="font-family: '{font.family}', sans-serif;">
-              The quick brown fox jumps over the lazy dog
-            </p>
-          </div>
-        {/if}
+
         <p class="text-muted-foreground mt-4 text-sm">
           Want to upload and use custom fonts? Read more about it in the
           <a
@@ -406,6 +434,58 @@
             <Loader class="mr-2 h-4 w-4 animate-spin" />
           {/if}
           Save Font
+        </Button>
+      </Card.Footer>
+    </Card.Root>
+
+    <!-- Theme Configuration Section -->
+    <Card.Root>
+      <Card.Header class="border-b">
+        <Card.Title>Theme</Card.Title>
+        <Card.Description>Configure the default theme and user preferences for your status page.</Card.Description>
+      </Card.Header>
+      <Card.Content class="space-y-6 pt-6">
+        <div class="space-y-3">
+          <Label>Default Theme</Label>
+          <RadioGroup.Root bind:value={theme} class="flex flex-col gap-3">
+            <div class="flex items-center space-x-2">
+              <RadioGroup.Item value="light" id="theme-light" />
+              <Label for="theme-light" class="cursor-pointer font-normal">Light</Label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <RadioGroup.Item value="dark" id="theme-dark" />
+              <Label for="theme-dark" class="cursor-pointer font-normal">Dark</Label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <RadioGroup.Item value="system" id="theme-system" />
+              <Label for="theme-system" class="cursor-pointer font-normal">System</Label>
+            </div>
+          </RadioGroup.Root>
+          <p class="text-muted-foreground text-xs">
+            The theme that will be used by default when users visit your status page.
+          </p>
+        </div>
+
+        <div class="flex items-start space-x-3 rounded-lg border p-4">
+          <Checkbox
+            id="theme-toggle"
+            checked={themeToggle === "YES"}
+            onCheckedChange={(checked) => (themeToggle = checked ? "YES" : "NO")}
+          />
+          <div class="space-y-1">
+            <Label for="theme-toggle" class="cursor-pointer">Allow users to toggle theme</Label>
+            <p class="text-muted-foreground text-sm">
+              When enabled, users can switch between light and dark themes using a toggle button.
+            </p>
+          </div>
+        </div>
+      </Card.Content>
+      <Card.Footer class="flex justify-end border-t pt-6">
+        <Button onclick={saveTheme} disabled={savingTheme}>
+          {#if savingTheme}
+            <Loader class="mr-2 h-4 w-4 animate-spin" />
+          {/if}
+          Save Theme
         </Button>
       </Card.Footer>
     </Card.Root>

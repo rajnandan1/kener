@@ -20,7 +20,10 @@
 <svelte:head>
   <title>Kener Status</title>
   <link rel="icon" href={data.favicon} />
-  {@html `<style>:root{--up:${data.siteStatusColors.UP};--degraded:${data.siteStatusColors.DEGRADED};--down:${data.siteStatusColors.DOWN};--maintenance:${data.siteStatusColors.MAINTENANCE};}</style>`}
+  {#if data.font?.cssSrc}
+    <link rel="stylesheet" href={data.font.cssSrc} />
+  {/if}
+  {@html `<style>:root{--up:${data.siteStatusColors.UP};--degraded:${data.siteStatusColors.DEGRADED};--down:${data.siteStatusColors.DOWN};--maintenance:${data.siteStatusColors.MAINTENANCE};${data.font?.family ? `--font-family:'${data.font.family}', sans-serif;` : ""}}</style>`}
 </svelte:head>
 <main class="kener-public">
   <!-- Nav -->
@@ -39,4 +42,9 @@
   * {
     font-family: var(--font-family);
   }
+  /*
+	:global(.text-3xl) {
+		font-family: var(--font-family);
+	}
+	*/
 </style>
