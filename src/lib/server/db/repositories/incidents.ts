@@ -583,15 +583,27 @@ export class IncidentsRepository extends BaseRepository {
     comment: string,
     state: string,
     commented_at: number,
-  ): Promise<number[]> {
-    return await this.knex("incident_comments").insert({
+  ): Promise<IncidentCommentRecord> {
+    const dbType = GetDbType();
+
+    const insertData = {
       comment,
       incident_id,
       state,
       commented_at,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
-    });
+    };
+
+    if (dbType === "postgresql") {
+      const [createdComment] = await this.knex("incident_comments").insert(insertData).returning("*");
+      return createdComment;
+    } else {
+      const result = await this.knex("incident_comments").insert(insertData);
+      const id = result[0];
+      const createdComment = await this.knex("incident_comments").where("id", id).first();
+      return createdComment;
+    }
   }
 
   async getIncidentComments(incident_id: number): Promise<IncidentCommentRecord[]> {

@@ -638,4 +638,82 @@ export class MaintenancesRepository extends BaseRepository {
 
     return Array.from(maintenanceMap.values());
   }
+
+  /**
+   * Get maintenance events with maintenance details for API listing
+   * Supports filtering by monitor tags, event status, maintenance_id, and start_date_time
+   * Returns paginated results with total count
+   */
+  async getMaintenanceEventsWithDetails(options: {
+    startFromTimestamp: number;
+    page: number;
+    limit: number;
+    monitorTags?: string[];
+    eventStatus?: string;
+    maintenanceId?: number;
+  }): Promise<{ events: any[]; total: number }> {
+    const { startFromTimestamp, page, limit, monitorTags, eventStatus, maintenanceId } = options;
+
+    // Build base query
+    let query = this.knex("maintenances_events")
+      .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
+      .select(
+        "maintenances_events.id as event_id",
+        "maintenances_events.maintenance_id",
+        "maintenances_events.start_date_time as event_start_date_time",
+        "maintenances_events.end_date_time as event_end_date_time",
+        "maintenances_events.status as event_status",
+        "maintenances.title as maintenance_title",
+        "maintenances.description as maintenance_description",
+        "maintenances.status as maintenance_status",
+        "maintenances.rrule as maintenance_rrule",
+        "maintenances.duration_seconds as maintenance_duration_seconds",
+      )
+      .where("maintenances_events.start_date_time", ">=", startFromTimestamp);
+
+    // Apply event status filter
+    if (eventStatus) {
+      query = query.andWhere("maintenances_events.status", eventStatus);
+    }
+
+    // Apply maintenance_id filter
+    if (maintenanceId) {
+      query = query.andWhere("maintenances_events.maintenance_id", maintenanceId);
+    }
+
+    // Apply monitors filter - get events for maintenances that include any of the specified monitors
+    if (monitorTags && monitorTags.length > 0) {
+      query = query.whereIn("maintenances_events.maintenance_id", function () {
+        this.select("maintenance_id").from("maintenance_monitors").whereIn("monitor_tag", monitorTags);
+      });
+    }
+
+    // Get total count
+    const countQuery = this.knex("maintenances_events")
+      .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
+      .where("maintenances_events.start_date_time", ">=", startFromTimestamp);
+
+    if (eventStatus) {
+      countQuery.andWhere("maintenances_events.status", eventStatus);
+    }
+    if (maintenanceId) {
+      countQuery.andWhere("maintenances_events.maintenance_id", maintenanceId);
+    }
+    if (monitorTags && monitorTags.length > 0) {
+      countQuery.whereIn("maintenances_events.maintenance_id", function () {
+        this.select("maintenance_id").from("maintenance_monitors").whereIn("monitor_tag", monitorTags);
+      });
+    }
+
+    const totalResult = await countQuery.count("maintenances_events.id as count").first();
+    const total = totalResult ? Number(totalResult.count) : 0;
+
+    // Apply ordering and pagination
+    const events = await query
+      .orderBy("maintenances_events.start_date_time", "asc")
+      .limit(limit)
+      .offset((page - 1) * limit);
+
+    return { events, total };
+  }
 }

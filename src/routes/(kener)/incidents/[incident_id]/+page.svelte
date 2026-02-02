@@ -64,9 +64,8 @@
   <!-- Incident Meta -->
   <div class="mb-4 flex flex-col items-start gap-4 rounded-3xl border p-4 text-sm">
     <div class="flex">
-      <Badge class="gap-1">
-        <Clock class="h-4 w-4" />
-        {$t("Timeline")}
+      <Badge variant="outline" class="gap-1 text-{data.incident.state.toLowerCase()}  rounded-none border-0 p-0">
+        {$t(data.incident.state)}
       </Badge>
     </div>
     <div class="flex w-full justify-between gap-2">

@@ -266,6 +266,10 @@ export const UpdateMaintenance = async (id: number, data: UpdateMaintenanceInput
   // Extract monitors separately as it's not part of the record
   const { monitors, ...updateData } = data;
 
+  // Determine the rrule after update (use new value if provided, otherwise existing)
+  const effectiveRrule = data.rrule !== undefined ? data.rrule : existing.rrule;
+  const isOneTime = isOneTimeRrule(effectiveRrule);
+
   // Check if schedule has changed (start_date_time, rrule, or duration_seconds)
   const scheduleChanged =
     (data.start_date_time !== undefined && data.start_date_time !== existing.start_date_time) ||
@@ -283,23 +287,35 @@ export const UpdateMaintenance = async (id: number, data: UpdateMaintenanceInput
     }
   }
 
-  // If schedule changed, delete future SCHEDULED events and regenerate
+  // Handle schedule changes differently for one-time vs recurring
   if (scheduleChanged) {
     // Get current values (may have been updated)
     const updated = await db.getMaintenanceById(id);
     if (updated) {
-      // Delete future scheduled events
       const events = await db.getMaintenanceEventsByMaintenanceId(id);
       const now = Math.floor(Date.now() / 1000);
-      for (const event of events) {
-        // Only delete SCHEDULED events in the future
-        if (event.status === "SCHEDULED" && event.start_date_time > now) {
-          await db.deleteMaintenanceEvent(event.id);
-        }
-      }
 
-      // Regenerate events for the next 7 days
-      await GenerateMaintenanceEvents(id, updated.start_date_time, updated.rrule, updated.duration_seconds, 7);
+      if (isOneTime) {
+        // For one-time maintenance: delete all events that aren't completed and create a new one
+        for (const event of events) {
+          // Delete events that are not COMPLETED or CANCELLED
+          if (event.status !== "COMPLETED" && event.status !== "CANCELLED") {
+            await db.deleteMaintenanceEvent(event.id);
+          }
+        }
+        // Regenerate the event
+        await GenerateMaintenanceEvents(id, updated.start_date_time, updated.rrule, updated.duration_seconds, 7);
+      } else {
+        // For recurring maintenances: delete future SCHEDULED events and regenerate
+        for (const event of events) {
+          // Only delete SCHEDULED events in the future
+          if (event.status === "SCHEDULED" && event.start_date_time > now) {
+            await db.deleteMaintenanceEvent(event.id);
+          }
+        }
+        // Regenerate events for the next 7 days
+        await GenerateMaintenanceEvents(id, updated.start_date_time, updated.rrule, updated.duration_seconds, 7);
+      }
     }
   }
 

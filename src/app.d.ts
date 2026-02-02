@@ -6,6 +6,12 @@ declare global {
     interface Locals {
       // Example: set by hooks.server.ts after validating a cookie/JWT.
       user?: import("$lib/server/types/auth").SessionUser;
+      // Set by hooks.server.ts for /api/monitors/:monitor_tag/* routes
+      monitor?: import("$lib/server/types/db").MonitorRecord;
+      // Set by hooks.server.ts for /api/incidents/:incident_id/* routes
+      incident?: Omit<import("$lib/server/types/db").IncidentRecord, "incident_source">;
+      // Set by hooks.server.ts for /api/maintenances/:maintenance_id/* routes
+      maintenance?: import("$lib/server/types/db").MaintenanceRecord;
     }
 
     interface PageData {

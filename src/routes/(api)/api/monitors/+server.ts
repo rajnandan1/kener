@@ -1,0 +1,190 @@
+import { json, type RequestHandler } from "@sveltejs/kit";
+import db from "$lib/server/db/db";
+import type {
+  GetMonitorsListResponse,
+  MonitorResponse,
+  CreateMonitorRequest,
+  CreateMonitorResponse,
+  BadRequestResponse,
+} from "$lib/types/api";
+
+function formatDateToISO(date: Date | string): string {
+  if (date instanceof Date) {
+    return date.toISOString();
+  }
+  // Handle string dates (e.g., from SQLite: "2026-01-27 16:07:19")
+  const parsed = new Date(date.replace(" ", "T") + "Z");
+  return parsed.toISOString();
+}
+
+function formatMonitorResponse(monitor: {
+  id: number;
+  tag: string;
+  name: string;
+  description: string | null;
+  image: string | null;
+  cron: string | null;
+  default_status: string | null;
+  status: string | null;
+  category_name: string | null;
+  monitor_type: string;
+  type_data: string | null;
+  day_degraded_minimum_count: number | null;
+  day_down_minimum_count: number | null;
+  include_degraded_in_downtime: string;
+  is_hidden: string;
+  monitor_settings_json: string | null;
+  created_at: Date | string;
+  updated_at: Date | string;
+}): MonitorResponse {
+  let typeData = null;
+  let monitorSettingsJson = null;
+
+  if (monitor.type_data) {
+    try {
+      typeData = JSON.parse(monitor.type_data);
+    } catch {
+      typeData = null;
+    }
+  }
+
+  if (monitor.monitor_settings_json) {
+    try {
+      monitorSettingsJson = JSON.parse(monitor.monitor_settings_json);
+    } catch {
+      monitorSettingsJson = null;
+    }
+  }
+
+  return {
+    id: monitor.id,
+    tag: monitor.tag,
+    name: monitor.name,
+    description: monitor.description,
+    image: monitor.image,
+    cron: monitor.cron,
+    default_status: monitor.default_status,
+    status: monitor.status,
+    category_name: monitor.category_name,
+    monitor_type: monitor.monitor_type,
+    type_data: typeData,
+    day_degraded_minimum_count: monitor.day_degraded_minimum_count,
+    day_down_minimum_count: monitor.day_down_minimum_count,
+    include_degraded_in_downtime: monitor.include_degraded_in_downtime,
+    is_hidden: monitor.is_hidden,
+    monitor_settings_json: monitorSettingsJson,
+    created_at: formatDateToISO(monitor.created_at),
+    updated_at: formatDateToISO(monitor.updated_at),
+  };
+}
+
+export const GET: RequestHandler = async ({ url }) => {
+  const status = url.searchParams.get("status") || undefined;
+  const category_name = url.searchParams.get("category_name") || undefined;
+  const monitor_type = url.searchParams.get("monitor_type") || undefined;
+  const is_hidden = url.searchParams.get("is_hidden") || undefined;
+
+  const rawMonitors = await db.getMonitors({
+    status,
+    category_name,
+    monitor_type,
+    is_hidden,
+  });
+
+  const monitors: MonitorResponse[] = rawMonitors.map(formatMonitorResponse);
+
+  const response: GetMonitorsListResponse = {
+    monitors,
+  };
+
+  return json(response);
+};
+
+export const POST: RequestHandler = async ({ request }) => {
+  let body: CreateMonitorRequest;
+
+  try {
+    body = await request.json();
+  } catch {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: "Invalid JSON body",
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
+  // Validate required fields
+  if (!body.tag || typeof body.tag !== "string" || body.tag.trim().length === 0) {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: "Tag is required and must be a non-empty string",
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
+  if (!body.name || typeof body.name !== "string" || body.name.trim().length === 0) {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: "Name is required and must be a non-empty string",
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
+  // Check if monitor with this tag already exists
+  const existingMonitor = await db.getMonitorByTag(body.tag);
+  if (existingMonitor) {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: `Monitor with tag '${body.tag}' already exists`,
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
+  // Prepare monitor data for insertion
+  const monitorData = {
+    tag: body.tag.trim(),
+    name: body.name.trim(),
+    description: body.description ?? null,
+    image: body.image ?? null,
+    cron: body.cron ?? null,
+    default_status: body.default_status ?? "UP",
+    status: body.status ?? "ACTIVE",
+    category_name: body.category_name ?? null,
+    monitor_type: body.monitor_type ?? "API",
+    type_data: body.type_data ? JSON.stringify(body.type_data) : null,
+    day_degraded_minimum_count: body.day_degraded_minimum_count ?? 1,
+    day_down_minimum_count: body.day_down_minimum_count ?? 1,
+    include_degraded_in_downtime: body.include_degraded_in_downtime ?? "NO",
+    is_hidden: body.is_hidden ?? "NO",
+    monitor_settings_json: body.monitor_settings_json ? JSON.stringify(body.monitor_settings_json) : null,
+  };
+
+  await db.insertMonitor(monitorData);
+
+  // Fetch the created monitor
+  const createdMonitor = await db.getMonitorByTag(body.tag);
+
+  if (!createdMonitor) {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "Failed to create monitor",
+      },
+    };
+    return json(errorResponse, { status: 500 });
+  }
+
+  const response: CreateMonitorResponse = {
+    monitor: formatMonitorResponse(createdMonitor),
+  };
+
+  return json(response, { status: 201 });
+};
