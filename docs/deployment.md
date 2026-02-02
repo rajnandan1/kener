@@ -160,3 +160,11 @@ docker build  --build-arg KENER_BASE_PATH=/status -t kener .
 You can deploy Kener on [Railway](https://railway.app) with a single click.
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/spSvic?referralCode=1Pn7vs)
+
+## Kubernetes
+
+### Kubernetes
+
+You can easily deploy Kener on Kubernetes by applying the manifests directory with kubectl. Follow these steps do deploy it on an already configured Kubernetes cluster.
+
+[Guide can be found here]("https://github.com/rajnandan1/kener/blob/main/manifests/README.md")
