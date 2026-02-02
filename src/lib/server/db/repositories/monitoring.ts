@@ -14,11 +14,11 @@ import type {
  */
 export class MonitoringRepository extends BaseRepository {
   async insertMonitoringData(data: MonitoringDataInsert): Promise<number[]> {
-    const { monitor_tag, timestamp, status, latency, type } = data;
+    const { monitor_tag, timestamp, status, latency, type, error_message } = data;
     return await this.knex("monitoring_data")
-      .insert({ monitor_tag, timestamp, status, latency, type })
+      .insert({ monitor_tag, timestamp, status, latency, type, error_message })
       .onConflict(["monitor_tag", "timestamp"])
-      .merge({ status, latency, type });
+      .merge({ status, latency, type, error_message });
   }
 
   async getMonitoringData(monitor_tag: string, start: number, end: number): Promise<MonitoringData[]> {
@@ -63,6 +63,50 @@ export class MonitoringRepository extends BaseRepository {
       .where("monitor_tag", monitor_tag)
       .orderBy("timestamp", "desc")
       .limit(limit);
+  }
+
+  async getMonitoringDataPaginated(
+    page: number,
+    limit: number,
+    filter?: { monitor_tag?: string; start_time?: number; end_time?: number },
+  ): Promise<MonitoringData[]> {
+    let query = this.knex("monitoring_data").select("*");
+
+    if (filter?.monitor_tag) {
+      query = query.where("monitor_tag", filter.monitor_tag);
+    }
+
+    if (filter?.start_time) {
+      query = query.where("timestamp", ">=", filter.start_time);
+    }
+
+    if (filter?.end_time) {
+      query = query.where("timestamp", "<=", filter.end_time);
+    }
+
+    return await query
+      .orderBy("timestamp", "desc")
+      .limit(limit)
+      .offset((page - 1) * limit);
+  }
+
+  async getMonitoringDataCount(filter?: { monitor_tag?: string; start_time?: number; end_time?: number }): Promise<{ count: number }> {
+    let query = this.knex("monitoring_data").count("* as count");
+
+    if (filter?.monitor_tag) {
+      query = query.where("monitor_tag", filter.monitor_tag);
+    }
+
+    if (filter?.start_time) {
+      query = query.where("timestamp", ">=", filter.start_time);
+    }
+
+    if (filter?.end_time) {
+      query = query.where("timestamp", "<=", filter.end_time);
+    }
+
+    const result = await query.first();
+    return { count: Number(result?.count) || 0 };
   }
 
   async getMonitoringDataAt(monitor_tag: string, timestamp: number): Promise<MonitoringData | undefined> {

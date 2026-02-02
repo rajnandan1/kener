@@ -47,6 +47,7 @@ import {
   ManualUpdateUserData,
   DeleteMonitorCompletelyUsingTag,
   GetSiteDataByKey,
+  GetMonitoringDataPaginated,
 } from "$lib/server/controllers/controller.js";
 
 import { INVITE_VERIFY_EMAIL, MANUAL } from "$lib/server/constants.js";
@@ -256,6 +257,20 @@ export async function POST({ request, cookies }) {
       const limit = parseInt(String(data.limit)) || 20;
       const filter = data.status && data.status !== "ALL" ? { alert_status: data.status } : undefined;
       resp = await GetMonitorAlertsV2Paginated(page, limit, filter);
+    } else if (action == "getMonitoringDataPaginated") {
+      const page = parseInt(String(data.page)) || 1;
+      const limit = parseInt(String(data.limit)) || 50;
+      const filter: { monitor_tag?: string; start_time?: number; end_time?: number } = {};
+      if (data.monitor_tag && data.monitor_tag !== "ALL") {
+        filter.monitor_tag = data.monitor_tag;
+      }
+      if (data.start_time) {
+        filter.start_time = parseInt(String(data.start_time));
+      }
+      if (data.end_time) {
+        filter.end_time = parseInt(String(data.end_time));
+      }
+      resp = await GetMonitoringDataPaginated(page, limit, Object.keys(filter).length > 0 ? filter : undefined);
     } else if (action == "getAPIKeys") {
       resp = await GetAllAPIKeys();
     } else if (action == "createNewApiKey") {

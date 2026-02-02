@@ -28,6 +28,7 @@
   import TemplateIcon from "@lucide/svelte/icons/layout-template";
   import EmailTemplateIcon from "@lucide/svelte/icons/mail-plus";
   import VaultIcon from "@lucide/svelte/icons/vault";
+  import DatabaseIcon from "@lucide/svelte/icons/database";
 
   import { Toaster } from "$lib/components/ui/sonner/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
@@ -54,7 +55,8 @@
     { title: "Embed", url: "/manage/app/embed", icon: CodeIcon },
     { title: "Templates", url: "/manage/app/templates", icon: TemplateIcon },
     { title: "Email Customization", url: "/manage/app/email-customization", icon: EmailTemplateIcon },
-    { title: "Vault", url: "/manage/app/vault", icon: VaultIcon }
+    { title: "Vault", url: "/manage/app/vault", icon: VaultIcon },
+    { title: "Database", url: "/manage/app/monitoring-data", icon: DatabaseIcon }
   ];
 
   // Derive page title from current URL

@@ -70,6 +70,7 @@ interface MonitoringDataInput {
   status: string;
   latency?: number;
   type: string;
+  error_message?: string | null;
 }
 
 interface InterpolatedDataEntry {
@@ -98,6 +99,7 @@ export const InsertMonitoringData = async (data: MonitoringDataInput): Promise<n
     status: data.status,
     latency: data.latency || 0,
     type: data.type,
+    error_message: data.error_message,
   });
 };
 export const ProcessGroupUpdate = async (data: GroupUpdateData): Promise<void> => {
@@ -529,6 +531,17 @@ export const GetStatusCountsByInterval = async (
   numIntervals: number,
 ): Promise<TimestampStatusCount[]> => {
   return await db.getStatusCountsByInterval(monitor_tag, start, interval, numIntervals);
+};
+
+//getMonitoringDataPaginated
+export const GetMonitoringDataPaginated = async (
+  page: number,
+  limit: number,
+  filter?: { monitor_tag?: string; start_time?: number; end_time?: number },
+): Promise<{ data: MonitoringData[]; total: number }> => {
+  const data = await db.getMonitoringDataPaginated(page, limit, filter);
+  const countResult = await db.getMonitoringDataCount(filter);
+  return { data, total: countResult.count };
 };
 
 export type BadgeType = "status" | "uptime" | "latency";

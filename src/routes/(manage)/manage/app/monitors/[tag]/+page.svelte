@@ -31,6 +31,7 @@
   import * as InputGroup from "$lib/components/ui/input-group/index.js";
   import type { MonitoringResult } from "$lib/server/types/monitor.js";
   import MonitorAlerting from "./components/MonitorAlerting.svelte";
+  import MonitorRecentLogs from "./components/MonitorRecentLogs.svelte";
   // Type-specific components
   import {
     MonitorApi,
@@ -1096,6 +1097,10 @@
 
     {#if !isNew}
       <MonitorAlerting monitor_tag={params.tag} />
+    {/if}
+
+    {#if !isNew}
+      <MonitorRecentLogs monitor_tag={params.tag} />
     {/if}
     <!-- Pages Card -->
     {#if !isNew}

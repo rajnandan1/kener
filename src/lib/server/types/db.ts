@@ -8,6 +8,7 @@ export interface MonitoringData {
   status: string | null;
   latency: number | null;
   type: string | null;
+  error_message?: string | null;
 }
 
 export interface MonitoringDataInsert {
@@ -16,6 +17,7 @@ export interface MonitoringDataInsert {
   status: string;
   latency: number;
   type: string;
+  error_message?: string | null;
 }
 
 export interface AggregatedMonitoringData {

@@ -65,6 +65,7 @@ async function manualMaintenance(monitor: MonitorRecordTyped): Promise<{ [timest
       status: impact,
       latency: 0,
       type: GC.MANUAL,
+      error_message: "Status set by manual maintenance",
     },
   };
 
@@ -105,6 +106,7 @@ async function manualIncident(monitor: MonitorRecordTyped): Promise<{ [timestamp
       status: impact,
       latency: 0,
       type: GC.MANUAL,
+      error_message: "Status set by manual incident",
     },
   };
 
@@ -118,27 +120,28 @@ const addWorker = () => {
     const serviceClient = new Service(monitor as MonitorWithType);
 
     const exeResult = await serviceClient.execute(ts);
-    if (exeResult && exeResult.type === GC.TIMEOUT && monitor.monitor_type === "API") {
-      let countTimeoutRetries = executeOptions?.countTimeoutRetries || 0;
-      let maxTimeoutRetries = executeOptions?.maxTimeoutRetries || 3;
-      if (countTimeoutRetries < maxTimeoutRetries) {
-        console.log(
-          `Timeout detected for monitor ${monitor.tag} at ${ts}. Retrying ${countTimeoutRetries + 1}/${maxTimeoutRetries}...`,
-        );
-        await push(
-          monitor,
-          ts,
-          {
-            ...executeOptions,
-            countTimeoutRetries: countTimeoutRetries + 1,
-          },
-          { delay: 500 },
-        );
-        return {
-          [ts]: exeResult,
-        };
-      }
-    }
+
+    // if (exeResult && exeResult.type === GC.TIMEOUT && monitor.monitor_type === "API") {
+    //   let countTimeoutRetries = executeOptions?.countTimeoutRetries || 0;
+    //   let maxTimeoutRetries = executeOptions?.maxTimeoutRetries || 3;
+    //   if (countTimeoutRetries < maxTimeoutRetries) {
+    //     console.log(
+    //       `Timeout detected for monitor ${monitor.tag} at ${ts}. Retrying ${countTimeoutRetries + 1}/${maxTimeoutRetries}...`,
+    //     );
+    //     await push(
+    //       monitor,
+    //       ts,
+    //       {
+    //         ...executeOptions,
+    //         countTimeoutRetries: countTimeoutRetries + 1,
+    //       },
+    //       { delay: 500 },
+    //     );
+    //     return {
+    //       [ts]: exeResult,
+    //     };
+    //   }
+    // }
 
     let realtimeData: MonitoringResultTS = {};
     if (exeResult) {
@@ -156,9 +159,34 @@ const addWorker = () => {
           latency: 0,
           type: GC.DEFAULT_STATUS,
         };
+        if (monitor.default_status !== GC.UP) {
+          defaultData[ts].error_message = "Default status applied";
+        }
       }
     }
+
+    // Merge data: later entries override earlier ones for all fields except error_message
     mergedData = { ...defaultData, ...realtimeData, ...incidentData, ...maintenanceData };
+
+    // Preserve error_message with cascading priority:
+    // default → realtime → incident → maintenance
+    // Each level only overrides if it has its own error_message
+    for (const timestamp in mergedData) {
+      const ts = parseInt(timestamp);
+      let errorMessage: string | undefined = defaultData[ts]?.error_message;
+      if (realtimeData[ts]?.error_message) {
+        errorMessage = realtimeData[ts].error_message;
+      }
+      if (incidentData[ts]?.error_message) {
+        errorMessage = incidentData[ts].error_message;
+      }
+      if (maintenanceData[ts]?.error_message) {
+        errorMessage = maintenanceData[ts].error_message;
+      }
+      if (errorMessage) {
+        mergedData[ts].error_message = errorMessage;
+      }
+    }
 
     for (const timestamp in mergedData) {
       monitorResponseQueue.push(monitor.tag, parseInt(timestamp), mergedData[timestamp]);

@@ -15,6 +15,7 @@ interface JobData {
   type: string;
   monitorTag: string;
   ts: number;
+  error_message?: string | null;
 }
 
 const getQueue = () => {
@@ -28,7 +29,7 @@ const addWorker = () => {
   if (worker) return worker;
 
   worker = q.createWorker(getQueue(), async (job: Job): Promise<number[]> => {
-    const { monitorTag, ts, status, latency, type } = job.data as JobData;
+    const { monitorTag, ts, status, latency, type, error_message } = job.data as JobData;
 
     const dbRes = await InsertMonitoringData({
       monitor_tag: monitorTag,
@@ -36,6 +37,7 @@ const addWorker = () => {
       status: status,
       latency: latency,
       type: type,
+      error_message: error_message,
     });
 
     if (dbRes.length > 0) {
