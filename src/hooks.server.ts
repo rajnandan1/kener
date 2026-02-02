@@ -6,7 +6,7 @@ import type { UnauthorizedResponse, NotFoundResponse } from "$lib/types/api";
 const API_PATH_PREFIX = "/api/";
 
 // Paths that don't require authentication
-const PUBLIC_API_PATHS = ["/api/status"];
+const PUBLIC_API_PATHS = ["/api/status", "/api/spec"];
 
 // Regex to match routes with monitor_tag parameter
 const MONITOR_TAG_ROUTE_REGEX = /^\/api\/monitors\/([^/]+)/;

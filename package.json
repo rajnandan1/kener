@@ -114,6 +114,7 @@
     "@rajnandan1/aven": "file:../aven",
     "@rajnandan1/svelte-legos": "^0.0.1",
     "@scalar/express-api-reference": "^0.8.28",
+    "@scalar/sveltekit": "^0.1.43",
     "@uiw/codemirror-theme-github": "^4.25.3",
     "analytics": "^0.8.19",
     "axios": "^1.13.2",
