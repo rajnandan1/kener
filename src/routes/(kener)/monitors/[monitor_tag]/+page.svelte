@@ -2,13 +2,14 @@
   import * as Item from "$lib/components/ui/item/index.js";
   import { t } from "$lib/stores/i18n";
   import { formatDate } from "$lib/stores/datetime";
-
+  import { Button } from "$lib/components/ui/button/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import IncidentMonitorList from "$lib/components/IncidentMonitorList.svelte";
   import AllMaintenanceMonitorGrid from "$lib/components/AllMaintenanceMonitorGrid.svelte";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import MonitorOverview from "$lib/components/MonitorOverview.svelte";
+  import ArrowUpRight from "@lucide/svelte/icons/arrow-up-right";
 
   let { data } = $props();
 
@@ -66,11 +67,23 @@
   <!-- Status Card -->
   <div class="mb-4">
     <div class="bg-background flex flex-col justify-start gap-y-3 rounded-3xl border p-4">
-      <div class="flex flex-col px-2">
+      <div class="relative flex flex-col px-2">
         <h2 class="text-base font-medium">{$t("Last Updated")}</h2>
         <p class="text-muted-foreground text-xs">
-          {$formatDate(data.monitorLastStatusTimestamp * 1000, "PPpp")}
+          <span>{$formatDate(data.monitorLastStatusTimestamp * 1000, "PPpp")}</span>
         </p>
+        {#if !!data.externalUrl}
+          <Button
+            variant="outline"
+            size="icon-sm"
+            class="rounded-btn absolute top-0 right-0"
+            href={data.externalUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <ArrowUpRight class="size-4" />
+          </Button>
+        {/if}
       </div>
       <div class="flex items-center justify-between px-2">
         <div class="flex flex-col items-start gap-1">

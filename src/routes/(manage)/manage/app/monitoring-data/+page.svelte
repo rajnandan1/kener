@@ -158,20 +158,6 @@
     }
   }
 
-  // Get badge variant for status
-  function getStatusBadgeVariant(status: string | null): "default" | "secondary" | "destructive" | "outline" {
-    switch (status) {
-      case "DOWN":
-        return "destructive";
-      case "DEGRADED":
-        return "outline";
-      case "UP":
-        return "default";
-      default:
-        return "secondary";
-    }
-  }
-
   // Format timestamp to date string
   function formatTimestamp(timestamp: number): string {
     try {
@@ -289,9 +275,9 @@
                 <span class="text-muted-foreground text-sm">{formatTimestamp(row.timestamp)}</span>
               </Table.Cell>
               <Table.Cell>
-                <Badge variant={getStatusBadgeVariant(row.status)}>
+                <span class="text-xs font-semibold text-{row.status?.toLowerCase()}">
                   {row.status || "N/A"}
-                </Badge>
+                </span>
               </Table.Cell>
               <Table.Cell>
                 {#if row.latency !== null}
@@ -314,7 +300,7 @@
                       <span class="text-destructive line-clamp-1 max-w-xs text-sm">{row.error_message}</span>
                     </Tooltip.Trigger>
                     <Tooltip.Content class="max-w-md">
-                      <p class="break-words">{row.error_message}</p>
+                      <p class="wrap-break-word">{row.error_message}</p>
                     </Tooltip.Content>
                   </Tooltip.Root>
                 {:else}

@@ -33,10 +33,12 @@ export class MonitorsRepository extends BaseRepository {
       monitor_settings_json: data.monitor_settings_json,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
+      external_url: data.external_url,
     });
   }
 
   async updateMonitor(data: MonitorRecord): Promise<number> {
+    console.log(">>>>>>----  monitors:40 ", data);
     return await this.knex("monitors").where({ id: data.id }).update({
       tag: data.tag,
       name: data.name,
@@ -54,6 +56,7 @@ export class MonitorsRepository extends BaseRepository {
       is_hidden: data.is_hidden,
       monitor_settings_json: data.monitor_settings_json,
       updated_at: this.knex.fn.now(),
+      external_url: data.external_url,
     });
   }
 

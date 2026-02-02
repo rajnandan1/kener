@@ -67,20 +67,21 @@ export interface MonitorRecord {
   description: string | null;
   image: string | null;
   cron: string | null;
-  default_status: string | null;
+  default_status: string;
   status: string | null;
   category_name: string | null;
   monitor_type: string;
-  down_trigger: string | null;
-  degraded_trigger: string | null;
-  type_data: string | null;
-  day_degraded_minimum_count: number | null;
-  day_down_minimum_count: number | null;
-  include_degraded_in_downtime: string;
+  down_trigger?: string | null;
+  degraded_trigger?: string | null;
+  type_data?: string | null;
+  external_url?: string | null;
+  day_degraded_minimum_count?: number | null;
+  day_down_minimum_count?: number | null;
+  include_degraded_in_downtime?: string;
   is_hidden: string;
   monitor_settings_json: string | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at?: Date;
+  updated_at?: Date;
 }
 
 export interface MonitorSettings {
@@ -112,16 +113,17 @@ export interface MonitorRecordTyped {
   status: string | null;
   category_name: string | null;
   monitor_type: string;
-  down_trigger: string | null;
-  degraded_trigger: string | null;
+  down_trigger?: string | null;
+  degraded_trigger?: string | null;
   type_data: Record<string, unknown> | null;
-  day_degraded_minimum_count: number | null;
-  day_down_minimum_count: number | null;
-  include_degraded_in_downtime: string;
+  day_degraded_minimum_count?: number | null;
+  day_down_minimum_count?: number | null;
+  include_degraded_in_downtime?: string;
   is_hidden: string;
   monitor_settings_json: MonitorSettings | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at?: Date;
+  updated_at?: Date;
+  external_url?: string | null;
 }
 
 export interface MonitorRecordInsert {
@@ -142,6 +144,7 @@ export interface MonitorRecordInsert {
   include_degraded_in_downtime?: string;
   is_hidden?: string;
   monitor_settings_json?: string | null;
+  external_url?: string | null;
 }
 
 // ============ triggers table ============

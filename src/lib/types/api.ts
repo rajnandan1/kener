@@ -399,3 +399,106 @@ export interface GetMaintenanceEventsDetailListResponse {
   limit: number;
   total: number;
 }
+
+// ============ Pages API Types ============
+
+export interface PageSettingsIncidentsOngoing {
+  show: boolean;
+}
+
+export interface PageSettingsIncidentsResolved {
+  show: boolean;
+  max_count: number;
+  days_in_past: number;
+}
+
+export interface PageSettingsIncidents {
+  enabled: boolean;
+  ongoing: PageSettingsIncidentsOngoing;
+  resolved: PageSettingsIncidentsResolved;
+}
+
+export interface PageSettingsMaintenancesPast {
+  show: boolean;
+  max_count: number;
+  days_in_past: number;
+}
+
+export interface PageSettingsMaintenancesUpcoming {
+  show: boolean;
+  max_count: number;
+  days_in_future: number;
+}
+
+export interface PageSettingsMaintenancesOngoing {
+  show: boolean;
+  past: PageSettingsMaintenancesPast;
+  upcoming: PageSettingsMaintenancesUpcoming;
+}
+
+export interface PageSettingsMaintenances {
+  enabled: boolean;
+  ongoing: PageSettingsMaintenancesOngoing;
+}
+
+export interface PageSettings {
+  incidents: PageSettingsIncidents;
+  include_maintenances: PageSettingsMaintenances;
+}
+
+export interface PageMonitorResponse {
+  monitor_tag: string;
+}
+
+export interface PageResponse {
+  id: number;
+  page_path: string;
+  page_title: string;
+  page_header: string;
+  page_subheader: string | null;
+  page_logo: string | null;
+  page_settings: PageSettings;
+  monitors: PageMonitorResponse[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GetPagesListResponse {
+  pages: PageResponse[];
+}
+
+export interface GetPageResponse {
+  page: PageResponse;
+}
+
+export interface CreatePageRequest {
+  page_path: string;
+  page_title: string;
+  page_header: string;
+  page_subheader?: string | null;
+  page_logo?: string | null;
+  page_settings?: Partial<PageSettings>;
+  monitors?: string[];
+}
+
+export interface CreatePageResponse {
+  page: PageResponse;
+}
+
+export interface UpdatePageRequest {
+  page_path?: string;
+  page_title?: string;
+  page_header?: string;
+  page_subheader?: string | null;
+  page_logo?: string | null;
+  page_settings?: Partial<PageSettings>;
+  monitors?: string[];
+}
+
+export interface UpdatePageResponse {
+  page: PageResponse;
+}
+
+export interface DeletePageResponse {
+  message: string;
+}

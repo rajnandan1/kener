@@ -12,6 +12,8 @@ declare global {
       incident?: Omit<import("$lib/server/types/db").IncidentRecord, "incident_source">;
       // Set by hooks.server.ts for /api/maintenances/:maintenance_id/* routes
       maintenance?: import("$lib/server/types/db").MaintenanceRecord;
+      // Set by hooks.server.ts for /api/pages/:page_path/* routes
+      page?: import("$lib/server/types/db").PageRecord;
     }
 
     interface PageData {

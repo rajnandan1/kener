@@ -67,5 +67,6 @@ export const load: PageServerLoad = async ({ params }) => {
     ongoingMaintenances,
     pastMaintenances,
     upcomingMaintenances,
+    externalUrl: monitor.external_url,
   };
 };

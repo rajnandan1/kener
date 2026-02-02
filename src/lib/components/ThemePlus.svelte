@@ -75,7 +75,7 @@
 
 <div class=" flex w-full items-center justify-between gap-2">
   <div class="flex items-center gap-2">
-    {#if showPagesDropdown && pages.length > 0}
+    {#if showPagesDropdown && pages.length > 1}
       <DropdownMenu.Root>
         <DropdownMenu.Trigger>
           {#snippet child({ props })}

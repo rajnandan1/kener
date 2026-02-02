@@ -98,4 +98,8 @@ export class PagesRepository extends BaseRepository {
   async deletePageMonitorsByTag(monitor_tag: string): Promise<number> {
     return await this.knex("pages_monitors").where({ monitor_tag }).del();
   }
+
+  async deletePageMonitorsByPageId(page_id: number): Promise<number> {
+    return await this.knex("pages_monitors").where({ page_id }).del();
+  }
 }

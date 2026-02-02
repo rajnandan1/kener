@@ -17,6 +17,9 @@ const INCIDENT_ID_ROUTE_REGEX = /^\/api\/incidents\/(\d+)/;
 // Regex to match routes with maintenance_id parameter
 const MAINTENANCE_ID_ROUTE_REGEX = /^\/api\/maintenances\/(\d+)/;
 
+// Regex to match routes with page_path parameter
+const PAGE_PATH_ROUTE_REGEX = /^\/api\/pages\/([^/]+)/;
+
 function isApiRoute(pathname: string): boolean {
   return pathname.startsWith(API_PATH_PREFIX);
 }
@@ -47,6 +50,11 @@ function extractIncidentId(pathname: string): number | null {
 function extractMaintenanceId(pathname: string): number | null {
   const match = pathname.match(MAINTENANCE_ID_ROUTE_REGEX);
   return match ? parseInt(match[1], 10) : null;
+}
+
+function extractPagePath(pathname: string): string | null {
+  const match = pathname.match(PAGE_PATH_ROUTE_REGEX);
+  return match ? decodeURIComponent(match[1]) : null;
 }
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -127,6 +135,23 @@ export const handle: Handle = async ({ event, resolve }) => {
       }
       // Store maintenance in locals for use in endpoints
       event.locals.maintenance = maintenance;
+    }
+
+    // Validate page_path exists for /api/pages/:page_path/* routes
+    const pagePath = extractPagePath(pathname);
+    if (pagePath) {
+      const page = await db.getPageByPath(pagePath);
+      if (!page) {
+        const errorResponse: NotFoundResponse = {
+          error: {
+            code: "NOT_FOUND",
+            message: `Page with path '${pagePath}' not found`,
+          },
+        };
+        return json(errorResponse, { status: 404 });
+      }
+      // Store page in locals for use in endpoints
+      event.locals.page = page;
     }
   }
 

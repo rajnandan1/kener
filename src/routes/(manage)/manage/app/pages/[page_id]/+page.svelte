@@ -77,7 +77,10 @@
   let deleteConfirmText = $state("");
   let deleting = $state(false);
   const canDelete = $derived(
-    !isNew && currentPage && currentPage.page_path !== "/" && deleteConfirmText === `delete ${currentPage?.page_path}`
+    !isNew &&
+      currentPage &&
+      currentPage.page_path !== "" &&
+      deleteConfirmText === `delete ${currentPage?.page_path || "home"}`
   );
 
   // Page settings state
@@ -170,8 +173,14 @@
     saving = true;
     try {
       const action = isNew ? "createPage" : "updatePage";
+      // Make page_path URL-friendly: lowercase, replace spaces with hyphens, remove special chars
+      const sanitizedPath = formData.page_path
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, "-")
+        .replace(/[^a-z0-9_-]/g, "");
       const data: Record<string, unknown> = {
-        page_path: formData.page_path.startsWith("/") ? formData.page_path : "/" + formData.page_path,
+        page_path: sanitizedPath,
         page_title: formData.page_title,
         page_header: formData.page_header,
         page_subheader: formData.page_subheader || null,
@@ -454,13 +463,13 @@
             id="page-path"
             type="text"
             bind:value={formData.page_path}
-            placeholder="/services"
-            disabled={!isNew && currentPage?.page_path === "/"}
+            placeholder="services"
+            disabled={!isNew && currentPage?.page_path === ""}
           />
           <p class="text-muted-foreground text-xs">
-            {!isNew && currentPage?.page_path === "/"
+            {!isNew && currentPage?.page_path === ""
               ? "Home page path cannot be changed"
-              : "URL path for the page (e.g., /services, /infrastructure)"}
+              : "URL path for the page (e.g., services, infrastructure). Will be made URL-friendly."}
           </p>
         </div>
 
@@ -831,7 +840,7 @@
       </Card.Root>
 
       <!-- Danger Zone Card (only for non-home pages) -->
-      {#if currentPage.page_path !== "/"}
+      {#if currentPage.page_path !== ""}
         <Card.Root class="border-destructive">
           <Card.Header>
             <Card.Title class="text-destructive">Danger Zone</Card.Title>
@@ -844,13 +853,13 @@
                 Once you delete a page, there is no going back. Please be certain.
               </p>
               <p class="text-muted-foreground text-sm">
-                Type <code class="bg-muted rounded px-1 font-mono">delete {currentPage.page_path}</code> to confirm:
+                Type <code class="bg-muted rounded px-1 font-mono">delete {currentPage.page_path || "home"}</code> to confirm:
               </p>
               <Input
                 id="delete-confirm"
                 type="text"
                 bind:value={deleteConfirmText}
-                placeholder="delete {currentPage.page_path}"
+                placeholder="delete {currentPage.page_path || 'home'}"
               />
             </div>
           </Card.Content>

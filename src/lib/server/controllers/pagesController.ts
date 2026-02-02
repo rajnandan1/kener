@@ -8,14 +8,16 @@ import type { PageRecord, PageRecordInsert, PageMonitorRecord, PageMonitorRecord
  */
 export async function CreatePage(data: PageRecordInsert): Promise<PageRecord> {
   // Validate required fields
-  if (!data.page_path || !data.page_title || !data.page_header) {
+  if (data.page_path === undefined || data.page_path === null || !data.page_title || !data.page_header) {
     throw new Error("page_path, page_title, and page_header are required");
   }
 
-  // Ensure page_path starts with /
-  if (!data.page_path.startsWith("/")) {
-    data.page_path = "/" + data.page_path;
-  }
+  // Make page_path URL-friendly: lowercase, replace spaces with hyphens, remove special chars (including leading slashes)
+  data.page_path = data.page_path
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9_-]/g, "");
 
   // Check if page with this path already exists
   const existingPage = await db.getPageByPath(data.page_path);
@@ -57,13 +59,17 @@ export async function UpdatePage(id: number, data: Partial<PageRecordInsert>): P
     throw new Error(`Page with id ${id} not found`);
   }
 
-  // If updating page_path, ensure it starts with /
-  if (data.page_path && !data.page_path.startsWith("/")) {
-    data.page_path = "/" + data.page_path;
+  // If updating page_path, make it URL-friendly
+  if (data.page_path !== undefined) {
+    data.page_path = data.page_path
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9_-]/g, "");
   }
 
   // If updating page_path, check if it conflicts with another page
-  if (data.page_path && data.page_path !== existingPage.page_path) {
+  if (data.page_path !== undefined && data.page_path !== existingPage.page_path) {
     const conflictingPage = await db.getPageByPath(data.page_path);
     if (conflictingPage) {
       throw new Error(`Page with path "${data.page_path}" already exists`);
@@ -84,8 +90,8 @@ export async function DeletePage(id: number): Promise<void> {
     throw new Error(`Page with id ${id} not found`);
   }
 
-  // Prevent deleting the home page
-  if (existingPage.page_path === "/") {
+  // Prevent deleting the home page (empty path)
+  if (existingPage.page_path === "") {
     throw new Error("Cannot delete the home page");
   }
 

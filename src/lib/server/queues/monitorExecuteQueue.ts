@@ -147,6 +147,7 @@ const addWorker = () => {
     if (exeResult) {
       realtimeData[ts] = exeResult;
     }
+
     let incidentData: MonitoringResultTS = await manualIncident(monitor);
     let maintenanceData: MonitoringResultTS = await manualMaintenance(monitor);
     let defaultData: MonitoringResultTS = {};
@@ -185,6 +186,15 @@ const addWorker = () => {
       }
       if (errorMessage) {
         mergedData[ts].error_message = errorMessage;
+      }
+    }
+
+    // Preserve latency from realtime monitoring
+    // Incident/maintenance override status but should keep the actual latency from monitoring
+    for (const timestamp in mergedData) {
+      const ts = parseInt(timestamp);
+      if (realtimeData[ts]?.latency !== undefined && realtimeData[ts].latency > 0) {
+        mergedData[ts].latency = realtimeData[ts].latency;
       }
     }
 

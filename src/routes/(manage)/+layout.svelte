@@ -56,7 +56,7 @@
     { title: "Templates", url: "/manage/app/templates", icon: TemplateIcon },
     { title: "Email Customization", url: "/manage/app/email-customization", icon: EmailTemplateIcon },
     { title: "Vault", url: "/manage/app/vault", icon: VaultIcon },
-    { title: "Database", url: "/manage/app/monitoring-data", icon: DatabaseIcon }
+    { title: "Monitoring Data", url: "/manage/app/monitoring-data", icon: DatabaseIcon }
   ];
 
   // Derive page title from current URL

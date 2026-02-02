@@ -209,6 +209,7 @@ class DbImpl {
   updatePageMonitorSettings!: PagesRepository["updatePageMonitorSettings"];
   monitorExistsOnPage!: PagesRepository["monitorExistsOnPage"];
   deletePageMonitorsByTag!: PagesRepository["deletePageMonitorsByTag"];
+  deletePageMonitorsByPageId!: PagesRepository["deletePageMonitorsByPageId"];
 
   // ============ Maintenances ============
   createMaintenance!: MaintenancesRepository["createMaintenance"];
@@ -549,6 +550,7 @@ class DbImpl {
     this.updatePageMonitorSettings = this.pages.updatePageMonitorSettings.bind(this.pages);
     this.monitorExistsOnPage = this.pages.monitorExistsOnPage.bind(this.pages);
     this.deletePageMonitorsByTag = this.pages.deletePageMonitorsByTag.bind(this.pages);
+    this.deletePageMonitorsByPageId = this.pages.deletePageMonitorsByPageId.bind(this.pages);
   }
 
   private bindMaintenancesMethods(): void {

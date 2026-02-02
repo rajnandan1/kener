@@ -97,10 +97,15 @@
           </Card.Header>
           <Card.Content class="h-18">
             <div class="flex flex-wrap gap-2">
-              <Badge variant="outline" class="gap-1">
-                <LinkIcon class="size-3" />
-                {page.page_path}
-              </Badge>
+              <Button
+                variant="link"
+                class="gap-1"
+                href={`/${page.page_path}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                /{page.page_path}
+              </Button>
               {#if page.monitors && page.monitors.length > 0}
                 <Badge variant="secondary">{page.monitors.length} monitor{page.monitors.length > 1 ? "s" : ""}</Badge>
               {:else}
