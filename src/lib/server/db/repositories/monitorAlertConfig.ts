@@ -330,9 +330,9 @@ export class MonitorAlertConfigRepository extends BaseRepository {
       const [record] = await this.knex("monitor_alerts_v2").insert(insertData).returning("*");
       return record;
     } else {
-			const [id] = await this.knex("monitor_alerts_v2").insert(insertData);
-			const record = await this.knex("monitor_alerts_v2").where({ id }).first();
-			return record as MonitorAlertV2Record;
+      const [id] = await this.knex("monitor_alerts_v2").insert(insertData);
+      const record = await this.knex("monitor_alerts_v2").where({ id }).first();
+      return record as MonitorAlertV2Record;
     }
   }
 
@@ -508,5 +508,46 @@ export class MonitorAlertConfigRepository extends BaseRepository {
     }
 
     return await query.first<CountResult>();
+  }
+
+  /**
+   * Get paginated monitor alerts v2 with config details
+   */
+  async getMonitorAlertsV2Paginated(
+    page: number,
+    limit: number,
+    filter?: MonitorAlertV2Filter,
+  ): Promise<{ alerts: MonitorAlertV2WithConfig[]; total: number }> {
+    // Build count query
+    let countQuery = this.knex("monitor_alerts_v2").count("* as count");
+    if (filter?.alert_status) {
+      countQuery = countQuery.where("alert_status", filter.alert_status);
+    }
+    if (filter?.config_id) {
+      countQuery = countQuery.andWhere("config_id", filter.config_id);
+    }
+    const totalResult = await countQuery.first<CountResult>();
+    const total = totalResult ? Number(totalResult.count) : 0;
+
+    // Build paginated query
+    let query = this.knex("monitor_alerts_v2").orderBy("id", "desc");
+    if (filter?.alert_status) {
+      query = query.where("alert_status", filter.alert_status);
+    }
+    if (filter?.config_id) {
+      query = query.andWhere("config_id", filter.config_id);
+    }
+    const rawAlerts = await query.limit(limit).offset((page - 1) * limit);
+
+    // Fetch config for each alert
+    const alerts: MonitorAlertV2WithConfig[] = [];
+    for (const alert of rawAlerts) {
+      const config = await this.getMonitorAlertConfigById(alert.config_id);
+      if (config) {
+        alerts.push({ ...alert, config });
+      }
+    }
+
+    return { alerts, total };
   }
 }

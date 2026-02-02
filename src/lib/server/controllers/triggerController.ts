@@ -43,3 +43,7 @@ export const UpdateTriggerData = async (data: {
     data as { id: number; down_trigger: string | null; degraded_trigger: string | null },
   );
 };
+
+export const DeleteTrigger = async (id: number): Promise<number> => {
+  return await db.deleteTrigger(id);
+};

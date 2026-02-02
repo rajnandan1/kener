@@ -206,7 +206,6 @@ export interface IncidentResponse {
 }
 
 export interface IncidentDetailResponse extends IncidentResponse {
-  status: string;
   incident_type: string;
 }
 

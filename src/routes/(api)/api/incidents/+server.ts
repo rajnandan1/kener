@@ -199,7 +199,6 @@ export const POST: RequestHandler = async ({ request }) => {
       start_date_time: createdIncident.start_date_time,
       end_date_time: createdIncident.end_date_time,
       state: createdIncident.state,
-      status: createdIncident.status,
       incident_type: createdIncident.incident_type,
       incident_source: createdIncident.incident_source,
       monitors: monitors.map((m) => ({

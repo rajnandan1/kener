@@ -561,6 +561,17 @@ export async function GetMonitorAlertsV2Count(filter: MonitorAlertV2Filter): Pro
 }
 
 /**
+ * Get paginated alerts with config details
+ */
+export async function GetMonitorAlertsV2Paginated(
+  page: number,
+  limit: number,
+  filter?: MonitorAlertV2Filter,
+): Promise<{ alerts: MonitorAlertV2WithConfig[]; total: number }> {
+  return await db.getMonitorAlertsV2Paginated(page, limit, filter);
+}
+
+/**
  * Delete a monitor alert v2
  */
 export async function DeleteMonitorAlertV2(id: number): Promise<boolean> {

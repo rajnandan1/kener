@@ -8,24 +8,37 @@
   import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
-  import AlertTriangleIcon from "@lucide/svelte/icons/alert-triangle";
   import { format } from "date-fns";
 
-  // Types
-  interface MonitorAlert {
+  // Types - using MonitorAlertV2WithConfig structure
+  interface MonitorAlertConfig {
     id: number;
     monitor_tag: string;
-    monitor_status: string;
-    alert_status: string;
-    health_checks: number;
-    incident_number: number | null;
+    alert_for: string;
+    alert_value: string;
+    failure_threshold: number;
+    success_threshold: number;
+    alert_description: string | null;
+    create_incident: string;
+    is_active: string;
+    severity: string;
     created_at: string;
     updated_at: string;
   }
 
+  interface MonitorAlertV2 {
+    id: number;
+    config_id: number;
+    incident_id: number | null;
+    alert_status: string;
+    created_at: string;
+    updated_at: string;
+    config: MonitorAlertConfig;
+  }
+
   // State
   let loading = $state(true);
-  let alerts = $state<MonitorAlert[]>([]);
+  let alerts = $state<MonitorAlertV2[]>([]);
   let totalPages = $state(0);
   let totalCount = $state(0);
   let pageNo = $state(1);
@@ -43,18 +56,14 @@
           action: "getAllAlertsPaginated",
           data: {
             page: pageNo,
-            limit
+            limit,
+            status: statusFilter
           }
         })
       });
       const result = await response.json();
       if (!result.error) {
-        // Filter alerts client-side based on status
-        let allAlerts = result.alerts as MonitorAlert[];
-        if (statusFilter !== "ALL") {
-          allAlerts = allAlerts.filter((a) => a.alert_status === statusFilter);
-        }
-        alerts = allAlerts;
+        alerts = result.alerts as MonitorAlertV2[];
         totalCount = result.total;
         totalPages = Math.ceil(result.total / limit);
       }
@@ -65,8 +74,8 @@
     }
   }
 
-  // Get badge variant for monitor status (UP/DOWN/DEGRADED)
-  function getMonitorStatusBadgeVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
+  // Get badge variant for alert value (UP/DOWN/DEGRADED)
+  function getAlertValueBadgeVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
     switch (status) {
       case "DOWN":
         return "destructive";
@@ -88,6 +97,20 @@
         return "default";
       default:
         return "secondary";
+    }
+  }
+
+  // Get badge variant for severity
+  function getSeverityBadgeVariant(severity: string): "default" | "secondary" | "destructive" | "outline" {
+    switch (severity) {
+      case "critical":
+        return "destructive";
+      case "warning":
+        return "outline";
+      case "info":
+        return "secondary";
+      default:
+        return "default";
     }
   }
 
@@ -148,9 +171,9 @@
         <Table.Row>
           <Table.Head class="w-16">ID</Table.Head>
           <Table.Head>Monitor</Table.Head>
-          <Table.Head class="w-32">Type</Table.Head>
+          <Table.Head class="w-32">Alert For</Table.Head>
           <Table.Head class="w-32">Status</Table.Head>
-          <Table.Head class="w-24">Checks</Table.Head>
+          <Table.Head class="w-24">Severity</Table.Head>
           <Table.Head class="w-32">Incident</Table.Head>
           <Table.Head class="w-48">Created At</Table.Head>
         </Table.Row>
@@ -167,16 +190,16 @@
               <Table.Cell>
                 <Tooltip.Root>
                   <Tooltip.Trigger>
-                    <span class="line-clamp-1 max-w-xs font-medium">{alert.monitor_tag}</span>
+                    <span class="line-clamp-1 max-w-xs font-medium">{alert.config.monitor_tag}</span>
                   </Tooltip.Trigger>
                   <Tooltip.Content>
-                    <p>{alert.monitor_tag}</p>
+                    <p>{alert.config.monitor_tag}</p>
                   </Tooltip.Content>
                 </Tooltip.Root>
               </Table.Cell>
               <Table.Cell>
-                <Badge variant={getMonitorStatusBadgeVariant(alert.monitor_status)}>
-                  {alert.monitor_status}
+                <Badge variant={getAlertValueBadgeVariant(alert.config.alert_value)}>
+                  {alert.config.alert_value}
                 </Badge>
               </Table.Cell>
               <Table.Cell>
@@ -185,23 +208,18 @@
                 </Badge>
               </Table.Cell>
               <Table.Cell>
-                <Tooltip.Root>
-                  <Tooltip.Trigger>
-                    <span class="text-muted-foreground text-sm">{alert.health_checks}</span>
-                  </Tooltip.Trigger>
-                  <Tooltip.Content>
-                    <p>Number of health checks that triggered this alert</p>
-                  </Tooltip.Content>
-                </Tooltip.Root>
+                <Badge variant={getSeverityBadgeVariant(alert.config.severity)}>
+                  {alert.config.severity}
+                </Badge>
               </Table.Cell>
               <Table.Cell>
-                {#if alert.incident_number}
+                {#if alert.incident_id}
                   <a
-                    href="/manage/app/incidents/{alert.incident_number}"
+                    href="/manage/app/incidents/{alert.incident_id}"
                     class="text-primary inline-flex items-center gap-1 text-sm hover:underline"
                     onclick={(e) => e.stopPropagation()}
                   >
-                    #{alert.incident_number}
+                    #{alert.incident_id}
                     <ExternalLinkIcon class="size-3" />
                   </a>
                 {:else}

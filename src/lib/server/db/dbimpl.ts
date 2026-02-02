@@ -97,6 +97,7 @@ class DbImpl {
   getTriggers!: AlertsRepository["getTriggers"];
   getTriggerByID!: AlertsRepository["getTriggerByID"];
   getTriggersByIDs!: AlertsRepository["getTriggersByIDs"];
+  deleteTrigger!: AlertsRepository["deleteTrigger"];
 
   // ============ Users ============
   getUsersCount!: UsersRepository["getUsersCount"];
@@ -144,6 +145,7 @@ class DbImpl {
   getIncidentsCount!: IncidentsRepository["getIncidentsCount"];
   getIncidentsCountByTypeAndDateRange!: IncidentsRepository["getIncidentsCountByTypeAndDateRange"];
   updateIncident!: IncidentsRepository["updateIncident"];
+  deleteIncident!: IncidentsRepository["deleteIncident"];
   setIncidentEndTimeToNull!: IncidentsRepository["setIncidentEndTimeToNull"];
   getIncidentById!: IncidentsRepository["getIncidentById"];
   getIncidentsByIds!: IncidentsRepository["getIncidentsByIds"];
@@ -297,6 +299,7 @@ class DbImpl {
   addIncidentToAlert!: MonitorAlertConfigRepository["addIncidentToAlert"];
   getAlertsByIncidentId!: MonitorAlertConfigRepository["getAlertsByIncidentId"];
   getMonitorAlertsV2Count!: MonitorAlertConfigRepository["getMonitorAlertsV2Count"];
+  getMonitorAlertsV2Paginated!: MonitorAlertConfigRepository["getMonitorAlertsV2Paginated"];
 
   // ============ Subscription System V2 (subscriber_users, subscriber_methods, user_subscriptions_v2) ============
   createSubscriberUser!: SubscriptionSystemRepository["createSubscriberUser"];
@@ -432,6 +435,7 @@ class DbImpl {
     this.getTriggers = this.alerts.getTriggers.bind(this.alerts);
     this.getTriggerByID = this.alerts.getTriggerByID.bind(this.alerts);
     this.getTriggersByIDs = this.alerts.getTriggersByIDs.bind(this.alerts);
+    this.deleteTrigger = this.alerts.deleteTrigger.bind(this.alerts);
   }
 
   private bindUsersMethods(): void {
@@ -478,6 +482,7 @@ class DbImpl {
     this.getIncidentsCount = this.incidents.getIncidentsCount.bind(this.incidents);
     this.getIncidentsCountByTypeAndDateRange = this.incidents.getIncidentsCountByTypeAndDateRange.bind(this.incidents);
     this.updateIncident = this.incidents.updateIncident.bind(this.incidents);
+    this.deleteIncident = this.incidents.deleteIncident.bind(this.incidents);
     this.setIncidentEndTimeToNull = this.incidents.setIncidentEndTimeToNull.bind(this.incidents);
     this.getIncidentById = this.incidents.getIncidentById.bind(this.incidents);
     this.getIncidentsByIds = this.incidents.getIncidentsByIds.bind(this.incidents);
@@ -692,6 +697,9 @@ class DbImpl {
     this.addIncidentToAlert = this.monitorAlertConfig.addIncidentToAlert.bind(this.monitorAlertConfig);
     this.getAlertsByIncidentId = this.monitorAlertConfig.getAlertsByIncidentId.bind(this.monitorAlertConfig);
     this.getMonitorAlertsV2Count = this.monitorAlertConfig.getMonitorAlertsV2Count.bind(this.monitorAlertConfig);
+    this.getMonitorAlertsV2Paginated = this.monitorAlertConfig.getMonitorAlertsV2Paginated.bind(
+      this.monitorAlertConfig,
+    );
   }
 
   private bindSubscriptionSystemMethods(): void {

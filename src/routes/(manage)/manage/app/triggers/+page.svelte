@@ -16,6 +16,7 @@
   import Loader from "@lucide/svelte/icons/loader";
   import { toast } from "svelte-sonner";
   import { goto } from "$app/navigation";
+  import ArrowRight from "@lucide/svelte/icons/arrow-right";
 
   // Types
   interface Trigger {
@@ -62,35 +63,6 @@
       toast.error("Failed to load triggers");
     } finally {
       loading = false;
-    }
-  }
-
-  async function testTrigger(index: number, triggerId: number, status: string) {
-    triggers[index].testLoaders = "loading";
-    try {
-      const response = await fetch("/manage/api", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "testTrigger",
-          data: { trigger_id: triggerId, status }
-        })
-      });
-      const result = await response.json();
-      if (result.error) {
-        triggers[index].testLoaders = "error";
-        toast.error(result.error);
-      } else {
-        triggers[index].testLoaders = "success";
-        toast.success("Test trigger sent successfully");
-      }
-    } catch (error) {
-      triggers[index].testLoaders = "error";
-      toast.error("Failed to test trigger");
-    } finally {
-      setTimeout(() => {
-        triggers[index].testLoaders = "idle";
-      }, 3000);
     }
   }
 
@@ -186,23 +158,9 @@
                 {trigger.trigger_status}
               </Badge>
               <Badge variant="outline" class="capitalize">{trigger.trigger_type}</Badge>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={trigger.testLoaders === "loading"}
-                onclick={() => testTrigger(index, trigger.id, "TRIGGERED")}
-              >
-                {#if trigger.testLoaders === "loading"}
-                  <Loader class="mr-1 size-3 animate-spin" />
-                {:else if trigger.testLoaders === "success"}
-                  <CheckIcon class="mr-1 size-3 text-green-500" />
-                {:else if trigger.testLoaders === "error"}
-                  <XIcon class="mr-1 size-3 text-red-500" />
-                {/if}
-                Test
-              </Button>
+
               <Button variant="ghost" size="icon" onclick={() => goto(`/manage/app/triggers/${trigger.id}`)}>
-                <PencilIcon class="size-4" />
+                <ArrowRight class="size-4" />
               </Button>
             </div>
           </Card.Header>

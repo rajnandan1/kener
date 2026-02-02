@@ -230,6 +230,10 @@ export class IncidentsRepository extends BaseRepository {
     });
   }
 
+  async deleteIncident(id: number): Promise<number> {
+    return await this.knex("incidents").where({ id }).delete();
+  }
+
   async setIncidentEndTimeToNull(id: number): Promise<number> {
     return await this.knex("incidents").where({ id }).update({
       end_date_time: null,

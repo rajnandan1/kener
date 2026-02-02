@@ -134,4 +134,11 @@ export class AlertsRepository extends BaseRepository {
   async getTriggersByIDs(ids: number[]): Promise<TriggerRecord[]> {
     return await this.knex("triggers").whereIn("id", ids);
   }
+
+  async deleteTrigger(id: number): Promise<number> {
+    // First delete any references in monitor_alerts_config_triggers
+    await this.knex("monitor_alerts_config_triggers").where("trigger_id", id).del();
+    // Then delete the trigger itself
+    return await this.knex("triggers").where("id", id).del();
+  }
 }

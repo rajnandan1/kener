@@ -35,7 +35,6 @@ async function buildIncidentResponse(incidentId: number): Promise<IncidentDetail
     start_date_time: incident.start_date_time,
     end_date_time: incident.end_date_time,
     state: incident.state,
-    status: incident.status,
     incident_type: incident.incident_type,
     incident_source: incidentSource,
     monitors: monitors.map((m) => ({
@@ -199,25 +198,14 @@ export const DELETE: RequestHandler = async ({ locals }) => {
     await db.removeIncidentMonitor(incident.id, monitor.monitor_tag);
   }
 
-  // Delete incident comments
+  // Delete incident comments (hard delete by setting status to DELETED)
   const comments = await db.getIncidentComments(incident.id);
   for (const comment of comments) {
     await db.updateIncidentCommentStatusByID(comment.id, "DELETED");
   }
 
-  // Update incident status to CLOSED (soft delete)
-  await db.updateIncident({
-    id: incident.id,
-    title: incident.title,
-    start_date_time: incident.start_date_time,
-    end_date_time: incident.end_date_time,
-    status: "CLOSED",
-    state: incident.state,
-    created_at: incident.created_at,
-    updated_at: incident.updated_at,
-    incident_type: incident.incident_type,
-    incident_source: "",
-  });
+  // Actually delete the incident from the database
+  await db.deleteIncident(incident.id);
 
   const response: DeleteIncidentResponse = {
     message: `Incident with id '${incident.id}' deleted successfully`,

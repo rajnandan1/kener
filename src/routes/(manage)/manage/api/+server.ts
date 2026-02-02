@@ -14,7 +14,7 @@ import {
   CreateUpdateTrigger,
   GetAllTriggers,
   UpdateTriggerData,
-  GetAllAlertsPaginated,
+  DeleteTrigger,
   GetIncidentByIDDashboard,
   GetMonitorsParsed,
   GetAllAPIKeys,
@@ -84,6 +84,7 @@ import {
   GetMonitorAlertConfigsByMonitorTag,
   DeleteMonitorAlertConfig,
   ToggleMonitorAlertConfigStatus,
+  GetMonitorAlertsV2Paginated,
   type MonitorAlertConfigRecord,
   type MonitorAlertV2Record,
 } from "$lib/server/controllers/monitorAlertConfigController.js";
@@ -247,8 +248,14 @@ export async function POST({ request, cookies }) {
     } else if (action == "updateMonitorTriggers") {
       AdminEditorCan(userDB.role);
       resp = await UpdateTriggerData(data);
+    } else if (action == "deleteTrigger") {
+      AdminEditorCan(userDB.role);
+      resp = await DeleteTrigger(data.trigger_id);
     } else if (action == "getAllAlertsPaginated") {
-      resp = await GetAllAlertsPaginated(data);
+      const page = parseInt(String(data.page)) || 1;
+      const limit = parseInt(String(data.limit)) || 20;
+      const filter = data.status && data.status !== "ALL" ? { alert_status: data.status } : undefined;
+      resp = await GetMonitorAlertsV2Paginated(page, limit, filter);
     } else if (action == "getAPIKeys") {
       resp = await GetAllAPIKeys();
     } else if (action == "createNewApiKey") {

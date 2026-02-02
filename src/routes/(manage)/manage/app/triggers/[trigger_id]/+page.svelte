@@ -9,6 +9,7 @@
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
   import * as RadioGroup from "$lib/components/ui/radio-group/index.js";
+  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
@@ -21,6 +22,7 @@
   import ZapIcon from "@lucide/svelte/icons/zap";
   import Loader from "@lucide/svelte/icons/loader";
   import CheckIcon from "@lucide/svelte/icons/check";
+  import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import { toast } from "svelte-sonner";
   import { mode } from "mode-watcher";
   import { IsValidURL } from "$lib/clientTools";
@@ -37,6 +39,9 @@
   let saving = $state(false);
   let testing = $state<"idle" | "loading" | "success" | "error">("idle");
   let invalidFormMessage = $state("");
+  let deleteDialogOpen = $state(false);
+  let deleteConfirmName = $state("");
+  let isDeleting = $state(false);
 
   // Get trigger ID from URL params
   const triggerId = $derived(data.trigger_id);
@@ -237,6 +242,35 @@
 
   function removeHeader(index: number) {
     trigger.trigger_meta.headers = trigger.trigger_meta.headers.filter((_, i) => i !== index);
+  }
+
+  async function deleteTrigger() {
+    if (!trigger.id || deleteConfirmName !== trigger.name) return;
+
+    isDeleting = true;
+    try {
+      const response = await fetch("/manage/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "deleteTrigger",
+          data: { trigger_id: trigger.id }
+        })
+      });
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Trigger deleted successfully");
+        goto("/manage/app/triggers");
+      }
+    } catch (error) {
+      toast.error("Failed to delete trigger");
+    } finally {
+      isDeleting = false;
+      deleteDialogOpen = false;
+      deleteConfirmName = "";
+    }
   }
 
   $effect(() => {
@@ -482,5 +516,61 @@
         </Button>
       </Card.Footer>
     </Card.Root>
+
+    <!-- Delete Trigger Card -->
+    {#if !isNew}
+      <Card.Root class="border-destructive">
+        <Card.Header>
+          <Card.Title class="text-destructive">Danger Zone</Card.Title>
+          <Card.Description>Permanently delete this trigger. This action cannot be undone.</Card.Description>
+        </Card.Header>
+        <Card.Content>
+          <p class="text-muted-foreground text-sm">
+            Deleting this trigger will also remove it from all alert configurations that use it.
+          </p>
+        </Card.Content>
+        <Card.Footer class="flex justify-end">
+          <Button variant="destructive" onclick={() => (deleteDialogOpen = true)}>
+            <Trash2Icon class="mr-2 size-4" />
+            Delete Trigger
+          </Button>
+        </Card.Footer>
+      </Card.Root>
+    {/if}
   {/if}
 </div>
+
+<!-- Delete Confirmation Dialog -->
+<AlertDialog.Root bind:open={deleteDialogOpen}>
+  <AlertDialog.Content>
+    <AlertDialog.Header>
+      <AlertDialog.Title>Delete Trigger</AlertDialog.Title>
+      <AlertDialog.Description>
+        This action cannot be undone. This will permanently delete the trigger and remove it from all alert
+        configurations.
+      </AlertDialog.Description>
+    </AlertDialog.Header>
+    <div class="space-y-4 py-4">
+      <p class="text-sm">
+        To confirm, type <span class="bg-muted rounded px-1.5 py-0.5 font-mono text-sm">{trigger.name}</span> below:
+      </p>
+      <Input bind:value={deleteConfirmName} placeholder="Type trigger name to confirm" />
+    </div>
+    <AlertDialog.Footer>
+      <AlertDialog.Cancel
+        disabled={isDeleting}
+        onclick={() => {
+          deleteConfirmName = "";
+        }}>Cancel</AlertDialog.Cancel
+      >
+      <Button variant="destructive" onclick={deleteTrigger} disabled={isDeleting || deleteConfirmName !== trigger.name}>
+        {#if isDeleting}
+          <Loader class="mr-2 size-4 animate-spin" />
+        {:else}
+          <Trash2Icon class="mr-2 size-4" />
+        {/if}
+        Delete Trigger
+      </Button>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>
