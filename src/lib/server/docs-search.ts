@@ -4,9 +4,8 @@
  */
 
 import FlexSearch from "flexsearch";
-import { marked } from "marked";
-import striptags from "striptags";
 import { redisConnection } from "$lib/server/redisConnector";
+import { mdToText } from "$lib/marked";
 import type { DocsSearchDocument, DocsSearchResult, DocsSearchIndexData } from "$lib/types/docs-search";
 import { getDocsConfig, getMarkdownContent, getAllPages } from "../../routes/(docs)/docs/docs-utils.server";
 
@@ -16,16 +15,6 @@ const REDIS_DOCS_KEY = "kener-docs:search:documents";
 // Using 'any' type here because FlexSearch's TypeScript types are complex
 let searchIndex: any = null;
 let documentsMap: Map<string, DocsSearchDocument> = new Map();
-
-/**
- * Convert markdown to plain text using marked and striptags
- */
-function stripMarkdown(content: string): string {
-  // Convert markdown to HTML
-  const html = marked.parse(content, { async: false }) as string;
-  // Strip HTML tags and normalize whitespace
-  return striptags(html).replace(/\s+/g, " ").trim();
-}
 
 /**
  * Create a search excerpt around the matching term
@@ -51,7 +40,7 @@ function createExcerpt(content: string, query: string, maxLength: number = 150):
 }
 
 /**
- * Create slug from heading text (same logic as addHeadingIds in docs-utils)
+ * Create slug from heading text (same logic as marked-gfm-heading-id)
  */
 function createHeadingSlug(text: string): string {
   return text
@@ -149,7 +138,7 @@ export async function buildSearchIndex(): Promise<void> {
     for (const page of group.pages) {
       const markdownContent = getMarkdownContent(page.slug);
       if (markdownContent) {
-        const plainContent = stripMarkdown(markdownContent);
+        const plainContent = mdToText(markdownContent);
         const doc: DocsSearchDocument = {
           id: page.slug,
           title: page.title,

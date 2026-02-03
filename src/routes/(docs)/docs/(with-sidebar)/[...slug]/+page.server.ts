@@ -1,5 +1,5 @@
 import type { PageServerLoad } from "./$types";
-import { getDocsPageData, addHeadingIds, extractTableOfContents, docExists } from "../../docs-utils.server";
+import { getDocsPageData, extractTableOfContents, docExists } from "../../docs-utils.server";
 import { error } from "@sveltejs/kit";
 import mdToHTML from "$lib/marked";
 
@@ -21,11 +21,8 @@ export const load: PageServerLoad = async ({ params }) => {
     });
   }
 
-  // Convert markdown to HTML
-  let htmlContent = mdToHTML(pageData.content);
-
-  // Add IDs to headings for anchor links
-  htmlContent = addHeadingIds(htmlContent);
+  // Convert markdown to HTML (heading IDs are added by marked-gfm-heading-id)
+  const htmlContent = mdToHTML(pageData.content);
 
   // Extract table of contents
   const tableOfContents = extractTableOfContents(htmlContent);

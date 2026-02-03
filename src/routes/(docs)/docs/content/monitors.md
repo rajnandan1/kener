@@ -31,7 +31,7 @@ Check HTTP/HTTPS endpoints for availability and response codes.
 - `headers` - Custom headers to send
 - `body` - Request body for POST/PUT requests
 
-### Ping Monitor
+### Ping Monitor {#ping-monitor}
 
 Simple ICMP ping to verify server availability.
 

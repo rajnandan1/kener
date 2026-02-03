@@ -2,6 +2,8 @@
   import "../layout.css";
   import "../kener.css";
   import "../docs.css";
+  import "../prose.css";
+  import "highlight.js/styles/github-dark.css";
   import { ModeWatcher } from "mode-watcher";
   import { resolve } from "$app/paths";
   import { Toaster } from "$lib/components/ui/sonner/index.js";

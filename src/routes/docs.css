@@ -1,12 +1,16 @@
-@import url("https://fonts.googleapis.com/css2?family=Merriweather+Sans:ital,wght@0,300..800;1,300..800&display=swap");
-
+@import url(https://fonts.bunny.net/css?family=anek-bangla:200,300,400,500);
+@import url(https://fonts.bunny.net/css?family=overpass-mono:300,400,500,600,700);
 * {
-  font-family: "Merriweather Sans", sans-serif;
+  font-family: "Anek Bangla", sans-serif;
   font-optical-sizing: auto;
 }
 
+pre > code {
+  font-family: "Overpass Mono", monospace;
+}
+
 html {
-  font-size: 14px;
+  font-size: 16px;
 }
 
 /* Prose/Content Body Styles - needed for markdown rendering */
@@ -57,7 +61,6 @@ html {
   font-size: 0.875em;
   background-color: var(--muted);
   border-radius: var(--radius-sm);
-  font-family: ui-monospace, monospace;
 }
 
 .docs-content-body pre {
@@ -71,7 +74,6 @@ html {
 .docs-content-body pre code {
   font-size: 0.875rem;
   line-height: 1.5;
-  font-family: ui-monospace, monospace;
 }
 
 .docs-content-body ul,
@@ -119,4 +121,79 @@ html {
   --tw-prose-bold: var(--foreground);
   --tw-prose-code: var(--foreground);
   --tw-prose-pre-bg: var(--muted);
+}
+
+/* Markdown Alerts (from marked-alert) */
+.markdown-alert {
+  padding: 0.75rem 1rem;
+  margin: 1.5rem 0;
+  border: 2px solid;
+  border-radius: 1rem;
+  background-color: var(--secondary);
+}
+
+.markdown-alert > :first-child {
+  margin-top: 0;
+}
+
+.markdown-alert > :last-child {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-left: 24px;
+}
+
+.markdown-alert .markdown-alert-title svg {
+  fill: currentColor;
+}
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  align-items: center;
+  gap: 0rem;
+  font-weight: 600;
+  margin-bottom: 0rem;
+}
+
+.markdown-alert-note {
+  border-color: hsl(220 90% 56%);
+  background-color: hsl(220 90% 56% / 0.3);
+}
+
+.markdown-alert-note .markdown-alert-title {
+  color: hsl(220 90% 56%);
+}
+
+.markdown-alert-tip {
+  border-left-color: hsl(142 76% 36%);
+  background-color: hsl(142 76% 36% / 0.3);
+}
+
+.markdown-alert-tip .markdown-alert-title {
+  color: hsl(142 76% 36%);
+}
+
+.markdown-alert-important {
+  border-left-color: hsl(271 81% 56%);
+  background-color: hsl(271 81% 56% / 0.3);
+}
+
+.markdown-alert-important .markdown-alert-title {
+  color: hsl(271 81% 56%);
+}
+
+.markdown-alert-warning {
+  border-left-color: hsl(38 92% 50%);
+  background-color: hsl(38 92% 50% / 0.3);
+}
+
+.markdown-alert-warning .markdown-alert-title {
+  color: hsl(38 92% 50%);
+}
+
+.markdown-alert-caution {
+  border-left-color: hsl(0 84% 60%);
+  background-color: hsl(0 84% 60% / 0.3);
+}
+
+.markdown-alert-caution .markdown-alert-title {
+  color: hsl(0 84% 60%);
 }

@@ -32,7 +32,7 @@
 </script>
 
 <!-- Main Navbar -->
-<header class="bg-background border-border fixed top-0 right-0 left-0 z-50 border-b">
+<header class="bg-background border-border/50 fixed top-0 right-0 left-0 z-50 border-b">
   <!-- Primary Nav Row -->
   <div class="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-6">
     <div class="flex items-center gap-4">
@@ -105,7 +105,7 @@
 
   <!-- Sub Navbar with Tabs -->
   {#if config.navigation?.tabs}
-    <div class="border-border bg-muted/30 border-t">
+    <div class="border-border/50 border-t">
       <nav class="mx-auto flex h-10 max-w-[1400px] items-center gap-1 px-6">
         {#each config.navigation.tabs as tab (tab.url)}
           <a

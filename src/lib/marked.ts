@@ -1,41 +1,45 @@
-import { marked } from "marked";
+import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
+import markedPlaintify from "marked-plaintify";
+import customHeadingId from "marked-custom-heading-id";
+import markedAlert from "marked-alert";
 import hljs from "highlight.js";
 
-/**
- * Configure marked with syntax highlighting
- * Uses highlight.js for code block syntax highlighting
- */
-function configureMarked() {
-  // Configure marked with highlight.js
-  marked.use(
-    markedHighlight({
-      langPrefix: "hljs language-",
-      highlight(code: string, lang: string) {
-        const language = hljs.getLanguage(lang) ? lang : "plaintext";
-        return hljs.highlight(code, { language }).value;
-      },
-    }),
-  );
+// Create dedicated instances for each use case to avoid cross-contamination
+const markedHTML = new Marked();
+const markedText = new Marked();
 
-  // Custom renderer to open links in new tab
-  const renderer = new marked.Renderer();
-  renderer.link = function ({ href, title, tokens }: { href: string; title?: string | null; tokens: any[] }) {
-    const titleAttr = title ? ` title="${title}"` : "";
-    const text = this.parser.parseInline(tokens);
-    return `<a href="${href}"${titleAttr} target="_blank" rel="noopener noreferrer">${text}</a>`;
-  };
+// Configure HTML instance with syntax highlighting
+markedHTML.use(customHeadingId());
+markedHTML.use(markedAlert());
+markedHTML.use(
+  markedHighlight({
+    langPrefix: "hljs language-",
+    highlight(code: string, lang: string) {
+      const language = hljs.getLanguage(lang) ? lang : "plaintext";
+      return hljs.highlight(code, { language }).value;
+    },
+  }),
+);
+markedHTML.use({
+  renderer: {
+    link({ href, title, tokens }: { href: string; title?: string | null; tokens: any[] }) {
+      const titleAttr = title ? ` title="${title}"` : "";
+      const text = this.parser.parseInline(tokens);
+      return `<a href="${href}"${titleAttr} target="_blank" rel="noopener noreferrer">${text}</a>`;
+    },
+  },
+});
+markedHTML.setOptions({
+  breaks: true,
+  gfm: true,
+});
 
-  marked.setOptions({
-    breaks: true, // Convert line breaks to <br>
-    gfm: true, // Enable GitHub Flavored Markdown
-    renderer: renderer,
-  });
-}
+// Configure text instance for plain text conversion
+markedText.use(markedPlaintify());
 
 /**
  * Convert markdown to HTML with syntax highlighting
- * Initializes marked configuration on first use for optimal performance
  *
  * @param markdown - The markdown string to convert
  * @returns HTML string with syntax-highlighted code blocks
@@ -46,13 +50,24 @@ function configureMarked() {
  * // Returns: <pre><code class="hljs language-javascript">...</code></pre>
  * ```
  */
-let isConfigured = false;
-
 export default function mdToHTML(markdown: string): string {
-  if (!isConfigured) {
-    configureMarked();
-    isConfigured = true;
-  }
+  return markedHTML.parse(markdown, { async: false }) as string;
+}
 
-  return marked.parse(markdown) as string;
+/**
+ * Convert markdown to plain text
+ * Strips all markdown syntax and returns clean text
+ *
+ * @param markdown - The markdown string to convert
+ * @returns Plain text string with markdown syntax removed
+ *
+ * @example
+ * ```typescript
+ * const text = mdToText('# Hello **World**');
+ * // Returns: 'Hello World'
+ * ```
+ */
+export function mdToText(markdown: string): string {
+  const text = markedText.parse(markdown, { async: false }) as string;
+  return text.replace(/\s+/g, " ").trim();
 }
