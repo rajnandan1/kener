@@ -1,0 +1,85 @@
+{
+  "$schema": "./docs.schema.json",
+  "name": "Kener Docs",
+  "logo": {
+    "light": "/logo-light.svg",
+    "dark": "/logo-dark.svg"
+  },
+  "favicon": "/favicon.ico",
+  "navigation": {
+    "tabs": [
+      {
+        "name": "Documentation",
+        "url": "/docs"
+      },
+      {
+        "name": "API Reference",
+        "url": "/docs/api-reference"
+      }
+    ]
+  },
+  "sidebar": [
+    {
+      "group": "Getting Started",
+      "collapsible": false,
+      "pages": [
+        {
+          "title": "Introduction",
+          "slug": "introduction"
+        },
+        {
+          "title": "Quick Start",
+          "slug": "quickstart"
+        },
+        {
+          "title": "Installation",
+          "slug": "installation"
+        }
+      ]
+    },
+    {
+      "group": "Core Concepts",
+      "pages": [
+        {
+          "title": "Monitors",
+          "slug": "monitors"
+        },
+        {
+          "title": "Incidents",
+          "slug": "incidents"
+        },
+        {
+          "title": "Configuration",
+          "slug": "configuration"
+        }
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        {
+          "title": "Overview",
+          "slug": "api-reference"
+        },
+        {
+          "title": "Authentication",
+          "slug": "api-reference/authentication"
+        },
+        {
+          "title": "Monitors API",
+          "slug": "api-reference/monitors"
+        }
+      ]
+    }
+  ],
+  "footerLinks": [
+    {
+      "name": "GitHub",
+      "url": "https://github.com/rajnandan1/kener"
+    },
+    {
+      "name": "Discord",
+      "url": "https://discord.gg/kener"
+    }
+  ]
+}

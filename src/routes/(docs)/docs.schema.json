@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Kener Docs Configuration",
+  "description": "Configuration schema for Kener documentation",
+  "type": "object",
+  "required": ["name", "sidebar"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference"
+    },
+    "name": {
+      "type": "string",
+      "description": "The name of your documentation site"
+    },
+    "logo": {
+      "type": "object",
+      "description": "Logo configuration for light and dark modes",
+      "properties": {
+        "light": {
+          "type": "string",
+          "description": "Path to light mode logo"
+        },
+        "dark": {
+          "type": "string",
+          "description": "Path to dark mode logo"
+        }
+      }
+    },
+    "favicon": {
+      "type": "string",
+      "description": "Path to favicon"
+    },
+    "navigation": {
+      "type": "object",
+      "description": "Top navigation configuration",
+      "properties": {
+        "tabs": {
+          "type": "array",
+          "description": "Navigation tabs",
+          "items": {
+            "type": "object",
+            "required": ["name", "url"],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Display name for the tab"
+              },
+              "url": {
+                "type": "string",
+                "description": "URL path for the tab"
+              }
+            }
+          }
+        }
+      }
+    },
+    "sidebar": {
+      "type": "array",
+      "description": "Sidebar navigation groups",
+      "items": {
+        "type": "object",
+        "required": ["group", "pages"],
+        "properties": {
+          "group": {
+            "type": "string",
+            "description": "Group title displayed in the sidebar"
+          },
+          "pages": {
+            "type": "array",
+            "description": "Pages within this group",
+            "items": {
+              "type": "object",
+              "required": ["title", "slug"],
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "description": "Display title for the page"
+                },
+                "slug": {
+                  "type": "string",
+                  "description": "URL slug for the page (maps to content/{slug}.md)"
+                }
+              }
+            }
+          },
+          "collapsible": {
+            "type": "boolean",
+            "description": "Whether the group can be collapsed. Default is false (always expanded).",
+            "default": false
+          }
+        }
+      }
+    },
+    "footerLinks": {
+      "type": "array",
+      "description": "Links displayed in the footer/navbar",
+      "items": {
+        "type": "object",
+        "required": ["name", "url"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Display name for the link"
+          },
+          "url": {
+            "type": "string",
+            "description": "URL for the link"
+          }
+        }
+      }
+    }
+  }
+}

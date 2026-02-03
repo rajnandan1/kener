@@ -1,79 +1,122 @@
-.sidebar-item.active,
-.sidebar-item:hover {
-  color: #ed702d;
+@import url("https://fonts.googleapis.com/css2?family=Merriweather+Sans:ital,wght@0,300..800;1,300..800&display=swap");
+
+* {
+  font-family: "Merriweather Sans", sans-serif;
+  font-optical-sizing: auto;
 }
 
-.w-585px {
-  width: 585px;
+html {
+  font-size: 14px;
 }
 
-main {
-  scroll-behavior: smooth;
+/* Prose/Content Body Styles - needed for markdown rendering */
+.docs-content-body {
+  font-size: 1rem;
+  line-height: 1.75;
 }
-.kener-home-links a {
+
+.docs-content-body h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.docs-content-body h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.docs-content-body h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.docs-content-body p {
+  margin-bottom: 1rem;
+}
+
+.docs-content-body a {
+  color: var(--accent-foreground);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.docs-content-body a:hover {
   text-decoration: none;
-  background-color: var(--bg-background);
-}
-.kener-home-links > a:hover {
-  transition: all 0.3s;
-  border-color: #ed702d;
-  background-color: #ed702d;
 }
 
-.accm input:checked ~ div {
-  display: block;
-}
-.accm input ~ div {
-  display: none;
-}
-
-.accm input {
-  visibility: hidden;
+.docs-content-body code:not(pre code) {
+  padding: 0.2rem 0.4rem;
+  font-size: 0.875em;
+  background-color: var(--muted);
+  border-radius: var(--radius-sm);
+  font-family: ui-monospace, monospace;
 }
 
-.accmt {
-  background-color: hsl(223, 10%, 14%);
+.docs-content-body pre {
+  padding: 1rem;
+  border-radius: var(--radius);
+  background-color: var(--muted) !important;
+  overflow-x: auto;
+  margin: 1rem 0;
 }
 
-.accm input:checked ~ .showaccm span:first-child {
-  display: none;
-}
-.accm input:checked ~ .showaccm span:last-child {
-  display: block;
-}
-.accm input ~ .showaccm span:first-child {
-  display: block;
-}
-.accm input ~ .showaccm span:last-child {
-  display: none;
+.docs-content-body pre code {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-family: ui-monospace, monospace;
 }
 
-.hljs {
-  background: transparent !important;
+.docs-content-body ul,
+.docs-content-body ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
 }
 
-.note {
-  @apply bg-background mt-4 rounded-md border p-3 text-sm shadow-sm;
-}
-.note.danger {
-  border: 1px solid #e3342f;
-  color: #e3342f;
+.docs-content-body li {
+  margin-bottom: 0.5rem;
 }
 
-.note.info {
-  border: 1px solid #3490dc;
-  color: #3490dc;
+.docs-content-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.875rem;
 }
 
-.copybtn .copy-btn {
-  transform: scale(1);
+.docs-content-body th,
+.docs-content-body td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border: 1px solid var(--border);
 }
-.copybtn .check-btn {
-  transform: scale(0);
+
+.docs-content-body th {
+  background-color: var(--muted);
+  font-weight: 600;
 }
-.copybtn:focus .copy-btn {
-  transform: scale(0);
+
+.docs-content-body blockquote {
+  border-left: 4px solid var(--accent-foreground);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: var(--muted-foreground);
+  font-style: italic;
 }
-.copybtn:focus .check-btn {
-  transform: scale(1);
+
+/* Prose dark mode fixes */
+.dark .prose {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-links: var(--accent-foreground);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-code: var(--foreground);
+  --tw-prose-pre-bg: var(--muted);
 }

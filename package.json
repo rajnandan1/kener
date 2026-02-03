@@ -132,6 +132,8 @@
     "esbuild": "^0.27.2",
     "express": "^5.2.1",
     "figlet": "^1.9.4",
+    "flexsearch": "^0.8.212",
+    "front-matter": "^4.0.2",
     "fs-extra": "^11.3.2",
     "gamedig": "^5.3.2",
     "highlight.js": "^11.11.1",

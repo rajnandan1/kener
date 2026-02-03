@@ -2,6 +2,10 @@ import { json, type Handle } from "@sveltejs/kit";
 import { VerifyAPIKey } from "$lib/server/controllers/apiController";
 import db from "$lib/server/db/db";
 import type { UnauthorizedResponse, NotFoundResponse } from "$lib/types/api";
+import { initializeSearchIndex } from "$lib/server/docs-search";
+
+// Initialize documentation search index at server startup
+initializeSearchIndex();
 
 const API_PATH_PREFIX = "/api/";
 
