@@ -54,8 +54,6 @@
     { title: "Badges", url: "/manage/app/badges", icon: BadgeIcon },
     { title: "Embed", url: "/manage/app/embed", icon: CodeIcon },
     { title: "Templates", url: "/manage/app/templates", icon: TemplateIcon },
-    { title: "Email Customization", url: "/manage/app/email-customization", icon: EmailTemplateIcon },
-    { title: "Vault", url: "/manage/app/vault", icon: VaultIcon },
     { title: "Monitoring Data", url: "/manage/app/monitoring-data", icon: DatabaseIcon }
   ];
 

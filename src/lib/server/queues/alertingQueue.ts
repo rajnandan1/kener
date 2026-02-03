@@ -12,7 +12,6 @@ import {
   IncidentCreateAlertMarkdown,
   ClosureCommentAlertMarkdown,
 } from "../controllers/controller.js";
-import { SetLastMonitoringValue } from "../cache/setGet.js";
 import type { MonitorSettings, MonitorAlertConfigRecord, MonitorAlertV2Record, TriggerMeta } from "../types/db.js";
 import { GetMonitorsParsed } from "../controllers/controller.js";
 import {

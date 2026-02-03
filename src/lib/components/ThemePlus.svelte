@@ -90,7 +90,7 @@
             <Button
               variant={page.page_path === currentPath ? "outline" : "ghost"}
               size="sm"
-              href={page.page_path}
+              href={`/${page.page_path}`}
               class="w-full justify-start rounded-full text-xs shadow-none"
             >
               {page.page_title}

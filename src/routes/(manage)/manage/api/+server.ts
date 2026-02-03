@@ -102,13 +102,6 @@ import {
   AdminAddSubscriber,
 } from "$lib/server/controllers/userSubscriptionsController.js";
 import {
-  GetAllEmailTemplateConfigsWithTemplates,
-  UpdateAllEmailTemplateConfigs,
-  GetEmailTemplates,
-  EMAIL_TYPE_LABELS,
-  EMAIL_TYPE_DESCRIPTIONS,
-} from "$lib/server/controllers/emailTemplateConfigController.js";
-import {
   GetAllSecrets,
   GetSecretById,
   CreateSecret,
@@ -573,24 +566,7 @@ export async function POST({ request, cookies }) {
       resp = await UpdateUserSubscriptionStatus(subscriptionId, status);
     }
     // ============ Email Template Config ============
-    else if (action == "getEmailTemplateConfigs") {
-      const configs = await GetAllEmailTemplateConfigsWithTemplates();
-      // Add labels and descriptions
-      resp = configs.map((config) => ({
-        ...config,
-        label: EMAIL_TYPE_LABELS[config.email_type as keyof typeof EMAIL_TYPE_LABELS] || config.email_type,
-        description: EMAIL_TYPE_DESCRIPTIONS[config.email_type as keyof typeof EMAIL_TYPE_DESCRIPTIONS] || "",
-      }));
-    } else if (action == "updateEmailTemplateConfigs") {
-      AdminCan(userDB.role);
-      const { configs } = data;
-      if (!configs || !Array.isArray(configs)) {
-        throw new Error("configs array is required");
-      }
-      resp = await UpdateAllEmailTemplateConfigs(configs);
-    } else if (action == "getEmailTemplates") {
-      resp = await GetEmailTemplates();
-    }
+
     // ============ General Email Templates ============
     else if (action == "getGeneralEmailTemplates") {
       resp = await GetAllGeneralEmailTemplates();
