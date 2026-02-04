@@ -2,7 +2,7 @@ import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import Mustache from "mustache";
 import striptags from "striptags";
 import { Resend, type CreateEmailOptions } from "resend";
-import type { SiteDataForNotification, SMTPConfiguration, TemplateVariableMap } from "./types.js";
+import type { SMTPConfiguration } from "./types.js";
 import getSMTPTransport from "./smtps.js";
 import { GetSMTPFromENV } from "../controllers/commonController.js";
 import { IsEmailSetup, IsResendSetup } from "../controllers/emailController.js";

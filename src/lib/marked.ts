@@ -26,7 +26,14 @@ markedHTML.use({
     link({ href, title, tokens }: { href: string; title?: string | null; tokens: any[] }) {
       const titleAttr = title ? ` title="${title}"` : "";
       const text = this.parser.parseInline(tokens);
-      return `<a href="${href}"${titleAttr} target="_blank" rel="noopener noreferrer">${text}</a>`;
+      let target = "";
+      let rel = "";
+      // Open external links in a new tab with noopener noreferrer
+      if (/^(http|https):\/\//.test(href) && !href.includes("yourdomain.com")) {
+        target = ' target="_blank"';
+        rel = ' rel="noopener noreferrer"';
+      }
+      return `<a href="${href}"${titleAttr}${target}${rel}>${text}</a>`;
     },
   },
 });

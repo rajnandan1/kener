@@ -26,25 +26,43 @@ export function getDocsConfig(): DocsConfig {
 }
 
 /**
- * Get all pages in a flat array for navigation
+ * Get all pages in a flat array for navigation (including nested pages)
  */
 export function getAllPages(): DocsPage[] {
   const config = getDocsConfig();
   const pages: DocsPage[] = [];
+
+  function addPages(pageList: DocsPage[]) {
+    for (const page of pageList) {
+      pages.push(page);
+      if (page.pages && page.pages.length > 0) {
+        addPages(page.pages);
+      }
+    }
+  }
+
   for (const group of config.sidebar) {
-    pages.push(...group.pages);
+    addPages(group.pages);
   }
   return pages;
 }
 
 /**
- * Find the group a page belongs to
+ * Find the group a page belongs to (including nested pages)
  */
 export function getPageGroup(slug: string): string | null {
   const config = getDocsConfig();
+
+  function findInPages(pages: DocsPage[]): boolean {
+    for (const page of pages) {
+      if (page.slug === slug) return true;
+      if (page.pages && findInPages(page.pages)) return true;
+    }
+    return false;
+  }
+
   for (const group of config.sidebar) {
-    const found = group.pages.find((p) => p.slug === slug);
-    if (found) {
+    if (findInPages(group.pages)) {
       return group.group;
     }
   }

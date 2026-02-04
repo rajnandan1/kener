@@ -19,6 +19,7 @@ export interface DocsNavigation {
 export interface DocsPage {
   title: string;
   slug: string;
+  pages?: DocsPage[]; // Nested pages for one more level
 }
 
 export interface DocsSidebarGroup {

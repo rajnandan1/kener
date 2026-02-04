@@ -105,8 +105,8 @@
 
   <!-- Sub Navbar with Tabs -->
   {#if config.navigation?.tabs}
-    <div class="border-border/50 border-t">
-      <nav class="mx-auto flex h-10 max-w-[1400px] items-center gap-1 px-6">
+    <div class="border-border/50 border-t px-10">
+      <nav class="mx-auto flex h-10 items-center gap-1 px-6">
         {#each config.navigation.tabs as tab (tab.url)}
           <a
             href={getHref(tab.url)}

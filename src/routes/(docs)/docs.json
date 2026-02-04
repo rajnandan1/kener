@@ -39,10 +39,25 @@
     },
     {
       "group": "Core Concepts",
+      "collapsible": true,
       "pages": [
         {
           "title": "Monitors",
-          "slug": "monitors"
+          "slug": "monitors",
+          "pages": [
+            {
+              "title": "Overview",
+              "slug": "monitors/overview"
+            },
+            {
+              "title": "API Monitors",
+              "slug": "monitors/api"
+            },
+            {
+              "title": "Ping Monitors",
+              "slug": "monitors/ping"
+            }
+          ]
         },
         {
           "title": "Incidents",
