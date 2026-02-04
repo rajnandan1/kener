@@ -236,6 +236,7 @@
             <Select.Item value="UP">UP</Select.Item>
             <Select.Item value="DOWN">DOWN</Select.Item>
             <Select.Item value="DEGRADED">DEGRADED</Select.Item>
+            <Select.Item value="MAINTENANCE">MAINTENANCE</Select.Item>
           </Select.Content>
         </Select.Root>
       </div>

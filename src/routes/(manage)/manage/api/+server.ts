@@ -309,28 +309,8 @@ export async function POST({ request, cookies }) {
         throw new Error("Trigger not found");
       }
 
-      const testAlert: MonitorAlertConfigRecord = {
-        id: 1,
-        monitor_tag: "test-monitor",
-        alert_for: "STATUS",
-        alert_value: "DOWN",
-        failure_threshold: 1,
-        success_threshold: 1,
-        alert_description: "This is a test alert",
-        create_incident: "NO",
-        is_active: "YES",
-        severity: "WARNING",
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
-      const testAlertData: MonitorAlertV2Record = {
-        id: 1,
-        config_id: 1,
-        alert_status: Math.random() > 0.5 ? "TRIGGERED" : "RESOLVED",
-        incident_id: null,
-        created_at: new Date(),
-        updated_at: new Date(),
-      };
+      if (trigger.trigger_type === "webhook") {
+      }
       //throw error if not template id
       // if (!trigger.template_id) {
       //   throw new Error("No template associated with this trigger");

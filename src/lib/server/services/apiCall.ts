@@ -93,7 +93,7 @@ class ApiCall {
     }
     let statusCode = 500;
     let latency = 0;
-		let errorMessage = "";
+    let errorMessage = "";
     let resp = "";
     let timeoutError = false;
     const start = Date.now();
@@ -107,13 +107,11 @@ class ApiCall {
         message?: string;
         response?: { status?: number; data?: string };
       };
-      console.log(`Error in apiCall ${tag}`, error.message);
-			errorMessage = error.message || "Unknown error";
+      errorMessage = error.message || "Unknown error";
       // Better timeout detection
       if (error.code === "ECONNABORTED" || (error.message && error.message.includes("timeout"))) {
         timeoutError = true;
-				errorMessage = "Request timed out";
-        console.log(`Timeout in api call for ${tag} at ${Math.floor(Date.now() / 1000)}`);
+        errorMessage = "Request timed out";
       }
 
       if (error.response?.status !== undefined) {
@@ -145,8 +143,7 @@ class ApiCall {
       );
       evalResp = await evalFunction(statusCode, latency, resp, modules);
     } catch (error: unknown) {
-			errorMessage += ` | Eval error: ${(error as Error).message}`;
-      console.log(`Error in monitorEval for ${tag}`, (error as Error).message);
+      errorMessage += ` | Eval error: ${(error as Error).message}`;
     }
 
     if (evalResp === undefined || evalResp === null) {
@@ -173,7 +170,7 @@ class ApiCall {
       status: DOWN,
       latency: latency,
       type: ERROR,
-			error_message: errorMessage,
+      error_message: errorMessage,
     };
     if (evalResp.status !== undefined && evalResp.status !== null) {
       toWrite.status = evalResp.status;
