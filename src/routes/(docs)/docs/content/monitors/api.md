@@ -3,7 +3,17 @@ title: API Monitor
 description: Monitor HTTP/HTTPS endpoints with custom methods, headers, and advanced evaluation logic
 ---
 
-API monitors allow you to track the uptime, latency, and correctness of your HTTP/HTTPS endpoints. Kener provides flexible options to configure the request and even custom JavaScript logic to determine the status.
+API monitors allow you to track the uptime, latency, and correctness of your HTTP/HTTPS endpoints. Kener provides flexible options to configure the request including custom headers, request bodies, authentication, and JavaScript-based evaluation logic to determine status.
+
+## How API Monitoring Works {#how-api-monitoring-works}
+
+Kener's API monitoring follows this workflow:
+
+1. **Build Request**: Kener constructs an HTTP request with the configured method, headers, body, and timeout.
+2. **Environment Variables**: Any `$VARIABLE_NAME` placeholders in URL, headers, or body are replaced with environment variable values.
+3. **Execute Request**: The request is sent using Axios with configurable SSL settings.
+4. **Measure Latency**: Total time from request start to response completion is recorded.
+5. **Evaluate Response**: The custom eval function receives the status code, latency, and response body to determine monitor status.
 
 ## Configuration Options {#configuration-options}
 
@@ -163,3 +173,68 @@ You can use the built-in `cheerio` module to parse HTML responses and check for 
 
 > [!NOTE]
 > The above example uses an `async` function wrapper. While this particular example doesn't require async operations, the function can be async if you need to perform asynchronous operations within your evaluation logic.
+
+## Using Environment Variables {#using-environment-variables}
+
+Kener supports environment variable substitution in URLs, headers, and body content:
+
+```
+https://api.example.com/v1/status?apikey=$API_KEY
+```
+
+Environment variables are replaced at runtime:
+
+- `$API_KEY` → value of `process.env.API_KEY`
+
+This keeps sensitive credentials out of your configuration.
+
+## Best Practices {#best-practices}
+
+### URL Configuration {#best-practices-url}
+
+1. **Use dedicated health endpoints**: `/health`, `/status`, or `/ping` endpoints are lightweight.
+2. **Avoid authentication on health checks**: If possible, use endpoints that don't require auth.
+3. **Use HTTPS**: Always prefer secure connections for production monitoring.
+
+### Timeout Configuration {#best-practices-timeout}
+
+| Scenario               | Recommended Timeout | Rationale                  |
+| :--------------------- | :------------------ | :------------------------- |
+| Health check endpoints | 5000ms              | Should be fast             |
+| API endpoints          | 10000ms             | Standard API response time |
+| Heavy processing       | 30000ms             | Reports, analytics, etc.   |
+| External third-party   | 15000ms             | Network variability        |
+
+### Evaluation Logic {#best-practices-evaluation}
+
+1. **Always return both status and latency**: The evaluation must return both fields.
+2. **Handle JSON parse errors**: Wrap `JSON.parse()` in try-catch.
+3. **Check for empty responses**: Empty body might indicate a problem.
+4. **Use DEGRADED appropriately**: For slow but functional services.
+
+## Troubleshooting {#troubleshooting}
+
+### Common Issues {#common-issues}
+
+| Issue                   | Possible Cause                         | Solution                         |
+| :---------------------- | :------------------------------------- | :------------------------------- |
+| Always DOWN             | URL unreachable or wrong               | Verify URL is accessible         |
+| SSL errors              | Self-signed or expired certificate     | Enable "Allow Self-Signed Certs" |
+| Timeout errors          | Server too slow or network issues      | Increase timeout value           |
+| Authentication failures | Wrong credentials or token expired     | Check environment variables      |
+| Eval errors             | JavaScript syntax error in custom eval | Test eval function separately    |
+
+### Debug Tips {#debug-tips}
+
+1. **Test with curl**:
+
+    ```bash
+    curl -v -X GET "https://api.example.com/health" \
+         -H "Authorization: Bearer $TOKEN"
+    ```
+
+2. **Check response format**: Ensure you're parsing the response correctly (JSON vs HTML).
+
+3. **Verify environment variables**: Ensure all `$VARIABLE` references are set.
+
+4. **Test eval function**: Test your custom eval with sample data before deploying.

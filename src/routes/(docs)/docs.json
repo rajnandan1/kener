@@ -39,7 +39,7 @@
     },
     {
       "group": "Core Concepts",
-      "collapsible": true,
+      "collapsible": false,
       "pages": [
         {
           "title": "Monitors",
@@ -56,6 +56,30 @@
             {
               "title": "Ping Monitors",
               "slug": "monitors/ping"
+            },
+            {
+              "title": "TCP Monitors",
+              "slug": "monitors/tcp"
+            },
+            {
+              "title": "DNS Monitors",
+              "slug": "monitors/dns"
+            },
+            {
+              "title": "SSL Monitors",
+              "slug": "monitors/ssl"
+            },
+            {
+              "title": "SQL Monitors",
+              "slug": "monitors/sql"
+            },
+            {
+              "title": "Heartbeat Monitors",
+              "slug": "monitors/heartbeat"
+            },
+            {
+              "title": "GameDig Monitors",
+              "slug": "monitors/gamedig"
             }
           ]
         },
