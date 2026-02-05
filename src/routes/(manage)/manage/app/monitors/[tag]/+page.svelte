@@ -17,7 +17,6 @@
   import PageVisibilityCard from "./components/PageVisibilityCard.svelte";
   import ModifyDataCard from "./components/ModifyDataCard.svelte";
   import DangerZoneCard from "./components/DangerZoneCard.svelte";
-  import MonitorAlerting from "./components/MonitorAlerting.svelte";
   import MonitorRecentLogs from "./components/MonitorRecentLogs.svelte";
 
   let { params }: PageProps = $props();
@@ -229,11 +228,6 @@
     <!-- Uptime Calculation Card -->
     {#if !isNew}
       <UptimeSettingsCard {monitor} {typeData} bind:uptimeSettings />
-    {/if}
-
-    <!-- Alerting Card -->
-    {#if !isNew}
-      <MonitorAlerting monitor_tag={params.tag} />
     {/if}
 
     <!-- Recent Logs Card -->

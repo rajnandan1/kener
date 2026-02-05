@@ -150,6 +150,44 @@ export class MonitorAlertConfigRepository extends BaseRepository {
     return await query.first<CountResult>();
   }
 
+  /**
+   * Get paginated monitor alert configs with triggers
+   */
+  async getMonitorAlertConfigsPaginated(
+    page: number,
+    limit: number,
+    filter?: MonitorAlertConfigFilter,
+  ): Promise<{ configs: MonitorAlertConfigRecord[]; total: number }> {
+    // Build count query
+    let countQuery = this.knex("monitor_alerts_config").count("* as count");
+    if (filter?.monitor_tag) {
+      countQuery = countQuery.where("monitor_tag", filter.monitor_tag);
+    }
+    if (filter?.is_active) {
+      countQuery = countQuery.andWhere("is_active", filter.is_active);
+    }
+    if (filter?.alert_for) {
+      countQuery = countQuery.andWhere("alert_for", filter.alert_for);
+    }
+    const totalResult = await countQuery.first<CountResult>();
+    const total = totalResult ? Number(totalResult.count) : 0;
+
+    // Build paginated query
+    let query = this.knex("monitor_alerts_config").orderBy("id", "desc");
+    if (filter?.monitor_tag) {
+      query = query.where("monitor_tag", filter.monitor_tag);
+    }
+    if (filter?.is_active) {
+      query = query.andWhere("is_active", filter.is_active);
+    }
+    if (filter?.alert_for) {
+      query = query.andWhere("alert_for", filter.alert_for);
+    }
+    const configs = await query.limit(limit).offset((page - 1) * limit);
+
+    return { configs, total };
+  }
+
   // ============ Monitor Alert Config Triggers CRUD ============
 
   /**

@@ -85,6 +85,9 @@ import {
   DeleteMonitorAlertConfig,
   ToggleMonitorAlertConfigStatus,
   GetMonitorAlertsV2Paginated,
+  GetMonitorAlertConfigsPaginated,
+  DeleteMonitorAlertV2,
+  UpdateMonitorAlertV2Status,
   type MonitorAlertConfigRecord,
   type MonitorAlertV2Record,
 } from "$lib/server/controllers/monitorAlertConfigController.js";
@@ -252,8 +255,10 @@ export async function POST({ request, cookies }) {
     } else if (action == "getAllAlertsPaginated") {
       const page = parseInt(String(data.page)) || 1;
       const limit = parseInt(String(data.limit)) || 20;
-      const filter = data.status && data.status !== "ALL" ? { alert_status: data.status } : undefined;
-      resp = await GetMonitorAlertsV2Paginated(page, limit, filter);
+      const filter: { alert_status?: "TRIGGERED" | "RESOLVED"; config_id?: number } = {};
+      if (data.status && data.status !== "ALL") filter.alert_status = data.status as "TRIGGERED" | "RESOLVED";
+      if (data.config_id) filter.config_id = parseInt(String(data.config_id));
+      resp = await GetMonitorAlertsV2Paginated(page, limit, Object.keys(filter).length > 0 ? filter : undefined);
     } else if (action == "getMonitoringDataPaginated") {
       const page = parseInt(String(data.page)) || 1;
       const limit = parseInt(String(data.limit)) || 50;
@@ -484,7 +489,7 @@ export async function POST({ request, cookies }) {
     } else if (action == "updateMonitorAlertConfig") {
       AdminEditorCan(userDB.role);
       resp = await UpdateMonitorAlertConfig(data);
-    } else if (action == "getMonitorAlertConfig") {
+    } else if (action == "getMonitorAlertConfig" || action == "getMonitorAlertConfigById") {
       resp = await GetMonitorAlertConfigById(data.id);
       if (!resp) {
         throw new Error("Monitor alert config not found");
@@ -498,6 +503,26 @@ export async function POST({ request, cookies }) {
     } else if (action == "toggleMonitorAlertConfigStatus") {
       AdminEditorCan(userDB.role);
       resp = await ToggleMonitorAlertConfigStatus(data.id);
+    } else if (action == "getAlertConfigsPaginated") {
+      const page = parseInt(String(data.page)) || 1;
+      const limit = parseInt(String(data.limit)) || 10;
+      const filter: { monitor_tag?: string; is_active?: "YES" | "NO"; alert_for?: "STATUS" | "LATENCY" | "UPTIME" } =
+        {};
+      if (data.monitor_tag) filter.monitor_tag = data.monitor_tag;
+      if (data.is_active) filter.is_active = data.is_active as "YES" | "NO";
+      if (data.alert_for) filter.alert_for = data.alert_for as "STATUS" | "LATENCY" | "UPTIME";
+      resp = await GetMonitorAlertConfigsPaginated(page, limit, Object.keys(filter).length > 0 ? filter : undefined);
+    } else if (action == "deleteMonitorAlertV2") {
+      AdminEditorCan(userDB.role);
+      const deleteIncident = data.deleteIncident === true;
+      // If deleteIncident is true, delete the incident first
+      if (deleteIncident && data.incident_id) {
+        await db.deleteIncident(data.incident_id);
+      }
+      resp = await DeleteMonitorAlertV2(data.id);
+    } else if (action == "updateMonitorAlertV2Status") {
+      AdminEditorCan(userDB.role);
+      resp = await UpdateMonitorAlertV2Status(data.id, data.status);
     }
 
     // ============ User Subscriptions (Admin) ============

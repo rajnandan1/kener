@@ -273,6 +273,7 @@ class DbImpl {
   deleteMonitorAlertConfig!: MonitorAlertConfigRepository["deleteMonitorAlertConfig"];
   deleteMonitorAlertConfigsByMonitorTag!: MonitorAlertConfigRepository["deleteMonitorAlertConfigsByMonitorTag"];
   getMonitorAlertConfigsCount!: MonitorAlertConfigRepository["getMonitorAlertConfigsCount"];
+  getMonitorAlertConfigsPaginated!: MonitorAlertConfigRepository["getMonitorAlertConfigsPaginated"];
 
   // ============ Monitor Alert Config Triggers ============
   addTriggerToMonitorAlertConfig!: MonitorAlertConfigRepository["addTriggerToMonitorAlertConfig"];
@@ -643,6 +644,9 @@ class DbImpl {
       this.monitorAlertConfig,
     );
     this.getMonitorAlertConfigsCount = this.monitorAlertConfig.getMonitorAlertConfigsCount.bind(
+      this.monitorAlertConfig,
+    );
+    this.getMonitorAlertConfigsPaginated = this.monitorAlertConfig.getMonitorAlertConfigsPaginated.bind(
       this.monitorAlertConfig,
     );
 

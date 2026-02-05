@@ -376,6 +376,27 @@ export async function GetMonitorAlertConfigsCount(filter: MonitorAlertConfigFilt
 }
 
 /**
+ * Get paginated monitor alert configs with triggers
+ */
+export async function GetMonitorAlertConfigsPaginated(
+  page: number,
+  limit: number,
+  filter?: MonitorAlertConfigFilter,
+): Promise<{ configs: MonitorAlertConfigWithTriggers[]; total: number }> {
+  const result = await db.getMonitorAlertConfigsPaginated(page, limit, filter);
+  const configs: MonitorAlertConfigWithTriggers[] = [];
+
+  for (const config of result.configs) {
+    const configWithTriggers = await db.getMonitorAlertConfigWithTriggers(config.id);
+    if (configWithTriggers) {
+      configs.push(configWithTriggers);
+    }
+  }
+
+  return { configs, total: result.total };
+}
+
+/**
  * Get all triggers for a monitor alert config with parsed trigger_meta
  */
 export async function GetTriggersByMonitorAlertConfigId(monitorAlertsId: number): Promise<TriggerRecord[]> {

@@ -84,16 +84,28 @@
           ]
         },
         {
-          "title": "Triggers",
-          "slug": "triggers",
+          "title": "Alerting",
+          "slug": "alerting",
           "pages": [
             {
               "title": "Overview",
-              "slug": "triggers/overview"
+              "slug": "alerting/overview"
             },
             {
-              "title": "Email Triggers",
-              "slug": "triggers/email"
+              "title": "Alert Configurations",
+              "slug": "alerting/alert-configurations"
+            },
+            {
+              "title": "Triggers",
+              "slug": "alerting/triggers"
+            },
+            {
+              "title": "Templates",
+              "slug": "alerting/templates"
+            },
+            {
+              "title": "Webhook Examples",
+              "slug": "alerting/webhook-examples"
             }
           ]
         },
