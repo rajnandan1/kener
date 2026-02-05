@@ -1,8 +1,7 @@
 import { Queue, Worker, Job, type JobSchedulerTemplateOptions } from "bullmq";
 import q from "../queues/q.js";
 import db from "../db/db.js";
-import pkg from "rrule";
-const { rrulestr } = pkg;
+import { rrulestr } from "rrule";
 import { addDays } from "date-fns";
 import type { MaintenanceRecord, MaintenanceEventRecord } from "../types/db.js";
 

@@ -10,8 +10,7 @@ import type {
 } from "$lib/types/api";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { GenerateMaintenanceEvents, isOneTimeRrule } from "$lib/server/controllers/maintenanceController";
-import pkg from "rrule";
-const { rrulestr } = pkg;
+import { rrulestr } from "rrule";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {

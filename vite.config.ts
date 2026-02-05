@@ -30,6 +30,7 @@ export default defineConfig(({ mode }) => {
   return {
     base: viteBase,
     optimizeDeps: {
+      include: ["rrule"],
       exclude: [
         "svelte-codemirror-editor",
         "codemirror",
@@ -51,7 +52,7 @@ export default defineConfig(({ mode }) => {
     },
     assetsInclude: ["**/*.yaml"],
     ssr: {
-      noExternal: ["svelte-sonner", "svelte-codemirror-editor"],
+      noExternal: ["svelte-sonner", "svelte-codemirror-editor", "rrule"],
     },
     // Keeping this around for quick grepping/debugging.
     define: {

@@ -1,5 +1,4 @@
 import figlet from "figlet";
-import { fileURLToPath } from "url";
 import version from "../version.js";
 import mainScheduler from "./schedulers/appScheduler.js";
 import maintenanceScheduler from "./schedulers/maintenanceScheduler.js";
@@ -20,10 +19,10 @@ async function Startup(): Promise<void> {
   });
 }
 
-// Call Startup() if not imported as a module
-const __filename = fileURLToPath(import.meta.url);
+// Call Startup() when run directly (works with both tsx and vite-node)
+const isMainModule = process.argv[1]?.includes("startup") || process.argv[1]?.includes("vite-node");
 
-if (process.argv[1] === __filename) {
+if (isMainModule) {
   Startup();
 }
 

@@ -329,7 +329,7 @@ export const push = async (monitor_tag: string, ts: number, status: string, opti
   //get all monitor alert configs
   const monitorAlertsConfigurations = await GetMonitorAlertConfigs({
     monitor_tag: monitor.tag,
-    is_active: "YES",
+    is_active: GC.YES,
   });
   if (monitorAlertsConfigurations.length === 0) {
     return;
@@ -338,11 +338,12 @@ export const push = async (monitor_tag: string, ts: number, status: string, opti
   for (const monitorAlertConfig of monitorAlertsConfigurations) {
     const deDupId = `${monitor_tag}-${ts}-${monitorAlertConfig.id}`;
 
-    if (!options.deduplication) {
-      options.deduplication = {
+    const jobOptions: JobsOptions = {
+      ...options,
+      deduplication: {
         id: deDupId,
-      };
-    }
+      },
+    };
     await queue.add(
       jobNamePrefix + "_" + monitor_tag,
       {
@@ -359,7 +360,7 @@ export const push = async (monitor_tag: string, ts: number, status: string, opti
         ts,
         status,
       },
-      options,
+      jobOptions,
     );
   }
 };

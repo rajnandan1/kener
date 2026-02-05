@@ -1,6 +1,5 @@
 import db from "../db/db.js";
-import pkg from "rrule";
-const { RRule, rrulestr } = pkg;
+import { RRule, rrulestr } from "rrule";
 import { addDays, formatDistanceStrict } from "date-fns";
 import type {
   MaintenanceRecord,
