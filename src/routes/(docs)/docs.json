@@ -111,7 +111,55 @@
         },
         {
           "title": "Incidents",
-          "slug": "incidents"
+          "slug": "incidents",
+          "pages": [
+            {
+              "title": "Overview",
+              "slug": "incidents/overview"
+            },
+            {
+              "title": "Creating and Managing",
+              "slug": "incidents/creating-managing"
+            },
+            {
+              "title": "Incident Updates",
+              "slug": "incidents/updates"
+            },
+            {
+              "title": "Impact on Monitoring",
+              "slug": "incidents/impact-on-monitoring"
+            },
+            {
+              "title": "Auto-Generated Incidents",
+              "slug": "incidents/auto-generated"
+            }
+          ]
+        },
+        {
+          "title": "Maintenances",
+          "slug": "maintenances",
+          "pages": [
+            {
+              "title": "Overview",
+              "slug": "maintenances/overview"
+            },
+            {
+              "title": "Creating and Managing",
+              "slug": "maintenances/creating-managing"
+            },
+            {
+              "title": "Maintenance Events",
+              "slug": "maintenances/events"
+            },
+            {
+              "title": "Impact on Monitoring",
+              "slug": "maintenances/impact-on-monitoring"
+            },
+            {
+              "title": "RRULE Patterns",
+              "slug": "maintenances/rrule-patterns"
+            }
+          ]
         },
         {
           "title": "Configuration",

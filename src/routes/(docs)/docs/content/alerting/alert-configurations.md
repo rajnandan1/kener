@@ -1,4 +1,7 @@
-# Alert Configurations {#alert-configurations}
+---
+title: "Alert Configurations"
+description: "Learn how to create and manage alert configurations that define when and how alerts are triggered in Kener."
+---
 
 Alert configurations define the rules that determine when alerts should be triggered. Each configuration monitors a specific metric on a monitor and sends notifications through configured triggers when conditions are met.
 

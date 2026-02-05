@@ -24,7 +24,8 @@
   import type { MonitorRecord } from "$lib/server/types/db.js";
   import { goto } from "$app/navigation";
   import { toast } from "svelte-sonner";
-  import { format, formatDistanceToNow, isPast, isFuture, isWithinInterval } from "date-fns";
+  import { format, formatDistanceToNow, isPast, isFuture, isWithinInterval, addDays } from "date-fns";
+  import { rrulestr } from "rrule";
 
   let { params }: PageProps = $props();
   const isNew = $derived(params.id === "new");
@@ -73,10 +74,18 @@
   let durationHours = $state(1);
   let durationMinutes = $state(0);
 
-  // RRULE builder for recurring
-  let rruleFreq = $state("WEEKLY");
-  let rruleByDay = $state<string[]>(["SU"]);
-  let rruleInterval = $state(1);
+  // Custom RRULE input for recurring
+  let customRrule = $state("FREQ=WEEKLY;BYDAY=SU");
+
+  // Sample RRULE patterns
+  const sampleRrules = [
+    { label: "Every Sunday", value: "FREQ=WEEKLY;BYDAY=SU" },
+    { label: "Every Day", value: "FREQ=DAILY" },
+    { label: "Weekdays", value: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR" },
+    { label: "Every Monday", value: "FREQ=WEEKLY;BYDAY=MO" },
+    { label: "Bi-weekly Monday", value: "FREQ=WEEKLY;INTERVAL=2;BYDAY=MO" },
+    { label: "First of Month", value: "FREQ=MONTHLY;BYMONTHDAY=1" }
+  ];
 
   // Monitor selection
   type MonitorStatus = "UP" | "DOWN" | "DEGRADED" | "MAINTENANCE";
@@ -112,47 +121,64 @@
     return Math.floor(date.getTime() / 1000);
   }
 
-  // Build RRULE string from UI inputs
-  function buildRrule(): string {
+  // Get the RRULE to use
+  function getRrule(): string {
     if (scheduleType === "ONE_TIME") {
       return "FREQ=MINUTELY;COUNT=1";
     }
-
-    let rrule = `FREQ=${rruleFreq}`;
-
-    if (rruleInterval > 1) {
-      rrule += `;INTERVAL=${rruleInterval}`;
-    }
-
-    if (rruleFreq === "WEEKLY" && rruleByDay.length > 0) {
-      rrule += `;BYDAY=${rruleByDay.join(",")}`;
-    }
-
-    return rrule;
+    return customRrule;
   }
 
   // Parse RRULE string for UI
   function parseRrule(rrule: string) {
-    // Check if one-time
     if (rrule.includes("COUNT=1")) {
       scheduleType = "ONE_TIME";
-      return;
+    } else {
+      scheduleType = "RECURRING";
+      customRrule = rrule;
+    }
+  }
+
+  // Generate preview dates based on RRULE and start time
+  function getPreviewDates(): string[] {
+    if (scheduleType === "ONE_TIME" || !startDateTimeLocal || !customRrule.trim()) {
+      return [];
     }
 
-    scheduleType = "RECURRING";
-
-    // Parse FREQ
-    const freqMatch = rrule.match(/FREQ=(\w+)/);
-    if (freqMatch) rruleFreq = freqMatch[1];
-
-    // Parse INTERVAL
-    const intervalMatch = rrule.match(/INTERVAL=(\d+)/);
-    if (intervalMatch) rruleInterval = parseInt(intervalMatch[1]);
-
-    // Parse BYDAY
-    const bydayMatch = rrule.match(/BYDAY=([A-Z,]+)/);
-    if (bydayMatch) rruleByDay = bydayMatch[1].split(",");
+    try {
+      const dtstart = new Date(startDateTimeLocal);
+      const fullRrule = `DTSTART:${dtstart.toISOString().replace(/[-:]/g, "").split(".")[0]}Z\nRRULE:${customRrule}`;
+      const rule = rrulestr(fullRrule);
+      const now = new Date();
+      const windowEnd = addDays(now, 30);
+      const occurrences = rule.between(now, windowEnd, true).slice(0, 5);
+      return occurrences.map((d) => format(d, "EEE, MMM d, yyyy 'at' h:mm a"));
+    } catch (e) {
+      return [];
+    }
   }
+
+  // Validate RRULE format
+  function validateRrule(): string | null {
+    if (scheduleType === "ONE_TIME" || !customRrule.trim()) {
+      return null;
+    }
+
+    try {
+      const dtstart = new Date();
+      const fullRrule = `DTSTART:${dtstart.toISOString().replace(/[-:]/g, "").split(".")[0]}Z\nRRULE:${customRrule}`;
+      rrulestr(fullRrule);
+      return null;
+    } catch (e) {
+      return "Invalid RRULE format";
+    }
+  }
+
+  // Reactive preview dates
+  const previewDates = $derived.by(() => getPreviewDates());
+
+  // Reactive RRULE error
+  const rruleError = $derived.by(() => validateRrule());
 
   // Calculate duration_seconds from hours and minutes
   const calculatedDurationSeconds = $derived(durationHours * 3600 + durationMinutes * 60);
@@ -168,7 +194,7 @@
     if (!maintenance.title.trim()) return false;
     if (!startDateTimeLocal) return false;
     if (calculatedDurationSeconds <= 0) return false;
-    if (scheduleType === "RECURRING" && rruleByDay.length === 0 && rruleFreq === "WEEKLY") return false;
+    if (scheduleType === "RECURRING" && (!customRrule.trim() || rruleError)) return false;
     return true;
   });
 
@@ -275,7 +301,7 @@
     error = null;
 
     try {
-      const rrule = buildRrule();
+      const rrule = getRrule();
       const startTime = localDatetimeToTimestamp(startDateTimeLocal);
 
       if (isNew) {
@@ -444,26 +470,6 @@
     return monitor?.name || tag;
   }
 
-  // Toggle day selection for RRULE
-  function toggleDay(day: string) {
-    if (rruleByDay.includes(day)) {
-      rruleByDay = rruleByDay.filter((d) => d !== day);
-    } else {
-      rruleByDay = [...rruleByDay, day];
-    }
-  }
-
-  // Days of week for RRULE
-  const daysOfWeek = [
-    { value: "MO", label: "Mon" },
-    { value: "TU", label: "Tue" },
-    { value: "WE", label: "Wed" },
-    { value: "TH", label: "Thu" },
-    { value: "FR", label: "Fri" },
-    { value: "SA", label: "Sat" },
-    { value: "SU", label: "Sun" }
-  ];
-
   $effect(() => {
     fetchMaintenance();
     fetchAvailableMonitors();
@@ -585,68 +591,74 @@
           </p>
         </div>
 
-        <!-- RRULE Configuration for Recurring -->
-        {#if scheduleType === "RECURRING"}
-          <Card.Root class="bg-muted/50">
-            <Card.Header class="pb-3">
-              <Card.Title class="flex items-center gap-2 text-base">
-                <InfoIcon class="size-4" />
-                Recurrence Pattern (RRULE)
-              </Card.Title>
-            </Card.Header>
-            <Card.Content class="space-y-4">
-              <!-- Frequency -->
+        <!-- RRULE Configuration -->
+        <Card.Root class="bg-muted/50">
+          <Card.Header class="pb-3">
+            <Card.Title class="flex items-center gap-2 text-base">
+              <InfoIcon class="size-4" />
+              {scheduleType === "ONE_TIME" ? "Schedule Pattern" : "Recurrence Pattern (RRULE)"}
+            </Card.Title>
+          </Card.Header>
+          <Card.Content class="space-y-4">
+            {#if scheduleType === "ONE_TIME"}
+              <!-- One-time: Show readonly RRULE -->
               <div class="flex flex-col gap-2">
-                <Label>Frequency</Label>
-                <Select.Root type="single" bind:value={rruleFreq}>
-                  <Select.Trigger class="w-48">
-                    {rruleFreq === "DAILY" ? "Daily" : rruleFreq === "WEEKLY" ? "Weekly" : "Monthly"}
-                  </Select.Trigger>
-                  <Select.Content>
-                    <Select.Item value="DAILY">Daily</Select.Item>
-                    <Select.Item value="WEEKLY">Weekly</Select.Item>
-                    <Select.Item value="MONTHLY">Monthly</Select.Item>
-                  </Select.Content>
-                </Select.Root>
+                <Label class="text-muted-foreground text-xs">iCalendar RRULE (auto-generated)</Label>
+                <Input value="FREQ=MINUTELY;COUNT=1" disabled class="bg-muted font-mono text-sm" />
+                <p class="text-muted-foreground text-xs">
+                  One-time maintenance uses a fixed RRULE that triggers only once.
+                </p>
+              </div>
+            {:else}
+              <!-- Recurring: Editable RRULE -->
+              <div class="flex flex-col gap-2">
+                <Label for="rrule">iCalendar RRULE <span class="text-destructive">*</span></Label>
+                <Input
+                  id="rrule"
+                  bind:value={customRrule}
+                  placeholder="FREQ=WEEKLY;BYDAY=SU"
+                  class={rruleError ? "border-destructive" : ""}
+                />
+                {#if rruleError}
+                  <p class="text-destructive text-xs">{rruleError}</p>
+                {/if}
               </div>
 
-              <!-- Interval -->
-              <div class="flex flex-col gap-2">
-                <Label>Every</Label>
-                <div class="flex items-center gap-2">
-                  <Input type="number" min={1} max={12} class="w-20" bind:value={rruleInterval} />
-                  <span class="text-muted-foreground text-sm">
-                    {rruleFreq === "DAILY" ? "day(s)" : rruleFreq === "WEEKLY" ? "week(s)" : "month(s)"}
-                  </span>
-                </div>
-              </div>
-
-              <!-- Days of Week (for WEEKLY) -->
-              {#if rruleFreq === "WEEKLY"}
+              <!-- Sample Patterns -->
+              {#if isNew}
                 <div class="flex flex-col gap-2">
-                  <Label>On Days <span class="text-destructive">*</span></Label>
+                  <Label class="text-muted-foreground text-xs">Quick Patterns:</Label>
                   <div class="flex flex-wrap gap-2">
-                    {#each daysOfWeek as day}
+                    {#each sampleRrules as sample}
                       <Button
-                        variant={rruleByDay.includes(day.value) ? "default" : "outline"}
+                        variant={customRrule === sample.value ? "default" : "outline"}
                         size="sm"
-                        onclick={() => toggleDay(day.value)}
+                        onclick={() => (customRrule = sample.value)}
                       >
-                        {day.label}
+                        {sample.label}
                       </Button>
                     {/each}
                   </div>
                 </div>
               {/if}
 
-              <!-- Preview -->
-              <div class="bg-background rounded-md border p-3">
-                <Label class="text-muted-foreground text-xs">Generated RRULE:</Label>
-                <code class="mt-1 block text-sm">{buildRrule()}</code>
-              </div>
-            </Card.Content>
-          </Card.Root>
-        {/if}
+              <!-- Preview Dates -->
+              {#if previewDates.length > 0}
+                <div class="bg-background rounded-md border p-3">
+                  <Label class="text-muted-foreground text-xs">Upcoming Occurrences:</Label>
+                  <ul class="mt-2 space-y-1 text-sm">
+                    {#each previewDates as date}
+                      <li class="flex items-center gap-2">
+                        <CalendarIcon class="text-muted-foreground size-3" />
+                        {date}
+                      </li>
+                    {/each}
+                  </ul>
+                </div>
+              {/if}
+            {/if}
+          </Card.Content>
+        </Card.Root>
 
         <!-- Monitor Selection -->
         <div class="flex flex-col gap-3">

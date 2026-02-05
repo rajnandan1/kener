@@ -1,4 +1,7 @@
-# Templates {#templates}
+---
+title: "Alert Templates"
+description: "Customize notification templates using Mustache syntax to format alerts for Discord, Slack, Email, and Webhooks."
+---
 
 Templates define how your alert notifications are formatted and what information they contain. Kener uses the [Mustache template system](https://mustache.github.io/) to provide flexible, dynamic notification formatting across all trigger types.
 

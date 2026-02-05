@@ -1,4 +1,7 @@
-# Alerting Overview {#alerting-overview}
+---
+title: "Alerting Overview"
+description: "Understand how Kener's alerting system works, including alert types, triggers, and the alert lifecycle."
+---
 
 Kener's alerting system enables you to get notified when your monitors detect issues. The alerting system is designed to be flexible and powerful, allowing you to configure exactly when and how you want to be notified.
 

@@ -1,4 +1,7 @@
-# Triggers {#triggers}
+---
+title: "Alert Triggers"
+description: "Configure notification channels (triggers) including Webhook, Discord, Slack, and Email to receive alert notifications."
+---
 
 Triggers are notification channels that receive alert notifications when your monitor alert configurations are triggered or resolved. Kener supports multiple trigger types including Webhook, Discord, Slack, and Email.
 

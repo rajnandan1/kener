@@ -1,4 +1,7 @@
-# Webhook Examples {#webhook-examples}
+---
+title: "Webhook Examples"
+description: "Practical webhook integration examples for Telegram, PagerDuty, Microsoft Teams, and other popular services."
+---
 
 Webhooks allow you to integrate Kener with virtually any service by sending HTTP POST requests with alert data. This guide provides practical examples for popular services and custom integrations.
 

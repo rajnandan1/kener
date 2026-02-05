@@ -42,20 +42,21 @@
 
   let expandedGroups = $state<string[]>([]);
   let expandedPages = $state<string[]>([]);
+  let prevSlug = $state(currentSlug);
 
-  // Auto-expand the collapsible group containing the current page
+  // Auto-expand when navigating to a different page (not when manually toggling)
   $effect(() => {
-    if (initialGroup && !expandedGroups.includes(initialGroup)) {
-      expandedGroups = [...expandedGroups, initialGroup];
-    }
-  });
-
-  // Auto-expand parent pages containing the current nested page or when on parent
-  $effect(() => {
-    for (const slug of initialExpandedPages) {
-      if (!expandedPages.includes(slug)) {
-        expandedPages = [...expandedPages, slug];
+    if (currentSlug !== prevSlug) {
+      // Slug changed, do auto-expansion
+      if (initialGroup && !expandedGroups.includes(initialGroup)) {
+        expandedGroups = [...expandedGroups, initialGroup];
       }
+      for (const slug of initialExpandedPages) {
+        if (!expandedPages.includes(slug)) {
+          expandedPages = [...expandedPages, slug];
+        }
+      }
+      prevSlug = currentSlug;
     }
   });
 
