@@ -48,7 +48,7 @@ function storeSiteData(data: Record<string, unknown>): Promise<Response> {
     body: JSON.stringify({ action: "storeSiteData", data }),
   });
 }
-const allRecordTypes = {
+const AllRecordTypes = {
   A: 1,
   NS: 2,
   MD: 3,
@@ -376,7 +376,7 @@ function GetStatusBgColor(item: TimestampStatusCount): string {
 export {
   siteDataExtractFromDb,
   storeSiteData,
-  allRecordTypes,
+  AllRecordTypes,
   ValidateIpAddress,
   IsValidHost,
   IsValidNameServer,

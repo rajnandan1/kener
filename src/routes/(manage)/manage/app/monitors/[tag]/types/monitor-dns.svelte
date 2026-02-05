@@ -6,7 +6,7 @@
   import * as InputGroup from "$lib/components/ui/input-group/index.js";
   import Plus from "@lucide/svelte/icons/plus";
   import X from "@lucide/svelte/icons/x";
-  import { allRecordTypes } from "$lib/clientTools";
+  import { AllRecordTypes } from "$lib/clientTools";
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let { data = $bindable() }: { data: any } = $props();
@@ -18,7 +18,7 @@
   if (!data.matchType) data.matchType = "ANY";
   if (!data.values) data.values = [];
 
-  const recordTypes = Object.keys(allRecordTypes);
+  const recordTypes = Object.keys(AllRecordTypes);
 
   function addValue() {
     data.values = [...data.values, ""];

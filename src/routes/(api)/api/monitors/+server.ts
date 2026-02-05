@@ -7,6 +7,8 @@ import type {
   CreateMonitorResponse,
   BadRequestResponse,
 } from "$lib/types/api";
+import type { MonitorRecord } from "$lib/server/types/db";
+import { GetMonitorsParsed } from "../../../../lib/server/controllers/monitorsController";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {
@@ -17,84 +19,21 @@ function formatDateToISO(date: Date | string): string {
   return parsed.toISOString();
 }
 
-function formatMonitorResponse(monitor: {
-  id: number;
-  tag: string;
-  name: string;
-  description: string | null;
-  image: string | null;
-  cron: string | null;
-  default_status: string | null;
-  status: string | null;
-  category_name: string | null;
-  monitor_type: string;
-  type_data: string | null;
-  day_degraded_minimum_count: number | null;
-  day_down_minimum_count: number | null;
-  include_degraded_in_downtime: string;
-  is_hidden: string;
-  monitor_settings_json: string | null;
-  created_at: Date | string;
-  updated_at: Date | string;
-}): MonitorResponse {
-  let typeData = null;
-  let monitorSettingsJson = null;
-
-  if (monitor.type_data) {
-    try {
-      typeData = JSON.parse(monitor.type_data);
-    } catch {
-      typeData = null;
-    }
-  }
-
-  if (monitor.monitor_settings_json) {
-    try {
-      monitorSettingsJson = JSON.parse(monitor.monitor_settings_json);
-    } catch {
-      monitorSettingsJson = null;
-    }
-  }
-
-  return {
-    id: monitor.id,
-    tag: monitor.tag,
-    name: monitor.name,
-    description: monitor.description,
-    image: monitor.image,
-    cron: monitor.cron,
-    default_status: monitor.default_status,
-    status: monitor.status,
-    category_name: monitor.category_name,
-    monitor_type: monitor.monitor_type,
-    type_data: typeData,
-    day_degraded_minimum_count: monitor.day_degraded_minimum_count,
-    day_down_minimum_count: monitor.day_down_minimum_count,
-    include_degraded_in_downtime: monitor.include_degraded_in_downtime,
-    is_hidden: monitor.is_hidden,
-    monitor_settings_json: monitorSettingsJson,
-    created_at: formatDateToISO(monitor.created_at),
-    updated_at: formatDateToISO(monitor.updated_at),
-  };
-}
-
 export const GET: RequestHandler = async ({ url }) => {
   const status = url.searchParams.get("status") || undefined;
   const category_name = url.searchParams.get("category_name") || undefined;
   const monitor_type = url.searchParams.get("monitor_type") || undefined;
   const is_hidden = url.searchParams.get("is_hidden") || undefined;
 
-  const rawMonitors = await db.getMonitors({
+  const rawMonitors = await GetMonitorsParsed({
     status,
     category_name,
     monitor_type,
     is_hidden,
   });
 
-  const monitors: MonitorResponse[] = rawMonitors.map(formatMonitorResponse);
-
   const response: GetMonitorsListResponse = {
-    monitors,
+    monitors: rawMonitors,
   };
 
   return json(response);
@@ -160,8 +99,6 @@ export const POST: RequestHandler = async ({ request }) => {
     category_name: body.category_name ?? null,
     monitor_type: body.monitor_type ?? "API",
     type_data: body.type_data ? JSON.stringify(body.type_data) : null,
-    day_degraded_minimum_count: body.day_degraded_minimum_count ?? 1,
-    day_down_minimum_count: body.day_down_minimum_count ?? 1,
     include_degraded_in_downtime: body.include_degraded_in_downtime ?? "NO",
     is_hidden: body.is_hidden ?? "NO",
     monitor_settings_json: body.monitor_settings_json ? JSON.stringify(body.monitor_settings_json) : null,
@@ -170,7 +107,9 @@ export const POST: RequestHandler = async ({ request }) => {
   await db.insertMonitor(monitorData);
 
   // Fetch the created monitor
-  const createdMonitor = await db.getMonitorByTag(body.tag);
+  const createdMonitor = await GetMonitorsParsed({ tag: body.tag }).then((monitors) =>
+    monitors.length > 0 ? monitors[0] : null,
+  );
 
   if (!createdMonitor) {
     const errorResponse: BadRequestResponse = {
@@ -183,7 +122,7 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 
   const response: CreateMonitorResponse = {
-    monitor: formatMonitorResponse(createdMonitor),
+    monitor: createdMonitor,
   };
 
   return json(response, { status: 201 });

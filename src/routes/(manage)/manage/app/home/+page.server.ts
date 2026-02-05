@@ -1,6 +1,7 @@
 import type { PageServerLoad } from "./$types";
 import db from "$lib/server/db/db.js";
 import { GetNowTimestampUTC } from "$lib/server/tool.js";
+import GC from "$lib/global-constants.js";
 
 export const load: PageServerLoad = async () => {
   const now = GetNowTimestampUTC();
@@ -43,10 +44,12 @@ export const load: PageServerLoad = async () => {
     (event) =>
       event.start_date_time <= now &&
       event.end_date_time >= now &&
-      (event.status === "IN_PROGRESS" || event.status === "SCHEDULED"),
+      (event.status === GC.ONGOING || event.status === GC.SCHEDULED),
   );
 
-  const upcomingMaintenances = allEvents.filter((event) => event.start_date_time > now && event.status === "SCHEDULED");
+  const upcomingMaintenances = allEvents.filter(
+    (event) => event.start_date_time > now && event.status === GC.SCHEDULED,
+  );
 
   return {
     monitorsCount,

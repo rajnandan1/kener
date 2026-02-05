@@ -65,6 +65,7 @@ class DbImpl {
   getLastStatusBeforeCombined!: MonitoringRepository["getLastStatusBeforeCombined"];
   background!: MonitoringRepository["background"];
   consecutivelyStatusFor!: MonitoringRepository["consecutivelyStatusFor"];
+  consecutivelyLatencyGreaterThan!: MonitoringRepository["consecutivelyLatencyGreaterThan"];
   updateMonitoringData!: MonitoringRepository["updateMonitoringData"];
   deleteMonitorDataByTag!: MonitoringRepository["deleteMonitorDataByTag"];
   getStatusCountsByInterval!: MonitoringRepository["getStatusCountsByInterval"];
@@ -406,6 +407,7 @@ class DbImpl {
     this.getLastStatusBeforeCombined = this.monitoring.getLastStatusBeforeCombined.bind(this.monitoring);
     this.background = this.monitoring.background.bind(this.monitoring);
     this.consecutivelyStatusFor = this.monitoring.consecutivelyStatusFor.bind(this.monitoring);
+    this.consecutivelyLatencyGreaterThan = this.monitoring.consecutivelyLatencyGreaterThan.bind(this.monitoring);
     this.updateMonitoringData = this.monitoring.updateMonitoringData.bind(this.monitoring);
     this.deleteMonitorDataByTag = this.monitoring.deleteMonitorDataByTag.bind(this.monitoring);
     this.getStatusCountsByInterval = this.monitoring.getStatusCountsByInterval.bind(this.monitoring);

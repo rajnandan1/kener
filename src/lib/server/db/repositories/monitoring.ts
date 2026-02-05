@@ -1,6 +1,6 @@
 import type { Knex as KnexType } from "knex";
 import { BaseRepository } from "./base.js";
-import { MANUAL, SIGNAL } from "../../constants.js";
+import GC from "../../../global-constants.js";
 import { GetMinuteStartNowTimestampUTC } from "../../tool.js";
 import type {
   MonitoringData,
@@ -152,7 +152,7 @@ export class MonitoringRepository extends BaseRepository {
   async getLastHeartbeat(monitor_tag: string): Promise<MonitoringData | undefined> {
     return await this.knex("monitoring_data")
       .where("monitor_tag", monitor_tag)
-      .where("type", SIGNAL)
+      .where("type", GC.SIGNAL)
       .orderBy("timestamp", "desc")
       .limit(1)
       .first();
@@ -254,7 +254,7 @@ export class MonitoringRepository extends BaseRepository {
         qb.select("*")
           .from("monitoring_data")
           .where("monitor_tag", monitor_tag)
-          .andWhere("type", "!=", MANUAL)
+          .andWhere("type", "=", GC.REALTIME)
           .orderBy("timestamp", "desc")
           .limit(lastX);
       })
@@ -262,6 +262,32 @@ export class MonitoringRepository extends BaseRepository {
         this.knex.raw(
           "CASE WHEN COUNT(*) <= SUM(CASE WHEN status = ? THEN 1 ELSE 0 END) THEN 1 ELSE 0 END as is_affected",
           [status],
+        ),
+      )
+      .from("last_records")
+      .first();
+
+    return result.is_affected === 1;
+  }
+
+  async consecutivelyLatencyGreaterThan(
+    monitor_tag: string,
+    latencyThreshold: number,
+    lastX: number,
+  ): Promise<boolean> {
+    const result = await this.knex
+      .with("last_records", (qb: KnexType.QueryBuilder) => {
+        qb.select("*")
+          .from("monitoring_data")
+          .where("monitor_tag", monitor_tag)
+          .andWhere("type", "=", GC.REALTIME)
+          .orderBy("timestamp", "desc")
+          .limit(lastX);
+      })
+      .select(
+        this.knex.raw(
+          "CASE WHEN COUNT(*) <= SUM(CASE WHEN latency > ? THEN 1 ELSE 0 END) THEN 1 ELSE 0 END as is_affected",
+          [latencyThreshold],
         ),
       )
       .from("last_records")

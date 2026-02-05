@@ -20,22 +20,6 @@
 
   let { data } = $props();
 
-  // Get state badge variant
-  function getStateBadgeClass(state: string): string {
-    switch (state) {
-      case constants.INVESTIGATING:
-        return "bg-down text-white";
-      case constants.IDENTIFIED:
-        return "bg-degraded text-white";
-      case constants.MONITORING:
-        return "bg-maintenance text-white";
-      case constants.RESOLVED:
-        return "bg-up text-white";
-      default:
-        return "";
-    }
-  }
-
   // Get impact color class
   function getImpactColorClass(impact: string): string {
     switch (impact?.toUpperCase()) {
@@ -146,7 +130,7 @@
                   <Item.Media>
                     <Tooltip.Root>
                       <Tooltip.Trigger>
-                        <div class="h-6 w-6 rounded-full {getImpactColorClass(monitor.monitor_impact ?? '')}"></div>
+                        <div class="h-6 w-6 rounded-full bg-{monitor.monitor_impact?.toLowerCase()}"></div>
                       </Tooltip.Trigger>
                       <Tooltip.Content arrowClasses="bg-foreground">
                         <div class="text-xs font-medium">

@@ -1,5 +1,5 @@
 import { Ping } from "../ping.js";
-import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
+import GC from "../../global-constants.js";
 import { DefaultPingEval } from "../../anywhere.js";
 import type { PingMonitor, MonitoringResult, EvalResponse } from "../types/monitor.js";
 
@@ -20,9 +20,9 @@ class PingCall {
         tag,
       );
       return {
-        status: DOWN,
+        status: GC.DOWN,
         latency: 0,
-        type: ERROR,
+        type: GC.ERROR,
       };
     }
     let arrayOfPings = [];
@@ -39,16 +39,16 @@ class PingCall {
     } catch (error: unknown) {
       console.log(`Error in pingEval for ${tag}`, (error as Error).message);
       return {
-        status: DOWN,
+        status: GC.DOWN,
         latency: 0,
-        type: ERROR,
+        type: GC.ERROR,
       };
     }
     //reduce to get the status
     return {
-      status: evalResp?.status || DOWN,
+      status: evalResp?.status || GC.DOWN,
       latency: evalResp?.latency || 0,
-      type: REALTIME,
+      type: GC.REALTIME,
     };
   }
 }

@@ -22,7 +22,11 @@ export default async function send(
     }
   }
 
-  const defaultHeaders = [{ key: "user-agent", value: "Kener/4.0.0" }];
+  const defaultHeaders = [
+    { key: "user-agent", value: "Kener/4.0.0" },
+    { key: "accept", value: "application/json" },
+    { key: "content-type", value: "application/json" },
+  ];
 
   try {
     if (headers) {
@@ -41,15 +45,11 @@ export default async function send(
     console.log(e);
   }
 
-  let webhookBodyJson = JSON.parse(webhookBody) as WebhookTemplateJson;
-
   // Render the webhook body with Mustache (disable HTML escaping for JSON/plain text)
-  const renderedBody = Mustache.render(webhookBodyJson.webhook_body, { ...variables }, {}, { escape: (text) => text });
+  const renderedBody = Mustache.render(webhookBody, { ...variables }, {}, { escape: (text) => text });
 
   // Build headers object
-  const headersObj: Record<string, string> = {
-    "Content-Type": "application/json",
-  };
+  const headersObj: Record<string, string> = {};
 
   for (const header of defaultHeaders) {
     if (header.key && header.value) {

@@ -77,10 +77,10 @@
   // Comment inline editing/adding
   let addingNewComment = $state(false);
   let editingCommentId = $state<number | null>(null);
-  let commentText = $state("");
-  let commentState = $state(GC.INVESTIGATING);
-  let commentDateTime = $state("");
-  let savingComment = $state(false);
+  let commentText = $state<string>("");
+  let commentState = $state<string>(GC.INVESTIGATING);
+  let commentDateTime = $state<string>("");
+  let savingComment = $state<boolean>(false);
 
   const states = [GC.INVESTIGATING, GC.IDENTIFIED, GC.MONITORING, GC.RESOLVED];
 

@@ -16,7 +16,6 @@ import type {
   MonitorAlertConfigRecord,
 } from "../types/db.js";
 import GC from "../../global-constants.js";
-import type { SubscriptionVariableMap } from "../notification/types.js";
 import { getUnixTime, differenceInSeconds } from "date-fns";
 
 interface IncidentsDashboardInput {
@@ -379,7 +378,11 @@ export const AddIncidentMonitor = async (
   monitor_impact: string,
 ): Promise<number[]> => {
   //monitor_impact must be DOWN or DEGRADED or MAINTENANCE or NONE
-  if (!["DOWN", "DEGRADED", "MAINTENANCE"].includes(monitor_impact)) {
+  if (
+    ![GC.DOWN, GC.DEGRADED, GC.MAINTENANCE].includes(
+      monitor_impact as typeof GC.DOWN | typeof GC.DEGRADED | typeof GC.MAINTENANCE,
+    )
+  ) {
     throw new Error("Monitor impact must be either DOWN, DEGRADED, MAINTENANCE");
   }
 
@@ -432,10 +435,10 @@ export const UpdateCommentByID = async (
     let incidentUpdate: IncidentUpdateInput = {
       state: state,
     };
-    if (state === "RESOLVED") {
+    if (state === GC.RESOLVED) {
       incidentUpdate.end_date_time = commented_at;
     } else {
-      if (incidentExists.state === "RESOLVED") {
+      if (incidentExists.state === GC.RESOLVED) {
         await db.setIncidentEndTimeToNull(incident_id);
       }
     }
@@ -448,7 +451,7 @@ export const AddIncidentComment = async (
   comment: string,
   state: string,
   commented_at: number,
-): Promise<number[]> => {
+): Promise<IncidentCommentRecord> => {
   let incidentExists = await db.getIncidentById(incident_id);
   if (!incidentExists) {
     throw new Error(`Incident with id ${incident_id} does not exist`);
@@ -461,14 +464,14 @@ export const AddIncidentComment = async (
   let c = await db.insertIncidentComment(incident_id, comment, state, commented_at);
   let incidentType = incidentExists.incident_type;
   //update incident state
-  if (c && incidentType === "INCIDENT") {
+  if (c && incidentType === GC.INCIDENT) {
     let incidentUpdate: IncidentUpdateInput = {
       state: state,
     };
-    if (state === "RESOLVED") {
+    if (state === GC.RESOLVED) {
       incidentUpdate.end_date_time = commented_at;
     } else {
-      if (incidentExists.state === "RESOLVED") {
+      if (incidentExists.state === GC.RESOLVED) {
         await db.setIncidentEndTimeToNull(incident_id);
       }
     }

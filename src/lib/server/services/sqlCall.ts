@@ -1,5 +1,5 @@
 import Knex, { type Knex as KnexType } from "knex";
-import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
+import GC from "../../global-constants.js";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import type { SqlMonitor, MonitoringResult } from "../types/monitor.js";
 
@@ -54,9 +54,9 @@ class SqlCall {
       const latency = Date.now() - startTime;
 
       return {
-        status: UP,
+        status: GC.UP,
         latency: latency,
-        type: REALTIME,
+        type: GC.REALTIME,
       };
     } catch (error: unknown) {
       const latency = Date.now() - startTime;
@@ -64,17 +64,17 @@ class SqlCall {
       // Handle timeout specifically
       if (error instanceof Error && error.message === "Query timeout") {
         return {
-          status: DOWN,
+          status: GC.DOWN,
           latency: latency,
-          type: TIMEOUT,
+          type: GC.TIMEOUT,
         };
       }
 
       // Handle other connection or query errors
       return {
-        status: DOWN,
+        status: GC.DOWN,
         latency: latency,
-        type: ERROR,
+        type: GC.ERROR,
       };
     } finally {
       // Destroy knex instance to clean up connections

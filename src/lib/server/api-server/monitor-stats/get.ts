@@ -3,7 +3,7 @@ import type { APIServerRequest } from "$lib/server/types/api-server";
 import db from "$lib/server/db/db";
 import { GetLastStatusBefore, GetMonitorsParsed, InterpolateData } from "$lib/server/controllers/monitorsController";
 import { ParseUptime, GetMinuteStartNowTimestampUTC, BeginningOfDay, UptimeCalculator } from "$lib/server/tool";
-import { NO_DATA } from "$lib/server/constants";
+import GC from "$lib/global-constants";
 
 /**
  * GET /dashboard-apis/monitor-stats?tag=xxx&days=90&localTz=xxx

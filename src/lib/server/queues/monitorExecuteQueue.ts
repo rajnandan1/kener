@@ -64,7 +64,7 @@ async function manualMaintenance(monitor: MonitorRecordTyped): Promise<{ [timest
     [startTs]: {
       status: impact,
       latency: 0,
-      type: GC.MANUAL,
+      type: GC.MAINTENANCE,
       error_message: "Status set by manual maintenance",
     },
   };
@@ -105,7 +105,7 @@ async function manualIncident(monitor: MonitorRecordTyped): Promise<{ [timestamp
     [startTs]: {
       status: impact,
       latency: 0,
-      type: GC.MANUAL,
+      type: GC.INCIDENT,
       error_message: "Status set by manual incident",
     },
   };

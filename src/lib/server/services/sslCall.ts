@@ -1,5 +1,5 @@
 import tls from "tls";
-import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
+import GC from "../../global-constants.js";
 import type { SslMonitor, MonitoringResult } from "../types/monitor.js";
 
 interface SSLExpiryResult {
@@ -50,29 +50,29 @@ class SSLCall {
       const timeTillExpiryHours = timeTillExpiryMs / 1000 / 60 / 60;
       if (timeTillExpiryHours > degradedRemainingHours) {
         return {
-          status: UP,
+          status: GC.UP,
           latency: latency,
-          type: REALTIME,
+          type: GC.REALTIME,
         };
       } else if (timeTillExpiryHours > downRemainingHours) {
         return {
-          status: DEGRADED,
+          status: GC.DEGRADED,
           latency: latency,
-          type: REALTIME,
+          type: GC.REALTIME,
         };
       } else {
         return {
-          status: DOWN,
+          status: GC.DOWN,
           latency: latency,
-          type: REALTIME,
+          type: GC.REALTIME,
         };
       }
     } catch (error: unknown) {
       console.log(`Error checking SSL for ${domain}:`, (error as Error).message);
       return {
-        status: DOWN,
+        status: GC.DOWN,
         latency: 0,
-        type: ERROR,
+        type: GC.ERROR,
       };
     }
   }

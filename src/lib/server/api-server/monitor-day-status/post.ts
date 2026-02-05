@@ -9,7 +9,6 @@ import {
   ParseUptime,
   UptimeCalculator,
 } from "$lib/server/tool";
-import { NO_DATA } from "$lib/server/constants";
 import GC from "$lib/global-constants";
 import { GetMonitorsParsed } from "../../controllers/monitorsController";
 import type { TimestampStatusCount } from "$lib/server/types/db";
@@ -60,11 +59,11 @@ export default async function post(req: APIServerRequest): Promise<Response> {
   // Create a map for quick lookup
   const dataMap = new Map<number, string>();
   for (const d of rawData) {
-    dataMap.set(d.timestamp, d.status || NO_DATA);
+    dataMap.set(d.timestamp, d.status || GC.NO_DATA);
   }
 
   for (let i = startOfDayTodayAtTz; i < nowAtTz; i += 60) {
-    const status = dataMap.get(i) || NO_DATA;
+    const status = dataMap.get(i) || GC.NO_DATA;
 
     minuteData.push({
       timestamp: i,

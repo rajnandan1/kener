@@ -1,5 +1,6 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import db from "$lib/server/db/db";
+import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
 import type {
   GetMonitorResponse,
   MonitorResponse,
@@ -17,73 +18,12 @@ function formatDateToISO(date: Date | string): string {
   return parsed.toISOString();
 }
 
-function formatMonitorResponse(monitor: {
-  id: number;
-  tag: string;
-  name: string;
-  description: string | null;
-  image: string | null;
-  cron: string | null;
-  default_status: string | null;
-  status: string | null;
-  category_name: string | null;
-  monitor_type: string;
-  type_data: string | null;
-  day_degraded_minimum_count: number | null;
-  day_down_minimum_count: number | null;
-  include_degraded_in_downtime: string;
-  is_hidden: string;
-  monitor_settings_json: string | null;
-  created_at: Date | string;
-  updated_at: Date | string;
-}): MonitorResponse {
-  let typeData = null;
-  let monitorSettingsJson = null;
-
-  if (monitor.type_data) {
-    try {
-      typeData = JSON.parse(monitor.type_data);
-    } catch {
-      typeData = null;
-    }
-  }
-
-  if (monitor.monitor_settings_json) {
-    try {
-      monitorSettingsJson = JSON.parse(monitor.monitor_settings_json);
-    } catch {
-      monitorSettingsJson = null;
-    }
-  }
-
-  return {
-    id: monitor.id,
-    tag: monitor.tag,
-    name: monitor.name,
-    description: monitor.description,
-    image: monitor.image,
-    cron: monitor.cron,
-    default_status: monitor.default_status,
-    status: monitor.status,
-    category_name: monitor.category_name,
-    monitor_type: monitor.monitor_type,
-    type_data: typeData,
-    day_degraded_minimum_count: monitor.day_degraded_minimum_count,
-    day_down_minimum_count: monitor.day_down_minimum_count,
-    include_degraded_in_downtime: monitor.include_degraded_in_downtime,
-    is_hidden: monitor.is_hidden,
-    monitor_settings_json: monitorSettingsJson,
-    created_at: formatDateToISO(monitor.created_at),
-    updated_at: formatDateToISO(monitor.updated_at),
-  };
-}
-
 export const GET: RequestHandler = async ({ locals }) => {
   // Monitor is validated by middleware and available in locals
   const monitor = locals.monitor!;
 
   const response: GetMonitorResponse = {
-    monitor: formatMonitorResponse(monitor),
+    monitor,
   };
 
   return json(response);
@@ -136,16 +76,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   updateData.status = body.status !== undefined ? body.status : existingMonitor.status;
   updateData.category_name = body.category_name !== undefined ? body.category_name : existingMonitor.category_name;
   updateData.monitor_type = body.monitor_type !== undefined ? body.monitor_type : existingMonitor.monitor_type;
-  updateData.day_degraded_minimum_count =
-    body.day_degraded_minimum_count !== undefined
-      ? body.day_degraded_minimum_count
-      : existingMonitor.day_degraded_minimum_count;
-  updateData.day_down_minimum_count =
-    body.day_down_minimum_count !== undefined ? body.day_down_minimum_count : existingMonitor.day_down_minimum_count;
-  updateData.include_degraded_in_downtime =
-    body.include_degraded_in_downtime !== undefined
-      ? body.include_degraded_in_downtime
-      : existingMonitor.include_degraded_in_downtime;
+
   updateData.is_hidden = body.is_hidden !== undefined ? body.is_hidden : existingMonitor.is_hidden;
 
   // Handle JSON fields - merge with existing data instead of replacing
@@ -157,7 +88,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
       let existingTypeData = {};
       if (existingMonitor.type_data) {
         try {
-          existingTypeData = JSON.parse(existingMonitor.type_data);
+          existingTypeData = existingMonitor.type_data;
         } catch {
           existingTypeData = {};
         }
@@ -178,7 +109,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
       let existingSettings = {};
       if (existingMonitor.monitor_settings_json) {
         try {
-          existingSettings = JSON.parse(existingMonitor.monitor_settings_json);
+          existingSettings = existingMonitor.monitor_settings_json;
         } catch {
           existingSettings = {};
         }
@@ -194,7 +125,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   await db.updateMonitor(updateData as unknown as Parameters<typeof db.updateMonitor>[0]);
 
   // Fetch the updated monitor
-  const updatedMonitor = await db.getMonitorByTag(monitorTag);
+  const updatedMonitor = await GetMonitorsParsed({ tag: monitorTag }).then((monitors) => monitors[0]);
 
   if (!updatedMonitor) {
     const errorResponse: BadRequestResponse = {
@@ -207,7 +138,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   }
 
   const response: UpdateMonitorResponse = {
-    monitor: formatMonitorResponse(updatedMonitor),
+    monitor: updatedMonitor,
   };
 
   return json(response);

@@ -1,5 +1,5 @@
 import DNSResolver from "../dns.js";
-import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
+import GC from "../../global-constants.js";
 import type { DnsMonitor, MonitoringResult } from "../types/monitor.js";
 
 class DnsCall {
@@ -23,9 +23,9 @@ class DnsCall {
 
       if (dnsRes[recordType] === undefined) {
         return {
-          status: DOWN,
+          status: GC.DOWN,
           latency: latency,
-          type: REALTIME,
+          type: GC.REALTIME,
         };
       }
       let data = dnsRes[recordType];
@@ -34,40 +34,40 @@ class DnsCall {
         for (let i = 0; i < values.length; i++) {
           if (dnsData.indexOf(values[i].trim()) === -1) {
             return {
-              status: DOWN,
+              status: GC.DOWN,
               latency: latency,
-              type: REALTIME,
+              type: GC.REALTIME,
             };
           }
         }
         return {
-          status: UP,
+          status: GC.UP,
           latency: latency,
-          type: REALTIME,
+          type: GC.REALTIME,
         };
       } else if (matchType === "ANY") {
         for (let i = 0; i < values.length; i++) {
           if (dnsData.indexOf(values[i].trim()) !== -1) {
             return {
-              status: UP,
+              status: GC.UP,
               latency: latency,
-              type: REALTIME,
+              type: GC.REALTIME,
             };
           }
         }
         return {
-          status: DOWN,
+          status: GC.DOWN,
           latency: latency,
-          type: REALTIME,
+          type: GC.REALTIME,
         };
       }
     } catch (error) {
       console.log("Error in dnsChecker", error);
     }
     return {
-      status: DOWN,
+      status: GC.DOWN,
       latency: 0,
-      type: REALTIME,
+      type: GC.REALTIME,
     };
   }
 }

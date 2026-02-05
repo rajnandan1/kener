@@ -1,0 +1,35 @@
+
+> kener@4.0.0 check
+> svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
+
+[dotenv@17.2.3] injecting env (19) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+Loading svelte-check in workspace: /Users/rajnandan1/Code/kener
+Getting Svelte diagnostics...
+
+[dotenv@17.2.3] injecting env (19) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+[dotenv@17.2.3] injecting env (0) from .env -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+The following Vite config options will be overridden by SvelteKit:
+  - base
+/Users/rajnandan1/Code/kener/src/lib/components/ui/chart/chart-container.svelte:20:28
+Warn: This reference only captures the initial value of `id`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally (svelte)
+
+  const chartId = `chart-${id || uid.replace(/:/g, "")}`;
+
+/Users/rajnandan1/Code/kener/src/routes/(kener)/events/[MMMM]-[YYYY]/+page.svelte:33:28
+Warn: This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally (svelte)
+  // Parse the current month from params
+  const parsedDate = parse(data.monthParam, "MMMM-yyyy", new Date());
+  const currentMonth = format(parsedDate, "MMMM yyyy");
+
+/Users/rajnandan1/Code/kener/src/routes/(manage)/manage/app-sidebar.svelte:20:15
+Warn: `<img>` element should have an alt attribute
+https://svelte.dev/e/a11y_missing_attribute (svelte)
+            <a href="##" {...props}>
+              <img src="/logo96.png" class="size-5!" />
+              <span class="text-base font-semibold"> Kener </span>
+
+====================================
+svelte-check found 0 errors and 3 warnings in 3 files

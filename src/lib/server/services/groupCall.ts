@@ -1,6 +1,6 @@
 import axios from "axios";
 import { GetRequiredSecrets, ReplaceAllOccurrences, Wait, GetMinuteStartNowTimestampUTC } from "../tool.js";
-import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
+import GC from "../../global-constants.js";
 import db from "../db/db.js";
 import type { GroupMonitor, MonitoringResult } from "../types/monitor.js";
 
@@ -8,15 +8,15 @@ async function waitForDataAndReturn(tag: string): Promise<MonitoringResult> {
   let res = await db.getLatestMonitoringData(tag);
   if (!!res) {
     return {
-      status: res.status || DOWN,
+      status: res.status || GC.DOWN,
       latency: res.latency || 0,
-      type: REALTIME,
+      type: GC.REALTIME,
     };
   }
   return {
-    status: DOWN,
+    status: GC.DOWN,
     latency: 0,
-    type: REALTIME,
+    type: GC.REALTIME,
   };
 }
 

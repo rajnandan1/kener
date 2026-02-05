@@ -1,5 +1,5 @@
 import { TCP } from "../ping.js";
-import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
+import GC from "../../global-constants.js";
 import { DefaultTCPEval } from "../../anywhere.js";
 import type { TcpMonitor, MonitoringResult, EvalResponse } from "../types/monitor.js";
 
@@ -21,9 +21,9 @@ class TcpCall {
         tag,
       );
       return {
-        status: DOWN,
+        status: GC.DOWN,
         latency: 0,
-        type: ERROR,
+        type: GC.ERROR,
       };
     }
     let arrayOfPings = [];
@@ -40,16 +40,16 @@ class TcpCall {
     } catch (error: unknown) {
       console.log(`Error in tcpEval for ${tag}`, (error as Error).message);
       return {
-        status: DOWN,
+        status: GC.DOWN,
         latency: 0,
-        type: ERROR,
+        type: GC.ERROR,
       };
     }
     //reduce to get the status
     return {
-      status: evalResp?.status || DOWN,
+      status: evalResp?.status || GC.DOWN,
       latency: evalResp?.latency || 0,
-      type: REALTIME,
+      type: GC.REALTIME,
     };
   }
 }

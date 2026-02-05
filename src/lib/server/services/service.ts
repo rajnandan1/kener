@@ -22,7 +22,6 @@ import type {
   MonitoringResult,
   NoneMonitor,
 } from "../types/monitor.js";
-import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL, NO_DATA } from "../constants.js";
 
 type ServiceCall =
   | ApiCall

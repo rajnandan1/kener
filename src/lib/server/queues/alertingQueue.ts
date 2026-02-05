@@ -160,7 +160,27 @@ async function sendAlertNotifications(
         toAddresses,
         triggerMetaParsed.from,
       );
-      // await sendEmail(emailSendingConfig, templateAlertVars, template, templateSiteVars, toAddresses);
+    } else if (trigger.trigger_type === "webhook") {
+      await sendWebhook(
+        triggerMetaParsed.webhook_body,
+        { ...templateAlertVars, ...templateSiteVars },
+        triggerMetaParsed.url,
+        JSON.stringify(triggerMetaParsed.headers),
+      );
+    } else if (trigger.trigger_type === "discord") {
+      await sendDiscord(
+        triggerMetaParsed.discord_body,
+        { ...templateAlertVars, ...templateSiteVars },
+        triggerMetaParsed.url,
+      );
+    } else if (trigger.trigger_type === "slack") {
+      await sendSlack(
+        triggerMetaParsed.slack_body,
+        { ...templateAlertVars, ...templateSiteVars },
+        triggerMetaParsed.url,
+      );
+    } else {
+      throw new Error("Unsupported trigger type for testing");
     }
   }
 }
@@ -183,54 +203,60 @@ const addWorker = () => {
       const typeOfConfig = monitor_alerts_configured.alert_for;
       const alertValue = monitor_alerts_configured.alert_value;
       const failureThreshold = monitor_alerts_configured.failure_threshold;
+
+      // Determine if monitor is affected based on alert type
+      let isAffected = false;
       if (typeOfConfig === "STATUS") {
         //alertValue can be DOWN or DEGRADED
-        let isAffected = await db.consecutivelyStatusFor(monitor_tag, alertValue, failureThreshold);
-        let alertsExisting = await GetMonitorAlertsV2({
-          config_id: monitor_alerts_configured.id,
-          alert_status: GC.TRIGGERED,
-        });
-        let activeAlert = null;
-        if (alertsExisting.length > 0) {
-          activeAlert = alertsExisting[0];
+        isAffected = await db.consecutivelyStatusFor(monitor_tag, alertValue, failureThreshold);
+      } else if (typeOfConfig === "LATENCY") {
+        isAffected = await db.consecutivelyLatencyGreaterThan(monitor_tag, parseFloat(alertValue), failureThreshold);
+      }
+
+      // Get existing alerts
+      let alertsExisting = await GetMonitorAlertsV2({
+        config_id: monitor_alerts_configured.id,
+        alert_status: GC.TRIGGERED,
+      });
+      let activeAlert = null;
+      if (alertsExisting.length > 0) {
+        activeAlert = alertsExisting[0];
+      }
+
+      if (isAffected) {
+        // Trigger alert if not already active
+        if (!activeAlert) {
+          activeAlert = await CreateMonitorAlertV2(monitor_alerts_configured.id);
+          if (monitor_alerts_configured.create_incident === GC.YES) {
+            let newIncidentNumber = await createNewIncident(
+              activeAlert,
+              monitor_alerts_configured,
+              monitor_name,
+              monitor_tag,
+            );
+            //update alert with incident number
+            if (newIncidentNumber && newIncidentNumber.incident_id > 0) {
+              activeAlert = await AddIncidentToAlert(activeAlert.id, newIncidentNumber.incident_id);
+            }
+          }
+          // Send triggered alert notifications
+          await sendAlertNotifications(activeAlert, monitor_alerts_configured, templateSiteVars);
+          // Send subscriber notifications
+          //await sendSubscriberNotifications(activeAlert, monitor_alerts_configured, monitor_name, monitor_tag);
         }
+      } else {
+        // Resolve any existing alert
+        if (activeAlert) {
+          //resolve the alert
+          activeAlert = await UpdateMonitorAlertV2Status(activeAlert.id, GC.RESOLVED);
 
-        if (isAffected) {
-          if (!activeAlert) {
-            activeAlert = await CreateMonitorAlertV2(monitor_alerts_configured.id);
-            if (monitor_alerts_configured.create_incident === GC.YES) {
-              let newIncidentNumber = await createNewIncident(
-                activeAlert,
-                monitor_alerts_configured,
-                monitor_name,
-                monitor_tag,
-              );
-              //update alert with incident number
-              if (newIncidentNumber && newIncidentNumber.incident_id > 0) {
-                activeAlert = await AddIncidentToAlert(activeAlert.id, newIncidentNumber.incident_id);
-              }
-            }
-            // Send triggered alert notifications
-            await sendAlertNotifications(activeAlert, monitor_alerts_configured, templateSiteVars);
-            // Send subscriber notifications
-            //await sendSubscriberNotifications(activeAlert, monitor_alerts_configured, monitor_name, monitor_tag);
+          // If alert has an incident, add closure comment
+          if (activeAlert.incident_id) {
+            await closeIncident(activeAlert, monitor_alerts_configured, monitor_name, monitor_tag);
           }
-        } else {
-          //all good, resolve any existing alert
-          if (activeAlert) {
-            //resolve the alert
-            activeAlert = await UpdateMonitorAlertV2Status(activeAlert.id, GC.RESOLVED);
 
-            // If alert has an incident, add closure comment
-            if (activeAlert.incident_id) {
-              await closeIncident(activeAlert, monitor_alerts_configured, monitor_name, monitor_tag);
-            }
-
-            // Send resolution notifications
-            await sendAlertNotifications(activeAlert, monitor_alerts_configured, templateSiteVars);
-            // Send subscriber notifications
-            //await sendSubscriberNotifications(activeAlert, monitor_alerts_configured, monitor_name, monitor_tag);
-          }
+          // Send resolution notifications
+          await sendAlertNotifications(activeAlert, monitor_alerts_configured, templateSiteVars);
         }
       }
     } catch (error) {

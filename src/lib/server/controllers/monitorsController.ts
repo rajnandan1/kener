@@ -1,11 +1,4 @@
-import {
-  GetMinuteStartNowTimestampUTC,
-  GetMinuteStartTimestampUTC,
-  GetNowTimestampUTC,
-  ReplaceAllOccurrences,
-  ValidateEmail,
-  UptimeCalculator,
-} from "../tool.js";
+import { GetMinuteStartNowTimestampUTC, GetMinuteStartTimestampUTC, UptimeCalculator } from "../tool.js";
 import type {
   MonitorRecordInsert,
   TriggerRecordInsert,
@@ -25,7 +18,6 @@ import type {
 import type { MonitorFilter } from "../db/repositories/base.js";
 import Queue from "queue";
 import db from "../db/db.js";
-import { DEGRADED, DOWN, NO_DATA, SIGNAL, UP, REALTIME } from "../constants.js";
 import type { PaginationInput } from "../../types/common.js";
 import type { DayWiseStatus, NumberWithChange } from "../../types/monitor.js";
 import GC, { getBadgeStyle, type BadgeStyle } from "../../global-constants.js";
@@ -136,28 +128,28 @@ export const ProcessGroupUpdate = async (data: GroupUpdateData): Promise<void> =
         let timestamp = lastStatus.timestamp;
         let receivedStatus = data.status;
         let receivedTimestamp = data.timestamp;
-        if (receivedStatus === DOWN) {
+        if (receivedStatus === GC.DOWN) {
           updateData = {
             monitor_tag: groupActiveMonitor.groupTag,
             timestamp: receivedTimestamp,
-            status: DOWN,
-            type: REALTIME,
+            status: GC.DOWN,
+            type: GC.REALTIME,
             latency: data.latency,
           };
-        } else if (receivedStatus === DEGRADED && status !== DOWN) {
+        } else if (receivedStatus === GC.DEGRADED && status !== GC.DOWN) {
           updateData = {
             monitor_tag: groupActiveMonitor.groupTag,
             timestamp: receivedTimestamp,
-            status: DEGRADED,
-            type: REALTIME,
+            status: GC.DEGRADED,
+            type: GC.REALTIME,
             latency: data.latency,
           };
-        } else if (receivedStatus === UP && status !== DOWN && status !== DEGRADED) {
+        } else if (receivedStatus === GC.UP && status !== GC.DOWN && status !== GC.DEGRADED) {
           updateData = {
             monitor_tag: groupActiveMonitor.groupTag,
             timestamp: receivedTimestamp,
-            status: UP,
-            type: REALTIME,
+            status: GC.UP,
+            type: GC.REALTIME,
             latency: data.latency,
           };
         }
@@ -167,7 +159,7 @@ export const ProcessGroupUpdate = async (data: GroupUpdateData): Promise<void> =
           monitor_tag: groupActiveMonitor.groupTag,
           timestamp: data.timestamp,
           status: data.status,
-          type: REALTIME,
+          type: GC.REALTIME,
           latency: data.latency,
         };
       }
@@ -195,9 +187,9 @@ export const UpdateMonitoringData = async (data: UpdateMonitoringDataInput): Pro
 export const GetLastStatusBefore = async (monitor_tag: string, timestamp: number): Promise<string> => {
   let data = await db.getLastStatusBefore(monitor_tag, timestamp);
   if (data) {
-    return data.status || NO_DATA;
+    return data.status || GC.NO_DATA;
   }
-  return NO_DATA;
+  return GC.NO_DATA;
 };
 
 export const InterpolateData = (
@@ -207,7 +199,7 @@ export const InterpolateData = (
   overrideEndTimestamp?: number,
 ): InterpolatedDataEntry[] => {
   const interpolatedData: InterpolatedDataEntry[] = [];
-  let currentStatus = initialStatus || "UP";
+  let currentStatus = initialStatus || GC.UP;
   let endTimestamp = startTimestamp;
 
   if (rawData && rawData.length > 0) {
@@ -237,11 +229,11 @@ export const AggregateData = (
   rawData: InterpolatedDataEntry[],
 ): { total: number; UPs: number; DOWNs: number; DEGRADEDs: number; NO_DATAs: number } => {
   //data like [{ timestamp: 1732435920, status: 'NO_DATA' }]
-  let rawDataWithStatus = rawData.filter((data) => data.status !== NO_DATA);
+  let rawDataWithStatus = rawData.filter((data) => data.status !== GC.NO_DATA);
   const total = rawDataWithStatus.length;
-  const UPs = rawDataWithStatus.filter((data) => data.status === UP).length;
-  const DOWNs = rawDataWithStatus.filter((data) => data.status === DOWN).length;
-  const DEGRADEDs = rawDataWithStatus.filter((data) => data.status === DEGRADED).length;
+  const UPs = rawDataWithStatus.filter((data) => data.status === GC.UP).length;
+  const DOWNs = rawDataWithStatus.filter((data) => data.status === GC.DOWN).length;
+  const DEGRADEDs = rawDataWithStatus.filter((data) => data.status === GC.DEGRADED).length;
   const NO_DATAs = total - (UPs + DOWNs + DEGRADEDs);
 
   return { total, UPs, DOWNs, DEGRADEDs, NO_DATAs };
@@ -392,15 +384,15 @@ export const GetLatestStatusActiveAll = async (): Promise<{ status: string }> =>
     }
   }
 
-  let status = NO_DATA;
+  let status: string = GC.NO_DATA;
   for (let i = 0; i < latestData.length; i++) {
     //if any status is down then status = down, if any is degraded then status = degraded, down > degraded > up
-    if (latestData[i].status === DOWN) {
-      status = DOWN;
-    } else if (latestData[i].status === DEGRADED && status !== DOWN) {
-      status = DEGRADED;
-    } else if (latestData[i].status === UP && status !== DOWN && status !== DEGRADED) {
-      status = UP;
+    if (latestData[i].status === GC.DOWN) {
+      status = GC.DOWN;
+    } else if (latestData[i].status === GC.DEGRADED && status !== GC.DOWN) {
+      status = GC.DEGRADED;
+    } else if (latestData[i].status === GC.UP && status !== GC.DOWN && status !== GC.DEGRADED) {
+      status = GC.UP;
     }
   }
   return {
@@ -465,9 +457,9 @@ export const RegisterHeartbeat = async (tag: string, secret: string): Promise<nu
       return InsertMonitoringData({
         monitor_tag: monitor.tag,
         timestamp: GetMinuteStartNowTimestampUTC(),
-        status: UP,
+        status: GC.UP,
         latency: 0,
-        type: SIGNAL,
+        type: GC.SIGNAL,
       });
     }
   } catch (e) {
@@ -510,9 +502,9 @@ export const GetMonitoringDataAll = async (tags: string[], since: number, now: n
 export const GetLastStatusBeforeAll = async (monitor_tags: string[], timestamp: number): Promise<string> => {
   let data = await db.getLastStatusBeforeAll(monitor_tags, timestamp);
   if (data) {
-    return data.status || NO_DATA;
+    return data.status || GC.NO_DATA;
   }
-  return NO_DATA;
+  return GC.NO_DATA;
 };
 
 export const InsertNewAlert = async (data: MonitorAlertInsert): Promise<MonitorAlert | undefined> => {
@@ -606,7 +598,7 @@ export const GetBadge = async (badgeType: BadgeType, params: BadgeParams): Promi
       lastObj = (await GetLastMonitoringValue(m.tag, () => GetLatestMonitoringData(m.tag))) as { status: string };
     }
 
-    const status = (lastObj?.status as string) || NO_DATA;
+    const status = (lastObj?.status as string) || GC.NO_DATA;
     message = status;
 
     // Use status-specific color if no custom color provided

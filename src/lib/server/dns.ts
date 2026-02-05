@@ -1,6 +1,6 @@
 import dns2 from "dns2";
 import dgram, { type Socket } from "dgram";
-import { AllRecordTypes } from "./constants.js";
+import { AllRecordTypes } from "../clientTools";
 
 interface DNSAnswer {
   name: string;

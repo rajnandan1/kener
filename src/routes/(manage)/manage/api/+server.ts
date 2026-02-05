@@ -50,7 +50,6 @@ import {
   GetMonitoringDataPaginated,
 } from "$lib/server/controllers/controller.js";
 
-import { INVITE_VERIFY_EMAIL, MANUAL } from "$lib/server/constants.js";
 import { GetNowTimestampUTC } from "$lib/server/tool.js";
 import {
   CreatePage,
@@ -113,8 +112,13 @@ import {
   GetGeneralEmailTemplateById,
   UpdateGeneralEmailTemplate,
 } from "$lib/server/controllers/generalTemplateController.js";
-import type { AlertData, SiteDataForNotification } from "$lib/server/notification/variables";
+import type { SiteDataForNotification } from "$lib/server/notification/types";
 import { alertToVariables, siteDataToVariables } from "$lib/server/notification/notification_utils";
+import type { TriggerMeta } from "$lib/server/types/db.js";
+import sendWebhook from "$lib/server/notification/webhook_notification.js";
+import sendEmail from "$lib/server/notification/email_notification.js";
+import sendDiscord from "$lib/server/notification/discord_notification.js";
+import sendSlack from "$lib/server/notification/slack_notification.js";
 
 function AdminCan(role: string) {
   if (role !== "admin") {
@@ -175,7 +179,7 @@ export async function POST({ request, cookies }) {
       const total = totalResult ? Number(totalResult.count) : 0;
       resp = { users, total };
     } else if (action == "sendVerificationEmail") {
-      data.invitation_type = INVITE_VERIFY_EMAIL;
+      data.invitation_type = GC.INVITE_VERIFY_EMAIL;
 
       let toEmail = userDB.email;
       let toId = userDB.id;
@@ -227,7 +231,7 @@ export async function POST({ request, cookies }) {
       AdminEditorCan(userDB.role);
       resp = await CreateUpdateMonitor(data);
     } else if (action == "updateMonitoringData") {
-      data.type = MANUAL;
+      data.type = GC.MANUAL;
       resp = await UpdateMonitoringData(data);
     } else if (action == "getMonitors") {
       resp = await GetMonitors(data);
@@ -308,58 +312,66 @@ export async function POST({ request, cookies }) {
       if (!trigger || !siteData) {
         throw new Error("Trigger not found");
       }
-
+      const triggerMetaParsed = JSON.parse(trigger.trigger_meta) as TriggerMeta;
+      const testAlert: MonitorAlertConfigRecord = {
+        id: 1,
+        monitor_tag: "test-monitor",
+        alert_for: "STATUS",
+        alert_value: "DOWN",
+        failure_threshold: 1,
+        success_threshold: 1,
+        alert_description: "This is a test alert",
+        create_incident: "NO",
+        is_active: "YES",
+        severity: "WARNING",
+        created_at: new Date(),
+        updated_at: new Date(),
+      };
+      const testAlertData: MonitorAlertV2Record = {
+        id: 1,
+        config_id: 1,
+        alert_status: Math.random() > 0.5 ? "TRIGGERED" : "RESOLVED",
+        incident_id: null,
+        created_at: new Date(),
+        updated_at: new Date(),
+      };
+      const templateAlertVars = alertToVariables(testAlert, testAlertData);
+      const templateSiteVars = siteDataToVariables(siteData);
       if (trigger.trigger_type === "webhook") {
+        resp = await sendWebhook(
+          triggerMetaParsed.webhook_body,
+          { ...templateAlertVars, ...templateSiteVars },
+          triggerMetaParsed.url,
+          JSON.stringify(triggerMetaParsed.headers),
+        );
+      } else if (trigger.trigger_type === "email") {
+        const toAddresses = triggerMetaParsed.to
+          .trim()
+          .split(",")
+          .map((addr) => addr.trim())
+          .filter((addr) => addr.length > 0);
+        resp = await sendEmail(
+          triggerMetaParsed.email_body,
+          triggerMetaParsed.email_subject,
+          { ...templateAlertVars, ...templateSiteVars },
+          toAddresses,
+          triggerMetaParsed.from,
+        );
+      } else if (trigger.trigger_type === "discord") {
+        resp = await sendDiscord(
+          triggerMetaParsed.discord_body,
+          { ...templateAlertVars, ...templateSiteVars },
+          triggerMetaParsed.url,
+        );
+      } else if (trigger.trigger_type === "slack") {
+        resp = await sendSlack(
+          triggerMetaParsed.slack_body,
+          { ...templateAlertVars, ...templateSiteVars },
+          triggerMetaParsed.url,
+        );
+      } else {
+        throw new Error("Unsupported trigger type for testing");
       }
-      //throw error if not template id
-      // if (!trigger.template_id) {
-      //   throw new Error("No template associated with this trigger");
-      // }
-      // //get template by id
-      // const template = await GetTemplateById(trigger.template_id);
-      // if (!template) {
-      //   throw new Error("No template found for this trigger");
-      // }
-
-      // const templateAlertVars = alertToVariables(testAlert, testAlertData);
-      // const templateSiteVars = siteDataToVariables(siteData);
-
-      // let triggerParsed: TriggerRecordParsed = {
-      //   ...trigger,
-      //   trigger_meta: trigger.trigger_meta ? JSON.parse(trigger.trigger_meta) : { to: [], from: "" },
-      // };
-      // if (trigger.trigger_type === "webhook") {
-      //   resp = await sendWebhook(
-      //     triggerParsed as TriggerRecordParsed<TriggerMetaWebhookJson>,
-      //     templateAlertVars as AlertData,
-      //     template,
-      //     templateSiteVars,
-      //   );
-      // } else if (trigger.trigger_type === "email") {
-      //   const emailSendingConfig = getEmailConfigFromTriggerMeta(triggerParsed.trigger_meta as TriggerMetaEmailJson);
-      //   const toAddresses = (triggerParsed.trigger_meta as TriggerMetaEmailJson).to;
-      //   resp = await sendEmail(
-      //     emailSendingConfig,
-      //     templateAlertVars as AlertData,
-      //     template,
-      //     templateSiteVars,
-      //     toAddresses,
-      //   );
-      // } else if (trigger.trigger_type === "slack") {
-      //   resp = await sendSlack(
-      //     triggerParsed as TriggerRecordParsed<TriggerMetaSlackJson>,
-      //     templateAlertVars as AlertData,
-      //     template,
-      //     templateSiteVars,
-      //   );
-      // } else if (trigger.trigger_type === "discord") {
-      //   resp = await sendDiscord(
-      //     triggerParsed as TriggerRecordParsed<TriggerMetaDiscordJson>,
-      //     templateAlertVars as AlertData,
-      //     template,
-      //     templateSiteVars,
-      //   );
-      // }
     } else if (action == "testMonitor") {
       let monitorID = data.monitor_id;
       let monitors = await GetMonitorsParsed({ id: monitorID });

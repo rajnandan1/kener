@@ -1,6 +1,7 @@
 // Types for request/response payloads.
 // Keep these decoupled from DB models (DTOs) so you can evolve DB without breaking the API.
 
+import type { MonitorRecordTyped } from "$lib/server/types/db";
 import type { MonitorPublicView } from "$lib/types/monitor";
 
 export type ApiError = {
@@ -88,8 +89,6 @@ export interface MonitorResponse {
   category_name: string | null;
   monitor_type: string;
   type_data: MonitorTypeData | null;
-  day_degraded_minimum_count: number | null;
-  day_down_minimum_count: number | null;
   include_degraded_in_downtime: string;
   is_hidden: string;
   monitor_settings_json: MonitorSettings | null;
@@ -98,11 +97,11 @@ export interface MonitorResponse {
 }
 
 export interface GetMonitorsListResponse {
-  monitors: MonitorResponse[];
+  monitors: MonitorRecordTyped[];
 }
 
 export interface GetMonitorResponse {
-  monitor: MonitorResponse;
+  monitor: MonitorRecordTyped;
 }
 
 export interface CreateMonitorRequest {
@@ -116,15 +115,13 @@ export interface CreateMonitorRequest {
   category_name?: string | null;
   monitor_type?: string | null;
   type_data?: MonitorTypeData | null;
-  day_degraded_minimum_count?: number | null;
-  day_down_minimum_count?: number | null;
   include_degraded_in_downtime?: string;
   is_hidden?: string;
   monitor_settings_json?: MonitorSettings | null;
 }
 
 export interface CreateMonitorResponse {
-  monitor: MonitorResponse;
+  monitor: MonitorRecordTyped;
 }
 
 export interface UpdateMonitorRequest {
@@ -137,15 +134,13 @@ export interface UpdateMonitorRequest {
   category_name?: string | null;
   monitor_type?: string | null;
   type_data?: MonitorTypeData | null;
-  day_degraded_minimum_count?: number | null;
-  day_down_minimum_count?: number | null;
   include_degraded_in_downtime?: string;
   is_hidden?: string;
   monitor_settings_json?: MonitorSettings | null;
 }
 
 export interface UpdateMonitorResponse {
-  monitor: MonitorResponse;
+  monitor: MonitorRecordTyped;
 }
 
 // Monitoring Data API types

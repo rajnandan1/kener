@@ -3,6 +3,7 @@ import { VerifyAPIKey } from "$lib/server/controllers/apiController";
 import db from "$lib/server/db/db";
 import type { UnauthorizedResponse, NotFoundResponse } from "$lib/types/api";
 import { initializeSearchIndex } from "$lib/server/docs-search";
+import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
 
 // Initialize documentation search index at server startup
 initializeSearchIndex();
@@ -93,7 +94,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     // Validate monitor tag exists for /api/monitors/:monitor_tag/* routes
     const monitorTag = extractMonitorTag(pathname);
     if (monitorTag) {
-      const monitor = await db.getMonitorByTag(monitorTag);
+      const monitor = await GetMonitorsParsed({ tag: monitorTag }).then((monitors) => monitors[0]);
       if (!monitor) {
         const errorResponse: NotFoundResponse = {
           error: {

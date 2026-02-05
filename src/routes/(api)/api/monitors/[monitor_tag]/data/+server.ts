@@ -7,7 +7,7 @@ import type {
   UpdateMonitoringDataRangeResponse,
   BadRequestResponse,
 } from "$lib/types/api";
-import { MANUAL } from "$lib/server/constants";
+import GC from "$lib/global-constants";
 import { UpdateMonitoringData } from "$lib/server/controllers/monitorsController";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
 
@@ -120,7 +120,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  if (!body.status || !["UP", "DOWN", "DEGRADED"].includes(body.status)) {
+  if (!body.status || ![GC.UP, GC.DOWN, GC.DEGRADED].includes(body.status)) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",
@@ -157,7 +157,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     start: body.start_ts,
     end: body.end_ts,
     newStatus: body.status,
-    type: MANUAL,
+    type: GC.MANUAL,
     latency: body.latency,
     deviation: deviation,
   });

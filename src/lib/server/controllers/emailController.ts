@@ -49,7 +49,7 @@ export const SendEmailWithTemplate = async (
     if (!!smtpData) {
       const transporter = getSMTPTransport(smtpData);
       const mailOptions = {
-        from: smtpData.smtp_from_email,
+        from: smtpData.smtp_sender,
         to: email,
         subject: mail.subject,
         html: mail.html,
@@ -62,6 +62,6 @@ export const SendEmailWithTemplate = async (
     }
   } catch (error) {
     console.error("Error sending email via SMTP", error);
-    throw new Error("Error sending email v");
+    throw new Error("Error sending email via SMTP");
   }
 };

@@ -1,4 +1,4 @@
-import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
+import GC from "../../global-constants.js";
 // @ts-expect-error - gamedig does not have type declarations
 import { GameDig } from "gamedig";
 import { DefaultGamedigEval, GAMEDIG_SOCKET_TIMEOUT, GAMEDIG_TIMEOUT } from "../../anywhere.js";
@@ -36,9 +36,9 @@ class GamedigCall {
     } catch (error: unknown) {
       console.log(`Error while requesting game's information for ${tag}: `, (error as Error).message);
       return {
-        status: DOWN,
+        status: GC.DOWN,
         latency: 0,
-        type: ERROR,
+        type: GC.ERROR,
       };
     }
 
@@ -54,17 +54,17 @@ class GamedigCall {
     } catch (error: unknown) {
       console.log(`Error in gamedigEval for ${tag}: `, (error as Error).message);
       return {
-        status: DOWN,
+        status: GC.DOWN,
         latency: 0,
-        type: ERROR,
+        type: GC.ERROR,
       };
     }
 
     // Result
     return {
-      status: evalResp?.status || DOWN,
+      status: evalResp?.status || GC.DOWN,
       latency: evalResp?.latency || 0,
-      type: REALTIME,
+      type: GC.REALTIME,
     };
   }
 }

@@ -7,7 +7,7 @@ import type {
   NotFoundResponse,
   BadRequestResponse,
 } from "$lib/types/api";
-import { MANUAL } from "$lib/server/constants";
+import GC from "$lib/global-constants";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
 
 export const GET: RequestHandler = async ({ params, locals }) => {
@@ -111,7 +111,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   let latency: number;
 
   if (body.status !== undefined) {
-    if (!["UP", "DOWN", "DEGRADED"].includes(body.status)) {
+    if (![GC.UP, GC.DOWN, GC.DEGRADED].includes(body.status)) {
       const errorResponse: BadRequestResponse = {
         error: {
           code: "BAD_REQUEST",
@@ -124,7 +124,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   } else if (existingData?.status) {
     status = existingData.status;
   } else {
-    status = monitor.default_status || "UP";
+    status = monitor.default_status || GC.UP;
   }
 
   if (body.latency !== undefined) {
@@ -150,7 +150,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     timestamp: timestamp,
     status: status,
     latency: latency,
-    type: MANUAL,
+    type: GC.MANUAL,
   });
 
   // Fetch the updated data
@@ -162,7 +162,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
       timestamp: timestamp,
       status: updatedData?.status ?? status,
       latency: updatedData?.latency ?? latency,
-      type: updatedData?.type ?? MANUAL,
+      type: updatedData?.type ?? GC.MANUAL,
     },
   };
 

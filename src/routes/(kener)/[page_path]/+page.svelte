@@ -74,7 +74,7 @@
       </div>
       {#each data.monitorTags as tag, i}
         <div class="{i < data.monitorTags.length - 1 ? 'border-b' : ''} py-2">
-          <MonitorBar {tag} localTz={data.localTz} />
+          <MonitorBar {tag} />
         </div>
       {/each}
     </div>

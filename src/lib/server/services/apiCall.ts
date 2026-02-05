@@ -1,6 +1,6 @@
 import axios, { type AxiosRequestConfig } from "axios";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
-import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
+import GC from "../../global-constants.js";
 import * as cheerio from "cheerio";
 import { DefaultAPIEval } from "../../anywhere.js";
 import version from "../../version.js";
@@ -146,30 +146,33 @@ class ApiCall {
       errorMessage += ` | Eval error: ${(error as Error).message}`;
     }
 
-    if (evalResp === undefined || evalResp === null) {
+    if (!!!evalResp) {
       evalResp = {
-        status: DOWN,
+        status: GC.DOWN,
         latency: latency,
-        type: ERROR,
+        type: GC.ERROR,
       };
     } else if (
-      evalResp.status === undefined ||
-      evalResp.status === null ||
-      [UP, DOWN, DEGRADED].indexOf(evalResp.status) === -1
+      !!!evalResp.status ||
+      ([GC.UP, GC.DOWN, GC.DEGRADED, GC.MAINTENANCE] as string[]).indexOf(evalResp.status) === -1
     ) {
       evalResp = {
-        status: DOWN,
+        status: GC.DOWN,
         latency: latency,
-        type: ERROR,
+        type: GC.ERROR,
       };
     } else {
-      evalResp.type = REALTIME;
+      evalResp.type = GC.REALTIME;
+      // Ensure latency is a valid number
+      if (typeof evalResp.latency !== "number" || isNaN(evalResp.latency)) {
+        evalResp.latency = latency;
+      }
     }
 
     let toWrite: MonitoringResult = {
-      status: DOWN,
+      status: GC.DOWN,
       latency: latency,
-      type: ERROR,
+      type: GC.ERROR,
       error_message: errorMessage,
     };
     if (evalResp.status !== undefined && evalResp.status !== null) {
@@ -182,7 +185,7 @@ class ApiCall {
       toWrite.type = evalResp.type;
     }
     if (timeoutError) {
-      toWrite.type = TIMEOUT;
+      toWrite.type = GC.TIMEOUT;
     }
 
     return toWrite;

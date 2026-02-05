@@ -1,4 +1,4 @@
-import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
+import GC from "../../global-constants.js";
 import { GetMinuteStartNowTimestampUTC } from "../tool.js";
 import { GetLastHeartbeat } from "../controllers/controller.js";
 import { Cron } from "croner";
@@ -17,9 +17,9 @@ class HeartbeatCall {
     let latestData = await GetLastHeartbeat(this.monitor.tag);
     if (!latestData) {
       return {
-        status: NODATA,
+        status: GC.NO_DATA,
         latency: 0,
-        type: REALTIME,
+        type: GC.REALTIME,
       };
     }
 
@@ -30,26 +30,26 @@ class HeartbeatCall {
       const prevDate = cronJob.previousRun();
       if (!prevDate) {
         return {
-          status: DOWN,
+          status: GC.DOWN,
           latency: 0,
-          type: ERROR,
+          type: GC.ERROR,
         };
       }
       expectedTime = Math.floor(prevDate.getTime() / 1000); // seconds
     } catch (err) {
       return {
-        status: DOWN,
+        status: GC.DOWN,
         latency: 0,
-        type: ERROR,
+        type: GC.ERROR,
       };
     }
 
     // If heartbeat was received after or at expected time, it's UP
     if (latestData.timestamp >= expectedTime) {
       return {
-        status: UP,
+        status: GC.UP,
         latency: nowMinute - latestData.timestamp,
-        type: REALTIME,
+        type: GC.REALTIME,
       };
     }
 
@@ -58,25 +58,25 @@ class HeartbeatCall {
     let downRemainingMinutes = Number(this.monitor.type_data.downRemainingMinutes);
     if (latency > downRemainingMinutes * 60) {
       return {
-        status: DOWN,
+        status: GC.DOWN,
         latency: latency,
-        type: REALTIME,
+        type: GC.REALTIME,
       };
     }
 
     let degradedRemainingMinutes = Number(this.monitor.type_data.degradedRemainingMinutes);
     if (latency > degradedRemainingMinutes * 60) {
       return {
-        status: DEGRADED,
+        status: GC.DEGRADED,
         latency: latency,
-        type: REALTIME,
+        type: GC.REALTIME,
       };
     }
 
     return {
-      status: UP,
+      status: GC.UP,
       latency: latency,
-      type: REALTIME,
+      type: GC.REALTIME,
     };
   }
 }

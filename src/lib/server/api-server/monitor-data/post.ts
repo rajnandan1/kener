@@ -4,7 +4,7 @@ import type { MonitorTableRow, MonitorTableUptime } from "$lib/types/common";
 import db from "$lib/server/db/db";
 import { ParseUptime } from "$lib/server/tool";
 import { CalculateUptimeByTags, GetLatestMonitoringData } from "$lib/server/controllers/monitorsController";
-import { NO_DATA } from "$lib/server/constants";
+import GC from "$lib/global-constants";
 
 interface MonitorDataRequest {
   monitor_tags: string[];
@@ -36,7 +36,7 @@ export default async function post(req: APIServerRequest): Promise<Response> {
     monitors.map(async (monitor) => {
       // Get latest status and latency
       const latestData = await GetLatestMonitoringData(monitor.tag);
-      const status = latestData?.status || NO_DATA;
+      const status = latestData?.status || GC.NO_DATA;
       const responseTime = latestData?.latency ? `${latestData.latency}ms` : "-";
 
       // Calculate uptimes for each range

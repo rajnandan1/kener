@@ -1,5 +1,4 @@
 import DNSResolver from "../dns.js";
-import { UP, DOWN, DEGRADED, REALTIME, TIMEOUT, ERROR, MANUAL } from "../constants.js";
 import type { NoneMonitor, MonitoringResult } from "../types/monitor.js";
 
 class NoneCall {

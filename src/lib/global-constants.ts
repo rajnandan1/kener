@@ -34,13 +34,13 @@ export default {
   INCIDENT: "INCIDENT",
   MAINTENANCE: "MAINTENANCE",
   NO_DATA: "NO_DATA",
-  REALTIME: "realtime",
-  TIMEOUT: "timeout",
-  ERROR: "error",
-  MANUAL: "manual",
-  WEBHOOK: "webhook",
-  DEFAULT_STATUS: "default_status",
-  SIGNAL: "signal",
+  REALTIME: "REALTIME",
+  TIMEOUT: "TIMEOUT",
+  ERROR: "ERROR",
+  MANUAL: "MANUAL",
+  WEBHOOK: "WEBHOOK",
+  DEFAULT_STATUS: "DEFAULT",
+  SIGNAL: "SIGNAL",
   INVITE_VERIFY_EMAIL: "invite_verify_email",
   ERROR_NO_SETUP: "Set up not done yet. Create a user first.",
   INVESTIGATING: "INVESTIGATING",
@@ -66,3 +66,10 @@ export default {
   READY: "READY",
   ACTIVE: "ACTIVE",
 } as const;
+
+const AnalyticsProviders = {
+  GA: "https://unpkg.com/@analytics/google-analytics@1.0.7/dist/@analytics/google-analytics.min.js",
+  AMPLITUDE: "https://unpkg.com/@analytics/amplitude@0.1.3/dist/@analytics/amplitude.min.js",
+  MIXPANEL: "https://unpkg.com/@analytics/mixpanel@0.4.0/dist/@analytics/mixpanel.min.js",
+};
+export { AnalyticsProviders };

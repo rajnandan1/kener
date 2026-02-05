@@ -163,30 +163,31 @@ export interface TriggerRecord {
 export interface EmailTemplateJson {
   email_subject: string;
   email_body: string; // HTML string
+  to: string;
+  from: string;
 }
 
 export interface WebhookTemplateJson {
   webhook_body: string; // JSON string
+  headers: TriggerHeader[];
+  url: string;
 }
 
 export interface SlackTemplateJson {
   slack_body: string; // JSON string
+  url: string;
 }
 
 export interface DiscordTemplateJson {
   discord_body: string; // JSON string
+  url: string;
 }
 
 export interface TriggerHeader {
   key: string;
   value: string;
 }
-export interface TriggerMeta extends EmailTemplateJson, WebhookTemplateJson, SlackTemplateJson, DiscordTemplateJson {
-  url: string;
-  headers: TriggerHeader[];
-  to: string;
-  from: string;
-}
+export interface TriggerMeta extends EmailTemplateJson, WebhookTemplateJson, SlackTemplateJson, DiscordTemplateJson {}
 
 export interface TriggerRecordInsert {
   name: string;

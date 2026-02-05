@@ -9,7 +9,6 @@ import {
   ParseUptime,
   UptimeCalculator,
 } from "$lib/server/tool";
-import { NO_DATA } from "$lib/server/constants";
 import GC from "$lib/global-constants";
 import { GetMonitorsParsed } from "../../controllers/monitorsController";
 import type { TimestampStatusCount } from "$lib/server/types/db";

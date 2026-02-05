@@ -3,7 +3,7 @@ import type { APIServerRequest } from "$lib/server/types/api-server";
 import db from "$lib/server/db/db";
 import { GetLatestMonitoringData, GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
 import { ParseUptime, GetMinuteStartNowTimestampUTC, UptimeCalculator } from "$lib/server/tool";
-import { NO_DATA } from "$lib/server/constants";
+import GC from "$lib/global-constants";
 import type { StatusType } from "$lib/global-constants";
 import type { TimestampStatusCount } from "$lib/server/types/db";
 
@@ -77,13 +77,13 @@ export default async function get(req: APIServerRequest): Promise<Response> {
 
   // Build bars from the data points
   const bars: BarData[] = dataPoints.map((d) => ({
-    status: (d.status as StatusType) || NO_DATA,
+    status: (d.status as StatusType) || GC.NO_DATA,
     timestamp: d.timestamp,
   }));
 
   // Get current status
   const latestData = bars[bars.length - 1];
-  const currentStatus: StatusType = (latestData?.status as StatusType) || NO_DATA;
+  const currentStatus: StatusType = (latestData?.status as StatusType) || GC.NO_DATA;
   const uptimeCalculationResult = UptimeCalculator(
     rawUptimeData,
     monitor.monitor_settings_json?.uptime_formula_numerator,

@@ -1,71 +1,57 @@
-// import type { TemplateRecord, TriggerRecordParsed, TriggerMetaSlackJson, SlackTemplateJson } from "../types/db";
-// import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
-// import Mustache from "mustache";
-// import type { SiteDataForNotification, TemplateVariableMap } from "./types.js";
+import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
+import Mustache from "mustache";
 
-// export default async function send(
-//   triggerRecord: TriggerRecordParsed<TriggerMetaSlackJson>,
-//   variables: TemplateVariableMap,
-//   template: TemplateRecord,
-//   siteData: SiteDataForNotification,
-//   url?: string,
-// ) {
-//   // Process trigger meta for environment secrets
-//   let metaStringified = JSON.stringify(triggerRecord.trigger_meta);
-//   let envSecrets = GetRequiredSecrets(metaStringified);
+export default async function send(
+  slackBody: string,
+  variables: Record<string, string | number | boolean>,
+  slackURL: string,
+) {
+  // Process trigger meta for environment secrets
+  let envSecrets = GetRequiredSecrets(slackBody + slackURL);
 
-//   for (let i = 0; i < envSecrets.length; i++) {
-//     const secret = envSecrets[i];
-//     if (secret.replace !== undefined) {
-//       metaStringified = ReplaceAllOccurrences(metaStringified, secret.find, secret.replace);
-//     }
-//   }
+  for (let i = 0; i < envSecrets.length; i++) {
+    const secret = envSecrets[i];
+    if (secret.replace !== undefined) {
+      slackBody = ReplaceAllOccurrences(slackBody, secret.find, secret.replace);
+      slackURL = ReplaceAllOccurrences(slackURL, secret.find, secret.replace);
+    }
+  }
 
-//   let trigger_meta_json = JSON.parse(metaStringified) as TriggerMetaSlackJson;
+  const defaultHeaders = [
+    { key: "user-agent", value: "Kener/4.0.0" },
+    { key: "accept", value: "application/json" },
+    { key: "content-type", value: "application/json" },
+  ];
 
-//   // Process template for environment secrets
-//   let slackBody = template.template_json;
-//   let envSecretsTemplate = GetRequiredSecrets(slackBody);
+  // Render the webhook body with Mustache (disable HTML escaping for JSON/plain text)
+  const renderedBody = Mustache.render(slackBody, { ...variables }, {}, { escape: (text) => text });
 
-//   for (let i = 0; i < envSecretsTemplate.length; i++) {
-//     const secret = envSecretsTemplate[i];
-//     if (secret.replace !== undefined) {
-//       slackBody = ReplaceAllOccurrences(slackBody, secret.find, secret.replace);
-//     }
-//   }
+  // Build headers object
+  const headersObj: Record<string, string> = {};
 
-//   let slackBodyJson = JSON.parse(slackBody) as SlackTemplateJson;
+  for (const header of defaultHeaders) {
+    if (header.key && header.value) {
+      headersObj[header.key] = header.value;
+    }
+  }
 
-//   // Get URL from trigger meta or override param
-//   const slackUrl = url || trigger_meta_json.url;
+  try {
+    const response = await fetch(slackURL, {
+      method: "POST",
+      headers: headersObj,
+      body: renderedBody,
+    });
 
-//   // Render the slack body with Mustache (disable HTML escaping)
-//   const renderedBody = Mustache.render(
-//     slackBodyJson.slack_body,
-//     { ...variables, ...siteData },
-//     {},
-//     { escape: (text) => text },
-//   );
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Discord webhook request failed with status ${response.status}: ${errorText}`);
+      return { error: `Discord webhook request failed with status ${response.status}`, details: errorText };
+    }
 
-//   try {
-//     const response = await fetch(slackUrl, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json",
-//       },
-//       body: renderedBody,
-//     });
-
-//     if (!response.ok) {
-//       const errorText = await response.text();
-//       console.error(`Slack webhook request failed with status ${response.status}: ${errorText}`);
-//       return { error: `Slack webhook request failed with status ${response.status}`, details: errorText };
-//     }
-
-//     const responseData = await response.text();
-//     return { success: true, status: response.status, data: responseData };
-//   } catch (error) {
-//     console.error("Error sending Slack notification", error);
-//     return { error: "Error sending Slack notification", details: error };
-//   }
-// }
+    const responseData = await response.text();
+    return { success: true, status: response.status, data: responseData };
+  } catch (error) {
+    console.error("Error sending Discord notification", error);
+    return { error: "Error sending Discord notification", details: error };
+  }
+}

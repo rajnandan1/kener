@@ -84,6 +84,20 @@
           ]
         },
         {
+          "title": "Triggers",
+          "slug": "triggers",
+          "pages": [
+            {
+              "title": "Overview",
+              "slug": "triggers/overview"
+            },
+            {
+              "title": "Email Triggers",
+              "slug": "triggers/email"
+            }
+          ]
+        },
+        {
           "title": "Incidents",
           "slug": "incidents"
         },
