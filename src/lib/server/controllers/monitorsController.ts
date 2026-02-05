@@ -1,4 +1,9 @@
-import { GetMinuteStartNowTimestampUTC, GetMinuteStartTimestampUTC, UptimeCalculator } from "../tool.js";
+import {
+  GetMinuteStartNowTimestampUTC,
+  GetMinuteStartTimestampUTC,
+  UnparsePercentage,
+  UptimeCalculator,
+} from "../tool.js";
 import type {
   MonitorRecordInsert,
   TriggerRecordInsert,
@@ -696,4 +701,38 @@ export const GetBadge = async (badgeType: BadgeType, params: BadgeParams): Promi
   return new Response(svg, {
     headers: { "Content-Type": "image/svg+xml" },
   });
+};
+
+//calculate uptime for last N rows
+export const CalculateUptimeForLastNRows = async (
+  tag: string | string[],
+  lastX: number,
+  numeratorStr: string,
+  denominatorStr: string,
+): Promise<number> => {
+  const statusCounts = await db.getStatusCountsForLastN(tag, lastX);
+  const uptime = UptimeCalculator([statusCounts], numeratorStr, denominatorStr);
+  return UnparsePercentage(uptime.uptime);
+};
+
+export const IsUptimeGreaterThanXPercent = async (
+  tag: string | string[],
+  lastX: number,
+  threshold: number,
+  numeratorStr: string,
+  denominatorStr: string,
+): Promise<boolean> => {
+  const uptimePercent = await CalculateUptimeForLastNRows(tag, lastX, numeratorStr, denominatorStr);
+  return uptimePercent > threshold;
+};
+
+export const IsUptimeLessThanXPercent = async (
+  tag: string | string[],
+  lastX: number,
+  threshold: number,
+  numeratorStr: string,
+  denominatorStr: string,
+): Promise<boolean> => {
+  const uptimePercent = await CalculateUptimeForLastNRows(tag, lastX, numeratorStr, denominatorStr);
+  return uptimePercent < threshold;
 };

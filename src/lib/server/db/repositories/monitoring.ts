@@ -296,6 +296,32 @@ export class MonitoringRepository extends BaseRepository {
     return result.is_affected === 1;
   }
 
+  async consecutivelyLatencyLessThan(
+    monitor_tag: string,
+    latencyThreshold: number,
+    lastX: number,
+  ): Promise<boolean> {
+    const result = await this.knex
+      .with("last_records", (qb: KnexType.QueryBuilder) => {
+        qb.select("*")
+          .from("monitoring_data")
+          .where("monitor_tag", monitor_tag)
+          .andWhere("type", "=", GC.REALTIME)
+          .orderBy("timestamp", "desc")
+          .limit(lastX);
+      })
+      .select(
+        this.knex.raw(
+          "CASE WHEN COUNT(*) <= SUM(CASE WHEN latency < ? THEN 1 ELSE 0 END) THEN 1 ELSE 0 END as is_recovered",
+          [latencyThreshold],
+        ),
+      )
+      .from("last_records")
+      .first();
+
+    return result.is_recovered === 1;
+  }
+
   async updateMonitoringData(
     monitor_tag: string,
     start: number,
@@ -428,5 +454,45 @@ export class MonitoringRepository extends BaseRepository {
       countOfMaintenance: Number(row.count_of_maintenance) || 0,
       avgLatency: Number(row.avg_latency) || 0,
     }));
+  }
+
+  /**
+   * Get aggregated status counts and average latency for the last N rows
+   * @param monitorTag - The monitor tag(s) to query (single string or array of strings)
+   * @param lastX - Number of most recent rows to include
+   * @returns Object with ts=0, counts of each status, and average latency
+   */
+  async getStatusCountsForLastN(
+    monitorTag: string | string[],
+    lastX: number,
+  ): Promise<TimestampStatusCount> {
+    const tags = Array.isArray(monitorTag) ? monitorTag : [monitorTag];
+
+    const result = await this.knex
+      .with("last_records", (qb: KnexType.QueryBuilder) => {
+        qb.select("status", "latency")
+          .from("monitoring_data")
+          .whereIn("monitor_tag", tags)
+          .orderBy("timestamp", "desc")
+          .limit(lastX);
+      })
+      .select(
+        this.knex.raw("SUM(CASE WHEN status = 'UP' THEN 1 ELSE 0 END) AS count_of_up"),
+        this.knex.raw("SUM(CASE WHEN status = 'DOWN' THEN 1 ELSE 0 END) AS count_of_down"),
+        this.knex.raw("SUM(CASE WHEN status = 'DEGRADED' THEN 1 ELSE 0 END) AS count_of_degraded"),
+        this.knex.raw("SUM(CASE WHEN status = 'MAINTENANCE' THEN 1 ELSE 0 END) AS count_of_maintenance"),
+        this.knex.raw("AVG(latency) AS avg_latency"),
+      )
+      .from("last_records")
+      .first();
+
+    return {
+      ts: 0,
+      countOfUp: Number(result?.count_of_up) || 0,
+      countOfDown: Number(result?.count_of_down) || 0,
+      countOfDegraded: Number(result?.count_of_degraded) || 0,
+      countOfMaintenance: Number(result?.count_of_maintenance) || 0,
+      avgLatency: Number(result?.avg_latency) || 0,
+    };
   }
 }

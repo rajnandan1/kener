@@ -66,9 +66,11 @@ class DbImpl {
   background!: MonitoringRepository["background"];
   consecutivelyStatusFor!: MonitoringRepository["consecutivelyStatusFor"];
   consecutivelyLatencyGreaterThan!: MonitoringRepository["consecutivelyLatencyGreaterThan"];
+  consecutivelyLatencyLessThan!: MonitoringRepository["consecutivelyLatencyLessThan"];
   updateMonitoringData!: MonitoringRepository["updateMonitoringData"];
   deleteMonitorDataByTag!: MonitoringRepository["deleteMonitorDataByTag"];
   getStatusCountsByInterval!: MonitoringRepository["getStatusCountsByInterval"];
+  getStatusCountsForLastN!: MonitoringRepository["getStatusCountsForLastN"];
 
   // ============ Monitors ============
   getMonitorsByTags!: MonitorsRepository["getMonitorsByTags"];
@@ -408,9 +410,11 @@ class DbImpl {
     this.background = this.monitoring.background.bind(this.monitoring);
     this.consecutivelyStatusFor = this.monitoring.consecutivelyStatusFor.bind(this.monitoring);
     this.consecutivelyLatencyGreaterThan = this.monitoring.consecutivelyLatencyGreaterThan.bind(this.monitoring);
+    this.consecutivelyLatencyLessThan = this.monitoring.consecutivelyLatencyLessThan.bind(this.monitoring);
     this.updateMonitoringData = this.monitoring.updateMonitoringData.bind(this.monitoring);
     this.deleteMonitorDataByTag = this.monitoring.deleteMonitorDataByTag.bind(this.monitoring);
     this.getStatusCountsByInterval = this.monitoring.getStatusCountsByInterval.bind(this.monitoring);
+    this.getStatusCountsForLastN = this.monitoring.getStatusCountsForLastN.bind(this.monitoring);
   }
 
   private bindMonitorsMethods(): void {

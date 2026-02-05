@@ -17,6 +17,7 @@
   import TrashIcon from "@lucide/svelte/icons/trash";
   import BellIcon from "@lucide/svelte/icons/bell";
   import BellOffIcon from "@lucide/svelte/icons/bell-off";
+  import GC from "$lib/global-constants";
   import { onMount } from "svelte";
   import type { TriggerRecord } from "$lib/server/types/db";
   import type {
@@ -62,34 +63,34 @@
 
   // Alert type options
   const alertForOptions: { value: AlertForType; label: string }[] = [
-    { value: "STATUS", label: "Status" },
-    { value: "LATENCY", label: "Latency" },
-    { value: "UPTIME", label: "Uptime" }
+    { value: GC.STATUS, label: GC.STATUS },
+    { value: GC.LATENCY, label: GC.LATENCY },
+    { value: GC.UPTIME, label: GC.UPTIME }
   ];
 
   const statusValueOptions = [
-    { value: "DOWN", label: "DOWN" },
-    { value: "DEGRADED", label: "DEGRADED" }
+    { value: GC.DOWN, label: GC.DOWN },
+    { value: GC.DEGRADED, label: GC.DEGRADED }
   ];
 
   const severityOptions: { value: AlertSeverityType; label: string }[] = [
-    { value: "CRITICAL", label: "Critical" },
-    { value: "WARNING", label: "Warning" }
+    { value: GC.CRITICAL, label: GC.CRITICAL },
+    { value: GC.WARNING, label: GC.WARNING }
   ];
 
   const yesNoOptions: { value: YesNoType; label: string }[] = [
-    { value: "YES", label: "Yes" },
-    { value: "NO", label: "No" }
+    { value: GC.YES, label: GC.YES },
+    { value: GC.NO, label: GC.NO }
   ];
 
   // Computed - value label based on alert type
   const alertValueLabel = $derived(() => {
     switch (form.alert_for) {
-      case "STATUS":
+      case GC.STATUS:
         return "Status Value";
-      case "LATENCY":
+      case GC.LATENCY:
         return "Latency Threshold (ms)";
-      case "UPTIME":
+      case GC.UPTIME:
         return "Uptime Threshold (%)";
       default:
         return "Value";
@@ -98,12 +99,12 @@
 
   const alertValueHelp = $derived(() => {
     switch (form.alert_for) {
-      case "STATUS":
-        return "Alert when monitor status equals this value";
-      case "LATENCY":
-        return "Alert when latency exceeds this value (in milliseconds)";
-      case "UPTIME":
-        return "Alert when uptime falls below this percentage";
+      case GC.STATUS:
+        return `Alert when monitor status equals this value`;
+      case GC.LATENCY:
+        return `Alert when latency exceeds this value (in milliseconds)`;
+      case GC.UPTIME:
+        return `Alert when uptime falls below this percentage`;
       default:
         return "";
     }
@@ -112,11 +113,11 @@
   // Reset alert value when alert_for changes
   function handleAlertForChange(newValue: AlertForType) {
     form.alert_for = newValue;
-    if (newValue === "STATUS") {
-      form.alert_value = "DOWN";
-    } else if (newValue === "LATENCY") {
+    if (newValue === GC.STATUS) {
+      form.alert_value = GC.DOWN;
+    } else if (newValue === GC.LATENCY) {
       form.alert_value = "1000";
-    } else if (newValue === "UPTIME") {
+    } else if (newValue === GC.UPTIME) {
       form.alert_value = "99";
     }
   }
@@ -129,7 +130,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "getTriggers",
-          data: { status: "ACTIVE" }
+          data: { status: GC.ACTIVE }
         })
       });
       triggers = await response.json();
@@ -299,11 +300,11 @@
   function getAlertDescription(alert: MonitorAlertConfigWithTriggers): string {
     const { alert_for, alert_value, failure_threshold, success_threshold } = alert;
 
-    if (alert_for === "STATUS") {
+    if (alert_for === GC.STATUS) {
       return `Alert when ${failure_threshold} consecutive checks result in ${alert_value}. Resolve after ${success_threshold} successful check(s).`;
-    } else if (alert_for === "LATENCY") {
+    } else if (alert_for === GC.LATENCY) {
       return `Alert when latency exceeds ${alert_value}ms for ${failure_threshold} consecutive checks. Resolve after ${success_threshold} check(s) below threshold.`;
-    } else if (alert_for === "UPTIME") {
+    } else if (alert_for === GC.UPTIME) {
       return `Alert when uptime falls below ${alert_value}% for ${failure_threshold} checks. Resolve after ${success_threshold} check(s) above threshold.`;
     }
     return "";
@@ -350,7 +351,7 @@
         <div class="flex flex-col gap-3">
           {#each alertConfigs as alert (alert.id)}
             <div
-              class="bg-muted/50 flex items-start justify-between gap-4 rounded-lg border p-4 {alert.is_active === 'NO'
+              class="bg-muted/50 flex items-start justify-between gap-4 rounded-lg border p-4 {alert.is_active === GC.NO
                 ? 'opacity-60'
                 : ''}"
             >
@@ -360,10 +361,10 @@
                     {alert.severity}
                   </Badge>
                   <Badge variant="outline">{alert.alert_for}</Badge>
-                  {#if alert.is_active === "NO"}
+                  {#if alert.is_active === GC.NO}
                     <Badge variant="outline" class="text-muted-foreground">Inactive</Badge>
                   {/if}
-                  {#if alert.create_incident === "YES"}
+                  {#if alert.create_incident === GC.YES}
                     <Badge variant="outline">Creates Incident</Badge>
                   {/if}
                 </div>
@@ -386,7 +387,7 @@
               </div>
 
               <div class="flex items-center gap-2">
-                <Switch checked={alert.is_active === "YES"} onCheckedChange={() => toggleAlertStatus(alert)} />
+                <Switch checked={alert.is_active === GC.YES} onCheckedChange={() => toggleAlertStatus(alert)} />
                 <Button variant="ghost" size="icon" onclick={() => openEditDialog(alert)}>
                   <EditIcon class="size-4" />
                 </Button>
@@ -449,8 +450,8 @@
             <Input
               id="alert-value"
               type="number"
-              min={form.alert_for === "UPTIME" ? "0" : "1"}
-              max={form.alert_for === "UPTIME" ? "100" : undefined}
+              min={form.alert_for === GC.UPTIME ? "0" : "1"}
+              max={form.alert_for === GC.UPTIME ? "100" : undefined}
               bind:value={form.alert_value}
             />
           {/if}
@@ -500,7 +501,7 @@
             onValueChange={(v) => v && (form.create_incident = v as YesNoType)}
           >
             <Select.Trigger id="create-incident" class="w-full">
-              {form.create_incident === "YES" ? "Yes" : "No"}
+              {form.create_incident}
             </Select.Trigger>
             <Select.Content>
               {#each yesNoOptions as option}
@@ -521,7 +522,7 @@
               onValueChange={(v) => v && (form.is_active = v as YesNoType)}
             >
               <Select.Trigger id="is-active" class="w-full">
-                {form.is_active === "YES" ? "Yes" : "No"}
+                {form.is_active}
               </Select.Trigger>
               <Select.Content>
                 {#each yesNoOptions as option}

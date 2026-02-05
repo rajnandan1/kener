@@ -166,6 +166,12 @@ const ParseUptime = function (up: number, all: number): string {
   // Remove trailing zeros
   return String(parseFloat(((up / all) * 100).toFixed(4)));
 };
+
+//unparse percentage string to float
+const UnparsePercentage = function (str: string): number {
+  if (str === "-") return NaN;
+  return parseFloat(str);
+};
 const ParsePercentage = function (n: number): string {
   if (isNaN(n)) return "-";
   if (n == 0) {
@@ -544,4 +550,5 @@ export {
   ValidateURL,
   GenerateRandomNumber,
   IsValidUptimeFormula,
+  UnparsePercentage,
 };

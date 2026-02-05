@@ -65,6 +65,9 @@ export default {
   CANCELLED: "CANCELLED",
   READY: "READY",
   ACTIVE: "ACTIVE",
+  STATUS: "STATUS",
+  LATENCY: "LATENCY",
+  UPTIME: "UPTIME",
 } as const;
 
 const AnalyticsProviders = {

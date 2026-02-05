@@ -11,6 +11,8 @@ import {
   CreateNewIncidentWithCommentAndMonitor,
   IncidentCreateAlertMarkdown,
   ClosureCommentAlertMarkdown,
+  IsUptimeLessThanXPercent,
+  IsUptimeGreaterThanXPercent,
 } from "../controllers/controller.js";
 import type { MonitorSettings, MonitorAlertConfigRecord, MonitorAlertV2Record, TriggerMeta } from "../types/db.js";
 import { GetMonitorsParsed } from "../controllers/controller.js";
@@ -51,6 +53,8 @@ interface JobData {
   monitor_image: string;
   monitor_id: number;
   monitor_description: string;
+  numerator: string;
+  denominator: string;
   ts: number;
   status: string;
 }
@@ -196,21 +200,34 @@ const addWorker = () => {
   if (worker) return worker;
 
   worker = q.createWorker(getQueue(), async (job: Job): Promise<void> => {
-    const { monitor_name, monitor_tag, ts, status, monitor_alerts_configured } = job.data as JobData;
+    const { monitor_name, monitor_tag, numerator, denominator, status, monitor_alerts_configured } =
+      job.data as JobData;
     const siteData = await GetAllSiteData();
     const templateSiteVars = siteDataToVariables(siteData);
     try {
       const typeOfConfig = monitor_alerts_configured.alert_for;
       const alertValue = monitor_alerts_configured.alert_value;
       const failureThreshold = monitor_alerts_configured.failure_threshold;
+      const successThreshold = monitor_alerts_configured.success_threshold;
 
       // Determine if monitor is affected based on alert type
       let isAffected = false;
-      if (typeOfConfig === "STATUS") {
+      let isUp = false;
+      if (typeOfConfig === GC.STATUS) {
         //alertValue can be DOWN or DEGRADED
         isAffected = await db.consecutivelyStatusFor(monitor_tag, alertValue, failureThreshold);
-      } else if (typeOfConfig === "LATENCY") {
+      } else if (typeOfConfig === GC.LATENCY) {
         isAffected = await db.consecutivelyLatencyGreaterThan(monitor_tag, parseFloat(alertValue), failureThreshold);
+      } else if (typeOfConfig === GC.UPTIME) {
+        isAffected = await IsUptimeLessThanXPercent(
+          monitor_tag,
+          parseFloat(alertValue),
+          failureThreshold,
+          numerator,
+          denominator,
+        );
+      } else {
+        return;
       }
 
       // Get existing alerts
@@ -241,12 +258,31 @@ const addWorker = () => {
           }
           // Send triggered alert notifications
           await sendAlertNotifications(activeAlert, monitor_alerts_configured, templateSiteVars);
-          // Send subscriber notifications
-          //await sendSubscriberNotifications(activeAlert, monitor_alerts_configured, monitor_name, monitor_tag);
         }
       } else {
         // Resolve any existing alert
         if (activeAlert) {
+          if (typeOfConfig === GC.STATUS) {
+            isUp = await db.consecutivelyStatusFor(monitor_tag, GC.UP, successThreshold);
+          } else if (typeOfConfig === GC.LATENCY) {
+            isUp = await db.consecutivelyLatencyLessThan(monitor_tag, parseFloat(alertValue), successThreshold);
+          } else if (typeOfConfig === GC.UPTIME) {
+            isUp = await IsUptimeGreaterThanXPercent(
+              monitor_tag,
+              parseFloat(alertValue),
+              successThreshold,
+              numerator,
+              denominator,
+            );
+          } else {
+            isUp = false;
+          }
+
+          if (!isUp) {
+            // Not yet recovered
+            return;
+          }
+
           //resolve the alert
           activeAlert = await UpdateMonitorAlertV2Status(activeAlert.id, GC.RESOLVED);
 
@@ -318,6 +354,8 @@ export const push = async (monitor_tag: string, ts: number, status: string, opti
         monitor_image: monitor.image,
         monitor_id: monitor.id,
         monitor_description: monitor.description,
+        numerator: monitor.monitor_settings_json?.uptime_formula_numerator || GC.defaultNumeratorStr,
+        denominator: monitor.monitor_settings_json?.uptime_formula_denominator || GC.defaultDenominatorStr,
         ts,
         status,
       },
