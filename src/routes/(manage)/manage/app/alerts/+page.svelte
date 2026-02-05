@@ -4,6 +4,8 @@
   import { Badge } from "$lib/components/ui/badge/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
+  import * as Table from "$lib/components/ui/table/index.js";
+  import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
   import PlusIcon from "@lucide/svelte/icons/plus";
@@ -168,88 +170,121 @@
     </Button>
   </div>
 
-  <!-- Alert Configs Grid -->
-  {#if !loading && configs.length === 0}
-    <div class="flex flex-col items-center gap-4 py-16 text-center">
-      <BellOffIcon class="text-muted-foreground size-16" />
-      <div class="space-y-2">
-        <h3 class="text-lg font-semibold">No alert configurations</h3>
-        <p class="text-muted-foreground text-sm">
-          {monitorFilter
-            ? "No alerts found for this monitor."
-            : "Create an alert to get notified when your monitors have issues."}
-        </p>
-      </div>
-      <Button onclick={() => goto("/manage/app/alerts/new")}>
-        <PlusIcon class="mr-2 size-4" />
-        Create Alert
-      </Button>
-    </div>
-  {:else}
-    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {#each configs as config (config.id)}
-        <div class="bg-card rounded-lg border p-4 {config.is_active === GC.NO ? 'opacity-60' : ''}">
-          <div class="flex items-start justify-between gap-2">
-            <div class="flex flex-wrap items-center gap-2">
-              <Badge variant={getSeverityBadgeVariant(config.severity)}>
-                {config.severity}
-              </Badge>
-              <Badge variant="outline">{config.alert_for}</Badge>
-              {#if config.is_active === GC.NO}
-                <Badge variant="outline" class="text-muted-foreground">Inactive</Badge>
-              {/if}
-            </div>
-            <Switch checked={config.is_active === GC.YES} onCheckedChange={() => toggleAlertStatus(config)} />
-          </div>
-
-          <div class="mt-3 space-y-2">
-            <a
-              href="/manage/app/monitors/{config.monitor_tag}"
-              class="text-primary text-sm font-medium hover:underline"
-            >
-              {config.monitor_tag}
-            </a>
-
-            <p class="text-muted-foreground text-sm">{getAlertDescription(config)}</p>
-
-            {#if config.alert_description}
-              <p class="text-muted-foreground text-xs italic">{config.alert_description}</p>
-            {/if}
-
-            {#if config.create_incident === GC.YES}
-              <Badge variant="outline" class="text-xs">Creates Incident</Badge>
-            {/if}
-
-            {#if config.triggers && config.triggers.length > 0}
-              <div class="flex flex-wrap gap-1 pt-1">
-                {#each config.triggers as trigger (trigger.id)}
-                  <Badge variant="secondary" class="text-xs">
-                    {trigger.name}
-                  </Badge>
-                {/each}
+  <!-- Alert Configs Table -->
+  <div class="ktable rounded-lg border">
+    <Table.Root>
+      <Table.Header>
+        <Table.Row>
+          <Table.Head>Monitor</Table.Head>
+          <Table.Head>Alert Type</Table.Head>
+          <Table.Head>Severity</Table.Head>
+          <Table.Head>Description</Table.Head>
+          <Table.Head class="w-24">Triggers</Table.Head>
+          <Table.Head class="w-20 text-center">Active</Table.Head>
+          <Table.Head class="w-32 text-right">Actions</Table.Head>
+        </Table.Row>
+      </Table.Header>
+      <Table.Body>
+        {#if configs.length === 0 && !loading}
+          <Table.Row>
+            <Table.Cell colspan={7} class="text-muted-foreground py-16 text-center">
+              <div class="flex flex-col items-center gap-4">
+                <BellOffIcon class="text-muted-foreground size-16" />
+                <div class="space-y-2">
+                  <h3 class="text-lg font-semibold">No alert configurations</h3>
+                  <p class="text-muted-foreground text-sm">
+                    {monitorFilter
+                      ? "No alerts found for this monitor."
+                      : "Create an alert to get notified when your monitors have issues."}
+                  </p>
+                </div>
+                <Button onclick={() => goto("/manage/app/alerts/new")}>
+                  <PlusIcon class="mr-2 size-4" />
+                  Create Alert
+                </Button>
               </div>
-            {/if}
-          </div>
-
-          <div class="mt-4 flex items-center gap-2 border-t pt-3">
-            <Button variant="outline" size="sm" class="flex-1" onclick={() => goto(`/manage/app/alerts/${config.id}`)}>
-              <EditIcon class="mr-1 size-3" />
-              Edit
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              class="flex-1"
-              onclick={() => goto(`/manage/app/alerts/logs/${config.id}`)}
-            >
-              <ListIcon class="mr-1 size-3" />
-              Logs
-            </Button>
-          </div>
-        </div>
-      {/each}
-    </div>
-  {/if}
+            </Table.Cell>
+          </Table.Row>
+        {:else}
+          {#each configs as config (config.id)}
+            <Table.Row class={config.is_active === GC.NO ? "opacity-60" : ""}>
+              <Table.Cell>
+                <a href="/manage/app/monitors/{config.monitor_tag}" class="text-primary font-medium hover:underline">
+                  {config.monitor_tag}
+                </a>
+              </Table.Cell>
+              <Table.Cell>
+                <Badge variant="outline">{config.alert_for}</Badge>
+              </Table.Cell>
+              <Table.Cell>
+                <Badge variant={getSeverityBadgeVariant(config.severity)}>
+                  {config.severity}
+                </Badge>
+              </Table.Cell>
+              <Table.Cell>
+                <Tooltip.Root>
+                  <Tooltip.Trigger>
+                    <div class="max-w-xs space-y-1">
+                      <p class="text-muted-foreground line-clamp-2 text-sm">{getAlertDescription(config)}</p>
+                      {#if config.alert_description}
+                        <p class="text-muted-foreground line-clamp-1 text-xs italic">{config.alert_description}</p>
+                      {/if}
+                      {#if config.create_incident === GC.YES}
+                        <Badge variant="outline" class="text-xs">Creates Incident</Badge>
+                      {/if}
+                    </div>
+                  </Tooltip.Trigger>
+                  <Tooltip.Content class="max-w-md">
+                    <div class="space-y-2">
+                      <p class="text-sm">{getAlertDescription(config)}</p>
+                      {#if config.alert_description}
+                        <p class="text-muted-foreground text-xs italic">{config.alert_description}</p>
+                      {/if}
+                    </div>
+                  </Tooltip.Content>
+                </Tooltip.Root>
+              </Table.Cell>
+              <Table.Cell>
+                {#if config.triggers && config.triggers.length > 0}
+                  <Tooltip.Root>
+                    <Tooltip.Trigger>
+                      <Badge variant="secondary" class="cursor-pointer text-xs">
+                        {config.triggers.length} trigger{config.triggers.length > 1 ? "s" : ""}
+                      </Badge>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content>
+                      <div class="space-y-1">
+                        {#each config.triggers as trigger (trigger.id)}
+                          <div class="text-sm">{trigger.name}</div>
+                        {/each}
+                      </div>
+                    </Tooltip.Content>
+                  </Tooltip.Root>
+                {:else}
+                  <span class="text-muted-foreground text-sm">-</span>
+                {/if}
+              </Table.Cell>
+              <Table.Cell class="text-center">
+                <Switch checked={config.is_active === GC.YES} onCheckedChange={() => toggleAlertStatus(config)} />
+              </Table.Cell>
+              <Table.Cell class="text-right">
+                <div class="flex items-center justify-end gap-1">
+                  <Button variant="ghost" size="sm" onclick={() => goto(`/manage/app/alerts/${config.id}`)}>
+                    <EditIcon class="mr-1 size-3" />
+                    Edit
+                  </Button>
+                  <Button variant="ghost" size="sm" onclick={() => goto(`/manage/app/alerts/logs/${config.id}`)}>
+                    <ListIcon class="mr-1 size-3" />
+                    Logs
+                  </Button>
+                </div>
+              </Table.Cell>
+            </Table.Row>
+          {/each}
+        {/if}
+      </Table.Body>
+    </Table.Root>
+  </div>
 
   <!-- Pagination -->
   {#if totalCount > 0}

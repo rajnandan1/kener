@@ -37,7 +37,7 @@ const seedSiteData = {
   nav: [
     { name: "Documentation", url: "https://kener.ing/docs/home", iconURL: "" },
     { name: "Github", iconURL: "", url: "https://github.com/rajnandan1/kener" },
-    { name: "Setup Kener", iconURL: "", url: "/account/signin" },
+    { name: "Login", iconURL: "", url: "/account/signin" },
   ],
   hero: {
     title: "Build stunning status pages in minutes",
@@ -52,7 +52,7 @@ const seedSiteData = {
          <a href="https://github.com/rajnandan1/kener" target="_blank"  class="font-medium underline underline-offset-4 hover:text-accent-foreground">
          Kener
          </a>
-         an open source status page system built with Svelte and Ta2ilwindCSS.<br/>
+         an open source status page system built with Svelte and TailwindCSS.<br/>
          Created with ❤️ by <a href="https://rajnandan.com" target="_blank"  class="font-medium hover:text-accent-foreground underline underline-offset-4">Raj Nandan Sharma</a>.
       </p>
    </div>
@@ -111,7 +111,7 @@ const seedSiteData = {
       selectableDays: [1, 7, 14, 30, 60, 90],
     },
   },
-  kenerTheme: "default",
+  kenerTheme: "system",
   showSiteStatus: "NO",
   subscriptionsSettings: {
     enable: false,

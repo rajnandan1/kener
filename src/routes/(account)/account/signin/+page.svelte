@@ -99,6 +99,9 @@
   }
 </script>
 
+<svelte:head>
+  <title>{!isAdminAccountCreated ? "Create Admin Account" : "Sign In"}</title>
+</svelte:head>
 <div class="flex min-h-screen items-center justify-center p-4">
   <Card.Root class="kener-card w-full max-w-md">
     <Card.Header>
@@ -136,7 +139,7 @@
               </Field.Field>
             {/if}
 
-            <Field.Field>
+            <Field.Field class="relative flex flex-col gap-1">
               <Field.Label for="email">Email</Field.Label>
               <InputGroup.Root>
                 <InputGroup.Addon>
@@ -146,8 +149,18 @@
               </InputGroup.Root>
             </Field.Field>
 
-            <Field.Field>
-              <Field.Label for="password">Password</Field.Label>
+            <Field.Field class="relative flex flex-col gap-1">
+              <Field.Label for="password" class="relative">
+                Password
+                <Button
+                  variant="link"
+                  size="sm"
+                  class="text-muted-foreground absolute top-0 right-0 h-auto p-0 text-xs"
+                  href="/account/forgot"
+                >
+                  Forgot?
+                </Button>
+              </Field.Label>
               <InputGroup.Root>
                 <InputGroup.Addon>
                   <LockIcon />
