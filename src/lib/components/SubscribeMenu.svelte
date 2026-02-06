@@ -6,6 +6,8 @@
   import { Switch } from "$lib/components/ui/switch/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { onMount } from "svelte";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   import Mail from "@lucide/svelte/icons/mail";
   import ArrowLeft from "@lucide/svelte/icons/arrow-left";
@@ -64,7 +66,7 @@
 
     currentView = "loading";
     try {
-      const response = await fetch("/dashboard-apis/subscription", {
+      const response = await fetch(clientResolver(resolve, "/dashboard-apis/subscription"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getPreferences", token })
@@ -99,7 +101,7 @@
     errorMessage = "";
 
     try {
-      const response = await fetch("/dashboard-apis/subscription", {
+      const response = await fetch(clientResolver(resolve, "/dashboard-apis/subscription"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "login", email: email.trim() })
@@ -130,7 +132,7 @@
     errorMessage = "";
 
     try {
-      const response = await fetch("/dashboard-apis/subscription", {
+      const response = await fetch(clientResolver(resolve, "/dashboard-apis/subscription"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "verify", email: email.trim(), code: otpValue })
@@ -160,7 +162,7 @@
     }
 
     try {
-      const response = await fetch("/dashboard-apis/subscription", {
+      const response = await fetch(clientResolver(resolve, "/dashboard-apis/subscription"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

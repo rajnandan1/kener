@@ -10,7 +10,8 @@
   import EyeClosedIcon from "@lucide/svelte/icons/eye-closed";
   import EyeOpenIcon from "@lucide/svelte/icons/eye";
   import ArrowLeftIcon from "@lucide/svelte/icons/arrow-left";
-
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
   const { data } = $props();
 
   const valid: boolean = $derived(data.valid);
@@ -45,7 +46,7 @@
 
     loading = true;
     try {
-      const response = await fetch("/account/invitation/api/accept-invitation", {
+      const response = await fetch(clientResolver(resolve, "/account/invitation/api/accept-invitation"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ receivedToken: token, newPassword })
@@ -89,7 +90,7 @@
         <Card.Description>{error}</Card.Description>
       </Card.Header>
       <Card.Content>
-        <Button href="/account/signin" class="w-full">
+        <Button href={clientResolver(resolve, "/account/signin")} class="w-full">
           <ArrowLeftIcon class="mr-2 h-4 w-4" />
           Go to Sign In
         </Button>
@@ -106,7 +107,7 @@
         </Card.Description>
       </Card.Header>
       <Card.Content>
-        <Button href="/account/signin" class="w-full">
+        <Button href={clientResolver(resolve, "/account/signin")} class="w-full">
           <ArrowLeftIcon class="mr-2 h-4 w-4" />
           Go to Sign In
         </Button>
@@ -200,7 +201,7 @@
           </div>
 
           <div class="mt-4 text-center">
-            <Button variant="link" href="/account/signin" class="text-sm">
+            <Button variant="link" href={clientResolver(resolve, "/account/signin")} class="text-sm">
               <ArrowLeftIcon class="mr-1 h-3 w-3" />
               Back to Sign In
             </Button>

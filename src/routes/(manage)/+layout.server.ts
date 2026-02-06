@@ -4,6 +4,7 @@ import MobileDetect from "mobile-detect";
 import type { LayoutServerLoad } from "./$types";
 import { IsEmailSetup } from "$lib/server/controllers/controller.js";
 import GC from "$lib/global-constants";
+import serverResolve from "$lib/server/resolver.js";
 
 import { resolve } from "$app/paths";
 import {
@@ -20,14 +21,14 @@ export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
 
   let isSetupComplete = await IsSetupComplete();
   if (!isSetupComplete) {
-    throw redirect(302, resolve(`/manage/setup`));
+    throw redirect(302, serverResolve(`/manage/setup`));
   }
 
   let isLoggedIn = await IsLoggedInSession(cookies);
 
   //if user not set throw redirect to signin
   if (!isLoggedIn.user) {
-    throw redirect(302, "/account/logout");
+    throw redirect(302, serverResolve("/account/logout"));
   }
 
   const siteData = await GetAllSiteData();

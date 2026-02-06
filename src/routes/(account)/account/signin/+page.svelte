@@ -11,7 +11,8 @@
   import AlertCircleIcon from "@lucide/svelte/icons/alert-circle";
   import EyeClosedIcon from "@lucide/svelte/icons/eye-closed";
   import EyeOpenIcon from "@lucide/svelte/icons/eye";
-
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
   import * as Alert from "$lib/components/ui/alert/index.js";
 
   const { data } = $props();
@@ -33,7 +34,7 @@
 
     loading = true;
     try {
-      const response = await fetch("/account/signin/api/login", {
+      const response = await fetch(clientResolver(resolve, "/account/signin/api/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password })
@@ -65,7 +66,7 @@
 
     loading = true;
     try {
-      const response = await fetch("/account/signin/api/signup", {
+      const response = await fetch(clientResolver(resolve, "/account/signin/api/signup"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, name })
@@ -156,7 +157,7 @@
                   variant="link"
                   size="sm"
                   class="text-muted-foreground absolute top-0 right-0 h-auto p-0 text-xs"
-                  href="/account/forgot"
+                  href={clientResolver(resolve, "/account/forgot")}
                 >
                   Forgot?
                 </Button>
