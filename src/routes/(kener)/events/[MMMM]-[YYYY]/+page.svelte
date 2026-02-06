@@ -158,7 +158,7 @@
 <div class="flex flex-col gap-3">
   <!-- Header with back button -->
 
-  <ThemePlus showHomeButton={true} shareLinkString={`/events/${format(currentMonth, "MMMM-yyyy")}`} />
+  <ThemePlus showHomeButton={true} />
 
   <div class="flex gap-4">
     <div class="flex h-20 flex-row justify-start gap-y-3 rounded-3xl border p-4">

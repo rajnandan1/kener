@@ -132,7 +132,9 @@
     <Item.Root>
       <Item.Media variant="image">
         <Avatar.Root class="size-10">
-          <Avatar.Image src={data.image} alt={data.name} class="  " />
+          {#if data.image}
+            <Avatar.Image src={clientResolver(resolve, data.image)} alt={data.name} class="  " />
+          {/if}
           <Avatar.Fallback>{data.name.charAt(1)}</Avatar.Fallback>
         </Avatar.Root>
       </Item.Media>

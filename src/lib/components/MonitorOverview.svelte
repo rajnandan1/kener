@@ -14,7 +14,7 @@
   import { selectedTimezone } from "$lib/stores/timezone";
   import { getEndOfDayAtTz } from "$lib/client/datetime";
   import { formatDate } from "$lib/stores/datetime";
-
+  import clientResolver from "$lib/client/resolver.js";
   interface Props {
     monitorTag: string;
     class?: string;
@@ -51,8 +51,8 @@
 
     try {
       const endOfDayTodayAtTz = getEndOfDayAtTz($selectedTimezone);
-      const url = `${resolve("/dashboard-apis/monitor-bar")}?tag=${monitorTag}&endOfDayTodayAtTz=${endOfDayTodayAtTz}&days=${days}`;
-      const response = await fetch(url);
+      const url = `?tag=${monitorTag}&endOfDayTodayAtTz=${endOfDayTodayAtTz}&days=${days}`;
+      const response = await fetch(clientResolver(resolve, "/dashboard-apis/monitor-bar") + url);
 
       if (!response.ok) {
         throw new Error("Failed to fetch monitor data");

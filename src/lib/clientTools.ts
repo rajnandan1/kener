@@ -38,16 +38,6 @@ function siteDataExtractFromDb(data: Record<string, unknown>, obj: Record<string
   return requestedObject;
 }
 
-//a function to make an api call to /manage/api/ to store site data
-function storeSiteData(data: Record<string, unknown>): Promise<Response> {
-  return fetch("/manage/app/api/", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ action: "storeSiteData", data }),
-  });
-}
 const AllRecordTypes = {
   A: 1,
   NS: 2,
@@ -375,7 +365,6 @@ function GetStatusBgColor(item: TimestampStatusCount): string {
 
 export {
   siteDataExtractFromDb,
-  storeSiteData,
   AllRecordTypes,
   ValidateIpAddress,
   IsValidHost,

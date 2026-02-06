@@ -90,11 +90,7 @@
   let savingSettings = $state(false);
 
   // Validation
-  const isFormValid = $derived(
-    formData.page_path.trim().length > 0 &&
-      formData.page_title.trim().length > 0 &&
-      formData.page_header.trim().length > 0
-  );
+  const isFormValid = $derived(formData.page_title.trim().length > 0 && formData.page_header.trim().length > 0);
 
   async function fetchPage() {
     if (isNew) {
@@ -519,7 +515,11 @@
           <div class="flex items-start gap-4">
             <div class="bg-muted flex h-16 w-16 items-center justify-center rounded-lg border">
               {#if formData.page_logo}
-                <img src={formData.page_logo} alt="Logo" class="max-h-14 max-w-14 object-contain" />
+                <img
+                  src={clientResolver(resolve, formData.page_logo)}
+                  alt="Logo"
+                  class="max-h-14 max-w-14 object-contain"
+                />
               {:else}
                 <ImageIcon class="text-muted-foreground h-6 w-6" />
               {/if}

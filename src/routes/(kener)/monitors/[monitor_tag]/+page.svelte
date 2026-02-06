@@ -10,101 +10,94 @@
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import MonitorOverview from "$lib/components/MonitorOverview.svelte";
   import ArrowUpRight from "@lucide/svelte/icons/arrow-up-right";
-
+  import clientResolver from "$lib/client/resolver.js";
+  import { resolve } from "$app/paths";
   let { data } = $props();
 
   // State
   let descriptionExpanded = $state(false);
 </script>
 
-<div class="container mx-auto px-4 py-8">
-  <!-- Monitor Header -->
-  <Item.Root class="mb-6">
+<div class="flex flex-col gap-3">
+  <ThemePlus
+    showHomeButton={true}
+    showEventsButton={true}
+    monitor_tags={[data.monitorTag]}
+    embedMonitorTag={data.monitorTag}
+  />
+  <div class="flex flex-col gap-2 px-4 py-2">
     {#if data.monitorImage}
-      <Item.Media>
-        <Avatar.Root class="size-10">
-          <Avatar.Image src={data.monitorImage} />
-          <Avatar.Fallback></Avatar.Fallback>
-        </Avatar.Root>
-      </Item.Media>
+      <img
+        src={clientResolver(resolve, data.monitorImage)}
+        alt={data.monitorName || "Monitor icon"}
+        class="aspect-auto w-12 rounded object-cover"
+      />
     {/if}
-    <Item.Content>
-      {#if data.monitorName}
-        <Item.Title class="text-3xl">{data.monitorName}</Item.Title>
-      {/if}
-      {#if data.monitorDescription}
-        <Item.Description
-          class="text-muted-foreground w-full {descriptionExpanded ? 'line-clamp-none' : ''} text-pretty"
-        >
-          {#if data.monitorDescription.length > 150 && !descriptionExpanded}
-            {data.monitorDescription.slice(0, 150)}...
-            <button class="inline font-bold hover:underline" onclick={() => (descriptionExpanded = true)}>
-              {$t("Read more")}
-            </button>
-          {:else if data.monitorDescription.length > 150}
-            {data.monitorDescription}
-            <button class="inline font-bold hover:underline" onclick={() => (descriptionExpanded = false)}>
-              {$t("Read less")}
-            </button>
-          {:else}
-            {data.monitorDescription}
-          {/if}
-        </Item.Description>
-      {/if}
-    </Item.Content>
-  </Item.Root>
-
-  <div class="my-4 flex justify-end gap-2">
-    <ThemePlus
-      showHomeButton={true}
-      showEventsButton={true}
-      monitor_tags={[data.monitorTag]}
-      shareLinkString={data.monitorTag}
-      embedMonitorTag={data.monitorTag}
-    />
-  </div>
-
-  <!-- Status Card -->
-  <div class="mb-4">
-    <div class="bg-background flex flex-col justify-start gap-y-3 rounded-3xl border p-4">
-      <div class="relative flex flex-col px-2">
-        <h2 class="text-base font-medium">{$t("Last Updated")}</h2>
-        <p class="text-muted-foreground text-xs">
-          <span>{$formatDate(data.monitorLastStatusTimestamp * 1000, "PPpp")}</span>
-        </p>
-        {#if !!data.externalUrl}
-          <Button
-            variant="outline"
-            size="icon-sm"
-            class="rounded-btn absolute top-0 right-0"
-            href={data.externalUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <ArrowUpRight class="size-4" />
-          </Button>
+    <Item.Root class="px-0 py-0 ">
+      <Item.Content>
+        {#if data.monitorName}
+          <Item.Title class="text-3xl">{data.monitorName}</Item.Title>
         {/if}
-      </div>
-      <div class="flex items-center justify-between px-2">
-        <div class="flex flex-col items-start gap-1">
-          <p class="text-muted-foreground text-2xl font-semibold {data.textClass}">
-            {$t(data.monitorLastStatus)}
-          </p>
-          <p class="text-muted-foreground text-xs">{$t("Latest Status")}</p>
-        </div>
-        {#if !!data.monitorLastLatency}
-          <div class="flex flex-col items-end gap-1">
-            <p class="text-right text-2xl font-semibold">
-              {data.monitorLastLatency}
-            </p>
-            <p class="text-muted-foreground text-xs">{$t("Latest Latency")}</p>
+        {#if data.monitorDescription}
+          <div class="">
+            <Item.Description
+              class="text-muted-foreground w-full {descriptionExpanded ? 'line-clamp-none' : ''} text-pretty"
+            >
+              {#if data.monitorDescription.length > 150 && !descriptionExpanded}
+                {data.monitorDescription.slice(0, 150)}...
+                <button class="inline font-bold hover:underline" onclick={() => (descriptionExpanded = true)}>
+                  {$t("Read more")}
+                </button>
+              {:else if data.monitorDescription.length > 150}
+                {data.monitorDescription}
+                <button class="inline font-bold hover:underline" onclick={() => (descriptionExpanded = false)}>
+                  {$t("Read less")}
+                </button>
+              {:else}
+                {data.monitorDescription}
+              {/if}
+            </Item.Description>
           </div>
         {/if}
+      </Item.Content>
+    </Item.Root>
+  </div>
+  <div class="bg-background flex flex-col justify-start gap-y-3 rounded-3xl border p-4">
+    <div class="relative flex flex-col px-2">
+      <h2 class="text-base font-medium">{$t("Last Updated")}</h2>
+      <p class="text-muted-foreground text-xs">
+        <span>{$formatDate(data.monitorLastStatusTimestamp * 1000, "PPpp")}</span>
+      </p>
+      {#if !!data.externalUrl}
+        <Button
+          variant="outline"
+          size="icon-sm"
+          class="rounded-btn absolute top-0 right-0"
+          href={data.externalUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <ArrowUpRight class="size-4" />
+        </Button>
+      {/if}
+    </div>
+    <div class="flex items-center justify-between px-2">
+      <div class="flex flex-col items-start gap-1">
+        <p class="text-muted-foreground text-2xl font-semibold {data.textClass}">
+          {$t(data.monitorLastStatus)}
+        </p>
+        <p class="text-muted-foreground text-xs">{$t("Latest Status")}</p>
       </div>
+      {#if !!data.monitorLastLatency}
+        <div class="flex flex-col items-end gap-1">
+          <p class="text-right text-2xl font-semibold">
+            {data.monitorLastLatency}
+          </p>
+          <p class="text-muted-foreground text-xs">{$t("Latest Latency")}</p>
+        </div>
+      {/if}
     </div>
   </div>
-
-  <!-- ongoing incidents -->
   <IncidentMonitorList incidents={data.ongoingIncidents} title={$t("Ongoing Incidents")} class="mb-4" />
 
   <!-- Maintenance -->

@@ -4,6 +4,7 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import CopyButton from "$lib/components/CopyButton.svelte";
   import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
   import { t } from "$lib/stores/i18n";
 
   import Code from "@lucide/svelte/icons/code";
@@ -17,8 +18,6 @@
     domain: string;
   }
 
-  const base = resolve("/");
-
   let { open = $bindable(false), monitorTag, protocol, domain }: Props = $props();
 
   let monitorTheme = $state<"light" | "dark">("light");
@@ -30,7 +29,7 @@
   // Monitor Embed URL
   const monitorEmbedUrl = $derived(() => {
     if (!protocol || !domain) return "";
-    return `${protocol}//${domain}${base}embed/monitor-${monitorTag}`;
+    return `${protocol}//${domain}` + clientResolver(resolve, `/embed/monitor-${monitorTag}`);
   });
 
   // Monitor Preview URL
@@ -55,7 +54,7 @@
   // Latency Embed URL
   const latencyEmbedUrl = $derived(() => {
     if (!protocol || !domain) return "";
-    return `${protocol}//${domain}${base}embed/latency-${monitorTag}`;
+    return `${protocol}//${domain}` + clientResolver(resolve, `/embed/latency-${monitorTag}`);
   });
 
   // Latency Preview URL

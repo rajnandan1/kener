@@ -12,9 +12,10 @@
     onclick?: () => void;
     children?: Snippet;
     class?: string;
+    title?: string;
   }
 
-  let { variant = "outline", size = "icon-sm", text, onclick, children, class: className }: Props = $props();
+  let { variant = "outline", size = "icon-sm", text, onclick, children, class: className, title }: Props = $props();
 
   const clipboard = new UseClipboard({ delay: 1000 });
 
@@ -28,7 +29,7 @@
   }
 </script>
 
-<Button {variant} {size} class="{className} relative cursor-pointer" onclick={handleClick}>
+<Button {variant} {size} class="{className} relative cursor-pointer" onclick={handleClick} {title}>
   <span
     class="absolute flex items-center transition-all duration-200 ease-out {clipboard.copied
       ? 'scale-100 opacity-100'

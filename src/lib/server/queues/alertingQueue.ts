@@ -34,6 +34,7 @@ import sendEmail from "../notification/email_notification.js";
 import sendWebhook from "$lib/server/notification/webhook_notification.js";
 import sendSlack from "$lib/server/notification/slack_notification.js";
 import sendDiscord from "$lib/server/notification/discord_notification.js";
+import serverResolver from "../resolver.js";
 
 import type { SiteDataForNotification, SubscriptionVariableMap } from "../notification/types.js";
 import mdToHTML from "../../marked.js";
@@ -139,7 +140,11 @@ async function sendAlertNotifications(
   monitor_alerts_configured: MonitorAlertConfigRecord,
   templateSiteVars: SiteDataForNotification,
 ): Promise<void> {
-  const templateAlertVars = alertToVariables(monitor_alerts_configured, activeAlert);
+  const templateAlertVars = alertToVariables(
+    monitor_alerts_configured,
+    activeAlert,
+    templateSiteVars.site_url + serverResolver("/monitors/" + monitor_alerts_configured.monitor_tag),
+  );
   const triggers = await GetTriggersByMonitorAlertConfigId(monitor_alerts_configured.id);
 
   for (let i = 0; i < triggers.length; i++) {

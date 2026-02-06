@@ -77,7 +77,7 @@
     nameError = "";
     nameSuccess = false;
     try {
-      const response = await fetch(base + "/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -105,7 +105,7 @@
     passwordError = "";
     passwordSuccess = false;
     try {
-      const response = await fetch(base + "/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

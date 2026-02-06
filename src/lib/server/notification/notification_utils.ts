@@ -9,11 +9,15 @@ import type {
 } from "./types.js";
 import GC from "../../global-constants.js";
 import type { SiteDataTransformed } from "../controllers/siteDataController.js";
-import { GetSMTPFromENV } from "../controllers/controller.js";
 import { format } from "date-fns";
 import mdToHTML from "../..//marked.js";
+import serverResolver from "../resolver.js";
 
-export function alertToVariables(config: MonitorAlertConfigRecord, alert: MonitorAlertV2Record): AlertVariableMap {
+export function alertToVariables(
+  config: MonitorAlertConfigRecord,
+  alert: MonitorAlertV2Record,
+  ctaURL: string,
+): AlertVariableMap {
   const createdAtDate = alert.created_at instanceof Date ? alert.created_at : new Date(alert.created_at);
   const alert_name = `Alert ${config.monitor_tag} for ${config.alert_for} ${config.alert_value} ${alert.alert_status} at ${createdAtDate.toISOString()}`;
 
@@ -25,9 +29,9 @@ export function alertToVariables(config: MonitorAlertConfigRecord, alert: Monito
     alert_status: alert.alert_status,
     alert_severity: config.severity,
     alert_message: config.alert_description || "",
-    alert_source: "ALERT",
+    alert_source: GC.ALERT,
     alert_timestamp: createdAtDate.toISOString(),
-    alert_cta_url: "https://kener.ing/docs/home",
+    alert_cta_url: ctaURL,
     alert_cta_text: "View Documentation",
     alert_incident_id: alert.incident_id ? String(alert.incident_id) : undefined,
     alert_failure_threshold: config.failure_threshold,
@@ -41,7 +45,7 @@ export function siteDataToVariables(siteData: SiteDataTransformed): SiteDataForN
   return {
     site_url: siteData.siteURL || "",
     site_name: siteData.siteName || "",
-    site_logo_url: siteData.logo || "",
+    site_logo_url: (siteData.siteURL || "") + serverResolver(siteData.logo || ""),
     colors_up: siteData.colors.UP,
     colors_down: siteData.colors.DOWN,
     colors_degraded: siteData.colors.DEGRADED,

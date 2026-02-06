@@ -2,7 +2,8 @@
   import { Label } from "$lib/components/ui/label/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
   import type { MonitorRecord } from "$lib/server/types/db.js";
-
+  import clientResolver from "$lib/client/resolver.js";
+  import { resolve } from "$app/paths";
   let {
     data = $bindable(),
     availableMonitors = []
@@ -45,7 +46,11 @@
           >
             <div class="flex items-center gap-3">
               {#if monitor.image}
-                <img src={monitor.image} alt={monitor.name} class="size-8 rounded object-cover" />
+                <img
+                  src={clientResolver(resolve, monitor.image)}
+                  alt={monitor.name}
+                  class="size-8 rounded object-cover"
+                />
               {:else}
                 <div class="bg-muted flex size-8 items-center justify-center rounded text-xs font-medium">
                   {monitor.name.charAt(0).toUpperCase()}

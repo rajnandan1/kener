@@ -86,7 +86,9 @@
           <Card.Header>
             <div class="flex items-start gap-3">
               <Avatar.Root class="size-10 rounded-sm">
-                <Avatar.Image src={page.page_logo} alt={page.page_title} />
+                {#if page.page_logo}
+                  <Avatar.Image src={clientResolver(resolve, page.page_logo)} alt={page.page_title} />
+                {/if}
                 <Avatar.Fallback>
                   {page.page_title.charAt(0).toUpperCase()}
                 </Avatar.Fallback>
@@ -102,7 +104,7 @@
               <Button
                 variant="link"
                 class="gap-1"
-                href={`/${page.page_path}`}
+                href={clientResolver(resolve, `/${page.page_path}`)}
                 target="_blank"
                 rel="noopener noreferrer"
               >

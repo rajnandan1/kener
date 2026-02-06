@@ -417,7 +417,7 @@
           <div class="space-y-2">
             <Label for="siteURL">Site URL *</Label>
             <Input id="siteURL" type="url" bind:value={siteData.siteURL} placeholder="https://status.example.com" />
-            <p class="text-muted-foreground text-xs">The public URL of your status page</p>
+            <p class="text-muted-foreground text-xs">Effective URL: {siteData.siteURL}{clientResolver(resolve, "/")}</p>
           </div>
         </div>
 
@@ -454,7 +454,7 @@
           <!-- Preview -->
           <div class="bg-muted flex h-24 w-24 items-center justify-center rounded-lg border">
             {#if siteData.logo}
-              <img src={siteData.logo} alt="Logo" class="max-h-20 max-w-20 object-contain" />
+              <img src={clientResolver(resolve, siteData.logo)} alt="Logo" class="max-h-20 max-w-20 object-contain" />
             {:else}
               <ImageIcon class="text-muted-foreground h-8 w-8" />
             {/if}
@@ -520,7 +520,11 @@
           <!-- Preview -->
           <div class="bg-muted flex h-16 w-16 items-center justify-center rounded-lg border">
             {#if siteData.favicon}
-              <img src={siteData.favicon} alt="Favicon" class="max-h-12 max-w-12 object-contain" />
+              <img
+                src={clientResolver(resolve, siteData.favicon)}
+                alt="Favicon"
+                class="max-h-12 max-w-12 object-contain"
+              />
             {:else}
               <ImageIcon class="text-muted-foreground h-6 w-6" />
             {/if}
@@ -597,7 +601,7 @@
                 <Label for="nav-icon-{index}">Icon</Label>
                 <div class="flex items-center gap-2">
                   {#if item.iconURL}
-                    <img src={item.iconURL} alt="Icon" class="h-6 w-6 object-contain" />
+                    <img src={clientResolver(resolve, item.iconURL)} alt="Icon" class="h-6 w-6 object-contain" />
                     <Button variant="ghost" size="sm" onclick={() => (item.iconURL = "")}>
                       <XIcon class="h-4 w-4" />
                     </Button>

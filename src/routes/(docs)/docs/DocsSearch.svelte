@@ -1,10 +1,11 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { base } from "$app/paths";
   import * as Command from "$lib/components/ui/command/index.js";
   import { Search, FileText, Loader2 } from "lucide-svelte";
   import { onMount, onDestroy } from "svelte";
   import type { DocsSearchResult } from "$lib/types/docs-search";
+  import clientResolver from "$lib/client/resolver.js";
+  import { resolve } from "$app/paths";
 
   interface Props {
     open?: boolean;
@@ -49,7 +50,8 @@
 
     isLoading = true;
     try {
-      const response = await fetch(`${base}/docs/api/search?q=${encodeURIComponent(searchQuery)}`);
+      const url = `?q=${encodeURIComponent(searchQuery)}`;
+      const response = await fetch(clientResolver(resolve, "/docs/api/search") + url);
       const data = await response.json();
       results = data.results || [];
     } catch (error) {
@@ -77,8 +79,8 @@
     open = false;
     query = "";
     results = [];
-    const url = anchor ? `${base}/docs/${slug}#${anchor}` : `${base}/docs/${slug}`;
-    goto(url).then(() => {
+    const url = anchor ? `/docs/${slug}#${anchor}` : `/docs/${slug}`;
+    goto(clientResolver(resolve, url)).then(() => {
       // After navigation, scroll to anchor if present
       if (anchor) {
         // Small delay to ensure DOM is updated

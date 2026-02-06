@@ -6,7 +6,7 @@
   import { Skeleton } from "$lib/components/ui/skeleton/index.js";
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
   import { t } from "$lib/stores/i18n";
-
+  import clientResolver from "$lib/client/resolver.js";
   interface Props {
     data: {
       monitorTag: string;
@@ -35,8 +35,8 @@
     error = null;
 
     try {
-      const url = `${resolve("/dashboard-apis/monitor-bar")}?tag=${data.monitorTag}&endOfDayTodayAtTz=${data.endOfDayTodayAtTz}&days=${data.days}`;
-      const response = await fetch(url);
+      const url = `?tag=${data.monitorTag}&endOfDayTodayAtTz=${data.endOfDayTodayAtTz}&days=${data.days}`;
+      const response = await fetch(clientResolver(resolve, "/dashboard-apis/monitor-bar") + url);
 
       if (!response.ok) {
         throw new Error("Monitor not found");

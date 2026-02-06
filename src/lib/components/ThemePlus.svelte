@@ -33,7 +33,6 @@
     showEventsButton?: boolean;
     showHomeButton?: boolean;
     monitor_tags?: string[];
-    shareLinkString?: string;
     embedMonitorTag?: string;
   }
 
@@ -46,18 +45,15 @@
     showPagesDropdown = false,
     showEventsButton = false,
     showHomeButton = false,
-    shareLinkString = "",
     embedMonitorTag = ""
   }: Props = $props();
 
   let protocol = $state("");
   let domain = $state("");
+  let shareLink = $state("");
   const pages = $derived<PageNavItem[]>(page.data.allPages || []);
   const currentPage = $derived(pages.find((p) => p.page_path === currentPath) || pages[0]);
   const eventsPath = $derived(`/events/${format(new Date(), "MMMM-yyyy")}`);
-  const shareLink = $derived(
-    protocol && domain && shareLinkString ? `${protocol}://${domain}${clientResolver(resolve, shareLinkString)}` : ""
-  );
 
   function toggleMode() {
     if (mode.current === "light") {
@@ -70,6 +66,7 @@
   onMount(() => {
     protocol = window.location.protocol;
     domain = window.location.host;
+    shareLink = window.location.href;
   });
 </script>
 

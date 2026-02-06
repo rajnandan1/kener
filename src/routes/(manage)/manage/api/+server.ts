@@ -1,6 +1,5 @@
 import { json } from "@sveltejs/kit";
 import Service, { type MonitorWithType } from "$lib/server/services/service.js";
-import verifyEmailTemplate from "$lib/server/templates/verify_email";
 import { format } from "date-fns";
 import sharp from "sharp";
 import { nanoid } from "nanoid";
@@ -125,6 +124,7 @@ import sendWebhook from "$lib/server/notification/webhook_notification.js";
 import sendEmail from "$lib/server/notification/email_notification.js";
 import sendDiscord from "$lib/server/notification/discord_notification.js";
 import sendSlack from "$lib/server/notification/slack_notification.js";
+import serverResolver from "$lib/server/resolver.js";
 
 function AdminCan(role: string) {
   if (role !== "admin") {
@@ -301,7 +301,7 @@ export async function POST({ request, cookies }) {
         created_at: new Date(),
         updated_at: new Date(),
       };
-      const templateAlertVars = alertToVariables(testAlert, testAlertData);
+      const templateAlertVars = alertToVariables(testAlert, testAlertData, siteData.siteURL + serverResolver("/"));
       const templateSiteVars = siteDataToVariables(siteData);
       if (trigger.trigger_type === "webhook") {
         resp = await sendWebhook(

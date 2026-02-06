@@ -32,6 +32,7 @@
   import { html } from "@codemirror/lang-html";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
   import type { TriggerMeta } from "$lib/server/types/db";
+
   let { data } = page;
   // Types
 
@@ -325,13 +326,13 @@
                 onclick={() => (trigger.trigger_type = type)}
               >
                 {#if type === "webhook"}
-                  <img src="/webhooks.svg" class="size-6" alt="webhook" />
+                  <img src={clientResolver(resolve, "/webhooks.svg")} class="size-6" alt="webhook" />
                 {:else if type === "slack"}
-                  <img src="/slack.svg" class="size-6" alt="slack" />
+                  <img src={clientResolver(resolve, "/slack.svg")} class="size-6" alt="slack" />
                 {:else if type === "discord"}
-                  <img src="/discord.svg" class="size-6" alt="discord" />
+                  <img src={clientResolver(resolve, "/discord.svg")} class="size-6" alt="discord" />
                 {:else if type === "email"}
-                  <img src="/email.png" class="size-6" alt="email" />
+                  <img src={clientResolver(resolve, "/email.png")} class="size-6" alt="email" />
                 {:else}
                   <ZapIcon class="size-6" />
                 {/if}

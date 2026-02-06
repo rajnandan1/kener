@@ -73,7 +73,7 @@
   </Item.Root>
 
   <div class="my-4 flex justify-end gap-2">
-    <ThemePlus showEventsButton={true} showHomeButton={true} shareLinkString={`/maintenances/${data.maintenance.id}`} />
+    <ThemePlus showEventsButton={true} showHomeButton={true} />
   </div>
 
   <!-- Maintenance Meta -->

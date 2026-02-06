@@ -35,7 +35,6 @@
 
   // Preview state
   let previewKey = $state(0);
-  let siteURL = $state("");
 
   // Duration presets in seconds
   const durationPresets = [
@@ -50,7 +49,8 @@
   const badgeUrl = $derived.by(() => {
     if (!badgeConfig.tag) return "";
 
-    const baseUrl = `${siteURL}${resolve("/")}badge/${badgeConfig.tag}/${badgeConfig.badgeType}`;
+    const baseUrl =
+      `${protocol}//${domain}` + clientResolver(resolve, `/badge/${badgeConfig.tag}/${badgeConfig.badgeType}`);
     const params = new URLSearchParams();
 
     // sinceLast and hideDuration only apply to uptime/latency badges
@@ -114,32 +114,18 @@
       // Ignore errors
     }
   }
-  async function fetchSiteData() {
-    try {
-      const response = await fetch(clientResolver(resolve, "/manage/api"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "getAllSiteData" })
-      });
-      const result = (await response.json()) as SiteDataTransformed;
-      siteURL = result.siteURL || window.location.origin;
-    } catch {
-      // Ignore errors
-    }
-  }
 
-  //fetch site data
-  onMount(() => {
-    fetchSiteData();
-  });
+  let domain = $state("");
+  let protocol = $state("");
 
   function refreshPreview() {
     previewKey++;
   }
 
   onMount(async () => {
+    protocol = window.location.protocol;
+    domain = window.location.host;
     loading = true;
-    await fetchSiteData();
     await fetchMonitors();
     loading = false;
   });

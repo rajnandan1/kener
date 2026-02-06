@@ -78,7 +78,11 @@
           <Card.Header>
             <div class="flex items-center gap-3">
               {#if monitor.image}
-                <img src={monitor.image} alt={monitor.name} class="size-10 rounded-md object-cover" />
+                <img
+                  src={clientResolver(resolve, monitor.image)}
+                  alt={monitor.name}
+                  class="size-10 rounded-md object-cover"
+                />
               {:else}
                 <div class="bg-muted flex size-10 items-center justify-center rounded-md">
                   <ActivityIcon class="text-muted-foreground size-5" />

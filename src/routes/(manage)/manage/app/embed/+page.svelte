@@ -10,14 +10,14 @@
   import CopyIcon from "@lucide/svelte/icons/copy";
   import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
   import type { MonitorRecord } from "$lib/server/types/db.js";
-  import type { SiteDataTransformed } from "$lib/server/controllers/siteDataController";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
 
   // Monitors state
   let monitors = $state<MonitorRecord[]>([]);
   let loading = $state(true);
-  let siteURL = $state("");
+  let domain = $state("");
+  let protocol = $state("");
 
   // Embed configuration
   let embedConfig = $state({
@@ -49,16 +49,14 @@
     { label: "300px", value: 300 }
   ];
 
-  const base = resolve("/");
-
   // Build the embed URL
   const embedUrl = $derived.by(() => {
-    if (!embedConfig.tag || !siteURL) return "";
+    if (!embedConfig.tag || !protocol || !domain) return "";
 
     const embedPath =
-      embedConfig.embedType === "status" ? `embed/monitor-${embedConfig.tag}` : `embed/latency-${embedConfig.tag}`;
+      embedConfig.embedType === "status" ? `/embed/monitor-${embedConfig.tag}` : `/embed/latency-${embedConfig.tag}`;
 
-    return `${siteURL}${base}${embedPath}`;
+    return `${protocol}//${domain}` + clientResolver(resolve, embedPath);
   });
 
   // Build the preview URL with parameters
@@ -125,27 +123,14 @@
     }
   }
 
-  async function fetchSiteData() {
-    try {
-      const response = await fetch(clientResolver(resolve, "/manage/api"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "getAllSiteData" })
-      });
-      const result = (await response.json()) as SiteDataTransformed;
-      siteURL = result.siteURL || window.location.origin;
-    } catch {
-      siteURL = window.location.origin;
-    }
-  }
-
   function refreshPreview() {
     previewKey++;
   }
 
   onMount(async () => {
+    protocol = window.location.protocol;
+    domain = window.location.host;
     loading = true;
-    await fetchSiteData();
     await fetchMonitors();
     loading = false;
   });

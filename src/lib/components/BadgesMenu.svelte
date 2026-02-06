@@ -3,6 +3,7 @@
   import CopyButton from "$lib/components/CopyButton.svelte";
   import GC from "$lib/global-constants.js";
   import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
   import { t } from "$lib/stores/i18n";
 
   import TrendingUp from "@lucide/svelte/icons/trending-up";
@@ -20,16 +21,18 @@
 
   // Badge URLs
   const badgeStatusUrl = $derived(
-    protocol && domain ? `${protocol}//${domain}${resolve("/")}badge/${monitorTag}/status` : ""
+    protocol && domain ? `${protocol}//${domain}` + clientResolver(resolve, `/badge/${monitorTag}/status`) : ""
   );
   const badgeUptimeUrl = $derived(
-    protocol && domain ? `${protocol}//${domain}${resolve("/")}badge/${monitorTag}/uptime` : ""
+    protocol && domain ? `${protocol}//${domain}` + clientResolver(resolve, `/badge/${monitorTag}/uptime`) : ""
   );
   const badgeDotUrl = $derived(
-    protocol && domain ? `${protocol}//${domain}${resolve("/")}badge/${monitorTag}/dot` : ""
+    protocol && domain ? `${protocol}//${domain}` + clientResolver(resolve, `/badge/${monitorTag}/dot`) : ""
   );
   const badgeDotPingUrl = $derived(
-    protocol && domain ? `${protocol}//${domain}${resolve("/")}badge/${monitorTag}/dot?animate=ping` : ""
+    protocol && domain
+      ? `${protocol}//${domain}` + clientResolver(resolve, `/badge/${monitorTag}/dot?animate=ping`)
+      : ""
   );
 </script>
 

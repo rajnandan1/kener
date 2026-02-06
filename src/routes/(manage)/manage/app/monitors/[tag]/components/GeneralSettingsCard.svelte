@@ -177,7 +177,11 @@
         <div class="flex items-center gap-3">
           <div class="bg-muted flex h-12 w-12 items-center justify-center rounded-md border">
             {#if monitor.image}
-              <img src={monitor.image} alt="Monitor" class="max-h-10 max-w-10 object-contain" />
+              <img
+                src={clientResolver(resolve, monitor.image)}
+                alt="Monitor"
+                class="max-h-10 max-w-10 object-contain"
+              />
             {:else}
               <ImageIcon class="text-muted-foreground h-5 w-5" />
             {/if}

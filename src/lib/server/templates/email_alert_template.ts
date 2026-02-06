@@ -1,6 +1,7 @@
 const emailTemplate = `<!DOCTYPE html>
 <html>
 <head>
+  <link rel="preload" as="image" href="{{site_logo_url}}" />
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Alert Notification</title>
@@ -21,9 +22,20 @@ const emailTemplate = `<!DOCTYPE html>
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
+    .logo {
+      text-align: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .logo img {
+      max-width: 120px;
+      height: auto;
+      max-height: 40px;
+    }
     .header {
       text-align: center;
       padding-bottom: 20px;
+      padding-top: 20px;
       border-bottom: 1px solid #eee;
     }
     .alert-badge {
@@ -68,15 +80,11 @@ const emailTemplate = `<!DOCTYPE html>
 </head>
 <body>
   <div class="container">
-    <table width="100%" border="0" cellspacing="0" cellpadding="0">
-      <tr>
-        <td>
-          <a href="{{{site_url}}}" style="text-decoration: none;">
-            <span style="font-size: 24px; font-weight: 600; color: #2c3e50;">{{site_name}}</span>
-          </a>
-        </td>
-      </tr>
-    </table>
+    <div class="logo">
+      <a href="{{{site_url}}}" style="text-decoration: none;">
+        <img src="{{site_logo_url}}" alt="{{site_name}}" />
+      </a>
+    </div>
     <div class="header">
       <div class="alert-badge">{{alert_status}}</div>
       <h1 class="alert-title">{{alert_name}}</h1>

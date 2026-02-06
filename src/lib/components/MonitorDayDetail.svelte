@@ -21,6 +21,7 @@
   import IncidentItem from "$lib/components/IncidentItem.svelte";
   import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
   import MinuteGrid from "$lib/components/MinuteGrid.svelte";
+  import clientResolver from "$lib/client/resolver.js";
 
   import * as Chart from "$lib/components/ui/chart/index.js";
   import type { IncidentForMonitorList, MaintenanceEventsMonitorList } from "$lib/server/types/db";
@@ -86,7 +87,7 @@
     loading = true;
     dayDetailData = null;
     try {
-      const response = await fetch(resolve("/dashboard-apis/monitor-day-status"), {
+      const response = await fetch(clientResolver(resolve, "/dashboard-apis/monitor-day-status"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -113,7 +114,7 @@
     latencyLoading = true;
     dayLatencyData = null;
     try {
-      const response = await fetch(resolve("/dashboard-apis/monitor-day-latency"), {
+      const response = await fetch(clientResolver(resolve, "/dashboard-apis/monitor-day-latency"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -139,7 +140,7 @@
     incidentsLoading = true;
     dayIncidentsData = [];
     try {
-      const response = await fetch(resolve("/dashboard-apis/monitor-day-incidents"), {
+      const response = await fetch(clientResolver(resolve, "/dashboard-apis/monitor-day-incidents"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -166,7 +167,7 @@
     maintenancesLoading = true;
     dayMaintenancesData = [];
     try {
-      const response = await fetch(resolve("/dashboard-apis/monitor-day-maintenances"), {
+      const response = await fetch(clientResolver(resolve, "/dashboard-apis/monitor-day-maintenances"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

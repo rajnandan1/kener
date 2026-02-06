@@ -2,7 +2,6 @@
   import Bell from "@lucide/svelte/icons/bell";
   import { t } from "$lib/stores/i18n";
   import * as Item from "$lib/components/ui/item/index.js";
-  import { resolve } from "$app/paths";
   import EventsCard from "$lib/components/EventsCard.svelte";
   import MonitorBar from "$lib/components/MonitorBar.svelte";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
@@ -12,6 +11,8 @@
   import IncidentItem from "$lib/components/IncidentItem.svelte";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import mdToHTML from "$lib/marked.js";
+  import clientResolver from "$lib/client/resolver.js";
+  import { resolve } from "$app/paths";
 
   let { data } = $props();
 </script>
@@ -28,11 +29,14 @@
     showPagesDropdown={true}
     showEventsButton={true}
     currentPath={data.pageDetails?.page_path || "/"}
-    shareLinkString={data.pageDetails?.page_path}
   />
-  <div class="px-4 py-2">
+  <div class="flex flex-col gap-2 px-4 py-2">
     {#if data.pageDetails?.page_logo}
-      <img src={data.pageDetails.page_logo} alt="Page Logo" class="aspect-auto h-12 rounded object-cover" />
+      <img
+        src={clientResolver(resolve, data.pageDetails.page_logo)}
+        alt="Page Logo"
+        class="aspect-auto w-12 rounded object-cover"
+      />
     {/if}
     <Item.Root class="px-0 py-0">
       <Item.Content>

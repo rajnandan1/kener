@@ -126,7 +126,7 @@
   // API calls
   async function loadTriggersData() {
     try {
-      const response = await fetch(base + "manage/api", {
+      const response = await fetch(clientResolver(resolve, "manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -142,7 +142,7 @@
 
   async function loadAlertConfigs() {
     try {
-      const response = await fetch(base + "manage/api", {
+      const response = await fetch(clientResolver(resolve, "manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -182,7 +182,7 @@
         data.is_active = form.is_active;
       }
 
-      const response = await fetch(base + "manage/api", {
+      const response = await fetch(clientResolver(resolve, "manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, data })
@@ -208,7 +208,7 @@
     if (!alertToDelete) return;
 
     try {
-      const response = await fetch(base + "manage/api", {
+      const response = await fetch(clientResolver(resolve, "manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -234,7 +234,7 @@
 
   async function toggleAlertStatus(alert: MonitorAlertConfigWithTriggers) {
     try {
-      const response = await fetch(base + "manage/api", {
+      const response = await fetch(clientResolver(resolve, "manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

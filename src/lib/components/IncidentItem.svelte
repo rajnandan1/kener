@@ -89,7 +89,11 @@
                 class="bg-background size-8 cursor-pointer border-2 border-{monitor.monitor_impact.toLowerCase()} transition-transform duration-100 ease-in-out hover:scale-[1.1] hover:border"
               >
                 {#if monitor.monitor_image}
-                  <Avatar.Image src={monitor.monitor_image} alt={monitor.monitor_name} class="object-cover" />
+                  <Avatar.Image
+                    src={clientResolver(resolve, monitor.monitor_image)}
+                    alt={monitor.monitor_name}
+                    class="object-cover"
+                  />
                 {/if}
                 <Avatar.Fallback class="text-xs">{getInitials(monitor.monitor_name)}</Avatar.Fallback>
               </Avatar.Root>
@@ -99,7 +103,7 @@
                 <div class="flex items-center gap-3">
                   <Avatar.Root>
                     {#if monitor.monitor_image}
-                      <Avatar.Image src={monitor.monitor_image} alt={monitor.monitor_name} />
+                      <Avatar.Image src={clientResolver(resolve, monitor.monitor_image)} alt={monitor.monitor_name} />
                     {/if}
                     <Avatar.Fallback>{getInitials(monitor.monitor_name)}</Avatar.Fallback>
                   </Avatar.Root>
