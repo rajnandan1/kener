@@ -34,11 +34,14 @@ import {
   GetTriggerByID,
   IsLoggedInSession,
   UpdateUserData,
-  CreateNewInvitation,
   SendEmailWithTemplate,
   GetSiteLogoURL,
   UpdatePassword,
-  CreateNewUser,
+  SendInvitationEmail,
+  ResendInvitationEmail,
+  GetUserPasswordHashById,
+  GetAllUsersPaginatedDashboard,
+  GetUserByIDDashboard,
   GetAllUsers,
   GetAllUsersPaginated,
   GetUsersCount,
@@ -167,66 +170,24 @@ export async function POST({ request, cookies }) {
       resp = await GetAllSiteData();
     } else if (action == "manualUpdate") {
       await ManualUpdateUserData(userDB, data.id, data);
-      resp = await GetUserByID(data.id);
+      resp = await GetUserByIDDashboard(data.id);
     } else if (action == "updatePassword") {
       data.userID = userDB.id;
       resp = await UpdatePassword(data);
     } else if (action == "createNewUser") {
-      await CreateNewUser(userDB, data);
+      await SendInvitationEmail(data.email, data.role, data.name, userDB.role);
       resp = await GetUserByEmail(data.email);
+    } else if (action == "resendInvitation") {
+      AdminEditorCan(userDB.role);
+      await ResendInvitationEmail(data.email, userDB.role);
+      resp = { success: true };
     } else if (action == "getUsers") {
       const page = parseInt(String(data.page)) || 1;
       const limit = parseInt(String(data.limit)) || 10;
-      const users = await GetAllUsersPaginated({ page, limit });
+      const users = await GetAllUsersPaginatedDashboard({ page, limit });
       const totalResult = await GetUsersCount();
       const total = totalResult ? Number(totalResult.count) : 0;
       resp = { users, total };
-    } else if (action == "sendVerificationEmail") {
-      data.invitation_type = GC.INVITE_VERIFY_EMAIL;
-
-      let toEmail = userDB.email;
-      let toId = userDB.id;
-
-      if (!!data.toId) {
-        toId = data.toId;
-        let user = await GetUserByID(toId);
-        if (!!!user) {
-          throw new Error("User not found");
-        }
-        toEmail = user.email;
-      }
-
-      data.invited_user_id = toId;
-      data.invited_by_user_id = userDB.id;
-
-      data.invitation_meta = JSON.stringify({
-        header: "Email Verified Successfully",
-        message: "Thanks for verifying your email",
-      });
-      //create timestamp with 1 hour expiry
-      const expiryTimestamp = GetNowTimestampUTC() + 3600;
-      const expiryDate = new Date(expiryTimestamp * 1000);
-      data.invitation_expiry = format(expiryDate, "yyyy-MM-dd HH:mm:ss");
-
-      resp = await CreateNewInvitation(data);
-      let token = resp.invitation_token;
-      let siteData = await GetAllSiteData();
-      let emailData = {
-        brand_name: siteData.siteName || "Kener",
-        logo_url: "",
-        verification_url: siteData.siteURL + "/manage/invitation?token=" + token,
-      };
-      if (siteData.logo) {
-        emailData.logo_url = await GetSiteLogoURL(siteData.siteURL, siteData.logo, "/");
-      }
-
-      resp = await SendEmailWithTemplate(
-        verifyEmailTemplate,
-        emailData,
-        toEmail,
-        `[Important] Verify email for ${emailData.brand_name}`,
-        `go to ${emailData.verification_url} to verify email`,
-      );
     } else if (action === "storeSiteData") {
       AdminEditorCan(userDB.role);
       resp = await storeSiteData(data);

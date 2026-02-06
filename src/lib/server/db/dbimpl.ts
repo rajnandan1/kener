@@ -108,6 +108,7 @@ class DbImpl {
   getUsersCount!: UsersRepository["getUsersCount"];
   getUserByEmail!: UsersRepository["getUserByEmail"];
   getUserPasswordHashById!: UsersRepository["getUserPasswordHashById"];
+  getUserPasswordHashesByIds!: UsersRepository["getUserPasswordHashesByIds"];
   getUserById!: UsersRepository["getUserById"];
   insertUser!: UsersRepository["insertUser"];
   updateUserPassword!: UsersRepository["updateUserPassword"];
@@ -125,13 +126,6 @@ class DbImpl {
   updateApiKeyStatus!: UsersRepository["updateApiKeyStatus"];
   getApiKeyByHashedKey!: UsersRepository["getApiKeyByHashedKey"];
   getAllApiKeys!: UsersRepository["getAllApiKeys"];
-
-  // ============ Invitations ============
-  insertInvitation!: UsersRepository["insertInvitation"];
-  updateInvitationStatusToVoid!: UsersRepository["updateInvitationStatusToVoid"];
-  invitationExists!: UsersRepository["invitationExists"];
-  updateInvitationStatusToAccepted!: UsersRepository["updateInvitationStatusToAccepted"];
-  getActiveInvitationByToken!: UsersRepository["getActiveInvitationByToken"];
 
   // ============ Site Data ============
   insertOrUpdateSiteData!: SiteDataRepository["insertOrUpdateSiteData"];
@@ -454,6 +448,7 @@ class DbImpl {
     this.getUsersCount = this.users.getUsersCount.bind(this.users);
     this.getUserByEmail = this.users.getUserByEmail.bind(this.users);
     this.getUserPasswordHashById = this.users.getUserPasswordHashById.bind(this.users);
+    this.getUserPasswordHashesByIds = this.users.getUserPasswordHashesByIds.bind(this.users);
     this.getUserById = this.users.getUserById.bind(this.users);
     this.insertUser = this.users.insertUser.bind(this.users);
     this.updateUserPassword = this.users.updateUserPassword.bind(this.users);
@@ -469,11 +464,6 @@ class DbImpl {
     this.updateApiKeyStatus = this.users.updateApiKeyStatus.bind(this.users);
     this.getApiKeyByHashedKey = this.users.getApiKeyByHashedKey.bind(this.users);
     this.getAllApiKeys = this.users.getAllApiKeys.bind(this.users);
-    this.insertInvitation = this.users.insertInvitation.bind(this.users);
-    this.updateInvitationStatusToVoid = this.users.updateInvitationStatusToVoid.bind(this.users);
-    this.invitationExists = this.users.invitationExists.bind(this.users);
-    this.updateInvitationStatusToAccepted = this.users.updateInvitationStatusToAccepted.bind(this.users);
-    this.getActiveInvitationByToken = this.users.getActiveInvitationByToken.bind(this.users);
   }
 
   private bindSiteDataMethods(): void {

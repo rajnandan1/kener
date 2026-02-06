@@ -2,7 +2,7 @@ import i18n from "$lib/i18n/server";
 import { redirect } from "@sveltejs/kit";
 import MobileDetect from "mobile-detect";
 import type { LayoutServerLoad } from "./$types";
-import { IsEmailSetup, CheckInvitationExists } from "$lib/server/controllers/controller.js";
+import { IsEmailSetup } from "$lib/server/controllers/controller.js";
 import GC from "$lib/global-constants";
 
 import { resolve } from "$app/paths";
@@ -52,6 +52,5 @@ export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
     userDb: isLoggedIn.user,
     siteStatusColors,
     canSendEmail: IsEmailSetup(),
-    activeInvitationExists: await CheckInvitationExists(isLoggedIn.user.id, GC.INVITE_VERIFY_EMAIL),
   };
 };

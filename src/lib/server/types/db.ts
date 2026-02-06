@@ -244,6 +244,9 @@ export interface UserRecordPublic {
   created_at: Date;
   updated_at: Date;
 }
+export interface UserRecordDashboard extends UserRecordPublic {
+  has_password: boolean;
+}
 
 // ============ api_keys table ============
 export interface ApiKeyRecord {
@@ -339,30 +342,6 @@ export interface IncidentCommentRecordInsert {
   commented_at: number;
   status?: string;
   state?: string;
-}
-
-// ============ invitations table ============
-export interface InvitationRecord {
-  id: number;
-  invitation_token: string;
-  invitation_type: string;
-  invited_user_id: number | null;
-  invited_by_user_id: number;
-  invitation_meta: string | null;
-  invitation_expiry: Date;
-  invitation_status: string;
-  created_at: Date;
-  updated_at: Date;
-}
-
-export interface InvitationRecordInsert {
-  invitation_token: string;
-  invitation_type: string;
-  invited_user_id?: number | null;
-  invited_by_user_id: number;
-  invitation_meta?: string | null;
-  invitation_expiry: Date;
-  invitation_status?: string;
 }
 
 // ============ Filter types ============

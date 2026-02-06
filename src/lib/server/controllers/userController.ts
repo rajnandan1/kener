@@ -1,8 +1,12 @@
 import db from "../db/db.js";
 import type { PaginationInput } from "$lib/types/common";
-import { HashPassword, ValidatePassword, VerifyToken } from "./commonController.js";
+import { GenerateToken, HashPassword, ValidatePassword, VerifyToken } from "./commonController.js";
 import type { Cookies } from "@sveltejs/kit";
-import type { UserRecordPublic } from "../types/db.js";
+import type { UserRecordPublic, UserRecordDashboard } from "../types/db.js";
+import { GetAllSiteData } from "./controller.js";
+import { siteDataToVariables } from "../notification/notification_utils.js";
+import sendEmail from "../notification/email_notification.js";
+import { GetGeneralEmailTemplateById } from "./generalTemplateController.js";
 
 export interface UserUpdateInput {
   userID: number;
@@ -35,6 +39,21 @@ export const GetAllUsersPaginated = async (data: PaginationInput): Promise<UserR
   return await db.getUsersPaginated(data.page, data.limit);
 };
 
+export const GetAllUsersPaginatedDashboard = async (data: PaginationInput): Promise<UserRecordDashboard[]> => {
+  const users = await db.getUsersPaginated(data.page, data.limit);
+  if (users.length === 0) return [];
+
+  // Batch fetch password statuses for all users
+  const userIds = users.map((u) => u.id);
+  const passwordData = await db.getUserPasswordHashesByIds(userIds);
+  const passwordMap = new Map(passwordData.map((p: { id: number; password_hash: string }) => [p.id, p.password_hash]));
+
+  return users.map((u) => ({
+    ...u,
+    has_password: !!(passwordMap.get(u.id) && passwordMap.get(u.id) !== ""),
+  }));
+};
+
 export const GetAllUsers = async () => {
   return await db.getAllUsers();
 };
@@ -50,6 +69,18 @@ export const GetUserPasswordHashById = async (id: number) => {
 //getUserById
 export const GetUserByID = async (userID: number): Promise<UserRecordPublic | undefined> => {
   return await db.getUserById(userID);
+};
+
+//getUserById with has_password for dashboard
+export const GetUserByIDDashboard = async (userID: number): Promise<UserRecordDashboard | undefined> => {
+  const user = await db.getUserById(userID);
+  if (!user) return undefined;
+
+  const passwordData = await db.getUserPasswordHashById(userID);
+  return {
+    ...user,
+    has_password: !!(passwordData && passwordData.password_hash !== ""),
+  };
 };
 
 //getUserByEmail
@@ -255,4 +286,121 @@ export const GetTotalUserPages = async (limit: number): Promise<number> => {
   if (!totalUsers) return 0;
   let totalPages = Math.ceil(Number(totalUsers.count) / limit);
   return totalPages;
+};
+
+//send invitation email to user for account creation
+export const SendInvitationEmail = async (email: string, role: string, name: string, currentUserRole: string) => {
+  let acceptedRoles = ["member", "editor"];
+  if (!acceptedRoles.includes(role)) {
+    throw new Error("Invalid role");
+  }
+
+  if (currentUserRole === "member") {
+    throw new Error("Only admins and editors can create new users");
+  }
+
+  //if data.email empty, throw error
+  if (!!!email) {
+    throw new Error("Email cannot be empty");
+  }
+
+  //if data.name empty, throw error
+  if (!!!name) {
+    throw new Error("Name cannot be empty");
+  }
+
+  // Check if user with this email already exists
+  const existingUser = await db.getUserByEmail(email);
+  if (existingUser) {
+    throw new Error(`A user with email ${email} already exists`);
+  }
+
+  //create user with empty password and is_active = 0
+  try {
+    await db.insertUser({
+      email,
+      password_hash: "",
+      name,
+      role,
+      is_active: 0,
+    });
+  } catch (error: unknown) {
+    // Handle database constraint errors
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (errorMessage.includes("UNIQUE constraint failed") || errorMessage.includes("duplicate")) {
+      throw new Error(`A user with email ${email} already exists`);
+    }
+    throw error;
+  }
+
+  const token = await GenerateToken({
+    email,
+    validTill: Date.now() + 7 * 24 * 60 * 60 * 1000, //7 days
+  });
+
+  const siteData = await GetAllSiteData();
+  const siteVars = siteDataToVariables(siteData);
+  const siteUrl = siteVars.site_url || "";
+  let link = `${siteUrl}/account/invitation?view=confirm_token&token=${token}`;
+
+  const emailVars = {
+    ...siteVars,
+    invitation_link: link,
+  };
+
+  const template = await GetGeneralEmailTemplateById("invite_user");
+  if (template) {
+    await sendEmail(
+      template.template_html_body || "",
+      template.template_subject || "Your Invitation to Join",
+      emailVars,
+      [email],
+    );
+  }
+};
+
+//resend invitation email to existing user with blank password
+export const ResendInvitationEmail = async (email: string, currentUserRole: string) => {
+  if (currentUserRole === "member") {
+    throw new Error("Only admins and editors can resend invitations");
+  }
+
+  if (!email) {
+    throw new Error("Email cannot be empty");
+  }
+
+  const user = await db.getUserByEmail(email);
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  const passwordData = await db.getUserPasswordHashById(user.id);
+  if (passwordData && passwordData.password_hash !== "") {
+    throw new Error("User has already set their password");
+  }
+
+  const token = await GenerateToken({
+    email,
+    validTill: Date.now() + 7 * 24 * 60 * 60 * 1000, //7 days
+  });
+
+  const siteData = await GetAllSiteData();
+  const siteVars = siteDataToVariables(siteData);
+  const siteUrl = siteVars.site_url || "";
+  let link = `${siteUrl}/account/invitation?view=confirm_token&token=${token}`;
+
+  const emailVars = {
+    ...siteVars,
+    invitation_link: link,
+  };
+
+  const template = await GetGeneralEmailTemplateById("invite_user");
+  if (template) {
+    await sendEmail(
+      template.template_html_body || "",
+      template.template_subject || "Your Invitation to Join",
+      emailVars,
+      [email],
+    );
+  }
 };

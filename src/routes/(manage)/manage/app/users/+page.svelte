@@ -18,35 +18,24 @@
   import MailWarningIcon from "@lucide/svelte/icons/mail-warning";
   import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
+  import EyeClosedIcon from "@lucide/svelte/icons/eye-closed";
+  import EyeOpenIcon from "@lucide/svelte/icons/eye";
+  import * as InputGroup from "$lib/components/ui/input-group/index.js";
   import { toast } from "svelte-sonner";
   import { format } from "date-fns";
+  import type { UserRecordDashboard } from "$lib/server/types/db.js";
 
   // Types
-  interface User {
-    id: number;
-    email: string;
-    name: string;
-    is_active: number;
-    is_verified: number;
-    role: string;
-    created_at: string;
-    updated_at: string;
-  }
-
   interface NewUser {
     name: string;
     email: string;
-    password: string;
-    plainPassword: string;
     role: string;
   }
 
-  interface EditUser extends User {
-    password: string;
-    passwordPlain: string;
+  interface EditUser extends UserRecordDashboard {
     actions: {
       sendingVerificationEmail: boolean;
-      updatingPassword: boolean;
+      resendingInvitation: boolean;
       updatingRole: boolean;
       deactivatingUser: boolean;
       activatingUser: boolean;
@@ -54,7 +43,7 @@
   }
 
   interface PageData {
-    user: User;
+    user: UserRecordDashboard;
     canSendEmail: boolean;
   }
 
@@ -66,7 +55,7 @@
 
   // State
   let loading = $state(true);
-  let users = $state<User[]>([]);
+  let users = $state<UserRecordDashboard[]>([]);
   let page = $state(1);
   let limit = $state(10);
   let total = $state(0);
@@ -79,8 +68,7 @@
   let newUser = $state<NewUser>({
     name: "",
     email: "",
-    password: "",
-    plainPassword: "",
+
     role: "member"
   });
 
@@ -118,11 +106,6 @@
 
   // Create new user
   async function createNewUser() {
-    if (newUser.password !== newUser.plainPassword) {
-      creatingUserError = "Passwords do not match";
-      return;
-    }
-
     creatingUser = true;
     creatingUserError = "";
 
@@ -143,12 +126,7 @@
         users = [...users, result];
         showAddUserDialog = false;
         resetNewUser();
-        toast.success("User created successfully");
-
-        // Send verification email
-        if (canSendEmail) {
-          await sendVerificationEmail(result.id);
-        }
+        toast.success("User invited successfully");
       }
     } catch (error) {
       creatingUserError = "Error while creating user";
@@ -161,21 +139,19 @@
     newUser = {
       name: "",
       email: "",
-      password: "",
-      plainPassword: "",
+
       role: "member"
     };
   }
 
   // Open settings for a user
-  function openSettingsSheet(user: User) {
+  function openSettingsSheet(user: UserRecordDashboard) {
     toEditUser = {
       ...JSON.parse(JSON.stringify(user)),
-      password: "",
-      passwordPlain: "",
+
       actions: {
         sendingVerificationEmail: false,
-        updatingPassword: false,
+        resendingInvitation: false,
         updatingRole: false,
         deactivatingUser: false,
         activatingUser: false
@@ -184,6 +160,23 @@
     manualUpdateError = "";
     manualSuccess = "";
     showSettingsSheet = true;
+  }
+
+  // Resend invitation email
+  async function resendInvitationEmail(email: string) {
+    try {
+      await fetch("/manage/api", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "resendInvitation",
+          data: { email }
+        })
+      });
+      toast.success("Invitation email resent");
+    } catch (error) {
+      toast.error("Failed to resend invitation email");
+    }
   }
 
   // Send verification email
@@ -230,8 +223,7 @@
         // Update toEditUser with the result
         toEditUser = {
           ...result,
-          password: "",
-          passwordPlain: "",
+
           actions: toEditUser.actions
         };
       }
@@ -247,7 +239,10 @@
   }
 
   // Format date
-  function formatDate(dateStr: string): string {
+  function formatDate(dateStr: string | Date): string {
+    if (dateStr instanceof Date) {
+      return format(dateStr, "MMM dd, yyyy HH:mm");
+    }
     try {
       return format(new Date(dateStr), "MMM dd, yyyy HH:mm");
     } catch {
@@ -353,11 +348,6 @@
                     <SettingsIcon class="h-4 w-4" />
                   </Button>
                 {/if}
-                {#if currentUser.id === user.id}
-                  <Button variant="ghost" size="icon" class="h-8 w-8" href="/manage/app/profile">
-                    <ArrowRightIcon class="h-4 w-4" />
-                  </Button>
-                {/if}
               </Table.Cell>
             </Table.Row>
           {/each}
@@ -419,26 +409,7 @@
           <Label for="email">Email</Label>
           <Input id="email" type="email" placeholder="email@example.com" bind:value={newUser.email} required />
         </div>
-        <div class="space-y-2">
-          <Label for="password">Password</Label>
-          <Input id="password" type="password" placeholder="********" bind:value={newUser.password} required />
-          <p class="text-muted-foreground text-xs">
-            Set a dummy password. Ask the user to reset the password once they log in.
-          </p>
-        </div>
-        <div class="space-y-2">
-          <Label for="plainPassword">Confirm Password</Label>
-          <Input
-            id="plainPassword"
-            type="password"
-            placeholder="********"
-            bind:value={newUser.plainPassword}
-            required
-          />
-          {#if newUser.plainPassword && newUser.password !== newUser.plainPassword}
-            <p class="text-destructive text-xs font-medium">Passwords do not match</p>
-          {/if}
-        </div>
+
         <div class="space-y-2">
           <Label for="role">Role</Label>
           <Select.Root type="single" value={newUser.role} onValueChange={(v) => v && (newUser.role = v)}>
@@ -475,201 +446,153 @@
       <Sheet.Title>Settings - {toEditUser?.name}</Sheet.Title>
       <Sheet.Description>Manage user settings and permissions</Sheet.Description>
     </Sheet.Header>
-
-    {#if toEditUser}
-      <div class="space-y-6 py-6">
-        <!-- User Info -->
-        <div class="space-y-2 text-sm">
-          <p>
-            <strong>Created At:</strong>
-            {formatDate(toEditUser.created_at)}
-          </p>
-          <p>
-            <strong>Updated At:</strong>
-            {formatDate(toEditUser.updated_at)}
-          </p>
-          <p>
-            <strong>Name:</strong>
-            {toEditUser.name}
-          </p>
-        </div>
-
-        <!-- Send Verification Email -->
-        {#if !toEditUser.is_verified && canSendEmail}
-          <Card.Root>
-            <Card.Content class="p-4">
-              <p class="mb-3 text-sm">
-                The email is not verified. Send a verification email to the user at {toEditUser.email}.
-              </p>
-              <Button
-                variant="secondary"
-                disabled={toEditUser.actions.sendingVerificationEmail}
-                onclick={async () => {
-                  toEditUser!.actions.sendingVerificationEmail = true;
-                  manualSuccess = "";
-                  await sendVerificationEmail(toEditUser!.id);
-                  toEditUser!.actions.sendingVerificationEmail = false;
-                  manualSuccess = "Verification email sent successfully";
-                }}
-              >
-                {#if toEditUser.actions.sendingVerificationEmail}
-                  <Spinner class="mr-2 size-4" />
-                {/if}
-                Send Verification Email
-              </Button>
-            </Card.Content>
-          </Card.Root>
-        {/if}
-
-        <!-- Update Password -->
-        <Card.Root>
-          <Card.Content class="p-4">
-            <p class="mb-3 text-sm">Update password for the user</p>
-            <form
-              class="space-y-3"
-              onsubmit={(e) => {
-                e.preventDefault();
-                toEditUser!.actions.updatingPassword = true;
-                manualUpdateData("password").then(() => {
-                  toEditUser!.actions.updatingPassword = false;
-                });
-              }}
-            >
-              <div class="grid grid-cols-2 gap-3">
-                <div class="space-y-2">
-                  <Label for="password2">Password</Label>
-                  <Input
-                    id="password2"
-                    type="password"
-                    placeholder="********"
-                    bind:value={toEditUser.password}
-                    disabled={toEditUser.actions.updatingPassword}
-                    required
-                  />
-                </div>
-                <div class="space-y-2">
-                  <Label for="passwordPlain2">Confirm Password</Label>
-                  <Input
-                    id="passwordPlain2"
-                    type="text"
-                    placeholder="********"
-                    bind:value={toEditUser.passwordPlain}
-                    disabled={toEditUser.actions.updatingPassword}
-                    required
-                  />
-                </div>
-              </div>
-              <Button type="submit" variant="secondary" disabled={toEditUser.actions.updatingPassword}>
-                {#if toEditUser.actions.updatingPassword}
-                  <Spinner class="mr-2 size-4" />
-                {/if}
-                Update Password
-              </Button>
-            </form>
-          </Card.Content>
-        </Card.Root>
-
-        <!-- Update Role -->
-        <Card.Root>
-          <Card.Content class="p-4">
-            <p class="mb-3 text-sm">
-              Change the role of the user. The user will have different permissions based on the role.
+    <div class="px-4">
+      {#if toEditUser}
+        <div class="space-y-6 py-6">
+          <!-- User Info -->
+          <div class="space-y-2 text-sm">
+            <p>
+              <strong>Created At:</strong>
+              {formatDate(toEditUser.created_at)}
             </p>
-            <div class="flex items-center gap-3">
-              <Select.Root
-                type="single"
-                value={toEditUser.role}
-                onValueChange={(v) => v && (toEditUser!.role = v)}
-                disabled={toEditUser.actions.updatingRole}
-              >
-                <Select.Trigger class="w-48">
-                  {toEditUser.role.toUpperCase()}
-                </Select.Trigger>
-                <Select.Content>
-                  <Select.Item value="editor">EDITOR</Select.Item>
-                  <Select.Item value="member">MEMBER</Select.Item>
-                </Select.Content>
-              </Select.Root>
-              <Button
-                variant="secondary"
-                disabled={toEditUser.actions.updatingRole}
-                onclick={() => {
-                  toEditUser!.actions.updatingRole = true;
-                  manualUpdateData("role").then(() => {
-                    toEditUser!.actions.updatingRole = false;
-                  });
-                }}
-              >
-                {#if toEditUser.actions.updatingRole}
-                  <Spinner class="mr-2 size-4" />
-                {/if}
-                Update Role
-              </Button>
-            </div>
-          </Card.Content>
-        </Card.Root>
+            <p>
+              <strong>Updated At:</strong>
+              {formatDate(toEditUser.updated_at)}
+            </p>
+            <p>
+              <strong>Name:</strong>
+              {toEditUser.name}
+            </p>
+          </div>
+          <!-- Resend Invitation -->
+          {#if !toEditUser.has_password && canSendEmail}
+            <Card.Root>
+              <Card.Content class="p-4">
+                <p class="mb-3 text-sm">
+                  This user ha2sn't set their password yet. Resend the invitation email to {toEditUser.email}.
+                </p>
+                <Button
+                  variant="secondary"
+                  disabled={toEditUser.actions.resendingInvitation}
+                  onclick={async () => {
+                    toEditUser!.actions.resendingInvitation = true;
+                    manualSuccess = "";
+                    await resendInvitationEmail(toEditUser!.email);
+                    toEditUser!.actions.resendingInvitation = false;
+                    manualSuccess = "Invitation email resent successfully";
+                  }}
+                >
+                  {#if toEditUser.actions.resendingInvitation}
+                    <Spinner class="mr-2 size-4" />
+                  {/if}
+                  Resend Invitation
+                </Button>
+              </Card.Content>
+            </Card.Root>
+          {/if}
 
-        <!-- Activate/Deactivate User -->
-        {#if toEditUser.is_active}
-          <Card.Root class="border-destructive">
-            <Card.Content class="p-4">
-              <p class="mb-3 text-sm">
-                Deactivate User. The user will not be able to login. Existing session will get invalidated.
-              </p>
-              <Button
-                variant="destructive"
-                disabled={toEditUser.actions.deactivatingUser}
-                onclick={() => {
-                  toEditUser!.actions.deactivatingUser = true;
-                  toEditUser!.is_active = 0;
-                  manualUpdateData("is_active").then(() => {
-                    toEditUser!.actions.deactivatingUser = false;
-                  });
-                }}
-              >
-                {#if toEditUser.actions.deactivatingUser}
-                  <Spinner class="mr-2 size-4" />
-                {/if}
-                Deactivate User
-              </Button>
-            </Card.Content>
-          </Card.Root>
-        {:else}
+          <!-- Update Role -->
           <Card.Root>
             <Card.Content class="p-4">
-              <p class="mb-3 text-sm">Activate User. The user will be able to login.</p>
-              <Button
-                variant="secondary"
-                disabled={toEditUser.actions.activatingUser}
-                onclick={() => {
-                  toEditUser!.actions.activatingUser = true;
-                  toEditUser!.is_active = 1;
-                  manualUpdateData("is_active").then(() => {
-                    toEditUser!.actions.activatingUser = false;
-                  });
-                }}
-              >
-                {#if toEditUser.actions.activatingUser}
-                  <Spinner class="mr-2 size-4" />
-                {/if}
-                Activate User
-              </Button>
+              <p class="mb-3 text-sm">
+                Change the role of the user. The user will have different permissions based on the role.
+              </p>
+              <div class="flex items-center gap-3">
+                <Select.Root
+                  type="single"
+                  value={toEditUser.role}
+                  onValueChange={(v) => v && (toEditUser!.role = v)}
+                  disabled={toEditUser.actions.updatingRole}
+                >
+                  <Select.Trigger class="w-48">
+                    {toEditUser.role.toUpperCase()}
+                  </Select.Trigger>
+                  <Select.Content>
+                    <Select.Item value="editor">EDITOR</Select.Item>
+                    <Select.Item value="member">MEMBER</Select.Item>
+                  </Select.Content>
+                </Select.Root>
+                <Button
+                  variant="secondary"
+                  disabled={toEditUser.actions.updatingRole}
+                  onclick={() => {
+                    toEditUser!.actions.updatingRole = true;
+                    manualUpdateData("role").then(() => {
+                      toEditUser!.actions.updatingRole = false;
+                    });
+                  }}
+                >
+                  {#if toEditUser.actions.updatingRole}
+                    <Spinner class="mr-2 size-4" />
+                  {/if}
+                  Update Role
+                </Button>
+              </div>
             </Card.Content>
           </Card.Root>
-        {/if}
 
-        <!-- Status Messages -->
-        {#if manualUpdateError}
-          <Alert.Root variant="destructive">
-            <Alert.Description>{manualUpdateError}</Alert.Description>
-          </Alert.Root>
-        {/if}
-        {#if manualSuccess}
-          <Alert.Root class="border-green-500 text-green-500">
-            <Alert.Description>{manualSuccess}</Alert.Description>
-          </Alert.Root>
-        {/if}
-      </div>
-    {/if}
+          <!-- Activate/Deactivate User -->
+          {#if toEditUser.is_active}
+            <Card.Root class="border-destructive">
+              <Card.Content class="p-4">
+                <p class="mb-3 text-sm">
+                  Deactivate User. The user will not be able to login. Existing session will get invalidated.
+                </p>
+                <Button
+                  variant="destructive"
+                  disabled={toEditUser.actions.deactivatingUser}
+                  onclick={() => {
+                    toEditUser!.actions.deactivatingUser = true;
+                    toEditUser!.is_active = 0;
+                    manualUpdateData("is_active").then(() => {
+                      toEditUser!.actions.deactivatingUser = false;
+                    });
+                  }}
+                >
+                  {#if toEditUser.actions.deactivatingUser}
+                    <Spinner class="mr-2 size-4" />
+                  {/if}
+                  Deactivate User
+                </Button>
+              </Card.Content>
+            </Card.Root>
+          {:else}
+            <Card.Root>
+              <Card.Content class="p-4">
+                <p class="mb-3 text-sm">Activate User. The user will be able to login.</p>
+                <Button
+                  variant="secondary"
+                  disabled={toEditUser.actions.activatingUser}
+                  onclick={() => {
+                    toEditUser!.actions.activatingUser = true;
+                    toEditUser!.is_active = 1;
+                    manualUpdateData("is_active").then(() => {
+                      toEditUser!.actions.activatingUser = false;
+                    });
+                  }}
+                >
+                  {#if toEditUser.actions.activatingUser}
+                    <Spinner class="mr-2 size-4" />
+                  {/if}
+                  Activate User
+                </Button>
+              </Card.Content>
+            </Card.Root>
+          {/if}
+
+          <!-- Status Messages -->
+          {#if manualUpdateError}
+            <Alert.Root variant="destructive">
+              <Alert.Description>{manualUpdateError}</Alert.Description>
+            </Alert.Root>
+          {/if}
+          {#if manualSuccess}
+            <Alert.Root class="border-green-500 text-green-500">
+              <Alert.Description>{manualSuccess}</Alert.Description>
+            </Alert.Root>
+          {/if}
+        </div>
+      {/if}
+    </div>
   </Sheet.Content>
 </Sheet.Root>

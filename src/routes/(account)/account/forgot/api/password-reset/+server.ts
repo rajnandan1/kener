@@ -1,4 +1,10 @@
-import { HashPassword, GenerateToken, VerifyToken, GetAllSiteData } from "$lib/server/controllers/controller.js";
+import {
+  HashPassword,
+  GenerateToken,
+  VerifyToken,
+  GetAllSiteData,
+  ValidatePassword,
+} from "$lib/server/controllers/controller.js";
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import db from "$lib/server/db/db.js";
@@ -36,10 +42,21 @@ export const POST: RequestHandler = async ({ request }) => {
     let errorMessage = "User does not exist";
     return json({ error: errorMessage }, { status: 401 });
   }
+  // Validate password strength
+  if (!ValidatePassword(newPassword)) {
+    return json(
+      {
+        error: "Password must contain at least 8 characters, one uppercase letter, one lowercase letter and one number",
+      },
+      { status: 400 },
+    );
+  }
   let password_hash = await HashPassword(newPassword);
   await db.updateUserPassword({
     id: userDB.id,
     password_hash: password_hash,
   });
+  //also update updateIsVerified
+  await db.updateIsVerified(userDB.id, 1);
   return json({ success: true });
 };

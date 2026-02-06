@@ -2,7 +2,6 @@ export * from "./apiController.js";
 export * from "./commonController.js";
 export * from "./emailController.js";
 export * from "./incidentController.js";
-export * from "./invitationController.js";
 export * from "./monitorsController.js";
 export * from "./siteDataController.js";
 export * from "./siteDataKeys.js";
