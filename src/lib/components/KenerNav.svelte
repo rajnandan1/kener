@@ -2,6 +2,8 @@
   import { page } from "$app/state";
   import * as NavigationMenu from "$lib/components/ui/navigation-menu/index.js";
   import { navigationMenuTriggerStyle } from "$lib/components/ui/navigation-menu/navigation-menu-trigger.svelte";
+  import { resolve } from "$app/paths";
+  import urlResolve from "$lib/client/resolver.js";
 
   let { data } = page;
   const navItems: { name: string; url: string; iconURL: string }[] = data.navItems || [];
@@ -13,12 +15,12 @@
     <div class="bg-background flex items-center justify-between rounded-3xl border p-1">
       <!-- Brand -->
       <a
-        href={siteUrl}
+        href={urlResolve(resolve, siteUrl)}
         class="{navigationMenuTriggerStyle()} hover:border-border border border-transparent text-xs hover:bg-transparent"
         style="border-radius: var(--radius-3xl)"
       >
         {#if logo}
-          <img src={logo} alt={siteName} class="mr-2 h-6 w-6 rounded-full object-cover" />
+          <img src={urlResolve(resolve, logo)} alt={siteName} class="mr-2 h-6 w-6 rounded-full object-cover" />
         {/if}
         {siteName}
       </a>
@@ -31,14 +33,14 @@
               <NavigationMenu.Link>
                 {#snippet child()}
                   <a
-                    href={item.url}
+                    href={urlResolve(resolve, item.url)}
                     class="{navigationMenuTriggerStyle()} hover:border-border border border-transparent text-xs hover:bg-transparent"
                     target={item.url.startsWith("http") ? "_blank" : undefined}
                     rel={item.url.startsWith("http") ? "noopener noreferrer" : undefined}
                     style="border-radius: var(--radius-3xl)"
                   >
                     {#if item.iconURL}
-                      <img src={item.iconURL} alt={item.name} class="mr-2 h-4 w-4" />
+                      <img src={urlResolve(resolve, item.iconURL)} alt={item.name} class="mr-2 h-4 w-4" />
                     {/if}
                     {item.name}
                   </a>

@@ -18,8 +18,6 @@ function getAllowedHost(origin: string): string | undefined {
 
 export default defineConfig(({ mode }) => {
   const port = Number(process.env.PORT) || 3000;
-  const basePath = (process.env.KENER_BASE_PATH ?? "").trim();
-  const viteBase = basePath === "" ? undefined : basePath.endsWith("/") ? basePath : `${basePath}/`;
 
   const buildEnv = process.env.VITE_BUILD_ENV || mode || "development";
   const isProduction = buildEnv === "production";
@@ -28,7 +26,6 @@ export default defineConfig(({ mode }) => {
   const allowedHost = getAllowedHost(origin);
 
   return {
-    base: viteBase,
     optimizeDeps: {
       include: ["rrule"],
       exclude: [

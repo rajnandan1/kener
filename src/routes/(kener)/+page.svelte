@@ -1,9 +1,8 @@
 <script lang="ts">
   import Bell from "@lucide/svelte/icons/bell";
   import { t } from "$lib/stores/i18n";
-
   import * as Item from "$lib/components/ui/item/index.js";
-
+  import { resolve } from "$app/paths";
   import EventsCard from "$lib/components/EventsCard.svelte";
   import MonitorBar from "$lib/components/MonitorBar.svelte";
   import ThemePlus from "$lib/components/ThemePlus.svelte";

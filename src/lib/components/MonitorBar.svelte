@@ -9,6 +9,7 @@
   import StatusBarCalendar from "$lib/components/StatusBarCalendar.svelte";
   import { selectedTimezone } from "$lib/stores/timezone";
   import type { MonitorBarResponse, BarData } from "$lib/server/api-server/monitor-bar/get.js";
+  import { resolve } from "$app/paths";
 
   interface Props {
     tag: string;
@@ -52,7 +53,7 @@
     try {
       const endOfDayTodayAtTz = getEndOfDayAtTz($selectedTimezone);
       const response = await fetch(
-        `/dashboard-apis/monitor-bar?tag=${encodeURIComponent(tag)}&endOfDayTodayAtTz=${endOfDayTodayAtTz}`
+        `${resolve("/dashboard-apis/monitor-bar")}?tag=${encodeURIComponent(tag)}&endOfDayTodayAtTz=${endOfDayTodayAtTz}`
       );
       if (!response.ok) {
         throw new Error("Failed to fetch monitor data");
