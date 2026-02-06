@@ -24,6 +24,8 @@
   import { toast } from "svelte-sonner";
   import { format } from "date-fns";
   import type { UserRecordDashboard } from "$lib/server/types/db.js";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   // Types
   interface NewUser {
@@ -82,7 +84,7 @@
   async function fetchUsers() {
     loading = true;
     try {
-      const res = await fetch("/manage/api", {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -110,7 +112,7 @@
     creatingUserError = "";
 
     try {
-      const res = await fetch("/manage/api", {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -165,7 +167,7 @@
   // Resend invitation email
   async function resendInvitationEmail(email: string) {
     try {
-      await fetch("/manage/api", {
+      await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -182,7 +184,7 @@
   // Send verification email
   async function sendVerificationEmail(id: number) {
     try {
-      await fetch("/manage/api", {
+      await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -204,7 +206,7 @@
     manualSuccess = "";
 
     try {
-      const res = await fetch("/manage/api", {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

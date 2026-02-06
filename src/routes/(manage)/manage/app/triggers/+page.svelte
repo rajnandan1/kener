@@ -17,6 +17,8 @@
   import { toast } from "svelte-sonner";
   import { goto } from "$app/navigation";
   import ArrowRight from "@lucide/svelte/icons/arrow-right";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   // Types
   interface Trigger {
@@ -44,7 +46,7 @@
   async function fetchData() {
     loading = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -124,7 +126,7 @@
       {#if loading}
         <Spinner class="size-5" />
       {/if}
-      <Button onclick={() => goto("/manage/app/triggers/new")}>
+      <Button onclick={() => goto(clientResolver(resolve, "/manage/app/triggers/new"))}>
         <PlusIcon class="mr-2 size-4" />
         New Trigger
       </Button>
@@ -159,7 +161,11 @@
               </Badge>
               <Badge variant="outline" class="capitalize">{trigger.trigger_type}</Badge>
 
-              <Button variant="ghost" size="icon" onclick={() => goto(`/manage/app/triggers/${trigger.id}`)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onclick={() => goto(clientResolver(resolve, `/manage/app/triggers/${trigger.id}`))}
+              >
                 <ArrowRight class="size-4" />
               </Button>
             </div>

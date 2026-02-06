@@ -16,6 +16,8 @@
   import { toast } from "svelte-sonner";
   import GC from "$lib/global-constants";
   import type { MonitorAlertConfigWithTriggers } from "$lib/server/types/db";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   // State
   let loading = $state(true);
@@ -31,7 +33,7 @@
   async function fetchConfigs() {
     loading = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -59,7 +61,7 @@
   // Fetch monitors for filter dropdown
   async function fetchMonitors() {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -79,7 +81,7 @@
   // Toggle alert status
   async function toggleAlertStatus(config: MonitorAlertConfigWithTriggers) {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -164,8 +166,8 @@
         <Spinner class="size-5" />
       {/if}
     </div>
-    <Button onclick={() => goto("/manage/app/alerts/new")}>
-      <PlusIcon class="mr-2 size-4" />
+    <Button onclick={() => goto(clientResolver(resolve, "/manage/app/alerts/new"))}>
+      <PlusIcon class="size-4" />
       Create Alert
     </Button>
   </div>
@@ -198,7 +200,7 @@
                       : "Create an alert to get notified when your monitors have issues."}
                   </p>
                 </div>
-                <Button onclick={() => goto("/manage/app/alerts/new")}>
+                <Button onclick={() => goto(clientResolver(resolve, "/manage/app/alerts/new"))}>
                   <PlusIcon class="mr-2 size-4" />
                   Create Alert
                 </Button>
@@ -209,7 +211,10 @@
           {#each configs as config (config.id)}
             <Table.Row class={config.is_active === GC.NO ? "opacity-60" : ""}>
               <Table.Cell>
-                <a href="/manage/app/monitors/{config.monitor_tag}" class="text-primary font-medium hover:underline">
+                <a
+                  href={clientResolver(resolve, `/manage/app/monitors/${config.monitor_tag}`)}
+                  class="text-primary font-medium hover:underline"
+                >
                   {config.monitor_tag}
                 </a>
               </Table.Cell>
@@ -269,11 +274,19 @@
               </Table.Cell>
               <Table.Cell class="text-right">
                 <div class="flex items-center justify-end gap-1">
-                  <Button variant="ghost" size="sm" onclick={() => goto(`/manage/app/alerts/${config.id}`)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onclick={() => goto(clientResolver(resolve, `/manage/app/alerts/${config.id}`))}
+                  >
                     <EditIcon class="mr-1 size-3" />
                     Edit
                   </Button>
-                  <Button variant="ghost" size="sm" onclick={() => goto(`/manage/app/alerts/logs/${config.id}`)}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onclick={() => goto(clientResolver(resolve, `/manage/app/alerts/logs/${config.id}`))}
+                  >
                     <ListIcon class="mr-1 size-3" />
                     Logs
                   </Button>

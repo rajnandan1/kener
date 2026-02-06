@@ -9,6 +9,8 @@
   import type { PageProps } from "./$types";
   import type { MonitorRecord } from "$lib/server/types/db.js";
   import type { MonitorType } from "$lib/types/monitor.js";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   // Card components
   import GeneralSettingsCard from "./components/GeneralSettingsCard.svelte";
@@ -74,7 +76,7 @@
     loading = true;
     error = null;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getMonitors", data: { tag: params.tag } })
@@ -132,7 +134,7 @@
 
   async function fetchAvailableMonitors() {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getMonitors", data: { status: "ACTIVE" } })
@@ -148,7 +150,7 @@
 
   async function fetchPages() {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getPages" })
@@ -174,7 +176,7 @@
     <Breadcrumb.Root>
       <Breadcrumb.List>
         <Breadcrumb.Item>
-          <Breadcrumb.Link href="/manage/app/monitors">Monitors</Breadcrumb.Link>
+          <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/monitors")}>Monitors</Breadcrumb.Link>
         </Breadcrumb.Item>
         <Breadcrumb.Separator />
         <Breadcrumb.Item>

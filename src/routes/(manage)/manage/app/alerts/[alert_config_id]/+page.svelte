@@ -25,6 +25,8 @@
     AlertSeverityType,
     YesNoType
   } from "$lib/server/types/db";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   let { data } = $props();
   const alertConfigId = $derived(data.alert_config_id);
@@ -125,7 +127,7 @@
   // API calls
   async function loadTriggers() {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -141,7 +143,7 @@
 
   async function loadMonitors() {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -162,7 +164,7 @@
     if (isNew) return;
 
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -173,7 +175,7 @@
       const result = await response.json();
       if (result.error) {
         toast.error(result.error);
-        goto("/manage/app/alerts");
+        goto(clientResolver(resolve, "/manage/app/alerts"));
       } else {
         const config = result as MonitorAlertConfigWithTriggers;
         form = {
@@ -192,7 +194,7 @@
     } catch (error) {
       console.error("Failed to load alert config", error);
       toast.error("Failed to load alert configuration");
-      goto("/manage/app/alerts");
+      goto(clientResolver(resolve, "/manage/app/alerts"));
     }
   }
 
@@ -222,7 +224,7 @@
         data.is_active = form.is_active;
       }
 
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, data })
@@ -234,7 +236,7 @@
       } else {
         toast.success(isNew ? "Alert created successfully" : "Alert updated successfully");
         if (isNew) {
-          goto(`/manage/app/alerts/${result.id}`);
+          goto(clientResolver(resolve, `/manage/app/alerts/${result.id}`));
         }
       }
     } catch (error) {
@@ -246,7 +248,7 @@
 
   async function deleteAlertConfig() {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -260,7 +262,7 @@
         toast.error(result.error);
       } else {
         toast.success("Alert deleted successfully");
-        goto("/manage/app/alerts");
+        goto(clientResolver(resolve, "/manage/app/alerts"));
       }
     } catch (error) {
       toast.error("Failed to delete alert");
@@ -281,11 +283,11 @@
   <Breadcrumb.Root>
     <Breadcrumb.List>
       <Breadcrumb.Item>
-        <Breadcrumb.Link href="/manage/app">Dashboard</Breadcrumb.Link>
+        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app")}>Dashboard</Breadcrumb.Link>
       </Breadcrumb.Item>
       <Breadcrumb.Separator />
       <Breadcrumb.Item>
-        <Breadcrumb.Link href="/manage/app/alerts">Alerts</Breadcrumb.Link>
+        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/alerts")}>Alerts</Breadcrumb.Link>
       </Breadcrumb.Item>
       <Breadcrumb.Separator />
       <Breadcrumb.Item>
@@ -296,7 +298,7 @@
 
   <!-- Header -->
   <div class="flex items-center gap-4">
-    <Button variant="ghost" size="icon" onclick={() => goto("/manage/app/alerts")}>
+    <Button variant="ghost" size="icon" onclick={() => goto(clientResolver(resolve, "/manage/app/alerts"))}>
       <ArrowLeftIcon class="size-5" />
     </Button>
     <div>
@@ -491,15 +493,16 @@
           </div>
         {:else}
           <p class="text-muted-foreground text-sm">
-            No notification triggers available. <a href="/manage/app/triggers" class="text-primary underline"
-              >Create a trigger</a
+            No notification triggers available. <a
+              href={clientResolver(resolve, "/manage/app/triggers")}
+              class="text-primary underline">Create a trigger</a
             > to receive notifications.
           </p>
         {/if}
       </Card.Content>
 
       <Card.Footer class="flex justify-between">
-        <Button variant="outline" onclick={() => goto("/manage/app/alerts")}>Cancel</Button>
+        <Button variant="outline" onclick={() => goto(clientResolver(resolve, "/manage/app/alerts"))}>Cancel</Button>
         <Button onclick={saveAlertConfig} disabled={saving}>
           {#if saving}
             <Spinner class="mr-2 size-4" />

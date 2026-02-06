@@ -47,7 +47,8 @@
           <Menu class="h-5 w-5" />
         {/if}
       </button>
-      <a href={getHref("/docs")} class="text-foreground flex items-center no-underline">
+      <a href={getHref("/docs")} class="text-foreground flex items-center gap-2 no-underline">
+        <img src="https://kener.ing/logo96.png" alt="" srcset="" class="h-8" />
         <span class="text-xl font-semibold">{config.name}</span>
       </a>
     </div>

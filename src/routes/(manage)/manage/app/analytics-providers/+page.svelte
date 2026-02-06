@@ -8,7 +8,8 @@
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
   import Loader from "@lucide/svelte/icons/loader";
   import { toast } from "svelte-sonner";
-  import { base } from "$app/paths";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   // Types
   interface AnalyticsRequirement {
@@ -194,7 +195,7 @@
   async function fetchAnalyticsData() {
     loading = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getAllSiteData" })
@@ -246,7 +247,7 @@
         isEnabled: selectedAnalytics.isEnabled
       });
 
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -301,7 +302,7 @@
             onclick={() => selectProvider(provider)}
           >
             <div class="flex flex-row items-center gap-x-3">
-              <img src={base + provider.logo} class="w-5" alt={provider.label} />
+              <img src={clientResolver(resolve, provider.logo)} class="w-5" alt={provider.label} />
               <span>{provider.label}</span>
             </div>
             {#if provider.activeInSite && provider.isEnabled}

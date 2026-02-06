@@ -14,6 +14,8 @@
   import type { MonitorRecord } from "$lib/server/types/db.js";
   import { toast } from "svelte-sonner";
   import { goto } from "$app/navigation";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   interface Props {
     monitor: MonitorRecord;
@@ -48,7 +50,7 @@
     try {
       const base64 = await fileToBase64(file);
 
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -113,7 +115,7 @@
         });
       }
 
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "storeMonitorData", data: payload })
@@ -124,7 +126,7 @@
         toast.error(result.error);
       } else if (isNew) {
         toast.success("Monitor created successfully");
-        goto(`/manage/app/monitors/${monitor.tag}`);
+        goto(clientResolver(resolve, `/manage/app/monitors/${monitor.tag}`));
       } else {
         toast.success("General settings saved successfully");
       }

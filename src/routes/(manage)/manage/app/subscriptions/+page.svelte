@@ -11,6 +11,8 @@
   import * as Alert from "$lib/components/ui/alert/index.js";
   import { toast } from "svelte-sonner";
   import { format } from "date-fns";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   import Bell from "@lucide/svelte/icons/bell";
   import PlusIcon from "@lucide/svelte/icons/plus";
@@ -75,7 +77,7 @@
   async function fetchConfig() {
     loadingConfig = true;
     try {
-      const res = await fetch("/manage/api", {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getSubscriptionsConfig" })
@@ -92,7 +94,7 @@
   async function saveConfig() {
     savingConfig = true;
     try {
-      await fetch("/manage/api", {
+      await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -112,7 +114,7 @@
   async function fetchSubscribers() {
     loadingSubscribers = true;
     try {
-      const res = await fetch("/manage/api", {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -139,7 +141,7 @@
     updatingToggle[key] = true;
 
     try {
-      const res = await fetch("/manage/api", {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -192,7 +194,7 @@
     addError = "";
 
     try {
-      const res = await fetch("/manage/api", {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -233,7 +235,7 @@
 
     isDeleting = true;
     try {
-      const res = await fetch("/manage/api", {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

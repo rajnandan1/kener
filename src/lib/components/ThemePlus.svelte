@@ -4,9 +4,9 @@
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import { setMode, mode } from "mode-watcher";
   import { page } from "$app/state";
-  import { resolve } from "$app/paths";
   import { t } from "$lib/stores/i18n";
-
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
   import Sun from "@lucide/svelte/icons/sun";
   import Moon from "@lucide/svelte/icons/moon";
   import Share from "@lucide/svelte/icons/share-2";
@@ -56,7 +56,7 @@
   const currentPage = $derived(pages.find((p) => p.page_path === currentPath) || pages[0]);
   const eventsPath = $derived(`/events/${format(new Date(), "MMMM-yyyy")}`);
   const shareLink = $derived(
-    protocol && domain && shareLinkString ? `${protocol}://${domain}${resolve(shareLinkString as `/${string}`)}` : ""
+    protocol && domain && shareLinkString ? `${protocol}://${domain}${clientResolver(resolve, shareLinkString)}` : ""
   );
 
   function toggleMode() {
@@ -100,13 +100,18 @@
       </DropdownMenu.Root>
     {/if}
     {#if showHomeButton}
-      <Button href="/" variant="outline" size="sm" class="rounded-full text-xs shadow-none">
+      <Button href={clientResolver(resolve, "/")} variant="outline" size="sm" class="rounded-full text-xs shadow-none">
         <ChevronLeft class="h-4 w-4" />
         {$t("Home")}
       </Button>
     {/if}
     {#if showEventsButton}
-      <Button href={eventsPath} variant="outline" size="sm" class="rounded-full text-xs shadow-none">
+      <Button
+        href={clientResolver(resolve, eventsPath)}
+        variant="outline"
+        size="sm"
+        class="rounded-full text-xs shadow-none"
+      >
         <ICONS.Events class="h-4 w-4" />
         {$t("Events")}
       </Button>

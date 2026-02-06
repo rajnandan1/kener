@@ -17,6 +17,8 @@
   import XIcon from "@lucide/svelte/icons/x";
   import { toast } from "svelte-sonner";
   import { onMount } from "svelte";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   // Types
   interface VaultSecret {
@@ -47,7 +49,7 @@
   // API functions
   async function loadSecrets() {
     try {
-      const res = await fetch("/manage/api", {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getVaultSecrets" })
@@ -88,7 +90,7 @@
         payload.data = { ...(payload.data as object), id: editingId };
       }
 
-      const res = await fetch("/manage/api", {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
@@ -114,7 +116,7 @@
 
     isDeleting = true;
     try {
-      const res = await fetch("/manage/api", {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

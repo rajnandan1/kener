@@ -3,7 +3,8 @@
   import { goto } from "$app/navigation";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Textarea } from "$lib/components/ui/textarea/index.js";
-
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
@@ -82,7 +83,7 @@
 
     loading = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -114,7 +115,7 @@
         };
       } else {
         toast.error("Trigger not found");
-        goto("/manage/app/triggers");
+        goto(clientResolver(resolve, "/manage/app/triggers"));
       }
     } catch (error) {
       console.error("Error fetching trigger:", error);
@@ -171,7 +172,7 @@
 
     saving = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -192,7 +193,7 @@
       } else {
         toast.success(trigger.id ? "Trigger updated successfully" : "Trigger created successfully");
         if (isNew) {
-          goto("/manage/app/triggers");
+          goto(clientResolver(resolve, "/manage/app/triggers"));
         }
       }
     } catch (error) {
@@ -210,7 +211,7 @@
 
     testing = "loading";
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -249,7 +250,7 @@
 
     isDeleting = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -262,7 +263,7 @@
         toast.error(result.error);
       } else {
         toast.success("Trigger deleted successfully");
-        goto("/manage/app/triggers");
+        goto(clientResolver(resolve, "/manage/app/triggers"));
       }
     } catch (error) {
       toast.error("Failed to delete trigger");
@@ -283,11 +284,11 @@
   <Breadcrumb.Root>
     <Breadcrumb.List>
       <Breadcrumb.Item>
-        <Breadcrumb.Link href="/manage/app">Dashboard</Breadcrumb.Link>
+        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app")}>Dashboard</Breadcrumb.Link>
       </Breadcrumb.Item>
       <Breadcrumb.Separator />
       <Breadcrumb.Item>
-        <Breadcrumb.Link href="/manage/app/triggers">Triggers</Breadcrumb.Link>
+        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/triggers")}>Triggers</Breadcrumb.Link>
       </Breadcrumb.Item>
       <Breadcrumb.Separator />
       <Breadcrumb.Item>

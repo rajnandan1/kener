@@ -5,6 +5,8 @@
   import Home from "@lucide/svelte/icons/home";
   import ArrowLeft from "@lucide/svelte/icons/arrow-left";
   import AlertCircle from "@lucide/svelte/icons/alert-circle";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 </script>
 
 <div class="flex min-h-[60vh] items-center justify-center p-4">
@@ -34,7 +36,7 @@
           <ArrowLeft class="mr-2 size-4" />
           Go Back
         </Button>
-        <Button href="/" class="rounded-full">
+        <Button href={clientResolver(resolve, "/")} class="rounded-full">
           <Home class="mr-2 size-4" />
           Home
         </Button>

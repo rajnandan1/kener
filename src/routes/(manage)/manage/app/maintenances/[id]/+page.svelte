@@ -26,6 +26,8 @@
   import { toast } from "svelte-sonner";
   import { format, formatDistanceToNow, isPast, isFuture, isWithinInterval, addDays } from "date-fns";
   import { rrulestr } from "rrule";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   let { params }: PageProps = $props();
   const isNew = $derived(params.id === "new");
@@ -212,7 +214,7 @@
     loading = true;
     error = null;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getMaintenance", data: { id: parseInt(params.id) } })
@@ -261,7 +263,7 @@
   async function fetchEvents() {
     loadingEvents = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getMaintenanceEvents", data: { maintenance_id: parseInt(params.id) } })
@@ -280,7 +282,7 @@
   // Fetch available monitors
   async function fetchAvailableMonitors() {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getMonitors", data: { status: "ACTIVE" } })
@@ -314,7 +316,7 @@
           monitors: selectedMonitors.map((m) => ({ monitor_tag: m.tag, monitor_impact: m.status }))
         };
 
-        const response = await fetch("/manage/api", {
+        const response = await fetch(clientResolver(resolve, "/manage/api"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "createMaintenance", data: createData })
@@ -324,7 +326,7 @@
           toast.error(result.error);
         } else {
           toast.success("Maintenance created successfully");
-          goto(`/manage/app/maintenances/${result.maintenance_id}`);
+          goto(clientResolver(resolve, `/manage/app/maintenances/${result.maintenance_id}`));
         }
       } else {
         const updateData = {
@@ -338,7 +340,7 @@
           monitors: selectedMonitors.map((m) => ({ monitor_tag: m.tag, monitor_impact: m.status }))
         };
 
-        const response = await fetch("/manage/api", {
+        const response = await fetch(clientResolver(resolve, "/manage/api"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "updateMaintenance", data: updateData })
@@ -362,7 +364,7 @@
     if (!confirm("Are you sure you want to delete this maintenance? All events will also be deleted.")) return;
 
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "deleteMaintenance", data: { id: maintenance.id } })
@@ -372,7 +374,7 @@
         toast.error(result.error);
       } else {
         toast.success("Maintenance deleted");
-        goto("/manage/app/maintenances");
+        goto(clientResolver(resolve, "/manage/app/maintenances"));
       }
     } catch {
       toast.error("Failed to delete maintenance");
@@ -384,7 +386,7 @@
     if (!confirm("Are you sure you want to delete this event?")) return;
 
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "deleteMaintenanceEvent", data: { id: eventId } })
@@ -481,11 +483,11 @@
   <Breadcrumb.Root>
     <Breadcrumb.List>
       <Breadcrumb.Item>
-        <Breadcrumb.Link href="/manage/app">Dashboard</Breadcrumb.Link>
+        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app")}>Dashboard</Breadcrumb.Link>
       </Breadcrumb.Item>
       <Breadcrumb.Separator />
       <Breadcrumb.Item>
-        <Breadcrumb.Link href="/manage/app/maintenances">Maintenances</Breadcrumb.Link>
+        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/maintenances")}>Maintenances</Breadcrumb.Link>
       </Breadcrumb.Item>
       <Breadcrumb.Separator />
       <Breadcrumb.Item>

@@ -11,6 +11,8 @@
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
   import { format } from "date-fns";
   import { onMount } from "svelte";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   // Types
   interface MonitoringData {
@@ -97,7 +99,7 @@
   // Fetch monitors for filter dropdown
   async function fetchMonitors() {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -137,7 +139,7 @@
         requestData.end_time = dateTimeStringToTimestamp(endDateTime);
       }
 
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

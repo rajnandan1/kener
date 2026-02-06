@@ -22,6 +22,8 @@
   import CodeMirror from "svelte-codemirror-editor";
   import { markdown } from "@codemirror/lang-markdown";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   // Default page settings
   const defaultPageSettings: PageSettingsType = {
@@ -102,7 +104,7 @@
 
     loading = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getPages" })
@@ -110,7 +112,7 @@
       const result = await response.json();
       if (result.error) {
         toast.error(result.error);
-        goto("/manage/app/pages");
+        goto(clientResolver(resolve, "/manage/app/pages"));
         return;
       }
 
@@ -141,11 +143,11 @@
         }
       } else {
         toast.error("Page not found");
-        goto("/manage/app/pages");
+        goto(clientResolver(resolve, "/manage/app/pages"));
       }
     } catch (e) {
       toast.error("Failed to load page");
-      goto("/manage/app/pages");
+      goto(clientResolver(resolve, "/manage/app/pages"));
     } finally {
       loading = false;
     }
@@ -153,7 +155,7 @@
 
   async function fetchMonitors() {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getMonitors", data: {} })
@@ -191,7 +193,7 @@
         data.id = currentPage.id;
       }
 
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action, data })
@@ -204,10 +206,10 @@
         toast.success(isNew ? "Page created successfully" : "Page updated successfully");
         if (isNew && result.id) {
           // Navigate to the newly created page
-          goto(`/manage/app/pages/${result.id}`);
+          goto(clientResolver(resolve, `/manage/app/pages/${result.id}`));
         } else if (isNew) {
           // Fallback: go back to pages list
-          goto("/manage/app/pages");
+          goto(clientResolver(resolve, "/manage/app/pages"));
         }
       }
     } catch (e) {
@@ -222,7 +224,7 @@
 
     addingMonitor = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -254,7 +256,7 @@
 
     deleting = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -268,7 +270,7 @@
         toast.error(result.error);
       } else {
         toast.success("Page deleted successfully");
-        goto("/manage/app/pages");
+        goto(clientResolver(resolve, "/manage/app/pages"));
       }
     } catch (e) {
       toast.error("Failed to delete page");
@@ -282,7 +284,7 @@
 
     removingMonitor = monitorTag;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -336,7 +338,7 @@
     try {
       const base64 = await fileToBase64(file);
 
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -389,7 +391,7 @@
 
     savingSettings = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -431,11 +433,11 @@
       <Breadcrumb.Root>
         <Breadcrumb.List>
           <Breadcrumb.Item>
-            <Breadcrumb.Link href="/manage/app">Dashboard</Breadcrumb.Link>
+            <Breadcrumb.Link href={clientResolver(resolve, "/manage/app")}>Dashboard</Breadcrumb.Link>
           </Breadcrumb.Item>
           <Breadcrumb.Separator />
           <Breadcrumb.Item>
-            <Breadcrumb.Link href="/manage/app/pages">Pages</Breadcrumb.Link>
+            <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/pages")}>Pages</Breadcrumb.Link>
           </Breadcrumb.Item>
           <Breadcrumb.Separator />
           <Breadcrumb.Item>

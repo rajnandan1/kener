@@ -20,6 +20,7 @@
   import { toggleMode, mode } from "mode-watcher";
   import Sun from "@lucide/svelte/icons/sun";
   import Moon from "@lucide/svelte/icons/moon";
+  import clientResolver from "$lib/client/resolver.js";
 
   let base = resolve("/");
   let user = $state<UserRecordPublic>(page.data.userDb);
@@ -201,7 +202,12 @@
         <DropdownMenu.Separator />
         <DropdownMenu.Item onSelect={() => (window.location.href = `${base}/account/logout`)}>
           {#snippet child({ props })}
-            <Button {...props} variant="ghost" href="/account/logout" class="w-full justify-start">
+            <Button
+              {...props}
+              variant="ghost"
+              href={clientResolver(resolve, "/account/logout")}
+              class="w-full justify-start"
+            >
               <LogoutIcon />
               Log out
             </Button>

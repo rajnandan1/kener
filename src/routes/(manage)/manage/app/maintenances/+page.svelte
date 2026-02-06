@@ -18,6 +18,8 @@
   import UsersIcon from "@lucide/svelte/icons/users";
   import { goto } from "$app/navigation";
   import { format, formatDistanceToNow, isPast, isFuture, isWithinInterval } from "date-fns";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   // Types
   interface MaintenanceEvent {
@@ -54,7 +56,7 @@
   async function fetchData() {
     loading = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -152,12 +154,12 @@
 
   // Navigate to maintenance
   function openMaintenance(id: number) {
-    goto(`/manage/app/maintenances/${id}`);
+    goto(clientResolver(resolve, `/manage/app/maintenances/${id}`));
   }
 
   // Create new maintenance
   function createNewMaintenance() {
-    goto("/manage/app/maintenances/new");
+    goto(clientResolver(resolve, "/manage/app/maintenances/new"));
   }
 
   // Handle status filter change

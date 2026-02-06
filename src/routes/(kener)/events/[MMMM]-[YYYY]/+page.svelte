@@ -15,7 +15,8 @@
   import ICONS from "$lib/icons";
   import { t } from "$lib/stores/i18n";
   import { formatDate } from "$lib/stores/datetime";
-
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
   import { format, parse, addMonths, subMonths, getUnixTime, startOfDay, formatDistanceStrict } from "date-fns";
 
   import type { IncidentForMonitorList, MaintenanceEventsMonitorList } from "$lib/server/types/db";
@@ -124,7 +125,7 @@
   async function fetchEvents() {
     loading = true;
     try {
-      const response = await fetch("/dashboard-apis/events-by-month", {
+      const response = await fetch(clientResolver(resolve, "/dashboard-apis/events-by-month"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -167,14 +168,14 @@
             rel="external"
             variant="outline"
             class="size-8 rounded-full p-0 shadow-none"
-            href="/events/{prevMonthPath}"
+            href={clientResolver(resolve, `/events/${prevMonthPath}`)}
           >
             <ICONS.CHEVRON_LEFT class=" size-5" />
           </Button>
           <p class="text-2xl">{$formatDate(parsedDate, "MMMM yyyy")}</p>
           <Button
             rel="external"
-            href="/events/{nextMonthPath}"
+            href={clientResolver(resolve, `/events/${nextMonthPath}`)}
             variant="outline"
             class="size-8 rounded-full p-0 shadow-none	"
           >
@@ -290,7 +291,12 @@
   <!-- Navigation buttons -->
   <div class="flex justify-between">
     {#if showPrevButton}
-      <Button variant="outline" rel="external" class="rounded-full shadow-none" href="/events/{prevMonthPath}">
+      <Button
+        variant="outline"
+        rel="external"
+        class="rounded-full shadow-none"
+        href={clientResolver(resolve, `/events/${prevMonthPath}`)}
+      >
         <ArrowLeft class="mr-2 h-4 w-4" />
         {$formatDate(prevMonth, "MMMM yyyy")}
       </Button>
@@ -298,7 +304,12 @@
       <div></div>
     {/if}
     {#if showNextButton}
-      <Button variant="outline" rel="external" class="rounded-full shadow-none" href="/events/{nextMonthPath}">
+      <Button
+        variant="outline"
+        rel="external"
+        class="rounded-full shadow-none"
+        href={clientResolver(resolve, `/events/${nextMonthPath}`)}
+      >
         {$formatDate(nextMonth, "MMMM yyyy")}
         <ArrowRight class="ml-2 h-4 w-4" />
       </Button>

@@ -7,6 +7,8 @@
   import Loader from "@lucide/svelte/icons/loader";
   import { toast } from "svelte-sonner";
   import { goto } from "$app/navigation";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   interface Props {
     monitorTag: string;
@@ -26,7 +28,7 @@
 
     deleting = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -40,7 +42,7 @@
         toast.error(result.error);
       } else {
         toast.success("Monitor deleted successfully");
-        goto("/manage/app/monitors");
+        goto(clientResolver(resolve, "/manage/app/monitors"));
       }
     } catch (e) {
       toast.error("Failed to delete monitor");

@@ -11,6 +11,8 @@
   import * as Item from "$lib/components/ui/item/index.js";
   import { toast } from "svelte-sonner";
   import type { PageRecord } from "$lib/server/types/db.js";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   interface PageWithMonitors extends PageRecord {
     monitors?: { monitor_tag: string }[];
@@ -24,7 +26,7 @@
     loading = true;
     error = null;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getPages" })
@@ -54,7 +56,7 @@
       <h1 class="text-2xl font-bold">Pages</h1>
       <p class="text-muted-foreground text-sm">Manage your status pages and their monitors</p>
     </div>
-    <Button class="cursor-pointer" onclick={() => goto("/manage/app/pages/new")}>
+    <Button class="cursor-pointer" onclick={() => goto(clientResolver(resolve, "/manage/app/pages/new"))}>
       <Plus class="mr-1 size-4" />
       New Page
     </Button>
@@ -117,7 +119,11 @@
             {/if}
           </Card.Content>
           <Card.Footer class="flex justify-end gap-2">
-            <Button variant="outline" size="sm" onclick={() => goto(`/manage/app/pages/${page.id}`)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onclick={() => goto(clientResolver(resolve, `/manage/app/pages/${page.id}`))}
+            >
               <SettingsIcon class="mr-1 size-4" />
               Edit
             </Button>

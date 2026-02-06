@@ -8,6 +8,8 @@
   import STATUS_ICON from "$lib/icons";
   import { t } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   interface MaintenanceMonitorImpact {
     monitor_tag: string;
@@ -140,7 +142,12 @@
                   <Badge variant="outline" class="text-{monitor.monitor_impact.toLowerCase()}">
                     {$t(monitor.monitor_impact)}
                   </Badge>
-                  <Button variant="outline" class="rounded-btn" size="icon-sm" href="/monitors/{monitor.monitor_tag}">
+                  <Button
+                    variant="outline"
+                    class="rounded-btn"
+                    size="icon-sm"
+                    href={clientResolver(resolve, `/monitors/${monitor.monitor_tag}`)}
+                  >
                     <ArrowRight class="size-3" />
                   </Button>
                 </div>
@@ -172,7 +179,7 @@
     <Button
       variant="outline"
       class="cursor-pointer rounded-full shadow-none"
-      href="/maintenances/{maintenance.id}"
+      href={clientResolver(resolve, `/maintenances/${maintenance.id}`)}
       size="icon"
     >
       <ArrowRight />

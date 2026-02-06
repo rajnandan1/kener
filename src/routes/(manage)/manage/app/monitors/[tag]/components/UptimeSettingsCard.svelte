@@ -6,6 +6,8 @@
   import Loader from "@lucide/svelte/icons/loader";
   import type { MonitorRecord } from "$lib/server/types/db.js";
   import { toast } from "svelte-sonner";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   interface Props {
     monitor: MonitorRecord;
@@ -83,7 +85,7 @@
         monitor_settings_json: JSON.stringify(uptimeSettings)
       };
 
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "storeMonitorData", data: payload })

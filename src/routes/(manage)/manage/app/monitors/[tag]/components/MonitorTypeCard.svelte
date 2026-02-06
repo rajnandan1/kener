@@ -13,6 +13,8 @@
   import { toast } from "svelte-sonner";
   import { ValidateIpAddress, IsValidHost, IsValidNameServer, IsValidURL, IsValidPort } from "$lib/clientTools";
   import { GAMEDIG_SOCKET_TIMEOUT } from "$lib/anywhere";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
   // Type-specific components
   import {
     MonitorApi,
@@ -159,7 +161,7 @@
         type_data: JSON.stringify(typeData)
       };
 
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "storeMonitorData", data: payload })
@@ -185,7 +187,7 @@
     testingMonitor = true;
     testResult = null;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

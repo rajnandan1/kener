@@ -18,7 +18,8 @@
   import { format } from "date-fns";
   import { toast } from "svelte-sonner";
   import type { MonitorAlertConfigWithTriggers, MonitorAlertV2WithConfig } from "$lib/server/types/db";
-
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
   let { data } = $props();
   const alertConfigId = $derived(data.alert_config_id);
 
@@ -40,7 +41,7 @@
   // Fetch config info
   async function fetchConfigInfo() {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -61,7 +62,7 @@
   async function fetchAlerts() {
     loading = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -90,7 +91,7 @@
   // Update alert status
   async function updateAlertStatus(alertId: number, newStatus: "TRIGGERED" | "RESOLVED") {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -122,7 +123,7 @@
     if (!alertToDelete) return;
 
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -189,11 +190,11 @@
   <Breadcrumb.Root>
     <Breadcrumb.List>
       <Breadcrumb.Item>
-        <Breadcrumb.Link href="/manage/app">Dashboard</Breadcrumb.Link>
+        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app")}>Dashboard</Breadcrumb.Link>
       </Breadcrumb.Item>
       <Breadcrumb.Separator />
       <Breadcrumb.Item>
-        <Breadcrumb.Link href="/manage/app/alerts">Alerts</Breadcrumb.Link>
+        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/alerts")}>Alerts</Breadcrumb.Link>
       </Breadcrumb.Item>
       <Breadcrumb.Separator />
       <Breadcrumb.Item>
@@ -204,7 +205,7 @@
 
   <!-- Header -->
   <div class="flex items-center gap-4">
-    <Button variant="ghost" size="icon" onclick={() => goto("/manage/app/alerts")}>
+    <Button variant="ghost" size="icon" onclick={() => goto(clientResolver(resolve, "/manage/app/alerts"))}>
       <ArrowLeftIcon class="size-5" />
     </Button>
     <div>
@@ -212,7 +213,10 @@
       {#if configInfo}
         <p class="text-muted-foreground text-sm">
           {configInfo.alert_for} alerts for
-          <a href="/manage/app/monitors/{configInfo.monitor_tag}" class="text-primary hover:underline">
+          <a
+            href={clientResolver(resolve, `/manage/app/monitors/${configInfo.monitor_tag}`)}
+            class="text-primary hover:underline"
+          >
             {configInfo.monitor_tag}
           </a>
         </p>
@@ -292,7 +296,7 @@
               <Table.Cell>
                 {#if alert.incident_id}
                   <a
-                    href="/manage/app/incidents/{alert.incident_id}"
+                    href={clientResolver(resolve, `/manage/app/incidents/${alert.incident_id}`)}
                     class="text-primary inline-flex items-center gap-1 text-sm hover:underline"
                   >
                     #{alert.incident_id}
@@ -305,7 +309,12 @@
               <Table.Cell class="text-muted-foreground text-sm">{formatDate(alert.created_at)}</Table.Cell>
               <Table.Cell class="text-muted-foreground text-sm">{formatDate(alert.updated_at)}</Table.Cell>
               <Table.Cell class="text-right">
-                <Button variant="ghost" size="icon" class="text-destructive h-8 w-8" onclick={() => openDeleteDialog(alert)}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  class="text-destructive h-8 w-8"
+                  onclick={() => openDeleteDialog(alert)}
+                >
                   <TrashIcon class="size-4" />
                 </Button>
               </Table.Cell>

@@ -26,6 +26,8 @@
   import { format } from "date-fns";
   import GC from "$lib/global-constants";
   import { mode } from "mode-watcher";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   import CodeMirror from "svelte-codemirror-editor";
   import { markdown } from "@codemirror/lang-markdown";
@@ -130,7 +132,7 @@
     loading = true;
     error = null;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getIncident", data: { incident_id: parseInt(params.incident_id) } })
@@ -163,7 +165,7 @@
     if (isNew) return;
     loadingComments = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getComments", data: { incident_id: parseInt(params.incident_id) } })
@@ -184,7 +186,7 @@
     if (isNew) return;
     try {
       // We get monitors from the getIncident response - need to fetch full incident data
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -212,7 +214,7 @@
   // Fetch available monitors
   async function fetchAvailableMonitors() {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getMonitors", data: { status: "ACTIVE" } })
@@ -235,7 +237,7 @@
     try {
       if (isNew) {
         // Create new incident
-        const response = await fetch("/manage/api", {
+        const response = await fetch(clientResolver(resolve, "/manage/api"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -258,7 +260,7 @@
 
           // Add monitors
           for (const monitor of incidentMonitors) {
-            await fetch("/manage/api", {
+            await fetch(clientResolver(resolve, "/manage/api"), {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -274,7 +276,7 @@
 
           // Add first comment if provided
           if (firstComment.trim()) {
-            await fetch("/manage/api", {
+            await fetch(clientResolver(resolve, "/manage/api"), {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -289,11 +291,11 @@
             });
           }
           toast.success("Incident created successfully");
-          goto(`/manage/app/incidents/${incidentId}`);
+          goto(clientResolver(resolve, `/manage/app/incidents/${incidentId}`));
         }
       } else {
         // Update existing incident
-        const response = await fetch("/manage/api", {
+        const response = await fetch(clientResolver(resolve, "/manage/api"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -327,7 +329,7 @@
 
           // Add new monitors
           for (const monitor of toAdd) {
-            await fetch("/manage/api", {
+            await fetch(clientResolver(resolve, "/manage/api"), {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -343,7 +345,7 @@
 
           // Update monitors with changed impact
           for (const monitor of toUpdate) {
-            await fetch("/manage/api", {
+            await fetch(clientResolver(resolve, "/manage/api"), {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -359,7 +361,7 @@
 
           // Remove deleted monitors
           for (const monitor of toRemove) {
-            await fetch("/manage/api", {
+            await fetch(clientResolver(resolve, "/manage/api"), {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -390,7 +392,7 @@
     if (!selectedMonitorTag || !incident.id) return;
     addingMonitor = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -422,7 +424,7 @@
   // Remove monitor from incident
   async function removeMonitorFromIncident(monitorTag: string) {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -485,7 +487,7 @@
     try {
       if (editingCommentId !== null) {
         // Update existing comment
-        const response = await fetch("/manage/api", {
+        const response = await fetch(clientResolver(resolve, "/manage/api"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -510,7 +512,7 @@
         }
       } else {
         // Add new comment
-        const response = await fetch("/manage/api", {
+        const response = await fetch(clientResolver(resolve, "/manage/api"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -543,7 +545,7 @@
   // Delete comment
   async function deleteComment(commentId: number) {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -641,11 +643,11 @@
   <Breadcrumb.Root>
     <Breadcrumb.List>
       <Breadcrumb.Item>
-        <Breadcrumb.Link href="/manage/app">Dashboard</Breadcrumb.Link>
+        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app")}>Dashboard</Breadcrumb.Link>
       </Breadcrumb.Item>
       <Breadcrumb.Separator />
       <Breadcrumb.Item>
-        <Breadcrumb.Link href="/manage/app/incidents">Incidents</Breadcrumb.Link>
+        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/incidents")}>Incidents</Breadcrumb.Link>
       </Breadcrumb.Item>
       <Breadcrumb.Separator />
       <Breadcrumb.Item>

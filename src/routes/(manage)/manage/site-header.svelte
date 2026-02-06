@@ -2,7 +2,8 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { Separator } from "$lib/components/ui/separator/index.js";
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
-  import { page } from "$app/stores";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   let { title = "" }: { title?: string } = $props();
 </script>
@@ -16,7 +17,7 @@
     <h1 class="text-base font-medium">{title}</h1>
     <div class="ms-auto flex items-center gap-2">
       <Button
-        href="/"
+        href={clientResolver(resolve, "/")}
         variant="secondary"
         size="sm"
         class="dark:text-foreground hidden sm:flex"

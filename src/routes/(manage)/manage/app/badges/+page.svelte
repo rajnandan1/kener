@@ -16,6 +16,7 @@
   import { BADGE_STYLES, type BadgeStyle } from "$lib/global-constants.js";
   import type { SiteDataTransformed } from "$lib/server/controllers/siteDataController";
   import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
   // Monitors state
   let monitors = $state<MonitorRecord[]>([]);
   let loading = $state(true);
@@ -96,7 +97,7 @@
 
   async function fetchMonitors() {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getMonitors", data: { status: "ACTIVE" } })
@@ -115,7 +116,7 @@
   }
   async function fetchSiteData() {
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getAllSiteData" })

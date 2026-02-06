@@ -4,6 +4,8 @@
   import { Checkbox } from "$lib/components/ui/checkbox/index.js";
   import FileTextIcon from "@lucide/svelte/icons/file-text";
   import { toast } from "svelte-sonner";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   interface PageWithMonitors {
     id: number;
@@ -33,7 +35,7 @@
     savingPages = true;
     try {
       const action = checked ? "addMonitorToPage" : "removeMonitorFromPage";
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

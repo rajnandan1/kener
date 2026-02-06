@@ -10,6 +10,8 @@
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import * as Item from "$lib/components/ui/item/index.js";
   import type { MonitorRecord } from "$lib/server/types/db.js";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   let monitors = $state<MonitorRecord[]>([]);
   let loading = $state(true);
@@ -19,7 +21,7 @@
     loading = true;
     error = null;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getMonitors", data: {} })
@@ -44,7 +46,7 @@
 
 <div class="flex w-full flex-col gap-4 p-4">
   <div class="mb-4 flex justify-end">
-    <Button class="cursor-pointer" href="/manage/app/monitors/new">
+    <Button class="cursor-pointer" href={clientResolver(resolve, "/manage/app/monitors/new")}>
       <Plus class="size-4" />
       New Monitor
     </Button>
@@ -113,7 +115,7 @@
             </div>
           </Card.Content>
           <Card.Footer class="flex justify-end gap-2">
-            <Button variant="outline" size="sm" href="/manage/app/monitors/{monitor.tag}">
+            <Button variant="outline" size="sm" href={clientResolver(resolve, `/manage/app/monitors/${monitor.tag}`)}>
               <SettingsIcon class="mr-1 size-4" />
               Configure
             </Button>

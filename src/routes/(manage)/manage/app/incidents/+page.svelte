@@ -16,7 +16,8 @@
   import { goto } from "$app/navigation";
   import { format, formatDistanceToNow } from "date-fns";
   import GC from "$lib/global-constants";
-
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
   // State
   let loading = $state(true);
   let incidents = $state<any[]>([]);
@@ -38,7 +39,7 @@
   async function fetchData() {
     loading = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -103,12 +104,12 @@
 
   // Navigate to incident
   function openIncident(id: number) {
-    goto(`/manage/app/incidents/${id}`);
+    goto(clientResolver(resolve, `/manage/app/incidents/${id}`));
   }
 
   // Create new incident
   function createNewIncident() {
-    goto("/manage/app/incidents/new");
+    goto(clientResolver(resolve, "/manage/app/incidents/new"));
   }
 
   // Handle state filter change
@@ -151,7 +152,7 @@
       {/if}
     </div>
     <div class="flex items-center gap-3">
-      <Button variant="outline" href="https://kener.ing/docs/incident-management" target="_blank">
+      <Button variant="outline" href={clientResolver(resolve, "/docs/incidents/creating-managing")} target="_blank">
         Documentation
         <ExternalLinkIcon class="ml-2 size-4" />
       </Button>

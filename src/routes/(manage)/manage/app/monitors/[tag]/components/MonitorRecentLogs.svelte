@@ -9,6 +9,8 @@
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import { format } from "date-fns";
   import { onMount } from "svelte";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   interface Props {
     monitor_tag: string;
@@ -34,7 +36,7 @@
   async function fetchLogs() {
     loading = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -104,7 +106,7 @@
         <Button variant="ghost" size="icon" onclick={fetchLogs} disabled={loading}>
           <RefreshCwIcon class="size-4 {loading ? 'animate-spin' : ''}" />
         </Button>
-        <Button variant="outline" size="sm" href="/manage/app/monitoring-data">
+        <Button variant="outline" size="sm" href={clientResolver(resolve, "/manage/app/monitoring-data")}>
           View All
           <ExternalLinkIcon class="ml-1 size-3" />
         </Button>

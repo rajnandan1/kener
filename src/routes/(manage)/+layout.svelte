@@ -26,14 +26,11 @@
   import Columns3CogIcon from "@lucide/svelte/icons/columns-3-cog";
   import SiteHeader from "./manage/site-header.svelte";
   import TemplateIcon from "@lucide/svelte/icons/layout-template";
-  import EmailTemplateIcon from "@lucide/svelte/icons/mail-plus";
-  import VaultIcon from "@lucide/svelte/icons/vault";
+  import clientResolver from "$lib/client/resolver.js";
   import DatabaseIcon from "@lucide/svelte/icons/database";
 
   import { Toaster } from "$lib/components/ui/sonner/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
-
-  let base = resolve("/");
 
   // Navigation items - single source of truth
   const navItems = [
@@ -55,7 +52,7 @@
     { title: "Embed", url: "/manage/app/embed", icon: CodeIcon },
     { title: "Templates", url: "/manage/app/templates", icon: TemplateIcon },
     { title: "Monitoring Data", url: "/manage/app/monitoring-data", icon: DatabaseIcon }
-  ];
+  ].map((item) => ({ ...item, url: clientResolver(resolve, item.url) }));
 
   // Derive page title from current URL
   let pageTitle = $derived(navItems.find((item) => page.url.pathname.startsWith(item.url))?.title || "Dashboard");
@@ -69,7 +66,7 @@
 <svelte:head>
   {@html `<style>:root{--up:${data.siteStatusColors.UP};--degraded:${data.siteStatusColors.DEGRADED};--down:${data.siteStatusColors.DOWN};--maintenance:${data.siteStatusColors.MAINTENANCE}}</style>`}
   <title>{pageTitle} | Kener</title>
-  <link rel="icon" href="/logo96.png" />
+  <link rel="icon" href={clientResolver(resolve, "/logo96.png")} />
 </svelte:head>
 <main>
   <Sidebar.Provider style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);">

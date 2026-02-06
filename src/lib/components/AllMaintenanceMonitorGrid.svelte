@@ -5,6 +5,8 @@
   import Timer from "lucide-svelte/icons/timer";
   import { t } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   interface Maintenance {
     id: number;
@@ -72,7 +74,7 @@
           {:else}
             {#each uniqueOngoing as maintenance (maintenance.id)}
               <a
-                href="/maintenances/{maintenance.id}"
+                href={clientResolver(resolve, `/maintenances/${maintenance.id}`)}
                 class="hover:bg-muted/50 block border-b p-3 transition-colors last:border-0"
               >
                 <h4 class="line-clamp-2 text-sm leading-tight font-medium">{maintenance.title}</h4>
@@ -114,7 +116,7 @@
           {:else}
             {#each uniqueUpcoming as maintenance (maintenance.id)}
               <a
-                href="/maintenances/{maintenance.id}"
+                href={clientResolver(resolve, `/maintenances/${maintenance.id}`)}
                 class="hover:bg-muted/50 block border-b p-3 transition-colors last:border-0"
               >
                 <h4 class="line-clamp-2 text-sm leading-tight font-medium">{maintenance.title}</h4>
@@ -157,7 +159,7 @@
           {:else}
             {#each uniquePast as maintenance (maintenance.id)}
               <a
-                href="/maintenances/{maintenance.id}"
+                href={clientResolver(resolve, `/maintenances/${maintenance.id}`)}
                 class="hover:bg-muted/50 block border-b p-3 transition-colors last:border-0"
               >
                 <h4 class="line-clamp-2 text-sm leading-tight font-medium">{maintenance.title}</h4>

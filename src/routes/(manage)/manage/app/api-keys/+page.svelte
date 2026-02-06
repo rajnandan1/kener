@@ -15,7 +15,8 @@
   import KeyIcon from "@lucide/svelte/icons/key";
   import { toast } from "svelte-sonner";
   import { format } from "date-fns";
-
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
   interface ApiKey {
     id: number;
     name: string;
@@ -36,7 +37,7 @@
   async function loadAPIKeys() {
     loading = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getAPIKeys", data: {} })
@@ -62,7 +63,7 @@
 
     creating = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -90,7 +91,7 @@
   async function updateStatus(apiKey: ApiKey) {
     const newStatus = apiKey.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

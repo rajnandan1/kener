@@ -20,6 +20,7 @@
   import GC from "$lib/global-constants";
   import { onMount } from "svelte";
   import type { TriggerRecord } from "$lib/server/types/db";
+  import clientResolver from "$lib/client/resolver.js";
   import type {
     MonitorAlertConfigWithTriggers,
     AlertForType,
@@ -571,8 +572,10 @@
           </div>
         {:else}
           <p class="text-muted-foreground text-sm">
-            No notification triggers available. <a href="/manage/app/triggers" class="underline">Create a trigger</a> to receive
-            notifications.
+            No notification triggers available. <a
+              href={clientResolver(resolve, "/manage/app/triggers")}
+              class="underline">Create a trigger</a
+            > to receive notifications.
           </p>
         {/if}
       </div>

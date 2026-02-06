@@ -10,6 +10,7 @@
   import { selectedTimezone } from "$lib/stores/timezone";
   import type { MonitorBarResponse, BarData } from "$lib/server/api-server/monitor-bar/get.js";
   import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   interface Props {
     tag: string;
@@ -53,7 +54,10 @@
     try {
       const endOfDayTodayAtTz = getEndOfDayAtTz($selectedTimezone);
       const response = await fetch(
-        `${resolve("/dashboard-apis/monitor-bar")}?tag=${encodeURIComponent(tag)}&endOfDayTodayAtTz=${endOfDayTodayAtTz}`
+        clientResolver(
+          resolve,
+          `/dashboard-apis/monitor-bar?tag=${encodeURIComponent(tag)}&endOfDayTodayAtTz=${endOfDayTodayAtTz}`
+        )
       );
       if (!response.ok) {
         throw new Error("Failed to fetch monitor data");
@@ -152,7 +156,12 @@
         </Item.Title>
       </Item.Content>
       <Item.Actions>
-        <Button size="icon" variant="outline" class="cursor-pointer rounded-full shadow-none" href="/monitors/{tag}">
+        <Button
+          size="icon"
+          variant="outline"
+          class="cursor-pointer rounded-full shadow-none"
+          href={clientResolver(resolve, `/monitors/${tag}`)}
+        >
           <ICONS.ARROW_RIGHT />
         </Button>
       </Item.Actions>

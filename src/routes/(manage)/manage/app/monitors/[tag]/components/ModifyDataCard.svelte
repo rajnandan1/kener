@@ -8,6 +8,8 @@
   import Loader from "@lucide/svelte/icons/loader";
   import DatabaseIcon from "@lucide/svelte/icons/database";
   import { toast } from "svelte-sonner";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   interface Props {
     monitorTag: string;
@@ -56,7 +58,7 @@
 
     modifyingData = true;
     try {
-      const response = await fetch("/manage/api", {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
