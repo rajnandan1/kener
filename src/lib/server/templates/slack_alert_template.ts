@@ -24,27 +24,27 @@ const template = `{
       "fields": [
         {
           "type": "mrkdwn",
-          "text": "*Status:*\\n{{alert_status}}"
+          "text": "*Status:*\n{{alert_status}}"
         },
         {
           "type": "mrkdwn",
-          "text": "*Severity:*\\n{{alert_severity}}"
+          "text": "*Severity:*\n{{alert_severity}}"
         },
         {
           "type": "mrkdwn",
-          "text": "*Alert Type:*\\n{{alert_for}}"
+          "text": "*Alert Type:*\n{{alert_for}}"
         },
         {
           "type": "mrkdwn",
-          "text": "*Alert Value:*\\n{{alert_value}}"
+          "text": "*Alert Value:*\n{{alert_value}}"
         },
         {
           "type": "mrkdwn",
-          "text": "*Failure Threshold:*\\n{{alert_failure_threshold}}"
+          "text": "*Failure Threshold:*\n{{alert_failure_threshold}}"
         },
         {
           "type": "mrkdwn",
-          "text": "*Success Threshold:*\\n{{alert_success_threshold}}"
+          "text": "*Success Threshold:*\n{{alert_success_threshold}}"
         }
       ]
     },
@@ -52,7 +52,7 @@ const template = `{
       "type": "section",
       "text": {
         "type": "mrkdwn",
-        "text": "*Message:*\\n{{alert_message}}"
+        "text": "*Message:*\n{{alert_message}}"
       }
     },
     {
@@ -65,7 +65,11 @@ const template = `{
         {
           "type": "mrkdwn",
           "text": "🆔 *Alert ID:* {{alert_id}}"
-        }
+        }{{#alert_incident_url}},
+        {
+          "type": "mrkdwn",
+          "text": "🔗 *Incident:* <{{alert_incident_url}}|View Incident>"
+        }{{/alert_incident_url}}
       ]
     },
     {

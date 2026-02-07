@@ -128,6 +128,15 @@ const emailTemplate = `<!DOCTYPE html>
       </table>
     </div>
     <p style="margin: 20px 0;">{{alert_message}}</p>
+    {{#alert_incident_url}}
+    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+      <tr>
+        <td align="center">
+          <a href="{{{alert_incident_url}}}" class="button" style="background-color: #6c757d;">View Incident</a>
+        </td>
+      </tr>
+    </table>
+    {{/alert_incident_url}}
     <table width="100%" border="0" cellspacing="0" cellpadding="0">
       <tr>
         <td align="center">

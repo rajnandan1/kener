@@ -1,12 +1,13 @@
 const template =
-  '{\n  "alert_id": "{{alert_id}}",\n  "alert_name": "{{alert_name}}",\n ' +
+  '{\n  "alert_id": {{alert_id}},\n  "alert_name": "{{alert_name}}",\n ' +
   ' "alert_for": "{{alert_for}}",\n  "alert_value": "{{alert_value}}",\n ' +
   ' "alert_status": "{{alert_status}}",\n  "alert_severity": "{{alert_severity}}",\n' +
   '  "alert_message": "{{alert_message}}",\n  "alert_source": "{{alert_source}}",\n ' +
   ' "alert_timestamp": "{{alert_timestamp}}",\n ' +
   ' "alert_cta_url": "{{alert_cta_url}}",\n ' +
   ' "alert_cta_text": "{{alert_cta_text}}",\n  ' +
-  '"alert_incident_id": {{alert_incident_id}},\n  ' +
+  '"alert_incident_id": {{#alert_incident_id}}{{alert_incident_id}}{{/alert_incident_id}}{{^alert_incident_id}}null{{/alert_incident_id}},\n  ' +
+  '"alert_incident_url": {{#alert_incident_url}}{{alert_incident_url}}{{/alert_incident_url}}{{^alert_incident_url}}null{{/alert_incident_url}},\n  ' +
   '"alert_failure_threshold": {{alert_failure_threshold}},\n ' +
   ' "alert_success_threshold": {{alert_success_threshold}},\n  ' +
   '"is_resolved": {{is_resolved}},\n  "is_triggered": {{is_triggered}},\n  ' +

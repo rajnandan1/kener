@@ -140,11 +140,7 @@ async function sendAlertNotifications(
   monitor_alerts_configured: MonitorAlertConfigRecord,
   templateSiteVars: SiteDataForNotification,
 ): Promise<void> {
-  const templateAlertVars = alertToVariables(
-    monitor_alerts_configured,
-    activeAlert,
-    templateSiteVars.site_url + serverResolver("/monitors/" + monitor_alerts_configured.monitor_tag),
-  );
+  const templateAlertVars = alertToVariables(monitor_alerts_configured, activeAlert, templateSiteVars);
   const triggers = await GetTriggersByMonitorAlertConfigId(monitor_alerts_configured.id);
 
   for (let i = 0; i < triggers.length; i++) {

@@ -29,7 +29,7 @@ markedHTML.use({
       let target = "";
       let rel = "";
       // Open external links in a new tab with noopener noreferrer
-      if (/^(http|https):\/\//.test(href) && !href.includes("yourdomain.com")) {
+      if (/^(http|https):\/\//.test(href)) {
         target = ' target="_blank"';
         rel = ' rel="noopener noreferrer"';
       }

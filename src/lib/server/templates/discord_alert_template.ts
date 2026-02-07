@@ -43,10 +43,15 @@ const template = `{
           "name": "📝 Message",
           "value": "{{alert_message}}",
           "inline": false
-        }
+        }{{#alert_incident_url}},
+        {
+          "name": "🔗 Incident",
+          "value": "[View Incident]({{alert_incident_url}})",
+          "inline": false
+        }{{/alert_incident_url}}
       ],
       "footer": {
-        "text": "Alert ID: {{alert_id}} | {{site_name}} Monitoring",
+        "text": "{{alert_cta_text}} | Alert ID: {{alert_id}} | {{site_name}} Monitoring",
         "icon_url": "{{site_logo_url}}"
       },
       "timestamp": "{{alert_timestamp}}"

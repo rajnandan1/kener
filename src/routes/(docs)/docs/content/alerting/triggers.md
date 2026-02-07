@@ -117,24 +117,25 @@ All triggers support mustache templating with the following variables:
 
 ### Alert Variables
 
-| Variable                      | Description                     | Example Value                                                          |
-| ----------------------------- | ------------------------------- | ---------------------------------------------------------------------- |
-| `{{alert_id}}`                | Alert event ID                  | "42"                                                                   |
-| `{{alert_name}}`              | Auto-generated alert name       | "Alert api-prod for STATUS DOWN TRIGGERED at 2024-01-15T10:30:00.000Z" |
-| `{{alert_for}}`               | Alert type                      | "STATUS", "LATENCY", or "UPTIME"                                       |
-| `{{alert_value}}`             | Alert threshold value           | "DOWN", "1000", or "99.9"                                              |
-| `{{alert_status}}`            | Current alert status            | "TRIGGERED" or "RESOLVED"                                              |
-| `{{alert_severity}}`          | Alert severity level            | "CRITICAL" or "WARNING"                                                |
-| `{{alert_message}}`           | Alert description from config   | Custom message text                                                    |
-| `{{alert_source}}`            | Source of alert                 | "ALERT"                                                                |
-| `{{alert_timestamp}}`         | ISO 8601 timestamp              | "2024-01-15T10:30:00.000Z"                                             |
-| `{{alert_cta_url}}`           | Call-to-action URL              | "https://kener.ing/docs/home"                                          |
-| `{{alert_cta_text}}`          | Call-to-action button text      | "View Documentation"                                                   |
-| `{{alert_incident_id}}`       | Associated incident ID (if any) | "123" or undefined                                                     |
-| `{{alert_failure_threshold}}` | Failure threshold setting       | 3                                                                      |
-| `{{alert_success_threshold}}` | Success threshold setting       | 5                                                                      |
-| `{{is_resolved}}`             | Boolean if alert is resolved    | true/false                                                             |
-| `{{is_triggered}}`            | Boolean if alert is triggered   | true/false                                                             |
+| Variable                      | Description                      | Example Value                                                          |
+| ----------------------------- | -------------------------------- | ---------------------------------------------------------------------- |
+| `{{alert_id}}`                | Alert event ID                   | 42                                                                     |
+| `{{alert_name}}`              | Auto-generated alert name        | "Alert api-prod for STATUS DOWN TRIGGERED at 2024-01-15T10:30:00.000Z" |
+| `{{alert_for}}`               | Alert type                       | "STATUS", "LATENCY", or "UPTIME"                                       |
+| `{{alert_value}}`             | Alert threshold value            | "DOWN", "1000", or "99.9"                                              |
+| `{{alert_status}}`            | Current alert status             | "TRIGGERED" or "RESOLVED"                                              |
+| `{{alert_severity}}`          | Alert severity level             | "CRITICAL" or "WARNING"                                                |
+| `{{alert_message}}`           | Alert description from config    | Custom message text                                                    |
+| `{{alert_source}}`            | Source of alert                  | "ALERT"                                                                |
+| `{{alert_timestamp}}`         | ISO 8601 timestamp               | "2024-01-15T10:30:00.000Z"                                             |
+| `{{alert_cta_url}}`           | Call-to-action URL               | "https://kener.ing/docs/home"                                          |
+| `{{alert_cta_text}}`          | Call-to-action button text       | "View Documentation"                                                   |
+| `{{alert_incident_id}}`       | Associated incident ID (if any)  | 123 or null                                                            |
+| `{{alert_incident_url}}`      | Associated incident URL (if any) | "https://kener.ing/incidents/123" or null                              |
+| `{{alert_failure_threshold}}` | Failure threshold setting        | 3                                                                      |
+| `{{alert_success_threshold}}` | Success threshold setting        | 5                                                                      |
+| `{{is_resolved}}`             | Boolean if alert is resolved     | true/false                                                             |
+| `{{is_triggered}}`            | Boolean if alert is triggered    | true/false                                                             |
 
 ### Site Variables
 
@@ -190,195 +191,15 @@ Kener provides default templates for each trigger type. You can customize these 
 
 ### Default Webhook Body {#default-webhook-body}
 
-```json
-{
-  "alert_id": "{{alert_id}}",
-  "alert_name": "{{alert_name}}",
-  "alert_for": "{{alert_for}}",
-  "alert_value": "{{alert_value}}",
-  "alert_status": "{{alert_status}}",
-  "alert_severity": "{{alert_severity}}",
-  "alert_message": "{{alert_message}}",
-  "alert_source": "{{alert_source}}",
-  "alert_timestamp": "{{alert_timestamp}}",
-  "alert_cta_url": "{{alert_cta_url}}",
-  "alert_cta_text": "{{alert_cta_text}}",
-  "alert_incident_id": {{alert_incident_id}},
-  "alert_failure_threshold": {{alert_failure_threshold}},
-  "alert_success_threshold": {{alert_success_threshold}},
-  "is_resolved": {{is_resolved}},
-  "is_triggered": {{is_triggered}},
-  "site_url": "{{site_url}}",
-  "site_name": "{{site_name}}",
-  "site_logo_url": "{{site_logo_url}}",
-  "colors_up": "{{colors_up}}",
-  "colors_down": "{{colors_down}}",
-  "colors_degraded": "{{colors_degraded}}",
-  "colors_maintenance": "{{colors_maintenance}}"
-}
-```
+See the [Templates documentation](/docs/alerting/templates#webhook-template) for the complete default webhook body template with mustache variables.
 
 ### Default Discord Body {#default-discord-body}
 
-```json
-{
-  "username": "{{site_name}}",
-  "avatar_url": "{{site_logo_url}}",
-  "content": "{{#is_triggered}}🚨 **Alert Triggered**{{/is_triggered}}{{#is_resolved}}✅ **Alert Resolved**{{/is_resolved}}",
-  "embeds": [
-    {
-      "title": "{{alert_name}}",
-      "url": "{{alert_cta_url}}",
-      "color": {{#is_triggered}}15158332{{/is_triggered}}{{#is_resolved}}3066993{{/is_resolved}},
-      "fields": [
-        {
-          "name": "📊 Status",
-          "value": "{{alert_status}}",
-          "inline": true
-        },
-        {
-          "name": "⚠️ Severity",
-          "value": "{{alert_severity}}",
-          "inline": true
-        },
-        {
-          "name": "📋 Alert Type",
-          "value": "{{alert_for}}",
-          "inline": true
-        },
-        {
-          "name": "📈 Alert Value",
-          "value": "{{alert_value}}",
-          "inline": true
-        },
-        {
-          "name": "🔻 Failure Threshold",
-          "value": "{{alert_failure_threshold}}",
-          "inline": true
-        },
-        {
-          "name": "🔺 Success Threshold",
-          "value": "{{alert_success_threshold}}",
-          "inline": true
-        },
-        {
-          "name": "📝 Message",
-          "value": "{{alert_message}}",
-          "inline": false
-        }
-      ],
-      "footer": {
-        "text": "Alert ID: {{alert_id}} | {{site_name}} Monitoring",
-        "icon_url": "{{site_logo_url}}"
-      },
-      "timestamp": "{{alert_timestamp}}"
-    }
-  ]
-}
-```
+See the [Templates documentation](/docs/alerting/templates#discord-template) for the complete default Discord message template with embeds.
 
 ### Default Slack Body {#default-slack-body}
 
-```json
-{
-    "blocks": [
-        {
-            "type": "header",
-            "text": {
-                "type": "plain_text",
-                "text": "{{#is_triggered}}🚨 Alert Triggered{{/is_triggered}}{{#is_resolved}}✅ Alert Resolved{{/is_resolved}}",
-                "emoji": true
-            }
-        },
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "*{{alert_name}}*"
-            }
-        },
-        {
-            "type": "divider"
-        },
-        {
-            "type": "section",
-            "fields": [
-                {
-                    "type": "mrkdwn",
-                    "text": "*Status:*\\n{{alert_status}}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": "*Severity:*\\n{{alert_severity}}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": "*Alert Type:*\\n{{alert_for}}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": "*Alert Value:*\\n{{alert_value}}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": "*Failure Threshold:*\\n{{alert_failure_threshold}}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": "*Success Threshold:*\\n{{alert_success_threshold}}"
-                }
-            ]
-        },
-        {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "*Message:*\\n{{alert_message}}"
-            }
-        },
-        {
-            "type": "context",
-            "elements": [
-                {
-                    "type": "mrkdwn",
-                    "text": "🕐 *Time:* {{alert_timestamp}}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": "🆔 *Alert ID:* {{alert_id}}"
-                }
-            ]
-        },
-        {
-            "type": "divider"
-        },
-        {
-            "type": "actions",
-            "elements": [
-                {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "{{alert_cta_text}}",
-                        "emoji": true
-                    },
-                    "url": "{{alert_cta_url}}",
-                    "style": "{{#is_triggered}}danger{{/is_triggered}}{{#is_resolved}}primary{{/is_resolved}}"
-                }
-            ]
-        },
-        {
-            "type": "context",
-            "elements": [
-                {
-                    "type": "mrkdwn",
-                    "text": "Sent from *{{site_name}}* monitoring system"
-                }
-            ]
-        }
-    ]
-}
-```
+See the [Templates documentation](/docs/alerting/templates#slack-template) for the complete default Slack message template with blocks and attachments.
 
 ### Default Email Template {#default-email-template}
 

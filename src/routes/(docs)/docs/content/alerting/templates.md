@@ -22,24 +22,25 @@ All templates have access to these mustache variables:
 
 ### Alert Variables
 
-| Variable                      | Type             | Description                     | Example Value                                                          |
-| ----------------------------- | ---------------- | ------------------------------- | ---------------------------------------------------------------------- |
-| `{{alert_id}}`                | string           | Alert event ID                  | "42"                                                                   |
-| `{{alert_name}}`              | string           | Auto-generated alert name       | "Alert api-prod for STATUS DOWN TRIGGERED at 2024-01-15T10:30:00.000Z" |
-| `{{alert_for}}`               | string           | Alert type                      | "STATUS", "LATENCY", or "UPTIME"                                       |
-| `{{alert_value}}`             | string           | Alert threshold value           | "DOWN", "1000", or "99.9"                                              |
-| `{{alert_status}}`            | string           | Current alert status            | "TRIGGERED" or "RESOLVED"                                              |
-| `{{alert_severity}}`          | string           | Alert severity level            | "CRITICAL" or "WARNING"                                                |
-| `{{alert_message}}`           | string           | Alert description from config   | Custom message text                                                    |
-| `{{alert_source}}`            | string           | Source of alert                 | "ALERT"                                                                |
-| `{{alert_timestamp}}`         | string           | ISO 8601 timestamp              | "2024-01-15T10:30:00.000Z"                                             |
-| `{{alert_cta_url}}`           | string           | Call-to-action URL              | "https://kener.ing/docs/home"                                          |
-| `{{alert_cta_text}}`          | string           | Call-to-action button text      | "View Documentation"                                                   |
-| `{{alert_incident_id}}`       | number/undefined | Associated incident ID (if any) | 123 or undefined                                                       |
-| `{{alert_failure_threshold}}` | number           | Failure threshold setting       | 3                                                                      |
-| `{{alert_success_threshold}}` | number           | Success threshold setting       | 5                                                                      |
-| `{{is_resolved}}`             | boolean          | Boolean if alert is resolved    | true/false                                                             |
-| `{{is_triggered}}`            | boolean          | Boolean if alert is triggered   | true/false                                                             |
+| Variable                      | Type        | Description                      | Example Value                                                          |
+| ----------------------------- | ----------- | -------------------------------- | ---------------------------------------------------------------------- |
+| `{{alert_id}}`                | number/null | Alert event ID                   | 42                                                                     |
+| `{{alert_name}}`              | string      | Auto-generated alert name        | "Alert api-prod for STATUS DOWN TRIGGERED at 2024-01-15T10:30:00.000Z" |
+| `{{alert_for}}`               | string      | Alert type                       | "STATUS", "LATENCY", or "UPTIME"                                       |
+| `{{alert_value}}`             | string      | Alert threshold value            | "DOWN", "1000", or "99.9"                                              |
+| `{{alert_status}}`            | string      | Current alert status             | "TRIGGERED" or "RESOLVED"                                              |
+| `{{alert_severity}}`          | string      | Alert severity level             | "CRITICAL" or "WARNING"                                                |
+| `{{alert_message}}`           | string      | Alert description from config    | Custom message text                                                    |
+| `{{alert_source}}`            | string      | Source of alert                  | "ALERT"                                                                |
+| `{{alert_timestamp}}`         | string      | ISO 8601 timestamp               | "2024-01-15T10:30:00.000Z"                                             |
+| `{{alert_cta_url}}`           | string      | Call-to-action URL               | "https://kener.ing/docs/home"                                          |
+| `{{alert_cta_text}}`          | string      | Call-to-action button text       | "View Documentation"                                                   |
+| `{{alert_incident_id}}`       | number/null | Associated incident ID (if any)  | 123 or null                                                            |
+| `{{alert_incident_url}}`      | string/null | Associated incident URL (if any) | "https://kener.ing/incidents/123" or null                              |
+| `{{alert_failure_threshold}}` | number      | Failure threshold setting        | 3                                                                      |
+| `{{alert_success_threshold}}` | number      | Success threshold setting        | 5                                                                      |
+| `{{is_resolved}}`             | boolean     | Boolean if alert is resolved     | true/false                                                             |
+| `{{is_triggered}}`            | boolean     | Boolean if alert is triggered    | true/false                                                             |
 
 ### Site Variables
 
@@ -141,9 +142,9 @@ https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage
 
 Default JSON structure for webhook triggers:
 
-```json
+```text
 {
-  "alert_id": "{{alert_id}}",
+  "alert_id": {{alert_id}},
   "alert_name": "{{alert_name}}",
   "alert_for": "{{alert_for}}",
   "alert_value": "{{alert_value}}",
@@ -154,7 +155,8 @@ Default JSON structure for webhook triggers:
   "alert_timestamp": "{{alert_timestamp}}",
   "alert_cta_url": "{{alert_cta_url}}",
   "alert_cta_text": "{{alert_cta_text}}",
-  "alert_incident_id": {{alert_incident_id}},
+  "alert_incident_id": {{#alert_incident_id}}{{alert_incident_id}}{{/alert_incident_id}}{{^alert_incident_id}}null{{/alert_incident_id}},
+  "alert_incident_url": {{#alert_incident_url}}{{alert_incident_url}}{{/alert_incident_url}}{{^alert_incident_url}}null{{/alert_incident_url}},
   "alert_failure_threshold": {{alert_failure_threshold}},
   "alert_success_threshold": {{alert_success_threshold}},
   "is_resolved": {{is_resolved}},
@@ -180,7 +182,7 @@ Default JSON structure for webhook triggers:
 
 Default Discord webhook embed format:
 
-```json
+```text
 {
   "username": "{{site_name}}",
   "avatar_url": "{{site_logo_url}}",
@@ -225,10 +227,15 @@ Default Discord webhook embed format:
           "name": "📝 Message",
           "value": "{{alert_message}}",
           "inline": false
-        }
+        }{{#alert_incident_url}},
+        {
+          "name": "🔗 Incident",
+          "value": "[View Incident]({{alert_incident_url}})",
+          "inline": false
+        }{{/alert_incident_url}}
       ],
       "footer": {
-        "text": "Alert ID: {{alert_id}} | {{site_name}} Monitoring",
+        "text": "{{alert_cta_text}} | Alert ID: {{alert_id}} | {{site_name}} Monitoring",
         "icon_url": "{{site_logo_url}}"
       },
       "timestamp": "{{alert_timestamp}}"
@@ -255,104 +262,108 @@ Default Discord webhook embed format:
 
 Default Slack Block Kit format:
 
-```json
+```text
 {
-    "blocks": [
+  "blocks": [
+    {
+      "type": "header",
+      "text": {
+        "type": "plain_text",
+        "text": "{{#is_triggered}}🚨 Alert Triggered{{/is_triggered}}{{#is_resolved}}✅ Alert Resolved{{/is_resolved}}",
+        "emoji": true
+      }
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*{{alert_name}}*"
+      }
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "section",
+      "fields": [
         {
-            "type": "header",
-            "text": {
-                "type": "plain_text",
-                "text": "{{#is_triggered}}🚨 Alert Triggered{{/is_triggered}}{{#is_resolved}}✅ Alert Resolved{{/is_resolved}}",
-                "emoji": true
-            }
+          "type": "mrkdwn",
+          "text": "*Status:*\n{{alert_status}}"
         },
         {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "*{{alert_name}}*"
-            }
+          "type": "mrkdwn",
+          "text": "*Severity:*\n{{alert_severity}}"
         },
         {
-            "type": "divider"
+          "type": "mrkdwn",
+          "text": "*Alert Type:*\n{{alert_for}}"
         },
         {
-            "type": "section",
-            "fields": [
-                {
-                    "type": "mrkdwn",
-                    "text": "*Status:*\\n{{alert_status}}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": "*Severity:*\\n{{alert_severity}}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": "*Alert Type:*\\n{{alert_for}}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": "*Alert Value:*\\n{{alert_value}}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": "*Failure Threshold:*\\n{{alert_failure_threshold}}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": "*Success Threshold:*\\n{{alert_success_threshold}}"
-                }
-            ]
+          "type": "mrkdwn",
+          "text": "*Alert Value:*\n{{alert_value}}"
         },
         {
-            "type": "section",
-            "text": {
-                "type": "mrkdwn",
-                "text": "*Message:*\\n{{alert_message}}"
-            }
+          "type": "mrkdwn",
+          "text": "*Failure Threshold:*\n{{alert_failure_threshold}}"
         },
         {
-            "type": "context",
-            "elements": [
-                {
-                    "type": "mrkdwn",
-                    "text": "🕐 *Time:* {{alert_timestamp}}"
-                },
-                {
-                    "type": "mrkdwn",
-                    "text": "🆔 *Alert ID:* {{alert_id}}"
-                }
-            ]
-        },
-        {
-            "type": "divider"
-        },
-        {
-            "type": "actions",
-            "elements": [
-                {
-                    "type": "button",
-                    "text": {
-                        "type": "plain_text",
-                        "text": "{{alert_cta_text}}",
-                        "emoji": true
-                    },
-                    "url": "{{alert_cta_url}}",
-                    "style": "{{#is_triggered}}danger{{/is_triggered}}{{#is_resolved}}primary{{/is_resolved}}"
-                }
-            ]
-        },
-        {
-            "type": "context",
-            "elements": [
-                {
-                    "type": "mrkdwn",
-                    "text": "Sent from *{{site_name}}* monitoring system"
-                }
-            ]
+          "type": "mrkdwn",
+          "text": "*Success Threshold:*\n{{alert_success_threshold}}"
         }
-    ]
+      ]
+    },
+    {
+      "type": "section",
+      "text": {
+        "type": "mrkdwn",
+        "text": "*Message:*\n{{alert_message}}"
+      }
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "mrkdwn",
+          "text": "🕐 *Time:* {{alert_timestamp}}"
+        },
+        {
+          "type": "mrkdwn",
+          "text": "🆔 *Alert ID:* {{alert_id}}"
+        }{{#alert_incident_url}},
+        {
+          "type": "mrkdwn",
+          "text": "🔗 *Incident:* <{{alert_incident_url}}|View Incident>"
+        }{{/alert_incident_url}}
+      ]
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "actions",
+      "elements": [
+        {
+          "type": "button",
+          "text": {
+            "type": "plain_text",
+            "text": "{{alert_cta_text}}",
+            "emoji": true
+          },
+          "url": "{{alert_cta_url}}",
+          "style": "{{#is_triggered}}danger{{/is_triggered}}{{#is_resolved}}primary{{/is_resolved}}"
+        }
+      ]
+    },
+    {
+      "type": "context",
+      "elements": [
+        {
+          "type": "mrkdwn",
+          "text": "Sent from *{{site_name}}* monitoring system"
+        }
+      ]
+    }
+  ]
 }
 ```
 
@@ -385,32 +396,150 @@ Default HTML email template with inline CSS:
 <!DOCTYPE html>
 <html>
     <head>
+        <link rel="preload" as="image" href="{{site_logo_url}}" />
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Alert Notification</title>
         <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: {{#is_triggered}}#dc2626{{/is_triggered}}{{#is_resolved}}#16a34a{{/is_resolved}}; color: white; padding: 20px; border-radius: 5px; }
-            .content { padding: 20px; background: #f5f5f5; margin-top: 20px; border-radius: 5px; }
-            .button { display: inline-block; padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; margin-top: 20px; }
-            .footer { text-align: center; margin-top: 20px; color: #666; font-size: 12px; }
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+              line-height: 1.6;
+              margin: 0;
+              padding: 0;
+              background-color: #f4f4f4;
+              color: #333;
+            }
+            .container {
+              max-width: 600px;
+              margin: 20px auto;
+              padding: 20px;
+              background: #ffffff;
+              border-radius: 8px;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+            .logo {
+              text-align: center;
+              padding-bottom: 20px;
+              border-bottom: 1px solid #eee;
+            }
+            .logo img {
+              max-width: 120px;
+              height: auto;
+              max-height: 40px;
+            }
+            .header {
+              text-align: center;
+              padding-bottom: 20px;
+              padding-top: 20px;
+              border-bottom: 1px solid #eee;
+            }
+            .alert-badge {
+              display: inline-block;
+              padding: 6px 12px;
+              border-radius: 16px;
+              background-color: {{#is_triggered}}{{colors_down}}{{/is_triggered}}{{#is_resolved}}{{colors_up}}{{/is_resolved}};
+              color: white;
+              font-weight: 500;
+              font-size: 14px;
+              margin-bottom: 16px;
+            }
+            .alert-title {
+              font-size: 24px;
+              font-weight: 600;
+              margin: 0;
+              color: #2c3e50;
+            }
+            .metric-box {
+              background: #f8f9fa;
+              border-radius: 6px;
+              padding: 16px;
+              margin: 16px 0;
+            }
+            .button {
+              display: inline-block;
+              padding: 12px 24px;
+              background-color: #007bff;
+              color: white !important;
+              text-decoration: none;
+              border-radius: 6px;
+              font-weight: 500;
+              margin-top: 20px;
+            }
+            .footer {
+              text-align: center;
+              padding-top: 20px;
+              color: #666;
+              font-size: 14px;
+            }
         </style>
     </head>
     <body>
         <div class="container">
+            <div class="logo">
+                <a href="{{{site_url}}}" style="text-decoration: none;">
+                    <img src="{{site_logo_url}}" alt="{{site_name}}" />
+                </a>
+            </div>
             <div class="header">
-                <h2>{{alert_name}}</h2>
-                <p>Status: {{status}} | Severity: {{severity}}</p>
+                <div class="alert-badge">{{alert_status}}</div>
+                <h1 class="alert-title">{{alert_name}}</h1>
             </div>
-            <div class="content">
-                <p>{{description}}</p>
-                <p><strong>Monitor:</strong> {{metric}}</p>
-                <p><strong>Current Value:</strong> {{current_value}}</p>
-                <p><strong>Threshold:</strong> {{threshold}}</p>
-                <p><strong>Time:</strong> {{timestamp}}</p>
-                <a href="{{action_url}}" class="button">{{action_text}}</a>
+            <table width="100%" border="0" cellspacing="0" cellpadding="8">
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td width="40%" style="color: #666; font-weight: 500;">Alert ID</td>
+                    <td width="60%" style="text-align: right;">{{alert_id}}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td width="40%" style="color: #666; font-weight: 500;">Status</td>
+                    <td width="60%" style="text-align: right;">{{alert_status}}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td width="40%" style="color: #666; font-weight: 500;">Time</td>
+                    <td width="60%" style="text-align: right;">{{alert_timestamp}}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td width="40%" style="color: #666; font-weight: 500;">Severity</td>
+                    <td width="60%" style="text-align: right;">{{alert_severity}}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #eee;">
+                    <td width="40%" style="color: #666; font-weight: 500;">Alert Type</td>
+                    <td width="60%" style="text-align: right;">{{alert_for}}</td>
+                </tr>
+            </table>
+            <div class="metric-box">
+                <table width="100%" border="0" cellspacing="0" cellpadding="8">
+                    <tr>
+                        <td width="40%" style="color: #666; font-weight: 500;">Alert Value</td>
+                        <td width="60%" style="text-align: right;">{{alert_value}}</td>
+                    </tr>
+                    <tr>
+                        <td width="40%" style="color: #666; font-weight: 500;">Failure Threshold</td>
+                        <td width="60%" style="text-align: right;">{{alert_failure_threshold}}</td>
+                    </tr>
+                    <tr>
+                        <td width="40%" style="color: #666; font-weight: 500;">Success Threshold</td>
+                        <td width="60%" style="text-align: right;">{{alert_success_threshold}}</td>
+                    </tr>
+                </table>
             </div>
-            <div class="footer">
-                <p>Sent by {{site_name}} | {{site_url}}</p>
-            </div>
+            <p style="margin: 20px 0;">{{alert_message}}</p>
+            {{#alert_incident_url}}
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td align="center">
+                        <a href="{{{alert_incident_url}}}" class="button" style="background-color: #6c757d;">View Incident</a>
+                    </td>
+                </tr>
+            </table>
+            {{/alert_incident_url}}
+            <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+                    <td align="center">
+                        <a href="{{{alert_cta_url}}}" class="button">{{alert_cta_text}}</a>
+                    </td>
+                </tr>
+            </table>
+            <div class="footer">This is an automated alert notification from {{site_name}} monitoring system.</div>
         </div>
     </body>
 </html>

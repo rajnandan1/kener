@@ -1,7 +1,7 @@
 import type { SubscriptionEventType } from "../db/dbimpl";
 
 export interface AlertVariableMap {
-  alert_id: string;
+  alert_id: number;
   alert_name: string;
   alert_for: string;
   alert_value: string;
@@ -12,7 +12,8 @@ export interface AlertVariableMap {
   alert_timestamp: string;
   alert_cta_url: string;
   alert_cta_text: string;
-  alert_incident_id?: string;
+  alert_incident_id?: number;
+  alert_incident_url?: string;
   alert_failure_threshold: number;
   alert_success_threshold: number;
   is_resolved: boolean;

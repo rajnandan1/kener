@@ -278,10 +278,16 @@ export async function POST({ request, cookies }) {
       if (!trigger || !siteData) {
         throw new Error("Trigger not found");
       }
+      //fetch the last monitor tag from monitoring data and use that for testing instead of "test-monitor"
+      const lastMonitoringData = await GetMonitoringDataPaginated(1, 1);
+      let testTag = "test-monitor";
+      if (lastMonitoringData && lastMonitoringData.data && lastMonitoringData.data.length > 0) {
+        testTag = lastMonitoringData.data[0].monitor_tag;
+      }
       const triggerMetaParsed = JSON.parse(trigger.trigger_meta) as TriggerMeta;
       const testAlert: MonitorAlertConfigRecord = {
         id: 1,
-        monitor_tag: "test-monitor",
+        monitor_tag: testTag,
         alert_for: "STATUS",
         alert_value: "DOWN",
         failure_threshold: 1,
@@ -296,13 +302,14 @@ export async function POST({ request, cookies }) {
       const testAlertData: MonitorAlertV2Record = {
         id: 1,
         config_id: 1,
+        incident_id: 4,
         alert_status: Math.random() > 0.5 ? "TRIGGERED" : "RESOLVED",
-        incident_id: null,
         created_at: new Date(),
         updated_at: new Date(),
       };
-      const templateAlertVars = alertToVariables(testAlert, testAlertData, siteData.siteURL + serverResolver("/"));
+
       const templateSiteVars = siteDataToVariables(siteData);
+      const templateAlertVars = alertToVariables(testAlert, testAlertData, templateSiteVars);
       if (trigger.trigger_type === "webhook") {
         resp = await sendWebhook(
           triggerMetaParsed.webhook_body,

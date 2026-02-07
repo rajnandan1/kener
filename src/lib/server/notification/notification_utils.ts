@@ -16,13 +16,13 @@ import serverResolver from "../resolver.js";
 export function alertToVariables(
   config: MonitorAlertConfigRecord,
   alert: MonitorAlertV2Record,
-  ctaURL: string,
+  siteVars: SiteDataForNotification,
 ): AlertVariableMap {
   const createdAtDate = alert.created_at instanceof Date ? alert.created_at : new Date(alert.created_at);
   const alert_name = `Alert ${config.monitor_tag} for ${config.alert_for} ${config.alert_value} ${alert.alert_status} at ${createdAtDate.toISOString()}`;
 
   return {
-    alert_id: String(alert.id),
+    alert_id: alert.id,
     alert_name: alert_name,
     alert_for: config.alert_for,
     alert_value: config.alert_value,
@@ -31,9 +31,10 @@ export function alertToVariables(
     alert_message: config.alert_description || "",
     alert_source: GC.ALERT,
     alert_timestamp: createdAtDate.toISOString(),
-    alert_cta_url: ctaURL,
-    alert_cta_text: "View Documentation",
-    alert_incident_id: alert.incident_id ? String(alert.incident_id) : undefined,
+    alert_cta_url: siteVars.site_url + "monitors/" + config.monitor_tag,
+    alert_cta_text: "Open Alert Details",
+    alert_incident_id: alert.incident_id ? alert.incident_id : undefined,
+    alert_incident_url: alert.incident_id ? siteVars.site_url + "incidents/" + alert.incident_id : undefined,
     alert_failure_threshold: config.failure_threshold,
     alert_success_threshold: config.success_threshold,
     is_resolved: alert.alert_status === GC.RESOLVED,
@@ -43,7 +44,7 @@ export function alertToVariables(
 
 export function siteDataToVariables(siteData: SiteDataTransformed): SiteDataForNotification {
   return {
-    site_url: siteData.siteURL || "",
+    site_url: siteData.siteURL + serverResolver("/"),
     site_name: siteData.siteName || "",
     site_logo_url: (siteData.siteURL || "") + serverResolver(siteData.logo || ""),
     colors_up: siteData.colors.UP,

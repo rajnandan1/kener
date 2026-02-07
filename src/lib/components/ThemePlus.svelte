@@ -70,7 +70,7 @@
   });
 </script>
 
-<div class=" flex w-full items-center justify-between gap-2">
+<div class="sticky top-18 z-20 flex w-full items-center justify-between gap-2 rounded">
   <div class="flex items-center gap-2">
     {#if showPagesDropdown && pages.length > 1}
       <DropdownMenu.Root>
