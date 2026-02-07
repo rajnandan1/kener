@@ -31,7 +31,7 @@ import {
   UpdateCommentByID,
   UpdateIncident,
   GetTriggerByID,
-  IsLoggedInSession,
+  GetLoggedInSession,
   UpdateUserData,
   SendEmailWithTemplate,
   GetSiteLogoURL,
@@ -155,12 +155,10 @@ export async function POST({ request, cookies }) {
   let data = payload.data || {};
   let resp: any = {};
 
-  let isLoggedIn = await IsLoggedInSession(cookies);
-  if (!!isLoggedIn.error || !isLoggedIn.user) {
+  let userDB = await GetLoggedInSession(cookies);
+  if (!userDB) {
     return json({ error: "User not logged in" }, { status: 401 });
   }
-
-  let userDB = isLoggedIn.user;
 
   try {
     if (action == "updateUser") {

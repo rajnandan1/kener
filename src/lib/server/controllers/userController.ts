@@ -237,47 +237,20 @@ export const ManualUpdateUserData = async (
   }
 };
 
-export const IsLoggedInSession = async (
-  cookies: Cookies,
-): Promise<{
-  error?: string;
-  action?: string;
-  location?: string;
-  user?: UserRecordPublic;
-}> => {
+export const GetLoggedInSession = async (cookies: Cookies): Promise<UserRecordPublic | null> => {
   let tokenData = cookies.get("kener-user");
   if (!!!tokenData) {
-    //redirect to signin page if user is not authenticated
-    //throw redirect(302, base + "/signin");
-    return {
-      error: "User not authenticated",
-      action: "redirect",
-      location: "/manage/signin",
-    };
+    return null;
   }
   const tokenUser = await VerifyToken(tokenData);
   if (!tokenUser) {
-    //redirect to signin page if user is not authenticated
-    // throw redirect(302, base + "/signin/logout");
-    return {
-      error: "User not authenticated",
-      action: "redirect",
-      location: "/manage/signin/logout",
-    };
+    return null;
   }
   const userDB = await db.getUserByEmail(tokenUser.email);
   if (!userDB) {
-    //redirect to signin page if user is not authenticated
-    // throw redirect(302, base + "/signin");
-    return {
-      error: "User not authenticated",
-      action: "redirect",
-      location: "/manage/signin",
-    };
+    return null;
   }
-  return {
-    user: userDB,
-  };
+  return userDB;
 };
 
 //given a limit return total pages

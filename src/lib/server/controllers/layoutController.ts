@@ -6,22 +6,18 @@ import seedSiteData from "$lib/server/db/seedSiteData";
 import {
   GetAllSiteData,
   IsSetupComplete,
-  IsLoggedInSession,
+  GetLoggedInSession,
   GetLocaleFromCookie,
   GetUsersCount,
   GetAllPages,
+  IsEmailSetup,
 } from "./controller.js";
 
 export interface LayoutServerData {
   isMobile: boolean;
   isSetupComplete: boolean;
   isAdminAccountCreated: boolean;
-  isLoggedIn: {
-    error?: string;
-    action?: string;
-    location?: string;
-    user?: UserRecordPublic;
-  };
+  loggedInUser: UserRecordPublic | null;
   selectedLang: string;
   siteStatusColors: {
     UP: string;
@@ -53,6 +49,7 @@ export interface LayoutServerData {
     cssSrc: string;
     family: string;
   };
+  canSendEmail: boolean;
 }
 
 export async function GetLayoutServerData(cookies: Cookies, request: Request): Promise<LayoutServerData> {
@@ -61,7 +58,7 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
   const isMobile = !!md.mobile();
 
   const isSetupComplete = await IsSetupComplete();
-  const isLoggedIn = await IsLoggedInSession(cookies);
+  const loggedInUser = await GetLoggedInSession(cookies);
   const siteData = await GetAllSiteData();
   const userCounts = await GetUsersCount();
 
@@ -91,11 +88,12 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
   const isThemeToggleEnabled = !!siteData.themeToggle && siteData.themeToggle !== "NO";
   const defaultSiteTheme = siteData.theme || "system";
   const font = siteData.font || { cssSrc: "", family: "" };
+  const canSendEmail = IsEmailSetup();
   return {
     isMobile,
     isSetupComplete,
     isAdminAccountCreated: userCounts ? Number(userCounts.count) > 0 : false,
-    isLoggedIn,
+    loggedInUser,
     selectedLang,
     siteStatusColors,
     navItems: siteData.nav || [],
@@ -112,5 +110,6 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     isThemeToggleEnabled,
     defaultSiteTheme,
     font,
+    canSendEmail,
   };
 }

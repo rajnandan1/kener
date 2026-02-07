@@ -22,7 +22,6 @@
   import Moon from "@lucide/svelte/icons/moon";
   import clientResolver from "$lib/client/resolver.js";
 
-  let base = resolve("/");
   let user = $state<UserRecordPublic>(page.data.userDb);
   let nameAbbr = $derived(
     user.name
@@ -200,7 +199,7 @@
           </DropdownMenu.Item>
         </DropdownMenu.Group>
         <DropdownMenu.Separator />
-        <DropdownMenu.Item onSelect={() => (window.location.href = `${base}/account/logout`)}>
+        <DropdownMenu.Item>
           {#snippet child({ props })}
             <Button
               {...props}

@@ -125,7 +125,7 @@
     {/if}
   </div>
   <div class="flex gap-2">
-    {#if page.data.isSubsEnabled}
+    {#if page.data.isSubsEnabled && page.data.canSendEmail}
       <ButtonGroup.Root class="hidden sm:flex">
         <Button
           variant="outline"

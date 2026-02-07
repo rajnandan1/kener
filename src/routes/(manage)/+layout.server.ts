@@ -10,47 +10,31 @@ import { resolve } from "$app/paths";
 import {
   GetAllSiteData,
   IsSetupComplete,
-  IsLoggedInSession,
+  GetLoggedInSession,
   GetLocaleFromCookie,
 } from "$lib/server/controllers/controller.js";
 
-export const load: LayoutServerLoad = async ({ cookies, request, url }) => {
-  const userAgent = request.headers.get("user-agent") ?? "";
-  const md = new MobileDetect(userAgent);
-  const isMobile = !!md.mobile();
-
+export const load: LayoutServerLoad = async ({ cookies }) => {
   let isSetupComplete = await IsSetupComplete();
   if (!isSetupComplete) {
-    throw redirect(302, serverResolve(`/manage/setup`));
+    throw redirect(302, serverResolve(`/account/signin`));
   }
 
-  let isLoggedIn = await IsLoggedInSession(cookies);
+  let loggedInUser = await GetLoggedInSession(cookies);
 
   //if user not set throw redirect to signin
-  if (!isLoggedIn.user) {
+  if (!loggedInUser) {
     throw redirect(302, serverResolve("/account/logout"));
   }
 
   const siteData = await GetAllSiteData();
-  let localTz = "UTC";
-  const localTzCookie = cookies.get("localTz");
-  if (!!localTzCookie) {
-    localTz = localTzCookie;
-  }
-
-  // if the user agent is lighthouse, then we are running a lighthouse test
-  //if bot also set localTz to -1 to avoid reload
-  let isBot = false;
-  if (userAgent?.includes("Chrome-Lighthouse") || userAgent?.includes("bot")) {
-    isBot = true;
-  }
 
   let selectedLang = GetLocaleFromCookie(siteData, cookies);
   const siteStatusColors = siteData.colors;
 
   // const emailSubscriptionTrigger = await GetSubscriptionTriggerByEmail();
   return {
-    userDb: isLoggedIn.user,
+    userDb: loggedInUser,
     siteStatusColors,
     canSendEmail: IsEmailSetup(),
   };
