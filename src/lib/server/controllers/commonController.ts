@@ -67,7 +67,7 @@ export const GetSMTPFromENV = (): SMTPConfiguration | null => {
 
   return {
     smtp_host: process.env.SMTP_HOST,
-    smtp_port: process.env.SMTP_PORT,
+    smtp_port: Number(process.env.SMTP_PORT),
     smtp_user: process.env.SMTP_USER,
     smtp_sender: process.env.SMTP_FROM_EMAIL,
     smtp_pass: process.env.SMTP_PASS,

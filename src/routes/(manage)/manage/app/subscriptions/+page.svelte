@@ -13,7 +13,7 @@
   import { format } from "date-fns";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
-
+  import { page as pageData } from "$app/state";
   import Bell from "@lucide/svelte/icons/bell";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
@@ -24,6 +24,7 @@
   import Mail from "@lucide/svelte/icons/mail";
 
   import type { SubscriptionsConfig } from "$lib/server/types/db.js";
+  import AlertCircleIcon from "@lucide/svelte/icons/octagon-alert";
 
   // Config state
   let config = $state<SubscriptionsConfig>({
@@ -290,6 +291,20 @@
       <Card.Description>Configure subscription options for your status page</Card.Description>
     </Card.Header>
     <Card.Content class="space-y-4">
+      {#if pageData.data.canSendEmail === false}
+        <Alert.Root variant="destructive">
+          <AlertCircleIcon />
+          <Alert.Title>Email is not setup</Alert.Title>
+          <Alert.Description>
+            <p>
+              Please visit the email set up documentation <a
+                class="underline"
+                href={clientResolver(resolve, "/docs/setup/email-setup")}>here</a
+              >.
+            </p>
+          </Alert.Description>
+        </Alert.Root>
+      {/if}
       {#if loadingConfig}
         <div class="flex justify-center py-10">
           <Spinner />

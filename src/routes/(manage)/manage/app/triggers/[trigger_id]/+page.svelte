@@ -1,6 +1,8 @@
 <script lang="ts">
   import { page } from "$app/state";
   import { goto } from "$app/navigation";
+  import * as Alert from "$lib/components/ui/alert/index.js";
+
   import { Button } from "$lib/components/ui/button/index.js";
   import { Textarea } from "$lib/components/ui/textarea/index.js";
   import { resolve } from "$app/paths";
@@ -20,6 +22,8 @@
   import XIcon from "@lucide/svelte/icons/x";
   import WebhookIcon from "@lucide/svelte/icons/webhook";
   import MailIcon from "@lucide/svelte/icons/mail";
+  import AlertCircleIcon from "@lucide/svelte/icons/octagon-alert";
+
   import ZapIcon from "@lucide/svelte/icons/zap";
   import Loader from "@lucide/svelte/icons/loader";
   import CheckIcon from "@lucide/svelte/icons/check";
@@ -455,6 +459,20 @@
         <!-- Email Specific -->
         {#if trigger.trigger_type === "email"}
           <!-- Email Recipients -->
+          {#if page.data.canSendEmail === false}
+            <Alert.Root variant="destructive">
+              <AlertCircleIcon />
+              <Alert.Title>Email is not setup</Alert.Title>
+              <Alert.Description>
+                <p>
+                  Please visit the email set up documentation <a
+                    class="underline"
+                    href={clientResolver(resolve, "/docs/setup/email-setup")}>here</a
+                  >.
+                </p>
+              </Alert.Description>
+            </Alert.Root>
+          {/if}
           <div class="space-y-2">
             <Label for="email-to">
               To (comma separated) <span class="text-destructive">*</span>

@@ -6,8 +6,11 @@ import serverResolve from "$lib/server/resolver.js";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const parentData = await parent();
-  if (!!!parentData.loggedInUser) {
-    throw redirect(302, serverResolve("/account/logout"));
+  if (!!parentData.loggedInUser) {
+    throw redirect(302, serverResolve("/manage/app/site-configurations"));
   }
-  throw redirect(302, serverResolve("/manage/app/site-configurations"));
+
+  return {
+    ...parentData,
+  };
 };

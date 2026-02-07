@@ -38,6 +38,20 @@
       ]
     },
     {
+      "group": "Setup Guide",
+      "collapsible": false,
+      "pages": [
+        {
+          "title": "Email Setup",
+          "slug": "setup/email-setup"
+        },
+        {
+          "title": "Database Setup",
+          "slug": "setup/database-setup"
+        }
+      ]
+    },
+    {
       "group": "Core Concepts",
       "collapsible": false,
       "pages": [

@@ -23,7 +23,7 @@ export default function getSMTPTransport(meta: SMTPConfiguration): Transporter {
     tls: { rejectUnauthorized: boolean };
   } = {
     host: meta.smtp_host,
-    port: Number(meta.smtp_port) || 587,
+    port: meta.smtp_port || 587,
     secure: meta.smtp_secure, // true for 465, false for other ports
     auth: {
       user: meta.smtp_user,

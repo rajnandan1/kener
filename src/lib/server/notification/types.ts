@@ -46,7 +46,7 @@ export interface EmailCodeVariableMap {
 
 export interface SMTPConfiguration {
   smtp_host: string;
-  smtp_port?: string | number;
+  smtp_port: number;
   smtp_secure?: boolean;
   smtp_user: string;
   smtp_pass: string;
