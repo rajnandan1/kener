@@ -6,6 +6,7 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { t } from "$lib/stores/i18n";
+  import { mode } from "mode-watcher";
 
   import Code from "@lucide/svelte/icons/code";
   import ExternalLink from "@lucide/svelte/icons/external-link";
@@ -20,10 +21,10 @@
 
   let { open = $bindable(false), monitorTag, protocol, domain }: Props = $props();
 
-  let monitorTheme = $state<"light" | "dark">("light");
+  let monitorTheme = $state<"light" | "dark">(mode.current === "dark" ? "dark" : "light");
   let monitorEmbedType = $state<"script" | "iframe">("iframe");
 
-  let latencyTheme = $state<"light" | "dark">("light");
+  let latencyTheme = $state<"light" | "dark">(mode.current === "dark" ? "dark" : "light");
   let latencyEmbedType = $state<"script" | "iframe">("iframe");
 
   // Monitor Embed URL

@@ -35,39 +35,14 @@
   }
 </script>
 
-<div class="container mx-auto px-4 py-8">
-  <!-- Incident Header -->
-  <Item.Root class="mb-4 px-0">
-    <Item.Content class="px-0">
-      <Item.Title class="text-3xl">{data.incident.title}</Item.Title>
-    </Item.Content>
-  </Item.Root>
-  <div class="my-4 flex justify-end gap-2">
-    <ThemePlus showEventsButton={true} showHomeButton={true} />
-  </div>
-  <!-- Incident Meta -->
-  <div class="mb-4 flex flex-col items-start gap-4 rounded-3xl border p-4 text-sm">
-    <div class="flex">
-      <Badge variant="outline" class="gap-1 text-{data.incident.state.toLowerCase()}  rounded-none border-0 p-0">
-        {$t(data.incident.state)}
-      </Badge>
-    </div>
-    <div class="flex w-full justify-between gap-2">
-      <div class="flex flex-col items-start gap-1.5">
-        <span class="text-muted-foreground">{$t("Start Time")}</span>
-        <span>{$formatDate(data.incident.start_date_time, "PPpp")}</span>
-      </div>
-      {#if data.incident.end_date_time}
-        <div class="flex flex-col items-center gap-1.5">
-          <span class="text-muted-foreground">{$t("End Time")}</span>
-          <span>{$formatDate(data.incident.end_date_time, "PPpp")}</span>
-        </div>
-      {/if}
-      <div class="flex flex-col items-end gap-1.5">
-        <span class="text-muted-foreground">{$t("Duration")}</span>
-        <span>{$formatDuration(data.incident.start_date_time, data.incident.end_date_time, $t("Ongoing"))}</span>
-      </div>
-    </div>
+<div class="flex flex-col gap-3">
+  <ThemePlus showEventsButton={true} showHomeButton={true} />
+  <div class="flex flex-col gap-2 px-4 py-2">
+    <Item.Root class="mb-4 px-0">
+      <Item.Content class="px-0">
+        <Item.Title class="text-3xl">{data.incident.title}</Item.Title>
+      </Item.Content>
+    </Item.Root>
   </div>
   <div class="grid gap-6 lg:grid-cols-3">
     <!-- Comments Timeline (Main Content) -->

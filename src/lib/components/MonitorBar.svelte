@@ -147,8 +147,8 @@
       </Item.Content>
 
       <Item.Content class="flex-none text-center">
-        <Item.Title class="text-2xl">
-          <StatusIcon class={STATUS_STROKE[data.currentStatus]} />
+        <Item.Title class="items-start text-2xl">
+          <StatusIcon class="{STATUS_STROKE[data.currentStatus]} mt-1.5" />
           <div class="flex flex-col items-start gap-1">
             <span>{data.uptime}%</span>
             <span class="text-muted-foreground text-xs">

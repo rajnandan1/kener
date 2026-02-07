@@ -35,7 +35,7 @@
         {...props}
         variant="outline"
         size="sm"
-        class="ksel rounded-full text-xs font-medium"
+        class="ksel bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border text-xs font-medium shadow-none backdrop-blur-md"
         role="combobox"
         aria-expanded={open}
       >

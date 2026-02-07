@@ -61,22 +61,18 @@
   }
 </script>
 
-<div class="container mx-auto px-4 py-8">
-  <!-- Maintenance Header -->
-  <Item.Root class="mb-4 px-0">
-    <Item.Media>
-      <MaintenanceIcon class="stroke-maintenance size-8" />
-    </Item.Media>
-    <Item.Content class="px-0">
-      <Item.Title class="text-3xl">{data.maintenance.title}</Item.Title>
-    </Item.Content>
-  </Item.Root>
-
-  <div class="my-4 flex justify-end gap-2">
-    <ThemePlus showEventsButton={true} showHomeButton={true} />
+<div class="flex flex-col gap-3">
+  <ThemePlus showEventsButton={true} showHomeButton={true} />
+  <div class="flex flex-col gap-2 px-4 py-2">
+    <Item.Root class="mb-4 px-0">
+      <Item.Media>
+        <MaintenanceIcon class="stroke-maintenance size-8" />
+      </Item.Media>
+      <Item.Content class="px-0">
+        <Item.Title class="text-3xl">{data.maintenance.title}</Item.Title>
+      </Item.Content>
+    </Item.Root>
   </div>
-
-  <!-- Maintenance Meta -->
   <div class="mb-4 flex flex-col items-start gap-4 rounded-3xl border p-4 text-sm">
     <div class="flex gap-2">
       {#if isRecurring(data.maintenance.rrule)}
@@ -215,4 +211,11 @@
       </div>
     </div>
   </div>
+</div>
+<div class="container mx-auto px-4 py-8">
+  <!-- Maintenance Header -->
+
+  <div class="my-4 flex justify-end gap-2"></div>
+
+  <!-- Maintenance Meta -->
 </div>

@@ -32,8 +32,11 @@
 
 {#if $i18n.availableLocales.length > 1}
   <Select.Root type="single" name="language" bind:value={selectedLang}>
-    <Select.Trigger size="sm" class="ksel bg-background rounded-full text-xs font-medium">
-      <Languages class="text-foreground" />
+    <Select.Trigger
+      size="sm"
+      class="ksel hover:text-accent-foreground bg-background/80 dark:bg-background/70 border-foreground/10 cursor-pointer rounded-full border text-xs font-medium shadow-none backdrop-blur-md"
+    >
+      <Languages class="text-inherit" />
       {triggerContent}
     </Select.Trigger>
     <Select.Content>

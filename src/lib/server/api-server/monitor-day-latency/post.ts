@@ -1,17 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { APIServerRequest } from "$lib/server/types/api-server";
 import db from "$lib/server/db/db";
-import { GetLastStatusBefore, InterpolateData } from "$lib/server/controllers/monitorsController";
-import {
-  BeginningOfDay,
-  GetMinuteStartNowTimestampUTC,
-  GetMinuteStartTimestampUTC,
-  ParseUptime,
-  UptimeCalculator,
-} from "$lib/server/tool";
-import GC from "$lib/global-constants";
+import { BeginningOfDay, GetMinuteStartNowTimestampUTC, GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { GetMonitorsParsed } from "../../controllers/monitorsController";
-import type { TimestampStatusCount } from "$lib/server/types/db";
 import { ParseLatency } from "$lib/clientTools";
 
 interface DayDetailRequest {
@@ -162,15 +153,15 @@ export default async function post(req: APIServerRequest): Promise<Response> {
   const targetPoints = Math.min(100, validData.length);
   const minuteData = lttbDownsample(validData, targetPoints);
 
-  console.log("Start", startOfDayTodayAtTz, "End", nowAtTz);
-  console.log(
-    "Raw data points:",
-    rawData.length,
-    "Valid points:",
-    validData.length,
-    "Downsampled to:",
-    minuteData.length,
-  );
+  // console.log("Start", startOfDayTodayAtTz, "End", nowAtTz);
+  // console.log(
+  //   "Raw data points:",
+  //   rawData.length,
+  //   "Valid points:",
+  //   validData.length,
+  //   "Downsampled to:",
+  //   minuteData.length,
+  // );
 
   return json({
     minutes: minuteData,

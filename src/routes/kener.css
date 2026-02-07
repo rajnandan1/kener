@@ -253,3 +253,6 @@ body::-webkit-scrollbar {
   border-top-right-radius: calc(infinity * 1px);
   border-bottom-right-radius: calc(infinity * 1px);
 }
+.theme-plus-bar button {
+  cursor: pointer;
+}

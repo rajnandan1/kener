@@ -4,7 +4,7 @@
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import { setMode, mode } from "mode-watcher";
   import { page } from "$app/state";
-  import { t } from "$lib/stores/i18n";
+  import { i18n, t } from "$lib/stores/i18n";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import Sun from "@lucide/svelte/icons/sun";
@@ -70,13 +70,18 @@
   });
 </script>
 
-<div class="sticky top-18 z-20 flex w-full items-center justify-between gap-2 rounded">
+<div class="theme-plus-bar sticky top-18 z-20 flex w-full items-center justify-between gap-2 rounded">
   <div class="flex items-center gap-2">
     {#if showPagesDropdown && pages.length > 1}
       <DropdownMenu.Root>
         <DropdownMenu.Trigger>
           {#snippet child({ props })}
-            <Button {...props} variant="outline" size="sm" class="rounded-full text-xs shadow-none">
+            <Button
+              {...props}
+              variant="outline"
+              size="sm"
+              class="bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border text-xs shadow-none backdrop-blur-md"
+            >
               {currentPage?.page_title || "Home"}
               <ChevronDown class="ml-1 h-4 w-4" />
             </Button>
@@ -97,7 +102,12 @@
       </DropdownMenu.Root>
     {/if}
     {#if showHomeButton}
-      <Button href={clientResolver(resolve, "/")} variant="outline" size="sm" class="rounded-full text-xs shadow-none">
+      <Button
+        href={clientResolver(resolve, "/")}
+        variant="outline"
+        size="sm"
+        class="bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border text-xs shadow-none backdrop-blur-md"
+      >
         <ChevronLeft class="h-4 w-4" />
         {$t("Home")}
       </Button>
@@ -107,7 +117,7 @@
         href={clientResolver(resolve, eventsPath)}
         variant="outline"
         size="sm"
-        class="rounded-full text-xs shadow-none"
+        class="bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border text-xs shadow-none backdrop-blur-md"
       >
         <ICONS.Events class="h-4 w-4" />
         {$t("Events")}
@@ -120,7 +130,7 @@
         <Button
           variant="outline"
           size="sm"
-          class="rounded-btn text-xs"
+          class="rounded-btn bg-background/80 dark:bg-background/70 border-foreground/10 border text-xs backdrop-blur-md"
           aria-label="Go Back"
           onclick={() => (openSubscribeMenu = true)}
         >
@@ -132,7 +142,12 @@
 
     <ButtonGroup.Root class=" rounded-btn-grp ">
       {#if !!page.data.subMenuOptions?.showCopyCurrentPageLink}
-        <CopyButton variant="outline" text={shareLink} class="cursor-pointer rounded-full shadow-none" size="icon-sm">
+        <CopyButton
+          variant="outline"
+          text={shareLink}
+          class="bg-background/80 dark:bg-background/70 border-foreground/10 cursor-pointer rounded-full border shadow-none backdrop-blur-md"
+          size="icon-sm"
+        >
           <Share />
         </CopyButton>
       {/if}
@@ -140,7 +155,7 @@
         <!-- BadgeMenu -->
         <Button
           variant="outline"
-          class="relative cursor-pointer rounded-full shadow-none"
+          class="bg-background/80 dark:bg-background/70 border-foreground/10 relative cursor-pointer rounded-full border shadow-none backdrop-blur-md"
           size="icon-sm"
           onclick={() => (openBadgesMenu = true)}
         >
@@ -151,7 +166,7 @@
         <!-- Embed Menu -->
         <Button
           variant="outline"
-          class="relative cursor-pointer rounded-full shadow-none"
+          class="bg-background/80 dark:bg-background/70 border-foreground/10 relative cursor-pointer rounded-full border shadow-none backdrop-blur-md"
           size="icon-sm"
           onclick={() => (openEmbedMenu = true)}
         >
@@ -167,7 +182,7 @@
           size="sm"
           onclick={toggleMode}
           aria-label="toggle theme mode "
-          class="relative rounded-full shadow-none"
+          class="bg-background/80 dark:bg-background/70 border-foreground/10 relative rounded-full border shadow-none backdrop-blur-md"
         >
           <Sun class="absolute left-2  scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
           <Moon class="absolute left-2  scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
@@ -177,8 +192,12 @@
           </span>
         </Button>
       {/if}
-      <LanguageSelector />
-      <TimezoneSelector />
+      {#if $i18n.availableLocales.length > 1}
+        <LanguageSelector />
+      {/if}
+      {#if page.data.isTimezoneEnabled}
+        <TimezoneSelector />
+      {/if}
     </ButtonGroup.Root>
   </div>
 </div>
