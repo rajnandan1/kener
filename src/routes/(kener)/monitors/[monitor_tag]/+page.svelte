@@ -45,12 +45,18 @@
             >
               {#if data.monitorDescription.length > 150 && !descriptionExpanded}
                 {data.monitorDescription.slice(0, 150)}...
-                <button class="inline font-bold hover:underline" onclick={() => (descriptionExpanded = true)}>
+                <button
+                  class="text-accent-foreground inline font-medium hover:underline"
+                  onclick={() => (descriptionExpanded = true)}
+                >
                   {$t("Read more")}
                 </button>
               {:else if data.monitorDescription.length > 150}
                 {data.monitorDescription}
-                <button class="inline font-bold hover:underline" onclick={() => (descriptionExpanded = false)}>
+                <button
+                  class="text-accent-foreground inline font-medium hover:underline"
+                  onclick={() => (descriptionExpanded = false)}
+                >
                   {$t("Read less")}
                 </button>
               {:else}
