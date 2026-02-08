@@ -109,9 +109,16 @@ export function IsValidColors(colors: string): boolean {
     return false;
   }
   if (typeof parsed !== "object") return false;
-  const validColorKeys = ["UP", "DOWN", "DEGRADED", "MAINTENANCE"];
-  for (const key of validColorKeys) {
+  const requiredColorKeys = ["UP", "DOWN", "DEGRADED", "MAINTENANCE"];
+  for (const key of requiredColorKeys) {
     if (typeof parsed[key] !== "string" || !/^#[0-9A-Fa-f]{6}$/.test(parsed[key] as string)) return false;
+  }
+  // Optional color keys
+  const optionalColorKeys = ["ACCENT", "ACCENT_FOREGROUND"];
+  for (const key of optionalColorKeys) {
+    if (parsed[key] !== undefined) {
+      if (typeof parsed[key] !== "string" || !/^#[0-9A-Fa-f]{6}$/.test(parsed[key] as string)) return false;
+    }
   }
   return true;
 }

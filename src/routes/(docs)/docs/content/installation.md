@@ -49,7 +49,6 @@ docker run -d \
   -p 3000:3000 \
   -v $(pwd)/database:/app/database \
   -e KENER_SECRET_KEY=your-secret-key \
-  -e ORIGIN=https://status.yourdomain.com \
   rajnandan1/kener:latest
 ```
 
@@ -69,7 +68,6 @@ services:
             - ./database:/app/database
         environment:
             - KENER_SECRET_KEY=your-secret-key
-            - ORIGIN=https://status.yourdomain.com
             - DATABASE_URL=sqlite://./database/kener.db
         restart: unless-stopped
 ```

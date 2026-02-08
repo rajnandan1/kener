@@ -140,7 +140,7 @@
       </ButtonGroup.Root>
     {/if}
 
-    <ButtonGroup.Root class=" rounded-btn-grp ">
+    <ButtonGroup.Root class="rounded-btn-grp">
       {#if !!page.data.subMenuOptions?.showCopyCurrentPageLink}
         <CopyButton
           variant="outline"

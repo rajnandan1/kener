@@ -116,3 +116,7 @@ Place types and interfaces in the appropriate folder based on where they are use
 - **`src/lib/client/types/`** - Client-only types. Use for UI-specific types, component prop types, and anything that relies on browser/DOM APIs.
 
 Always use `import type { ... }` when importing types to avoid accidental runtime imports.
+
+# Other skills
+
+Read files in .claude/skills for more instructions on specific tasks or file types.

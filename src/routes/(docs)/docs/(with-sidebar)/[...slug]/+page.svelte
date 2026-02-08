@@ -2,13 +2,18 @@
   import type { DocsTableOfContentsItem, DocsPage } from "$lib/types/docs";
   import DocsTableOfContents from "../../DocsTableOfContents.svelte";
   import DocsPageNavigation from "../../DocsPageNavigation.svelte";
-  import { Copy, Check } from "@lucide/svelte";
+  import { Copy, Check, ExternalLink } from "@lucide/svelte";
+  import { Button } from "$lib/components/ui/button/index.js";
+  import * as ButtonGroup from "$lib/components/ui/button-group/index.js";
+  import { ChevronDown } from "lucide-svelte";
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
 
   interface Props {
     data: {
       title: string;
       description?: string;
       slug: string;
+      content: string;
       htmlContent: string;
       tableOfContents: DocsTableOfContentsItem[];
       prevPage: DocsPage | null;
@@ -19,6 +24,55 @@
 
   let { data }: Props = $props();
   let contentEl: HTMLDivElement;
+
+  type MdAction = "copy-url" | "open-url" | "copy-content";
+
+  const actionLabels: Record<MdAction, string> = {
+    "copy-url": "Copy Markdown URL",
+    "open-url": "Open Markdown URL",
+    "copy-content": "Copy Markdown Content"
+  };
+
+  let selectedAction: MdAction = $state(
+    ((typeof window !== "undefined" && localStorage.getItem("kener-docs-md-action")) as MdAction) || "copy-url"
+  );
+  let showCheck = $state(false);
+  let checkTimeout: ReturnType<typeof setTimeout>;
+
+  function getMarkdownUrl(): string {
+    return `${window.location.origin}/docs/raw/${data.slug}.md`;
+  }
+
+  function flashCheck() {
+    showCheck = true;
+    clearTimeout(checkTimeout);
+    checkTimeout = setTimeout(() => {
+      showCheck = false;
+    }, 2000);
+  }
+
+  async function executeAction(action: MdAction) {
+    if (action !== selectedAction) {
+      selectedAction = action;
+      if (typeof window !== "undefined") {
+        localStorage.setItem("kener-docs-md-action", action);
+      }
+    }
+
+    switch (action) {
+      case "copy-url":
+        await navigator.clipboard.writeText(getMarkdownUrl());
+        flashCheck();
+        break;
+      case "open-url":
+        window.open(getMarkdownUrl(), "_blank");
+        break;
+      case "copy-content":
+        await navigator.clipboard.writeText(data.content || "");
+        flashCheck();
+        break;
+    }
+  }
 
   // Add copy buttons to code blocks after content is rendered
   $effect(() => {
@@ -97,14 +151,58 @@
 
 <div class="mx-auto flex max-w-[1100px] gap-8">
   <article class="max-w-4xl min-w-0 flex-1">
-    <div class="mb-8">
-      <span class="text-accent-foreground mb-2 inline-block text-xs font-semibold tracking-wide uppercase"
-        >{data.group}</span
-      >
+    <div class="relative mb-8">
+      <span class="text-accent-foreground mb-2 inline-block text-xs font-semibold tracking-wide uppercase">
+        {data.group}
+      </span>
       <h1 class="text-foreground m-0 text-3xl leading-tight font-bold">{data.title}</h1>
       {#if data.description}
         <p class="text-muted-foreground mt-1">{data.description}</p>
       {/if}
+
+      <ButtonGroup.Root class=" absolute top-0 right-0 hidden cursor-pointer sm:flex">
+        <Button
+          variant="outline"
+          size="sm"
+          class="cursor-pointer border-r-0 text-xs"
+          onclick={() => executeAction(selectedAction)}
+        >
+          {#if showCheck}
+            <Check class="size-3" />
+          {:else if selectedAction === "open-url"}
+            <ExternalLink class="size-3" />
+          {:else}
+            <Copy class="size-3" />
+          {/if}
+          {actionLabels[selectedAction]}
+        </Button>
+        <ButtonGroup.Separator />
+        <DropdownMenu.Root>
+          <DropdownMenu.Trigger>
+            {#snippet child({ props })}
+              <Button {...props} variant="outline" size="icon-sm" class="cursor-pointer">
+                <ChevronDown />
+              </Button>
+            {/snippet}
+          </DropdownMenu.Trigger>
+          <DropdownMenu.Content align="end">
+            <DropdownMenu.Group>
+              <DropdownMenu.Item onclick={() => executeAction("copy-url")}>
+                <Copy class="size-3" />
+                <span class="text-xs">Copy Markdown URL</span>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item onclick={() => executeAction("open-url")}>
+                <ExternalLink class="size-3" />
+                <span class="text-xs">Open Markdown URL</span>
+              </DropdownMenu.Item>
+              <DropdownMenu.Item onclick={() => executeAction("copy-content")}>
+                <Copy class="size-3" />
+                <span class="text-xs">Copy Markdown Content</span>
+              </DropdownMenu.Item>
+            </DropdownMenu.Group>
+          </DropdownMenu.Content>
+        </DropdownMenu.Root>
+      </ButtonGroup.Root>
     </div>
 
     <div class="prose dark:prose-invert prose-neutral max-w-none" bind:this={contentEl}>

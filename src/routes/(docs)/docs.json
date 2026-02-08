@@ -42,12 +42,20 @@
       "collapsible": false,
       "pages": [
         {
+          "title": "Environment Variables",
+          "slug": "setup/environment-variables"
+        },
+        {
           "title": "Email Setup",
           "slug": "setup/email-setup"
         },
         {
           "title": "Database Setup",
           "slug": "setup/database-setup"
+        },
+        {
+          "title": "Redis Setup",
+          "slug": "setup/redis-setup"
         }
       ]
     },
@@ -178,6 +186,16 @@
         {
           "title": "Configuration",
           "slug": "configuration"
+        }
+      ]
+    },
+    {
+      "group": "Advanced Topics",
+      "collapsible": true,
+      "pages": [
+        {
+          "title": "Reverse Proxy Setup",
+          "slug": "advanced-topics/reverse-proxy"
         }
       ]
     },

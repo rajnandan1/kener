@@ -39,7 +39,7 @@
         role="combobox"
         aria-expanded={open}
       >
-        <Globe class="text-foreground" />
+        <Globe class="text-inherit" />
         {$selectedTimezone}
       </Button>
     {/snippet}

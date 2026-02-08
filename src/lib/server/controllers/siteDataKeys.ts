@@ -162,6 +162,11 @@ export const siteDataKeys: SiteDataKey[] = [
     data_type: "object",
   },
   {
+    key: "colorsDark",
+    isValid: IsValidColors,
+    data_type: "object",
+  },
+  {
     key: "font",
     isValid: IsValidJSONString,
     data_type: "object",

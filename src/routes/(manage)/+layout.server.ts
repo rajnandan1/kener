@@ -31,11 +31,15 @@ export const load: LayoutServerLoad = async ({ cookies }) => {
 
   let selectedLang = GetLocaleFromCookie(siteData, cookies);
   const siteStatusColors = siteData.colors;
+  const siteStatusColorsDark = siteData.colorsDark || siteStatusColors;
+  const font = siteData.font || { cssSrc: "", family: "" };
 
   // const emailSubscriptionTrigger = await GetSubscriptionTriggerByEmail();
   return {
     userDb: loggedInUser,
     siteStatusColors,
+    siteStatusColorsDark,
+    font,
     canSendEmail: IsEmailSetup(),
   };
 };

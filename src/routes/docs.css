@@ -1,18 +1,3 @@
-@import url(https://fonts.bunny.net/css?family=anek-bangla:200,300,400,500);
-@import url(https://fonts.bunny.net/css?family=overpass-mono:300,400,500,600,700);
-* {
-  font-family: "Anek Bangla", sans-serif;
-  font-optical-sizing: auto;
-}
-
-pre > code {
-  font-family: "Overpass Mono", monospace;
-}
-
-html {
-  font-size: 16px;
-}
-
 /* Prose/Content Body Styles - needed for markdown rendering */
 .docs-content-body {
   font-size: 1rem;
@@ -163,7 +148,7 @@ html {
 }
 
 .markdown-alert-tip {
-  border-left-color: hsl(142 76% 36%);
+  border-color: hsl(142 76% 36%);
   background-color: hsl(142 76% 36% / 0.3);
 }
 
@@ -172,7 +157,7 @@ html {
 }
 
 .markdown-alert-important {
-  border-left-color: hsl(271 81% 56%);
+  border-color: hsl(271 81% 56%);
   background-color: hsl(271 81% 56% / 0.3);
 }
 
@@ -181,7 +166,7 @@ html {
 }
 
 .markdown-alert-warning {
-  border-left-color: hsl(38 92% 50%);
+  border-color: hsl(38 92% 50%);
   background-color: hsl(38 92% 50% / 0.3);
 }
 
@@ -190,7 +175,7 @@ html {
 }
 
 .markdown-alert-caution {
-  border-left-color: hsl(0 84% 60%);
+  border-color: hsl(0 84% 60%);
   background-color: hsl(0 84% 60% / 0.3);
 }
 

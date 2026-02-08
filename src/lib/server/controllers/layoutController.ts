@@ -24,6 +24,16 @@ export interface LayoutServerData {
     DOWN: string;
     DEGRADED: string;
     MAINTENANCE: string;
+    ACCENT: string;
+    ACCENT_FOREGROUND: string;
+  };
+  siteStatusColorsDark: {
+    UP: string;
+    DOWN: string;
+    DEGRADED: string;
+    MAINTENANCE: string;
+    ACCENT: string;
+    ACCENT_FOREGROUND: string;
   };
   navItems: Array<{ name: string; url: string; iconURL: string }>;
   allPages: PageNavItem[];
@@ -64,6 +74,7 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
 
   const selectedLang = GetLocaleFromCookie(siteData, cookies);
   const siteStatusColors = siteData.colors;
+  const siteStatusColorsDark = siteData.colorsDark || siteStatusColors;
 
   const allPagesData = await GetAllPages();
   const allPages: PageNavItem[] = allPagesData.map((p) => ({
@@ -96,6 +107,7 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     loggedInUser,
     selectedLang,
     siteStatusColors,
+    siteStatusColorsDark,
     navItems: siteData.nav || [],
     allPages,
     siteName: siteData.siteName || "Kener",

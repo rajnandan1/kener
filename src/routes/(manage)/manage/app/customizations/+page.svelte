@@ -26,6 +26,8 @@
     DOWN: string;
     DEGRADED: string;
     MAINTENANCE: string;
+    ACCENT: string;
+    ACCENT_FOREGROUND: string;
   }
 
   interface FontConfig {
@@ -50,7 +52,17 @@
     UP: "#67ab95",
     DOWN: "#ca3038",
     DEGRADED: "#e6ca61",
-    MAINTENANCE: "#6679cc"
+    MAINTENANCE: "#6679cc",
+    ACCENT: "#f4f4f5",
+    ACCENT_FOREGROUND: "#e96e2d"
+  });
+  let colorsDark = $state<StatusColors>({
+    UP: "#67ab95",
+    DOWN: "#ca3038",
+    DEGRADED: "#e6ca61",
+    MAINTENANCE: "#6679cc",
+    ACCENT: "#27272a",
+    ACCENT_FOREGROUND: "#e96e2d"
   });
   let font = $state<FontConfig>({
     cssSrc: "",
@@ -78,8 +90,23 @@
             UP: result.colors.UP || "#67ab95",
             DOWN: result.colors.DOWN || "#ca3038",
             DEGRADED: result.colors.DEGRADED || "#e6ca61",
-            MAINTENANCE: result.colors.MAINTENANCE || "#6679cc"
+            MAINTENANCE: result.colors.MAINTENANCE || "#6679cc",
+            ACCENT: result.colors.ACCENT || "#f4f4f5",
+            ACCENT_FOREGROUND: result.colors.ACCENT_FOREGROUND || result.colors.ACCENT || "#e96e2d"
           };
+        }
+        if (result.colorsDark) {
+          colorsDark = {
+            UP: result.colorsDark.UP || colors.UP,
+            DOWN: result.colorsDark.DOWN || colors.DOWN,
+            DEGRADED: result.colorsDark.DEGRADED || colors.DEGRADED,
+            MAINTENANCE: result.colorsDark.MAINTENANCE || colors.MAINTENANCE,
+            ACCENT: result.colorsDark.ACCENT || "#27272a",
+            ACCENT_FOREGROUND:
+              result.colorsDark.ACCENT_FOREGROUND || result.colorsDark.ACCENT || colors.ACCENT_FOREGROUND
+          };
+        } else {
+          colorsDark = { ...colors, ACCENT: "#27272a" };
         }
         if (result.font) {
           font = {
@@ -149,7 +176,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "storeSiteData",
-          data: { colors: JSON.stringify(colors) }
+          data: { colors: JSON.stringify(colors), colorsDark: JSON.stringify(colorsDark) }
         })
       });
       const result = await response.json();
@@ -303,57 +330,167 @@
     <Card.Root>
       <Card.Header class="border-b">
         <Card.Title>Status Colors</Card.Title>
-        <Card.Description>Customize the colors used to represent different monitor statuses.</Card.Description>
+        <Card.Description
+          >Customize the colors used to represent different monitor statuses. Set separate colors for light and dark
+          themes.</Card.Description
+        >
       </Card.Header>
-      <Card.Content class="pt-6">
-        <div class="flex flex-wrap justify-around gap-8">
-          <div class="flex flex-col items-center gap-2">
-            <Label class="flex items-center gap-2">{constants.UP}</Label>
-            <ColorPicker
-              bind:hex={colors.UP}
-              position="responsive"
-              isAlpha={false}
-              isDark={mode.current === "dark"}
-              --input-size="16px"
-              isTextInput={true}
-              label=""
-            />
+      <Card.Content class="space-y-8 pt-6">
+        <!-- Light Mode Colors -->
+        <div>
+          <h3 class="mb-4 text-sm font-semibold">Light Mode</h3>
+          <div class="flex flex-wrap justify-around gap-8">
+            <div class="flex flex-col items-center gap-2">
+              <Label class="flex items-center gap-2">{constants.UP}</Label>
+              <ColorPicker
+                bind:hex={colors.UP}
+                position="responsive"
+                isAlpha={false}
+                isDark={mode.current === "dark"}
+                --input-size="16px"
+                isTextInput={true}
+                label=""
+              />
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <Label class="flex items-center gap-2">{constants.DEGRADED}</Label>
+              <ColorPicker
+                bind:hex={colors.DEGRADED}
+                position="responsive"
+                isAlpha={false}
+                isDark={mode.current === "dark"}
+                --input-size="16px"
+                isTextInput={true}
+                label=""
+              />
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <Label class="flex items-center gap-2">{constants.DOWN}</Label>
+              <ColorPicker
+                bind:hex={colors.DOWN}
+                position="responsive"
+                isAlpha={false}
+                isDark={mode.current === "dark"}
+                --input-size="16px"
+                isTextInput={true}
+                label=""
+              />
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <Label class="flex items-center gap-2">{constants.MAINTENANCE}</Label>
+              <ColorPicker
+                bind:hex={colors.MAINTENANCE}
+                position="responsive"
+                isAlpha={false}
+                isDark={mode.current === "dark"}
+                --input-size="16px"
+                isTextInput={true}
+                label=""
+              />
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <Label class="flex items-center gap-2">Accent</Label>
+              <ColorPicker
+                bind:hex={colors.ACCENT}
+                position="responsive"
+                isAlpha={false}
+                isDark={mode.current === "dark"}
+                --input-size="16px"
+                isTextInput={true}
+                label=""
+              />
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <Label class="flex items-center gap-2">Accent Foreground</Label>
+              <ColorPicker
+                bind:hex={colors.ACCENT_FOREGROUND}
+                position="responsive"
+                isAlpha={false}
+                isDark={mode.current === "dark"}
+                --input-size="16px"
+                isTextInput={true}
+                label=""
+              />
+            </div>
           </div>
-          <div class="flex flex-col items-center gap-2">
-            <Label class="flex items-center gap-2">{constants.DEGRADED}</Label>
-            <ColorPicker
-              bind:hex={colors.DEGRADED}
-              position="responsive"
-              isAlpha={false}
-              isDark={mode.current === "dark"}
-              --input-size="16px"
-              isTextInput={true}
-              label=""
-            />
-          </div>
-          <div class="flex flex-col items-center gap-2">
-            <Label class="flex items-center gap-2">{constants.DOWN}</Label>
-            <ColorPicker
-              bind:hex={colors.DOWN}
-              position="responsive"
-              isAlpha={false}
-              isDark={mode.current === "dark"}
-              --input-size="16px"
-              isTextInput={true}
-              label=""
-            />
-          </div>
-          <div class="flex flex-col items-center gap-2">
-            <Label class="flex items-center gap-2">{constants.MAINTENANCE}</Label>
-            <ColorPicker
-              bind:hex={colors.MAINTENANCE}
-              position="responsive"
-              isAlpha={false}
-              isDark={mode.current === "dark"}
-              --input-size="16px"
-              isTextInput={true}
-              label=""
-            />
+        </div>
+
+        <!-- Dark Mode Colors -->
+        <div>
+          <h3 class="mb-4 text-sm font-semibold">Dark Mode</h3>
+          <div class="flex flex-wrap justify-around gap-8">
+            <div class="flex flex-col items-center gap-2">
+              <Label class="flex items-center gap-2">{constants.UP}</Label>
+              <ColorPicker
+                bind:hex={colorsDark.UP}
+                position="responsive"
+                isAlpha={false}
+                isDark={mode.current === "dark"}
+                --input-size="16px"
+                isTextInput={true}
+                label=""
+              />
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <Label class="flex items-center gap-2">{constants.DEGRADED}</Label>
+              <ColorPicker
+                bind:hex={colorsDark.DEGRADED}
+                position="responsive"
+                isAlpha={false}
+                isDark={mode.current === "dark"}
+                --input-size="16px"
+                isTextInput={true}
+                label=""
+              />
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <Label class="flex items-center gap-2">{constants.DOWN}</Label>
+              <ColorPicker
+                bind:hex={colorsDark.DOWN}
+                position="responsive"
+                isAlpha={false}
+                isDark={mode.current === "dark"}
+                --input-size="16px"
+                isTextInput={true}
+                label=""
+              />
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <Label class="flex items-center gap-2">{constants.MAINTENANCE}</Label>
+              <ColorPicker
+                bind:hex={colorsDark.MAINTENANCE}
+                position="responsive"
+                isAlpha={false}
+                isDark={mode.current === "dark"}
+                --input-size="16px"
+                isTextInput={true}
+                label=""
+              />
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <Label class="flex items-center gap-2">Accent</Label>
+              <ColorPicker
+                bind:hex={colorsDark.ACCENT}
+                position="responsive"
+                isAlpha={false}
+                isDark={mode.current === "dark"}
+                --input-size="16px"
+                isTextInput={true}
+                label=""
+              />
+            </div>
+            <div class="flex flex-col items-center gap-2">
+              <Label class="flex items-center gap-2">Accent Foreground</Label>
+              <ColorPicker
+                bind:hex={colorsDark.ACCENT_FOREGROUND}
+                position="responsive"
+                isAlpha={false}
+                isDark={mode.current === "dark"}
+                --input-size="16px"
+                isTextInput={true}
+                label=""
+              />
+            </div>
           </div>
         </div>
       </Card.Content>

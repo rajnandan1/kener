@@ -85,7 +85,7 @@ export function getAdjacentPages(slug: string): { prev: DocsPage | null; next: D
 /**
  * Read markdown file content for a given slug (raw, with front-matter)
  */
-function getRawMarkdownContent(slug: string): string | null {
+export function getRawMarkdownContent(slug: string): string | null {
   const filePath = path.join(DOCS_DIR, `${slug}.md`);
 
   try {

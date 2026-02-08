@@ -46,7 +46,6 @@ Create a `.env` file in the root directory:
 ```env
 # Required
 KENER_SECRET_KEY=your-secret-key-here
-ORIGIN=http://localhost:3000
 
 # Database (SQLite is default)
 DATABASE_URL=sqlite://./database/kener.db

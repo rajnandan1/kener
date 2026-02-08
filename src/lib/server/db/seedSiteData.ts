@@ -93,6 +93,16 @@ const seedSiteData = {
     DOWN: "#ca3038",
     DEGRADED: "#e6ca61",
     MAINTENANCE: "#6679cc",
+    ACCENT: "#f4f4f5",
+    ACCENT_FOREGROUND: "#e96e2d",
+  },
+  colorsDark: {
+    UP: "#67ab95",
+    DOWN: "#ca3038",
+    DEGRADED: "#e6ca61",
+    MAINTENANCE: "#6679cc",
+    ACCENT: "#27272a",
+    ACCENT_FOREGROUND: "#e96e2d",
   },
   font: {
     cssSrc: "",

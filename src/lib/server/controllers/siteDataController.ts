@@ -1,7 +1,6 @@
 import db from "../db/db.js";
 import { siteDataKeys } from "./siteDataKeys.js";
 import type { Cookies } from "@sveltejs/kit";
-import { addMonths, format, startOfMonth, subMonths } from "date-fns";
 
 export interface SiteDataTransformed {
   title?: string;
@@ -40,6 +39,16 @@ export interface SiteDataTransformed {
     DOWN: string;
     DEGRADED: string;
     MAINTENANCE: string;
+    ACCENT: string;
+    ACCENT_FOREGROUND: string;
+  };
+  colorsDark: {
+    UP: string;
+    DOWN: string;
+    DEGRADED: string;
+    MAINTENANCE: string;
+    ACCENT: string;
+    ACCENT_FOREGROUND: string;
   };
   font: {
     cssSrc: string;

@@ -12,9 +12,6 @@ Configure Kener to match your needs with environment variables and settings.
 ```env
 # Secret key for JWT tokens (generate a random string)
 KENER_SECRET_KEY=your-super-secret-key-here
-
-# Your site URL (no trailing slash)
-ORIGIN=https://status.yourdomain.com
 ```
 
 ### Database Configuration
@@ -167,7 +164,9 @@ DB_TIMEOUT=5000
 
 ## Reverse Proxy
 
-### Nginx Example
+For production deployments, it's recommended to run Kener behind a reverse proxy like Nginx, Apache, Caddy, or Traefik.
+
+**Quick Example (Nginx)**:
 
 ```nginx
 server {
@@ -185,13 +184,15 @@ server {
 }
 ```
 
-### Caddy Example
+**Quick Example (Caddy)**:
 
 ```caddyfile
 status.yourdomain.com {
     reverse_proxy localhost:3000
 }
 ```
+
+📖 **For complete configuration including SSL, subpaths, load balancing, and troubleshooting**, see the [Reverse Proxy Setup Guide](/docs/advanced-topics/reverse-proxy).
 
 ## Next Steps
 

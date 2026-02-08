@@ -4,6 +4,7 @@
   import { Sun, Moon, Menu, X, Search } from "lucide-svelte";
   import { toggleMode, mode } from "mode-watcher";
   import DocsSearch from "./DocsSearch.svelte";
+  import { Button } from "$lib/components/ui/button";
 
   interface Props {
     config: DocsConfig;
@@ -32,7 +33,7 @@
 </script>
 
 <!-- Main Navbar -->
-<header class="bg-background border-border/50 fixed top-0 right-0 left-0 z-50 border-b">
+<header class="bg-background border-border/50 fixed top-0 right-0 left-0 z-50">
   <!-- Primary Nav Row -->
   <div class="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-6">
     <div class="flex items-center gap-4">
@@ -106,16 +107,12 @@
 
   <!-- Sub Navbar with Tabs -->
   {#if config.navigation?.tabs}
-    <div class="border-border/50 border-t px-10">
+    <div class="border-border/50 px-6">
       <nav class="mx-auto flex h-10 items-center gap-1 px-6">
         {#each config.navigation.tabs as tab (tab.url)}
-          <a
-            href={getHref(tab.url)}
-            class="text-muted-foreground hover:text-foreground hover:bg-accent rounded px-3 py-1.5 text-sm font-medium no-underline transition-all duration-200"
-            class:active={isActiveTab(tab.url)}
-          >
+          <Button href={getHref(tab.url)} variant={!isActiveTab(tab.url) ? "ghost" : "outline"} size="sm" class="">
             {tab.name}
-          </a>
+          </Button>
         {/each}
       </nav>
     </div>
