@@ -189,47 +189,6 @@ export const UpdateMonitoringData = async (data: UpdateMonitoringDataInput): Pro
   );
 };
 
-export const GetLastStatusBefore = async (monitor_tag: string, timestamp: number): Promise<string> => {
-  let data = await db.getLastStatusBefore(monitor_tag, timestamp);
-  if (data) {
-    return data.status || GC.NO_DATA;
-  }
-  return GC.NO_DATA;
-};
-
-export const InterpolateData = (
-  rawData: InterpolatedDataEntry[],
-  startTimestamp: number,
-  initialStatus: string,
-  overrideEndTimestamp?: number,
-): InterpolatedDataEntry[] => {
-  const interpolatedData: InterpolatedDataEntry[] = [];
-  let currentStatus = initialStatus || GC.UP;
-  let endTimestamp = startTimestamp;
-
-  if (rawData && rawData.length > 0) {
-    endTimestamp = rawData[rawData.length - 1].timestamp;
-  }
-  if (overrideEndTimestamp) {
-    endTimestamp = overrideEndTimestamp;
-  }
-
-  const dataByTimestamp = rawData.reduce((accumulator: Record<number, InterpolatedDataEntry>, entry) => {
-    accumulator[entry.timestamp] = entry;
-    return accumulator;
-  }, {});
-
-  for (let timestamp = startTimestamp; timestamp <= endTimestamp; timestamp += 60) {
-    const currentEntry = dataByTimestamp[timestamp];
-    if (currentEntry) {
-      currentStatus = currentEntry.status;
-    }
-    interpolatedData.push({ timestamp, status: currentStatus });
-  }
-
-  return interpolatedData;
-};
-
 export const AggregateData = (
   rawData: InterpolatedDataEntry[],
 ): { total: number; UPs: number; DOWNs: number; DEGRADEDs: number; NO_DATAs: number } => {
@@ -244,56 +203,6 @@ export const AggregateData = (
   return { total, UPs, DOWNs, DEGRADEDs, NO_DATAs };
 };
 
-export const GetDataGroupByDayAlternative = async (
-  monitor_tag: string,
-  start: number,
-  end: number,
-  timezoneOffsetMinutes = 0,
-): Promise<DayGroupData[]> => {
-  const offsetMinutes = Number(timezoneOffsetMinutes);
-  if (isNaN(offsetMinutes)) {
-    throw new Error("Invalid timezone offset. Must be a number representing minutes from UTC.");
-  }
-
-  const offsetSeconds = offsetMinutes * 60;
-
-  let rawData = await db.getDataGroupByDayAlternative(monitor_tag, start, end);
-  let anchorStatus = await GetLastStatusBefore(monitor_tag, start);
-  let interpolatedData = InterpolateData(rawData, start, anchorStatus, end);
-
-  const groupedData = interpolatedData.reduce((acc: Record<number, DayGroupData>, row) => {
-    // Calculate day group considering timezone offset
-    const dayGroup = Math.floor((row.timestamp + offsetSeconds) / 86400);
-    if (!acc[dayGroup]) {
-      acc[dayGroup] = {
-        timestamp: dayGroup * 86400 - offsetSeconds, // start of day in UTC
-        total: 0,
-        UP: 0,
-        DOWN: 0,
-        DEGRADED: 0,
-        MAINTENANCE: 0,
-        NO_DATA: 0,
-      };
-    }
-
-    const group = acc[dayGroup];
-    group.total++;
-    group[row.status]++;
-
-    return acc;
-  }, {});
-
-  // Transform grouped data to final format
-  return Object.values(groupedData).map((group) => ({
-    timestamp: group.timestamp,
-    total: group.total,
-    UP: group.UP,
-    DOWN: group.DOWN,
-    DEGRADED: group.DEGRADED,
-    MAINTENANCE: group.MAINTENANCE,
-    NO_DATA: group.NO_DATA,
-  })) as DayGroupData[];
-};
 export const GetMonitorsParsed = async (query: MonitorFilter): Promise<Array<MonitorRecordTyped>> => {
   // Retrieve monitors from the database based on the provided query
   const rawMonitors = await db.getMonitors(query);
@@ -411,37 +320,6 @@ export const GetLatestMonitoringDataAllActive = async (monitor_tags: string[]): 
   return latestData;
 };
 
-export const CalculateUptimeByTags = async (tags: string[], start: number, end: number): Promise<number> => {
-  if (tags.length === 0) {
-    return 0;
-  }
-
-  // Get raw monitoring data for all tags
-  const rawData = await db.getMonitoringDataAll(tags, start, end);
-
-  // Get anchor status before the period
-  const anchorStatus = await GetLastStatusBeforeAll(tags, start);
-
-  // Convert to format expected by InterpolateData (filter out null status)
-  const formattedData = rawData
-    .filter((d) => d.status !== null)
-    .map((d) => ({ timestamp: d.timestamp, status: d.status as string }));
-
-  // Interpolate data
-  const interpolatedData = InterpolateData(formattedData, start, anchorStatus, end);
-
-  // Aggregate the data
-  const aggregated = AggregateData(interpolatedData);
-
-  // Calculate uptime percentage (UP / total * 100)
-  if (aggregated.total === 0) {
-    return 0;
-  }
-
-  const uptime = (aggregated.UPs / aggregated.total) * 100;
-  return Math.round(uptime * 10000) / 10000; // 4 decimal places
-};
-
 export const GetLastHeartbeat = async (monitor_tag: string): Promise<MonitoringData | undefined> => {
   return await db.getLastHeartbeat(monitor_tag);
 };
@@ -502,14 +380,6 @@ export const GetMonitoringData = async (tag: string, since: number, now: number)
 };
 export const GetMonitoringDataAll = async (tags: string[], since: number, now: number): Promise<MonitoringData[]> => {
   return await db.getMonitoringDataAll(tags, since, now);
-};
-
-export const GetLastStatusBeforeAll = async (monitor_tags: string[], timestamp: number): Promise<string> => {
-  let data = await db.getLastStatusBeforeAll(monitor_tags, timestamp);
-  if (data) {
-    return data.status || GC.NO_DATA;
-  }
-  return GC.NO_DATA;
 };
 
 export const InsertNewAlert = async (data: MonitorAlertInsert): Promise<MonitorAlert | undefined> => {

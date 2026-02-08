@@ -324,6 +324,18 @@ export interface IncidentMonitorRecordInsert {
   incident_id: number;
 }
 
+export interface IncidentMonitorDetailRecord {
+  id: number;
+  monitor_tag: string;
+  monitor_impact: string | null;
+  monitor_name: string;
+  monitor_image: string | null;
+  monitor_description: string | null;
+  created_at: Date;
+  updated_at: Date;
+  incident_id: number;
+}
+
 // ============ incident_comments table ============
 export interface IncidentCommentRecord {
   id: number;

@@ -5,6 +5,8 @@ import type {
   IncidentRecord,
   IncidentRecordInsert,
   IncidentMonitorRecordInsert,
+  IncidentMonitorRecord,
+  IncidentMonitorDetailRecord,
   IncidentCommentRecord,
   IncidentForMonitorList,
   IncidentMonitorImpact,
@@ -559,6 +561,32 @@ export class IncidentsRepository extends BaseRepository {
     return await this.knex("incident_monitors")
       .select("monitor_tag", "monitor_impact")
       .where("incident_id", incident_id);
+  }
+
+  async getIncidentMonitors(filter?: { incident_id?: number; monitor_tag?: string }): Promise<IncidentMonitorRecord[]> {
+    let query = this.knex("incident_monitors").select("*");
+
+    if (filter?.incident_id) {
+      query = query.where("incident_id", filter.incident_id);
+    }
+
+    if (filter?.monitor_tag) {
+      query = query.where("monitor_tag", filter.monitor_tag);
+    }
+
+    return await query;
+  }
+
+  async getMonitorsByIncidentId(incident_id: number): Promise<IncidentMonitorDetailRecord[]> {
+    return await this.knex("incident_monitors")
+      .join("monitors", "incident_monitors.monitor_tag", "monitors.tag")
+      .where("incident_monitors.incident_id", incident_id)
+      .select(
+        "incident_monitors.*",
+        "monitors.name as monitor_name",
+        "monitors.image as monitor_image",
+        "monitors.description as monitor_description",
+      );
   }
 
   async removeIncidentMonitor(incident_id: number, monitor_tag: string): Promise<number> {

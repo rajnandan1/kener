@@ -16,7 +16,7 @@
   import STATUS_ICON from "$lib/icons";
   import { t } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
-
+  import clientResolver from "$lib/client/resolver.js";
   let { data } = $props();
 
   const MaintenanceIcon = STATUS_ICON.MAINTENANCE;
@@ -197,7 +197,7 @@
                     <Button
                       variant="outline"
                       class="rounded-btn"
-                      href={resolve(`/monitors/${monitor.monitor_tag}`)}
+                      href={clientResolver(resolve, `/monitors/${monitor.monitor_tag}`)}
                       size="icon"
                     >
                       <ArrowRight class="h-4 w-4" />

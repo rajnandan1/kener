@@ -1,7 +1,6 @@
 import { json, error } from "@sveltejs/kit";
 import type { APIServerRequest } from "$lib/server/types/api-server";
 import db from "$lib/server/db/db";
-import { GetLastStatusBefore, InterpolateData } from "$lib/server/controllers/monitorsController";
 import {
   BeginningOfDay,
   GetMinuteStartNowTimestampUTC,

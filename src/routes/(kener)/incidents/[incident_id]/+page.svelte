@@ -17,22 +17,9 @@
   import CloudAlertIcon from "@lucide/svelte/icons/cloud-alert";
   import { t } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
+  import clientResolver from "$lib/client/resolver.js";
 
   let { data } = $props();
-
-  // Get impact color class
-  function getImpactColorClass(impact: string): string {
-    switch (impact?.toUpperCase()) {
-      case "DOWN":
-        return "bg-down";
-      case "DEGRADED":
-        return "bg-degraded";
-      case "MAINTENANCE":
-        return "bg-maintenance";
-      default:
-        return "bg-muted";
-    }
-  }
 </script>
 
 <div class="flex flex-col gap-3">
@@ -115,7 +102,7 @@
                     </Tooltip.Root>
                   </Item.Media>
                   <Item.Content>
-                    <Item.Title>{monitor.monitor_tag}</Item.Title>
+                    <Item.Title>{monitor.monitor_name}</Item.Title>
                     <Item.Description>
                       {#if monitor.monitor_impact}
                         <span class="text-{monitor.monitor_impact.toLowerCase()}">
@@ -127,7 +114,12 @@
                     </Item.Description>
                   </Item.Content>
                   <Item.Actions>
-                    <Button variant="ghost" href={resolve(`/monitors/${monitor.monitor_tag}`)} size="icon">
+                    <Button
+                      variant="outline"
+                      href={clientResolver(resolve, `/monitors/${monitor.monitor_tag}`)}
+                      class="rounded-btn"
+                      size="icon"
+                    >
                       <ArrowRight class="h-4 w-4" />
                     </Button>
                   </Item.Actions>

@@ -12,11 +12,13 @@
 
 <div class="fixed inset-x-0 top-0 z-10 py-2">
   <div class="mx-auto max-w-5xl">
-    <div class="bg-background flex items-center justify-between rounded-3xl border p-1">
+    <div
+      class="bg-background/80 dark:bg-background/70 flex items-center justify-between rounded-3xl border p-1 backdrop-blur-md"
+    >
       <!-- Brand -->
       <a
         href={clientResolver(resolve, siteUrl)}
-        class="{navigationMenuTriggerStyle()} hover:border-border border border-transparent text-xs hover:bg-transparent"
+        class="{navigationMenuTriggerStyle()} hover:border-border border border-transparent bg-transparent text-xs hover:bg-transparent"
         style="border-radius: var(--radius-3xl)"
       >
         {#if logo}
@@ -35,7 +37,7 @@
                   <a
                     data-sveltekit-preload-data="off"
                     href={clientResolver(resolve, item.url)}
-                    class="{navigationMenuTriggerStyle()} hover:border-border border border-transparent text-xs hover:bg-transparent"
+                    class="{navigationMenuTriggerStyle()} hover:border-border border border-transparent bg-transparent text-xs hover:bg-transparent"
                     target={item.url.startsWith("http") ? "_blank" : undefined}
                     rel={item.url.startsWith("http") ? "noopener noreferrer" : undefined}
                     style="border-radius: var(--radius-3xl)"

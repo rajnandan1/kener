@@ -170,6 +170,7 @@ class DbImpl {
   // ============ Incident Monitors ============
   insertIncidentMonitor!: IncidentsRepository["insertIncidentMonitor"];
   getIncidentMonitorsByIncidentID!: IncidentsRepository["getIncidentMonitorsByIncidentID"];
+  getMonitorsByIncidentId!: IncidentsRepository["getMonitorsByIncidentId"];
   removeIncidentMonitor!: IncidentsRepository["removeIncidentMonitor"];
   insertIncidentMonitorWithMerge!: IncidentsRepository["insertIncidentMonitorWithMerge"];
   deleteIncidentMonitorsByTag!: IncidentsRepository["deleteIncidentMonitorsByTag"];
@@ -513,6 +514,7 @@ class DbImpl {
       this.incidents.getIncidentsCountByTypeAndDateRangeAndMonitorTags.bind(this.incidents);
     this.insertIncidentMonitor = this.incidents.insertIncidentMonitor.bind(this.incidents);
     this.getIncidentMonitorsByIncidentID = this.incidents.getIncidentMonitorsByIncidentID.bind(this.incidents);
+    this.getMonitorsByIncidentId = this.incidents.getMonitorsByIncidentId.bind(this.incidents);
     this.removeIncidentMonitor = this.incidents.removeIncidentMonitor.bind(this.incidents);
     this.insertIncidentMonitorWithMerge = this.incidents.insertIncidentMonitorWithMerge.bind(this.incidents);
     this.deleteIncidentMonitorsByTag = this.incidents.deleteIncidentMonitorsByTag.bind(this.incidents);

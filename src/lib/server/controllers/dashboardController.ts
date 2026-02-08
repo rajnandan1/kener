@@ -13,6 +13,7 @@ import type {
   PageRecordTyped,
   TimestampStatusCount,
   PageSettingsType,
+  IncidentMonitorDetailRecord,
 } from "../types/db.js";
 import GC from "../../global-constants.js";
 
@@ -174,8 +175,8 @@ export const GetIncidentCommentsByIncidentId = async (incident_id: number): Prom
  */
 export const GetAffectedMonitorsByIncidentId = async (
   incident_id: number,
-): Promise<Array<{ monitor_tag: string; monitor_impact: string | null }>> => {
-  return await db.getIncidentMonitorsByIncidentID(incident_id);
+): Promise<Array<IncidentMonitorDetailRecord>> => {
+  return await db.getMonitorsByIncidentId(incident_id);
 };
 
 // ============ Page Dashboard Data ============
