@@ -13,12 +13,22 @@ import type {
  * Repository for monitoring data operations
  */
 export class MonitoringRepository extends BaseRepository {
-  async insertMonitoringData(data: MonitoringDataInsert): Promise<number[]> {
+  async insertMonitoringData(data: MonitoringDataInsert): Promise<MonitoringData | null> {
     const { monitor_tag, timestamp, status, latency, type, error_message } = data;
-    return await this.knex("monitoring_data")
+
+    // Perform insert/update - works across PostgreSQL, MySQL, and SQLite
+    await this.knex("monitoring_data")
       .insert({ monitor_tag, timestamp, status, latency, type, error_message })
       .onConflict(["monitor_tag", "timestamp"])
       .merge({ status, latency, type, error_message });
+
+    // Query and return the inserted/updated record (works consistently across all databases)
+    const record = await this.knex("monitoring_data")
+      .where("monitor_tag", monitor_tag)
+      .where("timestamp", timestamp)
+      .first();
+
+    return record as MonitoringData | null;
   }
 
   async getMonitoringData(monitor_tag: string, start: number, end: number): Promise<MonitoringData[]> {
@@ -296,11 +306,7 @@ export class MonitoringRepository extends BaseRepository {
     return result.is_affected === 1;
   }
 
-  async consecutivelyLatencyLessThan(
-    monitor_tag: string,
-    latencyThreshold: number,
-    lastX: number,
-  ): Promise<boolean> {
+  async consecutivelyLatencyLessThan(monitor_tag: string, latencyThreshold: number, lastX: number): Promise<boolean> {
     const result = await this.knex
       .with("last_records", (qb: KnexType.QueryBuilder) => {
         qb.select("*")
@@ -462,10 +468,7 @@ export class MonitoringRepository extends BaseRepository {
    * @param lastX - Number of most recent rows to include
    * @returns Object with ts=0, counts of each status, and average latency
    */
-  async getStatusCountsForLastN(
-    monitorTag: string | string[],
-    lastX: number,
-  ): Promise<TimestampStatusCount> {
+  async getStatusCountsForLastN(monitorTag: string | string[], lastX: number): Promise<TimestampStatusCount> {
     const tags = Array.isArray(monitorTag) ? monitorTag : [monitorTag];
 
     const result = await this.knex

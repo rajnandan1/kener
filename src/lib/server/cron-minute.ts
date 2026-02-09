@@ -9,6 +9,7 @@ import type { MonitorRecordTyped } from "./types/db.js";
 
 import type { MonitoringResult } from "./types/monitor.js";
 import { MONITOR_TYPES, type MonitorType } from "../types/monitor.js";
+import type { JobsOptions } from "bullmq";
 
 dotenv.config();
 const Minuter = async (monitor: MonitorRecordTyped) => {
@@ -16,7 +17,13 @@ const Minuter = async (monitor: MonitorRecordTyped) => {
     throw new Error(`Invalid monitor type: ${monitor.monitor_type}. Valid types are: ${MONITOR_TYPES.join(", ")}`);
   }
   const startOfMinute = GetMinuteStartNowTimestampUTC();
-  await monitorExecuteQueue.push(monitor, startOfMinute);
+  let options: JobsOptions | undefined = undefined;
+  if (monitor.monitor_type === "GROUP") {
+    options = {
+      delay: parseInt(String(monitor.type_data?.executionDelay)) || 1000, // default 1 second delay for group monitors
+    };
+  }
+  await monitorExecuteQueue.push(monitor, startOfMinute, options);
 };
 
 export { Minuter };

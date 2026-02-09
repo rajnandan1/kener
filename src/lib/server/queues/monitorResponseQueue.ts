@@ -4,6 +4,7 @@ import q from "./q.js";
 import { InsertMonitoringData } from "../controllers/controller.js";
 import { SetLastMonitoringValue } from "../cache/setGet.js";
 import alertingQueue from "./alertingQueue.js";
+import type { MonitoringData } from "../types/db.js";
 let monitorResponseQueue: Queue | null = null;
 let worker: Worker | null = null;
 const queueName = "monitorResponseQueue";
@@ -28,7 +29,7 @@ const getQueue = () => {
 const addWorker = () => {
   if (worker) return worker;
 
-  worker = q.createWorker(getQueue(), async (job: Job): Promise<number[]> => {
+  worker = q.createWorker(getQueue(), async (job: Job): Promise<MonitoringData | null> => {
     const { monitorTag, ts, status, latency, type, error_message } = job.data as JobData;
 
     const dbRes = await InsertMonitoringData({
@@ -40,17 +41,19 @@ const addWorker = () => {
       error_message: error_message,
     });
 
-    if (dbRes.length > 0) {
-      await SetLastMonitoringValue(monitorTag, {
-        monitor_tag: monitorTag,
-        timestamp: ts,
-        status: status,
-        latency: latency,
-        type: type,
-      });
-
-      alertingQueue.push(monitorTag, ts, status);
+    if (!dbRes) {
+      throw new Error("Failed to insert monitoring data");
     }
+
+    await SetLastMonitoringValue(monitorTag, {
+      monitor_tag: monitorTag,
+      timestamp: ts,
+      status: status,
+      latency: latency,
+      type: type,
+    });
+
+    alertingQueue.push(monitorTag, ts, status);
 
     return dbRes;
   });

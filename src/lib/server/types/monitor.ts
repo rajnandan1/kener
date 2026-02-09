@@ -73,9 +73,15 @@ export interface HeartbeatMonitorTypeData {
   degradedRemainingMinutes: number;
 }
 
+export interface GroupMonitorMember {
+  tag: string;
+  /** Weight for this monitor. All weights in a group must sum to 1. */
+  weight: number;
+}
+
 export interface GroupMonitorTypeData extends Record<string, unknown> {
-  monitors: Array<{ tag: string }>;
-  timeout: number;
+  monitors: GroupMonitorMember[];
+  executionDelay: number;
   latencyCalculation: "AVG" | "MAX" | "MIN";
 }
 

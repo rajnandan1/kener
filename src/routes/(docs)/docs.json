@@ -106,6 +106,10 @@
             {
               "title": "GameDig Monitors",
               "slug": "monitors/gamedig"
+            },
+            {
+              "title": "Group Monitors",
+              "slug": "monitors/group"
             }
           ]
         },

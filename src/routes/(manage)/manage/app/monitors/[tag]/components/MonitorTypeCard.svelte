@@ -49,7 +49,7 @@
   function createDefaultGroupTypeData(): GroupMonitorTypeData {
     return {
       monitors: [],
-      timeout: GROUP_MIN_TIMEOUT_MS,
+      executionDelay: GROUP_MIN_TIMEOUT_MS,
       latencyCalculation: "AVG"
     };
   }
@@ -57,29 +57,33 @@
   function normalizeGroupTypeData(raw: unknown): GroupMonitorTypeData {
     const candidate = (raw ?? {}) as Record<string, unknown>;
     const monitors = Array.isArray(candidate.monitors)
-      ? (candidate.monitors as Array<{ tag?: string }>).reduce<Array<{ tag: string }>>((acc, monitor) => {
-          if (monitor && typeof monitor.tag === "string" && monitor.tag.trim().length > 0) {
-            acc.push({ tag: monitor.tag });
-          }
-          return acc;
-        }, [])
+      ? (candidate.monitors as Array<{ tag?: string; weight?: number }>).reduce<Array<{ tag: string; weight: number }>>(
+          (acc, monitor) => {
+            if (monitor && typeof monitor.tag === "string" && monitor.tag.trim().length > 0) {
+              const weight = typeof monitor.weight === "number" && Number.isFinite(monitor.weight) ? monitor.weight : 0;
+              acc.push({ tag: monitor.tag, weight });
+            }
+            return acc;
+          },
+          []
+        )
       : [];
-
-    const timeout =
-      typeof candidate.timeout === "number" &&
-      Number.isFinite(candidate.timeout) &&
-      candidate.timeout >= GROUP_MIN_TIMEOUT_MS
-        ? candidate.timeout
-        : GROUP_MIN_TIMEOUT_MS;
 
     const latencyCalculation = isGroupLatencyCalculation(candidate.latencyCalculation)
       ? candidate.latencyCalculation
       : "AVG";
 
+    const executionDelay =
+      typeof candidate.executionDelay === "number" &&
+      Number.isFinite(candidate.executionDelay) &&
+      candidate.executionDelay >= GROUP_MIN_TIMEOUT_MS
+        ? candidate.executionDelay
+        : GROUP_MIN_TIMEOUT_MS;
+
     return {
       monitors,
-      timeout,
-      latencyCalculation
+      latencyCalculation,
+      executionDelay
     };
   }
 
@@ -155,8 +159,11 @@
       case "GROUP": {
         const data = typeData as Partial<GroupMonitorTypeData>;
         if (!data.monitors || !Array.isArray(data.monitors) || data.monitors.length < GROUP_MIN_MONITORS) return false;
-        if (typeof data.timeout !== "number" || data.timeout < GROUP_MIN_TIMEOUT_MS) return false;
+        if (typeof data.executionDelay !== "number" || data.executionDelay < GROUP_MIN_TIMEOUT_MS) return false;
         if (!isGroupLatencyCalculation((data as GroupMonitorTypeData).latencyCalculation)) return false;
+        // Weights must sum to 1
+        const totalWeight = data.monitors.reduce((sum, m) => sum + (m.weight ?? 0), 0);
+        if (Math.abs(totalWeight - 1) >= 0.01) return false;
         return true;
       }
 
@@ -308,7 +315,7 @@
       {/if}
     </div>
   </Card.Content>
-  <Card.Footer class="flex justify-between gap-2">
+  <Card.Footer class=" flex justify-between gap-2">
     <Dialog.Root
       onOpenChange={(e) => {
         if (e) testMonitor();
@@ -334,7 +341,7 @@
             {/if}
           </Dialog.Title>
         </Dialog.Header>
-        <div class="flex flex-col justify-center gap-2">
+        <div class="kener-manage flex flex-col justify-center gap-2">
           {#if testingMonitor}
             <div class="flex flex-col items-center gap-2 py-8">
               <Loader class="size-8 animate-spin" />

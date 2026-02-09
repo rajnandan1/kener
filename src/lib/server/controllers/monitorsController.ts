@@ -81,15 +81,12 @@ const insertStatusQueue = new Queue({
   autostart: true, // Automatically start the queue (optional)
 });
 
-export const InsertMonitoringData = async (data: MonitoringDataInput): Promise<number[]> => {
+export const InsertMonitoringData = async (data: MonitoringDataInput): Promise<MonitoringData | null> => {
   //do validation if present all fields below
   if (!data.monitor_tag || !data.timestamp || !data.status || !data.type) {
     throw new Error("Invalid data");
   }
-  // insertStatusQueue.push(async (cb) => {
-  //   await ProcessGroupUpdate(data as GroupUpdateData);
-  //   if (cb) cb();
-  // });
+
   return await db.insertMonitoringData({
     monitor_tag: data.monitor_tag,
     timestamp: data.timestamp,
@@ -324,7 +321,7 @@ export const GetLastHeartbeat = async (monitor_tag: string): Promise<MonitoringD
   return await db.getLastHeartbeat(monitor_tag);
 };
 
-export const RegisterHeartbeat = async (tag: string, secret: string): Promise<number[] | null> => {
+export const RegisterHeartbeat = async (tag: string, secret: string): Promise<MonitoringData | null> => {
   let monitor = await db.getMonitorByTag(tag);
   if (!monitor) {
     return null;

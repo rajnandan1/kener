@@ -70,7 +70,7 @@
     <link rel="stylesheet" href={data.font.cssSrc} />
   {/if}
   {@html `
-	<style id="dynamic-styles">
+	<style>
 		.kener-manage {
 			--up: ${data.siteStatusColors.UP};
 			--degraded: ${data.siteStatusColors.DEGRADED};

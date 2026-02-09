@@ -16,12 +16,6 @@ const jobNamePrefix = "monitorExecuteJob";
 interface JobData {
   monitor: MonitorRecordTyped;
   ts: number;
-  executeOptions?: ExecuteOptions;
-}
-
-interface ExecuteOptions {
-  countTimeoutRetries?: number;
-  maxTimeoutRetries?: number;
 }
 
 const getQueue = () => {
@@ -116,7 +110,7 @@ const addWorker = () => {
   if (worker) return worker;
 
   worker = q.createWorker(getQueue(), async (job: Job): Promise<MonitoringResultTS> => {
-    const { monitor, ts, executeOptions } = job.data as JobData;
+    const { monitor, ts } = job.data as JobData;
     const serviceClient = new Service(monitor as MonitorWithType);
 
     const exeResult = await serviceClient.execute(ts);
@@ -191,12 +185,7 @@ const addWorker = () => {
   return worker;
 };
 
-export const push = async (
-  monitor: MonitorRecordTyped,
-  ts: number,
-  executeOptions?: ExecuteOptions,
-  options?: JobsOptions,
-) => {
+export const push = async (monitor: MonitorRecordTyped, ts: number, options?: JobsOptions) => {
   const deDupId = `${monitor.tag}-${ts}`;
   if (!options) {
     options = {};
@@ -213,7 +202,6 @@ export const push = async (
     {
       monitor,
       ts,
-      executeOptions,
     },
     options,
   );
