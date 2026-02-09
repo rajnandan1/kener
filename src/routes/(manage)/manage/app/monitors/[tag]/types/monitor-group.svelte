@@ -16,36 +16,37 @@
 
   type GroupMonitorFormData = {
     monitors: Array<{ tag: string }>;
-    timeout: number;
+    delay: number;
     latencyCalculation: LatencyCalculationOption;
   };
 
   let {
     data = $bindable({} as Record<string, unknown>),
-    availableMonitors = []
-  }: { data: Record<string, unknown>; availableMonitors: MonitorRecord[] } = $props();
-
+    availableMonitors = [],
+    tag = ""
+  }: { data: Record<string, unknown>; availableMonitors: MonitorRecord[]; tag: string } = $props();
+  console.log(">>>>>>----  monitor-group:27 ", data);
   const formData = data as GroupMonitorFormData;
 
   const MIN_SELECTED_MONITORS = 2;
-  const MIN_TIMEOUT_MS = 1000;
+  const MIN_DELAY_MS = 1000;
 
   // Initialize defaults if not set
   if (!Array.isArray(formData.monitors)) formData.monitors = [];
-  if (typeof formData.timeout !== "number" || !Number.isFinite(formData.timeout) || formData.timeout < MIN_TIMEOUT_MS) {
-    formData.timeout = MIN_TIMEOUT_MS;
+  if (typeof formData.delay !== "number" || !Number.isFinite(formData.delay) || formData.delay < MIN_DELAY_MS) {
+    formData.delay = MIN_DELAY_MS;
   }
   if (!LATENCY_CALCULATION_OPTIONS.includes(formData.latencyCalculation)) {
     formData.latencyCalculation = "AVG";
   }
 
-  let timeoutInput = $state(String(formData.timeout));
-  const parsedTimeout = $derived.by(() => {
-    const value = Number(timeoutInput);
-    return Number.isFinite(value) ? value : MIN_TIMEOUT_MS;
+  let delayInput = $state(String(formData.delay));
+  const parsedDelay = $derived.by(() => {
+    const value = Number(delayInput);
+    return Number.isFinite(value) ? value : MIN_DELAY_MS;
   });
   $effect(() => {
-    formData.timeout = parsedTimeout;
+    formData.delay = parsedDelay;
   });
 
   // Filter out GROUP monitors - groups can't contain other groups
@@ -78,7 +79,7 @@
 
     {#if eligibleMonitors.length > 0}
       <div class="grid gap-2">
-        {#each eligibleMonitors as monitor (monitor.id ?? monitor.tag)}
+        {#each eligibleMonitors.filter((m) => m.tag !== tag) as monitor (monitor.id ?? monitor.tag)}
           <div
             class="flex items-center justify-between rounded-lg border p-3 transition-colors {isSelected(monitor.tag)
               ? 'bg-primary/5'
@@ -114,9 +115,9 @@
     <div class="space-y-2">
       <div class="flex items-center justify-between">
         <Label for="group-timeout">Timeout (ms)</Label>
-        <span class="text-muted-foreground text-xs">Minimum {MIN_TIMEOUT_MS}ms</span>
+        <span class="text-muted-foreground text-xs">Minimum {MIN_DELAY_MS}ms</span>
       </div>
-      <Input id="group-timeout" type="number" min={MIN_TIMEOUT_MS} step={100} bind:value={timeoutInput} />
+      <Input id="group-timeout" type="number" min={MIN_DELAY_MS} step={100} bind:value={delayInput} />
       <p class="text-muted-foreground text-xs">
         Determines how long to wait for all child monitors before aggregating results.
       </p>

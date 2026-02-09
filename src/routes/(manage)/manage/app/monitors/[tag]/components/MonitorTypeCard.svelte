@@ -300,7 +300,7 @@
       {:else if monitor.monitor_type === "HEARTBEAT"}
         <MonitorHeartbeat bind:data={typeData} tag={monitor.tag} />
       {:else if monitor.monitor_type === "GROUP"}
-        <MonitorGroup bind:data={typeData} {availableMonitors} />
+        <MonitorGroup bind:data={typeData} {availableMonitors} tag={monitor.tag} />
       {:else if monitor.monitor_type === "GAMEDIG"}
         <MonitorGamedig bind:data={typeData} />
       {:else if monitor.monitor_type === "NONE"}
