@@ -195,6 +195,13 @@ export const push = async (monitor: MonitorRecordTyped, ts: number, options?: Jo
       id: deDupId,
     };
   }
+  options.removeOnComplete = {
+    age: 3600, // keep up to 1 hour
+    count: 1000, // keep up to 1000 jobs
+  };
+  options.removeOnFail = {
+    age: 24 * 3600, // keep up to 24 hours
+  };
   const queue = getQueue();
   addWorker();
   await queue.add(

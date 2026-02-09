@@ -71,6 +71,13 @@ export const push = async (jobData: EmailJobData, options?: JobsOptions) => {
   if (!options) {
     options = {};
   }
+  options.removeOnComplete = {
+    age: 300, // keep up to 5 minutes
+    count: 100, // keep up to 100 jobs
+  };
+  options.removeOnFail = {
+    age: 24 * 3600, // keep up to 24 hours
+  };
 
   const queue = getQueue();
   addWorker();

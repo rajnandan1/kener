@@ -15,6 +15,8 @@
   import { getEndOfDayAtTz } from "$lib/client/datetime";
   import { formatDate } from "$lib/stores/datetime";
   import clientResolver from "$lib/client/resolver.js";
+  import { ArrowDown } from "@lucide/svelte";
+  import MonitorBar from "./MonitorBar.svelte";
   interface Props {
     monitorTag: string;
     class?: string;

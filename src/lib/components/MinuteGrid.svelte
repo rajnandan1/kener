@@ -307,11 +307,12 @@
     {#if hoveredMinute}
       <div
         bind:this={tooltipEl}
-        class="bg-foreground text-secondary pointer-events-none absolute z-20 w-max -translate-x-1/2 rounded-md px-2 py-1 text-xs font-medium whitespace-nowrap"
+        class="bg-popover text-popover-foreground border-border pointer-events-none absolute z-20 w-max -translate-x-1/2 rounded-md border px-2 py-1 text-xs font-medium whitespace-nowrap"
         style={tooltipStyle}
       >
-        {$formatDate(hoveredMinute.data.timestamp, "HH:mm")} -
-        <span class="text-{hoveredMinute.data.status.toLowerCase()}">{$t(hoveredMinute.data.status)}</span>
+        <span class="text-{hoveredMinute.data.status.toLowerCase()}">
+          {$t(hoveredMinute.data.status)} @ {$formatDate(hoveredMinute.data.timestamp, "HH:mm")}
+        </span>
       </div>
     {/if}
   </div>

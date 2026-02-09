@@ -365,14 +365,14 @@
   {#if hoveredBar}
     <div
       bind:this={tooltipEl}
-      class="bg-foreground text-secondary pointer-events-none absolute z-20 w-max -translate-x-1/2 rounded-md px-2 py-1 text-xs font-medium whitespace-nowrap"
+      class="bg-popover text-popver-foreground pointer-events-none absolute z-20 w-max -translate-x-1/2 rounded-md border px-2 py-1 text-xs font-medium whitespace-nowrap"
       style={tooltipStyle}
     >
       <span class={getStatusColor(hoveredBar.data)}>{$t(GetStatusSummary(hoveredBar.data))}</span>
-      <span class="text-muted">@</span>
+      <span class="text-muted-foreground">@</span>
       {$formatDate(hoveredBar.data.ts, "d MMM yyyy")}
       {#if hoveredBar.data.avgLatency > 0}
-        <span class="text-muted ml-1">|</span>
+        <span class="text-muted-foreground ml-1">|</span>
         <span class="ml-1">{ParseLatency(hoveredBar.data.avgLatency)}</span>
       {/if}
     </div>

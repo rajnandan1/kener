@@ -43,7 +43,11 @@
                     style="border-radius: var(--radius-3xl)"
                   >
                     {#if item.iconURL}
-                      <img src={clientResolver(resolve, item.iconURL)} alt={item.name} class="mr-2 h-4 w-4" />
+                      <img
+                        src={clientResolver(resolve, item.iconURL)}
+                        alt={item.name}
+                        class="mr-2 h-4 w-4 object-cover"
+                      />
                     {/if}
                     {item.name}
                   </a>

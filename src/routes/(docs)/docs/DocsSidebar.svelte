@@ -44,7 +44,7 @@
 
   let expandedGroups = $state<string[]>([]);
   let expandedPages = $state<string[]>([]);
-  let prevSlug = $state(currentSlug);
+  let prevSlug = $state("");
 
   // Auto-expand when navigating to a different page (not when manually toggling)
   $effect(() => {
@@ -102,7 +102,7 @@
 </script>
 
 <nav class="p-6 pr-4 pl-10">
-  <div class="flex flex-col gap-6">
+  <div class="scrollbar-hidden flex flex-col gap-6">
     {#each config.sidebar as group (group.group)}
       <div class="mb-2">
         {#if group.collapsible}

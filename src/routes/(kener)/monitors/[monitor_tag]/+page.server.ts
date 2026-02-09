@@ -12,12 +12,18 @@ import type { TimestampStatusCount } from "$lib/server/types/db";
 import { GetNowTimestampUTC, UptimeCalculator } from "$lib/server/tool";
 import GC from "$lib/global-constants.js";
 import { GetStatusColor, GetStatusSummary, ParseLatency } from "$lib/clientTools";
+import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
+import type { GroupMonitorTypeData } from "$lib/server/types/monitor";
 
 export const load: PageServerLoad = async ({ params }) => {
   const { monitor_tag } = params;
 
   // Validate monitor exists
-  const monitor = await db.getMonitorByTag(monitor_tag);
+  const monitors = await GetMonitorsParsed({ tag: monitor_tag });
+  if (!monitors || monitors.length === 0) {
+    throw error(404, { message: "Monitor not found" });
+  }
+  const monitor = monitors[0];
   if (!monitor) {
     throw error(404, { message: "Monitor not found" });
   }
@@ -51,6 +57,12 @@ export const load: PageServerLoad = async ({ params }) => {
   };
 
   //get status summary
+  let extendedTags: string[] = [];
+  if (monitor.monitor_type === "GROUP") {
+    const groupData = monitor.type_data as GroupMonitorTypeData;
+    const memberTags = groupData.monitors.map((m) => m.tag);
+    extendedTags = extendedTags.concat(memberTags);
+  }
 
   return {
     monitorTag: monitor_tag,
@@ -68,5 +80,6 @@ export const load: PageServerLoad = async ({ params }) => {
     pastMaintenances,
     upcomingMaintenances,
     externalUrl: monitor.external_url,
+    extendedTags,
   };
 };

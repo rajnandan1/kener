@@ -12,6 +12,8 @@
   import ArrowUpRight from "@lucide/svelte/icons/arrow-up-right";
   import clientResolver from "$lib/client/resolver.js";
   import { resolve } from "$app/paths";
+  import { ArrowDown } from "@lucide/svelte";
+  import MonitorBar from "$lib/components/MonitorBar.svelte";
   let { data } = $props();
 
   // State
@@ -116,6 +118,22 @@
 
   <!-- Calendar View (self-contained component with its own API call) -->
   <MonitorOverview monitorTag={data.monitorTag} class="mb-4" />
+
+  {#if data.extendedTags.length > 0}
+    <!-- Included monitors -->
+    <div class="flex flex-col">
+      <div class="flex flex-col rounded-3xl border">
+        <div class="flex items-center justify-between px-4 pt-4 pb-0">
+          <Badge variant="secondary" class="gap-1">{$t("Available Components")}</Badge>
+        </div>
+        {#each data.extendedTags as tag, i}
+          <div class="{i < data.extendedTags.length - 1 ? 'border-b' : ''} py-2 pb-4">
+            <MonitorBar {tag} />
+          </div>
+        {/each}
+      </div>
+    </div>
+  {/if}
 
   <!-- recent incidents -->
   <IncidentMonitorList incidents={data.resolvedIncidents} title="Recent Incidents" class="mt-4 mb-4" />

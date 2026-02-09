@@ -22,7 +22,7 @@
   {/if}
   {@html `
 	<style id="dynamic-styles">
-		.kener-public {
+		body {
 			--up: ${data.siteStatusColors.UP};
 			--degraded: ${data.siteStatusColors.DEGRADED};
 			--down: ${data.siteStatusColors.DOWN};
@@ -31,7 +31,7 @@
 			--accent-foreground: ${data.siteStatusColors.ACCENT_FOREGROUND || data.siteStatusColors.ACCENT || "#e96e2d"};
 			${data.font?.family ? `--font-family:'${data.font.family}', sans-serif;` : ""}
 		}
-		:is(.dark) .kener-public {
+		:is(.dark) body {
 			--up: ${data.siteStatusColorsDark.UP};
 			--degraded: ${data.siteStatusColorsDark.DEGRADED};
 			--down: ${data.siteStatusColorsDark.DOWN};
@@ -58,6 +58,7 @@
   * {
     font-family: var(--font-family);
   }
+
   /*
 	:global(.text-3xl) {
 		font-family: var(--font-family);
