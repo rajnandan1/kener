@@ -8,7 +8,7 @@
   import Loader from "@lucide/svelte/icons/loader";
   import PlayIcon from "@lucide/svelte/icons/play";
   import type { MonitorRecord } from "$lib/server/types/db.js";
-  import type { MonitoringResult } from "$lib/server/types/monitor.js";
+  import type { GroupMonitorTypeData, MonitoringResult } from "$lib/server/types/monitor.js";
   import { MONITOR_TYPES, type MonitorType } from "$lib/types/monitor.js";
   import { toast } from "svelte-sonner";
   import { ValidateIpAddress, IsValidHost, IsValidNameServer, IsValidURL, IsValidPort } from "$lib/clientTools";
@@ -36,6 +36,56 @@
   }
 
   let { monitor = $bindable(), typeData = $bindable(), availableMonitors }: Props = $props();
+
+  const GROUP_MIN_MONITORS = 2;
+  const GROUP_MIN_TIMEOUT_MS = 1000;
+  const GROUP_LATENCY_CALCULATION_OPTIONS = ["AVG", "MAX", "MIN"] as const;
+  type GroupLatencyCalculation = (typeof GROUP_LATENCY_CALCULATION_OPTIONS)[number];
+
+  function isGroupLatencyCalculation(value: unknown): value is GroupLatencyCalculation {
+    return typeof value === "string" && GROUP_LATENCY_CALCULATION_OPTIONS.includes(value as GroupLatencyCalculation);
+  }
+
+  function createDefaultGroupTypeData(): GroupMonitorTypeData {
+    return {
+      monitors: [],
+      timeout: GROUP_MIN_TIMEOUT_MS,
+      latencyCalculation: "AVG"
+    };
+  }
+
+  function normalizeGroupTypeData(raw: unknown): GroupMonitorTypeData {
+    const candidate = (raw ?? {}) as Record<string, unknown>;
+    const monitors = Array.isArray(candidate.monitors)
+      ? (candidate.monitors as Array<{ tag?: string }>).reduce<Array<{ tag: string }>>((acc, monitor) => {
+          if (monitor && typeof monitor.tag === "string" && monitor.tag.trim().length > 0) {
+            acc.push({ tag: monitor.tag });
+          }
+          return acc;
+        }, [])
+      : [];
+
+    const timeout =
+      typeof candidate.timeout === "number" &&
+      Number.isFinite(candidate.timeout) &&
+      candidate.timeout >= GROUP_MIN_TIMEOUT_MS
+        ? candidate.timeout
+        : GROUP_MIN_TIMEOUT_MS;
+
+    const latencyCalculation = isGroupLatencyCalculation(candidate.latencyCalculation)
+      ? candidate.latencyCalculation
+      : "AVG";
+
+    return {
+      monitors,
+      timeout,
+      latencyCalculation
+    };
+  }
+
+  if (monitor.monitor_type === "GROUP") {
+    typeData = normalizeGroupTypeData(typeData);
+  }
 
   let savingType = $state(false);
   let testingMonitor = $state(false);
@@ -103,11 +153,10 @@
       }
 
       case "GROUP": {
-        const data = typeData as any;
-        if (!data.monitors || !Array.isArray(data.monitors)) return false;
-        const selected = data.monitors.filter((m: any) => m.selected);
-        if (selected.length < 2) return false;
-        if (!data.timeout || data.timeout < 1000) return false;
+        const data = typeData as Partial<GroupMonitorTypeData>;
+        if (!data.monitors || !Array.isArray(data.monitors) || data.monitors.length < GROUP_MIN_MONITORS) return false;
+        if (typeof data.timeout !== "number" || data.timeout < GROUP_MIN_TIMEOUT_MS) return false;
+        if (!isGroupLatencyCalculation((data as GroupMonitorTypeData).latencyCalculation)) return false;
         return true;
       }
 
@@ -220,7 +269,7 @@
         onValueChange={(v) => {
           if (v) {
             monitor.monitor_type = v as MonitorType;
-            typeData = {}; // Reset type data when changing type
+            typeData = v === "GROUP" ? createDefaultGroupTypeData() : {};
           }
         }}
       >
@@ -228,7 +277,7 @@
           {monitorTypeLabels[monitor.monitor_type as MonitorType]}
         </Select.Trigger>
         <Select.Content>
-          {#each MONITOR_TYPES as type}
+          {#each MONITOR_TYPES as type (type)}
             <Select.Item value={type}>{monitorTypeLabels[type]}</Select.Item>
           {/each}
         </Select.Content>

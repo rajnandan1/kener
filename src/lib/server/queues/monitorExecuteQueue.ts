@@ -121,28 +121,6 @@ const addWorker = () => {
 
     const exeResult = await serviceClient.execute(ts);
 
-    // if (exeResult && exeResult.type === GC.TIMEOUT && monitor.monitor_type === "API") {
-    //   let countTimeoutRetries = executeOptions?.countTimeoutRetries || 0;
-    //   let maxTimeoutRetries = executeOptions?.maxTimeoutRetries || 3;
-    //   if (countTimeoutRetries < maxTimeoutRetries) {
-    //     console.log(
-    //       `Timeout detected for monitor ${monitor.tag} at ${ts}. Retrying ${countTimeoutRetries + 1}/${maxTimeoutRetries}...`,
-    //     );
-    //     await push(
-    //       monitor,
-    //       ts,
-    //       {
-    //         ...executeOptions,
-    //         countTimeoutRetries: countTimeoutRetries + 1,
-    //       },
-    //       { delay: 500 },
-    //     );
-    //     return {
-    //       [ts]: exeResult,
-    //     };
-    //   }
-    // }
-
     let realtimeData: MonitoringResultTS = {};
     if (exeResult) {
       realtimeData[ts] = exeResult;

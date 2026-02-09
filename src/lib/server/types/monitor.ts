@@ -73,8 +73,10 @@ export interface HeartbeatMonitorTypeData {
   degradedRemainingMinutes: number;
 }
 
-export interface GroupMonitorTypeData {
+export interface GroupMonitorTypeData extends Record<string, unknown> {
   monitors: Array<{ tag: string }>;
+  timeout: number;
+  latencyCalculation: "AVG" | "MAX" | "MIN";
 }
 
 export interface GamedigMonitorTypeData {

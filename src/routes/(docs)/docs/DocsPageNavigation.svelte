@@ -20,7 +20,7 @@
     {#if prevPage}
       <a
         href={getHref(prevPage.slug)}
-        class="border-border text-foreground hover:bg-accent hover:border-accent-foreground flex items-center justify-start gap-3 rounded border p-4 no-underline transition-all duration-200"
+        class=" text-foreground hover:bg-accent flex items-center justify-start gap-3 rounded p-4 no-underline transition-all duration-200"
       >
         <ChevronLeft class="h-4 w-4" />
         <div class="flex flex-col gap-1">
@@ -35,7 +35,7 @@
     {#if nextPage}
       <a
         href={getHref(nextPage.slug)}
-        class="border-border text-foreground hover:bg-accent hover:border-accent-foreground flex items-center justify-end gap-3 rounded border p-4 text-right no-underline transition-all duration-200"
+        class="text-foreground hover:bg-accent flex items-center justify-end gap-3 rounded p-4 text-right no-underline transition-all duration-200"
       >
         <div class="flex flex-col gap-1">
           <span class="text-muted-foreground text-xs tracking-wide uppercase">Next</span>
