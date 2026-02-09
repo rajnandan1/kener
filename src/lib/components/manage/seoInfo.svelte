@@ -181,9 +181,16 @@
         {
           label: "Website ID",
           type: "text",
-          placeholder: "Website ID for your umami script and domain",
+          placeholder: "Website ID for your umami script",
           required: true,
           value: ""
+        },
+        {
+          label: "Script Source",
+          type: "text",
+          placeholder: "The URL to fetch your umami script from",
+          required: true,
+          value: "https://cloud.umami.is/script.js"
         }
       ]
     }

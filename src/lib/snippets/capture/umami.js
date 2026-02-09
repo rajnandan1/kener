@@ -33,6 +33,6 @@
 
   //on dom ready
   document.addEventListener("DOMContentLoaded", function () {
-    loadJS("https://cloud.umami.is/script.js", initJS, document.getElementsByTagName("head")[0]);
+    loadJS("{{script_src}}", initJS, document.getElementsByTagName("head")[0]);
   });
 })();
