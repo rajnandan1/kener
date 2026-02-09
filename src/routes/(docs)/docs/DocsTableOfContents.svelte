@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { DocsTableOfContentsItem } from "$lib/types/docs";
-  import { onMount } from "svelte";
 
   interface Props {
     items: DocsTableOfContentsItem[];
@@ -10,7 +9,10 @@
 
   let activeId = $state<string>("");
 
-  onMount(() => {
+  $effect(() => {
+    // Re-run whenever items changes (e.g. on soft navigation)
+    const currentItems = items;
+
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -25,15 +27,20 @@
       }
     );
 
-    // Observe all headings
-    for (const item of items) {
-      const element = document.getElementById(item.id);
-      if (element) {
-        observer.observe(element);
+    // Wait a tick for the DOM to update with new content
+    const timeout = setTimeout(() => {
+      for (const item of currentItems) {
+        const element = document.getElementById(item.id);
+        if (element) {
+          observer.observe(element);
+        }
       }
-    }
+    }, 50);
 
-    return () => observer.disconnect();
+    return () => {
+      clearTimeout(timeout);
+      observer.disconnect();
+    };
   });
 
   function scrollToHeading(id: string) {

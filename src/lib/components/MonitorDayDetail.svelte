@@ -4,9 +4,9 @@
 
   import { format } from "date-fns";
   import { resolve } from "$app/paths";
-  import TrendingUp from "lucide-svelte/icons/trending-up";
-  import Clock from "lucide-svelte/icons/clock";
-  import Activity from "lucide-svelte/icons/activity";
+  import TrendingUp from "@lucide/svelte/icons/trending-up";
+  import Clock from "@lucide/svelte/icons/clock";
+  import Activity from "@lucide/svelte/icons/activity";
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";

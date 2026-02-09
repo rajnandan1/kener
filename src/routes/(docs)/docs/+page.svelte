@@ -1,7 +1,14 @@
 <script lang="ts">
   import type { DocsConfig } from "$lib/types/docs";
   import { base } from "$app/paths";
-  import { ArrowRight, Book, Code, Zap, Shield, Github, Moon, Sun } from "lucide-svelte";
+  import ArrowRight from "@lucide/svelte/icons/arrow-right";
+  import Book from "@lucide/svelte/icons/book";
+  import Code from "@lucide/svelte/icons/code";
+  import Zap from "@lucide/svelte/icons/zap";
+  import Shield from "@lucide/svelte/icons/shield";
+  import Github from "@lucide/svelte/icons/github";
+  import Moon from "@lucide/svelte/icons/moon";
+  import Sun from "@lucide/svelte/icons/sun";
   import { toggleMode, mode } from "mode-watcher";
 
   interface Props {

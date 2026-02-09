@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { mode } from "mode-watcher";
   import { page } from "$app/state";
-  import TrendingUp from "lucide-svelte/icons/trending-up";
+  import TrendingUp from "@lucide/svelte/icons/trending-up";
   import { t } from "$lib/stores/i18n";
   import { formatDate } from "$lib/stores/datetime";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";

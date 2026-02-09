@@ -12,8 +12,8 @@
   import Share from "@lucide/svelte/icons/share-2";
   import Code from "@lucide/svelte/icons/code";
   import Sticker from "@lucide/svelte/icons/sticker";
-  import Languages from "lucide-svelte/icons/languages";
-  import Globe from "lucide-svelte/icons/globe";
+  import Languages from "@lucide/svelte/icons/languages";
+  import Globe from "@lucide/svelte/icons/globe";
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
   import type { PageNavItem } from "$lib/server/controllers/dashboardController.js";
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";

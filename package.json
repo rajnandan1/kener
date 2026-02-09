@@ -28,7 +28,10 @@
     "url": "https://github.com/rajnandan1/kener.git"
   },
   "scripts": {
-    "build": "vite build",
+    "build": "node scripts/build-sveltekit.js && node scripts/build-server.js",
+    "build-with-docs": "node scripts/build-sveltekit.js --with-docs && node scripts/build-server.js",
+    "build:sveltekit": "vite build",
+    "build:server": "node scripts/build-server.js",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "configure": "node build.js",
@@ -36,6 +39,7 @@
     "development": "vite dev",
     "devschedule": "vite-node src/lib/server/startup.ts",
     "generate-readme": "node scripts/generate-readme.js",
+    "index-docs": "vite-node scripts/index-docs.ts",
     "migrate": "npx knex migrate:latest",
     "predev": "npm run seed",
     "prepare": "svelte-kit sync || echo ''",
@@ -44,7 +48,7 @@
     "preview": "vite preview",
     "schedule": "vite-node src/lib/server/startup.ts",
     "seed": "npx knex seed:run",
-    "start": "npx tsx main.ts"
+    "start": "node build/main.js"
   },
   "devDependencies": {
     "@internationalized/date": "^3.10.0",

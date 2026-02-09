@@ -12,7 +12,7 @@
   import GlobeIcon from "@lucide/svelte/icons/globe";
   import ClockIcon from "@lucide/svelte/icons/clock";
   import { toast } from "svelte-sonner";
-  import localesData from "$lib/locales/locales.json";
+  import { availableLocalesList } from "$lib/stores/i18n";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
 
@@ -35,7 +35,7 @@
   let tzToggle = $state("NO");
   let i18n = $state<I18nConfig>({
     defaultLocale: "en",
-    locales: localesData.map((el) => ({
+    locales: availableLocalesList.map((el) => ({
       code: el.code,
       name: el.name,
       selected: el.code === "en",
@@ -66,7 +66,7 @@
           const existingLocales = result.i18n.locales || [];
           i18n = {
             defaultLocale: result.i18n.defaultLocale || "en",
-            locales: localesData.map((el) => {
+            locales: availableLocalesList.map((el) => {
               const existing = existingLocales.find((l: Locale) => l.code === el.code);
               return {
                 code: el.code,

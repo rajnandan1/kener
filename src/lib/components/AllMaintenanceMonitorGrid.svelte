@@ -1,8 +1,8 @@
 <script lang="ts">
   import { Badge } from "$lib/components/ui/badge/index.js";
-  import Clock from "lucide-svelte/icons/clock";
-  import CalendarClock from "lucide-svelte/icons/calendar-clock";
-  import Timer from "lucide-svelte/icons/timer";
+  import Clock from "@lucide/svelte/icons/clock";
+  import CalendarClock from "@lucide/svelte/icons/calendar-clock";
+  import Timer from "@lucide/svelte/icons/timer";
   import { t } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import { resolve } from "$app/paths";

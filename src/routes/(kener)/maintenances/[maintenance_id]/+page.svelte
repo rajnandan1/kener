@@ -1,9 +1,9 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
   import { onMount } from "svelte";
-  import Clock from "lucide-svelte/icons/clock";
-  import Calendar from "lucide-svelte/icons/calendar";
-  import Monitor from "lucide-svelte/icons/monitor";
+  import Clock from "@lucide/svelte/icons/clock";
+  import Calendar from "@lucide/svelte/icons/calendar";
+  import Monitor from "@lucide/svelte/icons/monitor";
   import ArrowRight from "@lucide/svelte/icons/arrow-right";
   import Repeat from "@lucide/svelte/icons/repeat";
   import * as Item from "$lib/components/ui/item/index.js";

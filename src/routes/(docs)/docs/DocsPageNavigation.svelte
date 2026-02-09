@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { DocsPage } from "$lib/types/docs";
   import { base } from "$app/paths";
-  import { ChevronLeft, ChevronRight } from "lucide-svelte";
-
+  import ChevronLeft from "@lucide/svelte/icons/chevron-left";
+  import ChevronRight from "@lucide/svelte/icons/chevron-right";
   interface Props {
     prevPage: DocsPage | null;
     nextPage: DocsPage | null;

@@ -1,4 +1,3 @@
-import i18n from "$lib/i18n/server";
 import { redirect } from "@sveltejs/kit";
 import MobileDetect from "mobile-detect";
 import type { LayoutServerLoad } from "./$types";

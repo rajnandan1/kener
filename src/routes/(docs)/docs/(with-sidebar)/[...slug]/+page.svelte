@@ -5,9 +5,10 @@
   import { Copy, Check, ExternalLink } from "@lucide/svelte";
   import { Button } from "$lib/components/ui/button/index.js";
   import * as ButtonGroup from "$lib/components/ui/button-group/index.js";
-  import { ChevronDown } from "lucide-svelte";
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
+  import ChevronDown from "@lucide/svelte/icons/chevron-down";
 
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
+  import { afterNavigate } from "$app/navigation";
   interface Props {
     data: {
       title: string;
@@ -75,7 +76,8 @@
   }
 
   // Add copy buttons to code blocks after content is rendered
-  $effect(() => {
+  $effect(() => {});
+  afterNavigate(() => {
     if (!contentEl) return;
 
     const codeBlocks = contentEl.querySelectorAll("pre");

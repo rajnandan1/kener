@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as Select from "$lib/components/ui/select/index.js";
   import { i18n, t } from "$lib/stores/i18n";
-  import Languages from "lucide-svelte/icons/languages";
+  import Languages from "@lucide/svelte/icons/languages";
 
   // Get the current locale from the store
   let selectedLang = $state($i18n.currentLocale);

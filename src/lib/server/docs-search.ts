@@ -1,13 +1,12 @@
 /**
  * Documentation Search Service using FlexSearch
- * Provides full-text search across all documentation pages
+ * Provides full-text search across all documentation pages.
+ * Search index is populated from Redis (use `npm run index-docs` to build it).
  */
 
 import FlexSearch from "flexsearch";
 import { redisConnection } from "$lib/server/redisConnector";
-import { mdToText } from "$lib/marked";
 import type { DocsSearchDocument, DocsSearchResult, DocsSearchIndexData } from "$lib/types/docs-search";
-import { getDocsConfig, getMarkdownContent, getAllPages } from "../../routes/(docs)/docs/docs-utils.server";
 
 const REDIS_DOCS_KEY = "kener-docs:search:documents";
 
@@ -40,9 +39,17 @@ function createExcerpt(content: string, query: string, maxLength: number = 150):
 }
 
 /**
- * Create slug from heading text (same logic as marked-gfm-heading-id)
+ * Create slug from heading text.
+ * If the heading contains a custom ID like {#my-id}, use that directly.
+ * Otherwise, generate a slug from the text (same as marked-gfm-heading-id).
  */
 function createHeadingSlug(text: string): string {
+  // Check for custom heading ID syntax: ## Heading {#custom-id}
+  const customIdMatch = text.match(/\{#([^}]+)\}\s*$/);
+  if (customIdMatch) {
+    return customIdMatch[1].trim();
+  }
+
   return text
     .toLowerCase()
     .trim()
@@ -124,55 +131,8 @@ function getSearchIndex(): any {
 }
 
 /**
- * Build the search index from all documentation pages
- */
-export async function buildSearchIndex(): Promise<void> {
-  const index = getSearchIndex();
-  const config = getDocsConfig();
-  const documents: DocsSearchDocument[] = [];
-
-  // Clear existing index
-  documentsMap.clear();
-
-  for (const group of config.sidebar) {
-    for (const page of group.pages) {
-      const markdownContent = getMarkdownContent(page.slug);
-      if (markdownContent) {
-        const plainContent = mdToText(markdownContent);
-        const doc: DocsSearchDocument = {
-          id: page.slug,
-          title: page.title,
-          slug: page.slug,
-          group: group.group,
-          content: plainContent,
-          rawContent: markdownContent, // Store raw for section detection
-        };
-
-        documents.push(doc);
-        documentsMap.set(page.slug, doc);
-        index.add(doc);
-      } else {
-        console.warn(`[docs-search] No content found for slug: ${page.slug}`);
-      }
-    }
-  }
-
-  // Store in Redis for persistence
-  try {
-    const redis = redisConnection();
-    const indexData: DocsSearchIndexData = {
-      documents,
-      lastUpdated: Date.now(),
-    };
-    await redis.set(REDIS_DOCS_KEY, JSON.stringify(indexData));
-    console.log(`[docs-search] Stored ${documents.length} documents in Redis`);
-  } catch (error) {
-    console.warn("[docs-search] Failed to persist search index to Redis:", error);
-  }
-}
-
-/**
- * Load the search index from Redis if available
+ * Load the search index from Redis.
+ * The index must be built beforehand using `npm run index-docs`.
  */
 export async function loadSearchIndex(): Promise<boolean> {
   try {
@@ -201,13 +161,13 @@ export async function loadSearchIndex(): Promise<boolean> {
 }
 
 /**
- * Ensure the search index is initialized
+ * Ensure the search index is loaded from Redis
  */
 export async function ensureSearchIndex(): Promise<void> {
   if (documentsMap.size === 0) {
     const loaded = await loadSearchIndex();
     if (!loaded) {
-      await buildSearchIndex();
+      console.warn("[docs-search] No search index found in Redis. Run `npm run index-docs` to build it.");
     }
   }
 }
@@ -264,30 +224,6 @@ export async function searchDocs(query: string, limit: number = 10): Promise<Doc
   }
 
   return searchResults.slice(0, limit);
-}
-
-/**
- * Rebuild the search index (for internal use during server startup)
- */
-export async function rebuildSearchIndex(): Promise<void> {
-  // Reset the index
-  searchIndex = null;
-  documentsMap.clear();
-
-  await buildSearchIndex();
-  console.log(`[docs-search] Search index built with ${documentsMap.size} documents`);
-}
-
-/**
- * Initialize the search index at server startup
- * Always rebuilds to ensure fresh content
- */
-export async function initializeSearchIndex(): Promise<void> {
-  try {
-    await rebuildSearchIndex();
-  } catch (error) {
-    console.error("[docs-search] Failed to initialize search index:", error);
-  }
 }
 
 /**

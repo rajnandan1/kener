@@ -1,7 +1,12 @@
 <script lang="ts">
   import type { DocsConfig } from "$lib/types/docs";
   import { base } from "$app/paths";
-  import { Sun, Moon, Menu, X, Search } from "lucide-svelte";
+  import Sun from "@lucide/svelte/icons/sun";
+  import Moon from "@lucide/svelte/icons/moon";
+  import Menu from "@lucide/svelte/icons/menu";
+  import X from "@lucide/svelte/icons/x";
+  import Search from "@lucide/svelte/icons/search";
+
   import { toggleMode, mode } from "mode-watcher";
   import DocsSearch from "./DocsSearch.svelte";
   import { Button } from "$lib/components/ui/button";

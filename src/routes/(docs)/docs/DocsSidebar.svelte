@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { DocsConfig, DocsSidebarGroup, DocsPage } from "$lib/types/docs";
-  import { ChevronDown, ChevronRight } from "lucide-svelte";
+  import ChevronDown from "@lucide/svelte/icons/chevron-down";
+  import ChevronRight from "@lucide/svelte/icons/chevron-right";
+
   import { base } from "$app/paths";
 
   interface Props {

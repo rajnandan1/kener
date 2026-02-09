@@ -1,5 +1,26 @@
 import { writable, derived, get } from "svelte/store";
-import { asset } from "$app/paths";
+
+// Pre-import locale JSON files at build time for SSR (avoids fetch during SSR)
+const localeModules = import.meta.glob("/src/lib/locales/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, { name: string; mappings: Record<string, string> }>;
+
+/**
+ * List of available locales derived from the locale files in src/lib/locales/.
+ * Each entry has a code and human-readable name (read from the JSON file itself).
+ */
+export const availableLocalesList: { code: string; name: string }[] = Object.keys(localeModules)
+  .map((key) => {
+    const code = key.replace("/src/lib/locales/", "").replace(".json", "");
+    return { code, name: localeModules[key]?.name || code };
+  })
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+function getLocaleFromModules(locale: string): Record<string, string> | null {
+  const key = `/src/lib/locales/${locale}.json`;
+  return localeModules[key]?.mappings ?? null;
+}
 
 const LOCALE_STORAGE_KEY = "kener_preferred_locale";
 
@@ -71,34 +92,24 @@ function createI18nStore() {
       update((state) => ({ ...state, isLoading: true }));
 
       try {
-        const response = await storedFetch(asset(`/locales/${locale}.json`));
-        if (!response.ok) {
+        // Use pre-imported locale modules (works for both SSR and client)
+        let translations = getLocaleFromModules(locale);
+        if (!translations && locale !== "en") {
           console.error(`Failed to load locale ${locale}, falling back to en`);
-          // Try to load English as fallback
-          if (locale !== "en") {
-            const fallbackResponse = await storedFetch("/locales/en.json");
-            if (fallbackResponse.ok) {
-              const translations = await fallbackResponse.json();
-              update((state) => ({
-                ...state,
-                currentLocale: "en",
-                translations,
-                isLoading: false,
-              }));
-              return;
-            }
-          }
-          update((state) => ({ ...state, isLoading: false }));
-          return;
+          translations = getLocaleFromModules("en");
+          locale = "en";
         }
 
-        const translations = await response.json();
-        update((state) => ({
-          ...state,
-          currentLocale: locale,
-          translations,
-          isLoading: false,
-        }));
+        if (translations) {
+          update((state) => ({
+            ...state,
+            currentLocale: locale,
+            translations,
+            isLoading: false,
+          }));
+        } else {
+          update((state) => ({ ...state, isLoading: false }));
+        }
       } catch (error) {
         console.error(`Error loading translations for ${locale}:`, error);
         update((state) => ({ ...state, isLoading: false }));

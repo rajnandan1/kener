@@ -1,10 +1,10 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
-  import ChevronLeft from "lucide-svelte/icons/chevron-left";
-  import Clock from "lucide-svelte/icons/clock";
-  import AlertTriangle from "lucide-svelte/icons/alert-triangle";
-  import MessageSquare from "lucide-svelte/icons/message-square";
-  import Monitor from "lucide-svelte/icons/monitor";
+  import ChevronLeft from "@lucide/svelte/icons/chevron-left";
+  import Clock from "@lucide/svelte/icons/clock";
+  import AlertTriangle from "@lucide/svelte/icons/alert-triangle";
+  import MessageSquare from "@lucide/svelte/icons/message-square";
+  import Monitor from "@lucide/svelte/icons/monitor";
   import ArrowRight from "@lucide/svelte/icons/arrow-right";
   import * as Item from "$lib/components/ui/item/index.js";
   import { Button } from "$lib/components/ui/button/index.js";

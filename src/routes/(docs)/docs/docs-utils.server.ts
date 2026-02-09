@@ -1,6 +1,3 @@
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
 import fm from "front-matter";
 import type { DocsConfig, DocsTableOfContentsItem, DocsPage, DocsPageData } from "$lib/types/docs";
 
@@ -10,19 +7,22 @@ interface DocsFrontMatter {
   description?: string;
 }
 
-// Use __dirname equivalent for ES modules to get correct path
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Import docs.json directly as a module — bundled at build time
+import docsConfigJson from "../docs.json";
 
-const DOCS_DIR = path.join(__dirname, "content");
-const DOCS_CONFIG_PATH = path.join(__dirname, "../docs.json");
+// Import all markdown files at build time using Vite's import.meta.glob
+// Keys are like: ./content/introduction.md, ./content/monitors/api.md, etc.
+const markdownFiles = import.meta.glob("./content/**/*.md", {
+  query: "?raw",
+  eager: true,
+  import: "default",
+}) as Record<string, string>;
 
 /**
  * Get the docs configuration
  */
 export function getDocsConfig(): DocsConfig {
-  const configContent = fs.readFileSync(DOCS_CONFIG_PATH, "utf-8");
-  return JSON.parse(configContent) as DocsConfig;
+  return docsConfigJson as DocsConfig;
 }
 
 /**
@@ -84,23 +84,22 @@ export function getAdjacentPages(slug: string): { prev: DocsPage | null; next: D
 
 /**
  * Read markdown file content for a given slug (raw, with front-matter)
+ * Uses Vite's import.meta.glob so content is bundled at build time
  */
 export function getRawMarkdownContent(slug: string): string | null {
-  const filePath = path.join(DOCS_DIR, `${slug}.md`);
-
-  try {
-    if (fs.existsSync(filePath)) {
-      return fs.readFileSync(filePath, "utf-8");
-    }
-    // Try with index.md for nested folders
-    const indexPath = path.join(DOCS_DIR, slug, "index.md");
-    if (fs.existsSync(indexPath)) {
-      return fs.readFileSync(indexPath, "utf-8");
-    }
-    return null;
-  } catch {
-    return null;
+  // Try direct path first: ./content/{slug}.md
+  const directKey = `./content/${slug}.md`;
+  if (markdownFiles[directKey]) {
+    return markdownFiles[directKey];
   }
+
+  // Try index path: ./content/{slug}/index.md
+  const indexKey = `./content/${slug}/index.md`;
+  if (markdownFiles[indexKey]) {
+    return markdownFiles[indexKey];
+  }
+
+  return null;
 }
 
 /**
