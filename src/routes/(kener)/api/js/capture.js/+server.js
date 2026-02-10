@@ -54,7 +54,8 @@ export async function GET({ params, setHeaders, url }) {
   }
   if (!!analyticsData["analytics.umami"]) {
     let website_id = analyticsData["analytics.umami"].requirements["Website ID"];
-    captureScript = captureScript + ";\n" + um.replaceAll("{{website_id}}", website_id);
+    let script_src = analyticsData["analytics.umami"].requirements["Script Source"];
+    captureScript = captureScript + ";\n" + um.replaceAll("{{website_id}}", website_id).replaceAll("{{script_src}}", script_src);
   }
 
   return new Response(captureScript, {
