@@ -17,6 +17,7 @@
   import AlertTriangle from "@lucide/svelte/icons/alert-triangle";
   import Wrench from "@lucide/svelte/icons/wrench";
   import { t } from "$lib/stores/i18n";
+  import trackEvent from "$lib/beacon";
 
   interface Props {
     open: boolean;
@@ -113,6 +114,8 @@
         return;
       }
 
+      trackEvent("subscribe_login_sent", { source: "subscribe_menu" });
+
       currentView = "otp";
       otpValue = "";
     } catch (err) {
@@ -146,6 +149,7 @@
 
       const data = await response.json();
       localStorage.setItem(STORAGE_KEY, data.token);
+      trackEvent("subscribe_otp_verified", { source: "subscribe_menu" });
       await checkExistingToken();
     } catch (err) {
       errorMessage = $t("Network error. Please try again.");
@@ -190,6 +194,8 @@
       } else {
         maintenancesEnabled = value;
       }
+
+      trackEvent("subscribe_pref_toggled", { source: "subscribe_menu", type, value });
     } catch (err) {
       errorMessage = $t("Network error. Please try again.");
       // Revert the toggle
@@ -210,6 +216,7 @@
     maintenancesEnabled = false;
     errorMessage = "";
     currentView = "login";
+    trackEvent("subscribe_logout", { source: "subscribe_menu" });
   }
 
   function handleBackToEmail() {

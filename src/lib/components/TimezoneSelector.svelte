@@ -7,6 +7,7 @@
   import CheckIcon from "@lucide/svelte/icons/check";
   import { tick } from "svelte";
   import { cn } from "$lib/utils.js";
+  import trackEvent from "$lib/beacon";
 
   let open = $state(false);
   let triggerRef = $state<HTMLButtonElement>(null!);
@@ -15,6 +16,7 @@
   function handleTimezoneSelect(tz: string) {
     if (tz && tz !== $selectedTimezone) {
       timezone.setTimezone(tz);
+      trackEvent("timezone_changed", { timezone: tz });
     }
     closeAndFocusTrigger();
   }

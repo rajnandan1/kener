@@ -7,6 +7,7 @@
   import clientResolver from "$lib/client/resolver.js";
   import { t } from "$lib/stores/i18n";
   import { mode } from "mode-watcher";
+  import trackEvent from "$lib/beacon";
 
   import Code from "@lucide/svelte/icons/code";
   import ExternalLink from "@lucide/svelte/icons/external-link";
@@ -26,6 +27,32 @@
 
   let latencyTheme = $state<"light" | "dark">(mode.current === "dark" ? "dark" : "light");
   let latencyEmbedType = $state<"script" | "iframe">("iframe");
+
+  function setMonitorTheme(theme: "light" | "dark") {
+    monitorTheme = theme;
+    trackEvent("embed_theme_changed", { target: "monitor", theme, monitorTag });
+  }
+
+  function setMonitorEmbedType(type: "script" | "iframe") {
+    monitorEmbedType = type;
+    trackEvent("embed_format_changed", { target: "monitor", format: type, monitorTag });
+  }
+
+  function setLatencyTheme(theme: "light" | "dark") {
+    latencyTheme = theme;
+    trackEvent("embed_theme_changed", { target: "latency", theme, monitorTag });
+  }
+
+  function setLatencyEmbedType(type: "script" | "iframe") {
+    latencyEmbedType = type;
+    trackEvent("embed_format_changed", { target: "latency", format: type, monitorTag });
+  }
+
+  function handleEmbedCopy(target: "monitor" | "latency") {
+    const theme = target === "monitor" ? monitorTheme : latencyTheme;
+    const format = target === "monitor" ? monitorEmbedType : latencyEmbedType;
+    trackEvent("embed_code_copied", { target, theme, format, monitorTag });
+  }
 
   // Monitor Embed URL
   const monitorEmbedUrl = $derived(() => {
@@ -100,14 +127,14 @@
                 <Button
                   variant={monitorTheme === "light" ? "default" : "outline"}
                   size="sm"
-                  onclick={() => (monitorTheme = "light")}
+                  onclick={() => setMonitorTheme("light")}
                 >
                   {$t("Light")}
                 </Button>
                 <Button
                   variant={monitorTheme === "dark" ? "default" : "outline"}
                   size="sm"
-                  onclick={() => (monitorTheme = "dark")}
+                  onclick={() => setMonitorTheme("dark")}
                 >
                   {$t("Dark")}
                 </Button>
@@ -119,21 +146,27 @@
                 <Button
                   variant={monitorEmbedType === "iframe" ? "default" : "outline"}
                   size="sm"
-                  onclick={() => (monitorEmbedType = "iframe")}
+                  onclick={() => setMonitorEmbedType("iframe")}
                 >
                   {$t("iFrame")}
                 </Button>
                 <Button
                   variant={monitorEmbedType === "script" ? "default" : "outline"}
                   size="sm"
-                  onclick={() => (monitorEmbedType = "script")}
+                  onclick={() => setMonitorEmbedType("script")}
                 >
                   {$t("Script")}
                 </Button>
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <CopyButton variant="ghost" size="icon-sm" text={monitorEmbedCode()} class="rounded-btn">
+              <CopyButton
+                variant="ghost"
+                size="icon-sm"
+                text={monitorEmbedCode()}
+                class="rounded-btn"
+                onclick={() => handleEmbedCopy("monitor")}
+              >
                 <Copy class="h-3 w-3" />
               </CopyButton>
             </div>
@@ -154,14 +187,14 @@
                 <Button
                   variant={latencyTheme === "light" ? "default" : "outline"}
                   size="sm"
-                  onclick={() => (latencyTheme = "light")}
+                  onclick={() => setLatencyTheme("light")}
                 >
                   {$t("Light")}
                 </Button>
                 <Button
                   variant={latencyTheme === "dark" ? "default" : "outline"}
                   size="sm"
-                  onclick={() => (latencyTheme = "dark")}
+                  onclick={() => setLatencyTheme("dark")}
                 >
                   {$t("Dark")}
                 </Button>
@@ -173,21 +206,27 @@
                 <Button
                   variant={latencyEmbedType === "iframe" ? "default" : "outline"}
                   size="sm"
-                  onclick={() => (latencyEmbedType = "iframe")}
+                  onclick={() => setLatencyEmbedType("iframe")}
                 >
                   {$t("iFrame")}
                 </Button>
                 <Button
                   variant={latencyEmbedType === "script" ? "default" : "outline"}
                   size="sm"
-                  onclick={() => (latencyEmbedType = "script")}
+                  onclick={() => setLatencyEmbedType("script")}
                 >
                   {$t("Script")}
                 </Button>
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <CopyButton variant="ghost" size="icon-sm" text={latencyEmbedCode()} class="rounded-btn">
+              <CopyButton
+                variant="ghost"
+                size="icon-sm"
+                text={latencyEmbedCode()}
+                class="rounded-btn"
+                onclick={() => handleEmbedCopy("latency")}
+              >
                 <Copy class="h-3 w-3" />
               </CopyButton>
             </div>

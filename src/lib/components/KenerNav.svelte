@@ -4,10 +4,19 @@
   import { navigationMenuTriggerStyle } from "$lib/components/ui/navigation-menu/navigation-menu-trigger.svelte";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import trackEvent from "$lib/beacon";
 
   let { data } = page;
   const navItems: { name: string; url: string; iconURL: string }[] = data.navItems || [];
   const { siteName, siteUrl, logo } = data;
+
+  function trackBrandClick() {
+    trackEvent("nav_brand_clicked", { name: siteName });
+  }
+
+  function trackNavClick(item: { name: string; url: string }) {
+    trackEvent("nav_link_clicked", { name: item.name, external: item.url.startsWith("http") });
+  }
 </script>
 
 <div class="fixed inset-x-0 top-0 z-10 py-2">
@@ -20,6 +29,7 @@
         href={clientResolver(resolve, siteUrl)}
         class="{navigationMenuTriggerStyle()} hover:border-border border border-transparent bg-transparent text-xs hover:bg-transparent"
         style="border-radius: var(--radius-3xl)"
+        onclick={trackBrandClick}
       >
         {#if logo}
           <img src={clientResolver(resolve, logo)} alt={siteName} class="mr-2 h-6 w-6 rounded-full object-cover" />
@@ -30,7 +40,7 @@
       <!-- Nav Links -->
       <NavigationMenu.Root>
         <NavigationMenu.List>
-          {#each navItems as item}
+          {#each navItems as item (item.url)}
             <NavigationMenu.Item>
               <NavigationMenu.Link>
                 {#snippet child()}
@@ -41,6 +51,7 @@
                     target={item.url.startsWith("http") ? "_blank" : undefined}
                     rel={item.url.startsWith("http") ? "noopener noreferrer" : undefined}
                     style="border-radius: var(--radius-3xl)"
+                    onclick={() => trackNavClick(item)}
                   >
                     {#if item.iconURL}
                       <img

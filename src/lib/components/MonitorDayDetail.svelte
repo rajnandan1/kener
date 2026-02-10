@@ -25,6 +25,7 @@
   import * as Chart from "$lib/components/ui/chart/index.js";
   import type { IncidentForMonitorList, MaintenanceEventsMonitorList } from "$lib/server/types/db";
   import { formatDate } from "$lib/stores/datetime";
+  import trackEvent from "$lib/beacon";
 
   interface DayDetailData {
     minutes: Array<{
@@ -58,6 +59,7 @@
   let incidentsLoading = $state(false);
   let maintenancesLoading = $state(false);
   let activeView = $state<"status" | "latency" | "incidents" | "maintenances">("status");
+  let lastTrackedView = $state<"status" | "latency" | "incidents" | "maintenances">("status");
   let dayDetailData = $state<DayDetailData | null>(null);
   let dayLatencyData = $state<DayLatencyData | null>(null);
   let dayIncidentsData = $state<IncidentForMonitorList[]>([]);
@@ -195,6 +197,13 @@
       fetchDayLatency();
       fetchDayIncidents();
       fetchDayMaintenances();
+    }
+  });
+
+  $effect(() => {
+    if (open && activeView !== lastTrackedView) {
+      trackEvent("monitor_day_tab_changed", { view: activeView, monitorTag });
+      lastTrackedView = activeView;
     }
   });
 </script>

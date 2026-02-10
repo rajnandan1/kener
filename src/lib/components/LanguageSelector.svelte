@@ -2,6 +2,7 @@
   import * as Select from "$lib/components/ui/select/index.js";
   import { i18n, t } from "$lib/stores/i18n";
   import Languages from "@lucide/svelte/icons/languages";
+  import trackEvent from "$lib/beacon";
 
   // Get the current locale from the store
   let selectedLang = $state($i18n.currentLocale);
@@ -15,6 +16,7 @@
   async function handleLocaleChange(newLocale: string) {
     if (newLocale && newLocale !== $i18n.currentLocale) {
       await i18n.setLocale(newLocale);
+      trackEvent("language_changed", { locale: newLocale });
     }
   }
 

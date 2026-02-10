@@ -7,6 +7,7 @@
   import type { TimestampStatusCount } from "$lib/server/types/db";
   import { t } from "$lib/stores/i18n";
   import { formatDate } from "$lib/stores/datetime";
+  import trackEvent from "$lib/beacon";
 
   interface Props {
     data: TimestampStatusCount[];
@@ -294,6 +295,11 @@
       else status = "UP";
     }
 
+    trackEvent("status_calendar_day_opened", {
+      monitorTag,
+      status,
+      timestamp: barData.ts
+    });
     selectedDay = { timestamp: barData.ts, status };
     dialogOpen = true;
   }

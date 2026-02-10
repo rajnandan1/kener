@@ -14,10 +14,20 @@
   import { resolve } from "$app/paths";
   import { ArrowDown } from "@lucide/svelte";
   import MonitorBar from "$lib/components/MonitorBar.svelte";
+  import trackEvent from "$lib/beacon";
   let { data } = $props();
 
   // State
   let descriptionExpanded = $state(false);
+
+  function toggleDescription(expanded: boolean) {
+    descriptionExpanded = expanded;
+    trackEvent("monitor_description_toggled", { expanded, monitorTag: data.monitorTag });
+  }
+
+  function trackExternalLinkClick() {
+    trackEvent("monitor_external_link_clicked", { monitorTag: data.monitorTag });
+  }
 </script>
 
 <div class="flex flex-col gap-3">
@@ -49,7 +59,7 @@
                 {data.monitorDescription.slice(0, 150)}...
                 <button
                   class="text-accent-foreground inline font-medium hover:underline"
-                  onclick={() => (descriptionExpanded = true)}
+                  onclick={() => toggleDescription(true)}
                 >
                   {$t("Read more")}
                 </button>
@@ -57,7 +67,7 @@
                 {data.monitorDescription}
                 <button
                   class="text-accent-foreground inline font-medium hover:underline"
-                  onclick={() => (descriptionExpanded = false)}
+                  onclick={() => toggleDescription(false)}
                 >
                   {$t("Read less")}
                 </button>
@@ -84,6 +94,7 @@
           href={data.externalUrl}
           target="_blank"
           rel="noopener noreferrer"
+          onclick={trackExternalLinkClick}
         >
           <ArrowUpRight class="size-4" />
         </Button>
@@ -126,7 +137,7 @@
         <div class="flex items-center justify-between px-4 pt-4 pb-0">
           <Badge variant="secondary" class="gap-1">{$t("Available Components")}</Badge>
         </div>
-        {#each data.extendedTags as tag, i}
+        {#each data.extendedTags as tag, i (tag)}
           <div class="{i < data.extendedTags.length - 1 ? 'border-b' : ''} py-2 pb-4">
             <MonitorBar {tag} />
           </div>

@@ -65,6 +65,21 @@
     trackEvent("theme_toggled", { mode: mode.current });
   }
 
+  function openSubscribe() {
+    trackEvent("subscribe_opened", { source: "theme_plus" });
+    openSubscribeMenu = true;
+  }
+
+  function openBadges() {
+    trackEvent("badges_menu_opened", { source: "theme_plus" });
+    openBadgesMenu = true;
+  }
+
+  function openEmbed() {
+    trackEvent("embed_menu_opened", { source: "theme_plus" });
+    openEmbedMenu = true;
+  }
+
   onMount(() => {
     protocol = window.location.protocol;
     domain = window.location.host;
@@ -90,7 +105,7 @@
           {/snippet}
         </DropdownMenu.Trigger>
         <DropdownMenu.Content align="start" class="flex flex-col gap-1 rounded-3xl p-2">
-          {#each pages as page}
+          {#each pages as page (page.page_path)}
             <Button
               variant={page.page_path === currentPath ? "outline" : "ghost"}
               size="sm"
@@ -134,7 +149,7 @@
           size="sm"
           class="rounded-btn bg-background/80 dark:bg-background/70 border-foreground/10 border text-xs backdrop-blur-md"
           aria-label="Go Back"
-          onclick={() => (openSubscribeMenu = true)}
+          onclick={openSubscribe}
         >
           <ICONS.Bell class="" />
           {$t("Subscribe")}
@@ -149,6 +164,7 @@
           text={shareLink}
           class="bg-background/80 dark:bg-background/70 border-foreground/10 cursor-pointer rounded-full border shadow-none backdrop-blur-md"
           size="icon-sm"
+          onclick={() => trackEvent("share_link_copied", { source: "theme_plus" })}
         >
           <Share />
         </CopyButton>
@@ -159,7 +175,7 @@
           variant="outline"
           class="bg-background/80 dark:bg-background/70 border-foreground/10 relative cursor-pointer rounded-full border shadow-none backdrop-blur-md"
           size="icon-sm"
-          onclick={() => (openBadgesMenu = true)}
+          onclick={openBadges}
         >
           <Sticker />
         </Button>
@@ -170,7 +186,7 @@
           variant="outline"
           class="bg-background/80 dark:bg-background/70 border-foreground/10 relative cursor-pointer rounded-full border shadow-none backdrop-blur-md"
           size="icon-sm"
-          onclick={() => (openEmbedMenu = true)}
+          onclick={openEmbed}
         >
           <Code />
         </Button>
