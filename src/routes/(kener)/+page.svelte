@@ -60,14 +60,7 @@
     </Item.Root>
   </div>
 
-  <EventsCard
-    pageSettings={data.pageDetails.page_settings}
-    ongoingMaintenancesCount={data.ongoingMaintenances.length}
-    ongoingIncidentsCount={data.ongoingIncidents.length}
-    upcomingMaintenancesCount={data.upcomingMaintenances.length}
-    statusClass={data.pageStatus.statusClass}
-    statusText={data.pageStatus.statusSummary}
-  />
+  <EventsCard statusClass={data.pageStatus.statusClass} statusText={data.pageStatus.statusSummary} />
   <IncidentMonitorList incidents={data.ongoingIncidents} title="Ongoing Incidents" />
   <AllMaintenanceMonitorGrid
     ongoingMaintenances={data.ongoingMaintenances}

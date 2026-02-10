@@ -64,12 +64,12 @@
 <div class="flex flex-col gap-3">
   <ThemePlus showEventsButton={true} showHomeButton={true} />
   <div class="flex flex-col gap-2 px-4 py-2">
-    <Item.Root class="mb-4 px-0">
+    <Item.Root class="mb-4 flex-col items-start px-0 sm:flex-row sm:items-center">
       <Item.Media>
         <MaintenanceIcon class="stroke-maintenance size-8" />
       </Item.Media>
-      <Item.Content class="px-0">
-        <Item.Title class="text-3xl">{data.maintenance.title}</Item.Title>
+      <Item.Content class="min-w-0 flex-1 px-0">
+        <Item.Title class="text-3xl wrap-break-word">{data.maintenance.title}</Item.Title>
       </Item.Content>
     </Item.Root>
   </div>
@@ -84,29 +84,29 @@
         <Badge variant="secondary">{$t("One-time")}</Badge>
       {/if}
     </div>
-    <div class="flex w-full justify-between gap-2">
+    <div class="flex w-full flex-col gap-4 sm:flex-row sm:justify-between sm:gap-2">
       <div class="flex flex-col items-start gap-1.5">
         <span class="text-muted-foreground">{$t("Start Time")}</span>
         <span>{$formatDate(data.maintenanceEvent.start_date_time, "PPpp")}</span>
       </div>
-      <div class="flex flex-col items-center gap-1.5">
+      <div class="flex flex-col items-start gap-1.5 sm:items-center">
         <span class="text-muted-foreground">{$t("End Time")}</span>
         <span>{$formatDate(data.maintenanceEvent.end_date_time, "PPpp")}</span>
       </div>
-      <div class="flex flex-col items-end gap-1.5">
+      <div class="flex flex-col items-start gap-1.5 sm:items-end">
         <span class="text-muted-foreground">{$t("Duration")}</span>
         <span>{$formatDuration(data.maintenanceEvent.start_date_time, data.maintenanceEvent.end_date_time)}</span>
       </div>
     </div>
   </div>
 
-  <div class="grid gap-6 lg:grid-cols-3">
+  <div class="grid min-w-0 gap-6 lg:grid-cols-3">
     <!-- Description and Events (Main Content) -->
-    <div class="space-y-6 lg:col-span-2">
+    <div class="min-w-0 space-y-6 lg:col-span-2">
       <!-- Description -->
       {#if data.maintenance.description}
-        <div class="bg-background rounded-3xl border">
-          <div class="prose prose-sm dark:prose-invert max-w-none p-4">
+        <div class="bg-background min-w-0 rounded-3xl border">
+          <div class="prose prose-sm dark:prose-invert max-w-none min-w-0 overflow-x-auto p-4 wrap-break-word">
             {@html mdToHTML(data.maintenance.description)}
           </div>
         </div>
@@ -143,9 +143,11 @@
                     {$formatDuration(event.start_date_time, event.end_date_time)}
                   </span>
                 </div>
-                <div class="text-muted-foreground flex items-center justify-between text-sm">
+                <div
+                  class="text-muted-foreground flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between"
+                >
                   <span>{$formatDate(event.start_date_time, "PPpp")}</span>
-                  <span>→</span>
+                  <span class="hidden sm:inline">→</span>
                   <span>{$formatDate(event.end_date_time, "PPpp")}</span>
                 </div>
               </div>

@@ -362,21 +362,25 @@ function GetStatusBgColor(item: TimestampStatusCount): string {
   let textColor = GetStatusColor(item);
   return textColor.replace("text-", "bg-");
 }
-
+// Get initials from monitor name for avatar fallback
+function GetInitials(name: string): string {
+  return name
+    .split(" ")
+    .map((word) => word[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+}
 export {
-  siteDataExtractFromDb,
   AllRecordTypes,
   ValidateIpAddress,
   IsValidHost,
   IsValidNameServer,
   IsValidURL,
   IsValidPort,
-  ValidateCronExpression,
-  SortMonitor,
-  RandomString,
-  GetGameFromId,
   GetStatusSummary,
   GetStatusColor,
   GetStatusBgColor,
   ParseLatency,
+  GetInitials,
 };

@@ -160,33 +160,33 @@
 
   <ThemePlus showHomeButton={true} />
 
-  <div class="flex gap-4">
-    <div class="flex h-20 flex-row justify-start gap-y-3 rounded-3xl border p-4">
-      <div class="flex flex-row items-center gap-4">
-        <div class="flex flex-row items-center justify-between gap-4">
+  <div class="flex flex-col gap-4 sm:flex-row">
+    <div class="flex flex-row justify-start gap-y-3 rounded-3xl border p-4">
+      <div class="flex flex-1 flex-row items-center justify-center gap-4">
+        <div class="flex w-full flex-row items-center justify-between gap-4">
           <Button
             rel="external"
             variant="outline"
             class="size-8 rounded-full p-0 shadow-none"
             href={clientResolver(resolve, `/events/${prevMonthPath}`)}
           >
-            <ICONS.CHEVRON_LEFT class=" size-5" />
+            <ICONS.CHEVRON_LEFT class="size-5" />
           </Button>
           <p class="text-2xl">{$formatDate(parsedDate, "MMMM yyyy")}</p>
           <Button
             rel="external"
             href={clientResolver(resolve, `/events/${nextMonthPath}`)}
             variant="outline"
-            class="size-8 rounded-full p-0 shadow-none	"
+            class="size-8 rounded-full p-0 shadow-none"
           >
-            <ICONS.CHEVRON_RIGHT class=" size-5" />
+            <ICONS.CHEVRON_RIGHT class="size-5" />
           </Button>
         </div>
       </div>
     </div>
 
-    <div class="flex h-20 flex-1 flex-col justify-around gap-y-4 rounded-3xl border p-4">
-      <div class=" flex gap-x-3">
+    <div class="flex flex-1 flex-col justify-around gap-y-4 rounded-3xl border p-4">
+      <div class="flex gap-x-3">
         <!-- Incidents in this page -->
         <div class="flex flex-1 flex-row items-center gap-2">
           {#if numberOfIncidents === 0}

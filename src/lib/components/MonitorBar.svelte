@@ -12,6 +12,7 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { formatDate } from "$lib/stores/datetime";
+  import { GetInitials } from "$lib/clientTools.js";
 
   interface Props {
     tag: string;
@@ -126,7 +127,7 @@
           {#if data.image}
             <Avatar.Image src={clientResolver(resolve, data.image)} alt={data.name} class="  " />
           {/if}
-          <Avatar.Fallback>{data.name.charAt(1)}</Avatar.Fallback>
+          <Avatar.Fallback>{GetInitials(data.name)}</Avatar.Fallback>
         </Avatar.Root>
       </Item.Media>
 

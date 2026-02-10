@@ -15,9 +15,9 @@ import { GetStatusColor, GetStatusSummary, ParseLatency } from "$lib/clientTools
 import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
 import type { GroupMonitorTypeData } from "$lib/server/types/monitor";
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, parent }) => {
   const { monitor_tag } = params;
-
+  const parentData = await parent();
   // Validate monitor exists
   const monitors = await GetMonitorsParsed({ tag: monitor_tag });
   if (!monitors || monitors.length === 0) {
@@ -64,6 +64,12 @@ export const load: PageServerLoad = async ({ params }) => {
     extendedTags = extendedTags.concat(memberTags);
   }
 
+  let maxDays = parentData.isMobile ? 30 : 90;
+  if (monitor.monitor_settings_json?.monitor_status_history_days) {
+    maxDays = parentData.isMobile
+      ? monitor.monitor_settings_json.monitor_status_history_days.mobile || 30
+      : monitor.monitor_settings_json.monitor_status_history_days.desktop || 90;
+  }
   return {
     monitorTag: monitor_tag,
     monitorName: monitor.name,
@@ -81,5 +87,6 @@ export const load: PageServerLoad = async ({ params }) => {
     upcomingMaintenances,
     externalUrl: monitor.external_url,
     extendedTags,
+    maxDays,
   };
 };

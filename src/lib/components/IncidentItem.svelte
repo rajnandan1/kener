@@ -10,6 +10,7 @@
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import { GetInitials } from "$lib/clientTools.js";
 
   interface IncidentMonitorImpact {
     monitor_tag: string;
@@ -52,16 +53,6 @@
     return (monitors[0]?.monitor_impact as keyof typeof STATUS_ICON) || "NO_DATA";
   }
 
-  // Get initials from monitor name for avatar fallback
-  function getInitials(name: string): string {
-    return name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  }
-
   const highestImpact = $derived(getHighestImpact(incident.monitors));
   const Icon = $derived(STATUS_ICON[highestImpact]);
   const strokeClass = $derived(STATUS_STROKE[highestImpact as keyof typeof STATUS_STROKE] || "stroke-down");
@@ -77,12 +68,12 @@
   </Item.Media>
   <Item.Content class="min-w-0 flex-1">
     <div class="flex items-center gap-2">
-      <Item.Title class="min-w-0 break-words">{incident.title}</Item.Title>
+      <Item.Title class="min-w-0 wrap-break-word">{incident.title}</Item.Title>
     </div>
 
     {#if incident.monitors && incident.monitors.length > 0 && !hideMonitors}
-      <div class="my-1 overflow-x-auto pb-1">
-        <div class="*:data-[slot=avatar]:ring-background inline-flex min-w-max -space-x-2 *:data-[slot=avatar]:ring-2">
+      <div class="my-1 overflow-x-auto p-1">
+        <div class="*:data-[slot=avatar]:ring-background flex -space-x-2 *:data-[slot=avatar]:ring-2">
           {#each incident.monitors as monitor}
             <Popover.Root>
               <Popover.Trigger>
@@ -96,7 +87,7 @@
                       class="object-cover"
                     />
                   {/if}
-                  <Avatar.Fallback class="text-xs">{getInitials(monitor.monitor_name)}</Avatar.Fallback>
+                  <Avatar.Fallback class="text-xs">{GetInitials(monitor.monitor_name)}</Avatar.Fallback>
                 </Avatar.Root>
               </Popover.Trigger>
               <Popover.Content class="w-64">
@@ -106,7 +97,7 @@
                       {#if monitor.monitor_image}
                         <Avatar.Image src={clientResolver(resolve, monitor.monitor_image)} alt={monitor.monitor_name} />
                       {/if}
-                      <Avatar.Fallback>{getInitials(monitor.monitor_name)}</Avatar.Fallback>
+                      <Avatar.Fallback>{GetInitials(monitor.monitor_name)}</Avatar.Fallback>
                     </Avatar.Root>
                     <div class="flex flex-col">
                       <span class="font-medium">{monitor.monitor_name}</span>
@@ -137,21 +128,23 @@
     <Item.Description
       class="mt-2 flex w-full flex-col gap-2 text-xs font-medium sm:flex-row sm:items-center sm:justify-between"
     >
-      <span class="max-w-full rounded-full border px-3 py-2 break-words">
+      <span class="max-w-full rounded-full border px-3 py-2 wrap-break-word">
         {$formatDate(incident.start_date_time, "PPp")}
       </span>
-      <span class="relative w-full text-left sm:flex-1 sm:text-center">
-        <span class="absolute top-1/2 right-0 left-0 hidden border-t sm:block"></span>
-        <span class="bg-background relative z-10 px-0 py-1 sm:px-2"
-          >{$formatDuration(incident.start_date_time, endTimeForDuration)}</span
-        >
+      <span class="relative w-full text-center sm:flex-1">
+        <span
+          class="absolute top-0 bottom-0 left-1/2 border-l sm:top-1/2 sm:right-0 sm:bottom-auto sm:left-0 sm:border-t sm:border-l-0"
+        ></span>
+        <span class="bg-background relative z-10 px-0 py-1 sm:px-2">
+          {$formatDuration(incident.start_date_time, endTimeForDuration)}
+        </span>
       </span>
       {#if incident.end_date_time}
-        <span class="max-w-full rounded-full border px-3 py-2 break-words">
+        <span class="max-w-full rounded-full border px-3 py-2 wrap-break-word">
           {$formatDate(incident.end_date_time, "PPp")}
         </span>
       {:else}
-        <span class="max-w-full rounded-full border px-3 py-2 break-words">
+        <span class="max-w-full rounded-full border px-3 py-2 wrap-break-word">
           {$t("Ongoing")}
         </span>
       {/if}

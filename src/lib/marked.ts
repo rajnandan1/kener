@@ -5,6 +5,18 @@ import customHeadingId from "marked-custom-heading-id";
 import markedAlert from "marked-alert";
 import hljs from "highlight.js";
 
+/**
+ * Escape HTML entities to prevent XSS
+ */
+function escapeHtml(html: string): string {
+  return html
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 // Create dedicated instances for each use case to avoid cross-contamination
 const markedHTML = new Marked();
 const markedText = new Marked();
@@ -35,6 +47,10 @@ markedHTML.use({
       }
       return `<a href="${href}"${titleAttr}${target}${rel}>${text}</a>`;
     },
+    // Escape raw HTML blocks and inline HTML to prevent XSS
+    html({ text }: { text: string }) {
+      return escapeHtml(text);
+    },
   },
 });
 markedHTML.setOptions({
@@ -49,7 +65,7 @@ markedText.use(markedPlaintify());
  * Convert markdown to HTML with syntax highlighting
  *
  * @param markdown - The markdown string to convert
- * @returns HTML string with syntax-highlighted code blocks
+ * @returns Sanitized HTML string with syntax-highlighted code blocks
  *
  * @example
  * ```typescript

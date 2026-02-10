@@ -10,6 +10,7 @@
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import { GetInitials } from "$lib/clientTools.js";
 
   interface MaintenanceMonitorImpact {
     monitor_tag: string;
@@ -62,21 +63,9 @@
     return (monitors[0]?.monitor_impact as keyof typeof STATUS_ICON) || "MAINTENANCE";
   }
 
-  // Get initials from monitor name for avatar fallback
-  function getInitials(name: string): string {
-    return name
-      .split(" ")
-      .map((word) => word[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  }
-
   const highestImpact = $derived(getHighestImpact(maintenance.monitors));
   const Icon = $derived(STATUS_ICON[highestImpact]);
   const strokeClass = $derived(STATUS_STROKE[highestImpact as keyof typeof STATUS_STROKE] || "stroke-maintenance");
-  const borderClass = $derived(STATUS_BORDER[highestImpact as keyof typeof STATUS_BORDER] || "border-maintenance");
-  const textClass = $derived("text-" + highestImpact.toLowerCase());
 
   // Check if maintenance is ongoing (current time is between start and end)
   const isOngoing = $derived(() => {
@@ -92,11 +81,11 @@
   }
 </script>
 
-<Item.Root class="p-0 {className}">
-  <Item.Media>
+<Item.Root class="items-start p-0 {className} sm:items-center">
+  <Item.Media class="pt-0.5 sm:pt-0">
     <Icon class="size-6 {strokeClass}" />
   </Item.Media>
-  <Item.Content>
+  <Item.Content class="min-w-0 flex-1">
     <div class="flex items-center gap-2">
       <Item.Title>{maintenance.title}</Item.Title>
       {#if isOngoing()}
@@ -125,7 +114,7 @@
                     class="object-cover"
                   />
                 {/if}
-                <Avatar.Fallback class="text-xs">{getInitials(monitor.monitor_name)}</Avatar.Fallback>
+                <Avatar.Fallback class="text-xs">{GetInitials(monitor.monitor_name)}</Avatar.Fallback>
               </Avatar.Root>
             </Popover.Trigger>
             <Popover.Content class="w-64">
@@ -135,7 +124,7 @@
                     {#if monitor.monitor_image}
                       <Avatar.Image src={clientResolver(resolve, monitor.monitor_image)} alt={monitor.monitor_name} />
                     {/if}
-                    <Avatar.Fallback>{getInitials(monitor.monitor_name)}</Avatar.Fallback>
+                    <Avatar.Fallback>{GetInitials(monitor.monitor_name)}</Avatar.Fallback>
                   </Avatar.Root>
                   <div class="flex flex-col">
                     <span class="font-medium">{monitor.monitor_name}</span>
@@ -162,24 +151,26 @@
       </div>
     {/if}
 
-    <Item.Description>
-      <div class="mt-2 flex items-center justify-between text-xs font-medium">
-        <div class="rounded-full border px-3 py-2">
-          {$formatDate(maintenance.start_date_time, "PPp")}
-        </div>
-        <div class="relative flex-1 text-center">
-          <div class="absolute top-1/2 right-0 left-0 border-t border-solid"></div>
-          <span class="bg-background relative z-10 px-2 py-1 font-medium"
-            >{$formatDuration(maintenance.start_date_time, maintenance.end_date_time)}</span
-          >
-        </div>
-        <div class="rounded-full border px-3 py-2">
-          {$formatDate(maintenance.end_date_time, "PPp")}
-        </div>
-      </div>
+    <Item.Description
+      class="mt-2 flex w-full flex-col gap-2 text-xs font-medium sm:flex-row sm:items-center sm:justify-between"
+    >
+      <span class="max-w-full rounded-full border px-3 py-2 wrap-break-word">
+        {$formatDate(maintenance.start_date_time, "PPp")}
+      </span>
+      <span class="relative w-full text-center sm:flex-1">
+        <span
+          class="absolute top-0 bottom-0 left-1/2 border-l sm:top-1/2 sm:right-0 sm:bottom-auto sm:left-0 sm:border-t sm:border-l-0"
+        ></span>
+        <span class="bg-background relative z-10 px-0 py-1 sm:px-2">
+          {$formatDuration(maintenance.start_date_time, maintenance.end_date_time)}
+        </span>
+      </span>
+      <span class="max-w-full rounded-full border px-3 py-2 wrap-break-word">
+        {$formatDate(maintenance.end_date_time, "PPp")}
+      </span>
     </Item.Description>
   </Item.Content>
-  <Item.Actions>
+  <Item.Actions class="ml-auto self-start sm:ml-0 sm:self-auto">
     <Button
       variant="outline"
       class="cursor-pointer rounded-full shadow-none"

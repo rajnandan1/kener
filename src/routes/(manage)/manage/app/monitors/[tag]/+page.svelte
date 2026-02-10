@@ -20,6 +20,7 @@
   import ModifyDataCard from "./components/ModifyDataCard.svelte";
   import DangerZoneCard from "./components/DangerZoneCard.svelte";
   import MonitorRecentLogs from "./components/MonitorRecentLogs.svelte";
+  import StatusHistoryDaysCard from "./components/StatusHistoryDaysCard.svelte";
 
   let { params }: PageProps = $props();
   const isNew = $derived(params.tag === "new");
@@ -33,6 +34,12 @@
   let uptimeSettings = $state({
     uptime_formula_numerator: "up + maintenance",
     uptime_formula_denominator: "up + maintenance + down + degraded"
+  });
+
+  // Status history days state
+  let statusHistoryDays = $state({
+    desktop: 90,
+    mobile: 30
   });
 
   // Pages state
@@ -118,6 +125,12 @@
               uptime_formula_numerator: settings.uptime_formula_numerator || "up + maintenance",
               uptime_formula_denominator: settings.uptime_formula_denominator || "up + maintenance + down + degraded"
             };
+            if (settings.monitor_status_history_days) {
+              statusHistoryDays = {
+                desktop: settings.monitor_status_history_days.desktop ?? 90,
+                mobile: settings.monitor_status_history_days.mobile ?? 30
+              };
+            }
           } catch (e) {
             console.error("Failed to parse monitor_settings_json:", e);
           }
@@ -230,6 +243,11 @@
     <!-- Uptime Calculation Card -->
     {#if !isNew}
       <UptimeSettingsCard {monitor} {typeData} bind:uptimeSettings />
+    {/if}
+
+    <!-- Status History Days Card -->
+    {#if !isNew}
+      <StatusHistoryDaysCard bind:monitor {typeData} bind:statusHistoryDays />
     {/if}
 
     <!-- Recent Logs Card -->

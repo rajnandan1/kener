@@ -128,7 +128,7 @@
   />
 
   <!-- Calendar View (self-contained component with its own API call) -->
-  <MonitorOverview monitorTag={data.monitorTag} class="mb-4" />
+  <MonitorOverview monitorTag={data.monitorTag} maxDays={data.maxDays} class="mb-4" />
 
   {#if data.extendedTags.length > 0}
     <!-- Included monitors -->
@@ -139,7 +139,7 @@
         </div>
         {#each data.extendedTags as tag, i (tag)}
           <div class="{i < data.extendedTags.length - 1 ? 'border-b' : ''} py-2 pb-4">
-            <MonitorBar {tag} />
+            <MonitorBar {tag} barCount={data.maxDays} />
           </div>
         {/each}
       </div>

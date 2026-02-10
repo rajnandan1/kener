@@ -20,22 +20,34 @@
   interface Props {
     monitorTag: string;
     class?: string;
+    maxDays?: number;
   }
 
-  let { monitorTag, class: className = "" }: Props = $props();
+  let { monitorTag, class: className = "", maxDays = 90 }: Props = $props();
 
   // State
   let loading = $state(true);
   let overviewData = $state<MonitorBarResponse | null>(null);
   let error = $state<string | null>(null);
 
-  // Day range options
-  const dayOptions = [
-    { days: 90, text: $t("90 Days") },
-    { days: 30, text: $t("30 Days") },
-    { days: 7, text: $t("7 Days") },
-    { days: 1, text: $t("24 Hours") }
-  ];
+  // All possible day range options (ascending)
+  const allDayOptions = [1, 7, 14, 30, 60, 90];
+
+  // Filter options up to maxDays, always include maxDays itself
+  let dayOptions = $derived.by(() => {
+    const filtered = allDayOptions.filter((d) => d <= maxDays);
+    if (!filtered.includes(maxDays)) {
+      filtered.push(maxDays);
+    }
+    // Sort descending for dropdown display
+    filtered.sort((a, b) => b - a);
+    return filtered.map((d) => ({
+      days: d,
+      text: `${d} ${d === 1 ? $t("Day") : $t("Days")}`
+    }));
+  });
+
+  // Default to maxDays (first item since sorted descending)
   let selectedDayIndex = $state(0);
 
   // Display values from API response (already formatted as strings)

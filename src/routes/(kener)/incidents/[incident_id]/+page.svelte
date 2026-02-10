@@ -26,15 +26,15 @@
   <ThemePlus showEventsButton={true} showHomeButton={true} />
   <div class="flex flex-col gap-2 px-4 py-2">
     <Item.Root class="mb-4 px-0">
-      <Item.Content class="px-0">
-        <Item.Title class="text-3xl">{data.incident.title}</Item.Title>
+      <Item.Content class="min-w-0 flex-1 px-0">
+        <Item.Title class="text-3xl wrap-break-word">{data.incident.title}</Item.Title>
       </Item.Content>
     </Item.Root>
   </div>
-  <div class="grid gap-6 lg:grid-cols-3">
+  <div class="grid min-w-0 gap-6 lg:grid-cols-3">
     <!-- Comments Timeline (Main Content) -->
-    <div class="lg:col-span-2">
-      <div class="bg-background rounded-3xl border">
+    <div class="min-w-0 lg:col-span-2">
+      <div class="bg-background min-w-0 rounded-3xl border">
         <div class="flex items-center justify-between border-b p-4">
           <Badge variant="secondary" class="gap-1">
             <MessageSquare class="h-3 w-3" />
@@ -50,7 +50,7 @@
         {:else}
           <div class="divide-y">
             {#each data.comments as comment (comment.id)}
-              <div class="p-4">
+              <div class="min-w-0 p-4">
                 <div class="mb-2 flex items-center justify-between gap-2">
                   <Badge variant="outline" class="text-{comment.state.toLowerCase()} rounded-none border-0 p-0">
                     {$t(comment.state)}
@@ -59,7 +59,7 @@
                     {$formatDate(comment.commented_at, "PPpp")}
                   </span>
                 </div>
-                <div class="prose prose-sm dark:prose-invert max-w-none">
+                <div class="prose prose-sm dark:prose-invert max-w-none min-w-0 overflow-x-auto wrap-break-word">
                   {@html mdToHTML(comment.comment)}
                 </div>
               </div>
