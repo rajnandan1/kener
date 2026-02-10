@@ -1,0 +1,117 @@
+# =============================================================================
+# Kener v4 — Production Docker Compose
+#
+# Usage:
+#   docker compose up -d
+#
+# Defaults to the published image. To use a local build instead:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Redis — required for BullMQ queues, caching, and scheduler
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: kener-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Kener — Status Page Application
+  # ---------------------------------------------------------------------------
+  kener:
+    image: rajnandan1/kener:latest
+    # For Alpine variant use: rajnandan1/kener:alpine
+    container_name: kener
+    environment:
+      # ── Required ──
+      KENER_SECRET_KEY: replace_me_with_a_random_string # generate: openssl rand -base64 32
+      REDIS_URL: redis://redis:6379
+
+      # ── Database (default: SQLite) ──
+      # DATABASE_URL: sqlite://./database/kener.sqlite.db
+      # DATABASE_URL: postgresql://user:password@postgres:5432/kener
+      # DATABASE_URL: mysql://user:password@mysql:3306/kener
+
+      # ── Email (optional) ──
+      # RESEND_API_KEY:
+      # RESEND_SENDER_EMAIL:
+      # SMTP_HOST:
+      # SMTP_PORT:
+      # SMTP_USER:
+      # SMTP_PASSWORD:
+      # SMTP_SENDER:
+      # SMTP_SECURE: 0
+
+      # ── Advanced (you likely don't need to change these) ──
+      # PORT: 3000
+      # KENER_BASE_PATH:
+      # NODE_ENV: production          # already set in the image
+    ports:
+      - "3000:3000"
+    volumes:
+      - data:/app/database
+      - uploads:/app/uploads
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Optional: PostgreSQL (uncomment and set DATABASE_URL above)
+  # ---------------------------------------------------------------------------
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: kener-postgres
+  #   environment:
+  #     POSTGRES_USER: kener
+  #     POSTGRES_PASSWORD: change_me        # use a strong password
+  #     POSTGRES_DB: kener
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U kener"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Optional: MySQL / MariaDB (uncomment and set DATABASE_URL above)
+  # ---------------------------------------------------------------------------
+  # mysql:
+  #   image: mariadb:11
+  #   container_name: kener-mysql
+  #   environment:
+  #     MYSQL_USER: kener
+  #     MYSQL_PASSWORD: change_me            # use a strong password
+  #     MYSQL_DATABASE: kener
+  #     MYSQL_RANDOM_ROOT_PASSWORD: "true"
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+volumes:
+  data:
+    name: kener_db
+  uploads:
+    name: kener_uploads
+  redis_data:
+    name: kener_redis
+  # postgres_data:
+  #   name: kener_postgres
+  # mysql_data:
+  #   name: kener_mysql
