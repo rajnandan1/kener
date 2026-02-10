@@ -3,8 +3,9 @@ import StatusColor, { type StatusColors } from "$lib/color.js";
 import { ErrorSvg } from "$lib/anywhere.js";
 import GC, { type StatusType } from "$lib/global-constants.js";
 import { GetLastMonitoringValue } from "$lib/server/cache/setGet.js";
+import type { RequestHandler } from "./$types";
 
-export async function GET({ params, setHeaders, url }) {
+export const GET: RequestHandler = async ({ params, url }) => {
   let lastObj: { status: string };
   const { tag } = params;
   if (tag == "_") {
@@ -59,4 +60,4 @@ export async function GET({ params, setHeaders, url }) {
       "Content-Type": "image/svg+xml",
     },
   });
-}
+};

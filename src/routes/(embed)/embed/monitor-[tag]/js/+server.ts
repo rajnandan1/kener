@@ -1,4 +1,6 @@
-export async function GET({ url, params }) {
+import type { RequestHandler } from "./$types";
+
+export const GET: RequestHandler = async ({ params, url }) => {
   const { tag } = params;
   const query = url.searchParams;
   const uriEmbedded = query.get("monitor");
@@ -69,4 +71,4 @@ export async function GET({ url, params }) {
       "Content-Type": "application/javascript",
     },
   });
-}
+};

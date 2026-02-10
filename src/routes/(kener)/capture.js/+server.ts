@@ -8,7 +8,9 @@ import um from "$lib/snippets/capture/umami.js?raw";
 import ph from "$lib/snippets/capture/posthog.js?raw";
 import { GetAllAnalyticsData } from "$lib/server/controllers/siteDataController.js";
 
-export async function GET({ params, setHeaders, url }) {
+import type { RequestHandler } from "./$types";
+
+export const GET: RequestHandler = async ({ params, url }) => {
   let analyticsData = await GetAllAnalyticsData();
 
   analyticsData = analyticsData.filter((item) => item.value.isEnabled == true);
@@ -81,4 +83,4 @@ export async function GET({ params, setHeaders, url }) {
       "Content-Type": "application/javascript",
     },
   });
-}
+};

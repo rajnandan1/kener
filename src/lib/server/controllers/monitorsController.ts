@@ -21,7 +21,6 @@ import type {
   UptimeCalculatorResult,
 } from "../types/db.js";
 import type { MonitorFilter } from "../db/repositories/base.js";
-import Queue from "queue";
 import db from "../db/db.js";
 import type { PaginationInput } from "../../types/common.js";
 import type { DayWiseStatus, NumberWithChange } from "../../types/monitor.js";
@@ -75,12 +74,6 @@ interface InterpolatedDataEntry {
   status: string;
 }
 
-const insertStatusQueue = new Queue({
-  concurrency: 1, // Number of tasks that can run concurrently
-  timeout: 10000, // Timeout in ms after which a task will be considered as failed (optional)
-  autostart: true, // Automatically start the queue (optional)
-});
-
 export const InsertMonitoringData = async (data: MonitoringDataInput): Promise<MonitoringData | null> => {
   //do validation if present all fields below
   if (!data.monitor_tag || !data.timestamp || !data.status || !data.type) {
@@ -95,81 +88,6 @@ export const InsertMonitoringData = async (data: MonitoringDataInput): Promise<M
     type: data.type,
     error_message: data.error_message,
   });
-};
-export const ProcessGroupUpdate = async (data: GroupUpdateData): Promise<void> => {
-  //find all active monitor that are of type group
-  let groupActiveMonitors = await db.getMonitors({ status: "ACTIVE", monitor_type: "GROUP" });
-  let validMonitorTags: Array<{ groupTag: string; selectedMonitorTags: string[] }> = [];
-
-  for (let i = 0; i < groupActiveMonitors.length; i++) {
-    let groupActiveMonitor = groupActiveMonitors[i];
-    let typeData = JSON.parse(groupActiveMonitor.type_data || "{}");
-    let monitorsInGroup = typeData.monitors || [];
-    let selectedMonitorTags = monitorsInGroup
-      .filter((monitor: { selected?: boolean; tag: string }) => {
-        if (!!monitor.selected) {
-          return monitor.tag;
-        }
-      })
-      .map((monitor: { tag: string }) => monitor.tag);
-    validMonitorTags.push({
-      groupTag: groupActiveMonitor.tag,
-      selectedMonitorTags: selectedMonitorTags,
-    });
-  }
-
-  for (let i = 0; i < validMonitorTags.length; i++) {
-    let groupActiveMonitor = validMonitorTags[i];
-    if (groupActiveMonitor.selectedMonitorTags.indexOf(data.monitor_tag) !== -1) {
-      //do db insert
-      //get last status by tag for the group tag
-      let updateData: MonitoringDataInsert | null = null;
-      let lastStatus = await db.getMonitoringDataAt(groupActiveMonitor.groupTag, data.timestamp);
-      if (!!lastStatus) {
-        let status = lastStatus.status;
-        let timestamp = lastStatus.timestamp;
-        let receivedStatus = data.status;
-        let receivedTimestamp = data.timestamp;
-        if (receivedStatus === GC.DOWN) {
-          updateData = {
-            monitor_tag: groupActiveMonitor.groupTag,
-            timestamp: receivedTimestamp,
-            status: GC.DOWN,
-            type: GC.REALTIME,
-            latency: data.latency,
-          };
-        } else if (receivedStatus === GC.DEGRADED && status !== GC.DOWN) {
-          updateData = {
-            monitor_tag: groupActiveMonitor.groupTag,
-            timestamp: receivedTimestamp,
-            status: GC.DEGRADED,
-            type: GC.REALTIME,
-            latency: data.latency,
-          };
-        } else if (receivedStatus === GC.UP && status !== GC.DOWN && status !== GC.DEGRADED) {
-          updateData = {
-            monitor_tag: groupActiveMonitor.groupTag,
-            timestamp: receivedTimestamp,
-            status: GC.UP,
-            type: GC.REALTIME,
-            latency: data.latency,
-          };
-        }
-      } else {
-        //if no last status then insert the new status
-        updateData = {
-          monitor_tag: groupActiveMonitor.groupTag,
-          timestamp: data.timestamp,
-          status: data.status,
-          type: GC.REALTIME,
-          latency: data.latency,
-        };
-      }
-      if (updateData && !!updateData.status) {
-        await db.insertMonitoringData(updateData);
-      }
-    }
-  }
 };
 
 export const UpdateMonitoringData = async (data: UpdateMonitoringDataInput): Promise<unknown[]> => {

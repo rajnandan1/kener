@@ -1,6 +1,7 @@
+import type { RequestHandler } from "./$types";
 import { GetBadge } from "$lib/server/controllers/controller.js";
 
-export async function GET({ params, url }) {
+export const GET: RequestHandler = async ({ params, url }) => {
   const query = url.searchParams;
   return GetBadge("uptime", {
     tag: params.tag,
@@ -11,4 +12,4 @@ export async function GET({ params, url }) {
     color: query.get("color"),
     style: query.get("style"),
   });
-}
+};
