@@ -39,6 +39,10 @@
         past: { show: true, maxCount: 5, daysInPast: 7 },
         upcoming: { show: true, maxCount: 5, daysInFuture: 7 }
       }
+    },
+    monitor_status_history_days: {
+      desktop: 90,
+      mobile: 30
     }
   };
 
@@ -826,6 +830,43 @@
                 {/if}
               </div>
             {/if}
+          </div>
+
+          <hr class="border-muted" />
+
+          <!-- Monitor Status History Days -->
+          <div class="space-y-4">
+            <div>
+              <Label class="text-base font-medium">Monitor Status History</Label>
+              <p class="text-muted-foreground text-sm">
+                Configure how many days of status history to display on the status page
+              </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="space-y-2">
+                <Label for="history-desktop">Desktop (days)</Label>
+                <Input
+                  id="history-desktop"
+                  type="number"
+                  min="1"
+                  max="365"
+                  bind:value={pageSettings.monitor_status_history_days.desktop}
+                />
+                <p class="text-muted-foreground text-xs">Number of days shown on desktop screens</p>
+              </div>
+              <div class="space-y-2">
+                <Label for="history-mobile">Mobile (days)</Label>
+                <Input
+                  id="history-mobile"
+                  type="number"
+                  min="1"
+                  max="365"
+                  bind:value={pageSettings.monitor_status_history_days.mobile}
+                />
+                <p class="text-muted-foreground text-xs">Number of days shown on mobile screens</p>
+              </div>
+            </div>
           </div>
         </Card.Content>
         <Card.Footer class="flex justify-end">

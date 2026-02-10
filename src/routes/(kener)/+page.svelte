@@ -15,6 +15,12 @@
   import { resolve } from "$app/paths";
 
   let { data } = $props();
+  let pageSettings = $derived(data.pageDetails.page_settings);
+  let barCount = $derived.by(() =>
+    data.isMobile
+      ? pageSettings?.monitor_status_history_days.mobile || 30
+      : pageSettings?.monitor_status_history_days.desktop || 90
+  );
 </script>
 
 <!-- gap -->
@@ -23,14 +29,14 @@
 </svelte:head>
 
 <!-- page title -->
-<div class="flex flex-col gap-3">
+<div class="flex flex-col gap-3 sm:gap-4">
   <ThemePlus
     monitor_tags={data.monitorTags}
     showPagesDropdown={true}
     showEventsButton={true}
     currentPath={data.pageDetails?.page_path || "/"}
   />
-  <div class="flex flex-col gap-2 px-4 py-2">
+  <div class="flex flex-col gap-2 px-3 py-2 sm:px-4">
     {#if data.pageDetails?.page_logo}
       <img
         src={clientResolver(resolve, data.pageDetails.page_logo)}
@@ -41,7 +47,7 @@
     <Item.Root class="px-0 py-0">
       <Item.Content>
         {#if data.pageDetails?.page_header}
-          <Item.Title class="text-3xl">{data.pageDetails.page_header}</Item.Title>
+          <Item.Title class="text-2xl sm:text-3xl">{data.pageDetails.page_header}</Item.Title>
         {/if}
         {#if data.pageDetails?.page_subheader}
           <div class="">
@@ -69,13 +75,13 @@
     pastMaintenances={data.pastMaintenances}
   />
   <div class="flex flex-col">
-    <div class="flex flex-col rounded-3xl border">
+    <div class="flex flex-col overflow-hidden rounded-3xl border">
       <div class="flex items-center justify-between p-4">
         <Badge variant="secondary" class="gap-1">{$t("Available Components")}</Badge>
       </div>
       {#each data.monitorTags as tag, i}
-        <div class="{i < data.monitorTags.length - 1 ? 'border-b' : ''} py-2 pb-4">
-          <MonitorBar {tag} />
+        <div class="{i < data.monitorTags.length - 1 ? 'border-b' : ''} px-2 py-2 pb-4 sm:px-0">
+          <MonitorBar {tag} {barCount} />
         </div>
       {/each}
     </div>
@@ -83,7 +89,7 @@
 
   <!-- Recent Concluded Incidents -->
   {#if data.recentConcludedMaintenances && data.recentConcludedMaintenances.length > 0}
-    <div class="flex flex-col gap-3 rounded-3xl border">
+    <div class="flex flex-col gap-3 overflow-hidden rounded-3xl border">
       <div class="p-4">
         <Badge variant="secondary" class="gap-1">{$t("Recent Incidents")}</Badge>
       </div>

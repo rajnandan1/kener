@@ -56,9 +56,9 @@
       <Badge variant="secondary" class="gap-1">{$t("Maintenances")}</Badge>
     </div>
 
-    <div class="grid grid-cols-3 gap-0">
+    <div class="grid grid-cols-1 gap-0 lg:grid-cols-3">
       <!-- Ongoing Maintenances -->
-      <div class="flex flex-col border-t border-r">
+      <div class="flex flex-col border-t lg:border-r">
         <div class="text-muted-foreground flex items-center justify-between gap-2 border-b p-4 text-sm font-medium">
           <div class="flex items-center gap-2">
             <div class="bg-maintenance h-2 w-2 rounded-full"></div>
@@ -100,7 +100,7 @@
       </div>
 
       <!-- Upcoming Maintenances -->
-      <div class="flex flex-col border-t border-r">
+      <div class="flex flex-col border-t lg:border-r">
         <div class="text-muted-foreground flex items-center justify-between gap-2 border-b p-4 text-sm font-medium">
           <div class="flex items-center gap-2">
             <div class="bg-primary h-2 w-2 rounded-full"></div>

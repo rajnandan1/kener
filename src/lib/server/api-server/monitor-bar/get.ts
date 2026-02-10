@@ -31,9 +31,11 @@ export interface MonitorBarResponse {
  * GET /dashboard-apis/monitor-bar?tag=xxx&days=90&endOfDayTodayAtTz=xxx
  * Returns monitor info, uptime data, and calculated uptime/avgLatency for the specified days
  */
+
 export default async function get(req: APIServerRequest): Promise<Response> {
   const tag = req.query.get("tag");
   const daysStr = req.query.get("days");
+  // const numberOfDaysReceived
   const days = Math.min(MAX_DAYS, Math.max(1, daysStr ? parseInt(daysStr, 10) : DEFAULT_DAYS));
   const endOfDayTodayAtTzStr = req.query.get("endOfDayTodayAtTz");
   const endOfDayTodayAtTz = endOfDayTodayAtTzStr ? parseInt(endOfDayTodayAtTzStr, 10) : GetMinuteStartNowTimestampUTC();

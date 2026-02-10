@@ -32,6 +32,10 @@ const defaultPageSettings: PageSettingsType = {
       upcoming: { show: true, maxCount: 5, daysInFuture: 7 },
     },
   },
+  monitor_status_history_days: {
+    desktop: 90,
+    mobile: 30,
+  },
 };
 
 // Type for incident with comments
@@ -39,13 +43,7 @@ export type IncidentWithComments = IncidentRecord & {
   comments: IncidentCommentRecord[];
 };
 
-// Re-export HourlyUptime for consumers
-export type { HourlyUptime } from "../../types/monitor.js";
-
-export const GetOngoingIncidents = async (
-  monitor_tags: string[],
-  incidentType: string,
-): Promise<IncidentWithComments[]> => {
+const GetOngoingIncidents = async (monitor_tags: string[], incidentType: string): Promise<IncidentWithComments[]> => {
   const now = GetMinuteStartNowTimestampUTC();
   const ongoingIncidents = await db.getOngoingIncidentsByMonitorTags(now, monitor_tags, incidentType);
 
@@ -64,7 +62,7 @@ export const GetOngoingIncidents = async (
 };
 
 //upcoming maintenance function using maintenance tables
-export const GetUpcomingMaintenances = async (
+const GetUpcomingMaintenances = async (
   monitor_tags: string[],
   numDays: number,
   nowTs: number,
@@ -81,7 +79,7 @@ export const GetUpcomingMaintenances = async (
 };
 
 //ongoing maintenance function using maintenance tables
-export const GetOngoingMaintenances = async (
+const GetOngoingMaintenances = async (
   monitor_tags: string[],
   nowTs: number,
 ): Promise<MaintenanceEventRecordDetailed[]> => {
@@ -226,7 +224,6 @@ export const GetPageDashboardData = async (pagePath: string): Promise<PageDashbo
       settings = defaultPageSettings;
     }
   }
-
   const nowTs = GetMinuteStartNowTimestampUTC();
 
   // Fetch data based on settings

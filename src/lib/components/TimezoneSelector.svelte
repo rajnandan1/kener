@@ -9,6 +9,12 @@
   import { cn } from "$lib/utils.js";
   import trackEvent from "$lib/beacon";
 
+  interface Props {
+    compact?: boolean;
+  }
+
+  let { compact = false }: Props = $props();
+
   let open = $state(false);
   let triggerRef = $state<HTMLButtonElement>(null!);
 
@@ -37,12 +43,19 @@
         {...props}
         variant="outline"
         size="sm"
-        class="ksel bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border text-xs font-medium shadow-none backdrop-blur-md"
+        class={cn(
+          "ksel bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border text-xs font-medium shadow-none backdrop-blur-md",
+          compact ? "size-8 p-0" : "max-w-[10rem] sm:max-w-none"
+        )}
         role="combobox"
         aria-expanded={open}
       >
         <Globe class="text-inherit" />
-        {$selectedTimezone}
+        {#if compact}
+          <span class="sr-only">{$selectedTimezone}</span>
+        {:else}
+          <span class="truncate">{$selectedTimezone}</span>
+        {/if}
       </Button>
     {/snippet}
   </Popover.Trigger>

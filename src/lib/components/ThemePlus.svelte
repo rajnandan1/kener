@@ -12,8 +12,6 @@
   import Share from "@lucide/svelte/icons/share-2";
   import Code from "@lucide/svelte/icons/code";
   import Sticker from "@lucide/svelte/icons/sticker";
-  import Languages from "@lucide/svelte/icons/languages";
-  import Globe from "@lucide/svelte/icons/globe";
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
   import type { PageNavItem } from "$lib/server/controllers/dashboardController.js";
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
@@ -87,8 +85,8 @@
   });
 </script>
 
-<div class="theme-plus-bar sticky top-18 z-20 flex w-full items-center justify-between gap-2 rounded">
-  <div class="flex items-center gap-2">
+<div class="theme-plus-bar sticky top-18 z-20 flex w-full items-center gap-2 overflow-x-auto rounded">
+  <div class="flex shrink-0 items-center gap-2">
     {#if showPagesDropdown && pages.length > 1}
       <DropdownMenu.Root>
         <DropdownMenu.Trigger>
@@ -97,10 +95,11 @@
               {...props}
               variant="outline"
               size="sm"
-              class="bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border text-xs shadow-none backdrop-blur-md"
+              class="bg-background/80 dark:bg-background/70   border-foreground/10 flex items-center justify-center rounded-full border text-xs shadow-none backdrop-blur-md"
             >
-              {currentPage?.page_title || "Home"}
-              <ChevronDown class="ml-1 h-4 w-4" />
+              <span class="hidden max-w-[16rem] truncate sm:inline">{currentPage?.page_title || "Home"}</span>
+              <span class="sr-only sm:hidden">{currentPage?.page_title || "Home"}</span>
+              <ChevronDown class="h-4 w-4" />
             </Button>
           {/snippet}
         </DropdownMenu.Trigger>
@@ -126,7 +125,7 @@
         class="bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border text-xs shadow-none backdrop-blur-md"
       >
         <ChevronLeft class="h-4 w-4" />
-        {$t("Home")}
+        <span class="hidden sm:inline">{$t("Home")}</span>
       </Button>
     {/if}
     {#if showEventsButton}
@@ -137,13 +136,13 @@
         class="bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border text-xs shadow-none backdrop-blur-md"
       >
         <ICONS.Events class="h-4 w-4" />
-        {$t("Events")}
+        <span class="hidden sm:inline">{$t("Events")}</span>
       </Button>
     {/if}
   </div>
-  <div class="flex gap-2">
+  <div class="ml-auto flex shrink-0 items-center gap-2">
     {#if page.data.isSubsEnabled && page.data.canSendEmail}
-      <ButtonGroup.Root class="hidden sm:flex">
+      <ButtonGroup.Root class="hidden shrink-0 sm:flex">
         <Button
           variant="outline"
           size="sm"
@@ -156,8 +155,21 @@
         </Button>
       </ButtonGroup.Root>
     {/if}
+    {#if page.data.isSubsEnabled && page.data.canSendEmail}
+      <ButtonGroup.Root class="rounded-btn-grp shrink-0 sm:hidden">
+        <Button
+          variant="outline"
+          size="icon-sm"
+          class="bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border shadow-none backdrop-blur-md"
+          aria-label={$t("Subscribe")}
+          onclick={openSubscribe}
+        >
+          <ICONS.Bell />
+        </Button>
+      </ButtonGroup.Root>
+    {/if}
 
-    <ButtonGroup.Root class="rounded-btn-grp">
+    <ButtonGroup.Root class="rounded-btn-grp shrink-0">
       {#if !!page.data.subMenuOptions?.showCopyCurrentPageLink}
         <CopyButton
           variant="outline"
@@ -193,7 +205,31 @@
       {/if}
     </ButtonGroup.Root>
 
-    <ButtonGroup.Root class=" rounded-btn-grp hidden sm:flex">
+    <ButtonGroup.Root class="rounded-btn-grp shrink-0 sm:hidden">
+      {#if page.data.isThemeToggleEnabled}
+        <Button
+          variant="outline"
+          size="icon-sm"
+          onclick={toggleMode}
+          aria-label="toggle theme mode"
+          class="bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border shadow-none backdrop-blur-md"
+        >
+          {#if mode.current === "light"}
+            <Sun class="h-4 w-4" />
+          {:else}
+            <Moon class="h-4 w-4" />
+          {/if}
+        </Button>
+      {/if}
+      {#if $i18n.availableLocales.length > 1}
+        <LanguageSelector compact={true} />
+      {/if}
+      {#if page.data.isTimezoneEnabled}
+        <TimezoneSelector compact={true} />
+      {/if}
+    </ButtonGroup.Root>
+
+    <ButtonGroup.Root class="rounded-btn-grp hidden shrink-0 sm:flex">
       {#if page.data.isThemeToggleEnabled}
         <Button
           variant="outline"

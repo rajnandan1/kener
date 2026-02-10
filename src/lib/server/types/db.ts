@@ -348,14 +348,6 @@ export interface IncidentCommentRecord {
   state: string;
 }
 
-export interface IncidentCommentRecordInsert {
-  comment: string;
-  incident_id: number;
-  commented_at: number;
-  status?: string;
-  state?: string;
-}
-
 // ============ Filter types ============
 export interface IncidentFilter {
   status?: string;
@@ -448,6 +440,10 @@ export interface PageSettingsType {
         daysInFuture: number;
       };
     };
+  };
+  monitor_status_history_days: {
+    desktop: number;
+    mobile: number;
   };
 }
 

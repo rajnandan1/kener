@@ -15,10 +15,10 @@
 
   interface Props {
     tag: string;
+    barCount?: number;
   }
 
-  let { tag }: Props = $props();
-
+  let { tag, barCount = 90 }: Props = $props();
   let loading = $state(true);
   let data = $state<MonitorBarResponse | null>(null);
   let error = $state<string | null>(null);
@@ -47,7 +47,7 @@
       const response = await fetch(
         clientResolver(
           resolve,
-          `/dashboard-apis/monitor-bar?tag=${encodeURIComponent(tag)}&endOfDayTodayAtTz=${endOfDayTodayAtTz}`
+          `/dashboard-apis/monitor-bar?tag=${encodeURIComponent(tag)}&endOfDayTodayAtTz=${endOfDayTodayAtTz}&days=${barCount}`
         )
       );
       if (!response.ok) {
@@ -83,18 +83,18 @@
 <div>
   {#if loading}
     <!-- Skeleton loader -->
-    <Item.Root>
+    <Item.Root class="items-start sm:items-center">
       <Item.Media variant="image">
         <Skeleton class="size-8 rounded" />
       </Item.Media>
-      <Item.Content>
+      <Item.Content class="min-w-0 flex-1">
         <Skeleton class="mb-2 h-5 w-40" />
         <Skeleton class="h-4 w-64" />
       </Item.Content>
-      <Item.Content class="flex-none text-center">
+      <Item.Content class="order-3 w-full text-left sm:order-0 sm:w-auto sm:flex-none sm:text-center">
         <Skeleton class="h-8 w-24" />
       </Item.Content>
-      <Item.Actions>
+      <Item.Actions class="ml-auto self-start sm:ml-0 sm:self-auto">
         <Skeleton class="size-9" />
       </Item.Actions>
     </Item.Root>
@@ -120,7 +120,7 @@
   {:else if data}
     <!-- Loaded state -->
     {@const StatusIcon = STATUS_ICON[data.currentStatus]}
-    <Item.Root>
+    <Item.Root class="items-start sm:items-center">
       <Item.Media variant="image">
         <Avatar.Root class="size-10">
           {#if data.image}
@@ -130,14 +130,14 @@
         </Avatar.Root>
       </Item.Media>
 
-      <Item.Content>
-        <Item.Title>{data.name}</Item.Title>
+      <Item.Content class="min-w-0 flex-1">
+        <Item.Title class="w-full truncate">{data.name}</Item.Title>
         {#if data.description}
-          <Item.Description>{data.description}</Item.Description>
+          <Item.Description class="line-clamp-2 wrap-break-word">{data.description}</Item.Description>
         {/if}
       </Item.Content>
 
-      <Item.Content class="flex-none text-center">
+      <Item.Content class="order-3 w-full text-left sm:order-0 sm:w-auto sm:flex-none sm:text-center">
         <Item.Title class="items-start text-2xl">
           <StatusIcon class="{STATUS_STROKE[data.currentStatus]} mt-1.5" />
           <div class="flex flex-col items-start gap-1">
@@ -148,7 +148,7 @@
           </div>
         </Item.Title>
       </Item.Content>
-      <Item.Actions>
+      <Item.Actions class="ml-auto self-start sm:ml-0 sm:self-auto">
         <Button
           size="icon"
           variant="outline"
@@ -161,11 +161,11 @@
     </Item.Root>
     <div class="mx-auto flex w-full flex-col gap-1 px-4">
       <StatusBarCalendar data={data.uptimeData} monitorTag={tag} barHeight={40} radius={8} />
-      <div class="flex justify-between">
-        <p class="text-muted-foreground text-xs font-medium">
+      <div class="flex min-w-0 justify-between gap-3">
+        <p class="text-muted-foreground min-w-0 truncate text-xs font-medium">
           {$formatDate(new Date(data.fromTimeStamp * 1000), "MMM d, yyyy")}
         </p>
-        <p class="text-muted-foreground text-xs font-medium">
+        <p class="text-muted-foreground min-w-0 truncate text-right text-xs font-medium">
           {$formatDate(new Date(data.toTimeStamp * 1000), "MMM d, yyyy")}
         </p>
       </div>

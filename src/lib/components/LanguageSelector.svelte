@@ -2,7 +2,14 @@
   import * as Select from "$lib/components/ui/select/index.js";
   import { i18n, t } from "$lib/stores/i18n";
   import Languages from "@lucide/svelte/icons/languages";
+  import { cn } from "$lib/utils.js";
   import trackEvent from "$lib/beacon";
+
+  interface Props {
+    compact?: boolean;
+  }
+
+  let { compact = false }: Props = $props();
 
   // Get the current locale from the store
   let selectedLang = $state($i18n.currentLocale);
@@ -36,10 +43,17 @@
   <Select.Root type="single" name="language" bind:value={selectedLang}>
     <Select.Trigger
       size="sm"
-      class="ksel hover:text-accent-foreground bg-background/80 dark:bg-background/70 border-foreground/15 cursor-pointer rounded-full border text-xs font-medium shadow-none backdrop-blur-md"
+      class={cn(
+        "ksel hover:text-accent-foreground bg-background/80 dark:bg-background/70 border-foreground/15 flex cursor-pointer justify-center rounded-full border text-xs font-medium shadow-none backdrop-blur-md",
+        compact ? "size-8 p-0" : "max-w-[10rem] sm:max-w-none"
+      )}
     >
       <Languages class="text-inherit" />
-      {triggerContent}
+      {#if compact}
+        <span class="sr-only">{triggerContent}</span>
+      {:else}
+        <span class="truncate">{triggerContent}</span>
+      {/if}
     </Select.Trigger>
     <Select.Content>
       <Select.Group>
