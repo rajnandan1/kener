@@ -2,7 +2,6 @@
   import { t } from "$lib/stores/i18n";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
 
-  import { format } from "date-fns";
   import { resolve } from "$app/paths";
   import TrendingUp from "@lucide/svelte/icons/trending-up";
   import Clock from "@lucide/svelte/icons/clock";
@@ -25,6 +24,8 @@
 
   import * as Chart from "$lib/components/ui/chart/index.js";
   import type { IncidentForMonitorList, MaintenanceEventsMonitorList } from "$lib/server/types/db";
+  import { formatDate } from "$lib/stores/datetime";
+
   interface DayDetailData {
     minutes: Array<{
       timestamp: number;
@@ -186,14 +187,6 @@
       maintenancesLoading = false;
     }
   }
-  // Format date for display
-  function formatDate(timestamp: number): string {
-    return format(new Date(timestamp * 1000), "EEEE, MMMM do, yyyy");
-  }
-
-  function formatTime(timestamp: number): string {
-    return format(new Date(timestamp * 1000), "HH:mm");
-  }
 
   // Fetch data when dialog opens with a new day
   $effect(() => {
@@ -212,7 +205,7 @@
     <Dialog.Header>
       <Dialog.Title class="flex items-center gap-2">
         <Activity class="h-5 w-5" />
-        {selectedDay ? formatDate(selectedDay.timestamp) : ""}
+        {selectedDay ? $formatDate(new Date(selectedDay.timestamp * 1000), "EEEE, MMMM do, yyyy") : ""}
       </Dialog.Title>
       <Dialog.Description>{$t("Minute-by-minute status data for this day")}</Dialog.Description>
     </Dialog.Header>
@@ -300,7 +293,7 @@
                     line: { class: "stroke-1" }
                   },
                   xAxis: {
-                    format: (d: Date) => format(d, "HH:mm")
+                    format: (d: Date) => $formatDate(d, "HH:mm")
                   }
                 }}
               >
@@ -325,9 +318,9 @@
                           class="mt-0.5 size-2.5 shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)"
                         ></div>
                         <div class="flex flex-1 flex-col items-start justify-between gap-1 leading-none">
-                          <span class="text-muted-foreground text-xs"
-                            >{item.payload?.date ? format(item.payload.date, "HH:mm") : ""}</span
-                          >
+                          <span class="text-muted-foreground text-xs">
+                            {item.payload?.date ? $formatDate(item.payload.date, "HH:mm") : ""}
+                          </span>
                           <div class="flex items-center gap-2">
                             <span class="text-foreground font-mono font-medium tabular-nums">
                               {Math.round(Number(value))} ms

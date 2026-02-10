@@ -11,6 +11,7 @@
   import type { MonitorBarResponse, BarData } from "$lib/server/api-server/monitor-bar/get.js";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import { formatDate } from "$lib/stores/datetime";
 
   interface Props {
     tag: string;
@@ -37,16 +38,6 @@
     MAINTENANCE: "stroke-maintenance",
     NO_DATA: "stroke-muted-foreground"
   } as const;
-
-  function formatTimestamp(timestamp: number): string {
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleDateString("en-US", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      timeZone: $selectedTimezone
-    });
-  }
 
   async function fetchData() {
     loading = true;
@@ -172,10 +163,10 @@
       <StatusBarCalendar data={data.uptimeData} monitorTag={tag} barHeight={40} radius={8} />
       <div class="flex justify-between">
         <p class="text-muted-foreground text-xs font-medium">
-          {formatTimestamp(data.fromTimeStamp)}
+          {$formatDate(new Date(data.fromTimeStamp * 1000), "MMM d, yyyy")}
         </p>
         <p class="text-muted-foreground text-xs font-medium">
-          {formatTimestamp(data.toTimeStamp)}
+          {$formatDate(new Date(data.toTimeStamp * 1000), "MMM d, yyyy")}
         </p>
       </div>
     </div>

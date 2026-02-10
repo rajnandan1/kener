@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { format } from "date-fns";
   import { AreaChart, Area, LinearGradient } from "layerchart";
   import { curveCatmullRom } from "d3-shape";
   import { scaleTime } from "d3-scale";
@@ -8,6 +7,7 @@
   import { t } from "$lib/stores/i18n";
   import { ta } from "date-fns/locale";
   import { ParseLatency } from "$lib/clientTools";
+  import { formatDate } from "$lib/stores/datetime";
 
   interface Props {
     data: TimestampStatusCount[];
@@ -63,7 +63,7 @@
             line: { class: "stroke-1" }
           },
           xAxis: {
-            format: (d: Date) => format(d, "MMM d")
+            format: (d: Date) => $formatDate(d, "MMM d")
           }
         }}
       >
@@ -86,7 +86,7 @@
                 ></div>
                 <div class="flex flex-1 flex-col items-start justify-between gap-1 leading-none">
                   <span class="text-muted-foreground text-xs"
-                    >{item.payload?.date ? format(item.payload.date, "MMM d") : ""}</span
+                    >{item.payload?.date ? $formatDate(item.payload.date, "MMM d") : ""}</span
                   >
                   <div class="flex items-center gap-2">
                     <span class="text-foreground font-mono font-medium tabular-nums">

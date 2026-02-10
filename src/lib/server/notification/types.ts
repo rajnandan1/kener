@@ -52,10 +52,6 @@ export interface SMTPConfiguration {
   smtp_pass: string;
   smtp_sender: string;
 }
-export interface WebhookConfiguration {
-  url: string;
-  headers: Record<string, string>;
-}
 
 export interface ResendAPIConfiguration {
   resend_api_key: string;

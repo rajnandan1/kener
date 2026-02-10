@@ -308,14 +308,14 @@
           <div class="flex gap-2">
             <Button variant="outline" onclick={handleBackToEmail} disabled={isSubmitting} class="flex-1">
               <ArrowLeft class="mr-2 h-4 w-4" />
-              Back
+              {$t("Back")}
             </Button>
             <Button onclick={handleVerifyOTP} disabled={isSubmitting || otpValue.length !== 6} class="flex-1">
               {#if isSubmitting}
                 <Loader2 class="mr-2 h-4 w-4 animate-spin" />
-                Verifying...
+                {$t("Verifying")}...
               {:else}
-                Verify
+                {$t("Verify")}
               {/if}
             </Button>
           </div>

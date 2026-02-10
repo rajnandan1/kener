@@ -6,7 +6,6 @@
   import MonitorDayDetail from "$lib/components/MonitorDayDetail.svelte";
   import type { TimestampStatusCount } from "$lib/server/types/db";
   import { t } from "$lib/stores/i18n";
-  import { selectedTimezone } from "$lib/stores/timezone";
   import { formatDate } from "$lib/stores/datetime";
 
   interface Props {

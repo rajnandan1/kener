@@ -3,8 +3,9 @@ export interface AnalyticsEventDetail {
   data: unknown;
 }
 
-export const analyticsEvent = (event: string, data: unknown): void => {
-  // Do something with the event and data
+const analyticsEvent = (event: string, data: unknown): void => {
+  //log event data
+  console.log("Analytics Event:", event, data);
 
   if (typeof document !== "undefined") {
     event = "kener_" + event;
@@ -19,3 +20,4 @@ export const analyticsEvent = (event: string, data: unknown): void => {
     );
   }
 };
+export default analyticsEvent;

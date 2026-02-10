@@ -54,7 +54,7 @@ export function siteDataToVariables(siteData: SiteDataTransformed): SiteDataForN
   };
 }
 
-export function formatMaintenanceMarkdown(
+function formatMaintenanceMarkdown(
   monitorNames: string,
   event: MaintenanceEventRecordDetailed,
   statusMessage: string,

@@ -6,6 +6,8 @@
   import KenerFooter from "$lib/components/KenerFooter.svelte";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import { Toaster } from "$lib/components/ui/sonner/index.js";
+  import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
 
   let { children, data } = $props();
 </script>
@@ -40,6 +42,7 @@
 			--accent-foreground: ${data.siteStatusColorsDark.ACCENT_FOREGROUND || data.siteStatusColorsDark.ACCENT || "#e96e2d"};
 		}
 	</style>`}
+  <script src={clientResolver(resolve, "/capture.js")}></script>
 </svelte:head>
 <main class="kener-public">
   <!-- Nav -->

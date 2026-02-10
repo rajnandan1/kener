@@ -26,6 +26,7 @@
   import { onMount } from "svelte";
   import LanguageSelector from "./LanguageSelector.svelte";
   import TimezoneSelector from "./TimezoneSelector.svelte";
+  import trackEvent from "$lib/beacon";
 
   interface Props {
     currentPath?: string;
@@ -61,6 +62,7 @@
     } else {
       setMode("light");
     }
+    trackEvent("theme_toggled", { mode: mode.current });
   }
 
   onMount(() => {

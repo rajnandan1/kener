@@ -63,11 +63,3 @@ export interface IncidentTypeSummary {
   /** Raw numbers with change data */
   stats: NumberWithChange;
 }
-
-/**
- * Hourly uptime data for sparkbar charts
- */
-export interface HourlyUptime {
-  timestamp: number;
-  uptime: number;
-}

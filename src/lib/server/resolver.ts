@@ -21,7 +21,7 @@
  * // Returns: "https://example.com/api"
  * ```
  */
-export function serverResolve(path: string, params?: Record<string, string>): string {
+function serverResolve(path: string, params?: Record<string, string>): string {
   // If path is an absolute URL, return it as-is
   if (path.startsWith("http://") || path.startsWith("https://")) {
     return path;
