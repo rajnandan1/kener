@@ -13,8 +13,8 @@ FROM node:${DEBIAN_VERSION_TAG} AS builder-debian
 RUN apt-get update && apt-get install -y \
         build-essential=12.9 \
         python3=3.11.2-1+b1 \
-        sqlite3=3.40.1-2+deb12u1 \
-        libsqlite3-dev=3.40.1-2+deb12u1 \
+        sqlite3 \
+        libsqlite3-dev \
         make=4.3-4.1 \
         node-gyp=9.3.0-2 \
         g++=4:12.2.0-3 \
@@ -77,7 +77,7 @@ FROM node:${DEBIAN_VERSION_TAG} AS final-debian
 # TODO: Consider adding `--no-install-recommends`, but will need testing (may further help reduce final build size)
 RUN apt-get update && apt-get install -y \
         iputils-ping=3:20221126-1+deb12u1 \
-        sqlite3=3.40.1-2+deb12u1 \
+        sqlite3 \
         tzdata \
     # TODO: Is it ok to change to `curl` here so that we don't have to maintain `wget` version mismatch between Debian architectures? (`curl` is only used for the container healthcheck and because there is an Alpine variant (best!) we probably don't care if the Debian image ends up building bigger due to `curl`.)
     curl && \
