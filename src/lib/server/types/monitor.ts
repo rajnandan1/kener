@@ -71,6 +71,7 @@ export interface SqlMonitorTypeData {
 export interface HeartbeatMonitorTypeData {
   downRemainingMinutes: number;
   degradedRemainingMinutes: number;
+  secretString: string;
 }
 
 export interface GroupMonitorMember {

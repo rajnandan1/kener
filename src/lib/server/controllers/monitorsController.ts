@@ -28,6 +28,8 @@ import GC, { getBadgeStyle, type BadgeStyle } from "../../global-constants.js";
 import { makeBadge } from "badge-maker";
 import { ErrorSvg } from "../../anywhere.js";
 import { GetLastMonitoringValue } from "../cache/setGet.js";
+import type { HeartbeatMonitor } from "../types/monitor.js";
+import { CreateHash } from "./controller.js";
 
 interface GroupUpdateData {
   monitor_tag: string;
@@ -239,31 +241,29 @@ export const GetLastHeartbeat = async (monitor_tag: string): Promise<MonitoringD
   return await db.getLastHeartbeat(monitor_tag);
 };
 
-export const RegisterHeartbeat = async (tag: string, secret: string): Promise<MonitoringData | null> => {
-  let monitor = await db.getMonitorByTag(tag);
+export const RegisterHeartbeat = async (tag: string, secret: string): Promise<string> => {
+  let monitor = (await GetMonitorsParsed({ tag, status: "ACTIVE", monitor_type: "HEARTBEAT" }).then((monitors) =>
+    monitors.length > 0 ? monitors[0] : null,
+  )) as HeartbeatMonitor | null;
   if (!monitor) {
-    return null;
+    throw new Error("Monitor not found");
   }
+
   let typeData = monitor.type_data;
   if (!typeData) {
-    return null;
+    throw new Error("Monitor type data not found");
   }
   try {
-    let heartbeatConfig = JSON.parse(typeData);
+    let heartbeatConfig = typeData;
     let heartbeatSecret = heartbeatConfig.secretString;
-    if (heartbeatSecret === secret) {
-      return InsertMonitoringData({
-        monitor_tag: monitor.tag,
-        timestamp: GetMinuteStartNowTimestampUTC(),
-        status: GC.UP,
-        latency: 0,
-        type: GC.SIGNAL,
-      });
+    let hashedHeartbeatSecret = CreateHash(secret);
+    if (heartbeatSecret === hashedHeartbeatSecret) {
+      return "OK";
     }
   } catch (e) {
     console.error("Error registering heartbeat:", e);
   }
-  return null;
+  throw new Error("Invalid heartbeat secret");
 };
 
 export const DeleteMonitorCompletelyUsingTag = async (tag: string): Promise<number> => {
