@@ -58,8 +58,8 @@
 
     <div class="grid grid-cols-1 gap-0 lg:grid-cols-3">
       <!-- Ongoing Maintenances -->
-      <div class="flex flex-col border-t lg:border-r">
-        <div class="text-muted-foreground flex items-center justify-between gap-2 border-b p-4 text-sm font-medium">
+      <div class="flex flex-col lg:border-r">
+        <div class="text-muted-foreground bg-secondary flex items-center justify-between gap-2 p-4 text-sm font-medium">
           <div class="flex items-center gap-2">
             <div class="bg-maintenance h-2 w-2 rounded-full"></div>
             {$t("Ongoing")}
@@ -100,8 +100,8 @@
       </div>
 
       <!-- Upcoming Maintenances -->
-      <div class="flex flex-col border-t lg:border-r">
-        <div class="text-muted-foreground flex items-center justify-between gap-2 border-b p-4 text-sm font-medium">
+      <div class="flex flex-col lg:border-r">
+        <div class="text-muted-foreground bg-secondary flex items-center justify-between gap-2 p-4 text-sm font-medium">
           <div class="flex items-center gap-2">
             <div class="bg-primary h-2 w-2 rounded-full"></div>
             {$t("Upcoming")}
@@ -142,8 +142,8 @@
       </div>
 
       <!-- Past Maintenances -->
-      <div class="flex flex-col border-t">
-        <div class="text-muted-foreground flex items-center justify-between gap-2 border-b p-4 text-sm font-medium">
+      <div class="flex flex-col">
+        <div class="text-muted-foreground bg-secondary flex items-center justify-between gap-2 p-4 text-sm font-medium">
           <div class="flex items-center gap-2">
             <div class="bg-muted-foreground h-2 w-2 rounded-full"></div>
 

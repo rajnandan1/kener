@@ -1,9 +1,8 @@
 import GC from "../../global-constants.js";
-import { GetMinuteStartNowTimestampUTC } from "../tool.js";
-import { GetLastHeartbeat } from "../controllers/controller.js";
+import { GetMinuteStartNowTimestampUTC, GetNowTimestampUTCInMs } from "../tool.js";
+import { GetLastHeartbeat } from "../cache/setGet.js";
 import { Cron } from "croner";
 import type { HeartbeatMonitor, MonitoringResult } from "../types/monitor.js";
-import { NODATA } from "dns";
 
 class HeartbeatCall {
   monitor: HeartbeatMonitor;
@@ -13,69 +12,39 @@ class HeartbeatCall {
   }
 
   async execute(): Promise<MonitoringResult> {
-    let nowMinute = GetMinuteStartNowTimestampUTC(); // current time in seconds (minute start)
+    let nowMinute = GetNowTimestampUTCInMs(); // current time in milliseconds
     let latestData = await GetLastHeartbeat(this.monitor.tag);
     if (!latestData) {
       return {
-        status: GC.NO_DATA,
-        latency: 0,
-        type: GC.REALTIME,
-      };
-    }
-
-    // Use croner to calculate expected heartbeat time
-    let expectedTime: number;
-    try {
-      const cronJob = new Cron(this.monitor.cron || "");
-      const prevDate = cronJob.previousRun();
-      if (!prevDate) {
-        return {
-          status: GC.DOWN,
-          latency: 0,
-          type: GC.ERROR,
-        };
-      }
-      expectedTime = Math.floor(prevDate.getTime() / 1000); // seconds
-    } catch (err) {
-      return {
         status: GC.DOWN,
         latency: 0,
-        type: GC.ERROR,
-      };
-    }
-
-    // If heartbeat was received after or at expected time, it's UP
-    if (latestData.timestamp >= expectedTime) {
-      return {
-        status: GC.UP,
-        latency: nowMinute - latestData.timestamp,
         type: GC.REALTIME,
       };
     }
 
-    // Calculate how late the expected heartbeat is
-    let latency = nowMinute - expectedTime;
-    let downRemainingMinutes = Number(this.monitor.type_data.downRemainingMinutes);
-    if (latency > downRemainingMinutes * 60) {
+    //timestamp of latest heartbeat is in seconds, convert to milliseconds for comparison
+    const diffInMs = nowMinute - latestData.timestamp;
+    let downRemainingMinutesInMs = Number(this.monitor.type_data.downRemainingMinutes) * 60 * 1000;
+    if (diffInMs > downRemainingMinutesInMs) {
       return {
         status: GC.DOWN,
-        latency: latency,
+        latency: diffInMs,
         type: GC.REALTIME,
       };
     }
 
-    let degradedRemainingMinutes = Number(this.monitor.type_data.degradedRemainingMinutes);
-    if (latency > degradedRemainingMinutes * 60) {
+    let degradedRemainingMinutesInMs = Number(this.monitor.type_data.degradedRemainingMinutes) * 60 * 1000;
+    if (diffInMs > degradedRemainingMinutesInMs) {
       return {
         status: GC.DEGRADED,
-        latency: latency,
+        latency: diffInMs,
         type: GC.REALTIME,
       };
     }
 
     return {
       status: GC.UP,
-      latency: latency,
+      latency: diffInMs,
       type: GC.REALTIME,
     };
   }

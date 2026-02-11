@@ -1,18 +1,14 @@
 import {
   GetMinuteStartNowTimestampUTC,
   GetMinuteStartTimestampUTC,
+  GetNowTimestampUTC,
+  GetNowTimestampUTCInMs,
   UnparsePercentage,
   UptimeCalculator,
 } from "../tool.js";
 import type {
   MonitorRecordInsert,
-  TriggerRecordInsert,
-  MonitoringDataInsert,
   MonitorAlertInsert,
-  IncidentFilter,
-  TriggerFilter,
-  UserRecordInsert,
-  UserRecord,
   MonitorRecordTyped,
   MonitorRecord,
   MonitorAlert,
@@ -27,9 +23,8 @@ import type { DayWiseStatus, NumberWithChange } from "../../types/monitor.js";
 import GC, { getBadgeStyle, type BadgeStyle } from "../../global-constants.js";
 import { makeBadge } from "badge-maker";
 import { ErrorSvg } from "../../anywhere.js";
-import { GetLastMonitoringValue } from "../cache/setGet.js";
+import { GetLastMonitoringValue, SetLastHeartbeat } from "../cache/setGet.js";
 import type { HeartbeatMonitor } from "../types/monitor.js";
-import { CreateHash } from "./controller.js";
 
 interface GroupUpdateData {
   monitor_tag: string;
@@ -256,8 +251,8 @@ export const RegisterHeartbeat = async (tag: string, secret: string): Promise<st
   try {
     let heartbeatConfig = typeData;
     let heartbeatSecret = heartbeatConfig.secretString;
-    let hashedHeartbeatSecret = CreateHash(secret);
-    if (heartbeatSecret === hashedHeartbeatSecret) {
+    if (heartbeatSecret === secret) {
+      await SetLastHeartbeat(tag, GetNowTimestampUTCInMs());
       return "OK";
     }
   } catch (e) {

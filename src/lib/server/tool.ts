@@ -24,6 +24,12 @@ const GetNowTimestampUTC = function () {
   const timestamp = now.getTime();
   return Math.floor(timestamp / 1000);
 };
+const GetNowTimestampUTCInMs = function () {
+  //use js date instead of moment
+  const now = new Date();
+  const timestamp = now.getTime();
+  return timestamp;
+};
 //return given timestamp minute start timestamp in UTC
 const GetMinuteStartTimestampUTC = function (timestamp: number): number {
   //use js date instead of moment
@@ -564,4 +570,5 @@ export {
   GenerateRandomNumber,
   IsValidUptimeFormula,
   UnparsePercentage,
+  GetNowTimestampUTCInMs,
 };
