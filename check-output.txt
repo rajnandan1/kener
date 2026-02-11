@@ -2,36 +2,43 @@
 > kener@4.0.0 check
 > svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
 
-[dotenv@17.2.3] injecting env (18) from .env -- tip: ⚙️  enable debug logging with { debug: true }
+[dotenv@17.2.4] injecting env (6) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
 Loading svelte-check in workspace: /Users/rajnandan1/Code/kener
 Getting Svelte diagnostics...
 
-[dotenv@17.2.3] injecting env (18) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
-[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
-[dotenv@17.2.3] injecting env (0) from .env -- tip: 🔑 add access controls to secrets: https://dotenvx.com/ops
+[dotenv@17.2.4] injecting env (6) from .env -- tip: 🔄 add secrets lifecycle management: https://dotenvx.com/ops
+[dotenv@17.2.4] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+[dotenv@17.2.4] injecting env (0) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+/Users/rajnandan1/Code/kener/src/lib/server/controllers/dashboardController.ts:285:9
+Error: Type '{ ts: number; countOfUp: number; countOfDown: number; countOfDegraded: number; countOfMaintenance: number; avgLatency: number; }' is missing the following properties from type 'TimestampStatusCount': maxLatency, minLatency 
+    latestData.reduce((sum, data) => sum + (data.latency || 0), 0) / (latestData.length || 1);
+  const item: TimestampStatusCount = {
+    ts: nowTs,
+
 /Users/rajnandan1/Code/kener/src/lib/components/ui/chart/chart-container.svelte:20:28
 Warn: This reference only captures the initial value of `id`. Did you mean to reference it inside a closure instead?
 https://svelte.dev/e/state_referenced_locally (svelte)
 
   const chartId = `chart-${id || uid.replace(/:/g, "")}`;
 
-/Users/rajnandan1/Code/kener/src/routes/(manage)/+layout.server.ts:1:18
-Error: Cannot find module '$lib/i18n/server' or its corresponding type declarations. 
-import i18n from "$lib/i18n/server";
-import { redirect } from "@sveltejs/kit";
+/Users/rajnandan1/Code/kener/src/routes/(kener)/monitors/[monitor_tag]/+page.server.ts:50:7
+Error: Type '{ ts: number; countOfUp: number; countOfDown: number; countOfDegraded: number; countOfMaintenance: number; avgLatency: number; }' is missing the following properties from type 'TimestampStatusCount': maxLatency, minLatency 
+  //use uptime calculator tool to parse
+  let item: TimestampStatusCount = {
+    ts: lastStatus ? lastStatus.timestamp : GetNowTimestampUTC(),
 
-/Users/rajnandan1/Code/kener/src/routes/(docs)/docs/DocsNavbar.svelte:126:3
+/Users/rajnandan1/Code/kener/src/routes/(docs)/docs/DocsNavbar.svelte:131:3
 Warn: Unused CSS selector ".active"
 https://svelte.dev/e/css_unused_selector (svelte)
 <style>
   .active {
     color: var(--foreground);
 
-/Users/rajnandan1/Code/kener/src/routes/(docs)/docs/DocsSidebar.svelte:45:25
-Warn: This reference only captures the initial value of `currentSlug`. Did you mean to reference it inside a closure instead?
-https://svelte.dev/e/state_referenced_locally (svelte)
-  let expandedPages = $state<string[]>([]);
-  let prevSlug = $state(currentSlug);
+/Users/rajnandan1/Code/kener/src/routes/(kener)/[page_path]/+page.svelte:58:5
+Error: Object literal may only specify known properties, and '"pageSettings"' does not exist in type 'Props'. (ts)
+  <EventsCard
+    pageSettings={data.pageDetails.page_settings}
+    ongoingMaintenancesCount={data.ongoingMaintenances.length}
 
 /Users/rajnandan1/Code/kener/src/routes/(kener)/events/[MMMM]-[YYYY]/+page.svelte:34:28
 Warn: This reference only captures the initial value of `data`. Did you mean to reference it inside a closure instead?
@@ -41,4 +48,4 @@ https://svelte.dev/e/state_referenced_locally (svelte)
   const currentMonth = format(parsedDate, "MMMM yyyy");
 
 ====================================
-svelte-check found 1 error and 4 warnings in 5 files
+svelte-check found 3 errors and 3 warnings in 6 files

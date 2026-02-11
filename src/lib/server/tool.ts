@@ -475,6 +475,8 @@ function UptimeCalculator(
   let maintenance = 0;
   let latencySum = 0;
   let latencyCount = 0;
+  let maxLatency = -Infinity;
+  let minLatency = Infinity;
 
   for (let i = 0; i < data.length; i++) {
     const element = data[i];
@@ -483,7 +485,17 @@ function UptimeCalculator(
     down += element.countOfDown;
     maintenance += element.countOfMaintenance;
     latencySum += element.avgLatency;
-    latencyCount += 1;
+
+    if (element.avgLatency > 0) {
+      latencyCount += 1;
+    }
+
+    if (!!element.maxLatency && element.maxLatency > maxLatency) {
+      maxLatency = element.maxLatency;
+    }
+    if (!!element.minLatency && element.minLatency < minLatency) {
+      minLatency = element.minLatency;
+    }
   }
 
   // Default formulas
@@ -509,10 +521,11 @@ function UptimeCalculator(
 
   const numerator = SafeEvaluateExpression(numeratorExpr);
   const denominator = SafeEvaluateExpression(denominatorExpr);
-
   return {
     uptime: ParseUptime(numerator, denominator),
     avgLatency: latencyCount > 0 ? ParseLatency(latencySum / latencyCount) : "",
+    maxLatency: latencyCount > 0 && maxLatency !== -Infinity ? ParseLatency(maxLatency) : "",
+    minLatency: latencyCount > 0 && minLatency !== Infinity ? ParseLatency(minLatency) : "",
   };
 }
 

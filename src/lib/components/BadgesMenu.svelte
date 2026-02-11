@@ -9,6 +9,7 @@
 
   import TrendingUp from "@lucide/svelte/icons/trending-up";
   import Percent from "@lucide/svelte/icons/percent";
+  import Timer from "@lucide/svelte/icons/timer";
   import Copy from "@lucide/svelte/icons/copy";
 
   interface Props {
@@ -20,7 +21,9 @@
 
   let { open = $bindable(false), monitorTag, protocol, domain }: Props = $props();
 
-  function handleBadgeCopy(type: "status" | "uptime" | "dot" | "dot_ping") {
+  function handleBadgeCopy(
+    type: "status" | "uptime" | "latency_avg" | "latency_max" | "latency_min" | "dot" | "dot_ping"
+  ) {
     trackEvent("badge_copied", { type, monitorTag });
   }
 
@@ -30,6 +33,19 @@
   );
   const badgeUptimeUrl = $derived(
     protocol && domain ? `${protocol}//${domain}` + clientResolver(resolve, `/badge/${monitorTag}/uptime`) : ""
+  );
+  const badgeLatencyAvgUrl = $derived(
+    protocol && domain ? `${protocol}//${domain}` + clientResolver(resolve, `/badge/${monitorTag}/latency`) : ""
+  );
+  const badgeLatencyMaxUrl = $derived(
+    protocol && domain
+      ? `${protocol}//${domain}` + clientResolver(resolve, `/badge/${monitorTag}/latency?metric=maximum`)
+      : ""
+  );
+  const badgeLatencyMinUrl = $derived(
+    protocol && domain
+      ? `${protocol}//${domain}` + clientResolver(resolve, `/badge/${monitorTag}/latency?metric=minimum`)
+      : ""
   );
   const badgeDotUrl = $derived(
     protocol && domain ? `${protocol}//${domain}` + clientResolver(resolve, `/badge/${monitorTag}/dot`) : ""
@@ -89,6 +105,63 @@
                 text={badgeUptimeUrl}
                 class="rounded-btn hover:bg-transparent"
                 onclick={() => handleBadgeCopy("uptime")}
+              >
+                <Copy />
+              </CopyButton>
+            </div>
+          {/if}
+
+          {#if badgeLatencyAvgUrl}
+            <div class="flex items-center justify-between gap-2 rounded-3xl border px-2 py-1">
+              <div class="flex items-center gap-2">
+                <Timer class="h-3 w-3" />
+                <span class="text-xs font-medium">{$t("Avg Latency")}</span>
+              </div>
+              <img src={badgeLatencyAvgUrl} alt="Avg Latency Badge" class="h-5" />
+              <CopyButton
+                variant="ghost"
+                size="icon-sm"
+                text={badgeLatencyAvgUrl}
+                class="rounded-btn"
+                onclick={() => handleBadgeCopy("latency_avg")}
+              >
+                <Copy />
+              </CopyButton>
+            </div>
+          {/if}
+
+          {#if badgeLatencyMaxUrl}
+            <div class="flex items-center justify-between gap-2 rounded-3xl border px-2 py-1">
+              <div class="flex items-center gap-2">
+                <Timer class="h-3 w-3" />
+                <span class="text-xs font-medium">{$t("Max Latency")}</span>
+              </div>
+              <img src={badgeLatencyMaxUrl} alt="Max Latency Badge" class="h-5" />
+              <CopyButton
+                variant="ghost"
+                size="icon-sm"
+                text={badgeLatencyMaxUrl}
+                class="rounded-btn"
+                onclick={() => handleBadgeCopy("latency_max")}
+              >
+                <Copy />
+              </CopyButton>
+            </div>
+          {/if}
+
+          {#if badgeLatencyMinUrl}
+            <div class="flex items-center justify-between gap-2 rounded-3xl border px-2 py-1">
+              <div class="flex items-center gap-2">
+                <Timer class="h-3 w-3" />
+                <span class="text-xs font-medium">{$t("Min Latency")}</span>
+              </div>
+              <img src={badgeLatencyMinUrl} alt="Min Latency Badge" class="h-5" />
+              <CopyButton
+                variant="ghost"
+                size="icon-sm"
+                text={badgeLatencyMinUrl}
+                class="rounded-btn"
+                onclick={() => handleBadgeCopy("latency_min")}
               >
                 <Copy />
               </CopyButton>

@@ -121,8 +121,8 @@
       <Button
         href={clientResolver(resolve, "/")}
         variant="outline"
-        size="sm"
-        class="bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border text-xs shadow-none backdrop-blur-md"
+        size={page.data.isMobile ? "icon-sm" : "sm"}
+        class="bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border p-0 text-xs shadow-none backdrop-blur-md"
       >
         <ChevronLeft class="h-4 w-4" />
         <span class="hidden sm:inline">{$t("Home")}</span>

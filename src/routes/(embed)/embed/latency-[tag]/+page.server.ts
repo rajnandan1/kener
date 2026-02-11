@@ -10,6 +10,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
   const theme = url.searchParams.get("theme");
   const daysParam = url.searchParams.get("days");
   const heightParam = url.searchParams.get("height");
+  const metric = url.searchParams.get("metric") || "average"; // default to average if not provided
   const days = Math.min(MAX_DAYS, Math.max(1, daysParam ? parseInt(daysParam, 10) : DEFAULT_DAYS));
   const height = Math.max(50, heightParam ? parseInt(heightParam, 10) : DEFAULT_HEIGHT);
 
@@ -18,5 +19,6 @@ export const load: PageServerLoad = async ({ params, url }) => {
     days,
     height,
     theme,
+    metric,
   };
 };

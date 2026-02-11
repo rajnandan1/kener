@@ -26,7 +26,8 @@
     theme: "light" as "light" | "dark",
     format: "iframe" as "iframe" | "script",
     days: 90,
-    height: 200
+    height: 200,
+    metric: "average" as "average" | "maximum" | "minimum"
   });
 
   // Preview key for refreshing
@@ -69,6 +70,9 @@
 
     if (embedConfig.embedType === "latency") {
       params.set("height", embedConfig.height.toString());
+      if (embedConfig.metric !== "average") {
+        params.set("metric", embedConfig.metric);
+      }
     }
 
     return `${embedUrl}?${params.toString()}`;
@@ -84,6 +88,9 @@
 
     if (embedConfig.embedType === "latency") {
       params.set("height", embedConfig.height.toString());
+      if (embedConfig.metric !== "average") {
+        params.set("metric", embedConfig.metric);
+      }
     }
 
     const fullUrl = `${embedUrl}?${params.toString()}`;
@@ -93,7 +100,7 @@
       return `<iframe src="${fullUrl}" width="100%" height="${iframeHeight}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>`;
     }
     return (
-      `<script src="${embedUrl}/js?theme=${embedConfig.theme}&days=${embedConfig.days}${embedConfig.embedType === "latency" ? `&height=${embedConfig.height}` : ""}"><` +
+      `<script src="${embedUrl}/js?theme=${embedConfig.theme}&days=${embedConfig.days}${embedConfig.embedType === "latency" ? `&height=${embedConfig.height}${embedConfig.metric !== "average" ? `&metric=${embedConfig.metric}` : ""}` : ""}"><` +
       "/script>"
     );
   });
@@ -269,6 +276,32 @@
                       {/each}
                     </Select.Content>
                   </Select.Root>
+                </div>
+
+                <!-- Latency Metric -->
+                <div class="flex flex-col gap-2">
+                  <Label for="metric-select">Latency Metric</Label>
+                  <Select.Root
+                    type="single"
+                    value={embedConfig.metric}
+                    onValueChange={(v) => {
+                      if (v) embedConfig.metric = v as "average" | "maximum" | "minimum";
+                    }}
+                  >
+                    <Select.Trigger id="metric-select" class="w-full capitalize">
+                      {embedConfig.metric === "average"
+                        ? "Average"
+                        : embedConfig.metric === "maximum"
+                          ? "Maximum"
+                          : "Minimum"}
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Item value="average">Average</Select.Item>
+                      <Select.Item value="maximum">Maximum</Select.Item>
+                      <Select.Item value="minimum">Minimum</Select.Item>
+                    </Select.Content>
+                  </Select.Root>
+                  <p class="text-muted-foreground text-xs">Select which latency metric to display in the chart</p>
                 </div>
               {/if}
 

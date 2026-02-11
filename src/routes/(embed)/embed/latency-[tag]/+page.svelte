@@ -5,6 +5,7 @@
   import LatencyTrendChart from "$lib/components/LatencyTrendChart.svelte";
   import { Skeleton } from "$lib/components/ui/skeleton/index.js";
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
+  import type { TimestampStatusCount } from "$lib/server/types/db";
   import { t } from "$lib/stores/i18n";
   import clientResolver from "$lib/client/resolver.js";
   interface Props {
@@ -15,6 +16,7 @@
       endOfDayTodayAtTz: number;
       theme: string;
       localTz: string;
+      metric: string;
     };
   }
 
@@ -27,8 +29,20 @@
 
   // Display values from API response
   let displayUptime = $derived(overviewData?.uptime ?? "--");
-  let displayAvgLatency = $derived(overviewData?.avgLatency ?? "--");
   let displayData = $derived(overviewData?.uptimeData ?? []);
+  const metricToKeyMap: Record<string, keyof MonitorBarResponse> = {
+    average: "avgLatency",
+    maximum: "maxLatency",
+    minimum: "minLatency"
+  };
+  let displayLatency = $derived(overviewData?.[metricToKeyMap[data.metric]] ?? "--");
+  // Transform data for chart component
+  let latencyChartData = $derived(
+    displayData.map((d: TimestampStatusCount) => ({
+      date: new Date(d.ts * 1000),
+      value: d[metricToKeyMap[data.metric] as keyof TimestampStatusCount] || 0
+    }))
+  );
 
   async function fetchData() {
     loading = true;
@@ -73,12 +87,12 @@
     <!-- Stats row -->
     <div class="flex items-center justify-between text-xs font-semibold">
       <span class="text-foreground">{displayUptime}% {$t("Uptime")}</span>
-      {#if displayAvgLatency !== "--"}
-        <span class="">{displayAvgLatency} {$t("Avg Latency")}</span>
+      {#if displayLatency !== "--"}
+        <span class="">{displayLatency} {$t(data.metric)}</span>
       {/if}
     </div>
 
     <!-- Latency trend chart -->
-    <LatencyTrendChart data={displayData} height={data.height} />
+    <LatencyTrendChart data={latencyChartData} height={data.height} />
   {/if}
 </div>

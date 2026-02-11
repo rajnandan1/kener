@@ -282,6 +282,14 @@ export const GetPageDashboardData = async (pagePath: string): Promise<PageDashbo
   const maintenancesInLatestData = latestData.filter((data) => data.status === GC.MAINTENANCE).length;
   const avgLatencyInLatestData =
     latestData.reduce((sum, data) => sum + (data.latency || 0), 0) / (latestData.length || 1);
+  const maxLatencyInLatestData = latestData.reduce(
+    (max, data) => (data.latency && data.latency > max ? data.latency : max),
+    0,
+  );
+  const minLatencyInLatestData = latestData.reduce(
+    (min, data) => (data.latency && data.latency < min ? data.latency : min),
+    Infinity,
+  );
   const item: TimestampStatusCount = {
     ts: nowTs,
     countOfUp: upsInLatestData,
@@ -289,6 +297,8 @@ export const GetPageDashboardData = async (pagePath: string): Promise<PageDashbo
     countOfDegraded: degradedsInLatestData,
     countOfMaintenance: maintenancesInLatestData,
     avgLatency: avgLatencyInLatestData,
+    maxLatency: maxLatencyInLatestData,
+    minLatency: minLatencyInLatestData === Infinity ? 0 : minLatencyInLatestData,
   };
 
   const statusBgClass = GetStatusBgColor(item);

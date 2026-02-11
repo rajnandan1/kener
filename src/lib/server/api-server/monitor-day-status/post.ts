@@ -82,6 +82,8 @@ export default async function post(req: APIServerRequest): Promise<Response> {
     countOfDegraded: degradedCount,
     countOfMaintenance: maintenanceCount,
     avgLatency: 0,
+    maxLatency: 0,
+    minLatency: 0,
   };
 
   const uptimeCalculationResult = UptimeCalculator(
@@ -89,8 +91,6 @@ export default async function post(req: APIServerRequest): Promise<Response> {
     monitor.monitor_settings_json?.uptime_formula_numerator,
     monitor.monitor_settings_json?.uptime_formula_denominator,
   );
-
-  // console.log(">>>>>>----  post:95 ", minuteData[minuteData.length - 10], uptimeCalculationResult);
 
   return json({
     minutes: minuteData,

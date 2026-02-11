@@ -25,6 +25,8 @@ export interface MonitorBarResponse {
   uptimeData: TimestampStatusCount[];
   fromTimeStamp: number;
   toTimeStamp: number;
+  maxLatency: string;
+  minLatency: string;
 }
 
 /**
@@ -69,6 +71,8 @@ export default async function get(req: APIServerRequest): Promise<Response> {
         countOfDegraded: 0,
         countOfMaintenance: 0,
         avgLatency: 0,
+        maxLatency: 0,
+        minLatency: 0,
       });
     }
   }
@@ -97,10 +101,12 @@ export default async function get(req: APIServerRequest): Promise<Response> {
     image: monitor.image || null,
     currentStatus,
     uptime: uptimeCalculationResult.uptime,
-    avgLatency: uptimeCalculationResult.avgLatency,
     uptimeData,
     fromTimeStamp: startTime,
     toTimeStamp: endOfDayTodayAtTz - 1,
+    avgLatency: uptimeCalculationResult.avgLatency,
+    maxLatency: uptimeCalculationResult.maxLatency,
+    minLatency: uptimeCalculationResult.minLatency,
   };
 
   return json(response);

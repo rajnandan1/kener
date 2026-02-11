@@ -100,10 +100,14 @@ export interface TimestampStatusCount {
   countOfDegraded: number;
   countOfMaintenance: number;
   avgLatency: number;
+  maxLatency: number;
+  minLatency: number;
 }
 export interface UptimeCalculatorResult {
   uptime: string;
   avgLatency: string;
+  maxLatency: string;
+  minLatency: string;
 }
 
 export interface MonitorRecordTyped {

@@ -30,7 +30,8 @@
     label: "",
     labelColor: "#555",
     color: "#0079FF",
-    style: "flat" as BadgeStyle
+    style: "flat" as BadgeStyle,
+    metric: "average" as "average" | "maximum" | "minimum"
   });
 
   // Preview state
@@ -61,6 +62,9 @@
       if (badgeConfig.hideDuration) {
         params.set("hideDuration", "true");
       }
+    }
+    if (badgeConfig.badgeType === "latency" && badgeConfig.metric !== "average") {
+      params.set("metric", badgeConfig.metric);
     }
     if (badgeConfig.label) {
       params.set("label", badgeConfig.label);
@@ -201,7 +205,7 @@
                   {:else if badgeConfig.badgeType === "uptime"}
                     Shows uptime percentage over a time period
                   {:else}
-                    Shows average latency over a time period
+                    Shows latency over a time period
                   {/if}
                 </p>
               </div>
@@ -239,6 +243,34 @@
                     checked={badgeConfig.hideDuration}
                     onCheckedChange={(checked) => (badgeConfig.hideDuration = checked)}
                   />
+                </div>
+              {/if}
+
+              <!-- Latency Metric (only for latency) -->
+              {#if badgeConfig.badgeType === "latency"}
+                <div class="flex flex-col gap-2">
+                  <Label for="latency-metric">Latency Metric</Label>
+                  <Select.Root
+                    type="single"
+                    value={badgeConfig.metric}
+                    onValueChange={(v) => {
+                      if (v) badgeConfig.metric = v as "average" | "maximum" | "minimum";
+                    }}
+                  >
+                    <Select.Trigger id="latency-metric" class="w-full capitalize">
+                      {badgeConfig.metric === "average"
+                        ? "Average"
+                        : badgeConfig.metric === "maximum"
+                          ? "Maximum"
+                          : "Minimum"}
+                    </Select.Trigger>
+                    <Select.Content>
+                      <Select.Item value="average">Average</Select.Item>
+                      <Select.Item value="maximum">Maximum</Select.Item>
+                      <Select.Item value="minimum">Minimum</Select.Item>
+                    </Select.Content>
+                  </Select.Root>
+                  <p class="text-muted-foreground text-xs">Select which latency metric to display on the badge</p>
                 </div>
               {/if}
 

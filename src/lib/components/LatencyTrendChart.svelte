@@ -3,38 +3,34 @@
   import { curveCatmullRom } from "d3-shape";
   import { scaleTime } from "d3-scale";
   import * as Chart from "$lib/components/ui/chart/index.js";
-  import type { TimestampStatusCount } from "$lib/server/types/db";
   import { t } from "$lib/stores/i18n";
-  import { ta } from "date-fns/locale";
   import { ParseLatency } from "$lib/clientTools";
   import { formatDate } from "$lib/stores/datetime";
 
+  interface ChartPoint {
+    date: Date;
+    value: number;
+  }
+
   interface Props {
-    data: TimestampStatusCount[];
+    data: ChartPoint[];
+    label?: string;
     height?: number;
     class?: string;
   }
 
-  let { data, height = 128, class: className = "" }: Props = $props();
+  let { data, label = $t("Avg Latency"), height = 128, class: className = "" }: Props = $props();
 
   // Chart config
-  const chartConfig = {
-    avgLatency: {
-      label: $t("Avg Latency"),
+  let chartConfig = $derived({
+    value: {
+      label: label,
       color: "var(--chart-1)"
     }
-  } satisfies Chart.ChartConfig;
+  } satisfies Chart.ChartConfig);
 
-  // Transform data for chart
-  let chartData = $derived.by(() => {
-    if (!data) return [];
-    return data
-      .filter((d) => d.avgLatency > 0)
-      .map((d) => ({
-        date: new Date(d.ts * 1000),
-        avgLatency: d.avgLatency
-      }));
-  });
+  // Filter out zero values
+  let chartData = $derived(data.filter((d) => d.value > 0));
 </script>
 
 <div class="{className}  ">
@@ -44,16 +40,16 @@
         data={chartData}
         x="date"
         xScale={scaleTime()}
-        y="avgLatency"
+        y="value"
         yDomain={[0, null]}
         yNice
         axis="x"
         grid={false}
         series={[
           {
-            key: "avgLatency",
-            label: $t("Avg Latency"),
-            color: "var(--color-avgLatency)"
+            key: "value",
+            label: label,
+            color: "var(--color-value)"
           }
         ]}
         props={{

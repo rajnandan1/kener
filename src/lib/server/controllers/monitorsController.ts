@@ -336,6 +336,7 @@ export interface BadgeParams {
   labelColor?: string | null;
   color?: string | null;
   style?: string | null;
+  metric?: string | null;
 }
 
 function formatDuration(rangeInSeconds: number): string {
@@ -432,6 +433,8 @@ export const GetBadge = async (badgeType: BadgeType, params: BadgeParams): Promi
     let uptimeData: UptimeCalculatorResult = {
       uptime: "-",
       avgLatency: "-",
+      maxLatency: "-",
+      minLatency: "-",
     };
 
     if (tag === "_") {
@@ -464,7 +467,19 @@ export const GetBadge = async (badgeType: BadgeType, params: BadgeParams): Promi
     }
 
     // Determine message based on badge type
-    message = badgeType === "uptime" ? uptimeData.uptime : uptimeData.avgLatency;
+    if (badgeType === "uptime") {
+      message = uptimeData.uptime;
+    } else {
+      // latency badge - support metric param (average, maximum, minimum)
+      const metric = params.metric || "average";
+      if (metric === "maximum") {
+        message = uptimeData.maxLatency;
+      } else if (metric === "minimum") {
+        message = uptimeData.minLatency;
+      } else {
+        message = uptimeData.avgLatency;
+      }
+    }
 
     // Build label with duration suffix for uptime/latency
     name = name + (hideDuration ? "" : ` ${formatted}`);

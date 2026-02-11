@@ -417,7 +417,9 @@ export class MonitoringRepository extends BaseRepository {
         SUM(CASE WHEN status = 'DOWN' THEN 1 ELSE 0 END) AS count_of_down,
         SUM(CASE WHEN status = 'DEGRADED' THEN 1 ELSE 0 END) AS count_of_degraded,
         SUM(CASE WHEN status = 'MAINTENANCE' THEN 1 ELSE 0 END) AS count_of_maintenance,
-        AVG(latency) AS avg_latency
+        AVG(latency) AS avg_latency,
+				MAX(latency) AS max_latency,
+				MIN(latency) AS min_latency
       FROM monitoring_data
       WHERE ${tagClause} AND timestamp >= ? AND timestamp < ?
       GROUP BY ts
@@ -459,6 +461,8 @@ export class MonitoringRepository extends BaseRepository {
       countOfDegraded: Number(row.count_of_degraded) || 0,
       countOfMaintenance: Number(row.count_of_maintenance) || 0,
       avgLatency: Number(row.avg_latency) || 0,
+      maxLatency: Number(row.max_latency) || 0,
+      minLatency: Number(row.min_latency) || 0,
     }));
   }
 
@@ -485,6 +489,8 @@ export class MonitoringRepository extends BaseRepository {
         this.knex.raw("SUM(CASE WHEN status = 'DEGRADED' THEN 1 ELSE 0 END) AS count_of_degraded"),
         this.knex.raw("SUM(CASE WHEN status = 'MAINTENANCE' THEN 1 ELSE 0 END) AS count_of_maintenance"),
         this.knex.raw("AVG(latency) AS avg_latency"),
+        this.knex.raw("MAX(latency) AS max_latency"),
+        this.knex.raw("MIN(latency) AS min_latency"),
       )
       .from("last_records")
       .first();
@@ -496,6 +502,8 @@ export class MonitoringRepository extends BaseRepository {
       countOfDegraded: Number(result?.count_of_degraded) || 0,
       countOfMaintenance: Number(result?.count_of_maintenance) || 0,
       avgLatency: Number(result?.avg_latency) || 0,
+      maxLatency: Number(result?.max_latency) || 0,
+      minLatency: Number(result?.min_latency) || 0,
     };
   }
 }
