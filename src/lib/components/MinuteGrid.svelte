@@ -32,14 +32,22 @@
   let hoveredMinute = $state<{ x: number; y: number; data: MinuteData } | null>(null);
 
   // Layout constants
-  const SQUARE_SIZE = 10;
   const SQUARE_GAP = 1;
   const HOUR_LABEL_WIDTH = 0;
   const SECTION_LABEL_HEIGHT = 20;
   const SECTION_GAP = 12;
   const MINUTES_PER_HOUR = 60;
   const HOURS_PER_SECTION = 6;
-  const ROW_HEIGHT = SQUARE_SIZE + SQUARE_GAP;
+
+  // Responsive square size: fit 60 squares + gaps into the available width
+  let squareSize = $derived.by(() => {
+    if (canvasWidth <= 0) return 10;
+    const available = canvasWidth - HOUR_LABEL_WIDTH;
+    // 60 squares with gaps between them: 60 * size + 59 * gap <= available
+    const size = Math.floor((available - (MINUTES_PER_HOUR - 1) * SQUARE_GAP) / MINUTES_PER_HOUR);
+    return Math.max(3, Math.min(size, 10)); // clamp between 3px and 10px
+  });
+  let rowHeight = $derived(squareSize + SQUARE_GAP);
 
   // Colors from page data
   const colorUp = $derived(page.data.siteStatusColors?.UP || "#22c55e");
@@ -95,7 +103,7 @@
     let height = 0;
     for (const section of sections) {
       height += SECTION_LABEL_HEIGHT;
-      height += section.hours.length * ROW_HEIGHT;
+      height += section.hours.length * rowHeight;
       height += SECTION_GAP;
     }
     return Math.max(height, 50);
@@ -183,23 +191,23 @@
         // Draw minute squares
         for (let minIdx = 0; minIdx < hourMinutes.length; minIdx++) {
           const minute = hourMinutes[minIdx];
-          const x = HOUR_LABEL_WIDTH + minIdx * (SQUARE_SIZE + SQUARE_GAP);
+          const x = HOUR_LABEL_WIDTH + minIdx * (squareSize + SQUARE_GAP);
           const y = currentY;
 
           ctx.fillStyle = getStatusColor(minute.status);
-          ctx.fillRect(x, y, SQUARE_SIZE, SQUARE_SIZE);
+          ctx.fillRect(x, y, squareSize, squareSize);
 
           // Store rect for hit testing
           minuteRects.push({
             x,
             y,
-            width: SQUARE_SIZE,
-            height: SQUARE_SIZE,
+            width: squareSize,
+            height: squareSize,
             data: minute
           });
         }
 
-        currentY += ROW_HEIGHT;
+        currentY += rowHeight;
       }
 
       currentY += SECTION_GAP;

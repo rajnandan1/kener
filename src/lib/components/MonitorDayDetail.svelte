@@ -210,24 +210,38 @@
 
 <Dialog.Root bind:open>
   <Dialog.Overlay class="backdrop-blur-[2px]" />
-  <Dialog.Content class="max-h-[80vh] overflow-y-auto rounded-3xl sm:max-w-[46.5rem]">
+  <Dialog.Content class="max-h-[90vh] overflow-y-auto rounded-3xl p-4 sm:max-w-[46.5rem] sm:p-6">
     <Dialog.Header>
-      <Dialog.Title class="flex items-center gap-2">
-        <Activity class="h-5 w-5" />
-        {selectedDay ? $formatDate(new Date(selectedDay.timestamp * 1000), "EEEE, MMMM do, yyyy") : ""}
+      <Dialog.Title class="flex items-center gap-2 text-base sm:text-lg">
+        <Activity class="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
+        <span class="truncate">
+          {selectedDay ? $formatDate(new Date(selectedDay.timestamp * 1000), "EEEE, MMMM do, yyyy") : ""}
+        </span>
       </Dialog.Title>
-      <Dialog.Description>{$t("Minute-by-minute status data for this day")}</Dialog.Description>
+      <Dialog.Description class="text-xs sm:text-sm"
+        >{$t("Minute-by-minute status data for this day")}</Dialog.Description
+      >
     </Dialog.Header>
 
     <Tabs.Root value={activeView} class="bg-background ktabs w-full overflow-hidden rounded-3xl border">
-      <Tabs.List class="h-auto w-full justify-end rounded-none px-2 py-2">
-        <Tabs.Trigger value="status" class="rounded-3xl py-2">{$t("Status")}</Tabs.Trigger>
-        <Tabs.Trigger value="latency" class="rounded-3xl py-2">{$t("Latency")}</Tabs.Trigger>
-        <Tabs.Trigger value="incidents" class="rounded-3xl py-2">{$t("Incidents")}</Tabs.Trigger>
-        <Tabs.Trigger value="maintenances" class="rounded-3xl py-2">{$t("Maintenances")}</Tabs.Trigger>
+      <Tabs.List
+        class="scrollbar-hidden h-auto w-full justify-start overflow-x-auto rounded-none px-2 py-2 sm:justify-end"
+      >
+        <Tabs.Trigger value="status" class="shrink-0 rounded-3xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
+          >{$t("Status")}</Tabs.Trigger
+        >
+        <Tabs.Trigger value="latency" class="shrink-0 rounded-3xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
+          >{$t("Latency")}</Tabs.Trigger
+        >
+        <Tabs.Trigger value="incidents" class="shrink-0 rounded-3xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
+          >{$t("Incidents")}</Tabs.Trigger
+        >
+        <Tabs.Trigger value="maintenances" class="shrink-0 rounded-3xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
+          >{$t("Maintenances")}</Tabs.Trigger
+        >
       </Tabs.List>
       <!-- status view -->
-      <Tabs.Content value="status" class="p-4">
+      <Tabs.Content value="status" class="p-2 sm:p-4">
         {#if loading}
           <!-- Loading state -->
           <div class="space-y-4 py-4">
@@ -249,7 +263,7 @@
           </div>
         {/if}
       </Tabs.Content>
-      <Tabs.Content value="latency" class="p-4">
+      <Tabs.Content value="latency" class="p-2 sm:p-4">
         {#if latencyLoading}
           <!-- Loading state -->
           <div class="space-y-4 py-4">
@@ -278,7 +292,7 @@
             </div>
 
             <!-- Latency chart -->
-            <Chart.Container config={chartConfig} class="min-h-64 w-full">
+            <Chart.Container config={chartConfig} class="min-h-48 w-full sm:min-h-64">
               <AreaChart
                 data={chartData}
                 x="date"
@@ -353,7 +367,7 @@
           </div>
         {/if}
       </Tabs.Content>
-      <Tabs.Content value="incidents" class="p-4">
+      <Tabs.Content value="incidents" class="p-2 sm:p-4">
         {#if incidentsLoading}
           <!-- Loading state -->
           <div class="space-y-4 py-4">
@@ -391,7 +405,7 @@
           </div>
         {/if}
       </Tabs.Content>
-      <Tabs.Content value="maintenances" class="p-4">
+      <Tabs.Content value="maintenances" class="p-2 sm:p-4">
         {#if maintenancesLoading}
           <!-- Loading state -->
           <div class="space-y-4 py-4">
