@@ -60,6 +60,14 @@ export interface LayoutServerData {
     family: string;
   };
   canSendEmail: boolean;
+  announcement?: {
+    title: string;
+    message: string;
+    type: "INFO" | "WARNING" | "ERROR";
+    reshowAfterInHours: number | null;
+    cancellable: boolean;
+    cta: string | null;
+  };
 }
 
 export async function GetLayoutServerData(cookies: Cookies, request: Request): Promise<LayoutServerData> {
@@ -123,5 +131,6 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     defaultSiteTheme,
     font,
     canSendEmail,
+    announcement: siteData.announcement,
   };
 }

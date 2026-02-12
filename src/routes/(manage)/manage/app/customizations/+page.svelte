@@ -1,11 +1,13 @@
 <script lang="ts">
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
+  import { Textarea } from "$lib/components/ui/textarea/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Table from "$lib/components/ui/table/index.js";
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
+  import * as Select from "$lib/components/ui/select/index.js";
   import * as RadioGroup from "$lib/components/ui/radio-group/index.js";
   import { Checkbox } from "$lib/components/ui/checkbox/index.js";
   import Loader from "@lucide/svelte/icons/loader";
@@ -21,6 +23,7 @@
   import ColorPicker from "svelte-awesome-color-picker";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import type { SiteAnnouncement } from "$lib/types/site.js";
 
   interface StatusColors {
     UP: string;
@@ -36,6 +39,11 @@
     family: string;
   }
 
+  type AnnouncementForm = Omit<SiteAnnouncement, "reshowAfterInHours" | "cta"> & {
+    reshowAfterInHours: string;
+    cta: string;
+  };
+
   // State
   let loading = $state(true);
   let savingFooter = $state(false);
@@ -43,6 +51,7 @@
   let savingFont = $state(false);
   let savingCSS = $state(false);
   let savingTheme = $state(false);
+  let savingAnnouncement = $state(false);
 
   // Data
   let footerHTML = $state("");
@@ -70,6 +79,14 @@
     family: ""
   });
   let customCSS = $state("");
+  let announcement = $state<AnnouncementForm>({
+    title: "",
+    message: "",
+    type: "INFO",
+    reshowAfterInHours: "",
+    cancellable: true,
+    cta: ""
+  });
 
   async function fetchSettings() {
     loading = true;
@@ -123,6 +140,19 @@
         }
         if (result.themeToggle) {
           themeToggle = result.themeToggle as "YES" | "NO";
+        }
+        if (result.announcement) {
+          announcement = {
+            title: result.announcement.title || "",
+            message: result.announcement.message || "",
+            type: result.announcement.type || "INFO",
+            reshowAfterInHours:
+              result.announcement.reshowAfterInHours === null || result.announcement.reshowAfterInHours === undefined
+                ? ""
+                : String(result.announcement.reshowAfterInHours),
+            cancellable: result.announcement.cancellable ?? true,
+            cta: result.announcement.cta || ""
+          };
         }
       }
       // Set default footer HTML
@@ -262,6 +292,45 @@
       toast.error("Failed to save theme settings");
     } finally {
       savingTheme = false;
+    }
+  }
+
+  async function saveAnnouncement() {
+    savingAnnouncement = true;
+    try {
+      const rawReshow = announcement.reshowAfterInHours;
+      const parsedReshow = rawReshow == null ? "" : String(rawReshow).trim();
+      const reshowAfterInHours = parsedReshow.length === 0 ? null : Math.max(0, Number(parsedReshow));
+
+      const payload: SiteAnnouncement = {
+        title: announcement.title.trim(),
+        message: announcement.message.trim(),
+        type: announcement.type,
+        reshowAfterInHours: Number.isFinite(reshowAfterInHours as number) ? reshowAfterInHours : null,
+        cancellable: announcement.cancellable,
+        cta: announcement.cta.trim() ? announcement.cta.trim() : null
+      };
+
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "storeSiteData",
+          data: { announcement: JSON.stringify(payload) }
+        })
+      });
+
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        announcement.reshowAfterInHours = reshowAfterInHours == null ? "" : String(reshowAfterInHours);
+        toast.success("Announcement settings saved successfully");
+      }
+    } catch (e) {
+      toast.error("Failed to save announcement settings");
+    } finally {
+      savingAnnouncement = false;
     }
   }
 
@@ -619,6 +688,89 @@
             <Loader class="mr-2 h-4 w-4 animate-spin" />
           {/if}
           Save Theme
+        </Button>
+      </Card.Footer>
+    </Card.Root>
+
+    <!-- Announcement Section -->
+    <Card.Root>
+      <Card.Header class="border-b">
+        <Card.Title>Announcement</Card.Title>
+        <Card.Description>Configure a site-wide announcement message shown to visitors.</Card.Description>
+      </Card.Header>
+      <Card.Content class="space-y-4 pt-6">
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="space-y-2">
+            <Label for="announcement-title">Title</Label>
+            <Input id="announcement-title" bind:value={announcement.title} placeholder="Scheduled Maintenance" />
+          </div>
+          <div class="space-y-2">
+            <Label for="announcement-type">Type</Label>
+            <Select.Root
+              type="single"
+              value={announcement.type}
+              onValueChange={(v: string | undefined) => v && (announcement.type = v as "INFO" | "WARNING" | "ERROR")}
+            >
+              <Select.Trigger id="announcement-type" class="w-full">{announcement.type}</Select.Trigger>
+              <Select.Content>
+                <Select.Item value="INFO">INFO</Select.Item>
+                <Select.Item value="WARNING">WARNING</Select.Item>
+                <Select.Item value="ERROR">ERROR</Select.Item>
+              </Select.Content>
+            </Select.Root>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <Label for="announcement-message">Message</Label>
+          <Textarea
+            id="announcement-message"
+            bind:value={announcement.message}
+            placeholder="We are currently performing infrastructure upgrades."
+            rows={4}
+          />
+        </div>
+
+        <div class="grid gap-4 md:grid-cols-2">
+          <div class="space-y-2">
+            <Label for="announcement-reshow">Reshow After (hours)</Label>
+            <Input
+              id="announcement-reshow"
+              type="number"
+              min="0"
+              bind:value={announcement.reshowAfterInHours}
+              placeholder="Leave empty to never reshow automatically"
+            />
+            <p class="text-muted-foreground text-xs">Leave empty for null.</p>
+          </div>
+          <div class="space-y-2">
+            <Label for="announcement-cta">CTA URL (optional)</Label>
+            <Input
+              id="announcement-cta"
+              bind:value={announcement.cta}
+              placeholder="https://status.example.com/incident/123"
+            />
+          </div>
+        </div>
+
+        <div class="flex items-start space-x-3 rounded-lg border p-4">
+          <Checkbox
+            id="announcement-cancellable"
+            checked={announcement.cancellable}
+            onCheckedChange={(checked) => (announcement.cancellable = checked === true)}
+          />
+          <div class="space-y-1">
+            <Label for="announcement-cancellable" class="cursor-pointer">Cancellable</Label>
+            <p class="text-muted-foreground text-sm">Allow users to dismiss the announcement.</p>
+          </div>
+        </div>
+      </Card.Content>
+      <Card.Footer class="flex justify-end border-t pt-6">
+        <Button onclick={saveAnnouncement} disabled={savingAnnouncement}>
+          {#if savingAnnouncement}
+            <Loader class="mr-2 h-4 w-4 animate-spin" />
+          {/if}
+          Save Announcement
         </Button>
       </Card.Footer>
     </Card.Root>

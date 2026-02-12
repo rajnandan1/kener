@@ -1,6 +1,7 @@
 import db from "../db/db.js";
 import { siteDataKeys } from "./siteDataKeys.js";
 import type { Cookies } from "@sveltejs/kit";
+import type { SiteAnnouncement } from "../../types/site.js";
 
 export interface SiteDataTransformed {
   title?: string;
@@ -85,6 +86,7 @@ export interface SiteDataTransformed {
     showShareBadgeMonitor: boolean;
     showShareEmbedMonitor: boolean;
   };
+  announcement?: SiteAnnouncement;
 
   [key: string]: unknown;
 }

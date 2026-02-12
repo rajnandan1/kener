@@ -25,6 +25,8 @@
   import LanguageSelector from "./LanguageSelector.svelte";
   import TimezoneSelector from "./TimezoneSelector.svelte";
   import trackEvent from "$lib/beacon";
+  import { X } from "@lucide/svelte";
+  import SiteBanner from "./SiteBanner.svelte";
 
   interface Props {
     currentPath?: string;
@@ -254,8 +256,11 @@
       {/if}
     </ButtonGroup.Root>
   </div>
+  <!-- Banner -->
 </div>
-
+{#if !!page.data.announcement && !!page.data.announcement.title && !!page.data.announcement.message}
+  <SiteBanner announcement={page.data.announcement} />
+{/if}
 <SubscribeMenu bind:open={openSubscribeMenu} />
 <BadgesMenu bind:open={openBadgesMenu} monitorTag={embedMonitorTag} {protocol} {domain} />
 <EmbedMenu bind:open={openEmbedMenu} monitorTag={embedMonitorTag} {protocol} {domain} />
