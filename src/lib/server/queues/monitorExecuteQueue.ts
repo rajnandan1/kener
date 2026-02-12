@@ -139,7 +139,23 @@ const addWorker = () => {
     }
 
     // Merge data: later entries override earlier ones for all fields except error_message
-    mergedData = { ...defaultData, ...realtimeData, ...incidentData, ...maintenanceData };
+    // Special-case: if realtime returns NO_DATA but a default status exists, prefer default status.
+    const defaultStatus = defaultData[ts]?.status;
+    const realtimeStatus = realtimeData[ts]?.status;
+    let realtimeDataForMerge = realtimeData;
+    if (defaultStatus && realtimeStatus === GC.NO_DATA) {
+      // Apply the preference *before* merging so incident/maintenance can still override later.
+      // Also avoid carrying over realtime NO_DATA error_message.
+      realtimeDataForMerge = { ...realtimeData };
+      realtimeDataForMerge[ts] = {
+        ...realtimeDataForMerge[ts],
+        status: defaultStatus,
+        type: GC.DEFAULT_STATUS,
+      };
+      delete realtimeDataForMerge[ts].error_message;
+    }
+
+    mergedData = { ...defaultData, ...realtimeDataForMerge, ...incidentData, ...maintenanceData };
 
     // Preserve error_message with cascading priority:
     // default → realtime → incident → maintenance

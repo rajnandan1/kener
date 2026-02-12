@@ -72,6 +72,7 @@ export class PagesRepository extends BaseRepository {
       .join("monitors", "pages_monitors.monitor_tag", "monitors.tag")
       .where("pages_monitors.page_id", page_id)
       .andWhere("monitors.is_hidden", "NO")
+      .andWhere("monitors.status", "ACTIVE")
       .select("pages_monitors.*");
   }
 

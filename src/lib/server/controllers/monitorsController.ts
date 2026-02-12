@@ -252,7 +252,31 @@ export const RegisterHeartbeat = async (tag: string, secret: string): Promise<st
     let heartbeatConfig = typeData;
     let heartbeatSecret = heartbeatConfig.secretString;
     if (heartbeatSecret === secret) {
-      await SetLastHeartbeat(tag, GetNowTimestampUTCInMs());
+      // Store last heartbeat in seconds (DB uses seconds). Heartbeat evaluator tolerates older ms values.
+      let nowSec = GetNowTimestampUTC();
+
+      // Avoid rare collisions with minute-rounded monitoring timestamps (which can overwrite due to PK constraints).
+      // Minute-rounded timestamps always end with :00 seconds.
+      if (nowSec % 60 === 0) {
+        nowSec += 1;
+      }
+
+      await SetLastHeartbeat(tag, nowSec);
+
+      // Best-effort persist a heartbeat SIGNAL for restart recovery.
+      // Failure here should not break heartbeat reception.
+      try {
+        await InsertMonitoringData({
+          monitor_tag: tag,
+          timestamp: nowSec,
+          status: GC.UP,
+          latency: 0,
+          type: GC.SIGNAL,
+          error_message: null,
+        });
+      } catch (e) {
+        console.error("Error persisting heartbeat signal:", e);
+      }
       return "OK";
     }
   } catch (e) {

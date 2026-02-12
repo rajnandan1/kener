@@ -12,7 +12,7 @@ Kener's Heartbeat monitoring follows a push-based workflow:
 1. **Kener Generates URL**: Each heartbeat monitor gets a unique URL.
 2. **Your Service Pings URL**: Your cron job or service sends HTTP requests to this URL.
 3. **Kener Records Heartbeat**: Each request records a timestamp.
-4. **Monitor Checks**: Kener's cron compares the last heartbeat time against the expected schedule.
+4. **Monitor Checks**: Kener's cron compares the last heartbeat time against the time now.
 5. **Status Determination**: Based on how late the heartbeat is, status is UP, DEGRADED, or DOWN.
 
 ### Heartbeat Check Process {#heartbeat-check-process}
@@ -20,20 +20,19 @@ Kener's Heartbeat monitoring follows a push-based workflow:
 ```
 ┌─────────────┐                         ┌─────────────┐
 │  Your Cron  │ ──── GET/POST ────────► │   Kener     │
-│  Job/Task   │  /api/heartbeat/{tag}   │   Server    │
+│  Job/Task   │  /ext/heartbeat/tag:secret   │   Server    │
 └─────────────┘                         └─────────────┘
        │                                       │
-       │ Runs every X minutes                  │ Records timestamp
-       │                                       │
+       │                                     Record
+       │                                    Timestamp
        ▼                                       ▼
 ┌─────────────────────────────────────────────────────┐
 │ Kener's Cron Check (every minute):                  │
 │                                                     │
-│ Expected heartbeat time (from cron schedule)        │
 │ Last received heartbeat: 14:05:00                   │
 │ Current time: 14:12:00                              │
 │                                                     │
-│ Minutes late: 7                                     │
+│ Time Since Last Heartbeat: 7 minutes                │
 │ Degraded threshold: 5 minutes → DEGRADED            │
 │ Down threshold: 10 minutes → Still DEGRADED         │
 └─────────────────────────────────────────────────────┘
@@ -46,24 +45,20 @@ Kener's Heartbeat monitoring follows a push-based workflow:
 | **Degraded Remaining Minutes** | `number` | Mark as DEGRADED if no heartbeat received for this many minutes. | `5`     |
 | **Down Remaining Minutes**     | `number` | Mark as DOWN if no heartbeat received for this many minutes.     | `10`    |
 
-### Monitor Cron Schedule {#monitor-cron-schedule}
-
-Heartbeat monitors use the monitor's **cron schedule** to determine expected heartbeat timing. For example:
-
-- If cron is `*/5 * * * *` (every 5 minutes), Kener expects a heartbeat every 5 minutes.
-- The thresholds define how much lateness is tolerable before marking as DEGRADED or DOWN.
+> [!NOTE]
+> Heartbeat status is evaluated using **time since the last received heartbeat**. The monitor's `cron` value is not used for heartbeat timing.
 
 ## Heartbeat URL {#heartbeat-url}
 
-Each heartbeat monitor gets a unique URL:
+Each heartbeat monitor gets a unique URL with a secret token:
 
 ```
-https://your-kener-instance.com/api/heartbeat/{monitor-tag}
+https://your-kener-instance.com/ext/heartbeat/{monitor-tag}:{secret-token}
 ```
 
 - **Method**: `GET` or `POST` (both work)
-- **Authentication**: No authentication required (URL contains the unique tag)
-- **Response**: Returns success status
+- **Authentication**: No authentication required (URL contains the unique secret)
+- **Response**: Returns success status json
 
 ## Status Evaluation Logic {#status-evaluation-logic}
 
@@ -71,27 +66,22 @@ The heartbeat monitor uses time-based evaluation:
 
 ```javascript
 // Pseudocode for heartbeat status evaluation
-const expectedTime = calculateFromCronSchedule(monitor.cron)
-const lastHeartbeat = getLastHeartbeatTimestamp(monitor.tag)
-const now = getCurrentTime()
+const lastHeartbeatMs = getLastHeartbeatTimestamp(monitor.tag) // timestamp in ms
+const nowMs = getCurrentTime() // timestamp in ms
 
-// If heartbeat was received at or after expected time
-if (lastHeartbeat >= expectedTime) {
-    return { status: "UP", latency: now - lastHeartbeat }
+// Calculate time since the last heartbeat
+const minutesSince = (nowMs - lastHeartbeatMs) / (60 * 1000)
+const latencyMs = nowMs - lastHeartbeatMs
+
+if (minutesSince > downRemainingMinutes) {
+    return { status: "DOWN", latency: latencyMs }
 }
 
-// Calculate how late we are from expected time
-const minutesLate = (now - expectedTime) / 60
-
-if (minutesLate > downRemainingMinutes) {
-    return { status: "DOWN", latency: minutesLate * 60 }
+if (minutesSince > degradedRemainingMinutes) {
+    return { status: "DEGRADED", latency: latencyMs }
 }
 
-if (minutesLate > degradedRemainingMinutes) {
-    return { status: "DEGRADED", latency: minutesLate * 60 }
-}
-
-return { status: "UP", latency: minutesLate * 60 }
+return { status: "UP", latency: latencyMs }
 ```
 
 ### Status Conditions {#status-conditions}
@@ -101,7 +91,7 @@ return { status: "UP", latency: minutesLate * 60 }
 | **UP**       | Heartbeat received on time or within degraded threshold | Service running normally            |
 | **DEGRADED** | Late by more than degraded threshold but less than down | Service may be slow or struggling   |
 | **DOWN**     | Late by more than down threshold                        | Service likely failed               |
-| **NO_DATA**  | No heartbeat ever received                              | Service never started or configured |
+| **DOWN**     | No heartbeat ever received                              | Service never started or configured |
 
 ## Examples {#examples}
 
@@ -112,22 +102,23 @@ Monitor a cron job that runs every 5 minutes.
 ```json
 {
     "tag": "data-sync",
-    "name": "Data Sync Job",
-    "type": "HEARTBEAT",
+    "name": "Data Sync",
+    "image": "/uploads/cron.png",
     "cron": "*/5 * * * *",
+    "type": "HEARTBEAT",
     "type_data": {
-        "degradedRemainingMinutes": 2,
-        "downRemainingMinutes": 5
+        "degradedRemainingMinutes": 6,
+        "downRemainingMinutes": 10
     }
 }
 ```
 
-**Heartbeat URL**: `https://kener.example.com/api/heartbeat/data-sync`
+**Heartbeat URL**: `https://kener.example.com/ext/heartbeat/data-sync:SOME-SECRET-TOKEN`
 
 **Add to your cron job**:
 
 ```bash
-*/5 * * * * /path/to/your/script.sh && curl -s https://kener.example.com/api/heartbeat/data-sync
+*/5 * * * * /path/to/your/script.sh && curl -s https://kener.example.com/ext/heartbeat/data-sync:SOME-SECRET-TOKEN
 ```
 
 ### 2. Hourly Backup Job {#hourly-backup-job}
@@ -137,12 +128,13 @@ Monitor a backup that runs every hour.
 ```json
 {
     "tag": "hourly-backup",
-    "name": "Hourly Database Backup",
+    "name": "Hourly Backup",
+    "image": "/uploads/backup.png",
+    "cron": "* * * * *",
     "type": "HEARTBEAT",
-    "cron": "0 * * * *",
     "type_data": {
-        "degradedRemainingMinutes": 10,
-        "downRemainingMinutes": 30
+        "degradedRemainingMinutes": 65,
+        "downRemainingMinutes": 120
     }
 }
 ```
@@ -154,12 +146,13 @@ Monitor a daily report that runs at 2 AM.
 ```json
 {
     "tag": "daily-report",
-    "name": "Daily Sales Report",
+    "name": "Daily Report",
+    "image": "/uploads/report.png",
+    "cron": "* * * * *",
     "type": "HEARTBEAT",
-    "cron": "0 2 * * *",
     "type_data": {
-        "degradedRemainingMinutes": 30,
-        "downRemainingMinutes": 120
+        "degradedRemainingMinutes": 1500,
+        "downRemainingMinutes": 3000
     }
 }
 ```
@@ -172,8 +165,9 @@ Monitor a continuously running worker that should check in every minute.
 {
     "tag": "queue-worker",
     "name": "Queue Worker",
-    "type": "HEARTBEAT",
+    "image": "/uploads/queue.png",
     "cron": "* * * * *",
+    "type": "HEARTBEAT",
     "type_data": {
         "degradedRemainingMinutes": 2,
         "downRemainingMinutes": 5
@@ -188,12 +182,13 @@ Monitor a weekly cleanup job that runs Sundays at 3 AM.
 ```json
 {
     "tag": "weekly-cleanup",
-    "name": "Weekly Database Cleanup",
+    "name": "Weekly Cleanup",
+    "image": "/uploads/cleanup.png",
+    "cron": "* * * * *",
     "type": "HEARTBEAT",
-    "cron": "0 3 * * 0",
     "type_data": {
-        "degradedRemainingMinutes": 60,
-        "downRemainingMinutes": 180
+        "degradedRemainingMinutes": 10100,
+        "downRemainingMinutes": 20200
     }
 }
 ```
@@ -211,7 +206,7 @@ do_something_important
 
 # Send heartbeat on success
 if [ $? -eq 0 ]; then
-    curl -s https://kener.example.com/api/heartbeat/your-monitor-tag
+    curl -s https://kener.example.com/ext/heartbeat/your-monitor-tag:Secret-Token
 fi
 ```
 
@@ -219,10 +214,10 @@ fi
 
 ```cron
 # Run every 5 minutes, send heartbeat on success
-*/5 * * * * /path/to/script.sh && curl -s https://kener.example.com/api/heartbeat/task-name
+*/5 * * * * /path/to/script.sh && curl -s https://kener.example.com/ext/heartbeat/task-name:Secret-Token
 
 # Run hourly, send heartbeat regardless (for long-running tasks)
-0 * * * * /path/to/backup.sh; curl -s https://kener.example.com/api/heartbeat/backup
+0 * * * * /path/to/backup.sh; curl -s https://kener.example.com/ext/heartbeat/backup:Secret-Token
 ```
 
 ### Python Script {#python-integration}
@@ -232,10 +227,8 @@ import requests
 
 def main():
     # Your task logic
-    process_data()
-
-    # Send heartbeat on completion
-    requests.get("https://kener.example.com/api/heartbeat/python-task")
+    # ...
+    requests.get("https://kener.example.com/ext/heartbeat/python-task:Secret-Token")
 
 if __name__ == "__main__":
     main()
@@ -248,10 +241,8 @@ const https = require("https")
 
 async function main() {
     // Your task logic
-    await processData()
-
-    // Send heartbeat
-    https.get("https://kener.example.com/api/heartbeat/node-task")
+    # ...
+    https.get("https://kener.example.com/ext/heartbeat/node-task:Secret-Token")
 }
 
 main()
@@ -261,7 +252,7 @@ main()
 
 ```dockerfile
 # In your Dockerfile or entrypoint
-CMD ["sh", "-c", "node app.js && curl -s https://kener.example.com/api/heartbeat/container-task"]
+CMD ["sh", "-c", "node app.js && curl -s https://kener.example.com/ext/heartbeat/container-task:Secret-Token"]
 ```
 
 ### Kubernetes CronJob {#kubernetes-integration}
@@ -285,7 +276,7 @@ spec:
                               - -c
                               - |
                                   /app/sync.sh
-                                  curl -s https://kener.example.com/api/heartbeat/k8s-sync
+                                  curl -s https://kener.example.com/ext/heartbeat/data-sync:Secret-Token
                     restartPolicy: OnFailure
 ```
 
@@ -307,7 +298,7 @@ jobs:
                   echo "Running scheduled task"
 
             - name: Send heartbeat
-              run: curl -s https://kener.example.com/api/heartbeat/github-action
+              run: curl -s https://kener.example.com/ext/heartbeat/github-action:Secret-Token
 ```
 
 ## Threshold Configuration Guide {#threshold-configuration-guide}
@@ -337,12 +328,6 @@ Choose thresholds based on your job's schedule and criticality:
 3. **Match criticality**: Critical jobs need tighter thresholds.
 4. **Test with failures**: Verify alerts trigger appropriately.
 
-### Cron Schedule Alignment {#best-practices-cron}
-
-1. **Match monitor cron to task cron**: They should be identical.
-2. **Account for time zones**: Use UTC for consistency.
-3. **Consider execution time**: Heartbeat arrives after task completes.
-
 ## Troubleshooting {#troubleshooting}
 
 ### Common Issues {#common-issues}
@@ -360,7 +345,7 @@ Choose thresholds based on your job's schedule and criticality:
 1. **Test heartbeat URL manually**:
 
     ```bash
-    curl -v https://kener.example.com/api/heartbeat/your-tag
+    curl -v https://kener.example.com/ext/heartbeat/your-tag:Secret-Token
     ```
 
 2. **Check cron logs**:

@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { Switch } from "$lib/components/ui/switch/index.js";
-  import { Label } from "$lib/components/ui/label/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
@@ -11,6 +9,7 @@
   import type { MonitorType } from "$lib/types/monitor.js";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import * as Accordion from "$lib/components/ui/accordion/index.js";
 
   // Card components
   import GeneralSettingsCard from "./components/GeneralSettingsCard.svelte";
@@ -182,6 +181,8 @@
     fetchAvailableMonitors();
     fetchPages();
   });
+
+  let activeAccordionItem = $state<string>("");
 </script>
 
 <div class="flex w-full flex-col gap-4 p-4">
@@ -197,16 +198,6 @@
         </Breadcrumb.Item>
       </Breadcrumb.List>
     </Breadcrumb.Root>
-    <div class="flex items-center gap-2">
-      <div class="flex items-center space-x-2">
-        <Switch
-          id="active-mode"
-          checked={monitor.status === "ACTIVE"}
-          onCheckedChange={(checked) => (monitor.status = checked ? "ACTIVE" : "INACTIVE")}
-        />
-        <Label for="active-mode">{monitor.status === "ACTIVE" ? "Active" : "Inactive"}</Label>
-      </div>
-    </div>
   </div>
 
   {#if loading}
@@ -232,42 +223,87 @@
       </Alert.Root>
     {/if}
 
-    <!-- General Settings Card -->
-    <GeneralSettingsCard bind:monitor {typeData} {isNew} />
+    <Accordion.Root
+      type="single"
+      class="w-full "
+      bind:value={activeAccordionItem}
+      onValueChange={(value) => (activeAccordionItem = value)}
+    >
+      <Accordion.Item value="general">
+        <Accordion.Trigger>General Settings</Accordion.Trigger>
+        <Accordion.Content class="flex flex-col gap-4 text-balance">
+          <!-- General Settings Card -->
+          <GeneralSettingsCard bind:monitor {typeData} {isNew} />
+        </Accordion.Content>
+      </Accordion.Item>
+      {#if !isNew}
+        <Accordion.Item value="configuration">
+          <Accordion.Trigger>Configuration</Accordion.Trigger>
+          <Accordion.Content class="flex flex-col gap-4 text-balance">
+            <!-- Monitor Type Configuration Card -->
+            <MonitorTypeCard bind:monitor bind:typeData {availableMonitors} />
+          </Accordion.Content>
+        </Accordion.Item>
+      {/if}
+      {#if !isNew}
+        <Accordion.Item value="calculation">
+          <Accordion.Trigger>Uptime Calculation</Accordion.Trigger>
+          <Accordion.Content class="flex flex-col gap-4 text-balance">
+            <!-- Uptime Calculation Card -->
+            <UptimeSettingsCard {monitor} {typeData} bind:uptimeSettings />
+          </Accordion.Content>
+        </Accordion.Item>
+      {/if}
+      {#if !isNew}
+        <Accordion.Item value="status-history">
+          <Accordion.Trigger>Status History</Accordion.Trigger>
+          <Accordion.Content class="flex flex-col gap-4 text-balance">
+            <!-- Status History Days Card -->
 
-    <!-- Monitor Type Configuration Card -->
-    {#if !isNew}
-      <MonitorTypeCard bind:monitor bind:typeData {availableMonitors} />
-    {/if}
+            <StatusHistoryDaysCard bind:monitor {typeData} bind:statusHistoryDays />
+          </Accordion.Content>
+        </Accordion.Item>
+      {/if}
+      {#if !isNew}
+        <Accordion.Item value="logs-recent">
+          <Accordion.Trigger>Recent Logs</Accordion.Trigger>
+          <Accordion.Content class="flex flex-col gap-4 text-balance">
+            <!-- Recent Logs Card -->
 
-    <!-- Uptime Calculation Card -->
-    {#if !isNew}
-      <UptimeSettingsCard {monitor} {typeData} bind:uptimeSettings />
-    {/if}
+            <MonitorRecentLogs monitor_tag={params.tag} />
+          </Accordion.Content>
+        </Accordion.Item>
+      {/if}
+      {#if !isNew}
+        <Accordion.Item value="pages-visibility">
+          <Accordion.Trigger>Page Visibility</Accordion.Trigger>
+          <Accordion.Content class="flex flex-col gap-4 text-balance">
+            <!-- Page Visibility Card -->
 
-    <!-- Status History Days Card -->
-    {#if !isNew}
-      <StatusHistoryDaysCard bind:monitor {typeData} bind:statusHistoryDays />
-    {/if}
+            <PageVisibilityCard monitorTag={monitor.tag} {allPages} onPagesUpdated={fetchPages} />
+          </Accordion.Content>
+        </Accordion.Item>
+      {/if}
+      {#if !isNew}
+        <Accordion.Item value="modify-data">
+          <Accordion.Trigger>Modify Data</Accordion.Trigger>
+          <Accordion.Content class="flex flex-col gap-4 text-balance">
+            <!-- Modify Data Card -->
 
-    <!-- Recent Logs Card -->
-    {#if !isNew}
-      <MonitorRecentLogs monitor_tag={params.tag} />
-    {/if}
+            <ModifyDataCard monitorTag={monitor.tag} />
+          </Accordion.Content>
+        </Accordion.Item>
+      {/if}
+      {#if !isNew}
+        <Accordion.Item value="danger-zone">
+          <Accordion.Trigger>Danger Zone</Accordion.Trigger>
+          <Accordion.Content class="flex flex-col gap-4 text-balance">
+            <!-- Danger Zone Card -->
 
-    <!-- Pages Card -->
-    {#if !isNew}
-      <PageVisibilityCard monitorTag={monitor.tag} {allPages} onPagesUpdated={fetchPages} />
-    {/if}
-
-    <!-- Modify Monitoring Data Card -->
-    {#if !isNew}
-      <ModifyDataCard monitorTag={monitor.tag} />
-    {/if}
-
-    <!-- Danger Zone Card -->
-    {#if !isNew}
-      <DangerZoneCard monitorTag={monitor.tag} />
-    {/if}
+            <DangerZoneCard {monitor} status={monitor.status || "INACTIVE"} />
+          </Accordion.Content>
+        </Accordion.Item>
+      {/if}
+    </Accordion.Root>
   {/if}
 </div>

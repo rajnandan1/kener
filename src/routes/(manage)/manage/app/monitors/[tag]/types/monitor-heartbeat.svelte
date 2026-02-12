@@ -24,9 +24,14 @@
   // Generate heartbeat URL
   let heartbeatUrl = $derived(
     tag
-      ? window.location.origin + clientResolve(resolve, `/ext/heartbeat/${tag}-${data.secretString}`)
+      ? window.location.origin + clientResolve(resolve, `/ext/heartbeat/${tag}:${data.secretString}`)
       : "Save the monitor first to get the heartbeat URL"
   );
+
+  //refresh secret string and thus heartbeat URL
+  function refreshSecret() {
+    data.secretString = randomName() + "-" + randomName();
+  }
 </script>
 
 <div class="space-y-4">
@@ -36,8 +41,8 @@
         <InputGroup.Addon>
           <InputGroup.Text>
             <span class="text-degraded">DEGRADED</span>
-            if no heartbeat received for</InputGroup.Text
-          >
+            if no heartbeat received for
+          </InputGroup.Text>
         </InputGroup.Addon>
         <InputGroup.Input
           class="text-right"
@@ -79,6 +84,8 @@
           </InputGroup.Addon>
           <InputGroup.Input class="text-muted-foreground" id="hb-secret" bind:value={heartbeatUrl} readonly />
           <InputGroup.Addon align="inline-end">
+            <InputGroup.Button variant="secondary" onclick={refreshSecret}>New URL</InputGroup.Button>
+
             <CopyButton variant="ghost" size="icon-sm" text={heartbeatUrl}>
               <Copy class="size-4" />
             </CopyButton>

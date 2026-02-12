@@ -13,10 +13,10 @@ export async function GetLastMonitoringValue(
 
 //function to set heartbeat value in cache
 export async function SetLastHeartbeat(tag: string, timestamp: number): Promise<void> {
-  await setCache<{ timestamp: number }>("last_heartbeat:" + tag, { timestamp }, 86400); //set ttl to 1 day
+  await setCache<{ timestamp: number }>("last_heartbeat:" + tag, { timestamp }, 45 * 86400); //set ttl to 45 days
 }
 
 //function to get heartbeat value from cache
 export async function GetLastHeartbeat(tag: string): Promise<{ timestamp: number } | null> {
-  return await getCache<{ timestamp: number }>("last_heartbeat:" + tag, undefined, 86400);
+  return await getCache<{ timestamp: number }>("last_heartbeat:" + tag, undefined, 45 * 86400);
 }

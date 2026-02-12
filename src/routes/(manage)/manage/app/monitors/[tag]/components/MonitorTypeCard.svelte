@@ -31,7 +31,9 @@
 
   interface Props {
     monitor: MonitorRecord;
-    typeData: Record<string, unknown>;
+    // Dynamic per-monitor-type payload (parsed JSON). Keep as any so it can be bound into
+    // the various strongly-typed type editors (API/PING/HEARTBEAT/etc.) without TS errors.
+    typeData: any;
     availableMonitors: MonitorRecord[];
   }
 
