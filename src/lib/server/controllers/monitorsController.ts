@@ -179,6 +179,67 @@ export const CreateMonitor = async (monitor: MonitorInput): Promise<number[]> =>
   return await db.insertMonitor(monitorData);
 };
 
+interface CloneMonitorInput {
+  sourceTag: string;
+  newTag: string;
+  newName: string;
+}
+
+export const CloneMonitor = async ({ sourceTag, newTag, newName }: CloneMonitorInput): Promise<number[]> => {
+  const sourceTagTrimmed = sourceTag?.trim();
+  const newTagTrimmed = newTag?.trim();
+  const newNameTrimmed = newName?.trim();
+
+  if (!sourceTagTrimmed) {
+    throw new Error("Source monitor tag is required");
+  }
+  if (!newTagTrimmed) {
+    throw new Error("Tag is required");
+  }
+  if (!newNameTrimmed) {
+    throw new Error("Name is required");
+  }
+  if (sourceTagTrimmed === newTagTrimmed) {
+    throw new Error("New tag must be different from source tag");
+  }
+
+  const source = await db.getMonitorsByTag(sourceTagTrimmed);
+  if (!source) {
+    throw new Error("Source monitor not found");
+  }
+
+  const existingTag = await db.getMonitorsByTag(newTagTrimmed);
+  if (existingTag) {
+    throw new Error("Monitor tag already exists");
+  }
+
+  const allMonitors = await db.getMonitors({});
+  if (allMonitors.some((m) => m.name === newNameTrimmed)) {
+    throw new Error("Monitor name already exists");
+  }
+
+  return await db.insertMonitor({
+    tag: newTagTrimmed,
+    name: newNameTrimmed,
+    description: source.description,
+    image: source.image,
+    cron: source.cron,
+    default_status: source.default_status,
+    status: source.status,
+    category_name: source.category_name,
+    monitor_type: source.monitor_type,
+    down_trigger: source.down_trigger,
+    degraded_trigger: source.degraded_trigger,
+    type_data: source.type_data,
+    day_degraded_minimum_count: source.day_degraded_minimum_count,
+    day_down_minimum_count: source.day_down_minimum_count,
+    include_degraded_in_downtime: source.include_degraded_in_downtime,
+    is_hidden: source.is_hidden,
+    monitor_settings_json: source.monitor_settings_json,
+    external_url: source.external_url,
+  });
+};
+
 export const UpdateMonitor = async (monitor: MonitorInput): Promise<number> => {
   let monitorData = { ...monitor };
   if (!!!monitorData.id || monitorData.id === 0) {

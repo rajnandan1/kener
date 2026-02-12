@@ -48,6 +48,7 @@ import {
   GetUserByEmail,
   ManualUpdateUserData,
   DeleteMonitorCompletelyUsingTag,
+  CloneMonitor,
   GetSiteDataByKey,
   GetMonitoringDataPaginated,
 } from "$lib/server/controllers/controller.js";
@@ -200,6 +201,13 @@ export async function POST({ request, cookies }) {
     } else if (action == "deleteMonitor") {
       AdminEditorCan(userDB.role);
       resp = await DeleteMonitorCompletelyUsingTag(data.tag);
+    } else if (action == "cloneMonitor") {
+      AdminEditorCan(userDB.role);
+      resp = await CloneMonitor({
+        sourceTag: String(data.sourceTag || ""),
+        newTag: String(data.newTag || ""),
+        newName: String(data.newName || ""),
+      });
     } else if (action == "createUpdateTrigger") {
       AdminEditorCan(userDB.role);
       resp = await CreateUpdateTrigger(data);

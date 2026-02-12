@@ -19,7 +19,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   const { monitor_tag } = params;
   const parentData = await parent();
   // Validate monitor exists
-  const monitors = await GetMonitorsParsed({ tag: monitor_tag });
+  const monitors = await GetMonitorsParsed({ tag: monitor_tag, status: "ACTIVE", is_hidden: "NO" });
   if (!monitors || monitors.length === 0) {
     throw error(404, { message: "Monitor not found" });
   }

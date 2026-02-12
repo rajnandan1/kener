@@ -10,6 +10,14 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import * as Accordion from "$lib/components/ui/accordion/index.js";
+  import * as ButtonGroup from "$lib/components/ui/button-group/index.js";
+  import { Button } from "$lib/components/ui/button/index.js";
+  import * as HoverCard from "$lib/components/ui/hover-card/index.js";
+  import * as Dialog from "$lib/components/ui/dialog/index.js";
+  import { Input } from "$lib/components/ui/input/index.js";
+  import { Label } from "$lib/components/ui/label/index.js";
+  import { toast } from "svelte-sonner";
+  import { goto } from "$app/navigation";
 
   // Card components
   import GeneralSettingsCard from "./components/GeneralSettingsCard.svelte";
@@ -183,6 +191,57 @@
   });
 
   let activeAccordionItem = $state<string>("");
+  let cloneDialogOpen = $state(false);
+  let cloneTag = $state("");
+  let cloneName = $state("");
+  let cloning = $state(false);
+
+  function openCloneDialog() {
+    cloneTag = "";
+    cloneName = monitor.name ? `${monitor.name} Copy` : "Copy";
+    cloneDialogOpen = true;
+  }
+
+  async function cloneMonitor() {
+    const newTag = cloneTag.trim();
+    const newName = cloneName.trim();
+
+    if (!newTag || !newName) {
+      toast.error("Tag and name are required");
+      return;
+    }
+
+    cloning = true;
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "cloneMonitor",
+          data: {
+            sourceTag: monitor.tag,
+            newTag,
+            newName
+          }
+        })
+      });
+
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success("Monitor cloned successfully");
+      cloneDialogOpen = false;
+      goto(clientResolver(resolve, `/manage/app/monitors/${newTag}`));
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to clone monitor";
+      toast.error(message);
+    } finally {
+      cloning = false;
+    }
+  }
 </script>
 
 <div class="flex w-full flex-col gap-4 p-4">
@@ -198,6 +257,30 @@
         </Breadcrumb.Item>
       </Breadcrumb.List>
     </Breadcrumb.Root>
+    <div class="flex gap-2">
+      {#if !isNew}
+        <Button size="sm" variant="outline" onclick={openCloneDialog}>Clone</Button>
+      {/if}
+      <HoverCard.Root>
+        <HoverCard.Trigger>
+          <Button size="sm" target="_blank" href={clientResolver(resolve, `/monitors/${params.tag}`)} variant="outline">
+            View
+          </Button>
+        </HoverCard.Trigger>
+        <HoverCard.Content class="w-80">
+          <div class="flex justify-between space-x-4 text-xs">
+            {#if monitor.is_hidden === "YES"}
+              <p class="text-destructive">This monitor is hidden and won't appear on status pages.</p>
+            {:else if monitor.status !== "ACTIVE"}
+              <p class="text-destructive">This monitor is not active and won't appear on status pages.</p>
+            {:else}
+              <p class="text-success">This monitor is visible on status pages.</p>
+            {/if}
+            <p class="text-xs"></p>
+          </div>
+        </HoverCard.Content>
+      </HoverCard.Root>
+    </div>
   </div>
 
   {#if loading}
@@ -307,3 +390,35 @@
     </Accordion.Root>
   {/if}
 </div>
+
+<Dialog.Root bind:open={cloneDialogOpen}>
+  <Dialog.Content class="sm:max-w-md">
+    <Dialog.Header>
+      <Dialog.Title>Clone Monitor</Dialog.Title>
+      <Dialog.Description>Enter a new tag and name for the cloned monitor.</Dialog.Description>
+    </Dialog.Header>
+
+    <div class="space-y-4 py-2">
+      <div class="space-y-2">
+        <Label for="clone-tag">Tag</Label>
+        <Input id="clone-tag" bind:value={cloneTag} placeholder="my-monitor-copy" />
+      </div>
+      <div class="space-y-2">
+        <Label for="clone-name">Name</Label>
+        <Input id="clone-name" bind:value={cloneName} placeholder="Monitor Name Copy" />
+      </div>
+    </div>
+
+    <Dialog.Footer>
+      <Button variant="outline" onclick={() => (cloneDialogOpen = false)} disabled={cloning}>Cancel</Button>
+      <Button onclick={cloneMonitor} disabled={cloning || !cloneTag.trim() || !cloneName.trim()}>
+        {#if cloning}
+          <Spinner class="mr-2 size-4" />
+          Cloning...
+        {:else}
+          Clone
+        {/if}
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
