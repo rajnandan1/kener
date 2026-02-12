@@ -53,8 +53,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 2. Install ALL dependencies (devDependencies needed for the build step)
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci --no-fund && \
+RUN npm ci --no-fund && \
     npm cache clean --force
 
 # 3. Copy the rest of the source tree
