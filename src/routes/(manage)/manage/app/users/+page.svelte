@@ -285,14 +285,7 @@
 
 <div class="container mx-auto space-y-6 py-6">
   <!-- Header -->
-  <div class="flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <UsersIcon class="h-6 w-6" />
-      <div>
-        <h1 class="text-2xl font-bold tracking-tight">Users</h1>
-        <p class="text-muted-foreground text-sm">Manage users and their permissions</p>
-      </div>
-    </div>
+  <div class="flex items-center justify-end">
     <div class="flex items-center gap-2">
       {#if loading}
         <Spinner class="size-5" />

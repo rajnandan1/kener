@@ -347,13 +347,6 @@
 </script>
 
 <div class="flex flex-col gap-6 overflow-hidden">
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold">Customizations</h1>
-      <p class="text-muted-foreground">Customize the look and feel of your status page</p>
-    </div>
-  </div>
-
   {#if loading}
     <div class="flex h-64 items-center justify-center">
       <Loader class="text-muted-foreground h-8 w-8 animate-spin" />

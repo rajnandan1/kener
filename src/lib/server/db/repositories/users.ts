@@ -124,6 +124,10 @@ export class UsersRepository extends BaseRepository {
     });
   }
 
+  async deleteApiKey(id: number): Promise<number> {
+    return await this.knex("api_keys").where({ id }).delete();
+  }
+
   async getApiKeyByHashedKey(hashed_key: string): Promise<ApiKeyRecord | undefined> {
     return await this.knex("api_keys").where("hashed_key", hashed_key).first();
   }

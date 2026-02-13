@@ -6,28 +6,48 @@ import {
   GetMaintenanceEventById,
 } from "$lib/server/controllers/maintenanceController.js";
 import db from "$lib/server/db/db";
+import type { MaintenanceEventRecord } from "$lib/server/db/dbimpl";
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, url }) => {
   const { maintenance_id } = params;
+  let idType = "event";
+
+  // Determine if the maintenance_id is an event ID or a maintenance ID
+  if (url.searchParams.get("type") === "maintenance") {
+    idType = "maintenance";
+  }
+
   const eventIdNum = Number(maintenance_id);
   if (isNaN(eventIdNum)) {
     throw error(400, { message: "Invalid maintenance event ID" });
   }
 
   // First fetch the maintenance event to get the maintenance_id
-  const maintenanceEvent = await GetMaintenanceEventById(eventIdNum);
-  if (!maintenanceEvent) {
-    throw error(404, { message: "Maintenance event not found" });
+  let maintenanceId: number;
+  let maintenanceEvent: MaintenanceEventRecord | null = null;
+  if (idType === "event") {
+    maintenanceEvent = await GetMaintenanceEventById(eventIdNum);
+    if (!maintenanceEvent) {
+      throw error(404, { message: "Maintenance event not found" });
+    }
+    maintenanceId = maintenanceEvent.maintenance_id;
+    //
+  } else {
+    maintenanceId = eventIdNum;
+    //get the first maintenance event for this maintenance
   }
 
   // Fetch maintenance details with events using the maintenance_id from the event
-  const maintenance = await GetMaintenanceWithEvents(maintenanceEvent.maintenance_id);
+  const maintenance = await GetMaintenanceWithEvents(maintenanceId);
   if (!maintenance) {
     throw error(404, { message: "Maintenance not found" });
   }
+  if (!maintenanceEvent && !!maintenance.events && maintenance.events.length > 0) {
+    maintenanceEvent = maintenance.events[0];
+  }
 
   // Fetch monitor tags for this maintenance
-  const monitorRecords = await GetMaintenanceMonitors(maintenanceEvent.maintenance_id);
+  const monitorRecords = await GetMaintenanceMonitors(maintenanceId);
   const monitorTags = monitorRecords.map((m) => m.monitor_tag);
 
   // Fetch full monitor details (name, image, etc.)

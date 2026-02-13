@@ -194,7 +194,6 @@
 <div class="container mx-auto space-y-6 py-6">
   <!-- Header -->
   <div class="flex flex-wrap items-center justify-between gap-4">
-    <h1 class="text-2xl font-semibold">Monitoring Data</h1>
     <div class="flex flex-wrap items-center gap-3">
       <!-- Date Time Range Inputs -->
       <div class="flex items-center gap-2">

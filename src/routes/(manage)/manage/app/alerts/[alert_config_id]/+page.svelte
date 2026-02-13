@@ -283,10 +283,6 @@
   <Breadcrumb.Root>
     <Breadcrumb.List>
       <Breadcrumb.Item>
-        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app")}>Dashboard</Breadcrumb.Link>
-      </Breadcrumb.Item>
-      <Breadcrumb.Separator />
-      <Breadcrumb.Item>
         <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/alerts")}>Alerts</Breadcrumb.Link>
       </Breadcrumb.Item>
       <Breadcrumb.Separator />
@@ -295,19 +291,6 @@
       </Breadcrumb.Item>
     </Breadcrumb.List>
   </Breadcrumb.Root>
-
-  <!-- Header -->
-  <div class="flex items-center gap-4">
-    <Button variant="ghost" size="icon" onclick={() => goto(clientResolver(resolve, "/manage/app/alerts"))}>
-      <ArrowLeftIcon class="size-5" />
-    </Button>
-    <div>
-      <h1 class="text-2xl font-semibold">{isNew ? "Create New Alert" : "Edit Alert"}</h1>
-      <p class="text-muted-foreground text-sm">
-        Configure when to trigger an alert and which notification channels to use.
-      </p>
-    </div>
-  </div>
 
   {#if loading}
     <div class="flex flex-col items-center gap-4 py-16">

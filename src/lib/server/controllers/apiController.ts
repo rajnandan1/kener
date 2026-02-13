@@ -10,6 +10,10 @@ interface ApiKeyStatusInput {
   status: string;
 }
 
+interface ApiKeyDeleteInput {
+  id: number;
+}
+
 function generateApiKey() {
   const prefix = "kener_";
   const randomKey = crypto.randomBytes(32).toString("hex"); // 64-character hexadecimal string
@@ -46,6 +50,13 @@ export const GetAllAPIKeys = async () => {
 //update status of api key
 export const UpdateApiKeyStatus = async (data: ApiKeyStatusInput): Promise<number> => {
   return await db.updateApiKeyStatus(data);
+};
+
+export const DeleteApiKey = async (data: ApiKeyDeleteInput): Promise<number> => {
+  if (!data.id || Number.isNaN(Number(data.id))) {
+    throw new Error("Valid API key id is required");
+  }
+  return await db.deleteApiKey(Number(data.id));
 };
 
 export const VerifyAPIKey = async (apiKey: string): Promise<boolean> => {

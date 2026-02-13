@@ -479,22 +479,33 @@
 </script>
 
 <div class="container space-y-6 py-6">
-  <!-- Breadcrumb -->
-  <Breadcrumb.Root>
-    <Breadcrumb.List>
-      <Breadcrumb.Item>
-        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app")}>Dashboard</Breadcrumb.Link>
-      </Breadcrumb.Item>
-      <Breadcrumb.Separator />
-      <Breadcrumb.Item>
-        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/maintenances")}>Maintenances</Breadcrumb.Link>
-      </Breadcrumb.Item>
-      <Breadcrumb.Separator />
-      <Breadcrumb.Item>
-        <Breadcrumb.Page>{isNew ? "New Maintenance" : `Edit #${params.id}`}</Breadcrumb.Page>
-      </Breadcrumb.Item>
-    </Breadcrumb.List>
-  </Breadcrumb.Root>
+  <div class="flex justify-between gap-2">
+    <!-- Breadcrumb -->
+    <Breadcrumb.Root>
+      <Breadcrumb.List>
+        <Breadcrumb.Item>
+          <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/maintenances")}>Maintenances</Breadcrumb.Link>
+        </Breadcrumb.Item>
+        <Breadcrumb.Separator />
+        <Breadcrumb.Item>
+          <Breadcrumb.Page>{isNew ? "New Maintenance" : `Edit #${params.id}`}</Breadcrumb.Page>
+        </Breadcrumb.Item>
+      </Breadcrumb.List>
+    </Breadcrumb.Root>
+    <div>
+      {#if !isNew}
+        <Button
+          variant="outline"
+          target="_blank"
+          size="sm"
+          class="mr-2"
+          href={clientResolver(resolve, `/maintenances/${maintenance.id}?type=maintenance`)}
+        >
+          View
+        </Button>
+      {/if}
+    </div>
+  </div>
 
   {#if loading}
     <div class="flex items-center justify-center py-12">

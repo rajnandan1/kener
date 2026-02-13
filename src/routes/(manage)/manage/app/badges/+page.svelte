@@ -136,11 +136,6 @@
 </script>
 
 <div class="flex w-full flex-col gap-4 p-4">
-  <div class="mb-4">
-    <h1 class="text-2xl font-bold">Badge Generator</h1>
-    <p class="text-muted-foreground">Generate embeddable status badges for your monitors</p>
-  </div>
-
   {#if loading}
     <div class="flex items-center justify-center py-12">
       <Spinner class="size-8" />

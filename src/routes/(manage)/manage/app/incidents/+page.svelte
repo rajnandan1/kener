@@ -152,12 +152,8 @@
       {/if}
     </div>
     <div class="flex items-center gap-3">
-      <Button variant="outline" href={clientResolver(resolve, "/docs/incidents/creating-managing")} target="_blank">
-        Documentation
-        <ExternalLinkIcon class="ml-2 size-4" />
-      </Button>
       <Button onclick={createNewIncident}>
-        <PlusIcon class="mr-2 size-4" />
+        <PlusIcon class="size-4" />
         New Incident
       </Button>
     </div>
@@ -248,14 +244,14 @@
               </Table.Cell>
               <Table.Cell class="text-right">
                 <Button
-                  variant="ghost"
-                  size="icon"
+                  variant="outline"
+                  size="sm"
                   onclick={(e) => {
                     e.stopPropagation();
                     openIncident(incident.id);
                   }}
                 >
-                  <PencilIcon class="size-4" />
+                  <PencilIcon class="size-4" /> Edit
                 </Button>
               </Table.Cell>
             </Table.Row>

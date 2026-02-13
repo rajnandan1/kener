@@ -433,10 +433,6 @@
       <Breadcrumb.Root>
         <Breadcrumb.List>
           <Breadcrumb.Item>
-            <Breadcrumb.Link href={clientResolver(resolve, "/manage/app")}>Dashboard</Breadcrumb.Link>
-          </Breadcrumb.Item>
-          <Breadcrumb.Separator />
-          <Breadcrumb.Item>
             <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/pages")}>Pages</Breadcrumb.Link>
           </Breadcrumb.Item>
           <Breadcrumb.Separator />
@@ -445,6 +441,18 @@
           </Breadcrumb.Item>
         </Breadcrumb.List>
       </Breadcrumb.Root>
+      <div>
+        {#if !isNew}
+          <Button
+            variant="outline"
+            target="_blank"
+            size="sm"
+            href={clientResolver(resolve, `/${currentPage?.page_path}`)}
+          >
+            View
+          </Button>
+        {/if}
+      </div>
     </div>
 
     <!-- General Information Card -->

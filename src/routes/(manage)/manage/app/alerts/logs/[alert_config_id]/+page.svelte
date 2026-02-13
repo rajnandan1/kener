@@ -3,7 +3,6 @@
   import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
-  import { Badge } from "$lib/components/ui/badge/index.js";
   import { Checkbox } from "$lib/components/ui/checkbox/index.js";
   import * as Table from "$lib/components/ui/table/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
@@ -150,11 +149,6 @@
     }
   }
 
-  // Badge variant for status
-  function getStatusBadgeVariant(status: string): "default" | "destructive" | "secondary" | "outline" {
-    return status === "TRIGGERED" ? "destructive" : "default";
-  }
-
   // Format date
   function formatDate(dateStr: string | Date): string {
     try {
@@ -190,10 +184,6 @@
   <Breadcrumb.Root>
     <Breadcrumb.List>
       <Breadcrumb.Item>
-        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app")}>Dashboard</Breadcrumb.Link>
-      </Breadcrumb.Item>
-      <Breadcrumb.Separator />
-      <Breadcrumb.Item>
         <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/alerts")}>Alerts</Breadcrumb.Link>
       </Breadcrumb.Item>
       <Breadcrumb.Separator />
@@ -204,25 +194,6 @@
   </Breadcrumb.Root>
 
   <!-- Header -->
-  <div class="flex items-center gap-4">
-    <Button variant="ghost" size="icon" onclick={() => goto(clientResolver(resolve, "/manage/app/alerts"))}>
-      <ArrowLeftIcon class="size-5" />
-    </Button>
-    <div>
-      <h1 class="text-2xl font-semibold">Alert Logs</h1>
-      {#if configInfo}
-        <p class="text-muted-foreground text-sm">
-          {configInfo.alert_for} alerts for
-          <a
-            href={clientResolver(resolve, `/manage/app/monitors/${configInfo.monitor_tag}`)}
-            class="text-primary hover:underline"
-          >
-            {configInfo.monitor_tag}
-          </a>
-        </p>
-      {/if}
-    </div>
-  </div>
 
   <!-- Filter -->
   <div class="flex items-center gap-3">
@@ -278,18 +249,10 @@
                   value={alert.alert_status}
                   onValueChange={(v) => v && updateAlertStatus(alert.id, v as "TRIGGERED" | "RESOLVED")}
                 >
-                  <Select.Trigger class="h-8 w-32">
-                    <Badge variant={getStatusBadgeVariant(alert.alert_status)} class="pointer-events-none">
-                      {alert.alert_status}
-                    </Badge>
-                  </Select.Trigger>
+                  <Select.Trigger class="h-8 w-32">{alert.alert_status}</Select.Trigger>
                   <Select.Content>
-                    <Select.Item value="TRIGGERED">
-                      <Badge variant="destructive">TRIGGERED</Badge>
-                    </Select.Item>
-                    <Select.Item value="RESOLVED">
-                      <Badge variant="default">RESOLVED</Badge>
-                    </Select.Item>
+                    <Select.Item value="TRIGGERED">TRIGGERED</Select.Item>
+                    <Select.Item value="RESOLVED">RESOLVED</Select.Item>
                   </Select.Content>
                 </Select.Root>
               </Table.Cell>
@@ -309,13 +272,8 @@
               <Table.Cell class="text-muted-foreground text-sm">{formatDate(alert.created_at)}</Table.Cell>
               <Table.Cell class="text-muted-foreground text-sm">{formatDate(alert.updated_at)}</Table.Cell>
               <Table.Cell class="text-right">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="text-destructive h-8 w-8"
-                  onclick={() => openDeleteDialog(alert)}
-                >
-                  <TrashIcon class="size-4" />
+                <Button variant="destructive" size="sm" class="text-xs" onclick={() => openDeleteDialog(alert)}>
+                  <TrashIcon class="size-3" /> Delete
                 </Button>
               </Table.Cell>
             </Table.Row>

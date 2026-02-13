@@ -124,6 +124,7 @@ class DbImpl {
   // ============ API Keys ============
   createNewApiKey!: UsersRepository["createNewApiKey"];
   updateApiKeyStatus!: UsersRepository["updateApiKeyStatus"];
+  deleteApiKey!: UsersRepository["deleteApiKey"];
   getApiKeyByHashedKey!: UsersRepository["getApiKeyByHashedKey"];
   getAllApiKeys!: UsersRepository["getAllApiKeys"];
 
@@ -463,6 +464,7 @@ class DbImpl {
     this.updateIsVerified = this.users.updateIsVerified.bind(this.users);
     this.createNewApiKey = this.users.createNewApiKey.bind(this.users);
     this.updateApiKeyStatus = this.users.updateApiKeyStatus.bind(this.users);
+    this.deleteApiKey = this.users.deleteApiKey.bind(this.users);
     this.getApiKeyByHashedKey = this.users.getApiKeyByHashedKey.bind(this.users);
     this.getAllApiKeys = this.users.getAllApiKeys.bind(this.users);
   }

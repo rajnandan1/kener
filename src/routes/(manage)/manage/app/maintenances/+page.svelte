@@ -206,7 +206,7 @@
     </div>
     <div class="flex items-center gap-3">
       <Button onclick={createNewMaintenance}>
-        <PlusIcon class="mr-2 size-4" />
+        <PlusIcon class="size-4" />
         New Maintenance
       </Button>
     </div>
@@ -342,14 +342,14 @@
               </Table.Cell>
               <Table.Cell class="text-right">
                 <Button
-                  variant="ghost"
-                  size="icon"
+                  variant="outline"
+                  size="sm"
                   onclick={(e) => {
                     e.stopPropagation();
                     openMaintenance(maintenance.id);
                   }}
                 >
-                  <PencilIcon class="size-4" />
+                  <PencilIcon class="size-4" /> Edit
                 </Button>
               </Table.Cell>
             </Table.Row>

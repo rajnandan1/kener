@@ -11,28 +11,23 @@
   import { Badge } from "$lib/components/ui/badge/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
-  import * as RadioGroup from "$lib/components/ui/radio-group/index.js";
+  import * as Select from "$lib/components/ui/select/index.js";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
   import SaveIcon from "@lucide/svelte/icons/save";
-  import ArrowLeftIcon from "@lucide/svelte/icons/arrow-left";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import XIcon from "@lucide/svelte/icons/x";
-  import WebhookIcon from "@lucide/svelte/icons/webhook";
-  import MailIcon from "@lucide/svelte/icons/mail";
   import AlertCircleIcon from "@lucide/svelte/icons/octagon-alert";
-
-  import ZapIcon from "@lucide/svelte/icons/zap";
   import Loader from "@lucide/svelte/icons/loader";
   import CheckIcon from "@lucide/svelte/icons/check";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import { toast } from "svelte-sonner";
+  import { onMount } from "svelte";
   import { mode } from "mode-watcher";
   import { IsValidURL } from "$lib/clientTools";
   import CodeMirror from "svelte-codemirror-editor";
-  import { json } from "@codemirror/lang-json";
   import { html } from "@codemirror/lang-html";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
   import type { TriggerMeta } from "$lib/server/types/db";
@@ -279,7 +274,7 @@
     }
   }
 
-  $effect(() => {
+  onMount(() => {
     fetchTrigger();
   });
 </script>
@@ -288,10 +283,6 @@
   <!-- Breadcrumb -->
   <Breadcrumb.Root>
     <Breadcrumb.List>
-      <Breadcrumb.Item>
-        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app")}>Dashboard</Breadcrumb.Link>
-      </Breadcrumb.Item>
-      <Breadcrumb.Separator />
       <Breadcrumb.Item>
         <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/triggers")}>Triggers</Breadcrumb.Link>
       </Breadcrumb.Item>
@@ -322,28 +313,21 @@
         <div class="space-y-3">
           <Label>Trigger Type</Label>
           <p class="text-muted-foreground text-sm">Select the type of notification to send</p>
-          <div class="grid grid-cols-4 gap-3">
-            {#each ["webhook", "discord", "slack", "email"] as type}
-              <Button
-                variant={trigger.trigger_type === type ? "default" : "outline"}
-                class="h-20 flex-col gap-2"
-                onclick={() => (trigger.trigger_type = type)}
-              >
-                {#if type === "webhook"}
-                  <img src={clientResolver(resolve, "/webhooks.svg")} class="size-6" alt="webhook" />
-                {:else if type === "slack"}
-                  <img src={clientResolver(resolve, "/slack.svg")} class="size-6" alt="slack" />
-                {:else if type === "discord"}
-                  <img src={clientResolver(resolve, "/discord.svg")} class="size-6" alt="discord" />
-                {:else if type === "email"}
-                  <img src={clientResolver(resolve, "/email.png")} class="size-6" alt="email" />
-                {:else}
-                  <ZapIcon class="size-6" />
-                {/if}
-                <span class="capitalize">{type}</span>
-              </Button>
-            {/each}
-          </div>
+          <Select.Root
+            type="single"
+            value={trigger.trigger_type}
+            onValueChange={(value) => {
+              if (value) trigger.trigger_type = value;
+            }}
+          >
+            <Select.Trigger class="w-full max-w-sm capitalize">{trigger.trigger_type}</Select.Trigger>
+            <Select.Content>
+              <Select.Item value="webhook">Webhook</Select.Item>
+              <Select.Item value="discord">Discord</Select.Item>
+              <Select.Item value="slack">Slack</Select.Item>
+              <Select.Item value="email">Email</Select.Item>
+            </Select.Content>
+          </Select.Root>
         </div>
 
         <!-- Status Toggle -->

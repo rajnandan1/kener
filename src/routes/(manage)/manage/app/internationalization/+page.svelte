@@ -162,19 +162,6 @@
 </script>
 
 <div class="flex w-full flex-col gap-4 p-4">
-  <!-- Breadcrumb -->
-  <Breadcrumb.Root>
-    <Breadcrumb.List>
-      <Breadcrumb.Item>
-        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/monitors")}>Home</Breadcrumb.Link>
-      </Breadcrumb.Item>
-      <Breadcrumb.Separator />
-      <Breadcrumb.Item>
-        <Breadcrumb.Page>Internationalization</Breadcrumb.Page>
-      </Breadcrumb.Item>
-    </Breadcrumb.List>
-  </Breadcrumb.Root>
-
   {#if loading}
     <div class="flex items-center justify-center py-12">
       <Spinner class="h-6 w-6" />

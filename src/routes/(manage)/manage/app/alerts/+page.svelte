@@ -275,19 +275,19 @@
               <Table.Cell class="text-right">
                 <div class="flex items-center justify-end gap-1">
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onclick={() => goto(clientResolver(resolve, `/manage/app/alerts/${config.id}`))}
                   >
-                    <EditIcon class="mr-1 size-3" />
+                    <EditIcon class="size-3" />
                     Edit
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onclick={() => goto(clientResolver(resolve, `/manage/app/alerts/logs/${config.id}`))}
                   >
-                    <ListIcon class="mr-1 size-3" />
+                    <ListIcon class="size-3" />
                     Logs
                   </Button>
                 </div>

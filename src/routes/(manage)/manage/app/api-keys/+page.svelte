@@ -6,17 +6,20 @@
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
+  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import * as Table from "$lib/components/ui/table/index.js";
-  import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
   import Plus from "@lucide/svelte/icons/plus";
   import Loader from "@lucide/svelte/icons/loader";
   import Copy from "@lucide/svelte/icons/copy";
   import Check from "@lucide/svelte/icons/check";
   import KeyIcon from "@lucide/svelte/icons/key";
+  import Trash2 from "@lucide/svelte/icons/trash-2";
   import { toast } from "svelte-sonner";
   import { format } from "date-fns";
+  import { onMount } from "svelte";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import { page } from "$app/state";
   interface ApiKey {
     id: number;
     name: string;
@@ -33,6 +36,9 @@
   let newAPIKeyName = $state("");
   let newKeyResp = $state<{ apiKey?: string }>({});
   let copied = $state(false);
+  let deleteDialogOpen = $state(false);
+  let keyToDelete = $state<ApiKey | null>(null);
+  let deleting = $state(false);
 
   async function loadAPIKeys() {
     loading = true;
@@ -112,6 +118,40 @@
     }
   }
 
+  function openDeleteDialog(apiKey: ApiKey) {
+    keyToDelete = apiKey;
+    deleteDialogOpen = true;
+  }
+
+  async function deleteApiKey() {
+    if (!keyToDelete) return;
+
+    deleting = true;
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "deleteApiKey",
+          data: { id: keyToDelete.id }
+        })
+      });
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("API key deleted successfully");
+        await loadAPIKeys();
+      }
+    } catch (e) {
+      toast.error("Failed to delete API key");
+    } finally {
+      deleting = false;
+      deleteDialogOpen = false;
+      keyToDelete = null;
+    }
+  }
+
   function copyKey() {
     if (newKeyResp.apiKey) {
       navigator.clipboard.writeText(newKeyResp.apiKey);
@@ -135,7 +175,7 @@
     newKeyResp = {};
   }
 
-  $effect(() => {
+  onMount(() => {
     loadAPIKeys();
   });
 </script>
@@ -146,7 +186,7 @@
   <!-- Header with Create Button -->
   <div class="flex items-center justify-end">
     <Button onclick={() => (showCreateDialog = true)}>
-      <Plus class="mr-2 h-4 w-4" />
+      <Plus class="h-4 w-4" />
       Create New API Key
     </Button>
   </div>
@@ -154,7 +194,7 @@
   <!-- New Key Alert -->
   {#if newKeyResp.apiKey}
     <Card.Root class="border-green-600 bg-green-50 dark:bg-green-950/20">
-      <Card.Content class="pt-6">
+      <Card.Content class="">
         <div class="flex items-start gap-3">
           <div class="flex-1">
             <p class="font-medium text-green-800 dark:text-green-200">🎉 API Key Created Successfully</p>
@@ -207,6 +247,7 @@
               <Table.Head>Key</Table.Head>
               <Table.Head>Created At</Table.Head>
               <Table.Head class="pr-4 text-right">Status</Table.Head>
+              <Table.Head class="pr-4 text-right">Actions</Table.Head>
             </Table.Row>
           </Table.Header>
           <Table.Body>
@@ -228,6 +269,17 @@
                     </span>
                     <Switch checked={apiKey.status === "ACTIVE"} onCheckedChange={() => updateStatus(apiKey)} />
                   </div>
+                </Table.Cell>
+                <Table.Cell class="pr-4 text-right">
+                  <Button
+                    variant="destructive"
+                    disabled={page.data.userDb.role !== "admin"}
+                    size="sm"
+                    onclick={() => openDeleteDialog(apiKey)}
+                  >
+                    <Trash2 class="mr-2 h-4 w-4" />
+                    Delete
+                  </Button>
                 </Table.Cell>
               </Table.Row>
             {/each}
@@ -270,3 +322,23 @@
     </form>
   </Dialog.Content>
 </Dialog.Root>
+
+<AlertDialog.Root bind:open={deleteDialogOpen}>
+  <AlertDialog.Content>
+    <AlertDialog.Header>
+      <AlertDialog.Title>Delete API Key</AlertDialog.Title>
+      <AlertDialog.Description>
+        Are you sure you want to delete API key "{keyToDelete?.name}"? This action cannot be undone.
+      </AlertDialog.Description>
+    </AlertDialog.Header>
+    <AlertDialog.Footer>
+      <AlertDialog.Cancel disabled={deleting}>Cancel</AlertDialog.Cancel>
+      <AlertDialog.Action onclick={deleteApiKey} disabled={deleting}>
+        {#if deleting}
+          <Spinner class="mr-2 h-4 w-4" />
+        {/if}
+        Delete
+      </AlertDialog.Action>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>

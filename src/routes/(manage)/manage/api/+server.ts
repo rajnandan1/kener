@@ -20,6 +20,7 @@ import {
   GetAllSiteData,
   CreateNewAPIKey,
   UpdateApiKeyStatus,
+  DeleteApiKey,
   VerifyToken,
   GetIncidentsDashboard,
   CreateIncident,
@@ -256,6 +257,13 @@ export async function POST({ request, cookies }) {
     } else if (action == "updateApiKeyStatus") {
       AdminEditorCan(userDB.role);
       resp = await UpdateApiKeyStatus(data);
+    } else if (action == "deleteApiKey") {
+      AdminCan(userDB.role);
+      const deleted = await DeleteApiKey(data);
+      if (!deleted) {
+        throw new Error("API key not found");
+      }
+      resp = { success: true };
     } else if (action == "getIncidents") {
       resp = await GetIncidentsDashboard(data);
     } else if (action == "getIncident") {

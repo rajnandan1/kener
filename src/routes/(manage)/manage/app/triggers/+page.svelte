@@ -2,21 +2,14 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
-  import * as Card from "$lib/components/ui/card/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
+  import * as Table from "$lib/components/ui/table/index.js";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
-  import PencilIcon from "@lucide/svelte/icons/pencil";
-  import ZapIcon from "@lucide/svelte/icons/zap";
-  import WebhookIcon from "@lucide/svelte/icons/webhook";
-  import MailIcon from "@lucide/svelte/icons/mail";
-  import CheckIcon from "@lucide/svelte/icons/check";
-  import XIcon from "@lucide/svelte/icons/x";
-  import Loader from "@lucide/svelte/icons/loader";
   import { toast } from "svelte-sonner";
-  import { goto } from "$app/navigation";
-  import ArrowRight from "@lucide/svelte/icons/arrow-right";
+  import { onMount } from "svelte";
+  import SettingsIcon from "@lucide/svelte/icons/settings";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
 
@@ -80,24 +73,10 @@
     pageNo = page;
   }
 
-  function getTriggerIcon(type: string) {
-    switch (type) {
-      case "webhook":
-        return WebhookIcon;
-      case "email":
-        return MailIcon;
-      case "slack":
-      case "discord":
-        return ZapIcon;
-      default:
-        return ZapIcon;
-    }
-  }
-
   // Paginated triggers
   const paginatedTriggers = $derived(triggers.slice((pageNo - 1) * limit, pageNo * limit));
 
-  $effect(() => {
+  onMount(() => {
     fetchData();
   });
 </script>
@@ -105,13 +84,6 @@
 <div class="container mx-auto space-y-6 py-6">
   <!-- Header -->
   <div class="flex items-center justify-between">
-    <div class="flex items-center gap-3">
-      <ZapIcon class="text-muted-foreground size-6" />
-      <div>
-        <h1 class="text-2xl font-bold">Triggers</h1>
-        <p class="text-muted-foreground text-sm">Configure notification triggers for alerts</p>
-      </div>
-    </div>
     <div class="flex items-center gap-3">
       <Select.Root type="single" value={statusFilter} onValueChange={handleStatusChange}>
         <Select.Trigger class="w-36">
@@ -126,54 +98,56 @@
       {#if loading}
         <Spinner class="size-5" />
       {/if}
-      <Button onclick={() => goto(clientResolver(resolve, "/manage/app/triggers/new"))}>
-        <PlusIcon class="mr-2 size-4" />
-        New Trigger
-      </Button>
     </div>
+    <Button href={clientResolver(resolve, "/manage/app/triggers/new")}>
+      <PlusIcon class="size-4" />
+      New Trigger
+    </Button>
   </div>
 
   <!-- Triggers List -->
-  <div class="grid gap-4">
-    {#if paginatedTriggers.length === 0 && !loading}
-      <Card.Root>
-        <Card.Content class="text-muted-foreground py-8 text-center">No triggers found</Card.Content>
-      </Card.Root>
-    {:else}
-      {#each paginatedTriggers as trigger, index}
-        {@const TriggerIcon = getTriggerIcon(trigger.trigger_type)}
-        <Card.Root class="hover:bg-muted/30 transition-colors">
-          <Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
-            <div class="flex items-center gap-3">
-              <div class="bg-muted flex size-10 items-center justify-center rounded-lg">
-                <TriggerIcon class="size-5" />
-              </div>
-              <div>
-                <Card.Title class="text-base">{trigger.name}</Card.Title>
-                {#if trigger.trigger_desc}
-                  <p class="text-muted-foreground text-sm">{trigger.trigger_desc}</p>
-                {/if}
-              </div>
-            </div>
-            <div class="flex items-center gap-2">
-              <Badge variant={trigger.trigger_status === "ACTIVE" ? "default" : "secondary"}>
-                {trigger.trigger_status}
-              </Badge>
-              <Badge variant="outline" class="capitalize">{trigger.trigger_type}</Badge>
+  {#if paginatedTriggers.length === 0 && !loading}
+    <div class="text-muted-foreground py-8 text-center">No triggers found</div>
+  {:else}
+    <div class="ktable rounded-xl border">
+      <Table.Root>
+        <Table.Header>
+          <Table.Row>
+            <Table.Head class="w-[280px]">Name</Table.Head>
+            <Table.Head class="w-[140px]">Type</Table.Head>
+            <Table.Head class="w-[140px]">Status</Table.Head>
+            <Table.Head class="w-[160px] text-right"></Table.Head>
+          </Table.Row>
+        </Table.Header>
+        <Table.Body>
+          {#each paginatedTriggers as trigger (trigger.id)}
+            <Table.Row>
+              <Table.Cell class="font-medium">{trigger.name}</Table.Cell>
 
-              <Button
-                variant="ghost"
-                size="icon"
-                onclick={() => goto(clientResolver(resolve, `/manage/app/triggers/${trigger.id}`))}
-              >
-                <ArrowRight class="size-4" />
-              </Button>
-            </div>
-          </Card.Header>
-        </Card.Root>
-      {/each}
-    {/if}
-  </div>
+              <Table.Cell>
+                <Badge variant="outline" class="capitalize">{trigger.trigger_type}</Badge>
+              </Table.Cell>
+              <Table.Cell>
+                <Badge variant={trigger.trigger_status === "ACTIVE" ? "default" : "secondary"}>
+                  {trigger.trigger_status}
+                </Badge>
+              </Table.Cell>
+              <Table.Cell class="text-right">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  href={clientResolver(resolve, `/manage/app/triggers/${trigger.id}`)}
+                >
+                  <SettingsIcon class="mr-1 size-4" />
+                  Configure
+                </Button>
+              </Table.Cell>
+            </Table.Row>
+          {/each}
+        </Table.Body>
+      </Table.Root>
+    </div>
+  {/if}
 
   <!-- Pagination -->
   {#if totalCount > limit}
@@ -187,7 +161,7 @@
             <ChevronLeftIcon class="size-4" />
           </Button>
           <div class="flex items-center gap-1">
-            {#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
+            {#each Array.from({ length: totalPages }, (_, i) => i + 1) as page (page)}
               {#if page === 1 || page === totalPages || (page >= pageNo - 1 && page <= pageNo + 1)}
                 <Button variant={page === pageNo ? "default" : "ghost"} size="sm" onclick={() => goToPage(page)}>
                   {page}

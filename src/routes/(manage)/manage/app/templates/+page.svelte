@@ -142,13 +142,6 @@
 </script>
 
 <div class="container mx-auto space-y-6 py-6">
-  <div class="flex items-center justify-between">
-    <div>
-      <h1 class="text-2xl font-bold tracking-tight">Email Templates</h1>
-      <p class="text-muted-foreground">Manage your email notification templates</p>
-    </div>
-  </div>
-
   {#if loading}
     <div class="flex items-center justify-center py-12">
       <Spinner class="size-8" />
