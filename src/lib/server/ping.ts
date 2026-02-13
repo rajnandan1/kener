@@ -1,4 +1,5 @@
 import net from "net"; // Use import instead of require
+import dns from "node:dns/promises";
 import ping from "ping";
 
 interface TCPResult {
@@ -59,6 +60,30 @@ interface PingResult {
   type: string;
 }
 
+function ToLatencyNumber(value: string | number | null | undefined): number {
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  if (typeof value === "string") {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
+}
+
+function IsSpawnRestrictionError(error: unknown): error is NodeJS.ErrnoException {
+  if (!(error instanceof Error)) return false;
+  const err = error as NodeJS.ErrnoException;
+  const message = (err.message || "").toLowerCase();
+  const code = err.code || "";
+  return (
+    err.syscall === "spawn" ||
+    code === "EPERM" ||
+    code === "EACCES" ||
+    code === "ENOENT" ||
+    message.includes("spawn eperm") ||
+    message.includes("operation not permitted")
+  );
+}
+
 const Ping = async function (type: string, host: string, timeout: number, count: number): Promise<PingResult> {
   let output: PingResult = {
     alive: false,
@@ -82,9 +107,32 @@ const Ping = async function (type: string, host: string, timeout: number, count:
     output.max = res.max;
     output.avg = res.avg;
     output.latencies = (res as unknown as { times?: string[] }).times ?? []; //sv5-verify
-    output.latency = res.time;
-  } catch (error) {
-    console.log(`Error in pingCall IP4 for ${host}`, error);
+    output.latency = ToLatencyNumber(res.time as string | number | null | undefined);
+  } catch (error: unknown) {
+    if (IsSpawnRestrictionError(error)) {
+      const start = process.hrtime.bigint();
+      try {
+        await dns.lookup(host, { family: type === "IP6" ? 6 : 4 });
+        const end = process.hrtime.bigint();
+        const latency = Number(end - start) / 1e6;
+        const latencyStr = latency.toFixed(3);
+
+        output.alive = true;
+        output.min = latencyStr;
+        output.max = latencyStr;
+        output.avg = latencyStr;
+        output.latencies = [latencyStr];
+        output.latency = latency;
+
+        console.warn(
+          `[Ping] ICMP unavailable for ${host} (${(error as Error).message}). Falling back to DNS lookup reachability.`,
+        );
+      } catch (lookupError) {
+        console.log(`Error in ping fallback DNS for ${host}`, lookupError);
+      }
+    } else {
+      console.log(`Error in pingCall ${type} for ${host}`, error);
+    }
   }
   return output;
 };

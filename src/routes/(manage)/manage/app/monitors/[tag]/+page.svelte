@@ -190,7 +190,7 @@
     fetchPages();
   });
 
-  let activeAccordionItem = $state<string>("");
+  let activeAccordionItem = $derived<string>(isNew ? "general" : "configuration");
   let cloneDialogOpen = $state(false);
   let cloneTag = $state("");
   let cloneName = $state("");

@@ -1,5 +1,8 @@
 // Server-only monitor types (internal representation with all fields).
 
+import type { PingHost, PingMonitorTypeData } from "$lib/types/ping.js";
+import type { TcpHost, TcpMonitorTypeData } from "$lib/types/tcp.js";
+
 export interface MonitoringResult {
   status: string;
   latency: number;
@@ -30,29 +33,8 @@ export interface DnsMonitorTypeData {
   values: string[];
 }
 
-export interface PingHost {
-  type: string;
-  host: string;
-  timeout: number;
-  count: number;
-}
-
-export interface PingMonitorTypeData {
-  hosts: PingHost[];
-  pingEval?: string;
-}
-
-export interface TcpHost {
-  type: string;
-  host: string;
-  port: number;
-  timeout: number;
-}
-
-export interface TcpMonitorTypeData {
-  hosts: TcpHost[];
-  tcpEval?: string;
-}
+export type { PingHost, PingMonitorTypeData };
+export type { TcpHost, TcpMonitorTypeData };
 
 export interface SslMonitorTypeData {
   host: string;

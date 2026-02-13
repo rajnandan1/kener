@@ -15,22 +15,25 @@ class PingCall {
     let pingEval = !!this.monitor.type_data.pingEval ? this.monitor.type_data.pingEval : DefaultPingEval;
     let tag = this.monitor.tag;
     if (hosts === undefined) {
-      console.log(
-        "Hosts is undefined. The ping monitor has changed in version 3.0.10. Please update your monitor with tag",
-        tag,
-      );
       return {
         status: GC.DOWN,
         latency: 0,
         type: GC.ERROR,
+        error_message:
+          "Hosts is undefined. The ping monitor has changed in version 3.0.10. Please update your monitor with tag " +
+          tag,
       };
     }
     let arrayOfPings = [];
+    let errorMessages: string[] = [];
     for (let i = 0; i < hosts.length; i++) {
       const host = hosts[i];
-      arrayOfPings.push(await Ping(host.type, host.host, host.timeout, host.count));
+      const result = await Ping(host.type, host.host, host.timeout, host.count);
+      if (!result.alive) {
+        errorMessages.push(`Host ${host.host} is unreachable.`);
+      }
+      arrayOfPings.push(result);
     }
-
     let evalResp: EvalResponse | undefined = undefined;
 
     try {
@@ -42,13 +45,16 @@ class PingCall {
         status: GC.DOWN,
         latency: 0,
         type: GC.ERROR,
+        error_message: `Error in pingEval: ${(error as Error).message}`,
       };
     }
+
     //reduce to get the status
     return {
       status: evalResp?.status || GC.DOWN,
       latency: evalResp?.latency || 0,
       type: GC.REALTIME,
+      error_message: errorMessages.length > 0 ? errorMessages.join("; ") : undefined,
     };
   }
 }
