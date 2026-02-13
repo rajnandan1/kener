@@ -2,11 +2,12 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
-  import { Switch } from "$lib/components/ui/switch/index.js";
+  import * as Select from "$lib/components/ui/select/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
   import Loader from "@lucide/svelte/icons/loader";
+  import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
@@ -280,7 +281,7 @@
     selectedAnalytics = provider;
   }
 
-  $effect(() => {
+  onMount(() => {
     fetchAnalyticsData();
   });
 </script>
@@ -295,7 +296,7 @@
     <div class="grid grid-cols-4 overflow-hidden rounded-md border">
       <!-- Provider List -->
       <div class="col-span-1 flex flex-col border-r">
-        {#each analyticsProviders as provider}
+        {#each analyticsProviders as provider (provider.key)}
           <Button
             variant={selectedAnalytics?.key === provider.key ? "secondary" : "ghost"}
             class="flex items-center justify-between gap-x-2 rounded-none border-b text-sm last:border-none"
@@ -333,7 +334,7 @@
             </div>
 
             <div class="grid grid-cols-2 gap-4">
-              {#each selectedAnalytics.requirements as req}
+              {#each selectedAnalytics.requirements as req (req.label)}
                 <div class="flex flex-col gap-y-2">
                   <Label for={req.label}>{req.label}</Label>
                   <Input
@@ -345,18 +346,28 @@
                   />
                 </div>
               {/each}
+              <div class="flex flex-col gap-2">
+                <Label>Status</Label>
+                <Select.Root
+                  type="single"
+                  value={selectedAnalytics.isEnabled ? "enabled" : "disabled"}
+                  onValueChange={(value) => {
+                    if (!value || !selectedAnalytics) return;
+                    selectedAnalytics.isEnabled = value === "enabled";
+                  }}
+                >
+                  <Select.Trigger class="w-32">
+                    {selectedAnalytics.isEnabled ? "Enable" : "Disable"}
+                  </Select.Trigger>
+                  <Select.Content>
+                    <Select.Item value="enabled">Enable</Select.Item>
+                    <Select.Item value="disabled">Disable</Select.Item>
+                  </Select.Content>
+                </Select.Root>
+              </div>
             </div>
 
             <div class="mt-4 flex flex-row items-center justify-between">
-              <div class="flex flex-row items-center gap-x-3">
-                <Switch bind:checked={selectedAnalytics.isEnabled} />
-                <div class="text-muted-foreground text-sm font-medium">
-                  {selectedAnalytics.label} is
-                  <span class="underline">{selectedAnalytics.isEnabled ? "enabled" : "disabled"}</span>
-                  for your site
-                </div>
-              </div>
-
               <Button type="submit" disabled={saving}>
                 Save Changes for {selectedAnalytics.label}
                 {#if saving}

@@ -43,7 +43,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       sameSite: cookieConfig.sameSite,
     });
 
-    return json({ success: true, redirect: "/manage/app/home" });
+    return json({ success: true, redirect: "/manage/app/site-configurations" });
   } catch (e) {
     console.error("Signup error:", e);
     const errorMessage = e instanceof Error ? e.message : "An error occurred during signup";

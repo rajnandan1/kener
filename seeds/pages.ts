@@ -22,7 +22,7 @@ export async function seed(knex: Knex): Promise<void> {
         .returning("id");
 
       // For the home page, add the default monitor (earth) if it exists
-      if (page.page_path === "/") {
+      if (page.page_path === "") {
         const earthMonitor = await knex("monitors").where({ tag: "earth" }).first();
         if (earthMonitor) {
           const pageId = typeof insertedPage === "object" ? insertedPage.id : insertedPage;

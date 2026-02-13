@@ -49,7 +49,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
       sameSite: cookieConfig.sameSite,
     });
 
-    return json({ success: true, redirect: "/manage/app/home" });
+    return json({ success: true, redirect: "/manage/app/site-configurations" });
   } catch (e) {
     console.error("Login error:", e);
     return json({ error: "An error occurred during login" }, { status: 500 });

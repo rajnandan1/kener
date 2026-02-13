@@ -2,7 +2,6 @@
   import "../layout.css";
   import "../kener.css";
   import "../manage.css";
-  import favicon from "$lib/assets/favicon.svg";
   import { ModeWatcher } from "mode-watcher";
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
@@ -34,24 +33,23 @@
 
   // Navigation items - single source of truth
   const navItems = [
-    { title: "Home", url: "/manage/app/home", icon: House },
-    { title: "Monitors", url: "/manage/app/monitors", icon: BlendIcon },
-    { title: "Triggers", url: "/manage/app/triggers", icon: MailboxIcon },
     { title: "Site Configurations", url: "/manage/app/site-configurations", icon: Settings2Icon },
-    { title: "API Keys", url: "/manage/app/api-keys", icon: KeyIcon },
     { title: "Internationalization", url: "/manage/app/internationalization", icon: GlobeIcon },
     { title: "Customizations", url: "/manage/app/customizations", icon: Columns3CogIcon },
+    { title: "Analytics Providers", url: "/manage/app/analytics-providers", icon: ChartSplineIcon },
     { title: "Pages", url: "/manage/app/pages", icon: BookOpenIcon },
+    { title: "Monitors", url: "/manage/app/monitors", icon: BlendIcon },
+    { title: "Monitoring Data", url: "/manage/app/monitoring-data", icon: DatabaseIcon },
     { title: "Incidents", url: "/manage/app/incidents", icon: CloudAlertIcon },
     { title: "Maintenances", url: "/manage/app/maintenances", icon: ClockAlertIcon },
-    { title: "Analytics Providers", url: "/manage/app/analytics-providers", icon: ChartSplineIcon },
     { title: "Alerts", url: "/manage/app/alerts", icon: SirenIcon },
     { title: "Subscriptions", url: "/manage/app/subscriptions", icon: BellIcon },
     { title: "Users", url: "/manage/app/users", icon: UsersIcon },
+    { title: "Triggers", url: "/manage/app/triggers", icon: MailboxIcon },
+    { title: "Templates", url: "/manage/app/templates", icon: TemplateIcon },
     { title: "Badges", url: "/manage/app/badges", icon: BadgeIcon },
     { title: "Embed", url: "/manage/app/embed", icon: CodeIcon },
-    { title: "Templates", url: "/manage/app/templates", icon: TemplateIcon },
-    { title: "Monitoring Data", url: "/manage/app/monitoring-data", icon: DatabaseIcon }
+    { title: "API Keys", url: "/manage/app/api-keys", icon: KeyIcon }
   ].map((item) => ({ ...item, url: clientResolver(resolve, item.url) }));
 
   // Derive page title from current URL
