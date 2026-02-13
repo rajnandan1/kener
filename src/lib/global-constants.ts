@@ -69,6 +69,7 @@ export default {
   STATUS: "STATUS",
   LATENCY: "LATENCY",
   UPTIME: "UPTIME",
+  DOCS_URL: "https://kener.ing/docs",
 } as const;
 
 const AnalyticsProviders = {

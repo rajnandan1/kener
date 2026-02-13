@@ -8,6 +8,9 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
+  import { buttonVariants } from "$lib/components/ui/button/index.js";
+  import GC from "$lib/global-constants";
+
   import { Badge } from "$lib/components/ui/badge/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import UsersIcon from "@lucide/svelte/icons/users";
@@ -20,10 +23,11 @@
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
   import EyeClosedIcon from "@lucide/svelte/icons/eye-closed";
   import EyeOpenIcon from "@lucide/svelte/icons/eye";
-  import * as InputGroup from "$lib/components/ui/input-group/index.js";
+  import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import { toast } from "svelte-sonner";
   import { format } from "date-fns";
-  import type { UserRecordDashboard } from "$lib/server/types/db.js";
+  import { onMount } from "svelte";
+  import type { UserRecordDashboard, UserRecordPublic } from "$lib/server/types/db.js";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
 
@@ -45,14 +49,14 @@
   }
 
   interface PageData {
-    user: UserRecordDashboard;
+    userDb: UserRecordPublic;
     canSendEmail: boolean;
   }
 
   let { data }: { data: PageData } = $props();
 
   // Derived from data
-  let currentUser = $derived(data.user);
+  let currentUser = $derived(data.userDb);
   let canSendEmail = $derived(data.canSendEmail);
 
   // State
@@ -79,6 +83,7 @@
   let toEditUser = $state<EditUser | null>(null);
   let manualUpdateError = $state("");
   let manualSuccess = $state("");
+  let sendingSelfVerification = $state(false);
 
   // Fetch users
   async function fetchUsers() {
@@ -183,8 +188,9 @@
 
   // Send verification email
   async function sendVerificationEmail(id: number) {
+    sendingSelfVerification = true;
     try {
-      await fetch(clientResolver(resolve, "/manage/api"), {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -192,9 +198,16 @@
           data: { toId: id }
         })
       });
+      const result = await res.json();
+      if (!res.ok || result.error) {
+        throw new Error(result.error || "Failed to send verification email");
+      }
       toast.success("Verification email sent");
     } catch (error) {
-      toast.error("Failed to send verification email");
+      const message = error instanceof Error ? error.message : "Failed to send verification email";
+      toast.error(message);
+    } finally {
+      sendingSelfVerification = false;
     }
   }
 
@@ -265,7 +278,7 @@
   }
 
   // Initial load
-  $effect(() => {
+  onMount(() => {
     fetchUsers();
   });
 </script>
@@ -284,9 +297,18 @@
       {#if loading}
         <Spinner class="size-5" />
       {/if}
-      {#if currentUser.role === "admin"}
-        <Button onclick={() => (showAddUserDialog = true)}>
-          <PlusIcon class="mr-2 h-4 w-4" />
+      {#if currentUser.role === "admin" || currentUser.role === "editor"}
+        {#if !canSendEmail}
+          <p class="text-muted-foreground max-w-xs text-xs">
+            Email service not configured. Cannot invite new users. Please go to
+            <a href={`${GC.DOCS_URL}/setup/email-setup`} target="_blank" class="text-blue-500 underline">
+              setup email
+            </a>
+            for more info.
+          </p>
+        {/if}
+        <Button onclick={() => (showAddUserDialog = true)} disabled={!canSendEmail}>
+          <PlusIcon class="h-4 w-4" />
           Add User
         </Button>
       {/if}
@@ -321,7 +343,7 @@
             <Table.Cell colspan={6} class="text-muted-foreground py-8 text-center">No users found.</Table.Cell>
           </Table.Row>
         {:else}
-          {#each users as user}
+          {#each users as user (user.id)}
             <Table.Row>
               <Table.Cell class="font-medium">{user.name}</Table.Cell>
               <Table.Cell>{user.email}</Table.Cell>
@@ -349,6 +371,18 @@
                   <Button variant="ghost" size="icon" class="h-8 w-8" onclick={() => openSettingsSheet(user)}>
                     <SettingsIcon class="h-4 w-4" />
                   </Button>
+                {:else if currentUser.id === user.id && !!!currentUser.is_verified}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={sendingSelfVerification}
+                    onclick={() => sendVerificationEmail(user.id)}
+                  >
+                    {#if sendingSelfVerification}
+                      <Spinner class="mr-2 size-4" />
+                    {/if}
+                    Verify Email
+                  </Button>
                 {/if}
               </Table.Cell>
             </Table.Row>
@@ -370,7 +404,7 @@
             <ChevronLeftIcon class="size-4" />
           </Button>
           <div class="flex items-center gap-1">
-            {#each Array.from({ length: totalPages }, (_, i) => i + 1) as pageNum}
+            {#each Array.from({ length: totalPages }, (_, i) => i + 1) as pageNum (pageNum)}
               {#if pageNum === 1 || pageNum === totalPages || (pageNum >= page - 1 && pageNum <= page + 1)}
                 <Button variant={pageNum === page ? "default" : "ghost"} size="sm" onclick={() => goToPage(pageNum)}>
                   {pageNum}
@@ -467,15 +501,20 @@
             </p>
           </div>
           <!-- Resend Invitation -->
-          {#if !toEditUser.has_password && canSendEmail}
+          {#if !toEditUser.has_password}
             <Card.Root>
-              <Card.Content class="p-4">
+              <Card.Content class="">
                 <p class="mb-3 text-sm">
-                  This user ha2sn't set their password yet. Resend the invitation email to {toEditUser.email}.
+                  This user hasn't set their password yet. Resend the invitation email to {toEditUser.email}.
                 </p>
+                {#if !canSendEmail}
+                  <Alert.Root variant="destructive" class="mb-4">
+                    <Alert.Description>Email service not configured. Cannot resend invitation email.</Alert.Description>
+                  </Alert.Root>
+                {/if}
                 <Button
                   variant="secondary"
-                  disabled={toEditUser.actions.resendingInvitation}
+                  disabled={toEditUser.actions.resendingInvitation || !canSendEmail}
                   onclick={async () => {
                     toEditUser!.actions.resendingInvitation = true;
                     manualSuccess = "";

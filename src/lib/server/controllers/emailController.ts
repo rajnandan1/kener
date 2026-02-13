@@ -15,7 +15,7 @@ export const IsResendSetup = () => {
 };
 
 export const IsEmailSetup = () => {
-  return !!GetSMTPFromENV || IsResendSetup();
+  return !!GetSMTPFromENV() || IsResendSetup();
 };
 export const SendEmailWithTemplate = async (
   template: string,

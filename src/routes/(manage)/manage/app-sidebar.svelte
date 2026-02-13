@@ -3,12 +3,14 @@
   import NavMain from "./nav-main.svelte";
   import NavUser from "./nav-user.svelte";
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
+  import version from "$lib/version";
   import type { Component, ComponentProps } from "svelte";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   type NavItem = { title: string; url: string; icon: Component };
 
   let { navItems, ...restProps }: { navItems: NavItem[] } & ComponentProps<typeof Sidebar.Root> = $props();
+  const appVersion = version();
 </script>
 
 <Sidebar.Root collapsible="offcanvas" {...restProps}>
@@ -17,9 +19,14 @@
       <Sidebar.MenuItem>
         <Sidebar.MenuButton class="data-[slot=sidebar-menu-button]:p-1.5!">
           {#snippet child({ props })}
-            <a href={clientResolver(resolve, "/manage/app")} {...props}>
+            <a
+              href={clientResolver(resolve, "/manage/app")}
+              {...props}
+              class="justify-start-safe flex items-center gap-2"
+            >
               <img src={clientResolver(resolve, "/logo96.png")} class="size-5!" alt="Kener Logo" />
               <span class="text-base font-semibold"> Kener </span>
+              <span class="text-muted-foreground pt-0.5 text-xs font-medium"> v{appVersion} </span>
             </a>
           {/snippet}
         </Sidebar.MenuButton>

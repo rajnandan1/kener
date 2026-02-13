@@ -377,3 +377,48 @@ export const ResendInvitationEmail = async (email: string, currentUserRole: stri
     );
   }
 };
+
+// send verification email with verification link
+export const SendVerificationEmail = async (toUserId: number, currentUser: { id: number; role: string }) => {
+  if (!toUserId) {
+    throw new Error("User ID is required");
+  }
+
+  // Only admins/editors can send verification to other users.
+  // Members can only send verification email to themselves.
+  if (currentUser.role === "member" && currentUser.id !== toUserId) {
+    throw new Error("You do not have permission to send verification email for this user");
+  }
+
+  const user = await db.getUserById(toUserId);
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (user.is_verified) {
+    throw new Error("User email is already verified");
+  }
+
+  const token = await GenerateToken({
+    email: user.email,
+    validTill: Date.now() + 24 * 60 * 60 * 1000, //24 hours
+  });
+
+  const siteData = await GetAllSiteData();
+  const siteVars = siteDataToVariables(siteData);
+  const siteUrl = siteVars.site_url || "";
+  const verificationLink = `${siteUrl}/account/verify?view=confirm_token&token=${token}`;
+
+  const emailVars = {
+    ...siteVars,
+    verification_link: verificationLink,
+  };
+
+  const template = await GetGeneralEmailTemplateById("verify_email");
+  if (!template) {
+    throw new Error("Verify email template not found");
+  }
+  await sendEmail(template.template_html_body || "", template.template_subject || "Verify Your Email", emailVars, [
+    user.email,
+  ]);
+};

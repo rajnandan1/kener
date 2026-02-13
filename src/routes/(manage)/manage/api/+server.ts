@@ -37,6 +37,7 @@ import {
   GetSiteLogoURL,
   UpdatePassword,
   SendInvitationEmail,
+  SendVerificationEmail,
   ResendInvitationEmail,
   GetUserPasswordHashById,
   GetAllUsersPaginatedDashboard,
@@ -179,6 +180,13 @@ export async function POST({ request, cookies }) {
     } else if (action == "resendInvitation") {
       AdminEditorCan(userDB.role);
       await ResendInvitationEmail(data.email, userDB.role);
+      resp = { success: true };
+    } else if (action == "sendVerificationEmail") {
+      const toId = parseInt(String(data.toId));
+      if (!toId) {
+        throw new Error("User ID is required");
+      }
+      await SendVerificationEmail(toId, { id: userDB.id, role: userDB.role });
       resp = { success: true };
     } else if (action == "getUsers") {
       const page = parseInt(String(data.page)) || 1;

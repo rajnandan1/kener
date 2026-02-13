@@ -47,7 +47,11 @@ export default async function send(
         html: htmlBody,
         text: textBody,
       };
-      return await resend.emails.send(emailBody);
+      let resp = await resend.emails.send(emailBody);
+      if (!!resp.error) {
+        throw new Error(`Resend API error: ${resp.error.message}`);
+      }
+      return resp;
     } else if (mySMTPData) {
       // SMTP Configuration
       const transport = getSMTPTransport(mySMTPData as SMTPConfiguration);
@@ -59,9 +63,11 @@ export default async function send(
         html: htmlBody, // HTML body (if any)
       };
       return await transport.sendMail(mailOptions);
+    } else {
+      throw new Error("No valid email configuration found. Please check your SMTP or Resend settings.");
     }
   } catch (error) {
     console.error("Error sending email", error);
-    return error;
+    throw error;
   }
 }
