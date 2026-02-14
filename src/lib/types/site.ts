@@ -6,3 +6,92 @@ export interface SiteAnnouncement {
   cancellable: boolean;
   cta: string | null;
 }
+
+export interface SiteMetaTag {
+  key: string;
+  value: string;
+}
+
+export interface SiteNavItem {
+  name: string;
+  url: string;
+  iconURL: string;
+}
+
+export interface SiteHero {
+  title: string;
+  subtitle: string | null;
+  image: string | null;
+}
+
+export interface SiteI18nLocale {
+  code: string;
+  name: string;
+  selected: boolean;
+  disabled: boolean;
+}
+
+export interface SiteI18nConfig {
+  defaultLocale: string;
+  locales: SiteI18nLocale[];
+}
+
+export interface SiteAnalyticsItem {
+  id: string;
+  type: string;
+  name: string;
+  script: string;
+}
+
+export interface SiteStatusColors {
+  UP: string;
+  DOWN: string;
+  DEGRADED: string;
+  MAINTENANCE: string;
+  ACCENT: string;
+  ACCENT_FOREGROUND: string;
+}
+
+export interface SiteFont {
+  cssSrc: string;
+  family: string;
+}
+
+export interface SiteCategory {
+  name: string;
+  description: string;
+  isHidden: boolean;
+  image: string | null;
+}
+
+export interface SiteHomeDataMaxDays {
+  desktop: {
+    maxDays: number;
+    selectableDays: number[];
+  };
+  mobile: {
+    maxDays: number;
+    selectableDays: number[];
+  };
+}
+
+export interface SiteSubscriptionsSettings {
+  enable: boolean;
+  methods: {
+    emails: {
+      incidents: boolean;
+      maintenance: boolean;
+    };
+  };
+}
+
+export interface SiteSubMenuOptions {
+  showCopyCurrentPageLink: boolean;
+  showShareBadgeMonitor: boolean;
+  showShareEmbedMonitor: boolean;
+}
+
+export interface DataRetentionPolicy {
+  enabled: boolean;
+  retentionDays: number;
+}

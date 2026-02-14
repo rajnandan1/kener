@@ -277,7 +277,7 @@
                     size="sm"
                     onclick={() => openDeleteDialog(apiKey)}
                   >
-                    <Trash2 class="mr-2 h-4 w-4" />
+                    <Trash2 class="h-4 w-4" />
                     Delete
                   </Button>
                 </Table.Cell>
@@ -314,7 +314,7 @@
         <Button type="button" variant="outline" onclick={() => (showCreateDialog = false)}>Cancel</Button>
         <Button type="submit" disabled={creating}>
           {#if creating}
-            <Loader class="mr-2 h-4 w-4 animate-spin" />
+            <Loader class="h-4 w-4 animate-spin" />
           {/if}
           Create
         </Button>
@@ -335,7 +335,7 @@
       <AlertDialog.Cancel disabled={deleting}>Cancel</AlertDialog.Cancel>
       <AlertDialog.Action onclick={deleteApiKey} disabled={deleting}>
         {#if deleting}
-          <Spinner class="mr-2 h-4 w-4" />
+          <Spinner class="h-4 w-4" />
         {/if}
         Delete
       </AlertDialog.Action>

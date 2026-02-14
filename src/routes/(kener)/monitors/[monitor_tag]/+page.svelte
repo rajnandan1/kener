@@ -15,6 +15,10 @@
   import { ArrowDown } from "@lucide/svelte";
   import MonitorBar from "$lib/components/MonitorBar.svelte";
   import trackEvent from "$lib/beacon";
+  import { selectedTimezone } from "$lib/stores/timezone";
+  import { getEndOfDayAtTz } from "$lib/client/datetime";
+  import { requestMonitorBar } from "$lib/client/monitor-bar-client";
+  import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
   let { data } = $props();
 
   // State
@@ -28,6 +32,50 @@
   function trackExternalLinkClick() {
     trackEvent("monitor_external_link_clicked", { monitorTag: data.monitorTag });
   }
+
+  let monitorBarDataByTag = $state<Record<string, MonitorBarResponse>>({});
+  let monitorBarErrorByTag = $state<Record<string, string>>({});
+  let requestVersion = 0;
+
+  $effect(() => {
+    const tags = data.extendedTags || [];
+    const days = data.maxDays;
+    const endOfDayTodayAtTz = getEndOfDayAtTz($selectedTimezone);
+    const currentRequestVersion = ++requestVersion;
+
+    monitorBarDataByTag = {};
+    monitorBarErrorByTag = {};
+
+    if (!tags.length) return;
+
+    void Promise.all(
+      tags.map(async (tag) => {
+        try {
+          const monitorBarData = await requestMonitorBar(tag, days, endOfDayTodayAtTz);
+          return { tag, ok: true as const, monitorBarData };
+        } catch (err) {
+          const errorMessage = err instanceof Error ? err.message : "Unknown error";
+          return { tag, ok: false as const, errorMessage };
+        }
+      })
+    ).then((results) => {
+      if (currentRequestVersion !== requestVersion) return;
+
+      const nextDataByTag: Record<string, MonitorBarResponse> = {};
+      const nextErrorByTag: Record<string, string> = {};
+
+      for (const result of results) {
+        if (result.ok) {
+          nextDataByTag[result.tag] = result.monitorBarData;
+        } else {
+          nextErrorByTag[result.tag] = result.errorMessage;
+        }
+      }
+
+      monitorBarDataByTag = nextDataByTag;
+      monitorBarErrorByTag = nextErrorByTag;
+    });
+  });
 </script>
 
 <div class="flex flex-col gap-3">
@@ -139,7 +187,7 @@
         </div>
         {#each data.extendedTags as tag, i (tag)}
           <div class="{i < data.extendedTags.length - 1 ? 'border-b' : ''} py-2 pb-4">
-            <MonitorBar {tag} barCount={data.maxDays} />
+            <MonitorBar {tag} prefetchedData={monitorBarDataByTag[tag]} prefetchedError={monitorBarErrorByTag[tag]} />
           </div>
         {/each}
       </div>

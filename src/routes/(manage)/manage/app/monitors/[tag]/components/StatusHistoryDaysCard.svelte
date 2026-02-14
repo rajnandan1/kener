@@ -126,9 +126,9 @@
   <Card.Footer class="flex justify-end">
     <Button onclick={save} disabled={saving || !isValid}>
       {#if saving}
-        <Loader class="mr-2 size-4 animate-spin" />
+        <Loader class="size-4 animate-spin" />
       {:else}
-        <SaveIcon class="mr-2 size-4" />
+        <SaveIcon class="size-4" />
       {/if}
       Save Status History Settings
     </Button>

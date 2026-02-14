@@ -1,7 +1,21 @@
 import db from "../db/db.js";
 import { siteDataKeys } from "./siteDataKeys.js";
 import type { Cookies } from "@sveltejs/kit";
-import type { SiteAnnouncement } from "../../types/site.js";
+import type {
+  DataRetentionPolicy,
+  SiteAnalyticsItem,
+  SiteAnnouncement,
+  SiteCategory,
+  SiteFont,
+  SiteHero,
+  SiteHomeDataMaxDays,
+  SiteI18nConfig,
+  SiteMetaTag,
+  SiteNavItem,
+  SiteStatusColors,
+  SiteSubMenuOptions,
+  SiteSubscriptionsSettings,
+} from "../../types/site.js";
 
 export interface SiteDataTransformed {
   title?: string;
@@ -10,85 +24,34 @@ export interface SiteDataTransformed {
   home?: string;
   logo?: string;
   favicon?: string;
-  metaTags?: Array<{ key: string; value: string }>;
-  nav?: Array<{ name: string; url: string; iconURL: string }>;
-  hero?: {
-    title: string;
-    subtitle: string | null;
-    image: string | null;
-  };
+  metaTags?: SiteMetaTag[];
+  nav?: SiteNavItem[];
+  hero?: SiteHero;
   footerHTML?: string;
-  i18n: {
-    defaultLocale: string;
-    locales: Array<{ code: string; name: string; selected: boolean; disabled: boolean }>;
-  };
+  i18n: SiteI18nConfig;
   pattern?: string;
-  analytics?: Array<{
-    id: string;
-    type: string;
-    name: string;
-    script: string;
-  }>;
+  analytics?: SiteAnalyticsItem[];
   theme?: string;
   themeToggle?: string;
   tzToggle?: string;
   barStyle: string;
   barRoundness?: string;
   summaryStyle?: string;
-  colors: {
-    UP: string;
-    DOWN: string;
-    DEGRADED: string;
-    MAINTENANCE: string;
-    ACCENT: string;
-    ACCENT_FOREGROUND: string;
-  };
-  colorsDark: {
-    UP: string;
-    DOWN: string;
-    DEGRADED: string;
-    MAINTENANCE: string;
-    ACCENT: string;
-    ACCENT_FOREGROUND: string;
-  };
-  font: {
-    cssSrc: string;
-    family: string;
-  };
-  categories?: Array<{ name: string; description: string; isHidden: boolean; image: string | null }>;
+  colors: SiteStatusColors;
+  colorsDark: SiteStatusColors;
+  font: SiteFont;
+  categories?: SiteCategory[];
   homeIncidentCount?: number | null;
   homeIncidentStartTimeWithin?: number;
-  homeDataMaxDays?: {
-    desktop: {
-      maxDays: number;
-      selectableDays: number[];
-    };
-    mobile: {
-      maxDays: number;
-      selectableDays: number[];
-    };
-  };
+  homeDataMaxDays?: SiteHomeDataMaxDays;
   kenerTheme?: string;
-  subscriptionsSettings?: {
-    enable: boolean;
-    methods: {
-      emails: {
-        incidents: boolean;
-        maintenance: boolean;
-      };
-    };
-  };
+  subscriptionsSettings?: SiteSubscriptionsSettings;
   showSiteStatus?: string;
   monitorSort?: number[];
 
-  subMenuOptions?: {
-    showCopyCurrentPageLink: boolean;
-    showShareBadgeMonitor: boolean;
-    showShareEmbedMonitor: boolean;
-  };
+  subMenuOptions?: SiteSubMenuOptions;
   announcement?: SiteAnnouncement;
-
-  [key: string]: unknown;
+  dataRetentionPolicy?: DataRetentionPolicy;
 }
 
 export function InsertKeyValue(key: string, value: string): Promise<number[]> {
@@ -107,7 +70,7 @@ export function InsertKeyValue(key: string, value: string): Promise<number[]> {
 export async function GetAllSiteData(): Promise<SiteDataTransformed> {
   let data = await db.getAllSiteData();
   //return all data as key value pairs, transform using data_type
-  let transformedData = {} as SiteDataTransformed;
+  const transformedData: Record<string, unknown> = {};
   for (const d of data) {
     if (d.data_type === "object") {
       transformedData[d.key] = JSON.parse(d.value);
@@ -115,7 +78,7 @@ export async function GetAllSiteData(): Promise<SiteDataTransformed> {
       transformedData[d.key] = d.value;
     }
   }
-  return transformedData;
+  return transformedData as unknown as SiteDataTransformed;
 }
 
 export const GetLocaleFromCookie = (site: SiteDataTransformed, cookies: Cookies): string => {

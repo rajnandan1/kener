@@ -246,4 +246,9 @@ export const siteDataKeys: SiteDataKey[] = [
     isValid: IsValidJSONString,
     data_type: "object",
   },
+  {
+    key: "dataRetentionPolicy",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
 ];

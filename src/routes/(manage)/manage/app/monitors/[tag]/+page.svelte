@@ -413,7 +413,7 @@
       <Button variant="outline" onclick={() => (cloneDialogOpen = false)} disabled={cloning}>Cancel</Button>
       <Button onclick={cloneMonitor} disabled={cloning || !cloneTag.trim() || !cloneName.trim()}>
         {#if cloning}
-          <Spinner class="mr-2 size-4" />
+          <Spinner class="size-4" />
           Cloning...
         {:else}
           Clone

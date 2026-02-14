@@ -120,7 +120,7 @@
         </Select.Root>
         <Button onclick={updateStatus} disabled={updatingStatus || status === (monitor.status || "INACTIVE")}>
           {#if updatingStatus}
-            <Loader class="mr-2 size-4 animate-spin" />
+            <Loader class="size-4 animate-spin" />
             Updating...
           {:else}
             Update Status
@@ -142,10 +142,10 @@
         disabled={deleting || deleteConfirmText !== `delete ${monitorTag}`}
       >
         {#if deleting}
-          <Loader class="mr-2 size-4 animate-spin" />
+          <Loader class="size-4 animate-spin" />
           Deleting...
         {:else}
-          <TrashIcon class="mr-2 size-4" />
+          <TrashIcon class="size-4" />
           Delete Monitor
         {/if}
       </Button>

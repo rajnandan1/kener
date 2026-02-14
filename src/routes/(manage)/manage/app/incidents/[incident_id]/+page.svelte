@@ -751,7 +751,7 @@
               <Dialog.Trigger>
                 {#snippet child({ props })}
                   <Button {...props} size="sm" variant="outline" disabled={unassignedMonitors.length === 0}>
-                    <PlusIcon class="mr-2 size-4" />
+                    <PlusIcon class="size-4" />
                     Add Monitor
                   </Button>
                 {/snippet}
@@ -862,7 +862,7 @@
                         class="text-destructive cursor-pointer"
                         onclick={() => removeMonitorFromList(monitor.monitor_tag)}
                       >
-                        <TrashIcon class="mr-2 size-4" />
+                        <TrashIcon class="size-4" />
                         Remove
                       </DropdownMenu.Item>
                     </DropdownMenu.Content>
@@ -876,9 +876,9 @@
       <Card.Footer class="flex justify-end">
         <Button onclick={saveIncident} disabled={saving || !isValid}>
           {#if saving}
-            <Loader class="mr-2 size-4 animate-spin" />
+            <Loader class="size-4 animate-spin" />
           {:else}
-            <SaveIcon class="mr-2 size-4" />
+            <SaveIcon class="size-4" />
           {/if}
           {isNew ? "Create Incident" : "Save Changes"}
         </Button>
@@ -896,7 +896,7 @@
             </div>
             {#if !addingNewComment}
               <Button size="sm" onclick={startAddComment}>
-                <PlusIcon class="mr-2 size-4" />
+                <PlusIcon class="size-4" />
                 Add Update
               </Button>
             {/if}
@@ -951,7 +951,7 @@
                 <Button variant="outline" size="sm" onclick={cancelAddComment}>Cancel</Button>
                 <Button size="sm" onclick={saveComment} disabled={!commentText.trim() || savingComment}>
                   {#if savingComment}
-                    <Loader class="mr-2 size-4 animate-spin" />
+                    <Loader class="size-4 animate-spin" />
                   {/if}
                   Add Update
                 </Button>
@@ -1017,7 +1017,7 @@
                         <Button variant="outline" size="sm" onclick={cancelEditComment}>Cancel</Button>
                         <Button size="sm" onclick={saveComment} disabled={!commentText.trim() || savingComment}>
                           {#if savingComment}
-                            <Loader class="mr-2 size-4 animate-spin" />
+                            <Loader class="size-4 animate-spin" />
                           {/if}
                           Save
                         </Button>

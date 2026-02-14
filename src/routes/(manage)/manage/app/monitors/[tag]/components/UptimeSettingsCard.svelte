@@ -149,9 +149,9 @@
   <Card.Footer class="flex justify-end">
     <Button onclick={saveUptimeSettings} disabled={savingUptimeSettings || !isUptimeSettingsValid}>
       {#if savingUptimeSettings}
-        <Loader class="mr-2 size-4 animate-spin" />
+        <Loader class="size-4 animate-spin" />
       {:else}
-        <SaveIcon class="mr-2 size-4" />
+        <SaveIcon class="size-4" />
       {/if}
       Save Uptime Settings
     </Button>

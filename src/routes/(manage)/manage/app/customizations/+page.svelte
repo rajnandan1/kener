@@ -339,6 +339,7 @@
   }
 
   import { onMount } from "svelte";
+  import { Spinner } from "$lib/components/ui/spinner";
 
   // Initialize on mount
   onMount(() => {
@@ -346,10 +347,10 @@
   });
 </script>
 
-<div class="flex flex-col gap-6 overflow-hidden">
+<div class="flex w-full flex-col gap-6 overflow-hidden">
   {#if loading}
-    <div class="flex h-64 items-center justify-center">
-      <Loader class="text-muted-foreground h-8 w-8 animate-spin" />
+    <div class="flex items-center justify-center py-12">
+      <Spinner class="h-6 w-6" />
     </div>
   {:else}
     <!-- Footer HTML Section -->
@@ -382,7 +383,7 @@
         <Button variant="outline" onclick={resetFooter}>Reset to Default</Button>
         <Button onclick={saveFooter} disabled={savingFooter}>
           {#if savingFooter}
-            <Loader class="mr-2 h-4 w-4 animate-spin" />
+            <Loader class="h-4 w-4 animate-spin" />
           {/if}
           Save Footer
         </Button>
@@ -566,7 +567,7 @@
       <Card.Footer class="flex justify-end border-t pt-6">
         <Button onclick={saveColors} disabled={savingColors}>
           {#if savingColors}
-            <Loader class="mr-2 h-4 w-4 animate-spin" />
+            <Loader class="h-4 w-4 animate-spin" />
           {/if}
           Save Colors
         </Button>
@@ -626,7 +627,7 @@
       <Card.Footer class="flex justify-end border-t pt-6">
         <Button onclick={saveFont} disabled={savingFont}>
           {#if savingFont}
-            <Loader class="mr-2 h-4 w-4 animate-spin" />
+            <Loader class="h-4 w-4 animate-spin" />
           {/if}
           Save Font
         </Button>
@@ -678,7 +679,7 @@
       <Card.Footer class="flex justify-end border-t pt-6">
         <Button onclick={saveTheme} disabled={savingTheme}>
           {#if savingTheme}
-            <Loader class="mr-2 h-4 w-4 animate-spin" />
+            <Loader class="h-4 w-4 animate-spin" />
           {/if}
           Save Theme
         </Button>
@@ -761,7 +762,7 @@
       <Card.Footer class="flex justify-end border-t pt-6">
         <Button onclick={saveAnnouncement} disabled={savingAnnouncement}>
           {#if savingAnnouncement}
-            <Loader class="mr-2 h-4 w-4 animate-spin" />
+            <Loader class="h-4 w-4 animate-spin" />
           {/if}
           Save Announcement
         </Button>
@@ -805,7 +806,7 @@
       <Card.Footer class="flex justify-end border-t pt-6">
         <Button onclick={saveCustomCSS} disabled={savingCSS}>
           {#if savingCSS}
-            <Loader class="mr-2 h-4 w-4 animate-spin" />
+            <Loader class="h-4 w-4 animate-spin" />
           {/if}
           Save Custom CSS
         </Button>

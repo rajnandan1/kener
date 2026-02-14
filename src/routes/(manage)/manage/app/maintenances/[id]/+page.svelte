@@ -764,15 +764,15 @@
       <Card.Footer class="flex justify-end gap-2">
         {#if !isNew}
           <Button variant="destructive" onclick={deleteMaintenance}>
-            <TrashIcon class="mr-2 size-4" />
+            <TrashIcon class="size-4" />
             Delete
           </Button>
         {/if}
         <Button onclick={saveMaintenance} disabled={saving || !isValid}>
           {#if saving}
-            <Loader class="mr-2 size-4 animate-spin" />
+            <Loader class="size-4 animate-spin" />
           {:else}
-            <SaveIcon class="mr-2 size-4" />
+            <SaveIcon class="size-4" />
           {/if}
           {isNew ? "Create Maintenance" : "Save Changes"}
         </Button>

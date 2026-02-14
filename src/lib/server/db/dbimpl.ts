@@ -70,6 +70,7 @@ class DbImpl {
   updateMonitoringData!: MonitoringRepository["updateMonitoringData"];
   deleteMonitorDataByTag!: MonitoringRepository["deleteMonitorDataByTag"];
   getStatusCountsByInterval!: MonitoringRepository["getStatusCountsByInterval"];
+  getStatusCountsByIntervalGroupedByMonitor!: MonitoringRepository["getStatusCountsByIntervalGroupedByMonitor"];
   getStatusCountsForLastN!: MonitoringRepository["getStatusCountsForLastN"];
 
   // ============ Monitors ============
@@ -411,6 +412,9 @@ class DbImpl {
     this.updateMonitoringData = this.monitoring.updateMonitoringData.bind(this.monitoring);
     this.deleteMonitorDataByTag = this.monitoring.deleteMonitorDataByTag.bind(this.monitoring);
     this.getStatusCountsByInterval = this.monitoring.getStatusCountsByInterval.bind(this.monitoring);
+    this.getStatusCountsByIntervalGroupedByMonitor = this.monitoring.getStatusCountsByIntervalGroupedByMonitor.bind(
+      this.monitoring,
+    );
     this.getStatusCountsForLastN = this.monitoring.getStatusCountsForLastN.bind(this.monitoring);
   }
 

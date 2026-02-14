@@ -194,10 +194,10 @@
               onclick={() => document.getElementById("monitor-image-input")?.click()}
             >
               {#if uploadingImage}
-                <Loader class="mr-2 h-4 w-4 animate-spin" />
+                <Loader class="h-4 w-4 animate-spin" />
                 Uploading...
               {:else}
-                <UploadIcon class="mr-2 h-4 w-4" />
+                <UploadIcon class="h-4 w-4" />
                 Upload
               {/if}
             </Button>
@@ -268,9 +268,9 @@
   <Card.Footer class="flex justify-end">
     <Button onclick={saveGeneralSettings} disabled={savingGeneral}>
       {#if savingGeneral}
-        <Loader class="mr-2 size-4 animate-spin" />
+        <Loader class="size-4 animate-spin" />
       {:else}
-        <SaveIcon class="mr-2 size-4" />
+        <SaveIcon class="size-4" />
       {/if}
       {isNew ? "Create Monitor" : "Save General Settings"}
     </Button>

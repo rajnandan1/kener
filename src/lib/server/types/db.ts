@@ -103,6 +103,10 @@ export interface TimestampStatusCount {
   maxLatency: number;
   minLatency: number;
 }
+
+export interface TimestampStatusCountByMonitor extends TimestampStatusCount {
+  monitor_tag: string;
+}
 export interface UptimeCalculatorResult {
   uptime: string;
   avgLatency: string;

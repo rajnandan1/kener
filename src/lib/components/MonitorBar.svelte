@@ -1,14 +1,11 @@
 <script lang="ts">
-  import { onMount, untrack } from "svelte";
   import * as Item from "$lib/components/ui/item/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Skeleton } from "$lib/components/ui/skeleton/index.js";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import ICONS from "$lib/icons";
-  import { getEndOfDayAtTz } from "$lib/client/datetime";
   import StatusBarCalendar from "$lib/components/StatusBarCalendar.svelte";
-  import { selectedTimezone } from "$lib/stores/timezone";
-  import type { MonitorBarResponse, BarData } from "$lib/server/api-server/monitor-bar/get.js";
+  import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get.js";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { formatDate } from "$lib/stores/datetime";
@@ -16,13 +13,14 @@
 
   interface Props {
     tag: string;
-    barCount?: number;
+    prefetchedData?: MonitorBarResponse;
+    prefetchedError?: string;
   }
 
-  let { tag, barCount = 90 }: Props = $props();
-  let loading = $state(true);
-  let data = $state<MonitorBarResponse | null>(null);
-  let error = $state<string | null>(null);
+  let { tag, prefetchedData, prefetchedError }: Props = $props();
+  let data = $derived(prefetchedData ?? null);
+  let error = $derived(prefetchedError ?? null);
+  let loading = $derived(!data && !error);
 
   const STATUS_ICON = {
     UP: ICONS.UP,
@@ -39,46 +37,6 @@
     MAINTENANCE: "stroke-maintenance",
     NO_DATA: "stroke-muted-foreground"
   } as const;
-
-  async function fetchData() {
-    loading = true;
-    error = null;
-    try {
-      const endOfDayTodayAtTz = getEndOfDayAtTz($selectedTimezone);
-      const response = await fetch(
-        clientResolver(
-          resolve,
-          `/dashboard-apis/monitor-bar?tag=${encodeURIComponent(tag)}&endOfDayTodayAtTz=${endOfDayTodayAtTz}&days=${barCount}`
-        )
-      );
-      if (!response.ok) {
-        throw new Error("Failed to fetch monitor data");
-      }
-      data = await response.json();
-    } catch (e) {
-      console.error("Failed to fetch monitor bar data:", e);
-      error = e instanceof Error ? e.message : "Unknown error";
-    } finally {
-      loading = false;
-    }
-  }
-
-  onMount(() => {
-    fetchData();
-  });
-
-  // Re-fetch when timezone changes
-  let initialLoad = true;
-  $effect(() => {
-    // Use untrack to avoid tracking loading/data state changes
-    untrack(() => {
-      if (initialLoad) {
-        initialLoad = false;
-        return;
-      }
-      fetchData();
-    });
-  });
 </script>
 
 <div>
@@ -101,7 +59,7 @@
     </Item.Root>
     <div class="mx-auto flex w-full flex-col gap-1 px-4">
       <div class="flex justify-end overflow-hidden rounded-full">
-        {#each Array(54) as _, i}
+        {#each Array(54) as _, i (i)}
           <Skeleton
             class="h-4 w-4 shrink-0 {i === 0 ? 'rounded-tl-full rounded-bl-full' : ''} {i === 53
               ? 'rounded-tr-full rounded-br-full'

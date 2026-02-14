@@ -545,10 +545,10 @@
                   onclick={() => document.getElementById("page-logo-input")?.click()}
                 >
                   {#if uploadingLogo}
-                    <Loader class="mr-2 h-4 w-4 animate-spin" />
+                    <Loader class="h-4 w-4 animate-spin" />
                     Uploading...
                   {:else}
-                    <UploadIcon class="mr-2 h-4 w-4" />
+                    <UploadIcon class="h-4 w-4" />
                     Upload
                   {/if}
                 </Button>
@@ -574,10 +574,10 @@
       <Card.Footer class="flex justify-end">
         <Button onclick={savePage} disabled={saving || !isFormValid}>
           {#if saving}
-            <Loader class="mr-2 h-4 w-4 animate-spin" />
+            <Loader class="h-4 w-4 animate-spin" />
             {isNew ? "Creating..." : "Saving..."}
           {:else}
-            <SaveIcon class="mr-2 h-4 w-4" />
+            <SaveIcon class="h-4 w-4" />
             {isNew ? "Create Page" : "Save Changes"}
           {/if}
         </Button>
@@ -615,7 +615,7 @@
               {#if addingMonitor}
                 <Loader class="h-4 w-4 animate-spin" />
               {:else}
-                <PlusIcon class="mr-2 h-4 w-4" />
+                <PlusIcon class="h-4 w-4" />
                 Add
               {/if}
             </Button>
@@ -880,10 +880,10 @@
         <Card.Footer class="flex justify-end">
           <Button onclick={savePageSettings} disabled={savingSettings}>
             {#if savingSettings}
-              <Loader class="mr-2 h-4 w-4 animate-spin" />
+              <Loader class="h-4 w-4 animate-spin" />
               Saving...
             {:else}
-              <SaveIcon class="mr-2 h-4 w-4" />
+              <SaveIcon class="h-4 w-4" />
               Save Preferences
             {/if}
           </Button>
@@ -917,10 +917,10 @@
           <Card.Footer class="flex justify-end">
             <Button variant="destructive" onclick={deletePage} disabled={!canDelete || deleting}>
               {#if deleting}
-                <Loader class="mr-2 h-4 w-4 animate-spin" />
+                <Loader class="h-4 w-4 animate-spin" />
                 Deleting...
               {:else}
-                <TrashIcon class="mr-2 h-4 w-4" />
+                <TrashIcon class="h-4 w-4" />
                 Delete Page
               {/if}
             </Button>

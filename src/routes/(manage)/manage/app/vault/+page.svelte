@@ -198,7 +198,7 @@
     </div>
     {#if !isEditing}
       <Button onclick={startCreate}>
-        <PlusIcon class="mr-2 size-4" />
+        <PlusIcon class="size-4" />
         Add Secret
       </Button>
     {/if}
@@ -236,14 +236,14 @@
         </Card.Content>
         <Card.Footer class="flex justify-end gap-2">
           <Button variant="outline" onclick={resetForm} disabled={saving}>
-            <XIcon class="mr-2 size-4" />
+            <XIcon class="size-4" />
             Cancel
           </Button>
           <Button onclick={saveSecret} disabled={saving}>
             {#if saving}
-              <Spinner class="mr-2 size-4" />
+              <Spinner class="size-4" />
             {:else}
-              <SaveIcon class="mr-2 size-4" />
+              <SaveIcon class="size-4" />
             {/if}
             {editingId ? "Update Secret" : "Save Secret"}
           </Button>
@@ -296,11 +296,11 @@
                 </div>
                 <div class="flex items-center gap-2">
                   <Button variant="outline" size="sm" onclick={() => startEdit(secret)} disabled={isEditing}>
-                    <PencilIcon class="mr-2 size-4" />
+                    <PencilIcon class="size-4" />
                     Edit
                   </Button>
                   <Button variant="destructive" size="sm" onclick={() => openDeleteDialog(secret)} disabled={isEditing}>
-                    <TrashIcon class="mr-2 size-4" />
+                    <TrashIcon class="size-4" />
                     Delete
                   </Button>
                 </div>
@@ -330,7 +330,7 @@
         class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
       >
         {#if isDeleting}
-          <Spinner class="mr-2 size-4" />
+          <Spinner class="size-4" />
         {/if}
         Delete
       </AlertDialog.Action>

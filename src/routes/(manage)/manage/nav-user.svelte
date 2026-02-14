@@ -313,10 +313,10 @@
 
         <Button type="submit" disabled={resettingPass || !isPasswordValid}>
           {#if resettingPass}
-            <LoaderIcon class="mr-2 size-4 animate-spin" />
+            <LoaderIcon class="size-4 animate-spin" />
             Updating...
           {:else if passwordSuccess}
-            <CheckIcon class="mr-2 size-4" />
+            <CheckIcon class="size-4" />
             Updated!
           {:else}
             Update Password

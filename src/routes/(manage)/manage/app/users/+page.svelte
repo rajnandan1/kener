@@ -372,7 +372,7 @@
                     onclick={() => sendVerificationEmail(user.id)}
                   >
                     {#if sendingSelfVerification}
-                      <Spinner class="mr-2 size-4" />
+                      <Spinner class="size-4" />
                     {/if}
                     Verify Email
                   </Button>
@@ -459,7 +459,7 @@
         <Button type="button" variant="outline" onclick={() => (showAddUserDialog = false)}>Cancel</Button>
         <Button type="submit" disabled={creatingUser}>
           {#if creatingUser}
-            <Spinner class="mr-2 size-4" />
+            <Spinner class="size-4" />
           {/if}
           Add User
         </Button>
@@ -517,7 +517,7 @@
                   }}
                 >
                   {#if toEditUser.actions.resendingInvitation}
-                    <Spinner class="mr-2 size-4" />
+                    <Spinner class="size-4" />
                   {/if}
                   Resend Invitation
                 </Button>
@@ -557,7 +557,7 @@
                   }}
                 >
                   {#if toEditUser.actions.updatingRole}
-                    <Spinner class="mr-2 size-4" />
+                    <Spinner class="size-4" />
                   {/if}
                   Update Role
                 </Button>
@@ -584,7 +584,7 @@
                   }}
                 >
                   {#if toEditUser.actions.deactivatingUser}
-                    <Spinner class="mr-2 size-4" />
+                    <Spinner class="size-4" />
                   {/if}
                   Deactivate User
                 </Button>
@@ -606,7 +606,7 @@
                   }}
                 >
                   {#if toEditUser.actions.activatingUser}
-                    <Spinner class="mr-2 size-4" />
+                    <Spinner class="size-4" />
                   {/if}
                   Activate User
                 </Button>

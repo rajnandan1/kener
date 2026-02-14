@@ -384,7 +384,7 @@
               {/each}
             </div>
             <Button variant="outline" size="sm" onclick={addHeader}>
-              <PlusIcon class="mr-2 size-4" />
+              <PlusIcon class="size-4" />
               Add Header
             </Button>
           </div>
@@ -501,20 +501,20 @@
         {#if !isNew}
           <Button variant="outline" onclick={testTrigger} disabled={testing === "loading"}>
             {#if testing === "loading"}
-              <Loader class="mr-2 size-4 animate-spin" />
+              <Loader class="size-4 animate-spin" />
             {:else if testing === "success"}
-              <CheckIcon class="mr-2 size-4 text-green-500" />
+              <CheckIcon class="size-4 text-green-500" />
             {:else if testing === "error"}
-              <XIcon class="mr-2 size-4 text-red-500" />
+              <XIcon class="size-4 text-red-500" />
             {/if}
             Test Trigger
           </Button>
         {/if}
         <Button onclick={saveTrigger} disabled={saving}>
           {#if saving}
-            <Loader class="mr-2 size-4 animate-spin" />
+            <Loader class="size-4 animate-spin" />
           {:else}
-            <SaveIcon class="mr-2 size-4" />
+            <SaveIcon class="size-4" />
           {/if}
           {isNew ? "Create" : "Save"} Trigger
         </Button>
@@ -535,7 +535,7 @@
         </Card.Content>
         <Card.Footer class="flex justify-end">
           <Button variant="destructive" onclick={() => (deleteDialogOpen = true)}>
-            <Trash2Icon class="mr-2 size-4" />
+            <Trash2Icon class="size-4" />
             Delete Trigger
           </Button>
         </Card.Footer>
@@ -569,9 +569,9 @@
       >
       <Button variant="destructive" onclick={deleteTrigger} disabled={isDeleting || deleteConfirmName !== trigger.name}>
         {#if isDeleting}
-          <Loader class="mr-2 size-4 animate-spin" />
+          <Loader class="size-4 animate-spin" />
         {:else}
-          <Trash2Icon class="mr-2 size-4" />
+          <Trash2Icon class="size-4" />
         {/if}
         Delete Trigger
       </Button>

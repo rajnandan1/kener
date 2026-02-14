@@ -7,6 +7,7 @@ import type {
   MonitoringDataInsert,
   AggregatedMonitoringData,
   TimestampStatusCount,
+  TimestampStatusCountByMonitor,
 } from "../../types/db.js";
 
 /**
@@ -133,30 +134,26 @@ export class MonitoringRepository extends BaseRepository {
   }
 
   async getLatestMonitoringDataAllActive(monitor_tags: string[]): Promise<MonitoringData[]> {
-    const latestTimestamps = await this.knex("monitoring_data")
-      .select("monitor_tag")
-      .select(this.knex.raw("MAX(timestamp) as max_timestamp"))
-      .whereIn("monitor_tag", monitor_tags)
-      .groupBy("monitor_tag");
-
-    if (!latestTimestamps || latestTimestamps.length === 0) {
+    if (!monitor_tags || monitor_tags.length === 0) {
       return [];
     }
 
-    const conditions = latestTimestamps.map((item: { monitor_tag: string; max_timestamp: number }) => {
-      return function (this: KnexType.QueryBuilder) {
-        this.where(function (this: KnexType.QueryBuilder) {
-          this.where("monitor_tag", item.monitor_tag).andWhere("timestamp", item.max_timestamp);
-        });
-      };
-    });
+    const latestPerMonitor = this.knex("monitoring_data")
+      .select("monitor_tag")
+      .max("timestamp as max_timestamp")
+      .whereIn("monitor_tag", monitor_tags)
+      .groupBy("monitor_tag")
+      .as("latest_per_monitor");
 
-    let query = this.knex("monitoring_data").where(conditions[0]);
-    for (let i = 1; i < conditions.length; i++) {
-      query = query.orWhere(conditions[i]);
-    }
-
-    return await query;
+    return await this.knex("monitoring_data as md")
+      .join(latestPerMonitor, function (this: KnexType.JoinClause) {
+        this.on("md.monitor_tag", "=", "latest_per_monitor.monitor_tag").andOn(
+          "md.timestamp",
+          "=",
+          "latest_per_monitor.max_timestamp",
+        );
+      })
+      .select("md.*");
   }
 
   async getLastHeartbeat(monitor_tag: string): Promise<MonitoringData | undefined> {
@@ -253,9 +250,10 @@ export class MonitoringRepository extends BaseRepository {
       .first();
   }
 
-  async background(): Promise<number> {
-    const ninetyDaysAgo = GetMinuteStartNowTimestampUTC() - 86400 * 100;
-    return await this.knex("monitoring_data").where("timestamp", "<", ninetyDaysAgo).del();
+  async background(retentionDays: number = 100): Promise<number> {
+    const safeRetentionDays = Math.max(1, Math.floor(retentionDays || 100));
+    const cutoffTimestamp = GetMinuteStartNowTimestampUTC() - 86400 * safeRetentionDays;
+    return await this.knex("monitoring_data").where("timestamp", "<", cutoffTimestamp).del();
   }
 
   async consecutivelyStatusFor(monitor_tag: string, status: string, lastX: number): Promise<boolean> {
@@ -455,6 +453,79 @@ export class MonitoringRepository extends BaseRepository {
     }
 
     return rows.map((row: any) => ({
+      ts: Number(row.ts),
+      countOfUp: Number(row.count_of_up) || 0,
+      countOfDown: Number(row.count_of_down) || 0,
+      countOfDegraded: Number(row.count_of_degraded) || 0,
+      countOfMaintenance: Number(row.count_of_maintenance) || 0,
+      avgLatency: Number(row.avg_latency) || 0,
+      maxLatency: Number(row.max_latency) || 0,
+      minLatency: Number(row.min_latency) || 0,
+    }));
+  }
+
+  /**
+   * Get aggregated status counts grouped by monitor_tag and timestamp intervals
+   * @param monitorTags - Monitor tags to query
+   * @param startTimestamp - The starting timestamp (UTC seconds)
+   * @param intervalInSeconds - The interval size in seconds (e.g., 86400 for 1 day)
+   * @param numberOfPoints - Number of intervals/points to return
+   */
+  async getStatusCountsByIntervalGroupedByMonitor(
+    monitorTags: string[],
+    startTimestamp: number,
+    intervalInSeconds: number,
+    numberOfPoints: number,
+  ): Promise<Array<TimestampStatusCountByMonitor>> {
+    if (!monitorTags || monitorTags.length === 0) {
+      return [];
+    }
+
+    const endTimestamp = startTimestamp + numberOfPoints * intervalInSeconds;
+
+    const client = (this.knex.client as any).config.client;
+    const isSQLite = client === "better-sqlite3" || client === "sqlite3";
+
+    const tsExpression = isSQLite ? `CAST((timestamp - ?) / ? AS INT) * ? + ?` : `FLOOR((timestamp - ?) / ?) * ? + ?`;
+
+    const sql = `
+      SELECT
+        monitor_tag,
+        ${tsExpression} as ts,
+        SUM(CASE WHEN status = 'UP' THEN 1 ELSE 0 END) AS count_of_up,
+        SUM(CASE WHEN status = 'DOWN' THEN 1 ELSE 0 END) AS count_of_down,
+        SUM(CASE WHEN status = 'DEGRADED' THEN 1 ELSE 0 END) AS count_of_degraded,
+        SUM(CASE WHEN status = 'MAINTENANCE' THEN 1 ELSE 0 END) AS count_of_maintenance,
+        AVG(latency) AS avg_latency,
+        MAX(latency) AS max_latency,
+        MIN(latency) AS min_latency
+      FROM monitoring_data
+      WHERE monitor_tag IN (${monitorTags.map(() => "?").join(", ")}) AND timestamp >= ? AND timestamp < ?
+      GROUP BY monitor_tag, ts
+      ORDER BY monitor_tag ASC, ts ASC
+    `;
+
+    const bindings = [
+      startTimestamp,
+      intervalInSeconds,
+      intervalInSeconds,
+      startTimestamp,
+      ...monitorTags,
+      startTimestamp,
+      endTimestamp,
+    ];
+
+    const result = await this.knex.raw(sql, bindings);
+
+    let rows: any[];
+    if (Array.isArray(result)) {
+      rows = Array.isArray(result[0]) ? result[0] : result;
+    } else {
+      rows = result.rows || [];
+    }
+
+    return rows.map((row: any) => ({
+      monitor_tag: row.monitor_tag,
       ts: Number(row.ts),
       countOfUp: Number(row.count_of_up) || 0,
       countOfDown: Number(row.count_of_down) || 0,

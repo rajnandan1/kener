@@ -150,10 +150,10 @@
   <Card.Footer class="flex justify-end">
     <Button onclick={modifyMonitoringData} disabled={modifyingData}>
       {#if modifyingData}
-        <Loader class="mr-2 size-4 animate-spin" />
+        <Loader class="size-4 animate-spin" />
         Saving...
       {:else}
-        <SaveIcon class="mr-2 size-4" />
+        <SaveIcon class="size-4" />
         Save Changes
       {/if}
     </Button>

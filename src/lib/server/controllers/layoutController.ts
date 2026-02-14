@@ -5,7 +5,6 @@ import type { UserRecordPublic } from "$lib/server/types/db";
 import seedSiteData from "$lib/server/db/seedSiteData";
 import {
   GetAllSiteData,
-  IsSetupComplete,
   GetLoggedInSession,
   GetLocaleFromCookie,
   GetUsersCount,
@@ -75,16 +74,19 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
   const md = new MobileDetect(userAgent);
   const isMobile = !!md.mobile();
 
-  const isSetupComplete = await IsSetupComplete();
-  const loggedInUser = await GetLoggedInSession(cookies);
-  const siteData = await GetAllSiteData();
-  const userCounts = await GetUsersCount();
+  const [loggedInUser, siteData, userCounts, allPagesData] = await Promise.all([
+    GetLoggedInSession(cookies),
+    GetAllSiteData(),
+    GetUsersCount(),
+    GetAllPages(),
+  ]);
+
+  const isSetupComplete = process.env.KENER_SECRET_KEY !== undefined && Object.keys(siteData).length > 0;
 
   const selectedLang = GetLocaleFromCookie(siteData, cookies);
   const siteStatusColors = siteData.colors;
   const siteStatusColorsDark = siteData.colorsDark || siteStatusColors;
 
-  const allPagesData = await GetAllPages();
   const allPages: PageNavItem[] = allPagesData.map((p) => ({
     page_title: p.page_title,
     page_path: p.page_path,
@@ -101,8 +103,10 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     isSubsEnabled = true;
   }
 
-  const languageSetting = siteData.i18n;
-  languageSetting.locales = languageSetting.locales.filter((l) => l.selected);
+  const languageSetting = {
+    ...(siteData.i18n || seedSiteData.i18n),
+    locales: (siteData.i18n?.locales || seedSiteData.i18n.locales).filter((l) => l.selected).map((l) => ({ ...l })),
+  };
   const isTimezoneEnabled = !!siteData.tzToggle && siteData.tzToggle !== "NO";
   const isThemeToggleEnabled = !!siteData.themeToggle && siteData.themeToggle !== "NO";
   const defaultSiteTheme = siteData.theme || "system";

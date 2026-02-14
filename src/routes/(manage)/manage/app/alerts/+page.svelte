@@ -15,6 +15,7 @@
   import { goto } from "$app/navigation";
   import { toast } from "svelte-sonner";
   import GC from "$lib/global-constants";
+  import { getAlertText } from "$lib/alerts/alert-text";
   import type { MonitorAlertConfigWithTriggers } from "$lib/server/types/db";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
@@ -114,20 +115,6 @@
     }
   }
 
-  // Get alert description
-  function getAlertDescription(config: MonitorAlertConfigWithTriggers): string {
-    const { alert_for, alert_value, failure_threshold, success_threshold } = config;
-
-    if (alert_for === GC.STATUS) {
-      return `Alert when ${failure_threshold} consecutive checks result in ${alert_value}. Resolve after ${success_threshold} successful check(s).`;
-    } else if (alert_for === GC.LATENCY) {
-      return `Alert when latency exceeds ${alert_value}ms for ${failure_threshold} consecutive checks. Resolve after ${success_threshold} check(s) below threshold.`;
-    } else if (alert_for === GC.UPTIME) {
-      return `Alert when uptime falls below ${alert_value}% for ${failure_threshold} checks. Resolve after ${success_threshold} check(s) above threshold.`;
-    }
-    return "";
-  }
-
   // Handle monitor filter change
   function handleMonitorChange(value: string | undefined) {
     monitorFilter = value || "";
@@ -201,7 +188,7 @@
                   </p>
                 </div>
                 <Button onclick={() => goto(clientResolver(resolve, "/manage/app/alerts/new"))}>
-                  <PlusIcon class="mr-2 size-4" />
+                  <PlusIcon class="size-4" />
                   Create Alert
                 </Button>
               </div>
@@ -230,21 +217,28 @@
                 <Tooltip.Root>
                   <Tooltip.Trigger>
                     <div class="max-w-xs space-y-1">
-                      <p class="text-muted-foreground line-clamp-2 text-sm">{getAlertDescription(config)}</p>
-                      {#if config.alert_description}
-                        <p class="text-muted-foreground line-clamp-1 text-xs italic">{config.alert_description}</p>
-                      {/if}
-                      {#if config.create_incident === GC.YES}
-                        <Badge variant="outline" class="text-xs">Creates Incident</Badge>
-                      {/if}
+                      <p class="text-muted-foreground line-clamp-2 text-sm">
+                        {getAlertText({
+                          kind: "description",
+                          alert_for: config.alert_for,
+                          alert_value: config.alert_value,
+                          failure_threshold: config.failure_threshold,
+                          success_threshold: config.success_threshold
+                        })}
+                      </p>
                     </div>
                   </Tooltip.Trigger>
                   <Tooltip.Content class="max-w-md">
                     <div class="space-y-2">
-                      <p class="text-sm">{getAlertDescription(config)}</p>
-                      {#if config.alert_description}
-                        <p class="text-muted-foreground text-xs italic">{config.alert_description}</p>
-                      {/if}
+                      <p class="text-sm">
+                        {getAlertText({
+                          kind: "description",
+                          alert_for: config.alert_for,
+                          alert_value: config.alert_value,
+                          failure_threshold: config.failure_threshold,
+                          success_threshold: config.success_threshold
+                        })}
+                      </p>
                     </div>
                   </Tooltip.Content>
                 </Tooltip.Root>

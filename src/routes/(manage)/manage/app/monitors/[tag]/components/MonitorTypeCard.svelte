@@ -372,7 +372,7 @@
               </div>
               <div class="flex justify-end">
                 <Button variant="outline" size="sm" onclick={testMonitor} disabled={testingMonitor}>
-                  <PlayIcon class="mr-2 size-3" />
+                  <PlayIcon class="size-3" />
                   Run Test Again
                 </Button>
               </div>
@@ -384,9 +384,9 @@
 
     <Button onclick={saveTypeSettings} disabled={savingType || !isTypeSettingsValid}>
       {#if savingType}
-        <Loader class="mr-2 size-4 animate-spin" />
+        <Loader class="size-4 animate-spin" />
       {:else}
-        <SaveIcon class="mr-2 size-4" />
+        <SaveIcon class="size-4" />
       {/if}
       Save Monitor Type Settings
     </Button>

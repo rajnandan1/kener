@@ -196,12 +196,62 @@ export interface PageDashboardData {
   allPages: PageNavItem[];
 }
 
+const BuildPageStatus = (latestData: Array<{ status?: string | null; latency?: number | null }>, nowTs: number) => {
+  let upsInLatestData = 0;
+  let downsInLatestData = 0;
+  let degradedsInLatestData = 0;
+  let maintenancesInLatestData = 0;
+  let latencySum = 0;
+  let maxLatency = 0;
+  let minLatency = Infinity;
+
+  for (const data of latestData) {
+    if (data.status === GC.UP) {
+      upsInLatestData++;
+    } else if (data.status === GC.DOWN) {
+      downsInLatestData++;
+    } else if (data.status === GC.DEGRADED) {
+      degradedsInLatestData++;
+    } else if (data.status === GC.MAINTENANCE) {
+      maintenancesInLatestData++;
+    }
+
+    const latency = data.latency || 0;
+    latencySum += latency;
+    if (latency > maxLatency) {
+      maxLatency = latency;
+    }
+    if (latency < minLatency) {
+      minLatency = latency;
+    }
+  }
+
+  const item: TimestampStatusCount = {
+    ts: nowTs,
+    countOfUp: upsInLatestData,
+    countOfDown: downsInLatestData,
+    countOfDegraded: degradedsInLatestData,
+    countOfMaintenance: maintenancesInLatestData,
+    avgLatency: latencySum / (latestData.length || 1),
+    maxLatency,
+    minLatency: minLatency === Infinity ? 0 : minLatency,
+  };
+
+  return {
+    statusSummary: GetStatusSummary(item),
+    statusClass: GetStatusBgColor(item),
+  };
+};
+
 /**
  * Get all dashboard data for a status page
  * @param pagePath - The URL path of the page (e.g., "/" or "/api")
  * @returns Dashboard data or null if page not found
  */
-export const GetPageDashboardData = async (pagePath: string): Promise<PageDashboardData | null> => {
+export const GetPageDashboardData = async (
+  pagePath: string,
+  allPagesInput?: PageNavItem[],
+): Promise<PageDashboardData | null> => {
   // Fetch page by path with monitors
   const pageData = await GetPageByPathWithMonitors(pagePath);
   if (!pageData) {
@@ -226,89 +276,6 @@ export const GetPageDashboardData = async (pagePath: string): Promise<PageDashbo
   }
   const nowTs = GetMinuteStartNowTimestampUTC();
 
-  // Fetch data based on settings
-  const [latestData, allPagesData] = await Promise.all([GetLatestMonitoringDataAllActive(monitorTags), GetAllPages()]);
-
-  // Incidents - fetch based on settings
-  let ongoingIncidents: IncidentForMonitorList[] = [];
-  let recentConcludedMaintenances: IncidentForMonitorList[] = [];
-  if (settings.incidents.enabled) {
-    if (settings.incidents.ongoing.show) {
-      ongoingIncidents = await GetOngoingIncidentsForMonitorList(monitorTags);
-    }
-    if (settings.incidents.resolved.show) {
-      recentConcludedMaintenances = await GetResolvedIncidentsForMonitorList(
-        monitorTags,
-        settings.incidents.resolved.maxCount,
-        settings.incidents.resolved.daysInPast,
-      );
-    }
-  }
-
-  // Maintenances - fetch based on settings
-  let ongoingMaintenances: MaintenanceEventRecordDetailed[] = [];
-  let upcomingMaintenances: MaintenanceEventRecordDetailed[] = [];
-  let pastMaintenances: MaintenanceEventsMonitorList[] = [];
-  if (settings.include_maintenances.enabled) {
-    if (settings.include_maintenances.ongoing.show) {
-      ongoingMaintenances = await GetOngoingMaintenances(monitorTags, nowTs);
-    }
-    if (settings.include_maintenances.ongoing.past.show) {
-      pastMaintenances = await GetPastMaintenanceEventsForMonitorList(
-        monitorTags,
-        settings.include_maintenances.ongoing.past.maxCount,
-        settings.include_maintenances.ongoing.past.daysInPast,
-      );
-    }
-    if (settings.include_maintenances.ongoing.upcoming.show) {
-      upcomingMaintenances = await GetUpcomingMaintenances(
-        monitorTags,
-        settings.include_maintenances.ongoing.upcoming.daysInFuture,
-        nowTs,
-        settings.include_maintenances.ongoing.upcoming.maxCount,
-      );
-    }
-  }
-
-  // Map to lightweight page nav items
-  const allPages: PageNavItem[] = allPagesData.map((p) => ({
-    page_title: p.page_title,
-    page_path: p.page_path,
-  }));
-
-  const upsInLatestData = latestData.filter((data) => data.status === GC.UP).length;
-  const downsInLatestData = latestData.filter((data) => data.status === GC.DOWN).length;
-  const degradedsInLatestData = latestData.filter((data) => data.status === GC.DEGRADED).length;
-  const maintenancesInLatestData = latestData.filter((data) => data.status === GC.MAINTENANCE).length;
-  const avgLatencyInLatestData =
-    latestData.reduce((sum, data) => sum + (data.latency || 0), 0) / (latestData.length || 1);
-  const maxLatencyInLatestData = latestData.reduce(
-    (max, data) => (data.latency && data.latency > max ? data.latency : max),
-    0,
-  );
-  const minLatencyInLatestData = latestData.reduce(
-    (min, data) => (data.latency && data.latency < min ? data.latency : min),
-    Infinity,
-  );
-  const item: TimestampStatusCount = {
-    ts: nowTs,
-    countOfUp: upsInLatestData,
-    countOfDown: downsInLatestData,
-    countOfDegraded: degradedsInLatestData,
-    countOfMaintenance: maintenancesInLatestData,
-    avgLatency: avgLatencyInLatestData,
-    maxLatency: maxLatencyInLatestData,
-    minLatency: minLatencyInLatestData === Infinity ? 0 : minLatencyInLatestData,
-  };
-
-  const statusBgClass = GetStatusBgColor(item);
-  const statusSummary = GetStatusSummary(item);
-
-  const pageStatus: { statusSummary: string; statusClass: string } = {
-    statusSummary: statusSummary,
-    statusClass: statusBgClass,
-  };
-
   // Convert to PageRecordTyped with parsed settings
   const pageDetailsTyped: PageRecordTyped = {
     id: pageDetails.id,
@@ -321,6 +288,74 @@ export const GetPageDashboardData = async (pagePath: string): Promise<PageDashbo
     created_at: pageDetails.created_at,
     updated_at: pageDetails.updated_at,
   };
+
+  const allPagesPromise: Promise<PageNavItem[]> = allPagesInput
+    ? Promise.resolve(allPagesInput)
+    : GetAllPages().then((allPagesData) =>
+        allPagesData.map((p) => ({
+          page_title: p.page_title,
+          page_path: p.page_path,
+        })),
+      );
+
+  if (monitorTags.length === 0) {
+    const allPages = await allPagesPromise;
+    return {
+      pageStatus: BuildPageStatus([], nowTs),
+      recentConcludedMaintenances: [],
+      ongoingIncidents: [],
+      ongoingMaintenances: [],
+      upcomingMaintenances: [],
+      pastMaintenances: [],
+      monitorTags,
+      pageDetails: pageDetailsTyped,
+      allPages,
+    };
+  }
+
+  // Fetch all dashboard data in parallel (respecting feature toggles)
+  const [
+    latestData,
+    allPages,
+    ongoingIncidents,
+    recentConcludedMaintenances,
+    ongoingMaintenances,
+    pastMaintenances,
+    upcomingMaintenances,
+  ] = await Promise.all([
+    GetLatestMonitoringDataAllActive(monitorTags),
+    allPagesPromise,
+    settings.incidents.enabled && settings.incidents.ongoing.show
+      ? GetOngoingIncidentsForMonitorList(monitorTags)
+      : Promise.resolve([] as IncidentForMonitorList[]),
+    settings.incidents.enabled && settings.incidents.resolved.show
+      ? GetResolvedIncidentsForMonitorList(
+          monitorTags,
+          settings.incidents.resolved.maxCount,
+          settings.incidents.resolved.daysInPast,
+        )
+      : Promise.resolve([] as IncidentForMonitorList[]),
+    settings.include_maintenances.enabled && settings.include_maintenances.ongoing.show
+      ? GetOngoingMaintenances(monitorTags, nowTs)
+      : Promise.resolve([] as MaintenanceEventRecordDetailed[]),
+    settings.include_maintenances.enabled && settings.include_maintenances.ongoing.past.show
+      ? GetPastMaintenanceEventsForMonitorList(
+          monitorTags,
+          settings.include_maintenances.ongoing.past.maxCount,
+          settings.include_maintenances.ongoing.past.daysInPast,
+        )
+      : Promise.resolve([] as MaintenanceEventsMonitorList[]),
+    settings.include_maintenances.enabled && settings.include_maintenances.ongoing.upcoming.show
+      ? GetUpcomingMaintenances(
+          monitorTags,
+          settings.include_maintenances.ongoing.upcoming.daysInFuture,
+          nowTs,
+          settings.include_maintenances.ongoing.upcoming.maxCount,
+        )
+      : Promise.resolve([] as MaintenanceEventRecordDetailed[]),
+  ]);
+
+  const pageStatus = BuildPageStatus(latestData, nowTs);
 
   return {
     pageStatus,

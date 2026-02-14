@@ -381,7 +381,7 @@
             <Spinner class="size-5" />
           {/if}
           <Button onclick={() => (showAddDialog = true)}>
-            <PlusIcon class="mr-2 h-4 w-4" />
+            <PlusIcon class="h-4 w-4" />
             Add Subscriber
           </Button>
         </div>
@@ -553,7 +553,7 @@
       </Button>
       <Button onclick={addSubscriber} disabled={addingSubscriber}>
         {#if addingSubscriber}
-          <Spinner class="mr-2 size-4" />
+          <Spinner class="size-4" />
           Adding...
         {:else}
           Add Subscriber
@@ -593,7 +593,7 @@
       </Button>
       <Button variant="destructive" onclick={deleteSubscriber} disabled={isDeleting}>
         {#if isDeleting}
-          <Spinner class="mr-2 size-4" />
+          <Spinner class="size-4" />
           Deleting...
         {:else}
           Delete

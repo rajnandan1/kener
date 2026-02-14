@@ -236,9 +236,9 @@
       <Card.Footer class="flex justify-end">
         <Button onclick={saveLanguages} disabled={savingLanguages}>
           {#if savingLanguages}
-            <Loader class="mr-2 h-4 w-4 animate-spin" />
+            <Loader class="h-4 w-4 animate-spin" />
           {:else}
-            <SaveIcon class="mr-2 h-4 w-4" />
+            <SaveIcon class="h-4 w-4" />
           {/if}
           Save Languages
         </Button>
@@ -273,9 +273,9 @@
       <Card.Footer class="flex justify-end">
         <Button onclick={saveTimezone} disabled={savingTimezone}>
           {#if savingTimezone}
-            <Loader class="mr-2 h-4 w-4 animate-spin" />
+            <Loader class="h-4 w-4 animate-spin" />
           {:else}
-            <SaveIcon class="mr-2 h-4 w-4" />
+            <SaveIcon class="h-4 w-4" />
           {/if}
           Save Timezone
         </Button>

@@ -16,6 +16,7 @@
   import { IsValidURL } from "$lib/clientTools";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import type { DataRetentionPolicy } from "$lib/types/site.js";
 
   interface NavItem {
     name: string;
@@ -31,6 +32,7 @@
   let savingFavicon = $state(false);
   let savingNav = $state(false);
   let savingSubMenuOptions = $state(false);
+  let savingDataRetentionPolicy = $state(false);
   let uploadingLogo = $state(false);
   let uploadingFavicon = $state(false);
 
@@ -51,6 +53,11 @@
     showCopyCurrentPageLink: true,
     showShareBadgeMonitor: true,
     showShareEmbedMonitor: true
+  });
+
+  let dataRetentionPolicy = $state<DataRetentionPolicy>({
+    enabled: true,
+    retentionDays: 90
   });
 
   // Validation
@@ -92,6 +99,10 @@
             showShareEmbedMonitor: data.subMenuOptions.showShareEmbedMonitor ?? true
           };
         }
+        dataRetentionPolicy = {
+          enabled: data.dataRetentionPolicy?.enabled ?? true,
+          retentionDays: data.dataRetentionPolicy?.retentionDays ?? 90
+        };
       }
     } catch (e) {
       toast.error("Failed to load site data");
@@ -231,6 +242,37 @@
       toast.error("Failed to save sub menu options");
     } finally {
       savingSubMenuOptions = false;
+    }
+  }
+
+  async function saveDataRetentionPolicy() {
+    savingDataRetentionPolicy = true;
+    try {
+      const safeRetentionDays = Math.max(1, Number(dataRetentionPolicy.retentionDays) || 90);
+      const payload: DataRetentionPolicy = {
+        enabled: dataRetentionPolicy.enabled,
+        retentionDays: safeRetentionDays
+      };
+
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "storeSiteData",
+          data: { dataRetentionPolicy: JSON.stringify(payload) }
+        })
+      });
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        dataRetentionPolicy.retentionDays = safeRetentionDays;
+        toast.success("Data retention policy saved successfully");
+      }
+    } catch (e) {
+      toast.error("Failed to save data retention policy");
+    } finally {
+      savingDataRetentionPolicy = false;
     }
   }
 
@@ -422,10 +464,10 @@
       <Card.Footer class="flex justify-end">
         <Button onclick={saveSiteInfo} disabled={savingSiteInfo || !isValidSiteInfo} class="cursor-pointer">
           {#if savingSiteInfo}
-            <Loader class="mr-2 h-4 w-4 animate-spin" />
+            <Loader class="h-4 w-4 animate-spin" />
             Saving...
           {:else}
-            <SaveIcon class="mr-2 h-4 w-4" />
+            <SaveIcon class="h-4 w-4" />
             Save
           {/if}
         </Button>
@@ -458,10 +500,10 @@
                 onclick={() => document.getElementById("logo-input")?.click()}
               >
                 {#if uploadingLogo}
-                  <Loader class="mr-2 h-4 w-4 animate-spin" />
+                  <Loader class="h-4 w-4 animate-spin" />
                   Uploading...
                 {:else}
-                  <UploadIcon class="mr-2 h-4 w-4" />
+                  <UploadIcon class="h-4 w-4" />
                   Upload Logo
                 {/if}
               </Button>
@@ -488,10 +530,10 @@
       <Card.Footer class="flex justify-end">
         <Button onclick={saveLogo} disabled={savingLogo} class="cursor-pointer">
           {#if savingLogo}
-            <Loader class="mr-2 h-4 w-4 animate-spin" />
+            <Loader class="h-4 w-4 animate-spin" />
             Saving...
           {:else}
-            <SaveIcon class="mr-2 h-4 w-4" />
+            <SaveIcon class="h-4 w-4" />
             Save
           {/if}
         </Button>
@@ -528,10 +570,10 @@
                 onclick={() => document.getElementById("favicon-input")?.click()}
               >
                 {#if uploadingFavicon}
-                  <Loader class="mr-2 h-4 w-4 animate-spin" />
+                  <Loader class="h-4 w-4 animate-spin" />
                   Uploading...
                 {:else}
-                  <UploadIcon class="mr-2 h-4 w-4" />
+                  <UploadIcon class="h-4 w-4" />
                   Upload Favicon
                 {/if}
               </Button>
@@ -558,10 +600,10 @@
       <Card.Footer class="flex justify-end">
         <Button onclick={saveFavicon} disabled={savingFavicon} class="cursor-pointer">
           {#if savingFavicon}
-            <Loader class="mr-2 h-4 w-4 animate-spin" />
+            <Loader class="h-4 w-4 animate-spin" />
             Saving...
           {:else}
-            <SaveIcon class="mr-2 h-4 w-4" />
+            <SaveIcon class="h-4 w-4" />
             Save
           {/if}
         </Button>
@@ -575,7 +617,7 @@
         <Card.Description>Add custom navigation links to your status page header</Card.Description>
       </Card.Header>
       <Card.Content class="space-y-4">
-        {#each nav as item, index}
+        {#each nav as item, index (index)}
           <div class="flex items-end gap-2 rounded-lg border p-3">
             <div class="grid flex-1 gap-2 sm:grid-cols-3">
               <div class="space-y-1">
@@ -624,17 +666,17 @@
           </div>
         {/each}
         <Button variant="outline" onclick={addNavItem}>
-          <Plus class="mr-2 h-4 w-4" />
+          <Plus class="h-4 w-4" />
           Add Navigation Item
         </Button>
       </Card.Content>
       <Card.Footer class="flex justify-end">
         <Button onclick={saveNavigation} disabled={savingNav} class="cursor-pointer">
           {#if savingNav}
-            <Loader class="mr-2 h-4 w-4 animate-spin" />
+            <Loader class="h-4 w-4 animate-spin" />
             Saving...
           {:else}
-            <SaveIcon class="mr-2 h-4 w-4" />
+            <SaveIcon class="h-4 w-4" />
             Save
           {/if}
         </Button>
@@ -675,10 +717,50 @@
       <Card.Footer class="flex justify-end">
         <Button onclick={saveSubMenuOptions} disabled={savingSubMenuOptions} class="cursor-pointer">
           {#if savingSubMenuOptions}
-            <Loader class="mr-2 h-4 w-4 animate-spin" />
+            <Loader class="h-4 w-4 animate-spin" />
             Saving...
           {:else}
-            <SaveIcon class="mr-2 h-4 w-4" />
+            <SaveIcon class="h-4 w-4" />
+            Save
+          {/if}
+        </Button>
+      </Card.Footer>
+    </Card.Root>
+
+    <!-- Data Retention Policy Card -->
+    <Card.Root>
+      <Card.Header>
+        <Card.Title>Data Retention Policy</Card.Title>
+        <Card.Description>Configure automatic cleanup for old monitor status data</Card.Description>
+      </Card.Header>
+      <Card.Content class="space-y-6">
+        <div class="flex items-center justify-between">
+          <div class="space-y-0.5">
+            <Label>Enable Data Retention</Label>
+            <p class="text-muted-foreground text-xs">Automatically remove status data older than retention days</p>
+          </div>
+          <Switch bind:checked={dataRetentionPolicy.enabled} />
+        </div>
+
+        <div class="space-y-2">
+          <Label for="retention-days">Retention Days</Label>
+          <Input
+            id="retention-days"
+            type="number"
+            min="1"
+            bind:value={dataRetentionPolicy.retentionDays}
+            disabled={!dataRetentionPolicy.enabled}
+          />
+          <p class="text-muted-foreground text-xs">Default is 90 days if not configured.</p>
+        </div>
+      </Card.Content>
+      <Card.Footer class="flex justify-end">
+        <Button onclick={saveDataRetentionPolicy} disabled={savingDataRetentionPolicy} class="cursor-pointer">
+          {#if savingDataRetentionPolicy}
+            <Loader class="h-4 w-4 animate-spin" />
+            Saving...
+          {:else}
+            <SaveIcon class="h-4 w-4" />
             Save
           {/if}
         </Button>

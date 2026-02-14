@@ -27,6 +27,7 @@
   } from "$lib/server/types/db";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import { getAlertText } from "$lib/alerts/alert-text";
 
   let { data } = $props();
   const alertConfigId = $derived(data.alert_config_id);
@@ -78,31 +79,17 @@
   ];
 
   // Computed labels
-  const alertValueLabel = $derived(() => {
-    switch (form.alert_for) {
-      case GC.STATUS:
-        return "Status Value";
-      case GC.LATENCY:
-        return "Latency Threshold (ms)";
-      case GC.UPTIME:
-        return "Uptime Threshold (%)";
-      default:
-        return "Value";
-    }
-  });
-
-  const alertValueHelp = $derived(() => {
-    switch (form.alert_for) {
-      case GC.STATUS:
-        return `Alert when monitor status equals this value`;
-      case GC.LATENCY:
-        return `Alert when latency exceeds this value (in milliseconds)`;
-      case GC.UPTIME:
-        return `Alert when uptime falls below this percentage`;
-      default:
-        return "";
-    }
-  });
+  const alertValueLabel = $derived(getAlertText({ kind: "label", alert_for: form.alert_for }));
+  const alertValueHelp = $derived(getAlertText({ kind: "help", alert_for: form.alert_for }));
+  const alertDescriptionText = $derived(
+    getAlertText({
+      kind: "description",
+      alert_for: form.alert_for,
+      alert_value: form.alert_value,
+      failure_threshold: Number(form.failure_threshold),
+      success_threshold: Number(form.success_threshold)
+    })
+  );
 
   // Handlers
   function handleAlertForChange(newValue: AlertForType) {
@@ -346,7 +333,7 @@
 
         <!-- Alert Value -->
         <div class="flex flex-col gap-2">
-          <Label for="alert-value">{alertValueLabel()}</Label>
+          <Label for="alert-value">{alertValueLabel}</Label>
           {#if form.alert_for === "STATUS"}
             <Select.Root type="single" value={form.alert_value} onValueChange={(v) => v && (form.alert_value = v)}>
               <Select.Trigger id="alert-value" class="w-full">
@@ -367,7 +354,7 @@
               bind:value={form.alert_value}
             />
           {/if}
-          <p class="text-muted-foreground text-xs">{alertValueHelp()}</p>
+          <p class="text-muted-foreground text-xs">{alertValueHelp}</p>
         </div>
 
         <!-- Thresholds -->
@@ -383,6 +370,12 @@
             <Input id="success-threshold" type="number" min="1" bind:value={form.success_threshold} />
             <p class="text-muted-foreground text-xs">Consecutive successes to resolve</p>
           </div>
+        </div>
+
+        <!-- Generated Alert Text -->
+        <div class="flex flex-col gap-2">
+          <Label>Details</Label>
+          <p class="text-muted-foreground bg-muted/40 rounded-md border p-3 text-sm">{alertDescriptionText}</p>
         </div>
 
         <!-- Severity -->
@@ -488,7 +481,7 @@
         <Button variant="outline" onclick={() => goto(clientResolver(resolve, "/manage/app/alerts"))}>Cancel</Button>
         <Button onclick={saveAlertConfig} disabled={saving}>
           {#if saving}
-            <Spinner class="mr-2 size-4" />
+            <Spinner class="size-4" />
           {/if}
           {isNew ? "Create Alert" : "Save Changes"}
         </Button>
@@ -504,7 +497,7 @@
         </Card.Header>
         <Card.Content>
           <Button variant="destructive" onclick={() => (deleteDialogOpen = true)}>
-            <TrashIcon class="mr-2 size-4" />
+            <TrashIcon class="size-4" />
             Delete Alert
           </Button>
         </Card.Content>

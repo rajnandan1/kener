@@ -137,6 +137,10 @@ const seedSiteData = {
     showShareBadgeMonitor: true,
     showShareEmbedMonitor: true,
   },
+  dataRetentionPolicy: {
+    enabled: true,
+    retentionDays: 90,
+  },
 };
 
 export default seedSiteData;

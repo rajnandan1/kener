@@ -27,6 +27,7 @@
     AlertSeverityType,
     YesNoType
   } from "$lib/server/types/db";
+  import { getAlertText } from "$lib/alerts/alert-text";
   import { resolve } from "$app/paths";
   import { toast } from "svelte-sonner";
 
@@ -85,31 +86,8 @@
   ];
 
   // Computed - value label based on alert type
-  const alertValueLabel = $derived(() => {
-    switch (form.alert_for) {
-      case GC.STATUS:
-        return "Status Value";
-      case GC.LATENCY:
-        return "Latency Threshold (ms)";
-      case GC.UPTIME:
-        return "Uptime Threshold (%)";
-      default:
-        return "Value";
-    }
-  });
-
-  const alertValueHelp = $derived(() => {
-    switch (form.alert_for) {
-      case GC.STATUS:
-        return `Alert when monitor status equals this value`;
-      case GC.LATENCY:
-        return `Alert when latency exceeds this value (in milliseconds)`;
-      case GC.UPTIME:
-        return `Alert when uptime falls below this percentage`;
-      default:
-        return "";
-    }
-  });
+  const alertValueLabel = $derived(getAlertText({ kind: "label", alert_for: form.alert_for }));
+  const alertValueHelp = $derived(getAlertText({ kind: "help", alert_for: form.alert_for }));
 
   // Reset alert value when alert_for changes
   function handleAlertForChange(newValue: AlertForType) {
@@ -297,20 +275,6 @@
     }
   }
 
-  // Helper functions
-  function getAlertDescription(alert: MonitorAlertConfigWithTriggers): string {
-    const { alert_for, alert_value, failure_threshold, success_threshold } = alert;
-
-    if (alert_for === GC.STATUS) {
-      return `Alert when ${failure_threshold} consecutive checks result in ${alert_value}. Resolve after ${success_threshold} successful check(s).`;
-    } else if (alert_for === GC.LATENCY) {
-      return `Alert when latency exceeds ${alert_value}ms for ${failure_threshold} consecutive checks. Resolve after ${success_threshold} check(s) below threshold.`;
-    } else if (alert_for === GC.UPTIME) {
-      return `Alert when uptime falls below ${alert_value}% for ${failure_threshold} checks. Resolve after ${success_threshold} check(s) above threshold.`;
-    }
-    return "";
-  }
-
   onMount(async () => {
     loading = true;
     await Promise.all([loadTriggersData(), loadAlertConfigs()]);
@@ -370,7 +334,15 @@
                   {/if}
                 </div>
 
-                <p class="text-sm">{getAlertDescription(alert)}</p>
+                <p class="text-sm">
+                  {getAlertText({
+                    kind: "description",
+                    alert_for: alert.alert_for,
+                    alert_value: alert.alert_value,
+                    failure_threshold: alert.failure_threshold,
+                    success_threshold: alert.success_threshold
+                  })}
+                </p>
 
                 {#if alert.alert_description}
                   <p class="text-muted-foreground text-xs">{alert.alert_description}</p>
@@ -435,7 +407,7 @@
 
         <!-- Alert Value -->
         <div class="flex flex-col gap-2">
-          <Label for="alert-value">{alertValueLabel()}</Label>
+          <Label for="alert-value">{alertValueLabel}</Label>
           {#if form.alert_for === "STATUS"}
             <Select.Root type="single" value={form.alert_value} onValueChange={(v) => v && (form.alert_value = v)}>
               <Select.Trigger id="alert-value" class="w-full">
@@ -456,7 +428,7 @@
               bind:value={form.alert_value}
             />
           {/if}
-          <p class="text-muted-foreground text-xs">{alertValueHelp()}</p>
+          <p class="text-muted-foreground text-xs">{alertValueHelp}</p>
         </div>
 
         <!-- Thresholds -->
@@ -584,7 +556,7 @@
         <Button variant="outline" onclick={() => (dialogOpen = false)} disabled={saving}>Cancel</Button>
         <Button onclick={saveAlertConfig} disabled={saving}>
           {#if saving}
-            <Spinner class="mr-2 size-4" />
+            <Spinner class="size-4" />
           {/if}
           {isEditing ? "Update Alert" : "Create Alert"}
         </Button>

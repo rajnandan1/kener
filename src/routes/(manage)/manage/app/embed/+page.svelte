@@ -12,6 +12,7 @@
   import type { MonitorRecord } from "$lib/server/types/db.js";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import { mode } from "mode-watcher";
 
   // Monitors state
   let monitors = $state<MonitorRecord[]>([]);
@@ -23,7 +24,7 @@
   let embedConfig = $state({
     tag: "",
     embedType: "status" as "status" | "latency",
-    theme: "light" as "light" | "dark",
+    theme: mode.current === "dark" ? "dark" : "light",
     format: "iframe" as "iframe" | "script",
     days: 90,
     height: 200,
