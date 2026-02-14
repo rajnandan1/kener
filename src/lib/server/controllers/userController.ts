@@ -97,6 +97,9 @@ export const UpdateUserData = async (data: UserUpdateInput): Promise<number> => 
   if (updateKey === "password") {
     throw new Error("Password cannot be updated using this method");
   }
+  if (updateKey === "role") {
+    throw new Error("Role cannot be updated using this method");
+  }
   //if updateValue is empty, throw error
   if (!!!updateValue) {
     throw new Error("Update value cannot be empty");
@@ -105,8 +108,6 @@ export const UpdateUserData = async (data: UserUpdateInput): Promise<number> => 
   switch (updateKey) {
     case "name":
       return await db.updateUserName(userID, updateValue);
-    case "role":
-      return await db.updateUserRole(userID, updateValue);
     case "is_verified":
       return await db.updateIsVerified(userID, parseInt(updateValue));
     default:

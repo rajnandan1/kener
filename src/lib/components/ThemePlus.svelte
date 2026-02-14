@@ -27,6 +27,7 @@
   import trackEvent from "$lib/beacon";
   import { X } from "@lucide/svelte";
   import SiteBanner from "./SiteBanner.svelte";
+  console.log(">>>>>>----  ThemePlus:30 ", page.params);
 
   interface Props {
     currentPath?: string;
@@ -55,6 +56,31 @@
   const pages = $derived<PageNavItem[]>(page.data.allPages || []);
   const currentPage = $derived(pages.find((p) => p.page_path === currentPath) || pages[0]);
   const eventsPath = $derived(`/events/${format(new Date(), "MMMM-yyyy")}`);
+  const loginDetails = $derived.by((): { label: string; url: string } | null => {
+    if (!page.data?.loggedInUser) return null;
+
+    if (page.route.id === "/(kener)/monitors/[monitor_tag]") {
+      return {
+        label: "Edit Monitor",
+        url: clientResolver(resolve, "/manage/app/monitors/" + page.params.monitor_tag)
+      };
+    } else if (page.route.id === "/(kener)/incidents/[incident_id]") {
+      return {
+        label: "Update Incident",
+        url: clientResolver(resolve, "/manage/app/incidents/" + page.params.incident_id)
+      };
+    } else if (page.route.id === "/(kener)/maintenances/[maintenance_id]") {
+      return {
+        label: "Update Maintenance",
+        url: clientResolver(resolve, "/manage/app/maintenances/" + page.data.maintenance.id)
+      };
+    } else {
+      return {
+        label: "Login",
+        url: clientResolver(resolve, "/manage/app/site-configurations")
+      };
+    }
+  });
 
   function toggleMode() {
     if (mode.current === "light") {
@@ -255,6 +281,16 @@
         <TimezoneSelector />
       {/if}
     </ButtonGroup.Root>
+    {#if loginDetails}
+      <Button
+        size="sm"
+        href={loginDetails.url}
+        target="_blank"
+        class="bg-accent-foreground text-accent border-foreground/10 rounded-full border  text-xs font-semibold shadow-none  "
+      >
+        {loginDetails.label}
+      </Button>
+    {/if}
   </div>
   <!-- Banner -->
 </div>
