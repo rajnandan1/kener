@@ -69,9 +69,8 @@
   });
 </script>
 
-<!-- gap -->
 <svelte:head>
-  <title>{data.pageDetails?.page_title || "Status Page"}</title>
+  <title>{(data.pageDetails?.page_title || "Status Page") + " - " + data.siteName}</title>
 </svelte:head>
 
 <!-- page title -->

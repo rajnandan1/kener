@@ -3,7 +3,6 @@ import { error } from "@sveltejs/kit";
 import {
   GetIncidentById,
   GetIncidentCommentsByIncidentId,
-  GetOngoingMaintenanceEventsForMonitorList,
   GetAffectedMonitorsByIncidentId,
 } from "$lib/server/controllers/dashboardController.js";
 
@@ -26,8 +25,6 @@ export const load: PageServerLoad = async ({ params }) => {
   const affectedMonitors = await GetAffectedMonitorsByIncidentId(incidentIdNum);
 
   return {
-    incident,
-    comments,
-    affectedMonitors,
+    ...{ incident, comments, affectedMonitors },
   };
 };

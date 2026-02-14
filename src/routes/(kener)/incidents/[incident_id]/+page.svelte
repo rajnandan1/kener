@@ -22,6 +22,14 @@
   let { data } = $props();
 </script>
 
+<svelte:head>
+  <title>{data.incident.title + " - " + data.siteName}</title>
+  <!-- meta description -->
+  {#if data.comments.length > 0}
+    <meta name="description" content={data.comments[0].comment} />
+  {/if}
+</svelte:head>
+
 <div class="flex flex-col gap-3">
   <ThemePlus showEventsButton={true} showHomeButton={true} />
   <div class="flex flex-col gap-2 px-4 py-2">

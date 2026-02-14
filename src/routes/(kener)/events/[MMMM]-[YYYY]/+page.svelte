@@ -152,7 +152,7 @@
 </script>
 
 <svelte:head>
-  <title>{currentMonth} - Maintenances & Incidents</title>
+  <title>{currentMonth} - Maintenances & Incidents - {data.siteName}</title>
 </svelte:head>
 
 <div class="flex flex-col gap-3">
@@ -186,7 +186,7 @@
     </div>
 
     <div class="flex flex-1 flex-col justify-around gap-y-4 rounded-3xl border p-4">
-      <div class="flex gap-x-3">
+      <div class="flex flex-wrap gap-x-3">
         <!-- Incidents in this page -->
         <div class="flex flex-1 flex-row items-center gap-2">
           {#if numberOfIncidents === 0}
@@ -196,8 +196,8 @@
               {numberOfIncidents}
             </p>
           {/if}
-          <p class="text-xs leading-4 opacity-50">
-            {@html $t("Total <br /> Incidents")}
+          <p class="text-sm leading-4 font-medium">
+            {@html $t("Total Incidents")}
           </p>
         </div>
         <!-- Maintenances in this page -->
@@ -209,7 +209,7 @@
               {numberOfMaintenances}
             </p>
           {/if}
-          <p class="text-xs leading-4 opacity-50">{@html $t("Total <br /> Maintenances")}</p>
+          <p class="text-sm leading-4 font-medium">{@html $t("Total Maintenances")}</p>
         </div>
       </div>
     </div>

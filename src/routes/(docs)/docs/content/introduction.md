@@ -16,6 +16,10 @@ Here are the top features that make Kener stand out from other status page solut
 
 Kener is completely open-source under the MIT license, giving you full control over your status page. Host it on your own infrastructure, customize it to your heart's content, and never worry about vendor lock-in or data privacy concerns. You own your data, you control your destiny.
 
+### MIT License {#mit-license}
+
+Kener is licensed under the MIT License, a permissive open-source license that allows you to use, modify, and distribute the software freely. This means you can customize Kener to fit your specific needs without worrying about legal restrictions. Whether you're a small startup or a large enterprise, Kener's MIT License gives you the freedom to innovate and adapt as your business grows.
+
 ### Modern Design {#modern-design}
 
 Experience a clean, modern, and responsive design that looks stunning on all devices. Built with cutting-edge technologies like SvelteKit and TypeScript, Kener delivers a fast, smooth, and delightful user experience. Your status page is often the first place users go when they suspect issues—make sure it leaves a great impression.

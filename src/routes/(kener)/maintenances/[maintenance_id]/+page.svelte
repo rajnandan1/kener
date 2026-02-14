@@ -8,7 +8,7 @@
   import Repeat from "@lucide/svelte/icons/repeat";
   import * as Item from "$lib/components/ui/item/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
-  import * as Card from "$lib/components/ui/card/index.js";
+  import GC from "$lib/global-constants.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import mdToHTML from "$lib/marked";
@@ -42,13 +42,13 @@
   // Get status badge variant for event status
   function getEventStatusBadgeClass(status: string): string {
     switch (status) {
-      case "SCHEDULED":
+      case GC.SCHEDULED:
         return "bg-muted text-muted-foreground";
-      case "IN_PROGRESS":
+      case GC.ONGOING:
         return "bg-maintenance text-white";
-      case "COMPLETED":
+      case GC.COMPLETED:
         return "bg-up text-white";
-      case "CANCELLED":
+      case GC.CANCELLED:
         return "bg-down text-white";
       default:
         return "";
@@ -60,6 +60,14 @@
     return !rrule.includes("COUNT=1");
   }
 </script>
+
+<svelte:head>
+  <title>{data.maintenance.title + " - " + data.siteName}</title>
+  <!-- meta description -->
+  {#if data.maintenance.description}
+    <meta name="description" content={data.maintenance.description} />
+  {/if}
+</svelte:head>
 
 <div class="flex flex-col gap-3">
   <ThemePlus showEventsButton={true} showHomeButton={true} />

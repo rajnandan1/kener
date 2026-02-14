@@ -46,6 +46,11 @@ export const load: PageServerLoad = async ({ params, url }) => {
     maintenanceEvent = maintenance.events[0];
   }
 
+  //if maintenanceEvent is still null, throw error
+  if (!maintenanceEvent) {
+    throw error(404, { message: "Maintenance event not found" });
+  }
+
   // Fetch monitor tags for this maintenance
   const monitorRecords = await GetMaintenanceMonitors(maintenanceId);
   const monitorTags = monitorRecords.map((m) => m.monitor_tag);
@@ -71,8 +76,10 @@ export const load: PageServerLoad = async ({ params, url }) => {
   }
 
   return {
-    maintenance,
-    maintenanceEvent, // The specific event that was clicked
-    affectedMonitors,
+    ...{
+      maintenance,
+      maintenanceEvent, // The specific event that was clicked
+      affectedMonitors,
+    },
   };
 };

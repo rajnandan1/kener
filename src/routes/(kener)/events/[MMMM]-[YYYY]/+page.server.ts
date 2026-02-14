@@ -41,8 +41,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   const monthEndTs = getUnixTime(monthEnd) + 86399; // End of the last day
 
   return {
-    monthParam,
-    monthStartTs,
-    monthEndTs,
+    ...{ monthParam, monthStartTs, monthEndTs },
   };
 };

@@ -78,6 +78,13 @@
   });
 </script>
 
+<svelte:head>
+  <title>{data.monitorName + " - " + data.siteName}</title>
+  <!-- meta description -->
+  {#if data.monitorDescription}
+    <meta name="description" content={data.monitorDescription} />
+  {/if}
+</svelte:head>
 <div class="flex flex-col gap-3">
   <ThemePlus
     showHomeButton={true}
