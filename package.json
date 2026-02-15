@@ -112,6 +112,7 @@
     "@codemirror/state": "^6.5.4",
     "@codemirror/view": "^6.39.11",
     "@formkit/auto-animate": "^0.9.0",
+    "@humanspeak/svelte-purify": "^0.0.6",
     "@number-flow/svelte": "^0.3.9",
     "@scalar/express-api-reference": "^0.8.28",
     "@scalar/sveltekit": "^0.1.43",

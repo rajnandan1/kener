@@ -16,6 +16,7 @@
   import { goto } from "$app/navigation";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import GC from "$lib/global-constants.js";
 
   interface Props {
     monitor: MonitorRecord;
@@ -39,9 +40,8 @@
       return;
     }
 
-    const maxSize = 2 * 1024 * 1024; // 2MB
-    if (file.size > maxSize) {
-      toast.error("File too large. Maximum size is 2MB");
+    if (file.size > GC.MAX_UPLOAD_BYTES) {
+      toast.error(`File too large. Maximum size is ${GC.MAX_UPLOAD_BYTES / (1024 * 1024)}MB`);
       return;
     }
 

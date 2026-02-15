@@ -15,6 +15,7 @@
   import { getEndOfDayAtTz } from "$lib/client/datetime";
   import { requestMonitorBar } from "$lib/client/monitor-bar-client";
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
+  import { SveltePurify } from "@humanspeak/svelte-purify";
 
   let { data } = $props();
   let pageSettings = $derived(data.pageDetails.page_settings);
@@ -97,7 +98,7 @@
         {#if data.pageDetails?.page_subheader}
           <div class="">
             <div class="prose prose-sm dark:prose-invert max-w-none">
-              {@html mdToHTML(data.pageDetails.page_subheader)}
+              <SveltePurify html={mdToHTML(data.pageDetails.page_subheader)} />
             </div>
           </div>
         {/if}

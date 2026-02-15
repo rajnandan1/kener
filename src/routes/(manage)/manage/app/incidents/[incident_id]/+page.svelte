@@ -28,6 +28,7 @@
   import { mode } from "mode-watcher";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import { SveltePurify } from "@humanspeak/svelte-purify";
 
   import CodeMirror from "svelte-codemirror-editor";
   import { markdown } from "@codemirror/lang-markdown";
@@ -1036,7 +1037,7 @@
                         <div
                           class="kener-md prose prose-neutral dark:prose-invert prose-code:rounded prose-code:py-[0.2rem] prose-code:font-mono prose-code:text-sm prose-code:font-normal prose-pre:bg-opacity-0 dark:prose-pre:bg-neutral-800 max-w-none"
                         >
-                          {@html mdToHTML(comment.comment)}
+                          <SveltePurify html={mdToHTML(comment.comment)} />
                         </div>
                       </div>
                       <div class="ml-4 flex gap-1">

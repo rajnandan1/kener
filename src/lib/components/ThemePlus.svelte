@@ -27,7 +27,6 @@
   import trackEvent from "$lib/beacon";
   import { X } from "@lucide/svelte";
   import SiteBanner from "./SiteBanner.svelte";
-  console.log(">>>>>>----  ThemePlus:30 ", page.params);
 
   interface Props {
     currentPath?: string;

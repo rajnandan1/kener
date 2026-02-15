@@ -5,7 +5,7 @@
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
-  import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
+  import GC from "$lib/global-constants.js";
   import SaveIcon from "@lucide/svelte/icons/save";
   import Loader from "@lucide/svelte/icons/loader";
   import UploadIcon from "@lucide/svelte/icons/upload";
@@ -289,9 +289,8 @@
     }
 
     // Validate file size (max 2MB)
-    const maxSize = 2 * 1024 * 1024; // 2MB
-    if (file.size > maxSize) {
-      toast.error("File too large. Maximum size is 2MB");
+    if (file.size > GC.MAX_UPLOAD_BYTES) {
+      toast.error(`File too large. Maximum size is ${GC.MAX_UPLOAD_BYTES / (1024 * 1024)}MB`);
       return;
     }
 

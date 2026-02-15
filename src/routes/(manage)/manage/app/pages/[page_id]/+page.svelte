@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { page } from "$app/stores";
+  import { page } from "$app/state";
   import { goto } from "$app/navigation";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
@@ -24,6 +24,7 @@
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import GC from "$lib/global-constants.js";
 
   // Default page settings
   const defaultPageSettings: PageSettingsType = {
@@ -51,7 +52,7 @@
   }
 
   // Get page ID from URL params
-  const pageId = $derived($page.params.page_id);
+  const pageId = $derived(page.params.page_id);
   const isNew = $derived(pageId === "new");
 
   // State
@@ -327,9 +328,8 @@
     }
 
     // Validate file size (max 2MB)
-    const maxSize = 2 * 1024 * 1024;
-    if (file.size > maxSize) {
-      toast.error("File too large. Maximum size is 2MB");
+    if (file.size > GC.MAX_UPLOAD_BYTES) {
+      toast.error(`File too large. Maximum size is ${GC.MAX_UPLOAD_BYTES / (1024 * 1024)}MB`);
       return;
     }
 

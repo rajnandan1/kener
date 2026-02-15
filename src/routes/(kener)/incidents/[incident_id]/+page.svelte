@@ -14,7 +14,7 @@
   import mdToHTML from "$lib/marked";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import constants from "$lib/global-constants.js";
-  import CloudAlertIcon from "@lucide/svelte/icons/cloud-alert";
+  import { SveltePurify } from "@humanspeak/svelte-purify";
   import { t } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import clientResolver from "$lib/client/resolver.js";
@@ -68,7 +68,7 @@
                   </span>
                 </div>
                 <div class="prose prose-sm dark:prose-invert max-w-none min-w-0 overflow-x-auto wrap-break-word">
-                  {@html mdToHTML(comment.comment)}
+                  <SveltePurify html={mdToHTML(comment.comment)} />
                 </div>
               </div>
             {/each}

@@ -17,6 +17,8 @@
   import { t } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import clientResolver from "$lib/client/resolver.js";
+  import { SveltePurify } from "@humanspeak/svelte-purify";
+
   let { data } = $props();
 
   const MaintenanceIcon = STATUS_ICON.MAINTENANCE;
@@ -115,7 +117,7 @@
       {#if data.maintenance.description}
         <div class="bg-background min-w-0 rounded-3xl border">
           <div class="prose prose-sm dark:prose-invert max-w-none min-w-0 overflow-x-auto p-4 wrap-break-word">
-            {@html mdToHTML(data.maintenance.description)}
+            <SveltePurify html={mdToHTML(data.maintenance.description)} />
           </div>
         </div>
       {/if}

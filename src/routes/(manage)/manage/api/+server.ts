@@ -731,49 +731,90 @@ async function uploadImage(data: ImageUploadData): Promise<{ id: string; url: st
     throw new Error("Image data is required");
   }
 
-  const allowedMimeTypes = ["image/png", "image/jpeg", "image/jpg", "image/svg+xml", "image/webp"];
+  const allowedMimeTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
   if (!allowedMimeTypes.includes(mimeType)) {
     throw new Error(`Invalid image type. Allowed types: ${allowedMimeTypes.join(", ")}`);
   }
 
   // Decode base64 to buffer
   const imageBuffer = Buffer.from(base64, "base64");
+  if (!imageBuffer.length) {
+    throw new Error("Invalid image data");
+  }
+
+  if (imageBuffer.length > GC.MAX_UPLOAD_BYTES) {
+    throw new Error("Image is too large. Maximum upload size is 5MB");
+  }
+
+  const normalizedRequestedMime = mimeType === "image/jpg" ? "image/jpeg" : mimeType;
+  const maybeTextHeader = imageBuffer.subarray(0, 4096).toString("utf8");
+  const looksLikeSvg = /<svg[\s>]/i.test(maybeTextHeader) || /<\?xml/i.test(maybeTextHeader);
+
+  if (normalizedRequestedMime === "image/svg+xml" || looksLikeSvg) {
+    throw new Error("SVG uploads are not allowed");
+  }
 
   let processedBuffer: Buffer;
   let finalMimeType = mimeType;
   let width: number | undefined;
   let height: number | undefined;
 
-  // Process with sharp (except SVG which we keep as-is)
-  if (mimeType === "image/svg+xml") {
-    processedBuffer = imageBuffer;
-    // For SVG, we don't have width/height info easily, keep as null
+  // Process with sharp and normalize output
+  const image = sharp(imageBuffer, { limitInputPixels: GC.MAX_INPUT_PIXELS });
+  const metadata = await image.metadata();
+
+  const formatToMime: Record<string, string> = {
+    png: "image/png",
+    jpeg: "image/jpeg",
+    webp: "image/webp",
+    svg: "image/svg+xml",
+  };
+
+  const detectedMimeType = metadata.format ? formatToMime[metadata.format] : undefined;
+  if (!detectedMimeType) {
+    throw new Error("Could not detect a valid image format");
+  }
+
+  if (detectedMimeType === "image/svg+xml") {
+    throw new Error("SVG uploads are not allowed");
+  }
+
+  if (normalizedRequestedMime !== detectedMimeType) {
+    throw new Error("Image MIME type does not match file content");
+  }
+
+  const sourceWidth = metadata.width || maxWidth;
+  const sourceHeight = metadata.height || maxHeight;
+
+  if (sourceWidth > GC.MAX_IMAGE_DIMENSION || sourceHeight > GC.MAX_IMAGE_DIMENSION) {
+    throw new Error(
+      `Image dimensions exceed maximum allowed size of ${GC.MAX_IMAGE_DIMENSION}x${GC.MAX_IMAGE_DIMENSION}`,
+    );
+  }
+
+  const boundedMaxWidth = Math.min(maxWidth, GC.MAX_IMAGE_DIMENSION);
+  const boundedMaxHeight = Math.min(maxHeight, GC.MAX_IMAGE_DIMENSION);
+
+  // Calculate new dimensions maintaining aspect ratio
+  let newWidth = sourceWidth;
+  let newHeight = sourceHeight;
+
+  if (newWidth > boundedMaxWidth || newHeight > boundedMaxHeight) {
+    const ratio = Math.min(boundedMaxWidth / newWidth, boundedMaxHeight / newHeight);
+    newWidth = Math.max(1, Math.round(newWidth * ratio));
+    newHeight = Math.max(1, Math.round(newHeight * ratio));
+  }
+
+  width = newWidth;
+  height = newHeight;
+
+  // Keep JPEG as JPEG; convert everything else (WebP/PNG) to PNG.
+  if (detectedMimeType === "image/jpeg") {
+    processedBuffer = await image.resize(newWidth, newHeight, { fit: "inside" }).jpeg({ quality: 85 }).toBuffer();
+    finalMimeType = "image/jpeg";
   } else {
-    // Resize image maintaining aspect ratio
-    const image = sharp(imageBuffer);
-    const metadata = await image.metadata();
-
-    // Calculate new dimensions maintaining aspect ratio
-    let newWidth = metadata.width || maxWidth;
-    let newHeight = metadata.height || maxHeight;
-
-    if (newWidth > maxWidth || newHeight > maxHeight) {
-      const ratio = Math.min(maxWidth / newWidth, maxHeight / newHeight);
-      newWidth = Math.round(newWidth * ratio);
-      newHeight = Math.round(newHeight * ratio);
-    }
-
-    width = newWidth;
-    height = newHeight;
-
-    // Resize and convert to PNG for consistency (except keep JPEG as JPEG)
-    if (mimeType === "image/jpeg" || mimeType === "image/jpg") {
-      processedBuffer = await image.resize(newWidth, newHeight, { fit: "inside" }).jpeg({ quality: 85 }).toBuffer();
-      finalMimeType = "image/jpeg";
-    } else {
-      processedBuffer = await image.resize(newWidth, newHeight, { fit: "inside" }).png().toBuffer();
-      finalMimeType = "image/png";
-    }
+    processedBuffer = await image.resize(newWidth, newHeight, { fit: "inside" }).png().toBuffer();
+    finalMimeType = "image/png";
   }
 
   // Generate ID with prefix and nanoid
