@@ -7,8 +7,9 @@
   import { javascript } from "@codemirror/lang-javascript";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
   import { mode } from "mode-watcher";
+  import EyeClosedIcon from "@lucide/svelte/icons/eye-closed";
+  import EyeOpenIcon from "@lucide/svelte/icons/eye";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let { data = $bindable() }: { data: any } = $props();
 
   // Initialize defaults if not set
@@ -16,6 +17,8 @@
   if (!data.connectionString) data.connectionString = "";
   if (!data.query) data.query = "SELECT 1";
   if (!data.timeout) data.timeout = 5000;
+
+  let showConnectionString = $state(false);
 
   const dbTypes = [
     { value: "pg", label: "PostgreSQL" },
@@ -60,7 +63,7 @@
           {selectedDbType}
         </Select.Trigger>
         <Select.Content>
-          {#each dbTypes as db}
+          {#each dbTypes as db (db.value)}
             <Select.Item value={db.value}>{db.label}</Select.Item>
           {/each}
         </Select.Content>
@@ -81,8 +84,23 @@
         id="sql-connection"
         bind:value={data.connectionString}
         placeholder={connectionStringPlaceholder}
-        type="password"
+        type={showConnectionString ? "text" : "password"}
       />
+      <InputGroup.Addon align="inline-end">
+        <InputGroup.Button
+          type="button"
+          aria-label={showConnectionString ? "Hide connection string" : "Show connection string"}
+          title={showConnectionString ? "Hide connection string" : "Show connection string"}
+          size="icon-xs"
+          onclick={() => (showConnectionString = !showConnectionString)}
+        >
+          {#if showConnectionString}
+            <EyeClosedIcon class="size-4" />
+          {:else}
+            <EyeOpenIcon class="size-4" />
+          {/if}
+        </InputGroup.Button>
+      </InputGroup.Addon>
     </InputGroup.Root>
     <p class="text-muted-foreground mt-1 text-xs">Connection string will be stored securely</p>
   </div>

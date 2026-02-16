@@ -27,7 +27,7 @@
             "pages": [
               {
                 "title": "Introduction",
-                "content": "v4/introduction"
+                "content": "v4/getting-started/introduction"
               },
               {
                 "title": "Quick Start",

@@ -59,6 +59,11 @@ class SqlCall {
         type: GC.REALTIME,
       };
     } catch (error: unknown) {
+      let errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.length > 200) {
+        errorMessage = errorMessage.substring(0, 200) + "...";
+      }
+      console.log(`Error executing SQL query for monitor with tag ${this.monitor.tag}:`, errorMessage);
       const latency = Date.now() - startTime;
 
       // Handle timeout specifically
@@ -67,6 +72,7 @@ class SqlCall {
           status: GC.DOWN,
           latency: latency,
           type: GC.TIMEOUT,
+          error_message: "Query execution exceeded timeout of " + timeout + "ms",
         };
       }
 
@@ -75,6 +81,7 @@ class SqlCall {
         status: GC.DOWN,
         latency: latency,
         type: GC.ERROR,
+        error_message: errorMessage,
       };
     } finally {
       // Destroy knex instance to clean up connections

@@ -31,3 +31,5 @@ static/uploads/*
 temp.txt
 temp.js
 .DS_Store
+knip-output.txt
+check-output.txt

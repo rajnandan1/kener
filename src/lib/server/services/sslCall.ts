@@ -59,20 +59,27 @@ class SSLCall {
           status: GC.DEGRADED,
           latency: latency,
           type: GC.REALTIME,
+          error_message: `SSL certificate for ${domain} is expiring in ${timeTillExpiryHours.toFixed(2)} hours.`,
         };
       } else {
         return {
           status: GC.DOWN,
           latency: latency,
           type: GC.REALTIME,
+          error_message: `SSL certificate for ${domain} has expired or is expiring in less than ${downRemainingHours} hours.`,
         };
       }
     } catch (error: unknown) {
-      console.log(`Error checking SSL for ${domain}:`, (error as Error).message);
+      let errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.length > 200) {
+        errorMessage = errorMessage.substring(0, 200) + "...";
+      }
+      console.log(`Error checking SSL for ${domain}:`, errorMessage);
       return {
         status: GC.DOWN,
         latency: 0,
         type: GC.ERROR,
+        error_message: errorMessage,
       };
     }
   }

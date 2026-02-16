@@ -34,11 +34,16 @@ class GamedigCall {
       responseTime = response.ping;
       responseRaw = response.raw;
     } catch (error: unknown) {
-      console.log(`Error while requesting game's information for ${tag}: `, (error as Error).message);
+      let errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.length > 200) {
+        errorMessage = errorMessage.substring(0, 200) + "...";
+      }
+      console.log(`Error while requesting game's information for ${tag}: `, errorMessage);
       return {
         status: GC.DOWN,
         latency: 0,
         type: GC.ERROR,
+        error_message: errorMessage,
       };
     }
 
@@ -52,11 +57,16 @@ class GamedigCall {
     try {
       evalResp = await evalFunction(responseTime, responseRaw);
     } catch (error: unknown) {
-      console.log(`Error in gamedigEval for ${tag}: `, (error as Error).message);
+      let errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.length > 200) {
+        errorMessage = errorMessage.substring(0, 200) + "...";
+      }
+      console.log(`Error in gamedigEval for ${tag}: `, errorMessage);
       return {
         status: GC.DOWN,
         latency: 0,
         type: GC.ERROR,
+        error_message: errorMessage,
       };
     }
 
