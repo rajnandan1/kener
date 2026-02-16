@@ -4,7 +4,8 @@ export interface SiteAnnouncement {
   type: "INFO" | "WARNING" | "ERROR";
   reshowAfterInHours: number | null;
   cancellable: boolean;
-  cta: string | null;
+  ctaURL: string | null;
+  ctaText: string | null;
 }
 
 export interface SiteMetaTag {

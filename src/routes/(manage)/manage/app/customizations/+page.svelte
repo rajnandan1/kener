@@ -39,9 +39,10 @@
     family: string;
   }
 
-  type AnnouncementForm = Omit<SiteAnnouncement, "reshowAfterInHours" | "cta"> & {
+  type AnnouncementForm = Omit<SiteAnnouncement, "reshowAfterInHours" | "ctaURL" | "ctaText"> & {
     reshowAfterInHours: string;
-    cta: string;
+    ctaURL: string;
+    ctaText: string;
   };
 
   // State
@@ -85,7 +86,8 @@
     type: "INFO",
     reshowAfterInHours: "",
     cancellable: true,
-    cta: ""
+    ctaURL: "",
+    ctaText: ""
   });
 
   async function fetchSettings() {
@@ -151,7 +153,8 @@
                 ? ""
                 : String(result.announcement.reshowAfterInHours),
             cancellable: result.announcement.cancellable ?? true,
-            cta: result.announcement.cta || ""
+            ctaURL: result.announcement.ctaURL || "",
+            ctaText: result.announcement.ctaText || ""
           };
         }
       }
@@ -308,7 +311,8 @@
         type: announcement.type,
         reshowAfterInHours: Number.isFinite(reshowAfterInHours as number) ? reshowAfterInHours : null,
         cancellable: announcement.cancellable,
-        cta: announcement.cta.trim() ? announcement.cta.trim() : null
+        ctaURL: announcement.ctaURL.trim() ? announcement.ctaURL.trim() : null,
+        ctaText: announcement.ctaText.trim() ? announcement.ctaText.trim() : null
       };
 
       const response = await fetch(clientResolver(resolve, "/manage/api"), {
@@ -725,7 +729,7 @@
           />
         </div>
 
-        <div class="grid gap-4 md:grid-cols-2">
+        <div class="grid gap-4 md:grid-cols-3">
           <div class="space-y-2">
             <Label for="announcement-reshow">Reshow After (hours)</Label>
             <Input
@@ -740,10 +744,14 @@
           <div class="space-y-2">
             <Label for="announcement-cta">CTA URL (optional)</Label>
             <Input
-              id="announcement-cta"
-              bind:value={announcement.cta}
+              id="announcement-cta-url"
+              bind:value={announcement.ctaURL}
               placeholder="https://status.example.com/incident/123"
             />
+          </div>
+          <div class="space-y-2">
+            <Label for="announcement-cta-text">CTA Text (optional)</Label>
+            <Input id="announcement-cta-text" bind:value={announcement.ctaText} placeholder="Learn more" />
           </div>
         </div>
 

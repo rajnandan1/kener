@@ -20,12 +20,12 @@
   const typeClasses = $derived.by(() => {
     switch (announcement.type) {
       case "WARNING":
-        return "text-degraded";
+        return "degraded";
       case "ERROR":
-        return "text-down";
+        return "down";
       case "INFO":
       default:
-        return "text-foreground";
+        return "muted";
     }
   });
 
@@ -74,29 +74,29 @@
 </script>
 
 {#if visible}
-  <div class="bg-secondary relative flex w-full flex-col gap-0 rounded-3xl border p-4">
-    <div class="relative flex items-center justify-between gap-2">
-      <span class="text-foreground text-sm {typeClasses} font-medium">{announcement.title}</span>
-      {#if announcement.cta}
+  <div class="bg-background relative flex w-full flex-col gap-0 rounded-3xl border border-{typeClasses} px-4 pt-2 pb-4">
+    <div class="relative flex items-center justify-between gap-2 pr-2">
+      <span class="text-foreground text-base text-{typeClasses} font-medium">{announcement.title}</span>
+      {#if announcement.ctaURL && announcement.ctaText}
         <div>
           <Button
             variant="link"
-            class="px-0 text-xs underline"
+            class="h-8 px-0 text-xs underline"
             size="sm"
-            href={announcement.cta}
-            target={announcement.cta.startsWith("http") ? "_blank" : undefined}
+            href={announcement.ctaURL}
+            target={announcement.ctaURL.startsWith("http") ? "_blank" : undefined}
           >
-            Learn more
+            {announcement.ctaText}
           </Button>
         </div>
       {/if}
     </div>
 
-    <p class="text-muted-foreground text-xs">{announcement.message}</p>
+    <p class="text-muted-foreground text-sm">{announcement.message}</p>
     {#if announcement.cancellable}
       <Button
         variant="outline"
-        class="rounded-btn bg-secondary! absolute -top-2.5 -right-2.5 "
+        class="rounded-btn text-muted-foreground bg-background! border-{typeClasses} absolute -top-2.5 -right-2.5 "
         size="icon-sm"
         onclick={dismiss}
       >

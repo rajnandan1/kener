@@ -1,5 +1,7 @@
-export function up(knex) {
-  return knex.schema
+import type { Knex } from "knex";
+
+export async function up(knex: Knex): Promise<void> {
+  await knex.schema
     .createTable("subscribers", (table) => {
       table.increments("id").primary();
       table.string("subscriber_send").notNullable();
@@ -40,9 +42,8 @@ export function up(knex) {
       table.datetime("updated_at").defaultTo(knex.fn.now());
     });
 }
-
-export function down(knex) {
-  return knex.schema
+export async function down(knex: Knex): Promise<void> {
+  await knex.schema
     .dropTableIfExists("subscription_triggers")
     .dropTableIfExists("subscriptions")
     .dropTableIfExists("subscribers");
