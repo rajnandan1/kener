@@ -16,7 +16,11 @@
           "tabs": [
             {
               "name": "Documentation",
-              "url": "/docs"
+              "url": "/docs/v4/getting-started/introduction"
+            },
+            {
+              "name": "API Reference",
+              "url": "/docs/spec/v4/"
             }
           ]
         },

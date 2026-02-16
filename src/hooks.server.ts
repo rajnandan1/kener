@@ -7,19 +7,19 @@ import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
 const API_PATH_PREFIX = "/api/";
 
 // Paths that don't require authentication
-const PUBLIC_API_PATHS = ["/api/status", "/api/spec"];
+const PUBLIC_API_PATHS = ["/api/status"];
 
 // Regex to match routes with monitor_tag parameter
-const MONITOR_TAG_ROUTE_REGEX = /^\/api\/monitors\/([^/]+)/;
+const MONITOR_TAG_ROUTE_REGEX = /^\/api\/(?:v\d+\/)?monitors\/([^/]+)/;
 
 // Regex to match routes with incident_id parameter
-const INCIDENT_ID_ROUTE_REGEX = /^\/api\/incidents\/(\d+)/;
+const INCIDENT_ID_ROUTE_REGEX = /^\/api\/(?:v\d+\/)?incidents\/(\d+)/;
 
 // Regex to match routes with maintenance_id parameter
-const MAINTENANCE_ID_ROUTE_REGEX = /^\/api\/maintenances\/(\d+)/;
+const MAINTENANCE_ID_ROUTE_REGEX = /^\/api\/(?:v\d+\/)?maintenances\/(\d+)/;
 
 // Regex to match routes with page_path parameter
-const PAGE_PATH_ROUTE_REGEX = /^\/api\/pages\/([^/]+)/;
+const PAGE_PATH_ROUTE_REGEX = /^\/api\/(?:v\d+\/)?pages\/([^/]+)/;
 
 function isApiRoute(pathname: string): boolean {
   return pathname.startsWith(API_PATH_PREFIX);
@@ -87,7 +87,7 @@ export const handle: Handle = async ({ event, resolve }) => {
       return json(errorResponse, { status: 401 });
     }
 
-    // Validate monitor tag exists for /api/monitors/:monitor_tag/* routes
+    // Validate monitor tag exists for /api/(vX/)?monitors/:monitor_tag/* routes
     const monitorTag = extractMonitorTag(pathname);
     if (monitorTag) {
       const monitor = await GetMonitorsParsed({ tag: monitorTag }).then((monitors) => monitors[0]);
@@ -104,7 +104,7 @@ export const handle: Handle = async ({ event, resolve }) => {
       event.locals.monitor = monitor;
     }
 
-    // Validate incident_id exists for /api/incidents/:incident_id/* routes
+    // Validate incident_id exists for /api/(vX/)?incidents/:incident_id/* routes
     const incidentId = extractIncidentId(pathname);
     if (incidentId) {
       const incident = await db.getIncidentById(incidentId);
@@ -121,7 +121,7 @@ export const handle: Handle = async ({ event, resolve }) => {
       event.locals.incident = incident;
     }
 
-    // Validate maintenance_id exists for /api/maintenances/:maintenance_id/* routes
+    // Validate maintenance_id exists for /api/(vX/)?maintenances/:maintenance_id/* routes
     const maintenanceId = extractMaintenanceId(pathname);
     if (maintenanceId) {
       const maintenance = await db.getMaintenanceById(maintenanceId);
@@ -138,7 +138,7 @@ export const handle: Handle = async ({ event, resolve }) => {
       event.locals.maintenance = maintenance;
     }
 
-    // Validate page_path exists for /api/pages/:page_path/* routes
+    // Validate page_path exists for /api/(vX/)?pages/:page_path/* routes
     const pagePath = extractPagePath(pathname);
     if (pagePath) {
       const page = await db.getPageByPath(pagePath);

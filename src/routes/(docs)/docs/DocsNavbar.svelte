@@ -172,7 +172,13 @@
     <div class="border-border/50 px-0">
       <nav class="mx-auto flex h-10 items-center gap-1 px-4">
         {#each config.navigation.tabs as tab (tab.url)}
-          <Button href={tab.url} variant={!isActiveTab(tab.url) ? "ghost" : "outline"} size="sm" class="">
+          <Button
+            href={tab.url}
+            rel="external"
+            variant={!isActiveTab(tab.url) ? "ghost" : "secondary"}
+            size="sm"
+            class=""
+          >
             {tab.name}
           </Button>
         {/each}

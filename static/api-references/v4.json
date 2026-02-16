@@ -1,1482 +1,132 @@
 {
+  "openapi": "3.1.0",
   "info": {
-    "title": "Kener API",
-    "version": "3.0.0",
-    "description": "# Kener Selfhost node js status page\n![Kener](https://kener.ing/newbg.png \"kener\")\nAPI specification for Kener status page and incident management system. This API spec was created using [Frogment](https://www.frogment.app)\n",
-    "contact": {
-      "name": "Raj Nandan Sharma",
-      "email": "rajnandan1@gmail.com",
-      "url": "https://github.com/rajnandan1/kener/issues"
-    },
-    "license": {
-      "name": "MIT",
-      "url": "https://opensource.org/licenses/MIT"
-    }
+    "title": "Kener API v4",
+    "version": "4.0.0",
+    "description": "OpenAPI specification for Kener self-hosted API v4. All endpoints use Bearer authentication unless explicitly public. Example request URL: GET https://your-kener.com/api/v4/pages"
   },
-  "openapi": "3.0.0",
   "servers": [
     {
-      "url": "https://{host}",
-      "description": "Kener host URL"
+      "url": "https://your-kener.com"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
     }
   ],
   "tags": [
     {
-      "name": "Monitors",
-      "description": "APIs to interact with monitors"
+      "name": "Monitors"
     },
     {
-      "name": "MonitorStatus",
-      "description": "APIs to interact with monitor status"
+      "name": "Monitor Data"
     },
     {
-      "name": "Incidents",
-      "description": "APIs to integrate incidents"
+      "name": "Incidents"
+    },
+    {
+      "name": "Incident Comments"
+    },
+    {
+      "name": "Pages"
+    },
+    {
+      "name": "Site"
+    },
+    {
+      "name": "Maintenances"
+    },
+    {
+      "name": "Maintenance Events"
     }
   ],
-  "components": {
-    "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT",
-        "description": "enter your api key here"
-      }
-    },
-    "schemas": {
-      "MonitorStatus": {
-        "type": "object",
-        "description": "Monitor Status",
-        "required": ["status", "latency", "tag"],
-        "properties": {
-          "status": {
-            "type": "string",
-            "example": "UP",
-            "enum": ["UP", "DOWN", "DEGRADED"]
-          },
-          "latency": {
-            "type": "number",
-            "description": "In seconds",
-            "example": 100
-          },
-          "timestampInSeconds": {
-            "type": "integer",
-            "description": "UTC timestamp in seconds",
-            "example": 1731251760
-          },
-          "tag": {
-            "type": "string",
-            "example": "earth",
-            "description": "Tag of a monitor"
-          }
-        },
-        "example": {
-          "status": "UP",
-          "timestampInSeconds": 1731251760,
-          "latency": 100,
-          "tag": "earth"
-        }
-      },
-      "StatusResponse": {
-        "type": "object",
-        "description": "Status of a monitor given a tag",
-        "properties": {
-          "status": {
-            "type": "string",
-            "example": "UP",
-            "enum": ["UP", "DOWN", "DEGRADED"]
-          },
-          "uptime": {
-            "type": "string",
-            "example": "100"
-          },
-          "last_updated_at": {
-            "type": "integer",
-            "example": 1731251760
-          }
-        },
-        "example": {
-          "status": "UP",
-          "last_updated_at": 1731251760,
-          "uptime": "100"
-        }
-      },
-      "Incident": {
-        "type": "object",
-        "description": "body of an incident",
-        "properties": {
-          "start_date_time": {
-            "type": "integer",
-            "description": "UTC timestamp in seconds",
-            "example": 1731901920
-          },
-          "end_date_time": {
-            "type": "integer",
-            "description": "UTC timestamp in seconds",
-            "nullable": true,
-            "example": 1704123938
-          },
-          "title": {
-            "type": "string",
-            "example": "Outage in mumbai",
-            "description": "title of the incident"
-          },
-          "created_at": {
-            "type": "string",
-            "example": "2025-01-09 04:12:01",
-            "description": "created at time"
-          },
-          "updated_at": {
-            "type": "string",
-            "example": "2025-01-09 06:10:00",
-            "description": "updated at time"
-          },
-          "status": {
-            "type": "string",
-            "example": "OPEN",
-            "description": "delete or not deleted incident",
-            "enum": ["OPEN", "CLOSED"]
-          },
-          "state": {
-            "type": "string",
-            "description": "the current status of the incident",
-            "example": "INVESTIGATING",
-            "enum": ["INVESTIGATING", "IDENTIFIED", "MONITORING", "RESOLVED"]
-          }
-        },
-        "example": {
-          "start_date_time": 1731901920,
-          "end_date_time": 1704123938,
-          "title": "title of the incident",
-          "created_at": "2025-01-09 04:12:01",
-          "updated_at": "2025-01-09 04:12:01",
-          "state": "INVESTIGATING",
-          "status": "OPEN",
-          "id": 4
-        }
-      },
-      "IncidentResponse": {
-        "description": "Incident response schema",
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Incident"
-          }
-        ]
-      },
-      "Comment": {
-        "type": "object",
-        "description": "Comment of an incident",
-        "properties": {
-          "comment": {
-            "type": "string",
-            "example": "comment 1"
-          },
-          "commented_at": {
-            "type": "integer",
-            "example": 1736398336
-          },
-          "state": {
-            "type": "string",
-            "example": "IDENTIFIED"
-          }
-        },
-        "example": {
-          "body": "comment 2",
-          "commented_at": 1736398336,
-          "state": "IDENTIFIED"
-        }
-      },
-      "CommentResponse": {
-        "type": "object",
-        "description": "Comment Response",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "description": "ID of the comment",
-            "example": 60
-          },
-          "comment": {
-            "type": "string",
-            "description": "The content of the comment",
-            "example": "Sometimes, you want all the goodness of moment#from but you don't want to have to create two moments, you just want to display a length of time."
-          },
-          "incident_id": {
-            "type": "integer",
-            "description": "ID of the associated incident",
-            "example": 24
-          },
-          "commented_at": {
-            "type": "integer",
-            "description": "Timestamp when the comment was added",
-            "example": 1736398336
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Timestamp when the comment was created in ISO 8601 format",
-            "example": "2025-01-09 04:52:16"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Timestamp when the comment was last updated in ISO 8601 format",
-            "example": "2025-01-09 04:52:16"
-          },
-          "status": {
-            "type": "string",
-            "description": "Current status of the comment",
-            "example": "ACTIVE"
-          },
-          "state": {
-            "type": "string",
-            "description": "the current status of the incident",
-            "example": "INVESTIGATING",
-            "enum": ["INVESTIGATING", "IDENTIFIED", "MONITORING", "RESOLVED"]
-          }
-        },
-        "example": {
-          "id": 60,
-          "comment": "Sometimes, you want all the goodness of moment",
-          "incident_id": 24,
-          "commented_at": 1736398336,
-          "created_at": "2025-01-09 04:52:16",
-          "updated_at": "2025-01-09 04:52:16",
-          "status": "ACTIVE",
-          "state": "MONITORING"
-        }
-      },
-      "IncidentStatus": {
-        "type": "object",
-        "description": "Status of the incident",
-        "properties": {
-          "isIdentified": {
-            "type": "boolean",
-            "description": "Has the incident been indetified",
-            "example": true
-          },
-          "isResolved": {
-            "type": "boolean",
-            "description": "has the incident been resolved",
-            "example": true
-          },
-          "endDatetime": {
-            "type": "integer",
-            "description": "Incident end time",
-            "example": 1731901920
-          }
-        },
-        "example": {
-          "isIdentified": true,
-          "isResolved": true,
-          "endDatetime": 1731901920
-        }
-      },
-      "IncidentCreateRequest": {
-        "title": "Incident Create Request Body",
-        "type": "object",
-        "description": "body of an incident",
-        "required": ["title", "start_date_time"],
-        "properties": {
-          "start_date_time": {
-            "type": "integer",
-            "description": "UTC timestamp in seconds",
-            "example": 1731901920
-          },
-          "title": {
-            "type": "string",
-            "example": "Outage in mumbai",
-            "description": "title of the incident"
-          }
-        },
-        "example": {
-          "start_date_time": 1731901920,
-          "title": "title of the incident"
-        }
-      }
-    },
-    "responses": {
-      "Response401": {
-        "description": "Bad API keys response",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "error": {
-                  "type": "string",
-                  "description": "Invalid token response",
-                  "example": "invalid token"
-                }
-              }
-            },
-            "example": {
-              "error": "invalid token"
-            }
-          }
-        }
-      },
-      "Response400": {
-        "description": "bad request",
-        "content": {
-          "application/json": {
-            "schema": {
-              "type": "object",
-              "properties": {
-                "error": {
-                  "type": "string",
-                  "description": "bad request while calling kener apis",
-                  "example": "unknown tags"
-                }
-              }
-            },
-            "example": {
-              "error": "unknown tags"
-            }
-          }
-        }
-      }
-    },
-    "examples": {
-      "GetMonitorStatusExample200": {
-        "summary": "response of get status of a monitor",
-        "description": "Some Description",
-        "value": {
-          "status": "UP",
-          "uptime": "100",
-          "lastUpdatedAt": 1731901920
-        }
-      },
-      "DegradedRequestBody": {
-        "summary": "update to degraded",
-        "description": "Some Description",
-        "value": {
-          "status": "DEGRADED",
-          "timestampInSeconds": 1731251760,
-          "latency": 100,
-          "tag": "earth"
-        }
-      },
-      "CreateIncidentResponse": {
-        "summary": "create incident response",
-        "description": "create incident response",
-        "value": {
-          "start_date_time": 1731901920,
-          "end_date_time": 1731901920,
-          "id": 4,
-          "created_at": "2025-01-09 04:12:01",
-          "updated_at": "2025-01-10 04:12:01",
-          "title": "title of the incident",
-          "status": "OPEN",
-          "state": "INVESTIGATING"
-        }
-      },
-      "CreateIncidentRequest": {
-        "summary": "create incident request body",
-        "description": "create incident request body",
-        "value": {
-          "start_date_time": 1731901920,
-          "title": "title of the incident"
-        }
-      },
-      "SearchIncidentsResponse": {
-        "summary": "array of incidents",
-        "description": "Some Description",
-        "value": [
-          {
-            "id": 2,
-            "title": "future wala",
-            "start_date_time": 1736774486,
-            "end_date_time": 1737033787,
-            "created_at": "2025-01-12 13:21:32",
-            "updated_at": "2025-01-12 13:23:15",
-            "status": "OPEN",
-            "state": "RESOLVED"
-          },
-          {
-            "id": 1,
-            "title": "internatiinal asda",
-            "start_date_time": 1736684329,
-            "end_date_time": null,
-            "created_at": "2025-01-12 12:18:53",
-            "updated_at": "2025-01-12 13:21:32",
-            "status": "OPEN",
-            "state": "INVESTIGATING"
-          }
-        ]
-      },
-      "CommentsResponse": {
-        "summary": "list of comments",
-        "description": "Some Description",
-        "value": [
-          {
-            "id": 58,
-            "comment": "idensad",
-            "incident_id": 24,
-            "commented_at": 1736398295,
-            "created_at": "2025-01-09 04:51:37",
-            "updated_at": "2025-01-09 04:51:37",
-            "status": "ACTIVE",
-            "state": "IDENTIFIED"
-          },
-          {
-            "id": 57,
-            "comment": "Sometimes, you want all the goodness of moment#from but you don't want to have to create two moments, you just want to display a length of time.",
-            "incident_id": 24,
-            "commented_at": 1736398279,
-            "created_at": "2025-01-09 04:51:19",
-            "updated_at": "2025-01-09 04:51:19",
-            "status": "ACTIVE",
-            "state": "INVESTIGATING"
-          }
-        ]
-      },
-      "CommentRequestBody": {
-        "summary": "request body for a update",
-        "description": "request body for a update to add in an incident",
-        "value": {
-          "comment": "This is a comment",
-          "commented_at": 1736398336,
-          "state": "IDENTIFIED"
-        }
-      },
-      "CreateCommentResponse": {
-        "summary": "create update response body sample",
-        "description": "create update response body sample",
-        "value": {
-          "id": 60,
-          "comment": "Sometimes, you want all the goodness of moment",
-          "incident_id": 24,
-          "commented_at": 1736398336,
-          "created_at": "2025-01-09 04:52:16",
-          "updated_at": "2025-01-09 04:52:16",
-          "status": "ACTIVE",
-          "state": "MONITORING"
-        }
-      }
-    }
-  },
   "paths": {
-    "/api/status": {
-      "post": {
-        "operationId": "updateMonitorStatus",
-        "summary": "Update status of a monitor",
-        "description": "Update status of a monitor at a given timestamp UTC",
-        "tags": ["MonitorStatus"],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "request body to update status of a monitor",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/MonitorStatus"
-              },
-              "examples": {
-                "degraded": {
-                  "$ref": "#/components/examples/DegradedRequestBody"
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Status updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "status": {
-                      "type": "integer",
-                      "example": 200
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "success at 1731251760"
-                    }
-                  }
-                },
-                "example": {
-                  "status": 200,
-                  "message": "success at 1731251760"
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/Response400"
-          },
-          "401": {
-            "$ref": "#/components/responses/Response401"
-          }
-        }
-      },
+    "/api/v4/monitors": {
       "get": {
-        "operationId": "getMonitorStatus",
-        "summary": "Get status of a monitor",
-        "description": "get status of a monitor at timestamp",
-        "tags": ["MonitorStatus"],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "name": "tag",
-            "in": "query",
-            "required": true,
-            "description": "monitor tag to get status of it",
-            "schema": {
-              "type": "string",
-              "example": "earth"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Monitor status retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/StatusResponse"
-                },
-                "examples": {
-                  "successExample": {
-                    "$ref": "#/components/examples/GetMonitorStatusExample200"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/Response400"
-          },
-          "401": {
-            "$ref": "#/components/responses/Response401"
-          }
-        }
-      }
-    },
-    "/api/incident": {
-      "post": {
-        "operationId": "createIncident",
-        "summary": "Create a new incident",
-        "description": "API to create incidents",
-        "tags": ["Incidents"],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "request body to manually create an incident",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/IncidentCreateRequest"
-              },
-              "examples": {
-                "sample": {
-                  "$ref": "#/components/examples/CreateIncidentRequest"
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Incident created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IncidentResponse"
-                },
-                "examples": {
-                  "success": {
-                    "$ref": "#/components/examples/CreateIncidentResponse"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/Response400"
-          },
-          "401": {
-            "$ref": "#/components/responses/Response401"
-          }
-        }
-      },
-      "get": {
-        "operationId": "searchIncidents",
-        "summary": "Search for incidents",
-        "description": "API to get incidents",
-        "tags": ["Incidents"],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
+        "tags": ["Monitors"],
+        "operationId": "listMonitors",
+        "summary": "List monitors",
         "parameters": [
           {
             "name": "status",
             "in": "query",
-            "description": "status of the incident. Can be open or close. close means deleted",
-            "schema": {
-              "type": "string",
-              "description": "status of the incident. Can be open or close. close means deleted",
-              "enum": ["OPEN", "CLOSED"],
-              "default": "OPEN",
-              "example": "OPEN"
-            }
-          },
-          {
-            "name": "state",
-            "in": "query",
-            "description": "state of the incident. Can be open or close",
-            "schema": {
-              "type": "string",
-              "description": "state of the incident. Can be open or close",
-              "enum": ["INVESTIGATING", "IDENTIFIED", "MONITORING", "RESOLVED"],
-              "default": "INVESTIGATING",
-              "example": "IDENTIFIED"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "description": "page number",
-            "schema": {
-              "type": "integer",
-              "description": "page number",
-              "default": 1,
-              "minimum": 1,
-              "example": 1
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "description": "how many per page",
-            "schema": {
-              "type": "integer",
-              "default": 10,
-              "description": "how many per page",
-              "maximum": 100,
-              "example": 10
-            }
-          },
-          {
-            "name": "start_date_time",
-            "description": "start time",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "description": "start time",
-              "example": 1731866475
-            }
-          },
-          {
-            "name": "end_date_time",
-            "description": "end time",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "description": "end time",
-              "example": 1731866475
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Search results retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/IncidentResponse"
-                  }
-                },
-                "examples": {
-                  "success": {
-                    "$ref": "#/components/examples/SearchIncidentsResponse"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/Response400"
-          },
-          "401": {
-            "$ref": "#/components/responses/Response401"
-          }
-        }
-      }
-    },
-    "/api/incident/{incident_id}": {
-      "parameters": [
-        {
-          "name": "incident_id",
-          "in": "path",
-          "required": true,
-          "description": "incident id as an integer to get incident by id",
-          "schema": {
-            "type": "integer",
-            "example": 4
-          }
-        }
-      ],
-      "get": {
-        "operationId": "getIncident",
-        "summary": "Get an incident by id",
-        "description": "API to get an incident by incident id",
-        "tags": ["Incidents"],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Incident retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IncidentResponse"
-                },
-                "examples": {
-                  "success": {
-                    "$ref": "#/components/examples/CreateIncidentResponse"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/Response400"
-          },
-          "401": {
-            "$ref": "#/components/responses/Response401"
-          }
-        }
-      },
-      "patch": {
-        "operationId": "updateIncident",
-        "summary": "Update an incident",
-        "description": "API to update an incident by incident id",
-        "tags": ["Incidents"],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "search for an incident",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Incident"
-              },
-              "examples": {
-                "sample": {
-                  "$ref": "#/components/examples/CreateIncidentRequest"
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Incident updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/IncidentResponse"
-                },
-                "examples": {
-                  "success": {
-                    "$ref": "#/components/examples/CreateIncidentResponse"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/Response400"
-          },
-          "401": {
-            "$ref": "#/components/responses/Response401"
-          }
-        }
-      }
-    },
-    "/api/incident/{incident_id}/updates": {
-      "parameters": [
-        {
-          "name": "incident_id",
-          "in": "path",
-          "required": true,
-          "description": "incident id to fetch comment for",
-          "schema": {
-            "type": "integer",
-            "example": 4
-          }
-        }
-      ],
-      "post": {
-        "operationId": "addIncidentComment",
-        "summary": "Add an update to an incident",
-        "description": "API to create update for an incident",
-        "tags": ["Incidents"],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "description": "body to add an update",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/Comment"
-              },
-              "examples": {
-                "sample": {
-                  "$ref": "#/components/examples/CommentRequestBody"
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Comment added successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CommentResponse"
-                },
-                "examples": {
-                  "sample": {
-                    "$ref": "#/components/examples/CreateCommentResponse"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/Response400"
-          },
-          "401": {
-            "$ref": "#/components/responses/Response401"
-          }
-        }
-      },
-      "get": {
-        "operationId": "getIncidentComments",
-        "summary": "Get updates for an incident",
-        "description": "API to get updates for an incident",
-        "tags": ["Incidents"],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "updates retrieved successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/CommentResponse"
-                  }
-                },
-                "examples": {
-                  "success": {
-                    "$ref": "#/components/examples/CommentsResponse"
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "$ref": "#/components/responses/Response400"
-          },
-          "401": {
-            "$ref": "#/components/responses/Response401"
-          }
-        }
-      }
-    },
-    "/api/incident/{incident_id}/monitors": {
-      "parameters": [
-        {
-          "name": "incident_id",
-          "in": "path",
-          "required": true,
-          "description": "incident id to fetch comment for",
-          "schema": {
-            "type": "integer",
-            "example": 4
-          }
-        }
-      ],
-      "get": {
-        "summary": "Get monitors for an incident",
-        "operationId": "getIncidentMonitors",
-        "tags": ["Incidents"],
-        "parameters": [
-          {
-            "name": "incident_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            },
-            "description": "The ID of the incident"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of monitors for the incident",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "monitor_tag": {
-                        "type": "string",
-                        "description": "The tag of the monitor",
-                        "example": "earth"
-                      },
-                      "monitor_impact": {
-                        "type": "string",
-                        "description": "The impact status of the monitor",
-                        "example": "DOWN"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      },
-      "post": {
-        "summary": "Add a monitor to an incident",
-        "operationId": "addIncidentMonitor",
-        "tags": ["Incidents"],
-        "parameters": [
-          {
-            "name": "incident_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            },
-            "description": "The ID of the incident"
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "tag": {
-                    "type": "string",
-                    "description": "The tag for the monitor",
-                    "example": "okbookmarks"
-                  },
-                  "impact": {
-                    "type": "string",
-                    "description": "The impact status of the monitor",
-                    "example": "DEGRADED"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Monitor added successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "monitor_tag": {
-                        "type": "string",
-                        "description": "The tag of the monitor",
-                        "example": "okbookmarks"
-                      },
-                      "monitor_impact": {
-                        "type": "string",
-                        "description": "The impact status of the monitor",
-                        "example": "DEGRADED"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      },
-      "delete": {
-        "summary": "Delete a monitor from an incident",
-        "operationId": "deleteIncidentMonitor",
-        "tags": ["Incidents"],
-        "parameters": [
-          {
-            "name": "incident_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            },
-            "description": "The ID of the incident"
-          },
-          {
-            "name": "tag",
-            "in": "query",
-            "required": true,
             "schema": {
               "type": "string"
-            },
-            "description": "The tag of the monitor to delete"
+            }
+          },
+          {
+            "name": "category_name",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "monitor_type",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "is_hidden",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "Monitor deleted successfully",
+            "description": "Monitor list",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "required": ["monitors"],
                   "properties": {
-                    "message": {
-                      "type": "string",
-                      "description": "Confirmation message",
-                      "example": "Monitor deleted successfully"
+                    "monitors": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Monitor"
+                      }
                     }
                   }
                 }
               }
             }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/monitor": {
-      "get": {
-        "summary": "Search Monitor",
-        "description": "Search Monitor",
-        "operationId": "searchMonitor",
-        "tags": ["Monitors"],
-        "parameters": [
-          {
-            "name": "tag",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "example": "{{tag}}"
-            },
-            "description": "Optional tag to filter results"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Response200",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "category_name": {
-                        "type": "string",
-                        "example": "Home"
-                      },
-                      "created_at": {
-                        "type": "string",
-                        "example": "2025-04-23T11:14:49.822Z"
-                      },
-                      "cron": {
-                        "type": "string",
-                        "example": "* * * * *"
-                      },
-                      "day_degraded_minimum_count": {
-                        "type": "number",
-                        "example": 1
-                      },
-                      "day_down_minimum_count": {
-                        "type": "number",
-                        "example": 1
-                      },
-                      "default_status": {
-                        "type": "string",
-                        "example": "NONE"
-                      },
-                      "degraded_trigger": {
-                        "nullable": true,
-                        "example": null
-                      },
-                      "description": {
-                        "type": "string",
-                        "example": ""
-                      },
-                      "down_trigger": {
-                        "nullable": true,
-                        "example": null
-                      },
-                      "id": {
-                        "type": "number",
-                        "example": 15
-                      },
-                      "image": {
-                        "type": "string",
-                        "example": ""
-                      },
-                      "include_degraded_in_downtime": {
-                        "type": "string",
-                        "example": "NO"
-                      },
-                      "monitor_type": {
-                        "type": "string",
-                        "example": "SSL"
-                      },
-                      "name": {
-                        "type": "string",
-                        "example": "Github SSL Certificate"
-                      },
-                      "status": {
-                        "type": "string",
-                        "example": "ACTIVE"
-                      },
-                      "tag": {
-                        "type": "string",
-                        "example": "GithubSSL"
-                      },
-                      "type_data": {
-                        "type": "string",
-                        "example": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}"
-                      },
-                      "updated_at": {
-                        "type": "string",
-                        "example": "2025-04-23T12:05:01.941Z"
-                      }
-                    }
-                  },
-                  "example": [
-                    {
-                      "category_name": "Home",
-                      "created_at": "2025-04-23T11:14:49.822Z",
-                      "cron": "* * * * *",
-                      "day_degraded_minimum_count": 1,
-                      "day_down_minimum_count": 1,
-                      "default_status": "NONE",
-                      "degraded_trigger": null,
-                      "description": "",
-                      "down_trigger": null,
-                      "id": 15,
-                      "image": "",
-                      "include_degraded_in_downtime": "NO",
-                      "monitor_type": "SSL",
-                      "name": "Github SSL Certificate",
-                      "status": "ACTIVE",
-                      "tag": "GithubSSL",
-                      "type_data": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}",
-                      "updated_at": "2025-04-23T12:05:01.941Z"
-                    }
-                  ]
-                },
-                "examples": {
-                  "Response200": {
-                    "value": [
-                      {
-                        "category_name": "Home",
-                        "created_at": "2025-04-23T11:14:49.822Z",
-                        "cron": "* * * * *",
-                        "day_degraded_minimum_count": 1,
-                        "day_down_minimum_count": 1,
-                        "default_status": "NONE",
-                        "degraded_trigger": null,
-                        "description": "",
-                        "down_trigger": null,
-                        "id": 15,
-                        "image": "",
-                        "include_degraded_in_downtime": "NO",
-                        "monitor_type": "SSL",
-                        "name": "Github SSL Certificate",
-                        "status": "ACTIVE",
-                        "tag": "GithubSSL",
-                        "type_data": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}",
-                        "updated_at": "2025-04-23T12:05:01.941Z"
-                      }
-                    ]
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
+        }
       },
       "post": {
-        "summary": "Create Monitor",
-        "description": "API to create monitors",
-        "operationId": "createMonitor",
         "tags": ["Monitors"],
+        "operationId": "createMonitor",
+        "summary": "Create monitor",
         "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "category_name": {
-                    "type": "string",
-                    "example": "Home"
-                  },
-                  "created_at": {
-                    "type": "string",
-                    "example": "2025-04-22T10:10:00.546Z"
-                  },
-                  "cron": {
-                    "type": "string",
-                    "example": "* * * * *"
-                  },
-                  "day_degraded_minimum_count": {
-                    "type": "number",
-                    "example": 1
-                  },
-                  "day_down_minimum_count": {
-                    "type": "number",
-                    "example": 1
-                  },
-                  "default_status": {
-                    "type": "string",
-                    "example": "NONE"
-                  },
-                  "degraded_trigger": {
-                    "nullable": true,
-                    "example": null
-                  },
-                  "description": {
-                    "type": "string",
-                    "example": ""
-                  },
-                  "down_trigger": {
-                    "nullable": true,
-                    "example": null
-                  },
-                  "id": {
-                    "type": "number",
-                    "example": 15
-                  },
-                  "image": {
-                    "type": "string",
-                    "example": ""
-                  },
-                  "include_degraded_in_downtime": {
-                    "type": "string",
-                    "example": "NO"
-                  },
-                  "monitor_type": {
-                    "type": "string",
-                    "example": "API"
-                  },
-                  "name": {
-                    "type": "string",
-                    "example": "Github"
-                  },
-                  "status": {
-                    "type": "string",
-                    "example": "ACTIVE"
-                  },
-                  "tag": {
-                    "type": "string",
-                    "example": "Github"
-                  },
-                  "type_data": {
-                    "type": "string",
-                    "example": "{\"url\":\"https://github.com/\",\"method\":\"GET\",\"headers\":[],\"body\":\"\",\"timeout\":10000,\"eval\":\"(async function (statusCode, responseTime, responseRaw, modules) {\\n\\tlet statusCodeShort = Math.floor(statusCode/100);\\n    if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {\\n        return {\\n\\t\\t\\tstatus: 'UP',\\n\\t\\t\\tlatency: responseTime,\\n        }\\n    } \\n\\treturn {\\n\\t\\tstatus: 'DOWN',\\n\\t\\tlatency: responseTime,\\n\\t}\\n})\",\"hideURLForGet\":\"NO\",\"allowSelfSignedCert\":false}"
-                  },
-                  "updated_at": {
-                    "type": "string",
-                    "example": "2025-04-22T10:10:00.546Z"
-                  }
-                }
-              },
-              "examples": {
-                "Create Monitor": {
-                  "value": {
-                    "category_name": "Home",
-                    "created_at": "2025-04-22T10:10:00.546Z",
-                    "cron": "* * * * *",
-                    "day_degraded_minimum_count": 1,
-                    "day_down_minimum_count": 1,
-                    "default_status": "NONE",
-                    "degraded_trigger": null,
-                    "description": "",
-                    "down_trigger": null,
-                    "id": 15,
-                    "image": "",
-                    "include_degraded_in_downtime": "NO",
-                    "monitor_type": "API",
-                    "name": "Github",
-                    "status": "ACTIVE",
-                    "tag": "Github",
-                    "type_data": "{\"url\":\"https://github.com/\",\"method\":\"GET\",\"headers\":[],\"body\":\"\",\"timeout\":10000,\"eval\":\"(async function (statusCode, responseTime, responseRaw, modules) {\\n\\tlet statusCodeShort = Math.floor(statusCode/100);\\n    if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {\\n        return {\\n\\t\\t\\tstatus: 'UP',\\n\\t\\t\\tlatency: responseTime,\\n        }\\n    } \\n\\treturn {\\n\\t\\tstatus: 'DOWN',\\n\\t\\tlatency: responseTime,\\n\\t}\\n})\",\"hideURLForGet\":\"NO\",\"allowSelfSignedCert\":false}",
-                    "updated_at": "2025-04-22T10:10:00.546Z"
-                  }
-                }
+                "$ref": "#/components/schemas/CreateMonitorRequest"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Response201",
+            "description": "Monitor created",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "required": ["monitor"],
                   "properties": {
-                    "category_name": {
-                      "type": "string",
-                      "example": "Home"
-                    },
-                    "created_at": {
-                      "type": "string",
-                      "example": "2025-04-23T12:35:21.030Z"
-                    },
-                    "cron": {
-                      "type": "string",
-                      "example": "* * * * *"
-                    },
-                    "day_degraded_minimum_count": {
-                      "type": "number",
-                      "example": 1
-                    },
-                    "day_down_minimum_count": {
-                      "type": "number",
-                      "example": 1
-                    },
-                    "default_status": {
-                      "type": "string",
-                      "example": "NONE"
-                    },
-                    "degraded_trigger": {
-                      "nullable": true,
-                      "example": null
-                    },
-                    "description": {
-                      "type": "string",
-                      "example": ""
-                    },
-                    "down_trigger": {
-                      "nullable": true,
-                      "example": null
-                    },
-                    "id": {
-                      "type": "number",
-                      "example": 16
-                    },
-                    "image": {
-                      "type": "string",
-                      "example": ""
-                    },
-                    "include_degraded_in_downtime": {
-                      "type": "string",
-                      "example": "NO"
-                    },
-                    "monitor_type": {
-                      "type": "string",
-                      "example": "API"
-                    },
-                    "name": {
-                      "type": "string",
-                      "example": "Github"
-                    },
-                    "status": {
-                      "type": "string",
-                      "example": "ACTIVE"
-                    },
-                    "tag": {
-                      "type": "string",
-                      "example": "Github"
-                    },
-                    "type_data": {
-                      "type": "string",
-                      "example": "{\"url\":\"https://github.com/\",\"method\":\"GET\",\"headers\":[],\"body\":\"\",\"timeout\":10000,\"eval\":\"(async function (statusCode, responseTime, responseRaw, modules) {\\n\\tlet statusCodeShort = Math.floor(statusCode/100);\\n    if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {\\n        return {\\n\\t\\t\\tstatus: 'UP',\\n\\t\\t\\tlatency: responseTime,\\n        }\\n    } \\n\\treturn {\\n\\t\\tstatus: 'DOWN',\\n\\t\\tlatency: responseTime,\\n\\t}\\n})\",\"hideURLForGet\":\"NO\",\"allowSelfSignedCert\":false}"
-                    },
-                    "updated_at": {
-                      "type": "string",
-                      "example": "2025-04-23T12:35:21.030Z"
-                    }
-                  }
-                },
-                "examples": {
-                  "Response201": {
-                    "value": {
-                      "category_name": "Home",
-                      "created_at": "2025-04-23T12:35:21.030Z",
-                      "cron": "* * * * *",
-                      "day_degraded_minimum_count": 1,
-                      "day_down_minimum_count": 1,
-                      "default_status": "NONE",
-                      "degraded_trigger": null,
-                      "description": "",
-                      "down_trigger": null,
-                      "id": 16,
-                      "image": "",
-                      "include_degraded_in_downtime": "NO",
-                      "monitor_type": "API",
-                      "name": "Github",
-                      "status": "ACTIVE",
-                      "tag": "Github",
-                      "type_data": "{\"url\":\"https://github.com/\",\"method\":\"GET\",\"headers\":[],\"body\":\"\",\"timeout\":10000,\"eval\":\"(async function (statusCode, responseTime, responseRaw, modules) {\\n\\tlet statusCodeShort = Math.floor(statusCode/100);\\n    if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {\\n        return {\\n\\t\\t\\tstatus: 'UP',\\n\\t\\t\\tlatency: responseTime,\\n        }\\n    } \\n\\treturn {\\n\\t\\tstatus: 'DOWN',\\n\\t\\tlatency: responseTime,\\n\\t}\\n})\",\"hideURLForGet\":\"NO\",\"allowSelfSignedCert\":false}",
-                      "updated_at": "2025-04-23T12:35:21.030Z"
+                    "monitor": {
+                      "$ref": "#/components/schemas/Monitor"
                     }
                   }
                 }
@@ -1484,288 +134,918 @@
             }
           },
           "400": {
-            "description": "Response400",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "monitor id must be empty or 0"
-                    }
-                  }
-                },
-                "examples": {
-                  "Response400": {
-                    "value": {
-                      "error": "monitor id must be empty or 0"
-                    }
-                  }
-                }
-              }
-            }
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
+        }
       }
     },
-    "/api/monitor/{monitorId}": {
+    "/api/v4/monitors/{monitor_tag}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/MonitorTag"
+        }
+      ],
       "get": {
-        "summary": "Get Monitor",
-        "description": "API to get a specified monitor",
-        "operationId": "getMonitor",
         "tags": ["Monitors"],
+        "operationId": "getMonitor",
+        "summary": "Get monitor",
         "responses": {
           "200": {
-            "description": "Response200",
+            "description": "Monitor",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "required": ["monitor"],
                   "properties": {
-                    "category_name": {
-                      "type": "string",
-                      "example": "Home"
-                    },
-                    "created_at": {
-                      "type": "string",
-                      "example": "2025-04-23T11:14:49.822Z"
-                    },
-                    "cron": {
-                      "type": "string",
-                      "example": "* * * * *"
-                    },
-                    "day_degraded_minimum_count": {
-                      "type": "number",
-                      "example": 1
-                    },
-                    "day_down_minimum_count": {
-                      "type": "number",
-                      "example": 1
-                    },
-                    "default_status": {
-                      "type": "string",
-                      "example": "NONE"
-                    },
-                    "degraded_trigger": {
-                      "nullable": true,
-                      "example": null
-                    },
-                    "description": {
-                      "type": "string",
-                      "example": ""
-                    },
-                    "down_trigger": {
-                      "nullable": true,
-                      "example": null
-                    },
-                    "id": {
-                      "type": "number",
-                      "example": 15
-                    },
-                    "image": {
-                      "type": "string",
-                      "example": ""
-                    },
-                    "include_degraded_in_downtime": {
-                      "type": "string",
-                      "example": "NO"
-                    },
-                    "monitor_type": {
-                      "type": "string",
-                      "example": "SSL"
-                    },
-                    "name": {
-                      "type": "string",
-                      "example": "Github SSL Certificate"
-                    },
-                    "status": {
-                      "type": "string",
-                      "example": "ACTIVE"
-                    },
-                    "tag": {
-                      "type": "string",
-                      "example": "GithubSSL"
-                    },
-                    "type_data": {
-                      "type": "string",
-                      "example": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}"
-                    },
-                    "updated_at": {
-                      "type": "string",
-                      "example": "2025-04-23T12:05:01.941Z"
-                    }
-                  }
-                },
-                "examples": {
-                  "Response200": {
-                    "value": {
-                      "category_name": "Home",
-                      "created_at": "2025-04-23T11:14:49.822Z",
-                      "cron": "* * * * *",
-                      "day_degraded_minimum_count": 1,
-                      "day_down_minimum_count": 1,
-                      "default_status": "NONE",
-                      "degraded_trigger": null,
-                      "description": "",
-                      "down_trigger": null,
-                      "id": 15,
-                      "image": "",
-                      "include_degraded_in_downtime": "NO",
-                      "monitor_type": "SSL",
-                      "name": "Github SSL Certificate",
-                      "status": "ACTIVE",
-                      "tag": "GithubSSL",
-                      "type_data": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}",
-                      "updated_at": "2025-04-23T12:05:01.941Z"
+                    "monitor": {
+                      "$ref": "#/components/schemas/Monitor"
                     }
                   }
                 }
               }
             }
           },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
           "404": {
-            "description": "Response404",
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Monitors"],
+        "operationId": "updateMonitor",
+        "summary": "Update monitor",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMonitorRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Monitor updated",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "required": ["monitor"],
                   "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "monitor does not exist"
-                    }
-                  }
-                },
-                "examples": {
-                  "Response404": {
-                    "value": {
-                      "error": "monitor does not exist"
+                    "monitor": {
+                      "$ref": "#/components/schemas/Monitor"
                     }
                   }
                 }
               }
             }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/api/v4/monitors/{monitor_tag}/data": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/MonitorTag"
+        }
+      ],
+      "get": {
+        "tags": ["Monitor Data"],
+        "operationId": "getMonitorDataRange",
+        "summary": "Get monitor data in a time range",
+        "description": "Returns monitoring data points for [start_ts, end_ts). Timestamps are normalized to minute boundaries.",
+        "parameters": [
+          {
+            "name": "start_ts",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "end_ts",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Data points",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MonitoringDataPoint"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Monitor Data"],
+        "operationId": "bulkUpdateMonitorData",
+        "summary": "Bulk update monitor data over a range",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkUpdateMonitorDataRequest"
+              }
+            }
           }
         },
-        "security": [
-          {
-            "bearerAuth": []
+        "responses": {
+          "200": {
+            "description": "Range update completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["message", "updated_count"],
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "updated_count": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           }
-        ]
+        }
+      }
+    },
+    "/api/v4/monitors/{monitor_tag}/data/{timestamp}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/MonitorTag"
+        },
+        {
+          "$ref": "#/components/parameters/Timestamp"
+        }
+      ],
+      "get": {
+        "tags": ["Monitor Data"],
+        "operationId": "getMonitorDataPoint",
+        "summary": "Get one monitor data point",
+        "responses": {
+          "200": {
+            "description": "Data point",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/MonitoringDataPoint"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
       },
-      "put": {
-        "summary": "Update Monitor",
-        "description": "API to update a specified monitor",
-        "operationId": "updateMonitor",
-        "tags": ["Monitors"],
+      "patch": {
+        "tags": ["Monitor Data"],
+        "operationId": "upsertMonitorDataPoint",
+        "summary": "Upsert one monitor data point",
         "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertMonitorDataPointRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Data point upserted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["data"],
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/MonitoringDataPoint"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v4/incidents": {
+      "get": {
+        "tags": ["Incidents"],
+        "operationId": "listIncidents",
+        "summary": "List incidents",
+        "parameters": [
+          {
+            "name": "start_ts",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "end_ts",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "monitor_tags",
+            "in": "query",
+            "description": "Comma-separated monitor tags",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Incident list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["incidents"],
+                  "properties": {
+                    "incidents": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Incident"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Incidents"],
+        "operationId": "createIncident",
+        "summary": "Create incident",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIncidentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Incident created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["incident"],
+                  "properties": {
+                    "incident": {
+                      "$ref": "#/components/schemas/Incident"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v4/incidents/{incident_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/IncidentId"
+        }
+      ],
+      "get": {
+        "tags": ["Incidents"],
+        "operationId": "getIncident",
+        "summary": "Get incident",
+        "responses": {
+          "200": {
+            "description": "Incident details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["incident"],
+                  "properties": {
+                    "incident": {
+                      "$ref": "#/components/schemas/Incident"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Incidents"],
+        "operationId": "updateIncident",
+        "summary": "Update incident",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIncidentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Incident updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["incident"],
+                  "properties": {
+                    "incident": {
+                      "$ref": "#/components/schemas/Incident"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Incidents"],
+        "operationId": "deleteIncident",
+        "summary": "Delete incident",
+        "responses": {
+          "200": {
+            "description": "Incident deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v4/incidents/{incident_id}/comments": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/IncidentId"
+        }
+      ],
+      "get": {
+        "tags": ["Incident Comments"],
+        "operationId": "listIncidentComments",
+        "summary": "List incident comments",
+        "responses": {
+          "200": {
+            "description": "Comment list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["comments"],
+                  "properties": {
+                    "comments": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/IncidentComment"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Incident Comments"],
+        "operationId": "createIncidentComment",
+        "summary": "Create incident comment",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateIncidentCommentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Comment created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["comment"],
+                  "properties": {
+                    "comment": {
+                      "$ref": "#/components/schemas/IncidentComment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v4/incidents/{incident_id}/comments/{comment_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/IncidentId"
+        },
+        {
+          "$ref": "#/components/parameters/CommentId"
+        }
+      ],
+      "get": {
+        "tags": ["Incident Comments"],
+        "operationId": "getIncidentComment",
+        "summary": "Get incident comment",
+        "responses": {
+          "200": {
+            "description": "Comment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["comment"],
+                  "properties": {
+                    "comment": {
+                      "$ref": "#/components/schemas/IncidentComment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Incident Comments"],
+        "operationId": "updateIncidentComment",
+        "summary": "Update incident comment",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateIncidentCommentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Comment updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["comment"],
+                  "properties": {
+                    "comment": {
+                      "$ref": "#/components/schemas/IncidentComment"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Incident Comments"],
+        "operationId": "deleteIncidentComment",
+        "summary": "Delete incident comment",
+        "responses": {
+          "200": {
+            "description": "Comment deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v4/pages": {
+      "get": {
+        "tags": ["Pages"],
+        "operationId": "listPages",
+        "summary": "List pages",
+        "responses": {
+          "200": {
+            "description": "Page list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["pages"],
+                  "properties": {
+                    "pages": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Page"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Pages"],
+        "operationId": "createPage",
+        "summary": "Create page",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Page created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["page"],
+                  "properties": {
+                    "page": {
+                      "$ref": "#/components/schemas/Page"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v4/pages/{page_path}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/PagePath"
+        }
+      ],
+      "get": {
+        "tags": ["Pages"],
+        "operationId": "getPage",
+        "summary": "Get page",
+        "responses": {
+          "200": {
+            "description": "Page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["page"],
+                  "properties": {
+                    "page": {
+                      "$ref": "#/components/schemas/Page"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Pages"],
+        "operationId": "updatePage",
+        "summary": "Update page",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Page updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["page"],
+                  "properties": {
+                    "page": {
+                      "$ref": "#/components/schemas/Page"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Pages"],
+        "operationId": "deletePage",
+        "summary": "Delete page",
+        "responses": {
+          "200": {
+            "description": "Page deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v4/site": {
+      "get": {
+        "tags": ["Site"],
+        "operationId": "listSiteConfig",
+        "summary": "List site config entries",
+        "responses": {
+          "200": {
+            "description": "Site config",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["site_data"],
+                  "properties": {
+                    "site_data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SiteDataEntry"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v4/site/{config_key}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/ConfigKey"
+        }
+      ],
+      "get": {
+        "tags": ["Site"],
+        "operationId": "getSiteConfig",
+        "summary": "Get one site config entry",
+        "responses": {
+          "200": {
+            "description": "Site config entry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteDataEntry"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Site"],
+        "operationId": "updateSiteConfig",
+        "summary": "Update one site config entry",
+        "requestBody": {
+          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "type": "object",
+                "required": ["value"],
                 "properties": {
-                  "category_name": {
-                    "type": "string",
-                    "example": "Home"
-                  },
-                  "created_at": {
-                    "type": "string",
-                    "example": "2025-04-23T11:14:49.822Z"
-                  },
-                  "cron": {
-                    "type": "string",
-                    "example": "* * * * *"
-                  },
-                  "day_degraded_minimum_count": {
-                    "type": "number",
-                    "example": 1
-                  },
-                  "day_down_minimum_count": {
-                    "type": "number",
-                    "example": 1
-                  },
-                  "default_status": {
-                    "type": "string",
-                    "example": "NONE"
-                  },
-                  "degraded_trigger": {
-                    "nullable": true,
-                    "example": null
-                  },
-                  "description": {
-                    "type": "string",
-                    "example": ""
-                  },
-                  "down_trigger": {
-                    "nullable": true,
-                    "example": null
-                  },
-                  "id": {
-                    "type": "number",
-                    "example": 20
-                  },
-                  "image": {
-                    "type": "string",
-                    "example": ""
-                  },
-                  "include_degraded_in_downtime": {
-                    "type": "string",
-                    "example": "NO"
-                  },
-                  "monitor_type": {
-                    "type": "string",
-                    "example": "SSL"
-                  },
-                  "name": {
-                    "type": "string",
-                    "example": "Github SSL Certificate"
-                  },
-                  "status": {
-                    "type": "string",
-                    "example": "ACTIVE"
-                  },
-                  "tag": {
-                    "type": "string",
-                    "example": "GithubSSL"
-                  },
-                  "type_data": {
-                    "type": "string",
-                    "example": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}"
-                  },
-                  "updated_at": {
-                    "type": "string",
-                    "example": "2025-04-23T12:05:01.941Z"
-                  }
-                }
-              },
-              "examples": {
-                "Update Monitor": {
-                  "value": {
-                    "category_name": "Home",
-                    "created_at": "2025-04-23T11:14:49.822Z",
-                    "cron": "* * * * *",
-                    "day_degraded_minimum_count": 1,
-                    "day_down_minimum_count": 1,
-                    "default_status": "NONE",
-                    "degraded_trigger": null,
-                    "description": "",
-                    "down_trigger": null,
-                    "id": 20,
-                    "image": "",
-                    "include_degraded_in_downtime": "NO",
-                    "monitor_type": "SSL",
-                    "name": "Github SSL Certificate",
-                    "status": "ACTIVE",
-                    "tag": "GithubSSL",
-                    "type_data": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}",
-                    "updated_at": "2025-04-23T12:05:01.941Z"
-                  }
+                  "value": {}
                 }
               }
             }
@@ -1773,107 +1053,99 @@
         },
         "responses": {
           "200": {
-            "description": "Response200",
+            "description": "Site config updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteDataEntry"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v4/maintenances": {
+      "get": {
+        "tags": ["Maintenances"],
+        "operationId": "listMaintenances",
+        "summary": "List maintenances",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["ACTIVE", "INACTIVE"]
+            }
+          },
+          {
+            "name": "monitor_tag",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Maintenance list",
             "content": {
               "application/json": {
                 "schema": {
                   "type": "object",
+                  "required": ["maintenances"],
                   "properties": {
-                    "category_name": {
-                      "type": "string",
-                      "example": "Home"
-                    },
-                    "created_at": {
-                      "type": "string",
-                      "example": "2025-04-23T11:14:49.822Z"
-                    },
-                    "cron": {
-                      "type": "string",
-                      "example": "* * * * *"
-                    },
-                    "day_degraded_minimum_count": {
-                      "type": "number",
-                      "example": 1
-                    },
-                    "day_down_minimum_count": {
-                      "type": "number",
-                      "example": 1
-                    },
-                    "default_status": {
-                      "type": "string",
-                      "example": "NONE"
-                    },
-                    "degraded_trigger": {
-                      "nullable": true,
-                      "example": null
-                    },
-                    "description": {
-                      "type": "string",
-                      "example": ""
-                    },
-                    "down_trigger": {
-                      "nullable": true,
-                      "example": null
-                    },
-                    "id": {
-                      "type": "number",
-                      "example": 15
-                    },
-                    "image": {
-                      "type": "string",
-                      "example": ""
-                    },
-                    "include_degraded_in_downtime": {
-                      "type": "string",
-                      "example": "NO"
-                    },
-                    "monitor_type": {
-                      "type": "string",
-                      "example": "SSL"
-                    },
-                    "name": {
-                      "type": "string",
-                      "example": "Github SSL Certificate"
-                    },
-                    "status": {
-                      "type": "string",
-                      "example": "ACTIVE"
-                    },
-                    "tag": {
-                      "type": "string",
-                      "example": "GithubSSL"
-                    },
-                    "type_data": {
-                      "type": "string",
-                      "example": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}"
-                    },
-                    "updated_at": {
-                      "type": "string",
-                      "example": "2025-04-23T13:38:22.965Z"
+                    "maintenances": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Maintenance"
+                      }
                     }
                   }
-                },
-                "examples": {
-                  "Response200": {
-                    "value": {
-                      "category_name": "Home",
-                      "created_at": "2025-04-23T11:14:49.822Z",
-                      "cron": "* * * * *",
-                      "day_degraded_minimum_count": 1,
-                      "day_down_minimum_count": 1,
-                      "default_status": "NONE",
-                      "degraded_trigger": null,
-                      "description": "",
-                      "down_trigger": null,
-                      "id": 15,
-                      "image": "",
-                      "include_degraded_in_downtime": "NO",
-                      "monitor_type": "SSL",
-                      "name": "Github SSL Certificate",
-                      "status": "ACTIVE",
-                      "tag": "GithubSSL",
-                      "type_data": "{\"host\":\"github.com\",\"port\":443,\"degradedRemainingHours\":2,\"downRemainingHours\":1}",
-                      "updated_at": "2025-04-23T13:38:22.965Z"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      },
+      "post": {
+        "tags": ["Maintenances"],
+        "operationId": "createMaintenance",
+        "summary": "Create maintenance",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMaintenanceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Maintenance created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["maintenance"],
+                  "properties": {
+                    "maintenance": {
+                      "$ref": "#/components/schemas/Maintenance"
                     }
                   }
                 }
@@ -1881,120 +1153,1189 @@
             }
           },
           "400": {
-            "description": "Response400",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "id mismatch: payload: 15, url: 14"
-                    }
-                  }
-                },
-                "examples": {
-                  "Response400": {
-                    "value": {
-                      "error": "id mismatch: payload: 15, url: 14"
-                    }
-                  }
-                }
-              }
-            }
+            "$ref": "#/components/responses/BadRequest"
           },
-          "404": {
-            "description": "Response404",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "monitor does not exist"
-                    }
-                  }
-                },
-                "examples": {
-                  "Response404": {
-                    "value": {
-                      "error": "monitor does not exist"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      },
-      "delete": {
-        "summary": "Delete Monitor",
-        "description": "API to delete a specified monitor",
-        "operationId": "deleteMonitor",
-        "tags": ["Monitors"],
-        "responses": {
-          "200": {
-            "description": "Response200",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {}
-                },
-                "examples": {
-                  "Response200": {
-                    "value": {}
-                  }
-                }
-              }
-            }
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
           },
-          "404": {
-            "description": "Response404",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string",
-                      "example": "monitor does not exist"
-                    }
-                  }
-                },
-                "examples": {
-                  "Response404": {
-                    "value": {
-                      "error": "monitor does not exist"
-                    }
-                  }
-                }
-              }
-            }
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
-        },
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      },
+        }
+      }
+    },
+    "/api/v4/maintenances/{maintenance_id}": {
       "parameters": [
         {
-          "name": "monitorId",
-          "in": "path",
+          "$ref": "#/components/parameters/MaintenanceId"
+        }
+      ],
+      "get": {
+        "tags": ["Maintenances"],
+        "operationId": "getMaintenance",
+        "summary": "Get maintenance",
+        "responses": {
+          "200": {
+            "description": "Maintenance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["maintenance"],
+                  "properties": {
+                    "maintenance": {
+                      "$ref": "#/components/schemas/Maintenance"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Maintenances"],
+        "operationId": "updateMaintenance",
+        "summary": "Update maintenance",
+        "requestBody": {
           "required": true,
-          "schema": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaintenanceRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Maintenance updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["maintenance"],
+                  "properties": {
+                    "maintenance": {
+                      "$ref": "#/components/schemas/Maintenance"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Maintenances"],
+        "operationId": "deleteMaintenance",
+        "summary": "Delete maintenance",
+        "responses": {
+          "200": {
+            "description": "Maintenance deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v4/maintenances/events": {
+      "get": {
+        "tags": ["Maintenance Events"],
+        "operationId": "listMaintenanceEvents",
+        "summary": "List maintenance events",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          },
+          {
+            "name": "monitors",
+            "in": "query",
+            "description": "Comma-separated monitor tags",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "event_status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["SCHEDULED", "ONGOING", "COMPLETED", "CANCELLED", "READY"]
+            }
+          },
+          {
+            "name": "event_start_date_time",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "maintenance_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Events list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["events", "page", "limit", "total"],
+                  "properties": {
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MaintenanceEventDetailed"
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          }
+        }
+      }
+    },
+    "/api/v4/maintenances/{maintenance_id}/events": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/MaintenanceId"
+        }
+      ],
+      "get": {
+        "tags": ["Maintenance Events"],
+        "operationId": "listMaintenanceEventsByMaintenance",
+        "summary": "List events for one maintenance",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Events list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["events", "page", "limit"],
+                  "properties": {
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/MaintenanceEvent"
+                      }
+                    },
+                    "page": {
+                      "type": "integer"
+                    },
+                    "limit": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    },
+    "/api/v4/maintenances/{maintenance_id}/events/{event_id}": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/MaintenanceId"
+        },
+        {
+          "$ref": "#/components/parameters/EventId"
+        }
+      ],
+      "get": {
+        "tags": ["Maintenance Events"],
+        "operationId": "getMaintenanceEvent",
+        "summary": "Get one maintenance event",
+        "responses": {
+          "200": {
+            "description": "Event",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["event"],
+                  "properties": {
+                    "event": {
+                      "$ref": "#/components/schemas/MaintenanceEvent"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Maintenance Events"],
+        "operationId": "updateMaintenanceEvent",
+        "summary": "Update one maintenance event",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMaintenanceEventRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Event updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["event"],
+                  "properties": {
+                    "event": {
+                      "$ref": "#/components/schemas/MaintenanceEvent"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Maintenance Events"],
+        "operationId": "deleteMaintenanceEvent",
+        "summary": "Delete one maintenance event",
+        "responses": {
+          "200": {
+            "description": "Event deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "API key"
+      }
+    },
+    "parameters": {
+      "MonitorTag": {
+        "name": "monitor_tag",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "Timestamp": {
+        "name": "timestamp",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "IncidentId": {
+        "name": "incident_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "CommentId": {
+        "name": "comment_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "PagePath": {
+        "name": "page_path",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "ConfigKey": {
+        "name": "config_key",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "MaintenanceId": {
+        "name": "maintenance_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "EventId": {
+        "name": "event_id",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "integer"
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Bad request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Unauthorized",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "missingHeader": {
+                "value": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Missing or invalid authorization header"
+                  }
+                }
+              },
+              "invalidToken": {
+                "value": {
+                  "error": {
+                    "code": "UNAUTHORIZED",
+                    "message": "Invalid API key"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Not found",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "Internal server error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "required": ["error"],
+        "properties": {
+          "error": {
+            "type": "object",
+            "required": ["code", "message"],
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": {
             "type": "string"
           }
         }
-      ]
+      },
+      "Monitor": {
+        "type": "object",
+        "required": ["tag", "name"],
+        "properties": {
+          "tag": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string"
+          },
+          "cron": {
+            "type": "string"
+          },
+          "default_status": {
+            "type": "string",
+            "enum": ["UP", "DOWN", "DEGRADED", "MAINTENANCE", "NO_DATA"]
+          },
+          "status": {
+            "type": "string"
+          },
+          "category_name": {
+            "type": "string"
+          },
+          "monitor_type": {
+            "type": "string"
+          },
+          "type_data": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "include_degraded_in_downtime": {
+            "type": "string"
+          },
+          "is_hidden": {
+            "type": "string"
+          },
+          "monitor_settings_json": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      },
+      "CreateMonitorRequest": {
+        "type": "object",
+        "required": ["tag", "name"],
+        "properties": {
+          "tag": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string"
+          },
+          "cron": {
+            "type": "string"
+          },
+          "default_status": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "category_name": {
+            "type": "string"
+          },
+          "monitor_type": {
+            "type": "string"
+          },
+          "type_data": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "include_degraded_in_downtime": {
+            "type": "string"
+          },
+          "is_hidden": {
+            "type": "string"
+          },
+          "monitor_settings_json": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateMonitorRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string"
+          },
+          "cron": {
+            "type": "string"
+          },
+          "default_status": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "category_name": {
+            "type": "string"
+          },
+          "monitor_type": {
+            "type": "string"
+          },
+          "type_data": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "include_degraded_in_downtime": {
+            "type": "string"
+          },
+          "is_hidden": {
+            "type": "string"
+          },
+          "monitor_settings_json": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "MonitoringDataPoint": {
+        "type": "object",
+        "required": ["monitor_tag", "timestamp", "status", "latency", "type"],
+        "properties": {
+          "monitor_tag": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "integer",
+            "description": "UTC timestamp in seconds, minute-aligned"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["UP", "DOWN", "DEGRADED"]
+          },
+          "latency": {
+            "type": "number",
+            "minimum": 0
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "BulkUpdateMonitorDataRequest": {
+        "type": "object",
+        "required": ["start_ts", "end_ts", "status", "latency"],
+        "properties": {
+          "start_ts": {
+            "type": "integer"
+          },
+          "end_ts": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["UP", "DOWN", "DEGRADED"]
+          },
+          "latency": {
+            "type": "number",
+            "minimum": 0
+          },
+          "deviation": {
+            "type": "number",
+            "minimum": 0,
+            "default": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpsertMonitorDataPointRequest": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["UP", "DOWN", "DEGRADED"]
+          },
+          "latency": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "MonitorImpact": {
+        "type": "object",
+        "required": ["monitor_tag"],
+        "properties": {
+          "monitor_tag": {
+            "type": "string"
+          },
+          "impact": {
+            "type": "string",
+            "enum": ["UP", "DOWN", "DEGRADED", "MAINTENANCE"]
+          }
+        }
+      },
+      "Incident": {
+        "type": "object",
+        "required": ["id", "title"],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "start_date_time": {
+            "type": "integer"
+          },
+          "end_date_time": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "incident_type": {
+            "type": "string"
+          },
+          "incident_source": {
+            "type": "string"
+          },
+          "monitors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitorImpact"
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "CreateIncidentRequest": {
+        "type": "object",
+        "required": ["title", "start_date_time"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "start_date_time": {
+            "type": "integer"
+          },
+          "end_date_time": {
+            "type": "integer"
+          },
+          "monitors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitorImpact"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateIncidentRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "start_date_time": {
+            "type": "integer"
+          },
+          "end_date_time": {
+            "type": "integer"
+          },
+          "monitors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitorImpact"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "IncidentComment": {
+        "type": "object",
+        "required": ["id", "incident_id", "comment", "state", "timestamp"],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "incident_id": {
+            "type": "integer"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": ["INVESTIGATING", "IDENTIFIED", "MONITORING", "RESOLVED"]
+          },
+          "timestamp": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "CreateIncidentCommentRequest": {
+        "type": "object",
+        "required": ["comment", "state"],
+        "properties": {
+          "comment": {
+            "type": "string",
+            "minLength": 1
+          },
+          "state": {
+            "type": "string",
+            "enum": ["INVESTIGATING", "IDENTIFIED", "MONITORING", "RESOLVED"]
+          },
+          "timestamp": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateIncidentCommentRequest": {
+        "type": "object",
+        "properties": {
+          "comment": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": ["INVESTIGATING", "IDENTIFIED", "MONITORING", "RESOLVED"]
+          },
+          "timestamp": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      },
+      "Page": {
+        "type": "object",
+        "required": ["page_path", "page_title", "page_header"],
+        "properties": {
+          "page_path": {
+            "type": "string"
+          },
+          "page_title": {
+            "type": "string"
+          },
+          "page_header": {
+            "type": "string"
+          },
+          "page_subheader": {
+            "type": "string"
+          },
+          "page_logo": {
+            "type": "string"
+          },
+          "page_settings": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "monitors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Monitor"
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "CreatePageRequest": {
+        "type": "object",
+        "required": ["page_path", "page_title", "page_header"],
+        "properties": {
+          "page_path": {
+            "type": "string",
+            "description": "Will be sanitized to lowercase kebab-like single segment"
+          },
+          "page_title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "page_header": {
+            "type": "string",
+            "minLength": 1
+          },
+          "page_subheader": {
+            "type": "string"
+          },
+          "page_logo": {
+            "type": "string"
+          },
+          "page_settings": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "monitors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdatePageRequest": {
+        "type": "object",
+        "properties": {
+          "page_path": {
+            "type": "string"
+          },
+          "page_title": {
+            "type": "string"
+          },
+          "page_header": {
+            "type": "string"
+          },
+          "page_subheader": {
+            "type": "string"
+          },
+          "page_logo": {
+            "type": "string"
+          },
+          "page_settings": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "monitors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "SiteDataEntry": {
+        "type": "object",
+        "required": ["key", "value", "data_type"],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "value": {},
+          "data_type": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "Maintenance": {
+        "type": "object",
+        "required": ["id", "title", "start_date_time", "rrule", "duration_seconds"],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "start_date_time": {
+            "type": "integer"
+          },
+          "rrule": {
+            "type": "string"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ACTIVE", "INACTIVE"]
+          },
+          "monitors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitorImpact"
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "CreateMaintenanceRequest": {
+        "type": "object",
+        "required": ["title", "start_date_time", "rrule", "duration_seconds"],
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string"
+          },
+          "start_date_time": {
+            "type": "integer"
+          },
+          "rrule": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Valid RRULE string"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "monitors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitorImpact"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateMaintenanceRequest": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "start_date_time": {
+            "type": "integer"
+          },
+          "rrule": {
+            "type": "string"
+          },
+          "duration_seconds": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": ["ACTIVE", "INACTIVE"]
+          },
+          "monitors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitorImpact"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "MaintenanceEvent": {
+        "type": "object",
+        "required": ["id", "maintenance_id", "start_date_time", "end_date_time"],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "maintenance_id": {
+            "type": "integer"
+          },
+          "start_date_time": {
+            "type": "integer"
+          },
+          "end_date_time": {
+            "type": "integer"
+          },
+          "event_status": {
+            "type": "string",
+            "enum": ["SCHEDULED", "ONGOING", "COMPLETED", "CANCELLED", "READY"]
+          }
+        },
+        "additionalProperties": true
+      },
+      "MaintenanceEventDetailed": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/MaintenanceEvent"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "maintenance": {
+                "$ref": "#/components/schemas/Maintenance"
+              }
+            },
+            "additionalProperties": true
+          }
+        ]
+      },
+      "UpdateMaintenanceEventRequest": {
+        "type": "object",
+        "required": ["start_date_time", "end_date_time"],
+        "properties": {
+          "start_date_time": {
+            "type": "integer"
+          },
+          "end_date_time": {
+            "type": "integer",
+            "description": "Must be greater than start_date_time"
+          }
+        },
+        "additionalProperties": false
+      }
     }
   }
 }

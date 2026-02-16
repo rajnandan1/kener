@@ -8,7 +8,7 @@ import type {
   BadRequestResponse,
 } from "$lib/types/api";
 import type { MonitorRecord } from "$lib/server/types/db";
-import { GetMonitorsParsed } from "../../../../lib/server/controllers/monitorsController";
+import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {
