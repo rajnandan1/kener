@@ -87,8 +87,10 @@
     <!-- Stats row -->
     <div class="flex items-center justify-between text-xs font-semibold">
       <span class="text-foreground">{displayUptime}% {$t("Uptime")}</span>
-      {#if displayLatency !== "--"}
-        <span class="">{displayLatency} {$t(data.metric)}</span>
+      {#if !!displayLatency && displayLatency !== "--"}
+        <span class=""
+          >{$t("%latency %metric latency", { latency: String(displayLatency), metric: $t(data.metric) })}</span
+        >
       {/if}
     </div>
 

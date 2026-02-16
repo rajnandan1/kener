@@ -1,5 +1,6 @@
 {
   "name": "Русский",
+  "code": "ru",
   "mappings": {
     "Under Maintenance": "На обслуживании",
     "All Systems Operational": "Все системы работают",
