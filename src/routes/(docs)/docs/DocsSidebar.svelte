@@ -97,11 +97,19 @@
   }
 
   function getHref(slug: string): string {
-    return `${base}/docs/${slug}`;
+    if (!config.activeVersion) {
+      return `${base}/docs/${slug}`;
+    }
+
+    if (slug.startsWith(`${config.activeVersion}/`)) {
+      return `${base}/docs/${slug}`;
+    }
+
+    return `${base}/docs/${config.activeVersion}/${slug}`;
   }
 </script>
 
-<nav class="p-6 pr-4 pl-10">
+<nav class="p-6 pr-4 pl-4">
   <div class="scrollbar-hidden flex flex-col gap-6">
     {#each config.sidebar as group (group.group)}
       <div class="mb-2">

@@ -1,13 +1,17 @@
 import type { LayoutServerLoad } from "./$types";
-import { getDocsConfig } from "./docs-utils.server";
+import { getDocsConfig, resolvePageSlugForConfig, resolveVersionedDocsSlug } from "./docs-utils.server";
 
 export const load: LayoutServerLoad = async ({ params, url, parent }) => {
   const parentData = await parent();
-  const config = getDocsConfig();
 
   // Extract slug from URL path
   const pathParts = url.pathname.split("/docs/");
-  const currentSlug = pathParts[1] || "";
+  const pathAfterDocs = pathParts[1] || "";
+  const { versionSlug, pageSlug } = resolveVersionedDocsSlug(pathAfterDocs);
+
+  const requestedVersion = versionSlug;
+  const config = getDocsConfig(requestedVersion);
+  const currentSlug = resolvePageSlugForConfig(pageSlug, config, requestedVersion) ?? pageSlug;
 
   return {
     config,

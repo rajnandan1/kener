@@ -1,11 +1,13 @@
 <script lang="ts">
   import type { DocsConfig } from "$lib/types/docs";
-  import { base } from "$app/paths";
+
+  import { goto } from "$app/navigation";
   import Sun from "@lucide/svelte/icons/sun";
   import Moon from "@lucide/svelte/icons/moon";
   import Menu from "@lucide/svelte/icons/menu";
   import X from "@lucide/svelte/icons/x";
   import Search from "@lucide/svelte/icons/search";
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
 
   import { toggleMode, mode } from "mode-watcher";
   import DocsSearch from "./DocsSearch.svelte";
@@ -28,8 +30,36 @@
     return currentSlug.startsWith(url.replace("/docs/", ""));
   }
 
-  function getHref(path: string): string {
-    return `${base}${path}`;
+  function getVersionHref(versionSlug: string): string {
+    const version = config.versions?.find((item) => item.slug === versionSlug);
+    const firstPageSlug = version?.firstPageSlug;
+
+    if (!firstPageSlug) {
+      return `/docs/${versionSlug}`;
+    }
+
+    const normalizedFirstPageSlug = firstPageSlug.startsWith(`${versionSlug}/`)
+      ? firstPageSlug.slice(versionSlug.length + 1)
+      : firstPageSlug;
+
+    return `/docs/${versionSlug}/${normalizedFirstPageSlug}`;
+  }
+
+  function getActiveVersionLabel(): string {
+    if (!config.versions || config.versions.length === 0) {
+      return "Docs";
+    }
+
+    const activeVersion = config.versions.find((version) => version.slug === config.activeVersion);
+    return activeVersion?.name ?? config.versions[0].name;
+  }
+
+  function isActiveVersion(versionSlug: string): boolean {
+    return config.activeVersion === versionSlug;
+  }
+
+  async function selectVersion(versionSlug: string) {
+    await goto(getVersionHref(versionSlug));
   }
 
   function openSearch() {
@@ -53,10 +83,37 @@
           <Menu class="h-5 w-5" />
         {/if}
       </button>
-      <a href={getHref("/docs")} class="text-foreground flex items-center gap-2 no-underline">
-        <img src="https://kener.ing/logo96.png" alt="" srcset="" class="h-8" />
-        <span class="text-xl font-semibold">{config.name}</span>
+      <a href="/docs" class="text-foreground flex items-center gap-2 no-underline">
+        <img src={config.logo?.light} alt="" srcset="" class="h-8 dark:hidden" />
+        <img src={config.logo?.dark} alt="" srcset="" class="hidden h-8 dark:block" />
+        <span class="text-base font-medium">{config.name}</span>
       </a>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger>
+          {#snippet child({ props })}
+            <Button {...props} variant="link" class="text-muted-foreground h-8 px-0 text-xs "
+              >{getActiveVersionLabel()}</Button
+            >
+          {/snippet}
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Content class="w-56" align="start">
+          <DropdownMenu.Label>Select Version</DropdownMenu.Label>
+          <DropdownMenu.Group>
+            {#if config.versions && config.versions.length > 0}
+              {#each config.versions as version (version.slug)}
+                <DropdownMenu.Item
+                  onclick={() => selectVersion(version.slug)}
+                  class={isActiveVersion(version.slug) ? "active" : ""}
+                >
+                  {version.name}
+                </DropdownMenu.Item>
+              {/each}
+            {:else}
+              <DropdownMenu.Item>Default</DropdownMenu.Item>
+            {/if}
+          </DropdownMenu.Group>
+        </DropdownMenu.Content>
+      </DropdownMenu.Root>
     </div>
 
     <!-- Search Bar in Center -->
@@ -112,10 +169,10 @@
 
   <!-- Sub Navbar with Tabs -->
   {#if config.navigation?.tabs}
-    <div class="border-border/50 px-6">
-      <nav class="mx-auto flex h-10 items-center gap-1 px-6">
+    <div class="border-border/50 px-0">
+      <nav class="mx-auto flex h-10 items-center gap-1 px-4">
         {#each config.navigation.tabs as tab (tab.url)}
-          <Button href={getHref(tab.url)} variant={!isActiveTab(tab.url) ? "ghost" : "outline"} size="sm" class="">
+          <Button href={tab.url} variant={!isActiveTab(tab.url) ? "ghost" : "outline"} size="sm" class="">
             {tab.name}
           </Button>
         {/each}
@@ -126,10 +183,3 @@
 
 <!-- Search Dialog -->
 <DocsSearch bind:open={searchOpen} />
-
-<style>
-  .active {
-    color: var(--foreground);
-    background-color: var(--accent);
-  }
-</style>

@@ -57,7 +57,16 @@
   }
 
   function findFirstSlug(candidates: string[]): string | undefined {
-    const match = getAllPages().find((page) => candidates.includes(page.slug));
+    const match = getAllPages().find((page) => {
+      if (candidates.includes(page.slug)) return true;
+
+      const unprefixed =
+        data.config.activeVersion && page.slug.startsWith(`${data.config.activeVersion}/`)
+          ? page.slug.slice(data.config.activeVersion.length + 1)
+          : page.slug;
+
+      return candidates.includes(unprefixed);
+    });
     return match?.slug;
   }
 
@@ -216,7 +225,21 @@
   }
 
   function getHref(path: string): string {
-    return `${base}${path}`;
+    if (!path.startsWith("/docs") || !data.config.activeVersion) {
+      return `${base}${path}`;
+    }
+
+    const suffix = path.replace(/^\/docs\/?/, "");
+
+    if (suffix.startsWith(`${data.config.activeVersion}/`)) {
+      return `${base}/docs/${suffix}`;
+    }
+
+    const versionedPath = suffix
+      ? `/docs/${data.config.activeVersion}/${suffix}`
+      : `/docs/${data.config.activeVersion}`;
+
+    return `${base}${versionedPath}`;
   }
 </script>
 
@@ -226,11 +249,11 @@
 </svelte:head>
 
 <div class="bg-background text-foreground min-h-screen">
-  <header class="bg-background/95 border-border sticky top-0 z-50 border-b backdrop-blur">
+  <header class="bg-background/95 border-border fixed top-0 z-50 w-full border-b backdrop-blur">
     <div class="mx-auto flex max-w-[1200px] items-center justify-between p-4 px-6">
       <a href={getHref("/docs")} class="text-foreground no-underline">
-        <span class="inline-flex items-center gap-2 text-xl font-bold">
-          <Book class="h-5 w-5" />
+        <span class="inline-flex items-center gap-2 text-base font-medium">
+          <img src="/logo96.png" alt="Logo" class="h-6 w-6 rounded-sm" />
           {data.config.name}
         </span>
       </a>
@@ -262,8 +285,8 @@
     </div>
   </header>
 
-  <section class="bg-background bg-(image:--docs-home-hero-gradient) px-6 py-20 text-center md:py-24">
-    <div class="mx-auto max-w-[980px]">
+  <section class="bg-background min-h-screen bg-(image:--docs-home-hero-gradient) px-6 py-20 text-center md:py-24">
+    <div class="mx-auto mt-20 max-w-[980px]">
       <div
         class="bg-background/80 border-border mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium backdrop-blur"
       >
@@ -457,15 +480,20 @@
 
 <style>
   :global(:root) {
-    --docs-home-hero-gradient: linear-gradient(
-      147.05deg,
-      rgba(255, 237, 190, 0) 64.83%,
-      #ffedbe 77.53%,
-      #ffbcc3 90.17%
+    --docs-home-hero-gradient: radial-gradient(
+      circle at 80% 20%,
+      rgba(255, 180, 77, 0.5) 0%,
+      rgba(255, 143, 61, 0.2) 30%,
+      transparent 60%
     );
   }
 
   :global(.dark) {
-    --docs-home-hero-gradient: linear-gradient(147.05deg, rgba(72, 54, 24, 0) 64.83%, #3d2f18 77.53%, #4a2230 90.17%);
+    --docs-home-hero-gradient: radial-gradient(
+      circle at 80% 20%,
+      rgba(72, 54, 24, 0.3) 0%,
+      rgba(72, 54, 24, 0.1) 30%,
+      transparent 70%
+    );
   }
 </style>

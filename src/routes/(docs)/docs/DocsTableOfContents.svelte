@@ -67,7 +67,7 @@
     <nav>
       <ul class="m-0 list-none p-0">
         {#each items as item, index (`${item.id}-${index}`)}
-          <li class="mb-1" class:pl-3={item.level === 3} class:pl-6={item.level === 4}>
+          <li class="mb-0" class:pl-3={item.level === 3} class:pl-6={item.level === 4}>
             <button
               class="text-muted-foreground hover:text-foreground block cursor-pointer border-none bg-transparent py-1 text-left text-[0.8125rem] no-underline transition-colors duration-200"
               class:active={activeId === item.id}

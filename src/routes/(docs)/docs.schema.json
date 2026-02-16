@@ -3,7 +3,128 @@
   "title": "Kener Docs Configuration",
   "description": "Configuration schema for Kener documentation",
   "type": "object",
-  "required": ["name", "sidebar"],
+  "required": ["name", "versions"],
+  "definitions": {
+    "navTab": {
+      "type": "object",
+      "required": ["name", "url"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Display name for the tab"
+        },
+        "url": {
+          "type": "string",
+          "description": "URL path for the tab"
+        }
+      }
+    },
+    "navigation": {
+      "type": "object",
+      "description": "Top navigation configuration",
+      "properties": {
+        "tabs": {
+          "type": "array",
+          "description": "Navigation tabs",
+          "items": {
+            "$ref": "#/definitions/navTab"
+          }
+        }
+      }
+    },
+    "page": {
+      "type": "object",
+      "required": ["title"],
+      "anyOf": [
+        {
+          "required": ["content"]
+        },
+        {
+          "required": ["slug"]
+        }
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Display title for the page"
+        },
+        "content": {
+          "type": "string",
+          "description": "Content path in docs/content (without .md). This also becomes the docs URL slug."
+        },
+        "slug": {
+          "type": "string",
+          "description": "Deprecated alias for content path; kept for migration compatibility"
+        },
+        "pages": {
+          "type": "array",
+          "description": "Nested pages",
+          "items": {
+            "$ref": "#/definitions/page"
+          }
+        }
+      }
+    },
+    "sidebarGroup": {
+      "type": "object",
+      "required": ["group", "pages"],
+      "properties": {
+        "group": {
+          "type": "string",
+          "description": "Group title displayed in the sidebar"
+        },
+        "pages": {
+          "type": "array",
+          "description": "Pages within this group",
+          "items": {
+            "$ref": "#/definitions/page"
+          }
+        },
+        "collapsible": {
+          "type": "boolean",
+          "description": "Whether the group can be collapsed. Default is false (always expanded).",
+          "default": false
+        }
+      }
+    },
+    "footerLink": {
+      "type": "object",
+      "required": ["name", "url"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Display name for the link"
+        },
+        "url": {
+          "type": "string",
+          "description": "URL for the link"
+        }
+      }
+    },
+    "versionContent": {
+      "type": "object",
+      "required": ["sidebar"],
+      "properties": {
+        "navigation": {
+          "$ref": "#/definitions/navigation"
+        },
+        "sidebar": {
+          "type": "array",
+          "description": "Sidebar navigation groups",
+          "items": {
+            "$ref": "#/definitions/sidebarGroup"
+          }
+        },
+        "footerLinks": {
+          "type": "array",
+          "description": "Links displayed in the footer/navbar",
+          "items": {
+            "$ref": "#/definitions/footerLink"
+          }
+        }
+      }
+    }
+  },
   "properties": {
     "$schema": {
       "type": "string",
@@ -31,81 +152,27 @@
       "type": "string",
       "description": "Path to favicon"
     },
-    "navigation": {
-      "type": "object",
-      "description": "Top navigation configuration",
-      "properties": {
-        "tabs": {
-          "type": "array",
-          "description": "Navigation tabs",
-          "items": {
-            "type": "object",
-            "required": ["name", "url"],
-            "properties": {
-              "name": {
-                "type": "string",
-                "description": "Display name for the tab"
-              },
-              "url": {
-                "type": "string",
-                "description": "URL path for the tab"
-              }
-            }
-          }
-        }
-      }
-    },
-    "sidebar": {
+    "versions": {
       "type": "array",
-      "description": "Sidebar navigation groups",
+      "description": "Versioned docs configuration",
       "items": {
         "type": "object",
-        "required": ["group", "pages"],
-        "properties": {
-          "group": {
-            "type": "string",
-            "description": "Group title displayed in the sidebar"
-          },
-          "pages": {
-            "type": "array",
-            "description": "Pages within this group",
-            "items": {
-              "type": "object",
-              "required": ["title", "slug"],
-              "properties": {
-                "title": {
-                  "type": "string",
-                  "description": "Display title for the page"
-                },
-                "slug": {
-                  "type": "string",
-                  "description": "URL slug for the page (maps to content/{slug}.md)"
-                }
-              }
-            }
-          },
-          "collapsible": {
-            "type": "boolean",
-            "description": "Whether the group can be collapsed. Default is false (always expanded).",
-            "default": false
-          }
-        }
-      }
-    },
-    "footerLinks": {
-      "type": "array",
-      "description": "Links displayed in the footer/navbar",
-      "items": {
-        "type": "object",
-        "required": ["name", "url"],
+        "required": ["name", "slug", "content"],
         "properties": {
           "name": {
             "type": "string",
-            "description": "Display name for the link"
+            "description": "Version display name"
           },
-          "url": {
+          "slug": {
             "type": "string",
-            "description": "URL for the link"
+            "description": "Version identifier (used in docs URL path)"
+          },
+          "latest": {
+            "type": "boolean",
+            "description": "Whether this version is the latest"
+          },
+          "content": {
+            "$ref": "#/definitions/versionContent"
           }
         }
       }

@@ -25,12 +25,14 @@
 <svelte:head>
   <title>{data.config.name}</title>
   <meta name="description" content="Documentation for {data.config.name}" />
+  <!-- favicon -->
+  <link rel="icon" href={data.config.favicon} />
 </svelte:head>
 
 <div class="bg-background text-foreground min-h-screen">
   <DocsNavbar config={data.config} currentSlug={data.currentSlug} onMenuToggle={toggleMobileMenu} {isMobileMenuOpen} />
 
-  <div class="mx-auto flex px-10 pt-24">
+  <div class="mx-auto flex px-0 pt-24">
     <!-- Mobile sidebar overlay -->
     {#if isMobileMenuOpen}
       <div class="fixed inset-0 top-24 z-35 bg-black/50 lg:hidden" onclick={closeMobileMenu} role="presentation"></div>
@@ -45,7 +47,7 @@
     </aside>
 
     <!-- Main content -->
-    <div class="min-w-0 flex-1 p-6 px-8 lg:ml-[180px] lg:p-8 lg:px-4">
+    <div class="min-w-0 flex-1 p-6 px-8 lg:ml-[240px] lg:p-8 lg:px-8">
       {@render children()}
     </div>
   </div>

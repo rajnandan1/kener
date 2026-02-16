@@ -16,10 +16,24 @@ export interface DocsNavigation {
   tabs: DocsNavTab[];
 }
 
+export interface DocsPageSource {
+  title: string;
+  content?: string;
+  slug?: string;
+  pages?: DocsPageSource[];
+}
+
 export interface DocsPage {
   title: string;
   slug: string;
+  content?: string;
   pages?: DocsPage[]; // Nested pages for one more level
+}
+
+export interface DocsSidebarGroupSource {
+  group: string;
+  pages: DocsPageSource[];
+  collapsible?: boolean;
 }
 
 export interface DocsSidebarGroup {
@@ -33,6 +47,31 @@ export interface DocsFooterLink {
   url: string;
 }
 
+export interface DocsVersionMeta {
+  name: string;
+  slug: string;
+  latest?: boolean;
+  firstPageSlug?: string | null;
+}
+
+export interface DocsVersionContent {
+  navigation?: DocsNavigation;
+  sidebar: DocsSidebarGroupSource[];
+  footerLinks?: DocsFooterLink[];
+}
+
+export interface DocsVersion extends DocsVersionMeta {
+  content: DocsVersionContent;
+}
+
+export interface DocsRootConfig {
+  $schema?: string;
+  name: string;
+  logo?: DocsLogo;
+  favicon?: string;
+  versions: DocsVersion[];
+}
+
 export interface DocsConfig {
   $schema?: string;
   name: string;
@@ -41,6 +80,8 @@ export interface DocsConfig {
   navigation?: DocsNavigation;
   sidebar: DocsSidebarGroup[];
   footerLinks?: DocsFooterLink[];
+  versions?: DocsVersionMeta[];
+  activeVersion?: string | null;
 }
 
 export interface DocsTableOfContentsItem {
