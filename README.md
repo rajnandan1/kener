@@ -154,6 +154,9 @@ This keeps things clean, structured, and easy to read while preserving all the d
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/spSvic?referralCode=1Pn7vs)
 
+### Deploy on Kubernetes
+[Guide can be found here]("https://github.com/rajnandan1/kener/blob/main/manifests/README.md")
+
 ## Features
 
 Here are some of the features that you get out of the box. Please read the documentation to know how to use them.

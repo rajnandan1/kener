@@ -1,0 +1,21 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: kener-postgres
+spec:
+  instances: 1
+  managed:
+    roles:
+      - name: kener
+        superuser: true
+        login: true
+  bootstrap:
+    initdb:
+      database: kener
+      owner: kener
+      secret:
+        name: kener-postgres-user
+
+  storage:
+    size: 4Gi
+    storageClass: local-path

@@ -1,0 +1,69 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kener
+spec:
+  selector:
+    matchLabels:
+      app: kener
+  template:
+    metadata:
+      labels:
+        app: kener
+    spec:
+      containers:
+        - name: kener
+          image: rajnandan1/kener:latest
+          ports:
+            - containerPort: 3000
+              name: http
+          volumeMounts:
+            - name: kener-uploads
+              mountPath: "/app/uploads"
+            - name: kener-db # Only needed if you are using SQLite, If you are using PostgreSQL, you can remove this volume mount
+              mountPath: "/app/database"
+          env:
+            - name: ORIGIN
+              value: "http://localhost:3000"
+#            - name: DATABASE_URL -> Uncomment if you want to use a database other than SQLite
+#              valueFrom:
+#                secretKeyRef:
+#                  name: kener-secret
+#                  key: DATABASE_URL
+            - name: KENER_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: kener-secret
+                  key: KENER_SECRET_KEY
+            - name: SMTP_HOST
+              value: "mail.yourdomain.com"
+            - name: SMTP_PORT
+              value: "587" # or 465 for SSL
+            - name: SMTP_USER
+              valueFrom:
+                secretKeyRef:
+                  name: smtp-secret
+                  key: SMTP_USER
+            - name: SMTP_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: smtp-secret
+                  key: SMTP_PASS
+            - name: SMTP_SECURE
+              value: "0"
+            - name: SMTP_FROM_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: smtp-secret
+                  key: SMTP_FROM_EMAIL
+            - name: TZ
+              value: "UTC"
+
+      volumes:
+        - name: kener-uploads
+          persistentVolumeClaim:
+            claimName: kener-pvc
+        - name: kener-db # Only needed when using SQLite, If you're using a different database, you can remove this volume
+          persistentVolumeClaim:
+            claimName: kener-db-pvc
