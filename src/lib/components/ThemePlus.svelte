@@ -75,7 +75,7 @@
       };
     } else {
       return {
-        label: "Login",
+        label: "Manage Site",
         url: clientResolver(resolve, "/manage/app/site-configurations")
       };
     }

@@ -3,8 +3,8 @@ const seedSiteData = {
   siteName: "Kener.ing",
   siteURL: "http://localhost:3000",
   home: "/",
-  logo: "https://kener.ing/logo.png",
-  favicon: "https://kener.ing/logo96.png",
+  logo: "/logo.png",
+  favicon: "/logo96.png",
   metaTags: [
     {
       key: "description",
@@ -14,7 +14,7 @@ const seedSiteData = {
       key: "og:description",
       value: "Add your description here",
     },
-    { key: "og:image", value: "https://kener.ing/newbg.png" },
+    { key: "og:image", value: "/newbg.png" },
     {
       key: "og:title",
       value: "Kener - Open source status page system",
@@ -24,7 +24,7 @@ const seedSiteData = {
     { key: "twitter:card", value: "summary_large_image" },
     { key: "twitter:site", value: "@_rajnandan_" },
     { key: "twitter:creator", value: "@_rajnandan_" },
-    { key: "twitter:image", value: "https://kener.ing/newbg.png" },
+    { key: "twitter:image", value: "/newbg.png" },
     {
       key: "twitter:title",
       value: "Kener - Open source status page system",

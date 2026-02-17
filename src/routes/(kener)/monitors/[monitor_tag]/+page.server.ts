@@ -60,10 +60,23 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
   //get status summary
   let extendedTags: string[] = [];
+  let monitorGroupMembersByTag: Record<string, string[]> = {};
   if (monitor.monitor_type === "GROUP") {
     const groupData = monitor.type_data as GroupMonitorTypeData;
     const memberTags = groupData.monitors.map((m) => m.tag);
     extendedTags = extendedTags.concat(memberTags);
+  }
+
+  if (extendedTags.length > 0) {
+    const parsedExtendedMonitors = await GetMonitorsParsed({ tags: extendedTags, status: "ACTIVE", is_hidden: "NO" });
+    for (const parsedMonitor of parsedExtendedMonitors) {
+      if (parsedMonitor.monitor_type !== "GROUP") continue;
+
+      const groupData = parsedMonitor.type_data as GroupMonitorTypeData;
+      if (!groupData?.monitors || !Array.isArray(groupData.monitors)) continue;
+
+      monitorGroupMembersByTag[parsedMonitor.tag] = groupData.monitors.map((member) => member.tag);
+    }
   }
 
   let maxDays = parentData.isMobile ? 30 : 90;
@@ -90,6 +103,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       upcomingMaintenances,
       externalUrl: monitor.external_url,
       extendedTags,
+      monitorGroupMembersByTag,
       maxDays,
       monitorSharingOptions: {
         showShareBadgeMonitor: monitor.monitor_settings_json?.sharing_options?.showShareBadgeMonitor ?? true,

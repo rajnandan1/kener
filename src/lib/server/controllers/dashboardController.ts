@@ -2,6 +2,7 @@ import db from "../db/db.js";
 import { GetMinuteStartNowTimestampUTC, BeginningOfMinute, BeginningOfDay } from "../tool.js";
 import { GetPageByPathWithMonitors, GetLatestMonitoringDataAllActive } from "./controller.js";
 import { GetAllPages } from "./pagesController.js";
+import { GetMonitorsParsed } from "./monitorsController.js";
 import { GetStatusSummary, GetStatusBgColor } from "../../clientTools";
 import type {
   IncidentRecord,
@@ -15,6 +16,7 @@ import type {
   PageSettingsType,
   IncidentMonitorDetailRecord,
 } from "../types/db.js";
+import type { GroupMonitorTypeData } from "../types/monitor.js";
 import GC from "../../global-constants.js";
 
 // Default page settings
@@ -192,6 +194,7 @@ export interface PageDashboardData {
   upcomingMaintenances: MaintenanceEventRecordDetailed[];
   pastMaintenances: MaintenanceEventsMonitorList[];
   monitorTags: string[];
+  monitorGroupMembersByTag: Record<string, string[]>;
   pageDetails: PageRecordTyped;
   allPages: PageNavItem[];
 }
@@ -308,6 +311,7 @@ export const GetPageDashboardData = async (
       upcomingMaintenances: [],
       pastMaintenances: [],
       monitorTags,
+      monitorGroupMembersByTag: {},
       pageDetails: pageDetailsTyped,
       allPages,
     };
@@ -316,6 +320,7 @@ export const GetPageDashboardData = async (
   // Fetch all dashboard data in parallel (respecting feature toggles)
   const [
     latestData,
+    parsedMonitors,
     allPages,
     ongoingIncidents,
     recentConcludedMaintenances,
@@ -324,6 +329,7 @@ export const GetPageDashboardData = async (
     upcomingMaintenances,
   ] = await Promise.all([
     GetLatestMonitoringDataAllActive(monitorTags),
+    GetMonitorsParsed({ tags: monitorTags, status: "ACTIVE", is_hidden: "NO" }),
     allPagesPromise,
     settings.incidents.enabled && settings.incidents.ongoing.show
       ? GetOngoingIncidentsForMonitorList(monitorTags)
@@ -356,6 +362,16 @@ export const GetPageDashboardData = async (
   ]);
 
   const pageStatus = BuildPageStatus(latestData, nowTs);
+  const monitorGroupMembersByTag: Record<string, string[]> = {};
+
+  for (const monitor of parsedMonitors) {
+    if (monitor.monitor_type !== "GROUP") continue;
+
+    const groupData = monitor.type_data as GroupMonitorTypeData;
+    if (!groupData?.monitors || !Array.isArray(groupData.monitors)) continue;
+
+    monitorGroupMembersByTag[monitor.tag] = groupData.monitors.map((member) => member.tag);
+  }
 
   return {
     pageStatus,
@@ -365,6 +381,7 @@ export const GetPageDashboardData = async (
     upcomingMaintenances,
     pastMaintenances,
     monitorTags,
+    monitorGroupMembersByTag,
     pageDetails: pageDetailsTyped,
     allPages,
   };

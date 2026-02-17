@@ -12,7 +12,7 @@
 
   import Code from "@lucide/svelte/icons/code";
   import ExternalLink from "@lucide/svelte/icons/external-link";
-  import Copy from "@lucide/svelte/icons/copy";
+  import Copy from "@lucide/svelte/icons/clipboard";
   import { Check } from "@lucide/svelte";
 
   interface Props {
@@ -125,7 +125,7 @@
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap items-center gap-3">
               <div class="flex items-center gap-2">
-                <ButtonGroup.Root>
+                <ButtonGroup.Root class="rounded-btn-grp">
                   <Button variant="outline" size="sm" onclick={() => setMonitorTheme("light")}>
                     {#if monitorTheme === "light"}
                       <Check class="text-accent-foreground h-3 w-3" />
@@ -141,7 +141,7 @@
                 </ButtonGroup.Root>
               </div>
               <div class="flex items-center gap-2">
-                <ButtonGroup.Root>
+                <ButtonGroup.Root class="rounded-btn-grp">
                   <Button variant="outline" size="sm" onclick={() => setMonitorEmbedType("iframe")}>
                     {#if monitorEmbedType === "iframe"}
                       <Check class="text-accent-foreground h-3 w-3" />
@@ -159,12 +159,13 @@
               </div>
             </div>
             <CopyButton
-              variant="secondary"
-              size="sm"
+              variant="outline"
+              class="rounded-btn"
+              size="icon-sm"
               text={monitorEmbedCode()}
               onclick={() => handleEmbedCopy("monitor")}
             >
-              {$t("Copy Code")}
+              <Copy />
             </CopyButton>
           </div>
         </div>
@@ -179,7 +180,7 @@
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap items-center gap-3">
               <div class="flex items-center gap-2">
-                <ButtonGroup.Root>
+                <ButtonGroup.Root class="rounded-btn-grp">
                   <Button variant="outline" size="sm" onclick={() => setLatencyTheme("light")}>
                     {#if latencyTheme === "light"}
                       <Check class="text-accent-foreground h-3 w-3" />
@@ -195,7 +196,7 @@
                 </ButtonGroup.Root>
               </div>
               <div class="flex items-center gap-2">
-                <ButtonGroup.Root>
+                <ButtonGroup.Root class="rounded-btn-grp">
                   <Button variant="outline" size="sm" onclick={() => setLatencyEmbedType("iframe")}>
                     {#if latencyEmbedType === "iframe"}
                       <Check class="text-accent-foreground h-3 w-3" />
@@ -212,12 +213,13 @@
               </div>
             </div>
             <CopyButton
-              variant="secondary"
-              size="sm"
+              variant="outline"
+              class="rounded-btn"
+              size="icon-sm"
               text={latencyEmbedCode()}
               onclick={() => handleEmbedCopy("latency")}
             >
-              {$t("Copy Code")}
+              <Copy />
             </CopyButton>
           </div>
         </div>

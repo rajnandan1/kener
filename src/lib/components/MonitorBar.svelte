@@ -10,17 +10,24 @@
   import clientResolver from "$lib/client/resolver.js";
   import { formatDate } from "$lib/stores/datetime";
   import { GetInitials } from "$lib/clientTools.js";
+  import GroupMonitorPopover from "./GroupMonitorPopover.svelte";
 
   interface Props {
     tag: string;
     prefetchedData?: MonitorBarResponse;
     prefetchedError?: string;
+    groupChildTags?: string[];
+    days?: number;
+    endOfDayTodayAtTz?: number;
   }
 
-  let { tag, prefetchedData, prefetchedError }: Props = $props();
+  let { tag, prefetchedData, prefetchedError, groupChildTags = [], days, endOfDayTodayAtTz }: Props = $props();
   let data = $derived(prefetchedData ?? null);
   let error = $derived(prefetchedError ?? null);
   let loading = $derived(!data && !error);
+  let showGroupPopover = $derived(
+    groupChildTags.length > 0 && typeof days === "number" && typeof endOfDayTodayAtTz === "number"
+  );
 
   const STATUS_ICON = {
     UP: ICONS.UP,
@@ -124,10 +131,22 @@
         <p class="text-muted-foreground min-w-0 truncate text-xs font-medium">
           {$formatDate(new Date(data.fromTimeStamp * 1000), "MMM d, yyyy")}
         </p>
+
         <p class="text-muted-foreground min-w-0 truncate text-right text-xs font-medium">
           {$formatDate(new Date(data.toTimeStamp * 1000), "MMM d, yyyy")}
         </p>
       </div>
     </div>
+    {#if showGroupPopover}
+      <div class="flex justify-center gap-2">
+        <GroupMonitorPopover
+          tags={groupChildTags}
+          days={days as number}
+          endOfDayTodayAtTz={endOfDayTodayAtTz as number}
+        >
+          View More Monitors in this Group
+        </GroupMonitorPopover>
+      </div>
+    {/if}
   {/if}
 </div>

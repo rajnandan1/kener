@@ -24,6 +24,7 @@
       ? pageSettings?.monitor_status_history_days.mobile || 30
       : pageSettings?.monitor_status_history_days.desktop || 90
   );
+  let endOfDayTodayAtTz = $derived(getEndOfDayAtTz($selectedTimezone));
 
   let monitorBarDataByTag = $state<Record<string, MonitorBarResponse>>({});
   let monitorBarErrorByTag = $state<Record<string, string>>({});
@@ -32,7 +33,6 @@
   $effect(() => {
     const tags = data.monitorTags || [];
     const days = barCount;
-    const endOfDayTodayAtTz = getEndOfDayAtTz($selectedTimezone);
     const currentRequestVersion = ++requestVersion;
 
     monitorBarDataByTag = {};
@@ -120,7 +120,14 @@
       </div>
       {#each data.monitorTags as tag, i (tag)}
         <div class="{i < data.monitorTags.length - 1 ? 'border-b' : ''} px-2 py-2 pb-4 sm:px-0">
-          <MonitorBar {tag} prefetchedData={monitorBarDataByTag[tag]} prefetchedError={monitorBarErrorByTag[tag]} />
+          <MonitorBar
+            {tag}
+            prefetchedData={monitorBarDataByTag[tag]}
+            prefetchedError={monitorBarErrorByTag[tag]}
+            days={barCount}
+            {endOfDayTodayAtTz}
+            groupChildTags={data.monitorGroupMembersByTag?.[tag] || []}
+          />
         </div>
       {/each}
     </div>

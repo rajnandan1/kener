@@ -3,7 +3,6 @@
   import { t } from "$lib/stores/i18n";
   import { formatDate } from "$lib/stores/datetime";
   import { Button } from "$lib/components/ui/button/index.js";
-  import { Badge } from "$lib/components/ui/badge/index.js";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import IncidentMonitorList from "$lib/components/IncidentMonitorList.svelte";
   import AllMaintenanceMonitorGrid from "$lib/components/AllMaintenanceMonitorGrid.svelte";
@@ -12,13 +11,10 @@
   import ArrowUpRight from "@lucide/svelte/icons/arrow-up-right";
   import clientResolver from "$lib/client/resolver.js";
   import { resolve } from "$app/paths";
-  import { ArrowDown } from "@lucide/svelte";
-  import MonitorBar from "$lib/components/MonitorBar.svelte";
+  import GroupMonitorPopover from "$lib/components/GroupMonitorPopover.svelte";
   import trackEvent from "$lib/beacon";
   import { selectedTimezone } from "$lib/stores/timezone";
   import { getEndOfDayAtTz } from "$lib/client/datetime";
-  import { requestMonitorBar } from "$lib/client/monitor-bar-client";
-  import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
   let { data } = $props();
 
   // State
@@ -33,49 +29,7 @@
     trackEvent("monitor_external_link_clicked", { monitorTag: data.monitorTag });
   }
 
-  let monitorBarDataByTag = $state<Record<string, MonitorBarResponse>>({});
-  let monitorBarErrorByTag = $state<Record<string, string>>({});
-  let requestVersion = 0;
-
-  $effect(() => {
-    const tags = data.extendedTags || [];
-    const days = data.maxDays;
-    const endOfDayTodayAtTz = getEndOfDayAtTz($selectedTimezone);
-    const currentRequestVersion = ++requestVersion;
-
-    monitorBarDataByTag = {};
-    monitorBarErrorByTag = {};
-
-    if (!tags.length) return;
-
-    void Promise.all(
-      tags.map(async (tag) => {
-        try {
-          const monitorBarData = await requestMonitorBar(tag, days, endOfDayTodayAtTz);
-          return { tag, ok: true as const, monitorBarData };
-        } catch (err) {
-          const errorMessage = err instanceof Error ? err.message : "Unknown error";
-          return { tag, ok: false as const, errorMessage };
-        }
-      })
-    ).then((results) => {
-      if (currentRequestVersion !== requestVersion) return;
-
-      const nextDataByTag: Record<string, MonitorBarResponse> = {};
-      const nextErrorByTag: Record<string, string> = {};
-
-      for (const result of results) {
-        if (result.ok) {
-          nextDataByTag[result.tag] = result.monitorBarData;
-        } else {
-          nextErrorByTag[result.tag] = result.errorMessage;
-        }
-      }
-
-      monitorBarDataByTag = nextDataByTag;
-      monitorBarErrorByTag = nextErrorByTag;
-    });
-  });
+  let endOfDayTodayAtTz = $derived(getEndOfDayAtTz($selectedTimezone));
 </script>
 
 <svelte:head>
@@ -186,18 +140,10 @@
   <MonitorOverview monitorTag={data.monitorTag} maxDays={data.maxDays} class="mb-4" />
 
   {#if data.extendedTags.length > 0}
-    <!-- Included monitors -->
-    <div class="flex flex-col">
-      <div class="flex flex-col rounded-3xl border">
-        <div class="flex items-center justify-between px-4 pt-4 pb-0">
-          <Badge variant="secondary" class="gap-1">{$t("Available Components")}</Badge>
-        </div>
-        {#each data.extendedTags as tag, i (tag)}
-          <div class="{i < data.extendedTags.length - 1 ? 'border-b' : ''} py-2 pb-4">
-            <MonitorBar {tag} prefetchedData={monitorBarDataByTag[tag]} prefetchedError={monitorBarErrorByTag[tag]} />
-          </div>
-        {/each}
-      </div>
+    <div class="mb-4">
+      <GroupMonitorPopover tags={data.extendedTags} days={data.maxDays} {endOfDayTodayAtTz}>
+        Available Monitors ({data.extendedTags.length})
+      </GroupMonitorPopover>
     </div>
   {/if}
 

@@ -201,20 +201,22 @@
       </div>
 
       <!-- Status Bar Calendar -->
-      <StatusBarCalendar data={displayData} {monitorTag} barHeight={40} radius={8} />
+      <div class="flex flex-col gap-1">
+        <StatusBarCalendar data={displayData} {monitorTag} barHeight={40} radius={8} />
 
-      <!-- Date labels -->
-      <div class="flex justify-between">
-        <p class="text-muted-foreground text-xs font-medium">
-          {#if displayData.length > 0}
-            {$formatDate(displayData[0].ts, "d MMM yyyy")}
-          {/if}
-        </p>
-        <p class="text-muted-foreground text-xs font-medium">
-          {#if displayData.length > 0}
-            {$formatDate(displayData[displayData.length - 1].ts, "d MMM yyyy")}
-          {/if}
-        </p>
+        <!-- Date labels -->
+        <div class="flex justify-between">
+          <p class="text-muted-foreground text-xs font-medium">
+            {#if displayData.length > 0}
+              {$formatDate(displayData[0].ts, "d MMM yyyy")}
+            {/if}
+          </p>
+          <p class="text-muted-foreground text-xs font-medium">
+            {#if displayData.length > 0}
+              {$formatDate(displayData[displayData.length - 1].ts, "d MMM yyyy")}
+            {/if}
+          </p>
+        </div>
       </div>
 
       <!-- Latency Chart -->
