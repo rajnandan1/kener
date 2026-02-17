@@ -18,6 +18,7 @@
   import { Label } from "$lib/components/ui/label/index.js";
   import { toast } from "svelte-sonner";
   import { goto } from "$app/navigation";
+  import type { SiteSubMenuOptions } from "$lib/types/site";
 
   // Card components
   import GeneralSettingsCard from "./components/GeneralSettingsCard.svelte";
@@ -28,6 +29,7 @@
   import DangerZoneCard from "./components/DangerZoneCard.svelte";
   import MonitorRecentLogs from "./components/MonitorRecentLogs.svelte";
   import StatusHistoryDaysCard from "./components/StatusHistoryDaysCard.svelte";
+  import MonitorSharingOptionsCard from "./components/MonitorSharingOptionsCard.svelte";
 
   let { params }: PageProps = $props();
   const isNew = $derived(params.tag === "new");
@@ -36,6 +38,7 @@
   let loading = $state(true);
   let error = $state<string | null>(null);
   let availableMonitors = $state<MonitorRecord[]>([]);
+  let subMenuOptions = $state<SiteSubMenuOptions | null>(null);
 
   // Uptime settings state
   let uptimeSettings = $state({
@@ -184,10 +187,30 @@
     }
   }
 
+  //fetch sharing options from site data
+  async function getSiteLevelSharingConfig() {
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "getSiteDataByKey", data: { key: "subMenuOptions" } })
+      });
+      const result = await response.json();
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      subMenuOptions = result as SiteSubMenuOptions;
+    } catch (e) {
+      console.error("Failed to fetch site level sharing config:", e);
+      return {};
+    }
+  }
+
   $effect(() => {
     fetchMonitor();
     fetchAvailableMonitors();
     fetchPages();
+    getSiteLevelSharingConfig();
   });
 
   let activeAccordionItem = $derived<string>(isNew ? "general" : "configuration");
@@ -364,6 +387,16 @@
             <!-- Page Visibility Card -->
 
             <PageVisibilityCard monitorTag={monitor.tag} {allPages} onPagesUpdated={fetchPages} />
+          </Accordion.Content>
+        </Accordion.Item>
+      {/if}
+      {#if !isNew}
+        <Accordion.Item value="sharing-options">
+          <Accordion.Trigger>Sharing Options</Accordion.Trigger>
+          <Accordion.Content class="flex flex-col gap-4 text-balance">
+            <!-- Monitor Sharing Options Card -->
+
+            <MonitorSharingOptionsCard bind:monitor {typeData} {subMenuOptions} />
           </Accordion.Content>
         </Accordion.Item>
       {/if}

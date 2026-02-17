@@ -197,18 +197,16 @@
     {/if}
 
     <ButtonGroup.Root class="rounded-btn-grp shrink-0">
-      {#if !!page.data.subMenuOptions?.showCopyCurrentPageLink}
-        <CopyButton
-          variant="outline"
-          text={shareLink}
-          class="bg-background/80 dark:bg-background/70 border-foreground/10 cursor-pointer rounded-full border shadow-none backdrop-blur-md"
-          size="icon-sm"
-          onclick={() => trackEvent("share_link_copied", { source: "theme_plus" })}
-        >
-          <Share />
-        </CopyButton>
-      {/if}
-      {#if !!embedMonitorTag && page.data.subMenuOptions?.showShareBadgeMonitor}
+      <CopyButton
+        variant="outline"
+        text={shareLink}
+        class="bg-background/80 dark:bg-background/70 border-foreground/10 cursor-pointer rounded-full border shadow-none backdrop-blur-md"
+        size="icon-sm"
+        onclick={() => trackEvent("share_link_copied", { source: "theme_plus" })}
+      >
+        <Share />
+      </CopyButton>
+      {#if !!embedMonitorTag && page.data.monitorSharingOptions?.showShareBadgeMonitor && page.data.subMenuOptions?.showShareBadgeMonitor}
         <!-- BadgeMenu -->
         <Button
           variant="outline"
@@ -219,7 +217,7 @@
           <Sticker />
         </Button>
       {/if}
-      {#if !!embedMonitorTag && page.data.subMenuOptions?.showShareEmbedMonitor}
+      {#if !!embedMonitorTag && page.data.monitorSharingOptions?.showShareEmbedMonitor && page.data.subMenuOptions?.showShareEmbedMonitor}
         <!-- Embed Menu -->
         <Button
           variant="outline"

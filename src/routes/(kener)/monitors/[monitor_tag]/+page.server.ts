@@ -91,6 +91,10 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       externalUrl: monitor.external_url,
       extendedTags,
       maxDays,
+      monitorSharingOptions: {
+        showShareBadgeMonitor: monitor.monitor_settings_json?.sharing_options?.showShareBadgeMonitor ?? true,
+        showShareEmbedMonitor: monitor.monitor_settings_json?.sharing_options?.showShareEmbedMonitor ?? true,
+      },
     },
   };
 };

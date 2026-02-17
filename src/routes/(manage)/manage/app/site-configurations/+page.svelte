@@ -50,7 +50,6 @@
 
   // Sub Menu Options
   let subMenuOptions = $state({
-    showCopyCurrentPageLink: true,
     showShareBadgeMonitor: true,
     showShareEmbedMonitor: true
   });
@@ -94,7 +93,6 @@
         }
         if (data.subMenuOptions) {
           subMenuOptions = {
-            showCopyCurrentPageLink: data.subMenuOptions.showCopyCurrentPageLink ?? true,
             showShareBadgeMonitor: data.subMenuOptions.showShareBadgeMonitor ?? true,
             showShareEmbedMonitor: data.subMenuOptions.showShareEmbedMonitor ?? true
           };
@@ -689,13 +687,6 @@
         <Card.Description>Configure which options appear in the monitor sub menu on the status page</Card.Description>
       </Card.Header>
       <Card.Content class="space-y-6">
-        <div class="flex items-center justify-between">
-          <div class="space-y-0.5">
-            <Label>Copy Current Page Link</Label>
-            <p class="text-muted-foreground text-xs">Allow users to copy the direct link to the current monitor page</p>
-          </div>
-          <Switch bind:checked={subMenuOptions.showCopyCurrentPageLink} />
-        </div>
         <div class="flex items-center justify-between">
           <div class="space-y-0.5">
             <Label>Share Badge</Label>

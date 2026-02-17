@@ -47,7 +47,6 @@ export interface LayoutServerData {
     locales: Array<{ code: string; name: string; selected: boolean; disabled: boolean }>;
   };
   subMenuOptions: {
-    showCopyCurrentPageLink: boolean;
     showShareBadgeMonitor: boolean;
     showShareEmbedMonitor: boolean;
   };
@@ -65,7 +64,8 @@ export interface LayoutServerData {
     type: "INFO" | "WARNING" | "ERROR";
     reshowAfterInHours: number | null;
     cancellable: boolean;
-    cta: string | null;
+    ctaURL: string | null;
+    ctaText: string | null;
   };
 }
 

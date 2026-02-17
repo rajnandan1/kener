@@ -83,7 +83,10 @@ export interface MonitorRecord {
   created_at?: Date;
   updated_at?: Date;
 }
-
+export interface MonitorSharingOptions {
+  showShareBadgeMonitor: boolean;
+  showShareEmbedMonitor: boolean;
+}
 export interface MonitorSettings {
   uptime_formula_numerator?: string;
   uptime_formula_denominator?: string;
@@ -91,6 +94,7 @@ export interface MonitorSettings {
     desktop: number;
     mobile: number;
   };
+  sharing_options?: MonitorSharingOptions;
 }
 
 export interface TimestampStatusCount {

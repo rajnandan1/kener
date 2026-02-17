@@ -87,7 +87,6 @@ export interface SiteSubscriptionsSettings {
 }
 
 export interface SiteSubMenuOptions {
-  showCopyCurrentPageLink: boolean;
   showShareBadgeMonitor: boolean;
   showShareEmbedMonitor: boolean;
 }

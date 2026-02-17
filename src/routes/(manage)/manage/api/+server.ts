@@ -21,7 +21,6 @@ import {
   CreateNewAPIKey,
   UpdateApiKeyStatus,
   DeleteApiKey,
-  VerifyToken,
   GetIncidentsDashboard,
   CreateIncident,
   AddIncidentMonitor,
@@ -34,13 +33,10 @@ import {
   GetTriggerByID,
   GetLoggedInSession,
   UpdateUserData,
-  SendEmailWithTemplate,
-  GetSiteLogoURL,
   UpdatePassword,
   SendInvitationEmail,
   SendVerificationEmail,
   ResendInvitationEmail,
-  GetUserPasswordHashById,
   GetAllUsersPaginatedDashboard,
   GetUserByIDDashboard,
   GetAllUsers,
@@ -693,6 +689,16 @@ export async function POST({ request, cookies }) {
         };
       }
       resp = subscriptionsSettings;
+    } else if (action == "getSiteDataByKey") {
+      const { key } = data;
+      if (!key) {
+        throw new Error("Key is required");
+      }
+      let siteData = await GetSiteDataByKey(key);
+      if (!!!siteData) {
+        throw new Error("Site data not found for the given key");
+      }
+      resp = siteData;
     } else if (action == "updateSubscriptionsConfig") {
       AdminCan(userDB.role);
       resp = await InsertKeyValue("subscriptionsSettings", JSON.stringify(data));
