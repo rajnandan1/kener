@@ -58,7 +58,7 @@
   );
 
   // Role badge styling
-  let roleBadgeClass = $derived(() => {
+  let roleBadgeClass = $derived.by(() => {
     switch (user.role) {
       case "admin":
         return "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300";
@@ -201,15 +201,12 @@
         <DropdownMenu.Separator />
         <DropdownMenu.Item>
           {#snippet child({ props })}
-            <Button
-              {...props}
-              variant="ghost"
-              href={clientResolver(resolve, "/account/logout")}
-              class="w-full justify-start"
-            >
-              <LogoutIcon />
-              Log out
-            </Button>
+            <form method="POST" action={clientResolver(resolve, "/account/logout")} class="w-full">
+              <Button {...props} type="submit" variant="ghost" class="w-full justify-start">
+                <LogoutIcon />
+                Log out
+              </Button>
+            </form>
           {/snippet}
         </DropdownMenu.Item>
       </DropdownMenu.Content>

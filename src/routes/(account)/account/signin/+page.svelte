@@ -1,103 +1,27 @@
 <script lang="ts">
-  import { toast } from "svelte-sonner";
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Field from "$lib/components/ui/field/index.js";
   import * as InputGroup from "$lib/components/ui/input-group/index.js";
-  import { goto } from "$app/navigation";
   import MailIcon from "@lucide/svelte/icons/mail";
   import LockIcon from "@lucide/svelte/icons/lock";
   import UserIcon from "@lucide/svelte/icons/user";
   import AlertCircleIcon from "@lucide/svelte/icons/alert-circle";
   import EyeClosedIcon from "@lucide/svelte/icons/eye-closed";
   import EyeOpenIcon from "@lucide/svelte/icons/eye";
-  import { resolve } from "$app/paths";
-  import clientResolver from "$lib/client/resolver.js";
   import * as Alert from "$lib/components/ui/alert/index.js";
+  import type { PageProps } from "./$types";
 
-  const { data } = $props();
+  let { data, form }: PageProps = $props();
   const isAdminAccountCreated: boolean = $derived(data.isAdminAccountCreated);
   const isSetupComplete: boolean = $derived(data.isSetupComplete);
+  const authActionPath = $derived(!isAdminAccountCreated ? "?/signup" : "?/login");
+  const emailValue = $derived(form?.values?.email ?? "");
+  const nameValue = $derived(form?.values && "name" in form.values ? form.values.name : "");
 
   let loading = $state(false);
   let showPassword = $state(false);
-
-  let email = $state("");
   let password = $state("");
-  let name = $state("");
-
-  async function handleLogin() {
-    if (!email || !password) {
-      toast.error("Please fill in all fields");
-      return;
-    }
-
-    loading = true;
-    try {
-      const response = await fetch(clientResolver(resolve, "/account/signin/api/login"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        toast.error(data.error || "Login failed");
-        return;
-      }
-
-      toast.success("Login successful!");
-      if (data.redirect) {
-        goto(data.redirect);
-      }
-    } catch (e) {
-      toast.error("An error occurred during login");
-    } finally {
-      loading = false;
-    }
-  }
-
-  async function handleSignup() {
-    if (!email || !password || !name) {
-      toast.error("Please fill in all fields");
-      return;
-    }
-
-    loading = true;
-    try {
-      const response = await fetch(clientResolver(resolve, "/account/signin/api/signup"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, name })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        toast.error(data.error || "Signup failed");
-        return;
-      }
-
-      toast.success("Account created successfully!");
-      if (data.redirect) {
-        goto(data.redirect);
-      }
-    } catch (e) {
-      toast.error("An error occurred during signup");
-    } finally {
-      loading = false;
-    }
-  }
-
-  function handleSubmit(e: Event) {
-    e.preventDefault();
-    if (!isAdminAccountCreated) {
-      handleSignup();
-    } else {
-      handleLogin();
-    }
-  }
 </script>
 
 <svelte:head>
@@ -126,7 +50,21 @@
           </Alert.Description>
         </Alert.Root>
       {:else}
-        <form onsubmit={handleSubmit}>
+        <form
+          method="POST"
+          action={authActionPath}
+          onsubmit={() => {
+            loading = true;
+          }}
+        >
+          {#if form?.error}
+            <Alert.Root variant="destructive" class="mb-4">
+              <AlertCircleIcon />
+              <Alert.Title>{!isAdminAccountCreated ? "Signup failed" : "Login failed"}</Alert.Title>
+              <Alert.Description>{form.error}</Alert.Description>
+            </Alert.Root>
+          {/if}
+
           <Field.Group>
             {#if !isAdminAccountCreated}
               <Field.Field>
@@ -135,7 +73,14 @@
                   <InputGroup.Addon>
                     <UserIcon />
                   </InputGroup.Addon>
-                  <InputGroup.Input id="name" type="text" placeholder="Your name" bind:value={name} required />
+                  <InputGroup.Input
+                    id="name"
+                    name="name"
+                    type="text"
+                    placeholder="Your name"
+                    value={nameValue}
+                    required
+                  />
                 </InputGroup.Root>
               </Field.Field>
             {/if}
@@ -146,7 +91,14 @@
                 <InputGroup.Addon>
                   <MailIcon />
                 </InputGroup.Addon>
-                <InputGroup.Input id="email" type="email" placeholder="you@example.com" bind:value={email} required />
+                <InputGroup.Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={emailValue}
+                  required
+                />
               </InputGroup.Root>
             </Field.Field>
 
@@ -157,7 +109,7 @@
                   variant="link"
                   size="sm"
                   class="text-muted-foreground absolute top-0 right-0 h-auto p-0 text-xs"
-                  href={clientResolver(resolve, "/account/forgot")}
+                  href="/account/forgot"
                 >
                   Forgot?
                 </Button>
@@ -168,6 +120,7 @@
                 </InputGroup.Addon>
                 <InputGroup.Input
                   id="password"
+                  name="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   bind:value={password}

@@ -23,7 +23,7 @@ export const load: LayoutServerLoad = async ({ cookies }) => {
 
   //if user not set throw redirect to signin
   if (!loggedInUser) {
-    throw redirect(302, serverResolve("/account/logout"));
+    throw redirect(302, serverResolve("/account/signin"));
   }
 
   const siteData = await GetAllSiteData();
