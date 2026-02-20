@@ -11,6 +11,7 @@
   import { formatDate } from "$lib/stores/datetime";
   import { GetInitials } from "$lib/clientTools.js";
   import GroupMonitorPopover from "./GroupMonitorPopover.svelte";
+  import { t } from "$lib/stores/i18n";
 
   interface Props {
     tag: string;
@@ -144,7 +145,8 @@
           days={days as number}
           endOfDayTodayAtTz={endOfDayTodayAtTz as number}
         >
-          View More Monitors in this Group
+          {$t("Included Monitors")} ({groupChildTags.length})
+          <ICONS.ARROW_UP class="size-3" />
         </GroupMonitorPopover>
       </div>
     {/if}

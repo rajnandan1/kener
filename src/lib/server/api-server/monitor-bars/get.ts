@@ -6,7 +6,10 @@ import type { StatusType } from "$lib/global-constants";
 import GC from "$lib/global-constants";
 import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
 import { buildMonitorBarResponseFromRawData } from "$lib/server/api-server/monitor-bar/shared";
-import { GetLatestMonitoringDataAllActive } from "$lib/server/controllers/monitorsController";
+import {
+  GetLatestMonitoringDataAllActive,
+  GetStatusCountsByIntervalGroupedByMonitor,
+} from "$lib/server/controllers/monitorsController";
 import type { TimestampStatusCount, TimestampStatusCountByMonitor } from "$lib/server/types/db";
 
 const DEFAULT_DAYS = 90;
@@ -55,7 +58,7 @@ export default async function get(req: APIServerRequest): Promise<Response> {
   const [monitors, latestDataAll, aggregatedData] = await Promise.all([
     db.getMonitorsByTags(tags),
     GetLatestMonitoringDataAllActive(tags),
-    db.getStatusCountsByIntervalGroupedByMonitor(tags, startTime, 86400, days),
+    GetStatusCountsByIntervalGroupedByMonitor(tags, startTime, 86400, days),
   ]);
 
   const latestStatusByTag = new Map<string, StatusType>(

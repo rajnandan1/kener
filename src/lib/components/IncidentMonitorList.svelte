@@ -1,24 +1,10 @@
 <script lang="ts">
   import { Badge } from "$lib/components/ui/badge/index.js";
   import IncidentItem from "$lib/components/IncidentItem.svelte";
-
-  interface IncidentMonitorImpact {
-    monitor_tag: string;
-    monitor_impact: string;
-    monitor_name: string;
-    monitor_image: string | null;
-  }
-
-  interface Incident {
-    id: number;
-    title: string;
-    monitors: IncidentMonitorImpact[];
-    start_date_time: number;
-    end_date_time?: number | null;
-  }
+  import type { IncidentForMonitorListWithComments } from "$lib/server/types/db";
 
   interface Props {
-    incidents: Incident[];
+    incidents: IncidentForMonitorListWithComments[];
     title: string;
     class?: string;
   }
@@ -26,17 +12,8 @@
   let { incidents, title, class: className = "" }: Props = $props();
 </script>
 
-{#if incidents && incidents.length > 0}
-  <div class="bg-background overflow-hidden rounded-3xl border p-0 {className}">
-    <div class="flex flex-wrap items-center justify-between gap-2 p-4">
-      <Badge variant="secondary" class="gap-1">{title}</Badge>
-    </div>
-    <div class="">
-      {#each incidents as incident (incident.id)}
-        <div class="border-b p-3 last:border-b-0 sm:p-4">
-          <IncidentItem {incident} />
-        </div>
-      {/each}
-    </div>
+{#each incidents as incident (incident.id)}
+  <div class=" rounded-3xl border p-3 sm:p-4">
+    <IncidentItem {incident} />
   </div>
-{/if}
+{/each}

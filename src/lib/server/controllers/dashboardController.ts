@@ -1,16 +1,14 @@
 import db from "../db/db.js";
 import { GetMinuteStartNowTimestampUTC, BeginningOfMinute, BeginningOfDay } from "../tool.js";
 import { GetPageByPathWithMonitors, GetLatestMonitoringDataAllActive } from "./controller.js";
-import { GetAllPages } from "./pagesController.js";
 import { GetMonitorsParsed } from "./monitorsController.js";
 import { GetStatusSummary, GetStatusBgColor } from "../../clientTools";
+import { formatDistanceStrict } from "date-fns";
 import type {
   IncidentRecord,
   IncidentCommentRecord,
-  MaintenanceEventRecordDetailed,
-  IncidentForMonitorList,
+  IncidentForMonitorListWithComments,
   MaintenanceEventsMonitorList,
-  PageRecord,
   PageRecordTyped,
   TimestampStatusCount,
   PageSettingsType,
@@ -40,27 +38,22 @@ const defaultPageSettings: PageSettingsType = {
   },
 };
 
+export interface NotificationEvent {
+  eventURL: string;
+  eventTitle: string;
+  eventDate: string;
+  eventType: string;
+  eventDuration: string;
+  eventStatus: string;
+}
+
+export interface NotificationPayload {
+  notifications: NotificationEvent[];
+}
+
 // Type for incident with comments
 export type IncidentWithComments = IncidentRecord & {
   comments: IncidentCommentRecord[];
-};
-
-const GetOngoingIncidents = async (monitor_tags: string[], incidentType: string): Promise<IncidentWithComments[]> => {
-  const now = GetMinuteStartNowTimestampUTC();
-  const ongoingIncidents = await db.getOngoingIncidentsByMonitorTags(now, monitor_tags, incidentType);
-
-  // Fetch comments for each incident
-  const incidentsWithComments = await Promise.all(
-    ongoingIncidents.map(async (incident) => {
-      const comments = await db.getActiveIncidentComments(incident.id);
-      return {
-        ...incident,
-        comments,
-      };
-    }),
-  );
-
-  return incidentsWithComments;
 };
 
 //upcoming maintenance function using maintenance tables
@@ -69,13 +62,12 @@ const GetUpcomingMaintenances = async (
   numDays: number,
   nowTs: number,
   maxCount: number = 10,
-): Promise<MaintenanceEventRecordDetailed[]> => {
-  const futureTimestamp = nowTs + numDays * 24 * 60 * 60;
-  const upcomingMaintenances = await db.getUpcomingMaintenanceEventsByMonitorTags(
+): Promise<MaintenanceEventsMonitorList[]> => {
+  const upcomingMaintenances = await db.getUpcomingMaintenanceEventsForMonitorList(
     nowTs,
-    futureTimestamp,
     monitor_tags,
     maxCount,
+    numDays,
   );
   return upcomingMaintenances;
 };
@@ -84,15 +76,17 @@ const GetUpcomingMaintenances = async (
 const GetOngoingMaintenances = async (
   monitor_tags: string[],
   nowTs: number,
-): Promise<MaintenanceEventRecordDetailed[]> => {
-  const ongoingMaintenances = await db.getOngoingMaintenanceEventsByMonitorTags(nowTs, monitor_tags);
+): Promise<MaintenanceEventsMonitorList[]> => {
+  const ongoingMaintenances = await db.getOngoingMaintenanceEventsForMonitorList(nowTs, monitor_tags);
   return ongoingMaintenances;
 };
 
 //given array of monitor tags, get ongoing incidents for dashboard
-export const GetOngoingIncidentsForMonitorList = async (monitor_tags: string[]): Promise<IncidentForMonitorList[]> => {
+export const GetOngoingIncidentsForMonitorList = async (
+  monitor_tags: string[],
+): Promise<IncidentForMonitorListWithComments[]> => {
   const now = GetMinuteStartNowTimestampUTC();
-  const ongoingIncidents = await db.getOngoingIncidentsForMonitorList(now, monitor_tags);
+  const ongoingIncidents = await db.getOngoingIncidentsForMonitorListWithComments(now, monitor_tags);
   return ongoingIncidents;
 };
 
@@ -101,10 +95,9 @@ export const GetResolvedIncidentsForMonitorList = async (
   monitor_tags: string[],
   limit: number = 5,
   daysInPast: number = 7,
-): Promise<IncidentForMonitorList[]> => {
+): Promise<IncidentForMonitorListWithComments[]> => {
   const now = GetMinuteStartNowTimestampUTC();
-  const resolvedIncidents = await db.getResolvedIncidentsForMonitorList(now, monitor_tags, limit, daysInPast);
-  return resolvedIncidents;
+  return await db.getResolvedIncidentsForMonitorListWithComments(now, monitor_tags, limit, daysInPast);
 };
 
 // ============ Maintenance Events for Monitor List ============
@@ -188,15 +181,11 @@ export interface PageNavItem {
 
 export interface PageDashboardData {
   pageStatus: { statusSummary: string; statusClass: string };
-  ongoingIncidents: IncidentForMonitorList[];
-  recentConcludedMaintenances: IncidentForMonitorList[];
-  ongoingMaintenances: MaintenanceEventRecordDetailed[];
-  upcomingMaintenances: MaintenanceEventRecordDetailed[];
-  pastMaintenances: MaintenanceEventsMonitorList[];
+  ongoingIncidents: IncidentForMonitorListWithComments[];
+  ongoingMaintenances: MaintenanceEventsMonitorList[];
   monitorTags: string[];
   monitorGroupMembersByTag: Record<string, string[]>;
   pageDetails: PageRecordTyped;
-  allPages: PageNavItem[];
 }
 
 const BuildPageStatus = (latestData: Array<{ status?: string | null; latency?: number | null }>, nowTs: number) => {
@@ -246,6 +235,91 @@ const BuildPageStatus = (latestData: Array<{ status?: string | null; latency?: n
   };
 };
 
+export const BuildNotificationPayload = (
+  ongoingIncidents: IncidentForMonitorListWithComments[],
+  ongoingMaintenances: MaintenanceEventsMonitorList[],
+  pastResolvedIncidents: IncidentForMonitorListWithComments[],
+  upcomingMaintenances: MaintenanceEventsMonitorList[],
+  pastMaintenances: MaintenanceEventsMonitorList[],
+  nowTs: number,
+): NotificationPayload => {
+  const notifications: Array<NotificationEvent & { sortTs: number }> = [];
+
+  const durationFromRange = (startTs: number, endTs: number | null): string => {
+    const effectiveEnd = Math.max(startTs, endTs ?? nowTs);
+    return formatDistanceStrict(new Date(startTs * 1000), new Date(effectiveEnd * 1000));
+  };
+
+  for (const incident of ongoingIncidents) {
+    const ts = incident.start_date_time;
+    notifications.push({
+      sortTs: ts,
+      eventURL: `/incidents/${incident.id}`,
+      eventTitle: incident.title,
+      eventDate: new Date(ts * 1000).toISOString(),
+      eventType: "incident",
+      eventDuration: durationFromRange(incident.start_date_time, incident.end_date_time),
+      eventStatus: incident.state,
+    });
+  }
+
+  for (const incident of pastResolvedIncidents) {
+    const ts = incident.end_date_time ?? incident.start_date_time;
+    notifications.push({
+      sortTs: ts,
+      eventURL: `/incidents/${incident.id}`,
+      eventTitle: incident.title,
+      eventDate: new Date(ts * 1000).toISOString(),
+      eventType: "incident",
+      eventDuration: durationFromRange(incident.start_date_time, incident.end_date_time),
+      eventStatus: incident.state,
+    });
+  }
+
+  for (const maintenance of ongoingMaintenances) {
+    const ts = maintenance.start_date_time;
+    notifications.push({
+      sortTs: ts,
+      eventURL: `/maintenances/${maintenance.id}`,
+      eventTitle: maintenance.title,
+      eventDate: new Date(ts * 1000).toISOString(),
+      eventType: "maintenance",
+      eventDuration: durationFromRange(maintenance.start_date_time, maintenance.end_date_time),
+      eventStatus: GC.ONGOING,
+    });
+  }
+
+  for (const maintenance of upcomingMaintenances) {
+    const ts = maintenance.start_date_time;
+    notifications.push({
+      sortTs: ts,
+      eventURL: `/maintenances/${maintenance.id}`,
+      eventTitle: maintenance.title,
+      eventDate: new Date(ts * 1000).toISOString(),
+      eventType: "maintenance",
+      eventDuration: durationFromRange(maintenance.start_date_time, maintenance.end_date_time),
+      eventStatus: GC.SCHEDULED,
+    });
+  }
+
+  for (const maintenance of pastMaintenances) {
+    const ts = maintenance.end_date_time;
+    notifications.push({
+      sortTs: ts,
+      eventURL: `/maintenances/${maintenance.id}`,
+      eventTitle: maintenance.title,
+      eventDate: new Date(ts * 1000).toISOString(),
+      eventType: "maintenance",
+      eventDuration: durationFromRange(maintenance.start_date_time, maintenance.end_date_time),
+      eventStatus: GC.COMPLETED,
+    });
+  }
+
+  return {
+    notifications: notifications.sort((a, b) => a.sortTs - b.sortTs).map(({ sortTs, ...item }) => item),
+  };
+};
+
 /**
  * Get all dashboard data for a status page
  * @param pagePath - The URL path of the page (e.g., "/" or "/api")
@@ -253,7 +327,6 @@ const BuildPageStatus = (latestData: Array<{ status?: string | null; latency?: n
  */
 export const GetPageDashboardData = async (
   pagePath: string,
-  allPagesInput?: PageNavItem[],
 ): Promise<PageDashboardData | null> => {
   // Fetch page by path with monitors
   const pageData = await GetPageByPathWithMonitors(pagePath);
@@ -292,28 +365,14 @@ export const GetPageDashboardData = async (
     updated_at: pageDetails.updated_at,
   };
 
-  const allPagesPromise: Promise<PageNavItem[]> = allPagesInput
-    ? Promise.resolve(allPagesInput)
-    : GetAllPages().then((allPagesData) =>
-        allPagesData.map((p) => ({
-          page_title: p.page_title,
-          page_path: p.page_path,
-        })),
-      );
-
   if (monitorTags.length === 0) {
-    const allPages = await allPagesPromise;
     return {
       pageStatus: BuildPageStatus([], nowTs),
-      recentConcludedMaintenances: [],
       ongoingIncidents: [],
       ongoingMaintenances: [],
-      upcomingMaintenances: [],
-      pastMaintenances: [],
       monitorTags,
       monitorGroupMembersByTag: {},
       pageDetails: pageDetailsTyped,
-      allPages,
     };
   }
 
@@ -321,44 +380,17 @@ export const GetPageDashboardData = async (
   const [
     latestData,
     parsedMonitors,
-    allPages,
     ongoingIncidents,
-    recentConcludedMaintenances,
     ongoingMaintenances,
-    pastMaintenances,
-    upcomingMaintenances,
   ] = await Promise.all([
     GetLatestMonitoringDataAllActive(monitorTags),
     GetMonitorsParsed({ tags: monitorTags, status: "ACTIVE", is_hidden: "NO" }),
-    allPagesPromise,
     settings.incidents.enabled && settings.incidents.ongoing.show
       ? GetOngoingIncidentsForMonitorList(monitorTags)
-      : Promise.resolve([] as IncidentForMonitorList[]),
-    settings.incidents.enabled && settings.incidents.resolved.show
-      ? GetResolvedIncidentsForMonitorList(
-          monitorTags,
-          settings.incidents.resolved.maxCount,
-          settings.incidents.resolved.daysInPast,
-        )
-      : Promise.resolve([] as IncidentForMonitorList[]),
+      : Promise.resolve([] as IncidentForMonitorListWithComments[]),
     settings.include_maintenances.enabled && settings.include_maintenances.ongoing.show
       ? GetOngoingMaintenances(monitorTags, nowTs)
-      : Promise.resolve([] as MaintenanceEventRecordDetailed[]),
-    settings.include_maintenances.enabled && settings.include_maintenances.ongoing.past.show
-      ? GetPastMaintenanceEventsForMonitorList(
-          monitorTags,
-          settings.include_maintenances.ongoing.past.maxCount,
-          settings.include_maintenances.ongoing.past.daysInPast,
-        )
       : Promise.resolve([] as MaintenanceEventsMonitorList[]),
-    settings.include_maintenances.enabled && settings.include_maintenances.ongoing.upcoming.show
-      ? GetUpcomingMaintenances(
-          monitorTags,
-          settings.include_maintenances.ongoing.upcoming.daysInFuture,
-          nowTs,
-          settings.include_maintenances.ongoing.upcoming.maxCount,
-        )
-      : Promise.resolve([] as MaintenanceEventRecordDetailed[]),
   ]);
 
   const pageStatus = BuildPageStatus(latestData, nowTs);
@@ -375,14 +407,10 @@ export const GetPageDashboardData = async (
 
   return {
     pageStatus,
-    recentConcludedMaintenances,
     ongoingIncidents,
     ongoingMaintenances,
-    upcomingMaintenances,
-    pastMaintenances,
     monitorTags,
     monitorGroupMembersByTag,
     pageDetails: pageDetailsTyped,
-    allPages,
   };
 };

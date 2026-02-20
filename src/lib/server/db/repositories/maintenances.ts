@@ -30,6 +30,7 @@ export class MaintenancesRepository extends BaseRepository {
       rrule: data.rrule,
       duration_seconds: data.duration_seconds,
       status: data.status || GC.ACTIVE,
+      is_global: data.is_global || "YES",
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     };
@@ -452,7 +453,7 @@ export class MaintenancesRepository extends BaseRepository {
     timestamp: number,
     monitorTags: string[],
   ): Promise<MaintenanceEventsMonitorList[]> {
-    return await this.knex("maintenances_events")
+    const rows = await this.knex("maintenances_events")
       .select(
         "maintenances_events.id",
         "maintenances.title",
@@ -460,17 +461,25 @@ export class MaintenancesRepository extends BaseRepository {
         "maintenances_events.start_date_time",
         "maintenances_events.end_date_time",
         "maintenance_monitors.monitor_tag",
+        "maintenance_monitors.monitor_impact",
+        "monitors.name as monitor_name",
+        "monitors.image as monitor_image",
+        "monitors.is_hidden as monitor_is_hidden",
         "maintenances_events.created_at",
         "maintenances_events.updated_at",
       )
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
-      .join("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
-      .whereIn("maintenance_monitors.monitor_tag", monitorTags)
+      .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
+      .leftJoin("monitors", "maintenance_monitors.monitor_tag", "monitors.tag")
+      .where(function () {
+        this.whereIn("maintenance_monitors.monitor_tag", monitorTags).orWhere("maintenances.is_global", "YES");
+      })
       .andWhere("maintenances.status", GC.ACTIVE)
       .whereIn("maintenances_events.status", [GC.ONGOING])
       .andWhere("maintenances_events.start_date_time", "<=", timestamp)
       .andWhere("maintenances_events.end_date_time", ">=", timestamp)
       .orderBy("maintenances_events.start_date_time", "desc");
+    return this.groupMaintenancesByIdForMonitorList(rows);
   }
 
   /**
@@ -484,7 +493,7 @@ export class MaintenancesRepository extends BaseRepository {
     daysInPast: number,
   ): Promise<MaintenanceEventsMonitorList[]> {
     const pastTimestamp = timestamp - daysInPast * 24 * 60 * 60;
-    return await this.knex("maintenances_events")
+    const rows = await this.knex("maintenances_events")
       .select(
         "maintenances_events.id",
         "maintenances.title",
@@ -492,17 +501,26 @@ export class MaintenancesRepository extends BaseRepository {
         "maintenances_events.start_date_time",
         "maintenances_events.end_date_time",
         "maintenance_monitors.monitor_tag",
+        "maintenance_monitors.monitor_impact",
+        "monitors.name as monitor_name",
+        "monitors.image as monitor_image",
+        "monitors.is_hidden as monitor_is_hidden",
         "maintenances_events.created_at",
         "maintenances_events.updated_at",
       )
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
-      .join("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
-      .whereIn("maintenance_monitors.monitor_tag", monitorTags)
+      .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
+      .leftJoin("monitors", "maintenance_monitors.monitor_tag", "monitors.tag")
+      .where(function () {
+        this.whereIn("maintenance_monitors.monitor_tag", monitorTags).orWhere("maintenances.is_global", "YES");
+      })
       .andWhere("maintenances_events.end_date_time", "<", timestamp)
       .andWhere("maintenances_events.end_date_time", ">=", pastTimestamp)
       .whereIn("maintenances_events.status", [GC.COMPLETED])
       .orderBy("maintenances_events.end_date_time", "desc")
       .limit(limit);
+
+    return this.groupMaintenancesByIdForMonitorList(rows);
   }
 
   /**
@@ -516,7 +534,7 @@ export class MaintenancesRepository extends BaseRepository {
     daysInFuture: number,
   ): Promise<MaintenanceEventsMonitorList[]> {
     const futureTimestamp = timestamp + daysInFuture * 24 * 60 * 60;
-    return await this.knex("maintenances_events")
+    const rows = await this.knex("maintenances_events")
       .select(
         "maintenances_events.id",
         "maintenances.title",
@@ -524,18 +542,27 @@ export class MaintenancesRepository extends BaseRepository {
         "maintenances_events.start_date_time",
         "maintenances_events.end_date_time",
         "maintenance_monitors.monitor_tag",
+        "maintenance_monitors.monitor_impact",
+        "monitors.name as monitor_name",
+        "monitors.image as monitor_image",
+        "monitors.is_hidden as monitor_is_hidden",
         "maintenances_events.created_at",
         "maintenances_events.updated_at",
       )
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
-      .join("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
-      .whereIn("maintenance_monitors.monitor_tag", monitorTags)
+      .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
+      .leftJoin("monitors", "maintenance_monitors.monitor_tag", "monitors.tag")
+      .where(function () {
+        this.whereIn("maintenance_monitors.monitor_tag", monitorTags).orWhere("maintenances.is_global", "YES");
+      })
       .andWhere("maintenances.status", GC.ACTIVE)
       .andWhere("maintenances_events.status", GC.SCHEDULED)
       .andWhere("maintenances_events.start_date_time", ">", timestamp)
       .andWhere("maintenances_events.start_date_time", "<=", futureTimestamp)
       .orderBy("maintenances_events.start_date_time", "asc")
       .limit(limit);
+
+    return this.groupMaintenancesByIdForMonitorList(rows);
   }
 
   /**

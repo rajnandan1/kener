@@ -1,16 +1,8 @@
 import MobileDetect from "mobile-detect";
 import type { Cookies } from "@sveltejs/kit";
-import type { PageNavItem } from "./dashboardController";
 import type { UserRecordPublic } from "$lib/server/types/db";
 import seedSiteData from "$lib/server/db/seedSiteData";
-import {
-  GetAllSiteData,
-  GetLoggedInSession,
-  GetLocaleFromCookie,
-  GetUsersCount,
-  GetAllPages,
-  IsEmailSetup,
-} from "./controller.js";
+import { GetAllSiteData, GetLoggedInSession, GetLocaleFromCookie, GetUsersCount, IsEmailSetup } from "./controller.js";
 
 export interface LayoutServerData {
   isMobile: boolean;
@@ -35,7 +27,6 @@ export interface LayoutServerData {
     ACCENT_FOREGROUND: string;
   };
   navItems: Array<{ name: string; url: string; iconURL: string }>;
-  allPages: PageNavItem[];
   siteName: string;
   siteUrl: string;
   logo: string | undefined;
@@ -74,23 +65,18 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
   const md = new MobileDetect(userAgent);
   const isMobile = !!md.mobile();
 
-  const [loggedInUser, siteData, userCounts, allPagesData] = await Promise.all([
+  const [loggedInUser, siteData, userCounts] = await Promise.all([
     GetLoggedInSession(cookies),
     GetAllSiteData(),
     GetUsersCount(),
-    GetAllPages(),
   ]);
 
   const isSetupComplete = process.env.KENER_SECRET_KEY !== undefined && Object.keys(siteData).length > 0;
 
   const selectedLang = GetLocaleFromCookie(siteData, cookies);
   const siteStatusColors = siteData.colors;
-  const siteStatusColorsDark = siteData.colorsDark || siteStatusColors;
 
-  const allPages: PageNavItem[] = allPagesData.map((p) => ({
-    page_title: p.page_title,
-    page_path: p.page_path,
-  }));
+  const siteStatusColorsDark = siteData.colorsDark || siteStatusColors;
 
   // Check if subscription is enabled
   let isSubsEnabled = false;
@@ -121,7 +107,6 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     siteStatusColors,
     siteStatusColorsDark,
     navItems: siteData.nav || [],
-    allPages,
     siteName: siteData.siteName || "Kener",
     siteUrl: siteData.siteURL || "",
     logo: siteData.logo,

@@ -208,24 +208,43 @@ export function getDateFnsLocale(localeCode: string): Locale {
 export const dateFnsLocale = derived(currentLocale, ($locale) => getDateFnsLocale($locale));
 
 /**
+ * Parse incoming date values from app/DB payloads.
+ * Supports:
+ * - Unix timestamps (seconds/milliseconds)
+ * - Date objects
+ * - UTC strings from DB like "YYYY-MM-DD HH:mm:ss"
+ * - ISO strings
+ */
+function parseDateInput(date: Date | number | string): Date {
+  if (typeof date === "number") {
+    // Check if timestamp is in seconds (Unix) or milliseconds
+    return date < 10000000000 ? new Date(date * 1000) : new Date(date);
+  }
+
+  if (date instanceof Date) {
+    return date;
+  }
+
+  // DB UTC format without timezone offset: "YYYY-MM-DD HH:mm:ss"
+  if (/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}$/.test(date)) {
+    return new Date(date.replace(" ", "T") + "Z");
+  }
+
+  return new Date(date);
+}
+
+/**
  * Format a date with timezone and locale support
  * @param date - Date object or timestamp (in milliseconds or seconds)
  * @param formatStr - date-fns format string (e.g., "PPpp", "yyyy-MM-dd")
  * @param tz - Optional timezone override (uses store value if not provided)
  * @param locale - Optional locale override (uses store value if not provided)
  */
-export function formatDateTz(date: Date | number, formatStr: string, tz?: string, locale?: Locale): string {
+export function formatDateTz(date: Date | number | string, formatStr: string, tz?: string, locale?: Locale): string {
   const timezone = tz || get(selectedTimezone);
   const loc = locale || get(dateFnsLocale);
 
-  // Convert timestamp to Date if needed
-  let dateObj: Date;
-  if (typeof date === "number") {
-    // Check if timestamp is in seconds (Unix) or milliseconds
-    dateObj = date < 10000000000 ? new Date(date * 1000) : new Date(date);
-  } else {
-    dateObj = date;
-  }
+  const dateObj = parseDateInput(date);
 
   // Convert to the target timezone
   const zonedDate = toZonedTime(dateObj, timezone);
@@ -239,15 +258,8 @@ export function formatDateTz(date: Date | number, formatStr: string, tz?: string
  * Use: $formatDate(timestamp, "PPpp")
  */
 export const formatDate = derived([selectedTimezone, dateFnsLocale], ([$tz, $locale]) => {
-  return (date: Date | number, formatStr: string): string => {
-    // Convert timestamp to Date if needed
-    let dateObj: Date;
-    if (typeof date === "number") {
-      // Check if timestamp is in seconds (Unix) or milliseconds
-      dateObj = date < 10000000000 ? new Date(date * 1000) : new Date(date);
-    } else {
-      dateObj = date;
-    }
+  return (date: Date | number | string, formatStr: string): string => {
+    const dateObj = parseDateInput(date);
 
     // Convert to the target timezone
     const zonedDate = toZonedTime(dateObj, $tz);

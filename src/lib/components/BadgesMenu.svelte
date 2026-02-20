@@ -6,20 +6,29 @@
   import clientResolver from "$lib/client/resolver.js";
   import { t } from "$lib/stores/i18n";
   import trackEvent from "$lib/beacon";
+  import { Button } from "$lib/components/ui/button/index.js";
 
   import TrendingUp from "@lucide/svelte/icons/trending-up";
   import Percent from "@lucide/svelte/icons/percent";
   import Timer from "@lucide/svelte/icons/timer";
   import Copy from "@lucide/svelte/icons/copy";
+  import Sticker from "@lucide/svelte/icons/sticker";
+  import { page } from "$app/state";
 
   interface Props {
-    open: boolean;
-    monitorTag: string;
     protocol: string;
     domain: string;
   }
 
-  let { open = $bindable(false), monitorTag, protocol, domain }: Props = $props();
+  let { protocol, domain }: Props = $props();
+  let open = $state(false);
+  let showMenu = $derived(
+    page.route.id === "/(kener)/monitors/[monitor_tag]" &&
+      !!page.params.monitor_tag &&
+      page.data.monitorSharingOptions?.showShareBadgeMonitor &&
+      page.data.subMenuOptions?.showShareBadgeMonitor
+  );
+  let monitorTag = page.params.monitor_tag;
 
   function handleBadgeCopy(
     type: "status" | "uptime" | "latency_avg" | "latency_max" | "latency_min" | "dot" | "dot_ping"
@@ -57,6 +66,19 @@
   );
 </script>
 
+{#if showMenu}
+  <Button
+    variant="outline"
+    class="bg-background/80 dark:bg-background/70 border-foreground/10 relative cursor-pointer rounded-full border shadow-none backdrop-blur-md"
+    size="icon-sm"
+    onclick={() => {
+      open = true;
+      trackEvent("badges_menu_opened", { source: "theme_plus" });
+    }}
+  >
+    <Sticker />
+  </Button>
+{/if}
 <Dialog.Root bind:open>
   <Dialog.Overlay class="backdrop-blur-[2px]" />
   <Dialog.Content class="max-w-md rounded-3xl">

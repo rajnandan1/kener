@@ -1,12 +1,12 @@
 <script lang="ts">
+  import { browser } from "$app/environment";
   import { t } from "$lib/stores/i18n";
   import * as Item from "$lib/components/ui/item/index.js";
   import EventsCard from "$lib/components/EventsCard.svelte";
   import MonitorBar from "$lib/components/MonitorBar.svelte";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
-  import IncidentMonitorList from "$lib/components/IncidentMonitorList.svelte";
-  import AllMaintenanceMonitorGrid from "$lib/components/AllMaintenanceMonitorGrid.svelte";
   import IncidentItem from "$lib/components/IncidentItem.svelte";
+  import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import mdToHTML from "$lib/marked.js";
   import clientResolver from "$lib/client/resolver.js";
@@ -38,7 +38,7 @@
     monitorBarDataByTag = {};
     monitorBarErrorByTag = {};
 
-    if (!tags.length) return;
+    if (!browser || !tags.length) return;
 
     void Promise.all(
       tags.map(async (tag) => {
@@ -76,12 +76,7 @@
 
 <!-- page title -->
 <div class="flex flex-col gap-3 sm:gap-4">
-  <ThemePlus
-    monitor_tags={data.monitorTags}
-    showPagesDropdown={true}
-    showEventsButton={true}
-    currentPath={data.pageDetails?.page_path || "/"}
-  />
+  <ThemePlus monitor_tags={data.monitorTags} currentPath={data.pageDetails?.page_path || "/"} />
   <div class="flex flex-col gap-2 px-3 py-2 sm:px-4">
     {#if data.pageDetails?.page_logo}
       <img
@@ -107,12 +102,24 @@
   </div>
 
   <EventsCard statusClass={data.pageStatus.statusClass} statusText={data.pageStatus.statusSummary} />
-  <IncidentMonitorList incidents={data.ongoingIncidents} title="Ongoing Incidents" />
-  <AllMaintenanceMonitorGrid
-    ongoingMaintenances={data.ongoingMaintenances}
-    upcomingMaintenances={data.upcomingMaintenances}
-    pastMaintenances={data.pastMaintenances}
-  />
+  {#if data.ongoingIncidents && data.ongoingIncidents.length > 0}
+    <div class="flex flex-col gap-3">
+      {#each data.ongoingIncidents as incident, i (incident.id ?? i)}
+        <div class=" rounded-3xl border p-3 sm:p-4">
+          <IncidentItem {incident} />
+        </div>
+      {/each}
+    </div>
+  {/if}
+  {#if data.ongoingMaintenances && data.ongoingMaintenances.length > 0}
+    <div class="flex flex-col gap-3">
+      {#each data.ongoingMaintenances as maintenance, i (maintenance.id ?? i)}
+        <div class="rounded-3xl border p-3 sm:p-4">
+          <MaintenanceItem {maintenance} />
+        </div>
+      {/each}
+    </div>
+  {/if}
   <div class="flex flex-col">
     <div class="flex flex-col overflow-hidden rounded-3xl border">
       <div class="flex items-center justify-between p-4">
@@ -132,20 +139,4 @@
       {/each}
     </div>
   </div>
-
-  <!-- Recent Concluded Incidents -->
-  {#if data.recentConcludedMaintenances && data.recentConcludedMaintenances.length > 0}
-    <div class="flex flex-col gap-3 overflow-hidden rounded-3xl border">
-      <div class="p-4">
-        <Badge variant="secondary" class="gap-1">{$t("Recent Incidents")}</Badge>
-      </div>
-      <div class="flex flex-col gap-3">
-        {#each data.recentConcludedMaintenances as incident, i (incident.id ?? i)}
-          <div class="border-b p-4 last:border-0">
-            <IncidentItem {incident} />
-          </div>
-        {/each}
-      </div>
-    </div>
-  {/if}
 </div>

@@ -9,21 +9,26 @@
   import { t } from "$lib/stores/i18n";
   import { mode } from "mode-watcher";
   import trackEvent from "$lib/beacon";
+  import { page } from "$app/state";
 
-  import Code from "@lucide/svelte/icons/code";
-  import ExternalLink from "@lucide/svelte/icons/external-link";
   import Copy from "@lucide/svelte/icons/clipboard";
-  import { Check } from "@lucide/svelte";
+  import Check from "@lucide/svelte/icons/check";
+  import Code from "@lucide/svelte/icons/code";
 
   interface Props {
-    open: boolean;
-    monitorTag: string;
     protocol: string;
     domain: string;
   }
 
-  let { open = $bindable(false), monitorTag, protocol, domain }: Props = $props();
-
+  let { protocol, domain }: Props = $props();
+  let open = $state(false);
+  let showMenu = $derived(
+    page.route.id === "/(kener)/monitors/[monitor_tag]" &&
+      !!page.params.monitor_tag &&
+      page.data.monitorSharingOptions?.showShareEmbedMonitor &&
+      page.data.subMenuOptions?.showShareEmbedMonitor
+  );
+  let monitorTag = page.params.monitor_tag;
   let monitorTheme = $state<"light" | "dark">(mode.current === "dark" ? "dark" : "light");
   let monitorEmbedType = $state<"script" | "iframe">("iframe");
 
@@ -107,6 +112,19 @@
   });
 </script>
 
+{#if showMenu}
+  <Button
+    variant="outline"
+    class="bg-background/80 dark:bg-background/70 border-foreground/10 relative cursor-pointer rounded-full border shadow-none backdrop-blur-md"
+    size="icon-sm"
+    onclick={() => {
+      open = true;
+      trackEvent("embed_menu_opened", { source: "theme_plus" });
+    }}
+  >
+    <Code />
+  </Button>
+{/if}
 <Dialog.Root bind:open>
   <Dialog.Overlay class="backdrop-blur-[2px]" />
   <Dialog.Content class="max-w-2xl rounded-3xl">

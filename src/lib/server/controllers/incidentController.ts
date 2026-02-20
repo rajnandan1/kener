@@ -34,6 +34,7 @@ export interface IncidentInput {
   state?: string;
   incident_type?: string;
   incident_source?: string;
+  is_global?: string;
 }
 
 interface IncidentUpdateInput {
@@ -42,6 +43,7 @@ interface IncidentUpdateInput {
   end_date_time?: number | null;
   status?: string;
   state?: string;
+  is_global?: string;
 }
 
 export const GetIncidentsOpenHome = async (
@@ -305,6 +307,7 @@ export const CreateIncident = async (data: IncidentInput): Promise<{ incident_id
     state: !!data.state ? data.state : "INVESTIGATING",
     incident_type: !!data.incident_type ? data.incident_type : "INCIDENT",
     incident_source: !!data.incident_source ? data.incident_source : "DASHBOARD",
+    is_global: data.is_global || "YES",
   };
 
   //incident_type == INCIDENT delete endDateTime
@@ -348,6 +351,7 @@ export const UpdateIncident = async (incident_id: number, data: IncidentUpdateIn
     status: data.status || incidentExists.status,
     state: data.state || incidentExists.state,
     end_date_time: data.end_date_time || incidentExists.end_date_time,
+    is_global: data.is_global !== undefined ? data.is_global : incidentExists.is_global,
   };
 
   //check if updateObject same as incidentExists

@@ -10,7 +10,6 @@ import {
 } from "$lib/server/tool";
 import GC from "$lib/global-constants";
 import { GetMonitorsParsed } from "../../controllers/monitorsController";
-import type { TimestampStatusCount } from "$lib/server/types/db";
 
 interface DayDetailRequest {
   tag: string;

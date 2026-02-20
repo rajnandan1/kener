@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount, untrack } from "svelte";
-  import { resolve } from "$app/paths";
   import * as Card from "$lib/components/ui/card/index.js";
   import { Skeleton } from "$lib/components/ui/skeleton/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
@@ -8,24 +7,26 @@
   import StatusBarCalendar from "$lib/components/StatusBarCalendar.svelte";
   import LatencyTrendChart from "$lib/components/LatencyTrendChart.svelte";
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
+  import ArrowUp from "@lucide/svelte/icons/arrow-up";
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
   import { Button } from "$lib/components/ui/button";
   import { t } from "$lib/stores/i18n";
   import { selectedTimezone } from "$lib/stores/timezone";
   import { getEndOfDayAtTz } from "$lib/client/datetime";
   import { formatDate } from "$lib/stores/datetime";
-  import clientResolver from "$lib/client/resolver.js";
-  import { ArrowDown } from "@lucide/svelte";
+  import { requestMonitorBar, clearMonitorBarCache } from "$lib/client/monitor-bar-client";
   import * as Popover from "$lib/components/ui/popover/index.js";
   import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
+  import GroupMonitorPopover from "$lib/components/GroupMonitorPopover.svelte";
 
   interface Props {
     monitorTag: string;
     class?: string;
     maxDays?: number;
+    groupTags?: string[];
   }
 
-  let { monitorTag, class: className = "", maxDays = 90 }: Props = $props();
+  let { monitorTag, class: className = "", maxDays = 90, groupTags = [] }: Props = $props();
 
   // State
   let loading = $state(true);
@@ -51,6 +52,8 @@
 
   // Default to maxDays (first item since sorted descending)
   let selectedDayIndex = $state(0);
+  let selectedDays = $derived(dayOptions[selectedDayIndex]?.days ?? maxDays);
+  let endOfDayTodayAtTz = $derived(getEndOfDayAtTz($selectedTimezone));
 
   // Latency metric toggle: "average" | "maximum" | "minimum"
   let latencyMetric = $state("average");
@@ -89,15 +92,7 @@
     error = null;
 
     try {
-      const endOfDayTodayAtTz = getEndOfDayAtTz($selectedTimezone);
-      const url = `?tag=${monitorTag}&endOfDayTodayAtTz=${endOfDayTodayAtTz}&days=${days}`;
-      const response = await fetch(clientResolver(resolve, "/dashboard-apis/monitor-bar") + url);
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch monitor data");
-      }
-
-      overviewData = await response.json();
+      overviewData = await requestMonitorBar(monitorTag, days, endOfDayTodayAtTz);
     } catch (e) {
       console.error("Failed to fetch monitor data:", e);
       error = e instanceof Error ? e.message : "Failed to load data";
@@ -110,6 +105,8 @@
   function handleDayChange(index: number) {
     if (index !== selectedDayIndex) {
       selectedDayIndex = index;
+      // Evict cache so the new range fetches fresh data
+      clearMonitorBarCache();
       fetchData(dayOptions[index].days);
     }
   }
@@ -218,6 +215,15 @@
           </p>
         </div>
       </div>
+      <!-- Add group GroupMonitorPopover here -->
+      {#if groupTags.length > 0}
+        <div class="flex justify-center">
+          <GroupMonitorPopover tags={groupTags} days={selectedDays} {endOfDayTodayAtTz}>
+            {$t("Included Monitors")} ({groupTags.length})
+            <ArrowUp class="size-3" />
+          </GroupMonitorPopover>
+        </div>
+      {/if}
 
       <!-- Latency Chart -->
       <div class="pt-2">

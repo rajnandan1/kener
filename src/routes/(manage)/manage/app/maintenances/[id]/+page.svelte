@@ -6,6 +6,7 @@
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import { Checkbox } from "$lib/components/ui/checkbox/index.js";
+  import { Switch } from "$lib/components/ui/switch/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
@@ -59,6 +60,7 @@
     rrule: string;
     duration_seconds: number;
     status: "ACTIVE" | "INACTIVE";
+    is_global: string;
   }>({
     id: 0,
     title: "",
@@ -66,7 +68,8 @@
     start_date_time: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
     rrule: "FREQ=MINUTELY;COUNT=1",
     duration_seconds: 3600, // 1 hour default
-    status: "ACTIVE"
+    status: "ACTIVE",
+    is_global: "YES"
   });
 
   // For datetime input
@@ -230,7 +233,8 @@
           start_date_time: result.start_date_time,
           rrule: result.rrule,
           duration_seconds: result.duration_seconds,
-          status: result.status
+          status: result.status,
+          is_global: result.is_global || "YES"
         };
 
         // Parse RRULE for UI
@@ -313,7 +317,8 @@
           start_date_time: startTime,
           rrule,
           duration_seconds: calculatedDurationSeconds,
-          monitors: selectedMonitors.map((m) => ({ monitor_tag: m.tag, monitor_impact: m.status }))
+          monitors: selectedMonitors.map((m) => ({ monitor_tag: m.tag, monitor_impact: m.status })),
+          is_global: maintenance.is_global
         };
 
         const response = await fetch(clientResolver(resolve, "/manage/api"), {
@@ -337,7 +342,8 @@
           rrule,
           duration_seconds: calculatedDurationSeconds,
           status: maintenance.status,
-          monitors: selectedMonitors.map((m) => ({ monitor_tag: m.tag, monitor_impact: m.status }))
+          monitors: selectedMonitors.map((m) => ({ monitor_tag: m.tag, monitor_impact: m.status })),
+          is_global: maintenance.is_global
         };
 
         const response = await fetch(clientResolver(resolve, "/manage/api"), {
@@ -569,6 +575,23 @@
             bind:value={maintenance.description}
             placeholder="Details about the maintenance..."
             rows={3}
+          />
+        </div>
+
+        <!-- Global Visibility -->
+        <div class="flex items-center justify-between rounded-md border p-3">
+          <div class="flex flex-col gap-1">
+            <Label for="is-global">Global Maintenance</Label>
+            <p class="text-muted-foreground text-xs">
+              When enabled, this maintenance will be visible on all status pages
+            </p>
+          </div>
+          <Switch
+            id="is-global"
+            checked={maintenance.is_global === "YES"}
+            onCheckedChange={(checked) => {
+              maintenance.is_global = checked ? "YES" : "NO";
+            }}
           />
         </div>
 

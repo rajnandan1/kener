@@ -161,6 +161,11 @@
   --identified: #3b82f6;
   --monitoring: #10b981;
   --resolved: #22c55e;
+  --completed: #22c55e;
+  --scheduled: #3b82f6;
+  --ready: #f59e0b;
+  --ongoing: #3a10b9;
+  --cancelled: #6b7280;
 }
 
 /* INVESTIGATING */
@@ -191,6 +196,41 @@
 }
 .text-resolved {
   color: var(--resolved);
+}
+/* COMPLETED */
+.bg-completed {
+  background-color: var(--completed);
+}
+.text-completed {
+  color: var(--completed);
+}
+/* SCHEDULED */
+.bg-scheduled {
+  background-color: var(--scheduled);
+}
+.text-scheduled {
+  color: var(--scheduled);
+}
+/* READY */
+.bg-ready {
+  background-color: var(--ready);
+}
+.text-ready {
+  color: var(--ready);
+}
+/* ONGOING */
+.bg-ongoing {
+  background-color: var(--ongoing);
+}
+.text-ongoing {
+  color: var(--ongoing);
+}
+/* CANCELLED */
+.bg-cancelled {
+  background-color: var(--cancelled);
+}
+.text-cancelled {
+  color: var(--cancelled);
 }
 .mdot:hover .tooltip {
   opacity: 1;

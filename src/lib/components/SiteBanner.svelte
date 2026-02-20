@@ -3,7 +3,7 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { onMount } from "svelte";
   import type { SiteAnnouncement } from "$lib/types/site.js";
-  import { X } from "@lucide/svelte";
+  import X from "@lucide/svelte/icons/x";
 
   interface Props {
     announcement: SiteAnnouncement;

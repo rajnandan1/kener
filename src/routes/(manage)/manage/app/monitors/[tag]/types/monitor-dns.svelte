@@ -13,7 +13,7 @@
 
   // Initialize defaults if not set
   if (!data.host) data.host = "";
-  if (!data.nameServer) data.nameServer = "8.8.8.8";
+  if (!data.nameServer) data.nameServer = "";
   if (!data.lookupRecord) data.lookupRecord = "A";
   if (!data.matchType) data.matchType = "ANY";
   if (!data.values) data.values = [];
@@ -36,8 +36,9 @@
       <Input id="dns-host" bind:value={data.host} placeholder="example.com" />
     </div>
     <div class="flex flex-col gap-2">
-      <Label for="dns-nameserver">Name Server</Label>
-      <Input id="dns-nameserver" bind:value={data.nameServer} placeholder="8.8.8.8" />
+      <Label for="dns-nameserver">Name Server (optional)</Label>
+      <Input id="dns-nameserver" bind:value={data.nameServer} placeholder="Leave empty for authoritative lookup" />
+      <p class="text-muted-foreground text-xs">Leave blank to use authoritative DNS nameservers automatically.</p>
     </div>
   </div>
 

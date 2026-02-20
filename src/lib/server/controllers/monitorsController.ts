@@ -6,6 +6,7 @@ import {
   UnparsePercentage,
   UptimeCalculator,
 } from "../tool.js";
+import { getCache, setCache } from "../cache/cache.js";
 import type {
   MonitorRecordInsert,
   MonitorAlertInsert,
@@ -15,6 +16,7 @@ import type {
   MonitoringData,
   TimestampStatusCount,
   UptimeCalculatorResult,
+  TimestampStatusCountByMonitor,
 } from "../types/db.js";
 import type { MonitorFilter } from "../db/repositories/base.js";
 import db from "../db/db.js";
@@ -615,4 +617,26 @@ export const IsUptimeLessThanXPercent = async (
 ): Promise<boolean> => {
   const uptimePercent = await CalculateUptimeForLastNRows(tag, lastX, numeratorStr, denominatorStr);
   return uptimePercent < threshold;
+};
+export const GetStatusCountsByIntervalGroupedByMonitor = async (
+  monitorTags: string[],
+  startTimestamp: number,
+  intervalInSeconds: number,
+  numberOfPoints: number,
+): Promise<Array<TimestampStatusCountByMonitor>> => {
+  const sortedTags = [...monitorTags].sort();
+  const cacheKey = `status_counts_grouped:${sortedTags.join(",")}:${startTimestamp}:${intervalInSeconds}:${numberOfPoints}`;
+  const cached = await getCache<Array<TimestampStatusCountByMonitor>>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  const result = await db.getStatusCountsByIntervalGroupedByMonitor(
+    monitorTags,
+    startTimestamp,
+    intervalInSeconds,
+    numberOfPoints,
+  );
+  await setCache(cacheKey, result, 60);
+  return result;
 };

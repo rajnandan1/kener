@@ -30,6 +30,7 @@ export interface CreateMaintenanceInput {
   duration_seconds: number; // Duration of each maintenance window in seconds
   // Monitors with their status during maintenance
   monitors?: MonitorWithStatusInput[];
+  is_global?: string;
 }
 
 export interface UpdateMaintenanceInput {
@@ -40,6 +41,7 @@ export interface UpdateMaintenanceInput {
   duration_seconds?: number;
   status?: "ACTIVE" | "INACTIVE";
   monitors?: MonitorWithStatusInput[];
+  is_global?: string;
 }
 
 export interface CreateMaintenanceEventInput {
@@ -162,6 +164,7 @@ export const CreateMaintenance = async (data: CreateMaintenanceInput): Promise<{
     rrule: data.rrule,
     duration_seconds: data.duration_seconds,
     status: "ACTIVE",
+    is_global: data.is_global || "YES",
   });
 
   // Add monitors with their status to the maintenance if provided

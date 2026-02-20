@@ -7,15 +7,14 @@
   import { i18n, t } from "$lib/stores/i18n";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import { Spinner } from "$lib/components/ui/spinner/index.js";
+
   import Sun from "@lucide/svelte/icons/sun";
   import Moon from "@lucide/svelte/icons/moon";
   import Share from "@lucide/svelte/icons/share-2";
-  import Code from "@lucide/svelte/icons/code";
-  import Sticker from "@lucide/svelte/icons/sticker";
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
   import type { PageNavItem } from "$lib/server/controllers/dashboardController.js";
   import ChevronLeft from "@lucide/svelte/icons/chevron-left";
-  import ICONS from "$lib/icons";
   import { format } from "date-fns";
   import SubscribeMenu from "$lib/components/SubscribeMenu.svelte";
   import CopyButton from "$lib/components/CopyButton.svelte";
@@ -25,36 +24,25 @@
   import LanguageSelector from "./LanguageSelector.svelte";
   import TimezoneSelector from "./TimezoneSelector.svelte";
   import trackEvent from "$lib/beacon";
-  import { X } from "@lucide/svelte";
   import SiteBanner from "./SiteBanner.svelte";
+  import NotificationsPopover from "./NotificationsPopover.svelte";
 
   interface Props {
     currentPath?: string;
-    showPagesDropdown?: boolean;
-    showEventsButton?: boolean;
-    showHomeButton?: boolean;
     monitor_tags?: string[];
     embedMonitorTag?: string;
   }
 
-  let openSubscribeMenu = $state(false);
-  let openBadgesMenu = $state(false);
-  let openEmbedMenu = $state(false);
-
-  let {
-    currentPath = "/",
-    showPagesDropdown = false,
-    showEventsButton = false,
-    showHomeButton = false,
-    embedMonitorTag = ""
-  }: Props = $props();
+  let { currentPath = "/", monitor_tags = [], embedMonitorTag = "" }: Props = $props();
 
   let protocol = $state("");
   let domain = $state("");
   let shareLink = $state("");
-  const pages = $derived<PageNavItem[]>(page.data.allPages || []);
+  let pages = $state<PageNavItem[]>([]);
+  let pagesLoading = $state(false);
   const currentPage = $derived(pages.find((p) => p.page_path === currentPath) || pages[0]);
   const eventsPath = $derived(`/events/${format(new Date(), "MMMM-yyyy")}`);
+
   const loginDetails = $derived.by((): { label: string; url: string } | null => {
     if (!page.data?.loggedInUser) return null;
 
@@ -90,31 +78,40 @@
     trackEvent("theme_toggled", { mode: mode.current });
   }
 
-  function openSubscribe() {
-    trackEvent("subscribe_opened", { source: "theme_plus" });
-    openSubscribeMenu = true;
-  }
-
-  function openBadges() {
-    trackEvent("badges_menu_opened", { source: "theme_plus" });
-    openBadgesMenu = true;
-  }
-
-  function openEmbed() {
-    trackEvent("embed_menu_opened", { source: "theme_plus" });
-    openEmbedMenu = true;
+  async function fetchPages() {
+    pagesLoading = true;
+    try {
+      const response = await fetch(clientResolver(resolve, "/dashboard-apis/pages"));
+      if (response.ok) {
+        pages = await response.json();
+      }
+    } catch {
+      // silently fail, pages dropdown will just not show
+    } finally {
+      pagesLoading = false;
+    }
   }
 
   onMount(() => {
     protocol = window.location.protocol;
     domain = window.location.host;
     shareLink = window.location.href;
+    fetchPages();
   });
 </script>
 
-<div class="theme-plus-bar sticky top-18 z-20 flex w-full items-center gap-2 overflow-x-auto rounded">
+<div class="theme-plus-bar sticky top-18 z-20 flex w-full items-center gap-2 overflow-x-auto rounded py-2">
   <div class="flex shrink-0 items-center gap-2">
-    {#if showPagesDropdown && pages.length > 1}
+    {#if pagesLoading}
+      <Button
+        variant="outline"
+        size="sm"
+        class="bg-background/80 dark:bg-background/70 border-foreground/10 flex items-center justify-center rounded-full border text-xs shadow-none backdrop-blur-md"
+        disabled
+      >
+        <Spinner class="h-4 w-4" />
+      </Button>
+    {:else if pages.length > 1}
       <DropdownMenu.Root>
         <DropdownMenu.Trigger>
           {#snippet child({ props })}
@@ -130,7 +127,10 @@
             </Button>
           {/snippet}
         </DropdownMenu.Trigger>
-        <DropdownMenu.Content align="start" class="flex flex-col gap-1 rounded-3xl p-2">
+        <DropdownMenu.Content
+          align="start"
+          class="bg-background/30 supports-backdrop-filter:bg-background/20 flex  flex-col gap-1 rounded-3xl border   p-2    shadow-2xl backdrop-blur-2xl"
+        >
           {#each pages as page (page.page_path)}
             <Button
               variant={page.page_path === currentPath ? "outline" : "ghost"}
@@ -144,55 +144,17 @@
         </DropdownMenu.Content>
       </DropdownMenu.Root>
     {/if}
-    {#if showHomeButton}
-      <Button
-        href={clientResolver(resolve, "/")}
-        variant="outline"
-        size={page.data.isMobile ? "icon-sm" : "sm"}
-        class="bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border p-0 text-xs shadow-none backdrop-blur-md"
-      >
-        <ChevronLeft class="h-4 w-4" />
-        <span class="hidden sm:inline">{$t("Home")}</span>
-      </Button>
-    {/if}
-    {#if showEventsButton}
-      <Button
-        href={clientResolver(resolve, eventsPath)}
-        variant="outline"
-        size="sm"
-        class="bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border text-xs shadow-none backdrop-blur-md"
-      >
-        <ICONS.Events class="h-4 w-4" />
-        <span class="hidden sm:inline">{$t("Events")}</span>
-      </Button>
-    {/if}
   </div>
   <div class="ml-auto flex shrink-0 items-center gap-2">
     {#if page.data.isSubsEnabled && page.data.canSendEmail}
       <ButtonGroup.Root class="hidden shrink-0 sm:flex">
-        <Button
-          variant="outline"
-          size="sm"
-          class="rounded-btn bg-background/80 dark:bg-background/70 border-foreground/10 border text-xs backdrop-blur-md"
-          aria-label="Go Back"
-          onclick={openSubscribe}
-        >
-          <ICONS.Bell class="" />
-          {$t("Subscribe")}
-        </Button>
+        <SubscribeMenu />
       </ButtonGroup.Root>
     {/if}
+
     {#if page.data.isSubsEnabled && page.data.canSendEmail}
       <ButtonGroup.Root class="rounded-btn-grp shrink-0 sm:hidden">
-        <Button
-          variant="outline"
-          size="icon-sm"
-          class="bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border shadow-none backdrop-blur-md"
-          aria-label={$t("Subscribe")}
-          onclick={openSubscribe}
-        >
-          <ICONS.Bell />
-        </Button>
+        <SubscribeMenu compact={true} />
       </ButtonGroup.Root>
     {/if}
 
@@ -206,28 +168,8 @@
       >
         <Share />
       </CopyButton>
-      {#if !!embedMonitorTag && page.data.monitorSharingOptions?.showShareBadgeMonitor && page.data.subMenuOptions?.showShareBadgeMonitor}
-        <!-- BadgeMenu -->
-        <Button
-          variant="outline"
-          class="bg-background/80 dark:bg-background/70 border-foreground/10 relative cursor-pointer rounded-full border shadow-none backdrop-blur-md"
-          size="icon-sm"
-          onclick={openBadges}
-        >
-          <Sticker />
-        </Button>
-      {/if}
-      {#if !!embedMonitorTag && page.data.monitorSharingOptions?.showShareEmbedMonitor && page.data.subMenuOptions?.showShareEmbedMonitor}
-        <!-- Embed Menu -->
-        <Button
-          variant="outline"
-          class="bg-background/80 dark:bg-background/70 border-foreground/10 relative cursor-pointer rounded-full border shadow-none backdrop-blur-md"
-          size="icon-sm"
-          onclick={openEmbed}
-        >
-          <Code />
-        </Button>
-      {/if}
+      <BadgesMenu {protocol} {domain} />
+      <EmbedMenu {protocol} {domain} />
     </ButtonGroup.Root>
 
     <ButtonGroup.Root class="rounded-btn-grp shrink-0 sm:hidden">
@@ -278,6 +220,7 @@
         <TimezoneSelector />
       {/if}
     </ButtonGroup.Root>
+    <NotificationsPopover {eventsPath} monitorTags={monitor_tags} compact={true} />
     {#if loginDetails}
       <Button
         size="sm"
@@ -289,11 +232,7 @@
       </Button>
     {/if}
   </div>
-  <!-- Banner -->
 </div>
 {#if !!page.data.announcement && !!page.data.announcement.title && !!page.data.announcement.message}
   <SiteBanner announcement={page.data.announcement} />
 {/if}
-<SubscribeMenu bind:open={openSubscribeMenu} />
-<BadgesMenu bind:open={openBadgesMenu} monitorTag={embedMonitorTag} {protocol} {domain} />
-<EmbedMenu bind:open={openEmbedMenu} monitorTag={embedMonitorTag} {protocol} {domain} />

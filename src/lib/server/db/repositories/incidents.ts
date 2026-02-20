@@ -9,6 +9,7 @@ import type {
   IncidentMonitorDetailRecord,
   IncidentCommentRecord,
   IncidentForMonitorList,
+  IncidentForMonitorListWithComments,
   IncidentMonitorImpact,
 } from "../../types/db.js";
 
@@ -21,6 +22,7 @@ interface IncidentRowWithMonitor {
   created_at: Date;
   updated_at: Date;
   status: string;
+  state: string;
   monitor_impact: string;
   monitor_tag: string;
   monitor_name: string;
@@ -49,6 +51,7 @@ export class IncidentsRepository extends BaseRepository {
           created_at: row.created_at,
           updated_at: row.updated_at,
           status: row.status,
+          state: row.state,
           monitors: [],
         });
       }
@@ -131,6 +134,7 @@ export class IncidentsRepository extends BaseRepository {
       updated_at: this.knex.fn.now(),
       incident_type: data.incident_type,
       incident_source: data.incident_source,
+      is_global: data.is_global || "YES",
     };
 
     if (dbType === "postgresql") {
@@ -228,6 +232,7 @@ export class IncidentsRepository extends BaseRepository {
       end_date_time: data.end_date_time,
       status: data.status,
       state: data.state,
+      is_global: data.is_global,
       updated_at: this.knex.fn.now(),
     });
   }
@@ -255,6 +260,7 @@ export class IncidentsRepository extends BaseRepository {
         "status",
         "state",
         "incident_type",
+        "is_global",
       )
       .where("id", id)
       .first();
@@ -451,14 +457,17 @@ export class IncidentsRepository extends BaseRepository {
         "incidents.created_at",
         "incidents.updated_at",
         "incidents.status",
+        "incidents.state",
         "incident_monitors.monitor_impact",
         "incident_monitors.monitor_tag",
         "monitors.name as monitor_name",
         "monitors.image as monitor_image",
       )
-      .join("incident_monitors", "incidents.id", "incident_monitors.incident_id")
-      .join("monitors", "incident_monitors.monitor_tag", "monitors.tag")
-      .whereIn("incident_monitors.monitor_tag", monitorTags)
+      .leftJoin("incident_monitors", "incidents.id", "incident_monitors.incident_id")
+      .leftJoin("monitors", "incident_monitors.monitor_tag", "monitors.tag")
+      .where(function () {
+        this.whereIn("incident_monitors.monitor_tag", monitorTags).orWhere("incidents.is_global", "YES");
+      })
       .andWhere("incidents.state", "!=", GC.RESOLVED)
       .andWhere("incidents.incident_type", GC.INCIDENT)
       .andWhere("incidents.start_date_time", "<=", timestamp)
@@ -468,6 +477,37 @@ export class IncidentsRepository extends BaseRepository {
       .orderBy("incidents.start_date_time", "desc");
 
     return this.groupIncidentsByIdForMonitorList(rows);
+  }
+
+  async getOngoingIncidentsForMonitorListWithComments(
+    timestamp: number,
+    monitorTags: string[],
+  ): Promise<IncidentForMonitorListWithComments[]> {
+    const incidents = await this.getOngoingIncidentsForMonitorList(timestamp, monitorTags);
+
+    if (incidents.length === 0) {
+      return [];
+    }
+
+    const incidentIds = incidents.map((incident) => incident.id);
+    const comments = await this.knex("incident_comments")
+      .select("*")
+      .whereIn("incident_id", incidentIds)
+      .andWhere("status", "ACTIVE")
+      .orderBy("commented_at", "desc")
+      .orderBy("id", "desc");
+
+    const commentsByIncidentId = new Map<number, IncidentCommentRecord[]>();
+    for (const comment of comments) {
+      const existing = commentsByIncidentId.get(comment.incident_id) || [];
+      existing.push(comment);
+      commentsByIncidentId.set(comment.incident_id, existing);
+    }
+
+    return incidents.map((incident) => ({
+      ...incident,
+      comments: commentsByIncidentId.get(incident.id) || [],
+    }));
   }
 
   async getResolvedIncidentsForMonitorList(
@@ -481,8 +521,10 @@ export class IncidentsRepository extends BaseRepository {
     // First get distinct incident IDs with limit
     const incidentIds = await this.knex("incidents")
       .distinct("incidents.id")
-      .join("incident_monitors", "incidents.id", "incident_monitors.incident_id")
-      .whereIn("incident_monitors.monitor_tag", monitorTags)
+      .leftJoin("incident_monitors", "incidents.id", "incident_monitors.incident_id")
+      .where(function () {
+        this.whereIn("incident_monitors.monitor_tag", monitorTags).orWhere("incidents.is_global", "YES");
+      })
       .andWhere("incidents.state", GC.RESOLVED)
       .andWhere("incidents.incident_type", GC.INCIDENT)
       .andWhere("incidents.end_date_time", ">=", pastTimestamp)
@@ -504,18 +546,50 @@ export class IncidentsRepository extends BaseRepository {
         "incidents.created_at",
         "incidents.updated_at",
         "incidents.status",
+        "incidents.state",
         "incident_monitors.monitor_impact",
         "incident_monitors.monitor_tag",
         "monitors.name as monitor_name",
         "monitors.image as monitor_image",
       )
-      .join("incident_monitors", "incidents.id", "incident_monitors.incident_id")
-      .join("monitors", "incident_monitors.monitor_tag", "monitors.tag")
+      .leftJoin("incident_monitors", "incidents.id", "incident_monitors.incident_id")
+      .leftJoin("monitors", "incident_monitors.monitor_tag", "monitors.tag")
       .whereIn("incidents.id", incidentIds)
-      .whereIn("incident_monitors.monitor_tag", monitorTags)
       .orderBy("incidents.end_date_time", "desc");
 
     return this.groupIncidentsByIdForMonitorList(rows);
+  }
+
+  async getResolvedIncidentsForMonitorListWithComments(
+    timestamp: number,
+    monitorTags: string[],
+    limit: number,
+    daysInPast: number,
+  ): Promise<IncidentForMonitorListWithComments[]> {
+    const incidents = await this.getResolvedIncidentsForMonitorList(timestamp, monitorTags, limit, daysInPast);
+
+    if (incidents.length === 0) {
+      return [];
+    }
+
+    const incidentIds = incidents.map((incident) => incident.id);
+    const comments = await this.knex("incident_comments")
+      .select("*")
+      .whereIn("incident_id", incidentIds)
+      .andWhere("status", "ACTIVE")
+      .orderBy("commented_at", "desc")
+      .orderBy("id", "desc");
+
+    const commentsByIncidentId = new Map<number, IncidentCommentRecord[]>();
+    for (const comment of comments) {
+      const existing = commentsByIncidentId.get(comment.incident_id) || [];
+      existing.push(comment);
+      commentsByIncidentId.set(comment.incident_id, existing);
+    }
+    return incidents.map((incident) => ({
+      ...incident,
+      comments: commentsByIncidentId.get(incident.id) || [],
+    }));
   }
 
   async getLastIncidentByMonitorTags(monitorTags: string[]): Promise<IncidentRecord | undefined> {
@@ -679,7 +753,10 @@ export class IncidentsRepository extends BaseRepository {
    * Returns incidents that started within the given date range
    * Includes all incidents, but filters out hidden monitors from monitors array
    */
-  async getIncidentsForEventsByDateRange(startTs: number, endTs: number): Promise<IncidentForMonitorList[]> {
+  async getIncidentsForEventsByDateRange(
+    startTs: number,
+    endTs: number,
+  ): Promise<IncidentForMonitorListWithComments[]> {
     const rows = await this.knex("incidents")
       .select(
         "incidents.id",
@@ -689,6 +766,7 @@ export class IncidentsRepository extends BaseRepository {
         "incidents.created_at",
         "incidents.updated_at",
         "incidents.status",
+        "incidents.state",
         "incident_monitors.monitor_impact",
         "incident_monitors.monitor_tag",
         "monitors.name as monitor_name",
@@ -703,14 +781,38 @@ export class IncidentsRepository extends BaseRepository {
       .andWhere("incidents.start_date_time", "<=", endTs)
       .orderBy("incidents.start_date_time", "desc");
 
-    return this.groupIncidentsByIdForMonitorListFilterHidden(rows);
+    const incidents = this.groupIncidentsByIdForMonitorListFilterHidden(rows);
+
+    if (incidents.length === 0) {
+      return [];
+    }
+
+    const incidentIds = incidents.map((incident) => incident.id);
+    const comments = await this.knex("incident_comments")
+      .select("*")
+      .whereIn("incident_id", incidentIds)
+      .andWhere("status", "ACTIVE")
+      .orderBy("commented_at", "desc")
+      .orderBy("id", "desc");
+
+    const commentsByIncidentId = new Map<number, IncidentCommentRecord[]>();
+    for (const comment of comments) {
+      const existing = commentsByIncidentId.get(comment.incident_id) || [];
+      existing.push(comment);
+      commentsByIncidentId.set(comment.incident_id, existing);
+    }
+
+    return incidents.map((incident) => ({
+      ...incident,
+      comments: commentsByIncidentId.get(incident.id) || [],
+    }));
   }
 
   async getIncidentsForEventsByDateRangeMonitor(
     startTs: number,
     endTs: number,
     monitorTag: string,
-  ): Promise<IncidentForMonitorList[]> {
+  ): Promise<IncidentForMonitorListWithComments[]> {
     const rows = await this.knex("incidents")
       .select(
         "incidents.id",
@@ -720,6 +822,7 @@ export class IncidentsRepository extends BaseRepository {
         "incidents.created_at",
         "incidents.updated_at",
         "incidents.status",
+        "incidents.state",
         "incident_monitors.monitor_impact",
         "incident_monitors.monitor_tag",
         "monitors.name as monitor_name",
@@ -735,7 +838,31 @@ export class IncidentsRepository extends BaseRepository {
       .andWhere("incidents.start_date_time", "<=", endTs)
       .orderBy("incidents.start_date_time", "desc");
 
-    return this.groupIncidentsByIdForMonitorListFilterHidden(rows);
+    const incidents = this.groupIncidentsByIdForMonitorListFilterHidden(rows);
+
+    if (incidents.length === 0) {
+      return [];
+    }
+
+    const incidentIds = incidents.map((incident) => incident.id);
+    const comments = await this.knex("incident_comments")
+      .select("*")
+      .whereIn("incident_id", incidentIds)
+      .andWhere("status", "ACTIVE")
+      .orderBy("commented_at", "desc")
+      .orderBy("id", "desc");
+
+    const commentsByIncidentId = new Map<number, IncidentCommentRecord[]>();
+    for (const comment of comments) {
+      const existing = commentsByIncidentId.get(comment.incident_id) || [];
+      existing.push(comment);
+      commentsByIncidentId.set(comment.incident_id, existing);
+    }
+
+    return incidents.map((incident) => ({
+      ...incident,
+      comments: commentsByIncidentId.get(incident.id) || [],
+    }));
   }
 
   /**
@@ -755,6 +882,7 @@ export class IncidentsRepository extends BaseRepository {
           created_at: row.created_at,
           updated_at: row.updated_at,
           status: row.status,
+          state: row.state,
           monitors: [],
         });
       }

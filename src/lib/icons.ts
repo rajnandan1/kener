@@ -6,6 +6,7 @@ import NO_DATA from "@lucide/svelte/icons/circle-question-mark";
 import EventsIcon from "@lucide/svelte/icons/calendar-clock";
 import ArrowRight from "@lucide/svelte/icons/arrow-right";
 import ArrowLeft from "@lucide/svelte/icons/arrow-left";
+import ArrowUp from "@lucide/svelte/icons/arrow-up";
 // chevron right and left
 import ChevronLeft from "@lucide/svelte/icons/chevron-left";
 import ChevronRight from "@lucide/svelte/icons/chevron-right";
@@ -19,6 +20,7 @@ export default {
   NO_DATA: NO_DATA,
   Events: EventsIcon,
   ARROW_RIGHT: ArrowRight,
+  ARROW_UP: ArrowUp,
   ARROW_LEFT: ArrowLeft,
   CHEVRON_LEFT: ChevronLeft,
   CHEVRON_RIGHT: ChevronRight,

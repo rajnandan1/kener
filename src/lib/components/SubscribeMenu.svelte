@@ -18,12 +18,14 @@
   import Wrench from "@lucide/svelte/icons/wrench";
   import { t } from "$lib/stores/i18n";
   import trackEvent from "$lib/beacon";
+  import ICONS from "$lib/icons";
 
   interface Props {
-    open: boolean;
+    compact?: boolean;
   }
 
-  let { open = $bindable(false) }: Props = $props();
+  let { compact = false }: Props = $props();
+  let open = $state(false);
 
   const STORAGE_KEY = "subscriber_token";
 
@@ -230,6 +232,35 @@
     errorMessage = "";
   }
 </script>
+
+{#if compact}
+  <Button
+    variant="outline"
+    size="icon-sm"
+    class="bg-background/80 dark:bg-background/70 border-foreground/10 rounded-full border shadow-none backdrop-blur-md"
+    aria-label={$t("Subscribe")}
+    onclick={() => {
+      open = true;
+      trackEvent("subscribe_opened", { source: "theme_plus" });
+    }}
+  >
+    <ICONS.Bell />
+  </Button>
+{:else}
+  <Button
+    variant="outline"
+    size="sm"
+    class="rounded-btn bg-background/80 dark:bg-background/70 border-foreground/10 border text-xs backdrop-blur-md"
+    aria-label="Subscribe"
+    onclick={() => {
+      open = true;
+      trackEvent("subscribe_opened", { source: "theme_plus" });
+    }}
+  >
+    <ICONS.Bell class="" />
+    {$t("Subscribe")}
+  </Button>
+{/if}
 
 <Dialog.Root bind:open>
   <Dialog.Overlay class="backdrop-blur-[2px]" />

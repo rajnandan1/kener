@@ -19,7 +19,7 @@
   import clientResolver from "$lib/client/resolver.js";
   import { format, parse, addMonths, subMonths, getUnixTime, startOfDay, formatDistanceStrict } from "date-fns";
 
-  import type { IncidentForMonitorList, MaintenanceEventsMonitorList } from "$lib/server/types/db";
+  import type { IncidentForMonitorListWithComments, MaintenanceEventsMonitorList } from "$lib/server/types/db";
 
   let { data } = $props();
 
@@ -27,7 +27,7 @@
 
   // State
   let loading = $state(true);
-  let incidents = $state<IncidentForMonitorList[]>([]);
+  let incidents = $state<IncidentForMonitorListWithComments[]>([]);
   let maintenances = $state<MaintenanceEventsMonitorList[]>([]);
 
   // Parse the current month from params
@@ -59,6 +59,8 @@
     start_date_time: number;
     end_date_time: number | null;
     type: "incident" | "maintenance";
+    incident?: IncidentForMonitorListWithComments;
+    maintenance?: MaintenanceEventsMonitorList;
     monitors?: Array<{
       monitor_tag: string;
       monitor_impact: string;
@@ -84,6 +86,7 @@
         start_date_time: incident.start_date_time,
         end_date_time: incident.end_date_time,
         type: "incident",
+        incident,
         monitors: incident.monitors
       });
     }
@@ -97,6 +100,7 @@
         start_date_time: maintenance.start_date_time,
         end_date_time: maintenance.end_date_time,
         type: "maintenance",
+        maintenance,
         monitors: maintenance.monitors
       });
     }
@@ -237,49 +241,17 @@
     <!-- Events grouped by day -->
     {#each eventsByDay as day}
       <div class="flex flex-col gap-2">
-        <div class="mt-4 w-fit rounded-3xl border px-4 py-2 text-xs font-medium">
+        <div class="bg-secondary mt-4 w-fit rounded-3xl border px-4 py-2 text-xs font-medium">
           {$formatDate(day.date, "EEEE, MMMM do")}
         </div>
-        <div class="rounded-3xl border">
+        <div class="flex flex-col gap-2">
           {#each day.events as event}
-            <div class="flex flex-col gap-2 border-b p-4 last:border-b-0">
-              {#if event.type === "incident"}
-                <div class="pl-8">
-                  <Badge variant="secondary" class="text-xs">
-                    {$t("Incident")}
-                  </Badge>
-                </div>
-                <IncidentItem
-                  incident={{
-                    id: event.id,
-                    title: event.title,
-                    monitors: event.monitors || [],
-                    start_date_time: event.start_date_time,
-                    end_date_time: event.end_date_time
-                  }}
-                />
-              {:else}
+            <div class="flex flex-col gap-2 rounded-3xl border p-4">
+              {#if event.type === "incident" && event.incident}
+                <IncidentItem incident={event.incident} />
+              {:else if event.maintenance}
                 <!-- Maintenance -->
-                <div class="pl-8">
-                  <Badge variant="secondary" class="text-xs">
-                    {$t("Maintenance")}
-                  </Badge>
-                </div>
-                <MaintenanceItem
-                  maintenance={{
-                    id: event.id,
-                    title: event.title,
-                    description: event.description ?? null,
-                    monitors: (event.monitors ?? []).map((m) => ({
-                      monitor_tag: m.monitor_tag,
-                      monitor_name: m.monitor_name,
-                      monitor_image: m.monitor_image ?? null,
-                      monitor_impact: m.monitor_impact ?? "MAINTENANCE"
-                    })),
-                    start_date_time: event.start_date_time,
-                    end_date_time: event.end_date_time ?? 0
-                  }}
-                />
+                <MaintenanceItem maintenance={event.maintenance} />
               {/if}
             </div>
           {/each}

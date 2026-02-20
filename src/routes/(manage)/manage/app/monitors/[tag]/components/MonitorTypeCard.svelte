@@ -150,7 +150,8 @@
       case "DNS": {
         const data = typeData as any;
         if (!data.host || !IsValidHost(data.host)) return false;
-        if (!data.nameServer || !IsValidNameServer(data.nameServer)) return false;
+        const nameServer = (data.nameServer || "").trim();
+        if (nameServer && !IsValidNameServer(nameServer)) return false;
         if (!data.lookupRecord) return false;
         if (!data.values || !Array.isArray(data.values) || data.values.length === 0) return false;
         const hasNonEmptyValue = data.values.some((val: string) => val && val.trim() !== "");

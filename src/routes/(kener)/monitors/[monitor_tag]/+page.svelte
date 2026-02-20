@@ -11,10 +11,7 @@
   import ArrowUpRight from "@lucide/svelte/icons/arrow-up-right";
   import clientResolver from "$lib/client/resolver.js";
   import { resolve } from "$app/paths";
-  import GroupMonitorPopover from "$lib/components/GroupMonitorPopover.svelte";
   import trackEvent from "$lib/beacon";
-  import { selectedTimezone } from "$lib/stores/timezone";
-  import { getEndOfDayAtTz } from "$lib/client/datetime";
   let { data } = $props();
 
   // State
@@ -28,8 +25,6 @@
   function trackExternalLinkClick() {
     trackEvent("monitor_external_link_clicked", { monitorTag: data.monitorTag });
   }
-
-  let endOfDayTodayAtTz = $derived(getEndOfDayAtTz($selectedTimezone));
 </script>
 
 <svelte:head>
@@ -40,12 +35,7 @@
   {/if}
 </svelte:head>
 <div class="flex flex-col gap-3">
-  <ThemePlus
-    showHomeButton={true}
-    showEventsButton={true}
-    monitor_tags={[data.monitorTag]}
-    embedMonitorTag={data.monitorTag}
-  />
+  <ThemePlus monitor_tags={[data.monitorTag]} embedMonitorTag={data.monitorTag} />
   <div class="flex flex-col gap-2 px-4 py-2">
     {#if data.monitorImage}
       <img
@@ -137,15 +127,12 @@
   />
 
   <!-- Calendar View (self-contained component with its own API call) -->
-  <MonitorOverview monitorTag={data.monitorTag} maxDays={data.maxDays} class="mb-4" />
-
-  {#if data.extendedTags.length > 0}
-    <div class="mb-4">
-      <GroupMonitorPopover tags={data.extendedTags} days={data.maxDays} {endOfDayTodayAtTz}>
-        Available Monitors ({data.extendedTags.length})
-      </GroupMonitorPopover>
-    </div>
-  {/if}
+  <MonitorOverview
+    monitorTag={data.monitorTag}
+    maxDays={data.maxDays}
+    groupTags={data.extendedTags || []}
+    class="mb-4"
+  />
 
   <!-- recent incidents -->
   <IncidentMonitorList incidents={data.resolvedIncidents} title="Recent Incidents" class="mt-4 mb-4" />

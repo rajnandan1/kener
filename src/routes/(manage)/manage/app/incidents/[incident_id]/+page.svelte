@@ -5,6 +5,7 @@
   import { Textarea } from "$lib/components/ui/textarea/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
+  import { Switch } from "$lib/components/ui/switch/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
@@ -50,12 +51,14 @@
     start_date_time: number;
     status: string;
     state: string;
+    is_global: string;
   }>({
     id: 0,
     title: "",
     start_date_time: Math.floor(Date.now() / 1000),
     status: "OPEN",
-    state: GC.INVESTIGATING
+    state: GC.INVESTIGATING,
+    is_global: "YES"
   });
 
   // For datetime inputs (convert to/from local datetime string)
@@ -147,7 +150,8 @@
           title: result.title,
           start_date_time: result.start_date_time,
           status: result.status,
-          state: result.state
+          state: result.state,
+          is_global: result.is_global || "YES"
         };
         // Fetch comments and monitors
         await Promise.all([fetchComments(), fetchIncidentMonitors()]);
@@ -249,7 +253,8 @@
               end_date_time: null,
               status: "OPEN",
               state: GC.INVESTIGATING,
-              incident_type: GC.INCIDENT
+              incident_type: GC.INCIDENT,
+              is_global: incident.is_global
             }
           })
         });
@@ -306,7 +311,8 @@
               title: incident.title,
               start_date_time: incident.start_date_time,
               end_date_time: null,
-              status: "OPEN"
+              status: "OPEN",
+              is_global: incident.is_global
             }
           })
         });
@@ -718,6 +724,21 @@
             onchange={handleStartDateChange}
           />
           <p class="text-muted-foreground text-xs">Enter time in your local timezone. It will be stored as UTC.</p>
+        </div>
+
+        <!-- Global Visibility -->
+        <div class="flex items-center justify-between rounded-md border p-3">
+          <div class="flex flex-col gap-1">
+            <Label for="is-global">Global Incident</Label>
+            <p class="text-muted-foreground text-xs">When enabled, this incident will be visible on all status pages</p>
+          </div>
+          <Switch
+            id="is-global"
+            checked={incident.is_global === "YES"}
+            onCheckedChange={(checked) => {
+              incident.is_global = checked ? "YES" : "NO";
+            }}
+          />
         </div>
 
         <!-- First Comment (only for new) -->

@@ -139,6 +139,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     updated_at: existingIncident.updated_at,
     incident_type: existingIncident.incident_type,
     incident_source: "", // Not used by updateIncident
+    is_global: existingIncident.is_global,
   };
 
   // Update the incident

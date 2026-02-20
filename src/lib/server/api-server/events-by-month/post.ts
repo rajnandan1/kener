@@ -1,6 +1,6 @@
 import { json, error } from "@sveltejs/kit";
 import type { APIServerRequest } from "$lib/server/types/api-server";
-import type { IncidentForMonitorList, MaintenanceEventsMonitorList } from "$lib/server/types/db";
+import type { IncidentForMonitorListWithComments, MaintenanceEventsMonitorList } from "$lib/server/types/db";
 import db from "$lib/server/db/db";
 
 interface EventsByMonthRequest {
@@ -9,7 +9,7 @@ interface EventsByMonthRequest {
 }
 
 export interface EventsByMonthResponse {
-  incidents: IncidentForMonitorList[];
+  incidents: IncidentForMonitorListWithComments[];
   maintenances: MaintenanceEventsMonitorList[];
 }
 

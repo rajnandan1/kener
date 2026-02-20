@@ -5,92 +5,70 @@
   import ArrowRight from "@lucide/svelte/icons/arrow-right";
   import * as Popover from "$lib/components/ui/popover/index.js";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
-  import STATUS_ICON from "$lib/icons";
   import { t } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { GetInitials } from "$lib/clientTools.js";
-
-  interface IncidentMonitorImpact {
-    monitor_tag: string;
-    monitor_impact: string;
-    monitor_name: string;
-    monitor_image: string | null;
-  }
-
-  interface Incident {
-    id: number;
-    title: string;
-    monitors: IncidentMonitorImpact[];
-    start_date_time: number;
-    end_date_time?: number | null;
-  }
+  import type { IncidentCommentRecord, IncidentForMonitorListWithComments } from "$lib/server/types/db";
+  import { SveltePurify } from "@humanspeak/svelte-purify";
+  import mdToHTML from "$lib/marked";
+  import { slide } from "svelte/transition";
 
   interface Props {
-    incident: Incident;
+    incident: IncidentForMonitorListWithComments;
     class?: string;
     hideMonitors?: boolean;
+    showComments?: boolean;
+    showSummary?: boolean;
   }
 
-  let { incident, class: className = "", hideMonitors = false }: Props = $props();
-  const STATUS_STROKE = {
-    UP: "stroke-up",
-    DOWN: "stroke-down",
-    DEGRADED: "stroke-degraded",
-    MAINTENANCE: "stroke-maintenance",
-    NO_DATA: "stroke-muted-foreground"
-  } as const;
-
-  // Get the highest severity impact from monitors array
-  function getHighestImpact(monitors: IncidentMonitorImpact[]): keyof typeof STATUS_ICON {
-    const priority: (keyof typeof STATUS_ICON)[] = ["DOWN", "DEGRADED", "MAINTENANCE"];
-    for (const impact of priority) {
-      if (monitors.some((m) => m.monitor_impact === impact)) {
-        return impact;
-      }
-    }
-    return (monitors[0]?.monitor_impact as keyof typeof STATUS_ICON) || "NO_DATA";
-  }
-
-  const highestImpact = $derived(getHighestImpact(incident.monitors));
-  const Icon = $derived(STATUS_ICON[highestImpact]);
-  const strokeClass = $derived(STATUS_STROKE[highestImpact as keyof typeof STATUS_STROKE] || "stroke-down");
+  let {
+    incident,
+    class: className = "",
+    hideMonitors = false,
+    showComments = true,
+    showSummary = true
+  }: Props = $props();
 
   // Calculate duration between start and end (or now if ongoing)
   // If ongoing, use current timestamp for duration calculation
   const endTimeForDuration = $derived(incident.end_date_time ?? Math.floor(Date.now() / 1000));
+
+  // Oldest comment added to this incident
+  const firstCommentAdded = $derived.by((): IncidentCommentRecord | null => {
+    if (!incident.comments || incident.comments.length === 0) return null;
+
+    // Comments are already sorted in DB by commented_at DESC, id DESC
+    // so oldest comment is the last one.
+    return incident.comments.at(-1) ?? null;
+  });
 </script>
 
-<Item.Root class="items-start p-0 {className} sm:items-center">
-  <Item.Media class="pt-0.5 sm:pt-0">
-    <Icon class="size-6 {strokeClass}" />
-  </Item.Media>
+<Item.Root class="items-start  p-0 {className} sm:items-center">
   <Item.Content class="min-w-0 flex-1">
     <div class="flex items-center gap-2">
-      <Item.Title class="min-w-0 wrap-break-word">{incident.title}</Item.Title>
+      <Item.Title class="min-w-0 text-base wrap-break-word break-all">
+        <a class="hover:underline" href={clientResolver(resolve, `/incidents/${incident.id}`)}>{incident.title}</a>
+      </Item.Title>
     </div>
 
     {#if incident.monitors && incident.monitors.length > 0 && !hideMonitors}
       <div class="my-1 overflow-x-auto p-1">
-        <div class="*:data-[slot=avatar]:ring-background flex -space-x-2 *:data-[slot=avatar]:ring-2">
-          {#each incident.monitors as monitor}
+        <div class="flex gap-2">
+          {#each incident.monitors as monitor (`${incident.id}-${monitor.monitor_tag}`)}
             <Popover.Root>
               <Popover.Trigger>
-                <Avatar.Root
-                  class="bg-background size-8 shrink-0 cursor-pointer border-2 border-{monitor.monitor_impact.toLowerCase()} transition-transform duration-100 ease-in-out hover:scale-[1.1] hover:border"
+                <Badge
+                  variant="outline"
+                  class="border-{monitor.monitor_impact.toLowerCase()}   cursor-pointer rounded-none border-0 border-b px-0  text-sm font-normal"
                 >
-                  {#if monitor.monitor_image}
-                    <Avatar.Image
-                      src={clientResolver(resolve, monitor.monitor_image)}
-                      alt={monitor.monitor_name}
-                      class="object-cover"
-                    />
-                  {/if}
-                  <Avatar.Fallback class="text-xs">{GetInitials(monitor.monitor_name)}</Avatar.Fallback>
-                </Avatar.Root>
+                  {monitor.monitor_name}
+                </Badge>
               </Popover.Trigger>
-              <Popover.Content class="w-64">
+              <Popover.Content
+                class="bg-background/60 border-border w-64 rounded-3xl border shadow-2xl backdrop-blur-xl"
+              >
                 <div class="flex flex-col gap-3">
                   <div class="flex items-center gap-3">
                     <Avatar.Root>
@@ -149,15 +127,60 @@
         </span>
       {/if}
     </Item.Description>
+    {#if showSummary}
+      <div class="my-2 grid grid-cols-1 gap-4 text-xs font-medium sm:grid-cols-3">
+        <div class="text-muted-foreground bg-secondary flex items-center justify-between rounded-full border p-2 px-4">
+          <span>Last Updated</span>
+          <span>{$formatDate(incident.updated_at, "PPp")}</span>
+        </div>
+        <div class="text-muted-foreground bg-secondary flex items-center justify-between rounded-full border p-2 px-4">
+          <span>Status</span>
+          <div class="flex items-center gap-2">
+            <span class="text-{incident.state.toLowerCase()}">
+              {incident.state}
+            </span>
+          </div>
+        </div>
+        <div
+          class="text-muted-foreground bg-secondary flex items-center justify-between gap-2 rounded-full border p-2 px-4"
+        >
+          <span>
+            {incident.comments && incident.comments.length > 0
+              ? `${incident.comments.length} ${$t("Updates")}`
+              : $t("No Updates")}
+          </span>
+          <Button
+            variant="outline"
+            size="icon-sm"
+            class="rounded-btn -mr-2"
+            onclick={() => (showComments = !showComments)}
+          >
+            <ArrowRight class={`transition-transform duration-200 ${showComments ? "rotate-90" : ""}`} />
+          </Button>
+        </div>
+      </div>
+    {/if}
+    {#if showComments && incident.comments && incident.comments.length > 0}
+      <div transition:slide={{ duration: 220 }} class=" flex flex-col gap-4">
+        {#each incident.comments as comment (comment.id)}
+          <div class="flex flex-col gap-2 border-b pb-4 last:border-b-0 last:pb-0">
+            <div class="flex justify-start gap-2">
+              <Badge variant="outline" class="text-{comment.state.toLowerCase()} rounded-none border-0 p-0">
+                {$t(comment.state)}
+              </Badge>
+              <span class="text-muted-foreground text-xs">
+                {$formatDate(comment.commented_at, "PPp")}
+              </span>
+            </div>
+            <div
+              class="prose prose-sm dark:prose-invert max-w-none min-w-0 overflow-x-auto wrap-break-word"
+              style="font-size: 14px;"
+            >
+              <SveltePurify html={mdToHTML(comment.comment)} />
+            </div>
+          </div>
+        {/each}
+      </div>
+    {/if}
   </Item.Content>
-  <Item.Actions class="ml-auto self-start sm:ml-0 sm:self-auto">
-    <Button
-      variant="outline"
-      class="cursor-pointer rounded-full shadow-none"
-      href={clientResolver(resolve, `/incidents/${incident.id}`)}
-      size="icon"
-    >
-      <ArrowRight />
-    </Button>
-  </Item.Actions>
 </Item.Root>

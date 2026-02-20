@@ -23,7 +23,7 @@
   import clientResolver from "$lib/client/resolver.js";
 
   import * as Chart from "$lib/components/ui/chart/index.js";
-  import type { IncidentForMonitorList, MaintenanceEventsMonitorList } from "$lib/server/types/db";
+  import type { IncidentForMonitorListWithComments, MaintenanceEventsMonitorList } from "$lib/server/types/db";
   import { formatDate } from "$lib/stores/datetime";
   import trackEvent from "$lib/beacon";
 
@@ -62,7 +62,7 @@
   let lastTrackedView = $state<"status" | "latency" | "incidents" | "maintenances">("status");
   let dayDetailData = $state<DayDetailData | null>(null);
   let dayLatencyData = $state<DayLatencyData | null>(null);
-  let dayIncidentsData = $state<IncidentForMonitorList[]>([]);
+  let dayIncidentsData = $state<IncidentForMonitorListWithComments[]>([]);
   let dayMaintenancesData = $state<MaintenanceEventsMonitorList[]>([]);
   // Chart config for latency
   const chartConfig = {
@@ -223,9 +223,9 @@
       >
     </Dialog.Header>
 
-    <Tabs.Root value={activeView} class="bg-background ktabs w-full overflow-hidden rounded-3xl border">
+    <Tabs.Root value={activeView} class="bg-background ktabs w-full   overflow-hidden rounded-3xl border">
       <Tabs.List
-        class="scrollbar-hidden h-auto w-full justify-start overflow-x-auto rounded-none px-2 py-2 sm:justify-end"
+        class="scrollbar-hidden h-auto w-full justify-start gap-1 overflow-x-auto rounded-none px-2 py-2 sm:justify-end"
       >
         <Tabs.Trigger value="status" class="shrink-0 rounded-3xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
           >{$t("Status")}</Tabs.Trigger
@@ -381,19 +381,10 @@
           <div class="space-y-4">
             <!-- Incident list -->
             <div>
-              <div class="text-muted-foreground mb-2 flex items-center justify-between text-sm font-medium">
-                <p class="">{$t("Incidents")}</p>
-                <div class="flex items-center gap-1">
-                  <Clock class="h-3 w-3" />
-                  {dayIncidentsData.length}
-                  {$t("Total")}
-                </div>
-              </div>
-
               <div class="scrollbar-hidden flex max-h-100 flex-col gap-4 overflow-y-auto">
                 {#each dayIncidentsData as incident (incident.id)}
                   <div class="border-b pb-5 last:border-b-0">
-                    <IncidentItem {incident} hideMonitors={true} />
+                    <IncidentItem {incident} hideMonitors={true} showComments={false} showSummary={false} />
                   </div>
                 {/each}
               </div>
@@ -416,24 +407,12 @@
             <Skeleton class="h-64 w-full" />
           </div>
         {:else if dayMaintenancesData.length > 0}
-          <div class="space-y-4">
-            <!-- Maintenance list -->
-            <div>
-              <div class="text-muted-foreground mb-2 flex items-center justify-between text-sm font-medium">
-                <p class="">{$t("Maintenances")}</p>
-                <div class="flex items-center gap-1">
-                  <Clock class="h-3 w-3" />
-                  {dayMaintenancesData.length} Total
-                </div>
+          <div class="scrollbar-hidden flex max-h-100 flex-col gap-4 space-y-4 overflow-y-auto">
+            {#each dayMaintenancesData as maintenance (maintenance.id)}
+              <div class="border-b pb-5 last:border-b-0">
+                <MaintenanceItem {maintenance} hideMonitors={true} />
               </div>
-              <div class="scrollbar-hidden flex max-h-100 flex-col gap-4 overflow-y-auto">
-                {#each dayMaintenancesData as maintenance (maintenance.id)}
-                  <div class="border-b pb-5 last:border-b-0">
-                    <MaintenanceItem {maintenance} hideMonitors={true} />
-                  </div>
-                {/each}
-              </div>
-            </div>
+            {/each}
           </div>
         {:else}
           <div class="py-8 text-center">

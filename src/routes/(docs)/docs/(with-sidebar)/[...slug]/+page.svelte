@@ -2,7 +2,10 @@
   import type { DocsTableOfContentsItem, DocsPage } from "$lib/types/docs";
   import DocsTableOfContents from "../../DocsTableOfContents.svelte";
   import DocsPageNavigation from "../../DocsPageNavigation.svelte";
-  import { Copy, Check, ExternalLink } from "@lucide/svelte";
+  import Copy from "@lucide/svelte/icons/copy";
+  import Check from "@lucide/svelte/icons/check";
+  import ExternalLink from "@lucide/svelte/icons/external-link";
+
   import { Button } from "$lib/components/ui/button/index.js";
   import * as ButtonGroup from "$lib/components/ui/button-group/index.js";
   import ChevronDown from "@lucide/svelte/icons/chevron-down";

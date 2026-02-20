@@ -11,83 +11,31 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { GetInitials } from "$lib/clientTools.js";
-
-  interface MaintenanceMonitorImpact {
-    monitor_tag: string;
-    monitor_impact: string;
-    monitor_name: string;
-    monitor_image: string | null;
-  }
-
-  interface Maintenance {
-    id: number;
-    title: string;
-    description: string | null;
-    monitors: MaintenanceMonitorImpact[];
-    start_date_time: number;
-    end_date_time: number;
-  }
+  import type { MaintenanceEventsMonitorList } from "$lib/server/types/db";
 
   interface Props {
-    maintenance: Maintenance;
+    maintenance: MaintenanceEventsMonitorList;
     class?: string;
     hideMonitors?: boolean;
   }
 
   let { maintenance, class: className = "", hideMonitors = false }: Props = $props();
-
-  const STATUS_STROKE = {
-    UP: "stroke-up",
-    DOWN: "stroke-down",
-    DEGRADED: "stroke-degraded",
-    MAINTENANCE: "stroke-maintenance",
-    NO_DATA: "stroke-muted-foreground"
-  } as const;
-
-  const STATUS_BORDER = {
-    UP: "border-up",
-    DOWN: "border-down",
-    DEGRADED: "border-degraded",
-    MAINTENANCE: "border-maintenance",
-    NO_DATA: "border-muted-foreground"
-  } as const;
-
-  // Get the highest severity impact from monitors array
-  function getHighestImpact(monitors: MaintenanceMonitorImpact[]): keyof typeof STATUS_ICON {
-    const priority: (keyof typeof STATUS_ICON)[] = ["DOWN", "DEGRADED", "MAINTENANCE"];
-    for (const impact of priority) {
-      if (monitors.some((m) => m.monitor_impact === impact)) {
-        return impact;
-      }
-    }
-    return (monitors[0]?.monitor_impact as keyof typeof STATUS_ICON) || "MAINTENANCE";
-  }
-
-  const highestImpact = $derived(getHighestImpact(maintenance.monitors));
-  const Icon = $derived(STATUS_ICON[highestImpact]);
-  const strokeClass = $derived(STATUS_STROKE[highestImpact as keyof typeof STATUS_STROKE] || "stroke-maintenance");
-
+  console.log(">>>>>>----  MaintenanceItem:23 ", maintenance);
   // Check if maintenance is ongoing (current time is between start and end)
   const isOngoing = $derived(() => {
     const now = Date.now() / 1000;
     return now >= maintenance.start_date_time && now <= maintenance.end_date_time;
   });
-
-  // Truncate description to approximately 2-3 lines
-  function truncateDescription(text: string | null, maxLength: number = 150): string {
-    if (!text) return "";
-    if (text.length <= maxLength) return text;
-    return text.slice(0, maxLength).trim() + "...";
-  }
 </script>
 
 <Item.Root class="items-start p-0 {className} sm:items-center">
-  <Item.Media class="pt-0.5 sm:pt-0">
-    <Icon class="size-6 {strokeClass}" />
-  </Item.Media>
   <Item.Content class="min-w-0 flex-1">
     <div class="flex items-center gap-2">
-      <Item.Title>{maintenance.title}</Item.Title>
+      <Item.Title class="min-w-0 text-base wrap-break-word break-all">
+        <a class="hover:underline" href={clientResolver(resolve, `/maintenances/${maintenance.id}`)}
+          >{maintenance.title}</a
+        >
+      </Item.Title>
       {#if isOngoing()}
         <Badge variant="outline" class="text-maintenance border-maintenance text-xs">{$t("In Progress")}</Badge>
       {/if}
@@ -95,27 +43,21 @@
 
     {#if maintenance.description}
       <p class="text-muted-foreground mt-1 text-sm">
-        {truncateDescription(maintenance.description)}
+        {maintenance.description}
       </p>
     {/if}
 
     {#if maintenance.monitors && maintenance.monitors.length > 0 && !hideMonitors}
-      <div class="*:data-[slot=avatar]:ring-background my-2 flex -space-x-2 *:data-[slot=avatar]:ring-2">
+      <div class="flex gap-2">
         {#each maintenance.monitors as monitor}
           <Popover.Root>
             <Popover.Trigger>
-              <Avatar.Root
-                class="bg-background border-{monitor.monitor_impact.toLowerCase()} size-8 cursor-pointer border-2 transition-transform duration-100 ease-in-out hover:scale-[1.1] hover:border"
+              <Badge
+                variant="outline"
+                class="border-{monitor.monitor_impact.toLowerCase()}   cursor-pointer rounded-none border-0 border-b px-0  text-sm font-normal"
               >
-                {#if monitor.monitor_image}
-                  <Avatar.Image
-                    src={clientResolver(resolve, monitor.monitor_image)}
-                    alt={monitor.monitor_name}
-                    class="object-cover"
-                  />
-                {/if}
-                <Avatar.Fallback class="text-xs">{GetInitials(monitor.monitor_name)}</Avatar.Fallback>
-              </Avatar.Root>
+                {monitor.monitor_name}
+              </Badge>
             </Popover.Trigger>
             <Popover.Content class="w-64">
               <div class="flex flex-col gap-3">
@@ -170,14 +112,4 @@
       </span>
     </Item.Description>
   </Item.Content>
-  <Item.Actions class="ml-auto self-start sm:ml-0 sm:self-auto">
-    <Button
-      variant="outline"
-      class="cursor-pointer rounded-full shadow-none"
-      href={clientResolver(resolve, `/maintenances/${maintenance.id}`)}
-      size="icon"
-    >
-      <ArrowRight />
-    </Button>
-  </Item.Actions>
 </Item.Root>

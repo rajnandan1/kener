@@ -294,6 +294,7 @@ export interface IncidentRecord {
   state: string;
   incident_type: string;
   incident_source: string;
+  is_global: string;
 }
 
 export interface IncidentMonitorImpact {
@@ -311,7 +312,12 @@ export interface IncidentForMonitorList {
   created_at: Date;
   updated_at: Date;
   status: string;
+  state: string;
   monitors: IncidentMonitorImpact[];
+}
+
+export interface IncidentForMonitorListWithComments extends IncidentForMonitorList {
+  comments: IncidentCommentRecord[];
 }
 
 export interface IncidentRecordInsert {
@@ -322,6 +328,7 @@ export interface IncidentRecordInsert {
   state?: string;
   incident_type?: string;
   incident_source?: string;
+  is_global?: string;
 }
 
 // ============ incident_monitors table ============
@@ -517,6 +524,7 @@ export interface MaintenanceRecord {
   status: "ACTIVE" | "INACTIVE";
   created_at: Date;
   updated_at: Date;
+  is_global: string;
 }
 
 export interface MaintenanceRecordInsert {
@@ -526,6 +534,7 @@ export interface MaintenanceRecordInsert {
   rrule: string;
   duration_seconds: number;
   status?: "ACTIVE" | "INACTIVE";
+  is_global?: string;
 }
 
 // ============ maintenance_monitors table ============

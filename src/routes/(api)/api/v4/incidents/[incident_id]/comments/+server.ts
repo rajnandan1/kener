@@ -138,6 +138,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     updated_at: incident.updated_at,
     incident_type: incident.incident_type,
     incident_source: "",
+    is_global: incident.is_global,
   });
 
   const response: CreateCommentResponse = {
