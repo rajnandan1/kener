@@ -137,6 +137,7 @@
     "front-matter": "^4.0.2",
     "fs-extra": "^11.3.2",
     "gamedig": "^5.3.2",
+    "glob": "^13.0.6",
     "highlight.js": "^11.11.1",
     "ioredis": "^5.8.2",
     "js-yaml": "^4.1.1",

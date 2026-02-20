@@ -479,11 +479,68 @@ export class IncidentsRepository extends BaseRepository {
     return this.groupIncidentsByIdForMonitorList(rows);
   }
 
+  async geAllGlobalOngoingIncidents(timestamp: number): Promise<IncidentForMonitorList[]> {
+    const rows = await this.knex("incidents")
+      .select(
+        "incidents.id",
+        "incidents.title",
+        "incidents.start_date_time",
+        "incidents.end_date_time",
+        "incidents.created_at",
+        "incidents.updated_at",
+        "incidents.status",
+        "incidents.state",
+        "incident_monitors.monitor_impact",
+        "incident_monitors.monitor_tag",
+        "monitors.name as monitor_name",
+        "monitors.image as monitor_image",
+      )
+      .leftJoin("incident_monitors", "incidents.id", "incident_monitors.incident_id")
+      .leftJoin("monitors", "incident_monitors.monitor_tag", "monitors.tag")
+      .where("incidents.is_global", "YES")
+      .andWhere("incidents.state", "!=", GC.RESOLVED)
+      .andWhere("incidents.incident_type", GC.INCIDENT)
+      .andWhere("incidents.start_date_time", "<=", timestamp)
+      .andWhere(function () {
+        this.whereNull("incidents.end_date_time").orWhere("incidents.end_date_time", ">=", timestamp);
+      })
+      .orderBy("incidents.start_date_time", "desc");
+
+    return this.groupIncidentsByIdForMonitorList(rows);
+  }
+
   async getOngoingIncidentsForMonitorListWithComments(
     timestamp: number,
     monitorTags: string[],
   ): Promise<IncidentForMonitorListWithComments[]> {
     const incidents = await this.getOngoingIncidentsForMonitorList(timestamp, monitorTags);
+
+    if (incidents.length === 0) {
+      return [];
+    }
+
+    const incidentIds = incidents.map((incident) => incident.id);
+    const comments = await this.knex("incident_comments")
+      .select("*")
+      .whereIn("incident_id", incidentIds)
+      .andWhere("status", "ACTIVE")
+      .orderBy("commented_at", "desc")
+      .orderBy("id", "desc");
+
+    const commentsByIncidentId = new Map<number, IncidentCommentRecord[]>();
+    for (const comment of comments) {
+      const existing = commentsByIncidentId.get(comment.incident_id) || [];
+      existing.push(comment);
+      commentsByIncidentId.set(comment.incident_id, existing);
+    }
+
+    return incidents.map((incident) => ({
+      ...incident,
+      comments: commentsByIncidentId.get(incident.id) || [],
+    }));
+  }
+  async getAllGlobalOngoingIncidentsWithComments(timestamp: number): Promise<IncidentForMonitorListWithComments[]> {
+    const incidents = await this.geAllGlobalOngoingIncidents(timestamp);
 
     if (incidents.length === 0) {
       return [];

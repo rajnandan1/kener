@@ -12,6 +12,7 @@
   import clientResolver from "$lib/client/resolver.js";
   import { GetInitials } from "$lib/clientTools.js";
   import type { MaintenanceEventsMonitorList } from "$lib/server/types/db";
+  import { page } from "$app/state";
 
   interface Props {
     maintenance: MaintenanceEventsMonitorList;
@@ -20,12 +21,12 @@
   }
 
   let { maintenance, class: className = "", hideMonitors = false }: Props = $props();
-  console.log(">>>>>>----  MaintenanceItem:23 ", maintenance);
   // Check if maintenance is ongoing (current time is between start and end)
   const isOngoing = $derived(() => {
     const now = Date.now() / 1000;
     return now >= maintenance.start_date_time && now <= maintenance.end_date_time;
   });
+  const isEmbedded = page.route.id?.includes("(embed)");
 </script>
 
 <Item.Root class="items-start p-0 {className} sm:items-center">
@@ -51,7 +52,7 @@
       <div class="flex gap-2">
         {#each maintenance.monitors as monitor}
           <Popover.Root>
-            <Popover.Trigger>
+            <Popover.Trigger disabled={isEmbedded}>
               <Badge
                 variant="outline"
                 class="border-{monitor.monitor_impact.toLowerCase()}   cursor-pointer rounded-none border-0 border-b px-0  text-sm font-normal"

@@ -164,6 +164,8 @@ class DbImpl {
   getOngoingIncidentsByMonitorTags!: IncidentsRepository["getOngoingIncidentsByMonitorTags"];
   getOngoingIncidentsForMonitorList!: IncidentsRepository["getOngoingIncidentsForMonitorList"];
   getOngoingIncidentsForMonitorListWithComments!: IncidentsRepository["getOngoingIncidentsForMonitorListWithComments"];
+  geAllGlobalOngoingIncidents!: IncidentsRepository["geAllGlobalOngoingIncidents"];
+  getAllGlobalOngoingIncidentsWithComments!: IncidentsRepository["getAllGlobalOngoingIncidentsWithComments"];
   getResolvedIncidentsForMonitorList!: IncidentsRepository["getResolvedIncidentsForMonitorList"];
   getResolvedIncidentsForMonitorListWithComments!: IncidentsRepository["getResolvedIncidentsForMonitorListWithComments"];
   getIncidentsForEventsByDateRange!: IncidentsRepository["getIncidentsForEventsByDateRange"];
@@ -255,6 +257,7 @@ class DbImpl {
 
   // ============ Maintenance Events for Monitor List ============
   getOngoingMaintenanceEventsForMonitorList!: MaintenancesRepository["getOngoingMaintenanceEventsForMonitorList"];
+  getAllGlobalOngoingMaintenanceEvents!: MaintenancesRepository["getAllGlobalOngoingMaintenanceEvents"];
   getPastMaintenanceEventsForMonitorList!: MaintenancesRepository["getPastMaintenanceEventsForMonitorList"];
   getUpcomingMaintenanceEventsForMonitorList!: MaintenancesRepository["getUpcomingMaintenanceEventsForMonitorList"];
   getMaintenanceEventsForEventsByDateRange!: MaintenancesRepository["getMaintenanceEventsForEventsByDateRange"];
@@ -515,6 +518,10 @@ class DbImpl {
     this.getOngoingIncidentsForMonitorListWithComments =
       this.incidents.getOngoingIncidentsForMonitorListWithComments.bind(this.incidents);
     this.getResolvedIncidentsForMonitorList = this.incidents.getResolvedIncidentsForMonitorList.bind(this.incidents);
+    this.geAllGlobalOngoingIncidents = this.incidents.geAllGlobalOngoingIncidents.bind(this.incidents);
+    this.getAllGlobalOngoingIncidentsWithComments = this.incidents.getAllGlobalOngoingIncidentsWithComments.bind(
+      this.incidents,
+    );
     this.getResolvedIncidentsForMonitorListWithComments =
       this.incidents.getResolvedIncidentsForMonitorListWithComments.bind(this.incidents);
     this.getIncidentsForEventsByDateRange = this.incidents.getIncidentsForEventsByDateRange.bind(this.incidents);
@@ -610,6 +617,9 @@ class DbImpl {
       this.maintenances,
     );
     this.getOngoingMaintenanceEventsForMonitorList = this.maintenances.getOngoingMaintenanceEventsForMonitorList.bind(
+      this.maintenances,
+    );
+    this.getAllGlobalOngoingMaintenanceEvents = this.maintenances.getAllGlobalOngoingMaintenanceEvents.bind(
       this.maintenances,
     );
     this.getPastMaintenanceEventsForMonitorList = this.maintenances.getPastMaintenanceEventsForMonitorList.bind(

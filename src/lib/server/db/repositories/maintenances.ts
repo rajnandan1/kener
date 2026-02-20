@@ -481,6 +481,33 @@ export class MaintenancesRepository extends BaseRepository {
       .orderBy("maintenances_events.start_date_time", "desc");
     return this.groupMaintenancesByIdForMonitorList(rows);
   }
+  async getAllGlobalOngoingMaintenanceEvents(timestamp: number): Promise<MaintenanceEventsMonitorList[]> {
+    const rows = await this.knex("maintenances_events")
+      .select(
+        "maintenances_events.id",
+        "maintenances.title",
+        "maintenances.description",
+        "maintenances_events.start_date_time",
+        "maintenances_events.end_date_time",
+        "maintenance_monitors.monitor_tag",
+        "maintenance_monitors.monitor_impact",
+        "monitors.name as monitor_name",
+        "monitors.image as monitor_image",
+        "monitors.is_hidden as monitor_is_hidden",
+        "maintenances_events.created_at",
+        "maintenances_events.updated_at",
+      )
+      .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
+      .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
+      .leftJoin("monitors", "maintenance_monitors.monitor_tag", "monitors.tag")
+      .where("maintenances.is_global", "YES")
+      .andWhere("maintenances.status", GC.ACTIVE)
+      .whereIn("maintenances_events.status", [GC.ONGOING])
+      .andWhere("maintenances_events.start_date_time", "<=", timestamp)
+      .andWhere("maintenances_events.end_date_time", ">=", timestamp)
+      .orderBy("maintenances_events.start_date_time", "desc");
+    return this.groupMaintenancesByIdForMonitorList(rows);
+  }
 
   /**
    * Get past/completed maintenance events for a list of monitors

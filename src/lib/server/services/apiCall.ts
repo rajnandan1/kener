@@ -5,6 +5,7 @@ import * as cheerio from "cheerio";
 import { DefaultAPIEval } from "../../anywhere.js";
 import version from "../../version.js";
 import https from "https";
+import { performance } from "node:perf_hooks";
 import type { ApiMonitor, EvalResponse, MonitoringResult } from "../types/monitor.js";
 
 class ApiCall {
@@ -34,7 +35,6 @@ class ApiCall {
 
     let method = this.monitor.type_data.method;
     let timeout = this.monitor.type_data.timeout || 10000;
-    let tag = this.monitor.tag;
 
     let monitorEval = !!this.monitor.type_data.eval ? this.monitor.type_data.eval : DefaultAPIEval;
 
@@ -96,7 +96,7 @@ class ApiCall {
     let errorMessage = "";
     let resp = "";
     let timeoutError = false;
-    const start = Date.now();
+    const start = performance.now();
     try {
       let data = await axios(url, options);
       statusCode = data.status;
@@ -123,8 +123,8 @@ class ApiCall {
         resp = error.message || "";
       }
     } finally {
-      const end = Date.now();
-      latency = end - start;
+      const end = performance.now();
+      latency = Math.round(end - start);
       if (resp === undefined || resp === null) {
         resp = "";
       }
@@ -143,7 +143,15 @@ class ApiCall {
       );
       evalResp = await evalFunction(statusCode, latency, resp, modules);
     } catch (error: unknown) {
-      errorMessage += ` | Eval error: ${(error as Error).message}`;
+      if (error instanceof Error) {
+        if (error.message.length > 200) {
+          errorMessage += ` | Eval error: ${error.message.substring(0, 200)}...`;
+        } else {
+          errorMessage += ` | Eval error: ${error.message}`;
+        }
+      } else {
+        errorMessage += ` | Eval error: ${String(error)}`;
+      }
     }
 
     if (!!!evalResp) {

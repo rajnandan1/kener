@@ -1,5 +1,6 @@
 import tls from "tls";
 import GC from "../../global-constants.js";
+import { performance } from "node:perf_hooks";
 import type { SslMonitor, MonitoringResult } from "../types/monitor.js";
 
 interface SSLExpiryResult {
@@ -11,14 +12,14 @@ interface SSLExpiryResult {
 
 const getSSLExpiry = (domain: string, port: number = 443): Promise<SSLExpiryResult> => {
   return new Promise((resolve, reject) => {
-    const startTime = Date.now();
+    const startTime = performance.now();
     const socket = tls.connect(port, domain, { servername: domain }, () => {
       const { valid_to } = socket.getPeerCertificate();
       if (!valid_to) {
         reject(new Error("No certificate found."));
         return;
       }
-      const latency = Date.now() - startTime;
+      const latency = Math.round(performance.now() - startTime);
       const timeTillExpiryMs = new Date(valid_to).getTime() - new Date().getTime();
       resolve({
         domain,

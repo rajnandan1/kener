@@ -1,5 +1,6 @@
 import DNSResolver from "../dns.js";
 import GC from "../../global-constants.js";
+import { performance } from "node:perf_hooks";
 import type { DnsMonitor, MonitoringResult } from "../types/monitor.js";
 
 class DnsCall {
@@ -31,11 +32,11 @@ class DnsCall {
     let matchType = this.monitor.type_data.matchType;
     let values = this.monitor.type_data.values;
     const configuredNameServer = this.monitor.type_data.nameServer?.trim() || undefined;
-    const queryStartTime = Date.now();
+    const queryStartTime = performance.now();
 
     try {
       let dnsRes = await dnsResolver.getRecord(host, recordType, configuredNameServer);
-      let latency = Date.now() - queryStartTime;
+      let latency = Math.round(performance.now() - queryStartTime);
 
       if (dnsRes[recordType] === undefined) {
         return {
@@ -92,7 +93,7 @@ class DnsCall {
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      const latency = Date.now() - queryStartTime;
+      const latency = Math.round(performance.now() - queryStartTime);
       return {
         status: GC.DOWN,
         latency,
@@ -102,7 +103,7 @@ class DnsCall {
     }
     return {
       status: GC.DOWN,
-      latency: Date.now() - queryStartTime,
+      latency: Math.round(performance.now() - queryStartTime),
       type: GC.REALTIME,
       error_message: `DNS ${recordType} check did not return a definitive result for ${host}`,
     };

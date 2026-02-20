@@ -1,4 +1,5 @@
 import { BaseRepository } from "./base.js";
+import { GetDbType } from "../../tool.js";
 import type { PageRecord, PageRecordInsert, PageMonitorRecord, PageMonitorRecordInsert } from "../../types/db.js";
 
 /**
@@ -8,7 +9,8 @@ export class PagesRepository extends BaseRepository {
   // ============ Pages ============
 
   async createPage(data: PageRecordInsert): Promise<PageRecord> {
-    const [insertedId] = await this.knex("pages").insert({
+    const dbType = GetDbType();
+    const insertData = {
       page_path: data.page_path,
       page_title: data.page_title,
       page_header: data.page_header,
@@ -17,7 +19,15 @@ export class PagesRepository extends BaseRepository {
       page_settings_json: data.page_settings_json,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
-    });
+    };
+
+    if (dbType === "postgresql") {
+      const [page] = await this.knex("pages").insert(insertData).returning("*");
+      return page;
+    }
+
+    const result = await this.knex("pages").insert(insertData);
+    const insertedId = result[0];
     const id = typeof insertedId === "object" ? (insertedId as { id: number }).id : insertedId;
     return (await this.getPageById(id))!;
   }

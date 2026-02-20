@@ -76,7 +76,7 @@
 
 <!-- page title -->
 <div class="flex flex-col gap-3 sm:gap-4">
-  <ThemePlus monitor_tags={data.monitorTags} currentPath={data.pageDetails?.page_path || "/"} />
+  <ThemePlus monitor_tags={data.monitorTags} />
   <div class="flex flex-col gap-2 px-3 py-2 sm:px-4">
     {#if data.pageDetails?.page_logo}
       <img

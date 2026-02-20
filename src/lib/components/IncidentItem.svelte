@@ -14,6 +14,7 @@
   import { SveltePurify } from "@humanspeak/svelte-purify";
   import mdToHTML from "$lib/marked";
   import { slide } from "svelte/transition";
+  import { page } from "$app/state";
 
   interface Props {
     incident: IncidentForMonitorListWithComments;
@@ -35,19 +36,13 @@
   // If ongoing, use current timestamp for duration calculation
   const endTimeForDuration = $derived(incident.end_date_time ?? Math.floor(Date.now() / 1000));
 
-  // Oldest comment added to this incident
-  const firstCommentAdded = $derived.by((): IncidentCommentRecord | null => {
-    if (!incident.comments || incident.comments.length === 0) return null;
-
-    // Comments are already sorted in DB by commented_at DESC, id DESC
-    // so oldest comment is the last one.
-    return incident.comments.at(-1) ?? null;
-  });
+  const isEmbedded = page.route.id?.includes("(embed)");
 </script>
 
 <Item.Root class="items-start  p-0 {className} sm:items-center">
   <Item.Content class="min-w-0 flex-1">
-    <div class="flex items-center gap-2">
+    <div class="flex flex-col items-start justify-start gap-0.5">
+      <span class="text-xs text-{incident.state.toLowerCase()}">{incident.state}</span>
       <Item.Title class="min-w-0 text-base wrap-break-word break-all">
         <a class="hover:underline" href={clientResolver(resolve, `/incidents/${incident.id}`)}>{incident.title}</a>
       </Item.Title>
@@ -58,7 +53,7 @@
         <div class="flex gap-2">
           {#each incident.monitors as monitor (`${incident.id}-${monitor.monitor_tag}`)}
             <Popover.Root>
-              <Popover.Trigger>
+              <Popover.Trigger disabled={isEmbedded}>
                 <Badge
                   variant="outline"
                   class="border-{monitor.monitor_impact.toLowerCase()}   cursor-pointer rounded-none border-0 border-b px-0  text-sm font-normal"
@@ -152,7 +147,7 @@
           <Button
             variant="outline"
             size="icon-sm"
-            class="rounded-btn -mr-2"
+            class="rounded-btn -mr-2 {isEmbedded ? 'hidden' : ''}"
             onclick={() => (showComments = !showComments)}
           >
             <ArrowRight class={`transition-transform duration-200 ${showComments ? "rotate-90" : ""}`} />
@@ -160,7 +155,7 @@
         </div>
       </div>
     {/if}
-    {#if showComments && incident.comments && incident.comments.length > 0}
+    {#if showSummary && showComments && incident.comments && incident.comments.length > 0}
       <div transition:slide={{ duration: 220 }} class=" flex flex-col gap-4">
         {#each incident.comments as comment (comment.id)}
           <div class="flex flex-col gap-2 border-b pb-4 last:border-b-0 last:pb-0">

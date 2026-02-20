@@ -1,6 +1,7 @@
 import Knex, { type Knex as KnexType } from "knex";
 import GC from "../../global-constants.js";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
+import { performance } from "node:perf_hooks";
 import type { SqlMonitor, MonitoringResult } from "../types/monitor.js";
 
 class SqlCall {
@@ -24,7 +25,7 @@ class SqlCall {
     let query = this.monitor.type_data.query;
     let timeout = this.monitor.type_data.timeout || 5000;
 
-    const startTime = Date.now();
+    const startTime = performance.now();
     let knexInstance: KnexType | null = null;
 
     try {
@@ -51,7 +52,7 @@ class SqlCall {
       await Promise.race([queryPromise, timeoutPromise]);
 
       // Calculate latency
-      const latency = Date.now() - startTime;
+      const latency = Math.round(performance.now() - startTime);
 
       return {
         status: GC.UP,
@@ -64,7 +65,7 @@ class SqlCall {
         errorMessage = errorMessage.substring(0, 200) + "...";
       }
       console.log(`Error executing SQL query for monitor with tag ${this.monitor.tag}:`, errorMessage);
-      const latency = Date.now() - startTime;
+      const latency = Math.round(performance.now() - startTime);
 
       // Handle timeout specifically
       if (error instanceof Error && error.message === "Query timeout") {
