@@ -69,10 +69,8 @@
   let myTimezone = data.localTz;
   onMount(async () => {
     myTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (data.localTz === "UTC") {
-      if (data.isBot === false) {
-        setTz(myTimezone);
-      }
+    if (data.isBot === false && myTimezone && myTimezone != data.localTz) {
+      setTz(myTimezone);
     }
     if (defaultTheme != "none") {
       setMode(defaultTheme);
