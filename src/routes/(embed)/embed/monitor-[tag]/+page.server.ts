@@ -1,5 +1,4 @@
 import type { PageServerLoad } from "./$types";
-import { GetMinuteStartNowTimestampUTC } from "$lib/server/tool";
 
 const DEFAULT_DAYS = 90;
 const MAX_DAYS = 90;

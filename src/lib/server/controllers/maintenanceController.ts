@@ -14,6 +14,7 @@ import type {
 import { GetMinuteStartNowTimestampUTC } from "../tool.js";
 import { maintenanceToVariables } from "../notification/notification_utils.js";
 import subscriberQueue from "../queues/subscriberQueue.js";
+import GC from "../../global-constants";
 
 // ============ Input Interfaces ============
 
@@ -62,6 +63,34 @@ export interface MaintenanceWithMonitors extends MaintenanceRecord {
 export interface MaintenanceWithEvents extends MaintenanceWithMonitors {
   events?: MaintenanceEventRecord[];
   upcoming_event?: MaintenanceEventRecord | null;
+}
+
+// ============ Helper to determine event status ============
+
+/**
+ * Determine the initial status of a maintenance event based on current time
+ * - COMPLETED: now >= end_date_time
+ * - ONGOING: now >= start_date_time && now < end_date_time
+ * - READY: start_date_time - now <= 60 minutes
+ * - SCHEDULED: start_date_time - now > 60 minutes
+ */
+export function determineEventStatus(
+  eventStartTimestamp: number,
+  eventEndTimestamp: number,
+): "SCHEDULED" | "READY" | "ONGOING" | "COMPLETED" | "CANCELLED" {
+  const nowTimestamp = Math.floor(Date.now() / 1000);
+
+  if (nowTimestamp >= eventEndTimestamp) {
+    return "COMPLETED";
+  }
+  if (nowTimestamp >= eventStartTimestamp) {
+    return "ONGOING";
+  }
+  // 60 minutes = 3600 seconds
+  if (eventStartTimestamp - nowTimestamp <= 3600) {
+    return "READY";
+  }
+  return "SCHEDULED";
 }
 
 // ============ Helper to generate upcoming events from RRULE ============
@@ -127,7 +156,7 @@ export const GenerateMaintenanceEvents = async (
           maintenance_id,
           start_date_time: eventStart,
           end_date_time: eventEnd,
-          status: "SCHEDULED",
+          status: determineEventStatus(eventStart, eventEnd),
         });
         createdEvents.push(event);
       }
@@ -351,7 +380,7 @@ export const CreateMaintenanceEvent = async (data: CreateMaintenanceEventInput):
     maintenance_id: data.maintenance_id,
     start_date_time: data.start_date_time,
     end_date_time: data.end_date_time,
-    status: "SCHEDULED",
+    status: determineEventStatus(data.start_date_time, data.end_date_time),
   });
 
   return event;
@@ -516,7 +545,7 @@ export const UpdateMaintenanceEventStatuses = async (): Promise<void> => {
     // 1. Mark SCHEDULED events starting within 60 minutes as READY
     const scheduledEvents = await db.getScheduledEventsStartingSoon(currentTimestamp, sixtyMinutesInSeconds);
     for (const event of scheduledEvents) {
-      await db.updateMaintenanceEventStatus(event.id, "READY");
+      await db.updateMaintenanceEventStatus(event.id, GC.READY);
       console.log(`Maintenance event ${event.id} marked as READY (starts at ${event.start_date_time})`);
       const monitors = await db.getMonitorsByMaintenanceId(event.maintenance_id);
       const monitorNames = monitors.map((m) => `${m.monitor_name}(${m.monitor_impact})`).join(", ");
@@ -534,10 +563,27 @@ export const UpdateMaintenanceEventStatuses = async (): Promise<void> => {
       await subscriberQueue.push(update);
     }
 
-    // 2. Mark READY events that are now in progress as ONGOING
+    // 2. Catch-up: SCHEDULED events that missed the READY window and already started → ONGOING
+    const scheduledStartedEvents = await db.getScheduledEventsAlreadyStarted(currentTimestamp);
+    for (const event of scheduledStartedEvents) {
+      await db.updateMaintenanceEventStatus(event.id, GC.ONGOING);
+      console.log(`Maintenance event ${event.id} marked as ONGOING (catch-up from SCHEDULED)`);
+      const monitors = await db.getMonitorsByMaintenanceId(event.maintenance_id);
+      const monitorNames = monitors.map((m) => `${m.monitor_name}(${m.monitor_impact})`).join(", ");
+      const update = maintenanceToVariables(
+        event,
+        monitorNames,
+        "**is now in progress**",
+        "ongoing",
+        "Maintenance In Progress",
+      );
+      await subscriberQueue.push(update);
+    }
+
+    // 3. Mark READY events that are now in progress as ONGOING
     const readyEvents = await db.getReadyEventsInProgress(currentTimestamp);
     for (const event of readyEvents) {
-      await db.updateMaintenanceEventStatus(event.id, "ONGOING");
+      await db.updateMaintenanceEventStatus(event.id, GC.ONGOING);
       console.log(`Maintenance event ${event.id} marked as ONGOING`);
       const monitors = await db.getMonitorsByMaintenanceId(event.maintenance_id);
       const monitorNames = monitors.map((m) => `${m.monitor_name}(${m.monitor_impact})`).join(", ");
@@ -551,10 +597,10 @@ export const UpdateMaintenanceEventStatuses = async (): Promise<void> => {
       await subscriberQueue.push(update);
     }
 
-    // 3. Mark ONGOING events that have ended as COMPLETED
+    // 4. Mark ONGOING events that have ended as COMPLETED
     const ongoingEvents = await db.getOngoingEventsCompleted(currentTimestamp);
     for (const event of ongoingEvents) {
-      await db.updateMaintenanceEventStatus(event.id, "COMPLETED");
+      await db.updateMaintenanceEventStatus(event.id, GC.COMPLETED);
       console.log(`Maintenance event ${event.id} marked as COMPLETED`);
       const monitors = await db.getMonitorsByMaintenanceId(event.maintenance_id);
       const monitorNames = monitors.map((m) => `${m.monitor_name}(${m.monitor_impact})`).join(", ");

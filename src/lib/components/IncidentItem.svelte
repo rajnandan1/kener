@@ -37,14 +37,17 @@
   const endTimeForDuration = $derived(incident.end_date_time ?? Math.floor(Date.now() / 1000));
 
   const isEmbedded = page.route.id?.includes("(embed)");
+  const target = isEmbedded ? "_blank" : "_self";
 </script>
 
 <Item.Root class="items-start  p-0 {className} sm:items-center">
   <Item.Content class="min-w-0 flex-1">
     <div class="flex flex-col items-start justify-start gap-0.5">
-      <span class="text-xs text-{incident.state.toLowerCase()}">{incident.state}</span>
+      <span class="text-xs font-medium text-{incident.state.toLowerCase()}">{incident.state}</span>
       <Item.Title class="min-w-0 text-base wrap-break-word break-all">
-        <a class="hover:underline" href={clientResolver(resolve, `/incidents/${incident.id}`)}>{incident.title}</a>
+        <a {target} class="hover:underline" href={clientResolver(resolve, `/incidents/${incident.id}`)}>
+          {incident.title}
+        </a>
       </Item.Title>
     </div>
 
@@ -108,7 +111,7 @@
         <span
           class="absolute top-0 bottom-0 left-1/2 border-l sm:top-1/2 sm:right-0 sm:bottom-auto sm:left-0 sm:border-t sm:border-l-0"
         ></span>
-        <span class="bg-background relative z-10 px-0 py-1 sm:px-2">
+        <span class="bg-background relative z-10 rounded-full px-0 py-1 sm:px-2">
           {$formatDuration(incident.start_date_time, endTimeForDuration)}
         </span>
       </span>

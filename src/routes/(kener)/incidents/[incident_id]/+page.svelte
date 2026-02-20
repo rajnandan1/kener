@@ -31,7 +31,7 @@
 </svelte:head>
 
 <div class="flex flex-col gap-3">
-  <ThemePlus showEventsButton={true} showHomeButton={true} />
+  <ThemePlus />
   <div class="flex flex-col gap-2 px-4 py-2">
     <Item.Root class="mb-4 px-0">
       <Item.Content class="min-w-0 flex-1 px-0">

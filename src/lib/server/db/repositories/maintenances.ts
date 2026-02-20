@@ -377,6 +377,21 @@ export class MaintenancesRepository extends BaseRepository {
   }
 
   /**
+   * Get SCHEDULED maintenance events where start_date_time has already passed
+   * but end_date_time hasn't. These missed the READY window and should transition
+   * directly to ONGOING.
+   */
+  async getScheduledEventsAlreadyStarted(currentTimestamp: number): Promise<MaintenanceEventRecordDetailed[]> {
+    return await this.knex("maintenances_events")
+      .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
+      .where("maintenances_events.status", GC.SCHEDULED)
+      .andWhere("maintenances.status", GC.ACTIVE)
+      .andWhere("maintenances_events.start_date_time", "<=", currentTimestamp)
+      .andWhere("maintenances_events.end_date_time", ">=", currentTimestamp)
+      .select("maintenances_events.*", "maintenances.title", "maintenances.description");
+  }
+
+  /**
    * Get READY maintenance events where current timestamp falls within start and end
    * These should be marked as ONGOING
    */
@@ -467,6 +482,7 @@ export class MaintenancesRepository extends BaseRepository {
         "monitors.is_hidden as monitor_is_hidden",
         "maintenances_events.created_at",
         "maintenances_events.updated_at",
+        "maintenances_events.status as status",
       )
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
       .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
@@ -481,8 +497,11 @@ export class MaintenancesRepository extends BaseRepository {
       .orderBy("maintenances_events.start_date_time", "desc");
     return this.groupMaintenancesByIdForMonitorList(rows);
   }
-  async getAllGlobalOngoingMaintenanceEvents(timestamp: number): Promise<MaintenanceEventsMonitorList[]> {
-    const rows = await this.knex("maintenances_events")
+  async getAllGlobalOngoingMaintenanceEvents(
+    timestamp: number,
+    tags?: string[],
+  ): Promise<MaintenanceEventsMonitorList[]> {
+    const query = this.knex("maintenances_events")
       .select(
         "maintenances_events.id",
         "maintenances.title",
@@ -496,11 +515,22 @@ export class MaintenancesRepository extends BaseRepository {
         "monitors.is_hidden as monitor_is_hidden",
         "maintenances_events.created_at",
         "maintenances_events.updated_at",
+        "maintenances_events.status as status",
       )
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
       .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
-      .leftJoin("monitors", "maintenance_monitors.monitor_tag", "monitors.tag")
-      .where("maintenances.is_global", "YES")
+      .leftJoin("monitors", "maintenance_monitors.monitor_tag", "monitors.tag");
+
+    if (tags && tags.length > 0) {
+      query.where(function () {
+        this.whereIn("maintenance_monitors.monitor_tag", tags);
+      });
+    } else {
+      query.where("maintenances.is_global", "YES");
+    }
+
+    const rows = await query
+      .andWhere("monitors.is_hidden", "NO")
       .andWhere("maintenances.status", GC.ACTIVE)
       .whereIn("maintenances_events.status", [GC.ONGOING])
       .andWhere("maintenances_events.start_date_time", "<=", timestamp)
@@ -575,6 +605,7 @@ export class MaintenancesRepository extends BaseRepository {
         "monitors.is_hidden as monitor_is_hidden",
         "maintenances_events.created_at",
         "maintenances_events.updated_at",
+        "maintenances_events.status as status",
       )
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
       .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
@@ -615,6 +646,7 @@ export class MaintenancesRepository extends BaseRepository {
         "monitors.is_hidden as monitor_is_hidden",
         "maintenances_events.created_at",
         "maintenances_events.updated_at",
+        "maintenances_events.status as status",
       )
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
       .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
@@ -645,6 +677,7 @@ export class MaintenancesRepository extends BaseRepository {
         "monitors.is_hidden as monitor_is_hidden",
         "maintenances_events.created_at",
         "maintenances_events.updated_at",
+        "maintenances_events.status as status",
       )
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
       .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
@@ -672,6 +705,7 @@ export class MaintenancesRepository extends BaseRepository {
           description: row.description,
           start_date_time: row.start_date_time,
           end_date_time: row.end_date_time,
+          status: row.status,
           created_at: row.created_at,
           updated_at: row.updated_at,
           monitors: [],

@@ -584,7 +584,7 @@ export interface MaintenanceEventRecord {
   maintenance_id: number;
   start_date_time: number;
   end_date_time: number;
-  status: "SCHEDULED" | "ONGOING" | "COMPLETED" | "CANCELLED";
+  status: "SCHEDULED" | "READY" | "ONGOING" | "COMPLETED" | "CANCELLED";
   created_at: Date;
   updated_at: Date;
 }
@@ -594,7 +594,7 @@ export interface MaintenanceEventRecordDetailed {
   maintenance_id: number;
   start_date_time: number;
   end_date_time: number;
-  status: "SCHEDULED" | "ONGOING" | "COMPLETED" | "CANCELLED";
+  status: "SCHEDULED" | "READY" | "ONGOING" | "COMPLETED" | "CANCELLED";
   created_at: Date;
   updated_at: Date;
   title: string;
@@ -605,7 +605,7 @@ export interface MaintenanceEventRecordInsert {
   maintenance_id: number;
   start_date_time: number;
   end_date_time: number;
-  status?: "SCHEDULED" | "ONGOING" | "COMPLETED" | "CANCELLED";
+  status?: "SCHEDULED" | "READY" | "ONGOING" | "COMPLETED" | "CANCELLED";
 }
 
 // ============ Maintenance Filter ============
@@ -617,7 +617,7 @@ export interface MaintenanceFilter {
 export interface MaintenanceEventFilter {
   id?: number;
   maintenance_id?: number;
-  status?: "SCHEDULED" | "ONGOING" | "COMPLETED" | "CANCELLED";
+  status?: "SCHEDULED" | "READY" | "ONGOING" | "COMPLETED" | "CANCELLED";
 }
 
 export interface MaintenanceMonitorImpact {
@@ -630,6 +630,7 @@ export interface MaintenanceMonitorImpact {
 export interface MaintenanceEventsMonitorList {
   id: number;
   title: string;
+  status: string;
   description: string | null;
   start_date_time: number; // Unix timestamp - when the first occurrence starts
   end_date_time: number; // Unix timestamp - when the first occurrence ends

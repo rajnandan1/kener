@@ -341,7 +341,7 @@ export interface MaintenanceEventResponse {
   maintenance_id: number;
   start_date_time: number;
   end_date_time: number;
-  status: "SCHEDULED" | "ONGOING" | "COMPLETED" | "CANCELLED";
+  status: "SCHEDULED" | "READY" | "ONGOING" | "COMPLETED" | "CANCELLED";
   created_at: string;
   updated_at: string;
 }
@@ -379,7 +379,7 @@ export interface MaintenanceEventDetailResponse {
   event_id: number;
   event_start_date_time: number;
   event_end_date_time: number;
-  event_status: "SCHEDULED" | "ONGOING" | "COMPLETED" | "CANCELLED";
+  event_status: "SCHEDULED" | "READY" | "ONGOING" | "COMPLETED" | "CANCELLED";
   maintenance_title: string;
   maintenance_description: string | null;
   maintenance_status: "ACTIVE" | "INACTIVE";

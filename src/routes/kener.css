@@ -161,10 +161,10 @@
   --identified: #3b82f6;
   --monitoring: #10b981;
   --resolved: #22c55e;
-  --completed: #22c55e;
-  --scheduled: #3b82f6;
+  --scheduled: #c0b034;
   --ready: #f59e0b;
-  --ongoing: #562fcd;
+  --ongoing: #3593e0;
+  --completed: #22c55e;
   --cancelled: #6b7280;
 }
 

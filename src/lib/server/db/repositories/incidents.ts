@@ -479,8 +479,8 @@ export class IncidentsRepository extends BaseRepository {
     return this.groupIncidentsByIdForMonitorList(rows);
   }
 
-  async geAllGlobalOngoingIncidents(timestamp: number): Promise<IncidentForMonitorList[]> {
-    const rows = await this.knex("incidents")
+  async geAllGlobalOngoingIncidents(timestamp: number, tags?: string[]): Promise<IncidentForMonitorList[]> {
+    const query = this.knex("incidents")
       .select(
         "incidents.id",
         "incidents.title",
@@ -496,8 +496,18 @@ export class IncidentsRepository extends BaseRepository {
         "monitors.image as monitor_image",
       )
       .leftJoin("incident_monitors", "incidents.id", "incident_monitors.incident_id")
-      .leftJoin("monitors", "incident_monitors.monitor_tag", "monitors.tag")
-      .where("incidents.is_global", "YES")
+      .leftJoin("monitors", "incident_monitors.monitor_tag", "monitors.tag");
+
+    if (tags && tags.length > 0) {
+      query.where(function () {
+        this.whereIn("incident_monitors.monitor_tag", tags);
+      });
+    } else {
+      query.where("incidents.is_global", "YES");
+    }
+
+    const rows = await query
+      .andWhere("monitors.is_hidden", "NO")
       .andWhere("incidents.state", "!=", GC.RESOLVED)
       .andWhere("incidents.incident_type", GC.INCIDENT)
       .andWhere("incidents.start_date_time", "<=", timestamp)
@@ -539,8 +549,11 @@ export class IncidentsRepository extends BaseRepository {
       comments: commentsByIncidentId.get(incident.id) || [],
     }));
   }
-  async getAllGlobalOngoingIncidentsWithComments(timestamp: number): Promise<IncidentForMonitorListWithComments[]> {
-    const incidents = await this.geAllGlobalOngoingIncidents(timestamp);
+  async getAllGlobalOngoingIncidentsWithComments(
+    timestamp: number,
+    tags?: string[],
+  ): Promise<IncidentForMonitorListWithComments[]> {
+    const incidents = await this.geAllGlobalOngoingIncidents(timestamp, tags);
 
     if (incidents.length === 0) {
       return [];

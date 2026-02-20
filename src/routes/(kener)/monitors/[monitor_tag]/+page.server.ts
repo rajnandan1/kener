@@ -35,14 +35,10 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
   const monitorTags = [monitor_tag];
 
-  const [ongoingIncidents, resolvedIncidents, ongoingMaintenances, pastMaintenances, upcomingMaintenances] =
-    await Promise.all([
-      GetOngoingIncidentsForMonitorList(monitorTags),
-      GetResolvedIncidentsForMonitorList(monitorTags),
-      GetOngoingMaintenanceEventsForMonitorList(monitorTags),
-      GetPastMaintenanceEventsForMonitorList(monitorTags),
-      GetUpcomingMaintenanceEventsForMonitorList(monitorTags),
-    ]);
+  const [ongoingIncidents, ongoingMaintenances] = await Promise.all([
+    GetOngoingIncidentsForMonitorList(monitorTags),
+    GetOngoingMaintenanceEventsForMonitorList(monitorTags),
+  ]);
 
   //last known status
   const lastStatus = await db.getLatestMonitoringData(monitor.tag);
@@ -97,10 +93,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       monitorLastStatusTimestamp: item.ts,
       monitorLastLatency: ParseLatency(item.avgLatency),
       ongoingIncidents,
-      resolvedIncidents,
       ongoingMaintenances,
-      pastMaintenances,
-      upcomingMaintenances,
       externalUrl: monitor.external_url,
       extendedTags,
       monitorGroupMembersByTag,

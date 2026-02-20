@@ -4,6 +4,7 @@ import db from "../db/db.js";
 import { rrulestr } from "rrule";
 import { addDays } from "date-fns";
 import type { MaintenanceRecord, MaintenanceEventRecord } from "../types/db.js";
+import { determineEventStatus } from "../controllers/maintenanceController.js";
 
 let maintenanceSchedulerQueue: Queue | null = null;
 let worker: Worker | null = null;
@@ -61,7 +62,7 @@ const generateEventsForMaintenance = async (maintenance: MaintenanceRecord): Pro
           maintenance_id: maintenance.id,
           start_date_time: eventStart,
           end_date_time: eventEnd,
-          status: "SCHEDULED",
+          status: determineEventStatus(eventStart, eventEnd),
         });
         eventsCreated++;
         console.log(
@@ -165,7 +166,7 @@ export const start = async (options?: JobSchedulerTemplateOptions) => {
 /**
  * Graceful shutdown
  */
-export const shutdown = async () => {
+const shutdown = async () => {
   if (worker) {
     await worker.close();
     worker = null;

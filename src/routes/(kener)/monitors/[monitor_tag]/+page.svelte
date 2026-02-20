@@ -12,6 +12,8 @@
   import clientResolver from "$lib/client/resolver.js";
   import { resolve } from "$app/paths";
   import trackEvent from "$lib/beacon";
+  import IncidentItem from "$lib/components/IncidentItem.svelte";
+  import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
   let { data } = $props();
 
   // State
@@ -116,15 +118,24 @@
       {/if}
     </div>
   </div>
-  <IncidentMonitorList incidents={data.ongoingIncidents} title={$t("Ongoing Incidents")} class="mb-4" />
-
-  <!-- Maintenance -->
-  <AllMaintenanceMonitorGrid
-    ongoingMaintenances={data.ongoingMaintenances}
-    upcomingMaintenances={data.upcomingMaintenances}
-    pastMaintenances={data.pastMaintenances}
-    class="mb-4"
-  />
+  {#if data.ongoingIncidents && data.ongoingIncidents.length > 0}
+    <div class="flex flex-col gap-3">
+      {#each data.ongoingIncidents as incident, i (incident.id ?? i)}
+        <div class=" rounded-3xl border p-3 sm:p-4">
+          <IncidentItem {incident} />
+        </div>
+      {/each}
+    </div>
+  {/if}
+  {#if data.ongoingMaintenances && data.ongoingMaintenances.length > 0}
+    <div class="flex flex-col gap-3">
+      {#each data.ongoingMaintenances as maintenance, i (maintenance.id ?? i)}
+        <div class="rounded-3xl border p-3 sm:p-4">
+          <MaintenanceItem {maintenance} />
+        </div>
+      {/each}
+    </div>
+  {/if}
 
   <!-- Calendar View (self-contained component with its own API call) -->
   <MonitorOverview
@@ -133,7 +144,4 @@
     groupTags={data.extendedTags || []}
     class="mb-4"
   />
-
-  <!-- recent incidents -->
-  <IncidentMonitorList incidents={data.resolvedIncidents} title="Recent Incidents" class="mt-4 mb-4" />
 </div>

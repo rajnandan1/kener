@@ -2,7 +2,7 @@
   import { browser } from "$app/environment";
   import type { Snippet } from "svelte";
   import { buttonVariants } from "$lib/components/ui/button/index.js";
-  import * as Popover from "$lib/components/ui/popover/index.js";
+  import * as Drawer from "$lib/components/ui/drawer/index.js";
   import { requestMonitorBar } from "$lib/client/monitor-bar-client";
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
   import MonitorBar from "$lib/components/MonitorBar.svelte";
@@ -29,17 +29,15 @@
 </script>
 
 <div class=" px-4">
-  <Popover.Root bind:open={isOpen}>
-    <Popover.Trigger class={buttonVariants({ variant: "outline", size: "sm", class: "rounded-btn text-xs" })}>
+  <Drawer.Root bind:open={isOpen} direction="bottom">
+    <Drawer.Trigger class={buttonVariants({ variant: "outline", size: "sm", class: "rounded-btn text-xs" })}>
       {@render children()}
-    </Popover.Trigger>
-    <Popover.Content
-      class="bg-background/60 border-border max-h-[75vh] w-[min(92vw,64rem)] overflow-y-auto rounded-3xl border p-0 shadow-2xl backdrop-blur-xl"
-      side="bottom"
-      align="center"
-    >
-      <div class="flex flex-col">
-        <div class="px-4 pt-4 pb-2 text-sm font-medium">{$t("Included Monitors")}</div>
+    </Drawer.Trigger>
+    <Drawer.Content class="max-h-[80vh]">
+      <Drawer.Header>
+        <Drawer.Title>{$t("Included Monitors")}</Drawer.Title>
+      </Drawer.Header>
+      <div class="scrollbar-hidden flex flex-col overflow-y-auto px-4 pb-4">
         {#if tags.length === 0}
           <div class="text-muted-foreground p-4 text-sm">{$t("No monitors available.")}</div>
         {:else}
@@ -60,6 +58,6 @@
           {/each}
         {/if}
       </div>
-    </Popover.Content>
-  </Popover.Root>
+    </Drawer.Content>
+  </Drawer.Root>
 </div>

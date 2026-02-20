@@ -2,13 +2,13 @@
 > kener@4.0.0 check
 > svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
 
-[dotenv@17.2.4] injecting env (6) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.2.4] injecting env (6) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
 Loading svelte-check in workspace: /Users/rajnandan1/Code/kener
 Getting Svelte diagnostics...
 
-[dotenv@17.2.4] injecting env (6) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
-[dotenv@17.2.4] injecting env (0) from .env -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
-[dotenv@17.2.4] injecting env (0) from .env -- tip: ⚙️  override existing env vars with { override: true }
+[dotenv@17.2.4] injecting env (6) from .env -- tip: ⚙️  write to custom object with { processEnv: myObject }
+[dotenv@17.2.4] injecting env (0) from .env -- tip: ⚙️  suppress all logs with { quiet: true }
+[dotenv@17.2.4] injecting env (0) from .env -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
 /Users/rajnandan1/Code/kener/src/lib/components/ui/chart/chart-container.svelte:20:28
 Warn: This reference only captures the initial value of `id`. Did you mean to reference it inside a closure instead?
 https://svelte.dev/e/state_referenced_locally (svelte)
@@ -43,5 +43,22 @@ https://svelte.dev/e/state_referenced_locally (svelte)
   const parsedDate = parse(data.monthParam, "MMMM-yyyy", new Date());
   const currentMonth = format(parsedDate, "MMMM yyyy");
 
+/Users/rajnandan1/Code/kener/src/routes/(kener)/events/[MMMM]-[YYYY]/+page.svelte:165:14
+Error: Object literal may only specify known properties, and '"showHomeButton"' does not exist in type 'Props'. (ts)
+
+  <ThemePlus showHomeButton={true} />
+
+/Users/rajnandan1/Code/kener/src/routes/(kener)/incidents/[incident_id]/+page.svelte:34:14
+Error: Object literal may only specify known properties, and '"showEventsButton"' does not exist in type 'Props'. (ts)
+<div class="flex flex-col gap-3">
+  <ThemePlus showEventsButton={true} showHomeButton={true} />
+  <div class="flex flex-col gap-2 px-4 py-2">
+
+/Users/rajnandan1/Code/kener/src/routes/(kener)/maintenances/[maintenance_id]/+page.svelte:75:14
+Error: Object literal may only specify known properties, and '"showEventsButton"' does not exist in type 'Props'. (ts)
+<div class="flex flex-col gap-3">
+  <ThemePlus showEventsButton={true} showHomeButton={true} />
+  <div class="flex flex-col gap-2 px-4 py-2">
+
 ====================================
-svelte-check found 0 errors and 5 warnings in 3 files
+svelte-check found 3 errors and 5 warnings in 5 files

@@ -6,6 +6,7 @@
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
+  import { Checkbox } from "$lib/components/ui/checkbox/index.js";
   import CopyButton from "$lib/components/CopyButton.svelte";
   import CopyIcon from "@lucide/svelte/icons/copy";
   import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
@@ -23,12 +24,16 @@
   // Embed configuration
   let embedConfig = $state({
     tag: "",
-    embedType: "status" as "status" | "latency",
+    embedType: "status" as "status" | "latency" | "events",
     theme: mode.current === "dark" ? "dark" : "light",
     format: "iframe" as "iframe" | "script",
     days: 90,
     height: 200,
-    metric: "average" as "average" | "maximum" | "minimum"
+    metric: "average" as "average" | "maximum" | "minimum",
+    // Events-specific config
+    showIncidents: true,
+    showMaintenance: true,
+    selectedTags: [] as string[]
   });
 
   // Preview key for refreshing
@@ -53,7 +58,14 @@
 
   // Build the embed URL
   const embedUrl = $derived.by(() => {
-    if (!embedConfig.tag || !protocol || !domain) return "";
+    if (!protocol || !domain) return "";
+
+    if (embedConfig.embedType === "events") {
+      const embedPath = `/embed/events/live`;
+      return `${protocol}//${domain}` + clientResolver(resolve, embedPath);
+    }
+
+    if (!embedConfig.tag) return "";
 
     const embedPath =
       embedConfig.embedType === "status" ? `/embed/monitor-${embedConfig.tag}` : `/embed/latency-${embedConfig.tag}`;
@@ -67,12 +79,21 @@
 
     const params = new URLSearchParams();
     params.set("theme", embedConfig.theme);
-    params.set("days", embedConfig.days.toString());
 
-    if (embedConfig.embedType === "latency") {
-      params.set("height", embedConfig.height.toString());
-      if (embedConfig.metric !== "average") {
-        params.set("metric", embedConfig.metric);
+    if (embedConfig.embedType === "events") {
+      params.set("incidents", embedConfig.showIncidents ? "1" : "0");
+      params.set("maintenance", embedConfig.showMaintenance ? "1" : "0");
+      if (embedConfig.selectedTags.length > 0) {
+        params.set("tags", embedConfig.selectedTags.join(","));
+      }
+    } else {
+      params.set("days", embedConfig.days.toString());
+
+      if (embedConfig.embedType === "latency") {
+        params.set("height", embedConfig.height.toString());
+        if (embedConfig.metric !== "average") {
+          params.set("metric", embedConfig.metric);
+        }
       }
     }
 
@@ -85,6 +106,22 @@
 
     const params = new URLSearchParams();
     params.set("theme", embedConfig.theme);
+
+    if (embedConfig.embedType === "events") {
+      params.set("incidents", embedConfig.showIncidents ? "1" : "0");
+      params.set("maintenance", embedConfig.showMaintenance ? "1" : "0");
+      if (embedConfig.selectedTags.length > 0) {
+        params.set("tags", embedConfig.selectedTags.join(","));
+      }
+      const fullUrl = `${embedUrl}?${params.toString()}`;
+      const iframeHeight = 300;
+
+      if (embedConfig.format === "iframe") {
+        return `<iframe src="${fullUrl}" width="100%" height="${iframeHeight}" frameborder="0" allowfullscreen="allowfullscreen"></iframe>`;
+      }
+      return `<script src="${embedUrl}/js?${params.toString()}"><` + "/script>";
+    }
+
     params.set("days", embedConfig.days.toString());
 
     if (embedConfig.embedType === "latency") {
@@ -162,27 +199,6 @@
           <div class="grid grid-cols-2 gap-4">
             <!-- Configuration Panel -->
             <div class="flex flex-col gap-4 border-r pr-4">
-              <!-- Monitor Selection -->
-              <div class="flex flex-col gap-2">
-                <Label for="monitor-select">Monitor</Label>
-                <Select.Root
-                  type="single"
-                  value={embedConfig.tag}
-                  onValueChange={(v) => {
-                    if (v) embedConfig.tag = v;
-                  }}
-                >
-                  <Select.Trigger id="monitor-select" class="w-full">
-                    {monitors.find((m) => m.tag === embedConfig.tag)?.name || "Select a monitor"}
-                  </Select.Trigger>
-                  <Select.Content>
-                    {#each monitors as monitor (monitor.tag)}
-                      <Select.Item value={monitor.tag}>{monitor.name}</Select.Item>
-                    {/each}
-                  </Select.Content>
-                </Select.Root>
-              </div>
-
               <!-- Embed Type -->
               <div class="flex flex-col gap-2">
                 <Label for="embed-type">Embed Type</Label>
@@ -190,25 +206,55 @@
                   type="single"
                   value={embedConfig.embedType}
                   onValueChange={(v) => {
-                    if (v) embedConfig.embedType = v as "status" | "latency";
+                    if (v) embedConfig.embedType = v as "status" | "latency" | "events";
                   }}
                 >
                   <Select.Trigger id="embed-type" class="w-full capitalize">
-                    {embedConfig.embedType === "status" ? "Status Bar" : "Latency Chart"}
+                    {embedConfig.embedType === "status"
+                      ? "Status Bar"
+                      : embedConfig.embedType === "latency"
+                        ? "Latency Chart"
+                        : "Live Events"}
                   </Select.Trigger>
                   <Select.Content>
                     <Select.Item value="status">Status Bar</Select.Item>
                     <Select.Item value="latency">Latency Chart</Select.Item>
+                    <Select.Item value="events">Live Events</Select.Item>
                   </Select.Content>
                 </Select.Root>
                 <p class="text-muted-foreground text-xs">
                   {#if embedConfig.embedType === "status"}
                     Shows a status bar with uptime percentage and daily status indicators
-                  {:else}
+                  {:else if embedConfig.embedType === "latency"}
                     Shows a latency trend chart over time
+                  {:else}
+                    Shows ongoing incidents and maintenance events in real time
                   {/if}
                 </p>
               </div>
+
+              <!-- Monitor Selection (status & latency only) -->
+              {#if embedConfig.embedType !== "events"}
+                <div class="flex flex-col gap-2">
+                  <Label for="monitor-select">Monitor</Label>
+                  <Select.Root
+                    type="single"
+                    value={embedConfig.tag}
+                    onValueChange={(v) => {
+                      if (v) embedConfig.tag = v;
+                    }}
+                  >
+                    <Select.Trigger id="monitor-select" class="w-full">
+                      {monitors.find((m) => m.tag === embedConfig.tag)?.name || "Select a monitor"}
+                    </Select.Trigger>
+                    <Select.Content>
+                      {#each monitors as monitor (monitor.tag)}
+                        <Select.Item value={monitor.tag}>{monitor.name}</Select.Item>
+                      {/each}
+                    </Select.Content>
+                  </Select.Root>
+                </div>
+              {/if}
 
               <!-- Theme -->
               <div class="flex flex-col gap-2">
@@ -231,26 +277,88 @@
                 </div>
               </div>
 
-              <!-- Days -->
-              <div class="flex flex-col gap-2">
-                <Label for="days-select">Time Period</Label>
-                <Select.Root
-                  type="single"
-                  value={embedConfig.days.toString()}
-                  onValueChange={(v) => {
-                    if (v) embedConfig.days = parseInt(v);
-                  }}
-                >
-                  <Select.Trigger id="days-select" class="w-full">
-                    {daysPresets.find((d) => d.value === embedConfig.days)?.label || `${embedConfig.days} Days`}
-                  </Select.Trigger>
-                  <Select.Content>
-                    {#each daysPresets as preset (preset.value)}
-                      <Select.Item value={preset.value.toString()}>{preset.label}</Select.Item>
+              <!-- Events-specific options -->
+              {#if embedConfig.embedType === "events"}
+                <div class="flex flex-col gap-2">
+                  <Label>Show</Label>
+                  <div class="flex flex-col gap-2">
+                    <label class="flex items-center gap-2">
+                      <Checkbox
+                        checked={embedConfig.showIncidents}
+                        onCheckedChange={(v) => {
+                          embedConfig.showIncidents = !!v;
+                        }}
+                      />
+                      <span class="text-sm">Incidents</span>
+                    </label>
+                    <label class="flex items-center gap-2">
+                      <Checkbox
+                        checked={embedConfig.showMaintenance}
+                        onCheckedChange={(v) => {
+                          embedConfig.showMaintenance = !!v;
+                        }}
+                      />
+                      <span class="text-sm">Maintenance</span>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Monitor Tags Filter (optional) -->
+                <div class="flex flex-col gap-2">
+                  <Label>Filter by Monitors</Label>
+                  <p class="text-muted-foreground text-xs">
+                    Select monitors to filter events. Leave empty to show all global events.
+                  </p>
+                  <div class="flex max-h-40 flex-col gap-1.5 overflow-y-auto rounded-md border p-2">
+                    {#each monitors as monitor (monitor.tag)}
+                      <label class="flex items-center gap-2">
+                        <Checkbox
+                          checked={embedConfig.selectedTags.includes(monitor.tag)}
+                          onCheckedChange={(v) => {
+                            if (v) {
+                              embedConfig.selectedTags = [...embedConfig.selectedTags, monitor.tag];
+                            } else {
+                              embedConfig.selectedTags = embedConfig.selectedTags.filter((t) => t !== monitor.tag);
+                            }
+                          }}
+                        />
+                        <span class="text-sm">{monitor.name}</span>
+                      </label>
                     {/each}
-                  </Select.Content>
-                </Select.Root>
-              </div>
+                  </div>
+                  {#if embedConfig.selectedTags.length > 0}
+                    <button
+                      class="text-muted-foreground self-start text-xs underline hover:no-underline"
+                      onclick={() => (embedConfig.selectedTags = [])}
+                    >
+                      Clear selection
+                    </button>
+                  {/if}
+                </div>
+              {/if}
+
+              <!-- Days (status & latency only) -->
+              {#if embedConfig.embedType !== "events"}
+                <div class="flex flex-col gap-2">
+                  <Label for="days-select">Time Period</Label>
+                  <Select.Root
+                    type="single"
+                    value={embedConfig.days.toString()}
+                    onValueChange={(v) => {
+                      if (v) embedConfig.days = parseInt(v);
+                    }}
+                  >
+                    <Select.Trigger id="days-select" class="w-full">
+                      {daysPresets.find((d) => d.value === embedConfig.days)?.label || `${embedConfig.days} Days`}
+                    </Select.Trigger>
+                    <Select.Content>
+                      {#each daysPresets as preset (preset.value)}
+                        <Select.Item value={preset.value.toString()}>{preset.label}</Select.Item>
+                      {/each}
+                    </Select.Content>
+                  </Select.Root>
+                </div>
+              {/if}
 
               <!-- Height (only for latency) -->
               {#if embedConfig.embedType === "latency"}
@@ -332,7 +440,7 @@
 
             <!-- Preview Panel -->
             <div class="flex flex-col gap-4">
-              {#if embedConfig.tag}
+              {#if embedConfig.tag || embedConfig.embedType === "events"}
                 <div>
                   <p class="flex items-center justify-between">
                     <span class="text-sm font-semibold">Preview</span>
@@ -354,7 +462,11 @@
                         title="Embed preview"
                         src={previewUrl}
                         width="100%"
-                        height={embedConfig.embedType === "status" ? 70 : embedConfig.height + 50}
+                        height={embedConfig.embedType === "status"
+                          ? 70
+                          : embedConfig.embedType === "events"
+                            ? 300
+                            : embedConfig.height + 50}
                         frameborder="0"
                         class="rounded"
                       ></iframe>

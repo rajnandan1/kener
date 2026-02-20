@@ -3,6 +3,8 @@
   import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
   import { t } from "$lib/stores/i18n";
   import type { PageData } from "./$types";
+  import { setMode } from "mode-watcher";
+  import { onMount } from "svelte";
 
   interface Props {
     data: PageData;
@@ -14,6 +16,11 @@
 
   const maintenanceEvents = $derived(data.maintenance_events ?? []);
   const hasEvents = $derived(incidents.length > 0 || maintenanceEvents.length > 0);
+  onMount(() => {
+    if (data.theme) {
+      setMode(data.theme === "dark" ? "dark" : "light");
+    }
+  });
 </script>
 
 <div class="flex flex-col gap-4 p-2">

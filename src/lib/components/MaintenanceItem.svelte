@@ -27,19 +27,18 @@
     return now >= maintenance.start_date_time && now <= maintenance.end_date_time;
   });
   const isEmbedded = page.route.id?.includes("(embed)");
+  const target = isEmbedded ? "_blank" : "_self";
 </script>
 
 <Item.Root class="items-start p-0 {className} sm:items-center">
   <Item.Content class="min-w-0 flex-1">
-    <div class="flex items-center gap-2">
+    <div class="flex flex-col items-start justify-start gap-0.5">
+      <span class="text-xs font-medium text-{maintenance.status.toLowerCase()}">{maintenance.status}</span>
       <Item.Title class="min-w-0 text-base wrap-break-word break-all">
-        <a class="hover:underline" href={clientResolver(resolve, `/maintenances/${maintenance.id}`)}
+        <a {target} class="hover:underline" href={clientResolver(resolve, `/maintenances/${maintenance.id}`)}
           >{maintenance.title}</a
         >
       </Item.Title>
-      {#if isOngoing()}
-        <Badge variant="outline" class="text-maintenance border-maintenance text-xs">{$t("In Progress")}</Badge>
-      {/if}
     </div>
 
     {#if maintenance.description}
@@ -104,7 +103,7 @@
         <span
           class="absolute top-0 bottom-0 left-1/2 border-l sm:top-1/2 sm:right-0 sm:bottom-auto sm:left-0 sm:border-t sm:border-l-0"
         ></span>
-        <span class="bg-background relative z-10 px-0 py-1 sm:px-2">
+        <span class="bg-background relative z-10 rounded-full px-0 py-1 sm:px-2">
           {$formatDuration(maintenance.start_date_time, maintenance.end_date_time)}
         </span>
       </span>

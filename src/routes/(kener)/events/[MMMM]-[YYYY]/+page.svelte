@@ -162,7 +162,7 @@
 <div class="flex flex-col gap-3">
   <!-- Header with back button -->
 
-  <ThemePlus showHomeButton={true} />
+  <ThemePlus />
 
   <div class="flex flex-col gap-4 sm:flex-row">
     <div class="flex flex-row justify-start gap-y-3 rounded-3xl border p-4">
