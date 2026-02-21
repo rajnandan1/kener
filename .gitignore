@@ -1,4 +1,5 @@
 .DS_Store
+.DS_STORE
 **/.DS_Store
 node_modules
 static/kener
@@ -33,3 +34,4 @@ temp.js
 .DS_Store
 knip-output.txt
 check-output.txt
+translation-report.json
