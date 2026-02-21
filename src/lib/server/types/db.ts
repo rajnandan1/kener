@@ -468,6 +468,7 @@ export interface PageSettingsType {
     desktop: number;
     mobile: number;
   };
+  monitor_layout_style: "default-list" | "default-grid" | "compact-list" | "compact-grid";
 }
 
 export interface PageRecordTyped {

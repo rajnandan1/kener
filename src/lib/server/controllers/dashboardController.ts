@@ -36,6 +36,7 @@ const defaultPageSettings: PageSettingsType = {
     desktop: 90,
     mobile: 30,
   },
+  monitor_layout_style: "default-list",
 };
 
 export interface NotificationEvent {
@@ -54,22 +55,6 @@ export interface NotificationPayload {
 // Type for incident with comments
 export type IncidentWithComments = IncidentRecord & {
   comments: IncidentCommentRecord[];
-};
-
-//upcoming maintenance function using maintenance tables
-const GetUpcomingMaintenances = async (
-  monitor_tags: string[],
-  numDays: number,
-  nowTs: number,
-  maxCount: number = 10,
-): Promise<MaintenanceEventsMonitorList[]> => {
-  const upcomingMaintenances = await db.getUpcomingMaintenanceEventsForMonitorList(
-    nowTs,
-    monitor_tags,
-    maxCount,
-    numDays,
-  );
-  return upcomingMaintenances;
 };
 
 //ongoing maintenance function using maintenance tables
@@ -325,9 +310,7 @@ export const BuildNotificationPayload = (
  * @param pagePath - The URL path of the page (e.g., "/" or "/api")
  * @returns Dashboard data or null if page not found
  */
-export const GetPageDashboardData = async (
-  pagePath: string,
-): Promise<PageDashboardData | null> => {
+export const GetPageDashboardData = async (pagePath: string): Promise<PageDashboardData | null> => {
   // Fetch page by path with monitors
   const pageData = await GetPageByPathWithMonitors(pagePath);
   if (!pageData) {
@@ -377,12 +360,7 @@ export const GetPageDashboardData = async (
   }
 
   // Fetch all dashboard data in parallel (respecting feature toggles)
-  const [
-    latestData,
-    parsedMonitors,
-    ongoingIncidents,
-    ongoingMaintenances,
-  ] = await Promise.all([
+  const [latestData, parsedMonitors, ongoingIncidents, ongoingMaintenances] = await Promise.all([
     GetLatestMonitoringDataAllActive(monitorTags),
     GetMonitorsParsed({ tags: monitorTags, status: "ACTIVE", is_hidden: "NO" }),
     settings.incidents.enabled && settings.incidents.ongoing.show

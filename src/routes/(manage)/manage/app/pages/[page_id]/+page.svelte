@@ -20,6 +20,7 @@
   import type { PageRecord, MonitorRecord, PageSettingsType } from "$lib/server/types/db.js";
   import { mode } from "mode-watcher";
   import CodeMirror from "svelte-codemirror-editor";
+  import { onMount } from "svelte";
   import { markdown } from "@codemirror/lang-markdown";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
   import { resolve } from "$app/paths";
@@ -44,7 +45,8 @@
     monitor_status_history_days: {
       desktop: 90,
       mobile: 30
-    }
+    },
+    monitor_layout_style: "default-list"
   };
 
   interface PageWithMonitors extends PageRecord {
@@ -416,9 +418,9 @@
     }
   }
 
-  $effect(() => {
-    fetchPage();
-    fetchMonitors();
+  onMount(() => {
+    void fetchPage();
+    void fetchMonitors();
   });
 </script>
 
@@ -875,6 +877,38 @@
                 <p class="text-muted-foreground text-xs">Number of days shown on mobile screens</p>
               </div>
             </div>
+          </div>
+
+          <hr class="border-muted" />
+
+          <!-- Monitor Layout Style -->
+          <div class="space-y-4">
+            <div>
+              <Label class="text-base font-medium">Monitor Layout Style</Label>
+              <p class="text-muted-foreground text-sm">Choose how monitors are displayed on the status page</p>
+            </div>
+            <Select.Root type="single" bind:value={pageSettings.monitor_layout_style}>
+              <Select.Trigger class="w-full">
+                {#if pageSettings.monitor_layout_style === "default-list"}
+                  Default List
+                {:else if pageSettings.monitor_layout_style === "default-grid"}
+                  Default Grid
+                {:else if pageSettings.monitor_layout_style === "compact-list"}
+                  Compact List
+                {:else}
+                  Compact Grid
+                {/if}
+              </Select.Trigger>
+              <Select.Content>
+                <Select.Item value="default-list">Default List</Select.Item>
+                <Select.Item value="default-grid">Default Grid</Select.Item>
+                <Select.Item value="compact-list">Compact List</Select.Item>
+                <Select.Item value="compact-grid">Compact Grid</Select.Item>
+              </Select.Content>
+            </Select.Root>
+            <p class="text-muted-foreground text-xs">
+              Default is <code class="bg-muted rounded px-1 font-mono">default-list</code>
+            </p>
           </div>
         </Card.Content>
         <Card.Footer class="flex justify-end">
