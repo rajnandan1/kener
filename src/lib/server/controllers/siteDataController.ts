@@ -3,6 +3,7 @@ import { siteDataKeys } from "./siteDataKeys.js";
 import type { Cookies } from "@sveltejs/kit";
 import type {
   DataRetentionPolicy,
+  EventDisplaySettings,
   SiteAnalyticsItem,
   SiteAnnouncement,
   SiteCategory,
@@ -52,6 +53,7 @@ export interface SiteDataTransformed {
   subMenuOptions?: SiteSubMenuOptions;
   announcement?: SiteAnnouncement;
   dataRetentionPolicy?: DataRetentionPolicy;
+  eventDisplaySettings?: EventDisplaySettings;
 }
 
 export function InsertKeyValue(key: string, value: string): Promise<number[]> {

@@ -437,33 +437,6 @@ export interface PageRecordInsert {
 }
 
 export interface PageSettingsType {
-  incidents: {
-    enabled: boolean;
-    ongoing: {
-      show: boolean;
-    };
-    resolved: {
-      show: boolean;
-      maxCount: number;
-      daysInPast: number;
-    };
-  };
-  include_maintenances: {
-    enabled: boolean;
-    ongoing: {
-      show: boolean;
-      past: {
-        show: boolean;
-        maxCount: number;
-        daysInPast: number;
-      };
-      upcoming: {
-        show: boolean;
-        maxCount: number;
-        daysInFuture: number;
-      };
-    };
-  };
   monitor_status_history_days: {
     desktop: number;
     mobile: number;

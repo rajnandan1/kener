@@ -59,8 +59,8 @@ const addWorker = () => {
   });
 
   worker.on("completed", (job: Job, returnvalue: any) => {
-    const { monitorTag, ts, status, latency, type } = job.data as JobData;
-    console.log(`💾 Store: ${monitorTag} @ ${new Date(ts * 1000).toISOString()}`);
+    // const { monitorTag, ts, status, latency, type } = job.data as JobData;
+    // console.log(`💾 Store: ${monitorTag} @ ${new Date(ts * 1000).toISOString()}`);
   });
 
   return worker;

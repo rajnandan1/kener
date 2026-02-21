@@ -251,4 +251,9 @@ export const siteDataKeys: SiteDataKey[] = [
     isValid: IsValidJSONString,
     data_type: "object",
   },
+  {
+    key: "eventDisplaySettings",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
 ];

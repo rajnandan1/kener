@@ -16,22 +16,10 @@ import type {
 } from "../types/db.js";
 import type { GroupMonitorTypeData } from "../types/monitor.js";
 import GC from "../../global-constants.js";
+import type { LayoutServerData } from "./layoutController.js";
 
 // Default page settings
 const defaultPageSettings: PageSettingsType = {
-  incidents: {
-    enabled: true,
-    ongoing: { show: true },
-    resolved: { show: true, maxCount: 5, daysInPast: 7 },
-  },
-  include_maintenances: {
-    enabled: true,
-    ongoing: {
-      show: true,
-      past: { show: true, maxCount: 5, daysInPast: 7 },
-      upcoming: { show: true, maxCount: 5, daysInFuture: 7 },
-    },
-  },
   monitor_status_history_days: {
     desktop: 90,
     mobile: 30,
@@ -310,7 +298,10 @@ export const BuildNotificationPayload = (
  * @param pagePath - The URL path of the page (e.g., "/" or "/api")
  * @returns Dashboard data or null if page not found
  */
-export const GetPageDashboardData = async (pagePath: string): Promise<PageDashboardData | null> => {
+export const GetPageDashboardData = async (
+  pagePath: string,
+  layoutData: LayoutServerData,
+): Promise<PageDashboardData | null> => {
   // Fetch page by path with monitors
   const pageData = await GetPageByPathWithMonitors(pagePath);
   if (!pageData) {
@@ -358,15 +349,15 @@ export const GetPageDashboardData = async (pagePath: string): Promise<PageDashbo
       pageDetails: pageDetailsTyped,
     };
   }
-
+  const eventSettings = layoutData.eventDisplaySettings;
   // Fetch all dashboard data in parallel (respecting feature toggles)
   const [latestData, parsedMonitors, ongoingIncidents, ongoingMaintenances] = await Promise.all([
     GetLatestMonitoringDataAllActive(monitorTags),
     GetMonitorsParsed({ tags: monitorTags, status: "ACTIVE", is_hidden: "NO" }),
-    settings.incidents.enabled && settings.incidents.ongoing.show
+    eventSettings.incidents.enabled && eventSettings.incidents.ongoing.show
       ? GetOngoingIncidentsForMonitorList(monitorTags)
       : Promise.resolve([] as IncidentForMonitorListWithComments[]),
-    settings.include_maintenances.enabled && settings.include_maintenances.ongoing.show
+    eventSettings.maintenances.enabled && eventSettings.maintenances.ongoing.show
       ? GetOngoingMaintenances(monitorTags, nowTs)
       : Promise.resolve([] as MaintenanceEventsMonitorList[]),
   ]);

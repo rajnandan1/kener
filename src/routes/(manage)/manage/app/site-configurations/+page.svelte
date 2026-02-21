@@ -16,7 +16,7 @@
   import { IsValidURL } from "$lib/clientTools";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
-  import type { DataRetentionPolicy } from "$lib/types/site.js";
+  import type { DataRetentionPolicy, EventDisplaySettings } from "$lib/types/site.js";
 
   interface NavItem {
     name: string;
@@ -33,8 +33,25 @@
   let savingNav = $state(false);
   let savingSubMenuOptions = $state(false);
   let savingDataRetentionPolicy = $state(false);
+  let savingEventDisplaySettings = $state(false);
   let uploadingLogo = $state(false);
   let uploadingFavicon = $state(false);
+
+  const defaultEventDisplaySettings: EventDisplaySettings = {
+    incidents: {
+      enabled: true,
+      ongoing: { show: true },
+      resolved: { show: true, maxCount: 5, daysInPast: 7 }
+    },
+    maintenances: {
+      enabled: true,
+      ongoing: {
+        show: true
+      },
+      past: { show: true, maxCount: 5, daysInPast: 7 },
+      upcoming: { show: true, maxCount: 5, daysInFuture: 7 }
+    }
+  };
 
   // Site data
   let siteData = $state({
@@ -58,6 +75,8 @@
     enabled: true,
     retentionDays: 90
   });
+
+  let eventDisplaySettings = $state<EventDisplaySettings>(structuredClone(defaultEventDisplaySettings));
 
   // Validation
   const isValidSiteInfo = $derived(
@@ -101,6 +120,20 @@
           enabled: data.dataRetentionPolicy?.enabled ?? true,
           retentionDays: data.dataRetentionPolicy?.retentionDays ?? 90
         };
+
+        if (data.eventDisplaySettings) {
+          try {
+            const parsed =
+              typeof data.eventDisplaySettings === "string"
+                ? JSON.parse(data.eventDisplaySettings)
+                : data.eventDisplaySettings;
+            eventDisplaySettings = { ...structuredClone(defaultEventDisplaySettings), ...parsed };
+          } catch {
+            eventDisplaySettings = structuredClone(defaultEventDisplaySettings);
+          }
+        } else {
+          eventDisplaySettings = structuredClone(defaultEventDisplaySettings);
+        }
       }
     } catch (e) {
       toast.error("Failed to load site data");
@@ -271,6 +304,31 @@
       toast.error("Failed to save data retention policy");
     } finally {
       savingDataRetentionPolicy = false;
+    }
+  }
+
+  async function saveEventDisplaySettings() {
+    savingEventDisplaySettings = true;
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "storeSiteData",
+          data: { eventDisplaySettings: JSON.stringify(eventDisplaySettings) }
+        })
+      });
+
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Event display settings saved successfully");
+      }
+    } catch (e) {
+      toast.error("Failed to save event display settings");
+    } finally {
+      savingEventDisplaySettings = false;
     }
   }
 
@@ -747,6 +805,173 @@
       <Card.Footer class="flex justify-end">
         <Button onclick={saveDataRetentionPolicy} disabled={savingDataRetentionPolicy} class="cursor-pointer">
           {#if savingDataRetentionPolicy}
+            <Loader class="h-4 w-4 animate-spin" />
+            Saving...
+          {:else}
+            <SaveIcon class="h-4 w-4" />
+            Save
+          {/if}
+        </Button>
+      </Card.Footer>
+    </Card.Root>
+
+    <!-- Event Display Settings Card -->
+    <Card.Root>
+      <Card.Header>
+        <Card.Title>Event Display Settings</Card.Title>
+        <Card.Description>Configure which incidents and maintenances are shown on the site</Card.Description>
+      </Card.Header>
+      <Card.Content class="space-y-6">
+        <!-- Incidents -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="space-y-0.5">
+              <Label>Incidents</Label>
+              <p class="text-muted-foreground text-xs">Enable or disable incident display globally</p>
+            </div>
+            <Switch bind:checked={eventDisplaySettings.incidents.enabled} />
+          </div>
+
+          {#if eventDisplaySettings.incidents.enabled}
+            <div class="border-muted ml-4 space-y-4 border-l-2 pl-4">
+              <div class="flex items-center justify-between">
+                <div class="space-y-0.5">
+                  <Label>Show Ongoing Incidents</Label>
+                  <p class="text-muted-foreground text-xs">Display active incidents</p>
+                </div>
+                <Switch bind:checked={eventDisplaySettings.incidents.ongoing.show} />
+              </div>
+
+              <div class="flex items-center justify-between">
+                <div class="space-y-0.5">
+                  <Label>Show Resolved Incidents</Label>
+                  <p class="text-muted-foreground text-xs">Display recently resolved incidents</p>
+                </div>
+                <Switch bind:checked={eventDisplaySettings.incidents.resolved.show} />
+              </div>
+
+              {#if eventDisplaySettings.incidents.resolved.show}
+                <div class="grid gap-4 md:grid-cols-2">
+                  <div class="space-y-2">
+                    <Label for="events-incidents-max-count">Max Resolved Count</Label>
+                    <Input
+                      id="events-incidents-max-count"
+                      type="number"
+                      min="1"
+                      max="50"
+                      bind:value={eventDisplaySettings.incidents.resolved.maxCount}
+                    />
+                  </div>
+                  <div class="space-y-2">
+                    <Label for="events-incidents-days-in-past">Days in Past</Label>
+                    <Input
+                      id="events-incidents-days-in-past"
+                      type="number"
+                      min="1"
+                      max="90"
+                      bind:value={eventDisplaySettings.incidents.resolved.daysInPast}
+                    />
+                  </div>
+                </div>
+              {/if}
+            </div>
+          {/if}
+        </div>
+
+        <hr class="border-muted" />
+
+        <!-- Maintenances -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <div class="space-y-0.5">
+              <Label>Maintenances</Label>
+              <p class="text-muted-foreground text-xs">Enable or disable maintenance display globally</p>
+            </div>
+            <Switch bind:checked={eventDisplaySettings.maintenances.enabled} />
+          </div>
+
+          {#if eventDisplaySettings.maintenances.enabled}
+            <div class="border-muted ml-4 space-y-4 border-l-2 pl-4">
+              <div class="flex items-center justify-between">
+                <div class="space-y-0.5">
+                  <Label>Show Ongoing Maintenances</Label>
+                  <p class="text-muted-foreground text-xs">Display active maintenance windows</p>
+                </div>
+                <Switch bind:checked={eventDisplaySettings.maintenances.ongoing.show} />
+              </div>
+
+              <div class="flex items-center justify-between">
+                <div class="space-y-0.5">
+                  <Label>Show Past Maintenances</Label>
+                  <p class="text-muted-foreground text-xs">Display completed maintenance windows</p>
+                </div>
+                <Switch bind:checked={eventDisplaySettings.maintenances.past.show} />
+              </div>
+
+              {#if eventDisplaySettings.maintenances.past.show}
+                <div class="grid gap-4 md:grid-cols-2">
+                  <div class="space-y-2">
+                    <Label for="events-maint-past-max-count">Max Past Count</Label>
+                    <Input
+                      id="events-maint-past-max-count"
+                      type="number"
+                      min="1"
+                      max="50"
+                      bind:value={eventDisplaySettings.maintenances.past.maxCount}
+                    />
+                  </div>
+                  <div class="space-y-2">
+                    <Label for="events-maint-past-days-in-past">Days in Past</Label>
+                    <Input
+                      id="events-maint-past-days-in-past"
+                      type="number"
+                      min="1"
+                      max="90"
+                      bind:value={eventDisplaySettings.maintenances.past.daysInPast}
+                    />
+                  </div>
+                </div>
+              {/if}
+
+              <div class="flex items-center justify-between">
+                <div class="space-y-0.5">
+                  <Label>Show Upcoming Maintenances</Label>
+                  <p class="text-muted-foreground text-xs">Display scheduled maintenance windows</p>
+                </div>
+                <Switch bind:checked={eventDisplaySettings.maintenances.upcoming.show} />
+              </div>
+
+              {#if eventDisplaySettings.maintenances.upcoming.show}
+                <div class="grid gap-4 md:grid-cols-2">
+                  <div class="space-y-2">
+                    <Label for="events-maint-upcoming-max-count">Max Upcoming Count</Label>
+                    <Input
+                      id="events-maint-upcoming-max-count"
+                      type="number"
+                      min="1"
+                      max="50"
+                      bind:value={eventDisplaySettings.maintenances.upcoming.maxCount}
+                    />
+                  </div>
+                  <div class="space-y-2">
+                    <Label for="events-maint-upcoming-days-in-future">Days in Future</Label>
+                    <Input
+                      id="events-maint-upcoming-days-in-future"
+                      type="number"
+                      min="1"
+                      max="90"
+                      bind:value={eventDisplaySettings.maintenances.upcoming.daysInFuture}
+                    />
+                  </div>
+                </div>
+              {/if}
+            </div>
+          {/if}
+        </div>
+      </Card.Content>
+      <Card.Footer class="flex justify-end">
+        <Button onclick={saveEventDisplaySettings} disabled={savingEventDisplaySettings} class="cursor-pointer">
+          {#if savingEventDisplaySettings}
             <Loader class="h-4 w-4 animate-spin" />
             Saving...
           {:else}

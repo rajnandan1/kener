@@ -140,6 +140,21 @@ const seedSiteData = {
     enabled: true,
     retentionDays: 90,
   },
+  eventDisplaySettings: {
+    incidents: {
+      enabled: true,
+      ongoing: { show: true },
+      resolved: { show: true, maxCount: 5, daysInPast: 7 },
+    },
+    maintenances: {
+      enabled: true,
+      ongoing: {
+        show: true,
+      },
+      past: { show: true, maxCount: 5, daysInPast: 7 },
+      upcoming: { show: true, maxCount: 5, daysInFuture: 7 },
+    },
+  },
 };
 
 export default seedSiteData;

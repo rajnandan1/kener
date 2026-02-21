@@ -95,3 +95,33 @@ export interface DataRetentionPolicy {
   enabled: boolean;
   retentionDays: number;
 }
+
+export interface EventDisplaySettings {
+  incidents: {
+    enabled: boolean;
+    ongoing: {
+      show: boolean;
+    };
+    resolved: {
+      show: boolean;
+      maxCount: number;
+      daysInPast: number;
+    };
+  };
+  maintenances: {
+    enabled: boolean;
+    ongoing: {
+      show: boolean;
+    };
+    past: {
+      show: boolean;
+      maxCount: number;
+      daysInPast: number;
+    };
+    upcoming: {
+      show: boolean;
+      maxCount: number;
+      daysInFuture: number;
+    };
+  };
+}

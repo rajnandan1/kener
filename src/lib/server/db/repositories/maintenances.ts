@@ -614,7 +614,7 @@ export class MaintenancesRepository extends BaseRepository {
         this.whereIn("maintenance_monitors.monitor_tag", monitorTags).orWhere("maintenances.is_global", "YES");
       })
       .andWhere("maintenances.status", GC.ACTIVE)
-      .andWhere("maintenances_events.status", GC.SCHEDULED)
+      .whereIn("maintenances_events.status", [GC.SCHEDULED, GC.READY])
       .andWhere("maintenances_events.start_date_time", ">", timestamp)
       .andWhere("maintenances_events.start_date_time", "<=", futureTimestamp)
       .orderBy("maintenances_events.start_date_time", "asc")
