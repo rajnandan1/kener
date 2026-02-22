@@ -714,7 +714,10 @@ export async function POST({ request, cookies }) {
 async function storeSiteData(data: { [x: string]: any }) {
   for (const key in data) {
     if (Object.prototype.hasOwnProperty.call(data, key)) {
-      const element = data[key];
+      let element = data[key];
+      if (key === "socialPreviewImage" && (element === null || element === undefined)) {
+        element = "";
+      }
       await InsertKeyValue(key, element);
     }
   }
@@ -727,11 +730,20 @@ interface ImageUploadData {
   fileName?: string;
   maxWidth?: number;
   maxHeight?: number;
+  forceDimensions?: boolean;
   prefix?: string; // prefix for the ID (e.g., "logo_", "favicon_")
 }
 
 async function uploadImage(data: ImageUploadData): Promise<{ id: string; url: string }> {
-  const { base64, mimeType, fileName, maxWidth = 256, maxHeight = 256, prefix = "img_" } = data;
+  const {
+    base64,
+    mimeType,
+    fileName,
+    maxWidth = 256,
+    maxHeight = 256,
+    forceDimensions = false,
+    prefix = "img_",
+  } = data;
 
   if (!base64) {
     throw new Error("Image data is required");
@@ -801,11 +813,14 @@ async function uploadImage(data: ImageUploadData): Promise<{ id: string; url: st
   const boundedMaxWidth = Math.min(maxWidth, GC.MAX_IMAGE_DIMENSION);
   const boundedMaxHeight = Math.min(maxHeight, GC.MAX_IMAGE_DIMENSION);
 
-  // Calculate new dimensions maintaining aspect ratio
+  // Calculate new dimensions.
   let newWidth = sourceWidth;
   let newHeight = sourceHeight;
 
-  if (newWidth > boundedMaxWidth || newHeight > boundedMaxHeight) {
+  if (forceDimensions) {
+    newWidth = Math.max(1, boundedMaxWidth);
+    newHeight = Math.max(1, boundedMaxHeight);
+  } else if (newWidth > boundedMaxWidth || newHeight > boundedMaxHeight) {
     const ratio = Math.min(boundedMaxWidth / newWidth, boundedMaxHeight / newHeight);
     newWidth = Math.max(1, Math.round(newWidth * ratio));
     newHeight = Math.max(1, Math.round(newHeight * ratio));
@@ -816,10 +831,22 @@ async function uploadImage(data: ImageUploadData): Promise<{ id: string; url: st
 
   // Keep JPEG as JPEG; convert everything else (WebP/PNG) to PNG.
   if (detectedMimeType === "image/jpeg") {
-    processedBuffer = await image.resize(newWidth, newHeight, { fit: "inside" }).jpeg({ quality: 85 }).toBuffer();
+    processedBuffer = await image
+      .resize(newWidth, newHeight, {
+        fit: forceDimensions ? "cover" : "inside",
+        position: "centre",
+      })
+      .jpeg({ quality: 85 })
+      .toBuffer();
     finalMimeType = "image/jpeg";
   } else {
-    processedBuffer = await image.resize(newWidth, newHeight, { fit: "inside" }).png().toBuffer();
+    processedBuffer = await image
+      .resize(newWidth, newHeight, {
+        fit: forceDimensions ? "cover" : "inside",
+        position: "centre",
+      })
+      .png()
+      .toBuffer();
     finalMimeType = "image/png";
   }
 

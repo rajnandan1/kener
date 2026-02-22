@@ -60,6 +60,8 @@ export interface LayoutServerData {
     ctaText: string | null;
   };
   eventDisplaySettings: EventDisplaySettings;
+  socialPreviewImage?: string;
+  customCSS?: string;
 }
 
 export async function GetLayoutServerData(cookies: Cookies, request: Request): Promise<LayoutServerData> {
@@ -124,5 +126,7 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     canSendEmail,
     announcement: siteData.announcement,
     eventDisplaySettings: siteData.eventDisplaySettings || seedSiteData.eventDisplaySettings,
+    socialPreviewImage: siteData.socialPreviewImage,
+    customCSS: siteData.customCSS,
   };
 }

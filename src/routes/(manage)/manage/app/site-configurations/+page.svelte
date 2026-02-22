@@ -12,6 +12,7 @@
   import XIcon from "@lucide/svelte/icons/x";
   import ImageIcon from "@lucide/svelte/icons/image";
   import Plus from "@lucide/svelte/icons/plus";
+  import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
   import { IsValidURL } from "$lib/clientTools";
   import { resolve } from "$app/paths";
@@ -30,12 +31,14 @@
   let savingSiteInfo = $state(false);
   let savingLogo = $state(false);
   let savingFavicon = $state(false);
+  let savingSocialPreviewImage = $state(false);
   let savingNav = $state(false);
   let savingSubMenuOptions = $state(false);
   let savingDataRetentionPolicy = $state(false);
   let savingEventDisplaySettings = $state(false);
   let uploadingLogo = $state(false);
   let uploadingFavicon = $state(false);
+  let uploadingSocialPreviewImage = $state(false);
 
   const defaultEventDisplaySettings: EventDisplaySettings = {
     incidents: {
@@ -53,13 +56,23 @@
     }
   };
 
+  interface SiteDataForm {
+    siteName: string;
+    siteURL: string;
+    home: string;
+    logo: string;
+    favicon: string;
+    socialPreviewImage: string | null;
+  }
+
   // Site data
-  let siteData = $state({
+  let siteData = $state<SiteDataForm>({
     siteName: "",
     siteURL: "",
     home: "/",
     logo: "",
-    favicon: ""
+    favicon: "",
+    socialPreviewImage: null
   });
 
   // Navigation data
@@ -101,7 +114,8 @@
           siteURL: data.siteURL || "",
           home: data.home || "/",
           logo: data.logo || "",
-          favicon: data.favicon || ""
+          favicon: data.favicon || "",
+          socialPreviewImage: data.socialPreviewImage || null
         };
         if (data.nav) {
           nav = data.nav.map((item: NavItem) => ({
@@ -223,6 +237,31 @@
     }
   }
 
+  async function saveSocialPreviewImage() {
+    savingSocialPreviewImage = true;
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "storeSiteData",
+          data: { socialPreviewImage: siteData.socialPreviewImage }
+        })
+      });
+
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Social preview image saved successfully");
+      }
+    } catch (e) {
+      toast.error("Failed to save social preview image");
+    } finally {
+      savingSocialPreviewImage = false;
+    }
+  }
+
   async function saveNavigation() {
     savingNav = true;
     try {
@@ -332,7 +371,7 @@
     }
   }
 
-  async function handleImageUpload(event: Event, type: "logo" | "favicon"): Promise<void> {
+  async function handleImageUpload(event: Event, type: "logo" | "favicon" | "socialPreviewImage"): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
@@ -352,8 +391,10 @@
 
     if (type === "logo") {
       uploadingLogo = true;
-    } else {
+    } else if (type === "favicon") {
       uploadingFavicon = true;
+    } else {
+      uploadingSocialPreviewImage = true;
     }
 
     try {
@@ -369,8 +410,9 @@
             base64,
             mimeType: file.type,
             fileName: file.name,
-            maxWidth: type === "favicon" ? 64 : 256,
-            maxHeight: type === "favicon" ? 64 : 256,
+            maxWidth: type === "favicon" ? 64 : type === "socialPreviewImage" ? 640 : 256,
+            maxHeight: type === "favicon" ? 64 : type === "socialPreviewImage" ? 320 : 256,
+            forceDimensions: type === "socialPreviewImage",
             prefix: `${type}_`
           }
         })
@@ -382,18 +424,24 @@
       } else {
         if (type === "logo") {
           siteData.logo = result.url;
+        } else if (type === "socialPreviewImage") {
+          siteData.socialPreviewImage = result.url;
         } else {
           siteData.favicon = result.url;
         }
-        toast.success(`${type === "logo" ? "Logo" : "Favicon"} uploaded successfully`);
+        toast.success(
+          `${type === "logo" ? "Logo" : type === "favicon" ? "Favicon" : "Social preview image"} uploaded successfully`
+        );
       }
     } catch (e) {
       toast.error(`Failed to upload ${type}`);
     } finally {
       if (type === "logo") {
         uploadingLogo = false;
-      } else {
+      } else if (type === "favicon") {
         uploadingFavicon = false;
+      } else {
+        uploadingSocialPreviewImage = false;
       }
       // Reset input
       input.value = "";
@@ -455,11 +503,13 @@
     });
   }
 
-  function clearImage(type: "logo" | "favicon") {
+  function clearImage(type: "logo" | "favicon" | "socialPreviewImage") {
     if (type === "logo") {
       siteData.logo = "";
-    } else {
+    } else if (type === "favicon") {
       siteData.favicon = "";
+    } else {
+      siteData.socialPreviewImage = null;
     }
   }
 
@@ -471,8 +521,8 @@
     nav = nav.filter((_, i) => i !== index);
   }
 
-  $effect(() => {
-    fetchSiteData();
+  onMount(() => {
+    void fetchSiteData();
   });
 </script>
 
@@ -655,6 +705,78 @@
       <Card.Footer class="flex justify-end">
         <Button onclick={saveFavicon} disabled={savingFavicon} class="cursor-pointer">
           {#if savingFavicon}
+            <Loader class="h-4 w-4 animate-spin" />
+            Saving...
+          {:else}
+            <SaveIcon class="h-4 w-4" />
+            Save
+          {/if}
+        </Button>
+      </Card.Footer>
+    </Card.Root>
+
+    <!-- Social Preview Image Card -->
+    <Card.Root>
+      <Card.Header>
+        <Card.Title>Social Preview Image</Card.Title>
+        <Card.Description>Upload an optional social preview image at least 640x320px or similar</Card.Description>
+      </Card.Header>
+      <Card.Content class="space-y-4">
+        <div class="flex items-start gap-4">
+          <!-- Preview -->
+          <div class="bg-muted flex h-32 w-64 items-center justify-center rounded-lg border">
+            {#if siteData.socialPreviewImage}
+              <img
+                src={clientResolver(resolve, siteData.socialPreviewImage)}
+                alt="Social preview"
+                class="h-full w-full rounded-lg object-cover"
+              />
+            {:else}
+              <ImageIcon class="text-muted-foreground h-8 w-8" />
+            {/if}
+          </div>
+
+          <!-- Upload Controls -->
+          <div class="flex flex-1 flex-col gap-2">
+            <div class="flex gap-2">
+              <Button
+                variant="outline"
+                disabled={uploadingSocialPreviewImage}
+                onclick={() => document.getElementById("social-preview-image-input")?.click()}
+              >
+                {#if uploadingSocialPreviewImage}
+                  <Loader class="h-4 w-4 animate-spin" />
+                  Uploading...
+                {:else}
+                  <UploadIcon class="h-4 w-4" />
+                  Upload Social Preview
+                {/if}
+              </Button>
+              <input
+                id="social-preview-image-input"
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
+                class="hidden"
+                onchange={(e) => handleImageUpload(e, "socialPreviewImage")}
+                disabled={uploadingSocialPreviewImage}
+              />
+              {#if siteData.socialPreviewImage}
+                <Button variant="ghost" size="icon" onclick={() => clearImage("socialPreviewImage")}>
+                  <XIcon class="h-4 w-4" />
+                </Button>
+              {/if}
+            </div>
+            {#if siteData.socialPreviewImage}
+              <p class="text-muted-foreground truncate text-xs">{siteData.socialPreviewImage}</p>
+            {:else}
+              <p class="text-muted-foreground text-xs">Optional. Leave empty to use no social preview image.</p>
+            {/if}
+          </div>
+        </div>
+      </Card.Content>
+      <Card.Footer class="flex justify-end">
+        <Button onclick={saveSocialPreviewImage} disabled={savingSocialPreviewImage} class="cursor-pointer">
+          {#if savingSocialPreviewImage}
             <Loader class="h-4 w-4 animate-spin" />
             Saving...
           {:else}

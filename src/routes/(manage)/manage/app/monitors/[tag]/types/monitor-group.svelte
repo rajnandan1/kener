@@ -32,7 +32,6 @@
 
   const MIN_SELECTED_MONITORS = 2;
   const MIN_DELAY_MS = 1000;
-  console.log(">>>>>>----  monitor-group:35 ", formData);
   // Initialize defaults if not set
   if (!Array.isArray(formData.monitors)) formData.monitors = [];
   if (

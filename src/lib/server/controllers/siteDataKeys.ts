@@ -256,4 +256,9 @@ export const siteDataKeys: SiteDataKey[] = [
     isValid: IsValidJSONString,
     data_type: "object",
   },
+  {
+    key: "socialPreviewImage",
+    isValid: (value) => typeof value === "string",
+    data_type: "string",
+  },
 ];

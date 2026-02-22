@@ -41,8 +41,14 @@
 			--accent: ${data.siteStatusColorsDark.ACCENT || "#27272a"};
 			--accent-foreground: ${data.siteStatusColorsDark.ACCENT_FOREGROUND || data.siteStatusColorsDark.ACCENT || "#e96e2d"};
 		}
+		${data.customCSS || ""}
 	</style>`}
   <script src={clientResolver(resolve, "/capture.js")}></script>
+  <!-- social preview meta tags -->
+  {#if data.socialPreviewImage}
+    <meta property="og:image" content={clientResolver(resolve, data.socialPreviewImage)} />
+    <meta name="twitter:image" content={clientResolver(resolve, data.socialPreviewImage)} />
+  {/if}
 </svelte:head>
 <main class="kener-public">
   <!-- Nav -->

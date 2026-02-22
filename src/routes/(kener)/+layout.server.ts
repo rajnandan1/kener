@@ -6,7 +6,6 @@ import serverResolve from "$lib/server/resolver.js";
 
 export const load: LayoutServerLoad = async ({ cookies, request }) => {
   const data = await GetLayoutServerData(cookies, request);
-
   if (!data.isSetupComplete) {
     throw redirect(302, serverResolve(`/account/signin`));
   }

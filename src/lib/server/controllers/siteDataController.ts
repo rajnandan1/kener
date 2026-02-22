@@ -54,6 +54,8 @@ export interface SiteDataTransformed {
   announcement?: SiteAnnouncement;
   dataRetentionPolicy?: DataRetentionPolicy;
   eventDisplaySettings?: EventDisplaySettings;
+  socialPreviewImage?: string;
+  customCSS?: string;
 }
 
 export function InsertKeyValue(key: string, value: string): Promise<number[]> {
