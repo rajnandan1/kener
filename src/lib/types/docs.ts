@@ -9,7 +9,10 @@ export interface DocsLogo {
 
 export interface DocsNavTab {
   name: string;
-  url: string;
+  url?: string;
+  key?: string;
+  firstPageSlug?: string | null;
+  sidebar?: DocsSidebarGroupSource[];
 }
 
 export interface DocsNavigation {
@@ -56,7 +59,6 @@ export interface DocsVersionMeta {
 
 export interface DocsVersionContent {
   navigation?: DocsNavigation;
-  sidebar: DocsSidebarGroupSource[];
   footerLinks?: DocsFooterLink[];
 }
 
@@ -82,6 +84,7 @@ export interface DocsConfig {
   footerLinks?: DocsFooterLink[];
   versions?: DocsVersionMeta[];
   activeVersion?: string | null;
+  activeTabKey?: string | null;
 }
 
 export interface DocsTableOfContentsItem {

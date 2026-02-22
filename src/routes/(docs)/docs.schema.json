@@ -7,7 +7,15 @@
   "definitions": {
     "navTab": {
       "type": "object",
-      "required": ["name", "url"],
+      "required": ["name"],
+      "anyOf": [
+        {
+          "required": ["sidebar"]
+        },
+        {
+          "required": ["url"]
+        }
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -15,7 +23,14 @@
         },
         "url": {
           "type": "string",
-          "description": "URL path for the tab"
+          "description": "Optional redirect URL for tabs that navigate away instead of rendering a sidebar"
+        },
+        "sidebar": {
+          "type": "array",
+          "description": "Sidebar navigation groups for this tab",
+          "items": {
+            "$ref": "#/definitions/sidebarGroup"
+          }
         }
       }
     },
@@ -103,17 +118,10 @@
     },
     "versionContent": {
       "type": "object",
-      "required": ["sidebar"],
+      "required": ["navigation"],
       "properties": {
         "navigation": {
           "$ref": "#/definitions/navigation"
-        },
-        "sidebar": {
-          "type": "array",
-          "description": "Sidebar navigation groups",
-          "items": {
-            "$ref": "#/definitions/sidebarGroup"
-          }
         },
         "footerLinks": {
           "type": "array",

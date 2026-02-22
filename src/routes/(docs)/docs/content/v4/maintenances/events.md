@@ -179,52 +179,59 @@ Action: Override monitor statuses
 
 ```
 READY → ONGOING
-Condition: current_time >= start_time AND current_time < end_time
-Executed by: Status update scheduler (runs every minute)
+title: Maintenance Events
+description: How maintenance events are generated and shown to users
 ```
 
-#### COMPLETED {#completed-state}
+A maintenance event is one occurrence of a maintenance window.
 
-**When:** Current time is past end time
+## Event generation {#event-generation}
 
-**Meaning:**
+### One-time maintenance {#one-time-maintenance}
 
-- Maintenance has finished
+- Creates one event.
+- Triggered when maintenance is created.
 - Monitor statuses restored to realtime values
-- Historical record
 
-**Displayed As:** "Completed"
+### Recurring maintenance {#recurring-maintenance}
 
-**Notification:** "Maintenance Completed" notification sent
+- Creates upcoming events from RRULE.
+- Scheduler refreshes upcoming occurrences.
+- Duplicate event start times are skipped.
 
-**Example:**
+## Event statuses {#event-statuses}
 
-```
+- `SCHEDULED`
+- `READY`
+- `ONGOING`
+- `COMPLETED`
+- `CANCELLED`
+
+Status transitions are time-based and automatic.
 Current Time: May 15, 4:05 PM
-Event End: May 15, 4:00 PM
+
+## User-visible behavior {#user-visible-behavior}
+
 Status: COMPLETED (finished 5 minutes ago)
-Action: Restore monitor statuses
-```
 
+- Ongoing events affect monitor display according to impact settings.
+- Upcoming and past visibility depends on site/page event display settings.
+
+```
+## Manual actions {#manual-actions}
 **Automatic Transition:**
-
+- You can cancel/delete events from maintenance management screens.
+- Edit the parent maintenance to regenerate future schedule behavior.
 ```
-ONGOING → COMPLETED
+
+## Related guides {#related-guides}
+
 Condition: current_time >= end_time
-Executed by: Status update scheduler (runs every minute)
-```
 
-#### CANCELLED {#cancelled-state}
-
-**When:** Manually cancelled by user
-
-**Meaning:**
-
-- Maintenance was scheduled but won't happen
-- Monitor statuses not overridden
-- Marked explicitly as cancelled vs completed
-
-**Displayed As:** "Cancelled"
+- [Creating and Managing Maintenances](/docs/v4/maintenances/creating-managing)
+- [Impact on Monitoring](/docs/v4/maintenances/impact-on-monitoring)
+- [RRULE Patterns](/docs/v4/maintenances/rrule-patterns)
+  **Displayed As:** "Cancelled"
 
 **Notification:** No automatic notification
 

@@ -17,7 +17,7 @@ export const GET: RequestHandler = async ({ params }) => {
   }
 
   const requestedVersion = versionSlug;
-  const config = getDocsConfig(requestedVersion);
+  const config = getDocsConfig(requestedVersion, undefined, pageSlug);
 
   const resolvedSlug = resolvePageSlugForConfig(pageSlug, config, requestedVersion);
 

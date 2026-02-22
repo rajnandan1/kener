@@ -198,4 +198,5 @@ status.yourdomain.com {
 
 - Set up [Monitors](/docs/monitors)
 - Configure [Incidents](/docs/incidents)
+- Configure [Sharing Monitors](/docs/v4/sharing)
 - Explore the [API Reference](/docs/api-reference)

@@ -32,189 +32,78 @@ A clear, concise description of the issue that will be visible to users.
 - Be specific but brief
 - Mention the affected service
 - Avoid internal jargon
-
-**Examples:**
+  title: Creating and Managing Incidents
+  description: Create incidents, add affected monitors, post updates, and resolve incidents
 
 - ✅ "API Gateway Responding Slowly"
-- ✅ "Database Connection Issues"
+  Use **Manage → Incidents** to create and manage incidents.
 - ❌ "DB01 high CPU" (too technical)
-- ❌ "Issue" (too vague)
 
-#### Start Date/Time (Required) {#start-datetime}
+## Create an incident {#create-an-incident}
 
-When did the incident begin?
+1. Open **New Incident**.
+2. Fill required fields:
+    - **Title**
+    - **Start Date/Time** (entered in local timezone)
+3. Optional:
+    - **Global visibility** toggle
+    - Initial update message
+4. Add affected monitors (optional but recommended).
+5. Click **Create Incident**.
 
-**Important Notes:**
+## Add affected monitors {#add-affected-monitors}
 
-- Enter time in **your local timezone**
-- Kener stores it as UTC internally
-- Use datetime picker or type manually
+For each monitor, set an impact:
+
+- `DOWN`
+- `DEGRADED`
+
+You can add, remove, and change impact while editing the incident.
+
 - Can be in the past (for recording historical incidents)
-- Should reflect when users were first affected
 
-**Default:** Current date and time
+## Add updates and change state {#add-updates-and-change-state}
 
-### Step 2: Initial Update (Optional) {#initial-update}
+Updates are timeline entries shown to users. When posting an update, choose a state:
 
-Provide an initial status update describing what's happening.
+- `INVESTIGATING`
+- `IDENTIFIED`
+- `MONITORING`
+- `RESOLVED`
 
-**Format:** Supports Markdown formatting
+When set to `RESOLVED`, the incident closes and end time is recorded.
 
-**When to Use:**
+## Edit an incident {#edit-an-incident}
 
-- Describing initial symptoms
-- Explaining known scope
-- Setting expectations
+You can edit:
 
-**Example:**
+- Title
+- Start time
+- Global visibility
+- Affected monitors and impact
 
-```markdown
-We're experiencing elevated error rates on our API endpoints.
-Our team is investigating the root cause.
+Save changes to apply them immediately.
+
+## Delete incident {#delete-incident}
 
 **Affected Services:**
+Incidents can be deleted from the incident edit view.
 
 - REST API
-- Webhook delivery
+    > [!WARNING]
+    > Deletion is irreversible and removes incident timeline context.
 
-**Not Affected:**
+## Good practices {#good-practices}
 
-- Dashboard UI
-- Data exports
-```
+- Keep titles user-facing and clear.
+- Add regular, concise updates during active incidents.
+- Keep monitor impact accurate as recovery progresses.
 
-**Note:** This becomes the first update in the incident timeline with state "INVESTIGATING".
+## Related guides {#related-guides}
 
-### Step 3: Affected Monitors (Optional) {#affected-monitors}
-
-Select which monitors are impacted by this incident.
-
-#### Adding Monitors {#adding-monitors}
-
-1. Click **Add Monitor**
-2. Select a monitor from the dropdown
-3. Choose the impact level:
-    - **DOWN** - Service completely unavailable
-    - **DEGRADED** - Service partially available or slow
-4. Click **Add Monitor**
-
-#### Multiple Monitors {#multiple-monitors}
-
-You can add multiple monitors to a single incident. This is useful when:
-
-- A backend issue affects multiple frontend services
-- Infrastructure problems impact several applications
-- Related services are all experiencing issues
-
-#### Impact Level Guidance {#impact-guidance}
-
-**Use DOWN when:**
-
-- Monitor returns 100% errors
-- Service is completely inaccessible
-- All requests fail
-- Critical functionality broken
-
-**Use DEGRADED when:**
-
-- Monitor returns some errors (not all)
-- Service is slow but functional
-- Partial functionality unavailable
-- Intermittent issues
-
-**Important:** The impact level you select here **overrides** the monitor's realtime status during the incident. See [Incident Impact on Monitoring](/docs/incidents/impact-on-monitoring) for details.
-
-### Step 4: Create {#create-incident}
-
-Click **Create Incident** to save the incident.
-
-**What Happens Next:**
-
-- Incident is created with state "INVESTIGATING"
-- If initial update provided, it's added as first comment
-- Affected monitors immediately show the incident status
-- Incident appears on public status page
-- Incident is assigned a unique ID
-
-## Editing an Existing Incident {#editing-incident}
-
-Click the **Edit** button (pencil icon) on any incident to modify it.
-
-### Editable Fields {#editable-fields}
-
-#### Title {#edit-title}
-
-You can change the incident title at any time. The change is immediate and reflects on the public status page.
-
-**When to Edit:**
-
-- Initial title was unclear
-- Scope changed (add/remove affected services)
-- More specific information available
-
-#### Start Date/Time {#edit-start-datetime}
-
-You can adjust when the incident actually started.
-
-**When to Edit:**
-
-- Initial entry was incorrect
-- Discovered issue started earlier than reported
-- Aligning timeline with logs
-
-**Cannot Change:**
-
-- Cannot set start time to future
-- Cannot set start time after end time (if incident is resolved)
-
-#### State {#edit-state}
-
-**State is controlled by updates, not direct editing.** To change an incident's state, you must add an update (comment) with the new state.
-
-See [Incident Updates](/docs/incidents/updates) for details.
-
-### Managing Affected Monitors {#managing-monitors}
-
-While editing an incident, you can:
-
-#### Add More Monitors {#add-more-monitors}
-
-Click **Add Monitor** and select additional monitors to add to the incident.
-
-**Use Cases:**
-
-- Issue scope expanded
-- Additional services affected
-- Related problem discovered
-
-#### Change Monitor Impact {#change-impact}
-
-Click the **⋮** (three dots) menu on a monitor and select:
-
-- **Down** - Change impact to DOWN
-- **Degraded** - Change impact to DEGRADED
-
-**Use Cases:**
-
-- Partial recovery (DOWN → DEGRADED)
-- Worsening situation (DEGRADED → DOWN)
-- More accurate assessment available
-
-#### Remove Monitors {#remove-monitors}
-
-Click the **⋮** (three dots) menu on a monitor and select **Remove**.
-
-**Use Cases:**
-
-- Monitor recovered (but incident ongoing for others)
-- Incorrectly added
-- Issue was unrelated
-
-**Important:** Removing a monitor immediately restores its realtime monitoring status on the status page.
-
-### Saving Changes {#saving-changes}
-
-Click **Save Changes** to apply your edits.
+- [Incidents Overview](/docs/v4/incidents/overview)
+- [Impact on Monitoring](/docs/v4/incidents/impact-on-monitoring)
+- [Alert Configurations](/docs/v4/alerting/alert-configurations)
 
 **What Changes Immediately:**
 

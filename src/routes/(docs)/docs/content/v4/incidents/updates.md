@@ -60,69 +60,32 @@ The incident state after this update. This is **crucial** because:
 - State progression drives the incident lifecycle
 
 **Available States:**
+title: Incident Updates
+description: Quick reference for posting timeline updates on incidents
 
-- **INVESTIGATING** - Initial investigation
 - **IDENTIFIED** - Root cause found
 - **MONITORING** - Fix applied, watching for stability
-- **RESOLVED** - Issue fully resolved
+  Incident updates are timeline entries used to communicate progress and move incident state.
 
-**Important:** When you set state to **RESOLVED**, Kener automatically sets the incident's `end_date_time` to the update's timestamp.
+## Quick reference {#quick-reference}
 
-### Timestamp (Required) {#timestamp}
+When posting an update, choose one state:
 
-When this update was made.
+- `INVESTIGATING`
+- `IDENTIFIED`
+- `MONITORING`
+- `RESOLVED`
 
-**Default:** Current date and time
+Setting `RESOLVED` closes the incident and sets end time.
 
-**Can Be Modified:**
-
-- Useful for backdating updates
 - Aligning timeline with actual events
-- Recording updates made after the fact
+  Use concise, user-facing text and include only meaningful changes.
 
-**Display:** Shown in your local timezone but stored as UTC
+## See also {#see-also}
 
-## Creating Updates {#creating-updates}
-
-### During Incident Creation {#during-creation}
-
-When creating a new incident, you can optionally provide an **Initial Update**:
-
-1. Fill out the incident details
-2. Add text in the "Initial Update" field
-3. Uses Markdown formatting
-4. Automatically created with state "INVESTIGATING"
-5. Timestamp matches incident start time
-
-### Adding Updates to Existing Incidents {#adding-updates}
-
-1. Navigate to the incident detail page
-2. Click **Add Update** button
-3. Enter your message (Markdown supported)
-4. Select the new state
-5. Optionally adjust the timestamp
-6. Click **Add Update**
-
-**What Happens:**
-
-- Update is added to the incident timeline
-- Incident state changes to the update's state
-- If state is RESOLVED, end_date_time is set
-- Update appears immediately on status page
-- Subscribers receive notifications (if configured)
-
-## Editing Updates {#editing-updates}
-
-You can edit any existing update:
-
-1. Find the update in the incident timeline
-2. Click the **Edit** (pencil icon) button
-3. Modify the message
-4. Change the state if needed
-5. Adjust the timestamp if needed
-6. Click **Save**
-
-**Important State Changes:**
+- [Creating and Managing Incidents](/docs/v4/incidents/creating-managing)
+- [Impact on Monitoring](/docs/v4/incidents/impact-on-monitoring)
+  **Important State Changes:**
 
 **Moving to RESOLVED:**
 
@@ -434,7 +397,7 @@ When configured with the subscription system:
 - Incident is created
 - Incident is resolved
 
-See [Subscription documentation](/docs/subscriptions) for setup.
+See [Subscription documentation](/docs/v4/subscriptions) for setup.
 
 ## Next Steps {#next-steps}
 

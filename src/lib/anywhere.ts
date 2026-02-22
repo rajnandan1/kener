@@ -1,4 +1,4 @@
-export const DefaultAPIEval = `(async function (statusCode, responseTime, responseRaw, modules) {
+export const DefaultAPIEval = `async function (statusCode, responseTime, responseRaw, modules) {
 	let statusCodeShort = Math.floor(statusCode/100);
     if(statusCode == 429 || (statusCodeShort >=2 && statusCodeShort <= 3)) {
         return {
@@ -10,9 +10,9 @@ export const DefaultAPIEval = `(async function (statusCode, responseTime, respon
 		status: 'DOWN',
 		latency: responseTime,
 	}
-})`;
+}`;
 
-export const DefaultPingEval = `(async function (arrayOfPings) {
+export const DefaultPingEval = `async function (arrayOfPings) {
 	let latencyTotal = arrayOfPings.reduce((acc, ping) => {
 		return acc + ping.latency;
 	}, 0);
@@ -25,9 +25,9 @@ export const DefaultPingEval = `(async function (arrayOfPings) {
 		status: alive ? 'UP' : 'DOWN',
 		latency: latencyTotal / arrayOfPings.length,
 	}
-})`;
+}`;
 
-export const DefaultTCPEval = `(async function (arrayOfPings) {
+export const DefaultTCPEval = `async function (arrayOfPings) {
 	let latencyTotal = arrayOfPings.reduce((acc, ping) => {
 		return acc + ping.latency;
 	}, 0);
@@ -40,14 +40,14 @@ export const DefaultTCPEval = `(async function (arrayOfPings) {
 		status: alive ? 'UP' : 'DOWN',
 		latency: latencyTotal / arrayOfPings.length,
 	}
-})`;
+}`;
 
-export const DefaultGamedigEval = `(async function (responseTime, responseRaw) {
+export const DefaultGamedigEval = `async function (responseTime, responseRaw) {
 	return {
 		status: 'UP',
 		latency: responseTime,
 	}
-})`;
+}`;
 export const GAMEDIG_TIMEOUT = 10 * 1000; // 10 seconds
 export const GAMEDIG_SOCKET_TIMEOUT = 2 * 1000; // 2 seconds
 

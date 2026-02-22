@@ -61,7 +61,7 @@
 
 {#if items.length > 0}
   <aside
-    class="sticky top-[calc(96px+2rem)] hidden max-h-[calc(100vh-96px-4rem)] w-[220px] shrink-0 overflow-y-auto xl:block"
+    class="scrollbar-hidden sticky top-[calc(96px+2rem)] hidden max-h-[calc(100vh-96px-4rem)] w-[220px] shrink-0 overflow-y-auto xl:block"
   >
     <div class="text-muted-foreground mb-3 text-xs font-semibold tracking-wide uppercase">On this page</div>
     <nav>

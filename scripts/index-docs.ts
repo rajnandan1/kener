@@ -29,8 +29,15 @@ const REDIS_DOCS_KEY = "kener-docs:search:documents";
 
 interface DocsPage {
   title: string;
+  content?: string;
+  slug?: string;
+  pages?: DocsPageSource[];
+}
+
+interface DocsPageSource {
+  title: string;
   slug: string;
-  pages?: DocsPage[];
+  pages?: DocsPageSource[];
 }
 
 interface DocsSidebarGroup {
@@ -38,8 +45,24 @@ interface DocsSidebarGroup {
   pages: DocsPage[];
 }
 
-interface DocsConfig {
+interface DocsNavTab {
+  name: string;
   sidebar: DocsSidebarGroup[];
+}
+
+interface DocsVersion {
+  name: string;
+  slug: string;
+  latest?: boolean;
+  content: {
+    navigation?: {
+      tabs?: DocsNavTab[];
+    };
+  };
+}
+
+interface DocsRootConfig {
+  versions: DocsVersion[];
 }
 
 interface DocsSearchDocument {
@@ -86,13 +109,38 @@ function getMarkdownContent(slug: string): string | null {
 /**
  * Recursively collect all pages from sidebar groups (including nested pages)
  */
-function collectPages(pages: DocsPage[], group: string, result: Array<{ page: DocsPage; group: string }>): void {
+function collectPages(
+  pages: DocsPageSource[],
+  group: string,
+  result: Array<{ page: DocsPageSource; group: string }>,
+): void {
   for (const page of pages) {
     result.push({ page, group });
     if (page.pages && page.pages.length > 0) {
       collectPages(page.pages, group, result);
     }
   }
+}
+
+function normalizePage(page: DocsPage): DocsPageSource {
+  const resolvedPath = page.content ?? page.slug;
+
+  if (!resolvedPath) {
+    throw new Error(`[index-docs] Page \"${page.title}\" must define content or slug`);
+  }
+
+  return {
+    title: page.title,
+    slug: resolvedPath,
+    pages: page.pages?.map(normalizePage),
+  };
+}
+
+function normalizeSidebar(sidebar: DocsSidebarGroup[]): Array<{ group: string; pages: DocsPageSource[] }> {
+  return sidebar.map((group) => ({
+    group: group.group,
+    pages: group.pages.map(normalizePage),
+  }));
 }
 
 async function main(): Promise<void> {
@@ -108,15 +156,25 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const config: DocsConfig = JSON.parse(fs.readFileSync(DOCS_JSON_PATH, "utf-8"));
+  const config: DocsRootConfig = JSON.parse(fs.readFileSync(DOCS_JSON_PATH, "utf-8"));
+  const latestVersion = config.versions.find((version) => version.latest) ?? config.versions[0];
+
+  if (!latestVersion) {
+    console.error("[index-docs] No versions found in docs.json");
+    process.exit(1);
+  }
+
+  const primaryTabSidebar = latestVersion.content.navigation?.tabs?.[0]?.sidebar ?? [];
+  const sidebar = normalizeSidebar(primaryTabSidebar);
   const documents: DocsSearchDocument[] = [];
 
   // Collect all pages from sidebar
-  const allPages: Array<{ page: DocsPage; group: string }> = [];
-  for (const sidebarGroup of config.sidebar) {
+  const allPages: Array<{ page: DocsPageSource; group: string }> = [];
+  for (const sidebarGroup of sidebar) {
     collectPages(sidebarGroup.pages, sidebarGroup.group, allPages);
   }
 
+  console.log(`[index-docs] Indexing version ${latestVersion.slug}`);
   console.log(`[index-docs] Found ${allPages.length} pages to index`);
 
   for (const { page, group } of allPages) {

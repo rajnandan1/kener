@@ -13,22 +13,26 @@ export default async function send(
   variables: Record<string, string | number | boolean>,
   to: string[],
   from?: string,
+  emailTextBody?: string,
 ) {
   // Implementation for sending email notification using the provided triggerRecord, variables, and template
 
-  let envSecretsTemplate = GetRequiredSecrets(emailBody + emailSubject);
+  let envSecretsTemplate = GetRequiredSecrets(emailBody + emailSubject + (emailTextBody || ""));
 
   for (let i = 0; i < envSecretsTemplate.length; i++) {
     const secret = envSecretsTemplate[i];
     if (secret.replace !== undefined) {
       emailBody = ReplaceAllOccurrences(emailBody, secret.find, secret.replace);
       emailSubject = ReplaceAllOccurrences(emailSubject, secret.find, secret.replace);
+      if (emailTextBody !== undefined) {
+        emailTextBody = ReplaceAllOccurrences(emailTextBody, secret.find, secret.replace);
+      }
     }
   }
 
   const subject = Mustache.render(emailSubject, variables);
   const htmlBody = Mustache.render(emailBody, variables);
-  const textBody = striptags(htmlBody);
+  const textBody = emailTextBody ? Mustache.render(emailTextBody, variables) : striptags(htmlBody);
 
   try {
     let isEmailSetupDone = IsEmailSetup();

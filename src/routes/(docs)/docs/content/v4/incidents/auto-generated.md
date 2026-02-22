@@ -148,62 +148,45 @@ This provides complete context about:
 
 When the alert resolves, a detailed closure update is added:
 
-```markdown
 The alert has been resolved, Total duration: 47 minutes
 
 #### Alert Details
 
-| Setting               | Value       |
+title: Auto-Generated Incidents
+description: Quick reference for incident creation via alerting
 | :-------------------- | :---------- |
-| **Monitor Name**      | Payment API |
-| **Incident Status**   | RESOLVED    |
-| **Monitor Tag**       | payment-api |
-| **Alert Type**        | STATUS      |
-| **Alert Value**       | DOWN        |
-| **Severity**          | CRITICAL    |
-| **Failure Threshold** | 3           |
-| **Success Threshold** | 5           |
-```
+| **Monitor Name** | Payment API |
+Kener can auto-create incidents from alert configurations.
+| **Monitor Tag** | payment-api |
+
+## How it works {#how-it-works}
+
+| **Alert Value** | DOWN |
+
+1. Alert triggers.
+2. Alert has **Create Incident = YES**.
+3. Incident is created and monitor is attached.
+4. When alert resolves, incident is resolved automatically.
+   | **Failure Threshold** | 3 |
+
+## Where to configure {#where-to-configure}
 
 This includes:
+Use **Manage → Alerts → Alert Configurations**.
 
 - Total incident duration
-- Alert configuration
+
+## Notes {#notes}
+
 - Resolution confirmation
-- Success threshold that was met
+- Auto-generated incidents are ideal for critical, user-facing alerts.
+- Tune thresholds to avoid noisy incident creation.
 
-## Configuration Requirements {#configuration-requirements}
+## See also {#see-also}
 
-To enable auto-generated incidents:
-
-### 1. Create Alert Configuration {#create-alert-config}
-
-Navigate to **Manage > Alerts > Create Alert**
-
-**Configure:**
-
-- Monitor to watch
-- Alert type (STATUS, LATENCY, UPTIME)
-- Alert value (threshold)
-- Failure threshold
-- Success threshold
-- Severity (CRITICAL or WARNING)
-
-**Enable Incident Creation:**
-
-- Set **Create Incident** to **YES**
-
-See [Alert Configurations](/docs/alerting/alert-configurations) for complete details.
-
-### 2. Configure Triggers (Optional) {#configure-triggers}
-
-While triggers are optional for incident creation, they enable notifications:
-
-**Create Triggers:**
-
-- Discord
-- Slack
-- Email
+- [Alert Configurations](/docs/v4/alerting/alert-configurations)
+- [Triggers](/docs/v4/alerting/triggers)
+- [Creating and Managing Incidents](/docs/v4/incidents/creating-managing)
 - Webhook
 
 **Attach to Alert:**
@@ -306,13 +289,11 @@ A monitor can have multiple alert configurations:
 
 **Example:**
 
-```
 Monitor: api-gateway
 
 Alert 1: STATUS - DOWN (failure: 1)
 Alert 2: LATENCY - 1000ms (failure: 5)
 Alert 3: UPTIME - 99.9% (failure: 10)
-```
 
 **Each Alert:**
 
@@ -367,7 +348,7 @@ If subscription system is configured:
 - Includes resolution update
 - Shows total duration
 
-See [Subscriptions](/docs/subscriptions) for setup.
+See [Subscriptions](/docs/v4/subscriptions) for setup.
 
 ## Alert Logs {#alert-logs}
 
@@ -484,13 +465,11 @@ See [Troubleshooting Triggers](/docs/alerting/triggers#troubleshooting-triggers)
 
 **Workflow:**
 
-```
 1. Alert triggers → Auto-creates incident
 2. You investigate → Add IDENTIFIED update
 3. You deploy fix → Add MONITORING update
 4. Alert resolves → Auto-adds RESOLVED update
 5. You add post-mortem → Add final manual update
-```
 
 ### Threshold Tuning {#threshold-tuning}
 

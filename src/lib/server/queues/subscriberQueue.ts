@@ -63,6 +63,7 @@ const addWorker = () => {
           toEmails: [email],
           templateHtmlBody: template.template_html_body || "",
           templateSubject: template.template_subject || "Event Update",
+          templateTextBody: template.template_text_body || "",
           variables: emailVars,
         });
       }

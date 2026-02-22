@@ -8,9 +8,10 @@ export const load: LayoutServerLoad = async ({ params, url, parent }) => {
   const pathParts = url.pathname.split("/docs/");
   const pathAfterDocs = pathParts[1] || "";
   const { versionSlug, pageSlug } = resolveVersionedDocsSlug(pathAfterDocs);
+  const requestedTab = url.searchParams.get("tab") ?? undefined;
 
   const requestedVersion = versionSlug;
-  const config = getDocsConfig(requestedVersion);
+  const config = getDocsConfig(requestedVersion, requestedTab, pageSlug);
   const currentSlug = resolvePageSlugForConfig(pageSlug, config, requestedVersion) ?? pageSlug;
 
   return {

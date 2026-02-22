@@ -90,92 +90,75 @@ Kener uses the industry-standard [iCalendar RRULE](http://www.kanzaki.com/docs/i
 FREQ=frequency;[INTERVAL=n;][BYDAY=days;][COUNT=n;]
 ```
 
-**Example Patterns:**
-
-| Pattern                 | RRULE                              | Meaning               |
+title: Maintenances Overview
+description: Plan and communicate scheduled service work with one-time or recurring maintenance windows
+| Pattern | RRULE | Meaning |
 | :---------------------- | :--------------------------------- | :-------------------- |
-| Every Sunday            | `FREQ=WEEKLY;BYDAY=SU`             | Weekly on Sunday      |
-| Every 2 weeks on Monday | `FREQ=WEEKLY;INTERVAL=2;BYDAY=MO`  | Bi-weekly on Monday   |
-| Every day               | `FREQ=DAILY`                       | Daily                 |
-| First of each month     | `FREQ=MONTHLY;BYMONTHDAY=1`        | Monthly on day 1      |
-| Weekdays only           | `FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR` | Monday through Friday |
+Maintenances are planned service windows. Use them to communicate expected downtime or degradation before work starts.
+| Every 2 weeks on Monday | `FREQ=WEEKLY;INTERVAL=2;BYDAY=MO` | Bi-weekly on Monday |
 
-Learn more in [RRULE Patterns](/docs/maintenances/rrule-patterns).
+## What a maintenance includes {#what-a-maintenance-includes}
 
-## Maintenance Events {#maintenance-events}
+| First of each month | `FREQ=MONTHLY;BYMONTHDAY=1` | Monthly on day 1 |
+Each maintenance has:
 
-When you create a maintenance, Kener automatically generates **maintenance events** based on the RRULE:
-
+- Title and optional description
+- Start time
+- Duration
+- Schedule (`one-time` or recurring `RRULE`)
+- Affected monitors with impact
+- Status (`ACTIVE` / `INACTIVE`)
 - **One-Time Maintenances:** Generate 1 event at creation time
-- **Recurring Maintenances:** Generate events for the next 7 days, refreshed hourly
 
-Each event represents a single occurrence of the maintenance window and tracks:
+## Maintenance vs incident {#maintenance-vs-incident}
 
-- Start date/time
-- End date/time (calculated from duration)
-- Status (SCHEDULED → READY → ONGOING → COMPLETED)
+| Aspect     | Maintenance                 | Incident                      |
+| ---------- | --------------------------- | ----------------------------- |
+| Nature     | Planned                     | Unplanned                     |
+| Timing     | Scheduled in advance        | Created when issue occurs     |
+| Recurrence | Can recur with RRULE        | Typically one-off             |
+| Purpose    | Communicate expected impact | Communicate active disruption |
 
-Events are covered in detail in [Maintenance Events](/docs/maintenances/events).
-
-## Maintenance Status {#maintenance-status}
+## One-time vs recurring {#one-time-vs-recurring}
 
 Maintenances have two levels of status:
 
+- **One-time**: single event (`FREQ=MINUTELY;COUNT=1`)
+- **Recurring**: repeated events from RRULE (for example weekly/monthly patterns)
+
 ### Maintenance-Level Status {#maintenance-level-status}
 
+## Monitor impact during maintenance {#monitor-impact-during-maintenance}
+
 Controls whether the maintenance is active in the system:
+Set per-monitor impact for the maintenance window:
 
 - **ACTIVE** - Maintenance is enabled and will generate events
-- **INACTIVE** - Maintenance is disabled and will not affect monitors
+- `MAINTENANCE` (recommended for planned work)
+- `DOWN`
+- `DEGRADED`
+- `UP` (rare)
 
-**Note:** Changing a maintenance to INACTIVE does not cancel already scheduled events. You must manually cancel or delete those events.
+When an event is ongoing, this impact can override realtime status shown to users.
 
-### Event-Level Status {#event-level-status}
+## Event lifecycle {#event-lifecycle}
 
-Tracks the lifecycle of each individual maintenance occurrence:
+Each occurrence is a maintenance event that moves through statuses:
 
-- **SCHEDULED** - Event created, more than 60 minutes away
+- `SCHEDULED`
+- `READY` (starting soon)
+- `ONGOING`
+- `COMPLETED`
+- `CANCELLED`
 - **READY** - Event starts within 60 minutes (notification sent)
-- **ONGOING** - Event is currently in progress
+
+## Related guides {#related-guides}
+
 - **COMPLETED** - Event has finished
-- **CANCELLED** - Event was manually cancelled
-
-Events automatically transition through states based on the current time.
-
-## Affected Monitors {#affected-monitors}
-
-Each maintenance specifies which monitors are affected and their expected status during the maintenance window:
-
-**Monitor Impact Options:**
-
-- **MAINTENANCE** - Show as under maintenance (recommended)
-- **DOWN** - Show as completely unavailable
-- **DEGRADED** - Show as partially available
-- **UP** - Show as operational (rare, for non-disruptive maintenance)
-
-When a maintenance event is ONGOING, the specified impact **overrides** the monitor's realtime status on the status page.
-
-Learn more in [Maintenance Impact on Monitoring](/docs/maintenances/impact-on-monitoring).
-
-## Public Visibility {#public-visibility}
-
-Maintenances are visible to users on your public status page:
-
-### Upcoming Maintenances {#upcoming-maintenances}
-
-- Shown on the home page
-- Displays upcoming events (configurable days ahead)
-- Shows affected monitors and maintenance window
-
-### Ongoing Maintenances {#ongoing-maintenances}
-
-- Prominently displayed during the maintenance window
-- Affected monitors show maintenance status
-- Duration and progress indicators
-
-### Past Maintenances {#past-maintenances}
-
-- Listed on the events/history page
+- [Creating and Managing Maintenances](/docs/v4/maintenances/creating-managing)
+- [Maintenance Events](/docs/v4/maintenances/events)
+- [Impact on Monitoring](/docs/v4/maintenances/impact-on-monitoring)
+- [RRULE Patterns](/docs/v4/maintenances/rrule-patterns)
 - Shows completed maintenance events
 - Configurable retention period
 

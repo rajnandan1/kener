@@ -115,6 +115,9 @@ SMTP_SENDER=noreply@yourdomain.com
 3. Ensure sender email is authorized by your SMTP provider
 4. Check server logs for detailed error messages
 
+> [!TIP]
+> User invitations and verification emails depend on email setup. See [User Management](/docs/v4/user-management).
+
 ### Wrong port/SSL configuration {#wrong-port-ssl}
 
 If you're getting connection errors, verify:

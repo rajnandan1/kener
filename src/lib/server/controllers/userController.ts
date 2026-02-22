@@ -329,6 +329,8 @@ export const SendInvitationEmail = async (email: string, role: string, name: str
       template.template_subject || "Your Invitation to Join",
       emailVars,
       [email],
+      undefined,
+      template.template_text_body || "",
     );
   }
 };
@@ -375,6 +377,8 @@ export const ResendInvitationEmail = async (email: string, currentUserRole: stri
       template.template_subject || "Your Invitation to Join",
       emailVars,
       [email],
+      undefined,
+      template.template_text_body || "",
     );
   }
 };
@@ -419,7 +423,12 @@ export const SendVerificationEmail = async (toUserId: number, currentUser: { id:
   if (!template) {
     throw new Error("Verify email template not found");
   }
-  await sendEmail(template.template_html_body || "", template.template_subject || "Verify Your Email", emailVars, [
-    user.email,
-  ]);
+  await sendEmail(
+    template.template_html_body || "",
+    template.template_subject || "Verify Your Email",
+    emailVars,
+    [user.email],
+    undefined,
+    template.template_text_body || "",
+  );
 };

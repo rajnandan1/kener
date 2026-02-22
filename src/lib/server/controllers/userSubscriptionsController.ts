@@ -476,6 +476,8 @@ export async function SubscriberLogin(email: string): Promise<{ success: boolean
       template.template_subject || "Your Verification Code",
       emailVars,
       [normalizedEmail],
+      undefined,
+      template.template_text_body || "",
     );
     return { success: true };
   } catch (error) {

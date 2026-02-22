@@ -69,13 +69,124 @@ function normalizeSidebar(sidebar: DocsSidebarGroupSource[]): DocsSidebarGroup[]
   }));
 }
 
+function createTabKey(tabName: string): string {
+  return tabName
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function sidebarHasSlug(sidebar: DocsSidebarGroupSource[], pageSlug: string, versionSlug?: string): boolean {
+  if (!pageSlug) {
+    return false;
+  }
+
+  const normalizedSidebar = normalizeSidebar(sidebar);
+  const availableSlugs = new Set<string>();
+
+  function addPages(pages: DocsPage[]) {
+    for (const page of pages) {
+      availableSlugs.add(page.slug);
+      if (page.pages && page.pages.length > 0) {
+        addPages(page.pages);
+      }
+    }
+  }
+
+  for (const group of normalizedSidebar) {
+    addPages(group.pages);
+  }
+
+  if (availableSlugs.has(pageSlug)) {
+    return true;
+  }
+
+  if (versionSlug && pageSlug) {
+    const versionPrefixed = `${versionSlug}/${pageSlug}`;
+    if (availableSlugs.has(versionPrefixed)) {
+      return true;
+    }
+  }
+
+  if (versionSlug && pageSlug.startsWith(`${versionSlug}/`)) {
+    const unprefixed = pageSlug.slice(versionSlug.length + 1);
+    if (availableSlugs.has(unprefixed)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function getPrimarySidebarSource(version: DocsVersion): DocsSidebarGroupSource[] {
+  const tabs = version.content.navigation?.tabs ?? [];
+  const firstSidebarTab = tabs.find((tab) => (tab.sidebar?.length ?? 0) > 0);
+  return firstSidebarTab?.sidebar ?? [];
+}
+
+function normalizeNavigationTabs(version: DocsVersion) {
+  const tabs = version.content.navigation?.tabs ?? [];
+  return tabs.map((tab, index) => {
+    const fallbackKey = `tab-${index + 1}`;
+    const key = createTabKey(tab.name) || fallbackKey;
+
+    return {
+      ...tab,
+      key,
+      firstPageSlug: getFirstPageSlugFromSidebar(normalizeSidebar(tab.sidebar ?? [])),
+    };
+  });
+}
+
+function resolveActiveTab(version: DocsVersion, requestedTabKey?: string, requestedPageSlug?: string) {
+  const tabs = normalizeNavigationTabs(version);
+  const firstSidebarTab = tabs.find((tab) => (tab.sidebar?.length ?? 0) > 0) ?? tabs[0];
+
+  if (!firstSidebarTab) {
+    return {
+      tabs,
+      activeTab: null,
+    };
+  }
+
+  if (requestedTabKey) {
+    const requested = tabs.find((tab) => tab.key === requestedTabKey);
+    if (requested && (requested.sidebar?.length ?? 0) > 0) {
+      return {
+        tabs,
+        activeTab: requested,
+      };
+    }
+  }
+
+  if (requestedPageSlug) {
+    const matchedByPage = tabs.find(
+      (tab) => (tab.sidebar?.length ?? 0) > 0 && sidebarHasSlug(tab.sidebar ?? [], requestedPageSlug, version.slug),
+    );
+    if (matchedByPage) {
+      return {
+        tabs,
+        activeTab: matchedByPage,
+      };
+    }
+  }
+
+  return {
+    tabs,
+    activeTab: firstSidebarTab,
+  };
+}
+
 function normalizeVersionMeta(versions: DocsVersion[]): DocsVersionMeta[] {
   return versions.map((version) => ({
     ...(version as DocsVersionMeta),
     name: version.name,
     slug: version.slug,
     latest: version.latest,
-    firstPageSlug: getFirstPageSlugFromSidebar(normalizeSidebar(version.content.sidebar)),
+    firstPageSlug: getFirstPageSlugFromSidebar(normalizeSidebar(getPrimarySidebarSource(version))),
   }));
 }
 
@@ -105,7 +216,11 @@ export function getDocsRootConfig(): DocsRootConfig {
 /**
  * Get the docs configuration for a selected version slug (or latest)
  */
-export function getDocsConfig(requestedVersionSlug?: string): DocsConfig {
+export function getDocsConfig(
+  requestedVersionSlug?: string,
+  requestedTabKey?: string,
+  requestedPageSlug?: string,
+): DocsConfig {
   const rootConfig = getDocsRootConfig();
   const versions = rootConfig.versions;
   const selectedVersion = getSelectedVersion(versions, requestedVersionSlug);
@@ -118,19 +233,27 @@ export function getDocsConfig(requestedVersionSlug?: string): DocsConfig {
       sidebar: [],
       versions: [],
       activeVersion: null,
+      activeTabKey: null,
     };
   }
+
+  const { tabs, activeTab } = resolveActiveTab(selectedVersion, requestedTabKey, requestedPageSlug);
+  const activeSidebarSource = activeTab?.sidebar ?? [];
 
   return {
     $schema: rootConfig.$schema,
     name: rootConfig.name,
     logo: rootConfig.logo,
     favicon: rootConfig.favicon,
-    navigation: selectedVersion.content.navigation,
-    sidebar: normalizeSidebar(selectedVersion.content.sidebar),
+    navigation: {
+      ...selectedVersion.content.navigation,
+      tabs,
+    },
+    sidebar: normalizeSidebar(activeSidebarSource),
     footerLinks: selectedVersion.content.footerLinks,
     versions: normalizeVersionMeta(versions),
     activeVersion: selectedVersion.slug,
+    activeTabKey: activeTab?.key ?? null,
   };
 }
 
@@ -221,6 +344,7 @@ export function getAllPages(config: DocsConfig = getDocsConfig()): DocsPage[] {
   for (const group of config.sidebar) {
     addPages(group.pages);
   }
+
   return pages;
 }
 

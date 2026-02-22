@@ -73,81 +73,83 @@ Select whether this is a one-time or recurring maintenance:
 - Select the exact date and time when maintenance begins
 - Time is in your local timezone
 - Stored in UTC internally
-
-**Example:**
+  title: Creating and Managing Maintenances
+  description: Create a maintenance window, choose impact, and manage recurring schedules
 
 ```
-Start: May 15, 2026 at 2:00 AM
+Use **Manage → Maintenances** to create and manage planned work windows.
 ```
+
+## Create a maintenance {#create-a-maintenance}
 
 #### For Recurring Maintenances {#recurring-schedule}
 
-**First Occurrence Date/Time** (Required)
+1. Click **New Maintenance**.
+2. Choose schedule type:
+    - One-time
+    - Recurring (RRULE)
+3. Fill required fields:
+    - Title
+    - Start date/time
+    - Duration
+4. Select affected monitors and set impact.
+5. Click **Create Maintenance**.
+   **First Occurrence Date/Time** (Required)
 
-- Select when the first maintenance occurrence happens
-- Subsequent occurrences use this same time of day
+## Impact settings {#impact-settings}
+
 - Date determines the starting point for the recurrence pattern
+  Set per monitor:
+  **RRULE Pattern** (Required)
+- `MAINTENANCE` (recommended)
+- `DOWN`
+- `DEGRADED`
+- `UP`
+  Enter an iCalendar RRULE pattern directly or use the quick pattern buttons:
 
-**RRULE Pattern** (Required)
-
-Enter an iCalendar RRULE pattern directly or use the quick pattern buttons:
+## RRULE quick examples {#rrule-quick-examples}
 
 **Quick Pattern Buttons:**
 
+```text
+FREQ=WEEKLY;BYDAY=SU
+FREQ=DAILY
+FREQ=MONTHLY;BYMONTHDAY=1
+```
+
 - **Every Sunday** - `FREQ=WEEKLY;BYDAY=SU`
-- **Every Day** - `FREQ=DAILY`
+  For one-time maintenances, Kener uses:
 - **Weekdays** - `FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR`
-- **Every Monday** - `FREQ=WEEKLY;BYDAY=MO`
-- **Bi-weekly Monday** - `FREQ=WEEKLY;INTERVAL=2;BYDAY=MO`
-- **First of Month** - `FREQ=MONTHLY;BYMONTHDAY=1`
 
-Click any button to automatically fill the RRULE field. You can also type a custom RRULE pattern directly.
-
-**Preview Dates:**
-
-As you configure the RRULE and start time, the form shows the next 5 upcoming occurrences based on your pattern. This helps verify your recurrence configuration is correct.
-
-**Examples:**
-
-_Weekly on Sundays:_
-
-```
-RRULE: FREQ=WEEKLY;BYDAY=SU
+```text
+FREQ=MINUTELY;COUNT=1
 ```
 
-_Bi-weekly on Mondays:_
+## Edit maintenance {#edit-maintenance}
 
-```
-RRULE: FREQ=WEEKLY;INTERVAL=2;BYDAY=MO
-```
+You can edit title, description, schedule, duration, monitor list, and status.
 
-_Daily:_
+When schedule/duration changes, future generated events are recalculated.
 
-```
-RRULE: FREQ=DAILY
-```
+## Activate or pause {#activate-or-pause}
 
-_First of every month:_
+- `ACTIVE`: normal behavior and event generation
+- `INACTIVE`: disables maintenance behavior
+  RRULE: FREQ=WEEKLY;BYDAY=SU
 
-```
-RRULE: FREQ=MONTHLY;BYMONTHDAY=1
-```
+## Delete maintenance {#delete-maintenance}
 
-For more complex patterns, see the [RRULE Patterns](/docs/maintenances/rrule-patterns) documentation.
+Deleting a maintenance removes it and related events.
 
-### Step 5: Duration {#step-5-duration}
+> [!WARNING]
+> Deletion is irreversible.
+> RRULE: FREQ=WEEKLY;INTERVAL=2;BYDAY=MO
 
-Specify how long each maintenance window lasts:
+## Related guides {#related-guides}
 
-**Hours** (Required)
-
-- 0-72 hours
-- Whole number
-
-**Minutes** (Required)
-
-- 0-59 minutes
-- Whole number
+- [Maintenance Events](/docs/v4/maintenances/events)
+- [Impact on Monitoring](/docs/v4/maintenances/impact-on-monitoring)
+- [RRULE Patterns](/docs/v4/maintenances/rrule-patterns)
 
 **Total Duration:**
 The system calculates `duration_seconds = (hours × 3600) + (minutes × 60)`

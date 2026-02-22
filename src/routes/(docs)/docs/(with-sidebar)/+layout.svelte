@@ -40,7 +40,7 @@
 
     <!-- Sidebar -->
     <aside
-      class="bg-background fixed top-24 bottom-0 left-0 z-40 w-[240px] -translate-x-full overflow-y-auto transition-transform duration-300 ease-in-out lg:translate-x-0"
+      class="bg-background scrollbar-hidden fixed top-24 bottom-0 left-0 z-40 w-[240px] -translate-x-full overflow-y-auto transition-transform duration-300 ease-in-out lg:translate-x-0"
       class:translate-x-0={isMobileMenuOpen}
     >
       <DocsSidebar config={data.config} currentSlug={data.currentSlug} onNavigate={closeMobileMenu} />

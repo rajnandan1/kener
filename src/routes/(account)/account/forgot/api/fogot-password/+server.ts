@@ -49,6 +49,8 @@ export const POST: RequestHandler = async ({ request }) => {
       template.template_subject || "Your Password Reset Request",
       emailVars,
       [email],
+      undefined,
+      template.template_text_body || "",
     );
     return json({ success: true });
   } catch (error) {

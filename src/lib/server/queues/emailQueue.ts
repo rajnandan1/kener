@@ -18,6 +18,7 @@ export interface EmailJobData {
   toEmails: string[];
   templateHtmlBody: string;
   templateSubject: string;
+  templateTextBody?: string;
   variables: Record<string, string | number | boolean>;
   fromEmail?: string;
 }
@@ -33,7 +34,8 @@ const addWorker = () => {
   if (worker) return worker;
 
   worker = q.createWorker(getQueue(), async (job: Job): Promise<void> => {
-    const { toEmails, templateHtmlBody, templateSubject, variables, fromEmail } = job.data as EmailJobData;
+    const { toEmails, templateHtmlBody, templateSubject, templateTextBody, variables, fromEmail } =
+      job.data as EmailJobData;
 
     try {
       await sendEmail(
@@ -42,6 +44,7 @@ const addWorker = () => {
         variables,
         toEmails, // Single recipient array
         fromEmail,
+        templateTextBody,
       );
       console.log(`📧 Email sent to ${toEmails}`);
     } catch (error) {

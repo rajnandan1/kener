@@ -21,7 +21,7 @@ export const load: PageServerLoad = async ({ params }) => {
   }
 
   const requestedVersion = versionSlug;
-  const config = getDocsConfig(requestedVersion);
+  const config = getDocsConfig(requestedVersion, undefined, pageSlug);
   const slug = resolvePageSlugForConfig(pageSlug, config, requestedVersion);
 
   if (!pageSlug) {

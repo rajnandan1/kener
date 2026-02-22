@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { DocsConfig } from "$lib/types/docs";
 
+  import { browser } from "$app/environment";
   import { goto } from "$app/navigation";
   import Sun from "@lucide/svelte/icons/sun";
   import Moon from "@lucide/svelte/icons/moon";
@@ -23,11 +24,15 @@
   let { config, currentSlug, onMenuToggle, isMobileMenuOpen = false }: Props = $props();
   let searchOpen = $state(false);
 
-  function isActiveTab(url: string): boolean {
-    if (url === "/docs") {
-      return currentSlug === "" || !currentSlug.startsWith("api-reference");
-    }
-    return currentSlug.startsWith(url.replace("/docs/", ""));
+  type DocsNavTab = NonNullable<DocsConfig["navigation"]>["tabs"][number];
+
+  function getDefaultTabKey(): string | null {
+    const tabs = config.navigation?.tabs ?? [];
+    return tabs.find((tab) => (tab.sidebar?.length ?? 0) > 0)?.key ?? tabs[0]?.key ?? null;
+  }
+
+  function getActiveTabKey(): string | null {
+    return config.activeTabKey ?? getDefaultTabKey();
   }
 
   function getVersionHref(versionSlug: string): string {
@@ -60,6 +65,38 @@
 
   async function selectVersion(versionSlug: string) {
     await goto(getVersionHref(versionSlug));
+  }
+
+  function getTabHref(tab: DocsNavTab): string {
+    if (tab.url) {
+      return tab.url;
+    }
+
+    const activeVersion = config.activeVersion;
+    const firstPageSlug = tab.firstPageSlug;
+
+    if (!activeVersion) {
+      return "/docs";
+    }
+
+    if (!firstPageSlug) {
+      return `/docs/${activeVersion}`;
+    }
+
+    const normalizedFirstPageSlug = firstPageSlug.startsWith(`${activeVersion}/`)
+      ? firstPageSlug.slice(activeVersion.length + 1)
+      : firstPageSlug;
+
+    return `/docs/${activeVersion}/${normalizedFirstPageSlug}`;
+  }
+
+  async function selectTab(tab: DocsNavTab) {
+    if (tab.url) {
+      window.location.href = tab.url;
+      return;
+    }
+
+    await goto(getTabHref(tab));
   }
 
   function openSearch() {
@@ -168,16 +205,17 @@
   </div>
 
   <!-- Sub Navbar with Tabs -->
-  {#if config.navigation?.tabs}
+  {#if config.navigation?.tabs && config.navigation.tabs.length > 1}
     <div class="border-border/50 px-0">
-      <nav class="mx-auto flex h-10 items-center gap-1 px-4">
-        {#each config.navigation.tabs as tab (tab.url)}
+      <nav class="mx-auto flex h-10 items-center gap-2 px-4">
+        {#each config.navigation.tabs as tab, index (`${tab.name}-${index}`)}
           <Button
-            href={tab.url}
-            rel="external"
-            variant={!isActiveTab(tab.url) ? "ghost" : "secondary"}
+            variant="ghost"
             size="sm"
-            class=""
+            class="rounded-none  border-0 {tab.key === getActiveTabKey()
+              ? 'border-b-accent-foreground! border-b!'
+              : ''}"
+            onclick={() => selectTab(tab)}
           >
             {tab.name}
           </Button>
