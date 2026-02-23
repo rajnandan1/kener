@@ -48,8 +48,8 @@
 	</picture>
 </p>
 
-| [🌍 Live Server](https://kener.ing) | [🎉 Quick Start](https://kener.ing/docs/quick-start) | [🗄 Documentation](https://kener.ing/docs/home) |
-| ----------------------------------- | ---------------------------------------------------- | ----------------------------------------------- |
+| [🌍 Live Server](https://kener.ing) | [🎉 Quick Start](https://kener.ing/docs/v4/getting-started/quick-start) | [🗄 Documentation](https://kener.ing/docs/v4/getting-started/introduction) |
+| ----------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 
 ## What is Kener?
 
