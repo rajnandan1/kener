@@ -50,7 +50,7 @@
         {...props}
         variant="outline"
         size={compact ? "icon-sm" : "sm"}
-        class="bg-background/80 dark:bg-background/70 border-foreground/10 relative rounded-full border text-xs shadow-none backdrop-blur-md"
+        class="bg-background/80 dark:bg-background/70 border-foreground/10 relative mr-2 rounded-full border text-xs shadow-none backdrop-blur-md"
         aria-label={$t("Notifications")}
       >
         {#if loading}
