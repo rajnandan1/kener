@@ -124,12 +124,7 @@
               </Table.Cell>
 
               <Table.Cell class="text-right">
-                <Button
-                  variant="outline"
-                  target="_blank"
-                  size="sm"
-                  href={clientResolver(resolve, `/${page.page_path}`)}
-                >
+                <Button variant="ghost" target="_blank" size="sm" href={clientResolver(resolve, `/${page.page_path}`)}>
                   View
                 </Button>
                 <Button
@@ -137,7 +132,6 @@
                   size="sm"
                   onclick={() => goto(clientResolver(resolve, `/manage/app/pages/${page.id}`))}
                 >
-                  <SettingsIcon class="mr-1 size-4" />
                   Edit
                 </Button>
               </Table.Cell>

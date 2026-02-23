@@ -28,9 +28,15 @@
   });
 </script>
 
-<div class=" px-4">
+<div class="w-full">
   <Drawer.Root bind:open={isOpen} direction="bottom">
-    <Drawer.Trigger class={buttonVariants({ variant: "outline", size: "sm", class: "rounded-btn text-xs" })}>
+    <Drawer.Trigger
+      class={buttonVariants({
+        variant: "ghost",
+        size: "sm",
+        class: "rounded-btn bg-secondary w-full   text-xs"
+      })}
+    >
       {@render children()}
     </Drawer.Trigger>
     <Drawer.Content class="max-h-[80vh]">

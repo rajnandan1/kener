@@ -29,7 +29,7 @@ export const POST: RequestHandler = async ({ request }) => {
   const siteData = await GetAllSiteData();
   const siteVars = siteDataToVariables(siteData);
   const siteUrl = siteVars.site_url || "";
-  let link = `${siteUrl}/account/forgot?view=confirm_token&token=${token}`;
+  let link = `${siteUrl}account/forgot?view=confirm_token&token=${token}`;
 
   const template = await GetGeneralEmailTemplateById("forgot_password");
   if (!template) {

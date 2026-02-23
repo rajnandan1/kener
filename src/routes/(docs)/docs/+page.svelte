@@ -74,60 +74,60 @@
     return findFirstSlug(["quickstart", "introduction"]) ?? data.config.sidebar[0]?.pages[0]?.slug;
   }
 
-  function getApiReferenceSlug(): string {
-    return findFirstSlug(["api-reference"]) ?? "api-reference";
-  }
-
   const coreFeatures: FeatureCard[] = [
     {
       icon: Zap,
       title: "Powerful Monitoring",
       description: "Track API, Ping, TCP, DNS, SSL, SQL, Heartbeat, and GameDig monitors with flexible checks.",
-      href: "/docs/monitors"
+      href: "/docs/monitors/overview"
     },
     {
       icon: Shield,
       title: "Incident Management",
       description: "Create transparent incident timelines with updates, acknowledgements, and clear communication.",
-      href: "/docs/incidents"
+      href: "/docs/incidents/overview"
     },
     {
       icon: Bell,
       title: "Smart Notifications",
       description: "Notify subscribers via email, webhooks, Slack, and Discord with trigger-based workflows.",
-      href: "/docs/notifications"
+      href: "/docs/alerting/overview"
     },
     {
       icon: Wrench,
       title: "Maintenance Scheduling",
       description: "Plan recurring maintenance windows and keep customers informed before, during, and after.",
-      href: "/docs/maintenances"
+      href: "/docs/maintenances/overview"
     },
     {
       icon: Users,
       title: "Multi-user Collaboration",
-      description: "Invite your team with role-based access to monitors, incidents, and configuration workflows."
+      description: "Invite your team with role-based access to monitors, incidents, and configuration workflows.",
+      href: "/docs/user-management"
     },
     {
       icon: Database,
       title: "Multiple Status Pages",
-      description: "Manage multiple branded status pages from one Kener instance for different products or teams."
+      description: "Manage multiple branded status pages from one Kener instance for different products or teams.",
+      href: "/docs/pages"
     },
     {
       icon: Code,
       title: "Complete API Access",
       description: "Automate incidents, monitor operations, and reporting with the full REST API.",
-      href: "/docs/api-reference"
+      href: "/docs/spec/v4/"
     },
     {
       icon: Globe,
       title: "Global Reach",
-      description: "Use localization, timezone-aware display, and SEO-friendly pages for global audiences."
+      description: "Use localization, timezone-aware display, and SEO-friendly pages for global audiences.",
+      href: "/docs/internationalization"
     },
     {
       icon: Palette,
       title: "Customization & Branding",
-      description: "Customize logo, colors, CSS, and theme behavior to match your product identity."
+      description: "Customize logo, colors, CSS, and theme behavior to match your product identity.",
+      href: "/docs/setup/customizations"
     },
     {
       icon: Moon,
@@ -137,7 +137,8 @@
     {
       icon: Book,
       title: "Embeddable Widgets & Badges",
-      description: "Embed status cards and badges into your website, app, or support portal."
+      description: "Embed status cards and badges into your website, app, or support portal.",
+      href: "/docs/sharing"
     },
     {
       icon: Activity,
@@ -193,17 +194,11 @@
   }
 
   function getMetrics(): Array<{ label: string; value: string }> {
-    return [
-      { label: "Open Source", value: "MIT" },
-      { label: "Docs Sections", value: `${data.config.sidebar.length}+` },
-      { label: "Theme", value: "Light / Dark" },
-      { label: "APIs", value: "REST" }
-    ];
+    return [];
   }
 
   function getCtaButtons(): CtaButton[] {
     const quickStartSlug = getQuickStartSlug();
-    const apiReferenceSlug = getApiReferenceSlug();
 
     return [
       {
@@ -213,12 +208,7 @@
       },
       {
         title: "API Reference",
-        href: `/docs/${apiReferenceSlug}`,
-        primary: false
-      },
-      {
-        title: "View Introduction",
-        href: "/docs/introduction",
+        href: "/docs/spec/v4/",
         primary: false
       }
     ];
@@ -226,6 +216,10 @@
 
   function getHref(path: string): string {
     if (!path.startsWith("/docs") || !data.config.activeVersion) {
+      return `${base}${path}`;
+    }
+
+    if (path.startsWith("/docs/spec/")) {
       return `${base}${path}`;
     }
 
@@ -246,6 +240,7 @@
 <svelte:head>
   <title>Documentation - {data.config.name}</title>
   <meta name="description" content="Documentation and guides for {data.config.name}" />
+  <link rel="icon" href={data.config.favicon} />
 </svelte:head>
 
 <div class="bg-background text-foreground min-h-screen">
@@ -309,6 +304,7 @@
         {#each getCtaButtons() as button (button.title)}
           <a
             href={getHref(button.href)}
+            rel="external"
             class={[
               "inline-flex items-center gap-2 rounded px-6 py-3 text-sm font-semibold no-underline transition-all duration-200 md:px-7 md:py-3.5 md:text-base",
               button.primary
@@ -357,6 +353,7 @@
             </div>
             {#if feature.href}
               <a
+                rel="external"
                 href={getHref(feature.href)}
                 class="text-muted-foreground hover:text-foreground text-xs font-medium no-underline transition-colors"
               >

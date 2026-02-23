@@ -1,12 +1,5 @@
 import type { MaintenanceEventRecordDetailed, MonitorAlertConfigRecord, MonitorAlertV2Record } from "../types/db";
-import type {
-  AlertVariableMap,
-  ResendAPIConfiguration,
-  SiteDataForNotification,
-  SMTPConfiguration,
-  SubscriptionVariableMap,
-  TemplateVariableMap,
-} from "./types.js";
+import type { AlertVariableMap, SiteDataForNotification, SubscriptionVariableMap } from "./types.js";
 import GC from "../../global-constants.js";
 import type { SiteDataTransformed } from "../controllers/siteDataController.js";
 import { format } from "date-fns";

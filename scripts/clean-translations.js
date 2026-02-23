@@ -9,6 +9,15 @@ const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, "..");
 const localesDir = path.join(projectRoot, "src", "lib", "locales");
 
+const WHITELISTED_DYNAMIC_KEYS = new Set([
+  "All Systems Operational",
+  "Degraded Performance",
+  "Partial Degraded Performance",
+  "Partial System Outage",
+  "Major System Outage",
+  "No Status Available",
+]);
+
 function fail(message) {
   throw new Error(message);
 }
@@ -191,7 +200,7 @@ function cleanTranslations(report) {
     const localePath = path.join(localesDir, localeFileName);
     const localeData = loadLocaleJson(localePath, localeFileName);
     const unusedKeys = getUnusedKeysForLocale(report, localeFileName);
-    const unusedSet = new Set(unusedKeys);
+    const unusedSet = new Set(unusedKeys.filter((key) => !WHITELISTED_DYNAMIC_KEYS.has(key)));
 
     const currentMappings = localeData.mappings;
     const cleanedMappings = {};

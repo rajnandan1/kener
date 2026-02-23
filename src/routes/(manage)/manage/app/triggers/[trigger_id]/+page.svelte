@@ -451,7 +451,7 @@
                 <p>
                   Please visit the email set up documentation <a
                     class="underline"
-                    href={clientResolver(resolve, "/docs/setup/email-setup")}>here</a
+                    href={clientResolver(resolve, "https://kener.ing/docs/v4/setup/email-setup")}>here</a
                   >.
                 </p>
               </Alert.Description>

@@ -144,18 +144,18 @@
           </p>
         </div>
       </div>
-      {#if showGroupPopover}
-        <div class="flex justify-center gap-2">
-          <GroupMonitorPopover
-            tags={groupChildTags}
-            days={days as number}
-            endOfDayTodayAtTz={endOfDayTodayAtTz as number}
-          >
-            {$t("Included Monitors")} ({groupChildTags.length})
-            <ICONS.ARROW_UP class="size-3" />
-          </GroupMonitorPopover>
-        </div>
-      {/if}
+    {/if}
+    {#if showGroupPopover}
+      <div class="mt-2 flex justify-center gap-2 px-4">
+        <GroupMonitorPopover
+          tags={groupChildTags}
+          days={days as number}
+          endOfDayTodayAtTz={endOfDayTodayAtTz as number}
+        >
+          {groupChildTags.length}
+          {$t("Included Monitors")}
+        </GroupMonitorPopover>
+      </div>
     {/if}
   {/if}
 </div>

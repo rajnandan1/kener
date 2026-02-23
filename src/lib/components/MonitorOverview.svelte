@@ -257,15 +257,15 @@
         <div class="mb-3 flex justify-between gap-4">
           <div class="flex flex-col items-start gap-1">
             <p class="text-lg font-semibold">{displayMinLatency}</p>
-            <p class="text-muted-foreground text-xs">{$t("Min Latency")}</p>
+            <p class="text-muted-foreground text-xs">{$t("Minimum Latency")}</p>
           </div>
           <div class="flex flex-col items-center gap-1">
             <p class="text-lg font-semibold">{displayAvgLatency}</p>
-            <p class="text-muted-foreground text-xs">{$t("Avg Latency")}</p>
+            <p class="text-muted-foreground text-xs">{$t("Average Latency")}</p>
           </div>
           <div class="flex flex-col items-end gap-1">
             <p class="text-lg font-semibold">{displayMaxLatency}</p>
-            <p class="text-muted-foreground text-xs">{$t("Max Latency")}</p>
+            <p class="text-muted-foreground text-xs">{$t("Maximum Latency")}</p>
           </div>
         </div>
 

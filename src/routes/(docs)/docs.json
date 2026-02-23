@@ -209,6 +209,10 @@
                     {
                       "title": "Pages",
                       "content": "v4/pages"
+                    },
+                    {
+                      "title": "Internationalization",
+                      "content": "v4/internationalization"
                     }
                   ]
                 }
@@ -255,7 +259,7 @@
           },
           {
             "name": "Discord",
-            "url": "https://discord.gg/kener"
+            "url": "https://discord.gg/uSTpnuK9XR"
           }
         ]
       }

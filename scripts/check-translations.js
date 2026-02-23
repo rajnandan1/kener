@@ -21,6 +21,15 @@ const TRANSLATION_CALL_REGEX = /\$t\s*\(\s*(["'`])([\s\S]*?)\1\s*(?:,|\))/g;
 
 const COMMENT_PATTERNS = [/\/\*[\s\S]*?\*\//g, /\/\/[^\n\r]*/g, /<!--[\s\S]*?-->/g];
 
+const WHITELISTED_DYNAMIC_KEYS = new Set([
+  "All Systems Operational",
+  "Degraded Performance",
+  "Partial Degraded Performance",
+  "Partial System Outage",
+  "Major System Outage",
+  "No Status Available",
+]);
+
 function decodeQuotedContent(value) {
   return value
     .replace(/\\\\/g, "\\")
@@ -84,6 +93,10 @@ function getUsedTranslationKeys() {
 
       usedKeys.add(decodeQuotedContent(rawKey));
     }
+  }
+
+  for (const key of WHITELISTED_DYNAMIC_KEYS) {
+    usedKeys.add(key);
   }
 
   return {
@@ -171,6 +184,8 @@ function main() {
     scannedSourceDir: "src",
     usedLiteralKeysCount: sortedUsedKeys.length,
     usedLiteralKeys: sortedUsedKeys,
+    whitelistedDynamicKeysCount: WHITELISTED_DYNAMIC_KEYS.size,
+    whitelistedDynamicKeys: [...WHITELISTED_DYNAMIC_KEYS].sort((a, b) => a.localeCompare(b)),
     localeFilesCount: localeFiles.length,
     locales: localesReport,
     skippedDynamicCallsCount: skippedDynamicCalls.length,

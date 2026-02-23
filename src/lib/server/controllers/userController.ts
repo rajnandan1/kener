@@ -315,7 +315,7 @@ export const SendInvitationEmail = async (email: string, role: string, name: str
   const siteData = await GetAllSiteData();
   const siteVars = siteDataToVariables(siteData);
   const siteUrl = siteVars.site_url || "";
-  let link = `${siteUrl}/account/invitation?view=confirm_token&token=${token}`;
+  let link = `${siteUrl}account/invitation?view=confirm_token&token=${token}`;
 
   const emailVars = {
     ...siteVars,
@@ -363,7 +363,7 @@ export const ResendInvitationEmail = async (email: string, currentUserRole: stri
   const siteData = await GetAllSiteData();
   const siteVars = siteDataToVariables(siteData);
   const siteUrl = siteVars.site_url || "";
-  let link = `${siteUrl}/account/invitation?view=confirm_token&token=${token}`;
+  let link = `${siteUrl}account/invitation?view=confirm_token&token=${token}`;
 
   const emailVars = {
     ...siteVars,
@@ -412,7 +412,7 @@ export const SendVerificationEmail = async (toUserId: number, currentUser: { id:
   const siteData = await GetAllSiteData();
   const siteVars = siteDataToVariables(siteData);
   const siteUrl = siteVars.site_url || "";
-  const verificationLink = `${siteUrl}/account/verify?view=confirm_token&token=${token}`;
+  const verificationLink = `${siteUrl}account/verify?view=confirm_token&token=${token}`;
 
   const emailVars = {
     ...siteVars,
