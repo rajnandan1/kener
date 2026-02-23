@@ -16,7 +16,7 @@ import IORedis from "ioredis";
 import dotenv from "dotenv";
 import { marked } from "marked";
 import plaintify from "marked-plaintify";
-import { mdToText } from "../src/lib/marked";
+import { mdToText } from "../src/lib/marked.ts";
 
 dotenv.config();
 

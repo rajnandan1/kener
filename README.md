@@ -78,14 +78,14 @@ git clone https://github.com/rajnandan1/kener.git
 cd kener
 
 # Uses docker-compose.yml (includes Redis + Kener)
-# Set a strong KENER_SECRET_KEY in docker-compose.yml before first run
+# Set a strong KENER_SECRET_KEY and ORIGIN in docker-compose.yml before first run
 docker compose up -d
 ```
 
 Open `http://localhost:3000`.
 
 > [!IMPORTANT]
-> Set a strong `KENER_SECRET_KEY` before starting for the first time.
+> Set a strong `KENER_SECRET_KEY` and set `ORIGIN` to your public URL before starting for the first time.
 
 Use `docker-compose.dev.yml` when you want to build from local source instead of pulling the published image:
 
@@ -113,6 +113,7 @@ docker run -d \
 	-p 3000:3000 \
 	-v "$(pwd)/database:/app/database" \
 	-e "KENER_SECRET_KEY=replace_with_a_random_string" \
+	-e "ORIGIN=http://localhost:3000" \
 	-e "REDIS_URL=redis://host.docker.internal:6379" \
 	docker.io/rajnandan1/kener:latest
 ```
@@ -140,6 +141,7 @@ Create a `.env` with at least:
 
 ```dotenv
 KENER_SECRET_KEY=replace_with_a_random_string
+ORIGIN=http://localhost:3000
 REDIS_URL=redis://localhost:6379
 PORT=3000
 ```

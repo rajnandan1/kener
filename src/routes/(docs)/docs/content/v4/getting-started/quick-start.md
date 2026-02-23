@@ -13,14 +13,14 @@ The fastest way to get started is with Docker Compose.
 git clone https://github.com/rajnandan1/kener.git
 cd kener
 
-# Update KENER_SECRET_KEY in docker-compose.yml before first run
+# Update KENER_SECRET_KEY and ORIGIN in docker-compose.yml before first run
 docker compose up -d
 ```
 
 Kener will be available at `http://localhost:3000`.
 
 > [!IMPORTANT]
-> Set a strong value for `KENER_SECRET_KEY` in `docker-compose.yml` before starting.
+> Set a strong value for `KENER_SECRET_KEY` and set `ORIGIN` to your public URL in `docker-compose.yml` before starting.
 
 ### Run pre-built image {#run-pre-built-image-docker-hub-or-ghcr}
 
@@ -57,6 +57,7 @@ Minimum `.env` for Docker:
 
 ```dotenv
 KENER_SECRET_KEY=replace_with_a_random_string
+ORIGIN=http://localhost:3000
 REDIS_URL=redis://host.docker.internal:6379
 PORT=3000
 ```
@@ -70,6 +71,7 @@ docker run -d \
 	-p 3000:3000 \
 	-v "$(pwd)/database:/app/database" \
 	-e "KENER_SECRET_KEY=replace_with_a_random_string" \
+	-e "ORIGIN=http://localhost:3000" \
 	-e "REDIS_URL=redis://host.docker.internal:6379" \
 	docker.io/rajnandan1/kener:latest
 ```
@@ -122,6 +124,7 @@ Create or update your `.env`:
 
 ```dotenv
 KENER_SECRET_KEY=replace_with_a_random_string
+ORIGIN=http://localhost:3000
 REDIS_URL=redis://localhost:6379
 PORT=3000
 # Optional (defaults to SQLite):

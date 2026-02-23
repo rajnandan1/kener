@@ -1,7 +1,4 @@
 <script lang="ts">
-  import CirclePlusFilledIcon from "@lucide/svelte/icons/circle-plus";
-  import MailIcon from "@lucide/svelte/icons/mail";
-  import { Button } from "$lib/components/ui/button/index.js";
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
   import { page } from "$app/state";
   import type { Component } from "svelte";

@@ -20,11 +20,13 @@
         href={clientResolver(resolve, "/")}
         variant="secondary"
         size="sm"
-        class="dark:text-foreground hidden sm:flex"
         target="_blank"
         rel="noopener noreferrer"
       >
         Status Page
+      </Button>
+      <Button href="https://kener.ing/docs" variant="secondary" size="sm" target="_blank" rel="noopener noreferrer">
+        Documentation
       </Button>
     </div>
   </div>

@@ -1,5 +1,4 @@
 import { handler } from "../build/handler.js";
-import { apiReference } from "@scalar/express-api-reference";
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
@@ -7,7 +6,6 @@ import Startup from "../src/lib/server/startup.ts";
 import shutdownSchedulers from "../src/lib/server/schedulers/shutdown.ts";
 import shutdownQueues from "../src/lib/server/queues/shutdown.ts";
 import dbInstance from "../src/lib/server/db/db.ts";
-import fs from "fs-extra";
 import knex from "knex";
 import knexOb from "../knexfile.js";
 

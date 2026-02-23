@@ -44,6 +44,38 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 > [!WARNING]
 > Without `KENER_SECRET_KEY`, Kener will use a default key which is **not secure for production**. You'll see warnings in the console if running without this variable.
 
+### ORIGIN {#origin}
+
+**Purpose**: The public-facing URL of your Kener instance. Required by SvelteKit for CSRF protection in production.
+
+**Why It's Required**: In production builds, SvelteKit validates that POST form submissions originate from the same site. Without `ORIGIN`, all form submissions (login, signup, settings, etc.) will fail with a **"Cross-site POST form submissions are forbidden"** error.
+
+**Requirements**:
+
+- Must include protocol (`http://` or `https://`)
+- Must match the URL users access in their browser
+- No trailing slash
+- Not needed during local development (`vite dev` infers it automatically)
+
+**Examples**:
+
+```bash
+# Local Docker testing
+ORIGIN=http://localhost:3000
+
+# Production
+ORIGIN=https://status.example.com
+
+# With custom port
+ORIGIN=https://status.example.com:8443
+
+# With base path
+ORIGIN=https://example.com
+```
+
+> [!CAUTION]
+> Without `ORIGIN`, **all form submissions will be rejected** in production. This includes login, signup, and admin panel actions. Always set this variable when deploying.
+
 ## Optional Variables {#optional-variables}
 
 ### KENER_BASE_PATH {#kener-base-path}
