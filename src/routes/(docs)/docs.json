@@ -248,6 +248,21 @@
             {
               "name": "API Reference",
               "url": "/docs/spec/v4/"
+            },
+            {
+              "name": "Changelogs",
+              "sidebar": [
+                {
+                  "group": "v4.x",
+                  "collapsible": false,
+                  "pages": [
+                    {
+                      "title": "v4.0.0",
+                      "content": "v4/changelogs/v4.0.0"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         },
