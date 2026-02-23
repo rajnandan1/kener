@@ -1,11 +1,8 @@
-<script>
-	let i = 24 * 60;
+<script lang="ts">
+  const boxes = Array.from({ length: 24 * 60 }, (_, i) => i);
 </script>
 
-<!-- Loop i times -->
-{#each Array.from({ length: i }, (ii, i) => i) as k}
-	<div
-		class="today-sq animatebg m-[1px] h-[10px] w-[10px]"
-		style="animation-delay:{Math.random(0, 1) * (k * 15)}ms;"
-	></div>
+<!-- Loop 1440 times (24 hours * 60 minutes) -->
+{#each boxes as k (k)}
+  <div class="today-sq animatebg m-px h-2.5 w-2.5" style="animation-delay:{Math.random() * (k * 15)}ms;"></div>
 {/each}

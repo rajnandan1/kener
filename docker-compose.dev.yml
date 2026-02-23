@@ -1,0 +1,55 @@
+# =============================================================================
+# Kener v4 — Development Docker Compose (local build testing)
+#
+# Builds the image from the local Dockerfile instead of pulling from a registry.
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up -d --build
+#
+# Build a specific variant:
+#   docker compose -f docker-compose.dev.yml build --build-arg VARIANT=debian
+#   docker compose -f docker-compose.dev.yml up -d
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # Redis
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: kener-redis-dev
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Kener — built from local Dockerfile
+  # ---------------------------------------------------------------------------
+  kener:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        VARIANT: alpine # or "debian"
+        NODE_VERSION: 24
+        WITH_DOCS: "true"
+    container_name: kener-dev
+    environment:
+      KENER_SECRET_KEY: dev-secret-key-for-local-testing-only
+      ORIGIN: http://localhost:3000
+      REDIS_URL: redis://redis:6379
+      # DATABASE_URL: sqlite://./database/kener.sqlite.db
+    ports:
+      - "3000:3000"
+    volumes:
+      - dev_data:/app/database
+    depends_on:
+      redis:
+        condition: service_healthy
+
+volumes:
+  dev_data:

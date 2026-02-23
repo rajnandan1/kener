@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ***************************************************
  * *                                                 *
@@ -5,7 +6,6 @@
  * *                                                 *
  * ***************************************************
  **/
-// @ts-nocheck
 
 (function () {
   let loadJS = function (url, implementationCode, location) {
@@ -23,7 +23,7 @@
   };
   let initJS = function () {
     window.amplitude.add(window.sessionReplay.plugin({ sampleRate: 1 }));
-    window.amplitude.init("{{api_key}}", { fetchRemoteConfig: true, autocapture: true });
+    window.amplitude.init("{{api_key}}", { fetchRemoteConfig: true, autocapture: true, serverUrl: "{{server_url}}" });
 
     window.addEventListener("analyticsEvent", function (e) {
       // Extract event name and data from the custom event

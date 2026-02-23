@@ -1,18 +1,27 @@
-<script>
+<script lang="ts">
   import { onMount, onDestroy, beforeUpdate } from "svelte";
   import { createEventDispatcher } from "svelte";
 
   const dispatch = createEventDispatcher();
 
-  export let monitor;
-  export let theme = "light";
-  export let bgc = "transparent";
-  export let locale = "en";
+  export let monitor: string;
+  export let theme: string = "light";
+  export let bgc: string = "transparent";
+  export let locale: string = "en";
 
-  let iframe, listeners;
+  interface MessageData {
+    height?: string;
+    width?: string;
+  }
+
+  let iframe: HTMLIFrameElement | null = null;
+  let listeners: ((event: MessageEvent<MessageData>) => void) | null = null;
   let containerId = `embed-container-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
   let isMounted = false;
-  let prevMonitor, prevTheme, prevBgc, prevLocale;
+  let prevMonitor: string | undefined;
+  let prevTheme: string | undefined;
+  let prevBgc: string | undefined;
+  let prevLocale: string | undefined;
 
   onMount(() => {
     if (!monitor) return;
@@ -35,26 +44,33 @@
     iframe.width = "0%";
     iframe.height = "0";
     iframe.frameBorder = "0";
-    iframe.allowTransparency = true;
-    iframe.sandbox =
-      "allow-modals allow-forms allow-same-origin allow-scripts allow-popups allow-top-navigation-by-user-activation allow-downloads";
+    (iframe as HTMLIFrameElement & { allowTransparency: boolean }).allowTransparency = true;
+    iframe.sandbox.add(
+      "allow-modals",
+      "allow-forms",
+      "allow-same-origin",
+      "allow-scripts",
+      "allow-popups",
+      "allow-top-navigation-by-user-activation",
+      "allow-downloads"
+    );
     iframe.allow = "midi; geolocation; microphone; camera; display-capture; encrypted-media;";
 
     container.appendChild(iframe);
 
-    const setHeight = (data) => {
-      if (data.height !== undefined) {
+    const setHeight = (data: MessageData) => {
+      if (data.height !== undefined && iframe) {
         iframe.height = data.height;
       }
     };
 
-    const setWidth = (data) => {
-      if (data.width !== undefined) {
+    const setWidth = (data: MessageData) => {
+      if (data.width !== undefined && iframe) {
         iframe.width = data.width;
       }
     };
 
-    listeners = (event) => {
+    listeners = (event: MessageEvent<MessageData>) => {
       if (event.data && event.data.height !== undefined) {
         setHeight(event.data);
       }
@@ -89,7 +105,7 @@
   });
 
   onDestroy(() => {
-    if (iframe) {
+    if (iframe && listeners) {
       window.removeEventListener("message", listeners);
       iframe.remove();
     }

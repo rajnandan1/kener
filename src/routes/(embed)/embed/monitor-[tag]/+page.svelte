@@ -1,70 +1,87 @@
-<script>
-	import Monitor from "$lib/components/monitor.svelte";
-	import * as Card from "$lib/components/ui/card";
-	import { Separator } from "$lib/components/ui/separator";
-	import { Badge } from "$lib/components/ui/badge";
-	import { page } from "$app/stores";
-	import { onMount, afterUpdate, onDestroy } from "svelte";
-	import { l } from "$lib/i18n/client";
+<script lang="ts">
+  import { onMount } from "svelte";
+  import { setMode } from "mode-watcher";
+  import { resolve } from "$app/paths";
+  import StatusBarCalendar from "$lib/components/StatusBarCalendar.svelte";
+  import { Skeleton } from "$lib/components/ui/skeleton/index.js";
+  import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
+  import { t } from "$lib/stores/i18n";
+  import clientResolver from "$lib/client/resolver.js";
+  interface Props {
+    data: {
+      monitorTag: string;
+      days: number;
+      endOfDayTodayAtTz: number;
+      theme: string;
+      localTz: string;
+    };
+  }
 
-	let element;
-	let previousHeight = 0;
-	let previousWidth = 0;
-	export let data;
-	let embed = true;
+  let { data }: Props = $props();
 
-	function handleHeightChange(event) {
-		//use window.postMessage to send the height to the parent
+  // State
+  let loading = $state(true);
+  let overviewData = $state<MonitorBarResponse | null>(null);
+  let error = $state<string | null>(null);
 
-		window.parent.postMessage(
-			{
-				height: element.offsetHeight,
-				width: element.offsetWidth,
-				slug: $page.params.tag
-			},
-			"*"
-		);
-	}
+  const localTz = $derived(data.localTz || "UTC");
 
-	onMount(() => {
-		if (data.theme === "dark") {
-			document.documentElement.classList.add("dark");
-		} else {
-			document.documentElement.classList.remove("dark");
-		}
-	});
+  // Display values from API response
+  let displayUptime = $derived(overviewData?.uptime ?? "--");
+  let displayAvgLatency = $derived(overviewData?.avgLatency ?? "--");
+  let displayData = $derived(overviewData?.uptimeData ?? []);
+
+  async function fetchData() {
+    loading = true;
+    error = null;
+
+    try {
+      const url = `?tag=${data.monitorTag}&endOfDayTodayAtTz=${data.endOfDayTodayAtTz}&days=${data.days}`;
+      const response = await fetch(clientResolver(resolve, "/dashboard-apis/monitor-bar") + url);
+
+      if (!response.ok) {
+        throw new Error("Monitor not found");
+      }
+
+      overviewData = await response.json();
+    } catch (e) {
+      console.error("Failed to fetch monitor data:", e);
+      error = e instanceof Error ? e.message : "Failed to load data";
+    } finally {
+      loading = false;
+    }
+  }
+
+  onMount(() => {
+    if (data.theme) {
+      setMode(data.theme === "dark" ? "dark" : "light");
+    }
+    fetchData();
+  });
 </script>
 
-{#if data.monitors.length > 0}
-	<section class="w-fit p-0.5" bind:this={element}>
-		<Card.Root class="w-[575px]      pt-0 shadow-none">
-			<Card.Content class="monitors-card embed p-0 pt-0">
-				{#each data.monitors as monitor}
-					<Monitor
-						{monitor}
-						localTz={data.localTz}
-						selectedLang={data.selectedLang}
-						lang={data.lang}
-						{embed}
-						on:heightChange={handleHeightChange}
-					/>
-				{/each}
-			</Card.Content>
-		</Card.Root>
-	</section>
-{:else}
-	<section
-		class="mx-auto mb-4 flex w-full max-w-[655px] flex-1 flex-col items-start justify-center bg-transparent"
-		id=""
-	>
-		<Card.Root class="mx-auto bg-transparent">
-			<Card.Content class="bg-transparent pt-4">
-				<h1
-					class="scroll-m-20 text-center text-2xl font-extrabold tracking-tight lg:text-2xl"
-				>
-					{l(data.lang, "No Monitor Found")}
-				</h1>
-			</Card.Content>
-		</Card.Root>
-	</section>
-{/if}
+<div class="flex flex-col gap-2 p-2">
+  {#if loading}
+    <!-- Loading skeleton -->
+    <div class="flex items-center justify-between">
+      <Skeleton class="h-4 w-20" />
+      <Skeleton class="h-4 w-24" />
+    </div>
+    <Skeleton class="h-7.5 w-full rounded" />
+  {:else if error}
+    <div class="text-muted-foreground text-xs">
+      {$t("Failed to load data")}
+    </div>
+  {:else}
+    <!-- Stats row -->
+    <div class="flex items-center justify-between text-xs font-semibold">
+      <span class="text-foreground">{displayUptime}% {$t("Uptime")}</span>
+      {#if displayAvgLatency !== "--"}
+        <span class="">{displayAvgLatency} {$t("Avg Latency")}</span>
+      {/if}
+    </div>
+
+    <!-- Status bar calendar -->
+    <StatusBarCalendar data={displayData} monitorTag={data.monitorTag} barHeight={30} radius={4} disableClick={true} />
+  {/if}
+</div>

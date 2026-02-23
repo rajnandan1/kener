@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ***************************************************
  * *                                                 *
@@ -5,7 +6,6 @@
  * *                                                 *
  * ***************************************************
  **/
-// @ts-nocheck
 
 (function (f, b) {
   if (!b.__SV) {
@@ -67,7 +67,7 @@
   }
 })(document, window.mixpanel || []);
 
-window.mixpanel.init("{{YOUR_PROJECT_TOKEN}}", { track_pageview: true, autocapture: true });
+window.mixpanel.init("{{YOUR_PROJECT_TOKEN}}", { track_pageview: true, autocapture: true, api_host: "{{api_host}}" });
 
 window.addEventListener("analyticsEvent", function (e) {
   const eventName = e.detail.event;

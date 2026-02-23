@@ -6,7 +6,7 @@
 </details>
 
 <p align="center">
-	<img src="https://kener.ing/newbg.png?v=1" width="100%" height="auto" class="rounded-lg shadow-lg" alt="kener example illustration">
+	<img src="https://kener.ing/og.jpg?v=1" width="100%" height="auto" class="rounded-lg shadow-lg" alt="kener example illustration">
 </p>
 
 <p align="center">
@@ -67,132 +67,120 @@ Designed with **ease of use** and **customization in mind**, Kener provides all 
 
 “Kener” is inspired by the Assamese word _“Kene”_, meaning _“how’s it going?”_. The _‘.ing’_ was added because, well… that domain was available. 😄
 
-## Installation
+## Quick Start
 
-### Manual
+Get Kener running in minutes.
 
-```shell
-# Clone the repository
+### Docker (recommended)
+
+```bash
+git clone https://github.com/rajnandan1/kener.git
+cd kener
+
+# Uses docker-compose.yml (includes Redis + Kener)
+# Set a strong KENER_SECRET_KEY and ORIGIN in docker-compose.yml before first run
+docker compose up -d
+```
+
+Open `http://localhost:3000`.
+
+> [!IMPORTANT]
+> Set a strong `KENER_SECRET_KEY` and set `ORIGIN` to your public URL before starting for the first time.
+
+Use `docker-compose.dev.yml` when you want to build from local source instead of pulling the published image:
+
+```bash
+docker compose -f docker-compose.dev.yml up -d --build
+```
+
+Or combine both files to keep base production config while overriding Kener with a local build:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+```
+
+### Run pre-built image
+
+You can use either image:
+
+- `docker.io/rajnandan1/kener:latest`
+- `ghcr.io/rajnandan1/kener:latest`
+
+```bash
+mkdir -p database
+docker run -d \
+	--name kener \
+	-p 3000:3000 \
+	-v "$(pwd)/database:/app/database" \
+	-e "KENER_SECRET_KEY=replace_with_a_random_string" \
+	-e "ORIGIN=http://localhost:3000" \
+	-e "REDIS_URL=redis://host.docker.internal:6379" \
+	docker.io/rajnandan1/kener:latest
+```
+
+### Run without Docker
+
+Requirements:
+
+- Node.js `>= 20`
+- Redis
+
+```bash
 git clone https://github.com/rajnandan1/kener.git
 cd kener
 npm install
-cp .env.example .env
-npm run dev
+
+# Start Redis (example)
+docker run -d --name kener-redis -p 6379:6379 redis:7-alpine
+
+npm run build
+npm run start
 ```
 
-### Docker
+Create a `.env` with at least:
 
-Official Docker images for **Kener** are available on [Docker Hub](https://hub.docker.com/r/rajnandan1/kener). Multiple versions are maintained to support different use cases.
-
-<a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.2.19"><img src="https://img.shields.io/badge/Latest_Stable_Release-3.2.19-blue" alt="Kener latest stable version: 3.2.19" /></a>
-
-#### Available Tags
-
-<table>
-	<tr>
-		<th>Image Tag</th>
-		<th>Description</th>
-	</tr>
-	<tr>
-		<td align="left" colspan="2" style="color:#A81D33;text-align:left;">Debian 12 <small>(Bookwork Slim)</small> w/ Node.js v23.7.0 &nbsp;<strong><em>(default)</em></strong></td>
-	</tr>
-	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=latest" target="_blank"><code>latest</code></td>
-		<td>Latest stable release (aka 3.2.19)</td>
-	</tr>
-	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.2.19" target="_blank"><code>3.2.19</code></a></td>
-		<td>Specific release version</td>
-	</tr>
-	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.2" target="_blank"><code>3.2</code></a></td>
-		<td>Major-minor version tag pointing to the latest patch (3.2.19) release within that minor version (3.2.x)</td>
-	</tr>
-	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3" target="_blank"><code>3</code></a></td>
-		<td>Major version tag pointing to the latest stable (3.2.19) release within that major version (3.x.x)</td>
-	</tr>
-	<tr>
-		<td align="left" colspan="2" style="color:#0D597F;text-align:left;">Alpine Linux 3.21 w/ Node.js v23.7.0 &nbsp;<strong><em>(smallest image size)</em></strong></td>
-	</tr>
-	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=alpine" target="_blank"><code>alpine</code></td>
-		<td>Latest stable release (aka 3.2.19)</td>
-	</tr>
-	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.2.19-alpine" target="_blank"><code>3.2.19-alpine</code></a></td>
-		<td>Specific release version</td>
-	</tr>
-	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3.2-alpine" target="_blank"><code>3.2-alpine</code></a></td>
-		<td>Major-minor version tag pointing to the latest patch (3.2.19) release within that minor version (3.2.x)</td>
-	</tr>
-	<tr>
-		<td><a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=3-alpine" target="_blank"><code>3-alpine</code></a></td>
-		<td>Major version tag pointing to the latest stable (3.2.19) release within that major version (3.x.x)</td>
-	</tr>
-</table>
-
-#### Usage
-
-Pull the latest stable version:
-
-```sh
-docker pull rajnandan1/kener:latest
+```dotenv
+KENER_SECRET_KEY=replace_with_a_random_string
+ORIGIN=http://localhost:3000
+REDIS_URL=redis://localhost:6379
+PORT=3000
 ```
 
-Or use the smaller, Alpine-based variant:
+For the full quick start (including local Docker builds and dev mode), see the docs:
 
-```sh
-docker pull rajnandan1/kener:alpine
-```
+- https://kener.ing/docs/quick-start
 
-For a production setup, refer to the sample [docker-compose.yml](https://github.com/rajnandan1/kener/blob/main/docker-compose.yml).
-This keeps things clean, structured, and easy to read while preserving all the details.
-
-### One Click
+## One Click Deployment
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/spSvic?referralCode=1Pn7vs)
 
 ## Features
 
-Here are some of the features that you get out of the box. Please read the documentation to know how to use them.
+Kener combines public status page essentials with advanced admin workflows.
 
-### 📊 &nbsp;Monitoring and Tracking
+### 📊 &nbsp;Monitoring, Reliability, and Communication
 
-- Advanced **application performance monitoring** tools
-- **Real-time network monitoring** capabilities
-- Supports **polling HTTP endpoints** or **pushing data** via REST APIs
-- **Timezone auto-adjustment** for visitors
-- Organize monitors into **custom sections**
-- **Cron-based scheduling** (minimum: **every minute**)
-- **Create complex API polls** (chaining, secrets, etc.)
-- Set a **default status** for monitors
-- Supports **base path hosting in Kubernetes (k8s)**
-- **Pre-built Docker images** for easy deployment
+- Monitor **API, Ping, TCP, DNS, SSL, SQL, Heartbeat, and GameDig** checks
+- Manage incidents with clear timelines, updates, and acknowledgements
+- Schedule maintenance windows and keep users informed throughout
+- Send notifications via **Email, Webhook, Slack, and Discord**
+- Explore historical monitoring data and uptime trends
 
-### 🎨 &nbsp;Customization and Branding
+### 🎨 &nbsp;Status Page Experience and Branding
 
-- Fully **customizable status page**
-- **Badge generation** for status and uptime tracking
-- Support for **custom domains**
-- Embed monitors as **iframes or widgets**
-- **Light & Dark Mode**
-- **Internationalization (i18n) support**
-- **Sleek, beautifully crafted UI**
+- Build branded, customizable status pages (logo, colors, CSS, themes)
+- Support **light/dark mode**, localization, and timezone-aware display
+- Embed status widgets and badges into external sites and portals
+- Provide SEO-friendly public pages for global audiences
 
-### 🚨 &nbsp;Incident Management
+### 🛠️ &nbsp;Operations, Collaboration, and Automation
 
-- **Incident tracking & communication** tools
-- **Comprehensive APIs** for incident management
-
-### 🧑‍💻 &nbsp;User Experience and Design
-
-- **Accessible & user-friendly interface**
-- **Quick & easy installation**
-- **Responsive design** for all devices
-- **Auto SEO & Social Media ready**
-- **Server-Side Rendering (SSR) for better performance**
+- Invite teams with role-based collaboration across workflows
+- Manage multiple status pages from one Kener instance
+- Use trigger-based workflows and template-driven messaging
+- Manage API keys for secure integrations and automations
+- Integrate analytics providers like GA, Plausible, Mixpanel, Umami, and Clarity
+- Access the full REST API for incidents, monitors, and reporting
 
 <div align="left">
     <img alt="Visitor Stats" src="https://widgetbite.com/stats/rajnandan"/>
@@ -200,8 +188,8 @@ Here are some of the features that you get out of the box. Please read the docum
 
 ## Technologies Used
 
--   [SvelteKit](https://kit.svelte.dev/)
--   [shadcn-svelte](https://www.shadcn-svelte.com/)
+- [SvelteKit](https://kit.svelte.dev/)
+- [shadcn-svelte](https://www.shadcn-svelte.com/)
 
 ## Support Me
 

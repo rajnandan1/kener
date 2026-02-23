@@ -1,76 +1,51 @@
-<script>
-  import "../../app.postcss";
-  import "../../kener.css";
-  import Nav from "$lib/components/nav.svelte";
-  import { onMount } from "svelte";
-  import { base } from "$app/paths";
-  import { Button } from "$lib/components/ui/button";
-  import Sun from "lucide-svelte/icons/sun";
-  import Moon from "lucide-svelte/icons/moon";
-  import Languages from "lucide-svelte/icons/languages";
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
-  import { setMode, mode, ModeWatcher } from "mode-watcher";
-  export let data;
+<script lang="ts">
+  import "../layout.css";
+  import "../kener.css";
+  import "../embed.css";
+  import { ModeWatcher } from "mode-watcher";
+  import { resolve } from "$app/paths";
+  import { Toaster } from "$lib/components/ui/sonner/index.js";
 
-  let defaultLocaleKey = data.selectedLang;
-  let defaultTheme = data.site.theme;
-  const allLocales = data.site.i18n?.locales.filter((locale) => locale.selected === true);
-
-  function toggleMode() {
-    if ($mode === "light") {
-      setMode("dark");
-    } else {
-      setMode("light");
-    }
-  }
-  let defaultLocaleValue;
-  if (!allLocales) {
-    defaultLocaleValue = "English";
-  } else {
-    defaultLocaleValue = allLocales.find((locale) => locale.code === defaultLocaleKey).name;
-  }
-
-  onMount(async () => {
-    if (defaultTheme != "none") {
-      setMode(defaultTheme);
-    }
-    //
-  });
+  let { children, data } = $props();
 </script>
 
-<svelte:head>
-  <title>{data.site.title}</title>
-  {#if data.site.favicon && data.site.favicon[0] == "/"}
-    <link rel="icon" id="kener-app-favicon" href="{base}{data.site.favicon}" />
-  {:else if data.site.favicon}
-    <link rel="icon" id="kener-app-favicon" href={data.site.favicon} />
-  {/if}
-  <link href={data.site.font.cssSrc} rel="stylesheet" />
-  {#each Object.entries(data.site.metaTags) as [key, value]}
-    <meta name={key} content={value} />
-  {/each}
-</svelte:head>
 <ModeWatcher />
-<main
-  style="
-	--font-family: {data.site.font.family};
-	--bg-custom: {data.bgc};
-	--up-color: {data.site.colors.UP};
-	--down-color: {data.site.colors.DOWN};
-	--degraded-color: {data.site.colors.DEGRADED}
-	"
->
-  <div class="">
-    <slot />
-  </div>
+<Toaster />
+
+<svelte:head>
+  <title>Kener Status</title>
+  <link rel="icon" href={data.favicon} />
+  {#if data.font?.cssSrc}
+    <link rel="stylesheet" href={data.font.cssSrc} />
+  {/if}
+  {@html `
+	<style id="dynamic-styles">
+		.body {
+			--up: ${data.siteStatusColors.UP};
+			--degraded: ${data.siteStatusColors.DEGRADED};
+			--down: ${data.siteStatusColors.DOWN};
+			--maintenance: ${data.siteStatusColors.MAINTENANCE};
+			--accent: ${data.siteStatusColors.ACCENT || "#f4f4f5"};
+			--accent-foreground: ${data.siteStatusColors.ACCENT_FOREGROUND || data.siteStatusColors.ACCENT || "#e96e2d"};
+			${data.font?.family ? `--font-family:'${data.font.family}', sans-serif;` : ""}
+		}
+		:is(.dark) body {
+			--up: ${data.siteStatusColorsDark.UP};
+			--degraded: ${data.siteStatusColorsDark.DEGRADED};
+			--down: ${data.siteStatusColorsDark.DOWN};
+			--maintenance: ${data.siteStatusColorsDark.MAINTENANCE};
+			--accent: ${data.siteStatusColorsDark.ACCENT || "#27272a"};
+			--accent-foreground: ${data.siteStatusColorsDark.ACCENT_FOREGROUND || data.siteStatusColorsDark.ACCENT || "#e96e2d"};
+		}
+	</style>`}
+</svelte:head>
+<main class="kener-public">
+  {@render children()}
 </main>
 
 <style>
   /* Apply the global font family using the CSS variable */
   * {
     font-family: var(--font-family);
-  }
-  main {
-    background-color: var(--bg-custom);
   }
 </style>

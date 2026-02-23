@@ -1,0 +1,1012 @@
+generatedAt: '2026-02-20T09:12:43.804Z'
+format: yaml
+scannedSourceDir: src
+usedLiteralKeysCount: 104
+usedLiteralKeys:
+  - '%latency %metric latency'
+  - Affected Monitors (%count)
+  - Available Components
+  - Average Latency
+  - Avg Latency
+  - Back
+  - Badges
+  - Continue
+  - Copied
+  - Dark
+  - Day
+  - Day Uptime
+  - Days
+  - Didn't receive the code? Resend
+  - Duration
+  - Email address
+  - Embed Monitor
+  - Embed this monitor in your website or app
+  - End Time
+  - Enter the verification code sent to your email.
+  - Events
+  - Failed to load data
+  - Failed to load latency data
+  - Failed to load status data for this day
+  - Failed to send verification code
+  - Failed to update preference
+  - Get badges for this monitor
+  - Get notified about incidents and scheduled maintenance.
+  - Get notified about incidents updates
+  - Get notified about scheduled maintenance
+  - iFrame
+  - Impact
+  - In Progress
+  - Incident Updates
+  - Incidents
+  - Included Monitors
+  - Last Updated
+  - Latency
+  - Latency Embed
+  - Latency Over Time
+  - Latency Trend
+  - Latest Latency
+  - Latest Status
+  - Light
+  - Live Status
+  - Loading your preferences...
+  - Maintenance Updates
+  - Maintenances
+  - Manage your notification preferences.
+  - Max Latency
+  - Min Latency
+  - Minute-by-minute status data for this day
+  - Network error. Please try again.
+  - No Events in %currentMonth
+  - No events to show
+  - No incidents for this day
+  - No latency data available for this day
+  - No maintenances for this day
+  - No monitors affected
+  - No monitors available.
+  - No ongoing maintenances
+  - No past maintenances
+  - No upcoming maintenances
+  - No Updates
+  - No updates yet
+  - Notifications
+  - One-time
+  - Ongoing
+  - Ongoing Incidents
+  - Past
+  - Per-Minute Status
+  - Pinging
+  - Please enter a valid email address
+  - Please enter the 6-digit verification code
+  - Read less
+  - Read more
+  - Recurring
+  - Script
+  - Select Language
+  - Select latency metric to display
+  - Select Range
+  - Sending...
+  - Standard
+  - Start Time
+  - Status
+  - Status Badge
+  - Status Embed
+  - Status history and latency trend
+  - Subscribe
+  - Subscribe to Updates
+  - There are no incidents or maintenances scheduled for this month.
+  - Total Incidents
+  - Total Maintenances
+  - Under Maintenance
+  - Unknown impact
+  - Upcoming
+  - Updates
+  - Updates (%count)
+  - Uptime
+  - Uptime Badge
+  - Verification failed
+  - Verify
+  - Verifying
+  - We sent a 6-digit code to
+localeFilesCount: 20
+locales:
+  cs.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  de.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  dk.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  en.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  es.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  fa.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  fr.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  hi.json:
+    missing:
+      - '%latency %metric latency'
+      - Day
+      - Days
+      - Included Monitors
+      - Max Latency
+      - Min Latency
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Total Incidents
+      - Total Maintenances
+      - Updates
+      - Verify
+      - Verifying
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing <br /> Incidents
+      - Ongoing <br /> Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - Total <br /> Incidents
+      - Total <br /> Maintenances
+      - UP
+      - Upcoming <br /> Maintenances
+    missingCount: 17
+    unusedCount: 31
+  it.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  ja.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  ko.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  nb-NO.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  nl.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  pl.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  pt-BR.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  ru.json:
+    missing:
+      - '%latency %metric latency'
+      - Day
+      - Days
+      - Included Monitors
+      - Max Latency
+      - Min Latency
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Total Incidents
+      - Total Maintenances
+      - Updates
+      - Verify
+      - Verifying
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing <br /> Incidents
+      - Ongoing <br /> Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - Total <br /> Incidents
+      - Total <br /> Maintenances
+      - UP
+      - Upcoming <br /> Maintenances
+    missingCount: 17
+    unusedCount: 31
+  sk.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  tr.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  vi.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+  zh-CN.json:
+    missing:
+      - Included Monitors
+      - No events to show
+      - No monitors available.
+      - No Updates
+      - Notifications
+      - Recurring
+      - Select latency metric to display
+      - Updates
+    unused:
+      - 24 Hours
+      - 30 Days
+      - 7 Days
+      - 90 Days
+      - All Systems Operational
+      - average
+      - DEGRADED
+      - Degraded Performance
+      - DOWN
+      - Format
+      - Home
+      - IDENTIFIED
+      - Incident
+      - INVESTIGATING
+      - Maintenance
+      - MAINTENANCE
+      - Major System Outage
+      - maximum
+      - minimum
+      - MONITORING
+      - No Status Available
+      - NO_DATA
+      - Ongoing Maintenances
+      - Partial Degraded Performance
+      - Partial System Outage
+      - Recent Incidents
+      - RESOLVED
+      - Theme
+      - Timeline
+      - UP
+      - Upcoming Maintenances
+    missingCount: 8
+    unusedCount: 31
+skippedDynamicCallsCount: 0
+skippedDynamicCalls: []
+

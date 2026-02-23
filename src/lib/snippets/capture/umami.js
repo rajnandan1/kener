@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 /**
  * ***************************************************
  * *                                                 *
@@ -5,7 +7,6 @@
  * *                                                 *
  * ***************************************************
  **/
-// @ts-nocheck
 
 (function () {
   let loadJS = function (url, implementationCode, location) {
@@ -33,6 +34,6 @@
 
   //on dom ready
   document.addEventListener("DOMContentLoaded", function () {
-    loadJS("{{script_src}}", initJS, document.getElementsByTagName("head")[0]);
+    loadJS("{{script_url}}", initJS, document.getElementsByTagName("head")[0]);
   });
 })();

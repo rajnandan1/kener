@@ -1,0 +1,450 @@
+{
+  "$schema": "./docs.schema.json",
+  "name": "Kener Docs",
+  "logo": {
+    "light": "/logo96.png",
+    "dark": "/logo96.png"
+  },
+  "favicon": "/logo96.png",
+  "versions": [
+    {
+      "name": "v4.x",
+      "slug": "v4",
+      "latest": true,
+      "content": {
+        "navigation": {
+          "tabs": [
+            {
+              "name": "Documentation",
+              "sidebar": [
+                {
+                  "group": "Getting Started",
+                  "collapsible": false,
+                  "pages": [
+                    {
+                      "title": "Introduction",
+                      "content": "v4/getting-started/introduction"
+                    },
+                    {
+                      "title": "Quick Start",
+                      "content": "v4/getting-started/quick-start"
+                    },
+                    {
+                      "title": "Basic Setup",
+                      "content": "v4/getting-started/basic-setup"
+                    }
+                  ]
+                },
+                {
+                  "group": "Setup Guide",
+                  "collapsible": false,
+                  "pages": [
+                    {
+                      "title": "Site Configuration",
+                      "content": "v4/setup/site-configuration"
+                    },
+                    {
+                      "title": "Customizations",
+                      "content": "v4/setup/customizations"
+                    },
+                    {
+                      "title": "Environment Variables",
+                      "content": "v4/setup/environment-variables"
+                    },
+                    {
+                      "title": "Email Setup",
+                      "content": "v4/setup/email-setup"
+                    },
+                    {
+                      "title": "Database Setup",
+                      "content": "v4/setup/database-setup"
+                    },
+                    {
+                      "title": "Redis Setup",
+                      "content": "v4/setup/redis-setup"
+                    }
+                  ]
+                },
+                {
+                  "group": "Core Concepts",
+                  "collapsible": false,
+                  "pages": [
+                    {
+                      "title": "Monitors",
+                      "content": "v4/monitors",
+                      "pages": [
+                        {
+                          "title": "Overview",
+                          "content": "v4/monitors/overview"
+                        },
+                        {
+                          "title": "API Monitors",
+                          "content": "v4/monitors/api"
+                        },
+                        {
+                          "title": "Ping Monitors",
+                          "content": "v4/monitors/ping"
+                        },
+                        {
+                          "title": "TCP Monitors",
+                          "content": "v4/monitors/tcp"
+                        },
+                        {
+                          "title": "DNS Monitors",
+                          "content": "v4/monitors/dns"
+                        },
+                        {
+                          "title": "SSL Monitors",
+                          "content": "v4/monitors/ssl"
+                        },
+                        {
+                          "title": "SQL Monitors",
+                          "content": "v4/monitors/sql"
+                        },
+                        {
+                          "title": "Heartbeat Monitors",
+                          "content": "v4/monitors/heartbeat"
+                        },
+                        {
+                          "title": "GameDig Monitors",
+                          "content": "v4/monitors/gamedig"
+                        },
+                        {
+                          "title": "Group Monitors",
+                          "content": "v4/monitors/group"
+                        },
+                        {
+                          "title": "Sharing Monitors",
+                          "content": "v4/sharing"
+                        }
+                      ]
+                    },
+                    {
+                      "title": "Alerting",
+                      "content": "v4/alerting",
+                      "pages": [
+                        {
+                          "title": "Overview",
+                          "content": "v4/alerting/overview"
+                        },
+                        {
+                          "title": "Alert Configurations",
+                          "content": "v4/alerting/alert-configurations"
+                        },
+                        {
+                          "title": "Triggers",
+                          "content": "v4/alerting/triggers"
+                        },
+                        {
+                          "title": "Templates",
+                          "content": "v4/alerting/templates"
+                        },
+                        {
+                          "title": "Webhook Examples",
+                          "content": "v4/alerting/webhook-examples"
+                        }
+                      ]
+                    },
+                    {
+                      "title": "Incidents",
+                      "content": "v4/incidents",
+                      "pages": [
+                        {
+                          "title": "Overview",
+                          "content": "v4/incidents/overview"
+                        },
+                        {
+                          "title": "Creating and Managing",
+                          "content": "v4/incidents/creating-managing"
+                        },
+                        {
+                          "title": "Impact on Monitoring",
+                          "content": "v4/incidents/impact-on-monitoring"
+                        },
+                        {
+                          "title": "Auto-Generated Incidents",
+                          "content": "v4/incidents/auto-generated"
+                        },
+                        {
+                          "title": "Incident Updates",
+                          "content": "v4/incidents/updates"
+                        }
+                      ]
+                    },
+                    {
+                      "title": "Maintenances",
+                      "content": "v4/maintenances",
+                      "pages": [
+                        {
+                          "title": "Overview",
+                          "content": "v4/maintenances/overview"
+                        },
+                        {
+                          "title": "Creating and Managing",
+                          "content": "v4/maintenances/creating-managing"
+                        },
+                        {
+                          "title": "Maintenance Events",
+                          "content": "v4/maintenances/events"
+                        },
+                        {
+                          "title": "Impact on Monitoring",
+                          "content": "v4/maintenances/impact-on-monitoring"
+                        },
+                        {
+                          "title": "RRULE Patterns",
+                          "content": "v4/maintenances/rrule-patterns"
+                        }
+                      ]
+                    },
+                    {
+                      "title": "User Subscriptions",
+                      "content": "v4/subscriptions"
+                    },
+                    {
+                      "title": "User Management",
+                      "content": "v4/user-management"
+                    },
+
+                    {
+                      "title": "Pages",
+                      "content": "v4/pages"
+                    },
+                    {
+                      "title": "Internationalization",
+                      "content": "v4/internationalization"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "Guides",
+              "sidebar": [
+                {
+                  "group": "Guides",
+                  "collapsible": false,
+                  "pages": [
+                    {
+                      "title": "Email Templates",
+                      "content": "v4/guides/email-templates"
+                    },
+                    {
+                      "title": "API Custom Eval Examples",
+                      "content": "v4/guides/api-custom-eval-examples"
+                    },
+                    {
+                      "title": "Alerting Trigger Examples",
+                      "content": "v4/guides/alerting-trigger-examples"
+                    },
+                    {
+                      "title": "Reverse Proxy Setup",
+                      "content": "v4/guides/reverse-proxy"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "API Reference",
+              "url": "/docs/spec/v4/"
+            }
+          ]
+        },
+
+        "footerLinks": [
+          {
+            "name": "GitHub",
+            "url": "https://github.com/rajnandan1/kener"
+          },
+          {
+            "name": "Discord",
+            "url": "https://discord.gg/uSTpnuK9XR"
+          }
+        ]
+      }
+    },
+    {
+      "name": "v3.x",
+      "slug": "v3",
+      "latest": false,
+      "content": {
+        "navigation": {
+          "tabs": [
+            {
+              "name": "Documentation",
+              "sidebar": [
+                {
+                  "group": "Getting Started",
+                  "collapsible": false,
+                  "pages": [
+                    {
+                      "title": "Introduction",
+                      "content": "v3/home"
+                    },
+                    {
+                      "title": "Get Started",
+                      "content": "v3/quick-start"
+                    },
+                    {
+                      "title": "Concepts",
+                      "content": "v3/concepts"
+                    },
+                    {
+                      "title": "Deployment",
+                      "content": "v3/deployment"
+                    },
+                    {
+                      "title": "Databases",
+                      "content": "v3/database"
+                    },
+                    {
+                      "title": "Access Control",
+                      "content": "v3/rbac"
+                    }
+                  ]
+                },
+                {
+                  "group": "Guides",
+                  "collapsible": false,
+                  "pages": [
+                    {
+                      "title": "Setup Environment",
+                      "content": "v3/environment-vars"
+                    },
+                    {
+                      "title": "Use Badges",
+                      "content": "v3/status-badges"
+                    },
+                    {
+                      "title": "Setup Monitors",
+                      "content": "v3/monitors"
+                    },
+                    {
+                      "title": "Setup Triggers",
+                      "content": "v3/triggers"
+                    },
+                    {
+                      "title": "Setup Site",
+                      "content": "v3/site"
+                    },
+                    {
+                      "title": "Setup SEO",
+                      "content": "v3/seo"
+                    },
+                    {
+                      "title": "Setup Home",
+                      "content": "v3/home-page"
+                    },
+                    {
+                      "title": "Setup Theme",
+                      "content": "v3/theme"
+                    },
+
+                    {
+                      "title": "API Keys",
+                      "content": "v3/apikeys"
+                    },
+                    {
+                      "title": "Incident Management",
+                      "content": "v3/incident-management"
+                    },
+                    {
+                      "title": "Embed",
+                      "content": "v3/embed"
+                    },
+                    {
+                      "title": "Custom JS/CSS",
+                      "content": "v3/custom-js-css-guide"
+                    },
+                    {
+                      "title": "Internationalization",
+                      "content": "v3/i18n"
+                    }
+                  ]
+                },
+                {
+                  "group": "Monitors",
+                  "collapsible": false,
+                  "pages": [
+                    {
+                      "title": "API/Website Monitor",
+                      "content": "v3/monitors-api"
+                    },
+                    {
+                      "title": "Ping Monitor",
+                      "content": "v3/monitors-ping"
+                    },
+                    {
+                      "title": "TCP Monitor",
+                      "content": "v3/monitors-tcp"
+                    },
+                    {
+                      "title": "DNS Monitor",
+                      "content": "v3/monitors-dns"
+                    },
+                    {
+                      "title": "Group Monitor",
+                      "content": "v3/monitors-group"
+                    },
+                    {
+                      "title": "SSL Monitor",
+                      "content": "v3/monitors-ssl"
+                    },
+                    {
+                      "title": "SQL Monitor",
+                      "content": "v3/monitors-sql"
+                    },
+                    {
+                      "title": "Heartbeat Monitor",
+                      "content": "v3/monitors-heartbeat"
+                    },
+                    {
+                      "title": "Gamedig Monitor",
+                      "content": "v3/monitors-gamedig"
+                    }
+                  ]
+                },
+                {
+                  "group": "API Reference",
+                  "collapsible": false,
+                  "pages": [
+                    {
+                      "title": "Kener APIs",
+                      "content": "v3/kener-apis"
+                    }
+                  ]
+                },
+                {
+                  "group": "Help",
+                  "collapsible": false,
+                  "pages": [
+                    {
+                      "title": "Fonts",
+                      "content": "v3/custom-fonts"
+                    },
+                    {
+                      "title": "Changelogs",
+                      "content": "v3/changelogs"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+
+        "footerLinks": [
+          {
+            "name": "GitHub",
+            "url": "https://github.com/rajnandan1/kener"
+          },
+          {
+            "name": "Discord",
+            "url": "https://discord.gg/kener"
+          }
+        ]
+      }
+    }
+  ]
+}

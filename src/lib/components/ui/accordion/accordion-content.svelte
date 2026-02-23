@@ -1,25 +1,22 @@
 <script lang="ts">
-	import { Accordion as AccordionPrimitive } from "bits-ui";
-	import { cn } from "$lib/utils";
-	import { slide } from "svelte/transition";
+  import { Accordion as AccordionPrimitive } from "bits-ui";
+  import { cn, type WithoutChild } from "$lib/utils.js";
 
-	type $$Props = AccordionPrimitive.ContentProps;
-
-	let className: $$Props["class"] = undefined;
-	export let transition: $$Props["transition"] = slide;
-	export let transitionConfig: $$Props["transitionConfig"] = {
-		duration: 200
-	};
-	export { className as class };
+  let {
+    ref = $bindable(null),
+    class: className,
+    children,
+    ...restProps
+  }: WithoutChild<AccordionPrimitive.ContentProps> = $props();
 </script>
 
 <AccordionPrimitive.Content
-	class={cn("overflow-hidden text-sm transition-all", className)}
-	{transition}
-	{transitionConfig}
-	{...$$restProps}
+  bind:ref
+  data-slot="accordion-content"
+  class="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down overflow-hidden text-sm"
+  {...restProps}
 >
-	<div class="pb-4 pt-0">
-		<slot />
-	</div>
+  <div class={cn("pt-0 pb-4", className)}>
+    {@render children?.()}
+  </div>
 </AccordionPrimitive.Content>

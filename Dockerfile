@@ -1,148 +1,183 @@
 # syntax=docker/dockerfile:1
 
-# Global build arguments (defined default values in case `.env.build` isn't loaded)
-ARG ALPINE_VERSION_TAG=23.7.0-alpine3.21
-ARG DEBIAN_VERSION_TAG=23.7.0-bookworm-slim
-ARG VARIANT=debian
+# =============================================================================
+# Kener v4 — Status Page Application
+# Multi-stage, multi-variant (Alpine / Debian) Dockerfile
+#
+# Build:
+#   docker build -t kener .                          # Alpine (default)
+#   docker build -t kener --build-arg VARIANT=debian . # Debian Slim
+#   docker build -t kener --build-arg WITH_DOCS=true .  # Include docs
+#
+# Run:
+#   docker run -d -p 3000:3000 \
+#     -e KENER_SECRET_KEY=<secret> \
+#     -e ORIGIN=http://localhost:3000 \
+#     -e REDIS_URL=redis://<host>:6379 \
+#     -v kener_db:/app/database \
+#     kener
+# =============================================================================
 
-#==========================================================#
-#                   STAGE 1: BUILD STAGE                    #
-#==========================================================#
+ARG NODE_VERSION=24
+ARG VARIANT=alpine
+ARG WITH_DOCS=false
 
-FROM node:${DEBIAN_VERSION_TAG} AS builder-debian
-RUN apt-get update && apt-get install -y \
-        build-essential=12.9 \
-        python3=3.11.2-1+b1 \
-        sqlite3=3.40.1-2+deb12u1 \
-        libsqlite3-dev=3.40.1-2+deb12u1 \
-        make=4.3-4.1 \
-        node-gyp=9.3.0-2 \
-        g++=4:12.2.0-3 \
-        tzdata \
-        iputils-ping=3:20221126-1+deb12u1 && \
+# =============================================================================
+#  STAGE 1 — BUILDER  (installs deps, compiles native modules, builds app)
+# =============================================================================
+
+# ---------- Alpine builder ----------
+FROM node:${NODE_VERSION}-alpine AS builder-alpine
+RUN apk add --no-cache \
+    build-base \
+    python3 \
+    sqlite \
+    sqlite-dev \
+    tzdata
+
+# ---------- Debian builder ----------
+FROM node:${NODE_VERSION}-slim AS builder-debian
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    python3 \
+    sqlite3 \
+    libsqlite3-dev \
+    tzdata && \
     rm -rf /var/lib/apt/lists/*
 
-FROM node:${ALPINE_VERSION_TAG} AS builder-alpine
-RUN apk add --no-cache --update \
-        build-base=0.5-r3 \
-        python3 \
-        py3-pip \
-        make=4.4.1-r2 \
-        g++=14.2.0-r4 \
-        sqlite \
-        sqlite-dev \
-        tzdata \
-        iputils
-
+# ---------- Selected variant ----------
 FROM builder-${VARIANT} AS builder
 
-# Set environment variables
-ENV NPM_CONFIG_LOGLEVEL=error \
-    VITE_BUILD_ENV=production
+ENV NPM_CONFIG_LOGLEVEL=error
 
-# Set the working directory
 WORKDIR /app
 
-# Copy package files for dependency installation
+# 1. Copy package manifests first (maximises layer cache hits)
 COPY package*.json ./
 
-# Install all dependencies, including `devDependencies` (cache enabled for faster builds)
-# TODO: Possibly add `--no-audit` flag to `npm ci` to prevent `npm` from running a security audit on installed packages. (By default, `npm install` performs an audit to check for vulnerabilities in dependencies, which can slow down installation. Adding this flag would skip the audit, thus making `npm install` significantly faster for the CI/CD pipeline.)
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci --no-fund && \
+# 2. Install ALL dependencies (devDependencies needed for the build step)
+RUN npm ci --no-fund && \
     npm cache clean --force
 
-# Copy application source code
+# 3. Copy the rest of the source tree
 COPY . .
 
-# TODO: Reevaluate permissions (possibly reduce?)...
-# Remove docs directory and ensure required directories exist
-RUN rm -rf src/routes/\(docs\) \
-        static/documentation \
-        static/fonts/lato/full && \
-    mkdir -p uploads database && \
-    chmod -R 750 uploads database
+# 4. Create directories that the app expects
+RUN mkdir -p database
 
-# Build the application and copy templates to build directory
-RUN npm run build && \
-    mkdir -p build/server/templates && \
-    cp -r src/lib/server/templates/* build/server/templates/ && \
-    npm prune --omit=dev
+# 5. Conditionally remove docs routes before build
+#    (avoids EXDEV rename error in overlayfs; clean .svelte-kit so stale
+#    route types don't persist)
+ARG WITH_DOCS
+RUN if [ "$WITH_DOCS" != "true" ]; then \
+      rm -rf src/routes/\(docs\) .svelte-kit; \
+    fi
 
-#==========================================================#
-#             STAGE 2: PRODUCTION/FINAL STAGE              #
-#==========================================================#
+# 6. Build: SvelteKit (vite) + server bundle (esbuild)
+#    Use build-with-docs when docs are enabled
+RUN if [ "$WITH_DOCS" = "true" ]; then \
+      npm run build-with-docs; \
+    else \
+      npm run build; \
+    fi
 
-FROM node:${DEBIAN_VERSION_TAG} AS final-debian
-# TODO: Consider adding `--no-install-recommends`, but will need testing (may further help reduce final build size)
-RUN apt-get update && apt-get install -y \
-        iputils-ping=3:20221126-1+deb12u1 \
-        sqlite3=3.40.1-2+deb12u1 \
-        tzdata \
-    # TODO: Is it ok to change to `curl` here so that we don't have to maintain `wget` version mismatch between Debian architectures? (`curl` is only used for the container healthcheck and because there is an Alpine variant (best!) we probably don't care if the Debian image ends up building bigger due to `curl`.)
-    curl && \
+# 7. Stage docs runtime files for index-docs (empty dir when docs disabled)
+RUN mkdir -p /docs-runtime && \
+    if [ "$WITH_DOCS" = "true" ]; then \
+      mkdir -p /docs-runtime/scripts && \
+      mkdir -p /docs-runtime/src/lib && \
+      mkdir -p "/docs-runtime/src/routes/(docs)/docs" && \
+      cp scripts/index-docs.ts /docs-runtime/scripts/ && \
+      cp src/lib/marked.ts /docs-runtime/src/lib/ && \
+      cp "src/routes/(docs)/docs.json" "/docs-runtime/src/routes/(docs)/" && \
+      cp -r "src/routes/(docs)/docs/content" "/docs-runtime/src/routes/(docs)/docs/"; \
+    fi
+
+# 8. Remove devDependencies from node_modules
+RUN npm prune --omit=dev
+
+# =============================================================================
+#  STAGE 2 — PRODUCTION  (minimal runtime image)
+# =============================================================================
+
+# ---------- Alpine runtime ----------
+FROM node:${NODE_VERSION}-alpine AS final-alpine
+RUN apk add --no-cache \
+    sqlite \
+    tzdata \
+    iputils \
+    curl \
+    libcap && \
+    # Grant ping the NET_RAW capability so non-root users can send ICMP packets
+    setcap cap_net_raw+ep /bin/ping || true
+
+# ---------- Debian runtime ----------
+FROM node:${NODE_VERSION}-slim AS final-debian
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    sqlite3 \
+    tzdata \
+    iputils-ping \
+    curl \
+    libcap2-bin && \
+    setcap cap_net_raw+ep /usr/bin/ping || true && \
     rm -rf /var/lib/apt/lists/*
 
-FROM node:${ALPINE_VERSION_TAG} AS final-alpine
-RUN apk add --no-cache --update \
-	iputils \
-	sqlite \
-	tzdata
-
+# ---------- Selected variant ----------
 FROM final-${VARIANT} AS final
 
-ARG PORT=3000 \
-    USERNAME=node
+ARG PORT=3000
 
-# Set environment variables
-ENV HEALTHCHECK_PORT=$PORT \
-    HEALTHCHECK_PATH= \
-    NODE_ENV=production \
-    NPM_CONFIG_LOGLEVEL=error \
-    PORT=$PORT \
-    TZ=Etc/UTC
+ENV NODE_ENV=production \
+    PORT=${PORT} \
+    TZ=UTC \
+    # Required so Node can import .ts migration/seed files at runtime
+    NODE_OPTIONS="--experimental-strip-types"
 
-# Set the working directory
 WORKDIR /app
 
-# Copy package files build artifacts, and necessary files from builder stage
-COPY --chown=node:node --from=builder /app/src/lib/ ./src/lib/
-COPY --chown=node:node --from=builder /app/build ./build
-COPY --chown=node:node --from=builder /app/uploads ./uploads
-COPY --chown=node:node --from=builder /app/database ./database
-COPY --chown=node:node --from=builder /app/src/lib/server/templates ./build/server/templates
-# TODO: Consider changing from copying `node_modules` to instead letting `npm ci --omit=dev` handle production dependencies. Right now, copying `node_modules` is leading to a smaller image, whereas letting `npm ci` handle the install in final image is slightly faster, but leads to larger image size. IMO, having a slightly longer build time (e.g. ~10 sec.) is better in the end to have a smaller image.
+# Create writable directories owned by the non-root "node" user
+# (node:node is provided by the official Node.js images)
+RUN mkdir -p database && \
+    chown -R node:node /app
+
+# ---- Copy artifacts from builder (order: least → most likely to change) ----
+
+# Production node_modules (largest layer, changes least often)
 COPY --chown=node:node --from=builder /app/node_modules ./node_modules
-COPY --chown=node:node --from=builder /app/migrations ./migrations
-COPY --chown=node:node --from=builder /app/seeds ./seeds
-COPY --chown=node:node --from=builder /app/static ./static
-COPY --chown=node:node --from=builder /app/entrypoint.sh ./entrypoint.sh
-COPY --chown=node:node --from=builder /app/knexfile.js ./knexfile.js
-COPY --chown=node:node --from=builder /app/main.js ./main.js
-COPY --chown=node:node --from=builder /app/openapi.json ./openapi.json
-COPY --chown=node:node --from=builder /app/openapi.yaml ./openapi.yaml
+
+# Package manifest (needed for ESM "type":"module" resolution)
 COPY --chown=node:node --from=builder /app/package.json ./package.json
 
-# Set container timezone and make entrypoint script executable
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
-    chmod +x ./entrypoint.sh
-  # TODO: To improve security, consider dropping unnecessary capabilities instead of granting image all network capabilities of host. (Maybe `setcap cap_net_raw+p /usr/bin/ping`, etc.) Could also drop all and then grant only the capabilities that are explicitly needed. Some examples are commented out below...
-  # setcap cap_net_bind_service=+ep /usr/local/bin/node
-  # setcap cap_net_bind_service=+ep /usr/bin/ping
-  # setcap cap_net_bind_service=+ep /usr/bin/ping6
-  # setcap cap_net_bind_service=+ep /usr/bin/tracepath
-  # setcap cap_net_bind_service=+ep /usr/bin/clockdiff
+# Knex migrations & seeds (run at startup by build/main.js)
+COPY --chown=node:node --from=builder /app/migrations ./migrations
+COPY --chown=node:node --from=builder /app/seeds ./seeds
 
-# Expose the application port
-EXPOSE $PORT
+# Seed data files imported by seeds at runtime (all are leaf modules)
+COPY --chown=node:node --from=builder /app/src/lib/server/db/seedSiteData.ts      ./src/lib/server/db/seedSiteData.ts
+COPY --chown=node:node --from=builder /app/src/lib/server/db/seedMonitorData.ts   ./src/lib/server/db/seedMonitorData.ts
+COPY --chown=node:node --from=builder /app/src/lib/server/db/seedPagesData.ts     ./src/lib/server/db/seedPagesData.ts
+COPY --chown=node:node --from=builder /app/src/lib/server/templates/general       ./src/lib/server/templates/general
 
-# Add a healthcheck to the container; `wget` vs. `curl` depending on base image. Using this approach because `wget` does not actually maintain versioning across architectures, so we cannot pin a `wget` version (in above `final-debian` base, `apt-get install`) between differing architectures (e.g. arm64, amd64)
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD sh -c 'if [ -f "/etc/alpine-release" ]; then wget --quiet --spider http://localhost:$HEALTHCHECK_PORT$HEALTHCHECK_PATH || exit 1; else curl --silent --head --fail http://localhost:$HEALTHCHECK_PORT$HEALTHCHECK_PATH || exit 1; fi'
+# Build output (SvelteKit client/server + esbuild main.js) — changes most often
+COPY --chown=node:node --from=builder /app/build ./build
 
-# TODO: Revisit letting user define $PUID & $PGID overrides (e.g. `addgroup -g $PGID newgroup && adduser -D -G newgroup -u $PUID node`) as well as potentially ensure no root user exists. (Make sure no processes are running as root, first!)
-# Use a non-root user (recommended for security)
-USER $USERNAME
+# Docs runtime files (index-docs script + markdown sources; empty when WITH_DOCS=false)
+COPY --chown=node:node --from=builder /docs-runtime/ ./
 
-ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["node", "main"]
+# Entrypoint script (runs index-docs on startup when docs are bundled)
+COPY --chown=node:node docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x docker-entrypoint.sh
+
+# ---- Runtime configuration ----
+
+# Switch to non-root user
+USER node
+
+EXPOSE ${PORT}
+
+# Healthcheck: hit the /healthcheck endpoint exposed by Express in main.ts
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD sh -c 'curl -sf http://localhost:${PORT}${KENER_BASE_PATH}/healthcheck || exit 1'
+
+ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["node", "build/main.js"]

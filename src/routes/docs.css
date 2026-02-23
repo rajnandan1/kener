@@ -1,0 +1,184 @@
+/* Prose/Content Body Styles - needed for markdown rendering */
+.docs-content-body {
+  font-size: 1rem;
+  line-height: 1.75;
+}
+
+.docs-content-body h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.docs-content-body h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 0.75rem;
+}
+
+.docs-content-body h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.docs-content-body p {
+  margin-bottom: 1rem;
+}
+
+.docs-content-body a {
+  color: var(--accent-foreground);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.docs-content-body a:hover {
+  text-decoration: none;
+}
+
+.docs-content-body code:not(pre code) {
+  padding: 0.2rem 0.4rem;
+  font-size: 0.875em;
+  background-color: var(--muted);
+  border-radius: var(--radius-sm);
+}
+
+.docs-content-body pre {
+  padding: 1rem;
+  border-radius: var(--radius);
+  background-color: var(--muted) !important;
+  overflow-x: auto;
+  margin: 1rem 0;
+}
+
+.docs-content-body pre code {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.docs-content-body ul,
+.docs-content-body ol {
+  padding-left: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.docs-content-body li {
+  margin-bottom: 0.5rem;
+}
+
+.docs-content-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  font-size: 0.875rem;
+}
+
+.docs-content-body th,
+.docs-content-body td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border: 1px solid var(--border);
+}
+
+.docs-content-body th {
+  background-color: var(--muted);
+  font-weight: 600;
+}
+
+.docs-content-body blockquote {
+  border-left: 4px solid var(--accent-foreground);
+  padding-left: 1rem;
+  margin: 1rem 0;
+  color: var(--muted-foreground);
+  font-style: italic;
+}
+
+/* Prose dark mode fixes */
+.dark .prose {
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-links: var(--accent-foreground);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-code: var(--foreground);
+  --tw-prose-pre-bg: var(--muted);
+}
+
+/* Markdown Alerts (from marked-alert) */
+.markdown-alert {
+  padding: 0.75rem 1rem;
+  margin: 1.5rem 0;
+  border: 2px solid;
+  border-radius: 1rem;
+  background-color: var(--secondary);
+}
+
+.markdown-alert > :first-child {
+  margin-top: 0;
+}
+
+.markdown-alert > :last-child {
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-left: 24px;
+}
+
+.markdown-alert .markdown-alert-title svg {
+  fill: currentColor;
+}
+.markdown-alert .markdown-alert-title {
+  display: flex;
+  align-items: center;
+  gap: 0rem;
+  font-weight: 600;
+  margin-bottom: 0rem;
+}
+
+.markdown-alert-note {
+  border-color: hsl(220 90% 56%);
+  background-color: hsl(220 90% 56% / 0.3);
+}
+
+.markdown-alert-note .markdown-alert-title {
+  color: hsl(220 90% 56%);
+}
+
+.markdown-alert-tip {
+  border-color: hsl(142 76% 36%);
+  background-color: hsl(142 76% 36% / 0.3);
+}
+
+.markdown-alert-tip .markdown-alert-title {
+  color: hsl(142 76% 36%);
+}
+
+.markdown-alert-important {
+  border-color: hsl(271 81% 56%);
+  background-color: hsl(271 81% 56% / 0.3);
+}
+
+.markdown-alert-important .markdown-alert-title {
+  color: hsl(271 81% 56%);
+}
+
+.markdown-alert-warning {
+  border-color: hsl(38 92% 50%);
+  background-color: hsl(38 92% 50% / 0.3);
+}
+
+.markdown-alert-warning .markdown-alert-title {
+  color: hsl(38 92% 50%);
+}
+
+.markdown-alert-caution {
+  border-color: hsl(0 84% 60%);
+  background-color: hsl(0 84% 60% / 0.3);
+}
+
+.markdown-alert-caution .markdown-alert-title {
+  color: hsl(0 84% 60%);
+}

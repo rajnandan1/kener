@@ -1,4 +1,6 @@
 .DS_Store
+.DS_STORE
+**/.DS_Store
 node_modules
 static/kener
 build
@@ -29,3 +31,7 @@ static/uploads/*
 !static/uploads/upload.dir
 temp.txt
 temp.js
+.DS_Store
+knip-output.txt
+check-output.txt
+translation-report.json

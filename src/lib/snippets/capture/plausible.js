@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 /**
  * ***************************************************
  * *                                                 *
@@ -5,7 +7,6 @@
  * *                                                 *
  * ***************************************************
  **/
-// @ts-nocheck
 
 (function () {
   let loadJS = function (url, implementationCode, location) {

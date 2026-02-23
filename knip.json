@@ -1,0 +1,27 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": ["src/app.html", "build/main.js", "scripts/**/*.{js,ts}", "migrations/**/*.{js,ts}", "seeds/**/*.{js,ts}"],
+  "project": ["src/**/*.{js,ts,svelte}", "scripts/**/*.{js,ts}", "migrations/**/*.{js,ts}", "seeds/**/*.{js,ts}"],
+  "ignore": ["src/lib/components/ui/**"],
+  "ignoreDependencies": [
+    "@babel/runtime",
+    "js-yaml",
+    "mysql2",
+    "node-cache",
+    "pg",
+    "pg-pool",
+    "randomstring",
+    "style-to-object",
+    "lucide-svelte",
+    "marked-gfm-heading-id"
+  ],
+  "ignoreExportsUsedInFile": {
+    "interface": true,
+    "type": true
+  },
+  "ignoreBinaries": [],
+  "compilers": {
+    "css": ["postcss"],
+    "svelte": ["svelte"]
+  }
+}

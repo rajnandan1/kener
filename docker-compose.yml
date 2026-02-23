@@ -1,61 +1,115 @@
-# Docker Compose Configuration
-# Description: This file sets up a multi-container environment for Kener (https://github.com/rajnandan1/kener).
-# Last Updated: 2025-02-08
-# Docker Compose Version: 3.8
-# Notes: Ensure that you specify a random value for the `KENER_SECRET_KEY` environment variable before running `docker-compose up -d`.
-
-version: '3.8'
+# =============================================================================
+# Kener v4 — Production Docker Compose
+#
+# Usage:
+#   docker compose up -d
+#
+# Defaults to the published image. To use a local build instead:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# =============================================================================
 
 services:
-  kener:
-    image: rajnandan1/kener:latest      # Change to 'rajnandan1/kener:alpine' for an even smaller image! 😁🚀
-    container_name: kener
-    # env_file: custom.env              # Uncomment this if you are needing to export environment variables from a custom environment file. By default, Docker will import any variables that exist in `.env`
-    environment:
-      TZ: Etc/UTC
-      KENER_SECRET_KEY: replace_me_with_a_random_string   # Keep private!! - best to define in `.env` file or through Docker Secret
-      # DATABASE_URL: custom_db_url     # By default, a SQLite database is used - you may override the database url/type here
-      # RESEND_API_KEY: 
-      # RESEND_SENDER_EMAIL: 
-
-      ### You most likely will NOT need to change anything below this line. Be sure you know what you're doing!! (https://kener.ing/docs/deployment/#docker-environment-variables)
-
-      # PORT: 3000                      # Port that app listens on in the container
-      # KENER_BASE_PATH:                # By default, Kener runs at `/`. You may change this to be, e.g. `/status`, etc. Do NOT add a trailing slash!! (more info here: https://kener.ing/docs/deployment/#docker-environment-variables)
-      # ORIGIN: http://localhost:3000
-      # NODE_ENV: production            # This is already set to "production" by default within the container
-    ports:
-      - '3000:3000/tcp'
+  # ---------------------------------------------------------------------------
+  # Redis — required for BullMQ queues, caching, and scheduler
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: kener-redis
+    restart: unless-stopped
     volumes:
-      - data:/app/database              # We suggest using a Docker named volume, which is more performant for databases
-      - $(pwd)/uploads:/app/uploads
-    # read_only: true                   # Uncommenting this fortifies security by marking the container's filesystem as read-only (aka no data can be written to the container's filesystem except for explicitly defined writable volumes and bind mounts, an exception has already been defined for `/database` and `/uploads`)
-    restart: unless-stopped
-    # depends_on:                       #  <-- Uncomment if you would like to use PostgreSQL or MySQL
-    #   - postgres                      #       ...instead of SQLite
-    #   - mysql                         #
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # Only use below section if you would like to utilize PostgreSQL instead of Kener's default SQLite database. (Don't forget to set `DATABASE_URL` in `kener` service to be: `DATABASE_URL=postgresql://db_user:db_password@localhost:5432/kener_db`)
-  postgres:
-    image: postgres:alpine
-    container_name: postgres
+  # ---------------------------------------------------------------------------
+  # Kener — Status Page Application
+  # ---------------------------------------------------------------------------
+  kener:
+    image: rajnandan1/kener:latest
+    # For Alpine variant use: rajnandan1/kener:alpine
+    container_name: kener
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: some_super_random_secure_password   # Best to define this in `.env` or via Docker Secret!!
-      POSTGRES_DB: kener_db
+      # ── Required ──
+      KENER_SECRET_KEY: replace_me_with_a_random_string # generate: openssl rand -base64 32
+      ORIGIN: http://localhost:3000 # public URL of your Kener instance (required for CSRF protection)
+      REDIS_URL: redis://redis:6379
+
+      # ── Database (default: SQLite) ──
+      # DATABASE_URL: sqlite://./database/kener.sqlite.db
+      # DATABASE_URL: postgresql://user:password@postgres:5432/kener
+      # DATABASE_URL: mysql://user:password@mysql:3306/kener
+
+      # ── Email (optional) ──
+      # RESEND_API_KEY:
+      # RESEND_SENDER_EMAIL:
+      # SMTP_HOST:
+      # SMTP_PORT:
+      # SMTP_USER:
+      # SMTP_PASSWORD:
+      # SMTP_SENDER:
+      # SMTP_SECURE: 0
+
+      # ── Advanced (you likely don't need to change these) ──
+      # PORT: 3000
+      # KENER_BASE_PATH:
+      # NODE_ENV: production          # already set in the image
+    ports:
+      - "3000:3000"
+    volumes:
+      - data:/app/database
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
 
-  # Only use below section if you would like to utilize MySQL instead of Kener's default SQLite database. (Don't forget to set `DATABASE_URL` in `kener` service to be: `DATABASE_URL=mysql://db_user:db_password@localhost:3306/kener_db`)
-  mysql:
-    image: mariadb:11
-    container_name: mysql
-    environment:
-      MYSQL_USER: user
-      MYSQL_PASSWORD: some_super_random_secure_password   # Best to define this in `.env` or via Docker Secret!!
-      MYSQL_DATABASE: kener_db
-      MYSQL_RANDOM_ROOT_PASSWORD: true
-    restart: unless-stopped
+  # ---------------------------------------------------------------------------
+  # Optional: PostgreSQL (uncomment and set DATABASE_URL above)
+  # ---------------------------------------------------------------------------
+  # postgres:
+  #   image: postgres:16-alpine
+  #   container_name: kener-postgres
+  #   environment:
+  #     POSTGRES_USER: kener
+  #     POSTGRES_PASSWORD: change_me        # use a strong password
+  #     POSTGRES_DB: kener
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U kener"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Optional: MySQL / MariaDB (uncomment and set DATABASE_URL above)
+  # ---------------------------------------------------------------------------
+  # mysql:
+  #   image: mariadb:11
+  #   container_name: kener-mysql
+  #   environment:
+  #     MYSQL_USER: kener
+  #     MYSQL_PASSWORD: change_me            # use a strong password
+  #     MYSQL_DATABASE: kener
+  #     MYSQL_RANDOM_ROOT_PASSWORD: "true"
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
 
 volumes:
   data:
     name: kener_db
+  redis_data:
+    name: kener_redis
+  # postgres_data:
+  #   name: kener_postgres
+  # mysql_data:
+  #   name: kener_mysql

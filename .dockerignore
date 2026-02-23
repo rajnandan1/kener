@@ -1,9 +1,51 @@
+# Dependencies
 node_modules
+
+# Version control
 .git
 .github
+
+# IDE and editor
 .vscode
-dist
+.idea
+*.swp
+*.swo
+
+# Build outputs (rebuilt inside Docker)
 build
+dist
+.svelte-kit
+.docs-excluded
+
+# Environment and secrets
 .env
+.env.*
+!.env.example
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Logs
 *.log
+npm-debug.log*
+
+# Docker files (prevent recursive context)
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Documentation and meta
+README.md
+README.template.md
+AGENTS.md
+CHANGELOG.md
+LICENSE
+check-output.txt
+
+# AI / tooling config
+.claude
+
+# Test artifacts
+*.test.*
+*.spec.*

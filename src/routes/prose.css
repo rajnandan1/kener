@@ -1,0 +1,112 @@
+@reference "../routes/layout.css";
+
+/* Custom styles for prose code blocks */
+.prose pre,
+.prose .code-block {
+  border-radius: 0.5rem;
+  border: 1px solid #374151;
+  background-color: #111827;
+  color: #f3f4f6;
+  padding: 1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  display: block;
+}
+
+.prose strong {
+  @apply text-foreground font-semibold;
+}
+
+.prose :where(a):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
+  @apply text-foreground hover:underline;
+}
+
+.prose code {
+  background-color: var(--muted);
+  color: var(--foreground);
+  border-radius: 0.375rem;
+  padding: 0.0125rem 0.375rem;
+  font-size: 12px;
+  word-break: keep-all;
+  display: inline-block;
+  opacity: 0.85;
+  font-family:
+    "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+}
+
+.prose pre code,
+.prose .code-block code {
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  color: #f3f4f6;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  display: block;
+  white-space: pre;
+}
+
+/* Dark mode adjustments for code blocks */
+.dark .prose pre,
+.dark .prose .code-block {
+  border-color: #1d2024;
+  background-color: #16181a;
+  color: #f9fafb;
+}
+
+.dark .prose pre code,
+.dark .prose .code-block code {
+  color: #f9fafb;
+}
+
+/* Custom styles for prose lists */
+.prose ul > li::marker {
+  @apply text-muted-foreground;
+}
+
+.prose ol > li::marker {
+  @apply text-muted-foreground;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose th,
+.prose td,
+.prose h6 {
+  @apply text-foreground;
+}
+
+.prose p,
+.prose li {
+  @apply text-foreground/70;
+  font-weight: 300;
+}
+
+.prose.user-message p,
+.proseuser-message li,
+.prose.user-message h1,
+.prose.user-message h2,
+.prose.user-message h3,
+.prose.user-message h4,
+.prose.user-message h5,
+.prose.user-message h6 {
+  @apply text-white;
+}
+
+.prose hr {
+  @apply border-border border-t;
+}
+
+.prose {
+  :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::before {
+    content: "";
+  }
+}
+.prose {
+  :where(code):not(:where([class~="not-prose"], [class~="not-prose"] *))::after {
+    content: "";
+  }
+}

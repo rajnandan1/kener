@@ -1,0 +1,21 @@
+[aria-label="color picker"] input {
+  color: rgba(255, 255, 255, 0.5) !important;
+}
+
+.dark [aria-label="color picker"] input {
+  color: rgba(0, 0, 0, 0.5) !important;
+}
+.bg-card {
+  background-color: var(--background) !important;
+}
+
+@supports (background-color: color-mix(in oklch, white, black)) {
+  .bg-card {
+    background-color: color-mix(in oklch, var(--background) 94%, rgb(206, 203, 203) 6%) !important;
+    box-shadow: none;
+  }
+
+  .dark .bg-card {
+    background-color: color-mix(in oklch, var(--background) 90%, rgb(82, 81, 79) 10%) !important;
+  }
+}
