@@ -251,6 +251,9 @@ export const GetLoggedInSession = async (cookies: Cookies): Promise<UserRecordPu
   if (!userDB) {
     return null;
   }
+  if (!userDB.is_active) {
+    return null;
+  }
   return userDB;
 };
 
