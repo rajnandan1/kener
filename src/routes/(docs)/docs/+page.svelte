@@ -303,7 +303,12 @@
 
         <div class="mb-8 flex flex-wrap justify-center gap-3 md:gap-4 lg:justify-start">
           {#each getCtaButtons() as button (button.title)}
-            <Button href={getHref(button.href)} variant={button.primary ? "default" : "outline"} size="lg">
+            <Button
+              href={getHref(button.href)}
+              variant={button.primary ? "default" : "outline"}
+              rel="external"
+              size="lg"
+            >
               {button.title}
               {#if button.primary}
                 <ArrowRight class="h-4 w-4" />

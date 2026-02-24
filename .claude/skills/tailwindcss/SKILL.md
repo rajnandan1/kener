@@ -1,8 +1,9 @@
 ---
 name: tailwindcss
-displayName: Tailwind CSS
 description: Tailwind CSS v4 utility-first styling patterns including responsive design, dark mode, and custom configuration. Use when styling with Tailwind, adding utility classes, configuring Tailwind, setting up dark mode, or customizing the theme.
-version: 1.0.0
+user-invokable: false
+metadata:
+    category: styling
 ---
 
 # Tailwind CSS v4 Development Guidelines
@@ -358,11 +359,3 @@ Tailwind v4 delivers 3.5x faster full builds (~100ms) compared to v3 using moder
 6. **Enable Dark Mode**: Plan for dark mode from the start
 7. **Use Plugins**: Leverage official plugins for common needs
 8. **Optimize Production**: Ensure purge is configured correctly
-
-## Additional Resources
-
-For detailed information, see:
-
-- [Utility Patterns](resources/utility-patterns.md)
-- [Component Library](resources/component-library.md)
-- [Configuration Guide](resources/configuration.md)

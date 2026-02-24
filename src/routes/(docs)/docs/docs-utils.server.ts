@@ -398,6 +398,28 @@ export function getVersionDocsLlmEntries(versionSlug: string, baseDomain: string
   const entries: DocsLlmEntry[] = [];
   const seenUrls = new Set<string>();
 
+  const tabs = version.content.navigation?.tabs ?? [];
+
+  for (const tab of tabs) {
+    const tabUrl = tab.url?.trim();
+    if (!tabUrl) {
+      continue;
+    }
+
+    const url = normalizeAbsoluteUrl(baseDomain, tabUrl);
+    if (!url || seenUrls.has(url)) {
+      continue;
+    }
+
+    seenUrls.add(url);
+
+    entries.push({
+      title: normalizeText(tab.name) || titleFromSlug(tabUrl),
+      description: tab.name === "API Reference" ? "Interactive API reference for this docs version" : "",
+      url,
+    });
+  }
+
   for (const pageSlug of pageSlugs) {
     const normalizedSlug = pageSlug.replace(/^\/+/, "");
     if (!normalizedSlug) {

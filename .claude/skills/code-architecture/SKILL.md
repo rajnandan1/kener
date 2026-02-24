@@ -1,10 +1,14 @@
 ---
-name: codearch
-description: |
-    Persistent project memory via a `.codearch/` folder. Use this skill at the START and END of every coding session, agentic task, or multi-step file operation. Trigger whenever the user asks you to work on a codebase, fix a bug, refactor, review code, or continue work from a previous session. Also trigger if the user mentions "context," "memory," "remember this," "pick up where we left off," or references prior work. This skill tells you how to read relevant context before acting and how to compress + save what you learned after acting. Always use it — skipping it loses hard-won context.
+name: code-architecture
+description: Persistent project memory via a `.codearch/` folder.
+user-invokable: false
+metadata:
+    category: architecture
 ---
 
-# codearch — Project Memory Skill
+# code-architecture — Project Memory Skill
+
+Use this skill at the START and END of every coding session, agentic task, or multi-step file operation. Trigger whenever the user asks you to work on a codebase, fix a bug, refactor, review code, or continue work from a previous session. Also trigger if the user mentions "context," "memory," "remember this," "pick up where we left off," or references prior work. This skill tells you how to read relevant context before acting and how to compress + save what you learned after acting. Always use it — skipping it loses hard-won context.
 
 `.codearch/` is a folder that lives at the project root. It stores compressed context files so you can resume work without re-deriving what was already figured out.
 

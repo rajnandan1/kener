@@ -4,7 +4,7 @@ import type { RequestHandler } from "./$types";
 import { asset } from "$app/paths";
 
 const render = ScalarApiReference({
-  url: asset("/api-references/v4.json"),
+  url: asset("/docs/spec/v4/spec.json"),
   hideModels: true,
   hideTestRequestButton: false,
   theme: "kepler",
