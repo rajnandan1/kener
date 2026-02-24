@@ -154,8 +154,8 @@
   <meta property="og:type" content="article" />
 </svelte:head>
 
-<div class="mx-auto flex max-w-[1100px] gap-8">
-  <article class="max-w-4xl min-w-0 flex-1">
+<div class="mx-auto flex justify-between gap-8">
+  <article class=" min-w-0 flex-1">
     <div class="relative mb-8">
       <span class="text-accent-foreground mb-2 inline-block text-xs font-semibold tracking-wide uppercase">
         {data.group}

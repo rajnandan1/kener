@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { DocsConfig } from "$lib/types/docs";
 
-  import { browser } from "$app/environment";
   import { goto } from "$app/navigation";
   import Sun from "@lucide/svelte/icons/sun";
   import Moon from "@lucide/svelte/icons/moon";
@@ -102,12 +101,23 @@
   function openSearch() {
     searchOpen = true;
   }
+
+  function getLlmsHref(): string {
+    const fallbackVersion = config.versions?.find((version) => version.latest)?.slug ?? config.versions?.[0]?.slug;
+    const versionSlug = config.activeVersion ?? fallbackVersion;
+
+    if (!versionSlug) {
+      return "/docs";
+    }
+
+    return `/docs/${versionSlug}/llms.txt`;
+  }
 </script>
 
 <!-- Main Navbar -->
 <header class="bg-background border-border/50 fixed top-0 right-0 left-0 z-50">
   <!-- Primary Nav Row -->
-  <div class="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-6">
+  <div class="mx-auto flex h-14 items-center justify-between px-6">
     <div class="flex items-center gap-4">
       <button
         class="text-foreground flex h-9 w-9 cursor-pointer items-center justify-center rounded border-none bg-transparent lg:hidden"
@@ -207,20 +217,30 @@
   <!-- Sub Navbar with Tabs -->
   {#if config.navigation?.tabs && config.navigation.tabs.length > 1}
     <div class="border-border/50 px-0">
-      <nav class="mx-auto flex h-10 items-center gap-2 px-4">
-        {#each config.navigation.tabs as tab, index (`${tab.name}-${index}`)}
-          <Button
-            variant="ghost"
-            size="sm"
-            class="rounded-none  border-0 {tab.key === getActiveTabKey()
-              ? 'border-b-accent-foreground! border-b!'
-              : ''}"
-            onclick={() => selectTab(tab)}
-          >
-            {tab.name}
-          </Button>
-        {/each}
-      </nav>
+      <div class="mx-auto flex h-10 items-center justify-between px-4">
+        <nav class="flex min-w-0 items-center gap-2 overflow-x-auto">
+          {#each config.navigation.tabs as tab, index (`${tab.name}-${index}`)}
+            <Button
+              variant="ghost"
+              size="sm"
+              class="rounded-none  border-0 {tab.key === getActiveTabKey()
+                ? 'border-b-accent-foreground! border-b!'
+                : ''}"
+              onclick={() => selectTab(tab)}
+            >
+              {tab.name}
+            </Button>
+          {/each}
+        </nav>
+
+        <a
+          href={getLlmsHref()}
+          rel="external"
+          class="text-muted-foreground hover:text-foreground ml-4 shrink-0 text-xs no-underline transition-colors duration-200"
+        >
+          llms.txt
+        </a>
+      </div>
     </div>
   {/if}
 </header>

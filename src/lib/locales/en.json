@@ -110,6 +110,10 @@
     "Verification failed": "Verification failed",
     "Verify": "Verify",
     "Verifying": "Verifying",
-    "We sent a 6-digit code to": "We sent a 6-digit code to"
+    "We sent a 6-digit code to": "We sent a 6-digit code to",
+    "INVESTIGATING": "INVESTIGATING",
+    "IDENTIFIED": "IDENTIFIED",
+    "MONITORING": "MONITORING",
+    "RESOLVED": "RESOLVED"
   }
 }

@@ -11,13 +11,15 @@ async function Startup(): Promise<void> {
   await maintenanceScheduler.start();
   await dailyCleanupScheduler.start();
 
-  figlet("Kener v" + version(), function (err, data) {
+  const runtimeVersion = version();
+
+  figlet("Kener v" + runtimeVersion, function (err, data) {
     if (err) {
       console.log("Something went wrong...");
       return;
     }
     console.log(data);
-    console.log(`Kener version ${version()} is running!`);
+    console.log(`Kener version ${runtimeVersion} is running!`);
   });
 }
 
