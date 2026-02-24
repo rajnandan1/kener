@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { Badge } from "$lib/components/ui/badge/index.js";
+  import { Button } from "$lib/components/ui/button/index.js";
+  import * as Card from "$lib/components/ui/card/index.js";
+  import { Separator } from "$lib/components/ui/separator/index.js";
   import type { DocsConfig, DocsPage } from "$lib/types/docs";
   import { base } from "$app/paths";
   import ArrowRight from "@lucide/svelte/icons/arrow-right";
@@ -255,81 +259,87 @@
       <div class="flex items-center gap-3 sm:gap-6">
         {#if data.config.footerLinks}
           {#each data.config.footerLinks.slice(0, 3) as link (link.url)}
-            <a
+            <Button
+              variant="ghost"
+              size="sm"
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              class="text-muted-foreground hover:text-foreground hidden text-sm no-underline transition-colors duration-200 sm:inline"
+              class="text-muted-foreground hover:text-foreground hidden sm:inline-flex"
             >
               {link.name}
-            </a>
+            </Button>
           {/each}
         {/if}
-        <button
-          class="text-muted-foreground hover:bg-accent hover:text-foreground flex h-9 w-9 cursor-pointer items-center justify-center rounded border-none bg-transparent transition-all duration-200"
-          onclick={toggleMode}
-          aria-label="Toggle theme"
-        >
+        <Button variant="ghost" size="icon" onclick={toggleMode} aria-label="Toggle theme">
           {#if mode.current === "dark"}
             <Sun class="h-5 w-5" />
           {:else}
             <Moon class="h-5 w-5" />
           {/if}
-        </button>
+        </Button>
       </div>
     </div>
   </header>
 
-  <section class="bg-background min-h-screen bg-(image:--docs-home-hero-gradient) px-6 py-20 text-center md:py-24">
-    <div class="mx-auto mt-20 max-w-[980px]">
-      <div
-        class="bg-background/80 border-border mb-6 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium backdrop-blur"
-      >
-        <Shield class="h-3.5 w-3.5" />
-        Production-ready status page platform
-      </div>
-      <h1 class="text-foreground mb-6 text-4xl leading-tight font-extrabold tracking-tight md:text-6xl">
-        Build trust with
-        <span class="from-primary to-accent-foreground bg-linear-to-r bg-clip-text text-transparent"
-          >{data.config.name}</span
-        >
-        documentation that actually gets used
-      </h1>
-      <p class="text-muted-foreground mx-auto mb-10 max-w-[760px] text-base leading-relaxed md:text-xl">
-        From quick setup to advanced operations, Kener gives you open-source monitoring, incident workflows,
-        notifications, maintenance scheduling, embeds, and automation APIs—all in one modern platform.
-      </p>
-
-      <div class="mb-10 flex flex-wrap justify-center gap-3 md:gap-4">
-        {#each getCtaButtons() as button (button.title)}
-          <a
-            href={getHref(button.href)}
-            rel="external"
-            class={[
-              "inline-flex items-center gap-2 rounded px-6 py-3 text-sm font-semibold no-underline transition-all duration-200 md:px-7 md:py-3.5 md:text-base",
-              button.primary
-                ? "bg-primary text-primary-foreground shadow-lg hover:-translate-y-0.5 hover:shadow-xl"
-                : "bg-background text-foreground border-border hover:bg-accent hover:border-accent-foreground border"
-            ]}
+  <section class="bg-background min-h-screen bg-(image:--docs-home-hero-gradient) px-6 py-20 md:py-24">
+    <div class="mx-auto mt-20 grid max-w-[1200px] items-center gap-10 lg:grid-cols-2">
+      <div class="text-center lg:text-left">
+        <Badge variant="secondary" class="mb-6 inline-flex items-center gap-2 px-3 py-1 text-xs">
+          <Shield class="h-3.5 w-3.5" />
+          Production-ready status page platform
+        </Badge>
+        <h1 class="text-foreground mb-6 text-2xl leading-tight font-bold tracking-tight md:text-4xl">
+          Build trust with
+          <span class="from-primary to-accent-foreground bg-linear-to-r bg-clip-text text-transparent"
+            >{data.config.name}</span
           >
-            {button.title}
-            {#if button.primary}
-              <ArrowRight class="h-4 w-4" />
-            {/if}
-          </a>
-        {/each}
+          documentation that actually gets used
+        </h1>
+        <p class="text-muted-foreground mb-8 max-w-[760px] text-sm leading-relaxed md:text-base">
+          From quick setup to advanced operations, Kener gives you open-source monitoring, incident workflows,
+          notifications, maintenance scheduling, embeds, and automation APIs—all in one modern platform.
+        </p>
+
+        <div class="mb-8 flex flex-wrap justify-center gap-3 md:gap-4 lg:justify-start">
+          {#each getCtaButtons() as button (button.title)}
+            <Button href={getHref(button.href)} variant={button.primary ? "default" : "outline"} size="lg">
+              {button.title}
+              {#if button.primary}
+                <ArrowRight class="h-4 w-4" />
+              {/if}
+            </Button>
+          {/each}
+        </div>
+
+        {#if getMetrics().length > 0}
+          <div class="grid max-w-[920px] grid-cols-2 gap-3 sm:grid-cols-4">
+            {#each getMetrics() as metric (metric.label)}
+              <Card.Root class="bg-card/70 backdrop-blur">
+                <Card.Content class="px-4 py-3">
+                  <p class="text-foreground text-lg font-bold md:text-xl">{metric.value}</p>
+                  <p class="text-muted-foreground text-xs tracking-wide uppercase">{metric.label}</p>
+                </Card.Content>
+              </Card.Root>
+            {/each}
+          </div>
+        {/if}
       </div>
 
-      <div class="mx-auto grid max-w-[920px] grid-cols-2 gap-3 sm:grid-cols-4">
-        {#each getMetrics() as metric (metric.label)}
-          <div class="bg-card/70 border-border rounded-lg border px-4 py-3 backdrop-blur">
-            <p class="text-foreground text-lg font-bold md:text-xl">{metric.value}</p>
-            <p class="text-muted-foreground text-xs tracking-wide uppercase">{metric.label}</p>
-          </div>
-        {/each}
+      <div class="overflow-hidden rounded-md border-2 shadow-xl">
+        <img
+          src="/og.jpg"
+          alt="Kener documentation preview"
+          class="bg-muted h-auto w-full rounded-md object-cover"
+          loading="eager"
+        />
       </div>
     </div>
   </section>
+
+  <div class="mx-auto max-w-[1200px] px-6">
+    <Separator />
+  </div>
 
   <section class="bg-background px-6 py-20 md:py-24">
     <div class="mx-auto mb-10 max-w-[1200px] text-center">
@@ -344,29 +354,33 @@
 
     <div class="mx-auto grid max-w-[1200px] grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
       {#each coreFeatures as feature (feature.title)}
-        <div
-          class="bg-card border-border hover:border-accent-foreground rounded-lg border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+        <Card.Root
+          class="hover:border-accent-foreground transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
         >
-          <div class="mb-4 flex items-start justify-between gap-4">
-            <div class="bg-accent text-accent-foreground inline-flex h-11 w-11 items-center justify-center rounded-md">
-              <feature.icon class="h-5 w-5" />
-            </div>
-            {#if feature.href}
-              <a
-                rel="external"
-                href={getHref(feature.href)}
-                class="text-muted-foreground hover:text-foreground text-xs font-medium no-underline transition-colors"
+          <Card.Header>
+            <div class="mb-2 flex items-start justify-between gap-4">
+              <div
+                class="bg-accent text-accent-foreground inline-flex h-11 w-11 items-center justify-center rounded-md"
               >
-                Learn more →
-              </a>
-            {/if}
-          </div>
-          <h3 class="text-foreground mb-2 text-lg font-semibold">{feature.title}</h3>
-          <p class="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
-        </div>
+                <feature.icon class="h-5 w-5" />
+              </div>
+              {#if feature.href}
+                <Button href={getHref(feature.href)} variant="ghost" size="sm" class="text-xs">Learn more →</Button>
+              {/if}
+            </div>
+            <Card.Title class="text-lg">{feature.title}</Card.Title>
+          </Card.Header>
+          <Card.Content>
+            <p class="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+          </Card.Content>
+        </Card.Root>
       {/each}
     </div>
   </section>
+
+  <div class="mx-auto max-w-[1200px] px-6">
+    <Separator />
+  </div>
 
   <section class="bg-muted/30 px-6 py-20 md:py-24">
     <div class="mx-auto mb-10 max-w-[1200px]">
@@ -380,27 +394,31 @@
 
     <div class="mx-auto grid max-w-[1200px] grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
       {#each advancedFeatures as feature (feature.title)}
-        <div
-          class="bg-background border-border rounded-lg border p-6 shadow-sm transition-all duration-300 hover:shadow-md"
-        >
-          <div class="mb-4 flex items-center justify-between gap-3">
-            <div class="bg-accent text-accent-foreground inline-flex h-10 w-10 items-center justify-center rounded-md">
-              <feature.icon class="h-5 w-5" />
-            </div>
-            {#if feature.tag}
-              <span
-                class="bg-accent text-accent-foreground rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide uppercase"
+        <Card.Root class="bg-background shadow-sm transition-all duration-300 hover:shadow-md">
+          <Card.Header>
+            <div class="mb-2 flex items-center justify-between gap-3">
+              <div
+                class="bg-accent text-accent-foreground inline-flex h-10 w-10 items-center justify-center rounded-md"
               >
-                {feature.tag}
-              </span>
-            {/if}
-          </div>
-          <h3 class="text-foreground mb-2 text-lg font-semibold">{feature.title}</h3>
-          <p class="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
-        </div>
+                <feature.icon class="h-5 w-5" />
+              </div>
+              {#if feature.tag}
+                <Badge variant="secondary" class="text-[11px] tracking-wide uppercase">{feature.tag}</Badge>
+              {/if}
+            </div>
+            <Card.Title class="text-lg">{feature.title}</Card.Title>
+          </Card.Header>
+          <Card.Content>
+            <p class="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
+          </Card.Content>
+        </Card.Root>
       {/each}
     </div>
   </section>
+
+  <div class="mx-auto max-w-[1200px] px-6">
+    <Separator />
+  </div>
 
   <section class="bg-background px-6 py-20 md:py-24">
     <div class="mx-auto mb-10 max-w-[1200px]">
@@ -412,45 +430,45 @@
 
     <div class="mx-auto grid max-w-[1200px] grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
       {#each getGroupHighlights() as group (group.group)}
-        <div class="bg-card border-border rounded-lg border p-6">
-          <h3 class="text-foreground mb-3 text-lg font-semibold">{group.group}</h3>
-          <div class="space-y-2">
+        <Card.Root>
+          <Card.Header>
+            <Card.Title class="text-lg">{group.group}</Card.Title>
+          </Card.Header>
+          <Card.Content class="space-y-2">
             {#each group.pages as page (page.slug)}
-              <a
+              <Button
                 href={getHref(`/docs/${page.slug}`)}
-                class="text-muted-foreground hover:text-foreground hover:bg-accent flex items-center justify-between rounded px-2.5 py-2 text-sm no-underline transition-colors"
+                variant="ghost"
+                class="text-muted-foreground hover:text-foreground flex w-full items-center justify-between"
               >
                 <span>{page.title}</span>
                 <ArrowRight class="h-3.5 w-3.5" />
-              </a>
+              </Button>
             {/each}
-          </div>
-        </div>
+          </Card.Content>
+        </Card.Root>
       {/each}
     </div>
   </section>
 
   <section class="bg-background px-6 pb-6">
     <div class="mx-auto max-w-[1200px]">
-      <div
-        class="bg-card border-border flex flex-col items-center justify-between gap-4 rounded-xl border px-6 py-6 text-center md:flex-row md:text-left"
-      >
-        <div>
-          <h3 class="text-foreground text-lg font-semibold">Need help or want to contribute?</h3>
-          <p class="text-muted-foreground text-sm">
-            Join the community, browse examples, and help shape Kener's future.
-          </p>
-        </div>
-        <a
-          href="https://github.com/rajnandan1/kener"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="bg-primary text-primary-foreground inline-flex items-center gap-2 rounded px-4 py-2.5 text-sm font-semibold no-underline transition-transform duration-200 hover:-translate-y-0.5"
+      <Card.Root>
+        <Card.Content
+          class="flex flex-col items-center justify-between gap-4 px-6 py-6 text-center md:flex-row md:text-left"
         >
-          <Github class="h-4 w-4" />
-          Star on GitHub
-        </a>
-      </div>
+          <div>
+            <h3 class="text-foreground text-lg font-semibold">Need help or want to contribute?</h3>
+            <p class="text-muted-foreground text-sm">
+              Join the community, browse examples, and help shape Kener's future.
+            </p>
+          </div>
+          <Button href="https://github.com/rajnandan1/kener" target="_blank" rel="noopener noreferrer">
+            <Github class="h-4 w-4" />
+            Star on GitHub
+          </Button>
+        </Card.Content>
+      </Card.Root>
     </div>
   </section>
 
@@ -460,14 +478,16 @@
       {#if data.config.footerLinks}
         <div class="flex flex-wrap items-center justify-center gap-4 md:gap-6">
           {#each data.config.footerLinks as link (link.url)}
-            <a
+            <Button
+              variant="link"
+              size="sm"
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              class="text-muted-foreground hover:text-foreground text-sm no-underline transition-colors duration-200"
+              class="text-muted-foreground hover:text-foreground h-auto p-0"
             >
               {link.name}
-            </a>
+            </Button>
           {/each}
         </div>
       {/if}

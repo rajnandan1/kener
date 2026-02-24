@@ -7,7 +7,13 @@
   },
   "servers": [
     {
-      "url": "https://your-kener.com"
+      "url": "{serverUrl}",
+      "variables": {
+        "serverUrl": {
+          "default": "https://your-kener.com",
+          "description": "Base URL for your Kener deployment"
+        }
+      }
     }
   ],
   "security": [
