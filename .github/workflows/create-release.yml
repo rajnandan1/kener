@@ -95,3 +95,4 @@ jobs:
           generate_release_notes: true
           make_latest: ${{ inputs.make_latest && 'true' || 'false' }}
           prerelease: ${{ inputs.prerelease }}
+          token: ${{ secrets.RELEASE_TOKEN }}
