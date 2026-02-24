@@ -24,6 +24,18 @@ app.use(handler);
 //migrations
 async function runMigrations() {
   try {
+    // Rename old .js migration entries to .ts in the knex_migrations table
+    // so Knex can find the renamed files on disk
+    const hasTable = await db.schema.hasTable("knex_migrations");
+    if (hasTable) {
+      const oldJsMigrations = await db("knex_migrations").where("name", "like", "%.js");
+      for (const row of oldJsMigrations) {
+        const newName = row.name.replace(/\.js$/, ".ts");
+        await db("knex_migrations").where("id", row.id).update({ name: newName });
+        console.log(`Renamed migration record: ${row.name} -> ${newName}`);
+      }
+    }
+
     console.log("Running migrations...");
     await db.migrate.latest(); // Runs migrations to the latest state
     console.log("Migrations completed successfully!");
