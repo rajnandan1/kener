@@ -78,7 +78,7 @@
   });
 </script>
 
-<div class="theme-plus-bar sticky top-18 z-20 flex w-full items-center gap-2 overflow-x-auto rounded py-2">
+<div class="theme-plus-bar scrollbar-hidden sticky top-18 z-20 flex w-full items-center gap-2 rounded py-2">
   <PageSelector />
   <div class="ml-auto flex shrink-0 items-center gap-2">
     {#if page.data.isSubsEnabled && page.data.canSendEmail}

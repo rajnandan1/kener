@@ -106,6 +106,13 @@ You can use either image:
 - `docker.io/rajnandan1/kener:latest`
 - `ghcr.io/rajnandan1/kener:latest`
 
+For subpath deployments (`/status`), use:
+
+- `docker.io/rajnandan1/kener:latest-status`
+- `docker.io/rajnandan1/kener:latest-status-alpine`
+- `ghcr.io/rajnandan1/kener:latest-status`
+- `ghcr.io/rajnandan1/kener:latest-status-alpine`
+
 ```bash
 mkdir -p database
 docker run -d \
@@ -117,6 +124,24 @@ docker run -d \
 	-e "REDIS_URL=redis://host.docker.internal:6379" \
 	docker.io/rajnandan1/kener:latest
 ```
+
+### Run pre-built subpath image (`/status`)
+
+```bash
+mkdir -p database
+docker run -d \
+	--name kener-status \
+	-p 3000:3000 \
+	-v "$(pwd)/database:/app/database" \
+	-e "KENER_SECRET_KEY=replace_with_a_random_string" \
+	-e "ORIGIN=http://localhost:3000" \
+	-e "KENER_BASE_PATH=/status" \
+	-e "REDIS_URL=redis://host.docker.internal:6379" \
+	docker.io/rajnandan1/kener:latest-status
+```
+
+> [!NOTE]
+> For subpath mode, keep `ORIGIN` as the site origin (`http://localhost:3000`), not `http://localhost:3000/status`.
 
 ### Run without Docker
 

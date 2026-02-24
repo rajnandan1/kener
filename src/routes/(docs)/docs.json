@@ -240,6 +240,10 @@
                     {
                       "title": "Reverse Proxy Setup",
                       "content": "v4/guides/reverse-proxy"
+                    },
+                    {
+                      "title": "Base Path Deployment",
+                      "content": "v4/guides/base-path"
                     }
                   ]
                 }

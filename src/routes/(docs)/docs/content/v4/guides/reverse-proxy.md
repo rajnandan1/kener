@@ -19,6 +19,8 @@ Running Kener behind a reverse proxy is the recommended approach for production 
 
 ## Before You Begin {#before-you-begin}
 
+If you specifically need `/status` (or any subpath) deployment, follow [Base Path Deployment](/docs/v4/guides/base-path) first, then return here for your proxy-specific config.
+
 ### Prerequisites {#prerequisites}
 
 - Kener running on port 3000 (or custom port)

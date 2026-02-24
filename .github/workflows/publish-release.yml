@@ -1,0 +1,143 @@
+name: Publish Release Docker Images
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+
+env:
+  DOCKERHUB_REGISTRY: docker.io
+  GITHUB_REGISTRY: ghcr.io
+  DOCKERHUB_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name }}
+  GITHUB_IMAGE_NAME: ${{ github.repository }}
+
+concurrency:
+  group: release-docker-${{ github.event.release.tag_name || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-push-release:
+    name: Build and push release Docker images
+    strategy:
+      matrix:
+        variant: [debian, alpine]
+        base_path: ["", "/status"]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@v4.2.2
+        with:
+          ref: refs/tags/${{ github.event.release.tag_name || github.ref_name }}
+          fetch-depth: 0
+
+      - name: Validate package version matches release tag
+        run: |
+          TAG="${{ github.event.release.tag_name || github.ref_name }}"
+          EXPECTED_VERSION="${TAG#v}"
+          PACKAGE_VERSION="$(node -p \"require('./package.json').version\")"
+
+          if [ "$PACKAGE_VERSION" != "$EXPECTED_VERSION" ]; then
+            echo "package.json version mismatch"
+            echo "release tag: $TAG"
+            echo "expected package.json version: $EXPECTED_VERSION"
+            echo "actual package.json version: $PACKAGE_VERSION"
+            exit 1
+          fi
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3.8.0
+        with:
+          cosign-release: v2.2.4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3.8.0
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3.3.0
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3.3.0
+        with:
+          registry: ${{ env.GITHUB_REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute release tags
+        id: vars
+        run: |
+          TAG="${{ github.event.release.tag_name || github.ref_name }}"
+          NORM_TAG="${TAG#v}"
+
+          if [ "${{ matrix.base_path }}" = "/status" ]; then
+            BASE_SUFFIX="-status"
+          else
+            BASE_SUFFIX=""
+          fi
+
+          if [ "${{ matrix.variant }}" = "alpine" ]; then
+            VARIANT_SUFFIX="-alpine"
+          else
+            VARIANT_SUFFIX=""
+          fi
+
+          FULL_SUFFIX="${BASE_SUFFIX}${VARIANT_SUFFIX}"
+
+          echo "release_tag=${TAG}${FULL_SUFFIX}" >> "$GITHUB_OUTPUT"
+          echo "release_norm_tag=${NORM_TAG}${FULL_SUFFIX}" >> "$GITHUB_OUTPUT"
+          echo "latest_tag=latest${FULL_SUFFIX}" >> "$GITHUB_OUTPUT"
+
+          if [ "${{ matrix.variant }}" = "debian" ]; then
+            echo "release_tag_debian_alias=${TAG}${BASE_SUFFIX}-debian" >> "$GITHUB_OUTPUT"
+            echo "release_norm_tag_debian_alias=${NORM_TAG}${BASE_SUFFIX}-debian" >> "$GITHUB_OUTPUT"
+            echo "latest_tag_debian_alias=latest${BASE_SUFFIX}-debian" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5.6.1
+        with:
+          images: |
+            ${{ env.DOCKERHUB_IMAGE_NAME }}
+            ${{ env.GITHUB_REGISTRY }}/${{ env.GITHUB_IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ steps.vars.outputs.latest_tag }}
+            type=raw,value=${{ steps.vars.outputs.release_tag }}
+            type=raw,value=${{ steps.vars.outputs.release_norm_tag }},enable=${{ steps.vars.outputs.release_norm_tag != steps.vars.outputs.release_tag }}
+            type=raw,value=${{ steps.vars.outputs.latest_tag_debian_alias }},enable=${{ matrix.variant == 'debian' }}
+            type=raw,value=${{ steps.vars.outputs.release_tag_debian_alias }},enable=${{ matrix.variant == 'debian' }}
+            type=raw,value=${{ steps.vars.outputs.release_norm_tag_debian_alias }},enable=${{ matrix.variant == 'debian' && steps.vars.outputs.release_norm_tag_debian_alias != steps.vars.outputs.release_tag_debian_alias }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3.3.0
+
+      - name: Build and push Docker image
+        id: build-and-push
+        uses: docker/build-push-action@v6.13.0
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            VARIANT=${{ matrix.variant }}
+            WITH_DOCS=true
+            KENER_BASE_PATH=${{ matrix.base_path }}
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Sign the published Docker images
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          DIGEST: ${{ steps.build-and-push.outputs.digest }}
+        run: |
+          echo "${TAGS}" | xargs -I {} cosign sign --yes {}@${DIGEST}
