@@ -1,10 +1,5 @@
 # Kener - Stunning Status Pages
 
-<details>
-  <summary>Upcoming Version 4.0.0</summary>
-   Currently we are working on updating kener to the latest svelte version with typescript
-</details>
-
 <p align="center">
 	<img src="https://kener.ing/og.jpg?v=1" width="100%" height="auto" class="rounded-lg shadow-lg" alt="kener example illustration">
 </p>
@@ -173,10 +168,9 @@ PORT=3000
 
 For the full quick start (including local Docker builds and dev mode), see the docs:
 
-- https://kener.ing/docs/quick-start
+- https://kener.ing/docs/v4/getting-started/quick-start
 
 ## One Click Deployment
-
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/spSvic?referralCode=1Pn7vs&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
@@ -208,10 +202,6 @@ Kener combines public status page essentials with advanced admin workflows.
 - Integrate analytics providers like GA, Plausible, Mixpanel, Umami, and Clarity
 - Access the full REST API for incidents, monitors, and reporting
 
-<div align="left">
-    <img alt="Visitor Stats" src="https://widgetbite.com/stats/rajnandan"/>
-</div>
-
 ## Technologies Used
 
 - [SvelteKit](https://kit.svelte.dev/)
@@ -221,11 +211,9 @@ Kener combines public status page essentials with advanced admin workflows.
 
 If you’re enjoying Kener and want to support its development, consider sponsoring me on GitHub or treating me to a coffee. Your support helps keep the project growing! 🚀
 
-[Sponsor Me Using Github](https://github.com/sponsors/rajnandan1)
+- [Sponsor Me Using Github](https://github.com/sponsors/rajnandan1)
 
-☕ &nbsp;[Buy Me a Coffee](https://www.buymeacoffee.com/rajnandan1)
-
-![image](https://badges.pufler.dev/visits/rajnandan1/kener)
+- [Buy Me a Coffee](https://www.buymeacoffee.com/rajnandan1)
 
 ## Contributing
 
