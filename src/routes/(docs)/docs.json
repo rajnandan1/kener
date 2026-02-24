@@ -242,6 +242,10 @@
                       "content": "v4/guides/alerting-trigger-examples"
                     },
                     {
+                      "title": "Mattermost Webhook Trigger",
+                      "content": "v4/guides/mattermost-webhook-trigger"
+                    },
+                    {
                       "title": "Reverse Proxy Setup",
                       "content": "v4/guides/reverse-proxy"
                     },
