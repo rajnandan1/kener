@@ -14,7 +14,6 @@
   import Plus from "@lucide/svelte/icons/plus";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
-  import { IsValidURL } from "$lib/clientTools";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import type { DataRetentionPolicy, EventDisplaySettings } from "$lib/types/site.js";
@@ -90,12 +89,36 @@
   });
 
   let eventDisplaySettings = $state<EventDisplaySettings>(structuredClone(defaultEventDisplaySettings));
+  let currentOrigin = $state("");
+
+  function parseOriginOnlyURL(value: string): URL | null {
+    try {
+      const trimmedValue = value.trim();
+      if (!trimmedValue) return null;
+
+      const url = new URL(trimmedValue);
+      if (!url.hostname || !["http:", "https:"].includes(url.protocol)) return null;
+      if (url.username || url.password) return null;
+      if (url.pathname !== "/" || url.search || url.hash) return null;
+
+      return url;
+    } catch {
+      return null;
+    }
+  }
+
+  const parsedSiteOriginURL = $derived(parseOriginOnlyURL(siteData.siteURL));
+  const isOriginOnlySiteURL = $derived(parsedSiteOriginURL !== null);
+  const enteredSiteOrigin = $derived(parsedSiteOriginURL?.origin ?? "");
+  const hasOriginMismatch = $derived(
+    Boolean(currentOrigin && enteredSiteOrigin && currentOrigin !== enteredSiteOrigin)
+  );
 
   // Validation
   const isValidSiteInfo = $derived(
     siteData.siteName.trim().length > 0 &&
       siteData.siteURL.trim().length > 0 &&
-      IsValidURL(siteData.siteURL) &&
+      isOriginOnlySiteURL &&
       siteData.home.trim().length > 0
   );
 
@@ -522,6 +545,7 @@
   }
 
   onMount(() => {
+    currentOrigin = window.location.origin;
     void fetchSiteData();
   });
 </script>
@@ -553,7 +577,20 @@
           <div class="space-y-2">
             <Label for="siteURL">Site URL *</Label>
             <Input id="siteURL" type="url" bind:value={siteData.siteURL} placeholder="https://status.example.com" />
-            <p class="text-muted-foreground text-xs">Effective URL: {siteData.siteURL}{clientResolver(resolve, "/")}</p>
+            {#if siteData.siteURL.trim().length > 0 && !isOriginOnlySiteURL}
+              <p class="text-destructive text-xs">
+                Invalid site URL. Please enter only protocol + domain (no path, query, or hash).
+              </p>
+            {/if}
+            {#if siteData.siteURL.trim().length > 0 && isOriginOnlySiteURL && hasOriginMismatch}
+              <p class="text-xs text-amber-600 dark:text-amber-400">
+                Warning: Entered origin ({enteredSiteOrigin}) does not match current origin ({currentOrigin}).
+              </p>
+            {/if}
+            <p class="text-muted-foreground text-xs">
+              Effective URL: {(isOriginOnlySiteURL ? enteredSiteOrigin : siteData.siteURL) +
+                clientResolver(resolve, "/")}
+            </p>
           </div>
         </div>
 

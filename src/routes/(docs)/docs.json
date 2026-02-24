@@ -240,6 +240,10 @@
                     {
                       "title": "Reverse Proxy Setup",
                       "content": "v4/guides/reverse-proxy"
+                    },
+                    {
+                      "title": "Base Path Deployment",
+                      "content": "v4/guides/base-path"
                     }
                   ]
                 }
@@ -248,6 +252,21 @@
             {
               "name": "API Reference",
               "url": "/docs/spec/v4/"
+            },
+            {
+              "name": "Changelogs",
+              "sidebar": [
+                {
+                  "group": "v4.x",
+                  "collapsible": false,
+                  "pages": [
+                    {
+                      "title": "v4.0.0",
+                      "content": "v4/changelogs/v4.0.0"
+                    }
+                  ]
+                }
+              ]
             }
           ]
         },

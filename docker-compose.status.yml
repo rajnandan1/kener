@@ -1,0 +1,47 @@
+# =============================================================================
+# Kener v4 — Production Docker Compose for /status base path
+#
+# Usage:
+#   docker compose -f docker-compose.status.yml up -d
+# =============================================================================
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: kener-redis-status
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kener:
+    image: rajnandan1/kener:latest-status
+    # For Alpine variant use: rajnandan1/kener:latest-status-alpine
+    container_name: kener-status
+    environment:
+      KENER_SECRET_KEY: replace_me_with_a_random_string # generate: openssl rand -base64 32
+      ORIGIN: http://localhost:3000/status
+      REDIS_URL: redis://redis:6379
+      KENER_BASE_PATH: /status
+
+      # DATABASE_URL: sqlite://./database/kener.sqlite.db
+      # DATABASE_URL: postgresql://user:password@postgres:5432/kener
+      # DATABASE_URL: mysql://user:password@mysql:3306/kener
+    ports:
+      - "3000:3000"
+    volumes:
+      - data:/app/database
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  data:
+    name: kener_db_status
+  redis_data:
+    name: kener_redis_status

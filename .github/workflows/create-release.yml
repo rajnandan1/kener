@@ -1,0 +1,97 @@
+name: Create Release (Deterministic)
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (for example: 4.0.0)"
+        required: true
+        type: string
+      make_latest:
+        description: "Mark this release as latest"
+        required: true
+        type: boolean
+        default: true
+      prerelease:
+        description: "Mark as pre-release"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    name: Bump version, tag, and create release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out default branch
+        uses: actions/checkout@v4.2.2
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 0
+
+      - name: Validate version format
+        run: |
+          VERSION="${{ inputs.version }}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid version format: $VERSION"
+            echo "Use semver like 4.0.0 or 4.0.0-rc.1"
+            exit 1
+          fi
+
+      - name: Ensure release tag does not already exist
+        run: |
+          TAG="v${{ inputs.version }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists"
+            exit 1
+          fi
+
+      - name: Bump package version
+        run: |
+          VERSION="${{ inputs.version }}"
+          CURRENT_VERSION="$(node -p \"require('./package.json').version\")"
+
+          if [ "$CURRENT_VERSION" != "$VERSION" ]; then
+            npm version "$VERSION" --no-git-tag-version --allow-same-version
+          else
+            echo "package.json already at version $VERSION"
+          fi
+
+      - name: Commit version bump
+        run: |
+          VERSION="${{ inputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add package.json
+          if [ -f package-lock.json ]; then
+            git add package-lock.json
+          fi
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(release): bump version to $VERSION"
+          fi
+
+      - name: Create and push git tag
+        run: |
+          VERSION="${{ inputs.version }}"
+          TAG="v$VERSION"
+
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "HEAD:${{ github.event.repository.default_branch }}"
+          git push origin "$TAG"
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.version }}
+          target_commitish: ${{ github.event.repository.default_branch }}
+          generate_release_notes: true
+          make_latest: ${{ inputs.make_latest && 'true' || 'false' }}
+          prerelease: ${{ inputs.prerelease }}

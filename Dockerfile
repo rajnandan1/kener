@@ -21,6 +21,7 @@
 ARG NODE_VERSION=24
 ARG VARIANT=alpine
 ARG WITH_DOCS=false
+ARG KENER_BASE_PATH=
 
 # =============================================================================
 #  STAGE 1 — BUILDER  (installs deps, compiles native modules, builds app)
@@ -51,6 +52,9 @@ FROM builder-${VARIANT} AS builder
 ENV NPM_CONFIG_LOGLEVEL=error
 
 WORKDIR /app
+
+ARG KENER_BASE_PATH
+ENV KENER_BASE_PATH=${KENER_BASE_PATH}
 
 # 1. Copy package manifests first (maximises layer cache hits)
 COPY package*.json ./
@@ -126,9 +130,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 FROM final-${VARIANT} AS final
 
 ARG PORT=3000
+ARG KENER_BASE_PATH=
 
 ENV NODE_ENV=production \
     PORT=${PORT} \
+    KENER_BASE_PATH=${KENER_BASE_PATH} \
     TZ=UTC \
     # Required so Node can import .ts migration/seed files at runtime
     NODE_OPTIONS="--experimental-strip-types"
