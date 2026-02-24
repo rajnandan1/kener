@@ -53,7 +53,7 @@ jobs:
       - name: Bump package version
         run: |
           VERSION="${{ inputs.version }}"
-          CURRENT_VERSION="$(node -p \"require('./package.json').version\")"
+          CURRENT_VERSION=$(node -p 'require("./package.json").version')
 
           if [ "$CURRENT_VERSION" != "$VERSION" ]; then
             npm version "$VERSION" --no-git-tag-version --allow-same-version

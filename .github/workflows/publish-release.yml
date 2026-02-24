@@ -40,7 +40,7 @@ jobs:
         run: |
           TAG="${{ github.event.release.tag_name || github.ref_name }}"
           EXPECTED_VERSION="${TAG#v}"
-          PACKAGE_VERSION="$(node -p \"require('./package.json').version\")"
+          PACKAGE_VERSION=$(node -p 'require("./package.json").version')
 
           if [ "$PACKAGE_VERSION" != "$EXPECTED_VERSION" ]; then
             echo "package.json version mismatch"
