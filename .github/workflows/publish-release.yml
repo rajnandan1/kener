@@ -83,6 +83,8 @@ jobs:
             BASE_SUFFIX=""
           fi
 
+          WITH_DOCS="false"
+
           if [ "${{ matrix.variant }}" = "alpine" ]; then
             VARIANT_SUFFIX="-alpine"
           else
@@ -94,6 +96,7 @@ jobs:
           echo "release_tag=${TAG}${FULL_SUFFIX}" >> "$GITHUB_OUTPUT"
           echo "release_norm_tag=${NORM_TAG}${FULL_SUFFIX}" >> "$GITHUB_OUTPUT"
           echo "latest_tag=latest${FULL_SUFFIX}" >> "$GITHUB_OUTPUT"
+          echo "with_docs=${WITH_DOCS}" >> "$GITHUB_OUTPUT"
 
           if [ "${{ matrix.variant }}" = "debian" ]; then
             echo "release_tag_debian_alias=${TAG}${BASE_SUFFIX}-debian" >> "$GITHUB_OUTPUT"
@@ -129,7 +132,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VARIANT=${{ matrix.variant }}
-            WITH_DOCS=true
+            WITH_DOCS=${{ steps.vars.outputs.with_docs }}
             KENER_BASE_PATH=${{ matrix.base_path }}
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha
