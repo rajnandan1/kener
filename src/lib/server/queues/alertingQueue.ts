@@ -65,6 +65,7 @@ async function createNewIncident(
   config: MonitorAlertConfigRecord,
   monitorName: string,
   monitorTag: string,
+  siteUrl: string = "",
 ): Promise<{ incident_id: number }> {
   let startDateTime = getUnixTime(new Date(alert.created_at));
   let incidentInput: IncidentInput = {
@@ -83,7 +84,7 @@ async function createNewIncident(
 
   const updateVariables: SubscriptionVariableMap = {
     title: incidentInput.title,
-    cta_url: "/incidents/" + incidentCreated.incident_id,
+    cta_url: siteUrl + "incidents/" + incidentCreated.incident_id,
     cta_text: "View Incident",
     update_text: mdToHTML(update),
     update_subject: `[#${incidentCreated.incident_id}:${GC.TRIGGERED}] ${incidentInput.title}`,
@@ -105,6 +106,7 @@ async function closeIncident(
   config: MonitorAlertConfigRecord,
   monitorName: string,
   monitorTag: string,
+  siteUrl: string = "",
 ): Promise<void> {
   //check if incident is already resolved
   if (!alert.incident_id) {
@@ -124,7 +126,7 @@ async function closeIncident(
   const updatedAt = getUnixTime(new Date(alert.updated_at));
   const updateMessage: SubscriptionVariableMap = {
     title: incident.title,
-    cta_url: `/incidents/${incident_id}`,
+    cta_url: `${siteUrl}incidents/${incident_id}`,
     cta_text: "View Incident",
     update_text: mdToHTML(comment),
     update_subject: `[#${incident.id}:${GC.RESOLVED}] ${incident.title}`,
@@ -251,6 +253,7 @@ const addWorker = () => {
               monitor_alerts_configured,
               monitor_name,
               monitor_tag,
+              templateSiteVars.site_url,
             );
             //update alert with incident number
             if (newIncidentNumber && newIncidentNumber.incident_id > 0) {
@@ -289,7 +292,13 @@ const addWorker = () => {
 
           // If alert has an incident, add closure comment
           if (activeAlert.incident_id) {
-            await closeIncident(activeAlert, monitor_alerts_configured, monitor_name, monitor_tag);
+            await closeIncident(
+              activeAlert,
+              monitor_alerts_configured,
+              monitor_name,
+              monitor_tag,
+              templateSiteVars.site_url,
+            );
           }
 
           // Send resolution notifications

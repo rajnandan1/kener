@@ -72,12 +72,13 @@ export function maintenanceToVariables(
   statusMessage: string,
   updateIdSuffix: string,
   subjectPrefix: string,
+  siteUrl: string = "",
 ): SubscriptionVariableMap {
   const template = formatMaintenanceMarkdown(monitorNames, event, statusMessage);
   return {
     title: `${subjectPrefix}: ${event.title}`,
     event_type: "maintenances",
-    cta_url: "/maintenances/" + event.maintenance_id,
+    cta_url: siteUrl + "maintenances/" + event.maintenance_id,
     cta_text: "View Maintenance Details",
     update_id: `maintenance_${event.id}_${updateIdSuffix}`,
     update_subject: `${subjectPrefix}: ${event.title}`,

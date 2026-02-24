@@ -12,7 +12,8 @@ import type {
   MaintenanceEventFilter,
 } from "../types/db.js";
 import { GetMinuteStartNowTimestampUTC } from "../tool.js";
-import { maintenanceToVariables } from "../notification/notification_utils.js";
+import { maintenanceToVariables, siteDataToVariables } from "../notification/notification_utils.js";
+import { GetAllSiteData } from "./controller.js";
 import subscriberQueue from "../queues/subscriberQueue.js";
 import GC from "../../global-constants";
 
@@ -540,6 +541,9 @@ export const formatDurationSeconds = (seconds: number): string => {
 export const UpdateMaintenanceEventStatuses = async (): Promise<void> => {
   const currentTimestamp = GetMinuteStartNowTimestampUTC();
   const sixtyMinutesInSeconds = 60 * 60;
+  const siteData = await GetAllSiteData();
+  const siteVars = siteDataToVariables(siteData);
+  const siteUrl = siteVars.site_url;
 
   try {
     // 1. Mark SCHEDULED events starting within 60 minutes as READY
@@ -559,6 +563,7 @@ export const UpdateMaintenanceEventStatuses = async (): Promise<void> => {
         `**is starting in ${timeUntilStart}**`,
         "starting_soon",
         "Maintenance Starting Soon",
+        siteUrl,
       );
       await subscriberQueue.push(update);
     }
@@ -576,6 +581,7 @@ export const UpdateMaintenanceEventStatuses = async (): Promise<void> => {
         "**is now in progress**",
         "ongoing",
         "Maintenance In Progress",
+        siteUrl,
       );
       await subscriberQueue.push(update);
     }
@@ -593,6 +599,7 @@ export const UpdateMaintenanceEventStatuses = async (): Promise<void> => {
         "**is now in progress**",
         "ongoing",
         "Maintenance In Progress",
+        siteUrl,
       );
       await subscriberQueue.push(update);
     }
@@ -610,6 +617,7 @@ export const UpdateMaintenanceEventStatuses = async (): Promise<void> => {
         "**has been completed**",
         "completed",
         "Maintenance Completed",
+        siteUrl,
       );
       await subscriberQueue.push(update);
     }
