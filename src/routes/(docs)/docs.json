@@ -40,6 +40,10 @@
                   "collapsible": false,
                   "pages": [
                     {
+                      "title": "Deployment",
+                      "content": "v4/setup/deployment"
+                    },
+                    {
                       "title": "Site Configuration",
                       "content": "v4/setup/site-configuration"
                     },

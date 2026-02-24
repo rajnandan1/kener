@@ -29,3 +29,9 @@ When the user asks to write or edit documentation, follow the skill file:
 - `.claude/skills/documentation-writer/SKILL.md`
 
 This is mandatory for docs-related tasks. Prioritize short, clear, action-oriented docs and avoid bloat.
+
+## Code architecture skill - Important for all coding tasks
+
+Always try to use the code architecture skill at the start and end of coding sessions:
+
+- `.claude/skills/code-architecture/SKILL.md`

@@ -206,6 +206,89 @@ function getSelectedVersion(versions: DocsVersion[], requestedVersionSlug?: stri
   return getLatestVersion(versions);
 }
 
+function normalizeAbsoluteUrl(baseDomain: string, value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  const path = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+  return `${baseDomain.replace(/\/+$/, "")}${path}`;
+}
+
+function collectSidebarPagePaths(pages: DocsPageSource[], output: Set<string>) {
+  for (const page of pages) {
+    const resolvedPath = (page.content ?? page.slug ?? "").trim();
+    if (resolvedPath) {
+      output.add(resolvedPath.replace(/^\/+/, ""));
+    }
+
+    if (page.pages && page.pages.length > 0) {
+      collectSidebarPagePaths(page.pages, output);
+    }
+  }
+}
+
+function collectVersionDocsPaths(version: DocsVersion): string[] {
+  const output = new Set<string>();
+  const tabs = version.content.navigation?.tabs ?? [];
+
+  for (const tab of tabs) {
+    if (tab.sidebar) {
+      for (const group of tab.sidebar) {
+        collectSidebarPagePaths(group.pages, output);
+      }
+    }
+
+    if (tab.url?.trim()) {
+      output.add(tab.url.trim());
+    }
+  }
+
+  return Array.from(output);
+}
+
+function collectVersionDocPageSlugs(version: DocsVersion): string[] {
+  const output = new Set<string>();
+  const tabs = version.content.navigation?.tabs ?? [];
+
+  for (const tab of tabs) {
+    if (!tab.sidebar) {
+      continue;
+    }
+
+    for (const group of tab.sidebar) {
+      collectSidebarPagePaths(group.pages, output);
+    }
+  }
+
+  return Array.from(output);
+}
+
+function titleFromSlug(slug: string): string {
+  const leaf = slug.split("/").filter(Boolean).pop();
+
+  if (!leaf) {
+    return "Untitled";
+  }
+
+  return leaf.replace(/[-_]+/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function normalizeText(value: string | undefined): string {
+  return (value ?? "").replace(/\s+/g, " ").trim();
+}
+
+export interface DocsLlmEntry {
+  title: string;
+  description: string;
+  url: string;
+}
+
 /**
  * Get the docs configuration
  */
@@ -263,6 +346,82 @@ export function getDocsConfig(
 export function getDocsVersions(): DocsVersionMeta[] {
   const rootConfig = getDocsRootConfig();
   return normalizeVersionMeta(rootConfig.versions);
+}
+
+/**
+ * Get a docs version by slug.
+ */
+export function getDocsVersionBySlug(versionSlug: string): DocsVersion | null {
+  const rootConfig = getDocsRootConfig();
+  return rootConfig.versions.find((version) => version.slug === versionSlug) ?? null;
+}
+
+/**
+ * Build absolute URLs for docs content of a specific version.
+ * Includes all sidebar pages across tabs plus any tab.url entries.
+ */
+export function getVersionDocsUrls(versionSlug: string, baseDomain: string): string[] {
+  const version = getDocsVersionBySlug(versionSlug);
+
+  if (!version) {
+    return [];
+  }
+
+  const paths = collectVersionDocsPaths(version);
+  const urls = paths
+    .map((path) => {
+      if (/^https?:\/\//i.test(path)) {
+        return path;
+      }
+
+      const normalizedPath = path.replace(/^\/+/, "");
+      const docsPath = normalizedPath.startsWith("docs/") ? `/${normalizedPath}` : `/docs/${normalizedPath}`;
+      return normalizeAbsoluteUrl(baseDomain, docsPath);
+    })
+    .filter((url) => url.length > 0);
+
+  return Array.from(new Set(urls));
+}
+
+/**
+ * Build llms.txt entries for a docs version.
+ * Uses markdown frontmatter for title/description and emits raw .md URLs.
+ */
+export function getVersionDocsLlmEntries(versionSlug: string, baseDomain: string): DocsLlmEntry[] {
+  const version = getDocsVersionBySlug(versionSlug);
+
+  if (!version) {
+    return [];
+  }
+
+  const pageSlugs = collectVersionDocPageSlugs(version);
+  const entries: DocsLlmEntry[] = [];
+  const seenUrls = new Set<string>();
+
+  for (const pageSlug of pageSlugs) {
+    const normalizedSlug = pageSlug.replace(/^\/+/, "");
+    if (!normalizedSlug) {
+      continue;
+    }
+
+    const rawUrl = normalizeAbsoluteUrl(baseDomain, `/docs/raw/${normalizedSlug}.md`);
+    if (seenUrls.has(rawUrl)) {
+      continue;
+    }
+    seenUrls.add(rawUrl);
+
+    const parsed = parseMarkdownWithFrontMatter(normalizedSlug);
+    const title = normalizeText(parsed?.attributes.title) || titleFromSlug(normalizedSlug);
+    const description = normalizeText(parsed?.attributes.description);
+
+    entries.push({
+      title,
+      description,
+      url: rawUrl,
+    });
+  }
+
+  return entries;
 }
 
 /**
