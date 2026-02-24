@@ -177,7 +177,8 @@ For the full quick start (including local Docker builds and dev mode), see the d
 
 ## One Click Deployment
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/spSvic?referralCode=1Pn7vs)
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/spSvic?referralCode=1Pn7vs&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
 ## Features
 
