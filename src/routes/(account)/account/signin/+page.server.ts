@@ -51,6 +51,13 @@ export const actions: Actions = {
       return fail(401, { error: "Invalid password or Email", values: { email } });
     }
 
+    if (!userDB.is_active) {
+      return fail(403, {
+        error: "Your account has been deactivated. Please contact an administrator.",
+        values: { email },
+      });
+    }
+
     const token = await GenerateToken(userDB);
     const cookieConfig = CookieConfig();
     cookies.set(cookieConfig.name, token, {

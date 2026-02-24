@@ -199,6 +199,7 @@ export async function POST({ request, cookies }) {
       AdminEditorCan(userDB.role);
       resp = await CreateUpdateMonitor(data);
     } else if (action == "updateMonitoringData") {
+      AdminEditorCan(userDB.role);
       data.type = GC.MANUAL;
       resp = await UpdateMonitoringData(data);
     } else if (action == "getMonitors") {
@@ -291,6 +292,7 @@ export async function POST({ request, cookies }) {
       AdminEditorCan(userDB.role);
       resp = await UpdateCommentByID(data.incident_id, data.comment_id, data.comment, data.state, data.commented_at);
     } else if (action == "testTrigger") {
+      AdminEditorCan(userDB.role);
       const trigger = await GetTriggerByID(data.trigger_id);
       const siteData = await GetAllSiteData();
       if (!trigger || !siteData) {
@@ -364,6 +366,7 @@ export async function POST({ request, cookies }) {
         throw new Error("Unsupported trigger type for testing");
       }
     } else if (action == "testMonitor") {
+      AdminEditorCan(userDB.role);
       let monitorID = data.monitor_id;
       let monitors = await GetMonitorsParsed({ id: monitorID });
       let monitor = monitors[0];
