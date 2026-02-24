@@ -1,6 +1,8 @@
 import type { Knex } from "knex";
 
 export async function up(knex: Knex): Promise<void> {
+  if (await knex.schema.hasTable("invitations")) return;
+
   await knex.schema.createTable("invitations", (table) => {
     // Primary key
     table.increments("id").primary();

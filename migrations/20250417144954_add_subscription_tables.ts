@@ -1,8 +1,8 @@
 import type { Knex } from "knex";
 
 export async function up(knex: Knex): Promise<void> {
-  await knex.schema
-    .createTable("subscribers", (table) => {
+  if (!(await knex.schema.hasTable("subscribers"))) {
+    await knex.schema.createTable("subscribers", (table) => {
       table.increments("id").primary();
       table.string("subscriber_send").notNullable();
       table.text("subscriber_meta").nullable();
@@ -16,8 +16,11 @@ export async function up(knex: Knex): Promise<void> {
 
       // Add index on subscriber_send for better query performance
       table.index(["subscriber_send"]);
-    })
-    .createTable("subscriptions", (table) => {
+    });
+  }
+
+  if (!(await knex.schema.hasTable("subscriptions"))) {
+    await knex.schema.createTable("subscriptions", (table) => {
       table.increments("id").primary();
       table.integer("subscriber_id").unsigned().notNullable();
       table.string("subscriptions_status").notNullable();
@@ -32,8 +35,11 @@ export async function up(knex: Knex): Promise<void> {
 
       // Add index to optimize queries filtering by status and monitors
       table.index(["subscriptions_status", "subscriptions_monitors"]);
-    })
-    .createTable("subscription_triggers", (table) => {
+    });
+  }
+
+  if (!(await knex.schema.hasTable("subscription_triggers"))) {
+    await knex.schema.createTable("subscription_triggers", (table) => {
       table.increments("id").primary();
       table.string("subscription_trigger_type").notNullable().unique();
       table.string("subscription_trigger_status").notNullable();
@@ -41,6 +47,7 @@ export async function up(knex: Knex): Promise<void> {
       table.datetime("created_at").defaultTo(knex.fn.now());
       table.datetime("updated_at").defaultTo(knex.fn.now());
     });
+  }
 }
 export async function down(knex: Knex): Promise<void> {
   await knex.schema

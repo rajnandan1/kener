@@ -1,6 +1,8 @@
 import type { Knex } from "knex";
 
 export async function up(knex: Knex): Promise<void> {
+  if (await knex.schema.hasTable("general_email_templates")) return;
+
   await knex.schema.createTable("general_email_templates", (table) => {
     table.string("template_id").primary();
     table.string("template_subject");

@@ -1,17 +1,19 @@
 import type { Knex } from "knex";
 
 export async function up(knex: Knex): Promise<void> {
-  await knex.schema
-    .createTable("monitoring_data", (table) => {
+  if (!(await knex.schema.hasTable("monitoring_data"))) {
+    await knex.schema.createTable("monitoring_data", (table) => {
       table.string("monitor_tag", 255).notNullable();
       table.integer("timestamp").notNullable();
       table.text("status");
       table.float("latency", 8, 2);
       table.text("type");
       table.primary(["monitor_tag", "timestamp"]);
-    })
-    // Create monitor_alerts table
-    .createTable("monitor_alerts", (table) => {
+    });
+  }
+
+  if (!(await knex.schema.hasTable("monitor_alerts"))) {
+    await knex.schema.createTable("monitor_alerts", (table) => {
       table.increments("id").primary();
       table.string("monitor_tag", 255).notNullable();
       table.string("monitor_status", 255).notNullable();
@@ -20,18 +22,29 @@ export async function up(knex: Knex): Promise<void> {
       table.integer("incident_number").defaultTo(0);
       table.timestamp("created_at").defaultTo(knex.fn.now());
       table.timestamp("updated_at").defaultTo(knex.fn.now());
-    })
-    // Add index to monitor_alerts table
-    .raw("CREATE INDEX idx_monitor_tag_created_at ON monitor_alerts (monitor_tag, created_at)")
-    .createTable("site_data", (table) => {
+    });
+  }
+
+  // Add index (IF NOT EXISTS not supported by all DBs, so use try/catch)
+  try {
+    await knex.schema.raw("CREATE INDEX idx_monitor_tag_created_at ON monitor_alerts (monitor_tag, created_at)");
+  } catch (_e) {
+    // Index already exists
+  }
+
+  if (!(await knex.schema.hasTable("site_data"))) {
+    await knex.schema.createTable("site_data", (table) => {
       table.increments("id").primary();
       table.string("key", 255).notNullable().unique();
       table.text("value").notNullable();
       table.string("data_type", 255).notNullable();
       table.timestamp("created_at").defaultTo(knex.fn.now());
       table.timestamp("updated_at").defaultTo(knex.fn.now());
-    })
-    .createTable("monitors", (table) => {
+    });
+  }
+
+  if (!(await knex.schema.hasTable("monitors"))) {
+    await knex.schema.createTable("monitors", (table) => {
       table.increments("id").primary();
       table.string("tag", 255).notNullable().unique();
       table.string("name", 255).notNullable().unique();
@@ -50,8 +63,11 @@ export async function up(knex: Knex): Promise<void> {
       table.string("include_degraded_in_downtime", 255).defaultTo("NO");
       table.timestamp("created_at").defaultTo(knex.fn.now());
       table.timestamp("updated_at").defaultTo(knex.fn.now());
-    })
-    .createTable("triggers", (table) => {
+    });
+  }
+
+  if (!(await knex.schema.hasTable("triggers"))) {
+    await knex.schema.createTable("triggers", (table) => {
       table.increments("id").primary();
       table.string("name", 255).notNullable().unique();
       table.string("trigger_type", 255);
@@ -60,8 +76,11 @@ export async function up(knex: Knex): Promise<void> {
       table.text("trigger_meta");
       table.timestamp("created_at").defaultTo(knex.fn.now());
       table.timestamp("updated_at").defaultTo(knex.fn.now());
-    })
-    .createTable("users", (table) => {
+    });
+  }
+
+  if (!(await knex.schema.hasTable("users"))) {
+    await knex.schema.createTable("users", (table) => {
       table.increments("id").primary();
       table.string("email", 255).notNullable().unique();
       table.string("name", 255).notNullable();
@@ -71,8 +90,11 @@ export async function up(knex: Knex): Promise<void> {
       table.string("role", 255).defaultTo("user");
       table.timestamp("created_at").defaultTo(knex.fn.now());
       table.timestamp("updated_at").defaultTo(knex.fn.now());
-    })
-    .createTable("api_keys", (table) => {
+    });
+  }
+
+  if (!(await knex.schema.hasTable("api_keys"))) {
+    await knex.schema.createTable("api_keys", (table) => {
       table.increments("id").primary();
       table.string("name", 255).notNullable().unique();
       table.string("hashed_key", 255).notNullable().unique();
@@ -80,8 +102,11 @@ export async function up(knex: Knex): Promise<void> {
       table.string("status", 255).defaultTo("ACTIVE");
       table.timestamp("created_at").defaultTo(knex.fn.now());
       table.timestamp("updated_at").defaultTo(knex.fn.now());
-    })
-    .createTable("incidents", (table) => {
+    });
+  }
+
+  if (!(await knex.schema.hasTable("incidents"))) {
+    await knex.schema.createTable("incidents", (table) => {
       table.increments("id").primary();
       table.string("title", 255).notNullable();
       table.integer("start_date_time").notNullable();
@@ -90,8 +115,11 @@ export async function up(knex: Knex): Promise<void> {
       table.timestamp("updated_at").defaultTo(knex.fn.now());
       table.string("status", 255).defaultTo("ACTIVE");
       table.string("state", 255).defaultTo("INVESTIGATING");
-    })
-    .createTable("incident_monitors", (table) => {
+    });
+  }
+
+  if (!(await knex.schema.hasTable("incident_monitors"))) {
+    await knex.schema.createTable("incident_monitors", (table) => {
       table.increments("id").primary();
       table.string("monitor_tag", 255).notNullable();
       table.string("monitor_impact", 255);
@@ -99,8 +127,11 @@ export async function up(knex: Knex): Promise<void> {
       table.timestamp("updated_at").defaultTo(knex.fn.now());
       table.integer("incident_id").notNullable();
       table.unique(["monitor_tag", "incident_id"]);
-    })
-    .createTable("incident_comments", (table) => {
+    });
+  }
+
+  if (!(await knex.schema.hasTable("incident_comments"))) {
+    await knex.schema.createTable("incident_comments", (table) => {
       table.increments("id").primary();
       table.text("comment").notNullable();
       table.integer("incident_id").notNullable();
@@ -110,6 +141,7 @@ export async function up(knex: Knex): Promise<void> {
       table.string("status", 255).defaultTo("ACTIVE");
       table.string("state", 255).defaultTo("INVESTIGATING");
     });
+  }
 }
 
 export async function down(knex: Knex): Promise<void> {

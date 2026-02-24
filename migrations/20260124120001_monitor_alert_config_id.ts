@@ -1,6 +1,8 @@
 import type { Knex } from "knex";
 
 export async function up(knex: Knex): Promise<void> {
+  if (await knex.schema.hasTable("monitor_alerts_v2")) return;
+
   await knex.schema.createTable("monitor_alerts_v2", (table) => {
     table.increments("id").primary();
     table.integer("config_id").references("id").inTable("monitor_alerts_config").notNullable().onDelete("CASCADE");
@@ -15,5 +17,5 @@ export async function up(knex: Knex): Promise<void> {
 }
 
 export async function down(knex: Knex): Promise<void> {
-  await knex.schema.dropTable("monitor_alerts_v2");
+  await knex.schema.dropTableIfExists("monitor_alerts_v2");
 }

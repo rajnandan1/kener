@@ -1,9 +1,12 @@
 import type { Knex } from "knex";
 
 export async function up(knex: Knex): Promise<void> {
-  await knex.schema.alterTable("monitors", (table) => {
-    table.text("monitor_settings_json").nullable();
-  });
+  const hasCol = await knex.schema.hasColumn("monitors", "monitor_settings_json");
+  if (!hasCol) {
+    await knex.schema.alterTable("monitors", (table) => {
+      table.text("monitor_settings_json").nullable();
+    });
+  }
 }
 
 export async function down(knex: Knex): Promise<void> {

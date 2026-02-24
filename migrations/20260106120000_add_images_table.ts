@@ -1,6 +1,8 @@
 import type { Knex } from "knex";
 
 export async function up(knex: Knex): Promise<void> {
+  if (await knex.schema.hasTable("images")) return;
+
   await knex.schema.createTable("images", (table) => {
     table.string("id", 32).primary(); // nanoid generated ID with prefix
     table.text("data").notNullable(); // base64 encoded image data
