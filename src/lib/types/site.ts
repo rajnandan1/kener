@@ -125,3 +125,8 @@ export interface EventDisplaySettings {
     };
   };
 }
+
+export interface GlobalPageVisibilitySettings {
+  showSwitcher: boolean;
+  forceExclusivity: boolean;
+}

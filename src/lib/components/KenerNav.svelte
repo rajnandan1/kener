@@ -11,7 +11,15 @@
 
   let { data } = page;
   const navItems: { name: string; url: string; iconURL: string }[] = data.navItems || [];
-  const { siteName, siteUrl, logo } = data;
+  const { siteName, logo, globalPageVisibilitySettings } = data;
+
+  const brandPath = $derived.by(() => {
+    if (globalPageVisibilitySettings?.forceExclusivity) {
+      const currentPagePath = page.params?.page_path?.trim();
+      return currentPagePath ? `/${currentPagePath}` : "/";
+    }
+    return "/";
+  });
 
   function trackBrandClick() {
     trackEvent("nav_brand_clicked", { name: siteName });
@@ -29,7 +37,7 @@
     >
       <!-- Brand -->
       <a
-        href={clientResolver(resolve, siteUrl)}
+        href={clientResolver(resolve, brandPath)}
         class="{navigationMenuTriggerStyle()} hover:border-border border border-transparent bg-transparent text-xs hover:bg-transparent"
         style="border-radius: var(--radius-3xl)"
         onclick={trackBrandClick}

@@ -155,6 +155,10 @@ const seedSiteData = {
       upcoming: { show: true, maxCount: 5, daysInFuture: 7 },
     },
   },
+  globalPageVisibilitySettings: {
+    showSwitcher: true,
+    forceExclusivity: false,
+  },
 };
 
 export default seedSiteData;

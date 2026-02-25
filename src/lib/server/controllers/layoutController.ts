@@ -3,7 +3,7 @@ import type { Cookies } from "@sveltejs/kit";
 import type { UserRecordPublic } from "$lib/server/types/db";
 import seedSiteData from "$lib/server/db/seedSiteData";
 import { GetAllSiteData, GetLoggedInSession, GetLocaleFromCookie, GetUsersCount, IsEmailSetup } from "./controller.js";
-import type { EventDisplaySettings } from "$lib/types/site.js";
+import type { EventDisplaySettings, GlobalPageVisibilitySettings } from "$lib/types/site.js";
 
 export interface LayoutServerData {
   isMobile: boolean;
@@ -62,6 +62,7 @@ export interface LayoutServerData {
   eventDisplaySettings: EventDisplaySettings;
   socialPreviewImage?: string;
   customCSS?: string;
+  globalPageVisibilitySettings: GlobalPageVisibilitySettings;
 }
 
 export async function GetLayoutServerData(cookies: Cookies, request: Request): Promise<LayoutServerData> {
@@ -128,5 +129,6 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     eventDisplaySettings: siteData.eventDisplaySettings || seedSiteData.eventDisplaySettings,
     socialPreviewImage: siteData.socialPreviewImage,
     customCSS: siteData.customCSS,
+    globalPageVisibilitySettings: siteData.globalPageVisibilitySettings || seedSiteData.globalPageVisibilitySettings,
   };
 }

@@ -10,7 +10,6 @@
   import Sun from "@lucide/svelte/icons/sun";
   import Moon from "@lucide/svelte/icons/moon";
   import Share from "@lucide/svelte/icons/share-2";
-  import ChevronLeft from "@lucide/svelte/icons/chevron-left";
   import { format } from "date-fns";
   import SubscribeMenu from "$lib/components/SubscribeMenu.svelte";
   import CopyButton from "$lib/components/CopyButton.svelte";
@@ -79,7 +78,9 @@
 </script>
 
 <div class="theme-plus-bar scrollbar-hidden sticky top-18 z-20 flex w-full items-center gap-2 rounded py-2">
-  <PageSelector />
+  {#if !!!page.data.globalPageVisibilitySettings.forceExclusivity && page.data.globalPageVisibilitySettings.showSwitcher}
+    <PageSelector />
+  {/if}
   <div class="ml-auto flex shrink-0 items-center gap-2">
     {#if page.data.isSubsEnabled && page.data.canSendEmail}
       <ButtonGroup.Root class="hidden shrink-0 sm:flex">

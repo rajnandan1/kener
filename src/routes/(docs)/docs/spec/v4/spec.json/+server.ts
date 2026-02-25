@@ -1,8 +1,11 @@
 import { readFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { RequestHandler } from "./$types";
 
-const SPEC_PATH = join(process.cwd(), "static", "api-references", "v4.json");
+const DEV_PATH = join(process.cwd(), "static", "api-references", "v4.json");
+const PROD_PATH = join(process.cwd(), "build", "client", "api-references", "v4.json");
+const SPEC_PATH = existsSync(PROD_PATH) ? PROD_PATH : DEV_PATH;
 
 export const GET: RequestHandler = async () => {
   try {

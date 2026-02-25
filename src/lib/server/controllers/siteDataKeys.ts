@@ -261,4 +261,9 @@ export const siteDataKeys: SiteDataKey[] = [
     isValid: (value) => typeof value === "string",
     data_type: "string",
   },
+  {
+    key: "globalPageVisibilitySettings",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
 ];

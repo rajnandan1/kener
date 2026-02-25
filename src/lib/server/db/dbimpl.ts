@@ -14,7 +14,6 @@ import { MaintenancesRepository } from "./repositories/maintenances.js";
 import { MonitorAlertConfigRepository } from "./repositories/monitorAlertConfig.js";
 import { SubscriptionSystemRepository } from "./repositories/subscriptionSystem.js";
 import { EmailTemplateConfigRepository } from "./repositories/emailTemplateConfig.js";
-import { VaultRepository } from "./repositories/vault.js";
 
 // Re-export types from base
 export type { MonitorFilter, TriggerFilter, IncidentFilter, CountResult } from "./repositories/base.js";
@@ -44,7 +43,6 @@ class DbImpl {
   private monitorAlertConfig!: MonitorAlertConfigRepository;
   private subscriptionSystem!: SubscriptionSystemRepository;
   private emailTemplateConfig!: EmailTemplateConfigRepository;
-  private vault!: VaultRepository;
 
   // Method bindings - declared with definite assignment assertion
   // ============ Monitoring Data ============
@@ -347,18 +345,6 @@ class DbImpl {
   deleteEmailTemplate!: EmailTemplateConfigRepository["deleteEmailTemplate"];
   upsertEmailTemplate!: EmailTemplateConfigRepository["upsertEmailTemplate"];
 
-  // ============ Vault ============
-  getAllSecrets!: VaultRepository["getAllSecrets"];
-  getSecretById!: VaultRepository["getSecretById"];
-  getSecretByName!: VaultRepository["getSecretByName"];
-  insertSecret!: VaultRepository["insertSecret"];
-  updateSecretById!: VaultRepository["updateSecretById"];
-  updateSecretByName!: VaultRepository["updateSecretByName"];
-  deleteSecretById!: VaultRepository["deleteSecretById"];
-  deleteSecretByName!: VaultRepository["deleteSecretByName"];
-  secretNameExists!: VaultRepository["secretNameExists"];
-  getSecretsCount!: VaultRepository["getSecretsCount"];
-
   constructor(opts: KnexType.Config) {
     this.knex = Knex(opts);
 
@@ -375,7 +361,6 @@ class DbImpl {
     this.monitorAlertConfig = new MonitorAlertConfigRepository(this.knex);
     this.subscriptionSystem = new SubscriptionSystemRepository(this.knex);
     this.emailTemplateConfig = new EmailTemplateConfigRepository(this.knex);
-    this.vault = new VaultRepository(this.knex);
 
     // Bind methods after repositories are initialized
     this.bindMonitoringMethods();
@@ -390,7 +375,6 @@ class DbImpl {
     this.bindMonitorAlertConfigMethods();
     this.bindSubscriptionSystemMethods();
     this.bindEmailTemplateConfigMethods();
-    this.bindVaultMethods();
 
     this.init();
   }
@@ -792,19 +776,6 @@ class DbImpl {
     this.getEmailTemplateById = this.emailTemplateConfig.getEmailTemplateById.bind(this.emailTemplateConfig);
     this.deleteEmailTemplate = this.emailTemplateConfig.deleteEmailTemplate.bind(this.emailTemplateConfig);
     this.upsertEmailTemplate = this.emailTemplateConfig.upsertEmailTemplate.bind(this.emailTemplateConfig);
-  }
-
-  private bindVaultMethods(): void {
-    this.getAllSecrets = this.vault.getAllSecrets.bind(this.vault);
-    this.getSecretById = this.vault.getSecretById.bind(this.vault);
-    this.getSecretByName = this.vault.getSecretByName.bind(this.vault);
-    this.insertSecret = this.vault.insertSecret.bind(this.vault);
-    this.updateSecretById = this.vault.updateSecretById.bind(this.vault);
-    this.updateSecretByName = this.vault.updateSecretByName.bind(this.vault);
-    this.deleteSecretById = this.vault.deleteSecretById.bind(this.vault);
-    this.deleteSecretByName = this.vault.deleteSecretByName.bind(this.vault);
-    this.secretNameExists = this.vault.secretNameExists.bind(this.vault);
-    this.getSecretsCount = this.vault.getSecretsCount.bind(this.vault);
   }
 
   async init(): Promise<void> {}

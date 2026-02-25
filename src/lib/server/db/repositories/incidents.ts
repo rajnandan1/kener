@@ -826,8 +826,9 @@ export class IncidentsRepository extends BaseRepository {
   async getIncidentsForEventsByDateRange(
     startTs: number,
     endTs: number,
+    monitorTags?: string[],
   ): Promise<IncidentForMonitorListWithComments[]> {
-    const rows = await this.knex("incidents")
+    const query = this.knex("incidents")
       .select(
         "incidents.id",
         "incidents.title",
@@ -848,8 +849,15 @@ export class IncidentsRepository extends BaseRepository {
       .where("incidents.incident_type", GC.INCIDENT)
       .andWhere("incidents.status", "OPEN")
       .andWhere("incidents.start_date_time", ">=", startTs)
-      .andWhere("incidents.start_date_time", "<=", endTs)
-      .orderBy("incidents.start_date_time", "desc");
+      .andWhere("incidents.start_date_time", "<=", endTs);
+
+    if (monitorTags) {
+      query.andWhere(function () {
+        this.whereIn("incident_monitors.monitor_tag", monitorTags).orWhere("incidents.is_global", "YES");
+      });
+    }
+
+    const rows = await query.orderBy("incidents.start_date_time", "desc");
 
     const incidents = this.groupIncidentsByIdForMonitorListFilterHidden(rows);
 
