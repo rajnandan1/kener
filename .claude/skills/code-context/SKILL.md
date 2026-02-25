@@ -93,9 +93,15 @@ Only write/update docs if the task revealed architecture knowledge worth preserv
 
 ### B1) Decide what to document
 
-Ask: *"Would a new developer or future agent need to re-discover this to work in this area?"*
+Ask: _"Would a new developer or future agent need to re-discover this to work in this area?"_
 
-If yes, document it. If no, skip Phase B entirely.
+If yes, proceed. If no, skip Phase B entirely.
+
+Then apply this filter to **every sentence** before writing:
+
+> "Does this sentence describe how the code is structured, a design decision, or a constraint that would change how someone writes future code in this area?"
+
+If no → cut it. This is the line between architecture documentation and a session diary.
 
 ### B2) Write architecture documentation
 
@@ -107,24 +113,30 @@ Template (use only the sections that apply):
 # <Domain/Feature Area>
 
 ## Overview
+
 Brief description of what this area does and its role in the system.
 
 ## Architecture
+
 How the components are structured, key abstractions, layers.
 
 ## Code Flow
+
 Step-by-step flow for the primary operations (e.g., "How a monitor check executes").
 
 ## Key Files
-| File | Responsibility |
-|------|---------------|
-| `src/lib/server/...` | Does X |
+
+| File                 | Responsibility |
+| -------------------- | -------------- |
+| `src/lib/server/...` | Does X         |
 
 ## Edge Cases and Gotchas
+
 - Non-obvious behavior 1
 - Constraint that must be preserved
 
 ## Design Decisions
+
 - Why X was chosen over Y (if non-obvious)
 ```
 
@@ -137,11 +149,11 @@ ls .codecontext/
 grep -ril "<topic keyword>" .codecontext/
 ```
 
-| Condition                          | Action                                |
-| ---------------------------------- | ------------------------------------- |
-| Existing doc covers this domain    | Update/rewrite relevant sections      |
-| Different domain                   | Create new file                       |
-| No match                           | Create new file                       |
+| Condition                       | Action                           |
+| ------------------------------- | -------------------------------- |
+| Existing doc covers this domain | Update/rewrite relevant sections |
+| Different domain                | Create new file                  |
+| No match                        | Create new file                  |
 
 When updating, **replace outdated sections** rather than appending session entries. The doc should always read as a clean, current architecture reference.
 
@@ -177,6 +189,7 @@ Before coding:
 
 Before finishing:
 
+- [ ] Every sentence passed the B1 architecture filter
 - [ ] Documented any new architecture knowledge discovered
 - [ ] Updated outdated docs if current code contradicts them
 - [ ] Doc reads as a clean architecture reference, not a session log
