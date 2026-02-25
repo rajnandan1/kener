@@ -20,6 +20,8 @@
 
   let { data } = $props();
 
+  const pagePath = $derived(!!page.params.page_path ? `/${page.params.page_path}` : "");
+
   const MIN_YEAR = 2023;
 
   // State
@@ -172,14 +174,14 @@
             rel="external"
             variant="outline"
             class="size-8 rounded-full p-0 shadow-none"
-            href={clientResolver(resolve, `/events/${prevMonthPath}`)}
+            href={clientResolver(resolve, `${pagePath}/events/${prevMonthPath}`)}
           >
             <ICONS.CHEVRON_LEFT class="size-5" />
           </Button>
           <p class="text-2xl">{$formatDate(parsedDate, "MMMM yyyy")}</p>
           <Button
             rel="external"
-            href={clientResolver(resolve, `/events/${nextMonthPath}`)}
+            href={clientResolver(resolve, `${pagePath}/events/${nextMonthPath}`)}
             variant="outline"
             class="size-8 rounded-full p-0 shadow-none"
           >
@@ -267,9 +269,9 @@
         variant="outline"
         rel="external"
         class="rounded-full shadow-none"
-        href={clientResolver(resolve, `/events/${prevMonthPath}`)}
+        href={clientResolver(resolve, `${pagePath}/events/${prevMonthPath}`)}
       >
-        <ArrowLeft class="mr-2 h-4 w-4" />
+        <ArrowLeft class="h-4 w-4" />
         {$formatDate(prevMonth, "MMMM yyyy")}
       </Button>
     {:else}
@@ -280,10 +282,10 @@
         variant="outline"
         rel="external"
         class="rounded-full shadow-none"
-        href={clientResolver(resolve, `/events/${nextMonthPath}`)}
+        href={clientResolver(resolve, `${pagePath}/events/${nextMonthPath}`)}
       >
         {$formatDate(nextMonth, "MMMM yyyy")}
-        <ArrowRight class="ml-2 h-4 w-4" />
+        <ArrowRight class="h-4 w-4" />
       </Button>
     {:else}
       <div></div>
