@@ -13,10 +13,6 @@ Most of the default settings are designed to work out of the box, but you can cu
 
 - **Site Name**: The name of your status page. This will be displayed in the header and title of the page.
 - **Site URL**: The URL of your status page. This is used for sharing and linking to your status page.
-- **Home Path**: The path to the home page of your status page. This is used for routing and navigation within your status page. By default, it is set to `/`, but you can change it to something else if you want.
-
-> [!NOTE]
-> If you are hosting site on a subpath, make sure to set the Home Path to the correct value. For example, if your site is hosted at `https://example.com/status`, then you should set the Home Path to `/status`.
 
 > [!IMPORTANT]
 > Setting up the Site URL correctly is very important for Kener to function properly.

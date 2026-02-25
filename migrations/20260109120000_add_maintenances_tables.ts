@@ -10,6 +10,7 @@ export async function up(knex: Knex): Promise<void> {
       table.string("rrule", 500).notNullable();
       table.integer("duration_seconds").notNullable();
       table.string("status", 50).notNullable().defaultTo("ACTIVE");
+      table.string("is_global", 15).notNullable().defaultTo("YES");
       table.timestamp("created_at").defaultTo(knex.fn.now());
       table.timestamp("updated_at").defaultTo(knex.fn.now());
     });
@@ -20,6 +21,7 @@ export async function up(knex: Knex): Promise<void> {
       table.increments("id").primary();
       table.integer("maintenance_id").unsigned().notNullable();
       table.string("monitor_tag", 255).notNullable();
+      table.string("monitor_impact").defaultTo("MAINTENANCE").notNullable();
       table.timestamp("created_at").defaultTo(knex.fn.now());
       table.timestamp("updated_at").defaultTo(knex.fn.now());
 

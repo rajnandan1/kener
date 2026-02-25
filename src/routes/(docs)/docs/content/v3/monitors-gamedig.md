@@ -50,12 +50,12 @@ This is an anonymous JS function, it should return a **Promise**, that resolves 
 > `{status: "DEGRADED", latency: 200}`.
 
 ```javascript
-;(async function (responseTime, responseRaw) {
+async function (responseTime, responseRaw) {
     return {
         status: "UP",
         latency: responseTime
     }
-})
+}
 ```
 
 - `responseTime` **REQUIRED** is a number. It is the latency in milliseconds

@@ -72,7 +72,7 @@ This is an anonymous JS function, it should return a **Promise**, that resolves 
 The following example shows how to use the eval function to evaluate the response. The function checks if the status code is 2XX then the status is UP, if the status code is 5XX then the status is DOWN. If the response contains the word `Unknown Error` then the status is DOWN. If the response time is greater than 2000 then the status is DEGRADED.
 
 ```javascript
-;(async function (statusCode, responseTime, responseRaw, modules) {
+async function (statusCode, responseTime, responseRaw, modules) {
     let status = "DOWN"
 
     //if the status code is 2XX then the status is UP
@@ -94,7 +94,7 @@ The following example shows how to use the eval function to evaluate the respons
         status: status,
         latency: responseTime
     }
-})
+}
 ```
 
 ### Example 2 {#example-2}
@@ -102,7 +102,7 @@ The following example shows how to use the eval function to evaluate the respons
 This next example shows how to call another API withing eval. It is scrapping the second last script tag from the response and checking if the heading is "No recent issues" then the status is UP else it is DOWN.
 
 ```js
-;(async function (statusCode, responseTime, responseRaw, modules) {
+async function (statusCode, responseTime, responseRaw, modules) {
     let htmlString = responseRaw
     const scriptTags = htmlString.match(/<script[^>]*src="([^"]+)"[^>]*>/g)
     if (scriptTags && scriptTags.length >= 2) {
@@ -126,7 +126,7 @@ This next example shows how to call another API withing eval. It is scrapping th
         status: "DOWN",
         latency: responseTime
     }
-})
+}
 ```
 
 ### Example 3 {#example-3}
@@ -134,7 +134,7 @@ This next example shows how to call another API withing eval. It is scrapping th
 The next example shows how to use cheerio to parse bitbucket status page and check if all the components are operational. If all the components are operational then the status is UP else it is DOWN.
 
 ```js
-;(async function (statusCode, responseTime, responseDataBase64, modules) {
+async function (statusCode, responseTime, responseDataBase64, modules) {
     let html = atob(responseDataBase64)
     const $ = modules.cheerio.load(html)
     const components = $(".components-section .components-container .component-container")
@@ -150,7 +150,7 @@ The next example shows how to use cheerio to parse bitbucket status page and che
         status: status ? "UP" : "DOWN",
         latency: responseTime
     }
-})
+}
 ```
 
 ## Examples {#examples}

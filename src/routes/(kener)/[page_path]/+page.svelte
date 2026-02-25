@@ -14,8 +14,10 @@
   import { requestMonitorBar } from "$lib/client/monitor-bar-client";
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
   import { SveltePurify } from "@humanspeak/svelte-purify";
+  import { page } from "$app/state";
 
   let { data } = $props();
+
   let pageSettings = $derived(data.pageDetails.page_settings);
   let barCount = $derived.by(() =>
     data.isMobile

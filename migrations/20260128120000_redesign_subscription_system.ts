@@ -27,12 +27,46 @@ export async function up(knex: Knex): Promise<void> {
       table.text("meta").nullable();
       table.timestamp("created_at").defaultTo(knex.fn.now());
       table.timestamp("updated_at").defaultTo(knex.fn.now());
+    });
+  }
+
+  // Add indexes, unique constraints, and foreign keys for subscriber_methods (idempotent)
+  try {
+    await knex.schema.alterTable("subscriber_methods", (table) => {
       table.index(["subscriber_user_id"]);
+    });
+  } catch (_e) {
+    /* index already exists */
+  }
+  try {
+    await knex.schema.alterTable("subscriber_methods", (table) => {
       table.index(["method_type"]);
+    });
+  } catch (_e) {
+    /* index already exists */
+  }
+  try {
+    await knex.schema.alterTable("subscriber_methods", (table) => {
       table.index(["status"]);
-      table.unique(["subscriber_user_id", "method_type", "method_value"]);
+    });
+  } catch (_e) {
+    /* index already exists */
+  }
+  try {
+    await knex.schema.alterTable("subscriber_methods", (table) => {
+      table.unique(["subscriber_user_id", "method_type", "method_value"], {
+        indexName: "sub_methods_user_type_value_unique",
+      });
+    });
+  } catch (_e) {
+    /* unique constraint already exists */
+  }
+  try {
+    await knex.schema.alterTable("subscriber_methods", (table) => {
       table.foreign("subscriber_user_id").references("id").inTable("subscriber_users").onDelete("CASCADE");
     });
+  } catch (_e) {
+    /* foreign key already exists */
   }
 
   // 3. Create user_subscriptions_v2 table
@@ -45,14 +79,60 @@ export async function up(knex: Knex): Promise<void> {
       table.string("status", 20).notNullable().defaultTo("ACTIVE");
       table.timestamp("created_at").defaultTo(knex.fn.now());
       table.timestamp("updated_at").defaultTo(knex.fn.now());
+    });
+  }
+
+  // Add indexes, unique constraints, and foreign keys for user_subscriptions_v2 (idempotent)
+  try {
+    await knex.schema.alterTable("user_subscriptions_v2", (table) => {
       table.index(["subscriber_user_id"]);
+    });
+  } catch (_e) {
+    /* index already exists */
+  }
+  try {
+    await knex.schema.alterTable("user_subscriptions_v2", (table) => {
       table.index(["subscriber_method_id"]);
+    });
+  } catch (_e) {
+    /* index already exists */
+  }
+  try {
+    await knex.schema.alterTable("user_subscriptions_v2", (table) => {
       table.index(["event_type"]);
+    });
+  } catch (_e) {
+    /* index already exists */
+  }
+  try {
+    await knex.schema.alterTable("user_subscriptions_v2", (table) => {
       table.index(["status"]);
-      table.unique(["subscriber_user_id", "subscriber_method_id", "event_type"]);
+    });
+  } catch (_e) {
+    /* index already exists */
+  }
+  try {
+    await knex.schema.alterTable("user_subscriptions_v2", (table) => {
+      table.unique(["subscriber_user_id", "subscriber_method_id", "event_type"], {
+        indexName: "sub_v2_user_method_event_unique",
+      });
+    });
+  } catch (_e) {
+    /* unique constraint already exists */
+  }
+  try {
+    await knex.schema.alterTable("user_subscriptions_v2", (table) => {
       table.foreign("subscriber_user_id").references("id").inTable("subscriber_users").onDelete("CASCADE");
+    });
+  } catch (_e) {
+    /* foreign key already exists */
+  }
+  try {
+    await knex.schema.alterTable("user_subscriptions_v2", (table) => {
       table.foreign("subscriber_method_id").references("id").inTable("subscriber_methods").onDelete("CASCADE");
     });
+  } catch (_e) {
+    /* foreign key already exists */
   }
 }
 

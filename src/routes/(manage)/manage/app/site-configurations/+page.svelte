@@ -16,7 +16,7 @@
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
-  import type { DataRetentionPolicy, EventDisplaySettings } from "$lib/types/site.js";
+  import type { DataRetentionPolicy, EventDisplaySettings, GlobalPageVisibilitySettings } from "$lib/types/site.js";
 
   interface NavItem {
     name: string;
@@ -33,6 +33,7 @@
   let savingSocialPreviewImage = $state(false);
   let savingNav = $state(false);
   let savingSubMenuOptions = $state(false);
+  let savingGlobalPageVisibilitySettings = $state(false);
   let savingDataRetentionPolicy = $state(false);
   let savingEventDisplaySettings = $state(false);
   let uploadingLogo = $state(false);
@@ -58,7 +59,6 @@
   interface SiteDataForm {
     siteName: string;
     siteURL: string;
-    home: string;
     logo: string;
     favicon: string;
     socialPreviewImage: string | null;
@@ -68,7 +68,6 @@
   let siteData = $state<SiteDataForm>({
     siteName: "",
     siteURL: "",
-    home: "/",
     logo: "",
     favicon: "",
     socialPreviewImage: null
@@ -83,6 +82,15 @@
     showShareEmbedMonitor: true
   });
 
+  const defaultGlobalPageVisibilitySettings: GlobalPageVisibilitySettings = {
+    showSwitcher: true,
+    forceExclusivity: false
+  };
+
+  let globalPageVisibilitySettings = $state<GlobalPageVisibilitySettings>(
+    structuredClone(defaultGlobalPageVisibilitySettings)
+  );
+
   let dataRetentionPolicy = $state<DataRetentionPolicy>({
     enabled: true,
     retentionDays: 90
@@ -90,6 +98,14 @@
 
   let eventDisplaySettings = $state<EventDisplaySettings>(structuredClone(defaultEventDisplaySettings));
   let currentOrigin = $state("");
+
+  function onForceExclusivityChange(checked: boolean | "indeterminate") {
+    const enabled = checked === true;
+    globalPageVisibilitySettings.forceExclusivity = enabled;
+    if (enabled) {
+      globalPageVisibilitySettings.showSwitcher = true;
+    }
+  }
 
   function parseOriginOnlyURL(value: string): URL | null {
     try {
@@ -116,10 +132,7 @@
 
   // Validation
   const isValidSiteInfo = $derived(
-    siteData.siteName.trim().length > 0 &&
-      siteData.siteURL.trim().length > 0 &&
-      isOriginOnlySiteURL &&
-      siteData.home.trim().length > 0
+    siteData.siteName.trim().length > 0 && siteData.siteURL.trim().length > 0 && isOriginOnlySiteURL
   );
 
   async function fetchSiteData() {
@@ -135,7 +148,6 @@
         siteData = {
           siteName: data.siteName || "",
           siteURL: data.siteURL || "",
-          home: data.home || "/",
           logo: data.logo || "",
           favicon: data.favicon || "",
           socialPreviewImage: data.socialPreviewImage || null
@@ -153,6 +165,27 @@
             showShareEmbedMonitor: data.subMenuOptions.showShareEmbedMonitor ?? true
           };
         }
+
+        if (data.globalPageVisibilitySettings) {
+          try {
+            const parsed =
+              typeof data.globalPageVisibilitySettings === "string"
+                ? JSON.parse(data.globalPageVisibilitySettings)
+                : data.globalPageVisibilitySettings;
+
+            globalPageVisibilitySettings = {
+              ...structuredClone(defaultGlobalPageVisibilitySettings),
+              ...parsed,
+              showSwitcher: Boolean(parsed?.showSwitcher ?? true),
+              forceExclusivity: Boolean(parsed?.forceExclusivity ?? false)
+            };
+          } catch {
+            globalPageVisibilitySettings = structuredClone(defaultGlobalPageVisibilitySettings);
+          }
+        } else {
+          globalPageVisibilitySettings = structuredClone(defaultGlobalPageVisibilitySettings);
+        }
+
         dataRetentionPolicy = {
           enabled: data.dataRetentionPolicy?.enabled ?? true,
           retentionDays: data.dataRetentionPolicy?.retentionDays ?? 90
@@ -191,8 +224,7 @@
           action: "storeSiteData",
           data: {
             siteName: siteData.siteName,
-            siteURL: siteData.siteURL,
-            home: siteData.home
+            siteURL: siteData.siteURL
           }
         })
       });
@@ -335,6 +367,36 @@
       toast.error("Failed to save sub menu options");
     } finally {
       savingSubMenuOptions = false;
+    }
+  }
+
+  async function saveGlobalPageVisibilitySettings() {
+    savingGlobalPageVisibilitySettings = true;
+    try {
+      const payload: GlobalPageVisibilitySettings = {
+        showSwitcher: globalPageVisibilitySettings.forceExclusivity ? true : globalPageVisibilitySettings.showSwitcher,
+        forceExclusivity: globalPageVisibilitySettings.forceExclusivity
+      };
+
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "storeSiteData",
+          data: { globalPageVisibilitySettings: JSON.stringify(payload) }
+        })
+      });
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        globalPageVisibilitySettings = payload;
+        toast.success("Global page visibility settings saved successfully");
+      }
+    } catch (e) {
+      toast.error("Failed to save global page visibility settings");
+    } finally {
+      savingGlobalPageVisibilitySettings = false;
     }
   }
 
@@ -592,15 +654,6 @@
                 clientResolver(resolve, "/")}
             </p>
           </div>
-        </div>
-
-        <!-- Home Path -->
-        <div class="space-y-2">
-          <Label for="home">Home Path *</Label>
-          <Input id="home" type="text" bind:value={siteData.home} placeholder="/" />
-          <p class="text-muted-foreground text-xs">
-            The path users are redirected to when clicking the logo (e.g., "/" or "/status")
-          </p>
         </div>
       </Card.Content>
       <Card.Footer class="flex justify-end">
@@ -924,6 +977,55 @@
       <Card.Footer class="flex justify-end">
         <Button onclick={saveSubMenuOptions} disabled={savingSubMenuOptions} class="cursor-pointer">
           {#if savingSubMenuOptions}
+            <Loader class="h-4 w-4 animate-spin" />
+            Saving...
+          {:else}
+            <SaveIcon class="h-4 w-4" />
+            Save
+          {/if}
+        </Button>
+      </Card.Footer>
+    </Card.Root>
+
+    <!-- Global Page Visibility Settings Card -->
+    <Card.Root>
+      <Card.Header>
+        <Card.Title>Global Page Visibility Settings</Card.Title>
+        <Card.Description>
+          Configure page switcher visibility and global exclusivity behavior for page-linked content.
+        </Card.Description>
+      </Card.Header>
+      <Card.Content class="space-y-6">
+        <div class="flex items-center justify-between">
+          <div class="space-y-0.5">
+            <Label>Show page switcher</Label>
+            <p class="text-muted-foreground text-xs">This will hide the pages dropdown from the menu.</p>
+          </div>
+          <Switch
+            bind:checked={globalPageVisibilitySettings.showSwitcher}
+            disabled={globalPageVisibilitySettings.forceExclusivity}
+          />
+        </div>
+
+        <div class="flex items-center justify-between">
+          <div class="space-y-0.5">
+            <Label>Force exclusivity</Label>
+            <p class="text-muted-foreground text-xs">
+              This sets <code>showSwitcher</code> to true and makes it read-only. It also enables brand icon link
+              overwrite and calendar event updates for affected monitors. Global events (incidents and maintenances with
+              <code>is_global=YES</code>) are still shown.
+            </p>
+          </div>
+          <Switch checked={globalPageVisibilitySettings.forceExclusivity} onCheckedChange={onForceExclusivityChange} />
+        </div>
+      </Card.Content>
+      <Card.Footer class="flex justify-end">
+        <Button
+          onclick={saveGlobalPageVisibilitySettings}
+          disabled={savingGlobalPageVisibilitySettings}
+          class="cursor-pointer"
+        >
+          {#if savingGlobalPageVisibilitySettings}
             <Loader class="h-4 w-4 animate-spin" />
             Saving...
           {:else}

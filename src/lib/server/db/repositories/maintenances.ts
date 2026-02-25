@@ -631,8 +631,9 @@ export class MaintenancesRepository extends BaseRepository {
   async getMaintenanceEventsForEventsByDateRange(
     startTs: number,
     endTs: number,
+    monitorTags?: string[],
   ): Promise<MaintenanceEventsMonitorList[]> {
-    const rows = await this.knex("maintenances_events")
+    const query = this.knex("maintenances_events")
       .select(
         "maintenances_events.id",
         "maintenances.title",
@@ -652,8 +653,15 @@ export class MaintenancesRepository extends BaseRepository {
       .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
       .leftJoin("monitors", "maintenance_monitors.monitor_tag", "monitors.tag")
       .andWhere("maintenances_events.start_date_time", ">=", startTs)
-      .andWhere("maintenances_events.start_date_time", "<=", endTs)
-      .orderBy("maintenances_events.start_date_time", "desc");
+      .andWhere("maintenances_events.start_date_time", "<=", endTs);
+
+    if (monitorTags) {
+      query.andWhere(function () {
+        this.whereIn("maintenance_monitors.monitor_tag", monitorTags).orWhere("maintenances.is_global", "YES");
+      });
+    }
+
+    const rows = await query.orderBy("maintenances_events.start_date_time", "desc");
 
     return this.groupMaintenancesByIdForMonitorList(rows);
   }

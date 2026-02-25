@@ -105,13 +105,6 @@ import {
   AdminAddSubscriber,
 } from "$lib/server/controllers/userSubscriptionsController.js";
 import {
-  GetAllSecrets,
-  GetSecretById,
-  CreateSecret,
-  UpdateSecret,
-  DeleteSecret,
-} from "$lib/server/controllers/vaultController.js";
-import {
   GetAllGeneralEmailTemplates,
   GetGeneralEmailTemplateById,
   UpdateGeneralEmailTemplate,
@@ -632,48 +625,6 @@ export async function POST({ request, cookies }) {
         throw new Error("Email is required");
       }
       resp = await AdminAddSubscriber(email, incidents ?? false, maintenances ?? false);
-      if (!resp.success) {
-        throw new Error(resp.error);
-      }
-    }
-    // ============ Vault ============
-    else if (action == "getVaultSecrets") {
-      AdminCan(userDB.role);
-      resp = await GetAllSecrets();
-    } else if (action == "getVaultSecret") {
-      AdminCan(userDB.role);
-      const { id } = data;
-      if (!id) {
-        throw new Error("Secret ID is required");
-      }
-      resp = await GetSecretById(id);
-      if (!resp) {
-        throw new Error("Secret not found");
-      }
-    } else if (action == "createVaultSecret") {
-      AdminCan(userDB.role);
-      const { secret_name, secret_value } = data;
-      resp = await CreateSecret(secret_name, secret_value);
-      if (!resp.success) {
-        throw new Error(resp.error);
-      }
-    } else if (action == "updateVaultSecret") {
-      AdminCan(userDB.role);
-      const { id, secret_name, secret_value } = data;
-      if (!id) {
-        throw new Error("Secret ID is required");
-      }
-      resp = await UpdateSecret(id, { secret_name, secret_value });
-      if (!resp.success) {
-        throw new Error(resp.error);
-      }
-    } else if (action == "deleteVaultSecret") {
-      AdminCan(userDB.role);
-      const { id } = data;
-      if (!id) {
-        throw new Error("Secret ID is required");
-      }
-      resp = await DeleteSecret(id);
       if (!resp.success) {
         throw new Error(resp.error);
       }

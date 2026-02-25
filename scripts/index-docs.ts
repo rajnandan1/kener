@@ -47,7 +47,8 @@ interface DocsSidebarGroup {
 
 interface DocsNavTab {
   name: string;
-  sidebar: DocsSidebarGroup[];
+  url?: string;
+  sidebar?: DocsSidebarGroup[];
 }
 
 interface DocsVersion {
@@ -164,14 +165,16 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const primaryTabSidebar = latestVersion.content.navigation?.tabs?.[0]?.sidebar ?? [];
-  const sidebar = normalizeSidebar(primaryTabSidebar);
+  const tabs = latestVersion.content.navigation?.tabs ?? [];
   const documents: DocsSearchDocument[] = [];
 
-  // Collect all pages from sidebar
+  // Collect all pages from all tabs' sidebars
   const allPages: Array<{ page: DocsPageSource; group: string }> = [];
-  for (const sidebarGroup of sidebar) {
-    collectPages(sidebarGroup.pages, sidebarGroup.group, allPages);
+  for (const tab of tabs) {
+    const sidebar = normalizeSidebar(tab.sidebar ?? []);
+    for (const sidebarGroup of sidebar) {
+      collectPages(sidebarGroup.pages, sidebarGroup.group, allPages);
+    }
   }
 
   console.log(`[index-docs] Indexing version ${latestVersion.slug}`);

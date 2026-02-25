@@ -4,6 +4,7 @@ import type { Cookies } from "@sveltejs/kit";
 import type {
   DataRetentionPolicy,
   EventDisplaySettings,
+  GlobalPageVisibilitySettings,
   SiteAnalyticsItem,
   SiteAnnouncement,
   SiteCategory,
@@ -56,6 +57,7 @@ export interface SiteDataTransformed {
   eventDisplaySettings?: EventDisplaySettings;
   socialPreviewImage?: string;
   customCSS?: string;
+  globalPageVisibilitySettings?: GlobalPageVisibilitySettings;
 }
 
 export function InsertKeyValue(key: string, value: string): Promise<number[]> {

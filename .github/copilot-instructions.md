@@ -120,3 +120,21 @@ Always use `import type { ... }` when importing types to avoid accidental runtim
 # Other skills
 
 Read files in .claude/skills for more instructions on specific tasks or file types.
+
+## Code Architecture Documentation (MUST)
+
+For every coding task that touches architecture (multi-file features, refactors, new integrations):
+
+1. **Before edits**
+	- Read and apply `.claude/skills/code-context/SKILL.md`.
+	- Load relevant architecture docs from `.codecontext/` when present.
+
+2. **Before finishing the response**
+	- If the task revealed new architecture knowledge (code flow, edge cases, component relationships, design decisions), write/update a `.codecontext/*.md` entry as a clean reference doc.
+	- Skip if the task was trivial (typo fixes, single-line edits).
+
+3. **Final response contract**
+	- Include a short line: `Context loaded: ...`
+	- Include a short line: `Context updated: ...`
+
+`.codecontext/` documents **code architecture only** — not session logs, changelogs, or task summaries.

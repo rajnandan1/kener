@@ -252,6 +252,14 @@
                     {
                       "title": "Base Path Deployment",
                       "content": "v4/guides/base-path"
+                    },
+                    {
+                      "title": "Custom Fonts",
+                      "content": "v4/guides/custom-fonts"
+                    },
+                    {
+                      "title": "Custom JS & CSS",
+                      "content": "v4/guides/custom-js-css-guide"
                     }
                   ]
                 }

@@ -23,7 +23,7 @@ Use **Manage → Customizations** to control visual behavior of the public statu
 | Font           | `font` (`cssSrc`, `family`) | Loads font stylesheet and applies global `--font-family`      |
 | Theme defaults | `theme`, `themeToggle`      | Sets initial mode and controls whether users can toggle theme |
 | Announcement   | `announcement`              | Renders site banner when title + message are present          |
-| Custom CSS     | `customCSS`                 | Saved in site data, not yet injected into public layout       |
+| Custom CSS     | `customCSS`                 | Injected as `<style>` block in public layout `<head>`         |
 
 ## Footer HTML {#footer-html}
 
@@ -46,11 +46,13 @@ Color settings feed CSS variables for status/accent colors in the public layout.
 - `themeToggle` controls whether users can switch theme in UI
 - announcement banner appears when both `title` and `message` are set
 
-## Custom CSS status {#custom-css-status}
+## Custom CSS {#custom-css-status}
 
-`customCSS` is already persisted through site data APIs, but public layout injection is not enabled yet.
+`customCSS` is injected as a `<style>` block in the public layout `<head>`. Do not include `<style>` tags — only raw CSS.
 
-Planned approach: append a `<style>` block in public layout head using saved `customCSS` (after validation/sanitization policy is finalized).
+Use Custom CSS to override styles, add `@font-face` rules for self-hosted fonts, or customize the status page appearance beyond the built-in settings.
+
+See [Custom Fonts guide](/docs/v4/guides/custom-fonts) for font-specific examples.
 
 ## Verify changes {#verify-changes}
 

@@ -30,7 +30,7 @@ This is an anonymous JS function, it should return a **Promise**, that resolves 
 > `{status:"DEGRADED", latency: 200}`.
 
 ```javascript
-;(async function (arrayOfPings) {
+async function (arrayOfPings) {
     let latencyTotal = arrayOfPings.reduce((acc, ping) => {
         return acc + ping.latency
     }, 0)
@@ -43,7 +43,7 @@ This is an anonymous JS function, it should return a **Promise**, that resolves 
         status: alive ? "UP" : "DOWN",
         latency: latencyTotal / arrayOfPings.length
     }
-})
+}
 ```
 
 - `arrayOfPings` **REQUIRED** is an array of Ping Response Objects as shown below.
@@ -103,7 +103,7 @@ Each object in the array represents the ping response of a host.
 The following example shows how to use the eval function to evaluate the response. The function checks if the combined latency is more 10ms then returns `DEGRADED`.
 
 ```javascript
-;(async function (arrayOfPings) {
+async function (arrayOfPings) {
     let latencyTotal = arrayOfPings.reduce((acc, ping) => {
         return acc + ping.latency
     }, 0)
@@ -125,5 +125,5 @@ The following example shows how to use the eval function to evaluate the respons
         status: areAllOpen ? "UP" : "DOWN",
         latency: avgLatency
     }
-})
+}
 ```

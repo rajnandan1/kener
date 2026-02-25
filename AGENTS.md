@@ -30,8 +30,22 @@ When the user asks to write or edit documentation, follow the skill file:
 
 This is mandatory for docs-related tasks. Prioritize short, clear, action-oriented docs and avoid bloat.
 
-## Code architecture skill - Important for all coding tasks
+## Code architecture docs skill - Important for all tasks
 
-Always try to use the code architecture skill at the start and end of coding sessions:
+Always try to use the code-context skill at the start and end of coding sessions:
 
-- `.claude/skills/code-architecture/SKILL.md`
+- `.claude/skills/code-context/SKILL.md`
+
+## Code architecture enforcement (mandatory)
+
+The code-context skill is not optional. Agents MUST do both:
+
+1. **Before coding**: load relevant architecture docs from `.codecontext/`.
+2. **Before final response**: if the task revealed new architecture knowledge (code flow, edge cases, component relationships), update or create a `.codecontext/*.md` entry. Skip if the task was trivial.
+
+Required output evidence in the final response:
+
+- `Context loaded:` list of `.codecontext` files read (or `none found`).
+- `Context updated:` exact `.codecontext` file path written (or `skipped — no architecture changes`).
+
+The `.codecontext/` folder documents **code architecture only** — not session logs, changelogs, or task summaries.

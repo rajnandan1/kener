@@ -1,5 +1,6 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
+  import { page } from "$app/state";
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Popover from "$lib/components/ui/popover/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
@@ -9,6 +10,7 @@
   import { t } from "$lib/stores/i18n";
   import type { NotificationEvent } from "$lib/server/controllers/dashboardController.js";
   import Calendar from "@lucide/svelte/icons/calendar-1";
+  import { format } from "date-fns";
   import { onMount } from "svelte";
 
   interface Props {
@@ -21,6 +23,17 @@
   let open = $state(false);
   let notifications = $state<NotificationEvent[]>([]);
   let loading = $state(false);
+
+  const defaultEventsPath = $derived(`/events/${format(new Date(), "MMMM-yyyy")}`);
+
+  const resolvedEventsPath = $derived.by(() => {
+    const finalEventsPath = eventsPath || defaultEventsPath;
+    if (page.data?.globalPageVisibilitySettings?.forceExclusivity) {
+      const currentPagePath = page.params?.page_path?.trim();
+      return currentPagePath ? `/${currentPagePath}${finalEventsPath}` : finalEventsPath;
+    }
+    return finalEventsPath;
+  });
 
   async function fetchNotifications() {
     loading = true;
@@ -76,7 +89,7 @@
   >
     <div class="flex items-center justify-between border-b px-4 py-3">
       <h4 class="text-sm font-semibold">{$t("Events")}</h4>
-      <Button variant="outline" href={clientResolver(resolve, eventsPath)} size="icon-sm" class="rounded-btn">
+      <Button variant="outline" href={clientResolver(resolve, resolvedEventsPath)} size="icon-sm" class="rounded-btn">
         <Calendar class="size-4" />
       </Button>
     </div>
