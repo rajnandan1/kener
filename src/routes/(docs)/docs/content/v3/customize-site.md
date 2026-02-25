@@ -25,7 +25,7 @@ metaTags:
 nav:
     - name: "Documentation"
       url: "/docs"
-	- name: "Github"
+	- name: "GitHub"
       iconURL: "/github.svg"
       url: "https://github.com/rajnandan1/kener"
 siteURL: https://kener.ing

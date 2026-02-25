@@ -97,8 +97,8 @@ export GH_TOKEN=some.token.for.github
 > **_NOTE:_** DO NOT forget the `$` sign in your monitor secret, otherwise it will not be picked up.
 
 ```yaml
-- name: Github Issues
-  description: Github Issues Fetch
+- name: GitHub Issues
+  description: GitHub Issues Fetch
   tag: "gh-search-issue"
   api:
   	method: GET
@@ -112,8 +112,8 @@ export GH_TOKEN=some.token.for.github
 Assuming `ORDER_ID` is present in env
 
 ```yaml
-- name: Github Issues
-  description: Github Issues Fetch
+- name: GitHub Issues
+  description: GitHub Issues Fetch
   tag: "gh-search-issue"
   api:
   	method: POST
@@ -130,8 +130,8 @@ Read more about [eval](https://kener.ing/docs/monitors#eval)
 Below example will call https://api.github.com/repos/rajnandan1/kener/issues. If the status code is 200 then it will be UP else DOWN. It will also check if the response time is greater than 2000ms then it will be DEGRADED.
 
 ```yaml
-- name: Github Issues
-  description: Github Issues Fetch
+- name: GitHub Issues
+  description: GitHub Issues Fetch
   tag: "gh-search-issue"
   api:
   	method: GET
@@ -208,7 +208,7 @@ The below monitor will show DEGRADED if 3 or more degraded status in a day and D
 
 Make sure you have set up triggers in `server.yaml`. Read more about [alerts](/docs/alerting).
 
-The below example will trigger an alert if the monitor is DOWN for 10 consecutive times. It will also create an incident in Github and send alerts to Webhook, Discord and Slack. It will also trigger an alert if the monitor is DEGRADED for 5 consecutive times. It will not create an incident in Github and send alerts to Webhook, Discord and Slack.
+The below example will trigger an alert if the monitor is DOWN for 10 consecutive times. It will also create an incident in GitHub and send alerts to Webhook, Discord and Slack. It will also trigger an alert if the monitor is DEGRADED for 5 consecutive times. It will not create an incident in GitHub and send alerts to Webhook, Discord and Slack.
 
 ```yaml
 - name: Earth
