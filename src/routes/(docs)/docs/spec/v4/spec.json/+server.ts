@@ -5,11 +5,11 @@ import type { RequestHandler } from "./$types";
 
 const DEV_PATH = join(process.cwd(), "static", "api-references", "v4.json");
 const PROD_PATH = join(process.cwd(), "build", "client", "api-references", "v4.json");
-const SPEC_PATH = existsSync(PROD_PATH) ? PROD_PATH : DEV_PATH;
 
 export const GET: RequestHandler = async () => {
   try {
-    const spec = await readFile(SPEC_PATH, "utf-8");
+    const specPath = existsSync(PROD_PATH) ? PROD_PATH : DEV_PATH;
+    const spec = await readFile(specPath, "utf-8");
 
     return new Response(spec, {
       status: 200,
