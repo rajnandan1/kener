@@ -29,4 +29,4 @@ Ready to get started? Head over to the [Quick Start](/docs/v4/getting-started/qu
 1. [GitHub Sponsors](https://github.com/sponsors/rajnandan1)
 2. [PayPal](https://www.paypal.com/paypalme/rajnandan1)
 3. [Buy Me a Coffee](https://www.buymeacoffee.com/rajnandan1)
-4. [Github Star](https://github.com/rajnandan1/kener)
+4. [GitHub Star](https://github.com/rajnandan1/kener)

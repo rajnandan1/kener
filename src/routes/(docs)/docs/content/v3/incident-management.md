@@ -1,6 +1,6 @@
 ---
 title: Incident Management | Kener
-description: Kener uses Github to power incident management using labels
+description: Kener uses GitHub to power incident management using labels
 ---
 
 Kener lets you manage incidents using its dashboard or APIs.

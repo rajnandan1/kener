@@ -39,7 +39,7 @@ pm2 start main.js
 docker.io/rajnandan1/kener:latest
 ```
 
-[Github Packages](https://github.com/rajnandan1/kener/pkgs/container/kener)
+[GitHub Packages](https://github.com/rajnandan1/kener/pkgs/container/kener)
 
 ```bash
 ghcr.io/rajnandan1/kener:latest
