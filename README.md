@@ -211,7 +211,7 @@ Kener combines public status page essentials with advanced admin workflows.
 
 If you’re enjoying Kener and want to support its development, consider sponsoring me on GitHub or treating me to a coffee. Your support helps keep the project growing! 🚀
 
-- [Sponsor Me Using Github](https://github.com/sponsors/rajnandan1)
+- [Sponsor Me Using GitHub](https://github.com/sponsors/rajnandan1)
 
 - [Buy Me a Coffee](https://www.buymeacoffee.com/rajnandan1)
 

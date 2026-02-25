@@ -58,7 +58,7 @@ Here are the changelogs for Kener. Changelogs are only published when there are 
 
 - Improved build time by migrating lucid-svelte to individual components
 
-### Github Issues Resolved in this release {#v3-2-5-github-issues}
+### GitHub Issues Resolved in this release {#v3-2-5-github-issues}
 
 - Feature: Enhancement of Webhook Custom Body Functionality [#238](https://github.com/rajnandan1/kener/issues/238)
 - Feature: Add LDAP for authentication [#210](https://github.com/rajnandan1/kener/issues/210)
