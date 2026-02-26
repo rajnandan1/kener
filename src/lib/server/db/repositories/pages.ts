@@ -22,7 +22,8 @@ export class PagesRepository extends BaseRepository {
     };
 
     if (dbType === "postgresql") {
-      const [page] = await this.knex("pages").insert(insertData).returning("*");
+      const result = await this.knex("pages").insert(insertData).returning("*");
+      const page = Array.isArray(result) ? result[0] : result;
       return page;
     }
 

@@ -55,12 +55,14 @@ export const VerifyToken = async (token: string): Promise<TokenPayload | undefin
 
 export const GetSMTPFromENV = (): SMTPConfiguration | null => {
   //if variables are not return null
+  const smtpPassword = process.env.SMTP_PASS || process.env.SMTP_PASSWORD;
+  const fromEmail = process.env.SMTP_FROM_EMAIL || process.env.SMTP_SENDER;
   if (
     !!!process.env.SMTP_HOST ||
     !!!process.env.SMTP_PORT ||
     !!!process.env.SMTP_USER ||
-    !!!process.env.SMTP_FROM_EMAIL ||
-    !!!process.env.SMTP_PASS
+    !!!fromEmail ||
+    !!!smtpPassword
   ) {
     return null;
   }
@@ -69,8 +71,8 @@ export const GetSMTPFromENV = (): SMTPConfiguration | null => {
     smtp_host: process.env.SMTP_HOST,
     smtp_port: Number(process.env.SMTP_PORT),
     smtp_user: process.env.SMTP_USER,
-    smtp_sender: process.env.SMTP_FROM_EMAIL,
-    smtp_pass: process.env.SMTP_PASS,
+    smtp_sender: fromEmail,
+    smtp_pass: smtpPassword,
     smtp_secure: !!Number(process.env.SMTP_SECURE),
   };
 };

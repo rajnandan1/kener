@@ -134,6 +134,12 @@ export const IsSetupComplete = async (): Promise<boolean> => {
   if (process.env.KENER_SECRET_KEY === undefined) {
     return false;
   }
+  if (process.env.ORIGIN === undefined) {
+    return false;
+  }
+  if (process.env.REDIS_URL === undefined) {
+    return false;
+  }
   let data = await db.getAllSiteData();
 
   if (!data) {

@@ -76,6 +76,22 @@ ORIGIN=https://example.com
 > [!CAUTION]
 > Without `ORIGIN`, **all form submissions will be rejected** in production. This includes login, signup, and admin panel actions. Always set this variable when deploying.
 
+### REDIS_URL {#redis-url}
+
+**Purpose**: Full Redis connection string used for background job processing.
+
+**Requirements**:
+
+- Must be a valid Redis connection URL
+- Include protocol (`redis://` or `rediss://`)
+- Must point to a reachable Redis instance
+
+**Example**:
+
+```bash
+REDIS_URL=redis://localhost:6379
+```
+
 ## Optional Variables {#optional-variables}
 
 ### KENER_BASE_PATH {#kener-base-path}
@@ -99,7 +115,7 @@ KENER_BASE_PATH=/status
 - Must start with `/`
 - No trailing slash
 - Update your reverse proxy configuration to match
-- See [Reverse Proxy Setup](/docs/advanced-topics/reverse-proxy) for nginx/Apache examples
+- See [Reverse Proxy Setup](/docs/v4/guides/reverse-proxy) for nginx/Apache examples
 
 ### PORT {#port}
 
@@ -170,16 +186,16 @@ For detailed configuration of these integrations, see their dedicated documentat
 
 Kener supports two email providers:
 
-| Variable              | Description          | Required For    |
-| :-------------------- | :------------------- | :-------------- |
-| `RESEND_API_KEY`      | Resend API key       | Resend provider |
-| `RESEND_SENDER_EMAIL` | Sender email address | Resend provider |
-| `SMTP_HOST`           | SMTP server hostname | SMTP provider   |
-| `SMTP_PORT`           | SMTP server port     | SMTP provider   |
-| `SMTP_USER`           | SMTP username        | SMTP provider   |
-| `SMTP_PASS`           | SMTP password        | SMTP provider   |
-| `SMTP_FROM_EMAIL`     | Sender email address | SMTP provider   |
-| `SMTP_SECURE`         | Use TLS (1 or 0)     | SMTP provider   |
+| Variable                          | Description          | Required For    |
+| :-------------------------------- | :------------------- | :-------------- |
+| `RESEND_API_KEY`                  | Resend API key       | Resend provider |
+| `RESEND_SENDER_EMAIL`             | Sender email address | Resend provider |
+| `SMTP_HOST`                       | SMTP server hostname | SMTP provider   |
+| `SMTP_PORT`                       | SMTP server port     | SMTP provider   |
+| `SMTP_USER`                       | SMTP username        | SMTP provider   |
+| `SMTP_PASS` / `SMTP_PASSWORD`     | SMTP password        | SMTP provider   |
+| `SMTP_FROM_EMAIL` / `SMTP_SENDER` | Sender email address | SMTP provider   |
+| `SMTP_SECURE`                     | Use TLS (1 or 0)     | SMTP provider   |
 
 **Example (Resend)**:
 
@@ -199,7 +215,7 @@ SMTP_FROM_EMAIL=alerts@example.com
 SMTP_SECURE=1
 ```
 
-📖 **See**: [Email Setup Guide](/docs/setup/email-setup) for detailed configuration and troubleshooting.
+📖 **See**: [Email Setup Guide](/docs/v4/setup/email-setup) for detailed configuration and troubleshooting.
 
 ### Database Configuration {#database-configuration}
 
@@ -226,15 +242,15 @@ DATABASE_URL=postgresql://user:password@localhost:5432/kener
 DATABASE_URL=mysql://user:password@localhost:3306/kener
 ```
 
-📖 **See**: [Database Setup Guide](/docs/setup/database-setup) for migration guides and best practices.
+📖 **See**: [Database Setup Guide](/docs/v4/setup/database-setup) for migration guides and best practices.
 
 ### Redis Configuration {#redis-configuration}
 
 | Variable    | Description                  | Required |
 | :---------- | :--------------------------- | :------- |
-| `REDIS_URL` | Full Redis connection string | No       |
+| `REDIS_URL` | Full Redis connection string | Yes      |
 
-**Purpose**: Optional Redis queue for background job processing.
+**Purpose**: Redis queue for background job processing.
 
 **Example**:
 
@@ -242,7 +258,7 @@ DATABASE_URL=mysql://user:password@localhost:3306/kener
 REDIS_URL=redis://localhost:6379
 ```
 
-📖 **See**: [Redis Setup Guide](/docs/setup/redis-setup) for installation and performance benefits.
+📖 **See**: [Redis Setup Guide](/docs/v4/setup/redis-setup) for installation and performance benefits.
 
 ## Custom Environment Variables {#custom-variables}
 
@@ -525,7 +541,7 @@ After setting environment variables:
     ✓ KENER_SECRET_KEY is set
     ✓ Database connected: postgresql://localhost:5432/kener
     ✓ Email configured: Resend
-    ℹ Redis not configured (optional)
+    ✓ Redis connected: redis://localhost:6379
     ✓ Kener is running on port 3000!
     ```
 
@@ -662,8 +678,8 @@ Use tools like:
 
 ## Next Steps {#next-steps}
 
-- [Email Setup Guide](/docs/setup/email-setup) - Configure email notifications
-- [Database Setup Guide](/docs/setup/database-setup) - Set up PostgreSQL or MySQL
-- [Redis Setup Guide](/docs/setup/redis-setup) - Enable background job processing
-- [Monitor Configuration](/docs/monitors/api) - Use custom variables in monitors
-- [Alert Triggers](/docs/alerting/triggers) - Use custom variables in webhooks
+- [Email Setup Guide](/docs/v4/setup/email-setup) - Configure email notifications
+- [Database Setup Guide](/docs/v4/setup/database-setup) - Set up PostgreSQL or MySQL
+- [Redis Setup Guide](/docs/v4/setup/redis-setup) - Enable background job processing
+- [Monitor Configuration](/docs/v4/monitors/api) - Use custom variables in monitors
+- [Alert Triggers](/docs/v4/alerting/triggers) - Use custom variables in webhooks

@@ -26,8 +26,9 @@ export class MonitorAlertConfigRepository extends BaseRepository {
   /**
    * Insert a new monitor alert config
    */
-  async insertMonitorAlertConfig(data: MonitorAlertConfigInsert): Promise<number[]> {
-    return await this.knex("monitor_alerts_config").insert({
+  async insertMonitorAlertConfig(data: MonitorAlertConfigInsert): Promise<number> {
+    const dbType = GetDbType();
+    const insertData = {
       monitor_tag: data.monitor_tag,
       alert_for: data.alert_for,
       alert_value: data.alert_value,
@@ -39,7 +40,21 @@ export class MonitorAlertConfigRepository extends BaseRepository {
       severity: data.severity || "WARNING",
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
-    });
+    };
+
+    if (dbType === "postgresql") {
+      const result = await this.knex("monitor_alerts_config").insert(insertData).returning("id");
+      const inserted = Array.isArray(result) ? result[0] : result;
+      return typeof inserted === "object" && inserted !== null
+        ? Number((inserted as { id: number }).id)
+        : Number(inserted);
+    }
+
+    const result = await this.knex("monitor_alerts_config").insert(insertData);
+    const inserted = Array.isArray(result) ? result[0] : result;
+    return typeof inserted === "object" && inserted !== null
+      ? Number((inserted as { id: number }).id)
+      : Number(inserted);
   }
 
   /**
