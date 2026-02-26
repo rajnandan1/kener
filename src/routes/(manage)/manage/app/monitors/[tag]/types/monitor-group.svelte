@@ -1,10 +1,14 @@
 <script lang="ts">
   import { Label } from "$lib/components/ui/label/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
+  import { Button } from "$lib/components/ui/button/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
   import type { MonitorRecord } from "$lib/server/types/db.js";
   import type { GroupMonitorMember } from "$lib/server/types/monitor.js";
+  import ArrowUp from "@lucide/svelte/icons/arrow-up";
+  import ArrowDown from "@lucide/svelte/icons/arrow-down";
+  import GripVertical from "@lucide/svelte/icons/grip-vertical";
   import clientResolver from "$lib/client/resolver.js";
   import { resolve } from "$app/paths";
 
@@ -95,10 +99,24 @@
       return { ...m, weight: Math.min(1, Math.max(0, Math.round(weight * 1000) / 1000)) };
     });
   }
+
+  function moveMonitorUp(index: number) {
+    if (index <= 0) return;
+    const arr = [...formData.monitors];
+    [arr[index - 1], arr[index]] = [arr[index], arr[index - 1]];
+    formData.monitors = arr;
+  }
+
+  function moveMonitorDown(index: number) {
+    if (index >= formData.monitors.length - 1) return;
+    const arr = [...formData.monitors];
+    [arr[index], arr[index + 1]] = [arr[index + 1], arr[index]];
+    formData.monitors = arr;
+  }
 </script>
 
 <div class="space-y-4">
-  <div>
+  <div class="flex flex-col gap-2">
     <div class="flex flex-col gap-1">
       <Label>Select Monitors to Group</Label>
       <p class="text-muted-foreground text-xs">
@@ -223,16 +241,49 @@
   </div>
 
   {#if formData.monitors.length > 0}
-    <div class="bg-muted/50 rounded-lg p-3">
-      <p class="text-sm font-medium">Selected: {formData.monitors.length} monitor(s)</p>
-      <div class="mt-1 space-y-0.5">
-        {#each formData.monitors as m (m.tag)}
-          <p class="text-muted-foreground text-xs">
-            {m.tag}
-            <span class="ml-1 text-[10px]">weight {m.weight}</span>
-          </p>
-        {/each}
+    <div class="rounded-lg border">
+      <div class="mb-2 border-b px-3 py-2">
+        <p class="text-sm font-medium">Selected: {formData.monitors.length} monitor(s) — Execution Order</p>
+        <p class="text-muted-foreground text-xs">Monitors will be executed in this order. Use arrows to reorder.</p>
       </div>
+      {#each formData.monitors as m, index (m.tag)}
+        {@const monitorInfo = availableMonitors.find((am) => am.tag === m.tag)}
+        <div
+          class="flex items-center justify-between px-3 py-2 {index < formData.monitors.length - 1 ? 'border-b' : ''}"
+        >
+          <div class="flex items-center gap-2">
+            <GripVertical class="text-muted-foreground h-4 w-4 shrink-0" />
+            <span class="text-muted-foreground text-xs font-medium">{index + 1}.</span>
+            <div>
+              <p class="text-sm">{monitorInfo?.name || m.tag}</p>
+              <p class="text-muted-foreground text-xs">
+                {m.tag}
+                <span class="ml-1 text-[10px]">weight {m.weight}</span>
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              class="h-7 w-7"
+              disabled={index === 0}
+              onclick={() => moveMonitorUp(index)}
+            >
+              <ArrowUp class="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              class="h-7 w-7"
+              disabled={index === formData.monitors.length - 1}
+              onclick={() => moveMonitorDown(index)}
+            >
+              <ArrowDown class="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        </div>
+      {/each}
     </div>
   {/if}
 </div>

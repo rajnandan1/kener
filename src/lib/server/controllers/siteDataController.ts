@@ -5,6 +5,7 @@ import type {
   DataRetentionPolicy,
   EventDisplaySettings,
   GlobalPageVisibilitySettings,
+  PageOrderingSettings,
   SiteAnalyticsItem,
   SiteAnnouncement,
   SiteCategory,
@@ -58,6 +59,7 @@ export interface SiteDataTransformed {
   socialPreviewImage?: string;
   customCSS?: string;
   globalPageVisibilitySettings?: GlobalPageVisibilitySettings;
+  pageOrderingSettings?: PageOrderingSettings;
 }
 
 export function InsertKeyValue(key: string, value: string): Promise<number[]> {

@@ -130,3 +130,8 @@ export interface GlobalPageVisibilitySettings {
   showSwitcher: boolean;
   forceExclusivity: boolean;
 }
+
+export interface PageOrderingSettings {
+  enabled: boolean;
+  order: number[]; // Array of page IDs in the desired order
+}

@@ -13,6 +13,7 @@ Use **Manage → Customizations** to control visual behavior of the public statu
 - Default theme and theme toggle
 - Site-wide announcement banner
 - Custom CSS (stored now, injection pending)
+- Page ordering in the page switcher
 
 ## Runtime impact map {#runtime-impact-map}
 
@@ -24,6 +25,7 @@ Use **Manage → Customizations** to control visual behavior of the public statu
 | Theme defaults | `theme`, `themeToggle`      | Sets initial mode and controls whether users can toggle theme |
 | Announcement   | `announcement`              | Renders site banner when title + message are present          |
 | Custom CSS     | `customCSS`                 | Injected as `<style>` block in public layout `<head>`         |
+| Page ordering  | `pageOrderingSettings`      | Controls page display order in the public page switcher       |
 
 ## Footer HTML {#footer-html}
 
@@ -54,6 +56,17 @@ Use Custom CSS to override styles, add `@font-face` rules for self-hosted fonts,
 
 See [Custom Fonts guide](/docs/v4/guides/custom-fonts) for font-specific examples.
 
+## Page ordering {#page-ordering}
+
+Control the display order of pages in the public page switcher.
+
+- **Enable custom page ordering** — when enabled, pages appear in the saved order instead of creation order.
+- Use the up/down arrows to reorder pages.
+- New pages added after saving will appear at the end of the list automatically.
+- Disabling ordering reverts the public display to default (creation order) but preserves your saved order for later re-enabling.
+
+Stored as `pageOrderingSettings` with `enabled` (boolean) and `order` (array of page IDs).
+
 ## Verify changes {#verify-changes}
 
 - Update footer and refresh page.
@@ -61,3 +74,4 @@ See [Custom Fonts guide](/docs/v4/guides/custom-fonts) for font-specific example
 - Set font URL/family and confirm typography changes.
 - Toggle theme settings and verify theme toggle visibility.
 - Create announcement and verify banner appears.
+- Enable page ordering, reorder pages, and verify the page switcher reflects the new order.

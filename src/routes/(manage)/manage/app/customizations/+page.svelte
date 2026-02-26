@@ -23,7 +23,10 @@
   import ColorPicker from "svelte-awesome-color-picker";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
-  import type { SiteAnnouncement } from "$lib/types/site.js";
+  import type { SiteAnnouncement, PageOrderingSettings } from "$lib/types/site.js";
+  import ArrowUp from "@lucide/svelte/icons/arrow-up";
+  import ArrowDown from "@lucide/svelte/icons/arrow-down";
+  import GripVertical from "@lucide/svelte/icons/grip-vertical";
 
   interface StatusColors {
     UP: string;
@@ -53,6 +56,8 @@
   let savingCSS = $state(false);
   let savingTheme = $state(false);
   let savingAnnouncement = $state(false);
+  let savingPageOrdering = $state(false);
+  let loadingPages = $state(false);
 
   // Data
   let footerHTML = $state("");
@@ -88,6 +93,33 @@
     cancellable: true,
     ctaURL: "",
     ctaText: ""
+  });
+
+  // Page ordering
+  interface PageItem {
+    id: number;
+    page_path: string;
+    page_title: string;
+  }
+  let pageOrderingEnabled = $state(false);
+  let orderedPageIds = $state<number[]>([]);
+  let allPages = $state<PageItem[]>([]);
+  let displayPages = $derived.by(() => {
+    if (orderedPageIds.length === 0) {
+      return allPages;
+    }
+    const ordered: PageItem[] = [];
+    for (const id of orderedPageIds) {
+      const page = allPages.find((p) => p.id === id);
+      if (page) ordered.push(page);
+    }
+    // Append pages not in the order list (newly added)
+    for (const page of allPages) {
+      if (!orderedPageIds.includes(page.id)) {
+        ordered.push(page);
+      }
+    }
+    return ordered;
   });
 
   async function fetchSettings() {
@@ -156,6 +188,10 @@
             ctaURL: result.announcement.ctaURL || "",
             ctaText: result.announcement.ctaText || ""
           };
+        }
+        if (result.pageOrderingSettings) {
+          pageOrderingEnabled = result.pageOrderingSettings.enabled ?? false;
+          orderedPageIds = result.pageOrderingSettings.order ?? [];
         }
       }
       // Set default footer HTML
@@ -338,6 +374,73 @@
     }
   }
 
+  async function fetchPages() {
+    loadingPages = true;
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "getPages" })
+      });
+      const result = await response.json();
+      if (Array.isArray(result)) {
+        allPages = result.map((p: { id: number; page_path: string; page_title: string }) => ({
+          id: p.id,
+          page_path: p.page_path,
+          page_title: p.page_title
+        }));
+      }
+    } catch {
+      // silently fail
+    } finally {
+      loadingPages = false;
+    }
+  }
+
+  async function savePageOrdering() {
+    savingPageOrdering = true;
+    try {
+      const payload: PageOrderingSettings = {
+        enabled: pageOrderingEnabled,
+        order: displayPages.map((p) => p.id)
+      };
+
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "storeSiteData",
+          data: { pageOrderingSettings: JSON.stringify(payload) }
+        })
+      });
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        orderedPageIds = displayPages.map((p) => p.id);
+        toast.success("Page ordering saved successfully");
+      }
+    } catch (e) {
+      toast.error("Failed to save page ordering");
+    } finally {
+      savingPageOrdering = false;
+    }
+  }
+
+  function movePageUp(index: number) {
+    if (index <= 0) return;
+    const pages = displayPages.map((p) => p.id);
+    [pages[index - 1], pages[index]] = [pages[index], pages[index - 1]];
+    orderedPageIds = pages;
+  }
+
+  function movePageDown(index: number) {
+    const pages = displayPages.map((p) => p.id);
+    if (index >= pages.length - 1) return;
+    [pages[index], pages[index + 1]] = [pages[index + 1], pages[index]];
+    orderedPageIds = pages;
+  }
+
   function resetFooter() {
     footerHTML = defaultFooterHTML;
   }
@@ -348,6 +451,7 @@
   // Initialize on mount
   onMount(() => {
     fetchSettings();
+    fetchPages();
   });
 </script>
 
@@ -773,6 +877,85 @@
             <Loader class="h-4 w-4 animate-spin" />
           {/if}
           Save Announcement
+        </Button>
+      </Card.Footer>
+    </Card.Root>
+
+    <!-- Page Ordering Section -->
+    <Card.Root>
+      <Card.Header class="border-b">
+        <Card.Title>Page Ordering</Card.Title>
+        <Card.Description>
+          Control the display order of pages in the page switcher. New pages will appear at the end of the list.
+        </Card.Description>
+      </Card.Header>
+      <Card.Content class="space-y-4 pt-6">
+        <div class="flex items-start space-x-3 rounded-lg border p-4">
+          <Checkbox
+            id="page-ordering-enabled"
+            checked={pageOrderingEnabled}
+            onCheckedChange={(checked) => (pageOrderingEnabled = checked === true)}
+          />
+          <div class="space-y-1">
+            <Label for="page-ordering-enabled" class="cursor-pointer">Enable custom page ordering</Label>
+            <p class="text-muted-foreground text-sm">
+              When enabled, pages will be displayed in the order below instead of the default creation order.
+            </p>
+          </div>
+        </div>
+
+        {#if loadingPages}
+          <div class="flex items-center justify-center py-6">
+            <Spinner class="h-5 w-5" />
+          </div>
+        {:else if allPages.length === 0}
+          <p class="text-muted-foreground py-4 text-center text-sm">No pages found.</p>
+        {:else}
+          <div class="rounded-lg border">
+            {#each displayPages as page, index (page.id)}
+              <div
+                class="flex items-center justify-between px-4 py-3 {index < displayPages.length - 1 ? 'border-b' : ''}"
+              >
+                <div class="flex items-center gap-3">
+                  <GripVertical class="text-muted-foreground h-4 w-4 shrink-0" />
+                  <div>
+                    <p class="text-sm font-medium">{page.page_title}</p>
+                    <p class="text-muted-foreground text-xs">/{page.page_path || ""}</p>
+                  </div>
+                </div>
+                {#if pageOrderingEnabled}
+                  <div class="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      class="h-8 w-8"
+                      disabled={index === 0}
+                      onclick={() => movePageUp(index)}
+                    >
+                      <ArrowUp class="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      class="h-8 w-8"
+                      disabled={index === displayPages.length - 1}
+                      onclick={() => movePageDown(index)}
+                    >
+                      <ArrowDown class="h-4 w-4" />
+                    </Button>
+                  </div>
+                {/if}
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </Card.Content>
+      <Card.Footer class="flex justify-end border-t pt-6">
+        <Button onclick={savePageOrdering} disabled={savingPageOrdering || loadingPages}>
+          {#if savingPageOrdering}
+            <Loader class="h-4 w-4 animate-spin" />
+          {/if}
+          Save Page Ordering
         </Button>
       </Card.Footer>
     </Card.Root>
