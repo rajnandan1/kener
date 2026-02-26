@@ -22,6 +22,15 @@ You MUST use this tool whenever writing Svelte code before sending it to the use
 Generates a Svelte Playground link with the provided code.
 After completing the code, ask the user if they want a playground link. Only call this tool after user confirmation and NEVER if code was written to files in their project.
 
+## Database compatibility rule
+
+All database operations — migrations, queries, and repository functions — **MUST** work across all three supported databases: **SQLite**, **PostgreSQL**, and **MySQL**. Use Knex.js schema builder and query builder abstractions; avoid raw SQL unless wrapped in dialect-safe helpers or guarded with `try/catch`. When writing migrations:
+
+- Use `knex.schema.hasColumn` / `knex.schema.hasTable` guards for idempotency.
+- Use Knex column types (`.string()`, `.integer()`, `.text()`, etc.) — never raw `ALTER TABLE` unless necessary.
+- For data-seeding inside migrations, use standard Knex query builder (`.insert()`, `.update()`, `.orderBy()`, `.first()`).
+- Test that `defaultTo()` values and `notNullable()` constraints work on all three engines.
+
 ## Documentation writing skill
 
 When the user asks to write or edit documentation, follow the skill file:

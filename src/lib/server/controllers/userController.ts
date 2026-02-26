@@ -210,7 +210,7 @@ export const UpdatePassword = async (data: PasswordUpdateInput): Promise<number>
 };
 
 export const ManualUpdateUserData = async (
-  byUser: { role: string },
+  byUser: { role: string; is_owner: string },
   forUserId: number,
   data: ManualUserUpdateInput,
 ): Promise<number | undefined> => {
@@ -221,6 +221,10 @@ export const ManualUpdateUserData = async (
   //only admins can update
   if (byUser.role !== "admin") {
     throw new Error("You do not have permission to update user");
+  }
+  // non-owner admins cannot modify other admins
+  if (forUser.role === "admin" && byUser.is_owner !== "YES") {
+    throw new Error("Only the owner can modify other admins");
   }
   if (data.updateType == "role") {
     if (!data.role) throw new Error("Role is required");
@@ -267,13 +271,14 @@ export const GetTotalUserPages = async (limit: number): Promise<number> => {
 
 //send invitation email to user for account creation
 export const SendInvitationEmail = async (email: string, role: string, name: string, currentUserRole: string) => {
-  let acceptedRoles = ["member", "editor"];
-  if (!acceptedRoles.includes(role)) {
-    throw new Error("Invalid role");
-  }
-
   if (currentUserRole === "member") {
     throw new Error("Only admins and editors can create new users");
+  }
+
+  // Admins can add admin, editor, member; Editors can only add editor, member
+  const acceptedRoles = currentUserRole === "admin" ? ["admin", "editor", "member"] : ["editor", "member"];
+  if (!acceptedRoles.includes(role)) {
+    throw new Error("Invalid role");
   }
 
   //if data.email empty, throw error

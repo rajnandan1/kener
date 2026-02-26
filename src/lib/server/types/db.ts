@@ -256,6 +256,7 @@ export interface UserRecordPublic {
   name: string;
   is_active: number;
   is_verified: number;
+  is_owner: string;
   role: string;
   created_at: Date;
   updated_at: Date;

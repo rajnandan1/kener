@@ -13,7 +13,7 @@ export class UsersRepository extends BaseRepository {
 
   async getUserByEmail(email: string): Promise<UserRecordPublic | undefined> {
     return await this.knex("users")
-      .select("id", "email", "name", "is_active", "is_verified", "role", "created_at", "updated_at")
+      .select("id", "email", "name", "is_active", "is_verified", "is_owner", "role", "created_at", "updated_at")
       .where("email", email)
       .first();
   }
@@ -29,7 +29,7 @@ export class UsersRepository extends BaseRepository {
 
   async getUserById(id: number): Promise<UserRecordPublic | undefined> {
     return await this.knex("users")
-      .select("id", "email", "name", "is_active", "is_verified", "role", "created_at", "updated_at")
+      .select("id", "email", "name", "is_active", "is_verified", "is_owner", "role", "created_at", "updated_at")
       .where("id", id)
       .first();
   }
@@ -54,13 +54,13 @@ export class UsersRepository extends BaseRepository {
 
   async getAllUsers(): Promise<UserRecordPublic[]> {
     return await this.knex("users")
-      .select("id", "email", "name", "role", "is_active", "is_verified", "created_at", "updated_at")
+      .select("id", "email", "name", "role", "is_active", "is_verified", "is_owner", "created_at", "updated_at")
       .orderBy("created_at", "desc");
   }
 
   async getUsersPaginated(page: number, limit: number): Promise<UserRecordPublic[]> {
     return await this.knex("users")
-      .select("id", "email", "name", "role", "is_active", "is_verified", "created_at", "updated_at")
+      .select("id", "email", "name", "role", "is_active", "is_verified", "is_owner", "created_at", "updated_at")
       .orderBy("created_at", "desc")
       .limit(limit)
       .offset((page - 1) * limit);
