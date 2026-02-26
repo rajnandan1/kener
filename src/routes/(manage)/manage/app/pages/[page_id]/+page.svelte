@@ -462,7 +462,6 @@
             id="page-path"
             type="text"
             bind:value={formData.page_path}
-            placeholder="services"
             disabled={!isNew && currentPage?.page_path === ""}
           />
           <p class="text-muted-foreground text-xs">

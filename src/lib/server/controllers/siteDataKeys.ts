@@ -266,4 +266,9 @@ export const siteDataKeys: SiteDataKey[] = [
     isValid: IsValidJSONString,
     data_type: "object",
   },
+  {
+    key: "pageOrderingSettings",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
 ];

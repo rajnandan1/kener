@@ -13,8 +13,8 @@
 
   let pages = $state<PageNavItem[]>([]);
   let pagesLoading = $state(false);
-
-  const currentPage = $derived(pages.find((p) => p.page_path === currentPath) || pages[0]);
+  const defaultHomePage = $derived(pages.find((p) => p.page_path == ""));
+  const currentPage = $derived(pages.find((p) => p.page_path === currentPath) || defaultHomePage);
 
   async function fetchPages() {
     pagesLoading = true;
