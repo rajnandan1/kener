@@ -12,7 +12,8 @@ import serverResolve from "$lib/server/resolver.js";
 
 export const load: PageServerLoad = async ({ parent }) => {
   const parentData = await parent();
-  if (!!parentData.loggedInUser) {
+
+  if (!!parentData.loggedInUser && parentData.isSetupComplete) {
     throw redirect(302, serverResolve("/manage/app/site-configurations"));
   }
 
