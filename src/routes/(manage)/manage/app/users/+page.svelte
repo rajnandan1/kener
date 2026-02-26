@@ -85,6 +85,16 @@
   let manualSuccess = $state("");
   let sendingSelfVerification = $state(false);
 
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  function normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
+  }
+
+  function normalizeName(name: string): string {
+    return name.trim().replace(/\s+/g, " ");
+  }
+
   // Fetch users
   async function fetchUsers() {
     loading = true;
@@ -113,8 +123,37 @@
 
   // Create new user
   async function createNewUser() {
-    creatingUser = true;
     creatingUserError = "";
+
+    const normalizedName = normalizeName(newUser.name);
+    const normalizedEmail = normalizeEmail(newUser.email);
+
+    if (!normalizedName) {
+      creatingUserError = "Name cannot be empty";
+      return;
+    }
+    if (normalizedName.length < 2) {
+      creatingUserError = "Name must be at least 2 characters";
+      return;
+    }
+    if (normalizedName.length > 100) {
+      creatingUserError = "Name must be less than 100 characters";
+      return;
+    }
+    if (!normalizedEmail) {
+      creatingUserError = "Email cannot be empty";
+      return;
+    }
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      creatingUserError = "Please enter a valid email address";
+      return;
+    }
+    if (!["admin", "editor", "member"].includes(newUser.role)) {
+      creatingUserError = "Invalid role selected";
+      return;
+    }
+
+    creatingUser = true;
 
     try {
       const res = await fetch(clientResolver(resolve, "/manage/api"), {
@@ -122,7 +161,11 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "createNewUser",
-          data: newUser
+          data: {
+            ...newUser,
+            name: normalizedName,
+            email: normalizedEmail
+          }
         })
       });
       const result = await res.json();
@@ -337,8 +380,11 @@
           </Table.Row>
         {:else}
           {#each users as user (user.id)}
-            <Table.Row>
-              <Table.Cell class="font-medium">{user.name}</Table.Cell>
+            <Table.Row class={currentUser.id === user.id ? "bg-muted/50" : ""}>
+              <Table.Cell class="font-medium"
+                >{user.name}{#if currentUser.id === user.id}
+                  <Badge variant="outline" class="ml-1 text-[10px]">You</Badge>{/if}</Table.Cell
+              >
               <Table.Cell>{user.email}</Table.Cell>
               <Table.Cell class="text-center">
                 {#if user.is_verified}
@@ -360,7 +406,7 @@
                 {/if}
               </Table.Cell>
               <Table.Cell class="text-center">
-                {#if currentUser.role === "admin" && currentUser.id !== user.id}
+                {#if currentUser.role === "admin" && currentUser.id !== user.id && (user.role !== "admin" || currentUser.is_owner === "YES")}
                   <Button variant="ghost" size="icon" class="h-8 w-8" onclick={() => openSettingsSheet(user)}>
                     <SettingsIcon class="h-4 w-4" />
                   </Button>
@@ -446,6 +492,9 @@
               {newUser.role.toUpperCase()}
             </Select.Trigger>
             <Select.Content>
+              {#if currentUser.role === "admin"}
+                <Select.Item value="admin">ADMIN</Select.Item>
+              {/if}
               <Select.Item value="editor">EDITOR</Select.Item>
               <Select.Item value="member">MEMBER</Select.Item>
             </Select.Content>
@@ -542,6 +591,9 @@
                     {toEditUser.role.toUpperCase()}
                   </Select.Trigger>
                   <Select.Content>
+                    {#if currentUser.role === "admin"}
+                      <Select.Item value="admin">ADMIN</Select.Item>
+                    {/if}
                     <Select.Item value="editor">EDITOR</Select.Item>
                     <Select.Item value="member">MEMBER</Select.Item>
                   </Select.Content>

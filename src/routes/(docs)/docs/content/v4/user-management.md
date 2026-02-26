@@ -23,11 +23,20 @@ Admin can:
 
 - invite users
 - resend invitations
-- change user role (`member` / `editor`)
+- change user role
 - activate/deactivate users
 - send verification email to any user
 - perform all editor-level operational actions
 - manage admin-only areas like vault and certain privileged API actions
+
+Admin invite permissions:
+
+- admin can invite `admin`, `editor`, and `member`
+
+Admin user-management restrictions:
+
+- non-owner admin cannot modify other admins
+- owner admin can modify other admins (role update and activate/deactivate)
 
 ### Editor {#editor}
 
@@ -36,6 +45,10 @@ Editor can:
 - invite users
 - resend invitation emails
 - manage monitors, incidents, maintenances, alerts, triggers, pages, subscriptions, and site data
+
+Editor invite permissions:
+
+- editor can invite `editor` and `member`
 
 Editor cannot:
 
@@ -66,8 +79,14 @@ Member cannot:
 From **Manage → Users**:
 
 1. Click **Add User**.
-2. Enter name, email, and role (`editor` or `member`).
+2. Enter name, email, and role.
 3. Invitation email is sent with a secure token link.
+
+Role options in **Add User** are filtered by your role:
+
+- admin: `admin`, `editor`, `member`
+- editor: `editor`, `member`
+- member: no access to Add User
 
 Current behavior:
 
@@ -92,9 +111,14 @@ If link is invalid, expired, or already used, invitation page shows an error and
 
 ## Common user management tasks {#common-user-management-tasks}
 
-- **Promote/demote user**: admin updates role in user settings sheet.
-- **Deactivate user**: admin toggles account inactive (session access removed).
+- **Promote/demote user**: admin updates role in user settings sheet. Non-owner admins cannot change other admins.
+- **Deactivate user**: admin toggles account inactive (session access removed). Non-owner admins cannot deactivate other admins.
 - **Re-invite user**: resend invitation if user has not set password yet.
+
+## UI behavior notes {#ui-behavior-notes}
+
+- The current signed-in user is highlighted in the users table.
+- For non-owner admins, admin targets do not show admin-management actions.
 
 ## Requirements and dependencies {#requirements-and-dependencies}
 

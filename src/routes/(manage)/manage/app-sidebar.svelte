@@ -20,7 +20,7 @@
         <Sidebar.MenuButton class="data-[slot=sidebar-menu-button]:p-1.5!">
           {#snippet child({ props })}
             <a
-              href={clientResolver(resolve, "/manage/app")}
+              href={clientResolver(resolve, "/manage/app/site-configurations")}
               {...props}
               class="justify-start-safe flex items-center gap-2"
             >

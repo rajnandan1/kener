@@ -75,7 +75,7 @@ export class PagesRepository extends BaseRepository {
   }
 
   async getPageMonitors(page_id: number): Promise<PageMonitorRecord[]> {
-    return await this.knex("pages_monitors").where("page_id", page_id);
+    return await this.knex("pages_monitors").where("page_id", page_id).orderBy("created_at", "desc");
   }
 
   async getPageMonitorsExcludeHidden(page_id: number): Promise<PageMonitorRecord[]> {
@@ -84,6 +84,7 @@ export class PagesRepository extends BaseRepository {
       .where("pages_monitors.page_id", page_id)
       .andWhere("monitors.is_hidden", "NO")
       .andWhere("monitors.status", "ACTIVE")
+      .orderBy("pages_monitors.created_at", "desc")
       .select("pages_monitors.*");
   }
 

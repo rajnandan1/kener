@@ -35,6 +35,36 @@ interface NewUserInput {
   role: string;
 }
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const normalizeEmail = (email: string): string => email.trim().toLowerCase();
+const normalizeName = (name: string): string => name.trim().replace(/\s+/g, " ");
+
+const validateEmailOrThrow = (email: string): string => {
+  const normalizedEmail = normalizeEmail(email);
+  if (!normalizedEmail) {
+    throw new Error("Email cannot be empty");
+  }
+  if (!EMAIL_REGEX.test(normalizedEmail)) {
+    throw new Error("Please enter a valid email address");
+  }
+  return normalizedEmail;
+};
+
+const validateNameOrThrow = (name: string): string => {
+  const normalizedName = normalizeName(name);
+  if (!normalizedName) {
+    throw new Error("Name cannot be empty");
+  }
+  if (normalizedName.length < 2) {
+    throw new Error("Name must be at least 2 characters");
+  }
+  if (normalizedName.length > 100) {
+    throw new Error("Name must be less than 100 characters");
+  }
+  return normalizedName;
+};
+
 export const GetAllUsersPaginated = async (data: PaginationInput): Promise<UserRecordPublic[]> => {
   return await db.getUsersPaginated(data.page, data.limit);
 };
@@ -125,15 +155,8 @@ export const CreateNewUser = async (currentUser: { role: string }, data: NewUser
     throw new Error("Only admins and editors can create new users");
   }
 
-  //if data.email empty, throw error
-  if (!!!data.email) {
-    throw new Error("Email cannot be empty");
-  }
-
-  //if data.name empty, throw error
-  if (!!!data.name) {
-    throw new Error("Name cannot be empty");
-  }
+  const normalizedEmail = validateEmailOrThrow(data.email);
+  const normalizedName = validateNameOrThrow(data.name);
 
   //if data.password empty, throw error
   if (!!!data.password) {
@@ -156,21 +179,17 @@ export const CreateNewUser = async (currentUser: { role: string }, data: NewUser
     );
   }
   let user = {
-    email: data.email,
+    email: normalizedEmail,
     password_hash: await HashPassword(data.password),
-    name: data.name,
+    name: normalizedName,
     role: data.role,
   };
   return await db.insertUser(user);
 };
 
 export const CreateFirstUser = async (data: { email: string; name: string; password: string }): Promise<number[]> => {
-  if (!data.email) {
-    throw new Error("Email cannot be empty");
-  }
-  if (!data.name) {
-    throw new Error("Name cannot be empty");
-  }
+  const normalizedEmail = validateEmailOrThrow(data.email);
+  const normalizedName = validateNameOrThrow(data.name);
   if (!data.password) {
     throw new Error("Password cannot be empty");
   }
@@ -180,10 +199,11 @@ export const CreateFirstUser = async (data: { email: string; name: string; passw
     );
   }
   const user = {
-    email: data.email,
+    email: normalizedEmail,
     password_hash: await HashPassword(data.password),
-    name: data.name,
+    name: normalizedName,
     role: "admin",
+    is_owner: "YES",
   };
   return await db.insertUser(user);
 };
@@ -209,8 +229,10 @@ export const UpdatePassword = async (data: PasswordUpdateInput): Promise<number>
   });
 };
 
+const VALID_ROLES = ["admin", "editor", "member"] as const;
+
 export const ManualUpdateUserData = async (
-  byUser: { role: string },
+  byUser: { id: number; role: string; is_owner: string },
   forUserId: number,
   data: ManualUserUpdateInput,
 ): Promise<number | undefined> => {
@@ -222,8 +244,15 @@ export const ManualUpdateUserData = async (
   if (byUser.role !== "admin") {
     throw new Error("You do not have permission to update user");
   }
+  // non-owner admins cannot modify other admins (self-updates are allowed)
+  if (forUser.role === "admin" && byUser.is_owner !== "YES" && forUser.id !== byUser.id) {
+    throw new Error("Only the owner can modify other admins");
+  }
   if (data.updateType == "role") {
     if (!data.role) throw new Error("Role is required");
+    if (!VALID_ROLES.includes(data.role as (typeof VALID_ROLES)[number])) {
+      throw new Error(`Invalid role. Must be one of: ${VALID_ROLES.join(", ")}`);
+    }
     return await db.updateUserRole(forUser.id, data.role);
   } else if (data.updateType == "is_active") {
     if (data.is_active === undefined) throw new Error("is_active is required");
@@ -235,6 +264,8 @@ export const ManualUpdateUserData = async (
       newPassword: data.password,
       newPlainPassword: data.passwordPlain,
     });
+  } else {
+    throw new Error(`Unsupported update type: ${data.updateType}`);
   }
 };
 
@@ -267,37 +298,31 @@ export const GetTotalUserPages = async (limit: number): Promise<number> => {
 
 //send invitation email to user for account creation
 export const SendInvitationEmail = async (email: string, role: string, name: string, currentUserRole: string) => {
-  let acceptedRoles = ["member", "editor"];
-  if (!acceptedRoles.includes(role)) {
-    throw new Error("Invalid role");
-  }
-
   if (currentUserRole === "member") {
     throw new Error("Only admins and editors can create new users");
   }
 
-  //if data.email empty, throw error
-  if (!!!email) {
-    throw new Error("Email cannot be empty");
+  // Admins can add admin, editor, member; Editors can only add editor, member
+  const acceptedRoles = currentUserRole === "admin" ? ["admin", "editor", "member"] : ["editor", "member"];
+  if (!acceptedRoles.includes(role)) {
+    throw new Error("Invalid role");
   }
 
-  //if data.name empty, throw error
-  if (!!!name) {
-    throw new Error("Name cannot be empty");
-  }
+  const normalizedEmail = validateEmailOrThrow(email);
+  const normalizedName = validateNameOrThrow(name);
 
   // Check if user with this email already exists
-  const existingUser = await db.getUserByEmail(email);
+  const existingUser = await db.getUserByEmail(normalizedEmail);
   if (existingUser) {
-    throw new Error(`A user with email ${email} already exists`);
+    throw new Error(`A user with email ${normalizedEmail} already exists`);
   }
 
   //create user with empty password and is_active = 0
   try {
     await db.insertUser({
-      email,
+      email: normalizedEmail,
       password_hash: "",
-      name,
+      name: normalizedName,
       role,
       is_active: 0,
     });
@@ -305,13 +330,13 @@ export const SendInvitationEmail = async (email: string, role: string, name: str
     // Handle database constraint errors
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (errorMessage.includes("UNIQUE constraint failed") || errorMessage.includes("duplicate")) {
-      throw new Error(`A user with email ${email} already exists`);
+      throw new Error(`A user with email ${normalizedEmail} already exists`);
     }
     throw error;
   }
 
   const token = await GenerateToken({
-    email,
+    email: normalizedEmail,
     validTill: Date.now() + 7 * 24 * 60 * 60 * 1000, //7 days
   });
 
@@ -331,7 +356,7 @@ export const SendInvitationEmail = async (email: string, role: string, name: str
       template.template_html_body || "",
       template.template_subject || "Your Invitation to Join",
       emailVars,
-      [email],
+      [normalizedEmail],
       undefined,
       template.template_text_body || "",
     );
@@ -344,11 +369,9 @@ export const ResendInvitationEmail = async (email: string, currentUserRole: stri
     throw new Error("Only admins and editors can resend invitations");
   }
 
-  if (!email) {
-    throw new Error("Email cannot be empty");
-  }
+  const normalizedEmail = validateEmailOrThrow(email);
 
-  const user = await db.getUserByEmail(email);
+  const user = await db.getUserByEmail(normalizedEmail);
   if (!user) {
     throw new Error("User not found");
   }
@@ -359,7 +382,7 @@ export const ResendInvitationEmail = async (email: string, currentUserRole: stri
   }
 
   const token = await GenerateToken({
-    email,
+    email: normalizedEmail,
     validTill: Date.now() + 7 * 24 * 60 * 60 * 1000, //7 days
   });
 
