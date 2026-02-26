@@ -39,6 +39,31 @@ interface MonitorInput extends MonitorRecordInsert {
   id?: number;
 }
 
+/**
+ * Validates that a monitor tag is URL-friendly: lowercase alphanumeric, hyphens, and underscores only.
+ * Must start and end with an alphanumeric character.
+ */
+const VALID_TAG_REGEX = /^[a-z0-9][a-z0-9_-]*[a-z0-9]$/;
+const VALID_TAG_SINGLE_CHAR_REGEX = /^[a-z0-9]$/;
+
+function isValidMonitorTag(tag: string): boolean {
+  if (!tag || tag.length === 0) return false;
+  if (tag.length === 1) return VALID_TAG_SINGLE_CHAR_REGEX.test(tag);
+  return VALID_TAG_REGEX.test(tag);
+}
+
+function validateMonitorTag(tag: string): void {
+  const trimmed = tag?.trim();
+  if (!trimmed) {
+    throw new Error("Monitor tag is required");
+  }
+  if (!isValidMonitorTag(trimmed)) {
+    throw new Error(
+      "Monitor tag must be URL-friendly: only lowercase letters, numbers, hyphens, and underscores. Must start and end with a letter or number.",
+    );
+  }
+}
+
 interface DayGroupData {
   timestamp: number;
   total: number;
@@ -169,6 +194,7 @@ export const CreateUpdateMonitor = async (monitor: MonitorInput): Promise<number
   if (monitorData.id) {
     return await db.updateMonitor(monitorData as MonitorRecord);
   } else {
+    validateMonitorTag(monitorData.tag);
     return await db.insertMonitor(monitorData);
   }
 };
@@ -178,6 +204,7 @@ export const CreateMonitor = async (monitor: MonitorInput): Promise<number[]> =>
   if (monitorData.id) {
     throw new Error("monitor id must be empty or 0");
   }
+  validateMonitorTag(monitorData.tag);
   return await db.insertMonitor(monitorData);
 };
 
@@ -198,6 +225,7 @@ export const CloneMonitor = async ({ sourceTag, newTag, newName }: CloneMonitorI
   if (!newTagTrimmed) {
     throw new Error("Tag is required");
   }
+  validateMonitorTag(newTagTrimmed);
   if (!newNameTrimmed) {
     throw new Error("Name is required");
   }

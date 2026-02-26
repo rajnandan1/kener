@@ -65,6 +65,20 @@ export const POST: RequestHandler = async ({ request }) => {
     return json(errorResponse, { status: 400 });
   }
 
+  // Validate tag is URL-friendly: lowercase alphanumeric, hyphens, underscores
+  const tagTrimmed = body.tag.trim();
+  const validTagRegex = tagTrimmed.length === 1 ? /^[a-z0-9]$/ : /^[a-z0-9][a-z0-9_-]*[a-z0-9]$/;
+  if (!validTagRegex.test(tagTrimmed)) {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message:
+          "Tag must be URL-friendly: only lowercase letters, numbers, hyphens, and underscores. Must start and end with a letter or number.",
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
   if (!body.name || typeof body.name !== "string" || body.name.trim().length === 0) {
     const errorResponse: BadRequestResponse = {
       error: {
