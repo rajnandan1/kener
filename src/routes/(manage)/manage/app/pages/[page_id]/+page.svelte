@@ -231,7 +231,7 @@
         toast.error(result.error);
       } else {
         toast.success("Monitor added to page");
-        selectedMonitors = [...selectedMonitors, selectedMonitorTag];
+        selectedMonitors = [selectedMonitorTag, ...selectedMonitors.filter((tag) => tag !== selectedMonitorTag)];
         selectedMonitorTag = "";
       }
     } catch (e) {
