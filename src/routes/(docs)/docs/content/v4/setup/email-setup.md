@@ -17,21 +17,26 @@ To use SMTP for sending emails, configure the following environment variables:
 SMTP_HOST=smtp.example.com
 SMTP_PORT=587
 SMTP_USER=your-username
-SMTP_PASSWORD=your-password
-SMTP_SENDER=noreply@example.com
+SMTP_PASS=your-password
+SMTP_FROM_EMAIL=noreply@example.com
 SMTP_SECURE=0
 ```
 
+Kener accepts both naming styles for compatibility:
+
+- Password: `SMTP_PASS` or `SMTP_PASSWORD`
+- Sender: `SMTP_FROM_EMAIL` or `SMTP_SENDER`
+
 ### SMTP Variables {#smtp-variables}
 
-| Variable        | Description                        | Required |
-| --------------- | ---------------------------------- | -------- |
-| `SMTP_HOST`     | SMTP server hostname               | Yes      |
-| `SMTP_PORT`     | SMTP server port (25, 587, or 465) | Yes      |
-| `SMTP_USER`     | SMTP authentication username       | Yes      |
-| `SMTP_PASSWORD` | SMTP authentication password       | Yes      |
-| `SMTP_SENDER`   | Sender email address               | Yes      |
-| `SMTP_SECURE`   | SSL/TLS mode (0 or 1)              | Yes      |
+| Variable                           | Description                        | Required |
+| ---------------------------------- | ---------------------------------- | -------- |
+| `SMTP_HOST`                        | SMTP server hostname               | Yes      |
+| `SMTP_PORT`                        | SMTP server port (25, 587, or 465) | Yes      |
+| `SMTP_USER`                        | SMTP authentication username       | Yes      |
+| `SMTP_PASS` or `SMTP_PASSWORD`     | SMTP authentication password       | Yes      |
+| `SMTP_FROM_EMAIL` or `SMTP_SENDER` | Sender email address               | Yes      |
+| `SMTP_SECURE`                      | SSL/TLS mode (0 or 1)              | Yes      |
 
 ### Understanding SMTP_SECURE {#smtp-secure}
 
@@ -80,8 +85,8 @@ SMTP_PORT=587
 SMTP_SECURE=0
 # Use App Password instead of regular password
 SMTP_USER=your-email@gmail.com
-SMTP_PASSWORD=your-app-password
-SMTP_SENDER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_FROM_EMAIL=your-email@gmail.com
 ```
 
 ### SendGrid {#sendgrid}
@@ -91,8 +96,8 @@ SMTP_HOST=smtp.sendgrid.net
 SMTP_PORT=587
 SMTP_SECURE=0
 SMTP_USER=apikey
-SMTP_PASSWORD=your-sendgrid-api-key
-SMTP_SENDER=noreply@yourdomain.com
+SMTP_PASS=your-sendgrid-api-key
+SMTP_FROM_EMAIL=noreply@yourdomain.com
 ```
 
 ### AWS SES {#aws-ses}
@@ -102,9 +107,30 @@ SMTP_HOST=email-smtp.us-east-1.amazonaws.com
 SMTP_PORT=587
 SMTP_SECURE=0
 SMTP_USER=your-smtp-username
-SMTP_PASSWORD=your-smtp-password
-SMTP_SENDER=noreply@yourdomain.com
+SMTP_PASS=your-smtp-password
+SMTP_FROM_EMAIL=noreply@yourdomain.com
 ```
+
+### Resend SMTP (SMTP relay mode) {#resend-smtp-relay}
+
+```env
+SMTP_HOST=smtp.resend.com
+SMTP_PORT=587
+SMTP_USER=resend
+SMTP_PASS=re_xxxxxxxxxxxxx
+SMTP_FROM_EMAIL=accounts@example.com
+SMTP_SECURE=0
+```
+
+**Important gotcha**:
+
+- `SMTP_SECURE=1` means **implicit TLS** (TLS handshake starts immediately on connect).
+- `SMTP_SECURE=0` means **STARTTLS/upgrade** (plain connection first, then TLS upgrade).
+
+For Resend SMTP, using ports like `587` (and provider-documented STARTTLS ports such as `2587`/`2465`) generally works with `SMTP_SECURE=0`.
+If you force `SMTP_SECURE=1` on these ports, connections can time out because the server expects STARTTLS negotiation, not immediate implicit TLS.
+
+Use `SMTP_SECURE=1` only with an implicit TLS port (commonly `465`).
 
 ## Troubleshooting {#troubleshooting}
 
@@ -131,3 +157,4 @@ If you're getting connection errors, verify:
 1. Verify your API key is correct
 2. Ensure sender domain is verified in Resend dashboard
 3. Check API key has proper permissions
+4. If using Resend SMTP relay on `587`, set `SMTP_SECURE=0`

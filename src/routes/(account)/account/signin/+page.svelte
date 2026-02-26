@@ -46,7 +46,17 @@
             <p>Please make sure to set the below environment variables:</p>
             <ul class="list-inside list-disc text-sm">
               <li>KENER_SECRET_KEY</li>
+              <li>ORIGIN</li>
+              <li>REDIS_URL</li>
             </ul>
+            <Button
+              variant="link"
+              size="sm"
+              class="text-destructive w-full justify-start underline"
+              href="https://kener.ing/docs/v4/setup/environment-variables"
+            >
+              Go to docs
+            </Button>
           </Alert.Description>
         </Alert.Root>
       {:else}

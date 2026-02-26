@@ -365,9 +365,9 @@
                   </div>
                 </div>
                 <div class="rounded-lg border p-4 text-center">
-                  <div class="text-muted-foreground text-xs uppercase">Response Time</div>
-                  <div class="mt-1 text-2xl font-bold">
-                    {testResult.latency}ms
+                  <div class="text-muted-foreground text-xs uppercase">Latency (milliseconds)</div>
+                  <div class="mt-1 truncate text-2xl font-bold">
+                    {testResult.latency}
                   </div>
                 </div>
               </div>

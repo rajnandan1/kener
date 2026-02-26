@@ -151,7 +151,7 @@ export async function CreateMonitorAlertConfig(
   };
 
   // Insert alert config
-  const [id] = await db.insertMonitorAlertConfig(insertData);
+  const id = await db.insertMonitorAlertConfig(insertData);
 
   // Add triggers if provided
   if (data.trigger_ids && data.trigger_ids.length > 0) {

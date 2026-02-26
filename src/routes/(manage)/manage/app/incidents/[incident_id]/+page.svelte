@@ -703,8 +703,11 @@
         <!-- Status badges (only for existing) -->
         {#if !isNew}
           <div class="flex items-center gap-2">
-            <Badge variant={getStateBadgeVariant(incident.state)}>{incident.state}</Badge>
-            <Badge variant={incident.status === "OPEN" ? "default" : "outline"}>{incident.status}</Badge>
+            <Badge
+              variant="outline"
+              class="text-{incident.state.toLowerCase()} border-{incident.state.toLowerCase()} font-semibold"
+              >{incident.state}</Badge
+            >
           </div>
         {/if}
 
@@ -837,7 +840,11 @@
                 <div class="flex items-center justify-between rounded-md border p-3">
                   <div class="flex items-center gap-3">
                     <span class="font-medium">{getMonitorName(monitor.monitor_tag)}</span>
-                    <Badge variant={getImpactBadgeVariant(monitor.monitor_impact)}>
+                    <Badge
+                      variant="outline"
+                      class="text-{monitor.monitor_impact?.toLowerCase() ||
+                        'default'} font-semibold border-{monitor.monitor_impact?.toLowerCase() || 'default'}"
+                    >
                       {monitor.monitor_impact || "Unknown"}
                     </Badge>
                   </div>

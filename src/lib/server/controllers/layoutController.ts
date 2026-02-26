@@ -2,7 +2,14 @@ import MobileDetect from "mobile-detect";
 import type { Cookies } from "@sveltejs/kit";
 import type { UserRecordPublic } from "$lib/server/types/db";
 import seedSiteData from "$lib/server/db/seedSiteData";
-import { GetAllSiteData, GetLoggedInSession, GetLocaleFromCookie, GetUsersCount, IsEmailSetup } from "./controller.js";
+import {
+  GetAllSiteData,
+  GetLoggedInSession,
+  GetLocaleFromCookie,
+  GetUsersCount,
+  IsEmailSetup,
+  IsSetupComplete,
+} from "./controller.js";
 import type { EventDisplaySettings, GlobalPageVisibilitySettings } from "$lib/types/site.js";
 
 export interface LayoutServerData {
@@ -76,7 +83,7 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     GetUsersCount(),
   ]);
 
-  const isSetupComplete = process.env.KENER_SECRET_KEY !== undefined && Object.keys(siteData).length > 0;
+  const isSetupComplete = await IsSetupComplete();
 
   const selectedLang = GetLocaleFromCookie(siteData, cookies);
   const siteStatusColors = siteData.colors;
