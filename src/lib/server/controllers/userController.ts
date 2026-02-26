@@ -229,8 +229,10 @@ export const UpdatePassword = async (data: PasswordUpdateInput): Promise<number>
   });
 };
 
+const VALID_ROLES = ["admin", "editor", "member"] as const;
+
 export const ManualUpdateUserData = async (
-  byUser: { role: string; is_owner: string },
+  byUser: { id: number; role: string; is_owner: string },
   forUserId: number,
   data: ManualUserUpdateInput,
 ): Promise<number | undefined> => {
@@ -242,12 +244,15 @@ export const ManualUpdateUserData = async (
   if (byUser.role !== "admin") {
     throw new Error("You do not have permission to update user");
   }
-  // non-owner admins cannot modify other admins
-  if (forUser.role === "admin" && byUser.is_owner !== "YES") {
+  // non-owner admins cannot modify other admins (self-updates are allowed)
+  if (forUser.role === "admin" && byUser.is_owner !== "YES" && forUser.id !== byUser.id) {
     throw new Error("Only the owner can modify other admins");
   }
   if (data.updateType == "role") {
     if (!data.role) throw new Error("Role is required");
+    if (!VALID_ROLES.includes(data.role as (typeof VALID_ROLES)[number])) {
+      throw new Error(`Invalid role. Must be one of: ${VALID_ROLES.join(", ")}`);
+    }
     return await db.updateUserRole(forUser.id, data.role);
   } else if (data.updateType == "is_active") {
     if (data.is_active === undefined) throw new Error("is_active is required");
@@ -259,6 +264,8 @@ export const ManualUpdateUserData = async (
       newPassword: data.password,
       newPlainPassword: data.passwordPlain,
     });
+  } else {
+    throw new Error(`Unsupported update type: ${data.updateType}`);
   }
 };
 

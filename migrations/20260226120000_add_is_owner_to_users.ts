@@ -6,12 +6,14 @@ export async function up(knex: Knex): Promise<void> {
     await knex.schema.alterTable("users", (table) => {
       table.string("is_owner").defaultTo("NO").notNullable();
     });
-  }
 
-  // Set the first user (by id) as owner, if any users exist
-  const firstUser = await knex("users").orderBy("id", "asc").first();
-  if (firstUser) {
-    await knex("users").where("id", firstUser.id).update({ is_owner: "YES" });
+    // Set the first user (by id) as owner, if any users exist.
+    // This only runs when the column has just been added to avoid
+    // overwriting an existing owner on migration re-run.
+    const firstUser = await knex("users").orderBy("id", "asc").first();
+    if (firstUser) {
+      await knex("users").where("id", firstUser.id).update({ is_owner: "YES" });
+    }
   }
 }
 
