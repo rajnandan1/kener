@@ -85,6 +85,16 @@
   let manualSuccess = $state("");
   let sendingSelfVerification = $state(false);
 
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  function normalizeEmail(email: string): string {
+    return email.trim().toLowerCase();
+  }
+
+  function normalizeName(name: string): string {
+    return name.trim().replace(/\s+/g, " ");
+  }
+
   // Fetch users
   async function fetchUsers() {
     loading = true;
@@ -113,8 +123,37 @@
 
   // Create new user
   async function createNewUser() {
-    creatingUser = true;
     creatingUserError = "";
+
+    const normalizedName = normalizeName(newUser.name);
+    const normalizedEmail = normalizeEmail(newUser.email);
+
+    if (!normalizedName) {
+      creatingUserError = "Name cannot be empty";
+      return;
+    }
+    if (normalizedName.length < 2) {
+      creatingUserError = "Name must be at least 2 characters";
+      return;
+    }
+    if (normalizedName.length > 100) {
+      creatingUserError = "Name must be less than 100 characters";
+      return;
+    }
+    if (!normalizedEmail) {
+      creatingUserError = "Email cannot be empty";
+      return;
+    }
+    if (!EMAIL_REGEX.test(normalizedEmail)) {
+      creatingUserError = "Please enter a valid email address";
+      return;
+    }
+    if (!["admin", "editor", "member"].includes(newUser.role)) {
+      creatingUserError = "Invalid role selected";
+      return;
+    }
+
+    creatingUser = true;
 
     try {
       const res = await fetch(clientResolver(resolve, "/manage/api"), {
@@ -122,7 +161,11 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "createNewUser",
-          data: newUser
+          data: {
+            ...newUser,
+            name: normalizedName,
+            email: normalizedEmail
+          }
         })
       });
       const result = await res.json();

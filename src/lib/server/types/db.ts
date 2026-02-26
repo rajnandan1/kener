@@ -248,6 +248,7 @@ export interface UserRecordInsert {
   is_active?: number;
   is_verified?: number;
   role?: string;
+  is_owner?: string;
 }
 
 export interface UserRecordPublic {

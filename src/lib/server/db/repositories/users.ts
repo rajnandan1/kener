@@ -40,6 +40,7 @@ export class UsersRepository extends BaseRepository {
       name: data.name,
       password_hash: data.password_hash,
       role: data.role,
+      is_owner: data.is_owner || "NO",
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     });
