@@ -40,22 +40,22 @@
 
     if (page.route.id === "/(kener)/monitors/[monitor_tag]") {
       return {
-        label: "Edit Monitor",
+        label: $t("Edit Monitor"),
         url: clientResolver(resolve, "/manage/app/monitors/" + page.params.monitor_tag)
       };
     } else if (page.route.id === "/(kener)/incidents/[incident_id]") {
       return {
-        label: "Update Incident",
+        label: $t("Update Incident"),
         url: clientResolver(resolve, "/manage/app/incidents/" + page.params.incident_id)
       };
     } else if (page.route.id === "/(kener)/maintenances/[maintenance_id]") {
       return {
-        label: "Update Maintenance",
+        label: $t("Update Maintenance"),
         url: clientResolver(resolve, "/manage/app/maintenances/" + page.data.maintenance.id)
       };
     } else {
       return {
-        label: "Manage Site",
+        label: $t("Manage Site"),
         url: clientResolver(resolve, "/manage/app/site-configurations")
       };
     }
