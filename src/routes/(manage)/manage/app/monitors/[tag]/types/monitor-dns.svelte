@@ -16,7 +16,7 @@
   if (!data.nameServer) data.nameServer = "";
   if (!data.lookupRecord) data.lookupRecord = "A";
   if (!data.matchType) data.matchType = "ANY";
-  if (!data.values) data.values = [];
+  if (!data.values) data.values = [""];
 
   const recordTypes = Object.keys(AllRecordTypes);
 
@@ -87,7 +87,7 @@
       <Label>Expected Values <span class="text-destructive">*</span></Label>
       <Button variant="outline" size="sm" onclick={addValue}>
         <Plus class="mr-1 size-4" />
-        Add Value
+        {data.values.length > 0 ? "Add More Values" : "Add Value"}
       </Button>
     </div>
     {#if data.values.length > 0}
