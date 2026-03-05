@@ -36,7 +36,7 @@
     "Impact": "Auswirkungen",
     "Incident Updates": "Vorfallaktualisierungen",
     "Incidents": "Vorfälle",
-    "Included Monitors": "Included Monitors",
+    "Included Monitors": "Enthaltene Monitore",
     "Last Updated": "Zuletzt aktualisiert",
     "Latency": "Latenz",
     "Latency Embed": "Latenz-Einbettung",
@@ -44,7 +44,7 @@
     "Latency Trend": "Latenztrend",
     "Latest Latency": "Neueste Latenz",
     "Latest Status": "Neuester Stand",
-    "Light": "Licht",
+    "Light": "Hell",
     "Live Status": "Live-Status",
     "Loading your preferences...": "Deine Einstellungen werden geladen...",
     "Maintenance Updates": "Wartungsaktualisierungen",
@@ -95,7 +95,7 @@
     "Status Embed": "Status einbetten",
     "Status history and latency trend": "Statusverlauf und Latenztrend",
     "Subscribe": "Abonnieren",
-    "Subscribe to Updates": "Abonnieren Sie Updates",
+    "Subscribe to Updates": "Benachrichtigungen erhalten",
     "There are no incidents or maintenances scheduled for this month.": "Für diesen Monat sind keine Vorfälle oder Wartungsarbeiten geplant.",
     "There are no ongoing incidents or maintenance events.": "Es gibt keine laufenden Vorfälle oder Wartungsereignisse.",
     "Total Incidents": "Gesamtzahl der Vorfälle",
@@ -111,9 +111,9 @@
     "Verify": "Verifizieren",
     "Verifying": "Verifizieren",
     "We sent a 6-digit code to": "Wir haben einen 6-stelligen Code an gesendet",
-    "INVESTIGATING": "INVESTIGATING",
-    "IDENTIFIED": "IDENTIFIED",
-    "MONITORING": "MONITORING",
-    "RESOLVED": "RESOLVED"
+    "INVESTIGATING": "WIRD UNTERSUCHT",
+    "IDENTIFIED": "IDENTIFIZIERT",
+    "MONITORING": "WIRD ÜBERWACHT",
+    "RESOLVED": "BEHOBEN"
   }
 }
