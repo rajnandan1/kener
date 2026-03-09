@@ -25,8 +25,8 @@ import type { DayWiseStatus, NumberWithChange } from "../../types/monitor.js";
 import GC, { getBadgeStyle, type BadgeStyle } from "../../global-constants.js";
 import { makeBadge } from "badge-maker";
 import { ErrorSvg } from "../../anywhere.js";
-import { GetLastMonitoringValue, SetLastHeartbeat } from "../cache/setGet.js";
-import type { HeartbeatMonitor } from "../types/monitor.js";
+import { GetLastMonitoringValue, SetLastHeartbeat, DeleteMonitorCaches } from "../cache/setGet.js";
+import type { HeartbeatMonitor, GroupMonitorTypeData } from "../types/monitor.js";
 
 interface GroupUpdateData {
   monitor_tag: string;
@@ -376,12 +376,71 @@ export const RegisterHeartbeat = async (tag: string, secret: string): Promise<st
   throw new Error("Invalid heartbeat secret");
 };
 
+/**
+ * Removes a monitor tag from all GROUP monitors that reference it,
+ * rebalances weights equally, and deactivates groups left with < 2 members.
+ */
+async function removeTagFromGroupMonitors(tag: string): Promise<void> {
+  const groupMonitors = await GetMonitorsParsed({ monitor_type: "GROUP" });
+
+  for (const group of groupMonitors) {
+    const typeData = group.type_data as GroupMonitorTypeData;
+    if (!typeData.monitors || !Array.isArray(typeData.monitors)) continue;
+
+    const hasMember = typeData.monitors.some((m) => m.tag === tag);
+    if (!hasMember) continue;
+
+    // Remove the deleted tag
+    const remaining = typeData.monitors.filter((m) => m.tag !== tag);
+
+    // Rebalance weights equally across remaining monitors
+    if (remaining.length > 0) {
+      const weight = Math.round((1 / remaining.length) * 1000) / 1000;
+      for (let i = 0; i < remaining.length; i++) {
+        remaining[i].weight =
+          i === remaining.length - 1
+            ? Math.round((1 - weight * (remaining.length - 1)) * 1000) / 1000
+            : weight;
+      }
+    }
+
+    typeData.monitors = remaining;
+
+    const updateData: Record<string, unknown> = {
+      id: group.id,
+      tag: group.tag,
+      name: group.name,
+      description: group.description,
+      image: group.image,
+      cron: group.cron,
+      default_status: group.default_status,
+      status: remaining.length < 2 ? "INACTIVE" : group.status,
+      category_name: group.category_name,
+      monitor_type: group.monitor_type,
+      type_data: JSON.stringify(typeData),
+      day_degraded_minimum_count: group.day_degraded_minimum_count,
+      day_down_minimum_count: group.day_down_minimum_count,
+      include_degraded_in_downtime: group.include_degraded_in_downtime,
+      is_hidden: group.is_hidden,
+      monitor_settings_json:
+        typeof group.monitor_settings_json === "string"
+          ? group.monitor_settings_json
+          : JSON.stringify(group.monitor_settings_json),
+      external_url: group.external_url,
+    };
+
+    await db.updateMonitor(updateData as unknown as MonitorRecord);
+  }
+}
+
 export const DeleteMonitorCompletelyUsingTag = async (tag: string): Promise<number> => {
   await db.deleteMonitorDataByTag(tag);
   await db.deleteIncidentMonitorsByTag(tag);
   await db.deleteMonitorAlertsByTag(tag);
   await db.deletePageMonitorsByTag(tag);
   await db.deleteMaintenanceMonitorsByTag(tag);
+  await removeTagFromGroupMonitors(tag);
+  await DeleteMonitorCaches(tag);
   return await db.deleteMonitorsByTag(tag);
 };
 

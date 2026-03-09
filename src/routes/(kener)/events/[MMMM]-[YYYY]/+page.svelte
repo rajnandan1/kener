@@ -203,7 +203,7 @@
             </p>
           {/if}
           <p class="text-sm leading-4 font-medium">
-            {@html $t("Total Incidents")}
+            {$t("Total Incidents")}
           </p>
         </div>
         <!-- Maintenances in this page -->
@@ -215,7 +215,7 @@
               {numberOfMaintenances}
             </p>
           {/if}
-          <p class="text-sm leading-4 font-medium">{@html $t("Total Maintenances")}</p>
+          <p class="text-sm leading-4 font-medium">{$t("Total Maintenances")}</p>
         </div>
       </div>
     </div>

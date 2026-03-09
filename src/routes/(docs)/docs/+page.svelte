@@ -283,25 +283,22 @@
   </header>
 
   <section class="bg-background min-h-screen bg-(image:--docs-home-hero-gradient) px-6 py-20 md:py-24">
-    <div class="mx-auto mt-20 grid max-w-[1200px] items-center gap-10 lg:grid-cols-2">
-      <div class="text-center lg:text-left">
-        <Badge variant="secondary" class="mb-6 inline-flex items-center gap-2 px-3 py-1 text-xs">
+    <div class="mx-auto mt-20 grid max-w-[1200px] items-center gap-10">
+      <div class="text-center">
+        <Badge variant="outline" class="mb-6 inline-flex items-center gap-2 px-3 py-1 text-xs">
           <Shield class="h-3.5 w-3.5" />
           Production-ready status page platform
         </Badge>
         <h1 class="text-foreground mb-6 text-2xl leading-tight font-bold tracking-tight md:text-4xl">
-          Build trust with
-          <span class="from-primary to-accent-foreground bg-linear-to-r bg-clip-text text-transparent"
-            >{data.config.name}</span
-          >
-          documentation that actually gets used
+          Build stunning status pages with
+          <span class="from-primary to-accent-foreground bg-linear-to-r bg-clip-text text-transparent"> Kener </span>
         </h1>
-        <p class="text-muted-foreground mb-8 max-w-[760px] text-sm leading-relaxed md:text-base">
+        <p class="text-muted-foreground mx-auto mb-8 max-w-[760px] text-sm leading-relaxed md:text-base">
           From quick setup to advanced operations, Kener gives you open-source monitoring, incident workflows,
           notifications, maintenance scheduling, embeds, and automation APIs—all in one modern platform.
         </p>
 
-        <div class="mb-8 flex flex-wrap justify-center gap-3 md:gap-4 lg:justify-start">
+        <div class="mb-8 flex flex-wrap justify-center gap-3 md:gap-4 lg:justify-center">
           {#each getCtaButtons() as button (button.title)}
             <Button
               href={getHref(button.href)}
