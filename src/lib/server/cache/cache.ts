@@ -13,6 +13,11 @@ export async function setCache<T>(key: string, value: T | null | undefined, ttlS
   await redis.set(getCacheKey(key), payload, "EX", ttl);
 }
 
+export async function deleteCache(key: string): Promise<void> {
+  const redis = redisIOConnection();
+  await redis.del(getCacheKey(key));
+}
+
 export async function getCache<T>(
   key: string,
   fetcher?: () => Promise<T | null | undefined> | T | null | undefined,
