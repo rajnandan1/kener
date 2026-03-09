@@ -43,7 +43,7 @@
 <Item.Root class="items-start  p-0 {className} sm:items-center">
   <Item.Content class="min-w-0 flex-1">
     <div class="flex flex-col items-start justify-start gap-0.5">
-      <span class="text-xs font-medium text-{incident.state.toLowerCase()}">{incident.state}</span>
+      <span class="text-xs font-medium text-{incident.state.toLowerCase()}">{$t(incident.state)}</span>
       <Item.Title class="min-w-0 text-base wrap-break-word break-all">
         <a {target} class="hover:underline" href={clientResolver(resolve, `/incidents/${incident.id}`)}>
           {incident.title}
@@ -128,14 +128,14 @@
     {#if showSummary}
       <div class="my-2 grid grid-cols-1 gap-4 text-xs font-medium sm:grid-cols-3">
         <div class="text-muted-foreground bg-secondary flex items-center justify-between rounded-full border p-2 px-4">
-          <span>Last Updated</span>
+          <span>{$t("Last Updated")}</span>
           <span>{$formatDate(incident.updated_at, "PPp")}</span>
         </div>
         <div class="text-muted-foreground bg-secondary flex items-center justify-between rounded-full border p-2 px-4">
-          <span>Status</span>
+          <span>{$t("Status")}</span>
           <div class="flex items-center gap-2">
             <span class="text-{incident.state.toLowerCase()}">
-              {incident.state}
+              {$t(incident.state)}
             </span>
           </div>
         </div>

@@ -128,7 +128,7 @@
           <div class="flex items-center justify-between border-b p-4">
             <Badge variant="secondary" class="gap-1">
               <Calendar class="h-3 w-3" />
-              Scheduled Windows ({data.maintenance.events.length})
+              {$t("Scheduled Events (%count)", { count: String(data.maintenance.events.length) })}
             </Badge>
           </div>
 
@@ -143,10 +143,12 @@
                 <div class="mb-2 flex items-center justify-between gap-2">
                   <div class="flex items-center gap-2">
                     <Badge class={getEventStatusBadgeClass(event.status)}>
-                      {event.status.replace("_", " ")}
+                      {$t(event.status)}
                     </Badge>
                     {#if event.id === data.maintenanceEvent.id}
-                      <Badge variant="outline" class="text-maintenance border-maintenance text-xs">Current</Badge>
+                      <Badge variant="outline" class="text-maintenance border-maintenance text-xs">
+                        {$t("Current")}
+                      </Badge>
                     {/if}
                   </div>
                   <span class="text-muted-foreground text-xs">
