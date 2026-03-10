@@ -270,6 +270,21 @@
               "url": "/docs/spec/v4/"
             },
             {
+              "name": "Showcase",
+              "sidebar": [
+                {
+                  "group": "Showcase",
+                  "collapsible": false,
+                  "pages": [
+                    {
+                      "title": "Showcase",
+                      "content": "v4/showcase/showcase"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
               "name": "Changelogs",
               "sidebar": [
                 {
