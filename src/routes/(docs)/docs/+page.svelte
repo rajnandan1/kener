@@ -298,7 +298,7 @@
           notifications, maintenance scheduling, embeds, and automation APIs—all in one modern platform.
         </p>
 
-        <div class="mb-8 flex flex-wrap justify-center gap-3 md:gap-4 lg:justify-center">
+        <div class="mb-8 flex flex-wrap items-center justify-center gap-3 md:gap-4 lg:justify-center">
           {#each getCtaButtons() as button (button.title)}
             <Button
               href={getHref(button.href)}
@@ -312,6 +312,13 @@
               {/if}
             </Button>
           {/each}
+          <a
+            href="https://railway.com/deploy/spSvic?referralCode=1Pn7vs&utm_medium=integration&utm_source=template&utm_campaign=generic"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img src="https://railway.com/button.svg" alt="Deploy on Railway" class="h-10" />
+          </a>
         </div>
 
         {#if getMetrics().length > 0}

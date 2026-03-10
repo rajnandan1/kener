@@ -150,6 +150,8 @@ export const GetAffectedMonitorsByIncidentId = async (
 export interface PageNavItem {
   page_title: string;
   page_path: string;
+  page_header: string;
+  page_logo: string | null;
 }
 
 export interface PageDashboardData {

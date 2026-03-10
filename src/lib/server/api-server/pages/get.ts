@@ -33,6 +33,8 @@ export default async function get(_req: APIServerRequest): Promise<Response> {
   const pages: PageNavItem[] = orderedPages.map((p) => ({
     page_title: p.page_title,
     page_path: p.page_path,
+    page_header: p.page_header,
+    page_logo: p.page_logo,
   }));
   return json(pages);
 }

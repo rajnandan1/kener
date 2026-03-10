@@ -14,7 +14,6 @@
   import { requestMonitorBar } from "$lib/client/monitor-bar-client";
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
   import { SveltePurify } from "@humanspeak/svelte-purify";
-  import { page } from "$app/state";
 
   let { data } = $props();
 
@@ -144,48 +143,49 @@
       </Item.Content>
     </Item.Root>
   </div>
-
-  <EventsCard statusClass={data.pageStatus.statusClass} statusText={data.pageStatus.statusSummary} />
-  {#if data.ongoingIncidents && data.ongoingIncidents.length > 0}
-    <div class="flex flex-col gap-3">
-      {#each data.ongoingIncidents as incident, i (incident.id ?? i)}
-        <div class=" rounded-3xl border p-3 sm:p-4">
-          <IncidentItem {incident} />
-        </div>
-      {/each}
+  {#if !!data.monitorTags.length}
+    <EventsCard statusClass={data.pageStatus.statusClass} statusText={data.pageStatus.statusSummary} />
+    {#if data.ongoingIncidents && data.ongoingIncidents.length > 0}
+      <div class="flex flex-col gap-3">
+        {#each data.ongoingIncidents as incident, i (incident.id ?? i)}
+          <div class=" rounded-3xl border p-3 sm:p-4">
+            <IncidentItem {incident} />
+          </div>
+        {/each}
+      </div>
+    {/if}
+    {#if data.ongoingMaintenances && data.ongoingMaintenances.length > 0}
+      <div class="flex flex-col gap-3">
+        {#each data.ongoingMaintenances as maintenance, i (maintenance.id ?? i)}
+          <div class="rounded-3xl border p-3 sm:p-4">
+            <MaintenanceItem {maintenance} />
+          </div>
+        {/each}
+      </div>
+    {/if}
+    <div class="overflow-hidden rounded-3xl border">
+      <div class={`grid grid-cols-1 ${getGridContainerClass(viewType)}`}>
+        {#each data.monitorTags as tag, i (tag)}
+          <div
+            class="{viewType === 'compact-grid' || viewType === 'default-grid'
+              ? `${getGridItemSpanClass(i, data.monitorTags.length, viewType)} bg-background`
+              : i < data.monitorTags.length - 1
+                ? 'border-b'
+                : ''} px-2 py-2 sm:px-0"
+          >
+            <MonitorBar
+              {tag}
+              prefetchedData={monitorBarDataByTag[tag]}
+              prefetchedError={monitorBarErrorByTag[tag]}
+              days={barCount}
+              {endOfDayTodayAtTz}
+              groupChildTags={data.monitorGroupMembersByTag?.[tag] || []}
+              compact={isCompact}
+              grid={viewType === "compact-grid" || viewType === "default-grid"}
+            />
+          </div>
+        {/each}
+      </div>
     </div>
   {/if}
-  {#if data.ongoingMaintenances && data.ongoingMaintenances.length > 0}
-    <div class="flex flex-col gap-3">
-      {#each data.ongoingMaintenances as maintenance, i (maintenance.id ?? i)}
-        <div class="rounded-3xl border p-3 sm:p-4">
-          <MaintenanceItem {maintenance} />
-        </div>
-      {/each}
-    </div>
-  {/if}
-  <div class="overflow-hidden rounded-3xl border">
-    <div class={`grid grid-cols-1 ${getGridContainerClass(viewType)}`}>
-      {#each data.monitorTags as tag, i (tag)}
-        <div
-          class="{viewType === 'compact-grid' || viewType === 'default-grid'
-            ? `${getGridItemSpanClass(i, data.monitorTags.length, viewType)} bg-background`
-            : i < data.monitorTags.length - 1
-              ? 'border-b'
-              : ''} px-2 py-2 sm:px-0"
-        >
-          <MonitorBar
-            {tag}
-            prefetchedData={monitorBarDataByTag[tag]}
-            prefetchedError={monitorBarErrorByTag[tag]}
-            days={barCount}
-            {endOfDayTodayAtTz}
-            groupChildTags={data.monitorGroupMembersByTag?.[tag] || []}
-            compact={isCompact}
-            grid={viewType === "compact-grid" || viewType === "default-grid"}
-          />
-        </div>
-      {/each}
-    </div>
-  </div>
 </div>

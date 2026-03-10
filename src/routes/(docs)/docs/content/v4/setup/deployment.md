@@ -3,6 +3,8 @@ title: Deployment
 description: Deploy Kener with Docker or Node.js and verify service health with the healthcheck endpoint
 ---
 
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/spSvic?referralCode=1Pn7vs&utm_medium=integration&utm_source=template&utm_campaign=generic)
+
 Use this guide when moving from local testing to production. It includes `.env` examples for PostgreSQL, MySQL, subpath deployments, and both SMTP/Resend email providers.
 
 ## Quick start with Docker Compose {#quick-start-with-docker-compose}
