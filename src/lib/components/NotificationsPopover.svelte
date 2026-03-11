@@ -116,7 +116,7 @@
               <span>{$formatDate(item.eventDate, "PPp")}</span>
 
               <span>•</span>
-              <span>{$formatDuration(item.eventStartDateTime, item.eventEndDateTime)}</span>
+              <span>{$formatDuration(item.eventStartDateTime, item.eventEndDateTime, $t("Ongoing"))}</span>
             </div>
           </a>
         {/each}
