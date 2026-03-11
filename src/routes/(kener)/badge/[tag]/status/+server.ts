@@ -9,5 +9,6 @@ export const GET: RequestHandler = async ({ params, url }) => {
     labelColor: query.get("labelColor"),
     color: query.get("color"),
     style: query.get("style"),
+    locale: query.get("locale"),
   });
 };

@@ -120,8 +120,9 @@
     <div class="flex flex-col gap-1">
       <Label>Select Monitors to Group</Label>
       <p class="text-muted-foreground text-xs">
-        Group monitors aggregate the status of multiple monitors using weighted scores. Each status has a score: UP=0,
-        DEGRADED=1, DOWN=2, MAINTENANCE=3. The weighted sum determines the group status.
+        Group monitors aggregate the status of multiple monitors using weighted scores. Each status has a normalized
+        score: UP=1, DEGRADED=0.5, DOWN=0. Maintenance members are treated as UP. The weighted sum determines the group
+        status: 1=UP, between 0 and 1=DEGRADED, 0=DOWN.
       </p>
       <p class="text-muted-foreground text-xs">
         Select at least {MIN_SELECTED_MONITORS} monitors. Weights must sum to 1.

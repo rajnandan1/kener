@@ -26,6 +26,7 @@ import GC, { getBadgeStyle, type BadgeStyle } from "../../global-constants.js";
 import { makeBadge } from "badge-maker";
 import { ErrorSvg } from "../../anywhere.js";
 import { GetLastMonitoringValue, SetLastHeartbeat, DeleteMonitorCaches } from "../cache/setGet.js";
+import { translate, isLocaleAvailable } from "../i18n.js";
 import type { HeartbeatMonitor, GroupMonitorTypeData } from "../types/monitor.js";
 
 interface GroupUpdateData {
@@ -506,6 +507,7 @@ export interface BadgeParams {
   color?: string | null;
   style?: string | null;
   metric?: string | null;
+  locale?: string | null;
 }
 
 function formatDuration(rangeInSeconds: number): string {
@@ -559,7 +561,34 @@ export const GetBadge = async (badgeType: BadgeType, params: BadgeParams): Promi
     }
 
     const status = (lastObj?.status as string) || GC.NO_DATA;
-    message = status;
+
+    // Resolve locale: validate against activated locales, fall back to configured default
+    const i18nData = await db.getSiteDataByKey("i18n");
+    let i18nConfig: { defaultLocale: string; locales: Array<{ code: string; selected: boolean }> } | null = null;
+    if (i18nData?.value) {
+      try {
+        i18nConfig = typeof i18nData.value === "string" ? JSON.parse(i18nData.value) : i18nData.value;
+      } catch {
+        i18nConfig = null;
+      }
+    }
+    const defaultLocale = i18nConfig?.defaultLocale || "en";
+    const activatedCodes = new Set(
+      i18nConfig?.locales?.filter((l) => l.selected).map((l) => l.code) ?? ["en"],
+    );
+    const requestedLocale = params.locale || defaultLocale;
+    const locale = activatedCodes.has(requestedLocale) && isLocaleAvailable(requestedLocale)
+      ? requestedLocale
+      : defaultLocale;
+
+    const statusLocaleKey: Record<string, string> = {
+      [GC.UP]: "Operational",
+      [GC.DEGRADED]: "Degraded",
+      [GC.DOWN]: "Down",
+      [GC.MAINTENANCE]: "Under Maintenance",
+      [GC.NO_DATA]: "No Status Available",
+    };
+    message = translate(locale, statusLocaleKey[status] || status, defaultLocale);
 
     // Use status-specific color if no custom color provided
     if (!params.color) {

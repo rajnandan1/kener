@@ -51,6 +51,7 @@ Run this skill at the **start and end** of any coding task that touches architec
 - Bug fixes that reveal non-obvious system behavior
 - New integrations or service connections
 - Discovery of undocumented edge cases or invariants
+- **After any agent run** — if the agent explored, read, or traced code to understand how part of the codebase works, that understanding must be captured (see Phase C)
 
 **Skip** for trivial changes (typo fixes, single-line edits, style-only changes).
 
@@ -171,6 +172,54 @@ cat > .codecontext/<domain>.md
 
 ---
 
+## Phase C — Capture Agent Understanding (After Any Agent Run)
+
+After completing any task (coding, debugging, research, exploration), review what you learned about the codebase during the session and persist anything not already documented.
+
+### C1) Identify new understanding
+
+Reflect on what you discovered during this session:
+
+- How does a feature/module actually work? (code flow, data transformations, call chains)
+- What patterns or conventions did you observe across multiple files?
+- What dependencies or relationships between modules did you trace?
+- What surprised you or was non-obvious? (hidden side effects, implicit ordering, shared state)
+- What constraints or invariants did you discover that aren't documented anywhere?
+
+### C2) Check if already documented
+
+```bash
+ls .codecontext/
+grep -ril "<keyword>" .codecontext/
+```
+
+Read matching files. If the understanding is already captured accurately, skip. If partially captured, update the relevant sections.
+
+### C3) Write or update docs
+
+Apply the same quality filters from Phase B (B1 architecture filter). Then:
+
+- If the understanding maps to an existing `.codecontext/` file, update the relevant sections
+- If it covers a new domain area, create a new file following the B2 template and naming rules
+- Merge your new understanding with existing content — do not duplicate or contradict
+
+### C4) Scope
+
+This phase applies even when:
+
+- The task was **read-only** (research, exploration, answering questions about code)
+- The task was a **bug investigation** that didn't result in a fix
+- The agent **traced code flow** to understand behavior before making changes
+- The agent **read multiple files** to understand how a feature works
+
+This phase does **NOT** apply when:
+
+- The agent only touched a single file and learned nothing non-obvious
+- The understanding is already fully captured in existing `.codecontext/` docs
+- The session was trivial (formatting, typo fix, config change)
+
+---
+
 ## Naming Rules
 
 - Name by domain/feature area: `alerting.md`, `auth.md`, `monitor-execution.md`, `incident-lifecycle.md`
@@ -193,3 +242,9 @@ Before finishing:
 - [ ] Documented any new architecture knowledge discovered
 - [ ] Updated outdated docs if current code contradicts them
 - [ ] Doc reads as a clean architecture reference, not a session log
+
+After any agent run:
+
+- [ ] Reviewed what was learned about the codebase during this session
+- [ ] Checked if that understanding is already in `.codecontext/`
+- [ ] Persisted any new architectural knowledge (even from read-only/research sessions)

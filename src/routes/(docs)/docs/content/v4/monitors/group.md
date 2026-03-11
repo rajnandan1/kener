@@ -17,12 +17,13 @@ Requirements from current validation:
 
 ## Status scoring model {#status-scoring-model}
 
-Member statuses are scored as:
+Member statuses are normalized to a 0–1 scale:
 
-- `UP = 0`
-- `DEGRADED = 1`
-- `DOWN = 2`
-- `MAINTENANCE = 3`
+- `UP = 1`
+- `DEGRADED = 0.5`
+- `DOWN = 0`
+
+Members in `MAINTENANCE` are treated as `UP` (score `1`) and do not affect the group status.
 
 Weighted score:
 
@@ -32,10 +33,17 @@ Weighted score:
 
 Mapped group status:
 
-- `< 1` → **UP**
-- `>= 1` and `< 2` → **DEGRADED**
-- `>= 2` and `< 3` → **DOWN**
-- `>= 3` → **MAINTENANCE**
+- `= 1` → **UP** (all members healthy)
+- `> 0` and `< 1` → **DEGRADED** (partial failure)
+- `= 0` → **DOWN** (all members down)
+
+### Example {#scoring-example}
+
+5 monitors with equal weight (`0.2` each), 1 is DOWN:
+
+```
+4 × 0.2 × 1 (UP) + 1 × 0.2 × 0 (DOWN) = 0.8 → DEGRADED
+```
 
 ## Latency aggregation {#latency-aggregation}
 
@@ -74,4 +82,4 @@ Group latency uses selected mode:
 
 - **Cannot save**: verify weights sum to `1`, min member count, and delay >= `1000`
 - **Unexpected stale status**: increase `executionDelay` so member checks finish first
-- **Group too optimistic/pessimistic**: rebalance weights toward critical components
+- **Group too sensitive/lenient**: adjust weights — higher weight on critical monitors makes their failure impact the group score more
