@@ -102,11 +102,7 @@
   <div class="mb-4 flex flex-col gap-3">
     <div class="flex items-center justify-between gap-3">
       <div class="flex items-center gap-2">
-        <Button
-          variant={showFilters ? "default" : "outline"}
-          size="sm"
-          onclick={() => (showFilters = !showFilters)}
-        >
+        <Button variant={showFilters ? "default" : "outline"} size="sm" onclick={() => (showFilters = !showFilters)}>
           <FilterIcon class="size-4" />
           Filters
           {#if hasActiveFilters}
@@ -127,16 +123,17 @@
       <div class="bg-muted/50 flex flex-wrap items-end gap-3 rounded-lg border p-3">
         <div class="flex flex-col gap-1">
           <span class="text-muted-foreground text-xs font-medium">Search</span>
-          <Input
-            type="text"
-            placeholder="Search by name or tag..."
-            bind:value={searchQuery}
-            class="w-60"
-          />
+          <Input type="text" placeholder="Search by name or tag..." bind:value={searchQuery} class="w-60" />
         </div>
         <div class="flex flex-col gap-1">
           <span class="text-muted-foreground text-xs font-medium">Status</span>
-          <Select.Root type="single" value={statusFilter} onValueChange={(v) => { if (v) statusFilter = v; }}>
+          <Select.Root
+            type="single"
+            value={statusFilter}
+            onValueChange={(v) => {
+              if (v) statusFilter = v;
+            }}
+          >
             <Select.Trigger class="w-40">
               {statusOptions.find((o) => o.value === statusFilter)?.label || "All Status"}
             </Select.Trigger>

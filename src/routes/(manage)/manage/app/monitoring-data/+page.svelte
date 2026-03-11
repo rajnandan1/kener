@@ -67,7 +67,11 @@
   let endDateTime = $state(formatDateTimeForInput(now));
   const limit = 50;
 
-  const hasActiveFilters = $derived(monitorTagFilter !== "ALL" || startDateTime !== formatDateTimeForInput(yesterday) || endDateTime !== formatDateTimeForInput(now));
+  const hasActiveFilters = $derived(
+    monitorTagFilter !== "ALL" ||
+      startDateTime !== formatDateTimeForInput(yesterday) ||
+      endDateTime !== formatDateTimeForInput(now)
+  );
 
   // Convert datetime string (YYYY-MM-DDTHH:mm) to Unix timestamp (seconds)
   function dateTimeStringToTimestamp(dateTimeStr: string): number {
@@ -205,11 +209,7 @@
 <div class="container mx-auto space-y-6 py-6">
   <div class="flex flex-col gap-3">
     <div class="flex items-center gap-2">
-      <Button
-        variant={showFilters ? "default" : "outline"}
-        size="sm"
-        onclick={() => (showFilters = !showFilters)}
-      >
+      <Button variant={showFilters ? "default" : "outline"} size="sm" onclick={() => (showFilters = !showFilters)}>
         <FilterIcon class="size-4" />
         Filters
         {#if hasActiveFilters}
