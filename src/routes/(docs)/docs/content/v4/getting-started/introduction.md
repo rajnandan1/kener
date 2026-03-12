@@ -22,6 +22,11 @@ Kener is built and maintained by [Rajnandan1](https://www.rajnandan.com). It is 
 6. Discord - [join](https://discord.gg/uSTpnuK9XR)
 7. Contribution - [contribute](/docs/v4/getting-started/contributing)
 
+## One Click Deployment {#one-click-deployment}
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/spSvic?referralCode=1Pn7vs&utm_medium=integration&utm_source=template&utm_campaign=generic)
+[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/1YRTMI?referralCode=rajnandan1)
+
 Ready to get started? Head over to the [Quick Start](/docs/v4/getting-started/quick-start) guide.
 
 ## Ways to Sponsor {#ways-to-sponsor}
