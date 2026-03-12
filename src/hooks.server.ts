@@ -1,4 +1,5 @@
 import { json, type Handle } from "@sveltejs/kit";
+import { sequence } from "@sveltejs/kit/hooks";
 import { VerifyAPIKey } from "$lib/server/controllers/apiController";
 import db from "$lib/server/db/db";
 import type { UnauthorizedResponse, NotFoundResponse } from "$lib/types/api";
@@ -58,7 +59,38 @@ function extractPagePath(pathname: string): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-export const handle: Handle = async ({ event, resolve }) => {
+// Content types that indicate a form submission (mirrors SvelteKit's internal CSRF check scope)
+const FORM_CONTENT_TYPES = ["application/x-www-form-urlencoded", "multipart/form-data", "text/plain"];
+
+function isFormContentType(request: Request): boolean {
+  const type = request.headers.get("content-type")?.split(";", 1)[0].trim()?.toLowerCase() ?? "";
+  return FORM_CONTENT_TYPES.includes(type);
+}
+
+// Custom CSRF handler: validates Origin when present, allows requests when absent.
+// When Origin is absent (e.g. Referrer-Policy: no-referrer), security relies on
+// SameSite=Lax cookies which prevent cross-site POST from carrying auth cookies.
+const csrfHandle: Handle = async ({ event, resolve }) => {
+  const { request } = event;
+
+  if (
+    isFormContentType(request) &&
+    (request.method === "POST" || request.method === "PUT" || request.method === "PATCH" || request.method === "DELETE")
+  ) {
+    const requestOrigin = request.headers.get("origin");
+    if (requestOrigin && requestOrigin !== "null") {
+      const requestHost = new URL(requestOrigin).host;
+      const expectedHost = event.url.host;
+      if (requestHost !== expectedHost) {
+        return new Response(`Cross-site ${request.method} form submissions are forbidden`, { status: 403 });
+      }
+    }
+  }
+
+  return resolve(event);
+};
+
+const apiAuthHandle: Handle = async ({ event, resolve }) => {
   const { pathname } = event.url;
 
   // Check if this is an API route that requires authentication
@@ -160,3 +192,5 @@ export const handle: Handle = async ({ event, resolve }) => {
   response.headers.delete("Link");
   return response;
 };
+
+export const handle = sequence(csrfHandle, apiAuthHandle);

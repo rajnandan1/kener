@@ -17,6 +17,9 @@ const config = {
     paths: {
       base: basePath,
     },
+    csrf: {
+      trustedOrigins: ["*"],
+    },
   },
 
   compilerOptions: {
