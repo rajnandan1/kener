@@ -1,12 +1,24 @@
 /**
  * Server-side i18n helper for translating strings outside of Svelte components.
- * Reads locale JSON files eagerly via Vite's import.meta.glob.
+ * Reads locale JSON files from disk using Node.js fs (compatible with both
+ * Vite dev server and esbuild production bundle).
  */
 
-const localeModules = import.meta.glob("/src/lib/locales/*.json", {
-  eager: true,
-  import: "default",
-}) as Record<string, { name: string; mappings: Record<string, string> }>;
+import { readdirSync, readFileSync } from "fs";
+import { join } from "path";
+
+const localeModules: Record<string, { name: string; mappings: Record<string, string> }> = {};
+
+const localesDir = join(process.cwd(), "src", "lib", "locales");
+try {
+  const files = readdirSync(localesDir).filter((f) => f.endsWith(".json"));
+  for (const file of files) {
+    const key = `/src/lib/locales/${file}`;
+    localeModules[key] = JSON.parse(readFileSync(join(localesDir, file), "utf-8"));
+  }
+} catch {
+  console.warn("Could not load locale files from", localesDir);
+}
 
 const localeCache = new Map<string, Record<string, string>>();
 

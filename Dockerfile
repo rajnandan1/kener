@@ -164,6 +164,9 @@ COPY --chown=node:node --from=builder /app/src/lib/server/db/seedMonitorData.ts 
 COPY --chown=node:node --from=builder /app/src/lib/server/db/seedPagesData.ts     ./src/lib/server/db/seedPagesData.ts
 COPY --chown=node:node --from=builder /app/src/lib/server/templates/general       ./src/lib/server/templates/general
 
+# Locale JSON files (read at runtime by server-side i18n)
+COPY --chown=node:node --from=builder /app/src/lib/locales ./src/lib/locales
+
 # Build output (SvelteKit client/server + esbuild main.js) — changes most often
 COPY --chown=node:node --from=builder /app/build ./build
 
