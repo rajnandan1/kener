@@ -319,6 +319,13 @@
           >
             <img src="https://railway.com/button.svg" alt="Deploy on Railway" class="h-10" />
           </a>
+          <a
+            href="https://zeabur.com/templates/1YRTMI?referralCode=rajnandan1"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img src="https://zeabur.com/button.svg" alt="Deploy on Zeabur" class="h-10" />
+          </a>
         </div>
 
         {#if getMetrics().length > 0}
