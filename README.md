@@ -174,6 +174,8 @@ For the full quick start (including local Docker builds and dev mode), see the d
 
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/spSvic?referralCode=1Pn7vs&utm_medium=integration&utm_source=template&utm_campaign=generic)
 
+[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/9LPJ55?referralCode=pan93412&utm_medium=integration&utm_source=template&utm_campaign=generic)
+
 ## Features
 
 Kener combines public status page essentials with advanced admin workflows.
