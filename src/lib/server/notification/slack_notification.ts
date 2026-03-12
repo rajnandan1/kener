@@ -1,5 +1,6 @@
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import Mustache from "mustache";
+import version from "../../version.js";
 
 export default async function send(
   slackBody: string,
@@ -18,7 +19,7 @@ export default async function send(
   }
 
   const defaultHeaders = [
-    { key: "user-agent", value: "Kener/4.0.0" },
+    { key: "user-agent", value: `Kener/${version()}` },
     { key: "accept", value: "application/json" },
     { key: "content-type", value: "application/json" },
   ];
