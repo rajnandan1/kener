@@ -75,10 +75,7 @@ const csrfHandle: Handle = async ({ event, resolve }) => {
 
   if (
     isFormContentType(request) &&
-    (request.method === "POST" ||
-      request.method === "PUT" ||
-      request.method === "PATCH" ||
-      request.method === "DELETE")
+    (request.method === "POST" || request.method === "PUT" || request.method === "PATCH" || request.method === "DELETE")
   ) {
     const requestOrigin = request.headers.get("origin");
     if (requestOrigin && requestOrigin !== "null") {
