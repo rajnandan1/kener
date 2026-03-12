@@ -10,12 +10,13 @@ export default async function send(
   headers?: string,
 ) {
   // Process trigger meta for environment secrets
-  let envSecrets = GetRequiredSecrets(webhookBody + headers);
+  let envSecrets = GetRequiredSecrets(webhookBody + headers + webhookURL);
 
   for (let i = 0; i < envSecrets.length; i++) {
     const secret = envSecrets[i];
     if (secret.replace !== undefined) {
       webhookBody = ReplaceAllOccurrences(webhookBody, secret.find, secret.replace);
+      webhookURL = ReplaceAllOccurrences(webhookURL, secret.find, secret.replace);
       if (headers) {
         headers = ReplaceAllOccurrences(headers, secret.find, secret.replace);
       }
