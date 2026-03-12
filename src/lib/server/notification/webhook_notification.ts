@@ -2,6 +2,7 @@ import type { WebhookTemplateJson } from "../types/db";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import Mustache from "mustache";
 import type { SiteDataForNotification, TemplateVariableMap } from "./types.js";
+import version from "../../version.js";
 
 export default async function send(
   webhookBody: string,
@@ -10,12 +11,13 @@ export default async function send(
   headers?: string,
 ) {
   // Process trigger meta for environment secrets
-  let envSecrets = GetRequiredSecrets(webhookBody + headers);
+  let envSecrets = GetRequiredSecrets(webhookBody + headers + webhookURL);
 
   for (let i = 0; i < envSecrets.length; i++) {
     const secret = envSecrets[i];
     if (secret.replace !== undefined) {
       webhookBody = ReplaceAllOccurrences(webhookBody, secret.find, secret.replace);
+      webhookURL = ReplaceAllOccurrences(webhookURL, secret.find, secret.replace);
       if (headers) {
         headers = ReplaceAllOccurrences(headers, secret.find, secret.replace);
       }
@@ -23,7 +25,7 @@ export default async function send(
   }
 
   const defaultHeaders = [
-    { key: "user-agent", value: "Kener/4.0.0" },
+    { key: "user-agent", value: `Kener/${version()}` },
     { key: "accept", value: "application/json" },
     { key: "content-type", value: "application/json" },
   ];

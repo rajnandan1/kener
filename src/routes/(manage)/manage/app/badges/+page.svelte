@@ -17,8 +17,10 @@
   import type { SiteDataTransformed } from "$lib/server/controllers/siteDataController";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import { availableLocalesList } from "$lib/stores/i18n";
   // Monitors state
   let monitors = $state<MonitorRecord[]>([]);
+  let activatedLocales = $state<{ code: string; name: string }[]>([]);
   let loading = $state(true);
 
   // Badge configuration
@@ -31,7 +33,8 @@
     labelColor: "#555",
     color: "#0079FF",
     style: "flat" as BadgeStyle,
-    metric: "average" as "average" | "maximum" | "minimum"
+    metric: "average" as "average" | "maximum" | "minimum",
+    locale: ""
   });
 
   // Preview state
@@ -77,6 +80,9 @@
     }
     if (badgeConfig.style !== "flat") {
       params.set("style", badgeConfig.style);
+    }
+    if (badgeConfig.badgeType === "status" && badgeConfig.locale) {
+      params.set("locale", badgeConfig.locale);
     }
 
     const queryString = params.toString();
@@ -126,11 +132,30 @@
     previewKey++;
   }
 
+  async function fetchActivatedLocales() {
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "getAllSiteData" })
+      });
+      const result = await response.json();
+      if (!result.error && result.i18n?.locales) {
+        const selectedCodes = new Set(
+          result.i18n.locales.filter((l: { selected: boolean }) => l.selected).map((l: { code: string }) => l.code)
+        );
+        activatedLocales = availableLocalesList.filter((l) => selectedCodes.has(l.code));
+      }
+    } catch {
+      // Ignore errors
+    }
+  }
+
   onMount(async () => {
     protocol = window.location.protocol;
     domain = window.location.host;
     loading = true;
-    await fetchMonitors();
+    await Promise.all([fetchMonitors(), fetchActivatedLocales()]);
     loading = false;
   });
 </script>
@@ -204,6 +229,32 @@
                   {/if}
                 </p>
               </div>
+
+              <!-- Locale (only for status badges) -->
+              {#if badgeConfig.badgeType === "status" && activatedLocales.length > 0}
+                <div class="flex flex-col gap-2">
+                  <Label for="badge-locale">Language</Label>
+                  <Select.Root
+                    type="single"
+                    value={badgeConfig.locale || "en"}
+                    onValueChange={(v) => {
+                      if (v) badgeConfig.locale = v === "en" ? "" : v;
+                    }}
+                  >
+                    <Select.Trigger id="badge-locale" class="w-full">
+                      {activatedLocales.find((l) => l.code === (badgeConfig.locale || "en"))?.name || "English"}
+                    </Select.Trigger>
+                    <Select.Content>
+                      {#each activatedLocales as locale (locale.code)}
+                        <Select.Item value={locale.code}>{locale.name}</Select.Item>
+                      {/each}
+                    </Select.Content>
+                  </Select.Root>
+                  <p class="text-muted-foreground text-xs">
+                    Status text will be shown in the selected language
+                  </p>
+                </div>
+              {/if}
 
               <!-- Duration (only for uptime/latency) -->
               {#if badgeConfig.badgeType !== "status"}

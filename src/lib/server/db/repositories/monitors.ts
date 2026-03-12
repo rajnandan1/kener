@@ -96,6 +96,12 @@ export class MonitorsRepository extends BaseRepository {
         builder.whereIn("tag", data.tags as string[]);
       });
     }
+    if (!!data.search) {
+      const term = `%${data.search}%`;
+      query = query.andWhere((builder: KnexType.QueryBuilder) => {
+        builder.where("name", "like", term).orWhere("tag", "like", term);
+      });
+    }
     return await query.orderBy("id", "desc");
   }
 

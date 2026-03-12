@@ -3,7 +3,7 @@ import { GetMinuteStartNowTimestampUTC, BeginningOfMinute, BeginningOfDay } from
 import { GetPageByPathWithMonitors, GetLatestMonitoringDataAllActive } from "./controller.js";
 import { GetMonitorsParsed } from "./monitorsController.js";
 import { GetStatusSummary, GetStatusBgColor } from "../../clientTools";
-import { formatDistanceStrict } from "date-fns";
+
 import type {
   IncidentRecord,
   IncidentCommentRecord,
@@ -32,7 +32,8 @@ export interface NotificationEvent {
   eventTitle: string;
   eventDate: string;
   eventType: string;
-  eventDuration: string;
+  eventStartDateTime: number;
+  eventEndDateTime: number | null;
   eventStatus: string;
 }
 
@@ -220,11 +221,6 @@ export const BuildNotificationPayload = (
 ): NotificationPayload => {
   const notifications: Array<NotificationEvent & { sortTs: number }> = [];
 
-  const durationFromRange = (startTs: number, endTs: number | null): string => {
-    const effectiveEnd = Math.max(startTs, endTs ?? nowTs);
-    return formatDistanceStrict(new Date(startTs * 1000), new Date(effectiveEnd * 1000));
-  };
-
   for (const incident of ongoingIncidents) {
     const ts = incident.start_date_time;
     notifications.push({
@@ -233,7 +229,8 @@ export const BuildNotificationPayload = (
       eventTitle: incident.title,
       eventDate: new Date(ts * 1000).toISOString(),
       eventType: "incident",
-      eventDuration: durationFromRange(incident.start_date_time, incident.end_date_time),
+      eventStartDateTime: incident.start_date_time,
+      eventEndDateTime: incident.end_date_time,
       eventStatus: incident.state,
     });
   }
@@ -246,7 +243,8 @@ export const BuildNotificationPayload = (
       eventTitle: incident.title,
       eventDate: new Date(ts * 1000).toISOString(),
       eventType: "incident",
-      eventDuration: durationFromRange(incident.start_date_time, incident.end_date_time),
+      eventStartDateTime: incident.start_date_time,
+      eventEndDateTime: incident.end_date_time,
       eventStatus: incident.state,
     });
   }
@@ -259,7 +257,8 @@ export const BuildNotificationPayload = (
       eventTitle: maintenance.title,
       eventDate: new Date(ts * 1000).toISOString(),
       eventType: "maintenance",
-      eventDuration: durationFromRange(maintenance.start_date_time, maintenance.end_date_time),
+      eventStartDateTime: maintenance.start_date_time,
+      eventEndDateTime: maintenance.end_date_time,
       eventStatus: GC.ONGOING,
     });
   }
@@ -272,7 +271,8 @@ export const BuildNotificationPayload = (
       eventTitle: maintenance.title,
       eventDate: new Date(ts * 1000).toISOString(),
       eventType: "maintenance",
-      eventDuration: durationFromRange(maintenance.start_date_time, maintenance.end_date_time),
+      eventStartDateTime: maintenance.start_date_time,
+      eventEndDateTime: maintenance.end_date_time,
       eventStatus: GC.SCHEDULED,
     });
   }
@@ -285,7 +285,8 @@ export const BuildNotificationPayload = (
       eventTitle: maintenance.title,
       eventDate: new Date(ts * 1000).toISOString(),
       eventType: "maintenance",
-      eventDuration: durationFromRange(maintenance.start_date_time, maintenance.end_date_time),
+      eventStartDateTime: maintenance.start_date_time,
+      eventEndDateTime: maintenance.end_date_time,
       eventStatus: GC.COMPLETED,
     });
   }

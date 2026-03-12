@@ -9,6 +9,9 @@
   import { Label } from "$lib/components/ui/label/index.js";
   import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
+  import SearchIcon from "@lucide/svelte/icons/search";
+  import FilterIcon from "@lucide/svelte/icons/filter";
+  import XIcon from "@lucide/svelte/icons/x";
   import { format } from "date-fns";
   import { onMount } from "svelte";
   import { resolve } from "$app/paths";
@@ -58,10 +61,17 @@
   let totalPages = $state(0);
   let totalCount = $state(0);
   let pageNo = $state(1);
+  let showFilters = $state(false);
   let monitorTagFilter = $state("ALL");
   let startDateTime = $state(formatDateTimeForInput(yesterday));
   let endDateTime = $state(formatDateTimeForInput(now));
   const limit = 50;
+
+  const hasActiveFilters = $derived(
+    monitorTagFilter !== "ALL" ||
+      startDateTime !== formatDateTimeForInput(yesterday) ||
+      endDateTime !== formatDateTimeForInput(now)
+  );
 
   // Convert datetime string (YYYY-MM-DDTHH:mm) to Unix timestamp (seconds)
   function dateTimeStringToTimestamp(dateTimeStr: string): number {
@@ -69,20 +79,17 @@
     return Math.floor(date.getTime() / 1000);
   }
 
-  // Validate date range (max 30 days)
-  function validateAndFetch() {
+  // Validate date range (max 30 days) and clamp values
+  function validateDates() {
     const start = new Date(startDateTime);
     const end = new Date(endDateTime);
 
-    // Ensure start is before end
     if (start > end) {
       startDateTime = endDateTime;
     }
 
-    // Check if range exceeds 30 days
     const daysDiff = Math.abs((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
     if (daysDiff > 30) {
-      // Adjust end datetime to be 30 days from start
       const newEnd = new Date(start);
       newEnd.setDate(newEnd.getDate() + 30);
       if (newEnd > now) {
@@ -91,7 +98,18 @@
         endDateTime = formatDateTimeForInput(newEnd);
       }
     }
+  }
 
+  function applyFilters() {
+    validateDates();
+    pageNo = 1;
+    fetchData();
+  }
+
+  function clearFilters() {
+    monitorTagFilter = "ALL";
+    startDateTime = formatDateTimeForInput(yesterday);
+    endDateTime = formatDateTimeForInput(now);
     pageNo = 1;
     fetchData();
   }
@@ -170,12 +188,9 @@
     }
   }
 
-  // Handle monitor tag filter change
   function handleMonitorChange(value: string | undefined) {
     if (value) {
       monitorTagFilter = value;
-      pageNo = 1;
-      fetchData();
     }
   }
 
@@ -192,53 +207,70 @@
 </script>
 
 <div class="container mx-auto space-y-6 py-6">
-  <!-- Header -->
-  <div class="flex flex-wrap items-center justify-between gap-4">
-    <div class="flex flex-wrap items-center gap-3">
-      <!-- Date Time Range Inputs -->
-      <div class="flex items-center gap-2">
-        <div class="flex items-center gap-1.5">
-          <Label for="start-datetime" class="text-muted-foreground text-sm">From</Label>
-          <Input
-            id="start-datetime"
-            type="datetime-local"
-            bind:value={startDateTime}
-            onchange={validateAndFetch}
-            min={formatDateTimeForInput(maxDaysAgoDate)}
-            max={endDateTime}
-            class="w-44"
-          />
-        </div>
-        <div class="flex items-center gap-1.5">
-          <Label for="end-datetime" class="text-muted-foreground text-sm">To</Label>
-          <Input
-            id="end-datetime"
-            type="datetime-local"
-            bind:value={endDateTime}
-            onchange={validateAndFetch}
-            min={startDateTime}
-            max={formatDateTimeForInput(now)}
-            class="w-44"
-          />
-        </div>
-      </div>
-
-      <!-- Monitor Filter -->
-      <Select.Root type="single" value={monitorTagFilter} onValueChange={handleMonitorChange}>
-        <Select.Trigger class="w-48">
-          {monitorTagFilter === "ALL" ? "All Monitors" : monitorTagFilter}
-        </Select.Trigger>
-        <Select.Content>
-          <Select.Item value="ALL">All Monitors</Select.Item>
-          {#each monitors as monitor (monitor.tag)}
-            <Select.Item value={monitor.tag}>{monitor.name || monitor.tag}</Select.Item>
-          {/each}
-        </Select.Content>
-      </Select.Root>
+  <div class="flex flex-col gap-3">
+    <div class="flex items-center gap-2">
+      <Button variant={showFilters ? "default" : "outline"} size="sm" onclick={() => (showFilters = !showFilters)}>
+        <FilterIcon class="size-4" />
+        Filters
+        {#if hasActiveFilters}
+          <Badge variant="secondary" class="ml-1 px-1.5 py-0 text-[10px]">ON</Badge>
+        {/if}
+      </Button>
       {#if loading}
         <Spinner class="size-5" />
       {/if}
     </div>
+
+    {#if showFilters}
+      <div class="bg-muted/50 flex flex-wrap items-end gap-3 rounded-lg border p-3">
+        <div class="flex flex-col gap-1">
+          <Label for="start-datetime" class="text-muted-foreground text-xs font-medium">From</Label>
+          <Input
+            id="start-datetime"
+            type="datetime-local"
+            bind:value={startDateTime}
+            min={formatDateTimeForInput(maxDaysAgoDate)}
+            max={endDateTime}
+            class="w-48"
+          />
+        </div>
+        <div class="flex flex-col gap-1">
+          <Label for="end-datetime" class="text-muted-foreground text-xs font-medium">To</Label>
+          <Input
+            id="end-datetime"
+            type="datetime-local"
+            bind:value={endDateTime}
+            min={startDateTime}
+            max={formatDateTimeForInput(now)}
+            class="w-48"
+          />
+        </div>
+        <div class="flex flex-col gap-1">
+          <span class="text-muted-foreground text-xs font-medium">Monitor</span>
+          <Select.Root type="single" value={monitorTagFilter} onValueChange={handleMonitorChange}>
+            <Select.Trigger class="w-48">
+              {monitorTagFilter === "ALL" ? "All Monitors" : monitorTagFilter}
+            </Select.Trigger>
+            <Select.Content>
+              <Select.Item value="ALL">All Monitors</Select.Item>
+              {#each monitors as monitor (monitor.tag)}
+                <Select.Item value={monitor.tag}>{monitor.name || monitor.tag}</Select.Item>
+              {/each}
+            </Select.Content>
+          </Select.Root>
+        </div>
+        <Button size="sm" onclick={applyFilters}>
+          <SearchIcon class="size-4" />
+          Search
+        </Button>
+        {#if hasActiveFilters}
+          <Button variant="ghost" size="sm" onclick={clearFilters}>
+            <XIcon class="size-4" />
+            Clear
+          </Button>
+        {/if}
+      </div>
+    {/if}
   </div>
 
   <!-- Data Table -->

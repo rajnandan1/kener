@@ -7,7 +7,7 @@ const template =
   ' "alert_cta_url": "{{alert_cta_url}}",\n ' +
   ' "alert_cta_text": "{{alert_cta_text}}",\n  ' +
   '"alert_incident_id": {{#alert_incident_id}}{{alert_incident_id}}{{/alert_incident_id}}{{^alert_incident_id}}null{{/alert_incident_id}},\n  ' +
-  '"alert_incident_url": {{#alert_incident_url}}{{alert_incident_url}}{{/alert_incident_url}}{{^alert_incident_url}}null{{/alert_incident_url}},\n  ' +
+  '"alert_incident_url": {{#alert_incident_url}}"{{alert_incident_url}}"{{/alert_incident_url}}{{^alert_incident_url}}null{{/alert_incident_url}},\n  ' +
   '"alert_failure_threshold": {{alert_failure_threshold}},\n ' +
   ' "alert_success_threshold": {{alert_success_threshold}},\n  ' +
   '"is_resolved": {{is_resolved}},\n  "is_triggered": {{is_triggered}},\n  ' +

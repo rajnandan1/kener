@@ -6,7 +6,7 @@
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import ICONS from "$lib/icons";
   import clientResolver from "$lib/client/resolver.js";
-  import { formatDate } from "$lib/stores/datetime";
+  import { formatDate, formatDuration } from "$lib/stores/datetime";
   import { t } from "$lib/stores/i18n";
   import type { NotificationEvent } from "$lib/server/controllers/dashboardController.js";
   import Calendar from "@lucide/svelte/icons/calendar-1";
@@ -106,8 +106,8 @@
             class="hover:bg-muted/60 block border-b px-4 py-3 last:border-b-0"
           >
             <div class="my-0.5 flex items-center justify-between gap-2 text-xs">
-              <span class="text-muted-foreground text-[11px] uppercase">{item.eventType}</span>
-              <span class="text-{item.eventStatus.toLowerCase()}">{item.eventStatus}</span>
+              <span class="text-muted-foreground text-[11px] uppercase">{$t(item.eventType)}</span>
+              <span class="text-{item.eventStatus.toLowerCase()}">{$t(item.eventStatus)}</span>
             </div>
             <div class="flex items-start justify-between gap-2">
               <p class="line-clamp-2 text-sm">{item.eventTitle}</p>
@@ -116,7 +116,7 @@
               <span>{$formatDate(item.eventDate, "PPp")}</span>
 
               <span>•</span>
-              <span>{item.eventDuration}</span>
+              <span>{$formatDuration(item.eventStartDateTime, item.eventEndDateTime, $t("Ongoing"))}</span>
             </div>
           </a>
         {/each}

@@ -9,6 +9,7 @@ export interface MonitorFilter {
   tag?: string;
   is_hidden?: string;
   tags?: string[];
+  search?: string;
 }
 
 export interface TriggerFilter {

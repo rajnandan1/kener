@@ -5,22 +5,24 @@ import { GetLastMonitoringValue } from "../cache/setGet.js";
 import { GetLatestMonitoringData } from "../controllers/controller.js";
 
 /**
- * Numeric scores for each status.
- * UP = 0, DEGRADED = 1, DOWN = 2, MAINTENANCE = 3
+ * Numeric scores for each status (normalized 0–1).
+ * UP = 1, DEGRADED = 0.5, DOWN = 0
+ * MAINTENANCE members are treated as UP (score 1).
+ *
+ * Weighted sum = Σ(weight × score), weights should sum to 1.
+ * Result: 1 → UP, (0, 1) → DEGRADED, 0 → DOWN
  */
 const STATUS_SCORE: Record<string, number> = {
-  [GC.UP]: 0,
-  [GC.DEGRADED]: 1,
-  [GC.DOWN]: 2,
-  [GC.MAINTENANCE]: 3,
+  [GC.UP]: 1,
+  [GC.DEGRADED]: 0.5,
+  [GC.DOWN]: 0,
 };
 
 /** Map a weighted score back to a status string. */
 function scoreToStatus(score: number): string {
-  if (score >= 3) return GC.MAINTENANCE;
-  if (score >= 2) return GC.DOWN;
-  if (score >= 1) return GC.DEGRADED;
-  return GC.UP;
+  if (score >= 1) return GC.UP;
+  if (score > 0) return GC.DEGRADED;
+  return GC.DOWN;
 }
 
 class GroupCall {
@@ -64,16 +66,17 @@ class GroupCall {
     }
 
     // --- Status calculation via weighted scores ---
-    // Each status has a numeric score: UP=0, DEGRADED=1, DOWN=2, MAINTENANCE=3
+    // Each status has a normalized score: UP=1, DEGRADED=0.5, DOWN=0
+    // MAINTENANCE members are treated as UP (score 1).
     // Weighted sum = Σ(weight × score), weights should sum to 1.
-    // Result is mapped back: <1 → UP, ≥1 → DEGRADED, ≥2 → DOWN, ≥3 → MAINTENANCE
+    // Result: 1 → UP, (0,1) → DEGRADED, 0 → DOWN
     let weightedScore = 0;
     let totalWeight = 0;
 
     for (const member of members) {
       const data = statusMap.get(member.tag);
       if (!data) continue;
-      const score = STATUS_SCORE[data.status] ?? 0;
+      const score = STATUS_SCORE[data.status] ?? 1;
       weightedScore += member.weight * score;
       totalWeight += member.weight;
     }
