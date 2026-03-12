@@ -81,7 +81,7 @@ const csrfHandle: Handle = async ({ event, resolve }) => {
       request.method === "DELETE")
   ) {
     const requestOrigin = request.headers.get("origin");
-    if (requestOrigin) {
+    if (requestOrigin && requestOrigin !== "null") {
       const requestHost = new URL(requestOrigin).host;
       const expectedHost = event.url.host;
       if (requestHost !== expectedHost) {
