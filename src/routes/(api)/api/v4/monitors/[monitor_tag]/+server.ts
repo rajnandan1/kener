@@ -98,7 +98,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
       updateData.type_data = JSON.stringify(mergedTypeData);
     }
   } else {
-    updateData.type_data = existingMonitor.type_data;
+    updateData.type_data = JSON.stringify(existingMonitor.type_data);
   }
 
   if (body.monitor_settings_json !== undefined) {
@@ -119,7 +119,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
       updateData.monitor_settings_json = JSON.stringify(mergedSettings);
     }
   } else {
-    updateData.monitor_settings_json = existingMonitor.monitor_settings_json;
+    updateData.monitor_settings_json = JSON.stringify(existingMonitor.monitor_settings_json);
   }
 
   await db.updateMonitor(updateData as unknown as Parameters<typeof db.updateMonitor>[0]);
