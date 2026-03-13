@@ -26,7 +26,8 @@
     MonitorHeartbeat,
     MonitorGroup,
     MonitorGamedig,
-    MonitorNone
+    MonitorNone,
+    MonitorGrpc
   } from "../types/index.js";
 
   interface Props {
@@ -107,7 +108,8 @@
     SSL: "SSL Certificate",
     SQL: "Database",
     HEARTBEAT: "Heartbeat",
-    GAMEDIG: "Game Server"
+    GAMEDIG: "Game Server",
+    GRPC: "gRPC Health"
   };
 
   // Validation for each monitor type
@@ -203,6 +205,14 @@
         if (!IsValidPort(data.port)) return false;
         if (!data.gameId) return false;
         if (!data.timeout || data.timeout < GAMEDIG_SOCKET_TIMEOUT) return false;
+        return true;
+      }
+
+      case "GRPC": {
+        const data = typeData as any;
+        if (!data.host) return false;
+        if (!data.port || data.port < 1 || data.port > 65535) return false;
+        if (!data.timeout || data.timeout < 1) return false;
         return true;
       }
 
@@ -313,6 +323,8 @@
         <MonitorGroup bind:data={typeData} {availableMonitors} tag={monitor.tag} />
       {:else if monitor.monitor_type === "GAMEDIG"}
         <MonitorGamedig bind:data={typeData} />
+      {:else if monitor.monitor_type === "GRPC"}
+        <MonitorGrpc bind:data={typeData} />
       {:else if monitor.monitor_type === "NONE"}
         <MonitorNone bind:data={typeData} />
       {/if}

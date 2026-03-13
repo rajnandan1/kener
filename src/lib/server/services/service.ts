@@ -8,6 +8,7 @@ import SqlCall from "./sqlCall.js";
 import HeartbeatCall from "./heartbeatCall.js";
 import GamedigCall from "./gamedigCall.js";
 import NoneCall from "./noneCall.js";
+import GrpcCall from "./grpcCall.js";
 
 import type {
   ApiMonitor,
@@ -19,6 +20,7 @@ import type {
   SqlMonitor,
   HeartbeatMonitor,
   GamedigMonitor,
+  GrpcMonitor,
   MonitoringResult,
   NoneMonitor,
 } from "../types/monitor.js";
@@ -33,6 +35,7 @@ type ServiceCall =
   | SqlCall
   | HeartbeatCall
   | GamedigCall
+  | GrpcCall
   | NoneCall;
 
 export interface MonitorWithType {
@@ -64,6 +67,8 @@ class Service {
       this.service = new HeartbeatCall(monitor as HeartbeatMonitor);
     } else if (monitor.monitor_type === "GAMEDIG") {
       this.service = new GamedigCall(monitor as GamedigMonitor);
+    } else if (monitor.monitor_type === "GRPC") {
+      this.service = new GrpcCall(monitor as GrpcMonitor);
     } else {
       this.service = new NoneCall(monitor as NoneMonitor);
     }

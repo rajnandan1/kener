@@ -78,6 +78,14 @@ export interface GamedigMonitorTypeData {
   requestRules?: boolean;
 }
 
+export interface GrpcMonitorTypeData {
+  host: string;
+  port: number;
+  service?: string;
+  tls?: boolean;
+  timeout?: number;
+}
+
 export type MonitorTypeData =
   | ApiMonitorTypeData
   | DnsMonitorTypeData
@@ -87,7 +95,8 @@ export type MonitorTypeData =
   | SqlMonitorTypeData
   | HeartbeatMonitorTypeData
   | GroupMonitorTypeData
-  | GamedigMonitorTypeData;
+  | GamedigMonitorTypeData
+  | GrpcMonitorTypeData;
 
 export interface Monitor<T = MonitorTypeData> {
   tag: string;
@@ -105,6 +114,7 @@ export type SqlMonitor = Monitor<SqlMonitorTypeData>;
 export type HeartbeatMonitor = Monitor<HeartbeatMonitorTypeData>;
 export type GroupMonitor = Monitor<GroupMonitorTypeData>;
 export type GamedigMonitor = Monitor<GamedigMonitorTypeData>;
+export type GrpcMonitor = Monitor<GrpcMonitorTypeData>;
 
 export interface EvalResponse {
   status?: string;

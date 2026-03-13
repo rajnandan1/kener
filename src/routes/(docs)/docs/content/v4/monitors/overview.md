@@ -49,6 +49,7 @@ UP + MAINTENANCE + DEGRADED + DOWN
 - [SQL Monitor](/docs/v4/monitors/sql) — Run SQL query against DB connection
 - [Heartbeat Monitor](/docs/v4/monitors/heartbeat) — Push-based health signal
 - [GameDig Monitor](/docs/v4/monitors/gamedig) — Game server query checks
+- [gRPC Monitor](/docs/v4/monitors/grpc) — gRPC Health Checking Protocol
 - [Group Monitor](/docs/v4/monitors/group) — Weighted aggregate of member monitors
 
 ## Related docs {#related-docs}

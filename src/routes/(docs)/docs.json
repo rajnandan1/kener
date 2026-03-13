@@ -114,6 +114,10 @@
                           "content": "v4/monitors/gamedig"
                         },
                         {
+                          "title": "gRPC Monitors",
+                          "content": "v4/monitors/grpc"
+                        },
+                        {
                           "title": "Group Monitors",
                           "content": "v4/monitors/group"
                         },

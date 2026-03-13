@@ -15,6 +15,7 @@ export const MONITOR_TYPES = [
   "SQL",
   "HEARTBEAT",
   "GAMEDIG",
+  "GRPC",
 ] as const;
 export type MonitorType = (typeof MONITOR_TYPES)[number];
 
