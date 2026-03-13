@@ -61,6 +61,7 @@ import {
   AddMonitorToPage,
   RemoveMonitorFromPage,
   GetPageMonitors,
+  ReorderPageMonitors,
 } from "$lib/server/controllers/pagesController.js";
 import {
   CreateMaintenance,
@@ -408,6 +409,10 @@ export async function POST({ request, cookies }) {
     } else if (action == "removeMonitorFromPage") {
       AdminEditorCan(userDB.role);
       await RemoveMonitorFromPage(data.page_id, data.monitor_tag);
+      resp = { success: true };
+    } else if (action == "reorderPageMonitors") {
+      AdminEditorCan(userDB.role);
+      await ReorderPageMonitors(data.page_id, data.monitor_tags);
       resp = { success: true };
     }
     // ============ Maintenance Actions ============

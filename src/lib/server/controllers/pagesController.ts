@@ -107,6 +107,7 @@ export async function AddMonitorToPage(
   page_id: number,
   monitor_tag: string,
   monitor_settings_json?: string | null,
+  position?: number,
 ): Promise<void> {
   // Check if page exists
   const page = await db.getPageById(page_id);
@@ -120,11 +121,36 @@ export async function AddMonitorToPage(
     throw new Error(`Monitor "${monitor_tag}" already exists on this page`);
   }
 
+  // If no position specified, append at end
+  let finalPosition = position;
+  if (finalPosition === undefined) {
+    const existing = await db.getPageMonitors(page_id);
+    finalPosition = existing.length > 0 ? Math.max(...existing.map((m) => m.position)) + 1 : 0;
+  }
+
   await db.addMonitorToPage({
     page_id,
     monitor_tag,
     monitor_settings_json: monitor_settings_json || null,
+    position: finalPosition,
   });
+}
+
+/**
+ * Reorder monitors on a page
+ */
+export async function ReorderPageMonitors(page_id: number, monitor_tags: string[]): Promise<void> {
+  const page = await db.getPageById(page_id);
+  if (!page) {
+    throw new Error(`Page with id ${page_id} not found`);
+  }
+
+  const monitorPositions = monitor_tags.map((tag, index) => ({
+    monitor_tag: tag,
+    position: index,
+  }));
+
+  await db.updatePageMonitorPositions(page_id, monitorPositions);
 }
 
 /**

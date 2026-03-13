@@ -30,6 +30,7 @@ export async function seed(knex: Knex): Promise<void> {
             page_id: pageId,
             monitor_tag: "earth",
             monitor_settings_json: "",
+            position: 0,
             created_at: knex.fn.now(),
             updated_at: knex.fn.now(),
           });
@@ -42,6 +43,7 @@ export async function seed(knex: Knex): Promise<void> {
             page_id: pageId,
             monitor_tag: "kener",
             monitor_settings_json: "",
+            position: 1,
             created_at: knex.fn.now(),
             updated_at: knex.fn.now(),
           });
