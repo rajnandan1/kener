@@ -18,8 +18,8 @@ Group monitors aggregate the status of child monitors using weighted scores. The
 - **TTL:** 86400 seconds (1 day)
 - `getCache()` returns cached value if present — **fetcher is only called on cache miss**
 - Cache is updated in two places:
-  - `monitorResponseQueue.ts` — after cron-driven monitor execution completes
-  - API PATCH endpoints (`api/v4/monitors/[tag]/data/`) — after external status updates
+    - `monitorResponseQueue.ts` — after cron-driven monitor execution completes
+    - API PATCH endpoints (`api/v4/monitors/[tag]/data/`) — after external status updates
 
 ## Key Invariant
 

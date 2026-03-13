@@ -63,11 +63,11 @@ Group latency uses selected mode:
 
 ## Configuration fields {#configuration-fields}
 
-| Field                | Type                   | Default | Notes                                             |
-| :------------------- | :--------------------- | :------ | :------------------------------------------------ |
-| `monitors`           | `Array<{tag, weight}>` | `[]`    | Required, min 2                                   |
-| `executionDelay`     | `number`               | `1000`  | ms to wait before aggregating; must be >= 1000    |
-| `latencyCalculation` | `AVG\|MAX\|MIN`        | `AVG`   |                                                   |
+| Field                | Type                   | Default | Notes                                          |
+| :------------------- | :--------------------- | :------ | :--------------------------------------------- |
+| `monitors`           | `Array<{tag, weight}>` | `[]`    | Required, min 2                                |
+| `executionDelay`     | `number`               | `1000`  | ms to wait before aggregating; must be >= 1000 |
+| `latencyCalculation` | `AVG\|MAX\|MIN`        | `AVG`   |                                                |
 
 ## Example {#example}
 
