@@ -296,6 +296,10 @@
                   "collapsible": false,
                   "pages": [
                     {
+                      "title": "v4.0.16",
+                      "content": "v4/changelogs/v4.0.16"
+                    },
+                    {
                       "title": "v4.0.14",
                       "content": "v4/changelogs/v4.0.14"
                     },
