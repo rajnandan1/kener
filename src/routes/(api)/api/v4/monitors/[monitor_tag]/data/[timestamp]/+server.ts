@@ -9,6 +9,7 @@ import type {
 } from "$lib/types/api";
 import GC from "$lib/global-constants";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
+import { SetLastMonitoringValue } from "$lib/server/cache/setGet";
 
 export const GET: RequestHandler = async ({ params, locals }) => {
   // Monitor is validated by middleware and available in locals
@@ -152,6 +153,12 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     latency: latency,
     type: GC.MANUAL,
   });
+
+  // Update the cache so group monitors (and other cache consumers) see the latest status
+  const latestData = await db.getLatestMonitoringData(monitorTag);
+  if (latestData) {
+    await SetLastMonitoringValue(monitorTag, latestData);
+  }
 
   // Fetch the updated data
   const updatedData = await db.getMonitoringDataAt(monitorTag, timestamp);
