@@ -53,13 +53,21 @@ Group latency uses selected mode:
 - `MAX`: slowest member latency
 - `MIN`: fastest member latency
 
+## Execution delay {#execution-delay}
+
+`executionDelay` (in milliseconds) controls how long the group monitor waits before running its aggregation. This delay gives member monitors time to complete their own checks and update the cache before the group reads their statuses.
+
+- Default: `1000` (1 second). Minimum: `1000`.
+- If member monitors take longer to finish (e.g. slow API checks), increase this value so the group always reads fresh results.
+- Only affects cron-driven execution. When a member's status is updated via the API, the cache is updated immediately and the group will read the new value on its next run.
+
 ## Configuration fields {#configuration-fields}
 
-| Field                | Type                   | Default | Notes           |
-| :------------------- | :--------------------- | :------ | :-------------- |
-| `monitors`           | `Array<{tag, weight}>` | `[]`    | Required, min 2 |
-| `executionDelay`     | `number`               | `1000`  | Must be >= 1000 |
-| `latencyCalculation` | `AVG\|MAX\|MIN`        | `AVG`   |                 |
+| Field                | Type                   | Default | Notes                                             |
+| :------------------- | :--------------------- | :------ | :------------------------------------------------ |
+| `monitors`           | `Array<{tag, weight}>` | `[]`    | Required, min 2                                   |
+| `executionDelay`     | `number`               | `1000`  | ms to wait before aggregating; must be >= 1000    |
+| `latencyCalculation` | `AVG\|MAX\|MIN`        | `AVG`   |                                                   |
 
 ## Example {#example}
 
@@ -81,5 +89,6 @@ Group latency uses selected mode:
 ## Troubleshooting {#troubleshooting}
 
 - **Cannot save**: verify weights sum to `1`, min member count, and delay >= `1000`
-- **Unexpected stale status**: increase `executionDelay` so member checks finish first
+- **Unexpected stale status (cron)**: increase `executionDelay` so member checks finish before the group aggregates
+- **Unexpected stale status (API updates)**: ensure you are running a version that updates the cache on API writes — older versions only updated the cache from cron, causing the group to miss API-driven status changes
 - **Group too sensitive/lenient**: adjust weights — higher weight on critical monitors makes their failure impact the group score more
