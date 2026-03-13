@@ -14,6 +14,8 @@
   import SaveIcon from "@lucide/svelte/icons/save";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import XIcon from "@lucide/svelte/icons/x";
+  import ArrowUpIcon from "@lucide/svelte/icons/arrow-up";
+  import ArrowDownIcon from "@lucide/svelte/icons/arrow-down";
   import UploadIcon from "@lucide/svelte/icons/upload";
   import ImageIcon from "@lucide/svelte/icons/image";
   import TrashIcon from "@lucide/svelte/icons/trash";
@@ -68,6 +70,7 @@
   let selectedMonitors = $state<string[]>([]);
   let addingMonitor = $state(false);
   let removingMonitor = $state<string | null>(null);
+  let reordering = $state(false);
 
   // Delete state
   let deleteConfirmText = $state("");
@@ -231,7 +234,7 @@
         toast.error(result.error);
       } else {
         toast.success("Monitor added to page");
-        selectedMonitors = [selectedMonitorTag, ...selectedMonitors.filter((tag) => tag !== selectedMonitorTag)];
+        selectedMonitors = [...selectedMonitors, selectedMonitorTag];
         selectedMonitorTag = "";
       }
     } catch (e) {
@@ -302,6 +305,39 @@
 
   // Get available monitors (not already on the current page)
   const availableMonitors = $derived(monitors.filter((m) => !selectedMonitors.includes(m.tag)));
+
+  async function moveMonitor(index: number, direction: "up" | "down") {
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= selectedMonitors.length) return;
+
+    const updated = [...selectedMonitors];
+    [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
+    selectedMonitors = updated;
+
+    if (!currentPage) return;
+    reordering = true;
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "reorderPageMonitors",
+          data: {
+            page_id: currentPage.id,
+            monitor_tags: selectedMonitors
+          }
+        })
+      });
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      }
+    } catch (e) {
+      toast.error("Failed to reorder monitors");
+    } finally {
+      reordering = false;
+    }
+  }
 
   // Image upload functions
   async function handleLogoUpload(event: Event): Promise<void> {
@@ -614,25 +650,43 @@
             <Label>Current Monitors</Label>
             {#if selectedMonitors.length > 0}
               <div class="space-y-2">
-                {#each selectedMonitors as monitorTag (monitorTag)}
+                {#each selectedMonitors as monitorTag, i (monitorTag)}
                   {@const monitor = monitors.find((m) => m.tag === monitorTag)}
                   <div class="bg-muted flex items-center justify-between rounded-lg p-3">
                     <div>
                       <p class="font-medium">{monitor?.name || monitorTag}</p>
                       <p class="text-muted-foreground text-xs">{monitorTag}</p>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onclick={() => removeMonitorFromPage(monitorTag)}
-                      disabled={removingMonitor === monitorTag}
-                    >
-                      {#if removingMonitor === monitorTag}
-                        <Loader class="h-4 w-4 animate-spin" />
-                      {:else}
-                        <XIcon class="h-4 w-4" />
-                      {/if}
-                    </Button>
+                    <div class="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onclick={() => moveMonitor(i, "up")}
+                        disabled={i === 0 || reordering}
+                      >
+                        <ArrowUpIcon class="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onclick={() => moveMonitor(i, "down")}
+                        disabled={i === selectedMonitors.length - 1 || reordering}
+                      >
+                        <ArrowDownIcon class="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onclick={() => removeMonitorFromPage(monitorTag)}
+                        disabled={removingMonitor === monitorTag}
+                      >
+                        {#if removingMonitor === monitorTag}
+                          <Loader class="h-4 w-4 animate-spin" />
+                        {:else}
+                          <XIcon class="h-4 w-4" />
+                        {/if}
+                      </Button>
+                    </div>
                   </div>
                 {/each}
               </div>

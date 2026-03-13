@@ -463,6 +463,7 @@ export interface PageMonitorRecord {
   page_id: number;
   monitor_tag: string;
   monitor_settings_json: string | null;
+  position: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -471,12 +472,14 @@ export interface PageMonitorRecordInsert {
   page_id: number;
   monitor_tag: string;
   monitor_settings_json?: string | null;
+  position?: number;
 }
 
 export interface PageMonitorRecordTyped {
   page_id: number;
   monitor_tag: string;
   monitor_settings: Record<string, unknown> | null;
+  position: number;
   created_at: Date;
   updated_at: Date;
 }

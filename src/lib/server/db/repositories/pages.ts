@@ -65,6 +65,7 @@ export class PagesRepository extends BaseRepository {
       page_id: data.page_id,
       monitor_tag: data.monitor_tag,
       monitor_settings_json: data.monitor_settings_json,
+      position: data.position ?? 0,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     });
@@ -75,7 +76,7 @@ export class PagesRepository extends BaseRepository {
   }
 
   async getPageMonitors(page_id: number): Promise<PageMonitorRecord[]> {
-    return await this.knex("pages_monitors").where("page_id", page_id).orderBy("created_at", "desc");
+    return await this.knex("pages_monitors").where("page_id", page_id).orderBy("position", "asc");
   }
 
   async getPageMonitorsExcludeHidden(page_id: number): Promise<PageMonitorRecord[]> {
@@ -84,7 +85,7 @@ export class PagesRepository extends BaseRepository {
       .where("pages_monitors.page_id", page_id)
       .andWhere("monitors.is_hidden", "NO")
       .andWhere("monitors.status", "ACTIVE")
-      .orderBy("pages_monitors.created_at", "desc")
+      .orderBy("pages_monitors.position", "asc")
       .select("pages_monitors.*");
   }
 
@@ -114,5 +115,18 @@ export class PagesRepository extends BaseRepository {
 
   async deletePageMonitorsByPageId(page_id: number): Promise<number> {
     return await this.knex("pages_monitors").where({ page_id }).del();
+  }
+
+  async updatePageMonitorPositions(
+    page_id: number,
+    monitorPositions: { monitor_tag: string; position: number }[],
+  ): Promise<void> {
+    await this.knex.transaction(async (trx) => {
+      for (const mp of monitorPositions) {
+        await trx("pages_monitors")
+          .where({ page_id, monitor_tag: mp.monitor_tag })
+          .update({ position: mp.position, updated_at: trx.fn.now() });
+      }
+    });
   }
 }

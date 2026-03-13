@@ -107,7 +107,7 @@ async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
     page_subheader: page.page_subheader,
     page_logo: page.page_logo,
     page_settings: pageSettings,
-    monitors: pageMonitors.map((pm) => ({ monitor_tag: pm.monitor_tag })),
+    monitors: pageMonitors.map((pm) => ({ monitor_tag: pm.monitor_tag, position: pm.position })),
     created_at: formatDateToISO(page.created_at),
     updated_at: formatDateToISO(page.updated_at),
   };
@@ -291,11 +291,12 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     await db.deletePageMonitorsByPageId(page.id);
 
     // Add new monitors
-    for (const monitorTag of body.monitors) {
+    for (let i = 0; i < body.monitors.length; i++) {
       await db.addMonitorToPage({
         page_id: page.id,
-        monitor_tag: monitorTag,
+        monitor_tag: body.monitors[i],
         monitor_settings_json: null,
+        position: i,
       });
     }
   }
