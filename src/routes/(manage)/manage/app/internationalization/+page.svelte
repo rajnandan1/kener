@@ -7,7 +7,6 @@
   import { Input } from "$lib/components/ui/input/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
-  import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import SaveIcon from "@lucide/svelte/icons/save";
   import Loader from "@lucide/svelte/icons/loader";
@@ -178,19 +177,25 @@
   const datePlusTimeSuggestions = [
     { value: "PPp", label: "Locale (AM/PM)" },
     { value: "PP HH:mm", label: "Locale date + 24h" },
-    { value: "yyyy-MM-dd HH:mm", label: "ISO-like 24h" }
+    { value: "yyyy-MM-dd HH:mm", label: "ISO-like 24h" },
+    { value: "dd MMM yyyy h:mm a", label: "Day month year AM/PM" },
+    { value: "MMM dd, yyyy HH:mm", label: "Month day year 24h" }
   ];
 
   const dateOnlySuggestions = [
     { value: "PP", label: "Locale" },
     { value: "yyyy-MM-dd", label: "ISO" },
-    { value: "dd/MM/yyyy", label: "Day-first" }
+    { value: "dd/MM/yyyy", label: "Day-first" },
+    { value: "MMM dd, yyyy", label: "Month day year" },
+    { value: "dd MMM yyyy", label: "Day month year" }
   ];
 
   const timeOnlySuggestions = [
     { value: "p", label: "Locale (AM/PM)" },
     { value: "HH:mm", label: "24h" },
-    { value: "HH:mm", label: "24h short" }
+    { value: "H:mm", label: "24h short" },
+    { value: "h:mm a", label: "12h AM/PM" },
+    { value: "hh:mm", label: "12h no period" }
   ];
 
   function formatPreview(fmt: string): string {
