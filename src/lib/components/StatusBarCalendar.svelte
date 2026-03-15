@@ -375,7 +375,7 @@
     >
       <span class={getStatusColor(hoveredBar.data)}>{$t(GetStatusSummary(hoveredBar.data))}</span>
       <span class="text-muted-foreground">@</span>
-      {$formatDate(hoveredBar.data.ts, "d MMM yyyy")}
+      {$formatDate(hoveredBar.data.ts, page.data.dateAndTimeFormat.dateOnly)}
       {#if hoveredBar.data.avgLatency > 0}
         <span class="text-muted-foreground ml-1">|</span>
         <span class="ml-1">{ParseLatency(hoveredBar.data.avgLatency)}</span>

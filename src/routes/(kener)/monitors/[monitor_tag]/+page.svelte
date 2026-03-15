@@ -3,9 +3,6 @@
   import { t } from "$lib/stores/i18n";
   import { formatDate } from "$lib/stores/datetime";
   import { Button } from "$lib/components/ui/button/index.js";
-  import * as Avatar from "$lib/components/ui/avatar/index.js";
-  import IncidentMonitorList from "$lib/components/IncidentMonitorList.svelte";
-  import AllMaintenanceMonitorGrid from "$lib/components/AllMaintenanceMonitorGrid.svelte";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import MonitorOverview from "$lib/components/MonitorOverview.svelte";
   import ArrowUpRight from "@lucide/svelte/icons/arrow-up-right";
@@ -14,6 +11,7 @@
   import trackEvent from "$lib/beacon";
   import IncidentItem from "$lib/components/IncidentItem.svelte";
   import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
+  import { page } from "$app/state";
   let { data } = $props();
 
   // State
@@ -85,7 +83,7 @@
     <div class="relative flex flex-col px-2">
       <h2 class="text-base font-medium">{$t("Last Updated")}</h2>
       <p class="text-muted-foreground text-xs">
-        <span>{$formatDate(data.monitorLastStatusTimestamp * 1000, "PPpp")}</span>
+        <span>{$formatDate(data.monitorLastStatusTimestamp * 1000, page.data.dateAndTimeFormat.datePlusTime)}</span>
       </p>
       {#if !!data.externalUrl}
         <Button

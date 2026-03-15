@@ -97,7 +97,7 @@
       class="mt-2 flex w-full flex-col gap-2 text-xs font-medium sm:flex-row sm:items-center sm:justify-between"
     >
       <span class="max-w-full rounded-full border px-3 py-2 wrap-break-word">
-        {$formatDate(maintenance.start_date_time, "PPp")}
+        {$formatDate(maintenance.start_date_time, page.data.dateAndTimeFormat.datePlusTime)}
       </span>
       <span class="relative w-full text-center sm:flex-1">
         <span
@@ -108,7 +108,7 @@
         </span>
       </span>
       <span class="max-w-full rounded-full border px-3 py-2 wrap-break-word">
-        {$formatDate(maintenance.end_date_time, "PPp")}
+        {$formatDate(maintenance.end_date_time, page.data.dateAndTimeFormat.datePlusTime)}
       </span>
     </Item.Description>
   </Item.Content>

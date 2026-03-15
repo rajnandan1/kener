@@ -244,7 +244,7 @@
     {#each eventsByDay as day}
       <div class="flex flex-col gap-2">
         <div class="bg-secondary mt-4 w-fit rounded-3xl border px-4 py-2 text-xs font-medium">
-          {$formatDate(day.date, "EEEE, MMMM do")}
+          {$formatDate(day.date, page.data.dateAndTimeFormat.dateOnly)}
         </div>
         <div class="flex flex-col gap-2">
           {#each day.events as event}

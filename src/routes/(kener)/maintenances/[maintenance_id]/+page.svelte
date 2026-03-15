@@ -1,7 +1,6 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
   import { onMount } from "svelte";
-  import Clock from "@lucide/svelte/icons/clock";
   import Calendar from "@lucide/svelte/icons/calendar";
   import Monitor from "@lucide/svelte/icons/monitor";
   import ArrowRight from "@lucide/svelte/icons/arrow-right";
@@ -18,6 +17,7 @@
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import clientResolver from "$lib/client/resolver.js";
   import { SveltePurify } from "@humanspeak/svelte-purify";
+  import { page } from "$app/state";
 
   let { data } = $props();
 
@@ -97,11 +97,11 @@
     <div class="flex w-full flex-col gap-4 sm:flex-row sm:justify-between sm:gap-2">
       <div class="flex flex-col items-start gap-1.5">
         <span class="text-muted-foreground">{$t("Start Time")}</span>
-        <span>{$formatDate(data.maintenanceEvent.start_date_time, "PPpp")}</span>
+        <span>{$formatDate(data.maintenanceEvent.start_date_time, page.data.dateAndTimeFormat.datePlusTime)}</span>
       </div>
       <div class="flex flex-col items-start gap-1.5 sm:items-center">
         <span class="text-muted-foreground">{$t("End Time")}</span>
-        <span>{$formatDate(data.maintenanceEvent.end_date_time, "PPpp")}</span>
+        <span>{$formatDate(data.maintenanceEvent.end_date_time, page.data.dateAndTimeFormat.datePlusTime)}</span>
       </div>
       <div class="flex flex-col items-start gap-1.5 sm:items-end">
         <span class="text-muted-foreground">{$t("Duration")}</span>
@@ -158,9 +158,9 @@
                 <div
                   class="text-muted-foreground flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between"
                 >
-                  <span>{$formatDate(event.start_date_time, "PPpp")}</span>
+                  <span>{$formatDate(event.start_date_time, page.data.dateAndTimeFormat.datePlusTime)}</span>
                   <span class="hidden sm:inline">→</span>
-                  <span>{$formatDate(event.end_date_time, "PPpp")}</span>
+                  <span>{$formatDate(event.end_date_time, page.data.dateAndTimeFormat.datePlusTime)}</span>
                 </div>
               </div>
             {/each}
