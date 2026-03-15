@@ -4,7 +4,6 @@ services:
     runtime: image
     image:
       url: docker.io/rajnandan1/kener:latest
-    dockerCommand: sh -c 'ORIGIN=${RENDER_EXTERNAL_URL} exec node build/main.js'
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -12,6 +11,11 @@ services:
           property: connectionString
       - key: KENER_SECRET_KEY
         generateValue: true
+      - key: ORIGIN
+        fromService:
+          type: web
+          name: kener
+          envVarKey: RENDER_EXTERNAL_URL
       - key: REDIS_URL
         fromService:
           name: kener-redis
