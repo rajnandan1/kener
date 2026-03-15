@@ -47,6 +47,14 @@
 | [🌍 Live Server](https://kener.ing) | [🎉 Quick Start](https://kener.ing/docs/v4/getting-started/quick-start) | [🗄 Documentation](https://kener.ing/docs/v4/getting-started/introduction) |
 | ----------------------------------- | ----------------------------------------------------------------------- | -------------------------------------------------------------------------- |
 
+<p align="center">
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/spSvic?referralCode=1Pn7vs&utm_medium=integration&utm_source=template&utm_campaign=generic)
+[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/1YRTMI?referralCode=rajnandan1)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Frajnandan1%2Fkener)
+
+</p>
+
 ## What is Kener?
 
 **Kener** is a sleek and lightweight status page system built with **SvelteKit** and **NodeJS**. It’s not here to replace heavyweights like Datadog or Atlassian but rather to offer a simple, modern, and hassle-free way to set up a great-looking status page with minimal effort.
@@ -170,11 +178,6 @@ PORT=3000
 For the full quick start (including local Docker builds and dev mode), see the docs:
 
 - https://kener.ing/docs/v4/getting-started/quick-start
-
-## One Click Deployment
-
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/spSvic?referralCode=1Pn7vs&utm_medium=integration&utm_source=template&utm_campaign=generic)
-[![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/1YRTMI?referralCode=rajnandan1)
 
 ## Features
 
