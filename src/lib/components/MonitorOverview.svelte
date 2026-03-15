@@ -2,7 +2,6 @@
   import { onMount, untrack } from "svelte";
   import * as Card from "$lib/components/ui/card/index.js";
   import { Skeleton } from "$lib/components/ui/skeleton/index.js";
-  import { Badge } from "$lib/components/ui/badge/index.js";
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import StatusBarCalendar from "$lib/components/StatusBarCalendar.svelte";
   import LatencyTrendChart from "$lib/components/LatencyTrendChart.svelte";
@@ -18,6 +17,7 @@
   import * as Popover from "$lib/components/ui/popover/index.js";
   import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
   import GroupMonitorPopover from "$lib/components/GroupMonitorPopover.svelte";
+  import { page } from "$app/state";
 
   interface Props {
     monitorTag: string;
@@ -205,12 +205,12 @@
         <div class="flex justify-between">
           <p class="text-muted-foreground text-xs font-medium">
             {#if displayData.length > 0}
-              {$formatDate(displayData[0].ts, "d MMM yyyy")}
+              {$formatDate(displayData[0].ts, page.data.dateAndTimeFormat.dateOnly)}
             {/if}
           </p>
           <p class="text-muted-foreground text-xs font-medium">
             {#if displayData.length > 0}
-              {$formatDate(displayData[displayData.length - 1].ts, "d MMM yyyy")}
+              {$formatDate(displayData[displayData.length - 1].ts, page.data.dateAndTimeFormat.dateOnly)}
             {/if}
           </p>
         </div>

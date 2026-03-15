@@ -17,6 +17,7 @@ import type {
   SiteNavItem,
   SiteStatusColors,
   SiteSubMenuOptions,
+  SiteDateTimeFormat,
   SiteSubscriptionsSettings,
 } from "../../types/site.js";
 
@@ -60,6 +61,7 @@ export interface SiteDataTransformed {
   customCSS?: string;
   globalPageVisibilitySettings?: GlobalPageVisibilitySettings;
   pageOrderingSettings?: PageOrderingSettings;
+  dateAndTimeFormat?: SiteDateTimeFormat;
 }
 
 export function InsertKeyValue(key: string, value: string): Promise<number[]> {

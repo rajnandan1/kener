@@ -3,24 +3,20 @@
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
 
   import { resolve } from "$app/paths";
-  import TrendingUp from "@lucide/svelte/icons/trending-up";
   import Clock from "@lucide/svelte/icons/clock";
-  import Activity from "@lucide/svelte/icons/activity";
-  import { Button } from "$lib/components/ui/button/index.js";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
-  import { Badge } from "$lib/components/ui/badge/index.js";
   import { Skeleton } from "$lib/components/ui/skeleton/index.js";
   import LoaderBoxes from "$lib/components/loaderbox.svelte";
-  import constants from "$lib/global-constants.js";
   import * as Tabs from "$lib/components/ui/tabs/index.js";
   import { page } from "$app/state";
   import { AreaChart, Area, LinearGradient } from "layerchart";
   import { curveCatmullRom } from "d3-shape";
-  import { scaleOrdinal, scaleSequential, scaleTime } from "d3-scale";
+  import { scaleTime } from "d3-scale";
   import IncidentItem from "$lib/components/IncidentItem.svelte";
   import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
   import MinuteGrid from "$lib/components/MinuteGrid.svelte";
   import clientResolver from "$lib/client/resolver.js";
+  import { ParseLatency } from "$lib/clientTools";
 
   import * as Chart from "$lib/components/ui/chart/index.js";
   import type { IncidentForMonitorListWithComments, MaintenanceEventsMonitorList } from "$lib/server/types/db";
@@ -213,9 +209,8 @@
   <Dialog.Content class="max-h-[90vh] overflow-y-auto rounded-3xl p-4 sm:max-w-[46.5rem] sm:p-6">
     <Dialog.Header>
       <Dialog.Title class="flex items-center gap-2 text-base sm:text-lg">
-        <Activity class="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
         <span class="truncate">
-          {selectedDay ? $formatDate(new Date(selectedDay.timestamp * 1000), "EEEE, MMMM do, yyyy") : ""}
+          {selectedDay ? $formatDate(new Date(selectedDay.timestamp * 1000), page.data.dateAndTimeFormat.dateOnly) : ""}
         </span>
       </Dialog.Title>
       <Dialog.Description class="text-xs sm:text-sm"
@@ -316,7 +311,7 @@
                     line: { class: "stroke-1" }
                   },
                   xAxis: {
-                    format: (d: Date) => $formatDate(d, "HH:mm")
+                    format: (d: Date) => $formatDate(d, page.data.dateAndTimeFormat.timeOnly)
                   }
                 }}
               >
@@ -342,11 +337,13 @@
                         ></div>
                         <div class="flex flex-1 flex-col items-start justify-between gap-1 leading-none">
                           <span class="text-muted-foreground text-xs">
-                            {item.payload?.date ? $formatDate(item.payload.date, "HH:mm") : ""}
+                            {item.payload?.date
+                              ? $formatDate(item.payload.date, page.data.dateAndTimeFormat.timeOnly)
+                              : ""}
                           </span>
                           <div class="flex items-center gap-2">
                             <span class="text-foreground font-mono font-medium tabular-nums">
-                              {Math.round(Number(value))} ms
+                              {ParseLatency(Math.round(Number(value)))}
                             </span>
                           </div>
                         </div>

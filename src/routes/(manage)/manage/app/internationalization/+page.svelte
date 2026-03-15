@@ -4,17 +4,21 @@
   import { Switch } from "$lib/components/ui/switch/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Checkbox } from "$lib/components/ui/checkbox/index.js";
+  import { Input } from "$lib/components/ui/input/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
+  import { Badge } from "$lib/components/ui/badge/index.js";
   import SaveIcon from "@lucide/svelte/icons/save";
   import Loader from "@lucide/svelte/icons/loader";
   import GlobeIcon from "@lucide/svelte/icons/globe";
   import ClockIcon from "@lucide/svelte/icons/clock";
+  import CalendarClockIcon from "@lucide/svelte/icons/calendar-clock";
   import { toast } from "svelte-sonner";
   import { availableLocalesList } from "$lib/stores/i18n";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import { format } from "date-fns";
 
   interface Locale {
     code: string;
@@ -32,7 +36,13 @@
   let loading = $state(true);
   let savingLanguages = $state(false);
   let savingTimezone = $state(false);
+  let savingDateTimeFormat = $state(false);
   let tzToggle = $state("NO");
+  let dateAndTimeFormat = $state({
+    datePlusTime: "PPpp",
+    dateOnly: "PP",
+    timeOnly: "pp"
+  });
   let i18n = $state<I18nConfig>({
     defaultLocale: "en",
     locales: availableLocalesList.map((el) => ({
@@ -60,6 +70,13 @@
       } else {
         if (result.tzToggle) {
           tzToggle = result.tzToggle;
+        }
+        if (result.dateAndTimeFormat) {
+          dateAndTimeFormat = {
+            datePlusTime: result.dateAndTimeFormat.datePlusTime || "PPpp",
+            dateOnly: result.dateAndTimeFormat.dateOnly || "PP",
+            timeOnly: result.dateAndTimeFormat.timeOnly || "pp"
+          };
         }
         if (result.i18n) {
           // Merge with all available locales
@@ -154,6 +171,60 @@
 
   function setDefaultLocale(code: string) {
     i18n.defaultLocale = code;
+  }
+
+  const previewDate = new Date();
+
+  const datePlusTimeSuggestions = [
+    { value: "PPp", label: "Locale (AM/PM)" },
+    { value: "PP HH:mm", label: "Locale date + 24h" },
+    { value: "yyyy-MM-dd HH:mm", label: "ISO-like 24h" }
+  ];
+
+  const dateOnlySuggestions = [
+    { value: "PP", label: "Locale" },
+    { value: "yyyy-MM-dd", label: "ISO" },
+    { value: "dd/MM/yyyy", label: "Day-first" }
+  ];
+
+  const timeOnlySuggestions = [
+    { value: "p", label: "Locale (AM/PM)" },
+    { value: "HH:mm", label: "24h" },
+    { value: "HH:mm", label: "24h short" }
+  ];
+
+  function formatPreview(fmt: string): string {
+    try {
+      return format(previewDate, fmt);
+    } catch {
+      return "Invalid format";
+    }
+  }
+
+  async function saveDateTimeFormat() {
+    savingDateTimeFormat = true;
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "storeSiteData",
+          data: {
+            dateAndTimeFormat: JSON.stringify(dateAndTimeFormat)
+          }
+        })
+      });
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Date & time format saved successfully");
+      }
+    } catch (e) {
+      toast.error("Failed to save date & time format");
+    } finally {
+      savingDateTimeFormat = false;
+    }
   }
 
   $effect(() => {
@@ -278,6 +349,123 @@
             <SaveIcon class="h-4 w-4" />
           {/if}
           Save Timezone
+        </Button>
+      </Card.Footer>
+    </Card.Root>
+
+    <!-- Date & Time Format Card -->
+    <Card.Root>
+      <Card.Header>
+        <div class="flex items-center gap-2">
+          <CalendarClockIcon class="h-5 w-5" />
+          <div>
+            <Card.Title>Date & Time Format</Card.Title>
+            <Card.Description>
+              Choose how dates and times are displayed across your status page. Uses
+              <a
+                href="https://date-fns.org/docs/format"
+                target="_blank"
+                class="hover:text-foreground underline underline-offset-2">date-fns format tokens</a
+              >.
+            </Card.Description>
+          </div>
+        </div>
+      </Card.Header>
+      <Card.Content class="space-y-6">
+        <!-- Date + Time -->
+        <div class="space-y-2">
+          <Label class="text-sm font-medium">Date + Time</Label>
+          <Input
+            class="font-mono text-sm"
+            placeholder="e.g. PPpp"
+            value={dateAndTimeFormat.datePlusTime}
+            oninput={(e) => {
+              dateAndTimeFormat.datePlusTime = e.currentTarget.value;
+            }}
+          />
+          <div class="flex flex-wrap items-center gap-1.5">
+            {#each datePlusTimeSuggestions as s (s.value)}
+              <Badge
+                variant={dateAndTimeFormat.datePlusTime === s.value ? "default" : "outline"}
+                class="cursor-pointer"
+                href={undefined}
+                onclick={() => {
+                  dateAndTimeFormat.datePlusTime = s.value;
+                }}
+              >
+                {s.label} ({s.value})
+              </Badge>
+            {/each}
+          </div>
+          <p class="text-muted-foreground text-xs">
+            Preview: <code>{formatPreview(dateAndTimeFormat.datePlusTime)}</code>
+          </p>
+        </div>
+
+        <!-- Date Only -->
+        <div class="space-y-2">
+          <Label class="text-sm font-medium">Date Only</Label>
+          <Input
+            class="font-mono text-sm"
+            placeholder="e.g. PP"
+            value={dateAndTimeFormat.dateOnly}
+            oninput={(e) => {
+              dateAndTimeFormat.dateOnly = e.currentTarget.value;
+            }}
+          />
+          <div class="flex flex-wrap items-center gap-1.5">
+            {#each dateOnlySuggestions as s (s.value)}
+              <Badge
+                variant={dateAndTimeFormat.dateOnly === s.value ? "default" : "outline"}
+                class="cursor-pointer"
+                href={undefined}
+                onclick={() => {
+                  dateAndTimeFormat.dateOnly = s.value;
+                }}
+              >
+                {s.label} ({s.value})
+              </Badge>
+            {/each}
+          </div>
+          <p class="text-muted-foreground text-xs">Preview: <code>{formatPreview(dateAndTimeFormat.dateOnly)}</code></p>
+        </div>
+
+        <!-- Time Only -->
+        <div class="space-y-2">
+          <Label class="text-sm font-medium">Time Only</Label>
+          <Input
+            class="font-mono text-sm"
+            placeholder="e.g. pp"
+            value={dateAndTimeFormat.timeOnly}
+            oninput={(e) => {
+              dateAndTimeFormat.timeOnly = e.currentTarget.value;
+            }}
+          />
+          <div class="flex flex-wrap items-center gap-1.5">
+            {#each timeOnlySuggestions as s (s.value)}
+              <Badge
+                variant={dateAndTimeFormat.timeOnly === s.value ? "default" : "outline"}
+                class="cursor-pointer"
+                href={undefined}
+                onclick={() => {
+                  dateAndTimeFormat.timeOnly = s.value;
+                }}
+              >
+                {s.label} ({s.value})
+              </Badge>
+            {/each}
+          </div>
+          <p class="text-muted-foreground text-xs">Preview: <code>{formatPreview(dateAndTimeFormat.timeOnly)}</code></p>
+        </div>
+      </Card.Content>
+      <Card.Footer class="flex justify-end">
+        <Button onclick={saveDateTimeFormat} disabled={savingDateTimeFormat}>
+          {#if savingDateTimeFormat}
+            <Loader class="h-4 w-4 animate-spin" />
+          {:else}
+            <SaveIcon class="h-4 w-4" />
+          {/if}
+          Save Format
         </Button>
       </Card.Footer>
     </Card.Root>

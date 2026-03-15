@@ -6,6 +6,7 @@
   import { t } from "$lib/stores/i18n";
   import { ParseLatency } from "$lib/clientTools";
   import { formatDate } from "$lib/stores/datetime";
+  import { page } from "$app/state";
 
   interface ChartPoint {
     date: Date;
@@ -82,7 +83,9 @@
                 ></div>
                 <div class="flex flex-1 flex-col items-start justify-between gap-1 leading-none">
                   <span class="text-muted-foreground text-xs"
-                    >{item.payload?.date ? $formatDate(item.payload.date, "MMM d") : ""}</span
+                    >{item.payload?.date
+                      ? $formatDate(item.payload.date, page.data.dateAndTimeFormat.dateOnly)
+                      : ""}</span
                   >
                   <div class="flex items-center gap-2">
                     <span class="text-foreground font-mono font-medium tabular-nums">

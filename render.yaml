@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: kener
+    runtime: image
+    image:
+      url: docker.io/rajnandan1/kener:latest
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: kener-db
+          property: connectionString
+      - key: KENER_SECRET_KEY
+        generateValue: true
+      - key: ORIGIN
+        sync: false
+      - key: REDIS_URL
+        fromService:
+          name: kener-redis
+          type: keyvalue
+          property: connectionString
+  - type: keyvalue
+    name: kener-redis
+    plan: starter
+    ipAllowList:
+      - source: 0.0.0.0/0
+        description: everywhere
+    maxmemoryPolicy: allkeys-lru
+
+databases:
+  - name: kener-db
+    plan: basic-256mb
+    databaseName: kener

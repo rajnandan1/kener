@@ -159,6 +159,11 @@ const seedSiteData = {
     showSwitcher: true,
     forceExclusivity: false,
   },
+  dateAndTimeFormat: {
+    datePlusTime: "PPp",
+    dateOnly: "PP",
+    timeOnly: "p",
+  },
 };
 
 export default seedSiteData;

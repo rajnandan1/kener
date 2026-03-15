@@ -135,3 +135,9 @@ export interface PageOrderingSettings {
   enabled: boolean;
   order: number[]; // Array of page IDs in the desired order
 }
+
+export interface SiteDateTimeFormat {
+  datePlusTime: string;
+  dateOnly: string;
+  timeOnly: string;
+}

@@ -10,7 +10,7 @@ import {
   IsEmailSetup,
   IsSetupComplete,
 } from "./controller.js";
-import type { EventDisplaySettings, GlobalPageVisibilitySettings } from "$lib/types/site.js";
+import type { EventDisplaySettings, GlobalPageVisibilitySettings, SiteDateTimeFormat } from "$lib/types/site.js";
 
 export interface LayoutServerData {
   isMobile: boolean;
@@ -70,6 +70,7 @@ export interface LayoutServerData {
   socialPreviewImage?: string;
   customCSS?: string;
   globalPageVisibilitySettings: GlobalPageVisibilitySettings;
+  dateAndTimeFormat: SiteDateTimeFormat;
 }
 
 export async function GetLayoutServerData(cookies: Cookies, request: Request): Promise<LayoutServerData> {
@@ -137,5 +138,6 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     socialPreviewImage: siteData.socialPreviewImage,
     customCSS: siteData.customCSS,
     globalPageVisibilitySettings: siteData.globalPageVisibilitySettings || seedSiteData.globalPageVisibilitySettings,
+    dateAndTimeFormat: siteData.dateAndTimeFormat || seedSiteData.dateAndTimeFormat,
   };
 }

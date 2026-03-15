@@ -218,6 +218,28 @@ docker run -d \
   docker.io/rajnandan1/kener:latest
 ```
 
+### Pre-built image with `/status` base path {#pre-built-status-base-path}
+
+If you deploy Kener under the `/status` subpath, use the pre-built `-status` image instead of building your own. These images have `KENER_BASE_PATH=/status` baked in at build time:
+
+| Variant          | Tag example                             |
+| ---------------- | --------------------------------------- |
+| Debian (default) | `rajnandan1/kener:latest-status`        |
+| Alpine           | `rajnandan1/kener:latest-status-alpine` |
+| Versioned        | `rajnandan1/kener:v4.0.16-status`       |
+
+```bash
+docker run -d \
+  --name kener \
+  -p 3000:3000 \
+  -v "$(pwd)/database:/app/database" \
+  --env-file .env \
+  docker.io/rajnandan1/kener:latest-status
+```
+
+> [!IMPORTANT]
+> Your `.env` must still set `KENER_BASE_PATH=/status` so the runtime knows the base path. The pre-built image only embeds it at build time for SvelteKit — both are required.
+
 ## Node.js deployment (without Docker) {#nodejs-deployment-without-docker}
 
 Use this when you prefer managing runtime directly on a VM/server.

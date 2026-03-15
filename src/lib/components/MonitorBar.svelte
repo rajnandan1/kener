@@ -1,6 +1,5 @@
 <script lang="ts">
   import * as Item from "$lib/components/ui/item/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
   import { Skeleton } from "$lib/components/ui/skeleton/index.js";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import ICONS from "$lib/icons";
@@ -12,6 +11,7 @@
   import { GetInitials } from "$lib/clientTools.js";
   import GroupMonitorPopover from "./GroupMonitorPopover.svelte";
   import { t } from "$lib/stores/i18n";
+  import { page } from "$app/state";
 
   interface Props {
     tag: string;
@@ -136,11 +136,11 @@
         <StatusBarCalendar data={data.uptimeData} monitorTag={tag} barHeight={40} radius={8} />
         <div class="flex min-w-0 justify-between gap-3">
           <p class="text-muted-foreground min-w-0 truncate text-xs font-medium">
-            {$formatDate(new Date(data.fromTimeStamp * 1000), "MMM d, yyyy")}
+            {$formatDate(new Date(data.fromTimeStamp * 1000), page.data.dateAndTimeFormat.dateOnly)}
           </p>
 
           <p class="text-muted-foreground min-w-0 truncate text-right text-xs font-medium">
-            {$formatDate(new Date(data.toTimeStamp * 1000), "MMM d, yyyy")}
+            {$formatDate(new Date(data.toTimeStamp * 1000), page.data.dateAndTimeFormat.dateOnly)}
           </p>
         </div>
       </div>

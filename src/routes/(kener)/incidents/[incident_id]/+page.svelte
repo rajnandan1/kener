@@ -1,23 +1,19 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
-  import ChevronLeft from "@lucide/svelte/icons/chevron-left";
-  import Clock from "@lucide/svelte/icons/clock";
-  import AlertTriangle from "@lucide/svelte/icons/alert-triangle";
   import MessageSquare from "@lucide/svelte/icons/message-square";
   import Monitor from "@lucide/svelte/icons/monitor";
   import ArrowRight from "@lucide/svelte/icons/arrow-right";
   import * as Item from "$lib/components/ui/item/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
-  import * as Card from "$lib/components/ui/card/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import mdToHTML from "$lib/marked";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
-  import constants from "$lib/global-constants.js";
   import { SveltePurify } from "@humanspeak/svelte-purify";
   import { t } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import clientResolver from "$lib/client/resolver.js";
+  import { page } from "$app/state";
 
   let { data } = $props();
 </script>
@@ -64,7 +60,7 @@
                     {$t(comment.state)}
                   </Badge>
                   <span class="text-muted-foreground text-xs">
-                    {$formatDate(comment.commented_at, "PPpp")}
+                    {$formatDate(comment.commented_at, page.data.dateAndTimeFormat.datePlusTime)}
                   </span>
                 </div>
                 <div class="prose prose-sm dark:prose-invert max-w-none min-w-0 overflow-x-auto wrap-break-word">

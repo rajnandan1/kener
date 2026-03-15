@@ -105,7 +105,7 @@
       class="mt-2 flex w-full flex-col gap-2 text-xs font-medium sm:flex-row sm:items-center sm:justify-between"
     >
       <span class="max-w-full rounded-full border px-3 py-2 wrap-break-word">
-        {$formatDate(incident.start_date_time, "PPp")}
+        {$formatDate(incident.start_date_time, page.data.dateAndTimeFormat.datePlusTime)}
       </span>
       <span class="relative w-full text-center sm:flex-1">
         <span
@@ -117,7 +117,7 @@
       </span>
       {#if incident.end_date_time}
         <span class="max-w-full rounded-full border px-3 py-2 wrap-break-word">
-          {$formatDate(incident.end_date_time, "PPp")}
+          {$formatDate(incident.end_date_time, page.data.dateAndTimeFormat.datePlusTime)}
         </span>
       {:else}
         <span class="max-w-full rounded-full border px-3 py-2 wrap-break-word">
@@ -129,7 +129,7 @@
       <div class="my-2 grid grid-cols-1 gap-4 text-xs font-medium sm:grid-cols-3">
         <div class="text-muted-foreground bg-secondary flex items-center justify-between rounded-full border p-2 px-4">
           <span>{$t("Last Updated")}</span>
-          <span>{$formatDate(incident.updated_at, "PPp")}</span>
+          <span>{$formatDate(incident.updated_at, page.data.dateAndTimeFormat.datePlusTime)}</span>
         </div>
         <div class="text-muted-foreground bg-secondary flex items-center justify-between rounded-full border p-2 px-4">
           <span>{$t("Status")}</span>
@@ -167,7 +167,7 @@
                 {$t(comment.state)}
               </Badge>
               <span class="text-muted-foreground text-xs">
-                {$formatDate(comment.commented_at, "PPp")}
+                {$formatDate(comment.commented_at, page.data.dateAndTimeFormat.datePlusTime)}
               </span>
             </div>
             <div

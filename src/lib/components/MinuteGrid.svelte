@@ -319,7 +319,10 @@
         style={tooltipStyle}
       >
         <span class="text-{hoveredMinute.data.status.toLowerCase()}">
-          {$t(hoveredMinute.data.status)} @ {$formatDate(hoveredMinute.data.timestamp, "HH:mm")}
+          {$t(hoveredMinute.data.status)} @ {$formatDate(
+            hoveredMinute.data.timestamp,
+            page.data.dateAndTimeFormat.timeOnly
+          )}
         </span>
       </div>
     {/if}

@@ -113,7 +113,7 @@
               <p class="line-clamp-2 text-sm">{item.eventTitle}</p>
             </div>
             <div class="text-muted-foreground mt-1 flex flex-wrap items-center gap-2 text-xs">
-              <span>{$formatDate(item.eventDate, "PPp")}</span>
+              <span>{$formatDate(item.eventDate, page.data.dateAndTimeFormat.datePlusTime)}</span>
 
               <span>•</span>
               <span>{$formatDuration(item.eventStartDateTime, item.eventEndDateTime, $t("Ongoing"))}</span>
