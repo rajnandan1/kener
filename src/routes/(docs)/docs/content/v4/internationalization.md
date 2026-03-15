@@ -92,11 +92,11 @@ For setup details, see: [/docs/v4/setup/environment-variables#timezone](/docs/v4
 
 Kener uses three separate format strings to display dates and times across the status page:
 
-| Field           | Where it is used                                                      | Default |
-| --------------- | --------------------------------------------------------------------- | ------- |
-| **Date + Time** | Incident timestamps, maintenance windows, event details               | `PPp`   |
-| **Date Only**   | Day headings, uptime history dates                                    | `PP`    |
-| **Time Only**   | Monitoring tick tooltips, time-only displays                          | `p`     |
+| Field           | Where it is used                                        | Default |
+| --------------- | ------------------------------------------------------- | ------- |
+| **Date + Time** | Incident timestamps, maintenance windows, event details | `PPp`   |
+| **Date Only**   | Day headings, uptime history dates                      | `PP`    |
+| **Time Only**   | Monitoring tick tooltips, time-only displays            | `p`     |
 
 Set these in **Manage → Internationalization → Date & Time Format**. Type a format string directly or click a suggestion badge to fill the input.
 
@@ -104,17 +104,17 @@ Set these in **Manage → Internationalization → Date & Time Format**. Type a 
 
 Formats use [date-fns `format` tokens](https://date-fns.org/docs/format). Common examples:
 
-| Token      | Output example      | Notes                                |
-| ---------- | ------------------- | ------------------------------------ |
-| `PP`       | Apr 29, 1453        | Locale-aware date                    |
-| `PPp`      | Apr 29, 1453, 12:00 AM | Locale-aware date + time          |
-| `yyyy-MM-dd` | 1453-04-29        | ISO date                             |
-| `HH:mm`    | 14:30               | 24-hour time                         |
-| `p`        | 12:00 AM            | Locale-aware time                    |
+| Token        | Output example         | Notes                    |
+| ------------ | ---------------------- | ------------------------ |
+| `PP`         | Apr 29, 1453           | Locale-aware date        |
+| `PPp`        | Apr 29, 1453, 12:00 AM | Locale-aware date + time |
+| `yyyy-MM-dd` | 1453-04-29             | ISO date                 |
+| `HH:mm`      | 14:30                  | 24-hour time             |
+| `p`          | 12:00 AM               | Locale-aware time        |
 
 ### What does "Locale" mean? {#locale-format}
 
- Tokens that start with an uppercase `P` (like `PP`, `PPp`) are **locale-aware** — they automatically adapt to the user's browser language. For example, `PP` renders as "Apr 29, 2025" in English but "29 avr. 2025" in French. Non-locale tokens like `yyyy-MM-dd` always produce the same output regardless of language.
+Tokens that start with an uppercase `P` (like `PP`, `PPp`) are **locale-aware** — they automatically adapt to the user's browser language. For example, `PP` renders as "Apr 29, 2025" in English but "29 avr. 2025" in French. Non-locale tokens like `yyyy-MM-dd` always produce the same output regardless of language.
 
 > [!TIP]
 > Kener does not display seconds anywhere in the UI. Avoid adding seconds tokens (`ss`, `pp` with seconds) to keep the interface clean. Use `PPp` instead of `PPpp`, and `p` or `HH:mm` instead of `pp` or `HH:mm:ss`.
