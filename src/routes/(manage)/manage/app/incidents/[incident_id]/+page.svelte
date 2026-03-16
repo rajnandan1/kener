@@ -721,9 +721,7 @@
             </Dialog.Header>
             <div class="space-y-4 py-4">
               <div class="flex flex-col gap-2">
-                <Label
-                  >Type <span class="font-mono font-semibold">{deleteConfirmPhrase}</span> to confirm</Label
-                >
+                <Label>Type <span class="font-mono font-semibold">{deleteConfirmPhrase}</span> to confirm</Label>
                 <Input bind:value={deleteConfirmText} placeholder={deleteConfirmPhrase} />
               </div>
             </div>
