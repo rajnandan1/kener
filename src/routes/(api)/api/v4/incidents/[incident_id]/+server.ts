@@ -193,6 +193,12 @@ export const DELETE: RequestHandler = async ({ locals }) => {
   // Incident is validated by middleware and available in locals
   const incident = locals.incident!;
 
+  // Set incident_id to null in monitor_alerts_v2
+  const alerts = await db.getAlertsByIncidentId(incident.id);
+  for (const alert of alerts) {
+    await db.updateMonitorAlertV2(alert.id, { incident_id: null });
+  }
+
   // Delete incident monitors
   const monitors = await db.getIncidentMonitorsByIncidentID(incident.id);
   for (const monitor of monitors) {

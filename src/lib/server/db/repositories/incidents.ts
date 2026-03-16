@@ -818,6 +818,10 @@ export class IncidentsRepository extends BaseRepository {
     return await this.knex("incident_comments").where({ id }).first();
   }
 
+  async deleteIncidentCommentsByIncidentID(incident_id: number): Promise<number> {
+    return await this.knex("incident_comments").where({ incident_id }).del();
+  }
+
   /**
    * Get incidents within a date range for the events page
    * Returns incidents that started within the given date range
