@@ -30,6 +30,7 @@ import {
   AddIncidentComment,
   UpdateCommentByID,
   UpdateIncident,
+  DeleteIncident,
   GetTriggerByID,
   GetLoggedInSession,
   UpdateUserData,
@@ -268,6 +269,9 @@ export async function POST({ request, cookies }) {
     } else if (action == "updateIncident") {
       AdminEditorCan(userDB.role);
       resp = await UpdateIncident(data.id, data);
+    } else if (action == "deleteIncident") {
+      AdminEditorCan(userDB.role);
+      resp = await DeleteIncident(data.incident_id);
     } else if (action == "addMonitor") {
       AdminEditorCan(userDB.role);
       resp = await AddIncidentMonitor(data.incident_id, data.monitor_tag, data.monitor_impact);

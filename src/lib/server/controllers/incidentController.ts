@@ -526,3 +526,30 @@ export const ParseIncidentToAPIResp = async (
 
   return resp;
 };
+
+export const DeleteIncident = async (incident_id: number): Promise<{ success: boolean }> => {
+  const incident = await db.getIncidentById(incident_id);
+  if (!incident) {
+    throw new Error(`Incident with id ${incident_id} does not exist`);
+  }
+
+  // Set incident_id to null in monitor_alerts_v2
+  const alerts = await db.getAlertsByIncidentId(incident_id);
+  for (const alert of alerts) {
+    await db.updateMonitorAlertV2(alert.id, { incident_id: null });
+  }
+
+  // Delete incident monitors
+  const monitors = await db.getIncidentMonitorsByIncidentID(incident_id);
+  for (const monitor of monitors) {
+    await db.removeIncidentMonitor(incident_id, monitor.monitor_tag);
+  }
+
+  // Delete incident comments permanently
+  await db.deleteIncidentCommentsByIncidentID(incident_id);
+
+  // Delete the incident
+  await db.deleteIncident(incident_id);
+
+  return { success: true };
+};

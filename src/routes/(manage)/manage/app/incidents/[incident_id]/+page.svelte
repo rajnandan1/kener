@@ -639,6 +639,39 @@
     availableMonitors.filter((m) => !incidentMonitors.some((im) => im.monitor_tag === m.tag))
   );
 
+  // Delete incident
+  let deleteDialogOpen = $state(false);
+  let deleteConfirmText = $state("");
+  let deleting = $state(false);
+  const deleteConfirmPhrase = $derived(`delete incident ${params.incident_id}`);
+  const deleteConfirmed = $derived(deleteConfirmText === deleteConfirmPhrase);
+
+  async function deleteIncident() {
+    if (!deleteConfirmed) return;
+    deleting = true;
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "deleteIncident",
+          data: { incident_id: parseInt(params.incident_id) }
+        })
+      });
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Incident deleted successfully");
+        window.location.replace(clientResolver(resolve, "/manage/app/incidents"));
+      }
+    } catch {
+      toast.error("Failed to delete incident");
+    } finally {
+      deleting = false;
+    }
+  }
+
   $effect(() => {
     fetchIncident();
     fetchAvailableMonitors();
@@ -659,7 +692,7 @@
         </Breadcrumb.Item>
       </Breadcrumb.List>
     </Breadcrumb.Root>
-    <div>
+    <div class="flex gap-2">
       {#if !isNew}
         <Button
           variant="outline"
@@ -669,6 +702,40 @@
         >
           View
         </Button>
+        <Dialog.Root bind:open={deleteDialogOpen} onOpenChange={() => (deleteConfirmText = "")}>
+          <Dialog.Trigger>
+            {#snippet child({ props })}
+              <Button {...props} variant="destructive" size="sm">
+                <TrashIcon class="size-4" />
+                Delete
+              </Button>
+            {/snippet}
+          </Dialog.Trigger>
+          <Dialog.Content>
+            <Dialog.Header>
+              <Dialog.Title>Delete Incident</Dialog.Title>
+              <Dialog.Description>
+                This action cannot be undone. This will permanently delete the incident, its updates, and remove all
+                associated monitor links.
+              </Dialog.Description>
+            </Dialog.Header>
+            <div class="space-y-4 py-4">
+              <div class="flex flex-col gap-2">
+                <Label>Type <span class="font-mono font-semibold">{deleteConfirmPhrase}</span> to confirm</Label>
+                <Input bind:value={deleteConfirmText} placeholder={deleteConfirmPhrase} />
+              </div>
+            </div>
+            <Dialog.Footer>
+              <Button variant="outline" onclick={() => (deleteDialogOpen = false)}>Cancel</Button>
+              <Button variant="destructive" onclick={deleteIncident} disabled={!deleteConfirmed || deleting}>
+                {#if deleting}
+                  <Loader class="size-4 animate-spin" />
+                {/if}
+                Delete Incident
+              </Button>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Root>
       {/if}
     </div>
   </div>

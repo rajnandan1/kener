@@ -187,6 +187,7 @@ class DbImpl {
   updateIncidentCommentByID!: IncidentsRepository["updateIncidentCommentByID"];
   updateIncidentCommentStatusByID!: IncidentsRepository["updateIncidentCommentStatusByID"];
   getIncidentCommentByID!: IncidentsRepository["getIncidentCommentByID"];
+  deleteIncidentCommentsByIncidentID!: IncidentsRepository["deleteIncidentCommentsByIncidentID"];
 
   // ============ Images ============
   insertImage!: ImagesRepository["insertImage"];
@@ -530,6 +531,7 @@ class DbImpl {
     this.updateIncidentCommentByID = this.incidents.updateIncidentCommentByID.bind(this.incidents);
     this.updateIncidentCommentStatusByID = this.incidents.updateIncidentCommentStatusByID.bind(this.incidents);
     this.getIncidentCommentByID = this.incidents.getIncidentCommentByID.bind(this.incidents);
+    this.deleteIncidentCommentsByIncidentID = this.incidents.deleteIncidentCommentsByIncidentID.bind(this.incidents);
   }
 
   private bindImagesMethods(): void {
