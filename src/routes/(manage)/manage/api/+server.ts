@@ -204,7 +204,7 @@ export async function POST({ request, cookies }) {
       resp = await DeleteMonitorCompletelyUsingTag(data.tag);
     } else if (action == "deleteMonitorData") {
       AdminEditorCan(userDB.role);
-      await db.deleteMonitorDataByTag(data.tag, data.start, data.end);
+      await db.deleteMonitorDataByTag(data.tag || undefined, data.start, data.end);
       resp = { success: true };
     } else if (action == "cloneMonitor") {
       AdminEditorCan(userDB.role);
