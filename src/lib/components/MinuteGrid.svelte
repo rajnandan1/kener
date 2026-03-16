@@ -76,7 +76,7 @@
     const minutesByHour: Map<number, MinuteData[]> = new Map();
 
     for (const minute of minutes) {
-      const date = toZonedTime(new Date(minute.timestamp * 1000), $selectedTimezone);
+      const date = toZonedTime(minute.timestamp * 1000, $selectedTimezone);
       const hour = date.getHours();
 
       if (!minutesByHour.has(hour)) {
