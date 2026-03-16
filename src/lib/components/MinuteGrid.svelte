@@ -5,6 +5,8 @@
   import TrendingUp from "@lucide/svelte/icons/trending-up";
   import { t } from "$lib/stores/i18n";
   import { formatDate } from "$lib/stores/datetime";
+  import { selectedTimezone } from "$lib/stores/timezone";
+  import { toZonedTime } from "date-fns-tz";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
 
   interface MinuteData {
@@ -74,7 +76,7 @@
     const minutesByHour: Map<number, MinuteData[]> = new Map();
 
     for (const minute of minutes) {
-      const date = new Date(minute.timestamp * 1000);
+      const date = toZonedTime(minute.timestamp * 1000, $selectedTimezone);
       const hour = date.getHours();
 
       if (!minutesByHour.has(hour)) {
