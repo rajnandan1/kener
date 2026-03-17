@@ -5,15 +5,18 @@
   import * as Table from "$lib/components/ui/table/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
+  import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
   import SearchIcon from "@lucide/svelte/icons/search";
+  import TrashIcon from "@lucide/svelte/icons/trash";
   import FilterIcon from "@lucide/svelte/icons/filter";
   import XIcon from "@lucide/svelte/icons/x";
   import { format } from "date-fns";
   import { onMount } from "svelte";
+  import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
 
@@ -56,6 +59,8 @@
 
   // State
   let loading = $state(true);
+  let deleting = $state(false);
+  let deleteDialogOpen = $state(false);
   let monitoringData = $state<MonitoringData[]>([]);
   let monitors = $state<Monitor[]>([]);
   let totalPages = $state(0);
@@ -112,6 +117,48 @@
     endDateTime = formatDateTimeForInput(now);
     pageNo = 1;
     fetchData();
+  }
+
+  function openDeleteDialog() {
+    validateDates();
+    deleteDialogOpen = true;
+  }
+
+  async function deleteFilteredData() {
+    deleteDialogOpen = false;
+
+    const startTs = dateTimeStringToTimestamp(startDateTime);
+    const endTs = dateTimeStringToTimestamp(endDateTime);
+
+    deleting = true;
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "deleteMonitorData",
+          data: {
+            tag: monitorTagFilter === "ALL" ? "" : monitorTagFilter,
+            start: startTs,
+            end: endTs
+          }
+        })
+      });
+
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Monitoring data deleted successfully");
+        monitorTagFilter = "ALL";
+        pageNo = 1;
+        fetchData();
+      }
+    } catch (e) {
+      toast.error("Failed to delete monitoring data");
+    } finally {
+      deleting = false;
+    }
   }
 
   // Fetch monitors for filter dropdown
@@ -231,7 +278,6 @@
             bind:value={startDateTime}
             min={formatDateTimeForInput(maxDaysAgoDate)}
             max={endDateTime}
-            class="w-48"
           />
         </div>
         <div class="flex flex-col gap-1">
@@ -242,7 +288,6 @@
             bind:value={endDateTime}
             min={startDateTime}
             max={formatDateTimeForInput(now)}
-            class="w-48"
           />
         </div>
         <div class="flex flex-col gap-1">
@@ -262,6 +307,15 @@
         <Button size="sm" onclick={applyFilters}>
           <SearchIcon class="size-4" />
           Search
+        </Button>
+        <Button size="sm" variant="destructive" onclick={openDeleteDialog} disabled={deleting}>
+          {#if deleting}
+            <Spinner class="size-4" />
+            Deleting...
+          {:else}
+            <TrashIcon class="size-4" />
+            Delete
+          {/if}
         </Button>
         {#if hasActiveFilters}
           <Button variant="ghost" size="sm" onclick={clearFilters}>
@@ -377,3 +431,23 @@
     </div>
   {/if}
 </div>
+
+<AlertDialog.Root bind:open={deleteDialogOpen}>
+  <AlertDialog.Content>
+    <AlertDialog.Header>
+      <AlertDialog.Title>Delete Monitoring Data</AlertDialog.Title>
+      <AlertDialog.Description>
+        {#if monitorTagFilter === "ALL"}
+          This will delete monitoring data for <strong>all monitors</strong> from {startDateTime} to {endDateTime}.
+        {:else}
+          This will delete monitoring data for <strong>{monitorTagFilter}</strong> from {startDateTime} to {endDateTime}.
+        {/if}
+        This action cannot be undone.
+      </AlertDialog.Description>
+    </AlertDialog.Header>
+    <AlertDialog.Footer>
+      <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+      <AlertDialog.Action onclick={deleteFilteredData}>Delete</AlertDialog.Action>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>

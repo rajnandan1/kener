@@ -372,8 +372,18 @@ export class MonitoringRepository extends BaseRepository {
     });
   }
 
-  async deleteMonitorDataByTag(tag: string): Promise<number> {
-    return await this.knex("monitoring_data").where("monitor_tag", tag).del();
+  async deleteMonitorDataByTag(tag?: string, start?: number, end?: number): Promise<number> {
+    const query = this.knex("monitoring_data");
+    if (tag) {
+      query.where("monitor_tag", tag);
+    }
+    if (start !== undefined) {
+      query.where("timestamp", ">=", start);
+    }
+    if (end !== undefined) {
+      query.where("timestamp", "<=", end);
+    }
+    return await query.del();
   }
 
   /**
