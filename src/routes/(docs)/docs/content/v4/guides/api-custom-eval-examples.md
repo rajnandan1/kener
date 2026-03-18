@@ -81,7 +81,7 @@ SECRET_PARAM=your_real_secret_value
 ## Cheerio HTML content check {#cheerio-html-check-eval}
 
 ```javascript
-;(async function (statusCode, responseTime, responseRaw, modules) {
+async function (statusCode, responseTime, responseRaw, modules) {
     if (statusCode !== 200) {
         return { status: "DOWN", latency: responseTime }
     }
@@ -99,5 +99,5 @@ SECRET_PARAM=your_real_secret_value
         status: status ? "UP" : "DOWN",
         latency: responseTime
     }
-})
+}
 ```
