@@ -24,6 +24,10 @@
   {#if data.comments.length > 0}
     <meta name="description" content={data.comments[0].comment} />
   {/if}
+  {#if data.socialPreviewImage}
+    <meta property="og:image" content={clientResolver(resolve, data.socialPreviewImage)} />
+    <meta name="twitter:image" content={clientResolver(resolve, data.socialPreviewImage)} />
+  {/if}
 </svelte:head>
 
 <div class="flex flex-col gap-3">

@@ -33,6 +33,10 @@
   {#if data.monitorDescription}
     <meta name="description" content={data.monitorDescription} />
   {/if}
+  {#if data.socialPreviewImage}
+    <meta property="og:image" content={clientResolver(resolve, data.socialPreviewImage)} />
+    <meta name="twitter:image" content={clientResolver(resolve, data.socialPreviewImage)} />
+  {/if}
 </svelte:head>
 <div class="flex flex-col gap-3">
   <ThemePlus monitor_tags={[data.monitorTag]} embedMonitorTag={data.monitorTag} />

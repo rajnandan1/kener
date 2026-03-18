@@ -9,6 +9,7 @@
   import { Label } from "$lib/components/ui/label/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
+  import { Textarea } from "$lib/components/ui/textarea/index.js";
   import { toast } from "svelte-sonner";
   import Loader from "@lucide/svelte/icons/loader";
   import SaveIcon from "@lucide/svelte/icons/save";
@@ -51,6 +52,7 @@
   let saving = $state(false);
   let savingMonitors = $state(false);
   let uploadingLogo = $state(false);
+  let uploadingSocialPreview = $state(false);
 
   // Page data
   let currentPage = $state<PageWithMonitors | null>(null);
@@ -409,6 +411,60 @@
 
   function clearLogo() {
     formData.page_logo = "";
+  }
+
+  function clearSocialPreview() {
+    pageSettings.socialPagePreviewImage = "";
+  }
+
+  async function handleSocialPreviewUpload(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Invalid file type. Allowed: PNG, JPG, WebP");
+      return;
+    }
+
+    if (file.size > GC.MAX_UPLOAD_BYTES) {
+      toast.error(`File too large. Maximum size is ${GC.MAX_UPLOAD_BYTES / (1024 * 1024)}MB`);
+      return;
+    }
+
+    uploadingSocialPreview = true;
+    try {
+      const base64 = await fileToBase64(file);
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "uploadImage",
+          data: {
+            base64,
+            mimeType: file.type,
+            fileName: file.name,
+            maxWidth: 1200,
+            maxHeight: 630,
+            prefix: "page_social_"
+          }
+        })
+      });
+
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        pageSettings.socialPagePreviewImage = result.url;
+        toast.success("Social preview image uploaded");
+      }
+    } catch (e) {
+      toast.error("Failed to upload social preview image");
+    } finally {
+      uploadingSocialPreview = false;
+      input.value = "";
+    }
   }
 
   async function savePageSettings() {
@@ -781,6 +837,102 @@
             {:else}
               <SaveIcon class="h-4 w-4" />
               Save Preferences
+            {/if}
+          </Button>
+        </Card.Footer>
+      </Card.Root>
+
+      <!-- Social Preview & SEO Card -->
+      <Card.Root>
+        <Card.Header>
+          <Card.Title>Social Preview & SEO</Card.Title>
+          <Card.Description
+            >Optional social preview image and meta tags for this page. Leave empty to use site defaults.</Card.Description
+          >
+        </Card.Header>
+        <Card.Content class="space-y-4">
+          <div class="flex items-start gap-4">
+            <!-- Preview -->
+            <div class="bg-muted flex h-32 w-64 items-center justify-center rounded-lg border">
+              {#if pageSettings.socialPagePreviewImage}
+                <img
+                  src={clientResolver(resolve, pageSettings.socialPagePreviewImage)}
+                  alt="Social preview"
+                  class="h-full w-full rounded-lg object-cover"
+                />
+              {:else}
+                <ImageIcon class="text-muted-foreground h-8 w-8" />
+              {/if}
+            </div>
+
+            <!-- Upload Controls -->
+            <div class="flex flex-1 flex-col gap-2">
+              <div class="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={uploadingSocialPreview}
+                  onclick={() => document.getElementById("page-social-preview-input")?.click()}
+                >
+                  {#if uploadingSocialPreview}
+                    <Loader class="h-4 w-4 animate-spin" />
+                    Uploading...
+                  {:else}
+                    <UploadIcon class="h-4 w-4" />
+                    Upload Social Preview
+                  {/if}
+                </Button>
+                <input
+                  id="page-social-preview-input"
+                  type="file"
+                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  class="hidden"
+                  onchange={handleSocialPreviewUpload}
+                  disabled={uploadingSocialPreview}
+                />
+                {#if pageSettings.socialPagePreviewImage}
+                  <Button variant="ghost" size="sm" onclick={clearSocialPreview}>
+                    <XIcon class="h-4 w-4" />
+                  </Button>
+                {/if}
+              </div>
+              {#if pageSettings.socialPagePreviewImage}
+                <p class="text-muted-foreground truncate text-xs">{pageSettings.socialPagePreviewImage}</p>
+              {:else}
+                <p class="text-muted-foreground text-xs">Optional. Leave empty to use site default.</p>
+              {/if}
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <Label for="page-metaPageTitle">Meta Title</Label>
+            <Input
+              id="page-metaPageTitle"
+              type="text"
+              bind:value={pageSettings.metaPageTitle}
+              placeholder="Custom page title for search engines"
+            />
+            <p class="text-muted-foreground text-xs">Overrides the default page title in search results</p>
+          </div>
+          <div class="space-y-2">
+            <Label for="page-metaPageDescription">Meta Description</Label>
+            <Textarea
+              id="page-metaPageDescription"
+              bind:value={pageSettings.metaPageDescription}
+              placeholder="Custom description for search engines"
+              rows={3}
+            />
+            <p class="text-muted-foreground text-xs">Shown as the snippet text in search engine results</p>
+          </div>
+        </Card.Content>
+        <Card.Footer class="flex justify-end">
+          <Button onclick={savePageSettings} disabled={savingSettings}>
+            {#if savingSettings}
+              <Loader class="h-4 w-4 animate-spin" />
+              Saving...
+            {:else}
+              <SaveIcon class="h-4 w-4" />
+              Save
             {/if}
           </Button>
         </Card.Footer>

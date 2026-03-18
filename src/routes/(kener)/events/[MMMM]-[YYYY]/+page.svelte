@@ -159,6 +159,10 @@
 
 <svelte:head>
   <title>{currentMonth} - Maintenances & Incidents - {data.siteName}</title>
+  {#if data.socialPreviewImage}
+    <meta property="og:image" content={clientResolver(resolve, data.socialPreviewImage)} />
+    <meta name="twitter:image" content={clientResolver(resolve, data.socialPreviewImage)} />
+  {/if}
 </svelte:head>
 
 <div class="flex flex-col gap-3">

@@ -16,7 +16,6 @@
   import { SveltePurify } from "@humanspeak/svelte-purify";
 
   let { data } = $props();
-
   let pageSettings = $derived(data.pageDetails.page_settings);
   let barCount = $derived.by(() =>
     data.isMobile
@@ -114,7 +113,25 @@
 </script>
 
 <svelte:head>
-  <title>{(data.pageDetails?.page_title || "Status Page") + " - " + data.siteName}</title>
+  <title>{data.metaPageTitle || (data.pageDetails?.page_title || "Status Page") + " - " + data.siteName}</title>
+  {#if data.metaPageTitle}
+    <title>{data.metaPageTitle}</title>
+  {:else if data.pageDetails?.page_title}
+    <title>{data.pageDetails.page_title} - {data.siteName}</title>
+  {:else}
+    <title>{data.siteName} - Status Page</title>
+  {/if}
+  {#if data.metaPageDescription}
+    <meta name="description" content={data.metaPageDescription} />
+  {:else if data.pageDetails?.page_header}
+    <meta name="description" content={data.pageDetails.page_header} />
+  {:else}
+    <meta name="description" content={data.pageDetails.page_title + " - Status Page"} />
+  {/if}
+  {#if data.socialPagePreviewImage}
+    <meta property="og:image" content={clientResolver(resolve, data.socialPagePreviewImage)} />
+    <meta name="twitter:image" content={clientResolver(resolve, data.socialPagePreviewImage)} />
+  {/if}
 </svelte:head>
 
 <!-- page title -->

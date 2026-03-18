@@ -444,6 +444,9 @@ export interface PageSettingsType {
     mobile: number;
   };
   monitor_layout_style: "default-list" | "default-grid" | "compact-list" | "compact-grid";
+  metaPageTitle?: string;
+  metaPageDescription?: string;
+  socialPagePreviewImage?: string;
 }
 
 export interface PageRecordTyped {

@@ -162,6 +162,9 @@ export interface PageDashboardData {
   monitorTags: string[];
   monitorGroupMembersByTag: Record<string, string[]>;
   pageDetails: PageRecordTyped;
+  socialPagePreviewImage?: string;
+  metaPageTitle?: string;
+  metaPageDescription?: string;
 }
 
 const BuildPageStatus = (latestData: Array<{ status?: string | null; latency?: number | null }>, nowTs: number) => {
@@ -377,6 +380,22 @@ export const GetPageDashboardData = async (
     monitorGroupMembersByTag[monitor.tag] = groupData.monitors.map((member) => member.tag);
   }
 
+  let socialPagePreviewImage: string | undefined = layoutData.socialPreviewImage;
+  let metaPageTitle: string | undefined = layoutData.metaSiteTitle;
+  let metaPageDescription: string | undefined = layoutData.metaSiteDescription;
+  if (!!pageDetails.page_settings_json) {
+    try {
+      const pageSettings = JSON.parse(pageDetails.page_settings_json);
+      if (pageSettings) {
+        socialPagePreviewImage = pageSettings.socialPreviewImage || layoutData.socialPreviewImage;
+        metaPageTitle = pageSettings.metaTitle || layoutData.metaSiteTitle;
+        metaPageDescription = pageSettings.metaDescription || layoutData.metaSiteDescription;
+      }
+    } catch (e) {
+      // Ignore JSON parsing errors and fallback to layout data or defaults
+    }
+  }
+
   return {
     pageStatus,
     ongoingIncidents,
@@ -384,5 +403,8 @@ export const GetPageDashboardData = async (
     monitorTags,
     monitorGroupMembersByTag,
     pageDetails: pageDetailsTyped,
+    socialPagePreviewImage,
+    metaPageTitle,
+    metaPageDescription,
   };
 };

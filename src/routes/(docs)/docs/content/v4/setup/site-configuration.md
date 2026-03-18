@@ -12,18 +12,20 @@ Use **Manage → Site Configurations** to control identity, navigation, monitor 
 3. Configure **Navigation Menu**.
 4. Set **Monitor Sub Menu Options**.
 5. Configure **Global Page Visibility Settings**.
-6. Configure **Data Retention Policy**.
-7. Configure **Event Display Settings**.
+6. Configure **Social Preview & SEO**.
+7. Configure **Data Retention Policy**.
+8. Configure **Event Display Settings**.
 
 ## Runtime impact map {#runtime-impact-map}
 
-| Setting area                 | Stored key                           | Runtime impact                                                      |
-| ---------------------------- | ------------------------------------ | ------------------------------------------------------------------- |
-| Site name / URL / logo / nav | `siteName`, `siteURL`, `logo`, `nav` | Rendered in top navbar branding and nav links                       |
-| Favicon                      | `favicon`                            | Used in `<head>` as page icon                                       |
-| Monitor sub menu options     | `subMenuOptions`                     | Gates monitor share actions (badges/embed) on public monitor pages  |
-| Global page visibility       | `globalPageVisibilitySettings`       | Controls page switcher visibility and page-scoped navigation/events |
-| Data retention policy        | `dataRetentionPolicy`                | Controls daily cleanup of old `monitoring_data`                     |
+| Setting area                 | Stored key                                                   | Runtime impact                                                      |
+| ---------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------- |
+| Site name / URL / logo / nav | `siteName`, `siteURL`, `logo`, `nav`                         | Rendered in top navbar branding and nav links                       |
+| Favicon                      | `favicon`                                                    | Used in `<head>` as page icon                                       |
+| Monitor sub menu options     | `subMenuOptions`                                             | Gates monitor share actions (badges/embed) on public monitor pages  |
+| Global page visibility       | `globalPageVisibilitySettings`                               | Controls page switcher visibility and page-scoped navigation/events |
+| Data retention policy        | `dataRetentionPolicy`                                        | Controls daily cleanup of old `monitoring_data`                     |
+| Social preview & SEO         | `metaSiteTitle`, `metaSiteDescription`, `socialPreviewImage` | Default `og:title`, `og:description`, `og:image` for all pages      |
 
 ## Monitor sub menu options {#monitor-sub-menu-options}
 
@@ -80,6 +82,21 @@ This affects:
 - event sections on status pages
 - notifications payload API used by the UI
 
+## Social preview and SEO {#social-preview-and-seo}
+
+The **Social Preview & SEO** card sets site-wide defaults for meta tags used in search engines and link previews.
+
+| Field                  | Stored key            | Meta tags affected                            |
+| ---------------------- | --------------------- | --------------------------------------------- |
+| `Meta Title`           | `metaSiteTitle`       | `<title>`, `og:title`                         |
+| `Meta Description`     | `metaSiteDescription` | `<meta name="description">`, `og:description` |
+| `Social Preview Image` | `socialPreviewImage`  | `og:image`, `twitter:image`                   |
+
+These values are used as defaults for every page. Individual pages can override them — see [Pages → Social Preview & SEO](/docs/v4/pages#social-preview-and-seo).
+
+> [!TIP]
+> Upload a 1200×630 image for best results across social platforms.
+
 ## Verify changes {#verify-changes}
 
 - Update site name/logo/nav and refresh home page.
@@ -90,3 +107,4 @@ This affects:
     - notifications calendar opens page-scoped events for the current month.
 - Change event display settings and verify incident/maintenance visibility.
 - Set retention policy and confirm scheduler logs in server output.
+- Set meta title/description and social preview image, then check `<meta>` tags in page source.

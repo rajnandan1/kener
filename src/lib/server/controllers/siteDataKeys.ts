@@ -276,4 +276,14 @@ export const siteDataKeys: SiteDataKey[] = [
     isValid: IsValidJSONString,
     data_type: "object",
   },
+  {
+    key: "metaSiteTitle",
+    isValid: (value) => typeof value === "string",
+    data_type: "string",
+  },
+  {
+    key: "metaSiteDescription",
+    isValid: (value) => typeof value === "string",
+    data_type: "string",
+  },
 ];

@@ -62,6 +62,8 @@ export interface SiteDataTransformed {
   globalPageVisibilitySettings?: GlobalPageVisibilitySettings;
   pageOrderingSettings?: PageOrderingSettings;
   dateAndTimeFormat?: SiteDateTimeFormat;
+  metaSiteTitle?: string;
+  metaSiteDescription?: string;
 }
 
 export function InsertKeyValue(key: string, value: string): Promise<number[]> {

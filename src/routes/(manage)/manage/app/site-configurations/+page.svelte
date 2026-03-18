@@ -2,6 +2,7 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
+  import { Textarea } from "$lib/components/ui/textarea/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
@@ -97,6 +98,8 @@
   });
 
   let eventDisplaySettings = $state<EventDisplaySettings>(structuredClone(defaultEventDisplaySettings));
+  let metaSiteTitle = $state("");
+  let metaSiteDescription = $state("");
   let currentOrigin = $state("");
 
   function onForceExclusivityChange(checked: boolean | "indeterminate") {
@@ -204,6 +207,9 @@
         } else {
           eventDisplaySettings = structuredClone(defaultEventDisplaySettings);
         }
+
+        metaSiteTitle = data.metaSiteTitle || "";
+        metaSiteDescription = data.metaSiteDescription || "";
       }
     } catch (e) {
       toast.error("Failed to load site data");
@@ -300,7 +306,11 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "storeSiteData",
-          data: { socialPreviewImage: siteData.socialPreviewImage }
+          data: {
+            socialPreviewImage: siteData.socialPreviewImage,
+            metaSiteTitle: metaSiteTitle,
+            metaSiteDescription: metaSiteDescription
+          }
         })
       });
 
@@ -308,10 +318,10 @@
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Social preview image saved successfully");
+        toast.success("Social preview & SEO settings saved successfully");
       }
     } catch (e) {
-      toast.error("Failed to save social preview image");
+      toast.error("Failed to save social preview & SEO settings");
     } finally {
       savingSocialPreviewImage = false;
     }
@@ -805,11 +815,11 @@
       </Card.Footer>
     </Card.Root>
 
-    <!-- Social Preview Image Card -->
+    <!-- Social Preview & SEO Card -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>Social Preview Image</Card.Title>
-        <Card.Description>Upload an optional social preview image at least 640x320px or similar</Card.Description>
+        <Card.Title>Social Preview & SEO</Card.Title>
+        <Card.Description>Configure social preview image and meta tags for search engines</Card.Description>
       </Card.Header>
       <Card.Content class="space-y-4">
         <div class="flex items-start gap-4">
@@ -862,6 +872,27 @@
               <p class="text-muted-foreground text-xs">Optional. Leave empty to use no social preview image.</p>
             {/if}
           </div>
+        </div>
+
+        <div class="space-y-2">
+          <Label for="metaSiteTitle">Meta Title</Label>
+          <Input
+            id="metaSiteTitle"
+            type="text"
+            bind:value={metaSiteTitle}
+            placeholder="Custom page title for search engines"
+          />
+          <p class="text-muted-foreground text-xs">Overrides the default page title in search results</p>
+        </div>
+        <div class="space-y-2">
+          <Label for="metaSiteDescription">Meta Description</Label>
+          <Textarea
+            id="metaSiteDescription"
+            bind:value={metaSiteDescription}
+            placeholder="Custom description for search engines"
+            rows={3}
+          />
+          <p class="text-muted-foreground text-xs">Shown as the snippet text in search engine results</p>
         </div>
       </Card.Content>
       <Card.Footer class="flex justify-end">

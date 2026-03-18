@@ -69,6 +69,10 @@
   {#if data.maintenance.description}
     <meta name="description" content={data.maintenance.description} />
   {/if}
+  {#if data.socialPreviewImage}
+    <meta property="og:image" content={clientResolver(resolve, data.socialPreviewImage)} />
+    <meta name="twitter:image" content={clientResolver(resolve, data.socialPreviewImage)} />
+  {/if}
 </svelte:head>
 
 <div class="flex flex-col gap-3">

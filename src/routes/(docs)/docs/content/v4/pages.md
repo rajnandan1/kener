@@ -64,6 +64,23 @@ Choose one layout:
 
 Click **Save Preferences** after changes.
 
+## Social preview and SEO {#social-preview-and-seo}
+
+Each page can override the site-level SEO defaults set in [Site Configuration](/docs/v4/setup/site-configuration#social-preview-and-seo).
+
+| Field                  | Description                                                   |
+| ---------------------- | ------------------------------------------------------------- |
+| `Meta Title`           | Custom `<title>` and `og:title` for this page.                |
+| `Meta Description`     | Custom `<meta name="description">` and `og:description`.      |
+| `Social Preview Image` | Custom `og:image` and `twitter:image` shown in link previews. |
+
+When a field is left empty, the site-level value is used. When the site-level value is also empty, the page title and header are used as automatic fallbacks.
+
+**Override hierarchy**: Page setting → Site setting → Auto-generated from page title/header.
+
+> [!TIP]
+> Upload a 1200×630 image for best results across social platforms.
+
 ## Delete a page {#delete-a-page}
 
 Non-home pages can be deleted from **Danger Zone**.

@@ -71,6 +71,8 @@ export interface LayoutServerData {
   customCSS?: string;
   globalPageVisibilitySettings: GlobalPageVisibilitySettings;
   dateAndTimeFormat: SiteDateTimeFormat;
+  metaSiteTitle?: string;
+  metaSiteDescription?: string;
 }
 
 export async function GetLayoutServerData(cookies: Cookies, request: Request): Promise<LayoutServerData> {
@@ -139,5 +141,7 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     customCSS: siteData.customCSS,
     globalPageVisibilitySettings: siteData.globalPageVisibilitySettings || seedSiteData.globalPageVisibilitySettings,
     dateAndTimeFormat: siteData.dateAndTimeFormat || seedSiteData.dateAndTimeFormat,
+    metaSiteTitle: siteData.metaSiteTitle,
+    metaSiteDescription: siteData.metaSiteDescription,
   };
 }

@@ -17,7 +17,6 @@
 <Toaster />
 
 <svelte:head>
-  <title>Kener Status</title>
   <link rel="icon" href={data.favicon} />
   {#if data.font?.cssSrc}
     <link rel="stylesheet" href={data.font.cssSrc} />
@@ -44,11 +43,6 @@
 		${data.customCSS || ""}
 	</style>`}
   <script src={clientResolver(resolve, "/capture.js")}></script>
-  <!-- social preview meta tags -->
-  {#if data.socialPreviewImage}
-    <meta property="og:image" content={clientResolver(resolve, data.socialPreviewImage)} />
-    <meta name="twitter:image" content={clientResolver(resolve, data.socialPreviewImage)} />
-  {/if}
 </svelte:head>
 <main class="kener-public">
   <!-- Nav -->
