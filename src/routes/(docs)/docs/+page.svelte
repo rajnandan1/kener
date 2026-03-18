@@ -238,6 +238,8 @@
   <title>Documentation - {data.config.name}</title>
   <meta name="description" content="Documentation and guides for {data.config.name}" />
   <link rel="icon" href={data.config.favicon} />
+  <meta property="og:image" content="https://kener.ing/og.jpg" />
+  <meta name="twitter:image" content="https://kener.ing/og.jpg" />
 </svelte:head>
 
 <div class="docs-landing bg-background text-foreground min-h-screen">
@@ -246,7 +248,11 @@
     <div class="mx-auto flex max-w-[1200px] items-center justify-between px-6 py-3">
       <a href={getHref("/docs")} class="text-foreground group no-underline">
         <span class="inline-flex items-center gap-2.5 text-base font-medium tracking-tight">
-          <img src="/logo96.png" alt="Logo" class="h-7 w-7 rounded-md transition-transform duration-300 group-hover:scale-110" />
+          <img
+            src="/logo96.png"
+            alt="Logo"
+            class="h-7 w-7 rounded-md transition-transform duration-300 group-hover:scale-110"
+          />
           <span class="font-display text-lg font-semibold">{data.config.name}</span>
         </span>
       </a>
@@ -290,20 +296,30 @@
     <div class="relative z-10 mx-auto max-w-[1200px]">
       <div class="mx-auto max-w-[820px] text-center">
         <div class="fade-up mb-8 inline-flex items-center gap-2">
-          <Badge variant="outline" class="hero-badge border-foreground/10 bg-background/60 gap-2 rounded-full px-4 py-1.5 text-xs font-medium tracking-wide backdrop-blur-sm">
+          <Badge
+            variant="outline"
+            class="hero-badge border-foreground/10 bg-background/60 gap-2 rounded-full px-4 py-1.5 text-xs font-medium tracking-wide backdrop-blur-sm"
+          >
             <span class="bg-primary inline-block h-1.5 w-1.5 animate-pulse rounded-full"></span>
             Production-ready status page platform
           </Badge>
         </div>
 
-        <h1 class="fade-up font-display text-foreground mb-6 text-4xl leading-[1.1] font-bold tracking-tight md:text-6xl lg:text-7xl" style="animation-delay: 80ms">
+        <h1
+          class="fade-up font-display text-foreground mb-6 text-4xl leading-[1.1] font-bold tracking-tight md:text-6xl lg:text-7xl"
+          style="animation-delay: 80ms"
+        >
           Build stunning<br />
           status pages with
           <span class="hero-gradient-text">Kener</span>
         </h1>
 
-        <p class="fade-up font-body text-muted-foreground mx-auto mb-10 max-w-[640px] text-base leading-relaxed font-light md:text-lg" style="animation-delay: 160ms">
-          Open-source monitoring, incident workflows, notifications, maintenance scheduling, embeds, and automation APIs — all in one modern platform.
+        <p
+          class="fade-up font-body text-muted-foreground mx-auto mb-10 max-w-[640px] text-base leading-relaxed font-light md:text-lg"
+          style="animation-delay: 160ms"
+        >
+          Open-source monitoring, incident workflows, notifications, maintenance scheduling, embeds, and automation APIs
+          — all in one modern platform.
         </p>
 
         <div class="fade-up mb-6 flex flex-wrap items-center justify-center gap-3" style="animation-delay: 240ms">
@@ -386,7 +402,9 @@
             <div class="feature-card-bg"></div>
             <div class="relative z-10">
               <div class="mb-4 flex items-start justify-between gap-4">
-                <div class="feature-icon-wrapper inline-flex h-11 w-11 items-center justify-center rounded-lg transition-all duration-300">
+                <div
+                  class="feature-icon-wrapper inline-flex h-11 w-11 items-center justify-center rounded-lg transition-all duration-300"
+                >
                   <feature.icon class="h-5 w-5" />
                 </div>
                 {#if feature.href}
@@ -424,7 +442,10 @@
 
       <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
         {#each advancedFeatures as feature, i (feature.title)}
-          <div class="advanced-card group relative overflow-hidden rounded-xl p-6 transition-all duration-500" style="animation-delay: {i * 60}ms">
+          <div
+            class="advanced-card group relative overflow-hidden rounded-xl p-6 transition-all duration-500"
+            style="animation-delay: {i * 60}ms"
+          >
             <div class="advanced-card-border"></div>
             <div class="relative z-10">
               <div class="mb-4 flex items-center justify-between gap-3">
@@ -432,7 +453,10 @@
                   <feature.icon class="h-5 w-5" />
                 </div>
                 {#if feature.tag}
-                  <span class="text-muted-foreground bg-muted/60 rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-widest uppercase">{feature.tag}</span>
+                  <span
+                    class="text-muted-foreground bg-muted/60 rounded-md px-2.5 py-1 text-[10px] font-semibold tracking-widest uppercase"
+                    >{feature.tag}</span
+                  >
                 {/if}
               </div>
               <h3 class="font-display text-foreground mb-2 text-lg font-semibold tracking-tight">{feature.title}</h3>
@@ -449,7 +473,9 @@
     <div class="mx-auto max-w-[1200px]">
       <div class="mx-auto mb-16 max-w-[640px] text-center">
         <p class="font-body text-primary mb-3 text-sm font-semibold tracking-widest uppercase">Documentation</p>
-        <h2 class="font-display text-foreground mb-4 text-3xl font-bold tracking-tight md:text-5xl">Explore by topic</h2>
+        <h2 class="font-display text-foreground mb-4 text-3xl font-bold tracking-tight md:text-5xl">
+          Explore by topic
+        </h2>
         <p class="font-body text-muted-foreground text-base leading-relaxed font-light md:text-lg">
           Jump to the sections your team needs most.
         </p>
@@ -507,9 +533,7 @@
   <!-- Footer -->
   <footer class="border-border/40 border-t px-6 py-8">
     <div class="mx-auto flex max-w-[1200px] flex-col items-center justify-between gap-4 md:flex-row">
-      <p class="font-body text-muted-foreground text-sm font-light">
-        Built with care by the Kener team
-      </p>
+      <p class="font-body text-muted-foreground text-sm font-light">Built with care by the Kener team</p>
       {#if data.config.footerLinks}
         <div class="flex flex-wrap items-center justify-center gap-5">
           {#each data.config.footerLinks as link (link.url)}
@@ -534,7 +558,11 @@
     font-family: "Instrument Serif", Georgia, "Times New Roman", serif;
   }
   .docs-landing :global(.font-body) {
-    font-family: "Source Sans 3", system-ui, -apple-system, sans-serif;
+    font-family:
+      "Source Sans 3",
+      system-ui,
+      -apple-system,
+      sans-serif;
   }
 
   /* ===== Entrance Animations ===== */
