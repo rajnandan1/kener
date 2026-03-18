@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What is Kener?
 
-Kener is an open-source status page application built with **SvelteKit 2.x (Svelte 5)** and **Node.js/Express**. It provides real-time monitoring, uptime tracking, incident management, and customizable dashboards. The codebase is migrating to **TypeScript-first**.
+Kener is an open-source status page application built with **SvelteKit 2.x (Svelte 5)** and **Node.js/Express**. It is a **TypeScript-first** codebase providing real-time monitoring, uptime tracking, incident management, and customizable dashboards.
 
 ## Development Commands
 
@@ -51,7 +51,7 @@ In production, `scripts/main.ts` is the single entry point: Express server + Sve
 
 Each monitor type has a dedicated implementation in `src/lib/server/services/`:
 
-- Types: API, Ping, TCP, DNS, SSL, SQL, Heartbeat, GameDig, Group
+- Types: API, Ping, TCP, DNS, SSL, SQL, Heartbeat, GameDig, Group, gRPC, None
 - Scheduled via `src/lib/server/schedulers/` using `croner`
 - Job queues managed with **BullMQ** + **Redis** (`src/lib/server/queues/`)
 
@@ -83,21 +83,21 @@ All timestamps are **UTC seconds** (not milliseconds). Use helpers from `src/lib
 
 ### Status Constants
 
-#### When svelte code
+Constants are exported as a **default export** from `src/lib/global-constants.ts`:
 
 ```typescript
-import { UP, DOWN, DEGRADED, MAINTENANCE, NO_DATA } from "$lib/server/global-constants.ts"
-```
+// In Svelte/client code or SvelteKit routes:
+import GC from "$lib/global-constants";
+// Usage: GC.UP, GC.DOWN, GC.DEGRADED, GC.MAINTENANCE, GC.NO_DATA
 
-#### When server code use directory traversal
-
-```typescript
-import { UP, DOWN, DEGRADED, MAINTENANCE, NO_DATA } from "./global-constants.ts"
+// In server code (use relative path):
+import GC from "../../global-constants.js";
+// Usage: GC.UP, GC.DOWN, etc.
 ```
 
 ### API Authentication
 
-APIs use Bearer token auth: `import { VerifyAPIKey } from "$lib/server/controllers/controller.js"`
+APIs use Bearer token auth: `import { VerifyAPIKey } from "$lib/server/controllers/apiController"`
 
 ### Types Location
 
@@ -111,8 +111,8 @@ Locale files in `src/lib/locales/`. Add translations by creating `{code}.json` a
 
 ## Environment Variables
 
-Required: `KENER_SECRET_KEY`, `ORIGIN`, `DATABASE_URL`
-Optional: `KENER_BASE_PATH`, `PORT` (default 3000), `RESEND_API_KEY`, `RESEND_SENDER_EMAIL`
+Required: `KENER_SECRET_KEY`, `ORIGIN`, `REDIS_URL`
+Optional: `DATABASE_URL` (defaults to SQLite), `KENER_BASE_PATH`, `PORT` (default 3000), `RESEND_API_KEY`, `RESEND_SENDER_EMAIL`
 
 ## Skills
 
@@ -121,4 +121,3 @@ Read `.claude/skills/` for specialized instructions on:
 - **svelte-code-writer** - Svelte component creation/editing
 - **documentation-writer** - Editing docs in `src/routes/(docs)/docs/content/`
 - **tailwindcss** - Tailwind CSS v4 patterns
-- **code-context** - Architecture documentation in `.codecontext/`

@@ -24,18 +24,29 @@ src/routes/(api)/api/
 - **Repository**: `src/lib/server/db/repositories/*.ts` - Database operations
 - **DbImpl**: `src/lib/server/db/dbimpl.ts` - Bindings for repository methods
 
+### Current Locals (set by middleware in `hooks.server.ts`)
+```typescript
+interface Locals {
+  user?: SessionUser;                // Auth session
+  monitor?: MonitorRecordTyped;      // /api/monitors/:monitor_tag/*
+  incident?: IncidentRecord;         // /api/incidents/:incident_id/*
+  maintenance?: MaintenanceRecord;   // /api/maintenances/:maintenance_id/*
+  page?: PageRecord;                 // /api/pages/:page_path/*
+}
+```
+
 ## Naming Conventions
 
 ### Use snake_case for API payloads
 ```typescript
-// ✅ Correct
+// Correct
 interface CreateMonitorRequest {
   monitor_tag: string;
   start_date_time: number;
   duration_seconds: number;
 }
 
-// ❌ Wrong
+// Wrong
 interface CreateMonitorRequest {
   monitorTag: string;
   startDateTime: number;
@@ -251,7 +262,7 @@ export const DELETE: RequestHandler = async ({ locals }) => {
 
   // Delete related records first (cascade)
   await db.deleteResourceRelatedRecords(resource.id);
-  
+
   // Delete the resource itself
   await db.deleteResource(resource.id);
 
@@ -275,8 +286,8 @@ const normalizedTs = GetMinuteStartTimestampUTC(body.start_date_time);
 const now = GetNowTimestampUTC();
 
 // For optional timestamp with fallback
-const timestamp = body.timestamp !== undefined 
-  ? GetMinuteStartTimestampUTC(body.timestamp) 
+const timestamp = body.timestamp !== undefined
+  ? GetMinuteStartTimestampUTC(body.timestamp)
   : GetMinuteStartNowTimestampUTC();
 ```
 
@@ -300,8 +311,8 @@ if (typeof body.count !== "number" || isNaN(body.count) || body.count <= 0) {
 ```typescript
 const VALID_STATUSES = ["ACTIVE", "INACTIVE"];
 if (body.status && !VALID_STATUSES.includes(body.status)) {
-  return json({ 
-    error: { code: "BAD_REQUEST", message: `status must be one of: ${VALID_STATUSES.join(", ")}` } 
+  return json({
+    error: { code: "BAD_REQUEST", message: `status must be one of: ${VALID_STATUSES.join(", ")}` }
   }, { status: 400 });
 }
 ```
@@ -311,8 +322,8 @@ if (body.status && !VALID_STATUSES.includes(body.status)) {
 if (body.monitor_tag) {
   const monitor = await db.getMonitorByTag(body.monitor_tag);
   if (!monitor) {
-    return json({ 
-      error: { code: "BAD_REQUEST", message: `Monitor with tag '${body.monitor_tag}' not found` } 
+    return json({
+      error: { code: "BAD_REQUEST", message: `Monitor with tag '${body.monitor_tag}' not found` }
     }, { status: 400 });
   }
 }
@@ -324,7 +335,7 @@ if (body.items !== undefined) {
   if (!Array.isArray(body.items)) {
     return json({ error: { code: "BAD_REQUEST", message: "items must be an array" } }, { status: 400 });
   }
-  
+
   for (const item of body.items) {
     if (!item.tag || typeof item.tag !== "string") {
       return json({ error: { code: "BAD_REQUEST", message: "Each item must have a valid tag" } }, { status: 400 });
