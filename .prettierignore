@@ -20,3 +20,4 @@ config/static/*
 **/*.yaml
 **/*.yml
 .github/
+src/lib/components/ui
