@@ -345,6 +345,22 @@ export const GetPageDashboardData = async (
     updated_at: pageDetails.updated_at,
   };
 
+  let socialPagePreviewImage: string | undefined = layoutData.socialPreviewImage;
+  let metaPageTitle: string | undefined = layoutData.metaSiteTitle;
+  let metaPageDescription: string | undefined = layoutData.metaSiteDescription;
+  if (!!pageDetails.page_settings_json) {
+    try {
+      const pageSettings = JSON.parse(pageDetails.page_settings_json);
+      if (pageSettings) {
+        socialPagePreviewImage = pageSettings.socialPagePreviewImage || layoutData.socialPreviewImage;
+        metaPageTitle = pageSettings.metaPageTitle || layoutData.metaSiteTitle;
+        metaPageDescription = pageSettings.metaPageDescription || layoutData.metaSiteDescription;
+      }
+    } catch (e) {
+      // Ignore JSON parsing errors and fallback to layout data or defaults
+    }
+  }
+
   if (monitorTags.length === 0) {
     return {
       pageStatus: BuildPageStatus([], nowTs),
@@ -353,6 +369,9 @@ export const GetPageDashboardData = async (
       monitorTags,
       monitorGroupMembersByTag: {},
       pageDetails: pageDetailsTyped,
+      socialPagePreviewImage,
+      metaPageTitle,
+      metaPageDescription,
     };
   }
   const eventSettings = layoutData.eventDisplaySettings;
@@ -378,22 +397,6 @@ export const GetPageDashboardData = async (
     if (!groupData?.monitors || !Array.isArray(groupData.monitors)) continue;
 
     monitorGroupMembersByTag[monitor.tag] = groupData.monitors.map((member) => member.tag);
-  }
-
-  let socialPagePreviewImage: string | undefined = layoutData.socialPreviewImage;
-  let metaPageTitle: string | undefined = layoutData.metaSiteTitle;
-  let metaPageDescription: string | undefined = layoutData.metaSiteDescription;
-  if (!!pageDetails.page_settings_json) {
-    try {
-      const pageSettings = JSON.parse(pageDetails.page_settings_json);
-      if (pageSettings) {
-        socialPagePreviewImage = pageSettings.socialPreviewImage || layoutData.socialPreviewImage;
-        metaPageTitle = pageSettings.metaTitle || layoutData.metaSiteTitle;
-        metaPageDescription = pageSettings.metaDescription || layoutData.metaSiteDescription;
-      }
-    } catch (e) {
-      // Ignore JSON parsing errors and fallback to layout data or defaults
-    }
   }
 
   return {

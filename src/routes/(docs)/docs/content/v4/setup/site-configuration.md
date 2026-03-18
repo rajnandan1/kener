@@ -18,14 +18,14 @@ Use **Manage → Site Configurations** to control identity, navigation, monitor 
 
 ## Runtime impact map {#runtime-impact-map}
 
-| Setting area                 | Stored key                                                   | Runtime impact                                                      |
-| ---------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------- |
-| Site name / URL / logo / nav | `siteName`, `siteURL`, `logo`, `nav`                         | Rendered in top navbar branding and nav links                       |
-| Favicon                      | `favicon`                                                    | Used in `<head>` as page icon                                       |
-| Monitor sub menu options     | `subMenuOptions`                                             | Gates monitor share actions (badges/embed) on public monitor pages  |
-| Global page visibility       | `globalPageVisibilitySettings`                               | Controls page switcher visibility and page-scoped navigation/events |
-| Data retention policy        | `dataRetentionPolicy`                                        | Controls daily cleanup of old `monitoring_data`                     |
-| Social preview & SEO         | `metaSiteTitle`, `metaSiteDescription`, `socialPreviewImage` | Default `og:title`, `og:description`, `og:image` for all pages      |
+| Setting area                 | Stored key                                                   | Runtime impact                                                                                  |
+| ---------------------------- | ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| Site name / URL / logo / nav | `siteName`, `siteURL`, `logo`, `nav`                         | Rendered in top navbar branding and nav links                                                   |
+| Favicon                      | `favicon`                                                    | Used in `<head>` as page icon                                                                   |
+| Monitor sub menu options     | `subMenuOptions`                                             | Gates monitor share actions (badges/embed) on public monitor pages                              |
+| Global page visibility       | `globalPageVisibilitySettings`                               | Controls page switcher visibility and page-scoped navigation/events                             |
+| Data retention policy        | `dataRetentionPolicy`                                        | Controls daily cleanup of old `monitoring_data`                                                 |
+| Social preview & SEO         | `metaSiteTitle`, `metaSiteDescription`, `socialPreviewImage` | Default `<title>`, `og:title`, `<meta description>`, `og:description`, `og:image` for all pages |
 
 ## Monitor sub menu options {#monitor-sub-menu-options}
 

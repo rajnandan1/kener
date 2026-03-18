@@ -113,20 +113,25 @@
 </script>
 
 <svelte:head>
-  <title>{data.metaPageTitle || (data.pageDetails?.page_title || "Status Page") + " - " + data.siteName}</title>
   {#if data.metaPageTitle}
     <title>{data.metaPageTitle}</title>
+    <meta property="og:title" content={data.metaPageTitle} />
   {:else if data.pageDetails?.page_title}
     <title>{data.pageDetails.page_title} - {data.siteName}</title>
+    <meta property="og:title" content={data.pageDetails.page_title + " - " + data.siteName} />
   {:else}
     <title>{data.siteName} - Status Page</title>
+    <meta property="og:title" content={data.siteName + " - Status Page"} />
   {/if}
   {#if data.metaPageDescription}
     <meta name="description" content={data.metaPageDescription} />
+    <meta property="og:description" content={data.metaPageDescription} />
   {:else if data.pageDetails?.page_header}
     <meta name="description" content={data.pageDetails.page_header} />
+    <meta property="og:description" content={data.pageDetails.page_header} />
   {:else}
-    <meta name="description" content={data.pageDetails.page_title + " - Status Page"} />
+    <meta name="description" content={(data.pageDetails?.page_title || "Status Page") + " - Status Page"} />
+    <meta property="og:description" content={(data.pageDetails?.page_title || "Status Page") + " - Status Page"} />
   {/if}
   {#if data.socialPagePreviewImage}
     <meta property="og:image" content={clientResolver(resolve, data.socialPagePreviewImage)} />
