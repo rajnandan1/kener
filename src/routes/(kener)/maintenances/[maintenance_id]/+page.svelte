@@ -65,9 +65,12 @@
 
 <svelte:head>
   <title>{data.maintenance.title + " - " + data.siteName}</title>
-  <!-- meta description -->
+  <meta property="og:title" content={data.maintenance.title + " - " + data.siteName} />
+  <meta property="og:type" content="article" />
+  <meta name="twitter:card" content="summary_large_image" />
   {#if data.maintenance.description}
     <meta name="description" content={data.maintenance.description} />
+    <meta property="og:description" content={data.maintenance.description} />
   {/if}
   {#if data.socialPreviewImage}
     <meta property="og:image" content={clientResolver(resolve, data.socialPreviewImage)} />

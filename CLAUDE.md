@@ -87,11 +87,11 @@ Constants are exported as a **default export** from `src/lib/global-constants.ts
 
 ```typescript
 // In Svelte/client code or SvelteKit routes:
-import GC from "$lib/global-constants";
+import GC from "$lib/global-constants"
 // Usage: GC.UP, GC.DOWN, GC.DEGRADED, GC.MAINTENANCE, GC.NO_DATA
 
 // In server code (use relative path):
-import GC from "../../global-constants.js";
+import GC from "../../global-constants.js"
 // Usage: GC.UP, GC.DOWN, etc.
 ```
 

@@ -133,6 +133,8 @@
     <meta name="description" content={(data.pageDetails?.page_title || "Status Page") + " - Status Page"} />
     <meta property="og:description" content={(data.pageDetails?.page_title || "Status Page") + " - Status Page"} />
   {/if}
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
   {#if data.socialPagePreviewImage}
     <meta property="og:image" content={clientResolver(resolve, data.socialPagePreviewImage)} />
     <meta name="twitter:image" content={clientResolver(resolve, data.socialPagePreviewImage)} />

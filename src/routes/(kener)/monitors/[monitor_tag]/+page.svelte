@@ -29,9 +29,12 @@
 
 <svelte:head>
   <title>{data.monitorName + " - " + data.siteName}</title>
-  <!-- meta description -->
+  <meta property="og:title" content={data.monitorName + " - " + data.siteName} />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
   {#if data.monitorDescription}
     <meta name="description" content={data.monitorDescription} />
+    <meta property="og:description" content={data.monitorDescription} />
   {/if}
   {#if data.socialPreviewImage}
     <meta property="og:image" content={clientResolver(resolve, data.socialPreviewImage)} />

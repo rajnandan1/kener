@@ -20,6 +20,7 @@
 <Toaster />
 
 <svelte:head>
+  <meta name="robots" content="noindex, nofollow" />
   {@html `<style>:root{--up:${colorUp};--degraded:${colorDegraded};--down:${colorDown};--maintenance:${colorMaintenance};}</style>`}
 </svelte:head>
 <main>

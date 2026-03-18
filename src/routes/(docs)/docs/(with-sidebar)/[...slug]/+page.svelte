@@ -152,6 +152,37 @@
   <meta property="og:title" content="{data.title} - Documentation" />
   <meta property="og:description" content={data.description || `Documentation for ${data.title}`} />
   <meta property="og:type" content="article" />
+  <meta property="article:author" content="https://github.com/rajnandan1" />
+  <link rel="canonical" href={`https://kener.ing/docs/${data.slug}`} />
+  <meta property="og:url" content={`https://kener.ing/docs/${data.slug}`} />
+  <meta name="twitter:card" content="summary_large_image" />
+  {@html `<script type="application/ld+json">${JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Documentation",
+        item: "https://kener.ing/docs"
+      },
+      ...(data.group
+        ? [
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: data.group
+            }
+          ]
+        : []),
+      {
+        "@type": "ListItem",
+        position: data.group ? 3 : 2,
+        name: data.title,
+        item: `https://kener.ing/docs/${data.slug}`
+      }
+    ]
+  })}</script>`}
 </svelte:head>
 
 <div class="mx-auto flex justify-between gap-8">

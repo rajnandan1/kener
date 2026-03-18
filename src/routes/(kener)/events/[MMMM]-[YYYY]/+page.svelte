@@ -159,6 +159,11 @@
 
 <svelte:head>
   <title>{currentMonth} - Maintenances & Incidents - {data.siteName}</title>
+  <meta name="description" content={`${currentMonth} maintenances and incidents for ${data.siteName}`} />
+  <meta property="og:title" content={`${currentMonth} - Maintenances & Incidents - ${data.siteName}`} />
+  <meta property="og:description" content={`${currentMonth} maintenances and incidents for ${data.siteName}`} />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
   {#if data.socialPreviewImage}
     <meta property="og:image" content={clientResolver(resolve, data.socialPreviewImage)} />
     <meta name="twitter:image" content={clientResolver(resolve, data.socialPreviewImage)} />

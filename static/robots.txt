@@ -1,1 +1,38 @@
 User-agent: *
+Allow: /
+Disallow: /manage/
+Disallow: /account/
+Disallow: /api/
+Disallow: /embed/
+
+# AI Search Engine Crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+Sitemap: https://kener.ing/sitemap.xml
+
+# AI Documentation Index
+# See https://llmstxt.org for specification
+# /llms.txt redirects to the latest version
+
