@@ -6,6 +6,7 @@
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
+  import * as RadioGroup from "$lib/components/ui/radio-group/index.js";
   import GC from "$lib/global-constants.js";
   import SaveIcon from "@lucide/svelte/icons/save";
   import Loader from "@lucide/svelte/icons/loader";
@@ -13,11 +14,19 @@
   import XIcon from "@lucide/svelte/icons/x";
   import ImageIcon from "@lucide/svelte/icons/image";
   import Plus from "@lucide/svelte/icons/plus";
+  import CopyButton from "$lib/components/CopyButton.svelte";
+  import CopyIcon from "@lucide/svelte/icons/copy";
+  import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
-  import type { DataRetentionPolicy, EventDisplaySettings, GlobalPageVisibilitySettings } from "$lib/types/site.js";
+  import type {
+    DataRetentionPolicy,
+    EventDisplaySettings,
+    GlobalPageVisibilitySettings,
+    SitemapXMLConfig
+  } from "$lib/types/site.js";
 
   interface NavItem {
     name: string;
@@ -37,6 +46,7 @@
   let savingGlobalPageVisibilitySettings = $state(false);
   let savingDataRetentionPolicy = $state(false);
   let savingEventDisplaySettings = $state(false);
+  let savingSitemap = $state(false);
   let uploadingLogo = $state(false);
   let uploadingFavicon = $state(false);
   let uploadingSocialPreviewImage = $state(false);
@@ -100,6 +110,17 @@
   let eventDisplaySettings = $state<EventDisplaySettings>(structuredClone(defaultEventDisplaySettings));
   let metaSiteTitle = $state("");
   let metaSiteDescription = $state("");
+
+  const defaultSitemap: SitemapXMLConfig = {
+    mode: "off",
+    urls: []
+  };
+  let sitemap = $state<SitemapXMLConfig>(structuredClone(defaultSitemap));
+
+  const sitemapURL = $derived(
+    siteData.siteURL ? siteData.siteURL.replace(/\/$/, "") + clientResolver(resolve, "/sitemap.xml") : ""
+  );
+
   let currentOrigin = $state("");
 
   function onForceExclusivityChange(checked: boolean | "indeterminate") {
@@ -210,6 +231,19 @@
 
         metaSiteTitle = data.metaSiteTitle || "";
         metaSiteDescription = data.metaSiteDescription || "";
+        if (data.sitemap) {
+          try {
+            const parsed = typeof data.sitemap === "string" ? JSON.parse(data.sitemap) : data.sitemap;
+            sitemap = {
+              mode: parsed?.mode ?? "auto",
+              urls: Array.isArray(parsed?.urls) ? parsed.urls : []
+            };
+          } catch {
+            sitemap = structuredClone(defaultSitemap);
+          }
+        } else {
+          sitemap = structuredClone(defaultSitemap);
+        }
       }
     } catch (e) {
       toast.error("Failed to load site data");
@@ -463,6 +497,49 @@
       toast.error("Failed to save event display settings");
     } finally {
       savingEventDisplaySettings = false;
+    }
+  }
+
+  function addSitemapUrl() {
+    sitemap.urls = [...sitemap.urls, { loc: "" }];
+  }
+
+  function removeSitemapUrl(index: number) {
+    sitemap.urls = sitemap.urls.filter((_, i) => i !== index);
+  }
+
+  const isValidSitemap = $derived(
+    sitemap.mode !== "manual" || (sitemap.urls.length > 0 && sitemap.urls.every((u) => u.loc.trim().length > 0))
+  );
+
+  async function saveSitemap() {
+    if (!isValidSitemap) return;
+    savingSitemap = true;
+    try {
+      const payload: SitemapXMLConfig = {
+        mode: sitemap.mode,
+        urls:
+          sitemap.mode !== "off" ? sitemap.urls.map((u) => ({ loc: u.loc.trim() })).filter((u) => u.loc.length > 0) : []
+      };
+
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "storeSiteData",
+          data: { sitemap: JSON.stringify(payload) }
+        })
+      });
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Sitemap settings saved successfully");
+      }
+    } catch (e) {
+      toast.error("Failed to save sitemap settings");
+    } finally {
+      savingSitemap = false;
     }
   }
 
@@ -1264,6 +1341,102 @@
       <Card.Footer class="flex justify-end">
         <Button onclick={saveEventDisplaySettings} disabled={savingEventDisplaySettings} class="cursor-pointer">
           {#if savingEventDisplaySettings}
+            <Loader class="h-4 w-4 animate-spin" />
+            Saving...
+          {:else}
+            <SaveIcon class="h-4 w-4" />
+            Save
+          {/if}
+        </Button>
+      </Card.Footer>
+    </Card.Root>
+
+    <!-- Sitemap Configuration Card -->
+    <Card.Root>
+      <Card.Header>
+        <Card.Title>Sitemap</Card.Title>
+        <Card.Description>Configure how your sitemap.xml is generated</Card.Description>
+      </Card.Header>
+      <Card.Content class="space-y-6">
+        <div class="space-y-3">
+          <Label>Mode</Label>
+          <RadioGroup.Root
+            value={sitemap.mode}
+            onValueChange={(v: string) => {
+              sitemap.mode = v as SitemapXMLConfig["mode"];
+              if (v === "manual" && sitemap.urls.length === 0) {
+                sitemap.urls = [{ loc: "" }];
+              }
+            }}
+            class="flex flex-col gap-3"
+          >
+            <div class="flex items-center space-x-2">
+              <RadioGroup.Item value="auto" id="sitemap-auto" />
+              <Label for="sitemap-auto" class="cursor-pointer font-normal">Auto</Label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <RadioGroup.Item value="manual" id="sitemap-manual" />
+              <Label for="sitemap-manual" class="cursor-pointer font-normal">Manual</Label>
+            </div>
+            <div class="flex items-center space-x-2">
+              <RadioGroup.Item value="off" id="sitemap-off" />
+              <Label for="sitemap-off" class="cursor-pointer font-normal">Off</Label>
+            </div>
+          </RadioGroup.Root>
+          <p class="text-muted-foreground text-xs">
+            {#if sitemap.mode === "auto"}
+              Sitemap will be auto-generated from your monitors and pages. You can also add additional URLs below.
+            {:else if sitemap.mode === "manual"}
+              Provide custom URLs to include in the sitemap.
+            {:else}
+              Sitemap generation is disabled.
+            {/if}
+          </p>
+        </div>
+
+        {#if sitemap.mode === "manual" || sitemap.mode === "auto"}
+          <div class="space-y-3">
+            <Label>{sitemap.mode === "auto" ? "Additional URLs" : "URLs"}</Label>
+            {#each sitemap.urls as url, index (index)}
+              <div class="flex items-center gap-2">
+                <Input type="url" bind:value={url.loc} placeholder="https://example.com/page" class="flex-1" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onclick={() => removeSitemapUrl(index)}
+                  disabled={sitemap.mode === "manual" && sitemap.urls.length <= 1}
+                >
+                  <XIcon class="h-4 w-4" />
+                </Button>
+              </div>
+            {/each}
+            <Button variant="outline" onclick={addSitemapUrl}>
+              <Plus class="h-4 w-4" />
+              {sitemap.urls.length > 0 ? "Add More URLs" : "Add URL"}
+            </Button>
+            {#if sitemap.mode === "manual" && sitemap.urls.length === 0}
+              <p class="text-destructive text-xs">At least one URL is required for manual mode.</p>
+            {/if}
+          </div>
+        {/if}
+      </Card.Content>
+      <Card.Footer class="flex justify-end gap-2">
+        {#if sitemap.mode !== "off" && sitemapURL}
+          <CopyButton variant="outline" size="default" text={sitemapURL}>
+            <CopyIcon class="mr-2 h-4 w-4" />
+            Copy URL
+          </CopyButton>
+          <Button
+            variant="outline"
+            class="cursor-pointer"
+            onclick={() => window.open(clientResolver(resolve, "/sitemap.xml"), "_blank")}
+          >
+            <ExternalLinkIcon class="h-4 w-4" />
+            View
+          </Button>
+        {/if}
+        <Button onclick={saveSitemap} disabled={savingSitemap || !isValidSitemap} class="cursor-pointer">
+          {#if savingSitemap}
             <Loader class="h-4 w-4 animate-spin" />
             Saving...
           {:else}

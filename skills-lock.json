@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "ss-shadcn-svelte": {
+      "source": "rajnandan1/such-skills",
+      "sourceType": "github",
+      "computedHash": "0678d0cad0bce1d56731c9613e75f2d274810ad2a17ecea2d21434b6416c90b7"
+    }
+  }
+}

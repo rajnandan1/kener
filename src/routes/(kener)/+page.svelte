@@ -155,14 +155,16 @@
     <Item.Root class="px-0 py-0">
       <Item.Content>
         {#if data.pageDetails?.page_header}
-          <Item.Title class="text-2xl sm:text-3xl">{data.pageDetails.page_header}</Item.Title>
+          <h1>
+            <Item.Title class="text-2xl sm:text-3xl">{data.pageDetails.page_header}</Item.Title>
+          </h1>
         {/if}
         {#if data.pageDetails?.page_subheader}
-          <div class="">
+          <h2 class="">
             <div class="prose prose-sm dark:prose-invert max-w-none">
               <SveltePurify html={mdToHTML(data.pageDetails.page_subheader)} />
             </div>
-          </div>
+          </h2>
         {/if}
       </Item.Content>
     </Item.Root>
