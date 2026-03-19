@@ -264,6 +264,10 @@
                     {
                       "title": "Custom JS & CSS",
                       "content": "v4/guides/custom-js-css-guide"
+                    },
+                    {
+                      "title": "Kener vs Other Status Pages",
+                      "content": "v4/guides/comparison"
                     }
                   ]
                 }
