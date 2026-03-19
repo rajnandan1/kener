@@ -178,6 +178,25 @@ NODE_ENV=production
 - Controls logging verbosity
 - Enables/disables development-only features
 
+### BODY_SIZE_LIMIT {#body-size-limit}
+
+**Purpose**: Maximum allowed request body size. This is a SvelteKit setting that controls the largest payload the server will accept.
+
+**Default**: `3M` (3 megabytes)
+
+**When to Change**: Increase if you need to upload larger images through the admin panel or send larger API payloads.
+
+**Format**: Number followed by unit — `K` (kilobytes), `M` (megabytes), or `Infinity` for no limit.
+
+**Example**:
+
+```bash
+BODY_SIZE_LIMIT=10M
+```
+
+> [!NOTE]
+> The Docker image sets `BODY_SIZE_LIMIT=3M` by default. Override it by passing the variable to your container.
+
 ## Integration Variables {#integration-variables}
 
 For detailed configuration of these integrations, see their dedicated documentation pages.

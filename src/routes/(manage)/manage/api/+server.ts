@@ -118,6 +118,7 @@ import sendWebhook from "$lib/server/notification/webhook_notification.js";
 import sendEmail from "$lib/server/notification/email_notification.js";
 import sendDiscord from "$lib/server/notification/discord_notification.js";
 import sendSlack from "$lib/server/notification/slack_notification.js";
+import heicConvert from "heic-convert";
 import serverResolver from "$lib/server/resolver.js";
 
 function AdminCan(role: string) {
@@ -716,7 +717,7 @@ async function uploadImage(data: ImageUploadData): Promise<{ id: string; url: st
     throw new Error("Image data is required");
   }
 
-  const allowedMimeTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+  const allowedMimeTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/heic", "image/heif"];
   if (!allowedMimeTypes.includes(mimeType)) {
     throw new Error(`Invalid image type. Allowed types: ${allowedMimeTypes.join(", ")}`);
   }
@@ -744,8 +745,21 @@ async function uploadImage(data: ImageUploadData): Promise<{ id: string; url: st
   let width: number | undefined;
   let height: number | undefined;
 
+  // Pre-convert HEIC/HEIF to JPEG before passing to sharp (sharp may lack HEVC codec)
+  let sharpInputBuffer = imageBuffer;
+  const heicSignature = imageBuffer.subarray(4, 12).toString("ascii");
+  const isHeicData = heicSignature.includes("ftyp");
+  if (isHeicData) {
+    const converted = await heicConvert({
+      buffer: new Uint8Array(imageBuffer) as unknown as ArrayBuffer,
+      format: "JPEG",
+      quality: 0.85,
+    });
+    sharpInputBuffer = Buffer.from(converted);
+  }
+
   // Process with sharp and normalize output
-  const image = sharp(imageBuffer, { limitInputPixels: GC.MAX_INPUT_PIXELS });
+  const image = sharp(sharpInputBuffer, { limitInputPixels: GC.MAX_INPUT_PIXELS });
   const metadata = await image.metadata();
 
   const formatToMime: Record<string, string> = {
@@ -753,6 +767,8 @@ async function uploadImage(data: ImageUploadData): Promise<{ id: string; url: st
     jpeg: "image/jpeg",
     webp: "image/webp",
     svg: "image/svg+xml",
+    heic: "image/heic",
+    heif: "image/heif",
   };
 
   const detectedMimeType = metadata.format ? formatToMime[metadata.format] : undefined;
@@ -764,7 +780,10 @@ async function uploadImage(data: ImageUploadData): Promise<{ id: string; url: st
     throw new Error("SVG uploads are not allowed");
   }
 
-  if (normalizedRequestedMime !== detectedMimeType) {
+  // HEIC/HEIF files often have .jpg extension (e.g. iPhone photos); allow the mismatch
+  const isHeicDetected = detectedMimeType === "image/heic" || detectedMimeType === "image/heif";
+  const isHeicRequested = normalizedRequestedMime === "image/heic" || normalizedRequestedMime === "image/heif";
+  if (normalizedRequestedMime !== detectedMimeType && !isHeicDetected && !isHeicRequested) {
     throw new Error("Image MIME type does not match file content");
   }
 
@@ -796,8 +815,8 @@ async function uploadImage(data: ImageUploadData): Promise<{ id: string; url: st
   width = newWidth;
   height = newHeight;
 
-  // Keep JPEG as JPEG; convert everything else (WebP/PNG) to PNG.
-  if (detectedMimeType === "image/jpeg") {
+  // Keep JPEG as JPEG; convert HEIC/HEIF to JPEG; convert everything else (WebP/PNG) to PNG.
+  if (detectedMimeType === "image/jpeg" || isHeicDetected) {
     processedBuffer = await image
       .resize(newWidth, newHeight, {
         fit: forceDimensions ? "cover" : "inside",

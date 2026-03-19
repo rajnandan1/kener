@@ -204,7 +204,7 @@
             <input
               id="monitor-image-input"
               type="file"
-              accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp"
+              accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp,image/heic,image/heif"
               class="hidden"
               onchange={handleImageUpload}
               disabled={uploadingImage}

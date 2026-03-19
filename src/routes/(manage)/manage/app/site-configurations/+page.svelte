@@ -792,7 +792,7 @@
               <input
                 id="logo-input"
                 type="file"
-                accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp"
+                accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp,image/heic,image/heif"
                 class="hidden"
                 onchange={(e) => handleImageUpload(e, "logo")}
                 disabled={uploadingLogo}
@@ -862,7 +862,7 @@
               <input
                 id="favicon-input"
                 type="file"
-                accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp"
+                accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp,image/heic,image/heif"
                 class="hidden"
                 onchange={(e) => handleImageUpload(e, "favicon")}
                 disabled={uploadingFavicon}
@@ -932,7 +932,7 @@
               <input
                 id="social-preview-image-input"
                 type="file"
-                accept="image/png,image/jpeg,image/jpg,image/webp"
+                accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
                 class="hidden"
                 onchange={(e) => handleImageUpload(e, "socialPreviewImage")}
                 disabled={uploadingSocialPreviewImage}
@@ -1028,7 +1028,7 @@
                   <input
                     id="nav-icon-input-{index}"
                     type="file"
-                    accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp"
+                    accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp,image/heic,image/heif"
                     class="hidden"
                     onchange={(e) => handleNavIconUpload(e, index)}
                   />

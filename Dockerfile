@@ -135,6 +135,7 @@ ARG KENER_BASE_PATH=
 ENV NODE_ENV=production \
     PORT=${PORT} \
     KENER_BASE_PATH=${KENER_BASE_PATH} \
+    BODY_SIZE_LIMIT=3M \
     TZ=UTC \
     # Required so Node can import .ts migration/seed files at runtime
     NODE_OPTIONS="--experimental-strip-types"

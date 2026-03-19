@@ -86,7 +86,8 @@
 
   // Page settings state
   let pageSettings = $state<PageSettingsType>(structuredClone(defaultPageSettings));
-  let savingSettings = $state(false);
+  let savingDisplaySettings = $state(false);
+  let savingSeoSettings = $state(false);
 
   // Validation
   const isFormValid = $derived(formData.page_title.trim().length > 0 && formData.page_header.trim().length > 0);
@@ -381,6 +382,10 @@
         })
       });
 
+      if (!response.ok) {
+        toast.error("Failed to upload logo");
+        return;
+      }
       const result = await response.json();
       if (result.error) {
         toast.error(result.error);
@@ -452,6 +457,10 @@
         })
       });
 
+      if (!response.ok) {
+        toast.error("Failed to upload social preview image");
+        return;
+      }
       const result = await response.json();
       if (result.error) {
         toast.error(result.error);
@@ -467,10 +476,11 @@
     }
   }
 
-  async function savePageSettings() {
+  async function savePageSettings(source: "display" | "seo") {
     if (!currentPage) return;
 
-    savingSettings = true;
+    if (source === "display") savingDisplaySettings = true;
+    else savingSeoSettings = true;
     try {
       const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
@@ -493,7 +503,8 @@
     } catch (e) {
       toast.error("Failed to save page settings");
     } finally {
-      savingSettings = false;
+      if (source === "display") savingDisplaySettings = false;
+      else savingSeoSettings = false;
     }
   }
 
@@ -635,7 +646,7 @@
                 <input
                   id="page-logo-input"
                   type="file"
-                  accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp"
+                  accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp,image/heic,image/heif"
                   class="hidden"
                   onchange={handleLogoUpload}
                   disabled={uploadingLogo}
@@ -830,8 +841,8 @@
           </div>
         </Card.Content>
         <Card.Footer class="flex justify-end">
-          <Button onclick={savePageSettings} disabled={savingSettings}>
-            {#if savingSettings}
+          <Button onclick={() => savePageSettings("display")} disabled={savingDisplaySettings}>
+            {#if savingDisplaySettings}
               <Loader class="h-4 w-4 animate-spin" />
               Saving...
             {:else}
@@ -885,7 +896,7 @@
                 <input
                   id="page-social-preview-input"
                   type="file"
-                  accept="image/png,image/jpeg,image/jpg,image/webp"
+                  accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
                   class="hidden"
                   onchange={handleSocialPreviewUpload}
                   disabled={uploadingSocialPreview}
@@ -926,8 +937,8 @@
           </div>
         </Card.Content>
         <Card.Footer class="flex justify-end">
-          <Button onclick={savePageSettings} disabled={savingSettings}>
-            {#if savingSettings}
+          <Button onclick={() => savePageSettings("seo")} disabled={savingSeoSettings}>
+            {#if savingSeoSettings}
               <Loader class="h-4 w-4 animate-spin" />
               Saving...
             {:else}
