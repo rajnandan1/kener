@@ -141,3 +141,10 @@ export interface SiteDateTimeFormat {
   dateOnly: string;
   timeOnly: string;
 }
+
+export interface SitemapXMLConfig {
+  mode: "auto" | "manual" | "off";
+  urls: {
+    loc: string;
+  }[];
+}
