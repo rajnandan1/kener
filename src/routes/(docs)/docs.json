@@ -300,6 +300,10 @@
                   "collapsible": false,
                   "pages": [
                     {
+                      "title": "v4.0.20",
+                      "content": "v4/changelogs/v4.0.20"
+                    },
+                    {
                       "title": "v4.0.19",
                       "content": "v4/changelogs/v4.0.19"
                     },
