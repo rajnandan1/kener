@@ -450,7 +450,7 @@
         </div>
 
         <h1
-          class="fade-up font-display text-foreground mb-6 text-4xl leading-[1.1] font-bold tracking-tight md:text-6xl lg:text-7xl"
+          class="fade-up font-display text-foreground mb-6 text-4xl leading-[1.1] font-semibold tracking-tight md:text-6xl lg:text-7xl"
           style="animation-delay: 80ms"
         >
           Open source status page
@@ -699,7 +699,7 @@
 <style>
   /* ===== Typography ===== */
   .docs-landing :global(.font-display) {
-    font-family: "Bodoni Moda", Georgia, "Times New Roman", serif;
+    font-family: "Bodoni Moda", serif;
   }
   .docs-landing :global(.font-body) {
     font-family:
