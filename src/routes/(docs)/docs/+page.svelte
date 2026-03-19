@@ -699,7 +699,7 @@
 <style>
   /* ===== Typography ===== */
   .docs-landing :global(.font-display) {
-    font-family: "Inria Serif", Georgia, "Times New Roman", serif;
+    font-family: "Bodoni Moda", Georgia, "Times New Roman", serif;
   }
   .docs-landing :global(.font-body) {
     font-family:
