@@ -78,8 +78,9 @@
   const coreFeatures: FeatureCard[] = [
     {
       icon: Zap,
-      title: "Powerful Monitoring",
-      description: "Track API, Ping, TCP, DNS, SSL, SQL, Heartbeat, and GameDig monitors with flexible checks.",
+      title: "11 Monitor Types",
+      description:
+        "Track API, Ping, TCP, DNS, SSL, SQL, Heartbeat, GameDig, and gRPC services with configurable check intervals and thresholds.",
       href: "/docs/monitors/overview"
     },
     {
@@ -108,8 +109,9 @@
     },
     {
       icon: Database,
-      title: "Multiple Status Pages",
-      description: "Manage multiple branded status pages from one Kener instance for different products or teams.",
+      title: "Multi-page Status Dashboard",
+      description:
+        "Run multiple branded status pages from a single self-hosted Kener instance — one per product, team, or region.",
       href: "/docs/pages"
     },
     {
@@ -120,8 +122,9 @@
     },
     {
       icon: Globe,
-      title: "Global Reach",
-      description: "Use localization, timezone-aware display, and SEO-friendly pages for global audiences.",
+      title: "21 Languages & i18n",
+      description:
+        "Built-in localization with 21 languages, timezone-aware display, and SEO-friendly pages for global audiences.",
       href: "/docs/internationalization"
     },
     {
@@ -235,101 +238,152 @@
 </script>
 
 <svelte:head>
-  <title>{data.config.name} - Open Source Status Page System | Documentation</title>
+  <title>{data.config.name} - Open Source Status Page | Self-Hosted Docker Status Page & Uptime Monitor</title>
   <meta
     name="description"
     content="{data.config
-      .name} is an open-source status page system built with SvelteKit. Monitor APIs, Ping, TCP, DNS, SSL, SQL, and more. Features incident management, maintenance scheduling, notifications, embeddable widgets, and a complete REST API. Self-host with Docker or deploy to Railway and Zeabur."
+      .name} is a free, open-source status page system you can self-host with Docker. Monitor APIs, Ping, TCP, DNS, SSL, and SQL services. Features incident management, maintenance scheduling, real-time notifications, embeddable widgets, and a REST API. Supports 11 monitor types, 21 languages, and deploys in under 2 minutes."
+  />
+  <meta
+    name="keywords"
+    content="open source status page, docker status page, self-hosted status page, uptime monitor, incident management, status page tool, free status page, kener, status page docker compose, open source uptime monitoring"
   />
   <link rel="icon" href={data.config.favicon} />
   <link rel="canonical" href="https://kener.ing/docs" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://kener.ing/docs" />
-  <meta property="og:title" content="{data.config.name} - Open Source Status Page System | Documentation" />
+  <meta property="og:title" content="{data.config.name} - Open Source Status Page | Self-Hosted with Docker" />
   <meta
     property="og:description"
-    content="{data.config
-      .name} is an open-source status page system built with SvelteKit. Monitor APIs, Ping, TCP, DNS, SSL, SQL, and more. Features incident management, maintenance scheduling, notifications, and a complete REST API."
+    content="Free, open-source status page you can self-host with Docker. Monitor 11 service types, manage incidents, schedule maintenance, and notify subscribers. Deploy in under 2 minutes with Docker Compose."
   />
   <meta property="og:image" content="https://kener.ing/og.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta
+    property="og:image:alt"
+    content="Kener open source status page dashboard showing uptime monitoring and incident management"
+  />
   <meta property="og:site_name" content={data.config.name} />
+  <meta property="og:locale" content="en_US" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="{data.config.name} - Open Source Status Page System" />
+  <meta name="twitter:title" content="{data.config.name} - Open Source Status Page & Docker Uptime Monitor" />
   <meta
     name="twitter:description"
-    content="Open-source status page with monitoring, incident management, maintenance scheduling, and notifications. Self-host with Docker or deploy instantly."
+    content="Free, self-hosted status page with Docker support. Monitor APIs, DNS, SSL, and more. Incident management, maintenance scheduling, and real-time notifications out of the box."
   />
   <meta name="twitter:image" content="https://kener.ing/og.jpg" />
-  {@html `<script type="application/ld+json">${JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "What is Kener?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Kener is an open-source status page system built with SvelteKit and Node.js. It provides real-time monitoring, uptime tracking, incident management, maintenance scheduling, and customizable dashboards. You can self-host it with Docker or deploy to platforms like Railway and Zeabur."
-        }
+  {@html `<script type="application/ld+json">${JSON.stringify([
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: "Kener",
+      applicationCategory: "DeveloperApplication",
+      operatingSystem: "Linux, macOS, Windows, Docker",
+      description:
+        "Kener is a free, open-source status page system and uptime monitor. Self-host with Docker or deploy to Railway and Zeabur. Supports 11 monitor types including API, Ping, TCP, DNS, SSL, SQL, gRPC, and more.",
+      url: "https://kener.ing",
+      downloadUrl: "https://github.com/rajnandan1/kener",
+      softwareVersion: "latest",
+      license: "https://opensource.org/licenses/MIT",
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "USD"
       },
-      {
-        "@type": "Question",
-        name: "What types of monitors does Kener support?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Kener supports API (HTTP), Ping, TCP, DNS, SSL certificate, SQL database, Heartbeat, GameDig (game server), gRPC, and Group monitors. Each monitor type can be configured with custom check intervals, thresholds, and alerting rules."
-        }
+      author: {
+        "@type": "Person",
+        name: "Raj Nandan Sharma",
+        url: "https://github.com/rajnandan1"
       },
-      {
-        "@type": "Question",
-        name: "How do I deploy Kener?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Kener can be deployed using Docker, or one-click deployed to Railway or Zeabur. It supports SQLite (default), PostgreSQL, and MySQL databases. You need Node.js 20+ and Redis for the job queue."
-        }
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: "5",
+        ratingCount: "1",
+        bestRating: "5"
       },
-      {
-        "@type": "Question",
-        name: "Does Kener support incident management?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Yes, Kener has full incident management with transparent timelines, status updates, acknowledgements, and clear communication workflows. You can create, update, and resolve incidents through the admin dashboard or the REST API."
+      featureList:
+        "Uptime Monitoring, Incident Management, Maintenance Scheduling, Status Page, Docker Deployment, REST API, Email Notifications, Slack Integration, Discord Integration, Webhook Alerts, Embeddable Widgets, Multi-language Support, Dark Mode"
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: "What is Kener?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Kener is a free, open-source status page system built with SvelteKit and Node.js. It provides real-time uptime monitoring across 11 service types, incident management, maintenance scheduling, and customizable dashboards. You can self-host it with Docker in under 2 minutes, or one-click deploy to Railway and Zeabur."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "How do I deploy Kener with Docker?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Kener can be deployed with a single docker-compose.yml file. Run 'docker compose up -d' to start. It supports SQLite (default), PostgreSQL, and MySQL databases. You need Redis for the job queue. One-click deploy options are also available for Railway and Zeabur."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "What types of monitors does Kener support?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Kener supports 11 monitor types: API (HTTP), Ping, TCP, DNS, SSL certificate, SQL database, Heartbeat, GameDig (game server), gRPC, Group, and None. Each monitor type can be configured with custom check intervals, thresholds, and alerting rules."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "Is Kener a good alternative to Statuspage, Betteruptime, or Upptime?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes. Kener is a free, MIT-licensed, open-source alternative to paid status page services like Atlassian Statuspage, Better Uptime, and Instatus. Unlike SaaS options, Kener gives you full control over your data with self-hosted Docker deployment, supports 11 monitor types, 21 languages, and includes incident management, maintenance scheduling, and subscriber notifications at no cost."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "Does Kener support incident management?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes, Kener has full incident management with transparent timelines, status updates, acknowledgements, and clear communication workflows. You can create, update, and resolve incidents through the admin dashboard or the REST API."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "Can I customize the look and feel of my Kener status page?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes, Kener offers extensive customization including custom logos, colors, CSS, theme behavior (light/dark mode), localization across 21 languages, and multiple branded status pages from a single instance. It also supports embeddable status widgets and uptime badges."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "Does Kener have an API?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes, Kener provides a complete REST API (v4) for automating incidents, monitor operations, and reporting. API access is secured with Bearer token authentication and supports full CRUD operations."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "What notification channels does Kener support?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Kener supports notifications via email, webhooks, Slack, and Discord. It uses a trigger-based workflow system where you can configure smart conditions to route alerts and automate operational notifications to your team."
+          }
+        },
+        {
+          "@type": "Question",
+          name: "Is Kener free and open source?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Yes, Kener is 100% free and open-source, licensed under the MIT license. The source code is available on GitHub at github.com/rajnandan1/kener. There are no paid tiers or premium features — every feature is available to all users."
+          }
         }
-      },
-      {
-        "@type": "Question",
-        name: "Can I customize the look and feel of my Kener status page?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Yes, Kener offers extensive customization including custom logos, colors, CSS, theme behavior (light/dark mode), localization (i18n), and multiple branded status pages from a single instance. It also supports embeddable widgets and badges."
-        }
-      },
-      {
-        "@type": "Question",
-        name: "Does Kener have an API?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Yes, Kener provides a complete REST API (v4) for automating incidents, monitor operations, and reporting. API access is secured with Bearer token authentication and supports full CRUD operations."
-        }
-      },
-      {
-        "@type": "Question",
-        name: "What notification channels does Kener support?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Kener supports notifications via email, webhooks, Slack, and Discord. It uses a trigger-based workflow system where you can configure smart conditions to route alerts and automate operational notifications."
-        }
-      },
-      {
-        "@type": "Question",
-        name: "Is Kener free and open source?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Yes, Kener is fully free and open-source, licensed under the MIT license. The source code is available on GitHub at github.com/rajnandan1/kener."
-        }
-      }
-    ]
-  })}</script>`}
+      ]
+    }
+  ])}</script>`}
 </svelte:head>
 
 <div class="docs-landing bg-background text-foreground min-h-screen">
@@ -391,7 +445,7 @@
             class="hero-badge border-foreground/10 bg-background/60 gap-2 rounded-full px-4 py-1.5 text-xs font-medium tracking-wide backdrop-blur-sm"
           >
             <span class="bg-primary inline-block h-1.5 w-1.5 animate-pulse rounded-full"></span>
-            Production-ready status page platform
+            Open-source &middot; Self-hosted &middot; Docker-ready
           </Badge>
         </div>
 
@@ -399,17 +453,16 @@
           class="fade-up font-display text-foreground mb-6 text-4xl leading-[1.1] font-bold tracking-tight md:text-6xl lg:text-7xl"
           style="animation-delay: 80ms"
         >
-          Build stunning<br />
-          status pages with
-          <span class="hero-gradient-text">Kener</span>
+          Open source status page
+          <br />you can <span class="hero-gradient-text">self-host</span>
         </h1>
 
         <p
           class="fade-up font-body text-muted-foreground mx-auto mb-10 max-w-[640px] text-base leading-relaxed font-light md:text-lg"
           style="animation-delay: 160ms"
         >
-          Open-source monitoring, incident workflows, notifications, maintenance scheduling, embeds, and automation APIs
-          — all in one modern platform.
+          Kener is a free, open-source status page and uptime monitor. Deploy with Docker in under 2 minutes. Track 11
+          service types, manage incidents, schedule maintenance, and notify subscribers — all from one platform.
         </p>
 
         <div class="fade-up mb-6 flex flex-wrap items-center justify-center gap-3" style="animation-delay: 240ms">
@@ -460,7 +513,7 @@
           <div class="relative overflow-hidden rounded-xl border border-white/10 shadow-2xl">
             <img
               src="/og.jpg"
-              alt="Kener documentation preview"
+              alt="Kener open source status page dashboard — uptime monitoring, incident management, and Docker deployment"
               class="bg-muted h-auto w-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
               loading="eager"
             />
@@ -476,10 +529,10 @@
       <div class="mx-auto mb-16 max-w-[640px] text-center">
         <p class="font-body text-primary mb-3 text-sm font-semibold tracking-widest uppercase">Capabilities</p>
         <h2 class="font-display text-foreground mb-4 text-3xl font-bold tracking-tight md:text-5xl">
-          Everything you need
+          Status page monitoring features
         </h2>
         <p class="font-body text-muted-foreground text-base leading-relaxed font-light md:text-lg">
-          From quick setup to advanced operations — monitoring, incidents, notifications, and more.
+          From uptime monitoring to incident management — everything you need to run a production status page.
         </p>
       </div>
 
@@ -523,10 +576,10 @@
       <div class="mx-auto mb-16 max-w-[640px] text-center">
         <p class="font-body text-primary mb-3 text-sm font-semibold tracking-widest uppercase">For Ops Teams</p>
         <h2 class="font-display text-foreground mb-4 text-3xl font-bold tracking-tight md:text-5xl">
-          Advanced power tools
+          Advanced ops &amp; admin tools
         </h2>
         <p class="font-body text-muted-foreground text-base leading-relaxed font-light md:text-lg">
-          Deep operational tooling surfaced in the admin dashboard.
+          Self-hosted status page with deep operational tooling — secrets vault, triggers, API keys, and analytics.
         </p>
       </div>
 
@@ -564,10 +617,10 @@
       <div class="mx-auto mb-16 max-w-[640px] text-center">
         <p class="font-body text-primary mb-3 text-sm font-semibold tracking-widest uppercase">Documentation</p>
         <h2 class="font-display text-foreground mb-4 text-3xl font-bold tracking-tight md:text-5xl">
-          Explore by topic
+          Kener documentation
         </h2>
         <p class="font-body text-muted-foreground text-base leading-relaxed font-light md:text-lg">
-          Jump to the sections your team needs most.
+          Guides for Docker deployment, monitor configuration, incident workflows, and API integration.
         </p>
       </div>
 
@@ -599,11 +652,12 @@
         <div class="cta-banner-bg"></div>
         <div class="relative z-10 flex flex-col items-center justify-between gap-6 md:flex-row">
           <div>
-            <h3 class="font-display text-foreground mb-2 text-xl font-bold tracking-tight md:text-2xl">
-              Need help or want to contribute?
-            </h3>
+            <h2 class="font-display text-foreground mb-2 text-xl font-bold tracking-tight md:text-2xl">
+              Star Kener on GitHub
+            </h2>
             <p class="font-body text-muted-foreground text-sm font-light">
-              Join the community, browse examples, and help shape Kener's future.
+              Join the open-source community. Contribute features, report issues, and help build the best free status
+              page platform.
             </p>
           </div>
           <a

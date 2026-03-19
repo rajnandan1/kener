@@ -31,7 +31,7 @@ Response: Array of todo objects with `completed` boolean field.
 ### Eval function:
 
 ```javascript
-;(async function (statusCode, responseTime, responseRaw) {
+async function (statusCode, responseTime, responseRaw) {
     if (statusCode !== 200) {
         return { status: "DOWN", latency: responseTime }
     }
@@ -58,7 +58,7 @@ Response: Array of todo objects with `completed` boolean field.
     }
 
     return { status: "DOWN", latency: responseTime }
-})
+}
 ```
 
 ## POST request body with $SECRET_PARAM (no eval) {#post-secret-param-body}
