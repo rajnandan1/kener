@@ -47,10 +47,12 @@
     <Item.Root class="px-0 py-0 ">
       <Item.Content>
         {#if data.monitorName}
-          <Item.Title class="text-3xl">{data.monitorName}</Item.Title>
+          <h1>
+            <Item.Title class="text-3xl">{data.monitorName}</Item.Title>
+          </h1>
         {/if}
         {#if data.monitorDescription}
-          <div class="">
+          <h2 class="">
             <Item.Description
               class="text-muted-foreground w-full {descriptionExpanded ? 'line-clamp-none' : ''} text-pretty"
             >
@@ -74,7 +76,7 @@
                 {data.monitorDescription}
               {/if}
             </Item.Description>
-          </div>
+          </h2>
         {/if}
       </Item.Content>
     </Item.Root>

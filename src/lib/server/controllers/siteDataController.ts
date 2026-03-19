@@ -19,6 +19,7 @@ import type {
   SiteSubMenuOptions,
   SiteDateTimeFormat,
   SiteSubscriptionsSettings,
+  SitemapXMLConfig,
 } from "../../types/site.js";
 
 export interface SiteDataTransformed {
@@ -62,6 +63,7 @@ export interface SiteDataTransformed {
   globalPageVisibilitySettings?: GlobalPageVisibilitySettings;
   pageOrderingSettings?: PageOrderingSettings;
   dateAndTimeFormat?: SiteDateTimeFormat;
+  sitemap?: SitemapXMLConfig;
 }
 
 export function InsertKeyValue(key: string, value: string): Promise<number[]> {

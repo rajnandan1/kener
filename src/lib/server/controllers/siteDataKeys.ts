@@ -276,4 +276,9 @@ export const siteDataKeys: SiteDataKey[] = [
     isValid: IsValidJSONString,
     data_type: "object",
   },
+  {
+    key: "sitemap",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
 ];

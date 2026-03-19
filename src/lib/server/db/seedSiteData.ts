@@ -164,6 +164,10 @@ const seedSiteData = {
     dateOnly: "PP",
     timeOnly: "p",
   },
+  sitemap: {
+    mode: "off",
+    urls: [],
+  },
 };
 
 export default seedSiteData;
