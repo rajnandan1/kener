@@ -399,9 +399,7 @@ async function removeTagFromGroupMonitors(tag: string): Promise<void> {
       const weight = Math.round((1 / remaining.length) * 1000) / 1000;
       for (let i = 0; i < remaining.length; i++) {
         remaining[i].weight =
-          i === remaining.length - 1
-            ? Math.round((1 - weight * (remaining.length - 1)) * 1000) / 1000
-            : weight;
+          i === remaining.length - 1 ? Math.round((1 - weight * (remaining.length - 1)) * 1000) / 1000 : weight;
       }
     }
 
@@ -573,13 +571,10 @@ export const GetBadge = async (badgeType: BadgeType, params: BadgeParams): Promi
       }
     }
     const defaultLocale = i18nConfig?.defaultLocale || "en";
-    const activatedCodes = new Set(
-      i18nConfig?.locales?.filter((l) => l.selected).map((l) => l.code) ?? ["en"],
-    );
+    const activatedCodes = new Set(i18nConfig?.locales?.filter((l) => l.selected).map((l) => l.code) ?? ["en"]);
     const requestedLocale = params.locale || defaultLocale;
-    const locale = activatedCodes.has(requestedLocale) && isLocaleAvailable(requestedLocale)
-      ? requestedLocale
-      : defaultLocale;
+    const locale =
+      activatedCodes.has(requestedLocale) && isLocaleAvailable(requestedLocale) ? requestedLocale : defaultLocale;
 
     const statusLocaleKey: Record<string, string> = {
       [GC.UP]: "Operational",

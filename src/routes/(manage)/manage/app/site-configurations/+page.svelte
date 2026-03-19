@@ -2,6 +2,7 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
+  import { Textarea } from "$lib/components/ui/textarea/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
@@ -13,6 +14,9 @@
   import XIcon from "@lucide/svelte/icons/x";
   import ImageIcon from "@lucide/svelte/icons/image";
   import Plus from "@lucide/svelte/icons/plus";
+  import CopyButton from "$lib/components/CopyButton.svelte";
+  import CopyIcon from "@lucide/svelte/icons/copy";
+  import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
@@ -104,12 +108,18 @@
   });
 
   let eventDisplaySettings = $state<EventDisplaySettings>(structuredClone(defaultEventDisplaySettings));
+  let metaSiteTitle = $state("");
+  let metaSiteDescription = $state("");
 
   const defaultSitemap: SitemapXMLConfig = {
     mode: "off",
     urls: []
   };
   let sitemap = $state<SitemapXMLConfig>(structuredClone(defaultSitemap));
+
+  const sitemapURL = $derived(
+    siteData.siteURL ? siteData.siteURL.replace(/\/$/, "") + clientResolver(resolve, "/sitemap.xml") : ""
+  );
 
   let currentOrigin = $state("");
 
@@ -219,6 +229,8 @@
           eventDisplaySettings = structuredClone(defaultEventDisplaySettings);
         }
 
+        metaSiteTitle = data.metaSiteTitle || "";
+        metaSiteDescription = data.metaSiteDescription || "";
         if (data.sitemap) {
           try {
             const parsed = typeof data.sitemap === "string" ? JSON.parse(data.sitemap) : data.sitemap;
@@ -328,7 +340,11 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "storeSiteData",
-          data: { socialPreviewImage: siteData.socialPreviewImage }
+          data: {
+            socialPreviewImage: siteData.socialPreviewImage,
+            metaSiteTitle: metaSiteTitle,
+            metaSiteDescription: metaSiteDescription
+          }
         })
       });
 
@@ -336,10 +352,10 @@
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Social preview image saved successfully");
+        toast.success("Social preview & SEO settings saved successfully");
       }
     } catch (e) {
-      toast.error("Failed to save social preview image");
+      toast.error("Failed to save social preview & SEO settings");
     } finally {
       savingSocialPreviewImage = false;
     }
@@ -502,7 +518,8 @@
     try {
       const payload: SitemapXMLConfig = {
         mode: sitemap.mode,
-        urls: sitemap.mode !== "off" ? sitemap.urls.map((u) => ({ loc: u.loc.trim() })).filter((u) => u.loc.length > 0) : []
+        urls:
+          sitemap.mode !== "off" ? sitemap.urls.map((u) => ({ loc: u.loc.trim() })).filter((u) => u.loc.length > 0) : []
       };
 
       const response = await fetch(clientResolver(resolve, "/manage/api"), {
@@ -875,11 +892,11 @@
       </Card.Footer>
     </Card.Root>
 
-    <!-- Social Preview Image Card -->
+    <!-- Social Preview & SEO Card -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>Social Preview Image</Card.Title>
-        <Card.Description>Upload an optional social preview image at least 640x320px or similar</Card.Description>
+        <Card.Title>Social Preview & SEO</Card.Title>
+        <Card.Description>Configure social preview image and meta tags for search engines</Card.Description>
       </Card.Header>
       <Card.Content class="space-y-4">
         <div class="flex items-start gap-4">
@@ -932,6 +949,27 @@
               <p class="text-muted-foreground text-xs">Optional. Leave empty to use no social preview image.</p>
             {/if}
           </div>
+        </div>
+
+        <div class="space-y-2">
+          <Label for="metaSiteTitle">Meta Title</Label>
+          <Input
+            id="metaSiteTitle"
+            type="text"
+            bind:value={metaSiteTitle}
+            placeholder="Custom page title for search engines"
+          />
+          <p class="text-muted-foreground text-xs">Overrides the default page title in search results</p>
+        </div>
+        <div class="space-y-2">
+          <Label for="metaSiteDescription">Meta Description</Label>
+          <Textarea
+            id="metaSiteDescription"
+            bind:value={metaSiteDescription}
+            placeholder="Custom description for search engines"
+            rows={3}
+          />
+          <p class="text-muted-foreground text-xs">Shown as the snippet text in search engine results</p>
         </div>
       </Card.Content>
       <Card.Footer class="flex justify-end">
@@ -1382,7 +1420,21 @@
           </div>
         {/if}
       </Card.Content>
-      <Card.Footer class="flex justify-end">
+      <Card.Footer class="flex justify-end gap-2">
+        {#if sitemap.mode !== "off" && sitemapURL}
+          <CopyButton variant="outline" size="default" text={sitemapURL}>
+            <CopyIcon class="mr-2 h-4 w-4" />
+            Copy URL
+          </CopyButton>
+          <Button
+            variant="outline"
+            class="cursor-pointer"
+            onclick={() => window.open(clientResolver(resolve, "/sitemap.xml"), "_blank")}
+          >
+            <ExternalLinkIcon class="h-4 w-4" />
+            View
+          </Button>
+        {/if}
         <Button onclick={saveSitemap} disabled={savingSitemap || !isValidSitemap} class="cursor-pointer">
           {#if savingSitemap}
             <Loader class="h-4 w-4 animate-spin" />

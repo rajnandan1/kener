@@ -63,6 +63,8 @@ export interface SiteDataTransformed {
   globalPageVisibilitySettings?: GlobalPageVisibilitySettings;
   pageOrderingSettings?: PageOrderingSettings;
   dateAndTimeFormat?: SiteDateTimeFormat;
+  metaSiteTitle?: string;
+  metaSiteDescription?: string;
   sitemap?: SitemapXMLConfig;
 }
 

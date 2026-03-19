@@ -26,13 +26,13 @@ Connection errors and timeouts return **DOWN**.
 
 ## Configuration fields {#configuration-fields}
 
-| Field     | Type      | Default | Notes                                          |
-| :-------- | :-------- | :------ | :--------------------------------------------- |
-| `host`    | `string`  | —       | Required                                       |
-| `port`    | `number`  | `50051` | Required                                       |
-| `service` | `string`  | `""`    | Fully qualified service name; empty = overall   |
-| `tls`     | `boolean` | `false` | Use TLS credentials                            |
-| `timeout` | `number`  | `10000` | Request deadline in ms                         |
+| Field     | Type      | Default | Notes                                         |
+| :-------- | :-------- | :------ | :-------------------------------------------- |
+| `host`    | `string`  | —       | Required                                      |
+| `port`    | `number`  | `50051` | Required                                      |
+| `service` | `string`  | `""`    | Fully qualified service name; empty = overall |
+| `tls`     | `boolean` | `false` | Use TLS credentials                           |
+| `timeout` | `number`  | `10000` | Request deadline in ms                        |
 
 ## Example {#example}
 

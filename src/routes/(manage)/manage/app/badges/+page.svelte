@@ -250,9 +250,7 @@
                       {/each}
                     </Select.Content>
                   </Select.Root>
-                  <p class="text-muted-foreground text-xs">
-                    Status text will be shown in the selected language
-                  </p>
+                  <p class="text-muted-foreground text-xs">Status text will be shown in the selected language</p>
                 </div>
               {/if}
 

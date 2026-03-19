@@ -13,6 +13,7 @@
 <Toaster />
 
 <svelte:head>
+  <meta name="robots" content="noindex, nofollow" />
   <title>Kener Status</title>
   <link rel="icon" href={data.favicon} />
   {#if data.font?.cssSrc}

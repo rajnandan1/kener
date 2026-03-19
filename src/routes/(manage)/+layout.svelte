@@ -62,6 +62,7 @@
 <Toaster />
 
 <svelte:head>
+  <meta name="robots" content="noindex, nofollow" />
   <title>{pageTitle} | Kener</title>
   <link rel="icon" href={clientResolver(resolve, "/logo96.png")} />
   {#if data.font?.cssSrc}

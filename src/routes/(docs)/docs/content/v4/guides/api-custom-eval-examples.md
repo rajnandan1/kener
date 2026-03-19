@@ -31,7 +31,7 @@ Response: Array of todo objects with `completed` boolean field.
 ### Eval function:
 
 ```javascript
-(async function (statusCode, responseTime, responseRaw) {
+async function (statusCode, responseTime, responseRaw) {
     if (statusCode !== 200) {
         return { status: "DOWN", latency: responseTime }
     }
@@ -58,7 +58,7 @@ Response: Array of todo objects with `completed` boolean field.
     }
 
     return { status: "DOWN", latency: responseTime }
-})
+}
 ```
 
 ## POST request body with $SECRET_PARAM (no eval) {#post-secret-param-body}
@@ -81,7 +81,7 @@ SECRET_PARAM=your_real_secret_value
 ## Cheerio HTML content check {#cheerio-html-check-eval}
 
 ```javascript
-(async function (statusCode, responseTime, responseRaw, modules) {
+async function (statusCode, responseTime, responseRaw, modules) {
     if (statusCode !== 200) {
         return { status: "DOWN", latency: responseTime }
     }
@@ -99,5 +99,5 @@ SECRET_PARAM=your_real_secret_value
         status: status ? "UP" : "DOWN",
         latency: responseTime
     }
-})
+}
 ```

@@ -20,9 +20,16 @@
 
 <svelte:head>
   <title>{data.incident.title + " - " + data.siteName}</title>
-  <!-- meta description -->
+  <meta property="og:title" content={data.incident.title + " - " + data.siteName} />
+  <meta property="og:type" content="article" />
+  <meta name="twitter:card" content="summary_large_image" />
   {#if data.comments.length > 0}
     <meta name="description" content={data.comments[0].comment} />
+    <meta property="og:description" content={data.comments[0].comment} />
+  {/if}
+  {#if data.socialPreviewImage}
+    <meta property="og:image" content={clientResolver(resolve, data.socialPreviewImage)} />
+    <meta name="twitter:image" content={clientResolver(resolve, data.socialPreviewImage)} />
   {/if}
 </svelte:head>
 
