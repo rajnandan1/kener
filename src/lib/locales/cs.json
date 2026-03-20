@@ -54,7 +54,7 @@
     "Incident": "Incident",
     "Incident Updates": "Aktualizace incidentů",
     "Incidents": "Incidenty",
-    "Included Monitors": "Monitorů zahrnuto",
+    "Included Monitors (%count)": "Zahrnutých monitorů: %count",
     "INVESTIGATING": "VYŠETŘOVÁNÍ",
     "Last Updated": "Naposledy aktualizováno",
     "Latency": "Latence",
