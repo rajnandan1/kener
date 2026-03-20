@@ -16,7 +16,6 @@
 <ModeWatcher />
 <Toaster />
 
-<svelte:head></svelte:head>
 <main>
   {@render children()}
 </main>

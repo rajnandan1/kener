@@ -23,8 +23,6 @@
 </script>
 
 <svelte:head>
-  <title>{data.config.name}</title>
-  <meta name="description" content="Documentation for {data.config.name}" />
   <!-- favicon -->
   <link rel="icon" href={data.config.favicon} />
 </svelte:head>

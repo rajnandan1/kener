@@ -149,14 +149,18 @@
 <svelte:head>
   <title>{data.title} - Documentation</title>
   <meta name="description" content={data.description || `Documentation for ${data.title}`} />
+  <meta property="article:author" content="https://github.com/rajnandan1" />
+  <link rel="canonical" href={`https://kener.ing/docs/${data.slug}`} />
   <meta property="og:title" content="{data.title} - Documentation" />
   <meta property="og:description" content={data.description || `Documentation for ${data.title}`} />
   <meta property="og:type" content="article" />
-  <meta property="article:author" content="https://github.com/rajnandan1" />
-  <link rel="canonical" href={`https://kener.ing/docs/${data.slug}`} />
   <meta property="og:url" content={`https://kener.ing/docs/${data.slug}`} />
   <meta property="og:logo" content="https://kener.ing/logo96.png" />
+  <meta property="og:image" content="https://kener.ing/og.jpg" />
+  <meta name="twitter:title" content="{data.title} - Documentation" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:description" content={data.description || `Documentation for ${data.title}`} />
+  <meta name="twitter:image" content="https://kener.ing/og.jpg" />
   {@html `<script type="application/ld+json">${JSON.stringify({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
