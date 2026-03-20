@@ -724,7 +724,7 @@
         <p class="text-muted-foreground mt-4 text-sm">
           Want to upload and use custom fonts? Read more about it in the
           <a
-            href={clientResolver(resolve, "/docs/v4/guides/custom-fonts")}
+            href="https://kener.ing/docs/v4/guides/custom-fonts"
             target="_blank"
             class="text-foreground underline underline-offset-4"
           >
@@ -968,7 +968,7 @@
           Add custom CSS to further customize the appearance of your status page. Do not include &lt;style&gt; tags.
           Learn more in the
           <a
-            href={clientResolver(resolve, "/docs/v4/guides/custom-js-css-guide")}
+            href="https://kener.ing/docs/v4/guides/custom-js-css-guide"
             target="_blank"
             class="text-foreground underline underline-offset-4"
           >
