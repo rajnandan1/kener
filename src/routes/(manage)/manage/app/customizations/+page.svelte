@@ -724,7 +724,7 @@
         <p class="text-muted-foreground mt-4 text-sm">
           Want to upload and use custom fonts? Read more about it in the
           <a
-            href={clientResolver(resolve, "/docs/v4/guides/custom-fonts")}
+            href="https://kener.ing/docs/v4/guides/custom-fonts"
             target="_blank"
             class="text-foreground underline underline-offset-4"
           >
