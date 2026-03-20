@@ -45,7 +45,7 @@
     "incident": "Vorfall",
     "Incident Updates": "Vorfallaktualisierungen",
     "Incidents": "Vorfälle",
-    "Included Monitors": "Enthaltene Monitore",
+    "Included Monitors (%count)": "Enthaltene Monitore (%count)",
     "INVESTIGATING": "WIRD UNTERSUCHT",
     "Last Updated": "Zuletzt aktualisiert",
     "Latency": "Latenz",

@@ -46,7 +46,7 @@
     "incident": "Инцидент",
     "Incident Updates": "Обновления инцидентов",
     "Incidents": "Инциденты",
-    "Included Monitors": "Included Monitors",
+    "Included Monitors (%count)": "Included Monitors (%count)",
     "INVESTIGATING": "INVESTIGATING",
     "Last Updated": "Последнее обновление",
     "Latency": "Задержка",

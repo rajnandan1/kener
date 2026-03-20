@@ -152,8 +152,7 @@
           days={days as number}
           endOfDayTodayAtTz={endOfDayTodayAtTz as number}
         >
-          {groupChildTags.length}
-          {$t("Included Monitors")}
+          {$t("Included Monitors (%count)", { count: String(groupChildTags.length) })}
         </GroupMonitorPopover>
       </div>
     {/if}

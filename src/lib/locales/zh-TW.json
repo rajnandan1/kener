@@ -43,7 +43,7 @@
     "Impact": "影響",
     "Incident Updates": "事件更新",
     "Incidents": "事件",
-    "Included Monitors": "包含的監控項目",
+    "Included Monitors (%count)": "包含的監控項目 (%count)",
     "INVESTIGATING": "調查中",
     "Last Updated": "最後更新",
     "Latency": "延遲",

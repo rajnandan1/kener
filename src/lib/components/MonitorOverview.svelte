@@ -219,7 +219,7 @@
       {#if groupTags.length > 0}
         <div class="flex justify-center">
           <GroupMonitorPopover tags={groupTags} days={selectedDays} {endOfDayTodayAtTz}>
-            {$t("Included Monitors")} ({groupTags.length})
+            {$t("Included Monitors (%count)", { count: String(groupTags.length) })}
             <ArrowUp class="size-3" />
           </GroupMonitorPopover>
         </div>

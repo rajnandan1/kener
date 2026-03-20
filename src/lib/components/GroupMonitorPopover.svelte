@@ -41,7 +41,7 @@
     </Drawer.Trigger>
     <Drawer.Content class="max-h-[80vh]">
       <Drawer.Header>
-        <Drawer.Title>{$t("Included Monitors")}</Drawer.Title>
+        <Drawer.Title>{$t("Included Monitors (%count)", { count: String(tags.length) })}</Drawer.Title>
       </Drawer.Header>
       <div class="scrollbar-hidden flex flex-col overflow-y-auto px-4 pb-4">
         {#if tags.length === 0}
