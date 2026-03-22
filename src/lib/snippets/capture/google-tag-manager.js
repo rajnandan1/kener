@@ -28,7 +28,12 @@
     }
     gtag("js", new Date());
 
-    gtag("config", "{{id}}");
+    var gtagConfig = {};
+    var transportUrl = "{{transport_url}}";
+    if (!!transportUrl) {
+      gtagConfig.transport_url = transportUrl;
+    }
+    gtag("config", "{{id}}", gtagConfig);
 
     window.addEventListener("analyticsEvent", function (e) {
       // Extract event name and data from the custom event
@@ -43,6 +48,7 @@
 
   //on dom ready
   document.addEventListener("DOMContentLoaded", function () {
-    loadJS("https://www.googletagmanager.com/gtag/js?id={{id}}", initJS, document.getElementsByTagName("head")[0]);
+    var scriptHost = "{{script_host}}" || "https://www.googletagmanager.com";
+    loadJS(scriptHost + "/gtag/js?id={{id}}", initJS, document.getElementsByTagName("head")[0]);
   });
 })();

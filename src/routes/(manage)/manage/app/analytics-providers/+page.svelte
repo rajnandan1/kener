@@ -50,6 +50,20 @@
           placeholder: "G-S05E5E5E5E5",
           required: true,
           value: ""
+        },
+        {
+          label: "Transport URL",
+          type: "text",
+          placeholder: "https://www.google-analytics.com",
+          required: false,
+          value: ""
+        },
+        {
+          label: "Script Host",
+          type: "text",
+          placeholder: "https://www.googletagmanager.com",
+          required: false,
+          value: ""
         }
       ]
     },

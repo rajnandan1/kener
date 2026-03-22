@@ -32,7 +32,15 @@ export const GET: RequestHandler = async ({ params, url }) => {
 
   if (!!analyticsData["analytics.googleTagManager"]) {
     let id = analyticsData["analytics.googleTagManager"].requirements["Measurement ID"];
-    captureScript = captureScript + ";\n" + gtm.replaceAll("{{id}}", id);
+    let transportUrl = analyticsData["analytics.googleTagManager"].requirements["Transport URL"] || "";
+    let scriptHost = analyticsData["analytics.googleTagManager"].requirements["Script Host"] || "";
+    captureScript =
+      captureScript +
+      ";\n" +
+      gtm
+        .replaceAll("{{id}}", id)
+        .replaceAll("{{transport_url}}", transportUrl)
+        .replaceAll("{{script_host}}", scriptHost);
   }
 
   if (!!analyticsData["analytics.mixpanel"]) {
