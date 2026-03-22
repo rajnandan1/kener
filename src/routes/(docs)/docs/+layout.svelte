@@ -10,7 +10,7 @@
 
 <svelte:head>
   <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q3MLRXCBFT"></script>
+  <script async src="https://saki-production.up.railway.app/googletagmanager/gtag/js?id=G-Q3MLRXCBFT"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag() {
@@ -18,7 +18,7 @@
     }
     gtag("js", new Date());
 
-    gtag("config", "G-Q3MLRXCBFT");
+    gtag("config", "G-Q3MLRXCBFT", { transport_url: "https://saki-production.up.railway.app/google-analytics" });
   </script>
 </svelte:head>
 
