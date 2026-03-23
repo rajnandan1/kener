@@ -159,6 +159,7 @@ export interface PageDashboardData {
   pageStatus: { statusSummary: string; statusClass: string };
   ongoingIncidents: IncidentForMonitorListWithComments[];
   ongoingMaintenances: MaintenanceEventsMonitorList[];
+  upcomingMaintenances: MaintenanceEventsMonitorList[];
   monitorTags: string[];
   monitorGroupMembersByTag: Record<string, string[]>;
   pageDetails: PageRecordTyped;
@@ -366,6 +367,7 @@ export const GetPageDashboardData = async (
       pageStatus: BuildPageStatus([], nowTs),
       ongoingIncidents: [],
       ongoingMaintenances: [],
+      upcomingMaintenances: [],
       monitorTags,
       monitorGroupMembersByTag: {},
       pageDetails: pageDetailsTyped,
@@ -376,7 +378,7 @@ export const GetPageDashboardData = async (
   }
   const eventSettings = layoutData.eventDisplaySettings;
   // Fetch all dashboard data in parallel (respecting feature toggles)
-  const [latestData, parsedMonitors, ongoingIncidents, ongoingMaintenances] = await Promise.all([
+  const [latestData, parsedMonitors, ongoingIncidents, ongoingMaintenances, upcomingMaintenances] = await Promise.all([
     GetLatestMonitoringDataAllActive(monitorTags),
     GetMonitorsParsed({ tags: monitorTags, status: "ACTIVE", is_hidden: "NO" }),
     eventSettings.incidents.enabled && eventSettings.incidents.ongoing.show
@@ -384,6 +386,13 @@ export const GetPageDashboardData = async (
       : Promise.resolve([] as IncidentForMonitorListWithComments[]),
     eventSettings.maintenances.enabled && eventSettings.maintenances.ongoing.show
       ? GetOngoingMaintenances(monitorTags, nowTs)
+      : Promise.resolve([] as MaintenanceEventsMonitorList[]),
+    eventSettings.maintenances.enabled && eventSettings.maintenances.upcoming.show
+      ? GetUpcomingMaintenanceEventsForMonitorList(
+          monitorTags,
+          eventSettings.maintenances.upcoming.maxCount,
+          eventSettings.maintenances.upcoming.daysInFuture,
+        )
       : Promise.resolve([] as MaintenanceEventsMonitorList[]),
   ]);
 
@@ -403,6 +412,7 @@ export const GetPageDashboardData = async (
     pageStatus,
     ongoingIncidents,
     ongoingMaintenances,
+    upcomingMaintenances,
     monitorTags,
     monitorGroupMembersByTag,
     pageDetails: pageDetailsTyped,

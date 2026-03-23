@@ -35,9 +35,17 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
   const monitorTags = [monitor_tag];
 
-  const [ongoingIncidents, ongoingMaintenances] = await Promise.all([
+  const eventSettings = parentData.eventDisplaySettings;
+  const [ongoingIncidents, ongoingMaintenances, upcomingMaintenances] = await Promise.all([
     GetOngoingIncidentsForMonitorList(monitorTags),
     GetOngoingMaintenanceEventsForMonitorList(monitorTags),
+    eventSettings.maintenances.enabled && eventSettings.maintenances.upcoming.show
+      ? GetUpcomingMaintenanceEventsForMonitorList(
+          monitorTags,
+          eventSettings.maintenances.upcoming.maxCount,
+          eventSettings.maintenances.upcoming.daysInFuture,
+        )
+      : Promise.resolve([]),
   ]);
 
   //last known status
@@ -94,6 +102,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       monitorLastLatency: ParseLatency(item.avgLatency),
       ongoingIncidents,
       ongoingMaintenances,
+      upcomingMaintenances,
       externalUrl: monitor.external_url,
       extendedTags,
       monitorGroupMembersByTag,

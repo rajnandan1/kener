@@ -189,6 +189,15 @@
         {/each}
       </div>
     {/if}
+    {#if data.upcomingMaintenances && data.upcomingMaintenances.length > 0}
+      <div class="flex flex-col gap-3">
+        {#each data.upcomingMaintenances as maintenance, i (maintenance.id ?? i)}
+          <div class="rounded-3xl border p-3 sm:p-4">
+            <MaintenanceItem {maintenance} />
+          </div>
+        {/each}
+      </div>
+    {/if}
     <div class="overflow-hidden rounded-3xl border">
       <div class={`grid grid-cols-1 ${getGridContainerClass(viewType)}`}>
         {#each data.monitorTags as tag, i (tag)}
