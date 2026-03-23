@@ -143,6 +143,15 @@
       {/each}
     </div>
   {/if}
+  {#if data.upcomingMaintenances && data.upcomingMaintenances.length > 0}
+    <div class="flex flex-col gap-3">
+      {#each data.upcomingMaintenances as maintenance, i (maintenance.id ?? i)}
+        <div class="rounded-3xl border p-3 sm:p-4">
+          <MaintenanceItem {maintenance} />
+        </div>
+      {/each}
+    </div>
+  {/if}
 
   <!-- Calendar View (self-contained component with its own API call) -->
   <MonitorOverview
