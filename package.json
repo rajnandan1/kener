@@ -55,7 +55,7 @@
     "@lucide/svelte": "^0.561.0",
     "@sveltejs/adapter-auto": "^7.0.0",
     "@sveltejs/adapter-node": "^5.4.0",
-    "@sveltejs/kit": "^2.48.5",
+    "@sveltejs/kit": "^2.53.3",
     "@sveltejs/vite-plugin-svelte": "^6.2.1",
     "@tailwindcss/typography": "^0.5.19",
     "@tailwindcss/vite": "^4.1.17",
@@ -79,7 +79,7 @@
     "prettier": "^3.7.4",
     "prettier-plugin-svelte": "^3.4.0",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "svelte": "^5.43.8",
+    "svelte": "^5.53.5",
     "svelte-awesome-color-picker": "^4.1.0",
     "svelte-check": "^4.3.4",
     "svelte-sonner": "^1.0.7",
@@ -170,5 +170,15 @@
     "style-to-object": "^1.0.14",
     "svelte-codemirror-editor": "^2.1.0",
     "vite-plugin-package-version": "^1.1.0"
+  },
+  "overrides": {
+    "fast-xml-parser": "^5.5.6",
+    "rollup": "^4.59.0",
+    "undici": "^7.24.0",
+    "minimatch": "^10.2.3",
+    "devalue": "^5.6.4",
+    "dompurify": "^3.3.2",
+    "cookie": "^0.7.0",
+    "mailparser": "^3.9.3"
   }
 }
