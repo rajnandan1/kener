@@ -48,7 +48,7 @@
 
   //on dom ready
   document.addEventListener("DOMContentLoaded", function () {
-    var scriptHost = "{{script_host}}" || "https://www.googletagmanager.com";
-    loadJS(scriptHost + "/gtag/js?id={{id}}", initJS, document.getElementsByTagName("head")[0]);
+    var scriptHost = "{{script_host}}" || "https://www.googletagmanager.com/gtag/js?id={{id}}";
+    loadJS(scriptHost, initJS, document.getElementsByTagName("head")[0]);
   });
 })();
