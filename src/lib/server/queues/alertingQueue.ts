@@ -352,15 +352,8 @@ export const push = async (monitor_tag: string, ts: number, status: string, opti
   });
 
   if (monitorAlertsConfigurations.length === 0) {
-    //console.log("🤢 No active monitor alert configurations found for tag:", monitor_tag);
     return;
   }
-  console.log(
-    "🤢 Found monitor alert configurations for tag:",
-    monitor_tag,
-    "count:",
-    monitorAlertsConfigurations.length,
-  );
 
   for (const monitorAlertConfig of monitorAlertsConfigurations) {
     const deDupId = `${monitor_tag}-${ts}-${monitorAlertConfig.id}`;

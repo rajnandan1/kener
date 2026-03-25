@@ -55,7 +55,7 @@ class TcpCall {
         error_message: `Error in tcpEval: ${message}`,
       };
     }
-    if (!!!evalResp) {
+    if (!evalResp) {
       const message = "tcpEval did not return a valid response.";
       console.log(`Error in tcpEval for ${tag}:`, message);
       return {
@@ -65,6 +65,19 @@ class TcpCall {
         error_message: `Error in tcpEval: ${message}`,
       };
     }
+
+    //evalResp to be an object with status and latency
+    if (!("status" in evalResp) || !("latency" in evalResp)) {
+      const message = "tcpEval did not return status or latency.";
+      console.log(`Error in tcpEval for ${tag}:`, message);
+      return {
+        status: GC.DOWN,
+        latency: 0,
+        type: GC.ERROR,
+        error_message: `Error in tcpEval: ${message}`,
+      };
+    }
+
     //reduce to get the status
     return {
       status: evalResp?.status || GC.DOWN,
