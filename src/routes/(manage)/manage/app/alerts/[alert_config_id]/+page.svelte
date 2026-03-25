@@ -15,8 +15,13 @@
   import * as Select from "$lib/components/ui/select/index.js";
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
+  import * as Popover from "$lib/components/ui/popover/index.js";
+  import * as Command from "$lib/components/ui/command/index.js";
   import ArrowLeftIcon from "@lucide/svelte/icons/arrow-left";
   import TrashIcon from "@lucide/svelte/icons/trash";
+  import ChevronsUpDownIcon from "@lucide/svelte/icons/chevrons-up-down";
+  import CheckIcon from "@lucide/svelte/icons/check";
+  import XIcon from "@lucide/svelte/icons/x";
   import GC from "$lib/global-constants";
   import type {
     TriggerRecord,
@@ -39,10 +44,11 @@
   let triggers = $state<TriggerRecord[]>([]);
   let monitors = $state<{ tag: string; name: string }[]>([]);
   let deleteDialogOpen = $state(false);
+  let monitorPopoverOpen = $state(false);
 
   // Form state
   const defaultForm = {
-    monitor_tag: "",
+    monitor_tags: [] as string[],
     alert_for: "STATUS" as AlertForType,
     alert_value: "DOWN",
     failure_threshold: 3,
@@ -100,6 +106,14 @@
       form.alert_value = "1000";
     } else if (newValue === GC.UPTIME) {
       form.alert_value = "99";
+    }
+  }
+
+  function toggleMonitor(monitorTag: string) {
+    if (form.monitor_tags.includes(monitorTag)) {
+      form.monitor_tags = form.monitor_tags.filter((tag) => tag !== monitorTag);
+    } else {
+      form.monitor_tags = [...form.monitor_tags, monitorTag];
     }
   }
 
@@ -166,7 +180,7 @@
       } else {
         const config = result as MonitorAlertConfigWithTriggers;
         form = {
-          monitor_tag: config.monitor_tag,
+          monitor_tags: config.monitor_tags || [],
           alert_for: config.alert_for,
           alert_value: config.alert_value,
           failure_threshold: config.failure_threshold,
@@ -186,8 +200,8 @@
   }
 
   async function saveAlertConfig() {
-    if (!form.monitor_tag) {
-      toast.error("Please select a monitor");
+    if (form.monitor_tags.length === 0) {
+      toast.error("Please select at least one monitor");
       return;
     }
 
@@ -195,7 +209,7 @@
     try {
       const action = isNew ? "createMonitorAlertConfig" : "updateMonitorAlertConfig";
       const data: Record<string, unknown> = {
-        monitor_tag: form.monitor_tag,
+        monitor_tags: form.monitor_tags,
         alert_for: form.alert_for,
         alert_value: form.alert_value,
         failure_threshold: form.failure_threshold,
@@ -287,28 +301,58 @@
   {:else}
     <Card.Root>
       <Card.Content class="space-y-6 pt-6">
-        <!-- Monitor Selection -->
+        <!-- Monitor Selection (Searchable Multi-select) -->
         <div class="flex flex-col gap-2">
-          <Label for="monitor">Monitor</Label>
-          <Select.Root
-            type="single"
-            value={form.monitor_tag}
-            onValueChange={(v) => v && (form.monitor_tag = v)}
-            disabled={!isNew}
-          >
-            <Select.Trigger id="monitor" class="w-full">
-              {form.monitor_tag
-                ? monitors.find((m) => m.tag === form.monitor_tag)?.name || form.monitor_tag
-                : "Select monitor"}
-            </Select.Trigger>
-            <Select.Content>
-              {#each monitors as monitor}
-                <Select.Item value={monitor.tag}>{monitor.name}</Select.Item>
+          <Label>Monitors</Label>
+          <p class="text-muted-foreground text-xs">Select which monitors this alert applies to</p>
+          <Popover.Root bind:open={monitorPopoverOpen}>
+            <Popover.Trigger>
+              <Button variant="outline" role="combobox" class="w-full justify-between font-normal">
+                {#if form.monitor_tags.length === 0}
+                  Select monitors...
+                {:else if form.monitor_tags.length === 1}
+                  {monitors.find((m) => m.tag === form.monitor_tags[0])?.name || form.monitor_tags[0]}
+                {:else}
+                  {form.monitor_tags.length} monitors selected
+                {/if}
+                <ChevronsUpDownIcon class="text-muted-foreground size-4 shrink-0" />
+              </Button>
+            </Popover.Trigger>
+            <Popover.Content class="w-[var(--bits-popover-trigger-width)] p-0" align="start">
+              <Command.Root>
+                <Command.Input placeholder="Search monitors..." />
+                <Command.List>
+                  <Command.Empty>No monitors found.</Command.Empty>
+                  <Command.Group>
+                    {#each monitors as monitor (monitor.tag)}
+                      <Command.Item
+                        value={monitor.name}
+                        onSelect={() => toggleMonitor(monitor.tag)}
+                      >
+                        <CheckIcon class="size-4 {form.monitor_tags.includes(monitor.tag) ? 'opacity-100' : 'opacity-0'}" />
+                        {monitor.name}
+                      </Command.Item>
+                    {/each}
+                  </Command.Group>
+                </Command.List>
+              </Command.Root>
+            </Popover.Content>
+          </Popover.Root>
+          {#if form.monitor_tags.length > 0}
+            <div class="flex flex-wrap gap-1.5">
+              {#each form.monitor_tags as tag (tag)}
+                <Badge variant="secondary" class="gap-1 pr-1">
+                  {monitors.find((m) => m.tag === tag)?.name || tag}
+                  <button
+                    type="button"
+                    class="hover:bg-muted rounded-sm p-0.5"
+                    onclick={() => toggleMonitor(tag)}
+                  >
+                    <XIcon class="size-3" />
+                  </button>
+                </Badge>
               {/each}
-            </Select.Content>
-          </Select.Root>
-          {#if !isNew}
-            <p class="text-muted-foreground text-xs">Monitor cannot be changed after creation</p>
+            </div>
           {/if}
         </div>
 

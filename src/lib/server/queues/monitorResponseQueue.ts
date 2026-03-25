@@ -42,6 +42,7 @@ const addWorker = () => {
     });
 
     if (!dbRes) {
+      console.error("Failed to insert monitoring data for monitorTag:", monitorTag, "timestamp:", ts);
       throw new Error("Failed to insert monitoring data");
     }
 
@@ -52,7 +53,6 @@ const addWorker = () => {
       latency: latency,
       type: type,
     });
-
     alertingQueue.push(monitorTag, ts, status);
 
     return dbRes;

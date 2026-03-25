@@ -7,6 +7,8 @@ import type {
   MonitorAlertConfigTriggerRecord,
   MonitorAlertConfigTriggerInsert,
   MonitorAlertConfigWithTriggers,
+  MonitorAlertConfigMonitorRecord,
+  MonitorAlertConfigMonitorInsert,
   TriggerRecord,
   MonitorAlertV2Record,
   MonitorAlertV2Insert,
@@ -29,7 +31,7 @@ export class MonitorAlertConfigRepository extends BaseRepository {
   async insertMonitorAlertConfig(data: MonitorAlertConfigInsert): Promise<number> {
     const dbType = GetDbType();
     const insertData = {
-      monitor_tag: data.monitor_tag,
+      monitor_tag: data.monitor_tag || null,
       alert_for: data.alert_for,
       alert_value: data.alert_value,
       failure_threshold: data.failure_threshold,
@@ -88,29 +90,35 @@ export class MonitorAlertConfigRepository extends BaseRepository {
    * Get monitor alert configs with optional filtering
    */
   async getMonitorAlertConfigs(filter: MonitorAlertConfigFilter): Promise<MonitorAlertConfigRecord[]> {
-    let query = this.knex("monitor_alerts_config").whereRaw("1=1");
+    let query = this.knex("monitor_alerts_config as mac").select("mac.*").whereRaw("1=1");
 
     if (filter.id !== undefined) {
-      query = query.andWhere("id", filter.id);
+      query = query.andWhere("mac.id", filter.id);
     }
     if (filter.monitor_tag !== undefined) {
-      query = query.andWhere("monitor_tag", filter.monitor_tag);
+      query = query
+        .join("monitor_alerts_config_monitors as macm", "mac.id", "macm.monitor_alerts_id")
+        .andWhere("macm.monitor_tag", filter.monitor_tag);
     }
     if (filter.alert_for !== undefined) {
-      query = query.andWhere("alert_for", filter.alert_for);
+      query = query.andWhere("mac.alert_for", filter.alert_for);
     }
     if (filter.is_active !== undefined) {
-      query = query.andWhere("is_active", filter.is_active);
+      query = query.andWhere("mac.is_active", filter.is_active);
     }
 
-    return await query.orderBy("id", "desc");
+    return await query.orderBy("mac.id", "desc");
   }
 
   /**
    * Get all monitor alert configs for a specific monitor tag
    */
   async getMonitorAlertConfigsByMonitorTag(monitorTag: string): Promise<MonitorAlertConfigRecord[]> {
-    return await this.knex("monitor_alerts_config").where({ monitor_tag: monitorTag }).orderBy("id", "desc");
+    return await this.knex("monitor_alerts_config as mac")
+      .select("mac.*")
+      .join("monitor_alerts_config_monitors as macm", "mac.id", "macm.monitor_alerts_id")
+      .where("macm.monitor_tag", monitorTag)
+      .orderBy("mac.id", "desc");
   }
 
   /**
@@ -124,9 +132,12 @@ export class MonitorAlertConfigRepository extends BaseRepository {
    * Get all active monitor alert configs for a specific monitor
    */
   async getActiveMonitorAlertConfigsByMonitorTag(monitorTag: string): Promise<MonitorAlertConfigRecord[]> {
-    return await this.knex("monitor_alerts_config")
-      .where({ monitor_tag: monitorTag, is_active: "YES" })
-      .orderBy("id", "desc");
+    return await this.knex("monitor_alerts_config as mac")
+      .select("mac.*")
+      .join("monitor_alerts_config_monitors as macm", "mac.id", "macm.monitor_alerts_id")
+      .where("macm.monitor_tag", monitorTag)
+      .andWhere("mac.is_active", "YES")
+      .orderBy("mac.id", "desc");
   }
 
   /**
@@ -140,26 +151,51 @@ export class MonitorAlertConfigRepository extends BaseRepository {
    * Delete all monitor alert configs for a specific monitor tag
    */
   async deleteMonitorAlertConfigsByMonitorTag(monitorTag: string): Promise<number> {
-    return await this.knex("monitor_alerts_config").where({ monitor_tag: monitorTag }).del();
+    // Find all config IDs that have this monitor tag in the junction table
+    const configIds = await this.knex("monitor_alerts_config_monitors")
+      .select("monitor_alerts_id")
+      .where({ monitor_tag: monitorTag });
+
+    if (configIds.length === 0) return 0;
+
+    // Remove the monitor from the junction table
+    await this.knex("monitor_alerts_config_monitors").where({ monitor_tag: monitorTag }).del();
+
+    // Delete any configs that now have zero monitors
+    const ids = configIds.map((r: { monitor_alerts_id: number }) => r.monitor_alerts_id);
+    let deletedCount = 0;
+    for (const id of ids) {
+      const remainingMonitors = await this.knex("monitor_alerts_config_monitors")
+        .count("* as count")
+        .where({ monitor_alerts_id: id })
+        .first<CountResult>();
+      if (Number(remainingMonitors?.count) === 0) {
+        await this.knex("monitor_alerts_config").where({ id }).del();
+        deletedCount++;
+      }
+    }
+    return deletedCount;
   }
 
   /**
    * Count monitor alert configs with optional filtering
    */
   async getMonitorAlertConfigsCount(filter: MonitorAlertConfigFilter): Promise<CountResult | undefined> {
-    let query = this.knex("monitor_alerts_config").count("* as count");
+    let query = this.knex("monitor_alerts_config as mac").count("* as count");
 
     if (filter.id !== undefined) {
-      query = query.andWhere("id", filter.id);
+      query = query.andWhere("mac.id", filter.id);
     }
     if (filter.monitor_tag !== undefined) {
-      query = query.andWhere("monitor_tag", filter.monitor_tag);
+      query = query
+        .join("monitor_alerts_config_monitors as macm", "mac.id", "macm.monitor_alerts_id")
+        .andWhere("macm.monitor_tag", filter.monitor_tag);
     }
     if (filter.alert_for !== undefined) {
-      query = query.andWhere("alert_for", filter.alert_for);
+      query = query.andWhere("mac.alert_for", filter.alert_for);
     }
     if (filter.is_active !== undefined) {
-      query = query.andWhere("is_active", filter.is_active);
+      query = query.andWhere("mac.is_active", filter.is_active);
     }
 
     return await query.first<CountResult>();
@@ -174,29 +210,33 @@ export class MonitorAlertConfigRepository extends BaseRepository {
     filter?: MonitorAlertConfigFilter,
   ): Promise<{ configs: MonitorAlertConfigRecord[]; total: number }> {
     // Build count query
-    let countQuery = this.knex("monitor_alerts_config").count("* as count");
+    let countQuery = this.knex("monitor_alerts_config as mac").count("* as count");
     if (filter?.monitor_tag) {
-      countQuery = countQuery.where("monitor_tag", filter.monitor_tag);
+      countQuery = countQuery
+        .join("monitor_alerts_config_monitors as macm", "mac.id", "macm.monitor_alerts_id")
+        .where("macm.monitor_tag", filter.monitor_tag);
     }
     if (filter?.is_active) {
-      countQuery = countQuery.andWhere("is_active", filter.is_active);
+      countQuery = countQuery.andWhere("mac.is_active", filter.is_active);
     }
     if (filter?.alert_for) {
-      countQuery = countQuery.andWhere("alert_for", filter.alert_for);
+      countQuery = countQuery.andWhere("mac.alert_for", filter.alert_for);
     }
     const totalResult = await countQuery.first<CountResult>();
     const total = totalResult ? Number(totalResult.count) : 0;
 
     // Build paginated query
-    let query = this.knex("monitor_alerts_config").orderBy("id", "desc");
+    let query = this.knex("monitor_alerts_config as mac").select("mac.*").orderBy("mac.id", "desc");
     if (filter?.monitor_tag) {
-      query = query.where("monitor_tag", filter.monitor_tag);
+      query = query
+        .join("monitor_alerts_config_monitors as macm", "mac.id", "macm.monitor_alerts_id")
+        .where("macm.monitor_tag", filter.monitor_tag);
     }
     if (filter?.is_active) {
-      query = query.andWhere("is_active", filter.is_active);
+      query = query.andWhere("mac.is_active", filter.is_active);
     }
     if (filter?.alert_for) {
-      query = query.andWhere("alert_for", filter.alert_for);
+      query = query.andWhere("mac.alert_for", filter.alert_for);
     }
     const configs = await query.limit(limit).offset((page - 1) * limit);
 
@@ -278,6 +318,51 @@ export class MonitorAlertConfigRepository extends BaseRepository {
     }
   }
 
+  // ============ Monitor Alert Config Monitors CRUD ============
+
+  /**
+   * Add multiple monitors to an alert config
+   */
+  async addMonitorsToAlertConfig(alertConfigId: number, monitorTags: string[]): Promise<void> {
+    if (monitorTags.length === 0) return;
+
+    const inserts = monitorTags.map((monitorTag) => ({
+      monitor_alerts_id: alertConfigId,
+      monitor_tag: monitorTag,
+      created_at: this.knex.fn.now(),
+      updated_at: this.knex.fn.now(),
+    }));
+
+    await this.knex("monitor_alerts_config_monitors").insert(inserts);
+  }
+
+  /**
+   * Remove all monitors from an alert config
+   */
+  async removeAllMonitorsFromAlertConfig(alertConfigId: number): Promise<number> {
+    return await this.knex("monitor_alerts_config_monitors").where({ monitor_alerts_id: alertConfigId }).del();
+  }
+
+  /**
+   * Replace all monitors for an alert config (remove old, add new)
+   */
+  async replaceAlertConfigMonitors(alertConfigId: number, monitorTags: string[]): Promise<void> {
+    await this.removeAllMonitorsFromAlertConfig(alertConfigId);
+    if (monitorTags.length > 0) {
+      await this.addMonitorsToAlertConfig(alertConfigId, monitorTags);
+    }
+  }
+
+  /**
+   * Get monitor tags for an alert config
+   */
+  async getAlertConfigMonitorTags(alertConfigId: number): Promise<string[]> {
+    const records = await this.knex("monitor_alerts_config_monitors")
+      .select("monitor_tag")
+      .where({ monitor_alerts_id: alertConfigId });
+    return records.map((r: { monitor_tag: string }) => r.monitor_tag);
+  }
+
   // ============ Composite / Join Operations ============
 
   /**
@@ -292,9 +377,12 @@ export class MonitorAlertConfigRepository extends BaseRepository {
       .select("t.*")
       .where("mact.monitor_alerts_id", id);
 
+    const monitorTags = await this.getAlertConfigMonitorTags(id);
+
     return {
       ...config,
       triggers: triggerRecords as TriggerRecord[],
+      monitor_tags: monitorTags,
     };
   }
 
@@ -311,9 +399,12 @@ export class MonitorAlertConfigRepository extends BaseRepository {
         .select("t.*")
         .where("mact.monitor_alerts_id", config.id);
 
+      const monitorTags = await this.getAlertConfigMonitorTags(config.id);
+
       result.push({
         ...config,
         triggers: triggerRecords as TriggerRecord[],
+        monitor_tags: monitorTags,
       });
     }
 
@@ -333,9 +424,12 @@ export class MonitorAlertConfigRepository extends BaseRepository {
         .select("t.*")
         .where("mact.monitor_alerts_id", config.id);
 
+      const monitorTags = await this.getAlertConfigMonitorTags(config.id);
+
       result.push({
         ...config,
         triggers: triggerRecords as TriggerRecord[],
+        monitor_tags: monitorTags,
       });
     }
 
@@ -373,6 +467,7 @@ export class MonitorAlertConfigRepository extends BaseRepository {
     const dbType = GetDbType();
     const insertData: Record<string, unknown> = {
       config_id: data.config_id,
+      monitor_tag: data.monitor_tag || null,
       incident_id: data.incident_id || null,
       alert_status: data.alert_status,
       created_at: this.knex.fn.now(),
@@ -431,6 +526,9 @@ export class MonitorAlertConfigRepository extends BaseRepository {
     }
     if (filter.config_id !== undefined) {
       query = query.andWhere("config_id", filter.config_id);
+    }
+    if (filter.monitor_tag !== undefined) {
+      query = query.andWhere("monitor_tag", filter.monitor_tag);
     }
     if (filter.incident_id !== undefined) {
       query = query.andWhere("incident_id", filter.incident_id);

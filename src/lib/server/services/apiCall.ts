@@ -154,25 +154,32 @@ class ApiCall {
       }
     }
 
-    if (!!!evalResp) {
+    if (!evalResp || typeof evalResp !== "object") {
       evalResp = {
         status: GC.DOWN,
         latency: latency,
         type: GC.ERROR,
       };
-    } else if (
-      !!!evalResp.status ||
-      ([GC.UP, GC.DOWN, GC.DEGRADED, GC.MAINTENANCE] as string[]).indexOf(evalResp.status) === -1
-    ) {
+      errorMessage += " | Eval must return an object with 'status' and 'latency' fields, got no response";
+    } else if (evalResp.status === undefined) {
       evalResp = {
         status: GC.DOWN,
         latency: latency,
         type: GC.ERROR,
       };
+      errorMessage += ` | Eval must return an object with a 'status' field (one of: ${GC.UP}, ${GC.DOWN}, ${GC.DEGRADED}, ${GC.MAINTENANCE}), but 'status' was missing`;
+    } else if (([GC.UP, GC.DOWN, GC.DEGRADED, GC.MAINTENANCE] as string[]).indexOf(evalResp.status) === -1) {
+      evalResp = {
+        status: GC.DOWN,
+        latency: latency,
+        type: GC.ERROR,
+      };
+      errorMessage += ` | Eval returned invalid 'status' value "${evalResp.status}". Must be one of: ${GC.UP}, ${GC.DOWN}, ${GC.DEGRADED}, ${GC.MAINTENANCE}`;
     } else {
       evalResp.type = GC.REALTIME;
-      // Ensure latency is a valid number
+      // Ensure latency is a valid number; fall back to measured latency
       if (typeof evalResp.latency !== "number" || isNaN(evalResp.latency)) {
+        errorMessage += ` | Eval 'latency' must be a number, got ${JSON.stringify(evalResp.latency)}. Using measured latency instead`;
         evalResp.latency = latency;
       }
     }

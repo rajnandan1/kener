@@ -3,6 +3,7 @@
   import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
+  import { Badge } from "$lib/components/ui/badge/index.js";
   import { Checkbox } from "$lib/components/ui/checkbox/index.js";
   import * as Table from "$lib/components/ui/table/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
@@ -232,6 +233,7 @@
         <Table.Header>
           <Table.Row>
             <Table.Head class="w-16">ID</Table.Head>
+            <Table.Head class="w-40">Monitor</Table.Head>
             <Table.Head class="w-40">Status</Table.Head>
             <Table.Head class="w-32">Incident</Table.Head>
             <Table.Head class="w-44">Created At</Table.Head>
@@ -243,6 +245,13 @@
           {#each alerts as alert (alert.id)}
             <Table.Row class="hover:bg-muted/50">
               <Table.Cell class="font-medium">{alert.id}</Table.Cell>
+              <Table.Cell>
+                {#if alert.monitor_tag}
+                  <Badge variant="outline">{alert.monitor_tag}</Badge>
+                {:else}
+                  <span class="text-muted-foreground text-sm">—</span>
+                {/if}
+              </Table.Cell>
               <Table.Cell>
                 <Select.Root
                   type="single"

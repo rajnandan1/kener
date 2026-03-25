@@ -325,6 +325,7 @@ export async function POST({ request, cookies }) {
       const testAlertData: MonitorAlertV2Record = {
         id: 1,
         config_id: 1,
+        monitor_tag: null,
         incident_id: 4,
         alert_status: Math.random() > 0.5 ? "TRIGGERED" : "RESOLVED",
         created_at: new Date(),

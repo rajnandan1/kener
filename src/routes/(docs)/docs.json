@@ -221,6 +221,10 @@
                     {
                       "title": "Internationalization",
                       "content": "v4/internationalization"
+                    },
+                    {
+                      "title": "Analytics",
+                      "content": "v4/analytics"
                     }
                   ]
                 }

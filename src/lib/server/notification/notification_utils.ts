@@ -10,9 +10,11 @@ export function alertToVariables(
   config: MonitorAlertConfigRecord,
   alert: MonitorAlertV2Record,
   siteVars: SiteDataForNotification,
+  monitorTag?: string,
 ): AlertVariableMap {
   const createdAtDate = alert.created_at instanceof Date ? alert.created_at : new Date(alert.created_at);
-  const alert_name = `Alert ${config.monitor_tag} for ${config.alert_for} ${config.alert_value} ${alert.alert_status} at ${createdAtDate.toISOString()}`;
+  const effectiveMonitorTag = monitorTag || config.monitor_tag || "unknown";
+  const alert_name = `Alert ${effectiveMonitorTag} for ${config.alert_for} ${config.alert_value} ${alert.alert_status} at ${createdAtDate.toISOString()}`;
 
   return {
     alert_id: alert.id,
@@ -24,7 +26,7 @@ export function alertToVariables(
     alert_message: config.alert_description || "",
     alert_source: GC.ALERT,
     alert_timestamp: createdAtDate.toISOString(),
-    alert_cta_url: siteVars.site_url + "monitors/" + config.monitor_tag,
+    alert_cta_url: siteVars.site_url + "monitors/" + effectiveMonitorTag,
     alert_cta_text: "Open Alert Details",
     alert_incident_id: alert.incident_id ? alert.incident_id : undefined,
     alert_incident_url: alert.incident_id ? siteVars.site_url + "incidents/" + alert.incident_id : undefined,

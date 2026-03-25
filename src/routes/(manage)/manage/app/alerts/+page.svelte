@@ -164,7 +164,7 @@
     <Table.Root>
       <Table.Header>
         <Table.Row>
-          <Table.Head>Monitor</Table.Head>
+          <Table.Head>Monitors</Table.Head>
           <Table.Head>Alert Type</Table.Head>
           <Table.Head>Severity</Table.Head>
           <Table.Head>Description</Table.Head>
@@ -198,12 +198,23 @@
           {#each configs as config (config.id)}
             <Table.Row class={config.is_active === GC.NO ? "opacity-60" : ""}>
               <Table.Cell>
-                <a
-                  href={clientResolver(resolve, `/manage/app/monitors/${config.monitor_tag}`)}
-                  class="text-primary font-medium hover:underline"
-                >
-                  {config.monitor_tag}
-                </a>
+                {#if config.monitor_tags && config.monitor_tags.length > 0}
+                  <div class="flex flex-wrap gap-1">
+                    {#each config.monitor_tags as tag}
+                      <a
+                        href={clientResolver(resolve, `/manage/app/monitors/${tag}`)}
+                        class="text-primary text-sm font-medium hover:underline"
+                      >
+                        {monitors.find((m) => m.tag === tag)?.name || tag}
+                      </a>
+                      {#if config.monitor_tags.indexOf(tag) < config.monitor_tags.length - 1}
+                        <span class="text-muted-foreground">,</span>
+                      {/if}
+                    {/each}
+                  </div>
+                {:else}
+                  <span class="text-muted-foreground text-sm">-</span>
+                {/if}
               </Table.Cell>
               <Table.Cell>
                 <Badge variant="outline">{config.alert_for}</Badge>
