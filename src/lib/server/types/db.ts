@@ -628,7 +628,7 @@ export type YesNoType = "YES" | "NO";
 
 export interface MonitorAlertConfigRecord {
   id: number;
-  monitor_tag: string;
+  monitor_tag: string | null;
   alert_for: AlertForType;
   alert_value: string;
   failure_threshold: number;
@@ -642,7 +642,7 @@ export interface MonitorAlertConfigRecord {
 }
 
 export interface MonitorAlertConfigInsert {
-  monitor_tag: string;
+  monitor_tag?: string | null;
   alert_for: AlertForType;
   alert_value: string;
   failure_threshold: number;
@@ -684,13 +684,27 @@ export interface MonitorAlertConfigTriggerInsert {
   trigger_id: number;
 }
 
+// ============ monitor_alerts_config_monitors table ============
+export interface MonitorAlertConfigMonitorRecord {
+  monitor_alerts_id: number;
+  monitor_tag: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface MonitorAlertConfigMonitorInsert {
+  monitor_alerts_id: number;
+  monitor_tag: string;
+}
+
 // ============ Composite types for monitor_alerts_config ============
 export interface MonitorAlertConfigWithTriggers extends MonitorAlertConfigRecord {
   triggers: TriggerRecord[];
+  monitor_tags: string[];
 }
 
 export interface MonitorAlertConfigCreateInput {
-  monitor_tag: string;
+  monitor_tags: string[];
   alert_for: AlertForType;
   alert_value: string;
   failure_threshold: number;
@@ -704,6 +718,7 @@ export interface MonitorAlertConfigCreateInput {
 
 export interface MonitorAlertConfigUpdateInput {
   id: number;
+  monitor_tags?: string[];
   alert_for?: AlertForType;
   alert_value?: string;
   failure_threshold?: number;
@@ -721,6 +736,7 @@ export type MonitorAlertStatusType = "TRIGGERED" | "RESOLVED";
 export interface MonitorAlertV2Record {
   id: number;
   config_id: number;
+  monitor_tag: string | null;
   incident_id: number | null;
   alert_status: MonitorAlertStatusType;
   created_at: Date;
@@ -729,11 +745,13 @@ export interface MonitorAlertV2Record {
 
 export interface MonitorAlertV2Insert {
   config_id: number;
+  monitor_tag?: string | null;
   incident_id?: number | null;
   alert_status: MonitorAlertStatusType;
 }
 
 export interface MonitorAlertV2Update {
+  monitor_tag?: string | null;
   incident_id?: number | null;
   alert_status?: MonitorAlertStatusType;
 }
@@ -741,6 +759,7 @@ export interface MonitorAlertV2Update {
 export interface MonitorAlertV2Filter {
   id?: number;
   config_id?: number;
+  monitor_tag?: string;
   incident_id?: number;
   alert_status?: MonitorAlertStatusType;
 }

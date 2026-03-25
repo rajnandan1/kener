@@ -141,8 +141,9 @@ async function sendAlertNotifications(
   activeAlert: MonitorAlertV2Record,
   monitor_alerts_configured: MonitorAlertConfigRecord,
   templateSiteVars: SiteDataForNotification,
+  monitorTag?: string,
 ): Promise<void> {
-  const templateAlertVars = alertToVariables(monitor_alerts_configured, activeAlert, templateSiteVars);
+  const templateAlertVars = alertToVariables(monitor_alerts_configured, activeAlert, templateSiteVars, monitorTag);
   const triggers = await GetTriggersByMonitorAlertConfigId(monitor_alerts_configured.id);
 
   for (let i = 0; i < triggers.length; i++) {
@@ -233,9 +234,10 @@ const addWorker = () => {
         return;
       }
 
-      // Get existing alerts
+      // Get existing alerts for this specific monitor + config combination
       let alertsExisting = await GetMonitorAlertsV2({
         config_id: monitor_alerts_configured.id,
+        monitor_tag: monitor_tag,
         alert_status: GC.TRIGGERED,
       });
       let activeAlert = null;
@@ -244,9 +246,9 @@ const addWorker = () => {
       }
 
       if (isAffected) {
-        // Trigger alert if not already active
+        // Trigger alert if not already active for this monitor
         if (!activeAlert) {
-          activeAlert = await CreateMonitorAlertV2(monitor_alerts_configured.id);
+          activeAlert = await CreateMonitorAlertV2(monitor_alerts_configured.id, monitor_tag);
           if (monitor_alerts_configured.create_incident === GC.YES) {
             let newIncidentNumber = await createNewIncident(
               activeAlert,
@@ -261,7 +263,7 @@ const addWorker = () => {
             }
           }
           // Send triggered alert notifications
-          await sendAlertNotifications(activeAlert, monitor_alerts_configured, templateSiteVars);
+          await sendAlertNotifications(activeAlert, monitor_alerts_configured, templateSiteVars, monitor_tag);
         }
       } else {
         // Resolve any existing alert
@@ -302,7 +304,7 @@ const addWorker = () => {
           }
 
           // Send resolution notifications
-          await sendAlertNotifications(activeAlert, monitor_alerts_configured, templateSiteVars);
+          await sendAlertNotifications(activeAlert, monitor_alerts_configured, templateSiteVars, monitor_tag);
         }
       }
     } catch (error) {
@@ -348,9 +350,17 @@ export const push = async (monitor_tag: string, ts: number, status: string, opti
     monitor_tag: monitor.tag,
     is_active: GC.YES,
   });
+
   if (monitorAlertsConfigurations.length === 0) {
+    //console.log("🤢 No active monitor alert configurations found for tag:", monitor_tag);
     return;
   }
+  console.log(
+    "🤢 Found monitor alert configurations for tag:",
+    monitor_tag,
+    "count:",
+    monitorAlertsConfigurations.length,
+  );
 
   for (const monitorAlertConfig of monitorAlertsConfigurations) {
     const deDupId = `${monitor_tag}-${ts}-${monitorAlertConfig.id}`;

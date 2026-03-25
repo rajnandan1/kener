@@ -292,6 +292,12 @@ class DbImpl {
   isTriggerUsedInMonitorAlertConfig!: MonitorAlertConfigRepository["isTriggerUsedInMonitorAlertConfig"];
   getMonitorAlertConfigsByTriggerId!: MonitorAlertConfigRepository["getMonitorAlertConfigsByTriggerId"];
 
+  // ============ Monitor Alert Config Monitors ============
+  addMonitorsToAlertConfig!: MonitorAlertConfigRepository["addMonitorsToAlertConfig"];
+  removeAllMonitorsFromAlertConfig!: MonitorAlertConfigRepository["removeAllMonitorsFromAlertConfig"];
+  replaceAlertConfigMonitors!: MonitorAlertConfigRepository["replaceAlertConfigMonitors"];
+  getAlertConfigMonitorTags!: MonitorAlertConfigRepository["getAlertConfigMonitorTags"];
+
   // ============ Monitor Alerts V2 ============
   insertMonitorAlertV2!: MonitorAlertConfigRepository["insertMonitorAlertV2"];
   updateMonitorAlertV2!: MonitorAlertConfigRepository["updateMonitorAlertV2"];
@@ -691,6 +697,14 @@ class DbImpl {
     this.getMonitorAlertConfigsByTriggerId = this.monitorAlertConfig.getMonitorAlertConfigsByTriggerId.bind(
       this.monitorAlertConfig,
     );
+
+    // Monitor Alert Config Monitors
+    this.addMonitorsToAlertConfig = this.monitorAlertConfig.addMonitorsToAlertConfig.bind(this.monitorAlertConfig);
+    this.removeAllMonitorsFromAlertConfig = this.monitorAlertConfig.removeAllMonitorsFromAlertConfig.bind(
+      this.monitorAlertConfig,
+    );
+    this.replaceAlertConfigMonitors = this.monitorAlertConfig.replaceAlertConfigMonitors.bind(this.monitorAlertConfig);
+    this.getAlertConfigMonitorTags = this.monitorAlertConfig.getAlertConfigMonitorTags.bind(this.monitorAlertConfig);
 
     // Monitor Alerts V2
     this.insertMonitorAlertV2 = this.monitorAlertConfig.insertMonitorAlertV2.bind(this.monitorAlertConfig);

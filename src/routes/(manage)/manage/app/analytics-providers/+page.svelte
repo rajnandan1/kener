@@ -301,7 +301,15 @@
 </script>
 
 <div class="flex w-full flex-col gap-4 px-4">
-  <div>Add your analytics ID/Key here. You can add multiple analytics providers.</div>
+  <div>
+    Add your analytics ID/Key here. You can add multiple analytics providers.
+    <a
+      href="https://kener.ing/docs/v4/analytics"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-primary ml-1 underline underline-offset-2">Learn more</a
+    >.
+  </div>
   {#if loading}
     <div class="flex items-center justify-center py-8">
       <Spinner />

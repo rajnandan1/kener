@@ -127,19 +127,20 @@ export async function CreateMonitorAlertConfig(
   // Validate input
   validateMonitorAlertConfigInput(data);
 
-  if (!data.monitor_tag) {
-    throw new Error("monitor_tag is required");
+  if (!data.monitor_tags || data.monitor_tags.length === 0) {
+    throw new Error("At least one monitor is required");
   }
 
-  // Check if monitor exists
-  const monitor = await db.getMonitorByTag(data.monitor_tag);
-  if (!monitor) {
-    throw new Error(`Monitor with tag '${data.monitor_tag}' not found`);
+  // Check if all monitors exist
+  for (const tag of data.monitor_tags) {
+    const monitor = await db.getMonitorByTag(tag);
+    if (!monitor) {
+      throw new Error(`Monitor with tag '${tag}' not found`);
+    }
   }
 
   // Prepare insert data
   const insertData: MonitorAlertConfigInsert = {
-    monitor_tag: data.monitor_tag,
     alert_for: data.alert_for,
     alert_value: data.alert_value,
     failure_threshold: data.failure_threshold,
@@ -152,6 +153,9 @@ export async function CreateMonitorAlertConfig(
 
   // Insert alert config
   const id = await db.insertMonitorAlertConfig(insertData);
+
+  // Add monitors to junction table
+  await db.addMonitorsToAlertConfig(id, data.monitor_tags);
 
   // Add triggers if provided
   if (data.trigger_ids && data.trigger_ids.length > 0) {
@@ -194,6 +198,19 @@ export async function UpdateMonitorAlertConfig(
     validateAlertValue(alertFor, data.alert_value);
   }
 
+  // Validate monitor_tags if provided
+  if (data.monitor_tags !== undefined) {
+    if (data.monitor_tags.length === 0) {
+      throw new Error("At least one monitor is required");
+    }
+    for (const tag of data.monitor_tags) {
+      const monitor = await db.getMonitorByTag(tag);
+      if (!monitor) {
+        throw new Error(`Monitor with tag '${tag}' not found`);
+      }
+    }
+  }
+
   // Prepare update data
   const updateData: MonitorAlertConfigUpdate = {};
   if (data.alert_for !== undefined) updateData.alert_for = data.alert_for;
@@ -208,6 +225,11 @@ export async function UpdateMonitorAlertConfig(
   // Update alert config if there are changes
   if (Object.keys(updateData).length > 0) {
     await db.updateMonitorAlertConfig(data.id, updateData);
+  }
+
+  // Update monitors if provided
+  if (data.monitor_tags !== undefined) {
+    await db.replaceAlertConfigMonitors(data.id, data.monitor_tags);
   }
 
   // Update triggers if provided
@@ -420,6 +442,7 @@ function validateAlertStatus(value: string): asserts value is MonitorAlertStatus
  */
 export async function CreateMonitorAlertV2(
   configId: number,
+  monitorTag?: string | null,
   incidentId?: number | null,
 ): Promise<MonitorAlertV2Record> {
   // Check if config exists
@@ -438,6 +461,7 @@ export async function CreateMonitorAlertV2(
 
   const insertData: MonitorAlertV2Insert = {
     config_id: configId,
+    monitor_tag: monitorTag || null,
     incident_id: incidentId || null,
     alert_status: "TRIGGERED",
   };

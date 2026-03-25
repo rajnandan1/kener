@@ -160,6 +160,7 @@ class ApiCall {
         latency: latency,
         type: GC.ERROR,
       };
+      errorMessage += " | Eval did not return a valid response";
     } else if (
       !!!evalResp.status ||
       ([GC.UP, GC.DOWN, GC.DEGRADED, GC.MAINTENANCE] as string[]).indexOf(evalResp.status) === -1
@@ -169,6 +170,7 @@ class ApiCall {
         latency: latency,
         type: GC.ERROR,
       };
+      errorMessage += " | Eval returned invalid status. has to be an object that return status and latency";
     } else {
       evalResp.type = GC.REALTIME;
       // Ensure latency is a valid number
