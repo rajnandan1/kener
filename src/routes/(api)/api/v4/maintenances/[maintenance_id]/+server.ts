@@ -264,7 +264,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
         updatedMaintenance.start_date_time,
         updatedMaintenance.rrule,
         updatedMaintenance.duration_seconds,
-        7,
+        1,
       );
     }
   } else if (!isOneTime && scheduleChanged) {
@@ -287,7 +287,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
         updatedMaintenance.start_date_time,
         updatedMaintenance.rrule,
         updatedMaintenance.duration_seconds,
-        7,
+        1,
       );
     }
   }

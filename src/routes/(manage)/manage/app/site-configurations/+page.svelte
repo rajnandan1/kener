@@ -21,11 +21,13 @@
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import { page } from "$app/state";
   import type {
     DataRetentionPolicy,
     EventDisplaySettings,
     GlobalPageVisibilitySettings,
-    SitemapXMLConfig
+    SitemapXMLConfig,
+    GlobalMaintenanceNotificationSettings
   } from "$lib/types/site.js";
 
   interface NavItem {
@@ -47,25 +49,12 @@
   let savingDataRetentionPolicy = $state(false);
   let savingEventDisplaySettings = $state(false);
   let savingSitemap = $state(false);
+  let savingMaintenanceNotificationSettings = $state(false);
   let uploadingLogo = $state(false);
   let uploadingFavicon = $state(false);
   let uploadingSocialPreviewImage = $state(false);
 
-  const defaultEventDisplaySettings: EventDisplaySettings = {
-    incidents: {
-      enabled: true,
-      ongoing: { show: true },
-      resolved: { show: true, maxCount: 5, daysInPast: 7 }
-    },
-    maintenances: {
-      enabled: true,
-      ongoing: {
-        show: true
-      },
-      past: { show: true, maxCount: 5, daysInPast: 7 },
-      upcoming: { show: true, maxCount: 5, daysInFuture: 7 }
-    }
-  };
+  const defaultEventDisplaySettings: EventDisplaySettings = page.data.seedSiteData.eventDisplaySettings;
 
   interface SiteDataForm {
     siteName: string;
@@ -93,29 +82,27 @@
     showShareEmbedMonitor: true
   });
 
-  const defaultGlobalPageVisibilitySettings: GlobalPageVisibilitySettings = {
-    showSwitcher: true,
-    forceExclusivity: false
-  };
+  const defaultGlobalPageVisibilitySettings: GlobalPageVisibilitySettings =
+    page.data.seedSiteData.globalPageVisibilitySettings;
 
   let globalPageVisibilitySettings = $state<GlobalPageVisibilitySettings>(
     structuredClone(defaultGlobalPageVisibilitySettings)
   );
 
-  let dataRetentionPolicy = $state<DataRetentionPolicy>({
-    enabled: true,
-    retentionDays: 90
-  });
+  let dataRetentionPolicy = $state<DataRetentionPolicy>(page.data.seedSiteData.dataRetentionPolicy);
 
   let eventDisplaySettings = $state<EventDisplaySettings>(structuredClone(defaultEventDisplaySettings));
   let metaSiteTitle = $state("");
   let metaSiteDescription = $state("");
 
-  const defaultSitemap: SitemapXMLConfig = {
-    mode: "off",
-    urls: []
-  };
+  const defaultSitemap: SitemapXMLConfig = page.data.seedSiteData.sitemap;
   let sitemap = $state<SitemapXMLConfig>(structuredClone(defaultSitemap));
+
+  const defaultMaintenanceNotificationSettings: GlobalMaintenanceNotificationSettings =
+    page.data.seedSiteData.globalMaintenanceNotificationSettings;
+  let maintenanceNotificationSettings = $state<GlobalMaintenanceNotificationSettings>(
+    structuredClone(defaultMaintenanceNotificationSettings)
+  );
 
   const sitemapURL = $derived(
     siteData.siteURL ? siteData.siteURL.replace(/\/$/, "") + clientResolver(resolve, "/sitemap.xml") : ""
@@ -243,6 +230,27 @@
           }
         } else {
           sitemap = structuredClone(defaultSitemap);
+        }
+
+        if (data.globalMaintenanceNotificationSettings) {
+          try {
+            const parsed =
+              typeof data.globalMaintenanceNotificationSettings === "string"
+                ? JSON.parse(data.globalMaintenanceNotificationSettings)
+                : data.globalMaintenanceNotificationSettings;
+            maintenanceNotificationSettings = {
+              ...structuredClone(defaultMaintenanceNotificationSettings),
+              ...parsed,
+              event_types: {
+                ...structuredClone(defaultMaintenanceNotificationSettings.event_types),
+                ...parsed?.event_types
+              }
+            };
+          } catch {
+            maintenanceNotificationSettings = structuredClone(defaultMaintenanceNotificationSettings);
+          }
+        } else {
+          maintenanceNotificationSettings = structuredClone(defaultMaintenanceNotificationSettings);
         }
       }
     } catch (e) {
@@ -543,13 +551,53 @@
     }
   }
 
+  async function saveMaintenanceNotificationSettings() {
+    //reminder_buffer_hours > 0
+    if (maintenanceNotificationSettings.reminder_buffer_hours <= 0) {
+      toast.error("Reminder buffer hours must be at least 1");
+      return;
+    }
+    savingMaintenanceNotificationSettings = true;
+    try {
+      const payload: GlobalMaintenanceNotificationSettings = {
+        event_types: {
+          created: maintenanceNotificationSettings.event_types.created,
+          reminder: maintenanceNotificationSettings.event_types.reminder,
+          started: maintenanceNotificationSettings.event_types.started,
+          ended: maintenanceNotificationSettings.event_types.ended
+        },
+        reminder_buffer_hours: Math.max(1, Number(maintenanceNotificationSettings.reminder_buffer_hours) || 1)
+      };
+
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "storeSiteData",
+          data: { globalMaintenanceNotificationSettings: JSON.stringify(payload) }
+        })
+      });
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        maintenanceNotificationSettings.reminder_buffer_hours = payload.reminder_buffer_hours;
+        toast.success("Maintenance notification settings saved successfully");
+      }
+    } catch (e) {
+      toast.error("Failed to save maintenance notification settings");
+    } finally {
+      savingMaintenanceNotificationSettings = false;
+    }
+  }
+
   async function handleImageUpload(event: Event, type: "logo" | "favicon" | "socialPreviewImage"): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
 
     // Validate file type
-    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/svg+xml", "image/webp"];
+    const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       toast.error("Invalid file type. Allowed: PNG, JPG, SVG, WebP");
       return;
@@ -792,7 +840,7 @@
               <input
                 id="logo-input"
                 type="file"
-                accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp,image/heic,image/heif"
+                accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
                 class="hidden"
                 onchange={(e) => handleImageUpload(e, "logo")}
                 disabled={uploadingLogo}
@@ -862,7 +910,7 @@
               <input
                 id="favicon-input"
                 type="file"
-                accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp,image/heic,image/heif"
+                accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
                 class="hidden"
                 onchange={(e) => handleImageUpload(e, "favicon")}
                 disabled={uploadingFavicon}
@@ -1028,7 +1076,7 @@
                   <input
                     id="nav-icon-input-{index}"
                     type="file"
-                    accept="image/png,image/jpeg,image/jpg,image/svg+xml,image/webp,image/heic,image/heif"
+                    accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
                     class="hidden"
                     onchange={(e) => handleNavIconUpload(e, index)}
                   />
@@ -1437,6 +1485,101 @@
         {/if}
         <Button onclick={saveSitemap} disabled={savingSitemap || !isValidSitemap} class="cursor-pointer">
           {#if savingSitemap}
+            <Loader class="h-4 w-4 animate-spin" />
+            Saving...
+          {:else}
+            <SaveIcon class="h-4 w-4" />
+            Save
+          {/if}
+        </Button>
+      </Card.Footer>
+    </Card.Root>
+
+    <!-- Maintenance Notification Settings Card -->
+    <Card.Root>
+      <Card.Header>
+        <Card.Title>Maintenance Notification Settings</Card.Title>
+        <Card.Description
+          >Configure which maintenance lifecycle events trigger subscriber notifications</Card.Description
+        >
+      </Card.Header>
+      <Card.Content class="space-y-6">
+        <div class="space-y-4">
+          <Label>Event Types</Label>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="flex items-center justify-between gap-2 rounded-lg border p-3">
+              <div>
+                <p class="text-sm font-medium">Created</p>
+                <p class="text-muted-foreground text-xs">When a maintenance is created</p>
+              </div>
+              <Switch
+                checked={maintenanceNotificationSettings.event_types.created}
+                onCheckedChange={(v) => {
+                  maintenanceNotificationSettings.event_types.created = v === true;
+                }}
+              />
+            </div>
+            <div class="flex items-center justify-between gap-2 rounded-lg border p-3">
+              <div>
+                <p class="text-sm font-medium">Reminder</p>
+                <p class="text-muted-foreground text-xs">Before a scheduled maintenance starts</p>
+              </div>
+              <Switch
+                checked={maintenanceNotificationSettings.event_types.reminder}
+                onCheckedChange={(v) => {
+                  maintenanceNotificationSettings.event_types.reminder = v === true;
+                }}
+              />
+            </div>
+            <div class="flex items-center justify-between gap-2 rounded-lg border p-3">
+              <div>
+                <p class="text-sm font-medium">Started</p>
+                <p class="text-muted-foreground text-xs">When a maintenance begins</p>
+              </div>
+              <Switch
+                checked={maintenanceNotificationSettings.event_types.started}
+                onCheckedChange={(v) => {
+                  maintenanceNotificationSettings.event_types.started = v === true;
+                }}
+              />
+            </div>
+            <div class="flex items-center justify-between gap-2 rounded-lg border p-3">
+              <div>
+                <p class="text-sm font-medium">Ended</p>
+                <p class="text-muted-foreground text-xs">When a maintenance completes</p>
+              </div>
+              <Switch
+                checked={maintenanceNotificationSettings.event_types.ended}
+                onCheckedChange={(v) => {
+                  maintenanceNotificationSettings.event_types.ended = v === true;
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {#if maintenanceNotificationSettings.event_types.reminder}
+          <div class="space-y-2">
+            <Label for="reminder-buffer-hours">Reminder Buffer (hours)</Label>
+            <Input
+              id="reminder-buffer-hours"
+              type="number"
+              min={1}
+              bind:value={maintenanceNotificationSettings.reminder_buffer_hours}
+            />
+            <p class="text-muted-foreground text-xs">
+              How many hours before the maintenance start time to send the reminder notification
+            </p>
+          </div>
+        {/if}
+      </Card.Content>
+      <Card.Footer class="flex justify-end">
+        <Button
+          onclick={saveMaintenanceNotificationSettings}
+          disabled={savingMaintenanceNotificationSettings}
+          class="cursor-pointer"
+        >
+          {#if savingMaintenanceNotificationSettings}
             <Loader class="h-4 w-4 animate-spin" />
             Saving...
           {:else}

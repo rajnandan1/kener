@@ -4,7 +4,7 @@ import db from "../db/db.js";
 import { rrulestr } from "rrule";
 import { addDays } from "date-fns";
 import type { MaintenanceRecord, MaintenanceEventRecord } from "../types/db.js";
-import { determineEventStatus } from "../controllers/maintenanceController.js";
+import { determineEventStatus, CreateMaintenanceEventWithNotification } from "../controllers/maintenanceController.js";
 
 let maintenanceSchedulerQueue: Queue | null = null;
 let worker: Worker | null = null;
@@ -58,12 +58,13 @@ const generateEventsForMaintenance = async (maintenance: MaintenanceRecord): Pro
 
       // Check if event already exists for this start time
       if (!existingStartTimes.has(eventStart)) {
-        await db.createMaintenanceEvent({
-          maintenance_id: maintenance.id,
-          start_date_time: eventStart,
-          end_date_time: eventEnd,
-          status: determineEventStatus(eventStart, eventEnd),
-        });
+        await CreateMaintenanceEventWithNotification(
+          maintenance.id,
+          eventStart,
+          eventEnd,
+          maintenance.title,
+          maintenance.description || null,
+        );
         eventsCreated++;
         console.log(
           `Created maintenance event for "${maintenance.title}" at ${new Date(eventStart * 1000).toISOString()}`,

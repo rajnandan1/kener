@@ -43,12 +43,12 @@ export const siteDataKeys: SiteDataKey[] = [
   },
   {
     key: "favicon",
-    isValid: (value) => typeof value === "string" && value.trim().length > 0,
+    isValid: (value) => typeof value === "string",
     data_type: "string",
   },
   {
     key: "logo",
-    isValid: (value) => typeof value === "string" && value.trim().length > 0,
+    isValid: (value) => typeof value === "string",
     data_type: "string",
   },
   {
@@ -288,6 +288,11 @@ export const siteDataKeys: SiteDataKey[] = [
   },
   {
     key: "sitemap",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
+  {
+    key: "globalMaintenanceNotificationSettings",
     isValid: IsValidJSONString,
     data_type: "object",
   },
