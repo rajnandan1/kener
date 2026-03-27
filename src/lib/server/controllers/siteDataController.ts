@@ -20,6 +20,7 @@ import type {
   SiteDateTimeFormat,
   SiteSubscriptionsSettings,
   SitemapXMLConfig,
+  GlobalMaintenanceNotificationSettings,
 } from "../../types/site.js";
 
 export interface SiteDataTransformed {
@@ -66,6 +67,7 @@ export interface SiteDataTransformed {
   metaSiteTitle?: string;
   metaSiteDescription?: string;
   sitemap?: SitemapXMLConfig;
+  globalMaintenanceNotificationSettings?: GlobalMaintenanceNotificationSettings;
 }
 
 export function InsertKeyValue(key: string, value: string): Promise<number[]> {

@@ -168,6 +168,15 @@ const seedSiteData = {
     mode: "off",
     urls: [],
   },
+  globalMaintenanceNotificationSettings: {
+    event_types: {
+      created: false,
+      reminder: true,
+      started: true,
+      ended: true,
+    },
+    reminder_buffer_hours: 1,
+  },
 };
 
 export default seedSiteData;

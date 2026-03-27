@@ -2,7 +2,7 @@ import { redirect } from "@sveltejs/kit";
 import MobileDetect from "mobile-detect";
 import type { LayoutServerLoad } from "./$types";
 import { IsEmailSetup } from "$lib/server/controllers/controller.js";
-import GC from "$lib/global-constants";
+import seedSiteData from "$lib/server/db/seedSiteData.js";
 import serverResolve from "$lib/server/resolver.js";
 
 import { resolve } from "$app/paths";
@@ -38,5 +38,6 @@ export const load: LayoutServerLoad = async ({ cookies }) => {
     siteStatusColorsDark,
     font,
     canSendEmail: IsEmailSetup(),
+    seedSiteData,
   };
 };

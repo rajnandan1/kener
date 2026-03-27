@@ -46,7 +46,7 @@ const addWorker = () => {
         fromEmail,
         templateTextBody,
       );
-      console.log(`📧 Email sent to ${toEmails}`);
+      // console.log(`📧 Email sent to ${toEmails}`);
     } catch (error) {
       console.error(`Failed to send email to ${toEmails}:`, error);
       throw error; // Re-throw to trigger retry

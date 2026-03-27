@@ -148,3 +148,13 @@ export interface SitemapXMLConfig {
     loc: string;
   }[];
 }
+
+export interface GlobalMaintenanceNotificationSettings {
+  event_types: {
+    created: boolean;
+    reminder: boolean;
+    started: boolean;
+    ended: boolean;
+  };
+  reminder_buffer_hours: number;
+}
