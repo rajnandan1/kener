@@ -79,6 +79,7 @@ export interface MaintenanceWithEvents extends MaintenanceWithMonitors {
 export function determineEventStatus(
   eventStartTimestamp: number,
   eventEndTimestamp: number,
+  reminderBufferSeconds: number = 3600,
 ): "SCHEDULED" | "READY" | "ONGOING" | "COMPLETED" | "CANCELLED" {
   const nowTimestamp = Math.floor(Date.now() / 1000);
 
@@ -88,8 +89,7 @@ export function determineEventStatus(
   if (nowTimestamp >= eventStartTimestamp) {
     return "ONGOING";
   }
-  // 60 minutes = 3600 seconds
-  if (eventStartTimestamp - nowTimestamp <= 3600) {
+  if (eventStartTimestamp - nowTimestamp <= reminderBufferSeconds) {
     return "READY";
   }
   return "SCHEDULED";
@@ -104,18 +104,19 @@ export const CreateMaintenanceEventWithNotification = async (
   title: string,
   description: string | null,
 ): Promise<MaintenanceEventRecord> => {
+  const siteData = await GetAllSiteData();
+  const notificationSettings =
+    siteData.globalMaintenanceNotificationSettings || seedSiteData.globalMaintenanceNotificationSettings;
+  const reminderBufferSeconds = notificationSettings.reminder_buffer_hours * 3600;
+
   const event = await db.createMaintenanceEvent({
     maintenance_id,
     start_date_time,
     end_date_time,
-    status: determineEventStatus(start_date_time, end_date_time),
+    status: determineEventStatus(start_date_time, end_date_time, reminderBufferSeconds),
   });
 
   try {
-    const siteData = await GetAllSiteData();
-    const notificationSettings =
-      siteData.globalMaintenanceNotificationSettings || seedSiteData.globalMaintenanceNotificationSettings;
-
     if (notificationSettings.event_types.created) {
       const siteVars = siteDataToVariables(siteData);
       const siteUrl = siteVars.site_url;
@@ -439,11 +440,16 @@ export const CreateMaintenanceEvent = async (data: CreateMaintenanceEventInput):
     throw new Error("End date/time must be after start date/time");
   }
 
+  const siteData = await GetAllSiteData();
+  const notificationSettings =
+    siteData.globalMaintenanceNotificationSettings || seedSiteData.globalMaintenanceNotificationSettings;
+  const reminderBufferSeconds = notificationSettings.reminder_buffer_hours * 3600;
+
   const event = await db.createMaintenanceEvent({
     maintenance_id: data.maintenance_id,
     start_date_time: data.start_date_time,
     end_date_time: data.end_date_time,
-    status: determineEventStatus(data.start_date_time, data.end_date_time),
+    status: determineEventStatus(data.start_date_time, data.end_date_time, reminderBufferSeconds),
   });
 
   return event;

@@ -552,9 +552,9 @@
   }
 
   async function saveMaintenanceNotificationSettings() {
-    //reminder_buffer_hours > 0
-    if (maintenanceNotificationSettings.reminder_buffer_hours <= 0) {
-      toast.error("Reminder buffer hours must be at least 1");
+    const bufferHours = Number(maintenanceNotificationSettings.reminder_buffer_hours);
+    if (!Number.isFinite(bufferHours) || bufferHours < 1) {
+      toast.error("Reminder buffer hours must be a number of at least 1");
       return;
     }
     savingMaintenanceNotificationSettings = true;
@@ -566,7 +566,7 @@
           started: maintenanceNotificationSettings.event_types.started,
           ended: maintenanceNotificationSettings.event_types.ended
         },
-        reminder_buffer_hours: Math.max(1, Number(maintenanceNotificationSettings.reminder_buffer_hours) || 1)
+        reminder_buffer_hours: Math.max(1, Math.floor(bufferHours))
       };
 
       const response = await fetch(clientResolver(resolve, "/manage/api"), {
