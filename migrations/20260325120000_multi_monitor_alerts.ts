@@ -98,47 +98,50 @@ export async function up(knex: Knex): Promise<void> {
 
   if (dbClient === "sqlite3" || dbClient === "better-sqlite3") {
     // SQLite cannot ALTER COLUMN, so we rebuild the table with monitor_tag nullable
-    await knex.raw("PRAGMA foreign_keys = OFF");
-    await knex.raw(`
-      CREATE TABLE monitor_alerts_config_new (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        monitor_tag VARCHAR(255),
-        alert_for VARCHAR(50) NOT NULL,
-        alert_value VARCHAR(255) NOT NULL,
-        failure_threshold INTEGER NOT NULL DEFAULT 1,
-        success_threshold INTEGER NOT NULL DEFAULT 1,
-        alert_description TEXT,
-        create_incident VARCHAR(10) NOT NULL DEFAULT 'NO',
-        is_active VARCHAR(10) NOT NULL DEFAULT 'YES',
-        severity VARCHAR(50) NOT NULL DEFAULT 'WARNING',
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
-    await knex.raw(`
-      INSERT INTO monitor_alerts_config_new
-        (id, monitor_tag, alert_for, alert_value, failure_threshold,
-         success_threshold, alert_description, create_incident,
-         is_active, severity, created_at, updated_at)
-      SELECT
-        id, NULL, alert_for, alert_value, failure_threshold,
-        success_threshold, alert_description, create_incident,
-        is_active, severity, created_at, updated_at
-      FROM monitor_alerts_config
-    `);
-    await knex.raw("DROP TABLE monitor_alerts_config");
-    await knex.raw("ALTER TABLE monitor_alerts_config_new RENAME TO monitor_alerts_config");
-    try {
-      await knex.raw("CREATE INDEX idx_monitor_alerts_config_monitor_tag ON monitor_alerts_config (monitor_tag)");
-    } catch (_e) {
-      /* index may already exist */
-    }
-    try {
-      await knex.raw("CREATE INDEX idx_monitor_alerts_config_is_active ON monitor_alerts_config (is_active)");
-    } catch (_e) {
-      /* index may already exist */
-    }
-    await knex.raw("PRAGMA foreign_keys = ON");
+    await knex.transaction(async (trx) => {
+      await trx.raw("PRAGMA foreign_keys = OFF");
+      await trx.raw("DROP TABLE IF EXISTS monitor_alerts_config_new");
+      await trx.raw(`
+        CREATE TABLE monitor_alerts_config_new (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          monitor_tag VARCHAR(255),
+          alert_for VARCHAR(50) NOT NULL,
+          alert_value VARCHAR(255) NOT NULL,
+          failure_threshold INTEGER NOT NULL DEFAULT 1,
+          success_threshold INTEGER NOT NULL DEFAULT 1,
+          alert_description TEXT,
+          create_incident VARCHAR(10) NOT NULL DEFAULT 'NO',
+          is_active VARCHAR(10) NOT NULL DEFAULT 'YES',
+          severity VARCHAR(50) NOT NULL DEFAULT 'WARNING',
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      await trx.raw(`
+        INSERT INTO monitor_alerts_config_new
+          (id, monitor_tag, alert_for, alert_value, failure_threshold,
+           success_threshold, alert_description, create_incident,
+           is_active, severity, created_at, updated_at)
+        SELECT
+          id, NULL, alert_for, alert_value, failure_threshold,
+          success_threshold, alert_description, create_incident,
+          is_active, severity, created_at, updated_at
+        FROM monitor_alerts_config
+      `);
+      await trx.raw("DROP TABLE monitor_alerts_config");
+      await trx.raw("ALTER TABLE monitor_alerts_config_new RENAME TO monitor_alerts_config");
+      try {
+        await trx.raw("CREATE INDEX idx_monitor_alerts_config_monitor_tag ON monitor_alerts_config (monitor_tag)");
+      } catch (_e) {
+        /* index may already exist */
+      }
+      try {
+        await trx.raw("CREATE INDEX idx_monitor_alerts_config_is_active ON monitor_alerts_config (is_active)");
+      } catch (_e) {
+        /* index may already exist */
+      }
+      await trx.raw("PRAGMA foreign_keys = ON");
+    });
   } else {
     try {
       await knex.schema.alterTable("monitor_alerts_config", (table) => {

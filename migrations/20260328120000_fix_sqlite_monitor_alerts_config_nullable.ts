@@ -4,8 +4,7 @@
  * The earlier migration 20260325120000_multi_monitor_alerts nulled out data in
  * monitor_alerts_config.monitor_tag for SQLite but could not alter the column
  * constraint (SQLite doesn't support ALTER COLUMN). This migration recreates
- * the table with monitor_tag as nullable, preserving all data, indexes, and
- * foreign keys.
+ * the table with monitor_tag as nullable, preserving all data and indexes.
  *
  * Only runs on SQLite/better-sqlite3; other databases already had the column
  * altered in the previous migration.
@@ -28,10 +27,10 @@ export async function up(knex: Knex): Promise<void> {
   }
 
   // Column is still NOT NULL — rebuild the table to make it nullable
-  await knex.raw("PRAGMA foreign_keys = OFF");
-
   try {
     await knex.transaction(async (trx) => {
+      await trx.raw("PRAGMA foreign_keys = OFF");
+      await trx.raw("DROP TABLE IF EXISTS monitor_alerts_config_new");
       await trx.raw(`
         CREATE TABLE monitor_alerts_config_new (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -74,9 +73,11 @@ export async function up(knex: Knex): Promise<void> {
       } catch (_e) {
         /* index may already exist */
       }
+      await trx.raw("PRAGMA foreign_keys = ON");
     });
-  } finally {
+  } catch (e) {
     await knex.raw("PRAGMA foreign_keys = ON");
+    throw e;
   }
 }
 
@@ -87,10 +88,9 @@ export async function down(knex: Knex): Promise<void> {
   }
 
   // Revert: make monitor_tag NOT NULL again via table rebuild
-  await knex.raw("PRAGMA foreign_keys = OFF");
-
   try {
     await knex.transaction(async (trx) => {
+      await trx.raw("PRAGMA foreign_keys = OFF");
       await trx.raw(`
 				CREATE TABLE monitor_alerts_config_old (
 					id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -135,8 +135,10 @@ export async function down(knex: Knex): Promise<void> {
       } catch (_e) {
         /* index may already exist */
       }
+      await trx.raw("PRAGMA foreign_keys = ON");
     });
-  } finally {
+  } catch (e) {
     await knex.raw("PRAGMA foreign_keys = ON");
+    throw e;
   }
 }
