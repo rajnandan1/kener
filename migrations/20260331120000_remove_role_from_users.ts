@@ -58,11 +58,34 @@ export async function up(knex: Knex): Promise<void> {
   });
 }
 
+// Reverse map: pick the highest-precedence role when backfilling.
+const REVERSE_ROLE_PRECEDENCE: string[] = ["admin", "editor", "member"];
+
 export async function down(knex: Knex): Promise<void> {
   const hasColumn = await knex.schema.hasColumn("users", "role");
   if (!hasColumn) {
     await knex.schema.alterTable("users", (table) => {
       table.string("role").defaultTo("member");
     });
+  }
+
+  // Backfill users.role from users_roles using deterministic precedence
+  const assignments: Array<{ users_id: number; roles_id: string }> = await knex("users_roles").select(
+    "users_id",
+    "roles_id",
+  );
+
+  // Group roles by user
+  const userRolesMap = new Map<number, string[]>();
+  for (const row of assignments) {
+    const list = userRolesMap.get(row.users_id) || [];
+    list.push(row.roles_id);
+    userRolesMap.set(row.users_id, list);
+  }
+
+  // Pick highest-precedence role for each user
+  for (const [userId, roleIds] of userRolesMap) {
+    const bestRole = REVERSE_ROLE_PRECEDENCE.find((r) => roleIds.includes(r)) || roleIds[0] || "member";
+    await knex("users").where("id", userId).update({ role: bestRole });
   }
 }

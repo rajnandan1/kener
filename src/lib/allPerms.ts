@@ -262,7 +262,6 @@ export const ROUTE_PERMISSION_MAP: Record<string, string | null> = {
   "/(manage)/manage/app/analytics-providers": "settings.read",
   "/(manage)/manage/app/badges": "settings.read",
   "/(manage)/manage/app/embed": "settings.read",
-  "/(manage)/manage/app/vault": "settings.read",
 
   // Subscribers
   "/(manage)/manage/app/subscriptions": "subscribers.read",
