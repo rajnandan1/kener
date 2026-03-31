@@ -111,6 +111,20 @@ import {
   GetGeneralEmailTemplateById,
   UpdateGeneralEmailTemplate,
 } from "$lib/server/controllers/generalTemplateController.js";
+import {
+  GetAllRoles,
+  GetAllPermissions,
+  GetRolePermissions,
+  UpdateRolePermissions,
+  GetRoleUsers,
+  AddUserToRole,
+  RemoveUserFromRole,
+  CreateRole,
+  UpdateRole,
+  DeleteRole,
+  GetUserPermissions,
+  RequirePermission,
+} from "$lib/server/controllers/userController.js";
 import type { SiteDataForNotification } from "$lib/server/notification/types";
 import { alertToVariables, siteDataToVariables } from "$lib/server/notification/notification_utils";
 import type { TriggerMeta } from "$lib/server/types/db.js";
@@ -120,29 +134,7 @@ import sendDiscord from "$lib/server/notification/discord_notification.js";
 import sendSlack from "$lib/server/notification/slack_notification.js";
 import heicConvert from "heic-convert";
 import serverResolver from "$lib/server/resolver.js";
-
-function AdminCan(role: string) {
-  if (role !== "admin") {
-    throw new Error("Only Admins can perform this action");
-  }
-}
-
-function EditorCan(role: string) {
-  if (role !== "editor") {
-    throw new Error("Only Editors can perform this action");
-  }
-}
-function MemberCan(role: string) {
-  if (role !== "member") {
-    throw new Error("Only Member can perform this action");
-  }
-}
-
-function AdminEditorCan(role: string) {
-  if (role !== "admin" && role !== "editor") {
-    throw new Error("Only Admins and Editors can perform this action");
-  }
-}
+import { ACTION_PERMISSION_MAP } from "$lib/allPerms.js";
 
 export async function POST({ request, cookies }) {
   const payload = await request.json();
@@ -155,6 +147,22 @@ export async function POST({ request, cookies }) {
     return json({ error: "User not logged in" }, { status: 401 });
   }
 
+  // Fetch user permissions once for the entire request
+  const userPermissions = await GetUserPermissions(userDB.id);
+
+  // Check permission for the action
+  const requiredPermission = ACTION_PERMISSION_MAP[action];
+  if (requiredPermission === undefined) {
+    return json({ error: "Unknown action" }, { status: 400 });
+  }
+  if (requiredPermission !== null) {
+    try {
+      RequirePermission(userPermissions, requiredPermission);
+    } catch {
+      return json({ error: "You do not have permission to perform this action" }, { status: 403 });
+    }
+  }
+
   try {
     if (action == "updateUser") {
       data.userID = userDB.id;
@@ -162,68 +170,69 @@ export async function POST({ request, cookies }) {
     } else if (action == "getAllSiteData") {
       resp = await GetAllSiteData();
     } else if (action == "manualUpdate") {
-      await ManualUpdateUserData(userDB, data.id, data);
+      await ManualUpdateUserData(data.id, data);
       resp = await GetUserByIDDashboard(data.id);
     } else if (action == "updatePassword") {
       data.userID = userDB.id;
       resp = await UpdatePassword(data);
     } else if (action == "createNewUser") {
-      await SendInvitationEmail(data.email, data.role, data.name, userDB.role);
+      await SendInvitationEmail(data.email, data.role_ids, data.name);
       resp = await GetUserByEmail(data.email);
     } else if (action == "resendInvitation") {
-      AdminEditorCan(userDB.role);
-      await ResendInvitationEmail(data.email, userDB.role);
+      await ResendInvitationEmail(data.email);
       resp = { success: true };
     } else if (action == "sendVerificationEmail") {
       const toId = parseInt(String(data.toId));
       if (!toId) {
         throw new Error("User ID is required");
       }
-      await SendVerificationEmail(toId, { id: userDB.id, role: userDB.role });
+      // Non-self verification requires users.write permission
+      if (toId !== userDB.id) {
+        if (!userPermissions.has("users.write")) {
+          return json({ error: "You do not have permission to perform this action" }, { status: 403 });
+        }
+      }
+      await SendVerificationEmail(toId, userDB.id);
       resp = { success: true };
     } else if (action == "getUsers") {
       const page = parseInt(String(data.page)) || 1;
       const limit = parseInt(String(data.limit)) || 10;
-      const users = await GetAllUsersPaginatedDashboard({ page, limit });
-      const totalResult = await GetUsersCount();
+      const filter: { is_active?: number } = {};
+      if (data.is_active !== undefined && data.is_active !== null) {
+        filter.is_active = parseInt(String(data.is_active));
+      }
+      const hasFilter = Object.keys(filter).length > 0 ? filter : undefined;
+      const users = await GetAllUsersPaginatedDashboard({ page, limit }, hasFilter);
+      const totalResult = await GetUsersCount(hasFilter);
       const total = totalResult ? Number(totalResult.count) : 0;
       resp = { users, total };
     } else if (action === "storeSiteData") {
-      AdminEditorCan(userDB.role);
       resp = await storeSiteData(data);
     } else if (action == "storeMonitorData") {
-      AdminEditorCan(userDB.role);
       resp = await CreateUpdateMonitor(data);
     } else if (action == "updateMonitoringData") {
-      AdminEditorCan(userDB.role);
       data.type = GC.MANUAL;
       resp = await UpdateMonitoringData(data);
     } else if (action == "getMonitors") {
       resp = await GetMonitors(data);
     } else if (action == "deleteMonitor") {
-      AdminEditorCan(userDB.role);
       resp = await DeleteMonitorCompletelyUsingTag(data.tag);
     } else if (action == "deleteMonitorData") {
-      AdminEditorCan(userDB.role);
       await db.deleteMonitorDataByTag(data.tag || undefined, data.start, data.end);
       resp = { success: true };
     } else if (action == "cloneMonitor") {
-      AdminEditorCan(userDB.role);
       resp = await CloneMonitor({
         sourceTag: String(data.sourceTag || ""),
         newTag: String(data.newTag || ""),
         newName: String(data.newName || ""),
       });
     } else if (action == "createUpdateTrigger") {
-      AdminEditorCan(userDB.role);
       resp = await CreateUpdateTrigger(data);
     } else if (action == "getTriggers") {
       resp = await GetAllTriggers(data);
     } else if (action == "updateMonitorTriggers") {
-      AdminEditorCan(userDB.role);
       resp = await UpdateTriggerData(data);
     } else if (action == "deleteTrigger") {
-      AdminEditorCan(userDB.role);
       resp = await DeleteTrigger(data.trigger_id);
     } else if (action == "getAllAlertsPaginated") {
       const page = parseInt(String(data.page)) || 1;
@@ -249,13 +258,10 @@ export async function POST({ request, cookies }) {
     } else if (action == "getAPIKeys") {
       resp = await GetAllAPIKeys();
     } else if (action == "createNewApiKey") {
-      AdminEditorCan(userDB.role);
       resp = await CreateNewAPIKey(data);
     } else if (action == "updateApiKeyStatus") {
-      AdminEditorCan(userDB.role);
       resp = await UpdateApiKeyStatus(data);
     } else if (action == "deleteApiKey") {
-      AdminCan(userDB.role);
       const deleted = await DeleteApiKey(data);
       if (!deleted) {
         throw new Error("API key not found");
@@ -269,33 +275,24 @@ export async function POST({ request, cookies }) {
         throw new Error("Incident not found");
       }
     } else if (action == "createIncident") {
-      AdminEditorCan(userDB.role);
       resp = await CreateIncident(data);
     } else if (action == "updateIncident") {
-      AdminEditorCan(userDB.role);
       resp = await UpdateIncident(data.id, data);
     } else if (action == "deleteIncident") {
-      AdminEditorCan(userDB.role);
       resp = await DeleteIncident(data.incident_id);
     } else if (action == "addMonitor") {
-      AdminEditorCan(userDB.role);
       resp = await AddIncidentMonitor(data.incident_id, data.monitor_tag, data.monitor_impact);
     } else if (action == "removeMonitor") {
-      AdminEditorCan(userDB.role);
       resp = await RemoveIncidentMonitor(data.incident_id, data.monitor_tag);
     } else if (action == "getComments") {
       resp = await GetIncidentActiveComments(data.incident_id);
     } else if (action == "addComment") {
-      AdminEditorCan(userDB.role);
       resp = await AddIncidentComment(data.incident_id, data.comment, data.state, data.commented_at);
     } else if (action == "deleteComment") {
-      AdminEditorCan(userDB.role);
       resp = await UpdateCommentStatusByID(data.incident_id, data.comment_id, "INACTIVE");
     } else if (action == "updateComment") {
-      AdminEditorCan(userDB.role);
       resp = await UpdateCommentByID(data.incident_id, data.comment_id, data.comment, data.state, data.commented_at);
     } else if (action == "testTrigger") {
-      AdminEditorCan(userDB.role);
       const trigger = await GetTriggerByID(data.trigger_id);
       const siteData = await GetAllSiteData();
       if (!trigger || !siteData) {
@@ -370,7 +367,6 @@ export async function POST({ request, cookies }) {
         throw new Error("Unsupported trigger type for testing");
       }
     } else if (action == "testMonitor") {
-      AdminEditorCan(userDB.role);
       let monitorID = data.monitor_id;
       let monitors = await GetMonitorsParsed({ id: monitorID });
       let monitor = monitors[0];
@@ -386,10 +382,8 @@ export async function POST({ request, cookies }) {
       const serviceClient = new Service(monitorReducedType);
       resp = await serviceClient.execute();
     } else if (action == "uploadImage") {
-      AdminEditorCan(userDB.role);
       resp = await uploadImage(data);
     } else if (action == "deleteImage") {
-      AdminEditorCan(userDB.role);
       resp = await db.deleteImage(data.id);
     } else if (action == "getPages") {
       const pages = await GetAllPages();
@@ -402,26 +396,20 @@ export async function POST({ request, cookies }) {
       );
       resp = pagesWithMonitors;
     } else if (action == "createPage") {
-      AdminEditorCan(userDB.role);
       resp = await CreatePage(data);
     } else if (action == "updatePage") {
-      AdminEditorCan(userDB.role);
       const { id, ...updateData } = data;
       resp = await UpdatePage(id, updateData);
     } else if (action == "deletePage") {
-      AdminEditorCan(userDB.role);
       await DeletePage(data.id);
       resp = { success: true };
     } else if (action == "addMonitorToPage") {
-      AdminEditorCan(userDB.role);
       await AddMonitorToPage(data.page_id, data.monitor_tag);
       resp = { success: true };
     } else if (action == "removeMonitorFromPage") {
-      AdminEditorCan(userDB.role);
       await RemoveMonitorFromPage(data.page_id, data.monitor_tag);
       resp = { success: true };
     } else if (action == "reorderPageMonitors") {
-      AdminEditorCan(userDB.role);
       await ReorderPageMonitors(data.page_id, data.monitor_tags);
       resp = { success: true };
     }
@@ -434,15 +422,12 @@ export async function POST({ request, cookies }) {
         throw new Error("Maintenance not found");
       }
     } else if (action == "createMaintenance") {
-      AdminEditorCan(userDB.role);
       resp = await CreateMaintenance(data);
     } else if (action == "updateMaintenance") {
-      AdminEditorCan(userDB.role);
       const { id, ...updateData } = data;
       await UpdateMaintenance(id, updateData);
       resp = { success: true };
     } else if (action == "deleteMaintenance") {
-      AdminEditorCan(userDB.role);
       await DeleteMaintenance(data.id);
       resp = { success: true };
     } else if (action == "getMaintenanceEvents") {
@@ -453,38 +438,30 @@ export async function POST({ request, cookies }) {
         throw new Error("Maintenance event not found");
       }
     } else if (action == "createMaintenanceEvent") {
-      AdminEditorCan(userDB.role);
       resp = await CreateMaintenanceEvent(data);
     } else if (action == "updateMaintenanceEvent") {
-      AdminEditorCan(userDB.role);
       const { id, ...updateData } = data;
       await UpdateMaintenanceEvent(id, updateData);
       resp = { success: true };
     } else if (action == "deleteMaintenanceEvent") {
-      AdminEditorCan(userDB.role);
       await DeleteMaintenanceEvent(data.id);
       resp = { success: true };
     } else if (action == "addMonitorToMaintenance") {
-      AdminEditorCan(userDB.role);
       await AddMonitorToMaintenance(data.maintenance_id, data.monitor_tag);
       resp = { success: true };
     } else if (action == "removeMonitorFromMaintenance") {
-      AdminEditorCan(userDB.role);
       await RemoveMonitorFromMaintenance(data.maintenance_id, data.monitor_tag);
       resp = { success: true };
     } else if (action == "getMaintenanceMonitors") {
       resp = await GetMaintenanceMonitors(data.maintenance_id);
     } else if (action == "updateMaintenanceMonitorImpact") {
-      AdminEditorCan(userDB.role);
       await UpdateMaintenanceMonitorImpact(data.maintenance_id, data.monitor_tag, data.monitor_impact);
       resp = { success: true };
     }
     // ============ Monitor Alert Config Actions ============
     else if (action == "createMonitorAlertConfig") {
-      AdminEditorCan(userDB.role);
       resp = await CreateMonitorAlertConfig(data);
     } else if (action == "updateMonitorAlertConfig") {
-      AdminEditorCan(userDB.role);
       resp = await UpdateMonitorAlertConfig(data);
     } else if (action == "getMonitorAlertConfig" || action == "getMonitorAlertConfigById") {
       resp = await GetMonitorAlertConfigById(data.id);
@@ -494,11 +471,9 @@ export async function POST({ request, cookies }) {
     } else if (action == "getMonitorAlertConfigsByMonitorTag") {
       resp = await GetMonitorAlertConfigsByMonitorTag(data.monitor_tag);
     } else if (action == "deleteMonitorAlertConfig") {
-      AdminEditorCan(userDB.role);
       await DeleteMonitorAlertConfig(data.id);
       resp = { success: true };
     } else if (action == "toggleMonitorAlertConfigStatus") {
-      AdminEditorCan(userDB.role);
       resp = await ToggleMonitorAlertConfigStatus(data.id);
     } else if (action == "getAlertConfigsPaginated") {
       const page = parseInt(String(data.page)) || 1;
@@ -510,7 +485,6 @@ export async function POST({ request, cookies }) {
       if (data.alert_for) filter.alert_for = data.alert_for as "STATUS" | "LATENCY" | "UPTIME";
       resp = await GetMonitorAlertConfigsPaginated(page, limit, Object.keys(filter).length > 0 ? filter : undefined);
     } else if (action == "deleteMonitorAlertV2") {
-      AdminEditorCan(userDB.role);
       const deleteIncident = data.deleteIncident === true;
       // If deleteIncident is true, delete the incident first
       if (deleteIncident && data.incident_id) {
@@ -518,7 +492,6 @@ export async function POST({ request, cookies }) {
       }
       resp = await DeleteMonitorAlertV2(data.id);
     } else if (action == "updateMonitorAlertV2Status") {
-      AdminEditorCan(userDB.role);
       resp = await UpdateMonitorAlertV2Status(data.id, data.status);
     }
 
@@ -565,14 +538,12 @@ export async function POST({ request, cookies }) {
     } else if (action == "getSubscriberCountsByMethod") {
       resp = await GetSubscriberCountsByMethod();
     } else if (action == "deleteUserSubscription") {
-      AdminCan(userDB.role);
       const { subscriptionId } = data;
       if (!subscriptionId) {
         throw new Error("subscriptionId is required");
       }
       resp = await DeleteUserSubscription(subscriptionId);
     } else if (action == "updateUserSubscriptionStatus") {
-      AdminCan(userDB.role);
       const { subscriptionId, status } = data;
       if (!subscriptionId || !status) {
         throw new Error("subscriptionId and status are required");
@@ -594,7 +565,6 @@ export async function POST({ request, cookies }) {
         throw new Error("Template not found");
       }
     } else if (action == "updateGeneralEmailTemplate") {
-      AdminEditorCan(userDB.role);
       const { templateId, template_subject, template_html_body, template_text_body } = data;
       if (!templateId) {
         throw new Error("Template ID is required");
@@ -614,7 +584,6 @@ export async function POST({ request, cookies }) {
       const limit = parseInt(String(data.limit)) || 10;
       resp = await GetAdminSubscribersPaginated(page, limit);
     } else if (action == "adminUpdateSubscriptionStatus") {
-      AdminEditorCan(userDB.role);
       const { methodId, eventType, enabled } = data;
       if (!methodId || !eventType) {
         throw new Error("Method ID and event type are required");
@@ -624,7 +593,6 @@ export async function POST({ request, cookies }) {
         throw new Error(resp.error);
       }
     } else if (action == "adminDeleteSubscriber") {
-      AdminEditorCan(userDB.role);
       const { methodId } = data;
       if (!methodId) {
         throw new Error("Method ID is required");
@@ -634,7 +602,6 @@ export async function POST({ request, cookies }) {
         throw new Error(resp.error);
       }
     } else if (action == "adminAddSubscriber") {
-      AdminEditorCan(userDB.role);
       const { email, incidents, maintenances } = data;
       if (!email) {
         throw new Error("Email is required");
@@ -644,7 +611,6 @@ export async function POST({ request, cookies }) {
         throw new Error(resp.error);
       }
     } else if (action == "getSubscriptionsConfig") {
-      AdminCan(userDB.role);
       let subscriptionsSettings = await GetSiteDataByKey("subscriptionsSettings");
       if (!!!subscriptionsSettings) {
         subscriptionsSettings = {
@@ -669,8 +635,27 @@ export async function POST({ request, cookies }) {
       }
       resp = siteData;
     } else if (action == "updateSubscriptionsConfig") {
-      AdminCan(userDB.role);
       resp = await InsertKeyValue("subscriptionsSettings", JSON.stringify(data));
+    } else if (action == "getRoles") {
+      resp = await GetAllRoles();
+    } else if (action == "getAllPermissions") {
+      resp = await GetAllPermissions();
+    } else if (action == "getRolePermissions") {
+      resp = await GetRolePermissions(data.roleId);
+    } else if (action == "updateRolePermissions") {
+      resp = await UpdateRolePermissions(data.roleId, data.permissionIds);
+    } else if (action == "getRoleUsers") {
+      resp = await GetRoleUsers(data.roleId);
+    } else if (action == "addUserToRole") {
+      resp = await AddUserToRole(data.roleId, data.userId);
+    } else if (action == "removeUserFromRole") {
+      resp = await RemoveUserFromRole(data.roleId, data.userId);
+    } else if (action == "createRole") {
+      resp = await CreateRole({ role_id: data.role_id, name: data.name });
+    } else if (action == "updateRole") {
+      resp = await UpdateRole(data.roleId, { name: data.name, status: data.status });
+    } else if (action == "deleteRole") {
+      resp = await DeleteRole(data.roleId, data.options);
     }
   } catch (error: unknown) {
     console.log(error);

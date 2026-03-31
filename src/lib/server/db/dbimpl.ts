@@ -115,10 +115,28 @@ class DbImpl {
   getUsersPaginated!: UsersRepository["getUsersPaginated"];
   getTotalUsers!: UsersRepository["getTotalUsers"];
   updateUserName!: UsersRepository["updateUserName"];
-  updateUserRole!: UsersRepository["updateUserRole"];
+  updateUserRoles!: UsersRepository["updateUserRoles"];
   updateUserIsActive!: UsersRepository["updateUserIsActive"];
   updateUserPasswordById!: UsersRepository["updateUserPasswordById"];
   updateIsVerified!: UsersRepository["updateIsVerified"];
+
+  // ============ Roles ============
+  getRoleById!: UsersRepository["getRoleById"];
+  getAllRoles!: UsersRepository["getAllRoles"];
+  insertRole!: UsersRepository["insertRole"];
+  updateRole!: UsersRepository["updateRole"];
+  deleteRole!: UsersRepository["deleteRole"];
+  getUsersCountByRoleId!: UsersRepository["getUsersCountByRoleId"];
+  migrateUsersRole!: UsersRepository["migrateUsersRole"];
+  getRolePermissions!: UsersRepository["getRolePermissions"];
+  getAllPermissions!: UsersRepository["getAllPermissions"];
+  addRolePermission!: UsersRepository["addRolePermission"];
+  removeRolePermission!: UsersRepository["removeRolePermission"];
+  getUsersByRoleId!: UsersRepository["getUsersByRoleId"];
+  addUserToRole!: UsersRepository["addUserToRole"];
+  removeUserFromRole!: UsersRepository["removeUserFromRole"];
+  getUserPermissionIds!: UsersRepository["getUserPermissionIds"];
+  getUserRoleIds!: UsersRepository["getUserRoleIds"];
 
   // ============ API Keys ============
   createNewApiKey!: UsersRepository["createNewApiKey"];
@@ -460,7 +478,7 @@ class DbImpl {
     this.getUsersPaginated = this.users.getUsersPaginated.bind(this.users);
     this.getTotalUsers = this.users.getTotalUsers.bind(this.users);
     this.updateUserName = this.users.updateUserName.bind(this.users);
-    this.updateUserRole = this.users.updateUserRole.bind(this.users);
+    this.updateUserRoles = this.users.updateUserRoles.bind(this.users);
     this.updateUserIsActive = this.users.updateUserIsActive.bind(this.users);
     this.updateUserPasswordById = this.users.updateUserPasswordById.bind(this.users);
     this.updateIsVerified = this.users.updateIsVerified.bind(this.users);
@@ -469,6 +487,24 @@ class DbImpl {
     this.deleteApiKey = this.users.deleteApiKey.bind(this.users);
     this.getApiKeyByHashedKey = this.users.getApiKeyByHashedKey.bind(this.users);
     this.getAllApiKeys = this.users.getAllApiKeys.bind(this.users);
+
+    // Roles
+    this.getRoleById = this.users.getRoleById.bind(this.users);
+    this.getAllRoles = this.users.getAllRoles.bind(this.users);
+    this.insertRole = this.users.insertRole.bind(this.users);
+    this.updateRole = this.users.updateRole.bind(this.users);
+    this.deleteRole = this.users.deleteRole.bind(this.users);
+    this.getUsersCountByRoleId = this.users.getUsersCountByRoleId.bind(this.users);
+    this.migrateUsersRole = this.users.migrateUsersRole.bind(this.users);
+    this.getRolePermissions = this.users.getRolePermissions.bind(this.users);
+    this.getAllPermissions = this.users.getAllPermissions.bind(this.users);
+    this.addRolePermission = this.users.addRolePermission.bind(this.users);
+    this.removeRolePermission = this.users.removeRolePermission.bind(this.users);
+    this.getUsersByRoleId = this.users.getUsersByRoleId.bind(this.users);
+    this.addUserToRole = this.users.addUserToRole.bind(this.users);
+    this.removeUserFromRole = this.users.removeUserFromRole.bind(this.users);
+    this.getUserPermissionIds = this.users.getUserPermissionIds.bind(this.users);
+    this.getUserRoleIds = this.users.getUserRoleIds.bind(this.users);
   }
 
   private bindSiteDataMethods(): void {

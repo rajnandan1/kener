@@ -1,10 +1,10 @@
 <script lang="ts">
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Table from "$lib/components/ui/table/index.js";
-  import * as Select from "$lib/components/ui/select/index.js";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import * as Sheet from "$lib/components/ui/sheet/index.js";
   import * as Alert from "$lib/components/ui/alert/index.js";
+  import { Checkbox } from "$lib/components/ui/checkbox/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
@@ -27,7 +27,7 @@
   import { toast } from "svelte-sonner";
   import { format } from "date-fns";
   import { onMount } from "svelte";
-  import type { UserRecordDashboard, UserRecordPublic } from "$lib/server/types/db.js";
+  import type { UserRecordDashboard, UserRecordPublic, RoleRecord } from "$lib/server/types/db.js";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
 
@@ -35,7 +35,7 @@
   interface NewUser {
     name: string;
     email: string;
-    role: string;
+    role_ids: string[];
   }
 
   interface EditUser extends UserRecordDashboard {
@@ -50,6 +50,7 @@
 
   interface PageData {
     userDb: UserRecordPublic;
+    userPermissions: string[];
     canSendEmail: boolean;
   }
 
@@ -57,15 +58,22 @@
 
   // Derived from data
   let currentUser = $derived(data.userDb);
+  let userPermissions = $derived(data.userPermissions);
   let canSendEmail = $derived(data.canSendEmail);
+
+  function hasPermission(perm: string): boolean {
+    return userPermissions.includes(perm);
+  }
 
   // State
   let loading = $state(true);
   let users = $state<UserRecordDashboard[]>([]);
+  let roles = $state<RoleRecord[]>([]);
   let page = $state(1);
   let limit = $state(10);
   let total = $state(0);
   let totalPages = $state(0);
+  let statusFilter = $state<"ACTIVE" | "INACTIVE">("ACTIVE");
 
   // Add user modal state
   let showAddUserDialog = $state(false);
@@ -74,8 +82,7 @@
   let newUser = $state<NewUser>({
     name: "",
     email: "",
-
-    role: "member"
+    role_ids: []
   });
 
   // Edit user sheet state
@@ -104,7 +111,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "getUsers",
-          data: { page, limit }
+          data: { page, limit, is_active: statusFilter === "ACTIVE" ? 1 : 0 }
         })
       });
       const result = await res.json();
@@ -148,8 +155,8 @@
       creatingUserError = "Please enter a valid email address";
       return;
     }
-    if (!["admin", "editor", "member"].includes(newUser.role)) {
-      creatingUserError = "Invalid role selected";
+    if (newUser.role_ids.length === 0) {
+      creatingUserError = "At least one role must be selected";
       return;
     }
 
@@ -189,8 +196,7 @@
     newUser = {
       name: "",
       email: "",
-
-      role: "member"
+      role_ids: []
     };
   }
 
@@ -198,7 +204,6 @@
   function openSettingsSheet(user: UserRecordDashboard) {
     toEditUser = {
       ...JSON.parse(JSON.stringify(user)),
-
       actions: {
         sendingVerificationEmail: false,
         resendingInvitation: false,
@@ -308,32 +313,79 @@
     }
   }
 
-  // Role badge variant
-  function getRoleBadgeVariant(role: string): "default" | "secondary" | "outline" {
-    switch (role) {
-      case "admin":
-        return "default";
-      case "editor":
-        return "secondary";
-      default:
-        return "outline";
+  // Role badge variant by precedence: admin > editor > others
+  function getRoleBadgeVariant(roleIds: string[]): "default" | "secondary" | "outline" {
+    if (roleIds.includes("admin")) return "default";
+    if (roleIds.includes("editor")) return "secondary";
+    return "outline";
+  }
+
+  let activeRoles = $derived(roles.filter((r) => r.status === "ACTIVE"));
+
+  // Fetch roles
+  async function fetchRoles() {
+    try {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "getRoles", data: {} })
+      });
+      const result = await res.json();
+      if (!result.error) {
+        roles = result;
+      }
+    } catch {
+      toast.error("Failed to load roles");
+    }
+  }
+
+  function toggleRole(roleId: string, currentList: string[]): string[] {
+    if (currentList.includes(roleId)) {
+      return currentList.filter((r) => r !== roleId);
+    } else {
+      return [...currentList, roleId];
     }
   }
 
   // Initial load
   onMount(() => {
     fetchUsers();
+    fetchRoles();
   });
 </script>
 
 <div class="container mx-auto space-y-6 py-6">
   <!-- Header -->
-  <div class="flex items-center justify-end">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-1">
+      <Button
+        variant={statusFilter === "ACTIVE" ? "default" : "outline"}
+        size="sm"
+        onclick={() => {
+          statusFilter = "ACTIVE";
+          page = 1;
+          fetchUsers();
+        }}
+      >
+        Active
+      </Button>
+      <Button
+        variant={statusFilter === "INACTIVE" ? "default" : "outline"}
+        size="sm"
+        onclick={() => {
+          statusFilter = "INACTIVE";
+          page = 1;
+          fetchUsers();
+        }}
+      >
+        Inactive
+      </Button>
+    </div>
     <div class="flex items-center gap-2">
       {#if loading}
         <Spinner class="size-5" />
       {/if}
-      {#if currentUser.role === "admin" || currentUser.role === "editor"}
+      {#if hasPermission("users.write")}
         {#if !canSendEmail}
           <p class="text-muted-foreground max-w-xs text-xs">
             Email service not configured. Cannot invite new users. Please go to
@@ -394,8 +446,8 @@
                 {/if}
               </Table.Cell>
               <Table.Cell>
-                <Badge variant={getRoleBadgeVariant(user.role)} class="uppercase">
-                  {user.role}
+                <Badge variant={getRoleBadgeVariant(user.role_ids)} class="uppercase">
+                  {user.role_ids.join(", ")}
                 </Badge>
               </Table.Cell>
               <Table.Cell>
@@ -406,7 +458,7 @@
                 {/if}
               </Table.Cell>
               <Table.Cell class="text-center">
-                {#if currentUser.role === "admin" && currentUser.id !== user.id && (user.role !== "admin" || currentUser.is_owner === "YES")}
+                {#if hasPermission("users.write") && currentUser.id !== user.id}
                   <Button variant="ghost" size="icon" class="h-8 w-8" onclick={() => openSettingsSheet(user)}>
                     <SettingsIcon class="h-4 w-4" />
                   </Button>
@@ -486,19 +538,23 @@
         </div>
 
         <div class="space-y-2">
-          <Label for="role">Role</Label>
-          <Select.Root type="single" value={newUser.role} onValueChange={(v) => v && (newUser.role = v)}>
-            <Select.Trigger class="w-full">
-              {newUser.role.toUpperCase()}
-            </Select.Trigger>
-            <Select.Content>
-              {#if currentUser.role === "admin"}
-                <Select.Item value="admin">ADMIN</Select.Item>
-              {/if}
-              <Select.Item value="editor">EDITOR</Select.Item>
-              <Select.Item value="member">MEMBER</Select.Item>
-            </Select.Content>
-          </Select.Root>
+          <Label>Roles</Label>
+          <div class="space-y-2">
+            {#each activeRoles as role (role.id)}
+              <label class="flex items-center gap-2">
+                <Checkbox
+                  checked={newUser.role_ids.includes(role.id)}
+                  onCheckedChange={() => {
+                    newUser.role_ids = toggleRole(role.id, newUser.role_ids);
+                  }}
+                />
+                <span class="text-sm uppercase">{role.role_name}</span>
+              </label>
+            {/each}
+            {#if activeRoles.length === 0}
+              <p class="text-muted-foreground text-sm">No roles available</p>
+            {/if}
+          </div>
         </div>
         {#if creatingUserError}
           <p class="text-destructive text-sm font-medium">{creatingUserError}</p>
@@ -578,42 +634,41 @@
           <Card.Root>
             <Card.Content class="p-4">
               <p class="mb-3 text-sm">
-                Change the role of the user. The user will have different permissions based on the role.
+                Change the roles of the user. The user will have different permissions based on assigned roles.
               </p>
-              <div class="flex items-center gap-3">
-                <Select.Root
-                  type="single"
-                  value={toEditUser.role}
-                  onValueChange={(v) => v && (toEditUser!.role = v)}
-                  disabled={toEditUser.actions.updatingRole}
-                >
-                  <Select.Trigger class="w-48">
-                    {toEditUser.role.toUpperCase()}
-                  </Select.Trigger>
-                  <Select.Content>
-                    {#if currentUser.role === "admin"}
-                      <Select.Item value="admin">ADMIN</Select.Item>
-                    {/if}
-                    <Select.Item value="editor">EDITOR</Select.Item>
-                    <Select.Item value="member">MEMBER</Select.Item>
-                  </Select.Content>
-                </Select.Root>
-                <Button
-                  variant="secondary"
-                  disabled={toEditUser.actions.updatingRole}
-                  onclick={() => {
-                    toEditUser!.actions.updatingRole = true;
-                    manualUpdateData("role").then(() => {
-                      toEditUser!.actions.updatingRole = false;
-                    });
-                  }}
-                >
-                  {#if toEditUser.actions.updatingRole}
-                    <Spinner class="size-4" />
-                  {/if}
-                  Update Role
-                </Button>
+              <div class="space-y-2">
+                {#each activeRoles as role (role.id)}
+                  <label class="flex items-center gap-2">
+                    <Checkbox
+                      checked={toEditUser.role_ids.includes(role.id)}
+                      disabled={toEditUser.actions.updatingRole}
+                      onCheckedChange={() => {
+                        toEditUser!.role_ids = toggleRole(role.id, toEditUser!.role_ids);
+                      }}
+                    />
+                    <span class="text-sm uppercase">{role.role_name}</span>
+                  </label>
+                {/each}
+                {#if activeRoles.length === 0}
+                  <p class="text-muted-foreground text-sm">No roles available</p>
+                {/if}
               </div>
+              <Button
+                variant="secondary"
+                class="mt-3"
+                disabled={toEditUser.actions.updatingRole || toEditUser.role_ids.length === 0}
+                onclick={() => {
+                  toEditUser!.actions.updatingRole = true;
+                  manualUpdateData("role").then(() => {
+                    toEditUser!.actions.updatingRole = false;
+                  });
+                }}
+              >
+                {#if toEditUser.actions.updatingRole}
+                  <Spinner class="size-4" />
+                {/if}
+                Update Roles
+              </Button>
             </Card.Content>
           </Card.Root>
 

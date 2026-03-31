@@ -236,7 +236,7 @@ export interface UserRecord {
   password_hash: string;
   is_active: number;
   is_verified: number;
-  role: string;
+  role_ids: string[]; // Array of role IDs
   created_at: Date;
   updated_at: Date;
 }
@@ -245,9 +245,9 @@ export interface UserRecordInsert {
   email: string;
   name: string;
   password_hash: string;
+  role_ids: string[]; // Array of role IDs
   is_active?: number;
   is_verified?: number;
-  role?: string;
   is_owner?: string;
 }
 
@@ -258,12 +258,37 @@ export interface UserRecordPublic {
   is_active: number;
   is_verified: number;
   is_owner: string;
-  role: string;
+  role_ids: string[];
   created_at: Date;
   updated_at: Date;
 }
 export interface UserRecordDashboard extends UserRecordPublic {
   has_password: boolean;
+}
+
+// ============ roles table ============
+export interface RoleRecord {
+  id: string;
+  role_name: string;
+  readonly: number;
+  status: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface RolePermissionRecord {
+  roles_id: string;
+  permissions_id: string;
+  status: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface UserRoleRecord {
+  roles_id: string;
+  users_id: number;
+  created_at: Date;
+  updated_at: Date;
 }
 
 // ============ api_keys table ============

@@ -59,6 +59,13 @@ export const actions: Actions = {
       });
     }
 
+    if (!userDB.role_ids || userDB.role_ids.length === 0) {
+      return fail(403, {
+        error: "Your account has no active roles assigned. Please contact an administrator.",
+        values: { email },
+      });
+    }
+
     const token = await GenerateToken(userDB);
     const cookieConfig = CookieConfig();
     cookies.set(cookieConfig.name, token, {
