@@ -61,7 +61,8 @@
     .filter((item) => {
       const routeId = `/(manage)${item.url}`;
       const requiredPermission = ROUTE_PERMISSION_MAP[routeId];
-      if (requiredPermission === undefined || requiredPermission === null) return true;
+      if (requiredPermission === undefined) return false;
+      if (requiredPermission === null) return true;
       return (data.userPermissions ?? []).includes(requiredPermission);
     })
     .map((item) => ({ ...item, url: clientResolver(resolve, item.url) }));

@@ -188,7 +188,9 @@ export async function POST({ request, cookies }) {
       }
       // Non-self verification requires users.write permission
       if (toId !== userDB.id) {
-        RequirePermission(userPermissions, "users.write");
+        if (!userPermissions.has("users.write")) {
+          return json({ error: "You do not have permission to perform this action" }, { status: 403 });
+        }
       }
       await SendVerificationEmail(toId, userDB.id);
       resp = { success: true };

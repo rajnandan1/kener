@@ -1,7 +1,8 @@
 import { redirect } from "@sveltejs/kit";
 import MobileDetect from "mobile-detect";
 import type { LayoutServerLoad } from "./$types";
-import { IsEmailSetup, RequirePermission } from "$lib/server/controllers/controller.js";
+import { IsEmailSetup } from "$lib/server/controllers/controller.js";
+import { RequirePermission } from "$lib/server/controllers/userController.js";
 import seedSiteData from "$lib/server/db/seedSiteData.js";
 import serverResolve from "$lib/server/resolver.js";
 import { ROUTE_PERMISSION_MAP } from "$lib/allPerms.js";

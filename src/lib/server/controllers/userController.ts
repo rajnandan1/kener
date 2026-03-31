@@ -240,6 +240,10 @@ export const ManualUpdateUserData = async (forUserId: number, data: ManualUserUp
   }
   if (data.updateType == "role") {
     if (!data.role_ids || data.role_ids.length === 0) throw new Error("At least one role is required");
+    // Owner must always retain the admin role
+    if (forUser.is_owner === "YES" && !data.role_ids.includes("admin")) {
+      throw new Error("Owner must retain the admin role");
+    }
     // Validate all role_ids exist
     for (const roleId of data.role_ids) {
       const role = await db.getRoleById(roleId);
@@ -250,6 +254,10 @@ export const ManualUpdateUserData = async (forUserId: number, data: ManualUserUp
     return await db.updateUserRoles(forUser.id, data.role_ids);
   } else if (data.updateType == "is_active") {
     if (data.is_active === undefined) throw new Error("is_active is required");
+    // Owner cannot be deactivated
+    if (forUser.is_owner === "YES" && data.is_active === 0) {
+      throw new Error("Owner account cannot be deactivated");
+    }
     return await db.updateUserIsActive(forUser.id, data.is_active);
   } else if (data.updateType == "password") {
     if (!data.password || !data.passwordPlain) throw new Error("Password is required");
@@ -279,8 +287,7 @@ export const GetLoggedInSession = async (cookies: Cookies): Promise<UserRecordPu
   if (!userDB.is_active) {
     return null;
   }
-  const roleIds = await db.getUserRoleIds(userDB.id);
-  return { ...userDB, role_ids: roleIds };
+  return userDB;
 };
 
 //given a limit return total pages

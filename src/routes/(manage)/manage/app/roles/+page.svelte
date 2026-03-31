@@ -304,7 +304,12 @@
     showUsersSheet = true;
     loadingUsers = true;
     try {
-      roleUsers = await apiCall("getRoleUsers", { roleId: role.id });
+      const canAssign = hasPermission("roles.assign_users");
+      const [users] = await Promise.all([
+        apiCall("getRoleUsers", { roleId: role.id }),
+        canAssign ? fetchAllUsers() : Promise.resolve()
+      ]);
+      roleUsers = users;
     } catch {
       toast.error("Failed to load role users");
     } finally {
@@ -365,7 +370,7 @@
   let availableUsersToAdd = $derived(allUsers.filter((u) => !roleUsers.some((ru) => ru.id === u.id)));
 
   onMount(async () => {
-    await Promise.all([fetchRoles(), fetchAllPermissions(), fetchAllUsers()]);
+    await Promise.all([fetchRoles(), fetchAllPermissions()]);
   });
 </script>
 
@@ -694,12 +699,12 @@
                         class="h-auto justify-start gap-3 p-3 text-left {rolePermissionIds.has(perm.id)
                           ? 'border-primary bg-primary/5'
                           : ''}"
-                        disabled={permissionsRole?.readonly === 1}
+                        disabled={permissionsRole?.readonly === 1 || !hasPermission("roles.assign_permissions")}
                         onclick={() => togglePermission(perm.id)}
                       >
                         <Checkbox.Root
                           checked={rolePermissionIds.has(perm.id)}
-                          disabled={permissionsRole?.readonly === 1}
+                          disabled={permissionsRole?.readonly === 1 || !hasPermission("roles.assign_permissions")}
                         />
                         <div class="flex flex-col">
                           <span class="text-sm font-medium">{perm.permission_name}</span>
@@ -713,7 +718,7 @@
           </Accordion.Root>
         </div>
 
-        {#if permissionsRole?.readonly !== 1}
+        {#if permissionsRole?.readonly !== 1 && hasPermission("roles.assign_permissions")}
           <div class="flex justify-end gap-2 p-4">
             <Button variant="outline" onclick={() => (showPermissionsSheet = false)}>Cancel</Button>
             <Button onclick={savePermissions} disabled={savingPermissions}>
@@ -757,51 +762,60 @@
                   <span class="text-sm font-medium">{user.name}</span>
                   <span class="text-muted-foreground text-xs">{user.email}</span>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={removingUserId === user.id}
-                  onclick={() => removeUser(user.id)}
-                >
-                  {#if removingUserId === user.id}
-                    <Spinner class="h-4 w-4" />
-                  {:else}
-                    <UserMinusIcon class="text-destructive h-4 w-4" />
-                  {/if}
-                </Button>
+                {#if hasPermission("roles.assign_users")}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={removingUserId === user.id}
+                    onclick={() => removeUser(user.id)}
+                  >
+                    {#if removingUserId === user.id}
+                      <Spinner class="h-4 w-4" />
+                    {:else}
+                      <UserMinusIcon class="text-destructive h-4 w-4" />
+                    {/if}
+                  </Button>
+                {/if}
               </div>
             {/each}
           </div>
         {/if}
       </div>
 
-      <Separator />
+      {#if hasPermission("roles.assign_users")}
+        <Separator />
 
-      <!-- Add users -->
-      <div class="p-4">
-        <h4 class="mb-2 text-sm font-medium">Add Users</h4>
-        {#if availableUsersToAdd.length === 0}
-          <p class="text-muted-foreground text-sm">All users are already in this role.</p>
-        {:else}
-          <div class="flex max-h-64 flex-col gap-2 overflow-y-auto">
-            {#each availableUsersToAdd as user (user.id)}
-              <div class="flex items-center justify-between rounded-md border p-3">
-                <div class="flex flex-col">
-                  <span class="text-sm font-medium">{user.name}</span>
-                  <span class="text-muted-foreground text-xs">{user.email}</span>
+        <!-- Add users -->
+        <div class="p-4">
+          <h4 class="mb-2 text-sm font-medium">Add Users</h4>
+          {#if availableUsersToAdd.length === 0}
+            <p class="text-muted-foreground text-sm">All users are already in this role.</p>
+          {:else}
+            <div class="flex max-h-64 flex-col gap-2 overflow-y-auto">
+              {#each availableUsersToAdd as user (user.id)}
+                <div class="flex items-center justify-between rounded-md border p-3">
+                  <div class="flex flex-col">
+                    <span class="text-sm font-medium">{user.name}</span>
+                    <span class="text-muted-foreground text-xs">{user.email}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={addingUserId === user.id}
+                    onclick={() => addUser(user.id)}
+                  >
+                    {#if addingUserId === user.id}
+                      <Spinner class="h-4 w-4" />
+                    {:else}
+                      <UserPlusIcon class="h-4 w-4" />
+                    {/if}
+                  </Button>
                 </div>
-                <Button variant="ghost" size="sm" disabled={addingUserId === user.id} onclick={() => addUser(user.id)}>
-                  {#if addingUserId === user.id}
-                    <Spinner class="h-4 w-4" />
-                  {:else}
-                    <UserPlusIcon class="h-4 w-4" />
-                  {/if}
-                </Button>
-              </div>
-            {/each}
-          </div>
-        {/if}
-      </div>
+              {/each}
+            </div>
+          {/if}
+        </div>
+      {/if}
     {/if}
   </Sheet.Content>
 </Sheet.Root>
