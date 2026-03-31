@@ -29,7 +29,6 @@
     SitemapXMLConfig,
     GlobalMaintenanceNotificationSettings
   } from "$lib/types/site.js";
-
   interface NavItem {
     name: string;
     url: string;

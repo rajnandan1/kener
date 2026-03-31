@@ -59,15 +59,14 @@
 
   // Role badge styling
   let roleBadgeClass = $derived.by(() => {
-    switch (user.role) {
-      case "admin":
-        return "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300";
-      case "editor":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
-      case "member":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+    if (user.role_ids.includes("admin")) {
+      return "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300";
+    } else if (user.role_ids.includes("editor")) {
+      return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
+    } else if (user.role_ids.includes("member")) {
+      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+    } else {
+      return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
     }
   });
 
@@ -227,7 +226,7 @@
             {user.email}
           </span>
           <span class="text-foreground rounded-sm font-medium uppercase">
-            {user.role}
+            {user.role_ids.join(", ")}
           </span>
         </div>
       </Dialog.Description>

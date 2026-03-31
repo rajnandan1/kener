@@ -273,7 +273,7 @@
                 <Table.Cell class="pr-4 text-right">
                   <Button
                     variant="destructive"
-                    disabled={page.data.userDb.role !== "admin"}
+                    disabled={!page.data.userPermissions?.includes("api_keys.write")}
                     size="sm"
                     onclick={() => openDeleteDialog(apiKey)}
                   >

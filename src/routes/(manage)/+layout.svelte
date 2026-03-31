@@ -22,6 +22,7 @@
   import BookOpenIcon from "@lucide/svelte/icons/book-open";
   import KeyIcon from "@lucide/svelte/icons/key";
   import UsersIcon from "@lucide/svelte/icons/users";
+  import ShieldIcon from "@lucide/svelte/icons/shield";
   import Columns3CogIcon from "@lucide/svelte/icons/columns-3-cog";
   import SiteHeader from "./manage/site-header.svelte";
   import TemplateIcon from "@lucide/svelte/icons/layout-template";
@@ -30,9 +31,12 @@
 
   import { Toaster } from "$lib/components/ui/sonner/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
+  import { ROUTE_PERMISSION_MAP } from "$lib/allPerms.js";
+
+  let { children, data } = $props();
 
   // Navigation items - single source of truth
-  const navItems = [
+  const allNavItems = [
     { title: "Site Configurations", url: "/manage/app/site-configurations", icon: Settings2Icon },
     { title: "Internationalization", url: "/manage/app/internationalization", icon: GlobeIcon },
     { title: "Customizations", url: "/manage/app/customizations", icon: Columns3CogIcon },
@@ -45,17 +49,25 @@
     { title: "Alerts", url: "/manage/app/alerts", icon: SirenIcon },
     { title: "Subscriptions", url: "/manage/app/subscriptions", icon: BellIcon },
     { title: "Users", url: "/manage/app/users", icon: UsersIcon },
+    { title: "Roles", url: "/manage/app/roles", icon: ShieldIcon },
     { title: "Triggers", url: "/manage/app/triggers", icon: MailboxIcon },
     { title: "Templates", url: "/manage/app/templates", icon: TemplateIcon },
     { title: "Badges", url: "/manage/app/badges", icon: BadgeIcon },
     { title: "Embed", url: "/manage/app/embed", icon: CodeIcon },
     { title: "API Keys", url: "/manage/app/api-keys", icon: KeyIcon }
-  ].map((item) => ({ ...item, url: clientResolver(resolve, item.url) }));
+  ];
+
+  const navItems = allNavItems
+    .filter((item) => {
+      const routeId = `/(manage)${item.url}`;
+      const requiredPermission = ROUTE_PERMISSION_MAP[routeId];
+      if (requiredPermission === undefined || requiredPermission === null) return true;
+      return (data.userPermissions ?? []).includes(requiredPermission);
+    })
+    .map((item) => ({ ...item, url: clientResolver(resolve, item.url) }));
 
   // Derive page title from current URL
   let pageTitle = $derived(navItems.find((item) => page.url.pathname.startsWith(item.url))?.title || "Dashboard");
-
-  let { children, data } = $props();
 </script>
 
 <ModeWatcher />
