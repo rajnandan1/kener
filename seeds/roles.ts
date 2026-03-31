@@ -45,14 +45,21 @@ export async function seed(knex: Knex): Promise<void> {
   }
 
   // 2. Seed roles_permissions for readonly roles
+  //    Only insert permissions that actually exist in the permissions table
+  //    to avoid FK constraint errors if permissions seed hasn't run yet.
+  const existingPermRows: Array<{ id: string }> = await knex("permissions").select("id");
+  const existingPermIds = new Set(existingPermRows.map((p) => p.id));
+
   for (const [roleId, permissionIds] of Object.entries(rolePermissions)) {
+    const validPermissionIds = permissionIds.filter((id) => existingPermIds.has(id));
+
     const existingPerms: Array<{ permissions_id: string }> = await knex("roles_permissions")
       .where("roles_id", roleId)
       .select("permissions_id");
     const existingSet = new Set(existingPerms.map((e) => e.permissions_id));
 
     // Insert missing permissions
-    for (const permId of permissionIds) {
+    for (const permId of validPermissionIds) {
       if (!existingSet.has(permId)) {
         await knex("roles_permissions").insert({
           roles_id: roleId,
@@ -65,7 +72,7 @@ export async function seed(knex: Knex): Promise<void> {
     }
 
     // Remove permissions no longer assigned to this role
-    const desiredSet = new Set(permissionIds);
+    const desiredSet = new Set(validPermissionIds);
     const toRemove = existingPerms.filter((e) => !desiredSet.has(e.permissions_id)).map((e) => e.permissions_id);
     if (toRemove.length > 0) {
       await knex("roles_permissions").where("roles_id", roleId).whereIn("permissions_id", toRemove).del();

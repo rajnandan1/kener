@@ -45,6 +45,7 @@ export async function up(knex: Knex): Promise<void> {
       table.timestamp("updated_at").defaultTo(knex.fn.now());
 
       table.primary(["roles_id", "users_id"]);
+      table.index("users_id", "idx_users_roles_users_id");
     });
   }
 }

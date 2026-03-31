@@ -34,9 +34,17 @@ export async function up(knex: Knex): Promise<void> {
     }
   }
 
-  // 2. Migrate users.role → users_roles
+  // 2. Read users.role into memory BEFORE dropping the column.
+  //    On SQLite, dropColumn recreates the table (create → copy → drop → rename),
+  //    which can discard DML inserts to tables with FKs pointing at users.
   const users: Array<{ id: number; role: string }> = await knex("users").select("id", "role");
 
+  // 3. Drop the column first.
+  await knex.schema.alterTable("users", (table) => {
+    table.dropColumn("role");
+  });
+
+  // 4. Now populate users_roles from the in-memory snapshot.
   for (const user of users) {
     const newRoleId = ROLE_MAP[user.role] ?? "member";
 
@@ -51,11 +59,6 @@ export async function up(knex: Knex): Promise<void> {
       });
     }
   }
-
-  // 3. Now safe to drop the column
-  await knex.schema.alterTable("users", (table) => {
-    table.dropColumn("role");
-  });
 }
 
 // Reverse map: pick the highest-precedence role when backfilling.
