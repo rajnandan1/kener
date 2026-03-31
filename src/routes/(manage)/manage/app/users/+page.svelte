@@ -313,17 +313,14 @@
     }
   }
 
-  // Role badge variant
-  function getRoleBadgeVariant(role: string): "default" | "secondary" | "outline" {
-    switch (role) {
-      case "admin":
-        return "default";
-      case "editor":
-        return "secondary";
-      default:
-        return "outline";
-    }
+  // Role badge variant by precedence: admin > editor > others
+  function getRoleBadgeVariant(roleIds: string[]): "default" | "secondary" | "outline" {
+    if (roleIds.includes("admin")) return "default";
+    if (roleIds.includes("editor")) return "secondary";
+    return "outline";
   }
+
+  let activeRoles = $derived(roles.filter((r) => r.status === "ACTIVE"));
 
   // Fetch roles
   async function fetchRoles() {
@@ -449,7 +446,7 @@
                 {/if}
               </Table.Cell>
               <Table.Cell>
-                <Badge variant={getRoleBadgeVariant(user.role_ids[0] || "member")} class="uppercase">
+                <Badge variant={getRoleBadgeVariant(user.role_ids)} class="uppercase">
                   {user.role_ids.join(", ")}
                 </Badge>
               </Table.Cell>
@@ -543,7 +540,7 @@
         <div class="space-y-2">
           <Label>Roles</Label>
           <div class="space-y-2">
-            {#each roles as role (role.id)}
+            {#each activeRoles as role (role.id)}
               <label class="flex items-center gap-2">
                 <Checkbox
                   checked={newUser.role_ids.includes(role.id)}
@@ -554,7 +551,7 @@
                 <span class="text-sm uppercase">{role.role_name}</span>
               </label>
             {/each}
-            {#if roles.length === 0}
+            {#if activeRoles.length === 0}
               <p class="text-muted-foreground text-sm">No roles available</p>
             {/if}
           </div>
@@ -640,7 +637,7 @@
                 Change the roles of the user. The user will have different permissions based on assigned roles.
               </p>
               <div class="space-y-2">
-                {#each roles as role (role.id)}
+                {#each activeRoles as role (role.id)}
                   <label class="flex items-center gap-2">
                     <Checkbox
                       checked={toEditUser.role_ids.includes(role.id)}
@@ -652,7 +649,7 @@
                     <span class="text-sm uppercase">{role.role_name}</span>
                   </label>
                 {/each}
-                {#if roles.length === 0}
+                {#if activeRoles.length === 0}
                   <p class="text-muted-foreground text-sm">No roles available</p>
                 {/if}
               </div>

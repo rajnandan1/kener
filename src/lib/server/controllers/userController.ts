@@ -156,11 +156,14 @@ export const CreateNewUser = async (data: NewUserInput): Promise<number[]> => {
     throw new Error("At least one role is required");
   }
 
-  // Validate all role_ids exist
+  // Validate all role_ids exist and are active
   for (const roleId of data.role_ids) {
     const role = await db.getRoleById(roleId);
     if (!role) {
       throw new Error(`Role "${roleId}" does not exist`);
+    }
+    if (role.status !== "ACTIVE") {
+      throw new Error(`Role "${roleId}" is not active`);
     }
   }
 
@@ -244,11 +247,14 @@ export const ManualUpdateUserData = async (forUserId: number, data: ManualUserUp
     if (forUser.is_owner === "YES" && !data.role_ids.includes("admin")) {
       throw new Error("Owner must retain the admin role");
     }
-    // Validate all role_ids exist
+    // Validate all role_ids exist and are active
     for (const roleId of data.role_ids) {
       const role = await db.getRoleById(roleId);
       if (!role) {
         throw new Error(`Role "${roleId}" does not exist`);
+      }
+      if (role.status !== "ACTIVE") {
+        throw new Error(`Role "${roleId}" is not active`);
       }
     }
     return await db.updateUserRoles(forUser.id, data.role_ids);
@@ -304,11 +310,14 @@ export const SendInvitationEmail = async (email: string, role_ids: string[], nam
     throw new Error("At least one role is required");
   }
 
-  // Validate all role_ids exist
+  // Validate all role_ids exist and are active
   for (const roleId of role_ids) {
     const role = await db.getRoleById(roleId);
     if (!role) {
       throw new Error(`Role "${roleId}" does not exist`);
+    }
+    if (role.status !== "ACTIVE") {
+      throw new Error(`Role "${roleId}" is not active`);
     }
   }
 
@@ -636,6 +645,9 @@ export const AddUserToRole = async (roleId: string, userId: number) => {
   const role = await db.getRoleById(roleId);
   if (!role) {
     throw new Error(`Role "${roleId}" not found`);
+  }
+  if (role.status !== "ACTIVE") {
+    throw new Error(`Role "${roleId}" is not active`);
   }
   // Check if user already in role
   const users = await db.getUsersByRoleId(roleId);

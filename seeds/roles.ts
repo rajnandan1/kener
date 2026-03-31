@@ -8,7 +8,7 @@ import { permissions } from "../src/lib/allPerms.ts";
  *
  * Permission mapping derived from src/routes/(manage)/manage/api/+server.ts:
  *
- * admin  → all 25 permissions
+ * admin  → all permissions
  * editor → all except api_keys.delete (AdminCan-only)
  * member → all .read permissions only
  */

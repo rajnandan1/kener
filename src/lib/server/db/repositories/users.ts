@@ -8,6 +8,7 @@ import type {
   RolePermissionRecord,
   UserRoleRecord,
 } from "../../types/db.js";
+import { GetDbType } from "../../tool.js";
 
 /**
  * Repository for users, API keys operations
@@ -80,18 +81,26 @@ export class UsersRepository extends BaseRepository {
   }
 
   async insertUser(data: UserRecordInsert): Promise<number[]> {
-    const result = await this.knex("users")
-      .insert({
-        email: data.email,
-        name: data.name,
-        password_hash: data.password_hash,
-        is_owner: data.is_owner || "NO",
-        created_at: this.knex.fn.now(),
-        updated_at: this.knex.fn.now(),
-      })
-      .returning("id");
-    // SQLite returns [number], PG/MySQL return [{id: number}]
-    const userId = typeof result[0] === "object" ? (result[0] as { id: number }).id : (result[0] as number);
+    const dbType = GetDbType();
+
+    const insertData = {
+      email: data.email,
+      name: data.name,
+      password_hash: data.password_hash,
+      is_owner: data.is_owner || "NO",
+      created_at: this.knex.fn.now(),
+      updated_at: this.knex.fn.now(),
+    };
+
+    let userId: number;
+    if (dbType === "postgresql") {
+      const [row] = await this.knex("users").insert(insertData).returning("id");
+      userId = typeof row === "object" ? (row as { id: number }).id : (row as number);
+    } else {
+      const result = await this.knex("users").insert(insertData);
+      userId = result[0];
+    }
+
     if (data.role_ids && data.role_ids.length > 0) {
       const roleInserts = data.role_ids.map((roleId) => ({
         users_id: userId,
