@@ -41,20 +41,12 @@
     groupChildTags.length > 0 && typeof days === "number" && typeof endOfDayTodayAtTz === "number"
   );
 
-  const STATUS_ICON = {
-    UP: ICONS.UP,
-    DOWN: ICONS.DOWN,
-    DEGRADED: ICONS.DEGRADED,
-    MAINTENANCE: ICONS.MAINTENANCE,
-    NO_DATA: ICONS.MAINTENANCE
-  } as const;
-
-  const STATUS_STROKE = {
-    UP: "stroke-up",
-    DOWN: "stroke-down",
-    DEGRADED: "stroke-degraded",
-    MAINTENANCE: "stroke-maintenance",
-    NO_DATA: "stroke-muted-foreground"
+  const STATUS_DOT = {
+    UP: "bg-up",
+    DOWN: "bg-down",
+    DEGRADED: "bg-degraded",
+    MAINTENANCE: "bg-maintenance",
+    NO_DATA: "bg-zinc-600"
   } as const;
 </script>
 
@@ -98,7 +90,6 @@
     </div>
   {:else if data}
     <!-- Loaded state -->
-    {@const StatusIcon = STATUS_ICON[data.currentStatus]}
     <Item.Root class="items-start px-4 py-4">
       {#if !compact}
         <Item.Media variant="image" class="hidden sm:block">
@@ -121,18 +112,20 @@
 
       <Item.Content class="order-3 w-full text-left sm:order-0 sm:w-auto sm:flex-none sm:text-center">
         <Item.Title class="items-center gap-3 text-2xl text-zinc-100">
-          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950/90">
-            <StatusIcon class="{STATUS_STROKE[data.currentStatus]} size-4" />
-          </div>
           <div class="flex flex-col items-start gap-1 sm:items-end">
             <span class={grid ? "text-base sm:text-lg" : "text-lg sm:text-xl"}>{data.uptime}%</span>
-            <span class="text-right text-xs text-zinc-400">
-              {data.currentStatus === "UP"
-                ? `${$t("All Systems Operational")} @ ${$formatDate(
-                    new Date(data.toTimeStamp * 1000),
-                    page.data.dateAndTimeFormat.datePlusTime
-                  )} | ${data.avgLatency}`
-                : data.avgLatency}
+            <span class="flex flex-wrap items-center gap-1.5 text-right text-xs text-zinc-400 sm:justify-end">
+              {#if data.currentStatus === "UP"}
+                <span class="{STATUS_DOT[data.currentStatus]} inline-flex size-1.5 shrink-0 rounded-full"></span>
+                <span class="font-medium text-zinc-300">{$t("All Systems Operational")}</span>
+                <span class="text-zinc-600">@</span>
+                <span>{$formatDate(new Date(data.toTimeStamp * 1000), page.data.dateAndTimeFormat.datePlusTime)}</span>
+                <span class="text-zinc-600">|</span>
+                <span>{data.avgLatency}</span>
+              {:else}
+                <span class="{STATUS_DOT[data.currentStatus]} inline-flex size-1.5 shrink-0 rounded-full"></span>
+                <span>{data.avgLatency}</span>
+              {/if}
             </span>
           </div>
         </Item.Title>
@@ -140,9 +133,7 @@
     </Item.Root>
     {#if !compact}
       <div class="mx-auto flex w-full flex-col gap-2 px-4 pb-4">
-        <div class="rounded-[18px] border border-zinc-800 bg-zinc-950/75 px-2 py-2">
-          <StatusBarCalendar data={data.uptimeData} monitorTag={tag} barHeight={36} radius={6} />
-        </div>
+        <StatusBarCalendar data={data.uptimeData} monitorTag={tag} barHeight={36} radius={6} class="px-0.5" />
         <div class="flex min-w-0 justify-between gap-3">
           <p class="min-w-0 truncate text-xs font-medium text-zinc-500">
             {$formatDate(new Date(data.fromTimeStamp * 1000), page.data.dateAndTimeFormat.dateOnly)}

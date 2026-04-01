@@ -150,13 +150,24 @@
       <div class="min-w-0 flex-1">
         <Item.Root class="px-0 py-0">
           <Item.Content>
-            {#if data.pageDetails?.page_header}
-              <h1>
-                <Item.Title class="text-balance text-[1.75rem] font-medium tracking-[-0.04em] text-zinc-100 md:text-[2rem]">
-                  {data.pageDetails.page_header}
-                </Item.Title>
-              </h1>
-            {/if}
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              {#if data.pageDetails?.page_header}
+                <h1 class="min-w-0">
+                  <Item.Title class="text-balance text-[1.75rem] font-medium tracking-[-0.04em] text-zinc-100 md:text-[2rem]">
+                    {data.pageDetails.page_header}
+                  </Item.Title>
+                </h1>
+              {/if}
+              {#if data.loggedInUser}
+                <a
+                  href={clientResolver(resolve, "/manage/app/site-configurations")}
+                  class="inline-flex h-8 shrink-0 items-center justify-center gap-1.5 self-start rounded-lg bg-blue-600 px-2.5 text-[13px] leading-none font-light text-white transition-colors hover:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+                >
+                  <IconSettings class="h-4 w-4 opacity-90" />
+                  Manage Site
+                </a>
+              {/if}
+            </div>
             {#if data.pageDetails?.page_subheader}
               <div class="mt-2">
                 <div class="public-copy prose prose-sm dark:prose-invert max-w-none">
@@ -168,15 +179,6 @@
         </Item.Root>
       </div>
       <div class="flex shrink-0 flex-col gap-3 lg:items-end lg:pt-1">
-        {#if data.loggedInUser}
-          <a
-            href={clientResolver(resolve, "/manage/app/site-configurations")}
-            class="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-2.5 text-[13px] leading-none font-light text-white transition-colors hover:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
-          >
-            <IconSettings class="h-4 w-4 opacity-90" />
-            Manage Site
-          </a>
-        {/if}
         <EventsCard statusClass={data.pageStatus.statusClass} statusText={data.pageStatus.statusSummary} />
       </div>
     </div>
