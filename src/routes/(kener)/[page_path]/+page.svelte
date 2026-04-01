@@ -1,7 +1,7 @@
 <script lang="ts">
   import { browser } from "$app/environment";
   import * as Item from "$lib/components/ui/item/index.js";
-  import { IconServer } from "@tabler/icons-svelte";
+  import { IconHistory, IconServer, IconSettings } from "@tabler/icons-svelte";
   import EventsCard from "$lib/components/EventsCard.svelte";
   import MonitorBar from "$lib/components/MonitorBar.svelte";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
@@ -167,7 +167,16 @@
           </Item.Content>
         </Item.Root>
       </div>
-      <div class="shrink-0 lg:pt-1">
+      <div class="flex shrink-0 flex-col gap-3 lg:items-end lg:pt-1">
+        {#if data.loggedInUser}
+          <a
+            href={clientResolver(resolve, "/manage/app/site-configurations")}
+            class="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg bg-blue-600 px-2.5 text-[13px] leading-none font-light text-white transition-colors hover:bg-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+          >
+            <IconSettings class="h-4 w-4 opacity-90" />
+            Manage Site
+          </a>
+        {/if}
         <EventsCard statusClass={data.pageStatus.statusClass} statusText={data.pageStatus.statusSummary} />
       </div>
     </div>
@@ -190,6 +199,23 @@
           </div>
         {/each}
       </div>
+    {/if}
+    {#if data.resolvedIncidents && data.resolvedIncidents.length > 0}
+      <section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/20">
+        <div class="flex min-h-11 items-center border-b border-zinc-800 px-3 py-2">
+          <h2 class="flex items-center gap-2 text-sm font-medium text-zinc-100">
+            <IconHistory class="h-4 w-4 text-zinc-400" aria-hidden="true" />
+            Past Incidents
+          </h2>
+        </div>
+        <div class="divide-y divide-zinc-800">
+          {#each data.resolvedIncidents as incident, i (incident.id ?? i)}
+            <div class="p-3 sm:p-4">
+              <IncidentItem {incident} />
+            </div>
+          {/each}
+        </div>
+      </section>
     {/if}
     {#if data.upcomingMaintenances && data.upcomingMaintenances.length > 0}
       <div class="flex flex-col gap-3">

@@ -158,6 +158,7 @@ export interface PageNavItem {
 export interface PageDashboardData {
   pageStatus: { statusSummary: string; statusClass: string };
   ongoingIncidents: IncidentForMonitorListWithComments[];
+  resolvedIncidents: IncidentForMonitorListWithComments[];
   ongoingMaintenances: MaintenanceEventsMonitorList[];
   upcomingMaintenances: MaintenanceEventsMonitorList[];
   monitorTags: string[];
@@ -366,6 +367,7 @@ export const GetPageDashboardData = async (
     return {
       pageStatus: BuildPageStatus([], nowTs),
       ongoingIncidents: [],
+      resolvedIncidents: [],
       ongoingMaintenances: [],
       upcomingMaintenances: [],
       monitorTags,
@@ -378,23 +380,31 @@ export const GetPageDashboardData = async (
   }
   const eventSettings = layoutData.eventDisplaySettings;
   // Fetch all dashboard data in parallel (respecting feature toggles)
-  const [latestData, parsedMonitors, ongoingIncidents, ongoingMaintenances, upcomingMaintenances] = await Promise.all([
-    GetLatestMonitoringDataAllActive(monitorTags),
-    GetMonitorsParsed({ tags: monitorTags, status: "ACTIVE", is_hidden: "NO" }),
-    eventSettings.incidents.enabled && eventSettings.incidents.ongoing.show
-      ? GetOngoingIncidentsForMonitorList(monitorTags)
-      : Promise.resolve([] as IncidentForMonitorListWithComments[]),
-    eventSettings.maintenances.enabled && eventSettings.maintenances.ongoing.show
-      ? GetOngoingMaintenances(monitorTags, nowTs)
-      : Promise.resolve([] as MaintenanceEventsMonitorList[]),
-    eventSettings.maintenances.enabled && eventSettings.maintenances.upcoming.show
-      ? GetUpcomingMaintenanceEventsForMonitorList(
-          monitorTags,
-          eventSettings.maintenances.upcoming.maxCount,
-          eventSettings.maintenances.upcoming.daysInFuture,
-        )
-      : Promise.resolve([] as MaintenanceEventsMonitorList[]),
-  ]);
+  const [latestData, parsedMonitors, ongoingIncidents, resolvedIncidents, ongoingMaintenances, upcomingMaintenances] =
+    await Promise.all([
+      GetLatestMonitoringDataAllActive(monitorTags),
+      GetMonitorsParsed({ tags: monitorTags, status: "ACTIVE", is_hidden: "NO" }),
+      eventSettings.incidents.enabled && eventSettings.incidents.ongoing.show
+        ? GetOngoingIncidentsForMonitorList(monitorTags)
+        : Promise.resolve([] as IncidentForMonitorListWithComments[]),
+      eventSettings.incidents.enabled && eventSettings.incidents.resolved.show
+        ? GetResolvedIncidentsForMonitorList(
+            monitorTags,
+            eventSettings.incidents.resolved.maxCount,
+            eventSettings.incidents.resolved.daysInPast,
+          )
+        : Promise.resolve([] as IncidentForMonitorListWithComments[]),
+      eventSettings.maintenances.enabled && eventSettings.maintenances.ongoing.show
+        ? GetOngoingMaintenances(monitorTags, nowTs)
+        : Promise.resolve([] as MaintenanceEventsMonitorList[]),
+      eventSettings.maintenances.enabled && eventSettings.maintenances.upcoming.show
+        ? GetUpcomingMaintenanceEventsForMonitorList(
+            monitorTags,
+            eventSettings.maintenances.upcoming.maxCount,
+            eventSettings.maintenances.upcoming.daysInFuture,
+          )
+        : Promise.resolve([] as MaintenanceEventsMonitorList[]),
+    ]);
 
   const pageStatus = BuildPageStatus(latestData, nowTs);
   const monitorGroupMembersByTag: Record<string, string[]> = {};
@@ -411,6 +421,7 @@ export const GetPageDashboardData = async (
   return {
     pageStatus,
     ongoingIncidents,
+    resolvedIncidents,
     ongoingMaintenances,
     upcomingMaintenances,
     monitorTags,
