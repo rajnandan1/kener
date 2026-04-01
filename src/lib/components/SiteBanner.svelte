@@ -17,15 +17,24 @@
     `announcement:dismissed:${announcement.title}:${announcement.message}:${announcement.type}`
   );
 
-  const typeClasses = $derived.by(() => {
+  const toneClasses = $derived.by(() => {
     switch (announcement.type) {
       case "WARNING":
-        return "degraded";
+        return {
+          border: "border-amber-700/50",
+          title: "text-amber-300"
+        };
       case "ERROR":
-        return "down";
+        return {
+          border: "border-rose-700/50",
+          title: "text-rose-300"
+        };
       case "INFO":
       default:
-        return "muted";
+        return {
+          border: "border-zinc-800",
+          title: "text-zinc-100"
+        };
     }
   });
 
@@ -74,14 +83,14 @@
 </script>
 
 {#if visible}
-  <div class="bg-background relative flex w-full flex-col gap-0 rounded-3xl border border-{typeClasses} px-4 pt-2 pb-4">
+  <div class={`public-panel-muted relative flex w-full flex-col gap-2 px-4 pt-4 pb-4 ${toneClasses.border}`}>
     <div class="relative flex items-center justify-between gap-2 pr-2">
-      <span class="text-foreground text-base text-{typeClasses} font-medium">{announcement.title}</span>
+      <span class={`text-base font-medium ${toneClasses.title}`}>{announcement.title}</span>
       {#if announcement.ctaURL && announcement.ctaText}
         <div>
           <Button
             variant="link"
-            class="h-8 px-0 text-xs underline"
+            class="h-8 px-0 text-xs text-zinc-300 underline underline-offset-4"
             size="sm"
             href={announcement.ctaURL}
             target={announcement.ctaURL.startsWith("http") ? "_blank" : undefined}
@@ -92,11 +101,11 @@
       {/if}
     </div>
 
-    <p class="text-muted-foreground text-sm">{announcement.message}</p>
+    <p class="text-sm text-zinc-400">{announcement.message}</p>
     {#if announcement.cancellable}
       <Button
         variant="outline"
-        class="rounded-btn text-muted-foreground bg-background! border-{typeClasses} absolute -top-2.5 -right-2.5 "
+        class={`rounded-btn absolute -top-2.5 -right-2.5 border-zinc-800 bg-zinc-950 text-zinc-400 ${toneClasses.border}`}
         size="icon-sm"
         onclick={dismiss}
       >

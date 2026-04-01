@@ -10,7 +10,7 @@
 </script>
 
 <div class="flex min-h-[60vh] items-center justify-center p-4">
-  <Card.Root class="w-full max-w-md rounded-3xl border bg-transparent shadow-none">
+  <Card.Root class="public-panel w-full max-w-md shadow-none">
     <Card.Content class="flex flex-col items-center gap-6 pt-10 pb-8 text-center">
       <div class="bg-muted flex size-16 items-center justify-center rounded-full">
         <AlertCircle class="text-muted-foreground size-8" />

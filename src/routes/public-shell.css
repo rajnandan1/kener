@@ -1,0 +1,42 @@
+@import "../lib/assets/fonts.css";
+
+.kracking-public-shell {
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.kracking-public-shell,
+.kracking-public-shell body {
+  overflow-x: hidden;
+}
+
+.kracking-shell-notch {
+  position: relative;
+  width: 100%;
+}
+
+.kracking-shell-notch::before,
+.kracking-shell-notch::after {
+  content: "";
+  position: absolute;
+  top: -4.5px;
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+}
+
+.kracking-shell-notch::before {
+  left: 0;
+  border-left: 5px solid rgb(24 24 27);
+}
+
+.kracking-shell-notch::after {
+  right: 0;
+  border-right: 5px solid rgb(24 24 27);
+}

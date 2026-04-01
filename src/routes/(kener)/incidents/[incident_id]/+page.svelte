@@ -33,13 +33,14 @@
   {/if}
 </svelte:head>
 
-<div class="flex flex-col gap-3">
+<div class="public-page">
   <ThemePlus />
-  <div class="flex flex-col gap-2 px-4 py-2">
+  <div class="public-intro">
+    <p class="public-kicker">Incident Report</p>
     <Item.Root class="mb-4 px-0">
       <Item.Content class="min-w-0 flex-1 px-0">
         <h1>
-          <Item.Title class="text-3xl wrap-break-word">{data.incident.title}</Item.Title>
+          <Item.Title class="public-title wrap-break-word">{data.incident.title}</Item.Title>
         </h1>
       </Item.Content>
     </Item.Root>
@@ -47,8 +48,8 @@
   <div class="grid min-w-0 gap-6 lg:grid-cols-3">
     <!-- Comments Timeline (Main Content) -->
     <div class="min-w-0 lg:col-span-2">
-      <div class="bg-background min-w-0 rounded-3xl border">
-        <div class="flex items-center justify-between border-b p-4">
+      <div class="public-panel min-w-0">
+        <div class="public-divider flex items-center justify-between border-b p-4">
           <Badge variant="secondary" class="gap-1">
             <MessageSquare class="h-3 w-3" />
             {$t("Updates (%count)", { count: String(data.comments.length) })}
@@ -84,8 +85,8 @@
 
     <!-- Affected Monitors (Sidebar) -->
     <div class="lg:col-span-1">
-      <div class="bg-background rounded-3xl border">
-        <div class="flex items-center justify-between border-b p-4">
+      <div class="public-panel">
+        <div class="public-divider flex items-center justify-between border-b p-4">
           <Badge variant="secondary" class="gap-1">
             <Monitor class="h-3 w-3" />
             {$t("Affected Monitors (%count)", { count: String(data.affectedMonitors.length) })}

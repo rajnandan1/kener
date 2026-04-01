@@ -14,7 +14,7 @@
   import { formatDate } from "$lib/stores/datetime";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
-  import { format, parse, addMonths, subMonths, getUnixTime, startOfDay, formatDistanceStrict } from "date-fns";
+  import { format, parse, addMonths, subMonths, getUnixTime, startOfDay } from "date-fns";
   import { page } from "$app/state";
   import type { IncidentForMonitorListWithComments, MaintenanceEventsMonitorList } from "$lib/server/types/db";
 
@@ -39,7 +39,6 @@
   const prevMonthPath = $derived(format(prevMonth, "MMMM-yyyy"));
   const nextMonthPath = $derived(format(nextMonth, "MMMM-yyyy"));
 
-  // Determine if navigation buttons should show
   const currentDate = new Date();
   const maxDate = addMonths(currentDate, 12);
   const minDate = new Date(MIN_YEAR, 0, 1);
@@ -170,13 +169,19 @@
   {/if}
 </svelte:head>
 
-<div class="flex flex-col gap-3">
+<div class="public-page">
   <!-- Header with back button -->
 
   <ThemePlus />
 
+  <div class="public-intro">
+    <p class="public-kicker">Event Archive</p>
+    <h1 class="public-title">{$formatDate(parsedDate, "MMMM yyyy")}</h1>
+    <p class="public-copy">Historical incidents and scheduled maintenance updates for this month.</p>
+  </div>
+
   <div class="flex flex-col gap-4 sm:flex-row">
-    <div class="flex flex-row justify-start gap-y-3 rounded-3xl border p-4">
+    <div class="public-panel flex flex-row justify-start gap-y-3 p-4">
       <div class="flex flex-1 flex-row items-center justify-center gap-4">
         <div class="flex w-full flex-row items-center justify-between gap-4">
           <Button
@@ -200,7 +205,7 @@
       </div>
     </div>
 
-    <div class="flex flex-1 flex-col justify-around gap-y-4 rounded-3xl border p-4">
+    <div class="public-panel flex flex-1 flex-col justify-around gap-y-4 p-4">
       <div class="flex flex-wrap gap-x-3">
         <!-- Incidents in this page -->
         <div class="flex flex-1 flex-row items-center gap-2">
@@ -237,7 +242,7 @@
     </div>
   {:else if eventsByDay.length === 0}
     <!-- No Events -->
-    <Card.Root class="rounded-3xl border bg-transparent shadow-none">
+    <Card.Root class="public-panel shadow-none">
       <Card.Content class=" py-12 text-center">
         <div class="mx-auto mb-4 text-4xl">🎉</div>
         <h2 class="text-xl font-semibold">
@@ -252,12 +257,12 @@
     <!-- Events grouped by day -->
     {#each eventsByDay as day}
       <div class="flex flex-col gap-2">
-        <div class="bg-secondary mt-4 w-fit rounded-3xl border px-4 py-2 text-xs font-medium">
+        <div class="public-chip mt-4 w-fit">
           {$formatDate(day.date, page.data.dateAndTimeFormat.dateOnly)}
         </div>
         <div class="flex flex-col gap-2">
           {#each day.events as event}
-            <div class="flex flex-col gap-2 rounded-3xl border p-4">
+            <div class="public-panel flex flex-col gap-2 p-4">
               {#if event.type === "incident" && event.incident}
                 <IncidentItem incident={event.incident} />
               {:else if event.maintenance}

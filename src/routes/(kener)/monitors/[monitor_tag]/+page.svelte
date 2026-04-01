@@ -41,27 +41,28 @@
     <meta name="twitter:image" content={clientResolver(resolve, data.socialPreviewImage)} />
   {/if}
 </svelte:head>
-<div class="flex flex-col gap-3">
-  <ThemePlus monitor_tags={[data.monitorTag]} embedMonitorTag={data.monitorTag} />
-  <div class="flex flex-col gap-2 px-4 py-2">
+<div class="public-page">
+  <ThemePlus />
+  <div class="public-intro">
+    <p class="public-kicker">Monitor Status</p>
     {#if data.monitorImage}
       <img
         src={clientResolver(resolve, data.monitorImage)}
         alt={data.monitorName || "Monitor icon"}
-        class="aspect-auto w-12 rounded object-cover"
+        class="aspect-auto h-12 w-auto rounded object-cover"
       />
     {/if}
     <Item.Root class="px-0 py-0 ">
       <Item.Content>
         {#if data.monitorName}
           <h1>
-            <Item.Title class="text-3xl">{data.monitorName}</Item.Title>
+            <Item.Title class="public-title">{data.monitorName}</Item.Title>
           </h1>
         {/if}
         {#if data.monitorDescription}
           <h2 class="">
             <Item.Description
-              class="text-muted-foreground w-full {descriptionExpanded ? 'line-clamp-none' : ''} text-pretty"
+              class="public-copy w-full {descriptionExpanded ? 'line-clamp-none' : ''} text-pretty"
             >
               {#if data.monitorDescription.length > 150 && !descriptionExpanded}
                 {data.monitorDescription.slice(0, 150)}...
@@ -88,7 +89,7 @@
       </Item.Content>
     </Item.Root>
   </div>
-  <div class="bg-background flex flex-col justify-start gap-y-3 rounded-3xl border p-4">
+  <div class="public-panel flex flex-col justify-start gap-y-3 p-4">
     <div class="relative flex flex-col px-2">
       <h2 class="text-base font-medium">{$t("Last Updated")}</h2>
       <p class="text-muted-foreground text-xs">
@@ -128,7 +129,7 @@
   {#if data.ongoingIncidents && data.ongoingIncidents.length > 0}
     <div class="flex flex-col gap-3">
       {#each data.ongoingIncidents as incident, i (incident.id ?? i)}
-        <div class=" rounded-3xl border p-3 sm:p-4">
+        <div class="public-panel p-3 sm:p-4">
           <IncidentItem {incident} />
         </div>
       {/each}
@@ -137,7 +138,7 @@
   {#if data.ongoingMaintenances && data.ongoingMaintenances.length > 0}
     <div class="flex flex-col gap-3">
       {#each data.ongoingMaintenances as maintenance, i (maintenance.id ?? i)}
-        <div class="rounded-3xl border p-3 sm:p-4">
+        <div class="public-panel p-3 sm:p-4">
           <MaintenanceItem {maintenance} />
         </div>
       {/each}
@@ -146,7 +147,7 @@
   {#if data.upcomingMaintenances && data.upcomingMaintenances.length > 0}
     <div class="flex flex-col gap-3">
       {#each data.upcomingMaintenances as maintenance, i (maintenance.id ?? i)}
-        <div class="rounded-3xl border p-3 sm:p-4">
+        <div class="public-panel p-3 sm:p-4">
           <MaintenanceItem {maintenance} />
         </div>
       {/each}

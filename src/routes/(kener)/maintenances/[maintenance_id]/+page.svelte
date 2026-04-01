@@ -78,18 +78,19 @@
   {/if}
 </svelte:head>
 
-<div class="flex flex-col gap-3">
+<div class="public-page">
   <ThemePlus />
-  <div class="flex flex-col gap-2 px-4 py-2">
+  <div class="public-intro">
+    <p class="public-kicker">Maintenance Window</p>
     <Item.Root class="mb-4 flex-col items-start px-0 sm:flex-row sm:items-center">
       <Item.Content class="min-w-0 flex-1 px-0">
         <h1>
-          <Item.Title class="text-3xl wrap-break-word">{data.maintenance.title}</Item.Title>
+          <Item.Title class="public-title wrap-break-word">{data.maintenance.title}</Item.Title>
         </h1>
       </Item.Content>
     </Item.Root>
   </div>
-  <div class="mb-4 flex flex-col items-start gap-4 rounded-3xl border p-4 text-sm">
+  <div class="public-panel mb-4 flex flex-col items-start gap-4 p-4 text-sm">
     <div class="flex gap-2">
       {#if isRecurring(data.maintenance.rrule)}
         <Badge variant="secondary" class="gap-1">
@@ -121,7 +122,7 @@
     <div class="min-w-0 space-y-6 lg:col-span-2">
       <!-- Description -->
       {#if data.maintenance.description}
-        <div class="bg-background min-w-0 rounded-3xl border">
+        <div class="public-panel min-w-0">
           <div class="prose prose-sm dark:prose-invert max-w-none min-w-0 overflow-x-auto p-4 wrap-break-word">
             <SveltePurify html={mdToHTML(data.maintenance.description)} />
           </div>
@@ -130,8 +131,8 @@
 
       <!-- Scheduled Events (Past, Current, Upcoming) -->
       {#if data.maintenance.events && data.maintenance.events.length > 0}
-        <div class="bg-background rounded-3xl border">
-          <div class="flex items-center justify-between border-b p-4">
+        <div class="public-panel">
+          <div class="public-divider flex items-center justify-between border-b p-4">
             <Badge variant="secondary" class="gap-1">
               <Calendar class="h-3 w-3" />
               {$t("Scheduled Events (%count)", { count: String(data.maintenance.events.length) })}
@@ -177,8 +178,8 @@
 
     <!-- Affected Monitors (Sidebar) -->
     <div class="lg:col-span-1">
-      <div class="bg-background rounded-3xl border">
-        <div class="flex items-center justify-between border-b p-4">
+      <div class="public-panel">
+        <div class="public-divider flex items-center justify-between border-b p-4">
           <Badge variant="secondary" class="gap-1">
             <Monitor class="h-3 w-3" />
             {$t("Affected Monitors (%count)", { count: String(data.affectedMonitors.length) })}

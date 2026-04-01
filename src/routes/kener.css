@@ -267,7 +267,43 @@
   @apply cursor-pointer rounded-full shadow-none;
 }
 .kener-card {
-  @apply bg-background rounded-3xl shadow-none;
+  @apply rounded-3xl border border-zinc-900 bg-zinc-950/90 text-zinc-50 shadow-none backdrop-blur-sm;
+}
+
+.public-page {
+  @apply flex flex-col gap-6;
+}
+
+.public-intro {
+  @apply flex flex-col gap-4;
+}
+
+.public-kicker {
+  @apply text-[11px] font-medium uppercase tracking-[0.28em] text-zinc-500;
+}
+
+.public-title {
+  @apply text-4xl font-medium tracking-[-0.04em] text-zinc-100 md:text-5xl;
+}
+
+.public-copy {
+  @apply max-w-3xl text-sm leading-7 text-zinc-400 md:text-base;
+}
+
+.public-panel {
+  @apply rounded-3xl border border-zinc-900 bg-zinc-950/85 shadow-none backdrop-blur-sm;
+}
+
+.public-panel-muted {
+  @apply rounded-3xl border border-zinc-900 bg-zinc-950/55 shadow-none backdrop-blur-sm;
+}
+
+.public-chip {
+  @apply rounded-full border border-zinc-900 bg-zinc-950/85 px-3 py-2 text-xs font-medium text-zinc-300;
+}
+
+.public-divider {
+  @apply border-zinc-900;
 }
 
 /* Hide scrollbar globally */

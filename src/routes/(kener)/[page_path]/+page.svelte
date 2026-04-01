@@ -142,26 +142,27 @@
 </svelte:head>
 
 <!-- page title -->
-<div class="flex flex-col gap-3 sm:gap-4">
-  <ThemePlus monitor_tags={data.monitorTags} />
-  <div class="flex flex-col gap-2 px-3 py-2 sm:px-4">
+<div class="public-page">
+  <ThemePlus />
+  <div class="public-intro">
+    <p class="public-kicker">System Status</p>
     {#if data.pageDetails?.page_logo}
       <img
         src={clientResolver(resolve, data.pageDetails.page_logo)}
         alt="Page Logo"
-        class="aspect-auto w-12 rounded object-cover"
+        class="aspect-auto h-12 w-auto rounded object-cover"
       />
     {/if}
     <Item.Root class="px-0 py-0">
       <Item.Content>
         {#if data.pageDetails?.page_header}
           <h1>
-            <Item.Title class="text-2xl sm:text-3xl">{data.pageDetails.page_header}</Item.Title>
+            <Item.Title class="public-title text-balance">{data.pageDetails.page_header}</Item.Title>
           </h1>
         {/if}
         {#if data.pageDetails?.page_subheader}
           <h2 class="">
-            <div class="prose prose-sm dark:prose-invert max-w-none">
+            <div class="public-copy prose prose-sm dark:prose-invert max-w-none">
               <SveltePurify html={mdToHTML(data.pageDetails.page_subheader)} />
             </div>
           </h2>
@@ -174,7 +175,7 @@
     {#if data.ongoingIncidents && data.ongoingIncidents.length > 0}
       <div class="flex flex-col gap-3">
         {#each data.ongoingIncidents as incident, i (incident.id ?? i)}
-          <div class=" rounded-3xl border p-3 sm:p-4">
+          <div class="public-panel p-3 sm:p-4">
             <IncidentItem {incident} />
           </div>
         {/each}
@@ -183,7 +184,7 @@
     {#if data.ongoingMaintenances && data.ongoingMaintenances.length > 0}
       <div class="flex flex-col gap-3">
         {#each data.ongoingMaintenances as maintenance, i (maintenance.id ?? i)}
-          <div class="rounded-3xl border p-3 sm:p-4">
+          <div class="public-panel p-3 sm:p-4">
             <MaintenanceItem {maintenance} />
           </div>
         {/each}
@@ -192,13 +193,13 @@
     {#if data.upcomingMaintenances && data.upcomingMaintenances.length > 0}
       <div class="flex flex-col gap-3">
         {#each data.upcomingMaintenances as maintenance, i (maintenance.id ?? i)}
-          <div class="rounded-3xl border p-3 sm:p-4">
+          <div class="public-panel p-3 sm:p-4">
             <MaintenanceItem {maintenance} />
           </div>
         {/each}
       </div>
     {/if}
-    <div class="overflow-hidden rounded-3xl border">
+    <div class="public-panel overflow-hidden">
       <div class={`grid grid-cols-1 ${getGridContainerClass(viewType)}`}>
         {#each data.monitorTags as tag, i (tag)}
           <div
