@@ -1,5 +1,6 @@
 <script lang="ts">
   import bannerImage from "$lib/assets/banner.png";
+  import { page } from "$app/state";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import type { Snippet } from "svelte";
@@ -37,6 +38,16 @@
     </section>
 
     <footer class="border-t border-zinc-900 px-6 py-8 md:px-10">
+      {#if page.data.loggedInUser}
+        <div class="mb-4 flex justify-center">
+          <a
+            href={clientResolver(resolve, "/manage/app/site-configurations")}
+            class="text-sm font-medium text-zinc-300 underline underline-offset-4 transition-colors hover:text-blue-400"
+          >
+            Manage Site
+          </a>
+        </div>
+      {/if}
       {#if footerHTML}
         <div class="flex justify-center text-center text-sm text-zinc-500 [&>*]:mx-auto [&_a]:text-zinc-300 [&_a]:underline [&_a]:underline-offset-4">
           {@html footerHTML}
