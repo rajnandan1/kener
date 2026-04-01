@@ -10,7 +10,7 @@ Kener is an open-source status page system designed to help you monitor and comm
 
 Kener is a simple status monitoring app that helps you keep your users informed about the status of your services. It is built with Node.js and Svelte, and uses Redis for caching.
 
-Kener is built and maintained by [Rajnandan1](https://www.rajnandan.com). It is licensed under the MIT License. Please consider supporting the project by starring it on [GitHub](https://github.com/rajnandan1/kener) or by [sponsoring](https://github.com/sponsors/rajnandan1) the development.
+Kener is built and maintained by [Rajnandan1](https://www.rajnandan.com). It is licensed under the Kracking Open Source License. Please consider supporting the project by starring it on [GitHub](https://github.com/rajnandan1/kener) or by [sponsoring](https://github.com/sponsors/rajnandan1) the development.
 
 ## Important Links {#important-links}
 
