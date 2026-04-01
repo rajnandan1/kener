@@ -148,34 +148,29 @@
   <div class="public-intro">
     <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div class="min-w-0 flex-1">
-        {#if data.pageDetails?.page_logo}
-          <img
-            src={clientResolver(resolve, data.pageDetails.page_logo)}
-            alt="Page Logo"
-            class="mb-4 aspect-auto h-12 w-auto rounded object-cover"
-          />
-        {/if}
         <Item.Root class="px-0 py-0">
           <Item.Content>
             {#if data.pageDetails?.page_header}
               <h1>
-                <Item.Title class="public-title text-balance">{data.pageDetails.page_header}</Item.Title>
+                <Item.Title class="text-balance text-[1.75rem] font-medium tracking-[-0.04em] text-zinc-100 md:text-[2rem]">
+                  {data.pageDetails.page_header}
+                </Item.Title>
               </h1>
+            {/if}
+            {#if data.pageDetails?.page_subheader}
+              <div class="mt-2">
+                <div class="public-copy prose prose-sm dark:prose-invert max-w-none">
+                  <SveltePurify html={mdToHTML(data.pageDetails.page_subheader)} />
+                </div>
+              </div>
             {/if}
           </Item.Content>
         </Item.Root>
       </div>
-      <div class="shrink-0 lg:pt-2">
+      <div class="shrink-0 lg:pt-1">
         <EventsCard statusClass={data.pageStatus.statusClass} statusText={data.pageStatus.statusSummary} />
       </div>
     </div>
-    {#if data.pageDetails?.page_subheader}
-      <div class="flex justify-end">
-        <div class="public-copy prose prose-sm dark:prose-invert max-w-none text-right">
-          <SveltePurify html={mdToHTML(data.pageDetails.page_subheader)} />
-        </div>
-      </div>
-    {/if}
   </div>
   {#if !!data.monitorTags.length}
     {#if data.ongoingIncidents && data.ongoingIncidents.length > 0}

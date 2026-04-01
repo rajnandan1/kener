@@ -17,12 +17,12 @@
 <div class="kracking-public-shell dark min-h-screen bg-zinc-950 text-zinc-50">
   <div class="mx-auto flex min-h-screen w-full max-w-[1126px] flex-col">
     <section class="flex flex-1 flex-col px-6 py-6 md:px-10 md:py-8">
-      <div class="flex items-center justify-between">
+      <div class="mx-auto flex w-full max-w-5xl items-center justify-start">
         <a href={clientResolver(resolve, "/")} class="flex items-center gap-3">
           <img
             src={bannerImage}
             alt="Kracking"
-            class="h-10 w-auto object-contain"
+            class="h-9 w-auto object-contain md:h-10"
             fetchpriority="high"
             decoding="async"
           />

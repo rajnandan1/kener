@@ -3,7 +3,7 @@
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
 
   import { resolve } from "$app/paths";
-  import Clock from "@lucide/svelte/icons/clock";
+  import { IconClockHour4, IconActivityHeartbeat, IconAlertTriangle, IconTool } from "@tabler/icons-svelte";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import { Skeleton } from "$lib/components/ui/skeleton/index.js";
   import LoaderBoxes from "$lib/components/loaderbox.svelte";
@@ -206,7 +206,7 @@
 
 <Dialog.Root bind:open>
   <Dialog.Overlay class="backdrop-blur-[2px]" />
-  <Dialog.Content class="max-h-[90vh] overflow-y-auto rounded-3xl p-4 sm:max-w-[46.5rem] sm:p-6">
+  <Dialog.Content class="max-h-[90vh] overflow-y-auto p-4 sm:max-w-[46.5rem] sm:p-6">
     <Dialog.Header>
       <Dialog.Title class="flex items-center gap-2 text-base sm:text-lg">
         <span class="truncate">
@@ -218,21 +218,25 @@
       >
     </Dialog.Header>
 
-    <Tabs.Root value={activeView} class="bg-background ktabs w-full   overflow-hidden rounded-3xl border">
+    <Tabs.Root value={activeView} class="w-full overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950">
       <Tabs.List
-        class="scrollbar-hidden h-auto w-full justify-start gap-1 overflow-x-auto rounded-none px-2 py-2 sm:justify-end"
+        class="scrollbar-hidden h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b border-zinc-800 px-2 py-2"
       >
-        <Tabs.Trigger value="status" class="shrink-0 rounded-3xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
-          >{$t("Status")}</Tabs.Trigger
+        <Tabs.Trigger value="status" class="shrink-0 px-3 py-1.5 text-sm">
+          <IconActivityHeartbeat class="h-4 w-4" />
+          {$t("Status")}</Tabs.Trigger
         >
-        <Tabs.Trigger value="latency" class="shrink-0 rounded-3xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
-          >{$t("Latency")}</Tabs.Trigger
+        <Tabs.Trigger value="latency" class="shrink-0 px-3 py-1.5 text-sm">
+          <IconClockHour4 class="h-4 w-4" />
+          {$t("Latency")}</Tabs.Trigger
         >
-        <Tabs.Trigger value="incidents" class="shrink-0 rounded-3xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
-          >{$t("Incidents")}</Tabs.Trigger
+        <Tabs.Trigger value="incidents" class="shrink-0 px-3 py-1.5 text-sm">
+          <IconAlertTriangle class="h-4 w-4" />
+          {$t("Incidents")}</Tabs.Trigger
         >
-        <Tabs.Trigger value="maintenances" class="shrink-0 rounded-3xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
-          >{$t("Maintenances")}</Tabs.Trigger
+        <Tabs.Trigger value="maintenances" class="shrink-0 px-3 py-1.5 text-sm">
+          <IconTool class="h-4 w-4" />
+          {$t("Maintenances")}</Tabs.Trigger
         >
       </Tabs.List>
       <!-- status view -->
@@ -274,9 +278,9 @@
             <div class="text-foreground mb-2 flex items-center justify-between text-sm font-medium">
               <p>{$t("Latency Over Time")}</p>
               <div class="flex items-center gap-1">
-                <Tooltip.Root>
-                  <Tooltip.Trigger class="flex items-center gap-1">
-                    <Clock class="h-3 w-3" />
+                  <Tooltip.Root>
+                    <Tooltip.Trigger class="flex items-center gap-1">
+                    <IconClockHour4 class="h-3 w-3" />
                     {dayLatencyData.avgLatency}
                   </Tooltip.Trigger>
                   <Tooltip.Content>

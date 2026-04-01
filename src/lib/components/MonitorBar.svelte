@@ -120,8 +120,8 @@
       </Item.Content>
 
       <Item.Content class="order-3 w-full text-left sm:order-0 sm:w-auto sm:flex-none sm:text-center">
-        <Item.Title class="items-start text-2xl text-zinc-100">
-          <StatusIcon class="{STATUS_STROKE[data.currentStatus]} {grid ? 'mt-1 size-5' : 'mt-1.5 size-6'}" />
+        <Item.Title class="items-center text-2xl text-zinc-100">
+          <StatusIcon class="{STATUS_STROKE[data.currentStatus]} {grid ? 'size-5' : 'size-5'}" />
           <div class="flex flex-col items-start gap-1 sm:items-end">
             <span class={grid ? "text-base sm:text-lg" : "text-lg sm:text-xl"}>{data.uptime}%</span>
             <span class="text-right text-xs text-zinc-400">
