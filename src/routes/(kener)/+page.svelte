@@ -1,6 +1,7 @@
 <script lang="ts">
   import { browser } from "$app/environment";
   import * as Item from "$lib/components/ui/item/index.js";
+  import { IconServer } from "@tabler/icons-svelte";
   import EventsCard from "$lib/components/EventsCard.svelte";
   import MonitorBar from "$lib/components/MonitorBar.svelte";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
@@ -145,32 +146,38 @@
 <div class="public-page">
   <ThemePlus />
   <div class="public-intro">
-    {#if data.pageDetails?.page_logo}
-      <img
-        src={clientResolver(resolve, data.pageDetails.page_logo)}
-        alt="Page Logo"
-        class="aspect-auto h-12 w-auto rounded object-cover"
-      />
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      <div class="min-w-0 flex-1">
+        {#if data.pageDetails?.page_logo}
+          <img
+            src={clientResolver(resolve, data.pageDetails.page_logo)}
+            alt="Page Logo"
+            class="mb-4 aspect-auto h-12 w-auto rounded object-cover"
+          />
+        {/if}
+        <Item.Root class="px-0 py-0">
+          <Item.Content>
+            {#if data.pageDetails?.page_header}
+              <h1>
+                <Item.Title class="public-title text-balance">{data.pageDetails.page_header}</Item.Title>
+              </h1>
+            {/if}
+          </Item.Content>
+        </Item.Root>
+      </div>
+      <div class="shrink-0 lg:pt-2">
+        <EventsCard statusClass={data.pageStatus.statusClass} statusText={data.pageStatus.statusSummary} />
+      </div>
+    </div>
+    {#if data.pageDetails?.page_subheader}
+      <div class="flex justify-end">
+        <div class="public-copy prose prose-sm dark:prose-invert max-w-none text-right">
+          <SveltePurify html={mdToHTML(data.pageDetails.page_subheader)} />
+        </div>
+      </div>
     {/if}
-    <Item.Root class="px-0 py-0">
-      <Item.Content>
-        {#if data.pageDetails?.page_header}
-          <h1>
-            <Item.Title class="public-title text-balance">{data.pageDetails.page_header}</Item.Title>
-          </h1>
-        {/if}
-        {#if data.pageDetails?.page_subheader}
-          <h2 class="">
-            <div class="public-copy prose prose-sm dark:prose-invert max-w-none">
-              <SveltePurify html={mdToHTML(data.pageDetails.page_subheader)} />
-            </div>
-          </h2>
-        {/if}
-      </Item.Content>
-    </Item.Root>
   </div>
   {#if !!data.monitorTags.length}
-    <EventsCard statusClass={data.pageStatus.statusClass} statusText={data.pageStatus.statusSummary} />
     {#if data.ongoingIncidents && data.ongoingIncidents.length > 0}
       <div class="flex flex-col gap-3">
         {#each data.ongoingIncidents as incident, i (incident.id ?? i)}
@@ -198,9 +205,16 @@
         {/each}
       </div>
     {/if}
-    <div class={`grid grid-cols-1 gap-4 ${viewType === "compact-grid" ? "sm:grid-cols-2 lg:grid-cols-4" : ""} ${viewType === "default-grid" ? "md:grid-cols-2 lg:grid-cols-2" : ""}`}>
+    <section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/20">
+      <div class="flex min-h-11 items-center border-b border-zinc-800 px-3 py-2">
+        <h2 class="flex items-center gap-2 text-sm font-medium text-zinc-100">
+          <IconServer class="h-4 w-4 text-zinc-400" aria-hidden="true" />
+          Infrastructure
+        </h2>
+      </div>
+      <div class="divide-y divide-zinc-800">
         {#each data.monitorTags as tag, i (tag)}
-          <div class={`public-panel px-2 py-2 sm:px-0 ${viewType === 'compact-grid' || viewType === 'default-grid' ? getGridItemSpanClass(i, data.monitorTags.length, viewType) : ''}`}>
+          <div class="bg-transparent">
             <MonitorBar
               {tag}
               prefetchedData={monitorBarDataByTag[tag]}
@@ -214,5 +228,6 @@
           </div>
         {/each}
       </div>
+    </section>
   {/if}
 </div>

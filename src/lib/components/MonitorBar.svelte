@@ -99,7 +99,7 @@
   {:else if data}
     <!-- Loaded state -->
     {@const StatusIcon = STATUS_ICON[data.currentStatus]}
-    <Item.Root class="items-start ">
+    <Item.Root class="items-start px-4 py-4">
       {#if !compact}
         <Item.Media variant="image" class="hidden sm:block">
           <Avatar.Root class="size-10">
@@ -111,35 +111,40 @@
         </Item.Media>
       {/if}
       <Item.Content class="min-w-0 flex-1">
-        <Item.Title class="w-full truncate">
+        <Item.Title class="w-full truncate text-zinc-100">
           <a class="hover:underline" href={clientResolver(resolve, `/monitors/${tag}`)}>{data.name}</a>
         </Item.Title>
         {#if data.description}
-          <Item.Description class="line-clamp-2 wrap-break-word">{data.description}</Item.Description>
+          <Item.Description class="line-clamp-2 wrap-break-word text-zinc-400">{data.description}</Item.Description>
         {/if}
       </Item.Content>
 
       <Item.Content class="order-3 w-full text-left sm:order-0 sm:w-auto sm:flex-none sm:text-center">
-        <Item.Title class="items-start text-2xl">
+        <Item.Title class="items-start text-2xl text-zinc-100">
           <StatusIcon class="{STATUS_STROKE[data.currentStatus]} {grid ? 'mt-1 size-5' : 'mt-1.5 size-6'}" />
           <div class="flex flex-col items-start gap-1 sm:items-end">
             <span class={grid ? "text-base sm:text-lg" : "text-lg sm:text-xl"}>{data.uptime}%</span>
-            <span class="text-muted-foreground text-right text-xs">
-              {data.avgLatency}
+            <span class="text-right text-xs text-zinc-400">
+              {data.currentStatus === "UP"
+                ? `${$t("All Systems Operational")} @ ${$formatDate(
+                    new Date(data.toTimeStamp * 1000),
+                    page.data.dateAndTimeFormat.datePlusTime
+                  )} | ${data.avgLatency}`
+                : data.avgLatency}
             </span>
           </div>
         </Item.Title>
       </Item.Content>
     </Item.Root>
     {#if !compact}
-      <div class="mx-auto flex w-full flex-col gap-1 px-4">
+      <div class="mx-auto flex w-full flex-col gap-1 px-4 pb-4">
         <StatusBarCalendar data={data.uptimeData} monitorTag={tag} barHeight={40} radius={8} />
         <div class="flex min-w-0 justify-between gap-3">
-          <p class="text-muted-foreground min-w-0 truncate text-xs font-medium">
+          <p class="min-w-0 truncate text-xs font-medium text-zinc-500">
             {$formatDate(new Date(data.fromTimeStamp * 1000), page.data.dateAndTimeFormat.dateOnly)}
           </p>
 
-          <p class="text-muted-foreground min-w-0 truncate text-right text-xs font-medium">
+          <p class="min-w-0 truncate text-right text-xs font-medium text-zinc-500">
             {$formatDate(new Date(data.toTimeStamp * 1000), page.data.dateAndTimeFormat.dateOnly)}
           </p>
         </div>
