@@ -5,8 +5,7 @@
   import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import StatusBarCalendar from "$lib/components/StatusBarCalendar.svelte";
   import LatencyTrendChart from "$lib/components/LatencyTrendChart.svelte";
-  import ChevronDown from "@lucide/svelte/icons/chevron-down";
-  import ArrowUp from "@lucide/svelte/icons/arrow-up";
+  import { IconChevronDown, IconArrowUp } from "@tabler/icons-svelte";
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
   import { Button } from "$lib/components/ui/button";
   import { t } from "$lib/stores/i18n";
@@ -132,7 +131,7 @@
   });
 </script>
 
-<Card.Root class="bg-background rounded-3xl shadow-none {className}">
+<Card.Root class="public-panel gap-0 py-0 {className}">
   <Card.Header class="pb-2">
     <div class="flex items-center justify-between">
       <div>
@@ -147,7 +146,7 @@
             {#snippet child({ props })}
               <Button {...props} variant="outline" class="rounded-btn cursor-pointer gap-1 text-xs" size="sm">
                 {dayOptions[selectedDayIndex].text}
-                <ChevronDown class="size-4" />
+                <IconChevronDown class="size-4" />
               </Button>
             {/snippet}
           </DropdownMenu.Trigger>
@@ -220,7 +219,7 @@
         <div class="flex justify-center">
           <GroupMonitorPopover tags={groupTags} days={selectedDays} {endOfDayTodayAtTz}>
             {$t("Included Monitors (%count)", { count: String(groupTags.length) })}
-            <ArrowUp class="size-3" />
+            <IconArrowUp class="size-3" />
           </GroupMonitorPopover>
         </div>
       {/if}

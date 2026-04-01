@@ -120,6 +120,7 @@
     "@scalar/express-api-reference": "^0.8.28",
     "@scalar/sveltekit": "^0.1.43",
     "@scaleway/random-name": "^5.1.4",
+    "@tabler/icons-svelte": "^3.41.1",
     "@uiw/codemirror-theme-github": "^4.25.3",
     "axios": "^1.13.2",
     "badge-maker": "^5.0.2",

@@ -283,7 +283,7 @@
 }
 
 .public-title {
-  @apply text-4xl font-medium tracking-[-0.04em] text-zinc-100 md:text-5xl;
+  @apply text-3xl font-medium tracking-[-0.04em] text-zinc-100 md:text-4xl;
 }
 
 .public-copy {
@@ -291,19 +291,19 @@
 }
 
 .public-panel {
-  @apply rounded-3xl border border-zinc-900 bg-zinc-950/85 shadow-none backdrop-blur-sm;
+  @apply rounded-xl border border-zinc-800 bg-zinc-950 shadow-none;
 }
 
 .public-panel-muted {
-  @apply rounded-3xl border border-zinc-900 bg-zinc-950/55 shadow-none backdrop-blur-sm;
+  @apply rounded-xl border border-zinc-800 bg-zinc-950/80 shadow-none;
 }
 
 .public-chip {
-  @apply rounded-full border border-zinc-900 bg-zinc-950/85 px-3 py-2 text-xs font-medium text-zinc-300;
+  @apply rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs font-medium text-zinc-300;
 }
 
 .public-divider {
-  @apply border-zinc-900;
+  @apply border-zinc-800;
 }
 
 /* Hide scrollbar globally */

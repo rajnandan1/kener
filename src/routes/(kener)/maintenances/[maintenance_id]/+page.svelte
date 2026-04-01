@@ -1,10 +1,7 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
   import { onMount } from "svelte";
-  import Calendar from "@lucide/svelte/icons/calendar";
-  import Monitor from "@lucide/svelte/icons/monitor";
-  import ArrowRight from "@lucide/svelte/icons/arrow-right";
-  import Repeat from "@lucide/svelte/icons/repeat";
+  import { IconCalendarEvent, IconServer, IconArrowRight, IconRepeat } from "@tabler/icons-svelte";
   import * as Item from "$lib/components/ui/item/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import GC from "$lib/global-constants.js";
@@ -94,7 +91,7 @@
     <div class="flex gap-2">
       {#if isRecurring(data.maintenance.rrule)}
         <Badge variant="secondary" class="gap-1">
-          <Repeat class="h-3 w-3" />
+          <IconRepeat class="h-3 w-3" />
           {$t("Recurring")}
         </Badge>
       {:else}
@@ -134,7 +131,7 @@
         <div class="public-panel">
           <div class="public-divider flex items-center justify-between border-b p-4">
             <Badge variant="secondary" class="gap-1">
-              <Calendar class="h-3 w-3" />
+              <IconCalendarEvent class="h-3 w-3" />
               {$t("Scheduled Events (%count)", { count: String(data.maintenance.events.length) })}
             </Badge>
           </div>
@@ -181,14 +178,14 @@
       <div class="public-panel">
         <div class="public-divider flex items-center justify-between border-b p-4">
           <Badge variant="secondary" class="gap-1">
-            <Monitor class="h-3 w-3" />
+            <IconServer class="h-3 w-3" />
             {$t("Affected Monitors (%count)", { count: String(data.affectedMonitors.length) })}
           </Badge>
         </div>
 
         {#if data.affectedMonitors.length === 0}
           <div class="text-muted-foreground p-8 text-center">
-            <Monitor class="mx-auto mb-2 h-8 w-8 opacity-50" />
+            <IconServer class="mx-auto mb-2 h-8 w-8 opacity-50" />
             <p>{$t("No monitors affected")}</p>
           </div>
         {:else}
@@ -221,7 +218,7 @@
                       href={clientResolver(resolve, `/monitors/${monitor.monitor_tag}`)}
                       size="icon"
                     >
-                      <ArrowRight class="h-4 w-4" />
+                      <IconArrowRight class="h-4 w-4" />
                     </Button>
                   </Item.Actions>
                 </Item.Root>

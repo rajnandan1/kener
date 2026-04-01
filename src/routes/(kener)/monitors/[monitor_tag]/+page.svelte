@@ -5,7 +5,7 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import MonitorOverview from "$lib/components/MonitorOverview.svelte";
-  import ArrowUpRight from "@lucide/svelte/icons/arrow-up-right";
+  import { IconArrowUpRight } from "@tabler/icons-svelte";
   import clientResolver from "$lib/client/resolver.js";
   import { resolve } from "$app/paths";
   import trackEvent from "$lib/beacon";
@@ -105,7 +105,7 @@
           rel="noopener noreferrer"
           onclick={trackExternalLinkClick}
         >
-          <ArrowUpRight class="size-4" />
+          <IconArrowUpRight class="size-4" />
         </Button>
       {/if}
     </div>

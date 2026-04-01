@@ -1,8 +1,6 @@
 <script lang="ts">
   import { resolve } from "$app/paths";
-  import MessageSquare from "@lucide/svelte/icons/message-square";
-  import Monitor from "@lucide/svelte/icons/monitor";
-  import ArrowRight from "@lucide/svelte/icons/arrow-right";
+  import { IconMessageCircle, IconServer, IconArrowRight } from "@tabler/icons-svelte";
   import * as Item from "$lib/components/ui/item/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
@@ -51,14 +49,14 @@
       <div class="public-panel min-w-0">
         <div class="public-divider flex items-center justify-between border-b p-4">
           <Badge variant="secondary" class="gap-1">
-            <MessageSquare class="h-3 w-3" />
+            <IconMessageCircle class="h-3 w-3" />
             {$t("Updates (%count)", { count: String(data.comments.length) })}
           </Badge>
         </div>
 
         {#if data.comments.length === 0}
           <div class="text-muted-foreground p-8 text-center">
-            <MessageSquare class="mx-auto mb-2 h-8 w-8 opacity-50" />
+            <IconMessageCircle class="mx-auto mb-2 h-8 w-8 opacity-50" />
             <p>{$t("No updates yet")}</p>
           </div>
         {:else}
@@ -88,14 +86,14 @@
       <div class="public-panel">
         <div class="public-divider flex items-center justify-between border-b p-4">
           <Badge variant="secondary" class="gap-1">
-            <Monitor class="h-3 w-3" />
+            <IconServer class="h-3 w-3" />
             {$t("Affected Monitors (%count)", { count: String(data.affectedMonitors.length) })}
           </Badge>
         </div>
 
         {#if data.affectedMonitors.length === 0}
           <div class="text-muted-foreground p-8 text-center">
-            <Monitor class="mx-auto mb-2 h-8 w-8 opacity-50" />
+            <IconServer class="mx-auto mb-2 h-8 w-8 opacity-50" />
             <p>{$t("No monitors affected")}</p>
           </div>
         {:else}
@@ -134,7 +132,7 @@
                       class="rounded-btn"
                       size="icon"
                     >
-                      <ArrowRight class="h-4 w-4" />
+                      <IconArrowRight class="h-4 w-4" />
                     </Button>
                   </Item.Actions>
                 </Item.Root>

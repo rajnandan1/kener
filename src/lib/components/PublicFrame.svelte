@@ -15,7 +15,7 @@
 </script>
 
 <div class="kracking-public-shell dark min-h-screen bg-zinc-950 text-zinc-50">
-  <div class="mx-auto flex min-h-screen w-full max-w-[1126px] flex-col border-x border-zinc-900">
+  <div class="mx-auto flex min-h-screen w-full max-w-[1126px] flex-col">
     <section class="flex flex-1 flex-col px-6 py-6 md:px-10 md:py-8">
       <div class="flex items-center justify-between">
         <a href={clientResolver(resolve, "/")} class="flex items-center gap-3">
@@ -29,26 +29,20 @@
         </a>
       </div>
 
-      <div class="-mx-6 mt-6 md:-mx-10 md:mt-8">
-        <div class="kracking-shell-notch"></div>
-      </div>
-
-      <div class="-mx-6 mt-0 flex flex-1 flex-col border-t border-zinc-900 px-6 py-10 md:-mx-10 md:px-10 md:py-12">
+      <div class="mt-8 flex flex-1 flex-col px-0 py-6 md:py-8">
         <div class="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6">
           {@render children?.()}
         </div>
       </div>
     </section>
 
-    <div class="kracking-shell-notch border-t border-zinc-900"></div>
-
     <footer class="border-t border-zinc-900 px-6 py-8 md:px-10">
       {#if footerHTML}
-        <div class="text-center text-sm text-zinc-500 [&_a]:text-zinc-300 [&_a]:underline [&_a]:underline-offset-4">
+        <div class="flex justify-center text-center text-sm text-zinc-500 [&>*]:mx-auto [&_a]:text-zinc-300 [&_a]:underline [&_a]:underline-offset-4">
           {@html footerHTML}
         </div>
       {:else}
-        <div class="text-center text-sm text-zinc-500">
+        <div class="flex justify-center text-center text-sm text-zinc-500">
           <p>&copy; {year} Kracking Technologies LLC. All rights reserved.</p>
         </div>
       {/if}

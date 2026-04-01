@@ -2,9 +2,7 @@
   import { page } from "$app/stores";
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
-  import Home from "@lucide/svelte/icons/home";
-  import ArrowLeft from "@lucide/svelte/icons/arrow-left";
-  import AlertCircle from "@lucide/svelte/icons/alert-circle";
+  import { IconHome, IconArrowLeft, IconAlertCircle } from "@tabler/icons-svelte";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
 </script>
@@ -13,7 +11,7 @@
   <Card.Root class="public-panel w-full max-w-md shadow-none">
     <Card.Content class="flex flex-col items-center gap-6 pt-10 pb-8 text-center">
       <div class="bg-muted flex size-16 items-center justify-center rounded-full">
-        <AlertCircle class="text-muted-foreground size-8" />
+        <IconAlertCircle class="text-muted-foreground size-8" />
       </div>
 
       <div class="space-y-2">
@@ -33,11 +31,11 @@
 
       <div class="flex gap-3">
         <Button variant="outline" onclick={() => history.back()} class="rounded-full">
-          <ArrowLeft class="mr-2 size-4" />
+          <IconArrowLeft class="mr-2 size-4" />
           Go Back
         </Button>
         <Button href={clientResolver(resolve, "/")} class="rounded-full">
-          <Home class="mr-2 size-4" />
+          <IconHome class="mr-2 size-4" />
           Home
         </Button>
       </div>

@@ -1,6 +1,4 @@
 <script lang="ts">
-  import Check from "@lucide/svelte/icons/check";
-  import type { PageSettingsType } from "$lib/server/types/db";
   import { t } from "$lib/stores/i18n";
 
   interface Props {
@@ -13,16 +11,11 @@
 </script>
 
 <div class="flex flex-col gap-3 lg:flex-row">
-  <div class="flex min-h-20 w-full flex-row justify-start gap-y-3 rounded-3xl border p-4 lg:w-full lg:min-w-72">
-    <div class="flex w-full flex-row items-center gap-4">
-      <div class="relative flex justify-between">
-        <span class="relative flex size-4">
-          <span class="{statusClass} absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"></span>
-          <span class="{statusClass} relative inline-flex size-4 rounded-full"></span>
-        </span>
-      </div>
-      <div class="flex min-w-0 flex-col items-start gap-2">
-        <p class="text-xl leading-tight wrap-break-word sm:text-2xl">{$t(statusText)}</p>
+  <div class="flex w-full flex-row justify-start gap-y-3 lg:w-full lg:min-w-72">
+    <div class="flex w-full flex-row items-center gap-2">
+      <div class="min-w-0 flex items-center gap-2">
+        <span class="{statusClass} inline-flex size-2 rounded-full"></span>
+        <p class="text-sm leading-tight font-medium wrap-break-word sm:text-base">{$t(statusText)}</p>
       </div>
     </div>
   </div>

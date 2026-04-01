@@ -145,7 +145,6 @@
 <div class="public-page">
   <ThemePlus />
   <div class="public-intro">
-    <p class="public-kicker">System Status</p>
     {#if data.pageDetails?.page_logo}
       <img
         src={clientResolver(resolve, data.pageDetails.page_logo)}
@@ -199,16 +198,9 @@
         {/each}
       </div>
     {/if}
-    <div class="public-panel overflow-hidden">
-      <div class={`grid grid-cols-1 ${getGridContainerClass(viewType)}`}>
+    <div class={`grid grid-cols-1 gap-4 ${viewType === "compact-grid" ? "sm:grid-cols-2 lg:grid-cols-4" : ""} ${viewType === "default-grid" ? "md:grid-cols-2 lg:grid-cols-2" : ""}`}>
         {#each data.monitorTags as tag, i (tag)}
-          <div
-            class="{viewType === 'compact-grid' || viewType === 'default-grid'
-              ? `${getGridItemSpanClass(i, data.monitorTags.length, viewType)} bg-background`
-              : i < data.monitorTags.length - 1
-                ? 'border-b'
-                : ''} px-2 py-2 sm:px-0"
-          >
+          <div class={`public-panel px-2 py-2 sm:px-0 ${viewType === 'compact-grid' || viewType === 'default-grid' ? getGridItemSpanClass(i, data.monitorTags.length, viewType) : ''}`}>
             <MonitorBar
               {tag}
               prefetchedData={monitorBarDataByTag[tag]}
@@ -222,6 +214,5 @@
           </div>
         {/each}
       </div>
-    </div>
   {/if}
 </div>

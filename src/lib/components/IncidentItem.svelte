@@ -2,7 +2,7 @@
   import * as Item from "$lib/components/ui/item/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
-  import ArrowRight from "@lucide/svelte/icons/arrow-right";
+  import { IconArrowRight } from "@tabler/icons-svelte";
   import * as Popover from "$lib/components/ui/popover/index.js";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import { t } from "$lib/stores/i18n";
@@ -90,7 +90,7 @@
                       size="icon-sm"
                       href={clientResolver(resolve, `/monitors/${monitor.monitor_tag}`)}
                     >
-                      <ArrowRight class="size-3" />
+                      <IconArrowRight class="size-3" />
                     </Button>
                   </div>
                 </div>
@@ -153,7 +153,7 @@
             class="rounded-btn -mr-2 {isEmbedded ? 'hidden' : ''}"
             onclick={() => (showComments = !showComments)}
           >
-            <ArrowRight class={`transition-transform duration-200 ${showComments ? "rotate-90" : ""}`} />
+            <IconArrowRight class={`transition-transform duration-200 ${showComments ? "rotate-90" : ""}`} />
           </Button>
         </div>
       </div>

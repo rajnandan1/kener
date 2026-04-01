@@ -1,7 +1,7 @@
 <script lang="ts">
   import * as Item from "$lib/components/ui/item/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
-  import ArrowRight from "@lucide/svelte/icons/arrow-right";
+  import { IconArrowRight } from "@tabler/icons-svelte";
   import * as Popover from "$lib/components/ui/popover/index.js";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
@@ -83,7 +83,7 @@
                     size="icon-sm"
                     href={clientResolver(resolve, `/monitors/${monitor.monitor_tag}`)}
                   >
-                    <ArrowRight class="size-3" />
+                    <IconArrowRight class="size-3" />
                   </Button>
                 </div>
               </div>

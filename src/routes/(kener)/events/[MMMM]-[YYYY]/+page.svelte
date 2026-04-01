@@ -6,9 +6,7 @@
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import IncidentItem from "$lib/components/IncidentItem.svelte";
   import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
-  import ArrowLeft from "@lucide/svelte/icons/arrow-left";
-  import ArrowRight from "@lucide/svelte/icons/arrow-right";
-  import Check from "@lucide/svelte/icons/check";
+  import { IconArrowLeft, IconArrowRight, IconCheck } from "@tabler/icons-svelte";
   import ICONS from "$lib/icons";
   import { t } from "$lib/stores/i18n";
   import { formatDate } from "$lib/stores/datetime";
@@ -210,7 +208,7 @@
         <!-- Incidents in this page -->
         <div class="flex flex-1 flex-row items-center gap-2">
           {#if numberOfIncidents === 0}
-            <Check class="text-up" />
+            <IconCheck class="text-up" />
           {:else}
             <p class="text-3xl">
               {numberOfIncidents}
@@ -223,7 +221,7 @@
         <!-- Maintenances in this page -->
         <div class="flex flex-1 flex-row items-center gap-2">
           {#if numberOfMaintenances === 0}
-            <Check class="text-up" />
+            <IconCheck class="text-up" />
           {:else}
             <p class="text-3xl">
               {numberOfMaintenances}
@@ -285,7 +283,7 @@
         class="rounded-full shadow-none"
         href={clientResolver(resolve, `${pagePath}/events/${prevMonthPath}`)}
       >
-        <ArrowLeft class="h-4 w-4" />
+        <IconArrowLeft class="h-4 w-4" />
         {$formatDate(prevMonth, "MMMM yyyy")}
       </Button>
     {:else}
@@ -299,7 +297,7 @@
         href={clientResolver(resolve, `${pagePath}/events/${nextMonthPath}`)}
       >
         {$formatDate(nextMonth, "MMMM yyyy")}
-        <ArrowRight class="h-4 w-4" />
+        <IconArrowRight class="h-4 w-4" />
       </Button>
     {:else}
       <div></div>
