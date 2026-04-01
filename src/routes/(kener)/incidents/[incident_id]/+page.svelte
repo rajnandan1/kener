@@ -2,7 +2,6 @@
   import { resolve } from "$app/paths";
   import { IconMessageCircle, IconServer, IconArrowRight } from "@tabler/icons-svelte";
   import * as Item from "$lib/components/ui/item/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import mdToHTML from "$lib/marked";
@@ -126,14 +125,9 @@
                     </Item.Description>
                   </Item.Content>
                   <Item.Actions>
-                    <Button
-                      variant="outline"
-                      href={clientResolver(resolve, `/monitors/${monitor.monitor_tag}`)}
-                      class="rounded-btn"
-                      size="icon"
-                    >
+                    <div class="rounded-lg border border-zinc-800 bg-zinc-900 p-2 text-zinc-500">
                       <IconArrowRight class="h-4 w-4" />
-                    </Button>
+                    </div>
                   </Item.Actions>
                 </Item.Root>
               </div>

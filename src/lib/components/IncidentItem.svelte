@@ -84,14 +84,9 @@
                     <Badge variant="outline" class="text-{monitor.monitor_impact.toLowerCase()}">
                       {$t(monitor.monitor_impact)}
                     </Badge>
-                    <Button
-                      variant="outline"
-                      class="rounded-btn"
-                      size="icon-sm"
-                      href={clientResolver(resolve, `/monitors/${monitor.monitor_tag}`)}
-                    >
+                    <div class="rounded-lg border border-zinc-800 bg-zinc-900 p-1.5 text-zinc-500">
                       <IconArrowRight class="size-3" />
-                    </Button>
+                    </div>
                   </div>
                 </div>
               </Popover.Content>

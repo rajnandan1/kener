@@ -359,7 +359,7 @@
     <canvas
       bind:this={canvas}
       style="width: 100%; height: {barHeight + 8}px;"
-      class="cursor-pointer"
+      class={disableClick ? "" : "cursor-pointer"}
       onmousemove={handleMouseMove}
       onmouseleave={handleMouseLeave}
       onclick={handleBarClick}
@@ -370,14 +370,14 @@
   {#if hoveredBar}
     <div
       bind:this={tooltipEl}
-      class="bg-popover text-popver-foreground pointer-events-none absolute z-20 w-max -translate-x-1/2 rounded-md border px-2 py-1 text-xs font-medium whitespace-nowrap"
+      class="pointer-events-none absolute z-20 w-max -translate-x-1/2 rounded-lg border border-zinc-800 bg-zinc-950 px-2.5 py-1.5 text-xs font-medium whitespace-nowrap text-zinc-100 shadow-[0_18px_38px_-20px_rgba(0,0,0,0.9)]"
       style={tooltipStyle}
     >
       <span class={getStatusColor(hoveredBar.data)}>{$t(GetStatusSummary(hoveredBar.data))}</span>
-      <span class="text-muted-foreground">@</span>
+      <span class="text-zinc-500">@</span>
       {$formatDate(hoveredBar.data.ts, page.data.dateAndTimeFormat.dateOnly)}
       {#if hoveredBar.data.avgLatency > 0}
-        <span class="text-muted-foreground ml-1">|</span>
+        <span class="ml-1 text-zinc-500">|</span>
         <span class="ml-1">{ParseLatency(hoveredBar.data.avgLatency)}</span>
       {/if}
     </div>

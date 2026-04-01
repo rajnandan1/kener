@@ -1,6 +1,5 @@
 import { GetSiteDataByKey } from "$lib/server/controllers/siteDataController.js";
 import { GetAllPages } from "$lib/server/controllers/pagesController.js";
-import { GetMonitors } from "$lib/server/controllers/monitorsController.js";
 import serverResolver from "$lib/server/resolver.js";
 import type { SitemapXMLConfig } from "$lib/types/site.js";
 import type { RequestHandler } from "./$types";
@@ -36,12 +35,6 @@ export const GET: RequestHandler = async () => {
   for (const page of pages) {
     const path = page.page_path ? `/${page.page_path}` : "/";
     locs.push(siteURL + serverResolver(path));
-  }
-
-  // Add active, visible monitors
-  const monitors = await GetMonitors({ status: "ACTIVE", is_hidden: "NO" });
-  for (const monitor of monitors) {
-    locs.push(siteURL + serverResolver(`/monitors/${monitor.tag}`));
   }
 
   // Add current and previous month events pages

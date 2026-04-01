@@ -112,7 +112,7 @@
       {/if}
       <Item.Content class="min-w-0 flex-1">
         <Item.Title class="w-full truncate text-zinc-100">
-          <a class="hover:underline" href={clientResolver(resolve, `/monitors/${tag}`)}>{data.name}</a>
+          <span>{data.name}</span>
         </Item.Title>
         {#if data.description}
           <Item.Description class="line-clamp-2 wrap-break-word text-zinc-400">{data.description}</Item.Description>
@@ -120,8 +120,10 @@
       </Item.Content>
 
       <Item.Content class="order-3 w-full text-left sm:order-0 sm:w-auto sm:flex-none sm:text-center">
-        <Item.Title class="items-center text-2xl text-zinc-100">
-          <StatusIcon class="{STATUS_STROKE[data.currentStatus]} {grid ? 'size-5' : 'size-5'}" />
+        <Item.Title class="items-center gap-3 text-2xl text-zinc-100">
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950/90">
+            <StatusIcon class="{STATUS_STROKE[data.currentStatus]} size-4" />
+          </div>
           <div class="flex flex-col items-start gap-1 sm:items-end">
             <span class={grid ? "text-base sm:text-lg" : "text-lg sm:text-xl"}>{data.uptime}%</span>
             <span class="text-right text-xs text-zinc-400">
@@ -137,8 +139,10 @@
       </Item.Content>
     </Item.Root>
     {#if !compact}
-      <div class="mx-auto flex w-full flex-col gap-1 px-4 pb-4">
-        <StatusBarCalendar data={data.uptimeData} monitorTag={tag} barHeight={40} radius={8} />
+      <div class="mx-auto flex w-full flex-col gap-2 px-4 pb-4">
+        <div class="rounded-[18px] border border-zinc-800 bg-zinc-950/75 px-2 py-2">
+          <StatusBarCalendar data={data.uptimeData} monitorTag={tag} barHeight={36} radius={6} />
+        </div>
         <div class="flex min-w-0 justify-between gap-3">
           <p class="min-w-0 truncate text-xs font-medium text-zinc-500">
             {$formatDate(new Date(data.fromTimeStamp * 1000), page.data.dateAndTimeFormat.dateOnly)}
