@@ -1,55 +1,21 @@
-Kracking Open Source License
+MIT License
 
-Copyright (c) 2026 Kracking Technologies LLC.
-All rights reserved.
+Copyright (c) 2026 Raj Nandan Sharma
 
-This repository is publicly available source code. You may use, copy, modify,
-publish, distribute, sublicense, and sell this software, in source or binary
-form, for any purpose, subject to the conditions below.
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-What you may do
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-You may:
-
-- use this software for personal, commercial, internal, hosted, or public use
-- copy, modify, adapt, and create derivative works
-- publish, distribute, sublicense, and sell copies of this software
-- use this software to provide services to third parties
-- use this software and its outputs in research, automation, AI, and machine learning workflows
-
-What you must do
-
-When you distribute this software or a substantial portion of it, you must:
-
-- include this license text and the copyright notice above
-- retain any existing copyright, trademark, attribution, and proprietary notices
-- clearly indicate if you have modified the software when representing it to others
-
-Trademarks and branding
-
-This license does not grant permission to use the name "Kracking", the Kracking
-logo, or other Kracking Technologies LLC trademarks except as necessary for
-accurate attribution or to describe the origin of the software.
-
-Third-party software
-
-Any third-party components included in this repository remain subject to their
-own license terms.
-
-No warranty
-
-This software is provided "as is", without warranties of any kind, express or
-implied, including but not limited to the warranties of merchantability,
-fitness for a particular purpose, and noninfringement.
-
-Liability
-
-To the maximum extent permitted by law, Kracking Technologies LLC is not liable
-for any claim, damages, or other liability, whether in an action of contract,
-tort, or otherwise, arising from, out of, or in connection with the software
-or the use or other dealings in the software.
-
-Governing law
-
-This license is governed by the laws of the State of Montana, United States.
-Any dispute must be brought in the state or federal courts located in Montana.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
