@@ -396,9 +396,11 @@
               <p class="text-muted-foreground text-sm">Override the default JSON payload</p>
             </div>
             <p class="text-muted-foreground text-xs">
-              Use Mustache variables like <code class="bg-muted rounded px-1">{"{{variable}}"}</code>. Available: id,
-              alert_name, severity, status, source, timestamp, description, metric, current_value, threshold,
-              action_text, action_url
+              Use Mustache variables like <code class="bg-muted rounded px-1">{"{{variable}}"}</code>. Available:
+              alert_id, alert_name, alert_for, alert_value, alert_status, alert_severity, alert_message, alert_source,
+              alert_timestamp, alert_cta_url, alert_cta_text, alert_incident_id, alert_incident_url,
+              alert_failure_threshold, alert_success_threshold, is_resolved, is_triggered, site_url, site_name,
+              site_logo_url, colors_up, colors_down, colors_degraded, colors_maintenance
             </p>
             <div class="overflow-hidden rounded-md border">
               <Textarea bind:value={trigger.trigger_meta.webhook_body} />
@@ -414,8 +416,11 @@
               <p class="text-muted-foreground text-sm">Override the default Discord message</p>
             </div>
             <p class="text-muted-foreground text-xs">
-              Use Mustache variables. Available: site_name, logo_url, alert_name, status, is_triggered, is_resolved,
-              description, metric, severity, id, current_value, threshold, source, action_text, action_url
+              Use Mustache variables. Available: alert_id, alert_name, alert_for, alert_value, alert_status,
+              alert_severity, alert_message, alert_source, alert_timestamp, alert_cta_url, alert_cta_text,
+              alert_incident_id, alert_incident_url, alert_failure_threshold, alert_success_threshold, is_resolved,
+              is_triggered, site_url, site_name, site_logo_url, colors_up, colors_down, colors_degraded,
+              colors_maintenance
             </p>
             <div class="overflow-hidden rounded-md border">
               <Textarea bind:value={trigger.trigger_meta.discord_body} />
@@ -431,8 +436,11 @@
               <p class="text-muted-foreground text-sm">Override the default Slack message</p>
             </div>
             <p class="text-muted-foreground text-xs">
-              Use Mustache variables. Available: site_name, logo_url, alert_name, status, is_triggered, is_resolved,
-              description, metric, severity, id, current_value, threshold, source, action_text, action_url
+              Use Mustache variables. Available: alert_id, alert_name, alert_for, alert_value, alert_status,
+              alert_severity, alert_message, alert_source, alert_timestamp, alert_cta_url, alert_cta_text,
+              alert_incident_id, alert_incident_url, alert_failure_threshold, alert_success_threshold, is_resolved,
+              is_triggered, site_url, site_name, site_logo_url, colors_up, colors_down, colors_degraded,
+              colors_maintenance
             </p>
             <div class="overflow-hidden rounded-md border">
               <Textarea bind:value={trigger.trigger_meta.slack_body} />
@@ -482,9 +490,11 @@
               <p class="text-muted-foreground text-sm">Create your own email design</p>
             </div>
             <p class="text-muted-foreground text-xs">
-              Use Mustache variables. Available: site_name, site_url, logo_url, alert_name, status, severity,
-              description, metric, current_value, threshold, action_text, action_url, is_triggered, is_resolved,
-              color_up, color_down, color_degraded, color_maintenance
+              Use Mustache variables. Available: alert_id, alert_name, alert_for, alert_value, alert_status,
+              alert_severity, alert_message, alert_source, alert_timestamp, alert_cta_url, alert_cta_text,
+              alert_incident_id, alert_incident_url, alert_failure_threshold, alert_success_threshold, is_resolved,
+              is_triggered, site_url, site_name, site_logo_url, colors_up, colors_down, colors_degraded,
+              colors_maintenance
             </p>
             <div class="overflow-hidden rounded-md border">
               <CodeMirror
