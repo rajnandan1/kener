@@ -19,7 +19,7 @@ class SqlCall {
       connection = ReplaceAllOccurrences(connection, secret.find, secret.replace);
     }
     let query = this.monitor.type_data.query;
-    let timeout = this.monitor.type_data.timeout || 5000;
+    let timeout = parseInt(this.monitor.type_data.timeout) || 5000;
 
     const startTime = Date.now();
     let knexInstance = null;

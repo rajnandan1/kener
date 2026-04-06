@@ -33,7 +33,7 @@ class ApiCall {
     }
 
     let method = this.monitor.type_data.method;
-    let timeout = this.monitor.type_data.timeout || 10000;
+    let timeout = parseInt(this.monitor.type_data.timeout) || 10000;
     let tag = this.monitor.tag;
 
     let monitorEval = !!this.monitor.type_data.eval ? this.monitor.type_data.eval : DefaultAPIEval;

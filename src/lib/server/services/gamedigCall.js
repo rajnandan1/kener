@@ -14,7 +14,7 @@ class GamedigCall {
     const tag = this.monitor.tag;
     const host = this.monitor.type_data.host;
     const port = this.monitor.type_data.port;
-    const timeout = !!this.monitor.type_data.timeout ? this.monitor.type_data.timeout : GAMEDIG_TIMEOUT;
+    const timeout = !!this.monitor.type_data.timeout ? parseInt(this.monitor.type_data.timeout) : GAMEDIG_TIMEOUT;
     const gamedigEval = !!this.monitor.type_data.eval ? this.monitor.type_data.eval : DefaultGamedigEval;
 
     // Query

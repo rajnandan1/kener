@@ -30,7 +30,7 @@ class TcpCall {
     let arrayOfPings = [];
     for (let i = 0; i < hosts.length; i++) {
       const host = hosts[i];
-      arrayOfPings.push(await TCP(host.type, host.host, host.port, host.timeout));
+      arrayOfPings.push(await TCP(host.type, host.host, parseInt(host.port), parseInt(host.timeout) || 3000));
     }
 
     let evalResp = undefined;

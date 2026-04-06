@@ -29,7 +29,7 @@ class PingCall {
     let arrayOfPings = [];
     for (let i = 0; i < hosts.length; i++) {
       const host = hosts[i];
-      arrayOfPings.push(await Ping(host.type, host.host, host.timeout, host.count));
+      arrayOfPings.push(await Ping(host.type, host.host, parseInt(host.timeout) || 3000, parseInt(host.count) || 4));
     }
 
     let evalResp = undefined;
