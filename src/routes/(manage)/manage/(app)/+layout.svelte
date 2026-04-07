@@ -55,6 +55,11 @@
       id: "/(manage)/manage/(app)/app/badges"
     },
     {
+      name: "Reports",
+      url: `${base}/manage/app/reports`,
+      id: "/(manage)/manage/(app)/app/reports"
+    },
+    {
       name: "API Keys",
       url: `${base}/manage/app/api-keys`,
       id: "/(manage)/manage/(app)/app/api-keys"

@@ -1272,6 +1272,19 @@ class DbImpl {
   async deleteSubscriptionTriggerById(id) {
     return await this.knex("subscription_triggers").where({ id }).del();
   }
+
+  // Get alerts generated for a monitor within a date range
+  async getAlertsForPeriod(monitor_tag, startTimestamp, endTimestamp) {
+    // Convert timestamps to milliseconds for comparison with created_at
+    const startDate = new Date(startTimestamp * 1000);
+    const endDate = new Date(endTimestamp * 1000);
+    
+    return await this.knex("monitor_alerts")
+      .where("monitor_tag", monitor_tag)
+      .andWhere("created_at", ">=", startDate.toISOString())
+      .andWhere("created_at", "<=", endDate.toISOString())
+      .orderBy("created_at", "asc");
+  }
 }
 
 export default DbImpl;
