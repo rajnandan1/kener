@@ -32,6 +32,10 @@
 		{
 			"name": "Incidents",
 			"description": "APIs to integrate incidents"
+		},
+		{
+			"name": "Reports",
+			"description": "APIs to generate and retrieve reports"
 		}
 	],
 	"components": {
@@ -291,6 +295,150 @@
 				"example": {
 					"start_date_time": 1731901920,
 					"title": "title of the incident"
+				}
+			},
+			"DowntimeReport": {
+				"type": "object",
+				"description": "Downtime report for a monitor",
+				"properties": {
+					"success": {
+						"type": "boolean",
+						"example": true
+					},
+					"data": {
+						"type": "object",
+						"properties": {
+							"monitor": {
+								"type": "object",
+								"properties": {
+									"tag": {
+										"type": "string",
+										"example": "earth"
+									},
+									"name": {
+										"type": "string",
+										"example": "Earth API"
+									},
+									"monitor_type": {
+										"type": "string",
+										"example": "HTTP"
+									}
+								}
+							},
+							"period": {
+								"type": "object",
+								"properties": {
+									"start": {
+										"type": "integer",
+										"description": "Start timestamp in seconds",
+										"example": 1712448000
+									},
+									"end": {
+										"type": "integer",
+										"description": "End timestamp in seconds",
+										"example": 1712534400
+									},
+									"startFormatted": {
+										"type": "string",
+										"example": "2024-04-07 00:00:00"
+									},
+									"endFormatted": {
+										"type": "string",
+										"example": "2024-04-08 00:00:00"
+									},
+									"durationHours": {
+										"type": "number",
+										"example": 24
+									}
+								}
+							},
+							"summary": {
+								"type": "object",
+								"properties": {
+									"totalDowntimeMinutes": {
+										"type": "number",
+										"example": 75.5
+									},
+									"totalDowntimeHours": {
+										"type": "number",
+										"example": 1.26
+									},
+									"uptimePercentage": {
+										"type": "number",
+										"example": 99.4792
+									},
+									"downtimePercentage": {
+										"type": "number",
+										"example": 0.5208
+									},
+									"totalEvents": {
+										"type": "integer",
+										"example": 2
+									},
+									"alertsGenerated": {
+										"type": "integer",
+										"example": 1
+									}
+								}
+							},
+							"downtimes": {
+								"type": "array",
+								"items": {
+									"type": "object",
+									"properties": {
+										"startDateTime": {
+											"type": "string",
+											"example": "2024-04-07 14:30:00"
+										},
+										"endDateTime": {
+											"type": "string",
+											"example": "2024-04-07 15:45:00"
+										},
+										"startTimestamp": {
+											"type": "integer",
+											"example": 1712500200
+										},
+										"endTimestamp": {
+											"type": "integer",
+											"example": 1712504700
+										},
+										"durationMinutes": {
+											"type": "number",
+											"example": 75
+										},
+										"durationHours": {
+											"type": "number",
+											"example": 1.25
+										},
+										"status": {
+											"type": "string",
+											"enum": ["DOWN", "DEGRADED"],
+											"example": "DOWN"
+										},
+										"alertGenerated": {
+											"type": "boolean",
+											"example": true
+										}
+									}
+								}
+							}
+						}
+					},
+					"meta": {
+						"type": "object",
+						"properties": {
+							"requestedAt": {
+								"type": "integer",
+								"description": "Timestamp when report was requested",
+								"example": 1712600000
+							},
+							"processingTimeMs": {
+								"type": "integer",
+								"description": "Time taken to generate report in milliseconds",
+								"example": 145
+							}
+						}
+					}
 				}
 			}
 		},
@@ -1995,6 +2143,164 @@
           }
         }
       ]
+    },
+    "/api/reports/downtime": {
+      "get": {
+        "tags": ["Reports"],
+        "summary": "Get downtime report for a monitor",
+        "description": "Returns detailed downtime information for a specific monitor within a date range. Requires API key authentication.",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "tag",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Monitor tag identifier",
+            "example": "earth"
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Start timestamp in Unix seconds (UTC)",
+            "example": 1712448000
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "End timestamp in Unix seconds (UTC)",
+            "example": 1712534400
+          },
+          {
+            "name": "format",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": ["json", "summary"]
+            },
+            "description": "Response format - 'json' for full report or 'summary' for summary only",
+            "example": "json"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful response with downtime report",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DowntimeReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - missing or invalid parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": ["MISSING_PARAMETERS", "INVALID_PARAMETERS", "INVALID_DATE_RANGE"],
+                          "example": "MISSING_PARAMETERS"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Missing required parameters: tag, start, end"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Response401"
+          },
+          "404": {
+            "description": "Monitor not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "example": "MONITOR_NOT_FOUND"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Monitor earth not found"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "example": "INTERNAL_ERROR"
+                        },
+                        "message": {
+                          "type": "string",
+                          "example": "Error generating report"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
 	}
 }
