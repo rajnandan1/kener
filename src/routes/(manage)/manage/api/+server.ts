@@ -680,14 +680,7 @@ interface ImageUploadData {
 }
 
 async function uploadImage(data: ImageUploadData): Promise<{ id: string; url: string }> {
-  const {
-    base64,
-    mimeType,
-    fileName,
-    maxWidth = 256,
-    maxHeight = 256,
-    forceDimensions = false,
-  } = data;
+  const { base64, mimeType, fileName, maxWidth = 256, maxHeight = 256, forceDimensions = false } = data;
 
   if (!base64) {
     throw new Error("Image data is required");

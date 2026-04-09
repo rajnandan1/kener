@@ -323,11 +323,10 @@
                   <Command.Empty>No monitors found.</Command.Empty>
                   <Command.Group>
                     {#each monitors as monitor (monitor.tag)}
-                      <Command.Item
-                        value={monitor.name}
-                        onSelect={() => toggleMonitor(monitor.tag)}
-                      >
-                        <CheckIcon class="size-4 {form.monitor_tags.includes(monitor.tag) ? 'opacity-100' : 'opacity-0'}" />
+                      <Command.Item value={monitor.name} onSelect={() => toggleMonitor(monitor.tag)}>
+                        <CheckIcon
+                          class="size-4 {form.monitor_tags.includes(monitor.tag) ? 'opacity-100' : 'opacity-0'}"
+                        />
                         {monitor.name}
                       </Command.Item>
                     {/each}
@@ -341,11 +340,7 @@
               {#each form.monitor_tags as tag (tag)}
                 <Badge variant="secondary" class="gap-1 pr-1">
                   {monitors.find((m) => m.tag === tag)?.name || tag}
-                  <button
-                    type="button"
-                    class="hover:bg-muted rounded-sm p-0.5"
-                    onclick={() => toggleMonitor(tag)}
-                  >
+                  <button type="button" class="hover:bg-muted rounded-sm p-0.5" onclick={() => toggleMonitor(tag)}>
                     <XIcon class="size-3" />
                   </button>
                 </Badge>

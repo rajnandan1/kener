@@ -16,9 +16,7 @@ interface LanguageSetting {
   locales: Array<{ code: string; name: string; selected: boolean; disabled: boolean }>;
 }
 
-export async function GetLayoutClientData(
-  languageSetting: LanguageSetting,
-): Promise<LayoutClientData> {
+export async function GetLayoutClientData(languageSetting: LanguageSetting): Promise<LayoutClientData> {
   // Initialize i18n store with available locales
   await i18n.init(languageSetting.locales, languageSetting.defaultLocale);
 

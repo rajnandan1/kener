@@ -1,8 +1,4 @@
-import {
-  HashPassword,
-  VerifyToken,
-  ValidatePassword,
-} from "$lib/server/controllers/controller.js";
+import { HashPassword, VerifyToken, ValidatePassword } from "$lib/server/controllers/controller.js";
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import db from "$lib/server/db/db.js";

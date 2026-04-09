@@ -198,8 +198,7 @@ const addWorker = () => {
   if (worker) return worker;
 
   worker = q.createWorker(getQueue(), async (job: Job): Promise<void> => {
-    const { monitor_name, monitor_tag, numerator, denominator, monitor_alerts_configured } =
-      job.data as JobData;
+    const { monitor_name, monitor_tag, numerator, denominator, monitor_alerts_configured } = job.data as JobData;
     const siteData = await GetAllSiteData();
     const templateSiteVars = siteDataToVariables(siteData);
     try {

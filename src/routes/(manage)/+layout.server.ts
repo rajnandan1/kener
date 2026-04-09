@@ -7,11 +7,7 @@ import serverResolve from "$lib/server/resolver.js";
 import { ROUTE_PERMISSION_MAP } from "$lib/allPerms.js";
 import { error } from "@sveltejs/kit";
 
-import {
-  GetAllSiteData,
-  IsSetupComplete,
-  GetLoggedInSession,
-} from "$lib/server/controllers/controller.js";
+import { GetAllSiteData, IsSetupComplete, GetLoggedInSession } from "$lib/server/controllers/controller.js";
 import { GetUserPermissions } from "$lib/server/controllers/userController.js";
 
 export const load: LayoutServerLoad = async ({ cookies, route }) => {

@@ -56,7 +56,6 @@ function createI18nStore() {
      * Checks localStorage first, then falls back to defaultLocale
      */
     async init(availableLocales: LocaleInfo[], defaultLocale: string): Promise<void> {
-
       // Determine which locale to use
       let preferredLocale = defaultLocale;
 

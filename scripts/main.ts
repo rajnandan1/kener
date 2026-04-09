@@ -13,89 +13,89 @@ const PORT = process.env.PORT || 3000;
 const base = process.env.KENER_BASE_PATH || "";
 
 async function start() {
-	// Dynamic import so BODY_SIZE_LIMIT from .env is available
-	// before the handler reads it at module top-level
-	const { handler } = await import("../build/handler.js");
+  // Dynamic import so BODY_SIZE_LIMIT from .env is available
+  // before the handler reads it at module top-level
+  const { handler } = await import("../build/handler.js");
 
-	const app: any = express();
-	const db = knex(knexOb);
+  const app: any = express();
+  const db = knex(knexOb);
 
-	app.get(base + "/healthcheck", (req: any, res: any) => {
-		res.end("ok");
-	});
+  app.get(base + "/healthcheck", (req: any, res: any) => {
+    res.end("ok");
+  });
 
-	app.use(handler);
+  app.use(handler);
 
-	//migrations
-	async function runMigrations() {
-		try {
-			// Rename old .js migration entries to .ts in the knex_migrations table
-			// so Knex can find the renamed files on disk
-			const hasTable = await db.schema.hasTable("knex_migrations");
-			if (hasTable) {
-				const oldJsMigrations = await db("knex_migrations").where("name", "like", "%.js");
-				for (const row of oldJsMigrations) {
-					const newName = row.name.replace(/\.js$/, ".ts");
-					await db("knex_migrations").where("id", row.id).update({ name: newName });
-					console.log(`Renamed migration record: ${row.name} -> ${newName}`);
-				}
-			}
+  //migrations
+  async function runMigrations() {
+    try {
+      // Rename old .js migration entries to .ts in the knex_migrations table
+      // so Knex can find the renamed files on disk
+      const hasTable = await db.schema.hasTable("knex_migrations");
+      if (hasTable) {
+        const oldJsMigrations = await db("knex_migrations").where("name", "like", "%.js");
+        for (const row of oldJsMigrations) {
+          const newName = row.name.replace(/\.js$/, ".ts");
+          await db("knex_migrations").where("id", row.id).update({ name: newName });
+          console.log(`Renamed migration record: ${row.name} -> ${newName}`);
+        }
+      }
 
-			console.log("Running migrations...");
-			await db.migrate.latest(); // Runs migrations to the latest state
-			console.log("Migrations completed successfully!");
-		} catch (err) {
-			console.error("Error running migrations:", err);
-		}
-	}
+      console.log("Running migrations...");
+      await db.migrate.latest(); // Runs migrations to the latest state
+      console.log("Migrations completed successfully!");
+    } catch (err) {
+      console.error("Error running migrations:", err);
+    }
+  }
 
-	//seed
-	async function runSeed() {
-		try {
-			console.log("Running seed...");
-			await db.seed.run(); // Runs seed to the latest state
-			console.log("Seed completed successfully!");
-		} catch (err) {
-			console.error("Error running seed:", err);
-		}
-	}
+  //seed
+  async function runSeed() {
+    try {
+      console.log("Running seed...");
+      await db.seed.run(); // Runs seed to the latest state
+      console.log("Seed completed successfully!");
+    } catch (err) {
+      console.error("Error running seed:", err);
+    }
+  }
 
-	app.listen(PORT, async () => {
-		await runMigrations();
-		await runSeed();
-		await db.destroy();
-		Startup();
-		console.log("Kener is running on port " + PORT + "!");
-	});
+  app.listen(PORT, async () => {
+    await runMigrations();
+    await runSeed();
+    await db.destroy();
+    Startup();
+    console.log("Kener is running on port " + PORT + "!");
+  });
 
-	// Graceful shutdown handler
-	async function gracefulShutdown(signal: string) {
-		console.log(`\nReceived ${signal}. Starting graceful shutdown...`);
+  // Graceful shutdown handler
+  async function gracefulShutdown(signal: string) {
+    console.log(`\nReceived ${signal}. Starting graceful shutdown...`);
 
-		try {
-			console.log("Shutting down schedulers...");
-			await shutdownSchedulers();
-			console.log("Schedulers shut down successfully.");
+    try {
+      console.log("Shutting down schedulers...");
+      await shutdownSchedulers();
+      console.log("Schedulers shut down successfully.");
 
-			console.log("Shutting down queues...");
-			await shutdownQueues();
-			console.log("Queues shut down successfully.");
+      console.log("Shutting down queues...");
+      await shutdownQueues();
+      console.log("Queues shut down successfully.");
 
-			console.log("Closing database connection...");
-			await dbInstance.close();
-			console.log("Database connection closed successfully.");
+      console.log("Closing database connection...");
+      await dbInstance.close();
+      console.log("Database connection closed successfully.");
 
-			console.log("Graceful shutdown completed.");
-			process.exit(0);
-		} catch (err) {
-			console.error("Error during graceful shutdown:", err);
-			process.exit(1);
-		}
-	}
+      console.log("Graceful shutdown completed.");
+      process.exit(0);
+    } catch (err) {
+      console.error("Error during graceful shutdown:", err);
+      process.exit(1);
+    }
+  }
 
-	// Handle termination signals
-	process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-	process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+  // Handle termination signals
+  process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+  process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 }
 
 start();

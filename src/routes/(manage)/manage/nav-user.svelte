@@ -55,7 +55,6 @@
     hasDigit && hasLowercase && hasUppercase && hasLetter && hasMinLength && passwordsMatch
   );
 
-
   async function saveName() {
     savingName = true;
     nameError = "";

@@ -391,7 +391,6 @@
     }
   }
 
-
   // Start editing a comment (inline)
   function startEditComment(comment: IncidentCommentRecord) {
     editingCommentId = comment.id;
@@ -551,7 +550,6 @@
         return "destructive";
     }
   }
-
 
   // Get monitor name by tag
   function getMonitorName(tag: string): string {
