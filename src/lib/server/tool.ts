@@ -70,21 +70,12 @@ const GetDayStartTimestampUTC = function (timestamp: number): number {
   const dayStartTimestamp = dayStart.getTime();
   return Math.floor(dayStartTimestamp / 1000);
 };
-const GetDayEndTimestampUTC = function (timestamp: number): number {
-  //use js date instead of moment
-  const now = new Date(timestamp * 1000);
-  const dayEnd = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999));
-  const dayEndTimestamp = dayEnd.getTime();
-  return Math.floor(dayEndTimestamp / 1000) + 60;
-};
 const DurationInMinutes = function (start: number, end: number): number {
   return Math.floor((end - start) / 60);
 };
 const GetDayStartWithOffset = function (timeStampInSeconds: number, offsetInMinutes: number): number {
   const then = new Date(GetMinuteStartTimestampUTC(timeStampInSeconds) * 1000);
   let dayStartThen = GetDayStartTimestampUTC(then.getTime() / 1000);
-  let dayStartTomorrow = dayStartThen + 24 * 60 * 60;
-  let dayStartYesterday = dayStartThen - 24 * 60 * 60;
   //have to figure out when to add a day
   //20-12AM 			[21-12AM] 	=21:630  xtm 	[22-12AM]   xtd	   =22:630 		23-12AM
 

@@ -3,8 +3,8 @@ import q from "../queues/q.js";
 import db from "../db/db.js";
 import { rrulestr } from "rrule";
 import { addDays } from "date-fns";
-import type { MaintenanceRecord, MaintenanceEventRecord } from "../types/db.js";
-import { determineEventStatus, CreateMaintenanceEventWithNotification } from "../controllers/maintenanceController.js";
+import type { MaintenanceRecord } from "../types/db.js";
+import { CreateMaintenanceEventWithNotification } from "../controllers/maintenanceController.js";
 
 let maintenanceSchedulerQueue: Queue | null = null;
 let worker: Worker | null = null;

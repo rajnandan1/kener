@@ -1,5 +1,4 @@
 <script lang="ts">
-  import InnerShadowTopIcon from "@lucide/svelte/icons/user";
   import NavMain from "./nav-main.svelte";
   import NavUser from "./nav-user.svelte";
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";

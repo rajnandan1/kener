@@ -1,13 +1,9 @@
-import axios from "axios";
-import constants from "../global-constants.js";
-import { GetMinuteStartNowTimestampUTC, ReplaceAllOccurrences, GetRequiredSecrets, Wait } from "./tool.js";
+import { GetMinuteStartNowTimestampUTC } from "./tool.js";
 import monitorExecuteQueue from "./queues/monitorExecuteQueue";
 
 import dotenv from "dotenv";
-import db from "./db/db.js";
 import type { MonitorRecordTyped } from "./types/db.js";
 
-import type { MonitoringResult } from "./types/monitor.js";
 import { MONITOR_TYPES, type MonitorType } from "../types/monitor.js";
 import type { JobsOptions } from "bullmq";
 

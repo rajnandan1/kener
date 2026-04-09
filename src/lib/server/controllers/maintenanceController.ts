@@ -1,15 +1,12 @@
 import db from "../db/db.js";
-import { RRule, rrulestr } from "rrule";
+import { rrulestr } from "rrule";
 import { addDays, formatDistanceStrict } from "date-fns";
 import type {
   MaintenanceRecord,
-  MaintenanceRecordInsert,
   MaintenanceEventRecord,
   MaintenanceEventRecordInsert,
   MaintenanceEventRecordDetailed,
-  MaintenanceMonitorRecord,
   MaintenanceFilter,
-  MaintenanceEventFilter,
 } from "../types/db.js";
 import { GetMinuteStartNowTimestampUTC } from "../tool.js";
 import { maintenanceToVariables, siteDataToVariables } from "../notification/notification_utils.js";

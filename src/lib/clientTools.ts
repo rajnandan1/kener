@@ -16,28 +16,6 @@ function ParseLatency(latencyMs: number): string {
   }
 }
 
-function siteDataExtractFromDb(data: Record<string, unknown>, obj: Record<string, unknown>): Record<string, unknown> {
-  let requestedObject: Record<string, unknown> = { ...obj };
-  for (const key in requestedObject) {
-    if (Object.prototype.hasOwnProperty.call(requestedObject, key)) {
-      const element = data[key];
-      if (data[key]) {
-        requestedObject[key] = data[key];
-      }
-    }
-  }
-  //remove any keys that are still null or empty
-  for (const key in requestedObject) {
-    if (Object.prototype.hasOwnProperty.call(requestedObject, key)) {
-      const element = requestedObject[key];
-      if (element === null || element === "") {
-        delete requestedObject[key];
-      }
-    }
-  }
-  return requestedObject;
-}
-
 const AllRecordTypes = {
   A: 1,
   NS: 2,
@@ -155,110 +133,6 @@ function IsValidNameServer(nameServer: string): boolean {
 const IsValidURL = function (url: string): boolean {
   return /^(http|https):\/\/[^ "]+$/.test(url);
 };
-function ValidateCronExpression(cronExp: string): { isValid: boolean; message: string } {
-  // Check if expression is provided and is a string
-  if (!cronExp || typeof cronExp !== "string") {
-    return { isValid: false, message: "Cron expression must be a non-empty string" };
-  }
-
-  // Split the expression into its components
-  const fields = cronExp.trim().split(/\s+/);
-
-  // Standard cron should have 5 or 6 fields
-  // minute hour day-of-month month day-of-week [year]
-  if (fields.length < 5 || fields.length > 6) {
-    return {
-      isValid: false,
-      message: "Cron expression must have 5 or 6 fields",
-    };
-  }
-
-  // Define field constraints
-  const fieldConstraints = [
-    { name: "minute", min: 0, max: 59 },
-    { name: "hour", min: 0, max: 23 },
-    { name: "day", min: 1, max: 31 },
-    { name: "month", min: 1, max: 12 },
-    { name: "weekday", min: 0, max: 6 },
-    { name: "year", min: 1970, max: 2099 }, // Optional field
-  ];
-
-  // Valid characters in cron expressions
-  const validChars = /^[\d/*,\-]+$/;
-
-  // Validate each field
-  for (let i = 0; i < fields.length; i++) {
-    const field = fields[i];
-    const constraint = fieldConstraints[i];
-
-    // Check for valid characters
-    if (!validChars.test(field)) {
-      return {
-        isValid: false,
-        message: `Invalid characters in ${constraint.name} field`,
-      };
-    }
-
-    // Handle special characters
-    if (field === "*") {
-      continue; // Asterisk is valid for all fields
-    }
-
-    // Handle lists (comma-separated values)
-    if (field.includes(",")) {
-      const values = field.split(",");
-      for (const value of values) {
-        if (!isValidRange(value, constraint.min, constraint.max)) {
-          return {
-            isValid: false,
-            message: `Invalid value in ${constraint.name} field: ${value}`,
-          };
-        }
-      }
-      continue;
-    }
-
-    // Handle ranges (with hyphens)
-    if (field.includes("-")) {
-      const [start, end] = field.split("-").map(Number);
-      if (start == null || end == null || start < constraint.min || end > constraint.max || start > end) {
-        return {
-          isValid: false,
-          message: `Invalid range in ${constraint.name} field: ${field}`,
-        };
-      }
-      continue;
-    }
-
-    // Handle steps (with forward slash)
-    if (field.includes("/")) {
-      const [range, step] = field.split("/");
-      if (range !== "*" && !isValidRange(range, constraint.min, constraint.max)) {
-        return {
-          isValid: false,
-          message: `Invalid range in ${constraint.name} field: ${range}`,
-        };
-      }
-      if (!isValidRange(step, 1, constraint.max)) {
-        return {
-          isValid: false,
-          message: `Invalid step value in ${constraint.name} field: ${step}`,
-        };
-      }
-      continue;
-    }
-
-    // Handle plain numbers
-    if (!isValidRange(field, constraint.min, constraint.max)) {
-      return {
-        isValid: false,
-        message: `Invalid value in ${constraint.name} field: ${field}`,
-      };
-    }
-  }
-
-  return { isValid: true, message: "Valid cron expression" };
-}
 
 function isValidRange(value: string | number, min: number, max: number): boolean {
   const num = Number(value);
@@ -282,40 +156,6 @@ export interface MonitorItem {
   [key: string]: unknown;
 }
 
-function SortMonitor(monitorSort: number[] | undefined, resp: MonitorItem[]): MonitorItem[] {
-  let monitors: MonitorItem[] = [];
-  if (!!monitorSort && monitorSort.length > 0) {
-    monitors = monitorSort
-      .map((id: number) => resp.find((m: MonitorItem) => m.id == id))
-      .filter((m): m is MonitorItem => !!m);
-    //append any new monitors
-    monitors = [...monitors, ...resp.filter((m: MonitorItem) => !monitorSort.includes(m.id))];
-  } else {
-    monitors = resp;
-  }
-  return monitors;
-}
-//js function to generate 32 character random string
-function RandomString(length: number): string {
-  const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  let result = "";
-  for (let i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
-  return result;
-}
-
-interface GameItem {
-  id: string;
-  [key: string]: unknown;
-}
-
-/**
- * Retreive game's data from its id.
- * @param {string} id Id
- * @return Returns game's data if found, undefined instead.
- */
-function GetGameFromId(list: GameItem[], id: string): GameItem | undefined {
-  return list.find((game: GameItem) => game.id === id);
-}
 function GetStatusSummary(item: TimestampStatusCount): string {
   const total = item.countOfUp + item.countOfDown + item.countOfDegraded + item.countOfMaintenance;
   if (total === 0) return PAGE_STATUS_MESSAGES.NO_DATA;

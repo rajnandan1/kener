@@ -1,6 +1,5 @@
 import { json } from "@sveltejs/kit";
 import Service, { type MonitorWithType } from "$lib/server/services/service.js";
-import { format } from "date-fns";
 import sharp from "sharp";
 import { nanoid } from "nanoid";
 import db from "$lib/server/db/db";
@@ -40,10 +39,7 @@ import {
   ResendInvitationEmail,
   GetAllUsersPaginatedDashboard,
   GetUserByIDDashboard,
-  GetAllUsers,
-  GetAllUsersPaginated,
   GetUsersCount,
-  GetUserByID,
   GetUserByEmail,
   ManualUpdateUserData,
   DeleteMonitorCompletelyUsingTag,
@@ -52,11 +48,9 @@ import {
   GetMonitoringDataPaginated,
 } from "$lib/server/controllers/controller.js";
 
-import { GetNowTimestampUTC } from "$lib/server/tool.js";
 import {
   CreatePage,
   GetAllPages,
-  GetPageById,
   UpdatePage,
   DeletePage,
   AddMonitorToPage,
@@ -125,7 +119,6 @@ import {
   GetUserPermissions,
   RequirePermission,
 } from "$lib/server/controllers/userController.js";
-import type { SiteDataForNotification } from "$lib/server/notification/types";
 import { alertToVariables, siteDataToVariables } from "$lib/server/notification/notification_utils";
 import type { TriggerMeta } from "$lib/server/types/db.js";
 import sendWebhook from "$lib/server/notification/webhook_notification.js";
@@ -133,7 +126,6 @@ import sendEmail from "$lib/server/notification/email_notification.js";
 import sendDiscord from "$lib/server/notification/discord_notification.js";
 import sendSlack from "$lib/server/notification/slack_notification.js";
 import heicConvert from "heic-convert";
-import serverResolver from "$lib/server/resolver.js";
 import { ACTION_PERMISSION_MAP } from "$lib/allPerms.js";
 
 export async function POST({ request, cookies }) {
@@ -685,7 +677,6 @@ interface ImageUploadData {
   maxWidth?: number;
   maxHeight?: number;
   forceDimensions?: boolean;
-  prefix?: string; // prefix for the ID (e.g., "logo_", "favicon_")
 }
 
 async function uploadImage(data: ImageUploadData): Promise<{ id: string; url: string }> {
@@ -696,7 +687,6 @@ async function uploadImage(data: ImageUploadData): Promise<{ id: string; url: st
     maxWidth = 256,
     maxHeight = 256,
     forceDimensions = false,
-    prefix = "img_",
   } = data;
 
   if (!base64) {

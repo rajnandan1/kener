@@ -5,7 +5,6 @@ import type {
   IncidentResponse,
   CreateIncidentRequest,
   CreateIncidentResponse,
-  IncidentDetailResponse,
   BadRequestResponse,
 } from "$lib/types/api";
 import GC from "$lib/global-constants";

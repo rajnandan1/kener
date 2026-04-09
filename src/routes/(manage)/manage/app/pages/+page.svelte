@@ -7,7 +7,6 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import Plus from "@lucide/svelte/icons/plus";
-  import SettingsIcon from "@lucide/svelte/icons/settings";
   import * as Item from "$lib/components/ui/item/index.js";
   import type { PageRecord } from "$lib/server/types/db.js";
   import { resolve } from "$app/paths";

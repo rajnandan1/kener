@@ -1,11 +1,7 @@
-import type { MonitoringResult } from "../types/monitor.js";
 import { Queue, Worker, Job, type JobsOptions } from "bullmq";
 import q from "./q.js";
 import {
-  CreateIncident,
-  InsertMonitoringData,
   AddIncidentComment,
-  AddIncidentMonitor,
   GetIncidentByIDDashboard,
   GetAllSiteData,
   CreateNewIncidentWithCommentAndMonitor,
@@ -24,17 +20,15 @@ import {
   UpdateMonitorAlertV2Status,
 } from "../controllers/monitorAlertConfigController.js";
 import type { IncidentInput } from "../controllers/incidentController.js";
-import { InsertNewAlert } from "../controllers/controller.js";
 import { GetMonitorAlertsV2 } from "../controllers/monitorAlertConfigController.js";
 import db from "../db/db.js";
-import { getUnixTime, differenceInSeconds } from "date-fns";
+import { getUnixTime } from "date-fns";
 import GC from "../../global-constants.js";
 import { alertToVariables, siteDataToVariables } from "../notification/notification_utils.js";
 import sendEmail from "../notification/email_notification.js";
 import sendWebhook from "$lib/server/notification/webhook_notification.js";
 import sendSlack from "$lib/server/notification/slack_notification.js";
 import sendDiscord from "$lib/server/notification/discord_notification.js";
-import serverResolver from "../resolver.js";
 
 import type { SiteDataForNotification, SubscriptionVariableMap } from "../notification/types.js";
 import mdToHTML from "../../marked.js";
@@ -95,9 +89,9 @@ async function createNewIncident(
   return incidentCreated;
 
   /*
-	
-	
-	
+
+
+
 		subscriberQueue.push(updateVariables);*/
 }
 
@@ -204,7 +198,7 @@ const addWorker = () => {
   if (worker) return worker;
 
   worker = q.createWorker(getQueue(), async (job: Job): Promise<void> => {
-    const { monitor_name, monitor_tag, numerator, denominator, status, monitor_alerts_configured } =
+    const { monitor_name, monitor_tag, numerator, denominator, monitor_alerts_configured } =
       job.data as JobData;
     const siteData = await GetAllSiteData();
     const templateSiteVars = siteDataToVariables(siteData);

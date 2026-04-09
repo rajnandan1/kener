@@ -5,11 +5,8 @@ import {
   BeginningOfDay,
   GetMinuteStartNowTimestampUTC,
   GetMinuteStartTimestampUTC,
-  ParseUptime,
-  UptimeCalculator,
 } from "$lib/server/tool";
 import { GetMonitorsParsed } from "../../controllers/monitorsController";
-import type { TimestampStatusCount } from "$lib/server/types/db";
 
 interface DayDetailRequest {
   tag: string;

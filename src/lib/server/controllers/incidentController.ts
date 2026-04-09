@@ -1,22 +1,13 @@
 import db from "../db/db.js";
 import type {
-  MonitorRecordInsert,
-  TriggerRecordInsert,
-  MonitoringDataInsert,
-  MonitorAlertInsert,
   IncidentFilter,
-  MonitorAlert,
-  TriggerFilter,
-  UserRecordInsert,
-  UserRecord,
-  MonitorRecordTyped,
   IncidentRecord,
   IncidentCommentRecord,
   MonitorAlertV2Record,
   MonitorAlertConfigRecord,
 } from "../types/db.js";
 import GC from "../../global-constants.js";
-import { getUnixTime, differenceInSeconds } from "date-fns";
+import { differenceInSeconds } from "date-fns";
 
 interface IncidentsDashboardInput {
   page: number;

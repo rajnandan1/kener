@@ -111,7 +111,7 @@
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        await response.json();
         errorMessage = $t("Failed to send verification code");
         return;
       }
@@ -144,7 +144,7 @@
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        await response.json();
         errorMessage = $t("Verification failed");
         return;
       }
@@ -179,7 +179,7 @@
       });
 
       if (!response.ok) {
-        const data = await response.json();
+        await response.json();
         errorMessage = $t("Failed to update preference");
         // Revert the toggle
         if (type === "incidents") {
@@ -224,11 +224,6 @@
   function handleBackToEmail() {
     currentView = "login";
     otpValue = "";
-    errorMessage = "";
-  }
-
-  function handleClose() {
-    open = false;
     errorMessage = "";
   }
 </script>

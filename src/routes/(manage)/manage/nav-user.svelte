@@ -1,8 +1,6 @@
 <script lang="ts">
-  import CreditCardIcon from "@lucide/svelte/icons/credit-card";
   import DotsVerticalIcon from "@lucide/svelte/icons/ellipsis-vertical";
   import LogoutIcon from "@lucide/svelte/icons/log-out";
-  import NotificationIcon from "@lucide/svelte/icons/bell";
   import UserCircleIcon from "@lucide/svelte/icons/user-circle";
   import CheckIcon from "@lucide/svelte/icons/check";
   import LoaderIcon from "@lucide/svelte/icons/loader";
@@ -57,18 +55,6 @@
     hasDigit && hasLowercase && hasUppercase && hasLetter && hasMinLength && passwordsMatch
   );
 
-  // Role badge styling
-  let roleBadgeClass = $derived.by(() => {
-    if (user.role_ids.includes("admin")) {
-      return "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300";
-    } else if (user.role_ids.includes("editor")) {
-      return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
-    } else if (user.role_ids.includes("member")) {
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-    } else {
-      return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
-    }
-  });
 
   async function saveName() {
     savingName = true;

@@ -1,16 +1,11 @@
 import {
   HashPassword,
-  GenerateToken,
   VerifyToken,
-  GetAllSiteData,
   ValidatePassword,
 } from "$lib/server/controllers/controller.js";
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import db from "$lib/server/db/db.js";
-import { GetGeneralEmailTemplateById } from "$lib/server/controllers/generalTemplateController";
-import { siteDataToVariables } from "$lib/server/notification/notification_utils";
-import sendEmail from "$lib/server/notification/email_notification.js";
 
 export const POST: RequestHandler = async ({ request }) => {
   const body = await request.json();

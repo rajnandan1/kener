@@ -24,8 +24,6 @@
   let overviewData = $state<MonitorBarResponse | null>(null);
   let error = $state<string | null>(null);
 
-  const localTz = $derived(data.localTz || "UTC");
-
   // Display values from API response
   let displayUptime = $derived(overviewData?.uptime ?? "--");
   let displayAvgLatency = $derived(overviewData?.avgLatency ?? "--");

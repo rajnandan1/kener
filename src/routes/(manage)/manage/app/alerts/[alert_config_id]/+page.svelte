@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
@@ -17,7 +16,6 @@
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
   import * as Popover from "$lib/components/ui/popover/index.js";
   import * as Command from "$lib/components/ui/command/index.js";
-  import ArrowLeftIcon from "@lucide/svelte/icons/arrow-left";
   import TrashIcon from "@lucide/svelte/icons/trash";
   import ChevronsUpDownIcon from "@lucide/svelte/icons/chevrons-up-down";
   import CheckIcon from "@lucide/svelte/icons/check";

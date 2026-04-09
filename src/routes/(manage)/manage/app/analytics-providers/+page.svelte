@@ -4,8 +4,6 @@
   import { Label } from "$lib/components/ui/label/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
-  import * as Card from "$lib/components/ui/card/index.js";
-  import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
   import Loader from "@lucide/svelte/icons/loader";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";

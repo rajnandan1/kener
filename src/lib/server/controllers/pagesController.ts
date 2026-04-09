@@ -1,5 +1,5 @@
 import db from "../db/db.js";
-import type { PageRecord, PageRecordInsert, PageMonitorRecord, PageMonitorRecordInsert } from "../types/db.js";
+import type { PageRecord, PageRecordInsert, PageMonitorRecord } from "../types/db.js";
 
 // ============ Page CRUD Operations ============
 

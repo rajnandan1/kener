@@ -2,7 +2,6 @@ import {
   GetMinuteStartNowTimestampUTC,
   GetMinuteStartTimestampUTC,
   GetNowTimestampUTC,
-  GetNowTimestampUTCInMs,
   UnparsePercentage,
   UptimeCalculator,
 } from "../tool.js";
@@ -21,20 +20,12 @@ import type {
 import type { MonitorFilter } from "../db/repositories/base.js";
 import db from "../db/db.js";
 import type { PaginationInput } from "../../types/common.js";
-import type { DayWiseStatus, NumberWithChange } from "../../types/monitor.js";
-import GC, { getBadgeStyle, type BadgeStyle } from "../../global-constants.js";
+import GC, { getBadgeStyle } from "../../global-constants.js";
 import { makeBadge } from "badge-maker";
 import { ErrorSvg } from "../../anywhere.js";
 import { GetLastMonitoringValue, SetLastHeartbeat, DeleteMonitorCaches } from "../cache/setGet.js";
 import { translate, isLocaleAvailable } from "../i18n.js";
 import type { HeartbeatMonitor, GroupMonitorTypeData } from "../types/monitor.js";
-
-interface GroupUpdateData {
-  monitor_tag: string;
-  timestamp: number;
-  status: string;
-  latency: number;
-}
 
 interface MonitorInput extends MonitorRecordInsert {
   id?: number;
@@ -63,17 +54,6 @@ function validateMonitorTag(tag: string): void {
       "Monitor tag must be URL-friendly: only lowercase letters, numbers, hyphens, and underscores. Must start and end with a letter or number.",
     );
   }
-}
-
-interface DayGroupData {
-  timestamp: number;
-  total: number;
-  UP: number;
-  DOWN: number;
-  DEGRADED: number;
-  MAINTENANCE: number;
-  NO_DATA: number;
-  [key: string]: number;
 }
 
 interface UpdateMonitoringDataInput {

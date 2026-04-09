@@ -6,7 +6,6 @@ import type {
   ApiKeyRecordInsert,
   RoleRecord,
   RolePermissionRecord,
-  UserRoleRecord,
 } from "../../types/db.js";
 import { GetDbType } from "../../tool.js";
 

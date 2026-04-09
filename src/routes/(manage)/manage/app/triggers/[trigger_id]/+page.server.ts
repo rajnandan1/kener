@@ -1,4 +1,3 @@
-import { error } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import emailTemplate from "$lib/server/templates/email_alert_template";
 import webhookTemplate from "$lib/server/templates/webhook_alert_template";

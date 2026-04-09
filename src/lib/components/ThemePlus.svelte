@@ -25,10 +25,9 @@
 
   interface Props {
     monitor_tags?: string[];
-    embedMonitorTag?: string;
   }
 
-  let { monitor_tags = [], embedMonitorTag = "" }: Props = $props();
+  let { monitor_tags = [] }: Props = $props();
 
   let protocol = $state("");
   let domain = $state("");

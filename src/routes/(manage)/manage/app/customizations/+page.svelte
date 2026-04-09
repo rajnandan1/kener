@@ -5,7 +5,6 @@
   import { Label } from "$lib/components/ui/label/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Table from "$lib/components/ui/table/index.js";
-  import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
   import * as RadioGroup from "$lib/components/ui/radio-group/index.js";

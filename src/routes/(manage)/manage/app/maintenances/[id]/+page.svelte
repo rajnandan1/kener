@@ -467,11 +467,6 @@
     }
   }
 
-  // Update monitor status locally
-  function updateMonitorStatus(tag: string, status: MonitorStatus) {
-    selectedMonitors = selectedMonitors.map((m) => (m.tag === tag ? { ...m, status } : m));
-  }
-
   // Get monitor name by tag
   function getMonitorName(tag: string): string {
     const monitor = availableMonitors.find((m) => m.tag === tag);

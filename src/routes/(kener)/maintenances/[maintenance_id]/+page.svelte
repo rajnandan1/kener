@@ -12,7 +12,6 @@
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import mdToHTML from "$lib/marked";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
-  import STATUS_ICON from "$lib/icons";
   import { t } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import clientResolver from "$lib/client/resolver.js";
@@ -20,8 +19,6 @@
   import { page } from "$app/state";
 
   let { data } = $props();
-
-  const MaintenanceIcon = STATUS_ICON.MAINTENANCE;
 
   // Reference for the scrollable container
   let eventsContainer: HTMLDivElement | undefined = $state();

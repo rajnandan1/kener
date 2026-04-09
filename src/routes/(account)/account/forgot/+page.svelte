@@ -4,7 +4,6 @@
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Field from "$lib/components/ui/field/index.js";
   import * as InputGroup from "$lib/components/ui/input-group/index.js";
-  import { goto } from "$app/navigation";
   import MailIcon from "@lucide/svelte/icons/mail";
   import LockIcon from "@lucide/svelte/icons/lock";
   import CheckCircleIcon from "@lucide/svelte/icons/check-circle";

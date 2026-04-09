@@ -2,7 +2,6 @@ import { redisIOConnection } from "../redisConnector.js";
 import {
   Queue,
   Worker,
-  Job,
   type QueueOptions,
   type WorkerOptions,
   type Processor,

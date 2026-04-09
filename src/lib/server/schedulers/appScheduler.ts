@@ -1,6 +1,6 @@
 import type { MonitorRecordTyped } from "../types/db";
 
-import { Queue, Worker, Job, type JobsOptions, type JobSchedulerTemplateOptions } from "bullmq";
+import { Queue, Worker, Job, type JobSchedulerTemplateOptions } from "bullmq";
 import q from "../queues/q.js";
 import { HashString } from "../tool.js";
 import { getSchedulers, addJobToSchedulerQueue, removeJobFromSchedulerQueue } from "./monitorSchedulers.js";
@@ -12,8 +12,6 @@ let appSchedulerQueue: Queue | null = null;
 let worker: Worker | null = null;
 const queueName = "appSchedulerQueue";
 const jobNamePrefix = "mainJob";
-
-interface JobData {}
 
 const getQueue = () => {
   if (!appSchedulerQueue) {

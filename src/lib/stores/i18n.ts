@@ -45,9 +45,6 @@ const defaultState: I18nStore = {
   isLoading: false,
 };
 
-// Store the fetch function for later use (client-side locale changes)
-let storedFetch: typeof fetch = globalThis.fetch;
-
 function createI18nStore() {
   const { subscribe, set, update } = writable<I18nStore>(defaultState);
 
@@ -57,11 +54,8 @@ function createI18nStore() {
     /**
      * Initialize the store with available locales and load the appropriate locale
      * Checks localStorage first, then falls back to defaultLocale
-     * @param fetchFn - The fetch function from SvelteKit load
      */
-    async init(availableLocales: LocaleInfo[], defaultLocale: string, fetchFn: typeof fetch): Promise<void> {
-      // Store fetch for later use
-      storedFetch = fetchFn;
+    async init(availableLocales: LocaleInfo[], defaultLocale: string): Promise<void> {
 
       // Determine which locale to use
       let preferredLocale = defaultLocale;

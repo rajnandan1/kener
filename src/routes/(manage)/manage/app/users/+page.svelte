@@ -8,22 +8,16 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
-  import { buttonVariants } from "$lib/components/ui/button/index.js";
   import GC from "$lib/global-constants";
 
   import { Badge } from "$lib/components/ui/badge/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
-  import UsersIcon from "@lucide/svelte/icons/users";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import SettingsIcon from "@lucide/svelte/icons/settings";
-  import ArrowRightIcon from "@lucide/svelte/icons/arrow-right";
   import CheckCheckIcon from "@lucide/svelte/icons/check-check";
   import MailWarningIcon from "@lucide/svelte/icons/mail-warning";
   import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
-  import EyeClosedIcon from "@lucide/svelte/icons/eye-closed";
-  import EyeOpenIcon from "@lucide/svelte/icons/eye";
-  import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import { toast } from "svelte-sonner";
   import { format } from "date-fns";
   import { onMount } from "svelte";

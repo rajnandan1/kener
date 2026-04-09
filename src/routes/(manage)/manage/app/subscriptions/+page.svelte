@@ -37,7 +37,6 @@
     }
   });
   let loadingConfig = $state(true);
-  let savingConfig = $state(false);
 
   // Subscribers state
   interface Subscriber {
@@ -93,7 +92,6 @@
 
   // Save config
   async function saveConfig() {
-    savingConfig = true;
     try {
       await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
@@ -106,8 +104,6 @@
       toast.success("Configuration saved");
     } catch (error) {
       toast.error("Failed to save configuration");
-    } finally {
-      savingConfig = false;
     }
   }
 

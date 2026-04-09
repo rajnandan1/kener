@@ -2,7 +2,6 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
-  import { Textarea } from "$lib/components/ui/textarea/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
@@ -16,12 +15,11 @@
   import PlusIcon from "@lucide/svelte/icons/plus";
   import TrashIcon from "@lucide/svelte/icons/trash";
   import PencilIcon from "@lucide/svelte/icons/pencil";
-  import XIcon from "@lucide/svelte/icons/x";
   import MoreVerticalIcon from "@lucide/svelte/icons/more-vertical";
   import CheckIcon from "@lucide/svelte/icons/check";
   import AlertTriangleIcon from "@lucide/svelte/icons/alert-triangle";
   import type { PageProps } from "./$types";
-  import type { MonitorRecord, IncidentRecord, IncidentCommentRecord } from "$lib/server/types/db.js";
+  import type { MonitorRecord, IncidentCommentRecord } from "$lib/server/types/db.js";
   import { goto } from "$app/navigation";
   import { toast } from "svelte-sonner";
   import { format } from "date-fns";
@@ -78,7 +76,6 @@
   let addMonitorDialogOpen = $state(false);
   let selectedMonitorTag = $state("");
   let selectedMonitorImpact = $state("DOWN");
-  let addingMonitor = $state(false);
 
   // Comment inline editing/adding
   let addingNewComment = $state(false);
@@ -394,65 +391,6 @@
     }
   }
 
-  // Add monitor to incident
-  async function addMonitorToIncident() {
-    if (!selectedMonitorTag || !incident.id) return;
-    addingMonitor = true;
-    try {
-      const response = await fetch(clientResolver(resolve, "/manage/api"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "addMonitor",
-          data: {
-            incident_id: incident.id,
-            monitor_tag: selectedMonitorTag,
-            monitor_impact: selectedMonitorImpact
-          }
-        })
-      });
-      const result = await response.json();
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success("Monitor added to incident");
-        await fetchIncidentMonitors();
-        addMonitorDialogOpen = false;
-        selectedMonitorTag = "";
-        selectedMonitorImpact = "DOWN";
-      }
-    } catch (e) {
-      toast.error("Failed to add monitor");
-    } finally {
-      addingMonitor = false;
-    }
-  }
-
-  // Remove monitor from incident
-  async function removeMonitorFromIncident(monitorTag: string) {
-    try {
-      const response = await fetch(clientResolver(resolve, "/manage/api"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "removeMonitor",
-          data: {
-            incident_id: incident.id,
-            monitor_tag: monitorTag
-          }
-        })
-      });
-      const result = await response.json();
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success("Monitor removed from incident");
-        await fetchIncidentMonitors();
-      }
-    } catch {
-      toast.error("Failed to remove monitor");
-    }
-  }
 
   // Start editing a comment (inline)
   function startEditComment(comment: IncidentCommentRecord) {
@@ -614,19 +552,6 @@
     }
   }
 
-  // Get impact badge variant
-  function getImpactBadgeVariant(impact: string | null): "default" | "secondary" | "destructive" | "outline" {
-    switch (impact) {
-      case "DOWN":
-        return "destructive";
-      case "DEGRADED":
-        return "secondary";
-      case "MAINTENANCE":
-        return "outline";
-      default:
-        return "default";
-    }
-  }
 
   // Get monitor name by tag
   function getMonitorName(tag: string): string {

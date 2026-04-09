@@ -1,5 +1,5 @@
 import db from "../db/db.js";
-import { GetMinuteStartNowTimestampUTC, BeginningOfMinute, BeginningOfDay } from "../tool.js";
+import { GetMinuteStartNowTimestampUTC } from "../tool.js";
 import { GetPageByPathWithMonitors, GetLatestMonitoringDataAllActive } from "./controller.js";
 import { GetMonitorsParsed } from "./monitorsController.js";
 import { GetStatusSummary, GetStatusBgColor } from "../../clientTools";

@@ -5,10 +5,7 @@ import {
   BeginningOfDay,
   GetMinuteStartNowTimestampUTC,
   GetMinuteStartTimestampUTC,
-  ParseUptime,
-  UptimeCalculator,
 } from "$lib/server/tool";
-import GC from "$lib/global-constants";
 import { GetMonitorsParsed } from "../../controllers/monitorsController";
 
 interface DayDetailRequest {

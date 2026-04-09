@@ -14,7 +14,7 @@
   import { formatDate } from "$lib/stores/datetime";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
-  import { format, parse, addMonths, subMonths, getUnixTime, startOfDay, formatDistanceStrict } from "date-fns";
+  import { format, parse, addMonths, subMonths, getUnixTime, startOfDay } from "date-fns";
   import { page } from "$app/state";
   import type { IncidentForMonitorListWithComments, MaintenanceEventsMonitorList } from "$lib/server/types/db";
 

@@ -1,5 +1,4 @@
 // Server-only database types (based on migrations schema)
-import type { Knex } from "knex";
 
 // ============ monitoring_data table ============
 export interface MonitoringData {

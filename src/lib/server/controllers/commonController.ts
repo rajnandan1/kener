@@ -9,17 +9,6 @@ export const ValidatePassword = (password: string): boolean => {
   return /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/.test(password);
 };
 
-const GenerateSalt = async () => {
-  try {
-    const salt = await bcrypt.genSalt(saltRounds);
-    console.log("Generated Salt:", salt);
-    return salt;
-  } catch (err) {
-    console.error("Error generating salt:", err);
-    throw err;
-  }
-};
-
 export const HashPassword = async (plainTextPassword: string): Promise<string> => {
   try {
     const hash = await bcrypt.hash(plainTextPassword, saltRounds);

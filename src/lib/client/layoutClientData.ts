@@ -18,10 +18,9 @@ interface LanguageSetting {
 
 export async function GetLayoutClientData(
   languageSetting: LanguageSetting,
-  fetchFn: typeof fetch,
 ): Promise<LayoutClientData> {
   // Initialize i18n store with available locales
-  await i18n.init(languageSetting.locales, languageSetting.defaultLocale, fetchFn);
+  await i18n.init(languageSetting.locales, languageSetting.defaultLocale);
 
   // Initialize timezone store (checks localStorage, falls back to browser timezone)
   timezone.init();

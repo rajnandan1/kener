@@ -6,7 +6,6 @@ import type {
   SubscriberMethodRecord,
   SubscriberMethodRecordInsert,
   SubscriptionMethodType,
-  SubscriptionStatus,
   UserSubscriptionV2Record,
   UserSubscriptionV2RecordInsert,
   UserSubscriptionV2Filter,

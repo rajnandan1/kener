@@ -2,15 +2,12 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
-  import * as Card from "$lib/components/ui/card/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
-  import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
   import * as Table from "$lib/components/ui/table/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
-  import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import SirenIcon from "@lucide/svelte/icons/siren";
   import { goto } from "$app/navigation";

@@ -1,7 +1,5 @@
-import type { WebhookTemplateJson } from "../types/db";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import Mustache from "mustache";
-import type { SiteDataForNotification, TemplateVariableMap } from "./types.js";
 import version from "../../version.js";
 
 export default async function send(
