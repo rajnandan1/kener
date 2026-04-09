@@ -10,7 +10,6 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import * as Accordion from "$lib/components/ui/accordion/index.js";
-  import * as ButtonGroup from "$lib/components/ui/button-group/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import * as HoverCard from "$lib/components/ui/hover-card/index.js";
   import * as Dialog from "$lib/components/ui/dialog/index.js";

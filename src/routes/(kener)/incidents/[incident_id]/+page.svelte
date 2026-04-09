@@ -11,7 +11,7 @@
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import { SveltePurify } from "@humanspeak/svelte-purify";
   import { t } from "$lib/stores/i18n";
-  import { formatDate, formatDuration } from "$lib/stores/datetime";
+  import { formatDate } from "$lib/stores/datetime";
   import clientResolver from "$lib/client/resolver.js";
   import { page } from "$app/state";
 

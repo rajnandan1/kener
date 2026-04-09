@@ -2,7 +2,6 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
-  import * as Card from "$lib/components/ui/card/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
   import BlendIcon from "@lucide/svelte/icons/blend";
   import * as Table from "$lib/components/ui/table/index.js";
@@ -10,12 +9,10 @@
   import PlusIcon from "@lucide/svelte/icons/plus";
   import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
-  import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import CalendarIcon from "@lucide/svelte/icons/calendar";
   import RepeatIcon from "@lucide/svelte/icons/repeat";
   import ClockIcon from "@lucide/svelte/icons/clock";
-  import UsersIcon from "@lucide/svelte/icons/users";
   import { goto } from "$app/navigation";
   import { format, formatDistanceToNow, isPast, isFuture, isWithinInterval } from "date-fns";
   import { resolve } from "$app/paths";

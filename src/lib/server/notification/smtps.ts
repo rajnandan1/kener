@@ -1,7 +1,6 @@
 import nodemailer from "nodemailer";
 import type { Transporter } from "nodemailer";
 import { HashString } from "../tool.js";
-import type { TriggerRecord, MonitorRecord } from "../types/db.js";
 import type { SMTPConfiguration } from "./types.js";
 
 const transports: Record<string, Transporter> = {};

@@ -3,13 +3,11 @@ import { error } from "@sveltejs/kit";
 import db from "$lib/server/db/db";
 import {
   GetOngoingIncidentsForMonitorList,
-  GetResolvedIncidentsForMonitorList,
   GetOngoingMaintenanceEventsForMonitorList,
-  GetPastMaintenanceEventsForMonitorList,
   GetUpcomingMaintenanceEventsForMonitorList,
 } from "$lib/server/controllers/dashboardController.js";
 import type { TimestampStatusCount } from "$lib/server/types/db";
-import { GetNowTimestampUTC, UptimeCalculator } from "$lib/server/tool";
+import { GetNowTimestampUTC } from "$lib/server/tool";
 import GC from "$lib/global-constants.js";
 import { GetStatusColor, GetStatusSummary, ParseLatency } from "$lib/clientTools";
 import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";

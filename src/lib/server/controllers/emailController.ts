@@ -1,10 +1,4 @@
-import {
-  GetMinuteStartNowTimestampUTC,
-  GetMinuteStartTimestampUTC,
-  GetNowTimestampUTC,
-  ReplaceAllOccurrences,
-  ValidateEmail,
-} from "../tool.js";
+import { ReplaceAllOccurrences } from "../tool.js";
 import { Resend } from "resend";
 import getSMTPTransport from "../notification/smtps.js";
 

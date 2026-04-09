@@ -304,10 +304,6 @@
     dialogOpen = true;
   }
 
-  function handleDialogClose() {
-    selectedDay = null;
-  }
-
   function getStatusColor(item: TimestampStatusCount): string {
     const total = item.countOfUp + item.countOfDown + item.countOfDegraded + item.countOfMaintenance;
     if (total === 0) return "text-muted-foreground";

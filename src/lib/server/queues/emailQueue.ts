@@ -59,7 +59,7 @@ const addWorker = () => {
 
   worker.on("failed", (job: Job | undefined, err: Error) => {
     const toEmails = job?.data?.toEmail || "unknown";
-    console.error(`❌ Email job failed`, err.message);
+    console.error(`❌ Email job failed to ${toEmails}`, err.message);
   });
 
   return worker;

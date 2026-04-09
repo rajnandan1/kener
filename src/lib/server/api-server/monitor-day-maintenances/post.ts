@@ -1,15 +1,8 @@
 import { json, error } from "@sveltejs/kit";
 import type { APIServerRequest } from "$lib/server/types/api-server";
 import db from "$lib/server/db/db";
-import {
-  BeginningOfDay,
-  GetMinuteStartNowTimestampUTC,
-  GetMinuteStartTimestampUTC,
-  ParseUptime,
-  UptimeCalculator,
-} from "$lib/server/tool";
+import { BeginningOfDay, GetMinuteStartNowTimestampUTC, GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { GetMonitorsParsed } from "../../controllers/monitorsController";
-import type { TimestampStatusCount } from "$lib/server/types/db";
 
 interface DayDetailRequest {
   tag: string;

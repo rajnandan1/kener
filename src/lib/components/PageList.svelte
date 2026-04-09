@@ -1,21 +1,15 @@
 <script lang="ts">
   import { Button } from "$lib/components/ui/button/index.js";
-  import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { onMount } from "svelte";
   import type { PageNavItem } from "$lib/server/controllers/dashboardController.js";
-  import { page } from "$app/state";
   import * as Item from "$lib/components/ui/item/index.js";
   import ChevronRight from "@lucide/svelte/icons/chevron-right";
 
-  let currentPath = $derived(page.params.page_path);
-
   let pages = $state<PageNavItem[]>([]);
   let pagesLoading = $state(false);
-  const defaultHomePage = $derived(pages.find((p) => p.page_path == ""));
-  const currentPage = $derived(pages.find((p) => p.page_path === currentPath) || defaultHomePage);
 
   async function fetchPages() {
     pagesLoading = true;

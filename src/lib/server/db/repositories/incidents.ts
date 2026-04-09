@@ -10,7 +10,6 @@ import type {
   IncidentCommentRecord,
   IncidentForMonitorList,
   IncidentForMonitorListWithComments,
-  IncidentMonitorImpact,
 } from "../../types/db.js";
 
 // Raw row type from DB query before grouping

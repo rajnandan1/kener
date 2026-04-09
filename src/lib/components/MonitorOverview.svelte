@@ -119,7 +119,7 @@
   let initialLoad = true;
   $effect(() => {
     // Track only the timezone - this is the dependency we care about
-    const tz = $selectedTimezone;
+    void $selectedTimezone;
 
     // Use untrack to avoid tracking loading/data state changes
     untrack(() => {

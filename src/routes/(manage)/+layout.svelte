@@ -16,7 +16,6 @@
   import CodeIcon from "@lucide/svelte/icons/code";
   import ChartSplineIcon from "@lucide/svelte/icons/chart-spline";
   import CloudAlertIcon from "@lucide/svelte/icons/cloud-alert";
-  import House from "@lucide/svelte/icons/house";
   import BadgeIcon from "@lucide/svelte/icons/id-card";
   import ClockAlertIcon from "@lucide/svelte/icons/clock-alert";
   import BookOpenIcon from "@lucide/svelte/icons/book-open";

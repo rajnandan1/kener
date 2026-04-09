@@ -10,11 +10,9 @@
   import CopyButton from "$lib/components/CopyButton.svelte";
   import ColorPicker from "svelte-awesome-color-picker";
   import CopyIcon from "@lucide/svelte/icons/copy";
-  import EyeIcon from "@lucide/svelte/icons/eye";
   import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
   import type { MonitorRecord } from "$lib/server/types/db.js";
   import { BADGE_STYLES, type BadgeStyle } from "$lib/global-constants.js";
-  import type { SiteDataTransformed } from "$lib/server/controllers/siteDataController";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { availableLocalesList } from "$lib/stores/i18n";

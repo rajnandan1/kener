@@ -15,12 +15,11 @@
 
   interface Props {
     config: DocsConfig;
-    currentSlug: string;
     onMenuToggle?: () => void;
     isMobileMenuOpen?: boolean;
   }
 
-  let { config, currentSlug, onMenuToggle, isMobileMenuOpen = false }: Props = $props();
+  let { config, onMenuToggle, isMobileMenuOpen = false }: Props = $props();
   let searchOpen = $state(false);
 
   type DocsNavTab = NonNullable<DocsConfig["navigation"]>["tabs"][number];

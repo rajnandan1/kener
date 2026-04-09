@@ -1,12 +1,11 @@
 import type { PageServerLoad } from "./$types";
 import { error } from "@sveltejs/kit";
 import { parse, isValid, getYear, startOfMonth, endOfMonth, addMonths, getUnixTime } from "date-fns";
-import { GetPageByPathWithMonitors } from "$lib/server/controllers/controller.js";
 
 const MIN_YEAR = 2023;
 
 export const load: PageServerLoad = async ({ params, parent }) => {
-  const parentData = await parent();
+  await parent();
 
   // Parse month parameter (format: MMMM-YYYY e.g. "January-2026")
   const monthParam = `${params.MMMM}-${params.YYYY}`;

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { goto } from "$app/navigation";
   import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
@@ -11,13 +10,12 @@
   import * as AlertDialog from "$lib/components/ui/alert-dialog/index.js";
   import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
-  import ArrowLeftIcon from "@lucide/svelte/icons/arrow-left";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import BellOffIcon from "@lucide/svelte/icons/bell-off";
   import TrashIcon from "@lucide/svelte/icons/trash";
   import { format } from "date-fns";
   import { toast } from "svelte-sonner";
-  import type { MonitorAlertConfigWithTriggers, MonitorAlertV2WithConfig } from "$lib/server/types/db";
+  import type { MonitorAlertV2WithConfig } from "$lib/server/types/db";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   let { data } = $props();
@@ -26,7 +24,6 @@
   // State
   let loading = $state(true);
   let alerts = $state<MonitorAlertV2WithConfig[]>([]);
-  let configInfo = $state<MonitorAlertConfigWithTriggers | null>(null);
   let totalPages = $state(0);
   let totalCount = $state(0);
   let pageNo = $state(1);
@@ -49,10 +46,7 @@
           data: { id: parseInt(alertConfigId) }
         })
       });
-      const result = await response.json();
-      if (!result.error) {
-        configInfo = result;
-      }
+      await response.json();
     } catch (error) {
       console.error("Error fetching config info:", error);
     }

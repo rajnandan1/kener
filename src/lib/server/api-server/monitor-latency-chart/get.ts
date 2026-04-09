@@ -33,7 +33,6 @@ const TIME_RANGES: TimeRange[] = [
 export default async function get(req: APIServerRequest): Promise<Response> {
   const tag = req.query.get("tag");
   const range = req.query.get("range") || "24h";
-  const localTz = req.query.get("localTz") || "UTC";
 
   if (!tag) {
     return error(400, { message: "tag query parameter is required" });

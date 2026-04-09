@@ -1,13 +1,5 @@
 import { redisIOConnection } from "../redisConnector.js";
-import {
-  Queue,
-  Worker,
-  Job,
-  type QueueOptions,
-  type WorkerOptions,
-  type Processor,
-  type ConnectionOptions,
-} from "bullmq";
+import { Queue, Worker, type QueueOptions, type WorkerOptions, type Processor, type ConnectionOptions } from "bullmq";
 
 //create and return queue instance given name and options
 export const createQueue = (name: string, options?: Omit<QueueOptions, "connection" | "prefix">) => {

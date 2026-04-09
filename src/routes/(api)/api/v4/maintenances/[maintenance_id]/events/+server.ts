@@ -26,7 +26,6 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   const allEvents = await db.getMaintenanceEventsByMaintenanceId(maintenance.id);
 
   // Calculate pagination
-  const total = allEvents.length;
   const offset = (page - 1) * limit;
   const paginatedEvents = allEvents.slice(offset, offset + limit);
 

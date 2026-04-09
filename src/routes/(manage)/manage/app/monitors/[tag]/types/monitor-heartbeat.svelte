@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
   import Copy from "@lucide/svelte/icons/copy";
   import * as InputGroup from "$lib/components/ui/input-group/index.js";
   import clientResolve from "$lib/client/resolver.js";

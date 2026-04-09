@@ -8,7 +8,6 @@
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
-  import { Switch } from "$lib/components/ui/switch/index.js";
   import { Textarea } from "$lib/components/ui/textarea/index.js";
   import { toast } from "svelte-sonner";
   import Loader from "@lucide/svelte/icons/loader";
@@ -50,7 +49,6 @@
   // State
   let loading = $state(true);
   let saving = $state(false);
-  let savingMonitors = $state(false);
   let uploadingLogo = $state(false);
   let uploadingSocialPreview = $state(false);
 

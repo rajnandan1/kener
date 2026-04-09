@@ -10,7 +10,7 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { GetInitials } from "$lib/clientTools.js";
-  import type { IncidentCommentRecord, IncidentForMonitorListWithComments } from "$lib/server/types/db";
+  import type { IncidentForMonitorListWithComments } from "$lib/server/types/db";
   import { SveltePurify } from "@humanspeak/svelte-purify";
   import mdToHTML from "$lib/marked";
   import { slide } from "svelte/transition";

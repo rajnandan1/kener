@@ -28,7 +28,7 @@
 </svelte:head>
 
 <div class="bg-background text-foreground min-h-screen">
-  <DocsNavbar config={data.config} currentSlug={data.currentSlug} onMenuToggle={toggleMobileMenu} {isMobileMenuOpen} />
+  <DocsNavbar config={data.config} onMenuToggle={toggleMobileMenu} {isMobileMenuOpen} />
 
   <div class="mx-auto flex px-0 pt-24">
     <!-- Mobile sidebar overlay -->

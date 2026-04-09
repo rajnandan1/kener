@@ -1,5 +1,5 @@
 import type { Knex as KnexType } from "knex";
-import { BaseRepository, type MonitorFilter, type CountResult } from "./base.js";
+import { BaseRepository, type MonitorFilter } from "./base.js";
 import type { MonitorRecord, MonitorRecordInsert } from "../../types/db.js";
 
 /**

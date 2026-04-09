@@ -7,8 +7,6 @@ import type {
   MonitorAlertConfigTriggerRecord,
   MonitorAlertConfigTriggerInsert,
   MonitorAlertConfigWithTriggers,
-  MonitorAlertConfigMonitorRecord,
-  MonitorAlertConfigMonitorInsert,
   TriggerRecord,
   MonitorAlertV2Record,
   MonitorAlertV2Insert,

@@ -12,7 +12,7 @@
 
 <div bind:this={ref} data-slot="input-otp-separator" role="separator" {...restProps}>
 	{#if children}
-		{@render children?.()}
+		{@render children()}
 	{:else}
 		<MinusIcon />
 	{/if}

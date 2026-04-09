@@ -3,20 +3,10 @@ import db from "$lib/server/db/db";
 import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
 import type {
   GetMonitorResponse,
-  MonitorResponse,
   UpdateMonitorRequest,
   UpdateMonitorResponse,
   BadRequestResponse,
 } from "$lib/types/api";
-
-function formatDateToISO(date: Date | string): string {
-  if (date instanceof Date) {
-    return date.toISOString();
-  }
-  // Handle string dates (e.g., from SQLite: "2026-01-27 16:07:19")
-  const parsed = new Date(date.replace(" ", "T") + "Z");
-  return parsed.toISOString();
-}
 
 export const GET: RequestHandler = async ({ locals }) => {
   // Monitor is validated by middleware and available in locals

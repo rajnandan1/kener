@@ -408,7 +408,7 @@
             href={link.url}
             target="_blank"
             rel="noopener noreferrer"
-            class="text-muted-foreground hover:text-foreground hidden rounded-full px-3 py-1.5 text-[13px] font-medium tracking-tight transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/5 sm:inline-flex"
+            class="text-muted-foreground hover:text-foreground hover:bg-foreground/5 hidden rounded-full px-3 py-1.5 text-[13px] font-medium tracking-tight transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] sm:inline-flex"
           >
             {link.name}
           </a>
@@ -417,7 +417,7 @@
       <button
         onclick={toggleMode}
         aria-label="Toggle theme"
-        class="text-muted-foreground hover:text-foreground inline-flex h-8 w-8 items-center justify-center rounded-full transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/5"
+        class="text-muted-foreground hover:text-foreground hover:bg-foreground/5 inline-flex h-8 w-8 items-center justify-center rounded-full transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
       >
         {#if mode.current === "dark"}
           <Sun class="h-4 w-4" />
@@ -531,7 +531,7 @@
 
       <div class="bento-features">
         {#each coreFeatures as feature, i (feature.title)}
-          <div class="feature-bezel-outer group h-full bento-item" style="animation-delay: {i * 60}ms">
+          <div class="feature-bezel-outer group bento-item h-full" style="animation-delay: {i * 60}ms">
             <div class="feature-bezel-inner h-full">
               <div class="mb-5 flex items-start justify-between gap-4">
                 <div class="feature-icon-wrapper">
@@ -621,7 +621,7 @@
                 {#each group.pages as page (page.slug)}
                   <a
                     href={getHref(`/docs/${page.slug}`)}
-                    class="text-muted-foreground hover:text-foreground flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium tracking-tight transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-foreground/5"
+                    class="text-muted-foreground hover:text-foreground hover:bg-foreground/5 flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium tracking-tight transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
                   >
                     <span>{page.title}</span>
                     <ArrowRight
@@ -1060,8 +1060,9 @@
     background: color-mix(in oklch, var(--foreground) 3%, transparent);
     border: 1px solid color-mix(in oklch, var(--foreground) 5%, transparent);
     cursor: default;
-    transition: border-color 0.6s cubic-bezier(0.32, 0.72, 0, 1),
-                box-shadow 0.6s cubic-bezier(0.32, 0.72, 0, 1);
+    transition:
+      border-color 0.6s cubic-bezier(0.32, 0.72, 0, 1),
+      box-shadow 0.6s cubic-bezier(0.32, 0.72, 0, 1);
   }
 
   .feature-bezel-outer:hover {
@@ -1091,8 +1092,9 @@
     border-radius: 0.75rem;
     background: color-mix(in oklch, var(--primary) 8%, transparent);
     color: var(--primary);
-    transition: background 0.6s cubic-bezier(0.32, 0.72, 0, 1),
-                transform 0.6s cubic-bezier(0.32, 0.72, 0, 1);
+    transition:
+      background 0.6s cubic-bezier(0.32, 0.72, 0, 1),
+      transform 0.6s cubic-bezier(0.32, 0.72, 0, 1);
   }
 
   .feature-bezel-outer:hover .feature-icon-wrapper {

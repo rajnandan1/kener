@@ -1,11 +1,7 @@
 import db from "$lib/server/db/db.js";
 import type {
-  UserSubscriptionRecord,
-  UserSubscriptionRecordInsert,
-  UserSubscriptionFilter,
   SubscriptionMethodType,
   SubscriptionEventType,
-  SubscriberSummary,
   UserSubscriptionV2Record,
   SubscriberUserRecord,
   SubscriberMethodRecord,
@@ -369,7 +365,7 @@ export async function GetActiveEmailsForEventType(eventType: SubscriptionEventTy
 // ============ Public Subscription Functions ============
 
 import { GenerateTokenWithExpiry, VerifyToken } from "./commonController.js";
-import { GenerateRandomNumber, ValidateEmail, GetNowTimestampUTC } from "../tool.js";
+import { GenerateRandomNumber, ValidateEmail } from "../tool.js";
 import sendEmail from "../notification/email_notification.js";
 import { GetAllSiteData } from "./controller.js";
 import { siteDataToVariables } from "../notification/notification_utils.js";

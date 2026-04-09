@@ -92,7 +92,7 @@
     </div>
     {#if data.values.length > 0}
       <div class="space-y-2">
-        {#each data.values as value, index}
+        {#each data.values as _, index}
           <InputGroup.Root>
             <InputGroup.Addon class="">
               <InputGroup.Text class="border-r-2 pr-2">Value {index + 1}</InputGroup.Text>

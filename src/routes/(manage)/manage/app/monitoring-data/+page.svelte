@@ -40,11 +40,6 @@
     return format(date, "yyyy-MM-dd'T'HH:mm");
   }
 
-  // Helper to format date only as YYYY-MM-DD for min/max constraints
-  function formatDateForInput(date: Date): string {
-    return format(date, "yyyy-MM-dd");
-  }
-
   // Helper to get date N days ago
   function getDaysAgo(days: number): Date {
     const date = new Date();

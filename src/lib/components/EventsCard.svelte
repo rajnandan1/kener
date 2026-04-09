@@ -1,6 +1,4 @@
 <script lang="ts">
-  import Check from "@lucide/svelte/icons/check";
-  import type { PageSettingsType } from "$lib/server/types/db";
   import { t } from "$lib/stores/i18n";
 
   interface Props {

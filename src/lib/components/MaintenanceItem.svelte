@@ -5,7 +5,6 @@
   import * as Popover from "$lib/components/ui/popover/index.js";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
-  import STATUS_ICON from "$lib/icons";
   import { t } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import { resolve } from "$app/paths";
@@ -21,11 +20,6 @@
   }
 
   let { maintenance, class: className = "", hideMonitors = false }: Props = $props();
-  // Check if maintenance is ongoing (current time is between start and end)
-  const isOngoing = $derived(() => {
-    const now = Date.now() / 1000;
-    return now >= maintenance.start_date_time && now <= maintenance.end_date_time;
-  });
   const isEmbedded = page.route.id?.includes("(embed)");
   const target = isEmbedded ? "_blank" : "_self";
 </script>

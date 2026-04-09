@@ -1,6 +1,5 @@
 <script lang="ts">
   import * as Accordion from "$lib/components/ui/accordion/index.js";
-  import * as Card from "$lib/components/ui/card/index.js";
   import * as Table from "$lib/components/ui/table/index.js";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import * as Sheet from "$lib/components/ui/sheet/index.js";
@@ -42,7 +41,6 @@
   }
 
   let { data }: { data: PageData } = $props();
-  let currentUser = $derived(data.userDb);
   let userPermissions = $derived(data.userPermissions);
 
   function hasPermission(perm: string): boolean {
@@ -165,7 +163,7 @@
     }
     creatingRole = true;
     try {
-      const created = await apiCall("createRole", { role_id: newRole.role_id, name: newRole.name });
+      await apiCall("createRole", { role_id: newRole.role_id, name: newRole.name });
 
       // Clone permissions if selected
       if (createPermissionMode === "clone" && cloneFromRoleId) {
