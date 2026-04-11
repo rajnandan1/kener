@@ -142,17 +142,13 @@
   <Card.Content class="space-y-4">
     {#if loading}
       <!-- Loading skeleton -->
-      <div class="space-y-4">
-        <div class="flex gap-4">
-          <Skeleton class="h-16 flex-1 rounded-lg" />
-          <Skeleton class="h-16 flex-1 rounded-lg" />
-        </div>
+      <div class="space-y-3">
+        <Skeleton class="h-12 w-28 rounded-lg" />
         <Skeleton class="h-10 w-full rounded-lg" />
         <div class="flex justify-between">
-          <Skeleton class="h-4 w-24" />
-          <Skeleton class="h-4 w-24" />
+          <Skeleton class="h-3.5 w-20" />
+          <Skeleton class="h-3.5 w-20" />
         </div>
-        <Skeleton class="h-32 w-full rounded-lg" />
       </div>
     {:else if error}
       <!-- Error state -->
