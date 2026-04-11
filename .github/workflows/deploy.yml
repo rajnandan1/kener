@@ -1,9 +1,39 @@
-name: Deploy to Coolify
+name: CI & Deploy to Coolify
+
 on:
   push:
     branches: [main]
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  ci:
+    name: Typecheck & Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck (svelte-check)
+        run: npm run check
+
+      - name: Build
+        run: npm run build
+
   deploy:
+    name: Deploy to Coolify
+    needs: ci
     runs-on: ubuntu-latest
     steps:
       - name: Deploy via SSH
