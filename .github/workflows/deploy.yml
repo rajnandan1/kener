@@ -16,12 +16,7 @@ jobs:
             cd /opt/kener
             git fetch origin main --prune
             git reset --hard origin/main
-            docker build -t kener:local \
-              --build-arg VARIANT=alpine \
-              --build-arg NODE_VERSION=24 \
-              --build-arg WITH_DOCS=false \
-              --build-arg KENER_BASE_PATH="" \
-              -f Dockerfile .
+            docker build -t kener:local --build-arg VARIANT=alpine --build-arg NODE_VERSION=24 --build-arg WITH_DOCS=false --build-arg KENER_BASE_PATH="" -f Dockerfile .
             cd /data/coolify/services/pjn8105j4bqa6m9lvk4my5cw
             docker compose down
             docker compose up -d
