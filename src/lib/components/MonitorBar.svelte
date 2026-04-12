@@ -9,7 +9,7 @@
   import clientResolver from "$lib/client/resolver.js";
   import { formatDate } from "$lib/stores/datetime";
   import { GetInitials } from "$lib/clientTools.js";
-  import GroupMonitorPopover from "./GroupMonitorPopover.svelte";
+  import GroupMonitorInlineExpansion from "./GroupMonitorInlineExpansion.svelte";
   import { t } from "$lib/stores/i18n";
   import { page } from "$app/state";
 
@@ -18,6 +18,7 @@
     prefetchedData?: MonitorBarResponse;
     prefetchedError?: string;
     groupChildTags?: string[];
+    groupChildTagsByTag?: Record<string, string[]>;
     days?: number;
     endOfDayTodayAtTz?: number;
     compact?: boolean;
@@ -29,6 +30,7 @@
     prefetchedData,
     prefetchedError,
     groupChildTags = [],
+    groupChildTagsByTag = {},
     days,
     endOfDayTodayAtTz,
     compact = false,
@@ -147,13 +149,15 @@
     {/if}
     {#if showGroupPopover}
       <div class="mt-2 flex justify-center gap-2 px-4">
-        <GroupMonitorPopover
+        <GroupMonitorInlineExpansion
           tags={groupChildTags}
           days={days as number}
           endOfDayTodayAtTz={endOfDayTodayAtTz as number}
+          {groupChildTagsByTag}
+          {compact}
         >
           {$t("Included Monitors (%count)", { count: String(groupChildTags.length) })}
-        </GroupMonitorPopover>
+        </GroupMonitorInlineExpansion>
       </div>
     {/if}
   {/if}

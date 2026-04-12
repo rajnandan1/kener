@@ -12,6 +12,7 @@
     page_path: string;
     page_title: string;
     monitors?: { monitor_tag: string }[];
+    monitor_groups?: Array<{ id: number; monitors: Array<{ monitor_tag: string }> }>;
   }
 
   interface Props {
@@ -27,7 +28,11 @@
   // Check if monitor is on a specific page
   function isMonitorOnPage(pageId: number): boolean {
     const page = allPages.find((p) => p.id === pageId);
-    return page?.monitors?.some((m) => m.monitor_tag === monitorTag) ?? false;
+    return (
+      page?.monitors?.some((m) => m.monitor_tag === monitorTag) ||
+      page?.monitor_groups?.some((group) => group.monitors.some((monitor) => monitor.monitor_tag === monitorTag)) ||
+      false
+    );
   }
 
   // Toggle monitor on a page

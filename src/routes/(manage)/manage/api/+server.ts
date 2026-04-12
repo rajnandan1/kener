@@ -60,9 +60,17 @@ import {
   UpdatePage,
   DeletePage,
   AddMonitorToPage,
+  CreatePageMonitorGroup,
+  DeletePageMonitorGroup,
+  GetPageMonitorStructure,
   RemoveMonitorFromPage,
+  MovePageMonitorToGroup,
+  ReorderPageGroupMonitors,
   GetPageMonitors,
+  ReorderPageTopLevelItems,
   ReorderPageMonitors,
+  UpdatePageMonitorGroup,
+  ReplacePageMonitorStructure,
 } from "$lib/server/controllers/pagesController.js";
 import {
   CreateMaintenance,
@@ -387,11 +395,14 @@ export async function POST({ request, cookies }) {
       resp = await db.deleteImage(data.id);
     } else if (action == "getPages") {
       const pages = await GetAllPages();
-      // Fetch monitors for each page
       const pagesWithMonitors = await Promise.all(
         pages.map(async (page) => {
-          const monitors = await GetPageMonitors(page.id);
-          return { ...page, monitors };
+          const structure = await GetPageMonitorStructure(page.id);
+          return {
+            ...page,
+            monitors: structure.monitors,
+            monitor_groups: structure.monitor_groups,
+          };
         }),
       );
       resp = pagesWithMonitors;
@@ -406,12 +417,44 @@ export async function POST({ request, cookies }) {
     } else if (action == "addMonitorToPage") {
       await AddMonitorToPage(data.page_id, data.monitor_tag);
       resp = { success: true };
+    } else if (action == "createPageMonitorGroup") {
+      resp = await CreatePageMonitorGroup(
+        data.page_id,
+        data.name,
+        data.default_expanded ?? false,
+        data.adopt_child_status ?? false,
+        data.description ?? null,
+      );
+    } else if (action == "updatePageMonitorGroup") {
+      resp = await UpdatePageMonitorGroup(data.page_id, data.group_id, {
+        name: data.name,
+        description: data.description,
+        default_expanded: data.default_expanded,
+        adopt_child_status: data.adopt_child_status,
+      });
+    } else if (action == "deletePageMonitorGroup") {
+      await DeletePageMonitorGroup(data.page_id, data.group_id);
+      resp = { success: true };
     } else if (action == "removeMonitorFromPage") {
       await RemoveMonitorFromPage(data.page_id, data.monitor_tag);
+      resp = { success: true };
+    } else if (action == "movePageMonitorToGroup") {
+      await MovePageMonitorToGroup(data.page_id, data.monitor_tag, data.group_id ?? null, data.position);
+      resp = { success: true };
+    } else if (action == "reorderPageTopLevelItems") {
+      await ReorderPageTopLevelItems(data.page_id, data.items);
+      resp = { success: true };
+    } else if (action == "reorderPageGroupMonitors") {
+      await ReorderPageGroupMonitors(data.page_id, data.group_id, data.monitor_tags);
       resp = { success: true };
     } else if (action == "reorderPageMonitors") {
       await ReorderPageMonitors(data.page_id, data.monitor_tags);
       resp = { success: true };
+    } else if (action == "replacePageMonitorStructure") {
+      resp = await ReplacePageMonitorStructure(data.page_id, {
+        monitors: data.monitors,
+        monitor_groups: data.monitor_groups,
+      });
     }
     // ============ Maintenance Actions ============
     else if (action == "getMaintenances") {

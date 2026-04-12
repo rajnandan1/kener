@@ -220,6 +220,13 @@ class DbImpl {
   getAllPages!: PagesRepository["getAllPages"];
   updatePage!: PagesRepository["updatePage"];
   deletePage!: PagesRepository["deletePage"];
+  createPageMonitorGroup!: PagesRepository["createPageMonitorGroup"];
+  getPageMonitorGroupById!: PagesRepository["getPageMonitorGroupById"];
+  getPageMonitorGroups!: PagesRepository["getPageMonitorGroups"];
+  updatePageMonitorGroup!: PagesRepository["updatePageMonitorGroup"];
+  deletePageMonitorGroup!: PagesRepository["deletePageMonitorGroup"];
+  updatePageMonitorGroupPositions!: PagesRepository["updatePageMonitorGroupPositions"];
+  deletePageMonitorGroupAndPromoteChildren!: PagesRepository["deletePageMonitorGroupAndPromoteChildren"];
 
   // ============ Page Monitors ============
   addMonitorToPage!: PagesRepository["addMonitorToPage"];
@@ -231,6 +238,7 @@ class DbImpl {
   monitorExistsOnPage!: PagesRepository["monitorExistsOnPage"];
   deletePageMonitorsByTag!: PagesRepository["deletePageMonitorsByTag"];
   deletePageMonitorsByPageId!: PagesRepository["deletePageMonitorsByPageId"];
+  movePageMonitorToGroup!: PagesRepository["movePageMonitorToGroup"];
   updatePageMonitorPositions!: PagesRepository["updatePageMonitorPositions"];
 
   // ============ Maintenances ============
@@ -590,6 +598,13 @@ class DbImpl {
     this.getAllPages = this.pages.getAllPages.bind(this.pages);
     this.updatePage = this.pages.updatePage.bind(this.pages);
     this.deletePage = this.pages.deletePage.bind(this.pages);
+    this.createPageMonitorGroup = this.pages.createPageMonitorGroup.bind(this.pages);
+    this.getPageMonitorGroupById = this.pages.getPageMonitorGroupById.bind(this.pages);
+    this.getPageMonitorGroups = this.pages.getPageMonitorGroups.bind(this.pages);
+    this.updatePageMonitorGroup = this.pages.updatePageMonitorGroup.bind(this.pages);
+    this.deletePageMonitorGroup = this.pages.deletePageMonitorGroup.bind(this.pages);
+    this.updatePageMonitorGroupPositions = this.pages.updatePageMonitorGroupPositions.bind(this.pages);
+    this.deletePageMonitorGroupAndPromoteChildren = this.pages.deletePageMonitorGroupAndPromoteChildren.bind(this.pages);
     this.addMonitorToPage = this.pages.addMonitorToPage.bind(this.pages);
     this.removeMonitorFromPage = this.pages.removeMonitorFromPage.bind(this.pages);
     this.getPageMonitors = this.pages.getPageMonitors.bind(this.pages);
@@ -599,6 +614,7 @@ class DbImpl {
     this.monitorExistsOnPage = this.pages.monitorExistsOnPage.bind(this.pages);
     this.deletePageMonitorsByTag = this.pages.deletePageMonitorsByTag.bind(this.pages);
     this.deletePageMonitorsByPageId = this.pages.deletePageMonitorsByPageId.bind(this.pages);
+    this.movePageMonitorToGroup = this.pages.movePageMonitorToGroup.bind(this.pages);
     this.updatePageMonitorPositions = this.pages.updatePageMonitorPositions.bind(this.pages);
   }
 

@@ -443,6 +443,30 @@ export interface PageSettings {
 
 export interface PageMonitorResponse {
   monitor_tag: string;
+  group_id: number | null;
+  position: number;
+}
+
+export interface PageMonitorGroupResponse {
+  id: number;
+  name: string;
+  description: string | null;
+  default_expanded: boolean;
+  adopt_child_status: boolean;
+  position: number;
+  monitors: PageMonitorResponse[];
+}
+
+export type PageMonitorRequest = string | { monitor_tag: string; position?: number; group_id?: number | null };
+
+export interface PageMonitorGroupRequest {
+  id?: number;
+  name: string;
+  description?: string | null;
+  default_expanded?: boolean;
+  adopt_child_status?: boolean;
+  position?: number;
+  monitors?: PageMonitorRequest[];
 }
 
 export interface PageResponse {
@@ -454,6 +478,7 @@ export interface PageResponse {
   page_logo: string | null;
   page_settings: PageSettings;
   monitors: PageMonitorResponse[];
+  monitor_groups: PageMonitorGroupResponse[];
   created_at: string;
   updated_at: string;
 }
@@ -473,7 +498,8 @@ export interface CreatePageRequest {
   page_subheader?: string | null;
   page_logo?: string | null;
   page_settings?: Partial<PageSettings>;
-  monitors?: string[];
+  monitors?: PageMonitorRequest[];
+  monitor_groups?: PageMonitorGroupRequest[];
 }
 
 export interface CreatePageResponse {
@@ -487,7 +513,8 @@ export interface UpdatePageRequest {
   page_subheader?: string | null;
   page_logo?: string | null;
   page_settings?: Partial<PageSettings>;
-  monitors?: string[];
+  monitors?: PageMonitorRequest[];
+  monitor_groups?: PageMonitorGroupRequest[];
 }
 
 export interface UpdatePageResponse {
