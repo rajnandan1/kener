@@ -111,7 +111,8 @@ RUN apk add --no-cache \
     tzdata \
     iputils \
     curl \
-    libcap && \
+    libcap \
+    su-exec && \
     # Grant ping the NET_RAW capability so non-root users can send ICMP packets
     setcap cap_net_raw+ep /bin/ping || true
 
@@ -122,7 +123,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tzdata \
     iputils-ping \
     curl \
-    libcap2-bin && \
+    libcap2-bin \
+    gosu && \
     setcap cap_net_raw+ep /usr/bin/ping || true && \
     rm -rf /var/lib/apt/lists/*
 
@@ -181,8 +183,9 @@ RUN chmod +x docker-entrypoint.sh
 
 # ---- Runtime configuration ----
 
-# Switch to non-root user
-USER node
+# NOTE: We start as root so the entrypoint can fix volume permissions,
+# then drop to the non-root "node" user via su-exec / gosu.
+# USER node  (handled by entrypoint)
 
 EXPOSE ${PORT}
 
