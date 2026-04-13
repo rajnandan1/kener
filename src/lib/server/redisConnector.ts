@@ -6,12 +6,24 @@ dotenv.config();
 let redisIOClient: IORedis | null = null;
 let redisClient: IORedis | null = null;
 
+const redisClientOptions: Redis.RedisOptions = {
+  maxRetriesPerRequest: null,
+  // Reconnect if Redis starts rejecting writes after a failover.
+  reconnectOnError: (error) => {
+    const message = error?.message ?? "";
+    if (message.includes("READONLY")) {
+      return 1;
+    }
+    return false;
+  },
+};
+
 export function redisIOConnection(): IORedis {
   if (!redisIOClient) {
     if (!process.env.REDIS_URL) {
       throw new Error("REDIS_URL is not defined in environment variables");
     }
-    redisIOClient = new IORedis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
+    redisIOClient = new IORedis(process.env.REDIS_URL, redisClientOptions);
   }
   return redisIOClient;
 }
@@ -21,7 +33,7 @@ export function redisConnection(): Redis {
     if (!process.env.REDIS_URL) {
       throw new Error("REDIS_URL is not defined in environment variables");
     }
-    redisClient = new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: null });
+    redisClient = new Redis(process.env.REDIS_URL, redisClientOptions);
   }
   return redisClient;
 }
