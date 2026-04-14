@@ -24,7 +24,9 @@ services:
   # Kener — Status Page Application
   # ---------------------------------------------------------------------------
   kener:
-    image: rajnandan1/kener:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     environment:
       KENER_SECRET_KEY: ${KENER_SECRET_KEY:-replace_me}
       ORIGIN: ${ORIGIN:-http://localhost:3000}
