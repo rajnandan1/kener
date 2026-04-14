@@ -39,13 +39,51 @@ jobs:
           host: ${{ secrets.SERVER_IP }}
           username: root
           key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 5m
           script: |
+            set -e
             cd /opt/kener
             git fetch origin main --prune
             git reset --hard origin/main
-            docker build -t kener:local --build-arg VARIANT=alpine --build-arg NODE_VERSION=24 --build-arg WITH_DOCS=false --build-arg KENER_BASE_PATH="" -f Dockerfile .
+            docker build -t kener:local \
+              --build-arg VARIANT=alpine \
+              --build-arg NODE_VERSION=24 \
+              --build-arg WITH_DOCS=false \
+              --build-arg KENER_BASE_PATH="" \
+              -f Dockerfile .
             cd /data/coolify/services/pjn8105j4bqa6m9lvk4my5cw
             docker compose down
             docker compose up -d
             sleep 5
             docker network connect coolify kener-pjn8105j4bqa6m9lvk4my5cw 2>/dev/null || true
+
+      - name: Verify health
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: root
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          command_timeout: 3m
+          script: |
+            check_health() {
+              local status=$1
+              echo "Status: $status"
+              echo "$status" | grep -q healthy
+            }
+
+            for attempt in 1 2 3 4 5 6; do
+              echo "Health check attempt $attempt/6..."
+              sleep 15
+
+              STATUS=$(docker ps --format '{{.Status}}' -f name=kener-pjn8105j4bqa6m9lvk4my5cw)
+
+              if check_health "$STATUS"; then
+                echo "Service healthy ✓"
+                exit 0
+              fi
+
+              echo "Not healthy yet, retrying..."
+            done
+
+            echo "Health checks failed after 6 attempts"
+            exit 1
