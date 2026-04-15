@@ -14,3 +14,61 @@
 .kracking-public-shell body {
   overflow-x: hidden;
 }
+
+/* ── Light-mode surface overrides ───────────────────────────────────────────
+   The kener layout.css does not carry the inverted zinc palette used by
+   Console / Marketing, so we provide explicit light-mode values here for
+   the public shell only.                                                    */
+html:not(.dark) .kracking-public-shell {
+  --public-card-bg:    oklch(0.97 0.001 286);   /* near-white card surface   */
+  --public-card-inner: oklch(1.0  0     0   );  /* white inner card          */
+  --public-border:     oklch(0.9  0.003 286);   /* light border              */
+  --public-text-muted: oklch(0.52 0.014 286);   /* muted label text          */
+}
+
+/* Section cards */
+html:not(.dark) .kracking-public-shell section.overflow-hidden {
+  background-color: var(--public-card-bg) !important;
+  border-color: var(--public-border) !important;
+}
+
+/* Inner card (bg-zinc-950/60 pattern) */
+html:not(.dark) .kracking-public-shell .bg-zinc-950\/60 {
+  background-color: var(--public-card-inner) !important;
+}
+
+/* Row dividers */
+html:not(.dark) .kracking-public-shell .divide-zinc-800 > * + * {
+  border-color: var(--public-border) !important;
+}
+html:not(.dark) .kracking-public-shell .border-zinc-800 {
+  border-color: var(--public-border) !important;
+}
+html:not(.dark) .kracking-public-shell .border-zinc-900 {
+  border-color: var(--public-border) !important;
+}
+
+/* Section header text */
+html:not(.dark) .kracking-public-shell .text-zinc-400 {
+  color: var(--public-text-muted) !important;
+}
+html:not(.dark) .kracking-public-shell .text-zinc-500 {
+  color: var(--public-text-muted) !important;
+}
+
+/* Monitor row content */
+html:not(.dark) .kracking-public-shell .text-zinc-100 {
+  color: oklch(0.145 0.005 286) !important; /* near-black heading */
+}
+html:not(.dark) .kracking-public-shell .text-zinc-300 {
+  color: oklch(0.3 0.006 286) !important;
+}
+html:not(.dark) .kracking-public-shell .text-zinc-600 {
+  color: oklch(0.6 0.010 286) !important;
+}
+
+/* Avatar / skeleton backgrounds */
+html:not(.dark) .kracking-public-shell .bg-zinc-800\/50,
+html:not(.dark) .kracking-public-shell .bg-zinc-800\/30 {
+  background-color: oklch(0.92 0.003 286 / 0.6) !important;
+}
