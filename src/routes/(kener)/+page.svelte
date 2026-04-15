@@ -135,10 +135,8 @@
   {/if}
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
-  {#if data.socialPagePreviewImage}
-    <meta property="og:image" content={clientResolver(resolve, data.socialPagePreviewImage)} />
-    <meta name="twitter:image" content={clientResolver(resolve, data.socialPagePreviewImage)} />
-  {/if}
+  <meta property="og:image" content={data.socialPagePreviewImage ? clientResolver(resolve, data.socialPagePreviewImage) : clientResolver(resolve, "/og-image.png")} />
+  <meta name="twitter:image" content={data.socialPagePreviewImage ? clientResolver(resolve, data.socialPagePreviewImage) : clientResolver(resolve, "/og-image.png")} />
 </svelte:head>
 
 <!-- page title -->
