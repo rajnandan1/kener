@@ -271,11 +271,11 @@
 }
 
 .public-page {
-  @apply flex flex-col gap-6;
+  @apply flex flex-col gap-5;
 }
 
 .public-intro {
-  @apply flex flex-col gap-4;
+  @apply flex flex-col gap-2;
 }
 
 .public-kicker {

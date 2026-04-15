@@ -16,59 +16,73 @@
 }
 
 /* ── Light-mode surface overrides ───────────────────────────────────────────
-   The kener layout.css does not carry the inverted zinc palette used by
-   Console / Marketing, so we provide explicit light-mode values here for
-   the public shell only.                                                    */
+   Applied only when the html element does NOT carry the .dark class.
+   Values are hardcoded hex so they are independent of Kener's shadcn CSS
+   variable system.                                                          */
 html:not(.dark) .kracking-public-shell {
-  --public-card-bg:    oklch(0.97 0.001 286);   /* near-white card surface   */
-  --public-card-inner: oklch(1.0  0     0   );  /* white inner card          */
-  --public-border:     oklch(0.9  0.003 286);   /* light border              */
-  --public-text-muted: oklch(0.52 0.014 286);   /* muted label text          */
+  background-color: #ffffff;
+  color: #18181b;
 }
 
-/* Section cards */
-html:not(.dark) .kracking-public-shell section.overflow-hidden {
-  background-color: var(--public-card-bg) !important;
-  border-color: var(--public-border) !important;
+/* Section outer card */
+html:not(.dark) .kracking-public-shell section.overflow-hidden.bg-zinc-900\/20 {
+  background-color: #f9f9fa !important;
+  border-color: #e4e4e7 !important;
 }
 
-/* Inner card (bg-zinc-950/60 pattern) */
+/* Inner card shell (bg-zinc-950/60 pattern) */
 html:not(.dark) .kracking-public-shell .bg-zinc-950\/60 {
-  background-color: var(--public-card-inner) !important;
+  background-color: #ffffff !important;
+  border-color: #e4e4e7 !important;
 }
 
 /* Row dividers */
 html:not(.dark) .kracking-public-shell .divide-zinc-800 > * + * {
-  border-color: var(--public-border) !important;
+  border-color: #e4e4e7 !important;
 }
 html:not(.dark) .kracking-public-shell .border-zinc-800 {
-  border-color: var(--public-border) !important;
+  border-color: #e4e4e7 !important;
 }
 html:not(.dark) .kracking-public-shell .border-zinc-900 {
-  border-color: var(--public-border) !important;
+  border-color: #e4e4e7 !important;
 }
 
-/* Section header text */
-html:not(.dark) .kracking-public-shell .text-zinc-400 {
-  color: var(--public-text-muted) !important;
+/* Section header label text */
+html:not(.dark) .kracking-public-shell .text-\[13px\].font-medium.text-zinc-400 {
+  color: #71717a !important;
 }
 html:not(.dark) .kracking-public-shell .text-zinc-500 {
-  color: var(--public-text-muted) !important;
+  color: #71717a !important;
 }
 
-/* Monitor row content */
+/* Monitor name / heading */
 html:not(.dark) .kracking-public-shell .text-zinc-100 {
-  color: oklch(0.145 0.005 286) !important; /* near-black heading */
-}
-html:not(.dark) .kracking-public-shell .text-zinc-300 {
-  color: oklch(0.3 0.006 286) !important;
-}
-html:not(.dark) .kracking-public-shell .text-zinc-600 {
-  color: oklch(0.6 0.010 286) !important;
+  color: #18181b !important;
 }
 
-/* Avatar / skeleton backgrounds */
-html:not(.dark) .kracking-public-shell .bg-zinc-800\/50,
-html:not(.dark) .kracking-public-shell .bg-zinc-800\/30 {
-  background-color: oklch(0.92 0.003 286 / 0.6) !important;
+/* Monitor description / secondary text */
+html:not(.dark) .kracking-public-shell .text-zinc-400 {
+  color: #52525b !important;
+}
+
+/* Separator dots */
+html:not(.dark) .kracking-public-shell .text-zinc-600 {
+  color: #a1a1aa !important;
+}
+
+/* Date labels */
+html:not(.dark) .kracking-public-shell .text-zinc-300 {
+  color: #3f3f46 !important;
+}
+
+/* Drawer / modal overrides */
+html:not(.dark) [data-slot="drawer-content"] {
+  background-color: #ffffff !important;
+  border-color: #e4e4e7 !important;
+}
+html:not(.dark) [data-slot="drawer-header"] {
+  border-color: #e4e4e7 !important;
+}
+html:not(.dark) [data-slot="drawer-title"] {
+  color: #18181b !important;
 }

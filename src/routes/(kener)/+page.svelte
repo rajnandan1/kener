@@ -143,19 +143,19 @@
 <div class="public-page">
   <ThemePlus />
   <div class="public-intro">
-    <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-2">
       <div class="min-w-0 flex-1">
         <Item.Root class="px-0 py-0">
           <Item.Content>
             {#if data.pageDetails?.page_header}
               <h1 class="min-w-0">
-                <Item.Title class="text-balance text-[1.75rem] font-medium tracking-[-0.04em] text-zinc-100 md:text-[2rem]">
+                <Item.Title class="text-balance text-[1.5rem] font-medium tracking-[-0.04em] text-zinc-100 md:text-[1.75rem]">
                   {data.pageDetails.page_header}
                 </Item.Title>
               </h1>
             {/if}
             {#if data.pageDetails?.page_subheader}
-              <div class="mt-2">
+              <div class="mt-0.5">
                 <div class="public-copy prose prose-sm dark:prose-invert max-w-none">
                   <SveltePurify html={mdToHTML(data.pageDetails.page_subheader)} />
                 </div>

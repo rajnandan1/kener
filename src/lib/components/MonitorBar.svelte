@@ -90,17 +90,8 @@
     </div>
   {:else if data}
     <!-- Loaded state -->
-    <Item.Root class="items-start px-4 py-4">
-      {#if !compact}
-        <Item.Media variant="image" class="hidden sm:block">
-          <Avatar.Root class="size-10">
-            {#if data.image}
-              <Avatar.Image src={clientResolver(resolve, data.image)} alt={data.name} class="  " />
-            {/if}
-            <Avatar.Fallback>{GetInitials(data.name)}</Avatar.Fallback>
-          </Avatar.Root>
-        </Item.Media>
-      {/if}
+    <Item.Root class="items-start px-4 py-3">
+
       <Item.Content class="min-w-0 flex-1">
         <Item.Title class="w-full truncate text-zinc-100">
           <span>{data.name}</span>
