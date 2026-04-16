@@ -370,7 +370,7 @@
   {#if hoveredBar}
     <div
       bind:this={tooltipEl}
-      class="pointer-events-none absolute z-20 w-max -translate-x-1/2 rounded-lg border border-zinc-800 bg-zinc-950 px-2.5 py-1.5 text-xs font-medium whitespace-nowrap text-zinc-100 shadow-[0_18px_38px_-20px_rgba(0,0,0,0.9)]"
+      class="pointer-events-none absolute z-20 w-max -translate-x-1/2 rounded-lg border border-zinc-700/50 bg-zinc-900 px-2.5 py-1.5 text-xs font-medium whitespace-nowrap text-white shadow-[0_18px_38px_-20px_rgba(0,0,0,0.9)]"
       style={tooltipStyle}
     >
       <span class={getStatusColor(hoveredBar.data)}>{$t(GetStatusSummary(hoveredBar.data))}</span>

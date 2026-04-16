@@ -20,15 +20,16 @@
 
   type ThemePref = "light" | "dark" | "system";
 
-  let preference = $state<ThemePref>(() => {
-    if (typeof localStorage === "undefined") return "system";
-    const s = localStorage.getItem("mode-watcher-mode");
-    return (s === "light" || s === "dark" || s === "system" ? s : "system") as ThemePref;
-  });
+  // Start with 'system' — onMount syncs from localStorage after hydration.
+  // Using a function initialiser for $state would run on the server where
+  // localStorage is unavailable, locking the value to 'system' forever.
+  let preference = $state<ThemePref>("system");
 
   function handleTheme(p: ThemePref) {
     preference = p;
     setMode(p);
+    // Immediately re-measure so the indicator slides to the new position.
+    void tick().then(() => updateIndicator());
   }
 
   const themeTabs: { id: ThemePref; Icon: typeof IconSun }[] = [
@@ -37,7 +38,7 @@
     { id: "system", Icon: IconDeviceDesktop },
   ];
 
-  // ── Sliding indicator (same logic as Console Tabs component) ──────────────
+  // ── Sliding indicator — exact same implementation as Console Tabs ─────────
   let containerRef = $state<HTMLDivElement | null>(null);
   let enableTransitions = $state(false);
   let indicator = $state({ height: 0, left: 0, opacity: 0, top: 0, width: 0 });
@@ -47,27 +48,39 @@
     if (!container) return;
     const activeIndex = themeTabs.findIndex((t) => t.id === preference);
     const activeEl = container.querySelector<HTMLElement>(`[data-tab-index="${activeIndex}"]`);
-    if (!activeEl) { indicator = { ...indicator, opacity: 0 }; return; }
+    if (!activeEl) {
+      indicator = { ...indicator, opacity: 0 };
+      return;
+    }
     indicator = {
-      height: activeEl.offsetHeight,
-      left:   activeEl.offsetLeft,
+      height:  activeEl.offsetHeight,
+      left:    activeEl.offsetLeft,
       opacity: 1,
-      top:    activeEl.offsetTop,
-      width:  activeEl.offsetWidth,
+      top:     activeEl.offsetTop,
+      width:   activeEl.offsetWidth,
     };
   }
 
-  $effect(() => {
-    preference; // reactive — re-measure when active tab changes
-    void tick().then(() => updateIndicator());
-  });
-
   onMount(() => {
-    updateIndicator();
-    // Wait two frames so the indicator snaps to its initial position
-    // before enabling transitions (avoids the "slide from origin" flash).
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => { enableTransitions = true; });
+    // 1. Sync preference from localStorage — must happen in onMount so it
+    //    runs only in the browser, after SSR hydration is complete.
+    const stored = localStorage.getItem("mode-watcher-mode");
+    if (stored === "light" || stored === "dark" || stored === "system") {
+      preference = stored;
+    }
+
+    // 2. Measure indicator position now that preference is correct.
+    //    Transitions are still disabled here so it snaps immediately.
+    void tick().then(() => {
+      updateIndicator();
+
+      // 3. Enable smooth transitions after the indicator has snapped to its
+      //    initial position (two rAF frames, same pattern as Console Tabs).
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          enableTransitions = true;
+        });
+      });
     });
   });
 </script>
@@ -79,23 +92,28 @@
       <!-- Nav header -->
       <div class="mx-auto flex w-full max-w-5xl items-center justify-between">
         <a href={clientResolver(resolve, "/")} class="flex items-center gap-3">
-          <!-- Dark banner — hidden in light mode -->
           <img src={bannerDark}  alt="Kracking" class="h-9 w-auto object-contain md:h-10 hidden dark:block" fetchpriority="high" decoding="async" />
-          <!-- Light banner — hidden in dark mode -->
           <img src={bannerLight} alt="Kracking" class="h-9 w-auto object-contain md:h-10 block  dark:hidden" fetchpriority="high" decoding="async" />
         </a>
 
-        <!-- Theme switcher: icon-only sliding tabs matching Console -->
+        <!--
+          Theme switcher — icon-only, sliding-indicator tabs.
+          Implementation mirrors Console's tabs.component.svelte exactly:
+          the absolutely-positioned indicator div is translated via
+          translate3d and transitions with cubic-bezier(0.22,1,0.36,1).
+        -->
         <div
           bind:this={containerRef}
           role="group"
           aria-label="Theme"
           class="relative inline-grid grid-flow-col auto-cols-max gap-0.5 overflow-hidden rounded-lg dark:bg-zinc-900/40 bg-zinc-100 p-0.5 outline-none"
         >
-          <!-- Sliding indicator -->
+          <!-- Sliding indicator pill -->
           <div
             aria-hidden="true"
-            class="pointer-events-none absolute z-0 rounded-md dark:bg-zinc-800/75 bg-white shadow-sm {enableTransitions ? 'transition-[transform,width,height,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]' : ''}"
+            class="pointer-events-none absolute z-0 rounded-md dark:bg-zinc-800/75 bg-white shadow-sm {enableTransitions
+              ? 'transition-[transform,width,height,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]'
+              : ''}"
             style="width:{indicator.width}px;height:{indicator.height}px;opacity:{indicator.opacity};transform:translate3d({indicator.left}px,{indicator.top}px,0)"
           ></div>
 
