@@ -105,7 +105,7 @@
 <div
   bind:this={containerRef}
   role="tablist"
-  class="relative inline-grid max-w-full grid-flow-col auto-cols-max gap-0.5 overflow-auto rounded-lg bg-zinc-900/40 p-0.5 {className}"
+  class="relative inline-grid max-w-full grid-flow-col auto-cols-max gap-0.5 overflow-auto rounded-lg bg-zinc-900/40 p-0.5 outline-none {className}"
 >
   <div
     aria-hidden="true"
@@ -122,7 +122,7 @@
       data-tab-index={index}
       aria-selected={active === tab.id}
       onclick={() => handleTabChange(tab.id)}
-      class="relative z-10 inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs leading-none font-medium whitespace-nowrap transition-colors duration-150 ease-out {active ===
+      class="relative z-10 inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs leading-none font-medium whitespace-nowrap outline-none transition-colors duration-150 ease-out {active ===
       tab.id
         ? 'text-zinc-50'
         : 'text-zinc-400 hover:text-zinc-100'}"
