@@ -1,11 +1,11 @@
 {
-  "name": "kener",
+  "name": "@kracking-llc/kener",
   "version": "4.0.23",
   "type": "module",
   "private": false,
   "license": "SEE LICENSE IN LICENSE",
   "description": "Kener is a modern, open-source status page application built with Node.js. It provides real-time monitoring, uptime tracking, incident management, and beautiful dashboards. Perfect for DevOps teams, SaaS providers, and businesses needing reliable service status communication with minimal setup.",
-  "author": "Raj Nandan Sharma <rajnandan1@gmail.com>",
+  "author": "Kracking",
   "keywords": [
     "status page",
     "uptime monitoring",
