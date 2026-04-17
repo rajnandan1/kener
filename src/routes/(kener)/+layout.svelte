@@ -4,6 +4,8 @@
   import { ModeWatcher } from "mode-watcher";
   import KenerNav from "$lib/components/KenerNav.svelte";
   import KenerFooter from "$lib/components/KenerFooter.svelte";
+  import SiteBanner from "$lib/components/SiteBanner.svelte";
+  import { page } from "$app/state";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import { Toaster } from "$lib/components/ui/sonner/index.js";
   import { resolve } from "$app/paths";
@@ -48,7 +50,10 @@
   <!-- Nav -->
   <KenerNav />
   <!-- Body -->
-  <div class="mx-auto max-w-5xl px-4 pt-18">
+  <div class="mx-auto max-w-5xl px-4 pt-16">
+    {#if !!page.data.announcement && !!page.data.announcement.title && !!page.data.announcement.message}
+      <SiteBanner announcement={page.data.announcement} />
+    {/if}
     <Tooltip.Provider>
       {@render children()}
     </Tooltip.Provider>

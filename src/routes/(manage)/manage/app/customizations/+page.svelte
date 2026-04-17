@@ -195,17 +195,7 @@
         }
       }
       // Set default footer HTML
-      defaultFooterHTML = `<div class="container relative mt-4 max-w-[655px]">
-  <div class="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
-    <p class="text-center text-sm leading-loose text-muted-foreground">
-      Made using 
-      <a href="https://github.com/rajnandan1/kener" target="_blank" class="font-medium underline underline-offset-4">
-        Kener
-      </a>
-      an open source status page system built with Svelte and TailwindCSS.
-    </p>
-  </div>
-</div>`;
+      defaultFooterHTML = "";
     } catch (e) {
       toast.error("Failed to load settings");
     } finally {

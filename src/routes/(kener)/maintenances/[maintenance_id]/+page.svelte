@@ -11,7 +11,6 @@
   import { Badge } from "$lib/components/ui/badge/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import mdToHTML from "$lib/marked";
-  import ThemePlus from "$lib/components/ThemePlus.svelte";
   import STATUS_ICON from "$lib/icons";
   import { t } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
@@ -79,7 +78,6 @@
 </svelte:head>
 
 <div class="flex flex-col gap-3">
-  <ThemePlus />
   <div class="flex flex-col gap-2 px-4 py-2">
     <Item.Root class="mb-4 flex-col items-start px-0 sm:flex-row sm:items-center">
       <Item.Content class="min-w-0 flex-1 px-0">

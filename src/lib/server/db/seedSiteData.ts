@@ -43,20 +43,7 @@ const seedSiteData = {
     title: "Build stunning status pages in minutes",
     subtitle: "Let your users know what's going on.",
   },
-  footerHTML: `<div
-   class="container relative  mt-4 max-w-[655px]"
-   >
-   <div class="block items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0 mx-auto">
-      <p class="text-center text-xs leading-loose text-muted-foreground ">
-         Made using 
-         <a href="https://github.com/rajnandan1/kener" target="_blank"  class="font-medium underline underline-offset-4 hover:text-accent-foreground">
-         Kener
-         </a>
-         an open source status page system built with Svelte and TailwindCSS.<br/>
-         Created with ❤️ by <a href="https://rajnandan.com" target="_blank"  class="font-medium hover:text-accent-foreground underline underline-offset-4">Raj Nandan Sharma</a>.
-      </p>
-   </div>
-</div>`,
+  footerHTML: "",
   i18n: {
     defaultLocale: "en",
     locales: [{ code: "en", name: "English", selected: true, disabled: false }],
