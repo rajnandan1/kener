@@ -37,14 +37,7 @@ RUN apk add --no-cache \
     tzdata
 
 # ---------- Debian builder ----------
-FROM node:${NODE_VERSION}-slim AS builder-debian
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    python3 \
-    sqlite3 \
-    libsqlite3-dev \
-    tzdata && \
-    rm -rf /var/lib/apt/lists/*
+FROM node:${NODE_VERSION} AS builder-debian
 
 # ---------- Selected variant ----------
 FROM builder-${VARIANT} AS builder
@@ -116,15 +109,7 @@ RUN apk add --no-cache \
     setcap cap_net_raw+ep /bin/ping || true
 
 # ---------- Debian runtime ----------
-FROM node:${NODE_VERSION}-slim AS final-debian
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    sqlite3 \
-    tzdata \
-    iputils-ping \
-    curl \
-    libcap2-bin && \
-    setcap cap_net_raw+ep /usr/bin/ping || true && \
-    rm -rf /var/lib/apt/lists/*
+FROM node:${NODE_VERSION} AS final-debian
 
 # ---------- Selected variant ----------
 FROM final-${VARIANT} AS final

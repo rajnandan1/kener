@@ -3,7 +3,6 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
-  import ThemePlus from "$lib/components/ThemePlus.svelte";
   import IncidentItem from "$lib/components/IncidentItem.svelte";
   import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
   import ArrowLeft from "@lucide/svelte/icons/arrow-left";
@@ -173,7 +172,6 @@
 <div class="flex flex-col gap-3">
   <!-- Header with back button -->
 
-  <ThemePlus />
 
   <div class="flex flex-col gap-4 sm:flex-row">
     <div class="flex flex-row justify-start gap-y-3 rounded-3xl border p-4">

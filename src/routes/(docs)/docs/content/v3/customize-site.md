@@ -33,11 +33,8 @@ hero:
     title: Kener is a Open-Source Status Page System
     subtitle: Let your users know what's going on.
 footerHTML: |
-    Made using
-    <a href="https://github.com/rajnandan1/kener" target="_blank" rel="noreferrer" class="font-medium underline underline-offset-4">
-      Kener
-    </a>
-    an open source status page system built with Svelte and TailwindCSS.
+  <a href="/support" class="font-medium underline underline-offset-4">Support</a>
+  <span class="text-muted-foreground">Need help? Contact our team.</span>
 i18n:
     defaultLocale: "en"
     locales:
@@ -257,7 +254,7 @@ You can add HTML to the footer. You can add links to your social media or anythi
 
 ```yaml
 footerHTML: |
-	Made using <a href="https://kener.ing" target="_blank" rel="noreferrer" class="font-medium underline underline-offset-4">Kener</a> an open source status page system built with Svelte and TailwindCSS.
+  <a href="/support" class="font-medium underline underline-offset-4">Support</a> <span class="text-muted-foreground">Need help? Contact our team.</span>
 ```
 
 ---

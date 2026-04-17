@@ -3,7 +3,6 @@
   import { t } from "$lib/stores/i18n";
   import { formatDate } from "$lib/stores/datetime";
   import { Button } from "$lib/components/ui/button/index.js";
-  import ThemePlus from "$lib/components/ThemePlus.svelte";
   import MonitorOverview from "$lib/components/MonitorOverview.svelte";
   import ArrowUpRight from "@lucide/svelte/icons/arrow-up-right";
   import clientResolver from "$lib/client/resolver.js";
@@ -42,7 +41,6 @@
   {/if}
 </svelte:head>
 <div class="flex flex-col gap-3">
-  <ThemePlus monitor_tags={[data.monitorTag]} embedMonitorTag={data.monitorTag} />
   <div class="flex flex-col gap-2 px-4 py-2">
     {#if data.monitorImage}
       <img

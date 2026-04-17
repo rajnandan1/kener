@@ -1,0 +1,15 @@
+<script lang="ts">
+  import { page } from "$app/state";
+  import SiteBanner from "./SiteBanner.svelte";
+
+  interface Props {
+    monitor_tags?: string[];
+    embedMonitorTag?: string;
+  }
+
+  let { monitor_tags: _monitor_tags = [], embedMonitorTag: _embedMonitorTag = "" }: Props = $props();
+</script>
+
+{#if !!page.data.announcement && !!page.data.announcement.title && !!page.data.announcement.message}
+  <SiteBanner announcement={page.data.announcement} />
+{/if}
