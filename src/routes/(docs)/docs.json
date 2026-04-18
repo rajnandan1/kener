@@ -2,10 +2,10 @@
   "$schema": "./docs.schema.json",
   "name": "Kener Docs",
   "logo": {
-    "light": "/logo96.png",
-    "dark": "/logo96.png"
+    "light": "https://cdn.krack.ing/kracking-assets/logo96.png",
+    "dark": "https://cdn.krack.ing/kracking-assets/logo96.png"
   },
-  "favicon": "/logo96.png",
+  "favicon": "https://cdn.krack.ing/kracking-assets/logo96.png",
   "versions": [
     {
       "name": "v4.x",

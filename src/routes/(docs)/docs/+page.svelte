@@ -257,7 +257,7 @@
     property="og:description"
     content="Free, open-source status page you can self-host with Docker. Monitor 11 service types, manage incidents, schedule maintenance, and notify subscribers. Deploy in under 2 minutes with Docker Compose."
   />
-  <meta property="og:image" content="https://kener.ing/og.jpg" />
+  <meta property="og:image" content="https://cdn.krack.ing/kracking-assets/og.jpg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta
@@ -272,7 +272,7 @@
     name="twitter:description"
     content="Free, self-hosted status page with Docker support. Monitor APIs, DNS, SSL, and more. Incident management, maintenance scheduling, and real-time notifications out of the box."
   />
-  <meta name="twitter:image" content="https://kener.ing/og.jpg" />
+  <meta name="twitter:image" content="https://cdn.krack.ing/kracking-assets/og.jpg" />
   {@html `<script type="application/ld+json">${JSON.stringify([
     {
       "@context": "https://schema.org",
@@ -395,7 +395,7 @@
         class="text-foreground group flex items-center gap-2 rounded-full px-3 py-1.5 no-underline transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]"
       >
         <img
-          src="/logo96.png"
+          src="https://cdn.krack.ing/kracking-assets/logo96.png"
           alt="Logo"
           class="h-6 w-6 rounded-md transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-110"
         />
@@ -505,7 +505,7 @@
         <div class="hero-bezel-outer group">
           <div class="hero-bezel-inner">
             <img
-              src="/og.jpg"
+              src="https://cdn.krack.ing/kracking-assets/og.jpg"
               alt="Kener open source status page dashboard — uptime monitoring, incident management, and Docker deployment"
               class="bg-muted h-auto w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.015]"
               loading="eager"

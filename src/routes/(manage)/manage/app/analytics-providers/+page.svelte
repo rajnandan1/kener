@@ -11,6 +11,7 @@
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import { CDN_ASSETS } from "$lib/shared/cdn";
 
   // Types
   interface AnalyticsRequirement {
@@ -39,7 +40,7 @@
   let analyticsProviders = $state<AnalyticsProvider[]>([
     {
       label: "Google Analytics",
-      logo: "/ga.png",
+      logo: CDN_ASSETS.ga,
       key: "analytics.googleTagManager",
       isEnabled: false,
       activeInSite: false,
@@ -69,7 +70,7 @@
     },
     {
       label: "Plausible",
-      logo: "/plausible.png",
+      logo: CDN_ASSETS.plausible,
       key: "analytics.plausible",
       isEnabled: false,
       activeInSite: false,
@@ -99,7 +100,7 @@
     },
     {
       label: "MixPanel",
-      logo: "/mx.png",
+      logo: CDN_ASSETS.mx,
       key: "analytics.mixpanel",
       isEnabled: false,
       activeInSite: false,
@@ -122,7 +123,7 @@
     },
     {
       label: "Amplitude",
-      logo: "/amplitude.png",
+      logo: CDN_ASSETS.amplitude,
       key: "analytics.amplitude",
       isEnabled: false,
       activeInSite: false,
@@ -145,7 +146,7 @@
     },
     {
       label: "Microsoft Clarity",
-      logo: "/clarity.png",
+      logo: CDN_ASSETS.clarity,
       key: "analytics.clarity",
       isEnabled: false,
       activeInSite: false,
@@ -161,7 +162,7 @@
     },
     {
       label: "Umami",
-      logo: "/umami.png",
+      logo: CDN_ASSETS.umami,
       key: "analytics.umami",
       isEnabled: false,
       activeInSite: false,
@@ -184,7 +185,7 @@
     },
     {
       label: "PostHog",
-      logo: "/posthog.png",
+      logo: CDN_ASSETS.posthog,
       key: "analytics.posthog",
       isEnabled: false,
       activeInSite: false,

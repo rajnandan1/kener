@@ -7,6 +7,7 @@
   import type { Component, ComponentProps } from "svelte";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import { CDN_ASSETS } from "$lib/shared/cdn";
   type NavItem = { title: string; url: string; icon: Component };
 
   let { navItems, ...restProps }: { navItems: NavItem[] } & ComponentProps<typeof Sidebar.Root> = $props();
@@ -24,7 +25,7 @@
               {...props}
               class="justify-start-safe flex items-center gap-2"
             >
-              <img src={clientResolver(resolve, "/logo96.png")} class="size-5!" alt="Kener Logo" />
+              <img src={CDN_ASSETS.logo96} class="size-5!" alt="Kener Logo" />
               <span class="text-base font-semibold"> Kener </span>
               <span class="text-muted-foreground pt-0.5 text-xs font-medium"> v{appVersion} </span>
             </a>

@@ -4,7 +4,7 @@ description: Kener is a feature-rich and modern status page system built with Sv
 ---
 
 <p align="center">
-	<img src="/og.jpg" width="100%" height="auto" class="rounded-lg shadow-lg" alt="kener example illustration">
+	<img src="https://cdn.krack.ing/kracking-assets/og.jpg" width="100%" height="auto" class="rounded-lg shadow-lg" alt="kener example illustration">
 </p>
 
 ## Forget Boring Status Pages. Hello Kener!

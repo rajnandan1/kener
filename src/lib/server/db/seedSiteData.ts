@@ -3,8 +3,8 @@ const seedSiteData = {
   siteName: "Kener.ing",
   siteURL: "http://localhost:3000",
   home: "/",
-  logo: "/logo.png",
-  favicon: "/logo96.png",
+  logo: "https://cdn.krack.ing/kracking-assets/logo.png",
+  favicon: "https://cdn.krack.ing/kracking-assets/logo96.png",
   metaTags: [
     {
       key: "description",
