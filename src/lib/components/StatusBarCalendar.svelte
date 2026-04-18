@@ -4,6 +4,7 @@
   import { page } from "$app/state";
   import { GetStatusSummary, ParseLatency } from "$lib/clientTools";
   import MonitorDayDetail from "$lib/components/MonitorDayDetail.svelte";
+  import GroupDayDetail from "$lib/components/GroupDayDetail.svelte";
   import type { TimestampStatusCount } from "$lib/server/types/db";
   import { t } from "$lib/stores/i18n";
   import { formatDate } from "$lib/stores/datetime";
@@ -16,9 +17,22 @@
     radius?: number;
     class?: string;
     disableClick?: boolean;
+    detailKind?: "monitor" | "group";
+    detailTitle?: string;
+    detailMonitorTags?: string[];
   }
 
-  let { data, monitorTag, barHeight = 40, radius = 8, class: className = "", disableClick = false }: Props = $props();
+  let {
+    data,
+    monitorTag,
+    barHeight = 40,
+    radius = 8,
+    class: className = "",
+    disableClick = false,
+    detailKind = "monitor",
+    detailTitle = "",
+    detailMonitorTags = [],
+  }: Props = $props();
 
   // Canvas state
   let canvas = $state<HTMLCanvasElement | null>(null);
@@ -359,7 +373,7 @@
     <canvas
       bind:this={canvas}
       style="width: 100%; height: {barHeight + 8}px;"
-      class="cursor-pointer"
+      class={disableClick ? "" : "cursor-pointer"}
       onmousemove={handleMouseMove}
       onmouseleave={handleMouseLeave}
       onclick={handleBarClick}
@@ -376,7 +390,7 @@
       <span class={getStatusColor(hoveredBar.data)}>{$t(GetStatusSummary(hoveredBar.data))}</span>
       <span class="text-muted-foreground">@</span>
       {$formatDate(hoveredBar.data.ts, page.data.dateAndTimeFormat.dateOnly)}
-      {#if hoveredBar.data.avgLatency > 0}
+      {#if detailKind !== "group" && hoveredBar.data.avgLatency > 0}
         <span class="text-muted-foreground ml-1">|</span>
         <span class="ml-1">{ParseLatency(hoveredBar.data.avgLatency)}</span>
       {/if}
@@ -385,7 +399,11 @@
 </div>
 
 <!-- Day Detail Dialog -->
-<MonitorDayDetail bind:open={dialogOpen} {monitorTag} {selectedDay} />
+{#if detailKind === "group"}
+  <GroupDayDetail bind:open={dialogOpen} groupName={detailTitle} monitorTags={detailMonitorTags} {selectedDay} />
+{:else}
+  <MonitorDayDetail bind:open={dialogOpen} {monitorTag} {selectedDay} />
+{/if}
 
 <style>
   canvas {
