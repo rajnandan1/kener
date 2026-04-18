@@ -14,7 +14,8 @@
   import clientResolver from "$lib/client/resolver.js";
 
   interface PageWithMonitors extends PageRecord {
-    monitors?: { monitor_tag: string }[];
+    monitors?: Array<{ monitor_tag: string }>;
+    monitor_groups?: Array<{ id: number; monitors: Array<{ monitor_tag: string }> }>;
   }
 
   let pages = $state<PageWithMonitors[]>([]);
@@ -46,6 +47,10 @@
   onMount(() => {
     fetchPages();
   });
+
+  function getMonitorCount(page: PageWithMonitors): number {
+    return (page.monitors?.length || 0) + (page.monitor_groups || []).reduce((sum, group) => sum + group.monitors.length, 0);
+  }
 </script>
 
 <div class="flex w-full flex-col gap-4 p-4">
@@ -116,8 +121,9 @@
                 </Button>
               </Table.Cell>
               <Table.Cell>
-                {#if page.monitors && page.monitors.length > 0}
-                  <Badge variant="secondary">{page.monitors.length} monitor{page.monitors.length > 1 ? "s" : ""}</Badge>
+                {@const monitorCount = getMonitorCount(page)}
+                {#if monitorCount > 0}
+                  <Badge variant="secondary">{monitorCount} monitor{monitorCount > 1 ? "s" : ""}</Badge>
                 {:else}
                   <Badge variant="outline" class="text-muted-foreground">No monitors</Badge>
                 {/if}

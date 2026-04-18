@@ -2077,10 +2077,128 @@
         },
         "additionalProperties": false
       },
+      "PageMonitor": {
+        "type": "object",
+        "required": ["monitor_tag", "group_id", "position"],
+        "properties": {
+          "monitor_tag": {
+            "type": "string"
+          },
+          "group_id": {
+            "type": "integer",
+            "nullable": true
+          },
+          "position": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PageMonitorRequest": {
+        "oneOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "object",
+            "required": ["monitor_tag"],
+            "properties": {
+              "monitor_tag": {
+                "type": "string"
+              },
+              "position": {
+                "type": "integer"
+              },
+              "group_id": {
+                "type": "integer",
+                "nullable": true
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "PageMonitorGroup": {
+        "type": "object",
+        "required": ["id", "name", "description", "default_expanded", "adopt_child_status", "position", "monitors"],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "default_expanded": {
+            "type": "boolean"
+          },
+          "adopt_child_status": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "monitors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PageMonitor"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "PageMonitorGroupRequest": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
+          },
+          "default_expanded": {
+            "type": "boolean"
+          },
+          "adopt_child_status": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "integer"
+          },
+          "monitors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PageMonitorRequest"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
       "Page": {
         "type": "object",
-        "required": ["page_path", "page_title", "page_header"],
+        "required": [
+          "id",
+          "page_path",
+          "page_title",
+          "page_header",
+          "page_settings",
+          "monitors",
+          "monitor_groups",
+          "created_at",
+          "updated_at"
+        ],
         "properties": {
+          "id": {
+            "type": "integer"
+          },
           "page_path": {
             "type": "string"
           },
@@ -2091,10 +2209,12 @@
             "type": "string"
           },
           "page_subheader": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "page_logo": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "page_settings": {
             "type": "object",
@@ -2103,11 +2223,25 @@
           "monitors": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Monitor"
+              "$ref": "#/components/schemas/PageMonitor"
             }
+          },
+          "monitor_groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PageMonitorGroup"
+            }
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
           }
         },
-        "additionalProperties": true
+        "additionalProperties": false
       },
       "CreatePageRequest": {
         "type": "object",
@@ -2138,7 +2272,13 @@
           "monitors": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/PageMonitorRequest"
+            }
+          },
+          "monitor_groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PageMonitorGroupRequest"
             }
           }
         },
@@ -2169,7 +2309,13 @@
           "monitors": {
             "type": "array",
             "items": {
-              "type": "string"
+              "$ref": "#/components/schemas/PageMonitorRequest"
+            }
+          },
+          "monitor_groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PageMonitorGroupRequest"
             }
           }
         },

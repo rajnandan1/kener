@@ -486,10 +486,37 @@ export interface PageRecordTyped {
   updated_at: Date;
 }
 
+// ============ pages_monitor_groups table ============
+export interface PageMonitorGroupRecord {
+  id: number;
+  page_id: number;
+  name: string;
+  description: string | null;
+  default_expanded: boolean;
+  adopt_child_status: boolean;
+  position: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface PageMonitorGroupRecordInsert {
+  page_id: number;
+  name: string;
+  description?: string | null;
+  default_expanded?: boolean;
+  adopt_child_status?: boolean;
+  position?: number;
+}
+
+export interface PageMonitorGroupRecordTyped extends PageMonitorGroupRecord {
+  monitors: PageMonitorRecordTyped[];
+}
+
 // ============ pages_monitors table ============
 export interface PageMonitorRecord {
   page_id: number;
   monitor_tag: string;
+  page_monitor_group_id: number | null;
   monitor_settings_json: string | null;
   position: number;
   created_at: Date;
@@ -499,6 +526,7 @@ export interface PageMonitorRecord {
 export interface PageMonitorRecordInsert {
   page_id: number;
   monitor_tag: string;
+  page_monitor_group_id?: number | null;
   monitor_settings_json?: string | null;
   position?: number;
 }
@@ -506,6 +534,7 @@ export interface PageMonitorRecordInsert {
 export interface PageMonitorRecordTyped {
   page_id: number;
   monitor_tag: string;
+  page_monitor_group_id: number | null;
   monitor_settings: Record<string, unknown> | null;
   position: number;
   created_at: Date;
