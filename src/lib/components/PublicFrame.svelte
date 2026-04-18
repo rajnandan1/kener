@@ -1,6 +1,9 @@
 <script lang="ts">
-  import bannerDark  from "$lib/assets/banner.png";
-  import bannerLight from "$lib/assets/banner-light.png";
+  // Kracking-branded banner served from the shared CDN so a brand
+  // refresh is a single upload to the `kracking-assets` bucket
+  // rather than another commit to this fork.
+  const bannerDark = "https://cdn.krack.ing/kracking-assets/banner.png";
+  const bannerLight = "https://cdn.krack.ing/kracking-assets/banner-light.png";
   import { page } from "$app/state";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
