@@ -1,14 +1,53 @@
+<script module lang="ts">
+  /*
+   * Monitor row — Console dashboard list style.
+   *
+   * The Console's dashboard list rows (e.g. databases, object storage)
+   * use a `px-4 py-3` row with `text-sm font-medium text-zinc-100` for
+   * the resource name, Console `<Badge>` tones for lifecycle chips,
+   * and `text-[13px] leading-5 text-zinc-400` for dates/secondary text.
+   * Kener monitor rows follow the exact same rhythm plus two extra
+   * rows for the 90-day status bar and date range — these stack
+   * underneath the main row so one monitor reads as one Console-style
+   * list item.
+   *
+   * Maps Kener's status strings (UP / DOWN / DEGRADED / MAINTENANCE)
+   * onto Console Badge tones (emerald / red / amber / blue) so status
+   * chips pick up the same visual language the Console uses for
+   * `active / stopped / error / provisioning` resource states.
+   */
+  import type { BadgeTone } from "$lib/components/ui/badge";
+
+  export function statusBadgeTone(status: string): BadgeTone {
+    switch (status) {
+      case "UP":
+        return "emerald";
+      case "DOWN":
+        return "red";
+      case "DEGRADED":
+        return "amber";
+      case "MAINTENANCE":
+        return "blue";
+      default:
+        return "zinc";
+    }
+  }
+
+  export function statusDisplayLabel(status: string, t: (key: string) => string): string {
+    if (status === "UP") return t("Operational");
+    if (status === "DOWN") return t("Outage");
+    if (status === "DEGRADED") return t("Degraded");
+    if (status === "MAINTENANCE") return t("Maintenance");
+    return t("No data");
+  }
+</script>
+
 <script lang="ts">
-  import * as Item from "$lib/components/ui/item/index.js";
   import { Skeleton } from "$lib/components/ui/skeleton/index.js";
-  import * as Avatar from "$lib/components/ui/avatar/index.js";
-  import ICONS from "$lib/icons";
+  import { KrackingBadge } from "$lib/components/ui/badge";
   import StatusBarCalendar from "$lib/components/StatusBarCalendar.svelte";
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get.js";
-  import { resolve } from "$app/paths";
-  import clientResolver from "$lib/client/resolver.js";
   import { formatDate } from "$lib/stores/datetime";
-  import { GetInitials } from "$lib/clientTools.js";
   import GroupMonitorPopover from "./GroupMonitorPopover.svelte";
   import { t } from "$lib/stores/i18n";
   import { page } from "$app/state";
@@ -40,104 +79,104 @@
   let showGroupPopover = $derived(
     groupChildTags.length > 0 && typeof days === "number" && typeof endOfDayTodayAtTz === "number"
   );
-
-  const STATUS_DOT = {
-    UP: "bg-up",
-    DOWN: "bg-down",
-    DEGRADED: "bg-degraded",
-    MAINTENANCE: "bg-maintenance",
-    NO_DATA: "bg-zinc-600"
-  } as const;
 </script>
 
-<div>
+<div class="px-4 py-3">
   {#if loading}
-    <!-- Skeleton loader -->
-    <Item.Root class="items-start sm:items-center">
-      {#if !compact}
-        <Item.Media variant="image">
-          <Skeleton class="size-8 rounded" />
-        </Item.Media>
-      {/if}
-      <Item.Content class="min-w-0 flex-1">
-        <Skeleton class="mb-2 h-5 w-full" />
-        <Skeleton class="h-4 w-full" />
-      </Item.Content>
-      <Item.Content class="order-3 w-full text-left sm:order-0 sm:w-auto sm:flex-none sm:text-center">
-        <Skeleton class="h-8 w-full" />
-      </Item.Content>
-    </Item.Root>
+    <!-- Skeleton — mirrors the loaded-state row rhythm -->
+    <div class="flex items-center justify-between gap-3">
+      <div class="min-w-0 flex-1">
+        <Skeleton class="h-4 w-40 rounded-md" />
+        <Skeleton class="mt-1.5 h-3 w-64 rounded-md" />
+      </div>
+      <div class="flex shrink-0 items-center gap-2">
+        <Skeleton class="h-5 w-20 rounded-md" />
+        <Skeleton class="h-4 w-12 rounded-md" />
+      </div>
+    </div>
     {#if !compact}
-      <div class="mx-auto flex w-full flex-col gap-1 px-4">
-        <div class="flex justify-end overflow-hidden rounded-full">
-          {#each Array(54) as _, i (i)}
-            <Skeleton
-              class="h-4 w-4 shrink-0 {i === 0 ? 'rounded-tl-full rounded-bl-full' : ''} {i === 53
-                ? 'rounded-tr-full rounded-br-full'
-                : ''}"
-            />
-          {/each}
-        </div>
-        <div class="flex justify-end">
-          <Skeleton class="h-3 w-32" />
+      <div class="mt-3 flex flex-col gap-1.5">
+        <Skeleton class="h-6 w-full rounded-md" />
+        <div class="flex items-center justify-between">
+          <Skeleton class="h-3 w-20 rounded-md" />
+          <Skeleton class="h-3 w-20 rounded-md" />
         </div>
       </div>
     {/if}
   {:else if error}
-    <!-- Error state -->
-    <div class="text-destructive p-4 text-center">
-      <p>Failed to load monitor: {error}</p>
+    <!-- Error — muted single-line, Console pattern -->
+    <div class="text-center text-[13px] text-zinc-500">
+      {$t("Failed to load monitor")}: {error}
     </div>
   {:else if data}
-    <!-- Loaded state -->
-    <Item.Root class="items-start px-4 py-3">
-
-      <Item.Content class="min-w-0 flex-1">
-        <Item.Title class="w-full truncate text-zinc-100">
-          <span>{data.name}</span>
-        </Item.Title>
+    <!--
+      Main row. Left: name + description. Right: status Badge + uptime
+      value + current latency. Every piece of text uses Console's
+      dashboard list scales (`text-sm text-zinc-100` for primary,
+      `text-[13px] text-zinc-400` for secondary).
+    -->
+    <div class="flex items-start justify-between gap-3 sm:items-center">
+      <div class="min-w-0 flex-1">
+        <div class="truncate text-sm leading-5 font-medium text-zinc-100">
+          {data.name}
+        </div>
         {#if data.description}
-          <Item.Description class="line-clamp-2 wrap-break-word text-zinc-400">{data.description}</Item.Description>
-        {/if}
-      </Item.Content>
-
-      <Item.Content class="order-3 w-full text-left sm:order-0 sm:w-auto sm:flex-none sm:text-center">
-        <Item.Title class="items-center gap-3 text-2xl text-zinc-100">
-          <div class="flex flex-col items-start gap-1 sm:items-end">
-            <span class={grid ? "text-base sm:text-lg" : "text-lg sm:text-xl"}>{data.uptime}%</span>
-            <span class="flex flex-wrap items-center gap-1.5 text-right text-xs text-zinc-400 sm:justify-end">
-              {#if data.currentStatus === "UP"}
-                <span class="{STATUS_DOT[data.currentStatus]} inline-flex size-1.5 shrink-0 rounded-full"></span>
-                <span class="font-medium text-zinc-300">{$t("All Systems Operational")}</span>
-                <span class="text-zinc-600">@</span>
-                <span>{$formatDate(new Date(data.toTimeStamp * 1000), page.data.dateAndTimeFormat.datePlusTime)}</span>
-                <span class="text-zinc-600">|</span>
-                <span>{data.avgLatency}</span>
-              {:else}
-                <span class="{STATUS_DOT[data.currentStatus]} inline-flex size-1.5 shrink-0 rounded-full"></span>
-                <span>{data.avgLatency}</span>
-              {/if}
-            </span>
+          <div class="mt-0.5 line-clamp-2 text-[13px] leading-5 text-zinc-400 wrap-break-word">
+            {data.description}
           </div>
-        </Item.Title>
-      </Item.Content>
-    </Item.Root>
-    {#if !compact}
-      <div class="mx-auto flex w-full flex-col gap-2 px-4 pb-4">
-        <StatusBarCalendar data={data.uptimeData} monitorTag={tag} barHeight={36} radius={6} class="px-0.5" />
-        <div class="flex min-w-0 justify-between gap-3">
-          <p class="min-w-0 truncate text-xs font-medium text-zinc-500">
-            {$formatDate(new Date(data.fromTimeStamp * 1000), page.data.dateAndTimeFormat.dateOnly)}
-          </p>
+        {/if}
+      </div>
 
-          <p class="min-w-0 truncate text-right text-xs font-medium text-zinc-500">
+      <div class="flex shrink-0 items-center gap-3">
+        <KrackingBadge tone={statusBadgeTone(data.currentStatus)}>
+          {statusDisplayLabel(data.currentStatus, $t)}
+        </KrackingBadge>
+        <div class="flex flex-col items-end gap-0.5 text-right">
+          <span class={grid ? "text-[13px] font-medium leading-5 text-zinc-100" : "text-sm font-medium leading-5 text-zinc-100"}>
+            {data.uptime}%
+          </span>
+          {#if data.avgLatency}
+            <span class="text-[11px] leading-4 text-zinc-500">
+              {data.avgLatency}
+            </span>
+          {/if}
+        </div>
+      </div>
+    </div>
+
+    {#if !compact}
+      <!--
+        90-day status bar. Dropped to 24 px height to match the Console's
+        compact row rhythm — the previous 36 px made the row feel
+        visually unbalanced against the surrounding dashboard lists.
+      -->
+      <div class="mt-3 flex flex-col gap-1.5">
+        <StatusBarCalendar
+          data={data.uptimeData}
+          monitorTag={tag}
+          barHeight={24}
+          radius={4}
+          class="px-0"
+        />
+        <div class="flex min-w-0 items-center justify-between gap-3">
+          <span class="min-w-0 truncate text-[11px] leading-4 text-zinc-500">
+            {$formatDate(new Date(data.fromTimeStamp * 1000), page.data.dateAndTimeFormat.dateOnly)}
+          </span>
+          {#if data.currentStatus === "UP"}
+            <span class="shrink-0 text-[11px] leading-4 text-zinc-500">
+              {$t("Checked")}
+              {$formatDate(new Date(data.toTimeStamp * 1000), page.data.dateAndTimeFormat.datePlusTime)}
+            </span>
+          {/if}
+          <span class="min-w-0 truncate text-right text-[11px] leading-4 text-zinc-500">
             {$formatDate(new Date(data.toTimeStamp * 1000), page.data.dateAndTimeFormat.dateOnly)}
-          </p>
+          </span>
         </div>
       </div>
     {/if}
+
     {#if showGroupPopover}
-      <div class="mt-2 flex justify-center gap-2 px-4">
+      <div class="mt-3">
         <GroupMonitorPopover
           tags={groupChildTags}
           days={days as number}

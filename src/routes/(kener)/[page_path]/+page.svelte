@@ -188,19 +188,27 @@
       </div>
     {/if}
     {#if data.resolvedIncidents && data.resolvedIncidents.length > 0}
+      <!--
+        Past Incidents section. Console `DashboardListSection` pattern —
+        outer `bg-zinc-900/20` shell, `px-4 py-2` label strip with
+        `size-3.5 text-zinc-500` icon + `text-[13px] text-zinc-400`
+        heading, inner `bg-zinc-950/60` card with divided rows.
+      -->
       <section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/20">
-        <div class="flex min-h-11 items-center border-b border-zinc-800 px-3 py-2">
-          <h2 class="flex items-center gap-2 text-sm font-medium text-zinc-100">
-            <IconHistory class="h-4 w-4 text-zinc-400" aria-hidden="true" />
-            Past Incidents
-          </h2>
+        <div class="flex items-center gap-3 px-4 py-2">
+          <div class="flex shrink-0 items-center gap-2">
+            <IconHistory class="h-3.5 w-3.5 shrink-0 text-zinc-500" aria-hidden="true" />
+            <h2 class="text-[13px] font-medium text-zinc-400">Past Incidents</h2>
+          </div>
         </div>
-        <div class="divide-y divide-zinc-800">
-          {#each data.resolvedIncidents as incident, i (incident.id ?? i)}
-            <div class="p-3 sm:p-4">
-              <IncidentItem {incident} />
-            </div>
-          {/each}
+        <div class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/60">
+          <div class="divide-y divide-zinc-800">
+            {#each data.resolvedIncidents as incident, i (incident.id ?? i)}
+              <div class="px-4 py-3">
+                <IncidentItem {incident} />
+              </div>
+            {/each}
+          </div>
         </div>
       </section>
     {/if}
@@ -213,16 +221,17 @@
         {/each}
       </div>
     {/if}
+    <!-- Infrastructure monitor list — same DashboardListSection shell -->
     <section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/20">
-      <div class="flex min-h-11 items-center border-b border-zinc-800 px-3 py-2">
-        <h2 class="flex items-center gap-2 text-sm font-medium text-zinc-100">
-          <IconServer class="h-4 w-4 text-zinc-400" aria-hidden="true" />
-          Infrastructure
-        </h2>
+      <div class="flex items-center gap-3 px-4 py-2">
+        <div class="flex shrink-0 items-center gap-2">
+          <IconServer class="h-3.5 w-3.5 shrink-0 text-zinc-500" aria-hidden="true" />
+          <h2 class="text-[13px] font-medium text-zinc-400">Infrastructure</h2>
+        </div>
       </div>
-      <div class="divide-y divide-zinc-800">
-        {#each data.monitorTags as tag, i (tag)}
-          <div class="bg-transparent">
+      <div class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/60">
+        <div class="divide-y divide-zinc-800">
+          {#each data.monitorTags as tag, i (tag)}
             <MonitorBar
               {tag}
               prefetchedData={monitorBarDataByTag[tag]}
@@ -233,8 +242,8 @@
               compact={isCompact}
               grid={viewType === "compact-grid" || viewType === "default-grid"}
             />
-          </div>
-        {/each}
+          {/each}
+        </div>
       </div>
     </section>
   {/if}

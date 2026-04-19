@@ -187,24 +187,29 @@
     {/if}
     {#if data.resolvedIncidents && data.resolvedIncidents.length > 0}
       <!--
-        Past Incidents section. Matches `[page_path]/+page.svelte` and
-        the Console's section-card rhythm: one `public-panel` surface
-        with a `min-h-11 px-3 py-2` header strip, divide-zinc-800 body,
-        `p-3 sm:p-4` per-row padding. No nested card-in-card.
+        Past Incidents section. Matches the Console's `DashboardListSection`
+        primitive exactly:
+          - outer `rounded-xl border-zinc-800 bg-zinc-900/20` shell
+          - `px-4 py-2` label strip with `size-3.5 text-zinc-500` icon
+            and `text-[13px] font-medium text-zinc-400` title
+          - inner `rounded-xl border-zinc-800 bg-zinc-950/60` card
+            containing the list rows with `divide-zinc-800` separators
       -->
-      <section class="public-panel overflow-hidden">
-        <div class="flex min-h-11 items-center border-b border-zinc-800 px-3 py-2">
-          <h2 class="flex items-center gap-2 text-sm font-medium text-zinc-100">
-            <IconHistory class="h-4 w-4 text-zinc-400" aria-hidden="true" />
-            Past Incidents
-          </h2>
+      <section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/20">
+        <div class="flex items-center gap-3 px-4 py-2">
+          <div class="flex shrink-0 items-center gap-2">
+            <IconHistory class="h-3.5 w-3.5 shrink-0 text-zinc-500" aria-hidden="true" />
+            <h2 class="text-[13px] font-medium text-zinc-400">Past Incidents</h2>
+          </div>
         </div>
-        <div class="divide-y divide-zinc-800">
-          {#each data.resolvedIncidents as incident, i (incident.id ?? i)}
-            <div class="p-3 sm:p-4">
-              <IncidentItem {incident} />
-            </div>
-          {/each}
+        <div class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/60">
+          <div class="divide-y divide-zinc-800">
+            {#each data.resolvedIncidents as incident, i (incident.id ?? i)}
+              <div class="px-4 py-3">
+                <IncidentItem {incident} />
+              </div>
+            {/each}
+          </div>
         </div>
       </section>
     {/if}
@@ -218,29 +223,33 @@
       </div>
     {/if}
     <!--
-      Infrastructure section (monitor list). Same structure as Past
-      Incidents so the page reads as a single design vocabulary.
+      Infrastructure / monitor list. Identical structure to the "Past
+      Incidents" section above so the page reads as one DashboardList-
+      style surface. Each monitor renders inside a `px-0` row (MonitorBar
+      owns its own `px-4 py-3` padding) divided by `zinc-800` hairlines.
     -->
-    <section class="public-panel overflow-hidden">
-      <div class="flex min-h-11 items-center border-b border-zinc-800 px-3 py-2">
-        <h2 class="flex items-center gap-2 text-sm font-medium text-zinc-100">
-          <IconServer class="h-4 w-4 text-zinc-400" aria-hidden="true" />
-          Infrastructure
-        </h2>
+    <section class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/20">
+      <div class="flex items-center gap-3 px-4 py-2">
+        <div class="flex shrink-0 items-center gap-2">
+          <IconServer class="h-3.5 w-3.5 shrink-0 text-zinc-500" aria-hidden="true" />
+          <h2 class="text-[13px] font-medium text-zinc-400">Infrastructure</h2>
+        </div>
       </div>
-      <div class="divide-y divide-zinc-800">
-        {#each data.monitorTags as tag, i (tag)}
-          <MonitorBar
-            {tag}
-            prefetchedData={monitorBarDataByTag[tag]}
-            prefetchedError={monitorBarErrorByTag[tag]}
-            days={barCount}
-            {endOfDayTodayAtTz}
-            groupChildTags={data.monitorGroupMembersByTag?.[tag] || []}
-            compact={isCompact}
-            grid={viewType === "compact-grid" || viewType === "default-grid"}
-          />
-        {/each}
+      <div class="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/60">
+        <div class="divide-y divide-zinc-800">
+          {#each data.monitorTags as tag, i (tag)}
+            <MonitorBar
+              {tag}
+              prefetchedData={monitorBarDataByTag[tag]}
+              prefetchedError={monitorBarErrorByTag[tag]}
+              days={barCount}
+              {endOfDayTodayAtTz}
+              groupChildTags={data.monitorGroupMembersByTag?.[tag] || []}
+              compact={isCompact}
+              grid={viewType === "compact-grid" || viewType === "default-grid"}
+            />
+          {/each}
+        </div>
       </div>
     </section>
   {/if}
