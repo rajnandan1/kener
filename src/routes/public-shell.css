@@ -136,3 +136,23 @@ html:not(.dark) [data-slot="drawer-header"] {
 html:not(.dark) [data-slot="drawer-title"] {
   color: #18181b !important;
 }
+
+/* ── Dialog (close X + bg + border) ─────────────────────────────────────── */
+html:not(.dark) [data-slot="dialog-content"] {
+  background-color: #ffffff !important;
+  border-color: #e4e4e7 !important;
+}
+html:not(.dark) [data-slot="dialog-title"] {
+  color: #18181b !important;
+}
+html:not(.dark) [data-slot="dialog-description"] {
+  color: #52525b !important;
+}
+html:not(.dark) .dialog-close-btn {
+  color: #71717a !important;
+}
+html:not(.dark) .dialog-close-btn:hover,
+html:not(.dark) .dialog-close-btn:focus-visible {
+  background-color: #f4f4f5 !important;
+  color: #18181b !important;
+}

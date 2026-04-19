@@ -69,7 +69,7 @@
                 {monitor.monitor_name}
               </span>
             </Popover.Trigger>
-            <Popover.Content class="w-64 rounded-xl border border-zinc-800 bg-zinc-950 p-3 shadow-xl">
+            <Popover.Content class="w-64 rounded-xl border border-zinc-800 bg-zinc-950 p-3 shadow-(--shadow-dropdown)">
               <div class="flex flex-col gap-3">
                 <div class="flex items-center gap-3">
                   <Avatar.Root>

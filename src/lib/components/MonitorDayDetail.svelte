@@ -144,24 +144,34 @@
   });
 </script>
 
+<!--
+  Day-detail dialog. Follows the Console's dialog primitive rhythm —
+  header `px-6 pt-5 pb-4` with a 15 px medium title + 13 px zinc-400
+  description, body `px-6 py-3`. The inner minute-grid card uses the
+  same `rounded-xl border-zinc-800 bg-zinc-950` surface the Console
+  uses for its dashboard sections.
+-->
 <Dialog.Root bind:open>
   <Dialog.Overlay class="backdrop-blur-[2px]" />
-  <Dialog.Content class="max-h-[90vh] overflow-y-auto p-4 sm:max-w-[46.5rem] sm:p-5">
-    <Dialog.Header class="pb-3">
-      <Dialog.Title class="text-base font-medium">
-        {selectedDay ? $formatDate(new Date(selectedDay.timestamp * 1000), page.data.dateAndTimeFormat.dateOnly) : ""}
-      </Dialog.Title>
-      <Dialog.Description class="text-xs text-zinc-400"
-        >{$t("Minute-by-minute status data for this day")}</Dialog.Description
-      >
-    </Dialog.Header>
+  <Dialog.Content class="max-h-[90vh] gap-0! overflow-hidden border-zinc-800! p-0! sm:max-w-[46.5rem]">
+    <div class="flex items-start justify-between gap-4 px-6 pt-5 pb-4">
+      <Dialog.Header class="gap-1! text-start!">
+        <Dialog.Title class="text-[15px] font-medium tracking-[-0.01em] text-zinc-50!">
+          {selectedDay ? $formatDate(new Date(selectedDay.timestamp * 1000), page.data.dateAndTimeFormat.dateOnly) : ""}
+        </Dialog.Title>
+        <Dialog.Description class="text-[13px] leading-5 text-zinc-400!">
+          {$t("Minute-by-minute status data for this day")}
+        </Dialog.Description>
+      </Dialog.Header>
+    </div>
 
-    <div class="w-full overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950">
-      <div class="border-b border-zinc-800 px-3 py-2.5">
-        <SlideTabs tabs={tabItems} bind:active={activeView} />
-      </div>
+    <div class="overflow-y-auto px-6 pb-6">
+      <div class="w-full overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950">
+        <div class="border-b border-zinc-800 px-3 py-2.5">
+          <SlideTabs tabs={tabItems} bind:active={activeView} />
+        </div>
 
-      <div class="p-3 sm:p-4">
+        <div class="p-3 sm:p-4">
         {#if activeView === "status"}
           {#if loading}
             <div class="space-y-4 py-4">
@@ -176,10 +186,8 @@
           {:else if dayDetailData}
             <MinuteGrid minutes={dayDetailData.minutes} uptime={dayDetailData.uptime} />
           {:else}
-            <div class="py-8 text-center">
-              <p class="text-zinc-400">
-                {$t("Failed to load status data for this day")}
-              </p>
+            <div class="px-6 py-10 text-center text-[13px] text-zinc-500">
+              {$t("Failed to load status data for this day")}
             </div>
           {/if}
         {:else if activeView === "incidents"}
@@ -200,8 +208,8 @@
               {/each}
             </div>
           {:else}
-            <div class="py-8 text-center">
-              <p class="text-zinc-400">{$t("No incidents for this day")}</p>
+            <div class="px-6 py-10 text-center text-[13px] text-zinc-500">
+              {$t("No incidents for this day")}
             </div>
           {/if}
         {:else if activeView === "maintenances"}
@@ -222,11 +230,12 @@
               {/each}
             </div>
           {:else}
-            <div class="py-8 text-center">
-              <p class="text-zinc-400">{$t("No maintenances for this day")}</p>
+            <div class="px-6 py-10 text-center text-[13px] text-zinc-500">
+              {$t("No maintenances for this day")}
             </div>
           {/if}
         {/if}
+        </div>
       </div>
     </div>
   </Dialog.Content>

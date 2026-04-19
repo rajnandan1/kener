@@ -2,7 +2,6 @@
   import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
-  import * as Card from "$lib/components/ui/card/index.js";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import IncidentItem from "$lib/components/IncidentItem.svelte";
   import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
@@ -185,19 +184,19 @@
           <Button
             rel="external"
             variant="outline"
-            class="size-8 rounded-full p-0 shadow-none"
+            class="size-8 rounded-lg border-zinc-800 bg-zinc-950/60 p-0 shadow-none hover:bg-zinc-900"
             href={clientResolver(resolve, `${pagePath}/events/${prevMonthPath}`)}
           >
-            <ICONS.CHEVRON_LEFT class="size-5" />
+            <ICONS.CHEVRON_LEFT class="size-4" />
           </Button>
-          <p class="text-2xl">{$formatDate(parsedDate, "MMMM yyyy")}</p>
+          <p class="text-[15px] font-medium text-zinc-100">{$formatDate(parsedDate, "MMMM yyyy")}</p>
           <Button
             rel="external"
             href={clientResolver(resolve, `${pagePath}/events/${nextMonthPath}`)}
             variant="outline"
-            class="size-8 rounded-full p-0 shadow-none"
+            class="size-8 rounded-lg border-zinc-800 bg-zinc-950/60 p-0 shadow-none hover:bg-zinc-900"
           >
-            <ICONS.CHEVRON_RIGHT class="size-5" />
+            <ICONS.CHEVRON_RIGHT class="size-4" />
           </Button>
         </div>
       </div>
@@ -239,18 +238,15 @@
       <Spinner class="size-8" />
     </div>
   {:else if eventsByDay.length === 0}
-    <!-- No Events -->
-    <Card.Root class="public-panel shadow-none">
-      <Card.Content class=" py-12 text-center">
-        <div class="mx-auto mb-4 text-4xl">🎉</div>
-        <h2 class="text-xl font-semibold">
-          {$t("No Events in %currentMonth", { currentMonth })}
-        </h2>
-        <p class="text-muted-foreground mt-2">
-          {$t("There are no incidents or maintenances scheduled for this month.")}
-        </p>
-      </Card.Content>
-    </Card.Root>
+    <!-- Empty state — matches the Console's EmptyStateCard rhythm. -->
+    <div class="public-panel flex flex-col items-center gap-1 px-6 py-12 text-center">
+      <p class="text-[15px] font-medium text-zinc-100">
+        {$t("No Events in %currentMonth", { currentMonth })}
+      </p>
+      <p class="text-[13px] leading-5 text-zinc-500">
+        {$t("There are no incidents or maintenances scheduled for this month.")}
+      </p>
+    </div>
   {:else}
     <!-- Events grouped by day -->
     {#each eventsByDay as day}
@@ -280,10 +276,10 @@
       <Button
         variant="outline"
         rel="external"
-        class="rounded-full shadow-none"
+        class="rounded-lg border-zinc-800 bg-zinc-950/60 text-[13px] shadow-none hover:bg-zinc-900"
         href={clientResolver(resolve, `${pagePath}/events/${prevMonthPath}`)}
       >
-        <IconArrowLeft class="h-4 w-4" />
+        <IconArrowLeft class="size-4" />
         {$formatDate(prevMonth, "MMMM yyyy")}
       </Button>
     {:else}
@@ -293,11 +289,11 @@
       <Button
         variant="outline"
         rel="external"
-        class="rounded-full shadow-none"
+        class="rounded-lg border-zinc-800 bg-zinc-950/60 text-[13px] shadow-none hover:bg-zinc-900"
         href={clientResolver(resolve, `${pagePath}/events/${nextMonthPath}`)}
       >
         {$formatDate(nextMonth, "MMMM yyyy")}
-        <IconArrowRight class="h-4 w-4" />
+        <IconArrowRight class="size-4" />
       </Button>
     {:else}
       <div></div>

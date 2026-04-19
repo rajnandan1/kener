@@ -1,10 +1,32 @@
 <script lang="ts">
+  /*
+   * Sliding-indicator tabs.
+   *
+   * Matches the Console's `tabs.component.svelte` pixel-for-pixel: same
+   * container (`rounded-lg bg-zinc-900/40 p-0.5`), same indicator
+   * (`rounded-md bg-zinc-800/75` with a cubic-bezier slide), same
+   * `h-7 rounded-md px-2.5 text-xs` tab buttons, same `size-4` icon,
+   * same active / inactive text colours. The only deliberate difference
+   * is that Kener's version is horizontal-only — we don't ship a
+   * vertical variant on the public pages so the extra machinery is
+   * stripped out to keep this file small.
+   */
   import { onMount, tick } from "svelte";
+
+  /*
+   * Icon type is loose (`any`) by design — matches the Console's
+   * `IconComponent` definition. Tabler icons (Svelte 4 class components)
+   * and Svelte 5 function components have incompatible constructor
+   * signatures, and no unified reference type exists across both. A
+   * strict union would false-positive at every call site.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  type IconComponent = any;
 
   type TabItem = {
     id: string;
     label: string;
-    icon?: any;
+    icon?: IconComponent;
   };
 
   interface Props {
@@ -89,6 +111,8 @@
       syncResizeObserver();
     });
 
+    // Two-frame delay before enabling transitions so the initial paint
+    // of the indicator doesn't animate in from (0, 0).
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         enableTransitions = true;
@@ -116,19 +140,20 @@
   ></div>
 
   {#each tabs as tab, index (tab.id)}
+    {@const Icon = tab.icon}
     <button
       type="button"
       role="tab"
       data-tab-index={index}
       aria-selected={active === tab.id}
       onclick={() => handleTabChange(tab.id)}
-      class="relative z-10 inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-2.5 text-xs leading-none font-medium whitespace-nowrap outline-none transition-colors duration-150 ease-out {active ===
+      class="relative z-10 inline-flex h-7 cursor-pointer items-center justify-center gap-1.5 rounded-md px-2.5 text-xs leading-none font-medium whitespace-nowrap outline-none transition-colors duration-150 ease-out {active ===
       tab.id
         ? 'text-zinc-50'
         : 'text-zinc-400 hover:text-zinc-100'}"
     >
-      {#if tab.icon}
-        <svelte:component this={tab.icon} class="h-3.5 w-3.5 shrink-0" />
+      {#if Icon}
+        <Icon class="h-4 w-4 shrink-0" />
       {/if}
       <span class="whitespace-nowrap">{tab.label}</span>
     </button>
