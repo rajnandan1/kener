@@ -88,6 +88,43 @@ html:not(.dark) .kracking-public-shell .bg-zinc-950\/60 .text-zinc-300.font-medi
   color: #18181b !important;
 }
 
+/* ── Incident / maintenance chips (used on detail pages + items) ──────────
+   The new card layout uses `rounded-lg border border-zinc-800 bg-zinc-950/60`
+   chips for "Last Updated / Status / Updates" rows and monitor tag pills.
+   On white backgrounds we need subtle zinc surfaces that keep their card
+   identity rather than disappearing into the page. Scoped to the public
+   shell so the embed surfaces (which reuse the same components) inherit
+   automatically.                                                          */
+html:not(.dark) .kracking-public-shell .bg-zinc-950\/60 {
+  background-color: #fafafa !important;
+  border-color: #e4e4e7 !important;
+}
+
+/* Card-header text inside detail pages ("Updates (N)", "Affected Monitors") */
+html:not(.dark) .kracking-public-shell .text-zinc-300 {
+  color: #3f3f46 !important;
+}
+html:not(.dark) .kracking-public-shell .text-zinc-200 {
+  color: #27272a !important;
+}
+html:not(.dark) .kracking-public-shell .text-zinc-400 {
+  color: #52525b !important;
+}
+html:not(.dark) .kracking-public-shell .text-zinc-700 {
+  color: #d4d4d8 !important;
+}
+
+/* Icon-only pagination buttons in the events page */
+html:not(.dark) .kracking-public-shell .border-zinc-800 {
+  border-color: #e4e4e7 !important;
+}
+html:not(.dark) .kracking-public-shell .bg-zinc-900 {
+  background-color: #f4f4f5 !important;
+}
+html:not(.dark) .kracking-public-shell .hover\:bg-zinc-900:hover {
+  background-color: #f4f4f5 !important;
+}
+
 /* ── Drawer / modal ─────────────────────────────────────────────────────── */
 html:not(.dark) [data-slot="drawer-content"] {
   background-color: #ffffff !important;

@@ -10,7 +10,7 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { GetInitials } from "$lib/clientTools.js";
-  import type { IncidentCommentRecord, IncidentForMonitorListWithComments } from "$lib/server/types/db";
+  import type { IncidentForMonitorListWithComments } from "$lib/server/types/db";
   import { SveltePurify } from "@humanspeak/svelte-purify";
   import mdToHTML from "$lib/marked";
   import { slide } from "svelte/transition";
@@ -40,134 +40,167 @@
   const target = isEmbedded ? "_blank" : "_self";
 </script>
 
-<Item.Root class="items-start  p-0 {className} sm:items-center">
+<!--
+  Incident item (public surface).
+
+  Styled to match the Console's dashboard language: subtle zinc-toned
+  cards, rounded-lg info chips, dot separators for inline metadata. No
+  pill-shaped pills, no heavy shadows, no rounded-3xl curves — the
+  public pages share the same visual grammar as the Console.
+-->
+<Item.Root class="items-start p-0 {className} sm:items-center">
   <Item.Content class="min-w-0 flex-1">
-    <div class="flex flex-col items-start justify-start gap-0.5">
-      <span class="text-xs font-medium text-{incident.state.toLowerCase()}">{$t(incident.state)}</span>
-      <Item.Title class="min-w-0 text-base wrap-break-word break-all">
+    <!-- State indicator + title -->
+    <div class="flex flex-col items-start justify-start gap-1">
+      <span class="inline-flex items-center gap-1.5 text-[12px] font-medium text-{incident.state.toLowerCase()}">
+        <span class="inline-flex size-1.5 shrink-0 rounded-full bg-{incident.state.toLowerCase()}"></span>
+        {$t(incident.state)}
+      </span>
+      <Item.Title class="min-w-0 text-[15px] font-medium text-zinc-100 wrap-break-word break-all">
         <a {target} class="hover:underline" href={clientResolver(resolve, `/incidents/${incident.id}`)}>
           {incident.title}
         </a>
       </Item.Title>
     </div>
 
+    <!-- Affected monitors as compact, rounded chips -->
     {#if incident.monitors && incident.monitors.length > 0 && !hideMonitors}
-      <div class="my-1 overflow-x-auto p-1">
-        <div class="flex gap-2">
-          {#each incident.monitors as monitor (`${incident.id}-${monitor.monitor_tag}`)}
-            <Popover.Root>
-              <Popover.Trigger disabled={isEmbedded}>
-                <Badge
-                  variant="outline"
-                  class="border-{monitor.monitor_impact.toLowerCase()}   cursor-pointer rounded-none border-0 border-b px-0  text-sm font-normal"
-                >
-                  {monitor.monitor_name}
-                </Badge>
-              </Popover.Trigger>
-              <Popover.Content
-                class="bg-background/60 border-border w-64 rounded-3xl border shadow-2xl backdrop-blur-xl"
+      <div class="mt-2 -mx-0.5 flex flex-wrap gap-1.5 overflow-x-auto">
+        {#each incident.monitors as monitor (`${incident.id}-${monitor.monitor_tag}`)}
+          <Popover.Root>
+            <Popover.Trigger disabled={isEmbedded}>
+              <span
+                class="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-zinc-800 bg-zinc-950/60 px-2 py-0.5 text-[11px] font-medium text-zinc-300 transition-colors hover:bg-zinc-900"
               >
-                <div class="flex flex-col gap-3">
-                  <div class="flex items-center gap-3">
-                    <Avatar.Root>
-                      {#if monitor.monitor_image}
-                        <Avatar.Image src={clientResolver(resolve, monitor.monitor_image)} alt={monitor.monitor_name} />
-                      {/if}
-                      <Avatar.Fallback>{GetInitials(monitor.monitor_name)}</Avatar.Fallback>
-                    </Avatar.Root>
-                    <div class="flex flex-col">
-                      <span class="font-medium">{monitor.monitor_name}</span>
-                      <span class="text-muted-foreground text-xs">{monitor.monitor_tag}</span>
-                    </div>
-                  </div>
-                  <div class="flex items-center justify-between">
-                    <Badge variant="outline" class="text-{monitor.monitor_impact.toLowerCase()}">
-                      {$t(monitor.monitor_impact)}
-                    </Badge>
-                    <div class="rounded-lg border border-zinc-800 bg-zinc-900 p-1.5 text-zinc-500">
-                      <IconArrowRight class="size-3" />
-                    </div>
+                <span class="inline-flex size-1.5 shrink-0 rounded-full bg-{monitor.monitor_impact.toLowerCase()}"></span>
+                {monitor.monitor_name}
+              </span>
+            </Popover.Trigger>
+            <Popover.Content
+              class="w-64 rounded-xl border border-zinc-800 bg-zinc-950 p-3 shadow-xl"
+            >
+              <div class="flex flex-col gap-3">
+                <div class="flex items-center gap-3">
+                  <Avatar.Root>
+                    {#if monitor.monitor_image}
+                      <Avatar.Image src={clientResolver(resolve, monitor.monitor_image)} alt={monitor.monitor_name} />
+                    {/if}
+                    <Avatar.Fallback>{GetInitials(monitor.monitor_name)}</Avatar.Fallback>
+                  </Avatar.Root>
+                  <div class="flex min-w-0 flex-col">
+                    <span class="truncate text-[13px] font-medium text-zinc-100">{monitor.monitor_name}</span>
+                    <span class="truncate text-[11px] text-zinc-500">{monitor.monitor_tag}</span>
                   </div>
                 </div>
-              </Popover.Content>
-            </Popover.Root>
-          {/each}
-        </div>
+                <div class="flex items-center justify-between">
+                  <span
+                    class="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 bg-zinc-950/60 px-2 py-0.5 text-[11px] font-medium text-zinc-300"
+                  >
+                    <span class="inline-flex size-1.5 shrink-0 rounded-full bg-{monitor.monitor_impact.toLowerCase()}"></span>
+                    <span class="text-{monitor.monitor_impact.toLowerCase()}">
+                      {$t(monitor.monitor_impact)}
+                    </span>
+                  </span>
+                  <div class="rounded-lg border border-zinc-800 bg-zinc-900 p-1.5 text-zinc-500">
+                    <IconArrowRight class="size-3" />
+                  </div>
+                </div>
+              </div>
+            </Popover.Content>
+          </Popover.Root>
+        {/each}
       </div>
     {/if}
 
+    <!--
+      Inline timeline. Replaces the earlier three rounded-full pill chips
+      with a single muted row of text + dot separators. Matches the way
+      the Console lists metadata under dashboard list items.
+    -->
     <Item.Description
-      class="mt-2 flex w-full flex-col gap-2 text-xs font-medium sm:flex-row sm:items-center sm:justify-between"
+      class="mt-2 flex w-full flex-col gap-1 text-[12px] text-zinc-500 sm:flex-row sm:items-center sm:gap-2"
     >
-      <span class="max-w-full rounded-full border px-3 py-2 wrap-break-word">
+      <span>
+        <span class="text-zinc-400">{$t("Started")}</span>
         {$formatDate(incident.start_date_time, page.data.dateAndTimeFormat.datePlusTime)}
       </span>
-      <span class="relative w-full text-center sm:flex-1">
-        <span
-          class="absolute top-0 bottom-0 left-1/2 border-l sm:top-1/2 sm:right-0 sm:bottom-auto sm:left-0 sm:border-t sm:border-l-0"
-        ></span>
-        <span class="bg-background relative z-10 rounded-full px-0 py-1 sm:px-2">
-          {$formatDuration(incident.start_date_time, endTimeForDuration)}
-        </span>
+      <span aria-hidden="true" class="hidden text-zinc-700 sm:inline">·</span>
+      <span>
+        <span class="text-zinc-400">{$t("Duration")}</span>
+        {$formatDuration(incident.start_date_time, endTimeForDuration)}
       </span>
+      <span aria-hidden="true" class="hidden text-zinc-700 sm:inline">·</span>
       {#if incident.end_date_time}
-        <span class="max-w-full rounded-full border px-3 py-2 wrap-break-word">
+        <span>
+          <span class="text-zinc-400">{$t("Ended")}</span>
           {$formatDate(incident.end_date_time, page.data.dateAndTimeFormat.datePlusTime)}
         </span>
       {:else}
-        <span class="max-w-full rounded-full border px-3 py-2 wrap-break-word">
-          {$t("Ongoing")}
-        </span>
+        <span class="text-zinc-300">{$t("Ongoing")}</span>
       {/if}
     </Item.Description>
+
+    <!--
+      Summary strip. Three equal info chips: last updated, status,
+      updates count (with expand/collapse action). Console style —
+      `rounded-lg`, neutral zinc borders, compact padding.
+    -->
     {#if showSummary}
-      <div class="my-2 grid grid-cols-1 gap-4 text-xs font-medium sm:grid-cols-3">
-        <div class="text-muted-foreground bg-secondary flex items-center justify-between rounded-full border p-2 px-4">
-          <span>{$t("Last Updated")}</span>
-          <span>{$formatDate(incident.updated_at, page.data.dateAndTimeFormat.datePlusTime)}</span>
+      <div class="mt-3 grid grid-cols-1 gap-2 text-[12px] sm:grid-cols-3">
+        <div class="flex items-center justify-between gap-2 rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">
+          <span class="text-zinc-500">{$t("Last Updated")}</span>
+          <span class="text-zinc-300">{$formatDate(incident.updated_at, page.data.dateAndTimeFormat.datePlusTime)}</span>
         </div>
-        <div class="text-muted-foreground bg-secondary flex items-center justify-between rounded-full border p-2 px-4">
-          <span>{$t("Status")}</span>
-          <div class="flex items-center gap-2">
-            <span class="text-{incident.state.toLowerCase()}">
-              {$t(incident.state)}
-            </span>
-          </div>
+        <div class="flex items-center justify-between gap-2 rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">
+          <span class="text-zinc-500">{$t("Status")}</span>
+          <span class="text-{incident.state.toLowerCase()} font-medium">
+            {$t(incident.state)}
+          </span>
         </div>
-        <div
-          class="text-muted-foreground bg-secondary flex items-center justify-between gap-2 rounded-full border p-2 px-4"
-        >
-          <span>
+        <div class="flex items-center justify-between gap-2 rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">
+          <span class="text-zinc-500">
             {incident.comments && incident.comments.length > 0
               ? `${incident.comments.length} ${$t("Updates")}`
               : $t("No Updates")}
           </span>
-          <Button
-            variant="outline"
-            size="icon-sm"
-            class="rounded-btn -mr-2 {isEmbedded ? 'hidden' : ''}"
-            onclick={() => (showComments = !showComments)}
-          >
-            <IconArrowRight class={`transition-transform duration-200 ${showComments ? "rotate-90" : ""}`} />
-          </Button>
+          {#if !isEmbedded}
+            <button
+              type="button"
+              aria-label={showComments ? "Collapse updates" : "Expand updates"}
+              aria-expanded={showComments}
+              class="-mr-1 inline-flex size-6 cursor-pointer items-center justify-center rounded-md text-zinc-500 transition-colors hover:bg-zinc-800/60 hover:text-zinc-100"
+              onclick={() => (showComments = !showComments)}
+            >
+              <IconArrowRight
+                class="size-3.5 transition-transform duration-200 {showComments ? 'rotate-90' : ''}"
+              />
+            </button>
+          {/if}
         </div>
       </div>
     {/if}
+
+    <!--
+      Comments timeline. Simple divided rows inside the same card;
+      dot indicator in front of the state uses the same
+      text-{state} utility the rest of the page uses.
+    -->
     {#if showSummary && showComments && incident.comments && incident.comments.length > 0}
-      <div transition:slide={{ duration: 220 }} class=" flex flex-col gap-4">
+      <div transition:slide={{ duration: 220 }} class="mt-3 flex flex-col gap-3">
         {#each incident.comments as comment (comment.id)}
-          <div class="flex flex-col gap-2 border-b pb-4 last:border-b-0 last:pb-0">
-            <div class="flex justify-start gap-2">
-              <Badge variant="outline" class="text-{comment.state.toLowerCase()} rounded-none border-0 p-0">
+          <div class="flex flex-col gap-2 border-b border-zinc-800 pb-3 last:border-b-0 last:pb-0">
+            <div class="flex items-center justify-start gap-2">
+              <span class="inline-flex size-1.5 shrink-0 rounded-full bg-{comment.state.toLowerCase()}"></span>
+              <span class="text-[12px] font-medium text-{comment.state.toLowerCase()}">
                 {$t(comment.state)}
-              </Badge>
-              <span class="text-muted-foreground text-xs">
+              </span>
+              <span class="text-[11px] text-zinc-500">
                 {$formatDate(comment.commented_at, page.data.dateAndTimeFormat.datePlusTime)}
               </span>
             </div>
             <div
               class="prose prose-sm dark:prose-invert max-w-none min-w-0 overflow-x-auto wrap-break-word"
-              style="font-size: 14px;"
+              style="font-size: 13px;"
             >
               <SveltePurify html={mdToHTML(comment.comment)} />
             </div>

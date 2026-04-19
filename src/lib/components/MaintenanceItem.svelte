@@ -3,8 +3,6 @@
   import { IconArrowRight } from "@tabler/icons-svelte";
   import * as Popover from "$lib/components/ui/popover/index.js";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
-  import { Badge } from "$lib/components/ui/badge/index.js";
-  import STATUS_ICON from "$lib/icons";
   import { t } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import { resolve } from "$app/paths";
@@ -29,36 +27,49 @@
   const target = isEmbedded ? "_blank" : "_self";
 </script>
 
+<!--
+  Maintenance item (public surface).
+
+  Mirrors the IncidentItem layout and visual language so the two item
+  types read as siblings in the status feed — same dot+state kicker,
+  same rounded-md monitor chips, same inline date line, same popover
+  treatment. Console dashboard aesthetic throughout.
+-->
 <Item.Root class="items-start p-0 {className} sm:items-center">
   <Item.Content class="min-w-0 flex-1">
-    <div class="flex flex-col items-start justify-start gap-0.5">
-      <span class="text-xs font-medium text-{maintenance.status.toLowerCase()}">{$t(maintenance.status)}</span>
-      <Item.Title class="min-w-0 text-base wrap-break-word break-all">
-        <a {target} class="hover:underline" href={clientResolver(resolve, `/maintenances/${maintenance.id}`)}
-          >{maintenance.title}</a
-        >
+    <!-- Status indicator + title -->
+    <div class="flex flex-col items-start justify-start gap-1">
+      <span class="inline-flex items-center gap-1.5 text-[12px] font-medium text-{maintenance.status.toLowerCase()}">
+        <span class="inline-flex size-1.5 shrink-0 rounded-full bg-{maintenance.status.toLowerCase()}"></span>
+        {$t(maintenance.status)}
+      </span>
+      <Item.Title class="min-w-0 text-[15px] font-medium text-zinc-100 wrap-break-word break-all">
+        <a {target} class="hover:underline" href={clientResolver(resolve, `/maintenances/${maintenance.id}`)}>
+          {maintenance.title}
+        </a>
       </Item.Title>
     </div>
 
     {#if maintenance.description}
-      <p class="text-muted-foreground mt-1 text-sm">
+      <p class="mt-1 text-[13px] leading-5 text-zinc-400">
         {maintenance.description}
       </p>
     {/if}
 
+    <!-- Affected monitor chips -->
     {#if maintenance.monitors && maintenance.monitors.length > 0 && !hideMonitors}
-      <div class="flex gap-2">
+      <div class="mt-2 flex flex-wrap gap-1.5">
         {#each maintenance.monitors as monitor}
           <Popover.Root>
             <Popover.Trigger disabled={isEmbedded}>
-              <Badge
-                variant="outline"
-                class="border-{monitor.monitor_impact.toLowerCase()}   cursor-pointer rounded-none border-0 border-b px-0  text-sm font-normal"
+              <span
+                class="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-zinc-800 bg-zinc-950/60 px-2 py-0.5 text-[11px] font-medium text-zinc-300 transition-colors hover:bg-zinc-900"
               >
+                <span class="inline-flex size-1.5 shrink-0 rounded-full bg-{monitor.monitor_impact.toLowerCase()}"></span>
                 {monitor.monitor_name}
-              </Badge>
+              </span>
             </Popover.Trigger>
-            <Popover.Content class="w-64">
+            <Popover.Content class="w-64 rounded-xl border border-zinc-800 bg-zinc-950 p-3 shadow-xl">
               <div class="flex flex-col gap-3">
                 <div class="flex items-center gap-3">
                   <Avatar.Root>
@@ -67,15 +78,18 @@
                     {/if}
                     <Avatar.Fallback>{GetInitials(monitor.monitor_name)}</Avatar.Fallback>
                   </Avatar.Root>
-                  <div class="flex flex-col">
-                    <span class="font-medium">{monitor.monitor_name}</span>
-                    <span class="text-muted-foreground text-xs">{monitor.monitor_tag}</span>
+                  <div class="flex min-w-0 flex-col">
+                    <span class="truncate text-[13px] font-medium text-zinc-100">{monitor.monitor_name}</span>
+                    <span class="truncate text-[11px] text-zinc-500">{monitor.monitor_tag}</span>
                   </div>
                 </div>
                 <div class="flex items-center justify-between">
-                  <Badge variant="outline" class="text-{monitor.monitor_impact.toLowerCase()}">
-                    {$t(monitor.monitor_impact)}
-                  </Badge>
+                  <span
+                    class="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 bg-zinc-950/60 px-2 py-0.5 text-[11px] font-medium text-zinc-300"
+                  >
+                    <span class="inline-flex size-1.5 shrink-0 rounded-full bg-{monitor.monitor_impact.toLowerCase()}"></span>
+                    <span class="text-{monitor.monitor_impact.toLowerCase()}">{$t(monitor.monitor_impact)}</span>
+                  </span>
                   <div class="rounded-lg border border-zinc-800 bg-zinc-900 p-1.5 text-zinc-500">
                     <IconArrowRight class="size-3" />
                   </div>
@@ -87,21 +101,22 @@
       </div>
     {/if}
 
+    <!-- Inline maintenance window timing -->
     <Item.Description
-      class="mt-2 flex w-full flex-col gap-2 text-xs font-medium sm:flex-row sm:items-center sm:justify-between"
+      class="mt-2 flex w-full flex-col gap-1 text-[12px] text-zinc-500 sm:flex-row sm:items-center sm:gap-2"
     >
-      <span class="max-w-full rounded-full border px-3 py-2 wrap-break-word">
+      <span>
+        <span class="text-zinc-400">{$t("Start Time")}</span>
         {$formatDate(maintenance.start_date_time, page.data.dateAndTimeFormat.datePlusTime)}
       </span>
-      <span class="relative w-full text-center sm:flex-1">
-        <span
-          class="absolute top-0 bottom-0 left-1/2 border-l sm:top-1/2 sm:right-0 sm:bottom-auto sm:left-0 sm:border-t sm:border-l-0"
-        ></span>
-        <span class="bg-background relative z-10 rounded-full px-0 py-1 sm:px-2">
-          {$formatDuration(maintenance.start_date_time, maintenance.end_date_time)}
-        </span>
+      <span aria-hidden="true" class="hidden text-zinc-700 sm:inline">·</span>
+      <span>
+        <span class="text-zinc-400">{$t("Duration")}</span>
+        {$formatDuration(maintenance.start_date_time, maintenance.end_date_time)}
       </span>
-      <span class="max-w-full rounded-full border px-3 py-2 wrap-break-word">
+      <span aria-hidden="true" class="hidden text-zinc-700 sm:inline">·</span>
+      <span>
+        <span class="text-zinc-400">{$t("End Time")}</span>
         {$formatDate(maintenance.end_date_time, page.data.dateAndTimeFormat.datePlusTime)}
       </span>
     </Item.Description>

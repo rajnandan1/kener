@@ -3,12 +3,9 @@
   import { onMount } from "svelte";
   import { IconCalendarEvent, IconServer, IconArrowRight, IconRepeat } from "@tabler/icons-svelte";
   import * as Item from "$lib/components/ui/item/index.js";
-  import GC from "$lib/global-constants.js";
-  import { Badge } from "$lib/components/ui/badge/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import mdToHTML from "$lib/marked";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
-  import STATUS_ICON from "$lib/icons";
   import { t } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import clientResolver from "$lib/client/resolver.js";
@@ -16,8 +13,6 @@
   import { page } from "$app/state";
 
   let { data } = $props();
-
-  const MaintenanceIcon = STATUS_ICON.MAINTENANCE;
 
   // Reference for the scrollable container
   let eventsContainer: HTMLDivElement | undefined = $state();
@@ -36,22 +31,6 @@
       }
     }
   });
-
-  // Get status badge variant for event status
-  function getEventStatusBadgeClass(status: string): string {
-    switch (status) {
-      case GC.SCHEDULED:
-        return "bg-muted text-muted-foreground";
-      case GC.ONGOING:
-        return "bg-maintenance text-white";
-      case GC.COMPLETED:
-        return "bg-up text-white";
-      case GC.CANCELLED:
-        return "bg-down text-white";
-      default:
-        return "";
-    }
-  }
 
   // Check if maintenance is recurring (not one-time)
   function isRecurring(rrule: string): boolean {
@@ -88,27 +67,29 @@
   </div>
   <div class="public-panel mb-4 flex flex-col items-start gap-4 p-4 text-sm">
     <div class="flex gap-2">
-      {#if isRecurring(data.maintenance.rrule)}
-        <Badge variant="secondary" class="gap-1">
-          <IconRepeat class="h-3 w-3" />
+      <span
+        class="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 bg-zinc-950/60 px-2 py-0.5 text-[11px] font-medium text-zinc-300"
+      >
+        {#if isRecurring(data.maintenance.rrule)}
+          <IconRepeat class="size-3 text-zinc-500" aria-hidden="true" />
           {$t("Recurring")}
-        </Badge>
-      {:else}
-        <Badge variant="secondary">{$t("One-time")}</Badge>
-      {/if}
+        {:else}
+          {$t("One-time")}
+        {/if}
+      </span>
     </div>
-    <div class="flex w-full flex-col gap-4 sm:flex-row sm:justify-between sm:gap-2">
-      <div class="flex flex-col items-start gap-1.5">
-        <span class="text-muted-foreground">{$t("Start Time")}</span>
-        <span>{$formatDate(data.maintenanceEvent.start_date_time, page.data.dateAndTimeFormat.datePlusTime)}</span>
+    <div class="grid w-full grid-cols-1 gap-2 sm:grid-cols-3">
+      <div class="flex items-center justify-between gap-2 rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-[12px]">
+        <span class="text-zinc-500">{$t("Start Time")}</span>
+        <span class="text-zinc-300">{$formatDate(data.maintenanceEvent.start_date_time, page.data.dateAndTimeFormat.datePlusTime)}</span>
       </div>
-      <div class="flex flex-col items-start gap-1.5 sm:items-center">
-        <span class="text-muted-foreground">{$t("End Time")}</span>
-        <span>{$formatDate(data.maintenanceEvent.end_date_time, page.data.dateAndTimeFormat.datePlusTime)}</span>
+      <div class="flex items-center justify-between gap-2 rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-[12px]">
+        <span class="text-zinc-500">{$t("End Time")}</span>
+        <span class="text-zinc-300">{$formatDate(data.maintenanceEvent.end_date_time, page.data.dateAndTimeFormat.datePlusTime)}</span>
       </div>
-      <div class="flex flex-col items-start gap-1.5 sm:items-end">
-        <span class="text-muted-foreground">{$t("Duration")}</span>
-        <span>{$formatDuration(data.maintenanceEvent.start_date_time, data.maintenanceEvent.end_date_time)}</span>
+      <div class="flex items-center justify-between gap-2 rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-[12px]">
+        <span class="text-zinc-500">{$t("Duration")}</span>
+        <span class="text-zinc-300">{$formatDuration(data.maintenanceEvent.start_date_time, data.maintenanceEvent.end_date_time)}</span>
       </div>
     </div>
   </div>
@@ -128,41 +109,56 @@
       <!-- Scheduled Events (Past, Current, Upcoming) -->
       {#if data.maintenance.events && data.maintenance.events.length > 0}
         <div class="public-panel">
-          <div class="public-divider flex items-center justify-between border-b p-4">
-            <Badge variant="secondary" class="gap-1">
-              <IconCalendarEvent class="h-3 w-3" />
-              {$t("Scheduled Events (%count)", { count: String(data.maintenance.events.length) })}
-            </Badge>
+          <div class="flex items-center justify-between gap-3 border-b border-zinc-800 px-4 py-3">
+            <div class="flex items-center gap-2 text-[13px] font-medium text-zinc-300">
+              <IconCalendarEvent class="size-3.5 shrink-0 text-zinc-500" aria-hidden="true" />
+              <span>{$t("Scheduled Events (%count)", { count: String(data.maintenance.events.length) })}</span>
+            </div>
           </div>
 
-          <div bind:this={eventsContainer} class="scrollbar-hidden max-h-96 divide-y overflow-y-auto">
+          <div bind:this={eventsContainer} class="scrollbar-hidden max-h-96 divide-y divide-zinc-800 overflow-y-auto">
             {#each data.maintenance.events as event (event.id)}
+              {@const isCurrent = event.id === data.maintenanceEvent.id && data.maintenance.events.length > 1}
               <div
                 data-current={event.id === data.maintenanceEvent.id}
-                class="p-4 {event.id === data.maintenanceEvent.id && data.maintenance.events.length > 1
-                  ? 'bg-maintenance/10 border-l-maintenance border-l-4'
-                  : ''}"
+                class="relative p-4 {isCurrent ? 'bg-zinc-900/40' : ''}"
               >
+                {#if isCurrent}
+                  <!--
+                    Thin accent rail on the left edge marks the current event.
+                    Same idiom the Console uses for "this row is selected /
+                    active" — `border-l-2` + maintenance tint, no heavy fill.
+                  -->
+                  <span
+                    aria-hidden="true"
+                    class="pointer-events-none absolute inset-y-0 left-0 w-0.5 bg-maintenance"
+                  ></span>
+                {/if}
                 <div class="mb-2 flex items-center justify-between gap-2">
                   <div class="flex items-center gap-2">
-                    <Badge class={getEventStatusBadgeClass(event.status)}>
-                      {$t(event.status)}
-                    </Badge>
+                    <span
+                      class="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 bg-zinc-950/60 px-2 py-0.5 text-[11px] font-medium text-zinc-300"
+                    >
+                      <span class="inline-flex size-1.5 shrink-0 rounded-full bg-{event.status.toLowerCase()}"></span>
+                      <span class="text-{event.status.toLowerCase()}">{$t(event.status)}</span>
+                    </span>
                     {#if event.id === data.maintenanceEvent.id}
-                      <Badge variant="outline" class="text-maintenance border-maintenance text-xs">
+                      <span
+                        class="inline-flex items-center rounded-md border border-maintenance/40 bg-maintenance/10 px-2 py-0.5 text-[11px] font-medium text-maintenance"
+                      >
                         {$t("Current")}
-                      </Badge>
+                      </span>
                     {/if}
                   </div>
-                  <span class="text-muted-foreground text-xs">
+                  <span class="text-[11px] text-zinc-500">
                     {$formatDuration(event.start_date_time, event.end_date_time)}
                   </span>
                 </div>
                 <div
-                  class="text-muted-foreground flex flex-col gap-1 text-sm sm:flex-row sm:items-center sm:justify-between"
+                  class="flex flex-col gap-1 text-[12px] text-zinc-500 sm:flex-row sm:items-center sm:justify-between"
                 >
                   <span>{$formatDate(event.start_date_time, page.data.dateAndTimeFormat.datePlusTime)}</span>
-                  <span class="hidden sm:inline">→</span>
+                  <span aria-hidden="true" class="hidden text-zinc-700 sm:inline">→</span>
                   <span>{$formatDate(event.end_date_time, page.data.dateAndTimeFormat.datePlusTime)}</span>
                 </div>
               </div>
@@ -175,59 +171,50 @@
     <!-- Affected Monitors (Sidebar) -->
     <div class="lg:col-span-1">
       <div class="public-panel">
-        <div class="public-divider flex items-center justify-between border-b p-4">
-          <Badge variant="secondary" class="gap-1">
-            <IconServer class="h-3 w-3" />
-            {$t("Affected Monitors (%count)", { count: String(data.affectedMonitors.length) })}
-          </Badge>
+        <div class="flex items-center justify-between gap-3 border-b border-zinc-800 px-4 py-3">
+          <div class="flex items-center gap-2 text-[13px] font-medium text-zinc-300">
+            <IconServer class="size-3.5 shrink-0 text-zinc-500" aria-hidden="true" />
+            <span>{$t("Affected Monitors (%count)", { count: String(data.affectedMonitors.length) })}</span>
+          </div>
         </div>
 
         {#if data.affectedMonitors.length === 0}
-          <div class="text-muted-foreground p-8 text-center">
-            <IconServer class="mx-auto mb-2 h-8 w-8 opacity-50" />
-            <p>{$t("No monitors affected")}</p>
+          <div class="flex flex-col items-center gap-2 px-6 py-10 text-center text-zinc-500">
+            <IconServer class="size-7 opacity-60" aria-hidden="true" />
+            <p class="text-[13px]">{$t("No monitors affected")}</p>
           </div>
         {:else}
-          <div class="">
+          <div class="divide-y divide-zinc-800">
             {#each data.affectedMonitors as monitor (monitor.monitor_tag)}
-              <div class="border-b last:border-b-0">
-                <Item.Root>
-                  <Item.Media>
-                    <Tooltip.Root>
-                      <Tooltip.Trigger>
-                        <div class="bg-{monitor.monitor_impact.toLowerCase()} h-6 w-6 rounded-full"></div>
-                      </Tooltip.Trigger>
-                      <Tooltip.Content arrowClasses="bg-foreground">
-                        <div class="text-xs font-medium">{$t("Under Maintenance")}</div>
-                      </Tooltip.Content>
-                    </Tooltip.Root>
-                  </Item.Media>
-                  <Item.Content>
-                    <Item.Title>{monitor.monitor_name}</Item.Title>
-                    <Item.Description>
-                      <span class="text-{monitor.monitor_impact.toLowerCase()}">
-                        {$t(monitor.monitor_impact)}
-                      </span>
-                    </Item.Description>
-                  </Item.Content>
-                  <Item.Actions>
-                    <div class="rounded-lg border border-zinc-800 bg-zinc-900 p-2 text-zinc-500">
-                      <IconArrowRight class="h-4 w-4" />
-                    </div>
-                  </Item.Actions>
-                </Item.Root>
-              </div>
+              <Item.Root class="px-4 py-3">
+                <Item.Media>
+                  <Tooltip.Root>
+                    <Tooltip.Trigger>
+                      <div class="bg-{monitor.monitor_impact.toLowerCase()} size-6 rounded-full"></div>
+                    </Tooltip.Trigger>
+                    <Tooltip.Content arrowClasses="bg-foreground">
+                      <div class="text-[12px] font-medium">{$t("Under Maintenance")}</div>
+                    </Tooltip.Content>
+                  </Tooltip.Root>
+                </Item.Media>
+                <Item.Content>
+                  <Item.Title class="text-[13px] font-medium text-zinc-100">{monitor.monitor_name}</Item.Title>
+                  <Item.Description class="text-[12px] text-zinc-500">
+                    <span class="text-{monitor.monitor_impact.toLowerCase()}">
+                      {$t(monitor.monitor_impact)}
+                    </span>
+                  </Item.Description>
+                </Item.Content>
+                <Item.Actions>
+                  <div class="rounded-lg border border-zinc-800 bg-zinc-900 p-1.5 text-zinc-500">
+                    <IconArrowRight class="size-3.5" />
+                  </div>
+                </Item.Actions>
+              </Item.Root>
             {/each}
           </div>
         {/if}
       </div>
     </div>
   </div>
-</div>
-<div class="container mx-auto px-4 py-8">
-  <!-- Maintenance Header -->
-
-  <div class="my-4 flex justify-end gap-2"></div>
-
-  <!-- Maintenance Meta -->
 </div>

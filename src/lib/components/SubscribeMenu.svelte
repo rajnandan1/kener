@@ -264,7 +264,13 @@
 
 <Dialog.Root bind:open>
   <Dialog.Overlay class="backdrop-blur-[2px]" />
-  <Dialog.Content class="max-w-sm rounded-3xl">
+  <!--
+    Rounded `rounded-xl` + zinc-800 border brings the Subscribe dialog
+    in line with the Console's dialog primitive (which uses rounded-xl
+    and a `border border-zinc-800 bg-zinc-950 shadow-(--shadow-overlay)`
+    surface). Dropped the previous `rounded-3xl` pill-curve look.
+  -->
+  <Dialog.Content class="max-w-sm rounded-xl border border-zinc-800">
     <Dialog.Header>
       <Dialog.Title class="flex items-center gap-2">
         <Bell class="h-5 w-5" />
@@ -364,15 +370,21 @@
         </div>
       {:else if currentView === "preferences"}
         <!-- Preferences View -->
-        <div class="flex flex-col gap-6">
-          <div class="rounded-lg border p-4">
+        <div class="flex flex-col gap-5">
+          <div class="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
             <div class="flex items-center justify-between gap-2">
-              <div class="flex gap-2">
-                <Mail class="text-muted-foreground h-4 w-4" />
-                <span class="text-sm font-medium">{subscriberEmail}</span>
+              <div class="flex items-center gap-2 min-w-0">
+                <Mail class="size-4 shrink-0 text-zinc-500" />
+                <span class="truncate text-[13px] font-medium text-zinc-200">{subscriberEmail}</span>
               </div>
-              <Button variant="ghost" size="icon-sm" onclick={handleLogout} class="rounded-btn">
-                <LogOut class="h-4 w-4" />
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onclick={handleLogout}
+                class="size-7 shrink-0 rounded-md text-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-100"
+                aria-label={$t("Sign out")}
+              >
+                <LogOut class="size-3.5" />
               </Button>
             </div>
           </div>
