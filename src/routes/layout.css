@@ -5,6 +5,7 @@
 @plugin "@tailwindcss/typography";
 
 @source "../../**/*.{svelte,ts,js,html}";
+@source not "../../node_modules/svelte-codemirror-editor/**";
 
 @custom-variant dark (&:is(.dark *));
 
