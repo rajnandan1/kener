@@ -63,6 +63,7 @@
     page_path: "",
     page_title: "",
     page_header: "",
+    page_is_internal: false,
     page_subheader: "",
     page_logo: ""
   });
@@ -119,6 +120,7 @@
           page_path: foundPage.page_path,
           page_title: foundPage.page_title,
           page_header: foundPage.page_header,
+          page_is_internal: !!foundPage.page_is_internal,
           page_subheader: foundPage.page_subheader || "",
           page_logo: foundPage.page_logo || ""
         };
@@ -181,6 +183,7 @@
         page_path: sanitizedPath,
         page_title: formData.page_title,
         page_header: formData.page_header,
+        page_is_internal: formData.page_is_internal ? 1 : 0,
         page_subheader: formData.page_subheader || null,
         page_logo: formData.page_logo || null
       };
@@ -590,6 +593,15 @@
           </Label>
           <Input id="page-header" type="text" bind:value={formData.page_header} placeholder="Services Status" />
           <p class="text-muted-foreground text-xs">Main heading displayed on the page</p>
+        </div>
+
+        <!-- Internal toggle -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <Label for="page-internal">Internal Page</Label>
+            <Switch id="page-internal" bind:checked={formData.page_is_internal} />
+          </div>
+          <p class="text-muted-foreground text-xs">Only logged-in users can view this page.</p>
         </div>
 
         <!-- Subheader -->
