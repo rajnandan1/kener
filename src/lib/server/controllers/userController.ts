@@ -358,8 +358,6 @@ export const SendInvitationEmail = async (email: string, role_ids: string[], nam
   const siteUrl = siteVars.site_url || "";
   let link = `${siteUrl}account/invitation?view=confirm_token&token=${token}`;
 
-  if (process.env.NODE_ENV === "development") console.log(normalizedEmail, link);
-
   const emailVars = {
     ...siteVars,
     invitation_link: link,
@@ -401,8 +399,6 @@ export const ResendInvitationEmail = async (email: string) => {
   const siteVars = siteDataToVariables(siteData);
   const siteUrl = siteVars.site_url || "";
   let link = `${siteUrl}account/invitation?view=confirm_token&token=${token}`;
-
-  if (process.env.NODE_ENV === "development") console.log(normalizedEmail, link);
 
   const emailVars = {
     ...siteVars,
