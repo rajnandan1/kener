@@ -17,6 +17,9 @@ import type {
 } from "../types/db.js";
 import GC from "../../global-constants.js";
 import { getUnixTime, differenceInSeconds } from "date-fns";
+import subscriberQueue from "../queues/subscriberQueue.js";
+import { GetAllSiteData } from "./controller.js";
+import mdToHTML from "../../marked.js";
 
 interface IncidentsDashboardInput {
   page: number;
@@ -35,6 +38,7 @@ export interface IncidentInput {
   incident_type?: string;
   incident_source?: string;
   is_global?: string;
+  notify_subscribers?: boolean;
 }
 
 interface IncidentUpdateInput {
@@ -293,6 +297,25 @@ export const ClosureCommentAlertMarkdown = (
   return comment;
 };
 
+export const NotifySubscribersForIncident = async (
+  incident_id: number,
+  title: string,
+  state: string,
+  update_text: string,
+): Promise<void> => {
+  const siteData = await GetAllSiteData();
+  const siteUrl = (siteData.siteURL || "") + "/";
+  await subscriberQueue.push({
+    title,
+    cta_url: siteUrl + "incidents/" + incident_id,
+    cta_text: "View Incident",
+    update_text: mdToHTML(update_text),
+    update_subject: `[#${incident_id}:${state}] ${title}`,
+    update_id: String(incident_id),
+    event_type: "incidents",
+  });
+};
+
 export const CreateIncident = async (data: IncidentInput): Promise<{ incident_id: number }> => {
   //return error if no title or startDateTime
   if (!data.title || !data.start_date_time) {
@@ -327,6 +350,16 @@ export const CreateIncident = async (data: IncidentInput): Promise<{ incident_id
   //   message: `${incident.incident_type} Created`,
   //   ...incident,
   // });
+
+  if (data.notify_subscribers) {
+    await NotifySubscribersForIncident(
+      newIncident.id,
+      incident.title,
+      incident.state,
+      `Incident **${incident.title}** has been created.`,
+    );
+  }
+
   return {
     incident_id: newIncident.id,
   };
@@ -455,6 +488,7 @@ export const AddIncidentComment = async (
   comment: string,
   state: string,
   commented_at: number,
+  notify_subscribers: boolean = false,
 ): Promise<IncidentCommentRecord> => {
   let incidentExists = await db.getIncidentById(incident_id);
   if (!incidentExists) {
@@ -480,6 +514,10 @@ export const AddIncidentComment = async (
       }
     }
     await UpdateIncident(incident_id, incidentUpdate);
+  }
+
+  if (notify_subscribers) {
+    await NotifySubscribersForIncident(incident_id, incidentExists.title, state, comment);
   }
 
   return c;

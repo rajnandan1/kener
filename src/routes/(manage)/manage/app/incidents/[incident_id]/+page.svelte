@@ -87,6 +87,8 @@
   let commentState = $state<string>(GC.INVESTIGATING);
   let commentDateTime = $state<string>("");
   let savingComment = $state<boolean>(false);
+  let notifySubscribers = $state(true);
+  let notifySubscribersComment = $state(true);
 
   const states = [GC.INVESTIGATING, GC.IDENTIFIED, GC.MONITORING, GC.RESOLVED];
 
@@ -254,7 +256,8 @@
               status: "OPEN",
               state: GC.INVESTIGATING,
               incident_type: GC.INCIDENT,
-              is_global: incident.is_global
+              is_global: incident.is_global,
+              notify_subscribers: notifySubscribers
             }
           })
         });
@@ -485,6 +488,7 @@
     commentText = "";
     commentState = incident.state;
     commentDateTime = "";
+    notifySubscribersComment = true;
   }
 
   // Save comment (add or edit)
@@ -528,7 +532,8 @@
               incident_id: incident.id,
               comment: commentText,
               state: commentState,
-              commented_at: localDatetimeToTimestamp(commentDateTime)
+              commented_at: localDatetimeToTimestamp(commentDateTime),
+              notify_subscribers: notifySubscribersComment
             }
           })
         });
@@ -800,7 +805,9 @@
         <div class="flex items-center justify-between rounded-md border p-3">
           <div class="flex flex-col gap-1">
             <Label for="is-global">Global Incident</Label>
-            <p class="text-muted-foreground text-xs">When enabled, this incident will be visible on all status pages</p>
+            <p class="text-muted-foreground text-xs">
+              When enabled, this incident will be visible on all status pages.
+            </p>
           </div>
           <Switch
             id="is-global"
@@ -809,6 +816,17 @@
               incident.is_global = checked ? "YES" : "NO";
             }}
           />
+        </div>
+
+        <!-- Notify Subscribers -->
+        <div class="flex items-center justify-between rounded-md border p-3" class:opacity-50={!isNew}>
+          <div class="flex flex-col gap-1">
+            <Label for="notify-subscribers">{isNew ? "Notify Subscribers" : "Subscribers have been notified"}</Label>
+            <p class="text-muted-foreground text-xs">
+              When disabled, subscribers will not be notified (use for backdated or test incidents).
+            </p>
+          </div>
+          <Switch id="notify-subscribers" bind:checked={notifySubscribers} disabled={!isNew} />
         </div>
 
         <!-- First Comment (only for new) -->
@@ -1042,6 +1060,15 @@
                   <Label>Date/Time</Label>
                   <Input type="datetime-local" bind:value={commentDateTime} />
                 </div>
+              </div>
+              <div class="flex items-center justify-between rounded-md border p-3">
+                <div class="flex flex-col gap-1">
+                  <Label for="notify-subscribers-comment">Notify Subscribers</Label>
+                  <p class="text-muted-foreground text-xs">
+                    When disabled, subscribers will not be notified (use for backdated or test incidents).
+                  </p>
+                </div>
+                <Switch id="notify-subscribers-comment" bind:checked={notifySubscribersComment} />
               </div>
               <div class="flex justify-end gap-2">
                 <Button variant="outline" size="sm" onclick={cancelAddComment}>Cancel</Button>
