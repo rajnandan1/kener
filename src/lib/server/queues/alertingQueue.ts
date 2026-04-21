@@ -24,6 +24,7 @@ import {
   UpdateMonitorAlertV2Status,
 } from "../controllers/monitorAlertConfigController.js";
 import type { IncidentInput } from "../controllers/incidentController.js";
+import { NotifySubscribersForIncident } from "../controllers/incidentController.js";
 import { InsertNewAlert } from "../controllers/controller.js";
 import { GetMonitorAlertsV2 } from "../controllers/monitorAlertConfigController.js";
 import db from "../db/db.js";
@@ -36,9 +37,7 @@ import sendSlack from "$lib/server/notification/slack_notification.js";
 import sendDiscord from "$lib/server/notification/discord_notification.js";
 import serverResolver from "../resolver.js";
 
-import type { SiteDataForNotification, SubscriptionVariableMap } from "../notification/types.js";
-import mdToHTML from "../../marked.js";
-import subscriberQueue from "./subscriberQueue.js";
+import type { SiteDataForNotification } from "../notification/types.js";
 let alertingQueue: Queue | null = null;
 
 let worker: Worker | null = null;
@@ -65,7 +64,6 @@ async function createNewIncident(
   config: MonitorAlertConfigRecord,
   monitorName: string,
   monitorTag: string,
-  siteUrl: string = "",
 ): Promise<{ incident_id: number }> {
   let startDateTime = getUnixTime(new Date(alert.created_at));
   let incidentInput: IncidentInput = {
@@ -82,23 +80,13 @@ async function createNewIncident(
     config.alert_value,
   );
 
-  const updateVariables: SubscriptionVariableMap = {
-    title: incidentInput.title,
-    cta_url: siteUrl + "incidents/" + incidentCreated.incident_id,
-    cta_text: "View Incident",
-    update_text: mdToHTML(update),
-    update_subject: `[#${incidentCreated.incident_id}:${GC.TRIGGERED}] ${incidentInput.title}`,
-    update_id: String(incidentCreated.incident_id),
-    event_type: "incidents",
-  };
-  subscriberQueue.push(updateVariables);
+  await NotifySubscribersForIncident(
+    incidentCreated.incident_id,
+    incidentInput.title,
+    GC.TRIGGERED,
+    update,
+  );
   return incidentCreated;
-
-  /*
-	
-	
-	
-		subscriberQueue.push(updateVariables);*/
 }
 
 async function closeIncident(
@@ -106,7 +94,6 @@ async function closeIncident(
   config: MonitorAlertConfigRecord,
   monitorName: string,
   monitorTag: string,
-  siteUrl: string = "",
 ): Promise<void> {
   //check if incident is already resolved
   if (!alert.incident_id) {
@@ -124,16 +111,7 @@ async function closeIncident(
   let incident_id = alert.incident_id;
   const comment = ClosureCommentAlertMarkdown(alert, config, monitorName, monitorTag, GC.RESOLVED);
   const updatedAt = getUnixTime(new Date(alert.updated_at));
-  const updateMessage: SubscriptionVariableMap = {
-    title: incident.title,
-    cta_url: `${siteUrl}incidents/${incident_id}`,
-    cta_text: "View Incident",
-    update_text: mdToHTML(comment),
-    update_subject: `[#${incident.id}:${GC.RESOLVED}] ${incident.title}`,
-    update_id: String(incident_id),
-    event_type: "incidents",
-  };
-  subscriberQueue.push(updateMessage);
+  await NotifySubscribersForIncident(incident_id, incident.title, GC.RESOLVED, comment);
   await AddIncidentComment(incident_id, comment, GC.RESOLVED, updatedAt);
 }
 
@@ -255,7 +233,6 @@ const addWorker = () => {
               monitor_alerts_configured,
               monitor_name,
               monitor_tag,
-              templateSiteVars.site_url,
             );
             //update alert with incident number
             if (newIncidentNumber && newIncidentNumber.incident_id > 0) {
@@ -299,7 +276,6 @@ const addWorker = () => {
               monitor_alerts_configured,
               monitor_name,
               monitor_tag,
-              templateSiteVars.site_url,
             );
           }
 
