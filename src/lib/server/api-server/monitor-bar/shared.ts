@@ -85,17 +85,21 @@ export const buildMonitorBarResponseFromRawData = (
     monitorSettings.uptime_formula_denominator,
   );
 
+  const uptimeData = fillMissingUptimeData(rawUptimeData, startTime, days).map(
+    ({ avgLatency, maxLatency, minLatency, ...rest }) => rest,
+  ) as TimestampStatusCount[];
+
   return {
     name: monitor.name,
     description: monitor.description || "",
     image: monitor.image || null,
     currentStatus: latestStatus || GC.NO_DATA,
     uptime: uptimeCalculationResult.uptime,
-    uptimeData: fillMissingUptimeData(rawUptimeData, startTime, days),
+    uptimeData,
     fromTimeStamp: startTime,
     toTimeStamp: endOfDayTodayAtTz - 1,
-    avgLatency: uptimeCalculationResult.avgLatency,
-    maxLatency: uptimeCalculationResult.maxLatency,
-    minLatency: uptimeCalculationResult.minLatency,
+    avgLatency: "",
+    maxLatency: "",
+    minLatency: "",
   };
 };
