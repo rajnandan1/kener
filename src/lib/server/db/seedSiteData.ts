@@ -1,10 +1,10 @@
 const seedSiteData = {
-  title: "Kener - Open source status page system",
+  title: "Kener | Open source status page system",
   siteName: "Kener.ing",
   siteURL: "http://localhost:3000",
   home: "/",
   logo: "https://cdn.krack.ing/kracking-assets/logo.png",
-  favicon: "https://cdn.krack.ing/kracking-assets/logo96.png",
+  favicon: "https://cdn.krack.ing/kracking-assets/favicon.png",
   metaTags: [
     {
       key: "description",
@@ -14,20 +14,20 @@ const seedSiteData = {
       key: "og:description",
       value: "Add your description here",
     },
-    { key: "og:image", value: "/newbg.png" },
+    { key: "og:image", value: "https://cdn.krack.ing/kracking-assets/og-image.png" },
     {
       key: "og:title",
-      value: "Kener - Open source status page system",
+      value: "Kener | Open source status page system",
     },
     { key: "og:type", value: "website" },
     { key: "og:site_name", value: "Kener" },
     { key: "twitter:card", value: "summary_large_image" },
     { key: "twitter:site", value: "@_rajnandan_" },
     { key: "twitter:creator", value: "@_rajnandan_" },
-    { key: "twitter:image", value: "/newbg.png" },
+    { key: "twitter:image", value: "https://cdn.krack.ing/kracking-assets/og-image.png" },
     {
       key: "twitter:title",
-      value: "Kener - Open source status page system",
+      value: "Kener | Open source status page system",
     },
     {
       key: "twitter:description",

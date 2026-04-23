@@ -28,7 +28,6 @@
 
   // Display values from API response
   let displayUptime = $derived(overviewData?.uptime ?? "--");
-  let displayAvgLatency = $derived(overviewData?.avgLatency ?? "--");
   let displayData = $derived(overviewData?.uptimeData ?? []);
 
   async function fetchData() {
@@ -76,9 +75,6 @@
     <!-- Stats row -->
     <div class="flex items-center justify-between text-xs font-semibold">
       <span class="text-foreground">{displayUptime}% {$t("Uptime")}</span>
-      {#if displayAvgLatency !== "--"}
-        <span class="">{displayAvgLatency} {$t("Avg Latency")}</span>
-      {/if}
     </div>
 
     <!-- Status bar calendar -->

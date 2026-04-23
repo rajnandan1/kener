@@ -26,14 +26,14 @@ const render = ScalarApiReference({
     description: "Kener free open source status page API Reference",
     ogDescription: "Kener free open source status page API Reference",
     ogTitle: "Kener API Reference",
-    ogImage: "https://cdn.krack.ing/kracking-assets/og.jpg",
+    ogImage: "https://cdn.krack.ing/kracking-assets/og-image.png",
 
     twitterCard: "summary_large_image",
     twitterTitle: "Kener API Reference",
     twitterDescription: "Kener free open source status page API Reference",
-    twitterImage: "https://cdn.krack.ing/kracking-assets/og.jpg",
+    twitterImage: "https://cdn.krack.ing/kracking-assets/og-image.png",
   },
-  favicon: "https://cdn.krack.ing/kracking-assets/logo96.png",
+  favicon: "https://cdn.krack.ing/kracking-assets/favicon.png",
 });
 export const GET: RequestHandler = () => {
   return render();

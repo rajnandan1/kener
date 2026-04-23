@@ -2,7 +2,7 @@
   import { onMount } from "svelte";
   import { mode } from "mode-watcher";
   import { page } from "$app/state";
-  import { GetStatusSummary, ParseLatency } from "$lib/clientTools";
+  import { GetStatusSummary } from "$lib/clientTools";
   import MonitorDayDetail from "$lib/components/MonitorDayDetail.svelte";
   import type { TimestampStatusCount } from "$lib/server/types/db";
   import { t } from "$lib/stores/i18n";
@@ -376,10 +376,6 @@
       <span class={getStatusColor(hoveredBar.data)}>{$t(GetStatusSummary(hoveredBar.data))}</span>
       <span class="text-zinc-500">@</span>
       {$formatDate(hoveredBar.data.ts, page.data.dateAndTimeFormat.dateOnly)}
-      {#if hoveredBar.data.avgLatency > 0}
-        <span class="ml-1 text-zinc-500">|</span>
-        <span class="ml-1">{ParseLatency(hoveredBar.data.avgLatency)}</span>
-      {/if}
     </div>
   {/if}
 </div>

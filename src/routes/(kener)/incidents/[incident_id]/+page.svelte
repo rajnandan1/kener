@@ -15,8 +15,8 @@
 </script>
 
 <svelte:head>
-  <title>{data.incident.title + " - " + data.siteName}</title>
-  <meta property="og:title" content={data.incident.title + " - " + data.siteName} />
+  <title>{data.incident.title + " | " + data.siteName}</title>
+  <meta property="og:title" content={data.incident.title + " | " + data.siteName} />
   <meta property="og:type" content="article" />
   <meta name="twitter:card" content="summary_large_image" />
   {#if data.comments.length > 0}

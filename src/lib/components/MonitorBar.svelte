@@ -135,11 +135,6 @@
           <span class={grid ? "text-[13px] font-medium leading-5 text-zinc-100" : "text-sm font-medium leading-5 text-zinc-100"}>
             {data.uptime}%
           </span>
-          {#if data.avgLatency}
-            <span class="text-[11px] leading-4 text-zinc-500">
-              {data.avgLatency}
-            </span>
-          {/if}
         </div>
       </div>
     </div>

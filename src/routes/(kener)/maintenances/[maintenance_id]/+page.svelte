@@ -39,8 +39,8 @@
 </script>
 
 <svelte:head>
-  <title>{data.maintenance.title + " - " + data.siteName}</title>
-  <meta property="og:title" content={data.maintenance.title + " - " + data.siteName} />
+  <title>{data.maintenance.title + " | " + data.siteName}</title>
+  <meta property="og:title" content={data.maintenance.title + " | " + data.siteName} />
   <meta property="og:type" content="article" />
   <meta name="twitter:card" content="summary_large_image" />
   {#if data.maintenance.description}

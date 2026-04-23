@@ -238,7 +238,7 @@
 </script>
 
 <svelte:head>
-  <title>{data.config.name} - Open Source Status Page | Self-Hosted Docker Status Page & Uptime Monitor</title>
+  <title>{data.config.name} | Open Source Status Page | Self-Hosted Docker Status Page & Uptime Monitor</title>
   <meta
     name="description"
     content="{data.config
@@ -252,12 +252,12 @@
   <link rel="canonical" href="https://kener.ing/docs" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://kener.ing/docs" />
-  <meta property="og:title" content="{data.config.name} - Open Source Status Page | Self-Hosted with Docker" />
+  <meta property="og:title" content="{data.config.name} | Open Source Status Page | Self-Hosted with Docker" />
   <meta
     property="og:description"
     content="Free, open-source status page you can self-host with Docker. Monitor 11 service types, manage incidents, schedule maintenance, and notify subscribers. Deploy in under 2 minutes with Docker Compose."
   />
-  <meta property="og:image" content="https://cdn.krack.ing/kracking-assets/og.jpg" />
+  <meta property="og:image" content="https://cdn.krack.ing/kracking-assets/og-image.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta
@@ -267,12 +267,12 @@
   <meta property="og:site_name" content={data.config.name} />
   <meta property="og:locale" content="en_US" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="{data.config.name} - Open Source Status Page & Docker Uptime Monitor" />
+  <meta name="twitter:title" content="{data.config.name} | Open Source Status Page & Docker Uptime Monitor" />
   <meta
     name="twitter:description"
     content="Free, self-hosted status page with Docker support. Monitor APIs, DNS, SSL, and more. Incident management, maintenance scheduling, and real-time notifications out of the box."
   />
-  <meta name="twitter:image" content="https://cdn.krack.ing/kracking-assets/og.jpg" />
+  <meta name="twitter:image" content="https://cdn.krack.ing/kracking-assets/og-image.png" />
   {@html `<script type="application/ld+json">${JSON.stringify([
     {
       "@context": "https://schema.org",
