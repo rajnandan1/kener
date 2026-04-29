@@ -185,8 +185,23 @@
       case "SQL": {
         const data = typeData as any;
         if (!data.connectionString) return false;
-        if (!data.connectionString.startsWith("postgresql://") && !data.connectionString.startsWith("mysql://"))
-          return false;
+        const dbType = data.dbType || "pg";
+        const cs = String(data.connectionString).trim();
+        switch (dbType) {
+          case "pg":
+            if (!cs.startsWith("postgresql://") && !cs.startsWith("postgres://")) return false;
+            break;
+          case "mysql2":
+            if (!cs.startsWith("mysql://")) return false;
+            break;
+          case "mssql":
+          case "oracledb":
+          case "sqlite3":
+            // Free-form connection strings; just require non-empty.
+            break;
+          default:
+            return false;
+        }
         if (!data.timeout || data.timeout < 1) return false;
         if (!data.query) return false;
         return true;

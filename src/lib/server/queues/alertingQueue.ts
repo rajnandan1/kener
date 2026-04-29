@@ -82,23 +82,10 @@ async function createNewIncident(
     config.alert_value,
   );
 
-  const updateVariables: SubscriptionVariableMap = {
-    title: incidentInput.title,
-    cta_url: siteUrl + "incidents/" + incidentCreated.incident_id,
-    cta_text: "View Incident",
-    update_text: mdToHTML(update),
-    update_subject: `[#${incidentCreated.incident_id}:${GC.TRIGGERED}] ${incidentInput.title}`,
-    update_id: String(incidentCreated.incident_id),
-    event_type: "incidents",
-  };
-  subscriberQueue.push(updateVariables);
+  // Subscriber email is sent by AddIncidentComment (inside
+  // CreateNewIncidentWithCommentAndMonitor), so we don't push here to avoid
+  // duplicate notifications.
   return incidentCreated;
-
-  /*
-	
-	
-	
-		subscriberQueue.push(updateVariables);*/
 }
 
 async function closeIncident(
@@ -124,16 +111,7 @@ async function closeIncident(
   let incident_id = alert.incident_id;
   const comment = ClosureCommentAlertMarkdown(alert, config, monitorName, monitorTag, GC.RESOLVED);
   const updatedAt = getUnixTime(new Date(alert.updated_at));
-  const updateMessage: SubscriptionVariableMap = {
-    title: incident.title,
-    cta_url: `${siteUrl}incidents/${incident_id}`,
-    cta_text: "View Incident",
-    update_text: mdToHTML(comment),
-    update_subject: `[#${incident.id}:${GC.RESOLVED}] ${incident.title}`,
-    update_id: String(incident_id),
-    event_type: "incidents",
-  };
-  subscriberQueue.push(updateMessage);
+  // Subscriber email is sent by AddIncidentComment below.
   await AddIncidentComment(incident_id, comment, GC.RESOLVED, updatedAt);
 }
 

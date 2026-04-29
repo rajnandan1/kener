@@ -10,6 +10,7 @@ import type {
 } from "$lib/types/api";
 import GC from "$lib/global-constants";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
+import { NotifyIncidentSubscribers } from "$lib/server/controllers/incidentController";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {
@@ -191,6 +192,16 @@ export const POST: RequestHandler = async ({ request }) => {
 
   // Fetch monitors for response
   const monitors = await db.getIncidentMonitorsByIncidentID(createdIncident.id);
+
+  // Notify subscribers about the manually created incident
+  await NotifyIncidentSubscribers(
+    {
+      id: createdIncident.id,
+      title: createdIncident.title,
+      state: createdIncident.state,
+    },
+    `A new incident **${createdIncident.title}** has been opened.`,
+  );
 
   const response: CreateIncidentResponse = {
     incident: {

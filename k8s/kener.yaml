@@ -1,0 +1,210 @@
+# =============================================================================
+# Kener — Kubernetes manifests
+#
+# Deploys:
+#   - Namespace:  kener
+#   - Redis:      1 replica (BullMQ queues + cache)
+#   - Kener app:  1 replica, SQLite on a PVC at /app/database
+#   - Services:   ClusterIP for both
+#   - Ingress:    optional, edit host/className for your cluster
+#
+# Quick start:
+#   kubectl apply -f k8s/kener.yaml
+#
+# Update the image tag / env vars / host below before applying to prod.
+# =============================================================================
+
+---
+# -----------------------------------------------------------------------------
+# Secret — REPLACE the values before applying (kubectl create secret is safer)
+# Generate key: openssl rand -base64 32
+# -----------------------------------------------------------------------------
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kener-secrets
+  namespace: ole-status
+type: Opaque
+stringData:
+  KENER_SECRET_KEY: "lkjasdflkjsdfalkjasdflkjasdfkjld"
+  DATABASE_URL: ""
+  SMTP_HOST: "smtp.intel.com"
+  SMTP_PORT: "25"
+  SMTP_USER: "-"
+  SMTP_PASS: "-"
+  SMTP_FROM_EMAIL: "OLE Status <no-reply@ole-status.intel.com>"
+  SMTP_SECURE: "0"
+---
+# -----------------------------------------------------------------------------
+# ConfigMap — non-secret runtime config
+# -----------------------------------------------------------------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kener-config
+  namespace: ole-status
+data:
+  ORIGIN: "https://ole-status.intel.com/"   # <-- public URL of the status page
+  REDIS_URL: "redis://kener-redis:6379"
+  PORT: "3000"
+  NODE_ENV: "production"
+
+---
+# -----------------------------------------------------------------------------
+# Persistent storage for Redis
+# (No PVC for the app itself — all state lives in the external Postgres DB
+#  configured via DATABASE_URL.)
+# -----------------------------------------------------------------------------
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kener-redis-data
+  namespace: ole-status
+  labels:
+    app: kener-redis
+    # Redis AOF — job queues + cache. Safe-ish to lose (jobs will re-run),
+    # but keeping it avoids duplicate alerts on restart.
+  annotations:
+    "helm.sh/resource-policy": keep
+spec:
+  accessModes: ["ReadWriteOnce"]
+  resources:
+    requests:
+      storage: 4Gi
+  # storageClassName: standard
+
+---
+# -----------------------------------------------------------------------------
+# Redis Deployment
+# -----------------------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kener-redis
+  namespace: ole-status
+  labels: { app: kener-redis }
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels: { app: kener-redis }
+  template:
+    metadata:
+      labels: { app: kener-redis }
+    spec:
+      securityContext:
+        runAsUser: 0         # NFS backend ignores fsGroup; run as root to avoid permission issues
+        runAsGroup: 0
+      containers:
+        - name: redis
+          image: redis:7-alpine
+          command: ["redis-server"]   # bypass docker-entrypoint.sh (which tries to chown /data)
+          args: ["--appendonly", "yes", "--dir", "/data"]
+          ports:
+            - containerPort: 6379
+              name: redis
+          volumeMounts:
+            - name: data
+              mountPath: /data
+              subPath: redis   # avoids the read-only .snapshot dir at volume root
+          resources:
+            requests: { cpu: "1",  memory: "8Gi"  }
+            limits:   { cpu: "2", memory: "10Gi" }
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: kener-redis-data
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kener-redis
+  namespace: ole-status
+spec:
+  type: ClusterIP
+  selector: { app: kener-redis }
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+
+---
+# -----------------------------------------------------------------------------
+# Kener Deployment
+# -----------------------------------------------------------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kener
+  namespace: ole-status
+  labels: { app: kener }
+spec:
+  replicas: 1              # Safe to scale >1 now that state is in Postgres
+  strategy:
+    type: RollingUpdate
+  selector:
+    matchLabels: { app: kener }
+  template:
+    metadata:
+      labels: { app: kener }
+    spec:
+      containers:
+        - name: kener
+          image: ger-is-registry.caas.intel.com/nd-auto/kener-ole:1.0.3
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              name: http
+          envFrom:
+            - configMapRef: { name: kener-config }
+            - secretRef:    { name: kener-secrets }
+          resources:
+            requests: { cpu: "2", memory: "8Gi" }
+            limits:   { cpu: "4",    memory: "8Gi" }
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kener
+  namespace: ole-status
+  labels: { app: kener }
+spec:
+  type: ClusterIP
+  selector: { app: kener }
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+
+---
+# -----------------------------------------------------------------------------
+# Ingress — edit host + ingressClassName for your cluster, or delete this
+# section and expose the Service another way (NodePort / LoadBalancer).
+# -----------------------------------------------------------------------------
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kener
+  namespace: ole-status
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: ole-status.intel.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kener
+                port:
+                  number: 80
+  tls:
+    - hosts: [ole-status.intel.com]
+      secretName: ole-status-cert

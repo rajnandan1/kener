@@ -17,6 +17,11 @@ import type {
 } from "../types/db.js";
 import GC from "../../global-constants.js";
 import { getUnixTime, differenceInSeconds } from "date-fns";
+import subscriberQueue from "../queues/subscriberQueue.js";
+import type { SubscriptionVariableMap } from "../notification/types.js";
+import { siteDataToVariables } from "../notification/notification_utils.js";
+import mdToHTML from "../../marked.js";
+import { GetAllSiteData } from "./siteDataController.js";
 
 interface IncidentsDashboardInput {
   page: number;
@@ -322,14 +327,54 @@ export const CreateIncident = async (data: IncidentInput): Promise<{ incident_id
 
   let newIncident = await db.createIncident(incident);
 
-  //we need to
-  // queueController.PushDataToQueue(newIncident.id, "createIncident", {
-  //   message: `${incident.incident_type} Created`,
-  //   ...incident,
-  // });
+  // Notify subscribers when an incident is created outside the alerting flow.
+  // Alert-originated incidents are notified by alertingQueue (with full comment context),
+  // so we skip them here to avoid duplicate emails.
+  if (incident.incident_source !== "ALERT") {
+    await NotifyIncidentSubscribers(
+      {
+        id: newIncident.id,
+        title: newIncident.title,
+        state: newIncident.state,
+      },
+      `A new incident **${newIncident.title}** has been opened.`,
+    );
+  }
+
   return {
     incident_id: newIncident.id,
   };
+};
+
+/**
+ * Push a subscription_update email job for all "incidents" subscribers.
+ * Failures are logged but never thrown — we must not fail incident creation
+ * if Redis / the subscriber queue is unavailable.
+ */
+export const NotifyIncidentSubscribers = async (
+  incident: { id: number; title: string; state?: string | null },
+  updateMarkdown?: string,
+): Promise<void> => {
+  try {
+    const siteData = await GetAllSiteData();
+    const siteVars = siteDataToVariables(siteData);
+    const state = incident.state || GC.INVESTIGATING;
+    const body = updateMarkdown || `A new incident **${incident.title}** has been opened.`;
+
+    const variables: SubscriptionVariableMap = {
+      title: incident.title,
+      cta_url: siteVars.site_url + "incidents/" + incident.id,
+      cta_text: "View Incident",
+      update_text: mdToHTML(body),
+      update_subject: `[#${incident.id}:${state}] ${incident.title}`,
+      update_id: String(incident.id),
+      event_type: "incidents",
+    };
+
+    await subscriberQueue.push(variables);
+  } catch (error) {
+    console.error("Failed to notify subscribers about incident:", error);
+  }
 };
 
 export const UpdateIncident = async (incident_id: number, data: IncidentUpdateInput): Promise<number> => {
@@ -480,6 +525,19 @@ export const AddIncidentComment = async (
       }
     }
     await UpdateIncident(incident_id, incidentUpdate);
+  }
+
+  // Notify subscribers about the update/resolution of the incident.
+  // Every new public comment is treated as a status update worth emailing out.
+  if (c && incidentType === GC.INCIDENT) {
+    await NotifyIncidentSubscribers(
+      {
+        id: incident_id,
+        title: incidentExists.title,
+        state: state,
+      },
+      comment,
+    );
   }
 
   return c;

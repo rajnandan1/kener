@@ -4,6 +4,136 @@ import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import { performance } from "node:perf_hooks";
 import type { SqlMonitor, MonitoringResult } from "../types/monitor.js";
 
+/**
+ * Parse an ADO/SQL Server style connection string
+ * (e.g. "Server=host,1433;Database=db;User Id=u;Password=p;TrustServerCertificate=true")
+ * into a Knex/tedious-compatible config object.
+ */
+function parseMssqlConnectionString(connStr: string): Record<string, unknown> {
+  const parts = connStr
+    .split(";")
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  const kv: Record<string, string> = {};
+  for (const part of parts) {
+    const idx = part.indexOf("=");
+    if (idx === -1) continue;
+    const key = part.slice(0, idx).trim().toLowerCase();
+    const value = part.slice(idx + 1).trim();
+    kv[key] = value;
+  }
+
+  // Server / Data Source — may include ",port" or ":port" or "\\instance"
+  const rawServer = kv["server"] ?? kv["data source"] ?? kv["address"] ?? kv["addr"] ?? kv["network address"];
+  let server = rawServer ?? "";
+  let port: number | undefined;
+  let instanceName: string | undefined;
+
+  if (server.includes(",")) {
+    const [host, p] = server.split(",", 2);
+    server = host.trim();
+    const parsed = parseInt(p.trim(), 10);
+    if (!Number.isNaN(parsed)) port = parsed;
+  } else if (/:\d+$/.test(server)) {
+    const [host, p] = server.split(":");
+    server = host.trim();
+    const parsed = parseInt(p.trim(), 10);
+    if (!Number.isNaN(parsed)) port = parsed;
+  }
+  if (server.includes("\\")) {
+    const [host, inst] = server.split("\\", 2);
+    server = host.trim();
+    instanceName = inst.trim();
+  }
+
+  if (kv["port"]) {
+    const parsed = parseInt(kv["port"], 10);
+    if (!Number.isNaN(parsed)) port = parsed;
+  }
+
+  const user = kv["user id"] ?? kv["uid"] ?? kv["user"] ?? kv["username"];
+  const password = kv["password"] ?? kv["pwd"];
+  const database = kv["database"] ?? kv["initial catalog"];
+
+  const truthy = (v: string | undefined) => v !== undefined && /^(true|yes|1)$/i.test(v);
+
+  const encrypt = kv["encrypt"] !== undefined ? truthy(kv["encrypt"]) : true;
+  const trustServerCertificate = truthy(kv["trustservercertificate"]);
+
+  const config: Record<string, unknown> = {
+    server,
+    options: {
+      encrypt,
+      trustServerCertificate,
+      ...(port !== undefined ? { port } : {}),
+      ...(instanceName ? { instanceName } : {}),
+      ...(database ? { database } : {}),
+    },
+  };
+
+  if (user !== undefined) {
+    config.authentication = {
+      type: "default",
+      options: {
+        userName: user,
+        password: password ?? "",
+      },
+    };
+    // Some Knex versions also read top-level user/password
+    config.user = user;
+    if (password !== undefined) config.password = password;
+  }
+
+  if (database) config.database = database;
+
+  return config;
+}
+
+/**
+ * Parse an mssql:// or sqlserver:// URL into a Knex/tedious-compatible config.
+ * Ensures the port is a number (tedious requires it).
+ */
+function parseMssqlUrl(urlStr: string): Record<string, unknown> {
+  const url = new URL(urlStr);
+  const server = decodeURIComponent(url.hostname);
+  const port = url.port ? parseInt(url.port, 10) : undefined;
+  const user = url.username ? decodeURIComponent(url.username) : undefined;
+  const password = url.password ? decodeURIComponent(url.password) : undefined;
+  const database = url.pathname && url.pathname.length > 1 ? decodeURIComponent(url.pathname.slice(1)) : undefined;
+
+  const truthy = (v: string | null) => v !== null && /^(true|yes|1)$/i.test(v);
+  const params = url.searchParams;
+  const encryptParam = params.get("encrypt");
+  const encrypt = encryptParam !== null ? truthy(encryptParam) : true;
+  const trustServerCertificate = truthy(params.get("trustservercertificate") ?? params.get("trustServerCertificate"));
+
+  const config: Record<string, unknown> = {
+    server,
+    options: {
+      encrypt,
+      trustServerCertificate,
+      ...(port !== undefined && !Number.isNaN(port) ? { port } : {}),
+      ...(database ? { database } : {}),
+    },
+  };
+
+  if (user !== undefined) {
+    config.authentication = {
+      type: "default",
+      options: {
+        userName: user,
+        password: password ?? "",
+      },
+    };
+    config.user = user;
+    if (password !== undefined) config.password = password;
+  }
+  if (database) config.database = database;
+
+  return config;
+}
+
 class SqlCall {
   monitor: SqlMonitor;
   envSecrets: Array<{ find: string; replace: string | undefined }>;
@@ -29,10 +159,22 @@ class SqlCall {
     let knexInstance: KnexType | null = null;
 
     try {
+      // For SQL Server, parse connection strings into a config object
+      // because Knex/tedious does not parse ADO strings, and URL parsing
+      // leaves the port as a string (tedious requires a number).
+      let connectionConfig: unknown = connection;
+      if (client === "mssql" && typeof connection === "string") {
+        if (/^mssql:\/\//i.test(connection) || /^sqlserver:\/\//i.test(connection)) {
+          connectionConfig = parseMssqlUrl(connection);
+        } else if (/(?:^|;)\s*server\s*=/i.test(connection)) {
+          connectionConfig = parseMssqlConnectionString(connection);
+        }
+      }
+
       // Create database configuration
       const config = {
         client: client,
-        connection: connection,
+        connection: connectionConfig,
         pool: { min: 0, max: 1 },
         acquireConnectionTimeout: timeout,
       };

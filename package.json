@@ -171,6 +171,7 @@
     "striptags": "^3.2.0",
     "style-to-object": "^1.0.14",
     "svelte-codemirror-editor": "^2.1.0",
+    "tedious": "^18.6.1",
     "vite-plugin-package-version": "^1.1.0"
   },
   "overrides": {
