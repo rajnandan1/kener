@@ -6,13 +6,28 @@ dotenv.config();
 let redisIOClient: IORedis | null = null;
 let redisClient: IORedis | null = null;
 
+function shouldReconnectAfterRedisError(message: string): boolean {
+  const m = message.toUpperCase();
+  // Failover: writes hit a replica until the client points at the new primary.
+  if (m.includes("READONLY")) return true;
+  // RDB/AOF reload after pod restart — commands fail until loading finishes.
+  if (m.includes("LOADING")) return true;
+  // Replication: primary unavailable during StatefulSet rollout.
+  if (m.includes("MASTERDOWN")) return true;
+  return false;
+}
+
 const redisClientOptions: Redis.RedisOptions = {
   maxRetriesPerRequest: null,
-  // Reconnect if Redis starts rejecting writes after a failover.
-  reconnectOnError: (error) => {
+  // Detect dead peers during long K8s / network stalls (default ioredis keepAlive is off).
+  keepAlive: 30000,
+  // Allow long RDB reloads after a StatefulSet restart before giving up on "ready".
+  maxLoadingRetryTime: 120_000,
+  reconnectOnError: (error: Error) => {
     const message = error?.message ?? "";
-    if (message.includes("READONLY")) {
-      return 1;
+    if (shouldReconnectAfterRedisError(message)) {
+      // Reconnect and retry the failed command once the connection is healthy again.
+      return 2;
     }
     return false;
   },
