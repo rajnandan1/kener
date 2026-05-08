@@ -220,6 +220,15 @@ export const ACTION_PERMISSION_MAP: Record<string, string | null> = {
   updateRolePermissions: "roles.assign_permissions",
   addUserToRole: "roles.assign_users",
   removeUserFromRole: "roles.assign_users",
+
+  // Access Groups
+  getAccessGroups: "pages.read",
+  createAccessGroup: "roles.write",
+  deleteAccessGroup: "roles.write",
+  getPageAccessGroups: "pages.read",
+  setPageAccessGroups: "pages.write",
+  getRoleAccessGroups: "roles.read",
+  setRoleAccessGroups: "roles.write",
 };
 
 export const ROUTE_PERMISSION_MAP: Record<string, string | null> = {

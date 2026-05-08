@@ -11,6 +11,8 @@ import type {
   NotFoundResponse,
 } from "$lib/types/api";
 import type { PageRecord } from "$lib/server/types/db";
+import { GetPageAccessGroups } from "$lib/server/controllers/pagesController";
+import { SetPageAccessGroups } from "$lib/server/controllers/pagesController";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {
@@ -99,6 +101,9 @@ async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
 
   const pageMonitors = await db.getPageMonitors(page.id);
 
+  // Fetch access groups for this page
+  const accessGroups = await GetPageAccessGroups(page.id);
+
   return {
     id: page.id,
     page_path: page.page_path,
@@ -108,6 +113,7 @@ async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
     page_logo: page.page_logo,
     page_settings: pageSettings,
     monitors: pageMonitors.map((pm) => ({ monitor_tag: pm.monitor_tag, position: pm.position })),
+    access_groups: accessGroups,
     created_at: formatDateToISO(page.created_at),
     updated_at: formatDateToISO(page.updated_at),
   };
@@ -299,6 +305,25 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
         position: i,
       });
     }
+  }
+
+  // Handle access groups update
+  if (body.access_groups !== undefined && Array.isArray(body.access_groups)) {
+    // Validate that the groups exist
+    const allGroups = await db.getAllAccessGroups();
+    const validGroupIds = allGroups.map((g: { id: string }) => g.id);
+    for (const groupId of body.access_groups) {
+      if (!validGroupIds.includes(groupId)) {
+        const errorResponse: BadRequestResponse = {
+          error: {
+            code: "BAD_REQUEST",
+            message: `Access group '${groupId}' does not exist`,
+          },
+        };
+        return json(errorResponse, { status: 400 });
+      }
+    }
+    await SetPageAccessGroups(page.id, body.access_groups);
   }
 
   // Fetch updated page

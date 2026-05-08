@@ -29,6 +29,7 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import GC from "$lib/global-constants.js";
+  import * as Checkbox from "$lib/components/ui/checkbox/index.js";
 
   // Default page settings
   const defaultPageSettings: PageSettingsType = {
@@ -76,6 +77,10 @@
 
   // Delete state
   let deleteConfirmText = $state("");
+  // Access Groups state
+  let allAccessGroups = $state<Array<{ id: string; group_name: string; description: string | null; is_system: number }>>([]);
+  let pageAccessGroupIds = $state<Set<string>>(new Set());
+  let savingAccessGroups = $state(false);  
   let deleting = $state(false);
   const canDelete = $derived(
     !isNew &&
@@ -163,6 +168,77 @@
     } catch (e) {
       console.error("Failed to fetch monitors", e);
     }
+  }
+
+  async function fetchAccessGroups() {
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "getAccessGroups" })
+      });
+      const result = await response.json();
+      if (!result.error) {
+        allAccessGroups = result;
+      }
+    } catch (e) {
+      console.error("Failed to fetch access groups", e);
+    }
+  }
+
+  async function fetchPageAccessGroups() {
+    if (isNew || !currentPage) return;
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "getPageAccessGroups", data: { page_id: currentPage.id } })
+      });
+      const result = await response.json();
+      if (!result.error) {
+        pageAccessGroupIds = new Set(result);
+      }
+    } catch (e) {
+      console.error("Failed to fetch page access groups", e);
+    }
+  }
+
+  async function saveAccessGroups() {
+    if (!currentPage) return;
+    savingAccessGroups = true;
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "setPageAccessGroups",
+          data: {
+            page_id: currentPage.id,
+            group_ids: Array.from(pageAccessGroupIds)
+          }
+        })
+      });
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Access groups updated");
+      }
+    } catch (e) {
+      toast.error("Failed to update access groups");
+    } finally {
+      savingAccessGroups = false;
+    }
+  }
+
+  function toggleAccessGroup(groupId: string) {
+    const next = new Set(pageAccessGroupIds);
+    if (next.has(groupId)) {
+      next.delete(groupId);
+    } else {
+      next.add(groupId);
+    }
+    pageAccessGroupIds = next;
   }
 
   async function savePage() {
@@ -509,8 +585,9 @@
   }
 
   onMount(() => {
-    void fetchPage();
+    void fetchPage().then(() => fetchPageAccessGroups());
     void fetchMonitors();
+    void fetchAccessGroups();
   });
 </script>
 
@@ -944,6 +1021,63 @@
             {:else}
               <SaveIcon class="h-4 w-4" />
               Save
+            {/if}
+          </Button>
+        </Card.Footer>
+      </Card.Root>
+
+      <!-- Access Groups Card -->
+      <Card.Root>
+        <Card.Header>
+          <Card.Title>Access Groups</Card.Title>
+          <Card.Description>
+            Control who can see this page. Pages with the "public" group are visible to everyone.
+            Pages without "public" require login and are restricted to users whose role includes
+            a matching access group.
+          </Card.Description>
+        </Card.Header>
+        <Card.Content class="space-y-3">
+          {#if allAccessGroups.length === 0}
+            <p class="text-muted-foreground text-sm">No access groups configured yet.</p>
+          {:else}
+            {#each allAccessGroups.filter((g) => g.id !== "admin") as group (group.id)}
+              <Button
+                variant={pageAccessGroupIds.has(group.id) ? "outline" : "ghost"}
+                class="h-auto w-full justify-start gap-3 p-3 text-left {pageAccessGroupIds.has(group.id)
+                  ? 'border-primary bg-primary/5'
+                  : ''}"
+                onclick={() => toggleAccessGroup(group.id)}
+              >
+                <Checkbox.Root
+                  checked={pageAccessGroupIds.has(group.id)}
+                />
+                <div class="flex flex-col">
+                  <span class="text-sm font-medium">{group.group_name}</span>
+                  {#if group.description}
+                    <span class="text-muted-foreground text-xs">{group.description}</span>
+                  {/if}
+                </div>
+              </Button>
+            {/each}
+          {/if}
+          {#if !pageAccessGroupIds.has("public") && pageAccessGroupIds.size > 0}
+            <p class="text-muted-foreground text-xs">
+              This page requires login. Only users with a matching role can access it.
+            </p>
+          {:else if pageAccessGroupIds.size === 0}
+            <p class="text-destructive text-xs">
+              Warning: No access groups selected. This page is only visible to users with the admin group.
+            </p>
+          {/if}
+        </Card.Content>
+        <Card.Footer class="flex justify-end">
+          <Button onclick={saveAccessGroups} disabled={savingAccessGroups}>
+            {#if savingAccessGroups}
+              <Loader class="h-4 w-4 animate-spin" />
+              Saving...
+            {:else}
+              <SaveIcon class="h-4 w-4" />
+              Save Access Groups
             {/if}
           </Button>
         </Card.Footer>

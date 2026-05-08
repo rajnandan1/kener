@@ -168,6 +168,7 @@ const seedSiteData = {
     mode: "off",
     urls: [],
   },
+  autoPublicPages: true,
   globalMaintenanceNotificationSettings: {
     event_types: {
       created: false,

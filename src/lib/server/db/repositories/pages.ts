@@ -129,4 +129,90 @@ export class PagesRepository extends BaseRepository {
       }
     });
   }
+
+  // ============ Access Groups ============
+
+  async getAccessGroupsForPage(page_id: number): Promise<string[]> {
+    const rows = await this.knex("page_access_groups")
+      .where("page_id", page_id)
+      .select("access_group_id");
+    return rows.map((r: { access_group_id: string }) => r.access_group_id);
+  }
+
+  async getAccessGroupsForPages(page_ids: number[]): Promise<Map<number, string[]>> {
+    if (page_ids.length === 0) return new Map();
+    const rows = await this.knex("page_access_groups")
+      .whereIn("page_id", page_ids)
+      .select("page_id", "access_group_id");
+
+    const map = new Map<number, string[]>();
+    for (const row of rows) {
+      const list = map.get(row.page_id) || [];
+      list.push(row.access_group_id);
+      map.set(row.page_id, list);
+    }
+    return map;
+  }
+
+  async getAccessGroupsForRole(role_id: string): Promise<string[]> {
+    const rows = await this.knex("role_access_groups")
+      .where("role_id", role_id)
+      .select("access_group_id");
+    return rows.map((r: { access_group_id: string }) => r.access_group_id);
+  }
+
+  async getAccessGroupsForRoles(role_ids: string[]): Promise<string[]> {
+    if (role_ids.length === 0) return [];
+    const rows = await this.knex("role_access_groups")
+      .whereIn("role_id", role_ids)
+      .distinct("access_group_id")
+      .select("access_group_id");
+    return rows.map((r: { access_group_id: string }) => r.access_group_id);
+  }
+
+  async setPageAccessGroups(page_id: number, group_ids: string[]): Promise<void> {
+    await this.knex.transaction(async (trx) => {
+      await trx("page_access_groups").where("page_id", page_id).del();
+      if (group_ids.length > 0) {
+        const inserts = group_ids.map((gid) => ({
+          page_id,
+          access_group_id: gid,
+          created_at: trx.fn.now(),
+        }));
+        await trx("page_access_groups").insert(inserts);
+      }
+    });
+  }
+
+  async setRoleAccessGroups(role_id: string, group_ids: string[]): Promise<void> {
+    await this.knex.transaction(async (trx) => {
+      await trx("role_access_groups").where("role_id", role_id).del();
+      if (group_ids.length > 0) {
+        const inserts = group_ids.map((gid) => ({
+          role_id,
+          access_group_id: gid,
+          created_at: trx.fn.now(),
+        }));
+        await trx("role_access_groups").insert(inserts);
+      }
+    });
+  }
+
+  async getAllAccessGroups(): Promise<Array<{ id: string; group_name: string; description: string | null }>> {
+    return await this.knex("access_groups").orderBy("id", "asc");
+  }
+
+  async createAccessGroup(data: { id: string; group_name: string; description?: string }): Promise<void> {
+    await this.knex("access_groups").insert({
+      id: data.id,
+      group_name: data.group_name,
+      description: data.description || null,
+      created_at: this.knex.fn.now(),
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  async deleteAccessGroup(id: string): Promise<number> {
+    return await this.knex("access_groups").where("id", id).del();
+  }
 }
