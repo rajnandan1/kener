@@ -52,6 +52,11 @@ export const siteDataKeys: SiteDataKey[] = [
     data_type: "string",
   },
   {
+    key: "emailLogo",
+    isValid: (value) => typeof value === "string",
+    data_type: "string",
+  },
+  {
     key: "metaTags",
     isValid: IsValidJSONString,
     data_type: "object",

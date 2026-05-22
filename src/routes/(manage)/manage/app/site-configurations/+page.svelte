@@ -40,6 +40,7 @@
   let loading = $state(true);
   let savingSiteInfo = $state(false);
   let savingLogo = $state(false);
+  let savingEmailLogo = $state(false);
   let savingFavicon = $state(false);
   let savingSocialPreviewImage = $state(false);
   let savingNav = $state(false);
@@ -50,6 +51,7 @@
   let savingSitemap = $state(false);
   let savingMaintenanceNotificationSettings = $state(false);
   let uploadingLogo = $state(false);
+  let uploadingEmailLogo = $state(false);
   let uploadingFavicon = $state(false);
   let uploadingSocialPreviewImage = $state(false);
 
@@ -59,6 +61,7 @@
     siteName: string;
     siteURL: string;
     logo: string;
+    emailLogo: string;
     favicon: string;
     socialPreviewImage: string | null;
   }
@@ -68,6 +71,7 @@
     siteName: "",
     siteURL: "",
     logo: "",
+    emailLogo: "",
     favicon: "",
     socialPreviewImage: null
   });
@@ -159,6 +163,7 @@
           siteName: data.siteName || "",
           siteURL: data.siteURL || "",
           logo: data.logo || "",
+          emailLogo: data.emailLogo || "",
           favicon: data.favicon || "",
           socialPreviewImage: data.socialPreviewImage || null
         };
@@ -311,6 +316,31 @@
       toast.error("Failed to save logo");
     } finally {
       savingLogo = false;
+    }
+  }
+
+  async function saveEmailLogo() {
+    savingEmailLogo = true;
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "storeSiteData",
+          data: { emailLogo: siteData.emailLogo }
+        })
+      });
+
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Email logo saved successfully");
+      }
+    } catch (e) {
+      toast.error("Failed to save email logo");
+    } finally {
+      savingEmailLogo = false;
     }
   }
 
@@ -590,7 +620,10 @@
     }
   }
 
-  async function handleImageUpload(event: Event, type: "logo" | "favicon" | "socialPreviewImage"): Promise<void> {
+  async function handleImageUpload(
+    event: Event,
+    type: "logo" | "emailLogo" | "favicon" | "socialPreviewImage"
+  ): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
@@ -610,6 +643,8 @@
 
     if (type === "logo") {
       uploadingLogo = true;
+    } else if (type === "emailLogo") {
+      uploadingEmailLogo = true;
     } else if (type === "favicon") {
       uploadingFavicon = true;
     } else {
@@ -620,6 +655,11 @@
       // Convert file to base64
       const base64 = await fileToBase64(file);
 
+      const maxWidth =
+        type === "favicon" ? 64 : type === "socialPreviewImage" ? 640 : type === "emailLogo" ? 600 : 256;
+      const maxHeight =
+        type === "favicon" ? 64 : type === "socialPreviewImage" ? 320 : type === "emailLogo" ? 200 : 256;
+
       const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -629,8 +669,8 @@
             base64,
             mimeType: file.type,
             fileName: file.name,
-            maxWidth: type === "favicon" ? 64 : type === "socialPreviewImage" ? 640 : 256,
-            maxHeight: type === "favicon" ? 64 : type === "socialPreviewImage" ? 320 : 256,
+            maxWidth,
+            maxHeight,
             forceDimensions: type === "socialPreviewImage",
             prefix: `${type}_`
           }
@@ -643,20 +683,30 @@
       } else {
         if (type === "logo") {
           siteData.logo = result.url;
+        } else if (type === "emailLogo") {
+          siteData.emailLogo = result.url;
         } else if (type === "socialPreviewImage") {
           siteData.socialPreviewImage = result.url;
         } else {
           siteData.favicon = result.url;
         }
-        toast.success(
-          `${type === "logo" ? "Logo" : type === "favicon" ? "Favicon" : "Social preview image"} uploaded successfully`
-        );
+        const label =
+          type === "logo"
+            ? "Logo"
+            : type === "emailLogo"
+              ? "Email logo"
+              : type === "favicon"
+                ? "Favicon"
+                : "Social preview image";
+        toast.success(`${label} uploaded successfully`);
       }
     } catch (e) {
       toast.error(`Failed to upload ${type}`);
     } finally {
       if (type === "logo") {
         uploadingLogo = false;
+      } else if (type === "emailLogo") {
+        uploadingEmailLogo = false;
       } else if (type === "favicon") {
         uploadingFavicon = false;
       } else {
@@ -722,9 +772,11 @@
     });
   }
 
-  function clearImage(type: "logo" | "favicon" | "socialPreviewImage") {
+  function clearImage(type: "logo" | "emailLogo" | "favicon" | "socialPreviewImage") {
     if (type === "logo") {
       siteData.logo = "";
+    } else if (type === "emailLogo") {
+      siteData.emailLogo = "";
     } else if (type === "favicon") {
       siteData.favicon = "";
     } else {
@@ -859,6 +911,79 @@
       <Card.Footer class="flex justify-end">
         <Button onclick={saveLogo} disabled={savingLogo} class="cursor-pointer">
           {#if savingLogo}
+            <Loader class="h-4 w-4 animate-spin" />
+            Saving...
+          {:else}
+            <SaveIcon class="h-4 w-4" />
+            Save
+          {/if}
+        </Button>
+      </Card.Footer>
+    </Card.Root>
+
+    <!-- Email Logo Card -->
+    <Card.Root>
+      <Card.Header>
+        <Card.Title>Email Logo</Card.Title>
+        <Card.Description>
+          Optional logo shown in outgoing emails (max 600x200px, PNG/JPG/WebP). Useful when your site logo has a shape
+          that doesn't render well at small sizes. Falls back to the site logo when unset.
+        </Card.Description>
+      </Card.Header>
+      <Card.Content class="space-y-4">
+        <div class="flex items-start gap-4">
+          <!-- Preview -->
+          <div class="bg-muted flex h-24 w-60 items-center justify-center rounded-lg border">
+            {#if siteData.emailLogo}
+              <img
+                src={clientResolver(resolve, siteData.emailLogo)}
+                alt="Email Logo"
+                class="max-h-20 max-w-56 object-contain"
+              />
+            {:else}
+              <ImageIcon class="text-muted-foreground h-8 w-8" />
+            {/if}
+          </div>
+
+          <!-- Upload Controls -->
+          <div class="flex flex-1 flex-col gap-2">
+            <div class="flex gap-2">
+              <Button
+                variant="outline"
+                disabled={uploadingEmailLogo}
+                onclick={() => document.getElementById("email-logo-input")?.click()}
+              >
+                {#if uploadingEmailLogo}
+                  <Loader class="h-4 w-4 animate-spin" />
+                  Uploading...
+                {:else}
+                  <UploadIcon class="h-4 w-4" />
+                  Upload Email Logo
+                {/if}
+              </Button>
+              <input
+                id="email-logo-input"
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp,image/heic,image/heif"
+                class="hidden"
+                onchange={(e) => handleImageUpload(e, "emailLogo")}
+                disabled={uploadingEmailLogo}
+              />
+              {#if siteData.emailLogo}
+                <Button variant="ghost" size="icon" onclick={() => clearImage("emailLogo")}>
+                  <XIcon class="h-4 w-4" />
+                </Button>
+              {/if}
+            </div>
+            {#if siteData.emailLogo}
+              <p class="text-muted-foreground truncate text-xs">{siteData.emailLogo}</p>
+            {/if}
+          </div>
+        </div>
+      </Card.Content>
+      <Card.Footer class="flex justify-end">
+        <Button onclick={saveEmailLogo} disabled={savingEmailLogo} class="cursor-pointer">
+          {#if savingEmailLogo}
             <Loader class="h-4 w-4 animate-spin" />
             Saving...
           {:else}

@@ -4,6 +4,7 @@ const seedSiteData = {
   siteURL: "http://localhost:3000",
   home: "/",
   logo: "/logo.png",
+  emailLogo: "",
   favicon: "/logo96.png",
   metaTags: [
     {

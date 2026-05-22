@@ -29,6 +29,7 @@ export interface SiteDataTransformed {
   siteURL: string;
   home?: string;
   logo?: string;
+  emailLogo?: string;
   favicon?: string;
   metaTags?: SiteMetaTag[];
   nav?: SiteNavItem[];

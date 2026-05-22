@@ -41,7 +41,7 @@ export function siteDataToVariables(siteData: SiteDataTransformed): SiteDataForN
   return {
     site_url: siteData.siteURL + serverResolver("/"),
     site_name: siteData.siteName || "",
-    site_logo_url: (siteData.siteURL || "") + serverResolver(siteData.logo || ""),
+    site_logo_url: (siteData.siteURL || "") + serverResolver(siteData.emailLogo || siteData.logo || ""),
     colors_up: siteData.colors.UP,
     colors_down: siteData.colors.DOWN,
     colors_degraded: siteData.colors.DEGRADED,

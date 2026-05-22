@@ -63,7 +63,7 @@ const emailTemplate = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional
                   <td>
                     <img
                       alt="{{site_name}}"
-                      height="40"
+                      height="200"
                       src="{{site_logo_url}}"
                       style="
                         margin-left: auto;
@@ -72,8 +72,10 @@ const emailTemplate = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional
                         outline: none;
                         border: none;
                         text-decoration: none;
+                        max-width: 100%;
+                        height: auto;
                       "
-                      width="120"
+                      width="600"
                     />
                   </td>
                 </tr>

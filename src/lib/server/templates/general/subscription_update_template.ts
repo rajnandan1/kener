@@ -87,8 +87,9 @@ const emailTemplate = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional
                                 text-decoration: none;
                                 margin-left: auto;
                                 margin-right: auto;
+                                max-width: 100%;
                               "
-                              width="80"
+                              width="600"
                             />
                             <p
                               style="

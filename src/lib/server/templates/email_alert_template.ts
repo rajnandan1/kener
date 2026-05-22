@@ -28,9 +28,10 @@ const emailTemplate = `<!DOCTYPE html>
       border-bottom: 1px solid #eee;
     }
     .logo img {
-      max-width: 120px;
+      max-width: 100%;
+      width: 600px;
       height: auto;
-      max-height: 40px;
+      max-height: 200px;
     }
     .header {
       text-align: center;
