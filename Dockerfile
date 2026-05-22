@@ -110,6 +110,11 @@ RUN apk add --no-cache \
 
 # ---------- Debian runtime ----------
 FROM node:${NODE_VERSION} AS final-debian
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends iputils-ping libcap2-bin curl && \
+    rm -rf /var/lib/apt/lists/* && \
+    # Grant ping the NET_RAW capability so non-root users can send ICMP packets
+    setcap cap_net_raw+ep /bin/ping || true
 
 # ---------- Selected variant ----------
 FROM final-${VARIANT} AS final

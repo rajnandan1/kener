@@ -282,6 +282,7 @@ class DbImpl {
   getMaintenanceEventsForEventsByDateRange!: MaintenancesRepository["getMaintenanceEventsForEventsByDateRange"];
   getMaintenanceEventsForEventsByDateRangeMonitor!: MaintenancesRepository["getMaintenanceEventsForEventsByDateRangeMonitor"];
   getMaintenanceEventsWithDetails!: MaintenancesRepository["getMaintenanceEventsWithDetails"];
+  getActiveMaintenancesWithMonitors!: MaintenancesRepository["getActiveMaintenancesWithMonitors"];
 
   // ============ Monitor Alert Config ============
   insertMonitorAlertConfig!: MonitorAlertConfigRepository["insertMonitorAlertConfig"];
@@ -665,6 +666,9 @@ class DbImpl {
     this.getMaintenanceEventsForEventsByDateRangeMonitor =
       this.maintenances.getMaintenanceEventsForEventsByDateRangeMonitor.bind(this.maintenances);
     this.getMaintenanceEventsWithDetails = this.maintenances.getMaintenanceEventsWithDetails.bind(this.maintenances);
+    this.getActiveMaintenancesWithMonitors = this.maintenances.getActiveMaintenancesWithMonitors.bind(
+      this.maintenances,
+    );
     this.getScheduledEventsStartingSoon = this.maintenances.getScheduledEventsStartingSoon.bind(this.maintenances);
     this.getScheduledEventsAlreadyStarted = this.maintenances.getScheduledEventsAlreadyStarted.bind(this.maintenances);
     this.getReadyEventsInProgress = this.maintenances.getReadyEventsInProgress.bind(this.maintenances);

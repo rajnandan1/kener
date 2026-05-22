@@ -28,7 +28,7 @@
     incident,
     class: className = "",
     hideMonitors = false,
-    showComments = true,
+    showComments = false,
     showSummary = true
   }: Props = $props();
 

@@ -35,9 +35,18 @@
     <div class="flex flex-col items-start justify-start gap-0.5">
       <span class="text-xs font-medium text-{maintenance.status.toLowerCase()}">{$t(maintenance.status)}</span>
       <Item.Title class="min-w-0 text-base wrap-break-word break-all">
-        <a {target} class="hover:underline" href={clientResolver(resolve, `/maintenances/${maintenance.id}`)}
-          >{maintenance.title}</a
-        >
+        {#if maintenance.is_projected && maintenance.maintenance_id !== undefined}
+          <a
+            {target}
+            class="hover:underline"
+            href={clientResolver(resolve, `/maintenances/${maintenance.maintenance_id}?type=maintenance`)}
+            >{maintenance.title}</a
+          >
+        {:else}
+          <a {target} class="hover:underline" href={clientResolver(resolve, `/maintenances/${maintenance.id}`)}
+            >{maintenance.title}</a
+          >
+        {/if}
       </Item.Title>
     </div>
 

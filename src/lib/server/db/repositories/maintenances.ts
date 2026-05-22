@@ -678,6 +678,7 @@ export class MaintenancesRepository extends BaseRepository {
     const query = this.knex("maintenances_events")
       .select(
         "maintenances_events.id",
+        "maintenances_events.maintenance_id",
         "maintenances.title",
         "maintenances.description",
         "maintenances_events.start_date_time",
@@ -741,6 +742,95 @@ export class MaintenancesRepository extends BaseRepository {
   }
 
   /**
+   * Get all active maintenances joined with their monitor metadata (name, image, is_hidden, impact).
+   * Used to project recurring maintenance occurrences from RRULE into a date range when the
+   * scheduler has not yet materialized them in maintenances_events.
+   */
+  async getActiveMaintenancesWithMonitors(): Promise<
+    Array<{
+      id: number;
+      title: string;
+      description: string | null;
+      start_date_time: number;
+      rrule: string;
+      duration_seconds: number;
+      is_global: string;
+      monitors: Array<{
+        monitor_tag: string;
+        monitor_name: string;
+        monitor_image: string | null;
+        monitor_impact: string;
+        is_hidden: string;
+      }>;
+    }>
+  > {
+    const rows = await this.knex("maintenances")
+      .leftJoin("maintenance_monitors", "maintenances.id", "maintenance_monitors.maintenance_id")
+      .leftJoin("monitors", "maintenance_monitors.monitor_tag", "monitors.tag")
+      .where("maintenances.status", GC.ACTIVE)
+      .select(
+        "maintenances.id as id",
+        "maintenances.title as title",
+        "maintenances.description as description",
+        "maintenances.start_date_time as start_date_time",
+        "maintenances.rrule as rrule",
+        "maintenances.duration_seconds as duration_seconds",
+        "maintenances.is_global as is_global",
+        "maintenance_monitors.monitor_tag as monitor_tag",
+        "maintenance_monitors.monitor_impact as monitor_impact",
+        "monitors.name as monitor_name",
+        "monitors.image as monitor_image",
+        "monitors.is_hidden as is_hidden",
+      );
+
+    const byId = new Map<
+      number,
+      {
+        id: number;
+        title: string;
+        description: string | null;
+        start_date_time: number;
+        rrule: string;
+        duration_seconds: number;
+        is_global: string;
+        monitors: Array<{
+          monitor_tag: string;
+          monitor_name: string;
+          monitor_image: string | null;
+          monitor_impact: string;
+          is_hidden: string;
+        }>;
+      }
+    >();
+
+    for (const r of rows) {
+      if (!byId.has(r.id)) {
+        byId.set(r.id, {
+          id: r.id,
+          title: r.title,
+          description: r.description,
+          start_date_time: r.start_date_time,
+          rrule: r.rrule,
+          duration_seconds: r.duration_seconds,
+          is_global: r.is_global,
+          monitors: [],
+        });
+      }
+      if (r.monitor_tag) {
+        byId.get(r.id)!.monitors.push({
+          monitor_tag: r.monitor_tag,
+          monitor_name: r.monitor_name,
+          monitor_image: r.monitor_image,
+          monitor_impact: r.monitor_impact,
+          is_hidden: r.is_hidden,
+        });
+      }
+    }
+
+    return Array.from(byId.values());
+  }
+
+  /**
    * Group raw maintenance rows by maintenance event ID, aggregating monitors into an array
    * Filters out hidden monitors
    */
@@ -759,6 +849,7 @@ export class MaintenancesRepository extends BaseRepository {
           created_at: row.created_at,
           updated_at: row.updated_at,
           monitors: [],
+          ...(row.maintenance_id !== undefined ? { maintenance_id: row.maintenance_id } : {}),
         });
       }
 

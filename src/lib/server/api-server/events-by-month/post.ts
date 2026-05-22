@@ -3,6 +3,7 @@ import type { APIServerRequest } from "$lib/server/types/api-server";
 import type { IncidentForMonitorListWithComments, MaintenanceEventsMonitorList } from "$lib/server/types/db";
 import db from "$lib/server/db/db";
 import { GetAllSiteData } from "$lib/server/controllers/siteDataController";
+import { GetMaintenanceEventsForRange } from "$lib/server/controllers/maintenanceController";
 
 interface EventsByMonthRequest {
   start_ts: number;
@@ -53,7 +54,7 @@ export default async function post(req: APIServerRequest): Promise<Response> {
 
   const [incidents, maintenances] = await Promise.all([
     db.getIncidentsForEventsByDateRange(body.start_ts, body.end_ts, pathMonitors),
-    db.getMaintenanceEventsForEventsByDateRange(body.start_ts, body.end_ts, pathMonitors),
+    GetMaintenanceEventsForRange(body.start_ts, body.end_ts, pathMonitors),
   ]);
 
   const response: EventsByMonthResponse = {

@@ -5,6 +5,7 @@
   import * as Card from "$lib/components/ui/card/index.js";
   import IncidentItem from "$lib/components/IncidentItem.svelte";
   import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
+  import MonthCalendar from "$lib/components/MonthCalendar.svelte";
   import ArrowLeft from "@lucide/svelte/icons/arrow-left";
   import ArrowRight from "@lucide/svelte/icons/arrow-right";
   import Check from "@lucide/svelte/icons/check";
@@ -124,6 +125,27 @@
     return result;
   });
 
+  // Per-day counts for the month calendar (key = unix-seconds start of local day)
+  const dayCounts = $derived.by(() => {
+    const map: Record<number, { incidents: number; maintenances: number }> = {};
+    for (const day of eventsByDay) {
+      let inc = 0;
+      let maint = 0;
+      for (const e of day.events) {
+        if (e.type === "incident") inc++;
+        else maint++;
+      }
+      map[day.date] = { incidents: inc, maintenances: maint };
+    }
+    return map;
+  });
+
+  function scrollToDay(dayTs: number) {
+    const el = document.getElementById(`day-${dayTs}`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   async function fetchEvents() {
     loading = true;
     try {
@@ -174,7 +196,7 @@
 
 
   <div class="flex flex-col gap-4 sm:flex-row">
-    <div class="flex flex-row justify-start gap-y-3 rounded-3xl border p-4">
+    <div class="flex flex-row justify-start gap-y-3 rounded-3xl border px-3 py-2">
       <div class="flex flex-1 flex-row items-center justify-center gap-4">
         <div class="flex w-full flex-row items-center justify-between gap-4">
           <Button
@@ -185,7 +207,7 @@
           >
             <ICONS.CHEVRON_LEFT class="size-5" />
           </Button>
-          <p class="text-2xl">{$formatDate(parsedDate, "MMMM yyyy")}</p>
+          <p class="text-lg">{$formatDate(parsedDate, "MMMM yyyy")}</p>
           <Button
             rel="external"
             href={clientResolver(resolve, `${pagePath}/events/${nextMonthPath}`)}
@@ -198,14 +220,14 @@
       </div>
     </div>
 
-    <div class="flex flex-1 flex-col justify-around gap-y-4 rounded-3xl border p-4">
+    <div class="flex flex-1 flex-col justify-around gap-y-4 rounded-3xl border px-3 py-2">
       <div class="flex flex-wrap gap-x-3">
         <!-- Incidents in this page -->
         <div class="flex flex-1 flex-row items-center gap-2">
           {#if numberOfIncidents === 0}
-            <Check class="text-up" />
+            <Check class="text-up size-5" />
           {:else}
-            <p class="text-3xl">
+            <p class="text-xl">
               {numberOfIncidents}
             </p>
           {/if}
@@ -216,9 +238,9 @@
         <!-- Maintenances in this page -->
         <div class="flex flex-1 flex-row items-center gap-2">
           {#if numberOfMaintenances === 0}
-            <Check class="text-up" />
+            <Check class="text-up size-5" />
           {:else}
-            <p class="text-3xl">
+            <p class="text-xl">
               {numberOfMaintenances}
             </p>
           {/if}
@@ -234,6 +256,8 @@
       <Spinner class="size-8" />
     </div>
   {:else if eventsByDay.length === 0}
+    <!-- Calendar (even when empty, so users can navigate visually) -->
+    <MonthCalendar monthDate={parsedDate} counts={dayCounts} onDaySelect={scrollToDay} />
     <!-- No Events -->
     <Card.Root class="rounded-3xl border bg-transparent shadow-none">
       <Card.Content class=" py-12 text-center">
@@ -247,9 +271,11 @@
       </Card.Content>
     </Card.Root>
   {:else}
+    <!-- Calendar overview -->
+    <MonthCalendar monthDate={parsedDate} counts={dayCounts} onDaySelect={scrollToDay} />
     <!-- Events grouped by day -->
     {#each eventsByDay as day}
-      <div class="flex flex-col gap-2">
+      <div id="day-{day.date}" class="flex scroll-mt-8 flex-col gap-2">
         <div class="bg-secondary mt-4 w-fit rounded-3xl border px-4 py-2 text-xs font-medium">
           {$formatDate(day.date, page.data.dateAndTimeFormat.dateOnly)}
         </div>

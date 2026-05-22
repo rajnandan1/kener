@@ -10,6 +10,7 @@ import type {
   MaintenanceMonitorRecord,
   MaintenanceFilter,
   MaintenanceEventFilter,
+  MaintenanceEventsMonitorList,
 } from "../types/db.js";
 import { GetMinuteStartNowTimestampUTC } from "../tool.js";
 import { maintenanceToVariables, siteDataToVariables } from "../notification/notification_utils.js";
@@ -706,4 +707,109 @@ export const UpdateMaintenanceEventStatuses = async (): Promise<void> => {
   } catch (error) {
     console.error("Error updating maintenance event statuses:", error);
   }
+};
+
+// ============ Maintenance Events for Range (materialized + projected) ============
+
+/**
+ * Return maintenance events for the given range, combining:
+ *  - Materialized rows from `maintenances_events` (within range), and
+ *  - Synthetic occurrences projected from each active maintenance's RRULE for any
+ *    occurrence in the range that has not yet been materialized.
+ *
+ * This allows the events calendar to display recurring maintenances for future months
+ * even though the hourly scheduler only pre-materializes a 7-day window.
+ *
+ * Projected entries are flagged with `is_projected: true` and use a deterministic
+ * negative `id` so they remain stable across renders without colliding with real
+ * event ids.
+ *
+ * @param startTs Unix-seconds start of the range (inclusive)
+ * @param endTs   Unix-seconds end of the range (inclusive)
+ * @param monitorTags If provided, only include maintenances whose monitor tags overlap
+ *                    this list, plus any maintenance flagged is_global=YES.
+ */
+export const GetMaintenanceEventsForRange = async (
+  startTs: number,
+  endTs: number,
+  monitorTags?: string[],
+): Promise<MaintenanceEventsMonitorList[]> => {
+  const materialized = await db.getMaintenanceEventsForEventsByDateRange(startTs, endTs, monitorTags);
+
+  const maintenances = await db.getActiveMaintenancesWithMonitors();
+
+  // Build a lookup of materialized occurrences by maintenance_id+start_date_time so we
+  // can skip projecting an occurrence that already exists as a real event.
+  const materializedKey = new Set<string>();
+  for (const ev of materialized) {
+    if (ev.maintenance_id !== undefined) {
+      materializedKey.add(`${ev.maintenance_id}:${ev.start_date_time}`);
+    }
+  }
+
+  const projected: MaintenanceEventsMonitorList[] = [];
+  const rangeStart = new Date(startTs * 1000);
+  const rangeEnd = new Date(endTs * 1000);
+  const monitorTagSet = monitorTags ? new Set(monitorTags) : null;
+
+  for (const m of maintenances) {
+    // Skip one-time maintenances — their single occurrence is materialized at creation.
+    if (isOneTimeRrule(m.rrule)) continue;
+
+    // Apply the same page-scoping logic the DB query uses: include if global, or if any
+    // attached monitor overlaps the requested monitor list.
+    if (monitorTagSet) {
+      const isGlobal = m.is_global === "YES";
+      const overlap = m.monitors.some((mm) => monitorTagSet.has(mm.monitor_tag));
+      if (!isGlobal && !overlap) continue;
+    }
+
+    let occurrences: Date[] = [];
+    try {
+      const dtstart = new Date(m.start_date_time * 1000);
+      const fullRrule = `DTSTART:${dtstart.toISOString().replace(/[-:]/g, "").split(".")[0]}Z\nRRULE:${m.rrule}`;
+      const rule = rrulestr(fullRrule);
+      occurrences = rule.between(rangeStart, rangeEnd, true);
+    } catch (err) {
+      console.error(`Error projecting RRULE for maintenance ${m.id}:`, err);
+      continue;
+    }
+
+    const visibleMonitors = m.monitors
+      .filter((mm) => mm.is_hidden !== "YES")
+      .map((mm) => ({
+        monitor_tag: mm.monitor_tag,
+        monitor_name: mm.monitor_name,
+        monitor_image: mm.monitor_image,
+        monitor_impact: mm.monitor_impact,
+      }));
+
+    for (const occ of occurrences) {
+      const startSec = Math.floor(occ.getTime() / 1000);
+      if (materializedKey.has(`${m.id}:${startSec}`)) continue;
+
+      const endSec = startSec + m.duration_seconds;
+      // Deterministic, negative, unique synthetic id.
+      const syntheticId = -(m.id * 10_000_000_000 + startSec);
+
+      projected.push({
+        id: syntheticId,
+        maintenance_id: m.id,
+        is_projected: true,
+        title: m.title,
+        description: m.description,
+        start_date_time: startSec,
+        end_date_time: endSec,
+        status: "SCHEDULED",
+        monitors: visibleMonitors,
+        created_at: new Date(),
+        updated_at: new Date(),
+      });
+    }
+  }
+
+  // Merge and sort descending by start_date_time (newest first) to match the existing API.
+  const all = [...materialized, ...projected];
+  all.sort((a, b) => b.start_date_time - a.start_date_time);
+  return all;
 };

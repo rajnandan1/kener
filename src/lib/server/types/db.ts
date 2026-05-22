@@ -644,6 +644,9 @@ export interface MaintenanceEventsMonitorList {
   monitors: MaintenanceMonitorImpact[];
   created_at: Date;
   updated_at: Date;
+  // Optional: present for projected (RRULE) future occurrences not yet materialized in maintenances_events
+  maintenance_id?: number;
+  is_projected?: boolean;
 }
 
 // ============ monitor_alerts_config table ============
