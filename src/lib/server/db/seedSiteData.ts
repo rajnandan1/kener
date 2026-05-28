@@ -135,6 +135,7 @@ const seedSiteData = {
   subMenuOptions: {
     showShareBadgeMonitor: true,
     showShareEmbedMonitor: true,
+    showRssFeed: true,
   },
   dataRetentionPolicy: {
     enabled: true,

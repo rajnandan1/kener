@@ -78,7 +78,8 @@
   // Sub Menu Options
   let subMenuOptions = $state({
     showShareBadgeMonitor: true,
-    showShareEmbedMonitor: true
+    showShareEmbedMonitor: true,
+    showRssFeed: true
   });
 
   const defaultGlobalPageVisibilitySettings: GlobalPageVisibilitySettings =
@@ -172,7 +173,8 @@
         if (data.subMenuOptions) {
           subMenuOptions = {
             showShareBadgeMonitor: data.subMenuOptions.showShareBadgeMonitor ?? true,
-            showShareEmbedMonitor: data.subMenuOptions.showShareEmbedMonitor ?? true
+            showShareEmbedMonitor: data.subMenuOptions.showShareEmbedMonitor ?? true,
+            showRssFeed: data.subMenuOptions.showRssFeed ?? true
           };
         }
 
@@ -1127,6 +1129,15 @@
             <p class="text-muted-foreground text-xs">Show option to get iframe or script embed code for the monitor</p>
           </div>
           <Switch bind:checked={subMenuOptions.showShareEmbedMonitor} />
+        </div>
+        <div class="flex items-center justify-between">
+          <div class="space-y-0.5">
+            <Label>RSS Feed</Label>
+            <p class="text-muted-foreground text-xs">
+              Show an RSS feed link in the page header. The feed itself is always reachable at /rss.xml.
+            </p>
+          </div>
+          <Switch bind:checked={subMenuOptions.showRssFeed} />
         </div>
       </Card.Content>
       <Card.Footer class="flex justify-end">

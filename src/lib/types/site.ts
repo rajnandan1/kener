@@ -89,6 +89,7 @@ export interface SiteSubscriptionsSettings {
 export interface SiteSubMenuOptions {
   showShareBadgeMonitor: boolean;
   showShareEmbedMonitor: boolean;
+  showRssFeed: boolean;
 }
 
 export interface DataRetentionPolicy {
