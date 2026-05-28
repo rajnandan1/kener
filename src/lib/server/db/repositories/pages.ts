@@ -105,6 +105,13 @@ export class PagesRepository extends BaseRepository {
     });
   }
 
+  async updatePageMonitorGroup(page_id: number, monitor_tag: string, group_name: string | null): Promise<number> {
+    return await this.knex("pages_monitors").where({ page_id, monitor_tag }).update({
+      group_name,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
   async monitorExistsOnPage(page_id: number, monitor_tag: string): Promise<boolean> {
     const result = await this.knex("pages_monitors").where({ page_id, monitor_tag }).first();
     return !!result;

@@ -136,6 +136,7 @@ export async function AddMonitorToPage(
   monitor_tag: string,
   monitor_settings_json?: string | null,
   position?: number,
+  group_name?: string | null,
 ): Promise<void> {
   // Check if page exists
   const page = await db.getPageById(page_id);
@@ -161,7 +162,29 @@ export async function AddMonitorToPage(
     monitor_tag,
     monitor_settings_json: monitor_settings_json || null,
     position: finalPosition,
+    group_name: group_name ?? null,
   });
+}
+
+/**
+ * Set or clear the group of a single monitor on a page. group_name=null
+ * moves it back to "ungrouped" — same as removing the group label.
+ */
+export async function UpdatePageMonitorGroup(
+  page_id: number,
+  monitor_tag: string,
+  group_name: string | null,
+): Promise<void> {
+  const page = await db.getPageById(page_id);
+  if (!page) {
+    throw new Error(`Page with id ${page_id} not found`);
+  }
+  const exists = await db.monitorExistsOnPage(page_id, monitor_tag);
+  if (!exists) {
+    throw new Error(`Monitor "${monitor_tag}" not found on this page`);
+  }
+  const normalized = group_name === null ? null : group_name.trim() || null;
+  await db.updatePageMonitorGroup(page_id, monitor_tag, normalized);
 }
 
 /**

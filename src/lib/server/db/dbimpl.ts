@@ -228,6 +228,7 @@ class DbImpl {
   getPageMonitorsExcludeHidden!: PagesRepository["getPageMonitorsExcludeHidden"];
   getPagesByMonitorTag!: PagesRepository["getPagesByMonitorTag"];
   updatePageMonitorSettings!: PagesRepository["updatePageMonitorSettings"];
+  updatePageMonitorGroup!: PagesRepository["updatePageMonitorGroup"];
   monitorExistsOnPage!: PagesRepository["monitorExistsOnPage"];
   deletePageMonitorsByTag!: PagesRepository["deletePageMonitorsByTag"];
   deletePageMonitorsByPageId!: PagesRepository["deletePageMonitorsByPageId"];
@@ -596,6 +597,7 @@ class DbImpl {
     this.getPageMonitorsExcludeHidden = this.pages.getPageMonitorsExcludeHidden.bind(this.pages);
     this.getPagesByMonitorTag = this.pages.getPagesByMonitorTag.bind(this.pages);
     this.updatePageMonitorSettings = this.pages.updatePageMonitorSettings.bind(this.pages);
+    this.updatePageMonitorGroup = this.pages.updatePageMonitorGroup.bind(this.pages);
     this.monitorExistsOnPage = this.pages.monitorExistsOnPage.bind(this.pages);
     this.deletePageMonitorsByTag = this.pages.deletePageMonitorsByTag.bind(this.pages);
     this.deletePageMonitorsByPageId = this.pages.deletePageMonitorsByPageId.bind(this.pages);

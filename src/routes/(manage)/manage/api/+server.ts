@@ -63,6 +63,7 @@ import {
   RemoveMonitorFromPage,
   GetPageMonitors,
   ReorderPageMonitors,
+  UpdatePageMonitorGroup,
 } from "$lib/server/controllers/pagesController.js";
 import {
   CreateMaintenance,
@@ -404,13 +405,16 @@ export async function POST({ request, cookies }) {
       await DeletePage(data.id);
       resp = { success: true };
     } else if (action == "addMonitorToPage") {
-      await AddMonitorToPage(data.page_id, data.monitor_tag);
+      await AddMonitorToPage(data.page_id, data.monitor_tag, undefined, undefined, data.group_name ?? null);
       resp = { success: true };
     } else if (action == "removeMonitorFromPage") {
       await RemoveMonitorFromPage(data.page_id, data.monitor_tag);
       resp = { success: true };
     } else if (action == "reorderPageMonitors") {
       await ReorderPageMonitors(data.page_id, data.monitor_tags);
+      resp = { success: true };
+    } else if (action == "updatePageMonitorGroup") {
+      await UpdatePageMonitorGroup(data.page_id, data.monitor_tag, data.group_name ?? null);
       resp = { success: true };
     }
     // ============ Maintenance Actions ============
