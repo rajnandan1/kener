@@ -528,6 +528,7 @@ export interface PageMonitorRecord {
   position: number;
   created_at: DbTimestamp;
   updated_at: DbTimestamp;
+  group_name: string | null;
 }
 
 export interface PageMonitorRecordInsert {
@@ -535,6 +536,7 @@ export interface PageMonitorRecordInsert {
   monitor_tag: string;
   monitor_settings_json?: string | null;
   position?: number;
+  group_name?: string | null;
 }
 
 export interface PageMonitorRecordTyped {
@@ -544,6 +546,7 @@ export interface PageMonitorRecordTyped {
   position: number;
   created_at: DbTimestamp;
   updated_at: DbTimestamp;
+  group_name: string | null;
 }
 
 // ============ Page Filter ============

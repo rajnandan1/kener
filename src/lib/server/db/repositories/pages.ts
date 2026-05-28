@@ -66,6 +66,7 @@ export class PagesRepository extends BaseRepository {
       monitor_tag: data.monitor_tag,
       monitor_settings_json: data.monitor_settings_json,
       position: data.position ?? 0,
+      group_name: data.group_name ?? null,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     });

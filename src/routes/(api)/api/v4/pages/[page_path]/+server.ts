@@ -9,6 +9,7 @@ import type {
   DeletePageResponse,
   BadRequestResponse,
   NotFoundResponse,
+  PageMonitorInput,
 } from "$lib/types/api";
 import type { PageRecord } from "$lib/server/types/db";
 import GC from "$lib/global-constants";
@@ -17,6 +18,7 @@ import {
   AddMonitorToPage,
   DeletePage,
   GetPageMonitors,
+  normalizePageMonitorInputs,
   RemoveMonitorFromPage,
   UpdatePage,
 } from "$lib/server/controllers/pagesController";
@@ -36,7 +38,11 @@ async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
     page_subheader: page.page_subheader,
     page_logo: page.page_logo,
     page_settings: pageSettings,
-    monitors: pageMonitors.map((pm) => ({ monitor_tag: pm.monitor_tag, position: pm.position })),
+    monitors: pageMonitors.map((pm) => ({
+      monitor_tag: pm.monitor_tag,
+      position: pm.position,
+      group: pm.group_name,
+    })),
     created_at: parseDbTimestamp(page.created_at).toISOString(),
     updated_at: parseDbTimestamp(page.updated_at).toISOString(),
   };
@@ -149,21 +155,29 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     }
   }
 
-  // Validate monitors if provided
-  if (body.monitors !== undefined) {
-    for (const monitorTag of body.monitors) {
-      const monitor = await db.getMonitorByTag(monitorTag);
+  // Normalize monitors (accepts string[] or Array<{tag, group?, position?}>)
+  let normalizedMonitors: ReturnType<typeof normalizePageMonitorInputs> | null = null;
+  if (body.monitors !== undefined && Array.isArray(body.monitors)) {
+    try {
+      normalizedMonitors = normalizePageMonitorInputs(body.monitors as PageMonitorInput[]);
+    } catch (e) {
+      return json({ error: { code: "BAD_REQUEST", message: (e as Error).message } } satisfies BadRequestResponse, {
+        status: 400,
+      });
+    }
+    for (const m of normalizedMonitors) {
+      const monitor = await db.getMonitorByTag(m.tag);
       if (!monitor) {
         const errorResponse: BadRequestResponse = {
           error: {
             code: "BAD_REQUEST",
-            message: `Monitor with tag '${monitorTag}' does not exist`,
+            message: `Monitor with tag '${m.tag}' does not exist`,
           },
         };
         return json(errorResponse, { status: 400 });
       }
     }
-    if (new Set(body.monitors).size !== body.monitors.length) {
+    if (new Set(normalizedMonitors.map((m) => m.tag)).size !== normalizedMonitors.length) {
       const errorResponse: BadRequestResponse = {
         error: {
           code: "BAD_REQUEST",
@@ -221,12 +235,12 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   }
 
   // Handle monitors update - replace all monitors
-  if (body.monitors !== undefined) {
+  if (normalizedMonitors !== null) {
     for (const current of await GetPageMonitors(page.id)) {
       await RemoveMonitorFromPage(page.id, current.monitor_tag);
     }
-    for (let i = 0; i < body.monitors.length; i++) {
-      await AddMonitorToPage(page.id, body.monitors[i], null, i);
+    for (const m of normalizedMonitors) {
+      await AddMonitorToPage(page.id, m.tag, null, m.position, m.group);
     }
   }
 
