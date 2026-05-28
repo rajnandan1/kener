@@ -17,7 +17,8 @@
   import XIcon from "@lucide/svelte/icons/x";
   import ArrowUpIcon from "@lucide/svelte/icons/arrow-up";
   import ArrowDownIcon from "@lucide/svelte/icons/arrow-down";
-  import GripVerticalIcon from "@lucide/svelte/icons/grip-vertical";
+  import FolderInputIcon from "@lucide/svelte/icons/folder-input";
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import UploadIcon from "@lucide/svelte/icons/upload";
   import ImageIcon from "@lucide/svelte/icons/image";
   import TrashIcon from "@lucide/svelte/icons/trash";
@@ -84,9 +85,7 @@
   let reordering = $state(false);
   let addingGroup = $state(false);
   let newGroupName = $state("");
-  let draggedTag = $state<string | null>(null);
-  // null target = ungrouped section, undefined = no active drag-over
-  let dropTargetGroup = $state<string | null | undefined>(undefined);
+  let movingMonitor = $state<string | null>(null);
 
   // Derived: monitors grouped into sections. Ungrouped first, then named groups
   // in first-appearance order, then any pending (empty) groups awaiting drops.
@@ -398,44 +397,15 @@
     }
   }
 
-  // ---- Drag-and-drop between group sections ----
-  // Firefox requires dataTransfer.setData() inside dragstart or the drag is
-  // silently canceled. We also set a payload so cross-element drops work even
-  // when the reactive draggedTag state is read before Svelte flushes.
-  function handleDragStart(e: DragEvent, tag: string) {
-    draggedTag = tag;
-    if (e.dataTransfer) {
-      e.dataTransfer.setData("text/plain", tag);
-      e.dataTransfer.effectAllowed = "move";
-    }
-  }
-  function handleDragEnd() {
-    draggedTag = null;
-    dropTargetGroup = undefined;
-  }
-  function handleDragOver(e: DragEvent, groupName: string | null) {
-    // Always preventDefault so the drop event can fire — relying solely on
-    // draggedTag here would skip preventDefault if dragstart had issues.
-    e.preventDefault();
-    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-    dropTargetGroup = groupName;
-  }
-  function handleDragLeave(groupName: string | null) {
-    if (dropTargetGroup === groupName) dropTargetGroup = undefined;
-  }
-  async function handleDrop(e: DragEvent, groupName: string | null) {
-    e.preventDefault();
-    // Prefer reactive state, but fall back to the dataTransfer payload —
-    // makes the drop resilient if state hasn't flushed for any reason.
-    const tag = draggedTag ?? e.dataTransfer?.getData("text/plain") ?? null;
-    draggedTag = null;
-    dropTargetGroup = undefined;
-    if (!tag || !currentPage) return;
+  // Reassign a single monitor to a different group via the per-row "Move to"
+  // menu. Optimistic update; reverts on server failure.
+  async function moveMonitorToGroup(tag: string, groupName: string | null) {
+    if (!currentPage) return;
     const monitor = selectedMonitors.find((m) => m.monitor_tag === tag);
     if (!monitor || monitor.group_name === groupName) return;
 
     const previousGroup = monitor.group_name;
-    // Optimistic update + drop pending-group marker if we just landed one
+    movingMonitor = tag;
     selectedMonitors = selectedMonitors.map((m) => (m.monitor_tag === tag ? { ...m, group_name: groupName } : m));
     if (groupName) pendingGroups = pendingGroups.filter((g) => g !== groupName);
 
@@ -451,9 +421,10 @@
       const result = await response.json();
       if (result.error) throw new Error(result.error);
     } catch (e) {
-      // Revert
       selectedMonitors = selectedMonitors.map((m) => (m.monitor_tag === tag ? { ...m, group_name: previousGroup } : m));
       toast.error("Failed to move monitor");
+    } finally {
+      movingMonitor = null;
     }
   }
 
@@ -889,7 +860,7 @@
             {#if addingGroup}
               <div class="flex gap-2">
                 <Input
-                  placeholder="Group name (e.g. Mainnet)"
+                  placeholder="Group name"
                   bind:value={newGroupName}
                   onkeydown={(e) => {
                     if (e.key === "Enter") confirmAddGroup();
@@ -902,15 +873,11 @@
             {/if}
 
             {#if selectedMonitors.length > 0}
+              {@const knownGroupNames = groupSections.map((s) => s.name).filter((n): n is string => n !== null)}
               <div class="space-y-3">
                 {#each groupSections as section (section.name ?? "__ungrouped__")}
                   <div
-                    class="rounded-lg border p-2 transition-colors {dropTargetGroup === section.name
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border'}"
-                    ondragover={(e) => handleDragOver(e, section.name)}
-                    ondragleave={() => handleDragLeave(section.name)}
-                    ondrop={(e) => handleDrop(e, section.name)}
+                    class="border-border rounded-lg border p-2"
                     role="region"
                     aria-label={section.name ?? "Ungrouped"}
                   >
@@ -931,30 +898,67 @@
                     </div>
                     {#if section.monitors.length === 0}
                       <p class="text-muted-foreground px-2 py-2 text-xs italic">
-                        Drag a monitor here to add it to this group.
+                        Use the move-to menu on a monitor to add it to this group.
                       </p>
                     {:else}
                       <div class="space-y-2">
                         {#each section.monitors as item, i (item.monitor_tag)}
                           {@const monitor = monitors.find((m) => m.tag === item.monitor_tag)}
-                          <div
-                            class="bg-muted flex items-center justify-between rounded-lg p-3 {draggedTag ===
-                            item.monitor_tag
-                              ? 'opacity-50'
-                              : ''}"
-                            draggable="true"
-                            ondragstart={(e) => handleDragStart(e, item.monitor_tag)}
-                            ondragend={handleDragEnd}
-                            role="listitem"
-                          >
-                            <div class="flex items-center gap-2">
-                              <GripVerticalIcon class="text-muted-foreground h-4 w-4 cursor-grab" />
-                              <div>
-                                <p class="font-medium">{monitor?.name || item.monitor_tag}</p>
-                                <p class="text-muted-foreground text-xs">{item.monitor_tag}</p>
-                              </div>
+                          {@const otherGroups = knownGroupNames.filter((n) => n !== section.name)}
+                          <div class="bg-muted flex items-center justify-between rounded-lg p-3" role="listitem">
+                            <div>
+                              <p class="font-medium">{monitor?.name || item.monitor_tag}</p>
+                              <p class="text-muted-foreground text-xs">{item.monitor_tag}</p>
                             </div>
                             <div class="flex items-center gap-1">
+                              <DropdownMenu.Root>
+                                <DropdownMenu.Trigger>
+                                  {#snippet child({ props })}
+                                    <Button
+                                      {...props}
+                                      variant="ghost"
+                                      size="sm"
+                                      title="Move to group"
+                                      disabled={movingMonitor === item.monitor_tag}
+                                    >
+                                      {#if movingMonitor === item.monitor_tag}
+                                        <Loader class="h-4 w-4 animate-spin" />
+                                      {:else}
+                                        <FolderInputIcon class="h-4 w-4" />
+                                      {/if}
+                                    </Button>
+                                  {/snippet}
+                                </DropdownMenu.Trigger>
+                                <DropdownMenu.Content align="end">
+                                  <DropdownMenu.Label>Move to</DropdownMenu.Label>
+                                  <DropdownMenu.Group>
+                                    {#if section.name !== null}
+                                      <DropdownMenu.Item
+                                        class="cursor-pointer"
+                                        onclick={() => moveMonitorToGroup(item.monitor_tag, null)}
+                                      >
+                                        Ungrouped
+                                      </DropdownMenu.Item>
+                                    {/if}
+                                    {#each otherGroups as g (g)}
+                                      <DropdownMenu.Item
+                                        class="cursor-pointer"
+                                        onclick={() => moveMonitorToGroup(item.monitor_tag, g)}
+                                      >
+                                        {g}
+                                      </DropdownMenu.Item>
+                                    {/each}
+                                    {#if otherGroups.length === 0 && section.name !== null}
+                                      <DropdownMenu.Separator />
+                                    {/if}
+                                    {#if otherGroups.length === 0 && section.name === null}
+                                      <DropdownMenu.Item disabled>
+                                        No groups yet — use Add group above
+                                      </DropdownMenu.Item>
+                                    {/if}
+                                  </DropdownMenu.Group>
+                                </DropdownMenu.Content>
+                              </DropdownMenu.Root>
                               <Button
                                 variant="ghost"
                                 size="sm"
