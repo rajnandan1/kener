@@ -9,8 +9,10 @@ import type {
   DeletePageResponse,
   BadRequestResponse,
   NotFoundResponse,
+  PageMonitorInput,
 } from "$lib/types/api";
 import type { PageRecord } from "$lib/server/types/db";
+import { normalizePageMonitorInputs } from "$lib/server/controllers/pagesController";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {
@@ -107,7 +109,11 @@ async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
     page_subheader: page.page_subheader,
     page_logo: page.page_logo,
     page_settings: pageSettings,
-    monitors: pageMonitors.map((pm) => ({ monitor_tag: pm.monitor_tag, position: pm.position })),
+    monitors: pageMonitors.map((pm) => ({
+      monitor_tag: pm.monitor_tag,
+      position: pm.position,
+      group: pm.group_name,
+    })),
     created_at: formatDateToISO(page.created_at),
     updated_at: formatDateToISO(page.updated_at),
   };
@@ -223,15 +229,23 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     }
   }
 
-  // Validate monitors if provided
+  // Normalize monitors (accepts string[] or Array<{tag, group?, position?}>)
+  let normalizedMonitors: ReturnType<typeof normalizePageMonitorInputs> | null = null;
   if (body.monitors !== undefined && Array.isArray(body.monitors)) {
-    for (const monitorTag of body.monitors) {
-      const monitor = await db.getMonitorByTag(monitorTag);
+    try {
+      normalizedMonitors = normalizePageMonitorInputs(body.monitors as PageMonitorInput[]);
+    } catch (e) {
+      return json({ error: { code: "BAD_REQUEST", message: (e as Error).message } } satisfies BadRequestResponse, {
+        status: 400,
+      });
+    }
+    for (const m of normalizedMonitors) {
+      const monitor = await db.getMonitorByTag(m.tag);
       if (!monitor) {
         const errorResponse: BadRequestResponse = {
           error: {
             code: "BAD_REQUEST",
-            message: `Monitor with tag '${monitorTag}' does not exist`,
+            message: `Monitor with tag '${m.tag}' does not exist`,
           },
         };
         return json(errorResponse, { status: 400 });
@@ -286,17 +300,18 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   }
 
   // Handle monitors update - replace all monitors
-  if (body.monitors !== undefined && Array.isArray(body.monitors)) {
+  if (normalizedMonitors !== null) {
     // Delete all existing page monitors
     await db.deletePageMonitorsByPageId(page.id);
 
-    // Add new monitors
-    for (let i = 0; i < body.monitors.length; i++) {
+    // Add new monitors (preserving any group_name supplied)
+    for (const m of normalizedMonitors) {
       await db.addMonitorToPage({
         page_id: page.id,
-        monitor_tag: body.monitors[i],
+        monitor_tag: m.tag,
         monitor_settings_json: null,
-        position: i,
+        position: m.position,
+        group_name: m.group,
       });
     }
   }

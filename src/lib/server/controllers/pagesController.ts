@@ -1,5 +1,33 @@
 import db from "../db/db.js";
 import type { PageRecord, PageRecordInsert, PageMonitorRecord, PageMonitorRecordInsert } from "../types/db.js";
+import type { PageMonitorInput } from "../../types/api.js";
+
+// ============ Page Monitor Input ============
+
+/**
+ * Normalize the `monitors` field on Create/Update Page requests.
+ * Accepts either a plain string (the tag, ungrouped) or an object with
+ * `{ tag, group?, position? }`. Throws on malformed entries; returns
+ * objects with explicit position (index fallback) and group (null fallback).
+ */
+export function normalizePageMonitorInputs(
+  input: PageMonitorInput[],
+): Array<{ tag: string; group: string | null; position: number }> {
+  return input.map((item, idx) => {
+    if (typeof item === "string") {
+      return { tag: item, group: null, position: idx };
+    }
+    if (!item || typeof item !== "object" || typeof item.tag !== "string" || item.tag.trim().length === 0) {
+      throw new Error("Each monitor must be a string tag or an object with a non-empty `tag` field");
+    }
+    const group = item.group ?? null;
+    if (group !== null && typeof group !== "string") {
+      throw new Error("Monitor `group` must be a string or null");
+    }
+    const position = typeof item.position === "number" ? item.position : idx;
+    return { tag: item.tag.trim(), group: group === null ? null : group.trim() || null, position };
+  });
+}
 
 // ============ Page CRUD Operations ============
 

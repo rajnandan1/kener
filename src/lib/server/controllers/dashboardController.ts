@@ -155,17 +155,52 @@ export interface PageNavItem {
   page_logo: string | null;
 }
 
+export interface PageMonitorGroup {
+  // null means "ungrouped" — renders without a header (matches pre-groups behaviour)
+  name: string | null;
+  tags: string[];
+}
+
 export interface PageDashboardData {
   pageStatus: { statusSummary: string; statusClass: string };
   ongoingIncidents: IncidentForMonitorListWithComments[];
   ongoingMaintenances: MaintenanceEventsMonitorList[];
   upcomingMaintenances: MaintenanceEventsMonitorList[];
   monitorTags: string[];
+  // Ordered: ungrouped (if any) first, then groups in their first-appearance
+  // order. Pages with no group_name on any monitor yield a single group with
+  // name = null, preserving the existing render shape.
+  monitorGroups: PageMonitorGroup[];
   monitorGroupMembersByTag: Record<string, string[]>;
   pageDetails: PageRecordTyped;
   socialPagePreviewImage?: string;
   metaPageTitle?: string;
   metaPageDescription?: string;
+}
+
+function buildMonitorGroups(
+  pageMonitors: Array<{ monitor_tag: string; group_name: string | null }>,
+): PageMonitorGroup[] {
+  const ungrouped: string[] = [];
+  const groupOrder: string[] = [];
+  const byGroup = new Map<string, string[]>();
+  for (const pm of pageMonitors) {
+    if (!pm.group_name) {
+      ungrouped.push(pm.monitor_tag);
+      continue;
+    }
+    if (!byGroup.has(pm.group_name)) {
+      groupOrder.push(pm.group_name);
+      byGroup.set(pm.group_name, []);
+    }
+    byGroup.get(pm.group_name)!.push(pm.monitor_tag);
+  }
+  const result: PageMonitorGroup[] = [];
+  if (ungrouped.length > 0) result.push({ name: null, tags: ungrouped });
+  for (const name of groupOrder) {
+    result.push({ name, tags: byGroup.get(name)! });
+  }
+  return result;
 }
 
 const BuildPageStatus = (latestData: Array<{ status?: string | null; latency?: number | null }>, nowTs: number) => {
@@ -317,6 +352,7 @@ export const GetPageDashboardData = async (
 
   const { page: pageDetails, monitors: pageMonitors } = pageData;
   const monitorTags = pageMonitors.map((pm) => pm.monitor_tag);
+  const monitorGroups = buildMonitorGroups(pageMonitors);
 
   // Parse page settings with defaults
   let settings: PageSettingsType = defaultPageSettings;
@@ -369,6 +405,7 @@ export const GetPageDashboardData = async (
       ongoingMaintenances: [],
       upcomingMaintenances: [],
       monitorTags,
+      monitorGroups,
       monitorGroupMembersByTag: {},
       pageDetails: pageDetailsTyped,
       socialPagePreviewImage,
@@ -414,6 +451,7 @@ export const GetPageDashboardData = async (
     ongoingMaintenances,
     upcomingMaintenances,
     monitorTags,
+    monitorGroups,
     monitorGroupMembersByTag,
     pageDetails: pageDetailsTyped,
     socialPagePreviewImage,
