@@ -179,6 +179,18 @@ const seedSiteData = {
     },
     reminder_buffer_hours: 1,
   },
+  oidcSettings: {
+    enabled: false,
+    provider_name: "",
+    issuer_url: "",
+    client_id: "",
+    client_secret: "",
+    scopes: "openid profile email",
+    groups_claim: "groups",
+    allow_local_login: true,
+    auto_create_users: true,
+    default_role_id: "member",
+  },
 };
 
 export default seedSiteData;

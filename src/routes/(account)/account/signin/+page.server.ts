@@ -7,23 +7,44 @@ import {
   CreateFirstUser,
 } from "$lib/server/controllers/userController";
 import { VerifyPassword, GenerateToken, CookieConfig } from "$lib/server/controllers/commonController";
+import { GetOidcSettings } from "$lib/server/controllers/oidcController";
 import constants from "$lib/global-constants";
 import serverResolve from "$lib/server/resolver.js";
 
-export const load: PageServerLoad = async ({ parent }) => {
+export const load: PageServerLoad = async ({ parent, url }) => {
   const parentData = await parent();
 
   if (!!parentData.loggedInUser && parentData.isSetupComplete) {
     throw redirect(302, serverResolve("/manage/app/site-configurations"));
   }
 
+  const oidcSettings = await GetOidcSettings();
+  const oidcError = url.searchParams.get("oidc_error") || null;
+
   return {
     ...parentData,
+    oidc: oidcSettings
+      ? {
+          enabled: true,
+          providerName: oidcSettings.provider_name || "SSO",
+          allowLocalLogin: oidcSettings.allow_local_login,
+        }
+      : {
+          enabled: false,
+          providerName: "",
+          allowLocalLogin: true,
+        },
+    oidcError,
   };
 };
 
 export const actions: Actions = {
   login: async ({ request, cookies }) => {
+    const oidcSettings = await GetOidcSettings();
+    if (oidcSettings && !oidcSettings.allow_local_login) {
+      return fail(403, { error: "Local login is disabled. Please use SSO.", values: { email: "" } });
+    }
+
     const formData = await request.formData();
     const email = String(formData.get("email") ?? "").trim();
     const password = String(formData.get("password") ?? "");
@@ -42,8 +63,15 @@ export const actions: Actions = {
       return fail(401, { error: "User does not exist", values: { email } });
     }
 
+    if (userDB.auth_provider === "oidc") {
+      return fail(403, {
+        error: "This account uses SSO authentication. Please use the SSO login button.",
+        values: { email },
+      });
+    }
+
     const passwordStored = await GetUserPasswordHashById(userDB.id);
-    if (!passwordStored) {
+    if (!passwordStored || !passwordStored.password_hash) {
       return fail(401, { error: "Invalid password or Email", values: { email } });
     }
 

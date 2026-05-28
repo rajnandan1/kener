@@ -410,6 +410,7 @@
         <Table.Row>
           <Table.Head>Name</Table.Head>
           <Table.Head>Email</Table.Head>
+          <Table.Head class="text-center">Auth</Table.Head>
           <Table.Head class="text-center">Verified</Table.Head>
           <Table.Head>Role</Table.Head>
           <Table.Head>Status</Table.Head>
@@ -439,7 +440,12 @@
               >
               <Table.Cell>{user.email}</Table.Cell>
               <Table.Cell class="text-center">
-                {#if user.is_verified}
+                <Badge variant={user.auth_provider === "oidc" ? "default" : "outline"}>
+                  {user.auth_provider === "oidc" ? "OIDC" : "Local"}
+                </Badge>
+              </Table.Cell>
+              <Table.Cell class="text-center">
+                {#if user.is_verified || user.auth_provider == "oidc"}
                   <CheckCheckIcon class="mx-auto h-4 w-4 text-blue-500" />
                 {:else}
                   <MailWarningIcon class="mx-auto h-4 w-4 text-yellow-500" />
@@ -599,7 +605,7 @@
             </p>
           </div>
           <!-- Resend Invitation -->
-          {#if !toEditUser.has_password}
+          {#if !toEditUser.has_password && toEditUser.auth_provider !== "oidc"}
             <Card.Root>
               <Card.Content class="">
                 <p class="mb-3 text-sm">

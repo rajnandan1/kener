@@ -221,6 +221,13 @@ export const ACTION_PERMISSION_MAP: Record<string, string | null> = {
   updateRolePermissions: "roles.assign_permissions",
   addUserToRole: "roles.assign_users",
   removeUserFromRole: "roles.assign_users",
+
+  // OIDC
+  getOidcGroupRoleMappings: "settings.read",
+  upsertOidcGroupRoleMapping: "settings.write",
+  deleteOidcGroupRoleMapping: "settings.write",
+  testOidcConnection: "settings.write",
+  clearOidcCache: "settings.write",
 };
 
 export const ROUTE_PERMISSION_MAP: Record<string, string | null> = {
@@ -272,4 +279,7 @@ export const ROUTE_PERMISSION_MAP: Record<string, string | null> = {
 
   // Roles
   "/(manage)/manage/app/roles": "roles.read",
+
+  // OIDC
+  "/(manage)/manage/app/oidc": "settings.read",
 };

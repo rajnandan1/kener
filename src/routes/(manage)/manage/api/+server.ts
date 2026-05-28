@@ -136,6 +136,10 @@ import sendSlack from "$lib/server/notification/slack_notification.js";
 import heicConvert from "heic-convert";
 import serverResolver from "$lib/server/resolver.js";
 import { ACTION_PERMISSION_MAP } from "$lib/allPerms.js";
+import {
+  TestOidcConnection,
+  ClearOidcConfigCache,
+} from "$lib/server/controllers/oidcController.js";
 
 export async function POST({ request, cookies }) {
   const payload = await request.json();
@@ -659,6 +663,24 @@ export async function POST({ request, cookies }) {
       resp = await UpdateRole(data.roleId, { name: data.name, status: data.status });
     } else if (action == "deleteRole") {
       resp = await DeleteRole(data.roleId, data.options);
+    }
+    // ============ OIDC Group-Role Mappings ============
+    else if (action == "getOidcGroupRoleMappings") {
+      resp = await db.getAllOidcGroupRoleMappings();
+    } else if (action == "upsertOidcGroupRoleMapping") {
+      await db.upsertOidcGroupRoleMapping({
+        oidc_group: data.oidc_group,
+        role_id: data.role_id,
+      });
+      resp = { success: true };
+    } else if (action == "deleteOidcGroupRoleMapping") {
+      await db.deleteOidcGroupRoleMapping(data.id);
+      resp = { success: true };
+    } else if (action == "testOidcConnection") {
+      resp = await TestOidcConnection(data.settings);
+    } else if (action == "clearOidcCache") {
+      ClearOidcConfigCache();
+      resp = { success: true };
     }
   } catch (error: unknown) {
     console.log(error);

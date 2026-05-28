@@ -145,6 +145,15 @@ class DbImpl {
   getUserPermissionIds!: UsersRepository["getUserPermissionIds"];
   getUserRoleIds!: UsersRepository["getUserRoleIds"];
 
+  // ============ OIDC ============
+  getUserByOidcSub!: UsersRepository["getUserByOidcSub"];
+  updateUserOidcSub!: UsersRepository["updateUserOidcSub"];
+  getAllOidcGroupRoleMappings!: UsersRepository["getAllOidcGroupRoleMappings"];
+  getOidcGroupRoleMappingByGroup!: UsersRepository["getOidcGroupRoleMappingByGroup"];
+  upsertOidcGroupRoleMapping!: UsersRepository["upsertOidcGroupRoleMapping"];
+  deleteOidcGroupRoleMapping!: UsersRepository["deleteOidcGroupRoleMapping"];
+  getOidcRoleIdsForGroups!: UsersRepository["getOidcRoleIdsForGroups"];
+
   // ============ API Keys ============
   createNewApiKey!: UsersRepository["createNewApiKey"];
   updateApiKeyStatus!: UsersRepository["updateApiKeyStatus"];
@@ -518,6 +527,15 @@ class DbImpl {
     this.removeUserFromRole = this.users.removeUserFromRole.bind(this.users);
     this.getUserPermissionIds = this.users.getUserPermissionIds.bind(this.users);
     this.getUserRoleIds = this.users.getUserRoleIds.bind(this.users);
+
+    // OIDC
+    this.getUserByOidcSub = this.users.getUserByOidcSub.bind(this.users);
+    this.updateUserOidcSub = this.users.updateUserOidcSub.bind(this.users);
+    this.getAllOidcGroupRoleMappings = this.users.getAllOidcGroupRoleMappings.bind(this.users);
+    this.getOidcGroupRoleMappingByGroup = this.users.getOidcGroupRoleMappingByGroup.bind(this.users);
+    this.upsertOidcGroupRoleMapping = this.users.upsertOidcGroupRoleMapping.bind(this.users);
+    this.deleteOidcGroupRoleMapping = this.users.deleteOidcGroupRoleMapping.bind(this.users);
+    this.getOidcRoleIdsForGroups = this.users.getOidcRoleIdsForGroups.bind(this.users);
   }
 
   private bindSiteDataMethods(): void {
