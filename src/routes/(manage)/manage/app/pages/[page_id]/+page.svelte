@@ -399,16 +399,25 @@
   }
 
   // ---- Drag-and-drop between group sections ----
-  function handleDragStart(tag: string) {
+  // Firefox requires dataTransfer.setData() inside dragstart or the drag is
+  // silently canceled. We also set a payload so cross-element drops work even
+  // when the reactive draggedTag state is read before Svelte flushes.
+  function handleDragStart(e: DragEvent, tag: string) {
     draggedTag = tag;
+    if (e.dataTransfer) {
+      e.dataTransfer.setData("text/plain", tag);
+      e.dataTransfer.effectAllowed = "move";
+    }
   }
   function handleDragEnd() {
     draggedTag = null;
     dropTargetGroup = undefined;
   }
   function handleDragOver(e: DragEvent, groupName: string | null) {
-    if (!draggedTag) return;
+    // Always preventDefault so the drop event can fire — relying solely on
+    // draggedTag here would skip preventDefault if dragstart had issues.
     e.preventDefault();
+    if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
     dropTargetGroup = groupName;
   }
   function handleDragLeave(groupName: string | null) {
@@ -416,7 +425,9 @@
   }
   async function handleDrop(e: DragEvent, groupName: string | null) {
     e.preventDefault();
-    const tag = draggedTag;
+    // Prefer reactive state, but fall back to the dataTransfer payload —
+    // makes the drop resilient if state hasn't flushed for any reason.
+    const tag = draggedTag ?? e.dataTransfer?.getData("text/plain") ?? null;
     draggedTag = null;
     dropTargetGroup = undefined;
     if (!tag || !currentPage) return;
@@ -932,7 +943,7 @@
                               ? 'opacity-50'
                               : ''}"
                             draggable="true"
-                            ondragstart={() => handleDragStart(item.monitor_tag)}
+                            ondragstart={(e) => handleDragStart(e, item.monitor_tag)}
                             ondragend={handleDragEnd}
                             role="listitem"
                           >
