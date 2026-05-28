@@ -114,11 +114,15 @@ function joinUrl(...parts: string[]): string {
 const FEED_WINDOW_DAYS = 90;
 const FEED_MAX_ITEMS = 50;
 
+// Scope determines which monitors the feed covers.
+//   - page: scoped to a status page's monitor list (honors hidden-monitor
+//     stripping and globalPageVisibilitySettings.forceExclusivity when pagePath is null)
+//   - monitor: scoped to a single monitor by tag (404 if hidden, inactive, or unknown)
+export type RenderRssFeedScope = { type: "page"; pagePath: string | null } | { type: "monitor"; tag: string };
+
 export interface RenderRssFeedArgs {
-  // null = root request: honors globalPageVisibilitySettings.forceExclusivity
-  // (mirrors events-by-month/post.ts behavior).
-  pagePath: string | null;
-  // Path of THIS feed under basePath, e.g. "/rss.xml" or "/my-page/rss.xml".
+  scope: RenderRssFeedScope;
+  // Path of THIS feed under basePath, e.g. "/rss.xml" or "/monitors/foo/rss.xml".
   feedPath: string;
 }
 
@@ -131,19 +135,26 @@ export async function renderRssFeedResponse(args: RenderRssFeedArgs): Promise<Re
   const siteName = siteData.siteName || "Status";
   const basePath = process.env.KENER_BASE_PATH || "";
 
-  let pagePath = args.pagePath;
-  if (!!siteData.globalPageVisibilitySettings?.forceExclusivity && pagePath === null) {
-    pagePath = "";
-  }
-
   let monitorTags: string[] | undefined = undefined;
-  if (pagePath !== null) {
-    const page = await db.getPageByPath(pagePath);
-    if (!page) {
+  if (args.scope.type === "monitor") {
+    const monitor = await db.getMonitorByTag(args.scope.tag);
+    if (!monitor || monitor.is_hidden === "YES" || monitor.status !== "ACTIVE") {
       return new Response("Not found", { status: 404 });
     }
-    const pageMonitors = await db.getPageMonitorsExcludeHidden(page.id);
-    monitorTags = pageMonitors.map((m) => m.monitor_tag);
+    monitorTags = [args.scope.tag];
+  } else {
+    let pagePath = args.scope.pagePath;
+    if (!!siteData.globalPageVisibilitySettings?.forceExclusivity && pagePath === null) {
+      pagePath = "";
+    }
+    if (pagePath !== null) {
+      const page = await db.getPageByPath(pagePath);
+      if (!page) {
+        return new Response("Not found", { status: 404 });
+      }
+      const pageMonitors = await db.getPageMonitorsExcludeHidden(page.id);
+      monitorTags = pageMonitors.map((m) => m.monitor_tag);
+    }
   }
 
   const nowTs = nowSeconds();
