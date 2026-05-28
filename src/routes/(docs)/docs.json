@@ -210,6 +210,10 @@
                       "content": "v4/subscriptions"
                     },
                     {
+                      "title": "RSS Feed",
+                      "content": "v4/rss-feed"
+                    },
+                    {
                       "title": "User Management",
                       "content": "v4/user-management"
                     },
