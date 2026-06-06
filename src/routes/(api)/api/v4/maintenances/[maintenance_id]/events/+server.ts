@@ -1,6 +1,8 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import db from "$lib/server/db/db";
 import type { GetMaintenanceEventsListResponse, MaintenanceEventResponse } from "$lib/types/api";
+import { GetSiteURL } from "$lib/server/controllers/siteDataController";
+import serverResolver from "$lib/server/resolver";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {
@@ -31,6 +33,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   const paginatedEvents = allEvents.slice(offset, offset + limit);
 
   // Build response
+  const siteUrl = await GetSiteURL();
   const events: MaintenanceEventResponse[] = paginatedEvents.map((event) => ({
     id: event.id,
     maintenance_id: event.maintenance_id,
@@ -39,6 +42,7 @@ export const GET: RequestHandler = async ({ locals, url }) => {
     status: event.status as "SCHEDULED" | "ONGOING" | "COMPLETED" | "CANCELLED",
     created_at: formatDateToISO(event.created_at),
     updated_at: formatDateToISO(event.updated_at),
+    url: siteUrl + serverResolver(`/maintenances/${event.id}`),
   }));
 
   const response: GetMaintenanceEventsListResponse = {

@@ -1969,6 +1969,12 @@
             "items": {
               "$ref": "#/components/schemas/MonitorImpact"
             }
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Absolute URL of the public incident page.",
+            "examples": ["https://status.example.com/incidents/12"]
           }
         },
         "additionalProperties": true
@@ -2221,6 +2227,12 @@
             "items": {
               "$ref": "#/components/schemas/MonitorImpact"
             }
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Absolute URL of the public page for this maintenance. The public /maintenances/{id} route is keyed by maintenance EVENT id by default, so this URL carries ?type=maintenance. Always link via this field; never build links by concatenating `id` onto a path.",
+            "examples": ["https://status.example.com/maintenances/4?type=maintenance"]
           }
         },
         "additionalProperties": true
@@ -2308,6 +2320,12 @@
           "event_status": {
             "type": "string",
             "enum": ["SCHEDULED", "ONGOING", "COMPLETED", "CANCELLED", "READY"]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Absolute URL of the public page for this maintenance event.",
+            "examples": ["https://status.example.com/maintenances/9"]
           }
         },
         "additionalProperties": true

@@ -198,6 +198,8 @@ export interface IncidentResponse {
   monitors: IncidentMonitor[];
   created_at: string;
   updated_at: string;
+  /** Absolute URL of the public incident page */
+  url: string;
 }
 
 export interface IncidentDetailResponse extends IncidentResponse {
@@ -298,6 +300,13 @@ export interface MaintenanceResponse {
   monitors: MaintenanceMonitor[];
   created_at: string;
   updated_at: string;
+  /**
+   * Absolute URL of the public page for this maintenance.
+   * Note: the public /maintenances/<id> route is keyed by maintenance EVENT id
+   * by default, so this URL carries ?type=maintenance. Link via this field,
+   * never by concatenating `id` onto a path. See docs/adr/0002.
+   */
+  url: string;
 }
 
 export interface GetMaintenancesListResponse {
@@ -344,6 +353,8 @@ export interface MaintenanceEventResponse {
   status: "SCHEDULED" | "READY" | "ONGOING" | "COMPLETED" | "CANCELLED";
   created_at: string;
   updated_at: string;
+  /** Absolute URL of the public page for this maintenance event */
+  url: string;
 }
 
 export interface GetMaintenanceEventsListResponse {
@@ -386,6 +397,8 @@ export interface MaintenanceEventDetailResponse {
   maintenance_rrule: string;
   maintenance_duration_seconds: number;
   monitors: MaintenanceMonitor[];
+  /** Absolute URL of the public page for this maintenance event */
+  url: string;
 }
 
 export interface GetMaintenanceEventsDetailListResponse {

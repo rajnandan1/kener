@@ -1,0 +1,5 @@
+# Public maintenance page is keyed by Maintenance Event id
+
+The public route `/maintenances/<id>` interprets `<id>` as a Maintenance Event id by default (with `?type=maintenance` to address a Maintenance definition instead), even though the route param is named `maintenance_id`. Issue #723 showed this misleads API consumers: `/api/v4/maintenances` returns Maintenance ids, and linking those to `/maintenances/<id>` lands on whatever Event happens to carry that id — an apparent "off-by-one title mismatch" with no actual data corruption.
+
+We considered flipping the route default to Maintenance ids but rejected it: every internal status-page link, subscriber email, and externally bookmarked URL is keyed by Event id, and all of those would break. Instead, v4 API responses carry an absolute `url` field (built from the configured Site URL) that resolves correctly — `?type=maintenance` for Maintenance objects, the plain Event-id path for Maintenance Events. Consumers should link via `url`, never by concatenating ids onto paths.

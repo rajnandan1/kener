@@ -29,3 +29,13 @@ A monitor that may become a Member: ACTIVE, not a Group Monitor, and not the gro
 
 **Stale Member**:
 A Member whose monitor is no longer an Eligible Monitor (paused or deleted after being added). It remains a Member until explicitly removed, but is excluded from the group score.
+
+### Maintenance
+
+**Maintenance**:
+A recurring maintenance definition: title, description, an RRULE schedule, a duration, and affected monitors. Identified by its own id.
+_Avoid_: Maintenance window, maintenance event (that's an occurrence, see below)
+
+**Maintenance Event**:
+A single occurrence of a Maintenance, generated from its RRULE: a concrete start/end time with a lifecycle status (SCHEDULED → READY → ONGOING → COMPLETED). Has its own id, independent of the Maintenance id. The public maintenance page is keyed by Maintenance Event id.
+_Avoid_: Occurrence, maintenance instance

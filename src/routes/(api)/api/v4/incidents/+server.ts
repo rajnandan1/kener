@@ -10,6 +10,8 @@ import type {
 } from "$lib/types/api";
 import GC from "$lib/global-constants";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
+import { GetSiteURL } from "$lib/server/controllers/siteDataController";
+import serverResolver from "$lib/server/resolver";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {
@@ -56,6 +58,7 @@ export const GET: RequestHandler = async ({ url }) => {
   }
 
   // Build response with monitors for each incident
+  const siteUrl = await GetSiteURL();
   const incidents: IncidentResponse[] = [];
   for (const incident of rawIncidents) {
     const monitors = await db.getIncidentMonitorsByIncidentID(incident.id);
@@ -72,6 +75,7 @@ export const GET: RequestHandler = async ({ url }) => {
       })),
       created_at: formatDateToISO(incident.created_at),
       updated_at: formatDateToISO(incident.updated_at),
+      url: siteUrl + serverResolver(`/incidents/${incident.id}`),
     });
   }
 
@@ -207,6 +211,7 @@ export const POST: RequestHandler = async ({ request }) => {
       })),
       created_at: formatDateToISO(createdIncident.created_at),
       updated_at: formatDateToISO(createdIncident.updated_at),
+      url: (await GetSiteURL()) + serverResolver(`/incidents/${createdIncident.id}`),
     },
   };
 

@@ -108,6 +108,12 @@ export const GetLocaleFromCookie = (site: SiteDataTransformed, cookies: Cookies)
   return selectedLang;
 };
 
+/** Returns the configured site URL without a trailing slash, for building absolute public URLs. */
+export const GetSiteURL = async (): Promise<string> => {
+  const siteURL = await GetSiteDataByKey("siteURL");
+  return typeof siteURL === "string" ? siteURL.replace(/\/+$/, "") : "";
+};
+
 export const GetSiteLogoURL = async (siteURL: string, logo: string, base: string): Promise<string> => {
   if (logo.startsWith("http")) {
     return logo;
