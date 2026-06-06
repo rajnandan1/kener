@@ -58,6 +58,7 @@
     page_path: string;
     page_title: string;
     monitors?: { monitor_tag: string }[];
+    monitor_groups?: Array<{ id: number; monitors: Array<{ monitor_tag: string }> }>;
   }
   let allPages = $state<PageWithMonitors[]>([]);
 
@@ -82,7 +83,13 @@
   let typeData = $state<Record<string, unknown>>({});
 
   // Get pages this monitor is on
-  const monitorPages = $derived(allPages.filter((p) => p.monitors?.some((m) => m.monitor_tag === monitor.tag)));
+  const monitorPages = $derived(
+    allPages.filter(
+      (p) =>
+        p.monitors?.some((m) => m.monitor_tag === monitor.tag) ||
+        p.monitor_groups?.some((group) => group.monitors.some((m) => m.monitor_tag === monitor.tag)),
+    ),
+  );
 
   async function fetchMonitor() {
     if (isNew) {

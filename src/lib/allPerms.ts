@@ -14,7 +14,7 @@
  * maintenances.write → createMaintenance, updateMaintenance, deleteMaintenance, createMaintenanceEvent, updateMaintenanceEvent, deleteMaintenanceEvent, addMonitorToMaintenance, removeMonitorFromMaintenance, updateMaintenanceMonitorImpact
  *
  * pages.read         → getPages
- * pages.write        → createPage, updatePage, deletePage, addMonitorToPage, removeMonitorFromPage, reorderPageMonitors
+ * pages.write        → createPage, updatePage, deletePage, addMonitorToPage, removeMonitorFromPage, reorderPageMonitors, createPageMonitorGroup, updatePageMonitorGroup, deletePageMonitorGroup, movePageMonitorToGroup, reorderPageTopLevelItems, reorderPageGroupMonitors, replacePageMonitorStructure
  *
  * triggers.read      → getTriggers
  * triggers.write     → createUpdateTrigger, updateMonitorTriggers, deleteTrigger, testTrigger
@@ -162,6 +162,13 @@ export const ACTION_PERMISSION_MAP: Record<string, string | null> = {
   addMonitorToPage: "pages.write",
   removeMonitorFromPage: "pages.write",
   reorderPageMonitors: "pages.write",
+  createPageMonitorGroup: "pages.write",
+  updatePageMonitorGroup: "pages.write",
+  deletePageMonitorGroup: "pages.write",
+  movePageMonitorToGroup: "pages.write",
+  reorderPageTopLevelItems: "pages.write",
+  reorderPageGroupMonitors: "pages.write",
+  replacePageMonitorStructure: "pages.write",
 
   // Triggers
   getTriggers: "triggers.read",

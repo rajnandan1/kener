@@ -1,6 +1,7 @@
 import db from "../db/db.js";
 import { GetMinuteStartNowTimestampUTC, BeginningOfMinute, BeginningOfDay } from "../tool.js";
-import { GetPageByPathWithMonitors, GetLatestMonitoringDataAllActive } from "./controller.js";
+import { GetLatestMonitoringDataAllActive } from "./controller.js";
+import { GetPageByPathWithMonitorStructure, type PageMonitorGroupWithMonitors } from "./pagesController.js";
 import { GetMonitorsParsed } from "./monitorsController.js";
 import { GetStatusSummary, GetStatusBgColor } from "../../clientTools";
 
@@ -16,6 +17,7 @@ import type {
 } from "../types/db.js";
 import type { GroupMonitorTypeData } from "../types/monitor.js";
 import GC from "../../global-constants.js";
+import type { StatusType } from "../../global-constants.js";
 import type { LayoutServerData } from "./layoutController.js";
 
 // Default page settings
@@ -162,6 +164,20 @@ export interface PageDashboardData {
   upcomingMaintenances: MaintenanceEventsMonitorList[];
   monitorTags: string[];
   monitorGroupMembersByTag: Record<string, string[]>;
+  latestStatusByTag: Record<string, StatusType>;
+  pageMonitorItems: Array<
+    | { kind: "monitor"; monitor_tag: string; position: number }
+      | {
+          kind: "group";
+          id: number;
+          name: string;
+          description: string | null;
+          default_expanded: boolean;
+          adopt_child_status: boolean;
+          position: number;
+          monitors: Array<{ monitor_tag: string; position: number }>;
+        }
+  >;
   pageDetails: PageRecordTyped;
   socialPagePreviewImage?: string;
   metaPageTitle?: string;
@@ -309,13 +325,18 @@ export const GetPageDashboardData = async (
   pagePath: string,
   layoutData: LayoutServerData,
 ): Promise<PageDashboardData | null> => {
-  // Fetch page by path with monitors
-  const pageData = await GetPageByPathWithMonitors(pagePath);
+  const pageData = await GetPageByPathWithMonitorStructure(pagePath, {
+    excludeHidden: true,
+    includeEmptyGroups: false,
+  });
   if (!pageData) {
     return null;
   }
 
-  const { page: pageDetails, monitors: pageMonitors } = pageData;
+  const {
+    page: pageDetails,
+    structure: { all_monitors: pageMonitors, monitors: topLevelMonitors, monitor_groups: pageMonitorGroups },
+  } = pageData;
   const monitorTags = pageMonitors.map((pm) => pm.monitor_tag);
 
   // Parse page settings with defaults
@@ -370,6 +391,8 @@ export const GetPageDashboardData = async (
       upcomingMaintenances: [],
       monitorTags,
       monitorGroupMembersByTag: {},
+      latestStatusByTag: {},
+      pageMonitorItems: [],
       pageDetails: pageDetailsTyped,
       socialPagePreviewImage,
       metaPageTitle,
@@ -398,6 +421,9 @@ export const GetPageDashboardData = async (
 
   const pageStatus = BuildPageStatus(latestData, nowTs);
   const monitorGroupMembersByTag: Record<string, string[]> = {};
+  const latestStatusByTag: Record<string, StatusType> = Object.fromEntries(
+    latestData.map((item) => [item.monitor_tag, (item.status as StatusType) || GC.NO_DATA]),
+  );
 
   for (const monitor of parsedMonitors) {
     if (monitor.monitor_type !== "GROUP") continue;
@@ -408,6 +434,27 @@ export const GetPageDashboardData = async (
     monitorGroupMembersByTag[monitor.tag] = groupData.monitors.map((member) => member.tag);
   }
 
+  const pageMonitorItems = [
+    ...topLevelMonitors.map((monitor) => ({
+      kind: "monitor" as const,
+      monitor_tag: monitor.monitor_tag,
+      position: monitor.position,
+    })),
+    ...pageMonitorGroups.map((group: PageMonitorGroupWithMonitors) => ({
+      kind: "group" as const,
+      id: group.id,
+      name: group.name,
+      description: group.description,
+      default_expanded: group.default_expanded,
+      adopt_child_status: group.adopt_child_status,
+      position: group.position,
+      monitors: group.monitors.map((monitor) => ({
+        monitor_tag: monitor.monitor_tag,
+        position: monitor.position,
+      })),
+    })),
+  ].sort((a, b) => a.position - b.position);
+
   return {
     pageStatus,
     ongoingIncidents,
@@ -415,6 +462,8 @@ export const GetPageDashboardData = async (
     upcomingMaintenances,
     monitorTags,
     monitorGroupMembersByTag,
+    latestStatusByTag,
+    pageMonitorItems,
     pageDetails: pageDetailsTyped,
     socialPagePreviewImage,
     metaPageTitle,

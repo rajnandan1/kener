@@ -1,120 +1,27 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import db from "$lib/server/db/db";
+import {
+  CreatePage,
+  ReplacePageMonitorStructure,
+} from "$lib/server/controllers/pagesController.js";
+import {
+  formatApiPageResponse,
+  getDefaultApiPageSettings,
+  mergeApiPageSettings,
+  normalizePageMonitorGroupRequest,
+  normalizePageMonitorRequest,
+  validatePageMonitorStructureInput,
+} from "$lib/server/pagesApi.js";
 import type {
-  GetPagesListResponse,
-  PageResponse,
-  PageSettings,
+  BadRequestResponse,
   CreatePageRequest,
   CreatePageResponse,
-  BadRequestResponse,
+  GetPagesListResponse,
 } from "$lib/types/api";
-import type { PageRecord } from "$lib/server/types/db";
-
-function formatDateToISO(date: Date | string): string {
-  if (date instanceof Date) {
-    return date.toISOString();
-  }
-  // Handle string dates (e.g., from SQLite: "2026-01-27 16:07:19")
-  const parsed = new Date(date.replace(" ", "T") + "Z");
-  return parsed.toISOString();
-}
-
-function getDefaultPageSettings(): PageSettings {
-  return {
-    incidents: {
-      enabled: true,
-      ongoing: { show: true },
-      resolved: { show: true, max_count: 5, days_in_past: 7 },
-    },
-    include_maintenances: {
-      enabled: true,
-      ongoing: {
-        show: true,
-        past: { show: true, max_count: 5, days_in_past: 7 },
-        upcoming: { show: true, max_count: 5, days_in_future: 30 },
-      },
-    },
-  };
-}
-
-function mergePageSettings(defaults: PageSettings, partial?: Partial<PageSettings>): PageSettings {
-  if (!partial) {
-    return defaults;
-  }
-
-  return {
-    incidents: {
-      enabled: partial.incidents?.enabled ?? defaults.incidents.enabled,
-      ongoing: {
-        show: partial.incidents?.ongoing?.show ?? defaults.incidents.ongoing.show,
-      },
-      resolved: {
-        show: partial.incidents?.resolved?.show ?? defaults.incidents.resolved.show,
-        max_count: partial.incidents?.resolved?.max_count ?? defaults.incidents.resolved.max_count,
-        days_in_past: partial.incidents?.resolved?.days_in_past ?? defaults.incidents.resolved.days_in_past,
-      },
-    },
-    include_maintenances: {
-      enabled: partial.include_maintenances?.enabled ?? defaults.include_maintenances.enabled,
-      ongoing: {
-        show: partial.include_maintenances?.ongoing?.show ?? defaults.include_maintenances.ongoing.show,
-        past: {
-          show: partial.include_maintenances?.ongoing?.past?.show ?? defaults.include_maintenances.ongoing.past.show,
-          max_count:
-            partial.include_maintenances?.ongoing?.past?.max_count ??
-            defaults.include_maintenances.ongoing.past.max_count,
-          days_in_past:
-            partial.include_maintenances?.ongoing?.past?.days_in_past ??
-            defaults.include_maintenances.ongoing.past.days_in_past,
-        },
-        upcoming: {
-          show:
-            partial.include_maintenances?.ongoing?.upcoming?.show ??
-            defaults.include_maintenances.ongoing.upcoming.show,
-          max_count:
-            partial.include_maintenances?.ongoing?.upcoming?.max_count ??
-            defaults.include_maintenances.ongoing.upcoming.max_count,
-          days_in_future:
-            partial.include_maintenances?.ongoing?.upcoming?.days_in_future ??
-            defaults.include_maintenances.ongoing.upcoming.days_in_future,
-        },
-      },
-    },
-  };
-}
-
-async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
-  let pageSettings: PageSettings = getDefaultPageSettings();
-
-  if (page.page_settings_json) {
-    try {
-      const parsed = JSON.parse(page.page_settings_json);
-      pageSettings = mergePageSettings(getDefaultPageSettings(), parsed);
-    } catch {
-      // Use defaults on parse error
-    }
-  }
-
-  const pageMonitors = await db.getPageMonitors(page.id);
-
-  return {
-    id: page.id,
-    page_path: page.page_path,
-    page_title: page.page_title,
-    page_header: page.page_header,
-    page_subheader: page.page_subheader,
-    page_logo: page.page_logo,
-    page_settings: pageSettings,
-    monitors: pageMonitors.map((pm) => ({ monitor_tag: pm.monitor_tag, position: pm.position })),
-    created_at: formatDateToISO(page.created_at),
-    updated_at: formatDateToISO(page.updated_at),
-  };
-}
 
 export const GET: RequestHandler = async () => {
   const rawPages = await db.getAllPages();
-
-  const pages: PageResponse[] = await Promise.all(rawPages.map(formatPageResponse));
+  const pages = await Promise.all(rawPages.map(formatApiPageResponse));
 
   const response: GetPagesListResponse = {
     pages,
@@ -138,18 +45,18 @@ export const POST: RequestHandler = async ({ request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  // Validate required fields
   if (!body.page_path || typeof body.page_path !== "string") {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "page_path is required and must be a string",
-      },
-    };
-    return json(errorResponse, { status: 400 });
+    return json(
+      {
+        error: {
+          code: "BAD_REQUEST",
+          message: "page_path is required and must be a string",
+        },
+      } satisfies BadRequestResponse,
+      { status: 400 },
+    );
   }
 
-  // Make page_path URL-friendly: lowercase, replace spaces with hyphens, remove special chars
   const sanitizedPagePath = body.page_path
     .toLowerCase()
     .trim()
@@ -157,82 +64,85 @@ export const POST: RequestHandler = async ({ request }) => {
     .replace(/[^a-z0-9_-]/g, "");
 
   if (!body.page_title || typeof body.page_title !== "string" || body.page_title.trim().length === 0) {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "page_title is required and must be a non-empty string",
-      },
-    };
-    return json(errorResponse, { status: 400 });
+    return json(
+      {
+        error: {
+          code: "BAD_REQUEST",
+          message: "page_title is required and must be a non-empty string",
+        },
+      } satisfies BadRequestResponse,
+      { status: 400 },
+    );
   }
 
   if (!body.page_header || typeof body.page_header !== "string" || body.page_header.trim().length === 0) {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "page_header is required and must be a non-empty string",
-      },
-    };
-    return json(errorResponse, { status: 400 });
+    return json(
+      {
+        error: {
+          code: "BAD_REQUEST",
+          message: "page_header is required and must be a non-empty string",
+        },
+      } satisfies BadRequestResponse,
+      { status: 400 },
+    );
   }
 
-  // Check if page with this path already exists
   const existingPage = await db.getPageByPath(sanitizedPagePath);
   if (existingPage) {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: `Page with path '${sanitizedPagePath}' already exists`,
-      },
-    };
-    return json(errorResponse, { status: 400 });
+    return json(
+      {
+        error: {
+          code: "BAD_REQUEST",
+          message: `Page with path '${sanitizedPagePath}' already exists`,
+        },
+      } satisfies BadRequestResponse,
+      { status: 400 },
+    );
   }
 
-  // Validate monitors if provided
-  if (body.monitors && Array.isArray(body.monitors)) {
-    for (const monitorTag of body.monitors) {
-      const monitor = await db.getMonitorByTag(monitorTag);
-      if (!monitor) {
-        const errorResponse: BadRequestResponse = {
-          error: {
-            code: "BAD_REQUEST",
-            message: `Monitor with tag '${monitorTag}' does not exist`,
-          },
-        };
-        return json(errorResponse, { status: 400 });
-      }
-    }
+  const normalizedMonitors = (body.monitors || []).map((monitor, index) => normalizePageMonitorRequest(monitor, index));
+  const normalizedMonitorGroups = (body.monitor_groups || []).map((group, index) =>
+    normalizePageMonitorGroupRequest(group, normalizedMonitors.length + index),
+  );
+
+  try {
+    await validatePageMonitorStructureInput({
+      monitors: normalizedMonitors,
+      monitor_groups: normalizedMonitorGroups,
+    });
+  } catch (error) {
+    return json(
+      {
+        error: {
+          code: "BAD_REQUEST",
+          message: error instanceof Error ? error.message : "Invalid page monitor structure",
+        },
+      } satisfies BadRequestResponse,
+      { status: 400 },
+    );
   }
 
-  // Prepare page settings
-  const pageSettings = mergePageSettings(getDefaultPageSettings(), body.page_settings);
+  const pageSettings = mergeApiPageSettings(getDefaultApiPageSettings(), body.page_settings);
 
-  // Create the page
-  const pageData = {
+  const createdPage = await CreatePage({
     page_path: sanitizedPagePath,
     page_title: body.page_title.trim(),
     page_header: body.page_header.trim(),
     page_subheader: body.page_subheader ?? null,
     page_logo: body.page_logo ?? null,
     page_settings_json: JSON.stringify(pageSettings),
-  };
+  });
 
-  const createdPage = await db.createPage(pageData);
-
-  // Add monitors to the page
-  if (body.monitors && Array.isArray(body.monitors)) {
-    for (let i = 0; i < body.monitors.length; i++) {
-      await db.addMonitorToPage({
-        page_id: createdPage.id,
-        monitor_tag: body.monitors[i],
-        monitor_settings_json: null,
-        position: i,
-      });
-    }
+  if (normalizedMonitors.length > 0 || normalizedMonitorGroups.length > 0) {
+    await ReplacePageMonitorStructure(createdPage.id, {
+      monitors: normalizedMonitors,
+      monitor_groups: normalizedMonitorGroups,
+    });
   }
 
+  const freshPage = await db.getPageById(createdPage.id);
   const response: CreatePageResponse = {
-    page: await formatPageResponse(createdPage),
+    page: await formatApiPageResponse(freshPage || createdPage),
   };
 
   return json(response, { status: 201 });

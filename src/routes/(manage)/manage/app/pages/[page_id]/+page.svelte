@@ -13,10 +13,7 @@
   import { toast } from "svelte-sonner";
   import Loader from "@lucide/svelte/icons/loader";
   import SaveIcon from "@lucide/svelte/icons/save";
-  import PlusIcon from "@lucide/svelte/icons/plus";
   import XIcon from "@lucide/svelte/icons/x";
-  import ArrowUpIcon from "@lucide/svelte/icons/arrow-up";
-  import ArrowDownIcon from "@lucide/svelte/icons/arrow-down";
   import UploadIcon from "@lucide/svelte/icons/upload";
   import ImageIcon from "@lucide/svelte/icons/image";
   import TrashIcon from "@lucide/svelte/icons/trash";
@@ -29,6 +26,7 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import GC from "$lib/global-constants.js";
+  import PageMonitorsEditor from "./components/PageMonitorsEditor.svelte";
 
   // Default page settings
   const defaultPageSettings: PageSettingsType = {
@@ -40,7 +38,16 @@
   };
 
   interface PageWithMonitors extends PageRecord {
-    monitors?: { monitor_tag: string }[];
+    monitors?: Array<{ monitor_tag: string; position: number; page_monitor_group_id: number | null }>;
+    monitor_groups?: Array<{
+      id: number;
+      name: string;
+      description: string | null;
+      default_expanded: boolean;
+      adopt_child_status: boolean;
+      position: number;
+      monitors: Array<{ monitor_tag: string; position: number }>;
+    }>;
   }
 
   // Get page ID from URL params
@@ -50,7 +57,6 @@
   // State
   let loading = $state(true);
   let saving = $state(false);
-  let savingMonitors = $state(false);
   let uploadingLogo = $state(false);
   let uploadingSocialPreview = $state(false);
 
@@ -66,13 +72,6 @@
     page_subheader: "",
     page_logo: ""
   });
-
-  // Monitor selection
-  let selectedMonitorTag = $state("");
-  let selectedMonitors = $state<string[]>([]);
-  let addingMonitor = $state(false);
-  let removingMonitor = $state<string | null>(null);
-  let reordering = $state(false);
 
   // Delete state
   let deleteConfirmText = $state("");
@@ -122,7 +121,6 @@
           page_subheader: foundPage.page_subheader || "",
           page_logo: foundPage.page_logo || ""
         };
-        selectedMonitors = foundPage.monitors?.map((m: { monitor_tag: string }) => m.monitor_tag) || [];
         // Load page settings with defaults
         if (foundPage.page_settings_json) {
           try {
@@ -215,38 +213,6 @@
     }
   }
 
-  async function addMonitorToPage() {
-    if (!currentPage || !selectedMonitorTag) return;
-
-    addingMonitor = true;
-    try {
-      const response = await fetch(clientResolver(resolve, "/manage/api"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "addMonitorToPage",
-          data: {
-            page_id: currentPage.id,
-            monitor_tag: selectedMonitorTag
-          }
-        })
-      });
-
-      const result = await response.json();
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success("Monitor added to page");
-        selectedMonitors = [...selectedMonitors, selectedMonitorTag];
-        selectedMonitorTag = "";
-      }
-    } catch (e) {
-      toast.error("Failed to add monitor");
-    } finally {
-      addingMonitor = false;
-    }
-  }
-
   async function deletePage() {
     if (!currentPage || !canDelete) return;
 
@@ -272,73 +238,6 @@
       toast.error("Failed to delete page");
     } finally {
       deleting = false;
-    }
-  }
-
-  async function removeMonitorFromPage(monitorTag: string) {
-    if (!currentPage) return;
-
-    removingMonitor = monitorTag;
-    try {
-      const response = await fetch(clientResolver(resolve, "/manage/api"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "removeMonitorFromPage",
-          data: {
-            page_id: currentPage.id,
-            monitor_tag: monitorTag
-          }
-        })
-      });
-
-      const result = await response.json();
-      if (result.error) {
-        toast.error(result.error);
-      } else {
-        toast.success("Monitor removed from page");
-        selectedMonitors = selectedMonitors.filter((t) => t !== monitorTag);
-      }
-    } catch (e) {
-      toast.error("Failed to remove monitor");
-    } finally {
-      removingMonitor = null;
-    }
-  }
-
-  // Get available monitors (not already on the current page)
-  const availableMonitors = $derived(monitors.filter((m) => !selectedMonitors.includes(m.tag)));
-
-  async function moveMonitor(index: number, direction: "up" | "down") {
-    const newIndex = direction === "up" ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= selectedMonitors.length) return;
-
-    const updated = [...selectedMonitors];
-    [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
-    selectedMonitors = updated;
-
-    if (!currentPage) return;
-    reordering = true;
-    try {
-      const response = await fetch(clientResolver(resolve, "/manage/api"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "reorderPageMonitors",
-          data: {
-            page_id: currentPage.id,
-            monitor_tags: selectedMonitors
-          }
-        })
-      });
-      const result = await response.json();
-      if (result.error) {
-        toast.error(result.error);
-      }
-    } catch (e) {
-      toast.error("Failed to reorder monitors");
-    } finally {
-      reordering = false;
     }
   }
 
@@ -677,94 +576,12 @@
 
     <!-- Monitors Card (only shown for existing pages) -->
     {#if !isNew && currentPage}
-      <Card.Root>
-        <Card.Header>
-          <Card.Title>Page Monitors</Card.Title>
-          <Card.Description>Select which monitors to display on this page</Card.Description>
-        </Card.Header>
-        <Card.Content class="space-y-4">
-          <!-- Add Monitor -->
-          <div class="flex gap-2">
-            <Select.Root type="single" bind:value={selectedMonitorTag}>
-              <Select.Trigger class="flex-1">
-                {#if selectedMonitorTag}
-                  {monitors.find((m) => m.tag === selectedMonitorTag)?.name || selectedMonitorTag}
-                {:else}
-                  Select a monitor to add
-                {/if}
-              </Select.Trigger>
-              <Select.Content>
-                {#each availableMonitors as monitor (monitor.tag)}
-                  <Select.Item value={monitor.tag}>{monitor.name} ({monitor.tag})</Select.Item>
-                {/each}
-                {#if availableMonitors.length === 0}
-                  <div class="text-muted-foreground px-2 py-1 text-sm">No available monitors</div>
-                {/if}
-              </Select.Content>
-            </Select.Root>
-            <Button onclick={addMonitorToPage} disabled={addingMonitor || !selectedMonitorTag}>
-              {#if addingMonitor}
-                <Loader class="h-4 w-4 animate-spin" />
-              {:else}
-                <PlusIcon class="h-4 w-4" />
-                Add
-              {/if}
-            </Button>
-          </div>
-
-          <!-- Current Monitors -->
-          <div class="space-y-2">
-            <Label>Current Monitors</Label>
-            {#if selectedMonitors.length > 0}
-              <div class="space-y-2">
-                {#each selectedMonitors as monitorTag, i (monitorTag)}
-                  {@const monitor = monitors.find((m) => m.tag === monitorTag)}
-                  <div class="bg-muted flex items-center justify-between rounded-lg p-3">
-                    <div>
-                      <p class="font-medium">{monitor?.name || monitorTag}</p>
-                      <p class="text-muted-foreground text-xs">{monitorTag}</p>
-                    </div>
-                    <div class="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onclick={() => moveMonitor(i, "up")}
-                        disabled={i === 0 || reordering}
-                      >
-                        <ArrowUpIcon class="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onclick={() => moveMonitor(i, "down")}
-                        disabled={i === selectedMonitors.length - 1 || reordering}
-                      >
-                        <ArrowDownIcon class="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onclick={() => removeMonitorFromPage(monitorTag)}
-                        disabled={removingMonitor === monitorTag}
-                      >
-                        {#if removingMonitor === monitorTag}
-                          <Loader class="h-4 w-4 animate-spin" />
-                        {:else}
-                          <XIcon class="h-4 w-4" />
-                        {/if}
-                      </Button>
-                    </div>
-                  </div>
-                {/each}
-              </div>
-            {:else}
-              <div class="text-muted-foreground bg-muted rounded-lg p-4 text-center text-sm">
-                No monitors added to this page yet
-              </div>
-            {/if}
-          </div>
-        </Card.Content>
-      </Card.Root>
+      <PageMonitorsEditor
+        pageId={currentPage.id}
+        {monitors}
+        initialMonitors={currentPage.monitors || []}
+        initialMonitorGroups={currentPage.monitor_groups || []}
+      />
 
       <!-- Page Settings Card -->
       <Card.Root>
