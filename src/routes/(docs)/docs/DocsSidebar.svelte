@@ -192,7 +192,7 @@
 
 <style>
   .active {
-    color: var(--accent-foreground);
+    color: var(--primary);
     font-weight: 500;
   }
 </style>

@@ -10,6 +10,8 @@ import type {
   BadRequestResponse,
 } from "$lib/types/api";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
+import { GetSiteURL } from "$lib/server/controllers/siteDataController";
+import serverResolver from "$lib/server/resolver";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {
@@ -20,7 +22,7 @@ function formatDateToISO(date: Date | string): string {
   return parsed.toISOString();
 }
 
-function buildEventResponse(event: {
+async function buildEventResponse(event: {
   id: number;
   maintenance_id: number;
   start_date_time: number;
@@ -28,15 +30,16 @@ function buildEventResponse(event: {
   status: string;
   created_at: Date | string;
   updated_at: Date | string;
-}): MaintenanceEventResponse {
+}): Promise<MaintenanceEventResponse> {
   return {
     id: event.id,
     maintenance_id: event.maintenance_id,
     start_date_time: event.start_date_time,
     end_date_time: event.end_date_time,
-    status: event.status as "SCHEDULED" | "ONGOING" | "COMPLETED" | "CANCELLED",
+    status: event.status as MaintenanceEventResponse["status"],
     created_at: formatDateToISO(event.created_at),
     updated_at: formatDateToISO(event.updated_at),
+    url: (await GetSiteURL()) + serverResolver(`/maintenances/${event.id}`),
   };
 }
 
@@ -67,7 +70,7 @@ export const GET: RequestHandler = async ({ locals, params }) => {
   }
 
   const response: GetMaintenanceEventResponse = {
-    event: buildEventResponse(event),
+    event: await buildEventResponse(event),
   };
 
   return json(response);
@@ -182,7 +185,7 @@ export const PATCH: RequestHandler = async ({ locals, params, request }) => {
   }
 
   const response: UpdateMaintenanceEventResponse = {
-    event: buildEventResponse(updatedEvent),
+    event: await buildEventResponse(updatedEvent),
   };
 
   return json(response);
