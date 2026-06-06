@@ -57,6 +57,7 @@ const knexOb: KnexConfig = {
   },
   databaseType,
 };
+console.log(`Configuring database with type ${databaseType}`);
 if (databaseType === "sqlite") {
   knexOb.client = "better-sqlite3";
   knexOb.connection = {
