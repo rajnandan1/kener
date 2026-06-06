@@ -1,110 +1,38 @@
-@import url("https://fonts.bunny.net/css?family=bodoni-moda:400,400i,500,500i,600,600i,700,700i,800,800i,900,900i&family=plus-jakarta-sans:300,400,500,600,700,800");
+@import url("https://fonts.bunny.net/css?family=geist:400,500,600,700|geist-mono:400,500");
 
-/* Prose/Content Body Styles - needed for markdown rendering */
-.docs-content-body {
-  font-size: 1rem;
-  line-height: 1.75;
+/* Docs typography + brand accent.
+   Single family (Geist) with weight contrast; Geist Mono for code and labels.
+   Brand accent is the Kener logo orange (#ff6600 = oklch(0.696 0.204 43.5)),
+   deepened in light mode so it passes AA as text on white (4.6:1) and
+   brightened in dark mode (6.9:1 on the dark background).
+   Tokens live on body so portaled dialogs inherit them too. */
+body {
+  font-family:
+    "Geist",
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    sans-serif;
+  --primary: oklch(0.58 0.175 43);
+  --primary-foreground: oklch(0.985 0.005 43);
+  --ring: oklch(0.58 0.175 43);
 }
 
-.docs-content-body h2 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin-top: 2.5rem;
-  margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid var(--border);
+.dark body {
+  --primary: oklch(0.7 0.18 43);
+  --primary-foreground: oklch(0.18 0.035 43);
+  --ring: oklch(0.7 0.18 43);
 }
 
-.docs-content-body h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-top: 2rem;
-  margin-bottom: 0.75rem;
-}
-
-.docs-content-body h4 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin-top: 1.5rem;
-  margin-bottom: 0.5rem;
-}
-
-.docs-content-body p {
-  margin-bottom: 1rem;
-}
-
-.docs-content-body a {
-  color: var(--accent-foreground);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.docs-content-body a:hover {
-  text-decoration: none;
-}
-
-.docs-content-body code:not(pre code) {
-  padding: 0.2rem 0.4rem;
-  font-size: 0.875em;
-  background-color: var(--muted);
-  border-radius: var(--radius-sm);
-}
-
-.docs-content-body pre {
-  padding: 1rem;
-  border-radius: var(--radius);
-  background-color: var(--muted) !important;
-  overflow-x: auto;
-  margin: 1rem 0;
-}
-
-.docs-content-body pre code {
-  font-size: 0.875rem;
-  line-height: 1.5;
-}
-
-.docs-content-body ul,
-.docs-content-body ol {
-  padding-left: 1.5rem;
-  margin-bottom: 1rem;
-}
-
-.docs-content-body li {
-  margin-bottom: 0.5rem;
-}
-
-.docs-content-body table {
-  width: 100%;
-  border-collapse: collapse;
-  margin: 1rem 0;
-  font-size: 0.875rem;
-}
-
-.docs-content-body th,
-.docs-content-body td {
-  padding: 0.75rem 1rem;
-  text-align: left;
-  border: 1px solid var(--border);
-}
-
-.docs-content-body th {
-  background-color: var(--muted);
-  font-weight: 600;
-}
-
-.docs-content-body blockquote {
-  border-left: 4px solid var(--accent-foreground);
-  padding-left: 1rem;
-  margin: 1rem 0;
-  color: var(--muted-foreground);
-  font-style: italic;
+::selection {
+  background: color-mix(in oklch, var(--primary) 25%, transparent);
 }
 
 /* Prose dark mode fixes */
 .dark .prose {
   --tw-prose-body: var(--foreground);
   --tw-prose-headings: var(--foreground);
-  --tw-prose-links: var(--accent-foreground);
+  --tw-prose-links: var(--primary);
   --tw-prose-bold: var(--foreground);
   --tw-prose-code: var(--foreground);
   --tw-prose-pre-bg: var(--muted);

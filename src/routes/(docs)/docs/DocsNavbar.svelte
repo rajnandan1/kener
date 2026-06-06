@@ -223,9 +223,7 @@
             <Button
               variant="ghost"
               size="sm"
-              class="rounded-none  border-0 {tab.key === getActiveTabKey()
-                ? 'border-b-accent-foreground! border-b!'
-                : ''}"
+              class="rounded-none  border-0 {tab.key === getActiveTabKey() ? 'border-b-primary! border-b!' : ''}"
               onclick={() => selectTab(tab)}
             >
               {tab.name}
