@@ -24,14 +24,19 @@ async function start() {
   // Caps a health probe at 2s so a wedged dependency can not hang the
   // endpoint. A probe is healthy unless it throws, times out, or resolves false.
   const probe = async (check: () => Promise<unknown>): Promise<boolean> => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
       const result = await Promise.race([
         check(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error("health probe timeout")), 2000)),
+        new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error("health probe timeout")), 2000);
+        }),
       ]);
       return result !== false;
     } catch {
       return false;
+    } finally {
+      clearTimeout(timer);
     }
   };
 
@@ -39,7 +44,17 @@ async function start() {
   // not bounce the app while a dependency is down (a restart can not fix a
   // dead database); pass ?strict=1 to get 503 when any component is down.
   app.get(base + "/healthcheck", async (req: any, res: any) => {
-    const [dbOk, redisOk] = await Promise.all([probe(() => dbInstance.ping()), probe(() => redisConnection().ping())]);
+    const [dbOk, redisOk] = await Promise.all([
+      probe(() => dbInstance.ping()),
+      // Guard on status before PING: the shared ioredis client has
+      // maxRetriesPerRequest null, so commands sent while disconnected would
+      // queue forever and accumulate across healthcheck polls
+      probe(async () => {
+        const redis = redisConnection();
+        if (redis.status !== "ready") return false;
+        return await redis.ping();
+      }),
+    ]);
     const healthy = dbOk && redisOk;
     const strict = req.query.strict === "1";
     res.status(strict && !healthy ? 503 : 200).json({

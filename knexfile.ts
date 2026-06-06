@@ -25,9 +25,13 @@ const keepAliveEnabled = process.env.DATABASE_KEEPALIVE !== "false";
 //   ones that go stale and wedge the app until a manual restart
 // - 15s acquire/create timeouts: fail fast instead of hanging requests for
 //   knex's default 60s during a database outage
+// Tarn requires max >= 1 and min <= max; clamp so a bad env value can not
+// produce a pool that fails every acquire
+const poolMax = Math.max(1, intFromEnv("DATABASE_POOL_MAX", 10));
+const poolMin = Math.min(intFromEnv("DATABASE_POOL_MIN", 0), poolMax);
 const pool = {
-  min: intFromEnv("DATABASE_POOL_MIN", 0),
-  max: intFromEnv("DATABASE_POOL_MAX", 10),
+  min: poolMin,
+  max: poolMax,
   idleTimeoutMillis: intFromEnv("DATABASE_IDLE_TIMEOUT_MS", 30000),
   createTimeoutMillis: intFromEnv("DATABASE_CREATE_TIMEOUT_MS", 15000),
 };
