@@ -36,7 +36,7 @@ async function buildEventResponse(event: {
     maintenance_id: event.maintenance_id,
     start_date_time: event.start_date_time,
     end_date_time: event.end_date_time,
-    status: event.status as "SCHEDULED" | "ONGOING" | "COMPLETED" | "CANCELLED",
+    status: event.status as MaintenanceEventResponse["status"],
     created_at: formatDateToISO(event.created_at),
     updated_at: formatDateToISO(event.updated_at),
     url: (await GetSiteURL()) + serverResolver(`/maintenances/${event.id}`),

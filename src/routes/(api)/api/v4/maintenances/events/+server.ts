@@ -86,7 +86,7 @@ export const GET: RequestHandler = async ({ url }) => {
       event_id: event.event_id,
       event_start_date_time: event.event_start_date_time,
       event_end_date_time: event.event_end_date_time,
-      event_status: event.event_status as "SCHEDULED" | "ONGOING" | "COMPLETED" | "CANCELLED",
+      event_status: event.event_status as MaintenanceEventDetailResponse["event_status"],
       maintenance_title: event.maintenance_title,
       maintenance_description: event.maintenance_description,
       maintenance_status: event.maintenance_status as "ACTIVE" | "INACTIVE",

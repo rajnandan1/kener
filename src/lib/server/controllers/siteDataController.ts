@@ -108,10 +108,20 @@ export const GetLocaleFromCookie = (site: SiteDataTransformed, cookies: Cookies)
   return selectedLang;
 };
 
-/** Returns the configured site URL without a trailing slash, for building absolute public URLs. */
+/**
+ * Returns the site URL used for building absolute public URLs, without a trailing slash.
+ * Prefers the configured siteURL and falls back to the ORIGIN env var; only absolute
+ * http(s) values are returned. Returns an empty string when neither is usable, in which
+ * case callers degrade to a relative path.
+ */
 export const GetSiteURL = async (): Promise<string> => {
   const siteURL = await GetSiteDataByKey("siteURL");
-  return typeof siteURL === "string" ? siteURL.replace(/\/+$/, "") : "";
+  for (const candidate of [siteURL, process.env.ORIGIN]) {
+    if (typeof candidate === "string" && /^https?:\/\//i.test(candidate)) {
+      return candidate.replace(/\/+$/, "");
+    }
+  }
+  return "";
 };
 
 export const GetSiteLogoURL = async (siteURL: string, logo: string, base: string): Promise<string> => {
