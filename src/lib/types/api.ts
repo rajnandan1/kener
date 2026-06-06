@@ -460,6 +460,11 @@ export interface PageMonitorResponse {
 
 export interface PageResponse {
   id: number;
+  /**
+   * The page's path segment. The home page (stored path is empty) renders as
+   * the addressable token `~home`; its public URL is the site root.
+   * See docs/adr/0004-home-page-api-token.md.
+   */
   page_path: string;
   page_title: string;
   page_header: string;

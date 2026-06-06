@@ -4,6 +4,7 @@ import { VerifyAPIKey } from "$lib/server/controllers/apiController";
 import db from "$lib/server/db/db";
 import type { UnauthorizedResponse, NotFoundResponse } from "$lib/types/api";
 import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
+import GC from "$lib/global-constants";
 
 const API_PATH_PREFIX = "/api/";
 
@@ -119,6 +120,18 @@ const apiAuthHandle: Handle = async ({ event, resolve }) => {
       return json(errorResponse, { status: 401 });
     }
 
+    // API consumers must always get JSON; without this, an /api/ path with no
+    // matching route falls through to SvelteKit's HTML error page
+    if (event.route.id === null) {
+      const errorResponse: NotFoundResponse = {
+        error: {
+          code: "NOT_FOUND",
+          message: `No API route matches '${pathname}'`,
+        },
+      };
+      return json(errorResponse, { status: 404 });
+    }
+
     // Validate monitor tag exists for /api/(vX/)?monitors/:monitor_tag/* routes
     const monitorTag = extractMonitorTag(pathname);
     if (monitorTag) {
@@ -173,7 +186,10 @@ const apiAuthHandle: Handle = async ({ event, resolve }) => {
     // Validate page_path exists for /api/(vX/)?pages/:page_path/* routes
     const pagePath = extractPagePath(pathname);
     if (pagePath) {
-      const page = await db.getPageByPath(pagePath);
+      // The home page has an empty page_path, unreachable as a URL segment;
+      // the ~home token addresses it instead
+      const lookupPath = pagePath === GC.HOME_PAGE_TOKEN ? "" : pagePath;
+      const page = await db.getPageByPath(lookupPath);
       if (!page) {
         const errorResponse: NotFoundResponse = {
           error: {

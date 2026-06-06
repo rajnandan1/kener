@@ -950,7 +950,8 @@
           "404": {
             "$ref": "#/components/responses/NotFound"
           }
-        }
+        },
+        "description": "The home page (addressed as `~home`) accepts all fields except `page_path`, which is fixed and returns `400` if changed."
       },
       "delete": {
         "tags": ["Pages"],
@@ -973,7 +974,8 @@
           "404": {
             "$ref": "#/components/responses/NotFound"
           }
-        }
+        },
+        "description": "The home page (addressed as `~home`) cannot be deleted and returns `400`."
       }
     },
     "/api/v4/site": {
@@ -1584,8 +1586,19 @@
         "name": "page_path",
         "in": "path",
         "required": true,
+        "description": "The page's path segment. Use the special token `~home` to address the home page, whose stored `page_path` is an empty string and can not appear as a URL segment. No real page can be named `~home` because the path sanitizer strips `~`.",
         "schema": {
           "type": "string"
+        },
+        "examples": {
+          "regular": {
+            "value": "services",
+            "summary": "A regular page"
+          },
+          "home": {
+            "value": "~home",
+            "summary": "The home page (empty page_path)"
+          }
         }
       },
       "ConfigKey": {
@@ -2088,7 +2101,9 @@
         "required": ["page_path", "page_title", "page_header"],
         "properties": {
           "page_path": {
-            "type": "string"
+            "type": "string",
+            "description": "The page's path segment. The home page renders as the addressable token `~home` (its stored path is empty); its public URL is the site root.",
+            "examples": ["services", "~home"]
           },
           "page_title": {
             "type": "string"
@@ -2154,7 +2169,8 @@
         "type": "object",
         "properties": {
           "page_path": {
-            "type": "string"
+            "type": "string",
+            "description": "New path for the page, sanitized to a lowercase single segment. For the home page (addressed as `~home`), sending back `~home` is a no-op and any other value returns `400` — its path is fixed."
           },
           "page_title": {
             "type": "string"
