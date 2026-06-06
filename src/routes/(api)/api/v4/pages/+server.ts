@@ -9,6 +9,7 @@ import type {
   BadRequestResponse,
 } from "$lib/types/api";
 import type { PageRecord } from "$lib/server/types/db";
+import GC from "$lib/global-constants";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {
@@ -99,7 +100,8 @@ async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
 
   return {
     id: page.id,
-    page_path: page.page_path,
+    // The home page's empty page_path renders as the addressable ~home token
+    page_path: page.page_path === "" ? GC.HOME_PAGE_TOKEN : page.page_path,
     page_title: page.page_title,
     page_header: page.page_header,
     page_subheader: page.page_subheader,

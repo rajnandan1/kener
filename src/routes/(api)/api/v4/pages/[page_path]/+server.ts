@@ -11,6 +11,7 @@ import type {
   NotFoundResponse,
 } from "$lib/types/api";
 import type { PageRecord } from "$lib/server/types/db";
+import GC from "$lib/global-constants";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {
@@ -101,7 +102,8 @@ async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
 
   return {
     id: page.id,
-    page_path: page.page_path,
+    // The home page's empty page_path renders as the addressable ~home token
+    page_path: page.page_path === "" ? GC.HOME_PAGE_TOKEN : page.page_path,
     page_title: page.page_title,
     page_header: page.page_header,
     page_subheader: page.page_subheader,
@@ -158,6 +160,12 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
       },
     };
     return json(errorResponse, { status: 400 });
+  }
+
+  // API responses render the home page's path as ~home, so a read-modify-write
+  // client sends it back unchanged; treat that as "no path change"
+  if (page.page_path === "" && body.page_path === GC.HOME_PAGE_TOKEN) {
+    body.page_path = undefined;
   }
 
   // Validate page_path if provided
@@ -353,7 +361,7 @@ export const DELETE: RequestHandler = async ({ locals }) => {
   await db.deletePage(page.id);
 
   const response: DeletePageResponse = {
-    message: `Page '${page.page_path || "~home"}' deleted successfully`,
+    message: `Page '${page.page_path || GC.HOME_PAGE_TOKEN}' deleted successfully`,
   };
 
   return json(response);

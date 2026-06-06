@@ -2100,7 +2100,9 @@
         "required": ["page_path", "page_title", "page_header"],
         "properties": {
           "page_path": {
-            "type": "string"
+            "type": "string",
+            "description": "The page's path segment. The home page renders as the addressable token `~home` (its stored path is empty); its public URL is the site root.",
+            "examples": ["services", "~home"]
           },
           "page_title": {
             "type": "string"
@@ -2166,7 +2168,8 @@
         "type": "object",
         "properties": {
           "page_path": {
-            "type": "string"
+            "type": "string",
+            "description": "New path for the page, sanitized to a lowercase single segment. For the home page (addressed as `~home`), sending back `~home` is a no-op and any other value returns `400` — its path is fixed."
           },
           "page_title": {
             "type": "string"

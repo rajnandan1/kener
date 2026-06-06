@@ -69,6 +69,9 @@ export default {
   STATUS: "STATUS",
   LATENCY: "LATENCY",
   UPTIME: "UPTIME",
+  // Special path segment addressing the home page in the v4 API; its stored
+  // page_path is an empty string. See docs/adr/0004-home-page-api-token.md.
+  HOME_PAGE_TOKEN: "~home",
   DOCS_URL: "https://kener.ing/docs",
   MAX_UPLOAD_BYTES: 2 * 1024 * 1024, // 2MB
   MAX_IMAGE_DIMENSION: 4096,
