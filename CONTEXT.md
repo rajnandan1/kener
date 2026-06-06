@@ -10,6 +10,14 @@ An open-source status page application providing real-time monitoring, uptime tr
 A single check against a service, with a unique tag, a type (API, Ping, TCP, DNS, SSL, SQL, Heartbeat, GameDig, Group, gRPC, None), and a status (ACTIVE or otherwise).
 _Avoid_: Check, probe, service
 
+**Inactive Monitor**:
+A monitor that is not checked at all: the scheduler drops its job and no monitoring data is collected until it is made ACTIVE again. Independent of visibility (see Hidden Monitor).
+_Avoid_: Disabled monitor, paused monitor
+
+**Hidden Monitor**:
+A monitor excluded from all status pages while remaining fully checked and alerted. Independent of ACTIVE/INACTIVE.
+_Avoid_: Invisible monitor, private monitor
+
 **Group Monitor**:
 A monitor whose status is derived from other monitors via a weighted score (UP=1, DEGRADED=0.5, DOWN=0; maintenance counts as UP). A group cannot contain another group.
 _Avoid_: Monitor group, composite monitor
