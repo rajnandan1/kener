@@ -22,6 +22,12 @@ const MAINTENANCE_ID_ROUTE_REGEX = /^\/api\/(?:v\d+\/)?maintenances\/(\d+)/;
 // Regex to match routes with page_path parameter
 const PAGE_PATH_ROUTE_REGEX = /^\/api\/(?:v\d+\/)?pages\/([^/]+)/;
 
+// Special path segment that addresses the home page, whose page_path is an
+// empty string and therefore can not appear as a URL segment. The page path
+// sanitizer strips "~", so no real page can ever collide with this token.
+// See docs/adr/0004-home-page-api-token.md.
+export const HOME_PAGE_TOKEN = "~home";
+
 function isApiRoute(pathname: string): boolean {
   return pathname.startsWith(API_PATH_PREFIX);
 }
@@ -119,6 +125,18 @@ const apiAuthHandle: Handle = async ({ event, resolve }) => {
       return json(errorResponse, { status: 401 });
     }
 
+    // API consumers must always get JSON; without this, an /api/ path with no
+    // matching route falls through to SvelteKit's HTML error page
+    if (event.route.id === null) {
+      const errorResponse: NotFoundResponse = {
+        error: {
+          code: "NOT_FOUND",
+          message: `No API route matches '${pathname}'`,
+        },
+      };
+      return json(errorResponse, { status: 404 });
+    }
+
     // Validate monitor tag exists for /api/(vX/)?monitors/:monitor_tag/* routes
     const monitorTag = extractMonitorTag(pathname);
     if (monitorTag) {
@@ -173,7 +191,10 @@ const apiAuthHandle: Handle = async ({ event, resolve }) => {
     // Validate page_path exists for /api/(vX/)?pages/:page_path/* routes
     const pagePath = extractPagePath(pathname);
     if (pagePath) {
-      const page = await db.getPageByPath(pagePath);
+      // The home page has an empty page_path, unreachable as a URL segment;
+      // the ~home token addresses it instead
+      const lookupPath = pagePath === HOME_PAGE_TOKEN ? "" : pagePath;
+      const page = await db.getPageByPath(lookupPath);
       if (!page) {
         const errorResponse: NotFoundResponse = {
           error: {

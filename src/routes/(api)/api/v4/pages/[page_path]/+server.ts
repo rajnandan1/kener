@@ -179,6 +179,18 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9_-]/g, "");
 
+    // The home page's path is fixed; matches the manage UI which disables
+    // the field with "Home page path cannot be changed"
+    if (page.page_path === "" && sanitizedPagePath !== "") {
+      const errorResponse: BadRequestResponse = {
+        error: {
+          code: "BAD_REQUEST",
+          message: "Home page path cannot be changed",
+        },
+      };
+      return json(errorResponse, { status: 400 });
+    }
+
     // Check if page_path is being changed and conflicts with existing page
     if (sanitizedPagePath !== page.page_path) {
       const existingPage = await db.getPageByPath(sanitizedPagePath);
@@ -341,7 +353,7 @@ export const DELETE: RequestHandler = async ({ locals }) => {
   await db.deletePage(page.id);
 
   const response: DeletePageResponse = {
-    message: `Page '${page.page_path}' deleted successfully`,
+    message: `Page '${page.page_path || "~home"}' deleted successfully`,
   };
 
   return json(response);

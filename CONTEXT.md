@@ -38,6 +38,15 @@ A monitor that may become a Member: ACTIVE, not a Group Monitor, and not the gro
 **Stale Member**:
 A Member whose monitor is no longer an Eligible Monitor (paused or deleted after being added). It remains a Member until explicitly removed, but is excluded from the group score.
 
+### Pages
+
+**Page**:
+A public status page with its own path, title, monitors, and display settings. Served at `/<page_path>`.
+
+**Home Page**:
+The Page served at the site root. Its stored path is empty, it always exists, and its path can not be changed. Addressed in the API by the `~home` token.
+_Avoid_: Default page, base page, root page
+
 ### Maintenance
 
 **Maintenance**:
