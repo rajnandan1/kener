@@ -7,7 +7,7 @@
   import IncidentItem from "$lib/components/IncidentItem.svelte";
   import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
   import mdToHTML from "$lib/marked.js";
-  import clientResolver from "$lib/client/resolver.js";
+  import clientResolver, { absoluteResolve } from "$lib/client/resolver.js";
   import { resolve } from "$app/paths";
   import { selectedTimezone } from "$lib/stores/timezone";
   import { getEndOfDayAtTz } from "$lib/client/datetime";
@@ -136,8 +136,8 @@
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
   {#if data.socialPagePreviewImage}
-    <meta property="og:image" content={clientResolver(resolve, data.socialPagePreviewImage)} />
-    <meta name="twitter:image" content={clientResolver(resolve, data.socialPagePreviewImage)} />
+    <meta property="og:image" content={absoluteResolve(resolve, data.siteUrl, data.socialPagePreviewImage)} />
+    <meta name="twitter:image" content={absoluteResolve(resolve, data.siteUrl, data.socialPagePreviewImage)} />
   {/if}
 </svelte:head>
 

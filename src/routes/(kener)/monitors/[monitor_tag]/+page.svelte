@@ -6,7 +6,7 @@
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import MonitorOverview from "$lib/components/MonitorOverview.svelte";
   import ArrowUpRight from "@lucide/svelte/icons/arrow-up-right";
-  import clientResolver from "$lib/client/resolver.js";
+  import clientResolver, { absoluteResolve } from "$lib/client/resolver.js";
   import { resolve } from "$app/paths";
   import trackEvent from "$lib/beacon";
   import IncidentItem from "$lib/components/IncidentItem.svelte";
@@ -37,8 +37,8 @@
     <meta property="og:description" content={data.monitorDescription} />
   {/if}
   {#if data.socialPreviewImage}
-    <meta property="og:image" content={clientResolver(resolve, data.socialPreviewImage)} />
-    <meta name="twitter:image" content={clientResolver(resolve, data.socialPreviewImage)} />
+    <meta property="og:image" content={absoluteResolve(resolve, data.siteUrl, data.socialPreviewImage)} />
+    <meta name="twitter:image" content={absoluteResolve(resolve, data.siteUrl, data.socialPreviewImage)} />
   {/if}
 </svelte:head>
 <div class="flex flex-col gap-3">
