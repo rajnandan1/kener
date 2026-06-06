@@ -974,7 +974,8 @@
           "404": {
             "$ref": "#/components/responses/NotFound"
           }
-        }
+        },
+        "description": "The home page (addressed as `~home`) cannot be deleted and returns `400`."
       }
     },
     "/api/v4/site": {

@@ -354,6 +354,18 @@ export const DELETE: RequestHandler = async ({ locals }) => {
     return json(errorResponse, { status: 404 });
   }
 
+  // The home page must always exist; DeletePage in pagesController enforces
+  // the same invariant for the manage UI
+  if (page.page_path === "") {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: "Cannot delete the home page",
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
   // Delete all page monitors first
   await db.deletePageMonitorsByPageId(page.id);
 
