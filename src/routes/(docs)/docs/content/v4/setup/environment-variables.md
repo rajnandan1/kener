@@ -238,9 +238,15 @@ SMTP_SECURE=1
 
 ### Database Configuration {#database-configuration}
 
-| Variable       | Description                     | Default                        |
-| :------------- | :------------------------------ | :----------------------------- |
-| `DATABASE_URL` | Full database connection string | `sqlite://./database/kener.db` |
+| Variable                      | Description                                                  | Default                        |
+| :---------------------------- | :----------------------------------------------------------- | :----------------------------- |
+| `DATABASE_URL`                | Full database connection string                              | `sqlite://./database/kener.db` |
+| `DATABASE_POOL_MIN`           | Minimum pool connections (PostgreSQL/MySQL)                  | `0`                            |
+| `DATABASE_POOL_MAX`           | Maximum pool connections (PostgreSQL/MySQL)                  | `10`                           |
+| `DATABASE_ACQUIRE_TIMEOUT_MS` | Wait for a free connection before failing (PostgreSQL/MySQL) | `15000`                        |
+| `DATABASE_CREATE_TIMEOUT_MS`  | Wait for a new connection before failing (PostgreSQL/MySQL)  | `15000`                        |
+| `DATABASE_IDLE_TIMEOUT_MS`    | Idle time before a connection is closed (PostgreSQL/MySQL)   | `30000`                        |
+| `DATABASE_KEEPALIVE`          | TCP keepalive on connections (PostgreSQL/MySQL)              | `true`                         |
 
 **Supported Databases**:
 
@@ -261,7 +267,7 @@ DATABASE_URL=postgresql://user:password@localhost:5432/kener
 DATABASE_URL=mysql://user:password@localhost:3306/kener
 ```
 
-📖 **See**: [Database Setup Guide](/docs/v4/setup/database-setup) for migration guides and best practices.
+📖 **See**: [Database Setup Guide](/docs/v4/setup/database-setup) for migration guides and [connection pool tuning](/docs/v4/setup/database-setup#connection-pool-tuning) for when to change the pool variables.
 
 ### Redis Configuration {#redis-configuration}
 
