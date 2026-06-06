@@ -198,29 +198,39 @@
         {/each}
       </div>
     {/if}
-    <div class="overflow-hidden rounded-3xl border">
-      <div class={`grid grid-cols-1 ${getGridContainerClass(viewType)}`}>
-        {#each data.monitorTags as tag, i (tag)}
-          <div
-            class="{viewType === 'compact-grid' || viewType === 'default-grid'
-              ? `${getGridItemSpanClass(i, data.monitorTags.length, viewType)} bg-background`
-              : i < data.monitorTags.length - 1
-                ? 'border-b'
-                : ''} px-2 py-2 sm:px-0"
-          >
-            <MonitorBar
-              {tag}
-              prefetchedData={monitorBarDataByTag[tag]}
-              prefetchedError={monitorBarErrorByTag[tag]}
-              days={barCount}
-              {endOfDayTodayAtTz}
-              groupChildTags={data.monitorGroupMembersByTag?.[tag] || []}
-              compact={isCompact}
-              grid={viewType === "compact-grid" || viewType === "default-grid"}
-            />
+    <!-- Render monitors grouped by group_name. Pages with no group_name yield
+         a single group with name=null, which renders without a header — i.e.
+         backward-compatible with the pre-groups layout. -->
+    {#each data.monitorGroups as group, gIdx (group.name ?? `__ungrouped_${gIdx}`)}
+      <div class="flex flex-col gap-2">
+        {#if group.name}
+          <h2 class="px-3 text-lg font-semibold sm:px-4">{group.name}</h2>
+        {/if}
+        <div class="overflow-hidden rounded-3xl border">
+          <div class={`grid grid-cols-1 ${getGridContainerClass(viewType)}`}>
+            {#each group.tags as tag, i (tag)}
+              <div
+                class="{viewType === 'compact-grid' || viewType === 'default-grid'
+                  ? `${getGridItemSpanClass(i, group.tags.length, viewType)} bg-background`
+                  : i < group.tags.length - 1
+                    ? 'border-b'
+                    : ''} px-2 py-2 sm:px-0"
+              >
+                <MonitorBar
+                  {tag}
+                  prefetchedData={monitorBarDataByTag[tag]}
+                  prefetchedError={monitorBarErrorByTag[tag]}
+                  days={barCount}
+                  {endOfDayTodayAtTz}
+                  groupChildTags={data.monitorGroupMembersByTag?.[tag] || []}
+                  compact={isCompact}
+                  grid={viewType === "compact-grid" || viewType === "default-grid"}
+                />
+              </div>
+            {/each}
           </div>
-        {/each}
+        </div>
       </div>
-    </div>
+    {/each}
   {/if}
 </div>

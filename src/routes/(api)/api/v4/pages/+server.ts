@@ -7,8 +7,10 @@ import type {
   CreatePageRequest,
   CreatePageResponse,
   BadRequestResponse,
+  PageMonitorInput,
 } from "$lib/types/api";
 import type { PageRecord } from "$lib/server/types/db";
+import { normalizePageMonitorInputs } from "$lib/server/controllers/pagesController";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {
@@ -105,7 +107,11 @@ async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
     page_subheader: page.page_subheader,
     page_logo: page.page_logo,
     page_settings: pageSettings,
-    monitors: pageMonitors.map((pm) => ({ monitor_tag: pm.monitor_tag, position: pm.position })),
+    monitors: pageMonitors.map((pm) => ({
+      monitor_tag: pm.monitor_tag,
+      position: pm.position,
+      group: pm.group_name,
+    })),
     created_at: formatDateToISO(page.created_at),
     updated_at: formatDateToISO(page.updated_at),
   };
@@ -188,15 +194,23 @@ export const POST: RequestHandler = async ({ request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  // Validate monitors if provided
+  // Normalize monitors (accepts string[] or Array<{tag, group?, position?}>)
+  let normalizedMonitors: ReturnType<typeof normalizePageMonitorInputs> = [];
   if (body.monitors && Array.isArray(body.monitors)) {
-    for (const monitorTag of body.monitors) {
-      const monitor = await db.getMonitorByTag(monitorTag);
+    try {
+      normalizedMonitors = normalizePageMonitorInputs(body.monitors as PageMonitorInput[]);
+    } catch (e) {
+      return json({ error: { code: "BAD_REQUEST", message: (e as Error).message } } satisfies BadRequestResponse, {
+        status: 400,
+      });
+    }
+    for (const m of normalizedMonitors) {
+      const monitor = await db.getMonitorByTag(m.tag);
       if (!monitor) {
         const errorResponse: BadRequestResponse = {
           error: {
             code: "BAD_REQUEST",
-            message: `Monitor with tag '${monitorTag}' does not exist`,
+            message: `Monitor with tag '${m.tag}' does not exist`,
           },
         };
         return json(errorResponse, { status: 400 });
@@ -220,15 +234,14 @@ export const POST: RequestHandler = async ({ request }) => {
   const createdPage = await db.createPage(pageData);
 
   // Add monitors to the page
-  if (body.monitors && Array.isArray(body.monitors)) {
-    for (let i = 0; i < body.monitors.length; i++) {
-      await db.addMonitorToPage({
-        page_id: createdPage.id,
-        monitor_tag: body.monitors[i],
-        monitor_settings_json: null,
-        position: i,
-      });
-    }
+  for (const m of normalizedMonitors) {
+    await db.addMonitorToPage({
+      page_id: createdPage.id,
+      monitor_tag: m.tag,
+      monitor_settings_json: null,
+      position: m.position,
+      group_name: m.group,
+    });
   }
 
   const response: CreatePageResponse = {

@@ -17,6 +17,8 @@
   import XIcon from "@lucide/svelte/icons/x";
   import ArrowUpIcon from "@lucide/svelte/icons/arrow-up";
   import ArrowDownIcon from "@lucide/svelte/icons/arrow-down";
+  import FolderInputIcon from "@lucide/svelte/icons/folder-input";
+  import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
   import UploadIcon from "@lucide/svelte/icons/upload";
   import ImageIcon from "@lucide/svelte/icons/image";
   import TrashIcon from "@lucide/svelte/icons/trash";
@@ -40,7 +42,12 @@
   };
 
   interface PageWithMonitors extends PageRecord {
-    monitors?: { monitor_tag: string }[];
+    monitors?: { monitor_tag: string; group_name?: string | null }[];
+  }
+
+  interface SelectedMonitor {
+    monitor_tag: string;
+    group_name: string | null;
   }
 
   // Get page ID from URL params
@@ -69,10 +76,42 @@
 
   // Monitor selection
   let selectedMonitorTag = $state("");
-  let selectedMonitors = $state<string[]>([]);
+  let selectedMonitors = $state<SelectedMonitor[]>([]);
+  // Group sections created in the UI before any monitor has been dropped in;
+  // they vanish on reload if still empty (nothing to persist).
+  let pendingGroups = $state<string[]>([]);
   let addingMonitor = $state(false);
   let removingMonitor = $state<string | null>(null);
   let reordering = $state(false);
+  let addingGroup = $state(false);
+  let newGroupName = $state("");
+  let movingMonitor = $state<string | null>(null);
+
+  // Derived: monitors grouped into sections. Ungrouped first, then named groups
+  // in first-appearance order, then any pending (empty) groups awaiting drops.
+  const groupSections = $derived.by(() => {
+    const ungrouped: SelectedMonitor[] = [];
+    const groupOrder: string[] = [];
+    const byGroup = new Map<string, SelectedMonitor[]>();
+    for (const m of selectedMonitors) {
+      if (!m.group_name) {
+        ungrouped.push(m);
+        continue;
+      }
+      if (!byGroup.has(m.group_name)) {
+        groupOrder.push(m.group_name);
+        byGroup.set(m.group_name, []);
+      }
+      byGroup.get(m.group_name)!.push(m);
+    }
+    const result: Array<{ name: string | null; monitors: SelectedMonitor[] }> = [];
+    result.push({ name: null, monitors: ungrouped });
+    for (const name of groupOrder) result.push({ name, monitors: byGroup.get(name)! });
+    for (const name of pendingGroups) {
+      if (!byGroup.has(name)) result.push({ name, monitors: [] });
+    }
+    return result;
+  });
 
   // Delete state
   let deleteConfirmText = $state("");
@@ -122,7 +161,11 @@
           page_subheader: foundPage.page_subheader || "",
           page_logo: foundPage.page_logo || ""
         };
-        selectedMonitors = foundPage.monitors?.map((m: { monitor_tag: string }) => m.monitor_tag) || [];
+        selectedMonitors =
+          foundPage.monitors?.map((m: { monitor_tag: string; group_name?: string | null }) => ({
+            monitor_tag: m.monitor_tag,
+            group_name: m.group_name ?? null
+          })) || [];
         // Load page settings with defaults
         if (foundPage.page_settings_json) {
           try {
@@ -237,7 +280,7 @@
         toast.error(result.error);
       } else {
         toast.success("Monitor added to page");
-        selectedMonitors = [...selectedMonitors, selectedMonitorTag];
+        selectedMonitors = [...selectedMonitors, { monitor_tag: selectedMonitorTag, group_name: null }];
         selectedMonitorTag = "";
       }
     } catch (e) {
@@ -297,7 +340,7 @@
         toast.error(result.error);
       } else {
         toast.success("Monitor removed from page");
-        selectedMonitors = selectedMonitors.filter((t) => t !== monitorTag);
+        selectedMonitors = selectedMonitors.filter((m) => m.monitor_tag !== monitorTag);
       }
     } catch (e) {
       toast.error("Failed to remove monitor");
@@ -307,16 +350,30 @@
   }
 
   // Get available monitors (not already on the current page)
-  const availableMonitors = $derived(monitors.filter((m) => !selectedMonitors.includes(m.tag)));
+  const availableMonitors = $derived(monitors.filter((m) => !selectedMonitors.some((sm) => sm.monitor_tag === m.tag)));
 
-  async function moveMonitor(index: number, direction: "up" | "down") {
-    const newIndex = direction === "up" ? index - 1 : index + 1;
-    if (newIndex < 0 || newIndex >= selectedMonitors.length) return;
+  // Reorder within a single group section by swapping the two monitors' positions
+  // in the global selectedMonitors list, then persisting the new flat order.
+  async function moveMonitorInSection(groupName: string | null, tag: string, direction: "up" | "down") {
+    const section = groupSections.find((s) => s.name === groupName);
+    if (!section) return;
+    const idx = section.monitors.findIndex((m) => m.monitor_tag === tag);
+    const newIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (newIdx < 0 || newIdx >= section.monitors.length) return;
+
+    const aTag = section.monitors[idx].monitor_tag;
+    const bTag = section.monitors[newIdx].monitor_tag;
+    const aFlat = selectedMonitors.findIndex((m) => m.monitor_tag === aTag);
+    const bFlat = selectedMonitors.findIndex((m) => m.monitor_tag === bTag);
+    if (aFlat < 0 || bFlat < 0) return;
 
     const updated = [...selectedMonitors];
-    [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
+    [updated[aFlat], updated[bFlat]] = [updated[bFlat], updated[aFlat]];
     selectedMonitors = updated;
+    await persistOrder();
+  }
 
+  async function persistOrder() {
     if (!currentPage) return;
     reordering = true;
     try {
@@ -327,18 +384,94 @@
           action: "reorderPageMonitors",
           data: {
             page_id: currentPage.id,
-            monitor_tags: selectedMonitors
+            monitor_tags: selectedMonitors.map((m) => m.monitor_tag)
           }
         })
       });
       const result = await response.json();
-      if (result.error) {
-        toast.error(result.error);
-      }
+      if (result.error) toast.error(result.error);
     } catch (e) {
       toast.error("Failed to reorder monitors");
     } finally {
       reordering = false;
+    }
+  }
+
+  // Reassign a single monitor to a different group via the per-row "Move to"
+  // menu. Optimistic update; reverts on server failure.
+  async function moveMonitorToGroup(tag: string, groupName: string | null) {
+    if (!currentPage) return;
+    const monitor = selectedMonitors.find((m) => m.monitor_tag === tag);
+    if (!monitor || monitor.group_name === groupName) return;
+
+    const previousGroup = monitor.group_name;
+    movingMonitor = tag;
+    selectedMonitors = selectedMonitors.map((m) => (m.monitor_tag === tag ? { ...m, group_name: groupName } : m));
+    if (groupName) pendingGroups = pendingGroups.filter((g) => g !== groupName);
+
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "updatePageMonitorGroup",
+          data: { page_id: currentPage.id, monitor_tag: tag, group_name: groupName }
+        })
+      });
+      const result = await response.json();
+      if (result.error) throw new Error(result.error);
+    } catch (e) {
+      selectedMonitors = selectedMonitors.map((m) => (m.monitor_tag === tag ? { ...m, group_name: previousGroup } : m));
+      toast.error("Failed to move monitor");
+    } finally {
+      movingMonitor = null;
+    }
+  }
+
+  // ---- Group management ----
+  function startAddGroup() {
+    addingGroup = true;
+    newGroupName = "";
+  }
+  function cancelAddGroup() {
+    addingGroup = false;
+    newGroupName = "";
+  }
+  function confirmAddGroup() {
+    const name = newGroupName.trim();
+    if (!name) return;
+    const exists = selectedMonitors.some((m) => m.group_name === name) || pendingGroups.includes(name);
+    if (exists) {
+      toast.error("Group already exists");
+      return;
+    }
+    pendingGroups = [...pendingGroups, name];
+    addingGroup = false;
+    newGroupName = "";
+  }
+
+  async function removeGroup(name: string) {
+    if (!currentPage) return;
+    const monitorsInGroup = selectedMonitors.filter((m) => m.group_name === name);
+    // Optimistic — move all to ungrouped
+    selectedMonitors = selectedMonitors.map((m) => (m.group_name === name ? { ...m, group_name: null } : m));
+    pendingGroups = pendingGroups.filter((g) => g !== name);
+    if (monitorsInGroup.length === 0) return;
+    try {
+      await Promise.all(
+        monitorsInGroup.map((m) =>
+          fetch(clientResolver(resolve, "/manage/api"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "updatePageMonitorGroup",
+              data: { page_id: currentPage!.id, monitor_tag: m.monitor_tag, group_name: null }
+            })
+          })
+        )
+      );
+    } catch (e) {
+      toast.error("Failed to remove group");
     }
   }
 
@@ -712,48 +845,153 @@
             </Button>
           </div>
 
-          <!-- Current Monitors -->
-          <div class="space-y-2">
-            <Label>Current Monitors</Label>
+          <!-- Current Monitors, grouped into sections -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <Label>Current Monitors</Label>
+              {#if !addingGroup}
+                <Button variant="outline" size="sm" onclick={startAddGroup} disabled={selectedMonitors.length === 0}>
+                  <PlusIcon class="h-4 w-4" />
+                  Add group
+                </Button>
+              {/if}
+            </div>
+
+            {#if addingGroup}
+              <div class="flex gap-2">
+                <Input
+                  placeholder="Group name"
+                  bind:value={newGroupName}
+                  onkeydown={(e) => {
+                    if (e.key === "Enter") confirmAddGroup();
+                    if (e.key === "Escape") cancelAddGroup();
+                  }}
+                />
+                <Button onclick={confirmAddGroup} disabled={!newGroupName.trim()}>Create</Button>
+                <Button variant="ghost" onclick={cancelAddGroup}>Cancel</Button>
+              </div>
+            {/if}
+
             {#if selectedMonitors.length > 0}
-              <div class="space-y-2">
-                {#each selectedMonitors as monitorTag, i (monitorTag)}
-                  {@const monitor = monitors.find((m) => m.tag === monitorTag)}
-                  <div class="bg-muted flex items-center justify-between rounded-lg p-3">
-                    <div>
-                      <p class="font-medium">{monitor?.name || monitorTag}</p>
-                      <p class="text-muted-foreground text-xs">{monitorTag}</p>
-                    </div>
-                    <div class="flex items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onclick={() => moveMonitor(i, "up")}
-                        disabled={i === 0 || reordering}
-                      >
-                        <ArrowUpIcon class="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onclick={() => moveMonitor(i, "down")}
-                        disabled={i === selectedMonitors.length - 1 || reordering}
-                      >
-                        <ArrowDownIcon class="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onclick={() => removeMonitorFromPage(monitorTag)}
-                        disabled={removingMonitor === monitorTag}
-                      >
-                        {#if removingMonitor === monitorTag}
-                          <Loader class="h-4 w-4 animate-spin" />
-                        {:else}
+              {@const knownGroupNames = groupSections.map((s) => s.name).filter((n): n is string => n !== null)}
+              <div class="space-y-3">
+                {#each groupSections as section (section.name ?? "__ungrouped__")}
+                  <div
+                    class="border-border rounded-lg border p-2"
+                    role="region"
+                    aria-label={section.name ?? "Ungrouped"}
+                  >
+                    <div class="flex items-center justify-between px-2 py-1">
+                      <span class="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                        {section.name ?? "Ungrouped"}
+                      </span>
+                      {#if section.name}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          title="Remove group (monitors move to Ungrouped)"
+                          onclick={() => removeGroup(section.name as string)}
+                        >
                           <XIcon class="h-4 w-4" />
-                        {/if}
-                      </Button>
+                        </Button>
+                      {/if}
                     </div>
+                    {#if section.monitors.length === 0}
+                      <p class="text-muted-foreground px-2 py-2 text-xs italic">
+                        Use the move-to menu on a monitor to add it to this group.
+                      </p>
+                    {:else}
+                      <div class="space-y-2">
+                        {#each section.monitors as item, i (item.monitor_tag)}
+                          {@const monitor = monitors.find((m) => m.tag === item.monitor_tag)}
+                          {@const otherGroups = knownGroupNames.filter((n) => n !== section.name)}
+                          <div class="bg-muted flex items-center justify-between rounded-lg p-3" role="listitem">
+                            <div>
+                              <p class="font-medium">{monitor?.name || item.monitor_tag}</p>
+                              <p class="text-muted-foreground text-xs">{item.monitor_tag}</p>
+                            </div>
+                            <div class="flex items-center gap-1">
+                              <DropdownMenu.Root>
+                                <DropdownMenu.Trigger>
+                                  {#snippet child({ props })}
+                                    <Button
+                                      {...props}
+                                      variant="ghost"
+                                      size="sm"
+                                      title="Move to group"
+                                      disabled={movingMonitor === item.monitor_tag}
+                                    >
+                                      {#if movingMonitor === item.monitor_tag}
+                                        <Loader class="h-4 w-4 animate-spin" />
+                                      {:else}
+                                        <FolderInputIcon class="h-4 w-4" />
+                                      {/if}
+                                    </Button>
+                                  {/snippet}
+                                </DropdownMenu.Trigger>
+                                <DropdownMenu.Content align="end">
+                                  <DropdownMenu.Label>Move to</DropdownMenu.Label>
+                                  <DropdownMenu.Group>
+                                    {#if section.name !== null}
+                                      <DropdownMenu.Item
+                                        class="cursor-pointer"
+                                        onclick={() => moveMonitorToGroup(item.monitor_tag, null)}
+                                      >
+                                        Ungrouped
+                                      </DropdownMenu.Item>
+                                    {/if}
+                                    {#each otherGroups as g (g)}
+                                      <DropdownMenu.Item
+                                        class="cursor-pointer"
+                                        onclick={() => moveMonitorToGroup(item.monitor_tag, g)}
+                                      >
+                                        {g}
+                                      </DropdownMenu.Item>
+                                    {/each}
+                                    {#if otherGroups.length === 0 && section.name !== null}
+                                      <DropdownMenu.Separator />
+                                    {/if}
+                                    {#if otherGroups.length === 0 && section.name === null}
+                                      <DropdownMenu.Item disabled>
+                                        No groups yet — use Add group above
+                                      </DropdownMenu.Item>
+                                    {/if}
+                                  </DropdownMenu.Group>
+                                </DropdownMenu.Content>
+                              </DropdownMenu.Root>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onclick={() => moveMonitorInSection(section.name, item.monitor_tag, "up")}
+                                disabled={i === 0 || reordering}
+                              >
+                                <ArrowUpIcon class="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onclick={() => moveMonitorInSection(section.name, item.monitor_tag, "down")}
+                                disabled={i === section.monitors.length - 1 || reordering}
+                              >
+                                <ArrowDownIcon class="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onclick={() => removeMonitorFromPage(item.monitor_tag)}
+                                disabled={removingMonitor === item.monitor_tag}
+                              >
+                                {#if removingMonitor === item.monitor_tag}
+                                  <Loader class="h-4 w-4 animate-spin" />
+                                {:else}
+                                  <XIcon class="h-4 w-4" />
+                                {/if}
+                              </Button>
+                            </div>
+                          </div>
+                        {/each}
+                      </div>
+                    {/if}
                   </div>
                 {/each}
               </div>

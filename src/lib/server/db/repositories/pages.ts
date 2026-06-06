@@ -66,6 +66,7 @@ export class PagesRepository extends BaseRepository {
       monitor_tag: data.monitor_tag,
       monitor_settings_json: data.monitor_settings_json,
       position: data.position ?? 0,
+      group_name: data.group_name ?? null,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     });
@@ -100,6 +101,13 @@ export class PagesRepository extends BaseRepository {
   ): Promise<number> {
     return await this.knex("pages_monitors").where({ page_id, monitor_tag }).update({
       monitor_settings_json,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  async updatePageMonitorGroup(page_id: number, monitor_tag: string, group_name: string | null): Promise<number> {
+    return await this.knex("pages_monitors").where({ page_id, monitor_tag }).update({
+      group_name,
       updated_at: this.knex.fn.now(),
     });
   }
