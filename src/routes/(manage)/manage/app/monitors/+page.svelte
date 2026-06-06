@@ -102,8 +102,9 @@
     const key = `${monitor.id}:${field}`;
     if (toggling[key]) return;
 
+    // For is_hidden the switch shows visibility: on = visible = not hidden
     const previous = field === "status" ? monitor.status || "INACTIVE" : monitor.is_hidden || "NO";
-    const next = field === "status" ? (checked ? "ACTIVE" : "INACTIVE") : checked ? "YES" : "NO";
+    const next = field === "status" ? (checked ? "ACTIVE" : "INACTIVE") : checked ? "NO" : "YES";
     if (previous === next) return;
 
     // Optimistic flip; rolled back on failure
@@ -221,7 +222,7 @@
             <Table.Head class="w-[180px]">Tag</Table.Head>
             <Table.Head class="w-[130px]">Type</Table.Head>
             <Table.Head class="w-[120px]">Status</Table.Head>
-            <Table.Head class="w-[120px]">Hidden</Table.Head>
+            <Table.Head class="w-[120px]">Visible</Table.Head>
             <Table.Head class="w-[180px]">Cron</Table.Head>
             <Table.Head class="w-[120px] text-right"></Table.Head>
           </Table.Row>
@@ -264,7 +265,7 @@
               <Table.Cell>
                 <div class="flex items-center gap-2">
                   <Switch
-                    checked={data.is_hidden === "YES"}
+                    checked={data.is_hidden !== "YES"}
                     disabled={!canWrite || !!toggling[`${data.id}:is_hidden`]}
                     aria-label="Toggle status page visibility for {data.name}"
                     onCheckedChange={(checked) => toggleMonitorField(data, "is_hidden", checked)}

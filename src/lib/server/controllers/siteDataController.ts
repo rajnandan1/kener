@@ -154,14 +154,17 @@ export const GetSiteDataByKey = async (key: string): Promise<unknown> => {
   return data.value;
 };
 
+/** Checks the env vars required for setup, without touching the database. */
+export const HasRequiredEnv = (): boolean => {
+  return (
+    process.env.KENER_SECRET_KEY !== undefined &&
+    process.env.ORIGIN !== undefined &&
+    process.env.REDIS_URL !== undefined
+  );
+};
+
 export const IsSetupComplete = async (): Promise<boolean> => {
-  if (process.env.KENER_SECRET_KEY === undefined) {
-    return false;
-  }
-  if (process.env.ORIGIN === undefined) {
-    return false;
-  }
-  if (process.env.REDIS_URL === undefined) {
+  if (!HasRequiredEnv()) {
     return false;
   }
   let data = await db.getAllSiteData();

@@ -834,6 +834,16 @@ class DbImpl {
 
   async init(): Promise<void> {}
 
+  /** Probes database connectivity with a trivial query. Never throws. */
+  async ping(): Promise<boolean> {
+    try {
+      await this.knex.raw("select 1");
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async close(): Promise<void> {
     return await this.knex.destroy();
   }

@@ -7,8 +7,8 @@ import {
   GetLoggedInSession,
   GetLocaleFromCookie,
   GetUsersCount,
+  HasRequiredEnv,
   IsEmailSetup,
-  IsSetupComplete,
 } from "./controller.js";
 import type { EventDisplaySettings, GlobalPageVisibilitySettings, SiteDateTimeFormat } from "$lib/types/site.js";
 
@@ -86,7 +86,9 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     GetUsersCount(),
   ]);
 
-  const isSetupComplete = await IsSetupComplete();
+  // Same check as IsSetupComplete, but reuses the site data fetched above
+  // instead of querying it a second time on every request
+  const isSetupComplete = HasRequiredEnv() && Object.keys(siteData).length > 0;
 
   const selectedLang = GetLocaleFromCookie(siteData, cookies);
   const siteStatusColors = siteData.colors;
