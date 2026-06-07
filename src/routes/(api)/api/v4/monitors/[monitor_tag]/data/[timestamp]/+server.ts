@@ -10,6 +10,7 @@ import type {
 import GC from "$lib/global-constants";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { SetLastMonitoringValue } from "$lib/server/cache/setGet";
+import alertingQueue from "$lib/server/queues/alertingQueue";
 
 export const GET: RequestHandler = async ({ params, locals }) => {
   // Monitor is validated by middleware and available in locals
@@ -159,6 +160,10 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   if (latestData) {
     await SetLastMonitoringValue(monitorTag, latestData);
   }
+
+  // MANUAL samples are alert-visible (docs/adr/0005), so re-evaluate alerts for this
+  // sample — for NONE monitors nothing else would ever trigger evaluation.
+  await alertingQueue.push(monitorTag, timestamp, status);
 
   // Fetch the updated data
   const updatedData = await db.getMonitoringDataAt(monitorTag, timestamp);

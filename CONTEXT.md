@@ -35,8 +35,41 @@ The stored order in which a Group Monitor's members are checked before aggregati
 **Eligible Monitor**:
 A monitor that may become a Member: ACTIVE, not a Group Monitor, and not the group being edited itself.
 
+**Monitoring Sample**:
+One recorded data point for a monitor at a timestamp: a status, a latency, and a sample type describing how it was produced. Every sample is either Observed or Synthetic.
+_Avoid_: Data point, record, check result
+
+**Observed Sample**:
+A Monitoring Sample produced by a check that actually ran against the target, whatever the outcome: a clean evaluation (`REALTIME`), a timed-out check (`TIMEOUT`), or a check that errored (`ERROR`). A check failing to reach the target is itself an observation — for most monitor types that is exactly what "down" looks like.
+
+**Synthetic Sample**:
+A Monitoring Sample written by the system or an admin rather than by a check: a raw heartbeat receipt (`SIGNAL`), a status pushed through the data API (`MANUAL`), a default-status fill (`DEFAULT_STATUS`), or an incident/maintenance overlay (`INCIDENT`, `MAINTENANCE`).
+
 **Stale Member**:
 A Member whose monitor is no longer an Eligible Monitor (paused or deleted after being added). It remains a Member until explicitly removed, but is excluded from the group score.
+
+### Alerting
+
+**Alert Configuration**:
+A per-monitor alerting rule: a condition (status, latency, or uptime against a value), a Failure Threshold, a Success Threshold, whether triggering creates an incident, and the Triggers to notify.
+_Avoid_: Alert rule, alarm
+
+**Alert**:
+A fired instance of an Alert Configuration for a monitor. TRIGGERED when the condition holds, RESOLVED when the resolve condition later holds. May own the incident it created.
+_Avoid_: Alarm, notification (that's what Triggers send)
+
+**Trigger**:
+A notification channel (email, webhook, Discord, Slack) that Alert Configurations notify on trigger and on resolve.
+_Avoid_: Notifier, channel
+
+**Alert-Visible Sample**:
+A Monitoring Sample that alert evaluation can see: every Observed Sample, plus data-API pushes (`MANUAL`) and default-status fill (`DEFAULT_STATUS`). Raw heartbeat receipts (`SIGNAL`) and incident/maintenance overlays are never alert-visible — while an overlay is active the alert window freezes (alerts neither trigger nor resolve). All alert conditions (status and latency alike) evaluate the same alert-visible timeline.
+
+**Failure Threshold**:
+The number of consecutive Alert-Visible Samples matching the condition required to trigger an Alert.
+
+**Success Threshold**:
+The number of consecutive Alert-Visible Samples meeting the resolve condition required to resolve an Alert.
 
 ### Pages
 

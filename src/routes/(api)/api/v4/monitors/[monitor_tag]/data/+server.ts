@@ -11,6 +11,7 @@ import GC from "$lib/global-constants";
 import { UpdateMonitoringData } from "$lib/server/controllers/monitorsController";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { SetLastMonitoringValue } from "$lib/server/cache/setGet";
+import alertingQueue from "$lib/server/queues/alertingQueue";
 
 export const GET: RequestHandler = async ({ locals, url }) => {
   // Monitor is validated by middleware and available in locals
@@ -168,6 +169,11 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   if (latestData) {
     await SetLastMonitoringValue(monitorTag, latestData);
   }
+
+  // MANUAL samples are alert-visible (docs/adr/0005), so re-evaluate alerts once for the
+  // last written sample — for NONE monitors nothing else would ever trigger evaluation.
+  const lastWrittenTs = body.start_ts + Math.floor((body.end_ts - body.start_ts) / 60) * 60;
+  await alertingQueue.push(monitorTag, lastWrittenTs, body.status);
 
   // Calculate the number of data points that will be returned by GET
   // GET uses: timestamp >= start_ts AND timestamp < end_ts
