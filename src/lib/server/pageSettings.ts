@@ -133,6 +133,51 @@ function isValidHistoryDays(value: unknown): boolean {
   return Number.isInteger(value) && (value as number) >= HISTORY_DAYS_MIN && (value as number) <= HISTORY_DAYS_MAX;
 }
 
+const boolOrUndefined = (value: unknown): boolean | undefined => (typeof value === "boolean" ? value : undefined);
+const countOrUndefined = (value: unknown): number | undefined =>
+  Number.isInteger(value) && (value as number) >= 0 ? (value as number) : undefined;
+
+// Read-side sanitizers: keep only correctly-typed leaves from stored event
+// branches so wrong-typed values (e.g. enabled: "yes" from manual edits or
+// older versions) never override defaults in API responses
+function sanitizeStoredIncidents(value: unknown): PageSettingsPatch["incidents"] {
+  if (!isPlainObject(value)) return undefined;
+  const ongoing = isPlainObject(value.ongoing) ? value.ongoing : {};
+  const resolved = isPlainObject(value.resolved) ? value.resolved : {};
+  return {
+    enabled: boolOrUndefined(value.enabled),
+    ongoing: { show: boolOrUndefined(ongoing.show) },
+    resolved: {
+      show: boolOrUndefined(resolved.show),
+      max_count: countOrUndefined(resolved.max_count),
+      days_in_past: countOrUndefined(resolved.days_in_past),
+    },
+  };
+}
+
+function sanitizeStoredMaintenances(value: unknown): PageSettingsPatch["include_maintenances"] {
+  if (!isPlainObject(value)) return undefined;
+  const ongoing = isPlainObject(value.ongoing) ? value.ongoing : {};
+  const past = isPlainObject(ongoing.past) ? ongoing.past : {};
+  const upcoming = isPlainObject(ongoing.upcoming) ? ongoing.upcoming : {};
+  return {
+    enabled: boolOrUndefined(value.enabled),
+    ongoing: {
+      show: boolOrUndefined(ongoing.show),
+      past: {
+        show: boolOrUndefined(past.show),
+        max_count: countOrUndefined(past.max_count),
+        days_in_past: countOrUndefined(past.days_in_past),
+      },
+      upcoming: {
+        show: boolOrUndefined(upcoming.show),
+        max_count: countOrUndefined(upcoming.max_count),
+        days_in_future: countOrUndefined(upcoming.days_in_future),
+      },
+    },
+  };
+}
+
 function isValidLayoutStyle(value: unknown): value is PageSettings["monitor_layout_style"] {
   return (GC.MONITOR_LAYOUT_STYLES as readonly string[]).includes(value as string);
 }
@@ -147,10 +192,8 @@ export function toApiPageSettings(storedJson: string | null | undefined): PageSe
   const stored = parseStored(storedJson);
   const storedDays = isPlainObject(stored.monitor_status_history_days) ? stored.monitor_status_history_days : {};
   const fromStore: PageSettingsPatch = {
-    incidents: (isPlainObject(stored.incidents) ? stored.incidents : undefined) as unknown as PageSettings["incidents"],
-    include_maintenances: (isPlainObject(stored.include_maintenances)
-      ? stored.include_maintenances
-      : undefined) as unknown as PageSettings["include_maintenances"],
+    incidents: sanitizeStoredIncidents(stored.incidents),
+    include_maintenances: sanitizeStoredMaintenances(stored.include_maintenances),
     monitor_status_history_days: {
       desktop: isValidHistoryDays(storedDays.desktop) ? (storedDays.desktop as number) : undefined,
       mobile: isValidHistoryDays(storedDays.mobile) ? (storedDays.mobile as number) : undefined,
@@ -232,6 +275,40 @@ export function validatePageSettings(partial: unknown): string | null {
           return `include_maintenances.ongoing.${key} must be an object`;
         }
       }
+    }
+  }
+
+  // Leaf types inside the event branches must match the schema
+  const leafChecks: Array<{ path: readonly string[]; kind: "boolean" | "count" }> = [
+    { path: ["incidents", "enabled"], kind: "boolean" },
+    { path: ["incidents", "ongoing", "show"], kind: "boolean" },
+    { path: ["incidents", "resolved", "show"], kind: "boolean" },
+    { path: ["incidents", "resolved", "max_count"], kind: "count" },
+    { path: ["incidents", "resolved", "days_in_past"], kind: "count" },
+    { path: ["include_maintenances", "enabled"], kind: "boolean" },
+    { path: ["include_maintenances", "ongoing", "show"], kind: "boolean" },
+    { path: ["include_maintenances", "ongoing", "past", "show"], kind: "boolean" },
+    { path: ["include_maintenances", "ongoing", "past", "max_count"], kind: "count" },
+    { path: ["include_maintenances", "ongoing", "past", "days_in_past"], kind: "count" },
+    { path: ["include_maintenances", "ongoing", "upcoming", "show"], kind: "boolean" },
+    { path: ["include_maintenances", "ongoing", "upcoming", "max_count"], kind: "count" },
+    { path: ["include_maintenances", "ongoing", "upcoming", "days_in_future"], kind: "count" },
+  ];
+  for (const { path, kind } of leafChecks) {
+    let value: unknown = settings;
+    for (const key of path) {
+      if (!isPlainObject(value)) {
+        value = undefined;
+        break;
+      }
+      value = value[key];
+    }
+    if (value === undefined) continue;
+    if (kind === "boolean" && typeof value !== "boolean") {
+      return `${path.join(".")} must be a boolean`;
+    }
+    if (kind === "count" && !(Number.isInteger(value) && (value as number) >= 0)) {
+      return `${path.join(".")} must be a non-negative integer`;
     }
   }
 

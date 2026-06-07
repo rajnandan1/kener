@@ -455,9 +455,14 @@ export interface PageSettingsHistoryDays {
   mobile: number;
 }
 
-/** Recursive partial, so patch payloads can update any subset of nested fields. */
+/**
+ * Recursive partial, so patch payloads can update any subset of nested fields.
+ * Recursion applies only to plain object maps; arrays and other special object
+ * types pass through unchanged.
+ */
 export type DeepPartial<T> = {
-  [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [K in keyof T]?: T[K] extends (infer U)[] ? U[] : T[K] extends Record<string, any> ? DeepPartial<T[K]> : T[K];
 };
 
 /**
