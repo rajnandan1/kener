@@ -17,6 +17,7 @@
 ### Task 1: Constants + alert-visible whitelist
 
 **Files:**
+
 - Modify: `src/lib/global-constants.ts:43`
 - Modify: `src/lib/server/db/repositories/monitoring.ts:13-20`
 
@@ -50,7 +51,7 @@ In `src/lib/server/db/repositories/monitoring.ts`, replace lines 13-20:
  * SIGNAL rows (raw heartbeat receipts) and INCIDENT/MAINTENANCE overlays stay invisible, so the
  * alert window freezes during manual overlays instead of triggering or resolving on them.
  */
-const ALERT_VISIBLE_TYPES = [GC.REALTIME, GC.ERROR, GC.TIMEOUT, GC.MANUAL, GC.DEFAULT_STATUS];
+const ALERT_VISIBLE_TYPES = [GC.REALTIME, GC.ERROR, GC.TIMEOUT, GC.MANUAL, GC.DEFAULT_STATUS]
 ```
 
 with:
@@ -65,7 +66,7 @@ with:
  * SIGNAL rows (raw heartbeat receipts) and INCIDENT/MAINTENANCE overlays stay invisible, so the
  * alert window freezes during manual overlays instead of triggering or resolving on them.
  */
-const ALERT_VISIBLE_TYPES = [GC.REALTIME, GC.ERROR, GC.TIMEOUT, GC.MANUAL, GC.DEFAULT_STATUS, GC.CARRIED];
+const ALERT_VISIBLE_TYPES = [GC.REALTIME, GC.ERROR, GC.TIMEOUT, GC.MANUAL, GC.DEFAULT_STATUS, GC.CARRIED]
 ```
 
 - [ ] **Step 3: Type-check**
@@ -85,6 +86,7 @@ git commit -m "feat(constants): add CARRIED sample type and LAST_KNOWN default s
 ### Task 2: Repository — latest alert-visible sample query
 
 **Files:**
+
 - Modify: `src/lib/server/db/repositories/monitoring.ts` (after `getLatestMonitoringData`, line 79)
 - Modify: `src/lib/server/db/dbimpl.ts:52-53` (declaration) and `:412` (binding)
 
@@ -120,7 +122,7 @@ In `src/lib/server/db/dbimpl.ts`, after line 52 (`getLatestMonitoringData!: ...`
 and after line 412 (`this.getLatestMonitoringData = ...bind(this.monitoring);`), add the binding:
 
 ```typescript
-    this.getLatestAlertVisibleData = this.monitoring.getLatestAlertVisibleData.bind(this.monitoring);
+this.getLatestAlertVisibleData = this.monitoring.getLatestAlertVisibleData.bind(this.monitoring)
 ```
 
 - [ ] **Step 3: Write the throwaway verification script**
@@ -128,42 +130,42 @@ and after line 412 (`this.getLatestMonitoringData = ...bind(this.monitoring);`),
 Create `scripts/tmp-verify-carry-source.ts` (will be deleted, never committed):
 
 ```typescript
-import Knex from "knex";
-import { MonitoringRepository } from "../src/lib/server/db/repositories/monitoring";
+import Knex from "knex"
+import { MonitoringRepository } from "../src/lib/server/db/repositories/monitoring"
 
-const knex = Knex({ client: "better-sqlite3", connection: { filename: ":memory:" }, useNullAsDefault: true });
+const knex = Knex({ client: "better-sqlite3", connection: { filename: ":memory:" }, useNullAsDefault: true })
 
 await knex.schema.createTable("monitoring_data", (t) => {
-  t.string("monitor_tag");
-  t.integer("timestamp");
-  t.string("status");
-  t.float("latency");
-  t.string("type");
-  t.text("error_message");
-  t.primary(["monitor_tag", "timestamp"]);
-});
+    t.string("monitor_tag")
+    t.integer("timestamp")
+    t.string("status")
+    t.float("latency")
+    t.string("type")
+    t.text("error_message")
+    t.primary(["monitor_tag", "timestamp"])
+})
 
-const repo = new MonitoringRepository(knex);
+const repo = new MonitoringRepository(knex)
 
 // Timeline: MANUAL DOWN, then a CARRIED copy, then an INCIDENT overlay, then a SIGNAL receipt.
 await knex("monitoring_data").insert([
-  { monitor_tag: "t", timestamp: 100, status: "DOWN", latency: 42, type: "MANUAL" },
-  { monitor_tag: "t", timestamp: 160, status: "DOWN", latency: 42, type: "CARRIED" },
-  { monitor_tag: "t", timestamp: 220, status: "UP", latency: 0, type: "INCIDENT" },
-  { monitor_tag: "t", timestamp: 280, status: "UP", latency: 0, type: "SIGNAL" },
-]);
+    { monitor_tag: "t", timestamp: 100, status: "DOWN", latency: 42, type: "MANUAL" },
+    { monitor_tag: "t", timestamp: 160, status: "DOWN", latency: 42, type: "CARRIED" },
+    { monitor_tag: "t", timestamp: 220, status: "UP", latency: 0, type: "INCIDENT" },
+    { monitor_tag: "t", timestamp: 280, status: "UP", latency: 0, type: "SIGNAL" }
+])
 
-const latest = await repo.getLatestAlertVisibleData("t");
-console.log("latest:", latest);
+const latest = await repo.getLatestAlertVisibleData("t")
+console.log("latest:", latest)
 if (!latest || latest.timestamp !== 160 || latest.type !== "CARRIED" || latest.status !== "DOWN") {
-  throw new Error("FAIL: expected the CARRIED row at ts=160 (INCIDENT/SIGNAL must be skipped)");
+    throw new Error("FAIL: expected the CARRIED row at ts=160 (INCIDENT/SIGNAL must be skipped)")
 }
 
-const none = await repo.getLatestAlertVisibleData("missing");
-if (none !== undefined) throw new Error("FAIL: expected undefined for unknown tag");
+const none = await repo.getLatestAlertVisibleData("missing")
+if (none !== undefined) throw new Error("FAIL: expected undefined for unknown tag")
 
-console.log("PASS");
-await knex.destroy();
+console.log("PASS")
+await knex.destroy()
 ```
 
 - [ ] **Step 4: Run it**
@@ -185,6 +187,7 @@ git commit -m "feat(db): add getLatestAlertVisibleData query for last-known-stat
 ### Task 3: Engine — carry fill in the execute worker
 
 **Files:**
+
 - Modify: `src/lib/server/queues/monitorExecuteQueue.ts:125-156`
 
 - [ ] **Step 1: Extend the defaultData branch**
@@ -192,55 +195,55 @@ git commit -m "feat(db): add getLatestAlertVisibleData query for last-known-stat
 In `src/lib/server/queues/monitorExecuteQueue.ts`, replace lines 125-139:
 
 ```typescript
-    let defaultData: MonitoringResultTS = {};
-    let mergedData: MonitoringResultTS = {};
+let defaultData: MonitoringResultTS = {}
+let mergedData: MonitoringResultTS = {}
 
-    if (monitor.default_status !== undefined && monitor.default_status !== null) {
-      if (([GC.UP, GC.DOWN, GC.DEGRADED] as string[]).indexOf(monitor.default_status) !== -1) {
+if (monitor.default_status !== undefined && monitor.default_status !== null) {
+    if (([GC.UP, GC.DOWN, GC.DEGRADED] as string[]).indexOf(monitor.default_status) !== -1) {
         defaultData[ts] = {
-          status: monitor.default_status,
-          latency: 0,
-          type: GC.DEFAULT_STATUS,
-        };
-        if (monitor.default_status !== GC.UP) {
-          defaultData[ts].error_message = "Default status applied";
+            status: monitor.default_status,
+            latency: 0,
+            type: GC.DEFAULT_STATUS
         }
-      }
+        if (monitor.default_status !== GC.UP) {
+            defaultData[ts].error_message = "Default status applied"
+        }
     }
+}
 ```
 
 with:
 
 ```typescript
-    let defaultData: MonitoringResultTS = {};
-    let mergedData: MonitoringResultTS = {};
+let defaultData: MonitoringResultTS = {}
+let mergedData: MonitoringResultTS = {}
 
-    if (monitor.default_status !== undefined && monitor.default_status !== null) {
-      if (([GC.UP, GC.DOWN, GC.DEGRADED] as string[]).indexOf(monitor.default_status) !== -1) {
+if (monitor.default_status !== undefined && monitor.default_status !== null) {
+    if (([GC.UP, GC.DOWN, GC.DEGRADED] as string[]).indexOf(monitor.default_status) !== -1) {
         defaultData[ts] = {
-          status: monitor.default_status,
-          latency: 0,
-          type: GC.DEFAULT_STATUS,
-        };
-        if (monitor.default_status !== GC.UP) {
-          defaultData[ts].error_message = "Default status applied";
+            status: monitor.default_status,
+            latency: 0,
+            type: GC.DEFAULT_STATUS
         }
-      } else if (monitor.default_status === GC.LAST_KNOWN) {
+        if (monitor.default_status !== GC.UP) {
+            defaultData[ts].error_message = "Default status applied"
+        }
+    } else if (monitor.default_status === GC.LAST_KNOWN) {
         // Last Known Status fill (docs/adr/0006): repeat the most recent alert-visible
         // sample — status and latency alike. No sample yet → nothing to carry → no fill.
-        const lastKnown = await db.getLatestAlertVisibleData(monitor.tag);
+        const lastKnown = await db.getLatestAlertVisibleData(monitor.tag)
         if (lastKnown && lastKnown.status) {
-          defaultData[ts] = {
-            status: lastKnown.status,
-            latency: lastKnown.latency ?? 0,
-            type: GC.CARRIED,
-          };
-          if (lastKnown.status !== GC.UP) {
-            defaultData[ts].error_message = "Last known status applied";
-          }
+            defaultData[ts] = {
+                status: lastKnown.status,
+                latency: lastKnown.latency ?? 0,
+                type: GC.CARRIED
+            }
+            if (lastKnown.status !== GC.UP) {
+                defaultData[ts].error_message = "Last known status applied"
+            }
         }
-      }
     }
+}
 ```
 
 - [ ] **Step 2: Fix the NO_DATA-preference block to preserve the fill's type**
@@ -248,40 +251,40 @@ with:
 Still in the same file, the block at (previously) lines 141-156 hardcodes `type: GC.DEFAULT_STATUS` when realtime returns NO_DATA but a fill exists. A heartbeat monitor with `LAST_KNOWN` would mislabel its carried rows. Replace:
 
 ```typescript
-    const defaultStatus = defaultData[ts]?.status;
-    const realtimeStatus = realtimeData[ts]?.status;
-    let realtimeDataForMerge = realtimeData;
-    if (defaultStatus && realtimeStatus === GC.NO_DATA) {
-      // Apply the preference *before* merging so incident/maintenance can still override later.
-      // Also avoid carrying over realtime NO_DATA error_message.
-      realtimeDataForMerge = { ...realtimeData };
-      realtimeDataForMerge[ts] = {
+const defaultStatus = defaultData[ts]?.status
+const realtimeStatus = realtimeData[ts]?.status
+let realtimeDataForMerge = realtimeData
+if (defaultStatus && realtimeStatus === GC.NO_DATA) {
+    // Apply the preference *before* merging so incident/maintenance can still override later.
+    // Also avoid carrying over realtime NO_DATA error_message.
+    realtimeDataForMerge = { ...realtimeData }
+    realtimeDataForMerge[ts] = {
         ...realtimeDataForMerge[ts],
         status: defaultStatus,
-        type: GC.DEFAULT_STATUS,
-      };
-      delete realtimeDataForMerge[ts].error_message;
+        type: GC.DEFAULT_STATUS
     }
+    delete realtimeDataForMerge[ts].error_message
+}
 ```
 
 with:
 
 ```typescript
-    const defaultStatus = defaultData[ts]?.status;
-    const realtimeStatus = realtimeData[ts]?.status;
-    let realtimeDataForMerge = realtimeData;
-    if (defaultStatus && realtimeStatus === GC.NO_DATA) {
-      // Apply the preference *before* merging so incident/maintenance can still override later.
-      // Also avoid carrying over realtime NO_DATA error_message.
-      // Keep the fill's own type: DEFAULT for fixed fill, CARRIED for last-known fill.
-      realtimeDataForMerge = { ...realtimeData };
-      realtimeDataForMerge[ts] = {
+const defaultStatus = defaultData[ts]?.status
+const realtimeStatus = realtimeData[ts]?.status
+let realtimeDataForMerge = realtimeData
+if (defaultStatus && realtimeStatus === GC.NO_DATA) {
+    // Apply the preference *before* merging so incident/maintenance can still override later.
+    // Also avoid carrying over realtime NO_DATA error_message.
+    // Keep the fill's own type: DEFAULT for fixed fill, CARRIED for last-known fill.
+    realtimeDataForMerge = { ...realtimeData }
+    realtimeDataForMerge[ts] = {
         ...realtimeDataForMerge[ts],
         status: defaultStatus,
-        type: defaultData[ts].type,
-      };
-      delete realtimeDataForMerge[ts].error_message;
+        type: defaultData[ts].type
     }
+    delete realtimeDataForMerge[ts].error_message
+}
 ```
 
 Note: `latency` in this branch intentionally stays whatever realtime reported — unchanged from today for fixed fill; for LAST_KNOWN-on-heartbeat the carried latency was already placed in `defaultData[ts]` and `mergedData` spread order (`{ ...defaultData, ...realtimeDataForMerge, ... }`) means the realtime object wins the spread; this matches existing fixed-fill behavior, do not "improve" it here.
@@ -305,6 +308,7 @@ git commit -m "feat(scheduler): write CARRIED samples for LAST_KNOWN default sta
 ### Task 4: Normalization chokepoint for all monitor writes
 
 **Files:**
+
 - Modify: `src/lib/server/controllers/monitorsController.ts` (near `CreateUpdateMonitor`, line 193)
 - Modify: `src/routes/(api)/api/v4/monitors/+server.ts:104-121`
 - Modify: `src/routes/(api)/api/v4/monitors/[monitor_tag]/+server.ts:72-78`
@@ -314,7 +318,7 @@ git commit -m "feat(scheduler): write CARRIED samples for LAST_KNOWN default sta
 Directly above `CreateUpdateMonitor` (line 193), add:
 
 ```typescript
-const VALID_DEFAULT_STATUSES = ["NONE", GC.UP, GC.DOWN, GC.DEGRADED, GC.LAST_KNOWN] as const;
+const VALID_DEFAULT_STATUSES = ["NONE", GC.UP, GC.DOWN, GC.DEGRADED, GC.LAST_KNOWN] as const
 
 /**
  * Enforce the closed default_status value set and the LAST_KNOWN scope rule
@@ -322,19 +326,16 @@ const VALID_DEFAULT_STATUSES = ["NONE", GC.UP, GC.DOWN, GC.DEGRADED, GC.LAST_KNO
  * on any other type it silently resets to UP so the invalid combination never persists.
  * Throws on values outside the closed set.
  */
-export const NormalizeDefaultStatus = (
-  monitorType: string | null | undefined,
-  defaultStatus: string | null | undefined,
-): string => {
-  const value = defaultStatus ?? "NONE";
-  if (!(VALID_DEFAULT_STATUSES as readonly string[]).includes(value)) {
-    throw new Error(`default_status must be one of: ${VALID_DEFAULT_STATUSES.join(", ")}`);
-  }
-  if (value === GC.LAST_KNOWN && monitorType !== "NONE") {
-    return GC.UP;
-  }
-  return value;
-};
+export const NormalizeDefaultStatus = (monitorType: string | null | undefined, defaultStatus: string | null | undefined): string => {
+    const value = defaultStatus ?? "NONE"
+    if (!(VALID_DEFAULT_STATUSES as readonly string[]).includes(value)) {
+        throw new Error(`default_status must be one of: ${VALID_DEFAULT_STATUSES.join(", ")}`)
+    }
+    if (value === GC.LAST_KNOWN && monitorType !== "NONE") {
+        return GC.UP
+    }
+    return value
+}
 ```
 
 (`monitorsController.ts` already imports `GC` at line 25 — no import change needed.)
@@ -345,29 +346,29 @@ Replace `CreateUpdateMonitor` (lines 193-201):
 
 ```typescript
 export const CreateUpdateMonitor = async (monitor: MonitorInput): Promise<number | number[]> => {
-  let monitorData = { ...monitor };
-  if (monitorData.id) {
-    return await db.updateMonitor(monitorData as MonitorRecord);
-  } else {
-    validateMonitorTag(monitorData.tag);
-    return await db.insertMonitor(monitorData);
-  }
-};
+    let monitorData = { ...monitor }
+    if (monitorData.id) {
+        return await db.updateMonitor(monitorData as MonitorRecord)
+    } else {
+        validateMonitorTag(monitorData.tag)
+        return await db.insertMonitor(monitorData)
+    }
+}
 ```
 
 with:
 
 ```typescript
 export const CreateUpdateMonitor = async (monitor: MonitorInput): Promise<number | number[]> => {
-  let monitorData = { ...monitor };
-  monitorData.default_status = NormalizeDefaultStatus(monitorData.monitor_type, monitorData.default_status);
-  if (monitorData.id) {
-    return await db.updateMonitor(monitorData as MonitorRecord);
-  } else {
-    validateMonitorTag(monitorData.tag);
-    return await db.insertMonitor(monitorData);
-  }
-};
+    let monitorData = { ...monitor }
+    monitorData.default_status = NormalizeDefaultStatus(monitorData.monitor_type, monitorData.default_status)
+    if (monitorData.id) {
+        return await db.updateMonitor(monitorData as MonitorRecord)
+    } else {
+        validateMonitorTag(monitorData.tag)
+        return await db.insertMonitor(monitorData)
+    }
+}
 ```
 
 (The manage API route at `src/routes/(manage)/manage/api/+server.ts` wraps the action switch in try/catch (line 660) and surfaces thrown `Error.message` — no route change needed.)
@@ -377,7 +378,7 @@ export const CreateUpdateMonitor = async (monitor: MonitorInput): Promise<number
 In `src/routes/(api)/api/v4/monitors/+server.ts`, add to the imports from the monitors controller (`GetMonitorsParsed` is already imported — extend that import):
 
 ```typescript
-import { GetMonitorsParsed, NormalizeDefaultStatus } from "$lib/server/controllers/monitorsController";
+import { GetMonitorsParsed, NormalizeDefaultStatus } from "$lib/server/controllers/monitorsController"
 ```
 
 (match the existing import line's exact shape — if `GetMonitorsParsed` is imported from a different specifier, add `NormalizeDefaultStatus` to that same line).
@@ -391,18 +392,18 @@ Then replace line 111:
 with a pre-validated variable. Above the `const monitorData = {` block (line 104), insert:
 
 ```typescript
-  let defaultStatus: string;
-  try {
-    defaultStatus = NormalizeDefaultStatus(body.monitor_type ?? "API", body.default_status ?? "UP");
-  } catch (e) {
+let defaultStatus: string
+try {
+    defaultStatus = NormalizeDefaultStatus(body.monitor_type ?? "API", body.default_status ?? "UP")
+} catch (e) {
     const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: e instanceof Error ? e.message : "Invalid default_status",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
+        error: {
+            code: "BAD_REQUEST",
+            message: e instanceof Error ? e.message : "Invalid default_status"
+        }
+    }
+    return json(errorResponse, { status: 400 })
+}
 ```
 
 and in `monitorData` use:
@@ -413,37 +414,34 @@ and in `monitorData` use:
 
 - [ ] **Step 4: Apply it in v4 PATCH**
 
-In `src/routes/(api)/api/v4/monitors/[monitor_tag]/+server.ts`, the handler resolves `updateData.monitor_type` at line 78 *after* `updateData.default_status` at line 75 — the normalization must run after BOTH are resolved. Replace line 75:
+In `src/routes/(api)/api/v4/monitors/[monitor_tag]/+server.ts`, the handler resolves `updateData.monitor_type` at line 78 _after_ `updateData.default_status` at line 75 — the normalization must run after BOTH are resolved. Replace line 75:
 
 ```typescript
-  updateData.default_status = body.default_status !== undefined ? body.default_status : existingMonitor.default_status;
+updateData.default_status = body.default_status !== undefined ? body.default_status : existingMonitor.default_status
 ```
 
 with (keep it in place so field ordering stays readable, but move the value through the helper after line 78):
 
 ```typescript
-  updateData.default_status = body.default_status !== undefined ? body.default_status : existingMonitor.default_status;
+updateData.default_status = body.default_status !== undefined ? body.default_status : existingMonitor.default_status
 ```
 
 …and after line 78 (`updateData.monitor_type = ...`), insert:
 
 ```typescript
-  // Closed-set validation + LAST_KNOWN scope rule (docs/adr/0006). Runs after monitor_type
-  // is resolved so a type change away from NONE auto-resets LAST_KNOWN to UP.
-  try {
-    updateData.default_status = NormalizeDefaultStatus(
-      updateData.monitor_type as string,
-      updateData.default_status as string | null,
-    );
-  } catch (e) {
+// Closed-set validation + LAST_KNOWN scope rule (docs/adr/0006). Runs after monitor_type
+// is resolved so a type change away from NONE auto-resets LAST_KNOWN to UP.
+try {
+    updateData.default_status = NormalizeDefaultStatus(updateData.monitor_type as string, updateData.default_status as string | null)
+} catch (e) {
     const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: e instanceof Error ? e.message : "Invalid default_status",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
+        error: {
+            code: "BAD_REQUEST",
+            message: e instanceof Error ? e.message : "Invalid default_status"
+        }
+    }
+    return json(errorResponse, { status: 400 })
+}
 ```
 
 Add `NormalizeDefaultStatus` to this file's monitors-controller import the same way as in Step 3.
@@ -453,26 +451,26 @@ Add `NormalizeDefaultStatus` to this file's monitors-controller import the same 
 Create `scripts/tmp-verify-normalize.ts`:
 
 ```typescript
-import { NormalizeDefaultStatus } from "../src/lib/server/controllers/monitorsController";
+import { NormalizeDefaultStatus } from "../src/lib/server/controllers/monitorsController"
 
 const cases: Array<[string, string | null, string]> = [
-  ["NONE", "LAST_KNOWN", "LAST_KNOWN"], // allowed on Manual monitors
-  ["API", "LAST_KNOWN", "UP"], // auto-reset on any other type
-  ["NONE", null, "NONE"], // null → NONE
-  ["API", "DOWN", "DOWN"], // fixed values pass through
-];
+    ["NONE", "LAST_KNOWN", "LAST_KNOWN"], // allowed on Manual monitors
+    ["API", "LAST_KNOWN", "UP"], // auto-reset on any other type
+    ["NONE", null, "NONE"], // null → NONE
+    ["API", "DOWN", "DOWN"] // fixed values pass through
+]
 for (const [type, input, expected] of cases) {
-  const got = NormalizeDefaultStatus(type, input);
-  if (got !== expected) throw new Error(`FAIL: (${type}, ${input}) → ${got}, expected ${expected}`);
+    const got = NormalizeDefaultStatus(type, input)
+    if (got !== expected) throw new Error(`FAIL: (${type}, ${input}) → ${got}, expected ${expected}`)
 }
-let threw = false;
+let threw = false
 try {
-  NormalizeDefaultStatus("API", "MAINTENANCE");
+    NormalizeDefaultStatus("API", "MAINTENANCE")
 } catch {
-  threw = true;
+    threw = true
 }
-if (!threw) throw new Error("FAIL: MAINTENANCE must be rejected");
-console.log("PASS");
+if (!threw) throw new Error("FAIL: MAINTENANCE must be rejected")
+console.log("PASS")
 ```
 
 Run: `npx vite-node scripts/tmp-verify-normalize.ts`
@@ -492,26 +490,27 @@ git commit -m "feat(api): enforce closed default_status set with LAST_KNOWN scop
 ### Task 5: Migration — normalize legacy default_status values
 
 **Files:**
+
 - Create: `migrations/20260607150000_normalize_default_status.ts`
 
 - [ ] **Step 1: Write the migration**
 
 ```typescript
-import type { Knex } from "knex";
+import type { Knex } from "knex"
 
 // Closed default_status set as of docs/adr/0006. MAINTENANCE was offered by the old
 // UI but never honored by the fill engine — it behaved exactly like "no fill", so it
 // (and any other unknown value, and NULL) normalizes to NONE, preserving behavior.
-const VALID = ["NONE", "UP", "DOWN", "DEGRADED", "LAST_KNOWN"];
+const VALID = ["NONE", "UP", "DOWN", "DEGRADED", "LAST_KNOWN"]
 
 export async function up(knex: Knex): Promise<void> {
-  await knex("monitors").whereNull("default_status").update({ default_status: "NONE" });
-  await knex("monitors").whereNotIn("default_status", VALID).update({ default_status: "NONE" });
+    await knex("monitors").whereNull("default_status").update({ default_status: "NONE" })
+    await knex("monitors").whereNotIn("default_status", VALID).update({ default_status: "NONE" })
 }
 
 export async function down(): Promise<void> {
-  // Irreversible by design: the values rewritten to NONE were dead (never honored
-  // by the fill engine), so there is nothing meaningful to restore.
+    // Irreversible by design: the values rewritten to NONE were dead (never honored
+    // by the fill engine), so there is nothing meaningful to restore.
 }
 ```
 
@@ -542,6 +541,7 @@ git commit -m "feat(db): migrate default_status to closed value set"
 ### Task 6: Manage UI — dropdown options + callout + auto-reset
 
 **Files:**
+
 - Modify: `src/routes/(manage)/manage/app/monitors/[tag]/components/GeneralSettingsCard.svelte:230-247`
 
 **REQUIRED SUB-SKILL for this task: `svelte-code-writer` (per CLAUDE.md, mandatory for all .svelte edits).**
@@ -551,29 +551,29 @@ git commit -m "feat(db): migrate default_status to closed value set"
 In the `<script lang="ts">` block (GC is already imported at line 20), add to the imports:
 
 ```typescript
-  import * as Alert from "$lib/components/ui/alert/index.js";
-  import TriangleAlertIcon from "@lucide/svelte/icons/triangle-alert";
+import * as Alert from "$lib/components/ui/alert/index.js"
+import TriangleAlertIcon from "@lucide/svelte/icons/triangle-alert"
 ```
 
 and below the props destructuring add:
 
 ```typescript
-  const defaultStatusLabels: Record<string, string> = {
+const defaultStatusLabels: Record<string, string> = {
     NONE: "None (show gaps as no data)",
     UP: "UP",
     DOWN: "DOWN",
     DEGRADED: "DEGRADED",
-    LAST_KNOWN: "Last known status",
-  };
+    LAST_KNOWN: "Last known status"
+}
 
-  // LAST_KNOWN is only valid on Manual (NONE-type) monitors; the server enforces the
-  // same rule (NormalizeDefaultStatus), this effect just keeps the UI honest live.
-  $effect(() => {
+// LAST_KNOWN is only valid on Manual (NONE-type) monitors; the server enforces the
+// same rule (NormalizeDefaultStatus), this effect just keeps the UI honest live.
+$effect(() => {
     if (monitor.monitor_type !== "NONE" && monitor.default_status === GC.LAST_KNOWN) {
-      monitor.default_status = GC.UP;
-      toast.info("Default status was reset to UP — Last known status is only available for Manual monitors.");
+        monitor.default_status = GC.UP
+        toast.info("Default status was reset to UP — Last known status is only available for Manual monitors.")
     }
-  });
+})
 ```
 
 (`toast` is already imported from `svelte-sonner` at line 16.)
@@ -583,73 +583,69 @@ and below the props destructuring add:
 Replace lines 230-247:
 
 ```svelte
-        <Label for="monitor-default-status">Default Status</Label>
-        <Select.Root
-          type="single"
-          value={monitor.default_status}
-          onValueChange={(v) => {
-            if (v) monitor.default_status = v;
-          }}
-        >
-          <Select.Trigger id="monitor-default-status" class="w-full">
-            {monitor.default_status}
-          </Select.Trigger>
-          <Select.Content>
-            <Select.Item value="UP">UP</Select.Item>
-            <Select.Item value="DOWN">DOWN</Select.Item>
-            <Select.Item value="DEGRADED">DEGRADED</Select.Item>
-            <Select.Item value="MAINTENANCE">MAINTENANCE</Select.Item>
-          </Select.Content>
-        </Select.Root>
+<Label for="monitor-default-status">Default Status</Label>
+<Select.Root
+    type="single"
+    value={monitor.default_status}
+    onValueChange={(v) => {
+        if (v) monitor.default_status = v
+    }}
+>
+    <Select.Trigger id="monitor-default-status" class="w-full">
+        {monitor.default_status}
+    </Select.Trigger>
+    <Select.Content>
+        <Select.Item value="UP">UP</Select.Item>
+        <Select.Item value="DOWN">DOWN</Select.Item>
+        <Select.Item value="DEGRADED">DEGRADED</Select.Item>
+        <Select.Item value="MAINTENANCE">MAINTENANCE</Select.Item>
+    </Select.Content>
+</Select.Root>
 ```
 
 with:
 
 ```svelte
-        <Label for="monitor-default-status">Default Status</Label>
-        <Select.Root
-          type="single"
-          value={monitor.default_status ?? "NONE"}
-          onValueChange={(v) => {
-            if (v) monitor.default_status = v;
-          }}
-        >
-          <Select.Trigger id="monitor-default-status" class="w-full">
-            {defaultStatusLabels[monitor.default_status ?? "NONE"] ?? monitor.default_status}
-          </Select.Trigger>
-          <Select.Content>
-            <Select.Item value="NONE">None (show gaps as no data)</Select.Item>
-            <Select.Item value="UP">UP</Select.Item>
-            <Select.Item value="DOWN">DOWN</Select.Item>
-            <Select.Item value="DEGRADED">DEGRADED</Select.Item>
-            {#if monitor.monitor_type === "NONE"}
-              <Select.Item value="LAST_KNOWN">Last known status</Select.Item>
-            {/if}
-          </Select.Content>
-        </Select.Root>
-        {#if monitor.default_status === GC.LAST_KNOWN}
-          <Alert.Root>
-            <TriangleAlertIcon />
-            <Alert.Title>Last known status</Alert.Title>
-            <Alert.Description>
-              <p>
-                Kener will repeat the most recent status and latency every minute until your integration sends new
-                data.
-              </p>
-              <ul class="list-disc pl-4">
-                <li>
-                  If your integration stops sending, the page keeps showing the last status indefinitely — Kener
-                  cannot tell "still up" from "stopped reporting". Use a Heartbeat monitor to catch a silent
-                  integration.
-                </li>
-                <li>
-                  Carried minutes count toward alert thresholds: a single DOWN push will trigger alerts after your
-                  failure threshold, and they stay triggered until you push a recovery.
-                </li>
-              </ul>
-            </Alert.Description>
-          </Alert.Root>
+<Label for="monitor-default-status">Default Status</Label>
+<Select.Root
+    type="single"
+    value={monitor.default_status ?? "NONE"}
+    onValueChange={(v) => {
+        if (v) monitor.default_status = v
+    }}
+>
+    <Select.Trigger id="monitor-default-status" class="w-full">
+        {defaultStatusLabels[monitor.default_status ?? "NONE"] ?? monitor.default_status}
+    </Select.Trigger>
+    <Select.Content>
+        <Select.Item value="NONE">None (show gaps as no data)</Select.Item>
+        <Select.Item value="UP">UP</Select.Item>
+        <Select.Item value="DOWN">DOWN</Select.Item>
+        <Select.Item value="DEGRADED">DEGRADED</Select.Item>
+        {#if monitor.monitor_type === "NONE"}
+            <Select.Item value="LAST_KNOWN">Last known status</Select.Item>
         {/if}
+    </Select.Content>
+</Select.Root>
+{#if monitor.default_status === GC.LAST_KNOWN}
+    <Alert.Root>
+        <TriangleAlertIcon />
+        <Alert.Title>Last known status</Alert.Title>
+        <Alert.Description>
+            <p>Kener will repeat the most recent status and latency every minute until your integration sends new data.</p>
+            <ul class="list-disc pl-4">
+                <li>
+                    If your integration stops sending, the page keeps showing the last status indefinitely — Kener cannot tell "still up" from "stopped reporting". Use a Heartbeat
+                    monitor to catch a silent integration.
+                </li>
+                <li>
+                    Carried minutes count toward alert thresholds: a single DOWN push will trigger alerts after your failure threshold, and they stay triggered until you push a
+                    recovery.
+                </li>
+            </ul>
+        </Alert.Description>
+    </Alert.Root>
+{/if}
 ```
 
 - [ ] **Step 3: Run the svelte autofixer / check**
@@ -680,6 +676,7 @@ git commit -m "feat(manage): Last known status option with callout in Default St
 ### Task 7: Docs — ADR cross-link + user documentation
 
 **Files:**
+
 - Modify: `docs/adr/0005-alerts-evaluate-alert-visible-samples.md` (append one sentence)
 - Modify: `src/routes/(docs)/docs/content/v4/monitors/overview.md` (Default Status section)
 

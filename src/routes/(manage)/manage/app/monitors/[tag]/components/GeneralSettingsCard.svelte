@@ -33,7 +33,7 @@
     UP: "UP",
     DOWN: "DOWN",
     DEGRADED: "DEGRADED",
-    LAST_KNOWN: "Last known status",
+    LAST_KNOWN: "Last known status"
   };
 
   // LAST_KNOWN is only valid on Manual (NONE-type) monitors; the server enforces the
@@ -273,14 +273,13 @@
             <Alert.Title>Last known status</Alert.Title>
             <Alert.Description>
               <p>
-                Kener will repeat the most recent status and latency every minute until your integration sends new
-                data.
+                Kener will repeat the most recent status and latency every minute until your integration sends new data.
               </p>
               <ul class="list-disc pl-4">
                 <li>
                   If your integration stops sending, the page keeps showing the last status indefinitely &mdash; Kener
-                  cannot tell &quot;still up&quot; from &quot;stopped reporting&quot;. Use a Heartbeat monitor to catch a silent
-                  integration.
+                  cannot tell &quot;still up&quot; from &quot;stopped reporting&quot;. Use a Heartbeat monitor to catch
+                  a silent integration.
                 </li>
                 <li>
                   Carried minutes count toward alert thresholds: a single DOWN push will trigger alerts after your
