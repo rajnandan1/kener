@@ -8,7 +8,7 @@ import type {
   BadRequestResponse,
 } from "$lib/types/api";
 import type { MonitorRecord } from "$lib/server/types/db";
-import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
+import { GetMonitorsParsed, NormalizeDefaultStatus } from "$lib/server/controllers/monitorsController";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {
@@ -101,6 +101,19 @@ export const POST: RequestHandler = async ({ request }) => {
     return json(errorResponse, { status: 400 });
   }
 
+  let defaultStatus: string;
+  try {
+    defaultStatus = NormalizeDefaultStatus(body.monitor_type ?? "API", body.default_status ?? "UP");
+  } catch (e) {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: e instanceof Error ? e.message : "Invalid default_status",
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
   // Prepare monitor data for insertion
   const monitorData = {
     tag: body.tag.trim(),
@@ -108,7 +121,7 @@ export const POST: RequestHandler = async ({ request }) => {
     description: body.description ?? null,
     image: body.image ?? null,
     cron: body.cron ?? null,
-    default_status: body.default_status ?? "UP",
+    default_status: defaultStatus,
     status: body.status ?? "ACTIVE",
     category_name: body.category_name ?? null,
     monitor_type: body.monitor_type ?? "API",

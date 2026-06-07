@@ -190,8 +190,31 @@ export const GetMonitorsParsed = async (query: MonitorFilter): Promise<Array<Mon
   return parsedMonitors;
 };
 
+const VALID_DEFAULT_STATUSES = ["NONE", GC.UP, GC.DOWN, GC.DEGRADED, GC.LAST_KNOWN] as const;
+
+/**
+ * Enforce the closed default_status value set and the LAST_KNOWN scope rule
+ * (docs/adr/0006): LAST_KNOWN is only meaningful on NONE-type (Manual) monitors;
+ * on any other type it silently resets to UP so the invalid combination never persists.
+ * Throws on values outside the closed set.
+ */
+export const NormalizeDefaultStatus = (
+  monitorType: string | null | undefined,
+  defaultStatus: string | null | undefined,
+): string => {
+  const value = defaultStatus ?? "NONE";
+  if (!(VALID_DEFAULT_STATUSES as readonly string[]).includes(value)) {
+    throw new Error(`default_status must be one of: ${VALID_DEFAULT_STATUSES.join(", ")}`);
+  }
+  if (value === GC.LAST_KNOWN && monitorType !== "NONE") {
+    return GC.UP;
+  }
+  return value;
+};
+
 export const CreateUpdateMonitor = async (monitor: MonitorInput): Promise<number | number[]> => {
   let monitorData = { ...monitor };
+  monitorData.default_status = NormalizeDefaultStatus(monitorData.monitor_type, monitorData.default_status);
   if (monitorData.id) {
     return await db.updateMonitor(monitorData as MonitorRecord);
   } else {

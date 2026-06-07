@@ -1,6 +1,6 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import db from "$lib/server/db/db";
-import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
+import { GetMonitorsParsed, NormalizeDefaultStatus } from "$lib/server/controllers/monitorsController";
 import type {
   GetMonitorResponse,
   MonitorResponse,
@@ -76,6 +76,23 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   updateData.status = body.status !== undefined ? body.status : existingMonitor.status;
   updateData.category_name = body.category_name !== undefined ? body.category_name : existingMonitor.category_name;
   updateData.monitor_type = body.monitor_type !== undefined ? body.monitor_type : existingMonitor.monitor_type;
+
+  // Closed-set validation + LAST_KNOWN scope rule (docs/adr/0006). Runs after monitor_type
+  // is resolved so a type change away from NONE auto-resets LAST_KNOWN to UP.
+  try {
+    updateData.default_status = NormalizeDefaultStatus(
+      updateData.monitor_type as string,
+      updateData.default_status as string | null,
+    );
+  } catch (e) {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: e instanceof Error ? e.message : "Invalid default_status",
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
 
   updateData.is_hidden = body.is_hidden !== undefined ? body.is_hidden : existingMonitor.is_hidden;
 
