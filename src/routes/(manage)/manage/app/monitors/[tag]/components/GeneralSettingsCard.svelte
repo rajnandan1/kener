@@ -11,6 +11,8 @@
   import UploadIcon from "@lucide/svelte/icons/upload";
   import XIcon from "@lucide/svelte/icons/x";
   import ImageIcon from "@lucide/svelte/icons/image";
+  import * as Alert from "$lib/components/ui/alert/index.js";
+  import TriangleAlertIcon from "@lucide/svelte/icons/triangle-alert";
   import type { MonitorRecord } from "$lib/server/types/db.js";
   import { toast } from "svelte-sonner";
   import { goto } from "$app/navigation";
@@ -25,6 +27,23 @@
   }
 
   let { monitor = $bindable(), typeData, isNew }: Props = $props();
+
+  const defaultStatusLabels: Record<string, string> = {
+    NONE: "None (show gaps as no data)",
+    UP: "UP",
+    DOWN: "DOWN",
+    DEGRADED: "DEGRADED",
+    LAST_KNOWN: "Last known status",
+  };
+
+  // LAST_KNOWN is only valid on Manual (NONE-type) monitors; the server enforces the
+  // same rule (NormalizeDefaultStatus), this effect just keeps the UI honest live.
+  $effect(() => {
+    if (monitor.monitor_type !== "NONE" && monitor.default_status === GC.LAST_KNOWN) {
+      monitor.default_status = GC.UP;
+      toast.info("Default status was reset to UP — Last known status is only available for Manual monitors.");
+    }
+  });
 
   let savingGeneral = $state(false);
   let uploadingImage = $state(false);
@@ -230,21 +249,47 @@
         <Label for="monitor-default-status">Default Status</Label>
         <Select.Root
           type="single"
-          value={monitor.default_status}
+          value={monitor.default_status ?? "NONE"}
           onValueChange={(v) => {
             if (v) monitor.default_status = v;
           }}
         >
           <Select.Trigger id="monitor-default-status" class="w-full">
-            {monitor.default_status}
+            {defaultStatusLabels[monitor.default_status ?? "NONE"] ?? monitor.default_status}
           </Select.Trigger>
           <Select.Content>
+            <Select.Item value="NONE">None (show gaps as no data)</Select.Item>
             <Select.Item value="UP">UP</Select.Item>
             <Select.Item value="DOWN">DOWN</Select.Item>
             <Select.Item value="DEGRADED">DEGRADED</Select.Item>
-            <Select.Item value="MAINTENANCE">MAINTENANCE</Select.Item>
+            {#if monitor.monitor_type === "NONE"}
+              <Select.Item value="LAST_KNOWN">Last known status</Select.Item>
+            {/if}
           </Select.Content>
         </Select.Root>
+        {#if monitor.default_status === GC.LAST_KNOWN}
+          <Alert.Root>
+            <TriangleAlertIcon />
+            <Alert.Title>Last known status</Alert.Title>
+            <Alert.Description>
+              <p>
+                Kener will repeat the most recent status and latency every minute until your integration sends new
+                data.
+              </p>
+              <ul class="list-disc pl-4">
+                <li>
+                  If your integration stops sending, the page keeps showing the last status indefinitely &mdash; Kener
+                  cannot tell &quot;still up&quot; from &quot;stopped reporting&quot;. Use a Heartbeat monitor to catch a silent
+                  integration.
+                </li>
+                <li>
+                  Carried minutes count toward alert thresholds: a single DOWN push will trigger alerts after your
+                  failure threshold, and they stay triggered until you push a recovery.
+                </li>
+              </ul>
+            </Alert.Description>
+          </Alert.Root>
+        {/if}
       </div>
       <div class="flex flex-col gap-2">
         <Label for="hidden-switch">Hidden in Status Page</Label>
