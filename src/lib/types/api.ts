@@ -449,9 +449,23 @@ export interface PageSettingsMaintenances {
   ongoing: PageSettingsMaintenancesOngoing;
 }
 
+export interface PageSettingsHistoryDays {
+  desktop: number;
+  mobile: number;
+}
+
+export type PageMonitorLayoutStyle = "default-list" | "default-grid" | "compact-list" | "compact-grid";
+
 export interface PageSettings {
   incidents: PageSettingsIncidents;
   include_maintenances: PageSettingsMaintenances;
+  /** Days of status history shown on the page, per device class (1-365). */
+  monitor_status_history_days: PageSettingsHistoryDays;
+  monitor_layout_style: PageMonitorLayoutStyle;
+  /** Per-page meta/social overrides; stored as camelCase keys internally. */
+  meta_page_title?: string;
+  meta_page_description?: string;
+  social_page_preview_image?: string;
 }
 
 export interface PageMonitorResponse {
