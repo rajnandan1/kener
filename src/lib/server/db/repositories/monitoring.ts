@@ -80,6 +80,21 @@ export class MonitoringRepository extends BaseRepository {
       .first();
   }
 
+  /**
+   * Latest sample the alert evaluator (and last-known-status fill) can see.
+   * Carry source for Default Status = LAST_KNOWN (docs/adr/0006): overlays
+   * (INCIDENT/MAINTENANCE) and raw heartbeat receipts (SIGNAL) are excluded,
+   * so they can never become sticky.
+   */
+  async getLatestAlertVisibleData(monitor_tag: string): Promise<MonitoringData | undefined> {
+    return await this.knex("monitoring_data")
+      .where("monitor_tag", monitor_tag)
+      .whereIn("type", ALERT_VISIBLE_TYPES)
+      .orderBy("timestamp", "desc")
+      .limit(1)
+      .first();
+  }
+
   async getLatestMonitoringDataN(monitor_tag: string, limit: number): Promise<MonitoringData[]> {
     return await this.knex("monitoring_data")
       .where("monitor_tag", monitor_tag)

@@ -50,6 +50,7 @@ class DbImpl {
   getMonitoringData!: MonitoringRepository["getMonitoringData"];
   getMonitoringDataAll!: MonitoringRepository["getMonitoringDataAll"];
   getLatestMonitoringData!: MonitoringRepository["getLatestMonitoringData"];
+  getLatestAlertVisibleData!: MonitoringRepository["getLatestAlertVisibleData"];
   getLatestMonitoringDataN!: MonitoringRepository["getLatestMonitoringDataN"];
   getMonitoringDataPaginated!: MonitoringRepository["getMonitoringDataPaginated"];
   getMonitoringDataCount!: MonitoringRepository["getMonitoringDataCount"];
@@ -410,6 +411,7 @@ class DbImpl {
     this.getMonitoringData = this.monitoring.getMonitoringData.bind(this.monitoring);
     this.getMonitoringDataAll = this.monitoring.getMonitoringDataAll.bind(this.monitoring);
     this.getLatestMonitoringData = this.monitoring.getLatestMonitoringData.bind(this.monitoring);
+    this.getLatestAlertVisibleData = this.monitoring.getLatestAlertVisibleData.bind(this.monitoring);
     this.getLatestMonitoringDataN = this.monitoring.getLatestMonitoringDataN.bind(this.monitoring);
     this.getMonitoringDataPaginated = this.monitoring.getMonitoringDataPaginated.bind(this.monitoring);
     this.getMonitoringDataCount = this.monitoring.getMonitoringDataCount.bind(this.monitoring);
