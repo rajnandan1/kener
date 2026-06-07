@@ -2118,8 +2118,7 @@
             "type": "string"
           },
           "page_settings": {
-            "type": "object",
-            "additionalProperties": true
+            "$ref": "#/components/schemas/PageSettings"
           },
           "monitors": {
             "type": "array",
@@ -2153,8 +2152,7 @@
             "type": "string"
           },
           "page_settings": {
-            "type": "object",
-            "additionalProperties": true
+            "$ref": "#/components/schemas/PageSettings"
           },
           "monitors": {
             "type": "array",
@@ -2185,8 +2183,7 @@
             "type": "string"
           },
           "page_settings": {
-            "type": "object",
-            "additionalProperties": true
+            "$ref": "#/components/schemas/PageSettings"
           },
           "monitors": {
             "type": "array",
@@ -2375,6 +2372,59 @@
           }
         },
         "additionalProperties": false
+      },
+      "PageSettings": {
+        "type": "object",
+        "description": "Per-page display configuration. On update, provided fields are deep-merged into the current settings; omitted fields are left untouched.",
+        "properties": {
+          "incidents": {
+            "type": "object",
+            "description": "Incident display preferences for this page.",
+            "additionalProperties": true
+          },
+          "include_maintenances": {
+            "type": "object",
+            "description": "Maintenance display preferences for this page.",
+            "additionalProperties": true
+          },
+          "monitor_status_history_days": {
+            "type": "object",
+            "description": "Days of status history shown on the page, per device class.",
+            "properties": {
+              "desktop": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 365,
+                "default": 90
+              },
+              "mobile": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 365,
+                "default": 30
+              }
+            }
+          },
+          "monitor_layout_style": {
+            "type": "string",
+            "enum": ["default-list", "default-grid", "compact-list", "compact-grid"],
+            "default": "default-list",
+            "description": "How monitors are laid out on the status page."
+          },
+          "meta_page_title": {
+            "type": "string",
+            "description": "Per-page override for the meta title."
+          },
+          "meta_page_description": {
+            "type": "string",
+            "description": "Per-page override for the meta description."
+          },
+          "social_page_preview_image": {
+            "type": "string",
+            "description": "Per-page override for the social preview image."
+          }
+        },
+        "additionalProperties": true
       }
     }
   }

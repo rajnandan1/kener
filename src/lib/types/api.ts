@@ -3,6 +3,7 @@
 
 import type { MonitorRecordTyped } from "$lib/server/types/db";
 import type { MonitorPublicView } from "$lib/types/monitor";
+import type GC from "$lib/global-constants";
 
 export type ApiError = {
   code: string;
@@ -449,9 +450,40 @@ export interface PageSettingsMaintenances {
   ongoing: PageSettingsMaintenancesOngoing;
 }
 
+export interface PageSettingsHistoryDays {
+  desktop: number;
+  mobile: number;
+}
+
+/**
+ * Recursive partial, so patch payloads can update any subset of nested fields.
+ * Recursion applies only to plain object maps; arrays and other special object
+ * types pass through unchanged.
+ */
+export type DeepPartial<T> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [K in keyof T]?: T[K] extends (infer U)[] ? U[] : T[K] extends Record<string, any> ? DeepPartial<T[K]> : T[K];
+};
+
+/**
+ * Patch payload for page_settings: any subset of nested fields. Provided
+ * fields are deep-merged into the current settings; omitted fields are left
+ * untouched.
+ */
+export type PageSettingsPatch = DeepPartial<PageSettings>;
+
+export type PageMonitorLayoutStyle = (typeof GC.MONITOR_LAYOUT_STYLES)[number];
+
 export interface PageSettings {
   incidents: PageSettingsIncidents;
   include_maintenances: PageSettingsMaintenances;
+  /** Days of status history shown on the page, per device class (1-365). */
+  monitor_status_history_days: PageSettingsHistoryDays;
+  monitor_layout_style: PageMonitorLayoutStyle;
+  /** Per-page meta/social overrides; stored as camelCase keys internally. */
+  meta_page_title?: string;
+  meta_page_description?: string;
+  social_page_preview_image?: string;
 }
 
 export interface PageMonitorResponse {
@@ -490,7 +522,7 @@ export interface CreatePageRequest {
   page_header: string;
   page_subheader?: string | null;
   page_logo?: string | null;
-  page_settings?: Partial<PageSettings>;
+  page_settings?: PageSettingsPatch;
   monitors?: string[];
 }
 
@@ -504,7 +536,7 @@ export interface UpdatePageRequest {
   page_header?: string;
   page_subheader?: string | null;
   page_logo?: string | null;
-  page_settings?: Partial<PageSettings>;
+  page_settings?: PageSettingsPatch;
   monitors?: string[];
 }
 

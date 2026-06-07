@@ -47,6 +47,14 @@ A public status page with its own path, title, monitors, and display settings. S
 The Page served at the site root. Its stored path is empty, it always exists (it can not be deleted), and its path can not be changed. Addressed in the API by the `~home` token.
 _Avoid_: Default page, base page, root page
 
+**Status History Window**:
+The number of days of per-day status shown for a monitor, per device class (desktop/mobile). Configurable at two levels with the same defaults and bounds: per Page (applies to all its monitors) and per Monitor (overrides the page level).
+_Avoid_: History days, bar count
+
+**Page Settings**:
+A Page's display configuration: status-history window per device class, monitor layout style, per-page meta/social overrides, and event display preferences. The admin UI and the API expose the same settings, though each surface may name fields differently; a writer must never drop fields it does not understand.
+_Avoid_: Display settings (ambiguous with site-wide event display settings)
+
 ### Maintenance
 
 **Maintenance**:

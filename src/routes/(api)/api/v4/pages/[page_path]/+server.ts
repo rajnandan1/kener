@@ -3,7 +3,6 @@ import db from "$lib/server/db/db";
 import type {
   GetPageResponse,
   PageResponse,
-  PageSettings,
   UpdatePageRequest,
   UpdatePageResponse,
   DeletePageResponse,
@@ -12,6 +11,7 @@ import type {
 } from "$lib/types/api";
 import type { PageRecord } from "$lib/server/types/db";
 import GC from "$lib/global-constants";
+import { toApiPageSettings, applyPageSettingsPatch, validatePageSettings } from "$lib/server/pageSettings";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {
@@ -22,81 +22,8 @@ function formatDateToISO(date: Date | string): string {
   return parsed.toISOString();
 }
 
-function getDefaultPageSettings(): PageSettings {
-  return {
-    incidents: {
-      enabled: true,
-      ongoing: { show: true },
-      resolved: { show: true, max_count: 5, days_in_past: 7 },
-    },
-    include_maintenances: {
-      enabled: true,
-      ongoing: {
-        show: true,
-        past: { show: true, max_count: 5, days_in_past: 7 },
-        upcoming: { show: true, max_count: 5, days_in_future: 30 },
-      },
-    },
-  };
-}
-
-function mergePageSettings(defaults: PageSettings, partial?: Partial<PageSettings>): PageSettings {
-  if (!partial) {
-    return defaults;
-  }
-
-  return {
-    incidents: {
-      enabled: partial.incidents?.enabled ?? defaults.incidents.enabled,
-      ongoing: {
-        show: partial.incidents?.ongoing?.show ?? defaults.incidents.ongoing.show,
-      },
-      resolved: {
-        show: partial.incidents?.resolved?.show ?? defaults.incidents.resolved.show,
-        max_count: partial.incidents?.resolved?.max_count ?? defaults.incidents.resolved.max_count,
-        days_in_past: partial.incidents?.resolved?.days_in_past ?? defaults.incidents.resolved.days_in_past,
-      },
-    },
-    include_maintenances: {
-      enabled: partial.include_maintenances?.enabled ?? defaults.include_maintenances.enabled,
-      ongoing: {
-        show: partial.include_maintenances?.ongoing?.show ?? defaults.include_maintenances.ongoing.show,
-        past: {
-          show: partial.include_maintenances?.ongoing?.past?.show ?? defaults.include_maintenances.ongoing.past.show,
-          max_count:
-            partial.include_maintenances?.ongoing?.past?.max_count ??
-            defaults.include_maintenances.ongoing.past.max_count,
-          days_in_past:
-            partial.include_maintenances?.ongoing?.past?.days_in_past ??
-            defaults.include_maintenances.ongoing.past.days_in_past,
-        },
-        upcoming: {
-          show:
-            partial.include_maintenances?.ongoing?.upcoming?.show ??
-            defaults.include_maintenances.ongoing.upcoming.show,
-          max_count:
-            partial.include_maintenances?.ongoing?.upcoming?.max_count ??
-            defaults.include_maintenances.ongoing.upcoming.max_count,
-          days_in_future:
-            partial.include_maintenances?.ongoing?.upcoming?.days_in_future ??
-            defaults.include_maintenances.ongoing.upcoming.days_in_future,
-        },
-      },
-    },
-  };
-}
-
 async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
-  let pageSettings: PageSettings = getDefaultPageSettings();
-
-  if (page.page_settings_json) {
-    try {
-      const parsed = JSON.parse(page.page_settings_json);
-      pageSettings = mergePageSettings(getDefaultPageSettings(), parsed);
-    } catch {
-      // Use defaults on parse error
-    }
-  }
+  const pageSettings = toApiPageSettings(page.page_settings_json);
 
   const pageMonitors = await db.getPageMonitors(page.id);
 
@@ -259,6 +186,18 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     }
   }
 
+  // Validate page_settings if provided
+  const settingsError = validatePageSettings(body.page_settings);
+  if (settingsError) {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: settingsError,
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
   // Build update data
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateData: Record<string, any> = {};
@@ -283,21 +222,9 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     updateData.page_logo = body.page_logo;
   }
 
-  // Handle page_settings merge
+  // Handle page_settings merge; unknown stored keys are preserved
   if (body.page_settings !== undefined) {
-    let currentSettings: PageSettings = getDefaultPageSettings();
-
-    if (page.page_settings_json) {
-      try {
-        const parsed = JSON.parse(page.page_settings_json);
-        currentSettings = mergePageSettings(getDefaultPageSettings(), parsed);
-      } catch {
-        // Use defaults on parse error
-      }
-    }
-
-    const mergedSettings = mergePageSettings(currentSettings, body.page_settings);
-    updateData.page_settings_json = JSON.stringify(mergedSettings);
+    updateData.page_settings_json = applyPageSettingsPatch(page.page_settings_json, body.page_settings);
   }
 
   // Update page if there are changes
