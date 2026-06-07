@@ -11,13 +11,15 @@ import type {
 } from "../../types/db.js";
 
 /**
- * Sample types alert evaluation can see (see docs/adr/0005-alerts-evaluate-alert-visible-samples.md).
+ * Sample types alert evaluation can see (see docs/adr/0005-alerts-evaluate-alert-visible-samples.md
+ * and docs/adr/0006-last-known-status-fill.md).
  * Exactly the types written by flows that enqueue alert evaluation: scheduler checks
- * (REALTIME/ERROR/TIMEOUT), default-status fill (DEFAULT_STATUS), and data-API pushes (MANUAL).
+ * (REALTIME/ERROR/TIMEOUT), default-status fill (DEFAULT_STATUS), last-known-status fill (CARRIED),
+ * and data-API pushes (MANUAL).
  * SIGNAL rows (raw heartbeat receipts) and INCIDENT/MAINTENANCE overlays stay invisible, so the
  * alert window freezes during manual overlays instead of triggering or resolving on them.
  */
-const ALERT_VISIBLE_TYPES = [GC.REALTIME, GC.ERROR, GC.TIMEOUT, GC.MANUAL, GC.DEFAULT_STATUS];
+const ALERT_VISIBLE_TYPES = [GC.REALTIME, GC.ERROR, GC.TIMEOUT, GC.MANUAL, GC.DEFAULT_STATUS, GC.CARRIED];
 
 /**
  * Repository for monitoring data operations

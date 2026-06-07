@@ -41,6 +41,8 @@ export default {
   MANUAL: "MANUAL",
   WEBHOOK: "WEBHOOK",
   DEFAULT_STATUS: "DEFAULT",
+  CARRIED: "CARRIED",
+  LAST_KNOWN: "LAST_KNOWN",
   SIGNAL: "SIGNAL",
   INVITE_VERIFY_EMAIL: "invite_verify_email",
   ERROR_NO_SETUP: "Set up not done yet. Create a user first.",
