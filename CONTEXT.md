@@ -43,7 +43,15 @@ _Avoid_: Data point, record, check result
 A Monitoring Sample produced by a check that actually ran against the target, whatever the outcome: a clean evaluation (`REALTIME`), a timed-out check (`TIMEOUT`), or a check that errored (`ERROR`). A check failing to reach the target is itself an observation — for most monitor types that is exactly what "down" looks like.
 
 **Synthetic Sample**:
-A Monitoring Sample written by the system or an admin rather than by a check: a raw heartbeat receipt (`SIGNAL`), a status pushed through the data API (`MANUAL`), a default-status fill (`DEFAULT_STATUS`), or an incident/maintenance overlay (`INCIDENT`, `MAINTENANCE`).
+A Monitoring Sample written by the system or an admin rather than by a check: a raw heartbeat receipt (`SIGNAL`), a status pushed through the data API (`MANUAL`), a default-status fill (`DEFAULT_STATUS`), a last-known-status fill (`CARRIED`), or an incident/maintenance overlay (`INCIDENT`, `MAINTENANCE`).
+
+**Default Status**:
+A monitor's answer to what a minute without a Monitoring Sample means. Exactly one choice from a closed set: nothing (`NONE` — the minute shows no data), a fixed status (`UP`, `DOWN`, `DEGRADED`) written as default-status fill, or Last Known Status. `MAINTENANCE` is not a Default Status (a maintenance overlay is an event, not a fill).
+_Avoid_: Fallback status, fill status
+
+**Last Known Status**:
+A Default Status choice where a minute without a sample repeats the most recent Alert-Visible Sample — status and latency alike — written as a Carried Sample (`CARRIED`). Carried Samples are themselves alert-visible, so the chain continues from the last live statement: overlays and heartbeat receipts never become sticky, backdated corrections do not change the present, and alerts trigger and resolve on carried minutes like any other. Carry never expires and never backfills: it starts at the tick after the choice is made, and Carried Samples persist as history if the choice is later changed. A monitor with no Alert-Visible Sample yet has nothing to carry — its minutes show no data. Only None-type monitors may choose it; changing the monitor's type away from None resets the Default Status to UP.
+_Avoid_: Sticky status, carry-forward mode
 
 **Stale Member**:
 A Member whose monitor is no longer an Eligible Monitor (paused or deleted after being added). It remains a Member until explicitly removed, but is excluded from the group score.
@@ -63,7 +71,7 @@ A notification channel (email, webhook, Discord, Slack) that Alert Configuration
 _Avoid_: Notifier, channel
 
 **Alert-Visible Sample**:
-A Monitoring Sample that alert evaluation can see: every Observed Sample, plus data-API pushes (`MANUAL`) and default-status fill (`DEFAULT_STATUS`). Raw heartbeat receipts (`SIGNAL`) and incident/maintenance overlays are never alert-visible — while an overlay is active the alert window freezes (alerts neither trigger nor resolve). All alert conditions (status and latency alike) evaluate the same alert-visible timeline.
+A Monitoring Sample that alert evaluation can see: every Observed Sample, plus data-API pushes (`MANUAL`), default-status fill (`DEFAULT_STATUS`), and last-known-status fill (`CARRIED`). Raw heartbeat receipts (`SIGNAL`) and incident/maintenance overlays are never alert-visible — while an overlay is active the alert window freezes (alerts neither trigger nor resolve). All alert conditions (status and latency alike) evaluate the same alert-visible timeline.
 
 **Failure Threshold**:
 The number of consecutive Alert-Visible Samples matching the condition required to trigger an Alert.
