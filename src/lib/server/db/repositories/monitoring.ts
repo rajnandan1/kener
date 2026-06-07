@@ -72,6 +72,10 @@ export class MonitoringRepository extends BaseRepository {
       .orderBy("timestamp", "asc");
   }
 
+  /**
+   * Newest sample of ANY type (including SIGNAL receipts and overlays).
+   * For the last-known-status carry source, use getLatestAlertVisibleData.
+   */
   async getLatestMonitoringData(monitor_tag: string): Promise<MonitoringData | undefined> {
     return await this.knex("monitoring_data")
       .where("monitor_tag", monitor_tag)
@@ -84,7 +88,9 @@ export class MonitoringRepository extends BaseRepository {
    * Latest sample the alert evaluator (and last-known-status fill) can see.
    * Carry source for Default Status = LAST_KNOWN (docs/adr/0006): overlays
    * (INCIDENT/MAINTENANCE) and raw heartbeat receipts (SIGNAL) are excluded,
-   * so they can never become sticky.
+   * so they can never become sticky. CARRIED rows are included — each tick's
+   * carry output becomes the next tick's carry source, which is the intended
+   * sticky behavior.
    */
   async getLatestAlertVisibleData(monitor_tag: string): Promise<MonitoringData | undefined> {
     return await this.knex("monitoring_data")
