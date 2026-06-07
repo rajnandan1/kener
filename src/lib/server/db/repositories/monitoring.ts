@@ -11,6 +11,15 @@ import type {
 } from "../../types/db.js";
 
 /**
+ * Sample types alert evaluation can see (see docs/adr/0005-alerts-evaluate-alert-visible-samples.md).
+ * Exactly the types written by flows that enqueue alert evaluation: scheduler checks
+ * (REALTIME/ERROR/TIMEOUT), default-status fill (DEFAULT_STATUS), and data-API pushes (MANUAL).
+ * SIGNAL rows (raw heartbeat receipts) and INCIDENT/MAINTENANCE overlays stay invisible, so the
+ * alert window freezes during manual overlays instead of triggering or resolving on them.
+ */
+const ALERT_VISIBLE_TYPES = [GC.REALTIME, GC.ERROR, GC.TIMEOUT, GC.MANUAL, GC.DEFAULT_STATUS];
+
+/**
  * Repository for monitoring data operations
  */
 export class MonitoringRepository extends BaseRepository {
@@ -262,7 +271,7 @@ export class MonitoringRepository extends BaseRepository {
         qb.select("*")
           .from("monitoring_data")
           .where("monitor_tag", monitor_tag)
-          .andWhere("type", "=", GC.REALTIME)
+          .whereIn("type", ALERT_VISIBLE_TYPES)
           .orderBy("timestamp", "desc")
           .limit(lastX);
       })
@@ -288,7 +297,7 @@ export class MonitoringRepository extends BaseRepository {
         qb.select("*")
           .from("monitoring_data")
           .where("monitor_tag", monitor_tag)
-          .andWhere("type", "=", GC.REALTIME)
+          .whereIn("type", ALERT_VISIBLE_TYPES)
           .orderBy("timestamp", "desc")
           .limit(lastX);
       })
@@ -310,7 +319,7 @@ export class MonitoringRepository extends BaseRepository {
         qb.select("*")
           .from("monitoring_data")
           .where("monitor_tag", monitor_tag)
-          .andWhere("type", "=", GC.REALTIME)
+          .whereIn("type", ALERT_VISIBLE_TYPES)
           .orderBy("timestamp", "desc")
           .limit(lastX);
       })
