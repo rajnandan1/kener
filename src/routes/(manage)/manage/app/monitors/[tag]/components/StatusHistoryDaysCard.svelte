@@ -24,12 +24,13 @@
 
   let saving = $state(false);
 
-  const isValid = $derived(
-    statusHistoryDays.desktop >= GC.STATUS_HISTORY_DAYS_MIN &&
-      statusHistoryDays.desktop <= GC.STATUS_HISTORY_DAYS_MAX &&
-      statusHistoryDays.mobile >= GC.STATUS_HISTORY_DAYS_MIN &&
-      statusHistoryDays.mobile <= GC.STATUS_HISTORY_DAYS_MAX
+  const isDesktopValid = $derived(
+    statusHistoryDays.desktop >= GC.STATUS_HISTORY_DAYS_MIN && statusHistoryDays.desktop <= GC.STATUS_HISTORY_DAYS_MAX
   );
+  const isMobileValid = $derived(
+    statusHistoryDays.mobile >= GC.STATUS_HISTORY_DAYS_MIN && statusHistoryDays.mobile <= GC.STATUS_HISTORY_DAYS_MAX
+  );
+  const isValid = $derived(isDesktopValid && isMobileValid);
 
   async function save() {
     if (!isValid) {
@@ -103,10 +104,7 @@
           min={GC.STATUS_HISTORY_DAYS_MIN}
           max={GC.STATUS_HISTORY_DAYS_MAX}
           bind:value={statusHistoryDays.desktop}
-          class={statusHistoryDays.desktop < GC.STATUS_HISTORY_DAYS_MIN ||
-          statusHistoryDays.desktop > GC.STATUS_HISTORY_DAYS_MAX
-            ? "border-destructive"
-            : ""}
+          class={isDesktopValid ? "" : "border-destructive"}
         />
         <p class="text-muted-foreground text-xs">Number of days shown on desktop screens</p>
       </div>
@@ -118,10 +116,7 @@
           min={GC.STATUS_HISTORY_DAYS_MIN}
           max={GC.STATUS_HISTORY_DAYS_MAX}
           bind:value={statusHistoryDays.mobile}
-          class={statusHistoryDays.mobile < GC.STATUS_HISTORY_DAYS_MIN ||
-          statusHistoryDays.mobile > GC.STATUS_HISTORY_DAYS_MAX
-            ? "border-destructive"
-            : ""}
+          class={isMobileValid ? "" : "border-destructive"}
         />
         <p class="text-muted-foreground text-xs">Number of days shown on mobile screens</p>
       </div>
