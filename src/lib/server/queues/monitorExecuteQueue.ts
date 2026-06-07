@@ -135,6 +135,20 @@ const addWorker = () => {
         if (monitor.default_status !== GC.UP) {
           defaultData[ts].error_message = "Default status applied";
         }
+      } else if (monitor.default_status === GC.LAST_KNOWN) {
+        // Last Known Status fill (docs/adr/0006): repeat the most recent alert-visible
+        // sample — status and latency alike. No sample yet → nothing to carry → no fill.
+        const lastKnown = await db.getLatestAlertVisibleData(monitor.tag);
+        if (lastKnown && lastKnown.status) {
+          defaultData[ts] = {
+            status: lastKnown.status,
+            latency: lastKnown.latency ?? 0,
+            type: GC.CARRIED,
+          };
+          if (lastKnown.status !== GC.UP) {
+            defaultData[ts].error_message = "Last known status applied";
+          }
+        }
       }
     }
 
@@ -146,11 +160,12 @@ const addWorker = () => {
     if (defaultStatus && realtimeStatus === GC.NO_DATA) {
       // Apply the preference *before* merging so incident/maintenance can still override later.
       // Also avoid carrying over realtime NO_DATA error_message.
+      // Keep the fill's own type: DEFAULT for fixed fill, CARRIED for last-known fill.
       realtimeDataForMerge = { ...realtimeData };
       realtimeDataForMerge[ts] = {
         ...realtimeDataForMerge[ts],
         status: defaultStatus,
-        type: GC.DEFAULT_STATUS,
+        type: defaultData[ts].type,
       };
       delete realtimeDataForMerge[ts].error_message;
     }
