@@ -86,6 +86,16 @@
 
   // Page settings state
   let pageSettings = $state<PageSettingsType>(structuredClone(defaultPageSettings));
+  const isHistoryDesktopValid = $derived(
+    Number.isInteger(pageSettings.monitor_status_history_days.desktop) &&
+      pageSettings.monitor_status_history_days.desktop >= GC.STATUS_HISTORY_DAYS_MIN &&
+      pageSettings.monitor_status_history_days.desktop <= GC.STATUS_HISTORY_DAYS_MAX
+  );
+  const isHistoryMobileValid = $derived(
+    Number.isInteger(pageSettings.monitor_status_history_days.mobile) &&
+      pageSettings.monitor_status_history_days.mobile >= GC.STATUS_HISTORY_DAYS_MIN &&
+      pageSettings.monitor_status_history_days.mobile <= GC.STATUS_HISTORY_DAYS_MAX
+  );
   let savingDisplaySettings = $state(false);
   let savingSeoSettings = $state(false);
 
@@ -479,6 +489,13 @@
   async function savePageSettings(source: "display" | "seo") {
     if (!currentPage) return;
 
+    if (source === "display" && (!isHistoryDesktopValid || !isHistoryMobileValid)) {
+      toast.error(
+        `Days must be a whole number between ${GC.STATUS_HISTORY_DAYS_MIN} and ${GC.STATUS_HISTORY_DAYS_MAX}`
+      );
+      return;
+    }
+
     if (source === "display") savingDisplaySettings = true;
     else savingSeoSettings = true;
     try {
@@ -788,9 +805,11 @@
                 <Input
                   id="history-desktop"
                   type="number"
+                  step="1"
                   min={GC.STATUS_HISTORY_DAYS_MIN}
                   max={GC.STATUS_HISTORY_DAYS_MAX}
                   bind:value={pageSettings.monitor_status_history_days.desktop}
+                  class={isHistoryDesktopValid ? "" : "border-destructive"}
                 />
                 <p class="text-muted-foreground text-xs">Number of days shown on desktop screens</p>
               </div>
@@ -799,9 +818,11 @@
                 <Input
                   id="history-mobile"
                   type="number"
+                  step="1"
                   min={GC.STATUS_HISTORY_DAYS_MIN}
                   max={GC.STATUS_HISTORY_DAYS_MAX}
                   bind:value={pageSettings.monitor_status_history_days.mobile}
+                  class={isHistoryMobileValid ? "" : "border-destructive"}
                 />
                 <p class="text-muted-foreground text-xs">Number of days shown on mobile screens</p>
               </div>

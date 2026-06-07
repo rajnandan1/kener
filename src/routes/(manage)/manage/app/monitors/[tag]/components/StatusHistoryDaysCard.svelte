@@ -25,16 +25,22 @@
   let saving = $state(false);
 
   const isDesktopValid = $derived(
-    statusHistoryDays.desktop >= GC.STATUS_HISTORY_DAYS_MIN && statusHistoryDays.desktop <= GC.STATUS_HISTORY_DAYS_MAX
+    Number.isInteger(statusHistoryDays.desktop) &&
+      statusHistoryDays.desktop >= GC.STATUS_HISTORY_DAYS_MIN &&
+      statusHistoryDays.desktop <= GC.STATUS_HISTORY_DAYS_MAX
   );
   const isMobileValid = $derived(
-    statusHistoryDays.mobile >= GC.STATUS_HISTORY_DAYS_MIN && statusHistoryDays.mobile <= GC.STATUS_HISTORY_DAYS_MAX
+    Number.isInteger(statusHistoryDays.mobile) &&
+      statusHistoryDays.mobile >= GC.STATUS_HISTORY_DAYS_MIN &&
+      statusHistoryDays.mobile <= GC.STATUS_HISTORY_DAYS_MAX
   );
   const isValid = $derived(isDesktopValid && isMobileValid);
 
   async function save() {
     if (!isValid) {
-      toast.error(`Days must be between ${GC.STATUS_HISTORY_DAYS_MIN} and ${GC.STATUS_HISTORY_DAYS_MAX}`);
+      toast.error(
+        `Days must be a whole number between ${GC.STATUS_HISTORY_DAYS_MIN} and ${GC.STATUS_HISTORY_DAYS_MAX}`
+      );
       return;
     }
 
@@ -101,6 +107,7 @@
         <Input
           id="monitor-history-desktop"
           type="number"
+          step="1"
           min={GC.STATUS_HISTORY_DAYS_MIN}
           max={GC.STATUS_HISTORY_DAYS_MAX}
           bind:value={statusHistoryDays.desktop}
@@ -113,6 +120,7 @@
         <Input
           id="monitor-history-mobile"
           type="number"
+          step="1"
           min={GC.STATUS_HISTORY_DAYS_MIN}
           max={GC.STATUS_HISTORY_DAYS_MAX}
           bind:value={statusHistoryDays.mobile}
@@ -122,7 +130,8 @@
       </div>
     </div>
     <p class="text-muted-foreground text-xs">
-      This overrides the page-level default for this monitor. Values must be between {GC.STATUS_HISTORY_DAYS_MIN} and {GC.STATUS_HISTORY_DAYS_MAX}.
+      This overrides the page-level default for this monitor. Values must be whole numbers between {GC.STATUS_HISTORY_DAYS_MIN}
+      and {GC.STATUS_HISTORY_DAYS_MAX}.
     </p>
   </Card.Content>
   <Card.Footer class="flex justify-end">
