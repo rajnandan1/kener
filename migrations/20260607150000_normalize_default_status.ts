@@ -10,7 +10,7 @@ export async function up(knex: Knex): Promise<void> {
   await knex("monitors").whereNotIn("default_status", VALID).update({ default_status: "NONE" });
 }
 
-export async function down(): Promise<void> {
+export async function down(_knex: Knex): Promise<void> {
   // Irreversible by design: the values rewritten to NONE were dead (never honored
   // by the fill engine), so there is nothing meaningful to restore.
 }
