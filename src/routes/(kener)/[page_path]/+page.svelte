@@ -14,22 +14,22 @@
   import { requestMonitorBar } from "$lib/client/monitor-bar-client";
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
   import { SveltePurify } from "@humanspeak/svelte-purify";
+  import type { PageMonitorLayoutStyle } from "$lib/types/api";
+  import GC from "$lib/global-constants.js";
 
   let { data } = $props();
   let pageSettings = $derived(data.pageDetails.page_settings);
   let barCount = $derived.by(() =>
     data.isMobile
-      ? pageSettings?.monitor_status_history_days.mobile || 30
-      : pageSettings?.monitor_status_history_days.desktop || 90
+      ? pageSettings?.monitor_status_history_days.mobile || GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE
+      : pageSettings?.monitor_status_history_days.desktop || GC.DEFAULT_STATUS_HISTORY_DAYS_DESKTOP
   );
   let endOfDayTodayAtTz = $derived(getEndOfDayAtTz($selectedTimezone));
 
   let monitorBarDataByTag = $state<Record<string, MonitorBarResponse>>({});
   let monitorBarErrorByTag = $state<Record<string, string>>({});
   let requestVersion = 0;
-  let viewType = $derived<"compact-list" | "default-list" | "default-grid" | "compact-grid" | undefined>(
-    pageSettings?.monitor_layout_style
-  );
+  let viewType = $derived<PageMonitorLayoutStyle | undefined>(pageSettings?.monitor_layout_style);
   let isCompact = $derived(viewType === "compact-list" || viewType === "compact-grid");
 
   function getGridItemSpanClass(index: number, total: number, type: typeof viewType): string {

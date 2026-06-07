@@ -7,6 +7,7 @@
   import Loader from "@lucide/svelte/icons/loader";
   import type { MonitorRecord } from "$lib/server/types/db.js";
   import { toast } from "svelte-sonner";
+  import GC from "$lib/global-constants.js";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
 
@@ -24,15 +25,15 @@
   let saving = $state(false);
 
   const isValid = $derived(
-    statusHistoryDays.desktop >= 1 &&
-      statusHistoryDays.desktop <= 365 &&
-      statusHistoryDays.mobile >= 1 &&
-      statusHistoryDays.mobile <= 365
+    statusHistoryDays.desktop >= GC.STATUS_HISTORY_DAYS_MIN &&
+      statusHistoryDays.desktop <= GC.STATUS_HISTORY_DAYS_MAX &&
+      statusHistoryDays.mobile >= GC.STATUS_HISTORY_DAYS_MIN &&
+      statusHistoryDays.mobile <= GC.STATUS_HISTORY_DAYS_MAX
   );
 
   async function save() {
     if (!isValid) {
-      toast.error("Days must be between 1 and 365");
+      toast.error(`Days must be between ${GC.STATUS_HISTORY_DAYS_MIN} and ${GC.STATUS_HISTORY_DAYS_MAX}`);
       return;
     }
 
@@ -99,10 +100,13 @@
         <Input
           id="monitor-history-desktop"
           type="number"
-          min={1}
-          max={365}
+          min={GC.STATUS_HISTORY_DAYS_MIN}
+          max={GC.STATUS_HISTORY_DAYS_MAX}
           bind:value={statusHistoryDays.desktop}
-          class={statusHistoryDays.desktop < 1 || statusHistoryDays.desktop > 365 ? "border-destructive" : ""}
+          class={statusHistoryDays.desktop < GC.STATUS_HISTORY_DAYS_MIN ||
+          statusHistoryDays.desktop > GC.STATUS_HISTORY_DAYS_MAX
+            ? "border-destructive"
+            : ""}
         />
         <p class="text-muted-foreground text-xs">Number of days shown on desktop screens</p>
       </div>
@@ -111,16 +115,19 @@
         <Input
           id="monitor-history-mobile"
           type="number"
-          min={1}
-          max={365}
+          min={GC.STATUS_HISTORY_DAYS_MIN}
+          max={GC.STATUS_HISTORY_DAYS_MAX}
           bind:value={statusHistoryDays.mobile}
-          class={statusHistoryDays.mobile < 1 || statusHistoryDays.mobile > 365 ? "border-destructive" : ""}
+          class={statusHistoryDays.mobile < GC.STATUS_HISTORY_DAYS_MIN ||
+          statusHistoryDays.mobile > GC.STATUS_HISTORY_DAYS_MAX
+            ? "border-destructive"
+            : ""}
         />
         <p class="text-muted-foreground text-xs">Number of days shown on mobile screens</p>
       </div>
     </div>
     <p class="text-muted-foreground text-xs">
-      This overrides the page-level default for this monitor. Values must be between 1 and 365.
+      This overrides the page-level default for this monitor. Values must be between {GC.STATUS_HISTORY_DAYS_MIN} and {GC.STATUS_HISTORY_DAYS_MAX}.
     </p>
   </Card.Content>
   <Card.Footer class="flex justify-end">

@@ -1,5 +1,6 @@
 // Server-only database types (based on migrations schema)
 import type { Knex } from "knex";
+import type { PageMonitorLayoutStyle } from "$lib/types/api";
 
 // ============ monitoring_data table ============
 export interface MonitoringData {
@@ -468,7 +469,7 @@ export interface PageSettingsType {
     desktop: number;
     mobile: number;
   };
-  monitor_layout_style: "default-list" | "default-grid" | "compact-list" | "compact-grid";
+  monitor_layout_style: PageMonitorLayoutStyle;
   metaPageTitle?: string;
   metaPageDescription?: string;
   socialPagePreviewImage?: string;

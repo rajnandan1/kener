@@ -1,4 +1,5 @@
 import type { PageSettings } from "$lib/types/api";
+import GC from "$lib/global-constants";
 
 // Stored page_settings_json keys differ from the API contract for the meta
 // fields: the manage UI writes camelCase (metaPageTitle, metaPageDescription,
@@ -15,10 +16,8 @@ interface StoredPageSettings {
   [key: string]: unknown;
 }
 
-export const VALID_MONITOR_LAYOUT_STYLES = ["default-list", "default-grid", "compact-list", "compact-grid"] as const;
-
-const HISTORY_DAYS_MIN = 1;
-const HISTORY_DAYS_MAX = 365;
+const HISTORY_DAYS_MIN = GC.STATUS_HISTORY_DAYS_MIN;
+const HISTORY_DAYS_MAX = GC.STATUS_HISTORY_DAYS_MAX;
 
 export function getDefaultPageSettings(): PageSettings {
   return {
@@ -35,8 +34,11 @@ export function getDefaultPageSettings(): PageSettings {
         upcoming: { show: true, max_count: 5, days_in_future: 30 },
       },
     },
-    monitor_status_history_days: { desktop: 90, mobile: 30 },
-    monitor_layout_style: "default-list",
+    monitor_status_history_days: {
+      desktop: GC.DEFAULT_STATUS_HISTORY_DAYS_DESKTOP,
+      mobile: GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE,
+    },
+    monitor_layout_style: GC.DEFAULT_MONITOR_LAYOUT_STYLE,
   };
 }
 
@@ -162,8 +164,8 @@ export function validatePageSettings(partial: unknown): string | null {
   const settings = partial as Partial<PageSettings>;
 
   if (settings.monitor_layout_style !== undefined) {
-    if (!VALID_MONITOR_LAYOUT_STYLES.includes(settings.monitor_layout_style)) {
-      return `monitor_layout_style must be one of: ${VALID_MONITOR_LAYOUT_STYLES.join(", ")}`;
+    if (!GC.MONITOR_LAYOUT_STYLES.includes(settings.monitor_layout_style)) {
+      return `monitor_layout_style must be one of: ${GC.MONITOR_LAYOUT_STYLES.join(", ")}`;
     }
   }
 

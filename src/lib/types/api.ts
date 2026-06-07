@@ -3,6 +3,7 @@
 
 import type { MonitorRecordTyped } from "$lib/server/types/db";
 import type { MonitorPublicView } from "$lib/types/monitor";
+import type GC from "$lib/global-constants";
 
 export type ApiError = {
   code: string;
@@ -454,7 +455,7 @@ export interface PageSettingsHistoryDays {
   mobile: number;
 }
 
-export type PageMonitorLayoutStyle = "default-list" | "default-grid" | "compact-list" | "compact-grid";
+export type PageMonitorLayoutStyle = (typeof GC.MONITOR_LAYOUT_STYLES)[number];
 
 export interface PageSettings {
   incidents: PageSettingsIncidents;

@@ -33,10 +33,10 @@
   // Default page settings
   const defaultPageSettings: PageSettingsType = {
     monitor_status_history_days: {
-      desktop: 90,
-      mobile: 30
+      desktop: GC.DEFAULT_STATUS_HISTORY_DAYS_DESKTOP,
+      mobile: GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE
     },
-    monitor_layout_style: "default-list"
+    monitor_layout_style: GC.DEFAULT_MONITOR_LAYOUT_STYLE
   };
 
   interface PageWithMonitors extends PageRecord {
@@ -788,8 +788,8 @@
                 <Input
                   id="history-desktop"
                   type="number"
-                  min="1"
-                  max="365"
+                  min={GC.STATUS_HISTORY_DAYS_MIN}
+                  max={GC.STATUS_HISTORY_DAYS_MAX}
                   bind:value={pageSettings.monitor_status_history_days.desktop}
                 />
                 <p class="text-muted-foreground text-xs">Number of days shown on desktop screens</p>
@@ -799,8 +799,8 @@
                 <Input
                   id="history-mobile"
                   type="number"
-                  min="1"
-                  max="365"
+                  min={GC.STATUS_HISTORY_DAYS_MIN}
+                  max={GC.STATUS_HISTORY_DAYS_MAX}
                   bind:value={pageSettings.monitor_status_history_days.mobile}
                 />
                 <p class="text-muted-foreground text-xs">Number of days shown on mobile screens</p>

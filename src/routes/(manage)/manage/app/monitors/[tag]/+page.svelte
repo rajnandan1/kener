@@ -30,6 +30,7 @@
   import MonitorRecentLogs from "./components/MonitorRecentLogs.svelte";
   import StatusHistoryDaysCard from "./components/StatusHistoryDaysCard.svelte";
   import MonitorSharingOptionsCard from "./components/MonitorSharingOptionsCard.svelte";
+  import GC from "$lib/global-constants.js";
 
   let { params }: PageProps = $props();
   const isNew = $derived(params.tag === "new");
@@ -48,8 +49,8 @@
 
   // Status history days state
   let statusHistoryDays = $state({
-    desktop: 90,
-    mobile: 30
+    desktop: GC.DEFAULT_STATUS_HISTORY_DAYS_DESKTOP as number,
+    mobile: GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE as number
   });
 
   // Pages state
@@ -137,8 +138,8 @@
             };
             if (settings.monitor_status_history_days) {
               statusHistoryDays = {
-                desktop: settings.monitor_status_history_days.desktop ?? 90,
-                mobile: settings.monitor_status_history_days.mobile ?? 30
+                desktop: settings.monitor_status_history_days.desktop ?? GC.DEFAULT_STATUS_HISTORY_DAYS_DESKTOP,
+                mobile: settings.monitor_status_history_days.mobile ?? GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE
               };
             }
           } catch (e) {
