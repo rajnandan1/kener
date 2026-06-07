@@ -1,4 +1,4 @@
-import type { PageSettings } from "$lib/types/api";
+import type { PageSettings, PageSettingsPatch } from "$lib/types/api";
 import GC from "$lib/global-constants";
 
 // Stored page_settings_json keys differ from the API contract for the meta
@@ -52,7 +52,24 @@ function parseStored(storedJson: string | null | undefined): StoredPageSettings 
   }
 }
 
-export function mergePageSettings(defaults: PageSettings, partial?: Partial<PageSettings>): PageSettings {
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+// Recursively merges patch into base: objects merge key-by-key, everything
+// else replaces. Keys absent from the patch — including ones this module does
+// not know about — are left untouched.
+function deepMerge(base: Record<string, unknown>, patch: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(patch)) {
+    if (value === undefined) continue;
+    const current = result[key];
+    result[key] = isPlainObject(current) && isPlainObject(value) ? deepMerge(current, value) : value;
+  }
+  return result;
+}
+
+export function mergePageSettings(defaults: PageSettings, partial?: PageSettingsPatch): PageSettings {
   if (!partial) {
     return defaults;
   }
@@ -112,42 +129,67 @@ export function mergePageSettings(defaults: PageSettings, partial?: Partial<Page
   return merged;
 }
 
-/** Builds the API view of stored settings: defaults overlaid with stored values. */
+function isValidHistoryDays(value: unknown): boolean {
+  return Number.isInteger(value) && (value as number) >= HISTORY_DAYS_MIN && (value as number) <= HISTORY_DAYS_MAX;
+}
+
+function isValidLayoutStyle(value: unknown): value is PageSettings["monitor_layout_style"] {
+  return (GC.MONITOR_LAYOUT_STYLES as readonly string[]).includes(value as string);
+}
+
+/**
+ * Builds the API view of stored settings: defaults overlaid with stored
+ * values. Stored values that violate the API contract (unknown layout style,
+ * out-of-range days — e.g. from manual edits or older versions) are ignored
+ * so responses stay schema-compliant.
+ */
 export function toApiPageSettings(storedJson: string | null | undefined): PageSettings {
   const stored = parseStored(storedJson);
-  const fromStore: Partial<PageSettings> = {
-    incidents: stored.incidents as PageSettings["incidents"],
-    include_maintenances: stored.include_maintenances as PageSettings["include_maintenances"],
-    monitor_status_history_days: stored.monitor_status_history_days as PageSettings["monitor_status_history_days"],
-    monitor_layout_style: stored.monitor_layout_style as PageSettings["monitor_layout_style"],
-    meta_page_title: stored.metaPageTitle,
-    meta_page_description: stored.metaPageDescription,
-    social_page_preview_image: stored.socialPagePreviewImage,
+  const storedDays = isPlainObject(stored.monitor_status_history_days) ? stored.monitor_status_history_days : {};
+  const fromStore: PageSettingsPatch = {
+    incidents: (isPlainObject(stored.incidents) ? stored.incidents : undefined) as unknown as PageSettings["incidents"],
+    include_maintenances: (isPlainObject(stored.include_maintenances)
+      ? stored.include_maintenances
+      : undefined) as unknown as PageSettings["include_maintenances"],
+    monitor_status_history_days: {
+      desktop: isValidHistoryDays(storedDays.desktop) ? (storedDays.desktop as number) : undefined,
+      mobile: isValidHistoryDays(storedDays.mobile) ? (storedDays.mobile as number) : undefined,
+    },
+    monitor_layout_style: isValidLayoutStyle(stored.monitor_layout_style) ? stored.monitor_layout_style : undefined,
+    meta_page_title: typeof stored.metaPageTitle === "string" ? stored.metaPageTitle : undefined,
+    meta_page_description: typeof stored.metaPageDescription === "string" ? stored.metaPageDescription : undefined,
+    social_page_preview_image:
+      typeof stored.socialPagePreviewImage === "string" ? stored.socialPagePreviewImage : undefined,
   };
   return mergePageSettings(getDefaultPageSettings(), fromStore);
 }
 
 /**
- * Overlays a partial API payload onto the stored settings JSON and returns the
- * new JSON string. Keys this module does not know about are preserved, so an
- * API write can never wipe settings written by other parts of the app.
+ * Deep-merges a partial API payload into the stored settings JSON and returns
+ * the new JSON string. Only keys present in the patch are written; everything
+ * else in the stored JSON — including nested keys and top-level keys this
+ * module does not know about — is preserved, so an API write can never wipe
+ * settings written by other parts of the app, and clients may persist extra
+ * keys (the schema allows additional properties).
  */
 export function applyPageSettingsPatch(
   storedJson: string | null | undefined,
-  patch: Partial<PageSettings> | undefined,
+  patch: PageSettingsPatch | undefined,
 ): string {
   const stored = parseStored(storedJson);
-  const merged = mergePageSettings(toApiPageSettings(storedJson), patch);
+  if (!patch) {
+    return JSON.stringify(stored);
+  }
 
-  stored.incidents = merged.incidents;
-  stored.include_maintenances = merged.include_maintenances;
-  stored.monitor_status_history_days = merged.monitor_status_history_days;
-  stored.monitor_layout_style = merged.monitor_layout_style;
-  if (merged.meta_page_title !== undefined) stored.metaPageTitle = merged.meta_page_title;
-  if (merged.meta_page_description !== undefined) stored.metaPageDescription = merged.meta_page_description;
-  if (merged.social_page_preview_image !== undefined) stored.socialPagePreviewImage = merged.social_page_preview_image;
+  // Map the API's snake_case meta fields to their stored camelCase keys; all
+  // other keys are stored under their API names
+  const { meta_page_title, meta_page_description, social_page_preview_image, ...rest } = patch;
+  const mappedPatch: Record<string, unknown> = { ...rest };
+  if (meta_page_title !== undefined) mappedPatch.metaPageTitle = meta_page_title;
+  if (meta_page_description !== undefined) mappedPatch.metaPageDescription = meta_page_description;
+  if (social_page_preview_image !== undefined) mappedPatch.socialPagePreviewImage = social_page_preview_image;
 
-  return JSON.stringify(stored);
+  return JSON.stringify(deepMerge(stored, mappedPatch));
 }
 
 /**
@@ -161,7 +203,37 @@ export function validatePageSettings(partial: unknown): string | null {
     return "page_settings must be an object";
   }
 
-  const settings = partial as Partial<PageSettings>;
+  const settings = partial as PageSettingsPatch;
+
+  // The event display branches and their known sub-objects must be objects;
+  // anything else would be deep-merged into storage as-is
+  if (settings.incidents !== undefined) {
+    if (!isPlainObject(settings.incidents)) {
+      return "incidents must be an object";
+    }
+    for (const key of ["ongoing", "resolved"] as const) {
+      if (settings.incidents[key] !== undefined && !isPlainObject(settings.incidents[key])) {
+        return `incidents.${key} must be an object`;
+      }
+    }
+  }
+
+  if (settings.include_maintenances !== undefined) {
+    if (!isPlainObject(settings.include_maintenances)) {
+      return "include_maintenances must be an object";
+    }
+    const ongoing = settings.include_maintenances.ongoing;
+    if (ongoing !== undefined) {
+      if (!isPlainObject(ongoing)) {
+        return "include_maintenances.ongoing must be an object";
+      }
+      for (const key of ["past", "upcoming"] as const) {
+        if (ongoing[key] !== undefined && !isPlainObject(ongoing[key])) {
+          return `include_maintenances.ongoing.${key} must be an object`;
+        }
+      }
+    }
+  }
 
   if (settings.monitor_layout_style !== undefined) {
     if (!GC.MONITOR_LAYOUT_STYLES.includes(settings.monitor_layout_style)) {

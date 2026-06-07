@@ -455,6 +455,18 @@ export interface PageSettingsHistoryDays {
   mobile: number;
 }
 
+/** Recursive partial, so patch payloads can update any subset of nested fields. */
+export type DeepPartial<T> = {
+  [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
+};
+
+/**
+ * Patch payload for page_settings: any subset of nested fields. Provided
+ * fields are deep-merged into the current settings; omitted fields are left
+ * untouched.
+ */
+export type PageSettingsPatch = DeepPartial<PageSettings>;
+
 export type PageMonitorLayoutStyle = (typeof GC.MONITOR_LAYOUT_STYLES)[number];
 
 export interface PageSettings {
@@ -505,7 +517,7 @@ export interface CreatePageRequest {
   page_header: string;
   page_subheader?: string | null;
   page_logo?: string | null;
-  page_settings?: Partial<PageSettings>;
+  page_settings?: PageSettingsPatch;
   monitors?: string[];
 }
 
@@ -519,7 +531,7 @@ export interface UpdatePageRequest {
   page_header?: string;
   page_subheader?: string | null;
   page_logo?: string | null;
-  page_settings?: Partial<PageSettings>;
+  page_settings?: PageSettingsPatch;
   monitors?: string[];
 }
 

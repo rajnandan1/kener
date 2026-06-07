@@ -52,7 +52,7 @@ The number of days of per-day status shown for a monitor, per device class (desk
 _Avoid_: History days, bar count
 
 **Page Settings**:
-A Page's display configuration: status-history window per device class, monitor layout style, per-page meta/social overrides, and event display preferences. One shape shared by the admin UI and the API; a writer must never drop fields it does not understand.
+A Page's display configuration: status-history window per device class, monitor layout style, per-page meta/social overrides, and event display preferences. The admin UI and the API expose the same settings, though each surface may name fields differently; a writer must never drop fields it does not understand.
 _Avoid_: Display settings (ambiguous with site-wide event display settings)
 
 ### Maintenance
