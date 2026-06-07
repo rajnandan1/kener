@@ -172,8 +172,15 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 
   // MANUAL samples are alert-visible (docs/adr/0005), so re-evaluate alerts once for the
   // last written sample — for NONE monitors nothing else would ever trigger evaluation.
-  const lastWrittenTs = body.start_ts + Math.floor((body.end_ts - body.start_ts) / 60) * 60;
-  await alertingQueue.push(monitorTag, lastWrittenTs, body.status);
+  // UpdateMonitoringData floors both bounds to minute starts and writes through the floored
+  // end inclusive, so the last stored row is always at GetMinuteStartTimestampUTC(end_ts).
+  // Best-effort: the rows are already committed; a queue outage must not fail the request.
+  const lastWrittenTs = GetMinuteStartTimestampUTC(body.end_ts);
+  try {
+    await alertingQueue.push(monitorTag, lastWrittenTs, body.status);
+  } catch (err) {
+    console.error(`Failed to enqueue alert evaluation for ${monitorTag} after MANUAL data write:`, err);
+  }
 
   // Calculate the number of data points that will be returned by GET
   // GET uses: timestamp >= start_ts AND timestamp < end_ts

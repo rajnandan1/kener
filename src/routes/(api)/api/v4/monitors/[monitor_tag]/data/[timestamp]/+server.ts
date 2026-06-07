@@ -163,7 +163,12 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
 
   // MANUAL samples are alert-visible (docs/adr/0005), so re-evaluate alerts for this
   // sample — for NONE monitors nothing else would ever trigger evaluation.
-  await alertingQueue.push(monitorTag, timestamp, status);
+  // Best-effort: the row is already committed; a queue outage must not fail the request.
+  try {
+    await alertingQueue.push(monitorTag, timestamp, status);
+  } catch (err) {
+    console.error(`Failed to enqueue alert evaluation for ${monitorTag} after MANUAL data write:`, err);
+  }
 
   // Fetch the updated data
   const updatedData = await db.getMonitoringDataAt(monitorTag, timestamp);
