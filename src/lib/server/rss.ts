@@ -182,8 +182,10 @@ export async function renderRssFeedResponse(args: RenderRssFeedArgs): Promise<Re
   for (const maintenance of maintenances) {
     // Drop events whose affected monitors were all hidden: the DB layer strips
     // hidden monitors from the row; a now-empty monitors[] means the public
-    // shouldn't see this on the events page either.
-    if (maintenance.monitors.length === 0) continue;
+    // shouldn't see this on the events page either. A global maintenance is the
+    // exception — it has no per-monitor rows by design (it affects every
+    // monitor), so its empty monitors[] is expected and must still be published.
+    if (maintenance.monitors.length === 0 && maintenance.is_global !== "YES") continue;
     items.push({
       type: "maintenance",
       id: maintenance.id,
@@ -227,7 +229,9 @@ function buildMaintenanceDescription(maintenance: MaintenanceEventsMonitorList):
   const start = formatRfc822(maintenance.start_date_time);
   const end = maintenance.end_date_time != null ? formatRfc822(maintenance.end_date_time) : "open-ended";
   lines.push(`Scheduled: ${start} → ${end}`);
-  if (maintenance.monitors.length > 0) {
+  if (maintenance.is_global === "YES") {
+    lines.push("Affected: All monitors");
+  } else if (maintenance.monitors.length > 0) {
     const names = maintenance.monitors.map((m) => m.monitor_name).join(", ");
     lines.push(`Affected: ${names}`);
   }

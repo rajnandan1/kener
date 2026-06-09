@@ -641,6 +641,7 @@ export interface MaintenanceEventsMonitorList {
   description: string | null;
   start_date_time: number; // Unix timestamp - when the first occurrence starts
   end_date_time: number; // Unix timestamp - when the first occurrence ends
+  is_global: YesNoType; // "YES" when the maintenance affects all monitors (no per-monitor rows)
   monitors: MaintenanceMonitorImpact[];
   created_at: Date;
   updated_at: Date;
