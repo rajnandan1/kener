@@ -159,9 +159,13 @@ export async function renderRssFeedResponse(args: RenderRssFeedArgs): Promise<Re
 
   const nowTs = nowSeconds();
   const startTs = nowTs - FEED_WINDOW_DAYS * 24 * 60 * 60;
+  // Maintenances need a future end too: a SCHEDULED maintenance has its
+  // start_date_time in the future, and we want subscribers to learn about
+  // upcoming windows. Incidents are always past, so they keep nowTs as end.
+  const futureTs = nowTs + FEED_WINDOW_DAYS * 24 * 60 * 60;
   const [incidents, maintenances] = await Promise.all([
     db.getIncidentsForEventsByDateRange(startTs, nowTs, monitorTags),
-    db.getMaintenanceEventsForEventsByDateRange(startTs, nowTs, monitorTags),
+    db.getMaintenanceEventsForEventsByDateRange(startTs, futureTs, monitorTags),
   ]);
 
   const items: RssFeedItem[] = [];
