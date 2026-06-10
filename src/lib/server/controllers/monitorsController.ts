@@ -751,3 +751,6 @@ export const GetStatusCountsByIntervalGroupedByMonitor = async (
   await setCache(cacheKey, result, 60);
   return result;
 };
+export const GetLastKnownStatus = async (monitor_tag: string): Promise<MonitoringData | undefined> => {
+  return await db.getLastKnownStatus(monitor_tag);
+};
