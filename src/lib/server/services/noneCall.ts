@@ -17,13 +17,12 @@ class NoneCall {
       if (
         !!lastKnownStatus &&
         !!lastKnownStatus.status &&
-        !!lastKnownStatus.latency &&
         !!lastKnownStatus.type &&
         lastKnownStatus.type === GC.MANUAL
       ) {
         return {
           status: lastKnownStatus.status,
-          latency: lastKnownStatus.latency,
+          latency: lastKnownStatus.latency || 0,
           type: lastKnownStatus.type,
         };
       }
