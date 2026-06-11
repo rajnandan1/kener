@@ -16,6 +16,8 @@ services:
     image: redis:7-alpine
     container_name: kener-redis
     restart: unless-stopped
+    ports:
+      - "6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -27,15 +29,15 @@ services:
   # ---------------------------------------------------------------------------
   # Kener — Status Page Application
   # ---------------------------------------------------------------------------
-  kener:
-    image: rajnandan1/kener:latest
-    # For Alpine variant use: rajnandan1/kener:alpine
-    container_name: kener
-    environment:
-      # ── Required ──
-      KENER_SECRET_KEY: replace_me_with_a_random_string # generate: openssl rand -base64 32
-      ORIGIN: http://localhost:3000 # public URL of your Kener instance (required for CSRF protection)
-      REDIS_URL: redis://redis:6379
+  # kener:
+  #   image: rajnandan1/kener:latest
+  #   # For Alpine variant use: rajnandan1/kener:alpine
+  #   container_name: kener
+  #   environment:
+  #     # ── Required ──
+  #     KENER_SECRET_KEY: replace_me_with_a_random_string # generate: openssl rand -base64 32
+  #     ORIGIN: http://localhost:3000 # public URL of your Kener instance (required for CSRF protection)
+  #     REDIS_URL: redis://redis:6379
 
       # ── Database (default: SQLite) ──
       # DATABASE_URL: sqlite://./database/kener.sqlite.db
@@ -56,14 +58,14 @@ services:
       # PORT: 3000
       # KENER_BASE_PATH:
       # NODE_ENV: production          # already set in the image
-    ports:
-      - "3000:3000"
-    volumes:
-      - data:/app/database
-    depends_on:
-      redis:
-        condition: service_healthy
-    restart: unless-stopped
+    # ports:
+    #   - "3000:3000"
+    # volumes:
+    #   - data:/app/database
+    # depends_on:
+    #   redis:
+    #     condition: service_healthy
+    # restart: unless-stopped
 
   # ---------------------------------------------------------------------------
   # Optional: PostgreSQL (uncomment and set DATABASE_URL above)
@@ -105,8 +107,8 @@ services:
   #     retries: 5
 
 volumes:
-  data:
-    name: kener_db
+  # data:
+  #   name: kener_db
   redis_data:
     name: kener_redis
   # postgres_data:

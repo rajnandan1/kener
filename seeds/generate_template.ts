@@ -1,5 +1,6 @@
 import subscriptionAccountCodeTemplate from "../src/lib/server/templates/general/subscription_account_code_template.ts";
 import subscriptionUpdateTemplate from "../src/lib/server/templates/general/subscription_update_template.ts";
+import monitorStatusUpdateTemplate from "../src/lib/server/templates/general/monitor_status_update_template.ts";
 import forgotPasswordTemplate from "../src/lib/server/templates/general/forgot_password_template.ts";
 import inviteUserTemplate from "../src/lib/server/templates/general/invite_user_template.ts";
 import verifyEmailTemplate from "../src/lib/server/templates/general/verify_email_template.ts";
@@ -57,6 +58,20 @@ export async function seed(knex: Knex): Promise<void> {
       template_subject: inviteUserTemplate.template_subject,
       template_html_body: inviteUserTemplate.template_html_body,
       template_text_body: inviteUserTemplate.template_text_body,
+    });
+  }
+
+  count = await knex("general_email_templates")
+    .where({ template_id: monitorStatusUpdateTemplate.template_id })
+    .count("template_id as CNT")
+    .first();
+
+  if (count && count.CNT == 0) {
+    await knex("general_email_templates").insert({
+      template_id: monitorStatusUpdateTemplate.template_id,
+      template_subject: monitorStatusUpdateTemplate.template_subject,
+      template_html_body: monitorStatusUpdateTemplate.template_html_body,
+      template_text_body: monitorStatusUpdateTemplate.template_text_body,
     });
   }
 

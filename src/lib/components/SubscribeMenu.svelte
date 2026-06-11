@@ -3,7 +3,6 @@
   import * as InputOTP from "$lib/components/ui/input-otp/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
-  import { Switch } from "$lib/components/ui/switch/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { onMount } from "svelte";
   import { resolve } from "$app/paths";
@@ -14,8 +13,7 @@
   import LogOut from "@lucide/svelte/icons/log-out";
   import Loader2 from "@lucide/svelte/icons/loader-2";
   import Bell from "@lucide/svelte/icons/bell";
-  import AlertTriangle from "@lucide/svelte/icons/alert-triangle";
-  import Wrench from "@lucide/svelte/icons/wrench";
+  import Activity from "@lucide/svelte/icons/activity";
   import { t } from "$lib/stores/i18n";
   import trackEvent from "$lib/beacon";
   import ICONS from "$lib/icons";
@@ -29,31 +27,36 @@
 
   const STORAGE_KEY = "subscriber_token";
 
-  // UI States
   type View = "loading" | "login" | "otp" | "preferences" | "error";
   let currentView = $state<View>("loading");
   let isSubmitting = $state(false);
   let errorMessage = $state("");
 
-  // Form data
   let email = $state("");
   let otpValue = $state("");
 
   // Preferences data
   let subscriberEmail = $state("");
-  let incidentsEnabled = $state(false);
-  let maintenancesEnabled = $state(false);
-  let availableSubscriptions = $state<{ incidents: boolean; maintenances: boolean }>({
-    incidents: false,
-    maintenances: false
-  });
 
-  // Check token on mount
+  // Monitor selection (the core subscription model)
+  interface MonitorOption { tag: string; name: string }
+  let monitorsList = $state<MonitorOption[]>([]);
+  let loadingMonitors = $state(false);
+  let selectedMonitorTags = $state<string[]>([]);
+  let monitorSearch = $state("");
+
+  let filteredMonitors = $derived(
+    monitorsList.filter((m) => m.name.toLowerCase().includes(monitorSearch.toLowerCase()) || m.tag.toLowerCase().includes(monitorSearch.toLowerCase()))
+  );
+
+  // Track whether user has any active subscriptions at all
+  let hasActiveSubscriptions = $state(false);
+  let subscriptionsEnabled = $state(false);
+
   onMount(() => {
     checkExistingToken();
   });
 
-  // Also check when dialog opens
   $effect(() => {
     if (open) {
       checkExistingToken();
@@ -76,7 +79,6 @@
       });
 
       if (!response.ok) {
-        // Token invalid or expired
         localStorage.removeItem(STORAGE_KEY);
         currentView = "login";
         return;
@@ -84,13 +86,40 @@
 
       const data = await response.json();
       subscriberEmail = data.email || "";
-      incidentsEnabled = data.subscriptions?.incidents || false;
-      maintenancesEnabled = data.subscriptions?.maintenances || false;
-      availableSubscriptions = data.availableSubscriptions || { incidents: false, maintenances: false };
+
+      // Load monitor tags from incidents subscription
+      const tags = data.incidentsMonitorTags || data.monitorsMonitorTags || [];
+      selectedMonitorTags = tags;
+
+      // Has active subs and overall feature enabled
+      hasActiveSubscriptions = data.subscriptions?.incidents || data.subscriptions?.maintenances || data.subscriptions?.monitors || false;
+      subscriptionsEnabled = data.availableSubscriptions?.incidents || data.availableSubscriptions?.maintenances || data.availableSubscriptions?.monitors || false;
+
+      // Fetch monitors list
+      fetchMonitorsList();
+
       currentView = "preferences";
-    } catch (err) {
+    } catch {
       localStorage.removeItem(STORAGE_KEY);
       currentView = "login";
+    }
+  }
+
+  async function fetchMonitorsList() {
+    loadingMonitors = true;
+    try {
+      const res = await fetch(clientResolver(resolve, "/dashboard-apis/subscription"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "getAvailableMonitors" })
+      });
+      if (res.ok) {
+        monitorsList = await res.json();
+      }
+    } catch {
+      // silently fail
+    } finally {
+      loadingMonitors = false;
     }
   }
 
@@ -111,7 +140,6 @@
       });
 
       if (!response.ok) {
-        const data = await response.json();
         errorMessage = $t("Failed to send verification code");
         return;
       }
@@ -120,7 +148,7 @@
 
       currentView = "otp";
       otpValue = "";
-    } catch (err) {
+    } catch {
       errorMessage = $t("Network error. Please try again.");
     } finally {
       isSubmitting = false;
@@ -144,7 +172,6 @@
       });
 
       if (!response.ok) {
-        const data = await response.json();
         errorMessage = $t("Verification failed");
         return;
       }
@@ -153,19 +180,30 @@
       localStorage.setItem(STORAGE_KEY, data.token);
       trackEvent("subscribe_otp_verified", { source: "subscribe_menu" });
       await checkExistingToken();
-    } catch (err) {
+    } catch {
       errorMessage = $t("Network error. Please try again.");
     } finally {
       isSubmitting = false;
     }
   }
 
-  async function handlePreferenceChange(type: "incidents" | "maintenances", value: boolean) {
+  function toggleMonitorTag(tag: string) {
+    if (selectedMonitorTags.includes(tag)) {
+      selectedMonitorTags = selectedMonitorTags.filter((t) => t !== tag);
+    } else {
+      selectedMonitorTags = [...selectedMonitorTags, tag];
+    }
+  }
+
+  async function saveMonitorSelection() {
     const token = localStorage.getItem(STORAGE_KEY);
     if (!token) {
       currentView = "login";
       return;
     }
+
+    isSubmitting = true;
+    errorMessage = "";
 
     try {
       const response = await fetch(clientResolver(resolve, "/dashboard-apis/subscription"), {
@@ -174,38 +212,66 @@
         body: JSON.stringify({
           action: "updatePreferences",
           token,
-          [type]: value
+          incidents: true,
+          maintenances: true,
+          monitors: true,
+          incidentsMonitorTags: selectedMonitorTags,
+          maintenancesMonitorTags: selectedMonitorTags,
+          monitorsMonitorTags: selectedMonitorTags
         })
       });
 
       if (!response.ok) {
         const data = await response.json();
-        errorMessage = $t("Failed to update preference");
-        // Revert the toggle
-        if (type === "incidents") {
-          incidentsEnabled = !value;
-        } else {
-          maintenancesEnabled = !value;
-        }
+        errorMessage = data.message || $t("Failed to update subscription");
         return;
       }
 
-      // Update local state
-      if (type === "incidents") {
-        incidentsEnabled = value;
-      } else {
-        maintenancesEnabled = value;
+      hasActiveSubscriptions = true;
+      trackEvent("subscribe_monitors_saved", { source: "subscribe_menu", count: selectedMonitorTags.length });
+    } catch {
+      errorMessage = $t("Network error. Please try again.");
+    } finally {
+      isSubmitting = false;
+    }
+  }
+
+  async function handleUnsubscribeAll() {
+    const token = localStorage.getItem(STORAGE_KEY);
+    if (!token) {
+      currentView = "login";
+      return;
+    }
+
+    isSubmitting = true;
+    errorMessage = "";
+
+    try {
+      const response = await fetch(clientResolver(resolve, "/dashboard-apis/subscription"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "updatePreferences",
+          token,
+          incidents: false,
+          maintenances: false,
+          monitors: false
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        errorMessage = data.message || $t("Failed to unsubscribe");
+        return;
       }
 
-      trackEvent("subscribe_pref_toggled", { source: "subscribe_menu", type, value });
-    } catch (err) {
+      hasActiveSubscriptions = false;
+      selectedMonitorTags = [];
+      trackEvent("subscribe_unsubscribed", { source: "subscribe_menu" });
+    } catch {
       errorMessage = $t("Network error. Please try again.");
-      // Revert the toggle
-      if (type === "incidents") {
-        incidentsEnabled = !value;
-      } else {
-        maintenancesEnabled = !value;
-      }
+    } finally {
+      isSubmitting = false;
     }
   }
 
@@ -214,8 +280,8 @@
     email = "";
     otpValue = "";
     subscriberEmail = "";
-    incidentsEnabled = false;
-    maintenancesEnabled = false;
+    selectedMonitorTags = [];
+    hasActiveSubscriptions = false;
     errorMessage = "";
     currentView = "login";
     trackEvent("subscribe_logout", { source: "subscribe_menu" });
@@ -272,11 +338,11 @@
       </Dialog.Title>
       <Dialog.Description>
         {#if currentView === "login"}
-          {$t("Get notified about incidents and scheduled maintenance.")}
+          {$t("Select the monitors you care about and get notified when they have issues.")}
         {:else if currentView === "otp"}
           {$t("Enter the verification code sent to your email.")}
         {:else if currentView === "preferences"}
-          {$t("Manage your notification preferences.")}
+          {$t("Choose which monitors to follow. You'll be notified about incidents, maintenance, and status changes affecting your selected monitors.")}
         {:else if currentView === "loading"}
           {$t("Loading your preferences...")}
         {/if}
@@ -289,7 +355,6 @@
           <Loader2 class="text-muted-foreground h-8 w-8 animate-spin" />
         </div>
       {:else if currentView === "login"}
-        <!-- Login View -->
         <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
             <Label for="email">{$t("Email address")}</Label>
@@ -321,7 +386,6 @@
           </Button>
         </div>
       {:else if currentView === "otp"}
-        <!-- OTP View -->
         <div class="flex flex-col gap-4">
           <div class="flex flex-col items-center gap-4">
             <p class="text-muted-foreground text-center text-sm">
@@ -363,8 +427,8 @@
           </Button>
         </div>
       {:else if currentView === "preferences"}
-        <!-- Preferences View -->
         <div class="flex flex-col gap-6">
+          <!-- User info bar -->
           <div class="rounded-lg border p-4">
             <div class="flex items-center justify-between gap-2">
               <div class="flex gap-2">
@@ -377,42 +441,81 @@
             </div>
           </div>
 
-          <div class="flex flex-col gap-4">
-            {#if availableSubscriptions.incidents}
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <AlertTriangle class="h-5 w-5 text-orange-500" />
-                  <div>
-                    <Label class="font-medium">{$t("Incident Updates")}</Label>
-                    <p class="text-muted-foreground text-xs">{$t("Get notified about incidents updates")}</p>
-                  </div>
-                </div>
-                <Switch
-                  checked={incidentsEnabled}
-                  onCheckedChange={(value) => handlePreferenceChange("incidents", value)}
-                />
-              </div>
-            {/if}
+          <!-- Subscription status -->
+          {#if hasActiveSubscriptions}
+            <div class="flex items-center gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-700 dark:bg-green-950 dark:text-green-300">
+              <Activity class="h-4 w-4" />
+              {$t("You are subscribed to")} {selectedMonitorTags.length > 0 ? selectedMonitorTags.length : $t("all")} {$t("monitor(s)")}
+            </div>
+          {:else}
+            <div class="rounded-lg border p-3 text-sm text-muted-foreground">
+              {$t("You are not currently subscribed. Select monitors below to get notified.")}
+            </div>
+          {/if}
 
-            {#if availableSubscriptions.maintenances}
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <Wrench class="h-5 w-5 text-blue-500" />
-                  <div>
-                    <Label class="font-medium">{$t("Maintenance Updates")}</Label>
-                    <p class="text-muted-foreground text-xs">{$t("Get notified about scheduled maintenance")}</p>
-                  </div>
-                </div>
-                <Switch
-                  checked={maintenancesEnabled}
-                  onCheckedChange={(value) => handlePreferenceChange("maintenances", value)}
-                />
+          <!-- Monitor list -->
+          {#if subscriptionsEnabled}
+            {#if loadingMonitors}
+              <div class="flex items-center justify-center py-4">
+                <Loader2 class="text-muted-foreground h-5 w-5 animate-spin" />
               </div>
+            {:else if monitorsList.length > 0}
+              <div class="space-y-2">
+                <Label class="text-xs font-medium text-muted-foreground">{$t("Select monitors to follow")}</Label>
+                <Input
+                  type="text"
+                  placeholder={$t("Search monitors...")}
+                  bind:value={monitorSearch}
+                />
+                <div class="max-h-48 space-y-1 overflow-y-auto rounded border p-2">
+                  {#if filteredMonitors.length === 0}
+                    <p class="text-muted-foreground py-2 text-center text-xs">{$t("No monitors match your search")}</p>
+                  {:else}
+                    {#each filteredMonitors as monitor (monitor.tag)}
+                      <div class="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="mon-{monitor.tag}"
+                          class="h-4 w-4 rounded border-gray-300"
+                          checked={selectedMonitorTags.includes(monitor.tag)}
+                          onchange={() => toggleMonitorTag(monitor.tag)}
+                        />
+                        <Label for="mon-{monitor.tag}" class="mb-0 text-sm cursor-pointer">{monitor.name}</Label>
+                      </div>
+                    {/each}
+                  {/if}
+                </div>
+              </div>
+
+              <p class="text-xs text-muted-foreground">
+                {$t("Leave empty to follow all monitors.")}
+              </p>
+            {:else}
+              <p class="text-sm text-muted-foreground">{$t("No monitors available to subscribe to.")}</p>
             {/if}
-          </div>
+          {:else}
+            <p class="text-sm text-muted-foreground">{$t("Subscriptions are not currently enabled.")}</p>
+          {/if}
 
           {#if errorMessage}
             <p class="text-destructive text-sm">{errorMessage}</p>
+          {/if}
+
+          <!-- Actions -->
+          {#if subscriptionsEnabled && monitorsList.length > 0}
+            <div class="flex gap-2">
+              <Button onclick={saveMonitorSelection} disabled={isSubmitting} class="flex-1">
+                {#if isSubmitting}
+                  <Loader2 class="mr-2 h-3 w-3 animate-spin" />
+                {/if}
+                {$t("Save")}
+              </Button>
+              {#if hasActiveSubscriptions}
+                <Button variant="outline" onclick={handleUnsubscribeAll} disabled={isSubmitting}>
+                  {$t("Unsubscribe All")}
+                </Button>
+              {/if}
+            </div>
           {/if}
         </div>
       {/if}

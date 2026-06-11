@@ -105,6 +105,7 @@ import {
   AdminUpdateSubscriptionStatus,
   AdminDeleteSubscriber,
   AdminAddSubscriber,
+  GetAvailableMonitors,
 } from "$lib/server/controllers/userSubscriptionsController.js";
 import {
   GetAllGeneralEmailTemplates,
@@ -602,14 +603,24 @@ export async function POST({ request, cookies }) {
         throw new Error(resp.error);
       }
     } else if (action == "adminAddSubscriber") {
-      const { email, incidents, maintenances } = data;
+      const { email, incidents, maintenances, monitors, incidentsMonitorTags, maintenancesMonitorTags, monitorsMonitorTags } = data;
       if (!email) {
         throw new Error("Email is required");
       }
-      resp = await AdminAddSubscriber(email, incidents ?? false, maintenances ?? false);
+      resp = await AdminAddSubscriber(
+        email,
+        incidents ?? false,
+        maintenances ?? false,
+        monitors ?? false,
+        incidentsMonitorTags,
+        maintenancesMonitorTags,
+        monitorsMonitorTags,
+      );
       if (!resp.success) {
         throw new Error(resp.error);
       }
+    } else if (action == "getAvailableMonitors") {
+      resp = await GetAvailableMonitors();
     } else if (action == "getSubscriptionsConfig") {
       let subscriptionsSettings = await GetSiteDataByKey("subscriptionsSettings");
       if (!!!subscriptionsSettings) {
@@ -619,6 +630,7 @@ export async function POST({ request, cookies }) {
             emails: {
               incidents: true,
               maintenances: true,
+              monitors: true,
             },
           },
         };

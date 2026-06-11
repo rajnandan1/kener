@@ -75,6 +75,7 @@ export function maintenanceToVariables(
   updateIdSuffix: string,
   subjectPrefix: string,
   siteUrl: string = "",
+  monitorTags?: string[],
 ): SubscriptionVariableMap {
   const template = formatMaintenanceMarkdown(monitorNames, event, statusMessage);
   return {
@@ -85,5 +86,6 @@ export function maintenanceToVariables(
     update_id: `maintenance_${event.id}_${updateIdSuffix}`,
     update_subject: `${subjectPrefix}: ${event.title}`,
     update_text: template,
+    monitor_tags: monitorTags,
   };
 }

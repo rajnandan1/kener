@@ -17,6 +17,11 @@ import type {
 } from "../types/db.js";
 import GC from "../../global-constants.js";
 import { getUnixTime, differenceInSeconds } from "date-fns";
+import { GetAllSiteData } from "./controller.js";
+import { siteDataToVariables } from "../notification/notification_utils.js";
+import type { SubscriptionVariableMap } from "../notification/types.js";
+import subscriberQueue from "../queues/subscriberQueue.js";
+import mdToHTML from "../../marked.js";
 
 interface IncidentsDashboardInput {
   page: number;
@@ -228,6 +233,39 @@ export const GetIncidentsByIDS = async (ids: number[]): Promise<unknown[]> => {
   return incidents;
 };
 
+async function getIncidentMonitorTags(incident_id: number): Promise<string[]> {
+  const monitors = await db.getIncidentMonitorsByIncidentID(incident_id);
+  return monitors.map((m) => m.monitor_tag);
+}
+
+async function notifyIncidentSubscribers(
+  incident_id: number,
+  title: string,
+  update_text: string,
+  update_subject: string,
+  event_type: "incidents",
+  monitorTags: string[],
+) {
+  try {
+    const siteData = await GetAllSiteData();
+    const siteVars = siteDataToVariables(siteData);
+    const siteUrl = siteVars.site_url;
+    const variables: SubscriptionVariableMap = {
+      title,
+      cta_url: siteUrl + "incidents/" + incident_id,
+      cta_text: "View Incident",
+      update_text,
+      update_subject,
+      update_id: String(incident_id),
+      event_type,
+      monitor_tags: monitorTags,
+    };
+    await subscriberQueue.push(variables);
+  } catch (err) {
+    console.error(`Error sending incident notification for incident ${incident_id}:`, err);
+  }
+}
+
 export const CreateNewIncidentWithCommentAndMonitor = async (
   data: IncidentInput,
   update: string,
@@ -322,11 +360,15 @@ export const CreateIncident = async (data: IncidentInput): Promise<{ incident_id
 
   let newIncident = await db.createIncident(incident);
 
-  //we need to
-  // queueController.PushDataToQueue(newIncident.id, "createIncident", {
-  //   message: `${incident.incident_type} Created`,
-  //   ...incident,
-  // });
+  await notifyIncidentSubscribers(
+    newIncident.id,
+    incident.title,
+    mdToHTML(`**${incident.incident_type}**: ${incident.title} has been **${incident.state}**`),
+    `[#${newIncident.id}:${incident.state}] ${incident.title}`,
+    "incidents",
+    [],
+  );
+
   return {
     incident_id: newIncident.id,
   };
@@ -355,25 +397,27 @@ export const UpdateIncident = async (incident_id: number, data: IncidentUpdateIn
   };
 
   //check if updateObject same as incidentExists
-  // if (
-  //   JSON.stringify(updateObject) ===
-  //   JSON.stringify({
-  //     id: incidentExists.id,
-  //     title: incidentExists.title,
-  //     start_date_time: incidentExists.start_date_time,
-  //     status: incidentExists.status,
-  //     state: incidentExists.state,
-  //     end_date_time: incidentExists.end_date_time,
-  //   })
-  // ) {
-  //   queueController.PushDataToQueue(incident_id, "updateIncident", {
-  //     message: `${incidentExists.incident_type} has been updated to ${updateObject.state}`,
-  //     incident_type: incidentExists.incident_type,
-  //     title: incidentExists.title,
-  //   });
-  // }
+  let stateChanged = updateObject.state !== incidentExists.state;
+  let titleChanged = updateObject.title !== incidentExists.title;
 
-  return await db.updateIncident(updateObject as IncidentRecord);
+  let result = await db.updateIncident(updateObject as IncidentRecord);
+
+  if (stateChanged || titleChanged) {
+    const monitorTags = await getIncidentMonitorTags(incident_id);
+    const stateMsg = stateChanged ? `state changed to **${updateObject.state || incidentExists.state}**` : "";
+    const titleMsg = titleChanged ? `title changed to "${updateObject.title || incidentExists.title}"` : "";
+    const msg = [stateMsg, titleMsg].filter(Boolean).join(" and ");
+    await notifyIncidentSubscribers(
+      incident_id,
+      updateObject.title || incidentExists.title,
+      mdToHTML(`**${incidentExists.incident_type || "INCIDENT"}**: ${incidentExists.title} — ${msg}`),
+      `[#${incident_id}:${updateObject.state || incidentExists.state}] ${updateObject.title || incidentExists.title}`,
+      "incidents",
+      monitorTags,
+    );
+  }
+
+  return result;
 };
 
 export const AddIncidentMonitor = async (
@@ -407,11 +451,22 @@ export const AddIncidentMonitor = async (
   //   message: `Monitor ${monitor_tag} added to ${incidentExists.incident_type}. Impact is ${monitor_impact}`,
   //   incident_type: incidentExists.incident_type,
   // });
-  return await db.insertIncidentMonitorWithMerge({
+  let result = await db.insertIncidentMonitorWithMerge({
     incident_id,
     monitor_tag,
     monitor_impact,
   });
+
+  await notifyIncidentSubscribers(
+    incident_id,
+    incidentExists.title,
+    mdToHTML(`Monitor **${monitor_tag}** added to incident with impact **${monitor_impact}**`),
+    `[#${incident_id}:${incidentExists.state}] ${incidentExists.title}`,
+    "incidents",
+    [monitor_tag],
+  );
+
+  return result;
 };
 
 export const UpdateCommentByID = async (
@@ -481,6 +536,16 @@ export const AddIncidentComment = async (
     }
     await UpdateIncident(incident_id, incidentUpdate);
   }
+
+  const monitorTags = await getIncidentMonitorTags(incident_id);
+  await notifyIncidentSubscribers(
+    incident_id,
+    incidentExists.title,
+    mdToHTML(comment),
+    `[#${incident_id}:${state}] ${incidentExists.title}`,
+    "incidents",
+    monitorTags,
+  );
 
   return c;
 };
