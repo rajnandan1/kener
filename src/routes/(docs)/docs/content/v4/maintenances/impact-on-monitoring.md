@@ -66,63 +66,79 @@ Displayed Status: MAINTENANCE
 
 **Example:**
 
+```
 Monitor: Database
 Realtime Status: UP (checks passing now)
 Incident: OPEN
 Monitor Impact: DOWN
 
 Displayed Status: DOWN
-title: Impact on Monitoring
-description: How maintenance events affect displayed monitor status
+```
+
 **Rationale:** Incident status takes precedence over current checks during active issues.
 
-During an **ONGOING** maintenance event, maintenance impact can override monitor status shown to users.
+**Note:** Maintenance status takes precedence over incident status. If both exist, maintenance wins.
 
-## Status precedence {#status-precedence}
+#### 3. Realtime Monitoring Data {#realtime-priority}
 
-Kener resolves status in this order (later overrides earlier):
+**When:** No maintenance or incident affecting this monitor
 
-`default status → realtime monitor result → incident impact → maintenance impact`
+**Display:** Show latest monitoring check result (UP, DOWN, DEGRADED)
 
-So maintenance has the highest effective priority when active.
+**Example:**
 
-## Impact values {#impact-values}
-
+```
 Monitor: Web Server
-Set per monitor in a maintenance:
+Latest Check: DOWN (connection timeout)
+No Maintenance: ✓
+No Incident: ✓
 
-- `MAINTENANCE` (recommended)
-- `DOWN`
-- `DEGRADED`
-- `UP`
+Displayed Status: DOWN
+```
 
-Choose the value that matches expected user impact during the window.
+#### 4. Default Monitor Status (Lowest Priority) {#default-priority}
 
-## Event lifecycle behavior {#event-lifecycle-behavior}
+**When:** No monitoring data exists yet
 
-- `SCHEDULED` / `READY`: no override yet
-- `ONGOING`: override active
-- `COMPLETED` / `CANCELLED`: override removed
+**Display:** Monitor's configured default status
 
-## Realtime monitoring still runs {#realtime-monitoring-still-runs}
+**Example:**
 
+```
 Monitor: New Service
-Even during maintenance, checks continue and data is recorded.
+No Checks Run: (just created)
 Default Status: UP
-Maintenance changes **displayed/effective** status, not monitor execution.
+
 Displayed Status: UP
+```
 
-## Practical guidance {#practical-guidance}
+## Monitor Impact Levels {#impact-levels}
 
-- Prefer `MAINTENANCE` for planned work communication.
-- Use `DOWN` only when service is expected to be unavailable.
-- Avoid overlapping maintenances on the same monitor.
+When configuring a maintenance, you specify the impact for each affected monitor:
 
-## Related guides {#related-guides}
+### MAINTENANCE {#maintenance-impact}
 
-- [Maintenances Overview](/docs/v4/maintenances/overview)
-- [Maintenance Events](/docs/v4/maintenances/events)
-- [Creating and Managing Maintenances](/docs/v4/maintenances/creating-managing)
+**Visual:** Orange/yellow, wrench icon
+
+**Meaning:** Service is under planned maintenance
+
+**When to Use:**
+
+- General maintenance work
+- Service available but under maintenance
+- Default/recommended choice
+
+**User Interpretation:** "Service may be affected due to planned work"
+
+**Example:**
+
+```yaml
+Monitor: API Server
+Impact: MAINTENANCE
+During Event: Shows orange "Under Maintenance"
+```
+
+### DOWN {#down-impact}
 
 **Visual:** Red, X icon
 
@@ -514,6 +530,6 @@ Description: "Database will be completely offline during this window"
 
 ## Next Steps {#next-steps}
 
-- [Maintenance Events](/docs/maintenances/events) - Learn about event lifecycle and status transitions
-- [Creating and Managing Maintenances](/docs/maintenances/creating-managing) - How to configure monitor impacts
-- [RRULE Patterns](/docs/maintenances/rrule-patterns) - Advanced scheduling patterns
+- [Maintenance Events](/docs/v4/maintenances/events) - Learn about event lifecycle and status transitions
+- [Creating and Managing Maintenances](/docs/v4/maintenances/creating-managing) - How to configure monitor impacts
+- [RRULE Patterns](/docs/v4/maintenances/rrule-patterns) - Advanced scheduling patterns

@@ -369,8 +369,15 @@ export interface GetMaintenanceEventResponse {
 }
 
 export interface UpdateMaintenanceEventRequest {
-  start_date_time: number;
-  end_date_time: number;
+  /** Window edit mode: both times required. Cannot be combined with `status`. */
+  start_date_time?: number;
+  end_date_time?: number;
+  /**
+   * Transition mode: COMPLETED (from ONGOING) or CANCELLED (from SCHEDULED/READY/ONGOING).
+   * Cannot be combined with time fields. Transitioning an ONGOING event moves its
+   * end_date_time to the moment of the transition.
+   */
+  status?: "COMPLETED" | "CANCELLED";
 }
 
 export interface UpdateMaintenanceEventResponse {

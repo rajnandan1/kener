@@ -1514,7 +1514,8 @@
           "500": {
             "$ref": "#/components/responses/InternalServerError"
           }
-        }
+        },
+        "description": "Either edit the event window (start_date_time and end_date_time) or transition its status (COMPLETED or CANCELLED). The two modes cannot be combined in one request."
       },
       "delete": {
         "tags": ["Maintenance Events"],
@@ -2360,18 +2361,37 @@
         ]
       },
       "UpdateMaintenanceEventRequest": {
-        "type": "object",
-        "required": ["start_date_time", "end_date_time"],
-        "properties": {
-          "start_date_time": {
-            "type": "integer"
+        "description": "Two mutually exclusive modes: edit the event window (both start_date_time and end_date_time required), or transition the event status (status alone). Combining status with time fields returns 400.",
+        "oneOf": [
+          {
+            "title": "Window edit",
+            "type": "object",
+            "required": ["start_date_time", "end_date_time"],
+            "properties": {
+              "start_date_time": {
+                "type": "integer"
+              },
+              "end_date_time": {
+                "type": "integer",
+                "description": "Must be greater than start_date_time"
+              }
+            },
+            "additionalProperties": false
           },
-          "end_date_time": {
-            "type": "integer",
-            "description": "Must be greater than start_date_time"
+          {
+            "title": "Status transition",
+            "type": "object",
+            "required": ["status"],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": ["COMPLETED", "CANCELLED"],
+                "description": "Allowed transitions: ONGOING to COMPLETED; SCHEDULED, READY or ONGOING to CANCELLED. Both target statuses are terminal. Transitioning an ONGOING event moves its end_date_time to the moment of the transition; cancelling an event that has not started keeps its planned window. Invalid transitions return 400."
+              }
+            },
+            "additionalProperties": false
           }
-        },
-        "additionalProperties": false
+        ]
       },
       "PageSettings": {
         "type": "object",

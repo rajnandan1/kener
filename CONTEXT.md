@@ -97,3 +97,10 @@ _Avoid_: Maintenance window, maintenance event (that's an occurrence, see below)
 **Maintenance Event**:
 A single occurrence of a Maintenance, generated from its RRULE: a concrete start/end time with a lifecycle status (SCHEDULED → READY → ONGOING → COMPLETED). Has its own id, independent of the Maintenance id. The public maintenance page is keyed by Maintenance Event id.
 _Avoid_: Occurrence, maintenance instance
+
+**Cancelled Event**:
+A Maintenance Event called off by an admin instead of running to completion. An event not yet started keeps its planned window when cancelled; an ONGOING event that is cancelled — or completed early — has its end time moved to the moment it was ended, so the recorded window always reflects what actually happened, not what was planned. COMPLETED means the work finished; CANCELLED means the occurrence was called off, before or during. Both are terminal: no relabeling, no un-cancel.
+_Avoid_: Skipped event, aborted event
+
+**Ended Notification**:
+The subscriber notification sent when a Maintenance Event reaches a terminal status — COMPLETED or CANCELLED, naturally or by an admin. One toggle (`ended`) governs all of them; there is no separate cancellation toggle.
