@@ -491,7 +491,7 @@ Add buffer time to your estimates:
 
 - Ensure BYDAY is set for weekly frequency
 - Check interval is positive number
-- Verify RRULE syntax (see [RRULE Patterns](/docs/maintenances/rrule-patterns))
+- Verify RRULE syntax (see [RRULE Patterns](/docs/v4/maintenances/rrule-patterns))
 
 **Problem:** Events not generated for recurring maintenance
 
@@ -511,6 +511,6 @@ Add buffer time to your estimates:
 
 ## Next Steps {#next-steps}
 
-- [Maintenance Events](/docs/maintenances/events) - Learn about event lifecycle and automatic transitions
-- [Maintenance Impact on Monitoring](/docs/maintenances/impact-on-monitoring) - How maintenances affect monitor status display
-- [RRULE Patterns](/docs/maintenances/rrule-patterns) - Advanced scheduling patterns and examples
+- [Maintenance Events](/docs/v4/maintenances/events) - Learn about event lifecycle and automatic transitions
+- [Maintenance Impact on Monitoring](/docs/v4/maintenances/impact-on-monitoring) - How maintenances affect monitor status display
+- [RRULE Patterns](/docs/v4/maintenances/rrule-patterns) - Advanced scheduling patterns and examples
