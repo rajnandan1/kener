@@ -49,27 +49,6 @@ export class MonitoringRepository extends BaseRepository {
       .orderBy("timestamp", "asc");
   }
 
-  // Groups by timestamp and applies priority: DOWN > DEGRADED > UP
-  async getMonitoringDataAll(monitor_tags: string[], start: number, end: number): Promise<MonitoringData[]> {
-    return await this.knex("monitoring_data")
-      .select(
-        "timestamp",
-        this.knex.raw(`
-          CASE 
-            WHEN MAX(CASE WHEN status = 'DOWN' THEN 1 ELSE 0 END) = 1 THEN 'DOWN'
-            WHEN MAX(CASE WHEN status = 'DEGRADED' THEN 1 ELSE 0 END) = 1 THEN 'DEGRADED'
-            ELSE 'UP'
-          END as status
-        `),
-      )
-      .whereIn("monitor_tag", monitor_tags)
-      .where("timestamp", ">=", start)
-      .where("timestamp", "<=", end)
-      .whereNotNull("status")
-      .groupBy("timestamp")
-      .orderBy("timestamp", "asc");
-  }
-
   async getLatestMonitoringData(monitor_tag: string): Promise<MonitoringData | undefined> {
     return await this.knex("monitoring_data")
       .where("monitor_tag", monitor_tag)

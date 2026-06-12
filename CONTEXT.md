@@ -84,6 +84,14 @@ _Avoid_: Default page, base page, root page
 The number of days of per-day status shown for a monitor, per device class (desktop/mobile). Configurable at two levels with the same defaults and bounds: per Page (applies to all its monitors) and per Monitor (overrides the page level).
 _Avoid_: History days, bar count
 
+**Overall Status**:
+The single status a set of monitors collapses to for display — the page banner, the all-monitors badge. The worst state wins: DOWN > DEGRADED > MAINTENANCE > UP. Maintenance is noteworthy but not a problem: it surfaces only when nothing is actively wrong, and never masks an outage or degradation. Distinct from Group Monitor scoring, which derives a monitor's own status from its members.
+_Avoid_: Page status, summary status, aggregate status
+
+**All-Monitors Badge**:
+The badge addressed by the `_` token, showing the Overall Status of every ACTIVE, non-hidden monitor site-wide. Not scoped to any Page — on a multi-page install it need not match any single page's banner.
+_Avoid_: Site badge, page badge
+
 **Page Settings**:
 A Page's display configuration: status-history window per device class, monitor layout style, per-page meta/social overrides, and event display preferences. The admin UI and the API expose the same settings, though each surface may name fields differently; a writer must never drop fields it does not understand.
 _Avoid_: Display settings (ambiguous with site-wide event display settings)

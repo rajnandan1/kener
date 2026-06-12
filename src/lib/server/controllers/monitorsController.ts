@@ -21,11 +21,11 @@ import type {
 import type { MonitorFilter } from "../db/repositories/base.js";
 import db from "../db/db.js";
 import type { PaginationInput } from "../../types/common.js";
-import type { DayWiseStatus, NumberWithChange } from "../../types/monitor.js";
 import GC, { getBadgeStyle, type BadgeStyle } from "../../global-constants.js";
 import { makeBadge } from "badge-maker";
 import { ErrorSvg } from "../../anywhere.js";
 import { GetLastMonitoringValue, SetLastHeartbeat, DeleteMonitorCaches } from "../cache/setGet.js";
+import { CollapseStatusCounts } from "../../clientTools.js";
 import { translate, isLocaleAvailable } from "../i18n.js";
 import type { HeartbeatMonitor, GroupMonitorTypeData } from "../types/monitor.js";
 
@@ -290,7 +290,7 @@ export const GetLatestMonitoringData = async (monitor_tag: string): Promise<Moni
 };
 export const GetLatestStatusActiveAll = async (): Promise<{ status: string }> => {
   //get all the active not hidden monitor tags
-  const monitors = await db.getMonitors({ status: "ACTIVE", is_hidden: "NO" });
+  const monitors = await db.getMonitors({ status: GC.ACTIVE, is_hidden: GC.NO });
   const monitor_tags = monitors.map((m) => m.tag);
 
   const latestData: MonitoringData[] = [];
@@ -302,19 +302,20 @@ export const GetLatestStatusActiveAll = async (): Promise<{ status: string }> =>
     }
   }
 
-  let status: string = GC.NO_DATA;
-  for (let i = 0; i < latestData.length; i++) {
-    //if any status is down then status = down, if any is degraded then status = degraded, down > degraded > up
-    if (latestData[i].status === GC.DOWN) {
-      status = GC.DOWN;
-    } else if (latestData[i].status === GC.DEGRADED && status !== GC.DOWN) {
-      status = GC.DEGRADED;
-    } else if (latestData[i].status === GC.UP && status !== GC.DOWN && status !== GC.DEGRADED) {
-      status = GC.UP;
+  const counts = { countOfUp: 0, countOfDown: 0, countOfDegraded: 0, countOfMaintenance: 0 };
+  for (const data of latestData) {
+    if (data.status === GC.UP) {
+      counts.countOfUp++;
+    } else if (data.status === GC.DOWN) {
+      counts.countOfDown++;
+    } else if (data.status === GC.DEGRADED) {
+      counts.countOfDegraded++;
+    } else if (data.status === GC.MAINTENANCE) {
+      counts.countOfMaintenance++;
     }
   }
   return {
-    status: status,
+    status: CollapseStatusCounts(counts),
   };
 };
 
@@ -461,9 +462,6 @@ export const GetAllAlertsPaginated = async (
 export const GetMonitoringData = async (tag: string, since: number, now: number): Promise<MonitoringData[]> => {
   return await db.getMonitoringData(tag, since, now);
 };
-export const GetMonitoringDataAll = async (tags: string[], since: number, now: number): Promise<MonitoringData[]> => {
-  return await db.getMonitoringDataAll(tags, since, now);
-};
 
 export const InsertNewAlert = async (data: MonitorAlertInsert): Promise<MonitorAlert | undefined> => {
   if (await db.alertExists(data.monitor_tag, data.monitor_status, data.alert_status)) {
@@ -547,7 +545,7 @@ export const GetBadge = async (badgeType: BadgeType, params: BadgeParams): Promi
       lastObj = await GetLatestStatusActiveAll();
     } else {
       // Single monitor status
-      const monitors = await GetMonitorsParsed({ tag, status: "ACTIVE", is_hidden: "NO" });
+      const monitors = await GetMonitorsParsed({ tag, status: GC.ACTIVE, is_hidden: GC.NO });
       if (monitors.length === 0) {
         return new Response(ErrorSvg, {
           headers: { "Content-Type": "image/svg+xml" },
@@ -635,14 +633,14 @@ export const GetBadge = async (badgeType: BadgeType, params: BadgeParams): Promi
       const siteData = await db.getSiteDataByKey("siteName");
       const siteName = siteData?.value as string | undefined;
       name = siteName || "All Monitors";
-      const goodMonitors = await GetMonitorsParsed({ status: "ACTIVE", is_hidden: "NO" });
+      const goodMonitors = await GetMonitorsParsed({ status: GC.ACTIVE, is_hidden: GC.NO });
       const activeTags = goodMonitors.map((monitor) => monitor.tag);
 
       stats = await db.getStatusCountsByInterval(activeTags, since, now - since, 1);
       uptimeData = UptimeCalculator(stats);
     } else {
       // Single monitor badge
-      const monitors = await GetMonitorsParsed({ tag });
+      const monitors = await GetMonitorsParsed({ tag, status: GC.ACTIVE, is_hidden: GC.NO });
       if (monitors.length === 0) {
         return new Response(ErrorSvg, {
           headers: { "Content-Type": "image/svg+xml" },
