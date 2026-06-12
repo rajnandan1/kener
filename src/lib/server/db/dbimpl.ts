@@ -48,7 +48,6 @@ class DbImpl {
   // ============ Monitoring Data ============
   insertMonitoringData!: MonitoringRepository["insertMonitoringData"];
   getMonitoringData!: MonitoringRepository["getMonitoringData"];
-  getMonitoringDataAll!: MonitoringRepository["getMonitoringDataAll"];
   getLatestMonitoringData!: MonitoringRepository["getLatestMonitoringData"];
   getLatestMonitoringDataN!: MonitoringRepository["getLatestMonitoringDataN"];
   getMonitoringDataPaginated!: MonitoringRepository["getMonitoringDataPaginated"];
@@ -409,7 +408,6 @@ class DbImpl {
   private bindMonitoringMethods(): void {
     this.insertMonitoringData = this.monitoring.insertMonitoringData.bind(this.monitoring);
     this.getMonitoringData = this.monitoring.getMonitoringData.bind(this.monitoring);
-    this.getMonitoringDataAll = this.monitoring.getMonitoringDataAll.bind(this.monitoring);
     this.getLatestMonitoringData = this.monitoring.getLatestMonitoringData.bind(this.monitoring);
     this.getLatestMonitoringDataN = this.monitoring.getLatestMonitoringDataN.bind(this.monitoring);
     this.getMonitoringDataPaginated = this.monitoring.getMonitoringDataPaginated.bind(this.monitoring);
