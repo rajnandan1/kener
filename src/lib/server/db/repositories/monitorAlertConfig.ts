@@ -166,7 +166,11 @@ export class MonitorAlertConfigRepository extends BaseRepository {
 
     if (configIds.length === 0) return 0;
 
-    // Remove the monitor from the junction table
+    // Remove the monitor from the junction table, along with its per-monitor
+    // alert state — a shared config survives the detach, but its v2 rows for
+    // this tag would otherwise dangle (see deleteMonitorAlertConfig on why
+    // FK cascades can't be relied on)
+    await this.knex("monitor_alerts_v2").where({ monitor_tag: monitorTag }).del();
     await this.knex("monitor_alerts_config_monitors").where({ monitor_tag: monitorTag }).del();
 
     // Delete any configs that now have zero monitors
