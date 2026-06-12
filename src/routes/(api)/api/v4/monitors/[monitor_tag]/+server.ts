@@ -1,11 +1,12 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import db from "$lib/server/db/db";
-import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
+import { GetMonitorsParsed, DeleteMonitorCompletelyUsingTag } from "$lib/server/controllers/monitorsController";
 import type {
   GetMonitorResponse,
   MonitorResponse,
   UpdateMonitorRequest,
   UpdateMonitorResponse,
+  DeleteMonitorResponse,
   BadRequestResponse,
 } from "$lib/types/api";
 
@@ -139,6 +140,23 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 
   const response: UpdateMonitorResponse = {
     monitor: updatedMonitor,
+  };
+
+  return json(response);
+};
+
+export const DELETE: RequestHandler = async ({ locals }) => {
+  // Monitor is validated by middleware and available in locals
+  const monitor = locals.monitor!;
+
+  // Removes the monitor and everything keyed to its tag: monitoring data,
+  // incident/maintenance/page links, alerts, alert configs, group
+  // memberships (with weight rebalancing), and caches. The scheduler drops
+  // the orphaned BullMQ job on its next reconcile.
+  await DeleteMonitorCompletelyUsingTag(monitor.tag);
+
+  const response: DeleteMonitorResponse = {
+    message: `Monitor '${monitor.tag}' deleted successfully`,
   };
 
   return json(response);

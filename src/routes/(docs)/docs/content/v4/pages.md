@@ -97,6 +97,10 @@ Example:
 delete services
 ```
 
+## Manage pages via API {#manage-pages-via-api}
+
+Pages support full CRUD through the v4 REST API (`/api/v4/pages`), including assigning monitors. The home page has an empty stored path, so the API addresses it with the special segment `~home` (for example `PATCH /api/v4/pages/~home`); its path cannot be changed and it cannot be deleted. See the [API Reference](/docs/spec/v4/) for endpoints and schemas.
+
 ## Tips {#tips}
 
 - Keep page paths short and stable (changing links later is disruptive).

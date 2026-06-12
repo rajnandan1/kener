@@ -46,7 +46,7 @@ A Monitoring Sample produced by a check that actually ran against the target, wh
 A Monitoring Sample written by the system or an admin rather than by a check: a raw heartbeat receipt (`SIGNAL`), a status pushed through the data API (`MANUAL`), a default-status fill (`DEFAULT_STATUS`), or an incident/maintenance overlay (`INCIDENT`, `MAINTENANCE`).
 
 **Stale Member**:
-A Member whose monitor is no longer an Eligible Monitor (paused or deleted after being added). It remains a Member until explicitly removed, but is excluded from the group score.
+A Member whose monitor was paused after being added, making it no longer an Eligible Monitor. It remains a Member until explicitly removed, but is excluded from the group score. Deletion never produces a Stale Member: deleting a monitor strips it from every group and rebalances the remaining members' weights equally.
 
 ### Alerting
 

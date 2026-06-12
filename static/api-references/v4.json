@@ -230,6 +230,30 @@
             "$ref": "#/components/responses/InternalServerError"
           }
         }
+      },
+      "delete": {
+        "tags": ["Monitors"],
+        "operationId": "deleteMonitor",
+        "summary": "Delete monitor",
+        "description": "Deletes the monitor and everything keyed to its tag: monitoring data, incident/maintenance/page links, alerts, alert configurations, and group memberships (remaining member weights are rebalanced equally). This is irreversible. Scheduled checks stop within seconds.",
+        "responses": {
+          "200": {
+            "description": "Monitor deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
       }
     },
     "/api/v4/monitors/{monitor_tag}/data": {
