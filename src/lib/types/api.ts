@@ -144,6 +144,10 @@ export interface UpdateMonitorResponse {
   monitor: MonitorRecordTyped;
 }
 
+export interface DeleteMonitorResponse {
+  message: string;
+}
+
 // Monitoring Data API types
 export interface MonitoringDataPoint {
   monitor_tag: string;

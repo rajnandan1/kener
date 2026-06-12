@@ -437,6 +437,7 @@ export const DeleteMonitorCompletelyUsingTag = async (tag: string): Promise<numb
   await db.deleteMonitorDataByTag(tag);
   await db.deleteIncidentMonitorsByTag(tag);
   await db.deleteMonitorAlertsByTag(tag);
+  await db.deleteMonitorAlertConfigsByMonitorTag(tag);
   await db.deletePageMonitorsByTag(tag);
   await db.deleteMaintenanceMonitorsByTag(tag);
   await removeTagFromGroupMonitors(tag);
