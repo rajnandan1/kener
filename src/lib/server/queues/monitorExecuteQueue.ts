@@ -114,6 +114,9 @@ const addWorker = () => {
     const { monitor, ts } = job.data as JobData;
     const serviceClient = new Service(monitor as MonitorWithType);
 
+    let incidentData: MonitoringResultTS = await manualIncident(monitor);
+    let maintenanceData: MonitoringResultTS = await manualMaintenance(monitor);
+
     const exeResult = await serviceClient.execute(ts);
 
     let realtimeData: MonitoringResultTS = {};
@@ -125,7 +128,10 @@ const addWorker = () => {
       // Confirmation Threshold damping (#712 / ADR 0009): scheduled checks only.
       const threshold = Number(monitor.confirmation_threshold ?? 1);
       const isScheduledCheck = ([GC.REALTIME, GC.TIMEOUT, GC.ERROR] as string[]).indexOf(exeResult.type) !== -1;
-      if (threshold > 1 && isScheduledCheck) {
+      // Confirmation Threshold freezes while an incident/maintenance overlay is active for this
+      // minute: the overlay wins display and the count must neither advance nor backfill (#756).
+      const overlayActive = incidentData[ts] !== undefined || maintenanceData[ts] !== undefined;
+      if (threshold > 1 && isScheduledCheck && !overlayActive) {
         const resolved = await resolveConfirmedStatus({
           monitor_tag: monitor.tag,
           ts,
@@ -139,9 +145,6 @@ const addWorker = () => {
         }
       }
     }
-
-    let incidentData: MonitoringResultTS = await manualIncident(monitor);
-    let maintenanceData: MonitoringResultTS = await manualMaintenance(monitor);
     let defaultData: MonitoringResultTS = {};
     let mergedData: MonitoringResultTS = {};
 
