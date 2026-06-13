@@ -263,6 +263,24 @@
           continue to work normally.
         </p>
       </div>
+      <div class="flex flex-col gap-2">
+        <Label for="monitor-confirmation-threshold">Grace period</Label>
+        <Input
+          id="monitor-confirmation-threshold"
+          type="number"
+          min="1"
+          max="60"
+          step="1"
+          value={monitor.confirmation_threshold ?? 1}
+          oninput={(e) => {
+            const v = parseInt((e.currentTarget as HTMLInputElement).value, 10);
+            monitor.confirmation_threshold = Number.isNaN(v) ? 1 : Math.min(60, Math.max(1, v));
+          }}
+        />
+        <p class="text-muted-foreground text-xs">
+          Require this many consecutive checks before a status change is recorded. 1 = off (record every check immediately).
+        </p>
+      </div>
     </div>
   </Card.Content>
   <Card.Footer class="flex justify-end">
