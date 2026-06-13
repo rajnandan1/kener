@@ -35,3 +35,8 @@ temp.js
 knip-output.txt
 check-output.txt
 translation-report.json
+
+# AI workflow docs (not version-controlled)
+CONTEXT.md
+docs/adr/0009-confirmation-threshold-write-time-backfill.md
+docs/superpowers/

@@ -39,7 +39,7 @@ const LOOKBACK_BUFFER = 10;
 
 /**
  * Resolve the status to commit for one scheduled-check observation under Confirmation
- * Threshold damping (issue #712 / ADR 0009).
+ * Threshold damping (issue #712).
  *
  * IMPORTANT ordering contract: this MUST be called BEFORE the current row at `ts` is
  * persisted, and only when no incident/maintenance overlay is active for `ts` (the caller

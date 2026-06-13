@@ -21,13 +21,13 @@ const ALERT_VISIBLE_TYPES = [GC.REALTIME, GC.ERROR, GC.TIMEOUT, GC.MANUAL, GC.DE
 
 /**
  * Scheduled-check sample types that count toward a monitor's Confirmation Threshold
- * (issue #712 / ADR 0009). Intentionally narrower than ALERT_VISIBLE_TYPES: MANUAL pushes
+ * (issue #712). Intentionally narrower than ALERT_VISIBLE_TYPES: MANUAL pushes
  * and DEFAULT_STATUS fill stay transparent to threshold counting.
  */
 const OBSERVED_CHECK_TYPES = [GC.REALTIME, GC.TIMEOUT, GC.ERROR];
 
 /**
- * Overlay sample types that FREEZE Confirmation Threshold counting (issue #712 / ADR 0009):
+ * Overlay sample types that FREEZE Confirmation Threshold counting (issue #712):
  * while one is active the count does not advance, and it acts as a hard boundary the
  * pending run cannot cross. Included in the confirmation lookback (unlike MANUAL/DEFAULT,
  * which stay transparent) so the resolver can detect the boundary.

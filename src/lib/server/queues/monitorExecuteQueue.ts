@@ -125,7 +125,7 @@ const addWorker = () => {
       // Always record what the check actually observed (forensics + grace counting).
       realtimeData[ts].raw_status = exeResult.status;
 
-      // Confirmation Threshold damping (#712 / ADR 0009): scheduled checks only.
+      // Confirmation Threshold damping (#712): scheduled checks only.
       const threshold = Number(monitor.confirmation_threshold ?? 1);
       const isScheduledCheck = ([GC.REALTIME, GC.TIMEOUT, GC.ERROR] as string[]).indexOf(exeResult.type) !== -1;
       // Confirmation Threshold freezes while an incident/maintenance overlay is active for this
