@@ -352,19 +352,40 @@ export class MonitoringRepository extends BaseRepository {
   }
 
   /**
-   * Backfill a confirmed status flip: set each row's committed status to its observed
-   * raw_status. `message` is applied to error_message (use a generic string for confirmed
-   * outages, null for confirmed recoveries).
+   * The committed status of the most recent real scheduled-check observation before `beforeTs`
+   * — the Confirmation Threshold "anchor" (the side currently shown). Looks past overlays,
+   * MANUAL/DEFAULT, and NO_DATA so a long incident/maintenance window can never hide the anchor
+   * (issue #712). Returns null when there is no prior observation (cold start).
+   */
+  async getLastObservedStatus(monitor_tag: string, beforeTs: number): Promise<string | null> {
+    const row = await this.knex("monitoring_data")
+      .select("status")
+      .where("monitor_tag", monitor_tag)
+      .where("timestamp", "<", beforeTs)
+      .whereIn("type", OBSERVED_CHECK_TYPES)
+      .whereNot("status", GC.NO_DATA)
+      .orderBy("timestamp", "desc")
+      .limit(1)
+      .first();
+    return row ? (row.status ?? null) : null;
+  }
+
+  /**
+   * Backfill a confirmed status flip: set each row's committed status to its observed raw_status.
+   * `confirmThreshold` is the number of consecutive checks that confirmed the flip — when it is a
+   * number the run resolved to an unhealthy side and a per-row note ("Down"/"Degraded confirmed
+   * after N consecutive checks", matching each row's own severity) is appended to the existing
+   * error text; when it is null the run resolved to UP (recovery) and the error text is cleared.
    */
   async backfillConfirmedStatus(
     monitor_tag: string,
     timestamps: number[],
-    message: string | null,
+    confirmThreshold: number | null,
   ): Promise<number> {
     if (timestamps.length === 0) return 0;
 
     // Recovery (confirmed UP): rows become the UP side — clear any held error text in one update.
-    if (message === null) {
+    if (confirmThreshold === null) {
       return await this.knex("monitoring_data")
         .where("monitor_tag", monitor_tag)
         .whereIn("timestamp", timestamps)
@@ -375,10 +396,10 @@ export class MonitoringRepository extends BaseRepository {
         });
     }
 
-    // Confirmed unhealthy: set each row's status from its observed raw_status and APPEND the
-    // confirmation note to the existing error text (preserving the observed failure reason).
-    // Done per-row for portable string concatenation (|| vs CONCAT differ across SQLite/PG/MySQL)
-    // and to stay idempotent if the backfill is ever replayed.
+    // Confirmed unhealthy: set each row's status from its observed raw_status and APPEND a
+    // severity-matched confirmation note to the existing error text (preserving the observed
+    // failure reason). Done per-row for portable string concatenation (|| vs CONCAT differ across
+    // SQLite/PG/MySQL), per-row severity wording, and idempotency if the backfill is replayed.
     const rows = await this.knex("monitoring_data")
       .select("timestamp", "error_message", "raw_status")
       .where("monitor_tag", monitor_tag)
@@ -387,14 +408,16 @@ export class MonitoringRepository extends BaseRepository {
 
     let updated = 0;
     for (const row of rows) {
+      const severity = row.raw_status === GC.DEGRADED ? "Degraded" : "Down";
+      const note = `${severity} confirmed after ${confirmThreshold} consecutive checks`;
       const existing: string | null = row.error_message;
       let nextMessage: string;
       if (!existing) {
-        nextMessage = message;
-      } else if (existing.indexOf(message) !== -1) {
+        nextMessage = note;
+      } else if (existing.indexOf(note) !== -1) {
         nextMessage = existing; // already appended — keep idempotent
       } else {
-        nextMessage = `${existing} | ${message}`;
+        nextMessage = `${existing} | ${note}`;
       }
       updated += await this.knex("monitoring_data")
         .where({ monitor_tag, timestamp: row.timestamp })

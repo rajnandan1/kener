@@ -80,7 +80,10 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 
   updateData.is_hidden = body.is_hidden !== undefined ? body.is_hidden : existingMonitor.is_hidden;
 
-  if (body.confirmation_threshold !== undefined && body.confirmation_threshold !== null) {
+  if (body.confirmation_threshold === null) {
+    // Explicit null resets the grace period to the default (1 = off); undefined keeps the existing value.
+    updateData.confirmation_threshold = 1;
+  } else if (body.confirmation_threshold !== undefined) {
     const ct = Number(body.confirmation_threshold);
     if (!Number.isInteger(ct) || ct < 1 || ct > 60) {
       const errorResponse: BadRequestResponse = {

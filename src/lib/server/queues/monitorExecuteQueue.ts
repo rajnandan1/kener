@@ -26,8 +26,13 @@ const getQueue = () => {
   return monitorExecuteQueue;
 };
 
-async function manualMaintenance(monitor: MonitorRecordTyped): Promise<{ [timestamp: number]: MonitoringResult }> {
-  let startTs = GetMinuteStartNowTimestampUTC();
+async function manualMaintenance(
+  monitor: MonitorRecordTyped,
+  ts?: number,
+): Promise<{ [timestamp: number]: MonitoringResult }> {
+  // Key by the job's `ts` (already a minute-start) so the overlay aligns with the realtime/default
+  // rows and the freeze gate; fall back to "now" only when called without a ts.
+  let startTs = ts !== undefined ? ts : GetMinuteStartNowTimestampUTC();
   let maintenanceArr = await db.getMaintenancesByMonitorTagRealtime(monitor.tag, startTs);
 
   let impact = "";
@@ -67,8 +72,13 @@ async function manualMaintenance(monitor: MonitorRecordTyped): Promise<{ [timest
   return manualData;
 }
 
-async function manualIncident(monitor: MonitorRecordTyped): Promise<{ [timestamp: number]: MonitoringResult }> {
-  let startTs = GetMinuteStartNowTimestampUTC();
+async function manualIncident(
+  monitor: MonitorRecordTyped,
+  ts?: number,
+): Promise<{ [timestamp: number]: MonitoringResult }> {
+  // Key by the job's `ts` (already a minute-start) so the overlay aligns with the realtime/default
+  // rows and the freeze gate; fall back to "now" only when called without a ts.
+  let startTs = ts !== undefined ? ts : GetMinuteStartNowTimestampUTC();
   let incidentArr = await db.getIncidentsByMonitorTagRealtime(monitor.tag, startTs);
 
   let impact = "";
@@ -114,10 +124,13 @@ const addWorker = () => {
     const { monitor, ts } = job.data as JobData;
     const serviceClient = new Service(monitor as MonitorWithType);
 
-    let incidentData: MonitoringResultTS = await manualIncident(monitor);
-    let maintenanceData: MonitoringResultTS = await manualMaintenance(monitor);
-
     const exeResult = await serviceClient.execute(ts);
+
+    // Fetch overlays AFTER the check runs so a maintenance/incident that starts mid-check is still
+    // detected, and key them by the job's `ts` so the freeze gate (incidentData[ts]) is
+    // timestamp-safe even if the job is delayed or retried (#756).
+    let incidentData: MonitoringResultTS = await manualIncident(monitor, ts);
+    let maintenanceData: MonitoringResultTS = await manualMaintenance(monitor, ts);
 
     let realtimeData: MonitoringResultTS = {};
     if (exeResult) {
@@ -127,7 +140,7 @@ const addWorker = () => {
 
       // Confirmation Threshold damping (#712): scheduled checks only.
       const threshold = Number(monitor.confirmation_threshold ?? 1);
-      const isScheduledCheck = ([GC.REALTIME, GC.TIMEOUT, GC.ERROR] as string[]).indexOf(exeResult.type) !== -1;
+      const isScheduledCheck = ([GC.REALTIME, GC.TIMEOUT, GC.ERROR] as string[]).includes(exeResult.type);
       // Confirmation Threshold freezes while an incident/maintenance overlay is active for this
       // minute: the overlay wins display and the count must neither advance nor backfill (#756).
       const overlayActive = incidentData[ts] !== undefined || maintenanceData[ts] !== undefined;

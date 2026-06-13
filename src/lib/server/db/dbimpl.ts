@@ -65,6 +65,7 @@ class DbImpl {
   consecutivelyLatencyGreaterThan!: MonitoringRepository["consecutivelyLatencyGreaterThan"];
   consecutivelyLatencyLessThan!: MonitoringRepository["consecutivelyLatencyLessThan"];
   getRecentSamplesForConfirmation!: MonitoringRepository["getRecentSamplesForConfirmation"];
+  getLastObservedStatus!: MonitoringRepository["getLastObservedStatus"];
   backfillConfirmedStatus!: MonitoringRepository["backfillConfirmedStatus"];
   updateMonitoringData!: MonitoringRepository["updateMonitoringData"];
   deleteMonitorDataByTag!: MonitoringRepository["deleteMonitorDataByTag"];
@@ -427,6 +428,7 @@ class DbImpl {
     this.consecutivelyLatencyGreaterThan = this.monitoring.consecutivelyLatencyGreaterThan.bind(this.monitoring);
     this.consecutivelyLatencyLessThan = this.monitoring.consecutivelyLatencyLessThan.bind(this.monitoring);
     this.getRecentSamplesForConfirmation = this.monitoring.getRecentSamplesForConfirmation.bind(this.monitoring);
+    this.getLastObservedStatus = this.monitoring.getLastObservedStatus.bind(this.monitoring);
     this.backfillConfirmedStatus = this.monitoring.backfillConfirmedStatus.bind(this.monitoring);
     this.updateMonitoringData = this.monitoring.updateMonitoringData.bind(this.monitoring);
     this.deleteMonitorDataByTag = this.monitoring.deleteMonitorDataByTag.bind(this.monitoring);

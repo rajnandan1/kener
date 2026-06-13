@@ -3,6 +3,17 @@ import { BaseRepository, type MonitorFilter, type CountResult } from "./base.js"
 import type { MonitorRecord, MonitorRecordInsert } from "../../types/db.js";
 
 /**
+ * Clamp the Confirmation Threshold to its 1–60 invariant at the data layer, so the bound holds
+ * for every app write path (v4 API, manage API, clone, group), not only the v4 API validator.
+ * A non-finite/missing value defaults to 1 (off).
+ */
+function clampConfirmationThreshold(value: number | null | undefined): number {
+  const n = Math.round(Number(value));
+  if (!Number.isFinite(n)) return 1;
+  return Math.min(60, Math.max(1, n));
+}
+
+/**
  * Repository for monitors CRUD operations
  */
 export class MonitorsRepository extends BaseRepository {
@@ -28,7 +39,7 @@ export class MonitorsRepository extends BaseRepository {
       type_data: data.type_data,
       day_degraded_minimum_count: data.day_degraded_minimum_count,
       day_down_minimum_count: data.day_down_minimum_count,
-      confirmation_threshold: data.confirmation_threshold ?? 1,
+      confirmation_threshold: clampConfirmationThreshold(data.confirmation_threshold),
       include_degraded_in_downtime: data.include_degraded_in_downtime,
       is_hidden: data.is_hidden || "NO",
       monitor_settings_json: data.monitor_settings_json,
@@ -52,7 +63,7 @@ export class MonitorsRepository extends BaseRepository {
       type_data: data.type_data,
       day_degraded_minimum_count: data.day_degraded_minimum_count,
       day_down_minimum_count: data.day_down_minimum_count,
-      confirmation_threshold: data.confirmation_threshold ?? 1,
+      confirmation_threshold: clampConfirmationThreshold(data.confirmation_threshold),
       include_degraded_in_downtime: data.include_degraded_in_downtime,
       is_hidden: data.is_hidden,
       monitor_settings_json: data.monitor_settings_json,
