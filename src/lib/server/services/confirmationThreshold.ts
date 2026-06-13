@@ -26,18 +26,28 @@ export interface ResolveResult {
 
 /** Minimal data access this resolver needs; defaults to the db singleton, injectable for tests. */
 export interface ConfirmationDeps {
-  getRecentObservedSamples: typeof db.getRecentObservedSamples;
+  getRecentSamplesForConfirmation: typeof db.getRecentSamplesForConfirmation;
   backfillConfirmedStatus: typeof db.backfillConfirmedStatus;
 }
+
+// Overlay sample types that freeze the count (must match OVERLAY_TYPES in the monitoring repository).
+const OVERLAY_TYPES: string[] = [GC.INCIDENT, GC.MAINTENANCE];
+// Extra lookback rows beyond the threshold, to tolerate neutral (NO_DATA) rows that are skipped
+// rather than counted. Pathologically neutral-dense histories may delay confirmation by a check.
+const LOOKBACK_BUFFER = 10;
 
 /**
  * Resolve the status to commit for one scheduled-check observation under Confirmation
  * Threshold damping (issue #712 / ADR 0009).
  *
  * IMPORTANT ordering contract: this MUST be called BEFORE the current row at `ts` is
- * persisted. It anchors on the most recent stored sample (timestamp < ts); if the row at
- * `ts` were already written, it would mis-anchor the confirmed side. The scheduled-check
- * write path calls this, then persists the row with the returned status.
+ * persisted, and only when no incident/maintenance overlay is active for `ts` (the caller
+ * gates that — overlays freeze the count). It anchors on the most recent stored sample
+ * (timestamp < ts).
+ *
+ * Neutral (`NO_DATA`) observations are skipped in the count (neither advance nor reset).
+ * Overlay rows act as a hard boundary: the pending run never crosses one, so monitoring
+ * resumes with a fresh count after an incident/maintenance window.
  */
 export async function resolveConfirmedStatus(
   input: ResolveInput,
@@ -46,36 +56,46 @@ export async function resolveConfirmedStatus(
   const { monitor_tag, ts, rawStatus, threshold } = input;
   const observedSide = sideOf(rawStatus);
 
-  // Neutral observation (NO_DATA): pass through untouched (full neutrality is hardening slice #756).
+  // Neutral observation (NO_DATA): pass through untouched — written honestly as grey.
   if (observedSide === null) {
     return { status: rawStatus, pendingHold: false };
   }
 
-  const recent = await deps.getRecentObservedSamples(monitor_tag, ts, threshold);
+  const recent = await deps.getRecentSamplesForConfirmation(monitor_tag, ts, threshold + LOOKBACK_BUFFER);
 
-  // Cold start: no prior observation to anchor against -> commit immediately.
-  if (recent.length === 0) {
-    return { status: rawStatus, pendingHold: false };
+  // Confirmed side = the most recent non-neutral scheduled-check observation's committed
+  // status (overlays and NO_DATA are skipped — they don't define the confirmed side).
+  let confirmedSide: Side = null;
+  for (const row of recent) {
+    if (row.type !== null && OVERLAY_TYPES.indexOf(row.type) !== -1) continue; // overlay: skip for anchor
+    const s = sideOf(row.status);
+    if (s !== null) {
+      confirmedSide = s;
+      break;
+    }
   }
 
-  // A null stored status (unknown anchor) is treated as no-flip: commit the observation as-is.
-  const confirmedStatus = recent[0].status ?? rawStatus;
-  const confirmedSide = sideOf(confirmedStatus);
-
-  // Same side, or anchor is neutral: no flip — commit the observed status (and its severity).
+  // Cold start / no usable anchor / same side: commit immediately.
   if (confirmedSide === null || observedSide === confirmedSide) {
     return { status: rawStatus, pendingHold: false };
   }
 
-  // Opposite side: count the trailing pending run of opposite-side observations (incl. current).
+  // The displayed status to hold while pending = the confirmed side's actual stored status.
+  const confirmedStatus = confirmedSideStatus(recent, confirmedSide);
+
+  // Opposite side: count the trailing pending run (incl. current = 1), skipping NO_DATA
+  // (neutral) and stopping at an overlay boundary (freeze) or a confirmed-side observation.
   let pendingRun = 1;
   const pendingTimestamps: number[] = [];
   for (const row of recent) {
-    if (sideOf(row.raw_status) === observedSide && sideOf(row.status) === confirmedSide) {
+    if (row.type !== null && OVERLAY_TYPES.indexOf(row.type) !== -1) break; // freeze boundary
+    const rawSide = sideOf(row.raw_status);
+    if (rawSide === null) continue; // NO_DATA: neutral — neither advance nor reset
+    if (rawSide === observedSide && sideOf(row.status) === confirmedSide) {
       pendingRun++;
       pendingTimestamps.push(row.timestamp);
     } else {
-      break;
+      break; // hit a confirmed-side observation (the anchor)
     }
   }
 
@@ -88,4 +108,16 @@ export async function resolveConfirmedStatus(
 
   // Still pending: hold the confirmed side, display clean.
   return { status: confirmedStatus, pendingHold: true };
+}
+
+/** The displayed status of the confirmed side — the most recent non-neutral, non-overlay row on it. */
+function confirmedSideStatus(
+  recent: Array<{ status: string | null; raw_status: string | null; type: string | null }>,
+  confirmedSide: Side,
+): string {
+  for (const row of recent) {
+    if (row.type !== null && OVERLAY_TYPES.indexOf(row.type) !== -1) continue;
+    if (sideOf(row.status) === confirmedSide && row.status) return row.status;
+  }
+  return confirmedSide === "UP" ? GC.UP : GC.DOWN;
 }
