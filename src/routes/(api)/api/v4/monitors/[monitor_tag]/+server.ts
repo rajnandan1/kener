@@ -80,6 +80,19 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 
   updateData.is_hidden = body.is_hidden !== undefined ? body.is_hidden : existingMonitor.is_hidden;
 
+  if (body.confirmation_threshold !== undefined && body.confirmation_threshold !== null) {
+    const ct = Number(body.confirmation_threshold);
+    if (!Number.isInteger(ct) || ct < 1 || ct > 60) {
+      const errorResponse: BadRequestResponse = {
+        error: { code: "BAD_REQUEST", message: "confirmation_threshold must be an integer between 1 and 60" },
+      };
+      return json(errorResponse, { status: 400 });
+    }
+    updateData.confirmation_threshold = ct;
+  } else {
+    updateData.confirmation_threshold = existingMonitor.confirmation_threshold ?? 1;
+  }
+
   // Handle JSON fields - merge with existing data instead of replacing
   if (body.type_data !== undefined) {
     if (body.type_data === null) {

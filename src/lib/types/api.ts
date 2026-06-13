@@ -92,6 +92,7 @@ export interface MonitorResponse {
   type_data: MonitorTypeData | null;
   include_degraded_in_downtime: string;
   is_hidden: string;
+  confirmation_threshold?: number | null;
   monitor_settings_json: MonitorSettings | null;
   created_at: string;
   updated_at: string;
@@ -118,6 +119,7 @@ export interface CreateMonitorRequest {
   type_data?: MonitorTypeData | null;
   include_degraded_in_downtime?: string;
   is_hidden?: string;
+  confirmation_threshold?: number | null;
   monitor_settings_json?: MonitorSettings | null;
 }
 
@@ -137,6 +139,7 @@ export interface UpdateMonitorRequest {
   type_data?: MonitorTypeData | null;
   include_degraded_in_downtime?: string;
   is_hidden?: string;
+  confirmation_threshold?: number | null;
   monitor_settings_json?: MonitorSettings | null;
 }
 
