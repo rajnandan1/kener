@@ -45,6 +45,10 @@ A Monitoring Sample produced by a check that actually ran against the target, wh
 **Synthetic Sample**:
 A Monitoring Sample written by the system or an admin rather than by a check: a raw heartbeat receipt (`SIGNAL`), a status pushed through the data API (`MANUAL`), a default-status fill (`DEFAULT_STATUS`), or an incident/maintenance overlay (`INCIDENT`, `MAINTENANCE`).
 
+**Confirmation Threshold**:
+The number of consecutive scheduled-check observations on the opposite side a Monitor needs before its recorded status flips. A per-monitor count, default 1 (every observation is committed immediately — no damping). With a higher value the recorded timeline only changes side — healthy (UP) ↔ unhealthy (DOWN or DEGRADED) — after that many consecutive observations on the new side; shorter runs are treated as transient and never surface as a status change. Once a flip is confirmed, the observations leading up to it are recorded at their observed status, so a confirmed outage reads as down from its first failing check, not from the moment of confirmation. Severity changes within an already-unhealthy stretch (DOWN ↔ DEGRADED) are committed immediately, since the side is not changing. Only scheduled checks (`REALTIME`/`TIMEOUT`/`ERROR`) count toward the threshold; manual data-API pushes (`MANUAL`), default-status fill (`DEFAULT_STATUS`), and incident/maintenance overlays pass through unaffected and neither advance nor reset it. Parallels the alerting Failure/Success Thresholds, which gate alerts rather than the recorded timeline.
+_Avoid_: Grace period (acceptable as a UI label only), debounce, flap threshold
+
 **Stale Member**:
 A Member whose monitor was paused after being added, making it no longer an Eligible Monitor. It remains a Member until explicitly removed, but is excluded from the group score. Deletion never produces a Stale Member: deleting a monitor strips it from every group and rebalances the remaining members' weights equally.
 
