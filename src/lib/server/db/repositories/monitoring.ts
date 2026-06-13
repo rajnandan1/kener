@@ -20,17 +20,24 @@ import type {
 const ALERT_VISIBLE_TYPES = [GC.REALTIME, GC.ERROR, GC.TIMEOUT, GC.MANUAL, GC.DEFAULT_STATUS];
 
 /**
+ * Scheduled-check sample types that count toward a monitor's Confirmation Threshold
+ * (issue #712 / ADR 0009). Intentionally narrower than ALERT_VISIBLE_TYPES: MANUAL pushes
+ * and DEFAULT_STATUS fill stay transparent to threshold counting.
+ */
+const OBSERVED_CHECK_TYPES = [GC.REALTIME, GC.TIMEOUT, GC.ERROR];
+
+/**
  * Repository for monitoring data operations
  */
 export class MonitoringRepository extends BaseRepository {
   async insertMonitoringData(data: MonitoringDataInsert): Promise<MonitoringData | null> {
-    const { monitor_tag, timestamp, status, latency, type, error_message } = data;
+    const { monitor_tag, timestamp, status, latency, type, error_message, raw_status } = data;
 
     // Perform insert/update - works across PostgreSQL, MySQL, and SQLite
     await this.knex("monitoring_data")
-      .insert({ monitor_tag, timestamp, status, latency, type, error_message })
+      .insert({ monitor_tag, timestamp, status, latency, type, error_message, raw_status })
       .onConflict(["monitor_tag", "timestamp"])
-      .merge({ status, latency, type, error_message });
+      .merge({ status, latency, type, error_message, raw_status });
 
     // Query and return the inserted/updated record (works consistently across all databases)
     const record = await this.knex("monitoring_data")
@@ -312,6 +319,46 @@ export class MonitoringRepository extends BaseRepository {
       .first();
 
     return result.is_recovered === 1;
+  }
+
+  /**
+   * Most recent scheduled-check observations before `beforeTs`, newest first.
+   * Only REALTIME/TIMEOUT/ERROR rows — overlays, MANUAL, and DEFAULT are excluded so they
+   * stay transparent to Confirmation Threshold counting (issue #712 / ADR 0009).
+   */
+  async getRecentObservedSamples(
+    monitor_tag: string,
+    beforeTs: number,
+    limit: number,
+  ): Promise<Array<{ timestamp: number; status: string | null; raw_status: string | null }>> {
+    return await this.knex("monitoring_data")
+      .select("timestamp", "status", "raw_status")
+      .where("monitor_tag", monitor_tag)
+      .where("timestamp", "<", beforeTs)
+      .whereIn("type", OBSERVED_CHECK_TYPES)
+      .orderBy("timestamp", "desc")
+      .limit(limit);
+  }
+
+  /**
+   * Backfill a confirmed status flip: set each row's committed status to its observed
+   * raw_status. `message` is applied to error_message (use a generic string for confirmed
+   * outages, null for confirmed recoveries).
+   */
+  async backfillConfirmedStatus(
+    monitor_tag: string,
+    timestamps: number[],
+    message: string | null,
+  ): Promise<number> {
+    if (timestamps.length === 0) return 0;
+    return await this.knex("monitoring_data")
+      .where("monitor_tag", monitor_tag)
+      .whereIn("timestamp", timestamps)
+      .whereNotNull("raw_status")
+      .update({
+        status: this.knex.ref("raw_status"),
+        error_message: message,
+      });
   }
 
   async updateMonitoringData(
