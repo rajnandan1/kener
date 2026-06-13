@@ -27,6 +27,14 @@ const ALERT_VISIBLE_TYPES = [GC.REALTIME, GC.ERROR, GC.TIMEOUT, GC.MANUAL, GC.DE
 const OBSERVED_CHECK_TYPES = [GC.REALTIME, GC.TIMEOUT, GC.ERROR];
 
 /**
+ * Overlay sample types that FREEZE Confirmation Threshold counting (issue #712 / ADR 0009):
+ * while one is active the count does not advance, and it acts as a hard boundary the
+ * pending run cannot cross. Included in the confirmation lookback (unlike MANUAL/DEFAULT,
+ * which stay transparent) so the resolver can detect the boundary.
+ */
+const OVERLAY_TYPES = [GC.INCIDENT, GC.MAINTENANCE];
+
+/**
  * Repository for monitoring data operations
  */
 export class MonitoringRepository extends BaseRepository {
@@ -322,20 +330,22 @@ export class MonitoringRepository extends BaseRepository {
   }
 
   /**
-   * Most recent scheduled-check observations before `beforeTs`, newest first.
-   * Only REALTIME/TIMEOUT/ERROR rows — overlays, MANUAL, and DEFAULT are excluded so they
-   * stay transparent to Confirmation Threshold counting (issue #712 / ADR 0009).
+   * Recent samples the Confirmation Threshold resolver needs, newest first: scheduled-check
+   * observations (REALTIME/TIMEOUT/ERROR) plus incident/maintenance overlays. MANUAL pushes
+   * and DEFAULT fill are excluded — they stay transparent to the counter. Returns `type` so
+   * the resolver can stop at overlay rows (freeze); observations whose status is NO_DATA are
+   * skipped as neutral by the resolver.
    */
-  async getRecentObservedSamples(
+  async getRecentSamplesForConfirmation(
     monitor_tag: string,
     beforeTs: number,
     limit: number,
-  ): Promise<Array<{ timestamp: number; status: string | null; raw_status: string | null }>> {
+  ): Promise<Array<{ timestamp: number; status: string | null; raw_status: string | null; type: string | null }>> {
     return await this.knex("monitoring_data")
-      .select("timestamp", "status", "raw_status")
+      .select("timestamp", "status", "raw_status", "type")
       .where("monitor_tag", monitor_tag)
       .where("timestamp", "<", beforeTs)
-      .whereIn("type", OBSERVED_CHECK_TYPES)
+      .whereIn("type", [...OBSERVED_CHECK_TYPES, ...OVERLAY_TYPES])
       .orderBy("timestamp", "desc")
       .limit(limit);
   }
