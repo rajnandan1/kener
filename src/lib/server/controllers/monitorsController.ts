@@ -92,6 +92,7 @@ interface MonitoringDataInput {
   latency?: number;
   type: string;
   error_message?: string | null;
+  raw_status?: string | null;
 }
 
 interface InterpolatedDataEntry {
@@ -112,6 +113,7 @@ export const InsertMonitoringData = async (data: MonitoringDataInput): Promise<M
     latency: data.latency || 0,
     type: data.type,
     error_message: data.error_message,
+    raw_status: data.raw_status,
   });
 };
 

@@ -7,6 +7,7 @@ import { GetMinuteStartNowTimestampUTC } from "../tool.js";
 import db from "../db/db.js";
 import monitorResponseQueue from "./monitorResponseQueue";
 import GC from "../../global-constants.js";
+import { resolveConfirmedStatus } from "../services/confirmationThreshold.js";
 
 let monitorExecuteQueue: Queue | null = null;
 let worker: Worker | null = null;
@@ -118,6 +119,25 @@ const addWorker = () => {
     let realtimeData: MonitoringResultTS = {};
     if (exeResult) {
       realtimeData[ts] = exeResult;
+      // Always record what the check actually observed (forensics + grace counting).
+      realtimeData[ts].raw_status = exeResult.status;
+
+      // Confirmation Threshold damping (#712 / ADR 0009): scheduled checks only.
+      const threshold = Number(monitor.confirmation_threshold ?? 1);
+      const isScheduledCheck = ([GC.REALTIME, GC.TIMEOUT, GC.ERROR] as string[]).indexOf(exeResult.type) !== -1;
+      if (threshold > 1 && isScheduledCheck) {
+        const resolved = await resolveConfirmedStatus({
+          monitor_tag: monitor.tag,
+          ts,
+          rawStatus: exeResult.status,
+          threshold,
+        });
+        realtimeData[ts].status = resolved.status;
+        if (resolved.pendingHold) {
+          realtimeData[ts].latency = 0;
+          delete realtimeData[ts].error_message;
+        }
+      }
     }
 
     let incidentData: MonitoringResultTS = await manualIncident(monitor);
@@ -183,6 +203,15 @@ const addWorker = () => {
       const ts = parseInt(timestamp);
       if (realtimeData[ts]?.latency !== undefined && realtimeData[ts].latency > 0) {
         mergedData[ts].latency = realtimeData[ts].latency;
+      }
+    }
+
+    // Preserve raw_status from realtime monitoring (overlays replace the merged object wholesale,
+    // so re-attach the observed value the resolver recorded).
+    for (const timestamp in mergedData) {
+      const ts = parseInt(timestamp);
+      if (realtimeData[ts]?.raw_status !== undefined) {
+        mergedData[ts].raw_status = realtimeData[ts].raw_status;
       }
     }
 
