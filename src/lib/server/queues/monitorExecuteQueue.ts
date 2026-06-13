@@ -140,7 +140,9 @@ const addWorker = () => {
         });
         realtimeData[ts].status = resolved.status;
         if (resolved.pendingHold) {
-          realtimeData[ts].latency = 0;
+          // Hold the confirmed side for display, but keep the real measured latency — zeroing it
+          // would lose data and dent the latency chart during every grace window. Only the error
+          // text is dropped so a held row never shows a status-contradicting failure message.
           delete realtimeData[ts].error_message;
         }
       }
