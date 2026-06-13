@@ -264,6 +264,7 @@ export const CloneMonitor = async ({ sourceTag, newTag, newName }: CloneMonitorI
     type_data: source.type_data,
     day_degraded_minimum_count: source.day_degraded_minimum_count,
     day_down_minimum_count: source.day_down_minimum_count,
+    confirmation_threshold: source.confirmation_threshold,
     include_degraded_in_downtime: source.include_degraded_in_downtime,
     is_hidden: source.is_hidden,
     monitor_settings_json: source.monitor_settings_json,
@@ -420,6 +421,7 @@ async function removeTagFromGroupMonitors(tag: string): Promise<void> {
       type_data: JSON.stringify(typeData),
       day_degraded_minimum_count: group.day_degraded_minimum_count,
       day_down_minimum_count: group.day_down_minimum_count,
+      confirmation_threshold: group.confirmation_threshold,
       include_degraded_in_downtime: group.include_degraded_in_downtime,
       is_hidden: group.is_hidden,
       monitor_settings_json:
