@@ -8,6 +8,8 @@ Damping happens at **write time**, not read time. The rejected alternative — r
 
 The flip is **retroactive**, not forward-only. Forward-only (first N−1 failing samples stay `UP` forever, `DOWN` begins at confirmation) is simpler — history would stay append-only — but it systematically shaves N−1 minutes off the front of every real outage, permanently flattering uptime and misreporting outage start times. Retroactive backfill rewrites a bounded window (at most threshold−1 rows, one `UPDATE`) at the moment of crossing; it also makes the threshold compose with the alert Failure Threshold by `max` rather than `+`, because once backfilled the alert lookback sees N consecutive confirmed rows immediately. The cost accepted: `monitoring_data` is no longer append-only over the pending window, so the last-value cache and any reader that observed those rows mid-window saw the pre-flip side until convergence.
 
+A held (pending) row keeps the check's real measured latency and observed error text — no diagnostic information is discarded — tagged with `| Status held during grace period`. On confirmation the backfill preserves that text and appends `| Down confirmed after N consecutive checks` (rather than overwriting it); a confirmed recovery clears the error, since the row becomes the UP side. `raw_status` remains the canonical record of what each check observed.
+
 Deliberately accepted boundaries, chosen for one uniform rule rather than special cases:
 
 - **Count, not minutes.** The threshold is consecutive observations, well-defined for any cron, matching the alerting thresholds' unit; for the common every-minute cron, count and minutes coincide.

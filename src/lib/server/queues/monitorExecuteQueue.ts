@@ -140,10 +140,13 @@ const addWorker = () => {
         });
         realtimeData[ts].status = resolved.status;
         if (resolved.pendingHold) {
-          // Hold the confirmed side for display, but keep the real measured latency — zeroing it
-          // would lose data and dent the latency chart during every grace window. Only the error
-          // text is dropped so a held row never shows a status-contradicting failure message.
-          delete realtimeData[ts].error_message;
+          // Hold the confirmed side for display, but PRESERVE the observed latency and error text —
+          // no diagnostic info is discarded. Tag the row to record that the status is being held
+          // during the grace period; on confirmation the backfill appends the confirmation note (#756).
+          const observedError = realtimeData[ts].error_message;
+          realtimeData[ts].error_message = observedError
+            ? `${observedError} | Status held during grace period`
+            : "Status held during grace period";
         }
       }
     }

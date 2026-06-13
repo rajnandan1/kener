@@ -362,14 +362,45 @@ export class MonitoringRepository extends BaseRepository {
     message: string | null,
   ): Promise<number> {
     if (timestamps.length === 0) return 0;
-    return await this.knex("monitoring_data")
+
+    // Recovery (confirmed UP): rows become the UP side — clear any held error text in one update.
+    if (message === null) {
+      return await this.knex("monitoring_data")
+        .where("monitor_tag", monitor_tag)
+        .whereIn("timestamp", timestamps)
+        .whereNotNull("raw_status")
+        .update({
+          status: this.knex.ref("raw_status"),
+          error_message: null,
+        });
+    }
+
+    // Confirmed unhealthy: set each row's status from its observed raw_status and APPEND the
+    // confirmation note to the existing error text (preserving the observed failure reason).
+    // Done per-row for portable string concatenation (|| vs CONCAT differ across SQLite/PG/MySQL)
+    // and to stay idempotent if the backfill is ever replayed.
+    const rows = await this.knex("monitoring_data")
+      .select("timestamp", "error_message", "raw_status")
       .where("monitor_tag", monitor_tag)
       .whereIn("timestamp", timestamps)
-      .whereNotNull("raw_status")
-      .update({
-        status: this.knex.ref("raw_status"),
-        error_message: message,
-      });
+      .whereNotNull("raw_status");
+
+    let updated = 0;
+    for (const row of rows) {
+      const existing: string | null = row.error_message;
+      let nextMessage: string;
+      if (!existing) {
+        nextMessage = message;
+      } else if (existing.indexOf(message) !== -1) {
+        nextMessage = existing; // already appended — keep idempotent
+      } else {
+        nextMessage = `${existing} | ${message}`;
+      }
+      updated += await this.knex("monitoring_data")
+        .where({ monitor_tag, timestamp: row.timestamp })
+        .update({ status: row.raw_status, error_message: nextMessage });
+    }
+    return updated;
   }
 
   async updateMonitoringData(
