@@ -400,30 +400,34 @@ export class MonitoringRepository extends BaseRepository {
     // severity-matched confirmation note to the existing error text (preserving the observed
     // failure reason). Done per-row for portable string concatenation (|| vs CONCAT differ across
     // SQLite/PG/MySQL), per-row severity wording, and idempotency if the backfill is replayed.
-    const rows = await this.knex("monitoring_data")
-      .select("timestamp", "error_message", "raw_status")
-      .where("monitor_tag", monitor_tag)
-      .whereIn("timestamp", timestamps)
-      .whereNotNull("raw_status");
+    // The whole read+update window runs in one transaction — a confirmation flip is one logical
+    // write, so it must not leave the window half-confirmed/half-held if a row update fails.
+    return await this.knex.transaction(async (trx: KnexType.Transaction) => {
+      const rows = await trx("monitoring_data")
+        .select("timestamp", "error_message", "raw_status")
+        .where("monitor_tag", monitor_tag)
+        .whereIn("timestamp", timestamps)
+        .whereNotNull("raw_status");
 
-    let updated = 0;
-    for (const row of rows) {
-      const severity = row.raw_status === GC.DEGRADED ? "Degraded" : "Down";
-      const note = `${severity} confirmed after ${confirmThreshold} consecutive checks`;
-      const existing: string | null = row.error_message;
-      let nextMessage: string;
-      if (!existing) {
-        nextMessage = note;
-      } else if (existing.indexOf(note) !== -1) {
-        nextMessage = existing; // already appended — keep idempotent
-      } else {
-        nextMessage = `${existing} | ${note}`;
+      let updated = 0;
+      for (const row of rows) {
+        const severity = row.raw_status === GC.DEGRADED ? "Degraded" : "Down";
+        const note = `${severity} confirmed after ${confirmThreshold} consecutive checks`;
+        const existing: string | null = row.error_message;
+        let nextMessage: string;
+        if (!existing) {
+          nextMessage = note;
+        } else if (existing.indexOf(note) !== -1) {
+          nextMessage = existing; // already appended — keep idempotent
+        } else {
+          nextMessage = `${existing} | ${note}`;
+        }
+        updated += await trx("monitoring_data")
+          .where({ monitor_tag, timestamp: row.timestamp })
+          .update({ status: row.raw_status, error_message: nextMessage });
       }
-      updated += await this.knex("monitoring_data")
-        .where({ monitor_tag, timestamp: row.timestamp })
-        .update({ status: row.raw_status, error_message: nextMessage });
-    }
-    return updated;
+      return updated;
+    });
   }
 
   async updateMonitoringData(
