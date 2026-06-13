@@ -32,8 +32,9 @@ export interface ConfirmationDeps {
 
 // Overlay sample types that freeze the count (must match OVERLAY_TYPES in the monitoring repository).
 const OVERLAY_TYPES: string[] = [GC.INCIDENT, GC.MAINTENANCE];
-// Extra lookback rows beyond the threshold, to tolerate neutral (NO_DATA) rows that are skipped
-// rather than counted. Pathologically neutral-dense histories may delay confirmation by a check.
+// Extra lookback rows beyond the threshold: headroom for the anchor row and any interleaved
+// overlay rows. NO_DATA observations are excluded by the query (neutral), so they never
+// consume slots — the buffer does not need to scale with NO_DATA density.
 const LOOKBACK_BUFFER = 10;
 
 /**
@@ -90,7 +91,7 @@ export async function resolveConfirmedStatus(
   for (const row of recent) {
     if (row.type !== null && OVERLAY_TYPES.indexOf(row.type) !== -1) break; // freeze boundary
     const rawSide = sideOf(row.raw_status);
-    if (rawSide === null) continue; // NO_DATA: neutral — neither advance nor reset
+    if (rawSide === null) continue; // NO_DATA: neutral (excluded by the query; this is a defensive guard)
     if (rawSide === observedSide && sideOf(row.status) === confirmedSide) {
       pendingRun++;
       pendingTimestamps.push(row.timestamp);
@@ -119,5 +120,6 @@ function confirmedSideStatus(
     if (row.type !== null && OVERLAY_TYPES.indexOf(row.type) !== -1) continue;
     if (sideOf(row.status) === confirmedSide && row.status) return row.status;
   }
+  // Defensive fallback (unreachable when an anchor was found above); side is correct, severity may coarsen.
   return confirmedSide === "UP" ? GC.UP : GC.DOWN;
 }

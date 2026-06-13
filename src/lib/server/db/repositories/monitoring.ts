@@ -333,8 +333,8 @@ export class MonitoringRepository extends BaseRepository {
    * Recent samples the Confirmation Threshold resolver needs, newest first: scheduled-check
    * observations (REALTIME/TIMEOUT/ERROR) plus incident/maintenance overlays. MANUAL pushes
    * and DEFAULT fill are excluded — they stay transparent to the counter. Returns `type` so
-   * the resolver can stop at overlay rows (freeze); observations whose status is NO_DATA are
-   * skipped as neutral by the resolver.
+   * the resolver can stop at overlay rows (freeze). Observations whose status is NO_DATA are
+   * excluded entirely (neutral — they neither advance nor reset the count and must not consume lookback slots).
    */
   async getRecentSamplesForConfirmation(
     monitor_tag: string,
@@ -346,6 +346,7 @@ export class MonitoringRepository extends BaseRepository {
       .where("monitor_tag", monitor_tag)
       .where("timestamp", "<", beforeTs)
       .whereIn("type", [...OBSERVED_CHECK_TYPES, ...OVERLAY_TYPES])
+      .whereNot("status", GC.NO_DATA)
       .orderBy("timestamp", "desc")
       .limit(limit);
   }
