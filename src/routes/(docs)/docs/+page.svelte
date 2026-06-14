@@ -428,7 +428,7 @@
               </span>
             </a>
           {:else}
-            <a href={getHref(button.href)} class="cta-pill-secondary">
+            <a href={getHref(button.href)} class="cta-pill-secondary" rel="external">
               <span class="text-sm font-medium tracking-tight">{button.title}</span>
             </a>
           {/if}
