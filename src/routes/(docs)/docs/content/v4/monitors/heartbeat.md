@@ -10,10 +10,12 @@ Heartbeat monitors are push-based: your job calls a URL, and Kener measures how 
 URL format:
 
 ```
-/ext/heartbeat/{tag}:{secret}
+/ext/heartbeat/{tag}/{secret}
 ```
 
 Accepted methods: `GET` and `POST`.
+
+> Older heartbeat URLs used a colon — `/ext/heartbeat/{tag}:{secret}`. Those still work; they are rewritten to the path-separated form automatically, so existing cron jobs need no changes.
 
 ## Minimum setup {#minimum-setup}
 
@@ -53,11 +55,11 @@ Latency is recorded as elapsed time since the last heartbeat (ms).
 Minimal cron usage pattern:
 
 ```bash
-*/5 * * * * /path/to/job.sh && curl -s "https://your-kener-host/ext/heartbeat/my-job:my-secret"
+*/5 * * * * /path/to/job.sh && curl -s "https://your-kener-host/ext/heartbeat/my-job/my-secret"
 ```
 
 ## Troubleshooting {#troubleshooting}
 
-- **Always NO_DATA**: endpoint never called or wrong `tag:secret`
+- **Always NO_DATA**: endpoint never called or wrong `tag`/`secret`
 - **Always DOWN/DEGRADED**: thresholds too low for actual job interval
 - **Signal accepted but stale**: ensure heartbeat is sent only after successful completion
