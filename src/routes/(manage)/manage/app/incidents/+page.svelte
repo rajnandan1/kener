@@ -2,18 +2,16 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
-  import * as Card from "$lib/components/ui/card/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
-  import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
   import * as Table from "$lib/components/ui/table/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import PlusIcon from "@lucide/svelte/icons/plus";
   import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
-  import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import SirenIcon from "@lucide/svelte/icons/siren";
   import { goto } from "$app/navigation";
+  import { onMount } from "svelte";
   import { format, formatDistanceToNow } from "date-fns";
   import GC from "$lib/global-constants";
   import { resolve } from "$app/paths";
@@ -104,12 +102,12 @@
 
   // Navigate to incident
   function openIncident(id: number) {
-    goto(clientResolver(resolve, `/manage/app/incidents/${id}`));
+    goto(resolve(`/manage/app/incidents/${id}`));
   }
 
   // Create new incident
   function createNewIncident() {
-    goto(clientResolver(resolve, "/manage/app/incidents/new"));
+    goto(resolve("/manage/app/incidents/new"));
   }
 
   // Handle state filter change
@@ -127,7 +125,7 @@
     fetchData();
   }
 
-  $effect(() => {
+  onMount(() => {
     fetchData();
   });
 </script>
@@ -142,7 +140,7 @@
           {stateOptions.find((o) => o.value === stateFilter)?.label || "All States"}
         </Select.Trigger>
         <Select.Content>
-          {#each stateOptions as option}
+          {#each stateOptions as option (option.value)}
             <Select.Item value={option.value}>{option.label}</Select.Item>
           {/each}
         </Select.Content>
@@ -166,6 +164,7 @@
         <Table.Row>
           <Table.Head class="w-16">ID</Table.Head>
           <Table.Head>Title</Table.Head>
+          <Table.Head class="w-40">Started</Table.Head>
           <Table.Head class="w-32">Duration</Table.Head>
           <Table.Head class="w-36">State</Table.Head>
           <Table.Head class="w-40">Affects</Table.Head>
@@ -175,10 +174,10 @@
       <Table.Body>
         {#if incidents.length === 0 && !loading}
           <Table.Row>
-            <Table.Cell colspan={6} class="text-muted-foreground py-8 text-center">No incidents found</Table.Cell>
+            <Table.Cell colspan={7} class="text-muted-foreground py-8 text-center">No incidents found</Table.Cell>
           </Table.Row>
         {:else}
-          {#each incidents as incident}
+          {#each incidents as incident (incident.id)}
             <Table.Row class="hover:bg-muted/50 cursor-pointer" onclick={() => openIncident(incident.id)}>
               <Table.Cell class="font-medium">{incident.id}</Table.Cell>
               <Table.Cell>
@@ -190,6 +189,11 @@
                     <p class="max-w-md">{incident.title}</p>
                   </Tooltip.Content>
                 </Tooltip.Root>
+              </Table.Cell>
+              <Table.Cell>
+                <span class="text-muted-foreground text-sm whitespace-nowrap">
+                  {format(new Date(incident.start_date_time * 1000), "yyyy-MM-dd HH:mm")}
+                </span>
               </Table.Cell>
               <Table.Cell>
                 <Tooltip.Root>
@@ -227,7 +231,7 @@
                     </Tooltip.Trigger>
                     <Tooltip.Content>
                       <div class="space-y-1">
-                        {#each incident.monitors as monitor}
+                        {#each incident.monitors as monitor (monitor.tag || monitor.monitor_tag)}
                           <div class="text-sm">
                             <span class="font-medium">{monitor.tag || monitor.monitor_tag}</span>
                             <span class="text-muted-foreground ml-1"
@@ -274,7 +278,7 @@
           </Button>
           <div class="flex items-center gap-1">
             {#if totalPages <= 7}
-              {#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
+              {#each Array.from({ length: totalPages }, (_, i) => i + 1) as page (page)}
                 <Button variant={page === pageNo ? "default" : "ghost"} size="sm" onclick={() => goToPage(page)}>
                   {page}
                 </Button>
@@ -288,7 +292,7 @@
               {/if}
 
               <!-- Middle pages -->
-              {#each Array.from({ length: 3 }, (_, i) => pageNo - 1 + i).filter((p) => p > 1 && p < totalPages) as page}
+              {#each Array.from({ length: 3 }, (_, i) => pageNo - 1 + i).filter((p) => p > 1 && p < totalPages) as page (page)}
                 <Button variant={page === pageNo ? "default" : "ghost"} size="sm" onclick={() => goToPage(page)}>
                   {page}
                 </Button>
