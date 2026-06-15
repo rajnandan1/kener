@@ -48,6 +48,7 @@ export interface LayoutServerData {
   subMenuOptions: {
     showShareBadgeMonitor: boolean;
     showShareEmbedMonitor: boolean;
+    showRssFeed: boolean;
   };
   isTimezoneEnabled: boolean;
   isThemeToggleEnabled: boolean;
