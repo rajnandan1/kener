@@ -1,5 +1,6 @@
 import IORedis from "ioredis";
 import Redis from "ioredis";
+import type { RedisOptions } from "ioredis";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -17,7 +18,7 @@ function shouldReconnectAfterRedisError(message: string): boolean {
   return false;
 }
 
-const redisClientOptions: Redis.RedisOptions = {
+const redisClientOptions: RedisOptions = {
   maxRetriesPerRequest: null,
   // Detect dead peers during long K8s / network stalls (default ioredis keepAlive is off).
   keepAlive: 30000,
