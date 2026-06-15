@@ -6,6 +6,7 @@ import {
   HandleSSOCallback,
   GetSSOStateCookieConfig,
 } from "$lib/server/controllers/ssoController";
+import serverResolver from "$lib/server/resolver.js";
 
 export const GET: RequestHandler = async ({ url, cookies }) => {
   const config = GetSSOConfig();
@@ -35,23 +36,25 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
     return new Response("No authorization code received", { status: 400 });
   }
 
+  let token: string;
   try {
     const redirectUri = `${url.origin}/account/signin/api/sso/callback`;
-    const { token, isNewUser } = await HandleSSOCallback(config, code, redirectUri);
-
-    const cookieConfig = CookieConfig();
-    cookies.set("kener-user", token, {
-      path: cookieConfig.path,
-      maxAge: cookieConfig.maxAge,
-      httpOnly: cookieConfig.httpOnly,
-      secure: cookieConfig.secure,
-      sameSite: cookieConfig.sameSite,
-    });
-
-    throw redirect(302, "/manage");
+    const result = await HandleSSOCallback(config, code, redirectUri);
+    token = result.token;
   } catch (e) {
     const message = e instanceof Error ? e.message : "SSO authentication failed";
-    const redirectUrl = `/account/signin?error=${encodeURIComponent(message)}`;
+    const redirectUrl = `${serverResolver("/account/signin")}?error=${encodeURIComponent(message)}`;
     throw redirect(302, redirectUrl);
   }
+
+  const cookieConfig = CookieConfig();
+  cookies.set("kener-user", token, {
+    path: cookieConfig.path,
+    maxAge: cookieConfig.maxAge,
+    httpOnly: cookieConfig.httpOnly,
+    secure: cookieConfig.secure,
+    sameSite: cookieConfig.sameSite,
+  });
+
+  throw redirect(302, serverResolver("/manage"));
 };

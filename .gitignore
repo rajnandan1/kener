@@ -34,4 +34,5 @@ temp.js
 .DS_Store
 knip-output.txt
 check-output.txt
-translation-report.json.env
+translation-report.json
+translation-report.yaml

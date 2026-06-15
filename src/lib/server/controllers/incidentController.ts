@@ -360,15 +360,6 @@ export const CreateIncident = async (data: IncidentInput): Promise<{ incident_id
 
   let newIncident = await db.createIncident(incident);
 
-  await notifyIncidentSubscribers(
-    newIncident.id,
-    incident.title,
-    mdToHTML(`**${incident.incident_type}**: ${incident.title} has been **${incident.state}**`),
-    `[#${newIncident.id}:${incident.state}] ${incident.title}`,
-    "incidents",
-    [],
-  );
-
   return {
     incident_id: newIncident.id,
   };

@@ -253,5 +253,7 @@ export default {
   template_html_body: emailTemplate,
   template_text_body: `The monitor {{monitor_name}} has changed status from {{monitor_old_status}} to {{monitor_new_status}}.
 
-{{update_text}}`,
+{{update_text}}
+
+View details: {{cta_url}}`,
 };

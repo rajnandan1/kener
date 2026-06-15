@@ -1,4 +1,3 @@
-import DNSResolver from "../dns.js";
 import type { NoneMonitor, MonitoringResult } from "../types/monitor.js";
 
 class NoneCall {

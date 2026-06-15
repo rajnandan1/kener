@@ -251,5 +251,7 @@ export default {
   template_id: "subscription_update",
   template_subject: "{{update_subject}}",
   template_html_body: emailTemplate,
-  template_text_body: `{{update_text}}`,
+  template_text_body: `{{update_text}}
+
+View details: {{cta_url}}`,
 };

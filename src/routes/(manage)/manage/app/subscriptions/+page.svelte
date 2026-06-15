@@ -669,19 +669,11 @@
                     type="checkbox"
                     id="monitor-{monitor.tag}"
                     class="h-4 w-4 rounded border-gray-300"
-                    checked={selectedIncidentMonitors.includes(monitor.tag) ||
-                      selectedMaintenanceMonitors.includes(monitor.tag) ||
-                      selectedMonitorStatusMonitors.includes(monitor.tag)}
+                    checked={selectedIncidentMonitors.includes(monitor.tag)}
                     onchange={() => {
-                      if (newIncidents) {
-                        selectedIncidentMonitors = toggleMonitorTag(selectedIncidentMonitors, monitor.tag);
-                      }
-                      if (newMaintenances) {
-                        selectedMaintenanceMonitors = toggleMonitorTag(selectedMaintenanceMonitors, monitor.tag);
-                      }
-                      if (newMonitors) {
-                        selectedMonitorStatusMonitors = toggleMonitorTag(selectedMonitorStatusMonitors, monitor.tag);
-                      }
+                      selectedIncidentMonitors = toggleMonitorTag(selectedIncidentMonitors, monitor.tag);
+                      selectedMaintenanceMonitors = toggleMonitorTag(selectedMaintenanceMonitors, monitor.tag);
+                      selectedMonitorStatusMonitors = toggleMonitorTag(selectedMonitorStatusMonitors, monitor.tag);
                     }}
                     disabled={addingSubscriber}
                   />
