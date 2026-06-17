@@ -242,6 +242,7 @@ const addWorker = () => {
           }
           // Send triggered alert notifications
           await sendAlertNotifications(activeAlert, monitor_alerts_configured, templateSiteVars, monitor_tag);
+
         }
       } else {
         // Resolve any existing alert

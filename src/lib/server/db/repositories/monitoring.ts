@@ -11,6 +11,14 @@ import type {
 } from "../../types/db.js";
 
 /**
+ * Data types produced by an actual monitor check. These are the only types that
+ * should be considered when evaluating alert conditions. Overlay types such as
+ * MAINTENANCE, INCIDENT, MANUAL, SIGNAL and DEFAULT are excluded because they do
+ * not represent a real probe result.
+ */
+const REAL_CHECK_TYPES = [GC.REALTIME, GC.TIMEOUT, GC.ERROR];
+
+/**
  * Repository for monitoring data operations
  */
 export class MonitoringRepository extends BaseRepository {
@@ -262,7 +270,7 @@ export class MonitoringRepository extends BaseRepository {
         qb.select("*")
           .from("monitoring_data")
           .where("monitor_tag", monitor_tag)
-          .andWhere("type", "=", GC.REALTIME)
+          .whereIn("type", REAL_CHECK_TYPES)
           .orderBy("timestamp", "desc")
           .limit(lastX);
       })
@@ -288,7 +296,7 @@ export class MonitoringRepository extends BaseRepository {
         qb.select("*")
           .from("monitoring_data")
           .where("monitor_tag", monitor_tag)
-          .andWhere("type", "=", GC.REALTIME)
+          .whereIn("type", REAL_CHECK_TYPES)
           .orderBy("timestamp", "desc")
           .limit(lastX);
       })
@@ -310,7 +318,7 @@ export class MonitoringRepository extends BaseRepository {
         qb.select("*")
           .from("monitoring_data")
           .where("monitor_tag", monitor_tag)
-          .andWhere("type", "=", GC.REALTIME)
+          .whereIn("type", REAL_CHECK_TYPES)
           .orderBy("timestamp", "desc")
           .limit(lastX);
       })
