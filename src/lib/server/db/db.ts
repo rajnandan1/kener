@@ -1,5 +1,5 @@
 import DbImpl from "./dbimpl";
-import knexOb from "../../../../knexfile.js";
+import knexOb, { workerKnexOb } from "../../../../knexfile.js";
 
-const instance: DbImpl = new DbImpl(knexOb);
+const instance: DbImpl = new DbImpl(knexOb, workerKnexOb);
 export default instance;

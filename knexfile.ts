@@ -17,9 +17,24 @@ const intFromEnv = (name: string, fallback: number): number => {
 // TCP keepalive on pooled connections, on by default. Cloud networks (Railway,
 // Docker Swarm overlays, k8s) silently drop idle TCP connections; without
 // keepalive the pool keeps handing out dead sockets after an idle period or a
-// database restart. See docs/adr/0003-fail-fast-self-healing-db-pool.md.
+// database restart. See docs .../setup/database-setup.md.
 const keepAliveEnabled = process.env.DATABASE_KEEPALIVE !== "false";
 
+interface PoolConfig {
+  min: number;
+  max: number;
+  idleTimeoutMillis: number;
+  createTimeoutMillis: number;
+}
+
+// Two pools share one process (Postgres/MySQL only): the WEB pool serves
+// SvelteKit requests; the WORKER pool serves background jobs (BullMQ workers +
+// schedulers, routed via src/lib/server/db/poolContext.ts). Isolating them
+// stops a burst of background jobs from exhausting the connections that serve
+// page loads. Budget across both pools: replicas * (web + worker) must stay
+// under the database's max_connections. SQLite has no real pool and reuses a
+// single connection, so the split does not apply there.
+//
 // Pool defaults deviate from knex's on purpose:
 // - min 0: knex's min 2 connections are never reaped, so they are exactly the
 //   ones that go stale and wedge the app until a manual restart
@@ -27,14 +42,17 @@ const keepAliveEnabled = process.env.DATABASE_KEEPALIVE !== "false";
 //   knex's default 60s during a database outage
 // Tarn requires max >= 1 and min <= max; clamp so a bad env value can not
 // produce a pool that fails every acquire
-const poolMax = Math.max(1, intFromEnv("DATABASE_POOL_MAX", 10));
-const poolMin = Math.min(intFromEnv("DATABASE_POOL_MIN", 0), poolMax);
-const pool = {
-  min: poolMin,
-  max: poolMax,
-  idleTimeoutMillis: intFromEnv("DATABASE_IDLE_TIMEOUT_MS", 30000),
-  createTimeoutMillis: intFromEnv("DATABASE_CREATE_TIMEOUT_MS", 15000),
-};
+const idleTimeoutMillis = intFromEnv("DATABASE_IDLE_TIMEOUT_MS", 30000);
+const createTimeoutMillis = intFromEnv("DATABASE_CREATE_TIMEOUT_MS", 15000);
+const poolMin = intFromEnv("DATABASE_POOL_MIN", 0);
+const buildPool = (max: number): PoolConfig => ({
+  min: Math.min(poolMin, max),
+  max,
+  idleTimeoutMillis,
+  createTimeoutMillis,
+});
+const webPool = buildPool(Math.max(1, intFromEnv("DATABASE_POOL_MAX", 10)));
+const workerPool = buildPool(Math.max(1, intFromEnv("DATABASE_WORKER_POOL_MAX", 5)));
 const acquireConnectionTimeout = intFromEnv("DATABASE_ACQUIRE_TIMEOUT_MS", 15000);
 
 interface KnexConfig {
@@ -44,7 +62,7 @@ interface KnexConfig {
   client?: string;
   connection?: string | { filename: string } | Record<string, unknown>;
   useNullAsDefault?: boolean;
-  pool?: typeof pool;
+  pool?: PoolConfig;
   acquireConnectionTimeout?: number;
 }
 
@@ -57,6 +75,12 @@ const knexOb: KnexConfig = {
   },
   databaseType,
 };
+
+// Worker pool config for Postgres/MySQL — same connection as the web config,
+// but with the worker pool. Stays null for SQLite (single shared connection),
+// in which case the app reuses the web instance for background work too.
+let workerKnexOb: KnexConfig | null = null;
+
 console.log(`Configuring database with type ${databaseType}`);
 if (databaseType === "sqlite") {
   knexOb.client = "better-sqlite3";
@@ -70,8 +94,9 @@ if (databaseType === "sqlite") {
     connectionString: databaseURL,
     keepAlive: keepAliveEnabled,
   };
-  knexOb.pool = pool;
+  knexOb.pool = webPool;
   knexOb.acquireConnectionTimeout = acquireConnectionTimeout;
+  workerKnexOb = { ...knexOb, pool: workerPool };
 } else if (databaseType === "mysql") {
   knexOb.client = "mysql2";
   knexOb.connection = {
@@ -79,11 +104,13 @@ if (databaseType === "sqlite") {
     enableKeepAlive: keepAliveEnabled,
     keepAliveInitialDelay: 10000,
   };
-  knexOb.pool = pool;
+  knexOb.pool = webPool;
   knexOb.acquireConnectionTimeout = acquireConnectionTimeout;
+  workerKnexOb = { ...knexOb, pool: workerPool };
 } else {
   console.error("Invalid database type");
   process.exit(1);
 }
 
+export { workerKnexOb };
 export default knexOb;

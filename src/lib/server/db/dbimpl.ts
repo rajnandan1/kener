@@ -1,5 +1,6 @@
 import Knex from "knex";
 import type { Knex as KnexType } from "knex";
+import { runWithWorkerKnex } from "./poolContext.js";
 
 // Import all repositories
 import { MonitoringRepository } from "./repositories/monitoring.js";
@@ -29,6 +30,9 @@ export type * from "../types/db.js";
  */
 class DbImpl {
   private knex: KnexType;
+  // Dedicated pool for background jobs (Postgres/MySQL). Equals `knex` when
+  // there is no separate worker pool (e.g. SQLite).
+  private workerKnex: KnexType;
 
   // Domain repositories
   private monitoring!: MonitoringRepository;
@@ -374,8 +378,11 @@ class DbImpl {
   deleteEmailTemplate!: EmailTemplateConfigRepository["deleteEmailTemplate"];
   upsertEmailTemplate!: EmailTemplateConfigRepository["upsertEmailTemplate"];
 
-  constructor(opts: KnexType.Config) {
+  constructor(opts: KnexType.Config, workerOpts?: KnexType.Config | null) {
     this.knex = Knex(opts);
+    // Separate pool for background jobs when configured (Postgres/MySQL);
+    // otherwise reuse the web pool (SQLite has a single connection).
+    this.workerKnex = workerOpts ? Knex(workerOpts) : this.knex;
 
     // Initialize repositories
     this.monitoring = new MonitoringRepository(this.knex);
@@ -840,6 +847,15 @@ class DbImpl {
 
   async init(): Promise<void> {}
 
+  /**
+   * Runs `fn` with all repository queries routed to the worker connection pool.
+   * Wrap background work (BullMQ job processors, schedulers) with this so a
+   * burst of jobs cannot exhaust the web pool that serves page loads.
+   */
+  runInWorkerContext<T>(fn: () => Promise<T>): Promise<T> {
+    return runWithWorkerKnex(this.workerKnex, fn);
+  }
+
   /** Probes database connectivity with a trivial query. Never throws. */
   async ping(): Promise<boolean> {
     try {
@@ -851,7 +867,10 @@ class DbImpl {
   }
 
   async close(): Promise<void> {
-    return await this.knex.destroy();
+    await this.knex.destroy();
+    if (this.workerKnex !== this.knex) {
+      await this.workerKnex.destroy();
+    }
   }
 }
 
