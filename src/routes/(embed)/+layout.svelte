@@ -40,7 +40,7 @@
 		}
 	</style>`}
 </svelte:head>
-<main class="kener-public">
+<main class="kener-public embed-app">
   {@render children()}
 </main>
 

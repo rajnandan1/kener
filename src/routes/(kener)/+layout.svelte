@@ -53,7 +53,7 @@
 	</style>`}
   <script src={clientResolver(resolve, "/capture.js")}></script>
 </svelte:head>
-<main class="kener-public">
+<main class="kener-public status-page-app">
   <!-- Nav -->
   <KenerNav />
   <!-- Body -->
