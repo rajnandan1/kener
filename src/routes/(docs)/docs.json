@@ -312,6 +312,10 @@
                   "collapsible": false,
                   "pages": [
                     {
+                      "title": "v4.1.1",
+                      "content": "v4/changelogs/v4.1.1"
+                    },
+                    {
                       "title": "v4.1.0",
                       "content": "v4/changelogs/v4.1.0"
                     },
