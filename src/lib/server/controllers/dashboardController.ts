@@ -17,6 +17,9 @@ import type {
 import type { GroupMonitorTypeData } from "../types/monitor.js";
 import GC from "../../global-constants.js";
 import type { LayoutServerData } from "./layoutController.js";
+import type { NotificationEvent } from "../../types/notifications.js";
+
+export type { NotificationEvent };
 
 // Default page settings
 const defaultPageSettings: PageSettingsType = {
@@ -26,16 +29,6 @@ const defaultPageSettings: PageSettingsType = {
   },
   monitor_layout_style: GC.DEFAULT_MONITOR_LAYOUT_STYLE,
 };
-
-export interface NotificationEvent {
-  eventURL: string;
-  eventTitle: string;
-  eventDate: string;
-  eventType: string;
-  eventStartDateTime: number;
-  eventEndDateTime: number | null;
-  eventStatus: string;
-}
 
 export interface NotificationPayload {
   notifications: NotificationEvent[];

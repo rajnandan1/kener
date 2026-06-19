@@ -172,7 +172,7 @@
     </Item.Root>
   </div>
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-16">
-    <div class="col-span-1 flex flex-col gap-3 sm:gap-4 {!!!showInlineEvents ? 'sm:col-span-16' : 'sm:col-span-11'}">
+    <div class="col-span-1 flex flex-col gap-3 sm:gap-4 {!showInlineEvents ? 'sm:col-span-16' : 'sm:col-span-11'}">
       {#if !!data.monitorTags.length}
         <EventsCard statusClass={data.pageStatus.statusClass} statusText={data.pageStatus.statusSummary} />
         {#if showInlineEvents && data.ongoingIncidents && data.ongoingIncidents.length > 0}

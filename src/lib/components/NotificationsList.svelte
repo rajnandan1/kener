@@ -6,7 +6,7 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import { t } from "$lib/stores/i18n";
-  import type { NotificationEvent } from "$lib/server/controllers/dashboardController.js";
+  import type { NotificationEvent } from "$lib/types/notifications.js";
   import Calendar from "@lucide/svelte/icons/calendar-1";
   import { format } from "date-fns";
   import { onMount } from "svelte";
@@ -78,7 +78,14 @@
 
 <div class="flex items-center justify-between border-b px-4 py-3">
   <h4 class="text-sm font-semibold">{$t("Events")}</h4>
-  <Button variant="outline" href={clientResolver(resolve, resolvedEventsPath)} size="icon-sm" class="rounded-btn">
+  <Button
+    variant="outline"
+    href={clientResolver(resolve, resolvedEventsPath)}
+    size="icon-sm"
+    class="rounded-btn"
+    aria-label={$t("Open events page")}
+    title={$t("Open events page")}
+  >
     <Calendar class="size-4" />
   </Button>
 </div>

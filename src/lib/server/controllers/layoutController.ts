@@ -80,7 +80,8 @@ function NormalizeEventDisplaySettings(settings?: Partial<EventDisplaySettings>)
   const defaults = structuredClone(seedSiteData.eventDisplaySettings);
 
   return {
-    showInlineEvents: Boolean(settings?.showInlineEvents ?? defaults.showInlineEvents),
+    showInlineEvents:
+      typeof settings?.showInlineEvents === "boolean" ? settings.showInlineEvents : defaults.showInlineEvents,
     incidents: {
       ...defaults.incidents,
       ...settings?.incidents,

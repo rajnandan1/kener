@@ -510,7 +510,8 @@
     const defaults = structuredClone(defaultEventDisplaySettings);
 
     return {
-      showInlineEvents: Boolean(parsed?.showInlineEvents ?? defaults.showInlineEvents),
+      showInlineEvents:
+        typeof parsed?.showInlineEvents === "boolean" ? parsed.showInlineEvents : defaults.showInlineEvents,
       incidents: {
         ...defaults.incidents,
         ...parsed?.incidents,

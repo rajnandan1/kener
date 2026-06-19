@@ -6,7 +6,7 @@
   import { requestNotifications } from "$lib/client/notifications-client.js";
   import ICONS from "$lib/icons";
   import { t } from "$lib/stores/i18n";
-  import type { NotificationEvent } from "$lib/server/controllers/dashboardController.js";
+  import type { NotificationEvent } from "$lib/types/notifications.js";
   import { onMount } from "svelte";
 
   interface Props {
