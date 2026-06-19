@@ -27,14 +27,16 @@
   interface Props {
     monitor_tags?: string[];
     embedMonitorTag?: string;
+    hideNotificationsPopover?: boolean;
   }
 
-  let { monitor_tags = [], embedMonitorTag = "" }: Props = $props();
+  let { monitor_tags = [], embedMonitorTag = "", hideNotificationsPopover = false }: Props = $props();
 
   let protocol = $state("");
   let domain = $state("");
   let shareLink = $state("");
   const eventsPath = $derived(`/events/${format(new Date(), "MMMM-yyyy")}`);
+  const showNotificationsPopover = $derived(!hideNotificationsPopover);
 
   const rssHref = $derived.by(() => {
     const params = page.params;
@@ -183,7 +185,9 @@
         <TimezoneSelector />
       {/if}
     </ButtonGroup.Root>
-    <NotificationsPopover {eventsPath} monitorTags={monitor_tags} compact={true} />
+    {#if showNotificationsPopover}
+      <NotificationsPopover {eventsPath} monitorTags={monitor_tags} compact={true} />
+    {/if}
     {#if loginDetails}
       <Button
         size="sm"

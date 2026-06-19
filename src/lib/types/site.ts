@@ -98,6 +98,7 @@ export interface DataRetentionPolicy {
 }
 
 export interface EventDisplaySettings {
+  showInlineEvents: boolean;
   incidents: {
     enabled: boolean;
     ongoing: {

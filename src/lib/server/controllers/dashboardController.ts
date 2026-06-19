@@ -17,6 +17,9 @@ import type {
 import type { GroupMonitorTypeData } from "../types/monitor.js";
 import GC from "../../global-constants.js";
 import type { LayoutServerData } from "./layoutController.js";
+import type { NotificationEvent } from "../../types/notifications.js";
+
+export type { NotificationEvent };
 
 // Default page settings
 const defaultPageSettings: PageSettingsType = {
@@ -26,16 +29,6 @@ const defaultPageSettings: PageSettingsType = {
   },
   monitor_layout_style: GC.DEFAULT_MONITOR_LAYOUT_STYLE,
 };
-
-export interface NotificationEvent {
-  eventURL: string;
-  eventTitle: string;
-  eventDate: string;
-  eventType: string;
-  eventStartDateTime: number;
-  eventEndDateTime: number | null;
-  eventStatus: string;
-}
 
 export interface NotificationPayload {
   notifications: NotificationEvent[];
@@ -377,17 +370,18 @@ export const GetPageDashboardData = async (
     };
   }
   const eventSettings = layoutData.eventDisplaySettings;
+  const showInlineEvents = eventSettings.showInlineEvents === true;
   // Fetch all dashboard data in parallel (respecting feature toggles)
   const [latestData, parsedMonitors, ongoingIncidents, ongoingMaintenances, upcomingMaintenances] = await Promise.all([
     GetLatestMonitoringDataAllActive(monitorTags),
     GetMonitorsParsed({ tags: monitorTags, status: "ACTIVE", is_hidden: "NO" }),
-    eventSettings.incidents.enabled && eventSettings.incidents.ongoing.show
+    showInlineEvents && eventSettings.incidents.enabled && eventSettings.incidents.ongoing.show
       ? GetOngoingIncidentsForMonitorList(monitorTags)
       : Promise.resolve([] as IncidentForMonitorListWithComments[]),
-    eventSettings.maintenances.enabled && eventSettings.maintenances.ongoing.show
+    showInlineEvents && eventSettings.maintenances.enabled && eventSettings.maintenances.ongoing.show
       ? GetOngoingMaintenances(monitorTags, nowTs)
       : Promise.resolve([] as MaintenanceEventsMonitorList[]),
-    eventSettings.maintenances.enabled && eventSettings.maintenances.upcoming.show
+    showInlineEvents && eventSettings.maintenances.enabled && eventSettings.maintenances.upcoming.show
       ? GetUpcomingMaintenanceEventsForMonitorList(
           monitorTags,
           eventSettings.maintenances.upcoming.maxCount,

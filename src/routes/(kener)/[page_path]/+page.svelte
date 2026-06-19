@@ -31,6 +31,7 @@
   let requestVersion = 0;
   let viewType = $derived<PageMonitorLayoutStyle | undefined>(pageSettings?.monitor_layout_style);
   let isCompact = $derived(viewType === "compact-list" || viewType === "compact-grid");
+  let showInlineEvents = $derived(data.eventDisplaySettings?.showInlineEvents === true);
 
   function getGridItemSpanClass(index: number, total: number, type: typeof viewType): string {
     if (type === "default-grid") {
@@ -143,7 +144,7 @@
 
 <!-- page title -->
 <div class="flex flex-col gap-3 sm:gap-4">
-  <ThemePlus monitor_tags={data.monitorTags} />
+  <ThemePlus monitor_tags={data.monitorTags} hideNotificationsPopover={showInlineEvents} />
   <div class="flex flex-col gap-2 px-3 py-2 sm:px-4">
     {#if data.pageDetails?.page_logo}
       <img
@@ -171,7 +172,7 @@
   </div>
   {#if !!data.monitorTags.length}
     <EventsCard statusClass={data.pageStatus.statusClass} statusText={data.pageStatus.statusSummary} />
-    {#if data.ongoingIncidents && data.ongoingIncidents.length > 0}
+    {#if showInlineEvents && data.ongoingIncidents && data.ongoingIncidents.length > 0}
       <div class="flex flex-col gap-3">
         {#each data.ongoingIncidents as incident, i (incident.id ?? i)}
           <div class=" rounded-3xl border p-3 sm:p-4">
@@ -180,7 +181,7 @@
         {/each}
       </div>
     {/if}
-    {#if data.ongoingMaintenances && data.ongoingMaintenances.length > 0}
+    {#if showInlineEvents && data.ongoingMaintenances && data.ongoingMaintenances.length > 0}
       <div class="flex flex-col gap-3">
         {#each data.ongoingMaintenances as maintenance, i (maintenance.id ?? i)}
           <div class="rounded-3xl border p-3 sm:p-4">
@@ -189,7 +190,7 @@
         {/each}
       </div>
     {/if}
-    {#if data.upcomingMaintenances && data.upcomingMaintenances.length > 0}
+    {#if showInlineEvents && data.upcomingMaintenances && data.upcomingMaintenances.length > 0}
       <div class="flex flex-col gap-3">
         {#each data.upcomingMaintenances as maintenance, i (maintenance.id ?? i)}
           <div class="rounded-3xl border p-3 sm:p-4">
