@@ -16,6 +16,7 @@
 
   // State
   let descriptionExpanded = $state(false);
+  let showInlineEvents = $derived(data.eventDisplaySettings?.showInlineEvents === true);
 
   function toggleDescription(expanded: boolean) {
     descriptionExpanded = expanded;
@@ -125,7 +126,7 @@
       {/if}
     </div>
   </div>
-  {#if data.ongoingIncidents && data.ongoingIncidents.length > 0}
+  {#if showInlineEvents && data.ongoingIncidents && data.ongoingIncidents.length > 0}
     <div class="flex flex-col gap-3">
       {#each data.ongoingIncidents as incident, i (incident.id ?? i)}
         <div class=" rounded-3xl border p-3 sm:p-4">
@@ -134,7 +135,7 @@
       {/each}
     </div>
   {/if}
-  {#if data.ongoingMaintenances && data.ongoingMaintenances.length > 0}
+  {#if showInlineEvents && data.ongoingMaintenances && data.ongoingMaintenances.length > 0}
     <div class="flex flex-col gap-3">
       {#each data.ongoingMaintenances as maintenance, i (maintenance.id ?? i)}
         <div class="rounded-3xl border p-3 sm:p-4">
@@ -143,7 +144,7 @@
       {/each}
     </div>
   {/if}
-  {#if data.upcomingMaintenances && data.upcomingMaintenances.length > 0}
+  {#if showInlineEvents && data.upcomingMaintenances && data.upcomingMaintenances.length > 0}
     <div class="flex flex-col gap-3">
       {#each data.upcomingMaintenances as maintenance, i (maintenance.id ?? i)}
         <div class="rounded-3xl border p-3 sm:p-4">

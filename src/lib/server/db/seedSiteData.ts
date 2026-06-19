@@ -142,6 +142,7 @@ const seedSiteData = {
     retentionDays: 90,
   },
   eventDisplaySettings: {
+    showInlineEvents: false,
     incidents: {
       enabled: true,
       ongoing: { show: true },

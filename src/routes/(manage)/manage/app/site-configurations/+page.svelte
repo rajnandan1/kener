@@ -205,11 +205,7 @@
 
         if (data.eventDisplaySettings) {
           try {
-            const parsed =
-              typeof data.eventDisplaySettings === "string"
-                ? JSON.parse(data.eventDisplaySettings)
-                : data.eventDisplaySettings;
-            eventDisplaySettings = { ...structuredClone(defaultEventDisplaySettings), ...parsed };
+            eventDisplaySettings = parseEventDisplaySettings(data.eventDisplaySettings);
           } catch {
             eventDisplaySettings = structuredClone(defaultEventDisplaySettings);
           }
@@ -507,6 +503,43 @@
     } finally {
       savingEventDisplaySettings = false;
     }
+  }
+
+  function parseEventDisplaySettings(value: unknown): EventDisplaySettings {
+    const parsed = (typeof value === "string" ? JSON.parse(value) : value) as Partial<EventDisplaySettings> | null;
+    const defaults = structuredClone(defaultEventDisplaySettings);
+
+    return {
+      showInlineEvents: Boolean(parsed?.showInlineEvents ?? defaults.showInlineEvents),
+      incidents: {
+        ...defaults.incidents,
+        ...parsed?.incidents,
+        ongoing: {
+          ...defaults.incidents.ongoing,
+          ...parsed?.incidents?.ongoing
+        },
+        resolved: {
+          ...defaults.incidents.resolved,
+          ...parsed?.incidents?.resolved
+        }
+      },
+      maintenances: {
+        ...defaults.maintenances,
+        ...parsed?.maintenances,
+        ongoing: {
+          ...defaults.maintenances.ongoing,
+          ...parsed?.maintenances?.ongoing
+        },
+        past: {
+          ...defaults.maintenances.past,
+          ...parsed?.maintenances?.past
+        },
+        upcoming: {
+          ...defaults.maintenances.upcoming,
+          ...parsed?.maintenances?.upcoming
+        }
+      }
+    };
   }
 
   function addSitemapUrl() {
@@ -1249,6 +1282,16 @@
         <Card.Description>Configure which incidents and maintenances are shown on the site</Card.Description>
       </Card.Header>
       <Card.Content class="space-y-6">
+        <div class="flex items-center justify-between rounded-lg border p-4">
+          <div class="space-y-0.5">
+            <Label for="events-display-inline">Display Events Inline</Label>
+            <p class="text-muted-foreground text-xs">
+              Turn on to show events inline on the status page. Off shows them in the notification list.
+            </p>
+          </div>
+          <Switch id="events-display-inline" bind:checked={eventDisplaySettings.showInlineEvents} />
+        </div>
+
         <!-- Incidents -->
         <div class="space-y-4">
           <div class="flex items-center justify-between">
