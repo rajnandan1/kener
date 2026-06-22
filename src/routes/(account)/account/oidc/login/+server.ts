@@ -8,7 +8,8 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
     throw error(404, "OpenID Connect is not configured or not enabled");
   }
 
-  const callbackUrl = `${url.origin}/account/oidc/callback`;
+  const basePath = process.env.KENER_BASE_PATH || "";
+  const callbackUrl = `${url.origin}${basePath}/account/oidc/callback`;
 
   try {
     const { url: authUrl, state, nonce, codeVerifier } = await BuildAuthorizationUrl(

@@ -227,7 +227,7 @@ export const ACTION_PERMISSION_MAP: Record<string, string | null> = {
   upsertOidcGroupRoleMapping: "settings.write",
   deleteOidcGroupRoleMapping: "settings.write",
   testOidcConnection: "settings.write",
-  clearOidcCache: "settings.write",
+  getOidcSettingsMasked: "settings.read",
 };
 
 export const ROUTE_PERMISSION_MAP: Record<string, string | null> = {

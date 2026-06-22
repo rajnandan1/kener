@@ -14,6 +14,16 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
     throw error(404, "OpenID Connect is not configured or not enabled");
   }
 
+  // Check for error response from the provider first, before
+  // checking cookies — this way expired cookies don't hide the
+  // actual IdP error message.
+  const errorParam = url.searchParams.get("error");
+  if (errorParam) {
+    const errorDesc = url.searchParams.get("error_description") || errorParam;
+    console.error(`OIDC provider error: ${errorParam} - ${errorDesc}`);
+    throw redirect(302, serverResolve(`/account/signin?oidc_error=${encodeURIComponent(errorDesc)}`));
+  }
+
   const expectedState = cookies.get("oidc-state");
   const expectedNonce = cookies.get("oidc-nonce");
   const codeVerifier = cookies.get("oidc-code-verifier");
@@ -27,15 +37,9 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
     throw error(400, "Missing OIDC session data. Please try logging in again.");
   }
 
-  const errorParam = url.searchParams.get("error");
-  if (errorParam) {
-    const errorDesc = url.searchParams.get("error_description") || errorParam;
-    console.error(`OIDC provider error: ${errorParam} - ${errorDesc}`);
-    throw redirect(302, serverResolve(`/account/signin?oidc_error=${encodeURIComponent(errorDesc)}`));
-  }
-
   try {
-    const callbackUrl = `${url.origin}/account/oidc/callback`;
+    const basePath = process.env.KENER_BASE_PATH || "";
+    const callbackUrl = `${url.origin}${basePath}/account/oidc/callback`;
 
     const oidcData = await HandleCallback(
       settings,

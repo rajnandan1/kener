@@ -159,6 +159,13 @@ export class UsersRepository extends BaseRepository {
     });
   }
 
+  async updateUserProfile(id: number, data: { name?: string; email?: string }): Promise<number> {
+    const updateData: Record<string, unknown> = { updated_at: this.knex.fn.now() };
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.email !== undefined) updateData.email = data.email;
+    return await this.knex("users").where({ id }).update(updateData);
+  }
+
   async updateUserRoles(id: number, roleIds: string[]): Promise<void> {
     await this.knex("users_roles").where("users_id", id).delete();
     if (roleIds.length > 0) {
@@ -315,6 +322,8 @@ export class UsersRepository extends BaseRepository {
         "users.is_active",
         "users.is_verified",
         "users.is_owner",
+        "users.auth_provider",
+        "users.oidc_sub",
         "users.created_at",
         "users.updated_at",
         "users_roles.roles_id",
@@ -372,13 +381,6 @@ export class UsersRepository extends BaseRepository {
       .first();
     if (!row) return undefined;
     return await this.enrichWithRoleIds(row);
-  }
-
-  async updateUserOidcSub(id: number, oidcSub: string): Promise<number> {
-    return await this.knex("users").where({ id }).update({
-      oidc_sub: oidcSub,
-      updated_at: this.knex.fn.now(),
-    });
   }
 
   // ============ OIDC Group-Role Mappings ============

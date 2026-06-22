@@ -535,6 +535,10 @@ function UptimeCalculator(
   };
 }
 
+function GenerateRandomHexString(length: number = 32): string {
+  return crypto.randomBytes(Math.ceil(length / 2)).toString("hex").slice(0, length);
+}
+
 export {
   IsValidURL,
   UptimeCalculator,
@@ -571,4 +575,5 @@ export {
   IsValidUptimeFormula,
   UnparsePercentage,
   GetNowTimestampUTCInMs,
+  GenerateRandomHexString,
 };

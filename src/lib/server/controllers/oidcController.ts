@@ -6,16 +6,17 @@
  */
 
 import * as client from "openid-client";
-import crypto from "crypto";
+import { GenerateRandomHexString } from "../tool.js";
 import db from "../db/db.js";
 import { GenerateToken, CookieConfig } from "./commonController.js";
 import type { OidcSettings } from "$lib/types/site.js";
 import type { UserRecordPublic } from "../types/db.js";
 import { GetSiteDataByKey } from "./siteDataController.js";
+import GC from "$lib/global-constants.js";
 
 // Cache the OIDC configuration to avoid repeated discovery calls
 let cachedConfig: client.Configuration | null = null;
-let cachedIssuerUrl: string | null = null;
+let cachedCacheKey: string | null = null;
 
 /**
  * Read the current OIDC settings from the database.
@@ -39,13 +40,14 @@ export async function GetOidcSettings(): Promise<OidcSettings | null> {
  * The result is cached until the issuer URL changes.
  */
 async function getOidcConfig(settings: OidcSettings): Promise<client.Configuration> {
-  if (cachedConfig && cachedIssuerUrl === settings.issuer_url) {
+  const cacheKey = `${settings.issuer_url}|${settings.client_id}|${settings.client_secret}`;
+  if (cachedConfig && cachedCacheKey === cacheKey) {
     return cachedConfig;
   }
 
   const issuer = new URL(settings.issuer_url);
   cachedConfig = await client.discovery(issuer, settings.client_id, settings.client_secret);
-  cachedIssuerUrl = settings.issuer_url;
+  cachedCacheKey = cacheKey;
   return cachedConfig;
 }
 
@@ -54,14 +56,7 @@ async function getOidcConfig(settings: OidcSettings): Promise<client.Configurati
  */
 export function ClearOidcConfigCache(): void {
   cachedConfig = null;
-  cachedIssuerUrl = null;
-}
-
-/**
- * Generate a cryptographically random string for state/nonce parameters.
- */
-function generateRandomString(length: number = 32): string {
-  return crypto.randomBytes(length).toString("hex").slice(0, length);
+  cachedCacheKey = null;
 }
 
 /**
@@ -75,8 +70,8 @@ export async function BuildAuthorizationUrl(
 ): Promise<{ url: string; state: string; nonce: string; codeVerifier: string }> {
   const config = await getOidcConfig(settings);
 
-  const state = generateRandomString();
-  const nonce = generateRandomString();
+  const state = GenerateRandomHexString();
+  const nonce = GenerateRandomHexString();
   const codeVerifier = client.randomPKCECodeVerifier();
   const codeChallenge = await client.calculatePKCECodeChallenge(codeVerifier);
 
@@ -139,7 +134,10 @@ export async function HandleCallback(
     "";
 
   if (!email) {
-    const userinfo = await client.fetchUserInfo(config, tokens.access_token!, sub);
+    if (!tokens.access_token) {
+      throw new Error("No email in ID token and no access_token available for userinfo lookup");
+    }
+    const userinfo = await client.fetchUserInfo(config, tokens.access_token, sub);
     email = userinfo.email as string | undefined;
     if (!name) {
       name = (userinfo.name as string | undefined) ||
@@ -215,7 +213,7 @@ export async function FindOrCreateOidcUser(
       name: oidcData.name,
       password_hash: "",
       role_ids: roleIds,
-      auth_provider: "oidc",
+      auth_provider: GC.AUTH_PROVIDER_OIDC,
       oidc_sub: oidcData.sub,
       is_active: 1,
       is_verified: 1,
@@ -229,7 +227,12 @@ export async function FindOrCreateOidcUser(
     return user;
   }
 
+  // Sync roles and update profile data from the IdP
   await SyncOidcUserRoles(user.id, oidcData.groups, settings);
+  await db.updateUserProfile(user.id, {
+    name: oidcData.name,
+    email: oidcData.email,
+  });
 
   user = await db.getUserByOidcSub(oidcData.sub);
   if (!user) {
@@ -302,9 +305,11 @@ export async function TestOidcConnection(settings: OidcSettings): Promise<{
   error?: string;
 }> {
   try {
-    ClearOidcConfigCache();
-    const config = await getOidcConfig(settings);
-    const serverMetadata = config.serverMetadata();
+    // Build a local configuration for testing only — do not touch
+    // the shared cache, as these may be unsaved settings.
+    const issuer = new URL(settings.issuer_url);
+    const testConfig = await client.discovery(issuer, settings.client_id, settings.client_secret);
+    const serverMetadata = testConfig.serverMetadata();
 
     return {
       success: true,

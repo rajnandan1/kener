@@ -22,22 +22,9 @@
   import { onMount } from "svelte";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
-  import type { RoleRecord } from "$lib/server/types/db.js";
+  import type { OidcSettings } from "$lib/types/site.js";
 
   // ============ Types ============
-
-  interface OidcSettings {
-    enabled: boolean;
-    provider_name: string;
-    issuer_url: string;
-    client_id: string;
-    client_secret: string;
-    scopes: string;
-    groups_claim: string;
-    allow_local_login: boolean;
-    auto_create_users: boolean;
-    default_role_id: string;
-  }
 
   interface GroupRoleMapping {
     id: number;
@@ -45,6 +32,13 @@
     role_id: string;
     created_at: string;
     updated_at: string;
+  }
+
+  interface RoleRecord {
+    id: string;
+    role_name: string;
+    readonly: number;
+    status: string;
   }
 
   // ============ State ============
@@ -66,6 +60,8 @@
     auto_create_users: true,
     default_role_id: "member",
   });
+
+  let originalMaskedSecret = $state("");
 
   let testResult = $state<{
     success: boolean;
@@ -91,12 +87,16 @@
 
   // ============ API Helpers ============
 
-  async function apiCall(action: string, data: Record<string, unknown> = {}): Promise<unknown> {
+async function apiCall(action: string, data: Record<string, unknown> = {}): Promise<unknown> {
     const response = await fetch(clientResolver(resolve, "/manage/api"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action, data }),
     });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error((errorData as Record<string, string>).error || `Request failed with status ${response.status}`);
+    }
     return await response.json();
   }
 
@@ -105,9 +105,10 @@
   async function loadSettings() {
     loading = true;
     try {
-      const result = await apiCall("getSiteDataByKey", { key: "oidcSettings" }) as OidcSettings | { error: string };
+      const result = await apiCall("getOidcSettingsMasked") as OidcSettings | { error: string };
       if (result && !("error" in result)) {
         settings = { ...settings, ...result };
+        originalMaskedSecret = settings.client_secret;
       }
     } catch {
       toast.error("Failed to load OIDC settings");
@@ -119,12 +120,15 @@
   async function saveSettings() {
     saving = true;
     try {
-      const result = await apiCall("storeSiteData", { oidcSettings: JSON.stringify(settings) }) as { error?: string };
+      // Only include client_secret if it was changed from the masked value
+      const settingsToSave = { ...settings };
+      if (settingsToSave.client_secret === originalMaskedSecret) {
+        delete (settingsToSave as Record<string, unknown>).client_secret;
+      }
+      const result = await apiCall("storeSiteData", { oidcSettings: JSON.stringify(settingsToSave) }) as { error?: string };
       if (result?.error) {
         toast.error(result.error);
       } else {
-        // Clear the cached OIDC configuration so changes take effect
-        await apiCall("clearOidcCache");
         toast.success("OIDC settings saved");
       }
     } catch {

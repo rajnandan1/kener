@@ -85,4 +85,6 @@ export default {
   MAX_UPLOAD_BYTES: 2 * 1024 * 1024, // 2MB
   MAX_IMAGE_DIMENSION: 4096,
   MAX_INPUT_PIXELS: 4096 * 4096,
+  AUTH_PROVIDER_LOCAL: "local",
+  AUTH_PROVIDER_OIDC: "oidc",
 } as const;

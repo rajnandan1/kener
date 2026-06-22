@@ -126,6 +126,7 @@ class DbImpl {
   updateUserIsActive!: UsersRepository["updateUserIsActive"];
   updateUserPasswordById!: UsersRepository["updateUserPasswordById"];
   updateIsVerified!: UsersRepository["updateIsVerified"];
+  updateUserProfile!: UsersRepository["updateUserProfile"];
 
   // ============ Roles ============
   getRoleById!: UsersRepository["getRoleById"];
@@ -147,7 +148,6 @@ class DbImpl {
 
   // ============ OIDC ============
   getUserByOidcSub!: UsersRepository["getUserByOidcSub"];
-  updateUserOidcSub!: UsersRepository["updateUserOidcSub"];
   getAllOidcGroupRoleMappings!: UsersRepository["getAllOidcGroupRoleMappings"];
   getOidcGroupRoleMappingByGroup!: UsersRepository["getOidcGroupRoleMappingByGroup"];
   upsertOidcGroupRoleMapping!: UsersRepository["upsertOidcGroupRoleMapping"];
@@ -509,6 +509,7 @@ class DbImpl {
     this.deleteApiKey = this.users.deleteApiKey.bind(this.users);
     this.getApiKeyByHashedKey = this.users.getApiKeyByHashedKey.bind(this.users);
     this.getAllApiKeys = this.users.getAllApiKeys.bind(this.users);
+    this.updateUserProfile = this.users.updateUserProfile.bind(this.users);
 
     // Roles
     this.getRoleById = this.users.getRoleById.bind(this.users);
@@ -530,7 +531,6 @@ class DbImpl {
 
     // OIDC
     this.getUserByOidcSub = this.users.getUserByOidcSub.bind(this.users);
-    this.updateUserOidcSub = this.users.updateUserOidcSub.bind(this.users);
     this.getAllOidcGroupRoleMappings = this.users.getAllOidcGroupRoleMappings.bind(this.users);
     this.getOidcGroupRoleMappingByGroup = this.users.getOidcGroupRoleMappingByGroup.bind(this.users);
     this.upsertOidcGroupRoleMapping = this.users.upsertOidcGroupRoleMapping.bind(this.users);

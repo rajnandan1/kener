@@ -18,15 +18,8 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
-  // 2. Make password_hash nullable for OIDC users who have no local password.
-  //    SQLite does not support ALTER COLUMN, so we store an empty string
-  //    for OIDC users there. For PostgreSQL/MySQL we properly drop NOT NULL.
-  const dbClient = knex.client.config.client;
-  if (dbClient === "pg" || dbClient === "postgresql") {
-    await knex.schema.raw('ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL');
-  } else if (dbClient === "mysql" || dbClient === "mysql2") {
-    await knex.schema.raw('ALTER TABLE users MODIFY password_hash VARCHAR(255) NULL');
-  }
+  // Note: OIDC users store an empty string as password_hash.
+  // No schema change needed — the NOT NULL constraint is kept.
 
   // 3. Create OIDC group-to-role mapping table
   if (!(await knex.schema.hasTable("oidc_group_role_mappings"))) {

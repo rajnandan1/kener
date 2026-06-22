@@ -12,6 +12,7 @@
   import LogInIcon from "@lucide/svelte/icons/log-in";
   import * as Alert from "$lib/components/ui/alert/index.js";
   import type { PageProps } from "./$types";
+  import { resolve } from "$app/paths";
 
   let { data, form }: PageProps = $props();
   const isAdminAccountCreated: boolean = $derived(data.isAdminAccountCreated);
@@ -83,7 +84,7 @@
             <Button
               variant="outline"
               class="w-full"
-              href="/account/oidc/login"
+              href={resolve("/account/oidc/login")}
             >
               <LogInIcon class="mr-2 h-4 w-4" />
               Sign in with {oidcProviderName}
@@ -162,7 +163,7 @@
                     variant="link"
                     size="sm"
                     class="text-muted-foreground absolute top-0 right-0 h-auto p-0 text-xs"
-                    href="/account/forgot"
+                    href={resolve("/account/forgot")}
                   >
                     Forgot?
                   </Button>
