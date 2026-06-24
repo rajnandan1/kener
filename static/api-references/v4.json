@@ -1836,7 +1836,14 @@
             "additionalProperties": true
           },
           "external_url": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false
