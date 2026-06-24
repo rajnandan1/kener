@@ -79,6 +79,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   updateData.monitor_type = body.monitor_type !== undefined ? body.monitor_type : existingMonitor.monitor_type;
 
   updateData.is_hidden = body.is_hidden !== undefined ? body.is_hidden : existingMonitor.is_hidden;
+  updateData.external_url = body.external_url !== undefined ? body.external_url : existingMonitor.external_url;
 
   if (body.confirmation_threshold === null) {
     // Explicit null resets the grace period to the default (1 = off); undefined keeps the existing value.

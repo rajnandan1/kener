@@ -130,6 +130,7 @@ export const POST: RequestHandler = async ({ request }) => {
     is_hidden: body.is_hidden ?? "NO",
     confirmation_threshold: confirmationThreshold,
     monitor_settings_json: body.monitor_settings_json ? JSON.stringify(body.monitor_settings_json) : null,
+    external_url: body.external_url ?? null,
   };
 
   await db.insertMonitor(monitorData);
