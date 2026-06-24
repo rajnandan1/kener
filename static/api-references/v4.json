@@ -1784,6 +1784,16 @@
           "monitor_settings_json": {
             "type": "object",
             "additionalProperties": true
+          },
+          "external_url": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": true
