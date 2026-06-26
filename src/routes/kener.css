@@ -329,7 +329,7 @@ body::-webkit-scrollbar {
    stays transparent, so page content shows through both sections while scrolling. This paints
    one blurred layer behind both: above page content, below the nav (z-10) and the bar (z-20).
    Override --top-glass-h if the nav/bar wrap onto extra lines. */
-.kener-public::before {
+.kener-public.status-page-app::before {
   content: "";
   position: fixed;
   inset: 0 0 auto 0;
@@ -340,6 +340,6 @@ body::-webkit-scrollbar {
   backdrop-filter: blur(12px);
   pointer-events: none;
 }
-:is(.dark) .kener-public::before {
+:is(.dark) .kener-public.status-page-app::before {
   background-color: color-mix(in oklab, var(--background) 70%, transparent);
 }

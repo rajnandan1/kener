@@ -8,6 +8,7 @@ export interface MonitoringResult {
   latency: number;
   type: string;
   error_message?: string;
+  raw_status?: string;
 }
 
 export interface MonitoringResultTS {

@@ -1,9 +1,0 @@
-# Fail-fast, self-healing database pool defaults
-
-`knexfile.ts` overrides knex's pool defaults for network databases (Postgres, MySQL): `pool.min` is 0 instead of 2, acquire/create timeouts are 15s instead of 60s/30s, and TCP keepalive is enabled on connections. All knobs are overridable via `DATABASE_*` env vars.
-
-Two production incidents drove this. On Railway, a Postgres outage caused every request to hang for knex's default 60s `acquireConnectionTimeout` before failing with `KnexTimeoutError`, and after the database recovered the app stayed broken until a manual restart. In Docker Swarm (#692), the overlay network's conntrack silently dropped idle TCP connections after ~20 minutes, so the first request after an idle period drew a dead socket from the pool and returned a 500; the reporter worked around it with server-side Postgres `tcp_keepalives_*` settings and asked for an application-level fix.
-
-Both share one root cause: knex keeps `pool.min` connections forever and never validates them. Those permanently-idle sockets are exactly the ones cloud networks (Railway proxies, Swarm overlays, k8s) silently kill, and after any database blip they wedge the pool with corpses. `min: 0` lets the reaper retire every idle connection (`idleTimeoutMillis` 30s, well under typical conntrack windows), keepalive lets the OS detect silently-dropped sockets, and the 15s timeouts turn a minute-long hang into a fast failure during an outage.
-
-The trade-off: a quiet instance pays connection setup on the first query after idle (tens of milliseconds), and a database that takes longer than 15s to accept connections will see failures where the old defaults would have waited a minute. Deployments with such databases can raise `DATABASE_ACQUIRE_TIMEOUT_MS` / `DATABASE_CREATE_TIMEOUT_MS` rather than the project reverting to defaults that wedge everyone else.

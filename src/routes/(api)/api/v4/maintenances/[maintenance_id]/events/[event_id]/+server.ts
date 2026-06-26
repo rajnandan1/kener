@@ -11,6 +11,8 @@ import type {
 } from "$lib/types/api";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { GetSiteURL } from "$lib/server/controllers/siteDataController";
+import { UpdateMaintenanceEventStatus } from "$lib/server/controllers/maintenanceController";
+import GC from "$lib/global-constants";
 import serverResolver from "$lib/server/resolver";
 
 function formatDateToISO(date: Date | string): string {
@@ -116,7 +118,46 @@ export const PATCH: RequestHandler = async ({ locals, params, request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  // Validate required fields - both are required for event update
+  // Transition mode: `status` alone, mutually exclusive with window edits
+  if (body.status !== undefined) {
+    if (body.start_date_time !== undefined || body.end_date_time !== undefined) {
+      const errorResponse: BadRequestResponse = {
+        error: {
+          code: "BAD_REQUEST",
+          message: "Cannot update status and start/end times in the same request",
+        },
+      };
+      return json(errorResponse, { status: 400 });
+    }
+
+    if (body.status !== GC.COMPLETED && body.status !== GC.CANCELLED) {
+      const errorResponse: BadRequestResponse = {
+        error: {
+          code: "BAD_REQUEST",
+          message: `status must be ${GC.COMPLETED} or ${GC.CANCELLED}`,
+        },
+      };
+      return json(errorResponse, { status: 400 });
+    }
+
+    try {
+      const updatedEvent = await UpdateMaintenanceEventStatus(eventId, body.status);
+      const response: UpdateMaintenanceEventResponse = {
+        event: await buildEventResponse(updatedEvent),
+      };
+      return json(response);
+    } catch (err) {
+      const errorResponse: BadRequestResponse = {
+        error: {
+          code: "BAD_REQUEST",
+          message: err instanceof Error ? err.message : "Failed to update event status",
+        },
+      };
+      return json(errorResponse, { status: 400 });
+    }
+  }
+
+  // Window edit mode: both times required
   if (body.start_date_time === undefined || body.start_date_time === null) {
     const errorResponse: BadRequestResponse = {
       error: {

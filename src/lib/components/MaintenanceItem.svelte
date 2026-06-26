@@ -12,6 +12,8 @@
   import clientResolver from "$lib/client/resolver.js";
   import { GetInitials } from "$lib/clientTools.js";
   import type { MaintenanceEventsMonitorList } from "$lib/server/types/db";
+  import { SveltePurify } from "@humanspeak/svelte-purify";
+  import mdToHTML from "$lib/marked";
   import { page } from "$app/state";
 
   interface Props {
@@ -42,9 +44,11 @@
     </div>
 
     {#if maintenance.description}
-      <p class="text-muted-foreground mt-1 text-sm">
-        {maintenance.description}
-      </p>
+      <div
+        class="prose prose-sm dark:prose-invert text-muted-foreground mt-1 max-w-none min-w-0 overflow-x-auto text-sm wrap-break-word"
+      >
+        <SveltePurify html={mdToHTML(maintenance.description)} />
+      </div>
     {/if}
 
     {#if maintenance.monitors && maintenance.monitors.length > 0 && !hideMonitors}

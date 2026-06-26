@@ -18,71 +18,63 @@ FREQ=frequency[;INTERVAL=n][;BYDAY=days][;BYMONTHDAY=day][;COUNT=n][;UNTIL=date]
 ### Supported Components {#supported-components}
 
 **FREQ** (Required)
-title: RRULE Patterns
-description: Common RRULE patterns for recurring maintenance schedules
 
+- `DAILY` - Daily recurrence
 - `WEEKLY` - Weekly recurrence
 - `MONTHLY` - Monthly recurrence
-  Kener uses iCalendar RRULE strings to schedule recurring maintenances.
-  **INTERVAL** (Optional)
 
-## RRULE basics {#rrule-basics}
+**INTERVAL** (Optional)
 
 - Default: 1
-  Format:
+- Integer value: 2 = every other, 3 = every third, etc.
 
-```text
-FREQ=...;[INTERVAL=n];[BYDAY=...];[BYMONTHDAY=...]
-```
+**BYDAY** (Optional, for WEEKLY)
 
-For one-time maintenances, Kener uses:
+- Day codes: `MO`, `TU`, `WE`, `TH`, `FR`, `SA`, `SU`
+- Multiple days: `MO,WE,FR`
+
 **BYMONTHDAY** (Optional, for MONTHLY)
 
-```text
-FREQ=MINUTELY;COUNT=1
-```
-
 - Day of month: 1-31
+- Example: `BYMONTHDAY=1` (first of month)
 
-## Common patterns {#common-patterns}
+**COUNT** (For one-time only)
 
-| Use case                | RRULE                              |
-| ----------------------- | ---------------------------------- |
-| Every day               | `FREQ=DAILY`                       |
-| Every Sunday            | `FREQ=WEEKLY;BYDAY=SU`             |
-| Weekdays                | `FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR` |
-| Every 2 weeks on Monday | `FREQ=WEEKLY;INTERVAL=2;BYDAY=MO`  |
-| First day of each month | `FREQ=MONTHLY;BYMONTHDAY=1`        |
-
+- `COUNT=1` - Single occurrence
 - Used for one-time maintenances
-
-## Day codes {#day-codes}
 
 ## Common Patterns {#common-patterns}
 
-- `MO` Monday
-- `TU` Tuesday
-- `WE` Wednesday
-- `TH` Thursday
-- `FR` Friday
-- `SA` Saturday
-- `SU` Sunday
+### Daily Patterns {#daily-patterns}
 
-## Tips {#tips}
+#### Every Day {#every-day}
 
-- Use simple, readable patterns.
-- Verify next occurrences in the maintenance UI preview.
-- Avoid overlapping schedules for the same monitor.
-  **Description:** Maintenance occurs every single day at the configured time
+**RRULE:** `FREQ=DAILY`
 
-## Related guides {#related-guides}
+**Description:** Maintenance occurs every single day at the configured time
 
 **Use Case:** Daily backup windows, nightly cleanup tasks
 
-- [Creating and Managing Maintenances](/docs/v4/maintenances/creating-managing)
-- [Maintenance Events](/docs/v4/maintenances/events)
-- [Maintenances Overview](/docs/v4/maintenances/overview)
-  **Description:** Maintenance occurs every 2 days
+**Example:**
+
+```
+Title: Nightly Database Backup
+Start: 2:00 AM (any day)
+RRULE: FREQ=DAILY
+Duration: 30 minutes
+
+Occurrences:
+- Today at 2:00 AM
+- Tomorrow at 2:00 AM
+- Day after at 2:00 AM
+- Continues daily...
+```
+
+#### Every Other Day {#every-other-day}
+
+**RRULE:** `FREQ=DAILY;INTERVAL=2`
+
+**Description:** Maintenance occurs every 2 days
 
 **Use Case:** Bi-daily tasks
 
@@ -625,6 +617,6 @@ Description: |
 
 ## Next Steps {#next-steps}
 
-- [Creating and Managing Maintenances](/docs/maintenances/creating-managing) - Apply these patterns in the dashboard
-- [Maintenance Events](/docs/maintenances/events) - Understand how RRULE generates events
-- [Maintenance Overview](/docs/maintenances/overview) - Learn maintenance fundamentals
+- [Creating and Managing Maintenances](/docs/v4/maintenances/creating-managing) - Apply these patterns in the dashboard
+- [Maintenance Events](/docs/v4/maintenances/events) - Understand how RRULE generates events
+- [Maintenance Overview](/docs/v4/maintenances/overview) - Learn maintenance fundamentals

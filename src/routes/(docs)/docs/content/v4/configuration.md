@@ -196,7 +196,7 @@ status.yourdomain.com {
 
 ## Next Steps
 
-- Set up [Monitors](/docs/monitors)
-- Configure [Incidents](/docs/incidents)
+- Set up [Monitors](/docs/v4/monitors)
+- Configure [Incidents](/docs/v4/incidents)
 - Configure [Sharing Monitors](/docs/v4/sharing)
-- Explore the [API Reference](/docs/api-reference)
+- Explore the [API Reference](/docs/spec/v4/)

@@ -1,4 +1,5 @@
 import { redisIOConnection } from "../redisConnector.js";
+import db from "../db/db.js";
 import {
   Queue,
   Worker,
@@ -40,7 +41,15 @@ export const createWorker = <T = unknown, R = unknown>(
     concurrency: 5,
     ...options,
   };
-  return new Worker<T, R>(queue.name, processor, opts);
+  // Route every job's database access to the worker pool. This is the single
+  // chokepoint all BullMQ workers and schedulers flow through, so wrapping here
+  // isolates background work from the web request pool (see db/poolContext.ts).
+  // Sandboxed (string/URL) processors run out-of-process and pass through.
+  const wrapped: Processor<T, R> =
+    typeof processor === "function"
+      ? (job, token) => db.runInWorkerContext(() => Promise.resolve(processor(job, token)))
+      : processor;
+  return new Worker<T, R>(queue.name, wrapped, opts);
 };
 
 export default {

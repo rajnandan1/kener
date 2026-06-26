@@ -26,6 +26,7 @@ Use **Manage → Site Configurations** to control identity, navigation, monitor 
 | Monitor sub menu options     | `subMenuOptions`                                             | Gates monitor share actions (badges/embed) on public monitor pages                              |
 | Global page visibility       | `globalPageVisibilitySettings`                               | Controls page switcher visibility and page-scoped navigation/events                             |
 | Data retention policy        | `dataRetentionPolicy`                                        | Controls daily cleanup of old `monitoring_data`                                                 |
+| Event display settings       | `eventDisplaySettings`                                       | Controls event visibility and whether events render inline or in the notification surface       |
 | Maintenance notifications    | `globalMaintenanceNotificationSettings`                      | Controls which maintenance lifecycle events notify subscribers and reminder buffer timing       |
 | Social preview & SEO         | `metaSiteTitle`, `metaSiteDescription`, `socialPreviewImage` | Default `<title>`, `og:title`, `<meta description>`, `og:description`, `og:image` for all pages |
 
@@ -76,13 +77,14 @@ When enabled, cleanup runs daily at midnight UTC.
 
 `eventDisplaySettings` controls which events are visible:
 
+- `showInlineEvents`: when `true`, ongoing/upcoming events render inline on status pages; when `false` (default), they are shown through the notification UI.
 - incidents: ongoing/resolved + resolved limits
 - maintenances: ongoing/past/upcoming + limits
 
 This affects:
 
 - event sections on status pages
-- notifications payload API used by the UI
+- notification UI visibility and payloads used by the UI
 
 ## Maintenance notification settings {#maintenance-notification-settings}
 
@@ -126,7 +128,7 @@ These values are used as defaults for every page. Individual pages can override 
 - Enable `forceExclusivity` and verify:
     - brand link stays within current page path,
     - notifications calendar opens page-scoped events for the current month.
-- Change event display settings and verify incident/maintenance visibility.
+- Change event display settings and verify inline events vs notification UI behavior.
 - Set retention policy and confirm scheduler logs in server output.
 - Toggle maintenance notification event types and verify subscribers receive (or don't receive) emails at each lifecycle stage.
 - Set meta title/description and social preview image, then check `<meta>` tags in page source.

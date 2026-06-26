@@ -48,6 +48,7 @@ export interface LayoutServerData {
   subMenuOptions: {
     showShareBadgeMonitor: boolean;
     showShareEmbedMonitor: boolean;
+    showRssFeed: boolean;
   };
   isTimezoneEnabled: boolean;
   isThemeToggleEnabled: boolean;
@@ -73,6 +74,43 @@ export interface LayoutServerData {
   dateAndTimeFormat: SiteDateTimeFormat;
   metaSiteTitle?: string;
   metaSiteDescription?: string;
+}
+
+function NormalizeEventDisplaySettings(settings?: Partial<EventDisplaySettings>): EventDisplaySettings {
+  const defaults = structuredClone(seedSiteData.eventDisplaySettings);
+
+  return {
+    showInlineEvents:
+      typeof settings?.showInlineEvents === "boolean" ? settings.showInlineEvents : defaults.showInlineEvents,
+    incidents: {
+      ...defaults.incidents,
+      ...settings?.incidents,
+      ongoing: {
+        ...defaults.incidents.ongoing,
+        ...settings?.incidents?.ongoing,
+      },
+      resolved: {
+        ...defaults.incidents.resolved,
+        ...settings?.incidents?.resolved,
+      },
+    },
+    maintenances: {
+      ...defaults.maintenances,
+      ...settings?.maintenances,
+      ongoing: {
+        ...defaults.maintenances.ongoing,
+        ...settings?.maintenances?.ongoing,
+      },
+      past: {
+        ...defaults.maintenances.past,
+        ...settings?.maintenances?.past,
+      },
+      upcoming: {
+        ...defaults.maintenances.upcoming,
+        ...settings?.maintenances?.upcoming,
+      },
+    },
+  };
 }
 
 export async function GetLayoutServerData(cookies: Cookies, request: Request): Promise<LayoutServerData> {
@@ -138,7 +176,7 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     font,
     canSendEmail,
     announcement: siteData.announcement,
-    eventDisplaySettings: siteData.eventDisplaySettings || seedSiteData.eventDisplaySettings,
+    eventDisplaySettings: NormalizeEventDisplaySettings(siteData.eventDisplaySettings),
     socialPreviewImage: siteData.socialPreviewImage,
     customCSS: siteData.customCSS,
     globalPageVisibilitySettings: siteData.globalPageVisibilitySettings || seedSiteData.globalPageVisibilitySettings,

@@ -10,6 +10,7 @@ export interface MonitoringData {
   latency: number | null;
   type: string | null;
   error_message?: string | null;
+  raw_status?: string | null;
 }
 
 export interface MonitoringDataInsert {
@@ -19,6 +20,7 @@ export interface MonitoringDataInsert {
   latency: number;
   type: string;
   error_message?: string | null;
+  raw_status?: string | null;
 }
 
 export interface AggregatedMonitoringData {
@@ -78,6 +80,7 @@ export interface MonitorRecord {
   external_url?: string | null;
   day_degraded_minimum_count?: number | null;
   day_down_minimum_count?: number | null;
+  confirmation_threshold?: number | null;
   include_degraded_in_downtime?: string;
   is_hidden: string;
   monitor_settings_json: string | null;
@@ -135,6 +138,7 @@ export interface MonitorRecordTyped {
   type_data: Record<string, unknown> | null;
   day_degraded_minimum_count?: number | null;
   day_down_minimum_count?: number | null;
+  confirmation_threshold?: number | null;
   include_degraded_in_downtime?: string;
   is_hidden: string;
   monitor_settings_json: MonitorSettings | null;
@@ -158,6 +162,7 @@ export interface MonitorRecordInsert {
   type_data?: string | null;
   day_degraded_minimum_count?: number | null;
   day_down_minimum_count?: number | null;
+  confirmation_threshold?: number | null;
   include_degraded_in_downtime?: string;
   is_hidden?: string;
   monitor_settings_json?: string | null;
@@ -642,6 +647,7 @@ export interface MaintenanceEventsMonitorList {
   description: string | null;
   start_date_time: number; // Unix timestamp - when the first occurrence starts
   end_date_time: number; // Unix timestamp - when the first occurrence ends
+  is_global: YesNoType; // "YES" when the maintenance affects all monitors (no per-monitor rows)
   monitors: MaintenanceMonitorImpact[];
   created_at: Date;
   updated_at: Date;

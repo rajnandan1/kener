@@ -11,7 +11,7 @@
  * incidents.write    → createIncident, updateIncident, deleteIncident, addMonitor, removeMonitor, addComment, deleteComment, updateComment
  *
  * maintenances.read  → getMaintenances, getMaintenance, getMaintenanceEvents, getMaintenanceEvent, getMaintenanceMonitors
- * maintenances.write → createMaintenance, updateMaintenance, deleteMaintenance, createMaintenanceEvent, updateMaintenanceEvent, deleteMaintenanceEvent, addMonitorToMaintenance, removeMonitorFromMaintenance, updateMaintenanceMonitorImpact
+ * maintenances.write → createMaintenance, updateMaintenance, deleteMaintenance, createMaintenanceEvent, updateMaintenanceEvent, updateMaintenanceEventStatus, deleteMaintenanceEvent, addMonitorToMaintenance, removeMonitorFromMaintenance, updateMaintenanceMonitorImpact
  *
  * pages.read         → getPages
  * pages.write        → createPage, updatePage, deletePage, addMonitorToPage, removeMonitorFromPage, reorderPageMonitors
@@ -150,6 +150,7 @@ export const ACTION_PERMISSION_MAP: Record<string, string | null> = {
   deleteMaintenance: "maintenances.write",
   createMaintenanceEvent: "maintenances.write",
   updateMaintenanceEvent: "maintenances.write",
+  updateMaintenanceEventStatus: "maintenances.write",
   deleteMaintenanceEvent: "maintenances.write",
   addMonitorToMaintenance: "maintenances.write",
   removeMonitorFromMaintenance: "maintenances.write",

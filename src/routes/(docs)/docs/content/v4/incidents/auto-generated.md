@@ -148,45 +148,62 @@ This provides complete context about:
 
 When the alert resolves, a detailed closure update is added:
 
+```markdown
 The alert has been resolved, Total duration: 47 minutes
 
 #### Alert Details
 
-title: Auto-Generated Incidents
-description: Quick reference for incident creation via alerting
+| Setting               | Value       |
 | :-------------------- | :---------- |
-| **Monitor Name** | Payment API |
-Kener can auto-create incidents from alert configurations.
-| **Monitor Tag** | payment-api |
-
-## How it works {#how-it-works}
-
-| **Alert Value** | DOWN |
-
-1. Alert triggers.
-2. Alert has **Create Incident = YES**.
-3. Incident is created and monitor is attached.
-4. When alert resolves, incident is resolved automatically.
-   | **Failure Threshold** | 3 |
-
-## Where to configure {#where-to-configure}
+| **Monitor Name**      | Payment API |
+| **Incident Status**   | RESOLVED    |
+| **Monitor Tag**       | payment-api |
+| **Alert Type**        | STATUS      |
+| **Alert Value**       | DOWN        |
+| **Severity**          | CRITICAL    |
+| **Failure Threshold** | 3           |
+| **Success Threshold** | 5           |
+```
 
 This includes:
-Use **Manage → Alerts → Alert Configurations**.
 
 - Total incident duration
-
-## Notes {#notes}
-
+- Alert configuration
 - Resolution confirmation
-- Auto-generated incidents are ideal for critical, user-facing alerts.
-- Tune thresholds to avoid noisy incident creation.
+- Success threshold that was met
 
-## See also {#see-also}
+## Configuration Requirements {#configuration-requirements}
 
-- [Alert Configurations](/docs/v4/alerting/alert-configurations)
-- [Triggers](/docs/v4/alerting/triggers)
-- [Creating and Managing Incidents](/docs/v4/incidents/creating-managing)
+To enable auto-generated incidents:
+
+### 1. Create Alert Configuration {#create-alert-config}
+
+Navigate to **Manage > Alerts > Create Alert**
+
+**Configure:**
+
+- Monitor to watch
+- Alert type (STATUS, LATENCY, UPTIME)
+- Alert value (threshold)
+- Failure threshold
+- Success threshold
+- Severity (CRITICAL or WARNING)
+
+**Enable Incident Creation:**
+
+- Set **Create Incident** to **YES**
+
+See [Alert Configurations](/docs/v4/alerting/alert-configurations) for complete details.
+
+### 2. Configure Triggers (Optional) {#configure-triggers}
+
+While triggers are optional for incident creation, they enable notifications:
+
+**Create Triggers:**
+
+- Discord
+- Slack
+- Email
 - Webhook
 
 **Attach to Alert:**
@@ -194,7 +211,7 @@ Use **Manage → Alerts → Alert Configurations**.
 - Select triggers when creating/editing alert
 - Triggers fire on both TRIGGERED and RESOLVED events
 
-See [Triggers](/docs/alerting/triggers) for setup.
+See [Triggers](/docs/v4/alerting/triggers) for setup.
 
 ## Manual vs Auto-Generated {#manual-vs-auto}
 
@@ -289,11 +306,13 @@ A monitor can have multiple alert configurations:
 
 **Example:**
 
+```
 Monitor: api-gateway
 
 Alert 1: STATUS - DOWN (failure: 1)
 Alert 2: LATENCY - 1000ms (failure: 5)
 Alert 3: UPTIME - 99.9% (failure: 10)
+```
 
 **Each Alert:**
 
@@ -330,7 +349,7 @@ When incident is auto-resolved:
 - Uses configured templates
 - Variable: `is_resolved = true`
 
-See [Triggers](/docs/alerting/triggers) and [Templates](/docs/alerting/templates) for customization.
+See [Triggers](/docs/v4/alerting/triggers) and [Templates](/docs/v4/alerting/templates) for customization.
 
 ### Subscriber Notifications {#subscriber-notifications}
 
@@ -427,7 +446,7 @@ Every alert trigger creates an alert event log:
 3. Trigger credentials valid
 4. Check trigger logs for errors
 
-See [Troubleshooting Triggers](/docs/alerting/triggers#troubleshooting-triggers) for detailed diagnosing.
+See [Troubleshooting Triggers](/docs/v4/alerting/triggers#troubleshooting-triggers) for detailed diagnosing.
 
 ## Best Practices {#best-practices}
 
@@ -465,11 +484,13 @@ See [Troubleshooting Triggers](/docs/alerting/triggers#troubleshooting-triggers)
 
 **Workflow:**
 
+```
 1. Alert triggers → Auto-creates incident
 2. You investigate → Add IDENTIFIED update
 3. You deploy fix → Add MONITORING update
 4. Alert resolves → Auto-adds RESOLVED update
 5. You add post-mortem → Add final manual update
+```
 
 ### Threshold Tuning {#threshold-tuning}
 
@@ -493,7 +514,7 @@ See [Troubleshooting Triggers](/docs/alerting/triggers#troubleshooting-triggers)
 
 ## Next Steps {#next-steps}
 
-- [Alert Configurations](/docs/alerting/alert-configurations) - Set up alerts that create incidents
-- [Triggers](/docs/alerting/triggers) - Configure notification channels
-- [Incident Updates](/docs/incidents/updates) - Add manual updates to auto-generated incidents
-- [Incident Overview](/docs/incidents/overview) - Understand incident basics
+- [Alert Configurations](/docs/v4/alerting/alert-configurations) - Set up alerts that create incidents
+- [Triggers](/docs/v4/alerting/triggers) - Configure notification channels
+- [Incident Updates](/docs/v4/incidents/updates) - Add manual updates to auto-generated incidents
+- [Incident Overview](/docs/v4/incidents/overview) - Understand incident basics

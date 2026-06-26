@@ -488,18 +488,75 @@ export const UpdateMaintenanceEvent = async (
   return await db.updateMaintenanceEvent(id, data);
 };
 
-export const UpdateMaintenanceEventStatus = async (id: number, status: string): Promise<number> => {
-  const validStatuses = ["SCHEDULED", "IN_PROGRESS", "COMPLETED", "CANCELLED"];
-  if (!validStatuses.includes(status)) {
-    throw new Error(`Invalid status: ${status}`);
+/**
+ * Manually transition a maintenance event to a terminal status.
+ * Allowed transitions: ONGOING → COMPLETED, SCHEDULED/READY/ONGOING → CANCELLED.
+ * An event that already started has its end_date_time moved to the moment it was
+ * ended (the record reflects what actually happened); an event that never started
+ * keeps its planned window. See docs/adr/0006-manual-maintenance-event-transitions.md
+ */
+export const UpdateMaintenanceEventStatus = async (id: number, status: string): Promise<MaintenanceEventRecord> => {
+  if (status !== GC.COMPLETED && status !== GC.CANCELLED) {
+    throw new Error(`Invalid status: ${status}. Allowed values are ${GC.COMPLETED} and ${GC.CANCELLED}`);
   }
+  const targetStatus = status as "COMPLETED" | "CANCELLED";
 
   const existing = await db.getMaintenanceEventById(id);
   if (!existing) {
     throw new Error(`Maintenance event with id ${id} does not exist`);
   }
 
-  return await db.updateMaintenanceEventStatus(id, status);
+  const allowedFrom: string[] = targetStatus === GC.COMPLETED ? [GC.ONGOING] : [GC.SCHEDULED, GC.READY, GC.ONGOING];
+  if (!allowedFrom.includes(existing.status)) {
+    throw new Error(`Cannot transition event from ${existing.status} to ${targetStatus}`);
+  }
+
+  if (existing.status === GC.ONGOING) {
+    // Ended now, but never before its first minute nor after its planned end
+    const endDateTime = Math.min(
+      existing.end_date_time,
+      Math.max(GetMinuteStartNowTimestampUTC(), existing.start_date_time + 60),
+    );
+    await db.updateMaintenanceEvent(id, { status: targetStatus, end_date_time: endDateTime });
+  } else {
+    await db.updateMaintenanceEventStatus(id, targetStatus);
+  }
+
+  const updated = await db.getMaintenanceEventById(id);
+  if (!updated) {
+    throw new Error(`Maintenance event with id ${id} does not exist`);
+  }
+
+  try {
+    const siteData = await GetAllSiteData();
+    const notificationSettings =
+      siteData.globalMaintenanceNotificationSettings || seedSiteData.globalMaintenanceNotificationSettings;
+    if (notificationSettings.event_types.ended) {
+      const siteVars = siteDataToVariables(siteData);
+      const siteUrl = siteVars.site_url;
+      const maintenance = await db.getMaintenanceById(updated.maintenance_id);
+      const monitors = await db.getMonitorsByMaintenanceId(updated.maintenance_id);
+      const monitorNames = monitors.map((m) => `${m.monitor_name}(${m.monitor_impact})`).join(", ");
+      const eventDetailed: MaintenanceEventRecordDetailed = {
+        ...updated,
+        title: maintenance?.title || "",
+        description: maintenance?.description || null,
+      };
+      const update = maintenanceToVariables(
+        eventDetailed,
+        monitorNames,
+        targetStatus === GC.COMPLETED ? "**has been completed**" : "**has been cancelled**",
+        targetStatus === GC.COMPLETED ? "completed" : "cancelled",
+        targetStatus === GC.COMPLETED ? "Maintenance Completed" : "Maintenance Cancelled",
+        siteUrl,
+      );
+      await subscriberQueue.push(update);
+    }
+  } catch (err) {
+    console.error(`Error sending ${targetStatus} notification for maintenance event ${id}:`, err);
+  }
+
+  return updated;
 };
 
 export const DeleteMaintenanceEvent = async (id: number): Promise<number> => {

@@ -242,7 +242,8 @@ SMTP_SECURE=1
 | :---------------------------- | :----------------------------------------------------------- | :------------------------------------ |
 | `DATABASE_URL`                | Full database connection string                              | `sqlite://./database/kener.sqlite.db` |
 | `DATABASE_POOL_MIN`           | Minimum pool connections (PostgreSQL/MySQL)                  | `0`                                   |
-| `DATABASE_POOL_MAX`           | Maximum pool connections (PostgreSQL/MySQL)                  | `10`                                  |
+| `DATABASE_POOL_MAX`           | Max web/request pool connections (PostgreSQL/MySQL)          | `10`                                  |
+| `DATABASE_WORKER_POOL_MAX`    | Max background-job pool connections (PostgreSQL/MySQL)       | `5`                                   |
 | `DATABASE_ACQUIRE_TIMEOUT_MS` | Wait for a free connection before failing (PostgreSQL/MySQL) | `15000`                               |
 | `DATABASE_CREATE_TIMEOUT_MS`  | Wait for a new connection before failing (PostgreSQL/MySQL)  | `15000`                               |
 | `DATABASE_IDLE_TIMEOUT_MS`    | Idle time before a connection is closed (PostgreSQL/MySQL)   | `30000`                               |

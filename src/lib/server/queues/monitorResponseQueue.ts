@@ -18,6 +18,7 @@ interface JobData {
   monitorTag: string;
   ts: number;
   error_message?: string | null;
+  raw_status?: string | null;
 }
 
 const getQueue = () => {
@@ -31,7 +32,7 @@ const addWorker = () => {
   if (worker) return worker;
 
   worker = q.createWorker(getQueue(), async (job: Job): Promise<MonitoringData | null> => {
-    const { monitorTag, ts, status, latency, type, error_message } = job.data as JobData;
+    const { monitorTag, ts, status, latency, type, error_message, raw_status } = job.data as JobData;
 
     // Get old status before inserting new data (for status change detection)
     let oldStatus: string | undefined;
@@ -47,6 +48,7 @@ const addWorker = () => {
       latency: latency,
       type: type,
       error_message: error_message,
+      raw_status: raw_status,
     });
 
     if (!dbRes) {

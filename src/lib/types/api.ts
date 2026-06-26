@@ -92,6 +92,7 @@ export interface MonitorResponse {
   type_data: MonitorTypeData | null;
   include_degraded_in_downtime: string;
   is_hidden: string;
+  confirmation_threshold?: number | null;
   monitor_settings_json: MonitorSettings | null;
   created_at: string;
   updated_at: string;
@@ -118,7 +119,9 @@ export interface CreateMonitorRequest {
   type_data?: MonitorTypeData | null;
   include_degraded_in_downtime?: string;
   is_hidden?: string;
+  confirmation_threshold?: number | null;
   monitor_settings_json?: MonitorSettings | null;
+  external_url?: string | null;
 }
 
 export interface CreateMonitorResponse {
@@ -137,11 +140,17 @@ export interface UpdateMonitorRequest {
   type_data?: MonitorTypeData | null;
   include_degraded_in_downtime?: string;
   is_hidden?: string;
+  confirmation_threshold?: number | null;
   monitor_settings_json?: MonitorSettings | null;
+  external_url?: string | null;
 }
 
 export interface UpdateMonitorResponse {
   monitor: MonitorRecordTyped;
+}
+
+export interface DeleteMonitorResponse {
+  message: string;
 }
 
 // Monitoring Data API types
@@ -369,8 +378,15 @@ export interface GetMaintenanceEventResponse {
 }
 
 export interface UpdateMaintenanceEventRequest {
-  start_date_time: number;
-  end_date_time: number;
+  /** Window edit mode: both times required. Cannot be combined with `status`. */
+  start_date_time?: number;
+  end_date_time?: number;
+  /**
+   * Transition mode: COMPLETED (from ONGOING) or CANCELLED (from SCHEDULED/READY/ONGOING).
+   * Cannot be combined with time fields. Transitioning an ONGOING event moves its
+   * end_date_time to the moment of the transition.
+   */
+  status?: "COMPLETED" | "CANCELLED";
 }
 
 export interface UpdateMaintenanceEventResponse {

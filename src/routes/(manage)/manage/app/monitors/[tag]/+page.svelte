@@ -75,6 +75,7 @@
     category_name: "Home",
     monitor_type: "" as MonitorType,
     is_hidden: "NO",
+    confirmation_threshold: 1,
     monitor_settings_json: "",
     external_url: ""
   });
@@ -116,6 +117,7 @@
           category_name: m.category_name || "Home",
           monitor_type: m.monitor_type || "",
           is_hidden: m.is_hidden || "NO",
+          confirmation_threshold: m.confirmation_threshold ?? 1,
           monitor_settings_json: m.monitor_settings_json || "",
           external_url: m.external_url || ""
         };

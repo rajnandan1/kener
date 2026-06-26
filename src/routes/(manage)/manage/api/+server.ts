@@ -74,6 +74,7 @@ import {
   GetMaintenanceEventById,
   GetMaintenanceEventsByMaintenanceId,
   UpdateMaintenanceEvent,
+  UpdateMaintenanceEventStatus,
   DeleteMaintenanceEvent,
   AddMonitorToMaintenance,
   RemoveMonitorFromMaintenance,
@@ -444,6 +445,8 @@ export async function POST({ request, cookies }) {
       const { id, ...updateData } = data;
       await UpdateMaintenanceEvent(id, updateData);
       resp = { success: true };
+    } else if (action == "updateMaintenanceEventStatus") {
+      resp = await UpdateMaintenanceEventStatus(data.id, data.status);
     } else if (action == "deleteMaintenanceEvent") {
       await DeleteMaintenanceEvent(data.id);
       resp = { success: true };

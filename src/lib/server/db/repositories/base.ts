@@ -1,4 +1,5 @@
 import type { Knex as KnexType } from "knex";
+import { getWorkerKnex } from "../poolContext.js";
 
 // Filter types for queries
 export interface MonitorFilter {
@@ -35,9 +36,22 @@ export interface CountResult {
  * Base repository class that provides access to the Knex instance
  */
 export abstract class BaseRepository {
-  protected knex: KnexType;
+  private readonly fallbackKnex: KnexType;
 
   constructor(knex: KnexType) {
-    this.knex = knex;
+    this.fallbackKnex = knex;
+  }
+
+  /**
+   * The Knex instance for the current execution context.
+   *
+   * Background jobs run inside a worker-pool context (set in queues/q.ts), so
+   * their queries use the dedicated worker connection pool. Everything else —
+   * SvelteKit requests, startup — falls back to the web pool this repository
+   * was constructed with. This keeps a burst of background jobs from exhausting
+   * the connections that serve page loads. See poolContext.ts and knexfile.ts.
+   */
+  protected get knex(): KnexType {
+    return getWorkerKnex() ?? this.fallbackKnex;
   }
 }

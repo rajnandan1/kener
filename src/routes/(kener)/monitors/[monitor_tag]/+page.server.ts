@@ -36,10 +36,15 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   const monitorTags = [monitor_tag];
 
   const eventSettings = parentData.eventDisplaySettings;
+  const showInlineEvents = eventSettings.showInlineEvents === true;
   const [ongoingIncidents, ongoingMaintenances, upcomingMaintenances] = await Promise.all([
-    GetOngoingIncidentsForMonitorList(monitorTags),
-    GetOngoingMaintenanceEventsForMonitorList(monitorTags),
-    eventSettings.maintenances.enabled && eventSettings.maintenances.upcoming.show
+    showInlineEvents && eventSettings.incidents.enabled && eventSettings.incidents.ongoing.show
+      ? GetOngoingIncidentsForMonitorList(monitorTags)
+      : Promise.resolve([]),
+    showInlineEvents && eventSettings.maintenances.enabled && eventSettings.maintenances.ongoing.show
+      ? GetOngoingMaintenanceEventsForMonitorList(monitorTags)
+      : Promise.resolve([]),
+    showInlineEvents && eventSettings.maintenances.enabled && eventSettings.maintenances.upcoming.show
       ? GetUpcomingMaintenanceEventsForMonitorList(
           monitorTags,
           eventSettings.maintenances.upcoming.maxCount,
