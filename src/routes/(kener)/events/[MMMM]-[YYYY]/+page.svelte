@@ -13,7 +13,7 @@
   import { t } from "$lib/stores/i18n";
   import { formatDate } from "$lib/stores/datetime";
   import { resolve } from "$app/paths";
-  import clientResolver from "$lib/client/resolver.js";
+  import clientResolver, { absoluteResolve } from "$lib/client/resolver.js";
   import { format, parse, addMonths, subMonths, getUnixTime, startOfDay, formatDistanceStrict } from "date-fns";
   import { page } from "$app/state";
   import type { IncidentForMonitorListWithComments, MaintenanceEventsMonitorList } from "$lib/server/types/db";
@@ -165,8 +165,8 @@
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
   {#if data.socialPreviewImage}
-    <meta property="og:image" content={clientResolver(resolve, data.socialPreviewImage)} />
-    <meta name="twitter:image" content={clientResolver(resolve, data.socialPreviewImage)} />
+    <meta property="og:image" content={absoluteResolve(resolve, data.siteUrl, data.socialPreviewImage)} />
+    <meta name="twitter:image" content={absoluteResolve(resolve, data.siteUrl, data.socialPreviewImage)} />
   {/if}
 </svelte:head>
 

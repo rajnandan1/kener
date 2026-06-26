@@ -135,12 +135,14 @@ const seedSiteData = {
   subMenuOptions: {
     showShareBadgeMonitor: true,
     showShareEmbedMonitor: true,
+    showRssFeed: true,
   },
   dataRetentionPolicy: {
     enabled: true,
     retentionDays: 90,
   },
   eventDisplaySettings: {
+    showInlineEvents: false,
     incidents: {
       enabled: true,
       ongoing: { show: true },

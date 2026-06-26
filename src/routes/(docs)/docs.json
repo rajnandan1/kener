@@ -82,6 +82,10 @@
                           "content": "v4/monitors/overview"
                         },
                         {
+                          "title": "Grace Period",
+                          "content": "v4/monitors/grace-period"
+                        },
+                        {
                           "title": "API Monitors",
                           "content": "v4/monitors/api"
                         },
@@ -210,6 +214,10 @@
                       "content": "v4/subscriptions"
                     },
                     {
+                      "title": "RSS Feed",
+                      "content": "v4/rss-feed"
+                    },
+                    {
                       "title": "User Management",
                       "content": "v4/user-management"
                     },
@@ -303,6 +311,14 @@
                   "group": "v4.x",
                   "collapsible": false,
                   "pages": [
+                    {
+                      "title": "v4.1.1",
+                      "content": "v4/changelogs/v4.1.1"
+                    },
+                    {
+                      "title": "v4.1.0",
+                      "content": "v4/changelogs/v4.1.0"
+                    },
                     {
                       "title": "v4.0.23",
                       "content": "v4/changelogs/v4.0.23"

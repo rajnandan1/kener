@@ -323,3 +323,23 @@ body::-webkit-scrollbar {
 .theme-plus-bar button {
   cursor: pointer;
 }
+
+/* Frosted backdrop behind the fixed nav (KenerNav) and the sticky theme-plus bar (ThemePlus).
+   The theme-plus bar has no background of its own, and the gap between it and the fixed nav
+   stays transparent, so page content shows through both sections while scrolling. This paints
+   one blurred layer behind both: above page content, below the nav (z-10) and the bar (z-20).
+   Override --top-glass-h if the nav/bar wrap onto extra lines. */
+.kener-public.status-page-app::before {
+  content: "";
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: var(--top-glass-h, 7.5rem);
+  z-index: 1;
+  background-color: color-mix(in oklab, var(--background) 80%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  pointer-events: none;
+}
+:is(.dark) .kener-public.status-page-app::before {
+  background-color: color-mix(in oklab, var(--background) 70%, transparent);
+}

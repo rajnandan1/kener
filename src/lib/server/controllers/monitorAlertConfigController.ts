@@ -328,7 +328,8 @@ export async function DeleteMonitorAlertConfig(id: number): Promise<boolean> {
     throw new Error(`Monitor alert config with id '${id}' not found`);
   }
 
-  // Triggers will be deleted automatically due to CASCADE
+  // The repository deletes trigger/monitor junctions and v2 alerts explicitly;
+  // FK cascades are not enforced on SQLite
   const deleted = await db.deleteMonitorAlertConfig(id);
   return deleted > 0;
 }

@@ -18,6 +18,26 @@ From **Manage → Badges**, you can generate:
 
 You can customize style, label, colors, and time range.
 
+### All-monitors badge {#all-monitors-badge}
+
+Status and dot badges accept `_` instead of a monitor tag:
+
+```
+/badge/_/status
+/badge/_/dot
+```
+
+The `_` badge shows the overall status of **every active, non-hidden monitor site-wide**. It is not scoped to a page, so on a multi-page setup it may not match an individual page's banner.
+
+### Overall status priority {#overall-status-priority}
+
+When multiple monitor statuses collapse into one overall status (the page banner and the `_` badge), the worst state wins:
+
+`DOWN` > `DEGRADED` > `MAINTENANCE` > `UP`
+
+> [!NOTE]
+> Maintenance never masks an active problem: a page with one monitor under maintenance and another down or degraded reports the outage, not the maintenance. `NO_DATA` is shown only when no monitor has reported any data.
+
 ### Embeds {#embeds}
 
 From **Manage → Embed**, you can generate:

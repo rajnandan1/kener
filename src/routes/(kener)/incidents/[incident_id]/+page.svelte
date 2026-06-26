@@ -12,7 +12,7 @@
   import { SveltePurify } from "@humanspeak/svelte-purify";
   import { t } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
-  import clientResolver from "$lib/client/resolver.js";
+  import clientResolver, { absoluteResolve } from "$lib/client/resolver.js";
   import { page } from "$app/state";
 
   let { data } = $props();
@@ -28,8 +28,8 @@
     <meta property="og:description" content={data.comments[0].comment} />
   {/if}
   {#if data.socialPreviewImage}
-    <meta property="og:image" content={clientResolver(resolve, data.socialPreviewImage)} />
-    <meta name="twitter:image" content={clientResolver(resolve, data.socialPreviewImage)} />
+    <meta property="og:image" content={absoluteResolve(resolve, data.siteUrl, data.socialPreviewImage)} />
+    <meta name="twitter:image" content={absoluteResolve(resolve, data.siteUrl, data.socialPreviewImage)} />
   {/if}
 </svelte:head>
 

@@ -31,3 +31,39 @@ export default function urlResolve(resolve: ResolveFn, path: string, params?: Re
   }
   return resolve(path);
 }
+
+/**
+ * Resolves a path to an absolute URL by prefixing the site URL.
+ * Required for meta tags like og:image and twitter:image that need absolute URLs.
+ * @param resolve - The resolve function from $app/paths
+ * @param siteUrl - The site URL (e.g., "https://status.example.com")
+ * @param path - The route path or absolute URL
+ * @param params - Optional parameters for dynamic route segments
+ * @returns An absolute URL, or the resolved relative URL if siteUrl is empty
+ *
+ * @example
+ * ```ts
+ * absoluteResolve(resolve, "https://status.example.com", "/uploads/preview.png")
+ * // => "https://status.example.com/uploads/preview.png"
+ * ```
+ */
+export function absoluteResolve(
+  resolve: ResolveFn,
+  siteUrl: string,
+  path: string,
+  params?: Record<string, string>
+): string {
+  // Normalize relative paths like "./assets/..." to "/assets/..." so the
+  // final URL doesn't contain "/./" segments (crawlers don't normalize these)
+  const normalizedPath = path.startsWith("./") ? path.slice(1) : path;
+  const resolved = urlResolve(resolve, normalizedPath, params);
+  // Already absolute, return as-is
+  if (resolved.startsWith("http://") || resolved.startsWith("https://")) {
+    return resolved;
+  }
+  if (!siteUrl) {
+    return resolved;
+  }
+  const trimmedSiteUrl = siteUrl.replace(/\/+$/, "");
+  return trimmedSiteUrl + (resolved.startsWith("/") ? resolved : "/" + resolved);
+}

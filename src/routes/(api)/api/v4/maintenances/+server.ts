@@ -14,6 +14,8 @@ import {
   GenerateMaintenanceEvents,
   isOneTimeRrule,
 } from "$lib/server/controllers/maintenanceController";
+import { GetSiteURL } from "$lib/server/controllers/siteDataController";
+import serverResolver from "$lib/server/resolver";
 import { rrulestr } from "rrule";
 
 function formatDateToISO(date: Date | string): string {
@@ -67,6 +69,7 @@ export const GET: RequestHandler = async ({ url }) => {
   }
 
   // Build response with monitors for each maintenance
+  const siteUrl = await GetSiteURL();
   const maintenances: MaintenanceResponse[] = [];
   for (const maintenance of rawMaintenances) {
     const monitors = await db.getMaintenanceMonitors(maintenance.id);
@@ -84,6 +87,7 @@ export const GET: RequestHandler = async ({ url }) => {
       })),
       created_at: formatDateToISO(maintenance.created_at),
       updated_at: formatDateToISO(maintenance.updated_at),
+      url: siteUrl + serverResolver(`/maintenances/${maintenance.id}?type=maintenance`),
     });
   }
 
@@ -267,6 +271,7 @@ export const POST: RequestHandler = async ({ request }) => {
     })),
     created_at: formatDateToISO(maintenance.created_at),
     updated_at: formatDateToISO(maintenance.updated_at),
+    url: (await GetSiteURL()) + serverResolver(`/maintenances/${maintenance.id}?type=maintenance`),
   };
 
   const response: CreateMaintenanceResponse = {

@@ -141,9 +141,17 @@ export class MonitorAlertConfigRepository extends BaseRepository {
   }
 
   /**
-   * Delete a monitor alert config by ID
+   * Delete a monitor alert config by ID, including all child rows.
+   *
+   * Child rows are removed explicitly even though FK cascades are declared:
+   * SQLite never enforces them (foreign_keys pragma is off), so relying on
+   * CASCADE orphans children on the default deployment. See
+   * docs/adr/0008-explicit-deletes-over-fk-cascades.md.
    */
   async deleteMonitorAlertConfig(id: number): Promise<number> {
+    await this.knex("monitor_alerts_v2").where({ config_id: id }).del();
+    await this.knex("monitor_alerts_config_triggers").where({ monitor_alerts_id: id }).del();
+    await this.knex("monitor_alerts_config_monitors").where({ monitor_alerts_id: id }).del();
     return await this.knex("monitor_alerts_config").where({ id }).del();
   }
 
@@ -158,7 +166,11 @@ export class MonitorAlertConfigRepository extends BaseRepository {
 
     if (configIds.length === 0) return 0;
 
-    // Remove the monitor from the junction table
+    // Remove the monitor from the junction table, along with its per-monitor
+    // alert state — a shared config survives the detach, but its v2 rows for
+    // this tag would otherwise dangle (see deleteMonitorAlertConfig on why
+    // FK cascades can't be relied on)
+    await this.knex("monitor_alerts_v2").where({ monitor_tag: monitorTag }).del();
     await this.knex("monitor_alerts_config_monitors").where({ monitor_tag: monitorTag }).del();
 
     // Delete any configs that now have zero monitors
@@ -170,7 +182,7 @@ export class MonitorAlertConfigRepository extends BaseRepository {
         .where({ monitor_alerts_id: id })
         .first<CountResult>();
       if (Number(remainingMonitors?.count) === 0) {
-        await this.knex("monitor_alerts_config").where({ id }).del();
+        await this.deleteMonitorAlertConfig(id);
         deletedCount++;
       }
     }

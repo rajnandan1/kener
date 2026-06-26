@@ -6,6 +6,8 @@ import type {
   MaintenanceMonitor,
 } from "$lib/types/api";
 import { GetNowTimestampUTC, GetMinuteStartTimestampUTC } from "$lib/server/tool";
+import { GetSiteURL } from "$lib/server/controllers/siteDataController";
+import serverResolver from "$lib/server/resolver";
 
 const VALID_EVENT_STATUSES = ["SCHEDULED", "ONGOING", "COMPLETED", "CANCELLED", "READY"];
 
@@ -70,6 +72,7 @@ export const GET: RequestHandler = async ({ url }) => {
   });
 
   // For each event, get the monitors for that maintenance
+  const siteUrl = await GetSiteURL();
   const events: MaintenanceEventDetailResponse[] = [];
   for (const event of rawEvents) {
     const monitors = await db.getMaintenanceMonitors(event.maintenance_id);
@@ -83,13 +86,14 @@ export const GET: RequestHandler = async ({ url }) => {
       event_id: event.event_id,
       event_start_date_time: event.event_start_date_time,
       event_end_date_time: event.event_end_date_time,
-      event_status: event.event_status as "SCHEDULED" | "ONGOING" | "COMPLETED" | "CANCELLED",
+      event_status: event.event_status as MaintenanceEventDetailResponse["event_status"],
       maintenance_title: event.maintenance_title,
       maintenance_description: event.maintenance_description,
       maintenance_status: event.maintenance_status as "ACTIVE" | "INACTIVE",
       maintenance_rrule: event.maintenance_rrule,
       maintenance_duration_seconds: event.maintenance_duration_seconds,
       monitors: monitorList,
+      url: siteUrl + serverResolver(`/maintenances/${event.event_id}`),
     });
   }
 

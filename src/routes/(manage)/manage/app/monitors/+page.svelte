@@ -14,15 +14,20 @@
   import XIcon from "@lucide/svelte/icons/x";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import * as Item from "$lib/components/ui/item/index.js";
+  import { Switch } from "$lib/components/ui/switch/index.js";
   import type { MonitorRecord } from "$lib/server/types/db.js";
   import { resolve } from "$app/paths";
+  import { page } from "$app/state";
   import clientResolver from "$lib/client/resolver.js";
   import { GetInitials } from "$lib/clientTools.js";
   import { onMount } from "svelte";
+  import { toast } from "svelte-sonner";
 
   let monitors = $state<MonitorRecord[]>([]);
   let loading = $state(true);
   let error = $state<string | null>(null);
+  let toggling = $state<Record<string, boolean>>({});
+  const canWrite = $derived(page.data.userPermissions?.includes("monitors.write") ?? false);
   let showFilters = $state(false);
   let statusFilter = $state("ALL");
   let searchQuery = $state("");
@@ -90,6 +95,39 @@
       error = e instanceof Error ? e.message : "Failed to fetch monitors";
     } finally {
       loading = false;
+    }
+  }
+
+  async function toggleMonitorField(monitor: MonitorRecord, field: "status" | "is_hidden", checked: boolean) {
+    const key = `${monitor.id}:${field}`;
+    if (toggling[key]) return;
+
+    // For is_hidden the switch shows visibility: on = visible = not hidden
+    const previous = field === "status" ? monitor.status || "INACTIVE" : monitor.is_hidden || "NO";
+    const next = field === "status" ? (checked ? "ACTIVE" : "INACTIVE") : checked ? "NO" : "YES";
+    if (previous === next) return;
+
+    // Optimistic flip; rolled back on failure
+    monitor[field] = next;
+    toggling[key] = true;
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "storeMonitorData", data: { ...monitor, [field]: next } })
+      });
+      const result = await response.json();
+      if (result.error) {
+        throw new Error(result.error);
+      }
+      const stateLabel =
+        field === "status" ? (next === "ACTIVE" ? "active" : "inactive") : next === "YES" ? "hidden" : "visible";
+      toast.success(`${monitor.name} is now ${stateLabel}`);
+    } catch (e) {
+      monitor[field] = previous;
+      toast.error(e instanceof Error ? e.message : "Failed to update monitor");
+    } finally {
+      delete toggling[key];
     }
   }
 
@@ -184,7 +222,7 @@
             <Table.Head class="w-[180px]">Tag</Table.Head>
             <Table.Head class="w-[130px]">Type</Table.Head>
             <Table.Head class="w-[120px]">Status</Table.Head>
-            <Table.Head class="w-[120px]">Hidden</Table.Head>
+            <Table.Head class="w-[120px]">Visible</Table.Head>
             <Table.Head class="w-[180px]">Cron</Table.Head>
             <Table.Head class="w-[120px] text-right"></Table.Head>
           </Table.Row>
@@ -212,14 +250,30 @@
                 <Badge variant="secondary">{data.monitor_type}</Badge>
               </Table.Cell>
               <Table.Cell>
-                <Badge variant={(data.status || "INACTIVE") === "ACTIVE" ? "default" : "destructive"}>
-                  {data.status || "INACTIVE"}
-                </Badge>
+                <div class="flex items-center gap-2">
+                  <Switch
+                    checked={(data.status || "INACTIVE") === "ACTIVE"}
+                    disabled={!canWrite || !!toggling[`${data.id}:status`]}
+                    aria-label="Toggle status for {data.name}"
+                    onCheckedChange={(checked) => toggleMonitorField(data, "status", checked)}
+                  />
+                  <span class="text-muted-foreground text-xs">
+                    {(data.status || "INACTIVE") === "ACTIVE" ? "Active" : "Inactive"}
+                  </span>
+                </div>
               </Table.Cell>
               <Table.Cell>
-                <Badge variant={data.is_hidden === "YES" ? "destructive" : "outline"}>
-                  {data.is_hidden === "YES" ? "YES" : "NO"}
-                </Badge>
+                <div class="flex items-center gap-2">
+                  <Switch
+                    checked={data.is_hidden !== "YES"}
+                    disabled={!canWrite || !!toggling[`${data.id}:is_hidden`]}
+                    aria-label="Toggle status page visibility for {data.name}"
+                    onCheckedChange={(checked) => toggleMonitorField(data, "is_hidden", checked)}
+                  />
+                  <span class="text-muted-foreground text-xs">
+                    {data.is_hidden === "YES" ? "Hidden" : "Visible"}
+                  </span>
+                </div>
               </Table.Cell>
               <Table.Cell>
                 <span class="text-muted-foreground text-xs">{data.cron || "-"}</span>

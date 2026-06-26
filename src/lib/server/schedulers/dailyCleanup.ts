@@ -47,7 +47,7 @@ const getRetentionPolicy = async (): Promise<DataRetentionPolicy> => {
 const runDailyCleanup = async (): Promise<DailyCleanupResult> => {
   const policy = await getRetentionPolicy();
   const retentionDays = Math.max(1, Math.floor(policy.retentionDays || defaultPolicy.retentionDays));
-
+  console.log(`Data retention policy: enabled=${policy.enabled}, retentionDays=${retentionDays}`);
   if (!policy.enabled) {
     return {
       skipped: true,

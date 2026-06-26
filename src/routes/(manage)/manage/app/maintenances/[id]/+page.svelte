@@ -8,6 +8,7 @@
   import { Checkbox } from "$lib/components/ui/checkbox/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
+  import * as Dialog from "$lib/components/ui/dialog/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
   import * as RadioGroup from "$lib/components/ui/radio-group/index.js";
@@ -21,8 +22,10 @@
   import ClockIcon from "@lucide/svelte/icons/clock";
   import CheckCircleIcon from "@lucide/svelte/icons/check-circle";
   import PlayCircleIcon from "@lucide/svelte/icons/play-circle";
+  import XCircleIcon from "@lucide/svelte/icons/x-circle";
   import type { PageProps } from "./$types";
   import type { MonitorRecord } from "$lib/server/types/db.js";
+  import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { toast } from "svelte-sonner";
   import { format, formatDistanceToNow, isPast, isFuture, isWithinInterval, addDays } from "date-fns";
@@ -107,6 +110,42 @@
   // Events for existing maintenance
   let events = $state<MaintenanceEvent[]>([]);
   let loadingEvents = $state(false);
+
+  // Event status confirmation dialog
+  type EventActionStatus = "COMPLETED" | "CANCELLED";
+  let eventStatusDialogOpen = $state(false);
+  let updatingEventStatus = $state(false);
+  let pendingEventStatusUpdate = $state<{ eventId: number; status: EventActionStatus } | null>(null);
+
+  function openEventStatusDialog(eventId: number, status: EventActionStatus) {
+    pendingEventStatusUpdate = { eventId, status };
+    eventStatusDialogOpen = true;
+  }
+
+  function closeEventStatusDialog() {
+    eventStatusDialogOpen = false;
+    pendingEventStatusUpdate = null;
+  }
+
+  const eventStatusDialogCopy = $derived.by(() => {
+    if (pendingEventStatusUpdate?.status === "COMPLETED") {
+      return {
+        title: "Complete Maintenance Event",
+        description: "This will mark the event as completed and set its end time to the current time.",
+        confirmLabel: "Complete Event",
+        cancelLabel: "Keep Ongoing",
+        confirmVariant: "default" as const
+      };
+    }
+
+    return {
+      title: "Cancel Maintenance Event",
+      description: "This will mark the event as cancelled and remove it from active scheduling.",
+      confirmLabel: "Cancel Event",
+      cancelLabel: "Keep Scheduled",
+      confirmVariant: "destructive" as const
+    };
+  });
 
   // Convert timestamp to local datetime string for input
   function timestampToLocalDatetime(ts: number): string {
@@ -206,10 +245,8 @@
   // Fetch maintenance data
   async function fetchMaintenance() {
     if (isNew) {
-      // Set default start time
-      const now = new Date();
-      now.setMinutes(now.getMinutes() + 60);
-      startDateTimeLocal = timestampToLocalDatetime(Math.floor(now.getTime() / 1000));
+      // Set default start time (1 hour from now)
+      startDateTimeLocal = timestampToLocalDatetime(Math.floor(Date.now() / 1000) + 3600);
       loading = false;
       return;
     }
@@ -409,14 +446,60 @@
     }
   }
 
+  // Manually transition an event to COMPLETED or CANCELLED
+  async function updateEventStatus(eventId: number, status: "COMPLETED" | "CANCELLED") {
+    updatingEventStatus = true;
+
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "updateMaintenanceEventStatus", data: { id: eventId, status } })
+      });
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success(status === "COMPLETED" ? "Event completed" : "Event cancelled");
+        await fetchEvents();
+        closeEventStatusDialog();
+      }
+    } catch {
+      toast.error("Failed to update event status");
+    } finally {
+      updatingEventStatus = false;
+    }
+  }
+
+  async function confirmEventStatusUpdate() {
+    if (!pendingEventStatusUpdate) return;
+    await updateEventStatus(pendingEventStatusUpdate.eventId, pendingEventStatusUpdate.status);
+  }
+
   // Compute event display status based on current time
   interface EventDisplayStatus {
     label: string;
     variant: "default" | "secondary" | "destructive" | "outline";
-    icon: "clock" | "play" | "check";
+    icon: "clock" | "play" | "check" | "x";
   }
 
   function getEventDisplayStatus(event: MaintenanceEvent): EventDisplayStatus {
+    // Terminal statuses no longer follow time — the stored status wins
+    if (event.status === "CANCELLED") {
+      return {
+        label: "Cancelled",
+        variant: "destructive",
+        icon: "x"
+      };
+    }
+    if (event.status === "COMPLETED") {
+      return {
+        label: "Completed",
+        variant: "secondary",
+        icon: "check"
+      };
+    }
+
     const now = new Date();
     const startDate = new Date(event.start_date_time * 1000);
     const endDate = new Date(event.end_date_time * 1000);
@@ -478,7 +561,7 @@
     return monitor?.name || tag;
   }
 
-  $effect(() => {
+  onMount(() => {
     fetchMaintenance();
     fetchAvailableMonitors();
   });
@@ -665,7 +748,7 @@
                 <div class="flex flex-col gap-2">
                   <Label class="text-muted-foreground text-xs">Quick Patterns:</Label>
                   <div class="flex flex-wrap gap-2">
-                    {#each sampleRrules as sample}
+                    {#each sampleRrules as sample (sample.value)}
                       <Button
                         variant={customRrule === sample.value ? "default" : "outline"}
                         size="sm"
@@ -683,7 +766,7 @@
                 <div class="bg-background rounded-md border p-3">
                   <Label class="text-muted-foreground text-xs">Upcoming Occurrences:</Label>
                   <ul class="mt-2 space-y-1 text-sm">
-                    {#each previewDates as date}
+                    {#each previewDates as date (date)}
                       <li class="flex items-center gap-2">
                         <CalendarIcon class="text-muted-foreground size-3" />
                         {date}
@@ -704,7 +787,7 @@
           <div class="rounded-md border p-3">
             <Label class="text-muted-foreground mb-2 block text-xs">Select monitors to add:</Label>
             <div class="grid max-h-32 grid-cols-2 gap-2 overflow-y-auto">
-              {#each availableMonitors as monitor}
+              {#each availableMonitors as monitor (monitor.tag)}
                 <div class="flex items-center gap-2">
                   <Checkbox
                     id="monitor-{monitor.tag}"
@@ -727,7 +810,7 @@
             <div class="rounded-md border p-3">
               <Label class="text-muted-foreground mb-2 block text-xs">Monitor status during maintenance:</Label>
               <div class="space-y-2">
-                {#each selectedMonitors as selectedMonitor, index}
+                {#each selectedMonitors as selectedMonitor, index (selectedMonitor.tag)}
                   {@const currentStatus = selectedMonitor.status}
                   <div class="bg-muted/30 flex items-center justify-between gap-3 rounded border p-2">
                     <span class="text-sm font-medium">{getMonitorName(selectedMonitor.tag)}</span>
@@ -822,7 +905,7 @@
             </p>
           {:else}
             <div class="space-y-3">
-              {#each events as event}
+              {#each events as event (event.id)}
                 {@const displayStatus = getEventDisplayStatus(event)}
                 <div class="flex items-center justify-between rounded-md border p-4">
                   <div class="flex items-center gap-3">
@@ -831,6 +914,8 @@
                         <PlayCircleIcon class="text-primary size-4" />
                       {:else if displayStatus.icon === "check"}
                         <CheckCircleIcon class="text-muted-foreground size-4" />
+                      {:else if displayStatus.icon === "x"}
+                        <XCircleIcon class="text-muted-foreground size-4" />
                       {:else}
                         <ClockIcon class="text-muted-foreground size-4" />
                       {/if}
@@ -846,9 +931,23 @@
                       </p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" onclick={() => deleteEvent(event.id)}>
-                    <TrashIcon class="size-4" />
-                  </Button>
+                  <div class="flex items-center gap-2">
+                    {#if event.status === "ONGOING"}
+                      <Button variant="outline" size="sm" onclick={() => openEventStatusDialog(event.id, "COMPLETED")}>
+                        <CheckCircleIcon class="size-4" />
+                        Complete
+                      </Button>
+                    {/if}
+                    {#if event.status === "SCHEDULED" || event.status === "READY" || event.status === "ONGOING"}
+                      <Button variant="outline" size="sm" onclick={() => openEventStatusDialog(event.id, "CANCELLED")}>
+                        <XCircleIcon class="size-4" />
+                        Cancel
+                      </Button>
+                    {/if}
+                    <Button variant="ghost" size="icon" onclick={() => deleteEvent(event.id)}>
+                      <TrashIcon class="size-4" />
+                    </Button>
+                  </div>
                 </div>
               {/each}
             </div>
@@ -858,3 +957,27 @@
     {/if}
   {/if}
 </div>
+
+<Dialog.Root bind:open={eventStatusDialogOpen}>
+  <Dialog.Content>
+    <Dialog.Header>
+      <Dialog.Title>{eventStatusDialogCopy.title}</Dialog.Title>
+      <Dialog.Description>{eventStatusDialogCopy.description}</Dialog.Description>
+    </Dialog.Header>
+    <Dialog.Footer>
+      <Button variant="outline" onclick={closeEventStatusDialog} disabled={updatingEventStatus}>
+        {eventStatusDialogCopy.cancelLabel}
+      </Button>
+      <Button
+        variant={eventStatusDialogCopy.confirmVariant}
+        onclick={confirmEventStatusUpdate}
+        disabled={updatingEventStatus || !pendingEventStatusUpdate}
+      >
+        {#if updatingEventStatus}
+          <Loader class="size-4 animate-spin" />
+        {/if}
+        {eventStatusDialogCopy.confirmLabel}
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>

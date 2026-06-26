@@ -11,6 +11,7 @@ import GC from "$lib/global-constants";
 import { UpdateMonitoringData } from "$lib/server/controllers/monitorsController";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { SetLastMonitoringValue } from "$lib/server/cache/setGet";
+import alertingQueue from "$lib/server/queues/alertingQueue";
 
 export const GET: RequestHandler = async ({ locals, url }) => {
   // Monitor is validated by middleware and available in locals
@@ -167,6 +168,18 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   const latestData = await db.getLatestMonitoringData(monitorTag);
   if (latestData) {
     await SetLastMonitoringValue(monitorTag, latestData);
+  }
+
+  // MANUAL samples are alert-visible (docs/adr/0005), so re-evaluate alerts once for the
+  // last written sample — for NONE monitors nothing else would ever trigger evaluation.
+  // UpdateMonitoringData floors both bounds to minute starts and writes through the floored
+  // end inclusive, so the last stored row is always at GetMinuteStartTimestampUTC(end_ts).
+  // Best-effort: the rows are already committed; a queue outage must not fail the request.
+  const lastWrittenTs = GetMinuteStartTimestampUTC(body.end_ts);
+  try {
+    await alertingQueue.push(monitorTag, lastWrittenTs, body.status);
+  } catch (err) {
+    console.error(`Failed to enqueue alert evaluation for ${monitorTag} after MANUAL data write:`, err);
   }
 
   // Calculate the number of data points that will be returned by GET

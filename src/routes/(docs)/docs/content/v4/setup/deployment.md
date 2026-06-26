@@ -285,9 +285,20 @@ curl -fsS https://your-domain/healthcheck
 
 Expected response body:
 
-```text
-ok
+```json
+{ "status": "ok", "db": true, "redis": true }
 ```
+
+`status` is `degraded` when the database or Redis is unreachable. The endpoint always returns HTTP 200 so healthcheck-driven restarters do not bounce the app while a dependency is down.
+
+For orchestrators that should act on dependency health (load balancer readiness, alerting), pass `?strict=1` to get HTTP 503 when any component is down:
+
+```bash
+curl -fsS https://your-domain/healthcheck?strict=1
+```
+
+> [!WARNING]
+> Do not point a restart-on-failure healthcheck (Docker `HEALTHCHECK`, Railway) at `?strict=1` — restarting Kener can not fix a dead database and will loop for the whole outage.
 
 ## Next steps {#next-steps}
 

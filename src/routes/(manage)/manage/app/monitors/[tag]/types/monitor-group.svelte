@@ -3,12 +3,14 @@
   import { Input } from "$lib/components/ui/input/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
-  import { Switch } from "$lib/components/ui/switch/index.js";
+  import { Badge } from "$lib/components/ui/badge/index.js";
+  import MonitorPicker from "$lib/components/MonitorPicker.svelte";
   import type { MonitorRecord } from "$lib/server/types/db.js";
   import type { GroupMonitorMember } from "$lib/server/types/monitor.js";
   import ArrowUp from "@lucide/svelte/icons/arrow-up";
   import ArrowDown from "@lucide/svelte/icons/arrow-down";
   import GripVertical from "@lucide/svelte/icons/grip-vertical";
+  import X from "@lucide/svelte/icons/x";
   import clientResolver from "$lib/client/resolver.js";
   import { resolve } from "$app/paths";
 
@@ -58,15 +60,19 @@
     formData.executionDelay = parsedExecutionDelay;
   });
 
-  // Filter out GROUP monitors - groups can't contain other groups
-  let eligibleMonitors = $derived(availableMonitors.filter((m) => m.monitor_type !== "GROUP" && m.status === "ACTIVE"));
+  // Filter out GROUP monitors - groups can't contain other groups - and the group being edited itself
+  let eligibleMonitors = $derived(
+    availableMonitors.filter((m) => m.monitor_type !== "GROUP" && m.status === "ACTIVE" && m.tag !== tag)
+  );
+  let selectedTags = $derived(formData.monitors.map((m) => m.tag));
+
+  /** A stale member's monitor is no longer eligible (paused or deleted after being added). */
+  function isStale(monitorTag: string): boolean {
+    return !eligibleMonitors.some((m) => m.tag === monitorTag);
+  }
 
   let totalWeight = $derived(Math.round(formData.monitors.reduce((sum, m) => sum + m.weight, 0) * 1000) / 1000);
   let weightsValid = $derived(Math.abs(totalWeight - 1) < 0.001 || formData.monitors.length === 0);
-
-  function findMember(monitorTag: string): GroupMonitorMember | undefined {
-    return formData.monitors.find((m) => m.tag === monitorTag);
-  }
 
   function isSelected(monitorTag: string): boolean {
     return formData.monitors.some((m) => m.tag === monitorTag);
@@ -91,6 +97,22 @@
       formData.monitors = [...formData.monitors, { tag: monitorTag, weight: 0 }];
     }
     distributeEqually();
+  }
+
+  function addMonitors(tags: string[]) {
+    const newTags = tags.filter((t) => !isSelected(t));
+    if (newTags.length === 0) return;
+    formData.monitors = [...formData.monitors, ...newTags.map((t) => ({ tag: t, weight: 0 }))];
+    distributeEqually();
+  }
+
+  function removeMonitor(monitorTag: string) {
+    formData.monitors = formData.monitors.filter((m) => m.tag !== monitorTag);
+    distributeEqually();
+  }
+
+  function clearAll() {
+    formData.monitors = [];
   }
 
   function setWeight(monitorTag: string, weight: number) {
@@ -129,55 +151,8 @@
       </p>
     </div>
 
-    {#if eligibleMonitors.length > 0}
-      <div class="grid gap-2">
-        {#each eligibleMonitors.filter((m) => m.tag !== tag) as monitor (monitor.id ?? monitor.tag)}
-          {@const member = findMember(monitor.tag)}
-          {@const selected = !!member}
-          <div class="rounded-lg border p-3 transition-colors {selected ? 'bg-primary/5' : ''}">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-3">
-                {#if monitor.image}
-                  <img
-                    src={clientResolver(resolve, monitor.image)}
-                    alt={monitor.name}
-                    class="size-8 rounded object-cover"
-                  />
-                {:else}
-                  <div class="bg-muted flex size-8 items-center justify-center rounded text-xs font-medium">
-                    {monitor.name.charAt(0).toUpperCase()}
-                  </div>
-                {/if}
-                <div>
-                  <p class="text-sm font-medium">{monitor.name}</p>
-                  <p class="text-muted-foreground text-xs">{monitor.tag}</p>
-                </div>
-              </div>
-              <Switch checked={selected} onCheckedChange={() => toggleMonitor(monitor.tag)} />
-            </div>
-
-            {#if selected && member}
-              <div class="mt-3 flex items-end gap-4 border-t pt-3">
-                <div class="space-y-1">
-                  <Label class="text-xs">Weight</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    value={String(member.weight)}
-                    class="h-8 w-[100px] text-xs"
-                    onchange={(e) => {
-                      const target = e.currentTarget as HTMLInputElement;
-                      setWeight(monitor.tag, Number(target.value));
-                    }}
-                  />
-                </div>
-              </div>
-            {/if}
-          </div>
-        {/each}
-      </div>
+    {#if eligibleMonitors.length > 0 || formData.monitors.length > 0}
+      <MonitorPicker monitors={eligibleMonitors} {selectedTags} onToggle={toggleMonitor} onAddMany={addMonitors} />
     {:else}
       <p class="text-muted-foreground text-sm">No eligible monitors available. Create some non-group monitors first.</p>
     {/if}
@@ -195,13 +170,24 @@
           <span class="text-xs">(must equal 1)</span>
         {/if}
       </div>
-      <button
+      <Button
         type="button"
-        class="text-muted-foreground hover:text-foreground text-xs underline underline-offset-2"
+        variant="link"
+        size="sm"
+        class="text-muted-foreground hover:text-foreground h-auto p-0 text-xs"
         onclick={distributeEqually}
       >
         Distribute equally
-      </button>
+      </Button>
+      <Button
+        type="button"
+        variant="link"
+        size="sm"
+        class="text-muted-foreground hover:text-destructive h-auto p-0 text-xs"
+        onclick={clearAll}
+      >
+        Clear all
+      </Button>
     </div>
   {/if}
 
@@ -249,21 +235,59 @@
       </div>
       {#each formData.monitors as m, index (m.tag)}
         {@const monitorInfo = availableMonitors.find((am) => am.tag === m.tag)}
+        {@const stale = isStale(m.tag)}
         <div
-          class="flex items-center justify-between px-3 py-2 {index < formData.monitors.length - 1 ? 'border-b' : ''}"
+          class="flex items-center justify-between gap-2 px-3 py-2 {index < formData.monitors.length - 1
+            ? 'border-b'
+            : ''}"
         >
-          <div class="flex items-center gap-2">
+          <div class="flex min-w-0 items-center gap-2">
             <GripVertical class="text-muted-foreground h-4 w-4 shrink-0" />
             <span class="text-muted-foreground text-xs font-medium">{index + 1}.</span>
-            <div>
-              <p class="text-sm">{monitorInfo?.name || m.tag}</p>
-              <p class="text-muted-foreground text-xs">
-                {m.tag}
-                <span class="ml-1 text-[10px]">weight {m.weight}</span>
+            {#if monitorInfo?.image}
+              <img
+                src={clientResolver(resolve, monitorInfo.image)}
+                alt={monitorInfo.name}
+                class="size-8 shrink-0 rounded object-cover"
+              />
+            {:else}
+              <div class="bg-muted flex size-8 shrink-0 items-center justify-center rounded text-xs font-medium">
+                {(monitorInfo?.name || m.tag).charAt(0).toUpperCase()}
+              </div>
+            {/if}
+            <div class="min-w-0">
+              <p class="flex items-center gap-1.5 truncate text-sm">
+                {monitorInfo?.name || m.tag}
+                {#if stale}
+                  <Badge
+                    variant="outline"
+                    class="text-muted-foreground shrink-0 text-[10px]"
+                    title="Not currently checked; excluded from group score"
+                  >
+                    inactive
+                  </Badge>
+                {/if}
               </p>
+              <p class="text-muted-foreground truncate text-xs">{m.tag}</p>
             </div>
           </div>
-          <div class="flex items-center gap-1">
+          <div class="flex shrink-0 items-center gap-1">
+            <div class="flex items-center gap-1.5">
+              <Label class="text-muted-foreground text-xs" for="group-member-weight-{m.tag}">Weight</Label>
+              <Input
+                id="group-member-weight-{m.tag}"
+                type="number"
+                min={0}
+                max={1}
+                step={0.01}
+                value={String(m.weight)}
+                class="h-8 w-[80px] text-xs"
+                onchange={(e) => {
+                  const target = e.currentTarget as HTMLInputElement;
+                  setWeight(m.tag, Number(target.value));
+                }}
+              />
+            </div>
             <Button
               variant="ghost"
               size="icon"
@@ -281,6 +305,15 @@
               onclick={() => moveMonitorDown(index)}
             >
               <ArrowDown class="h-3.5 w-3.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              class="hover:text-destructive h-7 w-7"
+              title="Remove from group"
+              onclick={() => removeMonitor(m.tag)}
+            >
+              <X class="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>

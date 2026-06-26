@@ -24,7 +24,6 @@ import {
   UpdateMonitorAlertV2Status,
 } from "../controllers/monitorAlertConfigController.js";
 import type { IncidentInput } from "../controllers/incidentController.js";
-import { InsertNewAlert } from "../controllers/controller.js";
 import { GetMonitorAlertsV2 } from "../controllers/monitorAlertConfigController.js";
 import db from "../db/db.js";
 import { getUnixTime, differenceInSeconds } from "date-fns";
@@ -34,7 +33,6 @@ import sendEmail from "../notification/email_notification.js";
 import sendWebhook from "$lib/server/notification/webhook_notification.js";
 import sendSlack from "$lib/server/notification/slack_notification.js";
 import sendDiscord from "$lib/server/notification/discord_notification.js";
-import serverResolver from "../resolver.js";
 
 import type { SiteDataForNotification, SubscriptionVariableMap } from "../notification/types.js";
 import mdToHTML from "../../marked.js";

@@ -8,13 +8,16 @@ export interface MonitoringResult {
   latency: number;
   type: string;
   error_message?: string;
+  raw_status?: string;
 }
 
 export interface MonitoringResultTS {
   [timestamp: number]: MonitoringResult;
 }
 
-export interface NoneMonitorTypeData {}
+export interface NoneMonitorTypeData {
+  overrideWithLastKnownStatus: boolean;
+}
 export interface ApiMonitorTypeData {
   url: string;
   body?: string;

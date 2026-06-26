@@ -10,6 +10,8 @@ import type {
 } from "$lib/types/api";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { GenerateMaintenanceEvents, isOneTimeRrule } from "$lib/server/controllers/maintenanceController";
+import { GetSiteURL } from "$lib/server/controllers/siteDataController";
+import serverResolver from "$lib/server/resolver";
 import { rrulestr } from "rrule";
 
 function formatDateToISO(date: Date | string): string {
@@ -55,6 +57,7 @@ async function buildMaintenanceResponse(maintenanceId: number): Promise<Maintena
     })),
     created_at: formatDateToISO(maintenance.created_at),
     updated_at: formatDateToISO(maintenance.updated_at),
+    url: (await GetSiteURL()) + serverResolver(`/maintenances/${maintenance.id}?type=maintenance`),
   };
 }
 
