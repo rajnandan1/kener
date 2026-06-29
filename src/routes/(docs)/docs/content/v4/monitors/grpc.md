@@ -45,6 +45,20 @@ Connection errors and timeouts return **DOWN**.
         "port": 50051,
         "service": "my.package.MyService",
         "tls": true,
+        "timeout": 5000
+    }
+}
+```
+
+### Self-signed TLS example {#self-signed-example}
+
+```json
+{
+    "type": "GRPC",
+    "type_data": {
+        "host": "grpc.example.com",
+        "port": 50051,
+        "tls": true,
         "insecure": true,
         "timeout": 5000
     }

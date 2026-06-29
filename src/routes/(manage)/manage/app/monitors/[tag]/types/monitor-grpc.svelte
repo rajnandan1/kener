@@ -13,6 +13,10 @@
   if (!data.timeout) data.timeout = 10000;
   if (data.tls === undefined) data.tls = false;
   if (data.insecure === undefined) data.insecure = false;
+
+  $effect(() => {
+    if (!data.tls) data.insecure = false;
+  });
 </script>
 
 <div class="space-y-4">

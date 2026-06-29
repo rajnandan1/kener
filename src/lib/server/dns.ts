@@ -90,13 +90,22 @@ class DNSResolver {
 
       const onMessage = (message: Buffer) => {
         clearTimeout(timeoutId);
-        // @ts-expect-error dns2 types are incomplete
-        const response = dns2.Packet.parse(message) as DNSResponse;
-        resolve(response);
+        socket.removeListener("message", onMessage);
+        try {
+          // @ts-expect-error dns2 types are incomplete
+          const response = dns2.Packet.parse(message) as DNSResponse;
+          resolve(response);
+        } catch (error) {
+          reject(error instanceof Error ? error : new Error(String(error)));
+        }
       };
 
       const timeoutId = setTimeout(() => {
         socket.removeListener("message", onMessage);
+        socket.close();
+        if (this.socket === socket) {
+          this.socket = null;
+        }
         reject(new Error(`DNS query timed out for ${domain} (${recordType}) via ${targetNameserver}`));
       }, timeoutMs);
 
@@ -164,10 +173,15 @@ class DNSResolver {
         if (expectedLength !== null && responseBuffer.length >= expectedLength + 2) {
           cleanup();
           const responseData = responseBuffer.subarray(2, 2 + expectedLength);
-          // @ts-expect-error dns2 types are incomplete
-          const response = dns2.Packet.parse(responseData) as DNSResponse;
-          socket.end();
-          resolve(response);
+          try {
+            // @ts-expect-error dns2 types are incomplete
+            const response = dns2.Packet.parse(responseData) as DNSResponse;
+            socket.destroy();
+            resolve(response);
+          } catch (error) {
+            socket.destroy();
+            reject(error instanceof Error ? error : new Error(String(error)));
+          }
         }
       });
 

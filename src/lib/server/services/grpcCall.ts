@@ -74,18 +74,14 @@ class GrpcCall {
 
       const credentials =
         tls && insecure
-          ? grpc.credentials.createSsl(null, null, null, { rejectUnauthorized: false })
+          ? grpc.credentials.createSsl(null, null, null, {
+              checkServerIdentity: () => undefined,
+            })
           : tls
             ? grpc.credentials.createSsl()
             : grpc.credentials.createInsecure();
-      const clientOptions: grpc.ChannelOptions = {};
 
-      // Keep channel-level insecure knob for grpc-js compatibility.
-      if (tls && insecure) {
-        clientOptions["grpc-node.tls_reject_unauthorized"] = 0;
-      }
-
-      const client = new healthService(target, credentials, clientOptions);
+      const client = new healthService(target, credentials);
       const deadline = new Date(Date.now() + timeoutMs);
 
       const result = await new Promise<{ status: string }>((resolve, reject) => {

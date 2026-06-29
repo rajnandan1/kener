@@ -33,6 +33,7 @@ class DnsCall {
     let values = this.monitor.type_data.values;
     const configuredNameServer = this.monitor.type_data.nameServer?.trim() || undefined;
     const transport = this.monitor.type_data.transport ?? "UDP";
+    const transportLabel = transport === "TLS" ? "DNS-over-TLS" : "DNS";
     const queryStartTime = performance.now();
 
     try {
@@ -44,7 +45,6 @@ class DnsCall {
         allowSelfSignedCert: this.monitor.type_data.allowSelfSignedCert,
       });
       let latency = Math.round(performance.now() - queryStartTime);
-      const transportLabel = transport === "TLS" ? "DNS-over-TLS" : "DNS";
 
       if (dnsRes[recordType] === undefined) {
         return {
@@ -102,7 +102,6 @@ class DnsCall {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const latency = Math.round(performance.now() - queryStartTime);
-      const transportLabel = transport === "TLS" ? "DNS-over-TLS" : "DNS";
       return {
         status: GC.DOWN,
         latency,
@@ -114,7 +113,7 @@ class DnsCall {
       status: GC.DOWN,
       latency: Math.round(performance.now() - queryStartTime),
       type: GC.REALTIME,
-      error_message: `DNS ${recordType} check did not return a definitive result for ${host}`,
+      error_message: `${transportLabel} ${recordType} check did not return a definitive result for ${host}`,
     };
   }
 }

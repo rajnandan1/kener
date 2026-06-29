@@ -14,7 +14,7 @@ Configure:
 - `matchType` (`ANY` or `ALL`, default `ANY`)
 - at least one expected value in `values`
 
-For UDP transport, `nameServer` is optional (leave blank for resolver defaults).
+For UDP transport, `nameServer` is optional (leave blank to walk authoritative nameservers, then fall back to `8.8.8.8`).
 
 For DNS-over-TLS (`transport: "TLS"`), `nameServer` is required.
 
