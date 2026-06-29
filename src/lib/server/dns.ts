@@ -160,6 +160,7 @@ class DNSResolver {
 
       socket.on("error", (err) => {
         cleanup();
+        socket.destroy();
         reject(err);
       });
 

@@ -75,6 +75,7 @@ class GrpcCall {
       const credentials =
         tls && insecure
           ? grpc.credentials.createSsl(null, null, null, {
+              rejectUnauthorized: false,
               checkServerIdentity: () => undefined,
             })
           : tls
