@@ -61,7 +61,7 @@ class GrpcCall {
   }
 
   async execute(): Promise<MonitoringResult> {
-    const { host, port, service, tls, timeout } = this.monitor.type_data;
+    const { host, port, service, tls, insecure, timeout } = this.monitor.type_data;
     const timeoutMs = timeout || 10000;
     const target = `${host}:${port}`;
 
@@ -72,8 +72,20 @@ class GrpcCall {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const healthService = (proto.grpc as any).health.v1.Health;
 
-      const credentials = tls ? grpc.credentials.createSsl() : grpc.credentials.createInsecure();
-      const client = new healthService(target, credentials);
+      const credentials =
+        tls && insecure
+          ? grpc.credentials.createSsl(null, null, null, { rejectUnauthorized: false })
+          : tls
+            ? grpc.credentials.createSsl()
+            : grpc.credentials.createInsecure();
+      const clientOptions: grpc.ChannelOptions = {};
+
+      // Keep channel-level insecure knob for grpc-js compatibility.
+      if (tls && insecure) {
+        clientOptions["grpc-node.tls_reject_unauthorized"] = 0;
+      }
+
+      const client = new healthService(target, credentials, clientOptions);
       const deadline = new Date(Date.now() + timeoutMs);
 
       const result = await new Promise<{ status: string }>((resolve, reject) => {

@@ -152,6 +152,13 @@ function IsValidNameServer(nameServer: string): boolean {
   const regex = /^([0-9]{1,3}\.){3}[0-9]{1,3}$/;
   return regex.test(nameServer);
 }
+function IsValidDnsResolver(resolver: string): boolean {
+  const ipType = ValidateIpAddress(resolver);
+  if (ipType === "IP4" || ipType === "IP6") {
+    return true;
+  }
+  return IsValidHost(resolver);
+}
 const IsValidURL = function (url: string): boolean {
   return /^(http|https):\/\/[^ "]+$/.test(url);
 };
@@ -383,6 +390,7 @@ export {
   ValidateIpAddress,
   IsValidHost,
   IsValidNameServer,
+  IsValidDnsResolver,
   IsValidURL,
   IsValidPort,
   CollapseStatusCounts,

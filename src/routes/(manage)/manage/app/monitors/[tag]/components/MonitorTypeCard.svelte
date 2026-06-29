@@ -11,7 +11,7 @@
   import type { GroupMonitorTypeData, MonitoringResult } from "$lib/server/types/monitor.js";
   import { MONITOR_TYPES, type MonitorType } from "$lib/types/monitor.js";
   import { toast } from "svelte-sonner";
-  import { ValidateIpAddress, IsValidHost, IsValidNameServer, IsValidURL, IsValidPort } from "$lib/clientTools";
+  import { ValidateIpAddress, IsValidHost, IsValidNameServer, IsValidDnsResolver, IsValidURL, IsValidPort } from "$lib/clientTools";
   import { GAMEDIG_SOCKET_TIMEOUT } from "$lib/anywhere";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
@@ -153,7 +153,16 @@
         const data = typeData as any;
         if (!data.host || !IsValidHost(data.host)) return false;
         const nameServer = (data.nameServer || "").trim();
-        if (nameServer && !IsValidNameServer(nameServer)) return false;
+        const transport = data.transport || "UDP";
+        if (transport === "TLS") {
+          if (!nameServer || !IsValidDnsResolver(nameServer)) return false;
+          const tlsPort = Number(data.tlsPort ?? 853);
+          if (!IsValidPort(String(tlsPort))) return false;
+          const tlsServername = (data.tlsServername || "").trim();
+          if (tlsServername && !IsValidHost(tlsServername)) return false;
+        } else if (nameServer && !IsValidNameServer(nameServer)) {
+          return false;
+        }
         if (!data.lookupRecord) return false;
         if (!data.values || !Array.isArray(data.values) || data.values.length === 0) return false;
         const hasNonEmptyValue = data.values.some((val: string) => val && val.trim() !== "");

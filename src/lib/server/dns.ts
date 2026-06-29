@@ -1,7 +1,8 @@
 import dns2 from "dns2";
 import dgram, { type Socket } from "dgram";
+import tls from "tls";
 import { Resolver as NodeResolver } from "node:dns/promises";
-import { AllRecordTypes } from "../clientTools";
+import { AllRecordTypes, IsValidHost, ValidateIpAddress } from "../clientTools";
 
 interface DNSAnswer {
   name: string;
@@ -25,13 +26,32 @@ interface DNSRecordResult {
   data: unknown;
 }
 
+export interface DnsQueryOptions {
+  transport?: "UDP" | "TLS";
+  nameserverOverride?: string;
+  tlsPort?: number;
+  tlsServername?: string;
+  allowSelfSignedCert?: boolean;
+  timeoutMs?: number;
+}
+
+const DEFAULT_DOT_PORT = 853;
+const DEFAULT_QUERY_TIMEOUT_MS = 3000;
+
 class DNSResolver {
   nameserver: string;
-  socket: Socket;
+  socket: Socket | null;
 
   constructor() {
     this.nameserver = "8.8.8.8";
-    this.socket = dgram.createSocket("udp4");
+    this.socket = null;
+  }
+
+  private getUdpSocket(): Socket {
+    if (!this.socket) {
+      this.socket = dgram.createSocket("udp4");
+    }
+    return this.socket;
   }
 
   createQuery(domain: string, type: string): InstanceType<typeof dns2.Packet> {
@@ -49,11 +69,24 @@ class DNSResolver {
     return packet;
   }
 
+  private resolveTlsServername(nameserver: string, tlsServername?: string): string | undefined {
+    const configuredServername = tlsServername?.trim();
+    if (configuredServername) {
+      return configuredServername;
+    }
+    if (IsValidHost(nameserver)) {
+      return nameserver;
+    }
+    return undefined;
+  }
+
   async query(domain: string, recordType: string, nameserverOverride?: string): Promise<DNSResponse> {
+    const socket = this.getUdpSocket();
     return new Promise((resolve, reject) => {
       const query = this.createQuery(domain, recordType);
       const buffer = query.toBuffer();
       const targetNameserver = nameserverOverride || this.nameserver;
+      const timeoutMs = DEFAULT_QUERY_TIMEOUT_MS;
 
       const onMessage = (message: Buffer) => {
         clearTimeout(timeoutId);
@@ -63,18 +96,83 @@ class DNSResolver {
       };
 
       const timeoutId = setTimeout(() => {
-        this.socket.removeListener("message", onMessage);
+        socket.removeListener("message", onMessage);
         reject(new Error(`DNS query timed out for ${domain} (${recordType}) via ${targetNameserver}`));
-      }, 3000);
+      }, timeoutMs);
 
-      this.socket.once("message", onMessage);
+      socket.once("message", onMessage);
 
-      this.socket.send(buffer, 0, buffer.length, 53, targetNameserver, (err: Error | null) => {
+      socket.send(buffer, 0, buffer.length, 53, targetNameserver, (err: Error | null) => {
         if (err) {
           clearTimeout(timeoutId);
-          this.socket.removeListener("message", onMessage);
+          socket.removeListener("message", onMessage);
           reject(err);
         }
+      });
+    });
+  }
+
+  async queryOverTls(
+    domain: string,
+    recordType: string,
+    nameserver: string,
+    options: Pick<DnsQueryOptions, "tlsPort" | "tlsServername" | "allowSelfSignedCert" | "timeoutMs"> = {},
+  ): Promise<DNSResponse> {
+    const query = this.createQuery(domain, recordType);
+    const buffer = query.toBuffer();
+    const lengthPrefix = Buffer.alloc(2);
+    lengthPrefix.writeUInt16BE(buffer.length, 0);
+    const message = Buffer.concat([lengthPrefix, buffer]);
+    const port = options.tlsPort ?? DEFAULT_DOT_PORT;
+    const timeoutMs = options.timeoutMs ?? DEFAULT_QUERY_TIMEOUT_MS;
+    const servername = this.resolveTlsServername(nameserver, options.tlsServername);
+    const ipType = ValidateIpAddress(nameserver);
+
+    return new Promise((resolve, reject) => {
+      let responseBuffer = Buffer.alloc(0);
+      let expectedLength: number | null = null;
+
+      const socket = tls.connect({
+        host: nameserver,
+        port,
+        servername,
+        rejectUnauthorized: !options.allowSelfSignedCert,
+        family: ipType === "IP6" ? 6 : ipType === "IP4" ? 4 : undefined,
+      });
+
+      const timeoutId = setTimeout(() => {
+        socket.destroy();
+        reject(new Error(`DNS-over-TLS query timed out for ${domain} (${recordType}) via ${nameserver}:${port}`));
+      }, timeoutMs);
+
+      const cleanup = () => {
+        clearTimeout(timeoutId);
+      };
+
+      socket.on("error", (err) => {
+        cleanup();
+        reject(err);
+      });
+
+      socket.on("data", (chunk: Buffer) => {
+        responseBuffer = Buffer.concat([responseBuffer, chunk]);
+
+        if (expectedLength === null && responseBuffer.length >= 2) {
+          expectedLength = responseBuffer.readUInt16BE(0);
+        }
+
+        if (expectedLength !== null && responseBuffer.length >= expectedLength + 2) {
+          cleanup();
+          const responseData = responseBuffer.subarray(2, 2 + expectedLength);
+          // @ts-expect-error dns2 types are incomplete
+          const response = dns2.Packet.parse(responseData) as DNSResponse;
+          socket.end();
+          resolve(response);
+        }
+      });
+
+      socket.on("secureConnect", () => {
+        socket.write(message);
       });
     });
   }
@@ -140,12 +238,30 @@ class DNSResolver {
   async getRecord(
     domain: string,
     recordType: string,
-    nameserverOverride?: string,
+    options: DnsQueryOptions = {},
   ): Promise<Record<string, DNSRecordResult[]>> {
     const results: Record<string, DNSRecordResult[]> = {};
+    const transport = options.transport ?? "UDP";
+    const nameserverOverride = options.nameserverOverride?.trim() || undefined;
 
     try {
-      const response = await this.queryAuthoritativeRecord(domain, recordType, nameserverOverride);
+      let response: DNSResponse;
+
+      if (transport === "TLS") {
+        if (!nameserverOverride) {
+          throw new Error("Name server is required for DNS-over-TLS queries");
+        }
+
+        response = await this.queryOverTls(domain, recordType, nameserverOverride, {
+          tlsPort: options.tlsPort,
+          tlsServername: options.tlsServername,
+          allowSelfSignedCert: options.allowSelfSignedCert,
+          timeoutMs: options.timeoutMs,
+        });
+      } else {
+        response = await this.queryAuthoritativeRecord(domain, recordType, nameserverOverride);
+      }
+
       results[recordType] = response.answers.map((answer: DNSAnswer) => ({
         name: answer.name,
         type: recordType,
@@ -157,7 +273,10 @@ class DNSResolver {
       console.error("Error querying DNS records:", error);
       throw error;
     } finally {
-      this.socket.close();
+      if (this.socket) {
+        this.socket.close();
+        this.socket = null;
+      }
     }
   }
 }

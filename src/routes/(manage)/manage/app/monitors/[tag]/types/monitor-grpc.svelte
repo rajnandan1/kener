@@ -12,6 +12,7 @@
   if (!data.service) data.service = "";
   if (!data.timeout) data.timeout = 10000;
   if (data.tls === undefined) data.tls = false;
+  if (data.insecure === undefined) data.insecure = false;
 </script>
 
 <div class="space-y-4">
@@ -43,4 +44,11 @@
     <Switch id="grpc-tls" bind:checked={data.tls} />
     <Label for="grpc-tls">Use TLS</Label>
   </div>
+
+  {#if data.tls}
+    <div class="flex items-center space-x-2">
+      <Switch id="grpc-insecure" bind:checked={data.insecure} />
+      <Label for="grpc-insecure">Allow Insecure TLS (skip certificate verification)</Label>
+    </div>
+  {/if}
 </div>
