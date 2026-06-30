@@ -32,10 +32,18 @@ class DnsCall {
     let matchType = this.monitor.type_data.matchType;
     let values = this.monitor.type_data.values;
     const configuredNameServer = this.monitor.type_data.nameServer?.trim() || undefined;
+    const transport = this.monitor.type_data.transport ?? "UDP";
+    const transportLabel = transport === "TLS" ? "DNS-over-TLS" : "DNS";
     const queryStartTime = performance.now();
 
     try {
-      let dnsRes = await dnsResolver.getRecord(host, recordType, configuredNameServer);
+      let dnsRes = await dnsResolver.getRecord(host, recordType, {
+        transport,
+        nameserverOverride: configuredNameServer,
+        tlsPort: this.monitor.type_data.tlsPort,
+        tlsServername: this.monitor.type_data.tlsServername,
+        allowSelfSignedCert: this.monitor.type_data.allowSelfSignedCert,
+      });
       let latency = Math.round(performance.now() - queryStartTime);
 
       if (dnsRes[recordType] === undefined) {
@@ -43,7 +51,7 @@ class DnsCall {
           status: GC.DOWN,
           latency: latency,
           type: GC.REALTIME,
-          error_message: `No DNS ${recordType} response found for ${host}`,
+          error_message: `No ${transportLabel} ${recordType} response found for ${host}`,
         };
       }
       let data = dnsRes[recordType];
@@ -55,7 +63,7 @@ class DnsCall {
           status: GC.DOWN,
           latency: latency,
           type: GC.REALTIME,
-          error_message: `No DNS ${recordType} records returned for ${host}`,
+          error_message: `No ${transportLabel} ${recordType} records returned for ${host}`,
         };
       }
 
@@ -66,7 +74,7 @@ class DnsCall {
             status: GC.DOWN,
             latency: latency,
             type: GC.REALTIME,
-            error_message: `DNS ${recordType} mismatch for ${host}. Missing: ${missingValues.join(", ")}`,
+            error_message: `${transportLabel} ${recordType} mismatch for ${host}. Missing: ${missingValues.join(", ")}`,
           };
         }
         return {
@@ -88,7 +96,7 @@ class DnsCall {
           status: GC.DOWN,
           latency: latency,
           type: GC.REALTIME,
-          error_message: `DNS ${recordType} mismatch for ${host}. Got: ${dnsData.join(", ")}`,
+          error_message: `${transportLabel} ${recordType} mismatch for ${host}. Got: ${dnsData.join(", ")}`,
         };
       }
     } catch (error) {
@@ -98,14 +106,14 @@ class DnsCall {
         status: GC.DOWN,
         latency,
         type: GC.REALTIME,
-        error_message: `DNS query failed for ${host} (${recordType}): ${message}`,
+        error_message: `${transportLabel} query failed for ${host} (${recordType}): ${message}`,
       };
     }
     return {
       status: GC.DOWN,
       latency: Math.round(performance.now() - queryStartTime),
       type: GC.REALTIME,
-      error_message: `DNS ${recordType} check did not return a definitive result for ${host}`,
+      error_message: `${transportLabel} ${recordType} check did not return a definitive result for ${host}`,
     };
   }
 }

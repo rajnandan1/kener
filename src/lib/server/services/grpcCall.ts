@@ -61,7 +61,7 @@ class GrpcCall {
   }
 
   async execute(): Promise<MonitoringResult> {
-    const { host, port, service, tls, timeout } = this.monitor.type_data;
+    const { host, port, service, tls, insecure, timeout } = this.monitor.type_data;
     const timeoutMs = timeout || 10000;
     const target = `${host}:${port}`;
 
@@ -72,7 +72,16 @@ class GrpcCall {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const healthService = (proto.grpc as any).health.v1.Health;
 
-      const credentials = tls ? grpc.credentials.createSsl() : grpc.credentials.createInsecure();
+      const credentials =
+        tls && insecure
+          ? grpc.credentials.createSsl(null, null, null, {
+              rejectUnauthorized: false,
+              checkServerIdentity: () => undefined,
+            })
+          : tls
+            ? grpc.credentials.createSsl()
+            : grpc.credentials.createInsecure();
+
       const client = new healthService(target, credentials);
       const deadline = new Date(Date.now() + timeoutMs);
 

@@ -34,6 +34,10 @@ export interface DnsMonitorTypeData {
   lookupRecord: string;
   matchType: "ALL" | "ANY";
   values: string[];
+  transport?: "UDP" | "TLS";
+  tlsPort?: number;
+  tlsServername?: string;
+  allowSelfSignedCert?: boolean;
 }
 
 export type { PingHost, PingMonitorTypeData };
@@ -86,6 +90,7 @@ export interface GrpcMonitorTypeData {
   port: number;
   service?: string;
   tls?: boolean;
+  insecure?: boolean;
   timeout?: number;
 }
 
