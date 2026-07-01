@@ -849,7 +849,7 @@ export interface SubscriptionConfigUpdate {
 // ============ New Subscription System (v2) ============
 
 export type SubscriptionMethodType = "email";
-export type SubscriptionEventType = "incidents" | "maintenances";
+export type SubscriptionEventType = "incidents" | "maintenances" | "monitors";
 export type SubscriptionStatus = "ACTIVE" | "INACTIVE";
 export type SubscriberUserStatus = "PENDING" | "ACTIVE" | "INACTIVE";
 
@@ -899,6 +899,7 @@ export interface UserSubscriptionV2Record {
   event_type: SubscriptionEventType;
 
   status: SubscriptionStatus;
+  monitor_tags: string[] | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -909,6 +910,7 @@ export interface UserSubscriptionV2RecordInsert {
   event_type: SubscriptionEventType;
 
   status?: SubscriptionStatus;
+  monitor_tags?: string[] | null;
 }
 
 export interface UserSubscriptionV2Filter {
@@ -917,6 +919,7 @@ export interface UserSubscriptionV2Filter {
   event_type?: SubscriptionEventType;
 
   status?: SubscriptionStatus;
+  monitor_tags?: string[] | null;
 }
 
 // ============ Old types (kept for compatibility) ============
@@ -994,6 +997,7 @@ export interface SubscriptionsConfig {
     emails: {
       incidents: boolean;
       maintenances: boolean;
+      monitors: boolean;
     };
   };
 }

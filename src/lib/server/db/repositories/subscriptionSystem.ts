@@ -163,7 +163,7 @@ export class SubscriptionSystemRepository extends BaseRepository {
 
   async createUserSubscriptionV2(data: UserSubscriptionV2RecordInsert): Promise<UserSubscriptionV2Record> {
     const dbType = GetDbType();
-    const insertData = {
+    const insertData: Record<string, unknown> = {
       subscriber_user_id: data.subscriber_user_id,
       subscriber_method_id: data.subscriber_method_id,
       event_type: data.event_type,
@@ -171,19 +171,23 @@ export class SubscriptionSystemRepository extends BaseRepository {
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     };
+    if (data.monitor_tags !== undefined) {
+      insertData.monitor_tags = JSON.stringify(data.monitor_tags);
+    }
 
     if (dbType === "postgresql") {
       const [sub] = await this.knex("user_subscriptions_v2").insert(insertData).returning("*");
-      return sub;
+      return normalizeSubscriptionV2Record(sub);
     } else {
       const result = await this.knex("user_subscriptions_v2").insert(insertData);
       const id = result[0];
-      return (await this.getUserSubscriptionV2ById(id))!;
+      return normalizeSubscriptionV2Record(await this.getUserSubscriptionV2ById(id))!;
     }
   }
 
   async getUserSubscriptionV2ById(id: number): Promise<UserSubscriptionV2Record | undefined> {
-    return await this.knex("user_subscriptions_v2").where("id", id).first();
+    const row = await this.knex("user_subscriptions_v2").where("id", id).first();
+    return row ? normalizeSubscriptionV2Record(row) : undefined;
   }
 
   async getUserSubscriptionsV2(filter: UserSubscriptionV2Filter): Promise<UserSubscriptionV2Record[]> {
@@ -203,7 +207,8 @@ export class SubscriptionSystemRepository extends BaseRepository {
       query = query.where("status", filter.status);
     }
 
-    return await query.orderBy("created_at", "desc");
+    const rows = await query.orderBy("created_at", "desc");
+    return rows.map(normalizeSubscriptionV2Record);
   }
 
   async updateUserSubscriptionV2(id: number, data: Partial<UserSubscriptionV2RecordInsert>): Promise<number> {
@@ -211,6 +216,9 @@ export class SubscriptionSystemRepository extends BaseRepository {
       updated_at: this.knex.fn.now(),
     };
     if (data.status !== undefined) updateData.status = data.status;
+    if (data.monitor_tags !== undefined) {
+      updateData.monitor_tags = data.monitor_tags !== null ? JSON.stringify(data.monitor_tags) : null;
+    }
 
     return await this.knex("user_subscriptions_v2").where("id", id).update(updateData);
   }
@@ -223,6 +231,7 @@ export class SubscriptionSystemRepository extends BaseRepository {
     subscriberUserId: number,
     subscriberMethodId: number,
     eventType: SubscriptionEventType,
+    monitorTags?: string[] | null,
   ): Promise<boolean> {
     let query = this.knex("user_subscriptions_v2")
       .where("subscriber_user_id", subscriberUserId)
@@ -251,17 +260,7 @@ export class SubscriptionSystemRepository extends BaseRepository {
       .select("us.*", "sm.method_type", "sm.method_value", "sm.status as method_status", "sm.meta as method_meta");
 
     return rows.map((row) => ({
-      subscription: {
-        id: row.id,
-        subscriber_user_id: row.subscriber_user_id,
-        subscriber_method_id: row.subscriber_method_id,
-        event_type: row.event_type,
-        entity_type: row.entity_type,
-        entity_id: row.entity_id,
-        status: row.status,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-      },
+      subscription: normalizeSubscriptionV2Record(row),
       method: {
         id: row.subscriber_method_id,
         subscriber_user_id: row.subscriber_user_id,
@@ -276,7 +275,7 @@ export class SubscriptionSystemRepository extends BaseRepository {
   }
 
   /**
-   * Get subscribers for a specific event (for sending notifications)
+   * Get subscribers for a specific event (for sending notifications).
    */
   async getSubscribersForEvent(eventType: SubscriptionEventType): Promise<
     Array<{
@@ -306,6 +305,7 @@ export class SubscriptionSystemRepository extends BaseRepository {
       "us.id as sub_id",
       "us.event_type",
       "us.status as sub_status",
+      "us.monitor_tags as sub_monitor_tags",
       "us.created_at as sub_created_at",
     );
 
@@ -329,17 +329,16 @@ export class SubscriptionSystemRepository extends BaseRepository {
         created_at: row.sub_created_at,
         updated_at: row.sub_created_at,
       },
-      subscription: {
+      subscription: normalizeSubscriptionV2Record({
         id: row.sub_id,
         subscriber_user_id: row.user_id,
         subscriber_method_id: row.method_id,
         event_type: row.event_type,
-        entity_type: row.entity_type,
-        entity_id: row.entity_id,
         status: row.sub_status,
+        monitor_tags: row.sub_monitor_tags,
         created_at: row.sub_created_at,
         updated_at: row.sub_created_at,
-      },
+      }),
     }));
   }
 
@@ -475,6 +474,36 @@ export class SubscriptionSystemRepository extends BaseRepository {
       .andWhere("status", "ACTIVE")
       .orderBy("created_at", "desc");
 
-    return { user, method, subscriptions };
+    return {
+      user,
+      method,
+      subscriptions: subscriptions.map(normalizeSubscriptionV2Record),
+    };
   }
+}
+
+/**
+ * Normalize a raw row from user_subscriptions_v2 into a typed record.
+ * Parses monitor_tags from JSON string to string[] | null.
+ */
+function normalizeSubscriptionV2Record(row: Record<string, unknown>): UserSubscriptionV2Record {
+  let monitorTags: string[] | null = null;
+  if (row.monitor_tags) {
+    try {
+      const parsed = typeof row.monitor_tags === "string" ? JSON.parse(row.monitor_tags) : row.monitor_tags;
+      monitorTags = Array.isArray(parsed) ? parsed : null;
+    } catch {
+      monitorTags = null;
+    }
+  }
+  return {
+    id: row.id as number,
+    subscriber_user_id: row.subscriber_user_id as number,
+    subscriber_method_id: row.subscriber_method_id as number,
+    event_type: row.event_type as SubscriptionEventType,
+    status: row.status as SubscriptionStatus,
+    monitor_tags: monitorTags,
+    created_at: row.created_at as Date,
+    updated_at: row.updated_at as Date,
+  };
 }

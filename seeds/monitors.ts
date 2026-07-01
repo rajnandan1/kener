@@ -2,11 +2,10 @@ import monitorSeed from "../src/lib/server/db/seedMonitorData.ts";
 import type { Knex } from "knex";
 
 export async function seed(knex: Knex): Promise<void> {
-  // Check if the table is empty
-  const count = await knex("monitors").count("id as CNT").first();
-  if (count && count.CNT == 0) {
-    // Deletes ALL existing entries
-    for (const monitor of monitorSeed) {
+  for (const monitor of monitorSeed) {
+    // Only insert if tag doesn't exist yet
+    const existing = await knex("monitors").where("tag", monitor.tag).first();
+    if (!existing) {
       await knex("monitors").insert({
         tag: monitor.tag,
         name: monitor.name,

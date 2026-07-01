@@ -9,12 +9,15 @@
   import AlertCircleIcon from "@lucide/svelte/icons/alert-circle";
   import EyeClosedIcon from "@lucide/svelte/icons/eye-closed";
   import EyeOpenIcon from "@lucide/svelte/icons/eye";
+  import LogInIcon from "@lucide/svelte/icons/log-in";
   import * as Alert from "$lib/components/ui/alert/index.js";
   import type { PageProps } from "./$types";
 
   let { data, form }: PageProps = $props();
   const isAdminAccountCreated: boolean = $derived(data.isAdminAccountCreated);
   const isSetupComplete: boolean = $derived(data.isSetupComplete);
+  const ssoEnabled: boolean = $derived(data.ssoEnabled);
+  const ssoProviderName: string = $derived(data.ssoProviderName);
   const authActionPath = $derived(!isAdminAccountCreated ? "?/signup" : "?/login");
   const emailValue = $derived(form?.values?.email ?? "");
   const nameValue = $derived(form?.values && "name" in form.values ? form.values.name : "");
@@ -170,6 +173,23 @@
             </Button>
           </div>
         </form>
+
+        {#if isAdminAccountCreated && ssoEnabled}
+          <div class="relative my-6">
+            <div class="absolute inset-0 flex items-center">
+              <span class="w-full border-t"></span>
+            </div>
+            <div class="relative flex justify-center text-xs uppercase">
+              <span class="bg-card px-2 text-muted-foreground">Or continue with</span>
+            </div>
+          </div>
+          <a href="/account/signin/api/sso">
+            <Button variant="outline" class="w-full">
+              <LogInIcon class="mr-2 size-4" />
+              Sign in with {ssoProviderName}
+            </Button>
+          </a>
+        {/if}
       {/if}
     </Card.Content>
   </Card.Root>

@@ -1,7 +1,8 @@
 import type { MonitoringResult } from "../types/monitor.js";
 import { Queue, Worker, Job, type JobsOptions } from "bullmq";
 import q from "./q.js";
-import { InsertMonitoringData } from "../controllers/controller.js";
+import db from "../db/db.js";
+import { InsertMonitoringData, NotifySubscribersOnStatusChange } from "../controllers/controller.js";
 import { SetLastMonitoringValue } from "../cache/setGet.js";
 import alertingQueue from "./alertingQueue.js";
 import type { MonitoringData } from "../types/db.js";
@@ -33,6 +34,13 @@ const addWorker = () => {
   worker = q.createWorker(getQueue(), async (job: Job): Promise<MonitoringData | null> => {
     const { monitorTag, ts, status, latency, type, error_message, raw_status } = job.data as JobData;
 
+    // Get old status before inserting new data (for status change detection)
+    let oldStatus: string | undefined;
+    const latestBefore = await db.getLatestMonitoringData(monitorTag);
+    if (latestBefore && latestBefore.status) {
+      oldStatus = latestBefore.status;
+    }
+
     const dbRes = await InsertMonitoringData({
       monitor_tag: monitorTag,
       timestamp: ts,
@@ -55,6 +63,14 @@ const addWorker = () => {
       latency: latency,
       type: type,
     });
+
+    // Notify subscribers if status changed
+    if (oldStatus && oldStatus !== status) {
+      NotifySubscribersOnStatusChange(monitorTag, status, oldStatus).catch((err) =>
+        console.error("Failed to notify subscribers:", err),
+      );
+    }
+
     alertingQueue.push(monitorTag, ts, status);
 
     return dbRes;

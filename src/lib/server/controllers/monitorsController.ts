@@ -291,6 +291,65 @@ export const GetLatestMonitoringData = async (monitor_tag: string): Promise<Moni
 
   return latestData;
 };
+
+/**
+ * Check if a monitor's status changed and notify subscribers if so.
+ * Call this AFTER new monitoring data has been stored.
+ * Uses dynamic import to avoid circular dependency with subscriberQueue → controller.
+ */
+export async function NotifySubscribersOnStatusChange(
+  monitorTag: string,
+  newStatus: string,
+  oldStatus?: string,
+): Promise<void> {
+  try {
+    if (!oldStatus) {
+      const latestBefore = await db.getLatestMonitoringData(monitorTag);
+      if (!latestBefore || !latestBefore.status) return;
+      oldStatus = latestBefore.status;
+    }
+
+    if (oldStatus === newStatus) return;
+
+    const { default: subscriberQueue } = await import("../queues/subscriberQueue.js");
+
+    const monitors = await db.getMonitors({ tag: monitorTag });
+    if (monitors.length === 0) return;
+    const monitor = monitors[0];
+
+    const statusLabel = (s: string) => {
+      switch (s) {
+        case "UP": return "Operational";
+        case "DOWN": return "Down";
+        case "DEGRADED": return "Degraded";
+        case "MAINTENANCE": return "Under Maintenance";
+        default: return s;
+      }
+    };
+
+    const oldLabel = statusLabel(oldStatus!);
+    const newLabel = statusLabel(newStatus);
+
+    const updateSubject = `[Status Change] ${monitor.name}: ${oldLabel} → ${newLabel}`;
+    const updateText = `${monitor.name} changed from ${oldLabel} to ${newLabel}.`;
+
+    await subscriberQueue.push({
+      title: `${monitor.name} is now ${newLabel}`,
+      cta_url: "",
+      cta_text: "View Status Page",
+      update_text: updateText,
+      update_subject: updateSubject,
+      update_id: `${monitorTag}-${Date.now()}`,
+      event_type: "monitors",
+      monitor_tags: [monitorTag],
+      monitor_name: monitor.name,
+      monitor_old_status: oldLabel,
+      monitor_new_status: newLabel,
+    });
+  } catch (err) {
+    console.error(`Failed to notify subscribers of status change for ${monitorTag}:`, err);
+  }
+}
 export const GetLatestStatusActiveAll = async (): Promise<{ status: string }> => {
   //get all the active not hidden monitor tags
   const monitors = await db.getMonitors({ status: GC.ACTIVE, is_hidden: GC.NO });
@@ -753,7 +812,4 @@ export const GetStatusCountsByIntervalGroupedByMonitor = async (
   );
   await setCache(cacheKey, result, 60);
   return result;
-};
-export const GetLastKnownStatus = async (monitor_tag: string): Promise<MonitoringData | undefined> => {
-  return await db.getLastKnownStatus(monitor_tag);
 };
