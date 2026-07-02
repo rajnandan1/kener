@@ -63,6 +63,13 @@ import {
   RemoveMonitorFromPage,
   GetPageMonitors,
   ReorderPageMonitors,
+  GetAllAccessGroups,
+  CreateAccessGroup,
+  DeleteAccessGroup,
+  GetPageAccessGroups,
+  SetPageAccessGroups,
+  GetRoleAccessGroups,
+  SetRoleAccessGroups,
 } from "$lib/server/controllers/pagesController.js";
 import {
   CreateMaintenance,
@@ -413,6 +420,22 @@ export async function POST({ request, cookies }) {
     } else if (action == "reorderPageMonitors") {
       await ReorderPageMonitors(data.page_id, data.monitor_tags);
       resp = { success: true };
+    }
+    // ============ Access Group Actions ============
+    else if (action == "getAccessGroups") {
+      resp = await GetAllAccessGroups();
+    } else if (action == "createAccessGroup") {
+      resp = await CreateAccessGroup(data);
+    } else if (action == "deleteAccessGroup") {
+      resp = await DeleteAccessGroup(data.id);
+    } else if (action == "getPageAccessGroups") {
+      resp = await GetPageAccessGroups(data.page_id);
+    } else if (action == "setPageAccessGroups") {
+      resp = await SetPageAccessGroups(data.page_id, data.group_ids);
+    } else if (action == "getRoleAccessGroups") {
+      resp = await GetRoleAccessGroups(data.roleId);
+    } else if (action == "setRoleAccessGroups") {
+      resp = await SetRoleAccessGroups(data.roleId, data.group_ids);    
     }
     // ============ Maintenance Actions ============
     else if (action == "getMaintenances") {

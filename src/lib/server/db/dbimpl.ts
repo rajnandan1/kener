@@ -240,6 +240,17 @@ class DbImpl {
   deletePageMonitorsByPageId!: PagesRepository["deletePageMonitorsByPageId"];
   updatePageMonitorPositions!: PagesRepository["updatePageMonitorPositions"];
 
+  // ============ Access Groups ============
+  getAccessGroupsForPage!: PagesRepository["getAccessGroupsForPage"];
+  getAccessGroupsForPages!: PagesRepository["getAccessGroupsForPages"];
+  getAccessGroupsForRole!: PagesRepository["getAccessGroupsForRole"];
+  getAccessGroupsForRoles!: PagesRepository["getAccessGroupsForRoles"];
+  setPageAccessGroups!: PagesRepository["setPageAccessGroups"];
+  setRoleAccessGroups!: PagesRepository["setRoleAccessGroups"];
+  getAllAccessGroups!: PagesRepository["getAllAccessGroups"];
+  createAccessGroup!: PagesRepository["createAccessGroup"];
+  deleteAccessGroup!: PagesRepository["deleteAccessGroup"];
+
   // ============ Maintenances ============
   createMaintenance!: MaintenancesRepository["createMaintenance"];
   getMaintenanceById!: MaintenancesRepository["getMaintenanceById"];
@@ -613,6 +624,16 @@ class DbImpl {
     this.deletePageMonitorsByTag = this.pages.deletePageMonitorsByTag.bind(this.pages);
     this.deletePageMonitorsByPageId = this.pages.deletePageMonitorsByPageId.bind(this.pages);
     this.updatePageMonitorPositions = this.pages.updatePageMonitorPositions.bind(this.pages);
+    // Access Groups
+    this.getAccessGroupsForPage = this.pages.getAccessGroupsForPage.bind(this.pages);
+    this.getAccessGroupsForPages = this.pages.getAccessGroupsForPages.bind(this.pages);
+    this.getAccessGroupsForRole = this.pages.getAccessGroupsForRole.bind(this.pages);
+    this.getAccessGroupsForRoles = this.pages.getAccessGroupsForRoles.bind(this.pages);
+    this.setPageAccessGroups = this.pages.setPageAccessGroups.bind(this.pages);
+    this.setRoleAccessGroups = this.pages.setRoleAccessGroups.bind(this.pages);
+    this.getAllAccessGroups = this.pages.getAllAccessGroups.bind(this.pages);
+    this.createAccessGroup = this.pages.createAccessGroup.bind(this.pages);
+    this.deleteAccessGroup = this.pages.deleteAccessGroup.bind(this.pages);
   }
 
   private bindMaintenancesMethods(): void {
