@@ -8,7 +8,7 @@ import type {
   BadRequestResponse,
 } from "$lib/types/api";
 import GC from "$lib/global-constants";
-import { UpdateMonitoringData } from "$lib/server/controllers/monitorsController";
+import { UpdateMonitoringData, NotifySubscribersOnStatusChange } from "$lib/server/controllers/monitorsController";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { SetLastMonitoringValue } from "$lib/server/cache/setGet";
 import alertingQueue from "$lib/server/queues/alertingQueue";
@@ -153,6 +153,13 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     return json(errorResponse, { status: 400 });
   }
 
+  // Get old status before update (for status change detection)
+  let oldStatus: string | undefined;
+  const latestBefore = await db.getLatestMonitoringData(monitorTag);
+  if (latestBefore && latestBefore.status) {
+    oldStatus = latestBefore.status;
+  }
+
   // Use the existing UpdateMonitoringData function
   await UpdateMonitoringData({
     monitor_tag: monitorTag,
@@ -168,6 +175,13 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   const latestData = await db.getLatestMonitoringData(monitorTag);
   if (latestData) {
     await SetLastMonitoringValue(monitorTag, latestData);
+  }
+
+  // Notify subscribers if status changed
+  if (oldStatus && oldStatus !== body.status) {
+    NotifySubscribersOnStatusChange(monitorTag, body.status, oldStatus).catch((err) =>
+      console.error("Failed to notify subscribers of status change:", err),
+    );
   }
 
   // MANUAL samples are alert-visible (docs/adr/0005), so re-evaluate alerts once for the

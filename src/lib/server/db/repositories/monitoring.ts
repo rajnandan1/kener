@@ -691,9 +691,4 @@ export class MonitoringRepository extends BaseRepository {
       minLatency: Number(result?.min_latency) || 0,
     };
   }
-
-  //get the last known status for a monitor
-  async getLastKnownStatus(monitor_tag: string): Promise<MonitoringData | undefined> {
-    return await this.knex("monitoring_data").where("monitor_tag", monitor_tag).orderBy("timestamp", "desc").first();
-  }
 }

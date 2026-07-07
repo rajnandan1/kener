@@ -7,8 +7,10 @@ import type {
   SubscriptionEventType,
   SubscriberSummary,
   UserSubscriptionV2Record,
+  UserSubscriptionV2RecordInsert,
   SubscriberUserRecord,
   SubscriberMethodRecord,
+  MonitorRecord,
 } from "$lib/server/types/db.js";
 
 // ============ V2 Admin Functions ============
@@ -112,6 +114,8 @@ export function FormatEventType(eventType: SubscriptionEventType): string {
       return "Incident Updates";
     case "maintenances":
       return "Maintenance Updates";
+    case "monitors":
+      return "Monitor Status";
     default:
       return eventType;
   }
@@ -125,8 +129,13 @@ export interface AdminSubscriberRecord {
   email: string;
   incidents_enabled: boolean;
   maintenances_enabled: boolean;
+  monitors_enabled: boolean;
   incidents_subscription_id: number | null;
   maintenances_subscription_id: number | null;
+  monitors_subscription_id: number | null;
+  incidents_monitor_tags: string[] | null;
+  maintenances_monitor_tags: string[] | null;
+  monitors_monitor_tags: string[] | null;
   created_at: Date;
 }
 
@@ -159,6 +168,7 @@ export async function GetAdminSubscribersPaginated(
 
     const incidentsSub = subscriptions.find((s) => s.event_type === "incidents");
     const maintenancesSub = subscriptions.find((s) => s.event_type === "maintenances");
+    const monitorsSub = subscriptions.find((s) => s.event_type === "monitors");
 
     subscribers.push({
       user_id: item.id,
@@ -166,8 +176,13 @@ export async function GetAdminSubscribersPaginated(
       email: item.email,
       incidents_enabled: incidentsSub?.status === "ACTIVE",
       maintenances_enabled: maintenancesSub?.status === "ACTIVE",
+      monitors_enabled: monitorsSub?.status === "ACTIVE",
       incidents_subscription_id: incidentsSub?.id || null,
       maintenances_subscription_id: maintenancesSub?.id || null,
+      monitors_subscription_id: monitorsSub?.id || null,
+      incidents_monitor_tags: incidentsSub?.monitor_tags ?? null,
+      maintenances_monitor_tags: maintenancesSub?.monitor_tags ?? null,
+      monitors_monitor_tags: monitorsSub?.monitor_tags ?? null,
       created_at: item.created_at,
     });
   }
@@ -264,6 +279,10 @@ export async function AdminAddSubscriber(
   email: string,
   incidents: boolean,
   maintenances: boolean,
+  monitors: boolean,
+  incidentsMonitorTags?: string[] | null,
+  maintenancesMonitorTags?: string[] | null,
+  monitorsMonitorTags?: string[] | null,
 ): Promise<{ success: boolean; error?: string; subscriber?: AdminSubscriberRecord }> {
   if (!ValidateEmail(email)) {
     return { success: false, error: "Invalid email address" };
@@ -312,9 +331,12 @@ export async function AdminAddSubscriber(
         subscriber_method_id: method.id,
         event_type: "incidents",
         status: "ACTIVE",
+        monitor_tags: incidentsMonitorTags ?? [],
       });
     } else {
-      await db.updateUserSubscriptionV2(existing[0].id, { status: "ACTIVE" });
+      const updates: Partial<UserSubscriptionV2RecordInsert> = { status: "ACTIVE" };
+      if (incidentsMonitorTags !== undefined) updates.monitor_tags = incidentsMonitorTags;
+      await db.updateUserSubscriptionV2(existing[0].id, updates);
       incidentsSub = existing[0];
     }
   }
@@ -330,10 +352,35 @@ export async function AdminAddSubscriber(
         subscriber_method_id: method.id,
         event_type: "maintenances",
         status: "ACTIVE",
+        monitor_tags: maintenancesMonitorTags ?? [],
       });
     } else {
-      await db.updateUserSubscriptionV2(existing[0].id, { status: "ACTIVE" });
+      const updates: Partial<UserSubscriptionV2RecordInsert> = { status: "ACTIVE" };
+      if (maintenancesMonitorTags !== undefined) updates.monitor_tags = maintenancesMonitorTags;
+      await db.updateUserSubscriptionV2(existing[0].id, updates);
       maintenancesSub = existing[0];
+    }
+  }
+
+  let monitorsSub = null;
+  if (monitors) {
+    const existing = await db.getUserSubscriptionsV2({
+      subscriber_method_id: method.id,
+      event_type: "monitors",
+    });
+    if (existing.length === 0) {
+      monitorsSub = await db.createUserSubscriptionV2({
+        subscriber_user_id: user.id,
+        subscriber_method_id: method.id,
+        event_type: "monitors",
+        status: "ACTIVE",
+        monitor_tags: monitorsMonitorTags ?? [],
+      });
+    } else {
+      const updates: Partial<UserSubscriptionV2RecordInsert> = { status: "ACTIVE" };
+      if (monitorsMonitorTags !== undefined) updates.monitor_tags = monitorsMonitorTags;
+      await db.updateUserSubscriptionV2(existing[0].id, updates);
+      monitorsSub = existing[0];
     }
   }
 
@@ -345,25 +392,65 @@ export async function AdminAddSubscriber(
       email: normalizedEmail,
       incidents_enabled: incidents,
       maintenances_enabled: maintenances,
+      monitors_enabled: monitors,
       incidents_subscription_id: incidentsSub?.id || null,
       maintenances_subscription_id: maintenancesSub?.id || null,
+      monitors_subscription_id: monitorsSub?.id || null,
+      incidents_monitor_tags: incidentsMonitorTags ?? [],
+      maintenances_monitor_tags: maintenancesMonitorTags ?? [],
+      monitors_monitor_tags: monitorsMonitorTags ?? [],
       created_at: method.created_at,
     },
   };
+};
+
+/**
+ * Check if a subscriber's subscription matches the given monitor tags.
+ * Returns true if subscription has no monitor_tags filter (all monitors)
+ * or if there's overlap between subscription's monitor_tags and the event's monitorTags.
+ */
+function subscriberMatchesMonitors(
+  subscription: UserSubscriptionV2Record,
+  eventMonitorTags: string[],
+): boolean {
+  if (!subscription.monitor_tags || subscription.monitor_tags.length === 0) {
+    return true;
+  }
+  return eventMonitorTags.some((tag) => subscription.monitor_tags!.includes(tag));
 }
 
 /**
  * Get active email addresses for a given event type
+ * Optionally filtered by monitor tags (only return subscribers
+ * whose monitor_tags overlap with eventMonitorTags).
  * Used for sending notification emails to subscribers
  */
-export async function GetActiveEmailsForEventType(eventType: SubscriptionEventType): Promise<string[]> {
+export async function GetActiveEmailsForEventType(
+  eventType: SubscriptionEventType,
+  eventMonitorTags?: string[],
+): Promise<string[]> {
   const subscribers = await db.getSubscribersForEvent(eventType);
 
+  // Filter subscribers by monitor tags if event has specific monitors
+  const filtered = eventMonitorTags && eventMonitorTags.length > 0
+    ? subscribers.filter((s) => subscriberMatchesMonitors(s.subscription, eventMonitorTags))
+    : subscribers;
+
   // Filter for email method type and extract unique email addresses
-  const emails = subscribers.filter((s) => s.method.method_type === "email").map((s) => s.method.method_value);
+  const emails = filtered.filter((s) => s.method.method_type === "email").map((s) => s.method.method_value);
 
   // Return unique emails
   return [...new Set(emails)];
+}
+
+/**
+ * Get available monitors for subscription selection (non-hidden monitors)
+ */
+export async function GetAvailableMonitors(): Promise<Array<{ tag: string; name: string }>> {
+  const allMonitors = await db.getMonitors({});
+  return allMonitors
+    .filter((m) => m.is_hidden !== "YES")
+    .map((m) => ({ tag: m.tag, name: m.name }));
 }
 
 // ============ Public Subscription Functions ============
@@ -390,7 +477,10 @@ export async function VerifySubscriberToken(token: string): Promise<{
   error?: string;
   user?: SubscriberUserRecord;
   method?: SubscriberMethodRecord;
-  subscriptions?: { incidents: boolean; maintenances: boolean };
+  subscriptions?: { incidents: boolean; maintenances: boolean; monitors: boolean };
+  incidentsMonitorTags?: string[] | null;
+  maintenancesMonitorTags?: string[] | null;
+  monitorsMonitorTags?: string[] | null;
 }> {
   const decoded = await VerifyToken(token);
   if (!decoded || (decoded as unknown as SubscriberTokenPayload).type !== "subscriber") {
@@ -414,12 +504,25 @@ export async function VerifySubscriberToken(token: string): Promise<{
     subscriber_method_id: method.id,
   });
 
+  const incidentsSub = allSubs.find((s) => s.event_type === "incidents");
+  const maintenancesSub = allSubs.find((s) => s.event_type === "maintenances");
+  const monitorsSub = allSubs.find((s) => s.event_type === "monitors");
+
   const subscriptions = {
-    incidents: allSubs.some((s) => s.event_type === "incidents" && s.status === "ACTIVE"),
-    maintenances: allSubs.some((s) => s.event_type === "maintenances" && s.status === "ACTIVE"),
+    incidents: incidentsSub?.status === "ACTIVE",
+    maintenances: maintenancesSub?.status === "ACTIVE",
+    monitors: monitorsSub?.status === "ACTIVE",
   };
 
-  return { success: true, user, method, subscriptions };
+  return {
+    success: true,
+    user,
+    method,
+    subscriptions,
+    incidentsMonitorTags: incidentsSub?.monitor_tags ?? null,
+    maintenancesMonitorTags: maintenancesSub?.monitor_tags ?? null,
+    monitorsMonitorTags: monitorsSub?.monitor_tags ?? null,
+  };
 }
 
 /**
@@ -545,11 +648,18 @@ export async function VerifySubscriberOTP(
 }
 
 /**
- * Update subscription preferences
+ * Update subscription preferences including per-monitor filtering
  */
 export async function UpdateSubscriberPreferences(
   token: string,
-  preferences: { incidents?: boolean; maintenances?: boolean },
+  preferences: {
+    incidents?: boolean;
+    maintenances?: boolean;
+    monitors?: boolean;
+    incidentsMonitorTags?: string[] | null;
+    maintenancesMonitorTags?: string[] | null;
+    monitorsMonitorTags?: string[] | null;
+  },
 ): Promise<{ success: boolean; error?: string }> {
   const verifyResult = await VerifySubscriberToken(token);
   if (!verifyResult.success || !verifyResult.user || !verifyResult.method) {
@@ -567,22 +677,37 @@ export async function UpdateSubscriberPreferences(
     });
 
     if (preferences.incidents) {
-      // Enable
       if (existingSub.length === 0) {
         await db.createUserSubscriptionV2({
           subscriber_user_id: user.id,
           subscriber_method_id: method.id,
           event_type: "incidents",
           status: "ACTIVE",
+          monitor_tags: preferences.incidentsMonitorTags !== undefined ? preferences.incidentsMonitorTags : [],
         });
-      } else if (existingSub[0].status !== "ACTIVE") {
-        await db.updateUserSubscriptionV2(existingSub[0].id, { status: "ACTIVE" });
+      } else {
+        const updates: Partial<UserSubscriptionV2RecordInsert> = { status: "ACTIVE" };
+        if (preferences.incidentsMonitorTags !== undefined) {
+          updates.monitor_tags = preferences.incidentsMonitorTags;
+        }
+        if (existingSub[0].status !== "ACTIVE" || preferences.incidentsMonitorTags !== undefined) {
+          await db.updateUserSubscriptionV2(existingSub[0].id, updates);
+        }
       }
     } else {
-      // Disable
       if (existingSub.length > 0 && existingSub[0].status === "ACTIVE") {
         await db.updateUserSubscriptionV2(existingSub[0].id, { status: "INACTIVE" });
       }
+    }
+  } else if (preferences.incidentsMonitorTags !== undefined) {
+    // Just update monitor_tags without changing enabled status
+    const existingSub = await db.getUserSubscriptionsV2({
+      subscriber_user_id: user.id,
+      subscriber_method_id: method.id,
+      event_type: "incidents",
+    });
+    if (existingSub.length > 0) {
+      await db.updateUserSubscriptionV2(existingSub[0].id, { monitor_tags: preferences.incidentsMonitorTags });
     }
   }
 
@@ -595,22 +720,78 @@ export async function UpdateSubscriberPreferences(
     });
 
     if (preferences.maintenances) {
-      // Enable
       if (existingSub.length === 0) {
         await db.createUserSubscriptionV2({
           subscriber_user_id: user.id,
           subscriber_method_id: method.id,
           event_type: "maintenances",
           status: "ACTIVE",
+          monitor_tags: preferences.maintenancesMonitorTags !== undefined ? preferences.maintenancesMonitorTags : [],
         });
-      } else if (existingSub[0].status !== "ACTIVE") {
-        await db.updateUserSubscriptionV2(existingSub[0].id, { status: "ACTIVE" });
+      } else {
+        const updates: Partial<UserSubscriptionV2RecordInsert> = { status: "ACTIVE" };
+        if (preferences.maintenancesMonitorTags !== undefined) {
+          updates.monitor_tags = preferences.maintenancesMonitorTags;
+        }
+        if (existingSub[0].status !== "ACTIVE" || preferences.maintenancesMonitorTags !== undefined) {
+          await db.updateUserSubscriptionV2(existingSub[0].id, updates);
+        }
       }
     } else {
-      // Disable
       if (existingSub.length > 0 && existingSub[0].status === "ACTIVE") {
         await db.updateUserSubscriptionV2(existingSub[0].id, { status: "INACTIVE" });
       }
+    }
+  } else if (preferences.maintenancesMonitorTags !== undefined) {
+    const existingSub = await db.getUserSubscriptionsV2({
+      subscriber_user_id: user.id,
+      subscriber_method_id: method.id,
+      event_type: "maintenances",
+    });
+    if (existingSub.length > 0) {
+      await db.updateUserSubscriptionV2(existingSub[0].id, { monitor_tags: preferences.maintenancesMonitorTags });
+    }
+  }
+
+  // Handle monitors subscription
+  if (preferences.monitors !== undefined) {
+    const existingSub = await db.getUserSubscriptionsV2({
+      subscriber_user_id: user.id,
+      subscriber_method_id: method.id,
+      event_type: "monitors",
+    });
+
+    if (preferences.monitors) {
+      if (existingSub.length === 0) {
+        await db.createUserSubscriptionV2({
+          subscriber_user_id: user.id,
+          subscriber_method_id: method.id,
+          event_type: "monitors",
+          status: "ACTIVE",
+          monitor_tags: preferences.monitorsMonitorTags !== undefined ? preferences.monitorsMonitorTags : [],
+        });
+      } else {
+        const updates: Partial<UserSubscriptionV2RecordInsert> = { status: "ACTIVE" };
+        if (preferences.monitorsMonitorTags !== undefined) {
+          updates.monitor_tags = preferences.monitorsMonitorTags;
+        }
+        if (existingSub[0].status !== "ACTIVE" || preferences.monitorsMonitorTags !== undefined) {
+          await db.updateUserSubscriptionV2(existingSub[0].id, updates);
+        }
+      }
+    } else {
+      if (existingSub.length > 0 && existingSub[0].status === "ACTIVE") {
+        await db.updateUserSubscriptionV2(existingSub[0].id, { status: "INACTIVE" });
+      }
+    }
+  } else if (preferences.monitorsMonitorTags !== undefined) {
+    const existingSub = await db.getUserSubscriptionsV2({
+      subscriber_user_id: user.id,
+      subscriber_method_id: method.id,
+      event_type: "monitors",
+    });
+    if (existingSub.length > 0) {
+      await db.updateUserSubscriptionV2(existingSub[0].id, { monitor_tags: preferences.monitorsMonitorTags });
     }
   }
 

@@ -124,6 +124,7 @@ export const ACTION_PERMISSION_MAP: Record<string, string | null> = {
   deleteMonitorData: "monitors.write",
   cloneMonitor: "monitors.write",
   testMonitor: "monitors.write",
+  getAvailableMonitors: "monitors.read",
 
   // Incidents
   getIncidents: "incidents.read",

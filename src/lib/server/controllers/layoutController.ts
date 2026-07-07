@@ -139,7 +139,7 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
   if (
     subsSetting &&
     subsSetting.enable &&
-    (subsSetting.methods.emails.incidents || subsSetting.methods.emails.maintenance)
+    (subsSetting.methods.emails.incidents || subsSetting.methods.emails.maintenance || subsSetting.methods.emails.monitors)
   ) {
     isSubsEnabled = true;
   }

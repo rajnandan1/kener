@@ -88,6 +88,7 @@ async function createNewIncident(
     update_subject: `[#${incidentCreated.incident_id}:${GC.TRIGGERED}] ${incidentInput.title}`,
     update_id: String(incidentCreated.incident_id),
     event_type: "incidents",
+    monitor_tags: [monitorTag],
   };
   subscriberQueue.push(updateVariables);
   return incidentCreated;
@@ -130,6 +131,7 @@ async function closeIncident(
     update_subject: `[#${incident.id}:${GC.RESOLVED}] ${incident.title}`,
     update_id: String(incident_id),
     event_type: "incidents",
+    monitor_tags: [monitorTag],
   };
   subscriberQueue.push(updateMessage);
   await AddIncidentComment(incident_id, comment, GC.RESOLVED, updatedAt);

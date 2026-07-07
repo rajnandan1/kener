@@ -15,9 +15,7 @@ export interface MonitoringResultTS {
   [timestamp: number]: MonitoringResult;
 }
 
-export interface NoneMonitorTypeData {
-  overrideWithLastKnownStatus: boolean;
-}
+export interface NoneMonitorTypeData {}
 export interface ApiMonitorTypeData {
   url: string;
   body?: string;

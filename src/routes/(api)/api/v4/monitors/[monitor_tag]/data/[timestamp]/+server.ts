@@ -10,6 +10,7 @@ import type {
 import GC from "$lib/global-constants";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { SetLastMonitoringValue } from "$lib/server/cache/setGet";
+import { NotifySubscribersOnStatusChange } from "$lib/server/controllers/monitorsController";
 import alertingQueue from "$lib/server/queues/alertingQueue";
 
 export const GET: RequestHandler = async ({ params, locals }) => {
@@ -146,6 +147,10 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     latency = 0;
   }
 
+  // Get old status before insert (for status change detection)
+  const oldLatest = await db.getLatestMonitoringData(monitorTag);
+  const oldStatus = oldLatest?.status ?? undefined;
+
   // Insert or update the data point
   await db.insertMonitoringData({
     monitor_tag: monitorTag,
@@ -159,6 +164,13 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   const latestData = await db.getLatestMonitoringData(monitorTag);
   if (latestData) {
     await SetLastMonitoringValue(monitorTag, latestData);
+  }
+
+  // Notify subscribers if status changed
+  if (oldStatus && oldStatus !== status) {
+    NotifySubscribersOnStatusChange(monitorTag, status, oldStatus).catch((err) =>
+      console.error("Failed to notify subscribers of status change:", err),
+    );
   }
 
   // MANUAL samples are alert-visible (docs/adr/0005), so re-evaluate alerts for this

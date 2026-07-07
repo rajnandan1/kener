@@ -35,8 +35,4 @@ temp.js
 knip-output.txt
 check-output.txt
 translation-report.json
-
-# AI workflow docs (not version-controlled)
-CONTEXT.md
-docs/adr/
-docs/superpowers/
+translation-report.yaml

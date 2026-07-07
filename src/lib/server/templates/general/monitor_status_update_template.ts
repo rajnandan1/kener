@@ -156,8 +156,9 @@ const emailTemplate = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional
                         margin-top: 16px;
                       "
                     >
-                      We would like to provide you with an update regarding the current system
-                      status.
+                      The monitor <strong>{{monitor_name}}</strong> has changed status from
+                      <strong>{{monitor_old_status}}</strong> to
+                      <strong>{{monitor_new_status}}</strong>.
                     </p>
                     <p
                       style="
@@ -168,7 +169,6 @@ const emailTemplate = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional
                         margin-top: 16px;
                       "
                     >
-                      
                       {{{update_text}}}
                     </p>
 
@@ -248,10 +248,12 @@ const emailTemplate = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional
 </html>`;
 
 export default {
-  template_id: "subscription_update",
+  template_id: "monitor_status_update",
   template_subject: "{{update_subject}}",
   template_html_body: emailTemplate,
-  template_text_body: `{{update_text}}
+  template_text_body: `The monitor {{monitor_name}} has changed status from {{monitor_old_status}} to {{monitor_new_status}}.
+
+{{update_text}}
 
 View details: {{cta_url}}`,
 };

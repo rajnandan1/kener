@@ -9,7 +9,7 @@ import { GetAllSiteData } from "../controllers/controller.js";
 import { siteDataToVariables } from "../notification/notification_utils.js";
 import type { SubscriptionVariableMap } from "../notification/types.js";
 import { GetGeneralEmailTemplateById } from "../controllers/generalTemplateController.js";
-import { GetActiveEmailsForEventType } from "../controllers/userSubscriptionsController.js";
+import { GetActiveEmailsForEventType, FormatEventType } from "../controllers/userSubscriptionsController.js";
 import emailQueue from "./emailQueue.js";
 let subscriberQueue: Queue | null = null;
 let worker: Worker | null = null;
@@ -38,19 +38,25 @@ const addWorker = () => {
       const siteData = await GetAllSiteData();
       const templateSiteVars = siteDataToVariables(siteData);
 
-      const template = await GetGeneralEmailTemplateById("subscription_update");
+      const eventType = variables.event_type;
+      const { monitor_tags: monitorTags, ...variablesForEmail } = variables;
+
+      const currentMonitorTags = monitorTags ?? [];
+
+      // Select template based on event type
+      const templateId = eventType === "monitors" ? "monitor_status_update" : "subscription_update";
+      const template = await GetGeneralEmailTemplateById(templateId);
       if (!template) {
-        throw new Error("Subscription email template not found");
+        throw new Error(`Email template "${templateId}" not found`);
       }
-      const emailVars = {
+
+      const emailVars: Record<string, string | number | boolean> = {
         ...templateSiteVars,
-        ...variables,
+        ...variablesForEmail,
       };
 
-      const eventType = variables.event_type;
-
-      // Get active subscriber emails for this event type
-      const subscriberEmails = await GetActiveEmailsForEventType(eventType);
+      // Get active subscriber emails for this event type, filtered by monitor tags
+      const subscriberEmails = await GetActiveEmailsForEventType(eventType, currentMonitorTags);
 
       if (subscriberEmails.length === 0) {
         console.log(`📭 No active subscribers for event type: ${eventType}`);

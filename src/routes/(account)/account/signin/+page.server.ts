@@ -7,6 +7,7 @@ import {
   CreateFirstUser,
 } from "$lib/server/controllers/userController";
 import { VerifyPassword, GenerateToken, CookieConfig } from "$lib/server/controllers/commonController";
+import { GetSSOConfig } from "$lib/server/controllers/ssoController";
 import constants from "$lib/global-constants";
 import serverResolve from "$lib/server/resolver.js";
 
@@ -17,8 +18,12 @@ export const load: PageServerLoad = async ({ parent }) => {
     throw redirect(302, serverResolve("/manage/app/site-configurations"));
   }
 
+  const ssoConfig = GetSSOConfig();
+
   return {
     ...parentData,
+    ssoEnabled: ssoConfig !== null,
+    ssoProviderName: ssoConfig?.providerName ?? "SSO",
   };
 };
 

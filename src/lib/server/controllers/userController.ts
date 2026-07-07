@@ -215,6 +215,38 @@ export const CreateFirstUser = async (data: { email: string; name: string; passw
   return await db.insertUser(user);
 };
 
+/**
+ * Get or create a user from SSO login.
+ * If user exists, return it. Otherwise create a new one with the given role.
+ */
+export const GetOrCreateSSOUser = async (
+  email: string,
+  name: string,
+  defaultRole: string = "member",
+): Promise<UserRecordPublic> => {
+  const normalizedEmail = normalizeEmail(email);
+  const normalizedName = normalizeName(name) || normalizedEmail.split("@")[0];
+
+  let user = await db.getUserByEmail(normalizedEmail);
+  if (user) {
+    return user;
+  }
+
+  // Create new user (password_hash is set to empty string since SSO handles auth)
+  await db.insertUser({
+    email: normalizedEmail,
+    password_hash: "",
+    name: normalizedName,
+    role_ids: [defaultRole],
+  });
+
+  user = await db.getUserByEmail(normalizedEmail);
+  if (!user) {
+    throw new Error("Failed to create SSO user");
+  }
+  return user;
+};
+
 export const UpdatePassword = async (data: PasswordUpdateInput): Promise<number> => {
   let { userID, newPassword, newPlainPassword } = data;
   if (!ValidatePassword(newPassword)) {
