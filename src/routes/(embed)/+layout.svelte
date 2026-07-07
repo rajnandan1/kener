@@ -9,7 +9,7 @@
   let { children, data } = $props();
 </script>
 
-<ModeWatcher />
+<ModeWatcher defaultMode={data.defaultSiteTheme as 'light' | 'dark' | 'system'} />
 <Toaster />
 
 <svelte:head>

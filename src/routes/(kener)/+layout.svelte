@@ -20,7 +20,7 @@
   });
 </script>
 
-<ModeWatcher />
+<ModeWatcher defaultMode={data.defaultSiteTheme as 'light' | 'dark' | 'system'} />
 
 <Toaster />
 
