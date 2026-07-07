@@ -18,7 +18,7 @@ import type {
 import GC from "../../global-constants.js";
 import { getUnixTime, differenceInSeconds } from "date-fns";
 import { siteDataToVariables } from "../notification/notification_utils.js";
-import { GetAllSiteData } from "./controller.js";
+import { GetAllSiteData } from "./siteDataController.js";
 import subscriberQueue from "../queues/subscriberQueue.js";
 import mdToHTML from "../../marked.js";
 import type { SubscriptionVariableMap } from "../notification/types.js";
@@ -443,7 +443,11 @@ const notifySubscribersOfComment = async (
       update_id: String(comment.id),
       event_type: "incidents",
     };
-    await subscriberQueue.push(variables);
+    // Stable dedup id per comment so a retried/double push notifies once — without
+    // it subscriberQueue falls back to a Date.now()-suffixed id that never dedupes.
+    await subscriberQueue.push(variables, {
+      deduplication: { id: `subscriber-incidents-${comment.id}` },
+    });
   } catch (err) {
     console.error(`Error sending subscriber notification for incident ${incident.id}:`, err);
   }
