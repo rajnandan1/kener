@@ -516,7 +516,7 @@ export const AddIncidentComment = async (
     await notifySubscribersOfComment(incidentExists, c);
   }
 
-  if (notify_subscribers) {
+  if (notify_subscribers && incidentType !== GC.INCIDENT) {
     await NotifySubscribersForIncident(incident_id, incidentExists.title, state, comment);
   }
 
