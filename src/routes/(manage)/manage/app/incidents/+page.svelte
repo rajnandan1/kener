@@ -14,7 +14,8 @@
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import SirenIcon from "@lucide/svelte/icons/siren";
   import { goto } from "$app/navigation";
-  import { format, formatDistanceToNow } from "date-fns";
+  import { formatDistanceToNow } from "date-fns";
+  import { formatDate } from "$lib/stores/datetime";
   import GC from "$lib/global-constants";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
@@ -166,6 +167,7 @@
         <Table.Row>
           <Table.Head class="w-16">ID</Table.Head>
           <Table.Head>Title</Table.Head>
+          <Table.Head class="w-40">Started</Table.Head>
           <Table.Head class="w-32">Duration</Table.Head>
           <Table.Head class="w-36">State</Table.Head>
           <Table.Head class="w-40">Affects</Table.Head>
@@ -175,7 +177,7 @@
       <Table.Body>
         {#if incidents.length === 0 && !loading}
           <Table.Row>
-            <Table.Cell colspan={6} class="text-muted-foreground py-8 text-center">No incidents found</Table.Cell>
+            <Table.Cell colspan={7} class="text-muted-foreground py-8 text-center">No incidents found</Table.Cell>
           </Table.Row>
         {:else}
           {#each incidents as incident}
@@ -192,6 +194,11 @@
                 </Tooltip.Root>
               </Table.Cell>
               <Table.Cell>
+                <span class="text-muted-foreground text-sm">
+                  {$formatDate(incident.start_date_time, "yyyy-MM-dd HH:mm")}
+                </span>
+              </Table.Cell>
+              <Table.Cell>
                 <Tooltip.Root>
                   <Tooltip.Trigger>
                     <span class="text-muted-foreground text-sm">{incident.duration}</span>
@@ -199,11 +206,11 @@
                   <Tooltip.Content>
                     <div class="text-sm">
                       <span class="text-muted-foreground">From:</span>
-                      {format(new Date(incident.start_date_time * 1000), "yyyy-MM-dd HH:mm")}
+                      {$formatDate(incident.start_date_time, "yyyy-MM-dd HH:mm")}
                       <br />
                       <span class="text-muted-foreground">To:</span>
                       {#if incident.end_date_time}
-                        {format(new Date(incident.end_date_time * 1000), "yyyy-MM-dd HH:mm")}
+                        {$formatDate(incident.end_date_time, "yyyy-MM-dd HH:mm")}
                       {:else}
                         Ongoing
                       {/if}

@@ -179,63 +179,66 @@ Action: Override monitor statuses
 
 ```
 READY → ONGOING
-title: Maintenance Events
-description: How maintenance events are generated and shown to users
+Condition: current_time >= start_time AND current_time < end_time
+Executed by: Status update scheduler (runs every minute)
 ```
 
-A maintenance event is one occurrence of a maintenance window.
+#### COMPLETED {#completed-state}
 
-## Event generation {#event-generation}
+**When:** Current time is past end time, or an admin completes an ONGOING event early
 
-### One-time maintenance {#one-time-maintenance}
+**Meaning:**
 
-- Creates one event.
-- Triggered when maintenance is created.
+- Maintenance has finished
 - Monitor statuses restored to realtime values
+- Historical record
 
-### Recurring maintenance {#recurring-maintenance}
+**Displayed As:** "Completed"
 
-- Creates upcoming events from RRULE.
-- Scheduler refreshes upcoming occurrences.
-- Duplicate event start times are skipped.
+**Notification:** "Maintenance Completed" notification sent
 
-## Event statuses {#event-statuses}
+**Example:**
 
-- `SCHEDULED`
-- `READY`
-- `ONGOING`
-- `COMPLETED`
-- `CANCELLED`
-
-Status transitions are time-based and automatic.
+```
 Current Time: May 15, 4:05 PM
-
-## User-visible behavior {#user-visible-behavior}
-
+Event End: May 15, 4:00 PM
 Status: COMPLETED (finished 5 minutes ago)
-
-- Ongoing events affect monitor display according to impact settings.
-- Upcoming and past visibility depends on site/page event display settings.
-
+Action: Restore monitor statuses
 ```
-## Manual actions {#manual-actions}
+
 **Automatic Transition:**
-- You can cancel/delete events from maintenance management screens.
-- Edit the parent maintenance to regenerate future schedule behavior.
+
+```
+ONGOING → COMPLETED
+Condition: current_time >= end_time
+Executed by: Status update scheduler (runs every minute)
 ```
 
-## Related guides {#related-guides}
+**Manual Completion:**
 
-Condition: current_time >= end_time
+An ONGOING event can be completed early from the maintenance edit page or via the API (see [Completing an Event Early](#completing-events)). Its end time is moved to the moment it was completed, so the recorded window reflects what actually happened.
 
-- [Creating and Managing Maintenances](/docs/v4/maintenances/creating-managing)
-- [Impact on Monitoring](/docs/v4/maintenances/impact-on-monitoring)
-- [RRULE Patterns](/docs/v4/maintenances/rrule-patterns)
-  **Displayed As:** "Cancelled"
+#### CANCELLED {#cancelled-state}
 
-**Notification:** No automatic notification
+**When:** Manually cancelled by an admin (allowed for SCHEDULED, READY, and ONGOING events)
 
-**Manual Action:** User clicks delete/cancel on event
+**Meaning:**
+
+- The occurrence was called off — before or during its window
+- Monitor statuses are not (or no longer) overridden
+- Kept in history, explicitly marked as cancelled vs completed
+
+**Time Handling:**
+
+- Cancelled before start: the planned window is kept unchanged
+- Cancelled while ONGOING: the end time is moved to the moment of cancellation
+
+**Displayed As:** "Cancelled"
+
+**Notification:** "Maintenance Cancelled" notification sent (controlled by the same "ended" notification setting as completion)
+
+> [!NOTE]
+> COMPLETED and CANCELLED are terminal — an event cannot be moved out of them. For recurring maintenances, a cancelled occurrence is never regenerated, so cancelling is how you skip one occurrence while keeping the schedule.
 
 ## Automatic Status Transitions {#automatic-transitions}
 
@@ -323,8 +326,19 @@ When: At start time
 Subject: Maintenance Completed
 Body: "{title} has been completed"
 Monitors: List of affected monitors with impacts
-When: At end time
+When: At end time, or immediately when completed early
 ```
+
+**Cancelled (manual cancellation):**
+
+```
+Subject: Maintenance Cancelled
+Body: "{title} has been cancelled"
+Monitors: List of affected monitors with impacts
+When: Immediately when an admin cancels the event
+```
+
+Completed and Cancelled notifications share the same "ended" notification setting.
 
 ### Notification Channels {#notification-channels}
 
@@ -390,22 +404,35 @@ Users see events on the public status page:
 
 ## Managing Events Manually {#managing-events-manually}
 
+### Completing an Event Early {#completing-events}
+
+If the maintenance work finishes before the scheduled end:
+
+1. Find the ONGOING event on the maintenance edit page
+2. Click **Complete**
+3. Confirm
+
+The event moves to COMPLETED, its end time is set to the current time, monitor statuses return to realtime values, and the completion notification is sent.
+
+Via the API: `PATCH /api/v4/maintenances/{maintenance_id}/events/{event_id}` with body `{"status": "COMPLETED"}`.
+
 ### Cancelling Events {#cancelling-events}
 
 From the maintenance edit page:
 
-1. Find the event in the list
-2. Click the trash icon
-3. Confirm cancellation
-4. Event status changes to CANCELLED
+1. Find the event in the list (SCHEDULED, READY, or ONGOING)
+2. Click **Cancel**
+3. Confirm
+
+Via the API: `PATCH /api/v4/maintenances/{maintenance_id}/events/{event_id}` with body `{"status": "CANCELLED"}`.
 
 **When to Cancel:**
 
 - Maintenance no longer needed
-- Rescheduling to different time
-- Discovered conflict
+- Maintenance was aborted partway through
+- Skipping one occurrence of a recurring maintenance
 
-**Note:** Cancelled events remain in history but are not executed.
+**Note:** Cancelled events remain in history but are not executed. A cancelled occurrence of a recurring maintenance is never regenerated.
 
 ### Deleting Events {#deleting-events}
 
@@ -425,9 +452,9 @@ Events can be permanently deleted:
 
 **Best Practice:** Cancel rather than delete to preserve history.
 
-### Cannot Edit Events {#cannot-edit-events}
+### Editing Event Times {#cannot-edit-events}
 
-Individual events cannot be edited directly. To change event timing or duration:
+Individual event times cannot be edited from the dashboard. To change event timing or duration:
 
 1. Edit the parent maintenance
 2. Update start time, RRULE, or duration
@@ -437,7 +464,9 @@ Individual events cannot be edited directly. To change event timing or duration:
 
 - Future SCHEDULED events deleted
 - New events generated with updated settings
-- ONGOING/COMPLETED events preserved
+- ONGOING/COMPLETED/CANCELLED events preserved
+
+API consumers can edit a single event's window directly: `PATCH /api/v4/maintenances/{maintenance_id}/events/{event_id}` with both `start_date_time` and `end_date_time`. A request cannot combine time fields with a `status` transition.
 
 ## Event Retention {#event-retention}
 
@@ -472,7 +501,7 @@ During ONGOING events:
 - Realtime monitoring continues in background
 - Status page shows maintenance impact
 
-See [Maintenance Impact on Monitoring](/docs/maintenances/impact-on-monitoring) for details.
+See [Maintenance Impact on Monitoring](/docs/v4/maintenances/impact-on-monitoring) for details.
 
 ## Troubleshooting {#troubleshooting}
 
@@ -511,6 +540,6 @@ See [Maintenance Impact on Monitoring](/docs/maintenances/impact-on-monitoring) 
 
 ## Next Steps {#next-steps}
 
-- [Maintenance Impact on Monitoring](/docs/maintenances/impact-on-monitoring) - How events affect monitor status display
-- [RRULE Patterns](/docs/maintenances/rrule-patterns) - Advanced scheduling patterns for recurring maintenances
-- [Creating and Managing Maintenances](/docs/maintenances/creating-managing) - Learn how to create and edit maintenances
+- [Maintenance Impact on Monitoring](/docs/v4/maintenances/impact-on-monitoring) - How events affect monitor status display
+- [RRULE Patterns](/docs/v4/maintenances/rrule-patterns) - Advanced scheduling patterns for recurring maintenances
+- [Creating and Managing Maintenances](/docs/v4/maintenances/creating-managing) - Learn how to create and edit maintenances

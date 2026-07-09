@@ -22,6 +22,7 @@
   import AlertTriangle from "@lucide/svelte/icons/alert-triangle";
   import Wrench from "@lucide/svelte/icons/wrench";
   import Mail from "@lucide/svelte/icons/mail";
+  import Rss from "@lucide/svelte/icons/rss";
 
   import type { SubscriptionsConfig } from "$lib/server/types/db.js";
   import AlertCircleIcon from "@lucide/svelte/icons/octagon-alert";
@@ -38,6 +39,64 @@
   });
   let loadingConfig = $state(true);
   let savingConfig = $state(false);
+
+  // RSS feed visibility — same site_data key as Site Configurations →
+  // Sub Menu Options. Loaded/saved separately because it's independent of
+  // the email-subscription toggles below.
+  let subMenuOptions = $state<{
+    showShareBadgeMonitor: boolean;
+    showShareEmbedMonitor: boolean;
+    showRssFeed: boolean;
+  }>({
+    showShareBadgeMonitor: true,
+    showShareEmbedMonitor: true,
+    showRssFeed: true
+  });
+  let savingRssToggle = $state(false);
+
+  async function fetchSubMenuOptions() {
+    try {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "getSiteDataByKey", data: { key: "subMenuOptions" } })
+      });
+      const data = await res.json();
+      if (data && !data.error) {
+        subMenuOptions = {
+          showShareBadgeMonitor: data.showShareBadgeMonitor ?? true,
+          showShareEmbedMonitor: data.showShareEmbedMonitor ?? true,
+          showRssFeed: data.showRssFeed ?? true
+        };
+      }
+    } catch {
+      // Defaults already in state; silently fall through.
+    }
+  }
+
+  async function toggleRssFeed(value: boolean) {
+    const previous = subMenuOptions.showRssFeed;
+    subMenuOptions.showRssFeed = value;
+    savingRssToggle = true;
+    try {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "storeSiteData",
+          data: { subMenuOptions: JSON.stringify(subMenuOptions) }
+        })
+      });
+      const result = await res.json();
+      if (result.error) throw new Error(result.error);
+      toast.success("RSS feed preference saved");
+    } catch {
+      subMenuOptions.showRssFeed = previous;
+      toast.error("Failed to save RSS feed preference");
+    } finally {
+      savingRssToggle = false;
+    }
+  }
 
   // Subscribers state
   interface Subscriber {
@@ -276,6 +335,7 @@
 
   onMount(() => {
     fetchConfig();
+    fetchSubMenuOptions();
     fetchSubscribers();
   });
 </script>
@@ -363,6 +423,33 @@
               </div>
             </div>
           {/if}
+
+          <!-- RSS feed visibility — independent of the email enable flag.
+               Mirrors the same site_data key used in Site Configurations →
+               Sub Menu Options, so toggling here updates both places. -->
+          <div class="space-y-4 border-l-2 pl-4">
+            <p class="flex items-center gap-2 text-sm font-semibold">
+              <Rss class="h-4 w-4" />
+              RSS Feed
+            </p>
+            <div class="space-y-4 pl-4">
+              <div class="flex items-center justify-between">
+                <div class="space-y-0.5">
+                  <Label for="enable-rss-feed" class="mb-0">Show RSS feed link</Label>
+                  <p class="text-muted-foreground text-xs">
+                    Adds an RSS icon to the public page header. The feed routes
+                    (<code class="text-xs">/rss.xml</code>) remain reachable either way.
+                  </p>
+                </div>
+                <Switch
+                  id="enable-rss-feed"
+                  checked={subMenuOptions.showRssFeed}
+                  disabled={savingRssToggle}
+                  onCheckedChange={toggleRssFeed}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       {/if}
     </Card.Content>

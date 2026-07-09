@@ -6,7 +6,7 @@
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import MonitorOverview from "$lib/components/MonitorOverview.svelte";
   import ArrowUpRight from "@lucide/svelte/icons/arrow-up-right";
-  import clientResolver from "$lib/client/resolver.js";
+  import clientResolver, { absoluteResolve } from "$lib/client/resolver.js";
   import { resolve } from "$app/paths";
   import trackEvent from "$lib/beacon";
   import IncidentItem from "$lib/components/IncidentItem.svelte";
@@ -16,6 +16,7 @@
 
   // State
   let descriptionExpanded = $state(false);
+  let showInlineEvents = $derived(data.eventDisplaySettings?.showInlineEvents === true);
 
   function toggleDescription(expanded: boolean) {
     descriptionExpanded = expanded;
@@ -37,12 +38,16 @@
     <meta property="og:description" content={data.monitorDescription} />
   {/if}
   {#if data.socialPreviewImage}
-    <meta property="og:image" content={clientResolver(resolve, data.socialPreviewImage)} />
-    <meta name="twitter:image" content={clientResolver(resolve, data.socialPreviewImage)} />
+    <meta property="og:image" content={absoluteResolve(resolve, data.siteUrl, data.socialPreviewImage)} />
+    <meta name="twitter:image" content={absoluteResolve(resolve, data.siteUrl, data.socialPreviewImage)} />
   {/if}
 </svelte:head>
 <div class="flex flex-col gap-3">
-  <ThemePlus monitor_tags={[data.monitorTag]} embedMonitorTag={data.monitorTag} />
+  <ThemePlus
+    monitor_tags={[data.monitorTag]}
+    embedMonitorTag={data.monitorTag}
+    hideNotificationsPopover={showInlineEvents}
+  />
   <div class="flex flex-col gap-2 px-4 py-2">
     {#if data.monitorImage}
       <img
@@ -125,7 +130,7 @@
       {/if}
     </div>
   </div>
-  {#if data.ongoingIncidents && data.ongoingIncidents.length > 0}
+  {#if showInlineEvents && data.ongoingIncidents && data.ongoingIncidents.length > 0}
     <div class="flex flex-col gap-3">
       {#each data.ongoingIncidents as incident, i (incident.id ?? i)}
         <div class=" rounded-3xl border p-3 sm:p-4">
@@ -134,7 +139,7 @@
       {/each}
     </div>
   {/if}
-  {#if data.ongoingMaintenances && data.ongoingMaintenances.length > 0}
+  {#if showInlineEvents && data.ongoingMaintenances && data.ongoingMaintenances.length > 0}
     <div class="flex flex-col gap-3">
       {#each data.ongoingMaintenances as maintenance, i (maintenance.id ?? i)}
         <div class="rounded-3xl border p-3 sm:p-4">
@@ -143,7 +148,7 @@
       {/each}
     </div>
   {/if}
-  {#if data.upcomingMaintenances && data.upcomingMaintenances.length > 0}
+  {#if showInlineEvents && data.upcomingMaintenances && data.upcomingMaintenances.length > 0}
     <div class="flex flex-col gap-3">
       {#each data.upcomingMaintenances as maintenance, i (maintenance.id ?? i)}
         <div class="rounded-3xl border p-3 sm:p-4">

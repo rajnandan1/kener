@@ -7,6 +7,7 @@ import { GetMinuteStartNowTimestampUTC } from "../tool.js";
 import db from "../db/db.js";
 import monitorResponseQueue from "./monitorResponseQueue";
 import GC from "../../global-constants.js";
+import { resolveConfirmedStatus } from "../services/confirmationThreshold.js";
 
 let monitorExecuteQueue: Queue | null = null;
 let worker: Worker | null = null;
@@ -25,8 +26,13 @@ const getQueue = () => {
   return monitorExecuteQueue;
 };
 
-async function manualMaintenance(monitor: MonitorRecordTyped): Promise<{ [timestamp: number]: MonitoringResult }> {
-  let startTs = GetMinuteStartNowTimestampUTC();
+async function manualMaintenance(
+  monitor: MonitorRecordTyped,
+  ts?: number,
+): Promise<{ [timestamp: number]: MonitoringResult }> {
+  // Key by the job's `ts` (already a minute-start) so the overlay aligns with the realtime/default
+  // rows and the freeze gate; fall back to "now" only when called without a ts.
+  let startTs = ts !== undefined ? ts : GetMinuteStartNowTimestampUTC();
   let maintenanceArr = await db.getMaintenancesByMonitorTagRealtime(monitor.tag, startTs);
 
   let impact = "";
@@ -66,8 +72,13 @@ async function manualMaintenance(monitor: MonitorRecordTyped): Promise<{ [timest
   return manualData;
 }
 
-async function manualIncident(monitor: MonitorRecordTyped): Promise<{ [timestamp: number]: MonitoringResult }> {
-  let startTs = GetMinuteStartNowTimestampUTC();
+async function manualIncident(
+  monitor: MonitorRecordTyped,
+  ts?: number,
+): Promise<{ [timestamp: number]: MonitoringResult }> {
+  // Key by the job's `ts` (already a minute-start) so the overlay aligns with the realtime/default
+  // rows and the freeze gate; fall back to "now" only when called without a ts.
+  let startTs = ts !== undefined ? ts : GetMinuteStartNowTimestampUTC();
   let incidentArr = await db.getIncidentsByMonitorTagRealtime(monitor.tag, startTs);
 
   let impact = "";
@@ -115,13 +126,43 @@ const addWorker = () => {
 
     const exeResult = await serviceClient.execute(ts);
 
+    // Fetch overlays AFTER the check runs so a maintenance/incident that starts mid-check is still
+    // detected, and key them by the job's `ts` so the freeze gate (incidentData[ts]) is
+    // timestamp-safe even if the job is delayed or retried (#756).
+    let incidentData: MonitoringResultTS = await manualIncident(monitor, ts);
+    let maintenanceData: MonitoringResultTS = await manualMaintenance(monitor, ts);
+
     let realtimeData: MonitoringResultTS = {};
     if (exeResult) {
       realtimeData[ts] = exeResult;
-    }
+      // Always record what the check actually observed (forensics + grace counting).
+      realtimeData[ts].raw_status = exeResult.status;
 
-    let incidentData: MonitoringResultTS = await manualIncident(monitor);
-    let maintenanceData: MonitoringResultTS = await manualMaintenance(monitor);
+      // Confirmation Threshold damping (#712): scheduled checks only.
+      const threshold = Number(monitor.confirmation_threshold ?? 1);
+      const isScheduledCheck = ([GC.REALTIME, GC.TIMEOUT, GC.ERROR] as string[]).includes(exeResult.type);
+      // Confirmation Threshold freezes while an incident/maintenance overlay is active for this
+      // minute: the overlay wins display and the count must neither advance nor backfill (#756).
+      const overlayActive = incidentData[ts] !== undefined || maintenanceData[ts] !== undefined;
+      if (threshold > 1 && isScheduledCheck && !overlayActive) {
+        const resolved = await resolveConfirmedStatus({
+          monitor_tag: monitor.tag,
+          ts,
+          rawStatus: exeResult.status,
+          threshold,
+        });
+        realtimeData[ts].status = resolved.status;
+        if (resolved.pendingHold) {
+          // Hold the confirmed side for display, but PRESERVE the observed latency and error text —
+          // no diagnostic info is discarded. Tag the row to record that the status is being held
+          // during the grace period; on confirmation the backfill appends the confirmation note (#756).
+          const observedError = realtimeData[ts].error_message;
+          realtimeData[ts].error_message = observedError
+            ? `${observedError} | Status held during grace period`
+            : "Status held during grace period";
+        }
+      }
+    }
     let defaultData: MonitoringResultTS = {};
     let mergedData: MonitoringResultTS = {};
 
@@ -183,6 +224,15 @@ const addWorker = () => {
       const ts = parseInt(timestamp);
       if (realtimeData[ts]?.latency !== undefined && realtimeData[ts].latency > 0) {
         mergedData[ts].latency = realtimeData[ts].latency;
+      }
+    }
+
+    // Preserve raw_status from realtime monitoring (overlays replace the merged object wholesale,
+    // so re-attach the observed value the resolver recorded).
+    for (const timestamp in mergedData) {
+      const ts = parseInt(timestamp);
+      if (realtimeData[ts]?.raw_status !== undefined) {
+        mergedData[ts].raw_status = realtimeData[ts].raw_status;
       }
     }
 

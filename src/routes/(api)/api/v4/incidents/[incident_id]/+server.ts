@@ -9,6 +9,8 @@ import type {
   BadRequestResponse,
 } from "$lib/types/api";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
+import { GetSiteURL } from "$lib/server/controllers/siteDataController";
+import serverResolver from "$lib/server/resolver";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {
@@ -43,6 +45,7 @@ async function buildIncidentResponse(incidentId: number): Promise<IncidentDetail
     })),
     created_at: formatDateToISO(incident.created_at),
     updated_at: formatDateToISO(incident.updated_at),
+    url: (await GetSiteURL()) + serverResolver(`/incidents/${incident.id}`),
   };
 }
 

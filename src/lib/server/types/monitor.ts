@@ -8,13 +8,16 @@ export interface MonitoringResult {
   latency: number;
   type: string;
   error_message?: string;
+  raw_status?: string;
 }
 
 export interface MonitoringResultTS {
   [timestamp: number]: MonitoringResult;
 }
 
-export interface NoneMonitorTypeData {}
+export interface NoneMonitorTypeData {
+  overrideWithLastKnownStatus: boolean;
+}
 export interface ApiMonitorTypeData {
   url: string;
   body?: string;
@@ -31,6 +34,10 @@ export interface DnsMonitorTypeData {
   lookupRecord: string;
   matchType: "ALL" | "ANY";
   values: string[];
+  transport?: "UDP" | "TLS";
+  tlsPort?: number;
+  tlsServername?: string;
+  allowSelfSignedCert?: boolean;
 }
 
 export type { PingHost, PingMonitorTypeData };
@@ -83,6 +90,7 @@ export interface GrpcMonitorTypeData {
   port: number;
   service?: string;
   tls?: boolean;
+  insecure?: boolean;
   timeout?: number;
 }
 

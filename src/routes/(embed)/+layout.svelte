@@ -9,7 +9,7 @@
   let { children, data } = $props();
 </script>
 
-<ModeWatcher />
+<ModeWatcher defaultMode={data.defaultSiteTheme as 'light' | 'dark' | 'system'} />
 <Toaster />
 
 <svelte:head>
@@ -40,7 +40,7 @@
 		}
 	</style>`}
 </svelte:head>
-<main class="kener-public">
+<main class="kener-public embed-app">
   {@render children()}
 </main>
 

@@ -18,7 +18,13 @@
 }
 
 .prose :where(a):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
-  @apply text-foreground hover:underline;
+  @apply text-primary hover:underline;
+}
+
+.prose code,
+.prose pre,
+.prose .code-block {
+  font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 .prose code {
@@ -30,8 +36,6 @@
   word-break: keep-all;
   display: inline-block;
   opacity: 0.85;
-  font-family:
-    "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
 }
 
 .prose pre code,
@@ -81,8 +85,8 @@
 
 .prose p,
 .prose li {
-  @apply text-foreground/70;
-  font-weight: 300;
+  @apply text-foreground/75;
+  font-weight: 400;
 }
 
 .prose.user-message p,
@@ -98,6 +102,24 @@
 
 .prose hr {
   @apply border-border border-t;
+}
+
+/* Blockquotes: full hairline border + brand tint (replaces the typography
+   plugin's thick border-left stripe and its quote marks) */
+.prose blockquote {
+  border: 1px solid color-mix(in oklch, var(--primary) 25%, transparent);
+  border-inline-start-width: 1px;
+  background: color-mix(in oklch, var(--primary) 5%, transparent);
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  font-style: normal;
+  font-weight: 400;
+  color: var(--muted-foreground);
+}
+
+.prose blockquote p:first-of-type::before,
+.prose blockquote p:last-of-type::after {
+  content: none;
 }
 
 .prose {

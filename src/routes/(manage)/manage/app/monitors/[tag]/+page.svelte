@@ -30,6 +30,7 @@
   import MonitorRecentLogs from "./components/MonitorRecentLogs.svelte";
   import StatusHistoryDaysCard from "./components/StatusHistoryDaysCard.svelte";
   import MonitorSharingOptionsCard from "./components/MonitorSharingOptionsCard.svelte";
+  import GC from "$lib/global-constants.js";
 
   let { params }: PageProps = $props();
   const isNew = $derived(params.tag === "new");
@@ -48,8 +49,8 @@
 
   // Status history days state
   let statusHistoryDays = $state({
-    desktop: 90,
-    mobile: 30
+    desktop: GC.DEFAULT_STATUS_HISTORY_DAYS_DESKTOP as number,
+    mobile: GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE as number
   });
 
   // Pages state
@@ -74,6 +75,7 @@
     category_name: "Home",
     monitor_type: "" as MonitorType,
     is_hidden: "NO",
+    confirmation_threshold: 1,
     monitor_settings_json: "",
     external_url: ""
   });
@@ -115,6 +117,7 @@
           category_name: m.category_name || "Home",
           monitor_type: m.monitor_type || "",
           is_hidden: m.is_hidden || "NO",
+          confirmation_threshold: m.confirmation_threshold ?? 1,
           monitor_settings_json: m.monitor_settings_json || "",
           external_url: m.external_url || ""
         };
@@ -137,8 +140,8 @@
             };
             if (settings.monitor_status_history_days) {
               statusHistoryDays = {
-                desktop: settings.monitor_status_history_days.desktop ?? 90,
-                mobile: settings.monitor_status_history_days.mobile ?? 30
+                desktop: settings.monitor_status_history_days.desktop ?? GC.DEFAULT_STATUS_HISTORY_DAYS_DESKTOP,
+                mobile: settings.monitor_status_history_days.mobile ?? GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE
               };
             }
           } catch (e) {

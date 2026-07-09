@@ -230,6 +230,30 @@
             "$ref": "#/components/responses/InternalServerError"
           }
         }
+      },
+      "delete": {
+        "tags": ["Monitors"],
+        "operationId": "deleteMonitor",
+        "summary": "Delete monitor",
+        "description": "Deletes the monitor and everything keyed to its tag: monitoring data, incident/maintenance/page links, alerts, alert configurations, and group memberships (remaining member weights are rebalanced equally). This is irreversible. Scheduled checks stop within seconds.",
+        "responses": {
+          "200": {
+            "description": "Monitor deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MessageResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          }
+        }
       }
     },
     "/api/v4/monitors/{monitor_tag}/data": {
@@ -950,7 +974,8 @@
           "404": {
             "$ref": "#/components/responses/NotFound"
           }
-        }
+        },
+        "description": "The home page (addressed as `~home`) accepts all fields except `page_path`, which is fixed and returns `400` if changed."
       },
       "delete": {
         "tags": ["Pages"],
@@ -973,7 +998,8 @@
           "404": {
             "$ref": "#/components/responses/NotFound"
           }
-        }
+        },
+        "description": "The home page (addressed as `~home`) cannot be deleted and returns `400`."
       }
     },
     "/api/v4/site": {
@@ -1512,7 +1538,8 @@
           "500": {
             "$ref": "#/components/responses/InternalServerError"
           }
-        }
+        },
+        "description": "Either edit the event window (start_date_time and end_date_time) or transition its status (COMPLETED or CANCELLED). The two modes cannot be combined in one request."
       },
       "delete": {
         "tags": ["Maintenance Events"],
@@ -1584,8 +1611,19 @@
         "name": "page_path",
         "in": "path",
         "required": true,
+        "description": "The page's path segment. Use the special token `~home` to address the home page, whose stored `page_path` is an empty string and can not appear as a URL segment. No real page can be named `~home` because the path sanitizer strips `~`.",
         "schema": {
           "type": "string"
+        },
+        "examples": {
+          "regular": {
+            "value": "services",
+            "summary": "A regular page"
+          },
+          "home": {
+            "value": "~home",
+            "summary": "The home page (empty page_path)"
+          }
         }
       },
       "ConfigKey": {
@@ -1746,6 +1784,16 @@
           "monitor_settings_json": {
             "type": "object",
             "additionalProperties": true
+          },
+          "external_url": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": true
@@ -1796,6 +1844,16 @@
           "monitor_settings_json": {
             "type": "object",
             "additionalProperties": true
+          },
+          "external_url": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "additionalProperties": false
@@ -1849,6 +1907,16 @@
               {
                 "type": "object",
                 "additionalProperties": true
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "external_url": {
+            "oneOf": [
+              {
+                "type": "string"
               },
               {
                 "type": "null"
@@ -1969,6 +2037,12 @@
             "items": {
               "$ref": "#/components/schemas/MonitorImpact"
             }
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Absolute URL of the public incident page.",
+            "examples": ["https://status.example.com/incidents/12"]
           }
         },
         "additionalProperties": true
@@ -2082,7 +2156,9 @@
         "required": ["page_path", "page_title", "page_header"],
         "properties": {
           "page_path": {
-            "type": "string"
+            "type": "string",
+            "description": "The page's path segment. The home page renders as the addressable token `~home` (its stored path is empty); its public URL is the site root.",
+            "examples": ["services", "~home"]
           },
           "page_title": {
             "type": "string"
@@ -2097,8 +2173,7 @@
             "type": "string"
           },
           "page_settings": {
-            "type": "object",
-            "additionalProperties": true
+            "$ref": "#/components/schemas/PageSettings"
           },
           "monitors": {
             "type": "array",
@@ -2132,8 +2207,7 @@
             "type": "string"
           },
           "page_settings": {
-            "type": "object",
-            "additionalProperties": true
+            "$ref": "#/components/schemas/PageSettings"
           },
           "monitors": {
             "type": "array",
@@ -2148,7 +2222,8 @@
         "type": "object",
         "properties": {
           "page_path": {
-            "type": "string"
+            "type": "string",
+            "description": "New path for the page, sanitized to a lowercase single segment. For the home page (addressed as `~home`), sending back `~home` is a no-op and any other value returns `400` — its path is fixed."
           },
           "page_title": {
             "type": "string"
@@ -2163,8 +2238,7 @@
             "type": "string"
           },
           "page_settings": {
-            "type": "object",
-            "additionalProperties": true
+            "$ref": "#/components/schemas/PageSettings"
           },
           "monitors": {
             "type": "array",
@@ -2221,6 +2295,12 @@
             "items": {
               "$ref": "#/components/schemas/MonitorImpact"
             }
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Absolute URL of the public page for this maintenance. The public /maintenances/{id} route is keyed by maintenance EVENT id by default, so this URL carries ?type=maintenance. Always link via this field; never build links by concatenating `id` onto a path.",
+            "examples": ["https://status.example.com/maintenances/4?type=maintenance"]
           }
         },
         "additionalProperties": true
@@ -2308,6 +2388,12 @@
           "event_status": {
             "type": "string",
             "enum": ["SCHEDULED", "ONGOING", "COMPLETED", "CANCELLED", "READY"]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Absolute URL of the public page for this maintenance event.",
+            "examples": ["https://status.example.com/maintenances/9"]
           }
         },
         "additionalProperties": true
@@ -2329,18 +2415,90 @@
         ]
       },
       "UpdateMaintenanceEventRequest": {
-        "type": "object",
-        "required": ["start_date_time", "end_date_time"],
-        "properties": {
-          "start_date_time": {
-            "type": "integer"
+        "description": "Two mutually exclusive modes: edit the event window (both start_date_time and end_date_time required), or transition the event status (status alone). Combining status with time fields returns 400.",
+        "oneOf": [
+          {
+            "title": "Window edit",
+            "type": "object",
+            "required": ["start_date_time", "end_date_time"],
+            "properties": {
+              "start_date_time": {
+                "type": "integer"
+              },
+              "end_date_time": {
+                "type": "integer",
+                "description": "Must be greater than start_date_time"
+              }
+            },
+            "additionalProperties": false
           },
-          "end_date_time": {
-            "type": "integer",
-            "description": "Must be greater than start_date_time"
+          {
+            "title": "Status transition",
+            "type": "object",
+            "required": ["status"],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": ["COMPLETED", "CANCELLED"],
+                "description": "Allowed transitions: ONGOING to COMPLETED; SCHEDULED, READY or ONGOING to CANCELLED. Both target statuses are terminal. Transitioning an ONGOING event moves its end_date_time to the moment of the transition; cancelling an event that has not started keeps its planned window. Invalid transitions return 400."
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      },
+      "PageSettings": {
+        "type": "object",
+        "description": "Per-page display configuration. On update, provided fields are deep-merged into the current settings; omitted fields are left untouched.",
+        "properties": {
+          "incidents": {
+            "type": "object",
+            "description": "Incident display preferences for this page.",
+            "additionalProperties": true
+          },
+          "include_maintenances": {
+            "type": "object",
+            "description": "Maintenance display preferences for this page.",
+            "additionalProperties": true
+          },
+          "monitor_status_history_days": {
+            "type": "object",
+            "description": "Days of status history shown on the page, per device class.",
+            "properties": {
+              "desktop": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 365,
+                "default": 90
+              },
+              "mobile": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 365,
+                "default": 30
+              }
+            }
+          },
+          "monitor_layout_style": {
+            "type": "string",
+            "enum": ["default-list", "default-grid", "compact-list", "compact-grid"],
+            "default": "default-list",
+            "description": "How monitors are laid out on the status page."
+          },
+          "meta_page_title": {
+            "type": "string",
+            "description": "Per-page override for the meta title."
+          },
+          "meta_page_description": {
+            "type": "string",
+            "description": "Per-page override for the meta description."
+          },
+          "social_page_preview_image": {
+            "type": "string",
+            "description": "Per-page override for the social preview image."
           }
         },
-        "additionalProperties": false
+        "additionalProperties": true
       }
     }
   }

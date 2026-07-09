@@ -36,10 +36,15 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   const monitorTags = [monitor_tag];
 
   const eventSettings = parentData.eventDisplaySettings;
+  const showInlineEvents = eventSettings.showInlineEvents === true;
   const [ongoingIncidents, ongoingMaintenances, upcomingMaintenances] = await Promise.all([
-    GetOngoingIncidentsForMonitorList(monitorTags),
-    GetOngoingMaintenanceEventsForMonitorList(monitorTags),
-    eventSettings.maintenances.enabled && eventSettings.maintenances.upcoming.show
+    showInlineEvents && eventSettings.incidents.enabled && eventSettings.incidents.ongoing.show
+      ? GetOngoingIncidentsForMonitorList(monitorTags)
+      : Promise.resolve([]),
+    showInlineEvents && eventSettings.maintenances.enabled && eventSettings.maintenances.ongoing.show
+      ? GetOngoingMaintenanceEventsForMonitorList(monitorTags)
+      : Promise.resolve([]),
+    showInlineEvents && eventSettings.maintenances.enabled && eventSettings.maintenances.upcoming.show
       ? GetUpcomingMaintenanceEventsForMonitorList(
           monitorTags,
           eventSettings.maintenances.upcoming.maxCount,
@@ -83,11 +88,13 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     }
   }
 
-  let maxDays = parentData.isMobile ? 30 : 90;
+  let maxDays: number = parentData.isMobile
+    ? GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE
+    : GC.DEFAULT_STATUS_HISTORY_DAYS_DESKTOP;
   if (monitor.monitor_settings_json?.monitor_status_history_days) {
     maxDays = parentData.isMobile
-      ? monitor.monitor_settings_json.monitor_status_history_days.mobile || 30
-      : monitor.monitor_settings_json.monitor_status_history_days.desktop || 90;
+      ? monitor.monitor_settings_json.monitor_status_history_days.mobile || GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE
+      : monitor.monitor_settings_json.monitor_status_history_days.desktop || GC.DEFAULT_STATUS_HISTORY_DAYS_DESKTOP;
   }
   return {
     ...{

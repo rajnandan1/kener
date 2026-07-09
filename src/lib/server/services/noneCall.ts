@@ -1,5 +1,6 @@
-import DNSResolver from "../dns.js";
+import { GetLastKnownStatus } from "../controllers/monitorsController.js";
 import type { NoneMonitor, MonitoringResult } from "../types/monitor.js";
+import GC from "../../global-constants.js";
 
 class NoneCall {
   monitor: NoneMonitor;
@@ -8,7 +9,24 @@ class NoneCall {
     this.monitor = monitor;
   }
 
-  async execute(): Promise<null> {
+  async execute(): Promise<MonitoringResult | null> {
+    let overrideWithLastKnownStatus = this.monitor.type_data.overrideWithLastKnownStatus;
+    if (!!overrideWithLastKnownStatus) {
+      //get the last known status
+      let lastKnownStatus = await GetLastKnownStatus(this.monitor.tag);
+      if (
+        !!lastKnownStatus &&
+        !!lastKnownStatus.status &&
+        !!lastKnownStatus.type &&
+        lastKnownStatus.type === GC.MANUAL
+      ) {
+        return {
+          status: lastKnownStatus.status,
+          latency: lastKnownStatus.latency || 0,
+          type: lastKnownStatus.type,
+        };
+      }
+    }
     return null;
   }
 }

@@ -3,7 +3,6 @@ import db from "$lib/server/db/db";
 import type {
   GetPageResponse,
   PageResponse,
-  PageSettings,
   UpdatePageRequest,
   UpdatePageResponse,
   DeletePageResponse,
@@ -11,6 +10,8 @@ import type {
   NotFoundResponse,
 } from "$lib/types/api";
 import type { PageRecord } from "$lib/server/types/db";
+import GC from "$lib/global-constants";
+import { toApiPageSettings, applyPageSettingsPatch, validatePageSettings } from "$lib/server/pageSettings";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {
@@ -21,87 +22,15 @@ function formatDateToISO(date: Date | string): string {
   return parsed.toISOString();
 }
 
-function getDefaultPageSettings(): PageSettings {
-  return {
-    incidents: {
-      enabled: true,
-      ongoing: { show: true },
-      resolved: { show: true, max_count: 5, days_in_past: 7 },
-    },
-    include_maintenances: {
-      enabled: true,
-      ongoing: {
-        show: true,
-        past: { show: true, max_count: 5, days_in_past: 7 },
-        upcoming: { show: true, max_count: 5, days_in_future: 30 },
-      },
-    },
-  };
-}
-
-function mergePageSettings(defaults: PageSettings, partial?: Partial<PageSettings>): PageSettings {
-  if (!partial) {
-    return defaults;
-  }
-
-  return {
-    incidents: {
-      enabled: partial.incidents?.enabled ?? defaults.incidents.enabled,
-      ongoing: {
-        show: partial.incidents?.ongoing?.show ?? defaults.incidents.ongoing.show,
-      },
-      resolved: {
-        show: partial.incidents?.resolved?.show ?? defaults.incidents.resolved.show,
-        max_count: partial.incidents?.resolved?.max_count ?? defaults.incidents.resolved.max_count,
-        days_in_past: partial.incidents?.resolved?.days_in_past ?? defaults.incidents.resolved.days_in_past,
-      },
-    },
-    include_maintenances: {
-      enabled: partial.include_maintenances?.enabled ?? defaults.include_maintenances.enabled,
-      ongoing: {
-        show: partial.include_maintenances?.ongoing?.show ?? defaults.include_maintenances.ongoing.show,
-        past: {
-          show: partial.include_maintenances?.ongoing?.past?.show ?? defaults.include_maintenances.ongoing.past.show,
-          max_count:
-            partial.include_maintenances?.ongoing?.past?.max_count ??
-            defaults.include_maintenances.ongoing.past.max_count,
-          days_in_past:
-            partial.include_maintenances?.ongoing?.past?.days_in_past ??
-            defaults.include_maintenances.ongoing.past.days_in_past,
-        },
-        upcoming: {
-          show:
-            partial.include_maintenances?.ongoing?.upcoming?.show ??
-            defaults.include_maintenances.ongoing.upcoming.show,
-          max_count:
-            partial.include_maintenances?.ongoing?.upcoming?.max_count ??
-            defaults.include_maintenances.ongoing.upcoming.max_count,
-          days_in_future:
-            partial.include_maintenances?.ongoing?.upcoming?.days_in_future ??
-            defaults.include_maintenances.ongoing.upcoming.days_in_future,
-        },
-      },
-    },
-  };
-}
-
 async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
-  let pageSettings: PageSettings = getDefaultPageSettings();
-
-  if (page.page_settings_json) {
-    try {
-      const parsed = JSON.parse(page.page_settings_json);
-      pageSettings = mergePageSettings(getDefaultPageSettings(), parsed);
-    } catch {
-      // Use defaults on parse error
-    }
-  }
+  const pageSettings = toApiPageSettings(page.page_settings_json);
 
   const pageMonitors = await db.getPageMonitors(page.id);
 
   return {
     id: page.id,
-    page_path: page.page_path,
+    // The home page's empty page_path renders as the addressable ~home token
+    page_path: page.page_path === "" ? GC.HOME_PAGE_TOKEN : page.page_path,
     page_title: page.page_title,
     page_header: page.page_header,
     page_subheader: page.page_subheader,
@@ -160,6 +89,12 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     return json(errorResponse, { status: 400 });
   }
 
+  // API responses render the home page's path as ~home, so a read-modify-write
+  // client sends it back unchanged; treat that as "no path change"
+  if (page.page_path === "" && body.page_path === GC.HOME_PAGE_TOKEN) {
+    body.page_path = undefined;
+  }
+
   // Validate page_path if provided
   if (body.page_path !== undefined) {
     if (typeof body.page_path !== "string") {
@@ -178,6 +113,18 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
       .trim()
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9_-]/g, "");
+
+    // The home page's path is fixed; matches the manage UI which disables
+    // the field with "Home page path cannot be changed"
+    if (page.page_path === "" && sanitizedPagePath !== "") {
+      const errorResponse: BadRequestResponse = {
+        error: {
+          code: "BAD_REQUEST",
+          message: "Home page path cannot be changed",
+        },
+      };
+      return json(errorResponse, { status: 400 });
+    }
 
     // Check if page_path is being changed and conflicts with existing page
     if (sanitizedPagePath !== page.page_path) {
@@ -239,6 +186,18 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     }
   }
 
+  // Validate page_settings if provided
+  const settingsError = validatePageSettings(body.page_settings);
+  if (settingsError) {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: settingsError,
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
   // Build update data
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateData: Record<string, any> = {};
@@ -263,21 +222,9 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     updateData.page_logo = body.page_logo;
   }
 
-  // Handle page_settings merge
+  // Handle page_settings merge; unknown stored keys are preserved
   if (body.page_settings !== undefined) {
-    let currentSettings: PageSettings = getDefaultPageSettings();
-
-    if (page.page_settings_json) {
-      try {
-        const parsed = JSON.parse(page.page_settings_json);
-        currentSettings = mergePageSettings(getDefaultPageSettings(), parsed);
-      } catch {
-        // Use defaults on parse error
-      }
-    }
-
-    const mergedSettings = mergePageSettings(currentSettings, body.page_settings);
-    updateData.page_settings_json = JSON.stringify(mergedSettings);
+    updateData.page_settings_json = applyPageSettingsPatch(page.page_settings_json, body.page_settings);
   }
 
   // Update page if there are changes
@@ -334,6 +281,18 @@ export const DELETE: RequestHandler = async ({ locals }) => {
     return json(errorResponse, { status: 404 });
   }
 
+  // The home page must always exist; DeletePage in pagesController enforces
+  // the same invariant for the manage UI
+  if (page.page_path === "") {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: "Cannot delete the home page",
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
   // Delete all page monitors first
   await db.deletePageMonitorsByPageId(page.id);
 
@@ -341,7 +300,7 @@ export const DELETE: RequestHandler = async ({ locals }) => {
   await db.deletePage(page.id);
 
   const response: DeletePageResponse = {
-    message: `Page '${page.page_path}' deleted successfully`,
+    message: `Page '${page.page_path || GC.HOME_PAGE_TOKEN}' deleted successfully`,
   };
 
   return json(response);

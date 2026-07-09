@@ -3,6 +3,7 @@
 
 import type { MonitorRecordTyped } from "$lib/server/types/db";
 import type { MonitorPublicView } from "$lib/types/monitor";
+import type GC from "$lib/global-constants";
 
 export type ApiError = {
   code: string;
@@ -91,6 +92,7 @@ export interface MonitorResponse {
   type_data: MonitorTypeData | null;
   include_degraded_in_downtime: string;
   is_hidden: string;
+  confirmation_threshold?: number | null;
   monitor_settings_json: MonitorSettings | null;
   created_at: string;
   updated_at: string;
@@ -117,7 +119,9 @@ export interface CreateMonitorRequest {
   type_data?: MonitorTypeData | null;
   include_degraded_in_downtime?: string;
   is_hidden?: string;
+  confirmation_threshold?: number | null;
   monitor_settings_json?: MonitorSettings | null;
+  external_url?: string | null;
 }
 
 export interface CreateMonitorResponse {
@@ -136,11 +140,17 @@ export interface UpdateMonitorRequest {
   type_data?: MonitorTypeData | null;
   include_degraded_in_downtime?: string;
   is_hidden?: string;
+  confirmation_threshold?: number | null;
   monitor_settings_json?: MonitorSettings | null;
+  external_url?: string | null;
 }
 
 export interface UpdateMonitorResponse {
   monitor: MonitorRecordTyped;
+}
+
+export interface DeleteMonitorResponse {
+  message: string;
 }
 
 // Monitoring Data API types
@@ -198,6 +208,8 @@ export interface IncidentResponse {
   monitors: IncidentMonitor[];
   created_at: string;
   updated_at: string;
+  /** Absolute URL of the public incident page */
+  url: string;
 }
 
 export interface IncidentDetailResponse extends IncidentResponse {
@@ -298,6 +310,13 @@ export interface MaintenanceResponse {
   monitors: MaintenanceMonitor[];
   created_at: string;
   updated_at: string;
+  /**
+   * Absolute URL of the public page for this maintenance.
+   * Note: the public /maintenances/<id> route is keyed by maintenance EVENT id
+   * by default, so this URL carries ?type=maintenance. Link via this field,
+   * never by concatenating `id` onto a path. See docs/adr/0002.
+   */
+  url: string;
 }
 
 export interface GetMaintenancesListResponse {
@@ -344,6 +363,8 @@ export interface MaintenanceEventResponse {
   status: "SCHEDULED" | "READY" | "ONGOING" | "COMPLETED" | "CANCELLED";
   created_at: string;
   updated_at: string;
+  /** Absolute URL of the public page for this maintenance event */
+  url: string;
 }
 
 export interface GetMaintenanceEventsListResponse {
@@ -357,8 +378,15 @@ export interface GetMaintenanceEventResponse {
 }
 
 export interface UpdateMaintenanceEventRequest {
-  start_date_time: number;
-  end_date_time: number;
+  /** Window edit mode: both times required. Cannot be combined with `status`. */
+  start_date_time?: number;
+  end_date_time?: number;
+  /**
+   * Transition mode: COMPLETED (from ONGOING) or CANCELLED (from SCHEDULED/READY/ONGOING).
+   * Cannot be combined with time fields. Transitioning an ONGOING event moves its
+   * end_date_time to the moment of the transition.
+   */
+  status?: "COMPLETED" | "CANCELLED";
 }
 
 export interface UpdateMaintenanceEventResponse {
@@ -386,6 +414,8 @@ export interface MaintenanceEventDetailResponse {
   maintenance_rrule: string;
   maintenance_duration_seconds: number;
   monitors: MaintenanceMonitor[];
+  /** Absolute URL of the public page for this maintenance event */
+  url: string;
 }
 
 export interface GetMaintenanceEventsDetailListResponse {
@@ -436,9 +466,40 @@ export interface PageSettingsMaintenances {
   ongoing: PageSettingsMaintenancesOngoing;
 }
 
+export interface PageSettingsHistoryDays {
+  desktop: number;
+  mobile: number;
+}
+
+/**
+ * Recursive partial, so patch payloads can update any subset of nested fields.
+ * Recursion applies only to plain object maps; arrays and other special object
+ * types pass through unchanged.
+ */
+export type DeepPartial<T> = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [K in keyof T]?: T[K] extends (infer U)[] ? U[] : T[K] extends Record<string, any> ? DeepPartial<T[K]> : T[K];
+};
+
+/**
+ * Patch payload for page_settings: any subset of nested fields. Provided
+ * fields are deep-merged into the current settings; omitted fields are left
+ * untouched.
+ */
+export type PageSettingsPatch = DeepPartial<PageSettings>;
+
+export type PageMonitorLayoutStyle = (typeof GC.MONITOR_LAYOUT_STYLES)[number];
+
 export interface PageSettings {
   incidents: PageSettingsIncidents;
   include_maintenances: PageSettingsMaintenances;
+  /** Days of status history shown on the page, per device class (1-365). */
+  monitor_status_history_days: PageSettingsHistoryDays;
+  monitor_layout_style: PageMonitorLayoutStyle;
+  /** Per-page meta/social overrides; stored as camelCase keys internally. */
+  meta_page_title?: string;
+  meta_page_description?: string;
+  social_page_preview_image?: string;
 }
 
 export interface PageMonitorResponse {
@@ -447,6 +508,11 @@ export interface PageMonitorResponse {
 
 export interface PageResponse {
   id: number;
+  /**
+   * The page's path segment. The home page (stored path is empty) renders as
+   * the addressable token `~home`; its public URL is the site root.
+   * See docs/adr/0004-home-page-api-token.md.
+   */
   page_path: string;
   page_title: string;
   page_header: string;
@@ -472,7 +538,7 @@ export interface CreatePageRequest {
   page_header: string;
   page_subheader?: string | null;
   page_logo?: string | null;
-  page_settings?: Partial<PageSettings>;
+  page_settings?: PageSettingsPatch;
   monitors?: string[];
 }
 
@@ -486,7 +552,7 @@ export interface UpdatePageRequest {
   page_header?: string;
   page_subheader?: string | null;
   page_logo?: string | null;
-  page_settings?: Partial<PageSettings>;
+  page_settings?: PageSettingsPatch;
   monitors?: string[];
 }
 

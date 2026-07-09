@@ -19,10 +19,3 @@
 <main>
   {@render children()}
 </main>
-
-<style>
-  /* Apply the global font family using the CSS variable */
-  * {
-    font-family: var(--font-family);
-  }
-</style>

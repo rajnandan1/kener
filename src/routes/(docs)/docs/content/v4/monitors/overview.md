@@ -54,6 +54,7 @@ UP + MAINTENANCE + DEGRADED + DOWN
 
 ## Related docs {#related-docs}
 
+- [Grace Period](/docs/v4/monitors/grace-period) — require N consecutive checks before a status change is recorded
 - [Monitors (general)](/docs/v4/monitors)
 - [Sharing Monitors](/docs/v4/sharing)
 - [Alert Configurations](/docs/v4/alerting/alert-configurations)

@@ -101,6 +101,19 @@ export const POST: RequestHandler = async ({ request }) => {
     return json(errorResponse, { status: 400 });
   }
 
+  // Validate confirmation_threshold
+  let confirmationThreshold = 1;
+  if (body.confirmation_threshold !== undefined && body.confirmation_threshold !== null) {
+    const ct = Number(body.confirmation_threshold);
+    if (!Number.isInteger(ct) || ct < 1 || ct > 60) {
+      const errorResponse: BadRequestResponse = {
+        error: { code: "BAD_REQUEST", message: "confirmation_threshold must be an integer between 1 and 60" },
+      };
+      return json(errorResponse, { status: 400 });
+    }
+    confirmationThreshold = ct;
+  }
+
   // Prepare monitor data for insertion
   const monitorData = {
     tag: body.tag.trim(),
@@ -115,7 +128,9 @@ export const POST: RequestHandler = async ({ request }) => {
     type_data: body.type_data ? JSON.stringify(body.type_data) : null,
     include_degraded_in_downtime: body.include_degraded_in_downtime ?? "NO",
     is_hidden: body.is_hidden ?? "NO",
+    confirmation_threshold: confirmationThreshold,
     monitor_settings_json: body.monitor_settings_json ? JSON.stringify(body.monitor_settings_json) : null,
+    external_url: body.external_url ?? null,
   };
 
   await db.insertMonitor(monitorData);

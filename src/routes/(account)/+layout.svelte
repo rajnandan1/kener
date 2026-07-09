@@ -10,7 +10,7 @@
   import KenerNav from "$lib/components/KenerNav.svelte";
 </script>
 
-<ModeWatcher />
+<ModeWatcher defaultMode={data.defaultSiteTheme as 'light' | 'dark' | 'system'} />
 <Toaster />
 
 <svelte:head>
