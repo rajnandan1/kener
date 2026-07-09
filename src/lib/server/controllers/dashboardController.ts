@@ -315,7 +315,8 @@ export const GetPageDashboardData = async (
   // Check page access restrictions
   if (pageDetails.page_is_internal) {
     if (!layoutData.loggedInUser) {
-      throw redirect(302, serverResolve("/account/signin"));
+      const next = encodeURIComponent(serverResolve(pagePath.startsWith("/") ? pagePath : "/" + pagePath));
+      throw redirect(302, serverResolve("/account/signin") + "?next=" + next);
     }
   }
 

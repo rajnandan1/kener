@@ -10,15 +10,18 @@ import { VerifyPassword, GenerateToken, CookieConfig } from "$lib/server/control
 import constants from "$lib/global-constants";
 import serverResolve from "$lib/server/resolver.js";
 
-export const load: PageServerLoad = async ({ parent }) => {
+export const load: PageServerLoad = async ({ parent, url }) => {
   const parentData = await parent();
 
   if (!!parentData.loggedInUser && parentData.isSetupComplete) {
     throw redirect(302, serverResolve("/manage/app/site-configurations"));
   }
 
+  const next = url.searchParams.get("next") ?? "";
+
   return {
     ...parentData,
+    next,
   };
 };
 
@@ -27,6 +30,7 @@ export const actions: Actions = {
     const formData = await request.formData();
     const email = String(formData.get("email") ?? "").trim();
     const password = String(formData.get("password") ?? "");
+    const next = String(formData.get("next") ?? "").trim();
 
     if (!email || !password) {
       return fail(400, { error: "Email and password are required", values: { email } });
@@ -76,7 +80,10 @@ export const actions: Actions = {
       sameSite: cookieConfig.sameSite,
     });
 
-    throw redirect(302, serverResolve("/manage/app/site-configurations"));
+    const redirectTo = next.startsWith("/") && !next.startsWith("//")
+      ? next
+      : serverResolve("/manage/app/site-configurations");
+    throw redirect(302, redirectTo);
   },
   signup: async ({ request, cookies }) => {
     const formData = await request.formData();
