@@ -52,13 +52,15 @@
     status: string;
     state: string;
     is_global: string;
+    incident_type: string;
   }>({
     id: 0,
     title: "",
     start_date_time: Math.floor(Date.now() / 1000),
     status: "OPEN",
     state: GC.INVESTIGATING,
-    is_global: "YES"
+    is_global: "YES",
+    incident_type: GC.INCIDENT
   });
 
   // For datetime inputs (convert to/from local datetime string)
@@ -153,7 +155,8 @@
           start_date_time: result.start_date_time,
           status: result.status,
           state: result.state,
-          is_global: result.is_global || "YES"
+          is_global: result.is_global || "YES",
+          incident_type: result.incident_type || GC.INCIDENT
         };
         // Fetch comments and monitors
         await Promise.all([fetchComments(), fetchIncidentMonitors()]);
@@ -1061,6 +1064,7 @@
                   <Input type="datetime-local" bind:value={commentDateTime} />
                 </div>
               </div>
+              {#if incident.incident_type !== GC.INCIDENT}
               <div class="flex items-center justify-between rounded-md border p-3">
                 <div class="flex flex-col gap-1">
                   <Label for="notify-subscribers-comment">Notify Subscribers</Label>
@@ -1070,6 +1074,7 @@
                 </div>
                 <Switch id="notify-subscribers-comment" bind:checked={notifySubscribersComment} />
               </div>
+              {/if}
               <div class="flex justify-end gap-2">
                 <Button variant="outline" size="sm" onclick={cancelAddComment}>Cancel</Button>
                 <Button size="sm" onclick={saveComment} disabled={!commentText.trim() || savingComment}>

@@ -305,17 +305,21 @@ export const NotifySubscribersForIncident = async (
   state: string,
   update_text: string,
 ): Promise<void> => {
-  const siteData = await GetAllSiteData();
-  const siteUrl = (siteData.siteURL || "") + "/";
-  await subscriberQueue.push({
-    title,
-    cta_url: siteUrl + "incidents/" + incident_id,
-    cta_text: "View Incident",
-    update_text: mdToHTML(update_text),
-    update_subject: `[#${incident_id}:${state}] ${title}`,
-    update_id: String(incident_id),
-    event_type: "incidents",
-  });
+  try {
+    const siteData = await GetAllSiteData();
+    const siteUrl = (siteData.siteURL || "") + "/";
+    await subscriberQueue.push({
+      title,
+      cta_url: siteUrl + "incidents/" + incident_id,
+      cta_text: "View Incident",
+      update_text: mdToHTML(update_text),
+      update_subject: `[#${incident_id}:${state}] ${title}`,
+      update_id: String(incident_id),
+      event_type: "incidents",
+    });
+  } catch (err) {
+    console.error(`Error sending subscriber notification for incident ${incident_id}:`, err);
+  }
 };
 
 export const CreateIncident = async (data: IncidentInput): Promise<{ incident_id: number }> => {
