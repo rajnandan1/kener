@@ -25,6 +25,10 @@
   if (!data.eval) data.eval = DefaultAPIEval;
   if (data.allowSelfSignedCert === undefined) data.allowSelfSignedCert = false;
 
+  if (data.follow_redirects === undefined) data.follow_redirects = true;
+  if (data.max_redirects === undefined) data.max_redirects = 5;
+
+
   const methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
 
   function addHeader() {
@@ -102,6 +106,23 @@
     <Switch id="api-self-signed" bind:checked={data.allowSelfSignedCert} />
     <Label for="api-self-signed">Allow Self-Signed Certificates</Label>
   </div>
+
+  <div class="flex items-center space-x-2">
+    <Switch id="api-follow-redirects" bind:checked={data.follow_redirects} />
+    <Label for="api-follow-redirects">Follow Redirects</Label>
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <Label for="api-max-redirects">Max Redirects</Label>
+    <Input
+      id="api-max-redirects"
+      type="number"
+      min="0"
+      bind:value={data.max_redirects}
+      disabled={!data.follow_redirects}
+    />
+  </div>
+
 
   <div class="flex flex-col gap-2">
     <Label for="api-eval">Custom Eval Function</Label>
