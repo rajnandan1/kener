@@ -304,19 +304,23 @@ export const NotifySubscribersForIncident = async (
   title: string,
   state: string,
   update_text: string,
+  dedup_id?: string,
 ): Promise<void> => {
   try {
     const siteData = await GetAllSiteData();
-    const siteUrl = (siteData.siteURL || "") + "/";
-    await subscriberQueue.push({
-      title,
-      cta_url: siteUrl + "incidents/" + incident_id,
-      cta_text: "View Incident",
-      update_text: mdToHTML(update_text),
-      update_subject: `[#${incident_id}:${state}] ${title}`,
-      update_id: String(incident_id),
-      event_type: "incidents",
-    });
+    const siteUrl = siteDataToVariables(siteData).site_url;
+    await subscriberQueue.push(
+      {
+        title,
+        cta_url: `${siteUrl}incidents/${incident_id}`,
+        cta_text: "View Incident",
+        update_text: mdToHTML(update_text),
+        update_subject: `[#${incident_id}:${state}] ${title}`,
+        update_id: String(incident_id),
+        event_type: "incidents",
+      },
+      dedup_id ? { deduplication: { id: dedup_id } } : undefined,
+    );
   } catch (err) {
     console.error(`Error sending subscriber notification for incident ${incident_id}:`, err);
   }
@@ -357,6 +361,7 @@ export const CreateIncident = async (data: IncidentInput): Promise<{ incident_id
       incident.title,
       incident.state,
       `Incident **${incident.title}** has been created.`,
+      `subscriber-incidents-create-${newIncident.id}`,
     );
   }
 
@@ -521,7 +526,7 @@ export const AddIncidentComment = async (
   }
 
   if (notify_subscribers && incidentType !== GC.INCIDENT) {
-    await NotifySubscribersForIncident(incident_id, incidentExists.title, state, comment);
+    await NotifySubscribersForIncident(incident_id, incidentExists.title, state, comment, `subscriber-incidents-comment-${c.id}`);
   }
 
   return c;
