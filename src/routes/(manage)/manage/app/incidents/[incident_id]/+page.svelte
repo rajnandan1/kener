@@ -287,7 +287,7 @@
 
           // Add first comment if provided — this is also the subscriber notification
           if (firstComment.trim()) {
-            await fetch(clientResolver(resolve, "/manage/api"), {
+            const commentResponse = await fetch(clientResolver(resolve, "/manage/api"), {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -301,6 +301,12 @@
                 }
               })
             });
+            const commentResult = await commentResponse.json();
+            if (commentResult.error) {
+              toast.warning(`Incident created but initial update failed: ${commentResult.error}`);
+              goto(clientResolver(resolve, `/manage/app/incidents/${incidentId}`));
+              return;
+            }
           }
           toast.success("Incident created successfully");
           goto(clientResolver(resolve, `/manage/app/incidents/${incidentId}`));
