@@ -259,8 +259,7 @@
               status: "OPEN",
               state: GC.INVESTIGATING,
               incident_type: GC.INCIDENT,
-              is_global: incident.is_global,
-              notify_subscribers: notifySubscribers
+              is_global: incident.is_global
             }
           })
         });
@@ -286,7 +285,7 @@
             });
           }
 
-          // Add first comment if provided
+          // Add first comment if provided — this is also the subscriber notification
           if (firstComment.trim()) {
             await fetch(clientResolver(resolve, "/manage/api"), {
               method: "POST",
@@ -297,7 +296,8 @@
                   incident_id: incidentId,
                   comment: firstComment,
                   state: GC.INVESTIGATING,
-                  commented_at: incident.start_date_time
+                  commented_at: incident.start_date_time,
+                  notify_subscribers: notifySubscribers
                 }
               })
             });
@@ -826,7 +826,7 @@
           <div class="flex flex-col gap-1">
             <Label for="notify-subscribers">{isNew ? "Notify Subscribers" : "Subscribers have been notified"}</Label>
             <p class="text-muted-foreground text-xs">
-              When disabled, subscribers will not be notified (use for backdated or test incidents).
+              When enabled, subscribers are notified <strong>if an initial update is provided</strong>. Disable for backdated or test incidents.
             </p>
           </div>
           <Switch id="notify-subscribers" bind:checked={notifySubscribers} disabled={!isNew} />

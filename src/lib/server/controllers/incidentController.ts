@@ -355,16 +355,6 @@ export const CreateIncident = async (data: IncidentInput): Promise<{ incident_id
 
   let newIncident = await db.createIncident(incident);
 
-  if (data.notify_subscribers) {
-    await NotifySubscribersForIncident(
-      newIncident.id,
-      incident.title,
-      incident.state,
-      `Incident **${incident.title}** has been created.`,
-      `subscriber-incidents-create-${newIncident.id}`,
-    );
-  }
-
   return {
     incident_id: newIncident.id,
   };
@@ -496,7 +486,7 @@ export const AddIncidentComment = async (
   comment: string,
   state: string,
   commented_at: number,
-  notify_subscribers: boolean = false,
+  notify_subscribers: boolean = true,
 ): Promise<IncidentCommentRecord> => {
   let incidentExists = await db.getIncidentById(incident_id);
   if (!incidentExists) {
@@ -522,7 +512,9 @@ export const AddIncidentComment = async (
       }
     }
     await UpdateIncident(incident_id, incidentUpdate);
-    await notifySubscribersOfComment(incidentExists, c);
+    if (notify_subscribers) {
+      await notifySubscribersOfComment(incidentExists, c);
+    }
   }
 
   if (notify_subscribers && incidentType !== GC.INCIDENT) {
