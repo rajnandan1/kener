@@ -118,6 +118,8 @@
       id="api-max-redirects"
       type="number"
       min="0"
+      max="20"
+      step="1"
       bind:value={data.max_redirects}
       disabled={!data.follow_redirects}
     />
