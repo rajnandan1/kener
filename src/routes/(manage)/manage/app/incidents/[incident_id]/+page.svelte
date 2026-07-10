@@ -821,16 +821,18 @@
           />
         </div>
 
-        <!-- Notify Subscribers -->
-        <div class="flex items-center justify-between rounded-md border p-3" class:opacity-50={!isNew}>
+        <!-- Notify Subscribers (creation only — no persisted notification state to show on existing incidents) -->
+        {#if isNew}
+        <div class="flex items-center justify-between rounded-md border p-3">
           <div class="flex flex-col gap-1">
-            <Label for="notify-subscribers">{isNew ? "Notify Subscribers" : "Subscribers have been notified"}</Label>
+            <Label for="notify-subscribers">Notify Subscribers</Label>
             <p class="text-muted-foreground text-xs">
               When enabled, subscribers are notified <strong>if an initial update is provided</strong>. Disable for backdated or test incidents.
             </p>
           </div>
-          <Switch id="notify-subscribers" bind:checked={notifySubscribers} disabled={!isNew} />
+          <Switch id="notify-subscribers" bind:checked={notifySubscribers} />
         </div>
+        {/if}
 
         <!-- First Comment (only for new) -->
         {#if isNew}
