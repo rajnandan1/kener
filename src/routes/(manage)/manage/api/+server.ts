@@ -276,7 +276,7 @@ export async function POST({ request, cookies }) {
         throw new Error("Incident not found");
       }
     } else if (action == "createIncident") {
-      resp = await CreateIncident({ ...data, notify_subscribers: !!data.notify_subscribers });
+      resp = await CreateIncident({ ...data, notify_subscribers: data.notify_subscribers === true });
     } else if (action == "updateIncident") {
       resp = await UpdateIncident(data.id, data);
     } else if (action == "deleteIncident") {
