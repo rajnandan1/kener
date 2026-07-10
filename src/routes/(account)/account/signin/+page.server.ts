@@ -80,9 +80,8 @@ export const actions: Actions = {
       sameSite: cookieConfig.sameSite,
     });
 
-    const redirectTo = next.startsWith("/") && !next.startsWith("//")
-      ? next
-      : serverResolve("/manage/app/site-configurations");
+    const isSafePath = next.startsWith("/") && !/^\/[/\\]/.test(next);
+    const redirectTo = isSafePath ? next : serverResolve("/manage/app/site-configurations");
     throw redirect(302, redirectTo);
   },
   signup: async ({ request, cookies }) => {
