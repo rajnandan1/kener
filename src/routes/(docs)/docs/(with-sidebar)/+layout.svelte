@@ -26,7 +26,14 @@
 
 <svelte:head>
   <!-- favicon -->
-  <link rel="icon" href={clientResolver(resolve, data.config.favicon)} />
+  <link
+    rel="icon"
+    href={
+      data.config.favicon
+        ? clientResolver(resolve, data.config.favicon)
+        : data.config.favicon
+    }
+  />
 </svelte:head>
 
 <div class="bg-background text-foreground min-h-screen">

@@ -15,7 +15,10 @@
 
 <svelte:head>
   <meta name="robots" content="noindex, nofollow" />
-  <link rel="icon" href={clientResolver(resolve, data.favicon)} />
+  <link
+    rel="icon"
+    href={data.favicon ? clientResolver(resolve, data.favicon) : data.favicon}
+  />
   {#if data.font?.cssSrc}
     <link rel="stylesheet" href={data.font.cssSrc} />
   {/if}

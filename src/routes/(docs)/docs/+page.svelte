@@ -220,7 +220,14 @@
     name="keywords"
     content="open source status page, docker status page, self-hosted status page, uptime monitor, incident management, status page tool, free status page, kener, status page docker compose, open source uptime monitoring"
   />
-  <link rel="icon" href={clientResolver(resolve, data.config.favicon)} />
+  <link
+    rel="icon"
+    href={
+      data.config.favicon
+        ? clientResolver(resolve, data.config.favicon)
+        : data.config.favicon
+    }
+  />
   <link rel="canonical" href="https://kener.ing/docs" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://kener.ing/docs" />
