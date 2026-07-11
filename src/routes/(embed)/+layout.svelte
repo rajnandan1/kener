@@ -4,6 +4,7 @@
   import "../embed.css";
   import { ModeWatcher } from "mode-watcher";
   import { resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
   import { Toaster } from "$lib/components/ui/sonner/index.js";
 
   let { children, data } = $props();
@@ -15,7 +16,10 @@
 <svelte:head>
   <meta name="robots" content="noindex, nofollow" />
   <title>Kener Status</title>
-  <link rel="icon" href={data.favicon} />
+  <link
+    rel="icon"
+    href={data.favicon ? clientResolver(resolve, data.favicon) : data.favicon}
+  />
   {#if data.font?.cssSrc}
     <link rel="stylesheet" href={data.font.cssSrc} />
   {/if}
