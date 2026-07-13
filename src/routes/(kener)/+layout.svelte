@@ -15,6 +15,7 @@
   import { page } from "$app/state";
   import clientResolver from "$lib/client/resolver.js";
   import RefreshCw from "@lucide/svelte/icons/refresh-cw";
+  import { toast } from "svelte-sonner";
   import { t } from "$lib/stores/i18n";
   import {
     refreshStore,
@@ -46,6 +47,7 @@
       refreshStore.updateLastRefresh();
     } catch (error) {
       console.error("Failed to refresh page data:", error);
+      toast.error($t("Failed to refresh page data"));
     } finally {
       refreshInProgress = false;
     }
