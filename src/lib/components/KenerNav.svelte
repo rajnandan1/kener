@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from "svelte";
   import { page } from "$app/state";
   import * as NavigationMenu from "$lib/components/ui/navigation-menu/index.js";
   import * as Dropdown from "$lib/components/ui/dropdown-menu/index.js";
@@ -9,7 +10,7 @@
   import trackEvent from "$lib/beacon";
   import MenuIcon from "@lucide/svelte/icons/menu";
 
-  let { controls }: { controls?: import("svelte").Snippet } = $props();
+  let { controls }: { controls?: Snippet } = $props();
   let { data } = page;
   const navItems: { name: string; url: string; iconURL: string }[] = data.navItems || [];
   const { siteName, logo, globalPageVisibilitySettings } = data;

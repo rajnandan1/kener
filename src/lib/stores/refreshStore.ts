@@ -1,5 +1,9 @@
 import { writable } from "svelte/store";
 
+export const DEFAULT_REFRESH_INTERVAL = 60;
+export const MIN_REFRESH_INTERVAL = 5;
+export const MAX_REFRESH_INTERVAL = 86400;
+
 export type RefreshState = {
   enabled: boolean;
   interval: number;
@@ -8,7 +12,7 @@ export type RefreshState = {
 
 const defaultState: RefreshState = {
   enabled: false,
-  interval: 30,
+  interval: DEFAULT_REFRESH_INTERVAL,
   lastRefresh: null
 };
 
