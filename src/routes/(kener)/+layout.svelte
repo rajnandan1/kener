@@ -141,12 +141,12 @@
   <div class="fixed right-4 bottom-4 z-20">
     <Popover.Root>
       <Popover.Trigger>
-        {#snippet child()}
+        {#snippet child({ props })}
           <Button
+            {...props}
             variant="ghost"
             size="icon"
             aria-label={$t("Auto-Refresh")}
-            onclick={refreshPageData}
           >
             <RefreshCw
               class={`h-[1.2rem] w-[1.2rem] ${
