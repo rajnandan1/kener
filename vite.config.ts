@@ -4,6 +4,7 @@ import { sveltekit } from "@sveltejs/kit/vite";
 import version from "vite-plugin-package-version";
 import { defineConfig } from "vite";
 import devtoolsJson from "vite-plugin-devtools-json";
+import { playwright } from "@vitest/browser-playwright";
 
 import * as dotenv from "dotenv";
 
@@ -66,6 +67,23 @@ export default defineConfig(({ mode }) => {
             environment: "node",
             include: ["src/**/*.{test,spec}.{js,ts}"],
             exclude: ["src/**/*.svelte.{test,spec}.{js,ts}"],
+          },
+        },
+        {
+          extends: "./vite.config.ts",
+          test: {
+            name: "client",
+            browser: {
+              enabled: true,
+              headless: true,
+              provider: playwright(),
+              instances: [{ browser: "chromium" }],
+              // Vitest's default browser API port (63315) can fall inside Windows
+              // Hyper-V excluded TCP port ranges; pin below the ephemeral range.
+              api: { port: 5180 },
+            },
+            include: ["src/**/*.svelte.{test,spec}.{js,ts}"],
+            setupFiles: ["./vitest-setup-client.ts"],
           },
         },
       ],

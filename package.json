@@ -50,6 +50,7 @@
     "seed": "npx knex seed:run",
     "start": "node build/main.js",
     "test": "vitest run",
+    "test:client": "vitest run --project=client",
     "test:server": "vitest run --project=server",
     "test:watch": "vitest"
   },
@@ -72,6 +73,7 @@
     "@types/mustache": "^4.2.6",
     "@types/node": "^25.0.3",
     "@types/nodemailer": "^7.0.4",
+    "@vitest/browser-playwright": "^4.1.10",
     "autoprefixer": "^10.4.22",
     "clsx": "^2.1.1",
     "concurrently": "^9.2.1",
@@ -96,7 +98,8 @@
     "vite": "^7.2.2",
     "vite-node": "^5.3.0",
     "vite-plugin-devtools-json": "^1.0.0",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "vitest-browser-svelte": "^3.0.0"
   },
   "engines": {
     "node": ">=20.0.0"
