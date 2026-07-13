@@ -1,7 +1,8 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   BeginningOfDay,
   BeginningOfMinute,
+  checkIfDuplicateExists,
   DurationInMinutes,
   GetDayStartTimestampUTC,
   GetDayStartWithOffset,
@@ -9,11 +10,25 @@ import {
   GetMinuteStartTimestampUTC,
   GetNowTimestampUTC,
   GetNowTimestampUTCInMs,
+  GetRequiredSecrets,
+  GetWordsStartingWithDollar,
+  HashString,
+  IsStringURLSafe,
+  IsValidHost,
+  IsValidHTTPMethod,
+  IsValidNameServer,
+  IsValidURL,
   IsValidUptimeFormula,
+  MaskString,
   ParsePercentage,
   ParseUptime,
+  ReplaceAllOccurrences,
   UnparsePercentage,
   UptimeCalculator,
+  ValidateEmail,
+  ValidateIpAddress,
+  ValidateMonitorAlerts,
+  ValidateURL,
 } from "./tool";
 import type { TimestampStatusCount } from "./types/db";
 
@@ -202,5 +217,162 @@ describe("UptimeCalculator", () => {
     const result = UptimeCalculator(data);
     expect(result.uptime).toBe("100");
     expect(result.avgLatency).toBe("100ms"); // (0 + 100) / 1 entry with latency > 0
+  });
+});
+
+describe("ValidateIpAddress", () => {
+  it("classifies IPv4, IPv6, domain names, and invalid input", () => {
+    expect(ValidateIpAddress("192.168.1.1")).toBe("IPv4");
+    expect(ValidateIpAddress("8.8.8.8")).toBe("IPv4");
+    expect(ValidateIpAddress("2001:0db8:85a3:0000:0000:8a2e:0370:7334")).toBe("IPv6");
+    expect(ValidateIpAddress("example.com")).toBe("Domain Name");
+    expect(ValidateIpAddress("kener.ing")).toBe("Domain Name");
+    expect(ValidateIpAddress("not valid")).toBe("Invalid");
+  });
+
+  it("documents quirks: permissive IPv4 octets, no shortened IPv6", () => {
+    // The regex does not range-check octets:
+    expect(ValidateIpAddress("999.999.999.999")).toBe("IPv4");
+    // Only full-form IPv6 is recognized:
+    expect(ValidateIpAddress("::1")).toBe("Invalid");
+  });
+});
+
+describe("host / nameserver / URL / method validators", () => {
+  it("IsValidHost accepts dotted domains with a TLD", () => {
+    expect(IsValidHost("example.com")).toBe(true);
+    expect(IsValidHost("sub.domain.co.uk")).toBe(true);
+    expect(IsValidHost("my-site.example.org")).toBe(true);
+    expect(IsValidHost("localhost")).toBe(false);
+    expect(IsValidHost("-bad.com")).toBe(false);
+    expect(IsValidHost("")).toBe(false);
+  });
+
+  it("IsValidNameServer accepts only dotted-quad IPs", () => {
+    expect(IsValidNameServer("8.8.8.8")).toBe(true);
+    expect(IsValidNameServer("example.com")).toBe(false);
+    expect(IsValidNameServer("8.8.8")).toBe(false);
+  });
+
+  it("IsValidURL requires http(s) and no spaces", () => {
+    expect(IsValidURL("https://example.com")).toBe(true);
+    expect(IsValidURL("http://example.com/path?q=1")).toBe(true);
+    expect(IsValidURL("ftp://example.com")).toBe(false);
+    expect(IsValidURL("https://exa mple.com")).toBe(false);
+  });
+
+  it("ValidateURL parses with the URL constructor and allows only http(s)", () => {
+    expect(ValidateURL("https://example.com")).toBe(true);
+    expect(ValidateURL("http://localhost:3000")).toBe(true);
+    expect(ValidateURL("ftp://example.com")).toBe(false);
+    expect(ValidateURL("javascript:alert(1)")).toBe(false);
+    expect(ValidateURL("not a url")).toBe(false);
+  });
+
+  it("IsValidHTTPMethod is uppercase-only", () => {
+    expect(IsValidHTTPMethod("GET")).toBe(true);
+    expect(IsValidHTTPMethod("PATCH")).toBe(true);
+    expect(IsValidHTTPMethod("get")).toBe(false);
+    expect(IsValidHTTPMethod("FETCH")).toBe(false);
+  });
+
+  it("IsStringURLSafe allows unreserved URL characters only", () => {
+    expect(IsStringURLSafe("abc-123_~.")).toBe(true);
+    expect(IsStringURLSafe("a b")).toBe(false);
+    expect(IsStringURLSafe("a/b")).toBe(false);
+  });
+});
+
+describe("ValidateEmail", () => {
+  it("accepts common address shapes", () => {
+    expect(ValidateEmail("user@example.com")).toBe(true);
+    expect(ValidateEmail("first.last@sub.example.co")).toBe(true);
+    expect(ValidateEmail("user+tag@example.com")).toBe(true);
+  });
+
+  it("rejects malformed addresses", () => {
+    expect(ValidateEmail("no-at.example.com")).toBe(false);
+    expect(ValidateEmail("user@")).toBe(false);
+    expect(ValidateEmail("user@nodot")).toBe(false);
+    expect(ValidateEmail("@example.com")).toBe(false);
+  });
+});
+
+describe("string helpers", () => {
+  it("MaskString masks everything but the last 4 characters", () => {
+    expect(MaskString("secret123")).toBe("*****t123");
+    expect(MaskString("abcd")).toBe("****");
+    expect(MaskString("ab")).toBe("**");
+    expect(MaskString("")).toBe("");
+  });
+
+  it("HashString returns the sha256 hex digest", () => {
+    expect(HashString("hello")).toBe("2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824");
+  });
+
+  it("GetWordsStartingWithDollar extracts $-prefixed words", () => {
+    expect(GetWordsStartingWithDollar("run $FOO with $BAR_2")).toEqual(["$FOO", "$BAR_2"]);
+    expect(GetWordsStartingWithDollar("nothing here")).toEqual([]);
+  });
+
+  it("ReplaceAllOccurrences replaces every occurrence of a $-token", () => {
+    expect(ReplaceAllOccurrences("a $X b $X", "$X", "y")).toBe("a y b y");
+  });
+
+  it("checkIfDuplicateExists detects duplicates", () => {
+    expect(checkIfDuplicateExists([1, 2, 2])).toBe(true);
+    expect(checkIfDuplicateExists(["a", "b"])).toBe(false);
+  });
+});
+
+describe("GetRequiredSecrets", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("resolves $-tokens that exist in the environment", () => {
+    vi.stubEnv("KENER_TEST_SECRET", "s3cret");
+    expect(GetRequiredSecrets("token: $KENER_TEST_SECRET")).toEqual([
+      { find: "$KENER_TEST_SECRET", replace: "s3cret" },
+    ]);
+  });
+
+  it("ignores tokens with no matching environment variable", () => {
+    expect(GetRequiredSecrets("token: $KENER_TEST_DEFINITELY_UNSET_VAR")).toEqual([]);
+  });
+});
+
+describe("ValidateMonitorAlerts", () => {
+  beforeEach(() => {
+    // The function console.logs every rejection reason; keep test output clean.
+    vi.spyOn(console, "log").mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const validAlert = { triggers: [1], failureThreshold: 1, successThreshold: 2 };
+
+  it("accepts DOWN and/or DEGRADED alerts with triggers and integer thresholds", () => {
+    expect(ValidateMonitorAlerts({ DOWN: validAlert })).toBe(true);
+    expect(ValidateMonitorAlerts({ DOWN: validAlert, DEGRADED: validAlert })).toBe(true);
+  });
+
+  it("rejects missing/empty/unknown-key alert objects", () => {
+    expect(ValidateMonitorAlerts(null)).toBe(false);
+    expect(ValidateMonitorAlerts({})).toBe(false);
+    expect(ValidateMonitorAlerts({ UP: validAlert } as never)).toBe(false);
+  });
+
+  it("rejects missing or empty triggers", () => {
+    expect(ValidateMonitorAlerts({ DOWN: { failureThreshold: 1, successThreshold: 1 } })).toBe(false);
+    expect(ValidateMonitorAlerts({ DOWN: { ...validAlert, triggers: [] } })).toBe(false);
+  });
+
+  it("rejects missing, non-integer, or non-positive thresholds", () => {
+    expect(ValidateMonitorAlerts({ DOWN: { triggers: [1] } })).toBe(false);
+    expect(ValidateMonitorAlerts({ DOWN: { ...validAlert, failureThreshold: 1.5 } })).toBe(false);
+    expect(ValidateMonitorAlerts({ DOWN: { ...validAlert, successThreshold: 0 } })).toBe(false);
   });
 });
