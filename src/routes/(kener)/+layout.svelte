@@ -1,14 +1,21 @@
 <script lang="ts">
   import "../layout.css";
   import "../kener.css";
+  import { onMount } from "svelte";
   import { ModeWatcher } from "mode-watcher";
   import KenerNav from "$lib/components/KenerNav.svelte";
   import KenerFooter from "$lib/components/KenerFooter.svelte";
+  import { Button } from "$lib/components/ui/button/index.js";
+  import { Input } from "$lib/components/ui/input/index.js";
+  import * as Popover from "$lib/components/ui/popover/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import { Toaster } from "$lib/components/ui/sonner/index.js";
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
   import clientResolver from "$lib/client/resolver.js";
+  import RefreshCw from "@lucide/svelte/icons/refresh-cw";
+  import { t } from "$lib/stores/i18n";
+  import { refreshStore } from "$lib/stores/refreshStore";
 
   let { children, data } = $props();
 
@@ -17,6 +24,53 @@
     if (params.monitor_tag) return clientResolver(resolve, `/monitors/${params.monitor_tag}/rss.xml`);
     if (params.page_path) return clientResolver(resolve, `/${params.page_path}/rss.xml`);
     return clientResolver(resolve, "/rss.xml");
+  });
+
+  let refreshInterval = $state(60);
+  let refreshIntervalId: ReturnType<typeof setInterval> | undefined;
+
+  function startGlobalRefresh() {
+    stopGlobalRefresh();
+    refreshIntervalId = setInterval(() => refreshStore.updateLastRefresh(), refreshInterval * 1000);
+  }
+
+  function stopGlobalRefresh() {
+    if (refreshIntervalId !== undefined) {
+      clearInterval(refreshIntervalId);
+      refreshIntervalId = undefined;
+    }
+  }
+
+  function saveRefreshInterval() {
+    refreshInterval = Math.max(5, Number(refreshInterval) || 60);
+    localStorage.setItem("kener-global-refresh-interval", String(refreshInterval));
+    refreshStore.setInterval(refreshInterval);
+    if ($refreshStore.enabled) startGlobalRefresh();
+  }
+
+  function toggleGlobalRefresh() {
+    refreshStore.toggle();
+    localStorage.setItem("kener-global-refresh-enabled", String($refreshStore.enabled));
+
+    if ($refreshStore.enabled) {
+      startGlobalRefresh();
+      refreshStore.updateLastRefresh();
+    } else {
+      stopGlobalRefresh();
+    }
+  }
+
+  onMount(() => {
+    const savedInterval = Number(localStorage.getItem("kener-global-refresh-interval"));
+    if (Number.isFinite(savedInterval) && savedInterval >= 5) refreshInterval = savedInterval;
+    refreshStore.setInterval(refreshInterval);
+
+    if (localStorage.getItem("kener-global-refresh-enabled") === "true") {
+      refreshStore.setState({ ...$refreshStore, enabled: true });
+      startGlobalRefresh();
+    }
+
+    return stopGlobalRefresh;
   });
 </script>
 
@@ -64,6 +118,46 @@
     <Tooltip.Provider>
       {@render children()}
     </Tooltip.Provider>
+  </div>
+  <div class="fixed right-4 bottom-4 z-20">
+    <Popover.Root>
+      <Popover.Trigger>
+        {#snippet child()}
+          <Button variant="ghost" size="icon" aria-label={$t("Auto-Refresh")}>
+            <RefreshCw
+              class={`h-[1.2rem] w-[1.2rem] ${
+                $refreshStore.enabled ? "animate-spin" : ""
+              }`}
+            />
+          </Button>
+        {/snippet}
+      </Popover.Trigger>
+      <Popover.Content class="w-60">
+        <div class="grid gap-4">
+          <div class="space-y-2">
+            <h4 class="font-medium leading-none">{$t("Auto-Refresh")}</h4>
+            <p class="text-sm text-muted-foreground">{$t("auto-refresh-description")}</p>
+          </div>
+          <div class="grid gap-2">
+            <div class="grid grid-cols-3 items-center gap-4">
+              <label for="global-interval" class="text-xs">{$t("Interval")}</label>
+              <Input
+                id="global-interval"
+                type="number"
+                bind:value={refreshInterval}
+                min="5"
+                class="col-span-2 h-8"
+                placeholder={$t("Seconds")}
+                onchange={saveRefreshInterval}
+              />
+            </div>
+            <Button onclick={toggleGlobalRefresh} size="sm">
+              {$refreshStore.enabled ? $t("Disable") : $t("Enable")}
+            </Button>
+          </div>
+        </div>
+      </Popover.Content>
+    </Popover.Root>
   </div>
   <KenerFooter />
 </main>
