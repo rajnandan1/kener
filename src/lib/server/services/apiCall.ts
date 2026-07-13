@@ -64,13 +64,18 @@ class ApiCall {
         console.log(e);
       }
     }
+  const followRedirects =
+    this.monitor.type_data.follow_redirects ?? true;
+
+  const maxRedirects =
+    this.monitor.type_data.max_redirects ?? 5;
 
     const options: AxiosRequestConfig = {
       method: method,
       headers: axiosHeaders,
       timeout: timeout,
       transformResponse: (r: string) => r,
-      maxRedirects: 5,
+      maxRedirects: followRedirects ? maxRedirects : 0,
       validateStatus: () => true,
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
