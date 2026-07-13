@@ -2,7 +2,7 @@ import dns2 from "dns2";
 import dgram, { type Socket } from "dgram";
 import tls from "tls";
 import { Resolver as NodeResolver } from "node:dns/promises";
-import { AllRecordTypes, IsValidHost, ValidateIpAddress } from "../clientTools";
+import { AllRecordTypes, IsValidHost } from "../clientTools";
 
 interface DNSAnswer {
   name: string;
@@ -135,7 +135,6 @@ class DNSResolver {
     const port = options.tlsPort ?? DEFAULT_DOT_PORT;
     const timeoutMs = options.timeoutMs ?? DEFAULT_QUERY_TIMEOUT_MS;
     const servername = this.resolveTlsServername(nameserver, options.tlsServername);
-    const ipType = ValidateIpAddress(nameserver);
 
     return new Promise((resolve, reject) => {
       let responseBuffer = Buffer.alloc(0);
@@ -146,7 +145,6 @@ class DNSResolver {
         port,
         servername,
         rejectUnauthorized: !options.allowSelfSignedCert,
-        family: ipType === "IP6" ? 6 : ipType === "IP4" ? 4 : undefined,
       });
 
       const timeoutId = setTimeout(() => {
