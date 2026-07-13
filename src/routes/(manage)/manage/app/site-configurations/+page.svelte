@@ -49,6 +49,8 @@
   let savingEventDisplaySettings = $state(false);
   let savingSitemap = $state(false);
   let savingMaintenanceNotificationSettings = $state(false);
+  let savingAutoPublicPages = $state(false);
+  let autoPublicPages = $state(true);
   let uploadingLogo = $state(false);
   let uploadingFavicon = $state(false);
   let uploadingSocialPreviewImage = $state(false);
@@ -197,6 +199,12 @@
         } else {
           globalPageVisibilitySettings = structuredClone(defaultGlobalPageVisibilitySettings);
         }
+
+        if (data.autoPublicPages !== undefined && data.autoPublicPages !== null) {
+          autoPublicPages = data.autoPublicPages === true || data.autoPublicPages === "true";
+        } else {
+          autoPublicPages = true;
+        }   
 
         dataRetentionPolicy = {
           enabled: data.dataRetentionPolicy?.enabled ?? true,
@@ -446,6 +454,30 @@
       toast.error("Failed to save global page visibility settings");
     } finally {
       savingGlobalPageVisibilitySettings = false;
+    }
+  }
+
+  async function saveAutoPublicPages() {
+    savingAutoPublicPages = true;
+    try {
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "storeSiteData",
+          data: { autoPublicPages: String(autoPublicPages) }
+        })
+      });
+      const result = await response.json();
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Setting saved successfully");
+      }
+    } catch (e) {
+      toast.error("Failed to save setting");
+    } finally {
+      savingAutoPublicPages = false;
     }
   }
 
@@ -1218,6 +1250,7 @@
           </div>
           <Switch checked={globalPageVisibilitySettings.forceExclusivity} onCheckedChange={onForceExclusivityChange} />
         </div>
+
       </Card.Content>
       <Card.Footer class="flex justify-end">
         <Button
@@ -1226,6 +1259,39 @@
           class="cursor-pointer"
         >
           {#if savingGlobalPageVisibilitySettings}
+            <Loader class="h-4 w-4 animate-spin" />
+            Saving...
+          {:else}
+            <SaveIcon class="h-4 w-4" />
+            Save
+          {/if}
+        </Button>
+      </Card.Footer>
+    </Card.Root>
+
+    <!-- Access Group Settings Card -->
+    <Card.Root>
+      <Card.Header>
+        <Card.Title>Access Group Settings</Card.Title>
+        <Card.Description>
+          Control how access groups behave for new pages.
+        </Card.Description>
+      </Card.Header>
+      <Card.Content class="space-y-6">
+        <div class="flex items-center justify-between">
+          <div class="space-y-0.5">
+            <Label>Auto-public new pages</Label>
+            <p class="text-muted-foreground text-xs">
+              Newly created pages automatically get the "public" access group.
+              Disable this for multi-tenant setups where pages should be private by default.
+            </p>
+          </div>
+          <Switch bind:checked={autoPublicPages} />
+        </div>
+      </Card.Content>
+      <Card.Footer class="flex justify-end">
+        <Button onclick={saveAutoPublicPages} disabled={savingAutoPublicPages} class="cursor-pointer">
+          {#if savingAutoPublicPages}
             <Loader class="h-4 w-4 animate-spin" />
             Saving...
           {:else}
