@@ -129,59 +129,59 @@
 	</style>`}
   <script src={clientResolver(resolve, "/capture.js")}></script>
 </svelte:head>
+{#snippet refreshControls()}
+  <Popover.Root>
+    <Popover.Trigger>
+      {#snippet child({ props })}
+        <Button
+          {...props}
+          variant="ghost"
+          size="icon"
+          aria-label={$t("Auto-Refresh")}
+        >
+          <RefreshCw
+            class={`h-[1.2rem] w-[1.2rem] ${
+              refreshInProgress ? "animate-spin" : ""
+            }`}
+          />
+        </Button>
+      {/snippet}
+    </Popover.Trigger>
+    <Popover.Content class="w-60">
+      <div class="grid gap-4">
+        <div class="space-y-2">
+          <h4 class="font-medium leading-none">{$t("Auto-Refresh")}</h4>
+          <p class="text-sm text-muted-foreground">{$t("auto-refresh-description")}</p>
+        </div>
+        <div class="grid gap-2">
+          <div class="grid grid-cols-3 items-center gap-4">
+            <label for="global-interval" class="text-xs">{$t("Interval")}</label>
+            <Input
+              id="global-interval"
+              type="number"
+              bind:value={refreshInterval}
+              min="5"
+              class="col-span-2 h-8"
+              placeholder={$t("Seconds")}
+              onchange={saveRefreshInterval}
+            />
+          </div>
+          <Button onclick={toggleGlobalRefresh} size="sm">
+            {$refreshStore.enabled ? $t("Disable") : $t("Enable")}
+          </Button>
+        </div>
+      </div>
+    </Popover.Content>
+  </Popover.Root>
+{/snippet}
 <main class="kener-public status-page-app">
   <!-- Nav -->
-  <KenerNav />
+  <KenerNav controls={refreshControls} />
   <!-- Body -->
   <div class="mx-auto max-w-5xl px-4 pt-18">
     <Tooltip.Provider>
       {@render children()}
     </Tooltip.Provider>
-  </div>
-  <div class="fixed right-4 bottom-4 z-20">
-    <Popover.Root>
-      <Popover.Trigger>
-        {#snippet child({ props })}
-          <Button
-            {...props}
-            variant="ghost"
-            size="icon"
-            aria-label={$t("Auto-Refresh")}
-          >
-            <RefreshCw
-              class={`h-[1.2rem] w-[1.2rem] ${
-                refreshInProgress ? "animate-spin" : ""
-              }`}
-            />
-          </Button>
-        {/snippet}
-      </Popover.Trigger>
-      <Popover.Content class="w-60">
-        <div class="grid gap-4">
-          <div class="space-y-2">
-            <h4 class="font-medium leading-none">{$t("Auto-Refresh")}</h4>
-            <p class="text-sm text-muted-foreground">{$t("auto-refresh-description")}</p>
-          </div>
-          <div class="grid gap-2">
-            <div class="grid grid-cols-3 items-center gap-4">
-              <label for="global-interval" class="text-xs">{$t("Interval")}</label>
-              <Input
-                id="global-interval"
-                type="number"
-                bind:value={refreshInterval}
-                min="5"
-                class="col-span-2 h-8"
-                placeholder={$t("Seconds")}
-                onchange={saveRefreshInterval}
-              />
-            </div>
-            <Button onclick={toggleGlobalRefresh} size="sm">
-              {$refreshStore.enabled ? $t("Disable") : $t("Enable")}
-            </Button>
-          </div>
-        </div>
-      </Popover.Content>
-    </Popover.Root>
   </div>
   <KenerFooter />
 </main>

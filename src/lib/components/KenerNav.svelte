@@ -9,6 +9,7 @@
   import trackEvent from "$lib/beacon";
   import MenuIcon from "@lucide/svelte/icons/menu";
 
+  let { controls }: { controls?: import("svelte").Snippet } = $props();
   let { data } = page;
   const navItems: { name: string; url: string; iconURL: string }[] = data.navItems || [];
   const { siteName, logo, globalPageVisibilitySettings } = data;
@@ -80,42 +81,46 @@
         </NavigationMenu.List>
       </NavigationMenu.Root>
 
-      <!-- Mobile Nav -->
-      {#if navItems.length > 0}
-        <Dropdown.Root>
-          <Dropdown.Trigger>
-            {#snippet child({ props })}
-              <button
-                {...props}
-                type="button"
-                class="{navigationMenuTriggerStyle()} hover:border-border border border-transparent bg-transparent text-xs hover:bg-transparent sm:hidden"
-                style="border-radius: var(--radius-3xl)"
-                aria-label="Open navigation menu"
-              >
-                <MenuIcon class="h-4 w-4" />
-              </button>
-            {/snippet}
-          </Dropdown.Trigger>
-          <Dropdown.Content align="end" class="w-56 rounded-3xl p-2">
-            {#each navItems as item (item.url)}
-              <Button
-                variant="ghost"
-                size="sm"
-                href={clientResolver(resolve, item.url)}
-                class="w-full justify-start rounded-full text-xs"
-                target={item.url.startsWith("http") ? "_blank" : undefined}
-                rel={item.url.startsWith("http") ? "noopener noreferrer" : undefined}
-                onclick={() => trackNavClick(item)}
-              >
-                {#if item.iconURL}
-                  <img src={clientResolver(resolve, item.iconURL)} alt={item.name} class="mr-2 h-4 w-4 object-cover" />
-                {/if}
-                {item.name}
-              </Button>
-            {/each}
-          </Dropdown.Content>
-        </Dropdown.Root>
-      {/if}
+      <div class="flex items-center gap-1">
+        {@render controls?.()}
+
+        <!-- Mobile Nav -->
+        {#if navItems.length > 0}
+          <Dropdown.Root>
+            <Dropdown.Trigger>
+              {#snippet child({ props })}
+                <button
+                  {...props}
+                  type="button"
+                  class="{navigationMenuTriggerStyle()} hover:border-border border border-transparent bg-transparent text-xs hover:bg-transparent sm:hidden"
+                  style="border-radius: var(--radius-3xl)"
+                  aria-label="Open navigation menu"
+                >
+                  <MenuIcon class="h-4 w-4" />
+                </button>
+              {/snippet}
+            </Dropdown.Trigger>
+            <Dropdown.Content align="end" class="w-56 rounded-3xl p-2">
+              {#each navItems as item (item.url)}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  href={clientResolver(resolve, item.url)}
+                  class="w-full justify-start rounded-full text-xs"
+                  target={item.url.startsWith("http") ? "_blank" : undefined}
+                  rel={item.url.startsWith("http") ? "noopener noreferrer" : undefined}
+                  onclick={() => trackNavClick(item)}
+                >
+                  {#if item.iconURL}
+                    <img src={clientResolver(resolve, item.iconURL)} alt={item.name} class="mr-2 h-4 w-4 object-cover" />
+                  {/if}
+                  {item.name}
+                </Button>
+              {/each}
+            </Dropdown.Content>
+          </Dropdown.Root>
+        {/if}
+      </div>
     </div>
   </div>
 </div>
