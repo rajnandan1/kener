@@ -10,6 +10,7 @@
   import * as Popover from "$lib/components/ui/popover/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import { Toaster } from "$lib/components/ui/sonner/index.js";
+  import { invalidateAll } from "$app/navigation";
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
   import clientResolver from "$lib/client/resolver.js";
@@ -27,11 +28,29 @@
   });
 
   let refreshInterval = $state(60);
-  let refreshIntervalId: ReturnType<typeof setInterval> | undefined;
+  let refreshIntervalId: number | undefined;
+  let refreshInProgress = $state(false);
+
+  async function refreshPageData(): Promise<void> {
+    if (refreshInProgress) return;
+
+    refreshInProgress = true;
+
+    try {
+      await invalidateAll();
+      refreshStore.updateLastRefresh();
+    } catch (error) {
+      console.error("Failed to refresh page data:", error);
+    } finally {
+      refreshInProgress = false;
+    }
+  }
 
   function startGlobalRefresh() {
     stopGlobalRefresh();
-    refreshIntervalId = setInterval(() => refreshStore.updateLastRefresh(), refreshInterval * 1000);
+    refreshIntervalId = window.setInterval(() => {
+      void refreshPageData();
+    }, $refreshStore.interval * 1000);
   }
 
   function stopGlobalRefresh() {
@@ -54,7 +73,7 @@
 
     if ($refreshStore.enabled) {
       startGlobalRefresh();
-      refreshStore.updateLastRefresh();
+      void refreshPageData();
     } else {
       stopGlobalRefresh();
     }
@@ -123,10 +142,15 @@
     <Popover.Root>
       <Popover.Trigger>
         {#snippet child()}
-          <Button variant="ghost" size="icon" aria-label={$t("Auto-Refresh")}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={$t("Auto-Refresh")}
+            onclick={refreshPageData}
+          >
             <RefreshCw
               class={`h-[1.2rem] w-[1.2rem] ${
-                $refreshStore.enabled ? "animate-spin" : ""
+                refreshInProgress ? "animate-spin" : ""
               }`}
             />
           </Button>
