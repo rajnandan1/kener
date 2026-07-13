@@ -26,6 +26,8 @@ export interface ApiMonitorTypeData {
   timeout?: number;
   eval?: string;
   allowSelfSignedCert?: boolean;
+  follow_redirects?: boolean;
+  max_redirects?: number;
 }
 
 export interface DnsMonitorTypeData {
