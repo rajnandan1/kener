@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 import version from "vite-plugin-package-version";
@@ -55,6 +56,19 @@ export default defineConfig(({ mode }) => {
     define: {
       __KENER_BUILD_ENV__: JSON.stringify(buildEnv),
       __KENER_IS_PROD__: JSON.stringify(isProduction),
+    },
+    test: {
+      projects: [
+        {
+          extends: "./vite.config.ts",
+          test: {
+            name: "server",
+            environment: "node",
+            include: ["src/**/*.{test,spec}.{js,ts}"],
+            exclude: ["src/**/*.svelte.{test,spec}.{js,ts}"],
+          },
+        },
+      ],
     },
   };
 });
