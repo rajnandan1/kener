@@ -5,6 +5,7 @@ import version from "vite-plugin-package-version";
 import { defineConfig } from "vite";
 import devtoolsJson from "vite-plugin-devtools-json";
 import { playwright } from "@vitest/browser-playwright";
+import { configDefaults } from "vitest/config";
 
 import * as dotenv from "dotenv";
 
@@ -66,7 +67,7 @@ export default defineConfig(({ mode }) => {
             name: "server",
             environment: "node",
             include: ["src/**/*.{test,spec}.{js,ts}"],
-            exclude: ["src/**/*.svelte.{test,spec}.{js,ts}"],
+            exclude: [...configDefaults.exclude, "src/**/*.svelte.{test,spec}.{js,ts}"],
           },
         },
         {
@@ -76,7 +77,7 @@ export default defineConfig(({ mode }) => {
             browser: {
               enabled: true,
               headless: true,
-              provider: playwright(),
+              provider: playwright({ contextOptions: { timezoneId: "UTC" } }),
               instances: [{ browser: "chromium" }],
               // Vitest's default browser API port (63315) can fall inside Windows
               // Hyper-V excluded TCP port ranges; pin below the ephemeral range.

@@ -32,9 +32,9 @@ import {
 } from "./tool";
 import type { TimestampStatusCount } from "./types/db";
 
-// All fixed timestamps are at 12:00 UTC so that local-date-based functions
-// (GetDayStartTimestampUTC mixes local date parts with Date.UTC) produce the
-// same result on any machine with a UTC offset between -11 and +11 hours.
+// The npm scripts pin TZ=UTC, so local-date-based functions (GetDayStartTimestampUTC
+// mixes local date parts with Date.UTC) are deterministic here. Fixtures still use
+// noon UTC so the tests stay safe even if vitest is run directly without the pin.
 const NOON_UTC = 1768478400; // 2026-01-15T12:00:00Z
 const DAY_START = 1768435200; // 2026-01-15T00:00:00Z
 

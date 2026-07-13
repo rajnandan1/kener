@@ -49,10 +49,10 @@
     "schedule": "vite-node src/lib/server/startup.ts",
     "seed": "npx knex seed:run",
     "start": "node build/main.js",
-    "test": "vitest run",
+    "test": "cross-env TZ=UTC vitest run",
     "test:client": "vitest run --project=client",
-    "test:server": "vitest run --project=server",
-    "test:watch": "vitest"
+    "test:server": "cross-env TZ=UTC vitest run --project=server",
+    "test:watch": "cross-env TZ=UTC vitest"
   },
   "devDependencies": {
     "@internationalized/date": "^3.10.0",
