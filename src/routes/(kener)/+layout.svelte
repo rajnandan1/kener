@@ -16,7 +16,12 @@
   import clientResolver from "$lib/client/resolver.js";
   import RefreshCw from "@lucide/svelte/icons/refresh-cw";
   import { t } from "$lib/stores/i18n";
-  import { refreshStore } from "$lib/stores/refreshStore";
+  import {
+    refreshStore,
+    DEFAULT_REFRESH_INTERVAL,
+    MIN_REFRESH_INTERVAL,
+    MAX_REFRESH_INTERVAL
+  } from "$lib/stores/refreshStore";
 
   let { children, data } = $props();
 
@@ -27,7 +32,7 @@
     return clientResolver(resolve, "/rss.xml");
   });
 
-  let refreshInterval = $state(60);
+  let refreshInterval = $state(DEFAULT_REFRESH_INTERVAL);
   let refreshIntervalId: number | undefined;
   let refreshInProgress = $state(false);
 
@@ -60,11 +65,32 @@
     }
   }
 
+  function normalizeRefreshInterval(value: unknown): number {
+    const interval = Number(value);
+
+    if (!Number.isFinite(interval)) {
+      return DEFAULT_REFRESH_INTERVAL;
+    }
+
+    return Math.min(
+      MAX_REFRESH_INTERVAL,
+      Math.max(MIN_REFRESH_INTERVAL, Math.floor(interval))
+    );
+  }
+
   function saveRefreshInterval() {
-    refreshInterval = Math.max(5, Number(refreshInterval) || 60);
-    localStorage.setItem("kener-global-refresh-interval", String(refreshInterval));
+    refreshInterval = normalizeRefreshInterval(refreshInterval);
+
+    localStorage.setItem(
+      "kener-global-refresh-interval",
+      String(refreshInterval)
+    );
+
     refreshStore.setInterval(refreshInterval);
-    if ($refreshStore.enabled) startGlobalRefresh();
+
+    if ($refreshStore.enabled) {
+      startGlobalRefresh();
+    }
   }
 
   function toggleGlobalRefresh() {
@@ -80,8 +106,11 @@
   }
 
   onMount(() => {
-    const savedInterval = Number(localStorage.getItem("kener-global-refresh-interval"));
-    if (Number.isFinite(savedInterval) && savedInterval >= 5) refreshInterval = savedInterval;
+    const savedInterval = localStorage.getItem(
+      "kener-global-refresh-interval"
+    );
+
+    refreshInterval = normalizeRefreshInterval(savedInterval);
     refreshStore.setInterval(refreshInterval);
 
     if (localStorage.getItem("kener-global-refresh-enabled") === "true") {
@@ -160,7 +189,8 @@
               id="global-interval"
               type="number"
               bind:value={refreshInterval}
-              min="5"
+              min={MIN_REFRESH_INTERVAL}
+              max={MAX_REFRESH_INTERVAL}
               class="col-span-2 h-8"
               placeholder={$t("Seconds")}
               onchange={saveRefreshInterval}
