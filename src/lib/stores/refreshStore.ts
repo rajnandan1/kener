@@ -1,14 +1,9 @@
 import { writable } from "svelte/store";
+import type { RefreshState } from "$lib/client/types/refresh";
 
 export const DEFAULT_REFRESH_INTERVAL = 60;
 export const MIN_REFRESH_INTERVAL = 5;
 export const MAX_REFRESH_INTERVAL = 86400;
-
-export type RefreshState = {
-  enabled: boolean;
-  interval: number;
-  lastRefresh: number | null;
-};
 
 const defaultState: RefreshState = {
   enabled: false,
