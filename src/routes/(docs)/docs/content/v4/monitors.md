@@ -112,6 +112,64 @@ Monitors can have the following statuses:
 | **DEGRADED**    | Service is slow or partially working |
 | **MAINTENANCE** | Scheduled maintenance in progress    |
 
+## Metric Display {#metric-display}
+
+Every check records a numeric value alongside its status (response time, queue depth, price, etc.), stored as `latency`. By default it's shown as latency in milliseconds; **Metric Display** settings relabel and reformat that number per monitor without changing how it's collected.
+
+Open an existing monitor in `/manage/monitors` and expand the **Metric Display** section (available once the monitor is saved). All three settings are optional and saved together as `value_display` in the monitor's settings.
+
+| Setting      | Values                          | Default      | Effect                                                                                                        |
+| ------------ | ------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------- |
+| Display name | text, up to 64 chars            | `Latency`    | Replaces "Latency" in the trend header, metric toggle, stat captions, and day-detail tab, e.g. "Queue length" |
+| Unit         | text, up to 32 chars, or `none` | `ms`         | Suffix shown after the number — see below                                                                     |
+| Decimals     | integer `0`–`4`, or empty       | empty (auto) | Fixed decimal places; empty rounds to up to 2 decimals and trims trailing zeros                               |
+
+### `ms` vs. custom units {#ms-vs-custom}
+
+Leaving Unit empty (or set to `ms`) keeps the legacy latency behavior everywhere — status page, badges, embeds, admin tables:
+
+- Values auto-scale: `<1000` → `Nms`, `<60000` → `N.NNs`, `<3600000` → `N.NNm`, otherwise `N.NNh`.
+- A reading of `0` is treated as **no data** and hidden (chart gaps, blank cells), since `0` never happens for a real response time.
+
+Any other unit switches to plain-number formatting:
+
+- No auto-scaling — the raw stored number is shown with the configured Decimals.
+- `0` is a **valid reading** and is charted/displayed like any other value.
+- The literal input `none` clears the suffix entirely (bare number).
+- `%` and an empty unit join the number with no space (`97.3%`); every other unit gets a space (`42 items`).
+
+> [!NOTE]
+> Raw readings are stored in a `float(8,2)` column. On MySQL this keeps at most 2 decimal places regardless of the Decimals setting — keep Decimals at 2 or fewer if you need exact fractional values.
+
+### Example: queue length {#example-queue-length}
+
+Set Display name to `Queue length`, Unit to `items`, Decimals to `0`, then feed values through either path — both write the same `latency` field:
+
+**[API monitor](/docs/v4/monitors/api) eval:**
+
+```javascript
+async function (statusCode, responseTime, responseRaw) {
+    const { queueLength } = JSON.parse(responseRaw)
+    return { status: queueLength < 100 ? "UP" : "DEGRADED", latency: queueLength }
+}
+```
+
+**Push via the v4 data API:**
+
+```bash
+curl -X PATCH https://your-kener.com/api/v4/monitors/queue-worker/data \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "start_ts": 1700000000,
+    "end_ts": 1700000060,
+    "status": "UP",
+    "latency": 42
+  }'
+```
+
+Result: charts, tooltips, and stats show `42 items`, and a pushed `0` renders and charts normally instead of being hidden as no data.
+
 ## Check Intervals
 
 Configure how often monitors run:
