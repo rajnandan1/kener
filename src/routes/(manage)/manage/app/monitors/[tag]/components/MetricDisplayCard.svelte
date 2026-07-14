@@ -33,6 +33,7 @@
         valueDisplayForm.decimals <= 4)
   );
 
+  /** Builds the value_display object from the form, omitting unset fields (unit input "none" maps to ""); undefined when all fields are unset. */
   function buildValueDisplay(): MonitorValueDisplay | undefined {
     const valueDisplay: MonitorValueDisplay = {};
     const name = valueDisplayForm.name.trim();
@@ -50,6 +51,7 @@
     return Object.keys(valueDisplay).length > 0 ? valueDisplay : undefined;
   }
 
+  /** Persists the metric display settings into monitor_settings_json (merged with existing settings) and notifies the parent via onSaved. */
   async function save() {
     if (!isDecimalsValid) {
       toast.error("Decimals must be a whole number between 0 and 4");

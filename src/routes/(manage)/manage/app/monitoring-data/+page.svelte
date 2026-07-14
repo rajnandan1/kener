@@ -38,6 +38,7 @@
     value_display?: MonitorValueDisplay | null;
   }
 
+  /** Parses a monitor's settings JSON and returns its value_display config, or null when absent or malformed. */
   function parseValueDisplay(settingsJson: string | null | undefined): MonitorValueDisplay | null {
     if (!settingsJson) return null;
     try {
@@ -199,6 +200,7 @@
 
   const displayByTag = $derived(new Map(monitors.map((m) => [m.tag, m.value_display ?? null])));
 
+  /** Unit suffix for a monitor's raw readings in this table ("ms" default, "" for bare numbers). */
   function unitSuffixFor(tag: string): string {
     const { unitSuffix } = ValueDisplayLabels(displayByTag.get(tag));
     // "%" joins the number with no space; other non-empty units get a leading space; empty unit is bare.
