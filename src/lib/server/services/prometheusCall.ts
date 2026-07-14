@@ -77,8 +77,8 @@ class PrometheusCall {
       for (const h of userHeaders) {
         if (h && h.key) axiosHeaders[h.key] = h.value;
       }
-    } catch {
-      // ignore malformed headers
+    } catch (e) {
+      console.log(e);
     }
 
     const options: AxiosRequestConfig = {

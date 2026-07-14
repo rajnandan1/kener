@@ -166,6 +166,7 @@ describe("PrometheusCall.execute", () => {
     const r = await new PrometheusCall(makeMonitor({ down: { operator: ">", value: 0.95 } })).execute();
     expect(r.status).toBe("DOWN"); // Infinity > 0.95
     expect(r.latency).toBe(0); // non-finite clamped
+    expect(r.type).toBe("REALTIME");
   });
 
   it("evaluates -Inf against thresholds but charts 0", async () => {
@@ -173,6 +174,15 @@ describe("PrometheusCall.execute", () => {
     const r = await new PrometheusCall(makeMonitor({ down: { operator: "<", value: 0 } })).execute();
     expect(r.status).toBe("DOWN"); // -Infinity < 0
     expect(r.latency).toBe(0);
+    expect(r.type).toBe("REALTIME");
+  });
+
+  it("adds a differently-cased user header alongside the default (exact-case merge)", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", [vec("1")]) });
+    await new PrometheusCall(makeMonitor({ headers: [{ key: "accept", value: "text/plain" }] })).execute();
+    const [, opts] = mockedAxios.mock.calls[0] as [string, any];
+    expect(opts.headers["Accept"]).toBe("application/json"); // default retained
+    expect(opts.headers["accept"]).toBe("text/plain"); // user header added under its own case
   });
 
   it("maps a body-level error (bad PromQL) to ERROR/DOWN with the message", async () => {

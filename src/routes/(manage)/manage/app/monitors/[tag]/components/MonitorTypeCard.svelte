@@ -11,7 +11,14 @@
   import type { GroupMonitorTypeData, MonitoringResult } from "$lib/server/types/monitor.js";
   import { MONITOR_TYPES, type MonitorType } from "$lib/types/monitor.js";
   import { toast } from "svelte-sonner";
-  import { ValidateIpAddress, IsValidHost, IsValidNameServer, IsValidDnsResolver, IsValidURL, IsValidPort } from "$lib/clientTools";
+  import {
+    ValidateIpAddress,
+    IsValidHost,
+    IsValidNameServer,
+    IsValidDnsResolver,
+    IsValidURL,
+    IsValidPort
+  } from "$lib/clientTools";
   import { GAMEDIG_SOCKET_TIMEOUT } from "$lib/anywhere";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
@@ -238,7 +245,11 @@
             if (!validOp || typeof t.value !== "number" || !Number.isFinite(t.value)) return false;
           }
         }
-        if (data.timeout !== undefined && (typeof data.timeout !== "number" || data.timeout < 1)) return false;
+        if (
+          data.timeout !== undefined &&
+          (typeof data.timeout !== "number" || !Number.isFinite(data.timeout) || data.timeout < 1)
+        )
+          return false;
         return true;
       }
 
