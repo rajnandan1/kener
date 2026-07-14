@@ -200,7 +200,10 @@
 
   function unitSuffixFor(tag: string): string {
     const unit = displayByTag.get(tag)?.unit;
-    return unit === undefined ? "ms" : unit;
+    const resolvedUnit = unit === undefined ? "ms" : unit;
+    // "%" joins the number with no space; other non-empty units get a leading space; empty unit is bare.
+    if (resolvedUnit === "") return "";
+    return resolvedUnit === "%" ? resolvedUnit : ` ${resolvedUnit}`;
   }
 
   // Fetch monitoring data
@@ -390,9 +393,8 @@
               </Table.Cell>
               <Table.Cell>
                 {#if row.latency !== null}
-                  <span class="text-sm"
-                    >{row.latency}{unitSuffixFor(row.monitor_tag) ? ` ${unitSuffixFor(row.monitor_tag)}` : ""}</span
-                  >
+                  {@const suffix = unitSuffixFor(row.monitor_tag)}
+                  <span class="text-sm">{row.latency}{suffix}</span>
                 {:else}
                   <span class="text-muted-foreground text-sm">—</span>
                 {/if}

@@ -2,7 +2,7 @@ import { AllRecordTypes } from "../clientTools.js";
 import knexOb from "../../../knexfile.js";
 import crypto from "crypto";
 import GC from "../global-constants.js";
-import { FormatValue, IsCustomUnit } from "$lib/clientTools.js";
+import { FormatValue, IsCustomUnit, DayHasData } from "$lib/clientTools.js";
 import dotenv from "dotenv";
 import type { TimestampStatusCount, UptimeCalculatorResult } from "./db/dbimpl.js";
 import type { MonitorValueDisplay } from "$lib/server/types/db.js";
@@ -496,8 +496,7 @@ function UptimeCalculator(
     latencySum += element.avgLatency;
 
     // Custom units treat 0 as a real reading; a day "has data" when any checks ran.
-    const dayHasData =
-      element.countOfUp + element.countOfDown + element.countOfDegraded + element.countOfMaintenance > 0;
+    const dayHasData = DayHasData(element);
 
     if (customUnit ? dayHasData : element.avgLatency > 0) {
       latencyCount += 1;

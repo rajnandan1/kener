@@ -22,6 +22,8 @@
 
   const displayName = $derived(valueDisplay?.name?.trim() || "Latency");
   const unitSuffix = $derived(valueDisplay?.unit === undefined ? "ms" : valueDisplay.unit);
+  // "%" joins the number with no space; other non-empty units get a leading space; empty unit is bare.
+  const valueSuffix = $derived(unitSuffix === "" ? "" : unitSuffix === "%" ? unitSuffix : ` ${unitSuffix}`);
 
   // Types
   interface MonitoringData {
@@ -150,7 +152,7 @@
                 </Table.Cell>
                 <Table.Cell>
                   {#if log.latency !== null}
-                    <span class="text-sm">{log.latency}{unitSuffix ? ` ${unitSuffix}` : ""}</span>
+                    <span class="text-sm">{log.latency}{valueSuffix}</span>
                   {:else}
                     <span class="text-muted-foreground text-sm">—</span>
                   {/if}

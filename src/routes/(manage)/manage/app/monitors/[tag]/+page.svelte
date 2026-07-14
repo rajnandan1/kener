@@ -58,7 +58,7 @@
   let valueDisplayForm = $state({
     name: "",
     unit: "",
-    decimals: undefined as number | undefined
+    decimals: undefined as number | null | undefined
   });
   let parsedValueDisplay = $state<MonitorValueDisplay | null>(null);
 

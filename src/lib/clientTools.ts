@@ -5,6 +5,13 @@ function IsCustomUnit(display?: MonitorValueDisplay | null): boolean {
   return typeof display?.unit === "string" && display.unit !== "ms";
 }
 
+// Custom units treat 0 as a real reading; a day "has data" when any checks ran.
+function DayHasData(
+  d: Pick<TimestampStatusCount, "countOfUp" | "countOfDown" | "countOfDegraded" | "countOfMaintenance">,
+): boolean {
+  return d.countOfUp + d.countOfDown + d.countOfDegraded + d.countOfMaintenance > 0;
+}
+
 function clampDecimals(d: unknown): number | undefined {
   if (typeof d !== "number" || !Number.isFinite(d)) return undefined;
   return Math.min(4, Math.max(0, Math.round(d)));
@@ -441,6 +448,7 @@ export {
   GetStatusBgColor,
   FormatValue,
   IsCustomUnit,
+  DayHasData,
   ParseLatency,
   GetInitials,
 };

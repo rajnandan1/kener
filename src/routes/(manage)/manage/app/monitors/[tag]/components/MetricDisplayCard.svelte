@@ -16,7 +16,7 @@
     valueDisplayForm: {
       name: string;
       unit: string;
-      decimals: number | undefined;
+      decimals: number | null | undefined;
     };
     onSaved?: (valueDisplay: MonitorValueDisplay | undefined) => void;
   }
@@ -26,7 +26,7 @@
   let saving = $state(false);
 
   const isDecimalsValid = $derived(
-    valueDisplayForm.decimals === undefined ||
+    valueDisplayForm.decimals == null ||
       (typeof valueDisplayForm.decimals === "number" &&
         Number.isInteger(valueDisplayForm.decimals) &&
         valueDisplayForm.decimals >= 0 &&

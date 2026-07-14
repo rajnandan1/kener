@@ -8,7 +8,7 @@
   import type { TimestampStatusCount } from "$lib/server/types/db";
   import { t } from "$lib/stores/i18n";
   import clientResolver from "$lib/client/resolver.js";
-  import { IsCustomUnit } from "$lib/clientTools";
+  import { IsCustomUnit, DayHasData } from "$lib/clientTools";
   interface Props {
     data: {
       monitorTag: string;
@@ -43,10 +43,7 @@
   // Transform data for chart component
   let latencyChartData = $derived(
     displayData
-      .filter(
-        (d: TimestampStatusCount) =>
-          !customUnit || d.countOfUp + d.countOfDown + d.countOfDegraded + d.countOfMaintenance > 0
-      )
+      .filter((d: TimestampStatusCount) => !customUnit || DayHasData(d))
       .map((d: TimestampStatusCount) => ({
         date: new Date(d.ts * 1000),
         value: d[metricToKeyMap[data.metric] as keyof TimestampStatusCount] || 0

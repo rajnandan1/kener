@@ -9,7 +9,7 @@ import {
   GetUpcomingMaintenanceEventsForMonitorList,
 } from "$lib/server/controllers/dashboardController.js";
 import type { TimestampStatusCount } from "$lib/server/types/db";
-import { GetNowTimestampUTC, UptimeCalculator } from "$lib/server/tool";
+import { GetNowTimestampUTC } from "$lib/server/tool";
 import GC from "$lib/global-constants.js";
 import { FormatValue, GetStatusColor, GetStatusSummary } from "$lib/clientTools";
 import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";

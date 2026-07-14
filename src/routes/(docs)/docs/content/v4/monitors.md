@@ -118,11 +118,11 @@ Every check records a numeric value alongside its status (response time, queue d
 
 Open an existing monitor in `/manage/monitors` and expand the **Metric Display** section (available once the monitor is saved). All three settings are optional and saved together as `value_display` in the monitor's settings.
 
-| Setting      | Values                          | Default      | Effect                                                                                                        |
-| ------------ | ------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------- |
-| Display name | text, up to 64 chars            | `Latency`    | Replaces "Latency" in the trend header, metric toggle, stat captions, and day-detail tab, e.g. "Queue length" |
-| Unit         | text, up to 32 chars, or `none` | `ms`         | Suffix shown after the number — see below                                                                     |
-| Decimals     | integer `0`–`4`, or empty       | empty (auto) | Fixed decimal places; empty rounds to up to 2 decimals and trims trailing zeros                               |
+| Setting      | Values                          | Default      | Effect                                                                                                                                                                |
+| ------------ | ------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Display name | text, up to 64 chars            | `Latency`    | Replaces "Latency" in the trend header, metric toggle, stat captions, and day-detail tab, e.g. "Queue length"                                                         |
+| Unit         | text, up to 32 chars, or `none` | `ms`         | Suffix shown after the number — see below                                                                                                                             |
+| Decimals     | integer `0`–`4`, or empty       | empty (auto) | Fixed decimal places; empty rounds to up to 2 decimals and trims trailing zeros. Applies to custom units only — `ms` readings always use the auto-scaled format below |
 
 ### `ms` vs. custom units {#ms-vs-custom}
 
@@ -134,8 +134,8 @@ Leaving Unit empty (or set to `ms`) keeps the legacy latency behavior everywhere
 Any other unit switches to plain-number formatting:
 
 - No auto-scaling — the raw stored number is shown with the configured Decimals.
-- `0` is a **valid reading** and is charted/displayed like any other value.
-- The literal input `none` clears the suffix entirely (bare number).
+- `0` is a **valid reading** and is charted/displayed like any other value. Failed checks that record no reading are aggregated as `0` in day-level stats for custom-unit monitors, while per-minute data correctly treats them as no data.
+- The literal input `none` (case-insensitive) clears the suffix entirely (bare number).
 - `%` and an empty unit join the number with no space (`97.3%`); every other unit gets a space (`42 items`).
 
 > [!NOTE]
