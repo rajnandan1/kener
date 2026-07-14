@@ -144,8 +144,8 @@
         </div>
       </div>
       <p class="text-muted-foreground text-xs">
-        {displayName} will be randomly generated as value ± deviation for each data point. Set deviation to 0 for a
-        fixed value.
+        {displayName} will be randomly generated as value ± deviation for each data point. Set deviation to 0 for a fixed
+        value.
       </p>
       {#if modifyDataError}
         <p class="text-destructive text-sm">{modifyDataError}</p>

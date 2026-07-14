@@ -110,20 +110,32 @@
   <Card.Header>
     <Card.Title>Metric Display</Card.Title>
     <Card.Description>
-      Configure how this monitor's numeric value is displayed. Leave everything empty for the default latency display
-      in milliseconds.
+      Configure how this monitor's numeric value is displayed. Leave everything empty for the default latency display in
+      milliseconds.
     </Card.Description>
   </Card.Header>
   <Card.Content class="space-y-4">
     <div class="grid grid-cols-3 gap-4">
       <div class="space-y-2">
         <Label for="metric-display-name">Display name</Label>
-        <Input id="metric-display-name" type="text" maxlength={64} placeholder="Latency" bind:value={valueDisplayForm.name} />
+        <Input
+          id="metric-display-name"
+          type="text"
+          maxlength={64}
+          placeholder="Latency"
+          bind:value={valueDisplayForm.name}
+        />
         <p class="text-muted-foreground text-xs">Replaces "Latency" in charts and labels</p>
       </div>
       <div class="space-y-2">
         <Label for="metric-display-unit">Unit</Label>
-        <Input id="metric-display-unit" type="text" maxlength={32} placeholder="ms" bind:value={valueDisplayForm.unit} />
+        <Input
+          id="metric-display-unit"
+          type="text"
+          maxlength={32}
+          placeholder="ms"
+          bind:value={valueDisplayForm.unit}
+        />
         <p class="text-muted-foreground text-xs">e.g. items, %, req/s — enter "none" for a bare number</p>
       </div>
       <div class="space-y-2">
@@ -143,8 +155,8 @@
     </div>
     <p class="text-muted-foreground text-xs">
       With the default "ms" unit, values keep the automatic ms/s/m/h scaling and readings of 0 are treated as no data.
-      Any other unit shows plain numbers where 0 is a valid reading. Note: raw readings are stored with 2 decimal
-      places on MySQL.
+      Any other unit shows plain numbers where 0 is a valid reading. Note: raw readings are stored with 2 decimal places
+      on MySQL.
     </p>
   </Card.Content>
   <Card.Footer class="flex justify-end">

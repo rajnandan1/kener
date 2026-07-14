@@ -158,7 +158,8 @@
               valueDisplayForm = {
                 name: settings.value_display.name ?? "",
                 unit: settings.value_display.unit === "" ? "none" : (settings.value_display.unit ?? ""),
-                decimals: typeof settings.value_display.decimals === "number" ? settings.value_display.decimals : undefined
+                decimals:
+                  typeof settings.value_display.decimals === "number" ? settings.value_display.decimals : undefined
               };
             }
           } catch (e) {
@@ -394,7 +395,12 @@
         <Accordion.Item value="metric-display">
           <Accordion.Trigger>Metric Display</Accordion.Trigger>
           <Accordion.Content class="flex flex-col gap-4 text-balance">
-            <MetricDisplayCard bind:monitor {typeData} bind:valueDisplayForm onSaved={(vd) => (parsedValueDisplay = vd ?? null)} />
+            <MetricDisplayCard
+              bind:monitor
+              {typeData}
+              bind:valueDisplayForm
+              onSaved={(vd) => (parsedValueDisplay = vd ?? null)}
+            />
           </Accordion.Content>
         </Accordion.Item>
       {/if}

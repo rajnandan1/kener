@@ -390,7 +390,9 @@
               </Table.Cell>
               <Table.Cell>
                 {#if row.latency !== null}
-                  <span class="text-sm">{row.latency}{unitSuffixFor(row.monitor_tag) ? ` ${unitSuffixFor(row.monitor_tag)}` : ""}</span>
+                  <span class="text-sm"
+                    >{row.latency}{unitSuffixFor(row.monitor_tag) ? ` ${unitSuffixFor(row.monitor_tag)}` : ""}</span
+                  >
                 {:else}
                   <span class="text-muted-foreground text-sm">—</span>
                 {/if}
