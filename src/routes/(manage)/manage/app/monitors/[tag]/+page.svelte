@@ -368,7 +368,7 @@
           <Accordion.Trigger>Configuration</Accordion.Trigger>
           <Accordion.Content class="flex flex-col gap-4 text-balance">
             <!-- Monitor Type Configuration Card -->
-            <MonitorTypeCard bind:monitor bind:typeData {availableMonitors} />
+            <MonitorTypeCard bind:monitor bind:typeData {availableMonitors} valueDisplay={parsedValueDisplay} />
           </Accordion.Content>
         </Accordion.Item>
       {/if}

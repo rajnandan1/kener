@@ -17,6 +17,7 @@
   // State
   let descriptionExpanded = $state(false);
   let showInlineEvents = $derived(data.eventDisplaySettings?.showInlineEvents === true);
+  let customName = $derived(data.monitorValueDisplay?.name?.trim() || "");
 
   function toggleDescription(expanded: boolean) {
     descriptionExpanded = expanded;
@@ -125,7 +126,9 @@
           <p class="text-right text-2xl font-semibold">
             {data.monitorLastLatency}
           </p>
-          <p class="text-muted-foreground text-xs">{$t("Latest Latency")}</p>
+          <p class="text-muted-foreground text-xs">
+            {customName ? $t("Latest %name", { name: customName }) : $t("Latest Latency")}
+          </p>
         </div>
       {/if}
     </div>

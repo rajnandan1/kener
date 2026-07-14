@@ -24,6 +24,8 @@
 
   let { data, label = $t("Avg Latency"), height = 128, class: className = "", valueDisplay = null }: Props = $props();
 
+  let customName = $derived(valueDisplay?.name?.trim() || "");
+
   // Chart config
   let chartConfig = $derived({
     value: {
@@ -103,7 +105,11 @@
     </Chart.Container>
   {:else}
     <div class="flex items-center justify-center" style="height: {height}px;">
-      <p class="text-muted-foreground text-sm">{$t("No latency data available for this day")}</p>
+      <p class="text-muted-foreground text-sm">
+        {customName
+          ? $t("No %name data available for this day", { name: customName })
+          : $t("No latency data available for this day")}
+      </p>
     </div>
   {/if}
 </div>

@@ -364,11 +364,17 @@
           </div>
         {:else if dayLatencyData && chartData.length === 0}
           <div class="py-8 text-center">
-            <p class="text-muted-foreground">{$t("No latency data available for this day")}</p>
+            <p class="text-muted-foreground">
+              {customName
+                ? $t("No %name data available for this day", { name: customName })
+                : $t("No latency data available for this day")}
+            </p>
           </div>
         {:else}
           <div class="py-8 text-center">
-            <p class="text-muted-foreground">{$t("Failed to load latency data")}</p>
+            <p class="text-muted-foreground">
+              {customName ? $t("Failed to load %name data", { name: customName }) : $t("Failed to load latency data")}
+            </p>
           </div>
         {/if}
       </Tabs.Content>

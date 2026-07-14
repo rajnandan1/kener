@@ -107,6 +107,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       textClass: GetStatusColor(item),
       monitorLastStatusTimestamp: item.ts,
       monitorLastLatency: FormatValue(lastStatus?.latency ?? null, monitor.monitor_settings_json?.value_display),
+      monitorValueDisplay: monitor.monitor_settings_json?.value_display ?? null,
       ongoingIncidents,
       ongoingMaintenances,
       upcomingMaintenances,

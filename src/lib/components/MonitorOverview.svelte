@@ -154,7 +154,9 @@
       <div>
         <Card.Title class="text-base font-medium">{dayOptions[selectedDayIndex].text}</Card.Title>
         <Card.Description class="text-xs">
-          {$t("Status history and latency trend")}
+          {customName
+            ? $t("Status history and %name trend", { name: customName })
+            : $t("Status history and latency trend")}
         </Card.Description>
       </div>
       {#if !loading && overviewData}
