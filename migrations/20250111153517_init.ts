@@ -6,7 +6,7 @@ export async function up(knex: Knex): Promise<void> {
       table.string("monitor_tag", 255).notNullable();
       table.integer("timestamp").notNullable();
       table.text("status");
-      // TODO(next-major): rename column latency -> value. Stores any numeric metric, not just milliseconds.
+      // TODO(next-major): rename column latency -> value. Stores any numeric metric, not just milliseconds. (and potentially allow multiple metrics)
       table.float("latency", 8, 2);
       table.text("type");
       table.primary(["monitor_tag", "timestamp"]);
