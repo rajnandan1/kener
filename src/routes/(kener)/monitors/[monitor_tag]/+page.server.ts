@@ -58,14 +58,14 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   //use uptime calculator tool to parse
   let item: TimestampStatusCount = {
     ts: lastStatus ? lastStatus.timestamp : GetNowTimestampUTC(),
-    countOfUp: lastStatus && lastStatus.status === GC.UP ? 1 : 0,
-    countOfDown: lastStatus && lastStatus.status === GC.DOWN ? 1 : 0,
-    countOfDegraded: lastStatus && lastStatus.status === GC.DEGRADED ? 1 : 0,
-    countOfMaintenance: lastStatus && lastStatus.status === GC.MAINTENANCE ? 1 : 0,
-    avgLatency: lastStatus && lastStatus.latency ? lastStatus.latency : 0,
-    maxLatency: lastStatus && lastStatus.latency ? lastStatus.latency : 0,
-    minLatency: lastStatus && lastStatus.latency ? lastStatus.latency : 0,
-    latencyCount: lastStatus && lastStatus.latency !== null ? 1 : 0,
+    countOfUp: lastStatus?.status === GC.UP ? 1 : 0,
+    countOfDown: lastStatus?.status === GC.DOWN ? 1 : 0,
+    countOfDegraded: lastStatus?.status === GC.DEGRADED ? 1 : 0,
+    countOfMaintenance: lastStatus?.status === GC.MAINTENANCE ? 1 : 0,
+    avgLatency: lastStatus?.latency ?? 0,
+    maxLatency: lastStatus?.latency ?? 0,
+    minLatency: lastStatus?.latency ?? 0,
+    latencyCount: lastStatus?.latency != null ? 1 : 0,
   };
 
   //get status summary
