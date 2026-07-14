@@ -2,9 +2,9 @@
   import { onMount } from "svelte";
   import { mode } from "mode-watcher";
   import { page } from "$app/state";
-  import { GetStatusSummary, ParseLatency } from "$lib/clientTools";
+  import { GetStatusSummary, FormatValue, IsCustomUnit } from "$lib/clientTools";
   import MonitorDayDetail from "$lib/components/MonitorDayDetail.svelte";
-  import type { TimestampStatusCount } from "$lib/server/types/db";
+  import type { MonitorValueDisplay, TimestampStatusCount } from "$lib/server/types/db";
   import { t } from "$lib/stores/i18n";
   import { formatDate } from "$lib/stores/datetime";
   import trackEvent from "$lib/beacon";
@@ -16,9 +16,24 @@
     radius?: number;
     class?: string;
     disableClick?: boolean;
+    valueDisplay?: MonitorValueDisplay | null;
   }
 
-  let { data, monitorTag, barHeight = 40, radius = 8, class: className = "", disableClick = false }: Props = $props();
+  let {
+    data,
+    monitorTag,
+    barHeight = 40,
+    radius = 8,
+    class: className = "",
+    disableClick = false,
+    valueDisplay = null
+  }: Props = $props();
+
+  const customUnit = $derived(IsCustomUnit(valueDisplay));
+
+  function dayHasData(d: TimestampStatusCount): boolean {
+    return d.countOfUp + d.countOfDown + d.countOfDegraded + d.countOfMaintenance > 0;
+  }
 
   // Canvas state
   let canvas = $state<HTMLCanvasElement | null>(null);
@@ -376,16 +391,16 @@
       <span class={getStatusColor(hoveredBar.data)}>{$t(GetStatusSummary(hoveredBar.data))}</span>
       <span class="text-muted-foreground">@</span>
       {$formatDate(hoveredBar.data.ts, page.data.dateAndTimeFormat.dateOnly)}
-      {#if hoveredBar.data.avgLatency > 0}
+      {#if customUnit ? dayHasData(hoveredBar.data) : hoveredBar.data.avgLatency > 0}
         <span class="text-muted-foreground ml-1">|</span>
-        <span class="ml-1">{ParseLatency(hoveredBar.data.avgLatency)}</span>
+        <span class="ml-1">{FormatValue(hoveredBar.data.avgLatency, valueDisplay)}</span>
       {/if}
     </div>
   {/if}
 </div>
 
 <!-- Day Detail Dialog -->
-<MonitorDayDetail bind:open={dialogOpen} {monitorTag} {selectedDay} />
+<MonitorDayDetail bind:open={dialogOpen} {monitorTag} {selectedDay} {valueDisplay} />
 
 <style>
   canvas {

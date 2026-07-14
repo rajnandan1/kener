@@ -53,4 +53,40 @@ describe("StatusBarCalendar", () => {
 
     await expect.element(screen.getByText("Partial System Outage")).toBeInTheDocument();
   });
+
+  it("formats the tooltip value with a custom unit", async () => {
+    const data = [
+      day({ countOfUp: 100, avgLatency: 42 }),
+      day({ countOfUp: 100, avgLatency: 42 }),
+      day({ countOfUp: 100, avgLatency: 42 }),
+    ];
+    const screen = await render(StatusBarCalendar, {
+      data,
+      monitorTag: "test-monitor",
+      disableClick: true,
+      valueDisplay: { name: "Queue length", unit: "items" },
+    });
+
+    await screen.getByLabelText("Status calendar showing 3-day uptime data").hover();
+
+    await expect.element(screen.getByText("42 items")).toBeInTheDocument();
+  });
+
+  it("shows a zero reading for custom units instead of hiding it", async () => {
+    const data = [
+      day({ countOfUp: 100, avgLatency: 0 }),
+      day({ countOfUp: 100, avgLatency: 0 }),
+      day({ countOfUp: 100, avgLatency: 0 }),
+    ];
+    const screen = await render(StatusBarCalendar, {
+      data,
+      monitorTag: "test-monitor",
+      disableClick: true,
+      valueDisplay: { unit: "items" },
+    });
+
+    await screen.getByLabelText("Status calendar showing 3-day uptime data").hover();
+
+    await expect.element(screen.getByText("0 items")).toBeInTheDocument();
+  });
 });
