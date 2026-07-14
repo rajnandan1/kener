@@ -177,17 +177,20 @@ export const t = derived(i18n, ($i18n) => {
     try {
       let str = $i18n.translations[key];
 
-      // Replace placeholders in the string using the args object
-      if (str && typeof str === "string") {
+      //warn if missing translation
+      if (!str) {
+        console.warn(`Missing translation for key: "${key}"`);
+      }
+
+      // Fall back to the key itself, then replace placeholders either way so
+      // interpolated keys (e.g. "Avg %name") degrade gracefully in locales
+      // that don't carry them yet.
+      str = str || key;
+      if (typeof str === "string") {
         str = str.replace(/%\w+/g, (placeholder) => {
           const argKey = placeholder.slice(1); // Remove the `%` to get the key
           return args[argKey] !== undefined ? args[argKey] : placeholder;
         });
-      }
-
-      //warn if missing translation
-      if (!str) {
-        console.warn(`Missing translation for key: "${key}"`);
       }
 
       return str || key;
