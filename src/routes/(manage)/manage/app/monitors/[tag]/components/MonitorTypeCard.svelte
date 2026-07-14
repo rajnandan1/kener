@@ -27,7 +27,8 @@
     MonitorGroup,
     MonitorGamedig,
     MonitorNone,
-    MonitorGrpc
+    MonitorGrpc,
+    MonitorPrometheus
   } from "../types/index.js";
 
   interface Props {
@@ -109,7 +110,8 @@
     SQL: "Database",
     HEARTBEAT: "Heartbeat",
     GAMEDIG: "Game Server",
-    GRPC: "gRPC Health"
+    GRPC: "gRPC Health",
+    PROMETHEUS: "Prometheus"
   };
 
   // Validation for each monitor type
@@ -225,6 +227,21 @@
         return true;
       }
 
+      case "PROMETHEUS": {
+        const data = typeData as any;
+        if (!data.url || !IsValidURL(data.url)) return false;
+        if (!data.query || !data.query.trim()) return false;
+        for (const key of ["down", "degraded"] as const) {
+          const t = data[key];
+          if (t !== undefined && t !== null) {
+            const validOp = [">", ">=", "<", "<=", "==", "!="].includes(t.operator);
+            if (!validOp || typeof t.value !== "number" || !Number.isFinite(t.value)) return false;
+          }
+        }
+        if (data.timeout !== undefined && (typeof data.timeout !== "number" || data.timeout < 1)) return false;
+        return true;
+      }
+
       default:
         return true;
     }
@@ -334,6 +351,8 @@
         <MonitorGamedig bind:data={typeData} />
       {:else if monitor.monitor_type === "GRPC"}
         <MonitorGrpc bind:data={typeData} />
+      {:else if monitor.monitor_type === "PROMETHEUS"}
+        <MonitorPrometheus bind:data={typeData} />
       {:else if monitor.monitor_type === "NONE"}
         <MonitorNone bind:data={typeData} />
       {/if}
