@@ -21,6 +21,7 @@ const parseMonitorSettings = (value: string | null): ParsedMonitorSettings => {
   }
 };
 
+/** Fills gaps in `rawUptimeData` with zeroed entries so every day in `[startTime, startTime + days)` is present. */
 const fillMissingUptimeData = (
   rawUptimeData: TimestampStatusCount[],
   startTime: number,
@@ -73,6 +74,7 @@ export const buildMonitorBarResponse = async (
   );
 };
 
+/** Synchronous core of `buildMonitorBarResponse`: assembles a `MonitorBarResponse` from already-fetched raw uptime data. */
 export const buildMonitorBarResponseFromRawData = (
   monitor: MonitorRecord,
   rawUptimeData: TimestampStatusCount[],

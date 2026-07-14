@@ -18,6 +18,7 @@ function DayHasReading(d: Pick<TimestampStatusCount, "latencyCount">): boolean {
   return d.latencyCount > 0;
 }
 
+/** Clamps a decimals value to an integer in [0, 4]; returns undefined for non-finite/non-number input. */
 function clampDecimals(d: unknown): number | undefined {
   if (typeof d !== "number" || !Number.isFinite(d)) return undefined;
   return Math.min(4, Math.max(0, Math.round(d)));
