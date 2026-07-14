@@ -93,7 +93,8 @@ export interface MonitorSharingOptions {
 }
 /**
  * Per-monitor override for how latency/value readings are labeled and formatted.
- * Absent fields fall back to the legacy latency defaults (name "Latency", unit "ms", auto decimals).
+ * Absent name/unit fall back to the legacy latency defaults ("Latency", "ms" with ms/s/m/h scaling).
+ * decimals only applies to custom units: 0-4 fixed digits, or absent for auto (up to 2, trailing zeros trimmed).
  */
 export interface MonitorValueDisplay {
   name?: string;

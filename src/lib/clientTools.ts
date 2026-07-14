@@ -28,6 +28,7 @@ function clampDecimals(d: unknown): number | undefined {
  * Without a custom unit, mirrors the legacy latency formatting (ms/s/m/h based on magnitude).
  * With a custom unit, formats the number using `display.decimals` (or up to 2 auto-trimmed digits) and appends `display.unit`.
  * @param value Raw numeric value (latency ms, or a custom-unit reading); null/undefined/NaN render as "".
+ * On the legacy path 0 also renders as "" (treated as no data); with a custom unit, 0 is a real reading.
  * @param display Optional per-monitor value-display config (name/unit/decimals).
  */
 function FormatValue(value: number | null | undefined, display?: MonitorValueDisplay | null): string {
