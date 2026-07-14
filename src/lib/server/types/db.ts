@@ -91,6 +91,11 @@ export interface MonitorSharingOptions {
   showShareBadgeMonitor: boolean;
   showShareEmbedMonitor: boolean;
 }
+export interface MonitorValueDisplay {
+  name?: string;
+  unit?: string;
+  decimals?: number;
+}
 export interface MonitorSettings {
   uptime_formula_numerator?: string;
   uptime_formula_denominator?: string;
@@ -99,6 +104,7 @@ export interface MonitorSettings {
     mobile: number;
   };
   sharing_options?: MonitorSharingOptions;
+  value_display?: MonitorValueDisplay;
 }
 
 export interface TimestampStatusCount {

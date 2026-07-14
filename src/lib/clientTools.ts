@@ -1,19 +1,53 @@
-import type { TimestampStatusCount } from "$lib/server/types/db";
+import type { MonitorValueDisplay, TimestampStatusCount } from "$lib/server/types/db";
 import GC, { PAGE_STATUS_MESSAGES, type StatusType } from "$lib/global-constants";
 
-function ParseLatency(latencyMs: number): string {
-  if (!!!latencyMs) {
+function IsCustomUnit(display?: MonitorValueDisplay | null): boolean {
+  return typeof display?.unit === "string" && display.unit !== "ms";
+}
+
+function clampDecimals(d: unknown): number | undefined {
+  if (typeof d !== "number" || !Number.isFinite(d)) return undefined;
+  return Math.min(4, Math.max(0, Math.round(d)));
+}
+
+function FormatValue(value: number | null | undefined, display?: MonitorValueDisplay | null): string {
+  if (!IsCustomUnit(display)) {
+    // Legacy latency path - must stay byte-identical to the historical ParseLatency.
+    const latencyMs = value as number;
+    if (!!!latencyMs) {
+      return "";
+    }
+    if (latencyMs < 1000) {
+      return `${Math.round(latencyMs)}ms`;
+    } else if (latencyMs < 60000) {
+      return `${(latencyMs / 1000).toFixed(2)}s`;
+    } else if (latencyMs < 3600000) {
+      return `${(latencyMs / 60000).toFixed(2)}m`;
+    } else {
+      return `${(latencyMs / 3600000).toFixed(2)}h`;
+    }
+  }
+  if (value === null || value === undefined || Number.isNaN(value)) {
     return "";
   }
-  if (latencyMs < 1000) {
-    return `${Math.round(latencyMs)}ms`;
-  } else if (latencyMs < 60000) {
-    return `${(latencyMs / 1000).toFixed(2)}s`;
-  } else if (latencyMs < 3600000) {
-    return `${(latencyMs / 60000).toFixed(2)}m`;
-  } else {
-    return `${(latencyMs / 3600000).toFixed(2)}h`;
+  const decimals = clampDecimals(display?.decimals);
+  // Locale pinned so strings formatted on the server (badges, monitor-bar) match the client.
+  const formatted = new Intl.NumberFormat("en-US", {
+    useGrouping: false,
+    ...(decimals === undefined
+      ? { maximumFractionDigits: 2 } // "auto": up to 2 fraction digits, trailing zeros trimmed
+      : { minimumFractionDigits: decimals, maximumFractionDigits: decimals }),
+  }).format(value);
+  const unit = display?.unit ?? "";
+  if (unit === "" || unit === "%") {
+    return `${formatted}${unit}`;
   }
+  return `${formatted} ${unit}`;
+}
+
+/** @deprecated Use FormatValue. TODO(next-major): rename latency -> value and remove this alias. */
+function ParseLatency(latencyMs: number): string {
+  return FormatValue(latencyMs);
 }
 
 function siteDataExtractFromDb(data: Record<string, unknown>, obj: Record<string, unknown>): Record<string, unknown> {
@@ -405,6 +439,8 @@ export {
   GetStatusSummary,
   GetStatusColor,
   GetStatusBgColor,
+  FormatValue,
+  IsCustomUnit,
   ParseLatency,
   GetInitials,
 };
