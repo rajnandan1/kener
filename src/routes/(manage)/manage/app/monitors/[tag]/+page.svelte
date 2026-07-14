@@ -394,7 +394,7 @@
         <Accordion.Item value="metric-display">
           <Accordion.Trigger>Metric Display</Accordion.Trigger>
           <Accordion.Content class="flex flex-col gap-4 text-balance">
-            <MetricDisplayCard bind:monitor {typeData} bind:valueDisplayForm />
+            <MetricDisplayCard bind:monitor {typeData} bind:valueDisplayForm onSaved={(vd) => (parsedValueDisplay = vd ?? null)} />
           </Accordion.Content>
         </Accordion.Item>
       {/if}

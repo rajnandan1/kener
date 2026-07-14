@@ -18,9 +18,10 @@
       unit: string;
       decimals: number | undefined;
     };
+    onSaved?: (valueDisplay: MonitorValueDisplay | undefined) => void;
   }
 
-  let { monitor = $bindable(), typeData, valueDisplayForm = $bindable() }: Props = $props();
+  let { monitor = $bindable(), typeData, valueDisplayForm = $bindable(), onSaved }: Props = $props();
 
   let saving = $state(false);
 
@@ -93,6 +94,7 @@
       } else {
         // Update the monitor's settings_json so subsequent saves from other cards stay in sync
         monitor.monitor_settings_json = JSON.stringify(mergedSettings);
+        onSaved?.(valueDisplay);
         toast.success("Metric display settings saved successfully");
       }
     } catch (e) {
