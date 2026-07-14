@@ -62,7 +62,7 @@ export default defineConfig(({ mode }) => {
     test: {
       projects: [
         {
-          extends: "./vite.config.ts",
+          extends: true,
           test: {
             name: "server",
             environment: "node",
@@ -71,7 +71,7 @@ export default defineConfig(({ mode }) => {
           },
         },
         {
-          extends: "./vite.config.ts",
+          extends: true,
           // Pre-bundle the component-test dependency graph: on a cold Vite cache
           // (every CI runner) a mid-run dep-optimization reload can flake the suite.
           optimizeDeps: {
