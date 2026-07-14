@@ -5,7 +5,7 @@
   import * as Select from "$lib/components/ui/select/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import MonitorPicker from "$lib/components/MonitorPicker.svelte";
-  import type { MonitorRecord } from "$lib/server/types/db.js";
+  import type { MonitorRecord, MonitorValueDisplay } from "$lib/server/types/db.js";
   import type { GroupMonitorMember } from "$lib/server/types/monitor.js";
   import ArrowUp from "@lucide/svelte/icons/arrow-up";
   import ArrowDown from "@lucide/svelte/icons/arrow-down";
@@ -31,10 +31,18 @@
   let {
     data = $bindable({} as Record<string, unknown>),
     availableMonitors = [],
-    tag = ""
-  }: { data: Record<string, unknown>; availableMonitors: MonitorRecord[]; tag: string } = $props();
+    tag = "",
+    valueDisplay = null
+  }: {
+    data: Record<string, unknown>;
+    availableMonitors: MonitorRecord[];
+    tag: string;
+    valueDisplay?: MonitorValueDisplay | null;
+  } = $props();
 
   const formData = data as GroupMonitorFormData;
+  const customName = $derived(valueDisplay?.name?.trim() || "");
+  const displayName = $derived(customName || "Latency");
 
   const MIN_SELECTED_MONITORS = 2;
   const MIN_DELAY_MS = 1000;
@@ -204,7 +212,7 @@
     </div>
 
     <div class="space-y-2">
-      <Label for="group-latency-calculation">Latency calculation</Label>
+      <Label for="group-latency-calculation">{displayName} calculation</Label>
       <Select.Root
         type="single"
         value={formData.latencyCalculation}
@@ -223,7 +231,9 @@
           {/each}
         </Select.Content>
       </Select.Root>
-      <p class="text-muted-foreground text-xs">Choose how latency should be derived from the selected monitors.</p>
+      <p class="text-muted-foreground text-xs">
+        Choose how {customName || "latency"} should be derived from the selected monitors.
+      </p>
     </div>
   </div>
 

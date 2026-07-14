@@ -53,7 +53,7 @@
     }
 
     if (modifyDataForm.latency < 0) {
-      modifyDataError = "Latency must be non-negative";
+      modifyDataError = `${displayName} must be non-negative`;
       return;
     }
     if (modifyDataForm.deviation < 0) {

@@ -3,6 +3,7 @@
   "mappings": {
     "%latency %metric %name": "%latency %metric %name",
     "%latency %metric latency": "%latency %metric latency",
+    "%name Embed": "%name Embed",
     "%name Over Time": "%name Over Time",
     "%name Trend": "%name Trend",
     "Affected Monitors (%count)": "Affected Monitors (%count)",
