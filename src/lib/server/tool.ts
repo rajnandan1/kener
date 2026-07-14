@@ -471,6 +471,14 @@ function SafeEvaluateExpression(expression: string): number {
   return result;
 }
 
+/**
+ * Aggregates a window of per-day TimestampStatusCount buckets into an uptime percentage and
+ * formatted latency strings (avg/max/min), using `numeratorStr`/`denominatorStr` as the uptime
+ * formula (falling back to the global defaults when invalid).
+ * `valueDisplay` controls how the latency strings are formatted (see FormatValue) and, for custom
+ * units, gates which days are included in the latency aggregate on `latencyCount` (DayHasReading)
+ * instead of on `avgLatency > 0`, since a custom-unit reading of 0 is a real, non-latency value.
+ */
 function UptimeCalculator(
   data: TimestampStatusCount[],
   numeratorStr?: string,

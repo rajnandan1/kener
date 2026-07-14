@@ -12,6 +12,7 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import type { MonitorValueDisplay } from "$lib/server/types/db.js";
+  import { ValueDisplayLabels } from "$lib/clientTools";
 
   interface Props {
     monitor_tag: string;
@@ -20,8 +21,9 @@
 
   let { monitor_tag, valueDisplay = null }: Props = $props();
 
-  const displayName = $derived(valueDisplay?.name?.trim() || "Latency");
-  const unitSuffix = $derived(valueDisplay?.unit === undefined ? "ms" : valueDisplay.unit);
+  const labels = $derived(ValueDisplayLabels(valueDisplay));
+  const displayName = $derived(labels.displayName);
+  const unitSuffix = $derived(labels.unitSuffix);
   // "%" joins the number with no space; other non-empty units get a leading space; empty unit is bare.
   const valueSuffix = $derived(unitSuffix === "" ? "" : unitSuffix === "%" ? unitSuffix : ` ${unitSuffix}`);
 

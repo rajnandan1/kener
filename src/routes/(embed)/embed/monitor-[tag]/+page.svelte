@@ -30,6 +30,7 @@
   let displayUptime = $derived(overviewData?.uptime ?? "--");
   let displayAvgLatency = $derived(overviewData?.avgLatency ?? "--");
   let displayData = $derived(overviewData?.uptimeData ?? []);
+  let customName = $derived(overviewData?.valueDisplay?.name?.trim() || "");
 
   async function fetchData() {
     loading = true;
@@ -79,9 +80,7 @@
       {#if displayAvgLatency !== "--"}
         <span class=""
           >{displayAvgLatency}
-          {overviewData?.valueDisplay?.name?.trim()
-            ? $t("Avg %name", { name: overviewData.valueDisplay.name.trim() })
-            : $t("Avg Latency")}</span
+          {customName ? $t("Avg %name", { name: customName }) : $t("Avg Latency")}</span
         >
       {/if}
     </div>

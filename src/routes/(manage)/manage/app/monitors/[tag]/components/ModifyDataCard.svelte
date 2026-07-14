@@ -11,6 +11,7 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import type { MonitorValueDisplay } from "$lib/server/types/db.js";
+  import { ValueDisplayLabels } from "$lib/clientTools";
 
   interface Props {
     monitorTag: string;
@@ -19,8 +20,9 @@
 
   let { monitorTag, valueDisplay = null }: Props = $props();
 
-  const displayName = $derived(valueDisplay?.name?.trim() || "Latency");
-  const unitSuffix = $derived(valueDisplay?.unit === undefined ? "ms" : valueDisplay.unit);
+  const labels = $derived(ValueDisplayLabels(valueDisplay));
+  const displayName = $derived(labels.displayName);
+  const unitSuffix = $derived(labels.unitSuffix);
 
   let modifyingData = $state(false);
   let modifyDataError = $state<string | null>(null);

@@ -20,6 +20,7 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import type { MonitorValueDisplay } from "$lib/server/types/db";
+  import { ValueDisplayLabels } from "$lib/clientTools";
 
   // Types
   interface MonitoringData {
@@ -199,11 +200,10 @@
   const displayByTag = $derived(new Map(monitors.map((m) => [m.tag, m.value_display ?? null])));
 
   function unitSuffixFor(tag: string): string {
-    const unit = displayByTag.get(tag)?.unit;
-    const resolvedUnit = unit === undefined ? "ms" : unit;
+    const { unitSuffix } = ValueDisplayLabels(displayByTag.get(tag));
     // "%" joins the number with no space; other non-empty units get a leading space; empty unit is bare.
-    if (resolvedUnit === "") return "";
-    return resolvedUnit === "%" ? resolvedUnit : ` ${resolvedUnit}`;
+    if (unitSuffix === "") return "";
+    return unitSuffix === "%" ? unitSuffix : ` ${unitSuffix}`;
   }
 
   // Fetch monitoring data

@@ -91,6 +91,10 @@ export interface MonitorSharingOptions {
   showShareBadgeMonitor: boolean;
   showShareEmbedMonitor: boolean;
 }
+/**
+ * Per-monitor override for how latency/value readings are labeled and formatted.
+ * Absent fields fall back to the legacy latency defaults (name "Latency", unit "ms", auto decimals).
+ */
 export interface MonitorValueDisplay {
   name?: string;
   unit?: string;

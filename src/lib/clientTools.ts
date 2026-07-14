@@ -1,15 +1,19 @@
 import type { MonitorValueDisplay, TimestampStatusCount } from "$lib/server/types/db";
 import GC, { PAGE_STATUS_MESSAGES, type StatusType } from "$lib/global-constants";
 
+/** True when a unit is present and isn't exactly "ms" (including an explicit empty string ""). */
 function IsCustomUnit(display?: MonitorValueDisplay | null): boolean {
   return typeof display?.unit === "string" && display.unit !== "ms";
 }
 
-// Custom units treat 0 as a real reading, but a bucket whose readings were ALL NULL (e.g. every
-// check in the window failed before recording a value) must not be fabricated into a "0" sample.
-// `latencyCount` is the count of non-NULL `latency` readings the aggregate was built from (SQL
-// COUNT(latency) ignores NULLs, unlike AVG/MIN/MAX which silently collapse an all-NULL bucket to
-// NULL -> 0 downstream) - gate on that instead of on status counts.
+/**
+ * True when a day's aggregate has at least one non-NULL latency reading.
+ * Custom units treat 0 as a real reading, but a bucket whose readings were ALL NULL (e.g. every
+ * check in the window failed before recording a value) must not be fabricated into a "0" sample.
+ * `latencyCount` is the count of non-NULL `latency` readings the aggregate was built from (SQL
+ * COUNT(latency) ignores NULLs, unlike AVG/MIN/MAX which silently collapse an all-NULL bucket to
+ * NULL -> 0 downstream) - gate on that instead of on status counts.
+ */
 function DayHasReading(d: Pick<TimestampStatusCount, "latencyCount">): boolean {
   return d.latencyCount > 0;
 }
@@ -19,6 +23,13 @@ function clampDecimals(d: unknown): number | undefined {
   return Math.min(4, Math.max(0, Math.round(d)));
 }
 
+/**
+ * Formats a monitor's raw value for display.
+ * Without a custom unit, mirrors the legacy latency formatting (ms/s/m/h based on magnitude).
+ * With a custom unit, formats the number using `display.decimals` (or up to 2 auto-trimmed digits) and appends `display.unit`.
+ * @param value Raw numeric value (latency ms, or a custom-unit reading); null/undefined/NaN render as "".
+ * @param display Optional per-monitor value-display config (name/unit/decimals).
+ */
 function FormatValue(value: number | null | undefined, display?: MonitorValueDisplay | null): string {
   if (!IsCustomUnit(display)) {
     // Legacy latency path - must stay byte-identical to the historical ParseLatency.
@@ -57,6 +68,18 @@ function FormatValue(value: number | null | undefined, display?: MonitorValueDis
 /** @deprecated Use FormatValue. TODO(next-major): rename latency -> value and remove this alias. */
 function ParseLatency(latencyMs: number): string {
   return FormatValue(latencyMs);
+}
+
+/**
+ * Admin-facing labels for a monitor's value display config.
+ * displayName falls back to "Latency", unitSuffix to "ms"; an explicitly
+ * empty unit ("" = bare number) is preserved as an empty suffix.
+ */
+function ValueDisplayLabels(display?: MonitorValueDisplay | null): { displayName: string; unitSuffix: string } {
+  return {
+    displayName: display?.name?.trim() || "Latency",
+    unitSuffix: display?.unit === undefined ? "ms" : display.unit,
+  };
 }
 
 function siteDataExtractFromDb(data: Record<string, unknown>, obj: Record<string, unknown>): Record<string, unknown> {
@@ -452,5 +475,6 @@ export {
   IsCustomUnit,
   DayHasReading,
   ParseLatency,
+  ValueDisplayLabels,
   GetInitials,
 };

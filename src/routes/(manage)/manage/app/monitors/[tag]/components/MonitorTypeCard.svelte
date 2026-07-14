@@ -17,7 +17,8 @@
     IsValidNameServer,
     IsValidDnsResolver,
     IsValidURL,
-    IsValidPort
+    IsValidPort,
+    ValueDisplayLabels
   } from "$lib/clientTools";
   import { GAMEDIG_SOCKET_TIMEOUT } from "$lib/anywhere";
   import { resolve } from "$app/paths";
@@ -48,8 +49,9 @@
 
   let { monitor = $bindable(), typeData = $bindable(), availableMonitors, valueDisplay = null }: Props = $props();
 
-  const displayName = $derived(valueDisplay?.name?.trim() || "Latency");
-  const unitSuffix = $derived(valueDisplay?.unit === undefined ? "ms" : valueDisplay.unit);
+  const labels = $derived(ValueDisplayLabels(valueDisplay));
+  const displayName = $derived(labels.displayName);
+  const unitSuffix = $derived(labels.unitSuffix);
   const testResultLabel = $derived(
     unitSuffix === "" ? displayName : `${displayName} (${unitSuffix === "ms" ? "milliseconds" : unitSuffix})`
   );
