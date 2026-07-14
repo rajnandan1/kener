@@ -2,7 +2,7 @@ import { AllRecordTypes } from "../clientTools.js";
 import knexOb from "../../../knexfile.js";
 import crypto from "crypto";
 import GC from "../global-constants.js";
-import { FormatValue, IsCustomUnit, ParseLatency } from "$lib/clientTools.js";
+import { FormatValue, IsCustomUnit } from "$lib/clientTools.js";
 import dotenv from "dotenv";
 import type { TimestampStatusCount, UptimeCalculatorResult } from "./db/dbimpl.js";
 import type { MonitorValueDisplay } from "$lib/server/types/db.js";

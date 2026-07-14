@@ -169,8 +169,8 @@ export default async function post(req: APIServerRequest): Promise<Response> {
 
   return json({
     minutes: minuteData,
-    avgLatency: FormatValue(totalCount > 0 ? totalLatencySum / totalCount : 0, valueDisplay),
-    maxLatency: FormatValue(maxLatency, valueDisplay),
-    minLatency: FormatValue(minLatency, valueDisplay),
+    avgLatency: totalCount > 0 ? FormatValue(totalLatencySum / totalCount, valueDisplay) : "",
+    maxLatency: totalCount > 0 ? FormatValue(maxLatency, valueDisplay) : "",
+    minLatency: totalCount > 0 ? FormatValue(minLatency, valueDisplay) : "",
   });
 }

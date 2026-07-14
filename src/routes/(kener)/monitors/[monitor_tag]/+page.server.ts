@@ -11,7 +11,7 @@ import {
 import type { TimestampStatusCount } from "$lib/server/types/db";
 import { GetNowTimestampUTC, UptimeCalculator } from "$lib/server/tool";
 import GC from "$lib/global-constants.js";
-import { GetStatusColor, GetStatusSummary, ParseLatency } from "$lib/clientTools";
+import { FormatValue, GetStatusColor, GetStatusSummary } from "$lib/clientTools";
 import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
 import type { GroupMonitorTypeData } from "$lib/server/types/monitor";
 
@@ -106,7 +106,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       monitorLastStatus: GetStatusSummary(item),
       textClass: GetStatusColor(item),
       monitorLastStatusTimestamp: item.ts,
-      monitorLastLatency: ParseLatency(item.avgLatency),
+      monitorLastLatency: FormatValue(item.avgLatency, monitor.monitor_settings_json?.value_display),
       ongoingIncidents,
       ongoingMaintenances,
       upcomingMaintenances,
