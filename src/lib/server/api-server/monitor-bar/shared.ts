@@ -44,6 +44,7 @@ const fillMissingUptimeData = (
         avgLatency: 0,
         maxLatency: 0,
         minLatency: 0,
+        latencyCount: 0,
       });
     }
   }

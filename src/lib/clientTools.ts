@@ -5,11 +5,13 @@ function IsCustomUnit(display?: MonitorValueDisplay | null): boolean {
   return typeof display?.unit === "string" && display.unit !== "ms";
 }
 
-// Custom units treat 0 as a real reading; a day "has data" when any checks ran.
-function DayHasData(
-  d: Pick<TimestampStatusCount, "countOfUp" | "countOfDown" | "countOfDegraded" | "countOfMaintenance">,
-): boolean {
-  return d.countOfUp + d.countOfDown + d.countOfDegraded + d.countOfMaintenance > 0;
+// Custom units treat 0 as a real reading, but a bucket whose readings were ALL NULL (e.g. every
+// check in the window failed before recording a value) must not be fabricated into a "0" sample.
+// `latencyCount` is the count of non-NULL `latency` readings the aggregate was built from (SQL
+// COUNT(latency) ignores NULLs, unlike AVG/MIN/MAX which silently collapse an all-NULL bucket to
+// NULL -> 0 downstream) - gate on that instead of on status counts.
+function DayHasReading(d: Pick<TimestampStatusCount, "latencyCount">): boolean {
+  return d.latencyCount > 0;
 }
 
 function clampDecimals(d: unknown): number | undefined {
@@ -448,7 +450,7 @@ export {
   GetStatusBgColor,
   FormatValue,
   IsCustomUnit,
-  DayHasData,
+  DayHasReading,
   ParseLatency,
   GetInitials,
 };

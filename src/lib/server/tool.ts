@@ -2,7 +2,7 @@ import { AllRecordTypes } from "../clientTools.js";
 import knexOb from "../../../knexfile.js";
 import crypto from "crypto";
 import GC from "../global-constants.js";
-import { FormatValue, IsCustomUnit, DayHasData } from "$lib/clientTools.js";
+import { FormatValue, IsCustomUnit, DayHasReading } from "$lib/clientTools.js";
 import dotenv from "dotenv";
 import type { TimestampStatusCount, UptimeCalculatorResult } from "./db/dbimpl.js";
 import type { MonitorValueDisplay } from "$lib/server/types/db.js";
@@ -495,17 +495,18 @@ function UptimeCalculator(
     maintenance += element.countOfMaintenance;
     latencySum += element.avgLatency;
 
-    // Custom units treat 0 as a real reading; a day "has data" when any checks ran.
-    const dayHasData = DayHasData(element);
+    // Custom units treat 0 as a real reading, but a bucket whose readings were all NULL
+    // (element.latencyCount === 0) must not be fabricated into a "0" sample.
+    const dayHasReading = DayHasReading(element);
 
-    if (customUnit ? dayHasData : element.avgLatency > 0) {
+    if (customUnit ? dayHasReading : element.avgLatency > 0) {
       latencyCount += 1;
     }
 
-    if ((customUnit ? dayHasData : !!element.maxLatency) && element.maxLatency > maxLatency) {
+    if ((customUnit ? dayHasReading : !!element.maxLatency) && element.maxLatency > maxLatency) {
       maxLatency = element.maxLatency;
     }
-    if ((customUnit ? dayHasData : !!element.minLatency) && element.minLatency < minLatency) {
+    if ((customUnit ? dayHasReading : !!element.minLatency) && element.minLatency < minLatency) {
       minLatency = element.minLatency;
     }
   }

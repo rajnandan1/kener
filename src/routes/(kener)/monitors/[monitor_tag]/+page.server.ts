@@ -65,6 +65,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     avgLatency: lastStatus && lastStatus.latency ? lastStatus.latency : 0,
     maxLatency: lastStatus && lastStatus.latency ? lastStatus.latency : 0,
     minLatency: lastStatus && lastStatus.latency ? lastStatus.latency : 0,
+    latencyCount: lastStatus && lastStatus.latency !== null ? 1 : 0,
   };
 
   //get status summary

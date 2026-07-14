@@ -172,6 +172,7 @@ describe("UptimeCalculator", () => {
     avgLatency: 0,
     maxLatency: 0,
     minLatency: 0,
+    latencyCount: 0,
     ...overrides,
   });
 
@@ -220,7 +221,7 @@ describe("UptimeCalculator", () => {
   });
 
   it("formats latency strings with a custom unit", () => {
-    const data = [day({ countOfUp: 10, avgLatency: 42, maxLatency: 50, minLatency: 30 })];
+    const data = [day({ countOfUp: 10, avgLatency: 42, maxLatency: 50, minLatency: 30, latencyCount: 10 })];
     const result = UptimeCalculator(data, undefined, undefined, { unit: "items" });
     expect(result.avgLatency).toBe("42 items");
     expect(result.maxLatency).toBe("50 items");
@@ -228,10 +229,11 @@ describe("UptimeCalculator", () => {
   });
 
   it("counts zero-average days as data for custom units", () => {
-    // Day with monitoring activity (countOfUp > 0) but an average value of 0 (empty queue).
+    // Day with monitoring activity (countOfUp > 0) but an average value of 0 (empty queue -
+    // a real reading of 0, not a NULL/no-reading day, so latencyCount is still > 0).
     const data = [
-      day({ countOfUp: 10, avgLatency: 0, maxLatency: 0, minLatency: 0 }),
-      day({ countOfUp: 10, avgLatency: 10, maxLatency: 10, minLatency: 10 }),
+      day({ countOfUp: 10, avgLatency: 0, maxLatency: 0, minLatency: 0, latencyCount: 10 }),
+      day({ countOfUp: 10, avgLatency: 10, maxLatency: 10, minLatency: 10, latencyCount: 10 }),
     ];
     const result = UptimeCalculator(data, undefined, undefined, { unit: "items" });
     expect(result.avgLatency).toBe("5 items"); // (0 + 10) / 2 days with data
@@ -246,6 +248,28 @@ describe("UptimeCalculator", () => {
     ];
     const result = UptimeCalculator(data);
     expect(result.avgLatency).toBe("10ms"); // zero day excluded from the average
+  });
+
+  it("excludes all-NULL-reading days from custom-unit aggregates even though checks ran", () => {
+    // Day 1: checks ran (countOfUp: 10) but every reading was NULL (e.g. failed checks that
+    // never recorded a value) - the SQL aggregate for such a day is NULL, mapped to 0 with
+    // latencyCount 0. It must NOT be treated as a real "0 items" reading.
+    // Day 2: checks ran and recorded real readings.
+    const data = [
+      day({ countOfUp: 10, latencyCount: 0, avgLatency: 0, maxLatency: 0, minLatency: 0 }),
+      day({ countOfUp: 10, latencyCount: 5, avgLatency: 10, maxLatency: 10, minLatency: 10 }),
+    ];
+    const result = UptimeCalculator(data, undefined, undefined, { unit: "items" });
+    expect(result.avgLatency).toBe("10 items"); // NULL day excluded - not (0 + 10) / 2
+    expect(result.minLatency).toBe("10 items"); // NOT "0 items"
+    expect(result.maxLatency).toBe("10 items");
+
+    // Legacy (ms) behavior on the same data is unaffected by this change - it already gated
+    // on avgLatency > 0 / truthy min-max, so it also excludes the zero day, for the same result.
+    const legacyResult = UptimeCalculator(data);
+    expect(legacyResult.avgLatency).toBe("10ms");
+    expect(legacyResult.minLatency).toBe("10ms");
+    expect(legacyResult.maxLatency).toBe("10ms");
   });
 });
 

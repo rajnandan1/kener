@@ -81,6 +81,7 @@ export default async function get(req: APIServerRequest): Promise<Response> {
       avgLatency: row.avgLatency,
       maxLatency: row.maxLatency,
       minLatency: row.minLatency,
+      latencyCount: row.latencyCount,
     });
     aggregatedByTag.set(row.monitor_tag, arr);
   }

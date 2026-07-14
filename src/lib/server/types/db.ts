@@ -116,6 +116,8 @@ export interface TimestampStatusCount {
   avgLatency: number;
   maxLatency: number;
   minLatency: number;
+  /** Count of non-NULL `latency` readings the aggregate was built from (excludes NO_DATA/absent-latency samples). */
+  latencyCount: number;
 }
 
 export interface TimestampStatusCountByMonitor extends TimestampStatusCount {

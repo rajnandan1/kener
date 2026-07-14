@@ -18,7 +18,7 @@
   import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
   import GroupMonitorPopover from "$lib/components/GroupMonitorPopover.svelte";
   import { page } from "$app/state";
-  import { IsCustomUnit, DayHasData } from "$lib/clientTools";
+  import { IsCustomUnit, DayHasReading } from "$lib/clientTools";
   import type { MonitorValueDisplay } from "$lib/server/types/db";
 
   interface Props {
@@ -93,7 +93,7 @@
   let latencyChartData = $derived.by(() => {
     if (!displayData) return [];
     return displayData
-      .filter((d) => !customUnit || DayHasData(d))
+      .filter((d) => !customUnit || DayHasReading(d))
       .map((d) => ({
         date: new Date(d.ts * 1000),
         value: latencyMetric === "maximum" ? d.maxLatency : latencyMetric === "minimum" ? d.minLatency : d.avgLatency

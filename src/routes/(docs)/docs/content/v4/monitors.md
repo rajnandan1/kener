@@ -134,7 +134,7 @@ Leaving Unit empty (or set to `ms`) keeps the legacy latency behavior everywhere
 Any other unit switches to plain-number formatting:
 
 - No auto-scaling — the raw stored number is shown with the configured Decimals.
-- `0` is a **valid reading** and is charted/displayed like any other value. Failed checks that record no reading are aggregated as `0` in day-level stats for custom-unit monitors, while per-minute data correctly treats them as no data.
+- `0` is a **valid reading** and is charted/displayed like any other value. Failed checks that record no reading are excluded from stats as no data, at both the per-minute and day level.
 - The literal input `none` (case-insensitive) clears the suffix entirely (bare number).
 - `%` and an empty unit join the number with no space (`97.3%`); every other unit gets a space (`42 items`).
 
