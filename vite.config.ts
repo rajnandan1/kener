@@ -72,6 +72,11 @@ export default defineConfig(({ mode }) => {
         },
         {
           extends: "./vite.config.ts",
+          // Pre-bundle the component-test dependency graph: on a cold Vite cache
+          // (every CI runner) a mid-run dep-optimization reload can flake the suite.
+          optimizeDeps: {
+            include: ["layerchart", "mode-watcher", "bits-ui", "d3-scale", "d3-shape"],
+          },
           test: {
             name: "client",
             browser: {
