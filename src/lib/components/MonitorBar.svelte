@@ -138,7 +138,7 @@
           monitorTag={tag}
           barHeight={40}
           radius={8}
-          valueDisplay={data.value_display}
+          valueDisplay={data.valueDisplay}
         />
         <div class="flex min-w-0 justify-between gap-3">
           <p class="text-muted-foreground min-w-0 truncate text-xs font-medium">

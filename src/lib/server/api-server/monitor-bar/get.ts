@@ -26,7 +26,7 @@ export interface MonitorBarResponse {
   toTimeStamp: number;
   maxLatency: string;
   minLatency: string;
-  value_display?: MonitorValueDisplay | null;
+  valueDisplay?: MonitorValueDisplay | null;
 }
 
 /**

@@ -7,6 +7,7 @@ import type { MonitorBarResponse } from "./get";
 interface ParsedMonitorSettings {
   uptime_formula_numerator?: string;
   uptime_formula_denominator?: string;
+  // Mirrors the persisted key inside monitor_settings_json (snake_case by storage convention).
   value_display?: MonitorValueDisplay;
 }
 
@@ -99,6 +100,6 @@ export const buildMonitorBarResponseFromRawData = (
     avgLatency: uptimeCalculationResult.avgLatency,
     maxLatency: uptimeCalculationResult.maxLatency,
     minLatency: uptimeCalculationResult.minLatency,
-    value_display: monitorSettings.value_display ?? null,
+    valueDisplay: monitorSettings.value_display ?? null,
   };
 };

@@ -70,7 +70,7 @@
   // Data for calendar/chart comes directly from API
   let displayData = $derived(overviewData?.uptimeData ?? []);
 
-  let valueDisplay = $derived(overviewData?.value_display ?? null);
+  let valueDisplay = $derived(overviewData?.valueDisplay ?? null);
   let customUnit = $derived(IsCustomUnit(valueDisplay));
   let customName = $derived(valueDisplay?.name?.trim() || "");
 

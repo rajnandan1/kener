@@ -37,7 +37,7 @@
     minimum: "minLatency"
   };
   let displayLatency = $derived(overviewData?.[metricToKeyMap[data.metric]] ?? "--");
-  let valueDisplay = $derived(overviewData?.value_display ?? null);
+  let valueDisplay = $derived(overviewData?.valueDisplay ?? null);
   let customUnit = $derived(IsCustomUnit(valueDisplay));
   let customName = $derived(valueDisplay?.name?.trim() || "");
   // Transform data for chart component

@@ -79,8 +79,8 @@
       {#if displayAvgLatency !== "--"}
         <span class=""
           >{displayAvgLatency}
-          {overviewData?.value_display?.name?.trim()
-            ? $t("Avg %name", { name: overviewData.value_display.name.trim() })
+          {overviewData?.valueDisplay?.name?.trim()
+            ? $t("Avg %name", { name: overviewData.valueDisplay.name.trim() })
             : $t("Avg Latency")}</span
         >
       {/if}
@@ -93,7 +93,7 @@
       barHeight={30}
       radius={4}
       disableClick={true}
-      valueDisplay={overviewData?.value_display}
+      valueDisplay={overviewData?.valueDisplay}
     />
   {/if}
 </div>
