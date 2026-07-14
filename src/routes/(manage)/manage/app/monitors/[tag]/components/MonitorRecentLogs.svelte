@@ -11,12 +11,17 @@
   import { onMount } from "svelte";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import type { MonitorValueDisplay } from "$lib/server/types/db.js";
 
   interface Props {
     monitor_tag: string;
+    valueDisplay?: MonitorValueDisplay | null;
   }
 
-  let { monitor_tag }: Props = $props();
+  let { monitor_tag, valueDisplay = null }: Props = $props();
+
+  const displayName = $derived(valueDisplay?.name?.trim() || "Latency");
+  const unitSuffix = $derived(valueDisplay?.unit === undefined ? "ms" : valueDisplay.unit);
 
   // Types
   interface MonitoringData {
@@ -127,7 +132,7 @@
             <Table.Row>
               <Table.Head class="w-44">Timestamp</Table.Head>
               <Table.Head class="w-20">Status</Table.Head>
-              <Table.Head class="w-20">Latency</Table.Head>
+              <Table.Head class="w-20">{displayName}</Table.Head>
               <Table.Head class="w-20">Type</Table.Head>
               <Table.Head>Error</Table.Head>
             </Table.Row>
@@ -145,7 +150,7 @@
                 </Table.Cell>
                 <Table.Cell>
                   {#if log.latency !== null}
-                    <span class="text-sm">{log.latency} ms</span>
+                    <span class="text-sm">{log.latency}{unitSuffix ? ` ${unitSuffix}` : ""}</span>
                   {:else}
                     <span class="text-muted-foreground text-sm">—</span>
                   {/if}

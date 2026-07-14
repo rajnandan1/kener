@@ -10,12 +10,17 @@
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import type { MonitorValueDisplay } from "$lib/server/types/db.js";
 
   interface Props {
     monitorTag: string;
+    valueDisplay?: MonitorValueDisplay | null;
   }
 
-  let { monitorTag }: Props = $props();
+  let { monitorTag, valueDisplay = null }: Props = $props();
+
+  const displayName = $derived(valueDisplay?.name?.trim() || "Latency");
+  const unitSuffix = $derived(valueDisplay?.unit === undefined ? "ms" : valueDisplay.unit);
 
   let modifyingData = $state(false);
   let modifyDataError = $state<string | null>(null);
@@ -130,17 +135,17 @@
           </Select.Root>
         </div>
         <div class="space-y-2">
-          <Label for="latency">Latency (ms)</Label>
+          <Label for="latency">{displayName}{unitSuffix ? ` (${unitSuffix})` : ""}</Label>
           <Input id="latency" type="number" min="0" bind:value={modifyDataForm.latency} placeholder="100" />
         </div>
         <div class="space-y-2">
-          <Label for="deviation">Deviation (ms)</Label>
+          <Label for="deviation">Deviation{unitSuffix ? ` (${unitSuffix})` : ""}</Label>
           <Input id="deviation" type="number" min="0" bind:value={modifyDataForm.deviation} placeholder="0" />
         </div>
       </div>
       <p class="text-muted-foreground text-xs">
-        Latency will be randomly generated as latency ± deviation for each data point. Set deviation to 0 for a fixed
-        latency value.
+        {displayName} will be randomly generated as value ± deviation for each data point. Set deviation to 0 for a
+        fixed value.
       </p>
       {#if modifyDataError}
         <p class="text-destructive text-sm">{modifyDataError}</p>

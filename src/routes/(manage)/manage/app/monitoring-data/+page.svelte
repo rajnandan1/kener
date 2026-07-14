@@ -19,6 +19,7 @@
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import type { MonitorValueDisplay } from "$lib/server/types/db";
 
   // Types
   interface MonitoringData {
@@ -33,6 +34,16 @@
   interface Monitor {
     tag: string;
     name: string;
+    value_display?: MonitorValueDisplay | null;
+  }
+
+  function parseValueDisplay(settingsJson: string | null | undefined): MonitorValueDisplay | null {
+    if (!settingsJson) return null;
+    try {
+      return (JSON.parse(settingsJson) as { value_display?: MonitorValueDisplay }).value_display ?? null;
+    } catch {
+      return null;
+    }
   }
 
   // Helper to format datetime as YYYY-MM-DDTHH:mm for datetime-local input
@@ -174,11 +185,22 @@
       });
       const result = await response.json();
       if (!result.error && Array.isArray(result)) {
-        monitors = result.map((m: { tag: string; name: string }) => ({ tag: m.tag, name: m.name }));
+        monitors = result.map((m: { tag: string; name: string; monitor_settings_json?: string | null }) => ({
+          tag: m.tag,
+          name: m.name,
+          value_display: parseValueDisplay(m.monitor_settings_json)
+        }));
       }
     } catch (error) {
       console.error("Error fetching monitors:", error);
     }
+  }
+
+  const displayByTag = $derived(new Map(monitors.map((m) => [m.tag, m.value_display ?? null])));
+
+  function unitSuffixFor(tag: string): string {
+    const unit = displayByTag.get(tag)?.unit;
+    return unit === undefined ? "ms" : unit;
   }
 
   // Fetch monitoring data
@@ -368,7 +390,7 @@
               </Table.Cell>
               <Table.Cell>
                 {#if row.latency !== null}
-                  <span class="text-sm">{row.latency} ms</span>
+                  <span class="text-sm">{row.latency}{unitSuffixFor(row.monitor_tag) ? ` ${unitSuffixFor(row.monitor_tag)}` : ""}</span>
                 {:else}
                   <span class="text-muted-foreground text-sm">—</span>
                 {/if}
