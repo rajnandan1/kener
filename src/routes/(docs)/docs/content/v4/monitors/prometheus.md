@@ -34,16 +34,16 @@ The charted per-check number is always the **metric value**, not the HTTP round-
 
 ## Configuration fields {#configuration-fields}
 
-| Field                 | Type      | Default  | Notes                                                        |
-| :-------------------- | :-------- | :------- | :------------------------------------------------------------ |
-| `url`                 | `string`  | —        | Required. Prometheus base URL; base paths like `/prom` work   |
-| `query`               | `string`  | —        | Required. PromQL instant query                                |
-| `down`                | `object`  | —        | Optional `{ operator, value }`; matches → DOWN                |
-| `degraded`            | `object`  | —        | Optional `{ operator, value }`; matches → DEGRADED             |
-| `noDataStatus`        | `string`  | `"DOWN"` | Empty-result status: `UP` / `DEGRADED` / `DOWN`                |
-| `headers`             | `array`   | `[]`     | Key/value pairs; `$SECRET` env substitution applies            |
-| `timeout`             | `number`  | `10000`  | Request timeout in ms                                          |
-| `allowSelfSignedCert` | `boolean` | `false`  | Skip TLS certificate verification                              |
+| Field                 | Type      | Default  | Notes                                                       |
+| :-------------------- | :-------- | :------- | :---------------------------------------------------------- |
+| `url`                 | `string`  | —        | Required. Prometheus base URL; base paths like `/prom` work |
+| `query`               | `string`  | —        | Required. PromQL instant query                              |
+| `down`                | `object`  | —        | Optional `{ operator, value }`; matches → DOWN              |
+| `degraded`            | `object`  | —        | Optional `{ operator, value }`; matches → DEGRADED          |
+| `noDataStatus`        | `string`  | `"DOWN"` | Empty-result status: `UP` / `DEGRADED` / `DOWN`             |
+| `headers`             | `array`   | `[]`     | Key/value pairs; `$SECRET` env substitution applies         |
+| `timeout`             | `number`  | `10000`  | Request timeout in ms                                       |
+| `allowSelfSignedCert` | `boolean` | `false`  | Skip TLS certificate verification                           |
 
 `operator` is one of `>`, `>=`, `<`, `<=`, `==`, `!=`.
 

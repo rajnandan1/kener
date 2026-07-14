@@ -47,9 +47,7 @@ class PrometheusCall {
   constructor(monitor: PrometheusMonitor) {
     this.monitor = monitor;
     // Secret substitution applies to url + header values only, never the query.
-    this.envSecrets = GetRequiredSecrets(
-      `${monitor.type_data.url} ${JSON.stringify(monitor.type_data.headers || [])}`,
-    );
+    this.envSecrets = GetRequiredSecrets(`${monitor.type_data.url} ${JSON.stringify(monitor.type_data.headers || [])}`);
   }
 
   async execute(): Promise<MonitoringResult> {
@@ -109,9 +107,7 @@ class PrometheusCall {
     // 1b. HTTP non-2xx -> DOWN (surface the prometheus error field if present).
     if (response.status < 200 || response.status >= 300) {
       const promError =
-        response.data && typeof response.data === "object" && response.data.error
-          ? `: ${response.data.error}`
-          : "";
+        response.data && typeof response.data === "object" && response.data.error ? `: ${response.data.error}` : "";
       return this.fail(GC.ERROR, `HTTP ${response.status}${promError}`);
     }
 

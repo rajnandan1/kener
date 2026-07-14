@@ -115,7 +115,8 @@
       </div>
     </div>
     <p class="text-muted-foreground -mt-2 text-xs">
-      DEGRADED when metric value {data.degraded.operator} {data.degraded.value} (checked after DOWN).
+      DEGRADED when metric value {data.degraded.operator}
+      {data.degraded.value} (checked after DOWN).
     </p>
   {/if}
 
