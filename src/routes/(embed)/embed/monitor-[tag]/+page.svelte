@@ -77,11 +77,23 @@
     <div class="flex items-center justify-between text-xs font-semibold">
       <span class="text-foreground">{displayUptime}% {$t("Uptime")}</span>
       {#if displayAvgLatency !== "--"}
-        <span class="">{displayAvgLatency} {$t("Avg Latency")}</span>
+        <span class=""
+          >{displayAvgLatency}
+          {overviewData?.value_display?.name?.trim()
+            ? $t("Avg %name", { name: overviewData.value_display.name.trim() })
+            : $t("Avg Latency")}</span
+        >
       {/if}
     </div>
 
     <!-- Status bar calendar -->
-    <StatusBarCalendar data={displayData} monitorTag={data.monitorTag} barHeight={30} radius={4} disableClick={true} />
+    <StatusBarCalendar
+      data={displayData}
+      monitorTag={data.monitorTag}
+      barHeight={30}
+      radius={4}
+      disableClick={true}
+      valueDisplay={overviewData?.value_display}
+    />
   {/if}
 </div>
