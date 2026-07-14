@@ -1,12 +1,13 @@
 import db from "$lib/server/db/db";
 import GC, { type StatusType } from "$lib/global-constants";
-import type { MonitorRecord, TimestampStatusCount } from "$lib/server/types/db";
+import type { MonitorRecord, MonitorValueDisplay, TimestampStatusCount } from "$lib/server/types/db";
 import { UptimeCalculator } from "$lib/server/tool";
 import type { MonitorBarResponse } from "./get";
 
 interface ParsedMonitorSettings {
   uptime_formula_numerator?: string;
   uptime_formula_denominator?: string;
+  value_display?: MonitorValueDisplay;
 }
 
 const parseMonitorSettings = (value: string | null): ParsedMonitorSettings => {
@@ -83,6 +84,7 @@ export const buildMonitorBarResponseFromRawData = (
     rawUptimeData,
     monitorSettings.uptime_formula_numerator,
     monitorSettings.uptime_formula_denominator,
+    monitorSettings.value_display,
   );
 
   return {
@@ -97,5 +99,6 @@ export const buildMonitorBarResponseFromRawData = (
     avgLatency: uptimeCalculationResult.avgLatency,
     maxLatency: uptimeCalculationResult.maxLatency,
     minLatency: uptimeCalculationResult.minLatency,
+    value_display: monitorSettings.value_display ?? null,
   };
 };

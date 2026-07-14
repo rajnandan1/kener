@@ -2,9 +2,10 @@ import { AllRecordTypes } from "../clientTools.js";
 import knexOb from "../../../knexfile.js";
 import crypto from "crypto";
 import GC from "../global-constants.js";
-import { ParseLatency } from "$lib/clientTools.js";
+import { FormatValue, IsCustomUnit, ParseLatency } from "$lib/clientTools.js";
 import dotenv from "dotenv";
 import type { TimestampStatusCount, UptimeCalculatorResult } from "./db/dbimpl.js";
+import type { MonitorValueDisplay } from "$lib/server/types/db.js";
 dotenv.config();
 const IsValidURL = function (url: string): boolean {
   return /^(http|https):\/\/[^ "]+$/.test(url);
@@ -474,6 +475,7 @@ function UptimeCalculator(
   data: TimestampStatusCount[],
   numeratorStr?: string,
   denominatorStr?: string,
+  valueDisplay?: MonitorValueDisplay,
 ): UptimeCalculatorResult {
   let up = 0;
   let degraded = 0;
@@ -483,6 +485,7 @@ function UptimeCalculator(
   let latencyCount = 0;
   let maxLatency = -Infinity;
   let minLatency = Infinity;
+  const customUnit = IsCustomUnit(valueDisplay);
 
   for (let i = 0; i < data.length; i++) {
     const element = data[i];
@@ -492,14 +495,18 @@ function UptimeCalculator(
     maintenance += element.countOfMaintenance;
     latencySum += element.avgLatency;
 
-    if (element.avgLatency > 0) {
+    // Custom units treat 0 as a real reading; a day "has data" when any checks ran.
+    const dayHasData =
+      element.countOfUp + element.countOfDown + element.countOfDegraded + element.countOfMaintenance > 0;
+
+    if (customUnit ? dayHasData : element.avgLatency > 0) {
       latencyCount += 1;
     }
 
-    if (!!element.maxLatency && element.maxLatency > maxLatency) {
+    if ((customUnit ? dayHasData : !!element.maxLatency) && element.maxLatency > maxLatency) {
       maxLatency = element.maxLatency;
     }
-    if (!!element.minLatency && element.minLatency < minLatency) {
+    if ((customUnit ? dayHasData : !!element.minLatency) && element.minLatency < minLatency) {
       minLatency = element.minLatency;
     }
   }
@@ -529,9 +536,9 @@ function UptimeCalculator(
   const denominator = SafeEvaluateExpression(denominatorExpr);
   return {
     uptime: ParseUptime(numerator, denominator),
-    avgLatency: latencyCount > 0 ? ParseLatency(latencySum / latencyCount) : "",
-    maxLatency: latencyCount > 0 && maxLatency !== -Infinity ? ParseLatency(maxLatency) : "",
-    minLatency: latencyCount > 0 && minLatency !== Infinity ? ParseLatency(minLatency) : "",
+    avgLatency: latencyCount > 0 ? FormatValue(latencySum / latencyCount, valueDisplay) : "",
+    maxLatency: latencyCount > 0 && maxLatency !== -Infinity ? FormatValue(maxLatency, valueDisplay) : "",
+    minLatency: latencyCount > 0 && minLatency !== Infinity ? FormatValue(minLatency, valueDisplay) : "",
   };
 }
 

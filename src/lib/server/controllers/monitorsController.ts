@@ -659,6 +659,7 @@ export const GetBadge = async (badgeType: BadgeType, params: BadgeParams): Promi
         stats,
         m.monitor_settings_json?.uptime_formula_numerator,
         m.monitor_settings_json?.uptime_formula_denominator,
+        m.monitor_settings_json?.value_display,
       );
     }
 

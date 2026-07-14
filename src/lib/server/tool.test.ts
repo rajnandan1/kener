@@ -218,6 +218,35 @@ describe("UptimeCalculator", () => {
     expect(result.uptime).toBe("100");
     expect(result.avgLatency).toBe("100ms"); // (0 + 100) / 1 entry with latency > 0
   });
+
+  it("formats latency strings with a custom unit", () => {
+    const data = [day({ countOfUp: 10, avgLatency: 42, maxLatency: 50, minLatency: 30 })];
+    const result = UptimeCalculator(data, undefined, undefined, { unit: "items" });
+    expect(result.avgLatency).toBe("42 items");
+    expect(result.maxLatency).toBe("50 items");
+    expect(result.minLatency).toBe("30 items");
+  });
+
+  it("counts zero-average days as data for custom units", () => {
+    // Day with monitoring activity (countOfUp > 0) but an average value of 0 (empty queue).
+    const data = [
+      day({ countOfUp: 10, avgLatency: 0, maxLatency: 0, minLatency: 0 }),
+      day({ countOfUp: 10, avgLatency: 10, maxLatency: 10, minLatency: 10 }),
+    ];
+    const result = UptimeCalculator(data, undefined, undefined, { unit: "items" });
+    expect(result.avgLatency).toBe("5 items"); // (0 + 10) / 2 days with data
+    expect(result.minLatency).toBe("0 items");
+    expect(result.maxLatency).toBe("10 items");
+  });
+
+  it("still hides zero-average days on the legacy ms path", () => {
+    const data = [
+      day({ countOfUp: 10, avgLatency: 0 }),
+      day({ countOfUp: 10, avgLatency: 10, maxLatency: 10, minLatency: 10 }),
+    ];
+    const result = UptimeCalculator(data);
+    expect(result.avgLatency).toBe("10ms"); // zero day excluded from the average
+  });
 });
 
 describe("ValidateIpAddress", () => {
