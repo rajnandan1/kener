@@ -64,3 +64,164 @@ describe("matchesThreshold", () => {
     expect(matchesThreshold(-Infinity, { operator: "<", value: 0 })).toBe(true);
   });
 });
+
+// --- Cycle B: PrometheusCall.execute() ------------------------------------
+describe("PrometheusCall.execute", () => {
+  it("strips trailing slashes and appends /api/v1/query, POSTing the urlencoded query", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", [vec("1")]) });
+    await new PrometheusCall(makeMonitor({ url: "https://prom.example.com///", query: "up == 1" })).execute();
+    const [calledUrl, opts] = mockedAxios.mock.calls[0] as [string, any];
+    expect(calledUrl).toBe("https://prom.example.com/api/v1/query");
+    expect(opts.method).toBe("POST");
+    expect(opts.data).toBe("query=up%20%3D%3D%201");
+  });
+
+  it("works with a base-path url", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", [vec("1")]) });
+    await new PrometheusCall(makeMonitor({ url: "https://host/prom/" })).execute();
+    const [calledUrl] = mockedAxios.mock.calls[0] as [string, any];
+    expect(calledUrl).toBe("https://host/prom/api/v1/query");
+  });
+
+  it("merges default headers with user headers (user wins on collision)", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", [vec("1")]) });
+    await new PrometheusCall(
+      makeMonitor({
+        headers: [
+          { key: "Accept", value: "text/plain" },
+          { key: "X-Token", value: "abc" },
+        ],
+      }),
+    ).execute();
+    const [, opts] = mockedAxios.mock.calls[0] as [string, any];
+    expect(opts.headers["User-Agent"]).toMatch(/^Kener\//);
+    expect(opts.headers["Content-Type"]).toBe("application/x-www-form-urlencoded");
+    expect(opts.headers["Accept"]).toBe("text/plain"); // user override wins
+    expect(opts.headers["X-Token"]).toBe("abc");
+  });
+
+  it("parses a scalar result", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("scalar", [1719999999, "0.42"]) });
+    const r = await new PrometheusCall(makeMonitor()).execute();
+    expect(r.status).toBe("UP");
+    expect(r.latency).toBe(0.42);
+    expect(r.type).toBe("REALTIME");
+  });
+
+  it("parses the first series of a multi-series vector result", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", [vec("3"), vec("9")]) });
+    const r = await new PrometheusCall(makeMonitor()).execute();
+    expect(r.status).toBe("UP");
+    expect(r.latency).toBe(3);
+  });
+
+  it("checks down before degraded when both match", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", [vec("100")]) });
+    const r = await new PrometheusCall(
+      makeMonitor({ down: { operator: ">", value: 90 }, degraded: { operator: ">", value: 50 } }),
+    ).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.latency).toBe(100);
+  });
+
+  it("returns DEGRADED when only the degraded condition matches", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", [vec("70")]) });
+    const r = await new PrometheusCall(
+      makeMonitor({ down: { operator: ">", value: 90 }, degraded: { operator: ">", value: 50 } }),
+    ).execute();
+    expect(r.status).toBe("DEGRADED");
+  });
+
+  it("returns UP when no threshold matches", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", [vec("1")]) });
+    const r = await new PrometheusCall(
+      makeMonitor({ down: { operator: ">", value: 90 }, degraded: { operator: ">", value: 50 } }),
+    ).execute();
+    expect(r.status).toBe("UP");
+  });
+
+  it("uses noDataStatus (default DOWN) for an empty vector, charting 0", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", []) });
+    const r = await new PrometheusCall(makeMonitor()).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.latency).toBe(0);
+    expect(r.type).toBe("REALTIME");
+  });
+
+  it.each(["UP", "DEGRADED", "DOWN"] as const)("honors noDataStatus=%s on an empty vector", async (nds) => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", []) });
+    const r = await new PrometheusCall(makeMonitor({ noDataStatus: nds })).execute();
+    expect(r.status).toBe(nds);
+  });
+
+  it("treats a NaN value as no data", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", [vec("NaN")]) });
+    const r = await new PrometheusCall(makeMonitor({ noDataStatus: "DEGRADED" })).execute();
+    expect(r.status).toBe("DEGRADED");
+    expect(r.latency).toBe(0);
+  });
+
+  it("evaluates +Inf against thresholds but charts 0", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", [vec("+Inf")]) });
+    const r = await new PrometheusCall(makeMonitor({ down: { operator: ">", value: 0.95 } })).execute();
+    expect(r.status).toBe("DOWN"); // Infinity > 0.95
+    expect(r.latency).toBe(0); // non-finite clamped
+  });
+
+  it("evaluates -Inf against thresholds but charts 0", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", [vec("-Inf")]) });
+    const r = await new PrometheusCall(makeMonitor({ down: { operator: "<", value: 0 } })).execute();
+    expect(r.status).toBe("DOWN"); // -Infinity < 0
+    expect(r.latency).toBe(0);
+  });
+
+  it("maps a body-level error (bad PromQL) to ERROR/DOWN with the message", async () => {
+    mockedAxios.mockResolvedValue({
+      status: 200,
+      data: { status: "error", errorType: "bad_data", error: "parse error: unexpected identifier" },
+    });
+    const r = await new PrometheusCall(makeMonitor()).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.type).toBe("ERROR");
+    expect(r.error_message).toContain("parse error");
+  });
+
+  it("rejects a matrix result type as a config error", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("matrix", []) });
+    const r = await new PrometheusCall(makeMonitor()).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.type).toBe("ERROR");
+    expect(r.error_message).toBe("query must return an instant vector or scalar");
+  });
+
+  it("maps HTTP non-2xx to ERROR and surfaces the prometheus error field", async () => {
+    mockedAxios.mockResolvedValue({ status: 422, data: { status: "error", error: "invalid expression type" } });
+    const r = await new PrometheusCall(makeMonitor()).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.type).toBe("ERROR");
+    expect(r.error_message).toContain("422");
+    expect(r.error_message).toContain("invalid expression type");
+  });
+
+  it("maps a timeout (ECONNABORTED) to TIMEOUT", async () => {
+    mockedAxios.mockRejectedValue({ code: "ECONNABORTED", message: "timeout of 10000ms exceeded" });
+    const r = await new PrometheusCall(makeMonitor({ timeout: 10000 })).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.type).toBe("TIMEOUT");
+    expect(r.error_message).toBe("Request timed out after 10000ms");
+  });
+
+  it("maps a network error to ERROR with the axios message", async () => {
+    mockedAxios.mockRejectedValue({ code: "ECONNREFUSED", message: "connect ECONNREFUSED 127.0.0.1:9090" });
+    const r = await new PrometheusCall(makeMonitor()).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.type).toBe("ERROR");
+    expect(r.error_message).toContain("ECONNREFUSED");
+  });
+
+  it("stores the metric value as latency on a plain success", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("scalar", [123, "1.5"]) });
+    const r = await new PrometheusCall(makeMonitor()).execute();
+    expect(r.latency).toBe(1.5);
+  });
+});
