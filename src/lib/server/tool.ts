@@ -226,6 +226,36 @@ function GetRequiredSecrets(str: string): Array<{ find: string; replace: string 
   return envSecrets;
 }
 
+/**
+ * Build a request header map from structured key/value pairs, substituting env
+ * secrets into each key and value individually.
+ *
+ * Secrets MUST be applied to the parsed fields, never to a JSON-serialized blob
+ * of the headers: a secret whose value contains a quote, backslash, or newline
+ * would corrupt the JSON, and the whole header set (often the auth header) would
+ * be silently dropped when the blob is parsed back. Headers with an empty key
+ * are skipped; unresolved secrets are left as-is.
+ */
+function ApplySecretsToHeaders(
+  headers: Array<{ key: string; value: string }> | null | undefined,
+  secrets: Array<{ find: string; replace: string | undefined }>,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!Array.isArray(headers)) return out;
+  for (const header of headers) {
+    if (!header || !header.key) continue;
+    let key = header.key;
+    let value = header.value ?? "";
+    for (const secret of secrets) {
+      if (secret.replace === undefined) continue;
+      key = ReplaceAllOccurrences(key, secret.find, secret.replace);
+      value = ReplaceAllOccurrences(value, secret.find, secret.replace);
+    }
+    out[key] = value;
+  }
+  return out;
+}
+
 function ValidateMonitorAlerts(
   alerts:
     | Record<string, { triggers?: unknown[]; failureThreshold?: number; successThreshold?: number }>
@@ -550,6 +580,7 @@ export {
   ValidateIpAddress,
   checkIfDuplicateExists,
   GetWordsStartingWithDollar,
+  ApplySecretsToHeaders,
   StatusObj,
   ParseUptime,
   ParsePercentage,

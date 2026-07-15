@@ -2,7 +2,7 @@ import axios, { type AxiosRequestConfig } from "axios";
 import https from "https";
 import GC from "../../global-constants.js";
 import version from "../../version.js";
-import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
+import { GetRequiredSecrets, ReplaceAllOccurrences, ApplySecretsToHeaders } from "../tool.js";
 import type { PrometheusMonitor, PrometheusThreshold, MonitoringResult } from "../types/monitor.js";
 
 /**
@@ -60,32 +60,26 @@ class PrometheusCall {
       return this.fail(GC.ERROR, "Prometheus monitor is missing a url");
     }
 
-    // Apply secrets to url + serialized headers only (never the query).
+    // Apply secrets to the url only (never the query). Header secrets are
+    // substituted per-field below.
     let url = data.url;
-    let headersJson = JSON.stringify(data.headers || []);
     for (const secret of this.envSecrets) {
       if (secret.replace === undefined) continue;
       url = ReplaceAllOccurrences(url, secret.find, secret.replace);
-      headersJson = ReplaceAllOccurrences(headersJson, secret.find, secret.replace);
     }
 
     // Build the query endpoint: strip trailing slashes, append /api/v1/query.
     const endpoint = `${url.replace(/\/+$/, "")}/api/v1/query`;
 
-    // Merge default headers with user headers (user wins on collision).
+    // Merge default headers with user headers (user wins on collision). Secrets
+    // are substituted into each header key/value individually - never into a
+    // JSON blob, which a secret value could corrupt and drop the whole set.
     const axiosHeaders: Record<string, string> = {
       "User-Agent": `Kener/${version()}`,
       Accept: "application/json",
       "Content-Type": "application/x-www-form-urlencoded",
+      ...ApplySecretsToHeaders(data.headers, this.envSecrets),
     };
-    try {
-      const userHeaders: Array<{ key: string; value: string }> = JSON.parse(headersJson);
-      for (const h of userHeaders) {
-        if (h && h.key) axiosHeaders[h.key] = h.value;
-      }
-    } catch (e) {
-      console.log(e);
-    }
 
     const options: AxiosRequestConfig = {
       method: "POST",

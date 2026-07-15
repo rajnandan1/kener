@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  ApplySecretsToHeaders,
   BeginningOfDay,
   BeginningOfMinute,
   checkIfDuplicateExists,
@@ -235,6 +236,38 @@ describe("ValidateIpAddress", () => {
     expect(ValidateIpAddress("999.999.999.999")).toBe("IPv4");
     // Only full-form IPv6 is recognized:
     expect(ValidateIpAddress("::1")).toBe("Invalid");
+  });
+});
+
+describe("ApplySecretsToHeaders", () => {
+  const secret = (find: string, replace: string | undefined) => ({ find, replace });
+
+  it("substitutes secrets into header keys and values", () => {
+    const out = ApplySecretsToHeaders([{ key: "Authorization", value: "Bearer $TOKEN" }], [secret("$TOKEN", "abc123")]);
+    expect(out).toEqual({ Authorization: "Bearer abc123" });
+  });
+
+  it("keeps the header intact when a secret value contains JSON-special characters", () => {
+    // A quote or backslash in the secret would corrupt a JSON-serialized blob
+    // and drop the whole header set; per-field substitution must not.
+    const out = ApplySecretsToHeaders([{ key: "X-Auth", value: "$SECRET" }], [secret("$SECRET", 'a"b\\c')]);
+    expect(out).toEqual({ "X-Auth": 'a"b\\c' });
+  });
+
+  it("leaves unresolved secrets as-is and skips empty-key headers", () => {
+    const out = ApplySecretsToHeaders(
+      [
+        { key: "", value: "x" },
+        { key: "X-Set", value: "$MISSING" },
+      ],
+      [secret("$MISSING", undefined)],
+    );
+    expect(out).toEqual({ "X-Set": "$MISSING" });
+  });
+
+  it("returns an empty object for missing headers", () => {
+    expect(ApplySecretsToHeaders(undefined, [])).toEqual({});
+    expect(ApplySecretsToHeaders(null, [])).toEqual({});
   });
 });
 
