@@ -8,7 +8,7 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { formatDate } from "$lib/stores/datetime";
-  import { GetInitials } from "$lib/clientTools.js";
+  import { GetInitials, buildLatencyDisplay } from "$lib/clientTools.js";
   import GroupMonitorPopover from "./GroupMonitorPopover.svelte";
   import { t } from "$lib/stores/i18n";
   import { page } from "$app/state";
@@ -22,6 +22,7 @@
     endOfDayTodayAtTz?: number;
     compact?: boolean;
     grid?: boolean;
+    latencyDisplay?: { avg: boolean; min: boolean; max: boolean };
   }
 
   let {
@@ -32,11 +33,21 @@
     days,
     endOfDayTodayAtTz,
     compact = false,
-    grid = false
+    grid = false,
+    latencyDisplay = { avg: true, min: false, max: false }
   }: Props = $props();
   let data = $derived(prefetchedData ?? null);
   let error = $derived(prefetchedError ?? null);
   let loading = $derived(!data && !error);
+  let latencyText = $derived(
+    data
+      ? buildLatencyDisplay(
+          latencyDisplay,
+          { avg: data.avgLatency, min: data.minLatency, max: data.maxLatency },
+          { avg: $t("avg."), min: $t("min."), max: $t("max.") }
+        )
+      : ""
+  );
   let showGroupPopover = $derived(
     groupChildTags.length > 0 && typeof days === "number" && typeof endOfDayTodayAtTz === "number"
   );
@@ -125,7 +136,7 @@
           <div class="flex flex-col items-start gap-1 sm:items-end">
             <span class={grid ? "text-base sm:text-lg" : "text-lg sm:text-xl"}>{data.uptime}%</span>
             <span class="text-muted-foreground text-right text-xs">
-              {data.avgLatency}
+              {latencyText}
             </span>
           </div>
         </Item.Title>
