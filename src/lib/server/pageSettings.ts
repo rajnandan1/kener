@@ -10,7 +10,7 @@ interface StoredPageSettings {
   include_maintenances?: unknown;
   monitor_status_history_days?: { desktop?: number; mobile?: number };
   monitor_layout_style?: string;
-  monitor_latency_display?: { avg?: boolean; min?: boolean; max?: boolean };
+  monitor_latency_display?: { current?: boolean; avg?: boolean; min?: boolean; max?: boolean };
   metaPageTitle?: string;
   metaPageDescription?: string;
   socialPagePreviewImage?: string;
@@ -40,7 +40,7 @@ export function getDefaultPageSettings(): PageSettings {
       mobile: GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE,
     },
     monitor_layout_style: GC.DEFAULT_MONITOR_LAYOUT_STYLE,
-    monitor_latency_display: { avg: true, min: false, max: false },
+    monitor_latency_display: { current: false, avg: true, min: false, max: false },
   };
 }
 
@@ -120,6 +120,7 @@ export function mergePageSettings(defaults: PageSettings, partial?: PageSettings
     },
     monitor_layout_style: partial.monitor_layout_style ?? defaults.monitor_layout_style,
     monitor_latency_display: {
+      current: partial.monitor_latency_display?.current ?? defaults.monitor_latency_display.current,
       avg: partial.monitor_latency_display?.avg ?? defaults.monitor_latency_display.avg,
       min: partial.monitor_latency_display?.min ?? defaults.monitor_latency_display.min,
       max: partial.monitor_latency_display?.max ?? defaults.monitor_latency_display.max,
@@ -188,6 +189,7 @@ function sanitizeStoredMaintenances(value: unknown): PageSettingsPatch["include_
 function sanitizeStoredLatencyDisplay(value: unknown): PageSettingsPatch["monitor_latency_display"] {
   if (!isPlainObject(value)) return undefined;
   return {
+    current: boolOrUndefined(value.current),
     avg: boolOrUndefined(value.avg),
     min: boolOrUndefined(value.min),
     max: boolOrUndefined(value.max),
@@ -340,7 +342,7 @@ export function validatePageSettings(partial: unknown): string | null {
     if (!isPlainObject(display)) {
       return "monitor_latency_display must be an object";
     }
-    for (const key of ["avg", "min", "max"] as const) {
+    for (const key of ["current", "avg", "min", "max"] as const) {
       const value = display[key];
       if (value !== undefined && typeof value !== "boolean") {
         return `monitor_latency_display.${key} must be a boolean`;

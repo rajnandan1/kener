@@ -18,17 +18,18 @@ function ParseLatency(latencyMs: number): string {
 
 /**
  * Builds the monitor-bar latency string from a per-page display config.
- * Metrics render in fixed order (avg, min, max); a metric is included only when
- * its flag is truthy AND its value string is non-empty. Parts are joined with " | ".
- * Returns "" when nothing qualifies. Values are consumed as-is (already formatted),
- * so this is agnostic to how latency numbers were rendered.
+ * Metrics render in fixed order (current, avg, min, max); a metric is included
+ * only when its flag is truthy AND its value string is non-empty. Parts are
+ * joined with " | ". Returns "" when nothing qualifies. Values are consumed
+ * as-is (already formatted), so this is agnostic to how latency numbers were
+ * rendered.
  */
 export function buildLatencyDisplay(
-  display: { avg?: boolean; min?: boolean; max?: boolean } | undefined,
-  values: { avg: string; min: string; max: string },
-  labels: { avg: string; min: string; max: string },
+  display: { current?: boolean; avg?: boolean; min?: boolean; max?: boolean } | undefined,
+  values: { current: string; avg: string; min: string; max: string },
+  labels: { current: string; avg: string; min: string; max: string },
 ): string {
-  const order = ["avg", "min", "max"] as const;
+  const order = ["current", "avg", "min", "max"] as const;
   const parts: string[] = [];
   for (const key of order) {
     if (display?.[key] && values[key]) {

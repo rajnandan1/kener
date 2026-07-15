@@ -39,7 +39,7 @@
       mobile: GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE
     },
     monitor_layout_style: GC.DEFAULT_MONITOR_LAYOUT_STYLE,
-    monitor_latency_display: { avg: true, min: false, max: false }
+    monitor_latency_display: { current: false, avg: true, min: false, max: false }
   };
 
   interface PageWithMonitors extends PageRecord {
@@ -879,6 +879,10 @@
               </p>
             </div>
             <div class="flex flex-col gap-3">
+              <div class="flex items-center space-x-3">
+                <Checkbox id="latency-current" bind:checked={pageSettings.monitor_latency_display.current} />
+                <Label for="latency-current" class="cursor-pointer">{$t("Current")}</Label>
+              </div>
               <div class="flex items-center space-x-3">
                 <Checkbox id="latency-avg" bind:checked={pageSettings.monitor_latency_display.avg} />
                 <Label for="latency-avg" class="cursor-pointer">{$t("Average")}</Label>

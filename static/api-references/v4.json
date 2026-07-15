@@ -2487,8 +2487,9 @@
           },
           "monitor_latency_display": {
             "type": "object",
-            "description": "Which latency stats appear in the monitor bar. Order in the bar is always avg, min, max.",
+            "description": "Which latency stats appear in the monitor bar. Order in the bar is always current, avg, min, max. 'current' is the latest reading.",
             "properties": {
+              "current": { "type": "boolean", "default": false },
               "avg": { "type": "boolean", "default": true },
               "min": { "type": "boolean", "default": false },
               "max": { "type": "boolean", "default": false }

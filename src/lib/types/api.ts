@@ -467,6 +467,7 @@ export interface PageSettingsMaintenances {
 }
 
 export interface PageSettingsLatencyDisplay {
+  current: boolean;
   avg: boolean;
   min: boolean;
   max: boolean;

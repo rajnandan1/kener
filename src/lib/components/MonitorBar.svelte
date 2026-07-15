@@ -35,7 +35,7 @@
     endOfDayTodayAtTz,
     compact = false,
     grid = false,
-    latencyDisplay = { avg: true, min: false, max: false }
+    latencyDisplay = { current: false, avg: true, min: false, max: false }
   }: Props = $props();
   let data = $derived(prefetchedData ?? null);
   let error = $derived(prefetchedError ?? null);
@@ -44,8 +44,8 @@
     data
       ? buildLatencyDisplay(
           latencyDisplay,
-          { avg: data.avgLatency, min: data.minLatency, max: data.maxLatency },
-          { avg: $t("avg."), min: $t("min."), max: $t("max.") }
+          { current: data.currentLatency, avg: data.avgLatency, min: data.minLatency, max: data.maxLatency },
+          { current: $t("now."), avg: $t("avg."), min: $t("min."), max: $t("max.") }
         )
       : ""
   );
