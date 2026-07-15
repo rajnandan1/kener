@@ -204,6 +204,40 @@ describe("PrometheusCall.execute", () => {
     expect(r.error_message).toBe("query must return an instant vector or scalar");
   });
 
+  it("rejects a string result type as a config error", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("string", [1719999999, "hi"]) });
+    const r = await new PrometheusCall(makeMonitor()).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.type).toBe("ERROR");
+    expect(r.error_message).toBe("query must return an instant vector or scalar");
+  });
+
+  it("treats a 2xx that is not a Prometheus success as ERROR, not no-data", async () => {
+    // An auth proxy returning a 200 HTML login page must not be reported as UP,
+    // even when noDataStatus=UP would otherwise map no-data to UP.
+    mockedAxios.mockResolvedValue({ status: 200, data: "<html>login</html>" });
+    const r = await new PrometheusCall(makeMonitor({ noDataStatus: "UP" })).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.type).toBe("ERROR");
+    expect(r.error_message).toBe("Prometheus did not return a successful response");
+  });
+
+  it("treats a success envelope with an unrecognized result type as ERROR, not no-data", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: { status: "success", data: {} } });
+    const r = await new PrometheusCall(makeMonitor({ noDataStatus: "UP" })).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.type).toBe("ERROR");
+    expect(r.error_message).toBe("unexpected Prometheus response");
+  });
+
+  it("records ERROR instead of throwing when the url is missing", async () => {
+    const r = await new PrometheusCall(makeMonitor({ url: "" })).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.type).toBe("ERROR");
+    expect(r.error_message).toBe("Prometheus monitor is missing a url");
+    expect(mockedAxios).not.toHaveBeenCalled();
+  });
+
   it("maps HTTP non-2xx to ERROR and surfaces the prometheus error field", async () => {
     mockedAxios.mockResolvedValue({ status: 422, data: { status: "error", error: "invalid expression type" } });
     const r = await new PrometheusCall(makeMonitor()).execute();

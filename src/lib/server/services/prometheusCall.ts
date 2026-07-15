@@ -54,6 +54,12 @@ class PrometheusCall {
     const data = this.monitor.type_data;
     const timeout = data.timeout || 10000;
 
+    // Malformed config (e.g. created via the API without a url) must record a
+    // result, never throw out of the worker and leave a gap in the timeline.
+    if (typeof data.url !== "string" || data.url.trim() === "") {
+      return this.fail(GC.ERROR, "Prometheus monitor is missing a url");
+    }
+
     // Apply secrets to url + serialized headers only (never the query).
     let url = data.url;
     let headersJson = JSON.stringify(data.headers || []);
@@ -113,24 +119,35 @@ class PrometheusCall {
 
     const body = response.data;
 
-    // 1c. API-level error (e.g. bad PromQL returned with a 2xx).
-    if (!body || body.status === "error") {
-      return this.fail(GC.ERROR, (body && body.error) || "Prometheus returned an error");
+    // 1c. Require an explicit success envelope. A 2xx that is not a well-formed
+    // Prometheus success response - an API error, or an auth-proxy HTML/JSON
+    // page - must be an ERROR, not silently treated as no-data (which
+    // noDataStatus=UP would otherwise report as UP).
+    if (!body || typeof body !== "object" || body.status !== "success") {
+      const promError = body && typeof body === "object" && body.error ? body.error : null;
+      return this.fail(GC.ERROR, promError || "Prometheus did not return a successful response");
     }
 
     const resultType = body.data?.resultType;
     const result = body.data?.result;
 
-    // Reject non-instant result types.
-    if (resultType === "matrix" || resultType === "string") {
-      return this.fail(GC.ERROR, "query must return an instant vector or scalar");
+    // Only instant vectors and scalars are supported. Anything else - matrix,
+    // string, or an unrecognized/absent result type - is a config or response
+    // error rather than no-data.
+    if (resultType !== "scalar" && resultType !== "vector") {
+      const msg =
+        resultType === "matrix" || resultType === "string"
+          ? "query must return an instant vector or scalar"
+          : "unexpected Prometheus response";
+      return this.fail(GC.ERROR, msg);
     }
 
     // Extract the raw sample value; null means empty / no-data.
-    let rawValue: string | null = null;
+    let rawValue: string | null;
     if (resultType === "scalar") {
       rawValue = Array.isArray(result) ? result[1] : null;
-    } else if (resultType === "vector") {
+    } else {
+      // vector
       rawValue = Array.isArray(result) && result.length > 0 ? (result[0]?.value?.[1] ?? null) : null;
     }
 
