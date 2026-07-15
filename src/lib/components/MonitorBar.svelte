@@ -131,15 +131,17 @@
       </Item.Content>
 
       <Item.Content class="order-3 w-full text-left sm:order-0 sm:w-auto sm:flex-none sm:text-center">
-        <Item.Title class="items-start text-2xl">
-          <StatusIcon class="{STATUS_STROKE[data.currentStatus]} {grid ? 'mt-1 size-5' : 'mt-1.5 size-6'}" />
-          <div class="flex flex-col items-start gap-1 sm:items-end">
+        <div class="flex flex-col items-start gap-1 sm:items-end">
+          <Item.Title class="text-2xl">
+            <StatusIcon class="{STATUS_STROKE[data.currentStatus]} {grid ? 'size-5' : 'size-6'}" />
             <span class={grid ? "text-base sm:text-lg" : "text-lg sm:text-xl"}>{data.uptime}%</span>
+          </Item.Title>
+          {#if latencyText}
             <span class="text-muted-foreground text-right text-xs">
               {latencyText}
             </span>
-          </div>
-        </Item.Title>
+          {/if}
+        </div>
       </Item.Content>
     </Item.Root>
     {#if !compact}
