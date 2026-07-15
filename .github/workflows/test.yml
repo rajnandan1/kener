@@ -6,6 +6,11 @@ on:
       - main
   pull_request:
 
+# Cancel superseded runs on the same branch / PR to save CI minutes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
