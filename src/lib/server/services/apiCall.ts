@@ -14,12 +14,25 @@ class ApiCall {
 
   constructor(monitor: ApiMonitor) {
     this.monitor = monitor;
-    this.envSecrets = GetRequiredSecrets(
-      `${monitor.type_data.url} ${monitor.type_data.body || ""} ${JSON.stringify(monitor.type_data.headers || [])}`,
-    );
+    // Read type_data defensively: a malformed monitor (missing type_data) must
+    // be reported by execute() as an ERROR result, so the constructor must not
+    // throw before execute() ever runs.
+    const td = monitor.type_data;
+    this.envSecrets = GetRequiredSecrets(`${td?.url ?? ""} ${td?.body || ""} ${JSON.stringify(td?.headers || [])}`);
   }
 
   async execute(): Promise<MonitoringResult> {
+    // Malformed config (missing type_data) must record a result, not throw out
+    // of the worker and leave a gap in the timeline.
+    if (!this.monitor.type_data) {
+      return {
+        status: GC.DOWN,
+        latency: 0,
+        type: GC.ERROR,
+        error_message: "API monitor is missing configuration",
+      };
+    }
+
     let axiosHeaders: Record<string, string> = {};
     axiosHeaders["User-Agent"] = `Kener/${version()}`;
     axiosHeaders["Accept"] = "*/*";
