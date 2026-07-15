@@ -186,7 +186,9 @@ function IsValidRecordType(recordType: string): boolean {
 }
 function ReplaceAllOccurrences(originalString: string, searchString: string, replacement: string): string {
   const regex = new RegExp(`\\${searchString}`, "g");
-  const replacedString = originalString.replace(regex, replacement);
+  // Use a function replacer so replacement metacharacters ($&, $1, $$, ...) in
+  // secret values are inserted literally instead of being expanded.
+  const replacedString = originalString.replace(regex, () => replacement);
   return replacedString;
 }
 

@@ -269,6 +269,16 @@ describe("ApplySecretsToHeaders", () => {
     expect(ApplySecretsToHeaders(undefined, [])).toEqual({});
     expect(ApplySecretsToHeaders(null, [])).toEqual({});
   });
+
+  it("inserts secret values containing replacement metacharacters literally", () => {
+    // $&, $1, $$ must survive substitution byte-for-byte in both key and value
+    // instead of being expanded by the underlying String.replace.
+    const out = ApplySecretsToHeaders(
+      [{ key: "X-$NAME", value: "pre-$TOKEN-post" }],
+      [secret("$NAME", "a$$b"), secret("$TOKEN", "a$&b$1c")],
+    );
+    expect(out).toEqual({ "X-a$$b": "pre-a$&b$1c-post" });
+  });
 });
 
 describe("host / nameserver / URL / method validators", () => {
@@ -350,6 +360,12 @@ describe("string helpers", () => {
 
   it("ReplaceAllOccurrences replaces every occurrence of a $-token", () => {
     expect(ReplaceAllOccurrences("a $X b $X", "$X", "y")).toBe("a y b y");
+  });
+
+  it("ReplaceAllOccurrences inserts replacement text literally, without metacharacter expansion", () => {
+    // $&, $1, $$ in the replacement must not be expanded by String.replace.
+    expect(ReplaceAllOccurrences("x $KEY y", "$KEY", "a$&b")).toBe("x a$&b y");
+    expect(ReplaceAllOccurrences("$KEY", "$KEY", "p$$q")).toBe("p$$q");
   });
 
   it("checkIfDuplicateExists detects duplicates", () => {
