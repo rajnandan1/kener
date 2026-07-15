@@ -148,23 +148,35 @@ class PrometheusCall {
       return this.fail(GC.ERROR, msg);
     }
 
-    // Extract the raw sample value; null means empty / no-data.
-    let rawValue: string | null;
+    // Extract the raw sample value, rejecting payloads that do not match the
+    // result type's shape. A malformed response must be an ERROR, not silently
+    // treated as no-data (which noDataStatus=UP would report as healthy). An
+    // empty vector is the one legitimate no-data case.
+    let rawValue: string;
     if (resultType === "scalar") {
-      rawValue = Array.isArray(result) ? result[1] : null;
+      // A scalar is always [ <time>, "<value>" ]; there is no empty scalar.
+      if (!Array.isArray(result) || result.length < 2 || result[1] == null) {
+        return this.fail(GC.ERROR, "malformed scalar result");
+      }
+      rawValue = String(result[1]);
     } else {
-      // vector
-      rawValue = Array.isArray(result) && result.length > 0 ? (result[0]?.value?.[1] ?? null) : null;
-    }
-
-    // 2. Empty result -> noDataStatus.
-    if (rawValue === null) {
-      return this.noData();
+      // A vector is an array of { metric, value: [ <time>, "<value>" ] }.
+      if (!Array.isArray(result)) {
+        return this.fail(GC.ERROR, "malformed vector result");
+      }
+      if (result.length === 0) {
+        return this.noData(); // empty vector = genuine no-data
+      }
+      const sample = result[0]?.value;
+      if (!Array.isArray(sample) || sample.length < 2 || sample[1] == null) {
+        return this.fail(GC.ERROR, "malformed vector result");
+      }
+      rawValue = String(sample[1]);
     }
 
     const metricValue = parsePromValue(rawValue);
 
-    // 2b. NaN -> treated as no data.
+    // A real Prometheus "NaN" sample value -> treated as no data.
     if (Number.isNaN(metricValue)) {
       return this.noData();
     }

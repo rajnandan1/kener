@@ -212,6 +212,42 @@ describe("PrometheusCall.execute", () => {
     expect(r.error_message).toBe("query must return an instant vector or scalar");
   });
 
+  it("rejects a vector whose result payload is an object, not an array", async () => {
+    // resultType says vector but result is an object -> malformed, not no-data,
+    // even when noDataStatus=UP would otherwise report it as healthy.
+    mockedAxios.mockResolvedValue({
+      status: 200,
+      data: { status: "success", data: { resultType: "vector", result: {} } },
+    });
+    const r = await new PrometheusCall(makeMonitor({ noDataStatus: "UP" })).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.type).toBe("ERROR");
+    expect(r.error_message).toBe("malformed vector result");
+  });
+
+  it("rejects a vector element that is missing its value tuple", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", [{ metric: {} }]) });
+    const r = await new PrometheusCall(makeMonitor({ noDataStatus: "UP" })).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.type).toBe("ERROR");
+    expect(r.error_message).toBe("malformed vector result");
+  });
+
+  it("rejects a scalar result that is not a [time, value] tuple", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("scalar", { value: "1" }) });
+    const r = await new PrometheusCall(makeMonitor({ noDataStatus: "UP" })).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.type).toBe("ERROR");
+    expect(r.error_message).toBe("malformed scalar result");
+  });
+
+  it("still treats an empty vector as genuine no-data, not malformed", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", []) });
+    const r = await new PrometheusCall(makeMonitor({ noDataStatus: "UP" })).execute();
+    expect(r.status).toBe("UP"); // empty vector honors noDataStatus
+    expect(r.type).toBe("REALTIME");
+  });
+
   it("treats a 2xx that is not a Prometheus success as ERROR, not no-data", async () => {
     // An auth proxy returning a 200 HTML login page must not be reported as UP,
     // even when noDataStatus=UP would otherwise map no-data to UP.
