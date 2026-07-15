@@ -120,8 +120,8 @@ const AllRecordTypes = {
   ANY: 255,
 };
 const ValidateIpAddress = function (input: string): "IP4" | "IP6" | "DOMAIN" | "Invalid" {
-  // Check if input is a valid IPv4 address with an optional port
-  const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+  // Check if input is a dotted-quad IPv4 address with each octet in 0-255.
+  const ipv4Regex = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
   if (ipv4Regex.test(input)) {
     return "IP4";
   }

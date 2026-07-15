@@ -223,19 +223,19 @@ describe("UptimeCalculator", () => {
 
 describe("ValidateIpAddress", () => {
   it("classifies IPv4, IPv6, domain names, and invalid input", () => {
-    expect(ValidateIpAddress("192.168.1.1")).toBe("IPv4");
-    expect(ValidateIpAddress("8.8.8.8")).toBe("IPv4");
-    expect(ValidateIpAddress("2001:0db8:85a3:0000:0000:8a2e:0370:7334")).toBe("IPv6");
-    expect(ValidateIpAddress("example.com")).toBe("Domain Name");
-    expect(ValidateIpAddress("kener.ing")).toBe("Domain Name");
+    expect(ValidateIpAddress("192.168.1.1")).toBe("IP4");
+    expect(ValidateIpAddress("8.8.8.8")).toBe("IP4");
+    expect(ValidateIpAddress("2001:0db8:85a3:0000:0000:8a2e:0370:7334")).toBe("IP6");
+    expect(ValidateIpAddress("example.com")).toBe("DOMAIN");
+    expect(ValidateIpAddress("kener.ing")).toBe("DOMAIN");
     expect(ValidateIpAddress("not valid")).toBe("Invalid");
   });
 
-  it("documents quirks: permissive IPv4 octets, no shortened IPv6", () => {
-    // The regex does not range-check octets:
-    expect(ValidateIpAddress("999.999.999.999")).toBe("IPv4");
-    // Only full-form IPv6 is recognized:
-    expect(ValidateIpAddress("::1")).toBe("Invalid");
+  it("range-checks IPv4 octets and accepts compressed IPv6", () => {
+    expect(ValidateIpAddress("999.999.999.999")).toBe("Invalid");
+    expect(ValidateIpAddress("256.0.0.1")).toBe("Invalid");
+    expect(ValidateIpAddress("::1")).toBe("IP6");
+    expect(ValidateIpAddress("fe80::1")).toBe("IP6");
   });
 });
 

@@ -1,4 +1,4 @@
-import { AllRecordTypes } from "../clientTools.js";
+import { AllRecordTypes, ValidateIpAddress } from "../clientTools.js";
 import knexOb from "../../../knexfile.js";
 import crypto from "crypto";
 import GC from "../global-constants.js";
@@ -121,28 +121,6 @@ const BeginningOfMinute = (options: { date?: Date; timeZone?: string } = {}): nu
   const second = parseInt(parts.find((i) => i.type === "second")?.value ?? "0");
   const dt = new Date(1000 * Math.floor((date.getTime() - second * 1000) / 1000));
   return dt.getTime() / 1000;
-};
-const ValidateIpAddress = function (input: string): string {
-  // Check if input is a valid IPv4 address
-  const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
-  if (ipv4Regex.test(input)) {
-    return "IPv4";
-  }
-
-  // Check if input is a valid IPv6 address
-  const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
-  if (ipv6Regex.test(input)) {
-    return "IPv6";
-  }
-
-  // Check if input is a valid domain name
-  const domainRegex = /^[a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,}$/;
-  if (domainRegex.test(input)) {
-    return "Domain Name";
-  }
-
-  // If none of the above conditions match, the input is invalid
-  return "Invalid";
 };
 function checkIfDuplicateExists(arr: unknown[]): boolean {
   return new Set(arr).size !== arr.length;
