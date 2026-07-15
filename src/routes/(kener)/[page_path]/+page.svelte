@@ -218,6 +218,7 @@
               groupChildTags={data.monitorGroupMembersByTag?.[tag] || []}
               compact={isCompact}
               grid={viewType === "compact-grid" || viewType === "default-grid"}
+              latencyDisplay={pageSettings?.monitor_latency_display}
             />
           </div>
         {/each}

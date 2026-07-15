@@ -466,6 +466,12 @@ export interface PageSettingsMaintenances {
   ongoing: PageSettingsMaintenancesOngoing;
 }
 
+export interface PageSettingsLatencyDisplay {
+  avg: boolean;
+  min: boolean;
+  max: boolean;
+}
+
 export interface PageSettingsHistoryDays {
   desktop: number;
   mobile: number;

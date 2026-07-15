@@ -28,6 +28,7 @@ const defaultPageSettings: PageSettingsType = {
     mobile: GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE,
   },
   monitor_layout_style: GC.DEFAULT_MONITOR_LAYOUT_STYLE,
+  monitor_latency_display: { avg: true, min: false, max: false },
 };
 
 export interface NotificationPayload {

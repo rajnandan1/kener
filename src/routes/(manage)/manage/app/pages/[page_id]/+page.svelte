@@ -36,7 +36,8 @@
       desktop: GC.DEFAULT_STATUS_HISTORY_DAYS_DESKTOP,
       mobile: GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE
     },
-    monitor_layout_style: GC.DEFAULT_MONITOR_LAYOUT_STYLE
+    monitor_layout_style: GC.DEFAULT_MONITOR_LAYOUT_STYLE,
+    monitor_latency_display: { avg: true, min: false, max: false }
   };
 
   interface PageWithMonitors extends PageRecord {
