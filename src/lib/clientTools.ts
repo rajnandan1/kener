@@ -148,9 +148,9 @@ function IsValidHost(domain: string): boolean {
   return regex.test(domain);
 }
 function IsValidNameServer(nameServer: string): boolean {
-  //8.8.8.8 example
-  const regex = /^([0-9]{1,3}\.){3}[0-9]{1,3}$/;
-  return regex.test(nameServer);
+  // Validate a dotted-quad IPv4 nameserver (e.g. 8.8.8.8) through the shared
+  // validator so octet range-checking stays consistent with the rest of the app.
+  return ValidateIpAddress(nameServer.trim()) === "IP4";
 }
 function IsValidDnsResolver(resolver: string): boolean {
   const normalizedResolver = resolver.trim();

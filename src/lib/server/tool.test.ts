@@ -291,10 +291,13 @@ describe("host / nameserver / URL / method validators", () => {
     expect(IsValidHost("")).toBe(false);
   });
 
-  it("IsValidNameServer accepts only dotted-quad IPs", () => {
+  it("IsValidNameServer accepts only in-range dotted-quad IPs", () => {
     expect(IsValidNameServer("8.8.8.8")).toBe(true);
     expect(IsValidNameServer("example.com")).toBe(false);
     expect(IsValidNameServer("8.8.8")).toBe(false);
+    // Out-of-range and zero-padded octets must be rejected (shared validator).
+    expect(IsValidNameServer("999.999.999.999")).toBe(false);
+    expect(IsValidNameServer("0000000000001.0.0.0")).toBe(false);
   });
 
   it("IsValidURL requires http(s) and no spaces", () => {

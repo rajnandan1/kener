@@ -1,4 +1,4 @@
-import { AllRecordTypes, ValidateIpAddress } from "../clientTools.js";
+import { AllRecordTypes, ValidateIpAddress, IsValidNameServer } from "../clientTools.js";
 import knexOb from "../../../knexfile.js";
 import crypto from "crypto";
 import GC from "../global-constants.js";
@@ -171,13 +171,6 @@ const ParsePercentage = function (n: number): string {
 function IsValidHost(domain: string): boolean {
   const regex = /^[a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,}$/;
   return regex.test(domain);
-}
-
-//valid nameserver
-function IsValidNameServer(nameServer: string): boolean {
-  //8.8.8.8 example
-  const regex = /^([0-9]{1,3}\.){3}[0-9]{1,3}$/;
-  return regex.test(nameServer);
 }
 
 //valid dns record type
