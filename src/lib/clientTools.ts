@@ -36,7 +36,7 @@ export function buildLatencyDisplay(
       parts.push(`${labels[key]} ${values[key]}`);
     }
   }
-  return parts.join(" | ");
+  return parts.join(" · ");
 }
 
 function siteDataExtractFromDb(data: Record<string, unknown>, obj: Record<string, unknown>): Record<string, unknown> {

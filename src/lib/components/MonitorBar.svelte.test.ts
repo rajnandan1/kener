@@ -23,7 +23,7 @@ const baseData: MonitorBarResponse = {
 describe("MonitorBar latency display", () => {
   it("shows avg only by default", async () => {
     const screen = await render(MonitorBar, { tag: "test", prefetchedData: baseData, compact: true });
-    await expect.element(screen.getByText("avg. 250ms")).toBeInTheDocument();
+    await expect.element(screen.getByText("avg: 250ms")).toBeInTheDocument();
   });
 
   it("shows avg | min | max when all enabled", async () => {
@@ -33,17 +33,17 @@ describe("MonitorBar latency display", () => {
       compact: true,
       latencyDisplay: { current: false, avg: true, min: true, max: true },
     });
-    await expect.element(screen.getByText("avg. 250ms | min. 10ms | max. 900ms")).toBeInTheDocument();
+    await expect.element(screen.getByText("avg: 250ms · min: 10ms · max: 900ms")).toBeInTheDocument();
   });
 
-  it("shows current (now.) when enabled", async () => {
+  it("shows current (now:) when enabled", async () => {
     const screen = await render(MonitorBar, {
       tag: "test",
       prefetchedData: baseData,
       compact: true,
       latencyDisplay: { current: true, avg: false, min: false, max: false },
     });
-    await expect.element(screen.getByText("now. 123ms")).toBeInTheDocument();
+    await expect.element(screen.getByText("now: 123ms")).toBeInTheDocument();
   });
 
   it("renders no latency value when nothing is enabled", async () => {

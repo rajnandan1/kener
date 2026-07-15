@@ -45,7 +45,7 @@
       ? buildLatencyDisplay(
           latencyDisplay,
           { current: data.currentLatency, avg: data.avgLatency, min: data.minLatency, max: data.maxLatency },
-          { current: $t("now."), avg: $t("avg."), min: $t("min."), max: $t("max.") }
+          { current: $t("now:"), avg: $t("avg:"), min: $t("min:"), max: $t("max:") }
         )
       : ""
   );
