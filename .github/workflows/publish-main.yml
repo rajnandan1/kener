@@ -14,12 +14,13 @@ env:
 
 concurrency:
   group: main-docker-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build-and-push-main:
     name: Build and push main Docker images (with docs)
     strategy:
+      fail-fast: false
       matrix:
         variant: [debian, alpine]
     runs-on: ubuntu-latest
