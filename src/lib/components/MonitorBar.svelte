@@ -5,6 +5,7 @@
   import ICONS from "$lib/icons";
   import StatusBarCalendar from "$lib/components/StatusBarCalendar.svelte";
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get.js";
+  import type { PageSettingsLatencyDisplay } from "$lib/types/api";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { formatDate } from "$lib/stores/datetime";
@@ -22,7 +23,7 @@
     endOfDayTodayAtTz?: number;
     compact?: boolean;
     grid?: boolean;
-    latencyDisplay?: { avg: boolean; min: boolean; max: boolean };
+    latencyDisplay?: PageSettingsLatencyDisplay;
   }
 
   let {
@@ -164,6 +165,7 @@
           tags={groupChildTags}
           days={days as number}
           endOfDayTodayAtTz={endOfDayTodayAtTz as number}
+          {latencyDisplay}
         >
           {$t("Included Monitors (%count)", { count: String(groupChildTags.length) })}
         </GroupMonitorPopover>
