@@ -238,6 +238,17 @@ describe("PrometheusCall.execute", () => {
     expect(mockedAxios).not.toHaveBeenCalled();
   });
 
+  it("does not throw in the constructor and records ERROR when type_data is null", async () => {
+    // The worker constructs the service before calling execute(), so the
+    // constructor must survive a malformed (null type_data) monitor.
+    const monitor = { tag: "prom-test", type_data: null } as unknown as PrometheusMonitor;
+    const r = await new PrometheusCall(monitor).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.type).toBe("ERROR");
+    expect(r.error_message).toBe("Prometheus monitor is missing a url");
+    expect(mockedAxios).not.toHaveBeenCalled();
+  });
+
   it("maps HTTP non-2xx to ERROR and surfaces the prometheus error field", async () => {
     mockedAxios.mockResolvedValue({ status: 422, data: { status: "error", error: "invalid expression type" } });
     const r = await new PrometheusCall(makeMonitor()).execute();

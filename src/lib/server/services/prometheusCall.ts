@@ -47,18 +47,30 @@ class PrometheusCall {
   constructor(monitor: PrometheusMonitor) {
     this.monitor = monitor;
     // Secret substitution applies to url + header values only, never the query.
-    this.envSecrets = GetRequiredSecrets(`${monitor.type_data.url} ${JSON.stringify(monitor.type_data.headers || [])}`);
+    // Read type_data defensively: a malformed monitor (missing type_data) must
+    // be reported by execute() as an ERROR result, so the constructor must not
+    // throw before execute() ever runs.
+    const td = monitor.type_data;
+    this.envSecrets = GetRequiredSecrets(`${td?.url ?? ""} ${JSON.stringify(td?.headers || [])}`);
   }
 
+  /**
+   * Run the configured PromQL instant query and map the result to a
+   * MonitoringResult. Every outcome - malformed config, transport/HTTP/API
+   * error, no data, or a threshold match - resolves to a result; this never
+   * throws, so a scheduled check always records a row.
+   */
   async execute(): Promise<MonitoringResult> {
     const data = this.monitor.type_data;
-    const timeout = data.timeout || 10000;
 
-    // Malformed config (e.g. created via the API without a url) must record a
-    // result, never throw out of the worker and leave a gap in the timeline.
-    if (typeof data.url !== "string" || data.url.trim() === "") {
+    // Malformed config (missing type_data or url, e.g. created via the API)
+    // must record a result, never throw out of the worker and leave a gap in
+    // the timeline.
+    if (!data || typeof data.url !== "string" || data.url.trim() === "") {
       return this.fail(GC.ERROR, "Prometheus monitor is missing a url");
     }
+
+    const timeout = data.timeout || 10000;
 
     // Apply secrets to the url only (never the query). Header secrets are
     // substituted per-field below.
