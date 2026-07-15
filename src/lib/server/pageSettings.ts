@@ -10,6 +10,7 @@ interface StoredPageSettings {
   include_maintenances?: unknown;
   monitor_status_history_days?: { desktop?: number; mobile?: number };
   monitor_layout_style?: string;
+  monitor_latency_display?: { avg?: boolean; min?: boolean; max?: boolean };
   metaPageTitle?: string;
   metaPageDescription?: string;
   socialPagePreviewImage?: string;
@@ -39,6 +40,7 @@ export function getDefaultPageSettings(): PageSettings {
       mobile: GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE,
     },
     monitor_layout_style: GC.DEFAULT_MONITOR_LAYOUT_STYLE,
+    monitor_latency_display: { avg: true, min: false, max: false },
   };
 }
 
@@ -117,6 +119,11 @@ export function mergePageSettings(defaults: PageSettings, partial?: PageSettings
       mobile: partial.monitor_status_history_days?.mobile ?? defaults.monitor_status_history_days.mobile,
     },
     monitor_layout_style: partial.monitor_layout_style ?? defaults.monitor_layout_style,
+    monitor_latency_display: {
+      avg: partial.monitor_latency_display?.avg ?? defaults.monitor_latency_display.avg,
+      min: partial.monitor_latency_display?.min ?? defaults.monitor_latency_display.min,
+      max: partial.monitor_latency_display?.max ?? defaults.monitor_latency_display.max,
+    },
   };
 
   const metaPageTitle = partial.meta_page_title ?? defaults.meta_page_title;
@@ -178,6 +185,15 @@ function sanitizeStoredMaintenances(value: unknown): PageSettingsPatch["include_
   };
 }
 
+function sanitizeStoredLatencyDisplay(value: unknown): PageSettingsPatch["monitor_latency_display"] {
+  if (!isPlainObject(value)) return undefined;
+  return {
+    avg: boolOrUndefined(value.avg),
+    min: boolOrUndefined(value.min),
+    max: boolOrUndefined(value.max),
+  };
+}
+
 function isValidLayoutStyle(value: unknown): value is PageSettings["monitor_layout_style"] {
   return (GC.MONITOR_LAYOUT_STYLES as readonly string[]).includes(value as string);
 }
@@ -199,6 +215,7 @@ export function toApiPageSettings(storedJson: string | null | undefined): PageSe
       mobile: isValidHistoryDays(storedDays.mobile) ? (storedDays.mobile as number) : undefined,
     },
     monitor_layout_style: isValidLayoutStyle(stored.monitor_layout_style) ? stored.monitor_layout_style : undefined,
+    monitor_latency_display: sanitizeStoredLatencyDisplay(stored.monitor_latency_display),
     meta_page_title: typeof stored.metaPageTitle === "string" ? stored.metaPageTitle : undefined,
     meta_page_description: typeof stored.metaPageDescription === "string" ? stored.metaPageDescription : undefined,
     social_page_preview_image:
@@ -315,6 +332,19 @@ export function validatePageSettings(partial: unknown): string | null {
   if (settings.monitor_layout_style !== undefined) {
     if (!GC.MONITOR_LAYOUT_STYLES.includes(settings.monitor_layout_style)) {
       return `monitor_layout_style must be one of: ${GC.MONITOR_LAYOUT_STYLES.join(", ")}`;
+    }
+  }
+
+  if (settings.monitor_latency_display !== undefined) {
+    const display = settings.monitor_latency_display;
+    if (!isPlainObject(display)) {
+      return "monitor_latency_display must be an object";
+    }
+    for (const key of ["avg", "min", "max"] as const) {
+      const value = display[key];
+      if (value !== undefined && typeof value !== "boolean") {
+        return `monitor_latency_display.${key} must be a boolean`;
+      }
     }
   }
 

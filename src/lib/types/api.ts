@@ -502,6 +502,7 @@ export interface PageSettings {
   /** Days of status history shown on the page, per device class (1-365). */
   monitor_status_history_days: PageSettingsHistoryDays;
   monitor_layout_style: PageMonitorLayoutStyle;
+  monitor_latency_display: PageSettingsLatencyDisplay;
   /** Per-page meta/social overrides; stored as camelCase keys internally. */
   meta_page_title?: string;
   meta_page_description?: string;

@@ -2485,6 +2485,15 @@
             "default": "default-list",
             "description": "How monitors are laid out on the status page."
           },
+          "monitor_latency_display": {
+            "type": "object",
+            "description": "Which latency stats appear in the monitor bar. Order in the bar is always avg, min, max.",
+            "properties": {
+              "avg": { "type": "boolean", "default": true },
+              "min": { "type": "boolean", "default": false },
+              "max": { "type": "boolean", "default": false }
+            }
+          },
           "meta_page_title": {
             "type": "string",
             "description": "Per-page override for the meta title."
