@@ -10,6 +10,8 @@
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
   import { Textarea } from "$lib/components/ui/textarea/index.js";
+  import { Checkbox } from "$lib/components/ui/checkbox/index.js";
+  import { t } from "$lib/stores/i18n";
   import { toast } from "svelte-sonner";
   import Loader from "@lucide/svelte/icons/loader";
   import SaveIcon from "@lucide/svelte/icons/save";
@@ -142,6 +144,10 @@
                 ? JSON.parse(foundPage.page_settings_json)
                 : foundPage.page_settings_json;
             pageSettings = { ...structuredClone(defaultPageSettings), ...parsed };
+            pageSettings.monitor_latency_display = {
+              ...defaultPageSettings.monitor_latency_display,
+              ...(parsed?.monitor_latency_display ?? {})
+            };
           } catch {
             pageSettings = structuredClone(defaultPageSettings);
           }
@@ -860,6 +866,32 @@
             <p class="text-muted-foreground text-xs">
               Default is <code class="bg-muted rounded px-1 font-mono">default-list</code>
             </p>
+          </div>
+
+          <hr class="border-muted" />
+
+          <!-- Monitor Latency Display -->
+          <div class="space-y-4">
+            <div>
+              <Label class="text-base font-medium">{$t("Monitor Latency Display")}</Label>
+              <p class="text-muted-foreground text-sm">
+                {$t("Choose which latency stats appear in the monitor bar")}
+              </p>
+            </div>
+            <div class="flex flex-col gap-3">
+              <div class="flex items-center space-x-3">
+                <Checkbox id="latency-avg" bind:checked={pageSettings.monitor_latency_display.avg} />
+                <Label for="latency-avg" class="cursor-pointer">{$t("Average")}</Label>
+              </div>
+              <div class="flex items-center space-x-3">
+                <Checkbox id="latency-min" bind:checked={pageSettings.monitor_latency_display.min} />
+                <Label for="latency-min" class="cursor-pointer">{$t("Minimum")}</Label>
+              </div>
+              <div class="flex items-center space-x-3">
+                <Checkbox id="latency-max" bind:checked={pageSettings.monitor_latency_display.max} />
+                <Label for="latency-max" class="cursor-pointer">{$t("Maximum")}</Label>
+              </div>
+            </div>
           </div>
         </Card.Content>
         <Card.Footer class="flex justify-end">
