@@ -154,15 +154,10 @@ function IsValidNameServer(nameServer: string): boolean {
 }
 function IsValidDnsResolver(resolver: string): boolean {
   const normalizedResolver = resolver.trim();
-  const ipv4Parts = normalizedResolver.split(".");
-  if (
-    ipv4Parts.length === 4 &&
-    ipv4Parts.every((part) => /^\d+$/.test(part) && Number(part) >= 0 && Number(part) <= 255)
-  ) {
-    return true;
-  }
+  // Route IP inputs through the shared validator so the IPv4 grammar (octet
+  // range, no zero-padded forms) stays consistent with the rest of the app.
   const ipType = ValidateIpAddress(normalizedResolver);
-  if (ipType === "IP6") {
+  if (ipType === "IP4" || ipType === "IP6") {
     return true;
   }
   return IsValidHost(normalizedResolver);
