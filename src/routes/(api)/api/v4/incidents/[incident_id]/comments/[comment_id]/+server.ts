@@ -178,7 +178,15 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     body.timestamp !== undefined ? GetMinuteStartTimestampUTC(body.timestamp) : existingComment.commented_at;
 
   // Update the comment (does NOT change incident state)
-  await db.updateIncidentCommentByID(commentId, updateComment, updateState, updateTimestamp);
+  // translations: this REST endpoint doesn't accept translations input yet, so keep
+  // whatever was already stored on the comment rather than wiping it.
+  await db.updateIncidentCommentByID(
+    commentId,
+    updateComment,
+    updateState,
+    updateTimestamp,
+    existingComment.translations ?? null,
+  );
 
   // Fetch updated comment
   const updatedComment = await db.getIncidentCommentByIDAndIncident(incident.id, commentId);

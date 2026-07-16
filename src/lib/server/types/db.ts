@@ -332,6 +332,7 @@ export interface IncidentRecord {
   incident_type: string;
   incident_source: string;
   is_global: string;
+  translations?: string | null;
 }
 
 export interface IncidentMonitorImpact {
@@ -366,6 +367,7 @@ export interface IncidentRecordInsert {
   incident_type?: string;
   incident_source?: string;
   is_global?: string;
+  translations?: string | null;
 }
 
 // ============ incident_monitors table ============
@@ -406,6 +408,7 @@ export interface IncidentCommentRecord {
   updated_at: Date;
   status: string;
   state: string;
+  translations?: string | null;
 }
 
 // ============ Filter types ============

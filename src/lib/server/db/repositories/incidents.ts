@@ -135,6 +135,7 @@ export class IncidentsRepository extends BaseRepository {
       incident_type: data.incident_type,
       incident_source: data.incident_source,
       is_global: data.is_global || "YES",
+      translations: data.translations ?? null,
     };
 
     if (dbType === "postgresql") {
@@ -233,6 +234,7 @@ export class IncidentsRepository extends BaseRepository {
       status: data.status,
       state: data.state,
       is_global: data.is_global,
+      translations: data.translations ?? null,
       updated_at: this.knex.fn.now(),
     });
   }
@@ -261,6 +263,7 @@ export class IncidentsRepository extends BaseRepository {
         "state",
         "incident_type",
         "is_global",
+        "translations",
       )
       .where("id", id)
       .first();
@@ -759,6 +762,7 @@ export class IncidentsRepository extends BaseRepository {
     comment: string,
     state: string,
     commented_at: number,
+    translations: string | null,
   ): Promise<IncidentCommentRecord> {
     const dbType = GetDbType();
 
@@ -767,6 +771,7 @@ export class IncidentsRepository extends BaseRepository {
       incident_id,
       state,
       commented_at,
+      translations,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     };
@@ -798,11 +803,18 @@ export class IncidentsRepository extends BaseRepository {
     return await this.knex("incident_comments").where({ incident_id, id }).first();
   }
 
-  async updateIncidentCommentByID(id: number, comment: string, state: string, commented_at: number): Promise<number> {
+  async updateIncidentCommentByID(
+    id: number,
+    comment: string,
+    state: string,
+    commented_at: number,
+    translations: string | null,
+  ): Promise<number> {
     return await this.knex("incident_comments").where({ id }).update({
       comment,
       state,
       commented_at,
+      translations,
       updated_at: this.knex.fn.now(),
     });
   }

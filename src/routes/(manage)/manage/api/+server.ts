@@ -288,11 +288,18 @@ export async function POST({ request, cookies }) {
     } else if (action == "getComments") {
       resp = await GetIncidentActiveComments(data.incident_id);
     } else if (action == "addComment") {
-      resp = await AddIncidentComment(data.incident_id, data.comment, data.state, data.commented_at);
+      resp = await AddIncidentComment(data.incident_id, data.comment, data.state, data.commented_at, data.translations);
     } else if (action == "deleteComment") {
       resp = await UpdateCommentStatusByID(data.incident_id, data.comment_id, "INACTIVE");
     } else if (action == "updateComment") {
-      resp = await UpdateCommentByID(data.incident_id, data.comment_id, data.comment, data.state, data.commented_at);
+      resp = await UpdateCommentByID(
+        data.incident_id,
+        data.comment_id,
+        data.comment,
+        data.state,
+        data.commented_at,
+        data.translations,
+      );
     } else if (action == "testTrigger") {
       const trigger = await GetTriggerByID(data.trigger_id);
       const siteData = await GetAllSiteData();

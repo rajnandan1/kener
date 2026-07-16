@@ -22,6 +22,11 @@ import { GetAllSiteData } from "./siteDataController.js";
 import subscriberQueue from "../queues/subscriberQueue.js";
 import mdToHTML from "../../marked.js";
 import type { SubscriptionVariableMap } from "../notification/types.js";
+import {
+  serializeContentTranslations,
+  INCIDENT_TRANSLATABLE_FIELDS,
+  INCIDENT_COMMENT_TRANSLATABLE_FIELDS,
+} from "../content-i18n.js";
 
 interface IncidentsDashboardInput {
   page: number;
@@ -40,6 +45,7 @@ export interface IncidentInput {
   incident_type?: string;
   incident_source?: string;
   is_global?: string;
+  translations?: unknown;
 }
 
 interface IncidentUpdateInput {
@@ -49,6 +55,7 @@ interface IncidentUpdateInput {
   status?: string;
   state?: string;
   is_global?: string;
+  translations?: unknown;
 }
 
 export const GetIncidentsOpenHome = async (
@@ -313,6 +320,7 @@ export const CreateIncident = async (data: IncidentInput): Promise<{ incident_id
     incident_type: !!data.incident_type ? data.incident_type : "INCIDENT",
     incident_source: !!data.incident_source ? data.incident_source : "DASHBOARD",
     is_global: data.is_global || "YES",
+    translations: serializeContentTranslations(data.translations, INCIDENT_TRANSLATABLE_FIELDS),
   };
 
   //incident_type == INCIDENT delete endDateTime
@@ -352,6 +360,10 @@ export const UpdateIncident = async (incident_id: number, data: IncidentUpdateIn
     state: data.state || incidentExists.state,
     end_date_time: data.end_date_time || incidentExists.end_date_time,
     is_global: data.is_global !== undefined ? data.is_global : incidentExists.is_global,
+    translations:
+      data.translations !== undefined
+        ? serializeContentTranslations(data.translations, INCIDENT_TRANSLATABLE_FIELDS)
+        : incidentExists.translations,
   };
 
   return await db.updateIncident(updateObject as IncidentRecord);
@@ -396,6 +408,7 @@ export const UpdateCommentByID = async (
   comment: string,
   state: string,
   commented_at: number,
+  translations?: unknown,
 ): Promise<number> => {
   let incidentExists = await db.getIncidentById(incident_id);
   if (!incidentExists) {
@@ -405,7 +418,15 @@ export const UpdateCommentByID = async (
   if (!commentExists) {
     throw new Error(`Comment with id ${comment_id} does not exist`);
   }
-  let c = await db.updateIncidentCommentByID(comment_id, comment, state, commented_at);
+  let c = await db.updateIncidentCommentByID(
+    comment_id,
+    comment,
+    state,
+    commented_at,
+    translations !== undefined
+      ? serializeContentTranslations(translations, INCIDENT_COMMENT_TRANSLATABLE_FIELDS)
+      : (commentExists.translations ?? null),
+  );
   if (c) {
     let incidentUpdate: IncidentUpdateInput = {
       state: state,
@@ -458,6 +479,7 @@ export const AddIncidentComment = async (
   comment: string,
   state: string,
   commented_at: number,
+  translations?: unknown,
 ): Promise<IncidentCommentRecord> => {
   let incidentExists = await db.getIncidentById(incident_id);
   if (!incidentExists) {
@@ -468,7 +490,13 @@ export const AddIncidentComment = async (
     state = incidentExists.state;
   }
 
-  let c = await db.insertIncidentComment(incident_id, comment, state, commented_at);
+  let c = await db.insertIncidentComment(
+    incident_id,
+    comment,
+    state,
+    commented_at,
+    serializeContentTranslations(translations, INCIDENT_COMMENT_TRANSLATABLE_FIELDS),
+  );
   let incidentType = incidentExists.incident_type;
   //update incident state
   if (c && incidentType === GC.INCIDENT) {
