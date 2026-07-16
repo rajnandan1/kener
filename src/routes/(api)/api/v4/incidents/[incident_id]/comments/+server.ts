@@ -147,6 +147,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     incident_type: incident.incident_type,
     incident_source: "",
     is_global: incident.is_global,
+    // Preserve stored translations — this state-sync update never intends to change them.
+    translations: incident.translations ?? null,
   });
 
   const response: CreateCommentResponse = {
