@@ -545,6 +545,7 @@ export interface MaintenanceRecord {
   created_at: Date;
   updated_at: Date;
   is_global: string;
+  translations?: string | null;
 }
 
 export interface MaintenanceRecordInsert {
@@ -555,6 +556,7 @@ export interface MaintenanceRecordInsert {
   duration_seconds: number;
   status?: "ACTIVE" | "INACTIVE";
   is_global?: string;
+  translations?: string | null;
 }
 
 // ============ maintenance_monitors table ============

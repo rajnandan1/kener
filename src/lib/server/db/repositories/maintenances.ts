@@ -31,6 +31,7 @@ export class MaintenancesRepository extends BaseRepository {
       duration_seconds: data.duration_seconds,
       status: data.status || GC.ACTIVE,
       is_global: data.is_global || "YES",
+      translations: data.translations ?? null,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     };
