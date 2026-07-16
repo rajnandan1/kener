@@ -28,6 +28,8 @@ import { GetLastMonitoringValue, SetLastHeartbeat, DeleteMonitorCaches } from ".
 import { CollapseStatusCounts } from "../../clientTools.js";
 import { translate, isLocaleAvailable } from "../i18n.js";
 import type { HeartbeatMonitor, GroupMonitorTypeData } from "../types/monitor.js";
+import { serializeContentTranslations, MONITOR_TRANSLATABLE_FIELDS } from "../content-i18n.js";
+import { parseContentTranslations } from "../../content-i18n.js";
 
 interface GroupUpdateData {
   monitor_tag: string;
@@ -156,6 +158,7 @@ export const GetMonitorsParsed = async (query: MonitorFilter): Promise<Array<Mon
       ...monitorData,
       type_data: {},
       monitor_settings_json: {},
+      translations: null,
     };
 
     if (monitorData.type_data) {
@@ -186,6 +189,8 @@ export const GetMonitorsParsed = async (query: MonitorFilter): Promise<Array<Mon
       };
     }
 
+    monitorTyped.translations = parseContentTranslations(monitorData.translations);
+
     return monitorTyped;
   });
 
@@ -194,6 +199,7 @@ export const GetMonitorsParsed = async (query: MonitorFilter): Promise<Array<Mon
 
 export const CreateUpdateMonitor = async (monitor: MonitorInput): Promise<number | number[]> => {
   let monitorData = { ...monitor };
+  monitorData.translations = serializeContentTranslations(monitorData.translations, MONITOR_TRANSLATABLE_FIELDS);
   if (monitorData.id) {
     return await db.updateMonitor(monitorData as MonitorRecord);
   } else {
@@ -204,6 +210,7 @@ export const CreateUpdateMonitor = async (monitor: MonitorInput): Promise<number
 
 export const CreateMonitor = async (monitor: MonitorInput): Promise<number[]> => {
   let monitorData = { ...monitor };
+  monitorData.translations = serializeContentTranslations(monitorData.translations, MONITOR_TRANSLATABLE_FIELDS);
   if (monitorData.id) {
     throw new Error("monitor id must be empty or 0");
   }
@@ -270,6 +277,7 @@ export const CloneMonitor = async ({ sourceTag, newTag, newName }: CloneMonitorI
     include_degraded_in_downtime: source.include_degraded_in_downtime,
     is_hidden: source.is_hidden,
     monitor_settings_json: source.monitor_settings_json,
+    translations: source.translations,
     external_url: source.external_url,
   });
 };

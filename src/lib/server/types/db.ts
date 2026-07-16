@@ -1,6 +1,7 @@
 // Server-only database types (based on migrations schema)
 import type { Knex } from "knex";
 import type { PageMonitorLayoutStyle } from "$lib/types/api";
+import type { ContentTranslations } from "../../types/common.js";
 
 // ============ monitoring_data table ============
 export interface MonitoringData {
@@ -84,6 +85,7 @@ export interface MonitorRecord {
   include_degraded_in_downtime?: string;
   is_hidden: string;
   monitor_settings_json: string | null;
+  translations?: string | null;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -142,6 +144,7 @@ export interface MonitorRecordTyped {
   include_degraded_in_downtime?: string;
   is_hidden: string;
   monitor_settings_json: MonitorSettings | null;
+  translations: ContentTranslations | null;
   created_at?: Date;
   updated_at?: Date;
   external_url?: string | null;
@@ -166,6 +169,7 @@ export interface MonitorRecordInsert {
   include_degraded_in_downtime?: string;
   is_hidden?: string;
   monitor_settings_json?: string | null;
+  translations?: string | null;
   external_url?: string | null;
 }
 

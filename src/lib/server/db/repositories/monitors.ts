@@ -43,6 +43,7 @@ export class MonitorsRepository extends BaseRepository {
       include_degraded_in_downtime: data.include_degraded_in_downtime,
       is_hidden: data.is_hidden || "NO",
       monitor_settings_json: data.monitor_settings_json,
+      translations: data.translations ?? null,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
       external_url: data.external_url,
@@ -67,6 +68,7 @@ export class MonitorsRepository extends BaseRepository {
       include_degraded_in_downtime: data.include_degraded_in_downtime,
       is_hidden: data.is_hidden,
       monitor_settings_json: data.monitor_settings_json,
+      translations: data.translations ?? null,
       updated_at: this.knex.fn.now(),
       external_url: data.external_url,
     });
