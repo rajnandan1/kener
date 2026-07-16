@@ -192,6 +192,7 @@ export class MaintenancesRepository extends BaseRepository {
         "monitors.name as monitor_name",
         "monitors.image as monitor_image",
         "monitors.description as monitor_description",
+        "monitors.translations as monitor_translations",
       );
   }
 
@@ -485,6 +486,8 @@ export class MaintenancesRepository extends BaseRepository {
         "maintenances_events.updated_at",
         "maintenances_events.status as status",
         "maintenances.is_global as is_global",
+        "maintenances.translations",
+        "monitors.translations as monitor_translations",
       )
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
       .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
@@ -519,6 +522,8 @@ export class MaintenancesRepository extends BaseRepository {
         "maintenances_events.updated_at",
         "maintenances_events.status as status",
         "maintenances.is_global as is_global",
+        "maintenances.translations",
+        "monitors.translations as monitor_translations",
       )
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
       .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
@@ -568,6 +573,8 @@ export class MaintenancesRepository extends BaseRepository {
         "maintenances_events.created_at",
         "maintenances_events.updated_at",
         "maintenances.is_global as is_global",
+        "maintenances.translations",
+        "monitors.translations as monitor_translations",
       )
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
       .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
@@ -611,6 +618,8 @@ export class MaintenancesRepository extends BaseRepository {
         "maintenances_events.updated_at",
         "maintenances_events.status as status",
         "maintenances.is_global as is_global",
+        "maintenances.translations",
+        "monitors.translations as monitor_translations",
       )
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
       .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
@@ -654,6 +663,8 @@ export class MaintenancesRepository extends BaseRepository {
         "maintenances_events.updated_at",
         "maintenances_events.status as status",
         "maintenances.is_global as is_global",
+        "maintenances.translations",
+        "monitors.translations as monitor_translations",
       )
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
       .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
@@ -693,6 +704,8 @@ export class MaintenancesRepository extends BaseRepository {
         "maintenances_events.updated_at",
         "maintenances_events.status as status",
         "maintenances.is_global as is_global",
+        "maintenances.translations",
+        "monitors.translations as monitor_translations",
       )
       .join("maintenances", "maintenances_events.maintenance_id", "maintenances.id")
       .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
@@ -718,6 +731,7 @@ export class MaintenancesRepository extends BaseRepository {
           id: row.id,
           title: row.title,
           description: row.description,
+          translations: row.translations,
           start_date_time: row.start_date_time,
           end_date_time: row.end_date_time,
           status: row.status,
@@ -734,6 +748,7 @@ export class MaintenancesRepository extends BaseRepository {
         maintenance.monitors.push({
           monitor_tag: row.monitor_tag,
           monitor_name: row.monitor_name,
+          monitor_translations: row.monitor_translations,
           monitor_image: row.monitor_image,
           monitor_impact: row.monitor_impact,
         });

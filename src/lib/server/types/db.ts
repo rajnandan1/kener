@@ -580,6 +580,7 @@ export interface MaintenanceMonitorDetailRecord {
   monitor_name: string;
   monitor_image: string | null;
   monitor_description: string | null;
+  monitor_translations?: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -592,6 +593,7 @@ export interface MaintenanceMonitorDetailRecord {
   monitor_name: string;
   monitor_image: string | null;
   monitor_description: string | null;
+  monitor_translations?: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -650,6 +652,7 @@ export interface MaintenanceMonitorImpact {
   monitor_name: string;
   monitor_image: string | null;
   monitor_impact: string;
+  monitor_translations?: string | null;
 }
 
 export interface MaintenanceEventsMonitorList {
@@ -663,6 +666,7 @@ export interface MaintenanceEventsMonitorList {
   monitors: MaintenanceMonitorImpact[];
   created_at: Date;
   updated_at: Date;
+  translations?: string | null;
 }
 
 // ============ monitor_alerts_config table ============

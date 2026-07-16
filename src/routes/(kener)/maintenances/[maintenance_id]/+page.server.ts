@@ -61,6 +61,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
     monitor_name: string;
     monitor_image: string | null;
     monitor_impact: string;
+    monitor_translations: string | null;
   }> = [];
 
   if (monitorTags.length > 0) {
@@ -72,6 +73,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
         monitor_name: m.name,
         monitor_image: m.image || null,
         monitor_impact: monitorRecords.find((mr) => mr.monitor_tag === m.tag)?.monitor_impact || "",
+        monitor_translations: m.translations ?? null,
       }));
   }
 
