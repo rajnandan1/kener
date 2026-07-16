@@ -340,6 +340,7 @@ export interface IncidentMonitorImpact {
   monitor_impact: string;
   monitor_name: string;
   monitor_image: string | null;
+  monitor_translations?: string | null;
 }
 
 export interface IncidentForMonitorList {
@@ -351,6 +352,7 @@ export interface IncidentForMonitorList {
   updated_at: Date;
   status: string;
   state: string;
+  translations?: string | null;
   monitors: IncidentMonitorImpact[];
 }
 
@@ -393,6 +395,7 @@ export interface IncidentMonitorDetailRecord {
   monitor_name: string;
   monitor_image: string | null;
   monitor_description: string | null;
+  monitor_translations?: string | null;
   created_at: Date;
   updated_at: Date;
   incident_id: number;

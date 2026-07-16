@@ -27,6 +27,8 @@ interface IncidentRowWithMonitor {
   monitor_tag: string;
   monitor_name: string;
   monitor_image: string | null;
+  translations?: string | null;
+  monitor_translations?: string | null;
 }
 
 /**
@@ -52,6 +54,7 @@ export class IncidentsRepository extends BaseRepository {
           updated_at: row.updated_at,
           status: row.status,
           state: row.state,
+          translations: row.translations,
           monitors: [],
         });
       }
@@ -64,6 +67,7 @@ export class IncidentsRepository extends BaseRepository {
           monitor_impact: row.monitor_impact,
           monitor_name: row.monitor_name,
           monitor_image: row.monitor_image,
+          monitor_translations: row.monitor_translations,
         });
       }
     }
@@ -465,6 +469,8 @@ export class IncidentsRepository extends BaseRepository {
         "incident_monitors.monitor_tag",
         "monitors.name as monitor_name",
         "monitors.image as monitor_image",
+        "incidents.translations",
+        "monitors.translations as monitor_translations",
       )
       .leftJoin("incident_monitors", "incidents.id", "incident_monitors.incident_id")
       .leftJoin("monitors", "incident_monitors.monitor_tag", "monitors.tag")
@@ -497,6 +503,8 @@ export class IncidentsRepository extends BaseRepository {
         "incident_monitors.monitor_tag",
         "monitors.name as monitor_name",
         "monitors.image as monitor_image",
+        "incidents.translations",
+        "monitors.translations as monitor_translations",
       )
       .leftJoin("incident_monitors", "incidents.id", "incident_monitors.incident_id")
       .leftJoin("monitors", "incident_monitors.monitor_tag", "monitors.tag");
@@ -624,6 +632,8 @@ export class IncidentsRepository extends BaseRepository {
         "incident_monitors.monitor_tag",
         "monitors.name as monitor_name",
         "monitors.image as monitor_image",
+        "incidents.translations",
+        "monitors.translations as monitor_translations",
       )
       .leftJoin("incident_monitors", "incidents.id", "incident_monitors.incident_id")
       .leftJoin("monitors", "incident_monitors.monitor_tag", "monitors.tag")
@@ -733,6 +743,7 @@ export class IncidentsRepository extends BaseRepository {
         "monitors.name as monitor_name",
         "monitors.image as monitor_image",
         "monitors.description as monitor_description",
+        "monitors.translations as monitor_translations",
       );
   }
 
@@ -859,6 +870,8 @@ export class IncidentsRepository extends BaseRepository {
         "monitors.name as monitor_name",
         "monitors.image as monitor_image",
         "monitors.is_hidden as monitor_is_hidden",
+        "incidents.translations",
+        "monitors.translations as monitor_translations",
       )
       .leftJoin("incident_monitors", "incidents.id", "incident_monitors.incident_id")
       .leftJoin("monitors", "incident_monitors.monitor_tag", "monitors.tag")
@@ -922,6 +935,8 @@ export class IncidentsRepository extends BaseRepository {
         "monitors.name as monitor_name",
         "monitors.image as monitor_image",
         "monitors.is_hidden as monitor_is_hidden",
+        "incidents.translations",
+        "monitors.translations as monitor_translations",
       )
       .leftJoin("incident_monitors", "incidents.id", "incident_monitors.incident_id")
       .leftJoin("monitors", "incident_monitors.monitor_tag", "monitors.tag")
@@ -977,6 +992,7 @@ export class IncidentsRepository extends BaseRepository {
           updated_at: row.updated_at,
           status: row.status,
           state: row.state,
+          translations: row.translations,
           monitors: [],
         });
       }
@@ -989,6 +1005,7 @@ export class IncidentsRepository extends BaseRepository {
           monitor_impact: row.monitor_impact,
           monitor_name: row.monitor_name,
           monitor_image: row.monitor_image,
+          monitor_translations: row.monitor_translations,
         });
       }
     }
