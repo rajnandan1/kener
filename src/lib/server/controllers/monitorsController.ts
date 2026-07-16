@@ -284,6 +284,7 @@ export const CloneMonitor = async ({ sourceTag, newTag, newName }: CloneMonitorI
 
 export const UpdateMonitor = async (monitor: MonitorInput): Promise<number> => {
   let monitorData = { ...monitor };
+  monitorData.translations = serializeContentTranslations(monitorData.translations, MONITOR_TRANSLATABLE_FIELDS);
   if (!!!monitorData.id || monitorData.id === 0) {
     throw new Error("monitor id cannot be empty or 0");
   }
@@ -438,6 +439,7 @@ async function removeTagFromGroupMonitors(tag: string): Promise<void> {
         typeof group.monitor_settings_json === "string"
           ? group.monitor_settings_json
           : JSON.stringify(group.monitor_settings_json),
+      translations: group.translations ? JSON.stringify(group.translations) : null,
       external_url: group.external_url,
     };
 
