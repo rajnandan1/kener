@@ -28,7 +28,11 @@ import { GetLastMonitoringValue, SetLastHeartbeat, DeleteMonitorCaches } from ".
 import { CollapseStatusCounts } from "../../clientTools.js";
 import { translate, isLocaleAvailable } from "../i18n.js";
 import type { HeartbeatMonitor, GroupMonitorTypeData } from "../types/monitor.js";
-import { serializeContentTranslations, MONITOR_TRANSLATABLE_FIELDS } from "../content-i18n.js";
+import {
+  serializeContentTranslations,
+  resolveTranslationsForUpdate,
+  MONITOR_TRANSLATABLE_FIELDS,
+} from "../content-i18n.js";
 import { parseContentTranslations } from "../../content-i18n.js";
 
 interface GroupUpdateData {
@@ -38,8 +42,13 @@ interface GroupUpdateData {
   latency: number;
 }
 
-interface MonitorInput extends MonitorRecordInsert {
+// `translations` is retyped to `unknown` here (vs. MonitorRecordInsert's stored-shape
+// `string | null`) because callers pass a raw ContentTranslations object, an already-serialized
+// string, undefined (omitted), or explicit null — mirroring IncidentInput/CreateMaintenanceInput.
+// MonitorRecordInsert/MonitorRecord themselves are left untouched since they describe actual DB rows.
+interface MonitorInput extends Omit<MonitorRecordInsert, "translations"> {
   id?: number;
+  translations?: unknown;
 }
 
 /**
@@ -197,25 +206,38 @@ export const GetMonitorsParsed = async (query: MonitorFilter): Promise<Array<Mon
   return parsedMonitors;
 };
 
+/**
+ * Looks up the raw (still-serialized) translations string currently stored for a monitor, for
+ * callers on the UPDATE path whose payload omits `translations` entirely and must therefore
+ * preserve whatever is already persisted (see resolveTranslationsForUpdate).
+ */
+async function getExistingRawTranslations(tag: string): Promise<string | null> {
+  const existing = await db.getMonitorsByTag(tag);
+  return existing?.translations ?? null;
+}
+
 export const CreateUpdateMonitor = async (monitor: MonitorInput): Promise<number | number[]> => {
-  let monitorData = { ...monitor };
-  monitorData.translations = serializeContentTranslations(monitorData.translations, MONITOR_TRANSLATABLE_FIELDS);
+  const monitorData = { ...monitor };
   if (monitorData.id) {
-    return await db.updateMonitor(monitorData as MonitorRecord);
+    const existingRaw =
+      monitor.translations === undefined ? await getExistingRawTranslations(monitorData.tag) : undefined;
+    const translations = resolveTranslationsForUpdate(monitor.translations, existingRaw, MONITOR_TRANSLATABLE_FIELDS);
+    return await db.updateMonitor({ ...monitorData, translations } as MonitorRecord);
   } else {
     validateMonitorTag(monitorData.tag);
-    return await db.insertMonitor(monitorData);
+    const translations = serializeContentTranslations(monitorData.translations, MONITOR_TRANSLATABLE_FIELDS);
+    return await db.insertMonitor({ ...monitorData, translations });
   }
 };
 
 export const CreateMonitor = async (monitor: MonitorInput): Promise<number[]> => {
-  let monitorData = { ...monitor };
-  monitorData.translations = serializeContentTranslations(monitorData.translations, MONITOR_TRANSLATABLE_FIELDS);
+  const monitorData = { ...monitor };
   if (monitorData.id) {
     throw new Error("monitor id must be empty or 0");
   }
   validateMonitorTag(monitorData.tag);
-  return await db.insertMonitor(monitorData);
+  const translations = serializeContentTranslations(monitorData.translations, MONITOR_TRANSLATABLE_FIELDS);
+  return await db.insertMonitor({ ...monitorData, translations });
 };
 
 interface CloneMonitorInput {
@@ -283,12 +305,14 @@ export const CloneMonitor = async ({ sourceTag, newTag, newName }: CloneMonitorI
 };
 
 export const UpdateMonitor = async (monitor: MonitorInput): Promise<number> => {
-  let monitorData = { ...monitor };
-  monitorData.translations = serializeContentTranslations(monitorData.translations, MONITOR_TRANSLATABLE_FIELDS);
+  const monitorData = { ...monitor };
   if (!!!monitorData.id || monitorData.id === 0) {
     throw new Error("monitor id cannot be empty or 0");
   }
-  return await db.updateMonitor(monitorData as MonitorRecord);
+  const existingRaw =
+    monitor.translations === undefined ? await getExistingRawTranslations(monitorData.tag) : undefined;
+  const translations = resolveTranslationsForUpdate(monitor.translations, existingRaw, MONITOR_TRANSLATABLE_FIELDS);
+  return await db.updateMonitor({ ...monitorData, translations } as MonitorRecord);
 };
 
 export const GetMonitors = async (data: MonitorFilter): Promise<MonitorRecord[]> => {

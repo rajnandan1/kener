@@ -71,10 +71,23 @@ export function validateContentTranslations(
   return Object.keys(result).length > 0 ? result : null;
 }
 
-export function serializeContentTranslations(
-  input: unknown,
-  allowedFields: readonly string[],
-): string | null {
+export function serializeContentTranslations(input: unknown, allowedFields: readonly string[]): string | null {
   const validated = validateContentTranslations(input, allowedFields);
   return validated ? JSON.stringify(validated) : null;
+}
+
+/**
+ * Resolves what to persist for a `translations` column on an UPDATE, giving the field
+ * keep-on-undefined semantics: an omitted key preserves whatever is already stored, while an
+ * explicit value (object or null) always replaces it. Callers whose input omits `translations`
+ * entirely (e.g. cards that only edit unrelated settings) must not silently null out authored
+ * translations.
+ */
+export function resolveTranslationsForUpdate(
+  incoming: unknown,
+  existingRaw: string | null | undefined,
+  allowedFields: readonly string[],
+): string | null {
+  if (incoming === undefined) return existingRaw ?? null;
+  return serializeContentTranslations(incoming, allowedFields);
 }

@@ -3,6 +3,7 @@ import {
   INCIDENT_TRANSLATABLE_FIELDS,
   MAINTENANCE_TRANSLATABLE_FIELDS,
   MONITOR_TRANSLATABLE_FIELDS,
+  resolveTranslationsForUpdate,
   serializeContentTranslations,
   validateContentTranslations,
 } from "./content-i18n";
@@ -49,12 +50,12 @@ describe("validateContentTranslations", () => {
   });
 
   it("enforces length caps (255 for name/title, 65535 for description/comment)", () => {
-    expect(() =>
-      validateContentTranslations({ de: { name: "x".repeat(256) } }, MONITOR_TRANSLATABLE_FIELDS),
-    ).toThrow(/255/);
-    expect(
-      validateContentTranslations({ de: { name: "x".repeat(255) } }, MONITOR_TRANSLATABLE_FIELDS),
-    ).toEqual({ de: { name: "x".repeat(255) } });
+    expect(() => validateContentTranslations({ de: { name: "x".repeat(256) } }, MONITOR_TRANSLATABLE_FIELDS)).toThrow(
+      /255/,
+    );
+    expect(validateContentTranslations({ de: { name: "x".repeat(255) } }, MONITOR_TRANSLATABLE_FIELDS)).toEqual({
+      de: { name: "x".repeat(255) },
+    });
     expect(() =>
       validateContentTranslations({ de: { description: "x".repeat(65536) } }, MONITOR_TRANSLATABLE_FIELDS),
     ).toThrow(/65535/);
@@ -81,5 +82,34 @@ describe("serializeContentTranslations", () => {
   it("returns null when nothing survives validation", () => {
     expect(serializeContentTranslations(null, MONITOR_TRANSLATABLE_FIELDS)).toBeNull();
     expect(serializeContentTranslations({ de: { name: " " } }, MONITOR_TRANSLATABLE_FIELDS)).toBeNull();
+  });
+});
+
+describe("resolveTranslationsForUpdate", () => {
+  it("keeps the existing raw string when incoming is undefined", () => {
+    expect(resolveTranslationsForUpdate(undefined, '{"de":{"name":"Webseite"}}', MONITOR_TRANSLATABLE_FIELDS)).toBe(
+      '{"de":{"name":"Webseite"}}',
+    );
+  });
+
+  it("returns null when incoming is undefined and there is no existing value", () => {
+    expect(resolveTranslationsForUpdate(undefined, null, MONITOR_TRANSLATABLE_FIELDS)).toBeNull();
+    expect(resolveTranslationsForUpdate(undefined, undefined, MONITOR_TRANSLATABLE_FIELDS)).toBeNull();
+  });
+
+  it("clears translations when incoming is explicitly null, even if an existing value is present", () => {
+    expect(resolveTranslationsForUpdate(null, '{"de":{"name":"Webseite"}}', MONITOR_TRANSLATABLE_FIELDS)).toBeNull();
+  });
+
+  it("serializes an incoming object regardless of what existed before", () => {
+    expect(
+      resolveTranslationsForUpdate({ de: { name: "Neu" } }, '{"de":{"name":"Alt"}}', MONITOR_TRANSLATABLE_FIELDS),
+    ).toBe('{"de":{"name":"Neu"}}');
+  });
+
+  it("throws when incoming is an invalid object, regardless of existing value", () => {
+    expect(() => resolveTranslationsForUpdate({ de: { comment: "Hi" } }, null, MONITOR_TRANSLATABLE_FIELDS)).toThrow(
+      /not translatable/i,
+    );
   });
 });
