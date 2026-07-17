@@ -211,8 +211,8 @@ export const GetMonitorsParsed = async (query: MonitorFilter): Promise<Array<Mon
  * callers on the UPDATE path whose payload omits `translations` entirely and must therefore
  * preserve whatever is already persisted (see resolveTranslationsForUpdate).
  */
-async function getExistingRawTranslations(tag: string): Promise<string | null> {
-  const existing = await db.getMonitorsByTag(tag);
+async function getExistingRawTranslations(id: number): Promise<string | null> {
+  const [existing] = await db.getMonitors({ id });
   return existing?.translations ?? null;
 }
 
@@ -220,7 +220,7 @@ export const CreateUpdateMonitor = async (monitor: MonitorInput): Promise<number
   const monitorData = { ...monitor };
   if (monitorData.id) {
     const existingRaw =
-      monitor.translations === undefined ? await getExistingRawTranslations(monitorData.tag) : undefined;
+      monitor.translations === undefined ? await getExistingRawTranslations(monitorData.id) : undefined;
     const translations = resolveTranslationsForUpdate(monitor.translations, existingRaw, MONITOR_TRANSLATABLE_FIELDS);
     return await db.updateMonitor({ ...monitorData, translations } as MonitorRecord);
   } else {
@@ -309,8 +309,7 @@ export const UpdateMonitor = async (monitor: MonitorInput): Promise<number> => {
   if (!!!monitorData.id || monitorData.id === 0) {
     throw new Error("monitor id cannot be empty or 0");
   }
-  const existingRaw =
-    monitor.translations === undefined ? await getExistingRawTranslations(monitorData.tag) : undefined;
+  const existingRaw = monitor.translations === undefined ? await getExistingRawTranslations(monitorData.id) : undefined;
   const translations = resolveTranslationsForUpdate(monitor.translations, existingRaw, MONITOR_TRANSLATABLE_FIELDS);
   return await db.updateMonitor({ ...monitorData, translations } as MonitorRecord);
 };
