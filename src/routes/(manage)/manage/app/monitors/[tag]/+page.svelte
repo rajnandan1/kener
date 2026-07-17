@@ -216,7 +216,11 @@
   }
 
   async function fetchLocaleInfo() {
-    localeInfo = await fetchTranslatableLocales();
+    try {
+      localeInfo = await fetchTranslatableLocales();
+    } catch (e) {
+      console.error("Failed to fetch translatable locales:", e);
+    }
   }
 
   $effect(() => {
