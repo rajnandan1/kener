@@ -10,7 +10,7 @@
   import mdToHTML from "$lib/marked";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import { SveltePurify } from "@humanspeak/svelte-purify";
-  import { t } from "$lib/stores/i18n";
+  import { t, lt } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import clientResolver, { absoluteResolve } from "$lib/client/resolver.js";
   import { page } from "$app/state";
@@ -39,7 +39,9 @@
     <Item.Root class="mb-4 px-0">
       <Item.Content class="min-w-0 flex-1 px-0">
         <h1>
-          <Item.Title class="text-3xl wrap-break-word">{data.incident.title}</Item.Title>
+          <Item.Title class="text-3xl wrap-break-word"
+            >{$lt(data.incident.translations, "title", data.incident.title)}</Item.Title
+          >
         </h1>
       </Item.Content>
     </Item.Root>
@@ -73,7 +75,7 @@
                   </span>
                 </div>
                 <div class="prose prose-sm dark:prose-invert max-w-none min-w-0 overflow-x-auto wrap-break-word">
-                  <SveltePurify html={mdToHTML(comment.comment)} />
+                  <SveltePurify html={mdToHTML($lt(comment.translations, "comment", comment.comment))} />
                 </div>
               </div>
             {/each}
@@ -115,7 +117,7 @@
                     </Tooltip.Root>
                   </Item.Media>
                   <Item.Content>
-                    <Item.Title>{monitor.monitor_name}</Item.Title>
+                    <Item.Title>{$lt(monitor.monitor_translations, "name", monitor.monitor_name)}</Item.Title>
                     <Item.Description>
                       {#if monitor.monitor_impact}
                         <span class="text-{monitor.monitor_impact.toLowerCase()}">

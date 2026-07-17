@@ -13,7 +13,7 @@
   import mdToHTML from "$lib/marked";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
   import STATUS_ICON from "$lib/icons";
-  import { t } from "$lib/stores/i18n";
+  import { t, lt } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import clientResolver, { absoluteResolve } from "$lib/client/resolver.js";
   import { SveltePurify } from "@humanspeak/svelte-purify";
@@ -84,7 +84,9 @@
     <Item.Root class="mb-4 flex-col items-start px-0 sm:flex-row sm:items-center">
       <Item.Content class="min-w-0 flex-1 px-0">
         <h1>
-          <Item.Title class="text-3xl wrap-break-word">{data.maintenance.title}</Item.Title>
+          <Item.Title class="text-3xl wrap-break-word"
+            >{$lt(data.maintenance.translations, "title", data.maintenance.title)}</Item.Title
+          >
         </h1>
       </Item.Content>
     </Item.Root>
@@ -123,7 +125,9 @@
       {#if data.maintenance.description}
         <div class="bg-background min-w-0 rounded-3xl border">
           <div class="prose prose-sm dark:prose-invert max-w-none min-w-0 overflow-x-auto p-4 wrap-break-word">
-            <SveltePurify html={mdToHTML(data.maintenance.description)} />
+            <SveltePurify
+              html={mdToHTML($lt(data.maintenance.translations, "description", data.maintenance.description))}
+            />
           </div>
         </div>
       {/if}
@@ -206,7 +210,7 @@
                     </Tooltip.Root>
                   </Item.Media>
                   <Item.Content>
-                    <Item.Title>{monitor.monitor_name}</Item.Title>
+                    <Item.Title>{$lt(monitor.monitor_translations, "name", monitor.monitor_name)}</Item.Title>
                     <Item.Description>
                       <span class="text-{monitor.monitor_impact.toLowerCase()}">
                         {$t(monitor.monitor_impact)}
