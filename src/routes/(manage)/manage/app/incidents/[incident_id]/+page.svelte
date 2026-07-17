@@ -488,6 +488,7 @@
   function cancelEditComment() {
     editingCommentId = null;
     commentText = "";
+    commentTranslations = {};
     commentState = incident.state;
     commentDateTime = "";
   }
@@ -506,6 +507,7 @@
   function cancelAddComment() {
     addingNewComment = false;
     commentText = "";
+    commentTranslations = {};
     commentState = incident.state;
     commentDateTime = "";
   }
