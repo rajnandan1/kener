@@ -2,6 +2,7 @@ import db from "$lib/server/db/db";
 import GC, { type StatusType } from "$lib/global-constants";
 import type { MonitorRecord, TimestampStatusCount } from "$lib/server/types/db";
 import { UptimeCalculator } from "$lib/server/tool";
+import { parseContentTranslations } from "$lib/content-i18n";
 import type { MonitorBarResponse } from "./get";
 
 interface ParsedMonitorSettings {
@@ -97,5 +98,6 @@ export const buildMonitorBarResponseFromRawData = (
     avgLatency: uptimeCalculationResult.avgLatency,
     maxLatency: uptimeCalculationResult.maxLatency,
     minLatency: uptimeCalculationResult.minLatency,
+    translations: parseContentTranslations(monitor.translations),
   };
 };
