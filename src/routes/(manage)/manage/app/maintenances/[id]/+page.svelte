@@ -32,6 +32,10 @@
   import { rrulestr } from "rrule";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import { parseContentTranslations } from "$lib/content-i18n";
+  import { fetchTranslatableLocales, type TranslatableLocalesInfo } from "$lib/client/manage-locales";
+  import type { ContentTranslations } from "$lib/types/common";
+  import TranslationsButton from "$lib/components/manage/TranslationsButton.svelte";
 
   let { params }: PageProps = $props();
   const isNew = $derived(params.id === "new");
@@ -74,6 +78,8 @@
     status: "ACTIVE",
     is_global: "YES"
   });
+  let maintenanceTranslations = $state<ContentTranslations>({});
+  let localeInfo = $state<TranslatableLocalesInfo>({ defaultLocaleName: "", locales: [] });
 
   // For datetime input
   let startDateTimeLocal = $state("");
@@ -273,6 +279,7 @@
           status: result.status,
           is_global: result.is_global || "YES"
         };
+        maintenanceTranslations = parseContentTranslations(result.translations) ?? {};
 
         // Parse RRULE for UI
         parseRrule(result.rrule);
@@ -355,7 +362,8 @@
           rrule,
           duration_seconds: calculatedDurationSeconds,
           monitors: selectedMonitors.map((m) => ({ monitor_tag: m.tag, monitor_impact: m.status })),
-          is_global: maintenance.is_global
+          is_global: maintenance.is_global,
+          translations: Object.keys(maintenanceTranslations).length > 0 ? maintenanceTranslations : null
         };
 
         const response = await fetch(clientResolver(resolve, "/manage/api"), {
@@ -380,7 +388,8 @@
           duration_seconds: calculatedDurationSeconds,
           status: maintenance.status,
           monitors: selectedMonitors.map((m) => ({ monitor_tag: m.tag, monitor_impact: m.status })),
-          is_global: maintenance.is_global
+          is_global: maintenance.is_global,
+          translations: Object.keys(maintenanceTranslations).length > 0 ? maintenanceTranslations : null
         };
 
         const response = await fetch(clientResolver(resolve, "/manage/api"), {
@@ -561,9 +570,19 @@
     return monitor?.name || tag;
   }
 
+  // Fetch translatable locale info
+  async function fetchLocaleInfo() {
+    try {
+      localeInfo = await fetchTranslatableLocales();
+    } catch (e) {
+      console.error("Failed to fetch translatable locales:", e);
+    }
+  }
+
   onMount(() => {
     fetchMaintenance();
     fetchAvailableMonitors();
+    fetchLocaleInfo();
   });
 </script>
 
@@ -646,13 +665,36 @@
 
         <!-- Title -->
         <div class="flex flex-col gap-2">
-          <Label for="title">Title <span class="text-destructive">*</span></Label>
+          <div class="flex items-center justify-between">
+            <Label for="title">Title <span class="text-destructive">*</span></Label>
+            {#if localeInfo.locales.length > 0}
+              <TranslationsButton
+                bind:translations={maintenanceTranslations}
+                field="title"
+                defaultValue={maintenance.title}
+                defaultLocaleName={localeInfo.defaultLocaleName}
+                locales={localeInfo.locales}
+              />
+            {/if}
+          </div>
           <Input id="title" bind:value={maintenance.title} placeholder="Scheduled maintenance window" />
         </div>
 
         <!-- Description -->
         <div class="flex flex-col gap-2">
-          <Label for="description">Description</Label>
+          <div class="flex items-center justify-between">
+            <Label for="description">Description</Label>
+            {#if localeInfo.locales.length > 0}
+              <TranslationsButton
+                bind:translations={maintenanceTranslations}
+                field="description"
+                defaultValue={maintenance.description ?? ""}
+                defaultLocaleName={localeInfo.defaultLocaleName}
+                locales={localeInfo.locales}
+                multiline
+              />
+            {/if}
+          </div>
           <Textarea
             id="description"
             bind:value={maintenance.description}
