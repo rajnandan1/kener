@@ -410,6 +410,7 @@
         <Table.Row>
           <Table.Head>Name</Table.Head>
           <Table.Head>Email</Table.Head>
+          <Table.Head class="text-center">Auth</Table.Head>
           <Table.Head class="text-center">Verified</Table.Head>
           <Table.Head>Role</Table.Head>
           <Table.Head>Status</Table.Head>
@@ -419,7 +420,7 @@
       <Table.Body>
         {#if loading && users.length === 0}
           <Table.Row>
-            <Table.Cell colspan={6} class="py-8 text-center">
+            <Table.Cell colspan={7} class="py-8 text-center">
               <div class="flex items-center justify-center gap-2">
                 <Spinner class="size-4" />
                 <span class="text-muted-foreground text-sm">Loading users...</span>
@@ -428,7 +429,7 @@
           </Table.Row>
         {:else if users.length === 0}
           <Table.Row>
-            <Table.Cell colspan={6} class="text-muted-foreground py-8 text-center">No users found.</Table.Cell>
+            <Table.Cell colspan={7} class="text-muted-foreground py-8 text-center">No users found.</Table.Cell>
           </Table.Row>
         {:else}
           {#each users as user (user.id)}
@@ -439,7 +440,12 @@
               >
               <Table.Cell>{user.email}</Table.Cell>
               <Table.Cell class="text-center">
-                {#if user.is_verified}
+                <Badge variant={user.auth_provider === GC.AUTH_PROVIDER_OIDC ? "default" : "outline"}>
+                  {user.auth_provider === GC.AUTH_PROVIDER_OIDC ? "OIDC" : "Local"}
+                </Badge>
+              </Table.Cell>
+              <Table.Cell class="text-center">
+                {#if user.is_verified || user.auth_provider === GC.AUTH_PROVIDER_OIDC}
                   <CheckCheckIcon class="mx-auto h-4 w-4 text-blue-500" />
                 {:else}
                   <MailWarningIcon class="mx-auto h-4 w-4 text-yellow-500" />
@@ -599,7 +605,7 @@
             </p>
           </div>
           <!-- Resend Invitation -->
-          {#if !toEditUser.has_password}
+          {#if !toEditUser.has_password && toEditUser.auth_provider !== GC.AUTH_PROVIDER_OIDC}
             <Card.Root>
               <Card.Content class="">
                 <p class="mb-3 text-sm">
