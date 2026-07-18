@@ -5,10 +5,11 @@
   import ICONS from "$lib/icons";
   import StatusBarCalendar from "$lib/components/StatusBarCalendar.svelte";
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get.js";
+  import type { PageSettingsLatencyDisplay } from "$lib/types/api";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { formatDate } from "$lib/stores/datetime";
-  import { GetInitials } from "$lib/clientTools.js";
+  import { GetInitials, buildLatencyDisplay } from "$lib/clientTools.js";
   import GroupMonitorPopover from "./GroupMonitorPopover.svelte";
   import { t } from "$lib/stores/i18n";
   import { page } from "$app/state";
@@ -22,6 +23,7 @@
     endOfDayTodayAtTz?: number;
     compact?: boolean;
     grid?: boolean;
+    latencyDisplay?: PageSettingsLatencyDisplay;
   }
 
   let {
@@ -32,11 +34,21 @@
     days,
     endOfDayTodayAtTz,
     compact = false,
-    grid = false
+    grid = false,
+    latencyDisplay = { current: false, avg: true, min: false, max: false }
   }: Props = $props();
   let data = $derived(prefetchedData ?? null);
   let error = $derived(prefetchedError ?? null);
   let loading = $derived(!data && !error);
+  let latencyText = $derived(
+    data
+      ? buildLatencyDisplay(
+          latencyDisplay,
+          { current: data.currentLatency, avg: data.avgLatency, min: data.minLatency, max: data.maxLatency },
+          { current: $t("now:"), avg: $t("avg:"), min: $t("min:"), max: $t("max:") }
+        )
+      : ""
+  );
   let showGroupPopover = $derived(
     groupChildTags.length > 0 && typeof days === "number" && typeof endOfDayTodayAtTz === "number"
   );
@@ -120,15 +132,17 @@
       </Item.Content>
 
       <Item.Content class="order-3 w-full text-left sm:order-0 sm:w-auto sm:flex-none sm:text-center">
-        <Item.Title class="items-start text-2xl">
-          <StatusIcon class="{STATUS_STROKE[data.currentStatus]} {grid ? 'mt-1 size-5' : 'mt-1.5 size-6'}" />
-          <div class="flex flex-col items-start gap-1 sm:items-end">
+        <div class="flex flex-col items-start gap-1 sm:items-end">
+          <Item.Title class="text-2xl">
+            <StatusIcon class="{STATUS_STROKE[data.currentStatus]} {grid ? 'size-5' : 'size-6'}" />
             <span class={grid ? "text-base sm:text-lg" : "text-lg sm:text-xl"}>{data.uptime}%</span>
+          </Item.Title>
+          {#if latencyText}
             <span class="text-muted-foreground text-right text-xs">
-              {data.avgLatency}
+              {latencyText}
             </span>
-          </div>
-        </Item.Title>
+          {/if}
+        </div>
       </Item.Content>
     </Item.Root>
     {#if !compact}
@@ -151,6 +165,7 @@
           tags={groupChildTags}
           days={days as number}
           endOfDayTodayAtTz={endOfDayTodayAtTz as number}
+          {latencyDisplay}
         >
           {$t("Included Monitors (%count)", { count: String(groupChildTags.length) })}
         </GroupMonitorPopover>
