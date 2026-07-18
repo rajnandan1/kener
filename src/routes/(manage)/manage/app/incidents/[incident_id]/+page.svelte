@@ -30,6 +30,10 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { SveltePurify } from "@humanspeak/svelte-purify";
+  import { parseContentTranslations } from "$lib/content-i18n";
+  import { fetchTranslatableLocales, type TranslatableLocalesInfo } from "$lib/client/manage-locales";
+  import type { ContentTranslations } from "$lib/types/common";
+  import TranslationsButton from "$lib/components/manage/TranslationsButton.svelte";
 
   import CodeMirror from "svelte-codemirror-editor";
   import { markdown } from "@codemirror/lang-markdown";
@@ -60,12 +64,15 @@
     state: GC.INVESTIGATING,
     is_global: "YES"
   });
+  let incidentTranslations = $state<ContentTranslations>({});
+  let localeInfo = $state<TranslatableLocalesInfo>({ defaultLocaleName: "", locales: [] });
 
   // For datetime inputs (convert to/from local datetime string)
   let startDateTimeLocal = $state("");
 
   // First comment for new incidents
   let firstComment = $state("");
+  let firstCommentTranslations = $state<ContentTranslations>({});
 
   // Comments for existing incidents
   let comments = $state<IncidentCommentRecord[]>([]);
@@ -84,6 +91,7 @@
   let addingNewComment = $state(false);
   let editingCommentId = $state<number | null>(null);
   let commentText = $state<string>("");
+  let commentTranslations = $state<ContentTranslations>({});
   let commentState = $state<string>(GC.INVESTIGATING);
   let commentDateTime = $state<string>("");
   let savingComment = $state<boolean>(false);
@@ -153,6 +161,7 @@
           state: result.state,
           is_global: result.is_global || "YES"
         };
+        incidentTranslations = parseContentTranslations(result.translations) ?? {};
         // Fetch comments and monitors
         await Promise.all([fetchComments(), fetchIncidentMonitors()]);
       } else {
@@ -233,6 +242,15 @@
     }
   }
 
+  // Fetch translatable locale info
+  async function fetchLocaleInfo() {
+    try {
+      localeInfo = await fetchTranslatableLocales();
+    } catch (e) {
+      console.error("Failed to fetch translatable locales:", e);
+    }
+  }
+
   // Save incident (create or update)
   async function saveIncident() {
     if (!isValid) return;
@@ -254,7 +272,8 @@
               status: "OPEN",
               state: GC.INVESTIGATING,
               incident_type: GC.INCIDENT,
-              is_global: incident.is_global
+              is_global: incident.is_global,
+              translations: Object.keys(incidentTranslations).length > 0 ? incidentTranslations : null
             }
           })
         });
@@ -291,7 +310,8 @@
                   incident_id: incidentId,
                   comment: firstComment,
                   state: GC.INVESTIGATING,
-                  commented_at: incident.start_date_time
+                  commented_at: incident.start_date_time,
+                  translations: Object.keys(firstCommentTranslations).length > 0 ? firstCommentTranslations : null
                 }
               })
             });
@@ -312,7 +332,8 @@
               start_date_time: incident.start_date_time,
               end_date_time: null,
               status: "OPEN",
-              is_global: incident.is_global
+              is_global: incident.is_global,
+              translations: Object.keys(incidentTranslations).length > 0 ? incidentTranslations : null
             }
           })
         });
@@ -458,6 +479,7 @@
   function startEditComment(comment: IncidentCommentRecord) {
     editingCommentId = comment.id;
     commentText = comment.comment;
+    commentTranslations = parseContentTranslations(comment.translations) ?? {};
     commentState = comment.state;
     commentDateTime = timestampToLocalDatetime(comment.commented_at);
   }
@@ -466,6 +488,7 @@
   function cancelEditComment() {
     editingCommentId = null;
     commentText = "";
+    commentTranslations = {};
     commentState = incident.state;
     commentDateTime = "";
   }
@@ -475,6 +498,7 @@
     addingNewComment = true;
     editingCommentId = null;
     commentText = "";
+    commentTranslations = {};
     commentState = incident.state;
     commentDateTime = timestampToLocalDatetime(Math.floor(Date.now() / 1000));
   }
@@ -483,6 +507,7 @@
   function cancelAddComment() {
     addingNewComment = false;
     commentText = "";
+    commentTranslations = {};
     commentState = incident.state;
     commentDateTime = "";
   }
@@ -504,7 +529,8 @@
               comment_id: editingCommentId,
               comment: commentText,
               state: commentState,
-              commented_at: localDatetimeToTimestamp(commentDateTime)
+              commented_at: localDatetimeToTimestamp(commentDateTime),
+              translations: Object.keys(commentTranslations).length > 0 ? commentTranslations : null
             }
           })
         });
@@ -528,7 +554,8 @@
               incident_id: incident.id,
               comment: commentText,
               state: commentState,
-              commented_at: localDatetimeToTimestamp(commentDateTime)
+              commented_at: localDatetimeToTimestamp(commentDateTime),
+              translations: Object.keys(commentTranslations).length > 0 ? commentTranslations : null
             }
           })
         });
@@ -675,6 +702,7 @@
   $effect(() => {
     fetchIncident();
     fetchAvailableMonitors();
+    fetchLocaleInfo();
   });
 </script>
 
@@ -780,7 +808,18 @@
 
         <!-- Title -->
         <div class="flex flex-col gap-2">
-          <Label for="incident-title">Title <span class="text-destructive">*</span></Label>
+          <div class="flex items-center justify-between">
+            <Label for="incident-title">Title <span class="text-destructive">*</span></Label>
+            {#if localeInfo.locales.length > 0}
+              <TranslationsButton
+                bind:translations={incidentTranslations}
+                field="title"
+                defaultValue={incident.title}
+                defaultLocaleName={localeInfo.defaultLocaleName}
+                locales={localeInfo.locales}
+              />
+            {/if}
+          </div>
           <Input id="incident-title" bind:value={incident.title} placeholder="Brief description of the incident" />
         </div>
 
@@ -814,7 +853,19 @@
         <!-- First Comment (only for new) -->
         {#if isNew}
           <div class="flex flex-col gap-2">
-            <Label for="first-comment">Initial Update (Optional)</Label>
+            <div class="flex items-center justify-between">
+              <Label for="first-comment">Initial Update (Optional)</Label>
+              {#if localeInfo.locales.length > 0}
+                <TranslationsButton
+                  bind:translations={firstCommentTranslations}
+                  field="comment"
+                  defaultValue={firstComment}
+                  defaultLocaleName={localeInfo.defaultLocaleName}
+                  locales={localeInfo.locales}
+                  multiline
+                />
+              {/if}
+            </div>
             <div class="overflow-hidden rounded-md border">
               <CodeMirror
                 bind:value={firstComment}
@@ -1003,7 +1054,19 @@
           {#if addingNewComment}
             <div class="mb-4 space-y-4 rounded-md border p-4">
               <div class="flex flex-col gap-2">
-                <Label>Update Message</Label>
+                <div class="flex items-center justify-between">
+                  <Label>Update Message</Label>
+                  {#if localeInfo.locales.length > 0}
+                    <TranslationsButton
+                      bind:translations={commentTranslations}
+                      field="comment"
+                      defaultValue={commentText}
+                      defaultLocaleName={localeInfo.defaultLocaleName}
+                      locales={localeInfo.locales}
+                      multiline
+                    />
+                  {/if}
+                </div>
                 <div class="overflow-hidden rounded-md border">
                   <CodeMirror
                     bind:value={commentText}
@@ -1069,7 +1132,19 @@
                     <!-- Inline edit mode -->
                     <div class="space-y-4">
                       <div class="flex flex-col gap-2">
-                        <Label>Update Message</Label>
+                        <div class="flex items-center justify-between">
+                          <Label>Update Message</Label>
+                          {#if localeInfo.locales.length > 0}
+                            <TranslationsButton
+                              bind:translations={commentTranslations}
+                              field="comment"
+                              defaultValue={commentText}
+                              defaultLocaleName={localeInfo.defaultLocaleName}
+                              locales={localeInfo.locales}
+                              multiline
+                            />
+                          {/if}
+                        </div>
                         <div class="overflow-hidden rounded-md border">
                           <CodeMirror
                             bind:value={commentText}

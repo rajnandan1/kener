@@ -1,6 +1,7 @@
 // Server-only database types (based on migrations schema)
 import type { Knex } from "knex";
 import type { PageMonitorLayoutStyle } from "$lib/types/api";
+import type { ContentTranslations } from "../../types/common.js";
 
 // ============ monitoring_data table ============
 export interface MonitoringData {
@@ -84,6 +85,7 @@ export interface MonitorRecord {
   include_degraded_in_downtime?: string;
   is_hidden: string;
   monitor_settings_json: string | null;
+  translations?: string | null;
   created_at?: Date;
   updated_at?: Date;
 }
@@ -142,6 +144,7 @@ export interface MonitorRecordTyped {
   include_degraded_in_downtime?: string;
   is_hidden: string;
   monitor_settings_json: MonitorSettings | null;
+  translations: ContentTranslations | null;
   created_at?: Date;
   updated_at?: Date;
   external_url?: string | null;
@@ -166,6 +169,7 @@ export interface MonitorRecordInsert {
   include_degraded_in_downtime?: string;
   is_hidden?: string;
   monitor_settings_json?: string | null;
+  translations?: string | null;
   external_url?: string | null;
 }
 
@@ -328,6 +332,7 @@ export interface IncidentRecord {
   incident_type: string;
   incident_source: string;
   is_global: string;
+  translations?: string | null;
 }
 
 export interface IncidentMonitorImpact {
@@ -335,6 +340,7 @@ export interface IncidentMonitorImpact {
   monitor_impact: string;
   monitor_name: string;
   monitor_image: string | null;
+  monitor_translations?: string | null;
 }
 
 export interface IncidentForMonitorList {
@@ -346,6 +352,7 @@ export interface IncidentForMonitorList {
   updated_at: Date;
   status: string;
   state: string;
+  translations?: string | null;
   monitors: IncidentMonitorImpact[];
 }
 
@@ -362,6 +369,7 @@ export interface IncidentRecordInsert {
   incident_type?: string;
   incident_source?: string;
   is_global?: string;
+  translations?: string | null;
 }
 
 // ============ incident_monitors table ============
@@ -387,6 +395,7 @@ export interface IncidentMonitorDetailRecord {
   monitor_name: string;
   monitor_image: string | null;
   monitor_description: string | null;
+  monitor_translations?: string | null;
   created_at: Date;
   updated_at: Date;
   incident_id: number;
@@ -402,6 +411,7 @@ export interface IncidentCommentRecord {
   updated_at: Date;
   status: string;
   state: string;
+  translations?: string | null;
 }
 
 // ============ Filter types ============
@@ -538,6 +548,7 @@ export interface MaintenanceRecord {
   created_at: Date;
   updated_at: Date;
   is_global: string;
+  translations?: string | null;
 }
 
 export interface MaintenanceRecordInsert {
@@ -548,6 +559,7 @@ export interface MaintenanceRecordInsert {
   duration_seconds: number;
   status?: "ACTIVE" | "INACTIVE";
   is_global?: string;
+  translations?: string | null;
 }
 
 // ============ maintenance_monitors table ============
@@ -568,6 +580,7 @@ export interface MaintenanceMonitorDetailRecord {
   monitor_name: string;
   monitor_image: string | null;
   monitor_description: string | null;
+  monitor_translations?: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -580,6 +593,7 @@ export interface MaintenanceMonitorDetailRecord {
   monitor_name: string;
   monitor_image: string | null;
   monitor_description: string | null;
+  monitor_translations?: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -638,6 +652,7 @@ export interface MaintenanceMonitorImpact {
   monitor_name: string;
   monitor_image: string | null;
   monitor_impact: string;
+  monitor_translations?: string | null;
 }
 
 export interface MaintenanceEventsMonitorList {
@@ -651,6 +666,7 @@ export interface MaintenanceEventsMonitorList {
   monitors: MaintenanceMonitorImpact[];
   created_at: Date;
   updated_at: Date;
+  translations?: string | null;
 }
 
 // ============ monitor_alerts_config table ============

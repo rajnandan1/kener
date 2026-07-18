@@ -14,3 +14,9 @@ export interface MonitorTableRow {
   responseTime: string;
   uptimes: MonitorTableUptime[];
 }
+
+/**
+ * Per-entity content translations: locale code -> field name -> translated text.
+ * Example: { "de": { "name": "Webseite" }, "fr": { "name": "Site web" } }
+ */
+export type ContentTranslations = Record<string, Record<string, string>>;

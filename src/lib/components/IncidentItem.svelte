@@ -5,7 +5,7 @@
   import ArrowRight from "@lucide/svelte/icons/arrow-right";
   import * as Popover from "$lib/components/ui/popover/index.js";
   import * as Avatar from "$lib/components/ui/avatar/index.js";
-  import { t } from "$lib/stores/i18n";
+  import { t, lt } from "$lib/stores/i18n";
   import { formatDate, formatDuration } from "$lib/stores/datetime";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
@@ -46,7 +46,7 @@
       <span class="text-xs font-medium text-{incident.state.toLowerCase()}">{$t(incident.state)}</span>
       <Item.Title class="min-w-0 text-base wrap-break-word break-all">
         <a {target} class="hover:underline" href={clientResolver(resolve, `/incidents/${incident.id}`)}>
-          {incident.title}
+          {$lt(incident.translations, "title", incident.title)}
         </a>
       </Item.Title>
     </div>
@@ -61,7 +61,7 @@
                   variant="outline"
                   class="border-{monitor.monitor_impact.toLowerCase()}   cursor-pointer rounded-none border-0 border-b px-0  text-sm font-normal"
                 >
-                  {monitor.monitor_name}
+                  {$lt(monitor.monitor_translations, "name", monitor.monitor_name)}
                 </Badge>
               </Popover.Trigger>
               <Popover.Content
@@ -71,12 +71,17 @@
                   <div class="flex items-center gap-3">
                     <Avatar.Root>
                       {#if monitor.monitor_image}
-                        <Avatar.Image src={clientResolver(resolve, monitor.monitor_image)} alt={monitor.monitor_name} />
+                        <Avatar.Image
+                          src={clientResolver(resolve, monitor.monitor_image)}
+                          alt={$lt(monitor.monitor_translations, "name", monitor.monitor_name)}
+                        />
                       {/if}
-                      <Avatar.Fallback>{GetInitials(monitor.monitor_name)}</Avatar.Fallback>
+                      <Avatar.Fallback
+                        >{GetInitials($lt(monitor.monitor_translations, "name", monitor.monitor_name))}</Avatar.Fallback
+                      >
                     </Avatar.Root>
                     <div class="flex flex-col">
-                      <span class="font-medium">{monitor.monitor_name}</span>
+                      <span class="font-medium">{$lt(monitor.monitor_translations, "name", monitor.monitor_name)}</span>
                       <span class="text-muted-foreground text-xs">{monitor.monitor_tag}</span>
                     </div>
                   </div>
@@ -174,7 +179,7 @@
               class="prose prose-sm dark:prose-invert max-w-none min-w-0 overflow-x-auto wrap-break-word"
               style="font-size: 14px;"
             >
-              <SveltePurify html={mdToHTML(comment.comment)} />
+              <SveltePurify html={mdToHTML($lt(comment.translations, "comment", comment.comment))} />
             </div>
           </div>
         {/each}

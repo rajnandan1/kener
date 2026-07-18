@@ -28,6 +28,12 @@ import { GetLastMonitoringValue, SetLastHeartbeat, DeleteMonitorCaches } from ".
 import { CollapseStatusCounts } from "../../clientTools.js";
 import { translate, isLocaleAvailable } from "../i18n.js";
 import type { HeartbeatMonitor, GroupMonitorTypeData } from "../types/monitor.js";
+import {
+  serializeContentTranslations,
+  resolveTranslationsForUpdate,
+  MONITOR_TRANSLATABLE_FIELDS,
+} from "../content-i18n.js";
+import { parseContentTranslations } from "../../content-i18n.js";
 
 interface GroupUpdateData {
   monitor_tag: string;
@@ -36,8 +42,13 @@ interface GroupUpdateData {
   latency: number;
 }
 
-interface MonitorInput extends MonitorRecordInsert {
+// `translations` is retyped to `unknown` here (vs. MonitorRecordInsert's stored-shape
+// `string | null`) because callers pass a raw ContentTranslations object, an already-serialized
+// string, undefined (omitted), or explicit null — mirroring IncidentInput/CreateMaintenanceInput.
+// MonitorRecordInsert/MonitorRecord themselves are left untouched since they describe actual DB rows.
+interface MonitorInput extends Omit<MonitorRecordInsert, "translations"> {
   id?: number;
+  translations?: unknown;
 }
 
 /**
@@ -156,6 +167,7 @@ export const GetMonitorsParsed = async (query: MonitorFilter): Promise<Array<Mon
       ...monitorData,
       type_data: {},
       monitor_settings_json: {},
+      translations: null,
     };
 
     if (monitorData.type_data) {
@@ -186,29 +198,46 @@ export const GetMonitorsParsed = async (query: MonitorFilter): Promise<Array<Mon
       };
     }
 
+    monitorTyped.translations = parseContentTranslations(monitorData.translations);
+
     return monitorTyped;
   });
 
   return parsedMonitors;
 };
 
+/**
+ * Looks up the raw (still-serialized) translations string currently stored for a monitor, for
+ * callers on the UPDATE path whose payload omits `translations` entirely and must therefore
+ * preserve whatever is already persisted (see resolveTranslationsForUpdate).
+ */
+async function getExistingRawTranslations(id: number): Promise<string | null> {
+  const [existing] = await db.getMonitors({ id });
+  return existing?.translations ?? null;
+}
+
 export const CreateUpdateMonitor = async (monitor: MonitorInput): Promise<number | number[]> => {
-  let monitorData = { ...monitor };
+  const monitorData = { ...monitor };
   if (monitorData.id) {
-    return await db.updateMonitor(monitorData as MonitorRecord);
+    const existingRaw =
+      monitor.translations === undefined ? await getExistingRawTranslations(monitorData.id) : undefined;
+    const translations = resolveTranslationsForUpdate(monitor.translations, existingRaw, MONITOR_TRANSLATABLE_FIELDS);
+    return await db.updateMonitor({ ...monitorData, translations } as MonitorRecord);
   } else {
     validateMonitorTag(monitorData.tag);
-    return await db.insertMonitor(monitorData);
+    const translations = serializeContentTranslations(monitorData.translations, MONITOR_TRANSLATABLE_FIELDS);
+    return await db.insertMonitor({ ...monitorData, translations });
   }
 };
 
 export const CreateMonitor = async (monitor: MonitorInput): Promise<number[]> => {
-  let monitorData = { ...monitor };
+  const monitorData = { ...monitor };
   if (monitorData.id) {
     throw new Error("monitor id must be empty or 0");
   }
   validateMonitorTag(monitorData.tag);
-  return await db.insertMonitor(monitorData);
+  const translations = serializeContentTranslations(monitorData.translations, MONITOR_TRANSLATABLE_FIELDS);
+  return await db.insertMonitor({ ...monitorData, translations });
 };
 
 interface CloneMonitorInput {
@@ -270,16 +299,19 @@ export const CloneMonitor = async ({ sourceTag, newTag, newName }: CloneMonitorI
     include_degraded_in_downtime: source.include_degraded_in_downtime,
     is_hidden: source.is_hidden,
     monitor_settings_json: source.monitor_settings_json,
+    translations: source.translations,
     external_url: source.external_url,
   });
 };
 
 export const UpdateMonitor = async (monitor: MonitorInput): Promise<number> => {
-  let monitorData = { ...monitor };
+  const monitorData = { ...monitor };
   if (!!!monitorData.id || monitorData.id === 0) {
     throw new Error("monitor id cannot be empty or 0");
   }
-  return await db.updateMonitor(monitorData as MonitorRecord);
+  const existingRaw = monitor.translations === undefined ? await getExistingRawTranslations(monitorData.id) : undefined;
+  const translations = resolveTranslationsForUpdate(monitor.translations, existingRaw, MONITOR_TRANSLATABLE_FIELDS);
+  return await db.updateMonitor({ ...monitorData, translations } as MonitorRecord);
 };
 
 export const GetMonitors = async (data: MonitorFilter): Promise<MonitorRecord[]> => {
@@ -430,6 +462,7 @@ async function removeTagFromGroupMonitors(tag: string): Promise<void> {
         typeof group.monitor_settings_json === "string"
           ? group.monitor_settings_json
           : JSON.stringify(group.monitor_settings_json),
+      translations: group.translations ? JSON.stringify(group.translations) : null,
       external_url: group.external_url,
     };
 

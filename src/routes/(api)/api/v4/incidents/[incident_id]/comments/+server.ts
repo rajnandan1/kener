@@ -124,7 +124,15 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   }
 
   // Create comment
-  const createdComment = await db.insertIncidentComment(incident.id, body.comment.trim(), body.state, timestamp);
+  // translations: this REST endpoint doesn't accept translations input yet, so new
+  // comments created here stay untranslated (null) until a future task wires it up.
+  const createdComment = await db.insertIncidentComment(
+    incident.id,
+    body.comment.trim(),
+    body.state,
+    timestamp,
+    null,
+  );
 
   // Update incident state to match the comment state
   await db.updateIncident({
@@ -139,6 +147,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     incident_type: incident.incident_type,
     incident_source: "",
     is_global: incident.is_global,
+    // Preserve stored translations — this state-sync update never intends to change them.
+    translations: incident.translations ?? null,
   });
 
   const response: CreateCommentResponse = {

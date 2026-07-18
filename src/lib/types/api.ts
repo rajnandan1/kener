@@ -4,6 +4,7 @@
 import type { MonitorRecordTyped } from "$lib/server/types/db";
 import type { MonitorPublicView } from "$lib/types/monitor";
 import type GC from "$lib/global-constants";
+import type { ContentTranslations } from "$lib/types/common";
 
 export type ApiError = {
   code: string;
@@ -121,6 +122,7 @@ export interface CreateMonitorRequest {
   is_hidden?: string;
   confirmation_threshold?: number | null;
   monitor_settings_json?: MonitorSettings | null;
+  translations?: ContentTranslations | null;
   external_url?: string | null;
 }
 
@@ -142,6 +144,7 @@ export interface UpdateMonitorRequest {
   is_hidden?: string;
   confirmation_threshold?: number | null;
   monitor_settings_json?: MonitorSettings | null;
+  translations?: ContentTranslations | null;
   external_url?: string | null;
 }
 

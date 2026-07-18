@@ -1,6 +1,7 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import db from "$lib/server/db/db";
 import { GetMonitorsParsed, DeleteMonitorCompletelyUsingTag } from "$lib/server/controllers/monitorsController";
+import { serializeContentTranslations, MONITOR_TRANSLATABLE_FIELDS } from "$lib/server/content-i18n";
 import type {
   GetMonitorResponse,
   MonitorResponse,
@@ -138,6 +139,23 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     }
   } else {
     updateData.monitor_settings_json = JSON.stringify(existingMonitor.monitor_settings_json);
+  }
+
+  if (body.translations !== undefined) {
+    if (body.translations === null) {
+      updateData.translations = null;
+    } else {
+      try {
+        updateData.translations = serializeContentTranslations(body.translations, MONITOR_TRANSLATABLE_FIELDS);
+      } catch (e) {
+        const errorResponse: BadRequestResponse = {
+          error: { code: "BAD_REQUEST", message: e instanceof Error ? e.message : "Invalid translations" },
+        };
+        return json(errorResponse, { status: 400 });
+      }
+    }
+  } else {
+    updateData.translations = existingMonitor.translations ? JSON.stringify(existingMonitor.translations) : null;
   }
 
   await db.updateMonitor(updateData as unknown as Parameters<typeof db.updateMonitor>[0]);

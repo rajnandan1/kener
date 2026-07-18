@@ -1,4 +1,6 @@
 import { writable, derived, get } from "svelte/store";
+import { resolveTranslation } from "$lib/content-i18n";
+import type { ContentTranslations } from "$lib/types/common";
 
 // Pre-import locale JSON files at build time for SSR (avoids fetch during SSR)
 const localeModules = import.meta.glob("/src/lib/locales/*.json", {
@@ -195,4 +197,16 @@ export const t = derived(i18n, ($i18n) => {
       return key;
     }
   };
+});
+
+/**
+ * Derived store resolving per-entity content translations (localised
+ * user-entered content) against the active locale. Unlike `t` it takes a
+ * per-entity translations object (or its raw JSON-string form) and never
+ * warns on missing translations — partial translation is the expected state.
+ * Usage: {$lt(monitor.translations, "name", monitor.name)}
+ */
+export const lt = derived(i18n, ($i18n) => {
+  return (translations: ContentTranslations | string | null | undefined, field: string, fallback: string): string =>
+    resolveTranslation(translations, $i18n.currentLocale, field, fallback);
 });
