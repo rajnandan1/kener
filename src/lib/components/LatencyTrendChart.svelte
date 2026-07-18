@@ -4,9 +4,10 @@
   import { scaleTime } from "d3-scale";
   import * as Chart from "$lib/components/ui/chart/index.js";
   import { t } from "$lib/stores/i18n";
-  import { ParseLatency } from "$lib/clientTools";
+  import { FormatValue, IsCustomUnit } from "$lib/clientTools";
   import { formatDate } from "$lib/stores/datetime";
   import { page } from "$app/state";
+  import type { MonitorValueDisplay } from "$lib/server/types/db";
 
   interface ChartPoint {
     date: Date;
@@ -18,9 +19,12 @@
     label?: string;
     height?: number;
     class?: string;
+    valueDisplay?: MonitorValueDisplay | null;
   }
 
-  let { data, label = $t("Avg Latency"), height = 128, class: className = "" }: Props = $props();
+  let { data, label = $t("Avg Latency"), height = 128, class: className = "", valueDisplay = null }: Props = $props();
+
+  let customName = $derived(valueDisplay?.name?.trim() || "");
 
   // Chart config
   let chartConfig = $derived({
@@ -31,7 +35,7 @@
   } satisfies Chart.ChartConfig);
 
   // Filter out zero values
-  let chartData = $derived(data.filter((d) => d.value > 0));
+  let chartData = $derived(IsCustomUnit(valueDisplay) ? data : data.filter((d) => d.value > 0));
 </script>
 
 <div class="{className}  ">
@@ -89,7 +93,7 @@
                   >
                   <div class="flex items-center gap-2">
                     <span class="text-foreground font-mono font-medium tabular-nums">
-                      {ParseLatency(Number(value))}
+                      {FormatValue(Number(value), valueDisplay)}
                     </span>
                   </div>
                 </div>
@@ -101,7 +105,11 @@
     </Chart.Container>
   {:else}
     <div class="flex items-center justify-center" style="height: {height}px;">
-      <p class="text-muted-foreground text-sm">{$t("No latency data available for this day")}</p>
+      <p class="text-muted-foreground text-sm">
+        {customName
+          ? $t("No %name data available for this day", { name: customName })
+          : $t("No latency data available for this day")}
+      </p>
     </div>
   {/if}
 </div>

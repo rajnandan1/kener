@@ -18,6 +18,8 @@
   import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
   import GroupMonitorPopover from "$lib/components/GroupMonitorPopover.svelte";
   import { page } from "$app/state";
+  import { IsCustomUnit, DayHasReading } from "$lib/clientTools";
+  import type { MonitorValueDisplay } from "$lib/server/types/db";
 
   interface Props {
     monitorTag: string;
@@ -68,20 +70,34 @@
   // Data for calendar/chart comes directly from API
   let displayData = $derived(overviewData?.uptimeData ?? []);
 
+  let valueDisplay = $derived(overviewData?.valueDisplay ?? null);
+  let customUnit = $derived(IsCustomUnit(valueDisplay));
+  let customName = $derived(valueDisplay?.name?.trim() || "");
+
   // Latency metric label map
-  const metricLabels: Record<string, string> = {
-    average: $t("Avg Latency"),
-    maximum: $t("Max Latency"),
-    minimum: $t("Min Latency")
-  };
+  let metricLabels = $derived<Record<string, string>>(
+    customName
+      ? {
+          average: $t("Avg %name", { name: customName }),
+          maximum: $t("Max %name", { name: customName }),
+          minimum: $t("Min %name", { name: customName })
+        }
+      : {
+          average: $t("Avg Latency"),
+          maximum: $t("Max Latency"),
+          minimum: $t("Min Latency")
+        }
+  );
 
   // Transform uptimeData into chart-ready points based on selected metric
   let latencyChartData = $derived.by(() => {
     if (!displayData) return [];
-    return displayData.map((d) => ({
-      date: new Date(d.ts * 1000),
-      value: latencyMetric === "maximum" ? d.maxLatency : latencyMetric === "minimum" ? d.minLatency : d.avgLatency
-    }));
+    return displayData
+      .filter((d) => !customUnit || DayHasReading(d))
+      .map((d) => ({
+        date: new Date(d.ts * 1000),
+        value: latencyMetric === "maximum" ? d.maxLatency : latencyMetric === "minimum" ? d.minLatency : d.avgLatency
+      }));
   });
 
   let latencyChartLabel = $derived(metricLabels[latencyMetric] ?? metricLabels.average);
@@ -138,7 +154,9 @@
       <div>
         <Card.Title class="text-base font-medium">{dayOptions[selectedDayIndex].text}</Card.Title>
         <Card.Description class="text-xs">
-          {$t("Status history and latency trend")}
+          {customName
+            ? $t("Status history and %name trend", { name: customName })
+            : $t("Status history and latency trend")}
         </Card.Description>
       </div>
       {#if !loading && overviewData}
@@ -199,7 +217,7 @@
 
       <!-- Status Bar Calendar -->
       <div class="flex flex-col gap-1">
-        <StatusBarCalendar data={displayData} {monitorTag} barHeight={40} radius={8} />
+        <StatusBarCalendar data={displayData} {monitorTag} barHeight={40} radius={8} {valueDisplay} />
 
         <!-- Date labels -->
         <div class="flex justify-between">
@@ -228,12 +246,12 @@
       <!-- Latency Chart -->
       <div class="pt-2">
         <p class="text-muted-foreground mb-2 text-sm font-medium">
-          {$t("Latency Trend")}
+          {customName ? $t("%name Trend", { name: customName }) : $t("Latency Trend")}
           <Popover.Root>
             <Popover.Trigger class="text-foreground cursor-pointer underline">{latencyChartLabel}</Popover.Trigger>
             <Popover.Content class="flex w-fit flex-col gap-2">
               <p class="text-muted-foreground text-xs font-medium">
-                {$t("Select latency metric to display")}
+                {customName ? $t("Select metric to display") : $t("Select latency metric to display")}
               </p>
               <ToggleGroup.Root
                 type="single"
@@ -245,9 +263,9 @@
                 }}
                 class="flex justify-between"
               >
-                <ToggleGroup.Item value="average" aria-label="Average latency">{$t("Avg Latency")}</ToggleGroup.Item>
-                <ToggleGroup.Item value="maximum" aria-label="Maximum latency">{$t("Max Latency")}</ToggleGroup.Item>
-                <ToggleGroup.Item value="minimum" aria-label="Minimum latency">{$t("Min Latency")}</ToggleGroup.Item>
+                <ToggleGroup.Item value="average" aria-label="Average latency">{metricLabels.average}</ToggleGroup.Item>
+                <ToggleGroup.Item value="maximum" aria-label="Maximum latency">{metricLabels.maximum}</ToggleGroup.Item>
+                <ToggleGroup.Item value="minimum" aria-label="Minimum latency">{metricLabels.minimum}</ToggleGroup.Item>
               </ToggleGroup.Root>
             </Popover.Content>
           </Popover.Root>
@@ -257,19 +275,25 @@
         <div class="mb-3 flex justify-between gap-4">
           <div class="flex flex-col items-start gap-1">
             <p class="text-lg font-semibold">{displayMinLatency}</p>
-            <p class="text-muted-foreground text-xs">{$t("Minimum Latency")}</p>
+            <p class="text-muted-foreground text-xs">
+              {customName ? $t("Min %name", { name: customName }) : $t("Minimum Latency")}
+            </p>
           </div>
           <div class="flex flex-col items-center gap-1">
             <p class="text-lg font-semibold">{displayAvgLatency}</p>
-            <p class="text-muted-foreground text-xs">{$t("Average Latency")}</p>
+            <p class="text-muted-foreground text-xs">
+              {customName ? $t("Avg %name", { name: customName }) : $t("Average Latency")}
+            </p>
           </div>
           <div class="flex flex-col items-end gap-1">
             <p class="text-lg font-semibold">{displayMaxLatency}</p>
-            <p class="text-muted-foreground text-xs">{$t("Maximum Latency")}</p>
+            <p class="text-muted-foreground text-xs">
+              {customName ? $t("Max %name", { name: customName }) : $t("Maximum Latency")}
+            </p>
           </div>
         </div>
 
-        <LatencyTrendChart data={latencyChartData} label={latencyChartLabel} height={128} />
+        <LatencyTrendChart data={latencyChartData} label={latencyChartLabel} height={128} {valueDisplay} />
       </div>
     {/if}
   </Card.Content>

@@ -133,7 +133,13 @@
     </Item.Root>
     {#if !compact}
       <div class="mx-auto flex w-full flex-col gap-1 px-4">
-        <StatusBarCalendar data={data.uptimeData} monitorTag={tag} barHeight={40} radius={8} />
+        <StatusBarCalendar
+          data={data.uptimeData}
+          monitorTag={tag}
+          barHeight={40}
+          radius={8}
+          valueDisplay={data.valueDisplay}
+        />
         <div class="flex min-w-0 justify-between gap-3">
           <p class="text-muted-foreground min-w-0 truncate text-xs font-medium">
             {$formatDate(new Date(data.fromTimeStamp * 1000), page.data.dateAndTimeFormat.dateOnly)}

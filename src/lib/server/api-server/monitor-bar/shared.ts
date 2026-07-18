@@ -1,12 +1,14 @@
 import db from "$lib/server/db/db";
 import GC, { type StatusType } from "$lib/global-constants";
-import type { MonitorRecord, TimestampStatusCount } from "$lib/server/types/db";
+import type { MonitorRecord, MonitorValueDisplay, TimestampStatusCount } from "$lib/server/types/db";
 import { UptimeCalculator } from "$lib/server/tool";
 import type { MonitorBarResponse } from "./get";
 
 interface ParsedMonitorSettings {
   uptime_formula_numerator?: string;
   uptime_formula_denominator?: string;
+  // Mirrors the persisted key inside monitor_settings_json (snake_case by storage convention).
+  value_display?: MonitorValueDisplay;
 }
 
 const parseMonitorSettings = (value: string | null): ParsedMonitorSettings => {
@@ -19,6 +21,7 @@ const parseMonitorSettings = (value: string | null): ParsedMonitorSettings => {
   }
 };
 
+/** Fills gaps in `rawUptimeData` with zeroed entries so every day in `[startTime, startTime + days)` is present. */
 const fillMissingUptimeData = (
   rawUptimeData: TimestampStatusCount[],
   startTime: number,
@@ -42,6 +45,7 @@ const fillMissingUptimeData = (
         avgLatency: 0,
         maxLatency: 0,
         minLatency: 0,
+        latencyCount: 0,
       });
     }
   }
@@ -70,6 +74,7 @@ export const buildMonitorBarResponse = async (
   );
 };
 
+/** Synchronous core of `buildMonitorBarResponse`: assembles a `MonitorBarResponse` from already-fetched raw uptime data. */
 export const buildMonitorBarResponseFromRawData = (
   monitor: MonitorRecord,
   rawUptimeData: TimestampStatusCount[],
@@ -83,6 +88,7 @@ export const buildMonitorBarResponseFromRawData = (
     rawUptimeData,
     monitorSettings.uptime_formula_numerator,
     monitorSettings.uptime_formula_denominator,
+    monitorSettings.value_display,
   );
 
   return {
@@ -97,5 +103,6 @@ export const buildMonitorBarResponseFromRawData = (
     avgLatency: uptimeCalculationResult.avgLatency,
     maxLatency: uptimeCalculationResult.maxLatency,
     minLatency: uptimeCalculationResult.minLatency,
+    valueDisplay: monitorSettings.value_display ?? null,
   };
 };

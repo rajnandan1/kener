@@ -30,6 +30,7 @@
   let displayUptime = $derived(overviewData?.uptime ?? "--");
   let displayAvgLatency = $derived(overviewData?.avgLatency ?? "--");
   let displayData = $derived(overviewData?.uptimeData ?? []);
+  let customName = $derived(overviewData?.valueDisplay?.name?.trim() || "");
 
   async function fetchData() {
     loading = true;
@@ -77,11 +78,21 @@
     <div class="flex items-center justify-between text-xs font-semibold">
       <span class="text-foreground">{displayUptime}% {$t("Uptime")}</span>
       {#if displayAvgLatency !== "--"}
-        <span class="">{displayAvgLatency} {$t("Avg Latency")}</span>
+        <span class=""
+          >{displayAvgLatency}
+          {customName ? $t("Avg %name", { name: customName }) : $t("Avg Latency")}</span
+        >
       {/if}
     </div>
 
     <!-- Status bar calendar -->
-    <StatusBarCalendar data={displayData} monitorTag={data.monitorTag} barHeight={30} radius={4} disableClick={true} />
+    <StatusBarCalendar
+      data={displayData}
+      monitorTag={data.monitorTag}
+      barHeight={30}
+      radius={4}
+      disableClick={true}
+      valueDisplay={overviewData?.valueDisplay}
+    />
   {/if}
 </div>

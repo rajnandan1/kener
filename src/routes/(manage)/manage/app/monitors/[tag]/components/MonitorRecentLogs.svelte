@@ -11,12 +11,21 @@
   import { onMount } from "svelte";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import type { MonitorValueDisplay } from "$lib/server/types/db.js";
+  import { ValueDisplayLabels } from "$lib/clientTools";
 
   interface Props {
     monitor_tag: string;
+    valueDisplay?: MonitorValueDisplay | null;
   }
 
-  let { monitor_tag }: Props = $props();
+  let { monitor_tag, valueDisplay = null }: Props = $props();
+
+  const labels = $derived(ValueDisplayLabels(valueDisplay));
+  const displayName = $derived(labels.displayName);
+  const unitSuffix = $derived(labels.unitSuffix);
+  // "%" joins the number with no space; other non-empty units get a leading space; empty unit is bare.
+  const valueSuffix = $derived(unitSuffix === "" ? "" : unitSuffix === "%" ? unitSuffix : ` ${unitSuffix}`);
 
   // Types
   interface MonitoringData {
@@ -127,7 +136,7 @@
             <Table.Row>
               <Table.Head class="w-44">Timestamp</Table.Head>
               <Table.Head class="w-20">Status</Table.Head>
-              <Table.Head class="w-20">Latency</Table.Head>
+              <Table.Head class="w-20">{displayName}</Table.Head>
               <Table.Head class="w-20">Type</Table.Head>
               <Table.Head>Error</Table.Head>
             </Table.Row>
@@ -145,7 +154,7 @@
                 </Table.Cell>
                 <Table.Cell>
                   {#if log.latency !== null}
-                    <span class="text-sm">{log.latency} ms</span>
+                    <span class="text-sm">{log.latency}{valueSuffix}</span>
                   {:else}
                     <span class="text-muted-foreground text-sm">—</span>
                   {/if}

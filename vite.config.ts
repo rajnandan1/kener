@@ -75,7 +75,16 @@ export default defineConfig(({ mode }) => {
           // Pre-bundle the component-test dependency graph: on a cold Vite cache
           // (every CI runner) a mid-run dep-optimization reload can flake the suite.
           optimizeDeps: {
-            include: ["layerchart", "mode-watcher", "bits-ui", "d3-scale", "d3-shape"],
+            include: [
+              "layerchart",
+              "mode-watcher",
+              "bits-ui",
+              "d3-scale",
+              "d3-shape",
+              "@lucide/svelte/icons/save",
+              "@lucide/svelte/icons/loader",
+              "svelte-sonner",
+            ],
           },
           test: {
             name: "client",

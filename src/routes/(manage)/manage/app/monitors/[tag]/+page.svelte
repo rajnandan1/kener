@@ -5,7 +5,7 @@
   import * as Alert from "$lib/components/ui/alert/index.js";
   import AlertTriangleIcon from "@lucide/svelte/icons/alert-triangle";
   import type { PageProps } from "./$types";
-  import type { MonitorRecord } from "$lib/server/types/db.js";
+  import type { MonitorRecord, MonitorValueDisplay } from "$lib/server/types/db.js";
   import type { MonitorType } from "$lib/types/monitor.js";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
@@ -30,6 +30,7 @@
   import MonitorRecentLogs from "./components/MonitorRecentLogs.svelte";
   import StatusHistoryDaysCard from "./components/StatusHistoryDaysCard.svelte";
   import MonitorSharingOptionsCard from "./components/MonitorSharingOptionsCard.svelte";
+  import MetricDisplayCard from "./components/MetricDisplayCard.svelte";
   import GC from "$lib/global-constants.js";
 
   let { params }: PageProps = $props();
@@ -52,6 +53,14 @@
     desktop: GC.DEFAULT_STATUS_HISTORY_DAYS_DESKTOP as number,
     mobile: GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE as number
   });
+
+  // Metric display state (form representation; unit "none" means bare number when saved)
+  let valueDisplayForm = $state({
+    name: "",
+    unit: "",
+    decimals: undefined as number | null | undefined
+  });
+  let parsedValueDisplay = $state<MonitorValueDisplay | null>(null);
 
   // Pages state
   interface PageWithMonitors {
@@ -142,6 +151,15 @@
               statusHistoryDays = {
                 desktop: settings.monitor_status_history_days.desktop ?? GC.DEFAULT_STATUS_HISTORY_DAYS_DESKTOP,
                 mobile: settings.monitor_status_history_days.mobile ?? GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE
+              };
+            }
+            if (settings.value_display) {
+              parsedValueDisplay = settings.value_display;
+              valueDisplayForm = {
+                name: settings.value_display.name ?? "",
+                unit: settings.value_display.unit === "" ? "none" : (settings.value_display.unit ?? ""),
+                decimals:
+                  typeof settings.value_display.decimals === "number" ? settings.value_display.decimals : undefined
               };
             }
           } catch (e) {
@@ -350,7 +368,7 @@
           <Accordion.Trigger>Configuration</Accordion.Trigger>
           <Accordion.Content class="flex flex-col gap-4 text-balance">
             <!-- Monitor Type Configuration Card -->
-            <MonitorTypeCard bind:monitor bind:typeData {availableMonitors} />
+            <MonitorTypeCard bind:monitor bind:typeData {availableMonitors} valueDisplay={parsedValueDisplay} />
           </Accordion.Content>
         </Accordion.Item>
       {/if}
@@ -374,12 +392,25 @@
         </Accordion.Item>
       {/if}
       {#if !isNew}
+        <Accordion.Item value="metric-display">
+          <Accordion.Trigger>Metric Display</Accordion.Trigger>
+          <Accordion.Content class="flex flex-col gap-4 text-balance">
+            <MetricDisplayCard
+              bind:monitor
+              {typeData}
+              bind:valueDisplayForm
+              onSaved={(vd) => (parsedValueDisplay = vd ?? null)}
+            />
+          </Accordion.Content>
+        </Accordion.Item>
+      {/if}
+      {#if !isNew}
         <Accordion.Item value="logs-recent">
           <Accordion.Trigger>Recent Logs</Accordion.Trigger>
           <Accordion.Content class="flex flex-col gap-4 text-balance">
             <!-- Recent Logs Card -->
 
-            <MonitorRecentLogs monitor_tag={params.tag} />
+            <MonitorRecentLogs monitor_tag={params.tag} valueDisplay={parsedValueDisplay} />
           </Accordion.Content>
         </Accordion.Item>
       {/if}
@@ -409,7 +440,7 @@
           <Accordion.Content class="flex flex-col gap-4 text-balance">
             <!-- Modify Data Card -->
 
-            <ModifyDataCard monitorTag={monitor.tag} />
+            <ModifyDataCard monitorTag={monitor.tag} valueDisplay={parsedValueDisplay} />
           </Accordion.Content>
         </Accordion.Item>
       {/if}

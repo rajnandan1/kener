@@ -3,7 +3,7 @@ import type { APIServerRequest } from "$lib/server/types/api-server";
 import db from "$lib/server/db/db";
 import { GetMinuteStartNowTimestampUTC } from "$lib/server/tool";
 import type { StatusType } from "$lib/global-constants";
-import type { TimestampStatusCount } from "$lib/server/types/db";
+import type { MonitorValueDisplay, TimestampStatusCount } from "$lib/server/types/db";
 import { buildMonitorBarResponse } from "./shared";
 
 const DEFAULT_DAYS = 90;
@@ -26,6 +26,7 @@ export interface MonitorBarResponse {
   toTimeStamp: number;
   maxLatency: string;
   minLatency: string;
+  valueDisplay?: MonitorValueDisplay | null;
 }
 
 /**

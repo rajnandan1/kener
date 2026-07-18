@@ -8,6 +8,7 @@
   import type { TimestampStatusCount } from "$lib/server/types/db";
   import { t } from "$lib/stores/i18n";
   import clientResolver from "$lib/client/resolver.js";
+  import { IsCustomUnit, DayHasReading } from "$lib/clientTools";
   interface Props {
     data: {
       monitorTag: string;
@@ -36,12 +37,17 @@
     minimum: "minLatency"
   };
   let displayLatency = $derived(overviewData?.[metricToKeyMap[data.metric]] ?? "--");
+  let valueDisplay = $derived(overviewData?.valueDisplay ?? null);
+  let customUnit = $derived(IsCustomUnit(valueDisplay));
+  let customName = $derived(valueDisplay?.name?.trim() || "");
   // Transform data for chart component
   let latencyChartData = $derived(
-    displayData.map((d: TimestampStatusCount) => ({
-      date: new Date(d.ts * 1000),
-      value: d[metricToKeyMap[data.metric] as keyof TimestampStatusCount] || 0
-    }))
+    displayData
+      .filter((d: TimestampStatusCount) => !customUnit || DayHasReading(d))
+      .map((d: TimestampStatusCount) => ({
+        date: new Date(d.ts * 1000),
+        value: d[metricToKeyMap[data.metric] as keyof TimestampStatusCount] || 0
+      }))
   );
 
   async function fetchData() {
@@ -89,12 +95,18 @@
       <span class="text-foreground">{displayUptime}% {$t("Uptime")}</span>
       {#if !!displayLatency && displayLatency !== "--"}
         <span class=""
-          >{$t("%latency %metric latency", { latency: String(displayLatency), metric: $t(data.metric) })}</span
+          >{customName
+            ? $t("%latency %metric %name", {
+                latency: String(displayLatency),
+                metric: $t(data.metric),
+                name: customName
+              })
+            : $t("%latency %metric latency", { latency: String(displayLatency), metric: $t(data.metric) })}</span
         >
       {/if}
     </div>
 
     <!-- Latency trend chart -->
-    <LatencyTrendChart data={latencyChartData} height={data.height} />
+    <LatencyTrendChart data={latencyChartData} height={data.height} {valueDisplay} />
   {/if}
 </div>

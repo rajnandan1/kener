@@ -531,7 +531,8 @@ export class MonitoringRepository extends BaseRepository {
         SUM(CASE WHEN status = 'MAINTENANCE' THEN 1 ELSE 0 END) AS count_of_maintenance,
         AVG(latency) AS avg_latency,
 				MAX(latency) AS max_latency,
-				MIN(latency) AS min_latency
+				MIN(latency) AS min_latency,
+				COUNT(latency) AS latency_count
       FROM monitoring_data
       WHERE ${tagClause} AND timestamp >= ? AND timestamp < ?
       GROUP BY ts
@@ -575,6 +576,7 @@ export class MonitoringRepository extends BaseRepository {
       avgLatency: Number(row.avg_latency) || 0,
       maxLatency: Number(row.max_latency) || 0,
       minLatency: Number(row.min_latency) || 0,
+      latencyCount: Number(row.latency_count) || 0,
     }));
   }
 
@@ -612,7 +614,8 @@ export class MonitoringRepository extends BaseRepository {
         SUM(CASE WHEN status = 'MAINTENANCE' THEN 1 ELSE 0 END) AS count_of_maintenance,
         AVG(latency) AS avg_latency,
         MAX(latency) AS max_latency,
-        MIN(latency) AS min_latency
+        MIN(latency) AS min_latency,
+        COUNT(latency) AS latency_count
       FROM monitoring_data
       WHERE monitor_tag IN (${monitorTags.map(() => "?").join(", ")}) AND timestamp >= ? AND timestamp < ?
       GROUP BY monitor_tag, ts
@@ -648,6 +651,7 @@ export class MonitoringRepository extends BaseRepository {
       avgLatency: Number(row.avg_latency) || 0,
       maxLatency: Number(row.max_latency) || 0,
       minLatency: Number(row.min_latency) || 0,
+      latencyCount: Number(row.latency_count) || 0,
     }));
   }
 
@@ -676,6 +680,7 @@ export class MonitoringRepository extends BaseRepository {
         this.knex.raw("AVG(latency) AS avg_latency"),
         this.knex.raw("MAX(latency) AS max_latency"),
         this.knex.raw("MIN(latency) AS min_latency"),
+        this.knex.raw("COUNT(latency) AS latency_count"),
       )
       .from("last_records")
       .first();
@@ -689,6 +694,7 @@ export class MonitoringRepository extends BaseRepository {
       avgLatency: Number(result?.avg_latency) || 0,
       maxLatency: Number(result?.max_latency) || 0,
       minLatency: Number(result?.min_latency) || 0,
+      latencyCount: Number(result?.latency_count) || 0,
     };
   }
 
