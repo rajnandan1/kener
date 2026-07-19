@@ -1,8 +1,11 @@
+/// <reference types="vitest/config" />
 import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 import version from "vite-plugin-package-version";
 import { defineConfig } from "vite";
 import devtoolsJson from "vite-plugin-devtools-json";
+import { playwright } from "@vitest/browser-playwright";
+import { configDefaults } from "vitest/config";
 
 import * as dotenv from "dotenv";
 
@@ -55,6 +58,41 @@ export default defineConfig(({ mode }) => {
     define: {
       __KENER_BUILD_ENV__: JSON.stringify(buildEnv),
       __KENER_IS_PROD__: JSON.stringify(isProduction),
+    },
+    test: {
+      projects: [
+        {
+          extends: true,
+          test: {
+            name: "server",
+            environment: "node",
+            include: ["src/**/*.{test,spec}.{js,ts}"],
+            exclude: [...configDefaults.exclude, "src/**/*.svelte.{test,spec}.{js,ts}"],
+          },
+        },
+        {
+          extends: true,
+          // Pre-bundle the component-test dependency graph: on a cold Vite cache
+          // (every CI runner) a mid-run dep-optimization reload can flake the suite.
+          optimizeDeps: {
+            include: ["layerchart", "mode-watcher", "bits-ui", "d3-scale", "d3-shape"],
+          },
+          test: {
+            name: "client",
+            browser: {
+              enabled: true,
+              headless: true,
+              provider: playwright({ contextOptions: { timezoneId: "UTC" } }),
+              instances: [{ browser: "chromium" }],
+              // Vitest's default browser API port (63315) can fall inside Windows
+              // Hyper-V excluded TCP port ranges; pin below the ephemeral range.
+              api: { port: 5180 },
+            },
+            include: ["src/**/*.svelte.{test,spec}.{js,ts}"],
+            setupFiles: ["./vitest-setup-client.ts"],
+          },
+        },
+      ],
     },
   };
 });

@@ -16,7 +16,13 @@ npm run check        # Svelte + TypeScript type checking
 npm run prettify     # Format all files with Prettier
 npm run migrate      # Run database migrations via Knex
 npm run seed         # Run database seeds (migrations run automatically first)
+npm test             # Run all tests (server unit + browser component projects)
+npm run test:server  # Server-side unit tests only (Node)
+npm run test:client  # Component tests only (headless Chromium via Playwright)
+npm run test:watch   # Watch mode
 ```
+
+Component tests need a one-time `npx playwright install chromium`.
 
 ## Architecture
 
