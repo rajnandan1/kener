@@ -1,5 +1,5 @@
 import axios, { type AxiosRequestConfig } from "axios";
-import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
+import { GetRequiredSecrets, ReplaceAllOccurrences, ApplySecretsToHeaders } from "../tool.js";
 import GC from "../../global-constants.js";
 import * as cheerio from "cheerio";
 import { DefaultAPIEval } from "../../anywhere.js";
@@ -14,24 +14,31 @@ class ApiCall {
 
   constructor(monitor: ApiMonitor) {
     this.monitor = monitor;
-    this.envSecrets = GetRequiredSecrets(
-      `${monitor.type_data.url} ${monitor.type_data.body || ""} ${JSON.stringify(monitor.type_data.headers || [])}`,
-    );
+    // Read type_data defensively: a malformed monitor (missing type_data) must
+    // be reported by execute() as an ERROR result, so the constructor must not
+    // throw before execute() ever runs.
+    const td = monitor.type_data;
+    this.envSecrets = GetRequiredSecrets(`${td?.url ?? ""} ${td?.body || ""} ${JSON.stringify(td?.headers || [])}`);
   }
 
   async execute(): Promise<MonitoringResult> {
+    // Malformed config (missing type_data) must record a result, not throw out
+    // of the worker and leave a gap in the timeline.
+    if (!this.monitor.type_data) {
+      return {
+        status: GC.DOWN,
+        latency: 0,
+        type: GC.ERROR,
+        error_message: "API monitor is missing configuration",
+      };
+    }
+
     let axiosHeaders: Record<string, string> = {};
     axiosHeaders["User-Agent"] = `Kener/${version()}`;
     axiosHeaders["Accept"] = "*/*";
 
     let body = this.monitor.type_data.body;
     let url = this.monitor.type_data.url;
-
-    //headers to string
-    let headers: string | Array<{ key: string; value: string }> = "";
-    if (!!this.monitor.type_data.headers) {
-      headers = JSON.stringify(this.monitor.type_data.headers);
-    }
 
     let method = this.monitor.type_data.method;
     let timeout = this.monitor.type_data.timeout || 10000;
@@ -47,28 +54,14 @@ class ApiCall {
       if (!!url) {
         url = ReplaceAllOccurrences(url, secret.find, secret.replace);
       }
-      if (!!headers && typeof headers === "string") {
-        headers = ReplaceAllOccurrences(headers, secret.find, secret.replace);
-      }
     }
 
-    if (!!headers && typeof headers === "string") {
-      try {
-        const parsedHeaders: Array<{ key: string; value: string }> = JSON.parse(headers);
-        const headersObj = parsedHeaders.reduce<Record<string, string>>((acc, header) => {
-          acc[header.key] = header.value;
-          return acc;
-        }, {});
-        axiosHeaders = { ...axiosHeaders, ...headersObj };
-      } catch (e) {
-        console.log(e);
-      }
-    }
-  const followRedirects =
-    this.monitor.type_data.follow_redirects ?? true;
+    // Substitute secrets into each header key/value individually - never into a
+    // JSON blob, which a secret value could corrupt and drop the whole set.
+    axiosHeaders = { ...axiosHeaders, ...ApplySecretsToHeaders(this.monitor.type_data.headers, this.envSecrets) };
+    const followRedirects = this.monitor.type_data.follow_redirects ?? true;
 
-  const maxRedirects =
-    this.monitor.type_data.max_redirects ?? 5;
+    const maxRedirects = this.monitor.type_data.max_redirects ?? 5;
 
     const options: AxiosRequestConfig = {
       method: method,
