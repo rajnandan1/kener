@@ -45,7 +45,7 @@
     >
       <Spinner class="h-4 w-4" />
     </Button>
-  {:else if pages.length > 0}
+  {:else if pages.length > 1}
     <DropdownMenu.Root>
       <DropdownMenu.Trigger>
         {#snippet child({ props })}
