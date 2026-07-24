@@ -19,6 +19,7 @@
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import GC, { isMonitoringStatus, type MonitoringStatus } from "$lib/global-constants.js";
 
   // Types
   interface MonitoringData {
@@ -35,7 +36,7 @@
     name: string;
   }
 
-  type StatusFilter = "ALL" | "UP" | "DOWN" | "DEGRADED";
+  type StatusFilter = "ALL" | MonitoringStatus;
 
   // Helper to format datetime as YYYY-MM-DDTHH:mm for datetime-local input
   function formatDateTimeForInput(date: Date): string {
@@ -249,8 +250,8 @@
   }
 
   function handleStatusChange(value: string | undefined) {
-    if (value) {
-      statusFilter = value as StatusFilter;
+    if (value === "ALL" || isMonitoringStatus(value)) {
+      statusFilter = value;
     }
   }
 
@@ -325,9 +326,9 @@
             </Select.Trigger>
             <Select.Content>
               <Select.Item value="ALL">All Statuses</Select.Item>
-              <Select.Item value="UP">UP</Select.Item>
-              <Select.Item value="DOWN">DOWN</Select.Item>
-              <Select.Item value="DEGRADED">DEGRADED</Select.Item>
+              <Select.Item value={GC.UP}>UP</Select.Item>
+              <Select.Item value={GC.DOWN}>DOWN</Select.Item>
+              <Select.Item value={GC.DEGRADED}>DEGRADED</Select.Item>
             </Select.Content>
           </Select.Root>
         </div>

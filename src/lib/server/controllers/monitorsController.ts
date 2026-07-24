@@ -21,7 +21,7 @@ import type {
 import type { MonitorFilter } from "../db/repositories/base.js";
 import db from "../db/db.js";
 import type { PaginationInput } from "../../types/common.js";
-import GC, { getBadgeStyle, type BadgeStyle } from "../../global-constants.js";
+import GC, { getBadgeStyle, type BadgeStyle, type MonitoringStatus } from "../../global-constants.js";
 import { makeBadge } from "badge-maker";
 import { ErrorSvg } from "../../anywhere.js";
 import { GetLastMonitoringValue, SetLastHeartbeat, DeleteMonitorCaches } from "../cache/setGet.js";
@@ -490,7 +490,7 @@ export const GetStatusCountsByInterval = async (
 export const GetMonitoringDataPaginated = async (
   page: number,
   limit: number,
-  filter?: { monitor_tag?: string; status?: string; start_time?: number; end_time?: number },
+  filter?: { monitor_tag?: string; status?: MonitoringStatus; start_time?: number; end_time?: number },
 ): Promise<{ data: MonitoringData[]; total: number }> => {
   const data = await db.getMonitoringDataPaginated(page, limit, filter);
   const countResult = await db.getMonitoringDataCount(filter);

@@ -1,6 +1,6 @@
 import type { Knex as KnexType } from "knex";
 import { BaseRepository } from "./base.js";
-import GC from "../../../global-constants.js";
+import GC, { type MonitoringStatus } from "../../../global-constants.js";
 import { GetMinuteStartNowTimestampUTC } from "../../tool.js";
 import type {
   MonitoringData,
@@ -82,7 +82,7 @@ export class MonitoringRepository extends BaseRepository {
   async getMonitoringDataPaginated(
     page: number,
     limit: number,
-    filter?: { monitor_tag?: string; status?: string; start_time?: number; end_time?: number },
+    filter?: { monitor_tag?: string; status?: MonitoringStatus; start_time?: number; end_time?: number },
   ): Promise<MonitoringData[]> {
     let query = this.knex("monitoring_data").select("*");
 
@@ -110,7 +110,7 @@ export class MonitoringRepository extends BaseRepository {
 
   async getMonitoringDataCount(filter?: {
     monitor_tag?: string;
-    status?: string;
+    status?: MonitoringStatus;
     start_time?: number;
     end_time?: number;
   }): Promise<{ count: number }> {

@@ -4,7 +4,7 @@ import { format } from "date-fns";
 import sharp from "sharp";
 import { nanoid } from "nanoid";
 import db from "$lib/server/db/db";
-import GC from "$lib/global-constants.js";
+import GC, { isMonitoringStatus, type MonitoringStatus } from "$lib/global-constants.js";
 import {
   CreateUpdateMonitor,
   UpdateMonitoringData,
@@ -245,11 +245,14 @@ export async function POST({ request, cookies }) {
     } else if (action == "getMonitoringDataPaginated") {
       const page = parseInt(String(data.page)) || 1;
       const limit = parseInt(String(data.limit)) || 50;
-      const filter: { monitor_tag?: string; status?: string; start_time?: number; end_time?: number } = {};
+      const filter: { monitor_tag?: string; status?: MonitoringStatus; start_time?: number; end_time?: number } = {};
       if (data.monitor_tag && data.monitor_tag !== "ALL") {
         filter.monitor_tag = data.monitor_tag;
       }
       if (data.status && data.status !== "ALL") {
+        if (!isMonitoringStatus(data.status)) {
+          return json({ error: "Invalid monitoring status" }, { status: 400 });
+        }
         filter.status = data.status;
       }
       if (data.start_time) {
