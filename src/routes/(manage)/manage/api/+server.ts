@@ -245,9 +245,12 @@ export async function POST({ request, cookies }) {
     } else if (action == "getMonitoringDataPaginated") {
       const page = parseInt(String(data.page)) || 1;
       const limit = parseInt(String(data.limit)) || 50;
-      const filter: { monitor_tag?: string; start_time?: number; end_time?: number } = {};
+      const filter: { monitor_tag?: string; status?: string; start_time?: number; end_time?: number } = {};
       if (data.monitor_tag && data.monitor_tag !== "ALL") {
         filter.monitor_tag = data.monitor_tag;
+      }
+      if (data.status && data.status !== "ALL") {
+        filter.status = data.status;
       }
       if (data.start_time) {
         filter.start_time = parseInt(String(data.start_time));
