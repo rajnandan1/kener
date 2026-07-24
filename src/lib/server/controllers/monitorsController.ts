@@ -490,7 +490,7 @@ export const GetStatusCountsByInterval = async (
 export const GetMonitoringDataPaginated = async (
   page: number,
   limit: number,
-  filter?: { monitor_tag?: string; start_time?: number; end_time?: number },
+  filter?: { monitor_tag?: string; status?: string; start_time?: number; end_time?: number },
 ): Promise<{ data: MonitoringData[]; total: number }> => {
   const data = await db.getMonitoringDataPaginated(page, limit, filter);
   const countResult = await db.getMonitoringDataCount(filter);
