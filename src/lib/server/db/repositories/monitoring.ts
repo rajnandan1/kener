@@ -82,12 +82,16 @@ export class MonitoringRepository extends BaseRepository {
   async getMonitoringDataPaginated(
     page: number,
     limit: number,
-    filter?: { monitor_tag?: string; start_time?: number; end_time?: number },
+    filter?: { monitor_tag?: string; status?: string; start_time?: number; end_time?: number },
   ): Promise<MonitoringData[]> {
     let query = this.knex("monitoring_data").select("*");
 
     if (filter?.monitor_tag) {
       query = query.where("monitor_tag", filter.monitor_tag);
+    }
+
+    if (filter?.status) {
+      query = query.where("status", filter.status);
     }
 
     if (filter?.start_time) {
@@ -106,6 +110,7 @@ export class MonitoringRepository extends BaseRepository {
 
   async getMonitoringDataCount(filter?: {
     monitor_tag?: string;
+    status?: string;
     start_time?: number;
     end_time?: number;
   }): Promise<{ count: number }> {
@@ -113,6 +118,10 @@ export class MonitoringRepository extends BaseRepository {
 
     if (filter?.monitor_tag) {
       query = query.where("monitor_tag", filter.monitor_tag);
+    }
+
+    if (filter?.status) {
+      query = query.where("status", filter.status);
     }
 
     if (filter?.start_time) {
