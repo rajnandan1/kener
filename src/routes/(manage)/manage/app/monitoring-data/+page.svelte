@@ -19,6 +19,7 @@
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import GC, { isMonitoringStatus, type MonitoringStatus } from "$lib/global-constants.js";
 
   // Types
   interface MonitoringData {
@@ -34,6 +35,8 @@
     tag: string;
     name: string;
   }
+
+  type StatusFilter = "ALL" | MonitoringStatus;
 
   // Helper to format datetime as YYYY-MM-DDTHH:mm for datetime-local input
   function formatDateTimeForInput(date: Date): string {
@@ -68,12 +71,14 @@
   let pageNo = $state(1);
   let showFilters = $state(false);
   let monitorTagFilter = $state("ALL");
+  let statusFilter = $state<StatusFilter>("ALL");
   let startDateTime = $state(formatDateTimeForInput(yesterday));
   let endDateTime = $state(formatDateTimeForInput(now));
   const limit = 50;
 
   const hasActiveFilters = $derived(
     monitorTagFilter !== "ALL" ||
+      statusFilter !== "ALL" ||
       startDateTime !== formatDateTimeForInput(yesterday) ||
       endDateTime !== formatDateTimeForInput(now)
   );
@@ -113,6 +118,7 @@
 
   function clearFilters() {
     monitorTagFilter = "ALL";
+    statusFilter = "ALL";
     startDateTime = formatDateTimeForInput(yesterday);
     endDateTime = formatDateTimeForInput(now);
     pageNo = 1;
@@ -189,12 +195,14 @@
         page: number;
         limit: number;
         monitor_tag: string;
+        status: StatusFilter;
         start_time?: number;
         end_time?: number;
       } = {
         page: pageNo,
         limit,
-        monitor_tag: monitorTagFilter
+        monitor_tag: monitorTagFilter,
+        status: statusFilter
       };
 
       if (startDateTime) {
@@ -238,6 +246,12 @@
   function handleMonitorChange(value: string | undefined) {
     if (value) {
       monitorTagFilter = value;
+    }
+  }
+
+  function handleStatusChange(value: string | undefined) {
+    if (value === "ALL" || isMonitoringStatus(value)) {
+      statusFilter = value;
     }
   }
 
@@ -301,6 +315,20 @@
               {#each monitors as monitor (monitor.tag)}
                 <Select.Item value={monitor.tag}>{monitor.name || monitor.tag}</Select.Item>
               {/each}
+            </Select.Content>
+          </Select.Root>
+        </div>
+        <div class="flex flex-col gap-1">
+          <span class="text-muted-foreground text-xs font-medium">Status</span>
+          <Select.Root type="single" value={statusFilter} onValueChange={handleStatusChange}>
+            <Select.Trigger class="w-36">
+              {statusFilter === "ALL" ? "All Statuses" : statusFilter}
+            </Select.Trigger>
+            <Select.Content>
+              <Select.Item value="ALL">All Statuses</Select.Item>
+              <Select.Item value={GC.UP}>UP</Select.Item>
+              <Select.Item value={GC.DOWN}>DOWN</Select.Item>
+              <Select.Item value={GC.DEGRADED}>DEGRADED</Select.Item>
             </Select.Content>
           </Select.Root>
         </div>
