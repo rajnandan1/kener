@@ -21,7 +21,8 @@ import type {
 import type { MonitorFilter } from "../db/repositories/base.js";
 import db from "../db/db.js";
 import type { PaginationInput } from "../../types/common.js";
-import GC, { getBadgeStyle, type BadgeStyle, type MonitoringStatus } from "../../global-constants.js";
+import GC, { getBadgeStyle, type BadgeStyle } from "../../global-constants.js";
+import type { MonitoringStatus } from "../../types/status.js";
 import { makeBadge } from "badge-maker";
 import { ErrorSvg } from "../../anywhere.js";
 import { GetLastMonitoringValue, SetLastHeartbeat, DeleteMonitorCaches } from "../cache/setGet.js";

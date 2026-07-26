@@ -4,7 +4,8 @@ import { format } from "date-fns";
 import sharp from "sharp";
 import { nanoid } from "nanoid";
 import db from "$lib/server/db/db";
-import GC, { isMonitoringStatus, type MonitoringStatus } from "$lib/global-constants.js";
+import GC, { isMonitoringStatus } from "$lib/global-constants.js";
+import type { MonitoringStatus } from "$lib/types/status.js";
 import {
   CreateUpdateMonitor,
   UpdateMonitoringData,
@@ -220,7 +221,7 @@ export async function POST({ request, cookies }) {
       resp = await DeleteMonitorCompletelyUsingTag(data.tag);
     } else if (action == "deleteMonitorData") {
       let status: MonitoringStatus | undefined;
-      if (data.status && data.status !== "ALL") {
+      if (data.status !== undefined && data.status !== null && data.status !== "ALL") {
         if (!isMonitoringStatus(data.status)) {
           return json({ error: "Invalid monitoring status" }, { status: 400 });
         }
@@ -256,7 +257,7 @@ export async function POST({ request, cookies }) {
       if (data.monitor_tag && data.monitor_tag !== "ALL") {
         filter.monitor_tag = data.monitor_tag;
       }
-      if (data.status && data.status !== "ALL") {
+      if (data.status !== undefined && data.status !== null && data.status !== "ALL") {
         if (!isMonitoringStatus(data.status)) {
           return json({ error: "Invalid monitoring status" }, { status: 400 });
         }

@@ -1,5 +1,6 @@
 import type { TimestampStatusCount } from "$lib/server/types/db";
-import GC, { PAGE_STATUS_MESSAGES, type StatusType } from "$lib/global-constants";
+import GC, { PAGE_STATUS_MESSAGES } from "$lib/global-constants";
+import type { StatusType } from "$lib/types/status";
 
 function ParseLatency(latencyMs: number): string {
   if (!!!latencyMs) {

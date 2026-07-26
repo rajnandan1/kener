@@ -1,6 +1,7 @@
 import type { Knex as KnexType } from "knex";
 import { BaseRepository } from "./base.js";
-import GC, { type MonitoringStatus } from "../../../global-constants.js";
+import GC from "../../../global-constants.js";
+import type { MonitoringStatus } from "../../../types/status.js";
 import { GetMinuteStartNowTimestampUTC } from "../../tool.js";
 import type {
   MonitoringData,

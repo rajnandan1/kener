@@ -7,6 +7,7 @@ describe("isMonitoringStatus", () => {
     expect(isMonitoringStatus("DOWN")).toBe(true);
     expect(isMonitoringStatus("DEGRADED")).toBe(true);
     expect(isMonitoringStatus("MAINTENANCE")).toBe(false);
+    expect(isMonitoringStatus("")).toBe(false);
     expect(isMonitoringStatus("invalid")).toBe(false);
   });
 });

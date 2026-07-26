@@ -19,7 +19,8 @@
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
-  import GC, { isMonitoringStatus, type MonitoringStatus } from "$lib/global-constants.js";
+  import GC, { isMonitoringStatus } from "$lib/global-constants.js";
+  import type { MonitoringStatus } from "$lib/types/status.js";
 
   // Types
   interface MonitoringData {
@@ -466,11 +467,16 @@
     <AlertDialog.Header>
       <AlertDialog.Title>Delete Monitoring Data</AlertDialog.Title>
       <AlertDialog.Description>
+        This will delete monitoring data for
         {#if monitorTagFilter === "ALL"}
-          This will delete monitoring data for <strong>all monitors</strong> from {startDateTime} to {endDateTime}.
+          <strong>all monitors</strong>
         {:else}
-          This will delete monitoring data for <strong>{monitorTagFilter}</strong> from {startDateTime} to {endDateTime}.
+          <strong>{monitorTagFilter}</strong>
         {/if}
+        {#if statusFilter !== "ALL"}
+          with status <strong>{statusFilter}</strong>
+        {/if}
+        from {startDateTime} to {endDateTime}.
         This action cannot be undone.
       </AlertDialog.Description>
     </AlertDialog.Header>
