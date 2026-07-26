@@ -485,7 +485,7 @@ export class MonitoringRepository extends BaseRepository {
     });
   }
 
-  async deleteMonitorDataByTag(tag?: string, start?: number, end?: number): Promise<number> {
+  async deleteMonitorDataByTag(tag?: string, start?: number, end?: number, status?: MonitoringStatus): Promise<number> {
     const query = this.knex("monitoring_data");
     if (tag) {
       query.where("monitor_tag", tag);
@@ -495,6 +495,9 @@ export class MonitoringRepository extends BaseRepository {
     }
     if (end !== undefined) {
       query.where("timestamp", "<=", end);
+    }
+    if (status) {
+      query.where("status", status);
     }
     return await query.del();
   }

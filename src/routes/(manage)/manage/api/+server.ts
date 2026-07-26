@@ -219,7 +219,14 @@ export async function POST({ request, cookies }) {
     } else if (action == "deleteMonitor") {
       resp = await DeleteMonitorCompletelyUsingTag(data.tag);
     } else if (action == "deleteMonitorData") {
-      await db.deleteMonitorDataByTag(data.tag || undefined, data.start, data.end);
+      let status: MonitoringStatus | undefined;
+      if (data.status && data.status !== "ALL") {
+        if (!isMonitoringStatus(data.status)) {
+          return json({ error: "Invalid monitoring status" }, { status: 400 });
+        }
+        status = data.status;
+      }
+      await db.deleteMonitorDataByTag(data.tag || undefined, data.start, data.end, status);
       resp = { success: true };
     } else if (action == "cloneMonitor") {
       resp = await CloneMonitor({

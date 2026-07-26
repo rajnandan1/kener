@@ -145,6 +145,7 @@
           action: "deleteMonitorData",
           data: {
             tag: monitorTagFilter === "ALL" ? "" : monitorTagFilter,
+            status: statusFilter === "ALL" ? undefined : statusFilter,
             start: startTs,
             end: endTs
           }
