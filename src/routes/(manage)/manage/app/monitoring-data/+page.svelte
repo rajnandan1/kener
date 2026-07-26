@@ -19,7 +19,7 @@
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
-  import GC, { isMonitoringStatus } from "$lib/global-constants.js";
+  import GC, { isMonitoringStatus } from "$lib/global-constants";
   import type { MonitoringStatus } from "$lib/types/status.js";
 
   // Types
@@ -323,7 +323,7 @@
         <div class="flex flex-col gap-1">
           <span class="text-muted-foreground text-xs font-medium">Status</span>
           <Select.Root type="single" value={statusFilter} onValueChange={handleStatusChange}>
-            <Select.Trigger class="w-36">
+            <Select.Trigger class="w-36" aria-label="Status">
               {statusFilter === "ALL" ? "All Statuses" : statusFilter}
             </Select.Trigger>
             <Select.Content>
