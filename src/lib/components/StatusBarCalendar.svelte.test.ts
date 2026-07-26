@@ -16,6 +16,7 @@ const day = (overrides: Partial<TimestampStatusCount>): TimestampStatusCount => 
   avgLatency: 0,
   maxLatency: 0,
   minLatency: 0,
+  latencyCount: 0,
   ...overrides,
 });
 
@@ -52,5 +53,64 @@ describe("StatusBarCalendar", () => {
     await screen.getByLabelText("Status calendar showing 3-day uptime data").hover();
 
     await expect.element(screen.getByText("Partial System Outage")).toBeInTheDocument();
+  });
+
+  it("formats the tooltip value with a custom unit", async () => {
+    const data = [
+      day({ countOfUp: 100, avgLatency: 42, latencyCount: 100 }),
+      day({ countOfUp: 100, avgLatency: 42, latencyCount: 100 }),
+      day({ countOfUp: 100, avgLatency: 42, latencyCount: 100 }),
+    ];
+    const screen = await render(StatusBarCalendar, {
+      data,
+      monitorTag: "test-monitor",
+      disableClick: true,
+      valueDisplay: { name: "Queue length", unit: "items" },
+    });
+
+    await screen.getByLabelText("Status calendar showing 3-day uptime data").hover();
+
+    await expect.element(screen.getByText("42 items")).toBeInTheDocument();
+  });
+
+  it("shows a zero reading for custom units instead of hiding it", async () => {
+    // avgLatency 0 with latencyCount > 0 is a real reading of 0 (e.g. an empty queue), not a
+    // NULL/no-reading day, so it must still be shown.
+    const data = [
+      day({ countOfUp: 100, avgLatency: 0, latencyCount: 100 }),
+      day({ countOfUp: 100, avgLatency: 0, latencyCount: 100 }),
+      day({ countOfUp: 100, avgLatency: 0, latencyCount: 100 }),
+    ];
+    const screen = await render(StatusBarCalendar, {
+      data,
+      monitorTag: "test-monitor",
+      disableClick: true,
+      valueDisplay: { unit: "items" },
+    });
+
+    await screen.getByLabelText("Status calendar showing 3-day uptime data").hover();
+
+    await expect.element(screen.getByText("0 items")).toBeInTheDocument();
+  });
+
+  it("does not fabricate a reading when checks ran but all readings were NULL", async () => {
+    // countOfUp: 100 means checks ran, but latencyCount: 0 means every reading was NULL
+    // (the SQL aggregate is NULL, mapped to avgLatency 0). The tooltip must not show "0 items".
+    const data = [
+      day({ countOfUp: 100, latencyCount: 0, avgLatency: 0 }),
+      day({ countOfUp: 100, latencyCount: 0, avgLatency: 0 }),
+      day({ countOfUp: 100, latencyCount: 0, avgLatency: 0 }),
+    ];
+    const screen = await render(StatusBarCalendar, {
+      data,
+      monitorTag: "test-monitor",
+      disableClick: true,
+      valueDisplay: { unit: "items" },
+    });
+
+    await screen.getByLabelText("Status calendar showing 3-day uptime data").hover();
+
+    await expect.element(screen.getByText("All Systems Operational")).toBeInTheDocument();
+    await expect.element(screen.getByText("0 items")).not.toBeInTheDocument();
   });
 });

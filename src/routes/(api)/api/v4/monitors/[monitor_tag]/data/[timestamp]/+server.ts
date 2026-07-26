@@ -12,6 +12,8 @@ import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { SetLastMonitoringValue } from "$lib/server/cache/setGet";
 import alertingQueue from "$lib/server/queues/alertingQueue";
 
+// TODO(next-major): accept/return "value" alongside deprecated "latency".
+
 export const GET: RequestHandler = async ({ params, locals }) => {
   // Monitor is validated by middleware and available in locals
   const monitor = locals.monitor!;

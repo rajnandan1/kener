@@ -5,6 +5,7 @@ import type { TcpHost, TcpMonitorTypeData } from "$lib/types/tcp.js";
 
 export interface MonitoringResult {
   status: string;
+  // TODO(next-major): rename latency -> value (generic metric); kept for backwards compatibility.
   latency: number;
   type: string;
   error_message?: string;

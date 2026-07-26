@@ -7,6 +7,7 @@
   import { t } from "$lib/stores/i18n";
   import trackEvent from "$lib/beacon";
   import { Button } from "$lib/components/ui/button/index.js";
+  import type { MonitorValueDisplay } from "$lib/server/types/db.js";
 
   import TrendingUp from "@lucide/svelte/icons/trending-up";
   import Percent from "@lucide/svelte/icons/percent";
@@ -18,9 +19,11 @@
   interface Props {
     protocol: string;
     domain: string;
+    valueDisplay?: MonitorValueDisplay | null;
   }
 
-  let { protocol, domain }: Props = $props();
+  let { protocol, domain, valueDisplay = null }: Props = $props();
+  const customName = $derived(valueDisplay?.name?.trim() || "");
   let open = $state(false);
   let showMenu = $derived(
     page.route.id === "/(kener)/monitors/[monitor_tag]" &&
@@ -137,7 +140,9 @@
             <div class="flex items-center justify-between gap-2 rounded-3xl border px-2 py-1">
               <div class="flex items-center gap-2">
                 <Timer class="h-3 w-3" />
-                <span class="text-xs font-medium">{$t("Avg Latency")}</span>
+                <span class="text-xs font-medium"
+                  >{customName ? $t("Avg %name", { name: customName }) : $t("Avg Latency")}</span
+                >
               </div>
               <img src={badgeLatencyAvgUrl} alt="Avg Latency Badge" class="h-5" />
               <CopyButton
@@ -156,7 +161,9 @@
             <div class="flex items-center justify-between gap-2 rounded-3xl border px-2 py-1">
               <div class="flex items-center gap-2">
                 <Timer class="h-3 w-3" />
-                <span class="text-xs font-medium">{$t("Max Latency")}</span>
+                <span class="text-xs font-medium"
+                  >{customName ? $t("Max %name", { name: customName }) : $t("Max Latency")}</span
+                >
               </div>
               <img src={badgeLatencyMaxUrl} alt="Max Latency Badge" class="h-5" />
               <CopyButton
@@ -175,7 +182,9 @@
             <div class="flex items-center justify-between gap-2 rounded-3xl border px-2 py-1">
               <div class="flex items-center gap-2">
                 <Timer class="h-3 w-3" />
-                <span class="text-xs font-medium">{$t("Min Latency")}</span>
+                <span class="text-xs font-medium"
+                  >{customName ? $t("Min %name", { name: customName }) : $t("Min Latency")}</span
+                >
               </div>
               <img src={badgeLatencyMinUrl} alt="Min Latency Badge" class="h-5" />
               <CopyButton

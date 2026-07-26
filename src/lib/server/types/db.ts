@@ -91,6 +91,16 @@ export interface MonitorSharingOptions {
   showShareBadgeMonitor: boolean;
   showShareEmbedMonitor: boolean;
 }
+/**
+ * Per-monitor override for how latency/value readings are labeled and formatted.
+ * Absent name/unit fall back to the legacy latency defaults ("Latency", "ms" with ms/s/m/h scaling).
+ * decimals only applies to custom units: 0-4 fixed digits, or absent for auto (up to 2, trailing zeros trimmed).
+ */
+export interface MonitorValueDisplay {
+  name?: string;
+  unit?: string;
+  decimals?: number;
+}
 export interface MonitorSettings {
   uptime_formula_numerator?: string;
   uptime_formula_denominator?: string;
@@ -99,6 +109,7 @@ export interface MonitorSettings {
     mobile: number;
   };
   sharing_options?: MonitorSharingOptions;
+  value_display?: MonitorValueDisplay;
 }
 
 export interface TimestampStatusCount {
@@ -110,6 +121,8 @@ export interface TimestampStatusCount {
   avgLatency: number;
   maxLatency: number;
   minLatency: number;
+  /** Count of non-NULL `latency` readings the aggregate was built from (excludes NO_DATA/absent-latency samples). */
+  latencyCount: number;
 }
 
 export interface TimestampStatusCountByMonitor extends TimestampStatusCount {

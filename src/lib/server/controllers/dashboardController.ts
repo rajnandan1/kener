@@ -169,6 +169,7 @@ const BuildPageStatus = (latestData: Array<{ status?: string | null; latency?: n
   let latencySum = 0;
   let maxLatency = 0;
   let minLatency = Infinity;
+  let latencyCount = 0;
 
   for (const data of latestData) {
     if (data.status === GC.UP) {
@@ -179,6 +180,10 @@ const BuildPageStatus = (latestData: Array<{ status?: string | null; latency?: n
       degradedsInLatestData++;
     } else if (data.status === GC.MAINTENANCE) {
       maintenancesInLatestData++;
+    }
+
+    if (data.latency !== null && data.latency !== undefined) {
+      latencyCount++;
     }
 
     const latency = data.latency || 0;
@@ -200,6 +205,7 @@ const BuildPageStatus = (latestData: Array<{ status?: string | null; latency?: n
     avgLatency: latencySum / (latestData.length || 1),
     maxLatency,
     minLatency: minLatency === Infinity ? 0 : minLatency,
+    latencyCount,
   };
 
   return {

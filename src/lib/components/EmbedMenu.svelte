@@ -10,6 +10,7 @@
   import { mode } from "mode-watcher";
   import trackEvent from "$lib/beacon";
   import { page } from "$app/state";
+  import type { MonitorValueDisplay } from "$lib/server/types/db.js";
 
   import Copy from "@lucide/svelte/icons/clipboard";
   import Check from "@lucide/svelte/icons/check";
@@ -18,9 +19,11 @@
   interface Props {
     protocol: string;
     domain: string;
+    valueDisplay?: MonitorValueDisplay | null;
   }
 
-  let { protocol, domain }: Props = $props();
+  let { protocol, domain, valueDisplay = null }: Props = $props();
+  const customName = $derived(valueDisplay?.name?.trim() || "");
   let open = $state(false);
   let showMenu = $derived(
     page.route.id === "/(kener)/monitors/[monitor_tag]" &&
@@ -191,7 +194,9 @@
 
       <!-- Latency Embed -->
       <div>
-        <Label class="mb-2 block text-sm font-semibold">{$t("Latency Embed")}</Label>
+        <Label class="mb-2 block text-sm font-semibold"
+          >{customName ? $t("%name Embed", { name: customName }) : $t("Latency Embed")}</Label
+        >
         <div class="flex flex-col gap-3 rounded-3xl border p-4">
           <iframe title="latency embed preview" src={latencyPreviewUrl()} width="100%" height="200" frameborder="0"
           ></iframe>

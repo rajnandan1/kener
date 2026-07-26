@@ -19,6 +19,8 @@
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import type { MonitorValueDisplay } from "$lib/server/types/db";
+  import { ValueDisplayLabels } from "$lib/clientTools";
 
   // Types
   interface MonitoringData {
@@ -33,6 +35,17 @@
   interface Monitor {
     tag: string;
     name: string;
+    value_display?: MonitorValueDisplay | null;
+  }
+
+  /** Parses a monitor's settings JSON and returns its value_display config, or null when absent or malformed. */
+  function parseValueDisplay(settingsJson: string | null | undefined): MonitorValueDisplay | null {
+    if (!settingsJson) return null;
+    try {
+      return (JSON.parse(settingsJson) as { value_display?: MonitorValueDisplay }).value_display ?? null;
+    } catch {
+      return null;
+    }
   }
 
   // Helper to format datetime as YYYY-MM-DDTHH:mm for datetime-local input
@@ -174,11 +187,25 @@
       });
       const result = await response.json();
       if (!result.error && Array.isArray(result)) {
-        monitors = result.map((m: { tag: string; name: string }) => ({ tag: m.tag, name: m.name }));
+        monitors = result.map((m: { tag: string; name: string; monitor_settings_json?: string | null }) => ({
+          tag: m.tag,
+          name: m.name,
+          value_display: parseValueDisplay(m.monitor_settings_json)
+        }));
       }
     } catch (error) {
       console.error("Error fetching monitors:", error);
     }
+  }
+
+  const displayByTag = $derived(new Map(monitors.map((m) => [m.tag, m.value_display ?? null])));
+
+  /** Unit suffix for a monitor's raw readings in this table ("ms" default, "" for bare numbers). */
+  function unitSuffixFor(tag: string): string {
+    const { unitSuffix } = ValueDisplayLabels(displayByTag.get(tag));
+    // "%" joins the number with no space; other non-empty units get a leading space; empty unit is bare.
+    if (unitSuffix === "") return "";
+    return unitSuffix === "%" ? unitSuffix : ` ${unitSuffix}`;
   }
 
   // Fetch monitoring data
@@ -368,7 +395,8 @@
               </Table.Cell>
               <Table.Cell>
                 {#if row.latency !== null}
-                  <span class="text-sm">{row.latency} ms</span>
+                  {@const suffix = unitSuffixFor(row.monitor_tag)}
+                  <span class="text-sm">{row.latency}{suffix}</span>
                 {:else}
                   <span class="text-muted-foreground text-sm">—</span>
                 {/if}

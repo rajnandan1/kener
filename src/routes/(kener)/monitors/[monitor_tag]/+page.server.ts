@@ -9,9 +9,9 @@ import {
   GetUpcomingMaintenanceEventsForMonitorList,
 } from "$lib/server/controllers/dashboardController.js";
 import type { TimestampStatusCount } from "$lib/server/types/db";
-import { GetNowTimestampUTC, UptimeCalculator } from "$lib/server/tool";
+import { GetNowTimestampUTC } from "$lib/server/tool";
 import GC from "$lib/global-constants.js";
-import { GetStatusColor, GetStatusSummary, ParseLatency } from "$lib/clientTools";
+import { FormatValue, GetStatusColor, GetStatusSummary } from "$lib/clientTools";
 import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
 import type { GroupMonitorTypeData } from "$lib/server/types/monitor";
 
@@ -58,13 +58,14 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   //use uptime calculator tool to parse
   let item: TimestampStatusCount = {
     ts: lastStatus ? lastStatus.timestamp : GetNowTimestampUTC(),
-    countOfUp: lastStatus && lastStatus.status === GC.UP ? 1 : 0,
-    countOfDown: lastStatus && lastStatus.status === GC.DOWN ? 1 : 0,
-    countOfDegraded: lastStatus && lastStatus.status === GC.DEGRADED ? 1 : 0,
-    countOfMaintenance: lastStatus && lastStatus.status === GC.MAINTENANCE ? 1 : 0,
-    avgLatency: lastStatus && lastStatus.latency ? lastStatus.latency : 0,
-    maxLatency: lastStatus && lastStatus.latency ? lastStatus.latency : 0,
-    minLatency: lastStatus && lastStatus.latency ? lastStatus.latency : 0,
+    countOfUp: lastStatus?.status === GC.UP ? 1 : 0,
+    countOfDown: lastStatus?.status === GC.DOWN ? 1 : 0,
+    countOfDegraded: lastStatus?.status === GC.DEGRADED ? 1 : 0,
+    countOfMaintenance: lastStatus?.status === GC.MAINTENANCE ? 1 : 0,
+    avgLatency: lastStatus?.latency ?? 0,
+    maxLatency: lastStatus?.latency ?? 0,
+    minLatency: lastStatus?.latency ?? 0,
+    latencyCount: lastStatus?.latency != null ? 1 : 0,
   };
 
   //get status summary
@@ -106,7 +107,8 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       monitorLastStatus: GetStatusSummary(item),
       textClass: GetStatusColor(item),
       monitorLastStatusTimestamp: item.ts,
-      monitorLastLatency: ParseLatency(item.avgLatency),
+      monitorLastLatency: FormatValue(lastStatus?.latency ?? null, monitor.monitor_settings_json?.value_display),
+      monitorValueDisplay: monitor.monitor_settings_json?.value_display ?? null,
       ongoingIncidents,
       ongoingMaintenances,
       upcomingMaintenances,

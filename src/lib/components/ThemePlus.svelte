@@ -23,14 +23,21 @@
   import SiteBanner from "./SiteBanner.svelte";
   import NotificationsPopover from "./NotificationsPopover.svelte";
   import PageSelector from "./PageSelector.svelte";
+  import type { MonitorValueDisplay } from "$lib/server/types/db.js";
 
   interface Props {
     monitor_tags?: string[];
     embedMonitorTag?: string;
     hideNotificationsPopover?: boolean;
+    valueDisplay?: MonitorValueDisplay | null;
   }
 
-  let { monitor_tags = [], embedMonitorTag = "", hideNotificationsPopover = false }: Props = $props();
+  let {
+    monitor_tags = [],
+    embedMonitorTag = "",
+    hideNotificationsPopover = false,
+    valueDisplay = null
+  }: Props = $props();
 
   let protocol = $state("");
   let domain = $state("");
@@ -133,8 +140,8 @@
       >
         <Share />
       </CopyButton>
-      <BadgesMenu {protocol} {domain} />
-      <EmbedMenu {protocol} {domain} />
+      <BadgesMenu {protocol} {domain} {valueDisplay} />
+      <EmbedMenu {protocol} {domain} {valueDisplay} />
     </ButtonGroup.Root>
 
     <ButtonGroup.Root class="rounded-btn-grp shrink-0 sm:hidden">

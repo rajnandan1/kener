@@ -3,7 +3,7 @@ import type { APIServerRequest } from "$lib/server/types/api-server";
 import db from "$lib/server/db/db";
 import { BeginningOfDay, GetMinuteStartNowTimestampUTC, GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { GetMonitorsParsed } from "../../controllers/monitorsController";
-import { ParseLatency } from "$lib/clientTools";
+import { FormatValue, IsCustomUnit } from "$lib/clientTools";
 
 interface DayDetailRequest {
   tag: string;
@@ -116,6 +116,8 @@ export default async function post(req: APIServerRequest): Promise<Response> {
     return error(404, { message: "Monitor not found" });
   }
   const monitor = monitors[0];
+  const valueDisplay = monitor.monitor_settings_json?.value_display;
+  const customUnit = IsCustomUnit(valueDisplay);
 
   // Get raw monitoring data for the day
   const rawData = await db.getMonitoringData(monitor.tag, startOfDayTodayAtTz, nowAtTz);
@@ -128,7 +130,9 @@ export default async function post(req: APIServerRequest): Promise<Response> {
   const validData: MinuteData[] = [];
   for (const d of rawData) {
     const currentLatency = d.latency || 0;
-    if (currentLatency > 0) {
+    // Custom units: 0 is a real reading; only NULL rows are "no data".
+    const include = customUnit ? d.latency !== null && d.latency !== undefined : currentLatency > 0;
+    if (include) {
       validData.push({
         timestamp: d.timestamp,
         latency: currentLatency,
@@ -165,8 +169,8 @@ export default async function post(req: APIServerRequest): Promise<Response> {
 
   return json({
     minutes: minuteData,
-    avgLatency: ParseLatency(totalCount > 0 ? totalLatencySum / totalCount : 0),
-    maxLatency: ParseLatency(maxLatency),
-    minLatency: ParseLatency(minLatency),
+    avgLatency: totalCount > 0 ? FormatValue(totalLatencySum / totalCount, valueDisplay) : "",
+    maxLatency: totalCount > 0 ? FormatValue(maxLatency, valueDisplay) : "",
+    minLatency: totalCount > 0 ? FormatValue(minLatency, valueDisplay) : "",
   });
 }

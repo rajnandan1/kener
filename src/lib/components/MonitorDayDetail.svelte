@@ -16,10 +16,14 @@
   import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
   import MinuteGrid from "$lib/components/MinuteGrid.svelte";
   import clientResolver from "$lib/client/resolver.js";
-  import { ParseLatency } from "$lib/clientTools";
+  import { FormatValue, IsCustomUnit } from "$lib/clientTools";
 
   import * as Chart from "$lib/components/ui/chart/index.js";
-  import type { IncidentForMonitorListWithComments, MaintenanceEventsMonitorList } from "$lib/server/types/db";
+  import type {
+    IncidentForMonitorListWithComments,
+    MaintenanceEventsMonitorList,
+    MonitorValueDisplay
+  } from "$lib/server/types/db";
   import { formatDate } from "$lib/stores/datetime";
   import trackEvent from "$lib/beacon";
 
@@ -46,9 +50,13 @@
       timestamp: number;
       status: string;
     } | null;
+    valueDisplay?: MonitorValueDisplay | null;
   }
 
-  let { open = $bindable(), monitorTag, selectedDay }: Props = $props();
+  let { open = $bindable(), monitorTag, selectedDay, valueDisplay = null }: Props = $props();
+
+  const customUnit = $derived(IsCustomUnit(valueDisplay));
+  const customName = $derived(valueDisplay?.name?.trim() || "");
 
   let loading = $state(false);
   let latencyLoading = $state(false);
@@ -61,18 +69,18 @@
   let dayIncidentsData = $state<IncidentForMonitorListWithComments[]>([]);
   let dayMaintenancesData = $state<MaintenanceEventsMonitorList[]>([]);
   // Chart config for latency
-  const chartConfig = {
+  const chartConfig = $derived({
     latency: {
-      label: "Latency",
+      label: customName || "Latency",
       color: "var(--chart-1)"
     }
-  } satisfies Chart.ChartConfig;
+  } satisfies Chart.ChartConfig);
 
   // Transform latency data for chart
   let chartData = $derived.by(() => {
     if (!dayLatencyData?.minutes) return [];
     return dayLatencyData.minutes
-      .filter((d) => d.latency > 0)
+      .filter((d) => (customUnit ? d.latency !== null && d.latency !== undefined : d.latency > 0))
       .map((d) => ({
         date: new Date(d.timestamp * 1000),
         latency: d.latency
@@ -226,7 +234,7 @@
           >{$t("Status")}</Tabs.Trigger
         >
         <Tabs.Trigger value="latency" class="shrink-0 rounded-3xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
-          >{$t("Latency")}</Tabs.Trigger
+          >{customName || $t("Latency")}</Tabs.Trigger
         >
         <Tabs.Trigger value="incidents" class="shrink-0 rounded-3xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
           >{$t("Incidents")}</Tabs.Trigger
@@ -272,7 +280,7 @@
           <div class="space-y-4">
             <!-- Average latency -->
             <div class="text-foreground mb-2 flex items-center justify-between text-sm font-medium">
-              <p>{$t("Latency Over Time")}</p>
+              <p>{customName ? $t("%name Over Time", { name: customName }) : $t("Latency Over Time")}</p>
               <div class="flex items-center gap-1">
                 <Tooltip.Root>
                   <Tooltip.Trigger class="flex items-center gap-1">
@@ -280,7 +288,7 @@
                     {dayLatencyData.avgLatency}
                   </Tooltip.Trigger>
                   <Tooltip.Content>
-                    <p>{$t("Average Latency")}</p>
+                    <p>{customName ? $t("Avg %name", { name: customName }) : $t("Average Latency")}</p>
                   </Tooltip.Content>
                 </Tooltip.Root>
               </div>
@@ -300,7 +308,7 @@
                 series={[
                   {
                     key: "latency",
-                    label: $t("Latency"),
+                    label: customName || $t("Latency"),
                     color: "var(--color-latency)"
                   }
                 ]}
@@ -343,7 +351,7 @@
                           </span>
                           <div class="flex items-center gap-2">
                             <span class="text-foreground font-mono font-medium tabular-nums">
-                              {ParseLatency(Math.round(Number(value)))}
+                              {FormatValue(customUnit ? Number(value) : Math.round(Number(value)), valueDisplay)}
                             </span>
                           </div>
                         </div>
@@ -356,11 +364,17 @@
           </div>
         {:else if dayLatencyData && chartData.length === 0}
           <div class="py-8 text-center">
-            <p class="text-muted-foreground">{$t("No latency data available for this day")}</p>
+            <p class="text-muted-foreground">
+              {customName
+                ? $t("No %name data available for this day", { name: customName })
+                : $t("No latency data available for this day")}
+            </p>
           </div>
         {:else}
           <div class="py-8 text-center">
-            <p class="text-muted-foreground">{$t("Failed to load latency data")}</p>
+            <p class="text-muted-foreground">
+              {customName ? $t("Failed to load %name data", { name: customName }) : $t("Failed to load latency data")}
+            </p>
           </div>
         {/if}
       </Tabs.Content>

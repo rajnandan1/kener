@@ -1,19 +1,87 @@
-import type { TimestampStatusCount } from "$lib/server/types/db";
+import type { MonitorValueDisplay, TimestampStatusCount } from "$lib/server/types/db";
 import GC, { PAGE_STATUS_MESSAGES, type StatusType } from "$lib/global-constants";
 
-function ParseLatency(latencyMs: number): string {
-  if (!!!latencyMs) {
+/** True when a unit is present and isn't exactly "ms" (including an explicit empty string ""). */
+function IsCustomUnit(display?: MonitorValueDisplay | null): boolean {
+  return typeof display?.unit === "string" && display.unit !== "ms";
+}
+
+/**
+ * True when a day's aggregate has at least one non-NULL latency reading.
+ * Custom units treat 0 as a real reading, but a bucket whose readings were ALL NULL (e.g. every
+ * check in the window failed before recording a value) must not be fabricated into a "0" sample.
+ * `latencyCount` is the count of non-NULL `latency` readings the aggregate was built from (SQL
+ * COUNT(latency) ignores NULLs, unlike AVG/MIN/MAX which silently collapse an all-NULL bucket to
+ * NULL -> 0 downstream) - gate on that instead of on status counts.
+ */
+function DayHasReading(d: Pick<TimestampStatusCount, "latencyCount">): boolean {
+  return d.latencyCount > 0;
+}
+
+/** Clamps a decimals value to an integer in [0, 4]; returns undefined for non-finite/non-number input. */
+function clampDecimals(d: unknown): number | undefined {
+  if (typeof d !== "number" || !Number.isFinite(d)) return undefined;
+  return Math.min(4, Math.max(0, Math.round(d)));
+}
+
+/**
+ * Formats a monitor's raw value for display.
+ * Without a custom unit, mirrors the legacy latency formatting (ms/s/m/h based on magnitude).
+ * With a custom unit, formats the number using `display.decimals` (or up to 2 auto-trimmed digits) and appends `display.unit`.
+ * @param value Raw numeric value (latency ms, or a custom-unit reading); null/undefined/NaN render as "".
+ * On the legacy path 0 also renders as "" (treated as no data); with a custom unit, 0 is a real reading.
+ * @param display Optional per-monitor value-display config (name/unit/decimals).
+ */
+function FormatValue(value: number | null | undefined, display?: MonitorValueDisplay | null): string {
+  if (!IsCustomUnit(display)) {
+    // Legacy latency path - must stay byte-identical to the historical ParseLatency.
+    const latencyMs = value as number;
+    if (!!!latencyMs) {
+      return "";
+    }
+    if (latencyMs < 1000) {
+      return `${Math.round(latencyMs)}ms`;
+    } else if (latencyMs < 60000) {
+      return `${(latencyMs / 1000).toFixed(2)}s`;
+    } else if (latencyMs < 3600000) {
+      return `${(latencyMs / 60000).toFixed(2)}m`;
+    } else {
+      return `${(latencyMs / 3600000).toFixed(2)}h`;
+    }
+  }
+  if (value === null || value === undefined || Number.isNaN(value)) {
     return "";
   }
-  if (latencyMs < 1000) {
-    return `${Math.round(latencyMs)}ms`;
-  } else if (latencyMs < 60000) {
-    return `${(latencyMs / 1000).toFixed(2)}s`;
-  } else if (latencyMs < 3600000) {
-    return `${(latencyMs / 60000).toFixed(2)}m`;
-  } else {
-    return `${(latencyMs / 3600000).toFixed(2)}h`;
+  const decimals = clampDecimals(display?.decimals);
+  // Locale pinned so strings formatted on the server (badges, monitor-bar) match the client.
+  const formatted = new Intl.NumberFormat("en-US", {
+    useGrouping: false,
+    ...(decimals === undefined
+      ? { maximumFractionDigits: 2 } // "auto": up to 2 fraction digits, trailing zeros trimmed
+      : { minimumFractionDigits: decimals, maximumFractionDigits: decimals }),
+  }).format(value);
+  const unit = display?.unit ?? "";
+  if (unit === "" || unit === "%") {
+    return `${formatted}${unit}`;
   }
+  return `${formatted} ${unit}`;
+}
+
+/** @deprecated Use FormatValue. TODO(next-major): rename latency -> value and remove this alias. */
+function ParseLatency(latencyMs: number): string {
+  return FormatValue(latencyMs);
+}
+
+/**
+ * Admin-facing labels for a monitor's value display config.
+ * displayName falls back to "Latency", unitSuffix to "ms"; an explicitly
+ * empty unit ("" = bare number) is preserved as an empty suffix.
+ */
+function ValueDisplayLabels(display?: MonitorValueDisplay | null): { displayName: string; unitSuffix: string } {
+  return {
+    displayName: display?.name?.trim() || "Latency",
+    unitSuffix: display?.unit === undefined ? "ms" : display.unit,
+  };
 }
 
 function siteDataExtractFromDb(data: Record<string, unknown>, obj: Record<string, unknown>): Record<string, unknown> {
@@ -405,6 +473,10 @@ export {
   GetStatusSummary,
   GetStatusColor,
   GetStatusBgColor,
+  FormatValue,
+  IsCustomUnit,
+  DayHasReading,
   ParseLatency,
+  ValueDisplayLabels,
   GetInitials,
 };

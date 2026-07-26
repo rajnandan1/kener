@@ -7,11 +7,19 @@
   import SaveIcon from "@lucide/svelte/icons/save";
   import Loader from "@lucide/svelte/icons/loader";
   import PlayIcon from "@lucide/svelte/icons/play";
-  import type { MonitorRecord } from "$lib/server/types/db.js";
+  import type { MonitorRecord, MonitorValueDisplay } from "$lib/server/types/db.js";
   import type { GroupMonitorTypeData, MonitoringResult } from "$lib/server/types/monitor.js";
   import { MONITOR_TYPES, type MonitorType } from "$lib/types/monitor.js";
   import { toast } from "svelte-sonner";
-  import { ValidateIpAddress, IsValidHost, IsValidNameServer, IsValidDnsResolver, IsValidURL, IsValidPort } from "$lib/clientTools";
+  import {
+    ValidateIpAddress,
+    IsValidHost,
+    IsValidNameServer,
+    IsValidDnsResolver,
+    IsValidURL,
+    IsValidPort,
+    ValueDisplayLabels
+  } from "$lib/clientTools";
   import { GAMEDIG_SOCKET_TIMEOUT } from "$lib/anywhere";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
@@ -36,9 +44,17 @@
     // the various strongly-typed type editors (API/PING/HEARTBEAT/etc.) without TS errors.
     typeData: any;
     availableMonitors: MonitorRecord[];
+    valueDisplay?: MonitorValueDisplay | null;
   }
 
-  let { monitor = $bindable(), typeData = $bindable(), availableMonitors }: Props = $props();
+  let { monitor = $bindable(), typeData = $bindable(), availableMonitors, valueDisplay = null }: Props = $props();
+
+  const labels = $derived(ValueDisplayLabels(valueDisplay));
+  const displayName = $derived(labels.displayName);
+  const unitSuffix = $derived(labels.unitSuffix);
+  const testResultLabel = $derived(
+    unitSuffix === "" ? displayName : `${displayName} (${unitSuffix === "ms" ? "milliseconds" : unitSuffix})`
+  );
 
   const GROUP_MIN_MONITORS = 2;
   const GROUP_MIN_TIMEOUT_MS = 1000;
@@ -329,7 +345,7 @@
       {:else if monitor.monitor_type === "HEARTBEAT"}
         <MonitorHeartbeat bind:data={typeData} tag={monitor.tag} />
       {:else if monitor.monitor_type === "GROUP"}
-        <MonitorGroup bind:data={typeData} {availableMonitors} tag={monitor.tag} />
+        <MonitorGroup bind:data={typeData} {availableMonitors} tag={monitor.tag} {valueDisplay} />
       {:else if monitor.monitor_type === "GAMEDIG"}
         <MonitorGamedig bind:data={typeData} />
       {:else if monitor.monitor_type === "GRPC"}
@@ -386,7 +402,7 @@
                   </div>
                 </div>
                 <div class="rounded-lg border p-4 text-center">
-                  <div class="text-muted-foreground text-xs uppercase">Latency (milliseconds)</div>
+                  <div class="text-muted-foreground text-xs uppercase">{testResultLabel}</div>
                   <div class="mt-1 truncate text-2xl font-bold">
                     {testResult.latency}
                   </div>

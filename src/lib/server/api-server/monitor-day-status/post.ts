@@ -84,6 +84,7 @@ export default async function post(req: APIServerRequest): Promise<Response> {
     avgLatency: 0,
     maxLatency: 0,
     minLatency: 0,
+    latencyCount: 0,
   };
 
   const uptimeCalculationResult = UptimeCalculator(
