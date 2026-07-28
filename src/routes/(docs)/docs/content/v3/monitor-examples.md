@@ -125,7 +125,7 @@ Assuming `ORDER_ID` is present in env
 
 ## Eval Body
 
-Read more about [eval](https://kener.ing/docs/v3/monitors#eval)
+Read more about [eval](https://kener.ing/docs/v3/monitors-api#eval)
 
 Below example will call https://api.github.com/repos/rajnandan1/kener/issues. If the status code is 200 then it will be UP else DOWN. It will also check if the response time is greater than 2000ms then it will be DEGRADED.
 
