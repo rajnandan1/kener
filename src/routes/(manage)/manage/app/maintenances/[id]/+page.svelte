@@ -28,7 +28,7 @@
   import { onMount } from "svelte";
   import { goto } from "$app/navigation";
   import { toast } from "svelte-sonner";
-  import { format, formatDistanceToNow, isPast, isFuture, isWithinInterval, addDays } from "date-fns";
+  import { format, formatDistanceToNow, isPast, isFuture, isWithinInterval } from "date-fns";
   import { rrulestr } from "rrule";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
@@ -193,9 +193,16 @@
       const dtstart = new Date(startDateTimeLocal);
       const fullRrule = `DTSTART:${dtstart.toISOString().replace(/[-:]/g, "").split(".")[0]}Z\nRRULE:${customRrule}`;
       const rule = rrulestr(fullRrule);
-      const now = new Date();
-      const windowEnd = addDays(now, 30);
-      const occurrences = rule.between(now, windowEnd, true).slice(0, 5);
+      const occurrences: Date[] = [];
+      let searchFrom = new Date();
+
+      for (let i = 0; i < 5; i++) {
+        const next = rule.after(searchFrom, i === 0);
+        if (!next) break;
+        occurrences.push(next);
+        searchFrom = new Date(next.getTime() + 1000);
+      }
+
       return occurrences.map((d) => format(d, "EEE, MMM d, yyyy 'at' h:mm a"));
     } catch (e) {
       return [];
