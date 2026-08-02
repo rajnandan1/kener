@@ -240,6 +240,29 @@ Occurrences:
 - Continues monthly...
 ```
 
+#### First Weekday of Month (Ordinal BYDAY) {#first-weekday-of-month}
+
+**RRULE:** `FREQ=MONTHLY;BYDAY=1WE`
+
+**Description:** Maintenance occurs on the first Wednesday of each month
+
+**Use Case:** Monthly patch windows tied to a specific weekday
+
+**Example:**
+
+```
+Title: Monthly Patch Window
+Start: June 3, 2026 at 2:30 PM
+RRULE: FREQ=MONTHLY;BYDAY=1WE
+Duration: 90 minutes
+
+Occurrences:
+- Jun 3, 2026 at 2:30 PM
+- Jul 1, 2026 at 2:30 PM
+- Aug 5, 2026 at 2:30 PM
+- Continues monthly...
+```
+
 #### Middle of Month {#middle-of-month}
 
 **RRULE:** `FREQ=MONTHLY;BYMONTHDAY=15`
@@ -362,15 +385,16 @@ Affected Monitors:
 Title: Monthly Security Updates
 Description: Critical security patches and system updates
 Start Date: Sunday, June 4, 2026 at 2:00 AM
-RRULE: FREQ=MONTHLY;BYMONTHDAY=1
+RRULE: FREQ=MONTHLY;BYDAY=1SU
 Duration: 3600 seconds (1 hour)
 Affected Monitors:
     - All Servers: MAINTENANCE
 ```
 
-**Note:** Since RRULE doesn't support "first Sunday", use BYMONTHDAY=1 and choose first occurrence that falls on Sunday, or use BYDAY with ordinal (not supported in Kener UI currently).
+**Note:** Use ordinal weekday syntax in `BYDAY` for "first X weekday" patterns:
 
-**Workaround:** Create as weekly and manage manually or use BYMONTHDAY for specific date.
+- First Sunday: `BYDAY=1SU`
+- First Wednesday: `BYDAY=1WE`
 
 ### Example 4: Business Hours Backup {#example-backup}
 
@@ -469,6 +493,7 @@ Start: 2:00 AM UTC
 ✅ `FREQ=WEEKLY;BYDAY=MO,WE,FR`
 ✅ `FREQ=WEEKLY;INTERVAL=2;BYDAY=SU`
 ✅ `FREQ=MONTHLY;BYMONTHDAY=1`
+✅ `FREQ=MONTHLY;BYDAY=1WE`
 ✅ `FREQ=MINUTELY;COUNT=1`
 
 ### Invalid RRULEs {#invalid-rrules}
@@ -602,6 +627,7 @@ Description: |
 | Every Sunday      | `FREQ=WEEKLY;BYDAY=SU`                 |
 | Bi-weekly Mondays | `FREQ=WEEKLY;INTERVAL=2;BYDAY=MO`      |
 | First of month    | `FREQ=MONTHLY;BYMONTHDAY=1`            |
+| First Wednesday   | `FREQ=MONTHLY;BYDAY=1WE`               |
 | 15th of month     | `FREQ=MONTHLY;BYMONTHDAY=15`           |
 | Quarterly         | `FREQ=MONTHLY;INTERVAL=3;BYMONTHDAY=1` |
 
