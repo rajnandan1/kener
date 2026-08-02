@@ -28,10 +28,11 @@ FREQ=frequency[;INTERVAL=n][;BYDAY=days][;BYMONTHDAY=day][;COUNT=n][;UNTIL=date]
 - Default: 1
 - Integer value: 2 = every other, 3 = every third, etc.
 
-**BYDAY** (Optional, for WEEKLY)
+**BYDAY** (Optional, for WEEKLY or MONTHLY with an ordinal prefix)
 
 - Day codes: `MO`, `TU`, `WE`, `TH`, `FR`, `SA`, `SU`
 - Multiple days: `MO,WE,FR`
+- With MONTHLY, prefix a day code with an ordinal to mean "the Nth such weekday of the month": `1WE` (first Wednesday), `1SU` (first Sunday)
 
 **BYMONTHDAY** (Optional, for MONTHLY)
 
@@ -240,7 +241,7 @@ Occurrences:
 - Continues monthly...
 ```
 
-#### First Weekday of Month (Ordinal BYDAY) {#first-weekday-of-month}
+#### Nth Day-of-Week of Month (Ordinal BYDAY) {#first-weekday-of-month}
 
 **RRULE:** `FREQ=MONTHLY;BYDAY=1WE`
 

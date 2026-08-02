@@ -200,7 +200,7 @@
         const next = rule.after(searchFrom, i === 0);
         if (!next) break;
         occurrences.push(next);
-        searchFrom = new Date(next.getTime() + 1000);
+        searchFrom = next;
       }
 
       return occurrences.map((d) => format(d, "EEE, MMM d, yyyy 'at' h:mm a"));
