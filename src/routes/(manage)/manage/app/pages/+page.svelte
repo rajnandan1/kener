@@ -82,6 +82,7 @@
             <Table.Head class="w-[340px]">Page</Table.Head>
             <Table.Head class="w-[220px]">Path</Table.Head>
             <Table.Head class="w-[150px]">Monitors</Table.Head>
+            <Table.Head class="w-[120px]">Access</Table.Head>
             <Table.Head class="w-[120px] text-right"></Table.Head>
           </Table.Row>
         </Table.Header>
@@ -120,6 +121,13 @@
                   <Badge variant="secondary">{page.monitors.length} monitor{page.monitors.length > 1 ? "s" : ""}</Badge>
                 {:else}
                   <Badge variant="outline" class="text-muted-foreground">No monitors</Badge>
+                {/if}
+              </Table.Cell>
+              <Table.Cell>
+                {#if page.page_is_internal}
+                  <Badge variant="default">Internal</Badge>
+                {:else}
+                  <Badge variant="outline" class="text-muted-foreground">Public</Badge>
                 {/if}
               </Table.Cell>
 
