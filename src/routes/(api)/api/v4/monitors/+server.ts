@@ -9,6 +9,7 @@ import type {
 } from "$lib/types/api";
 import type { MonitorRecord } from "$lib/server/types/db";
 import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
+import { serializeContentTranslations, MONITOR_TRANSLATABLE_FIELDS } from "$lib/server/content-i18n";
 
 function formatDateToISO(date: Date | string): string {
   if (date instanceof Date) {
@@ -114,6 +115,16 @@ export const POST: RequestHandler = async ({ request }) => {
     confirmationThreshold = ct;
   }
 
+  let translations: string | null = null;
+  try {
+    translations = serializeContentTranslations(body.translations, MONITOR_TRANSLATABLE_FIELDS);
+  } catch (e) {
+    const errorResponse: BadRequestResponse = {
+      error: { code: "BAD_REQUEST", message: e instanceof Error ? e.message : "Invalid translations" },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
   // Prepare monitor data for insertion
   const monitorData = {
     tag: body.tag.trim(),
@@ -130,6 +141,7 @@ export const POST: RequestHandler = async ({ request }) => {
     is_hidden: body.is_hidden ?? "NO",
     confirmation_threshold: confirmationThreshold,
     monitor_settings_json: body.monitor_settings_json ? JSON.stringify(body.monitor_settings_json) : null,
+    translations,
     external_url: body.external_url ?? null,
   };
 

@@ -17,6 +17,7 @@ import { GetAllSiteData } from "./controller.js";
 import subscriberQueue from "../queues/subscriberQueue.js";
 import GC from "../../global-constants";
 import seedSiteData from "../db/seedSiteData.js";
+import { serializeContentTranslations, MAINTENANCE_TRANSLATABLE_FIELDS } from "../content-i18n.js";
 
 // ============ Input Interfaces ============
 
@@ -34,6 +35,7 @@ export interface CreateMaintenanceInput {
   // Monitors with their status during maintenance
   monitors?: MonitorWithStatusInput[];
   is_global?: string;
+  translations?: unknown;
 }
 
 export interface UpdateMaintenanceInput {
@@ -45,6 +47,7 @@ export interface UpdateMaintenanceInput {
   status?: "ACTIVE" | "INACTIVE";
   monitors?: MonitorWithStatusInput[];
   is_global?: string;
+  translations?: unknown;
 }
 
 export interface CreateMaintenanceEventInput {
@@ -258,6 +261,7 @@ export const CreateMaintenance = async (data: CreateMaintenanceInput): Promise<{
     duration_seconds: data.duration_seconds,
     status: "ACTIVE",
     is_global: data.is_global || "YES",
+    translations: serializeContentTranslations(data.translations, MAINTENANCE_TRANSLATABLE_FIELDS),
   });
 
   // Add monitors with their status to the maintenance if provided
@@ -359,7 +363,11 @@ export const UpdateMaintenance = async (id: number, data: UpdateMaintenanceInput
   }
 
   // Extract monitors separately as it's not part of the record
-  const { monitors, ...updateData } = data;
+  const { monitors, translations, ...rest } = data;
+  const updateData: Partial<MaintenanceRecordInsert> = { ...rest };
+  if (translations !== undefined) {
+    updateData.translations = serializeContentTranslations(translations, MAINTENANCE_TRANSLATABLE_FIELDS);
+  }
 
   // Determine the rrule after update (use new value if provided, otherwise existing)
   const effectiveRrule = data.rrule !== undefined ? data.rrule : existing.rrule;

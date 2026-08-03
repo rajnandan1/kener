@@ -1785,6 +1785,18 @@
             "type": "object",
             "additionalProperties": true
           },
+          "translations": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Per-locale content translations, keyed by locale code, e.g. {\"de\": {\"name\": \"...\"}}"
+          },
           "external_url": {
             "oneOf": [
               {
@@ -1844,6 +1856,18 @@
           "monitor_settings_json": {
             "type": "object",
             "additionalProperties": true
+          },
+          "translations": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Per-locale content translations, keyed by locale code, e.g. {\"de\": {\"name\": \"...\"}}"
           },
           "external_url": {
             "oneOf": [
@@ -1912,6 +1936,18 @@
                 "type": "null"
               }
             ]
+          },
+          "translations": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Per-locale content translations, keyed by locale code, e.g. {\"de\": {\"name\": \"...\"}}"
           },
           "external_url": {
             "oneOf": [

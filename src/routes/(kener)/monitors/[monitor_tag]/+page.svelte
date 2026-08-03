@@ -1,6 +1,6 @@
 <script lang="ts">
   import * as Item from "$lib/components/ui/item/index.js";
-  import { t } from "$lib/stores/i18n";
+  import { t, lt } from "$lib/stores/i18n";
   import { formatDate } from "$lib/stores/datetime";
   import { Button } from "$lib/components/ui/button/index.js";
   import ThemePlus from "$lib/components/ThemePlus.svelte";
@@ -17,6 +17,8 @@
   // State
   let descriptionExpanded = $state(false);
   let showInlineEvents = $derived(data.eventDisplaySettings?.showInlineEvents === true);
+  const monitorName = $derived($lt(data.monitorTranslations, "name", data.monitorName));
+  const monitorDescription = $derived($lt(data.monitorTranslations, "description", data.monitorDescription ?? ""));
 
   function toggleDescription(expanded: boolean) {
     descriptionExpanded = expanded;
@@ -52,7 +54,7 @@
     {#if data.monitorImage}
       <img
         src={clientResolver(resolve, data.monitorImage)}
-        alt={data.monitorName || "Monitor icon"}
+        alt={monitorName || "Monitor icon"}
         class="aspect-auto w-12 rounded object-cover"
       />
     {/if}
@@ -60,7 +62,7 @@
       <Item.Content>
         {#if data.monitorName}
           <h1>
-            <Item.Title class="text-3xl">{data.monitorName}</Item.Title>
+            <Item.Title class="text-3xl">{monitorName}</Item.Title>
           </h1>
         {/if}
         {#if data.monitorDescription}
@@ -68,16 +70,16 @@
             <Item.Description
               class="text-muted-foreground w-full {descriptionExpanded ? 'line-clamp-none' : ''} text-pretty"
             >
-              {#if data.monitorDescription.length > 150 && !descriptionExpanded}
-                {data.monitorDescription.slice(0, 150)}...
+              {#if monitorDescription.length > 150 && !descriptionExpanded}
+                {monitorDescription.slice(0, 150)}...
                 <button
                   class="text-accent-foreground inline font-medium hover:underline"
                   onclick={() => toggleDescription(true)}
                 >
                   {$t("Read more")}
                 </button>
-              {:else if data.monitorDescription.length > 150}
-                {data.monitorDescription}
+              {:else if monitorDescription.length > 150}
+                {monitorDescription}
                 <button
                   class="text-accent-foreground inline font-medium hover:underline"
                   onclick={() => toggleDescription(false)}
@@ -85,7 +87,7 @@
                   {$t("Read less")}
                 </button>
               {:else}
-                {data.monitorDescription}
+                {monitorDescription}
               {/if}
             </Item.Description>
           </h2>
