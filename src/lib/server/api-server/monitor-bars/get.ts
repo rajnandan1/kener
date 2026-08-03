@@ -65,6 +65,10 @@ export default async function get(req: APIServerRequest): Promise<Response> {
     latestDataAll.map((d) => [d.monitor_tag, (d.status as StatusType) || GC.NO_DATA]),
   );
 
+  const latestLatencyByTag = new Map<string, number | null>(
+    latestDataAll.map((d) => [d.monitor_tag, d.latency ?? null]),
+  );
+
   const monitorByTag = new Map(monitors.map((m) => [m.tag, m]));
   const existingTags = new Set(monitors.map((m) => m.tag));
   const missingTags = tags.filter((t) => !existingTags.has(t));
@@ -98,6 +102,7 @@ export default async function get(req: APIServerRequest): Promise<Response> {
           days,
           endOfDayTodayAtTz,
           latestStatusByTag.get(tag) || GC.NO_DATA,
+          latestLatencyByTag.get(tag) ?? null,
         );
         return { tag, payload };
       }),

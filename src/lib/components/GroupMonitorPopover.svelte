@@ -5,6 +5,7 @@
   import * as Drawer from "$lib/components/ui/drawer/index.js";
   import { requestMonitorBar } from "$lib/client/monitor-bar-client";
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
+  import type { PageSettingsLatencyDisplay } from "$lib/types/api";
   import MonitorBar from "$lib/components/MonitorBar.svelte";
   import { t } from "$lib/stores/i18n";
 
@@ -13,9 +14,10 @@
     days: number;
     endOfDayTodayAtTz: number;
     children: Snippet;
+    latencyDisplay?: PageSettingsLatencyDisplay;
   }
 
-  let { tags, days, endOfDayTodayAtTz, children }: Props = $props();
+  let { tags, days, endOfDayTodayAtTz, children, latencyDisplay }: Props = $props();
   let isOpen = $state(false);
   let monitorBarPromiseByTag = $derived.by(() => {
     if (!browser || !isOpen || tags.length === 0) {
@@ -51,14 +53,18 @@
             <div class="{i < tags.length - 1 ? 'border-b' : ''} py-2 pb-4">
               {#if monitorBarPromiseByTag[tag]}
                 {#await monitorBarPromiseByTag[tag]}
-                  <MonitorBar {tag} />
+                  <MonitorBar {tag} {latencyDisplay} />
                 {:then monitorBarData}
-                  <MonitorBar {tag} prefetchedData={monitorBarData} />
+                  <MonitorBar {tag} prefetchedData={monitorBarData} {latencyDisplay} />
                 {:catch err}
-                  <MonitorBar {tag} prefetchedError={err instanceof Error ? err.message : "Unknown error"} />
+                  <MonitorBar
+                    {tag}
+                    prefetchedError={err instanceof Error ? err.message : "Unknown error"}
+                    {latencyDisplay}
+                  />
                 {/await}
               {:else}
-                <MonitorBar {tag} />
+                <MonitorBar {tag} {latencyDisplay} />
               {/if}
             </div>
           {/each}

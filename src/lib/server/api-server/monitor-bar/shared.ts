@@ -3,6 +3,7 @@ import GC from "$lib/global-constants";
 import type { StatusType } from "$lib/types/status";
 import type { MonitorRecord, TimestampStatusCount } from "$lib/server/types/db";
 import { UptimeCalculator } from "$lib/server/tool";
+import { ParseLatency } from "$lib/clientTools.js";
 import type { MonitorBarResponse } from "./get";
 
 interface ParsedMonitorSettings {
@@ -68,6 +69,7 @@ export const buildMonitorBarResponse = async (
     days,
     endOfDayTodayAtTz,
     latestStatus || (latestData?.status as StatusType) || GC.NO_DATA,
+    latestData?.latency ?? null,
   );
 };
 
@@ -77,6 +79,7 @@ export const buildMonitorBarResponseFromRawData = (
   days: number,
   endOfDayTodayAtTz: number,
   latestStatus?: StatusType,
+  latestLatency?: number | null,
 ): MonitorBarResponse => {
   const startTime = endOfDayTodayAtTz - days * 24 * 60 * 60;
   const monitorSettings = parseMonitorSettings(monitor.monitor_settings_json);
@@ -98,5 +101,6 @@ export const buildMonitorBarResponseFromRawData = (
     avgLatency: uptimeCalculationResult.avgLatency,
     maxLatency: uptimeCalculationResult.maxLatency,
     minLatency: uptimeCalculationResult.minLatency,
+    currentLatency: ParseLatency(latestLatency ?? 0),
   };
 };
