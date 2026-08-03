@@ -9,8 +9,10 @@
   import AlertCircleIcon from "@lucide/svelte/icons/alert-circle";
   import EyeClosedIcon from "@lucide/svelte/icons/eye-closed";
   import EyeOpenIcon from "@lucide/svelte/icons/eye";
+  import LogInIcon from "@lucide/svelte/icons/log-in";
   import * as Alert from "$lib/components/ui/alert/index.js";
   import type { PageProps } from "./$types";
+  import { resolve } from "$app/paths";
 
   let { data, form }: PageProps = $props();
   const isAdminAccountCreated: boolean = $derived(data.isAdminAccountCreated);
@@ -18,6 +20,15 @@
   const authActionPath = $derived(!isAdminAccountCreated ? "?/signup" : "?/login");
   const emailValue = $derived(form?.values?.email ?? "");
   const nameValue = $derived(form?.values && "name" in form.values ? form.values.name : "");
+
+  const oidcEnabled: boolean = $derived(data.oidc?.enabled ?? false);
+  const oidcProviderName: string = $derived(data.oidc?.providerName ?? "SSO");
+  const allowLocalLogin: boolean = $derived(data.oidc?.allowLocalLogin ?? true);
+  const oidcError: string | null = $derived(data.oidcError ?? null);
+
+  const showLocalLogin: boolean = $derived(
+    !isAdminAccountCreated || allowLocalLogin || !oidcEnabled
+  );
 
   let loading = $state(false);
   let showPassword = $state(false);
@@ -60,116 +71,150 @@
           </Alert.Description>
         </Alert.Root>
       {:else}
-        <form
-          method="POST"
-          action={authActionPath}
-          onsubmit={() => {
-            loading = true;
-          }}
-        >
-          {#if form?.error}
-            <Alert.Root variant="destructive" class="mb-4">
-              <AlertCircleIcon />
-              <Alert.Title>{!isAdminAccountCreated ? "Signup failed" : "Login failed"}</Alert.Title>
-              <Alert.Description>{form.error}</Alert.Description>
-            </Alert.Root>
-          {/if}
+        {#if oidcError}
+          <Alert.Root variant="destructive" class="mb-4">
+            <AlertCircleIcon />
+            <Alert.Title>Authentication failed</Alert.Title>
+            <Alert.Description>{oidcError}</Alert.Description>
+          </Alert.Root>
+        {/if}
 
-          <Field.Group>
-            {#if !isAdminAccountCreated}
-              <Field.Field>
-                <Field.Label for="name">Name</Field.Label>
+        {#if oidcEnabled && isAdminAccountCreated}
+          <div class="mb-4">
+            <Button
+              variant="outline"
+              class="w-full"
+              href={resolve("/account/oidc/login")}
+            >
+              <LogInIcon class="mr-2 h-4 w-4" />
+              Sign in with {oidcProviderName}
+            </Button>
+          </div>
+
+          {#if showLocalLogin}
+            <div class="relative my-6">
+              <div class="absolute inset-0 flex items-center">
+                <span class="border-border w-full border-t"></span>
+              </div>
+              <div class="relative flex justify-center text-xs uppercase">
+                <span class="bg-card text-muted-foreground px-2">or</span>
+              </div>
+            </div>
+          {/if}
+        {/if}
+
+        {#if showLocalLogin}
+          <form
+            method="POST"
+            action={authActionPath}
+            onsubmit={() => {
+              loading = true;
+            }}
+          >
+            {#if form?.error}
+              <Alert.Root variant="destructive" class="mb-4">
+                <AlertCircleIcon />
+                <Alert.Title>{!isAdminAccountCreated ? "Signup failed" : "Login failed"}</Alert.Title>
+                <Alert.Description>{form.error}</Alert.Description>
+              </Alert.Root>
+            {/if}
+
+            <Field.Group>
+              {#if !isAdminAccountCreated}
+                <Field.Field>
+                  <Field.Label for="name">Name</Field.Label>
+                  <InputGroup.Root>
+                    <InputGroup.Addon>
+                      <UserIcon />
+                    </InputGroup.Addon>
+                    <InputGroup.Input
+                      id="name"
+                      name="name"
+                      type="text"
+                      placeholder="Your name"
+                      value={nameValue}
+                      required
+                    />
+                  </InputGroup.Root>
+                </Field.Field>
+              {/if}
+
+              <Field.Field class="relative flex flex-col gap-1">
+                <Field.Label for="email">Email</Field.Label>
                 <InputGroup.Root>
                   <InputGroup.Addon>
-                    <UserIcon />
+                    <MailIcon />
                   </InputGroup.Addon>
                   <InputGroup.Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    placeholder="Your name"
-                    value={nameValue}
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    value={emailValue}
                     required
                   />
                 </InputGroup.Root>
               </Field.Field>
-            {/if}
 
-            <Field.Field class="relative flex flex-col gap-1">
-              <Field.Label for="email">Email</Field.Label>
-              <InputGroup.Root>
-                <InputGroup.Addon>
-                  <MailIcon />
-                </InputGroup.Addon>
-                <InputGroup.Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={emailValue}
-                  required
-                />
-              </InputGroup.Root>
-            </Field.Field>
-
-            <Field.Field class="relative flex flex-col gap-1">
-              <Field.Label for="password" class="relative">
-                Password
-                <Button
-                  variant="link"
-                  size="sm"
-                  class="text-muted-foreground absolute top-0 right-0 h-auto p-0 text-xs"
-                  href="/account/forgot"
-                >
-                  Forgot?
-                </Button>
-              </Field.Label>
-              <InputGroup.Root>
-                <InputGroup.Addon>
-                  <LockIcon />
-                </InputGroup.Addon>
-                <InputGroup.Input
-                  id="password"
-                  name="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  bind:value={password}
-                  required
-                />
-                <InputGroup.Addon align="inline-end">
-                  <InputGroup.Button
-                    type="button"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    title={showPassword ? "Hide password" : "Show password"}
-                    size="icon-xs"
-                    onclick={() => (showPassword = !showPassword)}
+              <Field.Field class="relative flex flex-col gap-1">
+                <Field.Label for="password" class="relative">
+                  Password
+                  <Button
+                    variant="link"
+                    size="sm"
+                    class="text-muted-foreground absolute top-0 right-0 h-auto p-0 text-xs"
+                    href={resolve("/account/forgot")}
                   >
-                    {#if showPassword}
-                      <EyeClosedIcon class="size-4" />
-                    {:else}
-                      <EyeOpenIcon class="size-4" />
-                    {/if}
-                  </InputGroup.Button>
-                </InputGroup.Addon>
-              </InputGroup.Root>
-              {#if !isAdminAccountCreated}
-                <Field.Description>
-                  Password must contain at least 8 characters, one uppercase, one lowercase, and one number.
-                </Field.Description>
-              {/if}
-            </Field.Field>
-          </Field.Group>
+                    Forgot?
+                  </Button>
+                </Field.Label>
+                <InputGroup.Root>
+                  <InputGroup.Addon>
+                    <LockIcon />
+                  </InputGroup.Addon>
+                  <InputGroup.Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    bind:value={password}
+                    required
+                  />
+                  <InputGroup.Addon align="inline-end">
+                    <InputGroup.Button
+                      type="button"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      title={showPassword ? "Hide password" : "Show password"}
+                      size="icon-xs"
+                      onclick={() => (showPassword = !showPassword)}
+                    >
+                      {#if showPassword}
+                        <EyeClosedIcon class="size-4" />
+                      {:else}
+                        <EyeOpenIcon class="size-4" />
+                      {/if}
+                    </InputGroup.Button>
+                  </InputGroup.Addon>
+                </InputGroup.Root>
+                {#if !isAdminAccountCreated}
+                  <Field.Description>
+                    Password must contain at least 8 characters, one uppercase, one lowercase, and one number.
+                  </Field.Description>
+                {/if}
+              </Field.Field>
+            </Field.Group>
 
-          <div class="mt-6">
-            <Button type="submit" class="w-full" disabled={loading}>
-              {#if loading}
-                {!isAdminAccountCreated ? "Creating Account..." : "Signing In..."}
-              {:else}
-                {!isAdminAccountCreated ? "Create Account" : "Sign In"}
-              {/if}
-            </Button>
-          </div>
-        </form>
+            <div class="mt-6">
+              <Button type="submit" class="w-full" disabled={loading}>
+                {#if loading}
+                  {!isAdminAccountCreated ? "Creating Account..." : "Signing In..."}
+                {:else}
+                  {!isAdminAccountCreated ? "Create Account" : "Sign In"}
+                {/if}
+              </Button>
+            </div>
+          </form>
+        {/if}
       {/if}
     </Card.Content>
   </Card.Root>

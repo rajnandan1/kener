@@ -221,7 +221,10 @@
                       "title": "User Management",
                       "content": "v4/user-management"
                     },
-
+                    {
+                      "title": "OpenID Connect",
+                      "content": "v4/oidc"
+                    },
                     {
                       "title": "Pages",
                       "content": "v4/pages"

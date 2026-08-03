@@ -7,23 +7,42 @@ import {
   CreateFirstUser,
 } from "$lib/server/controllers/userController";
 import { VerifyPassword, GenerateToken, CookieConfig } from "$lib/server/controllers/commonController";
-import constants from "$lib/global-constants";
+import { GetOidcSettings } from "$lib/server/controllers/oidcController";
 import serverResolve from "$lib/server/resolver.js";
+import GC from "$lib/global-constants";
 
-export const load: PageServerLoad = async ({ parent }) => {
+export const load: PageServerLoad = async ({ parent, url }) => {
   const parentData = await parent();
 
   if (!!parentData.loggedInUser && parentData.isSetupComplete) {
     throw redirect(302, serverResolve("/manage/app/site-configurations"));
   }
 
+  const oidcSettings = await GetOidcSettings();
+  const oidcError = url.searchParams.get("oidc_error") || null;
+  const forceLocalLogin = process.env.KENER_FORCE_LOCAL_LOGIN === "true";
+
   return {
     ...parentData,
+    oidc: oidcSettings
+      ? {
+          enabled: true,
+          providerName: oidcSettings.provider_name || "SSO",
+          allowLocalLogin: oidcSettings.allow_local_login || forceLocalLogin,
+        }
+      : {
+          enabled: false,
+          providerName: "",
+          allowLocalLogin: true,
+        },
+    oidcError,
   };
 };
 
 export const actions: Actions = {
   login: async ({ request, cookies }) => {
+    const oidcSettings = await GetOidcSettings();
+
     const formData = await request.formData();
     const email = String(formData.get("email") ?? "").trim();
     const password = String(formData.get("password") ?? "");
@@ -34,16 +53,31 @@ export const actions: Actions = {
 
     const userCount = await GetUsersCount();
     if (!userCount || Number(userCount.count) === 0) {
-      return fail(400, { error: constants.ERROR_NO_SETUP, values: { email } });
+      return fail(400, { error: GC.ERROR_NO_SETUP, values: { email } });
     }
 
     const userDB = await GetUserByEmail(email);
     if (!userDB) {
       return fail(401, { error: "User does not exist", values: { email } });
     }
+    // Local login can be enabled by setting Env-Variable "KENER_FORCE_LOCAL_LOGIN" == "true".
+    // This prevents lockout when the IdP is misconfigured or unreachable.
+    const forceLocalLogin = process.env.KENER_FORCE_LOCAL_LOGIN === "true";
+    if (oidcSettings && !oidcSettings.allow_local_login && !forceLocalLogin) {
+      return fail(403, {
+        error: "Local login is disabled. Please use SSO.",
+        values: { email },
+      });
+    }
+    if (userDB.auth_provider === GC.AUTH_PROVIDER_OIDC) {
+      return fail(403, {
+        error: "This account uses SSO authentication. Please use the SSO login button.",
+        values: { email },
+      });
+    }
 
     const passwordStored = await GetUserPasswordHashById(userDB.id);
-    if (!passwordStored) {
+    if (!passwordStored || !passwordStored.password_hash) {
       return fail(401, { error: "Invalid password or Email", values: { email } });
     }
 

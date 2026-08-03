@@ -296,4 +296,9 @@ export const siteDataKeys: SiteDataKey[] = [
     isValid: IsValidJSONString,
     data_type: "object",
   },
+  {
+    key: "oidcSettings",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
 ];
