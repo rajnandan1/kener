@@ -296,4 +296,9 @@ export const siteDataKeys: SiteDataKey[] = [
     isValid: IsValidJSONString,
     data_type: "object",
   },
+  {
+    key: "autoPublicPages",
+    isValid: (value) => value === true || value === false || value === "true" || value === "false",
+    data_type: "string",
+  },
 ];

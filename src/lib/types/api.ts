@@ -520,6 +520,7 @@ export interface PageResponse {
   page_logo: string | null;
   page_settings: PageSettings;
   monitors: PageMonitorResponse[];
+  access_groups: string[];
   created_at: string;
   updated_at: string;
 }
@@ -540,6 +541,7 @@ export interface CreatePageRequest {
   page_logo?: string | null;
   page_settings?: PageSettingsPatch;
   monitors?: string[];
+  access_groups?: string[];
 }
 
 export interface CreatePageResponse {
@@ -554,6 +556,7 @@ export interface UpdatePageRequest {
   page_logo?: string | null;
   page_settings?: PageSettingsPatch;
   monitors?: string[];
+  access_groups?: string[];
 }
 
 export interface UpdatePageResponse {
