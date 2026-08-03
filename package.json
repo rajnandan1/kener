@@ -128,7 +128,7 @@
     "@scalar/sveltekit": "^0.1.43",
     "@scaleway/random-name": "^5.1.4",
     "@uiw/codemirror-theme-github": "^4.25.3",
-    "axios": "^1.13.2",
+    "axios": "^1.13.5",
     "badge-maker": "^5.0.2",
     "bcrypt": "^6.0.0",
     "better-sqlite3": "^12.5.0",

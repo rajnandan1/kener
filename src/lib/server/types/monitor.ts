@@ -96,6 +96,22 @@ export interface GrpcMonitorTypeData {
   timeout?: number;
 }
 
+export interface PrometheusThreshold {
+  operator: ">" | ">=" | "<" | "<=" | "==" | "!=";
+  value: number;
+}
+
+export interface PrometheusMonitorTypeData {
+  url: string; // Prometheus base URL, e.g. https://prom.example.com or https://host/prom
+  query: string; // PromQL instant query
+  down?: PrometheusThreshold; // matches when `metricValue <operator> value` -> DOWN
+  degraded?: PrometheusThreshold; // matches when `metricValue <operator> value` -> DEGRADED
+  noDataStatus?: "UP" | "DEGRADED" | "DOWN"; // empty-result status, default "DOWN"
+  headers?: { key: string; value: string }[]; // optional; secret substitution applies
+  timeout?: number; // ms, default 10000
+  allowSelfSignedCert?: boolean; // default false
+}
+
 export type MonitorTypeData =
   | ApiMonitorTypeData
   | DnsMonitorTypeData
@@ -106,7 +122,8 @@ export type MonitorTypeData =
   | HeartbeatMonitorTypeData
   | GroupMonitorTypeData
   | GamedigMonitorTypeData
-  | GrpcMonitorTypeData;
+  | GrpcMonitorTypeData
+  | PrometheusMonitorTypeData;
 
 export interface Monitor<T = MonitorTypeData> {
   tag: string;
@@ -125,6 +142,7 @@ export type HeartbeatMonitor = Monitor<HeartbeatMonitorTypeData>;
 export type GroupMonitor = Monitor<GroupMonitorTypeData>;
 export type GamedigMonitor = Monitor<GamedigMonitorTypeData>;
 export type GrpcMonitor = Monitor<GrpcMonitorTypeData>;
+export type PrometheusMonitor = Monitor<PrometheusMonitorTypeData>;
 
 export interface EvalResponse {
   status?: string;
