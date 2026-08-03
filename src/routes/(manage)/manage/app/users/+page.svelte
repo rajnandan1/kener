@@ -389,7 +389,7 @@
         {#if !canSendEmail}
           <p class="text-muted-foreground max-w-xs text-xs">
             Email service not configured. Cannot invite new users. Please go to
-            <a href={`${GC.DOCS_URL}/setup/email-setup`} target="_blank" class="text-blue-500 underline">
+            <a href={`${GC.DOCS_URL}/v4/setup/email-setup`} target="_blank" class="text-blue-500 underline">
               setup email
             </a>
             for more info.
