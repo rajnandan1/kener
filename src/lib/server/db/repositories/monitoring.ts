@@ -1,6 +1,7 @@
 import type { Knex as KnexType } from "knex";
 import { BaseRepository } from "./base.js";
 import GC from "../../../global-constants.js";
+import type { MonitoringStatus } from "../../../types/status.js";
 import { GetMinuteStartNowTimestampUTC } from "../../tool.js";
 import type {
   MonitoringData,
@@ -82,12 +83,16 @@ export class MonitoringRepository extends BaseRepository {
   async getMonitoringDataPaginated(
     page: number,
     limit: number,
-    filter?: { monitor_tag?: string; start_time?: number; end_time?: number },
+    filter?: { monitor_tag?: string; status?: MonitoringStatus; start_time?: number; end_time?: number },
   ): Promise<MonitoringData[]> {
     let query = this.knex("monitoring_data").select("*");
 
     if (filter?.monitor_tag) {
       query = query.where("monitor_tag", filter.monitor_tag);
+    }
+
+    if (filter?.status) {
+      query = query.where("status", filter.status);
     }
 
     if (filter?.start_time) {
@@ -106,6 +111,7 @@ export class MonitoringRepository extends BaseRepository {
 
   async getMonitoringDataCount(filter?: {
     monitor_tag?: string;
+    status?: MonitoringStatus;
     start_time?: number;
     end_time?: number;
   }): Promise<{ count: number }> {
@@ -113,6 +119,10 @@ export class MonitoringRepository extends BaseRepository {
 
     if (filter?.monitor_tag) {
       query = query.where("monitor_tag", filter.monitor_tag);
+    }
+
+    if (filter?.status) {
+      query = query.where("status", filter.status);
     }
 
     if (filter?.start_time) {
@@ -476,7 +486,7 @@ export class MonitoringRepository extends BaseRepository {
     });
   }
 
-  async deleteMonitorDataByTag(tag?: string, start?: number, end?: number): Promise<number> {
+  async deleteMonitorDataByTag(tag?: string, start?: number, end?: number, status?: MonitoringStatus): Promise<number> {
     const query = this.knex("monitoring_data");
     if (tag) {
       query.where("monitor_tag", tag);
@@ -486,6 +496,9 @@ export class MonitoringRepository extends BaseRepository {
     }
     if (end !== undefined) {
       query.where("timestamp", "<=", end);
+    }
+    if (status) {
+      query.where("status", status);
     }
     return await query.del();
   }
