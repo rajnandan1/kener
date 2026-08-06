@@ -235,6 +235,19 @@
     open = false;
     errorMessage = "";
   }
+
+  // Google reCAPTCHA's expanded image-challenge renders as a second iframe
+  // appended outside this Dialog's own DOM subtree (unlike the basic
+  // checkbox, which nests inside it). Bits UI's outside-interaction
+  // detection sees clicks/focus landing on that iframe as "outside" and
+  // dismisses the dialog, orphaning the still-open challenge. Any outside
+  // interaction targeting an iframe is treated as captcha-challenge traffic
+  // and kept open — nothing else in this dialog renders a bare iframe.
+  function ignoreCaptchaIframeInteraction(event: PointerEvent | FocusEvent) {
+    if (event.target instanceof HTMLIFrameElement) {
+      event.preventDefault();
+    }
+  }
 </script>
 
 {#if compact}
@@ -268,7 +281,11 @@
 
 <Dialog.Root bind:open>
   <Dialog.Overlay class="backdrop-blur-[2px]" />
-  <Dialog.Content class="max-w-sm rounded-3xl">
+  <Dialog.Content
+    class="max-w-sm rounded-3xl"
+    onInteractOutside={ignoreCaptchaIframeInteraction}
+    onFocusOutside={ignoreCaptchaIframeInteraction}
+  >
     <Dialog.Header>
       <Dialog.Title class="flex items-center gap-2">
         <Bell class="h-5 w-5" />
