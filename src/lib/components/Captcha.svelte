@@ -93,3 +93,24 @@
 {#if provider}
   <div bind:this={container} data-testid="captcha-widget"></div>
 {/if}
+
+<style>
+  /*
+   * The subscribe Dialog sets `pointer-events: none` on <body> while open
+   * (its scroll-lock). Google reCAPTCHA's expanded image-challenge (and
+   * similarly hCaptcha/Turnstile challenge overlays) are injected as direct
+   * children of <body> by the provider's own script, so they inherit that
+   * `none` and become click-through — clicks meant for the challenge fall
+   * through to whatever's underneath with pointer-events re-enabled, which
+   * is our own dialog. `:has()` re-arms pointer-events on the iframe and
+   * its whole wrapper chain regardless of how deep the provider nests it.
+   */
+  :global(body *:has(> iframe[src*="recaptcha"])),
+  :global(body *:has(> iframe[src*="hcaptcha.com"])),
+  :global(body *:has(> iframe[src*="challenges.cloudflare.com"])),
+  :global(iframe[src*="recaptcha"]),
+  :global(iframe[src*="hcaptcha.com"]),
+  :global(iframe[src*="challenges.cloudflare.com"]) {
+    pointer-events: auto !important;
+  }
+</style>
