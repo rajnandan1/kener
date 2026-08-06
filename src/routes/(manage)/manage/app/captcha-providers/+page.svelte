@@ -53,6 +53,7 @@
 
 <ProviderSettingsPanel
   initialProviders={captchaProviders}
-  description="Configure a CAPTCHA provider to protect the public subscribe form from automated abuse. Only one provider can be active at a time — enabling one disables the others."
+  description="Add your CAPTCHA provider Site Key/Secret Key here. Only one provider can be active at a time."
+  learnMoreUrl="https://kener.ing/docs/v4/captcha"
   enforceSingleActive
 />
