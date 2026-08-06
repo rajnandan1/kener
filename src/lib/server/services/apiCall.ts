@@ -7,6 +7,7 @@ import version from "../../version.js";
 import https from "https";
 import { performance } from "node:perf_hooks";
 import type { ApiMonitor, EvalResponse, MonitoringResult } from "../types/monitor.js";
+import { getAxiosProxyConfig } from "../proxy-agent.js";
 
 class ApiCall {
   monitor: ApiMonitor;
@@ -76,17 +77,27 @@ class ApiCall {
       maxBodyLength: Infinity,
     };
 
-    // Always configure HTTPS agent for better connection handling
-    const httpsAgentOptions: https.AgentOptions = {
-      keepAlive: true,
-      keepAliveMsecs: 30000,
-      maxSockets: 50,
-      maxFreeSockets: 10,
-      timeout: timeout,
-      rejectUnauthorized: !this.monitor.type_data.allowSelfSignedCert,
-    };
+    const rejectUnauthorized = !this.monitor.type_data.allowSelfSignedCert;
 
-    options.httpsAgent = new https.Agent(httpsAgentOptions);
+    // Use proxy agent when HTTPS_PROXY / HTTP_PROXY env vars are set,
+    // otherwise fall back to a plain HTTPS agent with keep-alive settings.
+    const proxyConfig = getAxiosProxyConfig(url, rejectUnauthorized);
+    if (proxyConfig.httpsAgent || proxyConfig.httpAgent) {
+      // A proxy agent was created – merge proxy settings into options.
+      Object.assign(options, proxyConfig);
+    } else {
+      // No proxy – use a plain https.Agent for keep-alive connection pooling.
+      const httpsAgentOptions: https.AgentOptions = {
+        keepAlive: true,
+        keepAliveMsecs: 30000,
+        maxSockets: 50,
+        maxFreeSockets: 10,
+        timeout: timeout,
+        rejectUnauthorized,
+      };
+      options.httpsAgent = new https.Agent(httpsAgentOptions);
+      options.proxy = false; // prevent axios from also trying env-based proxy
+    }
 
     if (!!body) {
       options.data = body;

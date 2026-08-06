@@ -24,7 +24,7 @@
   // Generate heartbeat URL
   let heartbeatUrl = $derived(
     tag
-      ? window.location.origin + clientResolve(resolve, `/ext/heartbeat/${tag}:${data.secretString}`)
+      ? window.location.origin + clientResolve(resolve, `/ext/heartbeat/${tag}/${data.secretString}`)
       : "Save the monitor first to get the heartbeat URL"
   );
 
