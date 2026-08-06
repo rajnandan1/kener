@@ -124,6 +124,10 @@
 
       trackEvent("subscribe_login_sent", { source: "subscribe_menu" });
 
+      // The token is single-use and has now been consumed by the provider
+      // regardless of which UI path sent it -- clear it so nothing can
+      // accidentally resubmit it later.
+      captchaToken = null;
       currentView = "otp";
       otpValue = "";
     } catch (err) {
@@ -131,6 +135,18 @@
     } finally {
       isSubmitting = false;
     }
+  }
+
+  function handleResend() {
+    if (captchaRequired) {
+      // The OTP view has no captcha widget to produce a fresh token, and
+      // the one from the original submission is already consumed -- send
+      // the user back to solve a new challenge instead of silently
+      // replaying a token the provider will reject.
+      handleBackToEmail();
+      return;
+    }
+    handleLogin();
   }
 
   async function handleVerifyOTP() {
@@ -387,7 +403,7 @@
             </Button>
           </div>
 
-          <Button variant="link" onclick={handleLogin} disabled={isSubmitting} class="text-xs">
+          <Button variant="link" onclick={handleResend} disabled={isSubmitting} class="text-xs">
             {$t("Didn't receive the code? Resend")}
           </Button>
         </div>

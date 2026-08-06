@@ -100,4 +100,49 @@ describe("SubscribeMenu — captcha gating", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (window as any).turnstile;
   });
+
+  it("sends the user back to solve a fresh captcha on Resend instead of replaying the consumed token", async () => {
+    const renderSpy = vi.fn((_container: HTMLElement, opts: { callback: (t: string) => void }) => {
+      opts.callback("solved-token-1");
+      return "widget-id-1";
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).turnstile = { render: renderSpy, reset: vi.fn() };
+
+    const loginCalls: unknown[] = [];
+    const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
+      if (url.includes("captcha-config.json")) {
+        return { ok: true, json: async () => ({ provider: "turnstile", siteKey: "site-key-123" }) } as Response;
+      }
+      if (url.includes("dashboard-apis/subscription")) {
+        const body = init?.body ? JSON.parse(init.body as string) : {};
+        loginCalls.push(body);
+        return { ok: true, json: async () => ({ success: true, message: "Verification code sent" }) } as Response;
+      }
+      throw new Error(`Unhandled fetch in test: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const screen = await render(SubscribeMenu, {});
+    await screen.getByRole("button", { name: "Subscribe" }).click();
+
+    const continueButton = screen.getByRole("button", { name: "Continue" });
+    await expect.element(continueButton).not.toBeDisabled();
+
+    await screen.getByLabelText("Email address").fill("test@example.com");
+    await continueButton.click();
+
+    // Now on the OTP view -- Resend has no captcha widget to solve here.
+    const resendButton = screen.getByRole("button", { name: /resend/i });
+    await expect.element(resendButton).toBeInTheDocument();
+    await resendButton.click();
+
+    // Should go back to the login view for a fresh solve, not silently
+    // replay the already-consumed token from the first submission.
+    await expect.element(screen.getByLabelText("Email address")).toBeInTheDocument();
+    expect(loginCalls.length).toBe(1);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (window as any).turnstile;
+  });
 });

@@ -132,4 +132,43 @@ describe("loadScript", () => {
 
     document.head.querySelectorAll(`script[src="${failSrc}"]`).forEach((el) => el.remove());
   });
+
+  it("resolves immediately when it finds a script tag already marked as loaded", async () => {
+    // Simulates the module-level cache having been reset (e.g. a dev-mode
+    // hot reload) while a previously-loaded <script> tag survives in the
+    // DOM -- loadScript must recognize it's already done rather than
+    // attaching listeners and waiting on a load event that already fired.
+    const preloadedSrc = "https://example.com/captcha-test-script-preloaded.js";
+    const preloadedScript = document.createElement("script");
+    preloadedScript.src = preloadedSrc;
+    preloadedScript.setAttribute("data-kener-script-loaded", "true");
+    document.head.appendChild(preloadedScript);
+
+    const onload = vi.fn();
+    await loadScript(preloadedSrc).then(onload);
+
+    expect(onload).toHaveBeenCalled();
+    expect(document.head.querySelectorAll(`script[src="${preloadedSrc}"]`).length).toBe(1);
+
+    preloadedScript.remove();
+  });
+
+  it("replaces a script tag already marked as failed instead of waiting on a dead element", async () => {
+    const preDeadSrc = "https://example.com/captcha-test-script-predead.js";
+    const deadScript = document.createElement("script");
+    deadScript.src = preDeadSrc;
+    deadScript.setAttribute("data-kener-script-failed", "true");
+    document.head.appendChild(deadScript);
+
+    const loadPromise = loadScript(preDeadSrc);
+
+    const scripts = document.head.querySelectorAll(`script[src="${preDeadSrc}"]`);
+    expect(scripts.length).toBe(1);
+    expect(scripts[0]).not.toBe(deadScript);
+
+    scripts[0].dispatchEvent(new Event("load"));
+    await expect(loadPromise).resolves.toBeUndefined();
+
+    document.head.querySelectorAll(`script[src="${preDeadSrc}"]`).forEach((el) => el.remove());
+  });
 });

@@ -6,6 +6,16 @@
   // present and resolving immediately before it's actually finished.
   const scriptLoadPromises = new Map<string, Promise<void>>();
 
+  // Markers written onto the <script> element itself the moment it settles,
+  // so a *different* call path — one that never went through our own
+  // in-memory cache (e.g. the cache was reset by a dev-mode hot reload
+  // while the DOM tag survived) — can still tell, just by inspecting the
+  // element, whether it already finished loading or already failed,
+  // instead of attaching listeners for events that already fired in the
+  // past and will never fire again.
+  const LOADED_MARKER = "data-kener-script-loaded";
+  const FAILED_MARKER = "data-kener-script-failed";
+
   export function loadScript(src: string): Promise<void> {
     const existing = scriptLoadPromises.get(src);
     if (existing) {
@@ -15,24 +25,37 @@
     const promise = new Promise<void>((resolvePromise, rejectPromise) => {
       const existingScript = document.querySelector(`script[src="${src}"]`);
       if (existingScript) {
-        existingScript.addEventListener("load", () => resolvePromise(), { once: true });
-        existingScript.addEventListener(
-          "error",
-          () => rejectPromise(new Error(`Failed to load ${src}`)),
-          { once: true }
-        );
-        return;
+        if (existingScript.hasAttribute(LOADED_MARKER)) {
+          resolvePromise();
+          return;
+        }
+        if (existingScript.hasAttribute(FAILED_MARKER)) {
+          existingScript.remove();
+          // Fall through to create a fresh element below.
+        } else {
+          existingScript.addEventListener("load", () => resolvePromise(), { once: true });
+          existingScript.addEventListener(
+            "error",
+            () => rejectPromise(new Error(`Failed to load ${src}`)),
+            { once: true }
+          );
+          return;
+        }
       }
 
       const script = document.createElement("script");
       script.src = src;
       script.async = true;
-      script.onload = () => resolvePromise();
+      script.onload = () => {
+        script.setAttribute(LOADED_MARKER, "true");
+        resolvePromise();
+      };
       script.onerror = () => {
         // Remove the failed tag so a retry (after this promise is evicted
         // from the cache below) creates a fresh <script> with fresh
         // listeners, instead of finding this dead one whose error event
         // already fired and will never fire again.
+        script.setAttribute(FAILED_MARKER, "true");
         script.remove();
         rejectPromise(new Error(`Failed to load ${src}`));
       };
