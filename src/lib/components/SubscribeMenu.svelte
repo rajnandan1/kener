@@ -19,6 +19,7 @@
   import { t } from "$lib/stores/i18n";
   import trackEvent from "$lib/beacon";
   import ICONS from "$lib/icons";
+  import Captcha from "./Captcha.svelte";
 
   interface Props {
     compact?: boolean;
@@ -38,6 +39,8 @@
   // Form data
   let email = $state("");
   let otpValue = $state("");
+  let captchaRequired = $state(false);
+  let captchaToken = $state<string | null>(null);
 
   // Preferences data
   let subscriberEmail = $state("");
@@ -107,12 +110,13 @@
       const response = await fetch(clientResolver(resolve, "/dashboard-apis/subscription"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "login", email: email.trim() })
+        body: JSON.stringify({ action: "login", email: email.trim(), captchaToken })
       });
 
       if (!response.ok) {
         const data = await response.json();
         errorMessage = $t("Failed to send verification code");
+        captchaToken = null;
         return;
       }
 
@@ -307,11 +311,13 @@
             </div>
           </div>
 
+          <Captcha onReady={(required) => (captchaRequired = required)} onVerify={(token) => (captchaToken = token)} />
+
           {#if errorMessage}
             <p class="text-destructive text-sm">{errorMessage}</p>
           {/if}
 
-          <Button onclick={handleLogin} disabled={isSubmitting} class="w-full">
+          <Button onclick={handleLogin} disabled={isSubmitting || (captchaRequired && !captchaToken)} class="w-full">
             {#if isSubmitting}
               <Loader2 class="mr-2 h-4 w-4 animate-spin" />
               {$t("Sending...")}
