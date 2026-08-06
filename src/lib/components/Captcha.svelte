@@ -64,11 +64,24 @@
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const global = (window as any)[PROVIDER_GLOBAL[provider]];
-      if (container && global?.render) {
-        global.render(container, {
-          sitekey: siteKey,
-          callback: (token: string) => onVerify(token)
-        });
+      const renderWidget = () => {
+        if (container && global?.render) {
+          global.render(container, {
+            sitekey: siteKey,
+            callback: (token: string) => onVerify(token)
+          });
+        }
+      };
+
+      // reCAPTCHA (and hCaptcha) attach `.render` asynchronously after the
+      // script's onload fires — calling render() immediately can hit
+      // "grecaptcha.render is not a function". Their SDKs expose `.ready()`
+      // to gate on; Turnstile has no such method, so it just falls through
+      // to an immediate render as before.
+      if (global?.ready) {
+        global.ready(renderWidget);
+      } else {
+        renderWidget();
       }
     } catch (err) {
       console.error("Failed to load captcha widget", err);
