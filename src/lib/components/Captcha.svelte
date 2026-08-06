@@ -28,7 +28,14 @@
       script.src = src;
       script.async = true;
       script.onload = () => resolvePromise();
-      script.onerror = () => rejectPromise(new Error(`Failed to load ${src}`));
+      script.onerror = () => {
+        // Remove the failed tag so a retry (after this promise is evicted
+        // from the cache below) creates a fresh <script> with fresh
+        // listeners, instead of finding this dead one whose error event
+        // already fired and will never fire again.
+        script.remove();
+        rejectPromise(new Error(`Failed to load ${src}`));
+      };
       document.head.appendChild(script);
     }).catch((err) => {
       // Don't cache a permanent failure — a transient network blip

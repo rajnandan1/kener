@@ -103,4 +103,33 @@ describe("loadScript", () => {
     expect(onload1).toHaveBeenCalled();
     expect(onload2).toHaveBeenCalled();
   });
+
+  it("removes a failed script tag so a retry creates a fresh one instead of hanging on stale listeners", async () => {
+    // Own URL, distinct from `src` above -- the module-level cache is a
+    // singleton shared across tests in this file, so reusing `src` here
+    // would just return the already-resolved promise the earlier test left
+    // behind instead of exercising a fresh load.
+    const failSrc = "https://example.com/captcha-test-script-retry.js";
+
+    const failedLoad = loadScript(failSrc);
+    const scriptsAfterFirstAttempt = document.head.querySelectorAll(`script[src="${failSrc}"]`);
+    expect(scriptsAfterFirstAttempt.length).toBe(1);
+
+    scriptsAfterFirstAttempt[0].dispatchEvent(new Event("error"));
+    await expect(failedLoad).rejects.toThrow();
+
+    // The failed tag must be gone -- otherwise a retry would find a dead
+    // script whose error event already fired (and never will again),
+    // attach listeners that never trigger, and hang forever.
+    expect(document.head.querySelectorAll(`script[src="${failSrc}"]`).length).toBe(0);
+
+    const retryLoad = loadScript(failSrc);
+    const scriptsAfterRetry = document.head.querySelectorAll(`script[src="${failSrc}"]`);
+    expect(scriptsAfterRetry.length).toBe(1);
+
+    scriptsAfterRetry[0].dispatchEvent(new Event("load"));
+    await expect(retryLoad).resolves.toBeUndefined();
+
+    document.head.querySelectorAll(`script[src="${failSrc}"]`).forEach((el) => el.remove());
+  });
 });
