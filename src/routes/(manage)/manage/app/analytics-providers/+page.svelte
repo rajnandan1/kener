@@ -1,6 +1,6 @@
 <script lang="ts">
   import ProviderSettingsPanel from "$lib/components/manage/ProviderSettingsPanel.svelte";
-  import type { ProviderDefinition } from "$lib/components/manage/ProviderSettingsPanel.svelte";
+  import type { ProviderDefinition } from "$lib/client/types/provider-settings.js";
 
   const analyticsProviders: ProviderDefinition[] = [
     {

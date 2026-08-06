@@ -10,23 +10,7 @@
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
-
-  export interface ProviderRequirement {
-    label: string;
-    type: string;
-    placeholder: string;
-    required: boolean;
-    value: string;
-  }
-
-  export interface ProviderDefinition {
-    label: string;
-    logo?: string;
-    key: string;
-    isEnabled: boolean;
-    activeInSite: boolean;
-    requirements: ProviderRequirement[];
-  }
+  import type { ProviderDefinition } from "$lib/client/types/provider-settings.js";
 
   interface Props {
     initialProviders: ProviderDefinition[];
@@ -45,6 +29,12 @@
     initialProviders.map((p) => ({ ...p, requirements: p.requirements.map((r) => ({ ...r })) }))
   );
   let selected = $state<ProviderDefinition | null>(null);
+  // Whether `providers` currently reflects a real, successful load from the
+  // server. Guards the single-active cross-provider save below: if the load
+  // never succeeded, `providers` only holds seeded placeholder values, and
+  // saving would overwrite other providers' real stored credentials with
+  // those empty defaults.
+  let loadSucceeded = $state(false);
 
   async function fetchData() {
     loading = true;
@@ -56,7 +46,9 @@
       });
       const result = await response.json();
 
-      if (!result.error) {
+      if (result.error) {
+        toast.error(result.error);
+      } else {
         providers = providers.map((provider) => {
           const dbData = result[provider.key];
           if (dbData) {
@@ -71,18 +63,23 @@
           }
           return provider;
         });
+        loadSucceeded = true;
       }
-
-      selected = providers[0];
     } catch (e) {
       toast.error("Failed to load settings");
     } finally {
+      selected = providers[0] ?? null;
       loading = false;
     }
   }
 
   async function save() {
     if (!selected) return;
+
+    if (enforceSingleActive && selected.isEnabled && !loadSucceeded) {
+      toast.error("Provider data hasn't finished loading. Reload the page and try again before enabling a provider.");
+      return;
+    }
 
     saving = true;
     try {
@@ -202,12 +199,13 @@
 
             <div class="grid grid-cols-2 gap-4">
               {#each selected.requirements as req (req.label)}
+                {@const fieldId = `${selected.key}-${req.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
                 <div class="flex flex-col gap-y-2">
-                  <Label for={req.label}>{req.label}</Label>
+                  <Label for={fieldId}>{req.label}</Label>
                   <Input
                     bind:value={req.value}
                     type={req.type}
-                    id={req.label}
+                    id={fieldId}
                     placeholder={req.placeholder}
                     required={req.required}
                   />
