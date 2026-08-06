@@ -92,5 +92,34 @@ describe("captchaController", () => {
 
       expect(await VerifyCaptchaToken("token")).toEqual({ success: false });
     });
+
+    it("fails closed when an enabled provider is missing its keys, instead of treating captcha as off", async () => {
+      GetAllCaptchaData.mockResolvedValue([{ key: "captcha.recaptcha", value: { isEnabled: true, requirements: {} } }]);
+
+      expect(await VerifyCaptchaToken("any-token")).toEqual({ success: false });
+      expect(await VerifyCaptchaToken(undefined)).toEqual({ success: false });
+    });
+
+    it("aborts the verify request after a timeout instead of hanging indefinitely", async () => {
+      GetAllCaptchaData.mockResolvedValue([
+        { key: "captcha.hcaptcha", value: { isEnabled: true, requirements: { "Site Key": "s", "Secret Key": "sec" } } },
+      ]);
+      vi.useFakeTimers();
+      const fetchMock = vi.fn((_url: string, options: RequestInit) => {
+        return new Promise((_resolve, reject) => {
+          options.signal?.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")));
+        });
+      });
+      vi.stubGlobal("fetch", fetchMock);
+
+      const resultPromise = VerifyCaptchaToken("token");
+      await vi.advanceTimersByTimeAsync(10000);
+      const result = await resultPromise;
+
+      expect(result).toEqual({ success: false });
+      expect(fetchMock.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
+
+      vi.useRealTimers();
+    });
   });
 });
