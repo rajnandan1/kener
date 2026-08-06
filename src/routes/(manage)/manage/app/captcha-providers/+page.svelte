@@ -5,6 +5,7 @@
   const captchaProviders: ProviderDefinition[] = [
     {
       label: "hCaptcha",
+      logo: "/hcaptcha.png",
       key: "captcha.hcaptcha",
       isEnabled: false,
       activeInSite: false,
@@ -27,6 +28,7 @@
     },
     {
       label: "Google reCAPTCHA",
+      logo: "/recaptcha.png",
       key: "captcha.recaptcha",
       isEnabled: false,
       activeInSite: false,
@@ -37,6 +39,7 @@
     },
     {
       label: "Cloudflare Turnstile",
+      logo: "/turnstile.png",
       key: "captcha.turnstile",
       isEnabled: false,
       activeInSite: false,
