@@ -32,4 +32,38 @@ describe("Captcha", () => {
 
     expect(onReady).toHaveBeenCalledWith(true);
   });
+
+  it("does not walk back the required state when the provider SDK fails after being detected", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ json: async () => ({ provider: "hcaptcha", siteKey: "site-key-123" }) }),
+    );
+
+    // Pre-seed the script tag so loadScript's "already exists" branch
+    // resolves immediately (no real network call), then make the provider
+    // global's render() throw — simulating the SDK failing to initialize
+    // after the script itself loaded.
+    const script = document.createElement("script");
+    script.src = "https://js.hcaptcha.com/1/api.js";
+    document.head.appendChild(script);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (window as any).hcaptcha = {
+      render: () => {
+        throw new Error("provider SDK init failed");
+      },
+    };
+
+    const onReady = vi.fn();
+    await render(Captcha, { onVerify: vi.fn(), onReady });
+
+    await vi.waitFor(() => expect(onReady).toHaveBeenCalledWith(true));
+    // Give the (failing) render attempt a chance to run and hit the catch
+    // block before asserting it never reported not-required afterwards.
+    await new Promise((r) => setTimeout(r, 50));
+    expect(onReady).not.toHaveBeenCalledWith(false);
+
+    document.head.removeChild(script);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (window as any).hcaptcha;
+  });
 });

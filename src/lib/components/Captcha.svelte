@@ -30,6 +30,17 @@
   let provider = $state<ProviderName | null>(null);
   let siteKey = $state<string | null>(null);
   let container: HTMLDivElement | undefined = $state();
+  let widgetId: string | number | undefined;
+
+  // Resets the rendered widget so the user can solve it again, e.g. after
+  // the server rejects a token (expired/already used). Exposed to the
+  // parent via `bind:this`.
+  export function reset() {
+    if (!provider || widgetId === undefined) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const global = (window as any)[PROVIDER_GLOBAL[provider]];
+    global?.reset?.(widgetId);
+  }
 
   function loadScript(src: string): Promise<void> {
     return new Promise((resolvePromise, rejectPromise) => {
@@ -47,6 +58,12 @@
   }
 
   onMount(async () => {
+    // Tracks whether we've already told the parent a provider is required,
+    // so a later failure (script load, SDK init) never walks that back —
+    // the server enforces the check regardless, so the button should stay
+    // disabled rather than falsely suggesting the form can be submitted.
+    let providerConfirmed = false;
+
     try {
       const response = await fetch(clientResolver(resolve, "/captcha-config.json"));
       const config = await response.json();
@@ -58,6 +75,7 @@
 
       provider = config.provider as ProviderName;
       siteKey = config.siteKey;
+      providerConfirmed = true;
       onReady?.(true);
 
       await loadScript(PROVIDER_SCRIPT[provider]);
@@ -66,7 +84,7 @@
       const global = (window as any)[PROVIDER_GLOBAL[provider]];
       const renderWidget = () => {
         if (container && global?.render) {
-          global.render(container, {
+          widgetId = global.render(container, {
             sitekey: siteKey,
             callback: (token: string) => onVerify(token)
           });
@@ -85,7 +103,9 @@
       }
     } catch (err) {
       console.error("Failed to load captcha widget", err);
-      onReady?.(false);
+      if (!providerConfirmed) {
+        onReady?.(false);
+      }
     }
   });
 </script>

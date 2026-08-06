@@ -41,6 +41,7 @@
   let otpValue = $state("");
   let captchaRequired = $state(false);
   let captchaToken = $state<string | null>(null);
+  let captchaRef: { reset: () => void } | undefined = $state();
 
   // Preferences data
   let subscriberEmail = $state("");
@@ -117,6 +118,7 @@
         const data = await response.json();
         errorMessage = $t("Failed to send verification code");
         captchaToken = null;
+        captchaRef?.reset();
         return;
       }
 
@@ -328,7 +330,11 @@
             </div>
           </div>
 
-          <Captcha onReady={(required) => (captchaRequired = required)} onVerify={(token) => (captchaToken = token)} />
+          <Captcha
+            bind:this={captchaRef}
+            onReady={(required) => (captchaRequired = required)}
+            onVerify={(token) => (captchaToken = token)}
+          />
 
           {#if errorMessage}
             <p class="text-destructive text-sm">{errorMessage}</p>
