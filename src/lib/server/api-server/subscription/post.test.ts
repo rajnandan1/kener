@@ -61,4 +61,16 @@ describe("POST /dashboard-apis/subscription — login action", () => {
     expect(response.status).toBe(200);
     expect(VerifyCaptchaToken).toHaveBeenCalledWith(undefined);
   });
+
+  it("passes an explicit JSON null captchaToken through unchanged (not coerced to undefined)", async () => {
+    GetSiteDataByKey.mockResolvedValue(enabledConfig);
+    VerifyCaptchaToken.mockResolvedValue({ success: true });
+    SubscriberLogin.mockResolvedValue({ success: true });
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await post({ body: { action: "login", email: "a@b.com", captchaToken: null } } as any);
+
+    expect(response.status).toBe(200);
+    expect(VerifyCaptchaToken).toHaveBeenCalledWith(null);
+  });
 });

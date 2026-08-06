@@ -13,7 +13,7 @@ import {
 interface LoginRequest {
   action: "login";
   email: string;
-  captchaToken?: string;
+  captchaToken?: string | null;
 }
 
 interface VerifyRequest {
@@ -80,7 +80,7 @@ async function GetSubscriptionConfig(): Promise<SubscriptionsConfig | null> {
 
 async function handleLogin(
   email: string,
-  captchaToken: string | undefined,
+  captchaToken: string | null | undefined,
   config: SubscriptionsConfig,
 ): Promise<Response> {
   const captchaResult = await VerifyCaptchaToken(captchaToken);
