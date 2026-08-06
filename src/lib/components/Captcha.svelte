@@ -1,3 +1,47 @@
+<script module lang="ts">
+  // Module scope (shared across every Captcha instance, unlike a plain
+  // const in the instance script below) — so if two instances ever load
+  // the same provider script concurrently, the second one awaits the
+  // first's in-flight load instead of finding the <script> tag already
+  // present and resolving immediately before it's actually finished.
+  const scriptLoadPromises = new Map<string, Promise<void>>();
+
+  export function loadScript(src: string): Promise<void> {
+    const existing = scriptLoadPromises.get(src);
+    if (existing) {
+      return existing;
+    }
+
+    const promise = new Promise<void>((resolvePromise, rejectPromise) => {
+      const existingScript = document.querySelector(`script[src="${src}"]`);
+      if (existingScript) {
+        existingScript.addEventListener("load", () => resolvePromise(), { once: true });
+        existingScript.addEventListener(
+          "error",
+          () => rejectPromise(new Error(`Failed to load ${src}`)),
+          { once: true }
+        );
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.src = src;
+      script.async = true;
+      script.onload = () => resolvePromise();
+      script.onerror = () => rejectPromise(new Error(`Failed to load ${src}`));
+      document.head.appendChild(script);
+    }).catch((err) => {
+      // Don't cache a permanent failure — a transient network blip
+      // shouldn't block every future attempt to load this script.
+      scriptLoadPromises.delete(src);
+      throw err;
+    });
+
+    scriptLoadPromises.set(src, promise);
+    return promise;
+  }
+</script>
+
 <script lang="ts">
   import { onMount } from "svelte";
   import { resolve } from "$app/paths";
@@ -40,21 +84,6 @@
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const global = (window as any)[PROVIDER_GLOBAL[provider]];
     global?.reset?.(widgetId);
-  }
-
-  function loadScript(src: string): Promise<void> {
-    return new Promise((resolvePromise, rejectPromise) => {
-      if (document.querySelector(`script[src="${src}"]`)) {
-        resolvePromise();
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = src;
-      script.async = true;
-      script.onload = () => resolvePromise();
-      script.onerror = () => rejectPromise(new Error(`Failed to load ${src}`));
-      document.head.appendChild(script);
-    });
   }
 
   onMount(async () => {
