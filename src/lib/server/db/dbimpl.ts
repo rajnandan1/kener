@@ -158,6 +158,7 @@ class DbImpl {
   getSiteData!: SiteDataRepository["getSiteData"];
   getSiteDataByKey!: SiteDataRepository["getSiteDataByKey"];
   getAllSiteDataAnalytics!: SiteDataRepository["getAllSiteDataAnalytics"];
+  getAllSiteDataByPrefix!: SiteDataRepository["getAllSiteDataByPrefix"];
 
   // ============ Incidents ============
   getIncidentsPaginated!: IncidentsRepository["getIncidentsPaginated"];
@@ -526,6 +527,7 @@ class DbImpl {
     this.getSiteData = this.siteData.getSiteData.bind(this.siteData);
     this.getSiteDataByKey = this.siteData.getSiteDataByKey.bind(this.siteData);
     this.getAllSiteDataAnalytics = this.siteData.getAllSiteDataAnalytics.bind(this.siteData);
+    this.getAllSiteDataByPrefix = this.siteData.getAllSiteDataByPrefix.bind(this.siteData);
   }
 
   private bindIncidentsMethods(): void {
