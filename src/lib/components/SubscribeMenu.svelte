@@ -116,7 +116,7 @@
 
       if (!response.ok) {
         const data = await response.json();
-        errorMessage = $t("Failed to send verification code");
+        errorMessage = data?.message || $t("Failed to send verification code");
         captchaToken = null;
         captchaRef?.reset();
         return;

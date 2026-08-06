@@ -44,6 +44,27 @@ describe("SubscribeMenu — captcha gating", () => {
     await expect.element(screen.getByRole("button", { name: "Continue" })).not.toBeDisabled();
   });
 
+  it("shows the server's specific error message instead of a generic one when login fails", async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (url.includes("captcha-config.json")) {
+        return { ok: true, json: async () => ({ provider: null, siteKey: null }) } as Response;
+      }
+      if (url.includes("dashboard-apis/subscription")) {
+        return { ok: false, json: async () => ({ message: "Captcha verification failed" }) } as Response;
+      }
+      throw new Error(`Unhandled fetch in test: ${url}`);
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const screen = await render(SubscribeMenu, {});
+    await screen.getByRole("button", { name: "Subscribe" }).click();
+
+    await screen.getByLabelText("Email address").fill("test@example.com");
+    await screen.getByRole("button", { name: "Continue" }).click();
+
+    await expect.element(screen.getByText("Captcha verification failed")).toBeInTheDocument();
+  });
+
   it("resets the captcha widget after a rejected token so the user can solve it again", async () => {
     const resetSpy = vi.fn();
     const renderSpy = vi.fn((_container: HTMLElement, opts: { callback: (t: string) => void }) => {
