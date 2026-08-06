@@ -23,6 +23,7 @@
   import KeyIcon from "@lucide/svelte/icons/key";
   import UsersIcon from "@lucide/svelte/icons/users";
   import ShieldIcon from "@lucide/svelte/icons/shield";
+  import ShieldCheckIcon from "@lucide/svelte/icons/shield-check";
   import Columns3CogIcon from "@lucide/svelte/icons/columns-3-cog";
   import SiteHeader from "./manage/site-header.svelte";
   import TemplateIcon from "@lucide/svelte/icons/layout-template";
@@ -41,6 +42,7 @@
     { title: "Internationalization", url: "/manage/app/internationalization", icon: GlobeIcon },
     { title: "Customizations", url: "/manage/app/customizations", icon: Columns3CogIcon },
     { title: "Analytics Providers", url: "/manage/app/analytics-providers", icon: ChartSplineIcon },
+    { title: "Captcha Providers", url: "/manage/app/captcha-providers", icon: ShieldCheckIcon },
     { title: "Pages", url: "/manage/app/pages", icon: BookOpenIcon },
     { title: "Monitors", url: "/manage/app/monitors", icon: BlendIcon },
     { title: "Monitoring Data", url: "/manage/app/monitoring-data", icon: DatabaseIcon },
