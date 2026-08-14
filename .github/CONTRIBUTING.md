@@ -30,7 +30,7 @@ Thank you for considering contributing to our project! Here are some guidelines 
    ```
 2. Create a `.env` file in the root of the project and add the following:
    ```bash
-   cp .env.example .env
+   cp .env-min.example .env
    ```
 2. Start the development server:
    ```bash
