@@ -1,6 +1,6 @@
 import { BaseRepository } from "./base.js";
 import { GetDbType } from "../../tool.js";
-import type { PageRecord, PageRecordInsert, PageMonitorRecord, PageMonitorRecordInsert } from "../../types/db.js";
+import type { ImageRecordInsert, PageRecord, PageRecordInsert, PageMonitorRecord, PageMonitorRecordInsert } from "../../types/db.js";
 
 /**
  * Repository for pages and page monitors operations
@@ -52,6 +52,22 @@ export class PagesRepository extends BaseRepository {
         ...data,
         updated_at: this.knex.fn.now(),
       });
+  }
+
+  async replacePageLogo(id: number, image: ImageRecordInsert): Promise<boolean> {
+    return await this.knex.transaction(async (trx) => {
+      await trx("images").insert(image);
+      const updated = await trx("pages")
+        .where("id", id)
+        .update({ page_logo: `/assets/images/${image.id}`, updated_at: trx.fn.now() });
+
+      if (updated === 0) {
+        await trx("images").where("id", image.id).del();
+        return false;
+      }
+
+      return true;
+    });
   }
 
   async deletePage(id: number): Promise<number> {

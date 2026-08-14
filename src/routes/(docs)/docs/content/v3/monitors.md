@@ -99,11 +99,11 @@ To monitor the DNS records, you need to provide the domain name and the record t
 
 ### PING Monitor {#ping-monitor}
 
-To monitor the ping, you need to provide the IP address or the domain name. If the ping is not successful, the monitor will be marked as down. Read the [PING monitoring documentation](/docs/v3/monitors-ping).
+For a PING monitor, provide the IP address or domain name. If the ping is not successful, the monitor will be marked as down. Read the [PING monitoring documentation](/docs/v3/monitors-ping).
 
 ### GAMEDIG Monitor {#gamedig-monitor}
 
-To monitor game/service, you need to provide the game or service to monitor, the IP address or the domain name and the port. If the query is not successful, the monitor will be marked as down. Read the [GAMEDIG monitoring documentation](/docs/v3/monitors-gamedig).
+To monitor a game or service, provide the game or service, the IP address or domain name, and the port. If the query is not successful, the monitor will be marked as down. Read the [GAMEDIG monitoring documentation](/docs/v3/monitors-gamedig).
 
 ---
 

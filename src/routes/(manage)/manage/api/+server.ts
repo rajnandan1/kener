@@ -129,7 +129,7 @@ import {
 } from "$lib/server/controllers/userController.js";
 import type { SiteDataForNotification } from "$lib/server/notification/types";
 import { alertToVariables, siteDataToVariables } from "$lib/server/notification/notification_utils";
-import type { TriggerMeta } from "$lib/server/types/db.js";
+import type { ImageRecordInsert, TriggerMeta } from "$lib/server/types/db.js";
 import sendWebhook from "$lib/server/notification/webhook_notification.js";
 import sendEmail from "$lib/server/notification/email_notification.js";
 import sendDiscord from "$lib/server/notification/discord_notification.js";
@@ -695,7 +695,7 @@ async function storeSiteData(data: { [x: string]: any }) {
   return { success: true };
 }
 
-interface ImageUploadData {
+export interface ImageUploadData {
   base64: string; // base64 encoded image data (without data URI prefix)
   mimeType: string;
   fileName?: string;
@@ -703,6 +703,7 @@ interface ImageUploadData {
   maxHeight?: number;
   forceDimensions?: boolean;
   prefix?: string; // prefix for the ID (e.g., "logo_", "favicon_")
+  saveImage?: (image: ImageRecordInsert) => Promise<void>;
 }
 
 export async function uploadImage(data: ImageUploadData): Promise<{ id: string; url: string }> {
@@ -847,7 +848,7 @@ export async function uploadImage(data: ImageUploadData): Promise<{ id: string; 
   const processedBase64 = processedBuffer.toString("base64");
 
   // Store in database
-  await db.insertImage({
+  const imageRecord: ImageRecordInsert = {
     id,
     data: processedBase64,
     mime_type: finalMimeType,
@@ -855,7 +856,8 @@ export async function uploadImage(data: ImageUploadData): Promise<{ id: string; 
     width: width || null,
     height: height || null,
     size: processedBuffer.length,
-  });
+  };
+  await (data.saveImage ?? db.insertImage)(imageRecord);
 
   return {
     id,

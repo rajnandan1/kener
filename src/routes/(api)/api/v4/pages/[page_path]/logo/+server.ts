@@ -36,6 +36,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
   }
 
   let image: Awaited<ReturnType<typeof uploadImage>>;
+  let saving = false;
+  let persisted = false;
   try {
     image = await uploadImage({
       base64: data.base64,
@@ -44,22 +46,25 @@ export const POST: RequestHandler = async ({ locals, request }) => {
       maxWidth: 256,
       maxHeight: 256,
       prefix: "page_logo_",
+      saveImage: async (imageRecord) => {
+        saving = true;
+        persisted = await db.replacePageLogo(page.id, imageRecord);
+      },
     });
   } catch (error) {
     return json(
-      { error: { code: "BAD_REQUEST", message: error instanceof Error ? error.message : "Failed to upload page logo" } },
-      { status: 400 },
+      {
+        error: {
+          code: saving ? "INTERNAL_SERVER_ERROR" : "BAD_REQUEST",
+          message: saving ? "Failed to save page logo" : error instanceof Error ? error.message : "Failed to upload page logo",
+        },
+      },
+      { status: saving ? 500 : 400 },
     );
   }
 
-  try {
-    if ((await db.updatePage(page.id, { page_logo: image.url })) === 0) {
-      await db.deleteImage(image.id).catch(() => undefined);
-      return json({ error: { code: "NOT_FOUND", message: "Page not found" } }, { status: 404 });
-    }
-  } catch {
-    await db.deleteImage(image.id).catch(() => undefined);
-    return json({ error: { code: "INTERNAL_SERVER_ERROR", message: "Failed to save page logo" } }, { status: 500 });
+  if (!persisted) {
+    return json({ error: { code: "NOT_FOUND", message: "Page not found" } }, { status: 404 });
   }
 
   const response: UploadPageLogoResponse = { page_logo: image.url };
