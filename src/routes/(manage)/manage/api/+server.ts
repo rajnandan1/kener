@@ -705,7 +705,7 @@ interface ImageUploadData {
   prefix?: string; // prefix for the ID (e.g., "logo_", "favicon_")
 }
 
-async function uploadImage(data: ImageUploadData): Promise<{ id: string; url: string }> {
+export async function uploadImage(data: ImageUploadData): Promise<{ id: string; url: string }> {
   const {
     base64,
     mimeType,

@@ -560,6 +560,16 @@ export interface UpdatePageResponse {
   page: PageResponse;
 }
 
+export interface UploadPageLogoRequest {
+  base64: string;
+  mime_type: string;
+  file_name?: string;
+}
+
+export interface UploadPageLogoResponse {
+  page_logo: string;
+}
+
 export interface DeletePageResponse {
   message: string;
 }
