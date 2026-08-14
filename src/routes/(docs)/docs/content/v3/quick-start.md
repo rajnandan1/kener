@@ -26,7 +26,7 @@ npm install
 
 ## Set up Environment Variables {#set-up-environment-variables}
 
-Kener needs some environment variables to be set to run properly. [Here](/docs/v3/environment-vars) are the list of environment variables that you need to set.
+Kener needs some environment variables to be set to run properly. See the [environment variables documentation](/docs/v3/environment-vars).
 
 ```bash
 cp .env.example .env

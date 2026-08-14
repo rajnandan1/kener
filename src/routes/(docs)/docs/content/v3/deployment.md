@@ -58,7 +58,7 @@ Make sure `./database` and `./uploads` directories are present in the root direc
 
 ### Examples {#docker-examples}
 
-This example is for sqlite. You can also use postgres. Read more about it [here](/docs/v3/environment-vars#database-url)
+This example is for sqlite. You can also use postgres. See [database configuration](/docs/v3/environment-vars#database-url).
 
 #### sqlite
 
@@ -133,7 +133,7 @@ docker run \
 
 #### Base path
 
-By default kener runs on `/` but you can change it to `/status` or any other path. Read more about it [here](/docs/v3/environment-vars/#kener-base-path).
+By default kener runs on `/` but you can change it to `/status` or any other path. See [base path configuration](/docs/v3/environment-vars/#kener-base-path).
 
 <div class="note info">
 
