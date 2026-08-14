@@ -47,7 +47,7 @@ Here are the changelogs for Kener. Changelogs are only published when there are 
 - Syntax highlighting and error checking for monitor evaluation functions
 - Added support for custom Discord and Slack body templates in triggers
 - Improved variable templating for all notification types
-- Added comprehensive user management with 3 roles: admin, editor, and member. Read more [here](/docs/rbac)
+- Added comprehensive user management with 3 roles: admin, editor, and member. Read more [here](/docs/v3/rbac)
 - Self-service profile management for all users
 - User activation/deactivation controls for admins
 - Added dedicated Badges management page in the admin dashboard

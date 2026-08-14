@@ -78,5 +78,5 @@ Authorization: Bearer $API_TOKEN
 
 ## Related pages {#related-pages}
 
-- [Triggers](/docs/alerting/triggers)
-- [Webhook Examples](/docs/alerting/webhook-examples)
+- [Triggers](/docs/v4/alerting/triggers)
+- [Webhook Examples](/docs/v4/alerting/webhook-examples)

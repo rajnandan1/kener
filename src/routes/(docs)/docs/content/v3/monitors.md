@@ -91,25 +91,25 @@ The include degraded is used to include the degraded checks in the total bad che
 
 ### API Monitor {#api-monitor}
 
-To monitor an API, you need to provide the URL of the API and the expected status code. If the status code is not received, the monitor will be marked as down. You can read more about API monitoring [here](/docs/monitors-api).
+To monitor an API, you need to provide the URL of the API and the expected status code. If the status code is not received, the monitor will be marked as down. You can read more about API monitoring [here](/docs/v3/monitors-api).
 
 ### DNS Monitor {#dns-monitor}
 
-To monitor the DNS records, you need to provide the domain name and the record type. If the record is not found, the monitor will be marked as down. You can read more about DNS monitoring [here](/docs/monitors-dns).
+To monitor the DNS records, you need to provide the domain name and the record type. If the record is not found, the monitor will be marked as down. You can read more about DNS monitoring [here](/docs/v3/monitors-dns).
 
 ### PING Monitor {#ping-monitor}
 
-To monitor the ping, you need to provide the IP address or the domain name. If the ping is not successful, the monitor will be marked as down. You can read more about PING monitoring [here](/docs/monitors-ping).
+To monitor the ping, you need to provide the IP address or the domain name. If the ping is not successful, the monitor will be marked as down. You can read more about PING monitoring [here](/docs/v3/monitors-ping).
 
 ### GAMEDIG Monitor {#gamedig-monitor}
 
-To monitor game/service, you need to provide the game or service to monitor, the IP address or the domain name and the port. If the query is not successful, the monitor will be marked as down. You can read more about GAMEDIG monitoring [here](/docs/monitors-gamedig).
+To monitor game/service, you need to provide the game or service to monitor, the IP address or the domain name and the port. If the query is not successful, the monitor will be marked as down. You can read more about GAMEDIG monitoring [here](/docs/v3/monitors-gamedig).
 
 ---
 
 ## Triggers {#triggers}
 
-To add a trigger to a monitor make sure you have created a trigger. You can read more about triggers [here](/docs/triggers).
+To add a trigger to a monitor make sure you have created a trigger. You can read more about triggers [here](/docs/v3/triggers).
 
 - Click on the 🔔 icon on the top right corner of the monitor.
 - Add details for either DOWN or DEGRADED.

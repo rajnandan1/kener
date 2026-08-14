@@ -49,7 +49,7 @@ The URL to redirect to when the link is clicked.
 
 ## Internationalization {#internationalization}
 
-Add multiple languages to your status page. You can add a new language and add translations for all the text that is shown on the status page by following the steps [here](/docs/i18n).
+Add multiple languages to your status page. You can add a new language and add translations for all the text that is shown on the status page by following the steps [here](/docs/v3/i18n).
 
 - Adding more than one locales will enable a dropdown in the navbar to select the language.
 - Selected languages are stored in cookies and will be used when the user visits the site again.

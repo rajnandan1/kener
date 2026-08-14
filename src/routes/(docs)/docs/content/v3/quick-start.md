@@ -26,7 +26,7 @@ npm install
 
 ## Set up Environment Variables {#set-up-environment-variables}
 
-Kener needs some environment variables to be set to run properly. [Here](/docs/environment-vars) are the list of environment variables that you need to set.
+Kener needs some environment variables to be set to run properly. [Here](/docs/v3/environment-vars) are the list of environment variables that you need to set.
 
 ```bash
 cp .env.example .env
@@ -72,9 +72,9 @@ You can watch the video tutorial on how to get started with Kener
 
 Learn how to configure kener by going through one of the topics
 
-- [Monitors](/docs/monitors): Learn how to set up and work with monitors in kener.
-- [Triggers](/docs/triggers): Learn how to set up and work with triggers in kener.
-- [Environment Variables](/docs/environment-vars): Learn how to set up and work with environment variables in kener.
-- [API](/docs/kener-apis): Learn how to use the API in kener.
-- [Databases](/docs/database): Learn how to set up and work with databases in kener.
-- [Theme](/docs/theme): Learn how to set up and work with theme in kener.
+- [Monitors](/docs/v3/monitors): Learn how to set up and work with monitors in kener.
+- [Triggers](/docs/v3/triggers): Learn how to set up and work with triggers in kener.
+- [Environment Variables](/docs/v3/environment-vars): Learn how to set up and work with environment variables in kener.
+- [API](/docs/v3/kener-apis): Learn how to use the API in kener.
+- [Databases](/docs/v3/database): Learn how to set up and work with databases in kener.
+- [Theme](/docs/v3/theme): Learn how to set up and work with theme in kener.
