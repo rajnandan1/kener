@@ -121,6 +121,7 @@ export interface CreateMonitorRequest {
   is_hidden?: string;
   confirmation_threshold?: number | null;
   monitor_settings_json?: MonitorSettings | null;
+  external_url?: string | null;
 }
 
 export interface CreateMonitorResponse {
@@ -141,6 +142,7 @@ export interface UpdateMonitorRequest {
   is_hidden?: string;
   confirmation_threshold?: number | null;
   monitor_settings_json?: MonitorSettings | null;
+  external_url?: string | null;
 }
 
 export interface UpdateMonitorResponse {

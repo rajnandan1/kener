@@ -1,5 +1,6 @@
 import type { TimestampStatusCount } from "$lib/server/types/db";
-import GC, { PAGE_STATUS_MESSAGES, type StatusType } from "$lib/global-constants";
+import GC, { PAGE_STATUS_MESSAGES } from "$lib/global-constants";
+import type { StatusType } from "$lib/types/status";
 
 function ParseLatency(latencyMs: number): string {
   if (!!!latencyMs) {
@@ -151,6 +152,21 @@ function IsValidNameServer(nameServer: string): boolean {
   //8.8.8.8 example
   const regex = /^([0-9]{1,3}\.){3}[0-9]{1,3}$/;
   return regex.test(nameServer);
+}
+function IsValidDnsResolver(resolver: string): boolean {
+  const normalizedResolver = resolver.trim();
+  const ipv4Parts = normalizedResolver.split(".");
+  if (
+    ipv4Parts.length === 4 &&
+    ipv4Parts.every((part) => /^\d+$/.test(part) && Number(part) >= 0 && Number(part) <= 255)
+  ) {
+    return true;
+  }
+  const ipType = ValidateIpAddress(normalizedResolver);
+  if (ipType === "IP6") {
+    return true;
+  }
+  return IsValidHost(normalizedResolver);
 }
 const IsValidURL = function (url: string): boolean {
   return /^(http|https):\/\/[^ "]+$/.test(url);
@@ -383,6 +399,7 @@ export {
   ValidateIpAddress,
   IsValidHost,
   IsValidNameServer,
+  IsValidDnsResolver,
   IsValidURL,
   IsValidPort,
   CollapseStatusCounts,

@@ -31,8 +31,9 @@ Connection errors and timeouts return **DOWN**.
 | `host`    | `string`  | —       | Required                                      |
 | `port`    | `number`  | `50051` | Required                                      |
 | `service` | `string`  | `""`    | Fully qualified service name; empty = overall |
-| `tls`     | `boolean` | `false` | Use TLS credentials                           |
-| `timeout` | `number`  | `10000` | Request deadline in ms                        |
+| `tls`      | `boolean` | `false` | Use TLS credentials                          |
+| `insecure` | `boolean` | `false` | Skip TLS certificate verification (TLS only) |
+| `timeout`  | `number`  | `10000` | Request deadline in ms                       |
 
 ## Example {#example}
 
@@ -49,9 +50,25 @@ Connection errors and timeouts return **DOWN**.
 }
 ```
 
+### Self-signed TLS example {#self-signed-example}
+
+```json
+{
+    "type": "GRPC",
+    "type_data": {
+        "host": "grpc.example.com",
+        "port": 50051,
+        "tls": true,
+        "insecure": true,
+        "timeout": 5000
+    }
+}
+```
+
 ## Troubleshooting {#troubleshooting}
 
 - **Immediate DOWN**: wrong host/port, service not running, or firewall blocking the connection
 - **DEGRADED**: server returned `UNKNOWN` or `SERVICE_UNKNOWN` — verify the service name is registered
 - **Timeout**: increase `timeout` or check network latency to the gRPC server
-- **TLS errors**: ensure the server has a valid certificate, or check if TLS should be disabled
+- **TLS errors**: ensure the server has a valid certificate, disable `insecure`, or check if TLS should be disabled
+- **Self-signed certificate** (messages mentioning `--use-system-ca`): set `tls: true` and `insecure: true` on the monitor (same as `grpcurl -insecure`). Alternatively, trust the issuer: run Node with `NODE_OPTIONS='--use-system-ca'` so the OS CA store is used (Node 22+ defaults to bundled CA roots only)

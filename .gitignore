@@ -12,6 +12,7 @@ config/server.yaml
 /package
 .env
 .vscode
+.idea
 .env.*
 !.env.example
 vite.config.js.timestamp-*
@@ -41,3 +42,4 @@ translation-report.json
 CONTEXT.md
 docs/adr/
 docs/superpowers/
+.superpowers/

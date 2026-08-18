@@ -5,8 +5,10 @@
 
 	type ToggleVariants = VariantProps<typeof toggleVariants>;
 
-	interface ToggleGroupContext extends ToggleVariants {
-		spacing?: number;
+	interface ToggleGroupContext {
+		get variant(): ToggleVariants["variant"];
+		get size(): ToggleVariants["size"];
+		get spacing(): number | undefined;
 	}
 
 	export function setToggleGroupCtx(props: ToggleGroupContext) {
@@ -33,9 +35,15 @@
 	}: ToggleGroupPrimitive.RootProps & ToggleVariants & { spacing?: number } = $props();
 
 	setToggleGroupCtx({
-		variant,
-		size,
-		spacing,
+		get variant() {
+			return variant;
+		},
+		get size() {
+			return size;
+		},
+		get spacing() {
+			return spacing;
+		},
 	});
 </script>
 

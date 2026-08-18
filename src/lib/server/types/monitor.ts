@@ -26,6 +26,8 @@ export interface ApiMonitorTypeData {
   timeout?: number;
   eval?: string;
   allowSelfSignedCert?: boolean;
+  follow_redirects?: boolean;
+  max_redirects?: number;
 }
 
 export interface DnsMonitorTypeData {
@@ -34,6 +36,10 @@ export interface DnsMonitorTypeData {
   lookupRecord: string;
   matchType: "ALL" | "ANY";
   values: string[];
+  transport?: "UDP" | "TLS";
+  tlsPort?: number;
+  tlsServername?: string;
+  allowSelfSignedCert?: boolean;
 }
 
 export type { PingHost, PingMonitorTypeData };
@@ -86,6 +92,7 @@ export interface GrpcMonitorTypeData {
   port: number;
   service?: string;
   tls?: boolean;
+  insecure?: boolean;
   timeout?: number;
 }
 

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { DocsConfig, DocsPage } from "$lib/types/docs";
-  import { base } from "$app/paths";
+  import { base, resolve } from "$app/paths";
+  import clientResolver from "$lib/client/resolver.js";
   import ArrowRight from "@lucide/svelte/icons/arrow-right";
   import Github from "@lucide/svelte/icons/github";
   import Moon from "@lucide/svelte/icons/moon";
@@ -219,7 +220,14 @@
     name="keywords"
     content="open source status page, docker status page, self-hosted status page, uptime monitor, incident management, status page tool, free status page, kener, status page docker compose, open source uptime monitoring"
   />
-  <link rel="icon" href={data.config.favicon} />
+  <link
+    rel="icon"
+    href={
+      data.config.favicon
+        ? clientResolver(resolve, data.config.favicon)
+        : data.config.favicon
+    }
+  />
   <link rel="canonical" href="https://kener.ing/docs" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://kener.ing/docs" />

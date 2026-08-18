@@ -17,6 +17,11 @@ import type {
 } from "../types/db.js";
 import GC from "../../global-constants.js";
 import { getUnixTime, differenceInSeconds } from "date-fns";
+import { siteDataToVariables } from "../notification/notification_utils.js";
+import { GetAllSiteData } from "./siteDataController.js";
+import subscriberQueue from "../queues/subscriberQueue.js";
+import mdToHTML from "../../marked.js";
+import type { SubscriptionVariableMap } from "../notification/types.js";
 
 interface IncidentsDashboardInput {
   page: number;
@@ -322,11 +327,6 @@ export const CreateIncident = async (data: IncidentInput): Promise<{ incident_id
 
   let newIncident = await db.createIncident(incident);
 
-  //we need to
-  // queueController.PushDataToQueue(newIncident.id, "createIncident", {
-  //   message: `${incident.incident_type} Created`,
-  //   ...incident,
-  // });
   return {
     incident_id: newIncident.id,
   };
@@ -353,25 +353,6 @@ export const UpdateIncident = async (incident_id: number, data: IncidentUpdateIn
     end_date_time: data.end_date_time || incidentExists.end_date_time,
     is_global: data.is_global !== undefined ? data.is_global : incidentExists.is_global,
   };
-
-  //check if updateObject same as incidentExists
-  // if (
-  //   JSON.stringify(updateObject) ===
-  //   JSON.stringify({
-  //     id: incidentExists.id,
-  //     title: incidentExists.title,
-  //     start_date_time: incidentExists.start_date_time,
-  //     status: incidentExists.status,
-  //     state: incidentExists.state,
-  //     end_date_time: incidentExists.end_date_time,
-  //   })
-  // ) {
-  //   queueController.PushDataToQueue(incident_id, "updateIncident", {
-  //     message: `${incidentExists.incident_type} has been updated to ${updateObject.state}`,
-  //     incident_type: incidentExists.incident_type,
-  //     title: incidentExists.title,
-  //   });
-  // }
 
   return await db.updateIncident(updateObject as IncidentRecord);
 };
@@ -402,11 +383,6 @@ export const AddIncidentMonitor = async (
     throw new Error(`Incident with id ${incident_id} does not exist`);
   }
 
-  // queueController.PushDataToQueue(incident_id, "insertIncidentMonitor", {
-  //   title: incidentExists.title,
-  //   message: `Monitor ${monitor_tag} added to ${incidentExists.incident_type}. Impact is ${monitor_impact}`,
-  //   incident_type: incidentExists.incident_type,
-  // });
   return await db.insertIncidentMonitorWithMerge({
     incident_id,
     monitor_tag,
@@ -429,11 +405,6 @@ export const UpdateCommentByID = async (
   if (!commentExists) {
     throw new Error(`Comment with id ${comment_id} does not exist`);
   }
-  // queueController.PushDataToQueue(incident_id, "updateIncidentComment", {
-  //   title: incidentExists.title,
-  //   message: `${comment}`,
-  //   incident_type: incidentExists.incident_type,
-  // });
   let c = await db.updateIncidentCommentByID(comment_id, comment, state, commented_at);
   if (c) {
     let incidentUpdate: IncidentUpdateInput = {
@@ -450,6 +421,38 @@ export const UpdateCommentByID = async (
   }
   return c;
 };
+// Subscriber notifications are driven solely by incident comments: the comment
+// timeline is the incident's public communication channel, so posting a comment
+// is the one event that emails "incidents" subscribers — regardless of whether
+// the incident came from an alert, the dashboard, or the API. This is the single
+// choke point; alertingQueue must not push its own incident notifications, or
+// alert-driven incidents would notify twice.
+const notifySubscribersOfComment = async (
+  incident: Pick<IncidentRecord, "id" | "title">,
+  comment: IncidentCommentRecord,
+): Promise<void> => {
+  try {
+    const siteData = await GetAllSiteData();
+    const siteUrl = siteDataToVariables(siteData).site_url;
+    const variables: SubscriptionVariableMap = {
+      title: incident.title,
+      cta_url: `${siteUrl}incidents/${incident.id}`,
+      cta_text: "View Incident",
+      update_text: mdToHTML(comment.comment),
+      update_subject: `[#${incident.id}:${comment.state}] ${incident.title}`,
+      update_id: String(comment.id),
+      event_type: "incidents",
+    };
+    // Stable dedup id per comment so a retried/double push notifies once — without
+    // it subscriberQueue falls back to a Date.now()-suffixed id that never dedupes.
+    await subscriberQueue.push(variables, {
+      deduplication: { id: `subscriber-incidents-${comment.id}` },
+    });
+  } catch (err) {
+    console.error(`Error sending subscriber notification for incident ${incident.id}:`, err);
+  }
+};
+
 export const AddIncidentComment = async (
   incident_id: number,
   comment: string,
@@ -480,6 +483,7 @@ export const AddIncidentComment = async (
       }
     }
     await UpdateIncident(incident_id, incidentUpdate);
+    await notifySubscribersOfComment(incidentExists, c);
   }
 
   return c;
