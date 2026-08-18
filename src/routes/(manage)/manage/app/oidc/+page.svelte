@@ -460,8 +460,8 @@
                 <Label>Auto-create users on first login</Label>
                 {#if isLocked("auto_create_users")}<Badge variant="secondary">Set by environment</Badge>{/if}
                 <p class="text-muted-foreground text-sm">
-                  When enabled, a new Kener user is created automatically on first OIDC login. When disabled, users must
-                  be pre-created.
+                  Required for a user's first sign-in — the account is created and linked to the provider on that login.
+                  Turn off afterwards to stop new identities from being provisioned; there is no manual linking.
                 </p>
               </div>
               <Switch bind:checked={settings.auto_create_users} disabled={isLocked("auto_create_users")} />
