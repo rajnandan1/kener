@@ -190,10 +190,11 @@ export function ClearOidcConfigCache(): void {
   cachedCacheKey = null;
 }
 
+// ============ Authorization flow ============
+
 /**
- * Build the authorization redirect URL and return it along with
- * state and nonce values that must be stored in cookies for
- * verification during the callback.
+ * Build the authorization redirect URL plus the state/nonce/PKCE verifier that
+ * must be stored in cookies for verification during the callback.
  */
 export async function BuildAuthorizationUrl(
   settings: OidcSettings,
@@ -209,24 +210,32 @@ export async function BuildAuthorizationUrl(
   const parameters: Record<string, string> = {
     redirect_uri: callbackUrl,
     scope: settings.scopes || "openid profile email",
-    state: state,
-    nonce: nonce,
+    state,
+    nonce,
     code_challenge: codeChallenge,
     code_challenge_method: "S256",
   };
 
   const url = client.buildAuthorizationUrl(config, parameters);
+  return { url: url.href, state, nonce, codeVerifier };
+}
 
-  return {
-    url: url.href,
-    state,
-    nonce,
-    codeVerifier,
-  };
+/** Group names from the configured claim: array → strings, string → [string], else []. */
+export function ExtractGroups(claims: Record<string, unknown>, groupsClaim: string): string[] {
+  const raw = claims[groupsClaim || "groups"];
+  if (Array.isArray(raw)) return raw.map((g) => String(g));
+  if (typeof raw === "string") return [raw];
+  return [];
 }
 
 /**
- * Exchange the authorization code for tokens and extract user information.
+ * Exchange the authorization code for tokens (state/nonce/PKCE verified by
+ * openid-client) and extract the identity. openid-client derives the
+ * `redirect_uri` it sends to the token endpoint from the URL it is given, so we
+ * hand it the registered callback URL with the incoming query — the request URL
+ * behind a reverse proxy may differ from what is registered at the IdP.
+ * Throws OidcAuthError("auth_failed") when required claims are missing; other
+ * library errors propagate as-is (the route maps them to "auth_failed").
  */
 export async function HandleCallback(
   settings: OidcSettings,
@@ -235,171 +244,165 @@ export async function HandleCallback(
   expectedState: string,
   expectedNonce: string,
   codeVerifier: string,
-): Promise<{
-  sub: string;
-  email: string;
-  name: string;
-  groups: string[];
-}> {
+): Promise<OidcIdentity> {
   const config = await getOidcConfig(settings);
+  const exchangeUrl = new URL(callbackUrl);
+  exchangeUrl.search = currentUrl.search;
 
-  const tokens = await client.authorizationCodeGrant(config, currentUrl, {
+  const tokens = await client.authorizationCodeGrant(config, exchangeUrl, {
     pkceCodeVerifier: codeVerifier,
-    expectedState: expectedState,
-    expectedNonce: expectedNonce,
+    expectedState,
+    expectedNonce,
   });
 
   const claims = tokens.claims();
-  if (!claims) {
-    throw new Error("No claims in token response");
-  }
-
+  if (!claims) throw new OidcAuthError("auth_failed", "No claims in token response");
   const sub = claims.sub;
-  if (!sub) {
-    throw new Error("No subject (sub) claim in token");
-  }
+  if (!sub) throw new OidcAuthError("auth_failed", "No subject (sub) claim in ID token");
 
-  let email = claims.email as string | undefined;
-  let name = (claims.name as string | undefined) || (claims.preferred_username as string | undefined) || "";
+  let email = typeof claims.email === "string" ? claims.email : undefined;
+  let name =
+    (typeof claims.name === "string" && claims.name) ||
+    (typeof claims.preferred_username === "string" && claims.preferred_username) ||
+    "";
 
   if (!email) {
     if (!tokens.access_token) {
-      throw new Error("No email in ID token and no access_token available for userinfo lookup");
+      throw new OidcAuthError("auth_failed", "No email in ID token and no access_token for userinfo lookup");
     }
     const userinfo = await client.fetchUserInfo(config, tokens.access_token, sub);
-    email = userinfo.email as string | undefined;
+    email = typeof userinfo.email === "string" ? userinfo.email : undefined;
     if (!name) {
-      name = (userinfo.name as string | undefined) || (userinfo.preferred_username as string | undefined) || "";
+      name =
+        (typeof userinfo.name === "string" && userinfo.name) ||
+        (typeof userinfo.preferred_username === "string" && userinfo.preferred_username) ||
+        "";
     }
   }
+  if (!email) throw new OidcAuthError("auth_failed", "No email claim in ID token or userinfo");
 
-  if (!email) {
-    throw new Error("No email claim found in token or userinfo response");
-  }
-
-  const groupsClaim = settings.groups_claim || "groups";
-  let groups: string[] = [];
-
-  const rawGroups = claims[groupsClaim];
-  if (Array.isArray(rawGroups)) {
-    groups = rawGroups.map((g) => String(g));
-  } else if (typeof rawGroups === "string") {
-    groups = [rawGroups];
-  }
-
+  const normalizedEmail = email.toLowerCase().trim();
   return {
     sub,
-    email: email.toLowerCase().trim(),
-    name: name.trim() || email,
-    groups,
+    email: normalizedEmail,
+    name: name.trim() || normalizedEmail,
+    groups: ExtractGroups(claims as Record<string, unknown>, settings.groups_claim),
   };
 }
 
-/**
- * Find or create a user based on OIDC authentication, then synchronize
- * their roles based on group mappings.
- */
-export async function FindOrCreateOidcUser(
-  settings: OidcSettings,
-  oidcData: {
-    sub: string;
-    email: string;
-    name: string;
-    groups: string[];
-  },
-): Promise<UserRecordPublic> {
-  let user = await db.getUserByOidcSub(oidcData.sub);
+// ============ Provisioning & sync ============
 
-  if (!user) {
-    if (!settings.auto_create_users) {
-      throw new Error("Your account is not provisioned in this system. " + "Please contact an administrator.");
-    }
+function isUniqueViolation(e: unknown): boolean {
+  const message = e instanceof Error ? e.message : String(e);
+  return message.includes("UNIQUE") || message.toLowerCase().includes("duplicate");
+}
 
-    const existingByEmail = await db.getUserByEmail(oidcData.email);
-    if (existingByEmail) {
-      throw new Error(
-        `A local account with the email "${oidcData.email}" already exists. ` +
-          "OIDC and local accounts are kept separate. " +
-          "Please contact an administrator.",
-      );
-    }
+async function provisionOidcUser(settings: OidcSettings, identity: OidcIdentity): Promise<UserRecordPublic> {
+  if (!settings.auto_create_users) {
+    throw new OidcAuthError("not_provisioned", `auto_create_users is off; refusing sub=${identity.sub}`);
+  }
+  const emailOwner = await db.getUserByEmail(identity.email);
+  if (emailOwner) {
+    throw new OidcAuthError(
+      "not_provisioned",
+      `email ${identity.email} already belongs to user ${emailOwner.id} (${emailOwner.auth_provider}); OIDC and local accounts are never merged`,
+    );
+  }
+  const mappedRoleIds = await db.getOidcRoleIdsForGroups(identity.groups);
+  const roleIds =
+    mappedRoleIds.length > 0 ? mappedRoleIds : settings.default_role_id ? [settings.default_role_id] : ["member"];
 
-    const mappedRoleIds = await db.getOidcRoleIdsForGroups(oidcData.groups);
-    const roleIds =
-      mappedRoleIds.length > 0 ? mappedRoleIds : settings.default_role_id ? [settings.default_role_id] : ["member"];
-
+  try {
     await db.insertUser({
-      email: oidcData.email,
-      name: oidcData.name,
+      email: identity.email,
+      name: identity.name,
       password_hash: "",
       role_ids: roleIds,
       auth_provider: GC.AUTH_PROVIDER_OIDC,
-      oidc_sub: oidcData.sub,
+      oidc_sub: identity.sub,
       is_active: 1,
       is_verified: 1,
     });
-
-    user = await db.getUserByOidcSub(oidcData.sub);
-    if (!user) {
-      throw new Error("Failed to create OIDC user");
+  } catch (e) {
+    if (isUniqueViolation(e)) {
+      throw new OidcAuthError("not_provisioned", `insert race for ${identity.email}: ${(e as Error).message}`);
     }
-
-    return user;
+    throw e;
   }
 
-  // Sync roles and update profile data from the IdP
-  await SyncOidcUserRoles(user.id, oidcData.groups, settings);
-  await db.updateUserProfile(user.id, {
-    name: oidcData.name,
-    email: oidcData.email,
-  });
-
-  user = await db.getUserByOidcSub(oidcData.sub);
-  if (!user) {
-    throw new Error("User disappeared during role sync");
-  }
-
-  return user;
+  const created = await db.getUserByOidcSub(identity.sub);
+  if (!created) throw new OidcAuthError("auth_failed", "Failed to load the newly created OIDC user");
+  return created;
 }
 
 /**
- * Synchronize a user's roles based on their current OIDC groups.
- * Manually assigned roles (not from any OIDC mapping) are preserved.
+ * Roles that appear in any mapping (or are the default role) are OIDC-managed
+ * and recomputed from the current groups; every other role is manual and kept.
+ * The owner account never loses `admin`.
  */
-async function SyncOidcUserRoles(userId: number, oidcGroups: string[], settings: OidcSettings): Promise<void> {
+export async function SyncOidcUserRoles(
+  user: UserRecordPublic,
+  oidcGroups: string[],
+  settings: OidcSettings,
+): Promise<void> {
   const allMappings = await db.getAllOidcGroupRoleMappings();
-  const allMappedRoleIds = new Set(allMappings.map((m) => m.role_id));
+  const managedRoleIds = new Set(allMappings.map((m) => m.role_id));
+  if (settings.default_role_id) managedRoleIds.add(settings.default_role_id);
 
-  // The default role is also OIDC-managed (used as fallback)
-  if (settings.default_role_id) {
-    allMappedRoleIds.add(settings.default_role_id);
+  const currentRoleIds = await db.getUserRoleIds(user.id);
+  const manualRoles = currentRoleIds.filter((rid) => !managedRoleIds.has(rid));
+
+  let oidcRoles = await db.getOidcRoleIdsForGroups(oidcGroups);
+  if (oidcRoles.length === 0 && settings.default_role_id) {
+    oidcRoles = [settings.default_role_id];
   }
 
-  const currentRoleIds = await db.getUserRoleIds(userId);
-
-  // Keep roles that were NOT assigned via OIDC (mapping or default)
-  const manualRoles = currentRoleIds.filter((rid) => !allMappedRoleIds.has(rid));
-
-  const newOidcRoleIds = await db.getOidcRoleIdsForGroups(oidcGroups);
-
-  let effectiveOidcRoles = newOidcRoleIds;
-  if (effectiveOidcRoles.length === 0 && settings.default_role_id) {
-    effectiveOidcRoles = [settings.default_role_id];
+  const finalRoleIds = [...new Set([...manualRoles, ...oidcRoles])];
+  if (user.is_owner === "YES" && !finalRoleIds.includes("admin")) {
+    finalRoleIds.push("admin");
   }
-
-  const finalRoleIds = [...new Set([...manualRoles, ...effectiveOidcRoles])];
 
   const currentSorted = [...currentRoleIds].sort().join(",");
-  const newSorted = [...finalRoleIds].sort().join(",");
-
-  if (currentSorted !== newSorted) {
-    await db.updateUserRoles(userId, finalRoleIds);
+  const finalSorted = [...finalRoleIds].sort().join(",");
+  if (currentSorted !== finalSorted) {
+    await db.updateUserRoles(user.id, finalRoleIds);
   }
 }
 
-/**
- * Test the OIDC configuration by performing a discovery request.
- */
+async function syncOidcProfile(user: UserRecordPublic, identity: OidcIdentity): Promise<void> {
+  const update: { name?: string; email?: string } = {};
+  if (identity.name && identity.name !== user.name) update.name = identity.name;
+  if (identity.email !== user.email) {
+    const owner = await db.getUserByEmail(identity.email);
+    if (!owner || owner.id === user.id) {
+      update.email = identity.email;
+    } else {
+      console.warn(
+        `[oidc] Not updating email of user ${user.id}: ${identity.email} already belongs to user ${owner.id}`,
+      );
+    }
+  }
+  if (Object.keys(update).length > 0) {
+    await db.updateUserProfile(user.id, update);
+  }
+}
+
+/** Find the user by `sub`, provisioning on first login (if allowed), then sync roles + profile. */
+export async function FindOrCreateOidcUser(settings: OidcSettings, identity: OidcIdentity): Promise<UserRecordPublic> {
+  const existing = await db.getUserByOidcSub(identity.sub);
+  if (!existing) {
+    return await provisionOidcUser(settings, identity);
+  }
+  await SyncOidcUserRoles(existing, identity.groups, settings);
+  await syncOidcProfile(existing, identity);
+  const refreshed = await db.getUserByOidcSub(identity.sub);
+  if (!refreshed) throw new OidcAuthError("auth_failed", "User disappeared during role sync");
+  return refreshed;
+}
+
+// ============ Admin: connection test ============
+
+/** Discovery against the given (possibly unsaved) settings. Never touches the shared cache. */
 export async function TestOidcConnection(settings: OidcSettings): Promise<{
   success: boolean;
   issuer?: string;
@@ -409,12 +412,8 @@ export async function TestOidcConnection(settings: OidcSettings): Promise<{
   error?: string;
 }> {
   try {
-    // Build a local configuration for testing only — do not touch
-    // the shared cache, as these may be unsaved settings.
-    const issuer = new URL(settings.issuer_url);
-    const testConfig = await client.discovery(issuer, settings.client_id, settings.client_secret);
+    const testConfig = await discover(settings);
     const serverMetadata = testConfig.serverMetadata();
-
     return {
       success: true,
       issuer: serverMetadata.issuer,
@@ -424,9 +423,6 @@ export async function TestOidcConnection(settings: OidcSettings): Promise<{
     };
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);
-    return {
-      success: false,
-      error: `OIDC Discovery failed: ${message}`,
-    };
+    return { success: false, error: `OIDC Discovery failed: ${message}` };
   }
 }

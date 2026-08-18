@@ -174,3 +174,272 @@ describe("MaskOidcSettings", () => {
     expect(empty.has_client_secret).toBe(false);
   });
 });
+
+function fakeConfig(meta: Record<string, string | undefined> = {}) {
+  return {
+    serverMetadata: () => ({
+      issuer: "https://gitlab.example.com",
+      authorization_endpoint: "https://gitlab.example.com/oauth/authorize",
+      token_endpoint: "https://gitlab.example.com/oauth/token",
+      userinfo_endpoint: "https://gitlab.example.com/oauth/userinfo",
+      ...meta,
+    }),
+  };
+}
+
+function fakeTokens(claims: Record<string, unknown> | null, accessToken: string | undefined = "at") {
+  return { access_token: accessToken, claims: () => claims };
+}
+
+const publicUser = (over: Record<string, unknown> = {}) => ({
+  id: 7,
+  email: "u@example.com",
+  name: "U",
+  is_active: 1,
+  is_verified: 1,
+  is_owner: "NO",
+  auth_provider: "oidc",
+  oidc_sub: "sub-7",
+  role_ids: ["member"],
+  created_at: new Date(),
+  updated_at: new Date(),
+  ...over,
+});
+
+describe("BuildAuthorizationUrl / config cache", () => {
+  it("performs discovery once per effective credentials and passes PKCE, state and nonce", async () => {
+    oidcClientMock.discovery.mockResolvedValue(fakeConfig());
+    oidcClientMock.buildAuthorizationUrl.mockReturnValue(new URL("https://gitlab.example.com/oauth/authorize?x=1"));
+    const first = await oidc.BuildAuthorizationUrl(baseSettings, "https://status.example.com/account/oidc/callback");
+    await oidc.BuildAuthorizationUrl(baseSettings, "https://status.example.com/account/oidc/callback");
+    expect(oidcClientMock.discovery).toHaveBeenCalledTimes(1);
+    expect(first.url).toBe("https://gitlab.example.com/oauth/authorize?x=1");
+    expect(first.codeVerifier).toBe("verifier-123");
+    const params = oidcClientMock.buildAuthorizationUrl.mock.calls[0][1] as Record<string, string>;
+    expect(params.redirect_uri).toBe("https://status.example.com/account/oidc/callback");
+    expect(params.code_challenge).toBe("challenge-123");
+    expect(params.code_challenge_method).toBe("S256");
+    expect(params.state).toBe(first.state);
+    expect(params.nonce).toBe(first.nonce);
+    expect(params.scope).toBe("openid profile email");
+  });
+
+  it("re-discovers when client_secret changes and after ClearOidcConfigCache", async () => {
+    oidcClientMock.discovery.mockResolvedValue(fakeConfig());
+    oidcClientMock.buildAuthorizationUrl.mockReturnValue(new URL("https://x/y"));
+    await oidc.BuildAuthorizationUrl(baseSettings, "cb");
+    await oidc.BuildAuthorizationUrl({ ...baseSettings, client_secret: "rotated" }, "cb");
+    expect(oidcClientMock.discovery).toHaveBeenCalledTimes(2);
+    oidc.ClearOidcConfigCache();
+    await oidc.BuildAuthorizationUrl({ ...baseSettings, client_secret: "rotated" }, "cb");
+    expect(oidcClientMock.discovery).toHaveBeenCalledTimes(3);
+  });
+
+  it("refuses an http issuer unless KENER_OIDC_ALLOW_HTTP=true, then passes allowInsecureRequests", async () => {
+    oidcClientMock.discovery.mockResolvedValue(fakeConfig());
+    oidcClientMock.buildAuthorizationUrl.mockReturnValue(new URL("https://x/y"));
+    await expect(oidc.BuildAuthorizationUrl({ ...baseSettings, issuer_url: "http://idp.local" }, "cb")).rejects.toThrow(
+      /https/,
+    );
+    vi.stubEnv("KENER_OIDC_ALLOW_HTTP", "true");
+    await oidc.BuildAuthorizationUrl({ ...baseSettings, issuer_url: "http://idp.local" }, "cb");
+    const options = oidcClientMock.discovery.mock.calls[0][4] as { execute: unknown[] };
+    expect(options.execute).toContain(oidcClientMock.allowInsecureRequests);
+  });
+});
+
+describe("ExtractGroups", () => {
+  it("handles array, string and missing claims", () => {
+    expect(oidc.ExtractGroups({ groups: ["a", 1] }, "groups")).toEqual(["a", "1"]);
+    expect(oidc.ExtractGroups({ roles: "solo" }, "roles")).toEqual(["solo"]);
+    expect(oidc.ExtractGroups({}, "groups")).toEqual([]);
+    expect(oidc.ExtractGroups({ groups: { nested: true } }, "groups")).toEqual([]);
+  });
+});
+
+describe("HandleCallback", () => {
+  const callbackUrl = "https://status.example.com/account/oidc/callback";
+  // Behind a proxy the request URL may differ from the registered redirect URI; the
+  // token exchange must still send the registered one.
+  const cbUrl = new URL("http://kener-internal:3000/account/oidc/callback?code=abc&state=st");
+  beforeEach(() => {
+    oidcClientMock.discovery.mockResolvedValue(fakeConfig());
+  });
+
+  it("returns the identity from ID token claims (email lower-cased, name fallback chain)", async () => {
+    oidcClientMock.authorizationCodeGrant.mockResolvedValue(
+      fakeTokens({ sub: "sub-1", email: " Ada@Example.COM ", preferred_username: "ada", groups: ["devs"] }),
+    );
+    const identity = await oidc.HandleCallback(baseSettings, callbackUrl, cbUrl, "st", "nn", "verifier-123");
+    expect(identity).toEqual({ sub: "sub-1", email: "ada@example.com", name: "ada", groups: ["devs"] });
+    const exchangeUrl = oidcClientMock.authorizationCodeGrant.mock.calls[0][1] as URL;
+    expect(exchangeUrl.href).toBe("https://status.example.com/account/oidc/callback?code=abc&state=st");
+    const grantOpts = oidcClientMock.authorizationCodeGrant.mock.calls[0][2] as Record<string, string>;
+    expect(grantOpts).toEqual({ pkceCodeVerifier: "verifier-123", expectedState: "st", expectedNonce: "nn" });
+    expect(oidcClientMock.fetchUserInfo).not.toHaveBeenCalled();
+  });
+
+  it("falls back to userinfo only when the ID token has no email", async () => {
+    oidcClientMock.authorizationCodeGrant.mockResolvedValue(fakeTokens({ sub: "sub-2" }));
+    oidcClientMock.fetchUserInfo.mockResolvedValue({ email: "ui@example.com", name: "From Userinfo" });
+    const identity = await oidc.HandleCallback(baseSettings, callbackUrl, cbUrl, "st", "nn", "v");
+    expect(identity.email).toBe("ui@example.com");
+    expect(identity.name).toBe("From Userinfo");
+    expect(oidcClientMock.fetchUserInfo).toHaveBeenCalledWith(expect.anything(), "at", "sub-2");
+  });
+
+  it("throws OidcAuthError(auth_failed) when sub or email are missing", async () => {
+    oidcClientMock.authorizationCodeGrant.mockResolvedValue(fakeTokens({ email: "x@example.com" }));
+    await expect(oidc.HandleCallback(baseSettings, callbackUrl, cbUrl, "st", "nn", "v")).rejects.toMatchObject({
+      code: "auth_failed",
+    });
+    oidcClientMock.authorizationCodeGrant.mockResolvedValue(fakeTokens({ sub: "s" }, ""));
+    await expect(oidc.HandleCallback(baseSettings, callbackUrl, cbUrl, "st", "nn", "v")).rejects.toMatchObject({
+      code: "auth_failed",
+    });
+  });
+});
+
+describe("FindOrCreateOidcUser — provisioning", () => {
+  const identity = { sub: "sub-new", email: "new@example.com", name: "New", groups: ["devs"] };
+
+  it("rejects unknown users when auto_create_users is off", async () => {
+    dbMock.getUserByOidcSub.mockResolvedValue(undefined);
+    await expect(
+      oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: false }, identity),
+    ).rejects.toMatchObject({ code: "not_provisioned" });
+    expect(dbMock.insertUser).not.toHaveBeenCalled();
+  });
+
+  it("rejects with the same not_provisioned code when the email belongs to another account", async () => {
+    dbMock.getUserByOidcSub.mockResolvedValue(undefined);
+    dbMock.getUserByEmail.mockResolvedValue(publicUser({ id: 1, auth_provider: "local", oidc_sub: null }));
+    await expect(
+      oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true }, identity),
+    ).rejects.toMatchObject({ code: "not_provisioned" });
+    expect(dbMock.insertUser).not.toHaveBeenCalled();
+  });
+
+  it("creates a verified, active OIDC user with mapped roles", async () => {
+    dbMock.getUserByOidcSub
+      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce(publicUser({ oidc_sub: "sub-new", role_ids: ["editor"] }));
+    dbMock.getUserByEmail.mockResolvedValue(undefined);
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
+    const user = await oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true }, identity);
+    expect(dbMock.insertUser).toHaveBeenCalledWith({
+      email: "new@example.com",
+      name: "New",
+      password_hash: "",
+      role_ids: ["editor"],
+      auth_provider: "oidc",
+      oidc_sub: "sub-new",
+      is_active: 1,
+      is_verified: 1,
+    });
+    expect(user.role_ids).toEqual(["editor"]);
+  });
+
+  it("uses default_role_id, then member, when no group matches", async () => {
+    dbMock.getUserByOidcSub.mockResolvedValueOnce(undefined).mockResolvedValueOnce(publicUser());
+    dbMock.getUserByEmail.mockResolvedValue(undefined);
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
+    await oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true, default_role_id: "viewer" }, identity);
+    expect(dbMock.insertUser.mock.calls[0][0].role_ids).toEqual(["viewer"]);
+    dbMock.getUserByOidcSub.mockResolvedValueOnce(undefined).mockResolvedValueOnce(publicUser());
+    await oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true, default_role_id: "" }, identity);
+    expect(dbMock.insertUser.mock.calls[1][0].role_ids).toEqual(["member"]);
+  });
+
+  it("maps a unique-constraint race on insert to not_provisioned", async () => {
+    dbMock.getUserByOidcSub.mockResolvedValue(undefined);
+    dbMock.getUserByEmail.mockResolvedValue(undefined);
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
+    dbMock.insertUser.mockRejectedValue(new Error("SQLITE_CONSTRAINT: UNIQUE constraint failed: users.email"));
+    await expect(
+      oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true }, identity),
+    ).rejects.toMatchObject({ code: "not_provisioned" });
+  });
+});
+
+describe("FindOrCreateOidcUser — existing user sync", () => {
+  const identity = { sub: "sub-7", email: "u@example.com", name: "U", groups: ["devs"] };
+
+  beforeEach(() => {
+    dbMock.getUserByOidcSub.mockResolvedValue(publicUser());
+    dbMock.getAllOidcGroupRoleMappings.mockResolvedValue([
+      { id: 1, oidc_group: "devs", role_id: "editor" },
+      { id: 2, oidc_group: "ops", role_id: "admin" },
+    ]);
+  });
+
+  it("replaces managed roles from current groups and preserves manual roles", async () => {
+    dbMock.getUserRoleIds.mockResolvedValue(["admin", "custom"]); // admin was mapped from ops; custom is manual
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
+    await oidc.FindOrCreateOidcUser(baseSettings, identity);
+    expect(dbMock.getOidcRoleIdsForGroups).toHaveBeenCalledWith(["devs"]);
+    const [, roles] = dbMock.updateUserRoles.mock.calls[0];
+    expect([...roles].sort()).toEqual(["custom", "editor"]);
+  });
+
+  it("falls back to the default role and does not write when nothing changed", async () => {
+    dbMock.getUserRoleIds.mockResolvedValue(["member"]);
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
+    await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, groups: [] });
+    expect(dbMock.updateUserRoles).not.toHaveBeenCalled();
+  });
+
+  it("never strips admin from the owner account", async () => {
+    dbMock.getUserByOidcSub.mockResolvedValue(publicUser({ is_owner: "YES", role_ids: ["admin"] }));
+    dbMock.getUserRoleIds.mockResolvedValue(["admin"]);
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
+    await oidc.FindOrCreateOidcUser(baseSettings, identity);
+    const [, roles] = dbMock.updateUserRoles.mock.calls[0];
+    expect([...roles].sort()).toEqual(["admin", "editor"]);
+  });
+
+  it("syncs name and email, but keeps the old email when another account owns the new one", async () => {
+    dbMock.getUserRoleIds.mockResolvedValue(["member"]);
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
+    dbMock.getUserByEmail.mockResolvedValue(undefined);
+    await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, name: "Renamed", email: "fresh@example.com" });
+    expect(dbMock.updateUserProfile).toHaveBeenCalledWith(7, { name: "Renamed", email: "fresh@example.com" });
+
+    dbMock.updateUserProfile.mockClear();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    dbMock.getUserByEmail.mockResolvedValue(publicUser({ id: 99, auth_provider: "local" }));
+    await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, email: "taken@example.com" });
+    expect(dbMock.updateUserProfile).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
+describe("TestOidcConnection", () => {
+  it("returns endpoints on success without touching the shared cache", async () => {
+    oidcClientMock.discovery.mockResolvedValue(fakeConfig());
+    const result = await oidc.TestOidcConnection(baseSettings);
+    expect(result).toEqual({
+      success: true,
+      issuer: "https://gitlab.example.com",
+      authorizationEndpoint: "https://gitlab.example.com/oauth/authorize",
+      tokenEndpoint: "https://gitlab.example.com/oauth/token",
+      userinfoEndpoint: "https://gitlab.example.com/oauth/userinfo",
+    });
+    // A subsequent login-path call must still discover (cache untouched by the test)
+    oidcClientMock.buildAuthorizationUrl.mockReturnValue(new URL("https://x/y"));
+    await oidc.BuildAuthorizationUrl(baseSettings, "cb");
+    expect(oidcClientMock.discovery).toHaveBeenCalledTimes(2);
+  });
+
+  it("reports discovery and scheme errors as { success: false }", async () => {
+    oidcClientMock.discovery.mockRejectedValue(new Error("boom"));
+    expect(await oidc.TestOidcConnection(baseSettings)).toEqual({
+      success: false,
+      error: "OIDC Discovery failed: boom",
+    });
+    const http = await oidc.TestOidcConnection({ ...baseSettings, issuer_url: "http://idp.local" });
+    expect(http.success).toBe(false);
+    expect(http.error).toMatch(/KENER_OIDC_ALLOW_HTTP/);
+  });
+});
