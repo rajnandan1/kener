@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { IsValidOidcSettings } from "./validators";
 
 const valid = {
@@ -15,6 +15,7 @@ const valid = {
 };
 const json = (o: unknown) => JSON.stringify(o);
 
+beforeEach(() => vi.stubEnv("KENER_OIDC_ALLOW_HTTP", ""));
 afterEach(() => vi.unstubAllEnvs());
 
 describe("IsValidOidcSettings", () => {

@@ -55,6 +55,11 @@ function storeSettings(partial: Partial<OidcSettings> | null) {
 beforeEach(() => {
   vi.resetAllMocks();
   vi.unstubAllEnvs();
+  // Neutralize any ambient KENER_OIDC_* / KENER_OIDC_ALLOW_HTTP set in the environment (e.g. via a
+  // local .env used for manual acceptance testing) so these tests are hermetic. An empty string is
+  // treated as unset by ParseOidcEnvOverrides, and IsOidcHttpAllowed requires exactly "true".
+  for (const name of Object.values(oidc.OIDC_ENV_KEYS)) vi.stubEnv(name, "");
+  vi.stubEnv(oidc.OIDC_HTTP_ENV, "");
   oidc.ClearOidcConfigCache();
   oidcClientMock.randomPKCECodeVerifier.mockReturnValue("verifier-123");
   oidcClientMock.calculatePKCECodeChallenge.mockResolvedValue("challenge-123");
