@@ -7,12 +7,12 @@
 
 import * as client from "openid-client";
 import { GenerateRandomHexString } from "../tool.js";
-import db from "../db/db.js";
+import db from "$lib/server/db/db";
 import { GenerateToken, CookieConfig } from "./commonController.js";
-import type { OidcSettings } from "$lib/types/site.js";
-import type { UserRecordPublic } from "../types/db.js";
 import { GetSiteDataByKey } from "./siteDataController.js";
-import GC from "$lib/global-constants.js";
+import GC from "../../global-constants.js";
+import type { OidcSettings } from "../../types/site.js";
+import type { UserRecordPublic } from "../types/db.js";
 
 // Cache the OIDC configuration to avoid repeated discovery calls
 let cachedConfig: client.Configuration | null = null;
@@ -129,9 +129,7 @@ export async function HandleCallback(
   }
 
   let email = claims.email as string | undefined;
-  let name = (claims.name as string | undefined) ||
-    (claims.preferred_username as string | undefined) ||
-    "";
+  let name = (claims.name as string | undefined) || (claims.preferred_username as string | undefined) || "";
 
   if (!email) {
     if (!tokens.access_token) {
@@ -140,9 +138,7 @@ export async function HandleCallback(
     const userinfo = await client.fetchUserInfo(config, tokens.access_token, sub);
     email = userinfo.email as string | undefined;
     if (!name) {
-      name = (userinfo.name as string | undefined) ||
-        (userinfo.preferred_username as string | undefined) ||
-        "";
+      name = (userinfo.name as string | undefined) || (userinfo.preferred_username as string | undefined) || "";
     }
   }
 
@@ -185,28 +181,21 @@ export async function FindOrCreateOidcUser(
 
   if (!user) {
     if (!settings.auto_create_users) {
-      throw new Error(
-        "Your account is not provisioned in this system. " +
-        "Please contact an administrator.",
-      );
+      throw new Error("Your account is not provisioned in this system. " + "Please contact an administrator.");
     }
 
     const existingByEmail = await db.getUserByEmail(oidcData.email);
     if (existingByEmail) {
       throw new Error(
         `A local account with the email "${oidcData.email}" already exists. ` +
-        "OIDC and local accounts are kept separate. " +
-        "Please contact an administrator.",
+          "OIDC and local accounts are kept separate. " +
+          "Please contact an administrator.",
       );
     }
 
     const mappedRoleIds = await db.getOidcRoleIdsForGroups(oidcData.groups);
     const roleIds =
-      mappedRoleIds.length > 0
-        ? mappedRoleIds
-        : settings.default_role_id
-          ? [settings.default_role_id]
-          : ["member"];
+      mappedRoleIds.length > 0 ? mappedRoleIds : settings.default_role_id ? [settings.default_role_id] : ["member"];
 
     await db.insertUser({
       email: oidcData.email,
@@ -246,11 +235,7 @@ export async function FindOrCreateOidcUser(
  * Synchronize a user's roles based on their current OIDC groups.
  * Manually assigned roles (not from any OIDC mapping) are preserved.
  */
-async function SyncOidcUserRoles(
-  userId: number,
-  oidcGroups: string[],
-  settings: OidcSettings,
-): Promise<void> {
+async function SyncOidcUserRoles(userId: number, oidcGroups: string[], settings: OidcSettings): Promise<void> {
   const allMappings = await db.getAllOidcGroupRoleMappings();
   const allMappedRoleIds = new Set(allMappings.map((m) => m.role_id));
 
