@@ -1,43 +1,37 @@
-import { redirect, error } from "@sveltejs/kit";
+import { error, redirect } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
-import { GetOidcSettings, BuildAuthorizationUrl } from "$lib/server/controllers/oidcController";
+import {
+  BuildAuthorizationUrl,
+  GetEffectiveOidcSettings,
+  GetOidcCallbackUrl,
+  OIDC_COOKIE_NAMES,
+} from "$lib/server/controllers/oidcController";
 
+/** Starts the Authorization Code + PKCE flow. */
 export const GET: RequestHandler = async ({ url, cookies }) => {
-  const settings = await GetOidcSettings();
-  if (!settings) {
-    throw error(404, "OpenID Connect is not configured or not enabled");
+  const { settings } = await GetEffectiveOidcSettings();
+  if (!settings.enabled) {
+    throw error(404, "OpenID Connect is not enabled");
   }
 
-  const basePath = process.env.KENER_BASE_PATH || "";
-  const callbackUrl = `${url.origin}${basePath}/account/oidc/callback`;
-
+  let authorization: Awaited<ReturnType<typeof BuildAuthorizationUrl>>;
   try {
-    const { url: authUrl, state, nonce, codeVerifier } = await BuildAuthorizationUrl(
-      settings,
-      callbackUrl,
-    );
-
-    const isSecure = process.env.ORIGIN?.startsWith("https://") ?? false;
-    const cookiePath = process.env.KENER_BASE_PATH || "/";
-
-    const cookieOptions = {
-      path: cookiePath,
-      httpOnly: true,
-      secure: isSecure,
-      sameSite: "lax" as const,
-      maxAge: 600,
-    };
-
-    cookies.set("oidc-state", state, cookieOptions);
-    cookies.set("oidc-nonce", nonce, cookieOptions);
-    cookies.set("oidc-code-verifier", codeVerifier, cookieOptions);
-
-    throw redirect(302, authUrl);
+    authorization = await BuildAuthorizationUrl(settings, GetOidcCallbackUrl(url.origin));
   } catch (e) {
-    if (e && typeof e === "object" && "status" in e && (e as { status: number }).status === 302) {
-      throw e;
-    }
-    console.error("OIDC login error:", e);
+    console.error("[oidc] login error:", e);
     throw error(500, "Failed to initiate OpenID Connect login");
   }
+
+  const cookieOptions = {
+    path: process.env.KENER_BASE_PATH || "/",
+    httpOnly: true,
+    secure: (process.env.ORIGIN || "").startsWith("https://"),
+    sameSite: "lax" as const,
+    maxAge: 600,
+  };
+  cookies.set(OIDC_COOKIE_NAMES.state, authorization.state, cookieOptions);
+  cookies.set(OIDC_COOKIE_NAMES.nonce, authorization.nonce, cookieOptions);
+  cookies.set(OIDC_COOKIE_NAMES.codeVerifier, authorization.codeVerifier, cookieOptions);
+
+  throw redirect(302, authorization.url);
 };
