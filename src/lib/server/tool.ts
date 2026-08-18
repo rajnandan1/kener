@@ -536,7 +536,15 @@ function UptimeCalculator(
 }
 
 function GenerateRandomHexString(length: number = 32): string {
-  return crypto.randomBytes(Math.ceil(length / 2)).toString("hex").slice(0, length);
+  return crypto
+    .randomBytes(Math.ceil(length / 2))
+    .toString("hex")
+    .slice(0, length);
+}
+
+/** Dev-only escape hatch: allow an `http:` OIDC issuer when KENER_OIDC_ALLOW_HTTP=true. */
+function IsOidcHttpAllowed(): boolean {
+  return process.env.KENER_OIDC_ALLOW_HTTP === "true";
 }
 
 export {
@@ -576,4 +584,5 @@ export {
   UnparsePercentage,
   GetNowTimestampUTCInMs,
   GenerateRandomHexString,
+  IsOidcHttpAllowed,
 };
