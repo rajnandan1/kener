@@ -20,6 +20,13 @@ export const POST: RequestHandler = async ({ request }) => {
     return json({ error: errorMessage }, { status: 401 });
   }
 
+  if (userDB.auth_provider === "oidc") {
+    // Never mint a local password for an SSO account; answer like a success so
+    // the endpoint cannot be used to tell OIDC accounts apart.
+    console.warn(`[oidc] password reset requested for OIDC account ${userDB.id}; ignoring`);
+    return json({ success: true });
+  }
+
   // Generate token
   const token = await GenerateToken({
     email: userDB.email,

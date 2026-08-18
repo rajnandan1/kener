@@ -42,6 +42,11 @@ export const POST: RequestHandler = async ({ request }) => {
     let errorMessage = "User does not exist";
     return json({ error: errorMessage }, { status: 401 });
   }
+
+  if (userDB.auth_provider === "oidc") {
+    console.warn(`[oidc] password reset attempted for OIDC account ${userDB.id}; refusing`);
+    return json({ error: "Password reset is not available for this account" }, { status: 400 });
+  }
   // Validate password strength
   if (!ValidatePassword(newPassword)) {
     return json(
