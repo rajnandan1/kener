@@ -181,3 +181,35 @@ export interface OidcGroupRoleMapping {
   created_at?: Date;
   updated_at?: Date;
 }
+
+/** OidcSettings as returned to the admin UI: secret masked, plus whether one is stored. */
+export type OidcSettingsMasked = Omit<OidcSettings, "client_secret"> & {
+  client_secret: string;
+  has_client_secret: boolean;
+};
+
+/** What the public sign-in page needs to know. Never includes credentials. */
+export interface OidcPublicState {
+  enabled: boolean;
+  providerName: string;
+  allowLocalLogin: boolean;
+}
+
+/** Identity extracted from the ID token / userinfo. */
+export interface OidcIdentity {
+  sub: string;
+  email: string;
+  name: string;
+  groups: string[];
+}
+
+/** Error codes surfaced to the sign-in page via `?oidc_error=<code>`. Details stay in server logs. */
+export const OIDC_ERROR_CODES = [
+  "provider_error",
+  "session_expired",
+  "auth_failed",
+  "not_provisioned",
+  "deactivated",
+  "no_roles",
+] as const;
+export type OidcErrorCode = (typeof OIDC_ERROR_CODES)[number];
