@@ -26,9 +26,12 @@
   const allowLocalLogin: boolean = $derived(data.oidc?.allowLocalLogin ?? true);
   const oidcError: string | null = $derived(data.oidcError ?? null);
 
-  const showLocalLogin: boolean = $derived(
-    !isAdminAccountCreated || allowLocalLogin || !oidcEnabled
-  );
+  // The password form is always available (the owner can always use it), but it is
+  // collapsed behind a link when local login is disabled for everyone else. A
+  // password error re-expands it so the user sees the message.
+  const localLoginCollapsed: boolean = $derived(isAdminAccountCreated && oidcEnabled && !allowLocalLogin);
+  let localLoginExpanded = $state(false);
+  const showLocalLogin: boolean = $derived(!localLoginCollapsed || localLoginExpanded || !!form?.error);
 
   let loading = $state(false);
   let showPassword = $state(false);
@@ -81,17 +84,24 @@
 
         {#if oidcEnabled && isAdminAccountCreated}
           <div class="mb-4">
-            <Button
-              variant="outline"
-              class="w-full"
-              href={resolve("/account/oidc/login")}
-            >
+            <Button variant="outline" class="w-full" href={resolve("/account/oidc/login")}>
               <LogInIcon class="mr-2 h-4 w-4" />
               Sign in with {oidcProviderName}
             </Button>
           </div>
 
-          {#if showLocalLogin}
+          {#if localLoginCollapsed && !showLocalLogin}
+            <div class="text-center">
+              <Button
+                variant="link"
+                size="sm"
+                class="text-muted-foreground text-xs"
+                onclick={() => (localLoginExpanded = true)}
+              >
+                Sign in with password (owner)
+              </Button>
+            </div>
+          {:else}
             <div class="relative my-6">
               <div class="absolute inset-0 flex items-center">
                 <span class="border-border w-full border-t"></span>
