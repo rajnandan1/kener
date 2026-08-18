@@ -106,8 +106,8 @@
 
   // ============ Settings ============
 
-  async function loadSettings() {
-    loading = true;
+  async function loadSettings(options: { silent?: boolean } = {}) {
+    if (!options.silent) loading = true;
     try {
       const result = (await apiCall("getOidcSettingsMasked")) as
         | (OidcSettingsMasked & { env_locked: string[]; redirect_uri: string })
@@ -122,7 +122,7 @@
     } catch {
       toast.error("Failed to load OIDC settings");
     } finally {
-      loading = false;
+      if (!options.silent) loading = false;
     }
   }
 
@@ -142,7 +142,7 @@
         toast.error(result.error);
       } else {
         toast.success("OIDC settings saved");
-        await loadSettings();
+        await loadSettings({ silent: true });
       }
     } catch {
       toast.error("Failed to save OIDC settings");
@@ -381,7 +381,11 @@
                   id="client_secret"
                   type={showSecret ? "text" : "password"}
                   bind:value={settings.client_secret}
-                  placeholder={hasClientSecret ? "•••••••• (stored — leave empty to keep)" : "Enter client secret"}
+                  placeholder={isLocked("client_secret")
+                    ? "Set by environment"
+                    : hasClientSecret
+                      ? "•••••••• (stored — leave empty to keep)"
+                      : "Enter client secret"}
                   disabled={isLocked("client_secret")}
                 />
                 <Button
