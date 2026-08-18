@@ -21,6 +21,7 @@
   import Sun from "@lucide/svelte/icons/sun";
   import Moon from "@lucide/svelte/icons/moon";
   import clientResolver from "$lib/client/resolver.js";
+  import GC from "$lib/global-constants";
 
   let user = $state<UserRecordPublic>(page.data.userDb);
   let nameAbbr = $derived(
@@ -260,68 +261,70 @@
         {/if}
       </form>
 
-      <hr />
+      {#if user?.auth_provider !== GC.AUTH_PROVIDER_OIDC}
+        <hr />
 
-      <!-- Password Section -->
-      <form
-        class="flex flex-col gap-3"
-        onsubmit={(e) => {
-          e.preventDefault();
-          updatePassword();
-        }}
-      >
-        <Label for="new-password">Change Password</Label>
-        <Input
-          id="new-password"
-          type="password"
-          bind:value={myPassword}
-          placeholder="New Password"
-          disabled={resettingPass}
-        />
-        <Input
-          id="confirm-password"
-          type="password"
-          bind:value={plainPassword}
-          placeholder="Confirm Password"
-          disabled={resettingPass}
-        />
+        <!-- Password Section -->
+        <form
+          class="flex flex-col gap-3"
+          onsubmit={(e) => {
+            e.preventDefault();
+            updatePassword();
+          }}
+        >
+          <Label for="new-password">Change Password</Label>
+          <Input
+            id="new-password"
+            type="password"
+            bind:value={myPassword}
+            placeholder="New Password"
+            disabled={resettingPass}
+          />
+          <Input
+            id="confirm-password"
+            type="password"
+            bind:value={plainPassword}
+            placeholder="Confirm Password"
+            disabled={resettingPass}
+          />
 
-        <div class="text-muted-foreground text-xs">
-          <p class="mb-1 font-medium">Password requirements:</p>
-          <ul class="grid grid-cols-2 gap-1">
-            <li class:text-green-500={hasDigit}>
-              {#if hasDigit}<CheckIcon class="inline size-3" />{/if} One digit
-            </li>
-            <li class:text-green-500={hasLowercase}>
-              {#if hasLowercase}<CheckIcon class="inline size-3" />{/if} One lowercase
-            </li>
-            <li class:text-green-500={hasUppercase}>
-              {#if hasUppercase}<CheckIcon class="inline size-3" />{/if} One uppercase
-            </li>
-            <li class:text-green-500={hasMinLength}>
-              {#if hasMinLength}<CheckIcon class="inline size-3" />{/if} 8+ characters
-            </li>
-            <li class:text-green-500={passwordsMatch}>
-              {#if passwordsMatch}<CheckIcon class="inline size-3" />{/if} Passwords match
-            </li>
-          </ul>
-        </div>
+          <div class="text-muted-foreground text-xs">
+            <p class="mb-1 font-medium">Password requirements:</p>
+            <ul class="grid grid-cols-2 gap-1">
+              <li class:text-green-500={hasDigit}>
+                {#if hasDigit}<CheckIcon class="inline size-3" />{/if} One digit
+              </li>
+              <li class:text-green-500={hasLowercase}>
+                {#if hasLowercase}<CheckIcon class="inline size-3" />{/if} One lowercase
+              </li>
+              <li class:text-green-500={hasUppercase}>
+                {#if hasUppercase}<CheckIcon class="inline size-3" />{/if} One uppercase
+              </li>
+              <li class:text-green-500={hasMinLength}>
+                {#if hasMinLength}<CheckIcon class="inline size-3" />{/if} 8+ characters
+              </li>
+              <li class:text-green-500={passwordsMatch}>
+                {#if passwordsMatch}<CheckIcon class="inline size-3" />{/if} Passwords match
+              </li>
+            </ul>
+          </div>
 
-        <Button type="submit" disabled={resettingPass || !isPasswordValid}>
-          {#if resettingPass}
-            <LoaderIcon class="size-4 animate-spin" />
-            Updating...
-          {:else if passwordSuccess}
-            <CheckIcon class="size-4" />
-            Updated!
-          {:else}
-            Update Password
+          <Button type="submit" disabled={resettingPass || !isPasswordValid}>
+            {#if resettingPass}
+              <LoaderIcon class="size-4 animate-spin" />
+              Updating...
+            {:else if passwordSuccess}
+              <CheckIcon class="size-4" />
+              Updated!
+            {:else}
+              Update Password
+            {/if}
+          </Button>
+          {#if passwordError}
+            <p class="text-destructive text-sm">{passwordError}</p>
           {/if}
-        </Button>
-        {#if passwordError}
-          <p class="text-destructive text-sm">{passwordError}</p>
-        {/if}
-      </form>
+        </form>
+      {/if}
     </div>
   </Dialog.Content>
 </Dialog.Root>

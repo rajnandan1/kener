@@ -8,7 +8,7 @@
  */
 
 import * as client from "openid-client";
-import { GenerateRandomHexString, IsOidcHttpAllowed, MaskString } from "../tool.js";
+import { GenerateRandomHexString, IsOidcHttpAllowed } from "../tool.js";
 import db from "$lib/server/db/db";
 import { GetSiteDataByKey } from "./siteDataController.js";
 import { IsValidOidcSettings } from "./validators.js";
@@ -157,7 +157,8 @@ export function MaskOidcSettings(settings: OidcSettings): OidcSettingsMasked {
   const { client_secret, ...rest } = settings;
   return {
     ...rest,
-    client_secret: client_secret ? MaskString(client_secret) : "",
+    // Fixed-width: MaskString would reveal the secret's length and last 4 characters.
+    client_secret: client_secret ? "********" : "",
     has_client_secret: !!client_secret,
   };
 }
@@ -310,8 +311,17 @@ async function provisionOidcUser(settings: OidcSettings, identity: OidcIdentity)
     );
   }
   const mappedRoleIds = await db.getOidcRoleIdsForGroups(identity.groups);
-  const roleIds =
-    mappedRoleIds.length > 0 ? mappedRoleIds : settings.default_role_id ? [settings.default_role_id] : ["member"];
+  let roleIds = mappedRoleIds;
+  if (roleIds.length === 0) {
+    roleIds = ["member"];
+    if (settings.default_role_id) {
+      // Mirrors SyncOidcUserRoles: an inactive default role is never assigned.
+      const defaultRole = await db.getRoleById(settings.default_role_id);
+      if (defaultRole?.status === "ACTIVE") {
+        roleIds = [settings.default_role_id];
+      }
+    }
+  }
 
   try {
     await db.insertUser({

@@ -697,15 +697,22 @@ export async function POST({ request, cookies }) {
       await DeleteOidcGroupRoleMapping(data.id);
       resp = { success: true };
     } else if (action == "testOidcConnection") {
-      // The browser never has the secret; if it is omitted (or the masked
-      // placeholder), test with the effective (env/stored) one.
-      const { settings: effective } = await GetEffectiveOidcSettings();
+      // The browser never holds the secret; when the submitted one is empty/missing (or the field
+      // is env-locked), test with the effective secret.
+      const { settings: effective, envLocked } = await GetEffectiveOidcSettings();
       const submitted = (data.settings ?? {}) as Record<string, unknown>;
+      const candidate: OidcSettings = { ...effective };
+      for (const field of Object.keys(effective) as (keyof OidcSettings)[]) {
+        if (envLocked.has(field) || field === "client_secret") continue;
+        if (field in submitted && typeof submitted[field] === typeof effective[field]) {
+          (candidate as unknown as Record<string, unknown>)[field] = submitted[field];
+        }
+      }
       const secret =
-        typeof submitted.client_secret === "string" && submitted.client_secret !== ""
+        typeof submitted.client_secret === "string" && submitted.client_secret !== "" && !envLocked.has("client_secret")
           ? submitted.client_secret
           : effective.client_secret;
-      resp = await TestOidcConnection({ ...effective, ...submitted, client_secret: secret });
+      resp = await TestOidcConnection({ ...candidate, client_secret: secret });
     } else if (action == "getOidcSettingsMasked") {
       const { settings: effective, envLocked } = await GetEffectiveOidcSettings();
       resp = {

@@ -174,14 +174,6 @@ export interface OidcSettings {
   default_role_id: string;
 }
 
-export interface OidcGroupRoleMapping {
-  id?: number;
-  oidc_group: string;
-  role_id: string;
-  created_at?: Date;
-  updated_at?: Date;
-}
-
 /** OidcSettings as returned to the admin UI: secret masked, plus whether one is stored. */
 export type OidcSettingsMasked = Omit<OidcSettings, "client_secret"> & {
   client_secret: string;

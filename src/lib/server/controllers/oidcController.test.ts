@@ -173,8 +173,8 @@ describe("ParseIssuerUrl", () => {
 describe("MaskOidcSettings", () => {
   it("masks the secret and reports whether one is stored", () => {
     const masked = oidc.MaskOidcSettings(baseSettings);
+    expect(masked.client_secret).toBe("********");
     expect(masked.client_secret).not.toContain("s3cret");
-    expect(masked.client_secret.endsWith("alue")).toBe(true);
     expect(masked.has_client_secret).toBe(true);
     expect(masked.client_id).toBe("kener");
     const empty = oidc.MaskOidcSettings({ ...baseSettings, client_secret: "" });
@@ -352,11 +352,21 @@ describe("FindOrCreateOidcUser — provisioning", () => {
     dbMock.getUserByOidcSub.mockResolvedValueOnce(undefined).mockResolvedValueOnce(publicUser());
     dbMock.getUserByEmail.mockResolvedValue(undefined);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
+    dbMock.getRoleById.mockResolvedValue({ id: "viewer", status: "ACTIVE" });
     await oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true, default_role_id: "viewer" }, identity);
     expect(dbMock.insertUser.mock.calls[0][0].role_ids).toEqual(["viewer"]);
     dbMock.getUserByOidcSub.mockResolvedValueOnce(undefined).mockResolvedValueOnce(publicUser());
     await oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true, default_role_id: "" }, identity);
     expect(dbMock.insertUser.mock.calls[1][0].role_ids).toEqual(["member"]);
+  });
+
+  it("provisioning ignores an inactive default role and falls back to member", async () => {
+    dbMock.getUserByOidcSub.mockResolvedValueOnce(undefined).mockResolvedValueOnce(publicUser());
+    dbMock.getUserByEmail.mockResolvedValue(undefined);
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
+    dbMock.getRoleById.mockResolvedValue({ id: "viewer", status: "INACTIVE" });
+    await oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true, default_role_id: "viewer" }, identity);
+    expect(dbMock.insertUser.mock.calls[0][0].role_ids).toEqual(["member"]);
   });
 
   it("maps a unique-constraint race on insert to not_provisioned", async () => {
