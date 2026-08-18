@@ -118,4 +118,12 @@ describe("actions.login with local login allowed", () => {
     expect(result.data.error).toBe("Invalid password or Email");
     expect(result.data.error).not.toMatch(/SSO/);
   });
+
+  it("refuses an OIDC account with a password even if a hash were present", async () => {
+    users.GetUserPasswordHashById.mockResolvedValueOnce({ password_hash: "somehash" });
+    const result = (await actions.login(loginEvent(oidcUser.email))) as { status: number; data: { error: string } };
+    expect(result.status).toBe(401);
+    expect(result.data.error).toBe("Invalid password or Email");
+    expect(common.VerifyPassword).not.toHaveBeenCalled();
+  });
 });

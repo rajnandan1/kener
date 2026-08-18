@@ -5,6 +5,7 @@ import db from "$lib/server/db/db.js";
 import { GetGeneralEmailTemplateById } from "$lib/server/controllers/generalTemplateController";
 import { siteDataToVariables } from "$lib/server/notification/notification_utils";
 import sendEmail from "$lib/server/notification/email_notification.js";
+import GC from "$lib/global-constants";
 
 export const POST: RequestHandler = async ({ request }) => {
   const body = await request.json();
@@ -20,7 +21,7 @@ export const POST: RequestHandler = async ({ request }) => {
     return json({ error: errorMessage }, { status: 401 });
   }
 
-  if (userDB.auth_provider === "oidc") {
+  if (userDB.auth_provider === GC.AUTH_PROVIDER_OIDC) {
     // Never mint a local password for an SSO account; answer like a success so
     // the endpoint cannot be used to tell OIDC accounts apart.
     console.warn(`[oidc] password reset requested for OIDC account ${userDB.id}; ignoring`);

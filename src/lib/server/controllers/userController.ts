@@ -393,6 +393,10 @@ export const ResendInvitationEmail = async (email: string) => {
     throw new Error("User not found");
   }
 
+  if (user.auth_provider === GC.AUTH_PROVIDER_OIDC) {
+    throw new Error("This account signs in via SSO and cannot be invited to set a password.");
+  }
+
   const passwordData = await db.getUserPasswordHashById(user.id);
   if (passwordData && passwordData.password_hash !== "") {
     throw new Error("User has already set their password");

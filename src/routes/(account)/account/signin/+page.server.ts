@@ -61,6 +61,13 @@ export const actions: Actions = {
       return fail(401, { error: "User does not exist", values: { email } });
     }
 
+    // OIDC accounts never authenticate with a password, even if a hash were ever
+    // present. Same generic message as a wrong password — this must not become a
+    // distinguishable "uses SSO" answer.
+    if (userDB.auth_provider === GC.AUTH_PROVIDER_OIDC) {
+      return fail(401, { error: "Invalid password or Email", values: { email } });
+    }
+
     // OIDC accounts have an empty password hash and fall through to the generic
     // invalid-credentials answer below — no dedicated message.
     const passwordStored = await GetUserPasswordHashById(userDB.id);

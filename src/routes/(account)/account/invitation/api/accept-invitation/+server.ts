@@ -3,6 +3,7 @@ import type { RequestHandler } from "./$types";
 import db from "$lib/server/db/db.js";
 import { HashPassword, ValidatePassword, VerifyToken } from "$lib/server/controllers/commonController.js";
 import { GetUserPasswordHashById } from "$lib/server/controllers/userController.js";
+import GC from "$lib/global-constants";
 
 export const POST: RequestHandler = async ({ request }) => {
   const body = await request.json();
@@ -37,6 +38,11 @@ export const POST: RequestHandler = async ({ request }) => {
   const user = await db.getUserByEmail(email);
   if (!user) {
     return json({ error: "User does not exist" }, { status: 401 });
+  }
+
+  if (user.auth_provider === GC.AUTH_PROVIDER_OIDC) {
+    console.warn(`[oidc] invitation acceptance attempted for OIDC account ${user.id}; refusing`);
+    return json({ error: "Invitation is not available for this account" }, { status: 400 });
   }
 
   const passwordData = await GetUserPasswordHashById(user.id);
