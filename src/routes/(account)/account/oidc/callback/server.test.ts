@@ -54,17 +54,20 @@ const activeUser = { id: 1, is_active: 1, role_ids: ["member"], email: "u@exampl
 
 /** GET always throws (redirect/error); await the rejection and pull its `location`. */
 async function locationOf(event: Parameters<typeof GET>[0]): Promise<string> {
+  let location: string | undefined;
   try {
     await GET(event);
-    throw new Error("expected GET to throw a redirect");
   } catch (e) {
-    return (e as { location: string }).location;
+    location = (e as { location?: string }).location;
   }
+  if (location === undefined) throw new Error("expected GET to throw a redirect");
+  return location;
 }
 
 beforeEach(() => {
   vi.clearAllMocks();
   vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "warn").mockImplementation(() => {});
   vi.stubEnv("KENER_BASE_PATH", "");
   controller.GetEffectiveOidcSettings.mockResolvedValue({ settings: { enabled: true }, envLocked: new Set() });
   controller.HandleCallback.mockResolvedValue({ sub: "s", email: "u@example.com", name: "U", groups: [] });
@@ -80,8 +83,9 @@ describe("GET /account/oidc/callback", () => {
   });
 
   it("maps a provider error to the provider_error code without reflecting its text", async () => {
-    const { event } = makeEvent("?error=access_denied&error_description=<script>alert(1)</script>");
+    const { event, cookies } = makeEvent("?error=access_denied&error_description=<script>alert(1)</script>");
     await expect(GET(event)).rejects.toMatchObject(redirectTo("provider_error"));
+    expect(cookies.delete).toHaveBeenCalledTimes(3);
     const location = await locationOf(event);
     expect(location).not.toContain("script");
   });
