@@ -148,6 +148,7 @@ import {
   UpsertOidcGroupRoleMapping,
 } from "$lib/server/controllers/oidcController";
 import type { OidcSettings } from "$lib/types/site";
+import { SanitizeSiteData, SanitizeSiteDataValue } from "$lib/server/controllers/siteDataSanitizer";
 
 export async function POST({ request, cookies }) {
   const payload = await request.json();
@@ -181,11 +182,7 @@ export async function POST({ request, cookies }) {
       data.userID = userDB.id;
       resp = await UpdateUserData(data);
     } else if (action == "getAllSiteData") {
-      const allSiteData = await GetAllSiteData();
-      if (allSiteData.oidcSettings) {
-        allSiteData.oidcSettings = MaskOidcSettings(allSiteData.oidcSettings);
-      }
-      resp = allSiteData;
+      resp = SanitizeSiteData((await GetAllSiteData()) as unknown as Record<string, unknown>);
     } else if (action == "manualUpdate") {
       await ManualUpdateUserData(data.id, data);
       resp = await GetUserByIDDashboard(data.id);
@@ -665,9 +662,7 @@ export async function POST({ request, cookies }) {
       if (!!!siteData) {
         throw new Error("Site data not found for the given key");
       }
-      if (key === "oidcSettings" && siteData && typeof siteData === "object") {
-        siteData = MaskOidcSettings(siteData as OidcSettings);
-      }
+      siteData = SanitizeSiteDataValue(key, siteData);
       resp = siteData;
     } else if (action == "updateSubscriptionsConfig") {
       resp = await InsertKeyValue("subscriptionsSettings", JSON.stringify(data));
