@@ -9,6 +9,7 @@ const dbMock = vi.hoisted(() => ({
   getOidcRoleIdsForGroups: vi.fn(),
   getAllOidcGroupRoleMappings: vi.fn(),
   getUserRoleIds: vi.fn(),
+  getUserAssignedRoleIds: vi.fn(),
   updateUserRoles: vi.fn(),
   updateUserProfile: vi.fn(),
   getRoleById: vi.fn(),
@@ -52,9 +53,11 @@ function storeSettings(partial: Partial<OidcSettings> | null) {
 }
 
 beforeEach(() => {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   vi.unstubAllEnvs();
   oidc.ClearOidcConfigCache();
+  oidcClientMock.randomPKCECodeVerifier.mockReturnValue("verifier-123");
+  oidcClientMock.calculatePKCECodeChallenge.mockResolvedValue("challenge-123");
   storeSettings(baseSettings);
 });
 afterEach(() => {
@@ -371,10 +374,11 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
       { id: 1, oidc_group: "devs", role_id: "editor" },
       { id: 2, oidc_group: "ops", role_id: "admin" },
     ]);
+    dbMock.getRoleById.mockResolvedValue({ id: "member", status: "ACTIVE" });
   });
 
   it("replaces managed roles from current groups and preserves manual roles", async () => {
-    dbMock.getUserRoleIds.mockResolvedValue(["admin", "custom"]); // admin was mapped from ops; custom is manual
+    dbMock.getUserAssignedRoleIds.mockResolvedValue(["admin", "custom"]); // admin was mapped from ops; custom is manual
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
     await oidc.FindOrCreateOidcUser(baseSettings, identity);
     expect(dbMock.getOidcRoleIdsForGroups).toHaveBeenCalledWith(["devs"]);
@@ -383,7 +387,25 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
   });
 
   it("falls back to the default role and does not write when nothing changed", async () => {
-    dbMock.getUserRoleIds.mockResolvedValue(["member"]);
+    dbMock.getUserAssignedRoleIds.mockResolvedValue(["member"]);
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
+    await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, groups: [] });
+    expect(dbMock.updateUserRoles).not.toHaveBeenCalled();
+  });
+
+  it("preserves a manual assignment to an inactive role", async () => {
+    // "retired" is an inactive role the user was manually assigned to before it
+    // was deactivated; "admin" is mapped from the "ops" group (not present here).
+    dbMock.getUserAssignedRoleIds.mockResolvedValue(["retired", "admin"]);
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
+    await oidc.FindOrCreateOidcUser(baseSettings, identity);
+    const [, roles] = dbMock.updateUserRoles.mock.calls[0];
+    expect([...roles].sort()).toEqual(["editor", "retired"]);
+  });
+
+  it("does not fall back to an inactive default role and does not write when nothing changed", async () => {
+    dbMock.getRoleById.mockResolvedValue({ id: "member", status: "INACTIVE" });
+    dbMock.getUserAssignedRoleIds.mockResolvedValue([]);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
     await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, groups: [] });
     expect(dbMock.updateUserRoles).not.toHaveBeenCalled();
@@ -391,7 +413,7 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
 
   it("never strips admin from the owner account", async () => {
     dbMock.getUserByOidcSub.mockResolvedValue(publicUser({ is_owner: "YES", role_ids: ["admin"] }));
-    dbMock.getUserRoleIds.mockResolvedValue(["admin"]);
+    dbMock.getUserAssignedRoleIds.mockResolvedValue(["admin"]);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
     await oidc.FindOrCreateOidcUser(baseSettings, identity);
     const [, roles] = dbMock.updateUserRoles.mock.calls[0];
@@ -399,7 +421,7 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
   });
 
   it("syncs name and email, but keeps the old email when another account owns the new one", async () => {
-    dbMock.getUserRoleIds.mockResolvedValue(["member"]);
+    dbMock.getUserAssignedRoleIds.mockResolvedValue(["member"]);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
     dbMock.getUserByEmail.mockResolvedValue(undefined);
     await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, name: "Renamed", email: "fresh@example.com" });
@@ -408,8 +430,29 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     dbMock.updateUserProfile.mockClear();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     dbMock.getUserByEmail.mockResolvedValue(publicUser({ id: 99, auth_provider: "local" }));
-    await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, email: "taken@example.com" });
-    expect(dbMock.updateUserProfile).not.toHaveBeenCalled();
+    await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, name: "Renamed2", email: "taken@example.com" });
+    expect(dbMock.updateUserProfile).toHaveBeenCalledWith(7, { name: "Renamed2" });
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it("tolerates a concurrent insert of the same email during profile sync (keeps old email, still syncs name)", async () => {
+    dbMock.getUserAssignedRoleIds.mockResolvedValue(["member"]);
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
+    dbMock.getUserByEmail.mockResolvedValue(undefined); // no collision seen at check time
+    dbMock.updateUserProfile
+      .mockRejectedValueOnce(new Error("UNIQUE constraint failed: users.email"))
+      .mockResolvedValueOnce(1);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const user = await oidc.FindOrCreateOidcUser(baseSettings, {
+      ...identity,
+      name: "Renamed",
+      email: "raced@example.com",
+    });
+    expect(user).toBeDefined();
+    expect(dbMock.updateUserProfile).toHaveBeenCalledTimes(2);
+    expect(dbMock.updateUserProfile.mock.calls[0]).toEqual([7, { name: "Renamed", email: "raced@example.com" }]);
+    expect(dbMock.updateUserProfile.mock.calls[1]).toEqual([7, { name: "Renamed" }]);
     expect(warn).toHaveBeenCalled();
     warn.mockRestore();
   });

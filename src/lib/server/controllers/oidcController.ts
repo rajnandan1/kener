@@ -293,8 +293,8 @@ export async function HandleCallback(
 // ============ Provisioning & sync ============
 
 function isUniqueViolation(e: unknown): boolean {
-  const message = e instanceof Error ? e.message : String(e);
-  return message.includes("UNIQUE") || message.toLowerCase().includes("duplicate");
+  const message = (e instanceof Error ? e.message : String(e)).toLowerCase();
+  return message.includes("unique") || message.includes("duplicate");
 }
 
 async function provisionOidcUser(settings: OidcSettings, identity: OidcIdentity): Promise<UserRecordPublic> {
@@ -336,9 +336,16 @@ async function provisionOidcUser(settings: OidcSettings, identity: OidcIdentity)
 }
 
 /**
- * Roles that appear in any mapping (or are the default role) are OIDC-managed
- * and recomputed from the current groups; every other role is manual and kept.
- * The owner account never loses `admin`.
+ * Roles that appear in any mapping (or are the active default role) are
+ * OIDC-managed and recomputed from the current groups; every other assigned
+ * role — including assignments to a role that has since been deactivated —
+ * is manual and preserved. `updateUserRoles` has delete-all-then-reinsert
+ * semantics, so both the "what's manual" computation and the "did anything
+ * change" comparison must be done against the *same* universe of assigned
+ * role ids (including inactive ones); comparing an ACTIVE-only read against
+ * a set that may include an inactive id would either silently drop the
+ * manual assignment on the first write, or never converge and rewrite on
+ * every login. The owner account never loses `admin`.
  */
 export async function SyncOidcUserRoles(
   user: UserRecordPublic,
@@ -349,12 +356,15 @@ export async function SyncOidcUserRoles(
   const managedRoleIds = new Set(allMappings.map((m) => m.role_id));
   if (settings.default_role_id) managedRoleIds.add(settings.default_role_id);
 
-  const currentRoleIds = await db.getUserRoleIds(user.id);
-  const manualRoles = currentRoleIds.filter((rid) => !managedRoleIds.has(rid));
+  const assignedRoleIds = await db.getUserAssignedRoleIds(user.id);
+  const manualRoles = assignedRoleIds.filter((rid) => !managedRoleIds.has(rid));
 
-  let oidcRoles = await db.getOidcRoleIdsForGroups(oidcGroups);
+  let oidcRoles = await db.getOidcRoleIdsForGroups(oidcGroups); // already ACTIVE-only
   if (oidcRoles.length === 0 && settings.default_role_id) {
-    oidcRoles = [settings.default_role_id];
+    const defaultRole = await db.getRoleById(settings.default_role_id);
+    if (defaultRole?.status === "ACTIVE") {
+      oidcRoles = [settings.default_role_id];
+    }
   }
 
   const finalRoleIds = [...new Set([...manualRoles, ...oidcRoles])];
@@ -362,9 +372,9 @@ export async function SyncOidcUserRoles(
     finalRoleIds.push("admin");
   }
 
-  const currentSorted = [...currentRoleIds].sort().join(",");
+  const assignedSorted = [...assignedRoleIds].sort().join(",");
   const finalSorted = [...finalRoleIds].sort().join(",");
-  if (currentSorted !== finalSorted) {
+  if (assignedSorted !== finalSorted) {
     await db.updateUserRoles(user.id, finalRoleIds);
   }
 }
@@ -382,8 +392,17 @@ async function syncOidcProfile(user: UserRecordPublic, identity: OidcIdentity): 
       );
     }
   }
-  if (Object.keys(update).length > 0) {
+  if (Object.keys(update).length === 0) return;
+
+  try {
     await db.updateUserProfile(user.id, update);
+  } catch (e) {
+    if (update.email && isUniqueViolation(e)) {
+      console.warn(`[oidc] Email ${update.email} was taken concurrently; keeping the old email for user ${user.id}`);
+      if (update.name) await db.updateUserProfile(user.id, { name: update.name });
+    } else {
+      throw e;
+    }
   }
 }
 

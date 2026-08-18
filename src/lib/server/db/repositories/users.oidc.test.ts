@@ -147,6 +147,17 @@ describe("getUserByOidcSub / getUsersByRoleId / updateUserProfile", () => {
     expect(rows[0].oidc_sub).toBe("sub-r");
   });
 
+  it("getUserAssignedRoleIds includes inactive-role assignments that getUserRoleIds hides", async () => {
+    const [id] = await repo.insertUser({
+      email: "ret@example.com",
+      name: "Ret",
+      password_hash: "",
+      role_ids: ["member", "retired"],
+    });
+    expect([...(await repo.getUserAssignedRoleIds(id))].sort()).toEqual(["member", "retired"]);
+    expect([...(await repo.getUserRoleIds(id))].sort()).toEqual(["member"]);
+  });
+
   it("updateUserProfile updates only the given fields", async () => {
     const [id] = await repo.insertUser({ email: "p@example.com", name: "P", password_hash: "", role_ids: [] });
     await repo.updateUserProfile(id, { name: "P2" });

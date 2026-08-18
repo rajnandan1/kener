@@ -145,6 +145,7 @@ class DbImpl {
   removeUserFromRole!: UsersRepository["removeUserFromRole"];
   getUserPermissionIds!: UsersRepository["getUserPermissionIds"];
   getUserRoleIds!: UsersRepository["getUserRoleIds"];
+  getUserAssignedRoleIds!: UsersRepository["getUserAssignedRoleIds"];
 
   // ============ OIDC ============
   getUserByOidcSub!: UsersRepository["getUserByOidcSub"];
@@ -528,6 +529,7 @@ class DbImpl {
     this.removeUserFromRole = this.users.removeUserFromRole.bind(this.users);
     this.getUserPermissionIds = this.users.getUserPermissionIds.bind(this.users);
     this.getUserRoleIds = this.users.getUserRoleIds.bind(this.users);
+    this.getUserAssignedRoleIds = this.users.getUserAssignedRoleIds.bind(this.users);
 
     // OIDC
     this.getUserByOidcSub = this.users.getUserByOidcSub.bind(this.users);

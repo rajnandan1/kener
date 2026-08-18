@@ -360,6 +360,12 @@ export class UsersRepository extends BaseRepository {
     return rows.map((r: { id: string }) => r.id);
   }
 
+  /** Every role id assigned to the user in users_roles, regardless of role status. */
+  async getUserAssignedRoleIds(userId: number): Promise<string[]> {
+    const rows = await this.knex("users_roles").where("users_id", userId).distinct("roles_id as id").select();
+    return rows.map((r: { id: string }) => r.id);
+  }
+
   async getUserPermissionIds(userId: number): Promise<string[]> {
     const knex = this.knex;
     const rows = await knex("users_roles")
