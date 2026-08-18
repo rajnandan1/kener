@@ -11,6 +11,7 @@ import type {
   OidcGroupRoleMappingInsert,
 } from "../../types/db.js";
 import { GetDbType } from "../../tool.js";
+import GC from "../../../global-constants.js";
 
 /**
  * Repository for users, API keys operations
@@ -87,16 +88,18 @@ export class UsersRepository extends BaseRepository {
   async insertUser(data: UserRecordInsert): Promise<number[]> {
     const dbType = GetDbType();
 
-    const insertData = {
+    const insertData: Record<string, unknown> = {
       email: data.email,
       name: data.name,
       password_hash: data.password_hash,
       is_owner: data.is_owner || "NO",
-      auth_provider: data.auth_provider || "local",
-      oidc_sub: data.oidc_sub || null,
+      auth_provider: data.auth_provider || GC.AUTH_PROVIDER_LOCAL,
+      oidc_sub: data.oidc_sub ?? null,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     };
+    if (data.is_active !== undefined) insertData.is_active = data.is_active;
+    if (data.is_verified !== undefined) insertData.is_verified = data.is_verified;
 
     let userId: number;
     if (dbType === "postgresql") {
@@ -372,7 +375,7 @@ export class UsersRepository extends BaseRepository {
     return rows.map((r: { id: string }) => r.id);
   }
 
-// ============ OIDC ============
+  // ============ OIDC ============
 
   async getUserByOidcSub(oidcSub: string): Promise<UserRecordPublic | undefined> {
     const row = await this.knex("users")
@@ -390,20 +393,16 @@ export class UsersRepository extends BaseRepository {
   }
 
   async getOidcGroupRoleMappingByGroup(oidcGroup: string): Promise<OidcGroupRoleMappingRecord | undefined> {
-    return await this.knex("oidc_group_role_mappings")
-      .where("oidc_group", oidcGroup)
-      .first();
+    return await this.knex("oidc_group_role_mappings").where("oidc_group", oidcGroup).first();
   }
 
   async upsertOidcGroupRoleMapping(data: OidcGroupRoleMappingInsert): Promise<void> {
     const existing = await this.getOidcGroupRoleMappingByGroup(data.oidc_group);
     if (existing) {
-      await this.knex("oidc_group_role_mappings")
-        .where("id", existing.id)
-        .update({
-          role_id: data.role_id,
-          updated_at: this.knex.fn.now(),
-        });
+      await this.knex("oidc_group_role_mappings").where("id", existing.id).update({
+        role_id: data.role_id,
+        updated_at: this.knex.fn.now(),
+      });
     } else {
       await this.knex("oidc_group_role_mappings").insert({
         oidc_group: data.oidc_group,
