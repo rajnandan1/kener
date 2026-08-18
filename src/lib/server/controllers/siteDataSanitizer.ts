@@ -12,6 +12,14 @@ export function SanitizeSiteDataValue(key: string, value: unknown): unknown {
   return sanitize ? sanitize(value) : value;
 }
 
+/** Site-data keys that must never be written through the generic API-key endpoints (authentication config). */
+const API_READ_ONLY_KEYS = new Set<string>(["oidcSettings"]);
+
+/** True when the key may be updated via the public /api/v4/site/{key} endpoint. */
+export function IsSiteDataKeyApiWritable(key: string): boolean {
+  return !API_READ_ONLY_KEYS.has(key);
+}
+
 /** Mask every secret-bearing key of a parsed site-data object. Returns a shallow copy. */
 export function SanitizeSiteData<T extends Record<string, unknown>>(data: T): T {
   const copy: Record<string, unknown> = { ...data };

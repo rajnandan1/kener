@@ -8,7 +8,7 @@ const oidcController = vi.hoisted(() => ({
 }));
 vi.mock("./oidcController.js", () => oidcController);
 
-import { SanitizeSiteData, SanitizeSiteDataValue } from "./siteDataSanitizer";
+import { IsSiteDataKeyApiWritable, SanitizeSiteData, SanitizeSiteDataValue } from "./siteDataSanitizer";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -53,5 +53,15 @@ describe("SanitizeSiteData", () => {
   it("is a no-op when the key is not present", () => {
     const input = { siteName: "Kener" };
     expect(SanitizeSiteData(input)).toEqual({ siteName: "Kener" });
+  });
+});
+
+describe("IsSiteDataKeyApiWritable", () => {
+  it("forbids writing oidcSettings through the generic API-key endpoints", () => {
+    expect(IsSiteDataKeyApiWritable("oidcSettings")).toBe(false);
+  });
+
+  it("allows writing other site-data keys", () => {
+    expect(IsSiteDataKeyApiWritable("siteName")).toBe(true);
   });
 });
