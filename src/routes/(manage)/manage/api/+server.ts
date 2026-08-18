@@ -138,10 +138,16 @@ import heicConvert from "heic-convert";
 import serverResolver from "$lib/server/resolver.js";
 import { ACTION_PERMISSION_MAP } from "$lib/allPerms.js";
 import {
-  TestOidcConnection,
   ClearOidcConfigCache,
-} from "$lib/server/controllers/oidcController.js";
-import { MaskString } from "$lib/server/tool.js";
+  DeleteOidcGroupRoleMapping,
+  GetEffectiveOidcSettings,
+  GetOidcCallbackUrl,
+  MaskOidcSettings,
+  PrepareOidcSettingsForStore,
+  TestOidcConnection,
+  UpsertOidcGroupRoleMapping,
+} from "$lib/server/controllers/oidcController";
+import type { OidcSettings } from "$lib/types/site";
 
 export async function POST({ request, cookies }) {
   const payload = await request.json();
@@ -175,7 +181,11 @@ export async function POST({ request, cookies }) {
       data.userID = userDB.id;
       resp = await UpdateUserData(data);
     } else if (action == "getAllSiteData") {
-      resp = await GetAllSiteData();
+      const allSiteData = await GetAllSiteData();
+      if (allSiteData.oidcSettings) {
+        allSiteData.oidcSettings = MaskOidcSettings(allSiteData.oidcSettings);
+      }
+      resp = allSiteData;
     } else if (action == "manualUpdate") {
       await ManualUpdateUserData(data.id, data);
       resp = await GetUserByIDDashboard(data.id);
@@ -655,6 +665,9 @@ export async function POST({ request, cookies }) {
       if (!!!siteData) {
         throw new Error("Site data not found for the given key");
       }
+      if (key === "oidcSettings" && siteData && typeof siteData === "object") {
+        siteData = MaskOidcSettings(siteData as OidcSettings);
+      }
       resp = siteData;
     } else if (action == "updateSubscriptionsConfig") {
       resp = await InsertKeyValue("subscriptionsSettings", JSON.stringify(data));
@@ -679,41 +692,32 @@ export async function POST({ request, cookies }) {
     } else if (action == "deleteRole") {
       resp = await DeleteRole(data.roleId, data.options);
     }
-    // ============ OIDC Group-Role Mappings ============
+    // ============ OIDC ============
     else if (action == "getOidcGroupRoleMappings") {
       resp = await db.getAllOidcGroupRoleMappings();
     } else if (action == "upsertOidcGroupRoleMapping") {
-      if (!data.oidc_group || typeof data.oidc_group !== "string" || !data.oidc_group.trim()) {
-        throw new Error("OIDC group name is required");
-      }
-      if (!data.role_id || typeof data.role_id !== "string") {
-        throw new Error("Role ID is required");
-      }
-      const role = await db.getRoleById(data.role_id);
-      if (!role) {
-        throw new Error(`Role "${data.role_id}" not found`);
-      }
-      await db.upsertOidcGroupRoleMapping({
-        oidc_group: data.oidc_group.trim(),
-        role_id: data.role_id,
-      });
+      await UpsertOidcGroupRoleMapping({ oidc_group: data.oidc_group, role_id: data.role_id });
       resp = { success: true };
     } else if (action == "deleteOidcGroupRoleMapping") {
-      await db.deleteOidcGroupRoleMapping(data.id);
+      await DeleteOidcGroupRoleMapping(data.id);
       resp = { success: true };
     } else if (action == "testOidcConnection") {
-      resp = await TestOidcConnection(data.settings);
+      // The browser never has the secret; if it is omitted (or the masked
+      // placeholder), test with the effective (env/stored) one.
+      const { settings: effective } = await GetEffectiveOidcSettings();
+      const submitted = (data.settings ?? {}) as Record<string, unknown>;
+      const secret =
+        typeof submitted.client_secret === "string" && submitted.client_secret !== ""
+          ? submitted.client_secret
+          : effective.client_secret;
+      resp = await TestOidcConnection({ ...effective, ...submitted, client_secret: secret });
     } else if (action == "getOidcSettingsMasked") {
-      const raw = await GetSiteDataByKey("oidcSettings");
-      if (raw && typeof raw === "object") {
-        const settings = raw as Record<string, unknown>;
-        if (settings.client_secret && typeof settings.client_secret === "string") {
-          settings.client_secret = MaskString(settings.client_secret);
-        }
-        resp = settings;
-      } else {
-        resp = raw;
-      }
+      const { settings: effective, envLocked } = await GetEffectiveOidcSettings();
+      resp = {
+        ...MaskOidcSettings(effective),
+        env_locked: [...envLocked],
+        redirect_uri: GetOidcCallbackUrl(),
+      };
     }
   } catch (error: unknown) {
     console.log(error);
@@ -730,26 +734,12 @@ async function storeSiteData(data: { [x: string]: any }) {
       if (key === "socialPreviewImage" && (element === null || element === undefined)) {
         element = "";
       }
-      // If oidcSettings is saved without client_secret, preserve the existing one
-      if (key === "oidcSettings" && typeof element === "string") {
-        try {
-          const newSettings = JSON.parse(element);
-          if (!newSettings.client_secret) {
-            const existing = await GetSiteDataByKey("oidcSettings");
-            if (existing && typeof existing === "object") {
-              newSettings.client_secret = (existing as Record<string, unknown>).client_secret;
-              element = JSON.stringify(newSettings);
-            }
-          }
-        } catch {
-          // If parsing fails, proceed with the original value
-        }
+      if (key === "oidcSettings") {
+        element = await PrepareOidcSettingsForStore(element);
       }
       await InsertKeyValue(key, element);
-
-      // Clear OIDC config cache when settings change so logins
-      // pick up new credentials immediately
       if (key === "oidcSettings") {
+        // Logins must pick up new credentials immediately.
         ClearOidcConfigCache();
       }
     }
