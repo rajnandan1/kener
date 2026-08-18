@@ -11,6 +11,7 @@ import * as client from "openid-client";
 import { GenerateRandomHexString, IsOidcHttpAllowed, MaskString } from "../tool.js";
 import db from "$lib/server/db/db";
 import { GetSiteDataByKey } from "./siteDataController.js";
+import { IsValidOidcSettings } from "./validators.js";
 import seedSiteData from "../db/seedSiteData.js";
 import GC from "../../global-constants.js";
 import type {
@@ -444,4 +445,65 @@ export async function TestOidcConnection(settings: OidcSettings): Promise<{
     const message = e instanceof Error ? e.message : String(e);
     return { success: false, error: `OIDC Discovery failed: ${message}` };
   }
+}
+
+// ============ Admin: settings store & mappings ============
+
+/**
+ * Turn an admin-submitted payload (object or JSON string) into the JSON to persist:
+ * env-locked fields are dropped (env values are never written to the DB), omitted
+ * fields keep their stored value (so an untouched secret survives), unknown keys
+ * are ignored, and the result is validated. Throws Error(message) on bad input.
+ */
+export async function PrepareOidcSettingsForStore(incoming: unknown): Promise<string> {
+  let parsed: unknown = incoming;
+  if (typeof incoming === "string") {
+    try {
+      parsed = JSON.parse(incoming);
+    } catch {
+      throw new Error("Invalid OIDC settings payload");
+    }
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("Invalid OIDC settings payload");
+  }
+  const input = parsed as Record<string, unknown>;
+  const stored = await readStoredOidcSettings();
+  const { locked } = ParseOidcEnvOverrides();
+
+  const next: Record<string, unknown> = { ...stored };
+  for (const field of OIDC_FIELDS) {
+    if (locked.has(field)) continue;
+    if (!(field in input) || input[field] === undefined) continue;
+    next[field] = input[field];
+  }
+
+  const json = JSON.stringify(next);
+  if (!IsValidOidcSettings(json)) {
+    throw new Error("Invalid OIDC settings");
+  }
+  const defaultRoleId = next.default_role_id;
+  if (typeof defaultRoleId === "string" && defaultRoleId !== "") {
+    const role = await db.getRoleById(defaultRoleId);
+    if (!role) throw new Error(`Role "${defaultRoleId}" not found`);
+  }
+  return json;
+}
+
+export async function UpsertOidcGroupRoleMapping(input: { oidc_group?: unknown; role_id?: unknown }): Promise<void> {
+  const group = typeof input.oidc_group === "string" ? input.oidc_group.trim() : "";
+  if (!group) throw new Error("OIDC group name is required");
+  const roleId = typeof input.role_id === "string" ? input.role_id : "";
+  if (!roleId) throw new Error("Role ID is required");
+  const role = await db.getRoleById(roleId);
+  if (!role) throw new Error(`Role "${roleId}" not found`);
+  if (role.status !== "ACTIVE") throw new Error(`Role "${roleId}" is not active`);
+  await db.upsertOidcGroupRoleMapping({ oidc_group: group, role_id: roleId });
+}
+
+export async function DeleteOidcGroupRoleMapping(id: unknown): Promise<void> {
+  const numeric = typeof id === "number" ? id : typeof id === "string" && /^\d+$/.test(id) ? Number(id) : Number.NaN;
+  if (!Number.isInteger(numeric) || numeric <= 0) throw new Error("Invalid mapping id");
+  const deleted = await db.deleteOidcGroupRoleMapping(numeric);
+  if (deleted === 0) throw new Error("Mapping not found");
 }

@@ -1,3 +1,5 @@
+import { IsOidcHttpAllowed } from "../tool.js";
+
 export function IsValidURL(url: string): boolean {
   const regex = /^(https?:\/\/)?((localhost|[\da-z.-]+\.[a-z]{2,10})(:[0-9]{1,5})?)?(\/[\w .-]*)*\/?$/i;
   return regex.test(url);
@@ -119,6 +121,57 @@ export function IsValidColors(colors: string): boolean {
     if (parsed[key] !== undefined) {
       if (typeof parsed[key] !== "string" || !/^#[0-9A-Fa-f]{6}$/.test(parsed[key] as string)) return false;
     }
+  }
+  return true;
+}
+
+const OIDC_STRING_KEYS = [
+  "provider_name",
+  "issuer_url",
+  "client_id",
+  "client_secret",
+  "scopes",
+  "groups_claim",
+  "default_role_id",
+];
+const OIDC_BOOLEAN_KEYS = ["enabled", "allow_local_login", "auto_create_users"];
+const OIDC_KNOWN_KEYS = new Set([...OIDC_STRING_KEYS, ...OIDC_BOOLEAN_KEYS]);
+
+/**
+ * Structural validation of the `oidcSettings` site-data value (a JSON string):
+ * only known keys, correct types, and — when enabled — an https issuer
+ * (http only with KENER_OIDC_ALLOW_HTTP=true), a client_id and the openid scope.
+ * Role existence is checked separately (needs the DB).
+ */
+export function IsValidOidcSettings(value: string): boolean {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    return false;
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return false;
+  const o = parsed as Record<string, unknown>;
+  for (const key of Object.keys(o)) {
+    if (!OIDC_KNOWN_KEYS.has(key)) return false;
+  }
+  for (const key of OIDC_STRING_KEYS) {
+    if (key in o && typeof o[key] !== "string") return false;
+  }
+  for (const key of OIDC_BOOLEAN_KEYS) {
+    if (key in o && typeof o[key] !== "boolean") return false;
+  }
+  if (o.enabled === true) {
+    let issuer: URL;
+    try {
+      issuer = new URL(typeof o.issuer_url === "string" ? o.issuer_url : "");
+    } catch {
+      return false;
+    }
+    if (issuer.protocol !== "https:" && !(issuer.protocol === "http:" && IsOidcHttpAllowed())) return false;
+    if (typeof o.client_id !== "string" || o.client_id.trim() === "") return false;
+    const scopes = typeof o.scopes === "string" ? o.scopes : "";
+    if (!scopes.split(/\s+/).includes("openid")) return false;
   }
   return true;
 }

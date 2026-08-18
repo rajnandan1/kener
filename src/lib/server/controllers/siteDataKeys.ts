@@ -6,6 +6,7 @@ import {
   IsValidJSONArray,
   IsValidJSONString,
   IsValidNav,
+  IsValidOidcSettings,
   IsValidURL,
 } from "./validators.js";
 
@@ -298,7 +299,7 @@ export const siteDataKeys: SiteDataKey[] = [
   },
   {
     key: "oidcSettings",
-    isValid: IsValidJSONString,
+    isValid: IsValidOidcSettings,
     data_type: "object",
   },
 ];

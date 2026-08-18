@@ -486,3 +486,76 @@ describe("TestOidcConnection", () => {
     expect(http.error).toMatch(/KENER_OIDC_ALLOW_HTTP/);
   });
 });
+
+describe("PrepareOidcSettingsForStore", () => {
+  beforeEach(() => {
+    dbMock.getRoleById.mockResolvedValue({ id: "member", role_name: "Member", status: "ACTIVE" });
+  });
+
+  it("keeps the stored secret when the field is omitted, clears it on empty string, replaces it otherwise", async () => {
+    const omitted = JSON.parse(await oidc.PrepareOidcSettingsForStore({ ...baseSettings, client_secret: undefined }));
+    expect(omitted.client_secret).toBe("s3cret-value");
+    const cleared = JSON.parse(await oidc.PrepareOidcSettingsForStore({ ...baseSettings, client_secret: "" }));
+    expect(cleared.client_secret).toBe("");
+    const replaced = JSON.parse(
+      await oidc.PrepareOidcSettingsForStore(JSON.stringify({ ...baseSettings, client_secret: "new" })),
+    );
+    expect(replaced.client_secret).toBe("new");
+  });
+
+  it("drops env-locked fields and unknown keys before validating", async () => {
+    vi.stubEnv("KENER_OIDC_ISSUER_URL", "https://env.example.com");
+    const stored = JSON.parse(
+      await oidc.PrepareOidcSettingsForStore({
+        ...baseSettings,
+        issuer_url: "https://attacker.example.com",
+        has_client_secret: true,
+        env_locked: ["issuer_url"],
+        redirect_uri: "x",
+      }),
+    );
+    expect(stored.issuer_url).toBe("https://gitlab.example.com"); // DB value untouched, env value not persisted
+    expect(stored).not.toHaveProperty("has_client_secret");
+    expect(stored).not.toHaveProperty("env_locked");
+  });
+
+  it("rejects invalid payloads and unknown default roles", async () => {
+    await expect(oidc.PrepareOidcSettingsForStore("{{")).rejects.toThrow(/Invalid OIDC settings/);
+    await expect(oidc.PrepareOidcSettingsForStore({ ...baseSettings, issuer_url: "ftp://x" })).rejects.toThrow(
+      /Invalid OIDC settings/,
+    );
+    dbMock.getRoleById.mockResolvedValue(undefined);
+    await expect(oidc.PrepareOidcSettingsForStore({ ...baseSettings, default_role_id: "ghost" })).rejects.toThrow(
+      /Role "ghost" not found/,
+    );
+  });
+});
+
+describe("mapping helpers", () => {
+  it("UpsertOidcGroupRoleMapping validates group, role existence and role status", async () => {
+    await expect(oidc.UpsertOidcGroupRoleMapping({ oidc_group: "  ", role_id: "member" })).rejects.toThrow(
+      /group name is required/,
+    );
+    await expect(oidc.UpsertOidcGroupRoleMapping({ oidc_group: "devs" })).rejects.toThrow(/Role ID is required/);
+    dbMock.getRoleById.mockResolvedValue(undefined);
+    await expect(oidc.UpsertOidcGroupRoleMapping({ oidc_group: "devs", role_id: "ghost" })).rejects.toThrow(
+      /not found/,
+    );
+    dbMock.getRoleById.mockResolvedValue({ id: "old", status: "INACTIVE" });
+    await expect(oidc.UpsertOidcGroupRoleMapping({ oidc_group: "devs", role_id: "old" })).rejects.toThrow(/not active/);
+    dbMock.getRoleById.mockResolvedValue({ id: "member", status: "ACTIVE" });
+    await oidc.UpsertOidcGroupRoleMapping({ oidc_group: " devs ", role_id: "member" });
+    expect(dbMock.upsertOidcGroupRoleMapping).toHaveBeenCalledWith({ oidc_group: "devs", role_id: "member" });
+  });
+
+  it("DeleteOidcGroupRoleMapping requires a positive integer id and an existing row", async () => {
+    await expect(oidc.DeleteOidcGroupRoleMapping(undefined)).rejects.toThrow(/Invalid mapping id/);
+    await expect(oidc.DeleteOidcGroupRoleMapping("abc")).rejects.toThrow(/Invalid mapping id/);
+    await expect(oidc.DeleteOidcGroupRoleMapping(0)).rejects.toThrow(/Invalid mapping id/);
+    dbMock.deleteOidcGroupRoleMapping.mockResolvedValue(0);
+    await expect(oidc.DeleteOidcGroupRoleMapping(5)).rejects.toThrow(/Mapping not found/);
+    dbMock.deleteOidcGroupRoleMapping.mockResolvedValue(1);
+    await oidc.DeleteOidcGroupRoleMapping("5");
+    expect(dbMock.deleteOidcGroupRoleMapping).toHaveBeenCalledWith(5);
+  });
+});
