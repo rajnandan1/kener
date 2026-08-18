@@ -236,6 +236,39 @@ SMTP_SECURE=1
 
 📖 **See**: [Email Setup Guide](/docs/v4/setup/email-setup) for detailed configuration and troubleshooting.
 
+### OpenID Connect (SSO) {#oidc-configuration}
+
+Every OIDC setting can be provided from the environment; a set variable overrides the value saved in **Manage → OpenID Connect** for that field only.
+
+| Variable                       | Description                                       | Default                |
+| :----------------------------- | :------------------------------------------------ | :--------------------- |
+| `KENER_OIDC_ENABLED`           | Enable OIDC login (`true`/`false`)                | `false`                |
+| `KENER_OIDC_PROVIDER_NAME`     | Name shown on the "Sign in with …" button         | —                      |
+| `KENER_OIDC_ISSUER_URL`        | Issuer URL (must support discovery, `https`)      | —                      |
+| `KENER_OIDC_CLIENT_ID`         | OAuth client id                                   | —                      |
+| `KENER_OIDC_CLIENT_SECRET`     | OAuth client secret                               | —                      |
+| `KENER_OIDC_SCOPES`            | Space-separated scopes, must include `openid`     | `openid profile email` |
+| `KENER_OIDC_GROUPS_CLAIM`      | Claim containing the user's groups                | `groups`               |
+| `KENER_OIDC_ALLOW_LOCAL_LOGIN` | Keep password login available (`true`/`false`)    | `true`                 |
+| `KENER_OIDC_AUTO_CREATE_USERS` | Create users on first OIDC login (`true`/`false`) | `false`                |
+| `KENER_OIDC_DEFAULT_ROLE_ID`   | Role when no group mapping matches                | `member`               |
+| `KENER_OIDC_ALLOW_HTTP`        | Allow an `http:` issuer — local development only  | `false`                |
+
+**Example**:
+
+```bash
+KENER_OIDC_ENABLED=true
+KENER_OIDC_PROVIDER_NAME=GitLab
+KENER_OIDC_ISSUER_URL=https://gitlab.example.com
+KENER_OIDC_CLIENT_ID=kener
+KENER_OIDC_CLIENT_SECRET=...
+KENER_OIDC_SCOPES="openid profile email groups"
+KENER_OIDC_GROUPS_CLAIM=groups_direct
+KENER_OIDC_ALLOW_LOCAL_LOGIN=false
+```
+
+📖 **See**: [OpenID Connect](/docs/v4/oidc) for setup, group→role mapping and lockout recovery.
+
 ### Database Configuration {#database-configuration}
 
 | Variable                      | Description                                                  | Default                               |
