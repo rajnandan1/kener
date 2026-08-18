@@ -445,7 +445,7 @@
                 </Badge>
               </Table.Cell>
               <Table.Cell class="text-center">
-                {#if user.is_verified || user.auth_provider === GC.AUTH_PROVIDER_OIDC}
+                {#if user.is_verified}
                   <CheckCheckIcon class="mx-auto h-4 w-4 text-blue-500" />
                 {:else}
                   <MailWarningIcon class="mx-auto h-4 w-4 text-yellow-500" />
