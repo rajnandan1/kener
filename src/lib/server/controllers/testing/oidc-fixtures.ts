@@ -23,25 +23,20 @@ export const publicUser = (over: Record<string, unknown> = {}) => ({
 });
 
 /**
- * Asserts that the role sync made exactly one `applyOidcRoleSync` write for
- * user 7 (and never rewrote the whole role set via `updateUserRoles`), and
- * returns it with sorted arrays so tests can `toEqual` against it.
+ * Asserts that the role sync handed exactly one grant set to the repository
+ * (`applyOidcRoleSync`) for user 7 — never rewriting the role set itself via
+ * `updateUserRoles` — and returns it with sorted arrays for `toEqual`.
  */
 export function expectSingleRoleSyncWrite(dbMock: { applyOidcRoleSync: Mock; updateUserRoles: Mock }): {
-  add: string[];
-  remove: string[];
   oidc_role_ids: string[];
+  protect: string[];
 } {
   expect(dbMock.applyOidcRoleSync).toHaveBeenCalledTimes(1);
   expect(dbMock.updateUserRoles).not.toHaveBeenCalled();
   const [userId, data] = dbMock.applyOidcRoleSync.mock.calls[0] as [
     number,
-    { add: string[]; remove: string[]; oidc_role_ids: string[] },
+    { oidc_role_ids: string[]; protect: string[] },
   ];
   expect(userId).toBe(7);
-  return {
-    add: [...data.add].sort(),
-    remove: [...data.remove].sort(),
-    oidc_role_ids: [...data.oidc_role_ids].sort(),
-  };
+  return { oidc_role_ids: [...data.oidc_role_ids].sort(), protect: [...data.protect].sort() };
 }

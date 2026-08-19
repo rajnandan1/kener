@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Knex } from "knex";
 import { createMemoryDb, migrationSource } from "../testing/memory-db";
 import { UsersRepository } from "./users";
@@ -7,6 +7,8 @@ let knex: Knex;
 let repo: UsersRepository;
 
 beforeEach(async () => {
+  // Hermetic against an ambient .env (the dev server's KENER_OIDC_ISSUER_URL would feed the backfill).
+  vi.stubEnv("KENER_OIDC_ISSUER_URL", "");
   knex = await createMemoryDb();
   repo = new UsersRepository(knex);
   // admin/member/editor are already seeded by migration 20260331120000
@@ -28,6 +30,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
+  vi.unstubAllEnvs();
   await knex.destroy();
 });
 
@@ -66,13 +69,27 @@ describe("migration 20260818120000_add_oidc_support", () => {
     expect(await knex.schema.hasColumn("users", "oidc_sub")).toBe(false);
   });
 
-  it("upgrades a database from an earlier build that keyed OIDC accounts by subject alone", async () => {
-    // Roll back, recreate the old shape (oidc_sub with a single-column unique), migrate again.
+  /** Roll back and recreate the schema of an earlier build (oidc_sub with a single-column unique, no issuer). */
+  async function recreateLegacyOidcSchema() {
     await knex.migrate.down({ migrationSource });
     await knex.schema.alterTable("users", (table) => {
       table.string("auth_provider", 20).notNullable().defaultTo("local");
       table.string("oidc_sub", 255).nullable().unique();
     });
+  }
+  const legacyOidcUser = (email: string, sub: string) =>
+    knex("users").insert({
+      email,
+      name: "L",
+      password_hash: "",
+      auth_provider: "oidc",
+      oidc_sub: sub,
+      created_at: knex.fn.now(),
+      updated_at: knex.fn.now(),
+    });
+
+  it("upgrades a database from an earlier build that keyed OIDC accounts by subject alone", async () => {
+    await recreateLegacyOidcSchema();
     await knex.migrate.up({ migrationSource });
     expect(await knex.schema.hasColumn("users", "oidc_issuer")).toBe(true);
     expect(await knex.schema.hasColumn("users", "oidc_role_ids")).toBe(true);
@@ -90,6 +107,52 @@ describe("migration 20260818120000_add_oidc_support", () => {
     await oidcUser("https://a.example.com", "a1@example.com");
     await oidcUser("https://b.example.com", "b1@example.com");
     await expect(oidcUser("https://b.example.com", "b2@example.com")).rejects.toThrow(/UNIQUE/);
+  });
+
+  it("backfills oidc_issuer for legacy OIDC rows from the saved settings so those accounts stay reachable", async () => {
+    await recreateLegacyOidcSchema();
+    await legacyOidcUser("legacy@example.com", "sub-legacy");
+    await knex("users").insert({ email: "local@example.com", name: "L", password_hash: "h" });
+    // Saved in the UI; the stored identifier is the normalized href (what discovery validates against).
+    await knex("site_data").insert({
+      key: "oidcSettings",
+      value: JSON.stringify({ enabled: true, issuer_url: "https://IdP.example.com:443/realms/x" }),
+      data_type: "object",
+    });
+    await knex.migrate.up({ migrationSource });
+    const legacy = await knex("users").where({ email: "legacy@example.com" }).first();
+    expect(legacy.oidc_issuer).toBe("https://idp.example.com/realms/x");
+    expect(await repo.getUserByOidcIdentity("https://idp.example.com/realms/x", "sub-legacy")).toMatchObject({
+      email: "legacy@example.com",
+    });
+    const local = await knex("users").where({ email: "local@example.com" }).first();
+    expect(local.oidc_issuer).toBeNull(); // only rows with a subject are touched
+  });
+
+  it("prefers KENER_OIDC_ISSUER_URL over the saved settings when backfilling", async () => {
+    vi.stubEnv("KENER_OIDC_ISSUER_URL", " https://env.example.com/realms/y ");
+    try {
+      await recreateLegacyOidcSchema();
+      await legacyOidcUser("legacy2@example.com", "sub-legacy-2");
+      await knex("site_data").insert({
+        key: "oidcSettings",
+        value: JSON.stringify({ issuer_url: "https://db.example.com" }),
+        data_type: "object",
+      });
+      await knex.migrate.up({ migrationSource });
+      expect((await knex("users").where({ email: "legacy2@example.com" }).first()).oidc_issuer).toBe(
+        "https://env.example.com/realms/y",
+      );
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it("leaves oidc_issuer NULL when no issuer was ever configured (nothing to backfill from)", async () => {
+    await recreateLegacyOidcSchema();
+    await legacyOidcUser("legacy3@example.com", "sub-legacy-3");
+    await knex.migrate.up({ migrationSource });
+    expect((await knex("users").where({ email: "legacy3@example.com" }).first()).oidc_issuer).toBeNull();
   });
 });
 
@@ -202,44 +265,90 @@ describe("OIDC role provenance (users.oidc_role_ids)", () => {
     expect(await repo.getUserOidcRoleIds(u)).toBeNull();
   });
 
-  it("applyOidcRoleSync only removes/adds the given roles — other assignments are never touched", async () => {
+  it("applyOidcRoleSync replaces exactly what the previous sync granted and leaves manual roles alone", async () => {
     // member was granted by OIDC, editor by hand.
     const [u] = await oidcInsert("p4@example.com", ["member", "editor"], ["member"]);
-    await repo.applyOidcRoleSync(u, { remove: ["member"], add: ["admin"], oidc_role_ids: ["admin"] });
+    expect(await repo.applyOidcRoleSync(u, { oidc_role_ids: ["admin"], protect: [] })).toEqual({
+      add: ["admin"],
+      remove: ["member"],
+    });
     expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["admin", "editor"]);
     expect(await repo.getUserOidcRoleIds(u)).toEqual(["admin"]);
 
-    // Adding an already-assigned role and removing an unassigned one are no-ops (no duplicate-key error).
-    await repo.applyOidcRoleSync(u, {
+    // Same grants again → nothing to do, nothing written.
+    const before = (await knex("users").where({ id: u }).first()).updated_at;
+    expect(await repo.applyOidcRoleSync(u, { oidc_role_ids: ["admin"], protect: [] })).toEqual({ add: [], remove: [] });
+    expect((await knex("users").where({ id: u }).first()).updated_at).toEqual(before);
+  });
+
+  it("applyOidcRoleSync keeps a hand-assigned role that a mapping names, and revokes a deleted mapping's grant", async () => {
+    const [u] = await oidcInsert("p5@example.com", ["admin", "member"], ["member"]); // admin by hand, member granted
+    expect(await repo.applyOidcRoleSync(u, { oidc_role_ids: ["member"], protect: [] })).toEqual({
+      add: [],
+      remove: [],
+    });
+    expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["admin", "member"]);
+    // The mapping that granted member is gone; editor is granted now.
+    expect(await repo.applyOidcRoleSync(u, { oidc_role_ids: ["editor"], protect: [] })).toEqual({
+      add: ["editor"],
       remove: ["member"],
-      add: ["admin", "editor"],
-      oidc_role_ids: ["admin", "editor"],
     });
     expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["admin", "editor"]);
-    expect(await repo.getUserOidcRoleIds(u)).toEqual(["admin", "editor"]);
+  });
 
-    // Provenance-only update leaves the assignments alone.
-    await repo.applyOidcRoleSync(u, { remove: [], add: [], oidc_role_ids: [] });
+  it("applyOidcRoleSync never removes a protected role (owner keeps admin) and never grants it as OIDC", async () => {
+    const [u] = await oidcInsert("p6@example.com", ["admin"], ["admin"]); // admin came from a mapping that is gone
+    expect(await repo.applyOidcRoleSync(u, { oidc_role_ids: ["editor"], protect: ["admin"] })).toEqual({
+      add: ["editor"],
+      remove: [],
+    });
     expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["admin", "editor"]);
+    expect(await repo.getUserOidcRoleIds(u)).toEqual(["editor"]);
+    // Owner without admin at all gets it back.
+    await repo.updateUserRoles(u, ["editor"]);
+    expect(await repo.applyOidcRoleSync(u, { oidc_role_ids: ["editor"], protect: ["admin"] })).toEqual({
+      add: ["admin"],
+      remove: [],
+    });
+  });
+
+  it("applyOidcRoleSync treats a user without provenance as holding only manual roles, then records the grants", async () => {
+    const [u] = await oidcInsert("p7@example.com", ["member", "editor"]); // oidc_role_ids NULL
+    expect(await repo.applyOidcRoleSync(u, { oidc_role_ids: ["admin"], protect: [] })).toEqual({
+      add: ["admin"],
+      remove: [],
+    });
+    expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["admin", "editor", "member"]);
+    expect(await repo.getUserOidcRoleIds(u)).toEqual(["admin"]);
+    // A hand-assigned role that the mapping then also grants is absorbed into provenance (no role change).
+    expect(await repo.applyOidcRoleSync(u, { oidc_role_ids: ["admin", "editor"], protect: [] })).toEqual({
+      add: [],
+      remove: [],
+    });
+    expect(await repo.getUserOidcRoleIds(u)).toEqual(["admin", "editor"]);
+  });
+
+  it("applyOidcRoleSync revokes every previous grant (possibly leaving no roles) when nothing is granted", async () => {
+    const [u] = await oidcInsert("p8@example.com", ["editor"], ["editor"]);
+    expect(await repo.applyOidcRoleSync(u, { oidc_role_ids: [], protect: [] })).toEqual({
+      add: [],
+      remove: ["editor"],
+    });
+    expect(await repo.getUserAssignedRoleIds(u)).toEqual([]);
     expect(await repo.getUserOidcRoleIds(u)).toEqual([]);
   });
 
-  it("applyOidcRoleSync is atomic — a failing insert rolls back the removal and the provenance stamp", async () => {
-    const [u] = await oidcInsert("p5@example.com", ["member", "editor"], ["member"]);
-    // roles_id is NOT NULL, so the insert fails after the delete ran inside the same transaction.
-    await expect(
-      repo.applyOidcRoleSync(u, { remove: ["member"], add: [null as unknown as string], oidc_role_ids: ["x"] }),
-    ).rejects.toThrow();
-    expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["editor", "member"]);
-    expect(await repo.getUserOidcRoleIds(u)).toEqual(["member"]);
-  });
-
-  it("applyOidcRoleSync survives a concurrent manual role change (it does not rewrite the whole set)", async () => {
-    // A sync computed from a snapshot where the user had [member]; meanwhile an admin granted editor by hand.
-    const [u] = await oidcInsert("p6@example.com", ["member"], ["member"]);
-    await repo.updateUserRoles(u, ["member", "editor"]); // the admin's concurrent change
-    await repo.applyOidcRoleSync(u, { remove: ["member"], add: ["admin"], oidc_role_ids: ["admin"] });
-    expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["admin", "editor"]); // editor survived
+  it("applyOidcRoleSync reads the assignments inside its own transaction — a manual change committed just before is honoured", async () => {
+    // The sync's inputs (what the IdP grants) were computed while the user had [member]; before the
+    // write runs, an admin replaced the roles with [member, editor]. The delta is computed from the
+    // committed state, so editor survives and only the stale grant goes.
+    const [u] = await oidcInsert("p9@example.com", ["member"], ["member"]);
+    await repo.updateUserRoles(u, ["member", "editor"]);
+    expect(await repo.applyOidcRoleSync(u, { oidc_role_ids: ["admin"], protect: [] })).toEqual({
+      add: ["admin"],
+      remove: ["member"],
+    });
+    expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["admin", "editor"]);
   });
 });
 

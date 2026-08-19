@@ -14,6 +14,21 @@ import type {
 import { GetDbType } from "../../tool.js";
 import GC from "../../../global-constants.js";
 
+/** Parse the users.oidc_role_ids JSON column; null for NULL or anything that is not a string array. */
+function parseOidcRoleIds(value: unknown): string[] | null {
+  if (value === null || value === undefined) return null;
+  try {
+    const parsed: unknown = JSON.parse(String(value));
+    if (!Array.isArray(parsed) || !parsed.every((v) => typeof v === "string")) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+const sameStringSet = (a: string[], b: string[]): boolean =>
+  [...new Set(a)].sort().join("\n") === [...new Set(b)].sort().join("\n");
+
 /**
  * Repository for users, API keys operations
  */
@@ -173,6 +188,18 @@ export class UsersRepository extends BaseRepository {
     return await this.knex("users").where({ id }).update(updateData);
   }
 
+  /**
+   * Serialize every writer of a user's role assignments (admin UI and OIDC sync)
+   * on the user's row: `SELECT … FOR UPDATE` on PostgreSQL/MySQL. On SQLite it
+   * compiles to a plain SELECT, which is enough — knex runs SQLite on a single
+   * connection, so transactions cannot interleave there in the first place.
+   * Every role writer takes this lock first, before touching users_roles, so the
+   * lock order is uniform and a stale read can never overwrite a newer write.
+   */
+  private async lockUserRow(trx: Knex.Transaction, id: number): Promise<void> {
+    await trx("users").select("id").where({ id }).forUpdate();
+  }
+
   /** Delete-all-then-reinsert inside the caller's transaction. */
   private async replaceUserRoles(trx: Knex.Transaction, id: number, roleIds: string[]): Promise<void> {
     await trx("users_roles").where("users_id", id).delete();
@@ -190,31 +217,50 @@ export class UsersRepository extends BaseRepository {
   /** Replace the user's role set. Atomic: a failing insert never leaves the user without roles. */
   async updateUserRoles(id: number, roleIds: string[]): Promise<void> {
     await this.knex.transaction(async (trx) => {
+      await this.lockUserRow(trx, id);
       await this.replaceUserRoles(trx, id, roleIds);
       await trx("users").where({ id }).update({ updated_at: trx.fn.now() });
     });
   }
 
   /**
-   * Apply the result of an OIDC role sync atomically and as a delta: remove only
-   * `remove` (roles an earlier sync granted and this one no longer grants), add
-   * only `add` (newly granted roles; already-present rows are ignored), and
-   * record `oidc_role_ids` — the roles this sync granted — so the next sync
-   * knows what it may revoke (see getUserOidcRoleIds). Never rewriting the whole
-   * set means a role an admin grants or revokes by hand concurrently survives.
+   * Apply an OIDC role sync. `oidc_role_ids` is what the provider grants now
+   * (mapped roles, or the default role); `protect` are roles that must never be
+   * removed (the owner's admin). Inside one transaction, after locking the
+   * user's row, the method reads the current assignments and the roles the
+   * previous sync granted (`oidc_role_ids` provenance), then
+   *  - removes only roles the previous sync granted that are no longer granted,
+   *  - adds only granted roles that are not assigned yet,
+   *  - records the new grant set.
+   * Roles the sync did not grant are never touched, and because the reads happen
+   * under the same lock the admin mutators take, a manual change made while a
+   * login is in flight is honoured rather than clobbered. Returns the delta it
+   * applied; a no-op writes nothing.
    */
   async applyOidcRoleSync(
     id: number,
-    data: { add: string[]; remove: string[]; oidc_role_ids: string[] },
-  ): Promise<void> {
-    await this.knex.transaction(async (trx) => {
-      if (data.remove.length > 0) {
-        await trx("users_roles").where("users_id", id).whereIn("roles_id", data.remove).delete();
+    data: { oidc_role_ids: string[]; protect: string[] },
+  ): Promise<{ add: string[]; remove: string[] }> {
+    return await this.knex.transaction(async (trx) => {
+      await this.lockUserRow(trx, id);
+      const assignedRows = await trx("users_roles").where("users_id", id).distinct("roles_id as id").select();
+      const assigned = new Set<string>(assignedRows.map((r: { id: string }) => r.id));
+      const userRow = await trx("users").select("oidc_role_ids").where({ id }).first();
+      const previouslyGranted = parseOidcRoleIds(userRow?.oidc_role_ids) ?? [];
+
+      const wanted = new Set<string>([...data.oidc_role_ids, ...data.protect]);
+      const remove = previouslyGranted.filter((rid) => !wanted.has(rid) && assigned.has(rid));
+      const add = [...wanted].filter((rid) => !assigned.has(rid));
+      const grantsChanged = !sameStringSet(previouslyGranted, data.oidc_role_ids);
+      if (remove.length === 0 && add.length === 0 && !grantsChanged) return { add, remove };
+
+      if (remove.length > 0) {
+        await trx("users_roles").where("users_id", id).whereIn("roles_id", remove).delete();
       }
-      if (data.add.length > 0) {
+      if (add.length > 0) {
         await trx("users_roles")
           .insert(
-            data.add.map((roleId) => ({
+            add.map((roleId) => ({
               users_id: id,
               roles_id: roleId,
               created_at: trx.fn.now(),
@@ -227,6 +273,7 @@ export class UsersRepository extends BaseRepository {
       await trx("users")
         .where({ id })
         .update({ oidc_role_ids: JSON.stringify(data.oidc_role_ids), updated_at: trx.fn.now() });
+      return { add, remove };
     });
   }
 
@@ -237,14 +284,7 @@ export class UsersRepository extends BaseRepository {
    */
   async getUserOidcRoleIds(userId: number): Promise<string[] | null> {
     const row = await this.knex("users").select("oidc_role_ids").where({ id: userId }).first();
-    if (!row || row.oidc_role_ids === null || row.oidc_role_ids === undefined) return null;
-    try {
-      const parsed: unknown = JSON.parse(String(row.oidc_role_ids));
-      if (!Array.isArray(parsed) || !parsed.every((v) => typeof v === "string")) return null;
-      return parsed;
-    } catch {
-      return null;
-    }
+    return row ? parseOidcRoleIds(row.oidc_role_ids) : null;
   }
 
   async updateUserIsActive(id: number, is_active: number): Promise<number> {
@@ -401,16 +441,22 @@ export class UsersRepository extends BaseRepository {
   }
 
   async addUserToRole(roleId: string, userId: number): Promise<void> {
-    await this.knex("users_roles").insert({
-      roles_id: roleId,
-      users_id: userId,
-      created_at: this.knex.fn.now(),
-      updated_at: this.knex.fn.now(),
+    await this.knex.transaction(async (trx) => {
+      await this.lockUserRow(trx, userId);
+      await trx("users_roles").insert({
+        roles_id: roleId,
+        users_id: userId,
+        created_at: trx.fn.now(),
+        updated_at: trx.fn.now(),
+      });
     });
   }
 
   async removeUserFromRole(roleId: string, userId: number): Promise<number> {
-    return await this.knex("users_roles").where({ roles_id: roleId, users_id: userId }).delete();
+    return await this.knex.transaction(async (trx): Promise<number> => {
+      await this.lockUserRow(trx, userId);
+      return await trx("users_roles").where({ roles_id: roleId, users_id: userId }).delete();
+    });
   }
 
   async getUserRoleIds(userId: number): Promise<string[]> {

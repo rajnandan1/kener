@@ -2,6 +2,34 @@ import type { Knex } from "knex";
 
 const OIDC_IDENTITY_UNIQUE = "users_oidc_issuer_sub_unique";
 
+/**
+ * The OIDC issuer this instance is configured for, in normalized URL form — from
+ * KENER_OIDC_ISSUER_URL if set (env overrides the saved value), else from the
+ * oidcSettings saved in site_data. `null` when no issuer was ever configured
+ * (then there cannot be OIDC accounts to backfill either).
+ */
+async function configuredOidcIssuer(knex: Knex): Promise<string | null> {
+  let raw = (process.env.KENER_OIDC_ISSUER_URL ?? "").trim();
+  if (!raw && (await knex.schema.hasTable("site_data"))) {
+    const row = await knex("site_data").where({ key: "oidcSettings" }).first();
+    if (row?.value) {
+      try {
+        const parsed: unknown = typeof row.value === "string" ? JSON.parse(row.value) : row.value;
+        const issuerUrl = (parsed as { issuer_url?: unknown } | null)?.issuer_url;
+        if (typeof issuerUrl === "string") raw = issuerUrl.trim();
+      } catch {
+        // unreadable settings: nothing to backfill from
+      }
+    }
+  }
+  if (!raw) return null;
+  try {
+    return new URL(raw).href;
+  } catch {
+    return null;
+  }
+}
+
 export async function up(knex: Knex): Promise<void> {
   // 1. Add auth_provider and the OIDC identity columns to users table
   const hasAuthProvider = await knex.schema.hasColumn("users", "auth_provider");
@@ -30,6 +58,14 @@ export async function up(knex: Knex): Promise<void> {
       table.dropUnique(["oidc_sub"]);
       table.unique(["oidc_issuer", "oidc_sub"], { indexName: OIDC_IDENTITY_UNIQUE });
     });
+    // Backfill the issuer for existing OIDC accounts so they stay reachable by (issuer, sub).
+    // Discovery only succeeds when the provider's issuer identifier equals the configured
+    // issuer URL in normalized form (`new URL(x).href`), and the application stores exactly
+    // that normalized form — so the configured issuer is the right value to backfill.
+    const issuer = await configuredOidcIssuer(knex);
+    if (issuer) {
+      await knex("users").whereNotNull("oidc_sub").whereNull("oidc_issuer").update({ oidc_issuer: issuer });
+    }
   }
 
   // 2. Role provenance: the JSON list of role ids the last OIDC sync granted to

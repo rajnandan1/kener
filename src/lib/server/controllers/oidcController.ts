@@ -383,8 +383,10 @@ export async function HandleCallback(
 
   const normalizedEmail = email.toLowerCase().trim();
   return {
-    // The discovered issuer identifier; openid-client has validated the ID token's `iss` against it.
-    issuer: config.serverMetadata().issuer,
+    // The discovered issuer identifier (openid-client has validated the ID token's `iss` against
+    // it), in normalized URL form — the same form the migration backfills from the configured
+    // issuer URL, and the form discovery compares against (`new URL(issuer).href`).
+    issuer: new URL(config.serverMetadata().issuer).href,
     sub,
     email: normalizedEmail,
     name: name.trim() || normalizedEmail,
@@ -502,25 +504,18 @@ async function provisionOidcUser(settings: OidcSettings, identity: OidcIdentity)
   return created;
 }
 
-const sameSet = (a: string[], b: string[]): boolean => [...a].sort().join("\n") === [...b].sort().join("\n");
-
 /**
- * Recompute the user's OIDC-granted roles from their current groups (mapped
- * roles, else the active default role) and apply the difference to the roles
- * the *previous* sync granted.
- *
- * Provenance, not the current mapping table, decides what is revocable: the
- * repository remembers the role ids the last sync granted (`oidc_role_ids`),
- * and only those may be removed. So a deleted or changed mapping revokes the
- * role it used to grant, a role an admin assigned by hand stays even if some
- * mapping names it, and switching between database and env mappings never
- * leaves stale grants behind. A user with no provenance record (never synced)
- * is treated as holding only manual roles.
- *
- * The write is a delta (`remove` what was granted and no longer is, `add` what
- * is granted and not yet assigned) rather than a rewrite of the whole set, so
- * a role an admin grants or revokes by hand while a login is in flight is not
- * clobbered by a stale snapshot. The owner account never loses `admin`.
+ * Recompute what the provider grants the user — the ACTIVE roles their current
+ * groups map to, else the active default role — and hand that set to the
+ * repository, which applies the difference to the roles the *previous* sync
+ * granted (`users.oidc_role_ids`, the provenance record) inside one locked
+ * transaction: it removes only previously granted roles that are no longer
+ * granted, adds only newly granted ones, and never touches roles an admin
+ * assigned by hand. So a deleted or changed mapping revokes the role it used to
+ * grant, a manual role stays even if some mapping names it, switching between
+ * database and env mappings leaves no stale grants, and a manual change made
+ * while a login is in flight is not clobbered by a stale snapshot. The owner
+ * account never loses `admin` (passed as `protect`).
  */
 export async function SyncOidcUserRoles(
   user: UserRecordPublic,
@@ -528,9 +523,6 @@ export async function SyncOidcUserRoles(
   settings: OidcSettings,
 ): Promise<void> {
   const view = await GetEffectiveOidcGroupRoleMappings();
-  const assigned = new Set(await db.getUserAssignedRoleIds(user.id)); // incl. inactive roles
-  const previouslyGranted = (await db.getUserOidcRoleIds(user.id)) ?? [];
-
   let oidcRoles = await resolveOidcRoleIds(view, oidcGroups); // ACTIVE-only
   if (oidcRoles.length === 0 && settings.default_role_id) {
     const defaultRole = await db.getRoleById(settings.default_role_id);
@@ -538,16 +530,10 @@ export async function SyncOidcUserRoles(
       oidcRoles = [settings.default_role_id];
     }
   }
-
-  const wanted = new Set(oidcRoles);
-  if (user.is_owner === "YES") wanted.add("admin");
-
-  const remove = previouslyGranted.filter((rid) => !wanted.has(rid) && assigned.has(rid));
-  const add = [...wanted].filter((rid) => !assigned.has(rid));
-  const grantsChanged = !sameSet(previouslyGranted, oidcRoles);
-  if (remove.length > 0 || add.length > 0 || grantsChanged) {
-    await db.applyOidcRoleSync(user.id, { add, remove, oidc_role_ids: oidcRoles });
-  }
+  await db.applyOidcRoleSync(user.id, {
+    oidc_role_ids: oidcRoles,
+    protect: user.is_owner === "YES" ? ["admin"] : [],
+  });
 }
 
 async function syncOidcProfile(user: UserRecordPublic, identity: OidcIdentity): Promise<void> {

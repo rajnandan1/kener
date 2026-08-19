@@ -10,8 +10,6 @@ const dbMock = vi.hoisted(() => ({
   getOidcRoleIdsForGroups: vi.fn(),
   getAllOidcGroupRoleMappings: vi.fn(),
   getAllRoles: vi.fn(),
-  getUserAssignedRoleIds: vi.fn(),
-  getUserOidcRoleIds: vi.fn(),
   updateUserRoles: vi.fn(),
   applyOidcRoleSync: vi.fn(),
   updateUserProfile: vi.fn(),
@@ -225,74 +223,38 @@ describe("role sync under KENER_OIDC_GROUP_ROLE_MAP", () => {
     dbMock.getOidcRoleIdsForGroups.mockRejectedValue(new Error("DB mappings must not be consulted"));
     dbMock.getUserByOidcIdentity.mockResolvedValue(publicUser());
     dbMock.getRoleById.mockResolvedValue({ id: "member", status: "ACTIVE" });
-    dbMock.getUserOidcRoleIds.mockResolvedValue([]);
+    dbMock.applyOidcRoleSync.mockResolvedValue({ add: [], remove: [] });
   });
 
-  /** The single write the sync makes: { role_ids?: string[]; oidc_role_ids: string[] }. */
-  const change = () => expectSingleRoleSyncWrite(dbMock);
+  const granted = () => expectSingleRoleSyncWrite(dbMock);
 
   it("grants the role mapped by the env map without consulting the database mappings", async () => {
-    dbMock.getUserAssignedRoleIds.mockResolvedValue([]);
     await oidc.FindOrCreateOidcUser(baseSettings, identity);
-    expect(change()).toEqual({ add: ["editor"], remove: [], oidc_role_ids: ["editor"] });
+    expect(granted()).toEqual({ oidc_role_ids: ["editor"], protect: [] });
     expect(dbMock.getAllOidcGroupRoleMappings).not.toHaveBeenCalled();
     expect(dbMock.getOidcRoleIdsForGroups).not.toHaveBeenCalled();
   });
 
-  it("revokes an env-granted role when the user leaves the group (falls back to the default role)", async () => {
-    dbMock.getUserAssignedRoleIds.mockResolvedValue(["editor"]);
-    dbMock.getUserOidcRoleIds.mockResolvedValue(["editor"]);
+  it("grants the default role when the user is in no mapped group (the env grant is revoked by the repository)", async () => {
     await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, groups: [] });
-    expect(change()).toEqual({ add: ["member"], remove: ["editor"], oidc_role_ids: ["member"] });
+    expect(granted()).toEqual({ oidc_role_ids: ["member"], protect: [] });
   });
 
-  it("preserves manual roles and revokes env-granted roles the user no longer qualifies for", async () => {
-    // "custom" was assigned by hand → kept. "admin" was granted by the last sync (ops) and the
-    // user is no longer in ops → revoked.
-    dbMock.getUserAssignedRoleIds.mockResolvedValue(["custom", "admin"]);
-    dbMock.getUserOidcRoleIds.mockResolvedValue(["admin"]);
-    await oidc.FindOrCreateOidcUser(baseSettings, identity);
-    expect(change()).toEqual({ add: ["editor"], remove: ["admin"], oidc_role_ids: ["editor"] });
+  it("grants every role the user's groups map to, deduplicated, ignoring unknown groups", async () => {
+    vi.stubEnv(ENV, JSON.stringify({ devs: "editor", ops: "admin", qa: "editor" }));
+    await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, groups: ["devs", "ops", "qa", "unknown"] });
+    expect(granted()).toEqual({ oidc_role_ids: ["admin", "editor"], protect: [] });
   });
 
-  it("revokes a previously env-granted role that has since been deactivated (dropped from the map)", async () => {
-    // olds→retired is dropped from the effective mappings (inactive) and therefore not re-granted;
-    // the sync granted it earlier, so it is revoked rather than retained as manual.
-    dbMock.getUserAssignedRoleIds.mockResolvedValue(["retired"]);
-    dbMock.getUserOidcRoleIds.mockResolvedValue(["retired"]);
+  it("never grants an inactive role from the env map (falls back to the default role)", async () => {
     await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, groups: ["olds"] });
-    expect(change()).toEqual({ add: ["member"], remove: ["retired"], oidc_role_ids: ["member"] });
+    expect(granted()).toEqual({ oidc_role_ids: ["member"], protect: [] });
   });
 
-  it("revokes roles that the database mappings granted once the env map takes over", async () => {
-    // Before the env map: DB row devs→admin granted admin. Now devs→editor: admin is revoked,
-    // editor granted — no stale role sticks to the user.
-    dbMock.getUserAssignedRoleIds.mockResolvedValue(["admin"]);
-    dbMock.getUserOidcRoleIds.mockResolvedValue(["admin"]);
-    await oidc.FindOrCreateOidcUser(baseSettings, identity);
-    expect(change()).toEqual({ add: ["editor"], remove: ["admin"], oidc_role_ids: ["editor"] });
-  });
-
-  it("treats a manually granted role as manual even when a database row or the env map names it", async () => {
-    vi.stubEnv(ENV, JSON.stringify({ devs: "editor", ops: "admin" }));
-    dbMock.getUserAssignedRoleIds.mockResolvedValue(["admin"]); // granted by hand, user not in ops
-    await oidc.FindOrCreateOidcUser(baseSettings, identity);
-    expect(change()).toEqual({ add: ["editor"], remove: [], oidc_role_ids: ["editor"] });
-  });
-
-  it("never grants an inactive role from the env map", async () => {
-    dbMock.getUserAssignedRoleIds.mockResolvedValue(["member"]);
-    dbMock.getUserOidcRoleIds.mockResolvedValue(["member"]);
-    await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, groups: ["olds"] });
-    expect(dbMock.applyOidcRoleSync).not.toHaveBeenCalled(); // default role already held, retired never added
-  });
-
-  it("never strips admin from the owner account", async () => {
+  it("protects admin for the owner account", async () => {
     dbMock.getUserByOidcIdentity.mockResolvedValue(publicUser({ is_owner: "YES", role_ids: ["admin"] }));
-    dbMock.getUserAssignedRoleIds.mockResolvedValue(["admin"]);
-    dbMock.getUserOidcRoleIds.mockResolvedValue(["admin"]);
     await oidc.FindOrCreateOidcUser(baseSettings, identity);
-    expect(change()).toEqual({ add: ["editor"], remove: [], oidc_role_ids: ["editor"] }); // admin stays
+    expect(granted()).toEqual({ oidc_role_ids: ["editor"], protect: ["admin"] });
   });
 
   it("provisions a new user with the env-mapped roles and records them as OIDC-granted", async () => {
