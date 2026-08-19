@@ -1,3 +1,4 @@
+import type { Knex } from "knex";
 import { BaseRepository, type CountResult } from "./base.js";
 import type {
   UserRecordInsert,
@@ -97,6 +98,7 @@ export class UsersRepository extends BaseRepository {
       auth_provider: data.auth_provider || GC.AUTH_PROVIDER_LOCAL,
       oidc_issuer: data.oidc_issuer ?? null,
       oidc_sub: data.oidc_sub ?? null,
+      oidc_role_ids: data.oidc_role_ids ? JSON.stringify(data.oidc_role_ids) : null,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     };
@@ -171,21 +173,57 @@ export class UsersRepository extends BaseRepository {
     return await this.knex("users").where({ id }).update(updateData);
   }
 
+  /** Delete-all-then-reinsert inside the caller's transaction. */
+  private async replaceUserRoles(trx: Knex.Transaction, id: number, roleIds: string[]): Promise<void> {
+    await trx("users_roles").where("users_id", id).delete();
+    if (roleIds.length > 0) {
+      const inserts = roleIds.map((roleId) => ({
+        users_id: id,
+        roles_id: roleId,
+        created_at: trx.fn.now(),
+        updated_at: trx.fn.now(),
+      }));
+      await trx("users_roles").insert(inserts);
+    }
+  }
+
   /** Replace the user's role set. Atomic: a failing insert never leaves the user without roles. */
   async updateUserRoles(id: number, roleIds: string[]): Promise<void> {
     await this.knex.transaction(async (trx) => {
-      await trx("users_roles").where("users_id", id).delete();
-      if (roleIds.length > 0) {
-        const inserts = roleIds.map((roleId) => ({
-          users_id: id,
-          roles_id: roleId,
-          created_at: trx.fn.now(),
-          updated_at: trx.fn.now(),
-        }));
-        await trx("users_roles").insert(inserts);
-      }
+      await this.replaceUserRoles(trx, id, roleIds);
       await trx("users").where({ id }).update({ updated_at: trx.fn.now() });
     });
+  }
+
+  /**
+   * Apply the result of an OIDC role sync atomically: replace the role set when
+   * `role_ids` is given, and always record `oidc_role_ids` — the roles this sync
+   * granted — so the next sync knows what it may revoke (see getUserOidcRoleIds).
+   */
+  async updateUserOidcRoles(id: number, data: { role_ids?: string[]; oidc_role_ids: string[] }): Promise<void> {
+    await this.knex.transaction(async (trx) => {
+      if (data.role_ids) await this.replaceUserRoles(trx, id, data.role_ids);
+      await trx("users")
+        .where({ id })
+        .update({ oidc_role_ids: JSON.stringify(data.oidc_role_ids), updated_at: trx.fn.now() });
+    });
+  }
+
+  /**
+   * Role ids the last OIDC sync granted to the user (provenance). `null` when the
+   * user was never synced (or the stored value is unreadable) — callers then treat
+   * every current assignment as manual.
+   */
+  async getUserOidcRoleIds(userId: number): Promise<string[] | null> {
+    const row = await this.knex("users").select("oidc_role_ids").where({ id: userId }).first();
+    if (!row || row.oidc_role_ids === null || row.oidc_role_ids === undefined) return null;
+    try {
+      const parsed: unknown = JSON.parse(String(row.oidc_role_ids));
+      if (!Array.isArray(parsed) || !parsed.every((v) => typeof v === "string")) return null;
+      return parsed;
+    } catch {
+      return null;
+    }
   }
 
   async updateUserIsActive(id: number, is_active: number): Promise<number> {

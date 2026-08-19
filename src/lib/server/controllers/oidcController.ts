@@ -430,23 +430,9 @@ export async function GetEffectiveOidcGroupRoleMappings(): Promise<OidcGroupRole
 }
 
 /**
- * The OIDC-managed role universe: every role id the effective mappings name.
- * A role named by the env map but dropped because it is inactive or missing
- * still counts — exactly as a database row pointing at an inactive role does —
- * so it is never re-granted and an existing assignment is revoked, never
- * silently retained as "manual".
- */
-function managedRoleIdsOf(view: OidcGroupRoleMappingsView): Set<string> {
-  const ids = new Set<string>();
-  for (const m of view.mappings) ids.add(m.role_id);
-  for (const m of view.invalid) if (m.role_id) ids.add(m.role_id);
-  return ids;
-}
-
-/**
- * ACTIVE role ids the given groups map to, from the same universe as
- * `managedRoleIdsOf`. Exact, case-sensitive group match on both paths (the DB
- * join filters ACTIVE itself; env mappings were filtered when loaded).
+ * ACTIVE role ids the given groups map to. Exact, case-sensitive group match on
+ * both paths (the DB join filters ACTIVE itself; env mappings were filtered
+ * when loaded).
  */
 async function resolveOidcRoleIds(view: OidcGroupRoleMappingsView, groups: string[]): Promise<string[]> {
   if (view.source === "db") return await db.getOidcRoleIdsForGroups(groups);
@@ -500,6 +486,7 @@ async function provisionOidcUser(settings: OidcSettings, identity: OidcIdentity)
       auth_provider: GC.AUTH_PROVIDER_OIDC,
       oidc_issuer: identity.issuer,
       oidc_sub: identity.sub,
+      oidc_role_ids: roleIds, // provenance: the next sync may revoke exactly these
       is_active: 1,
       is_verified: 1,
     });
@@ -515,21 +502,22 @@ async function provisionOidcUser(settings: OidcSettings, identity: OidcIdentity)
   return created;
 }
 
+const sameSet = (a: string[], b: string[]): boolean => [...a].sort().join("\n") === [...b].sort().join("\n");
+
 /**
- * Roles that appear in any effective mapping (or are the active default role)
- * are OIDC-managed and recomputed from the current groups; every other assigned
- * role — including assignments to a role that has since been deactivated —
- * is manual and preserved. Both the managed universe and the per-user lookup
- * come from `GetEffectiveOidcGroupRoleMappings()` (env map or DB table, never
- * a mix): if a role granted by the env map were missing from the managed set
- * it would be classified as manual on the next login and retained forever.
- * `updateUserRoles` has delete-all-then-reinsert semantics, so both the
- * "what's manual" computation and the "did anything change" comparison must be
- * done against the *same* universe of assigned role ids (including inactive
- * ones); comparing an ACTIVE-only read against a set that may include an
- * inactive id would either silently drop the manual assignment on the first
- * write, or never converge and rewrite on every login. The owner account never
- * loses `admin`.
+ * Recompute the user's OIDC-granted roles from their current groups (mapped
+ * roles, else the active default role) and apply them on top of the roles that
+ * were *not* granted by the previous sync.
+ *
+ * Provenance, not the current mapping table, decides what is revocable: the
+ * repository remembers the role ids the last sync granted (`oidc_role_ids`), and
+ * exactly those are replaced. So a deleted or changed mapping revokes the role
+ * it used to grant, a role an admin assigned by hand stays even if some mapping
+ * names it, and switching between database and env mappings never leaves stale
+ * grants behind. A user with no provenance record (never synced) is treated as
+ * holding only manual roles. The comparison runs against *all* assigned role
+ * ids (including inactive ones) because the write is delete-all-then-reinsert.
+ * The owner account never loses `admin`.
  */
 export async function SyncOidcUserRoles(
   user: UserRecordPublic,
@@ -537,11 +525,10 @@ export async function SyncOidcUserRoles(
   settings: OidcSettings,
 ): Promise<void> {
   const view = await GetEffectiveOidcGroupRoleMappings();
-  const managedRoleIds = managedRoleIdsOf(view);
-  if (settings.default_role_id) managedRoleIds.add(settings.default_role_id);
-
   const assignedRoleIds = await db.getUserAssignedRoleIds(user.id);
-  const manualRoles = assignedRoleIds.filter((rid) => !managedRoleIds.has(rid));
+  const previouslyGranted = (await db.getUserOidcRoleIds(user.id)) ?? [];
+  const previouslyGrantedSet = new Set(previouslyGranted);
+  const manualRoles = assignedRoleIds.filter((rid) => !previouslyGrantedSet.has(rid));
 
   let oidcRoles = await resolveOidcRoleIds(view, oidcGroups); // ACTIVE-only
   if (oidcRoles.length === 0 && settings.default_role_id) {
@@ -556,10 +543,13 @@ export async function SyncOidcUserRoles(
     finalRoleIds.push("admin");
   }
 
-  const assignedSorted = [...assignedRoleIds].sort().join(",");
-  const finalSorted = [...finalRoleIds].sort().join(",");
-  if (assignedSorted !== finalSorted) {
-    await db.updateUserRoles(user.id, finalRoleIds);
+  const rolesChanged = !sameSet(assignedRoleIds, finalRoleIds);
+  const grantsChanged = !sameSet(previouslyGranted, oidcRoles);
+  if (rolesChanged || grantsChanged) {
+    await db.updateUserOidcRoles(user.id, {
+      ...(rolesChanged ? { role_ids: finalRoleIds } : {}),
+      oidc_role_ids: oidcRoles,
+    });
   }
 }
 

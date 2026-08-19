@@ -63,7 +63,7 @@ Either fill in **Manage → OpenID Connect** and click **Test Connection**, then
 
 In **Group → Role Mapping**, map provider group names to Kener roles, e.g. `platform-admins → admin`, `viewers → member`. Each group maps to exactly one role; a user in several mapped groups gets all of those roles. Group names are matched exactly and case-sensitively against the values of the groups claim.
 
-On every login Kener recomputes the user's _managed_ roles — every role that appears in a mapping, plus the default role — from their current groups. Roles that are not part of any mapping (assigned manually) are preserved. If no group matches, the **Default Role** is assigned. The owner account always keeps `admin`.
+On every login Kener recomputes the roles the provider grants — the mapped roles for the user's current groups, or the **Default Role** if no group matches — and replaces exactly what the _previous_ login granted with them. Kener remembers which roles it granted via OIDC, so a role you assign by hand under **Users** is preserved even if a mapping also names it, and a role that came from a mapping is revoked as soon as the user leaves the group, the mapping is deleted, or it is changed to a different role. The owner account always keeps `admin`.
 
 **No mapped role → refuse.** There is no built-in fallback role. If no group matches and no active default role is configured (the UI option _No default role_, `KENER_OIDC_DEFAULT_ROLE_ID=none`, or a default role that has been deactivated), a first sign-in is refused as _not provisioned_ and an existing user who is left without any active role is denied as _no roles_ — the empty role set is still written, so the account shows up without roles under **Users**. Mapped roles alone are always sufficient.
 
@@ -86,7 +86,7 @@ KENER_OIDC_GROUP_ROLE_MAP='{"3connect/infra":"admin","3connect/devs":"editor"}'
     | Entry whose role id does not exist or is not active | That entry is dropped, the rest apply                    |
     | Entry with an empty group or role id                | That entry is dropped, the rest apply                    |
 
-- **Switching an existing instance from database mappings to the environment:** roles that users received from database mappings which are absent from the env map are no longer managed, so they stick to those users as if assigned manually. Either carry every mapping over, or remove the stale roles from the affected users once.
+- **Switching an existing instance from database mappings to the environment** needs no clean-up: roles that users received from database mappings are revoked on their next login unless the env map grants them too, because Kener tracks which roles it granted rather than which roles the current mappings mention.
 
 ## Local login, lockout and break-glass {#lockout-recovery}
 

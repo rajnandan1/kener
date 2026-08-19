@@ -32,16 +32,18 @@ afterEach(async () => {
 });
 
 describe("migration 20260818120000_add_oidc_support", () => {
-  it("adds users.auth_provider (default local), users.oidc_issuer + oidc_sub and the mapping table", async () => {
+  it("adds users.auth_provider (default local), users.oidc_issuer + oidc_sub + oidc_role_ids and the mapping table", async () => {
     expect(await knex.schema.hasColumn("users", "auth_provider")).toBe(true);
     expect(await knex.schema.hasColumn("users", "oidc_issuer")).toBe(true);
     expect(await knex.schema.hasColumn("users", "oidc_sub")).toBe(true);
+    expect(await knex.schema.hasColumn("users", "oidc_role_ids")).toBe(true);
     expect(await knex.schema.hasTable("oidc_group_role_mappings")).toBe(true);
     const [id] = await repo.insertUser({ email: "a@example.com", name: "A", password_hash: "x", role_ids: ["member"] });
     const row = await knex("users").where({ id }).first();
     expect(row.auth_provider).toBe("local");
     expect(row.oidc_issuer).toBeNull();
     expect(row.oidc_sub).toBeNull();
+    expect(row.oidc_role_ids).toBeNull();
   });
 
   it("is reversible (down → up)", async () => {
@@ -52,6 +54,7 @@ describe("migration 20260818120000_add_oidc_support", () => {
     await knex.migrate.up({ migrationSource });
     expect(await knex.schema.hasColumn("users", "oidc_issuer")).toBe(true);
     expect(await knex.schema.hasColumn("users", "oidc_sub")).toBe(true);
+    expect(await knex.schema.hasColumn("users", "oidc_role_ids")).toBe(true);
   });
 
   it("upgrades a database from an earlier build that keyed OIDC accounts by subject alone", async () => {
@@ -63,6 +66,7 @@ describe("migration 20260818120000_add_oidc_support", () => {
     });
     await knex.migrate.up({ migrationSource });
     expect(await knex.schema.hasColumn("users", "oidc_issuer")).toBe(true);
+    expect(await knex.schema.hasColumn("users", "oidc_role_ids")).toBe(true);
     // The subject-only uniqueness is gone: the same sub may now exist under two issuers.
     const oidcUser = (issuer: string, email: string) =>
       repo.insertUser({
@@ -149,6 +153,63 @@ describe("updateUserRoles", () => {
     expect(await repo.getUserAssignedRoleIds(id)).toEqual(["member"]);
     await repo.updateUserRoles(id, ["editor", "admin"]);
     expect([...(await repo.getUserAssignedRoleIds(id))].sort()).toEqual(["admin", "editor"]);
+  });
+});
+
+describe("OIDC role provenance (users.oidc_role_ids)", () => {
+  const oidcInsert = (email: string, role_ids: string[], oidc_role_ids?: string[]) =>
+    repo.insertUser({
+      email,
+      name: "P",
+      password_hash: "",
+      role_ids,
+      oidc_role_ids,
+      auth_provider: "oidc",
+      oidc_issuer: "https://a.example.com",
+      oidc_sub: email,
+    });
+
+  it("getUserOidcRoleIds is null until a sync recorded something; insertUser stores the granted set", async () => {
+    const [local] = await repo.insertUser({
+      email: "l@example.com",
+      name: "L",
+      password_hash: "h",
+      role_ids: ["member"],
+    });
+    expect(await repo.getUserOidcRoleIds(local)).toBeNull();
+    const [u] = await oidcInsert("p1@example.com", ["editor"], ["editor"]);
+    expect(await repo.getUserOidcRoleIds(u)).toEqual(["editor"]);
+    const [none] = await oidcInsert("p2@example.com", ["member"], []);
+    expect(await repo.getUserOidcRoleIds(none)).toEqual([]);
+  });
+
+  it("getUserOidcRoleIds treats an unreadable value as unknown (null)", async () => {
+    const [u] = await oidcInsert("p3@example.com", ["member"], ["member"]);
+    await knex("users").where({ id: u }).update({ oidc_role_ids: "{not json" });
+    expect(await repo.getUserOidcRoleIds(u)).toBeNull();
+    await knex("users")
+      .where({ id: u })
+      .update({ oidc_role_ids: JSON.stringify({ nope: 1 }) });
+    expect(await repo.getUserOidcRoleIds(u)).toBeNull();
+  });
+
+  it("updateUserOidcRoles replaces the roles and records the granted set atomically", async () => {
+    const [u] = await oidcInsert("p4@example.com", ["member"], ["member"]);
+    await repo.updateUserOidcRoles(u, { role_ids: ["editor", "admin"], oidc_role_ids: ["editor"] });
+    expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["admin", "editor"]);
+    expect(await repo.getUserOidcRoleIds(u)).toEqual(["editor"]);
+
+    // Provenance-only update leaves the assignments alone.
+    await repo.updateUserOidcRoles(u, { oidc_role_ids: [] });
+    expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["admin", "editor"]);
+    expect(await repo.getUserOidcRoleIds(u)).toEqual([]);
+
+    // A failing role insert rolls back both the role change and the provenance stamp.
+    await expect(
+      repo.updateUserOidcRoles(u, { role_ids: ["member", "member"], oidc_role_ids: ["member"] }),
+    ).rejects.toThrow();
+    expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["admin", "editor"]);
+    expect(await repo.getUserOidcRoleIds(u)).toEqual([]);
   });
 });
 

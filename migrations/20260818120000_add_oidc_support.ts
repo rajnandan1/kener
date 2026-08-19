@@ -32,6 +32,16 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
+  // 2. Role provenance: the JSON list of role ids the last OIDC sync granted to
+  // the user. The next sync revokes exactly those (unless re-granted) and leaves
+  // every other assignment — made by hand in the admin UI — alone. NULL = never
+  // synced (all current roles count as manual).
+  if (!(await knex.schema.hasColumn("users", "oidc_role_ids"))) {
+    await knex.schema.alterTable("users", (table) => {
+      table.text("oidc_role_ids").nullable();
+    });
+  }
+
   // Note: OIDC users store an empty string as password_hash.
   // No schema change needed — the NOT NULL constraint is kept.
 
@@ -50,6 +60,12 @@ export async function up(knex: Knex): Promise<void> {
 
 export async function down(knex: Knex): Promise<void> {
   await knex.schema.dropTableIfExists("oidc_group_role_mappings");
+
+  if (await knex.schema.hasColumn("users", "oidc_role_ids")) {
+    await knex.schema.alterTable("users", (table) => {
+      table.dropColumn("oidc_role_ids");
+    });
+  }
 
   const hasOidcIssuer = await knex.schema.hasColumn("users", "oidc_issuer");
   if (hasOidcIssuer) {

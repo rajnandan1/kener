@@ -728,12 +728,13 @@
               the claim name configured above) and updates their roles accordingly.
             </p>
             <p>
-              <strong>Roles from OIDC mappings</strong> are fully synchronized: if a user is removed from an OIDC group, they
-              lose the corresponding Kener role on next login.
+              <strong>Roles from OIDC mappings</strong> are fully synchronized: Kener remembers which roles it granted, and
+              on the next login a user loses a granted role when they leave the group, when the mapping is deleted, or when
+              it is changed to a different role.
             </p>
             <p>
-              <strong>Manually assigned roles</strong> (roles that don't appear in any mapping above) are preserved and not
-              affected by OIDC sync.
+              <strong>Manually assigned roles</strong> (granted under Users rather than by a mapping) are preserved and not
+              affected by OIDC sync — even if a mapping names the same role.
             </p>
             <p>
               <strong>If no groups match</strong>, the default role (configured above) is assigned. Without a default

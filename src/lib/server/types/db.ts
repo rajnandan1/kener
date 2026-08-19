@@ -261,6 +261,8 @@ export interface UserRecordInsert {
   auth_provider?: "local" | "oidc";
   oidc_issuer?: string | null;
   oidc_sub?: string | null;
+  /** Role ids granted by OIDC at creation (provenance for later syncs); omit for local accounts. */
+  oidc_role_ids?: string[];
 }
 
 export interface UserRecordPublic {
