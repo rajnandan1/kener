@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const dbMock = vi.hoisted(() => ({
   getSiteDataByKey: vi.fn(),
   getUserByOidcIdentity: vi.fn(),
+  claimLegacyOidcIdentity: vi.fn(),
   getUserByEmail: vi.fn(),
   insertUser: vi.fn(),
   getOidcRoleIdsForGroups: vi.fn(),
@@ -344,6 +345,41 @@ describe("HandleCallback", () => {
 
 describe("FindOrCreateOidcUser — provisioning", () => {
   const identity = { issuer: ISSUER, sub: "sub-new", email: "new@example.com", name: "New", groups: ["devs"] };
+
+  beforeEach(() => {
+    dbMock.claimLegacyOidcIdentity.mockResolvedValue(0);
+  });
+
+  it("binds a legacy subject-only account to the signing-in issuer instead of provisioning a duplicate", async () => {
+    // Pre-release builds stored no issuer; the migration could not backfill it (no issuer configured at
+    // that time). On the next sign-in the row is claimed by the configured issuer and synced as usual.
+    const legacy = publicUser({ id: 42, oidc_issuer: null, oidc_sub: "sub-new", email: "new@example.com" });
+    dbMock.getUserByOidcIdentity
+      .mockResolvedValueOnce(undefined) // not bound yet
+      .mockResolvedValue({ ...legacy, oidc_issuer: ISSUER }); // after the claim (and the post-sync re-read)
+    dbMock.claimLegacyOidcIdentity.mockResolvedValue(1);
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
+    dbMock.applyOidcRoleSync.mockResolvedValue({ add: [], remove: [] });
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const user = await oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: false }, identity);
+    expect(user.id).toBe(42);
+    expect(dbMock.claimLegacyOidcIdentity).toHaveBeenCalledWith(ISSUER, "sub-new");
+    expect(dbMock.insertUser).not.toHaveBeenCalled();
+    expect(dbMock.applyOidcRoleSync).toHaveBeenCalledWith(42, expect.objectContaining({ oidc_role_ids: ["editor"] }));
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0][0])).toContain("user 42");
+    expect(String(warn.mock.calls[0][0])).not.toContain("new@example.com");
+    warn.mockRestore();
+  });
+
+  it("falls back to provisioning when there is no legacy row to claim", async () => {
+    dbMock.getUserByOidcIdentity.mockResolvedValueOnce(undefined).mockResolvedValueOnce(publicUser());
+    dbMock.getUserByEmail.mockResolvedValue(undefined);
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
+    await oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true }, identity);
+    expect(dbMock.claimLegacyOidcIdentity).toHaveBeenCalledWith(ISSUER, "sub-new");
+    expect(dbMock.insertUser).toHaveBeenCalled();
+  });
 
   it("rejects unknown users when auto_create_users is off", async () => {
     dbMock.getUserByOidcIdentity.mockResolvedValue(undefined);

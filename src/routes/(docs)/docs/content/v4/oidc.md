@@ -111,6 +111,7 @@ When **Allow local login** is off, only the SSO button is offered. Two escape ha
 - One provider per Kener installation.
 - HTTPS is required for the issuer outside local development.
 - No manual account linking — a user must sign in once while auto-create is enabled.
+- Accounts created by pre-release builds of this feature recorded no issuer; the database migration binds them to the configured issuer, and any it could not (no issuer configured at that moment) are bound to the provider on their next sign-in.
 - Kener trusts the provider's `email` claim as-is; the `email_verified` claim is not enforced — only allow identity providers whose email addresses are verified.
 
 ## Related pages {#related-pages}

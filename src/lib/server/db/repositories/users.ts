@@ -494,6 +494,27 @@ export class UsersRepository extends BaseRepository {
 
   // ============ OIDC ============
 
+  /**
+   * Bind a legacy OIDC row — created by a pre-release build that recorded no
+   * issuer, and not backfilled by the migration because no issuer was configured
+   * at that time — to the issuer now signing in with its subject. Only rows with
+   * `oidc_issuer IS NULL` are touched, each at most once; an already-taken
+   * (issuer, sub) pair yields 0 instead of a unique violation. Returns the
+   * number of rows bound (0 or 1).
+   */
+  async claimLegacyOidcIdentity(issuer: string, oidcSub: string): Promise<number> {
+    try {
+      return await this.knex("users")
+        .where({ oidc_sub: oidcSub })
+        .whereNull("oidc_issuer")
+        .update({ oidc_issuer: issuer, updated_at: this.knex.fn.now() });
+    } catch (e) {
+      const message = (e instanceof Error ? e.message : String(e)).toLowerCase();
+      if (message.includes("unique") || message.includes("duplicate")) return 0;
+      throw e;
+    }
+  }
+
   /** The account linked to this (issuer, sub) pair — a subject alone is not an identity. */
   async getUserByOidcIdentity(issuer: string, oidcSub: string): Promise<UserRecordPublic | undefined> {
     const row = await this.knex("users")

@@ -156,6 +156,69 @@ describe("migration 20260818120000_add_oidc_support", () => {
   });
 });
 
+describe("claimLegacyOidcIdentity (rows the migration could not backfill)", () => {
+  const legacyRow = (email: string, sub: string) =>
+    knex("users").insert({
+      email,
+      name: "L",
+      password_hash: "",
+      auth_provider: "oidc",
+      oidc_sub: sub,
+      created_at: knex.fn.now(),
+      updated_at: knex.fn.now(),
+    });
+
+  it("binds a subject-only row to the issuer that signs in with it — once", async () => {
+    await legacyRow("legacy@example.com", "sub-l");
+    expect(await repo.getUserByOidcIdentity("https://idp.example.com/", "sub-l")).toBeUndefined();
+    expect(await repo.claimLegacyOidcIdentity("https://idp.example.com/", "sub-l")).toBe(1);
+    expect(await repo.getUserByOidcIdentity("https://idp.example.com/", "sub-l")).toMatchObject({
+      email: "legacy@example.com",
+      oidc_issuer: "https://idp.example.com/",
+    });
+    // Bound now: a second claim (even by another issuer) touches nothing.
+    expect(await repo.claimLegacyOidcIdentity("https://idp.example.com/", "sub-l")).toBe(0);
+    expect(await repo.claimLegacyOidcIdentity("https://other.example.com/", "sub-l")).toBe(0);
+    expect((await knex("users").where({ email: "legacy@example.com" }).first()).oidc_issuer).toBe(
+      "https://idp.example.com/",
+    );
+  });
+
+  it("never touches rows that already carry an issuer, local accounts, or unknown subjects", async () => {
+    await repo.insertUser({
+      email: "bound@example.com",
+      name: "B",
+      password_hash: "",
+      role_ids: [],
+      auth_provider: "oidc",
+      oidc_issuer: "https://a.example.com/",
+      oidc_sub: "sub-b",
+    });
+    await repo.insertUser({ email: "local@example.com", name: "L", password_hash: "h", role_ids: [] });
+    expect(await repo.claimLegacyOidcIdentity("https://b.example.com/", "sub-b")).toBe(0);
+    expect(await repo.claimLegacyOidcIdentity("https://b.example.com/", "nope")).toBe(0);
+    expect((await knex("users").where({ email: "bound@example.com" }).first()).oidc_issuer).toBe(
+      "https://a.example.com/",
+    );
+    expect((await knex("users").where({ email: "local@example.com" }).first()).oidc_issuer).toBeNull();
+  });
+
+  it("reports 0 instead of throwing when the (issuer, sub) pair is already taken by another row", async () => {
+    await legacyRow("legacy2@example.com", "sub-dup");
+    await repo.insertUser({
+      email: "taken@example.com",
+      name: "T",
+      password_hash: "",
+      role_ids: [],
+      auth_provider: "oidc",
+      oidc_issuer: "https://idp.example.com/",
+      oidc_sub: "sub-dup",
+    });
+    expect(await repo.claimLegacyOidcIdentity("https://idp.example.com/", "sub-dup")).toBe(0);
+    expect((await knex("users").where({ email: "legacy2@example.com" }).first()).oidc_issuer).toBeNull();
+  });
+});
+
 describe("insertUser", () => {
   it("keeps DB defaults when optional flags are omitted (existing callers)", async () => {
     const [id] = await repo.insertUser({

@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const dbMock = vi.hoisted(() => ({
   getSiteDataByKey: vi.fn(),
   getUserByOidcIdentity: vi.fn(),
+  claimLegacyOidcIdentity: vi.fn(),
   getUserByEmail: vi.fn(),
   insertUser: vi.fn(),
   getOidcRoleIdsForGroups: vi.fn(),

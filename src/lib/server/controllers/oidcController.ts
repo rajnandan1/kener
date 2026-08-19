@@ -567,7 +567,23 @@ async function syncOidcProfile(user: UserRecordPublic, identity: OidcIdentity): 
  * resolves a new provider's subject to an account from the previous one.
  */
 export async function FindOrCreateOidcUser(settings: OidcSettings, identity: OidcIdentity): Promise<UserRecordPublic> {
-  const existing = await db.getUserByOidcIdentity(identity.issuer, identity.sub);
+  let existing = await db.getUserByOidcIdentity(identity.issuer, identity.sub);
+  if (!existing) {
+    // Pre-release builds recorded no issuer. The migration backfills it from the configured
+    // issuer when it can; a row it could not backfill (no issuer configured at that time) is
+    // bound here, to the issuer now signing in with its subject — the same trust assumption
+    // (one instance, one provider) evaluated later. Each row is bound at most once.
+    // (Two concurrent first logins: the loser claims 0 rows, goes on to provision and fails on the
+    // unique (issuer, sub) as "insert race" — the documented retry path.)
+    if ((await db.claimLegacyOidcIdentity(identity.issuer, identity.sub)) > 0) {
+      existing = await db.getUserByOidcIdentity(identity.issuer, identity.sub);
+      if (existing) {
+        console.warn(
+          `[oidc] Bound legacy OIDC account of user ${existing.id} (no issuer recorded) to ${identity.issuer}`,
+        );
+      }
+    }
+  }
   if (!existing) {
     return await provisionOidcUser(settings, identity);
   }
