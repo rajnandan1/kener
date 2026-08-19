@@ -23,23 +23,25 @@ export const publicUser = (over: Record<string, unknown> = {}) => ({
 });
 
 /**
- * Asserts that the role sync made exactly one `updateUserOidcRoles` write for
- * user 7 (and never used the plain `updateUserRoles`), and returns it with
- * sorted arrays so tests can `toEqual` against it.
+ * Asserts that the role sync made exactly one `applyOidcRoleSync` write for
+ * user 7 (and never rewrote the whole role set via `updateUserRoles`), and
+ * returns it with sorted arrays so tests can `toEqual` against it.
  */
-export function expectSingleRoleSyncWrite(dbMock: { updateUserOidcRoles: Mock; updateUserRoles: Mock }): {
-  role_ids: string[] | undefined;
+export function expectSingleRoleSyncWrite(dbMock: { applyOidcRoleSync: Mock; updateUserRoles: Mock }): {
+  add: string[];
+  remove: string[];
   oidc_role_ids: string[];
 } {
-  expect(dbMock.updateUserOidcRoles).toHaveBeenCalledTimes(1);
+  expect(dbMock.applyOidcRoleSync).toHaveBeenCalledTimes(1);
   expect(dbMock.updateUserRoles).not.toHaveBeenCalled();
-  const [userId, data] = dbMock.updateUserOidcRoles.mock.calls[0] as [
+  const [userId, data] = dbMock.applyOidcRoleSync.mock.calls[0] as [
     number,
-    { role_ids?: string[]; oidc_role_ids: string[] },
+    { add: string[]; remove: string[]; oidc_role_ids: string[] },
   ];
   expect(userId).toBe(7);
   return {
-    role_ids: data.role_ids ? [...data.role_ids].sort() : undefined,
+    add: [...data.add].sort(),
+    remove: [...data.remove].sort(),
     oidc_role_ids: [...data.oidc_role_ids].sort(),
   };
 }

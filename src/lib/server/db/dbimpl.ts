@@ -147,7 +147,7 @@ class DbImpl {
   getUserRoleIds!: UsersRepository["getUserRoleIds"];
   getUserAssignedRoleIds!: UsersRepository["getUserAssignedRoleIds"];
   getUserOidcRoleIds!: UsersRepository["getUserOidcRoleIds"];
-  updateUserOidcRoles!: UsersRepository["updateUserOidcRoles"];
+  applyOidcRoleSync!: UsersRepository["applyOidcRoleSync"];
 
   // ============ OIDC ============
   getUserByOidcIdentity!: UsersRepository["getUserByOidcIdentity"];
@@ -533,7 +533,7 @@ class DbImpl {
     this.getUserRoleIds = this.users.getUserRoleIds.bind(this.users);
     this.getUserAssignedRoleIds = this.users.getUserAssignedRoleIds.bind(this.users);
     this.getUserOidcRoleIds = this.users.getUserOidcRoleIds.bind(this.users);
-    this.updateUserOidcRoles = this.users.updateUserOidcRoles.bind(this.users);
+    this.applyOidcRoleSync = this.users.applyOidcRoleSync.bind(this.users);
 
     // OIDC
     this.getUserByOidcIdentity = this.users.getUserByOidcIdentity.bind(this.users);

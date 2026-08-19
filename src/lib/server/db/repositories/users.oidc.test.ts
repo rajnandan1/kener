@@ -202,23 +202,44 @@ describe("OIDC role provenance (users.oidc_role_ids)", () => {
     expect(await repo.getUserOidcRoleIds(u)).toBeNull();
   });
 
-  it("updateUserOidcRoles replaces the roles and records the granted set atomically", async () => {
-    const [u] = await oidcInsert("p4@example.com", ["member"], ["member"]);
-    await repo.updateUserOidcRoles(u, { role_ids: ["editor", "admin"], oidc_role_ids: ["editor"] });
+  it("applyOidcRoleSync only removes/adds the given roles — other assignments are never touched", async () => {
+    // member was granted by OIDC, editor by hand.
+    const [u] = await oidcInsert("p4@example.com", ["member", "editor"], ["member"]);
+    await repo.applyOidcRoleSync(u, { remove: ["member"], add: ["admin"], oidc_role_ids: ["admin"] });
     expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["admin", "editor"]);
-    expect(await repo.getUserOidcRoleIds(u)).toEqual(["editor"]);
+    expect(await repo.getUserOidcRoleIds(u)).toEqual(["admin"]);
+
+    // Adding an already-assigned role and removing an unassigned one are no-ops (no duplicate-key error).
+    await repo.applyOidcRoleSync(u, {
+      remove: ["member"],
+      add: ["admin", "editor"],
+      oidc_role_ids: ["admin", "editor"],
+    });
+    expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["admin", "editor"]);
+    expect(await repo.getUserOidcRoleIds(u)).toEqual(["admin", "editor"]);
 
     // Provenance-only update leaves the assignments alone.
-    await repo.updateUserOidcRoles(u, { oidc_role_ids: [] });
+    await repo.applyOidcRoleSync(u, { remove: [], add: [], oidc_role_ids: [] });
     expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["admin", "editor"]);
     expect(await repo.getUserOidcRoleIds(u)).toEqual([]);
+  });
 
-    // A failing role insert rolls back both the role change and the provenance stamp.
+  it("applyOidcRoleSync is atomic — a failing insert rolls back the removal and the provenance stamp", async () => {
+    const [u] = await oidcInsert("p5@example.com", ["member", "editor"], ["member"]);
+    // roles_id is NOT NULL, so the insert fails after the delete ran inside the same transaction.
     await expect(
-      repo.updateUserOidcRoles(u, { role_ids: ["member", "member"], oidc_role_ids: ["member"] }),
+      repo.applyOidcRoleSync(u, { remove: ["member"], add: [null as unknown as string], oidc_role_ids: ["x"] }),
     ).rejects.toThrow();
-    expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["admin", "editor"]);
-    expect(await repo.getUserOidcRoleIds(u)).toEqual([]);
+    expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["editor", "member"]);
+    expect(await repo.getUserOidcRoleIds(u)).toEqual(["member"]);
+  });
+
+  it("applyOidcRoleSync survives a concurrent manual role change (it does not rewrite the whole set)", async () => {
+    // A sync computed from a snapshot where the user had [member]; meanwhile an admin granted editor by hand.
+    const [u] = await oidcInsert("p6@example.com", ["member"], ["member"]);
+    await repo.updateUserRoles(u, ["member", "editor"]); // the admin's concurrent change
+    await repo.applyOidcRoleSync(u, { remove: ["member"], add: ["admin"], oidc_role_ids: ["admin"] });
+    expect([...(await repo.getUserAssignedRoleIds(u))].sort()).toEqual(["admin", "editor"]); // editor survived
   });
 });
 

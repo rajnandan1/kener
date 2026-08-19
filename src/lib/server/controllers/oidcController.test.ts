@@ -12,7 +12,7 @@ const dbMock = vi.hoisted(() => ({
   getUserAssignedRoleIds: vi.fn(),
   getUserOidcRoleIds: vi.fn(),
   updateUserRoles: vi.fn(),
-  updateUserOidcRoles: vi.fn(),
+  applyOidcRoleSync: vi.fn(),
   updateUserProfile: vi.fn(),
   getRoleById: vi.fn(),
   upsertOidcGroupRoleMapping: vi.fn(),
@@ -460,7 +460,7 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     dbMock.getUserOidcRoleIds.mockResolvedValue(["member"]);
   });
 
-  /** The single write the sync makes: { role_ids?: string[]; oidc_role_ids: string[] }. */
+  /** The single delta write the sync makes: { add, remove, oidc_role_ids } (sorted). */
   const change = () => expectSingleRoleSyncWrite(dbMock);
 
   it("grants the mapped roles, revokes what the previous sync granted, and preserves manual roles", async () => {
@@ -470,7 +470,7 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     await oidc.FindOrCreateOidcUser(baseSettings, identity);
     expect(dbMock.getUserByOidcIdentity).toHaveBeenCalledWith(ISSUER, "sub-7");
     expect(dbMock.getOidcRoleIdsForGroups).toHaveBeenCalledWith(["devs"]);
-    expect(change()).toEqual({ role_ids: ["custom", "editor"], oidc_role_ids: ["editor"] });
+    expect(change()).toEqual({ add: ["editor"], remove: ["admin"], oidc_role_ids: ["editor"] });
   });
 
   it("revokes a role whose mapping was deleted — provenance decides, not the current mapping table", async () => {
@@ -480,7 +480,7 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     dbMock.getUserOidcRoleIds.mockResolvedValue(["admin"]);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
     await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, groups: ["ops"] });
-    expect(change()).toEqual({ role_ids: ["member"], oidc_role_ids: ["member"] });
+    expect(change()).toEqual({ add: ["member"], remove: ["admin"], oidc_role_ids: ["member"] });
   });
 
   it("revokes the old role when a mapping is changed from one role to another", async () => {
@@ -489,7 +489,7 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     dbMock.getUserOidcRoleIds.mockResolvedValue(["admin"]);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
     await oidc.FindOrCreateOidcUser(baseSettings, identity);
-    expect(change()).toEqual({ role_ids: ["editor"], oidc_role_ids: ["editor"] });
+    expect(change()).toEqual({ add: ["editor"], remove: ["admin"], oidc_role_ids: ["editor"] });
   });
 
   it("keeps a manually granted role even though a mapping names it", async () => {
@@ -498,14 +498,14 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     dbMock.getUserOidcRoleIds.mockResolvedValue(["member"]);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
     await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, groups: [] });
-    expect(dbMock.updateUserOidcRoles).not.toHaveBeenCalled();
+    expect(dbMock.applyOidcRoleSync).not.toHaveBeenCalled();
   });
 
   it("falls back to the default role and does not write when nothing changed", async () => {
     dbMock.getUserAssignedRoleIds.mockResolvedValue(["member"]);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
     await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, groups: [] });
-    expect(dbMock.updateUserOidcRoles).not.toHaveBeenCalled();
+    expect(dbMock.applyOidcRoleSync).not.toHaveBeenCalled();
     expect(dbMock.updateUserRoles).not.toHaveBeenCalled();
   });
 
@@ -516,7 +516,7 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     dbMock.getUserOidcRoleIds.mockResolvedValue([]);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["admin"]);
     await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, groups: ["ops"] });
-    expect(change()).toEqual({ role_ids: undefined, oidc_role_ids: ["admin"] });
+    expect(change()).toEqual({ add: [], remove: [], oidc_role_ids: ["admin"] });
   });
 
   it("treats a user without a provenance record (null) as holding only manual roles", async () => {
@@ -524,7 +524,7 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     dbMock.getUserOidcRoleIds.mockResolvedValue(null);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
     await oidc.FindOrCreateOidcUser(baseSettings, identity);
-    expect(change()).toEqual({ role_ids: ["custom", "editor", "member"], oidc_role_ids: ["editor"] });
+    expect(change()).toEqual({ add: ["editor"], remove: [], oidc_role_ids: ["editor"] });
   });
 
   it("preserves a manual assignment to an inactive role", async () => {
@@ -534,7 +534,7 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     dbMock.getUserOidcRoleIds.mockResolvedValue(["admin"]);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
     await oidc.FindOrCreateOidcUser(baseSettings, identity);
-    expect(change()).toEqual({ role_ids: ["editor", "retired"], oidc_role_ids: ["editor"] });
+    expect(change()).toEqual({ add: ["editor"], remove: ["admin"], oidc_role_ids: ["editor"] });
   });
 
   it("revokes a previously granted role that has since been deactivated", async () => {
@@ -542,7 +542,7 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     dbMock.getUserOidcRoleIds.mockResolvedValue(["retired"]);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]); // the mapping's role is inactive → not granted
     await oidc.FindOrCreateOidcUser(baseSettings, identity);
-    expect(change()).toEqual({ role_ids: ["member"], oidc_role_ids: ["member"] });
+    expect(change()).toEqual({ add: ["member"], remove: ["retired"], oidc_role_ids: ["member"] });
   });
 
   it("does not fall back to an inactive default role, does not write when nothing changed, and denies a user left with no roles", async () => {
@@ -556,7 +556,7 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     await expect(oidc.FindOrCreateOidcUser(baseSettings, { ...identity, groups: [] })).rejects.toMatchObject({
       code: "no_roles",
     });
-    expect(dbMock.updateUserOidcRoles).not.toHaveBeenCalled();
+    expect(dbMock.applyOidcRoleSync).not.toHaveBeenCalled();
   });
 
   it("denies (no_roles) an existing user whose last granted role was revoked, after writing the empty set", async () => {
@@ -571,7 +571,7 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     await expect(
       oidc.FindOrCreateOidcUser({ ...baseSettings, default_role_id: "" }, { ...identity, groups: [] }),
     ).rejects.toMatchObject({ code: "no_roles" });
-    expect(change()).toEqual({ role_ids: [], oidc_role_ids: [] });
+    expect(change()).toEqual({ add: [], remove: ["editor"], oidc_role_ids: [] });
   });
 
   it("never strips admin from the owner account", async () => {
@@ -580,7 +580,7 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     dbMock.getUserOidcRoleIds.mockResolvedValue(["admin"]); // even if admin came from a mapping that is gone
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
     await oidc.FindOrCreateOidcUser(baseSettings, identity);
-    expect(change()).toEqual({ role_ids: ["admin", "editor"], oidc_role_ids: ["editor"] });
+    expect(change()).toEqual({ add: ["editor"], remove: [], oidc_role_ids: ["editor"] }); // admin stays
   });
 
   it("syncs name and email, but keeps the old email when another account owns the new one", async () => {

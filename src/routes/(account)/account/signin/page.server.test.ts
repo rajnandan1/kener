@@ -84,20 +84,22 @@ describe("load", () => {
 });
 
 describe("actions.login with local login disabled", () => {
-  it("returns the identical 403 for an unknown email and for a non-owner (no enumeration)", async () => {
-    const unknown = (await actions.login(loginEvent("nobody@example.com"))) as {
-      status: number;
-      data: { error: string };
-    };
-    const known = (await actions.login(loginEvent(member.email))) as { status: number; data: { error: string } };
-    expect(unknown.status).toBe(403);
-    expect(known.status).toBe(403);
-    expect(unknown.data.error).toBe(known.data.error);
-    expect(unknown.data.error).toBe("Local login is disabled. Please use SSO.");
-    // Same work on both paths: one compare against the dummy hash, never against a stored one.
+  it("answers an unknown email, a non-owner and the owner with a wrong password identically (no enumeration)", async () => {
+    type R = { status: number; data: { error: string } };
+    const unknown = (await actions.login(loginEvent("nobody@example.com"))) as R;
+    const known = (await actions.login(loginEvent(member.email))) as R;
+    common.VerifyPassword.mockResolvedValueOnce(false);
+    const ownerWrong = (await actions.login(loginEvent(owner.email, "nope"))) as R;
+    // Same status and message for all three — the owner account must not be identifiable either.
+    expect([unknown.status, known.status, ownerWrong.status]).toEqual([401, 401, 401]);
+    expect(unknown.data.error).toBe("Invalid password or Email");
+    expect(known.data.error).toBe(unknown.data.error);
+    expect(ownerWrong.data.error).toBe(unknown.data.error);
+    // ...and the same work: exactly one bcrypt compare each (the owner's against the real hash).
     expect(common.VerifyPassword.mock.calls).toEqual([
       ["Password1", "dummy-hash"],
       ["Password1", "dummy-hash"],
+      ["nope", "hash"],
     ]);
   });
 

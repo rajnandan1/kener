@@ -196,13 +196,34 @@ export class UsersRepository extends BaseRepository {
   }
 
   /**
-   * Apply the result of an OIDC role sync atomically: replace the role set when
-   * `role_ids` is given, and always record `oidc_role_ids` — the roles this sync
-   * granted — so the next sync knows what it may revoke (see getUserOidcRoleIds).
+   * Apply the result of an OIDC role sync atomically and as a delta: remove only
+   * `remove` (roles an earlier sync granted and this one no longer grants), add
+   * only `add` (newly granted roles; already-present rows are ignored), and
+   * record `oidc_role_ids` — the roles this sync granted — so the next sync
+   * knows what it may revoke (see getUserOidcRoleIds). Never rewriting the whole
+   * set means a role an admin grants or revokes by hand concurrently survives.
    */
-  async updateUserOidcRoles(id: number, data: { role_ids?: string[]; oidc_role_ids: string[] }): Promise<void> {
+  async applyOidcRoleSync(
+    id: number,
+    data: { add: string[]; remove: string[]; oidc_role_ids: string[] },
+  ): Promise<void> {
     await this.knex.transaction(async (trx) => {
-      if (data.role_ids) await this.replaceUserRoles(trx, id, data.role_ids);
+      if (data.remove.length > 0) {
+        await trx("users_roles").where("users_id", id).whereIn("roles_id", data.remove).delete();
+      }
+      if (data.add.length > 0) {
+        await trx("users_roles")
+          .insert(
+            data.add.map((roleId) => ({
+              users_id: id,
+              roles_id: roleId,
+              created_at: trx.fn.now(),
+              updated_at: trx.fn.now(),
+            })),
+          )
+          .onConflict(["roles_id", "users_id"])
+          .ignore();
+      }
       await trx("users")
         .where({ id })
         .update({ oidc_role_ids: JSON.stringify(data.oidc_role_ids), updated_at: trx.fn.now() });

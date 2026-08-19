@@ -62,11 +62,12 @@ export const actions: Actions = {
     const userDB = await GetUserByEmail(email);
 
     // When local login is disabled only the owner may use a password (break-glass
-    // when the IdP is down). Unknown emails and non-owners get the same answer so
-    // this branch cannot be used to enumerate accounts.
+    // when the IdP is down). Unknown emails, non-owners and an owner with a wrong
+    // password all get the same generic 401 (the form is already presented as
+    // owner-only), so neither the status nor the message singles out any account.
     if (oidc.enabled && !oidc.allowLocalLogin && (!userDB || userDB.is_owner !== "YES")) {
       await equalizeTiming(password);
-      return fail(403, { error: "Local login is disabled. Please use SSO.", values: { email } });
+      return fail(401, { error: "Invalid password or Email", values: { email } });
     }
 
     // Unknown email and wrong password are indistinguishable — no account enumeration,
