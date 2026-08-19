@@ -55,7 +55,7 @@ Either fill in **Manage → OpenID Connect** and click **Test Connection**, then
 | Groups Claim Name     | `KENER_OIDC_GROUPS_CLAIM`      | Claim holding the group list (default `groups`)                                                                                                                                                                                                                              |
 | Allow local login     | `KENER_OIDC_ALLOW_LOCAL_LOGIN` | `true` / `false` (default `true`)                                                                                                                                                                                                                                            |
 | Auto-create users     | `KENER_OIDC_AUTO_CREATE_USERS` | `true` / `false` (default `false`). Must be `true` for a user's **first** sign-in — that is when the account is created and linked to the provider's `sub`. Turning it off afterwards freezes the set of linked accounts: new identities are refused with "not provisioned". |
-| Default Role          | `KENER_OIDC_DEFAULT_ROLE_ID`   | Role id used when no mapping matches (default `member`)                                                                                                                                                                                                                      |
+| Default Role          | `KENER_OIDC_DEFAULT_ROLE_ID`   | Role id used when no mapping matches (default `member`). Choose _No default role_ in the UI, or set the variable to `none`, to refuse users without a matching group instead.                                                                                                |
 
 **Precedence:** an environment variable that is set (non-empty) wins over the value saved in the UI for that field only. Env-configured fields are shown read-only with a _Set by environment_ badge and are never written to the database. `KENER_OIDC_ALLOW_HTTP=true` permits an `http:` issuer for local development only. Group→role mappings can also come from the environment via `KENER_OIDC_GROUP_ROLE_MAP` — see [below](#group-role-mapping-env).
 
@@ -64,6 +64,8 @@ Either fill in **Manage → OpenID Connect** and click **Test Connection**, then
 In **Group → Role Mapping**, map provider group names to Kener roles, e.g. `platform-admins → admin`, `viewers → member`. Each group maps to exactly one role; a user in several mapped groups gets all of those roles. Group names are matched exactly and case-sensitively against the values of the groups claim.
 
 On every login Kener recomputes the user's _managed_ roles — every role that appears in a mapping, plus the default role — from their current groups. Roles that are not part of any mapping (assigned manually) are preserved. If no group matches, the **Default Role** is assigned. The owner account always keeps `admin`.
+
+**No mapped role → refuse.** There is no built-in fallback role. If no group matches and no active default role is configured (the UI option _No default role_, `KENER_OIDC_DEFAULT_ROLE_ID=none`, or a default role that has been deactivated), a first sign-in is refused as _not provisioned_ and an existing user who is left without any active role is denied as _no roles_ — the empty role set is still written, so the account shows up without roles under **Users**. Mapped roles alone are always sufficient.
 
 #### Managing mappings from the environment {#group-role-mapping-env}
 
@@ -97,7 +99,8 @@ When **Allow local login** is off, only the SSO button is offered. Two escape ha
 
 - OIDC accounts are created verified and active, with an empty password. They cannot request a password reset, and administrators cannot set a password for them.
 - **Auto-create must be on for a user's first sign-in** — that is the moment the account is created and linked to the provider's `sub` claim. Turning auto-create off afterwards does not affect users who already signed in once, but it freezes the set of linked accounts: there is no manual "link this local user to an OIDC identity" in this version, so a new identity can only be provisioned while auto-create is on.
-- A sign-in is refused with "not provisioned" in two cases: auto-create is off, or (on a first sign-in with auto-create on) the provider's email already belongs to another Kener account. Either way the specific reason is only in the server log — create the user via the provider, turn on auto-create, or delete/rename the conflicting local account.
+- A sign-in is refused with "not provisioned" in three cases: auto-create is off; on a first sign-in with auto-create on, the provider's email already belongs to another Kener account; or on a first sign-in no group mapping matched and no active default role is configured. Either way the specific reason is only in the server log — create the user via the provider, turn on auto-create, delete/rename the conflicting local account, or add a mapping / default role.
+- An existing OIDC user whose last active role was revoked by the group sync (and who has no manual roles) is denied with "no roles"; assign a role manually or fix the mapping.
 - Name and email are refreshed from the provider on every login. If the new email already belongs to another account, the old email is kept and a warning is logged. Because sessions are keyed by email, an email change ends the user's other sessions.
 - Sign-in errors are shown as fixed messages; details (provider `error_description`, exchange failures) are only written to the server log.
 

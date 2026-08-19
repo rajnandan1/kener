@@ -251,7 +251,7 @@ Every OIDC setting can be provided from the environment; a set variable override
 | `KENER_OIDC_GROUPS_CLAIM`      | Claim containing the user's groups                                                                            | `groups`               |
 | `KENER_OIDC_ALLOW_LOCAL_LOGIN` | Keep password login available (`true`/`false`)                                                                | `true`                 |
 | `KENER_OIDC_AUTO_CREATE_USERS` | Create users on first OIDC login (`true`/`false`)                                                             | `false`                |
-| `KENER_OIDC_DEFAULT_ROLE_ID`   | Role when no group mapping matches                                                                            | `member`               |
+| `KENER_OIDC_DEFAULT_ROLE_ID`   | Role when no group mapping matches; `none` = no default role, users without a matching group are refused      | `member`               |
 | `KENER_OIDC_GROUP_ROLE_MAP`    | JSON object `{"<group>": "<role id>"}`; when set it replaces the group→role mappings saved in the UI entirely | —                      |
 | `KENER_OIDC_ALLOW_HTTP`        | Allow an `http:` issuer — local development only                                                              | `false`                |
 

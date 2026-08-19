@@ -42,6 +42,12 @@ export const OIDC_ENV_KEYS = {
   default_role_id: "KENER_OIDC_DEFAULT_ROLE_ID",
 } as const satisfies Record<keyof OidcSettings, string>;
 
+/**
+ * KENER_OIDC_DEFAULT_ROLE_ID value meaning "explicitly no default role" (stored as ""),
+ * because an empty env value means "unset" for every KENER_OIDC_* key.
+ */
+export const OIDC_NO_DEFAULT_ROLE = "none";
+
 /** Dev-only: permits an http: issuer. Not an OidcSettings field. */
 export const OIDC_HTTP_ENV = "KENER_OIDC_ALLOW_HTTP";
 
@@ -100,6 +106,8 @@ export function ParseOidcEnvOverrides(env: NodeJS.ProcessEnv = process.env): {
         continue;
       }
       overrides[field] = lower === "true";
+    } else if (field === "default_role_id" && value.toLowerCase() === OIDC_NO_DEFAULT_ROLE) {
+      overrides[field] = "";
     } else {
       overrides[field] = value;
     }
@@ -443,16 +451,20 @@ async function provisionOidcUser(settings: OidcSettings, identity: OidcIdentity)
       `email ${identity.email} already belongs to user ${emailOwner.id} (${emailOwner.auth_provider}); OIDC and local accounts are never merged`,
     );
   }
-  const mappedRoleIds = await resolveOidcRoleIds(await GetEffectiveOidcGroupRoleMappings(), identity.groups);
-  let roleIds = mappedRoleIds;
+  // No mapped role → the active default role → refuse. There is deliberately no
+  // hardcoded fallback role: an identity that matches nothing the admin configured
+  // must not get into the system at all.
+  let roleIds = await resolveOidcRoleIds(await GetEffectiveOidcGroupRoleMappings(), identity.groups);
   if (roleIds.length === 0) {
-    roleIds = ["member"];
-    if (settings.default_role_id) {
-      // Mirrors SyncOidcUserRoles: an inactive default role is never assigned.
-      const defaultRole = await db.getRoleById(settings.default_role_id);
-      if (defaultRole?.status === "ACTIVE") {
-        roleIds = [settings.default_role_id];
-      }
+    // Mirrors SyncOidcUserRoles: an inactive default role is never assigned.
+    const defaultRole = settings.default_role_id ? await db.getRoleById(settings.default_role_id) : undefined;
+    if (defaultRole?.status === "ACTIVE") {
+      roleIds = [settings.default_role_id];
+    } else {
+      throw new OidcAuthError(
+        "not_provisioned",
+        `no group mapping matched and no active default role is configured; refusing sub=${identity.sub}`,
+      );
     }
   }
 
@@ -564,6 +576,11 @@ export async function FindOrCreateOidcUser(settings: OidcSettings, identity: Oid
   await syncOidcProfile(existing, identity);
   const refreshed = await db.getUserByOidcSub(identity.sub);
   if (!refreshed) throw new OidcAuthError("auth_failed", "User disappeared during role sync");
+  // The sync above already wrote the (possibly empty) role set so admins can see it in Users;
+  // a user left without any active role is denied. `role_ids` is ACTIVE-only.
+  if (refreshed.role_ids.length === 0) {
+    throw new OidcAuthError("no_roles", `user ${refreshed.id} has no active role after group sync`);
+  }
   return refreshed;
 }
 

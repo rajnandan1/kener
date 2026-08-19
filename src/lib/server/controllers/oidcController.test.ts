@@ -105,6 +105,12 @@ describe("ParseOidcEnvOverrides", () => {
     expect([...locked].sort()).toEqual(Object.keys(oidc.OIDC_ENV_KEYS).sort());
   });
 
+  it('KENER_OIDC_DEFAULT_ROLE_ID="none" means explicitly no default role (empty, locked)', () => {
+    const { overrides, locked } = oidc.ParseOidcEnvOverrides({ KENER_OIDC_DEFAULT_ROLE_ID: " None " });
+    expect(overrides).toEqual({ default_role_id: "" });
+    expect([...locked]).toEqual(["default_role_id"]);
+  });
+
   it("ignores empty values and invalid booleans (with a warning), leaving those fields unlocked", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const { overrides, locked } = oidc.ParseOidcEnvOverrides({
@@ -349,35 +355,54 @@ describe("FindOrCreateOidcUser — provisioning", () => {
     expect(user.role_ids).toEqual(["editor"]);
   });
 
-  it("uses default_role_id, then member, when no group matches", async () => {
+  it("uses the active default_role_id when no group matches", async () => {
     dbMock.getUserByOidcSub.mockResolvedValueOnce(undefined).mockResolvedValueOnce(publicUser());
     dbMock.getUserByEmail.mockResolvedValue(undefined);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
     dbMock.getRoleById.mockResolvedValue({ id: "viewer", status: "ACTIVE" });
     await oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true, default_role_id: "viewer" }, identity);
     expect(dbMock.insertUser.mock.calls[0][0].role_ids).toEqual(["viewer"]);
-    dbMock.getUserByOidcSub.mockResolvedValueOnce(undefined).mockResolvedValueOnce(publicUser());
-    await oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true, default_role_id: "" }, identity);
-    expect(dbMock.insertUser.mock.calls[1][0].role_ids).toEqual(["member"]);
   });
 
-  it("provisioning ignores an inactive default role and falls back to member", async () => {
-    dbMock.getUserByOidcSub.mockResolvedValueOnce(undefined).mockResolvedValueOnce(publicUser());
+  it("refuses (not_provisioned) when no group matches and no default role is set — no hardcoded member floor", async () => {
+    dbMock.getUserByOidcSub.mockResolvedValue(undefined);
+    dbMock.getUserByEmail.mockResolvedValue(undefined);
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
+    await expect(
+      oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true, default_role_id: "" }, identity),
+    ).rejects.toMatchObject({ code: "not_provisioned" });
+    expect(dbMock.insertUser).not.toHaveBeenCalled();
+  });
+
+  it("refuses (not_provisioned) when no group matches and the default role is inactive", async () => {
+    dbMock.getUserByOidcSub.mockResolvedValue(undefined);
     dbMock.getUserByEmail.mockResolvedValue(undefined);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
     dbMock.getRoleById.mockResolvedValue({ id: "viewer", status: "INACTIVE" });
-    await oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true, default_role_id: "viewer" }, identity);
-    expect(dbMock.insertUser.mock.calls[0][0].role_ids).toEqual(["member"]);
+    await expect(
+      oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true, default_role_id: "viewer" }, identity),
+    ).rejects.toMatchObject({ code: "not_provisioned" });
+    expect(dbMock.insertUser).not.toHaveBeenCalled();
+  });
+
+  it("a mapped role is enough even without a default role", async () => {
+    dbMock.getUserByOidcSub.mockResolvedValueOnce(undefined).mockResolvedValueOnce(publicUser());
+    dbMock.getUserByEmail.mockResolvedValue(undefined);
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
+    await oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true, default_role_id: "" }, identity);
+    expect(dbMock.insertUser.mock.calls[0][0].role_ids).toEqual(["editor"]);
+    expect(dbMock.getRoleById).not.toHaveBeenCalled();
   });
 
   it("maps a unique-constraint race on insert to not_provisioned", async () => {
     dbMock.getUserByOidcSub.mockResolvedValue(undefined);
     dbMock.getUserByEmail.mockResolvedValue(undefined);
-    dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
     dbMock.insertUser.mockRejectedValue(new Error("SQLITE_CONSTRAINT: UNIQUE constraint failed: users.email"));
     await expect(
       oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true }, identity),
     ).rejects.toMatchObject({ code: "not_provisioned" });
+    expect(dbMock.insertUser).toHaveBeenCalled();
   });
 });
 
@@ -419,12 +444,27 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     expect([...roles].sort()).toEqual(["editor", "retired"]);
   });
 
-  it("does not fall back to an inactive default role and does not write when nothing changed", async () => {
+  it("does not fall back to an inactive default role, does not write when nothing changed, and denies a user left with no roles", async () => {
     dbMock.getRoleById.mockResolvedValue({ id: "member", status: "INACTIVE" });
+    dbMock.getUserByOidcSub.mockResolvedValueOnce(publicUser()).mockResolvedValueOnce(publicUser({ role_ids: [] }));
     dbMock.getUserAssignedRoleIds.mockResolvedValue([]);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
-    await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, groups: [] });
+    await expect(oidc.FindOrCreateOidcUser(baseSettings, { ...identity, groups: [] })).rejects.toMatchObject({
+      code: "no_roles",
+    });
     expect(dbMock.updateUserRoles).not.toHaveBeenCalled();
+  });
+
+  it("denies (no_roles) an existing user whose last managed role was revoked, after writing the empty set", async () => {
+    // Was in devs (editor); left every group; default role is unset → sync writes [] so admins can
+    // see it in Users, and the login is refused.
+    dbMock.getUserByOidcSub.mockResolvedValueOnce(publicUser()).mockResolvedValueOnce(publicUser({ role_ids: [] }));
+    dbMock.getUserAssignedRoleIds.mockResolvedValue(["editor"]);
+    dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
+    await expect(
+      oidc.FindOrCreateOidcUser({ ...baseSettings, default_role_id: "" }, { ...identity, groups: [] }),
+    ).rejects.toMatchObject({ code: "no_roles" });
+    expect(dbMock.updateUserRoles).toHaveBeenCalledWith(7, []);
   });
 
   it("never strips admin from the owner account", async () => {

@@ -74,6 +74,9 @@
     error?: string;
   } | null>(null);
 
+  /** Select value standing in for default_role_id = "" (bits-ui treats "" as "nothing selected"). */
+  const NO_DEFAULT_ROLE = "__none__";
+
   // Group-Role Mappings
   const MAPPINGS_ENV = "KENER_OIDC_GROUP_ROLE_MAP";
   let mappings = $state<OidcGroupRoleMappingEntry[]>([]);
@@ -481,16 +484,20 @@
               {#if isLocked("default_role_id")}<Badge variant="secondary">Set by environment</Badge>{/if}
               <Select.Root
                 type="single"
-                value={settings.default_role_id}
+                value={settings.default_role_id || NO_DEFAULT_ROLE}
                 onValueChange={(val) => {
-                  if (val) settings.default_role_id = val;
+                  if (val) settings.default_role_id = val === NO_DEFAULT_ROLE ? "" : val;
                 }}
                 disabled={isLocked("default_role_id")}
               >
                 <Select.Trigger class="w-full">
-                  {getRoleName(settings.default_role_id) || "Select a role..."}
+                  {settings.default_role_id ? getRoleName(settings.default_role_id) : "No default role"}
                 </Select.Trigger>
                 <Select.Content>
+                  <Select.Item value={NO_DEFAULT_ROLE}
+                    >No default role — refuse users without a matching group</Select.Item
+                  >
+                  <Select.Separator />
                   {#each roles as role (role.id)}
                     <Select.Item value={role.id}>
                       {role.role_name}
@@ -499,7 +506,8 @@
                 </Select.Content>
               </Select.Root>
               <p class="text-muted-foreground text-xs">
-                Assigned when a user's OIDC groups don't match any mapping below.
+                Assigned when a user's OIDC groups don't match any mapping below. Without a default role such users are
+                refused: a first sign-in as "not provisioned", an existing user left with no roles as "no roles".
               </p>
             </div>
 
@@ -646,7 +654,11 @@
             <div class="text-muted-foreground rounded-lg border border-dashed py-8 text-center">
               {#if mappingsLocked}
                 <p>{MAPPINGS_ENV} contains no usable mappings.</p>
-                <p class="mt-1 text-sm">Every OIDC user receives the default role.</p>
+                <p class="mt-1 text-sm">
+                  {settings.default_role_id
+                    ? "Every OIDC user receives the default role."
+                    : "No default role is set either, so every OIDC sign-in is refused."}
+                </p>
               {:else}
                 <p>No group mappings configured yet.</p>
                 <p class="mt-1 text-sm">Add a mapping above to assign Kener roles based on OIDC groups.</p>
@@ -724,7 +736,8 @@
               affected by OIDC sync.
             </p>
             <p>
-              <strong>If no groups match</strong>, the default role (configured above) is assigned.
+              <strong>If no groups match</strong>, the default role (configured above) is assigned. Without a default
+              role the sign-in is refused — there is no built-in fallback role.
             </p>
           </div>
         </Card.Content>
