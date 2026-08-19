@@ -724,6 +724,18 @@ describe("PrepareOidcSettingsForStore", () => {
     expect(stored).not.toHaveProperty("env_locked");
   });
 
+  it("ignores prototype-polluting keys (only the fixed OidcSettings field list is ever copied)", async () => {
+    // JSON.parse creates *own* "__proto__"/"constructor" properties; a naive merge would copy them.
+    const json = await oidc.PrepareOidcSettingsForStore(
+      '{"enabled":false,"__proto__":{"polluted":true},"constructor":{"prototype":{"polluted":true}}}',
+    );
+    expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+    const stored = JSON.parse(json) as Record<string, unknown>;
+    expect(Object.prototype.hasOwnProperty.call(stored, "__proto__")).toBe(false);
+    expect(Object.prototype.hasOwnProperty.call(stored, "constructor")).toBe(false);
+    expect(stored.enabled).toBe(false);
+  });
+
   it("rejects invalid payloads and unknown default roles", async () => {
     await expect(oidc.PrepareOidcSettingsForStore("{{")).rejects.toThrow(/Invalid OIDC settings/);
     await expect(oidc.PrepareOidcSettingsForStore({ ...baseSettings, issuer_url: "ftp://x" })).rejects.toThrow(
