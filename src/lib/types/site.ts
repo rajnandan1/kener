@@ -174,6 +174,25 @@ export interface OidcSettings {
   default_role_id: string;
 }
 
+/**
+ * Value type of every OidcSettings field — the single source of truth for the
+ * structural validator and the env-override parser. `satisfies` makes a field
+ * added to (or misspelled in) OidcSettings a compile error here instead of a
+ * runtime "Invalid OIDC settings" on every save.
+ */
+export const OIDC_SETTINGS_FIELD_TYPES = {
+  enabled: "boolean",
+  provider_name: "string",
+  issuer_url: "string",
+  client_id: "string",
+  client_secret: "string",
+  scopes: "string",
+  groups_claim: "string",
+  allow_local_login: "boolean",
+  auto_create_users: "boolean",
+  default_role_id: "string",
+} as const satisfies Record<keyof OidcSettings, "string" | "boolean">;
+
 /** OidcSettings as returned to the admin UI: secret masked, plus whether one is stored. */
 export type OidcSettingsMasked = Omit<OidcSettings, "client_secret"> & {
   client_secret: string;

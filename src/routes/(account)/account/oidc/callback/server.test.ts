@@ -5,7 +5,14 @@ const controller = vi.hoisted(() => ({
   HandleCallback: vi.fn(),
   FindOrCreateOidcUser: vi.fn(),
   GetOidcCallbackUrl: vi.fn(() => "https://status.example.com/account/oidc/callback"),
-  OIDC_COOKIE_NAMES: { state: "oidc-state", nonce: "oidc-nonce", codeVerifier: "oidc-code-verifier" },
+  // Mirrors the real constant (incl. the logout→login `reauth` cookie) so the
+  // "clear every OIDC cookie" contract below is tested against the full set.
+  OIDC_COOKIE_NAMES: {
+    state: "oidc-state",
+    nonce: "oidc-nonce",
+    codeVerifier: "oidc-code-verifier",
+    reauth: "oidc-reauth",
+  },
   OidcAuthError: class extends Error {
     code: string;
     constructor(code: string, detail?: string) {
@@ -76,6 +83,13 @@ beforeEach(() => {
 
 const redirectTo = (code: string) => ({ status: 302, location: `/account/signin?oidc_error=${code}` });
 
+/** The callback must clear every OIDC cookie — by name, not by count — on every exit path. */
+function expectAllOidcCookiesCleared(cookies: { delete: ReturnType<typeof vi.fn> }) {
+  const deleted = cookies.delete.mock.calls.map((call) => String(call[0])).sort();
+  expect(deleted).toEqual(Object.values(controller.OIDC_COOKIE_NAMES).sort());
+  for (const [, opts] of cookies.delete.mock.calls) expect(opts).toEqual({ path: "/" });
+}
+
 describe("GET /account/oidc/callback", () => {
   it("404s when OIDC is disabled", async () => {
     controller.GetEffectiveOidcSettings.mockResolvedValue({ settings: { enabled: false }, envLocked: new Set() });
@@ -85,7 +99,7 @@ describe("GET /account/oidc/callback", () => {
   it("maps a provider error to the provider_error code without reflecting its text", async () => {
     const { event, cookies } = makeEvent("?error=access_denied&error_description=<script>alert(1)</script>");
     await expect(GET(event)).rejects.toMatchObject(redirectTo("provider_error"));
-    expect(cookies.delete).toHaveBeenCalledTimes(3);
+    expectAllOidcCookiesCleared(cookies);
     const location = await locationOf(event);
     expect(location).not.toContain("script");
   });
@@ -93,7 +107,7 @@ describe("GET /account/oidc/callback", () => {
   it("clears the cookies and reports session_expired when they are missing", async () => {
     const { event, cookies } = makeEvent("?code=abc&state=st", false);
     await expect(GET(event)).rejects.toMatchObject(redirectTo("session_expired"));
-    expect(cookies.delete).toHaveBeenCalledTimes(3);
+    expectAllOidcCookiesCleared(cookies);
     expect(controller.HandleCallback).not.toHaveBeenCalled();
   });
 
@@ -108,7 +122,7 @@ describe("GET /account/oidc/callback", () => {
       "nn",
       "cv",
     );
-    expect(cookies.delete).toHaveBeenCalledTimes(3);
+    expectAllOidcCookiesCleared(cookies);
     expect(common.GenerateToken).toHaveBeenCalledWith(activeUser);
     expect(cookies.set).toHaveBeenCalledWith(
       "kener-user",

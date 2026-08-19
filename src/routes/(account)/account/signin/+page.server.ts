@@ -57,8 +57,9 @@ export const actions: Actions = {
       return fail(403, { error: "Local login is disabled. Please use SSO.", values: { email } });
     }
 
+    // Unknown email and wrong password are indistinguishable — no account enumeration.
     if (!userDB) {
-      return fail(401, { error: "User does not exist", values: { email } });
+      return fail(401, { error: "Invalid password or Email", values: { email } });
     }
 
     // OIDC accounts never authenticate with a password, even if a hash were ever

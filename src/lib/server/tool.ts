@@ -542,9 +542,9 @@ function GenerateRandomHexString(length: number = 32): string {
     .slice(0, length);
 }
 
-/** Dev-only escape hatch: allow an `http:` OIDC issuer when KENER_OIDC_ALLOW_HTTP=true. */
+/** Dev-only escape hatch: allow an `http:` OIDC issuer when KENER_OIDC_ALLOW_HTTP=true (trimmed, case-insensitive, like every other KENER_OIDC_* boolean). */
 function IsOidcHttpAllowed(): boolean {
-  return process.env.KENER_OIDC_ALLOW_HTTP === "true";
+  return (process.env.KENER_OIDC_ALLOW_HTTP ?? "").trim().toLowerCase() === "true";
 }
 
 export {

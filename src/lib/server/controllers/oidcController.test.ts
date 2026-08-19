@@ -175,11 +175,19 @@ describe("ParseIssuerUrl", () => {
     vi.stubEnv("KENER_OIDC_ALLOW_HTTP", "true");
     expect(oidc.ParseIssuerUrl("http://idp.local").protocol).toBe("http:");
   });
+
+  it("parses KENER_OIDC_ALLOW_HTTP like the other OIDC booleans (trimmed, case-insensitive)", () => {
+    vi.stubEnv("KENER_OIDC_ALLOW_HTTP", " TRUE ");
+    expect(oidc.ParseIssuerUrl("http://idp.local").protocol).toBe("http:");
+    vi.stubEnv("KENER_OIDC_ALLOW_HTTP", "yes");
+    expect(() => oidc.ParseIssuerUrl("http://idp.local")).toThrow(/KENER_OIDC_ALLOW_HTTP/);
+  });
 });
 
 describe("MaskOidcSettings", () => {
   it("masks the secret and reports whether one is stored", () => {
     const masked = oidc.MaskOidcSettings(baseSettings);
+    expect(masked.client_secret).toBe(oidc.OIDC_SECRET_MASK);
     expect(masked.client_secret).toBe("********");
     expect(masked.client_secret).not.toContain("s3cret");
     expect(masked.has_client_secret).toBe(true);
@@ -240,6 +248,17 @@ describe("BuildAuthorizationUrl / config cache", () => {
     expect(params.prompt).toBeUndefined();
   });
 
+  it("passes an explicit HTTP timeout (seconds) to discovery so an unreachable issuer fails fast", async () => {
+    oidcClientMock.discovery.mockResolvedValue(fakeConfig());
+    oidcClientMock.buildAuthorizationUrl.mockReturnValue(new URL("https://x/y"));
+    await oidc.BuildAuthorizationUrl(baseSettings, "cb");
+    const options = oidcClientMock.discovery.mock.calls[0][4] as { timeout: number; execute?: unknown[] };
+    expect(options.timeout).toBe(oidc.OIDC_HTTP_TIMEOUT_SECONDS);
+    expect(oidc.OIDC_HTTP_TIMEOUT_SECONDS).toBeGreaterThan(0);
+    expect(oidc.OIDC_HTTP_TIMEOUT_SECONDS).toBeLessThan(30); // openid-client's default
+    expect(options.execute).toBeUndefined(); // https: no allowInsecureRequests
+  });
+
   it("adds prompt=login only when re-authentication is forced (after a logout)", async () => {
     oidcClientMock.discovery.mockResolvedValue(fakeConfig());
     oidcClientMock.buildAuthorizationUrl.mockReturnValue(new URL("https://gitlab.example.com/oauth/authorize?x=1"));
@@ -269,8 +288,9 @@ describe("BuildAuthorizationUrl / config cache", () => {
     );
     vi.stubEnv("KENER_OIDC_ALLOW_HTTP", "true");
     await oidc.BuildAuthorizationUrl({ ...baseSettings, issuer_url: "http://idp.local" }, "cb");
-    const options = oidcClientMock.discovery.mock.calls[0][4] as { execute: unknown[] };
+    const options = oidcClientMock.discovery.mock.calls[0][4] as { execute: unknown[]; timeout: number };
     expect(options.execute).toContain(oidcClientMock.allowInsecureRequests);
+    expect(options.timeout).toBe(oidc.OIDC_HTTP_TIMEOUT_SECONDS);
   });
 });
 
@@ -340,9 +360,13 @@ describe("FindOrCreateOidcUser — provisioning", () => {
   it("rejects with the same not_provisioned code when the email belongs to another account", async () => {
     dbMock.getUserByOidcSub.mockResolvedValue(undefined);
     dbMock.getUserByEmail.mockResolvedValue(publicUser({ id: 1, auth_provider: "local", oidc_sub: null }));
-    await expect(
-      oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true }, identity),
-    ).rejects.toMatchObject({ code: "not_provisioned" });
+    const error = (await oidc
+      .FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true }, identity)
+      .catch((e: unknown) => e)) as Error;
+    expect(error).toMatchObject({ code: "not_provisioned" });
+    // The detail is logged by the callback route: identify records by id, never by email address.
+    expect(error.message).not.toContain("new@example.com");
+    expect(error.message).toContain("user 1");
     expect(dbMock.insertUser).not.toHaveBeenCalled();
   });
 
@@ -410,9 +434,11 @@ describe("FindOrCreateOidcUser — provisioning", () => {
     dbMock.getUserByEmail.mockResolvedValue(undefined);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
     dbMock.insertUser.mockRejectedValue(new Error("SQLITE_CONSTRAINT: UNIQUE constraint failed: users.email"));
-    await expect(
-      oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true }, identity),
-    ).rejects.toMatchObject({ code: "not_provisioned" });
+    const error = (await oidc
+      .FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true }, identity)
+      .catch((e: unknown) => e)) as Error;
+    expect(error).toMatchObject({ code: "not_provisioned" });
+    expect(error.message).not.toContain("new@example.com");
     expect(dbMock.insertUser).toHaveBeenCalled();
   });
 });
@@ -499,7 +525,10 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     dbMock.getUserByEmail.mockResolvedValue(publicUser({ id: 99, auth_provider: "local" }));
     await oidc.FindOrCreateOidcUser(baseSettings, { ...identity, name: "Renamed2", email: "taken@example.com" });
     expect(dbMock.updateUserProfile).toHaveBeenCalledWith(7, { name: "Renamed2" });
-    expect(warn).toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledTimes(1);
+    // Logs name users by id only — email addresses are personal data.
+    expect(String(warn.mock.calls[0][0])).not.toContain("taken@example.com");
+    expect(String(warn.mock.calls[0][0])).toMatch(/user 7.*user 99/);
     warn.mockRestore();
   });
 
@@ -520,7 +549,8 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     expect(dbMock.updateUserProfile).toHaveBeenCalledTimes(2);
     expect(dbMock.updateUserProfile.mock.calls[0]).toEqual([7, { name: "Renamed", email: "raced@example.com" }]);
     expect(dbMock.updateUserProfile.mock.calls[1]).toEqual([7, { name: "Renamed" }]);
-    expect(warn).toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(String(warn.mock.calls[0][0])).not.toContain("raced@example.com");
     warn.mockRestore();
   });
 });
@@ -568,6 +598,17 @@ describe("PrepareOidcSettingsForStore", () => {
       await oidc.PrepareOidcSettingsForStore(JSON.stringify({ ...baseSettings, client_secret: "new" })),
     );
     expect(replaced.client_secret).toBe("new");
+  });
+
+  it("treats the mask itself as 'unchanged' so a client echoing the masked value cannot overwrite the secret", async () => {
+    const masked = oidc.MaskOidcSettings(baseSettings);
+    const echoed = JSON.parse(await oidc.PrepareOidcSettingsForStore({ ...masked }));
+    expect(echoed.client_secret).toBe("s3cret-value");
+    expect(echoed).not.toHaveProperty("has_client_secret");
+    // With no stored secret the mask is still never persisted as a secret.
+    storeSettings({ ...baseSettings, client_secret: "" });
+    const none = JSON.parse(await oidc.PrepareOidcSettingsForStore({ client_secret: oidc.OIDC_SECRET_MASK }));
+    expect(none.client_secret).toBe("");
   });
 
   it("drops env-locked fields and unknown keys before validating", async () => {

@@ -114,6 +114,17 @@ describe("insertUser", () => {
   });
 });
 
+describe("updateUserRoles", () => {
+  it("replaces the assignments atomically — a failing insert leaves the previous roles in place", async () => {
+    const [id] = await repo.insertUser({ email: "t@example.com", name: "T", password_hash: "", role_ids: ["member"] });
+    // (roles_id, users_id) is the primary key, so the duplicate makes the insert fail after the delete ran.
+    await expect(repo.updateUserRoles(id, ["editor", "editor"])).rejects.toThrow();
+    expect(await repo.getUserAssignedRoleIds(id)).toEqual(["member"]);
+    await repo.updateUserRoles(id, ["editor", "admin"]);
+    expect([...(await repo.getUserAssignedRoleIds(id))].sort()).toEqual(["admin", "editor"]);
+  });
+});
+
 describe("getUserByOidcSub / getUsersByRoleId / updateUserProfile", () => {
   it("finds a user by sub with role ids and the new columns", async () => {
     await repo.insertUser({
@@ -171,13 +182,15 @@ describe("getUserByOidcSub / getUsersByRoleId / updateUserProfile", () => {
 });
 
 describe("oidc group → role mappings", () => {
-  it("upsert inserts, then updates in place for the same group", async () => {
+  it("upsert inserts, then updates in place for the same group (keeping created_at)", async () => {
     await repo.upsertOidcGroupRoleMapping({ oidc_group: "devs", role_id: "member" });
+    await knex("oidc_group_role_mappings").where({ oidc_group: "devs" }).update({ created_at: "2020-01-01 00:00:00" });
     await repo.upsertOidcGroupRoleMapping({ oidc_group: "devs", role_id: "editor" });
     const all = await repo.getAllOidcGroupRoleMappings();
     expect(all).toHaveLength(1);
     expect(all[0].oidc_group).toBe("devs");
     expect(all[0].role_id).toBe("editor");
+    expect(String(all[0].created_at)).toBe("2020-01-01 00:00:00");
     expect((await repo.getOidcGroupRoleMappingByGroup("devs"))?.role_id).toBe("editor");
   });
 

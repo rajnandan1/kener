@@ -1,4 +1,5 @@
 import { IsOidcHttpAllowed } from "../tool.js";
+import { OIDC_SETTINGS_FIELD_TYPES } from "../../types/site.js";
 
 export function IsValidURL(url: string): boolean {
   const regex = /^(https?:\/\/)?((localhost|[\da-z.-]+\.[a-z]{2,10})(:[0-9]{1,5})?)?(\/[\w .-]*)*\/?$/i;
@@ -125,17 +126,10 @@ export function IsValidColors(colors: string): boolean {
   return true;
 }
 
-const OIDC_STRING_KEYS = [
-  "provider_name",
-  "issuer_url",
-  "client_id",
-  "client_secret",
-  "scopes",
-  "groups_claim",
-  "default_role_id",
-];
-const OIDC_BOOLEAN_KEYS = ["enabled", "allow_local_login", "auto_create_users"];
-const OIDC_KNOWN_KEYS = new Set([...OIDC_STRING_KEYS, ...OIDC_BOOLEAN_KEYS]);
+const OIDC_ALL_KEYS = Object.keys(OIDC_SETTINGS_FIELD_TYPES) as (keyof typeof OIDC_SETTINGS_FIELD_TYPES)[];
+const OIDC_STRING_KEYS = OIDC_ALL_KEYS.filter((k) => OIDC_SETTINGS_FIELD_TYPES[k] === "string");
+const OIDC_BOOLEAN_KEYS = OIDC_ALL_KEYS.filter((k) => OIDC_SETTINGS_FIELD_TYPES[k] === "boolean");
+const OIDC_KNOWN_KEYS = new Set<string>(OIDC_ALL_KEYS);
 
 /**
  * Structural validation of the `oidcSettings` site-data value (a JSON string):

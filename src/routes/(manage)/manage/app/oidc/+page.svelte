@@ -198,13 +198,13 @@
     loadingMappings = true;
     try {
       const result = (await apiCall("getOidcGroupRoleMappings")) as OidcGroupRoleMappingsView | { error: string };
-      if ("mappings" in result) {
+      if (result && typeof result === "object" && "mappings" in result) {
         mappings = result.mappings;
         mappingsSource = result.source;
         invalidMappings = result.invalid;
         mappingsEnvError = result.error ?? "";
       } else {
-        toast.error(result.error || "Failed to load group mappings");
+        toast.error(result?.error || "Failed to load group mappings");
       }
     } catch {
       toast.error("Failed to load group mappings");

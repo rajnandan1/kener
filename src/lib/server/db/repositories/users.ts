@@ -169,18 +169,21 @@ export class UsersRepository extends BaseRepository {
     return await this.knex("users").where({ id }).update(updateData);
   }
 
+  /** Replace the user's role set. Atomic: a failing insert never leaves the user without roles. */
   async updateUserRoles(id: number, roleIds: string[]): Promise<void> {
-    await this.knex("users_roles").where("users_id", id).delete();
-    if (roleIds.length > 0) {
-      const inserts = roleIds.map((roleId) => ({
-        users_id: id,
-        roles_id: roleId,
-        created_at: this.knex.fn.now(),
-        updated_at: this.knex.fn.now(),
-      }));
-      await this.knex("users_roles").insert(inserts);
-    }
-    await this.knex("users").where({ id }).update({ updated_at: this.knex.fn.now() });
+    await this.knex.transaction(async (trx) => {
+      await trx("users_roles").where("users_id", id).delete();
+      if (roleIds.length > 0) {
+        const inserts = roleIds.map((roleId) => ({
+          users_id: id,
+          roles_id: roleId,
+          created_at: trx.fn.now(),
+          updated_at: trx.fn.now(),
+        }));
+        await trx("users_roles").insert(inserts);
+      }
+      await trx("users").where({ id }).update({ updated_at: trx.fn.now() });
+    });
   }
 
   async updateUserIsActive(id: number, is_active: number): Promise<number> {
@@ -402,21 +405,17 @@ export class UsersRepository extends BaseRepository {
     return await this.knex("oidc_group_role_mappings").where("oidc_group", oidcGroup).first();
   }
 
+  /** Insert or update in one statement (oidc_group is unique); created_at survives an update. */
   async upsertOidcGroupRoleMapping(data: OidcGroupRoleMappingInsert): Promise<void> {
-    const existing = await this.getOidcGroupRoleMappingByGroup(data.oidc_group);
-    if (existing) {
-      await this.knex("oidc_group_role_mappings").where("id", existing.id).update({
-        role_id: data.role_id,
-        updated_at: this.knex.fn.now(),
-      });
-    } else {
-      await this.knex("oidc_group_role_mappings").insert({
+    await this.knex("oidc_group_role_mappings")
+      .insert({
         oidc_group: data.oidc_group,
         role_id: data.role_id,
         created_at: this.knex.fn.now(),
         updated_at: this.knex.fn.now(),
-      });
-    }
+      })
+      .onConflict("oidc_group")
+      .merge(["role_id", "updated_at"]);
   }
 
   async deleteOidcGroupRoleMapping(id: number): Promise<number> {

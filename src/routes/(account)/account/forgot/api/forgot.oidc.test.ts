@@ -51,6 +51,7 @@ describe("forgot-password for an OIDC account", () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ success: true });
     expect(sendEmail).not.toHaveBeenCalled();
+    expect(controller.GenerateToken).not.toHaveBeenCalled(); // no reset token is ever minted for an OIDC account
   });
   it("still emails local accounts", async () => {
     dbMock.getUserByEmail.mockResolvedValue({ id: 2, email: "l@example.com", auth_provider: "local" });

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { IsValidOidcSettings } from "./validators";
+import { OIDC_SETTINGS_FIELD_TYPES } from "../../types/site";
 
 const valid = {
   enabled: true,
@@ -40,5 +41,14 @@ describe("IsValidOidcSettings", () => {
     expect(IsValidOidcSettings(json({ ...valid, scopes: "profile email" }))).toBe(false);
     vi.stubEnv("KENER_OIDC_ALLOW_HTTP", "true");
     expect(IsValidOidcSettings(json({ ...valid, issuer_url: "http://idp.local" }))).toBe(true);
+  });
+
+  it("derives the known keys and their types from OIDC_SETTINGS_FIELD_TYPES (one source of truth)", () => {
+    expect(Object.keys(OIDC_SETTINGS_FIELD_TYPES).sort()).toEqual(Object.keys(valid).sort());
+    for (const [key, type] of Object.entries(OIDC_SETTINGS_FIELD_TYPES)) {
+      if (key === "enabled") continue; // drives the extra rules above; a plain boolean check is covered there
+      expect(IsValidOidcSettings(json({ enabled: false, [key]: type === "string" ? "x" : true }))).toBe(true);
+      expect(IsValidOidcSettings(json({ enabled: false, [key]: type === "string" ? true : "x" }))).toBe(false);
+    }
   });
 });

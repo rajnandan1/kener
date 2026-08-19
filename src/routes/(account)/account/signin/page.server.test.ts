@@ -111,19 +111,38 @@ describe("actions.login with local login allowed", () => {
     await expect(actions.login(loginEvent(member.email))).rejects.toMatchObject({ status: 302 });
   });
 
-  it("gives an OIDC account (empty password hash) the generic invalid-credentials response", async () => {
+  it("answers an unknown email exactly like a wrong password (no account enumeration)", async () => {
+    common.VerifyPassword.mockResolvedValueOnce(false);
+    const wrongPassword = (await actions.login(loginEvent(member.email, "nope"))) as {
+      status: number;
+      data: { error: string };
+    };
+    const unknown = (await actions.login(loginEvent("nobody@example.com"))) as {
+      status: number;
+      data: { error: string };
+    };
+    expect(wrongPassword.status).toBe(401);
+    expect(unknown.status).toBe(401);
+    expect(unknown.data.error).toBe(wrongPassword.data.error);
+    expect(unknown.data.error).not.toMatch(/exist/i);
+  });
+
+  it("gives a local account with an empty password hash the generic invalid-credentials response", async () => {
+    // Covers the `!passwordStored.password_hash` guard: a local row with no usable hash
+    // must neither authenticate nor reveal why.
     users.GetUserPasswordHashById.mockResolvedValueOnce({ password_hash: "" });
-    const result = (await actions.login(loginEvent(oidcUser.email))) as { status: number; data: { error: string } };
+    const result = (await actions.login(loginEvent(member.email))) as { status: number; data: { error: string } };
     expect(result.status).toBe(401);
     expect(result.data.error).toBe("Invalid password or Email");
     expect(result.data.error).not.toMatch(/SSO/);
+    expect(common.VerifyPassword).not.toHaveBeenCalled();
   });
 
-  it("refuses an OIDC account with a password even if a hash were present", async () => {
-    users.GetUserPasswordHashById.mockResolvedValueOnce({ password_hash: "somehash" });
+  it("refuses an OIDC account with a password before even looking at a hash", async () => {
     const result = (await actions.login(loginEvent(oidcUser.email))) as { status: number; data: { error: string } };
     expect(result.status).toBe(401);
     expect(result.data.error).toBe("Invalid password or Email");
+    expect(users.GetUserPasswordHashById).not.toHaveBeenCalled();
     expect(common.VerifyPassword).not.toHaveBeenCalled();
   });
 });

@@ -14,6 +14,7 @@ import { GetSiteDataByKey } from "./siteDataController.js";
 import { IsValidOidcSettings } from "./validators.js";
 import seedSiteData from "../db/seedSiteData.js";
 import GC from "../../global-constants.js";
+import { OIDC_SETTINGS_FIELD_TYPES } from "../../types/site.js";
 import type {
   OidcErrorCode,
   OidcGroupRoleMappingEntry,
@@ -66,7 +67,19 @@ export const OIDC_COOKIE_NAMES = {
 } as const;
 
 const OIDC_FIELDS = Object.keys(OIDC_ENV_KEYS) as (keyof OidcSettings)[];
-const BOOLEAN_FIELDS = new Set<keyof OidcSettings>(["enabled", "allow_local_login", "auto_create_users"]);
+const BOOLEAN_FIELDS = new Set<keyof OidcSettings>(
+  OIDC_FIELDS.filter((field) => OIDC_SETTINGS_FIELD_TYPES[field] === "boolean"),
+);
+
+/** What the admin UI/API sees instead of the client secret. Echoing it back means "unchanged". */
+export const OIDC_SECRET_MASK = "********";
+
+/**
+ * Timeout (seconds) for every HTTP request openid-client makes — discovery, token
+ * exchange, userinfo. Its default is 30 s, which is what an admin would wait for a
+ * "Test connection" against an unreachable issuer.
+ */
+export const OIDC_HTTP_TIMEOUT_SECONDS = 10;
 
 /** Thrown by the auth flow; `code` is the only thing that reaches the browser. */
 export class OidcAuthError extends Error {
@@ -237,7 +250,7 @@ export function MaskOidcSettings(settings: OidcSettings): OidcSettingsMasked {
   return {
     ...rest,
     // Fixed-width: MaskString would reveal the secret's length and last 4 characters.
-    client_secret: client_secret ? "********" : "",
+    client_secret: client_secret ? OIDC_SECRET_MASK : "",
     has_client_secret: !!client_secret,
   };
 }
@@ -249,7 +262,8 @@ let cachedCacheKey: string | null = null;
 
 async function discover(settings: OidcSettings): Promise<client.Configuration> {
   const issuer = ParseIssuerUrl(settings.issuer_url);
-  const options = issuer.protocol === "http:" ? { execute: [client.allowInsecureRequests] } : undefined;
+  const options: client.DiscoveryRequestOptions = { timeout: OIDC_HTTP_TIMEOUT_SECONDS };
+  if (issuer.protocol === "http:") options.execute = [client.allowInsecureRequests];
   return await client.discovery(issuer, settings.client_id, settings.client_secret, undefined, options);
 }
 
@@ -452,9 +466,10 @@ async function provisionOidcUser(settings: OidcSettings, identity: OidcIdentity)
   }
   const emailOwner = await db.getUserByEmail(identity.email);
   if (emailOwner) {
+    // Details are logged by the route: name records by id, never by email address.
     throw new OidcAuthError(
       "not_provisioned",
-      `email ${identity.email} already belongs to user ${emailOwner.id} (${emailOwner.auth_provider}); OIDC and local accounts are never merged`,
+      `the provider's email already belongs to user ${emailOwner.id} (${emailOwner.auth_provider}); OIDC and local accounts are never merged (sub=${identity.sub})`,
     );
   }
   // No mapped role → the active default role → refuse. There is deliberately no
@@ -487,7 +502,7 @@ async function provisionOidcUser(settings: OidcSettings, identity: OidcIdentity)
     });
   } catch (e) {
     if (isUniqueViolation(e)) {
-      throw new OidcAuthError("not_provisioned", `insert race for ${identity.email}: ${(e as Error).message}`);
+      throw new OidcAuthError("not_provisioned", `insert race for sub=${identity.sub}: ${(e as Error).message}`);
     }
     throw e;
   }
@@ -553,9 +568,7 @@ async function syncOidcProfile(user: UserRecordPublic, identity: OidcIdentity): 
     if (!owner || owner.id === user.id) {
       update.email = identity.email;
     } else {
-      console.warn(
-        `[oidc] Not updating email of user ${user.id}: ${identity.email} already belongs to user ${owner.id}`,
-      );
+      console.warn(`[oidc] Not updating email of user ${user.id}: the address already belongs to user ${owner.id}`);
     }
   }
   if (Object.keys(update).length === 0) return;
@@ -564,7 +577,7 @@ async function syncOidcProfile(user: UserRecordPublic, identity: OidcIdentity): 
     await db.updateUserProfile(user.id, update);
   } catch (e) {
     if (update.email && isUniqueViolation(e)) {
-      console.warn(`[oidc] Email ${update.email} was taken concurrently; keeping the old email for user ${user.id}`);
+      console.warn(`[oidc] The new email was taken concurrently; keeping the old email for user ${user.id}`);
       if (update.name) await db.updateUserProfile(user.id, { name: update.name });
     } else {
       throw e;
@@ -622,8 +635,9 @@ export async function TestOidcConnection(settings: OidcSettings): Promise<{
 /**
  * Turn an admin-submitted payload (object or JSON string) into the JSON to persist:
  * env-locked fields are dropped (env values are never written to the DB), omitted
- * fields keep their stored value (so an untouched secret survives), unknown keys
- * are ignored, and the result is validated. Throws Error(message) on bad input.
+ * fields keep their stored value (so an untouched secret survives, as does one
+ * echoed back as the mask), unknown keys are ignored, and the result is
+ * validated. Throws Error(message) on bad input.
  */
 export async function PrepareOidcSettingsForStore(incoming: unknown): Promise<string> {
   let parsed: unknown = incoming;
@@ -645,6 +659,9 @@ export async function PrepareOidcSettingsForStore(incoming: unknown): Promise<st
   for (const field of OIDC_FIELDS) {
     if (locked.has(field)) continue;
     if (!(field in input) || input[field] === undefined) continue;
+    // The UI omits an untouched secret, but a stale or hand-written client may echo the
+    // mask back; that must never replace (or become) the stored secret.
+    if (field === "client_secret" && input[field] === OIDC_SECRET_MASK) continue;
     next[field] = input[field];
   }
 
