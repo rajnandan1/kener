@@ -206,8 +206,14 @@ export interface OidcPublicState {
   allowLocalLogin: boolean;
 }
 
-/** Identity extracted from the ID token / userinfo. */
+/**
+ * Identity extracted from the ID token / userinfo. An account is keyed by
+ * `(issuer, sub)`: a subject is only unique within one provider, so a new
+ * issuer handing out a known `sub` must never resolve to the old account.
+ */
 export interface OidcIdentity {
+  /** The discovered issuer identifier (openid-client validates the ID token's `iss` against it). */
+  issuer: string;
   sub: string;
   email: string;
   name: string;

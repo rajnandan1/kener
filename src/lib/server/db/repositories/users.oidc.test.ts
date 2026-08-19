@@ -32,22 +32,51 @@ afterEach(async () => {
 });
 
 describe("migration 20260818120000_add_oidc_support", () => {
-  it("adds users.auth_provider (default local), users.oidc_sub and the mapping table", async () => {
+  it("adds users.auth_provider (default local), users.oidc_issuer + oidc_sub and the mapping table", async () => {
     expect(await knex.schema.hasColumn("users", "auth_provider")).toBe(true);
+    expect(await knex.schema.hasColumn("users", "oidc_issuer")).toBe(true);
     expect(await knex.schema.hasColumn("users", "oidc_sub")).toBe(true);
     expect(await knex.schema.hasTable("oidc_group_role_mappings")).toBe(true);
     const [id] = await repo.insertUser({ email: "a@example.com", name: "A", password_hash: "x", role_ids: ["member"] });
     const row = await knex("users").where({ id }).first();
     expect(row.auth_provider).toBe("local");
+    expect(row.oidc_issuer).toBeNull();
     expect(row.oidc_sub).toBeNull();
   });
 
   it("is reversible (down → up)", async () => {
     await knex.migrate.down({ migrationSource });
+    expect(await knex.schema.hasColumn("users", "oidc_issuer")).toBe(false);
     expect(await knex.schema.hasColumn("users", "oidc_sub")).toBe(false);
     expect(await knex.schema.hasTable("oidc_group_role_mappings")).toBe(false);
     await knex.migrate.up({ migrationSource });
+    expect(await knex.schema.hasColumn("users", "oidc_issuer")).toBe(true);
     expect(await knex.schema.hasColumn("users", "oidc_sub")).toBe(true);
+  });
+
+  it("upgrades a database from an earlier build that keyed OIDC accounts by subject alone", async () => {
+    // Roll back, recreate the old shape (oidc_sub with a single-column unique), migrate again.
+    await knex.migrate.down({ migrationSource });
+    await knex.schema.alterTable("users", (table) => {
+      table.string("auth_provider", 20).notNullable().defaultTo("local");
+      table.string("oidc_sub", 255).nullable().unique();
+    });
+    await knex.migrate.up({ migrationSource });
+    expect(await knex.schema.hasColumn("users", "oidc_issuer")).toBe(true);
+    // The subject-only uniqueness is gone: the same sub may now exist under two issuers.
+    const oidcUser = (issuer: string, email: string) =>
+      repo.insertUser({
+        email,
+        name: "X",
+        password_hash: "",
+        role_ids: [],
+        auth_provider: "oidc",
+        oidc_issuer: issuer,
+        oidc_sub: "same",
+      });
+    await oidcUser("https://a.example.com", "a1@example.com");
+    await oidcUser("https://b.example.com", "b1@example.com");
+    await expect(oidcUser("https://b.example.com", "b2@example.com")).rejects.toThrow(/UNIQUE/);
   });
 });
 
@@ -67,7 +96,7 @@ describe("insertUser", () => {
     expect(row.is_owner).toBe("NO");
   });
 
-  it("forwards is_active, is_verified, auth_provider and oidc_sub when provided", async () => {
+  it("forwards is_active, is_verified, auth_provider, oidc_issuer and oidc_sub when provided", async () => {
     const [id] = await repo.insertUser({
       email: "o@example.com",
       name: "OIDC",
@@ -76,11 +105,13 @@ describe("insertUser", () => {
       is_active: 1,
       is_verified: 1,
       auth_provider: "oidc",
+      oidc_issuer: "https://idp.example.com",
       oidc_sub: "sub-123",
     });
     const row = await knex("users").where({ id }).first();
     expect(row.is_verified).toBe(1);
     expect(row.auth_provider).toBe("oidc");
+    expect(row.oidc_issuer).toBe("https://idp.example.com");
     expect(row.oidc_sub).toBe("sub-123");
     const [invited] = await repo.insertUser({
       email: "i@example.com",
@@ -92,25 +123,21 @@ describe("insertUser", () => {
     expect((await knex("users").where({ id: invited }).first()).is_active).toBe(0);
   });
 
-  it("rejects a second user with the same oidc_sub", async () => {
-    await repo.insertUser({
-      email: "x1@example.com",
-      name: "X",
-      password_hash: "",
-      role_ids: [],
-      auth_provider: "oidc",
-      oidc_sub: "dup",
-    });
-    await expect(
+  it("rejects a second user with the same (issuer, sub) but allows the same sub under another issuer", async () => {
+    const oidcUser = (issuer: string, email: string) =>
       repo.insertUser({
-        email: "x2@example.com",
+        email,
         name: "X",
         password_hash: "",
         role_ids: [],
         auth_provider: "oidc",
+        oidc_issuer: issuer,
         oidc_sub: "dup",
-      }),
-    ).rejects.toThrow(/UNIQUE/);
+      });
+    await oidcUser("https://a.example.com", "x1@example.com");
+    await expect(oidcUser("https://a.example.com", "x2@example.com")).rejects.toThrow(/UNIQUE/);
+    // A subject is only unique within one provider (GitLab instances hand out sequential ids).
+    await oidcUser("https://b.example.com", "x3@example.com");
   });
 });
 
@@ -125,36 +152,42 @@ describe("updateUserRoles", () => {
   });
 });
 
-describe("getUserByOidcSub / getUsersByRoleId / updateUserProfile", () => {
-  it("finds a user by sub with role ids and the new columns", async () => {
+describe("getUserByOidcIdentity / getUsersByRoleId / updateUserProfile", () => {
+  it("finds a user by (issuer, sub) with role ids and the new columns — never by sub alone", async () => {
     await repo.insertUser({
       email: "s@example.com",
       name: "S",
       password_hash: "",
       role_ids: ["member", "editor"],
       auth_provider: "oidc",
+      oidc_issuer: "https://a.example.com",
       oidc_sub: "sub-s",
     });
-    const user = await repo.getUserByOidcSub("sub-s");
+    const user = await repo.getUserByOidcIdentity("https://a.example.com", "sub-s");
     expect(user?.email).toBe("s@example.com");
     expect(user?.auth_provider).toBe("oidc");
+    expect(user?.oidc_issuer).toBe("https://a.example.com");
     expect(user?.oidc_sub).toBe("sub-s");
     expect([...(user?.role_ids ?? [])].sort()).toEqual(["editor", "member"]);
-    expect(await repo.getUserByOidcSub("nope")).toBeUndefined();
+    expect(await repo.getUserByOidcIdentity("https://a.example.com", "nope")).toBeUndefined();
+    // Same subject at a different provider is a different person.
+    expect(await repo.getUserByOidcIdentity("https://b.example.com", "sub-s")).toBeUndefined();
   });
 
-  it("getUsersByRoleId projects auth_provider and oidc_sub", async () => {
+  it("getUsersByRoleId projects auth_provider, oidc_issuer and oidc_sub", async () => {
     await repo.insertUser({
       email: "r@example.com",
       name: "R",
       password_hash: "",
       role_ids: ["editor"],
       auth_provider: "oidc",
+      oidc_issuer: "https://a.example.com",
       oidc_sub: "sub-r",
     });
     const rows = await repo.getUsersByRoleId("editor");
     expect(rows).toHaveLength(1);
     expect(rows[0].auth_provider).toBe("oidc");
+    expect(rows[0].oidc_issuer).toBe("https://a.example.com");
     expect(rows[0].oidc_sub).toBe("sub-r");
   });
 

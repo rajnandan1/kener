@@ -243,6 +243,7 @@ export interface UserRecord {
   is_active: number;
   is_verified: number;
   auth_provider: "local" | "oidc";
+  oidc_issuer: string | null;
   oidc_sub: string | null;
   role_ids: string[]; // Array of role IDs
   created_at: Date;
@@ -258,6 +259,7 @@ export interface UserRecordInsert {
   is_verified?: number;
   is_owner?: string;
   auth_provider?: "local" | "oidc";
+  oidc_issuer?: string | null;
   oidc_sub?: string | null;
 }
 
@@ -269,6 +271,7 @@ export interface UserRecordPublic {
   is_verified: number;
   is_owner: string;
   auth_provider: "local" | "oidc";
+  oidc_issuer: string | null;
   oidc_sub: string | null;
   role_ids: string[];
   created_at: Date;

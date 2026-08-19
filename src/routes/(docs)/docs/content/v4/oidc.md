@@ -16,7 +16,7 @@ Kener implements the OpenID Connect Authorization Code Flow with PKCE:
 5. Kener exchanges the code for tokens, verifies them, and reads the user's identity and group memberships.
 6. A Kener session is created and roles are assigned from the group→role mappings.
 
-OIDC accounts and local accounts are kept separate — there is no account merging. Accounts are matched by the provider's `sub` claim, never by email.
+OIDC accounts and local accounts are kept separate — there is no account merging. Accounts are matched by the provider's issuer **and** `sub` claim together, never by email — a `sub` is only unique within one provider. Consequently, pointing Kener at a different issuer (a new identity provider, or the same one under a new URL) means no existing OIDC account matches any more: users are treated as new identities on their next sign-in (and refused as "not provisioned" while their email is still taken by the old account).
 
 ## Setup {#setup}
 

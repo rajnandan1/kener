@@ -383,6 +383,8 @@ export async function HandleCallback(
 
   const normalizedEmail = email.toLowerCase().trim();
   return {
+    // The discovered issuer identifier; openid-client has validated the ID token's `iss` against it.
+    issuer: config.serverMetadata().issuer,
     sub,
     email: normalizedEmail,
     name: name.trim() || normalizedEmail,
@@ -496,6 +498,7 @@ async function provisionOidcUser(settings: OidcSettings, identity: OidcIdentity)
       password_hash: "",
       role_ids: roleIds,
       auth_provider: GC.AUTH_PROVIDER_OIDC,
+      oidc_issuer: identity.issuer,
       oidc_sub: identity.sub,
       is_active: 1,
       is_verified: 1,
@@ -507,7 +510,7 @@ async function provisionOidcUser(settings: OidcSettings, identity: OidcIdentity)
     throw e;
   }
 
-  const created = await db.getUserByOidcSub(identity.sub);
+  const created = await db.getUserByOidcIdentity(identity.issuer, identity.sub);
   if (!created) throw new OidcAuthError("auth_failed", "Failed to load the newly created OIDC user");
   return created;
 }
@@ -585,15 +588,19 @@ async function syncOidcProfile(user: UserRecordPublic, identity: OidcIdentity): 
   }
 }
 
-/** Find the user by `sub`, provisioning on first login (if allowed), then sync roles + profile. */
+/**
+ * Find the user by `(issuer, sub)`, provisioning on first login (if allowed),
+ * then sync roles + profile. Keying on the pair means a changed issuer never
+ * resolves a new provider's subject to an account from the previous one.
+ */
 export async function FindOrCreateOidcUser(settings: OidcSettings, identity: OidcIdentity): Promise<UserRecordPublic> {
-  const existing = await db.getUserByOidcSub(identity.sub);
+  const existing = await db.getUserByOidcIdentity(identity.issuer, identity.sub);
   if (!existing) {
     return await provisionOidcUser(settings, identity);
   }
   await SyncOidcUserRoles(existing, identity.groups, settings);
   await syncOidcProfile(existing, identity);
-  const refreshed = await db.getUserByOidcSub(identity.sub);
+  const refreshed = await db.getUserByOidcIdentity(identity.issuer, identity.sub);
   if (!refreshed) throw new OidcAuthError("auth_failed", "User disappeared during role sync");
   // The sync above already wrote the (possibly empty) role set so admins can see it in Users;
   // a user left without any active role is denied. `role_ids` is ACTIVE-only.

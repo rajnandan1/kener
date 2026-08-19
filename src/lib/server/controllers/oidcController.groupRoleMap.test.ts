@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const dbMock = vi.hoisted(() => ({
   getSiteDataByKey: vi.fn(),
-  getUserByOidcSub: vi.fn(),
+  getUserByOidcIdentity: vi.fn(),
   getUserByEmail: vi.fn(),
   insertUser: vi.fn(),
   getOidcRoleIdsForGroups: vi.fn(),
@@ -210,6 +210,7 @@ const publicUser = (over: Record<string, unknown> = {}) => ({
   is_verified: 1,
   is_owner: "NO",
   auth_provider: "oidc",
+  oidc_issuer: "https://gitlab.example.com",
   oidc_sub: "sub-7",
   role_ids: ["member"],
   created_at: new Date(),
@@ -218,7 +219,13 @@ const publicUser = (over: Record<string, unknown> = {}) => ({
 });
 
 describe("role sync under KENER_OIDC_GROUP_ROLE_MAP", () => {
-  const identity = { sub: "sub-7", email: "u@example.com", name: "U", groups: ["devs"] };
+  const identity = {
+    issuer: baseSettings.issuer_url,
+    sub: "sub-7",
+    email: "u@example.com",
+    name: "U",
+    groups: ["devs"],
+  };
 
   beforeEach(() => {
     vi.stubEnv(ENV, JSON.stringify({ devs: "editor", ops: "admin", olds: "retired" }));
@@ -229,7 +236,7 @@ describe("role sync under KENER_OIDC_GROUP_ROLE_MAP", () => {
       { id: 2, oidc_group: "qa", role_id: "member" },
     ]);
     dbMock.getOidcRoleIdsForGroups.mockRejectedValue(new Error("DB mappings must not be consulted"));
-    dbMock.getUserByOidcSub.mockResolvedValue(publicUser());
+    dbMock.getUserByOidcIdentity.mockResolvedValue(publicUser());
     dbMock.getRoleById.mockResolvedValue({ id: "member", status: "ACTIVE" });
   });
 
@@ -279,7 +286,7 @@ describe("role sync under KENER_OIDC_GROUP_ROLE_MAP", () => {
   });
 
   it("never strips admin from the owner account", async () => {
-    dbMock.getUserByOidcSub.mockResolvedValue(publicUser({ is_owner: "YES", role_ids: ["admin"] }));
+    dbMock.getUserByOidcIdentity.mockResolvedValue(publicUser({ is_owner: "YES", role_ids: ["admin"] }));
     dbMock.getUserAssignedRoleIds.mockResolvedValue(["admin"]);
     await oidc.FindOrCreateOidcUser(baseSettings, identity);
     const [, roles] = dbMock.updateUserRoles.mock.calls[0];
@@ -287,13 +294,19 @@ describe("role sync under KENER_OIDC_GROUP_ROLE_MAP", () => {
   });
 
   it("provisions a new user with the env-mapped roles", async () => {
-    dbMock.getUserByOidcSub
+    dbMock.getUserByOidcIdentity
       .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(publicUser({ oidc_sub: "sub-new", role_ids: ["editor"] }));
     dbMock.getUserByEmail.mockResolvedValue(undefined);
     await oidc.FindOrCreateOidcUser(
       { ...baseSettings, auto_create_users: true },
-      { sub: "sub-new", email: "new@example.com", name: "New", groups: ["devs", "unknown"] },
+      {
+        issuer: baseSettings.issuer_url,
+        sub: "sub-new",
+        email: "new@example.com",
+        name: "New",
+        groups: ["devs", "unknown"],
+      },
     );
     expect(dbMock.insertUser).toHaveBeenCalledWith(expect.objectContaining({ role_ids: ["editor"] }));
     expect(dbMock.getOidcRoleIdsForGroups).not.toHaveBeenCalled();

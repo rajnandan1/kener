@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // ---- shared mocks (also used by later describe blocks in this file) ----
 const dbMock = vi.hoisted(() => ({
   getSiteDataByKey: vi.fn(),
-  getUserByOidcSub: vi.fn(),
+  getUserByOidcIdentity: vi.fn(),
   getUserByEmail: vi.fn(),
   insertUser: vi.fn(),
   getOidcRoleIdsForGroups: vi.fn(),
@@ -44,6 +44,8 @@ const baseSettings: OidcSettings = {
   auto_create_users: false,
   default_role_id: "member",
 };
+
+const ISSUER = baseSettings.issuer_url;
 
 /** Makes db.getSiteDataByKey("oidcSettings") return the given (partial) settings object. */
 function storeSettings(partial: Partial<OidcSettings> | null) {
@@ -222,6 +224,7 @@ const publicUser = (over: Record<string, unknown> = {}) => ({
   is_verified: 1,
   is_owner: "NO",
   auth_provider: "oidc",
+  oidc_issuer: "https://gitlab.example.com",
   oidc_sub: "sub-7",
   role_ids: ["member"],
   created_at: new Date(),
@@ -317,7 +320,14 @@ describe("HandleCallback", () => {
       fakeTokens({ sub: "sub-1", email: " Ada@Example.COM ", preferred_username: "ada", groups: ["devs"] }),
     );
     const identity = await oidc.HandleCallback(baseSettings, callbackUrl, cbUrl, "st", "nn", "verifier-123");
-    expect(identity).toEqual({ sub: "sub-1", email: "ada@example.com", name: "ada", groups: ["devs"] });
+    // `issuer` is the discovered (and by openid-client validated) issuer identifier, not the configured URL.
+    expect(identity).toEqual({
+      issuer: "https://gitlab.example.com",
+      sub: "sub-1",
+      email: "ada@example.com",
+      name: "ada",
+      groups: ["devs"],
+    });
     const exchangeUrl = oidcClientMock.authorizationCodeGrant.mock.calls[0][1] as URL;
     expect(exchangeUrl.href).toBe("https://status.example.com/account/oidc/callback?code=abc&state=st");
     const grantOpts = oidcClientMock.authorizationCodeGrant.mock.calls[0][2] as Record<string, string>;
@@ -347,10 +357,10 @@ describe("HandleCallback", () => {
 });
 
 describe("FindOrCreateOidcUser — provisioning", () => {
-  const identity = { sub: "sub-new", email: "new@example.com", name: "New", groups: ["devs"] };
+  const identity = { issuer: ISSUER, sub: "sub-new", email: "new@example.com", name: "New", groups: ["devs"] };
 
   it("rejects unknown users when auto_create_users is off", async () => {
-    dbMock.getUserByOidcSub.mockResolvedValue(undefined);
+    dbMock.getUserByOidcIdentity.mockResolvedValue(undefined);
     await expect(
       oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: false }, identity),
     ).rejects.toMatchObject({ code: "not_provisioned" });
@@ -358,7 +368,7 @@ describe("FindOrCreateOidcUser — provisioning", () => {
   });
 
   it("rejects with the same not_provisioned code when the email belongs to another account", async () => {
-    dbMock.getUserByOidcSub.mockResolvedValue(undefined);
+    dbMock.getUserByOidcIdentity.mockResolvedValue(undefined);
     dbMock.getUserByEmail.mockResolvedValue(publicUser({ id: 1, auth_provider: "local", oidc_sub: null }));
     const error = (await oidc
       .FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true }, identity)
@@ -371,7 +381,7 @@ describe("FindOrCreateOidcUser — provisioning", () => {
   });
 
   it("creates a verified, active OIDC user with mapped roles", async () => {
-    dbMock.getUserByOidcSub
+    dbMock.getUserByOidcIdentity
       .mockResolvedValueOnce(undefined)
       .mockResolvedValueOnce(publicUser({ oidc_sub: "sub-new", role_ids: ["editor"] }));
     dbMock.getUserByEmail.mockResolvedValue(undefined);
@@ -383,15 +393,19 @@ describe("FindOrCreateOidcUser — provisioning", () => {
       password_hash: "",
       role_ids: ["editor"],
       auth_provider: "oidc",
+      oidc_issuer: ISSUER,
       oidc_sub: "sub-new",
       is_active: 1,
       is_verified: 1,
     });
     expect(user.role_ids).toEqual(["editor"]);
+    // Looked up (and re-read) by the pair, never by sub alone.
+    expect(dbMock.getUserByOidcIdentity).toHaveBeenCalledWith(ISSUER, "sub-new");
+    expect(dbMock.getUserByOidcIdentity.mock.calls.every(([iss]) => iss === ISSUER)).toBe(true);
   });
 
   it("uses the active default_role_id when no group matches", async () => {
-    dbMock.getUserByOidcSub.mockResolvedValueOnce(undefined).mockResolvedValueOnce(publicUser());
+    dbMock.getUserByOidcIdentity.mockResolvedValueOnce(undefined).mockResolvedValueOnce(publicUser());
     dbMock.getUserByEmail.mockResolvedValue(undefined);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
     dbMock.getRoleById.mockResolvedValue({ id: "viewer", status: "ACTIVE" });
@@ -400,7 +414,7 @@ describe("FindOrCreateOidcUser — provisioning", () => {
   });
 
   it("refuses (not_provisioned) when no group matches and no default role is set — no hardcoded member floor", async () => {
-    dbMock.getUserByOidcSub.mockResolvedValue(undefined);
+    dbMock.getUserByOidcIdentity.mockResolvedValue(undefined);
     dbMock.getUserByEmail.mockResolvedValue(undefined);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
     await expect(
@@ -410,7 +424,7 @@ describe("FindOrCreateOidcUser — provisioning", () => {
   });
 
   it("refuses (not_provisioned) when no group matches and the default role is inactive", async () => {
-    dbMock.getUserByOidcSub.mockResolvedValue(undefined);
+    dbMock.getUserByOidcIdentity.mockResolvedValue(undefined);
     dbMock.getUserByEmail.mockResolvedValue(undefined);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
     dbMock.getRoleById.mockResolvedValue({ id: "viewer", status: "INACTIVE" });
@@ -421,7 +435,7 @@ describe("FindOrCreateOidcUser — provisioning", () => {
   });
 
   it("a mapped role is enough even without a default role", async () => {
-    dbMock.getUserByOidcSub.mockResolvedValueOnce(undefined).mockResolvedValueOnce(publicUser());
+    dbMock.getUserByOidcIdentity.mockResolvedValueOnce(undefined).mockResolvedValueOnce(publicUser());
     dbMock.getUserByEmail.mockResolvedValue(undefined);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
     await oidc.FindOrCreateOidcUser({ ...baseSettings, auto_create_users: true, default_role_id: "" }, identity);
@@ -430,7 +444,7 @@ describe("FindOrCreateOidcUser — provisioning", () => {
   });
 
   it("maps a unique-constraint race on insert to not_provisioned", async () => {
-    dbMock.getUserByOidcSub.mockResolvedValue(undefined);
+    dbMock.getUserByOidcIdentity.mockResolvedValue(undefined);
     dbMock.getUserByEmail.mockResolvedValue(undefined);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
     dbMock.insertUser.mockRejectedValue(new Error("SQLITE_CONSTRAINT: UNIQUE constraint failed: users.email"));
@@ -444,10 +458,10 @@ describe("FindOrCreateOidcUser — provisioning", () => {
 });
 
 describe("FindOrCreateOidcUser — existing user sync", () => {
-  const identity = { sub: "sub-7", email: "u@example.com", name: "U", groups: ["devs"] };
+  const identity = { issuer: ISSUER, sub: "sub-7", email: "u@example.com", name: "U", groups: ["devs"] };
 
   beforeEach(() => {
-    dbMock.getUserByOidcSub.mockResolvedValue(publicUser());
+    dbMock.getUserByOidcIdentity.mockResolvedValue(publicUser());
     dbMock.getAllOidcGroupRoleMappings.mockResolvedValue([
       { id: 1, oidc_group: "devs", role_id: "editor" },
       { id: 2, oidc_group: "ops", role_id: "admin" },
@@ -459,6 +473,7 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
     dbMock.getUserAssignedRoleIds.mockResolvedValue(["admin", "custom"]); // admin was mapped from ops; custom is manual
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
     await oidc.FindOrCreateOidcUser(baseSettings, identity);
+    expect(dbMock.getUserByOidcIdentity).toHaveBeenCalledWith(ISSUER, "sub-7");
     expect(dbMock.getOidcRoleIdsForGroups).toHaveBeenCalledWith(["devs"]);
     const [, roles] = dbMock.updateUserRoles.mock.calls[0];
     expect([...roles].sort()).toEqual(["custom", "editor"]);
@@ -483,7 +498,9 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
 
   it("does not fall back to an inactive default role, does not write when nothing changed, and denies a user left with no roles", async () => {
     dbMock.getRoleById.mockResolvedValue({ id: "member", status: "INACTIVE" });
-    dbMock.getUserByOidcSub.mockResolvedValueOnce(publicUser()).mockResolvedValueOnce(publicUser({ role_ids: [] }));
+    dbMock.getUserByOidcIdentity
+      .mockResolvedValueOnce(publicUser())
+      .mockResolvedValueOnce(publicUser({ role_ids: [] }));
     dbMock.getUserAssignedRoleIds.mockResolvedValue([]);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
     await expect(oidc.FindOrCreateOidcUser(baseSettings, { ...identity, groups: [] })).rejects.toMatchObject({
@@ -495,7 +512,9 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
   it("denies (no_roles) an existing user whose last managed role was revoked, after writing the empty set", async () => {
     // Was in devs (editor); left every group; default role is unset → sync writes [] so admins can
     // see it in Users, and the login is refused.
-    dbMock.getUserByOidcSub.mockResolvedValueOnce(publicUser()).mockResolvedValueOnce(publicUser({ role_ids: [] }));
+    dbMock.getUserByOidcIdentity
+      .mockResolvedValueOnce(publicUser())
+      .mockResolvedValueOnce(publicUser({ role_ids: [] }));
     dbMock.getUserAssignedRoleIds.mockResolvedValue(["editor"]);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue([]);
     await expect(
@@ -505,7 +524,7 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
   });
 
   it("never strips admin from the owner account", async () => {
-    dbMock.getUserByOidcSub.mockResolvedValue(publicUser({ is_owner: "YES", role_ids: ["admin"] }));
+    dbMock.getUserByOidcIdentity.mockResolvedValue(publicUser({ is_owner: "YES", role_ids: ["admin"] }));
     dbMock.getUserAssignedRoleIds.mockResolvedValue(["admin"]);
     dbMock.getOidcRoleIdsForGroups.mockResolvedValue(["editor"]);
     await oidc.FindOrCreateOidcUser(baseSettings, identity);

@@ -1,7 +1,9 @@
 import type { Knex } from "knex";
 
+const OIDC_IDENTITY_UNIQUE = "users_oidc_issuer_sub_unique";
+
 export async function up(knex: Knex): Promise<void> {
-  // 1. Add auth_provider and oidc_sub columns to users table
+  // 1. Add auth_provider and the OIDC identity columns to users table
   const hasAuthProvider = await knex.schema.hasColumn("users", "auth_provider");
   if (!hasAuthProvider) {
     await knex.schema.alterTable("users", (table) => {
@@ -10,11 +12,23 @@ export async function up(knex: Knex): Promise<void> {
     });
   }
 
+  // An OIDC account is keyed by (issuer, sub): a subject is only unique within
+  // one provider, so the same `sub` may legitimately exist under two issuers and
+  // a new issuer handing out a known `sub` must not resolve to the old account.
   const hasOidcSub = await knex.schema.hasColumn("users", "oidc_sub");
+  const hasOidcIssuer = await knex.schema.hasColumn("users", "oidc_issuer");
   if (!hasOidcSub) {
     await knex.schema.alterTable("users", (table) => {
-      // Subject identifier from the OIDC provider (unique per provider)
-      table.string("oidc_sub", 255).nullable().unique();
+      table.string("oidc_issuer", 255).nullable();
+      table.string("oidc_sub", 255).nullable();
+      table.unique(["oidc_issuer", "oidc_sub"], { indexName: OIDC_IDENTITY_UNIQUE });
+    });
+  } else if (!hasOidcIssuer) {
+    // Earlier builds of this feature keyed accounts by subject alone (unique on oidc_sub).
+    await knex.schema.alterTable("users", (table) => {
+      table.string("oidc_issuer", 255).nullable();
+      table.dropUnique(["oidc_sub"]);
+      table.unique(["oidc_issuer", "oidc_sub"], { indexName: OIDC_IDENTITY_UNIQUE });
     });
   }
 
@@ -36,6 +50,14 @@ export async function up(knex: Knex): Promise<void> {
 
 export async function down(knex: Knex): Promise<void> {
   await knex.schema.dropTableIfExists("oidc_group_role_mappings");
+
+  const hasOidcIssuer = await knex.schema.hasColumn("users", "oidc_issuer");
+  if (hasOidcIssuer) {
+    await knex.schema.alterTable("users", (table) => {
+      table.dropUnique(["oidc_issuer", "oidc_sub"], OIDC_IDENTITY_UNIQUE);
+      table.dropColumn("oidc_issuer");
+    });
+  }
 
   const hasOidcSub = await knex.schema.hasColumn("users", "oidc_sub");
   if (hasOidcSub) {

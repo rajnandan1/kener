@@ -31,6 +31,7 @@ export class UsersRepository extends BaseRepository {
     "is_verified",
     "is_owner",
     "auth_provider",
+    "oidc_issuer",
     "oidc_sub",
     "created_at",
     "updated_at",
@@ -94,6 +95,7 @@ export class UsersRepository extends BaseRepository {
       password_hash: data.password_hash,
       is_owner: data.is_owner || "NO",
       auth_provider: data.auth_provider || GC.AUTH_PROVIDER_LOCAL,
+      oidc_issuer: data.oidc_issuer ?? null,
       oidc_sub: data.oidc_sub ?? null,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
@@ -329,6 +331,7 @@ export class UsersRepository extends BaseRepository {
         "users.is_verified",
         "users.is_owner",
         "users.auth_provider",
+        "users.oidc_issuer",
         "users.oidc_sub",
         "users.created_at",
         "users.updated_at",
@@ -386,10 +389,11 @@ export class UsersRepository extends BaseRepository {
 
   // ============ OIDC ============
 
-  async getUserByOidcSub(oidcSub: string): Promise<UserRecordPublic | undefined> {
+  /** The account linked to this (issuer, sub) pair — a subject alone is not an identity. */
+  async getUserByOidcIdentity(issuer: string, oidcSub: string): Promise<UserRecordPublic | undefined> {
     const row = await this.knex("users")
       .select(...this.userColumns)
-      .where("oidc_sub", oidcSub)
+      .where({ oidc_issuer: issuer, oidc_sub: oidcSub })
       .first();
     if (!row) return undefined;
     return await this.enrichWithRoleIds(row);
