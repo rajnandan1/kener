@@ -237,6 +237,17 @@ describe("BuildAuthorizationUrl / config cache", () => {
     expect(params.state).toBe(first.state);
     expect(params.nonce).toBe(first.nonce);
     expect(params.scope).toBe("openid profile email");
+    expect(params.prompt).toBeUndefined();
+  });
+
+  it("adds prompt=login only when re-authentication is forced (after a logout)", async () => {
+    oidcClientMock.discovery.mockResolvedValue(fakeConfig());
+    oidcClientMock.buildAuthorizationUrl.mockReturnValue(new URL("https://gitlab.example.com/oauth/authorize?x=1"));
+    await oidc.BuildAuthorizationUrl(baseSettings, "https://status.example.com/account/oidc/callback", {
+      forceLogin: true,
+    });
+    const params = oidcClientMock.buildAuthorizationUrl.mock.calls[0][1] as Record<string, string>;
+    expect(params.prompt).toBe("login");
   });
 
   it("re-discovers when client_secret changes and after ClearOidcConfigCache", async () => {

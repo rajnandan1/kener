@@ -61,6 +61,8 @@ export const OIDC_COOKIE_NAMES = {
   state: "oidc-state",
   nonce: "oidc-nonce",
   codeVerifier: "oidc-code-verifier",
+  /** Set by logout, consumed by the next /account/oidc/login: forces `prompt=login` at the IdP. */
+  reauth: "oidc-reauth",
 } as const;
 
 const OIDC_FIELDS = Object.keys(OIDC_ENV_KEYS) as (keyof OidcSettings)[];
@@ -279,6 +281,7 @@ export function ClearOidcConfigCache(): void {
 export async function BuildAuthorizationUrl(
   settings: OidcSettings,
   callbackUrl: string,
+  options: { forceLogin?: boolean } = {},
 ): Promise<{ url: string; state: string; nonce: string; codeVerifier: string }> {
   const config = await getOidcConfig(settings);
 
@@ -295,6 +298,9 @@ export async function BuildAuthorizationUrl(
     code_challenge: codeChallenge,
     code_challenge_method: "S256",
   };
+  // After a Kener logout the IdP's SSO session is still alive; `prompt=login` makes it
+  // ask for credentials again instead of silently re-issuing a code.
+  if (options.forceLogin) parameters.prompt = "login";
 
   const url = client.buildAuthorizationUrl(config, parameters);
   return { url: url.href, state, nonce, codeVerifier };

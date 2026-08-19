@@ -4,7 +4,12 @@ const controller = vi.hoisted(() => ({
   GetEffectiveOidcSettings: vi.fn(),
   BuildAuthorizationUrl: vi.fn(),
   GetOidcCallbackUrl: vi.fn(() => "https://status.example.com/account/oidc/callback"),
-  OIDC_COOKIE_NAMES: { state: "oidc-state", nonce: "oidc-nonce", codeVerifier: "oidc-code-verifier" },
+  OIDC_COOKIE_NAMES: {
+    state: "oidc-state",
+    nonce: "oidc-nonce",
+    codeVerifier: "oidc-code-verifier",
+    reauth: "oidc-reauth",
+  },
 }));
 vi.mock("$lib/server/controllers/oidcController", () => controller);
 
@@ -41,12 +46,14 @@ describe("GET /account/oidc/login", () => {
   });
 
   it("sets state/nonce/verifier cookies with strict flags and redirects to the IdP", async () => {
-    const { event, jar } = makeEvent();
+    const { event, jar, cookies } = makeEvent();
     await expect(GET(event)).rejects.toMatchObject({ status: 302, location: "https://idp.example.com/auth?x=1" });
     expect(controller.BuildAuthorizationUrl).toHaveBeenCalledWith(
       { enabled: true },
       "https://status.example.com/account/oidc/callback",
+      { forceLogin: false },
     );
+    expect(cookies.delete).not.toHaveBeenCalled();
     for (const [name, value] of [
       ["oidc-state", "st"],
       ["oidc-nonce", "nn"],
@@ -56,6 +63,19 @@ describe("GET /account/oidc/login", () => {
       expect(cookie?.value).toBe(value);
       expect(cookie?.opts).toMatchObject({ httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: 600 });
     }
+  });
+
+  it("after a logout (oidc-reauth cookie) forces re-authentication at the IdP and consumes the cookie", async () => {
+    vi.stubEnv("KENER_BASE_PATH", "/status");
+    const { event, jar, cookies } = makeEvent();
+    jar.set("oidc-reauth", { value: "1", opts: {} });
+    await expect(GET(event)).rejects.toMatchObject({ status: 302 });
+    expect(controller.BuildAuthorizationUrl).toHaveBeenCalledWith(
+      { enabled: true },
+      "https://status.example.com/account/oidc/callback",
+      { forceLogin: true },
+    );
+    expect(cookies.delete).toHaveBeenCalledWith("oidc-reauth", expect.objectContaining({ path: "/status" }));
   });
 
   it("uses the base path for the cookie path and secure=false for http origins", async () => {
