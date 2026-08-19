@@ -195,6 +195,33 @@ export interface OidcIdentity {
   groups: string[];
 }
 
+/** One group→role mapping; `id` is present only for rows that live in the database. */
+export interface OidcGroupRoleMappingEntry {
+  id?: number;
+  oidc_group: string;
+  role_id: string;
+}
+
+/** An entry of KENER_OIDC_GROUP_ROLE_MAP that was ignored, and why. */
+export interface OidcGroupRoleMappingInvalidEntry {
+  oidc_group: string;
+  role_id: string;
+  reason: string;
+}
+
+/**
+ * The mappings in effect, as shown in the admin UI. `source: "env"` means
+ * KENER_OIDC_GROUP_ROLE_MAP is set and parseable and the database table is
+ * ignored; `error` is set when the variable is set but unparseable (database
+ * mappings are then in effect).
+ */
+export interface OidcGroupRoleMappingsView {
+  source: "env" | "db";
+  mappings: OidcGroupRoleMappingEntry[];
+  invalid: OidcGroupRoleMappingInvalidEntry[];
+  error?: string;
+}
+
 /** Error codes surfaced to the sign-in page via `?oidc_error=<code>`. Details stay in server logs. */
 export const OIDC_ERROR_CODES = [
   "provider_error",

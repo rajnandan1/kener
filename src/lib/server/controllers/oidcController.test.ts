@@ -60,6 +60,7 @@ beforeEach(() => {
   // treated as unset by ParseOidcEnvOverrides, and IsOidcHttpAllowed requires exactly "true".
   for (const name of Object.values(oidc.OIDC_ENV_KEYS)) vi.stubEnv(name, "");
   vi.stubEnv(oidc.OIDC_HTTP_ENV, "");
+  vi.stubEnv(oidc.OIDC_GROUP_ROLE_MAP_ENV, "");
   oidc.ClearOidcConfigCache();
   oidcClientMock.randomPKCECodeVerifier.mockReturnValue("verifier-123");
   oidcClientMock.calculatePKCECodeChallenge.mockResolvedValue("challenge-123");

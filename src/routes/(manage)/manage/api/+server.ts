@@ -140,6 +140,7 @@ import { ACTION_PERMISSION_MAP } from "$lib/allPerms.js";
 import {
   ClearOidcConfigCache,
   DeleteOidcGroupRoleMapping,
+  GetEffectiveOidcGroupRoleMappings,
   GetEffectiveOidcSettings,
   GetOidcCallbackUrl,
   MaskOidcSettings,
@@ -689,7 +690,8 @@ export async function POST({ request, cookies }) {
     }
     // ============ OIDC ============
     else if (action == "getOidcGroupRoleMappings") {
-      resp = await db.getAllOidcGroupRoleMappings();
+      // Effective view: env map (read-only, with ignored entries) or DB rows.
+      resp = await GetEffectiveOidcGroupRoleMappings();
     } else if (action == "upsertOidcGroupRoleMapping") {
       await UpsertOidcGroupRoleMapping({ oidc_group: data.oidc_group, role_id: data.role_id });
       resp = { success: true };

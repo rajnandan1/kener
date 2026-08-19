@@ -57,13 +57,34 @@ Either fill in **Manage → OpenID Connect** and click **Test Connection**, then
 | Auto-create users     | `KENER_OIDC_AUTO_CREATE_USERS` | `true` / `false` (default `false`). Must be `true` for a user's **first** sign-in — that is when the account is created and linked to the provider's `sub`. Turning it off afterwards freezes the set of linked accounts: new identities are refused with "not provisioned". |
 | Default Role          | `KENER_OIDC_DEFAULT_ROLE_ID`   | Role id used when no mapping matches (default `member`)                                                                                                                                                                                                                      |
 
-**Precedence:** an environment variable that is set (non-empty) wins over the value saved in the UI for that field only. Env-configured fields are shown read-only with a _Set by environment_ badge and are never written to the database. `KENER_OIDC_ALLOW_HTTP=true` permits an `http:` issuer for local development only.
+**Precedence:** an environment variable that is set (non-empty) wins over the value saved in the UI for that field only. Env-configured fields are shown read-only with a _Set by environment_ badge and are never written to the database. `KENER_OIDC_ALLOW_HTTP=true` permits an `http:` issuer for local development only. Group→role mappings can also come from the environment via `KENER_OIDC_GROUP_ROLE_MAP` — see [below](#group-role-mapping-env).
 
 ### 4. Map groups to roles {#group-role-mapping}
 
-In **Group → Role Mapping**, map provider group names to Kener roles, e.g. `platform-admins → admin`, `viewers → member`.
+In **Group → Role Mapping**, map provider group names to Kener roles, e.g. `platform-admins → admin`, `viewers → member`. Each group maps to exactly one role; a user in several mapped groups gets all of those roles. Group names are matched exactly and case-sensitively against the values of the groups claim.
 
 On every login Kener recomputes the user's _managed_ roles — every role that appears in a mapping, plus the default role — from their current groups. Roles that are not part of any mapping (assigned manually) are preserved. If no group matches, the **Default Role** is assigned. The owner account always keeps `admin`.
+
+#### Managing mappings from the environment {#group-role-mapping-env}
+
+Set `KENER_OIDC_GROUP_ROLE_MAP` to a JSON object of `"<group>": "<role id>"` to manage the mappings from the deployment instead of the UI:
+
+```shell
+KENER_OIDC_GROUP_ROLE_MAP='{"3connect/infra":"admin","3connect/devs":"editor"}'
+```
+
+- **Full replacement, never a merge.** While the variable is set and parseable, the mappings saved in the database are ignored entirely, and the **Group → Role Mapping** card becomes read-only (_Set by environment_; Add and Delete are refused). Unset it and the database mappings apply again unchanged.
+- **Role ids** are the ids shown in **Manage → Roles** (for example `admin`, `editor`, `member`). Roles named in the map are OIDC-managed exactly like database mappings, so leaving a group revokes the role on the next login.
+- **Invalid configuration degrades, it never crashes the process** — a bad value at boot would otherwise lock you out of the status page. Problems are logged once and listed on the admin page:
+
+    | Value                                               | Behaviour                                                |
+    | --------------------------------------------------- | -------------------------------------------------------- |
+    | Empty / whitespace                                  | Treated as unset                                         |
+    | Not a JSON object (invalid JSON, array, string, …)  | Whole variable ignored, database mappings stay in effect |
+    | Entry whose role id does not exist or is not active | That entry is dropped, the rest apply                    |
+    | Entry with an empty group or role id                | That entry is dropped, the rest apply                    |
+
+- **Switching an existing instance from database mappings to the environment:** roles that users received from database mappings which are absent from the env map are no longer managed, so they stick to those users as if assigned manually. Either carry every mapping over, or remove the stale roles from the affected users once.
 
 ## Local login, lockout and break-glass {#lockout-recovery}
 

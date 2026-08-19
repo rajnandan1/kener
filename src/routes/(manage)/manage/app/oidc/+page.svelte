@@ -23,17 +23,15 @@
   import { onMount } from "svelte";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
-  import type { OidcSettings, OidcSettingsMasked } from "$lib/types/site";
+  import type {
+    OidcGroupRoleMappingEntry,
+    OidcGroupRoleMappingInvalidEntry,
+    OidcGroupRoleMappingsView,
+    OidcSettings,
+    OidcSettingsMasked
+  } from "$lib/types/site";
 
   // ============ Types ============
-
-  interface GroupRoleMapping {
-    id: number;
-    oidc_group: string;
-    role_id: string;
-    created_at: string;
-    updated_at: string;
-  }
 
   interface RoleRecord {
     id: string;
@@ -77,13 +75,18 @@
   } | null>(null);
 
   // Group-Role Mappings
-  let mappings = $state<GroupRoleMapping[]>([]);
+  const MAPPINGS_ENV = "KENER_OIDC_GROUP_ROLE_MAP";
+  let mappings = $state<OidcGroupRoleMappingEntry[]>([]);
+  let mappingsSource = $state<"env" | "db">("db");
+  let invalidMappings = $state<OidcGroupRoleMappingInvalidEntry[]>([]);
+  let mappingsEnvError = $state("");
+  const mappingsLocked = $derived(mappingsSource === "env");
   let loadingMappings = $state(true);
   let newMappingGroup = $state("");
   let newMappingRoleId = $state("");
   let addingMapping = $state(false);
   let deleteDialogOpen = $state(false);
-  let mappingToDelete = $state<GroupRoleMapping | null>(null);
+  let mappingToDelete = $state<OidcGroupRoleMappingEntry | null>(null);
   let deletingMapping = $state(false);
 
   // Available roles
@@ -191,9 +194,14 @@
   async function loadMappings() {
     loadingMappings = true;
     try {
-      const result = (await apiCall("getOidcGroupRoleMappings")) as GroupRoleMapping[] | { error: string };
-      if (Array.isArray(result)) {
-        mappings = result;
+      const result = (await apiCall("getOidcGroupRoleMappings")) as OidcGroupRoleMappingsView | { error: string };
+      if ("mappings" in result) {
+        mappings = result.mappings;
+        mappingsSource = result.source;
+        invalidMappings = result.invalid;
+        mappingsEnvError = result.error ?? "";
+      } else {
+        toast.error(result.error || "Failed to load group mappings");
       }
     } catch {
       toast.error("Failed to load group mappings");
@@ -244,13 +252,13 @@
     }
   }
 
-  function openDeleteMappingDialog(mapping: GroupRoleMapping) {
+  function openDeleteMappingDialog(mapping: OidcGroupRoleMappingEntry) {
     mappingToDelete = mapping;
     deleteDialogOpen = true;
   }
 
   async function deleteMapping() {
-    if (!mappingToDelete) return;
+    if (!mappingToDelete || mappingToDelete.id === undefined) return;
     deletingMapping = true;
     try {
       const result = (await apiCall("deleteOidcGroupRoleMapping", {
@@ -562,29 +570,52 @@
     {#if settings.enabled}
       <Card.Root>
         <Card.Header>
-          <Card.Title>Group → Role Mapping</Card.Title>
+          <Card.Title class="flex items-center gap-2">
+            Group → Role Mapping
+            {#if mappingsLocked}<Badge variant="secondary">Set by environment</Badge>{/if}
+          </Card.Title>
           <Card.Description>
-            Map OIDC group names to Kener roles. When a user signs in via OIDC, their group memberships determine which
-            roles they get in Kener. Roles are synchronized on every login.
+            {#if mappingsLocked}
+              Mappings are managed by <code class="text-xs">{MAPPINGS_ENV}</code> and cannot be edited here; the mappings
+              saved in the database are ignored while it is set. Roles are synchronized on every login.
+            {:else}
+              Map OIDC group names to Kener roles. When a user signs in via OIDC, their group memberships determine
+              which roles they get in Kener. Roles are synchronized on every login.
+            {/if}
           </Card.Description>
         </Card.Header>
         <Card.Content>
+          {#if mappingsEnvError}
+            <div
+              class="mb-6 rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200"
+            >
+              <strong>{MAPPINGS_ENV} is set but was ignored:</strong>
+              {mappingsEnvError}. The mappings below (from the database) are in effect.
+            </div>
+          {/if}
+
           <!-- Add new mapping -->
           <div class="mb-6 flex items-end gap-3">
             <div class="grid flex-1 gap-2">
               <Label for="new_group">OIDC Group</Label>
-              <Input id="new_group" bind:value={newMappingGroup} placeholder="e.g. Windows-Admins" />
+              <Input
+                id="new_group"
+                bind:value={newMappingGroup}
+                placeholder="e.g. Windows-Admins"
+                disabled={mappingsLocked}
+              />
             </div>
             <div class="grid flex-1 gap-2">
               <Label>Kener Role</Label>
               <Select.Root
                 type="single"
                 value={newMappingRoleId}
+                disabled={mappingsLocked}
                 onValueChange={(val) => {
                   if (val) newMappingRoleId = val;
                 }}
               >
-                <Select.Trigger class="w-full">
+                <Select.Trigger class="w-full" disabled={mappingsLocked}>
                   {newMappingRoleId ? getRoleName(newMappingRoleId) : "Select a role..."}
                 </Select.Trigger>
                 <Select.Content>
@@ -596,7 +627,7 @@
                 </Select.Content>
               </Select.Root>
             </div>
-            <Button disabled={addingMapping} onclick={addMapping}>
+            <Button disabled={addingMapping || mappingsLocked} onclick={addMapping}>
               {#if addingMapping}
                 <Spinner class="mr-2 h-4 w-4" />
               {:else}
@@ -613,8 +644,13 @@
             </div>
           {:else if mappings.length === 0}
             <div class="text-muted-foreground rounded-lg border border-dashed py-8 text-center">
-              <p>No group mappings configured yet.</p>
-              <p class="mt-1 text-sm">Add a mapping above to assign Kener roles based on OIDC groups.</p>
+              {#if mappingsLocked}
+                <p>{MAPPINGS_ENV} contains no usable mappings.</p>
+                <p class="mt-1 text-sm">Every OIDC user receives the default role.</p>
+              {:else}
+                <p>No group mappings configured yet.</p>
+                <p class="mt-1 text-sm">Add a mapping above to assign Kener roles based on OIDC groups.</p>
+              {/if}
             </div>
           {:else}
             <Table.Root>
@@ -626,7 +662,7 @@
                 </Table.Row>
               </Table.Header>
               <Table.Body>
-                {#each mappings as mapping (mapping.id)}
+                {#each mappings as mapping (mapping.oidc_group)}
                   <Table.Row>
                     <Table.Cell class="pl-4">
                       <code class="text-sm">{mapping.oidc_group}</code>
@@ -635,7 +671,12 @@
                       <Badge variant="outline">{getRoleName(mapping.role_id)}</Badge>
                     </Table.Cell>
                     <Table.Cell class="pr-4 text-right">
-                      <Button variant="destructive" size="sm" onclick={() => openDeleteMappingDialog(mapping)}>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        disabled={mappingsLocked}
+                        onclick={() => openDeleteMappingDialog(mapping)}
+                      >
                         <TrashIcon class="h-4 w-4" />
                       </Button>
                     </Table.Cell>
@@ -643,6 +684,22 @@
                 {/each}
               </Table.Body>
             </Table.Root>
+          {/if}
+
+          {#if invalidMappings.length > 0}
+            <div
+              class="mt-6 rounded-lg border border-amber-500/50 bg-amber-500/10 p-3 text-sm text-amber-800 dark:text-amber-200"
+            >
+              <p class="font-medium">Ignored entries in {MAPPINGS_ENV}</p>
+              <ul class="mt-2 list-disc space-y-1 pl-5">
+                {#each invalidMappings as entry, i (i)}
+                  <li>
+                    <code class="text-xs">{JSON.stringify(entry.oidc_group)} → {JSON.stringify(entry.role_id)}</code>
+                    — {entry.reason}
+                  </li>
+                {/each}
+              </ul>
+            </div>
           {/if}
         </Card.Content>
       </Card.Root>

@@ -16,6 +16,9 @@ import seedSiteData from "../db/seedSiteData.js";
 import GC from "../../global-constants.js";
 import type {
   OidcErrorCode,
+  OidcGroupRoleMappingEntry,
+  OidcGroupRoleMappingInvalidEntry,
+  OidcGroupRoleMappingsView,
   OidcIdentity,
   OidcPublicState,
   OidcSettings,
@@ -42,6 +45,12 @@ export const OIDC_ENV_KEYS = {
 /** Dev-only: permits an http: issuer. Not an OidcSettings field. */
 export const OIDC_HTTP_ENV = "KENER_OIDC_ALLOW_HTTP";
 
+/**
+ * JSON object of OIDC group → Kener role id. When set and parseable it fully
+ * replaces the `oidc_group_role_mappings` table (no merge). Not an OidcSettings field.
+ */
+export const OIDC_GROUP_ROLE_MAP_ENV = "KENER_OIDC_GROUP_ROLE_MAP";
+
 export const OIDC_COOKIE_NAMES = {
   state: "oidc-state",
   nonce: "oidc-nonce",
@@ -65,6 +74,13 @@ export class OidcAuthError extends Error {
 
 const warnedEnvKeys = new Set<string>();
 
+/** Log a configuration warning once per distinct `key` (env values do not change at runtime). */
+function warnOnce(key: string, message: string): void {
+  if (warnedEnvKeys.has(key)) return;
+  warnedEnvKeys.add(key);
+  console.warn(message);
+}
+
 export function ParseOidcEnvOverrides(env: NodeJS.ProcessEnv = process.env): {
   overrides: Partial<OidcSettings>;
   locked: Set<keyof OidcSettings>;
@@ -80,10 +96,7 @@ export function ParseOidcEnvOverrides(env: NodeJS.ProcessEnv = process.env): {
     if (BOOLEAN_FIELDS.has(field)) {
       const lower = value.toLowerCase();
       if (lower !== "true" && lower !== "false") {
-        if (!warnedEnvKeys.has(envName)) {
-          warnedEnvKeys.add(envName);
-          console.warn(`[oidc] Ignoring ${envName}="${raw}": expected "true" or "false"`);
-        }
+        warnOnce(envName, `[oidc] Ignoring ${envName}="${raw}": expected "true" or "false"`);
         continue;
       }
       overrides[field] = lower === "true";
@@ -93,6 +106,62 @@ export function ParseOidcEnvOverrides(env: NodeJS.ProcessEnv = process.env): {
     locked.add(field);
   }
   return { overrides: overrides as Partial<OidcSettings>, locked };
+}
+
+export type OidcGroupRoleMapEnvResult =
+  | { active: false; error?: string }
+  | { active: true; entries: OidcGroupRoleMappingEntry[]; invalid: OidcGroupRoleMappingInvalidEntry[] };
+
+/**
+ * Parse KENER_OIDC_GROUP_ROLE_MAP without touching the database. Unset/blank →
+ * inactive. Unparseable (not a JSON object) → inactive with `error`, warned once,
+ * so a typo degrades to the DB mappings instead of crash-looping the process.
+ * Entries with an empty or non-string group/role are reported in `invalid`.
+ */
+export function ParseOidcGroupRoleMapEnv(env: NodeJS.ProcessEnv = process.env): OidcGroupRoleMapEnvResult {
+  const raw = env[OIDC_GROUP_ROLE_MAP_ENV];
+  if (raw === undefined) return { active: false };
+  const value = raw.trim();
+  if (value === "") return { active: false };
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(value);
+  } catch {
+    parsed = undefined;
+  }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    const error = `${OIDC_GROUP_ROLE_MAP_ENV} must be a JSON object of {"<group>": "<role id>"}; ignoring it and using the mappings saved in the database`;
+    warnOnce(`${OIDC_GROUP_ROLE_MAP_ENV}:${value}`, `[oidc] ${error}`);
+    return { active: false, error };
+  }
+
+  const entries: OidcGroupRoleMappingEntry[] = [];
+  const invalid: OidcGroupRoleMappingInvalidEntry[] = [];
+  for (const [rawGroup, rawRole] of Object.entries(parsed as Record<string, unknown>)) {
+    const group = rawGroup.trim();
+    const roleId = typeof rawRole === "string" ? rawRole.trim() : "";
+    if (typeof rawRole !== "string") {
+      invalid.push({
+        oidc_group: group,
+        role_id: "",
+        reason: `role id must be a string (got ${JSON.stringify(rawRole)})`,
+      });
+    } else if (!group || !roleId) {
+      invalid.push({ oidc_group: group, role_id: roleId, reason: "group and role id must not be empty" });
+    } else {
+      entries.push({ oidc_group: group, role_id: roleId });
+    }
+  }
+  for (const entry of invalid) warnIgnoredGroupRoleMapEntry(entry);
+  return { active: true, entries, invalid };
+}
+
+function warnIgnoredGroupRoleMapEntry(entry: OidcGroupRoleMappingInvalidEntry): void {
+  warnOnce(
+    `${OIDC_GROUP_ROLE_MAP_ENV}:entry:${entry.oidc_group}`,
+    `[oidc] Ignoring ${OIDC_GROUP_ROLE_MAP_ENV} entry ${JSON.stringify(entry.oidc_group)}: ${entry.reason}`,
+  );
 }
 
 async function readStoredOidcSettings(): Promise<OidcSettings> {
@@ -186,10 +255,11 @@ async function getOidcConfig(settings: OidcSettings): Promise<client.Configurati
   return config;
 }
 
-/** Clear the cached Configuration. Called when settings are saved. */
+/** Clear the cached Configuration (and the warn-once memory). Called when settings are saved. */
 export function ClearOidcConfigCache(): void {
   cachedConfig = null;
   cachedCacheKey = null;
+  warnedEnvKeys.clear();
 }
 
 // ============ Authorization flow ============
@@ -292,6 +362,69 @@ export async function HandleCallback(
   };
 }
 
+// ============ Group→role mappings ============
+
+/**
+ * The group→role mappings every role computation must use. When
+ * KENER_OIDC_GROUP_ROLE_MAP is set and parseable it is the whole universe —
+ * the database table is not consulted — and entries naming a missing or
+ * inactive role are dropped (warned once, reported in `invalid`). Otherwise the
+ * database rows are returned unchanged (with ids, for the admin UI).
+ */
+export async function GetEffectiveOidcGroupRoleMappings(): Promise<OidcGroupRoleMappingsView> {
+  const parsed = ParseOidcGroupRoleMapEnv();
+  if (!parsed.active) {
+    const rows = await db.getAllOidcGroupRoleMappings();
+    const view: OidcGroupRoleMappingsView = { source: "db", mappings: rows, invalid: [] };
+    if (parsed.error) view.error = parsed.error;
+    return view;
+  }
+
+  const roleStatus = new Map<string, string>();
+  for (const role of await db.getAllRoles()) roleStatus.set(role.id, role.status);
+
+  const mappings: OidcGroupRoleMappingEntry[] = [];
+  const invalid: OidcGroupRoleMappingInvalidEntry[] = [...parsed.invalid];
+  for (const entry of parsed.entries) {
+    const status = roleStatus.get(entry.role_id);
+    if (status === "ACTIVE") {
+      mappings.push(entry);
+      continue;
+    }
+    const reason = status === undefined ? `role "${entry.role_id}" not found` : `role "${entry.role_id}" is not active`;
+    const dropped = { ...entry, reason };
+    invalid.push(dropped);
+    warnIgnoredGroupRoleMapEntry(dropped);
+  }
+  return { source: "env", mappings, invalid };
+}
+
+/**
+ * The OIDC-managed role universe: every role id the effective mappings name.
+ * A role named by the env map but dropped because it is inactive or missing
+ * still counts — exactly as a database row pointing at an inactive role does —
+ * so it is never re-granted and an existing assignment is revoked, never
+ * silently retained as "manual".
+ */
+function managedRoleIdsOf(view: OidcGroupRoleMappingsView): Set<string> {
+  const ids = new Set<string>();
+  for (const m of view.mappings) ids.add(m.role_id);
+  for (const m of view.invalid) if (m.role_id) ids.add(m.role_id);
+  return ids;
+}
+
+/**
+ * ACTIVE role ids the given groups map to, from the same universe as
+ * `managedRoleIdsOf`. Exact, case-sensitive group match on both paths (the DB
+ * join filters ACTIVE itself; env mappings were filtered when loaded).
+ */
+async function resolveOidcRoleIds(view: OidcGroupRoleMappingsView, groups: string[]): Promise<string[]> {
+  if (view.source === "db") return await db.getOidcRoleIdsForGroups(groups);
+  if (groups.length === 0) return [];
+  const wanted = new Set(groups);
+  return [...new Set(view.mappings.filter((m) => wanted.has(m.oidc_group)).map((m) => m.role_id))];
+}
+
 // ============ Provisioning & sync ============
 
 function isUniqueViolation(e: unknown): boolean {
@@ -310,7 +443,7 @@ async function provisionOidcUser(settings: OidcSettings, identity: OidcIdentity)
       `email ${identity.email} already belongs to user ${emailOwner.id} (${emailOwner.auth_provider}); OIDC and local accounts are never merged`,
     );
   }
-  const mappedRoleIds = await db.getOidcRoleIdsForGroups(identity.groups);
+  const mappedRoleIds = await resolveOidcRoleIds(await GetEffectiveOidcGroupRoleMappings(), identity.groups);
   let roleIds = mappedRoleIds;
   if (roleIds.length === 0) {
     roleIds = ["member"];
@@ -347,30 +480,34 @@ async function provisionOidcUser(settings: OidcSettings, identity: OidcIdentity)
 }
 
 /**
- * Roles that appear in any mapping (or are the active default role) are
- * OIDC-managed and recomputed from the current groups; every other assigned
+ * Roles that appear in any effective mapping (or are the active default role)
+ * are OIDC-managed and recomputed from the current groups; every other assigned
  * role — including assignments to a role that has since been deactivated —
- * is manual and preserved. `updateUserRoles` has delete-all-then-reinsert
- * semantics, so both the "what's manual" computation and the "did anything
- * change" comparison must be done against the *same* universe of assigned
- * role ids (including inactive ones); comparing an ACTIVE-only read against
- * a set that may include an inactive id would either silently drop the
- * manual assignment on the first write, or never converge and rewrite on
- * every login. The owner account never loses `admin`.
+ * is manual and preserved. Both the managed universe and the per-user lookup
+ * come from `GetEffectiveOidcGroupRoleMappings()` (env map or DB table, never
+ * a mix): if a role granted by the env map were missing from the managed set
+ * it would be classified as manual on the next login and retained forever.
+ * `updateUserRoles` has delete-all-then-reinsert semantics, so both the
+ * "what's manual" computation and the "did anything change" comparison must be
+ * done against the *same* universe of assigned role ids (including inactive
+ * ones); comparing an ACTIVE-only read against a set that may include an
+ * inactive id would either silently drop the manual assignment on the first
+ * write, or never converge and rewrite on every login. The owner account never
+ * loses `admin`.
  */
 export async function SyncOidcUserRoles(
   user: UserRecordPublic,
   oidcGroups: string[],
   settings: OidcSettings,
 ): Promise<void> {
-  const allMappings = await db.getAllOidcGroupRoleMappings();
-  const managedRoleIds = new Set(allMappings.map((m) => m.role_id));
+  const view = await GetEffectiveOidcGroupRoleMappings();
+  const managedRoleIds = managedRoleIdsOf(view);
   if (settings.default_role_id) managedRoleIds.add(settings.default_role_id);
 
   const assignedRoleIds = await db.getUserAssignedRoleIds(user.id);
   const manualRoles = assignedRoleIds.filter((rid) => !managedRoleIds.has(rid));
 
-  let oidcRoles = await db.getOidcRoleIdsForGroups(oidcGroups); // already ACTIVE-only
+  let oidcRoles = await resolveOidcRoleIds(view, oidcGroups); // ACTIVE-only
   if (oidcRoles.length === 0 && settings.default_role_id) {
     const defaultRole = await db.getRoleById(settings.default_role_id);
     if (defaultRole?.status === "ACTIVE") {
@@ -500,7 +637,15 @@ export async function PrepareOidcSettingsForStore(incoming: unknown): Promise<st
   return json;
 }
 
+/** Explicit admin actions on the table must fail loudly, not no-op, while the env map owns the mappings. */
+function assertGroupRoleMappingsWritable(): void {
+  if (ParseOidcGroupRoleMapEnv().active) {
+    throw new Error(`Group→role mappings are managed by ${OIDC_GROUP_ROLE_MAP_ENV}`);
+  }
+}
+
 export async function UpsertOidcGroupRoleMapping(input: { oidc_group?: unknown; role_id?: unknown }): Promise<void> {
+  assertGroupRoleMappingsWritable();
   const group = typeof input.oidc_group === "string" ? input.oidc_group.trim() : "";
   if (!group) throw new Error("OIDC group name is required");
   const roleId = typeof input.role_id === "string" ? input.role_id : "";
@@ -512,6 +657,7 @@ export async function UpsertOidcGroupRoleMapping(input: { oidc_group?: unknown; 
 }
 
 export async function DeleteOidcGroupRoleMapping(id: unknown): Promise<void> {
+  assertGroupRoleMappingsWritable();
   const numeric = typeof id === "number" ? id : typeof id === "string" && /^\d+$/.test(id) ? Number(id) : Number.NaN;
   if (!Number.isInteger(numeric) || numeric <= 0) throw new Error("Invalid mapping id");
   const deleted = await db.deleteOidcGroupRoleMapping(numeric);
