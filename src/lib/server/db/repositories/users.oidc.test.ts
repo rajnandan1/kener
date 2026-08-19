@@ -57,6 +57,15 @@ describe("migration 20260818120000_add_oidc_support", () => {
     expect(await knex.schema.hasColumn("users", "oidc_role_ids")).toBe(true);
   });
 
+  it("rolls back even when the composite unique index is already gone", async () => {
+    await knex.schema.alterTable("users", (table) => {
+      table.dropUnique(["oidc_issuer", "oidc_sub"], "users_oidc_issuer_sub_unique");
+    });
+    await expect(knex.migrate.down({ migrationSource })).resolves.toBeDefined();
+    expect(await knex.schema.hasColumn("users", "oidc_issuer")).toBe(false);
+    expect(await knex.schema.hasColumn("users", "oidc_sub")).toBe(false);
+  });
+
   it("upgrades a database from an earlier build that keyed OIDC accounts by subject alone", async () => {
     // Roll back, recreate the old shape (oidc_sub with a single-column unique), migrate again.
     await knex.migrate.down({ migrationSource });

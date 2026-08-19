@@ -316,11 +316,11 @@
           <!-- Enable/Disable -->
           <div class="flex items-center justify-between">
             <div>
-              <Label>Enable OpenID Connect</Label>
+              <Label for="oidc_enabled">Enable OpenID Connect</Label>
               {#if isLocked("enabled")}<Badge variant="secondary">Set by environment</Badge>{/if}
               <p class="text-muted-foreground text-sm">Allow users to sign in using an external identity provider.</p>
             </div>
-            <Switch bind:checked={settings.enabled} disabled={isLocked("enabled")} />
+            <Switch id="oidc_enabled" bind:checked={settings.enabled} disabled={isLocked("enabled")} />
           </div>
 
           <Separator />
@@ -403,6 +403,8 @@
                   variant="ghost"
                   size="icon"
                   class="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2"
+                  aria-label={showSecret ? "Hide client secret" : "Show client secret"}
+                  aria-pressed={showSecret}
                   onclick={() => (showSecret = !showSecret)}
                 >
                   {#if showSecret}
@@ -456,31 +458,39 @@
             <!-- Allow Local Login -->
             <div class="flex items-center justify-between">
               <div>
-                <Label>Allow local login</Label>
+                <Label for="allow_local_login">Allow local login</Label>
                 {#if isLocked("allow_local_login")}<Badge variant="secondary">Set by environment</Badge>{/if}
                 <p class="text-muted-foreground text-sm">
                   When disabled, users can only sign in via the OIDC provider. The password login form will be hidden.
                 </p>
               </div>
-              <Switch bind:checked={settings.allow_local_login} disabled={isLocked("allow_local_login")} />
+              <Switch
+                id="allow_local_login"
+                bind:checked={settings.allow_local_login}
+                disabled={isLocked("allow_local_login")}
+              />
             </div>
 
             <!-- Auto-Create Users -->
             <div class="flex items-center justify-between">
               <div>
-                <Label>Auto-create users on first login</Label>
+                <Label for="auto_create_users">Auto-create users on first login</Label>
                 {#if isLocked("auto_create_users")}<Badge variant="secondary">Set by environment</Badge>{/if}
                 <p class="text-muted-foreground text-sm">
                   Required for a user's first sign-in — the account is created and linked to the provider on that login.
                   Turn off afterwards to stop new identities from being provisioned; there is no manual linking.
                 </p>
               </div>
-              <Switch bind:checked={settings.auto_create_users} disabled={isLocked("auto_create_users")} />
+              <Switch
+                id="auto_create_users"
+                bind:checked={settings.auto_create_users}
+                disabled={isLocked("auto_create_users")}
+              />
             </div>
 
             <!-- Default Role -->
             <div class="grid gap-2">
-              <Label>Default Role</Label>
+              <Label for="default_role_id">Default Role</Label>
               {#if isLocked("default_role_id")}<Badge variant="secondary">Set by environment</Badge>{/if}
               <Select.Root
                 type="single"
@@ -490,7 +500,7 @@
                 }}
                 disabled={isLocked("default_role_id")}
               >
-                <Select.Trigger class="w-full">
+                <Select.Trigger id="default_role_id" class="w-full">
                   {settings.default_role_id ? getRoleName(settings.default_role_id) : "No default role"}
                 </Select.Trigger>
                 <Select.Content>
@@ -614,7 +624,7 @@
               />
             </div>
             <div class="grid flex-1 gap-2">
-              <Label>Kener Role</Label>
+              <Label for="new_mapping_role">Kener Role</Label>
               <Select.Root
                 type="single"
                 value={newMappingRoleId}
@@ -623,7 +633,7 @@
                   if (val) newMappingRoleId = val;
                 }}
               >
-                <Select.Trigger class="w-full" disabled={mappingsLocked}>
+                <Select.Trigger id="new_mapping_role" class="w-full" disabled={mappingsLocked}>
                   {newMappingRoleId ? getRoleName(newMappingRoleId) : "Select a role..."}
                 </Select.Trigger>
                 <Select.Content>
@@ -687,6 +697,7 @@
                         variant="destructive"
                         size="sm"
                         disabled={mappingsLocked}
+                        aria-label={`Delete mapping for ${mapping.oidc_group}`}
                         onclick={() => openDeleteMappingDialog(mapping)}
                       >
                         <TrashIcon class="h-4 w-4" />

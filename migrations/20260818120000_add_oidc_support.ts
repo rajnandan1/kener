@@ -69,8 +69,16 @@ export async function down(knex: Knex): Promise<void> {
 
   const hasOidcIssuer = await knex.schema.hasColumn("users", "oidc_issuer");
   if (hasOidcIssuer) {
+    // The composite unique may already be gone (partial upgrade, manual clean-up); its
+    // absence must not abort the rollback. Knex has no portable "hasIndex", so try/catch.
+    try {
+      await knex.schema.alterTable("users", (table) => {
+        table.dropUnique(["oidc_issuer", "oidc_sub"], OIDC_IDENTITY_UNIQUE);
+      });
+    } catch {
+      // index did not exist
+    }
     await knex.schema.alterTable("users", (table) => {
-      table.dropUnique(["oidc_issuer", "oidc_sub"], OIDC_IDENTITY_UNIQUE);
       table.dropColumn("oidc_issuer");
     });
   }

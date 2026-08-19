@@ -6,11 +6,22 @@ import {
   GetUserPasswordHashById,
   CreateFirstUser,
 } from "$lib/server/controllers/userController";
-import { VerifyPassword, GenerateToken, CookieConfig } from "$lib/server/controllers/commonController";
+import { VerifyPassword, HashPassword, GenerateToken, CookieConfig } from "$lib/server/controllers/commonController";
 import { GetOidcPublicState } from "$lib/server/controllers/oidcController";
 import serverResolve from "$lib/server/resolver.js";
 import GC from "$lib/global-constants";
 import { OIDC_ERROR_CODES, type OidcErrorCode } from "$lib/types/site";
+
+/**
+ * Every refusal that happens before the real password check still costs one bcrypt
+ * compare (against a throw-away hash computed once per process), so response time
+ * does not reveal whether an email exists, is an OIDC account, or has no password.
+ */
+let dummyHash: Promise<string> | undefined;
+async function equalizeTiming(password: string): Promise<void> {
+  dummyHash ??= HashPassword("kener-timing-equalizer");
+  await VerifyPassword(password, await dummyHash);
+}
 
 function oidcErrorMessage(code: string | null): string | null {
   if (!code) return null;
@@ -54,11 +65,14 @@ export const actions: Actions = {
     // when the IdP is down). Unknown emails and non-owners get the same answer so
     // this branch cannot be used to enumerate accounts.
     if (oidc.enabled && !oidc.allowLocalLogin && (!userDB || userDB.is_owner !== "YES")) {
+      await equalizeTiming(password);
       return fail(403, { error: "Local login is disabled. Please use SSO.", values: { email } });
     }
 
-    // Unknown email and wrong password are indistinguishable — no account enumeration.
+    // Unknown email and wrong password are indistinguishable — no account enumeration,
+    // neither by message nor by response time.
     if (!userDB) {
+      await equalizeTiming(password);
       return fail(401, { error: "Invalid password or Email", values: { email } });
     }
 
@@ -66,6 +80,7 @@ export const actions: Actions = {
     // present. Same generic message as a wrong password — this must not become a
     // distinguishable "uses SSO" answer.
     if (userDB.auth_provider === GC.AUTH_PROVIDER_OIDC) {
+      await equalizeTiming(password);
       return fail(401, { error: "Invalid password or Email", values: { email } });
     }
 
@@ -73,6 +88,7 @@ export const actions: Actions = {
     // invalid-credentials answer below — no dedicated message.
     const passwordStored = await GetUserPasswordHashById(userDB.id);
     if (!passwordStored || !passwordStored.password_hash) {
+      await equalizeTiming(password);
       return fail(401, { error: "Invalid password or Email", values: { email } });
     }
 

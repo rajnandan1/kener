@@ -33,6 +33,7 @@ const oidcClientMock = vi.hoisted(() => ({
 vi.mock("openid-client", () => oidcClientMock);
 
 import * as oidc from "./oidcController";
+import { expectSingleRoleSyncWrite, publicUser } from "./testing/oidc-fixtures";
 import type { OidcSettings } from "../../types/site";
 
 const ENV = oidc.OIDC_GROUP_ROLE_MAP_ENV;
@@ -204,22 +205,6 @@ describe("GetEffectiveOidcGroupRoleMappings", () => {
   });
 });
 
-const publicUser = (over: Record<string, unknown> = {}) => ({
-  id: 7,
-  email: "u@example.com",
-  name: "U",
-  is_active: 1,
-  is_verified: 1,
-  is_owner: "NO",
-  auth_provider: "oidc",
-  oidc_issuer: "https://gitlab.example.com",
-  oidc_sub: "sub-7",
-  role_ids: ["member"],
-  created_at: new Date(),
-  updated_at: new Date(),
-  ...over,
-});
-
 describe("role sync under KENER_OIDC_GROUP_ROLE_MAP", () => {
   const identity = {
     issuer: baseSettings.issuer_url,
@@ -243,18 +228,8 @@ describe("role sync under KENER_OIDC_GROUP_ROLE_MAP", () => {
     dbMock.getUserOidcRoleIds.mockResolvedValue([]);
   });
 
-  const change = () => {
-    expect(dbMock.updateUserOidcRoles).toHaveBeenCalledTimes(1);
-    const [userId, data] = dbMock.updateUserOidcRoles.mock.calls[0] as [
-      number,
-      { role_ids?: string[]; oidc_role_ids: string[] },
-    ];
-    expect(userId).toBe(7);
-    return {
-      role_ids: data.role_ids ? [...data.role_ids].sort() : undefined,
-      oidc_role_ids: [...data.oidc_role_ids].sort(),
-    };
-  };
+  /** The single write the sync makes: { role_ids?: string[]; oidc_role_ids: string[] }. */
+  const change = () => expectSingleRoleSyncWrite(dbMock);
 
   it("grants the role mapped by the env map without consulting the database mappings", async () => {
     dbMock.getUserAssignedRoleIds.mockResolvedValue([]);

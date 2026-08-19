@@ -9,6 +9,7 @@ const users = vi.hoisted(() => ({
 vi.mock("$lib/server/controllers/userController", () => users);
 const common = vi.hoisted(() => ({
   VerifyPassword: vi.fn(async () => true),
+  HashPassword: vi.fn(async () => "dummy-hash"),
   GenerateToken: vi.fn(async () => "jwt"),
   CookieConfig: vi.fn(() => ({
     name: "kener-user",
@@ -93,7 +94,11 @@ describe("actions.login with local login disabled", () => {
     expect(known.status).toBe(403);
     expect(unknown.data.error).toBe(known.data.error);
     expect(unknown.data.error).toBe("Local login is disabled. Please use SSO.");
-    expect(common.VerifyPassword).not.toHaveBeenCalled();
+    // Same work on both paths: one compare against the dummy hash, never against a stored one.
+    expect(common.VerifyPassword.mock.calls).toEqual([
+      ["Password1", "dummy-hash"],
+      ["Password1", "dummy-hash"],
+    ]);
   });
 
   it("still lets the owner sign in with a password (break-glass)", async () => {
@@ -125,6 +130,9 @@ describe("actions.login with local login allowed", () => {
     expect(unknown.status).toBe(401);
     expect(unknown.data.error).toBe(wrongPassword.data.error);
     expect(unknown.data.error).not.toMatch(/exist/i);
+    // ...and the same amount of work: the unknown email still costs one bcrypt compare (timing side channel).
+    expect(common.VerifyPassword).toHaveBeenCalledTimes(2);
+    expect(common.VerifyPassword).toHaveBeenLastCalledWith("Password1", "dummy-hash");
   });
 
   it("gives a local account with an empty password hash the generic invalid-credentials response", async () => {
@@ -135,7 +143,7 @@ describe("actions.login with local login allowed", () => {
     expect(result.status).toBe(401);
     expect(result.data.error).toBe("Invalid password or Email");
     expect(result.data.error).not.toMatch(/SSO/);
-    expect(common.VerifyPassword).not.toHaveBeenCalled();
+    expect(common.VerifyPassword.mock.calls).toEqual([["Password1", "dummy-hash"]]); // never against ""
   });
 
   it("refuses an OIDC account with a password before even looking at a hash", async () => {
@@ -143,6 +151,13 @@ describe("actions.login with local login allowed", () => {
     expect(result.status).toBe(401);
     expect(result.data.error).toBe("Invalid password or Email");
     expect(users.GetUserPasswordHashById).not.toHaveBeenCalled();
-    expect(common.VerifyPassword).not.toHaveBeenCalled();
+    expect(common.VerifyPassword.mock.calls).toEqual([["Password1", "dummy-hash"]]); // timing-equalized only
+  });
+
+  it("computes the dummy hash at most once per process", async () => {
+    await actions.login(loginEvent("nobody@example.com"));
+    await actions.login(loginEvent("nobody2@example.com"));
+    expect(common.VerifyPassword).toHaveBeenCalledTimes(2);
+    expect(common.HashPassword.mock.calls.length).toBeLessThanOrEqual(1); // memoized (maybe already by an earlier test)
   });
 });

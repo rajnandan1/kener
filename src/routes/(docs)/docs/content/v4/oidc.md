@@ -86,7 +86,7 @@ KENER_OIDC_GROUP_ROLE_MAP='{"3connect/infra":"admin","3connect/devs":"editor"}'
     | Entry whose role id does not exist or is not active | That entry is dropped, the rest apply                    |
     | Entry with an empty group or role id                | That entry is dropped, the rest apply                    |
 
-- **Switching an existing instance from database mappings to the environment** needs no clean-up: roles that users received from database mappings are revoked on their next login unless the env map grants them too, because Kener tracks which roles it granted rather than which roles the current mappings mention.
+- **Switching an existing instance from database mappings to the environment** needs no clean-up: the OIDC-granted roles that came from database mappings are revoked on the next login unless the env map grants them too, because Kener tracks which roles it granted rather than which roles the current mappings mention. Roles assigned by hand under **Users** are untouched, as always.
 
 ## Local login, lockout and break-glass {#lockout-recovery}
 

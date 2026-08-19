@@ -32,6 +32,7 @@ const oidcClientMock = vi.hoisted(() => ({
 vi.mock("openid-client", () => oidcClientMock);
 
 import * as oidc from "./oidcController";
+import { expectSingleRoleSyncWrite, publicUser } from "./testing/oidc-fixtures";
 import type { OidcSettings } from "../../types/site";
 
 const baseSettings: OidcSettings = {
@@ -217,22 +218,6 @@ function fakeConfig(meta: Record<string, string | undefined> = {}) {
 function fakeTokens(claims: Record<string, unknown> | null, accessToken: string | undefined = "at") {
   return { access_token: accessToken, claims: () => claims };
 }
-
-const publicUser = (over: Record<string, unknown> = {}) => ({
-  id: 7,
-  email: "u@example.com",
-  name: "U",
-  is_active: 1,
-  is_verified: 1,
-  is_owner: "NO",
-  auth_provider: "oidc",
-  oidc_issuer: "https://gitlab.example.com",
-  oidc_sub: "sub-7",
-  role_ids: ["member"],
-  created_at: new Date(),
-  updated_at: new Date(),
-  ...over,
-});
 
 describe("BuildAuthorizationUrl / config cache", () => {
   it("performs discovery once per effective credentials and passes PKCE, state and nonce", async () => {
@@ -476,19 +461,7 @@ describe("FindOrCreateOidcUser — existing user sync", () => {
   });
 
   /** The single write the sync makes: { role_ids?: string[]; oidc_role_ids: string[] }. */
-  const change = () => {
-    expect(dbMock.updateUserOidcRoles).toHaveBeenCalledTimes(1);
-    expect(dbMock.updateUserRoles).not.toHaveBeenCalled();
-    const [userId, data] = dbMock.updateUserOidcRoles.mock.calls[0] as [
-      number,
-      { role_ids?: string[]; oidc_role_ids: string[] },
-    ];
-    expect(userId).toBe(7);
-    return {
-      role_ids: data.role_ids ? [...data.role_ids].sort() : undefined,
-      oidc_role_ids: [...data.oidc_role_ids].sort(),
-    };
-  };
+  const change = () => expectSingleRoleSyncWrite(dbMock);
 
   it("grants the mapped roles, revokes what the previous sync granted, and preserves manual roles", async () => {
     dbMock.getUserAssignedRoleIds.mockResolvedValue(["admin", "custom"]); // admin came from ops last time; custom is manual
