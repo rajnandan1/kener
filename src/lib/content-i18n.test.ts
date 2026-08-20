@@ -46,6 +46,13 @@ describe("resolveTranslation", () => {
     expect(resolveTranslation({ de: { name: "   " } }, "de", "name", "Website")).toBe("Website");
   });
 
+  it("returns the translation when the base text is empty", () => {
+    // Detail pages guard their name/description blocks on the resolved value, so a
+    // translation must still surface when the base column was left blank.
+    expect(resolveTranslation(translations, "fr", "name", "")).toBe("Site web");
+    expect(resolveTranslation(translations, "es", "name", "")).toBe("");
+  });
+
   it("falls back on null/undefined/malformed translations input", () => {
     expect(resolveTranslation(null, "de", "name", "Website")).toBe("Website");
     expect(resolveTranslation(undefined, "de", "name", "Website")).toBe("Website");
