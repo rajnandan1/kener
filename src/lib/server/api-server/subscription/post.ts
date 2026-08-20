@@ -2,6 +2,7 @@ import { json, error } from "@sveltejs/kit";
 import type { APIServerRequest } from "$lib/server/types/api-server";
 import type { SubscriptionsConfig } from "$lib/server/types/db.js";
 import { GetSiteDataByKey } from "$lib/server/controllers/siteDataController";
+import { VerifyCaptchaToken } from "$lib/server/controllers/captchaController";
 import {
   SubscriberLogin,
   VerifySubscriberOTP,
@@ -12,6 +13,7 @@ import {
 interface LoginRequest {
   action: "login";
   email: string;
+  captchaToken?: string | null;
 }
 
 interface VerifyRequest {
@@ -51,7 +53,7 @@ export default async function post(req: APIServerRequest): Promise<Response> {
 
   switch (action) {
     case "login":
-      return handleLogin((body as LoginRequest).email, config);
+      return handleLogin((body as LoginRequest).email, (body as LoginRequest).captchaToken, config);
     case "verify":
       return handleVerify((body as VerifyRequest).email, (body as VerifyRequest).code);
     case "getPreferences":
@@ -76,7 +78,16 @@ async function GetSubscriptionConfig(): Promise<SubscriptionsConfig | null> {
   return subscriptionsSettings as SubscriptionsConfig;
 }
 
-async function handleLogin(email: string, config: SubscriptionsConfig): Promise<Response> {
+async function handleLogin(
+  email: string,
+  captchaToken: string | null | undefined,
+  config: SubscriptionsConfig,
+): Promise<Response> {
+  const captchaResult = await VerifyCaptchaToken(captchaToken);
+  if (!captchaResult.success) {
+    return error(400, { message: "Captcha verification failed" });
+  }
+
   const result = await SubscriberLogin(email);
   if (!result.success) {
     return error(400, { message: result.error || "Failed to send verification code" });
