@@ -107,6 +107,12 @@ export interface PrometheusMonitorTypeData {
   down?: PrometheusThreshold; // matches when `metricValue <operator> value` -> DOWN
   degraded?: PrometheusThreshold; // matches when `metricValue <operator> value` -> DEGRADED
   noDataStatus?: "UP" | "DEGRADED" | "DOWN"; // empty-result status, default "DOWN"
+  // Status for "Prometheus did not answer": transport failure, timeout, non-2xx, or a
+  // malformed/non-success payload. Default "DOWN". Distinct from noDataStatus, which covers a
+  // successful query that matched nothing — a lost scrape and an empty result mean different
+  // things, and a monitor charting a capacity metric usually wants the former to read DEGRADED
+  // rather than announce a false outage.
+  errorStatus?: "UP" | "DEGRADED" | "DOWN";
   headers?: { key: string; value: string }[]; // optional; secret substitution applies
   timeout?: number; // ms, default 10000
   allowSelfSignedCert?: boolean; // default false

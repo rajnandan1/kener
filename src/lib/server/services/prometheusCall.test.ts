@@ -315,4 +315,66 @@ describe("PrometheusCall.execute", () => {
     const r = await new PrometheusCall(makeMonitor()).execute();
     expect(r.latency).toBe(1.5);
   });
+
+  // --- errorStatus ---------------------------------------------------------
+  // noDataStatus covers "Prometheus answered, but with nothing". errorStatus covers
+  // "Prometheus did not answer" — transport failures, timeouts, non-2xx and malformed
+  // payloads — which previously had no knob at all and were always DOWN. A monitor whose
+  // reading is a capacity metric wants a lost scrape to read DEGRADED, not a false outage.
+
+  it("defaults to DOWN on a network error when errorStatus is unset", async () => {
+    mockedAxios.mockRejectedValue({ code: "ECONNREFUSED", message: "connect ECONNREFUSED" });
+    const r = await new PrometheusCall(makeMonitor()).execute();
+    expect(r.status).toBe("DOWN");
+  });
+
+  it.each(["UP", "DEGRADED", "DOWN"] as const)("honors errorStatus=%s on a network error", async (es) => {
+    mockedAxios.mockRejectedValue({ code: "ECONNREFUSED", message: "connect ECONNREFUSED" });
+    const r = await new PrometheusCall(makeMonitor({ errorStatus: es })).execute();
+    expect(r.status).toBe(es);
+  });
+
+  it("honors errorStatus on a timeout", async () => {
+    mockedAxios.mockRejectedValue({ code: "ECONNABORTED", message: "timeout of 10000ms exceeded" });
+    const r = await new PrometheusCall(makeMonitor({ errorStatus: "DEGRADED" })).execute();
+    expect(r.status).toBe("DEGRADED");
+  });
+
+  it("honors errorStatus on an HTTP non-2xx", async () => {
+    mockedAxios.mockResolvedValue({ status: 503, data: { status: "error", error: "service unavailable" } });
+    const r = await new PrometheusCall(makeMonitor({ errorStatus: "DEGRADED" })).execute();
+    expect(r.status).toBe("DEGRADED");
+  });
+
+  it("honors errorStatus on a malformed result type", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("matrix", []) });
+    const r = await new PrometheusCall(makeMonitor({ errorStatus: "DEGRADED" })).execute();
+    expect(r.status).toBe("DEGRADED");
+  });
+
+  it("honors errorStatus when type_data has no url", async () => {
+    const r = await new PrometheusCall(makeMonitor({ url: "", errorStatus: "DEGRADED" })).execute();
+    expect(r.status).toBe("DEGRADED");
+  });
+
+  it("keeps type and error_message intact when errorStatus softens the status", async () => {
+    mockedAxios.mockRejectedValue({ code: "ECONNABORTED", message: "timeout of 4200ms exceeded" });
+    const r = await new PrometheusCall(makeMonitor({ timeout: 4200, errorStatus: "DEGRADED" })).execute();
+    expect(r.status).toBe("DEGRADED");
+    expect(r.type).toBe("TIMEOUT");
+    expect(r.error_message).toBe("Request timed out after 4200ms");
+    expect(r.latency).toBe(0);
+  });
+
+  it("falls back to DOWN for an unrecognized errorStatus rather than recording it verbatim", async () => {
+    mockedAxios.mockRejectedValue({ code: "ECONNREFUSED", message: "connect ECONNREFUSED" });
+    const r = await new PrometheusCall(makeMonitor({ errorStatus: "BANANA" as never })).execute();
+    expect(r.status).toBe("DOWN");
+  });
+
+  it("keeps errorStatus and noDataStatus independent", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", []) });
+    const r = await new PrometheusCall(makeMonitor({ errorStatus: "UP", noDataStatus: "DEGRADED" })).execute();
+    expect(r.status).toBe("DEGRADED");
+  });
 });

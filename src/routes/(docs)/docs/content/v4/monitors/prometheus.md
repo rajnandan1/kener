@@ -20,7 +20,7 @@ With no thresholds configured, the monitor is **UP** whenever the query succeeds
 
 For each check the metric value is evaluated in this order:
 
-1. Transport, HTTP, or query error → **DOWN**
+1. Transport, HTTP, or query error → `errorStatus` (default **DOWN**)
 2. Empty result or `NaN` value → `noDataStatus` (default **DOWN**)
 3. `down` condition matches → **DOWN**
 4. `degraded` condition matches → **DEGRADED**
@@ -28,22 +28,31 @@ For each check the metric value is evaluated in this order:
 
 A condition matches when `value <operator> threshold` is true, with the metric value as the left operand. For example a `down` condition of `> 0.95` reads "down when the value is greater than 0.95". `down` is checked before `degraded`, so overlapping conditions resolve to **DOWN**.
 
+`noDataStatus` and `errorStatus` cover different failures and are set independently. `noDataStatus`
+applies when the query **succeeded** and matched nothing (an empty instant vector, or a `NaN`
+sample) — the scrape worked and the answer was "no series". `errorStatus` applies when there is no
+usable answer at all: a connection failure, a timeout, a non-2xx response, a body that is not a
+Prometheus success envelope, or a result whose type or shape cannot be read. Whatever `errorStatus`
+is set to, the check still records the real `type` (`ERROR` / `TIMEOUT`) and its error message, so
+softening the status never hides the cause.
+
 ## Recorded measurement {#recorded-measurement}
 
 The charted per-check number is always the **metric value**, not the HTTP round-trip time. Non-finite values (`NaN`, `±Inf`) and empty results are charted as `0`; status still follows the rules above.
 
 ## Configuration fields {#configuration-fields}
 
-| Field                 | Type      | Default  | Notes                                                       |
-| :-------------------- | :-------- | :------- | :---------------------------------------------------------- |
-| `url`                 | `string`  | —        | Required. Prometheus base URL; base paths like `/prom` work |
-| `query`               | `string`  | —        | Required. PromQL instant query                              |
-| `down`                | `object`  | —        | Optional `{ operator, value }`; matches → DOWN              |
-| `degraded`            | `object`  | —        | Optional `{ operator, value }`; matches → DEGRADED          |
-| `noDataStatus`        | `string`  | `"DOWN"` | Empty-result status: `UP` / `DEGRADED` / `DOWN`             |
-| `headers`             | `array`   | `[]`     | Key/value pairs; `$SECRET` env substitution applies         |
-| `timeout`             | `number`  | `10000`  | Request timeout in ms                                       |
-| `allowSelfSignedCert` | `boolean` | `false`  | Skip TLS certificate verification                           |
+| Field                 | Type      | Default  | Notes                                                            |
+| :-------------------- | :-------- | :------- | :--------------------------------------------------------------- |
+| `url`                 | `string`  | —        | Required. Prometheus base URL; base paths like `/prom` work      |
+| `query`               | `string`  | —        | Required. PromQL instant query                                   |
+| `down`                | `object`  | —        | Optional `{ operator, value }`; matches → DOWN                   |
+| `degraded`            | `object`  | —        | Optional `{ operator, value }`; matches → DEGRADED               |
+| `noDataStatus`        | `string`  | `"DOWN"` | Empty-result status: `UP` / `DEGRADED` / `DOWN`                  |
+| `errorStatus`         | `string`  | `"DOWN"` | Unreachable/unusable-response status: `UP` / `DEGRADED` / `DOWN` |
+| `headers`             | `array`   | `[]`     | Key/value pairs; `$SECRET` env substitution applies              |
+| `timeout`             | `number`  | `10000`  | Request timeout in ms                                            |
+| `allowSelfSignedCert` | `boolean` | `false`  | Skip TLS certificate verification                                |
 
 `operator` is one of `>`, `>=`, `<`, `<=`, `==`, `!=`.
 
@@ -58,6 +67,7 @@ The charted per-check number is always the **metric value**, not the HTTP round-
         "degraded": { "operator": "<", "value": 100 },
         "down": { "operator": "<", "value": 10 },
         "noDataStatus": "DOWN",
+        "errorStatus": "DOWN",
         "timeout": 10000
     }
 }

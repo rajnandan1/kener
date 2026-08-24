@@ -195,20 +195,32 @@ class PrometheusCall {
     return { status: GC.UP, latency, type: GC.REALTIME };
   }
 
-  /** Empty-result / NaN outcome: configurable status, charted as 0. */
-  private noData(): MonitoringResult {
+  /**
+   * Resolves a configured status name to its constant. An unset or unrecognized value falls back
+   * to DOWN: a typo in the config must not be recorded verbatim as a status.
+   */
+  private configuredStatus(value: string | undefined): string {
     const map: Record<string, string> = { UP: GC.UP, DEGRADED: GC.DEGRADED, DOWN: GC.DOWN };
-    const status = map[this.monitor.type_data.noDataStatus || "DOWN"] ?? GC.DOWN;
-    return { status, latency: 0, type: GC.REALTIME };
+    return map[value || "DOWN"] ?? GC.DOWN;
   }
 
-  /** DOWN failure with a message truncated to 200 chars (as sqlCall does). */
+  /** Empty-result / NaN outcome: configurable status, charted as 0. */
+  private noData(): MonitoringResult {
+    return { status: this.configuredStatus(this.monitor.type_data.noDataStatus), latency: 0, type: GC.REALTIME };
+  }
+
+  /**
+   * Unreachable/unusable-response failure, message truncated to 200 chars (as sqlCall does).
+   * The status follows errorStatus (default DOWN) while `type` and `error_message` always keep the
+   * real reason, so softening the status never costs the diagnostic. `type_data` is read
+   * defensively: this is the one failure path reachable with no type_data at all.
+   */
   private fail(type: string, message: string): MonitoringResult {
     let error_message = message;
     if (error_message.length > 200) {
       error_message = error_message.substring(0, 200) + "...";
     }
-    return { status: GC.DOWN, latency: 0, type, error_message };
+    return { status: this.configuredStatus(this.monitor.type_data?.errorStatus), latency: 0, type, error_message };
   }
 }
 

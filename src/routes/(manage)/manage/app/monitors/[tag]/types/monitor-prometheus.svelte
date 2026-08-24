@@ -12,13 +12,14 @@
   let { data = $bindable() }: { data: any } = $props();
 
   const OPERATORS = [">", ">=", "<", "<=", "==", "!="] as const;
-  const NO_DATA_OPTIONS = ["DOWN", "DEGRADED", "UP"] as const;
+  const STATUS_OPTIONS = ["DOWN", "DEGRADED", "UP"] as const;
 
   // Initialize defaults if not set. `down` / `degraded` intentionally stay
   // undefined until the user enables them.
   if (!data.url) data.url = "";
   if (!data.query) data.query = "";
   if (!data.noDataStatus) data.noDataStatus = "DOWN";
+  if (!data.errorStatus) data.errorStatus = "DOWN";
   if (!data.headers) data.headers = [];
   if (!data.timeout) data.timeout = 10000;
   if (data.allowSelfSignedCert === undefined) data.allowSelfSignedCert = false;
@@ -132,12 +133,34 @@
     >
       <Select.Trigger id="prom-nodata" class="w-full">{data.noDataStatus}</Select.Trigger>
       <Select.Content>
-        {#each NO_DATA_OPTIONS as opt}
+        {#each STATUS_OPTIONS as opt}
           <Select.Item value={opt}>{opt}</Select.Item>
         {/each}
       </Select.Content>
     </Select.Root>
     <p class="text-muted-foreground mt-1 text-xs">Status recorded when the query returns no data.</p>
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <Label for="prom-error">Unreachable status</Label>
+    <Select.Root
+      type="single"
+      value={data.errorStatus}
+      onValueChange={(v) => {
+        if (v) data.errorStatus = v;
+      }}
+    >
+      <Select.Trigger id="prom-error" class="w-full">{data.errorStatus}</Select.Trigger>
+      <Select.Content>
+        {#each STATUS_OPTIONS as opt}
+          <Select.Item value={opt}>{opt}</Select.Item>
+        {/each}
+      </Select.Content>
+    </Select.Root>
+    <p class="text-muted-foreground mt-1 text-xs">
+      Status recorded when Prometheus cannot be reached or answers unusably (timeout, HTTP error, malformed response).
+      Distinct from no-data, which means the query ran and matched nothing.
+    </p>
   </div>
 
   <!-- Headers -->
