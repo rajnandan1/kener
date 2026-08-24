@@ -1,10 +1,19 @@
 import db from "../db/db.js";
-import type { PageRecord, PageRecordInsert, PageMonitorRecord, PageMonitorRecordInsert } from "../types/db.js";
+import type {
+  PageRecord,
+  PageRecordInsert,
+  PageMonitorRecord,
+  PageMonitorRecordInsert,
+  UserRecordPublic,
+} from "../types/db.js";
+import { GetSiteDataByKey } from "./siteDataController.js";
 
 // ============ Page CRUD Operations ============
 
 /**
- * Create a new page
+ * Create a new page.
+ * When the site setting "autoPublicPages" is true (default),
+ * newly created pages automatically get the "public" access group.
  */
 export async function CreatePage(data: PageRecordInsert): Promise<PageRecord> {
   // Validate required fields
@@ -12,7 +21,7 @@ export async function CreatePage(data: PageRecordInsert): Promise<PageRecord> {
     throw new Error("page_path, page_title, and page_header are required");
   }
 
-  // Make page_path URL-friendly: lowercase, replace spaces with hyphens, remove special chars (including leading slashes)
+  // Make page_path URL-friendly
   data.page_path = data.page_path
     .toLowerCase()
     .trim()
@@ -25,7 +34,15 @@ export async function CreatePage(data: PageRecordInsert): Promise<PageRecord> {
     throw new Error(`Page with path "${data.page_path}" already exists`);
   }
 
-  return await db.createPage(data);
+  const newPage = await db.createPage(data);
+
+  // Auto-assign "public" group to new pages (unless disabled in settings)
+  const autoPublic = await GetSiteDataByKey("autoPublicPages");
+  if (autoPublic !== false && autoPublic !== "false") {
+    await db.setPageAccessGroups(newPage.id, ["public"]);
+  }
+
+  return newPage;
 }
 
 /**
@@ -227,4 +244,177 @@ export async function GetPageByPathWithMonitors(
 
   const monitors = await db.getPageMonitorsExcludeHidden(page.id);
   return { page, monitors };
+}
+
+// ============ Access Group Operations ============
+
+// Reserved group ID: role with "admin" can see all pages
+const ADMIN_GROUP = "admin";
+// Reserved group ID: pages with "public" are visible without login
+const PUBLIC_GROUP = "public";
+
+/**
+ * Check if a user can access a specific page.
+ *
+ * Rules (evaluated top to bottom, first match wins):
+ *   1. Page has "public" group → allow (no login needed)
+ *   2. No login → redirect to sign-in
+ *   3. User's roles include the "admin" group → allow (admin sees everything)
+ *   4. Page has no access groups → denied (unconfigured pages are hidden)
+ *   5. Any overlap between page groups and role groups → allow
+ *   6. No overlap → denied
+ *
+ * Returns: "allow" | "login_required" | "denied"
+ */
+export async function CheckPageAccess(
+  page_id: number,
+  user: UserRecordPublic | null,
+): Promise<"allow" | "login_required" | "denied"> {
+  const pageGroups = await db.getAccessGroupsForPage(page_id);
+
+  // Rule 1: public pages are visible to everyone
+  if (pageGroups.includes(PUBLIC_GROUP)) {
+    return "allow";
+  }
+
+  // Rule 2: non-public pages require login
+  if (!user) {
+    return "login_required";
+  }
+
+  // Rule 3: admin group grants access to all pages
+  const roleGroups = await db.getAccessGroupsForRoles(user.role_ids);
+  if (roleGroups.includes(ADMIN_GROUP)) {
+    return "allow";
+  }
+
+  // Rule 4: pages with no groups are hidden (except for admin)
+  if (pageGroups.length === 0) {
+    return "denied";
+  }
+
+  // Rule 5+6: check for overlap between page and role groups
+  const hasAccess = pageGroups.some((pg) => roleGroups.includes(pg));
+  return hasAccess ? "allow" : "denied";
+}
+
+/**
+ * Get all pages that a user is allowed to see.
+ * Used by the page switcher to filter the dropdown.
+ */
+export async function GetAccessiblePages(
+  user: UserRecordPublic | null,
+): Promise<PageRecord[]> {
+  const allPages = await db.getAllPages();
+  if (allPages.length === 0) return [];
+
+  // Load access groups for all pages in one query
+  const pageIds = allPages.map((p) => p.id);
+  const pageGroupsMap = await db.getAccessGroupsForPages(pageIds);
+
+  // Load user's role groups (if logged in)
+  let roleGroups: string[] = [];
+  let isAdmin = false;
+  if (user) {
+    roleGroups = await db.getAccessGroupsForRoles(user.role_ids);
+    isAdmin = roleGroups.includes(ADMIN_GROUP);
+  }
+
+  return allPages.filter((page) => {
+    const groups = pageGroupsMap.get(page.id) || [];
+
+    // Public pages are visible to everyone
+    if (groups.includes(PUBLIC_GROUP)) return true;
+
+    // Non-public pages require login
+    if (!user) return false;
+
+    // Admin sees everything
+    if (isAdmin) return true;
+
+    // Pages with no groups are hidden
+    if (groups.length === 0) return false;
+
+    // Check if role groups overlap with page groups
+    return groups.some((g) => roleGroups.includes(g));
+  });
+}
+
+// ============ Access Group Admin Operations ============
+
+/**
+ * Get all access groups (for admin UI dropdowns)
+ */
+export async function GetAllAccessGroups() {
+  return await db.getAllAccessGroups();
+}
+
+/**
+ * Create a new access group
+ */
+export async function CreateAccessGroup(data: { id: string; group_name: string; description?: string }) {
+  if (!data.id || !data.group_name) {
+    throw new Error("id and group_name are required");
+  }
+
+  // Normalize ID: lowercase, hyphens, no special chars
+  data.id = data.id.toLowerCase().trim().replace(/\s+/g, "-").replace(/[^a-z0-9_-]/g, "");
+
+  if (data.id === "public") {
+    throw new Error("Cannot create a group with the reserved ID 'public'");
+  }
+
+  const existing = (await db.getAllAccessGroups()).find((g) => g.id === data.id);
+  if (existing) {
+    throw new Error(`Access group '${data.id}' already exists`);
+  }
+
+  await db.createAccessGroup(data);
+  return { success: true, id: data.id };
+}
+
+/**
+ * Delete an access group. System groups (public, admin) cannot be deleted.
+ */
+export async function DeleteAccessGroup(id: string) {
+  const allGroups = await db.getAllAccessGroups();
+  const group = allGroups.find((g) => g.id === id);
+  if (!group) {
+    throw new Error(`Access group '${id}' not found`);
+  }
+  if ((group as any).is_system === 1) {
+    throw new Error(`Cannot delete system group '${id}'`);
+  }
+  await db.deleteAccessGroup(id);
+  return { success: true };
+}
+
+/**
+ * Get access groups assigned to a page
+ */
+export async function GetPageAccessGroups(page_id: number): Promise<string[]> {
+  return await db.getAccessGroupsForPage(page_id);
+}
+
+/**
+ * Set access groups for a page (replaces all existing assignments)
+ */
+export async function SetPageAccessGroups(page_id: number, group_ids: string[]) {
+  await db.setPageAccessGroups(page_id, group_ids);
+  return { success: true };
+}
+
+/**
+ * Get access groups assigned to a role
+ */
+export async function GetRoleAccessGroups(role_id: string): Promise<string[]> {
+  return await db.getAccessGroupsForRole(role_id);
+}
+
+/**
+ * Set access groups for a role (replaces all existing assignments)
+ */
+export async function SetRoleAccessGroups(role_id: string, group_ids: string[]) {
+  await db.setRoleAccessGroups(role_id, group_ids);
+  return { success: true };
 }
