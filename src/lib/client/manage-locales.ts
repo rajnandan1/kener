@@ -17,6 +17,12 @@ export async function fetchTranslatableLocales(): Promise<TranslatableLocalesInf
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ action: "getAllSiteData" }),
   });
+  // Without this guard an auth/server error parses into an empty locale set, which is
+  // indistinguishable from "only the default language is enabled" — silently hiding
+  // every translation control. Callers catch and log instead.
+  if (!response.ok) {
+    throw new Error(`Failed to load site locales: ${response.status}`);
+  }
   const result = await response.json();
   const names = new Map(availableLocalesList.map((l) => [l.code, l.name]));
   const defaultLocale: string = result?.i18n?.defaultLocale || "en";

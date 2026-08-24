@@ -23,6 +23,10 @@
 
   const MaintenanceIcon = STATUS_ICON.MAINTENANCE;
 
+  const maintenanceDescription = $derived(
+    $lt(data.maintenance.translations, "description", data.maintenance.description ?? "")
+  );
+
   // Reference for the scrollable container
   let eventsContainer: HTMLDivElement | undefined = $state();
 
@@ -122,12 +126,10 @@
     <!-- Description and Events (Main Content) -->
     <div class="min-w-0 space-y-6 lg:col-span-2">
       <!-- Description -->
-      {#if data.maintenance.description}
+      {#if maintenanceDescription}
         <div class="bg-background min-w-0 rounded-3xl border">
           <div class="prose prose-sm dark:prose-invert max-w-none min-w-0 overflow-x-auto p-4 wrap-break-word">
-            <SveltePurify
-              html={mdToHTML($lt(data.maintenance.translations, "description", data.maintenance.description))}
-            />
+            <SveltePurify html={mdToHTML(maintenanceDescription)} />
           </div>
         </div>
       {/if}

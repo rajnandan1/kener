@@ -60,12 +60,12 @@
     {/if}
     <Item.Root class="px-0 py-0 ">
       <Item.Content>
-        {#if data.monitorName}
+        {#if monitorName}
           <h1>
             <Item.Title class="text-3xl">{monitorName}</Item.Title>
           </h1>
         {/if}
-        {#if data.monitorDescription}
+        {#if monitorDescription}
           <h2 class="">
             <Item.Description
               class="text-muted-foreground w-full {descriptionExpanded ? 'line-clamp-none' : ''} text-pretty"
