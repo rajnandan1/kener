@@ -18,6 +18,7 @@
   const authActionPath = $derived(!isAdminAccountCreated ? "?/signup" : "?/login");
   const emailValue = $derived(form?.values?.email ?? "");
   const nameValue = $derived(form?.values && "name" in form.values ? form.values.name : "");
+  const next = $derived(data.next ?? "");
 
   let loading = $state(false);
   let showPassword = $state(false);
@@ -75,6 +76,9 @@
             </Alert.Root>
           {/if}
 
+          {#if next}
+            <input type="hidden" name="next" value={next} />
+          {/if}
           <Field.Group>
             {#if !isAdminAccountCreated}
               <Field.Field>

@@ -1,8 +1,10 @@
 import db from "../db/db.js";
+import { redirect } from "@sveltejs/kit";
 import { GetMinuteStartNowTimestampUTC, BeginningOfMinute, BeginningOfDay } from "../tool.js";
 import { GetPageByPathWithMonitors, GetLatestMonitoringDataAllActive } from "./controller.js";
 import { GetMonitorsParsed } from "./monitorsController.js";
 import { GetStatusSummary, GetStatusBgColor } from "../../clientTools";
+import serverResolve from "../resolver.js";
 
 import type {
   IncidentRecord,
@@ -309,6 +311,15 @@ export const GetPageDashboardData = async (
   }
 
   const { page: pageDetails, monitors: pageMonitors } = pageData;
+
+  // Check page access restrictions
+  if (pageDetails.page_is_internal) {
+    if (!layoutData.loggedInUser) {
+      const next = encodeURIComponent(serverResolve(pagePath.startsWith("/") ? pagePath : "/" + pagePath));
+      throw redirect(302, serverResolve("/account/signin") + "?next=" + next);
+    }
+  }
+
   const monitorTags = pageMonitors.map((pm) => pm.monitor_tag);
 
   // Parse page settings with defaults
