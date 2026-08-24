@@ -76,14 +76,43 @@ export function IsValidFooterHTML(html: unknown): boolean {
   return typeof html === "string";
 }
 
+/**
+ * Validates the i18n site-data value: `{ defaultLocale, locales: [{ code, name?, selected?,
+ * disabled? }] }`.
+ *
+ * Previously this only asked whether the string parsed as JSON, so `"[]"`, `"null"` and `"42"` were
+ * all accepted as configuration and surfaced as a broken locale picker instead of a rejected save.
+ *
+ * Deliberately NOT enforced: that every entry is `selected`, or that the list contains only enabled
+ * locales. The internationalization page writes out every available locale with `selected` false
+ * for the ones that are off, so either rule would reject the shape the app itself saves.
+ */
 export function IsValidI18n(i18n: string): boolean {
+  let parsed: unknown;
   try {
-    JSON.parse(i18n);
+    parsed = JSON.parse(i18n);
   } catch (error) {
     return false;
   }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return false;
 
-  return true;
+  const { defaultLocale, locales } = parsed as { defaultLocale?: unknown; locales?: unknown };
+  if (typeof defaultLocale !== "string" || defaultLocale.trim() === "") return false;
+  if (!Array.isArray(locales) || locales.length === 0) return false;
+
+  const codes = new Set<string>();
+  for (const entry of locales) {
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) return false;
+    const { code, name, selected, disabled } = entry as Record<string, unknown>;
+    if (typeof code !== "string" || code.trim() === "") return false;
+    if (name !== undefined && typeof name !== "string") return false;
+    if (selected !== undefined && typeof selected !== "boolean") return false;
+    if (disabled !== undefined && typeof disabled !== "boolean") return false;
+    codes.add(code);
+  }
+
+  // A default the picker cannot offer leaves the site with no usable default locale.
+  return codes.has(defaultLocale);
 }
 
 export function IsValidAnalytics(analytics: string): boolean {
