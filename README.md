@@ -52,6 +52,7 @@
 [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/spSvic?referralCode=1Pn7vs&utm_medium=integration&utm_source=template&utm_campaign=generic)
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/1YRTMI?referralCode=rajnandan1)
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Frajnandan1%2Fkener)
+[![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/Kener/)
 
 </p>
 
