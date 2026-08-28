@@ -1,7 +1,9 @@
-import db from "../db/db.js";
-import { DOCKER_CONNECTION_TYPES, type DockerConnectionTypeOption } from "../../anywhere.js";
-import { DockerError, containerDisplayName, getVersion, listContainers, type DockerConnection } from "../docker.js";
+import db from "$lib/server/db/db";
+import { DOCKER_CONNECTION_TYPES } from "../../anywhere.js";
+import { DockerError, containerDisplayName, getVersion, listContainers } from "../docker.js";
 import { GetMonitorsParsed } from "./monitorsController.js";
+import type { DockerConnectionTypeOption } from "../../anywhere.js";
+import type { DockerConnection } from "../docker.js";
 import type { DockerHostRecord, DockerHostInsert } from "../types/db.js";
 import type { DockerMonitorTypeData } from "../types/monitor.js";
 
@@ -10,26 +12,43 @@ export interface DockerHostInput extends Partial<DockerHostInsert> {
 }
 
 /**
- * Docker hosts hold credentials, so the manage UI never receives the private key
- * material back — only whether each field is populated.
+ * A fully-resolved host payload. Intersecting with DockerConnection drops the
+ * `undefined` from the optional TLS fields, so the result is usable both as a
+ * database insert and as a connection to hand straight to the Docker client.
  */
-export interface DockerHostView extends Omit<DockerHostRecord, "tls_ca" | "tls_cert" | "tls_key"> {
-  has_tls_ca: boolean;
+type NormalizedDockerHost = DockerHostInsert & DockerConnection;
+
+/**
+ * Docker hosts hold credentials, so the manage UI never receives the client
+ * certificate or private key back — only whether each is populated.
+ *
+ * `tls_ca` is deliberately returned in full: a CA certificate is public material,
+ * and round-tripping it is what lets a blank CA field mean "clear it" rather than
+ * being indistinguishable from "unchanged".
+ */
+export interface DockerHostView extends Omit<DockerHostRecord, "tls_cert" | "tls_key"> {
   has_tls_cert: boolean;
   has_tls_key: boolean;
 }
 
 function toView(host: DockerHostRecord): DockerHostView {
-  const { tls_ca, tls_cert, tls_key, ...rest } = host;
+  const { tls_cert, tls_key, ...rest } = host;
   return {
     ...rest,
-    has_tls_ca: !!tls_ca,
     has_tls_cert: !!tls_cert,
     has_tls_key: !!tls_key,
   };
 }
 
-function normalizeInput(input: DockerHostInput): DockerHostInsert {
+/**
+ * Validates and canonicalizes a host payload.
+ *
+ * `existing` is the stored row when this is an update. The manage UI never receives
+ * the client certificate or key, so it sends those fields blank to mean "keep what
+ * is stored"; merging them in here — before the completeness check — is what makes
+ * editing an existing TLS host (or testing it) work.
+ */
+function normalizeInput(input: DockerHostInput, existing?: DockerHostRecord): NormalizedDockerHost {
   const name = (input.name || "").trim();
   if (!name) {
     throw new Error("Name is required");
@@ -45,20 +64,23 @@ function normalizeInput(input: DockerHostInput): DockerHostInsert {
     throw new Error(connectionType === "socket" ? "Socket path is required" : "Daemon address (host:port) is required");
   }
 
-  if (connectionType === "tls" && (!input.tls_cert || !input.tls_key)) {
+  // TLS material is only meaningful for the tls transport; drop it otherwise so
+  // switching a host to socket/tcp does not leave stale keys behind.
+  if (connectionType !== "tls") {
+    return { name, connection_type: connectionType, daemon, tls_ca: null, tls_cert: null, tls_key: null };
+  }
+
+  // Blank cert/key mean "keep stored" — they are write-only in the UI, so blank can
+  // only ever mean unchanged. The CA round-trips, so blank there means "clear it".
+  const tls_cert = (input.tls_cert || "").trim() || existing?.tls_cert || null;
+  const tls_key = (input.tls_key || "").trim() || existing?.tls_key || null;
+  const tls_ca = (input.tls_ca || "").trim() || null;
+
+  if (!tls_cert || !tls_key) {
     throw new Error("TLS connections require both a client certificate and a client key");
   }
 
-  return {
-    name,
-    connection_type: connectionType,
-    daemon,
-    // TLS material is only meaningful for the tls transport; drop it otherwise so
-    // switching a host to socket/tcp does not leave stale keys behind.
-    tls_ca: connectionType === "tls" ? input.tls_ca || null : null,
-    tls_cert: connectionType === "tls" ? input.tls_cert || null : null,
-    tls_key: connectionType === "tls" ? input.tls_key || null : null,
-  };
+  return { name, connection_type: connectionType, daemon, tls_ca, tls_cert, tls_key };
 }
 
 export const GetDockerHosts = async (): Promise<DockerHostView[]> => {
@@ -72,7 +94,12 @@ export const GetDockerHostById = async (id: number): Promise<DockerHostView | un
 };
 
 export const CreateUpdateDockerHost = async (input: DockerHostInput): Promise<DockerHostView> => {
-  const data = normalizeInput(input);
+  const current = input.id ? await db.getDockerHostById(input.id) : undefined;
+  if (input.id && !current) {
+    throw new Error("Docker host not found");
+  }
+
+  const data = normalizeInput(input, current);
 
   const existingName = await db.getDockerHostByName(data.name);
   if (existingName && existingName.id !== input.id) {
@@ -80,20 +107,6 @@ export const CreateUpdateDockerHost = async (input: DockerHostInput): Promise<Do
   }
 
   if (input.id) {
-    const current = await db.getDockerHostById(input.id);
-    if (!current) {
-      throw new Error("Docker host not found");
-    }
-    // Blank TLS fields on an update mean "keep what is stored" so the UI never has to
-    // round-trip secrets it was not shown.
-    if (data.connection_type === "tls") {
-      data.tls_ca = data.tls_ca ?? current.tls_ca;
-      data.tls_cert = data.tls_cert || current.tls_cert;
-      data.tls_key = data.tls_key || current.tls_key;
-      if (!data.tls_cert || !data.tls_key) {
-        throw new Error("TLS connections require both a client certificate and a client key");
-      }
-    }
     await db.updateDockerHost({ ...data, id: input.id });
     const updated = await db.getDockerHostById(input.id);
     return toView(updated as DockerHostRecord);
@@ -145,22 +158,16 @@ async function resolveConnection(input: DockerHostInput): Promise<DockerConnecti
     if (!host) {
       throw new Error("Docker host not found");
     }
-    // Fall back to the stored TLS material when the form did not re-send it.
-    if (input.connection_type && input.daemon) {
-      const draft = normalizeInput({ ...input, name: input.name || host.name });
-      return {
-        connection_type: draft.connection_type,
-        daemon: draft.daemon,
-        tls_ca: draft.connection_type === "tls" ? (draft.tls_ca ?? host.tls_ca) : null,
-        tls_cert: draft.connection_type === "tls" ? draft.tls_cert || host.tls_cert : null,
-        tls_key: draft.connection_type === "tls" ? draft.tls_key || host.tls_key : null,
-      };
+    // Testing an unmodified saved host: use it as stored.
+    if (!input.connection_type || !input.daemon) {
+      return host;
     }
-    return host;
+    // Testing edits in the form: normalizeInput merges any TLS material the form
+    // did not re-send, so a blank cert/key still tests against the stored ones.
+    return normalizeInput({ ...input, name: input.name || host.name }, host);
   }
 
-  const draft = normalizeInput({ ...input, name: input.name || "draft" });
-  return draft as DockerConnection;
+  return normalizeInput({ ...input, name: input.name || "draft" });
 }
 
 export interface DockerHostTestResult {

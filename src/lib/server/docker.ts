@@ -76,12 +76,15 @@ export type DockerConnection = Pick<DockerHostRecord, "connection_type" | "daemo
 /**
  * Normalizes the stored daemon address into a base URL. Accepts bare `host:port`,
  * `tcp://host:port`, and `http(s)://host:port` so operators can paste whatever
- * `DOCKER_HOST` value they already have.
+ * `DOCKER_HOST` value they already have. Trailing slashes are stripped, otherwise
+ * `tcp://host:2375/` would not look like it already carries a port.
+ *
+ * Exported for unit testing.
  */
-function buildBaseURL(connection: DockerConnection): string {
+export function buildBaseURL(connection: DockerConnection): string {
   const raw = (connection.daemon || "").trim();
   const scheme = connection.connection_type === "tls" ? "https" : "http";
-  const withoutScheme = raw.replace(/^(tcp|http|https):\/\//i, "");
+  const withoutScheme = raw.replace(/^(tcp|http|https):\/\//i, "").replace(/\/+$/, "");
   if (!withoutScheme) {
     throw new DockerError("Docker host address is empty");
   }

@@ -24,7 +24,7 @@
     name: string;
     connection_type: string;
     daemon: string;
-    has_tls_ca: boolean;
+    tls_ca: string | null;
     has_tls_cert: boolean;
     has_tls_key: boolean;
   }
@@ -124,7 +124,7 @@
       name: host.name,
       connection_type: host.connection_type,
       daemon: host.daemon,
-      tls_ca: "",
+      tls_ca: host.tls_ca ?? "",
       tls_cert: "",
       tls_key: ""
     };
@@ -242,7 +242,12 @@
                   <PencilIcon class="size-4" />
                   Edit
                 </Button>
-                <Button variant="ghost" size="sm" onclick={() => (deleteTarget = host)}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label={`Delete ${host.name}`}
+                  onclick={() => (deleteTarget = host)}
+                >
                   <Trash2Icon class="text-destructive size-4" />
                 </Button>
               </Table.Cell>
@@ -331,7 +336,8 @@
         </div>
         {#if editingExistingTls}
           <p class="text-muted-foreground text-xs">
-            Certificates already stored for this host are not shown. Leave a field blank to keep it unchanged.
+            The stored client certificate and key are never shown. Leave those blank to keep them unchanged. The CA
+            field is shown in full — clearing it falls back to system CA trust.
           </p>
         {/if}
       {/if}

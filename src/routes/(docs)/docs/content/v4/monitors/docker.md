@@ -32,6 +32,8 @@ services:
 
 Addresses may be written bare (`host:port`) or with a scheme (`tcp://host:port`). The port defaults to `2375` for `tcp` and `2376` for `tls`.
 
+For `tls`, the stored client certificate and key are never shown again after saving — leave those fields blank when editing to keep them unchanged. The CA field is shown in full and is authoritative: clearing it falls back to system CA trust.
+
 > [!CAUTION]
 > Access to the Docker socket is equivalent to root on the host. Prefer a read-only socket proxy (for example `tecnativa/docker-socket-proxy` with only `CONTAINERS=1` and `VERSION=1` enabled) over mounting the raw socket or exposing `tcp://` without TLS.
 
