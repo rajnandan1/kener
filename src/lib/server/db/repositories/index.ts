@@ -15,3 +15,4 @@ export { ImagesRepository } from "./images.js";
 export { PagesRepository } from "./pages.js";
 export { MaintenancesRepository } from "./maintenances.js";
 export { EmailTemplateConfigRepository } from "./emailTemplateConfig.js";
+export { DockerHostsRepository } from "./dockerHosts.js";

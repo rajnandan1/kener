@@ -27,7 +27,8 @@
     MonitorGroup,
     MonitorGamedig,
     MonitorNone,
-    MonitorGrpc
+    MonitorGrpc,
+    MonitorDocker
   } from "../types/index.js";
 
   interface Props {
@@ -109,7 +110,8 @@
     SQL: "Database",
     HEARTBEAT: "Heartbeat",
     GAMEDIG: "Game Server",
-    GRPC: "gRPC Health"
+    GRPC: "gRPC Health",
+    DOCKER: "Docker Container"
   };
 
   // Validation for each monitor type
@@ -225,6 +227,14 @@
         return true;
       }
 
+      case "DOCKER": {
+        const data = typeData as any;
+        if (!data.dockerHostId) return false;
+        if (data.checkType !== "daemon" && !data.containerName?.trim()) return false;
+        if (!data.timeout || data.timeout < 1) return false;
+        return true;
+      }
+
       default:
         return true;
     }
@@ -334,6 +344,8 @@
         <MonitorGamedig bind:data={typeData} />
       {:else if monitor.monitor_type === "GRPC"}
         <MonitorGrpc bind:data={typeData} />
+      {:else if monitor.monitor_type === "DOCKER"}
+        <MonitorDocker bind:data={typeData} />
       {:else if monitor.monitor_type === "NONE"}
         <MonitorNone bind:data={typeData} />
       {/if}

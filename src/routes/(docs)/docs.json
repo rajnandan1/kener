@@ -122,6 +122,10 @@
                           "content": "v4/monitors/grpc"
                         },
                         {
+                          "title": "Docker Monitors",
+                          "content": "v4/monitors/docker"
+                        },
+                        {
                           "title": "Group Monitors",
                           "content": "v4/monitors/group"
                         },

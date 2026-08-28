@@ -50,6 +50,7 @@ UP + MAINTENANCE + DEGRADED + DOWN
 - [Heartbeat Monitor](/docs/v4/monitors/heartbeat) — Push-based health signal
 - [GameDig Monitor](/docs/v4/monitors/gamedig) — Game server query checks
 - [gRPC Monitor](/docs/v4/monitors/grpc) — gRPC Health Checking Protocol
+- [Docker Monitor](/docs/v4/monitors/docker) — Container state and healthcheck via the Docker Engine API
 - [Group Monitor](/docs/v4/monitors/group) — Weighted aggregate of member monitors
 
 ## Related docs {#related-docs}

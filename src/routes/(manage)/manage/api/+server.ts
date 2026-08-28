@@ -53,6 +53,14 @@ import {
   GetMonitoringDataPaginated,
 } from "$lib/server/controllers/controller.js";
 
+import {
+  GetDockerHosts,
+  GetDockerHostById,
+  CreateUpdateDockerHost,
+  DeleteDockerHost,
+  TestDockerHost,
+  ListDockerContainers,
+} from "$lib/server/controllers/dockerHostController.js";
 import { GetNowTimestampUTC } from "$lib/server/tool.js";
 import {
   CreatePage,
@@ -673,6 +681,21 @@ export async function POST({ request, cookies }) {
       resp = await UpdateRole(data.roleId, { name: data.name, status: data.status });
     } else if (action == "deleteRole") {
       resp = await DeleteRole(data.roleId, data.options);
+    } else if (action == "getDockerHosts") {
+      resp = await GetDockerHosts();
+    } else if (action == "getDockerHostById") {
+      resp = await GetDockerHostById(parseInt(String(data.id)));
+      if (!resp) {
+        throw new Error("Docker host not found");
+      }
+    } else if (action == "createUpdateDockerHost") {
+      resp = await CreateUpdateDockerHost(data);
+    } else if (action == "deleteDockerHost") {
+      resp = await DeleteDockerHost(parseInt(String(data.id)));
+    } else if (action == "testDockerHost") {
+      resp = await TestDockerHost(data);
+    } else if (action == "listDockerContainers") {
+      resp = await ListDockerContainers(parseInt(String(data.id)));
     }
   } catch (error: unknown) {
     console.log(error);

@@ -15,6 +15,7 @@ import { MaintenancesRepository } from "./repositories/maintenances.js";
 import { MonitorAlertConfigRepository } from "./repositories/monitorAlertConfig.js";
 import { SubscriptionSystemRepository } from "./repositories/subscriptionSystem.js";
 import { EmailTemplateConfigRepository } from "./repositories/emailTemplateConfig.js";
+import { DockerHostsRepository } from "./repositories/dockerHosts.js";
 
 // Re-export types from base
 export type { MonitorFilter, TriggerFilter, IncidentFilter, CountResult } from "./repositories/base.js";
@@ -47,6 +48,7 @@ class DbImpl {
   private monitorAlertConfig!: MonitorAlertConfigRepository;
   private subscriptionSystem!: SubscriptionSystemRepository;
   private emailTemplateConfig!: EmailTemplateConfigRepository;
+  private dockerHosts!: DockerHostsRepository;
 
   // Method bindings - declared with definite assignment assertion
   // ============ Monitoring Data ============
@@ -378,6 +380,14 @@ class DbImpl {
   deleteEmailTemplate!: EmailTemplateConfigRepository["deleteEmailTemplate"];
   upsertEmailTemplate!: EmailTemplateConfigRepository["upsertEmailTemplate"];
 
+  // ============ Docker Hosts ============
+  createDockerHost!: DockerHostsRepository["createDockerHost"];
+  updateDockerHost!: DockerHostsRepository["updateDockerHost"];
+  getDockerHosts!: DockerHostsRepository["getDockerHosts"];
+  getDockerHostById!: DockerHostsRepository["getDockerHostById"];
+  getDockerHostByName!: DockerHostsRepository["getDockerHostByName"];
+  deleteDockerHost!: DockerHostsRepository["deleteDockerHost"];
+
   constructor(opts: KnexType.Config, workerOpts?: KnexType.Config | null) {
     this.knex = Knex(opts);
     // Separate pool for background jobs when configured (Postgres/MySQL);
@@ -397,6 +407,7 @@ class DbImpl {
     this.monitorAlertConfig = new MonitorAlertConfigRepository(this.knex);
     this.subscriptionSystem = new SubscriptionSystemRepository(this.knex);
     this.emailTemplateConfig = new EmailTemplateConfigRepository(this.knex);
+    this.dockerHosts = new DockerHostsRepository(this.knex);
 
     // Bind methods after repositories are initialized
     this.bindMonitoringMethods();
@@ -411,6 +422,7 @@ class DbImpl {
     this.bindMonitorAlertConfigMethods();
     this.bindSubscriptionSystemMethods();
     this.bindEmailTemplateConfigMethods();
+    this.bindDockerHostsMethods();
 
     this.init();
   }
@@ -843,6 +855,15 @@ class DbImpl {
     this.getEmailTemplateById = this.emailTemplateConfig.getEmailTemplateById.bind(this.emailTemplateConfig);
     this.deleteEmailTemplate = this.emailTemplateConfig.deleteEmailTemplate.bind(this.emailTemplateConfig);
     this.upsertEmailTemplate = this.emailTemplateConfig.upsertEmailTemplate.bind(this.emailTemplateConfig);
+  }
+
+  private bindDockerHostsMethods(): void {
+    this.createDockerHost = this.dockerHosts.createDockerHost.bind(this.dockerHosts);
+    this.updateDockerHost = this.dockerHosts.updateDockerHost.bind(this.dockerHosts);
+    this.getDockerHosts = this.dockerHosts.getDockerHosts.bind(this.dockerHosts);
+    this.getDockerHostById = this.dockerHosts.getDockerHostById.bind(this.dockerHosts);
+    this.getDockerHostByName = this.dockerHosts.getDockerHostByName.bind(this.dockerHosts);
+    this.deleteDockerHost = this.dockerHosts.deleteDockerHost.bind(this.dockerHosts);
   }
 
   async init(): Promise<void> {}
