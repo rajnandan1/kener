@@ -76,8 +76,14 @@
   const isFormValid = $derived.by(() => {
     if (!form.name.trim()) return false;
     if (!form.daemon.trim()) return false;
-    if (form.connection_type === "tls" && !editingExistingTls && (!form.tls_cert.trim() || !form.tls_key.trim()))
-      return false;
+    if (form.connection_type === "tls") {
+      const hasCert = !!form.tls_cert.trim();
+      const hasKey = !!form.tls_key.trim();
+      // A certificate and its key are a matched pair, so they must be replaced
+      // together. One of the two on its own would save a pair that does not match.
+      if (hasCert !== hasKey) return false;
+      if (!editingExistingTls && !hasCert) return false;
+    }
     return true;
   });
 
@@ -336,8 +342,9 @@
         </div>
         {#if editingExistingTls}
           <p class="text-muted-foreground text-xs">
-            The stored client certificate and key are never shown. Leave those blank to keep them unchanged. The CA
-            field is shown in full. If you clear it, the system uses system CA trust.
+            The page does not show the stored client certificate and key. Leave both fields empty to keep the stored
+            values. To replace them, enter both, because they are a matched pair. The page shows the CA field in full.
+            If you clear it, the system uses system CA trust.
           </p>
         {/if}
       {/if}

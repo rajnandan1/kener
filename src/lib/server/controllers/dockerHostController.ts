@@ -70,10 +70,20 @@ function normalizeInput(input: DockerHostInput, existing?: DockerHostRecord): No
     return { name, connection_type: connectionType, daemon, tls_ca: null, tls_cert: null, tls_key: null };
   }
 
-  // Blank cert/key mean "keep stored". They are write-only in the UI, so blank can
-  // only ever mean unchanged. The CA round-trips, so blank there means "clear it".
-  const tls_cert = (input.tls_cert || "").trim() || existing?.tls_cert || null;
-  const tls_key = (input.tls_key || "").trim() || existing?.tls_key || null;
+  // The certificate and key are write-only in the UI, so blank means "keep stored".
+  // They are also a matched pair: taking one from the form and the other from storage
+  // would save a certificate that its key cannot open, and that only fails later, at
+  // connection time. So they move together. Either both come from the form, or both
+  // come from storage.
+  const inputCert = (input.tls_cert || "").trim();
+  const inputKey = (input.tls_key || "").trim();
+  if ((inputCert || inputKey) && !(inputCert && inputKey)) {
+    throw new Error("Replace the client certificate and the client key together");
+  }
+
+  const tls_cert = inputCert || existing?.tls_cert || null;
+  const tls_key = inputKey || existing?.tls_key || null;
+  // The CA round-trips to the browser, so blank there means "clear it".
   const tls_ca = (input.tls_ca || "").trim() || null;
 
   if (!tls_cert || !tls_key) {

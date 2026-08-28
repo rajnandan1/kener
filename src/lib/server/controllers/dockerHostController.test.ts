@@ -77,6 +77,36 @@ describe("editing an existing TLS host", () => {
     );
   });
 
+  // A certificate and its key are a matched pair. Replacing one and taking the other
+  // from storage persists a mismatched pair that only fails later, at connection time.
+  it("rejects a new certificate without a matching new key", async () => {
+    await expect(
+      CreateUpdateDockerHost({
+        id: 1,
+        name: "prod",
+        connection_type: "tls",
+        daemon: "docker.example.com:2376",
+        tls_cert: "NEW-CERT",
+        tls_key: null,
+      }),
+    ).rejects.toThrow("Replace the client certificate and the client key together");
+    expect(dbMock.updateDockerHost).not.toHaveBeenCalled();
+  });
+
+  it("rejects a new key without a matching new certificate", async () => {
+    await expect(
+      CreateUpdateDockerHost({
+        id: 1,
+        name: "prod",
+        connection_type: "tls",
+        daemon: "docker.example.com:2376",
+        tls_cert: null,
+        tls_key: "NEW-KEY",
+      }),
+    ).rejects.toThrow("Replace the client certificate and the client key together");
+    expect(dbMock.updateDockerHost).not.toHaveBeenCalled();
+  });
+
   it("clears the CA when the field is blanked, falling back to system trust", async () => {
     await CreateUpdateDockerHost({
       id: 1,

@@ -34,7 +34,7 @@ services:
 
 You can write the address as `host:port`. You can also write it with a scheme, such as `tcp://host:port`. If you do not give a port, Kener uses port `2375` for `tcp` and port `2376` for `tls`.
 
-For `tls`, the page does not show the stored client certificate and key again after you save them. Leave these two fields empty to keep the stored values. The page shows the CA field in full. If you clear the CA field, the system uses system CA trust.
+For `tls`, the page does not show the stored client certificate and key again after you save them. Leave these two fields empty to keep the stored values. To replace them, enter both. The certificate and the key are a matched pair, thus you cannot replace only one of them. The page shows the CA field in full. If you clear the CA field, the system uses system CA trust.
 
 > [!CAUTION]
 > A user who has access to the Docker socket has root permission on the host. Use a read-only socket proxy if possible. An example is `tecnativa/docker-socket-proxy` with only `CONTAINERS=1` and `VERSION=1`. Do not mount the socket directly, and do not use `tcp://` without TLS.
