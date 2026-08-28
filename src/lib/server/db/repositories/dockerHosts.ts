@@ -3,7 +3,7 @@ import type { DockerHostRecord, DockerHostInsert, DockerHostUpdate } from "../..
 import { GetDbType } from "../../tool.js";
 
 /**
- * Repository for docker_hosts — reusable Docker Engine connections referenced by
+ * Repository for docker_hosts. These are reusable Docker Engine connections referenced by
  * DOCKER monitors through `type_data.dockerHostId`.
  */
 export class DockerHostsRepository extends BaseRepository {

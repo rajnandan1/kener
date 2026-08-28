@@ -129,7 +129,7 @@
         </Select.Trigger>
         <Select.Content>
           {#each hosts as host (host.id)}
-            <Select.Item value={String(host.id)}>{host.name} — {host.daemon}</Select.Item>
+            <Select.Item value={String(host.id)}>{host.name} ({host.daemon})</Select.Item>
           {/each}
         </Select.Content>
       </Select.Root>
@@ -155,7 +155,7 @@
       </Select.Content>
     </Select.Root>
     <p class="text-muted-foreground text-xs">
-      Daemon checks only verify that the Docker Engine API answers — useful as a parent monitor for a host.
+      Daemon checks only verify that the Docker Engine API answers. Use this as a parent monitor for a host.
     </p>
   </div>
 

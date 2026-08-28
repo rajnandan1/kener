@@ -1,19 +1,21 @@
 ---
 title: Docker Monitors
-description: Track Docker container health and daemon availability through the Docker Engine API
+description: Monitor the state of a Docker container and the availability of the Docker daemon
 ---
 
-Docker monitors query the [Docker Engine API](https://docs.docker.com/reference/api/engine/) and map a container's state — including its `HEALTHCHECK` result — to a Kener status.
+Docker monitors read the state of a container from the [Docker Engine API](https://docs.docker.com/reference/api/engine/). They then set a Kener status. If the container has a `HEALTHCHECK`, the monitor also uses that result.
 
-A **Docker host** is a reusable connection to one Docker Engine. Configure it once under **Docker Hosts** in the manage dashboard, then point any number of monitors at it.
+A **Docker host** is a connection to one Docker Engine. You configure it one time in **Docker Hosts** in the manage dashboard. Many monitors can then use it.
 
 ## Minimum setup {#minimum-setup}
 
-1. Go to **Docker Hosts → New Docker Host**, pick a connection type, and enter the address.
-2. Click **Test Connection** to confirm Kener can reach the daemon.
-3. Create a monitor with type **Docker Container**, select the host, and enter a container name.
+1. Go to **Docker Hosts**, then click **New Docker Host**.
+2. Select a connection type and enter the address.
+3. Click **Test Connection** to make sure that Kener can get access to the daemon.
+4. Create a monitor with the type **Docker Container**.
+5. Select the host and enter a container name.
 
-Kener talks to the daemon from the machine it runs on. If Kener itself runs in a container, mount the socket read-only:
+Kener communicates with the daemon from the machine where Kener operates. If Kener operates in a container, mount the socket as read-only:
 
 ```yaml
 services:
@@ -24,49 +26,49 @@ services:
 
 ## Connection types {#connection-types}
 
-| Type     | Address field                                        | Notes                                             |
-| :------- | :--------------------------------------------------- | :------------------------------------------------ |
-| `socket` | `/var/run/docker.sock` (or `\\.\pipe\docker_engine`) | Default; requires the socket to be reachable      |
-| `tcp`    | `10.0.0.5:2375`                                      | Unencrypted — trusted networks only               |
-| `tls`    | `docker.example.com:2376`                            | Requires a client certificate and key in PEM form |
+| Type     | Address field                                        | Notes                                              |
+| :------- | :--------------------------------------------------- | :------------------------------------------------- |
+| `socket` | `/var/run/docker.sock` (or `\\.\pipe\docker_engine`) | The default. Kener must have access to the socket. |
+| `tcp`    | `10.0.0.5:2375`                                      | No encryption. Use only on a trusted network.      |
+| `tls`    | `docker.example.com:2376`                            | You must give a client certificate and key in PEM. |
 
-Addresses may be written bare (`host:port`) or with a scheme (`tcp://host:port`). The port defaults to `2375` for `tcp` and `2376` for `tls`.
+You can write the address as `host:port`. You can also write it with a scheme, such as `tcp://host:port`. If you do not give a port, Kener uses port `2375` for `tcp` and port `2376` for `tls`.
 
-For `tls`, the stored client certificate and key are never shown again after saving — leave those fields blank when editing to keep them unchanged. The CA field is shown in full and is authoritative: clearing it falls back to system CA trust.
+For `tls`, the page does not show the stored client certificate and key again after you save them. Leave these two fields empty to keep the stored values. The page shows the CA field in full. If you clear the CA field, the system uses system CA trust.
 
 > [!CAUTION]
-> Access to the Docker socket is equivalent to root on the host. Prefer a read-only socket proxy (for example `tecnativa/docker-socket-proxy` with only `CONTAINERS=1` and `VERSION=1` enabled) over mounting the raw socket or exposing `tcp://` without TLS.
+> A user who has access to the Docker socket has root permission on the host. Use a read-only socket proxy if possible. An example is `tecnativa/docker-socket-proxy` with only `CONTAINERS=1` and `VERSION=1`. Do not mount the socket directly, and do not use `tcp://` without TLS.
 
 ## Status logic {#status-logic}
 
-For **Docker daemon** checks, `GET /_ping` answering means **UP**; anything else is **DOWN**.
+For a **Docker daemon** check, the monitor sends a request to `GET /_ping`. If the daemon replies, the status is **UP**. In all other conditions, the status is **DOWN**.
 
-For **Container** checks:
+For a **Container** check, the monitor uses this table:
 
-| Container state                 | Status                                 |
-| :------------------------------ | :------------------------------------- |
-| Running, no `HEALTHCHECK`       | **UP**                                 |
-| Running, health `healthy`       | **UP**                                 |
-| Running, health `starting`      | **DEGRADED**                           |
-| Running, health `unhealthy`     | Configurable — **DOWN** by default     |
-| Restarting                      | Configurable — **DEGRADED** by default |
-| Paused                          | Configurable — **DOWN** by default     |
-| Created, exited, dead, removing | **DOWN** (exit code in the message)    |
-| Not found on the host           | **DOWN**                               |
+| Container state                 | Status                             |
+| :------------------------------ | :--------------------------------- |
+| Running, no `HEALTHCHECK`       | **UP**                             |
+| Running, health `healthy`       | **UP**                             |
+| Running, health `starting`      | **DEGRADED**                       |
+| Running, health `unhealthy`     | **DOWN**. You can change this.     |
+| Restarting                      | **DEGRADED**. You can change this. |
+| Paused                          | **DOWN**. You can change this.     |
+| Created, exited, dead, removing | **DOWN**, with the exit code       |
+| Not found on the host           | **DOWN**                           |
 
-Latency is the round-trip time of the Docker API call, so the latency chart tracks daemon responsiveness rather than anything inside the container.
+The latency value is the time of one Docker API request. Thus the latency chart shows the response time of the daemon. It does not show the response time of the software in the container.
 
 ## Configuration fields {#configuration-fields}
 
-| Field              | Type     | Default     | Notes                                          |
-| :----------------- | :------- | :---------- | :--------------------------------------------- |
-| `dockerHostId`     | `number` | —           | Required; id of the configured Docker host     |
-| `checkType`        | `string` | `container` | `container` or `daemon`                        |
-| `containerName`    | `string` | —           | Container name or id; required for `container` |
-| `unhealthyStatus`  | `string` | `DOWN`      | `DOWN` or `DEGRADED`                           |
-| `restartingStatus` | `string` | `DEGRADED`  | `DOWN` or `DEGRADED`                           |
-| `pausedStatus`     | `string` | `DOWN`      | `DOWN` or `DEGRADED`                           |
-| `timeout`          | `number` | `10000`     | Docker API request timeout in ms               |
+| Field              | Type     | Default     | Notes                                            |
+| :----------------- | :------- | :---------- | :----------------------------------------------- |
+| `dockerHostId`     | `number` | None        | Necessary. The id of the configured Docker host. |
+| `checkType`        | `string` | `container` | `container` or `daemon`                          |
+| `containerName`    | `string` | None        | Container name or id. Necessary for `container`. |
+| `unhealthyStatus`  | `string` | `DOWN`      | `DOWN` or `DEGRADED`                             |
+| `restartingStatus` | `string` | `DEGRADED`  | `DOWN` or `DEGRADED`                             |
+| `pausedStatus`     | `string` | `DOWN`      | `DOWN` or `DEGRADED`                             |
+| `timeout`          | `number` | `10000`     | The timeout of a Docker API request, in ms.      |
 
 ## Example {#example}
 
@@ -87,14 +89,14 @@ Latency is the round-trip time of the Docker API call, so the latency chart trac
 
 ## Verify {#verify}
 
-Open the monitor and click **Test Monitor**. A healthy container returns `UP` with the API round-trip latency; a stopped one returns `DOWN` with the container state and exit code.
+Open the monitor and click **Test Monitor**. For a healthy container, the result is `UP` with the time of the API request. For a container that stopped, the result is `DOWN` with the container state and the exit code.
 
 ## Troubleshooting {#troubleshooting}
 
-- **"Docker socket not found"** — the socket is not mounted into the Kener container, or the path is wrong.
-- **"Permission denied on the Docker socket"** — the Kener process user is not in the `docker` group. Use a socket proxy instead of loosening socket permissions.
-- **"Container ... not found"** — the daemon answered, but no container matches that name or id on this host. Use **Browse** in the monitor editor to list what the host actually runs.
-- **Container count missing in Test Connection** — the daemon replied to `/version` but blocked `/containers`. Expected when a socket proxy only exposes some endpoints; container monitors will still fail until `CONTAINERS` is allowed.
-- **TLS errors** — supply the CA certificate that signed the daemon's server certificate, along with the client certificate and key.
+- **"Docker socket not found"**. The socket is not mounted into the Kener container, or the path is wrong.
+- **"Permission denied on the Docker socket"**. The user of the Kener process is not in the `docker` group. Use a socket proxy. Do not make the socket permissions less strict.
+- **"Container ... not found"**. The daemon replied, but no container on this host has that name or id. Use the **Browse** control in the monitor editor to see the containers on the host.
+- **No container count in Test Connection**. The daemon replied to `/version`, but it refused `/containers`. This is usual when a socket proxy permits only some endpoints. Container monitors continue to fail until you permit `CONTAINERS`.
+- **TLS errors**. Give the CA certificate that signed the server certificate of the daemon. Also give the client certificate and the client key.
 
 Related: [Monitors Overview](/docs/v4/monitors/overview), [Grace Period](/docs/v4/monitors/grace-period)

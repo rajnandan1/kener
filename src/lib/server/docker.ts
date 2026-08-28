@@ -70,7 +70,7 @@ export class DockerError extends Error {
   }
 }
 
-/** Connection fields only — lets callers test a host that has not been saved yet. */
+/** Connection fields only. This lets callers test a host that has not been saved yet. */
 export type DockerConnection = Pick<DockerHostRecord, "connection_type" | "daemon" | "tls_ca" | "tls_cert" | "tls_key">;
 
 /**
@@ -162,9 +162,9 @@ async function request<T>(connection: DockerConnection, path: string, timeout: n
 function describeError(err: { code?: string; message?: string }): string {
   switch (err.code) {
     case "ENOENT":
-      return "Docker socket not found — is the daemon running and the socket mounted into Kener?";
+      return "Docker socket not found. Is the daemon running and the socket mounted into Kener?";
     case "EACCES":
-      return "Permission denied on the Docker socket — the Kener process needs access to it";
+      return "Permission denied on the Docker socket. The Kener process needs access to it.";
     case "ECONNREFUSED":
       return "Connection refused by the Docker daemon";
     default:
@@ -172,17 +172,17 @@ function describeError(err: { code?: string; message?: string }): string {
   }
 }
 
-/** `GET /_ping` — the cheapest liveness check the daemon offers. */
+/** `GET /_ping`. The cheapest liveness check the daemon offers. */
 export async function pingDaemon(connection: DockerConnection, timeout = DOCKER_DEFAULT_TIMEOUT) {
   return await request<string>(connection, "/_ping", timeout);
 }
 
-/** `GET /version` — used by "Test Connection" to prove we talked to a real daemon. */
+/** `GET /version`. Used by "Test Connection" to prove we talked to a real daemon. */
 export async function getVersion(connection: DockerConnection, timeout = DOCKER_DEFAULT_TIMEOUT) {
   return await request<DockerVersion>(connection, "/version", timeout);
 }
 
-/** `GET /containers/{id}/json` — accepts a container name or id. */
+/** `GET /containers/{id}/json`. Accepts a container name or id. */
 export async function inspectContainer(
   connection: DockerConnection,
   container: string,
@@ -195,7 +195,7 @@ export async function inspectContainer(
   );
 }
 
-/** `GET /containers/json?all=1` — every container, running or not. */
+/** `GET /containers/json?all=1`. Every container, running or not. */
 export async function listContainers(connection: DockerConnection, timeout = DOCKER_DEFAULT_TIMEOUT) {
   return await request<DockerContainerSummary[]>(connection, "/containers/json?all=1", timeout);
 }

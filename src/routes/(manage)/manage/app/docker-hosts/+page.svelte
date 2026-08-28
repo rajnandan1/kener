@@ -337,7 +337,7 @@
         {#if editingExistingTls}
           <p class="text-muted-foreground text-xs">
             The stored client certificate and key are never shown. Leave those blank to keep them unchanged. The CA
-            field is shown in full — clearing it falls back to system CA trust.
+            field is shown in full. If you clear it, the system uses system CA trust.
           </p>
         {/if}
       {/if}

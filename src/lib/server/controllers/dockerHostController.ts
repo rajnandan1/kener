@@ -20,7 +20,7 @@ type NormalizedDockerHost = DockerHostInsert & DockerConnection;
 
 /**
  * Docker hosts hold credentials, so the manage UI never receives the client
- * certificate or private key back — only whether each is populated.
+ * certificate or private key back. It receives only a flag for each of them.
  *
  * `tls_ca` is deliberately returned in full: a CA certificate is public material,
  * and round-tripping it is what lets a blank CA field mean "clear it" rather than
@@ -45,7 +45,7 @@ function toView(host: DockerHostRecord): DockerHostView {
  *
  * `existing` is the stored row when this is an update. The manage UI never receives
  * the client certificate or key, so it sends those fields blank to mean "keep what
- * is stored"; merging them in here — before the completeness check — is what makes
+ * is stored". This function merges them before it checks for completeness, which makes
  * editing an existing TLS host (or testing it) work.
  */
 function normalizeInput(input: DockerHostInput, existing?: DockerHostRecord): NormalizedDockerHost {
@@ -70,7 +70,7 @@ function normalizeInput(input: DockerHostInput, existing?: DockerHostRecord): No
     return { name, connection_type: connectionType, daemon, tls_ca: null, tls_cert: null, tls_key: null };
   }
 
-  // Blank cert/key mean "keep stored" — they are write-only in the UI, so blank can
+  // Blank cert/key mean "keep stored". They are write-only in the UI, so blank can
   // only ever mean unchanged. The CA round-trips, so blank there means "clear it".
   const tls_cert = (input.tls_cert || "").trim() || existing?.tls_cert || null;
   const tls_key = (input.tls_key || "").trim() || existing?.tls_key || null;
@@ -118,7 +118,7 @@ export const CreateUpdateDockerHost = async (input: DockerHostInput): Promise<Do
 };
 
 /**
- * Refuses to delete a host that monitors still point at — otherwise those monitors
+ * Refuses to delete a host that monitors still point at. Without this check, those monitors
  * would silently start reporting DOWN with a "host no longer exists" message.
  */
 export const DeleteDockerHost = async (id: number): Promise<{ success: true }> => {

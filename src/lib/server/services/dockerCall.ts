@@ -55,7 +55,7 @@ class DockerCall {
       return { ...this.evaluateState(data.State), latency, type: GC.REALTIME };
     } catch (error: unknown) {
       if (error instanceof DockerError) {
-        // 404 means the daemon is reachable but the container is gone — still DOWN,
+        // 404 means the daemon is reachable but the container is gone. Still DOWN,
         // but the operator needs a message that distinguishes it from a dead daemon.
         const message =
           error.statusCode === 404
