@@ -1,4 +1,5 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
+import { parseDbTimestamp } from "$lib/server/tool";
 import db from "$lib/server/db/db";
 import type {
   GetPagesListResponse,
@@ -10,15 +11,6 @@ import type {
 import type { PageRecord } from "$lib/server/types/db";
 import GC from "$lib/global-constants";
 import { toApiPageSettings, applyPageSettingsPatch, validatePageSettings } from "$lib/server/pageSettings";
-
-function formatDateToISO(date: Date | string): string {
-  if (date instanceof Date) {
-    return date.toISOString();
-  }
-  // Handle string dates (e.g., from SQLite: "2026-01-27 16:07:19")
-  const parsed = new Date(date.replace(" ", "T") + "Z");
-  return parsed.toISOString();
-}
 
 async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
   const pageSettings = toApiPageSettings(page.page_settings_json);
@@ -35,8 +27,8 @@ async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
     page_logo: page.page_logo,
     page_settings: pageSettings,
     monitors: pageMonitors.map((pm) => ({ monitor_tag: pm.monitor_tag, position: pm.position })),
-    created_at: formatDateToISO(page.created_at),
-    updated_at: formatDateToISO(page.updated_at),
+    created_at: parseDbTimestamp(page.created_at).toISOString(),
+    updated_at: parseDbTimestamp(page.updated_at).toISOString(),
   };
 }
 

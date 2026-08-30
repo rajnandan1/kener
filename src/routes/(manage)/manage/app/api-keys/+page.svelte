@@ -15,7 +15,7 @@
   import KeyIcon from "@lucide/svelte/icons/key";
   import Trash2 from "@lucide/svelte/icons/trash-2";
   import { toast } from "svelte-sonner";
-  import { format } from "date-fns";
+  import LocalTime from "$lib/components/LocalTime.svelte";
   import { onMount } from "svelte";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
@@ -163,14 +163,6 @@
     }
   }
 
-  function formatDate(dateStr: string): string {
-    try {
-      return format(new Date(dateStr), "MMM d, yyyy HH:mm");
-    } catch {
-      return dateStr;
-    }
-  }
-
   function dismissNewKey() {
     newKeyResp = {};
   }
@@ -260,7 +252,7 @@
                   </code>
                 </Table.Cell>
                 <Table.Cell class="text-muted-foreground text-sm">
-                  {formatDate(apiKey.created_at)}
+                  <LocalTime value={apiKey.created_at} format="MMM d, yyyy HH:mm" />
                 </Table.Cell>
                 <Table.Cell class="pr-4 text-right">
                   <div class="flex items-center justify-end gap-2">

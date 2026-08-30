@@ -30,6 +30,7 @@ import {
   ValidateIpAddress,
   ValidateMonitorAlerts,
   ValidateURL,
+  parseDbTimestamp,
 } from "./tool";
 import type { TimestampStatusCount } from "./types/db";
 
@@ -426,5 +427,24 @@ describe("ValidateMonitorAlerts", () => {
     expect(ValidateMonitorAlerts({ DOWN: { triggers: [1] } })).toBe(false);
     expect(ValidateMonitorAlerts({ DOWN: { ...validAlert, failureThreshold: 1.5 } })).toBe(false);
     expect(ValidateMonitorAlerts({ DOWN: { ...validAlert, successThreshold: 0 } })).toBe(false);
+  });
+});
+
+describe("parseDbTimestamp", () => {
+  it("treats a naive SQLite audit-column string as UTC", () => {
+    expect(parseDbTimestamp("2026-08-20 04:02:00").toISOString()).toBe("2026-08-20T04:02:00.000Z");
+  });
+
+  it("passes Date objects through (pg/mysql drivers)", () => {
+    const d = new Date("2026-08-20T04:02:00.000Z");
+    expect(parseDbTimestamp(d)).toBe(d);
+  });
+
+  it("reads epoch milliseconds (SQLite when a Date was bound)", () => {
+    expect(parseDbTimestamp(1787198520000).toISOString()).toBe("2026-08-20T04:02:00.000Z");
+  });
+
+  it("falls back to Date parsing for ISO strings", () => {
+    expect(parseDbTimestamp("2026-08-20T04:02:00Z").toISOString()).toBe("2026-08-20T04:02:00.000Z");
   });
 });

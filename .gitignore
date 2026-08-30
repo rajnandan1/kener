@@ -42,3 +42,5 @@ CONTEXT.md
 docs/adr/
 docs/superpowers/
 .superpowers/
+# Wayfinder scratch (local only)
+scratch/

@@ -9,6 +9,7 @@ import type {
   UserSubscriptionV2Record,
   SubscriberUserRecord,
   SubscriberMethodRecord,
+  DbTimestamp,
 } from "$lib/server/types/db.js";
 
 // ============ V2 Admin Functions ============
@@ -26,7 +27,7 @@ export async function GetSubscribersByMethod(
     subscriber_send: string;
     subscriber_type: string;
     subscriber_status: string;
-    created_at: Date;
+    created_at: DbTimestamp;
     subscription_count: number;
     event_types: SubscriptionEventType[];
   }>;
@@ -127,7 +128,7 @@ export interface AdminSubscriberRecord {
   maintenances_enabled: boolean;
   incidents_subscription_id: number | null;
   maintenances_subscription_id: number | null;
-  created_at: Date;
+  created_at: DbTimestamp;
 }
 
 /**

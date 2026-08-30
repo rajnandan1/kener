@@ -15,7 +15,7 @@
   import SirenIcon from "@lucide/svelte/icons/siren";
   import { goto } from "$app/navigation";
   import { formatDistanceToNow } from "date-fns";
-  import { formatDate } from "$lib/stores/datetime";
+  import LocalTime from "$lib/components/LocalTime.svelte";
   import GC from "$lib/global-constants";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
@@ -195,7 +195,7 @@
               </Table.Cell>
               <Table.Cell>
                 <span class="text-muted-foreground text-sm">
-                  {$formatDate(incident.start_date_time, "yyyy-MM-dd HH:mm")}
+                  <LocalTime value={incident.start_date_time} format="yyyy-MM-dd HH:mm" />
                 </span>
               </Table.Cell>
               <Table.Cell>
@@ -206,11 +206,11 @@
                   <Tooltip.Content>
                     <div class="text-sm">
                       <span class="text-muted-foreground">From:</span>
-                      {$formatDate(incident.start_date_time, "yyyy-MM-dd HH:mm")}
+                      <LocalTime value={incident.start_date_time} format="yyyy-MM-dd HH:mm" />
                       <br />
                       <span class="text-muted-foreground">To:</span>
                       {#if incident.end_date_time}
-                        {$formatDate(incident.end_date_time, "yyyy-MM-dd HH:mm")}
+                        <LocalTime value={incident.end_date_time} format="yyyy-MM-dd HH:mm" />
                       {:else}
                         Ongoing
                       {/if}
