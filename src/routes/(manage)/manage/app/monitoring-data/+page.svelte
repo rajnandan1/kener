@@ -15,6 +15,7 @@
   import FilterIcon from "@lucide/svelte/icons/filter";
   import XIcon from "@lucide/svelte/icons/x";
   import { format } from "date-fns";
+  import LocalTime from "$lib/components/LocalTime.svelte";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
@@ -235,16 +236,6 @@
     }
   }
 
-  // Format timestamp to date string
-  function formatTimestamp(timestamp: number): string {
-    try {
-      const date = new Date(timestamp * 1000);
-      return format(date, "yyyy-MM-dd HH:mm:ss");
-    } catch {
-      return String(timestamp);
-    }
-  }
-
   function handleMonitorChange(value: string | undefined) {
     if (value) {
       monitorTagFilter = value;
@@ -389,7 +380,7 @@
                 </Tooltip.Root>
               </Table.Cell>
               <Table.Cell>
-                <span class="text-muted-foreground text-sm">{formatTimestamp(row.timestamp)}</span>
+                <span class="text-muted-foreground text-sm"><LocalTime value={row.timestamp} /></span>
               </Table.Cell>
               <Table.Cell>
                 <span class="text-xs font-semibold text-{row.status?.toLowerCase()}">

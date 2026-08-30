@@ -11,6 +11,7 @@ import type {
   IncidentForMonitorList,
   IncidentForMonitorListWithComments,
   IncidentMonitorImpact,
+  DbTimestamp,
 } from "../../types/db.js";
 
 // Raw row type from DB query before grouping
@@ -19,8 +20,8 @@ interface IncidentRowWithMonitor {
   title: string;
   start_date_time: number;
   end_date_time: number | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
   status: string;
   state: string;
   monitor_impact: string;
