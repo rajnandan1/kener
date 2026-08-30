@@ -5,6 +5,7 @@ import {
   BeginningOfMinute,
   checkIfDuplicateExists,
   DurationInMinutes,
+  GenerateRandomHexString,
   GetDayStartTimestampUTC,
   GetDayStartWithOffset,
   GetMinuteStartNowTimestampUTC,
@@ -426,5 +427,22 @@ describe("ValidateMonitorAlerts", () => {
     expect(ValidateMonitorAlerts({ DOWN: { triggers: [1] } })).toBe(false);
     expect(ValidateMonitorAlerts({ DOWN: { ...validAlert, failureThreshold: 1.5 } })).toBe(false);
     expect(ValidateMonitorAlerts({ DOWN: { ...validAlert, successThreshold: 0 } })).toBe(false);
+  });
+});
+
+describe("GenerateRandomHexString", () => {
+  it("returns exactly `length` lowercase hex characters", () => {
+    for (const length of [1, 7, 32, 64]) {
+      const value = GenerateRandomHexString(length);
+      expect(value).toHaveLength(length);
+      expect(value).toMatch(/^[0-9a-f]+$/);
+    }
+  });
+
+  it("defaults to 32 characters and is not constant", () => {
+    const a = GenerateRandomHexString();
+    const b = GenerateRandomHexString();
+    expect(a).toHaveLength(32);
+    expect(a).not.toBe(b);
   });
 });

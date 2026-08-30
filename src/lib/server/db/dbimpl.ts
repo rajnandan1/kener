@@ -126,6 +126,7 @@ class DbImpl {
   updateUserIsActive!: UsersRepository["updateUserIsActive"];
   updateUserPasswordById!: UsersRepository["updateUserPasswordById"];
   updateIsVerified!: UsersRepository["updateIsVerified"];
+  updateUserProfile!: UsersRepository["updateUserProfile"];
 
   // ============ Roles ============
   getRoleById!: UsersRepository["getRoleById"];
@@ -144,6 +145,18 @@ class DbImpl {
   removeUserFromRole!: UsersRepository["removeUserFromRole"];
   getUserPermissionIds!: UsersRepository["getUserPermissionIds"];
   getUserRoleIds!: UsersRepository["getUserRoleIds"];
+  getUserAssignedRoleIds!: UsersRepository["getUserAssignedRoleIds"];
+  getUserOidcRoleIds!: UsersRepository["getUserOidcRoleIds"];
+  applyOidcRoleSync!: UsersRepository["applyOidcRoleSync"];
+
+  // ============ OIDC ============
+  getUserByOidcIdentity!: UsersRepository["getUserByOidcIdentity"];
+  claimLegacyOidcIdentity!: UsersRepository["claimLegacyOidcIdentity"];
+  getAllOidcGroupRoleMappings!: UsersRepository["getAllOidcGroupRoleMappings"];
+  getOidcGroupRoleMappingByGroup!: UsersRepository["getOidcGroupRoleMappingByGroup"];
+  upsertOidcGroupRoleMapping!: UsersRepository["upsertOidcGroupRoleMapping"];
+  deleteOidcGroupRoleMapping!: UsersRepository["deleteOidcGroupRoleMapping"];
+  getOidcRoleIdsForGroups!: UsersRepository["getOidcRoleIdsForGroups"];
 
   // ============ API Keys ============
   createNewApiKey!: UsersRepository["createNewApiKey"];
@@ -500,6 +513,7 @@ class DbImpl {
     this.deleteApiKey = this.users.deleteApiKey.bind(this.users);
     this.getApiKeyByHashedKey = this.users.getApiKeyByHashedKey.bind(this.users);
     this.getAllApiKeys = this.users.getAllApiKeys.bind(this.users);
+    this.updateUserProfile = this.users.updateUserProfile.bind(this.users);
 
     // Roles
     this.getRoleById = this.users.getRoleById.bind(this.users);
@@ -518,6 +532,18 @@ class DbImpl {
     this.removeUserFromRole = this.users.removeUserFromRole.bind(this.users);
     this.getUserPermissionIds = this.users.getUserPermissionIds.bind(this.users);
     this.getUserRoleIds = this.users.getUserRoleIds.bind(this.users);
+    this.getUserAssignedRoleIds = this.users.getUserAssignedRoleIds.bind(this.users);
+    this.getUserOidcRoleIds = this.users.getUserOidcRoleIds.bind(this.users);
+    this.applyOidcRoleSync = this.users.applyOidcRoleSync.bind(this.users);
+
+    // OIDC
+    this.getUserByOidcIdentity = this.users.getUserByOidcIdentity.bind(this.users);
+    this.claimLegacyOidcIdentity = this.users.claimLegacyOidcIdentity.bind(this.users);
+    this.getAllOidcGroupRoleMappings = this.users.getAllOidcGroupRoleMappings.bind(this.users);
+    this.getOidcGroupRoleMappingByGroup = this.users.getOidcGroupRoleMappingByGroup.bind(this.users);
+    this.upsertOidcGroupRoleMapping = this.users.upsertOidcGroupRoleMapping.bind(this.users);
+    this.deleteOidcGroupRoleMapping = this.users.deleteOidcGroupRoleMapping.bind(this.users);
+    this.getOidcRoleIdsForGroups = this.users.getOidcRoleIdsForGroups.bind(this.users);
   }
 
   private bindSiteDataMethods(): void {

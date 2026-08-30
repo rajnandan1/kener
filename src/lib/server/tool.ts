@@ -538,6 +538,18 @@ function UptimeCalculator(
   };
 }
 
+function GenerateRandomHexString(length: number = 32): string {
+  return crypto
+    .randomBytes(Math.ceil(length / 2))
+    .toString("hex")
+    .slice(0, length);
+}
+
+/** Dev-only escape hatch: allow an `http:` OIDC issuer when KENER_OIDC_ALLOW_HTTP=true (trimmed, case-insensitive, like every other KENER_OIDC_* boolean). */
+function IsOidcHttpAllowed(): boolean {
+  return (process.env.KENER_OIDC_ALLOW_HTTP ?? "").trim().toLowerCase() === "true";
+}
+
 export {
   IsValidURL,
   UptimeCalculator,
@@ -575,4 +587,6 @@ export {
   IsValidUptimeFormula,
   UnparsePercentage,
   GetNowTimestampUTCInMs,
+  GenerateRandomHexString,
+  IsOidcHttpAllowed,
 };

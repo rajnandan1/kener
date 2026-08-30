@@ -137,6 +137,19 @@ import sendSlack from "$lib/server/notification/slack_notification.js";
 import heicConvert from "heic-convert";
 import serverResolver from "$lib/server/resolver.js";
 import { ACTION_PERMISSION_MAP } from "$lib/allPerms.js";
+import {
+  ClearOidcConfigCache,
+  DeleteOidcGroupRoleMapping,
+  GetEffectiveOidcGroupRoleMappings,
+  GetEffectiveOidcSettings,
+  GetOidcCallbackUrl,
+  MaskOidcSettings,
+  PrepareOidcSettingsForStore,
+  TestOidcConnection,
+  UpsertOidcGroupRoleMapping,
+} from "$lib/server/controllers/oidcController";
+import type { OidcSettings } from "$lib/types/site";
+import { SanitizeSiteData, SanitizeSiteDataValue } from "$lib/server/controllers/siteDataSanitizer";
 
 export async function POST({ request, cookies }) {
   const payload = await request.json();
@@ -170,7 +183,7 @@ export async function POST({ request, cookies }) {
       data.userID = userDB.id;
       resp = await UpdateUserData(data);
     } else if (action == "getAllSiteData") {
-      resp = await GetAllSiteData();
+      resp = SanitizeSiteData((await GetAllSiteData()) as unknown as Record<string, unknown>);
     } else if (action == "manualUpdate") {
       await ManualUpdateUserData(data.id, data);
       resp = await GetUserByIDDashboard(data.id);
@@ -650,6 +663,7 @@ export async function POST({ request, cookies }) {
       if (!!!siteData) {
         throw new Error("Site data not found for the given key");
       }
+      siteData = SanitizeSiteDataValue(key, siteData);
       resp = siteData;
     } else if (action == "updateSubscriptionsConfig") {
       resp = await InsertKeyValue("subscriptionsSettings", JSON.stringify(data));
@@ -674,6 +688,41 @@ export async function POST({ request, cookies }) {
     } else if (action == "deleteRole") {
       resp = await DeleteRole(data.roleId, data.options);
     }
+    // ============ OIDC ============
+    else if (action == "getOidcGroupRoleMappings") {
+      // Effective view: env map (read-only, with ignored entries) or DB rows.
+      resp = await GetEffectiveOidcGroupRoleMappings();
+    } else if (action == "upsertOidcGroupRoleMapping") {
+      await UpsertOidcGroupRoleMapping({ oidc_group: data.oidc_group, role_id: data.role_id });
+      resp = { success: true };
+    } else if (action == "deleteOidcGroupRoleMapping") {
+      await DeleteOidcGroupRoleMapping(data.id);
+      resp = { success: true };
+    } else if (action == "testOidcConnection") {
+      // The browser never holds the secret; when the submitted one is empty/missing (or the field
+      // is env-locked), test with the effective secret.
+      const { settings: effective, envLocked } = await GetEffectiveOidcSettings();
+      const submitted = (data.settings ?? {}) as Record<string, unknown>;
+      const candidate: OidcSettings = { ...effective };
+      for (const field of Object.keys(effective) as (keyof OidcSettings)[]) {
+        if (envLocked.has(field) || field === "client_secret") continue;
+        if (field in submitted && typeof submitted[field] === typeof effective[field]) {
+          (candidate as unknown as Record<string, unknown>)[field] = submitted[field];
+        }
+      }
+      const secret =
+        typeof submitted.client_secret === "string" && submitted.client_secret !== "" && !envLocked.has("client_secret")
+          ? submitted.client_secret
+          : effective.client_secret;
+      resp = await TestOidcConnection({ ...candidate, client_secret: secret });
+    } else if (action == "getOidcSettingsMasked") {
+      const { settings: effective, envLocked } = await GetEffectiveOidcSettings();
+      resp = {
+        ...MaskOidcSettings(effective),
+        env_locked: [...envLocked],
+        redirect_uri: GetOidcCallbackUrl(),
+      };
+    }
   } catch (error: unknown) {
     console.log(error);
     const message = error instanceof Error ? error.message : String(error);
@@ -689,7 +738,14 @@ async function storeSiteData(data: { [x: string]: any }) {
       if (key === "socialPreviewImage" && (element === null || element === undefined)) {
         element = "";
       }
+      if (key === "oidcSettings") {
+        element = await PrepareOidcSettingsForStore(element);
+      }
       await InsertKeyValue(key, element);
+      if (key === "oidcSettings") {
+        // Logins must pick up new credentials immediately.
+        ClearOidcConfigCache();
+      }
     }
   }
   return { success: true };

@@ -242,6 +242,9 @@ export interface UserRecord {
   password_hash: string;
   is_active: number;
   is_verified: number;
+  auth_provider: "local" | "oidc";
+  oidc_issuer: string | null;
+  oidc_sub: string | null;
   role_ids: string[]; // Array of role IDs
   created_at: Date;
   updated_at: Date;
@@ -255,6 +258,11 @@ export interface UserRecordInsert {
   is_active?: number;
   is_verified?: number;
   is_owner?: string;
+  auth_provider?: "local" | "oidc";
+  oidc_issuer?: string | null;
+  oidc_sub?: string | null;
+  /** Role ids granted by OIDC at creation (provenance for later syncs); omit for local accounts. */
+  oidc_role_ids?: string[];
 }
 
 export interface UserRecordPublic {
@@ -264,12 +272,29 @@ export interface UserRecordPublic {
   is_active: number;
   is_verified: number;
   is_owner: string;
+  auth_provider: "local" | "oidc";
+  oidc_issuer: string | null;
+  oidc_sub: string | null;
   role_ids: string[];
   created_at: Date;
   updated_at: Date;
 }
 export interface UserRecordDashboard extends UserRecordPublic {
   has_password: boolean;
+}
+
+// ============ oidc_group_role_mappings table ============
+export interface OidcGroupRoleMappingRecord {
+  id: number;
+  oidc_group: string;
+  role_id: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface OidcGroupRoleMappingInsert {
+  oidc_group: string;
+  role_id: string;
 }
 
 // ============ roles table ============

@@ -1,4 +1,5 @@
 import type { MonitoringStatus } from "$lib/types/status.js";
+import type { OidcErrorCode } from "./types/site.js";
 
 // Badge styles supported by badge-maker
 export const BADGE_STYLES = ["flat", "plastic", "flat-square", "for-the-badge", "social"] as const;
@@ -91,4 +92,14 @@ export default {
   MAX_UPLOAD_BYTES: 2 * 1024 * 1024, // 2MB
   MAX_IMAGE_DIMENSION: 4096,
   MAX_INPUT_PIXELS: 4096 * 4096,
+  AUTH_PROVIDER_LOCAL: "local",
+  AUTH_PROVIDER_OIDC: "oidc",
+  OIDC_ERROR_MESSAGES: {
+    provider_error: "The identity provider rejected the sign-in request.",
+    session_expired: "Your sign-in session expired. Please try again.",
+    auth_failed: "Sign-in via SSO failed. Please try again or contact an administrator.",
+    not_provisioned: "Your account is not provisioned in this system. Please contact an administrator.",
+    deactivated: "Your account has been deactivated. Please contact an administrator.",
+    no_roles: "Your account has no active roles assigned. Please contact an administrator.",
+  } satisfies Record<OidcErrorCode, string>,
 } as const;

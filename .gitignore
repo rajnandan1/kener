@@ -27,6 +27,7 @@ database/*
 !database/.kener
 uploads/*
 !uploads/upload.dir
+*.save
 
 static/uploads/*
 !static/uploads/upload.dir

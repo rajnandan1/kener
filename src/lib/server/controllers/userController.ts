@@ -7,6 +7,7 @@ import { GetAllSiteData } from "./controller.js";
 import { siteDataToVariables } from "../notification/notification_utils.js";
 import sendEmail from "../notification/email_notification.js";
 import { GetGeneralEmailTemplateById } from "./generalTemplateController.js";
+import GC from "../../global-constants.js";
 
 export interface UserUpdateInput {
   userID: number;
@@ -227,6 +228,13 @@ export const UpdatePassword = async (data: PasswordUpdateInput): Promise<number>
     throw new Error("Passwords do not match");
   }
 
+  // OIDC accounts are password-less by construction: a local password would let
+  // them bypass the identity provider and its group→role sync.
+  const target = await db.getUserById(userID);
+  if (target?.auth_provider === GC.AUTH_PROVIDER_OIDC) {
+    throw new Error("This account signs in via SSO and cannot have a password.");
+  }
+
   //hash the password
   let hashedPassword = await HashPassword(newPassword);
 
@@ -383,6 +391,10 @@ export const ResendInvitationEmail = async (email: string) => {
   const user = await db.getUserByEmail(normalizedEmail);
   if (!user) {
     throw new Error("User not found");
+  }
+
+  if (user.auth_provider === GC.AUTH_PROVIDER_OIDC) {
+    throw new Error("This account signs in via SSO and cannot be invited to set a password.");
   }
 
   const passwordData = await db.getUserPasswordHashById(user.id);

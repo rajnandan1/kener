@@ -68,6 +68,13 @@ export interface BadRequestResponse {
   };
 }
 
+export interface ForbiddenResponse {
+  error: {
+    code: "FORBIDDEN";
+    message: string;
+  };
+}
+
 // Monitor API types
 export interface MonitorSettings {
   uptime_formula_numerator?: string;

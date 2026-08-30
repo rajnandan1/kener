@@ -6,11 +6,30 @@ import {
   GetUserPasswordHashById,
   CreateFirstUser,
 } from "$lib/server/controllers/userController";
-import { VerifyPassword, GenerateToken, CookieConfig } from "$lib/server/controllers/commonController";
-import constants from "$lib/global-constants";
+import { VerifyPassword, HashPassword, GenerateToken, CookieConfig } from "$lib/server/controllers/commonController";
+import { GetOidcPublicState } from "$lib/server/controllers/oidcController";
 import serverResolve from "$lib/server/resolver.js";
+import GC from "$lib/global-constants";
+import { OIDC_ERROR_CODES, type OidcErrorCode } from "$lib/types/site";
 
-export const load: PageServerLoad = async ({ parent }) => {
+/**
+ * Every refusal that happens before the real password check still costs one bcrypt
+ * compare (against a throw-away hash computed once per process), so response time
+ * does not reveal whether an email exists, is an OIDC account, or has no password.
+ */
+let dummyHash: Promise<string> | undefined;
+async function equalizeTiming(password: string): Promise<void> {
+  dummyHash ??= HashPassword("kener-timing-equalizer");
+  await VerifyPassword(password, await dummyHash);
+}
+
+function oidcErrorMessage(code: string | null): string | null {
+  if (!code) return null;
+  const known = (OIDC_ERROR_CODES as readonly string[]).includes(code) ? (code as OidcErrorCode) : "auth_failed";
+  return GC.OIDC_ERROR_MESSAGES[known];
+}
+
+export const load = (async ({ parent, url }) => {
   const parentData = await parent();
 
   if (!!parentData.loggedInUser && parentData.isSetupComplete) {
@@ -19,8 +38,10 @@ export const load: PageServerLoad = async ({ parent }) => {
 
   return {
     ...parentData,
+    oidc: await GetOidcPublicState(),
+    oidcError: oidcErrorMessage(url.searchParams.get("oidc_error")),
   };
-};
+}) satisfies PageServerLoad;
 
 export const actions: Actions = {
   login: async ({ request, cookies }) => {
@@ -34,16 +55,41 @@ export const actions: Actions = {
 
     const userCount = await GetUsersCount();
     if (!userCount || Number(userCount.count) === 0) {
-      return fail(400, { error: constants.ERROR_NO_SETUP, values: { email } });
+      return fail(400, { error: GC.ERROR_NO_SETUP, values: { email } });
     }
 
+    const oidc = await GetOidcPublicState();
     const userDB = await GetUserByEmail(email);
-    if (!userDB) {
-      return fail(401, { error: "User does not exist", values: { email } });
+
+    // When local login is disabled only the owner may use a password (break-glass
+    // when the IdP is down). Unknown emails, non-owners and an owner with a wrong
+    // password all get the same generic 401 (the form is already presented as
+    // owner-only), so neither the status nor the message singles out any account.
+    if (oidc.enabled && !oidc.allowLocalLogin && (!userDB || userDB.is_owner !== "YES")) {
+      await equalizeTiming(password);
+      return fail(401, { error: "Invalid password or Email", values: { email } });
     }
 
+    // Unknown email and wrong password are indistinguishable — no account enumeration,
+    // neither by message nor by response time.
+    if (!userDB) {
+      await equalizeTiming(password);
+      return fail(401, { error: "Invalid password or Email", values: { email } });
+    }
+
+    // OIDC accounts never authenticate with a password, even if a hash were ever
+    // present. Same generic message as a wrong password — this must not become a
+    // distinguishable "uses SSO" answer.
+    if (userDB.auth_provider === GC.AUTH_PROVIDER_OIDC) {
+      await equalizeTiming(password);
+      return fail(401, { error: "Invalid password or Email", values: { email } });
+    }
+
+    // OIDC accounts have an empty password hash and fall through to the generic
+    // invalid-credentials answer below — no dedicated message.
     const passwordStored = await GetUserPasswordHashById(userDB.id);
-    if (!passwordStored) {
+    if (!passwordStored || !passwordStored.password_hash) {
+      await equalizeTiming(password);
       return fail(401, { error: "Invalid password or Email", values: { email } });
     }
 

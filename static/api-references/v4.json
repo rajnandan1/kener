@@ -1043,6 +1043,7 @@
         "tags": ["Site"],
         "operationId": "getSiteConfig",
         "summary": "Get one site config entry",
+        "description": "`oidcSettings` is returned with the client secret masked and cannot be updated through the API; configure OIDC via Manage → OpenID Connect or `KENER_OIDC_*` environment variables.",
         "responses": {
           "200": {
             "description": "Site config entry",
@@ -1069,6 +1070,7 @@
         "tags": ["Site"],
         "operationId": "updateSiteConfig",
         "summary": "Update one site config entry",
+        "description": "`oidcSettings` is returned with the client secret masked and cannot be updated through the API; configure OIDC via Manage → OpenID Connect or `KENER_OIDC_*` environment variables.",
         "requestBody": {
           "required": true,
           "content": {
@@ -1099,6 +1101,9 @@
           },
           "401": {
             "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
@@ -1686,6 +1691,16 @@
                   }
                 }
               }
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Forbidden",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
             }
           }
         }

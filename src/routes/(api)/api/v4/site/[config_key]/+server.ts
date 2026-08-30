@@ -1,11 +1,13 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import db from "$lib/server/db/db";
 import { siteDataKeys } from "$lib/server/controllers/siteDataKeys";
+import { SanitizeSiteDataValue, IsSiteDataKeyApiWritable } from "$lib/server/controllers/siteDataSanitizer";
 import type {
   GetSiteDataKeyResponse,
   UpdateSiteDataKeyResponse,
   NotFoundResponse,
   BadRequestResponse,
+  ForbiddenResponse,
 } from "$lib/types/api";
 
 export const GET: RequestHandler = async ({ params }) => {
@@ -45,9 +47,11 @@ export const GET: RequestHandler = async ({ params }) => {
     return json(errorResponse, { status: 404 });
   }
 
+  const parsedValue = data.data_type === "object" ? JSON.parse(data.value) : data.value;
+
   const response: GetSiteDataKeyResponse = {
     key: data.key,
-    value: data.data_type === "object" ? JSON.parse(data.value) : data.value,
+    value: SanitizeSiteDataValue(configKey, parsedValue),
     data_type: data.data_type,
   };
 
@@ -77,6 +81,16 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
       },
     };
     return json(errorResponse, { status: 404 });
+  }
+
+  if (!IsSiteDataKeyApiWritable(configKey)) {
+    const errorResponse: ForbiddenResponse = {
+      error: {
+        code: "FORBIDDEN",
+        message: `Config key '${configKey}' cannot be updated through the API`,
+      },
+    };
+    return json(errorResponse, { status: 403 });
   }
 
   let body: { value: unknown };
