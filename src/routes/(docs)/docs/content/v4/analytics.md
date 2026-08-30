@@ -20,6 +20,7 @@ When a provider is enabled, Kener injects its tracking script into every public 
 | Microsoft Clarity | `analytics.clarity`          |
 | Umami             | `analytics.umami`            |
 | PostHog           | `analytics.posthog`          |
+| OpenPanel         | `analytics.openpanel`        |
 
 ---
 
@@ -125,6 +126,23 @@ Find your **API Key** in PostHog under **Settings → Project → Project API ke
 
 > [!TIP]
 > To bypass ad blockers, use [Saki](https://saki.rajnandan.com/). Set **API Host** to `https://saki.rajnandan.com/pha/`.
+
+---
+
+## OpenPanel {#openpanel}
+
+Open-source, self-hostable product analytics.
+
+| Field      | Required | Example                        |
+| ---------- | -------- | ------------------------------ |
+| Client ID  | Yes      | `a1b2c3d4-e5f6-...`            |
+| API URL    | Yes      | `https://api.openpanel.dev`    |
+| Script URL | Yes      | `https://openpanel.dev/op1.js` |
+
+Find your **Client ID** in OpenPanel under **Settings → Clients**. For self-hosted OpenPanel, set **API URL** to your instance with the `/api` path, e.g. `https://analytics.example.com/api`. The SDK script is served from OpenPanel's CDN; change **Script URL** only if you proxy it through your own domain.
+
+> [!IMPORTANT]
+> Only the client ID goes in the browser. Do not enter your OpenPanel client secret anywhere in Kener — it is for server-side events only.
 
 ---
 
