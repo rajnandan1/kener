@@ -78,7 +78,11 @@ export class PagesRepository extends BaseRepository {
           .where("page_logo", currentLogo)
           .andWhereNot("id", id)
           .first();
-        if (previousImageId && previousImageId !== image.id && !stillReferenced) {
+        const usedBySite = await trx("site_data")
+          .whereIn("key", ["logo", "favicon", "socialPreviewImage"])
+          .andWhere("value", currentLogo)
+          .first();
+        if (previousImageId && previousImageId !== image.id && !stillReferenced && !usedBySite) {
           await trx("images").where("id", previousImageId).del();
         }
       }
