@@ -20,15 +20,12 @@
   });
 </script>
 
-<ModeWatcher defaultMode={data.defaultSiteTheme as 'light' | 'dark' | 'system'} />
+<ModeWatcher defaultMode={data.defaultSiteTheme as "light" | "dark" | "system"} />
 
 <Toaster />
 
 <svelte:head>
-  <link
-    rel="icon"
-    href={data.favicon ? clientResolver(resolve, data.favicon) : data.favicon}
-  />
+  <link rel="icon" href={data.favicon} />
   <link rel="alternate" type="application/rss+xml" title="RSS feed" href={rssHref} />
   {#if data.font?.cssSrc}
     <link rel="stylesheet" href={data.font.cssSrc} />
