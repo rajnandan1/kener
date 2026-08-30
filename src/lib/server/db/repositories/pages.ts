@@ -56,7 +56,11 @@ export class PagesRepository extends BaseRepository {
 
   async replacePageLogo(id: number, image: ImageRecordInsert): Promise<boolean> {
     return await this.knex.transaction(async (trx) => {
-      const currentPage = await trx("pages").where("id", id).first<{ page_logo: string | null }>();
+      const currentPageQuery = trx("pages").where("id", id);
+      if (GetDbType() !== "sqlite") currentPageQuery.forUpdate();
+      const currentPage = await currentPageQuery.first<{ page_logo: string | null }>();
+      if (!currentPage) return false;
+
       await trx("images").insert(image);
       const updated = await trx("pages")
         .where("id", id)
@@ -67,7 +71,7 @@ export class PagesRepository extends BaseRepository {
         return false;
       }
 
-      const currentLogo = currentPage?.page_logo;
+      const currentLogo = currentPage.page_logo;
       if (currentLogo?.startsWith("/assets/images/")) {
         const previousImageId = currentLogo.slice("/assets/images/".length);
         const stillReferenced = await trx("pages")
