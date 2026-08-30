@@ -51,7 +51,7 @@ jobs:
         run: |
           {
             echo 'images<<EOF'
-            if [ -n "$DOCKER_USERNAME" ]; then
+            if [ -n "$DOCKER_USERNAME" ] && [ -n "$DOCKER_PASSWORD" ]; then
               echo "${DOCKER_USERNAME}/${{ github.event.repository.name }}"
             fi
             echo "${{ env.GITHUB_REGISTRY }}/${{ env.GITHUB_IMAGE_NAME }}"

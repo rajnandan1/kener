@@ -152,7 +152,7 @@ export async function uploadImage(data: ImageUploadData): Promise<{ id: string; 
 
   // Generate ID with nanoid and extension
   const fileExtension = finalMimeType === "image/jpeg" ? "jpg" : "png";
-  const id = `${nanoid(16)}.${fileExtension}`;
+  const id = `${prefix}${nanoid(16)}.${fileExtension}`;
 
   // Convert processed image back to base64
   const processedBase64 = processedBuffer.toString("base64");

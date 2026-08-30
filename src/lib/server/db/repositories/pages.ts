@@ -56,6 +56,7 @@ export class PagesRepository extends BaseRepository {
 
   async replacePageLogo(id: number, image: ImageRecordInsert): Promise<boolean> {
     return await this.knex.transaction(async (trx) => {
+      const currentPage = await trx("pages").where("id", id).first<{ page_logo: string | null }>();
       await trx("images").insert(image);
       const updated = await trx("pages")
         .where("id", id)
@@ -64,6 +65,18 @@ export class PagesRepository extends BaseRepository {
       if (updated === 0) {
         await trx("images").where("id", image.id).del();
         return false;
+      }
+
+      const currentLogo = currentPage?.page_logo;
+      if (currentLogo?.startsWith("/assets/images/")) {
+        const previousImageId = currentLogo.slice("/assets/images/".length);
+        const stillReferenced = await trx("pages")
+          .where("page_logo", currentLogo)
+          .andWhereNot("id", id)
+          .first();
+        if (previousImageId && previousImageId !== image.id && !stillReferenced) {
+          await trx("images").where("id", previousImageId).del();
+        }
       }
 
       return true;
