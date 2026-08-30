@@ -1,4 +1,5 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
+import { parseDbTimestamp } from "$lib/server/tool";
 import db from "$lib/server/db/db";
 import type {
   GetMaintenanceResponse,
@@ -13,15 +14,6 @@ import { GenerateMaintenanceEvents, isOneTimeRrule } from "$lib/server/controlle
 import { GetSiteURL } from "$lib/server/controllers/siteDataController";
 import serverResolver from "$lib/server/resolver";
 import { rrulestr } from "rrule";
-
-function formatDateToISO(date: Date | string): string {
-  if (date instanceof Date) {
-    return date.toISOString();
-  }
-  // Handle string dates (e.g., from SQLite: "2026-01-27 16:07:19")
-  const parsed = new Date(date.replace(" ", "T") + "Z");
-  return parsed.toISOString();
-}
 
 function isValidRrule(rrule: string): boolean {
   try {
@@ -55,8 +47,8 @@ async function buildMaintenanceResponse(maintenanceId: number): Promise<Maintena
       monitor_tag: m.monitor_tag,
       impact: m.monitor_impact as "UP" | "DOWN" | "DEGRADED" | "MAINTENANCE",
     })),
-    created_at: formatDateToISO(maintenance.created_at),
-    updated_at: formatDateToISO(maintenance.updated_at),
+    created_at: parseDbTimestamp(maintenance.created_at).toISOString(),
+    updated_at: parseDbTimestamp(maintenance.updated_at).toISOString(),
     url: (await GetSiteURL()) + serverResolver(`/maintenances/${maintenance.id}?type=maintenance`),
   };
 }

@@ -538,7 +538,20 @@ function UptimeCalculator(
   };
 }
 
+/**
+ * Parse an audit column (created_at/updated_at) into a Date regardless of driver.
+ * pg/mysql return Date; SQLite returns naive UTC text "YYYY-MM-DD HH:mm:ss",
+ * or epoch ms when a Date was bound on insert.
+ */
+function parseDbTimestamp(value: Date | string | number): Date {
+  if (value instanceof Date) return value;
+  if (typeof value === "number") return new Date(value);
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)) return new Date(value.replace(" ", "T") + "Z");
+  return new Date(value);
+}
+
 export {
+  parseDbTimestamp,
   IsValidURL,
   UptimeCalculator,
   IsValidHTTPMethod,

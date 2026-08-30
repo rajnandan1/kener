@@ -2,6 +2,9 @@
 import type { Knex } from "knex";
 import type { PageMonitorLayoutStyle } from "$lib/types/api";
 
+/** Audit column as returned by the driver: Date on pg/mysql, naive UTC text on SQLite. Parse before use. */
+export type DbTimestamp = Date | string;
+
 // ============ monitoring_data table ============
 export interface MonitoringData {
   monitor_tag: string;
@@ -40,8 +43,8 @@ export interface MonitorAlert {
   alert_status: string;
   health_checks: number;
   incident_number: number;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface MonitorAlertInsert {
@@ -58,8 +61,8 @@ export interface SiteData {
   key: string;
   value: string;
   data_type: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 // ============ monitors table ============
@@ -84,8 +87,8 @@ export interface MonitorRecord {
   include_degraded_in_downtime?: string;
   is_hidden: string;
   monitor_settings_json: string | null;
-  created_at?: Date;
-  updated_at?: Date;
+  created_at?: DbTimestamp;
+  updated_at?: DbTimestamp;
 }
 export interface MonitorSharingOptions {
   showShareBadgeMonitor: boolean;
@@ -142,8 +145,8 @@ export interface MonitorRecordTyped {
   include_degraded_in_downtime?: string;
   is_hidden: string;
   monitor_settings_json: MonitorSettings | null;
-  created_at?: Date;
-  updated_at?: Date;
+  created_at?: DbTimestamp;
+  updated_at?: DbTimestamp;
   external_url?: string | null;
 }
 
@@ -177,8 +180,8 @@ export interface TriggerRecord {
   trigger_desc: string | null;
   trigger_status: string | null;
   trigger_meta: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 // Template JSON types for each template type
@@ -243,8 +246,8 @@ export interface UserRecord {
   is_active: number;
   is_verified: number;
   role_ids: string[]; // Array of role IDs
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface UserRecordInsert {
@@ -265,8 +268,8 @@ export interface UserRecordPublic {
   is_verified: number;
   is_owner: string;
   role_ids: string[];
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 export interface UserRecordDashboard extends UserRecordPublic {
   has_password: boolean;
@@ -278,23 +281,23 @@ export interface RoleRecord {
   role_name: string;
   readonly: number;
   status: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface RolePermissionRecord {
   roles_id: string;
   permissions_id: string;
   status: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface UserRoleRecord {
   roles_id: string;
   users_id: number;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 // ============ api_keys table ============
@@ -304,8 +307,8 @@ export interface ApiKeyRecord {
   hashed_key: string;
   masked_key: string;
   status: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface ApiKeyRecordInsert {
@@ -321,8 +324,8 @@ export interface IncidentRecord {
   title: string;
   start_date_time: number;
   end_date_time: number | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
   status: string;
   state: string;
   incident_type: string;
@@ -342,8 +345,8 @@ export interface IncidentForMonitorList {
   title: string;
   start_date_time: number;
   end_date_time: number | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
   status: string;
   state: string;
   monitors: IncidentMonitorImpact[];
@@ -369,8 +372,8 @@ export interface IncidentMonitorRecord {
   id: number;
   monitor_tag: string;
   monitor_impact: string | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
   incident_id: number;
 }
 
@@ -387,8 +390,8 @@ export interface IncidentMonitorDetailRecord {
   monitor_name: string;
   monitor_image: string | null;
   monitor_description: string | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
   incident_id: number;
 }
 
@@ -398,8 +401,8 @@ export interface IncidentCommentRecord {
   comment: string;
   incident_id: number;
   commented_at: number;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
   status: string;
   state: string;
 }
@@ -433,8 +436,8 @@ export interface ImageRecord {
   width: number | null;
   height: number | null;
   size: number | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface ImageRecordInsert {
@@ -456,8 +459,8 @@ export interface PageRecord {
   page_subheader: string | null;
   page_logo: string | null;
   page_settings_json: string | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface PageRecordInsert {
@@ -488,8 +491,8 @@ export interface PageRecordTyped {
   page_subheader: string | null;
   page_logo: string | null;
   page_settings: PageSettingsType | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 // ============ pages_monitors table ============
@@ -498,8 +501,8 @@ export interface PageMonitorRecord {
   monitor_tag: string;
   monitor_settings_json: string | null;
   position: number;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface PageMonitorRecordInsert {
@@ -514,8 +517,8 @@ export interface PageMonitorRecordTyped {
   monitor_tag: string;
   monitor_settings: Record<string, unknown> | null;
   position: number;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 // ============ Page Filter ============
@@ -535,8 +538,8 @@ export interface MaintenanceRecord {
   rrule: string; // iCalendar RRULE string (e.g., FREQ=WEEKLY;BYDAY=SU or FREQ=MINUTELY;COUNT=1)
   duration_seconds: number; // Duration of each maintenance window in seconds
   status: "ACTIVE" | "INACTIVE";
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
   is_global: string;
 }
 
@@ -556,8 +559,8 @@ export interface MaintenanceMonitorRecord {
   maintenance_id: number;
   monitor_tag: string;
   monitor_impact: "UP" | "DOWN" | "DEGRADED" | "MAINTENANCE";
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface MaintenanceMonitorDetailRecord {
@@ -568,8 +571,8 @@ export interface MaintenanceMonitorDetailRecord {
   monitor_name: string;
   monitor_image: string | null;
   monitor_description: string | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface MaintenanceMonitorDetailRecord {
@@ -580,8 +583,8 @@ export interface MaintenanceMonitorDetailRecord {
   monitor_name: string;
   monitor_image: string | null;
   monitor_description: string | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface MaintenanceMonitorRecordInsert {
@@ -598,8 +601,8 @@ export interface MaintenanceEventRecord {
   start_date_time: number;
   end_date_time: number;
   status: "SCHEDULED" | "READY" | "ONGOING" | "COMPLETED" | "CANCELLED";
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface MaintenanceEventRecordDetailed {
@@ -608,8 +611,8 @@ export interface MaintenanceEventRecordDetailed {
   start_date_time: number;
   end_date_time: number;
   status: "SCHEDULED" | "READY" | "ONGOING" | "COMPLETED" | "CANCELLED";
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
   title: string;
   description: string | null;
 }
@@ -649,8 +652,8 @@ export interface MaintenanceEventsMonitorList {
   end_date_time: number; // Unix timestamp - when the first occurrence ends
   is_global: YesNoType; // "YES" when the maintenance affects all monitors (no per-monitor rows)
   monitors: MaintenanceMonitorImpact[];
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 // ============ monitor_alerts_config table ============
@@ -669,8 +672,8 @@ export interface MonitorAlertConfigRecord {
   create_incident: YesNoType;
   is_active: YesNoType;
   severity: AlertSeverityType;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface MonitorAlertConfigInsert {
@@ -707,8 +710,8 @@ export interface MonitorAlertConfigFilter {
 export interface MonitorAlertConfigTriggerRecord {
   monitor_alerts_id: number;
   trigger_id: number;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface MonitorAlertConfigTriggerInsert {
@@ -720,8 +723,8 @@ export interface MonitorAlertConfigTriggerInsert {
 export interface MonitorAlertConfigMonitorRecord {
   monitor_alerts_id: number;
   monitor_tag: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface MonitorAlertConfigMonitorInsert {
@@ -771,8 +774,8 @@ export interface MonitorAlertV2Record {
   monitor_tag: string | null;
   incident_id: number | null;
   alert_status: MonitorAlertStatusType;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface MonitorAlertV2Insert {
@@ -827,8 +830,8 @@ export interface SubscriptionConfigRecord {
   events_enabled: string;
   methods_enabled: string;
   method_triggers: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface SubscriptionConfigParsed {
@@ -836,8 +839,8 @@ export interface SubscriptionConfigParsed {
   events_enabled: SubscriptionEventsEnabled;
   methods_enabled: SubscriptionMethodsEnabled;
   method_triggers: SubscriptionMethodTriggers;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface SubscriptionConfigUpdate {
@@ -860,8 +863,8 @@ export interface SubscriberUserRecord {
   status: SubscriberUserStatus;
   verification_code: string | null;
   verification_expires_at: Date | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface SubscriberUserRecordInsert {
@@ -879,8 +882,8 @@ export interface SubscriberMethodRecord {
   method_value: string;
   status: SubscriptionStatus;
   meta: string | null; // JSON for extra config
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface SubscriberMethodRecordInsert {
@@ -899,8 +902,8 @@ export interface UserSubscriptionV2Record {
   event_type: SubscriptionEventType;
 
   status: SubscriptionStatus;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface UserSubscriptionV2RecordInsert {
@@ -928,8 +931,8 @@ export interface UserSubscriptionRecord {
   event_type: SubscriptionEventType;
 
   status: SubscriptionStatus;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface UserSubscriptionRecordInsert {
@@ -954,7 +957,7 @@ export interface SubscriberSummary {
   subscriber_send: string;
   subscriber_type: string;
   subscriber_status: string;
-  created_at: Date;
+  created_at: DbTimestamp;
   subscription_count: number;
   event_types: SubscriptionEventType[];
 }
