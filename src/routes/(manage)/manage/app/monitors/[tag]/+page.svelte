@@ -19,6 +19,9 @@
   import { toast } from "svelte-sonner";
   import { goto } from "$app/navigation";
   import type { SiteSubMenuOptions } from "$lib/types/site";
+  import { parseContentTranslations } from "$lib/content-i18n";
+  import { fetchTranslatableLocales, type TranslatableLocalesInfo } from "$lib/client/manage-locales";
+  import type { ContentTranslations } from "$lib/types/common";
 
   // Card components
   import GeneralSettingsCard from "./components/GeneralSettingsCard.svelte";
@@ -79,6 +82,8 @@
     monitor_settings_json: "",
     external_url: ""
   });
+  let monitorTranslations = $state<ContentTranslations>({});
+  let localeInfo = $state<TranslatableLocalesInfo>({ defaultLocaleName: "", locales: [] });
 
   // Type-specific data
   let typeData = $state<Record<string, unknown>>({});
@@ -121,6 +126,7 @@
           monitor_settings_json: m.monitor_settings_json || "",
           external_url: m.external_url || ""
         };
+        monitorTranslations = parseContentTranslations(m.translations) ?? {};
         // Parse type_data
         if (m.type_data) {
           try {
@@ -209,11 +215,20 @@
     }
   }
 
+  async function fetchLocaleInfo() {
+    try {
+      localeInfo = await fetchTranslatableLocales();
+    } catch (e) {
+      console.error("Failed to fetch translatable locales:", e);
+    }
+  }
+
   $effect(() => {
     fetchMonitor();
     fetchAvailableMonitors();
     fetchPages();
     getSiteLevelSharingConfig();
+    fetchLocaleInfo();
   });
 
   let activeAccordionItem = $derived<string>(isNew ? "general" : "configuration");
@@ -342,7 +357,7 @@
         <Accordion.Trigger>General Settings</Accordion.Trigger>
         <Accordion.Content class="flex flex-col gap-4 text-balance">
           <!-- General Settings Card -->
-          <GeneralSettingsCard bind:monitor {typeData} {isNew} />
+          <GeneralSettingsCard bind:monitor bind:translations={monitorTranslations} {localeInfo} {typeData} {isNew} />
         </Accordion.Content>
       </Accordion.Item>
       {#if !isNew}

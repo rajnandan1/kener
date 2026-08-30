@@ -143,6 +143,9 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     incident_type: existingIncident.incident_type,
     incident_source: "", // Not used by updateIncident
     is_global: existingIncident.is_global,
+    // This REST endpoint doesn't accept translations input, so keep whatever was
+    // already stored rather than letting db.updateIncident() null it out.
+    translations: existingIncident.translations ?? null,
   };
 
   // Update the incident

@@ -102,6 +102,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       monitorName: monitor.name,
       monitorImage: monitor.image,
       monitorDescription: monitor.description,
+      monitorTranslations: monitor.translations,
       monitorId: monitor.id,
       monitorLastStatus: GetStatusSummary(item),
       textClass: GetStatusColor(item),

@@ -17,14 +17,19 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import GC from "$lib/global-constants.js";
+  import TranslationsButton from "$lib/components/manage/TranslationsButton.svelte";
+  import type { ContentTranslations } from "$lib/types/common";
+  import type { TranslatableLocalesInfo } from "$lib/client/manage-locales";
 
   interface Props {
     monitor: MonitorRecord;
     typeData: Record<string, unknown>;
     isNew: boolean;
+    translations: ContentTranslations;
+    localeInfo: TranslatableLocalesInfo;
   }
 
-  let { monitor = $bindable(), typeData, isNew }: Props = $props();
+  let { monitor = $bindable(), typeData, isNew, translations = $bindable(), localeInfo }: Props = $props();
 
   let savingGeneral = $state(false);
   let uploadingImage = $state(false);
@@ -104,7 +109,8 @@
     try {
       const payload: Record<string, unknown> = {
         ...monitor,
-        type_data: JSON.stringify(typeData)
+        type_data: JSON.stringify(typeData),
+        translations: Object.keys(translations).length > 0 ? translations : null
       };
 
       // Include default uptime settings when creating a new monitor
@@ -147,7 +153,18 @@
   <Card.Content class="space-y-4">
     <div class="grid grid-cols-2 gap-4">
       <div class="flex flex-col gap-2">
-        <Label for="monitor-name">Name <span class="text-destructive">*</span></Label>
+        <div class="flex items-center justify-between">
+          <Label for="monitor-name">Name <span class="text-destructive">*</span></Label>
+          {#if localeInfo.locales.length > 0}
+            <TranslationsButton
+              bind:translations
+              field="name"
+              defaultValue={monitor.name}
+              defaultLocaleName={localeInfo.defaultLocaleName}
+              locales={localeInfo.locales}
+            />
+          {/if}
+        </div>
         <Input id="monitor-name" bind:value={monitor.name} placeholder="My API Monitor" />
       </div>
       <div class="flex flex-col gap-2">
@@ -158,7 +175,19 @@
     </div>
 
     <div class="flex flex-col gap-2">
-      <Label for="monitor-description">Description</Label>
+      <div class="flex items-center justify-between">
+        <Label for="monitor-description">Description</Label>
+        {#if localeInfo.locales.length > 0}
+          <TranslationsButton
+            bind:translations
+            field="description"
+            defaultValue={monitor.description ?? ""}
+            defaultLocaleName={localeInfo.defaultLocaleName}
+            locales={localeInfo.locales}
+            multiline
+          />
+        {/if}
+      </div>
       <Textarea
         id="monitor-description"
         bind:value={monitor.description}
@@ -278,7 +307,8 @@
           }}
         />
         <p class="text-muted-foreground text-xs">
-          Require this many consecutive checks before a status change is recorded. 1 = off (record every check immediately).
+          Require this many consecutive checks before a status change is recorded. 1 = off (record every check
+          immediately).
         </p>
       </div>
     </div>
