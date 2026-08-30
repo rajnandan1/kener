@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  ApplySecretsToHeaders,
   BeginningOfDay,
   BeginningOfMinute,
   checkIfDuplicateExists,
@@ -222,19 +223,61 @@ describe("UptimeCalculator", () => {
 
 describe("ValidateIpAddress", () => {
   it("classifies IPv4, IPv6, domain names, and invalid input", () => {
-    expect(ValidateIpAddress("192.168.1.1")).toBe("IPv4");
-    expect(ValidateIpAddress("8.8.8.8")).toBe("IPv4");
-    expect(ValidateIpAddress("2001:0db8:85a3:0000:0000:8a2e:0370:7334")).toBe("IPv6");
-    expect(ValidateIpAddress("example.com")).toBe("Domain Name");
-    expect(ValidateIpAddress("kener.ing")).toBe("Domain Name");
+    expect(ValidateIpAddress("192.168.1.1")).toBe("IP4");
+    expect(ValidateIpAddress("8.8.8.8")).toBe("IP4");
+    expect(ValidateIpAddress("2001:0db8:85a3:0000:0000:8a2e:0370:7334")).toBe("IP6");
+    expect(ValidateIpAddress("example.com")).toBe("DOMAIN");
+    expect(ValidateIpAddress("kener.ing")).toBe("DOMAIN");
     expect(ValidateIpAddress("not valid")).toBe("Invalid");
   });
 
-  it("documents quirks: permissive IPv4 octets, no shortened IPv6", () => {
-    // The regex does not range-check octets:
-    expect(ValidateIpAddress("999.999.999.999")).toBe("IPv4");
-    // Only full-form IPv6 is recognized:
-    expect(ValidateIpAddress("::1")).toBe("Invalid");
+  it("range-checks IPv4 octets and accepts compressed IPv6", () => {
+    expect(ValidateIpAddress("999.999.999.999")).toBe("Invalid");
+    expect(ValidateIpAddress("256.0.0.1")).toBe("Invalid");
+    expect(ValidateIpAddress("::1")).toBe("IP6");
+    expect(ValidateIpAddress("fe80::1")).toBe("IP6");
+  });
+});
+
+describe("ApplySecretsToHeaders", () => {
+  const secret = (find: string, replace: string | undefined) => ({ find, replace });
+
+  it("substitutes secrets into header keys and values", () => {
+    const out = ApplySecretsToHeaders([{ key: "Authorization", value: "Bearer $TOKEN" }], [secret("$TOKEN", "abc123")]);
+    expect(out).toEqual({ Authorization: "Bearer abc123" });
+  });
+
+  it("keeps the header intact when a secret value contains JSON-special characters", () => {
+    // A quote or backslash in the secret would corrupt a JSON-serialized blob
+    // and drop the whole header set; per-field substitution must not.
+    const out = ApplySecretsToHeaders([{ key: "X-Auth", value: "$SECRET" }], [secret("$SECRET", 'a"b\\c')]);
+    expect(out).toEqual({ "X-Auth": 'a"b\\c' });
+  });
+
+  it("leaves unresolved secrets as-is and skips empty-key headers", () => {
+    const out = ApplySecretsToHeaders(
+      [
+        { key: "", value: "x" },
+        { key: "X-Set", value: "$MISSING" },
+      ],
+      [secret("$MISSING", undefined)],
+    );
+    expect(out).toEqual({ "X-Set": "$MISSING" });
+  });
+
+  it("returns an empty object for missing headers", () => {
+    expect(ApplySecretsToHeaders(undefined, [])).toEqual({});
+    expect(ApplySecretsToHeaders(null, [])).toEqual({});
+  });
+
+  it("inserts secret values containing replacement metacharacters literally", () => {
+    // $&, $1, $$ must survive substitution byte-for-byte in both key and value
+    // instead of being expanded by the underlying String.replace.
+    const out = ApplySecretsToHeaders(
+      [{ key: "X-$NAME", value: "pre-$TOKEN-post" }],
+      [secret("$NAME", "a$$b"), secret("$TOKEN", "a$&b$1c")],
+    );
+    expect(out).toEqual({ "X-a$$b": "pre-a$&b$1c-post" });
   });
 });
 
@@ -248,10 +291,13 @@ describe("host / nameserver / URL / method validators", () => {
     expect(IsValidHost("")).toBe(false);
   });
 
-  it("IsValidNameServer accepts only dotted-quad IPs", () => {
+  it("IsValidNameServer accepts only in-range dotted-quad IPs", () => {
     expect(IsValidNameServer("8.8.8.8")).toBe(true);
     expect(IsValidNameServer("example.com")).toBe(false);
     expect(IsValidNameServer("8.8.8")).toBe(false);
+    // Out-of-range and zero-padded octets must be rejected (shared validator).
+    expect(IsValidNameServer("999.999.999.999")).toBe(false);
+    expect(IsValidNameServer("0000000000001.0.0.0")).toBe(false);
   });
 
   it("IsValidURL requires http(s) and no spaces", () => {
@@ -317,6 +363,12 @@ describe("string helpers", () => {
 
   it("ReplaceAllOccurrences replaces every occurrence of a $-token", () => {
     expect(ReplaceAllOccurrences("a $X b $X", "$X", "y")).toBe("a y b y");
+  });
+
+  it("ReplaceAllOccurrences inserts replacement text literally, without metacharacter expansion", () => {
+    // $&, $1, $$ in the replacement must not be expanded by String.replace.
+    expect(ReplaceAllOccurrences("x $KEY y", "$KEY", "a$&b")).toBe("x a$&b y");
+    expect(ReplaceAllOccurrences("$KEY", "$KEY", "p$$q")).toBe("p$$q");
   });
 
   it("checkIfDuplicateExists detects duplicates", () => {
