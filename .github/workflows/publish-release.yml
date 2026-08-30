@@ -21,8 +21,19 @@ jobs:
     name: Build and push release Docker images
     strategy:
       matrix:
-        variant: [debian, alpine]
-        base_path: ["", "/status"]
+        include:
+          - variant: debian
+            platforms: linux/amd64,linux/arm64
+            base_path: ""
+          - variant: debian
+            platforms: linux/amd64,linux/arm64
+            base_path: /status
+          - variant: alpine
+            platforms: linux/amd64
+            base_path: ""
+          - variant: alpine
+            platforms: linux/amd64
+            base_path: /status
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -134,7 +145,7 @@ jobs:
             VARIANT=${{ matrix.variant }}
             WITH_DOCS=${{ steps.vars.outputs.with_docs }}
             KENER_BASE_PATH=${{ matrix.base_path }}
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ matrix.platforms }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

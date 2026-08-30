@@ -39,7 +39,7 @@ Current runtime supports:
 
 Trigger templates render with alert and site variables (for example `{{alert_name}}`, `{{alert_status}}`, `{{site_name}}`, `{{site_url}}`).
 
-Use [Templates](/docs/alerting/templates) for the canonical variable list.
+Use [Templates](/docs/v4/alerting/templates) for the canonical variable list.
 
 ## Secret interpolation {#secret-interpolation}
 
@@ -53,7 +53,7 @@ Authorization: Bearer $API_TOKEN
 
 ## Next steps {#next-steps}
 
-- [Alert Configurations](/docs/alerting/alert-configurations)
-- [Triggers](/docs/alerting/triggers)
-- [Templates](/docs/alerting/templates)
-- [Webhook Examples](/docs/alerting/webhook-examples)
+- [Alert Configurations](/docs/v4/alerting/alert-configurations)
+- [Triggers](/docs/v4/alerting/triggers)
+- [Templates](/docs/v4/alerting/templates)
+- [Webhook Examples](/docs/v4/alerting/webhook-examples)

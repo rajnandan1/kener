@@ -46,7 +46,7 @@ PATCH /api/v4/monitors/{monitor_tag}
 { "confirmation_threshold": 5 }
 ```
 
-It is validated as an integer between `1` and `60`. See the [API Reference](/docs/v4/api-reference).
+It is validated as an integer between `1` and `60`. See the [API Reference](/docs/spec/v4/).
 
 ## What gets damped {#scope}
 
