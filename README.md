@@ -226,4 +226,4 @@ If you want to contribute to Kener, please read the [Contribution Guide](https:/
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=rajnandan1/kener&type=Date)](https://star-history.com/#rajnandan1/kener&Date)
+[![Star History Chart](https://star-history.dera.page/svg?repos=rajnandan1/kener&type=Date)](https://star-history.dera.page/#rajnandan1/kener&Date)
