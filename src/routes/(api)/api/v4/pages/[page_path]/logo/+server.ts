@@ -1,8 +1,8 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "@sveltejs/kit";
 import db from "$lib/server/db/db";
+import { uploadImage } from "$lib/server/uploadImage.js";
 import type { UploadPageLogoRequest, UploadPageLogoResponse } from "$lib/types/api";
-import { uploadImage } from "../../../../../../(manage)/manage/api/+server";
 
 export const POST: RequestHandler = async ({ locals, request }) => {
   const page = locals.page;
