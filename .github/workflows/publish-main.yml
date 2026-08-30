@@ -18,7 +18,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [debian, alpine]
+        include:
+          - variant: debian
+            platforms: linux/amd64,linux/arm64
+          - variant: alpine
+            platforms: linux/amd64
     concurrency:
       group: main-docker-${{ github.ref }}-${{ matrix.variant }}
       cancel-in-progress: true
@@ -80,7 +84,7 @@ jobs:
           build-args: |
             VARIANT=${{ matrix.variant }}
             WITH_DOCS=true
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ matrix.platforms }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
