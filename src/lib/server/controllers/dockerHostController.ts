@@ -83,8 +83,12 @@ function normalizeInput(input: DockerHostInput, existing?: DockerHostRecord): No
 
   const tls_cert = inputCert || existing?.tls_cert || null;
   const tls_key = inputKey || existing?.tls_key || null;
-  // The CA round-trips to the browser, so blank there means "clear it".
-  const tls_ca = (input.tls_ca || "").trim() || null;
+  // The CA round-trips to the browser, so the manage page always sends the field and a
+  // blank value there means "clear it". An absent field is different: an API caller doing
+  // a partial update never sent a CA at all, and dropping the stored one would silently
+  // remove custom trust from every monitor on this host. So absent means "keep stored",
+  // and only an explicit empty value clears it.
+  const tls_ca = input.tls_ca === undefined ? existing?.tls_ca || null : (input.tls_ca || "").trim() || null;
 
   if (!tls_cert || !tls_key) {
     throw new Error("TLS connections require both a client certificate and a client key");

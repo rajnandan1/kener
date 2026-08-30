@@ -121,6 +121,31 @@ describe("editing an existing TLS host", () => {
     expect(dbMock.updateDockerHost).toHaveBeenCalledWith(expect.objectContaining({ tls_ca: null }));
   });
 
+  // The UI always sends tls_ca, so blank there means "clear". An API caller doing a
+  // partial update omits the field, and that must not silently drop custom trust.
+  it("keeps the stored CA when the field is absent from the payload", async () => {
+    await CreateUpdateDockerHost({
+      id: 1,
+      name: "prod",
+      connection_type: "tls",
+      daemon: "docker.example.com:2376",
+    });
+
+    expect(dbMock.updateDockerHost).toHaveBeenCalledWith(expect.objectContaining({ tls_ca: "STORED-CA" }));
+  });
+
+  it("tests against the stored CA when the field is absent from the payload", async () => {
+    getVersion.mockResolvedValue({
+      data: { Version: "27.1.1", ApiVersion: "1.46", Os: "linux", Arch: "arm64" },
+      latency: 4,
+    });
+    listContainers.mockResolvedValue({ data: [], latency: 1 });
+
+    await TestDockerHost({ id: 1, name: "prod", connection_type: "tls", daemon: "docker.example.com:2376" });
+
+    expect(getVersion).toHaveBeenCalledWith(expect.objectContaining({ tls_ca: "STORED-CA" }));
+  });
+
   it("drops all TLS material when switched to a socket connection", async () => {
     await CreateUpdateDockerHost({ id: 1, name: "prod", connection_type: "socket", daemon: "/var/run/docker.sock" });
 
