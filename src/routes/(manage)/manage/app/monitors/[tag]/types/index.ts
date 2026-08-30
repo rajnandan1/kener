@@ -9,4 +9,5 @@ export { default as MonitorGroup } from "./monitor-group.svelte";
 export { default as MonitorGamedig } from "./monitor-gamedig.svelte";
 export { default as MonitorNone } from "./monitor-none.svelte";
 export { default as MonitorGrpc } from "./monitor-grpc.svelte";
+export { default as MonitorPrometheus } from "./monitor-prometheus.svelte";
 export { default as MonitorDocker } from "./monitor-docker.svelte";

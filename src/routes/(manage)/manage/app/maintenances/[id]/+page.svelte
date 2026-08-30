@@ -29,6 +29,7 @@
   import { goto } from "$app/navigation";
   import { toast } from "svelte-sonner";
   import { format, formatDistanceToNow, isPast, isFuture, isWithinInterval } from "date-fns";
+  import LocalTime from "$lib/components/LocalTime.svelte";
   import { rrulestr } from "rrule";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
@@ -932,9 +933,9 @@
                         <Badge variant={displayStatus.variant}>{displayStatus.label}</Badge>
                       </div>
                       <p class="text-muted-foreground text-sm">
-                        {format(new Date(event.start_date_time * 1000), "MMM d, yyyy HH:mm")}
+                        <LocalTime value={event.start_date_time} format="MMM d, yyyy HH:mm" />
                         →
-                        {format(new Date(event.end_date_time * 1000), "MMM d, yyyy HH:mm")}
+                        <LocalTime value={event.end_date_time} format="MMM d, yyyy HH:mm" />
                       </p>
                     </div>
                   </div>

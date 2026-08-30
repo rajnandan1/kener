@@ -215,7 +215,7 @@ export const dateFnsLocale = derived(currentLocale, ($locale) => getDateFnsLocal
  * - UTC strings from DB like "YYYY-MM-DD HH:mm:ss"
  * - ISO strings
  */
-function parseDateInput(date: Date | number | string): Date {
+export function parseDateInput(date: Date | number | string): Date {
   if (typeof date === "number") {
     // Check if timestamp is in seconds (Unix) or milliseconds
     return date < 10000000000 ? new Date(date * 1000) : new Date(date);

@@ -85,6 +85,8 @@ DATABASE_URL=postgresql://user:pass@host:5432/kener?sslmode=require
 
 Use when MySQL/MariaDB is your standard stack.
 
+Run the server with `time_zone` set to UTC (for example `--default-time-zone=+00:00`). Kener runs in UTC and reads `created_at`/`updated_at` as UTC; a non-UTC server session shifts them. See [/docs/v4/setup/environment-variables#timezone](/docs/v4/setup/environment-variables#timezone).
+
 ```env
 DATABASE_URL=mysql://kener:password@localhost:3306/kener
 ```
