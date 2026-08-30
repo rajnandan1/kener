@@ -204,6 +204,36 @@
           value: "https://us.i.posthog.com"
         }
       ]
+    },
+    {
+      label: "OpenPanel",
+      logo: "/openpanel.png",
+      key: "analytics.openpanel",
+      isEnabled: false,
+      activeInSite: false,
+      requirements: [
+        {
+          label: "Client ID",
+          type: "text",
+          placeholder: "Client ID from your OpenPanel project",
+          required: true,
+          value: ""
+        },
+        {
+          label: "API URL",
+          type: "text",
+          placeholder: "https://api.openpanel.dev",
+          required: true,
+          value: "https://api.openpanel.dev"
+        },
+        {
+          label: "Script URL",
+          type: "text",
+          placeholder: "https://openpanel.dev/op1.js",
+          required: true,
+          value: "https://openpanel.dev/op1.js"
+        }
+      ]
     }
   ]);
 

@@ -6,6 +6,7 @@ import pl from "$lib/snippets/capture/plausible.js?raw";
 import mscl from "$lib/snippets/capture/clarity.js?raw";
 import um from "$lib/snippets/capture/umami.js?raw";
 import ph from "$lib/snippets/capture/posthog.js?raw";
+import op from "$lib/snippets/capture/openpanel.js?raw";
 import { GetAllAnalyticsData } from "$lib/server/controllers/siteDataController.js";
 
 import type { RequestHandler } from "./$types";
@@ -84,6 +85,19 @@ export const GET: RequestHandler = async ({ params, url }) => {
     let api_key = analyticsData["analytics.posthog"].requirements["API Key"];
     let api_host = analyticsData["analytics.posthog"].requirements["API Host"];
     captureScript = captureScript + ";\n" + ph.replaceAll("{{api_key}}", api_key).replaceAll("{{api_host}}", api_host);
+  }
+
+  if (!!analyticsData["analytics.openpanel"]) {
+    let client_id = analyticsData["analytics.openpanel"].requirements["Client ID"];
+    let api_url = analyticsData["analytics.openpanel"].requirements["API URL"];
+    let script_url = analyticsData["analytics.openpanel"].requirements["Script URL"];
+    captureScript =
+      captureScript +
+      ";\n" +
+      op
+        .replaceAll("{{client_id}}", client_id)
+        .replaceAll("{{api_url}}", api_url)
+        .replaceAll("{{script_url}}", script_url);
   }
 
   return new Response(captureScript, {
