@@ -29,7 +29,7 @@ npm install
 Kener needs some environment variables to be set to run properly. See the [environment variables documentation](/docs/v3/environment-vars).
 
 ```bash
-cp .env.example .env
+cp .env-min.example .env
 ```
 
 ## Start Kener {#start-kener}

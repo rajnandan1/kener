@@ -122,6 +122,10 @@
                           "content": "v4/monitors/grpc"
                         },
                         {
+                          "title": "Prometheus Monitors",
+                          "content": "v4/monitors/prometheus"
+                        },
+                        {
                           "title": "Group Monitors",
                           "content": "v4/monitors/group"
                         },
