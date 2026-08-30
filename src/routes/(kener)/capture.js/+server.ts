@@ -29,6 +29,16 @@ export const GET: RequestHandler = async ({ params, url }) => {
     return acc;
   }, {});
 
+  // Every requirement is spliced into a double-quoted JS string literal inside a snippet.
+  // Escape once here so a pasted quote, backslash or newline can't turn /capture.js into a
+  // SyntaxError for every enabled provider.
+  for (const key in analyticsData) {
+    const req = analyticsData[key].requirements || {};
+    for (const name in req) {
+      req[name] = JSON.stringify(String(req[name] ?? "")).slice(1, -1);
+    }
+  }
+
   let captureScript = "";
 
   if (!!analyticsData["analytics.googleTagManager"]) {
