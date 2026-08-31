@@ -538,6 +538,13 @@ function UptimeCalculator(
   };
 }
 
+function GenerateRandomHexString(length: number = 32): string {
+  return crypto
+    .randomBytes(Math.ceil(length / 2))
+    .toString("hex")
+    .slice(0, length);
+}
+
 /**
  * Parse an audit column (created_at/updated_at) into a Date regardless of driver.
  * pg/mysql return Date; SQLite returns naive UTC text "YYYY-MM-DD HH:mm:ss",
@@ -588,4 +595,5 @@ export {
   IsValidUptimeFormula,
   UnparsePercentage,
   GetNowTimestampUTCInMs,
+  GenerateRandomHexString,
 };

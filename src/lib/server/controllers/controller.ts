@@ -3,6 +3,7 @@ export * from "./commonController.js";
 export * from "./emailController.js";
 export * from "./incidentController.js";
 export * from "./monitorsController.js";
+export * from "./oidcController.js";
 export * from "./siteDataController.js";
 export * from "./siteDataKeys.js";
 export * from "./triggerController.js";

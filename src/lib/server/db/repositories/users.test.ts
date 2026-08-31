@@ -21,6 +21,8 @@ describe("UsersRepository.getUserByEmail", () => {
       table.integer("is_active").defaultTo(1);
       table.integer("is_verified").defaultTo(0);
       table.string("is_owner").defaultTo("NO");
+      table.string("auth_provider", 20).notNullable().defaultTo("local");
+      table.string("oidc_sub", 255).nullable().unique();
       table.timestamp("created_at").defaultTo(db.fn.now());
       table.timestamp("updated_at").defaultTo(db.fn.now());
     });
