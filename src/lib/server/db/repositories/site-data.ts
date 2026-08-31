@@ -1,4 +1,5 @@
 import { BaseRepository } from "./base.js";
+import { withSerializedSiteDataWrite } from "./site-data-lock.js";
 import type { SiteData } from "../../types/db.js";
 
 /**
@@ -6,10 +7,11 @@ import type { SiteData } from "../../types/db.js";
  */
 export class SiteDataRepository extends BaseRepository {
   async insertOrUpdateSiteData(key: string, value: string, data_type: string): Promise<number[]> {
-    return await this.knex("site_data")
-      .insert({ key, value, data_type })
-      .onConflict("key")
-      .merge({ value, updated_at: this.knex.fn.now() });
+    return await this.knex.transaction(async (trx) =>
+      withSerializedSiteDataWrite(trx, async () =>
+        trx("site_data").insert({ key, value, data_type }).onConflict("key").merge({ value, updated_at: trx.fn.now() }),
+      ),
+    );
   }
 
   async getAllSiteData(): Promise<SiteData[]> {
