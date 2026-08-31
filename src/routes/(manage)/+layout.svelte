@@ -29,7 +29,7 @@
   import TemplateIcon from "@lucide/svelte/icons/layout-template";
   import clientResolver from "$lib/client/resolver.js";
   import DatabaseIcon from "@lucide/svelte/icons/database";
-  
+
   import { Toaster } from "$lib/components/ui/sonner/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import { ROUTE_PERMISSION_MAP } from "$lib/allPerms.js";

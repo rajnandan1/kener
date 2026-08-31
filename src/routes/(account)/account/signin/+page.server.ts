@@ -56,18 +56,20 @@ export const actions: Actions = {
       return fail(400, { error: GC.ERROR_NO_SETUP, values: { email } });
     }
 
-    const userDB = await GetUserByEmail(email);
-    if (!userDB) {
-      return fail(401, { error: "User does not exist", values: { email } });
-    }
     // Local login can be enabled by setting Env-Variable "KENER_FORCE_LOCAL_LOGIN" == "true".
     // This prevents lockout when the IdP is misconfigured or unreachable.
+    // Checked before the user lookup so the response does not reveal whether the email exists.
     const forceLocalLogin = process.env.KENER_FORCE_LOCAL_LOGIN === "true";
     if (oidcSettings && !oidcSettings.allow_local_login && !forceLocalLogin) {
       return fail(403, {
         error: "Local login is disabled. Please use SSO.",
         values: { email },
       });
+    }
+
+    const userDB = await GetUserByEmail(email);
+    if (!userDB) {
+      return fail(401, { error: "User does not exist", values: { email } });
     }
     if (userDB.auth_provider === GC.AUTH_PROVIDER_OIDC) {
       return fail(403, {

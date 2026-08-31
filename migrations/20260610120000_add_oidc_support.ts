@@ -26,12 +26,7 @@ export async function up(knex: Knex): Promise<void> {
     await knex.schema.createTable("oidc_group_role_mappings", (table) => {
       table.increments("id").primary();
       table.string("oidc_group", 255).notNullable();
-      table
-        .string("role_id", 100)
-        .notNullable()
-        .references("id")
-        .inTable("roles")
-        .onDelete("CASCADE");
+      table.string("role_id", 100).notNullable().references("id").inTable("roles").onDelete("CASCADE");
       table.timestamp("created_at").defaultTo(knex.fn.now());
       table.timestamp("updated_at").defaultTo(knex.fn.now());
       table.unique(["oidc_group"]);

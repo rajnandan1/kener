@@ -38,35 +38,27 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
   }
 
   try {
-    const basePath = process.env.KENER_BASE_PATH || "";
-    const callbackUrl = `${url.origin}${basePath}/account/oidc/callback`;
-
-    const oidcData = await HandleCallback(
-      settings,
-      callbackUrl,
-      url,
-      expectedState,
-      expectedNonce,
-      codeVerifier,
-    );
+    const oidcData = await HandleCallback(settings, url, expectedState, expectedNonce, codeVerifier);
 
     const user = await FindOrCreateOidcUser(settings, oidcData);
 
     if (!user.is_active) {
       throw redirect(
         302,
-        serverResolve("/account/signin?oidc_error=" + encodeURIComponent(
-          "Your account has been deactivated. Please contact an administrator.",
-        )),
+        serverResolve(
+          "/account/signin?oidc_error=" +
+            encodeURIComponent("Your account has been deactivated. Please contact an administrator."),
+        ),
       );
     }
 
     if (!user.role_ids || user.role_ids.length === 0) {
       throw redirect(
         302,
-        serverResolve("/account/signin?oidc_error=" + encodeURIComponent(
-          "Your account has no active roles assigned. Please contact an administrator.",
-        )),
+        serverResolve(
+          "/account/signin?oidc_error=" +
+            encodeURIComponent("Your account has no active roles assigned. Please contact an administrator."),
+        ),
       );
     }
 
@@ -91,9 +83,6 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 
     const message = e instanceof Error ? e.message : "Authentication failed";
     console.error("OIDC callback error:", e);
-    throw redirect(
-      302,
-      serverResolve(`/account/signin?oidc_error=${encodeURIComponent(message)}`),
-    );
+    throw redirect(302, serverResolve(`/account/signin?oidc_error=${encodeURIComponent(message)}`));
   }
 };

@@ -286,8 +286,8 @@ export interface OidcGroupRoleMappingRecord {
   id: number;
   oidc_group: string;
   role_id: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 export interface OidcGroupRoleMappingInsert {

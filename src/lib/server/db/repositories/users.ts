@@ -374,7 +374,7 @@ export class UsersRepository extends BaseRepository {
     return rows.map((r: { id: string }) => r.id);
   }
 
-// ============ OIDC ============
+  // ============ OIDC ============
 
   async getUserByOidcSub(oidcSub: string): Promise<UserRecordPublic | undefined> {
     const row = await this.knex("users")
@@ -392,20 +392,16 @@ export class UsersRepository extends BaseRepository {
   }
 
   async getOidcGroupRoleMappingByGroup(oidcGroup: string): Promise<OidcGroupRoleMappingRecord | undefined> {
-    return await this.knex("oidc_group_role_mappings")
-      .where("oidc_group", oidcGroup)
-      .first();
+    return await this.knex("oidc_group_role_mappings").where("oidc_group", oidcGroup).first();
   }
 
   async upsertOidcGroupRoleMapping(data: OidcGroupRoleMappingInsert): Promise<void> {
     const existing = await this.getOidcGroupRoleMappingByGroup(data.oidc_group);
     if (existing) {
-      await this.knex("oidc_group_role_mappings")
-        .where("id", existing.id)
-        .update({
-          role_id: data.role_id,
-          updated_at: this.knex.fn.now(),
-        });
+      await this.knex("oidc_group_role_mappings").where("id", existing.id).update({
+        role_id: data.role_id,
+        updated_at: this.knex.fn.now(),
+      });
     } else {
       await this.knex("oidc_group_role_mappings").insert({
         oidc_group: data.oidc_group,

@@ -26,9 +26,7 @@
   const allowLocalLogin: boolean = $derived(data.oidc?.allowLocalLogin ?? true);
   const oidcError: string | null = $derived(data.oidcError ?? null);
 
-  const showLocalLogin: boolean = $derived(
-    !isAdminAccountCreated || allowLocalLogin || !oidcEnabled
-  );
+  const showLocalLogin: boolean = $derived(!isAdminAccountCreated || allowLocalLogin || !oidcEnabled);
 
   let loading = $state(false);
   let showPassword = $state(false);
@@ -81,11 +79,7 @@
 
         {#if oidcEnabled && isAdminAccountCreated}
           <div class="mb-4">
-            <Button
-              variant="outline"
-              class="w-full"
-              href={resolve("/account/oidc/login")}
-            >
+            <Button variant="outline" class="w-full" href={resolve("/account/oidc/login")}>
               <LogInIcon class="mr-2 h-4 w-4" />
               Sign in with {oidcProviderName}
             </Button>

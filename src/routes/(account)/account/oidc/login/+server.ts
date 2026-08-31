@@ -12,10 +12,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
   const callbackUrl = `${url.origin}${basePath}/account/oidc/callback`;
 
   try {
-    const { url: authUrl, state, nonce, codeVerifier } = await BuildAuthorizationUrl(
-      settings,
-      callbackUrl,
-    );
+    const { url: authUrl, state, nonce, codeVerifier } = await BuildAuthorizationUrl(settings, callbackUrl);
 
     const isSecure = process.env.ORIGIN?.startsWith("https://") ?? false;
     const cookiePath = process.env.KENER_BASE_PATH || "/";

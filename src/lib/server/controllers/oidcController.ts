@@ -7,12 +7,12 @@
 
 import * as client from "openid-client";
 import { GenerateRandomHexString } from "../tool.js";
-import db from "../db/db.js";
+import db from "$lib/server/db/db";
 import { GenerateToken, CookieConfig } from "./commonController.js";
 import type { OidcSettings } from "$lib/types/site.js";
 import type { UserRecordPublic } from "../types/db.js";
 import { GetSiteDataByKey } from "./siteDataController.js";
-import GC from "$lib/global-constants.js";
+import GC from "../../global-constants.js";
 
 // Cache the OIDC configuration to avoid repeated discovery calls
 let cachedConfig: client.Configuration | null = null;
@@ -36,8 +36,21 @@ export async function GetOidcSettings(): Promise<OidcSettings | null> {
 }
 
 /**
+ * Run OIDC discovery for the given settings.
+ * openid-client enforces HTTPS; an http:// issuer is only allowed in development.
+ */
+async function discover(settings: OidcSettings): Promise<client.Configuration> {
+  const issuer = new URL(settings.issuer_url);
+  const options: client.DiscoveryRequestOptions =
+    issuer.protocol === "http:" && process.env.NODE_ENV === "development"
+      ? { execute: [client.allowInsecureRequests] }
+      : {};
+  return await client.discovery(issuer, settings.client_id, settings.client_secret, undefined, options);
+}
+
+/**
  * Get or create the openid-client Configuration via OIDC Discovery.
- * The result is cached until the issuer URL changes.
+ * The result is cached until issuer URL, client ID or client secret change.
  */
 async function getOidcConfig(settings: OidcSettings): Promise<client.Configuration> {
   const cacheKey = `${settings.issuer_url}|${settings.client_id}|${settings.client_secret}`;
@@ -45,8 +58,7 @@ async function getOidcConfig(settings: OidcSettings): Promise<client.Configurati
     return cachedConfig;
   }
 
-  const issuer = new URL(settings.issuer_url);
-  cachedConfig = await client.discovery(issuer, settings.client_id, settings.client_secret);
+  cachedConfig = await discover(settings);
   cachedCacheKey = cacheKey;
   return cachedConfig;
 }
@@ -99,7 +111,6 @@ export async function BuildAuthorizationUrl(
  */
 export async function HandleCallback(
   settings: OidcSettings,
-  callbackUrl: string,
   currentUrl: URL,
   expectedState: string,
   expectedNonce: string,
@@ -129,9 +140,10 @@ export async function HandleCallback(
   }
 
   let email = claims.email as string | undefined;
-  let name = (claims.name as string | undefined) ||
-    (claims.preferred_username as string | undefined) ||
-    "";
+  let name = (claims.name as string | undefined) || (claims.preferred_username as string | undefined) || "";
+
+  const groupsClaim = settings.groups_claim || "groups";
+  let groups = parseGroups(claims[groupsClaim]);
 
   if (!email) {
     if (!tokens.access_token) {
@@ -140,24 +152,15 @@ export async function HandleCallback(
     const userinfo = await client.fetchUserInfo(config, tokens.access_token, sub);
     email = userinfo.email as string | undefined;
     if (!name) {
-      name = (userinfo.name as string | undefined) ||
-        (userinfo.preferred_username as string | undefined) ||
-        "";
+      name = (userinfo.name as string | undefined) || (userinfo.preferred_username as string | undefined) || "";
+    }
+    if (groups.length === 0) {
+      groups = parseGroups(userinfo[groupsClaim]);
     }
   }
 
   if (!email) {
     throw new Error("No email claim found in token or userinfo response");
-  }
-
-  const groupsClaim = settings.groups_claim || "groups";
-  let groups: string[] = [];
-
-  const rawGroups = claims[groupsClaim];
-  if (Array.isArray(rawGroups)) {
-    groups = rawGroups.map((g) => String(g));
-  } else if (typeof rawGroups === "string") {
-    groups = [rawGroups];
   }
 
   return {
@@ -166,6 +169,15 @@ export async function HandleCallback(
     name: name.trim() || email,
     groups,
   };
+}
+
+/**
+ * Normalize a groups claim value: providers send an array, a single string, or nothing.
+ */
+function parseGroups(raw: unknown): string[] {
+  if (Array.isArray(raw)) return raw.map((g) => String(g));
+  if (typeof raw === "string") return [raw];
+  return [];
 }
 
 /**
@@ -185,28 +197,21 @@ export async function FindOrCreateOidcUser(
 
   if (!user) {
     if (!settings.auto_create_users) {
-      throw new Error(
-        "Your account is not provisioned in this system. " +
-        "Please contact an administrator.",
-      );
+      throw new Error("Your account is not provisioned in this system. " + "Please contact an administrator.");
     }
 
     const existingByEmail = await db.getUserByEmail(oidcData.email);
     if (existingByEmail) {
       throw new Error(
         `A local account with the email "${oidcData.email}" already exists. ` +
-        "OIDC and local accounts are kept separate. " +
-        "Please contact an administrator.",
+          "OIDC and local accounts are kept separate. " +
+          "Please contact an administrator.",
       );
     }
 
     const mappedRoleIds = await db.getOidcRoleIdsForGroups(oidcData.groups);
     const roleIds =
-      mappedRoleIds.length > 0
-        ? mappedRoleIds
-        : settings.default_role_id
-          ? [settings.default_role_id]
-          : ["member"];
+      mappedRoleIds.length > 0 ? mappedRoleIds : settings.default_role_id ? [settings.default_role_id] : ["member"];
 
     await db.insertUser({
       email: oidcData.email,
@@ -227,11 +232,19 @@ export async function FindOrCreateOidcUser(
     return user;
   }
 
-  // Sync roles and update profile data from the IdP
+  // Sync roles and update profile data from the IdP.
+  // Never move an email that another account already owns (no account merging).
   await SyncOidcUserRoles(user.id, oidcData.groups, settings);
+  const emailOwner = await db.getUserByEmail(oidcData.email);
+  const emailTaken = !!emailOwner && emailOwner.id !== user.id;
+  if (emailTaken) {
+    console.warn(
+      `OIDC: email "${oidcData.email}" belongs to another account; keeping "${user.email}" for user ${user.id}`,
+    );
+  }
   await db.updateUserProfile(user.id, {
     name: oidcData.name,
-    email: oidcData.email,
+    ...(emailTaken ? {} : { email: oidcData.email }),
   });
 
   user = await db.getUserByOidcSub(oidcData.sub);
@@ -246,11 +259,7 @@ export async function FindOrCreateOidcUser(
  * Synchronize a user's roles based on their current OIDC groups.
  * Manually assigned roles (not from any OIDC mapping) are preserved.
  */
-async function SyncOidcUserRoles(
-  userId: number,
-  oidcGroups: string[],
-  settings: OidcSettings,
-): Promise<void> {
+async function SyncOidcUserRoles(userId: number, oidcGroups: string[], settings: OidcSettings): Promise<void> {
   const allMappings = await db.getAllOidcGroupRoleMappings();
   const allMappedRoleIds = new Set(allMappings.map((m) => m.role_id));
 
@@ -307,8 +316,7 @@ export async function TestOidcConnection(settings: OidcSettings): Promise<{
   try {
     // Build a local configuration for testing only — do not touch
     // the shared cache, as these may be unsaved settings.
-    const issuer = new URL(settings.issuer_url);
-    const testConfig = await client.discovery(issuer, settings.client_id, settings.client_secret);
+    const testConfig = await discover(settings);
     const serverMetadata = testConfig.serverMetadata();
 
     return {

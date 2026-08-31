@@ -137,10 +137,7 @@ import sendSlack from "$lib/server/notification/slack_notification.js";
 import heicConvert from "heic-convert";
 import serverResolver from "$lib/server/resolver.js";
 import { ACTION_PERMISSION_MAP } from "$lib/allPerms.js";
-import {
-  TestOidcConnection,
-  ClearOidcConfigCache,
-} from "$lib/server/controllers/oidcController.js";
+import { TestOidcConnection, ClearOidcConfigCache } from "$lib/server/controllers/oidcController.js";
 import { MaskString } from "$lib/server/tool.js";
 
 export async function POST({ request, cookies }) {
@@ -699,14 +696,18 @@ export async function POST({ request, cookies }) {
       });
       resp = { success: true };
     } else if (action == "deleteOidcGroupRoleMapping") {
-      await db.deleteOidcGroupRoleMapping(data.id);
+      const mappingId = Number(data.id);
+      if (!Number.isInteger(mappingId) || mappingId <= 0) {
+        throw new Error("Mapping ID is required");
+      }
+      await db.deleteOidcGroupRoleMapping(mappingId);
       resp = { success: true };
     } else if (action == "testOidcConnection") {
       resp = await TestOidcConnection(data.settings);
     } else if (action == "getOidcSettingsMasked") {
       const raw = await GetSiteDataByKey("oidcSettings");
       if (raw && typeof raw === "object") {
-        const settings = raw as Record<string, unknown>;
+        const settings = { ...(raw as Record<string, unknown>) };
         if (settings.client_secret && typeof settings.client_secret === "string") {
           settings.client_secret = MaskString(settings.client_secret);
         }
@@ -730,11 +731,12 @@ async function storeSiteData(data: { [x: string]: any }) {
       if (key === "socialPreviewImage" && (element === null || element === undefined)) {
         element = "";
       }
-      // If oidcSettings is saved without client_secret, preserve the existing one
+      // If oidcSettings is saved without client_secret, preserve the existing one.
+      // An explicit empty string clears it.
       if (key === "oidcSettings" && typeof element === "string") {
         try {
           const newSettings = JSON.parse(element);
-          if (!newSettings.client_secret) {
+          if (newSettings.client_secret === undefined) {
             const existing = await GetSiteDataByKey("oidcSettings");
             if (existing && typeof existing === "object") {
               newSettings.client_secret = (existing as Record<string, unknown>).client_secret;

@@ -24,12 +24,12 @@ OIDC users and local users are kept completely separate — there is no account 
 
 Create an OIDC client (also called an "application" in some providers) with these settings:
 
-| Setting | Value |
-| --- | --- |
-| Client protocol | OpenID Connect |
-| Access type | Confidential |
-| Redirect URI | `https://your-kener-domain/account/oidc/callback` |
-| Web origins | `https://your-kener-domain` |
+| Setting         | Value                                             |
+| --------------- | ------------------------------------------------- |
+| Client protocol | OpenID Connect                                    |
+| Access type     | Confidential                                      |
+| Redirect URI    | `https://your-kener-domain/account/oidc/callback` |
+| Web origins     | `https://your-kener-domain`                       |
 
 Copy the **Client ID** and **Client Secret** from your provider.
 
@@ -38,6 +38,7 @@ Copy the **Client ID** and **Client Secret** from your provider.
 Most providers don't include group memberships in the ID token by default. You need to configure a mapper/scope:
 
 **Keycloak:**
+
 1. Go to your client → Client Scopes → Dedicated scope
 2. Add Mapper → Group Membership
 3. Token Claim Name: `groups`
@@ -45,10 +46,12 @@ Most providers don't include group memberships in the ID token by default. You n
 5. Add to ID token: ON
 
 **Authentik:**
+
 1. Go to your provider → Advanced protocol settings
 2. Add scope: `groups`
 
 **Azure AD:**
+
 1. App registration → Token configuration
 2. Add groups claim → Security groups
 
@@ -58,15 +61,15 @@ The claim name varies by provider. Common values: `groups` (Keycloak, Authentik)
 
 Go to **Manage → OpenID Connect** and fill in:
 
-| Setting | Description |
-| --- | --- |
-| Enable OpenID Connect | Turn on OIDC authentication |
-| Provider Name | Displayed on the login button (e.g. "Keycloak") |
-| Issuer URL | Your provider's issuer URL (must support `.well-known/openid-configuration`) |
-| Client ID | From step 1 |
-| Client Secret | From step 1 |
-| Scopes | Space-separated list (default: `openid profile email`) |
-| Groups Claim Name | The claim in the ID token that contains group memberships (default: `groups`) |
+| Setting               | Description                                                                   |
+| --------------------- | ----------------------------------------------------------------------------- |
+| Enable OpenID Connect | Turn on OIDC authentication                                                   |
+| Provider Name         | Displayed on the login button (e.g. "Keycloak")                               |
+| Issuer URL            | Your provider's issuer URL (must support `.well-known/openid-configuration`)  |
+| Client ID             | From step 1                                                                   |
+| Client Secret         | From step 1                                                                   |
+| Scopes                | Space-separated list (default: `openid profile email`)                        |
+| Groups Claim Name     | The claim in the ID token that contains group memberships (default: `groups`) |
 
 Click **Test Connection** to verify Kener can reach the provider's discovery endpoint.
 
@@ -76,10 +79,10 @@ Click **Save Settings**.
 
 In the **Group → Role Mapping** section, map OIDC group names to Kener roles:
 
-| OIDC Group | Kener Role |
-| --- | --- |
-| `Windows-Admins` | `admin` |
-| `Monitoring-Viewers` | `member` |
+| OIDC Group           | Kener Role |
+| -------------------- | ---------- |
+| `Windows-Admins`     | `admin`    |
+| `Monitoring-Viewers` | `member`   |
 
 When a user signs in via OIDC, Kener reads their group memberships from the ID token and assigns the corresponding roles. Roles are synchronized on every login — if a user is removed from a group in the identity provider, they lose the corresponding Kener role on next sign-in.
 
@@ -89,11 +92,11 @@ If none of a user's groups match any mapping, the configured **Default Role** is
 
 ## Settings reference {#settings-reference}
 
-| Setting | Default | Description |
-| --- | --- | --- |
-| Allow local login | ON | When OFF, the password form is hidden and only the OIDC button is shown |
-| Auto-create users on first login | OFF | When ON, new Kener users are created automatically on first OIDC login |
-| Default Role | `member` | Fallback role when no group mapping matches |
+| Setting                          | Default  | Description                                                             |
+| -------------------------------- | -------- | ----------------------------------------------------------------------- |
+| Allow local login                | ON       | When OFF, the password form is hidden and only the OIDC button is shown |
+| Auto-create users on first login | OFF      | When ON, new Kener users are created automatically on first OIDC login  |
+| Default Role                     | `member` | Fallback role when no group mapping matches                             |
 
 ## Lockout recovery {#lockout-recovery}
 
@@ -108,7 +111,7 @@ This re-enables the local login form regardless of the OIDC setting. Remove the 
 ## Limitations {#limitations}
 
 - **No RP-Initiated Logout**: Signing out of Kener does not end the session at the identity provider. The user remains authenticated at the provider until the session expires there.
-- **HTTPS required**: The `openid-client` library enforces HTTPS for the issuer URL. HTTP issuers (e.g. local development without TLS) will fail with a discovery error.
+- **HTTPS required**: The `openid-client` library enforces HTTPS for the issuer URL. An `http://` issuer is only accepted when Kener runs in development mode (`npm run dev`); in production it fails with a discovery error.
 - **No account merging**: OIDC users and local users are separate. A user cannot sign in via both methods with the same account.
 
 ## Related pages {#related-pages}
