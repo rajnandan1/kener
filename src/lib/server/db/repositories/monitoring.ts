@@ -151,22 +151,18 @@ export class MonitoringRepository extends BaseRepository {
       return [];
     }
 
-    const latestPerMonitor = this.knex("monitoring_data")
-      .select("monitor_tag")
-      .max("timestamp as max_timestamp")
-      .whereIn("monitor_tag", monitor_tags)
-      .groupBy("monitor_tag")
-      .as("latest_per_monitor");
-
-    return await this.knex("monitoring_data as md")
-      .join(latestPerMonitor, function (this: KnexType.JoinClause) {
-        this.on("md.monitor_tag", "=", "latest_per_monitor.monitor_tag").andOn(
-          "md.timestamp",
-          "=",
-          "latest_per_monitor.max_timestamp",
-        );
-      })
-      .select("md.*");
+    // One ORDER BY timestamp DESC LIMIT 1 lookup per tag: each is a single
+    // descent of the (monitor_tag, timestamp) primary key. The previous
+    // MAX(timestamp) GROUP BY self-join planned as a full-table scan on large
+    // monitoring_data tables (Postgres), holding a pool connection for
+    // hundreds of ms per page load and exhausting the web pool under load.
+    // ken: O(tags) queries; revisit if a page serves >100 tags.
+    const rows = await Promise.all(
+      monitor_tags.map((tag) =>
+        this.knex("monitoring_data").where("monitor_tag", tag).orderBy("timestamp", "desc").limit(1).first(),
+      ),
+    );
+    return rows.filter((row): row is MonitoringData => row !== undefined);
   }
 
   async getLastHeartbeat(monitor_tag: string): Promise<MonitoringData | undefined> {

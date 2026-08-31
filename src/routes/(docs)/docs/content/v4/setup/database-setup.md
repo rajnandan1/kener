@@ -81,6 +81,16 @@ With SSL:
 DATABASE_URL=postgresql://user:pass@host:5432/kener?sslmode=require
 ```
 
+### Maintenance {#postgresql-maintenance}
+
+Kener's nightly data-retention job deletes expired `monitoring_data` rows. Migrations tune that table's autovacuum thresholds to ~1% so Postgres reclaims the deleted rows and refreshes planner statistics after each nightly cleanup, instead of letting bloat accumulate and slow every page load.
+
+If you upgrade an existing install whose `monitoring_data` is already large, run once after migrating:
+
+```sql
+VACUUM (ANALYZE) monitoring_data;
+```
+
 ## MySQL {#mysql}
 
 Use when MySQL/MariaDB is your standard stack.
@@ -131,7 +141,7 @@ These variables have no effect on SQLite, which uses a single shared connection.
 - Connection failed: verify host, port, credentials, firewall.
 - Migration failed: ensure DB exists and user can `CREATE`/`ALTER`.
 - SQLite write error: ensure directory exists and is writable.
-- `KnexTimeoutError: Timeout acquiring a connection`: every pooled connection is busy, or the database is unreachable/too slow to accept new ones. If the database is healthy, the pool is too small for your concurrency — raise `DATABASE_POOL_MAX` (and `DATABASE_WORKER_POOL_MAX`) within your `max_connections` budget. See [Connection pool tuning](#connection-pool-tuning).
+- `KnexTimeoutError: Timeout acquiring a connection`: every pooled connection is busy, or the database is unreachable/too slow to accept new ones. If the database is healthy, the pool is too small for your concurrency — raise `DATABASE_POOL_MAX` (and `DATABASE_WORKER_POOL_MAX`) within your `max_connections` budget. See [Connection pool tuning](#connection-pool-tuning). On PostgreSQL, if pool timeouts start after the database has been up for months, also check `monitoring_data` bloat — see [Maintenance](#postgresql-maintenance).
 - `Connection terminated unexpectedly` after idle periods: the network dropped an idle connection; keepalive (on by default) prevents this — verify `DATABASE_KEEPALIVE` is not set to `false`.
 
 ## Environment variables {#environment-variables}
