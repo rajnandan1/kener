@@ -45,3 +45,6 @@ docs/superpowers/
 .superpowers/
 # Wayfinder scratch (local only)
 scratch/
+
+# Claude session-local state (ralph-loop etc.)
+.claude/*.local.md
