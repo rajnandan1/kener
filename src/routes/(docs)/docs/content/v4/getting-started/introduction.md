@@ -20,7 +20,7 @@ Kener is built and maintained by [Rajnandan1](https://www.rajnandan.com). It is 
 4. Discussions - [discuss](https://github.com/rajnandan1/kener/discussions)
 5. Roadmap - [view](https://github.com/users/rajnandan1/projects/4)
 6. Discord - [join](https://discord.gg/uSTpnuK9XR)
-7. Contribution - [contribute](/docs/v4/getting-started/contributing)
+7. Contribution - [contribute](https://github.com/rajnandan1/kener/blob/main/.github/CONTRIBUTING.md)
 
 ## One Click Deployment {#one-click-deployment}
 

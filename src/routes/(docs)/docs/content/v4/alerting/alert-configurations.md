@@ -62,6 +62,6 @@ Higher thresholds reduce noise; lower thresholds detect faster.
 
 ## Related pages {#related-pages}
 
-- [Triggers](/docs/alerting/triggers)
-- [Templates](/docs/alerting/templates)
-- [Webhook Examples](/docs/alerting/webhook-examples)
+- [Triggers](/docs/v4/alerting/triggers)
+- [Templates](/docs/v4/alerting/templates)
+- [Webhook Examples](/docs/v4/alerting/webhook-examples)

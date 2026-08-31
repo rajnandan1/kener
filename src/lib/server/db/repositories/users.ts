@@ -58,9 +58,11 @@ export class UsersRepository extends BaseRepository {
   }
 
   async getUserByEmail(email: string): Promise<UserRecordPublic | undefined> {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) return undefined;
     const row = await this.knex("users")
       .select(...this.userColumns)
-      .where("email", email)
+      .whereRaw("LOWER(email) = ?", [normalizedEmail]) // portable across sqlite, postgres, mysql
       .first();
     if (!row) return undefined;
     return await this.enrichWithRoleIds(row);

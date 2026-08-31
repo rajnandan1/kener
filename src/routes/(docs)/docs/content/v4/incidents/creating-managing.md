@@ -205,7 +205,7 @@ INVESTIGATING → IDENTIFIED → MONITORING → INVESTIGATING → IDENTIFIED →
 
 - Add updates regularly (every 15-30 minutes for critical issues)
 - Include substantive information
-- See [Incident Updates](/docs/incidents/updates)
+- See [Incident Updates](/docs/v4/incidents/updates)
 
 ## Filtering and Organization {#filtering-organization}
 
@@ -248,6 +248,6 @@ To delete an incident:
 
 ## Next Steps {#next-steps}
 
-- [Incident Updates](/docs/incidents/updates) - Learn how to add updates and change incident state
-- [Incident Impact on Monitoring](/docs/incidents/impact-on-monitoring) - Understand how incidents affect monitor status
-- [Auto-Generated Incidents](/docs/incidents/auto-generated) - Configure alerts to create incidents automatically
+- [Incident Updates](/docs/v4/incidents/updates) - Learn how to add updates and change incident state
+- [Incident Impact on Monitoring](/docs/v4/incidents/impact-on-monitoring) - Understand how incidents affect monitor status
+- [Auto-Generated Incidents](/docs/v4/incidents/auto-generated) - Configure alerts to create incidents automatically

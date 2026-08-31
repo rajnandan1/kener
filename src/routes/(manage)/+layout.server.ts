@@ -49,12 +49,14 @@ export const load: LayoutServerLoad = async ({ cookies, route }) => {
   const siteStatusColors = siteData.colors;
   const siteStatusColorsDark = siteData.colorsDark || siteStatusColors;
   const font = siteData.font || { cssSrc: "", family: "" };
+  const defaultSiteTheme = siteData.theme || "system";
   return {
     userDb: loggedInUser,
     userPermissions: [...userPermissions],
     siteStatusColors,
     siteStatusColorsDark,
     font,
+    defaultSiteTheme,
     canSendEmail: IsEmailSetup(),
     seedSiteData,
   };

@@ -73,7 +73,7 @@
   let pageTitle = $derived(navItems.find((item) => page.url.pathname.startsWith(item.url))?.title || "Dashboard");
 </script>
 
-<ModeWatcher />
+<ModeWatcher defaultMode={data.defaultSiteTheme as 'light' | 'dark' | 'system'} />
 <Toaster />
 
 <svelte:head>

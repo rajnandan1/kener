@@ -132,26 +132,26 @@ export const actions: Actions = {
 
     try {
       await CreateFirstUser({ email, name, password });
-      const userDB = await GetUserByEmail(email);
-
-      if (!userDB) {
-        return fail(500, { error: "Failed to create user", values: { name, email } });
-      }
-
-      const token = await GenerateToken(userDB);
-      const cookieConfig = CookieConfig();
-      cookies.set(cookieConfig.name, token, {
-        path: cookieConfig.path,
-        maxAge: cookieConfig.maxAge,
-        httpOnly: cookieConfig.httpOnly,
-        secure: cookieConfig.secure,
-        sameSite: cookieConfig.sameSite,
-      });
-
-      throw redirect(302, serverResolve("/manage/app/site-configurations"));
     } catch (e) {
       const errorMessage = e instanceof Error ? e.message : "An error occurred during signup";
       return fail(400, { error: errorMessage, values: { name, email } });
     }
+
+    const userDB = await GetUserByEmail(email);
+    if (!userDB) {
+      return fail(500, { error: "Failed to create user", values: { name, email } });
+    }
+
+    const token = await GenerateToken(userDB);
+    const cookieConfig = CookieConfig();
+    cookies.set(cookieConfig.name, token, {
+      path: cookieConfig.path,
+      maxAge: cookieConfig.maxAge,
+      httpOnly: cookieConfig.httpOnly,
+      secure: cookieConfig.secure,
+      sameSite: cookieConfig.sameSite,
+    });
+
+    throw redirect(302, serverResolve("/manage/app/site-configurations"));
   },
 };

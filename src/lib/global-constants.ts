@@ -1,9 +1,15 @@
+import type { MonitoringStatus } from "$lib/types/status.js";
+
 // Badge styles supported by badge-maker
 export const BADGE_STYLES = ["flat", "plastic", "flat-square", "for-the-badge", "social"] as const;
 export type BadgeStyle = (typeof BADGE_STYLES)[number];
 
 // Status types
-export type StatusType = "UP" | "DOWN" | "DEGRADED" | "MAINTENANCE" | "NO_DATA";
+export const MONITORING_STATUSES = ["UP", "DOWN", "DEGRADED"] as const satisfies readonly MonitoringStatus[];
+
+export function isMonitoringStatus(value: unknown): value is MonitoringStatus {
+  return typeof value === "string" && MONITORING_STATUSES.includes(value as MonitoringStatus);
+}
 
 // Incident states
 export type IncidentState = "INVESTIGATING" | "IDENTIFIED" | "MONITORING" | "RESOLVED";

@@ -7,8 +7,8 @@
   import { Button } from "$lib/components/ui/button/index.js";
   import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
-  import { format } from "date-fns";
   import { onMount } from "svelte";
+  import LocalTime from "$lib/components/LocalTime.svelte";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
 
@@ -73,16 +73,6 @@
     }
   }
 
-  // Format timestamp to date string
-  function formatTimestamp(timestamp: number): string {
-    try {
-      const date = new Date(timestamp * 1000);
-      return format(date, "yyyy-MM-dd HH:mm:ss");
-    } catch {
-      return String(timestamp);
-    }
-  }
-
   onMount(() => {
     fetchLogs();
   });
@@ -136,7 +126,7 @@
             {#each logs as log (log.timestamp)}
               <Table.Row class="hover:bg-muted/50">
                 <Table.Cell>
-                  <span class="text-muted-foreground text-sm">{formatTimestamp(log.timestamp)}</span>
+                  <span class="text-muted-foreground text-sm"><LocalTime value={log.timestamp} /></span>
                 </Table.Cell>
                 <Table.Cell>
                   <Badge variant={getStatusBadgeVariant(log.status)}>

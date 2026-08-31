@@ -1,5 +1,6 @@
 import type { TimestampStatusCount } from "$lib/server/types/db";
-import GC, { PAGE_STATUS_MESSAGES, type StatusType } from "$lib/global-constants";
+import GC, { PAGE_STATUS_MESSAGES } from "$lib/global-constants";
+import type { StatusType } from "$lib/types/status";
 
 function ParseLatency(latencyMs: number): string {
   if (!!!latencyMs) {
@@ -120,8 +121,8 @@ const AllRecordTypes = {
   ANY: 255,
 };
 const ValidateIpAddress = function (input: string): "IP4" | "IP6" | "DOMAIN" | "Invalid" {
-  // Check if input is a valid IPv4 address with an optional port
-  const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
+  // Check if input is a dotted-quad IPv4 address with each octet in 0-255.
+  const ipv4Regex = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
   if (ipv4Regex.test(input)) {
     return "IP4";
   }
@@ -148,9 +149,19 @@ function IsValidHost(domain: string): boolean {
   return regex.test(domain);
 }
 function IsValidNameServer(nameServer: string): boolean {
-  //8.8.8.8 example
-  const regex = /^([0-9]{1,3}\.){3}[0-9]{1,3}$/;
-  return regex.test(nameServer);
+  // Validate a dotted-quad IPv4 nameserver (e.g. 8.8.8.8) through the shared
+  // validator so octet range-checking stays consistent with the rest of the app.
+  return ValidateIpAddress(nameServer.trim()) === "IP4";
+}
+function IsValidDnsResolver(resolver: string): boolean {
+  const normalizedResolver = resolver.trim();
+  // Route IP inputs through the shared validator so the IPv4 grammar (octet
+  // range, no zero-padded forms) stays consistent with the rest of the app.
+  const ipType = ValidateIpAddress(normalizedResolver);
+  if (ipType === "IP4" || ipType === "IP6") {
+    return true;
+  }
+  return IsValidHost(normalizedResolver);
 }
 const IsValidURL = function (url: string): boolean {
   return /^(http|https):\/\/[^ "]+$/.test(url);
@@ -383,6 +394,7 @@ export {
   ValidateIpAddress,
   IsValidHost,
   IsValidNameServer,
+  IsValidDnsResolver,
   IsValidURL,
   IsValidPort,
   CollapseStatusCounts,

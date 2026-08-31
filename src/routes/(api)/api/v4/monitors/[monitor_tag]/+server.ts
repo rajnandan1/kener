@@ -10,15 +10,6 @@ import type {
   BadRequestResponse,
 } from "$lib/types/api";
 
-function formatDateToISO(date: Date | string): string {
-  if (date instanceof Date) {
-    return date.toISOString();
-  }
-  // Handle string dates (e.g., from SQLite: "2026-01-27 16:07:19")
-  const parsed = new Date(date.replace(" ", "T") + "Z");
-  return parsed.toISOString();
-}
-
 export const GET: RequestHandler = async ({ locals }) => {
   // Monitor is validated by middleware and available in locals
   const monitor = locals.monitor!;
@@ -79,6 +70,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   updateData.monitor_type = body.monitor_type !== undefined ? body.monitor_type : existingMonitor.monitor_type;
 
   updateData.is_hidden = body.is_hidden !== undefined ? body.is_hidden : existingMonitor.is_hidden;
+  updateData.external_url = body.external_url !== undefined ? body.external_url : existingMonitor.external_url;
 
   if (body.confirmation_threshold === null) {
     // Explicit null resets the grace period to the default (1 = off); undefined keeps the existing value.

@@ -43,6 +43,9 @@
 <Item.Root class="items-start  p-0 {className} sm:items-center">
   <Item.Content class="min-w-0 flex-1">
     <div class="flex flex-col items-start justify-start gap-0.5">
+      <span class="text-muted-foreground text-xs font-medium uppercase">
+        {$t("incident")}
+      </span>
       <span class="text-xs font-medium text-{incident.state.toLowerCase()}">{$t(incident.state)}</span>
       <Item.Title class="min-w-0 text-base wrap-break-word break-all">
         <a {target} class="hover:underline" href={clientResolver(resolve, `/incidents/${incident.id}`)}>
@@ -52,14 +55,14 @@
     </div>
 
     {#if incident.monitors && incident.monitors.length > 0 && !hideMonitors}
-      <div class="my-1 overflow-x-auto p-1">
-        <div class="flex gap-2">
+      <div class="my-1 p-1">
+        <div class="flex flex-wrap gap-2">
           {#each incident.monitors as monitor (`${incident.id}-${monitor.monitor_tag}`)}
             <Popover.Root>
               <Popover.Trigger disabled={isEmbedded}>
                 <Badge
                   variant="outline"
-                  class="border-{monitor.monitor_impact.toLowerCase()}   cursor-pointer rounded-none border-0 border-b px-0  text-sm font-normal"
+                  class="border-{monitor.monitor_impact.toLowerCase()}   max-w-full cursor-pointer rounded-none border-0 border-b px-0 text-sm font-normal wrap-anywhere whitespace-normal"
                 >
                   {monitor.monitor_name}
                 </Badge>

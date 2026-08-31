@@ -25,7 +25,7 @@
   import EyeOpenIcon from "@lucide/svelte/icons/eye";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import { toast } from "svelte-sonner";
-  import { format } from "date-fns";
+  import LocalTime from "$lib/components/LocalTime.svelte";
   import { onMount } from "svelte";
   import type { UserRecordDashboard, UserRecordPublic, RoleRecord } from "$lib/server/types/db.js";
   import { resolve } from "$app/paths";
@@ -299,18 +299,6 @@
   function goToPage(newPage: number) {
     page = newPage;
     fetchUsers();
-  }
-
-  // Format date
-  function formatDate(dateStr: string | Date): string {
-    if (dateStr instanceof Date) {
-      return format(dateStr, "MMM dd, yyyy HH:mm");
-    }
-    try {
-      return format(new Date(dateStr), "MMM dd, yyyy HH:mm");
-    } catch {
-      return dateStr;
-    }
   }
 
   // Role badge variant by precedence: admin > editor > others
@@ -593,11 +581,11 @@
           <div class="space-y-2 text-sm">
             <p>
               <strong>Created At:</strong>
-              {formatDate(toEditUser.created_at)}
+              <LocalTime value={toEditUser.created_at} format="MMM dd, yyyy HH:mm" />
             </p>
             <p>
               <strong>Updated At:</strong>
-              {formatDate(toEditUser.updated_at)}
+              <LocalTime value={toEditUser.updated_at} format="MMM dd, yyyy HH:mm" />
             </p>
             <p>
               <strong>Name:</strong>
