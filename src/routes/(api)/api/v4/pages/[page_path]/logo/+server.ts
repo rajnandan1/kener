@@ -1,5 +1,5 @@
 import { json } from "@sveltejs/kit";
-import type { RequestHandler } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
 import db from "$lib/server/db/db";
 import { uploadImage } from "$lib/server/uploadImage.js";
 import type { UploadPageLogoRequest, UploadPageLogoResponse } from "$lib/types/api";

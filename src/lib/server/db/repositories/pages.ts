@@ -82,7 +82,9 @@ export class PagesRepository extends BaseRepository {
           .whereIn("key", ["logo", "favicon", "socialPreviewImage"])
           .andWhere("value", currentLogo)
           .first();
-        if (previousImageId && previousImageId !== image.id && !stillReferenced && !usedBySite) {
+        // ponytail: string match keeps this DB-agnostic; use JSON-aware querying if page settings grow beyond text search.
+        const usedByPageSettings = await trx("pages").where("page_settings_json", "like", `%${currentLogo}%`).first();
+        if (previousImageId && previousImageId !== image.id && !stillReferenced && !usedBySite && !usedByPageSettings) {
           await trx("images").where("id", previousImageId).del();
         }
       }

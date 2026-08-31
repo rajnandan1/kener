@@ -1062,6 +1062,9 @@
           },
           "404": {
             "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
           }
         },
         "description": "Images are resized to fit within 256x256 pixels."
