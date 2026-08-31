@@ -1,6 +1,7 @@
 import { BaseRepository } from "./base.js";
 import { GetDbType } from "../../tool.js";
-import type { PageRecord, PageRecordInsert, PageMonitorRecord, PageMonitorRecordInsert } from "../../types/db.js";
+import type { ImageRecordInsert, PageRecord, PageRecordInsert, PageMonitorRecord, PageMonitorRecordInsert } from "../../types/db.js";
+import { withSerializedSiteDataWrite } from "./site-data-lock.js";
 
 /**
  * Repository for pages and page monitors operations
@@ -52,6 +53,47 @@ export class PagesRepository extends BaseRepository {
         ...data,
         updated_at: this.knex.fn.now(),
       });
+  }
+
+  async replacePageLogo(id: number, image: ImageRecordInsert): Promise<boolean> {
+    return await this.knex.transaction(async (trx) => {
+      return await withSerializedSiteDataWrite(trx, async () => {
+        const currentPageQuery = trx("pages").where("id", id);
+        if (GetDbType() !== "sqlite") currentPageQuery.forUpdate();
+        const currentPage = await currentPageQuery.first<{ page_logo: string | null }>();
+        if (!currentPage) return false;
+
+        await trx("images").insert(image);
+        const updated = await trx("pages")
+          .where("id", id)
+          .update({ page_logo: `/assets/images/${image.id}`, updated_at: trx.fn.now() });
+
+        if (updated === 0) {
+          await trx("images").where("id", image.id).del();
+          return false;
+        }
+
+        const currentLogo = currentPage.page_logo;
+        if (currentLogo?.startsWith("/assets/images/")) {
+          const previousImageId = currentLogo.slice("/assets/images/".length);
+          const stillReferenced = await trx("pages")
+            .where("page_logo", currentLogo)
+            .andWhereNot("id", id)
+            .first();
+          const usedBySite = await trx("site_data")
+            .whereIn("key", ["logo", "favicon", "socialPreviewImage"])
+            .andWhere("value", currentLogo)
+            .first();
+          // ponytail: string match keeps this DB-agnostic; use JSON-aware querying if page settings grow beyond text search.
+          const usedByPageSettings = await trx("pages").where("page_settings_json", "like", `%${currentLogo}%`).first();
+          if (previousImageId && previousImageId !== image.id && !stillReferenced && !usedBySite && !usedByPageSettings) {
+            await trx("images").where("id", previousImageId).del();
+          }
+        }
+
+        return true;
+      });
+    });
   }
 
   async deletePage(id: number): Promise<number> {

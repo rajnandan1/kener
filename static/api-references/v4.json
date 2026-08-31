@@ -1002,6 +1002,74 @@
         "description": "The home page (addressed as `~home`) cannot be deleted and returns `400`."
       }
     },
+    "/api/v4/pages/{page_path}/logo": {
+      "parameters": [
+        {
+          "$ref": "#/components/parameters/PagePath"
+        }
+      ],
+      "post": {
+        "tags": ["Pages"],
+        "operationId": "uploadPageLogo",
+        "summary": "Upload page logo",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["base64", "mime_type"],
+                "properties": {
+                  "base64": {
+                    "type": "string",
+                    "description": "Base64-encoded image data without a data URI prefix"
+                  },
+                  "mime_type": {
+                    "type": "string",
+                    "enum": ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/heic", "image/heif"]
+                  },
+                  "file_name": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Page logo uploaded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["page_logo"],
+                  "properties": {
+                    "page_logo": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        },
+        "description": "Images are resized to fit within 256x256 pixels."
+      }
+    },
     "/api/v4/site": {
       "get": {
         "tags": ["Site"],
