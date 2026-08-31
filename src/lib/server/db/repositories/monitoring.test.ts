@@ -5,6 +5,12 @@ import { MonitoringRepository } from "./monitoring.js";
 
 // Repository-level check against in-memory SQLite: getLatestMonitoringDataAllActive
 // must return exactly the newest row per requested tag, regardless of insert order.
+//
+// This test deliberately builds its own throwaway in-memory Knex instead of the
+// app-wide db singleton ($lib/server/db/db): the singleton connects to the real
+// database configured via DATABASE_URL, which a unit test must never touch. The
+// repository takes a Knex instance by constructor precisely to allow this kind
+// of isolated fixture.
 describe("MonitoringRepository.getLatestMonitoringDataAllActive", () => {
   let db: KnexType;
   let repo: MonitoringRepository;
@@ -43,6 +49,12 @@ describe("MonitoringRepository.getLatestMonitoringDataAllActive", () => {
     expect(rows).toHaveLength(2);
     expect(byTag["alpha"]).toMatchObject({ timestamp: 300, status: "UP" });
     expect(byTag["beta"]).toMatchObject({ timestamp: 150, status: "UP" });
+  });
+
+  it("returns one row per tag even when the input repeats a tag", async () => {
+    const rows = await repo.getLatestMonitoringDataAllActive(["alpha", "alpha", "beta"]);
+    expect(rows).toHaveLength(2);
+    expect(rows.map((r) => r.monitor_tag).sort()).toEqual(["alpha", "beta"]);
   });
 
   it("skips tags that have no data", async () => {

@@ -151,17 +151,20 @@ export class MonitoringRepository extends BaseRepository {
       return [];
     }
 
-    // One ORDER BY timestamp DESC LIMIT 1 lookup per tag: each is a single
-    // descent of the (monitor_tag, timestamp) primary key. The previous
-    // MAX(timestamp) GROUP BY self-join planned as a full-table scan on large
+    // One newest-row lookup per unique tag — each a single descent of the
+    // (monitor_tag, timestamp) primary key. The previous MAX(timestamp)
+    // GROUP BY self-join planned as a full-table scan on large
     // monitoring_data tables (Postgres), holding a pool connection for
     // hundreds of ms per page load and exhausting the web pool under load.
-    // ken: O(tags) queries; revisit if a page serves >100 tags.
-    const rows = await Promise.all(
-      monitor_tags.map((tag) =>
-        this.knex("monitoring_data").where("monitor_tag", tag).orderBy("timestamp", "desc").limit(1).first(),
-      ),
-    );
+    // Lookups run in small batches so a page with many monitors cannot queue
+    // more connection acquisitions than the pool can serve at once.
+    const uniqueTags = [...new Set(monitor_tags)];
+    const batchSize = 10;
+    const rows: (MonitoringData | undefined)[] = [];
+    for (let i = 0; i < uniqueTags.length; i += batchSize) {
+      const batch = uniqueTags.slice(i, i + batchSize);
+      rows.push(...(await Promise.all(batch.map((tag) => this.getLatestMonitoringData(tag)))));
+    }
     return rows.filter((row): row is MonitoringData => row !== undefined);
   }
 
