@@ -9,6 +9,8 @@ Kener supports injecting analytics scripts into the public status page. Go to **
 
 When a provider is enabled, Kener injects its tracking script into every public status page response via `/capture.js`. Multiple providers can be active simultaneously.
 
+Paste keys and URLs exactly as your provider shows them. Kener escapes every value before injecting it, so quotes or other special characters cannot break tracking for the other providers.
+
 ## Supported providers {#supported-providers}
 
 | Provider          | Key                          |

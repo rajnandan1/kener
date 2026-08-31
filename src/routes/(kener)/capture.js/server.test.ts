@@ -30,6 +30,31 @@ describe("GET /capture.js — OpenPanel", () => {
     expect(body).not.toContain("{{");
   });
 
+  it("escapes values so a stray quote in any provider cannot break the script", async () => {
+    vi.mocked(GetAllAnalyticsData).mockResolvedValue([
+      {
+        key: "analytics.openpanel",
+        value: {
+          isEnabled: true,
+          requirements: {
+            "Client ID": 'abc"; alert(1); //',
+            "API URL": "https://op.example.com/api\n",
+            "Script URL": "https://op.example.com/op1.js",
+          },
+        },
+      },
+      {
+        key: "analytics.posthog",
+        value: { isEnabled: true, requirements: { "API Key": 'phc_\\quote"', "API Host": "https://us.i.posthog.com" } },
+      },
+    ]);
+    const body = await (await call()).text();
+    expect(() => new Function(body)).not.toThrow();
+    expect(body).toContain('clientId: "abc\\"; alert(1); //"');
+    expect(body).toContain('apiUrl: "https://op.example.com/api\\n"');
+    expect(body).toContain('posthog.init("phc_\\\\quote\\"');
+  });
+
   it("emits nothing for OpenPanel when it is disabled", async () => {
     vi.mocked(GetAllAnalyticsData).mockResolvedValue([
       { key: "analytics.openpanel", value: { isEnabled: false, requirements: { "Client ID": "cid-123" } } },
