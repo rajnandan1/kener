@@ -5,6 +5,7 @@ import {
   HandleCallback,
   FindOrCreateOidcUser,
   GenerateOidcSession,
+  OidcLoginError,
 } from "$lib/server/controllers/oidcController";
 import serverResolve from "$lib/server/resolver.js";
 
@@ -21,7 +22,7 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
   if (errorParam) {
     const errorDesc = url.searchParams.get("error_description") || errorParam;
     console.error(`OIDC provider error: ${errorParam} - ${errorDesc}`);
-    throw redirect(302, serverResolve(`/account/signin?oidc_error=${encodeURIComponent(errorDesc)}`));
+    throw redirect(302, serverResolve("/account/signin?oidc_error=provider_error"));
   }
 
   const expectedState = cookies.get("oidc-state");
@@ -43,23 +44,11 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
     const user = await FindOrCreateOidcUser(settings, oidcData);
 
     if (!user.is_active) {
-      throw redirect(
-        302,
-        serverResolve(
-          "/account/signin?oidc_error=" +
-            encodeURIComponent("Your account has been deactivated. Please contact an administrator."),
-        ),
-      );
+      throw redirect(302, serverResolve("/account/signin?oidc_error=account_deactivated"));
     }
 
     if (!user.role_ids || user.role_ids.length === 0) {
-      throw redirect(
-        302,
-        serverResolve(
-          "/account/signin?oidc_error=" +
-            encodeURIComponent("Your account has no active roles assigned. Please contact an administrator."),
-        ),
-      );
+      throw redirect(302, serverResolve("/account/signin?oidc_error=no_roles"));
     }
 
     const { token, cookieConfig } = await GenerateOidcSession(user);
@@ -81,8 +70,8 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
       }
     }
 
-    const message = e instanceof Error ? e.message : "Authentication failed";
     console.error("OIDC callback error:", e);
-    throw redirect(302, serverResolve(`/account/signin?oidc_error=${encodeURIComponent(message)}`));
+    const code = e instanceof OidcLoginError ? e.code : "auth_failed";
+    throw redirect(302, serverResolve(`/account/signin?oidc_error=${code}`));
   }
 };

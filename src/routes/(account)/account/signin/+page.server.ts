@@ -11,6 +11,17 @@ import { GetOidcSettings } from "$lib/server/controllers/oidcController";
 import serverResolve from "$lib/server/resolver.js";
 import GC from "$lib/global-constants";
 
+// oidc_error carries a code, never free text; anything unknown gets the generic message.
+const OIDC_ERROR_MESSAGES: Record<string, string> = {
+  provider_error: "The identity provider returned an error. Please try again.",
+  account_deactivated: "Your account has been deactivated. Please contact an administrator.",
+  no_roles: "Your account has no active roles assigned. Please contact an administrator.",
+  not_provisioned: "Your account is not provisioned in this system. Please contact an administrator.",
+  email_conflict:
+    "An account with this email already exists. OIDC and local accounts are kept separate. Please contact an administrator.",
+  auth_failed: "Authentication failed. Please try again or contact an administrator.",
+};
+
 export const load: PageServerLoad = async ({ parent, url }) => {
   const parentData = await parent();
 
@@ -19,7 +30,8 @@ export const load: PageServerLoad = async ({ parent, url }) => {
   }
 
   const oidcSettings = await GetOidcSettings();
-  const oidcError = url.searchParams.get("oidc_error") || null;
+  const oidcErrorCode = url.searchParams.get("oidc_error");
+  const oidcError = oidcErrorCode ? (OIDC_ERROR_MESSAGES[oidcErrorCode] ?? OIDC_ERROR_MESSAGES.auth_failed) : null;
   const forceLocalLogin = process.env.KENER_FORCE_LOCAL_LOGIN === "true";
 
   return {

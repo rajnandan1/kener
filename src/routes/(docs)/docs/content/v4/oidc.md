@@ -31,6 +31,8 @@ Create an OIDC client (also called an "application" in some providers) with thes
 | Redirect URI    | `https://your-kener-domain/account/oidc/callback` |
 | Web origins     | `https://your-kener-domain`                       |
 
+If Kener is deployed under a subpath via [`KENER_BASE_PATH`](/docs/v4/setup/environment-variables#kener-base-path), include it in the redirect URI — e.g. with `KENER_BASE_PATH=/status` register `https://your-kener-domain/status/account/oidc/callback`.
+
 Copy the **Client ID** and **Client Secret** from your provider.
 
 ### 2. Enable the groups claim {#enable-groups-claim}
@@ -87,6 +89,8 @@ In the **Group → Role Mapping** section, map OIDC group names to Kener roles:
 When a user signs in via OIDC, Kener reads their group memberships from the ID token and assigns the corresponding roles. Roles are synchronized on every login — if a user is removed from a group in the identity provider, they lose the corresponding Kener role on next sign-in.
 
 Roles assigned manually (not through any OIDC mapping) are preserved and not affected by the sync.
+
+Deleting a mapping stops Kener from managing that role: users who already hold it keep it (it is now treated as manually assigned) until an administrator removes it on the Users page.
 
 If none of a user's groups match any mapping, the configured **Default Role** is assigned.
 

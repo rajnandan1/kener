@@ -14,6 +14,21 @@ import type { UserRecordPublic } from "../types/db.js";
 import { GetSiteDataByKey } from "./siteDataController.js";
 import GC from "../../global-constants.js";
 
+/**
+ * Login failure with a stable code. The callback redirects with the code only;
+ * the signin page maps codes to messages server-side, so no free text (or email
+ * address) ever travels through the oidc_error URL parameter.
+ */
+export class OidcLoginError extends Error {
+  constructor(
+    public code: "not_provisioned" | "email_conflict",
+    message: string,
+  ) {
+    super(message);
+    this.name = "OidcLoginError";
+  }
+}
+
 // Cache the OIDC configuration to avoid repeated discovery calls
 let cachedConfig: client.Configuration | null = null;
 let cachedCacheKey: string | null = null;
@@ -145,17 +160,25 @@ export async function HandleCallback(
   const groupsClaim = settings.groups_claim || "groups";
   let groups = parseGroups(claims[groupsClaim]);
 
-  if (!email) {
-    if (!tokens.access_token) {
-      throw new Error("No email in ID token and no access_token available for userinfo lookup");
-    }
-    const userinfo = await client.fetchUserInfo(config, tokens.access_token, sub);
-    email = userinfo.email as string | undefined;
-    if (!name) {
-      name = (userinfo.name as string | undefined) || (userinfo.preferred_username as string | undefined) || "";
-    }
-    if (groups.length === 0) {
-      groups = parseGroups(userinfo[groupsClaim]);
+  if (!email && !tokens.access_token) {
+    throw new Error("No email in ID token and no access_token available for userinfo lookup");
+  }
+
+  // Fall back to the userinfo endpoint when the ID token lacks the email or
+  // the groups claim entirely (some providers only expose groups there).
+  if ((!email || claims[groupsClaim] === undefined) && tokens.access_token) {
+    try {
+      const userinfo = await client.fetchUserInfo(config, tokens.access_token, sub);
+      email = email || (userinfo.email as string | undefined);
+      if (!name) {
+        name = (userinfo.name as string | undefined) || (userinfo.preferred_username as string | undefined) || "";
+      }
+      if (groups.length === 0) {
+        groups = parseGroups(userinfo[groupsClaim]);
+      }
+    } catch (e) {
+      if (!email) throw e; // userinfo was required for the email
+      console.warn("OIDC: userinfo lookup for groups failed:", e instanceof Error ? e.message : e);
     }
   }
 
@@ -197,15 +220,17 @@ export async function FindOrCreateOidcUser(
 
   if (!user) {
     if (!settings.auto_create_users) {
-      throw new Error("Your account is not provisioned in this system. " + "Please contact an administrator.");
+      throw new OidcLoginError(
+        "not_provisioned",
+        `OIDC user ${oidcData.sub} is not provisioned and auto-create is off`,
+      );
     }
 
     const existingByEmail = await db.getUserByEmail(oidcData.email);
     if (existingByEmail) {
-      throw new Error(
-        `A local account with the email "${oidcData.email}" already exists. ` +
-          "OIDC and local accounts are kept separate. " +
-          "Please contact an administrator.",
+      throw new OidcLoginError(
+        "email_conflict",
+        `OIDC login for sub ${oidcData.sub} matches an existing local account`,
       );
     }
 
@@ -239,7 +264,7 @@ export async function FindOrCreateOidcUser(
   const emailTaken = !!emailOwner && emailOwner.id !== user.id;
   if (emailTaken) {
     console.warn(
-      `OIDC: email "${oidcData.email}" belongs to another account; keeping "${user.email}" for user ${user.id}`,
+      `OIDC: IdP email for user ${user.id} is already owned by user ${emailOwner.id}; keeping the existing email`,
     );
   }
   await db.updateUserProfile(user.id, {
