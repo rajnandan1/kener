@@ -117,6 +117,24 @@ KENER_BASE_PATH=/status
 - Update your reverse proxy configuration to match
 - See [Reverse Proxy Setup](/docs/v4/guides/reverse-proxy) for nginx/Apache examples
 
+### KENER_FORCE_LOCAL_LOGIN {#kener-force-local-login}
+
+**Purpose**: Emergency override that re-enables the local (email/password) login form even when it is disabled in the [OpenID Connect settings](/docs/v4/oidc).
+
+**Use Case**: Recovering access when local login is disabled and the OIDC identity provider is misconfigured or unreachable.
+
+**Default**: unset (disabled)
+
+**Examples**:
+
+```bash
+KENER_FORCE_LOCAL_LOGIN=true
+```
+
+**Important**:
+
+- Remove the variable once the identity provider is reachable again
+
 ### PORT {#port}
 
 **Purpose**: The port number Kener will listen on.

@@ -108,4 +108,4 @@ On a monitor page, the share buttons in the top action bar are shown only when a
 
 - [Monitors Overview](/docs/v4/monitors/overview)
 - [Pages](/docs/v4/pages)
-- [Configuration](/docs/v4/configuration)
+- [Configuration](/docs/v4/setup/site-configuration)

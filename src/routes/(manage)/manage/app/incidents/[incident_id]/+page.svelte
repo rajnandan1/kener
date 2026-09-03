@@ -24,7 +24,7 @@
   import type { MonitorRecord, IncidentRecord, IncidentCommentRecord } from "$lib/server/types/db.js";
   import { goto } from "$app/navigation";
   import { toast } from "svelte-sonner";
-  import { format } from "date-fns";
+  import LocalTime from "$lib/components/LocalTime.svelte";
   import GC from "$lib/global-constants";
   import { mode } from "mode-watcher";
   import { resolve } from "$app/paths";
@@ -1126,7 +1126,7 @@
                         <div class="flex items-center gap-2">
                           <Badge variant={getStateBadgeVariant(comment.state)}>{comment.state}</Badge>
                           <span class="text-muted-foreground text-sm">
-                            {format(new Date(comment.commented_at * 1000), "MMM d, yyyy HH:mm")}
+                            <LocalTime value={comment.commented_at} format="MMM d, yyyy HH:mm" />
                           </span>
                         </div>
                         <div

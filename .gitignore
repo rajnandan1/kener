@@ -27,6 +27,7 @@ database/*
 !database/.kener
 uploads/*
 !uploads/upload.dir
+*.save
 
 static/uploads/*
 !static/uploads/upload.dir
@@ -42,3 +43,8 @@ CONTEXT.md
 docs/adr/
 docs/superpowers/
 .superpowers/
+# Wayfinder scratch (local only)
+scratch/
+
+# Claude session-local state (ralph-loop etc.)
+.claude/*.local.md

@@ -15,10 +15,13 @@
   import FilterIcon from "@lucide/svelte/icons/filter";
   import XIcon from "@lucide/svelte/icons/x";
   import { format } from "date-fns";
+  import LocalTime from "$lib/components/LocalTime.svelte";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
+  import GC, { isMonitoringStatus } from "$lib/global-constants";
+  import type { MonitoringStatus } from "$lib/types/status.js";
 
   // Types
   interface MonitoringData {
@@ -34,6 +37,8 @@
     tag: string;
     name: string;
   }
+
+  type StatusFilter = "ALL" | MonitoringStatus;
 
   // Helper to format datetime as YYYY-MM-DDTHH:mm for datetime-local input
   function formatDateTimeForInput(date: Date): string {
@@ -68,12 +73,14 @@
   let pageNo = $state(1);
   let showFilters = $state(false);
   let monitorTagFilter = $state("ALL");
+  let statusFilter = $state<StatusFilter>("ALL");
   let startDateTime = $state(formatDateTimeForInput(yesterday));
   let endDateTime = $state(formatDateTimeForInput(now));
   const limit = 50;
 
   const hasActiveFilters = $derived(
     monitorTagFilter !== "ALL" ||
+      statusFilter !== "ALL" ||
       startDateTime !== formatDateTimeForInput(yesterday) ||
       endDateTime !== formatDateTimeForInput(now)
   );
@@ -113,6 +120,7 @@
 
   function clearFilters() {
     monitorTagFilter = "ALL";
+    statusFilter = "ALL";
     startDateTime = formatDateTimeForInput(yesterday);
     endDateTime = formatDateTimeForInput(now);
     pageNo = 1;
@@ -139,6 +147,7 @@
           action: "deleteMonitorData",
           data: {
             tag: monitorTagFilter === "ALL" ? "" : monitorTagFilter,
+            status: statusFilter === "ALL" ? undefined : statusFilter,
             start: startTs,
             end: endTs
           }
@@ -189,12 +198,14 @@
         page: number;
         limit: number;
         monitor_tag: string;
+        status: StatusFilter;
         start_time?: number;
         end_time?: number;
       } = {
         page: pageNo,
         limit,
-        monitor_tag: monitorTagFilter
+        monitor_tag: monitorTagFilter,
+        status: statusFilter
       };
 
       if (startDateTime) {
@@ -225,19 +236,15 @@
     }
   }
 
-  // Format timestamp to date string
-  function formatTimestamp(timestamp: number): string {
-    try {
-      const date = new Date(timestamp * 1000);
-      return format(date, "yyyy-MM-dd HH:mm:ss");
-    } catch {
-      return String(timestamp);
-    }
-  }
-
   function handleMonitorChange(value: string | undefined) {
     if (value) {
       monitorTagFilter = value;
+    }
+  }
+
+  function handleStatusChange(value: string | undefined) {
+    if (value === "ALL" || isMonitoringStatus(value)) {
+      statusFilter = value;
     }
   }
 
@@ -304,6 +311,20 @@
             </Select.Content>
           </Select.Root>
         </div>
+        <div class="flex flex-col gap-1">
+          <span class="text-muted-foreground text-xs font-medium">Status</span>
+          <Select.Root type="single" value={statusFilter} onValueChange={handleStatusChange}>
+            <Select.Trigger class="w-36" aria-label="Status">
+              {statusFilter === "ALL" ? "All Statuses" : statusFilter}
+            </Select.Trigger>
+            <Select.Content>
+              <Select.Item value="ALL">All Statuses</Select.Item>
+              <Select.Item value={GC.UP}>UP</Select.Item>
+              <Select.Item value={GC.DOWN}>DOWN</Select.Item>
+              <Select.Item value={GC.DEGRADED}>DEGRADED</Select.Item>
+            </Select.Content>
+          </Select.Root>
+        </div>
         <Button size="sm" onclick={applyFilters}>
           <SearchIcon class="size-4" />
           Search
@@ -359,7 +380,7 @@
                 </Tooltip.Root>
               </Table.Cell>
               <Table.Cell>
-                <span class="text-muted-foreground text-sm">{formatTimestamp(row.timestamp)}</span>
+                <span class="text-muted-foreground text-sm"><LocalTime value={row.timestamp} /></span>
               </Table.Cell>
               <Table.Cell>
                 <span class="text-xs font-semibold text-{row.status?.toLowerCase()}">
@@ -437,11 +458,16 @@
     <AlertDialog.Header>
       <AlertDialog.Title>Delete Monitoring Data</AlertDialog.Title>
       <AlertDialog.Description>
+        This will delete monitoring data for
         {#if monitorTagFilter === "ALL"}
-          This will delete monitoring data for <strong>all monitors</strong> from {startDateTime} to {endDateTime}.
+          <strong>all monitors</strong>
         {:else}
-          This will delete monitoring data for <strong>{monitorTagFilter}</strong> from {startDateTime} to {endDateTime}.
+          <strong>{monitorTagFilter}</strong>
         {/if}
+        {#if statusFilter !== "ALL"}
+          with status <strong>{statusFilter}</strong>
+        {/if}
+        from {startDateTime} to {endDateTime}.
         This action cannot be undone.
       </AlertDialog.Description>
     </AlertDialog.Header>

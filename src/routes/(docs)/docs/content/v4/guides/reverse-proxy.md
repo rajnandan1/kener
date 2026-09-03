@@ -764,7 +764,7 @@ ab -n 1000 -c 10 https://status.example.com/
 
 ## Next Steps {#next-steps}
 
-- [Environment Variables](/docs/setup/environment-variables) - Configure KENER_BASE_PATH and other variables
-- [Database Setup](/docs/setup/database-setup) - Set up PostgreSQL/MySQL for production
-- [Email Setup](/docs/setup/email-setup) - Configure email notifications
-- [Docker Deployment](/docs/deployment/docker) - Deploy with Docker/Docker Compose
+- [Environment Variables](/docs/v4/setup/environment-variables) - Configure KENER_BASE_PATH and other variables
+- [Database Setup](/docs/v4/setup/database-setup) - Set up PostgreSQL/MySQL for production
+- [Email Setup](/docs/v4/setup/email-setup) - Configure email notifications
+- [Deployment](/docs/v4/setup/deployment) - Deploy with Docker/Docker Compose

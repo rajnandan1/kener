@@ -11,6 +11,7 @@ import type {
   UserSubscriptionV2RecordInsert,
   UserSubscriptionV2Filter,
   SubscriptionEventType,
+  DbTimestamp,
 } from "../../types/db.js";
 import { GetDbType } from "../../tool.js";
 
@@ -410,7 +411,7 @@ export class SubscriptionSystemRepository extends BaseRepository {
       method_value: string;
       method_id: number;
       status: string;
-      created_at: Date;
+      created_at: DbTimestamp;
       subscription_count: number;
       event_types: SubscriptionEventType[];
     }>

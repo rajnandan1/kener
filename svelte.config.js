@@ -14,6 +14,9 @@ const config = {
 
   kit: {
     adapter: adapter(),
+    output: {
+      bundleStrategy: 'single'
+    },
     paths: {
       base: basePath,
     },

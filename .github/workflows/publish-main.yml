@@ -12,16 +12,16 @@ env:
   DOCKERHUB_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name }}
   GITHUB_IMAGE_NAME: ${{ github.repository }}
 
-concurrency:
-  group: main-docker-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   build-and-push-main:
     name: Build and push main Docker images (with docs)
     strategy:
+      fail-fast: false
       matrix:
         variant: [debian, alpine]
+    concurrency:
+      group: main-docker-${{ github.ref }}-${{ matrix.variant }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     permissions:
       contents: read

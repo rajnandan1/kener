@@ -11,6 +11,7 @@ import {
   IsEmailSetup,
 } from "./controller.js";
 import type { EventDisplaySettings, GlobalPageVisibilitySettings, SiteDateTimeFormat } from "$lib/types/site.js";
+import serverResolve from "../resolver.js";
 
 export interface LayoutServerData {
   isMobile: boolean;
@@ -165,7 +166,10 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
     siteName: siteData.siteName || "Kener",
     siteUrl: siteData.siteURL || "",
     logo: siteData.logo,
-    favicon: siteData.favicon,
+    // Browsers fetch <link rel="icon"> from the SSR HTML before hydration.
+    // SvelteKit's resolve() uses a relative base on the app-root page, so
+    // prefix KENER_BASE_PATH here instead of in the layout.
+    favicon: siteData.favicon ? serverResolve(siteData.favicon) : siteData.favicon,
     footerHTML: siteData.footerHTML || "",
     isSubsEnabled,
     languageSetting,

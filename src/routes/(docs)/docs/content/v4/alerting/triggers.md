@@ -28,7 +28,7 @@ Runtime currently supports:
 
 ## Template variables {#template-variables}
 
-Trigger bodies/subjects can use Mustache variables. Use the canonical list in [Templates](/docs/alerting/templates).
+Trigger bodies/subjects can use Mustache variables. Use the canonical list in [Templates](/docs/v4/alerting/templates).
 
 ## Secret handling {#secret-handling}
 

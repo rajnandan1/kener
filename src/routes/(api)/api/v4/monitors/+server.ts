@@ -10,15 +10,6 @@ import type {
 import type { MonitorRecord } from "$lib/server/types/db";
 import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
 
-function formatDateToISO(date: Date | string): string {
-  if (date instanceof Date) {
-    return date.toISOString();
-  }
-  // Handle string dates (e.g., from SQLite: "2026-01-27 16:07:19")
-  const parsed = new Date(date.replace(" ", "T") + "Z");
-  return parsed.toISOString();
-}
-
 export const GET: RequestHandler = async ({ url }) => {
   const status = url.searchParams.get("status") || undefined;
   const category_name = url.searchParams.get("category_name") || undefined;

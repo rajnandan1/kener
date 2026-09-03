@@ -17,7 +17,8 @@
   import ClockIcon from "@lucide/svelte/icons/clock";
   import UsersIcon from "@lucide/svelte/icons/users";
   import { goto } from "$app/navigation";
-  import { format, formatDistanceToNow, isPast, isFuture, isWithinInterval } from "date-fns";
+  import { formatDistanceToNow, isPast, isFuture, isWithinInterval } from "date-fns";
+  import LocalTime from "$lib/components/LocalTime.svelte";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
 
@@ -274,7 +275,7 @@
                     <div class="text-sm">
                       <div>
                         <span class="text-muted-foreground">Start:</span>
-                        {format(new Date(maintenance.start_date_time * 1000), "yyyy-MM-dd HH:mm")}
+                        <LocalTime value={maintenance.start_date_time} format="yyyy-MM-dd HH:mm" />
                       </div>
                       <div>
                         <span class="text-muted-foreground">Duration:</span>
@@ -322,11 +323,11 @@
                       <div class="text-sm">
                         <div>
                           <span class="text-muted-foreground">Start:</span>
-                          {format(new Date(maintenance.upcoming_event.start_date_time * 1000), "MMM d, yyyy HH:mm")}
+                          <LocalTime value={maintenance.upcoming_event.start_date_time} format="MMM d, yyyy HH:mm" />
                         </div>
                         <div>
                           <span class="text-muted-foreground">End:</span>
-                          {format(new Date(maintenance.upcoming_event.end_date_time * 1000), "MMM d, yyyy HH:mm")}
+                          <LocalTime value={maintenance.upcoming_event.end_date_time} format="MMM d, yyyy HH:mm" />
                         </div>
                       </div>
                     </Tooltip.Content>

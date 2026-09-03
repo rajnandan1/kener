@@ -146,6 +146,6 @@ Verify your `DATABASE_URL` is correct and the database server is running.
 
 ## Next Steps
 
-- Configure your [environment variables](/docs/configuration)
-- Set up your first [monitor](/docs/monitors)
-- Customize your [status page](/docs/configuration)
+- Configure your [environment variables](/docs/v4/setup/environment-variables)
+- Set up your first [monitor](/docs/v4/monitors)
+- Customize your [status page](/docs/v4/setup/site-configuration)

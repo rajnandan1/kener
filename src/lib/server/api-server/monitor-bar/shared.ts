@@ -1,5 +1,6 @@
 import db from "$lib/server/db/db";
-import GC, { type StatusType } from "$lib/global-constants";
+import GC from "$lib/global-constants";
+import type { StatusType } from "$lib/types/status";
 import type { MonitorRecord, TimestampStatusCount } from "$lib/server/types/db";
 import { UptimeCalculator } from "$lib/server/tool";
 import type { MonitorBarResponse } from "./get";

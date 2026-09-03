@@ -74,6 +74,7 @@ node scripts/sort-translations.js
 - Kener stores timestamps in UTC (Unix seconds).
 - On the client, Kener detects browser timezone automatically.
 - If timezone switching is enabled, users can change timezone manually from the public page controls.
+- The admin dashboard (`/manage`) always uses your browser timezone and shows the GMT offset (for example `2026-08-20 12:02:00 GMT+8`); hover a time to see it in UTC.
 
 ### Admin toggle {#timezone-admin-toggle}
 

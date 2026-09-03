@@ -14,7 +14,9 @@ import type {
   IncidentCommentRecord,
   MonitorAlertV2Record,
   MonitorAlertConfigRecord,
+  DbTimestamp,
 } from "../types/db.js";
+import { parseDbTimestamp } from "../tool.js";
 import GC from "../../global-constants.js";
 import { getUnixTime, differenceInSeconds } from "date-fns";
 import { siteDataToVariables } from "../notification/notification_utils.js";
@@ -277,7 +279,7 @@ export const ClosureCommentAlertMarkdown = (
   let comment = "The alert has been resolved";
 
   // Calculate duration in seconds between created_at and updated_at
-  const durationInSeconds = differenceInSeconds(new Date(alert.updated_at), new Date(alert.created_at));
+  const durationInSeconds = differenceInSeconds(parseDbTimestamp(alert.updated_at), parseDbTimestamp(alert.created_at));
   const durationInMinutes = Math.round(durationInSeconds / 60);
 
   comment = comment + `, Total duration: ${durationInMinutes} minutes`;
@@ -507,8 +509,8 @@ export const ParseIncidentToAPIResp = async (
   id: number;
   start_date_time: number;
   end_date_time: number | null;
-  created_at: Date;
-  updated_at: Date;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
   title: string;
   status: string;
   state: string;

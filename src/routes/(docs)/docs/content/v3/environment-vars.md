@@ -75,7 +75,7 @@ export RESEND_SENDER_EMAIL=Some Name <email@domain.com>
 
 ## DATABASE_URL {#database-url}
 
-Kener uses a database to store its data. By default, Kener uses sqlite. You can change the database by setting the `DATABASE_URL` environment variable. The connection string has to start with `sqlite`, `postgresql`, or `mysql`. Read more about [database configuration](/docs/database).
+Kener uses a database to store its data. By default, Kener uses sqlite. You can change the database by setting the `DATABASE_URL` environment variable. The connection string has to start with `sqlite`, `postgresql`, or `mysql`. Read more about [database configuration](/docs/v3/database).
 
 ```bash
 export DATABASE_URL=sqlite://./database/awesomeKener.db

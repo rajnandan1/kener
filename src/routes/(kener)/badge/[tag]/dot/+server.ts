@@ -1,7 +1,8 @@
 import { GetMonitors, GetLatestMonitoringData, GetLatestStatusActiveAll } from "$lib/server/controllers/controller.js";
 import StatusColor, { type StatusColors } from "$lib/color.js";
 import { ErrorSvg } from "$lib/anywhere.js";
-import GC, { type StatusType } from "$lib/global-constants.js";
+import GC from "$lib/global-constants.js";
+import type { StatusType } from "$lib/types/status.js";
 import { GetLastMonitoringValue } from "$lib/server/cache/setGet.js";
 import type { RequestHandler } from "./$types";
 

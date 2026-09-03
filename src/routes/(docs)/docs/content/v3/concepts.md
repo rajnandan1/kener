@@ -41,7 +41,7 @@ You can set multiple triggers of the same type.
 
 Email Trigger is used to send an email when something goes wrong. It can be configured to send an email to different email addresses.
 
-Kener uses [resend.com](https://resend.com) to send emails. Please make sure to sign up in [resend.com](https://resend.com) and get the API key. You will need to set the API key in the environment variable `RESEND_API_KEY`. Learn more about environment variables [here](/docs/environment-vars).
+Kener uses [resend.com](https://resend.com) to send emails. Please make sure to sign up in [resend.com](https://resend.com) and get the API key. You will need to set the API key in the environment variable `RESEND_API_KEY`. Learn more in the [environment variables documentation](/docs/v3/environment-vars).
 
 ### Slack Trigger {#slack-trigger}
 
@@ -103,7 +103,7 @@ Incidents are the ones that are created when something goes wrong. They can be c
 
 There can be two types of incidents - `DOWN` and `DEGRADED`. Incident can have a title, description, severity and status. Status can be `INVESTIGATING`, `IDENTIFIED`, `MONITORING` and `RESOLVED`.
 
-To learn more about incidents, click [here](/docs/incident-management).
+Learn more in the [incident management documentation](/docs/v3/incident-management).
 
 ### Incident Updates
 

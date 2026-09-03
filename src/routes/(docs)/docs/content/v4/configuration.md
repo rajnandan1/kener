@@ -192,7 +192,7 @@ status.yourdomain.com {
 }
 ```
 
-📖 **For complete configuration including SSL, subpaths, load balancing, and troubleshooting**, see the [Reverse Proxy Setup Guide](/docs/advanced-topics/reverse-proxy).
+📖 **For complete configuration including SSL, subpaths, load balancing, and troubleshooting**, see the [Reverse Proxy Setup Guide](/docs/v4/guides/reverse-proxy).
 
 ## Next Steps
 

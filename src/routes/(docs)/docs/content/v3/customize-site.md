@@ -143,9 +143,7 @@ Repository name of the github repository. If the repository is `https://github.c
 
 `incidentSince` is in hours. It means if an issue is created before X hours then kener would not honor it. What it means is that kener would not show it active incident pages nor it will update the uptime. Default is 30\*24 hours = 720 hours.
 
-To read how to set up github for kener [click here](/docs/gh-setup)
-
-To see how to create an issue [click here](/docs/incident-management)
+See the [incident management documentation](/docs/v3/incident-management) to create an issue.
 
 ---
 

@@ -3,7 +3,7 @@ title: API Keys | Kener
 description: Learn how to set up and work with API keys in kener.
 ---
 
-API keys can be used to call the [APIs of kener](/docs/kener-apis). You can create multiple API keys and use them to call the APIs.
+API keys can be used to call the [APIs of kener](/docs/v3/kener-apis). You can create multiple API keys and use them to call the APIs.
 
 API keys once generated cannot be viewed again so please keep them safe and secure.
 

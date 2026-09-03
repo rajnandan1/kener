@@ -8,18 +8,9 @@ import type {
   IncidentDetailResponse,
   BadRequestResponse,
 } from "$lib/types/api";
-import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
+import { GetMinuteStartTimestampUTC, parseDbTimestamp } from "$lib/server/tool";
 import { GetSiteURL } from "$lib/server/controllers/siteDataController";
 import serverResolver from "$lib/server/resolver";
-
-function formatDateToISO(date: Date | string): string {
-  if (date instanceof Date) {
-    return date.toISOString();
-  }
-  // Handle string dates (e.g., from SQLite: "2026-01-27 16:07:19")
-  const parsed = new Date(date.replace(" ", "T") + "Z");
-  return parsed.toISOString();
-}
 
 async function buildIncidentResponse(incidentId: number): Promise<IncidentDetailResponse | null> {
   const incident = await db.getIncidentById(incidentId);
@@ -43,8 +34,8 @@ async function buildIncidentResponse(incidentId: number): Promise<IncidentDetail
       monitor_tag: m.monitor_tag,
       impact: m.monitor_impact || "DOWN",
     })),
-    created_at: formatDateToISO(incident.created_at),
-    updated_at: formatDateToISO(incident.updated_at),
+    created_at: parseDbTimestamp(incident.created_at).toISOString(),
+    updated_at: parseDbTimestamp(incident.updated_at).toISOString(),
     url: (await GetSiteURL()) + serverResolver(`/incidents/${incident.id}`),
   };
 }

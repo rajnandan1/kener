@@ -121,7 +121,7 @@ export const GetUserByIDDashboard = async (userID: number): Promise<UserRecordDa
 
 //getUserByEmail
 export const GetUserByEmail = async (email: string): Promise<UserRecordPublic | undefined> => {
-  return await db.getUserByEmail(email);
+  return await db.getUserByEmail(normalizeEmail(email));
 };
 
 export const UpdateUserData = async (data: UserUpdateInput): Promise<number> => {

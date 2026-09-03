@@ -8,18 +8,9 @@ import type {
   BadRequestResponse,
 } from "$lib/types/api";
 import GC from "$lib/global-constants";
-import { GetMinuteStartTimestampUTC, GetMinuteStartNowTimestampUTC } from "$lib/server/tool";
+import { GetMinuteStartTimestampUTC, GetMinuteStartNowTimestampUTC, parseDbTimestamp } from "$lib/server/tool";
 
 const VALID_STATES: string[] = [GC.INVESTIGATING, GC.IDENTIFIED, GC.MONITORING, GC.RESOLVED];
-
-function formatDateToISO(date: Date | string): string {
-  if (date instanceof Date) {
-    return date.toISOString();
-  }
-  // Handle string dates (e.g., from SQLite: "2026-01-27 16:07:19")
-  const parsed = new Date(date.replace(" ", "T") + "Z");
-  return parsed.toISOString();
-}
 
 function formatCommentResponse(comment: {
   id: number;
@@ -36,8 +27,8 @@ function formatCommentResponse(comment: {
     comment: comment.comment,
     timestamp: comment.commented_at,
     state: comment.state,
-    created_at: formatDateToISO(comment.created_at),
-    updated_at: formatDateToISO(comment.updated_at),
+    created_at: parseDbTimestamp(comment.created_at).toISOString(),
+    updated_at: parseDbTimestamp(comment.updated_at).toISOString(),
   };
 }
 
