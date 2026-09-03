@@ -123,4 +123,4 @@ Receive real-time notifications for events:
 }
 ```
 
-See [Authentication](/docs/api-reference/authentication) for detailed auth docs, or [Monitors API](/docs/api-reference/monitors) for monitor endpoints.
+See the [OpenAPI reference](/docs/spec/v4/) for authentication and monitor endpoints.

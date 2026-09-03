@@ -2,7 +2,7 @@ import { json, error } from "@sveltejs/kit";
 import type { APIServerRequest } from "$lib/server/types/api-server";
 import db from "$lib/server/db/db";
 import { GetMinuteStartNowTimestampUTC } from "$lib/server/tool";
-import type { StatusType } from "$lib/global-constants";
+import type { StatusType } from "$lib/types/status";
 import type { TimestampStatusCount } from "$lib/server/types/db";
 import { buildMonitorBarResponse } from "./shared";
 

@@ -232,6 +232,11 @@ export const siteDataKeys: SiteDataKey[] = [
     data_type: "object",
   },
   {
+    key: "analytics.openpanel",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
+  {
     key: "subscriptionsSettings",
     isValid: IsValidJSONString,
     data_type: "object",
@@ -293,6 +298,11 @@ export const siteDataKeys: SiteDataKey[] = [
   },
   {
     key: "globalMaintenanceNotificationSettings",
+    isValid: IsValidJSONString,
+    data_type: "object",
+  },
+  {
+    key: "oidcSettings",
     isValid: IsValidJSONString,
     data_type: "object",
   },

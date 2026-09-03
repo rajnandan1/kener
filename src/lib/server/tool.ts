@@ -1,4 +1,4 @@
-import { AllRecordTypes } from "../clientTools.js";
+import { AllRecordTypes, ValidateIpAddress, IsValidNameServer } from "../clientTools.js";
 import knexOb from "../../../knexfile.js";
 import crypto from "crypto";
 import GC from "../global-constants.js";
@@ -122,28 +122,6 @@ const BeginningOfMinute = (options: { date?: Date; timeZone?: string } = {}): nu
   const dt = new Date(1000 * Math.floor((date.getTime() - second * 1000) / 1000));
   return dt.getTime() / 1000;
 };
-const ValidateIpAddress = function (input: string): string {
-  // Check if input is a valid IPv4 address
-  const ipv4Regex = /^(\d{1,3}\.){3}\d{1,3}$/;
-  if (ipv4Regex.test(input)) {
-    return "IPv4";
-  }
-
-  // Check if input is a valid IPv6 address
-  const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
-  if (ipv6Regex.test(input)) {
-    return "IPv6";
-  }
-
-  // Check if input is a valid domain name
-  const domainRegex = /^[a-zA-Z0-9]+([\-\.]{1}[a-zA-Z0-9]+)*\.[a-zA-Z]{2,}$/;
-  if (domainRegex.test(input)) {
-    return "Domain Name";
-  }
-
-  // If none of the above conditions match, the input is invalid
-  return "Invalid";
-};
 function checkIfDuplicateExists(arr: unknown[]): boolean {
   return new Set(arr).size !== arr.length;
 }
@@ -195,20 +173,15 @@ function IsValidHost(domain: string): boolean {
   return regex.test(domain);
 }
 
-//valid nameserver
-function IsValidNameServer(nameServer: string): boolean {
-  //8.8.8.8 example
-  const regex = /^([0-9]{1,3}\.){3}[0-9]{1,3}$/;
-  return regex.test(nameServer);
-}
-
 //valid dns record type
 function IsValidRecordType(recordType: string): boolean {
   return AllRecordTypes.hasOwnProperty(recordType);
 }
 function ReplaceAllOccurrences(originalString: string, searchString: string, replacement: string): string {
   const regex = new RegExp(`\\${searchString}`, "g");
-  const replacedString = originalString.replace(regex, replacement);
+  // Use a function replacer so replacement metacharacters ($&, $1, $$, ...) in
+  // secret values are inserted literally instead of being expanded.
+  const replacedString = originalString.replace(regex, () => replacement);
   return replacedString;
 }
 
@@ -224,6 +197,36 @@ function GetRequiredSecrets(str: string): Array<{ find: string; replace: string 
     }
   }
   return envSecrets;
+}
+
+/**
+ * Build a request header map from structured key/value pairs, substituting env
+ * secrets into each key and value individually.
+ *
+ * Secrets MUST be applied to the parsed fields, never to a JSON-serialized blob
+ * of the headers: a secret whose value contains a quote, backslash, or newline
+ * would corrupt the JSON, and the whole header set (often the auth header) would
+ * be silently dropped when the blob is parsed back. Headers with an empty key
+ * are skipped; unresolved secrets are left as-is.
+ */
+function ApplySecretsToHeaders(
+  headers: Array<{ key: string; value: string }> | null | undefined,
+  secrets: Array<{ find: string; replace: string | undefined }>,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!Array.isArray(headers)) return out;
+  for (const header of headers) {
+    if (!header || !header.key) continue;
+    let key = header.key;
+    let value = header.value ?? "";
+    for (const secret of secrets) {
+      if (secret.replace === undefined) continue;
+      key = ReplaceAllOccurrences(key, secret.find, secret.replace);
+      value = ReplaceAllOccurrences(value, secret.find, secret.replace);
+    }
+    out[key] = value;
+  }
+  return out;
 }
 
 function ValidateMonitorAlerts(
@@ -535,7 +538,27 @@ function UptimeCalculator(
   };
 }
 
+function GenerateRandomHexString(length: number = 32): string {
+  return crypto
+    .randomBytes(Math.ceil(length / 2))
+    .toString("hex")
+    .slice(0, length);
+}
+
+/**
+ * Parse an audit column (created_at/updated_at) into a Date regardless of driver.
+ * pg/mysql return Date; SQLite returns naive UTC text "YYYY-MM-DD HH:mm:ss",
+ * or epoch ms when a Date was bound on insert.
+ */
+function parseDbTimestamp(value: Date | string | number): Date {
+  if (value instanceof Date) return value;
+  if (typeof value === "number") return new Date(value);
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)) return new Date(value.replace(" ", "T") + "Z");
+  return new Date(value);
+}
+
 export {
+  parseDbTimestamp,
   IsValidURL,
   UptimeCalculator,
   IsValidHTTPMethod,
@@ -550,6 +573,7 @@ export {
   ValidateIpAddress,
   checkIfDuplicateExists,
   GetWordsStartingWithDollar,
+  ApplySecretsToHeaders,
   StatusObj,
   ParseUptime,
   ParsePercentage,
@@ -571,4 +595,5 @@ export {
   IsValidUptimeFormula,
   UnparsePercentage,
   GetNowTimestampUTCInMs,
+  GenerateRandomHexString,
 };

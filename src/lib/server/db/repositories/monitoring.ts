@@ -1,6 +1,7 @@
 import type { Knex as KnexType } from "knex";
 import { BaseRepository } from "./base.js";
 import GC from "../../../global-constants.js";
+import type { MonitoringStatus } from "../../../types/status.js";
 import { GetMinuteStartNowTimestampUTC } from "../../tool.js";
 import type {
   MonitoringData,
@@ -82,12 +83,16 @@ export class MonitoringRepository extends BaseRepository {
   async getMonitoringDataPaginated(
     page: number,
     limit: number,
-    filter?: { monitor_tag?: string; start_time?: number; end_time?: number },
+    filter?: { monitor_tag?: string; status?: MonitoringStatus; start_time?: number; end_time?: number },
   ): Promise<MonitoringData[]> {
     let query = this.knex("monitoring_data").select("*");
 
     if (filter?.monitor_tag) {
       query = query.where("monitor_tag", filter.monitor_tag);
+    }
+
+    if (filter?.status) {
+      query = query.where("status", filter.status);
     }
 
     if (filter?.start_time) {
@@ -106,6 +111,7 @@ export class MonitoringRepository extends BaseRepository {
 
   async getMonitoringDataCount(filter?: {
     monitor_tag?: string;
+    status?: MonitoringStatus;
     start_time?: number;
     end_time?: number;
   }): Promise<{ count: number }> {
@@ -113,6 +119,10 @@ export class MonitoringRepository extends BaseRepository {
 
     if (filter?.monitor_tag) {
       query = query.where("monitor_tag", filter.monitor_tag);
+    }
+
+    if (filter?.status) {
+      query = query.where("status", filter.status);
     }
 
     if (filter?.start_time) {
@@ -141,22 +151,21 @@ export class MonitoringRepository extends BaseRepository {
       return [];
     }
 
-    const latestPerMonitor = this.knex("monitoring_data")
-      .select("monitor_tag")
-      .max("timestamp as max_timestamp")
-      .whereIn("monitor_tag", monitor_tags)
-      .groupBy("monitor_tag")
-      .as("latest_per_monitor");
-
-    return await this.knex("monitoring_data as md")
-      .join(latestPerMonitor, function (this: KnexType.JoinClause) {
-        this.on("md.monitor_tag", "=", "latest_per_monitor.monitor_tag").andOn(
-          "md.timestamp",
-          "=",
-          "latest_per_monitor.max_timestamp",
-        );
-      })
-      .select("md.*");
+    // One newest-row lookup per unique tag — each a single descent of the
+    // (monitor_tag, timestamp) primary key. The previous MAX(timestamp)
+    // GROUP BY self-join planned as a full-table scan on large
+    // monitoring_data tables (Postgres), holding a pool connection for
+    // hundreds of ms per page load and exhausting the web pool under load.
+    // Lookups run in small batches so a page with many monitors cannot queue
+    // more connection acquisitions than the pool can serve at once.
+    const uniqueTags = [...new Set(monitor_tags)];
+    const batchSize = 10;
+    const rows: (MonitoringData | undefined)[] = [];
+    for (let i = 0; i < uniqueTags.length; i += batchSize) {
+      const batch = uniqueTags.slice(i, i + batchSize);
+      rows.push(...(await Promise.all(batch.map((tag) => this.getLatestMonitoringData(tag)))));
+    }
+    return rows.filter((row): row is MonitoringData => row !== undefined);
   }
 
   async getLastHeartbeat(monitor_tag: string): Promise<MonitoringData | undefined> {
@@ -476,7 +485,7 @@ export class MonitoringRepository extends BaseRepository {
     });
   }
 
-  async deleteMonitorDataByTag(tag?: string, start?: number, end?: number): Promise<number> {
+  async deleteMonitorDataByTag(tag?: string, start?: number, end?: number, status?: MonitoringStatus): Promise<number> {
     const query = this.knex("monitoring_data");
     if (tag) {
       query.where("monitor_tag", tag);
@@ -486,6 +495,9 @@ export class MonitoringRepository extends BaseRepository {
     }
     if (end !== undefined) {
       query.where("timestamp", "<=", end);
+    }
+    if (status) {
+      query.where("status", status);
     }
     return await query.del();
   }

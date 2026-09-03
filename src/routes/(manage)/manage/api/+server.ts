@@ -4,7 +4,8 @@ import { format } from "date-fns";
 import sharp from "sharp";
 import { nanoid } from "nanoid";
 import db from "$lib/server/db/db";
-import GC from "$lib/global-constants.js";
+import GC, { isMonitoringStatus } from "$lib/global-constants.js";
+import type { MonitoringStatus } from "$lib/types/status.js";
 import {
   CreateUpdateMonitor,
   UpdateMonitoringData,
@@ -136,6 +137,8 @@ import sendSlack from "$lib/server/notification/slack_notification.js";
 import heicConvert from "heic-convert";
 import serverResolver from "$lib/server/resolver.js";
 import { ACTION_PERMISSION_MAP } from "$lib/allPerms.js";
+import { TestOidcConnection, ClearOidcConfigCache } from "$lib/server/controllers/oidcController.js";
+import { MaskString } from "$lib/server/tool.js";
 
 export async function POST({ request, cookies }) {
   const payload = await request.json();
@@ -219,7 +222,14 @@ export async function POST({ request, cookies }) {
     } else if (action == "deleteMonitor") {
       resp = await DeleteMonitorCompletelyUsingTag(data.tag);
     } else if (action == "deleteMonitorData") {
-      await db.deleteMonitorDataByTag(data.tag || undefined, data.start, data.end);
+      let status: MonitoringStatus | undefined;
+      if (data.status !== undefined && data.status !== null && data.status !== "ALL") {
+        if (!isMonitoringStatus(data.status)) {
+          return json({ error: "Invalid monitoring status" }, { status: 400 });
+        }
+        status = data.status;
+      }
+      await db.deleteMonitorDataByTag(data.tag || undefined, data.start, data.end, status);
       resp = { success: true };
     } else if (action == "cloneMonitor") {
       resp = await CloneMonitor({
@@ -245,9 +255,15 @@ export async function POST({ request, cookies }) {
     } else if (action == "getMonitoringDataPaginated") {
       const page = parseInt(String(data.page)) || 1;
       const limit = parseInt(String(data.limit)) || 50;
-      const filter: { monitor_tag?: string; start_time?: number; end_time?: number } = {};
+      const filter: { monitor_tag?: string; status?: MonitoringStatus; start_time?: number; end_time?: number } = {};
       if (data.monitor_tag && data.monitor_tag !== "ALL") {
         filter.monitor_tag = data.monitor_tag;
+      }
+      if (data.status !== undefined && data.status !== null && data.status !== "ALL") {
+        if (!isMonitoringStatus(data.status)) {
+          return json({ error: "Invalid monitoring status" }, { status: 400 });
+        }
+        filter.status = data.status;
       }
       if (data.start_time) {
         filter.start_time = parseInt(String(data.start_time));
@@ -660,6 +676,46 @@ export async function POST({ request, cookies }) {
     } else if (action == "deleteRole") {
       resp = await DeleteRole(data.roleId, data.options);
     }
+    // ============ OIDC Group-Role Mappings ============
+    else if (action == "getOidcGroupRoleMappings") {
+      resp = await db.getAllOidcGroupRoleMappings();
+    } else if (action == "upsertOidcGroupRoleMapping") {
+      if (!data.oidc_group || typeof data.oidc_group !== "string" || !data.oidc_group.trim()) {
+        throw new Error("OIDC group name is required");
+      }
+      if (!data.role_id || typeof data.role_id !== "string") {
+        throw new Error("Role ID is required");
+      }
+      const role = await db.getRoleById(data.role_id);
+      if (!role) {
+        throw new Error(`Role "${data.role_id}" not found`);
+      }
+      await db.upsertOidcGroupRoleMapping({
+        oidc_group: data.oidc_group.trim(),
+        role_id: data.role_id,
+      });
+      resp = { success: true };
+    } else if (action == "deleteOidcGroupRoleMapping") {
+      const mappingId = Number(data.id);
+      if (!Number.isInteger(mappingId) || mappingId <= 0) {
+        throw new Error("Mapping ID is required");
+      }
+      await db.deleteOidcGroupRoleMapping(mappingId);
+      resp = { success: true };
+    } else if (action == "testOidcConnection") {
+      resp = await TestOidcConnection(data.settings);
+    } else if (action == "getOidcSettingsMasked") {
+      const raw = await GetSiteDataByKey("oidcSettings");
+      if (raw && typeof raw === "object") {
+        const settings = { ...(raw as Record<string, unknown>) };
+        if (settings.client_secret && typeof settings.client_secret === "string") {
+          settings.client_secret = MaskString(settings.client_secret);
+        }
+        resp = settings;
+      } else {
+        resp = raw;
+      }
+    }
   } catch (error: unknown) {
     console.log(error);
     const message = error instanceof Error ? error.message : String(error);
@@ -675,7 +731,29 @@ async function storeSiteData(data: { [x: string]: any }) {
       if (key === "socialPreviewImage" && (element === null || element === undefined)) {
         element = "";
       }
+      // If oidcSettings is saved without client_secret, preserve the existing one.
+      // An explicit empty string clears it.
+      if (key === "oidcSettings" && typeof element === "string") {
+        try {
+          const newSettings = JSON.parse(element);
+          if (newSettings.client_secret === undefined) {
+            const existing = await GetSiteDataByKey("oidcSettings");
+            if (existing && typeof existing === "object") {
+              newSettings.client_secret = (existing as Record<string, unknown>).client_secret;
+              element = JSON.stringify(newSettings);
+            }
+          }
+        } catch {
+          // If parsing fails, proceed with the original value
+        }
+      }
       await InsertKeyValue(key, element);
+
+      // Clear OIDC config cache when settings change so logins
+      // pick up new credentials immediately
+      if (key === "oidcSettings") {
+        ClearOidcConfigCache();
+      }
     }
   }
   return { success: true };
