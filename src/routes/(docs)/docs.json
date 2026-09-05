@@ -229,7 +229,10 @@
                       "title": "User Management",
                       "content": "v4/user-management"
                     },
-
+                    {
+                      "title": "OpenID Connect",
+                      "content": "v4/oidc"
+                    },
                     {
                       "title": "Pages",
                       "content": "v4/pages"
@@ -319,6 +322,10 @@
                   "group": "v4.x",
                   "collapsible": false,
                   "pages": [
+                    {
+                      "title": "v4.1.3",
+                      "content": "v4/changelogs/v4.1.3"
+                    },
                     {
                       "title": "v4.1.2",
                       "content": "v4/changelogs/v4.1.2"

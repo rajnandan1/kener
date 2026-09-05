@@ -15,11 +15,10 @@ export function alertToVariables(
 ): AlertVariableMap {
   const createdAtDate = parseDbTimestamp(alert.created_at);
   const effectiveMonitorTag = monitorTag || config.monitor_tag || "unknown";
-  const alert_name = `Alert ${effectiveMonitorTag} for ${config.alert_for} ${config.alert_value} ${alert.alert_status} at ${createdAtDate.toISOString()}`;
 
   return {
     alert_id: alert.id,
-    alert_name: alert_name,
+    alert_name: effectiveMonitorTag,
     alert_for: config.alert_for,
     alert_value: config.alert_value,
     alert_status: alert.alert_status,

@@ -13,7 +13,7 @@ Make sure you have the following installed:
 - [npm](https://www.npmjs.com/get-npm)
 - [Sqlite3](https://www.sqlite.org/download.html)
 - Make sure `./database` directory is present in the root directory
-- [Set up Environment Variables](/docs/environment-vars). You can use a `.env` file or pass them as arguments. Be sure to add `NODE_ENV=production` for production deployment
+- [Set up Environment Variables](/docs/v3/environment-vars). You can use a `.env` file or pass them as arguments. Be sure to add `NODE_ENV=production` for production deployment
 
 ## NPM {#npm}
 
@@ -52,13 +52,13 @@ ghcr.io/rajnandan1/kener:latest
 
 ### Environment Variables {#docker-env-vars}
 
-[Environment variables](/docs/environment-vars) can be passed with `-e` An example `docker run` command:
+[Environment variables](/docs/v3/environment-vars) can be passed with `-e` An example `docker run` command:
 
 Make sure `./database` and `./uploads` directories are present in the root directory.
 
 ### Examples {#docker-examples}
 
-This example is for sqlite. You can also use postgres. Read more about it [here](/docs/environment-vars#database-url)
+This example is for sqlite. You can also use postgres. See [database configuration](/docs/v3/environment-vars#database-url).
 
 #### sqlite
 
@@ -133,7 +133,7 @@ docker run \
 
 #### Base path
 
-By default kener runs on `/` but you can change it to `/status` or any other path. Read more about it [here](/docs/environment-vars/#kener-base-path).
+By default kener runs on `/` but you can change it to `/status` or any other path. See [base path configuration](/docs/v3/environment-vars/#kener-base-path).
 
 <div class="note info">
 

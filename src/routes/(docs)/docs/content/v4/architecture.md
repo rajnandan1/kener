@@ -200,7 +200,7 @@ This ensures in-flight jobs complete and no data is lost during deployments or r
 
 ## Next Steps {#next-steps}
 
-- [Environment Variables](/docs/setup/environment-variables) — required and optional configuration
-- [Database Setup](/docs/setup/database-setup) — choosing and configuring your database
-- [Redis Setup](/docs/setup/redis-setup) — configuring Redis for BullMQ queues
-- [Monitors](/docs/monitors/overview) — understanding monitor types and configuration
+- [Environment Variables](/docs/v4/setup/environment-variables) — required and optional configuration
+- [Database Setup](/docs/v4/setup/database-setup) — choosing and configuring your database
+- [Redis Setup](/docs/v4/setup/redis-setup) — configuring Redis for BullMQ queues
+- [Monitors](/docs/v4/monitors/overview) — understanding monitor types and configuration

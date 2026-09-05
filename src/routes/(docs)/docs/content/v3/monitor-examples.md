@@ -125,7 +125,7 @@ Assuming `ORDER_ID` is present in env
 
 ## Eval Body
 
-Read more about [eval](https://kener.ing/docs/monitors#eval)
+Read more about [eval](https://kener.ing/docs/v3/monitors-api#eval)
 
 Below example will call https://api.github.com/repos/rajnandan1/kener/issues. If the status code is 200 then it will be UP else DOWN. It will also check if the response time is greater than 2000ms then it will be DEGRADED.
 
@@ -206,7 +206,7 @@ The below monitor will show DEGRADED if 3 or more degraded status in a day and D
 
 ## Monitor with Alerts
 
-Make sure you have set up triggers in `server.yaml`. Read more about [alerts](/docs/alerting).
+Make sure you have set up triggers in `server.yaml`. Read more about [alerts](/docs/v3/triggers).
 
 The below example will trigger an alert if the monitor is DOWN for 10 consecutive times. It will also create an incident in GitHub and send alerts to Webhook, Discord and Slack. It will also trigger an alert if the monitor is DEGRADED for 5 consecutive times. It will not create an incident in GitHub and send alerts to Webhook, Discord and Slack.
 

@@ -44,5 +44,5 @@ The documentation is available in the `docs` folder. You can view it by going to
 
 ## Where to Start
 
-1. Check out the [roadmap items](https://kener.ing/docs/roadmap/)
-2. Add language support by following the [i18n guide](https://kener.ing/docs/i18n/)
+1. Check out the [roadmap items](https://github.com/users/rajnandan1/projects/4)
+2. Add language support by following the [i18n guide](https://kener.ing/docs/v4/internationalization)

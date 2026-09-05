@@ -7,6 +7,8 @@ import type {
   RoleRecord,
   RolePermissionRecord,
   UserRoleRecord,
+  OidcGroupRoleMappingRecord,
+  OidcGroupRoleMappingInsert,
 } from "../../types/db.js";
 import { GetDbType } from "../../tool.js";
 
@@ -27,6 +29,8 @@ export class UsersRepository extends BaseRepository {
     "is_active",
     "is_verified",
     "is_owner",
+    "auth_provider",
+    "oidc_sub",
     "created_at",
     "updated_at",
   ] as const;
@@ -54,9 +58,11 @@ export class UsersRepository extends BaseRepository {
   }
 
   async getUserByEmail(email: string): Promise<UserRecordPublic | undefined> {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) return undefined;
     const row = await this.knex("users")
       .select(...this.userColumns)
-      .where("email", email)
+      .whereRaw("LOWER(email) = ?", [normalizedEmail]) // portable across sqlite, postgres, mysql
       .first();
     if (!row) return undefined;
     return await this.enrichWithRoleIds(row);
@@ -88,6 +94,8 @@ export class UsersRepository extends BaseRepository {
       name: data.name,
       password_hash: data.password_hash,
       is_owner: data.is_owner || "NO",
+      auth_provider: data.auth_provider || "local",
+      oidc_sub: data.oidc_sub || null,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     };
@@ -151,6 +159,13 @@ export class UsersRepository extends BaseRepository {
       name,
       updated_at: this.knex.fn.now(),
     });
+  }
+
+  async updateUserProfile(id: number, data: { name?: string; email?: string }): Promise<number> {
+    const updateData: Record<string, unknown> = { updated_at: this.knex.fn.now() };
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.email !== undefined) updateData.email = data.email;
+    return await this.knex("users").where({ id }).update(updateData);
   }
 
   async updateUserRoles(id: number, roleIds: string[]): Promise<void> {
@@ -309,6 +324,8 @@ export class UsersRepository extends BaseRepository {
         "users.is_active",
         "users.is_verified",
         "users.is_owner",
+        "users.auth_provider",
+        "users.oidc_sub",
         "users.created_at",
         "users.updated_at",
         "users_roles.roles_id",
@@ -353,6 +370,59 @@ export class UsersRepository extends BaseRepository {
       })
       .where("users_roles.users_id", userId)
       .distinct("roles_permissions.permissions_id as id")
+      .select();
+    return rows.map((r: { id: string }) => r.id);
+  }
+
+  // ============ OIDC ============
+
+  async getUserByOidcSub(oidcSub: string): Promise<UserRecordPublic | undefined> {
+    const row = await this.knex("users")
+      .select(...this.userColumns)
+      .where("oidc_sub", oidcSub)
+      .first();
+    if (!row) return undefined;
+    return await this.enrichWithRoleIds(row);
+  }
+
+  // ============ OIDC Group-Role Mappings ============
+
+  async getAllOidcGroupRoleMappings(): Promise<OidcGroupRoleMappingRecord[]> {
+    return await this.knex("oidc_group_role_mappings").orderBy("oidc_group", "asc");
+  }
+
+  async getOidcGroupRoleMappingByGroup(oidcGroup: string): Promise<OidcGroupRoleMappingRecord | undefined> {
+    return await this.knex("oidc_group_role_mappings").where("oidc_group", oidcGroup).first();
+  }
+
+  async upsertOidcGroupRoleMapping(data: OidcGroupRoleMappingInsert): Promise<void> {
+    const existing = await this.getOidcGroupRoleMappingByGroup(data.oidc_group);
+    if (existing) {
+      await this.knex("oidc_group_role_mappings").where("id", existing.id).update({
+        role_id: data.role_id,
+        updated_at: this.knex.fn.now(),
+      });
+    } else {
+      await this.knex("oidc_group_role_mappings").insert({
+        oidc_group: data.oidc_group,
+        role_id: data.role_id,
+        created_at: this.knex.fn.now(),
+        updated_at: this.knex.fn.now(),
+      });
+    }
+  }
+
+  async deleteOidcGroupRoleMapping(id: number): Promise<number> {
+    return await this.knex("oidc_group_role_mappings").where({ id }).delete();
+  }
+
+  async getOidcRoleIdsForGroups(oidcGroups: string[]): Promise<string[]> {
+    if (oidcGroups.length === 0) return [];
+    const rows = await this.knex("oidc_group_role_mappings")
+      .whereIn("oidc_group", oidcGroups)
+      .join("roles", "oidc_group_role_mappings.role_id", "roles.id")
+      .where("roles.status", "ACTIVE")
+      .distinct("roles.id as id")
       .select();
     return rows.map((r: { id: string }) => r.id);
   }
