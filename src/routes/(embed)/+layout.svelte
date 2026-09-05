@@ -20,7 +20,7 @@
   {/if}
   {@html `
 	<style id="dynamic-styles">
-		.body {
+		body {
 			--up: ${data.siteStatusColors.UP};
 			--degraded: ${data.siteStatusColors.DEGRADED};
 			--down: ${data.siteStatusColors.DOWN};
