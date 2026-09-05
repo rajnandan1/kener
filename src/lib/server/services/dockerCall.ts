@@ -39,7 +39,12 @@ class DockerCall {
       const connection = resolveConnection(typeData);
 
       if (checkType === "daemon") {
-        const { latency } = await pingDaemon(connection, timeout);
+        const { data, latency } = await pingDaemon(connection, timeout);
+        // The Engine answers `/_ping` with a bare "OK". Anything else is a proxy,
+        // a login page, or a redirect standing in front of the daemon, not the daemon.
+        if (String(data).trim() !== "OK") {
+          return this.failure("Docker daemon returned an unexpected /_ping response");
+        }
         return { status: GC.UP, latency, type: GC.REALTIME };
       }
 
@@ -51,7 +56,9 @@ class DockerCall {
         // but the operator needs a message that distinguishes it from a dead daemon.
         // The raw daemon field is used on purpose: it may hold a $SECRET reference.
         const message =
-          error.statusCode === 404 ? `Container "${containerName}" not found on ${typeData?.daemon}` : error.message;
+          error.statusCode === 404 && checkType === "container"
+            ? `Container "${containerName}" not found on ${typeData?.daemon}`
+            : error.message;
         return {
           status: GC.DOWN,
           latency: 0,

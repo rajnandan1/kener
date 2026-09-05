@@ -11,7 +11,7 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { DOCKER_DEFAULT_SOCKET_PATH, DOCKER_DEFAULT_TIMEOUT } from "$lib/anywhere.js";
-  import type { DockerMonitorTypeData } from "$lib/server/types/monitor.js";
+  import type { DockerMonitorTypeData } from "$lib/types/docker.js";
 
   let { data = $bindable({} as Record<string, unknown>) }: { data: Record<string, unknown> } = $props();
 
@@ -52,6 +52,12 @@
     if (!value || !(value in CONNECTION_TYPES)) return;
     formData.connectionType = value as DockerMonitorTypeData["connectionType"];
     formData.daemon = value === "socket" ? DOCKER_DEFAULT_SOCKET_PATH : "";
+    if (value !== "tls") {
+      // Otherwise a now-hidden private key would ride along on the next save.
+      formData.tlsCa = undefined;
+      formData.tlsCert = undefined;
+      formData.tlsKey = undefined;
+    }
     containers = [];
   }
 

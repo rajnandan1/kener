@@ -4,7 +4,7 @@ import { performance } from "node:perf_hooks";
 import { DOCKER_CONNECTION_TYPES, DOCKER_DEFAULT_TIMEOUT } from "../anywhere.js";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "./tool.js";
 import type { DockerConnectionType } from "../anywhere.js";
-import type { DockerMonitorTypeData } from "./types/monitor.js";
+import type { DockerMonitorTypeData } from "../types/docker.js";
 
 /**
  * Thin client for the Docker Engine HTTP API.
@@ -89,8 +89,10 @@ export function resolveConnection(typeData: Partial<DockerMonitorTypeData> | und
 
   const raw = { daemon: td.daemon, tlsCa: td.tlsCa, tlsCert: td.tlsCert, tlsKey: td.tlsKey };
   const secrets = GetRequiredSecrets(Object.values(raw).filter(Boolean).join(" "));
-  const substitute = (value: string | undefined): string => {
-    let out = (value ?? "").trim();
+  // Coerce rather than trust the shape: type_data comes from JSON and the browse
+  // action takes the unsaved form, so a stray number or null must not throw.
+  const substitute = (value: unknown): string => {
+    let out = value == null ? "" : String(value).trim();
     for (const secret of secrets) {
       if (secret.replace !== undefined) out = ReplaceAllOccurrences(out, secret.find, secret.replace);
     }

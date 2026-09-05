@@ -19,7 +19,7 @@
     IsValidURL,
     IsValidPort
   } from "$lib/clientTools";
-  import { GAMEDIG_SOCKET_TIMEOUT, DOCKER_CONNECTION_TYPES } from "$lib/anywhere";
+  import { GAMEDIG_SOCKET_TIMEOUT, DOCKER_CONNECTION_TYPES, DOCKER_CHECK_TYPES } from "$lib/anywhere";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   // Type-specific components
@@ -257,12 +257,17 @@
 
       case "DOCKER": {
         const data = typeData as any;
+        const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
         if (!DOCKER_CONNECTION_TYPES.includes(data.connectionType)) return false;
-        if (!data.daemon?.trim()) return false;
+        if (!DOCKER_CHECK_TYPES.includes(data.checkType)) return false;
+        if (!text(data.daemon)) return false;
+        for (const key of ["tlsCa", "tlsCert", "tlsKey"]) {
+          if (data[key] != null && typeof data[key] !== "string") return false;
+        }
         // Client certificate and key are a matched pair: both or neither.
-        if (!!data.tlsCert?.trim() !== !!data.tlsKey?.trim()) return false;
-        if (data.checkType !== "daemon" && !data.containerName?.trim()) return false;
-        if (!data.timeout || data.timeout < 1) return false;
+        if (!!text(data.tlsCert) !== !!text(data.tlsKey)) return false;
+        if (data.checkType === "container" && !text(data.containerName)) return false;
+        if (typeof data.timeout !== "number" || !Number.isFinite(data.timeout) || data.timeout < 1) return false;
         return true;
       }
 

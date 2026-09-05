@@ -80,6 +80,13 @@ describe("resolveConnection", () => {
     expect(resolved.tlsKey).toBeUndefined();
   });
 
+  it("coerces non-string fields instead of throwing", () => {
+    expect(resolveConnection({ connectionType: "socket", daemon: 123 as never, tlsKey: null as never })).toMatchObject({
+      daemon: "123",
+      tlsKey: undefined,
+    });
+  });
+
   it("rejects an unknown connection type", () => {
     expect(() => resolveConnection({ connectionType: "ssh" as never, daemon: "h" })).toThrow(DockerError);
     expect(() => resolveConnection(undefined)).toThrow("must be one of: socket, tcp, tls");

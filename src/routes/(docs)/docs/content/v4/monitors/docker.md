@@ -10,19 +10,20 @@ Docker monitors read a container's state from the [Docker Engine API](https://do
 1. Create a monitor with the type **Docker Container**.
 2. Pick a connection type and enter the socket path or daemon address.
 3. Enter the container name, or click **Browse** to pick one from the daemon.
-4. Click **Test Monitor**.
+4. Click **Save**. Test Monitor runs against the saved settings.
+5. Click **Test Monitor**.
 
-Kener talks to the daemon from the machine it runs on. If Kener itself runs in a container, mount the socket read-only:
+Kener talks to the daemon from the machine it runs on. If Kener itself runs in a container, mount the socket:
 
 ```yaml
 services:
     kener:
         volumes:
-            - /var/run/docker.sock:/var/run/docker.sock:ro
+            - /var/run/docker.sock:/var/run/docker.sock
 ```
 
 > [!CAUTION]
-> Anyone who can reach the Docker socket is root on the host. Prefer a read-only socket proxy such as `tecnativa/docker-socket-proxy` with only `CONTAINERS=1` set, and never expose `tcp` without TLS outside a trusted network.
+> Anyone who can reach the Docker socket is root on the host, and a `:ro` mount does not limit the API. Put a deny-by-default socket proxy such as `tecnativa/docker-socket-proxy` in front of it: it allows `GET /_ping` and `/version` out of the box, and `CONTAINERS=1` adds the read-only container endpoints Kener uses. Never expose `tcp` without TLS outside a trusted network.
 
 ## Connection types {#connection-types}
 
@@ -38,7 +39,7 @@ The address may carry a scheme (`tcp://host:port`). Without a port, Kener uses `
 
 The three PEM fields accept `$SECRET` references, the same substitution API monitor headers use. Set the PEM in an environment variable and reference it:
 
-```
+```bash
 DOCKER_TLS_KEY="-----BEGIN PRIVATE KEY-----
 ..."
 ```
@@ -96,7 +97,7 @@ Latency is the round-trip time of the Docker API call, so the latency chart show
 
 ## Verify {#verify}
 
-Open the monitor and click **Test Monitor**. A healthy container returns `UP` with the API round-trip time. A stopped one returns `DOWN` with the container state and exit code.
+Save the monitor, then click **Test Monitor**. A healthy container returns `UP` with the API round-trip time. A stopped one returns `DOWN` with the container state and exit code.
 
 ## Troubleshooting {#troubleshooting}
 

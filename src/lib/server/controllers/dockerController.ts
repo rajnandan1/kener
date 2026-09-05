@@ -1,5 +1,5 @@
 import { containerDisplayName, listContainers, resolveConnection } from "../docker.js";
-import type { DockerMonitorTypeData } from "../types/monitor.js";
+import type { DockerMonitorTypeData } from "../../types/docker.js";
 
 export interface DockerContainerOption {
   id: string;
@@ -20,7 +20,7 @@ export const ListDockerContainers = async (
   const timeout = typeData.timeout && typeData.timeout > 0 ? typeData.timeout : undefined;
   const { data } = await listContainers(resolveConnection(typeData), timeout);
   return data.map((container) => ({
-    id: container.Id.slice(0, 12),
+    id: container.Id,
     name: containerDisplayName(container.Names),
     image: container.Image,
     state: container.State,

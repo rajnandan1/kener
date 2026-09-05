@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DockerContainerState } from "../docker";
-import type { DockerMonitor, DockerMonitorTypeData } from "../types/monitor";
+import type { DockerMonitor } from "../types/monitor";
+import type { DockerMonitorTypeData } from "../../types/docker";
 
 const { inspectContainer, pingDaemon } = vi.hoisted(() => ({
   inspectContainer: vi.fn(),
@@ -127,6 +128,24 @@ describe("daemon checks", () => {
   it("does not require a container name", async () => {
     pingDaemon.mockResolvedValue({ data: "OK", latency: 1 });
     await expect(run({ checkType: "daemon", containerName: "" })).resolves.toMatchObject({ status: "UP" });
+  });
+
+  it("is DOWN when /_ping answers with something other than OK", async () => {
+    pingDaemon.mockResolvedValue({ data: "<html>login</html>", latency: 2 });
+    await expect(run({ checkType: "daemon" })).resolves.toMatchObject({
+      status: "DOWN",
+      type: "ERROR",
+      error_message: "Docker daemon returned an unexpected /_ping response",
+    });
+  });
+
+  it("keeps the daemon's own message on a 404 instead of a missing-container message", async () => {
+    pingDaemon.mockRejectedValue(new DockerError("page not found", { statusCode: 404 }));
+    await expect(run({ checkType: "daemon" })).resolves.toMatchObject({
+      status: "DOWN",
+      type: "ERROR",
+      error_message: "page not found",
+    });
   });
 });
 
