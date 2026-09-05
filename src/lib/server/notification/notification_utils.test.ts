@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import Mustache from "mustache";
 import { alertToVariables } from "./notification_utils.js";
 import emailTemplate from "../templates/email_alert_template.js";
+import discordTemplate from "../templates/discord_alert_template.js";
+import slackTemplate from "../templates/slack_alert_template.js";
 import type { MonitorAlertConfigRecord, MonitorAlertV2Record } from "../types/db";
 import type { SiteDataForNotification } from "./types.js";
 
@@ -40,6 +42,11 @@ const site: SiteDataForNotification = {
   colors_maintenance: "",
 };
 
+// What the old alert_name used to be; the default templates must still render it.
+const HEADLINE = "Alert my-api for STATUS DOWN TRIGGERED at 2026-09-02T13:26:00.514Z";
+// JSON templates are rendered without HTML escaping, same as the senders do.
+const raw = { escape: (text: string) => text };
+
 describe("alertToVariables", () => {
   it("alert_name is only the monitor tag (#830)", () => {
     expect(alertToVariables(config, alert, site, "my-api").alert_name).toBe("my-api");
@@ -50,10 +57,16 @@ describe("alertToVariables", () => {
     expect(alertToVariables({ ...config, monitor_tag: null }, alert, site).alert_name).toBe("unknown");
   });
 
-  it("default email subject still renders the full headline", () => {
-    const vars = alertToVariables(config, alert, site, "my-api");
-    expect(Mustache.render(emailTemplate.email_subject, { ...vars, ...site })).toBe(
-      "Alert my-api for STATUS DOWN TRIGGERED at 2026-09-02T13:26:00.514Z",
-    );
+  it("every default template still renders the full headline", () => {
+    const vars = { ...alertToVariables(config, alert, site, "my-api"), ...site };
+
+    expect(Mustache.render(emailTemplate.email_subject, vars)).toBe(HEADLINE);
+    expect(Mustache.render(emailTemplate.email_body, vars)).toContain(`<h1 class="alert-title">${HEADLINE}</h1>`);
+
+    const discord = JSON.parse(Mustache.render(discordTemplate.discord_body, vars, {}, raw));
+    expect(discord.embeds[0].title).toBe(HEADLINE);
+
+    // The Slack template carries raw newlines inside strings, so compare the rendered text, not parsed JSON.
+    expect(Mustache.render(slackTemplate.slack_body, vars, {}, raw)).toContain(`"text": "*${HEADLINE}*"`);
   });
 });
