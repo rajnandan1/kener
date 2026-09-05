@@ -19,7 +19,7 @@
     IsValidURL,
     IsValidPort
   } from "$lib/clientTools";
-  import { GAMEDIG_SOCKET_TIMEOUT } from "$lib/anywhere";
+  import { GAMEDIG_SOCKET_TIMEOUT, DOCKER_CONNECTION_TYPES, DOCKER_CHECK_TYPES } from "$lib/anywhere";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   // Type-specific components
@@ -35,7 +35,8 @@
     MonitorGamedig,
     MonitorNone,
     MonitorGrpc,
-    MonitorPrometheus
+    MonitorPrometheus,
+    MonitorDocker
   } from "../types/index.js";
 
   interface Props {
@@ -118,7 +119,8 @@
     HEARTBEAT: "Heartbeat",
     GAMEDIG: "Game Server",
     GRPC: "gRPC Health",
-    PROMETHEUS: "Prometheus"
+    PROMETHEUS: "Prometheus",
+    DOCKER: "Docker Container"
   };
 
   // Validation for each monitor type
@@ -253,6 +255,22 @@
         return true;
       }
 
+      case "DOCKER": {
+        const data = typeData as any;
+        const text = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+        if (!DOCKER_CONNECTION_TYPES.includes(data.connectionType)) return false;
+        if (!DOCKER_CHECK_TYPES.includes(data.checkType)) return false;
+        if (!text(data.daemon)) return false;
+        for (const key of ["tlsCa", "tlsCert", "tlsKey"]) {
+          if (data[key] != null && typeof data[key] !== "string") return false;
+        }
+        // Client certificate and key are a matched pair: both or neither.
+        if (!!text(data.tlsCert) !== !!text(data.tlsKey)) return false;
+        if (data.checkType === "container" && !text(data.containerName)) return false;
+        if (typeof data.timeout !== "number" || !Number.isFinite(data.timeout) || data.timeout < 1) return false;
+        return true;
+      }
+
       default:
         return true;
     }
@@ -364,6 +382,8 @@
         <MonitorGrpc bind:data={typeData} />
       {:else if monitor.monitor_type === "PROMETHEUS"}
         <MonitorPrometheus bind:data={typeData} />
+      {:else if monitor.monitor_type === "DOCKER"}
+        <MonitorDocker bind:data={typeData} />
       {:else if monitor.monitor_type === "NONE"}
         <MonitorNone bind:data={typeData} />
       {/if}

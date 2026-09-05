@@ -2,6 +2,7 @@
 
 import type { PingHost, PingMonitorTypeData } from "$lib/types/ping.js";
 import type { TcpHost, TcpMonitorTypeData } from "$lib/types/tcp.js";
+import type { DockerMonitorTypeData } from "$lib/types/docker.js";
 
 export interface MonitoringResult {
   status: string;
@@ -129,7 +130,8 @@ export type MonitorTypeData =
   | GroupMonitorTypeData
   | GamedigMonitorTypeData
   | GrpcMonitorTypeData
-  | PrometheusMonitorTypeData;
+  | PrometheusMonitorTypeData
+  | DockerMonitorTypeData;
 
 export interface Monitor<T = MonitorTypeData> {
   tag: string;
@@ -149,6 +151,7 @@ export type GroupMonitor = Monitor<GroupMonitorTypeData>;
 export type GamedigMonitor = Monitor<GamedigMonitorTypeData>;
 export type GrpcMonitor = Monitor<GrpcMonitorTypeData>;
 export type PrometheusMonitor = Monitor<PrometheusMonitorTypeData>;
+export type DockerMonitor = Monitor<DockerMonitorTypeData>;
 
 export interface EvalResponse {
   status?: string;

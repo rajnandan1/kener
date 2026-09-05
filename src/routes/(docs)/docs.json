@@ -126,6 +126,10 @@
                           "content": "v4/monitors/prometheus"
                         },
                         {
+                          "title": "Docker Monitors",
+                          "content": "v4/monitors/docker"
+                        },
+                        {
                           "title": "Group Monitors",
                           "content": "v4/monitors/group"
                         },
