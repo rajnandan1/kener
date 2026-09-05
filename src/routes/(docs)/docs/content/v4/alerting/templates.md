@@ -27,6 +27,8 @@ Templates define the body and subject sent by triggers. Kener uses Mustache rend
 | `{{is_resolved}}`             |
 | `{{is_triggered}}`            |
 
+`{{alert_name}}` is the tag of the monitor the alert fired for. Build headlines from the separate variables, for example `{{alert_name}} {{alert_for}} {{alert_value}} {{alert_status}}`.
+
 ## Canonical site variables {#canonical-site-variables}
 
 | Variable                 |
