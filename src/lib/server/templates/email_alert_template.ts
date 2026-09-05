@@ -87,7 +87,7 @@ const emailTemplate = `<!DOCTYPE html>
     </div>
     <div class="header">
       <div class="alert-badge">{{alert_status}}</div>
-      <h1 class="alert-title">{{alert_name}}</h1>
+      <h1 class="alert-title">Alert {{alert_name}} for {{alert_for}} {{alert_value}} {{alert_status}} at {{alert_timestamp}}</h1>
     </div>
     <table width="100%" border="0" cellspacing="0" cellpadding="8">
       <tr style="border-bottom: 1px solid #eee;">
@@ -152,6 +152,6 @@ const emailTemplate = `<!DOCTYPE html>
 </html>`;
 
 export default {
-  email_subject: "{{alert_name}}",
+  email_subject: "Alert {{alert_name}} for {{alert_for}} {{alert_value}} {{alert_status}} at {{alert_timestamp}}",
   email_body: emailTemplate,
 };

@@ -13,7 +13,7 @@ const template = `{
       "type": "section",
       "text": {
         "type": "mrkdwn",
-        "text": "*{{alert_name}}*"
+        "text": "*Alert {{alert_name}} for {{alert_for}} {{alert_value}} {{alert_status}} at {{alert_timestamp}}*"
       }
     },
     {
