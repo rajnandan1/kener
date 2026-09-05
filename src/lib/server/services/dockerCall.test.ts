@@ -1,16 +1,14 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DockerContainerState } from "../docker";
 import type { DockerMonitor, DockerMonitorTypeData } from "../types/monitor";
 
-const { getDockerHostById, inspectContainer, pingDaemon } = vi.hoisted(() => ({
-  getDockerHostById: vi.fn(),
+const { inspectContainer, pingDaemon } = vi.hoisted(() => ({
   inspectContainer: vi.fn(),
   pingDaemon: vi.fn(),
 }));
 
-vi.mock("../db/db.js", () => ({ default: { getDockerHostById } }));
 vi.mock("../docker.js", async (importOriginal) => {
-  // Keep the real DockerError so `instanceof` narrowing in dockerCall is exercised.
+  // Keep the real DockerError and resolveConnection so narrowing and $SECRET handling are exercised.
   const actual = await importOriginal<typeof import("../docker")>();
   return { ...actual, inspectContainer, pingDaemon };
 });
@@ -18,7 +16,7 @@ vi.mock("../docker.js", async (importOriginal) => {
 const { DockerError } = await import("../docker");
 const DockerCall = (await import("./dockerCall")).default;
 
-const HOST = { id: 1, name: "prod", connection_type: "socket", daemon: "/var/run/docker.sock" };
+const CONNECTION = { connectionType: "socket", daemon: "/var/run/docker.sock" } as const;
 
 function state(overrides: Partial<DockerContainerState>): DockerContainerState {
   return {
@@ -37,7 +35,7 @@ function state(overrides: Partial<DockerContainerState>): DockerContainerState {
 function run(typeData: Partial<DockerMonitorTypeData>) {
   const monitor = {
     tag: "web",
-    type_data: { dockerHostId: 1, checkType: "container", containerName: "app", ...typeData },
+    type_data: { ...CONNECTION, checkType: "container", containerName: "app", ...typeData },
   } as unknown as DockerMonitor;
   return new DockerCall(monitor).execute();
 }
@@ -48,7 +46,6 @@ function respondWith(containerState: DockerContainerState, latency = 7) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getDockerHostById.mockResolvedValue(HOST);
 });
 
 describe("container status mapping", () => {
@@ -70,7 +67,7 @@ describe("container status mapping", () => {
     });
   });
 
-  it("defaults an unhealthy container to DOWN and surfaces the last probe output", async () => {
+  it("is DOWN when unhealthy and surfaces the last probe output", async () => {
     respondWith(
       state({
         Health: { Status: "unhealthy", FailingStreak: 3, Log: [{ ExitCode: 1, Output: "connection refused\n" }] },
@@ -79,11 +76,6 @@ describe("container status mapping", () => {
     const result = await run({});
     expect(result.status).toBe("DOWN");
     expect(result.error_message).toBe("Container healthcheck is unhealthy after 3 failures: connection refused");
-  });
-
-  it("honours unhealthyStatus when set to DEGRADED", async () => {
-    respondWith(state({ Health: { Status: "unhealthy", FailingStreak: 1 } }));
-    await expect(run({ unhealthyStatus: "DEGRADED" })).resolves.toMatchObject({ status: "DEGRADED" });
   });
 
   it("truncates a very long healthcheck output", async () => {
@@ -95,16 +87,14 @@ describe("container status mapping", () => {
     expect(result.error_message!.length).toBeLessThan(300);
   });
 
-  it("defaults a restarting container to DEGRADED and is overridable", async () => {
-    respondWith(state({ Status: "restarting", Running: false, Restarting: true }));
+  it("is DEGRADED while restarting", async () => {
+    respondWith(state({ Status: "restarting", Running: true, Restarting: true }));
     await expect(run({})).resolves.toMatchObject({ status: "DEGRADED", error_message: "Container is restarting" });
-    await expect(run({ restartingStatus: "DOWN" })).resolves.toMatchObject({ status: "DOWN" });
   });
 
-  it("defaults a paused container to DOWN and is overridable", async () => {
+  it("is DOWN when paused", async () => {
     respondWith(state({ Status: "paused", Paused: true }));
     await expect(run({})).resolves.toMatchObject({ status: "DOWN", error_message: "Container is paused" });
-    await expect(run({ pausedStatus: "DEGRADED" })).resolves.toMatchObject({ status: "DEGRADED" });
   });
 
   it("reports the exit code for a stopped container", async () => {
@@ -140,13 +130,47 @@ describe("daemon checks", () => {
   });
 });
 
+describe("connection", () => {
+  afterEach(() => {
+    delete process.env.KENER_TEST_DOCKER_SOCK;
+  });
+
+  it("resolves $SECRET references before calling the daemon", async () => {
+    process.env.KENER_TEST_DOCKER_SOCK = "/tmp/docker.sock";
+    respondWith(state({}));
+    await run({ daemon: "$KENER_TEST_DOCKER_SOCK" });
+    expect(inspectContainer).toHaveBeenCalledWith(
+      expect.objectContaining({ connectionType: "socket", daemon: "/tmp/docker.sock" }),
+      "app",
+      10000,
+    );
+  });
+
+  it("is DOWN with a reason when the connection type is unknown", async () => {
+    await expect(run({ connectionType: "ssh" as never })).resolves.toMatchObject({
+      status: "DOWN",
+      type: "ERROR",
+      error_message: "Docker connection type must be one of: socket, tcp, tls",
+    });
+    expect(inspectContainer).not.toHaveBeenCalled();
+  });
+
+  it("is DOWN with a reason when no container is configured", async () => {
+    await expect(run({ containerName: "   " })).resolves.toMatchObject({
+      status: "DOWN",
+      error_message: "No container configured for monitor web",
+    });
+    expect(inspectContainer).not.toHaveBeenCalled();
+  });
+});
+
 describe("error handling", () => {
   it("distinguishes a missing container from an unreachable daemon", async () => {
     inspectContainer.mockRejectedValue(new DockerError("No such container: ghost", { statusCode: 404 }));
     await expect(run({ containerName: "ghost" })).resolves.toMatchObject({
       status: "DOWN",
       type: "ERROR",
-      error_message: 'Container "ghost" not found on prod',
+      error_message: 'Container "ghost" not found on /var/run/docker.sock',
     });
   });
 
@@ -164,29 +188,5 @@ describe("error handling", () => {
       type: "ERROR",
       error_message: "Connection refused by the Docker daemon",
     });
-  });
-
-  it("is DOWN with a reason when no Docker host is selected", async () => {
-    await expect(run({ dockerHostId: undefined })).resolves.toMatchObject({
-      status: "DOWN",
-      error_message: "No Docker host selected for monitor web",
-    });
-    expect(getDockerHostById).not.toHaveBeenCalled();
-  });
-
-  it("is DOWN with a reason when the referenced host was deleted", async () => {
-    getDockerHostById.mockResolvedValue(undefined);
-    await expect(run({})).resolves.toMatchObject({
-      status: "DOWN",
-      error_message: "Docker host 1 no longer exists",
-    });
-  });
-
-  it("is DOWN with a reason when no container is configured", async () => {
-    await expect(run({ containerName: "   " })).resolves.toMatchObject({
-      status: "DOWN",
-      error_message: "No container configured for monitor web",
-    });
-    expect(inspectContainer).not.toHaveBeenCalled();
   });
 });

@@ -1,46 +1,41 @@
 <script lang="ts">
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
+  import { Textarea } from "$lib/components/ui/textarea/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
-  import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
-  import { DOCKER_DEFAULT_TIMEOUT } from "$lib/anywhere.js";
+  import { DOCKER_DEFAULT_SOCKET_PATH, DOCKER_DEFAULT_TIMEOUT } from "$lib/anywhere.js";
   import type { DockerMonitorTypeData } from "$lib/server/types/monitor.js";
 
   let { data = $bindable({} as Record<string, unknown>) }: { data: Record<string, unknown> } = $props();
 
   const formData = data as unknown as DockerMonitorTypeData;
 
+  const CONNECTION_TYPES = {
+    socket: { label: "Unix socket", addressLabel: "Socket path", placeholder: DOCKER_DEFAULT_SOCKET_PATH },
+    tcp: { label: "TCP (no encryption)", addressLabel: "Daemon address", placeholder: "10.0.0.5:2375" },
+    tls: { label: "TCP with TLS", addressLabel: "Daemon address", placeholder: "docker.example.com:2376" }
+  } as const;
+
   const CHECK_TYPE_LABELS: Record<string, string> = {
     container: "Container",
     daemon: "Docker daemon (ping only)"
   };
 
-  const STATUS_LABELS: Record<string, string> = {
-    DOWN: "Down",
-    DEGRADED: "Degraded"
-  };
-
   // Initialize defaults if not set
+  if (!(formData.connectionType in CONNECTION_TYPES)) formData.connectionType = "socket";
+  if (typeof formData.daemon !== "string") {
+    formData.daemon = formData.connectionType === "socket" ? DOCKER_DEFAULT_SOCKET_PATH : "";
+  }
   if (formData.checkType !== "daemon") formData.checkType = "container";
   if (typeof formData.containerName !== "string") formData.containerName = "";
-  if (!formData.unhealthyStatus) formData.unhealthyStatus = "DOWN";
-  if (!formData.restartingStatus) formData.restartingStatus = "DEGRADED";
-  if (!formData.pausedStatus) formData.pausedStatus = "DOWN";
   if (!formData.timeout) formData.timeout = DOCKER_DEFAULT_TIMEOUT;
-
-  interface DockerHostOption {
-    id: number;
-    name: string;
-    connection_type: string;
-    daemon: string;
-  }
 
   interface DockerContainerOption {
     id: string;
@@ -50,41 +45,29 @@
     status: string;
   }
 
-  let hosts = $state<DockerHostOption[]>([]);
-  let loadingHosts = $state(true);
   let containers = $state<DockerContainerOption[]>([]);
   let loadingContainers = $state(false);
 
-  const selectedHost = $derived(hosts.find((host) => host.id === Number(formData.dockerHostId)));
-
-  async function callApi(action: string, payload: Record<string, unknown> = {}) {
-    const response = await fetch(clientResolver(resolve, "/manage/api"), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, data: payload })
-    });
-    const result = await response.json();
-    if (result?.error) throw new Error(result.error);
-    return result;
+  function selectConnectionType(value: string | undefined) {
+    if (!value || !(value in CONNECTION_TYPES)) return;
+    formData.connectionType = value as DockerMonitorTypeData["connectionType"];
+    formData.daemon = value === "socket" ? DOCKER_DEFAULT_SOCKET_PATH : "";
+    containers = [];
   }
 
-  async function loadHosts() {
-    loadingHosts = true;
-    try {
-      hosts = await callApi("getDockerHosts");
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to load Docker hosts");
-    } finally {
-      loadingHosts = false;
-    }
-  }
-
+  // Sends the unsaved connection fields, so browsing works before the monitor is saved.
   async function loadContainers() {
-    if (!formData.dockerHostId) return;
     loadingContainers = true;
     try {
-      containers = await callApi("listDockerContainers", { id: formData.dockerHostId });
-      if (containers.length === 0) toast.info("No containers found on this host");
+      const response = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "listDockerContainers", data: formData })
+      });
+      const result = await response.json();
+      if (result?.error) throw new Error(result.error);
+      containers = result;
+      if (containers.length === 0) toast.info("No containers found on this daemon");
     } catch (e) {
       containers = [];
       toast.error(e instanceof Error ? e.message : "Failed to list containers");
@@ -92,49 +75,78 @@
       loadingContainers = false;
     }
   }
-
-  function selectHost(value: string | undefined) {
-    if (!value) return;
-    formData.dockerHostId = Number(value);
-    containers = [];
-  }
-
-  onMount(loadHosts);
 </script>
 
 <div class="space-y-4">
-  <div class="flex flex-col gap-2">
-    <Label for="docker-host">Docker Host <span class="text-destructive">*</span></Label>
-    {#if loadingHosts}
-      <div class="text-muted-foreground flex items-center gap-2 text-sm">
-        <Spinner class="size-4" />
-        Loading Docker hosts...
-      </div>
-    {:else if hosts.length === 0}
-      <div class="text-muted-foreground flex items-center gap-1 text-sm">
-        No Docker hosts configured yet.
-        <Button variant="link" class="h-auto p-0" href={clientResolver(resolve, "/manage/app/docker-hosts")}>
-          Add one
-        </Button>
-        to connect Kener to a Docker Engine.
-      </div>
-    {:else}
-      <Select.Root
-        type="single"
-        value={formData.dockerHostId ? String(formData.dockerHostId) : ""}
-        onValueChange={selectHost}
-      >
-        <Select.Trigger id="docker-host" class="w-full">
-          {selectedHost ? `${selectedHost.name} (${selectedHost.daemon})` : "Select a Docker host"}
+  <div class="grid grid-cols-3 gap-4">
+    <div class="flex flex-col gap-2">
+      <Label for="docker-connection-type">Connection</Label>
+      <Select.Root type="single" value={formData.connectionType} onValueChange={selectConnectionType}>
+        <Select.Trigger id="docker-connection-type" class="w-full">
+          {CONNECTION_TYPES[formData.connectionType].label}
         </Select.Trigger>
         <Select.Content>
-          {#each hosts as host (host.id)}
-            <Select.Item value={String(host.id)}>{host.name} ({host.daemon})</Select.Item>
+          {#each Object.entries(CONNECTION_TYPES) as [value, option] (value)}
+            <Select.Item {value}>{option.label}</Select.Item>
           {/each}
         </Select.Content>
       </Select.Root>
-    {/if}
+    </div>
+    <div class="col-span-2 flex flex-col gap-2">
+      <Label for="docker-daemon">
+        {CONNECTION_TYPES[formData.connectionType].addressLabel} <span class="text-destructive">*</span>
+      </Label>
+      <Input
+        id="docker-daemon"
+        bind:value={formData.daemon}
+        placeholder={CONNECTION_TYPES[formData.connectionType].placeholder}
+      />
+    </div>
   </div>
+  <p class="text-muted-foreground text-xs">
+    Whoever can reach the Docker socket is root on that host. Prefer a read-only socket proxy over mounting the socket
+    directly, and never expose <code>tcp</code> without TLS outside a trusted network.
+  </p>
+
+  {#if formData.connectionType === "tls"}
+    <div class="flex flex-col gap-2">
+      <Label for="docker-tls-ca">CA certificate</Label>
+      <Textarea
+        id="docker-tls-ca"
+        bind:value={formData.tlsCa}
+        rows={3}
+        class="font-mono text-xs"
+        placeholder="-----BEGIN CERTIFICATE----- or $DOCKER_TLS_CA"
+      />
+    </div>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="flex flex-col gap-2">
+        <Label for="docker-tls-cert">Client certificate</Label>
+        <Textarea
+          id="docker-tls-cert"
+          bind:value={formData.tlsCert}
+          rows={4}
+          class="font-mono text-xs"
+          placeholder="-----BEGIN CERTIFICATE----- or $DOCKER_TLS_CERT"
+        />
+      </div>
+      <div class="flex flex-col gap-2">
+        <Label for="docker-tls-key">Client key</Label>
+        <Textarea
+          id="docker-tls-key"
+          bind:value={formData.tlsKey}
+          rows={4}
+          class="font-mono text-xs"
+          placeholder="-----BEGIN PRIVATE KEY----- or $DOCKER_TLS_KEY"
+        />
+      </div>
+    </div>
+    <p class="text-muted-foreground text-xs">
+      Paste PEM, or reference an environment variable such as <code>$DOCKER_TLS_KEY</code> to keep the key out of the database.
+      Leave all three empty for a daemon behind a TLS proxy that does not ask for a client certificate. The certificate and
+      key go together.
+    </p>
+  {/if}
 
   <div class="flex flex-col gap-2">
     <Label for="docker-check-type">What to check</Label>
@@ -164,7 +176,7 @@
       <Label for="docker-container">Container Name or ID <span class="text-destructive">*</span></Label>
       <div class="flex gap-2">
         <Input id="docker-container" bind:value={formData.containerName} placeholder="my-app" />
-        <Button variant="secondary" disabled={!formData.dockerHostId || loadingContainers} onclick={loadContainers}>
+        <Button variant="secondary" disabled={!formData.daemon?.trim() || loadingContainers} onclick={loadContainers}>
           {#if loadingContainers}
             <Spinner class="size-4" />
           {:else}
@@ -185,73 +197,11 @@
         </div>
       {/if}
       <p class="text-muted-foreground text-xs">
-        The container is resolved on every check, so it survives recreation as long as the name stays the same.
+        The container is resolved on every check, so it survives recreation as long as the name stays the same. A
+        running container is UP unless its <code>HEALTHCHECK</code> says otherwise; restarting or starting is DEGRADED; paused,
+        stopped, unhealthy, or missing is DOWN.
       </p>
     </div>
-
-    <div class="grid grid-cols-3 gap-4">
-      <div class="flex flex-col gap-2">
-        <Label for="docker-unhealthy">When unhealthy</Label>
-        <Select.Root
-          type="single"
-          value={formData.unhealthyStatus}
-          onValueChange={(v) => {
-            if (v) formData.unhealthyStatus = v as DockerMonitorTypeData["unhealthyStatus"];
-          }}
-        >
-          <Select.Trigger id="docker-unhealthy" class="w-full">
-            {STATUS_LABELS[formData.unhealthyStatus ?? "DOWN"]}
-          </Select.Trigger>
-          <Select.Content>
-            {#each Object.entries(STATUS_LABELS) as [value, label] (value)}
-              <Select.Item {value}>{label}</Select.Item>
-            {/each}
-          </Select.Content>
-        </Select.Root>
-      </div>
-      <div class="flex flex-col gap-2">
-        <Label for="docker-restarting">When restarting</Label>
-        <Select.Root
-          type="single"
-          value={formData.restartingStatus}
-          onValueChange={(v) => {
-            if (v) formData.restartingStatus = v as DockerMonitorTypeData["restartingStatus"];
-          }}
-        >
-          <Select.Trigger id="docker-restarting" class="w-full">
-            {STATUS_LABELS[formData.restartingStatus ?? "DEGRADED"]}
-          </Select.Trigger>
-          <Select.Content>
-            {#each Object.entries(STATUS_LABELS) as [value, label] (value)}
-              <Select.Item {value}>{label}</Select.Item>
-            {/each}
-          </Select.Content>
-        </Select.Root>
-      </div>
-      <div class="flex flex-col gap-2">
-        <Label for="docker-paused">When paused</Label>
-        <Select.Root
-          type="single"
-          value={formData.pausedStatus}
-          onValueChange={(v) => {
-            if (v) formData.pausedStatus = v as DockerMonitorTypeData["pausedStatus"];
-          }}
-        >
-          <Select.Trigger id="docker-paused" class="w-full">
-            {STATUS_LABELS[formData.pausedStatus ?? "DOWN"]}
-          </Select.Trigger>
-          <Select.Content>
-            {#each Object.entries(STATUS_LABELS) as [value, label] (value)}
-              <Select.Item {value}>{label}</Select.Item>
-            {/each}
-          </Select.Content>
-        </Select.Root>
-      </div>
-    </div>
-    <p class="text-muted-foreground text-xs">
-      A container with no <code>HEALTHCHECK</code> is UP whenever it is running. Stopped, exited, and dead containers are
-      always DOWN.
-    </p>
   {/if}
 
   <div class="flex flex-col gap-2">

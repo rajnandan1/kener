@@ -19,7 +19,7 @@
     IsValidURL,
     IsValidPort
   } from "$lib/clientTools";
-  import { GAMEDIG_SOCKET_TIMEOUT } from "$lib/anywhere";
+  import { GAMEDIG_SOCKET_TIMEOUT, DOCKER_CONNECTION_TYPES } from "$lib/anywhere";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   // Type-specific components
@@ -257,7 +257,10 @@
 
       case "DOCKER": {
         const data = typeData as any;
-        if (!data.dockerHostId) return false;
+        if (!DOCKER_CONNECTION_TYPES.includes(data.connectionType)) return false;
+        if (!data.daemon?.trim()) return false;
+        // Client certificate and key are a matched pair: both or neither.
+        if (!!data.tlsCert?.trim() !== !!data.tlsKey?.trim()) return false;
         if (data.checkType !== "daemon" && !data.containerName?.trim()) return false;
         if (!data.timeout || data.timeout < 1) return false;
         return true;

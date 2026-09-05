@@ -2,7 +2,7 @@
 
 import type { PingHost, PingMonitorTypeData } from "$lib/types/ping.js";
 import type { TcpHost, TcpMonitorTypeData } from "$lib/types/tcp.js";
-import type { DockerCheckType, DockerDegradableStatus } from "$lib/anywhere.js";
+import type { DockerCheckType, DockerConnectionType } from "$lib/anywhere.js";
 
 export interface MonitoringResult {
   status: string;
@@ -120,18 +120,18 @@ export interface PrometheusMonitorTypeData {
 }
 
 export interface DockerMonitorTypeData {
-  /** id of the row in docker_hosts this monitor connects through */
-  dockerHostId: number;
+  /** How Kener reaches the Docker Engine API */
+  connectionType: DockerConnectionType;
+  /** Socket path (or Windows named pipe) for "socket"; host:port or a full URL for "tcp" and "tls" */
+  daemon: string;
+  /** PEM material for "tls". `$SECRET` env substitution applies, so a key can stay out of the database. */
+  tlsCa?: string;
+  tlsCert?: string;
+  tlsKey?: string;
   /** "container" watches one container; "daemon" only pings the Engine API */
   checkType: DockerCheckType;
   /** Container name or id. Required when checkType is "container". */
   containerName?: string;
-  /** Status reported when the container's healthcheck says "unhealthy" (default DOWN) */
-  unhealthyStatus?: DockerDegradableStatus;
-  /** Status reported while the container is restarting (default DEGRADED) */
-  restartingStatus?: DockerDegradableStatus;
-  /** Status reported while the container is paused (default DOWN) */
-  pausedStatus?: DockerDegradableStatus;
   /** Docker API request timeout in ms */
   timeout?: number;
 }

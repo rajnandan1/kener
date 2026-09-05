@@ -1,8 +1,10 @@
 import axios, { type AxiosRequestConfig } from "axios";
 import https from "https";
 import { performance } from "node:perf_hooks";
-import type { DockerHostRecord } from "./types/db.js";
-import { DOCKER_DEFAULT_TIMEOUT } from "../anywhere.js";
+import { DOCKER_CONNECTION_TYPES, DOCKER_DEFAULT_TIMEOUT } from "../anywhere.js";
+import { GetRequiredSecrets, ReplaceAllOccurrences } from "./tool.js";
+import type { DockerConnectionType } from "../anywhere.js";
+import type { DockerMonitorTypeData } from "./types/monitor.js";
 
 /**
  * Thin client for the Docker Engine HTTP API.
@@ -10,7 +12,7 @@ import { DOCKER_DEFAULT_TIMEOUT } from "../anywhere.js";
  * The daemon speaks plain HTTP over three transports and Kener supports all of them:
  *   socket → a unix socket path (or a Windows named pipe) handed to Node as `socketPath`
  *   tcp    → an unencrypted `host:port` (typically :2375)
- *   tls    → `host:port` (typically :2376) with client-certificate authentication
+ *   tls    → `host:port` (typically :2376), optionally with client-certificate authentication
  *
  * Requests are intentionally unversioned (`/containers/...` rather than `/v1.44/containers/...`)
  * so the daemon answers with its own newest API version instead of us pinning one.
@@ -49,13 +51,6 @@ export interface DockerContainerSummary {
   Status: string;
 }
 
-export interface DockerVersion {
-  Version: string;
-  ApiVersion: string;
-  Os: string;
-  Arch: string;
-}
-
 export class DockerError extends Error {
   /** HTTP status returned by the daemon, when it answered at all. */
   statusCode?: number;
@@ -70,11 +65,49 @@ export class DockerError extends Error {
   }
 }
 
-/** Connection fields only. This lets callers test a host that has not been saved yet. */
-export type DockerConnection = Pick<DockerHostRecord, "connection_type" | "daemon" | "tls_ca" | "tls_cert" | "tls_key">;
+/** Connection fields of a DOCKER monitor with every `$SECRET` reference already resolved. */
+export interface DockerConnection {
+  connectionType: DockerConnectionType;
+  daemon: string;
+  tlsCa?: string;
+  tlsCert?: string;
+  tlsKey?: string;
+}
 
 /**
- * Normalizes the stored daemon address into a base URL. Accepts bare `host:port`,
+ * Turns a monitor's type_data into a connection. `$SECRET` tokens in the daemon
+ * address and the PEM fields are replaced from the environment, exactly like API
+ * monitor headers, so a private key can live in `DOCKER_TLS_KEY` instead of the
+ * database and the browser. Unknown tokens are left as-is.
+ */
+export function resolveConnection(typeData: Partial<DockerMonitorTypeData> | undefined): DockerConnection {
+  const td = typeData ?? {};
+  const connectionType = td.connectionType as DockerConnectionType;
+  if (!DOCKER_CONNECTION_TYPES.includes(connectionType)) {
+    throw new DockerError(`Docker connection type must be one of: ${DOCKER_CONNECTION_TYPES.join(", ")}`);
+  }
+
+  const raw = { daemon: td.daemon, tlsCa: td.tlsCa, tlsCert: td.tlsCert, tlsKey: td.tlsKey };
+  const secrets = GetRequiredSecrets(Object.values(raw).filter(Boolean).join(" "));
+  const substitute = (value: string | undefined): string => {
+    let out = (value ?? "").trim();
+    for (const secret of secrets) {
+      if (secret.replace !== undefined) out = ReplaceAllOccurrences(out, secret.find, secret.replace);
+    }
+    return out;
+  };
+
+  return {
+    connectionType,
+    daemon: substitute(raw.daemon),
+    tlsCa: substitute(raw.tlsCa) || undefined,
+    tlsCert: substitute(raw.tlsCert) || undefined,
+    tlsKey: substitute(raw.tlsKey) || undefined,
+  };
+}
+
+/**
+ * Normalizes the daemon address into a base URL. Accepts bare `host:port`,
  * `tcp://host:port`, and `http(s)://host:port` so operators can paste whatever
  * `DOCKER_HOST` value they already have. Trailing slashes are stripped, otherwise
  * `tcp://host:2375/` would not look like it already carries a port.
@@ -83,17 +116,18 @@ export type DockerConnection = Pick<DockerHostRecord, "connection_type" | "daemo
  */
 export function buildBaseURL(connection: DockerConnection): string {
   const raw = (connection.daemon || "").trim();
-  const scheme = connection.connection_type === "tls" ? "https" : "http";
+  const scheme = connection.connectionType === "tls" ? "https" : "http";
   const withoutScheme = raw.replace(/^(tcp|http|https):\/\//i, "").replace(/\/+$/, "");
   if (!withoutScheme) {
     throw new DockerError("Docker host address is empty");
   }
   const hasPort = /:\d+$/.test(withoutScheme);
-  const port = connection.connection_type === "tls" ? 2376 : 2375;
+  const port = connection.connectionType === "tls" ? 2376 : 2375;
   return `${scheme}://${hasPort ? withoutScheme : `${withoutScheme}:${port}`}`;
 }
 
-function buildRequestConfig(connection: DockerConnection, path: string, timeout: number): AxiosRequestConfig {
+/** Exported for unit testing. */
+export function buildRequestConfig(connection: DockerConnection, path: string, timeout: number): AxiosRequestConfig {
   const config: AxiosRequestConfig = {
     url: path,
     method: "GET",
@@ -103,7 +137,7 @@ function buildRequestConfig(connection: DockerConnection, path: string, timeout:
     validateStatus: () => true,
   };
 
-  if (connection.connection_type === "socket") {
+  if (connection.connectionType === "socket") {
     const socketPath = (connection.daemon || "").trim();
     if (!socketPath) {
       throw new DockerError("Docker socket path is empty");
@@ -116,11 +150,16 @@ function buildRequestConfig(connection: DockerConnection, path: string, timeout:
 
   config.baseURL = buildBaseURL(connection);
 
-  if (connection.connection_type === "tls") {
+  if (connection.connectionType === "tls") {
+    // A certificate without its key (or the reverse) only fails at handshake time
+    // with an unhelpful message, so refuse it up front.
+    if (!!connection.tlsCert !== !!connection.tlsKey) {
+      throw new DockerError("Provide the TLS client certificate and key together");
+    }
     config.httpsAgent = new https.Agent({
-      ca: connection.tls_ca || undefined,
-      cert: connection.tls_cert || undefined,
-      key: connection.tls_key || undefined,
+      ca: connection.tlsCa,
+      cert: connection.tlsCert,
+      key: connection.tlsKey,
     });
   }
 
@@ -175,11 +214,6 @@ function describeError(err: { code?: string; message?: string }): string {
 /** `GET /_ping`. The cheapest liveness check the daemon offers. */
 export async function pingDaemon(connection: DockerConnection, timeout = DOCKER_DEFAULT_TIMEOUT) {
   return await request<string>(connection, "/_ping", timeout);
-}
-
-/** `GET /version`. Used by "Test Connection" to prove we talked to a real daemon. */
-export async function getVersion(connection: DockerConnection, timeout = DOCKER_DEFAULT_TIMEOUT) {
-  return await request<DockerVersion>(connection, "/version", timeout);
 }
 
 /** `GET /containers/{id}/json`. Accepts a container name or id. */

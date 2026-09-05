@@ -5,7 +5,7 @@
  * Mapping from actions → permissions:
  *
  * monitors.read      → getMonitors, getMonitoringDataPaginated
- * monitors.write     → storeMonitorData, updateMonitoringData, deleteMonitor, deleteMonitorData, cloneMonitor, testMonitor
+ * monitors.write     → storeMonitorData, updateMonitoringData, deleteMonitor, deleteMonitorData, cloneMonitor, testMonitor, listDockerContainers
  *
  * incidents.read     → getIncidents, getIncident, getComments
  * incidents.write    → createIncident, updateIncident, deleteIncident, addMonitor, removeMonitor, addComment, deleteComment, updateComment
@@ -39,9 +39,6 @@
  * email_templates.write → updateGeneralEmailTemplate
  *
  * images.write       → uploadImage, deleteImage
- *
- * docker_hosts.read  → getDockerHosts, getDockerHostById, listDockerContainers
- * docker_hosts.write → createUpdateDockerHost, deleteDockerHost, testDockerHost
  */
 export const permissions: Array<{ id: string; permission_name: string }> = [
   // Monitors
@@ -92,10 +89,6 @@ export const permissions: Array<{ id: string; permission_name: string }> = [
   // Images
   { id: "images.write", permission_name: "Upload and delete images" },
 
-  // Docker Hosts
-  { id: "docker_hosts.read", permission_name: "View Docker hosts and their containers" },
-  { id: "docker_hosts.write", permission_name: "Create, update, delete, and test Docker hosts" },
-
   // Roles
   { id: "roles.read", permission_name: "View roles, permissions, and user assignments" },
   { id: "roles.write", permission_name: "Create, update, and delete roles" },
@@ -131,6 +124,7 @@ export const ACTION_PERMISSION_MAP: Record<string, string | null> = {
   deleteMonitorData: "monitors.write",
   cloneMonitor: "monitors.write",
   testMonitor: "monitors.write",
+  listDockerContainers: "monitors.write",
 
   // Incidents
   getIncidents: "incidents.read",
@@ -217,14 +211,6 @@ export const ACTION_PERMISSION_MAP: Record<string, string | null> = {
   uploadImage: "images.write",
   deleteImage: "images.write",
 
-  // Docker Hosts
-  getDockerHosts: "docker_hosts.read",
-  getDockerHostById: "docker_hosts.read",
-  listDockerContainers: "docker_hosts.read",
-  createUpdateDockerHost: "docker_hosts.write",
-  deleteDockerHost: "docker_hosts.write",
-  testDockerHost: "docker_hosts.write",
-
   // Roles
   getRoles: "roles.read",
   getAllPermissions: "roles.read",
@@ -291,9 +277,6 @@ export const ROUTE_PERMISSION_MAP: Record<string, string | null> = {
 
   // Email Templates
   "/(manage)/manage/app/templates": "email_templates.read",
-
-  // Docker Hosts
-  "/(manage)/manage/app/docker-hosts": "docker_hosts.read",
 
   // Roles
   "/(manage)/manage/app/roles": "roles.read",

@@ -222,35 +222,6 @@ export interface TriggerRecordInsert {
   trigger_meta?: string | null;
 }
 
-// ============ docker_hosts table ============
-export type DockerConnectionType = "socket" | "tcp" | "tls";
-
-export interface DockerHostRecord {
-  id: number;
-  name: string;
-  connection_type: DockerConnectionType;
-  /** Socket path / named pipe for "socket", host:port (or full URL) for "tcp"/"tls" */
-  daemon: string;
-  tls_ca: string | null;
-  tls_cert: string | null;
-  tls_key: string | null;
-  created_at: Date;
-  updated_at: Date;
-}
-
-export interface DockerHostInsert {
-  name: string;
-  connection_type: DockerConnectionType;
-  daemon: string;
-  tls_ca?: string | null;
-  tls_cert?: string | null;
-  tls_key?: string | null;
-}
-
-export interface DockerHostUpdate extends DockerHostInsert {
-  id: number;
-}
-
 // ============ general_email_templates table ============
 export interface GeneralEmailTemplateRecord {
   template_id: string;
