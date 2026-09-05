@@ -2,6 +2,7 @@
 
 import type { PingHost, PingMonitorTypeData } from "$lib/types/ping.js";
 import type { TcpHost, TcpMonitorTypeData } from "$lib/types/tcp.js";
+import type { DockerCheckType, DockerDegradableStatus } from "$lib/anywhere.js";
 
 export interface MonitoringResult {
   status: string;
@@ -118,6 +119,23 @@ export interface PrometheusMonitorTypeData {
   allowSelfSignedCert?: boolean; // default false
 }
 
+export interface DockerMonitorTypeData {
+  /** id of the row in docker_hosts this monitor connects through */
+  dockerHostId: number;
+  /** "container" watches one container; "daemon" only pings the Engine API */
+  checkType: DockerCheckType;
+  /** Container name or id. Required when checkType is "container". */
+  containerName?: string;
+  /** Status reported when the container's healthcheck says "unhealthy" (default DOWN) */
+  unhealthyStatus?: DockerDegradableStatus;
+  /** Status reported while the container is restarting (default DEGRADED) */
+  restartingStatus?: DockerDegradableStatus;
+  /** Status reported while the container is paused (default DOWN) */
+  pausedStatus?: DockerDegradableStatus;
+  /** Docker API request timeout in ms */
+  timeout?: number;
+}
+
 export type MonitorTypeData =
   | ApiMonitorTypeData
   | DnsMonitorTypeData
@@ -129,7 +147,8 @@ export type MonitorTypeData =
   | GroupMonitorTypeData
   | GamedigMonitorTypeData
   | GrpcMonitorTypeData
-  | PrometheusMonitorTypeData;
+  | PrometheusMonitorTypeData
+  | DockerMonitorTypeData;
 
 export interface Monitor<T = MonitorTypeData> {
   tag: string;
@@ -149,6 +168,7 @@ export type GroupMonitor = Monitor<GroupMonitorTypeData>;
 export type GamedigMonitor = Monitor<GamedigMonitorTypeData>;
 export type GrpcMonitor = Monitor<GrpcMonitorTypeData>;
 export type PrometheusMonitor = Monitor<PrometheusMonitorTypeData>;
+export type DockerMonitor = Monitor<DockerMonitorTypeData>;
 
 export interface EvalResponse {
   status?: string;

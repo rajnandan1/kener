@@ -85,6 +85,7 @@ Monitor execution logic lives in `src/lib/server/services/`. Each monitor type h
 | `sqlCall.ts`       | SQL          | Database query monitoring           |
 | `heartbeatCall.ts` | HEARTBEAT    | Passive push-based monitoring       |
 | `gamedigCall.ts`   | GAMEDIG      | Game server monitoring              |
+| `dockerCall.ts`    | DOCKER       | Docker container/daemon health      |
 | `groupCall.ts`     | GROUP        | Aggregates status of child monitors |
 
 The `service.ts` factory dispatches to the correct implementation based on the monitor's `monitor_type` field.

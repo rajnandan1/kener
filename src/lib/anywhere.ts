@@ -51,6 +51,23 @@ export const DefaultGamedigEval = `async function (responseTime, responseRaw) {
 export const GAMEDIG_TIMEOUT = 10 * 1000; // 10 seconds
 export const GAMEDIG_SOCKET_TIMEOUT = 2 * 1000; // 2 seconds
 
+// ---- Docker monitors ----------------------------------------------------
+
+/** Transports the Docker Engine API can be reached over. */
+export const DOCKER_CONNECTION_TYPES = ["socket", "tcp", "tls"] as const;
+export type DockerConnectionTypeOption = (typeof DOCKER_CONNECTION_TYPES)[number];
+
+/** What a DOCKER monitor watches: a single container, or the daemon itself. */
+export const DOCKER_CHECK_TYPES = ["container", "daemon"] as const;
+export type DockerCheckType = (typeof DOCKER_CHECK_TYPES)[number];
+
+/** Statuses an operator may map an unhealthy/paused/restarting container onto. */
+export const DOCKER_DEGRADABLE_STATUSES = ["DOWN", "DEGRADED"] as const;
+export type DockerDegradableStatus = (typeof DOCKER_DEGRADABLE_STATUSES)[number];
+
+export const DOCKER_DEFAULT_TIMEOUT = 10 * 1000; // 10 seconds
+export const DOCKER_DEFAULT_SOCKET_PATH = "/var/run/docker.sock";
+
 export const ErrorSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="60" viewBox="0 0 120 60" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="30" cy="24" r="10"/>
   <path d="M26 27h8"/>

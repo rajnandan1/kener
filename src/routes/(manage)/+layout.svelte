@@ -29,6 +29,7 @@
   import TemplateIcon from "@lucide/svelte/icons/layout-template";
   import clientResolver from "$lib/client/resolver.js";
   import DatabaseIcon from "@lucide/svelte/icons/database";
+  import ContainerIcon from "@lucide/svelte/icons/container";
 
   import { Toaster } from "$lib/components/ui/sonner/index.js";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
@@ -52,6 +53,7 @@
     { title: "Users", url: "/manage/app/users", icon: UsersIcon },
     { title: "Roles", url: "/manage/app/roles", icon: ShieldIcon },
     { title: "OpenID Connect", url: "/manage/app/oidc", icon: FingerprintIcon },
+    { title: "Docker Hosts", url: "/manage/app/docker-hosts", icon: ContainerIcon },
     { title: "Triggers", url: "/manage/app/triggers", icon: MailboxIcon },
     { title: "Templates", url: "/manage/app/templates", icon: TemplateIcon },
     { title: "Badges", url: "/manage/app/badges", icon: BadgeIcon },

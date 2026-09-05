@@ -35,7 +35,8 @@
     MonitorGamedig,
     MonitorNone,
     MonitorGrpc,
-    MonitorPrometheus
+    MonitorPrometheus,
+    MonitorDocker
   } from "../types/index.js";
 
   interface Props {
@@ -118,7 +119,8 @@
     HEARTBEAT: "Heartbeat",
     GAMEDIG: "Game Server",
     GRPC: "gRPC Health",
-    PROMETHEUS: "Prometheus"
+    PROMETHEUS: "Prometheus",
+    DOCKER: "Docker Container"
   };
 
   // Validation for each monitor type
@@ -253,6 +255,14 @@
         return true;
       }
 
+      case "DOCKER": {
+        const data = typeData as any;
+        if (!data.dockerHostId) return false;
+        if (data.checkType !== "daemon" && !data.containerName?.trim()) return false;
+        if (!data.timeout || data.timeout < 1) return false;
+        return true;
+      }
+
       default:
         return true;
     }
@@ -364,6 +374,8 @@
         <MonitorGrpc bind:data={typeData} />
       {:else if monitor.monitor_type === "PROMETHEUS"}
         <MonitorPrometheus bind:data={typeData} />
+      {:else if monitor.monitor_type === "DOCKER"}
+        <MonitorDocker bind:data={typeData} />
       {:else if monitor.monitor_type === "NONE"}
         <MonitorNone bind:data={typeData} />
       {/if}
