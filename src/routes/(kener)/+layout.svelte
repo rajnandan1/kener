@@ -112,7 +112,10 @@
       "kener-global-refresh-interval"
     );
 
-    refreshInterval = normalizeRefreshInterval(savedInterval);
+    refreshInterval =
+      savedInterval != null
+        ? normalizeRefreshInterval(savedInterval)
+        : DEFAULT_REFRESH_INTERVAL;
     refreshStore.setInterval(refreshInterval);
 
     if (localStorage.getItem("kener-global-refresh-enabled") === "true") {
