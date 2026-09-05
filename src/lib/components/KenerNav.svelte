@@ -11,9 +11,13 @@
   import MenuIcon from "@lucide/svelte/icons/menu";
 
   let { controls }: { controls?: Snippet } = $props();
-  let { data } = page;
-  const navItems: { name: string; url: string; iconURL: string }[] = data.navItems || [];
-  const { siteName, logo, globalPageVisibilitySettings } = data;
+
+  // Derive from `page` reactively — destructuring `let { data } = page` copies
+  // once and would not update on navigation. $derived keeps these in sync.
+  const navItems = $derived(page.data.navItems ?? []);
+  const siteName = $derived(page.data.siteName);
+  const logo = $derived(page.data.logo);
+  const globalPageVisibilitySettings = $derived(page.data.globalPageVisibilitySettings);
 
   const brandPath = $derived.by(() => {
     if (globalPageVisibilitySettings?.forceExclusivity) {

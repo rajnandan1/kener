@@ -37,6 +37,24 @@
   let refreshIntervalId: number | undefined;
   let refreshInProgress = $state(false);
 
+  // Safe localStorage helpers — storage can be disabled (private mode) or throw,
+  // so we guard every access and fall back to sane defaults instead of crashing.
+  function readStorage(key: string): string | null {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  function writeStorage(key: string, value: string): void {
+    try {
+      localStorage.setItem(key, value);
+    } catch {
+      /* ignore — non-critical, refresh state stays in-memory only */
+    }
+  }
+
   async function refreshPageData(): Promise<void> {
     if (refreshInProgress) return;
 
@@ -83,10 +101,7 @@
   function saveRefreshInterval() {
     refreshInterval = normalizeRefreshInterval(refreshInterval);
 
-    localStorage.setItem(
-      "kener-global-refresh-interval",
-      String(refreshInterval)
-    );
+    writeStorage("kener-global-refresh-interval", String(refreshInterval));
 
     refreshStore.setInterval(refreshInterval);
 
@@ -97,7 +112,7 @@
 
   function toggleGlobalRefresh() {
     refreshStore.toggle();
-    localStorage.setItem("kener-global-refresh-enabled", String($refreshStore.enabled));
+    writeStorage("kener-global-refresh-enabled", String($refreshStore.enabled));
 
     if ($refreshStore.enabled) {
       startGlobalRefresh();
@@ -108,9 +123,7 @@
   }
 
   onMount(() => {
-    const savedInterval = localStorage.getItem(
-      "kener-global-refresh-interval"
-    );
+    const savedInterval = readStorage("kener-global-refresh-interval");
 
     refreshInterval =
       savedInterval != null
@@ -118,7 +131,7 @@
         : DEFAULT_REFRESH_INTERVAL;
     refreshStore.setInterval(refreshInterval);
 
-    if (localStorage.getItem("kener-global-refresh-enabled") === "true") {
+    if (readStorage("kener-global-refresh-enabled") === "true") {
       refreshStore.setState({ ...$refreshStore, enabled: true });
       startGlobalRefresh();
     }
