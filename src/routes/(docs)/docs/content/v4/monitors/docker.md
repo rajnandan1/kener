@@ -23,7 +23,7 @@ services:
 ```
 
 > [!CAUTION]
-> Anyone who can reach the Docker socket is root on the host, and a `:ro` mount does not limit the API. Put a deny-by-default socket proxy such as `tecnativa/docker-socket-proxy` in front of it: it allows `GET /_ping` and `/version` out of the box, and `CONTAINERS=1` adds the read-only container endpoints Kener uses. Never expose `tcp` without TLS outside a trusted network.
+> Anyone who can reach the Docker socket is root on the host, and a `:ro` mount does not limit the API. Put a deny-by-default socket proxy in front of it. Kener only needs `GET /_ping`, `GET /containers/json`, and `GET /containers/{name}/json`. With `tecnativa/docker-socket-proxy`, `CONTAINERS=1` grants those but also every other `GET` under `/containers`, including logs, `archive`, and `export`; a proxy with path-level allowlisting can restrict it to the three paths above. Never expose `tcp` without TLS outside a trusted network.
 
 ## Connection types {#connection-types}
 

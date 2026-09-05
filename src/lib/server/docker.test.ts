@@ -87,6 +87,21 @@ describe("resolveConnection", () => {
     });
   });
 
+  // Regression: an object with a null toString made Object.values(...).join() throw before substitution.
+  it("treats object-valued fields as empty", () => {
+    const hostile = { toString: null } as never;
+    expect(resolveConnection({ connectionType: "socket", daemon: "/var/run/docker.sock", tlsCa: hostile })).toEqual({
+      connectionType: "socket",
+      daemon: "/var/run/docker.sock",
+      tlsCa: undefined,
+      tlsCert: undefined,
+      tlsKey: undefined,
+    });
+    const emptied = resolveConnection({ connectionType: "socket", daemon: hostile });
+    expect(emptied.daemon).toBe("");
+    expect(() => buildRequestConfig(emptied, "/_ping", 1000)).toThrow("Docker socket path is empty");
+  });
+
   it("rejects an unknown connection type", () => {
     expect(() => resolveConnection({ connectionType: "ssh" as never, daemon: "h" })).toThrow(DockerError);
     expect(() => resolveConnection(undefined)).toThrow("must be one of: socket, tcp, tls");

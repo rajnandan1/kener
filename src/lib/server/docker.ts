@@ -87,12 +87,14 @@ export function resolveConnection(typeData: Partial<DockerMonitorTypeData> | und
     throw new DockerError(`Docker connection type must be one of: ${DOCKER_CONNECTION_TYPES.join(", ")}`);
   }
 
-  const raw = { daemon: td.daemon, tlsCa: td.tlsCa, tlsCert: td.tlsCert, tlsKey: td.tlsKey };
-  const secrets = GetRequiredSecrets(Object.values(raw).filter(Boolean).join(" "));
   // Coerce rather than trust the shape: type_data comes from JSON and the browse
-  // action takes the unsaved form, so a stray number or null must not throw.
-  const substitute = (value: unknown): string => {
-    let out = value == null ? "" : String(value).trim();
+  // action takes the unsaved form, so a stray number, null, or object must not throw.
+  const text = (value: unknown): string =>
+    value == null || typeof value === "object" || typeof value === "function" ? "" : String(value).trim();
+  const raw = { daemon: text(td.daemon), tlsCa: text(td.tlsCa), tlsCert: text(td.tlsCert), tlsKey: text(td.tlsKey) };
+  const secrets = GetRequiredSecrets(Object.values(raw).join(" "));
+  const substitute = (value: string): string => {
+    let out = value;
     for (const secret of secrets) {
       if (secret.replace !== undefined) out = ReplaceAllOccurrences(out, secret.find, secret.replace);
     }

@@ -124,7 +124,9 @@
         // Parse type_data
         if (m.type_data) {
           try {
-            typeData = JSON.parse(m.type_data);
+            const parsed = JSON.parse(m.type_data);
+            // The API can persist "null"; every type form expects a record.
+            typeData = parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
           } catch (e) {
             console.error("Failed to parse type_data:", e);
             typeData = {};
