@@ -21,7 +21,11 @@ jobs:
     name: Build and push nightly Docker images
     strategy:
       matrix:
-        variant: [debian, alpine]
+        include:
+          - variant: debian
+            platforms: linux/amd64,linux/arm64
+          - variant: alpine
+            platforms: linux/amd64
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -79,7 +83,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             VARIANT=${{ matrix.variant }}
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ matrix.platforms }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

@@ -235,6 +235,7 @@ class DbImpl {
   getPageByPath!: PagesRepository["getPageByPath"];
   getAllPages!: PagesRepository["getAllPages"];
   updatePage!: PagesRepository["updatePage"];
+  replacePageLogo!: PagesRepository["replacePageLogo"];
   deletePage!: PagesRepository["deletePage"];
 
   // ============ Page Monitors ============
@@ -620,6 +621,7 @@ class DbImpl {
     this.getPageByPath = this.pages.getPageByPath.bind(this.pages);
     this.getAllPages = this.pages.getAllPages.bind(this.pages);
     this.updatePage = this.pages.updatePage.bind(this.pages);
+    this.replacePageLogo = this.pages.replacePageLogo.bind(this.pages);
     this.deletePage = this.pages.deletePage.bind(this.pages);
     this.addMonitorToPage = this.pages.addMonitorToPage.bind(this.pages);
     this.removeMonitorFromPage = this.pages.removeMonitorFromPage.bind(this.pages);
