@@ -190,11 +190,10 @@ USER node
 EXPOSE ${PORT}
 
 # Healthcheck: hit the /healthcheck endpoint exposed by Express in main.ts.
-# Use $$ so the shell expands PORT/KENER_BASE_PATH at *runtime* from the
-# container environment; a bare ${VAR} would be substituted at build time and
-# ignore operator overrides like `docker run -e KENER_BASE_PATH=/status`.
+# Use JSON form so the shell expands PORT/KENER_BASE_PATH at *runtime* from
+# the container environment; Docker's shell form substitutes bare ${VAR} at
+# build time and ignores runtime overrides like `docker run -e KENER_BASE_PATH=/status`.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
-    CMD sh -c 'curl -sf "http://localhost:$${PORT}$${KENER_BASE_PATH}/healthcheck" || exit 1'
-
+    CMD ["sh", "-c", "curl -sf \"http://localhost:${PORT}${KENER_BASE_PATH}/healthcheck\" || exit 1"]
 ENTRYPOINT ["./docker-entrypoint.sh"]
 CMD ["node", "build/main.js"]
