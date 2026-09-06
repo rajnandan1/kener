@@ -152,6 +152,23 @@ PORT=8080
 > [!TIP]
 > In production, it's common to use PORT=3000 and handle external port mapping via reverse proxy (nginx on port 80/443 → Kener on port 3000).
 
+### KENER_DISABLE_COMPRESSION {#kener-disable-compression}
+
+**Purpose**: Turn off gzip compression of HTTP responses.
+
+**Default**: unset, which means compression is on.
+
+**Use Case**: Set this to `true` when a reverse proxy in front of Kener already compresses responses, so the work is not done twice. Leave it unset otherwise. Compression matters most for status pages with many monitors, where the monitor data is the largest part of the response.
+
+**Example**:
+
+```bash
+KENER_DISABLE_COMPRESSION=true
+```
+
+> [!NOTE]
+> Only the exact value `true` turns compression off. Any other value leaves it on.
+
 ### TZ {#timezone}
 
 **Purpose**: Set the timezone for server-side date/time operations.

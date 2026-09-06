@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import express from "express";
+import { compressionMiddleware, isCompressionEnabled } from "../src/lib/server/httpCompression.ts";
 import Startup from "../src/lib/server/startup.ts";
 import shutdownSchedulers from "../src/lib/server/schedulers/shutdown.ts";
 import shutdownQueues from "../src/lib/server/queues/shutdown.ts";
@@ -20,6 +21,14 @@ async function start() {
 
   const app: any = express();
   const db = knex(knexOb);
+
+  // Compress responses. adapter-node does not compress, so without this the
+  // status page ships its monitor-bar payload raw: a 63 monitor page is 847 KB
+  // uncompressed and 64 KB compressed. Deployments behind a proxy that already
+  // compresses can skip this with KENER_DISABLE_COMPRESSION=true.
+  if (isCompressionEnabled()) {
+    app.use(compressionMiddleware());
+  }
 
   // Caps a health probe at 2s so a wedged dependency can not hang the
   // endpoint. A probe is healthy unless it throws, times out, or resolves false.
