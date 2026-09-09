@@ -1,5 +1,6 @@
 import axios, { type AxiosRequestConfig } from "axios";
-import https from "https";
+import type https from "https";
+import { AxiosProxyConfig } from "./proxy.js";
 import { performance } from "node:perf_hooks";
 import { DOCKER_CONNECTION_TYPES, DOCKER_DEFAULT_TIMEOUT } from "../anywhere.js";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "./tool.js";
@@ -154,20 +155,17 @@ export function buildRequestConfig(connection: DockerConnection, path: string, t
 
   config.baseURL = buildBaseURL(connection);
 
+  const tls: https.AgentOptions = {};
   if (connection.connectionType === "tls") {
     // A certificate without its key (or the reverse) only fails at handshake time
     // with an unhelpful message, so refuse it up front.
     if (!!connection.tlsCert !== !!connection.tlsKey) {
       throw new DockerError("Provide the TLS client certificate and key together");
     }
-    config.httpsAgent = new https.Agent({
-      ca: connection.tlsCa,
-      cert: connection.tlsCert,
-      key: connection.tlsKey,
-    });
+    Object.assign(tls, { ca: connection.tlsCa, cert: connection.tlsCert, key: connection.tlsKey });
   }
-
-  return config;
+  // Daemons honour the process env proxy only (put LAN daemons in NO_PROXY); no per-monitor proxy.
+  return { ...config, ...AxiosProxyConfig(undefined, {}, tls) };
 }
 
 interface DockerResponse<T> {

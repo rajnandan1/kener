@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import Mustache from "mustache";
-import { alertToVariables } from "./notification_utils.js";
+import { alertToVariables, describeError } from "./notification_utils.js";
 import emailTemplate from "../templates/email_alert_template.js";
 import discordTemplate from "../templates/discord_alert_template.js";
 import slackTemplate from "../templates/slack_alert_template.js";
@@ -68,5 +68,27 @@ describe("alertToVariables", () => {
 
     // The Slack template carries raw newlines inside strings, so compare the rendered text, not parsed JSON.
     expect(Mustache.render(slackTemplate.slack_body, vars, {}, raw)).toContain(`"text": "*${HEADLINE}*"`);
+  });
+});
+
+describe("describeError", () => {
+  // A failed fetch() throws TypeError("fetch failed") and hides the real reason in `cause`
+  // (a proxy tunnel refusal, a connect timeout). The trigger test shows this string.
+  it("appends the cause to the message", () => {
+    const err = new TypeError("fetch failed", { cause: new Error("Failed to establish tunnel to example.com:443") });
+    expect(describeError(err)).toBe("fetch failed: Failed to establish tunnel to example.com:443");
+  });
+
+  it("walks to the innermost cause (undici nests the proxy refusal two deep)", () => {
+    const tunnel = new Error("Proxy response (403) !== 200 when HTTP Tunneling");
+    const cancelled = new Error("Request was cancelled.", { cause: tunnel });
+    const err = new TypeError("fetch failed", { cause: cancelled });
+    expect(describeError(err)).toBe("fetch failed: Proxy response (403) !== 200 when HTTP Tunneling");
+  });
+
+  it("returns the plain message when there is no cause, and stringifies non-errors", () => {
+    expect(describeError(new Error("boom"))).toBe("boom");
+    expect(describeError("nope")).toBe("nope");
+    expect(describeError({ cause: 1 })).toBe("[object Object]");
   });
 });

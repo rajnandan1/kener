@@ -152,7 +152,7 @@ docker run -d \
 
 Requirements:
 
-- Node.js `>= 20`
+- Node.js `>= 24.14`
 - Redis
 
 ```bash

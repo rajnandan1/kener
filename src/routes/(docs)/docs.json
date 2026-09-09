@@ -244,6 +244,10 @@
                     {
                       "title": "Analytics",
                       "content": "v4/analytics"
+                    },
+                    {
+                      "title": "Captcha",
+                      "content": "v4/captcha"
                     }
                   ]
                 }
@@ -322,6 +326,10 @@
                   "group": "v4.x",
                   "collapsible": false,
                   "pages": [
+                    {
+                      "title": "v4.1.5",
+                      "content": "v4/changelogs/v4.1.5"
+                    },
                     {
                       "title": "v4.1.3",
                       "content": "v4/changelogs/v4.1.3"

@@ -28,7 +28,6 @@
   if (data.follow_redirects === undefined) data.follow_redirects = true;
   if (data.max_redirects === undefined) data.max_redirects = 5;
 
-
   const methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
 
   function addHeader() {
@@ -70,6 +69,12 @@
   <div class="flex flex-col gap-2">
     <Label for="api-timeout">Timeout (ms)</Label>
     <Input id="api-timeout" type="number" bind:value={data.timeout} placeholder="10000" />
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <Label for="api-proxy">Proxy URL</Label>
+    <Input id="api-proxy" bind:value={data.proxy} placeholder="http://user:$PROXY_PASS@proxy.internal:3128" />
+    <p class="text-muted-foreground text-xs">Leave empty to use HTTP_PROXY / HTTPS_PROXY from the environment.</p>
   </div>
 
   <div>
@@ -124,7 +129,6 @@
       disabled={!data.follow_redirects}
     />
   </div>
-
 
   <div class="flex flex-col gap-2">
     <Label for="api-eval">Custom Eval Function</Label>

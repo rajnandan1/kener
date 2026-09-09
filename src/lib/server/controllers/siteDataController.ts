@@ -143,6 +143,18 @@ export async function GetAllAnalyticsData() {
   }
   return transformedData;
 }
+export async function GetAllCaptchaData() {
+  let data = await db.getAllSiteDataByPrefix("captcha");
+  //return all data as key value pairs, transform using data_type
+  let transformedData = [];
+  for (const d of data) {
+    transformedData.push({
+      key: d.key,
+      value: JSON.parse(d.value),
+    });
+  }
+  return transformedData;
+}
 export const GetSiteDataByKey = async (key: string): Promise<unknown> => {
   let data = await db.getSiteDataByKey(key);
   if (!data) {

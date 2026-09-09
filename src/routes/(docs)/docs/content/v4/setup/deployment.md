@@ -247,7 +247,7 @@ Use this when you prefer managing runtime directly on a VM/server.
 
 Requirements:
 
-- Node.js `>= 20`
+- Node.js `>= 24.14`
 - Redis
 
 ```bash

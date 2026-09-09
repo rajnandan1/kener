@@ -378,3 +378,24 @@ describe("PrometheusCall.execute", () => {
     expect(r.status).toBe("DEGRADED");
   });
 });
+
+// --- Proxy -----------------------------------------------------------------
+describe("PrometheusCall proxy", () => {
+  it("opts out of axios's env proxy and passes the monitor proxy to both Node agents", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", [vec("1")]) });
+    await new PrometheusCall(makeMonitor({ proxy: "http://proxy.internal:3128" })).execute();
+    const o = mockedAxios.mock.calls[0][1] as Record<string, any>;
+    expect(o.proxy).toBe(false);
+    const expected = { HTTPS_PROXY: "http://proxy.internal:3128", HTTP_PROXY: "http://proxy.internal:3128" };
+    expect(o.httpsAgent.options.proxyEnv).toEqual(expected);
+    expect(o.httpAgent.options.proxyEnv).toEqual(expected);
+  });
+
+  it("uses the process env when the monitor has no proxy", async () => {
+    mockedAxios.mockResolvedValue({ status: 200, data: successBody("vector", [vec("1")]) });
+    await new PrometheusCall(makeMonitor()).execute();
+    const o = mockedAxios.mock.calls[0][1] as Record<string, any>;
+    expect(o.proxy).toBe(false);
+    expect(o.httpsAgent.options.proxyEnv).toBe(process.env);
+  });
+});

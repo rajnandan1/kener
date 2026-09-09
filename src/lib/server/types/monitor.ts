@@ -29,6 +29,7 @@ export interface ApiMonitorTypeData {
   allowSelfSignedCert?: boolean;
   follow_redirects?: boolean;
   max_redirects?: number;
+  proxy?: string; // http(s):// proxy URL; `$SECRET` substitution applies; empty = process env proxy
 }
 
 export interface DnsMonitorTypeData {
@@ -117,6 +118,7 @@ export interface PrometheusMonitorTypeData {
   headers?: { key: string; value: string }[]; // optional; secret substitution applies
   timeout?: number; // ms, default 10000
   allowSelfSignedCert?: boolean; // default false
+  proxy?: string; // as ApiMonitorTypeData.proxy
 }
 
 export type MonitorTypeData =

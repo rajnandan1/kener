@@ -3,10 +3,14 @@ import version from "../version.js";
 import mainScheduler from "./schedulers/appScheduler.js";
 import maintenanceScheduler from "./schedulers/maintenanceScheduler.js";
 import dailyCleanupScheduler from "./schedulers/dailyCleanup.js";
+import { InstallEnvProxy } from "./proxy.js";
 
 process.env.TZ = "UTC";
 
 async function Startup(): Promise<void> {
+  // After dotenv: main.ts calls dotenv.config() in its body, which runs after static imports,
+  // so this cannot be module top-level. Covers fetch (triggers, Resend, OIDC) and the global agents.
+  InstallEnvProxy();
   await mainScheduler.start();
   await maintenanceScheduler.start();
   await dailyCleanupScheduler.start();

@@ -19,7 +19,7 @@
     IsValidURL,
     IsValidPort
   } from "$lib/clientTools";
-  import { GAMEDIG_SOCKET_TIMEOUT, DOCKER_CONNECTION_TYPES, DOCKER_CHECK_TYPES } from "$lib/anywhere";
+  import { GAMEDIG_SOCKET_TIMEOUT, DOCKER_CONNECTION_TYPES, DOCKER_CHECK_TYPES, IsValidProxyURL } from "$lib/anywhere";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   // Type-specific components
@@ -133,6 +133,7 @@
         if (!data.url) return false;
         if (!IsValidURL(data.url)) return false;
         if (!data.timeout || data.timeout < 1) return false;
+        if (data.proxy && !IsValidProxyURL(data.proxy)) return false;
         return true;
       }
 
@@ -239,6 +240,7 @@
       case "PROMETHEUS": {
         const data = typeData as any;
         if (!data.url || !IsValidURL(data.url)) return false;
+        if (data.proxy && !IsValidProxyURL(data.proxy)) return false;
         if (!data.query || !data.query.trim()) return false;
         for (const key of ["down", "degraded"] as const) {
           const t = data[key];
