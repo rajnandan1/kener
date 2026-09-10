@@ -2,6 +2,7 @@
 
 import type { PingHost, PingMonitorTypeData } from "$lib/types/ping.js";
 import type { TcpHost, TcpMonitorTypeData } from "$lib/types/tcp.js";
+import type { DockerMonitorTypeData } from "$lib/types/docker.js";
 
 export interface MonitoringResult {
   status: string;
@@ -28,6 +29,7 @@ export interface ApiMonitorTypeData {
   allowSelfSignedCert?: boolean;
   follow_redirects?: boolean;
   max_redirects?: number;
+  proxy?: string; // http(s):// proxy URL; `$SECRET` substitution applies; empty = process env proxy
 }
 
 export interface DnsMonitorTypeData {
@@ -116,6 +118,7 @@ export interface PrometheusMonitorTypeData {
   headers?: { key: string; value: string }[]; // optional; secret substitution applies
   timeout?: number; // ms, default 10000
   allowSelfSignedCert?: boolean; // default false
+  proxy?: string; // as ApiMonitorTypeData.proxy
 }
 
 export type MonitorTypeData =
@@ -129,7 +132,8 @@ export type MonitorTypeData =
   | GroupMonitorTypeData
   | GamedigMonitorTypeData
   | GrpcMonitorTypeData
-  | PrometheusMonitorTypeData;
+  | PrometheusMonitorTypeData
+  | DockerMonitorTypeData;
 
 export interface Monitor<T = MonitorTypeData> {
   tag: string;
@@ -149,6 +153,7 @@ export type GroupMonitor = Monitor<GroupMonitorTypeData>;
 export type GamedigMonitor = Monitor<GamedigMonitorTypeData>;
 export type GrpcMonitor = Monitor<GrpcMonitorTypeData>;
 export type PrometheusMonitor = Monitor<PrometheusMonitorTypeData>;
+export type DockerMonitor = Monitor<DockerMonitorTypeData>;
 
 export interface EvalResponse {
   status?: string;

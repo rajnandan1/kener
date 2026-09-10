@@ -53,6 +53,7 @@ import {
   GetMonitoringDataPaginated,
 } from "$lib/server/controllers/controller.js";
 
+import { ListDockerContainers } from "$lib/server/controllers/dockerController.js";
 import { GetNowTimestampUTC } from "$lib/server/tool.js";
 import {
   CreatePage,
@@ -675,6 +676,8 @@ export async function POST({ request, cookies }) {
       resp = await UpdateRole(data.roleId, { name: data.name, status: data.status });
     } else if (action == "deleteRole") {
       resp = await DeleteRole(data.roleId, data.options);
+    } else if (action == "listDockerContainers") {
+      resp = await ListDockerContainers(data);
     }
     // ============ OIDC Group-Role Mappings ============
     else if (action == "getOidcGroupRoleMappings") {

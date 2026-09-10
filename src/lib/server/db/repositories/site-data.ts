@@ -24,7 +24,11 @@ export class SiteDataRepository extends BaseRepository {
     return await this.knex("site_data").where("key", key).first();
   }
 
+  async getAllSiteDataByPrefix(prefix: string): Promise<SiteData[]> {
+    return await this.knex("site_data").where("key", "like", `${prefix}.%`);
+  }
+
   async getAllSiteDataAnalytics(): Promise<SiteData[]> {
-    return await this.knex("site_data").where("key", "like", "analytics.%");
+    return await this.getAllSiteDataByPrefix("analytics");
   }
 }
