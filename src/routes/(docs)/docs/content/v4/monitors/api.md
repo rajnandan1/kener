@@ -25,6 +25,9 @@ API monitors send HTTP requests and evaluate the response with JavaScript.
 | `proxy`               | `string`                                       | —                | Optional forward proxy, e.g. `http://user:$PROXY_PASS@proxy.internal:3128`; overrides the [environment proxy](/docs/v4/setup/environment-variables#http-proxy) |
 | `eval`                | `string` (JS function)                         | built-in default | Receives response details                                                                                                                                      |
 
+> [!WARNING]
+> Header, body and URL values support `$SECRET` env substitution. If `url` uses plain `http://`, the substituted secrets are sent in cleartext — use `https://` unless the endpoint is on a trusted network.
+
 ## Default eval behavior {#default-eval}
 
 Built-in eval marks the monitor **UP** when:

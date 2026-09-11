@@ -37,6 +37,14 @@
   function removeHeader(index: number) {
     data.headers = data.headers?.filter((_: unknown, i: number) => i !== index);
   }
+
+  // Warn when a $SECRET env reference would be sent to a plain http:// target
+  // in cleartext. Same fields the server substitutes secrets into: url, body,
+  // header keys/values.
+  const secretsOverHttp = $derived(
+    /^http:\/\//i.test(data.url ?? "") &&
+      /\$\w+/.test(`${data.url} ${data.body || ""} ${JSON.stringify(data.headers || [])}`)
+  );
 </script>
 
 <div class="space-y-4">
@@ -44,6 +52,12 @@
     <div class="col-span-3 flex flex-col gap-2">
       <Label for="api-url">URL <span class="text-destructive">*</span></Label>
       <Input id="api-url" bind:value={data.url} placeholder="https://api.example.com/health" />
+      {#if secretsOverHttp}
+        <p class="text-xs text-amber-600 dark:text-amber-400">
+          $SECRET values are sent in cleartext over http:// — use https:// unless this endpoint is on a trusted
+          network.
+        </p>
+      {/if}
     </div>
     <div class="col-span-1 flex flex-col gap-2">
       <Label for="api-method">Method</Label>
