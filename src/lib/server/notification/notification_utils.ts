@@ -15,11 +15,10 @@ export function alertToVariables(
 ): AlertVariableMap {
   const createdAtDate = parseDbTimestamp(alert.created_at);
   const effectiveMonitorTag = monitorTag || config.monitor_tag || "unknown";
-  const alert_name = `Alert ${effectiveMonitorTag} for ${config.alert_for} ${config.alert_value} ${alert.alert_status} at ${createdAtDate.toISOString()}`;
 
   return {
     alert_id: alert.id,
-    alert_name: alert_name,
+    alert_name: effectiveMonitorTag,
     alert_for: config.alert_for,
     alert_value: config.alert_value,
     alert_status: alert.alert_status,
@@ -87,4 +86,20 @@ export function maintenanceToVariables(
     update_subject: `${subjectPrefix}: ${event.title}`,
     update_text: template,
   };
+}
+
+/**
+ * Error text for a failed send. A failed fetch() throws TypeError("fetch failed") and buries
+ * the real reason under `cause` (undici nests it two deep for a refused proxy tunnel:
+ * "Request was cancelled." -> "Proxy response (403) !== 200 when HTTP Tunneling"). Without
+ * this the trigger test only ever says "fetch failed".
+ */
+export function describeError(error: unknown): string {
+  if (!(error instanceof Error)) return String(error);
+  let innermost = "";
+  for (let c: unknown = error.cause; c !== undefined && c !== null; c = c instanceof Error ? c.cause : undefined) {
+    if (c instanceof Error) innermost = c.message;
+    else if (typeof c === "string") innermost = c;
+  }
+  return innermost && innermost !== error.message ? `${error.message}: ${innermost}` : error.message;
 }

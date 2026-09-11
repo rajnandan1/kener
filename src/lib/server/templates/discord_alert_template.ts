@@ -5,7 +5,7 @@ const template = `{
   "content": "{{#is_triggered}}🚨 **Alert Triggered**{{/is_triggered}}{{#is_resolved}}✅ **Alert Resolved**{{/is_resolved}}",
   "embeds": [
     {
-      "title": "{{alert_name}}",
+      "title": "Alert {{alert_name}} for {{alert_for}} {{alert_value}} {{alert_status}} at {{alert_timestamp}}",
       "url": "{{alert_cta_url}}",
       "color": {{#is_triggered}}15158332{{/is_triggered}}{{#is_resolved}}3066993{{/is_resolved}},
       "fields": [

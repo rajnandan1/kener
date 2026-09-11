@@ -42,7 +42,7 @@ This writes the `subscriptionsSettings` site configuration used by the subscript
 
 From the status page, user clicks **Subscribe**:
 
-1. Enter email.
+1. Enter email. If a [Captcha provider](/docs/v4/captcha) is enabled, solve the challenge first.
 2. Kener sends a 6-digit verification code.
 3. User enters OTP to verify.
 4. Kener stores a subscriber session token in browser storage.

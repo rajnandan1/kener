@@ -42,17 +42,18 @@ The charted per-check number is always the **metric value**, not the HTTP round-
 
 ## Configuration fields {#configuration-fields}
 
-| Field                 | Type      | Default  | Notes                                                            |
-| :-------------------- | :-------- | :------- | :--------------------------------------------------------------- |
-| `url`                 | `string`  | —        | Required. Prometheus base URL; base paths like `/prom` work      |
-| `query`               | `string`  | —        | Required. PromQL instant query                                   |
-| `down`                | `object`  | —        | Optional `{ operator, value }`; matches → DOWN                   |
-| `degraded`            | `object`  | —        | Optional `{ operator, value }`; matches → DEGRADED               |
-| `noDataStatus`        | `string`  | `"DOWN"` | Empty-result status: `UP` / `DEGRADED` / `DOWN`                  |
-| `errorStatus`         | `string`  | `"DOWN"` | Unreachable/unusable-response status: `UP` / `DEGRADED` / `DOWN` |
-| `headers`             | `array`   | `[]`     | Key/value pairs; `$SECRET` env substitution applies              |
-| `timeout`             | `number`  | `10000`  | Request timeout in ms                                            |
-| `allowSelfSignedCert` | `boolean` | `false`  | Skip TLS certificate verification                                |
+| Field                 | Type      | Default  | Notes                                                                                                                                                          |
+| :-------------------- | :-------- | :------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `url`                 | `string`  | —        | Required. Prometheus base URL; base paths like `/prom` work                                                                                                    |
+| `query`               | `string`  | —        | Required. PromQL instant query                                                                                                                                 |
+| `down`                | `object`  | —        | Optional `{ operator, value }`; matches → DOWN                                                                                                                 |
+| `degraded`            | `object`  | —        | Optional `{ operator, value }`; matches → DEGRADED                                                                                                             |
+| `noDataStatus`        | `string`  | `"DOWN"` | Empty-result status: `UP` / `DEGRADED` / `DOWN`                                                                                                                |
+| `errorStatus`         | `string`  | `"DOWN"` | Unreachable/unusable-response status: `UP` / `DEGRADED` / `DOWN`                                                                                               |
+| `headers`             | `array`   | `[]`     | Key/value pairs; `$SECRET` env substitution applies                                                                                                            |
+| `timeout`             | `number`  | `10000`  | Request timeout in ms                                                                                                                                          |
+| `allowSelfSignedCert` | `boolean` | `false`  | Skip TLS certificate verification                                                                                                                              |
+| `proxy`               | `string`  | —        | Optional forward proxy, e.g. `http://user:$PROXY_PASS@proxy.internal:3128`; overrides the [environment proxy](/docs/v4/setup/environment-variables#http-proxy) |
 
 `operator` is one of `>`, `>=`, `<`, `<=`, `==`, `!=`.
 
@@ -86,3 +87,4 @@ The charted per-check number is always the **metric value**, not the HTTP round-
 - **Immediate DOWN with an error message**: use "Test Monitor" — a bad PromQL query surfaces the Prometheus `error` field; an unreachable server surfaces the network error.
 - **Always no-data**: the query matched no series. Verify the query in Prometheus's own UI, or append `or vector(0)`.
 - **"query must return an instant vector or scalar"**: the query produced a range/matrix result. Use an instant query (no `[range]` in the outermost expression), or aggregate.
+- **`Failed to establish tunnel`**: the proxy refused the connection; see [proxy settings](/docs/v4/setup/environment-variables#http-proxy)

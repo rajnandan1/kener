@@ -7,8 +7,14 @@ interface RouteHandlers {
   delete?: APIHandler;
 }
 
-// Auto-import all handler files at build time
-const modules = import.meta.glob<{ default: APIHandler }>("./*/*.ts", { eager: true });
+// Auto-import all handler files at build time. Scoped to the four known
+// method filenames (not a bare "./*/*.ts") so a stray file dropped into an
+// action folder — e.g. a co-located post.test.ts — never gets eagerly
+// imported into the production bundle.
+const modules = import.meta.glob<{ default: APIHandler }>(
+  ["./*/get.ts", "./*/post.ts", "./*/put.ts", "./*/delete.ts"],
+  { eager: true },
+);
 
 const routes: Record<string, RouteHandlers> = {};
 

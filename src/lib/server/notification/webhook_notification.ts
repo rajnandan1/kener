@@ -1,4 +1,5 @@
 import type { WebhookTemplateJson } from "../types/db";
+import { describeError } from "./notification_utils.js";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import Mustache from "mustache";
 import type { SiteDataForNotification, TemplateVariableMap } from "./types.js";
@@ -76,6 +77,6 @@ export default async function send(
     return { success: true, status: response.status, data: responseData };
   } catch (error) {
     console.error("Error sending webhook", error);
-    return { error: "Error sending webhook", details: error };
+    return { error: `Error sending webhook: ${describeError(error)}`, details: error };
   }
 }

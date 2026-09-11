@@ -1,4 +1,7 @@
-html,
-body {
+/* Embeds render inside an <iframe> on the host page, so the canvas must stay transparent.
+   Scoped with :has() because every route group's CSS ends up in one file
+   (kit.output.bundleStrategy "single"): a bare `body` rule here would paint every page transparent. */
+html:has(.embed-app),
+body:has(.embed-app) {
   background-color: transparent;
 }

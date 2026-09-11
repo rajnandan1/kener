@@ -1,5 +1,5 @@
 import axios, { type AxiosRequestConfig } from "axios";
-import https from "https";
+import { AxiosProxyConfig } from "../proxy.js";
 import GC from "../../global-constants.js";
 import version from "../../version.js";
 import { GetRequiredSecrets, ReplaceAllOccurrences, ApplySecretsToHeaders } from "../tool.js";
@@ -46,12 +46,12 @@ class PrometheusCall {
 
   constructor(monitor: PrometheusMonitor) {
     this.monitor = monitor;
-    // Secret substitution applies to url + header values only, never the query.
+    // Secret substitution applies to url, proxy and header values only, never the query.
     // Read type_data defensively: a malformed monitor (missing type_data) must
     // be reported by execute() as an ERROR result, so the constructor must not
     // throw before execute() ever runs.
     const td = monitor.type_data;
-    this.envSecrets = GetRequiredSecrets(`${td?.url ?? ""} ${JSON.stringify(td?.headers || [])}`);
+    this.envSecrets = GetRequiredSecrets(`${td?.url ?? ""} ${td?.proxy ?? ""} ${JSON.stringify(td?.headers || [])}`);
   }
 
   /**
@@ -72,12 +72,14 @@ class PrometheusCall {
 
     const timeout = data.timeout || 10000;
 
-    // Apply secrets to the url only (never the query). Header secrets are
+    // Apply secrets to the url and proxy (never the query). Header secrets are
     // substituted per-field below.
     let url = data.url;
+    let proxy = data.proxy;
     for (const secret of this.envSecrets) {
       if (secret.replace === undefined) continue;
       url = ReplaceAllOccurrences(url, secret.find, secret.replace);
+      if (proxy) proxy = ReplaceAllOccurrences(proxy, secret.find, secret.replace);
     }
 
     // Build the query endpoint: strip trailing slashes, append /api/v1/query.
@@ -99,9 +101,7 @@ class PrometheusCall {
       timeout,
       data: `query=${encodeURIComponent(data.query)}`,
       validateStatus: () => true, // handle non-2xx ourselves
-      httpsAgent: new https.Agent({
-        rejectUnauthorized: !data.allowSelfSignedCert,
-      }),
+      ...AxiosProxyConfig(proxy, {}, { rejectUnauthorized: !data.allowSelfSignedCert }),
     };
 
     // 1. Transport errors -> DOWN.

@@ -1,4 +1,5 @@
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
+import { describeError } from "./notification_utils.js";
 import Mustache from "mustache";
 import version from "../../version.js";
 
@@ -45,14 +46,14 @@ export default async function send(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Discord webhook request failed with status ${response.status}: ${errorText}`);
-      return { error: `Discord webhook request failed with status ${response.status}`, details: errorText };
+      console.error(`Slack webhook request failed with status ${response.status}: ${errorText}`);
+      return { error: `Slack webhook request failed with status ${response.status}`, details: errorText };
     }
 
     const responseData = await response.text();
     return { success: true, status: response.status, data: responseData };
   } catch (error) {
-    console.error("Error sending Discord notification", error);
-    return { error: "Error sending Discord notification", details: error };
+    console.error("Error sending Slack notification", error);
+    return { error: `Error sending Slack notification: ${describeError(error)}`, details: error };
   }
 }

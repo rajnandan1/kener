@@ -14,15 +14,16 @@ API monitors send HTTP requests and evaluate the response with JavaScript.
 
 ## Configuration fields {#configuration-fields}
 
-| Field                 | Type                                           | Default          | Notes                         |
-| :-------------------- | :--------------------------------------------- | :--------------- | :---------------------------- |
-| `url`                 | `string`                                       | —                | Required                      |
-| `method`              | `GET\|POST\|PUT\|PATCH\|DELETE\|HEAD\|OPTIONS` | `GET`            |                               |
-| `headers`             | `{ key, value }[]`                             | `[]`             | Optional custom headers       |
-| `body`                | `string`                                       | `""`             | Sent for non-GET/HEAD methods |
-| `timeout`             | `number`                                       | `10000`          | Request timeout in ms         |
-| `allowSelfSignedCert` | `boolean`                                      | `false`          | Disables TLS verify when true |
-| `eval`                | `string` (JS function)                         | built-in default | Receives response details     |
+| Field                 | Type                                           | Default          | Notes                                                                                                                                                          |
+| :-------------------- | :--------------------------------------------- | :--------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `url`                 | `string`                                       | —                | Required                                                                                                                                                       |
+| `method`              | `GET\|POST\|PUT\|PATCH\|DELETE\|HEAD\|OPTIONS` | `GET`            |                                                                                                                                                                |
+| `headers`             | `{ key, value }[]`                             | `[]`             | Optional custom headers                                                                                                                                        |
+| `body`                | `string`                                       | `""`             | Sent for non-GET/HEAD methods                                                                                                                                  |
+| `timeout`             | `number`                                       | `10000`          | Request timeout in ms                                                                                                                                          |
+| `allowSelfSignedCert` | `boolean`                                      | `false`          | Disables TLS verify when true                                                                                                                                  |
+| `proxy`               | `string`                                       | —                | Optional forward proxy, e.g. `http://user:$PROXY_PASS@proxy.internal:3128`; overrides the [environment proxy](/docs/v4/setup/environment-variables#http-proxy) |
+| `eval`                | `string` (JS function)                         | built-in default | Receives response details                                                                                                                                      |
 
 ## Default eval behavior {#default-eval}
 
@@ -66,3 +67,4 @@ It must return:
 - **Always DOWN**: verify URL/method/headers/body
 - **TLS errors**: enable `allowSelfSignedCert` only for trusted self-signed endpoints
 - **Eval errors**: simplify eval and validate return shape
+- **`Failed to establish tunnel`**: the proxy refused the connection; see [proxy settings](/docs/v4/setup/environment-variables#http-proxy)

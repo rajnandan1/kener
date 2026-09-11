@@ -19,6 +19,7 @@
   import { t } from "$lib/stores/i18n";
   import trackEvent from "$lib/beacon";
   import ICONS from "$lib/icons";
+  import Captcha from "./Captcha.svelte";
 
   interface Props {
     compact?: boolean;
@@ -38,6 +39,9 @@
   // Form data
   let email = $state("");
   let otpValue = $state("");
+  let captchaRequired = $state(false);
+  let captchaToken = $state<string | null>(null);
+  let captchaRef: { reset: () => void } | undefined = $state();
 
   // Preferences data
   let subscriberEmail = $state("");
@@ -107,17 +111,23 @@
       const response = await fetch(clientResolver(resolve, "/dashboard-apis/subscription"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "login", email: email.trim() })
+        body: JSON.stringify({ action: "login", email: email.trim(), captchaToken })
       });
 
       if (!response.ok) {
         const data = await response.json();
-        errorMessage = $t("Failed to send verification code");
+        errorMessage = data?.message || $t("Failed to send verification code");
+        captchaToken = null;
+        captchaRef?.reset();
         return;
       }
 
       trackEvent("subscribe_login_sent", { source: "subscribe_menu" });
 
+      // The token is single-use and has now been consumed by the provider
+      // regardless of which UI path sent it -- clear it so nothing can
+      // accidentally resubmit it later.
+      captchaToken = null;
       currentView = "otp";
       otpValue = "";
     } catch (err) {
@@ -125,6 +135,18 @@
     } finally {
       isSubmitting = false;
     }
+  }
+
+  function handleResend() {
+    if (captchaRequired) {
+      // The OTP view has no captcha widget to produce a fresh token, and
+      // the one from the original submission is already consumed -- send
+      // the user back to solve a new challenge instead of silently
+      // replaying a token the provider will reject.
+      handleBackToEmail();
+      return;
+    }
+    handleLogin();
   }
 
   async function handleVerifyOTP() {
@@ -231,6 +253,19 @@
     open = false;
     errorMessage = "";
   }
+
+  // Google reCAPTCHA's expanded image-challenge renders as a second iframe
+  // appended outside this Dialog's own DOM subtree (unlike the basic
+  // checkbox, which nests inside it). Bits UI's outside-interaction
+  // detection sees clicks/focus landing on that iframe as "outside" and
+  // dismisses the dialog, orphaning the still-open challenge. Any outside
+  // interaction targeting an iframe is treated as captcha-challenge traffic
+  // and kept open — nothing else in this dialog renders a bare iframe.
+  function ignoreCaptchaIframeInteraction(event: PointerEvent | FocusEvent) {
+    if (event.target instanceof HTMLIFrameElement) {
+      event.preventDefault();
+    }
+  }
 </script>
 
 {#if compact}
@@ -264,7 +299,11 @@
 
 <Dialog.Root bind:open>
   <Dialog.Overlay class="backdrop-blur-[2px]" />
-  <Dialog.Content class="max-w-sm rounded-3xl">
+  <Dialog.Content
+    class="max-w-sm rounded-3xl"
+    onInteractOutside={ignoreCaptchaIframeInteraction}
+    onFocusOutside={ignoreCaptchaIframeInteraction}
+  >
     <Dialog.Header>
       <Dialog.Title class="flex items-center gap-2">
         <Bell class="h-5 w-5" />
@@ -307,11 +346,17 @@
             </div>
           </div>
 
+          <Captcha
+            bind:this={captchaRef}
+            onReady={(required) => (captchaRequired = required)}
+            onVerify={(token) => (captchaToken = token)}
+          />
+
           {#if errorMessage}
             <p class="text-destructive text-sm">{errorMessage}</p>
           {/if}
 
-          <Button onclick={handleLogin} disabled={isSubmitting} class="w-full">
+          <Button onclick={handleLogin} disabled={isSubmitting || (captchaRequired && !captchaToken)} class="w-full">
             {#if isSubmitting}
               <Loader2 class="mr-2 h-4 w-4 animate-spin" />
               {$t("Sending...")}
@@ -358,7 +403,7 @@
             </Button>
           </div>
 
-          <Button variant="link" onclick={handleLogin} disabled={isSubmitting} class="text-xs">
+          <Button variant="link" onclick={handleResend} disabled={isSubmitting} class="text-xs">
             {$t("Didn't receive the code? Resend")}
           </Button>
         </div>

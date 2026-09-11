@@ -27,6 +27,8 @@ Templates define the body and subject sent by triggers. Kener uses Mustache rend
 | `{{is_resolved}}`             |
 | `{{is_triggered}}`            |
 
+`{{alert_name}}` is the tag of the monitor the alert fired for. The shipped templates build their headline as `Alert {{alert_name}} for {{alert_for}} {{alert_value}} {{alert_status}} at {{alert_timestamp}}`. Any trigger created before this change whose stored template still uses a bare `{{alert_name}}` as a headline now shows only the tag there. The old defaults did this in four places: the email subject, the email heading, the Discord embed title, and the Slack section text. Paste the headline string wherever you want the full headline back.
+
 ## Canonical site variables {#canonical-site-variables}
 
 | Variable                 |

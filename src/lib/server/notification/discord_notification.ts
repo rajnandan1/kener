@@ -1,4 +1,5 @@
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
+import { describeError } from "./notification_utils.js";
 import Mustache from "mustache";
 import version from "../../version.js";
 
@@ -53,6 +54,6 @@ export default async function send(
     return { success: true, status: response.status, data: responseData };
   } catch (error) {
     console.error("Error sending Discord notification", error);
-    return { error: "Error sending Discord notification", details: error };
+    return { error: `Error sending Discord notification: ${describeError(error)}`, details: error };
   }
 }
