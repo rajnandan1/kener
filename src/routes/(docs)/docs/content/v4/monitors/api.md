@@ -26,7 +26,7 @@ API monitors send HTTP requests and evaluate the response with JavaScript.
 | `eval`                | `string` (JS function)                         | built-in default | Receives response details                                                                                                                                      |
 
 > [!WARNING]
-> Header, body and URL values support `$SECRET` env substitution. If `url` uses plain `http://`, the substituted secrets are sent in cleartext — use `https://` unless the endpoint is on a trusted network.
+> Header, body, URL and proxy values support `$SECRET` env substitution. If the URL (or an `http://` proxy) is unencrypted, the substituted secrets are sent in cleartext — use `https://` unless the endpoint is on a trusted network.
 
 ## Default eval behavior {#default-eval}
 

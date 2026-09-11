@@ -38,12 +38,13 @@
     data.headers = data.headers?.filter((_: unknown, i: number) => i !== index);
   }
 
-  // Warn when a $SECRET env reference would be sent to a plain http:// target
-  // in cleartext. Same fields the server substitutes secrets into: url, body,
-  // header keys/values.
+  // Warn when a $SECRET env reference would travel over plain http — either to
+  // an http:// target (secrets in url/body/headers) or to an http:// proxy
+  // (credentials embedded in the proxy url).
   const secretsOverHttp = $derived(
-    /^http:\/\//i.test(data.url ?? "") &&
-      /\$\w+/.test(`${data.url} ${data.body || ""} ${JSON.stringify(data.headers || [])}`)
+    (/^http:\/\//i.test(data.url ?? "") &&
+      /\$\w+/.test(`${data.url} ${data.body || ""} ${JSON.stringify(data.headers || [])}`)) ||
+      (/^http:\/\//i.test(data.proxy ?? "") && /\$\w+/.test(data.proxy))
   );
 </script>
 
@@ -54,8 +55,8 @@
       <Input id="api-url" bind:value={data.url} placeholder="https://api.example.com/health" />
       {#if secretsOverHttp}
         <p class="text-xs text-amber-600 dark:text-amber-400">
-          $SECRET values are sent in cleartext over http:// — use https:// unless this endpoint is on a trusted
-          network.
+          $SECRET values are sent in cleartext — the URL or proxy uses plain http://. Use https:// unless the
+          endpoint is on a trusted network.
         </p>
       {/if}
     </div>
