@@ -4,7 +4,7 @@ import GC from "../../global-constants.js";
 import * as cheerio from "cheerio";
 import { DefaultAPIEval } from "../../anywhere.js";
 import version from "../../version.js";
-import https from "https";
+import { AxiosProxyConfig } from "../proxy.js";
 import { performance } from "node:perf_hooks";
 import type { ApiMonitor, EvalResponse, MonitoringResult } from "../types/monitor.js";
 
@@ -18,7 +18,9 @@ class ApiCall {
     // be reported by execute() as an ERROR result, so the constructor must not
     // throw before execute() ever runs.
     const td = monitor.type_data;
-    this.envSecrets = GetRequiredSecrets(`${td?.url ?? ""} ${td?.body || ""} ${JSON.stringify(td?.headers || [])}`);
+    this.envSecrets = GetRequiredSecrets(
+      `${td?.url ?? ""} ${td?.body || ""} ${td?.proxy ?? ""} ${JSON.stringify(td?.headers || [])}`,
+    );
   }
 
   async execute(): Promise<MonitoringResult> {
@@ -39,6 +41,7 @@ class ApiCall {
 
     let body = this.monitor.type_data.body;
     let url = this.monitor.type_data.url;
+    let proxy = this.monitor.type_data.proxy;
 
     let method = this.monitor.type_data.method;
     let timeout = this.monitor.type_data.timeout || 10000;
@@ -53,6 +56,9 @@ class ApiCall {
       }
       if (!!url) {
         url = ReplaceAllOccurrences(url, secret.find, secret.replace);
+      }
+      if (!!proxy) {
+        proxy = ReplaceAllOccurrences(proxy, secret.find, secret.replace);
       }
     }
 
@@ -72,19 +78,12 @@ class ApiCall {
       validateStatus: () => true,
       maxContentLength: Infinity,
       maxBodyLength: Infinity,
+      ...AxiosProxyConfig(
+        proxy,
+        { keepAlive: true, keepAliveMsecs: 30000, maxSockets: 50, maxFreeSockets: 10, timeout },
+        { rejectUnauthorized: !this.monitor.type_data.allowSelfSignedCert },
+      ),
     };
-
-    // Always configure HTTPS agent for better connection handling
-    const httpsAgentOptions: https.AgentOptions = {
-      keepAlive: true,
-      keepAliveMsecs: 30000,
-      maxSockets: 50,
-      maxFreeSockets: 10,
-      timeout: timeout,
-      rejectUnauthorized: !this.monitor.type_data.allowSelfSignedCert,
-    };
-
-    options.httpsAgent = new https.Agent(httpsAgentOptions);
 
     if (!!body) {
       options.data = body;

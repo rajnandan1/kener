@@ -1,12 +1,15 @@
-@import url("https://fonts.bunny.net/css?family=geist:400,500,600,700|geist-mono:400,500");
-
 /* Docs typography + brand accent.
    Single family (Geist) with weight contrast; Geist Mono for code and labels.
    Brand accent is the Kener logo orange (#ff6600 = oklch(0.696 0.204 43.5)),
    deepened in light mode so it passes AA as text on white (4.6:1) and
    brightened in dark mode (6.9:1 on the dark background).
-   Tokens live on body so portaled dialogs inherit them too. */
-body {
+   Tokens live on body so portaled dialogs inherit them too.
+
+   Every route group's CSS ends up in one file (kit.output.bundleStrategy "single"), so the whole
+   sheet is scoped to pages that mount <main class="kener-docs">: the status page and /manage render
+   the same .prose and .markdown-alert markup and must keep their own look. Geist is loaded by the
+   docs layout's <link>, not an @import here, for the same reason. */
+body:has(.kener-docs) {
   font-family:
     "Geist",
     ui-sans-serif,
@@ -16,99 +19,99 @@ body {
   --primary: oklch(0.58 0.175 43);
   --primary-foreground: oklch(0.985 0.005 43);
   --ring: oklch(0.58 0.175 43);
-}
 
-.dark body {
-  --primary: oklch(0.7 0.18 43);
-  --primary-foreground: oklch(0.18 0.035 43);
-  --ring: oklch(0.7 0.18 43);
-}
+  .dark & {
+    --primary: oklch(0.7 0.18 43);
+    --primary-foreground: oklch(0.18 0.035 43);
+    --ring: oklch(0.7 0.18 43);
+  }
 
-::selection {
-  background: color-mix(in oklch, var(--primary) 25%, transparent);
-}
+  & ::selection {
+    background: color-mix(in oklch, var(--primary) 25%, transparent);
+  }
 
-/* Prose dark mode fixes */
-.dark .prose {
-  --tw-prose-body: var(--foreground);
-  --tw-prose-headings: var(--foreground);
-  --tw-prose-links: var(--primary);
-  --tw-prose-bold: var(--foreground);
-  --tw-prose-code: var(--foreground);
-  --tw-prose-pre-bg: var(--muted);
-}
+  /* Prose dark mode fixes */
+  .dark & .prose {
+    --tw-prose-body: var(--foreground);
+    --tw-prose-headings: var(--foreground);
+    --tw-prose-links: var(--primary);
+    --tw-prose-bold: var(--foreground);
+    --tw-prose-code: var(--foreground);
+    --tw-prose-pre-bg: var(--muted);
+  }
 
-/* Markdown Alerts (from marked-alert) */
-.markdown-alert {
-  padding: 0.75rem 1rem;
-  margin: 1.5rem 0;
-  border: 2px solid;
-  border-radius: 1rem;
-  background-color: var(--secondary);
-}
+  /* Markdown Alerts (from marked-alert) */
+  .markdown-alert {
+    padding: 0.75rem 1rem;
+    margin: 1.5rem 0;
+    border: 2px solid;
+    border-radius: 1rem;
+    background-color: var(--secondary);
+  }
 
-.markdown-alert > :first-child {
-  margin-top: 0;
-}
+  .markdown-alert > :first-child {
+    margin-top: 0;
+  }
 
-.markdown-alert > :last-child {
-  margin-top: 0;
-  margin-bottom: 0;
-  padding-left: 24px;
-}
+  .markdown-alert > :last-child {
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 24px;
+  }
 
-.markdown-alert .markdown-alert-title svg {
-  fill: currentColor;
-}
-.markdown-alert .markdown-alert-title {
-  display: flex;
-  align-items: center;
-  gap: 0rem;
-  font-weight: 600;
-  margin-bottom: 0rem;
-}
+  .markdown-alert .markdown-alert-title svg {
+    fill: currentColor;
+  }
+  .markdown-alert .markdown-alert-title {
+    display: flex;
+    align-items: center;
+    gap: 0rem;
+    font-weight: 600;
+    margin-bottom: 0rem;
+  }
 
-.markdown-alert-note {
-  border-color: hsl(220 90% 56%);
-  background-color: hsl(220 90% 56% / 0.3);
-}
+  .markdown-alert-note {
+    border-color: hsl(220 90% 56%);
+    background-color: hsl(220 90% 56% / 0.3);
+  }
 
-.markdown-alert-note .markdown-alert-title {
-  color: hsl(220 90% 56%);
-}
+  .markdown-alert-note .markdown-alert-title {
+    color: hsl(220 90% 56%);
+  }
 
-.markdown-alert-tip {
-  border-color: hsl(142 76% 36%);
-  background-color: hsl(142 76% 36% / 0.3);
-}
+  .markdown-alert-tip {
+    border-color: hsl(142 76% 36%);
+    background-color: hsl(142 76% 36% / 0.3);
+  }
 
-.markdown-alert-tip .markdown-alert-title {
-  color: hsl(142 76% 36%);
-}
+  .markdown-alert-tip .markdown-alert-title {
+    color: hsl(142 76% 36%);
+  }
 
-.markdown-alert-important {
-  border-color: hsl(271 81% 56%);
-  background-color: hsl(271 81% 56% / 0.3);
-}
+  .markdown-alert-important {
+    border-color: hsl(271 81% 56%);
+    background-color: hsl(271 81% 56% / 0.3);
+  }
 
-.markdown-alert-important .markdown-alert-title {
-  color: hsl(271 81% 56%);
-}
+  .markdown-alert-important .markdown-alert-title {
+    color: hsl(271 81% 56%);
+  }
 
-.markdown-alert-warning {
-  border-color: hsl(38 92% 50%);
-  background-color: hsl(38 92% 50% / 0.3);
-}
+  .markdown-alert-warning {
+    border-color: hsl(38 92% 50%);
+    background-color: hsl(38 92% 50% / 0.3);
+  }
 
-.markdown-alert-warning .markdown-alert-title {
-  color: hsl(38 92% 50%);
-}
+  .markdown-alert-warning .markdown-alert-title {
+    color: hsl(38 92% 50%);
+  }
 
-.markdown-alert-caution {
-  border-color: hsl(0 84% 60%);
-  background-color: hsl(0 84% 60% / 0.3);
-}
+  .markdown-alert-caution {
+    border-color: hsl(0 84% 60%);
+    background-color: hsl(0 84% 60% / 0.3);
+  }
 
-.markdown-alert-caution .markdown-alert-title {
-  color: hsl(0 84% 60%);
+  .markdown-alert-caution .markdown-alert-title {
+    color: hsl(0 84% 60%);
+  }
 }

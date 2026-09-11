@@ -193,6 +193,13 @@
     <Input id="prom-timeout" type="number" bind:value={data.timeout} placeholder="10000" />
   </div>
 
+  <!-- Proxy -->
+  <div class="flex flex-col gap-2">
+    <Label for="prom-proxy">Proxy URL</Label>
+    <Input id="prom-proxy" bind:value={data.proxy} placeholder="http://user:$PROXY_PASS@proxy.internal:3128" />
+    <p class="text-muted-foreground text-xs">Leave empty to use HTTP_PROXY / HTTPS_PROXY from the environment.</p>
+  </div>
+
   <!-- Self-signed -->
   <div class="flex items-center space-x-2">
     <Switch id="prom-self-signed" bind:checked={data.allowSelfSignedCert} />

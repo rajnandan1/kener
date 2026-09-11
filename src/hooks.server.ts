@@ -5,6 +5,10 @@ import db from "$lib/server/db/db";
 import type { UnauthorizedResponse, NotFoundResponse } from "$lib/types/api";
 import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
 import GC from "$lib/global-constants";
+import { InstallEnvProxy } from "$lib/server/proxy";
+
+// Dev runs the SvelteKit server and the scheduler as separate processes; each installs once.
+InstallEnvProxy();
 
 const API_PATH_PREFIX = "/api/";
 
