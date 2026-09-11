@@ -113,9 +113,11 @@ RUN apk add --no-cache \
     curl \
     libcap
 # Grant ping the NET_RAW capability so non-root users can send ICMP packets.
-# Isolated in its own RUN so a failed `apk add` is not masked by `|| true`
-# (the intent is only to tolerate setcap failing when ping is absent).
-RUN setcap cap_net_raw+ep /bin/ping || true
+# Isolated in its own RUN so a failed `apk add` is not masked. `iputils` above
+# guarantees the binary exists, so a setcap failure here is a real problem
+# (e.g. a filesystem that doesn't support the capability xattr) and must fail
+# the build rather than silently degrade the ping monitor to DNS-only checks.
+RUN setcap cap_net_raw+ep /bin/ping
 
 # ---------- Debian runtime ----------
 FROM node:${NODE_VERSION}-slim AS final-debian
@@ -126,8 +128,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     libcap2-bin && \
     rm -rf /var/lib/apt/lists/*
-# See alpine stage: keep setcap isolated so apt-get failures are not masked.
-RUN setcap cap_net_raw+ep /usr/bin/ping || true
+# See alpine stage: keep setcap isolated, and let a real failure fail the build.
+RUN setcap cap_net_raw+ep /usr/bin/ping
 
 # ---------- Selected variant ----------
 FROM final-${VARIANT} AS final
