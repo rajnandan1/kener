@@ -1,5 +1,5 @@
 const kenerAPITypeData = {
-  url: "https://kener.ing",
+  url: "https://kener.ing/healthcheck",
   method: "GET",
   headers: [],
   body: "",
