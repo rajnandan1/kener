@@ -20,6 +20,12 @@ const parseMonitorSettings = (value: string | null): ParsedMonitorSettings => {
   }
 };
 
+/** Parses an integer query param, falling back when it is missing or not a number (e.g. "NaN"). */
+export const parseIntParam = (value: string | null, fallback: number): number => {
+  const parsed = value ? parseInt(value, 10) : NaN;
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
 const fillMissingUptimeData = (
   rawUptimeData: TimestampStatusCount[],
   startTime: number,
