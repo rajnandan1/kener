@@ -1,6 +1,12 @@
 import type { Knex as KnexType } from "knex";
 import { BaseRepository } from "./base.js";
 import GC from "../../../global-constants.js";
+import {
+  rebuildBuckets,
+  rebuildAllBucketsForTag,
+  deleteBucketsBefore,
+  verifyBucketsForTag,
+} from "./monitoringBuckets.js";
 import type { MonitoringStatus } from "../../../types/status.js";
 import { GetMinuteStartNowTimestampUTC } from "../../tool.js";
 import type {
@@ -42,17 +48,23 @@ export class MonitoringRepository extends BaseRepository {
   async insertMonitoringData(data: MonitoringDataInsert): Promise<MonitoringData | null> {
     const { monitor_tag, timestamp, status, latency, type, error_message, raw_status } = data;
 
-    // Perform insert/update - works across PostgreSQL, MySQL, and SQLite
-    await this.knex("monitoring_data")
-      .insert({ monitor_tag, timestamp, status, latency, type, error_message, raw_status })
-      .onConflict(["monitor_tag", "timestamp"])
-      .merge({ status, latency, type, error_message, raw_status });
+    // The write and the rollup rebuild share one transaction so the two can not
+    // disagree if the process dies between them.
+    const record = await this.knex.transaction(async (trx: KnexType.Transaction) => {
+      // Perform insert/update - works across PostgreSQL, MySQL, and SQLite
+      await trx("monitoring_data")
+        .insert({ monitor_tag, timestamp, status, latency, type, error_message, raw_status })
+        .onConflict(["monitor_tag", "timestamp"])
+        .merge({ status, latency, type, error_message, raw_status });
 
-    // Query and return the inserted/updated record (works consistently across all databases)
-    const record = await this.knex("monitoring_data")
-      .where("monitor_tag", monitor_tag)
-      .where("timestamp", timestamp)
-      .first();
+      // This is an upsert, not an append: the row may already have existed with a
+      // different status. So rebuild the bucket from the raw rows rather than
+      // adding a delta, which would double count.
+      await rebuildBuckets(trx, monitor_tag, timestamp, timestamp);
+
+      // Query and return the inserted/updated record (works consistently across all databases)
+      return await trx("monitoring_data").where("monitor_tag", monitor_tag).where("timestamp", timestamp).first();
+    });
 
     return record as MonitoringData | null;
   }
@@ -262,10 +274,41 @@ export class MonitoringRepository extends BaseRepository {
       .first();
   }
 
+  /** Rebuilds every rollup bucket for one monitor, in a single transaction. */
+  async rebuildAllBucketsForTag(monitor_tag: string): Promise<number> {
+    return await this.knex.transaction(async (trx: KnexType.Transaction) => {
+      return await rebuildAllBucketsForTag(trx, monitor_tag);
+    });
+  }
+
+  /** Compares the rollup against the raw rows and returns any difference. */
+  async verifyBucketsForTag(monitor_tag: string, fromTs: number, toTs: number) {
+    return await verifyBucketsForTag(this.knex, monitor_tag, fromTs, toTs);
+  }
+
   async background(retentionDays: number = 100): Promise<number> {
     const safeRetentionDays = Math.max(1, Math.floor(retentionDays || 100));
     const cutoffTimestamp = GetMinuteStartNowTimestampUTC() - 86400 * safeRetentionDays;
-    return await this.knex("monitoring_data").where("timestamp", "<", cutoffTimestamp).del();
+
+    return await this.knex.transaction(async (trx: KnexType.Transaction) => {
+      const deleted = await trx("monitoring_data").where("timestamp", "<", cutoffTimestamp).del();
+
+      // Buckets that fall entirely before the cutoff go with the raw rows.
+      await deleteBucketsBefore(trx, cutoffTimestamp);
+
+      // The cutoff is minute aligned, so it usually lands inside a bucket, and
+      // that straddling bucket still holds the rows at or after the cutoff.
+      // Walk the monitors table rather than asking monitoring_data which tags
+      // were touched: the monitor list is small and already indexed, while that
+      // question means a second scan of everything the delete just matched.
+      // Rebuilding a bucket with no rows behind it is a no-op.
+      const monitors = (await trx("monitors").select("tag")) as Array<{ tag: string }>;
+      for (const monitor of monitors) {
+        await rebuildBuckets(trx, monitor.tag, cutoffTimestamp, cutoffTimestamp);
+      }
+
+      return deleted;
+    });
   }
 
   async consecutivelyStatusFor(monitor_tag: string, status: string, lastX: number): Promise<boolean> {
@@ -395,14 +438,22 @@ export class MonitoringRepository extends BaseRepository {
 
     // Recovery (confirmed UP): rows become the UP side — clear any held error text in one update.
     if (confirmThreshold === null) {
-      return await this.knex("monitoring_data")
-        .where("monitor_tag", monitor_tag)
-        .whereIn("timestamp", timestamps)
-        .whereNotNull("raw_status")
-        .update({
-          status: this.knex.ref("raw_status"),
-          error_message: null,
-        });
+      return await this.knex.transaction(async (trx: KnexType.Transaction) => {
+        const updated = await trx("monitoring_data")
+          .where("monitor_tag", monitor_tag)
+          .whereIn("timestamp", timestamps)
+          .whereNotNull("raw_status")
+          .update({
+            status: trx.ref("raw_status"),
+            error_message: null,
+          });
+
+        // This rewrites status on existing rows, so the buckets behind them are
+        // now stale. Same span handling as the confirmed-unhealthy branch below.
+        await rebuildBuckets(trx, monitor_tag, Math.min(...timestamps), Math.max(...timestamps));
+
+        return updated;
+      });
     }
 
     // Confirmed unhealthy: set each row's status from its observed raw_status and APPEND a
@@ -435,6 +486,13 @@ export class MonitoringRepository extends BaseRepository {
           .where({ monitor_tag, timestamp: row.timestamp })
           .update({ status: row.raw_status, error_message: nextMessage });
       }
+
+      // The grace window can straddle midnight, so this can rewrite yesterday's
+      // rows as well as today's. Rebuild across the whole span it touched.
+      if (timestamps.length > 0) {
+        await rebuildBuckets(trx, monitor_tag, Math.min(...timestamps), Math.max(...timestamps));
+      }
+
       return updated;
     });
   }
@@ -481,25 +539,45 @@ export class MonitoringRepository extends BaseRepository {
         results.push(result);
       }
 
+      // An admin can rewrite any past range from the manage UI, so rebuild every
+      // bucket the edit touched.
+      await rebuildBuckets(trx, monitor_tag, start, end);
+
       return results;
     });
   }
 
   async deleteMonitorDataByTag(tag?: string, start?: number, end?: number, status?: MonitoringStatus): Promise<number> {
-    const query = this.knex("monitoring_data");
-    if (tag) {
-      query.where("monitor_tag", tag);
-    }
-    if (start !== undefined) {
-      query.where("timestamp", ">=", start);
-    }
-    if (end !== undefined) {
-      query.where("timestamp", "<=", end);
-    }
-    if (status) {
-      query.where("status", status);
-    }
-    return await query.del();
+    return await this.knex.transaction(async (trx: KnexType.Transaction) => {
+      const applyFilters = (q: KnexType.QueryBuilder) => {
+        if (tag) q.where("monitor_tag", tag);
+        if (start !== undefined) q.where("timestamp", ">=", start);
+        if (end !== undefined) q.where("timestamp", "<=", end);
+        if (status) q.where("status", status);
+        return q;
+      };
+
+      // Every argument is optional, so this can delete anything from one minute
+      // of one monitor up to the entire table. Collect the affected monitors
+      // BEFORE the delete, while their raw rows still exist.
+      const affected = (await applyFilters(trx("monitoring_data")).distinct("monitor_tag")) as Array<{
+        monitor_tag: string;
+      }>;
+
+      const deleted = await applyFilters(trx("monitoring_data")).del();
+
+      for (const row of affected) {
+        if (start !== undefined && end !== undefined) {
+          await rebuildBuckets(trx, row.monitor_tag, start, end);
+        } else {
+          // An open-ended delete has no bounded window to rebuild, so rebuild
+          // the monitor wholesale rather than guess at the range.
+          await rebuildAllBucketsForTag(trx, row.monitor_tag);
+        }
+      }
+
+      return deleted;
+    });
   }
 
   /**
