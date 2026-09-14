@@ -4,7 +4,7 @@ import db from "$lib/server/db/db";
 import { GetMinuteStartNowTimestampUTC } from "$lib/server/tool";
 import type { StatusType } from "$lib/types/status";
 import type { TimestampStatusCount } from "$lib/server/types/db";
-import { buildMonitorBarResponse } from "./shared";
+import { buildMonitorBarResponse, parseIntParam } from "./shared";
 
 const DEFAULT_DAYS = 90;
 const MAX_DAYS = 90;
@@ -37,9 +37,9 @@ export default async function get(req: APIServerRequest): Promise<Response> {
   const tag = req.query.get("tag");
   const daysStr = req.query.get("days");
   // const numberOfDaysReceived
-  const days = Math.min(MAX_DAYS, Math.max(1, daysStr ? parseInt(daysStr, 10) : DEFAULT_DAYS));
+  const days = Math.min(MAX_DAYS, Math.max(1, parseIntParam(daysStr, DEFAULT_DAYS)));
   const endOfDayTodayAtTzStr = req.query.get("endOfDayTodayAtTz");
-  const endOfDayTodayAtTz = endOfDayTodayAtTzStr ? parseInt(endOfDayTodayAtTzStr, 10) : GetMinuteStartNowTimestampUTC();
+  const endOfDayTodayAtTz = parseIntParam(endOfDayTodayAtTzStr, GetMinuteStartNowTimestampUTC());
   if (!tag) {
     return error(400, { message: "tag query parameter is required" });
   }
