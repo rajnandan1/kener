@@ -20,10 +20,19 @@ const parseMonitorSettings = (value: string | null): ParsedMonitorSettings => {
   }
 };
 
-/** Parses an integer query param, falling back when it is missing or not a whole integer (e.g. "NaN", "30abc", "1.5"). */
+/**
+ * Parses an integer query param, falling back when it is missing or not a whole
+ * integer (e.g. "NaN", "30abc", "1.5").
+ *
+ * Digit strings too large for an exact integer ("9".repeat(21)) also fall back:
+ * they survive the pattern but `parseInt` returns 1e21, and `days` is used as a
+ * loop bound in `fillMissingUptimeData`.
+ */
 export const parseIntParam = (value: string | null, fallback: number): number => {
   const trimmed = value?.trim();
-  return trimmed && /^[+-]?\d+$/.test(trimmed) ? parseInt(trimmed, 10) : fallback;
+  if (!trimmed || !/^[+-]?\d+$/.test(trimmed)) return fallback;
+  const parsed = parseInt(trimmed, 10);
+  return Number.isSafeInteger(parsed) ? parsed : fallback;
 };
 
 const fillMissingUptimeData = (
