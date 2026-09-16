@@ -5,6 +5,7 @@ import { GetMinuteStartNowTimestampUTC } from "$lib/server/tool";
 import type { StatusType } from "$lib/types/status";
 import type { TimestampStatusCount } from "$lib/server/types/db";
 import { buildMonitorBarResponse } from "./shared";
+import GC from "$lib/global-constants";
 
 const DEFAULT_DAYS = 90;
 const MAX_DAYS = 90;
@@ -44,7 +45,8 @@ export default async function get(req: APIServerRequest): Promise<Response> {
     return error(400, { message: "tag query parameter is required" });
   }
 
-  const monitor = await db.getMonitorByTag(tag);
+  const monitors = await db.getMonitors({ tag, status: GC.ACTIVE, is_hidden: GC.NO });
+  const monitor = monitors[0];
   if (!monitor) {
     return error(404, { message: "Monitor not found" });
   }

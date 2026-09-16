@@ -56,7 +56,7 @@ export default async function get(req: APIServerRequest): Promise<Response> {
   const startTime = endOfDayTodayAtTz - days * 24 * 60 * 60;
 
   const [monitors, latestDataAll, aggregatedData] = await Promise.all([
-    db.getMonitorsByTags(tags),
+    db.getMonitors({ tags, status: GC.ACTIVE, is_hidden: GC.NO }),
     GetLatestMonitoringDataAllActive(tags),
     GetStatusCountsByIntervalGroupedByMonitor(tags, startTime, 86400, days),
   ]);
