@@ -174,9 +174,15 @@
       // reCAPTCHA (and hCaptcha) attach `.render` asynchronously after the
       // script's onload fires — calling render() immediately can hit
       // "grecaptcha.render is not a function". Their SDKs expose `.ready()`
-      // to gate on; Turnstile has no such method, so it just falls through
-      // to an immediate render as before.
-      if (global?.ready) {
+      // to gate on.
+      //
+      // Turnstile has a `ready()` too, but it throws whenever its api.js
+      // <script> is async or defer — and a dynamically inserted script, like
+      // the one loadScript() creates, is always async. The throw lands in the
+      // catch below, so the widget is never drawn and Continue stays disabled.
+      // Turnstile's `render` is usable as soon as the script has loaded, so
+      // skip ready() and render directly.
+      if (provider !== "turnstile" && global?.ready) {
         global.ready(renderWidget);
       } else {
         renderWidget();
