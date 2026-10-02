@@ -23,6 +23,7 @@ describe("GET /capture.js — OpenPanel", () => {
     const res = await call();
     const body = await res.text();
     expect(res.headers.get("Content-Type")).toBe("application/javascript");
+    expect(res.headers.get("Cache-Control")).toBe("no-cache");
     expect(body).toContain('clientId: "cid-123"');
     expect(body).toContain('apiUrl: "https://op.example.com/api"');
     expect(body).toContain('"https://op.example.com/op1.js"');
