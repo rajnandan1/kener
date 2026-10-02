@@ -60,7 +60,8 @@ describe("GET /capture.js — OpenPanel", () => {
     vi.mocked(GetAllAnalyticsData).mockResolvedValue([
       { key: "analytics.openpanel", value: { isEnabled: false, requirements: { "Client ID": "cid-123" } } },
     ]);
-    const body = await (await call()).text();
-    expect(body).toBe("//no data");
+    const res = await call();
+    expect(res.headers.get("Cache-Control")).toBe("no-cache");
+    expect(await res.text()).toBe("//no data");
   });
 });
