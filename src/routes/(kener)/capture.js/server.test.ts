@@ -23,6 +23,7 @@ describe("GET /capture.js — OpenPanel", () => {
     const res = await call();
     const body = await res.text();
     expect(res.headers.get("Content-Type")).toBe("application/javascript");
+    expect(res.headers.get("Cache-Control")).toBe("no-cache");
     expect(body).toContain('clientId: "cid-123"');
     expect(body).toContain('apiUrl: "https://op.example.com/api"');
     expect(body).toContain('"https://op.example.com/op1.js"');
@@ -59,7 +60,8 @@ describe("GET /capture.js — OpenPanel", () => {
     vi.mocked(GetAllAnalyticsData).mockResolvedValue([
       { key: "analytics.openpanel", value: { isEnabled: false, requirements: { "Client ID": "cid-123" } } },
     ]);
-    const body = await (await call()).text();
-    expect(body).toBe("//no data");
+    const res = await call();
+    expect(res.headers.get("Cache-Control")).toBe("no-cache");
+    expect(await res.text()).toBe("//no data");
   });
 });
