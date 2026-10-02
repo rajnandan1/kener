@@ -39,9 +39,12 @@ describe("Captcha", () => {
   });
 
   it("renders the widget container and reports required when a provider is configured", async () => {
+    // A provider no other test here loads: loadScript caches per src at module
+    // scope, so this test's real (unmocked) script load would leak into any
+    // later test that simulates that provider's load (Turnstile and hCaptcha both do).
     vi.stubGlobal(
       "fetch",
-      vi.fn().mockResolvedValue({ json: async () => ({ provider: "turnstile", siteKey: "site-key-123" }) }),
+      vi.fn().mockResolvedValue({ json: async () => ({ provider: "recaptcha", siteKey: "site-key-123" }) }),
     );
     const onReady = vi.fn();
     const onVerify = vi.fn();
@@ -133,6 +136,55 @@ describe("Captcha", () => {
     document.head.removeChild(script);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (window as any).hcaptcha;
+  });
+
+  it("renders Turnstile without going through ready(), which throws for an async-loaded script", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ json: async () => ({ provider: "turnstile", siteKey: "site-key-123" }) }),
+    );
+
+    // Mirrors the real api.js: `ready()` throws whenever its <script> tag is
+    // async or defer — which a dynamically inserted script always is — while
+    // `render` is usable as soon as the script has loaded.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let opts: any;
+    const turnstile = {
+      ready: () => {
+        throw new Error(
+          "[Cloudflare Turnstile] Remove async/defer from the Turnstile api.js script tag before using turnstile.ready().",
+        );
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      render: (_container: HTMLElement, options: any) => {
+        opts = options;
+        return "widget-1";
+      },
+    };
+
+    // The global only appears once the script has run, right before its load
+    // event — so a render() attempted before the load would find nothing.
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+    document.head.appendChild(script);
+    setTimeout(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (window as any).turnstile = turnstile;
+      script.dispatchEvent(new Event("load"));
+    }, 10);
+
+    const onVerify = vi.fn();
+    await render(Captcha, { onVerify, onReady: vi.fn() });
+
+    await vi.waitFor(() => expect(opts).toBeDefined());
+    expect(opts.sitekey).toBe("site-key-123");
+
+    opts.callback("solved-token");
+    expect(onVerify).toHaveBeenLastCalledWith("solved-token");
+
+    document.head.removeChild(script);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (window as any).turnstile;
   });
 
 });
