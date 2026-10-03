@@ -39,6 +39,8 @@ The method is used to define the HTTP method that should be used to make the req
 
 The headers are used to define the headers that should be sent with the request. It is optional and has to be a valid JSON object.
 
+Header values support `$SECRET` environment variable substitution. If the monitor URL uses plain `http://`, the substituted secrets are sent in cleartext — prefer `https://` unless the endpoint is on a trusted network.
+
 ## Eval {#eval}
 
 The eval is used to define the JavaScript code that should be used to evaluate the response. It is optional and has be a valid JavaScript code.
