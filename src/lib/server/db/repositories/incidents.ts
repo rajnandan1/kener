@@ -726,6 +726,7 @@ export class IncidentsRepository extends BaseRepository {
     return await this.knex("incident_monitors")
       .join("monitors", "incident_monitors.monitor_tag", "monitors.tag")
       .where("incident_monitors.incident_id", incident_id)
+      .andWhere("monitors.is_hidden", "NO")
       .select(
         "incident_monitors.*",
         "monitors.name as monitor_name",
