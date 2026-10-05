@@ -3,17 +3,17 @@ title: Monitor Visibility
 description: Control where a monitor appears publicly with the status, hidden, page, exclusivity, and sharing flags
 ---
 
-Five settings decide where a monitor shows up on your public status site. Two of them (`status` and `is_hidden`) apply everywhere. The other three only narrow things down further.
+Five settings decide where a monitor shows up on your public status site. Two of them (`status` and `is_hidden`) work site-wide. The other three only narrow things down further.
 
 ## The flags {#flags}
 
-| Flag                                                             | Set it in                                                                              | Values                | Default     | What it controls                                                                     |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------- | ----------- | ------------------------------------------------------------------------------------ |
-| `status`                                                         | **Manage → Monitors** (Active switch) or the monitor's General Settings                | `ACTIVE` / `INACTIVE` | `ACTIVE`    | `INACTIVE` stops all checks and removes the monitor from every public surface.       |
-| `is_hidden`                                                      | **Manage → Monitors** (Visible switch) or **General Settings → Hidden in Status Page** | `YES` / `NO`          | `NO`        | `YES` removes the monitor from every public surface. Checks and alerts keep running. |
-| Page membership                                                  | **Manage → Pages → _(page)_ → Page Monitors**                                          | on page / not on page | not on page | Which status pages list the monitor.                                                 |
-| `globalPageVisibilitySettings.forceExclusivity`                  | **Manage → Site Configurations**                                                       | `true` / `false`      | `false`     | Scopes the root events page, root RSS feed, and logo link to the current page.       |
-| `sharing_options.showShareBadgeMonitor`, `showShareEmbedMonitor` | Monitor **Sharing Options** and **Site Configurations**                                | `true` / `false`      | `true`      | Only shows or hides the Badges and Embed buttons on the monitor page.                |
+| Flag                                                             | Set it in                                                                              | Values                | Default     | What it controls                                                                                                                                 |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------- | --------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `status`                                                         | **Manage → Monitors** (Active switch) or the monitor's General Settings                | `ACTIVE` / `INACTIVE` | `ACTIVE`    | `INACTIVE` stops all checks and removes the monitor from public pages, badges, embeds, feeds, and the sitemap. Events still list it as affected. |
+| `is_hidden`                                                      | **Manage → Monitors** (Visible switch) or **General Settings → Hidden in Status Page** | `YES` / `NO`          | `NO`        | `YES` removes the monitor from every public surface. Checks and alerts keep running.                                                             |
+| Page membership                                                  | **Manage → Pages → _(page)_ → Page Monitors**                                          | on page / not on page | not on page | Which status pages list the monitor.                                                                                                             |
+| `globalPageVisibilitySettings.forceExclusivity`                  | **Manage → Site Configurations**                                                       | `true` / `false`      | `false`     | Scopes the root events page, root RSS feed, and logo link to the current page.                                                                   |
+| `sharing_options.showShareBadgeMonitor`, `showShareEmbedMonitor` | Monitor **Sharing Options** and **Site Configurations**                                | `true` / `false`      | `true`      | Only shows or hides the Badges and Embed buttons on the monitor page.                                                                            |
 
 > [!NOTE]
 > In the monitors list, the **Visible** switch shows the opposite of `is_hidden`: switch on means `is_hidden = NO`.
@@ -41,7 +41,7 @@ Five settings decide where a monitor shows up on your public status site. Two of
 | Per-monitor RSS `/monitors/{tag}/rss.xml`             | Returns 404 for hidden or inactive monitors.                                                                                                                                                                                              |
 | Events pages and page RSS feeds                       | Events stay listed. Hidden monitors are removed from each event's affected-monitor list. A page-scoped list shows an event only when it is global (`is_global = YES`) or touches a monitor that is on the page, `ACTIVE`, and not hidden. |
 | `sitemap.xml`                                         | Includes `ACTIVE`, non-hidden monitors.                                                                                                                                                                                                   |
-| REST API `/api/v4/*`                                  | Needs an API key and returns every monitor. Filter with `?status=ACTIVE&is_hidden=NO`. See [API Reference](/docs/v4/api-reference).                                                                                                       |
+| REST API `/api/v4/*`                                  | Needs an API key and returns every monitor. Filter with `?status=ACTIVE&is_hidden=NO`. See [API Reference](/docs/spec/v4/).                                                                                                               |
 | Manage dashboard                                      | Shows every monitor.                                                                                                                                                                                                                      |
 
 > [!NOTE]
