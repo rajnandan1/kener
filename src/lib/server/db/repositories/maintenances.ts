@@ -524,15 +524,12 @@ export class MaintenancesRepository extends BaseRepository {
       .leftJoin("monitors", "maintenance_monitors.monitor_tag", "monitors.tag");
 
     if (tags && tags.length > 0) {
-      query.where(function () {
-        this.whereIn("maintenance_monitors.monitor_tag", tags);
-      });
+      query.whereIn("maintenance_monitors.monitor_tag", tags).andWhere("monitors.is_hidden", "NO");
     } else {
       query.where("maintenances.is_global", "YES");
     }
 
     const rows = await query
-      .andWhere("monitors.is_hidden", "NO")
       .andWhere("maintenances.status", GC.ACTIVE)
       .whereIn("maintenances_events.status", [GC.ONGOING])
       .andWhere("maintenances_events.start_date_time", "<=", timestamp)
