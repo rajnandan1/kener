@@ -86,6 +86,10 @@
                           "content": "v4/monitors/grace-period"
                         },
                         {
+                          "title": "Visibility",
+                          "content": "v4/monitors/visibility"
+                        },
+                        {
                           "title": "API Monitors",
                           "content": "v4/monitors/api"
                         },
