@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("$lib/server/db/db", () => ({
   default: {
-    getMonitorsByTags: vi.fn().mockResolvedValue([]),
+    getMonitors: vi.fn().mockResolvedValue([]),
   },
 }));
 
