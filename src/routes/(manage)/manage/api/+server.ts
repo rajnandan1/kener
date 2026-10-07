@@ -50,6 +50,7 @@ import {
   DeleteMonitorCompletelyUsingTag,
   CloneMonitor,
   GetSiteDataByKey,
+  MaskSiteDataSecret,
   GetMonitoringDataPaginated,
 } from "$lib/server/controllers/controller.js";
 
@@ -139,7 +140,6 @@ import heicConvert from "heic-convert";
 import serverResolver from "$lib/server/resolver.js";
 import { ACTION_PERMISSION_MAP } from "$lib/allPerms.js";
 import { TestOidcConnection, ClearOidcConfigCache } from "$lib/server/controllers/oidcController.js";
-import { MaskString } from "$lib/server/tool.js";
 
 export async function POST({ request, cookies }) {
   const payload = await request.json();
@@ -173,7 +173,9 @@ export async function POST({ request, cookies }) {
       data.userID = userDB.id;
       resp = await UpdateUserData(data);
     } else if (action == "getAllSiteData") {
-      resp = await GetAllSiteData();
+      resp = Object.fromEntries(
+        Object.entries(await GetAllSiteData()).map(([key, value]) => [key, MaskSiteDataSecret(key, value)]),
+      );
     } else if (action == "manualUpdate") {
       await ManualUpdateUserData(data.id, data);
       resp = await GetUserByIDDashboard(data.id);
@@ -653,7 +655,7 @@ export async function POST({ request, cookies }) {
       if (!!!siteData) {
         throw new Error("Site data not found for the given key");
       }
-      resp = siteData;
+      resp = MaskSiteDataSecret(key, siteData);
     } else if (action == "updateSubscriptionsConfig") {
       resp = await InsertKeyValue("subscriptionsSettings", JSON.stringify(data));
     } else if (action == "getRoles") {
@@ -708,16 +710,7 @@ export async function POST({ request, cookies }) {
     } else if (action == "testOidcConnection") {
       resp = await TestOidcConnection(data.settings);
     } else if (action == "getOidcSettingsMasked") {
-      const raw = await GetSiteDataByKey("oidcSettings");
-      if (raw && typeof raw === "object") {
-        const settings = { ...(raw as Record<string, unknown>) };
-        if (settings.client_secret && typeof settings.client_secret === "string") {
-          settings.client_secret = MaskString(settings.client_secret);
-        }
-        resp = settings;
-      } else {
-        resp = raw;
-      }
+      resp = MaskSiteDataSecret("oidcSettings", await GetSiteDataByKey("oidcSettings"));
     }
   } catch (error: unknown) {
     console.log(error);
@@ -733,22 +726,6 @@ async function storeSiteData(data: { [x: string]: any }) {
       let element = data[key];
       if (key === "socialPreviewImage" && (element === null || element === undefined)) {
         element = "";
-      }
-      // If oidcSettings is saved without client_secret, preserve the existing one.
-      // An explicit empty string clears it.
-      if (key === "oidcSettings" && typeof element === "string") {
-        try {
-          const newSettings = JSON.parse(element);
-          if (newSettings.client_secret === undefined) {
-            const existing = await GetSiteDataByKey("oidcSettings");
-            if (existing && typeof existing === "object") {
-              newSettings.client_secret = (existing as Record<string, unknown>).client_secret;
-              element = JSON.stringify(newSettings);
-            }
-          }
-        } catch {
-          // If parsing fails, proceed with the original value
-        }
       }
       await InsertKeyValue(key, element);
 

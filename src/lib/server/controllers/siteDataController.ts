@@ -1,4 +1,5 @@
 import db from "../db/db.js";
+import { MaskString } from "../tool.js";
 import { siteDataKeys } from "./siteDataKeys.js";
 import type { Cookies } from "@sveltejs/kit";
 import type {
@@ -70,7 +71,44 @@ export interface SiteDataTransformed {
   globalMaintenanceNotificationSettings?: GlobalMaintenanceNotificationSettings;
 }
 
-export function InsertKeyValue(key: string, value: string): Promise<number[]> {
+function secretPath(key: string): string[] | null {
+  if (key === "oidcSettings") return ["client_secret"];
+  if (key.startsWith("captcha.")) return ["requirements", "Secret Key"];
+  return null;
+}
+
+function readPath(value: unknown, path: string[]): unknown {
+  return path.reduce<unknown>(
+    (v, k) => (v && typeof v === "object" ? (v as Record<string, unknown>)[k] : undefined),
+    value,
+  );
+}
+
+function writePath(value: unknown, [head, ...rest]: string[], secret: string): Record<string, unknown> {
+  const obj = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+  return { ...obj, [head]: rest.length ? writePath(obj[head], rest, secret) : secret };
+}
+
+/** Returns a copy of a site-data value with its secret field masked, for any response that leaves the server. */
+export function MaskSiteDataSecret(key: string, value: unknown): unknown {
+  const path = secretPath(key);
+  const secret = path && readPath(value, path);
+  if (!path || typeof secret !== "string" || !secret) return value;
+  return writePath(value, path, MaskString(secret));
+}
+
+/** Puts the stored secret back when a save sends the masked secret or leaves it out. An empty string clears it. */
+export function RestoreSiteDataSecret(key: string, value: unknown, stored: unknown): unknown {
+  const path = secretPath(key);
+  const storedSecret = path && readPath(stored, path);
+  if (!path || typeof storedSecret !== "string" || !storedSecret) return value;
+  if (!value || typeof value !== "object") return value;
+  const incoming = readPath(value, path);
+  if (incoming !== undefined && incoming !== MaskString(storedSecret)) return value;
+  return writePath(value, path, storedSecret);
+}
+
+export async function InsertKeyValue(key: string, value: string): Promise<number[]> {
   let f = siteDataKeys.find((k) => k.key === key);
   if (!f) {
     console.trace(`Invalid key: ${key}`);
@@ -79,6 +117,9 @@ export function InsertKeyValue(key: string, value: string): Promise<number[]> {
   if (!f.isValid(value)) {
     console.trace(`Invalid value for key: ${key}`);
     throw new Error(`Invalid value for key: ${key}`);
+  }
+  if (secretPath(key)) {
+    value = JSON.stringify(RestoreSiteDataSecret(key, JSON.parse(value), await GetSiteDataByKey(key)));
   }
   return db.insertOrUpdateSiteData(key, value, f.data_type);
 }

@@ -1,6 +1,7 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import db from "$lib/server/db/db";
 import { siteDataKeys } from "$lib/server/controllers/siteDataKeys";
+import { InsertKeyValue, MaskSiteDataSecret } from "$lib/server/controllers/siteDataController";
 import type {
   GetSiteDataKeyResponse,
   UpdateSiteDataKeyResponse,
@@ -47,7 +48,7 @@ export const GET: RequestHandler = async ({ params }) => {
 
   const response: GetSiteDataKeyResponse = {
     key: data.key,
-    value: data.data_type === "object" ? JSON.parse(data.value) : data.value,
+    value: MaskSiteDataSecret(data.key, data.data_type === "object" ? JSON.parse(data.value) : data.value),
     data_type: data.data_type,
   };
 
@@ -117,11 +118,11 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
   }
 
   // Insert or update the value
-  await db.insertOrUpdateSiteData(configKey, valueToStore, keyConfig.data_type);
+  await InsertKeyValue(configKey, valueToStore);
 
   const response: UpdateSiteDataKeyResponse = {
     key: configKey,
-    value: keyConfig.data_type === "object" ? body.value : valueToStore,
+    value: MaskSiteDataSecret(configKey, keyConfig.data_type === "object" ? body.value : valueToStore),
     data_type: keyConfig.data_type,
   };
 
