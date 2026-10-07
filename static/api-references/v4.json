@@ -2256,7 +2256,9 @@
           "key": {
             "type": "string"
           },
-          "value": {},
+          "value": {
+            "description": "Secret fields (`oidcSettings.client_secret` and the `Secret Key` of `captcha.*` entries) are returned masked. A PATCH that sends the masked value back keeps the stored secret."
+          },
           "data_type": {
             "type": "string"
           }
