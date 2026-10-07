@@ -1,5 +1,5 @@
 import db from "../db/db.js";
-import { MaskString } from "../tool.js";
+import { IsMaskedString, MaskString } from "../tool.js";
 import { siteDataKeys } from "./siteDataKeys.js";
 import type { Cookies } from "@sveltejs/kit";
 import type {
@@ -97,14 +97,15 @@ export function MaskSiteDataSecret(key: string, value: unknown): unknown {
   return writePath(value, path, MaskString(secret));
 }
 
-/** Puts the stored secret back when a save sends the masked secret or leaves it out. An empty string clears it. */
+/** Puts the stored secret back when a save sends any masked secret or leaves it out. An empty string clears it. */
 export function RestoreSiteDataSecret(key: string, value: unknown, stored: unknown): unknown {
   const path = secretPath(key);
   const storedSecret = path && readPath(stored, path);
   if (!path || typeof storedSecret !== "string" || !storedSecret) return value;
   if (!value || typeof value !== "object") return value;
   const incoming = readPath(value, path);
-  if (incoming !== undefined && incoming !== MaskString(storedSecret)) return value;
+  const unchanged = incoming === undefined || (typeof incoming === "string" && IsMaskedString(incoming));
+  if (!unchanged) return value;
   return writePath(value, path, storedSecret);
 }
 

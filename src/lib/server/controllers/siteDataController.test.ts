@@ -47,6 +47,13 @@ describe("InsertKeyValue", () => {
     expect(written()).toEqual(captcha("real-secret"));
   });
 
+  it("keeps the stored secret when a form loaded before a rotation sends the old mask", async () => {
+    const oldMask = MaskSiteDataSecret("captcha.hcaptcha", captcha("old-secret"));
+    stored("captcha.hcaptcha", captcha("rotated-secret"));
+    await InsertKeyValue("captcha.hcaptcha", JSON.stringify(oldMask));
+    expect(written()).toEqual(captcha("rotated-secret"));
+  });
+
   it("keeps the stored OIDC secret when the save leaves it out", async () => {
     stored("oidcSettings", { client_id: "id", client_secret: "real-secret" });
     await InsertKeyValue("oidcSettings", JSON.stringify({ client_id: "new-id" }));
