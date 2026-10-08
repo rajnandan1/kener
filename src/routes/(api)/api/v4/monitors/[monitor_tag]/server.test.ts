@@ -107,8 +107,11 @@ describe("PATCH /api/v4/monitors/{tag}", () => {
     for (const proxy of [{}, ["http://proxy.internal:3128"]]) {
       const monitor = stored("API", { url: "https://example.com", proxy });
 
-      expect((await patch(monitor, { name: "Renamed" })).status).toBe(200);
-      expect((await patch(monitor, { name: "Renamed", type_data: { ...monitor.type_data } })).status).toBe(200);
+      for (const body of [{ name: "Renamed" }, { name: "Renamed", type_data: { ...monitor.type_data } }]) {
+        const response = await patch(monitor, body);
+        expect(response.status).toBe(200);
+        expect((await response.json()).monitor.type_data.proxy).toEqual(proxy);
+      }
     }
   });
 });
