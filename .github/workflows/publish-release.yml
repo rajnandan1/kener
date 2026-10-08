@@ -5,21 +5,28 @@ on:
     types:
       - published
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to publish (for example: v4.1.7)"
+        required: true
+        type: string
 
 env:
+  RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
   DOCKERHUB_REGISTRY: docker.io
   GITHUB_REGISTRY: ghcr.io
   DOCKERHUB_IMAGE_NAME: ${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name }}
   GITHUB_IMAGE_NAME: ${{ github.repository }}
 
 concurrency:
-  group: release-docker-${{ github.event.release.tag_name || github.ref }}
+  group: release-docker-${{ inputs.tag || github.event.release.tag_name }}
   cancel-in-progress: true
 
 jobs:
   build-and-push-release:
     name: Build and push release Docker images
     strategy:
+      fail-fast: false
       matrix:
         variant: [debian, alpine]
         base_path: ["", "/status"]
@@ -33,12 +40,12 @@ jobs:
       - name: Check out release tag
         uses: actions/checkout@v4.2.2
         with:
-          ref: refs/tags/${{ github.event.release.tag_name || github.ref_name }}
+          ref: refs/tags/${{ env.RELEASE_TAG }}
           fetch-depth: 0
 
       - name: Validate package version matches release tag
         run: |
-          TAG="${{ github.event.release.tag_name || github.ref_name }}"
+          TAG="$RELEASE_TAG"
           EXPECTED_VERSION="${TAG#v}"
           PACKAGE_VERSION=$(node -p 'require("./package.json").version')
 
@@ -74,7 +81,7 @@ jobs:
       - name: Compute release tags
         id: vars
         run: |
-          TAG="${{ github.event.release.tag_name || github.ref_name }}"
+          TAG="$RELEASE_TAG"
           NORM_TAG="${TAG#v}"
 
           if [ "${{ matrix.base_path }}" = "/status" ]; then
