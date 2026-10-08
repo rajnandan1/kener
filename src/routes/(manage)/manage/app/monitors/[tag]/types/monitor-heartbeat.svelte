@@ -16,9 +16,10 @@
 
   if (!data.degradedRemainingMinutes) data.degradedRemainingMinutes = 5;
   if (!data.downRemainingMinutes) data.downRemainingMinutes = 10;
+  const storedSecret = data.secretString;
   if (!data.secretString) refreshSecret();
 
-  const secretValid = $derived(IsValidHeartbeatSecret(data.secretString));
+  const secretValid = $derived(data.secretString === storedSecret || IsValidHeartbeatSecret(data.secretString));
 
   let heartbeatUrl = $derived(
     tag
@@ -70,7 +71,7 @@
   </div>
 
   <div class="flex flex-col gap-2">
-    <Label for="hb-secret">Heartbeat secret</Label>
+    <Label for="hb-secret">Heartbeat secret <span class="text-destructive">*</span></Label>
     <div>
       <InputGroup.Root>
         <InputGroup.Input

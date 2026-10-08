@@ -1806,7 +1806,7 @@
             "type": "string",
             "minLength": 12,
             "pattern": "^[A-Za-z0-9._~-]+$",
-            "description": "`HEARTBEAT` only. The heartbeat secret: the last segment of `/ext/heartbeat/{tag}/{secret}`. Use at least 12 characters from `A-Z a-z 0-9 . _ ~ -`. A value that breaks this rule returns `400` with code `BAD_REQUEST`. If a `HEARTBEAT` monitor is saved without it, the server generates one (for example `focused-galois-sharp-chaum`) and the response shows it. A cloned heartbeat monitor gets a new secret.",
+            "description": "`HEARTBEAT` only. The heartbeat secret: the last segment of `/ext/heartbeat/{tag}/{secret}`. Use at least 12 characters from `A-Z a-z 0-9 . _ ~ -`. A new or changed value that breaks this rule returns `400` with code `BAD_REQUEST`. A stored value sent back unchanged is accepted. If a `HEARTBEAT` monitor is saved without it, the server generates one (for example `focused-galois-sharp-chaum`) and the response shows it. A cloned heartbeat monitor gets a new secret.",
             "examples": ["my-job-hb-secret-01"]
           }
         },

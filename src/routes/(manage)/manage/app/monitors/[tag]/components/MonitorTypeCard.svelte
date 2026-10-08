@@ -109,6 +109,8 @@
     typeData = normalizeGroupTypeData(typeData);
   }
 
+  const storedHeartbeatSecret = typeData?.secretString;
+
   let savingType = $state(false);
   let testingMonitor = $state(false);
   let testResult = $state<MonitoringResult | null>(null);
@@ -223,7 +225,7 @@
         const data = typeData as any;
         if (!data.degradedRemainingMinutes || data.degradedRemainingMinutes < 1) return false;
         if (!data.downRemainingMinutes || data.downRemainingMinutes <= data.degradedRemainingMinutes) return false;
-        if (!IsValidHeartbeatSecret(data.secretString)) return false;
+        if (data.secretString !== storedHeartbeatSecret && !IsValidHeartbeatSecret(data.secretString)) return false;
         return true;
       }
 

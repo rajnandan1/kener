@@ -87,7 +87,7 @@ const heartbeatMonitor = (typeData: Record<string, unknown> | null, id?: number)
 });
 
 describe("monitor save: heartbeat secret", () => {
-  const rejection = `Invalid heartbeat secret. ${HEARTBEAT_SECRET_RULE}`;
+  const rejection = `Heartbeat secret breaks the rule. ${HEARTBEAT_SECRET_RULE}`;
 
   it("rejects a secret with a character outside the URL-safe set", async () => {
     await expect(CreateUpdateMonitor(heartbeatMonitor({ secretString: "alertmanager/hb-01" }))).rejects.toThrow(
@@ -118,6 +118,37 @@ describe("monitor save: heartbeat secret", () => {
       expect(typeData.secretString).toMatch(/^[a-z]+-[a-z]+-[a-z]+-[a-z]+$/);
     }
     expect(saved[0]).toMatchObject({ degradedRemainingMinutes: 5, downRemainingMinutes: 10 });
+  });
+
+  it("keeps a stored secret the rule would reject when an admin save leaves it unchanged", async () => {
+    mockedDb.getMonitors.mockResolvedValueOnce([heartbeatMonitor({ secretString: "ab" }, 7)] as never);
+
+    await CreateUpdateMonitor({ ...heartbeatMonitor({ secretString: "ab" }, 7), name: "Renamed" });
+
+    expect(mockedDb.updateMonitor).toHaveBeenCalledOnce();
+    expect(mockedDb.updateMonitor.mock.calls[0][0]).toMatchObject({ name: "Renamed" });
+    expect(JSON.parse(mockedDb.updateMonitor.mock.calls[0][0].type_data!).secretString).toBe("ab");
+  });
+
+  it("keeps the stored type_data when an admin save sends none, as the status switch does", async () => {
+    const storedMonitor = heartbeatMonitor({ secretString: "my-alertmanager-hb-01" }, 7);
+    mockedDb.getMonitors.mockResolvedValueOnce([storedMonitor] as never);
+
+    await CreateUpdateMonitor({ ...storedMonitor, type_data: undefined, status: "INACTIVE" });
+
+    expect(mockedDb.updateMonitor.mock.calls[0][0]).toMatchObject({
+      status: "INACTIVE",
+      type_data: storedMonitor.type_data,
+    });
+  });
+
+  it("rejects a changed secret that breaks the rule on update", async () => {
+    mockedDb.getMonitors.mockResolvedValueOnce([
+      heartbeatMonitor({ secretString: "my-alertmanager-hb-01" }, 7),
+    ] as never);
+
+    await expect(CreateUpdateMonitor(heartbeatMonitor({ secretString: "ab" }, 7))).rejects.toThrow(rejection);
+    expect(mockedDb.updateMonitor).not.toHaveBeenCalled();
   });
 
   it("gives a clone of a heartbeat monitor a new secret", async () => {

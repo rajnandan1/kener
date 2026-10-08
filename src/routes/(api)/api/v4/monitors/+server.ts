@@ -8,11 +8,7 @@ import type {
   BadRequestResponse,
 } from "$lib/types/api";
 import type { MonitorRecord } from "$lib/server/types/db";
-import {
-  GetMonitorsParsed,
-  ValidateHeartbeatSecret,
-  WithHeartbeatSecret,
-} from "$lib/server/controllers/monitorsController";
+import { GetMonitorsParsed, WithValidHeartbeatSecret } from "$lib/server/controllers/monitorsController";
 
 export const GET: RequestHandler = async ({ url }) => {
   const status = url.searchParams.get("status") || undefined;
@@ -128,8 +124,9 @@ export const POST: RequestHandler = async ({ request }) => {
     external_url: body.external_url ?? null,
   };
 
+  let monitorToInsert: typeof monitorData;
   try {
-    ValidateHeartbeatSecret(monitorData);
+    monitorToInsert = WithValidHeartbeatSecret(monitorData);
   } catch (e) {
     const errorResponse: BadRequestResponse = {
       error: { code: "BAD_REQUEST", message: (e as Error).message },
@@ -137,7 +134,7 @@ export const POST: RequestHandler = async ({ request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  await db.insertMonitor(WithHeartbeatSecret(monitorData));
+  await db.insertMonitor(monitorToInsert);
 
   // Fetch the created monitor
   const createdMonitor = await GetMonitorsParsed({ tag: body.tag }).then((monitors) =>
