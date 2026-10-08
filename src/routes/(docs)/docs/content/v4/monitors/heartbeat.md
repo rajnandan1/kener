@@ -17,6 +17,22 @@ Accepted methods: `GET` and `POST`.
 
 > Older heartbeat URLs used a colon — `/ext/heartbeat/{tag}:{secret}`. Those still work; they are rewritten to the path-separated form automatically, so existing cron jobs need no changes.
 
+## Heartbeat secret {#heartbeat-secret}
+
+The `{secret}` part of the URL is the heartbeat secret. The monitor tag is public, so the secret is what stops others from sending fake heartbeats. Kener stores it in `type_data.secretString`.
+
+Rule: at least 12 characters, using only `A-Z a-z 0-9 . _ ~ -`. A secret that follows the rule goes into the URL without encoding.
+
+- **Admin UI**: type a value in **Heartbeat secret**, or click **New URL** for a random one.
+- **API**: set `type_data.secretString` on `POST /api/v4/monitors` or `PATCH /api/v4/monitors/{tag}`. A value that breaks the rule returns HTTP `400` with code `BAD_REQUEST`. See the [API Reference](/docs/spec/v4/).
+- **Not set**: when a `HEARTBEAT` monitor is saved without `secretString`, Kener generates one, for example `focused-galois-sharp-chaum`. The `POST`/`PATCH` response includes it.
+- **Clone**: a cloned heartbeat monitor gets a new secret. Give the sender the clone's URL.
+
+> [!TIP]
+> For infrastructure as code, set `secretString` yourself when you create the monitor. Then the sender (a cron job, a Prometheus Alertmanager rule) can be configured with the URL before the monitor exists.
+
+Kener checks the rule only when a save sends `secretString`. Secrets stored before the rule keep working until you change them.
+
 ## Minimum setup {#minimum-setup}
 
 Set:
@@ -47,7 +63,8 @@ Latency is recorded as elapsed time since the last heartbeat (ms).
     "type": "HEARTBEAT",
     "type_data": {
         "degradedRemainingMinutes": 5,
-        "downRemainingMinutes": 10
+        "downRemainingMinutes": 10,
+        "secretString": "my-job-hb-secret-01"
     }
 }
 ```
@@ -55,11 +72,12 @@ Latency is recorded as elapsed time since the last heartbeat (ms).
 Minimal cron usage pattern:
 
 ```bash
-*/5 * * * * /path/to/job.sh && curl -s "https://your-kener-host/ext/heartbeat/my-job/my-secret"
+*/5 * * * * /path/to/job.sh && curl -s "https://your-kener-host/ext/heartbeat/my-job/my-job-hb-secret-01"
 ```
 
 ## Troubleshooting {#troubleshooting}
 
 - **Always NO_DATA**: endpoint never called or wrong `tag`/`secret`
+- **`Invalid heartbeat secret`**: the URL secret does not match `secretString`. Copy the URL again from the monitor page, or from the API response.
 - **Always DOWN/DEGRADED**: thresholds too low for actual job interval
 - **Signal accepted but stale**: ensure heartbeat is sent only after successful completion
