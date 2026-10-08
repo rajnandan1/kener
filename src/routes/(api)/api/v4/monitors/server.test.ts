@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const { db } = vi.hoisted(() => {
   const rows = new Map<string, Record<string, unknown>>();
@@ -23,7 +23,23 @@ const post = (body: Record<string, unknown>) =>
     request: new Request("http://localhost/api/v4/monitors", { method: "POST", body: JSON.stringify(body) }),
   } as Parameters<typeof POST>[0]);
 
+beforeEach(() => {
+  db.insertMonitor.mockClear();
+});
+
 describe("POST /api/v4/monitors", () => {
+  it("returns 400 for a proxy that is not an http(s) URL", async () => {
+    for (const proxy of ["proxy.internal:3128", "socks5://proxy.internal:1080"]) {
+      const response = await post({ tag: "api", name: "API", type_data: { url: "https://example.com", proxy } });
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({
+        error: { code: "BAD_REQUEST", message: "Proxy URL must be a valid http:// or https:// URL" },
+      });
+    }
+    expect(db.insertMonitor).not.toHaveBeenCalled();
+  });
+
   it("returns 400 for a heartbeat secret that breaks the rule", async () => {
     for (const secretString of ["a/b?c", "ab"]) {
       const response = await post({ tag: "hb", name: "HB", monitor_type: "HEARTBEAT", type_data: { secretString } });
