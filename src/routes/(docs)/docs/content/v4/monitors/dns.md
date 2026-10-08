@@ -71,7 +71,7 @@ Before comparison, values are normalized by runtime logic:
 
 ```json
 {
-    "type": "DNS",
+    "monitor_type": "DNS",
     "type_data": {
         "host": "example.com",
         "lookupRecord": "A",
@@ -85,7 +85,7 @@ Before comparison, values are normalized by runtime logic:
 
 ```json
 {
-    "type": "DNS",
+    "monitor_type": "DNS",
     "type_data": {
         "host": "example.com",
         "transport": "TLS",

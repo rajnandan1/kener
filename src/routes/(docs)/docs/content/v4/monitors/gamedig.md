@@ -57,7 +57,7 @@ Return:
 
 ```json
 {
-    "type": "GAMEDIG",
+    "monitor_type": "GAMEDIG",
     "type_data": {
         "gameId": "minecraft",
         "host": "mc.example.com",

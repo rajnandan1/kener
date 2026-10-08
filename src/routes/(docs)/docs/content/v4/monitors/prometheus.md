@@ -61,7 +61,7 @@ The charted per-check number is always the **metric value**, not the HTTP round-
 
 ```json
 {
-    "type": "PROMETHEUS",
+    "monitor_type": "PROMETHEUS",
     "type_data": {
         "url": "https://prometheus.example.com",
         "query": "avg(rate(http_requests_total{job=\"api\"}[5m]))",
