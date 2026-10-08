@@ -31,8 +31,7 @@ const patch = (monitor: ReturnType<typeof stored>, body: Record<string, unknown>
   PATCH({
     locals: { monitor },
     request: new Request("http://localhost/api/v4/monitors/hb", { method: "PATCH", body: JSON.stringify(body) }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any);
+  } as Parameters<typeof PATCH>[0]);
 
 beforeEach(() => {
   rows.clear();
@@ -47,7 +46,7 @@ describe("PATCH /api/v4/monitors/{tag}", () => {
 
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({
-      error: { code: "BAD_REQUEST", message: `Invalid heartbeat secret. ${HEARTBEAT_SECRET_RULE}` },
+      error: { code: "BAD_REQUEST", message: `Heartbeat secret breaks the rule. ${HEARTBEAT_SECRET_RULE}` },
     });
     expect(db.updateMonitor).not.toHaveBeenCalled();
   });
@@ -64,5 +63,22 @@ describe("PATCH /api/v4/monitors/{tag}", () => {
 
     expect(response.status).toBe(200);
     expect((await response.json()).monitor).toMatchObject({ name: "Renamed", type_data: { secretString: "ab" } });
+  });
+
+  it("keeps a stored secret the rule would reject when the body sends it back unchanged", async () => {
+    const monitor = stored("HEARTBEAT", { secretString: "ab", downRemainingMinutes: 10 });
+    const response = await patch(monitor, { name: "Renamed", type_data: { ...monitor.type_data } });
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).monitor).toMatchObject({ name: "Renamed", type_data: { secretString: "ab" } });
+  });
+
+  it("returns 400 when the body changes the stored secret to one that breaks the rule", async () => {
+    const response = await patch(stored("HEARTBEAT", { secretString: "my-alertmanager-hb-01" }), {
+      type_data: { secretString: "ab" },
+    });
+
+    expect(response.status).toBe(400);
+    expect(db.updateMonitor).not.toHaveBeenCalled();
   });
 });

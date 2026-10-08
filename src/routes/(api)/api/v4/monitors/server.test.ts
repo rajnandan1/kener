@@ -21,8 +21,7 @@ import { HEARTBEAT_SECRET_RULE } from "$lib/anywhere";
 const post = (body: Record<string, unknown>) =>
   POST({
     request: new Request("http://localhost/api/v4/monitors", { method: "POST", body: JSON.stringify(body) }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any);
+  } as Parameters<typeof POST>[0]);
 
 describe("POST /api/v4/monitors", () => {
   it("returns 400 for a heartbeat secret that breaks the rule", async () => {
@@ -31,7 +30,7 @@ describe("POST /api/v4/monitors", () => {
 
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({
-        error: { code: "BAD_REQUEST", message: `Invalid heartbeat secret. ${HEARTBEAT_SECRET_RULE}` },
+        error: { code: "BAD_REQUEST", message: `Heartbeat secret breaks the rule. ${HEARTBEAT_SECRET_RULE}` },
       });
     }
     expect(db.insertMonitor).not.toHaveBeenCalled();

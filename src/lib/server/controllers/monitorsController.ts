@@ -228,28 +228,33 @@ function parseTypeData(typeData: string | null | undefined): Record<string, unkn
   }
 }
 
-export function ValidateHeartbeatSecret(monitor: Pick<MonitorInput, "monitor_type" | "type_data">): void {
-  if (monitor.monitor_type !== "HEARTBEAT") return;
-  const secret = parseTypeData(monitor.type_data)?.secretString;
-  if (secret !== undefined && !IsValidHeartbeatSecret(secret)) {
-    throw new Error(`Invalid heartbeat secret. ${HEARTBEAT_SECRET_RULE}`);
-  }
-}
-
 const newHeartbeatSecret = (): string => randomName() + "-" + randomName();
 
-export function WithHeartbeatSecret<T extends MonitorInput>(monitor: T): T {
+/**
+ * Returns the HEARTBEAT monitor to save, with a generated secret when it has none. Throws when
+ * the secret is new or changed and breaks the rule; an unchanged stored secret is kept as is.
+ */
+export function WithValidHeartbeatSecret<T extends Pick<MonitorInput, "monitor_type" | "type_data">>(
+  monitor: T,
+  storedSecret?: unknown,
+): T {
   if (monitor.monitor_type !== "HEARTBEAT") return monitor;
   const typeData = parseTypeData(monitor.type_data);
-  if (!typeData || typeData.secretString) return monitor;
+  if (!typeData) return monitor;
+  const secret = typeData.secretString;
+  if (secret !== undefined && secret !== storedSecret && !IsValidHeartbeatSecret(secret)) {
+    throw new Error(`Heartbeat secret breaks the rule. ${HEARTBEAT_SECRET_RULE}`);
+  }
+  if (secret) return monitor;
   return { ...monitor, type_data: JSON.stringify({ ...typeData, secretString: newHeartbeatSecret() }) };
 }
 
 export const CreateUpdateMonitor = async (monitor: MonitorInput): Promise<number | number[]> => {
   let monitorData = { ...monitor };
   validateTypeDataProxy(monitorData);
-  ValidateHeartbeatSecret(monitorData);
-  monitorData = WithHeartbeatSecret(monitorData);
+  const stored = monitorData.id ? (await db.getMonitors({ id: monitorData.id }))[0] : undefined;
+  if (stored && monitorData.type_data === undefined) monitorData.type_data = stored.type_data;
+  monitorData = WithValidHeartbeatSecret(monitorData, parseTypeData(stored?.type_data)?.secretString);
   if (monitorData.id) {
     return await db.updateMonitor(monitorData as MonitorRecord);
   } else {

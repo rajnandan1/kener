@@ -3,8 +3,7 @@ import db from "$lib/server/db/db";
 import {
   GetMonitorsParsed,
   DeleteMonitorCompletelyUsingTag,
-  ValidateHeartbeatSecret,
-  WithHeartbeatSecret,
+  WithValidHeartbeatSecret,
 } from "$lib/server/controllers/monitorsController";
 import type {
   GetMonitorResponse,
@@ -93,18 +92,6 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     updateData.confirmation_threshold = existingMonitor.confirmation_threshold ?? 1;
   }
 
-  try {
-    ValidateHeartbeatSecret({
-      monitor_type: updateData.monitor_type as string,
-      type_data: JSON.stringify(body.type_data ?? null),
-    });
-  } catch (e) {
-    const errorResponse: BadRequestResponse = {
-      error: { code: "BAD_REQUEST", message: (e as Error).message },
-    };
-    return json(errorResponse, { status: 400 });
-  }
-
   // Handle JSON fields - merge with existing data instead of replacing
   if (body.type_data !== undefined) {
     if (body.type_data === null) {
@@ -148,7 +135,20 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     updateData.monitor_settings_json = JSON.stringify(existingMonitor.monitor_settings_json);
   }
 
-  await db.updateMonitor(WithHeartbeatSecret(updateData as unknown as Parameters<typeof db.updateMonitor>[0]));
+  let monitorToSave: Parameters<typeof db.updateMonitor>[0];
+  try {
+    monitorToSave = WithValidHeartbeatSecret(
+      updateData as unknown as Parameters<typeof db.updateMonitor>[0],
+      existingMonitor.type_data?.secretString,
+    );
+  } catch (e) {
+    const errorResponse: BadRequestResponse = {
+      error: { code: "BAD_REQUEST", message: (e as Error).message },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
+  await db.updateMonitor(monitorToSave);
 
   // Fetch the updated monitor
   const updatedMonitor = await GetMonitorsParsed({ tag: monitorTag }).then((monitors) => monitors[0]);

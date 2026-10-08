@@ -34,6 +34,20 @@ describe("monitor-heartbeat form", () => {
     await expect.element(screen.getByLabelText("Heartbeat secret")).toBeValid();
   });
 
+  it("accepts the stored secret while unchanged, even one the rule would reject", async () => {
+    const data = $state({ secretString: "ab" } as HeartbeatMonitorTypeData);
+    const screen = await render(MonitorHeartbeat, { data, tag: "hb-mon" });
+    const input = screen.getByLabelText("Heartbeat secret");
+
+    await expect.element(input).toBeValid();
+
+    await input.fill("abc");
+    await expect.element(input).toBeInvalid();
+
+    await input.fill("ab");
+    await expect.element(input).toBeValid();
+  });
+
   it("generates a secret once on load and lets the user clear it", async () => {
     const data = $state({} as HeartbeatMonitorTypeData);
     const screen = await render(MonitorHeartbeat, { data, tag: "hb-mon" });
