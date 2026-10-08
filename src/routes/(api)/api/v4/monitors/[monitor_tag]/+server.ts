@@ -1,6 +1,10 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import db from "$lib/server/db/db";
-import { GetMonitorsParsed, DeleteMonitorCompletelyUsingTag } from "$lib/server/controllers/monitorsController";
+import {
+  GetMonitorsParsed,
+  DeleteMonitorCompletelyUsingTag,
+  WithValidHeartbeatSecret,
+} from "$lib/server/controllers/monitorsController";
 import type {
   GetMonitorResponse,
   MonitorResponse,
@@ -131,7 +135,20 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     updateData.monitor_settings_json = JSON.stringify(existingMonitor.monitor_settings_json);
   }
 
-  await db.updateMonitor(updateData as unknown as Parameters<typeof db.updateMonitor>[0]);
+  let monitorToSave: Parameters<typeof db.updateMonitor>[0];
+  try {
+    monitorToSave = WithValidHeartbeatSecret(
+      updateData as unknown as Parameters<typeof db.updateMonitor>[0],
+      existingMonitor.type_data?.secretString,
+    );
+  } catch (e) {
+    const errorResponse: BadRequestResponse = {
+      error: { code: "BAD_REQUEST", message: (e as Error).message },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
+  await db.updateMonitor(monitorToSave);
 
   // Fetch the updated monitor
   const updatedMonitor = await GetMonitorsParsed({ tag: monitorTag }).then((monitors) => monitors[0]);

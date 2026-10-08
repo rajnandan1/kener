@@ -36,7 +36,7 @@ Set:
 
 ```json
 {
-    "type": "SQL",
+    "monitor_type": "SQL",
     "type_data": {
         "dbType": "pg",
         "connectionString": "postgresql://monitor:$DB_PASSWORD@db.example.com:5432/app",

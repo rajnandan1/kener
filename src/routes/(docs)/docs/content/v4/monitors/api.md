@@ -53,7 +53,7 @@ It must return:
 
 ```json
 {
-    "type": "API",
+    "monitor_type": "API",
     "type_data": {
         "url": "https://api.example.com/health",
         "method": "GET",

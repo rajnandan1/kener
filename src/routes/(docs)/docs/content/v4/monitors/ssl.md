@@ -39,7 +39,7 @@ Connection/certificate retrieval errors also return **DOWN**.
 
 ```json
 {
-    "type": "SSL",
+    "monitor_type": "SSL",
     "type_data": {
         "host": "example.com",
         "port": "443",

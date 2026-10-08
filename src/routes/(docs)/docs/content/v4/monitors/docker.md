@@ -81,7 +81,7 @@ Latency is the round-trip time of the Docker API call, so the latency chart show
 
 ```json
 {
-    "type": "DOCKER",
+    "monitor_type": "DOCKER",
     "type_data": {
         "connectionType": "tls",
         "daemon": "docker.example.com:2376",

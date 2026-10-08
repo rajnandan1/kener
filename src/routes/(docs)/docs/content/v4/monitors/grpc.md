@@ -39,7 +39,7 @@ Connection errors and timeouts return **DOWN**.
 
 ```json
 {
-    "type": "GRPC",
+    "monitor_type": "GRPC",
     "type_data": {
         "host": "grpc.example.com",
         "port": 50051,
@@ -54,7 +54,7 @@ Connection errors and timeouts return **DOWN**.
 
 ```json
 {
-    "type": "GRPC",
+    "monitor_type": "GRPC",
     "type_data": {
         "host": "grpc.example.com",
         "port": 50051,
