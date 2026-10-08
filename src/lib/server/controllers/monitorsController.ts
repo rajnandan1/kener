@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from "node:util";
 import {
   GetMinuteStartNowTimestampUTC,
   GetMinuteStartTimestampUTC,
@@ -212,7 +213,7 @@ export function ValidateTypeDataProxy(monitor: Pick<MonitorInput, "type_data">, 
   // type_data is parsed JSON, so `proxy` can be any type. Absent or blank means no proxy;
   // anything else - an object or a number included - has to be a proxy URL.
   const proxy = (typeData as { proxy?: unknown } | null)?.proxy;
-  if (proxy === undefined || proxy === null || proxy === storedProxy) return;
+  if (proxy === undefined || proxy === null || isDeepStrictEqual(proxy, storedProxy)) return;
   if (typeof proxy === "string" && proxy.trim() === "") return;
   if (!IsValidProxyURL(proxy)) {
     throw new Error("Proxy URL must be a valid http:// or https:// URL");

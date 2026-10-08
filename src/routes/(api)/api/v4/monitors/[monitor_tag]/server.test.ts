@@ -102,4 +102,13 @@ describe("PATCH /api/v4/monitors/{tag}", () => {
     expect(response.status).toBe(200);
     expect((await response.json()).monitor.type_data.proxy).toBe("socks5://proxy.internal:1080");
   });
+
+  it("keeps a stored object or array proxy the body does not change", async () => {
+    for (const proxy of [{}, ["http://proxy.internal:3128"]]) {
+      const monitor = stored("API", { url: "https://example.com", proxy });
+
+      expect((await patch(monitor, { name: "Renamed" })).status).toBe(200);
+      expect((await patch(monitor, { name: "Renamed", type_data: { ...monitor.type_data } })).status).toBe(200);
+    }
+  });
 });
