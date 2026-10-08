@@ -81,4 +81,25 @@ describe("PATCH /api/v4/monitors/{tag}", () => {
     expect(response.status).toBe(400);
     expect(db.updateMonitor).not.toHaveBeenCalled();
   });
+
+  it("returns 400 when the body sets a proxy that is not an http(s) URL", async () => {
+    const response = await patch(stored("API", { url: "https://example.com" }), {
+      type_data: { proxy: "proxy.internal:3128" },
+    });
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: { code: "BAD_REQUEST", message: "Proxy URL must be a valid http:// or https:// URL" },
+    });
+    expect(db.updateMonitor).not.toHaveBeenCalled();
+  });
+
+  it("keeps a stored proxy the body does not change, even one the check would reject", async () => {
+    const monitor = stored("API", { url: "https://example.com", proxy: "socks5://proxy.internal:1080" });
+
+    expect((await patch(monitor, { name: "Renamed" })).status).toBe(200);
+    const response = await patch(monitor, { name: "Renamed", type_data: { ...monitor.type_data } });
+    expect(response.status).toBe(200);
+    expect((await response.json()).monitor.type_data.proxy).toBe("socks5://proxy.internal:1080");
+  });
 });

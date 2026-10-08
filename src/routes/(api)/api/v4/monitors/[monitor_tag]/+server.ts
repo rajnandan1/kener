@@ -3,6 +3,7 @@ import db from "$lib/server/db/db";
 import {
   GetMonitorsParsed,
   DeleteMonitorCompletelyUsingTag,
+  ValidateTypeDataProxy,
   WithValidHeartbeatSecret,
 } from "$lib/server/controllers/monitorsController";
 import type {
@@ -141,6 +142,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
       updateData as unknown as Parameters<typeof db.updateMonitor>[0],
       existingMonitor.type_data?.secretString,
     );
+    ValidateTypeDataProxy(monitorToSave, existingMonitor.type_data?.proxy);
   } catch (e) {
     const errorResponse: BadRequestResponse = {
       error: { code: "BAD_REQUEST", message: (e as Error).message },

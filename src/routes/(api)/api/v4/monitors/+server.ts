@@ -8,7 +8,11 @@ import type {
   BadRequestResponse,
 } from "$lib/types/api";
 import type { MonitorRecord } from "$lib/server/types/db";
-import { GetMonitorsParsed, WithValidHeartbeatSecret } from "$lib/server/controllers/monitorsController";
+import {
+  GetMonitorsParsed,
+  ValidateTypeDataProxy,
+  WithValidHeartbeatSecret,
+} from "$lib/server/controllers/monitorsController";
 
 export const GET: RequestHandler = async ({ url }) => {
   const status = url.searchParams.get("status") || undefined;
@@ -126,6 +130,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
   let monitorToInsert: typeof monitorData;
   try {
+    ValidateTypeDataProxy(monitorData);
     monitorToInsert = WithValidHeartbeatSecret(monitorData);
   } catch (e) {
     const errorResponse: BadRequestResponse = {
