@@ -1,6 +1,11 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import db from "$lib/server/db/db";
-import { GetMonitorsParsed, DeleteMonitorCompletelyUsingTag } from "$lib/server/controllers/monitorsController";
+import {
+  GetMonitorsParsed,
+  DeleteMonitorCompletelyUsingTag,
+  ValidateHeartbeatSecret,
+  WithHeartbeatSecret,
+} from "$lib/server/controllers/monitorsController";
 import type {
   GetMonitorResponse,
   MonitorResponse,
@@ -88,6 +93,18 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     updateData.confirmation_threshold = existingMonitor.confirmation_threshold ?? 1;
   }
 
+  try {
+    ValidateHeartbeatSecret({
+      monitor_type: updateData.monitor_type as string,
+      type_data: JSON.stringify(body.type_data ?? null),
+    });
+  } catch (e) {
+    const errorResponse: BadRequestResponse = {
+      error: { code: "BAD_REQUEST", message: (e as Error).message },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
   // Handle JSON fields - merge with existing data instead of replacing
   if (body.type_data !== undefined) {
     if (body.type_data === null) {
@@ -131,7 +148,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     updateData.monitor_settings_json = JSON.stringify(existingMonitor.monitor_settings_json);
   }
 
-  await db.updateMonitor(updateData as unknown as Parameters<typeof db.updateMonitor>[0]);
+  await db.updateMonitor(WithHeartbeatSecret(updateData as unknown as Parameters<typeof db.updateMonitor>[0]));
 
   // Fetch the updated monitor
   const updatedMonitor = await GetMonitorsParsed({ tag: monitorTag }).then((monitors) => monitors[0]);
