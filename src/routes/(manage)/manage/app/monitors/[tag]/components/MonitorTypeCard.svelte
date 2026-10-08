@@ -19,7 +19,13 @@
     IsValidURL,
     IsValidPort
   } from "$lib/clientTools";
-  import { GAMEDIG_SOCKET_TIMEOUT, DOCKER_CONNECTION_TYPES, DOCKER_CHECK_TYPES, IsValidProxyURL } from "$lib/anywhere";
+  import {
+    GAMEDIG_SOCKET_TIMEOUT,
+    DOCKER_CONNECTION_TYPES,
+    DOCKER_CHECK_TYPES,
+    IsValidProxyURL,
+    IsValidHeartbeatSecret
+  } from "$lib/anywhere";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   // Type-specific components
@@ -217,6 +223,7 @@
         const data = typeData as any;
         if (!data.degradedRemainingMinutes || data.degradedRemainingMinutes < 1) return false;
         if (!data.downRemainingMinutes || data.downRemainingMinutes <= data.degradedRemainingMinutes) return false;
+        if (!IsValidHeartbeatSecret(data.secretString)) return false;
         return true;
       }
 
