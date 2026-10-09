@@ -84,16 +84,29 @@ All templates can use site-level variables:
 
 ### subscription_update {#subscription-update-variables}
 
-| Variable                                                                  | Description                                                |
-| ------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| `{{site_name}}`, `{{site_url}}`, `{{logo}}`, `{{favicon}}`, `{{tagline}}` | Site branding/context                                      |
-| `{{title}}`                                                               | Event title                                                |
-| `{{update_subject}}`                                                      | Event subject line (also used by default subject template) |
-| `{{update_text}}`                                                         | Main update content                                        |
-| `{{cta_text}}`                                                            | Call-to-action text                                        |
-| `{{cta_url}}`                                                             | Call-to-action URL                                         |
-| `{{update_id}}`                                                           | Event/update identifier                                    |
-| `{{event_type}}`                                                          | Event category                                             |
+| Variable                                                                                | Description                                                                                   |
+| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `{{site_name}}`, `{{site_url}}`, `{{logo}}`, `{{favicon}}`, `{{tagline}}`               | Site branding/context                                                                         |
+| `{{title}}`                                                                             | Event title                                                                                   |
+| `{{update_subject}}`                                                                    | Event subject line (also used by default subject template)                                    |
+| `{{update_text}}`                                                                       | Main update content                                                                           |
+| `{{cta_text}}`                                                                          | Call-to-action text                                                                           |
+| `{{cta_url}}`                                                                           | Call-to-action URL                                                                            |
+| `{{update_id}}`                                                                         | Event/update identifier                                                                       |
+| `{{event_type}}`                                                                        | Event category                                                                                |
+| `{{update_state}}`                                                                      | Incident updates: the comment's state, e.g. `INVESTIGATING`                                   |
+| `{{#is_investigating}}`, `{{#is_identified}}`, `{{#is_monitoring}}`, `{{#is_resolved}}` | Incident updates: true for the comment's state                                                |
+| `{{incident_impact}}`                                                                   | Incident updates: the worst impact among the incident's monitors, `DOWN`, `DEGRADED` or empty |
+| `{{#is_down}}`, `{{#is_degraded}}`                                                      | Incident updates: true for that worst impact                                                  |
+| `{{#is_maintenance}}`                                                                   | True for maintenance mails                                                                    |
+
+The flags let a template change its look by what the mail is about, which Mustache cannot do by comparing strings. For example, a banner only on resolved incidents:
+
+```html
+{{#is_resolved}}
+<p style="background:#16a34a;color:#fff;padding:8px">Resolved</p>
+{{/is_resolved}}
+```
 
 ## Best practices {#best-practices}
 

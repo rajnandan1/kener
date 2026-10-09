@@ -436,6 +436,8 @@ const notifySubscribersOfComment = async (
   try {
     const siteData = await GetAllSiteData();
     const siteUrl = siteDataToVariables(siteData).site_url;
+    const impacts = (await db.getIncidentMonitorsByIncidentID(incident.id)).map((m) => m.monitor_impact);
+    const impact = impacts.includes(GC.DOWN) ? GC.DOWN : impacts.includes(GC.DEGRADED) ? GC.DEGRADED : "";
     const variables: SubscriptionVariableMap = {
       title: incident.title,
       cta_url: `${siteUrl}incidents/${incident.id}`,
@@ -444,6 +446,14 @@ const notifySubscribersOfComment = async (
       update_subject: `[#${incident.id}:${comment.state}] ${incident.title}`,
       update_id: String(comment.id),
       event_type: "incidents",
+      update_state: comment.state,
+      is_investigating: comment.state === GC.INVESTIGATING,
+      is_identified: comment.state === GC.IDENTIFIED,
+      is_monitoring: comment.state === GC.MONITORING,
+      is_resolved: comment.state === GC.RESOLVED,
+      incident_impact: impact,
+      is_down: impact === GC.DOWN,
+      is_degraded: impact === GC.DEGRADED,
     };
     // Stable dedup id per comment so a retried/double push notifies once — without
     // it subscriberQueue falls back to a Date.now()-suffixed id that never dedupes.
