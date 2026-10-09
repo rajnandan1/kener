@@ -78,6 +78,7 @@ async function createNewIncident(
     update,
     monitorTag,
     config.alert_value,
+    config.alert_for,
   );
 
   return incidentCreated;

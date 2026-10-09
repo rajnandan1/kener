@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import Mustache from "mustache";
-import { alertToVariables, describeError } from "./notification_utils.js";
+import { alertToVariables, describeError, maintenanceToVariables } from "./notification_utils.js";
 import emailTemplate from "../templates/email_alert_template.js";
 import discordTemplate from "../templates/discord_alert_template.js";
 import slackTemplate from "../templates/slack_alert_template.js";
@@ -90,5 +90,22 @@ describe("describeError", () => {
     expect(describeError(new Error("boom"))).toBe("boom");
     expect(describeError("nope")).toBe("nope");
     expect(describeError({ cause: 1 })).toBe("[object Object]");
+  });
+});
+
+describe("maintenanceToVariables", () => {
+  it("flags the mail as a maintenance one, for templates that style by it", () => {
+    const event = {
+      id: 3,
+      maintenance_id: 5,
+      title: "Database upgrade",
+      description: "",
+      start_date_time: 1767225600,
+      end_date_time: 1767229200,
+    } as unknown as Parameters<typeof maintenanceToVariables>[0];
+
+    expect(maintenanceToVariables(event, "api", "has started", "start", "Maintenance Started").is_maintenance).toBe(
+      true,
+    );
   });
 });
