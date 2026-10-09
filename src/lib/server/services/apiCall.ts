@@ -7,6 +7,13 @@ import version from "../../version.js";
 import { AxiosProxyConfig } from "../proxy.js";
 import { performance } from "node:perf_hooks";
 import type { ApiMonitor, EvalResponse, MonitoringResult } from "../types/monitor.js";
+import { createSsrfSafeLookup, assertLiteralIpIsAllowed } from "../security/ssrfGuard.js";
+
+// Caps a probe response at 20MB so a malicious or misbehaving target cannot grow the
+// Node process's memory unbounded by streaming an arbitrarily large response back
+// through a scheduled monitor check (CWE-770). 20MB comfortably covers any legitimate
+// health-check/API response while still bounding worst case memory use per probe.
+const MAX_RESPONSE_BYTES = 20 * 1024 * 1024;
 
 class ApiCall {
   monitor: ApiMonitor;
@@ -69,6 +76,31 @@ class ApiCall {
 
     const maxRedirects = this.monitor.type_data.max_redirects ?? 5;
 
+    // SSRF guard (CWE-918). A monitor's `url` and `proxy` are set by anyone who can
+    // create/edit a monitor (including any ACTIVE API key, which carries no scoping -
+    // see the API-key authorization fix), so both are treated as untrusted destinations,
+    // not as config the operator necessarily meant to reach internal/private network space.
+    try {
+      const parsedUrl = new URL(url || "");
+      if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+        throw new Error(`URL scheme "${parsedUrl.protocol}" is not allowed; only http/https are permitted`);
+      }
+      // Covers the literal-IP case the `lookup` option below cannot see (Node skips
+      // `lookup` entirely when the host is already an IP address).
+      assertLiteralIpIsAllowed(parsedUrl.hostname.replace(/^\[|\]$/g, ""));
+    } catch (e) {
+      return {
+        status: GC.DOWN,
+        latency: 0,
+        type: GC.ERROR,
+        error_message: `Invalid monitor URL: ${(e as Error).message}`,
+      };
+    }
+
+    // A monitor's own `proxy` is a deliberate egress choice (e.g. routing through a
+    // corporate proxy that legitimately lives on a private address) made by whoever
+    // configures the monitor, not treated as an SSRF target here - only the request's
+    // actual destination (`url`, including redirects) is guarded below.
     const options: AxiosRequestConfig = {
       method: method,
       headers: axiosHeaders,
@@ -76,8 +108,23 @@ class ApiCall {
       transformResponse: (r: string) => r,
       maxRedirects: followRedirects ? maxRedirects : 0,
       validateStatus: () => true,
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity,
+      maxContentLength: MAX_RESPONSE_BYTES,
+      maxBodyLength: MAX_RESPONSE_BYTES,
+      // Resolves the destination (and, since follow-redirects reuses these options on
+      // every hop, each redirect target too) and refuses to connect if it lands on a
+      // loopback/private/link-local/metadata/reserved address. Only guards the direct
+      // connection; when a monitor proxy is configured the proxy host is validated above
+      // instead, since that hop is dialed by a separate agent.
+      lookup: createSsrfSafeLookup(),
+      // `lookup` never runs when a hop's host is already a literal IP (Node bypasses
+      // it for IP literals) - covers that case for every redirect hop. Thrown errors
+      // here are caught by follow-redirects and surfaced as the request's rejection.
+      beforeRedirect: (redirectOptions) => {
+        if (redirectOptions.protocol !== "http:" && redirectOptions.protocol !== "https:") {
+          throw new Error(`Redirect to disallowed URL scheme "${redirectOptions.protocol}"`);
+        }
+        assertLiteralIpIsAllowed(String(redirectOptions.hostname || "").replace(/^\[|\]$/g, ""));
+      },
       ...AxiosProxyConfig(
         proxy,
         { keepAlive: true, keepAliveMsecs: 30000, maxSockets: 50, maxFreeSockets: 10, timeout },
