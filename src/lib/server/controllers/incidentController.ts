@@ -242,10 +242,22 @@ export const CreateNewIncidentWithCommentAndMonitor = async (
   monitorStatus: string,
 ): Promise<{ incident_id: number }> => {
   let incidentCreation = await CreateIncident(data);
-  // The monitor first: the opening comment notifies subscribers, and their mail reads the
-  // incident's impact from its monitors.
-  await AddIncidentMonitor(incidentCreation.incident_id, monitorTag, monitorStatus);
+  // A STATUS alert's value is DOWN or DEGRADED; a LATENCY or UPTIME alert's is its numeric
+  // threshold, which is no impact at all. A slow or under-target monitor is degraded.
+  const impact = monitorStatus === GC.DOWN || monitorStatus === GC.DEGRADED ? monitorStatus : GC.DEGRADED;
+  // The monitor before the comment: the comment notifies subscribers, and their mail reads the
+  // incident's impact from its monitors. If attaching fails, the comment is still posted and
+  // the error still raised, as when the comment came first.
+  let monitorError: unknown = null;
+  try {
+    await AddIncidentMonitor(incidentCreation.incident_id, monitorTag, impact);
+  } catch (err) {
+    monitorError = err;
+  }
   await AddIncidentComment(incidentCreation.incident_id, update, GC.INVESTIGATING, data.start_date_time);
+  if (monitorError) {
+    throw monitorError;
+  }
 
   return incidentCreation;
 };
@@ -438,8 +450,14 @@ const notifySubscribersOfComment = async (
   try {
     const siteData = await GetAllSiteData();
     const siteUrl = siteDataToVariables(siteData).site_url;
-    const impacts = (await db.getIncidentMonitorsByIncidentID(incident.id)).map((m) => m.monitor_impact);
-    const impact = impacts.includes(GC.DOWN) ? GC.DOWN : impacts.includes(GC.DEGRADED) ? GC.DEGRADED : "";
+    // Failing to read the impact must not cost the mail itself; it goes out without the flags.
+    let impact = "";
+    try {
+      const impacts = (await db.getIncidentMonitorsByIncidentID(incident.id)).map((m) => m.monitor_impact);
+      impact = impacts.includes(GC.DOWN) ? GC.DOWN : impacts.includes(GC.DEGRADED) ? GC.DEGRADED : "";
+    } catch (err) {
+      console.error(`Error reading monitors of incident ${incident.id} for its subscriber mail:`, err);
+    }
     const variables: SubscriptionVariableMap = {
       title: incident.title,
       cta_url: `${siteUrl}incidents/${incident.id}`,
