@@ -7,6 +7,9 @@ const { db, subscriberQueue } = vi.hoisted(() => ({
     updateIncident: vi.fn(),
     setIncidentEndTimeToNull: vi.fn(),
     getIncidentMonitorsByIncidentID: vi.fn(),
+    createIncident: vi.fn(),
+    getMonitorByTag: vi.fn(),
+    insertIncidentMonitorWithMerge: vi.fn(),
   },
   subscriberQueue: { push: vi.fn() },
 }));
@@ -16,7 +19,7 @@ vi.mock("./siteDataController.js", () => ({
   GetAllSiteData: vi.fn(async () => ({ siteURL: "https://status.example.com", siteName: "Example", colors: {} })),
 }));
 
-import { AddIncidentComment } from "./incidentController.js";
+import { AddIncidentComment, CreateNewIncidentWithCommentAndMonitor } from "./incidentController.js";
 
 const incident = {
   id: 12,
@@ -88,5 +91,37 @@ describe("AddIncidentComment: subscriber mail variables", () => {
       is_down: false,
       is_degraded: false,
     });
+  });
+});
+
+describe("CreateNewIncidentWithCommentAndMonitor", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    const attached: Array<{ monitor_tag: string; monitor_impact: string }> = [];
+    db.createIncident.mockResolvedValue({ id: 12 });
+    db.getIncidentById.mockResolvedValue(incident);
+    db.getMonitorByTag.mockResolvedValue({ tag: "web" });
+    db.insertIncidentMonitorWithMerge.mockImplementation(
+      async (row: { monitor_tag: string; monitor_impact: string }) => {
+        attached.push(row);
+      },
+    );
+    db.getIncidentMonitorsByIncidentID.mockImplementation(async () => [...attached]);
+    db.insertIncidentComment.mockImplementation(async (_id: number, comment: string, state: string) => ({
+      id: 99,
+      comment,
+      state,
+    }));
+  });
+
+  it("attaches the monitor before the opening comment, so its mail carries the impact", async () => {
+    await CreateNewIncidentWithCommentAndMonitor(
+      { title: "web is down", start_date_time: 1000 } as Parameters<typeof CreateNewIncidentWithCommentAndMonitor>[0],
+      "Alert triggered",
+      "web",
+      "DOWN",
+    );
+
+    expect(pushedVariables()).toMatchObject({ is_investigating: true, incident_impact: "DOWN", is_down: true });
   });
 });

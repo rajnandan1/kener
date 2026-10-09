@@ -242,8 +242,10 @@ export const CreateNewIncidentWithCommentAndMonitor = async (
   monitorStatus: string,
 ): Promise<{ incident_id: number }> => {
   let incidentCreation = await CreateIncident(data);
-  await AddIncidentComment(incidentCreation.incident_id, update, GC.INVESTIGATING, data.start_date_time);
+  // The monitor first: the opening comment notifies subscribers, and their mail reads the
+  // incident's impact from its monitors.
   await AddIncidentMonitor(incidentCreation.incident_id, monitorTag, monitorStatus);
+  await AddIncidentComment(incidentCreation.incident_id, update, GC.INVESTIGATING, data.start_date_time);
 
   return incidentCreation;
 };
