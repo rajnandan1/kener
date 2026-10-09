@@ -235,24 +235,40 @@ export const GetIncidentsByIDS = async (ids: number[]): Promise<unknown[]> => {
   return incidents;
 };
 
+// The impact an alert's incident has on its monitor, or null when the alert implies none. A
+// STATUS alert fires on the status in its value: DOWN and DEGRADED are impacts, UP is not one.
+// A LATENCY or UPTIME alert's value is a numeric threshold, and a slow or under-target monitor
+// is degraded.
+const AlertImpact = (alertFor: string, alertValue: string): string | null => {
+  if (alertFor === GC.STATUS) {
+    return alertValue === GC.DOWN || alertValue === GC.DEGRADED ? alertValue : null;
+  }
+  if (alertFor === GC.LATENCY || alertFor === GC.UPTIME) {
+    return GC.DEGRADED;
+  }
+  return null;
+};
+
 export const CreateNewIncidentWithCommentAndMonitor = async (
   data: IncidentInput,
   update: string,
   monitorTag: string,
   monitorStatus: string,
+  alertFor: string,
 ): Promise<{ incident_id: number }> => {
   let incidentCreation = await CreateIncident(data);
-  // A STATUS alert's value is DOWN or DEGRADED; a LATENCY or UPTIME alert's is its numeric
-  // threshold, which is no impact at all. A slow or under-target monitor is degraded.
-  const impact = monitorStatus === GC.DOWN || monitorStatus === GC.DEGRADED ? monitorStatus : GC.DEGRADED;
   // The monitor before the comment: the comment notifies subscribers, and their mail reads the
   // incident's impact from its monitors. If attaching fails, the comment is still posted and
-  // the error still raised, as when the comment came first.
+  // the error still raised, as when the comment came first. An alert that implies no impact
+  // opens its incident without the monitor rather than with an impact the monitor does not have.
+  const impact = AlertImpact(alertFor, monitorStatus);
   let monitorError: unknown = null;
-  try {
-    await AddIncidentMonitor(incidentCreation.incident_id, monitorTag, impact);
-  } catch (err) {
-    monitorError = err;
+  if (impact) {
+    try {
+      await AddIncidentMonitor(incidentCreation.incident_id, monitorTag, impact);
+    } catch (err) {
+      monitorError = err;
+    }
   }
   await AddIncidentComment(incidentCreation.incident_id, update, GC.INVESTIGATING, data.start_date_time);
   if (monitorError) {

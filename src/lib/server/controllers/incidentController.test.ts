@@ -132,23 +132,24 @@ describe("CreateNewIncidentWithCommentAndMonitor", () => {
     }));
   });
 
-  const create = (alertValue: string) =>
+  const create = (alertValue: string, alertFor = "STATUS") =>
     CreateNewIncidentWithCommentAndMonitor(
       { title: "web alert", start_date_time: 1000 } as Parameters<typeof CreateNewIncidentWithCommentAndMonitor>[0],
       "Alert triggered",
       "web",
       alertValue,
+      alertFor,
     );
 
   it.each([
-    ["a STATUS DOWN alert", "DOWN", "DOWN"],
-    ["a STATUS DEGRADED alert", "DEGRADED", "DEGRADED"],
-    ["a LATENCY alert, whose value is a threshold in ms", "1000", "DEGRADED"],
-    ["an UPTIME alert, whose value is a percentage", "99.5", "DEGRADED"],
+    ["a STATUS DOWN alert", "STATUS", "DOWN", "DOWN"],
+    ["a STATUS DEGRADED alert", "STATUS", "DEGRADED", "DEGRADED"],
+    ["a LATENCY alert, whose value is a threshold in ms", "LATENCY", "1000", "DEGRADED"],
+    ["an UPTIME alert, whose value is a percentage", "UPTIME", "99.5", "DEGRADED"],
   ])(
     "attaches the monitor for %s before the opening comment, so its mail carries the impact",
-    async (_, alertValue, impact) => {
-      await expect(create(alertValue)).resolves.toEqual({ incident_id: 12 });
+    async (_, alertFor, alertValue, impact) => {
+      await expect(create(alertValue, alertFor)).resolves.toEqual({ incident_id: 12 });
 
       expect(attached).toEqual([{ incident_id: 12, monitor_tag: "web", monitor_impact: impact }]);
       expect(db.insertIncidentMonitorWithMerge.mock.invocationCallOrder[0]).toBeLessThan(
@@ -162,6 +163,26 @@ describe("CreateNewIncidentWithCommentAndMonitor", () => {
       });
     },
   );
+
+  it("opens a STATUS UP alert's incident without the monitor, so a healthy monitor is not called degraded", async () => {
+    await expect(create("UP")).resolves.toEqual({ incident_id: 12 });
+
+    expect(db.insertIncidentMonitorWithMerge).not.toHaveBeenCalled();
+    expect(db.insertIncidentComment).toHaveBeenCalledOnce();
+    expect(pushedVariables()).toMatchObject({
+      is_investigating: true,
+      incident_impact: "",
+      is_down: false,
+      is_degraded: false,
+    });
+  });
+
+  it("claims no impact for an alert type it does not know", async () => {
+    await expect(create("DOWN", "SOMETHING_NEW")).resolves.toEqual({ incident_id: 12 });
+
+    expect(db.insertIncidentMonitorWithMerge).not.toHaveBeenCalled();
+    expect(pushedVariables()).toMatchObject({ incident_impact: "", is_down: false, is_degraded: false });
+  });
 
   it("still posts the opening comment and its mail when the monitor cannot be attached, then raises", async () => {
     db.getMonitorByTag.mockResolvedValue(undefined);
