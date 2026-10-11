@@ -235,15 +235,45 @@ export const GetIncidentsByIDS = async (ids: number[]): Promise<unknown[]> => {
   return incidents;
 };
 
+// The impact an alert's incident has on its monitor, or null when the alert implies none. A
+// STATUS alert fires on the status in its value: DOWN and DEGRADED are impacts, UP is not one.
+// A LATENCY or UPTIME alert's value is a numeric threshold, and a slow or under-target monitor
+// is degraded.
+const AlertImpact = (alertFor: string, alertValue: string): string | null => {
+  if (alertFor === GC.STATUS) {
+    return alertValue === GC.DOWN || alertValue === GC.DEGRADED ? alertValue : null;
+  }
+  if (alertFor === GC.LATENCY || alertFor === GC.UPTIME) {
+    return GC.DEGRADED;
+  }
+  return null;
+};
+
 export const CreateNewIncidentWithCommentAndMonitor = async (
   data: IncidentInput,
   update: string,
   monitorTag: string,
   monitorStatus: string,
+  alertFor: string,
 ): Promise<{ incident_id: number }> => {
   let incidentCreation = await CreateIncident(data);
+  // The monitor before the comment: the comment notifies subscribers, and their mail reads the
+  // incident's impact from its monitors. If attaching fails, the comment is still posted and
+  // the error still raised, as when the comment came first. An alert that implies no impact
+  // opens its incident without the monitor rather than with an impact the monitor does not have.
+  const impact = AlertImpact(alertFor, monitorStatus);
+  let monitorError: unknown = null;
+  if (impact) {
+    try {
+      await AddIncidentMonitor(incidentCreation.incident_id, monitorTag, impact);
+    } catch (err) {
+      monitorError = err;
+    }
+  }
   await AddIncidentComment(incidentCreation.incident_id, update, GC.INVESTIGATING, data.start_date_time);
-  await AddIncidentMonitor(incidentCreation.incident_id, monitorTag, monitorStatus);
+  if (monitorError) {
+    throw monitorError;
+  }
 
   return incidentCreation;
 };
@@ -436,6 +466,14 @@ const notifySubscribersOfComment = async (
   try {
     const siteData = await GetAllSiteData();
     const siteUrl = siteDataToVariables(siteData).site_url;
+    // Failing to read the impact must not cost the mail itself; it goes out without the flags.
+    let impact = "";
+    try {
+      const impacts = (await db.getIncidentMonitorsByIncidentID(incident.id)).map((m) => m.monitor_impact);
+      impact = impacts.includes(GC.DOWN) ? GC.DOWN : impacts.includes(GC.DEGRADED) ? GC.DEGRADED : "";
+    } catch (err) {
+      console.error(`Error reading monitors of incident ${incident.id} for its subscriber mail:`, err);
+    }
     const variables: SubscriptionVariableMap = {
       title: incident.title,
       cta_url: `${siteUrl}incidents/${incident.id}`,
@@ -444,6 +482,14 @@ const notifySubscribersOfComment = async (
       update_subject: `[#${incident.id}:${comment.state}] ${incident.title}`,
       update_id: String(comment.id),
       event_type: "incidents",
+      update_state: comment.state,
+      is_investigating: comment.state === GC.INVESTIGATING,
+      is_identified: comment.state === GC.IDENTIFIED,
+      is_monitoring: comment.state === GC.MONITORING,
+      is_resolved: comment.state === GC.RESOLVED,
+      incident_impact: impact,
+      is_down: impact === GC.DOWN,
+      is_degraded: impact === GC.DEGRADED,
     };
     // Stable dedup id per comment so a retried/double push notifies once — without
     // it subscriberQueue falls back to a Date.now()-suffixed id that never dedupes.
