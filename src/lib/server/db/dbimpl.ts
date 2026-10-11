@@ -77,6 +77,8 @@ class DbImpl {
   getStatusCountsByIntervalGroupedByMonitor!: MonitoringRepository["getStatusCountsByIntervalGroupedByMonitor"];
   getStatusCountsForLastN!: MonitoringRepository["getStatusCountsForLastN"];
   getLastKnownStatus!: MonitoringRepository["getLastKnownStatus"];
+  rebuildAllBucketsForTag!: MonitoringRepository["rebuildAllBucketsForTag"];
+  verifyBucketsForTag!: MonitoringRepository["verifyBucketsForTag"];
 
   // ============ Monitors ============
   getMonitorsByTags!: MonitorsRepository["getMonitorsByTags"];
@@ -455,6 +457,8 @@ class DbImpl {
     );
     this.getStatusCountsForLastN = this.monitoring.getStatusCountsForLastN.bind(this.monitoring);
     this.getLastKnownStatus = this.monitoring.getLastKnownStatus.bind(this.monitoring);
+    this.rebuildAllBucketsForTag = this.monitoring.rebuildAllBucketsForTag.bind(this.monitoring);
+    this.verifyBucketsForTag = this.monitoring.verifyBucketsForTag.bind(this.monitoring);
   }
 
   private bindMonitorsMethods(): void {
