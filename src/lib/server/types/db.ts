@@ -327,6 +327,7 @@ export interface ApiKeyRecord {
   hashed_key: string;
   masked_key: string;
   status: string;
+  expires_at: DbTimestamp | null;
   created_at: DbTimestamp;
   updated_at: DbTimestamp;
 }
@@ -336,6 +337,7 @@ export interface ApiKeyRecordInsert {
   hashed_key: string;
   masked_key: string;
   status?: string;
+  expires_at?: Date | string | null;
 }
 
 // ============ incidents table ============

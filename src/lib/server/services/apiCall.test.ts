@@ -75,3 +75,68 @@ describe("ApiCall proxy", () => {
     expect(optionsOfLastCall().httpsAgent.options.rejectUnauthorized).toBe(false);
   });
 });
+
+describe("ApiCall SSRF guard", () => {
+  const monitor = (overrides: Partial<NonNullable<ApiMonitor["type_data"]>> = {}): ApiMonitor =>
+    ({
+      tag: "api-ssrf",
+      type_data: { url: "https://example.com/health", method: "GET", ...overrides },
+    }) as ApiMonitor;
+
+  const optionsOfLastCall = () => mockedAxios.mock.calls[0][1] as Record<string, any>;
+
+  it("blocks a literal-IP monitor URL before ever calling axios", async () => {
+    const r = await new ApiCall(monitor({ url: "http://169.254.169.254/latest/meta-data/" })).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.type).toBe("ERROR");
+    expect(r.error_message).toContain("disallowed address");
+    expect(mockedAxios).not.toHaveBeenCalled();
+  });
+
+  it("blocks a non-http(s) URL scheme before ever calling axios", async () => {
+    const r = await new ApiCall(monitor({ url: "file:///etc/passwd" })).execute();
+    expect(r.status).toBe("DOWN");
+    expect(r.type).toBe("ERROR");
+    expect(r.error_message).toContain("URL scheme");
+    expect(mockedAxios).not.toHaveBeenCalled();
+  });
+
+  it("passes a `lookup` option on the axios config for a public URL", async () => {
+    await new ApiCall(monitor()).execute();
+    expect(typeof optionsOfLastCall().lookup).toBe("function");
+  });
+
+  it("caps maxContentLength/maxBodyLength instead of leaving them unbounded", async () => {
+    await new ApiCall(monitor()).execute();
+    const o = optionsOfLastCall();
+    expect(o.maxContentLength).toBeGreaterThan(0);
+    expect(Number.isFinite(o.maxContentLength)).toBe(true);
+    expect(o.maxBodyLength).toBe(o.maxContentLength);
+  });
+
+  it("beforeRedirect throws for a redirect hop that resolves to a literal blocked address", async () => {
+    await new ApiCall(monitor()).execute();
+    const { beforeRedirect } = optionsOfLastCall() as {
+      beforeRedirect: (opts: { protocol: string; hostname: string }) => void;
+    };
+    expect(() => beforeRedirect({ protocol: "http:", hostname: "169.254.169.254" })).toThrow(/disallowed address/);
+    expect(() => beforeRedirect({ protocol: "http:", hostname: "127.0.0.1" })).toThrow(/disallowed address/);
+  });
+
+  it("beforeRedirect throws for a redirect hop to a non-http(s) scheme", async () => {
+    await new ApiCall(monitor()).execute();
+    const { beforeRedirect } = optionsOfLastCall() as {
+      beforeRedirect: (opts: { protocol: string; hostname: string }) => void;
+    };
+    expect(() => beforeRedirect({ protocol: "file:", hostname: "etc" })).toThrow(/URL scheme/);
+  });
+
+  it("beforeRedirect allows a redirect hop to a public literal IP or ordinary hostname", async () => {
+    await new ApiCall(monitor()).execute();
+    const { beforeRedirect } = optionsOfLastCall() as {
+      beforeRedirect: (opts: { protocol: string; hostname: string }) => void;
+    };
+    expect(() => beforeRedirect({ protocol: "https:", hostname: "1.1.1.1" })).not.toThrow();
+    expect(() => beforeRedirect({ protocol: "https:", hostname: "example.com" })).not.toThrow();
+  });
+});

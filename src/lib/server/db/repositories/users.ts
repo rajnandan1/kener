@@ -210,6 +210,7 @@ export class UsersRepository extends BaseRepository {
       name: data.name,
       hashed_key: data.hashed_key,
       masked_key: data.masked_key,
+      expires_at: data.expires_at ?? null,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
     });
