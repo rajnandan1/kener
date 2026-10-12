@@ -52,13 +52,15 @@
     status: string;
     state: string;
     is_global: string;
+    incident_type: string;
   }>({
     id: 0,
     title: "",
     start_date_time: Math.floor(Date.now() / 1000),
     status: "OPEN",
     state: GC.INVESTIGATING,
-    is_global: "YES"
+    is_global: "YES",
+    incident_type: GC.INCIDENT
   });
 
   // For datetime inputs (convert to/from local datetime string)
@@ -87,6 +89,8 @@
   let commentState = $state<string>(GC.INVESTIGATING);
   let commentDateTime = $state<string>("");
   let savingComment = $state<boolean>(false);
+  let notifySubscribers = $state(true);
+  let notifySubscribersComment = $state(true);
 
   const states = [GC.INVESTIGATING, GC.IDENTIFIED, GC.MONITORING, GC.RESOLVED];
 
@@ -151,7 +155,8 @@
           start_date_time: result.start_date_time,
           status: result.status,
           state: result.state,
-          is_global: result.is_global || "YES"
+          is_global: result.is_global || "YES",
+          incident_type: result.incident_type || GC.INCIDENT
         };
         // Fetch comments and monitors
         await Promise.all([fetchComments(), fetchIncidentMonitors()]);
@@ -280,9 +285,9 @@
             });
           }
 
-          // Add first comment if provided
+          // Add first comment if provided — this is also the subscriber notification
           if (firstComment.trim()) {
-            await fetch(clientResolver(resolve, "/manage/api"), {
+            const commentResponse = await fetch(clientResolver(resolve, "/manage/api"), {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -291,10 +296,17 @@
                   incident_id: incidentId,
                   comment: firstComment,
                   state: GC.INVESTIGATING,
-                  commented_at: incident.start_date_time
+                  commented_at: incident.start_date_time,
+                  notify_subscribers: notifySubscribers
                 }
               })
             });
+            const commentResult = await commentResponse.json();
+            if (commentResult.error) {
+              toast.warning(`Incident created but initial update failed: ${commentResult.error}`);
+              goto(clientResolver(resolve, `/manage/app/incidents/${incidentId}`));
+              return;
+            }
           }
           toast.success("Incident created successfully");
           goto(clientResolver(resolve, `/manage/app/incidents/${incidentId}`));
@@ -485,6 +497,7 @@
     commentText = "";
     commentState = incident.state;
     commentDateTime = "";
+    notifySubscribersComment = true;
   }
 
   // Save comment (add or edit)
@@ -528,7 +541,8 @@
               incident_id: incident.id,
               comment: commentText,
               state: commentState,
-              commented_at: localDatetimeToTimestamp(commentDateTime)
+              commented_at: localDatetimeToTimestamp(commentDateTime),
+              notify_subscribers: notifySubscribersComment
             }
           })
         });
@@ -800,7 +814,9 @@
         <div class="flex items-center justify-between rounded-md border p-3">
           <div class="flex flex-col gap-1">
             <Label for="is-global">Global Incident</Label>
-            <p class="text-muted-foreground text-xs">When enabled, this incident will be visible on all status pages</p>
+            <p class="text-muted-foreground text-xs">
+              When enabled, this incident will be visible on all status pages.
+            </p>
           </div>
           <Switch
             id="is-global"
@@ -810,6 +826,19 @@
             }}
           />
         </div>
+
+        <!-- Notify Subscribers (creation only — no persisted notification state to show on existing incidents) -->
+        {#if isNew}
+        <div class="flex items-center justify-between rounded-md border p-3">
+          <div class="flex flex-col gap-1">
+            <Label for="notify-subscribers">Notify Subscribers</Label>
+            <p class="text-muted-foreground text-xs">
+              When enabled, subscribers are notified <strong>if an initial update is provided</strong>. Disable for backdated or test incidents.
+            </p>
+          </div>
+          <Switch id="notify-subscribers" bind:checked={notifySubscribers} />
+        </div>
+        {/if}
 
         <!-- First Comment (only for new) -->
         {#if isNew}
@@ -1043,6 +1072,17 @@
                   <Input type="datetime-local" bind:value={commentDateTime} />
                 </div>
               </div>
+              {#if incident.incident_type !== GC.INCIDENT}
+              <div class="flex items-center justify-between rounded-md border p-3">
+                <div class="flex flex-col gap-1">
+                  <Label for="notify-subscribers-comment">Notify Subscribers</Label>
+                  <p class="text-muted-foreground text-xs">
+                    When disabled, subscribers will not be notified (use for backdated or test incidents).
+                  </p>
+                </div>
+                <Switch id="notify-subscribers-comment" bind:checked={notifySubscribersComment} />
+              </div>
+              {/if}
               <div class="flex justify-end gap-2">
                 <Button variant="outline" size="sm" onclick={cancelAddComment}>Cancel</Button>
                 <Button size="sm" onclick={saveComment} disabled={!commentText.trim() || savingComment}>
