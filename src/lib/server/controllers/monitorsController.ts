@@ -169,6 +169,9 @@ export const UpdateMonitoringData = async (data: UpdateMonitoringDataInput): Pro
   return result;
 };
 
+/** Cap parallel last_status refreshes after a bulk (untagged) delete. */
+const LAST_STATUS_REFRESH_CONCURRENCY = 8;
+
 /** Delete monitoring samples and refresh last_status so dashboards do not keep a deleted latest row. */
 export const DeleteMonitoringData = async (
   tag?: string,
@@ -188,12 +191,17 @@ export const DeleteMonitoringData = async (
 
   const deleted = await db.deleteMonitorDataByTag(tag, start, end, status);
 
-  for (const t of tagsToRefresh) {
-    try {
-      await refreshLastStatusCache(t);
-    } catch {
-      // ignore cache failures
-    }
+  for (let i = 0; i < tagsToRefresh.length; i += LAST_STATUS_REFRESH_CONCURRENCY) {
+    const batch = tagsToRefresh.slice(i, i + LAST_STATUS_REFRESH_CONCURRENCY);
+    await Promise.all(
+      batch.map(async (t) => {
+        try {
+          await refreshLastStatusCache(t);
+        } catch {
+          // ignore per-tag cache failures
+        }
+      }),
+    );
   }
   return { success: true, deleted };
 };
