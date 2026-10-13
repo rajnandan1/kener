@@ -62,11 +62,15 @@ type SslSecurityState = "secured" | "insecure" | "unknown";
 
 /**
  * Map expiry evidence to UI state. Missing expiry must not look SECURED
- * (errors/timeouts leave sslExpiresAt null).
+ * (errors/timeouts leave sslExpiresAt null). Pass a reactive `nowMs` from the UI
+ * so SECURED flips to INSECURE when the page stays open past expiry.
  */
-function GetSslSecurityState(expiresAtMs: number | null | undefined): SslSecurityState {
+function GetSslSecurityState(
+  expiresAtMs: number | null | undefined,
+  nowMs: number = Date.now(),
+): SslSecurityState {
   if (typeof expiresAtMs !== "number") return "unknown";
-  return expiresAtMs <= Date.now() ? "insecure" : "secured";
+  return expiresAtMs <= nowMs ? "insecure" : "secured";
 }
 
 function SslSecurityLabelKey(state: SslSecurityState): "SECURED" | "INSECURE" | "UNKNOWN" {
@@ -82,11 +86,14 @@ function SslSecurityTextClass(state: SslSecurityState): string {
 }
 
 /** Live remaining time until expiry (from absolute expires-at), not a period average. */
-function FormatSslRemaining(expiresAtMs: number | null | undefined): string {
+function FormatSslRemaining(
+  expiresAtMs: number | null | undefined,
+  nowMs: number = Date.now(),
+): string {
   if (typeof expiresAtMs !== "number") {
     return "";
   }
-  const remainingMs = expiresAtMs - Date.now();
+  const remainingMs = expiresAtMs - nowMs;
   if (remainingMs <= 0) {
     return "0d";
   }

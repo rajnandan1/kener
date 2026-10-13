@@ -127,6 +127,26 @@ export const InsertMonitoringData = async (data: MonitoringDataInput): Promise<M
   });
 };
 
+/**
+ * After a DB write that may change the newest sample, refresh Redis last_status.
+ * DB rows lack SSL-only fields — keep expiry/issuer from the previous cache entry
+ * when it is still the same check (matching timestamp).
+ */
+async function refreshLastStatusCache(tag: string): Promise<void> {
+  const latest = await db.getLatestMonitoringData(tag);
+  if (!latest) {
+    await DeleteMonitorCaches(tag);
+    return;
+  }
+  let previous: MonitoringData | null = null;
+  try {
+    previous = await GetLastMonitoringValue(tag);
+  } catch {
+    previous = null;
+  }
+  await SetLastMonitoringValue(tag, mergeLatestMonitoringWithSslCache(latest, previous) ?? latest);
+}
+
 export const UpdateMonitoringData = async (data: UpdateMonitoringDataInput): Promise<unknown[]> => {
   let queryData = { ...data };
 
@@ -140,14 +160,8 @@ export const UpdateMonitoringData = async (data: UpdateMonitoringDataInput): Pro
     queryData.deviation ?? 0,
   );
 
-  // last_status is Redis-only for the dashboard hot path — refresh after manual edits.
   try {
-    const latest = await db.getLatestMonitoringData(queryData.monitor_tag);
-    if (latest) {
-      await SetLastMonitoringValue(queryData.monitor_tag, latest);
-    } else {
-      await DeleteMonitorCaches(queryData.monitor_tag);
-    }
+    await refreshLastStatusCache(queryData.monitor_tag);
   } catch {
     // ignore cache failures; DB write already succeeded
   }
@@ -155,7 +169,7 @@ export const UpdateMonitoringData = async (data: UpdateMonitoringDataInput): Pro
   return result;
 };
 
-/** Delete monitoring samples and drop last_status so dashboards do not keep a deleted latest row. */
+/** Delete monitoring samples and refresh last_status so dashboards do not keep a deleted latest row. */
 export const DeleteMonitoringData = async (
   tag?: string,
   start?: number,
@@ -165,12 +179,7 @@ export const DeleteMonitoringData = async (
   const deleted = await db.deleteMonitorDataByTag(tag, start, end, status);
   if (tag) {
     try {
-      const latest = await db.getLatestMonitoringData(tag);
-      if (latest) {
-        await SetLastMonitoringValue(tag, latest);
-      } else {
-        await DeleteMonitorCaches(tag);
-      }
+      await refreshLastStatusCache(tag);
     } catch {
       // ignore cache failures
     }

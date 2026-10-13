@@ -13,13 +13,14 @@
   import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
   import { page } from "$app/state";
   import { GetSslSecurityState, SslSecurityLabelKey, SslSecurityTextClass, FormatSslRemaining } from "$lib/clientTools";
+  import { getSslNowMs } from "$lib/client/sslClock.svelte";
   let { data } = $props();
 
   let sslSecurity = $derived(
-    data.monitorType === "SSL" ? GetSslSecurityState(data.monitorSslExpiresAt) : null
+    data.monitorType === "SSL" ? GetSslSecurityState(data.monitorSslExpiresAt, getSslNowMs()) : null
   );
   let sslRemaining = $derived(
-    data.monitorType === "SSL" ? FormatSslRemaining(data.monitorSslExpiresAt) : ""
+    data.monitorType === "SSL" ? FormatSslRemaining(data.monitorSslExpiresAt, getSslNowMs()) : ""
   );
 
   // State

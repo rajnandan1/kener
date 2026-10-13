@@ -21,17 +21,12 @@ export async function up(knex: Knex): Promise<void> {
   }
 }
 
-export async function down(knex: Knex): Promise<void> {
-  const client = knex.client.config.client as string;
-
-  if (client === "mysql" || client === "mysql2") {
-    await knex.schema.raw("ALTER TABLE monitoring_data MODIFY latency FLOAT(8, 2) NULL");
-    return;
-  }
-
-  if (client === "pg" || client === "postgres" || client === "postgresql") {
-    await knex.schema.raw(
-      "ALTER TABLE monitoring_data ALTER COLUMN latency TYPE REAL USING latency::real",
-    );
-  }
+/**
+ * Do not narrow latency back to FLOAT(8, 2) / REAL — SSL remaining-ms rows already
+ * stored after `up` would fail or clamp on MySQL. Rollback is intentionally unsupported.
+ */
+export async function down(_knex: Knex): Promise<void> {
+  throw new Error(
+    "Cannot rollback 20261013120000_widen_monitoring_data_latency: narrowing latency would clamp or reject SSL remaining-ms values. Restore from backup if needed.",
+  );
 }

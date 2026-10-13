@@ -8,7 +8,14 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { formatDate } from "$lib/stores/datetime";
-  import { GetInitials, GetSslSecurityState, SslSecurityLabelKey, SslSecurityTextClass } from "$lib/clientTools.js";
+  import {
+    GetInitials,
+    GetSslSecurityState,
+    SslSecurityLabelKey,
+    SslSecurityTextClass,
+    FormatSslRemaining,
+  } from "$lib/clientTools.js";
+  import { getSslNowMs } from "$lib/client/sslClock.svelte";
   import GroupMonitorPopover from "./GroupMonitorPopover.svelte";
   import { t } from "$lib/stores/i18n";
   import { page } from "$app/state";
@@ -99,8 +106,11 @@
   {:else if data}
     <!-- Loaded state -->
     {@const StatusIcon = STATUS_ICON[data.currentStatus]}
+    {@const sslNowMs = getSslNowMs()}
     {@const sslSecurity =
-      data.monitorType === "SSL" ? GetSslSecurityState(data.sslExpiresAt) : null}
+      data.monitorType === "SSL" ? GetSslSecurityState(data.sslExpiresAt, sslNowMs) : null}
+    {@const sslRemainingLive =
+      data.monitorType === "SSL" ? FormatSslRemaining(data.sslExpiresAt, sslNowMs) : ""}
     <Item.Root class="items-start ">
       {#if !compact}
         <Item.Media variant="image" class="hidden sm:block">
@@ -134,7 +144,7 @@
                 {$t(SslSecurityLabelKey(sslSecurity))}
               </span>
               <span class="text-muted-foreground text-right text-xs">
-                {$t("Remaining Days")}: {data.sslRemaining || "—"}
+                {$t("Remaining Days")}: {sslRemainingLive || "—"}
               </span>
               {#if data.sslExpiresAt}
                 <span class="text-muted-foreground text-right text-[10px] leading-tight sm:text-xs">

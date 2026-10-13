@@ -18,7 +18,8 @@
   import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
   import GroupMonitorPopover from "$lib/components/GroupMonitorPopover.svelte";
   import { page } from "$app/state";
-  import { GetSslSecurityState, SslSecurityLabelKey, SslSecurityTextClass } from "$lib/clientTools";
+  import { GetSslSecurityState, SslSecurityLabelKey, SslSecurityTextClass, FormatSslRemaining } from "$lib/clientTools";
+  import { getSslNowMs } from "$lib/client/sslClock.svelte";
 
   interface Props {
     monitorTag: string;
@@ -67,8 +68,9 @@
   let displayMinLatency = $derived(overviewData?.minLatency ?? "--");
   let isSslMonitor = $derived(overviewData?.monitorType === "SSL");
   let sslExpiresAt = $derived(overviewData?.sslExpiresAt ?? null);
-  let sslRemaining = $derived(overviewData?.sslRemaining ?? "");
-  let sslSecurity = $derived(isSslMonitor ? GetSslSecurityState(sslExpiresAt) : null);
+  let sslNowMs = $derived(getSslNowMs());
+  let sslRemaining = $derived(isSslMonitor ? FormatSslRemaining(sslExpiresAt, sslNowMs) : "");
+  let sslSecurity = $derived(isSslMonitor ? GetSslSecurityState(sslExpiresAt, sslNowMs) : null);
 
   // Data for calendar/chart comes directly from API
   let displayData = $derived(overviewData?.uptimeData ?? []);
