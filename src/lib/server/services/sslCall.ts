@@ -86,15 +86,14 @@ export const getSSLExpiry = (domain: string, options: GetSSLExpiryOptions = {}):
         }
         const handshakeMs = Math.round(performance.now() - startTime);
         const timeTillExpiryMs = new Date(cert.valid_to).getTime() - Date.now();
-        const issuer = cert.issuer as Record<string, unknown> | undefined;
         settle(() =>
           resolve({
             domain,
             expiryDate: new Date(cert.valid_to),
             timeTillExpiryMs,
             handshakeMs,
-            issuerCn: dnAttr(issuer?.CN),
-            issuerO: dnAttr(issuer?.O),
+            issuerCn: dnAttr(cert.issuer?.CN),
+            issuerO: dnAttr(cert.issuer?.O),
           }),
         );
       },
