@@ -1,5 +1,5 @@
 import type { MonitoringData } from "../types/db.js";
-import { setCache, getCache, deleteCache } from "./cache.js";
+import { setCache, getCache, getCacheMany, deleteCache } from "./cache.js";
 export async function SetLastMonitoringValue(tag: string, value: MonitoringData): Promise<void> {
   await setCache<MonitoringData>(tag + ":last_status", value, 86400); //set ttl to 1 day
 }
@@ -9,6 +9,11 @@ export async function GetLastMonitoringValue(
   fetcher?: () => Promise<MonitoringData | undefined | null> | MonitoringData | undefined | null,
 ): Promise<MonitoringData | null> {
   return await getCache<MonitoringData>(tag + ":last_status", fetcher, 86400);
+}
+
+export async function GetLastMonitoringValues(tags: string[]): Promise<Array<MonitoringData | null>> {
+  if (tags.length === 0) return [];
+  return await getCacheMany<MonitoringData>(tags.map((tag) => tag + ":last_status"));
 }
 
 //function to set heartbeat value in cache

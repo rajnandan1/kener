@@ -27,6 +27,13 @@ export interface MonitorBarResponse {
   toTimeStamp: number;
   maxLatency: string;
   minLatency: string;
+  monitorType?: string;
+  /** Absolute SSL certificate expiry timestamp in ms, when available. */
+  sslExpiresAt?: number | null;
+  /** Live remaining time until expiry (e.g. "80.56d"), from latest check — not period avg. */
+  sslRemaining?: string | null;
+  issuerCn?: string | null;
+  issuerO?: string | null;
 }
 
 /**

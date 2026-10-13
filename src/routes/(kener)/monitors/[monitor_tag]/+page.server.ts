@@ -11,9 +11,10 @@ import {
 import type { TimestampStatusCount } from "$lib/server/types/db";
 import { GetNowTimestampUTC, UptimeCalculator } from "$lib/server/tool";
 import GC from "$lib/global-constants.js";
-import { GetStatusColor, GetStatusSummary, ParseLatency } from "$lib/clientTools";
+import { GetStatusColor, GetStatusSummary, ParseLatency, SslExpiryDateMs, ParseSslIssuerFromMessage } from "$lib/clientTools";
 import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
 import type { GroupMonitorTypeData } from "$lib/server/types/monitor";
+import { GetLastMonitoringValue } from "$lib/server/cache/setGet.js";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const { monitor_tag } = params;
@@ -55,6 +56,10 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
   //last known status
   const lastStatus = await db.getLatestMonitoringData(monitor.tag);
+  const cachedStatus =
+    monitor.monitor_type === "SSL"
+      ? await GetLastMonitoringValue(monitor.tag, () => lastStatus).catch(() => lastStatus)
+      : lastStatus;
   //use uptime calculator tool to parse
   let item: TimestampStatusCount = {
     ts: lastStatus ? lastStatus.timestamp : GetNowTimestampUTC(),
@@ -66,6 +71,18 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     maxLatency: lastStatus && lastStatus.latency ? lastStatus.latency : 0,
     minLatency: lastStatus && lastStatus.latency ? lastStatus.latency : 0,
   };
+
+  const sslExpiresAt =
+    monitor.monitor_type === "SSL" && lastStatus?.latency
+      ? SslExpiryDateMs(lastStatus.timestamp, lastStatus.latency)
+      : null;
+  let issuerCn = cachedStatus?.issuer_cn ?? null;
+  let issuerO = cachedStatus?.issuer_o ?? null;
+  if (monitor.monitor_type === "SSL" && !issuerCn && !issuerO) {
+    const parsed = ParseSslIssuerFromMessage(cachedStatus?.error_message ?? lastStatus?.error_message);
+    issuerCn = parsed.issuer_cn;
+    issuerO = parsed.issuer_o;
+  }
 
   //get status summary
   let extendedTags: string[] = [];
@@ -107,6 +124,10 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       textClass: GetStatusColor(item),
       monitorLastStatusTimestamp: item.ts,
       monitorLastLatency: ParseLatency(item.avgLatency),
+      monitorType: monitor.monitor_type,
+      monitorSslExpiresAt: sslExpiresAt,
+      monitorIssuerCn: issuerCn,
+      monitorIssuerO: issuerO,
       ongoingIncidents,
       ongoingMaintenances,
       upcomingMaintenances,

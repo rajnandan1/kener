@@ -10,8 +10,17 @@ vi.mock("$lib/server/db/db", () => ({
 }));
 
 import db from "$lib/server/db/db";
-import { CloneMonitor, CreateMonitor, CreateUpdateMonitor } from "./monitorsController";
+import {
+  CloneMonitor,
+  CreateMonitor,
+  CreateUpdateMonitor,
+  combineCachedAndDbLatest,
+  mergeStatusCountsByMonitor,
+  statusCountsCacheKey,
+  statusCountsTodayStart,
+} from "./monitorsController.js";
 import { HEARTBEAT_SECRET_RULE } from "$lib/anywhere";
+import type { MonitoringData, TimestampStatusCountByMonitor } from "../types/db.js";
 
 const mockedDb = vi.mocked(db);
 
@@ -160,5 +169,77 @@ describe("monitor save: heartbeat secret", () => {
     const cloned = JSON.parse(mockedDb.insertMonitor.mock.calls[0][0].type_data!);
     expect(cloned.secretString).toMatch(/^[a-z]+-[a-z]+-[a-z]+-[a-z]+$/);
     expect(cloned).toMatchObject({ degradedRemainingMinutes: 5, downRemainingMinutes: 10 });
+  });
+});
+
+const row = (tag: string, status: string): MonitoringData => ({
+  monitor_tag: tag,
+  timestamp: 1,
+  status,
+  latency: 10,
+  type: "REALTIME",
+});
+
+const day = (tag: string, ts: number): TimestampStatusCountByMonitor => ({
+  monitor_tag: tag,
+  ts,
+  countOfUp: 1,
+  countOfDown: 0,
+  countOfDegraded: 0,
+  countOfMaintenance: 0,
+  avgLatency: 10,
+  maxLatency: 10,
+  minLatency: 10,
+});
+
+describe("combineCachedAndDbLatest", () => {
+  it("prefers cache hits and fills misses from DB in tag order", () => {
+    const cached = [row("a", "UP"), null, row("c", "DOWN")];
+    const fromDb = [row("b", "DEGRADED")];
+    expect(combineCachedAndDbLatest(["a", "b", "c"], cached, fromDb)).toEqual([
+      row("a", "UP"),
+      row("b", "DEGRADED"),
+      row("c", "DOWN"),
+    ]);
+  });
+
+  it("omits tags that are missing from both cache and DB", () => {
+    expect(combineCachedAndDbLatest(["a", "b"], [null, null], [row("a", "UP")])).toEqual([row("a", "UP")]);
+  });
+});
+
+describe("statusCountsCacheKey", () => {
+  it("is per-tag so pages can share monitor aggregates", () => {
+    expect(statusCountsCacheKey("a", 1, 86400, 89)).toBe("status_counts:a:1:86400:89");
+    expect(statusCountsCacheKey("a", 1, 86400, 89)).not.toBe(statusCountsCacheKey("b", 1, 86400, 89));
+  });
+});
+
+describe("statusCountsTodayStart", () => {
+  it("returns the last daily bucket start for a multi-day window", () => {
+    const start = 1_700_000_000;
+    expect(statusCountsTodayStart(start, 86400, 90)).toBe(start + 89 * 86400);
+  });
+
+  it("returns null for today-only or non-daily windows so those stay uncached", () => {
+    expect(statusCountsTodayStart(1, 86400, 1)).toBeNull();
+    expect(statusCountsTodayStart(1, 3600, 24)).toBeNull();
+  });
+});
+
+describe("mergeStatusCountsByMonitor", () => {
+  it("uses cache hits and fills misses from DB in request tag order", () => {
+    const cached: Array<TimestampStatusCountByMonitor[] | null> = [[day("a", 10)], null, [day("c", 30)]];
+    const fromDb = [day("b", 20), day("b", 21)];
+    expect(mergeStatusCountsByMonitor(["a", "b", "c"], cached, fromDb)).toEqual([
+      day("a", 10),
+      day("b", 20),
+      day("b", 21),
+      day("c", 30),
+    ]);
+  });
+
+  it("treats empty DB results as an empty series for a missing tag", () => {
+    expect(mergeStatusCountsByMonitor(["a"], [null], [])).toEqual([]);
   });
 });

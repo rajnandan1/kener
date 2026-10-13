@@ -12,9 +12,51 @@ function ParseLatency(latencyMs: number): string {
     return `${(latencyMs / 1000).toFixed(2)}s`;
   } else if (latencyMs < 3600000) {
     return `${(latencyMs / 60000).toFixed(2)}m`;
-  } else {
+  } else if (latencyMs < 86400000) {
     return `${(latencyMs / 3600000).toFixed(2)}h`;
+  } else {
+    // Used by SSL monitors (time until certificate expiry)
+    return `${(latencyMs / 86400000).toFixed(2)}d`;
   }
+}
+
+/** Absolute certificate expiry from a check timestamp (sec) + remaining time (ms). */
+function SslExpiryDateMs(checkTimestampSec: number, remainingMs: number): number | null {
+  if (!checkTimestampSec || remainingMs == null || remainingMs < 0) {
+    return null;
+  }
+  return checkTimestampSec * 1000 + remainingMs;
+}
+
+/** True when the certificate expiry datetime is in the past. */
+function IsSslCertificateExpired(expiresAtMs: number | null | undefined): boolean {
+  return typeof expiresAtMs === "number" && expiresAtMs <= Date.now();
+}
+
+/** Live remaining time until expiry (from absolute expires-at), not a period average. */
+function FormatSslRemaining(expiresAtMs: number | null | undefined): string {
+  if (typeof expiresAtMs !== "number") {
+    return "";
+  }
+  const remainingMs = expiresAtMs - Date.now();
+  if (remainingMs <= 0) {
+    return "0d";
+  }
+  return ParseLatency(remainingMs);
+}
+
+/** Parse `Issued by CN=..., O=...` from SSL error_message / notes. */
+function ParseSslIssuerFromMessage(message: string | null | undefined): {
+  issuer_cn: string | null;
+  issuer_o: string | null;
+} {
+  if (!message) return { issuer_cn: null, issuer_o: null };
+  const cnMatch = message.match(/\bCN=([^,]+?)(?:,|\s+O=|$)/);
+  const oMatch = message.match(/\bO=([^|]+?)(?:\s*\||$)/);
+  return {
+    issuer_cn: cnMatch?.[1]?.trim() || null,
+    issuer_o: oMatch?.[1]?.trim() || null,
+  };
 }
 
 function siteDataExtractFromDb(data: Record<string, unknown>, obj: Record<string, unknown>): Record<string, unknown> {
@@ -402,5 +444,9 @@ export {
   GetStatusColor,
   GetStatusBgColor,
   ParseLatency,
+  SslExpiryDateMs,
+  IsSslCertificateExpired,
+  FormatSslRemaining,
+  ParseSslIssuerFromMessage,
   GetInitials,
 };

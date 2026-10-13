@@ -8,7 +8,7 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { formatDate } from "$lib/stores/datetime";
-  import { GetInitials } from "$lib/clientTools.js";
+  import { GetInitials, IsSslCertificateExpired } from "$lib/clientTools.js";
   import GroupMonitorPopover from "./GroupMonitorPopover.svelte";
   import { t } from "$lib/stores/i18n";
   import { page } from "$app/state";
@@ -99,6 +99,7 @@
   {:else if data}
     <!-- Loaded state -->
     {@const StatusIcon = STATUS_ICON[data.currentStatus]}
+    {@const sslExpired = data.monitorType === "SSL" && IsSslCertificateExpired(data.sslExpiresAt)}
     <Item.Root class="items-start ">
       {#if !compact}
         <Item.Media variant="image" class="hidden sm:block">
@@ -123,17 +124,41 @@
         <Item.Title class="items-start text-2xl">
           <StatusIcon class="{STATUS_STROKE[data.currentStatus]} {grid ? 'mt-1 size-5' : 'mt-1.5 size-6'}" />
           <div class="flex flex-col items-start gap-1 sm:items-end">
-            <span class={grid ? "text-base sm:text-lg" : "text-lg sm:text-xl"}>{data.uptime}%</span>
-            <span class="text-muted-foreground text-right text-xs">
-              {data.avgLatency}
-            </span>
+            {#if data.monitorType === "SSL"}
+              <span
+                class="{grid ? 'text-base sm:text-lg' : 'text-lg sm:text-xl'} font-semibold {sslExpired
+                  ? 'text-down'
+                  : 'text-up'}"
+              >
+                {$t(sslExpired ? "INSECURE" : "SECURED")}
+              </span>
+              <span class="text-muted-foreground text-right text-xs">
+                {$t("Remaining Days")}: {data.sslRemaining || "—"}
+              </span>
+              {#if data.sslExpiresAt}
+                <span class="text-muted-foreground text-right text-[10px] leading-tight sm:text-xs">
+                  {$t("Expires At")}: {$formatDate(data.sslExpiresAt, "MMMM d, yyyy HH:mm:ss")}
+                </span>
+              {/if}
+            {:else}
+              <span class={grid ? "text-base sm:text-lg" : "text-lg sm:text-xl"}>{data.uptime}%</span>
+              <span class="text-muted-foreground text-right text-xs">
+                {data.avgLatency}
+              </span>
+            {/if}
           </div>
         </Item.Title>
       </Item.Content>
     </Item.Root>
     {#if !compact}
       <div class="mx-auto flex w-full flex-col gap-1 px-4">
-        <StatusBarCalendar data={data.uptimeData} monitorTag={tag} barHeight={40} radius={8} />
+        <StatusBarCalendar
+          data={data.uptimeData}
+          monitorTag={tag}
+          monitorType={data.monitorType}
+          barHeight={40}
+          radius={8}
+        />
         <div class="flex min-w-0 justify-between gap-3">
           <p class="text-muted-foreground min-w-0 truncate text-xs font-medium">
             {$formatDate(new Date(data.fromTimeStamp * 1000), page.data.dateAndTimeFormat.dateOnly)}

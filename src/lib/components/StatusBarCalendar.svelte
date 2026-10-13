@@ -12,13 +12,22 @@
   interface Props {
     data: TimestampStatusCount[];
     monitorTag: string;
+    monitorType?: string;
     barHeight?: number;
     radius?: number;
     class?: string;
     disableClick?: boolean;
   }
 
-  let { data, monitorTag, barHeight = 40, radius = 8, class: className = "", disableClick = false }: Props = $props();
+  let {
+    data,
+    monitorTag,
+    monitorType,
+    barHeight = 40,
+    radius = 8,
+    class: className = "",
+    disableClick = false
+  }: Props = $props();
 
   // Canvas state
   let canvas = $state<HTMLCanvasElement | null>(null);
@@ -376,7 +385,7 @@
       <span class={getStatusColor(hoveredBar.data)}>{$t(GetStatusSummary(hoveredBar.data))}</span>
       <span class="text-muted-foreground">@</span>
       {$formatDate(hoveredBar.data.ts, page.data.dateAndTimeFormat.dateOnly)}
-      {#if hoveredBar.data.avgLatency > 0}
+      {#if monitorType !== "SSL" && hoveredBar.data.avgLatency > 0}
         <span class="text-muted-foreground ml-1">|</span>
         <span class="ml-1">{ParseLatency(hoveredBar.data.avgLatency)}</span>
       {/if}
@@ -385,7 +394,7 @@
 </div>
 
 <!-- Day Detail Dialog -->
-<MonitorDayDetail bind:open={dialogOpen} {monitorTag} {selectedDay} />
+<MonitorDayDetail bind:open={dialogOpen} {monitorTag} {selectedDay} {monitorType} />
 
 <style>
   canvas {

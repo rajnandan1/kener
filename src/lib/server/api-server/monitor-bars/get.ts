@@ -64,6 +64,7 @@ export default async function get(req: APIServerRequest): Promise<Response> {
   const latestStatusByTag = new Map<string, StatusType>(
     latestDataAll.map((d) => [d.monitor_tag, (d.status as StatusType) || GC.NO_DATA]),
   );
+  const latestDataByTag = new Map(latestDataAll.map((d) => [d.monitor_tag, d]));
 
   const monitorByTag = new Map(monitors.map((m) => [m.tag, m]));
   const existingTags = new Set(monitors.map((m) => m.tag));
@@ -98,6 +99,7 @@ export default async function get(req: APIServerRequest): Promise<Response> {
           days,
           endOfDayTodayAtTz,
           latestStatusByTag.get(tag) || GC.NO_DATA,
+          latestDataByTag.get(tag) || null,
         );
         return { tag, payload };
       }),
