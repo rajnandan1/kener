@@ -30,8 +30,9 @@ function SslExpiryDateMs(checkTimestampSec: number, remainingMs: number): number
 
 /**
  * Resolve absolute SSL expiry (ms) from the latest check row.
- * Prefer stored `expiry_at`; fall back to timestamp+latency when remaining > 0;
- * latency 0 means the cert was already expired at check time (sslCall clamps to 0).
+ * Prefer stored `expiry_at`; fall back to timestamp+latency when remaining > 0.
+ * Do not treat latency 0 alone as expired — errors/timeouts also use 0 with no
+ * expiry_at; missing evidence must surface as unknown, not SECURED/INSECURE.
  */
 function ResolveSslExpiresAtMs(latestData: {
   timestamp: number;
@@ -49,17 +50,35 @@ function ResolveSslExpiresAtMs(latestData: {
     return SslExpiryDateMs(latestData.timestamp, latestData.latency);
   }
 
-  // Clamped remaining lifetime — treat check time as the expiry instant (INSECURE).
-  if (latestData.latency === 0 && latestData.timestamp) {
-    return latestData.timestamp * 1000;
-  }
-
   return null;
 }
 
 /** True when the certificate expiry datetime is in the past. */
 function IsSslCertificateExpired(expiresAtMs: number | null | undefined): boolean {
   return typeof expiresAtMs === "number" && expiresAtMs <= Date.now();
+}
+
+type SslSecurityState = "secured" | "insecure" | "unknown";
+
+/**
+ * Map expiry evidence to UI state. Missing expiry must not look SECURED
+ * (errors/timeouts leave sslExpiresAt null).
+ */
+function GetSslSecurityState(expiresAtMs: number | null | undefined): SslSecurityState {
+  if (typeof expiresAtMs !== "number") return "unknown";
+  return expiresAtMs <= Date.now() ? "insecure" : "secured";
+}
+
+function SslSecurityLabelKey(state: SslSecurityState): "SECURED" | "INSECURE" | "UNKNOWN" {
+  if (state === "insecure") return "INSECURE";
+  if (state === "secured") return "SECURED";
+  return "UNKNOWN";
+}
+
+function SslSecurityTextClass(state: SslSecurityState): string {
+  if (state === "insecure") return "text-down";
+  if (state === "secured") return "text-up";
+  return "text-muted-foreground";
 }
 
 /** Live remaining time until expiry (from absolute expires-at), not a period average. */
@@ -476,6 +495,9 @@ export {
   SslExpiryDateMs,
   ResolveSslExpiresAtMs,
   IsSslCertificateExpired,
+  GetSslSecurityState,
+  SslSecurityLabelKey,
+  SslSecurityTextClass,
   FormatSslRemaining,
   ParseSslIssuerFromMessage,
   GetInitials,

@@ -12,11 +12,11 @@
   import IncidentItem from "$lib/components/IncidentItem.svelte";
   import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
   import { page } from "$app/state";
-  import { IsSslCertificateExpired, FormatSslRemaining } from "$lib/clientTools";
+  import { GetSslSecurityState, SslSecurityLabelKey, SslSecurityTextClass, FormatSslRemaining } from "$lib/clientTools";
   let { data } = $props();
 
-  let sslExpired = $derived(
-    data.monitorType === "SSL" && IsSslCertificateExpired(data.monitorSslExpiresAt)
+  let sslSecurity = $derived(
+    data.monitorType === "SSL" ? GetSslSecurityState(data.monitorSslExpiresAt) : null
   );
   let sslRemaining = $derived(
     data.monitorType === "SSL" ? FormatSslRemaining(data.monitorSslExpiresAt) : ""
@@ -122,10 +122,10 @@
       {/if}
     </div>
     <div class="flex items-center justify-between gap-4 px-2">
-      {#if data.monitorType === "SSL"}
+      {#if data.monitorType === "SSL" && sslSecurity}
         <div class="flex flex-1 flex-col items-end gap-1">
-          <p class="text-2xl font-semibold {sslExpired ? 'text-down' : 'text-up'}">
-            {$t(sslExpired ? "INSECURE" : "SECURED")}
+          <p class="text-2xl font-semibold {SslSecurityTextClass(sslSecurity)}">
+            {$t(SslSecurityLabelKey(sslSecurity))}
           </p>
           {#if sslRemaining}
             <p class="text-muted-foreground text-right text-sm">

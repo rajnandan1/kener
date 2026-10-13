@@ -18,7 +18,7 @@
   import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
   import GroupMonitorPopover from "$lib/components/GroupMonitorPopover.svelte";
   import { page } from "$app/state";
-  import { IsSslCertificateExpired } from "$lib/clientTools";
+  import { GetSslSecurityState, SslSecurityLabelKey, SslSecurityTextClass } from "$lib/clientTools";
 
   interface Props {
     monitorTag: string;
@@ -68,7 +68,7 @@
   let isSslMonitor = $derived(overviewData?.monitorType === "SSL");
   let sslExpiresAt = $derived(overviewData?.sslExpiresAt ?? null);
   let sslRemaining = $derived(overviewData?.sslRemaining ?? "");
-  let sslExpired = $derived(isSslMonitor && IsSslCertificateExpired(sslExpiresAt));
+  let sslSecurity = $derived(isSslMonitor ? GetSslSecurityState(sslExpiresAt) : null);
 
   // Data for calendar/chart comes directly from API
   let displayData = $derived(overviewData?.uptimeData ?? []);
@@ -197,9 +197,9 @@
       <!-- Stats Summary -->
       <div class="flex gap-4">
         <div class="flex flex-1 flex-col items-start gap-1">
-          {#if isSslMonitor}
-            <p class="text-2xl font-semibold {sslExpired ? 'text-down' : 'text-up'}">
-              {$t(sslExpired ? "INSECURE" : "SECURED")}
+          {#if isSslMonitor && sslSecurity}
+            <p class="text-2xl font-semibold {SslSecurityTextClass(sslSecurity)}">
+              {$t(SslSecurityLabelKey(sslSecurity))}
             </p>
             <p class="text-muted-foreground text-sm font-medium">
               {$t("Remaining Days")}: {sslRemaining || "—"}
@@ -217,7 +217,7 @@
                 {#if overviewData.issuerO}O={overviewData.issuerO}{/if}
               </p>
             {/if}
-          {:else}
+          {:else if !isSslMonitor}
             <p class="text-2xl font-semibold">{displayUptime}%</p>
             <p class="text-muted-foreground text-sm font-medium">{$t("Uptime")}</p>
           {/if}

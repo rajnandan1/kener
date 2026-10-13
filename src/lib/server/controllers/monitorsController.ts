@@ -130,7 +130,7 @@ export const InsertMonitoringData = async (data: MonitoringDataInput): Promise<M
 export const UpdateMonitoringData = async (data: UpdateMonitoringDataInput): Promise<unknown[]> => {
   let queryData = { ...data };
 
-  return await db.updateMonitoringData(
+  const result = await db.updateMonitoringData(
     queryData.monitor_tag,
     GetMinuteStartTimestampUTC(queryData.start),
     GetMinuteStartTimestampUTC(queryData.end),
@@ -139,6 +139,43 @@ export const UpdateMonitoringData = async (data: UpdateMonitoringDataInput): Pro
     queryData.latency ?? 0,
     queryData.deviation ?? 0,
   );
+
+  // last_status is Redis-only for the dashboard hot path — refresh after manual edits.
+  try {
+    const latest = await db.getLatestMonitoringData(queryData.monitor_tag);
+    if (latest) {
+      await SetLastMonitoringValue(queryData.monitor_tag, latest);
+    } else {
+      await DeleteMonitorCaches(queryData.monitor_tag);
+    }
+  } catch {
+    // ignore cache failures; DB write already succeeded
+  }
+
+  return result;
+};
+
+/** Delete monitoring samples and drop last_status so dashboards do not keep a deleted latest row. */
+export const DeleteMonitoringData = async (
+  tag?: string,
+  start?: number,
+  end?: number,
+  status?: MonitoringStatus,
+): Promise<{ success: true; deleted: number }> => {
+  const deleted = await db.deleteMonitorDataByTag(tag, start, end, status);
+  if (tag) {
+    try {
+      const latest = await db.getLatestMonitoringData(tag);
+      if (latest) {
+        await SetLastMonitoringValue(tag, latest);
+      } else {
+        await DeleteMonitorCaches(tag);
+      }
+    } catch {
+      // ignore cache failures
+    }
+  }
+  return { success: true, deleted };
 };
 
 export const AggregateData = (

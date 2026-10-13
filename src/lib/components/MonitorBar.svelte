@@ -8,7 +8,7 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { formatDate } from "$lib/stores/datetime";
-  import { GetInitials, IsSslCertificateExpired } from "$lib/clientTools.js";
+  import { GetInitials, GetSslSecurityState, SslSecurityLabelKey, SslSecurityTextClass } from "$lib/clientTools.js";
   import GroupMonitorPopover from "./GroupMonitorPopover.svelte";
   import { t } from "$lib/stores/i18n";
   import { page } from "$app/state";
@@ -99,7 +99,8 @@
   {:else if data}
     <!-- Loaded state -->
     {@const StatusIcon = STATUS_ICON[data.currentStatus]}
-    {@const sslExpired = data.monitorType === "SSL" && IsSslCertificateExpired(data.sslExpiresAt)}
+    {@const sslSecurity =
+      data.monitorType === "SSL" ? GetSslSecurityState(data.sslExpiresAt) : null}
     <Item.Root class="items-start ">
       {#if !compact}
         <Item.Media variant="image" class="hidden sm:block">
@@ -124,13 +125,13 @@
         <Item.Title class="items-start text-2xl">
           <StatusIcon class="{STATUS_STROKE[data.currentStatus]} {grid ? 'mt-1 size-5' : 'mt-1.5 size-6'}" />
           <div class="flex flex-col items-start gap-1 sm:items-end">
-            {#if data.monitorType === "SSL"}
+            {#if data.monitorType === "SSL" && sslSecurity}
               <span
-                class="{grid ? 'text-base sm:text-lg' : 'text-lg sm:text-xl'} font-semibold {sslExpired
-                  ? 'text-down'
-                  : 'text-up'}"
+                class="{grid ? 'text-base sm:text-lg' : 'text-lg sm:text-xl'} font-semibold {SslSecurityTextClass(
+                  sslSecurity,
+                )}"
               >
-                {$t(sslExpired ? "INSECURE" : "SECURED")}
+                {$t(SslSecurityLabelKey(sslSecurity))}
               </span>
               <span class="text-muted-foreground text-right text-xs">
                 {$t("Remaining Days")}: {data.sslRemaining || "—"}
