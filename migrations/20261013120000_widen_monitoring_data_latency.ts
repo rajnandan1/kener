@@ -1,9 +1,11 @@
 import type { Knex } from "knex";
 
+/** Knex client driver id (e.g. mysql2, better-sqlite3). */
 function dbClient(knex: Knex): string {
   return knex.client.config.client as string;
 }
 
+/** True when the migration targets SQLite (REAL affinity; no ALTER needed). */
 function isSqlite(client: string): boolean {
   return client === "sqlite3" || client === "better-sqlite3";
 }

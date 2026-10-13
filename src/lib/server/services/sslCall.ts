@@ -6,7 +6,9 @@ import type { SslMonitor, MonitoringResult } from "../types/monitor.js";
 
 export const DEFAULT_SSL_TIMEOUT_MS = 10000;
 
+/** Thrown when the TLS handshake or certificate read exceeds the configured timeout. */
 export class SSLTimeoutError extends Error {
+  /** @param timeoutMs - Timeout budget that was exceeded. */
   constructor(timeoutMs: number) {
     super(`SSL check timed out after ${timeoutMs}ms`);
     this.name = "SSLTimeoutError";
@@ -40,6 +42,7 @@ export function dnAttr(value: unknown): string | null {
   return null;
 }
 
+/** Build a short `Issued by CN=..., O=...` note for logs and last_status. */
 function formatIssuerLine(issuerCn: string | null, issuerO: string | null): string | undefined {
   const parts: string[] = [];
   if (issuerCn) parts.push(`CN=${issuerCn}`);
@@ -109,13 +112,16 @@ export const getSSLExpiry = (domain: string, options: GetSSLExpiryOptions = {}):
   });
 };
 
+/** Runs a configured SSL/TLS certificate monitor check. */
 class SSLCall {
   monitor: SslMonitor;
 
+  /** @param monitor - Active SSL monitor definition. */
   constructor(monitor: SslMonitor) {
     this.monitor = monitor;
   }
 
+  /** Probe the host, evaluate remaining lifetime thresholds, and return a MonitoringResult. */
   async execute(): Promise<MonitoringResult> {
     const domain = this.monitor.type_data.host;
     const port = parseInt(this.monitor.type_data.port || "443", 10);

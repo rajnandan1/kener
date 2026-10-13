@@ -147,6 +147,7 @@ async function refreshLastStatusCache(tag: string): Promise<void> {
   await SetLastMonitoringValue(tag, mergeLatestMonitoringWithSslCache(latest, previous) ?? latest);
 }
 
+/** Manually rewrite monitoring samples in a time range, then refresh Redis last_status. */
 export const UpdateMonitoringData = async (data: UpdateMonitoringDataInput): Promise<unknown[]> => {
   let queryData = { ...data };
 
@@ -450,6 +451,7 @@ export const GetLatestStatusActiveAll = async (): Promise<{ status: string }> =>
   };
 };
 
+/** Merge per-tag Redis last_status hits with DB fallbacks, preserving tag order. */
 export function combineCachedAndDbLatest(
   monitor_tags: string[],
   cached: Array<MonitoringData | null>,
@@ -490,8 +492,12 @@ export function mergeLatestMonitoringWithSslCache(
   };
 }
 
-// Latest row per tag. Redis last_status is written on every check; the DB
-// fallback is only for cache misses (new monitors, expired keys).
+/**
+ * Latest row per tag. Redis last_status is the source of truth on the hot path;
+ * DB is only queried on cache misses. Manual corrections stay coherent because
+ * UpdateMonitoringData / DeleteMonitoringData refresh or clear last_status after
+ * writing — do not re-query DB here on every dashboard load.
+ */
 export const GetLatestMonitoringDataAllActive = async (monitor_tags: string[]): Promise<MonitoringData[]> => {
   if (!monitor_tags.length) {
     return [];
@@ -929,6 +935,7 @@ const DAY_SECONDS = 86400;
 const STATUS_COUNTS_CHUNK_SIZE = 8;
 const STATUS_COUNTS_CHUNK_CONCURRENCY = 3;
 
+/** Redis key for a generic status-counts window (start + interval + point count). */
 export function statusCountsCacheKey(
   tag: string,
   startTimestamp: number,
@@ -960,6 +967,7 @@ export function statusCountsTodayStart(
   return startTimestamp + (numberOfPoints - 1) * intervalInSeconds;
 }
 
+/** Combine cached and DB status-count rows into a flat list ordered by monitorTags. */
 export function mergeStatusCountsByMonitor(
   monitorTags: string[],
   cachedByTag: Array<TimestampStatusCountByMonitor[] | null>,
@@ -981,6 +989,7 @@ export function mergeStatusCountsByMonitor(
   return merged;
 }
 
+/** Query status counts for many tags in bounded parallel DB chunks. */
 async function queryStatusCountsInChunks(
   tags: string[],
   startTimestamp: number,
@@ -1011,6 +1020,10 @@ async function queryStatusCountsInChunks(
   return fromDb;
 }
 
+/**
+ * Return status-count series from Redis when present; otherwise query the DB,
+ * populate the cache, and merge results in tag order.
+ */
 async function getCachedStatusCounts(
   monitorTags: string[],
   startTimestamp: number,

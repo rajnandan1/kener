@@ -146,16 +146,15 @@ export class MonitoringRepository extends BaseRepository {
       .first();
   }
 
+  /**
+   * Newest monitoring row per tag via batched primary-key seeks (avoids a
+   * full-table MAX/GROUP BY self-join on large monitoring_data tables).
+   */
   async getLatestMonitoringDataAllActive(monitor_tags: string[]): Promise<MonitoringData[]> {
     if (!monitor_tags || monitor_tags.length === 0) {
       return [];
     }
 
-    // One newest-row lookup per unique tag — each a single descent of the
-    // (monitor_tag, timestamp) primary key. The previous MAX(timestamp)
-    // GROUP BY self-join planned as a full-table scan on large
-    // monitoring_data tables (Postgres), holding a pool connection for
-    // hundreds of ms per page load and exhausting the web pool under load.
     // Lookups run in small batches so a page with many monitors cannot queue
     // more connection acquisitions than the pool can serve at once.
     const uniqueTags = [...new Set(monitor_tags)];

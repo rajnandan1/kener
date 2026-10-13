@@ -4,6 +4,7 @@ const TICK_MS = 30_000;
 let nowMs = $state(Date.now());
 let started = false;
 
+/** Start a single browser interval that advances the shared SSL clock. */
 function ensureTicking(): void {
   if (started || typeof window === "undefined") return;
   started = true;

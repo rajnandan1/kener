@@ -13,6 +13,7 @@ interface ParsedMonitorSettings {
   uptime_formula_denominator?: string;
 }
 
+/** Parse monitor_settings_json; invalid JSON yields an empty object. */
 const parseMonitorSettings = (value: string | null): ParsedMonitorSettings => {
   if (!value) return {};
   try {
@@ -23,6 +24,7 @@ const parseMonitorSettings = (value: string | null): ParsedMonitorSettings => {
   }
 };
 
+/** Fill gaps in daily uptime buckets so the calendar always has `days` points. */
 const fillMissingUptimeData = (
   rawUptimeData: TimestampStatusCount[],
   startTime: number,
@@ -53,6 +55,7 @@ const fillMissingUptimeData = (
   return uptimeData;
 };
 
+/** Load aggregates + latest sample and build a monitor-bar API payload. */
 export const buildMonitorBarResponse = async (
   monitor: MonitorRecord,
   days: number,
@@ -78,6 +81,7 @@ export const buildMonitorBarResponse = async (
   );
 };
 
+/** Map pre-fetched uptime rows and latest sample into a monitor-bar response. */
 export const buildMonitorBarResponseFromRawData = (
   monitor: MonitorRecord,
   rawUptimeData: TimestampStatusCount[],

@@ -73,12 +73,14 @@ function GetSslSecurityState(
   return expiresAtMs <= nowMs ? "insecure" : "secured";
 }
 
+/** i18n key for the SSL security badge label. */
 function SslSecurityLabelKey(state: SslSecurityState): "SECURED" | "INSECURE" | "UNKNOWN" {
   if (state === "insecure") return "INSECURE";
   if (state === "secured") return "SECURED";
   return "UNKNOWN";
 }
 
+/** Tailwind text color class for the SSL security badge. */
 function SslSecurityTextClass(state: SslSecurityState): string {
   if (state === "insecure") return "text-down";
   if (state === "secured") return "text-up";
