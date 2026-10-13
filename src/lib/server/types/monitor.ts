@@ -10,6 +10,12 @@ export interface MonitoringResult {
   type: string;
   error_message?: string;
   raw_status?: string;
+  /** Absolute SSL certificate expiry (ISO), present for SSL monitor checks only. */
+  expiry_at?: string;
+  /** Certificate issuer Common Name (CN), SSL checks only. */
+  issuer_cn?: string | null;
+  /** Certificate issuer Organization (O), SSL checks only. */
+  issuer_o?: string | null;
 }
 
 export interface MonitoringResultTS {
@@ -52,6 +58,12 @@ export interface SslMonitorTypeData {
   port?: string;
   degradedRemainingHours: number;
   downRemainingHours: number;
+  /** TLS handshake timeout in ms (default 10000). */
+  timeout?: number;
+  /** Override SNI; useful when `host` is an IP. */
+  tlsServername?: string;
+  /** When true, skip cert chain verification so expiry can still be read. */
+  allowSelfSignedCert?: boolean;
 }
 
 export interface SqlMonitorTypeData {

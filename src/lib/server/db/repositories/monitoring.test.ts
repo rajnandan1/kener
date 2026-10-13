@@ -25,7 +25,7 @@ describe("MonitoringRepository.getLatestMonitoringDataAllActive", () => {
       table.string("monitor_tag").notNullable();
       table.integer("timestamp").notNullable();
       table.string("status");
-      table.float("latency");
+      table.double("latency");
       table.string("type");
       table.primary(["monitor_tag", "timestamp"]);
     });

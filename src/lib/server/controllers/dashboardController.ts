@@ -300,10 +300,11 @@ export const BuildNotificationPayload = (
  */
 export const GetPageDashboardData = async (
   pagePath: string,
-  layoutData: LayoutServerData,
+  layoutData: LayoutServerData | Promise<LayoutServerData>,
 ): Promise<PageDashboardData | null> => {
-  // Fetch page by path with monitors
-  const pageData = await GetPageByPathWithMonitors(pagePath);
+  // Overlap layout queries (site data, session) with the page+monitors lookup
+  // instead of waiting for parent() to finish first.
+  const [pageData, resolvedLayout] = await Promise.all([GetPageByPathWithMonitors(pagePath), layoutData]);
   if (!pageData) {
     return null;
   }
@@ -339,16 +340,16 @@ export const GetPageDashboardData = async (
     updated_at: pageDetails.updated_at,
   };
 
-  let socialPagePreviewImage: string | undefined = layoutData.socialPreviewImage;
-  let metaPageTitle: string | undefined = layoutData.metaSiteTitle;
-  let metaPageDescription: string | undefined = layoutData.metaSiteDescription;
+  let socialPagePreviewImage: string | undefined = resolvedLayout.socialPreviewImage;
+  let metaPageTitle: string | undefined = resolvedLayout.metaSiteTitle;
+  let metaPageDescription: string | undefined = resolvedLayout.metaSiteDescription;
   if (!!pageDetails.page_settings_json) {
     try {
       const pageSettings = JSON.parse(pageDetails.page_settings_json);
       if (pageSettings) {
-        socialPagePreviewImage = pageSettings.socialPagePreviewImage || layoutData.socialPreviewImage;
-        metaPageTitle = pageSettings.metaPageTitle || layoutData.metaSiteTitle;
-        metaPageDescription = pageSettings.metaPageDescription || layoutData.metaSiteDescription;
+        socialPagePreviewImage = pageSettings.socialPagePreviewImage || resolvedLayout.socialPreviewImage;
+        metaPageTitle = pageSettings.metaPageTitle || resolvedLayout.metaSiteTitle;
+        metaPageDescription = pageSettings.metaPageDescription || resolvedLayout.metaSiteDescription;
       }
     } catch (e) {
       // Ignore JSON parsing errors and fallback to layout data or defaults
@@ -369,7 +370,7 @@ export const GetPageDashboardData = async (
       metaPageDescription,
     };
   }
-  const eventSettings = layoutData.eventDisplaySettings;
+  const eventSettings = resolvedLayout.eventDisplaySettings;
   const showInlineEvents = eventSettings.showInlineEvents === true;
   // Fetch all dashboard data in parallel (respecting feature toggles)
   const [latestData, parsedMonitors, ongoingIncidents, ongoingMaintenances, upcomingMaintenances] = await Promise.all([

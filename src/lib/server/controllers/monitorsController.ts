@@ -7,7 +7,7 @@ import {
   UnparsePercentage,
   UptimeCalculator,
 } from "../tool.js";
-import { getCache, setCache } from "../cache/cache.js";
+import { getCacheMany, setCacheMany } from "../cache/cache.js";
 import type {
   MonitorRecordInsert,
   MonitorAlertInsert,
@@ -27,7 +27,13 @@ import type { MonitoringStatus } from "../../types/status.js";
 import { makeBadge } from "badge-maker";
 import randomName from "@scaleway/random-name";
 import { ErrorSvg } from "../../anywhere.js";
-import { GetLastMonitoringValue, SetLastHeartbeat, DeleteMonitorCaches } from "../cache/setGet.js";
+import {
+  GetLastMonitoringValue,
+  GetLastMonitoringValues,
+  SetLastMonitoringValue,
+  SetLastHeartbeat,
+  DeleteMonitorCaches,
+} from "../cache/setGet.js";
 import { CollapseStatusCounts } from "../../clientTools.js";
 import { translate, isLocaleAvailable } from "../i18n.js";
 import type { HeartbeatMonitor, GroupMonitorTypeData } from "../types/monitor.js";
@@ -121,10 +127,31 @@ export const InsertMonitoringData = async (data: MonitoringDataInput): Promise<M
   });
 };
 
+/**
+ * After a DB write that may change the newest sample, refresh Redis last_status.
+ * DB rows lack SSL-only fields — keep expiry/issuer from the previous cache entry
+ * only when it is still the same check (matching timestamp, status, and type).
+ */
+async function refreshLastStatusCache(tag: string): Promise<void> {
+  const latest = await db.getLatestMonitoringData(tag);
+  if (!latest) {
+    await DeleteMonitorCaches(tag);
+    return;
+  }
+  let previous: MonitoringData | null = null;
+  try {
+    previous = await GetLastMonitoringValue(tag);
+  } catch {
+    previous = null;
+  }
+  await SetLastMonitoringValue(tag, mergeLatestMonitoringWithSslCache(latest, previous) ?? latest);
+}
+
+/** Manually rewrite monitoring samples in a time range, then refresh Redis last_status. */
 export const UpdateMonitoringData = async (data: UpdateMonitoringDataInput): Promise<unknown[]> => {
   let queryData = { ...data };
 
-  return await db.updateMonitoringData(
+  const result = await db.updateMonitoringData(
     queryData.monitor_tag,
     GetMinuteStartTimestampUTC(queryData.start),
     GetMinuteStartTimestampUTC(queryData.end),
@@ -133,6 +160,51 @@ export const UpdateMonitoringData = async (data: UpdateMonitoringDataInput): Pro
     queryData.latency ?? 0,
     queryData.deviation ?? 0,
   );
+
+  try {
+    await refreshLastStatusCache(queryData.monitor_tag);
+  } catch {
+    // ignore cache failures; DB write already succeeded
+  }
+
+  return result;
+};
+
+/** Cap parallel last_status refreshes after a bulk (untagged) delete. */
+const LAST_STATUS_REFRESH_CONCURRENCY = 8;
+
+/** Delete monitoring samples and refresh last_status so dashboards do not keep a deleted latest row. */
+export const DeleteMonitoringData = async (
+  tag?: string,
+  start?: number,
+  end?: number,
+  status?: MonitoringStatus,
+): Promise<{ success: true; deleted: number }> => {
+  // Collect tags before delete — untagged deletes can touch many monitors' latest rows.
+  let tagsToRefresh: string[] = tag ? [tag] : [];
+  if (!tag) {
+    try {
+      tagsToRefresh = await db.listMonitorTagsWithData(start, end, status);
+    } catch {
+      tagsToRefresh = [];
+    }
+  }
+
+  const deleted = await db.deleteMonitorDataByTag(tag, start, end, status);
+
+  for (let i = 0; i < tagsToRefresh.length; i += LAST_STATUS_REFRESH_CONCURRENCY) {
+    const batch = tagsToRefresh.slice(i, i + LAST_STATUS_REFRESH_CONCURRENCY);
+    await Promise.all(
+      batch.map(async (t) => {
+        try {
+          await refreshLastStatusCache(t);
+        } catch {
+          // ignore per-tag cache failures
+        }
+      }),
+    );
+  }
+  return { success: true, deleted };
 };
 
 export const AggregateData = (
@@ -359,18 +431,8 @@ export const GetLatestMonitoringData = async (monitor_tag: string): Promise<Moni
   return latestData;
 };
 export const GetLatestStatusActiveAll = async (): Promise<{ status: string }> => {
-  //get all the active not hidden monitor tags
   const monitors = await db.getMonitors({ status: GC.ACTIVE, is_hidden: GC.NO });
-  const monitor_tags = monitors.map((m) => m.tag);
-
-  const latestData: MonitoringData[] = [];
-  for (let i = 0; i < monitor_tags.length; i++) {
-    const tag = monitor_tags[i];
-    const lastObj = await GetLastMonitoringValue(tag, () => GetLatestMonitoringData(tag));
-    if (lastObj) {
-      latestData.push(lastObj);
-    }
-  }
+  const latestData = await GetLatestMonitoringDataAllActive(monitors.map((m) => m.tag));
 
   const counts = { countOfUp: 0, countOfDown: 0, countOfDegraded: 0, countOfMaintenance: 0 };
   for (const data of latestData) {
@@ -389,10 +451,78 @@ export const GetLatestStatusActiveAll = async (): Promise<{ status: string }> =>
   };
 };
 
-//getLatestMonitoringDataAllActive
+/** Merge per-tag Redis last_status hits with DB fallbacks, preserving tag order. */
+export function combineCachedAndDbLatest(
+  monitor_tags: string[],
+  cached: Array<MonitoringData | null>,
+  fromDb: MonitoringData[],
+): MonitoringData[] {
+  const byTag = new Map(fromDb.map((row) => [row.monitor_tag, row]));
+  return monitor_tags
+    .map((tag, i) => cached[i] ?? byTag.get(tag) ?? null)
+    .filter((row): row is MonitoringData => row != null);
+}
+
+/**
+ * Prefer the DB latest row for status/latency. Redis last_status may carry SSL-only
+ * fields (expiry_at, issuer_*) that are not DB columns — attach them only when the
+ * cache entry is the same check (matching timestamp, status, and type). A manual
+ * update that rewrites the latest row keeps its timestamp but must not keep the
+ * previous certificate metadata.
+ */
+export function mergeLatestMonitoringWithSslCache(
+  fromDb: MonitoringData | null | undefined,
+  cached: MonitoringData | null | undefined,
+): MonitoringData | null {
+  if (!fromDb) return cached ?? null;
+  if (
+    !cached ||
+    cached.timestamp !== fromDb.timestamp ||
+    cached.status !== fromDb.status ||
+    cached.type !== fromDb.type
+  ) {
+    return fromDb;
+  }
+  return {
+    ...fromDb,
+    expiry_at: cached.expiry_at ?? fromDb.expiry_at,
+    issuer_cn: cached.issuer_cn ?? fromDb.issuer_cn,
+    issuer_o: cached.issuer_o ?? fromDb.issuer_o,
+    error_message: cached.error_message ?? fromDb.error_message,
+  };
+}
+
+/**
+ * Latest row per tag. Redis last_status is the source of truth on the hot path;
+ * DB is only queried on cache misses. Manual corrections stay coherent because
+ * UpdateMonitoringData / DeleteMonitoringData refresh or clear last_status after
+ * writing — do not re-query DB here on every dashboard load.
+ */
 export const GetLatestMonitoringDataAllActive = async (monitor_tags: string[]): Promise<MonitoringData[]> => {
-  let latestData = await db.getLatestMonitoringDataAllActive(monitor_tags);
-  return latestData;
+  if (!monitor_tags.length) {
+    return [];
+  }
+
+  let cached: Array<MonitoringData | null> = monitor_tags.map(() => null);
+  try {
+    cached = await GetLastMonitoringValues(monitor_tags);
+  } catch {
+    // Redis unavailable — fall through to DB
+  }
+
+  const missing = monitor_tags.filter((_, i) => cached[i] == null);
+  if (missing.length === 0) {
+    return cached as MonitoringData[];
+  }
+
+  const fromDb = await db.getLatestMonitoringDataAllActive(missing);
+  try {
+    await Promise.all(fromDb.map((row) => SetLastMonitoringValue(row.monitor_tag, row)));
+  } catch {
+    // ignore cache write failures
+  }
+
+  return combineCachedAndDbLatest(monitor_tags, cached, fromDb);
 };
 
 export const GetLastHeartbeat = async (monitor_tag: string): Promise<MonitoringData | undefined> => {
@@ -799,27 +929,193 @@ export const IsUptimeLessThanXPercent = async (
   const uptimePercent = await CalculateUptimeForLastNRows(tag, lastX, numeratorStr, denominatorStr);
   return uptimePercent < threshold;
 };
+/** Completed-day bar aggregates. Today's bucket is never stored here. */
+const STATUS_COUNTS_CACHE_TTL_SECONDS = 86400;
+const DAY_SECONDS = 86400;
+const STATUS_COUNTS_CHUNK_SIZE = 8;
+const STATUS_COUNTS_CHUNK_CONCURRENCY = 3;
+
+/** Redis key for a generic status-counts window (start + interval + point count). */
+export function statusCountsCacheKey(
+  tag: string,
+  startTimestamp: number,
+  intervalInSeconds: number,
+  numberOfPoints: number,
+): string {
+  return `status_counts:${tag}:${startTimestamp}:${intervalInSeconds}:${numberOfPoints}`;
+}
+
+/**
+ * History cache key for daily windows: identity is "today's bucket start" + how many
+ * completed days precede it. Query start is always derived as
+ * `todayStart - historyPoints * DAY_SECONDS` so the DB FLOOR grid and the cache key
+ * share one boundary (never key off a drifting minute-based start alone).
+ */
+export function statusCountsHistoryCacheKey(tag: string, todayStart: number, historyPoints: number): string {
+  return `status_counts:${tag}:until:${todayStart}:${historyPoints}`;
+}
+
+/** Last bucket is "today" when the series is daily and longer than one day. */
+export function statusCountsTodayStart(
+  startTimestamp: number,
+  intervalInSeconds: number,
+  numberOfPoints: number,
+): number | null {
+  if (intervalInSeconds !== DAY_SECONDS || numberOfPoints <= 1) {
+    return null;
+  }
+  return startTimestamp + (numberOfPoints - 1) * intervalInSeconds;
+}
+
+/** Combine cached and DB status-count rows into a flat list ordered by monitorTags. */
+export function mergeStatusCountsByMonitor(
+  monitorTags: string[],
+  cachedByTag: Array<TimestampStatusCountByMonitor[] | null>,
+  fromDb: TimestampStatusCountByMonitor[],
+): TimestampStatusCountByMonitor[] {
+  const dbByTag = new Map<string, TimestampStatusCountByMonitor[]>();
+  for (const row of fromDb) {
+    const arr = dbByTag.get(row.monitor_tag) || [];
+    arr.push(row);
+    dbByTag.set(row.monitor_tag, arr);
+  }
+
+  const merged: TimestampStatusCountByMonitor[] = [];
+  for (let i = 0; i < monitorTags.length; i++) {
+    const tag = monitorTags[i];
+    const rows = cachedByTag[i] ?? dbByTag.get(tag) ?? [];
+    merged.push(...rows);
+  }
+  return merged;
+}
+
+/** Query status counts for many tags in bounded parallel DB chunks. */
+async function queryStatusCountsInChunks(
+  tags: string[],
+  startTimestamp: number,
+  intervalInSeconds: number,
+  numberOfPoints: number,
+): Promise<TimestampStatusCountByMonitor[]> {
+  if (!tags.length) {
+    return [];
+  }
+
+  const chunks: string[][] = [];
+  for (let i = 0; i < tags.length; i += STATUS_COUNTS_CHUNK_SIZE) {
+    chunks.push(tags.slice(i, i + STATUS_COUNTS_CHUNK_SIZE));
+  }
+
+  const fromDb: TimestampStatusCountByMonitor[] = [];
+  for (let i = 0; i < chunks.length; i += STATUS_COUNTS_CHUNK_CONCURRENCY) {
+    const batch = chunks.slice(i, i + STATUS_COUNTS_CHUNK_CONCURRENCY);
+    const batchRows = await Promise.all(
+      batch.map((chunk) =>
+        db.getStatusCountsByIntervalGroupedByMonitor(chunk, startTimestamp, intervalInSeconds, numberOfPoints),
+      ),
+    );
+    for (const rows of batchRows) {
+      fromDb.push(...rows);
+    }
+  }
+  return fromDb;
+}
+
+/**
+ * Return status-count series from Redis when present; otherwise query the DB,
+ * populate the cache, and merge results in tag order.
+ */
+async function getCachedStatusCounts(
+  monitorTags: string[],
+  startTimestamp: number,
+  intervalInSeconds: number,
+  numberOfPoints: number,
+  cacheKeyFn: (tag: string) => string = (tag) =>
+    statusCountsCacheKey(tag, startTimestamp, intervalInSeconds, numberOfPoints),
+): Promise<TimestampStatusCountByMonitor[]> {
+  const cacheKeys = monitorTags.map((tag) => cacheKeyFn(tag));
+
+  let cachedByTag: Array<TimestampStatusCountByMonitor[] | null> = monitorTags.map(() => null);
+  try {
+    cachedByTag = await getCacheMany<TimestampStatusCountByMonitor[]>(cacheKeys);
+  } catch {
+    // Redis unavailable — fall through to DB
+  }
+
+  const missingTags = monitorTags.filter((_, i) => cachedByTag[i] == null);
+  const fromDb = await queryStatusCountsInChunks(
+    missingTags,
+    startTimestamp,
+    intervalInSeconds,
+    numberOfPoints,
+  );
+
+  if (missingTags.length > 0) {
+    const rowsByTag = new Map<string, TimestampStatusCountByMonitor[]>();
+    for (const tag of missingTags) {
+      rowsByTag.set(tag, []);
+    }
+    for (const row of fromDb) {
+      const arr = rowsByTag.get(row.monitor_tag) || [];
+      arr.push(row);
+      rowsByTag.set(row.monitor_tag, arr);
+    }
+
+    try {
+      await setCacheMany(
+        missingTags.map((tag) => ({
+          key: cacheKeyFn(tag),
+          value: rowsByTag.get(tag) || [],
+        })),
+        STATUS_COUNTS_CACHE_TTL_SECONDS,
+      );
+    } catch {
+      // ignore cache write failures
+    }
+  }
+
+  return mergeStatusCountsByMonitor(monitorTags, cachedByTag, fromDb);
+}
+
+/**
+ * Aggregated day buckets per monitor.
+ * Completed days are cached per tag for 24h. Today's bucket is always
+ * queried live so the last bar and uptime stay current.
+ *
+ * For multi-day daily windows, history is keyed and queried from `todayStart`
+ * (last bucket) so the DB FLOOR grid and Redis key share one boundary.
+ */
 export const GetStatusCountsByIntervalGroupedByMonitor = async (
   monitorTags: string[],
   startTimestamp: number,
   intervalInSeconds: number,
   numberOfPoints: number,
 ): Promise<Array<TimestampStatusCountByMonitor>> => {
-  const sortedTags = [...monitorTags].sort();
-  const cacheKey = `status_counts_grouped:${sortedTags.join(",")}:${startTimestamp}:${intervalInSeconds}:${numberOfPoints}`;
-  const cached = await getCache<Array<TimestampStatusCountByMonitor>>(cacheKey);
-  if (cached) {
-    return cached;
+  if (!monitorTags.length) {
+    return [];
   }
 
-  const result = await db.getStatusCountsByIntervalGroupedByMonitor(
-    monitorTags,
-    startTimestamp,
-    intervalInSeconds,
-    numberOfPoints,
-  );
-  await setCache(cacheKey, result, 60);
-  return result;
+  const todayStart = statusCountsTodayStart(startTimestamp, intervalInSeconds, numberOfPoints);
+
+  // Single-day (or non-daily) requests: today-only is always live for daily;
+  // non-daily keeps the generic start-based cache.
+  if (todayStart === null) {
+    if (intervalInSeconds === DAY_SECONDS && numberOfPoints === 1) {
+      return queryStatusCountsInChunks(monitorTags, startTimestamp, intervalInSeconds, numberOfPoints);
+    }
+    return getCachedStatusCounts(monitorTags, startTimestamp, intervalInSeconds, numberOfPoints);
+  }
+
+  const historyPoints = numberOfPoints - 1;
+  // Derive history start from todayStart so cache key and query origin stay aligned.
+  const historyStart = todayStart - historyPoints * intervalInSeconds;
+  const [history, today] = await Promise.all([
+    getCachedStatusCounts(monitorTags, historyStart, intervalInSeconds, historyPoints, (tag) =>
+      statusCountsHistoryCacheKey(tag, todayStart, historyPoints),
+    ),
+    queryStatusCountsInChunks(monitorTags, todayStart, intervalInSeconds, 1),
+  ]);
+
+  return [...history, ...today];
 };
 export const GetLastKnownStatus = async (monitor_tag: string): Promise<MonitoringData | undefined> => {
   return await db.getLastKnownStatus(monitor_tag);

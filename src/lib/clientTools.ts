@@ -12,9 +12,108 @@ function ParseLatency(latencyMs: number): string {
     return `${(latencyMs / 1000).toFixed(2)}s`;
   } else if (latencyMs < 3600000) {
     return `${(latencyMs / 60000).toFixed(2)}m`;
-  } else {
+  } else if (latencyMs < 86400000) {
     return `${(latencyMs / 3600000).toFixed(2)}h`;
+  } else {
+    // Used by SSL monitors (time until certificate expiry)
+    return `${(latencyMs / 86400000).toFixed(2)}d`;
   }
+}
+
+/** Absolute certificate expiry from a check timestamp (sec) + remaining time (ms). */
+function SslExpiryDateMs(checkTimestampSec: number, remainingMs: number): number | null {
+  if (!checkTimestampSec || remainingMs == null || remainingMs < 0) {
+    return null;
+  }
+  return checkTimestampSec * 1000 + remainingMs;
+}
+
+/**
+ * Resolve absolute SSL expiry (ms) from the latest check row.
+ * Prefer stored `expiry_at`; fall back to timestamp+latency when remaining > 0.
+ * Do not treat latency 0 alone as expired — errors/timeouts also use 0 with no
+ * expiry_at; missing evidence must surface as unknown, not SECURED/INSECURE.
+ */
+function ResolveSslExpiresAtMs(latestData: {
+  timestamp: number;
+  latency?: number | null;
+  expiry_at?: string | null;
+} | null | undefined): number | null {
+  if (!latestData) return null;
+
+  if (latestData.expiry_at) {
+    const parsed = Date.parse(latestData.expiry_at);
+    if (!Number.isNaN(parsed)) return parsed;
+  }
+
+  if (typeof latestData.latency === "number" && latestData.latency > 0) {
+    return SslExpiryDateMs(latestData.timestamp, latestData.latency);
+  }
+
+  return null;
+}
+
+/** True when the certificate expiry datetime is in the past. */
+function IsSslCertificateExpired(expiresAtMs: number | null | undefined): boolean {
+  return typeof expiresAtMs === "number" && expiresAtMs <= Date.now();
+}
+
+type SslSecurityState = "secured" | "insecure" | "unknown";
+
+/**
+ * Map expiry evidence to UI state. Missing expiry must not look SECURED
+ * (errors/timeouts leave sslExpiresAt null). Pass a reactive `nowMs` from the UI
+ * so SECURED flips to INSECURE when the page stays open past expiry.
+ */
+function GetSslSecurityState(
+  expiresAtMs: number | null | undefined,
+  nowMs: number = Date.now(),
+): SslSecurityState {
+  if (typeof expiresAtMs !== "number") return "unknown";
+  return expiresAtMs <= nowMs ? "insecure" : "secured";
+}
+
+/** i18n key for the SSL security badge label. */
+function SslSecurityLabelKey(state: SslSecurityState): "SECURED" | "INSECURE" | "UNKNOWN" {
+  if (state === "insecure") return "INSECURE";
+  if (state === "secured") return "SECURED";
+  return "UNKNOWN";
+}
+
+/** Tailwind text color class for the SSL security badge. */
+function SslSecurityTextClass(state: SslSecurityState): string {
+  if (state === "insecure") return "text-down";
+  if (state === "secured") return "text-up";
+  return "text-muted-foreground";
+}
+
+/** Live remaining time until expiry (from absolute expires-at), not a period average. */
+function FormatSslRemaining(
+  expiresAtMs: number | null | undefined,
+  nowMs: number = Date.now(),
+): string {
+  if (typeof expiresAtMs !== "number") {
+    return "";
+  }
+  const remainingMs = expiresAtMs - nowMs;
+  if (remainingMs <= 0) {
+    return "0d";
+  }
+  return ParseLatency(remainingMs);
+}
+
+/** Parse `Issued by CN=..., O=...` from SSL error_message / notes. */
+function ParseSslIssuerFromMessage(message: string | null | undefined): {
+  issuer_cn: string | null;
+  issuer_o: string | null;
+} {
+  if (!message) return { issuer_cn: null, issuer_o: null };
+  const cnMatch = message.match(/\bCN=([^,]+?)(?:,|\s+O=|$)/);
+  const oMatch = message.match(/\bO=([^|]+?)(?:\s*\||$)/);
+  return {
+    issuer_cn: cnMatch?.[1]?.trim() || null,
+    issuer_o: oMatch?.[1]?.trim() || null,
+  };
 }
 
 function siteDataExtractFromDb(data: Record<string, unknown>, obj: Record<string, unknown>): Record<string, unknown> {
@@ -402,5 +501,13 @@ export {
   GetStatusColor,
   GetStatusBgColor,
   ParseLatency,
+  SslExpiryDateMs,
+  ResolveSslExpiresAtMs,
+  IsSslCertificateExpired,
+  GetSslSecurityState,
+  SslSecurityLabelKey,
+  SslSecurityTextClass,
+  FormatSslRemaining,
+  ParseSslIssuerFromMessage,
   GetInitials,
 };

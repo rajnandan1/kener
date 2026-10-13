@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { IsValidDnsResolver } from "./clientTools";
+import {
+  IsValidDnsResolver,
+  ResolveSslExpiresAtMs,
+  GetSslSecurityState,
+  IsSslCertificateExpired,
+} from "./clientTools";
 
 describe("IsValidDnsResolver", () => {
   it("accepts valid IPv4, IPv6, and hostnames", () => {
@@ -13,5 +18,42 @@ describe("IsValidDnsResolver", () => {
     expect(IsValidDnsResolver("0000000000001.0.0.0")).toBe(false);
     expect(IsValidDnsResolver("256.0.0.1")).toBe(false);
     expect(IsValidDnsResolver("not a resolver")).toBe(false);
+  });
+});
+
+describe("ResolveSslExpiresAtMs", () => {
+  it("prefers stored expiry_at over latency", () => {
+    const expiryIso = "2020-01-01T00:00:00.000Z";
+    expect(
+      ResolveSslExpiresAtMs({
+        timestamp: 1_700_000_000,
+        latency: 86_400_000,
+        expiry_at: expiryIso,
+      }),
+    ).toBe(Date.parse(expiryIso));
+  });
+
+  it("falls back to timestamp+latency only when remaining > 0", () => {
+    expect(
+      ResolveSslExpiresAtMs({
+        timestamp: 1_700_000_000,
+        latency: 5_000,
+      }),
+    ).toBe(1_700_000_000 * 1000 + 5_000);
+  });
+
+  it("returns null for latency 0 without expiry_at (errors/timeouts are not SECURED)", () => {
+    expect(ResolveSslExpiresAtMs({ timestamp: 1_700_000_000, latency: 0 })).toBeNull();
+    expect(GetSslSecurityState(null)).toBe("unknown");
+  });
+
+  it("marks past expiry_at as insecure", () => {
+    const expiresAt = ResolveSslExpiresAtMs({
+      timestamp: 1_700_000_000,
+      latency: 0,
+      expiry_at: "2020-01-01T00:00:00.000Z",
+    });
+    expect(IsSslCertificateExpired(expiresAt)).toBe(true);
+    expect(GetSslSecurityState(expiresAt)).toBe("insecure");
   });
 });

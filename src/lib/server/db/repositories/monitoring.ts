@@ -146,16 +146,15 @@ export class MonitoringRepository extends BaseRepository {
       .first();
   }
 
+  /**
+   * Newest monitoring row per tag via batched primary-key seeks (avoids a
+   * full-table MAX/GROUP BY self-join on large monitoring_data tables).
+   */
   async getLatestMonitoringDataAllActive(monitor_tags: string[]): Promise<MonitoringData[]> {
     if (!monitor_tags || monitor_tags.length === 0) {
       return [];
     }
 
-    // One newest-row lookup per unique tag — each a single descent of the
-    // (monitor_tag, timestamp) primary key. The previous MAX(timestamp)
-    // GROUP BY self-join planned as a full-table scan on large
-    // monitoring_data tables (Postgres), holding a pool connection for
-    // hundreds of ms per page load and exhausting the web pool under load.
     // Lookups run in small batches so a page with many monitors cannot queue
     // more connection acquisitions than the pool can serve at once.
     const uniqueTags = [...new Set(monitor_tags)];
@@ -483,6 +482,26 @@ export class MonitoringRepository extends BaseRepository {
 
       return results;
     });
+  }
+
+  /** Distinct monitor tags matching the same filters as deleteMonitorDataByTag (before a bulk delete). */
+  async listMonitorTagsWithData(
+    start?: number,
+    end?: number,
+    status?: MonitoringStatus,
+  ): Promise<string[]> {
+    const query = this.knex("monitoring_data").distinct("monitor_tag");
+    if (start !== undefined) {
+      query.where("timestamp", ">=", start);
+    }
+    if (end !== undefined) {
+      query.where("timestamp", "<=", end);
+    }
+    if (status) {
+      query.where("status", status);
+    }
+    const rows = await query;
+    return rows.map((r: { monitor_tag: string }) => r.monitor_tag).filter(Boolean);
   }
 
   async deleteMonitorDataByTag(tag?: string, start?: number, end?: number, status?: MonitoringStatus): Promise<number> {

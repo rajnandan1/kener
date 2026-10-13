@@ -14,6 +14,10 @@ export interface MonitoringData {
   type: string | null;
   error_message?: string | null;
   raw_status?: string | null;
+  /** SSL-only fields cached in Redis last_status (not DB columns). */
+  expiry_at?: string | null;
+  issuer_cn?: string | null;
+  issuer_o?: string | null;
 }
 
 export interface MonitoringDataInsert {
