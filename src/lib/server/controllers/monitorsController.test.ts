@@ -15,6 +15,7 @@ import {
   CreateMonitor,
   CreateUpdateMonitor,
   combineCachedAndDbLatest,
+  mergeLatestMonitoringWithSslCache,
   mergeStatusCountsByMonitor,
   statusCountsCacheKey,
   statusCountsHistoryCacheKey,
@@ -206,6 +207,42 @@ describe("combineCachedAndDbLatest", () => {
 
   it("omits tags that are missing from both cache and DB", () => {
     expect(combineCachedAndDbLatest(["a", "b"], [null, null], [row("a", "UP")])).toEqual([row("a", "UP")]);
+  });
+});
+
+describe("mergeLatestMonitoringWithSslCache", () => {
+  it("attaches Redis SSL fields when timestamps match", () => {
+    const fromDb = { ...row("ssl", "UP"), timestamp: 100, latency: 0 };
+    const cached = {
+      ...row("ssl", "UP"),
+      timestamp: 100,
+      latency: 0,
+      expiry_at: "2020-01-01T00:00:00.000Z",
+      issuer_cn: "R3",
+      issuer_o: "Let's Encrypt",
+    };
+    expect(mergeLatestMonitoringWithSslCache(fromDb, cached)).toEqual({
+      ...fromDb,
+      expiry_at: "2020-01-01T00:00:00.000Z",
+      issuer_cn: "R3",
+      issuer_o: "Let's Encrypt",
+    });
+  });
+
+  it("ignores stale cache when DB has a newer check", () => {
+    const fromDb = { ...row("ssl", "DOWN"), timestamp: 200, latency: 0 };
+    const cached = {
+      ...row("ssl", "UP"),
+      timestamp: 100,
+      expiry_at: "2030-01-01T00:00:00.000Z",
+      issuer_cn: "stale",
+    };
+    expect(mergeLatestMonitoringWithSslCache(fromDb, cached)).toEqual(fromDb);
+  });
+
+  it("falls back to cache when DB has no row", () => {
+    const cached = { ...row("ssl", "UP"), expiry_at: "2030-01-01T00:00:00.000Z" };
+    expect(mergeLatestMonitoringWithSslCache(null, cached)).toEqual(cached);
   });
 });
 

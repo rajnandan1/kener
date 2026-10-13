@@ -396,6 +396,27 @@ export function combineCachedAndDbLatest(
     .filter((row): row is MonitoringData => row != null);
 }
 
+/**
+ * Prefer the DB latest row for status/latency. Redis last_status may carry SSL-only
+ * fields (expiry_at, issuer_*) that are not DB columns — attach them only when the
+ * cache entry is the same check (matching timestamp), otherwise stale cert metadata
+ * would be shown against a newer DB status.
+ */
+export function mergeLatestMonitoringWithSslCache(
+  fromDb: MonitoringData | null | undefined,
+  cached: MonitoringData | null | undefined,
+): MonitoringData | null {
+  if (!fromDb) return cached ?? null;
+  if (!cached || cached.timestamp !== fromDb.timestamp) return fromDb;
+  return {
+    ...fromDb,
+    expiry_at: cached.expiry_at ?? fromDb.expiry_at,
+    issuer_cn: cached.issuer_cn ?? fromDb.issuer_cn,
+    issuer_o: cached.issuer_o ?? fromDb.issuer_o,
+    error_message: cached.error_message ?? fromDb.error_message,
+  };
+}
+
 // Latest row per tag. Redis last_status is written on every check; the DB
 // fallback is only for cache misses (new monitors, expired keys).
 export const GetLatestMonitoringDataAllActive = async (monitor_tags: string[]): Promise<MonitoringData[]> => {

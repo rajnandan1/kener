@@ -6,6 +6,7 @@ import { UptimeCalculator } from "$lib/server/tool";
 import type { MonitorBarResponse } from "./get";
 import { ResolveSslExpiresAtMs, FormatSslRemaining, ParseSslIssuerFromMessage } from "$lib/clientTools";
 import { GetLastMonitoringValue } from "$lib/server/cache/setGet.js";
+import { mergeLatestMonitoringWithSslCache } from "$lib/server/controllers/monitorsController";
 
 interface ParsedMonitorSettings {
   uptime_formula_numerator?: string;
@@ -65,7 +66,7 @@ export const buildMonitorBarResponse = async (
     GetLastMonitoringValue(monitor.tag).catch(() => null),
   ]);
 
-  const latest = (cached || latestData) as MonitoringData | null | undefined;
+  const latest = mergeLatestMonitoringWithSslCache(latestData, cached);
 
   return buildMonitorBarResponseFromRawData(
     monitor,

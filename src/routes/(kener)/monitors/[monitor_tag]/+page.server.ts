@@ -18,7 +18,10 @@ import {
   ResolveSslExpiresAtMs,
   ParseSslIssuerFromMessage,
 } from "$lib/clientTools";
-import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
+import {
+  GetMonitorsParsed,
+  mergeLatestMonitoringWithSslCache,
+} from "$lib/server/controllers/monitorsController";
 import type { GroupMonitorTypeData } from "$lib/server/types/monitor";
 import { GetLastMonitoringValue } from "$lib/server/cache/setGet.js";
 
@@ -62,9 +65,14 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
   //last known status
   const lastStatus = await db.getLatestMonitoringData(monitor.tag);
+  // Do not pass a DB fetcher here — caching a DB row would wipe Redis SSL-only fields.
   const cachedStatus =
     monitor.monitor_type === "SSL"
-      ? await GetLastMonitoringValue(monitor.tag, () => lastStatus).catch(() => lastStatus)
+      ? await GetLastMonitoringValue(monitor.tag).catch(() => null)
+      : null;
+  const sslStatus =
+    monitor.monitor_type === "SSL"
+      ? mergeLatestMonitoringWithSslCache(lastStatus, cachedStatus)
       : lastStatus;
   //use uptime calculator tool to parse
   let item: TimestampStatusCount = {
@@ -79,13 +87,11 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   };
 
   const sslExpiresAt =
-    monitor.monitor_type === "SSL"
-      ? ResolveSslExpiresAtMs(cachedStatus ?? lastStatus)
-      : null;
-  let issuerCn = cachedStatus?.issuer_cn ?? null;
-  let issuerO = cachedStatus?.issuer_o ?? null;
+    monitor.monitor_type === "SSL" ? ResolveSslExpiresAtMs(sslStatus) : null;
+  let issuerCn = sslStatus?.issuer_cn ?? null;
+  let issuerO = sslStatus?.issuer_o ?? null;
   if (monitor.monitor_type === "SSL" && !issuerCn && !issuerO) {
-    const parsed = ParseSslIssuerFromMessage(cachedStatus?.error_message ?? lastStatus?.error_message);
+    const parsed = ParseSslIssuerFromMessage(sslStatus?.error_message);
     issuerCn = parsed.issuer_cn;
     issuerO = parsed.issuer_o;
   }
