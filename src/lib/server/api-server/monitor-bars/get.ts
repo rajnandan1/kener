@@ -1,7 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { APIServerRequest } from "$lib/server/types/api-server";
 import db from "$lib/server/db/db";
-import { GetMinuteStartNowTimestampUTC } from "$lib/server/tool";
+import { GetDayStartTimestampUTC, GetMinuteStartNowTimestampUTC } from "$lib/server/tool";
 import type { StatusType } from "$lib/types/status";
 import GC from "$lib/global-constants";
 import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
@@ -30,7 +30,11 @@ export default async function get(req: APIServerRequest): Promise<Response> {
   const daysStr = req.query.get("days");
   const days = Math.min(MAX_DAYS, Math.max(1, daysStr ? parseInt(daysStr, 10) : DEFAULT_DAYS));
   const endOfDayTodayAtTzStr = req.query.get("endOfDayTodayAtTz");
-  const endOfDayTodayAtTz = endOfDayTodayAtTzStr ? parseInt(endOfDayTodayAtTzStr, 10) : GetMinuteStartNowTimestampUTC();
+  // Prefer the client day boundary. When omitted, use a stable UTC day end — not
+  // GetMinuteStartNowTimestampUTC() — so daily status-count cache keys do not rotate every minute.
+  const endOfDayTodayAtTz = endOfDayTodayAtTzStr
+    ? parseInt(endOfDayTodayAtTzStr, 10)
+    : GetDayStartTimestampUTC(GetMinuteStartNowTimestampUTC()) + 86400;
 
   if (!tagsStr) {
     return error(400, { message: "tags query parameter is required" });

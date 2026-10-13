@@ -17,6 +17,7 @@ import {
   combineCachedAndDbLatest,
   mergeStatusCountsByMonitor,
   statusCountsCacheKey,
+  statusCountsHistoryCacheKey,
   statusCountsTodayStart,
 } from "./monitorsController.js";
 import { HEARTBEAT_SECRET_RULE } from "$lib/anywhere";
@@ -212,6 +213,16 @@ describe("statusCountsCacheKey", () => {
   it("is per-tag so pages can share monitor aggregates", () => {
     expect(statusCountsCacheKey("a", 1, 86400, 89)).toBe("status_counts:a:1:86400:89");
     expect(statusCountsCacheKey("a", 1, 86400, 89)).not.toBe(statusCountsCacheKey("b", 1, 86400, 89));
+  });
+});
+
+describe("statusCountsHistoryCacheKey", () => {
+  it("keys completed-day history by todayStart so the query origin and Redis identity match", () => {
+    const todayStart = 1_700_000_000 + 89 * 86400;
+    expect(statusCountsHistoryCacheKey("a", todayStart, 89)).toBe(`status_counts:a:until:${todayStart}:89`);
+    expect(statusCountsHistoryCacheKey("a", todayStart, 89)).not.toBe(
+      statusCountsHistoryCacheKey("b", todayStart, 89),
+    );
   });
 });
 

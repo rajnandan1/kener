@@ -4,7 +4,7 @@ import type { StatusType } from "$lib/types/status";
 import type { MonitorRecord, TimestampStatusCount, MonitoringData } from "$lib/server/types/db";
 import { UptimeCalculator } from "$lib/server/tool";
 import type { MonitorBarResponse } from "./get";
-import { SslExpiryDateMs, FormatSslRemaining, ParseSslIssuerFromMessage } from "$lib/clientTools";
+import { ResolveSslExpiresAtMs, FormatSslRemaining, ParseSslIssuerFromMessage } from "$lib/clientTools";
 import { GetLastMonitoringValue } from "$lib/server/cache/setGet.js";
 
 interface ParsedMonitorSettings {
@@ -94,9 +94,7 @@ export const buildMonitorBarResponseFromRawData = (
   );
 
   const sslExpiresAt =
-    monitor.monitor_type === "SSL" && latestData?.latency
-      ? SslExpiryDateMs(latestData.timestamp, latestData.latency)
-      : null;
+    monitor.monitor_type === "SSL" ? ResolveSslExpiresAtMs(latestData as MonitoringData | null | undefined) : null;
   const sslRemaining = monitor.monitor_type === "SSL" ? FormatSslRemaining(sslExpiresAt) || null : null;
 
   let issuerCn: string | null = null;

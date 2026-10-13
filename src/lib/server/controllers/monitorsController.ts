@@ -844,6 +844,16 @@ export function statusCountsCacheKey(
   return `status_counts:${tag}:${startTimestamp}:${intervalInSeconds}:${numberOfPoints}`;
 }
 
+/**
+ * History cache key for daily windows: identity is "today's bucket start" + how many
+ * completed days precede it. Query start is always derived as
+ * `todayStart - historyPoints * DAY_SECONDS` so the DB FLOOR grid and the cache key
+ * share one boundary (never key off a drifting minute-based start alone).
+ */
+export function statusCountsHistoryCacheKey(tag: string, todayStart: number, historyPoints: number): string {
+  return `status_counts:${tag}:until:${todayStart}:${historyPoints}`;
+}
+
 /** Last bucket is "today" when the series is daily and longer than one day. */
 export function statusCountsTodayStart(
   startTimestamp: number,
@@ -912,10 +922,10 @@ async function getCachedStatusCounts(
   startTimestamp: number,
   intervalInSeconds: number,
   numberOfPoints: number,
-): Promise<TimestampStatusCountByMonitor[]> {
-  const cacheKeys = monitorTags.map((tag) =>
+  cacheKeyFn: (tag: string) => string = (tag) =>
     statusCountsCacheKey(tag, startTimestamp, intervalInSeconds, numberOfPoints),
-  );
+): Promise<TimestampStatusCountByMonitor[]> {
+  const cacheKeys = monitorTags.map((tag) => cacheKeyFn(tag));
 
   let cachedByTag: Array<TimestampStatusCountByMonitor[] | null> = monitorTags.map(() => null);
   try {
@@ -946,7 +956,7 @@ async function getCachedStatusCounts(
     try {
       await setCacheMany(
         missingTags.map((tag) => ({
-          key: statusCountsCacheKey(tag, startTimestamp, intervalInSeconds, numberOfPoints),
+          key: cacheKeyFn(tag),
           value: rowsByTag.get(tag) || [],
         })),
         STATUS_COUNTS_CACHE_TTL_SECONDS,
@@ -963,6 +973,9 @@ async function getCachedStatusCounts(
  * Aggregated day buckets per monitor.
  * Completed days are cached per tag for 24h. Today's bucket is always
  * queried live so the last bar and uptime stay current.
+ *
+ * For multi-day daily windows, history is keyed and queried from `todayStart`
+ * (last bucket) so the DB FLOOR grid and Redis key share one boundary.
  */
 export const GetStatusCountsByIntervalGroupedByMonitor = async (
   monitorTags: string[],
@@ -976,7 +989,8 @@ export const GetStatusCountsByIntervalGroupedByMonitor = async (
 
   const todayStart = statusCountsTodayStart(startTimestamp, intervalInSeconds, numberOfPoints);
 
-  // Single-day (or non-daily) requests: today-only is always live.
+  // Single-day (or non-daily) requests: today-only is always live for daily;
+  // non-daily keeps the generic start-based cache.
   if (todayStart === null) {
     if (intervalInSeconds === DAY_SECONDS && numberOfPoints === 1) {
       return queryStatusCountsInChunks(monitorTags, startTimestamp, intervalInSeconds, numberOfPoints);
@@ -985,8 +999,12 @@ export const GetStatusCountsByIntervalGroupedByMonitor = async (
   }
 
   const historyPoints = numberOfPoints - 1;
+  // Derive history start from todayStart so cache key and query origin stay aligned.
+  const historyStart = todayStart - historyPoints * intervalInSeconds;
   const [history, today] = await Promise.all([
-    getCachedStatusCounts(monitorTags, startTimestamp, intervalInSeconds, historyPoints),
+    getCachedStatusCounts(monitorTags, historyStart, intervalInSeconds, historyPoints, (tag) =>
+      statusCountsHistoryCacheKey(tag, todayStart, historyPoints),
+    ),
     queryStatusCountsInChunks(monitorTags, todayStart, intervalInSeconds, 1),
   ]);
 

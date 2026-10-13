@@ -28,6 +28,35 @@ function SslExpiryDateMs(checkTimestampSec: number, remainingMs: number): number
   return checkTimestampSec * 1000 + remainingMs;
 }
 
+/**
+ * Resolve absolute SSL expiry (ms) from the latest check row.
+ * Prefer stored `expiry_at`; fall back to timestamp+latency when remaining > 0;
+ * latency 0 means the cert was already expired at check time (sslCall clamps to 0).
+ */
+function ResolveSslExpiresAtMs(latestData: {
+  timestamp: number;
+  latency?: number | null;
+  expiry_at?: string | null;
+} | null | undefined): number | null {
+  if (!latestData) return null;
+
+  if (latestData.expiry_at) {
+    const parsed = Date.parse(latestData.expiry_at);
+    if (!Number.isNaN(parsed)) return parsed;
+  }
+
+  if (typeof latestData.latency === "number" && latestData.latency > 0) {
+    return SslExpiryDateMs(latestData.timestamp, latestData.latency);
+  }
+
+  // Clamped remaining lifetime — treat check time as the expiry instant (INSECURE).
+  if (latestData.latency === 0 && latestData.timestamp) {
+    return latestData.timestamp * 1000;
+  }
+
+  return null;
+}
+
 /** True when the certificate expiry datetime is in the past. */
 function IsSslCertificateExpired(expiresAtMs: number | null | undefined): boolean {
   return typeof expiresAtMs === "number" && expiresAtMs <= Date.now();
@@ -445,6 +474,7 @@ export {
   GetStatusBgColor,
   ParseLatency,
   SslExpiryDateMs,
+  ResolveSslExpiresAtMs,
   IsSslCertificateExpired,
   FormatSslRemaining,
   ParseSslIssuerFromMessage,
