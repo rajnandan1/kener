@@ -485,6 +485,26 @@ export class MonitoringRepository extends BaseRepository {
     });
   }
 
+  /** Distinct monitor tags matching the same filters as deleteMonitorDataByTag (before a bulk delete). */
+  async listMonitorTagsWithData(
+    start?: number,
+    end?: number,
+    status?: MonitoringStatus,
+  ): Promise<string[]> {
+    const query = this.knex("monitoring_data").distinct("monitor_tag");
+    if (start !== undefined) {
+      query.where("timestamp", ">=", start);
+    }
+    if (end !== undefined) {
+      query.where("timestamp", "<=", end);
+    }
+    if (status) {
+      query.where("status", status);
+    }
+    const rows = await query;
+    return rows.map((r: { monitor_tag: string }) => r.monitor_tag).filter(Boolean);
+  }
+
   async deleteMonitorDataByTag(tag?: string, start?: number, end?: number, status?: MonitoringStatus): Promise<number> {
     const query = this.knex("monitoring_data");
     if (tag) {

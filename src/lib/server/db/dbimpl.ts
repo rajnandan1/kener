@@ -72,6 +72,7 @@ class DbImpl {
   getLastObservedStatus!: MonitoringRepository["getLastObservedStatus"];
   backfillConfirmedStatus!: MonitoringRepository["backfillConfirmedStatus"];
   updateMonitoringData!: MonitoringRepository["updateMonitoringData"];
+  listMonitorTagsWithData!: MonitoringRepository["listMonitorTagsWithData"];
   deleteMonitorDataByTag!: MonitoringRepository["deleteMonitorDataByTag"];
   getStatusCountsByInterval!: MonitoringRepository["getStatusCountsByInterval"];
   getStatusCountsByIntervalGroupedByMonitor!: MonitoringRepository["getStatusCountsByIntervalGroupedByMonitor"];
@@ -448,6 +449,7 @@ class DbImpl {
     this.getLastObservedStatus = this.monitoring.getLastObservedStatus.bind(this.monitoring);
     this.backfillConfirmedStatus = this.monitoring.backfillConfirmedStatus.bind(this.monitoring);
     this.updateMonitoringData = this.monitoring.updateMonitoringData.bind(this.monitoring);
+    this.listMonitorTagsWithData = this.monitoring.listMonitorTagsWithData.bind(this.monitoring);
     this.deleteMonitorDataByTag = this.monitoring.deleteMonitorDataByTag.bind(this.monitoring);
     this.getStatusCountsByInterval = this.monitoring.getStatusCountsByInterval.bind(this.monitoring);
     this.getStatusCountsByIntervalGroupedByMonitor = this.monitoring.getStatusCountsByIntervalGroupedByMonitor.bind(

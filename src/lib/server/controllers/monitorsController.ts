@@ -130,7 +130,7 @@ export const InsertMonitoringData = async (data: MonitoringDataInput): Promise<M
 /**
  * After a DB write that may change the newest sample, refresh Redis last_status.
  * DB rows lack SSL-only fields — keep expiry/issuer from the previous cache entry
- * when it is still the same check (matching timestamp).
+ * only when it is still the same check (matching timestamp, status, and type).
  */
 async function refreshLastStatusCache(tag: string): Promise<void> {
   const latest = await db.getLatestMonitoringData(tag);
@@ -176,10 +176,21 @@ export const DeleteMonitoringData = async (
   end?: number,
   status?: MonitoringStatus,
 ): Promise<{ success: true; deleted: number }> => {
-  const deleted = await db.deleteMonitorDataByTag(tag, start, end, status);
-  if (tag) {
+  // Collect tags before delete — untagged deletes can touch many monitors' latest rows.
+  let tagsToRefresh: string[] = tag ? [tag] : [];
+  if (!tag) {
     try {
-      await refreshLastStatusCache(tag);
+      tagsToRefresh = await db.listMonitorTagsWithData(start, end, status);
+    } catch {
+      tagsToRefresh = [];
+    }
+  }
+
+  const deleted = await db.deleteMonitorDataByTag(tag, start, end, status);
+
+  for (const t of tagsToRefresh) {
+    try {
+      await refreshLastStatusCache(t);
     } catch {
       // ignore cache failures
     }
@@ -445,15 +456,23 @@ export function combineCachedAndDbLatest(
 /**
  * Prefer the DB latest row for status/latency. Redis last_status may carry SSL-only
  * fields (expiry_at, issuer_*) that are not DB columns — attach them only when the
- * cache entry is the same check (matching timestamp), otherwise stale cert metadata
- * would be shown against a newer DB status.
+ * cache entry is the same check (matching timestamp, status, and type). A manual
+ * update that rewrites the latest row keeps its timestamp but must not keep the
+ * previous certificate metadata.
  */
 export function mergeLatestMonitoringWithSslCache(
   fromDb: MonitoringData | null | undefined,
   cached: MonitoringData | null | undefined,
 ): MonitoringData | null {
   if (!fromDb) return cached ?? null;
-  if (!cached || cached.timestamp !== fromDb.timestamp) return fromDb;
+  if (
+    !cached ||
+    cached.timestamp !== fromDb.timestamp ||
+    cached.status !== fromDb.status ||
+    cached.type !== fromDb.type
+  ) {
+    return fromDb;
+  }
   return {
     ...fromDb,
     expiry_at: cached.expiry_at ?? fromDb.expiry_at,

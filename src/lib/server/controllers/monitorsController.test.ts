@@ -240,6 +240,18 @@ describe("mergeLatestMonitoringWithSslCache", () => {
     expect(mergeLatestMonitoringWithSslCache(fromDb, cached)).toEqual(fromDb);
   });
 
+  it("does not keep SSL metadata when status/type changed at the same timestamp", () => {
+    const fromDb = { ...row("ssl", "DOWN"), timestamp: 100, type: "MANUAL", latency: 0 };
+    const cached = {
+      ...row("ssl", "UP"),
+      timestamp: 100,
+      type: "REALTIME",
+      expiry_at: "2030-01-01T00:00:00.000Z",
+      issuer_cn: "R3",
+    };
+    expect(mergeLatestMonitoringWithSslCache(fromDb, cached)).toEqual(fromDb);
+  });
+
   it("falls back to cache when DB has no row", () => {
     const cached = { ...row("ssl", "UP"), expiry_at: "2030-01-01T00:00:00.000Z" };
     expect(mergeLatestMonitoringWithSslCache(null, cached)).toEqual(cached);

@@ -12,8 +12,15 @@ function ensureTicking(): void {
   }, TICK_MS);
 }
 
-/** Reactive "now" for SSL security / remaining derived values. */
+/**
+ * Reactive "now" for SSL security / remaining derived values.
+ * On the server there is no interval — always return a fresh Date.now() so SSR
+ * does not reuse the module-load timestamp after a certificate has expired.
+ */
 export function getSslNowMs(): number {
+  if (typeof window === "undefined") {
+    return Date.now();
+  }
   ensureTicking();
   return nowMs;
 }
