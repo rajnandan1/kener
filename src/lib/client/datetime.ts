@@ -20,5 +20,8 @@ function getStartOfDayAtTz(timezone: string): number {
  * @returns End of day in the given timezone as Unix timestamp (seconds)
  */
 export function getEndOfDayAtTz(timezone: string): number {
-  return getStartOfDayAtTz(timezone) + 86400;
+  const startOfDayAtTz = getStartOfDayAtTz(timezone);
+  // date-fns-tz returns NaN for a zone it can't resolve (e.g. "Etc/Unknown"); fall back to UTC
+  // so callers never build a request with endOfDayTodayAtTz=NaN.
+  return (Number.isFinite(startOfDayAtTz) ? startOfDayAtTz : getStartOfDayAtTz("UTC")) + 86400;
 }
