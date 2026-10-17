@@ -1,40 +1,123 @@
-You are able to use the Svelte MCP server, where you have access to comprehensive Svelte 5 and SvelteKit documentation. Here's how to use the available tools effectively:
+# Kener — Agent Instructions
 
-## Available MCP Tools:
+## Overview
 
-### 1. list-sections
+Kener is an open-source status page: monitors, uptime tracking, incidents, maintenances, and public dashboards. It is a TypeScript app on **SvelteKit 2 (Svelte 5)**, served in production by **Express**. It stores data with **Knex.js** on SQLite (default), PostgreSQL, or MySQL, and runs jobs on **BullMQ + Redis**. Node `>=24.14.0`.
 
-Use this FIRST to discover all available documentation sections. Returns a structured list with titles, use_cases, and paths.
-When asked about Svelte or SvelteKit topics, ALWAYS use this tool at the start of the chat to find relevant sections.
+## Build & Run
 
-### 2. get-documentation
+```bash
+npm install
+cp .env-min.example .env   # sets KENER_SECRET_KEY, REDIS_URL, ORIGIN
+npm run dev                # runs migrations + seeds first, then vite dev and the scheduler in parallel
+npm run check              # svelte-kit sync + svelte-check (type check)
+npm run build              # scripts/build-sveltekit.js, then scripts/build-server.js bundles scripts/main.ts into build/main.js
+npm run build-with-docs    # same build, with the docs site included
+npm run start              # node build/main.js
+npm run migrate            # Knex migrations only
+npm run seed               # migrations, then seeds
+npm run prettify           # prettier --write .
+```
 
-Retrieves full documentation content for specific sections. Accepts single or multiple sections.
-After calling the list-sections tool, you MUST analyze the returned documentation sections (especially the use_cases field) and then use the get-documentation tool to fetch ALL documentation sections that are relevant for the user's task.
+Dev needs Redis on `REDIS_URL`. `docker compose -f docker-compose.dev.yml up -d redis` starts one on port 6379.
 
-### 3. svelte-autofixer
+Two processes run in dev: the SvelteKit dev server (`vite dev`) and the scheduler (`vite-node src/lib/server/startup.ts`), which runs monitor checks, the maintenance scheduler, and daily cleanup. In production, `scripts/main.ts` is the single entry point: Express + SvelteKit handler + migrations + seeds + scheduler.
 
-Analyzes Svelte code and returns issues and suggestions.
-You MUST use this tool whenever writing Svelte code before sending it to the user. Keep calling it until no issues or suggestions are returned.
+Environment: `KENER_SECRET_KEY`, `ORIGIN`, and `REDIS_URL` are required. `DATABASE_URL` is optional and defaults to `sqlite://./database/kener.sqlite.db` (other forms: `postgresql://...`, `mysql://...`). Other optional vars include `PORT` (default 3000), `KENER_BASE_PATH`, `DATABASE_KEEPALIVE`, `RESEND_API_KEY` / `RESEND_SENDER_EMAIL` or `SMTP_*` for email, and `KENER_FORCE_LOCAL_LOGIN` for OIDC. The full list is in `src/routes/(docs)/docs/content/v4/setup/environment-variables.md`.
 
-### 4. playground-link
+## Testing
 
-Generates a Svelte Playground link with the provided code.
-After completing the code, ask the user if they want a playground link. Only call this tool after user confirmation and NEVER if code was written to files in their project.
+Vitest has two projects in `vite.config.ts`:
 
-## Database compatibility rule
+- `server` runs `src/**/*.test.ts` in Node, except `*.svelte.test.ts`.
+- `client` runs `src/**/*.svelte.test.ts` in headless Chromium through Playwright, with setup in `vitest-setup-client.ts`. Install the browser once: `npx playwright install chromium`.
 
-All database operations — migrations, queries, and repository functions — **MUST** work across all three supported databases: **SQLite**, **PostgreSQL**, and **MySQL**. Use Knex.js schema builder and query builder abstractions; avoid raw SQL unless wrapped in dialect-safe helpers or guarded with `try/catch`. When writing migrations:
+Tests sit next to the code they test (`apiCall.ts` and `apiCall.test.ts`). Both projects run in UTC.
 
-- Use `knex.schema.hasColumn` / `knex.schema.hasTable` guards for idempotency.
-- Use Knex column types (`.string()`, `.integer()`, `.text()`, etc.) — never raw `ALTER TABLE` unless necessary.
-- For data-seeding inside migrations, use standard Knex query builder (`.insert()`, `.update()`, `.orderBy()`, `.first()`).
-- Test that `defaultTo()` values and `notNullable()` constraints work on all three engines.
+```bash
+npm test                                             # all tests
+npm run test:server                                  # server unit tests only
+npm run test:client                                  # component tests only
+npm run test:server -- src/lib/server/tool.test.ts   # one file
+npm run test:server -- -t "test name"                # one test by name
+npm run test:watch                                   # watch mode
+```
 
-## Documentation writing skill
+CI (`.github/workflows/test.yml`) runs `npm run check` and then `npm test` on every pull request and every push to `main`. Both must pass.
 
-When the user asks to write or edit documentation, follow the skill file:
+## Project Structure
 
-- `.claude/skills/documentation-writer/SKILL.md`
+```text
+scripts/main.ts             production entry point
+src/hooks.server.ts         auth; sets locals.monitor / incident / maintenance / page for API routes
+src/routes/(kener)/         public status page
+src/routes/(manage)/        admin dashboard (authenticated)
+src/routes/(api)/api/v4/    public REST API: incidents, maintenances, monitors, pages, site
+src/routes/(embed)/         embeddable widgets
+src/routes/(docs)/          docs site; content in docs/content/v4/, navigation in docs.json
+src/routes/(account)/  (ext)/  (assets)/
+src/lib/server/startup.ts   scheduler process for dev
+src/lib/server/services/    one <type>Call.ts per monitor type; service.ts picks one by monitor_type
+src/lib/server/schedulers/  croner jobs: monitors, maintenances, daily cleanup
+src/lib/server/queues/      BullMQ queues: monitor execute/response, alerting, email, subscriber
+src/lib/server/controllers/ domain logic that routes call
+src/lib/server/db/          db.ts singleton; dbimpl.ts binds the repositories/*.ts classes
+src/lib/server/api-server/  Express-side handlers, file-routed as ./<action>/<method>.ts
+src/lib/components/ui/      shadcn-svelte components
+src/lib/locales/            one {code}.json per language
+migrations/  seeds/         Knex
+```
 
-This is mandatory for docs-related tasks. Prioritize short, clear, action-oriented docs and avoid bloat.
+Monitor types (`monitor_type`): `API`, `PING`, `TCP`, `DNS`, `SSL`, `SQL`, `HEARTBEAT`, `GAMEDIG`, `GROUP`, `GRPC`, `PROMETHEUS`, `DOCKER`, `NONE`. A new type touches `src/lib/server/services/` (a `<type>Call.ts` and a branch in `service.ts`), `src/lib/server/types/monitor.ts`, and a form in `src/routes/(manage)/manage/app/monitors/[tag]/types/monitor-<type>.svelte`.
+
+Types go by where they are used: `src/lib/types/` (shared), `src/lib/server/types/` (server only), `src/lib/client/types/` (client only). Import them with `import type { ... }`.
+
+New language: add `src/lib/locales/{code}.json` with `name` and `mappings`. The server and client discover it from the folder. `node scripts/check-translations.js` checks the translations.
+
+## Code Style
+
+- Write TypeScript. Svelte components use runes (`$state`, `$derived`, `$effect`, `$props()`). Route files import their types from `./$types`.
+- Format with `npm run prettify`. `.prettierrc` sets 2 spaces, semicolons, and width 120 for `.ts` and `.svelte`.
+- Server code imports relative paths with a `.js` suffix (`import GC from "../../global-constants.js"`). Routes and components import from `$lib/...`.
+- Status constants are the default export of `src/lib/global-constants.ts`: `import GC from "$lib/global-constants"`, then `GC.UP`, `GC.DOWN`, `GC.DEGRADED`, `GC.MAINTENANCE`, `GC.NO_DATA`.
+- Timestamps are UTC **seconds**, never milliseconds. Use the helpers in `src/lib/server/tool.ts` (`GetNowTimestampUTC`, `GetMinuteStartTimestampUTC`, `GetDayStartTimestampUTC`).
+- Database access goes through `import db from "$lib/server/db/db"`. Never create a Knex instance.
+- API auth uses `VerifyAPIKey` from `$lib/server/controllers/apiController`. API payloads are snake_case; their types live in `src/lib/types/api.ts`.
+- UI uses shadcn-svelte (`import { Button } from "$lib/components/ui/button"`) and Tailwind CSS v4 with HSL CSS variables.
+
+## Database
+
+Every migration, query, and repository function must work on **SQLite, PostgreSQL, and MySQL**. Use the Knex schema builder and query builder. Avoid raw SQL unless it branches on `GetDbType()` from `tool.ts` or is guarded with `try/catch`. Check that `defaultTo()` and `notNullable()` behave on all three engines.
+
+Migrations are named `YYYYMMDDHHMMSS_snake_case.ts` and guard with `hasTable` / `hasColumn` so they can run twice. From `migrations/20260613120000_add_confirmation_threshold_and_raw_status.ts`:
+
+```ts
+export async function up(knex: Knex): Promise<void> {
+    if (!(await knex.schema.hasColumn("monitors", "confirmation_threshold"))) {
+        await knex.schema.alterTable("monitors", (table) => {
+            table.integer("confirmation_threshold").unsigned().notNullable().defaultTo(1)
+        })
+    }
+}
+```
+
+## Svelte MCP
+
+When the Svelte MCP server is connected:
+
+1. Call `list-sections` first for any Svelte or SvelteKit question, then `get-documentation` for every relevant section.
+2. Run `svelte-autofixer` on Svelte code before you hand it over. Repeat until it reports no issues.
+3. Call `playground-link` only when the user asks, and never for code written to project files.
+
+## Skills and Agent Docs
+
+- Svelte components (`.svelte`, `.svelte.ts`): `.claude/skills/svelte-code-writer/SKILL.md`.
+- Docs in `src/routes/(docs)/docs/content/` or `src/routes/(docs)/docs.json`: `.claude/skills/documentation-writer/SKILL.md`. This one is mandatory. Keep docs short and action-oriented.
+- Tailwind: `.claude/skills/tailwindcss/SKILL.md`. shadcn-svelte: `.claude/skills/ss-shadcn-svelte/SKILL.md`.
+- Issues live in GitHub Issues for `rajnandan1/kener`: `docs/agents/issue-tracker.md`. Triage labels: `docs/agents/triage-labels.md`. Domain docs: `docs/agents/domain.md`.
+
+## Boundaries
+
+- ✅ **Always do:** Run `npm run check` and `npm test` before a pull request. Add a co-located test for new server logic. Keep database code working on all three engines.
+- ⚠️ **Ask first:** Adding a dependency. Changing the database schema. Changing `/api/v4` request or response shapes. Editing `.github/workflows/`, `Dockerfile`, or the `docker-compose*.yml` files.
+- 🚫 **Never do:** Edit a migration that has shipped; add a new migration instead. Commit `.env` or secrets. Store timestamps in milliseconds. Push directly to `main`.
