@@ -5,7 +5,7 @@ description: Control where a monitor appears on your public site with five setti
 
 Five settings decide where a monitor appears on your public site. Two of them, `status` and `is_hidden`, apply across the public site. The other three only narrow things down further.
 
-On this page, a hidden monitor is a monitor with `is_hidden = YES`.
+On this page, a hidden monitor is a monitor with `is_hidden = YES`. The rules describe what anonymous visitors see. A signed-in user whose role has the `monitors.read` permission also sees hidden monitors on some pages. See [Signed-in viewers](#signed-in-viewers).
 
 ## The settings {#settings}
 
@@ -17,7 +17,7 @@ You set it with the **Active** switch in **Manage → Monitors**, or in the moni
 
 ### is_hidden {#is-hidden}
 
-The values are `YES` and `NO`. The default is `NO`. A hidden monitor disappears from the public site, except inside [group monitors](#group-monitors). Its checks and alerts keep running.
+The values are `YES` and `NO`. The default is `NO`. A hidden monitor disappears from the public site, except inside [group monitors](#group-monitors) and for [signed-in viewers](#signed-in-viewers) with `monitors.read`. Its checks and alerts keep running.
 
 You set it with the **Visible** switch in **Manage → Monitors**, or with **Hidden in Status Page** in the monitor's **General Settings**.
 
@@ -60,7 +60,7 @@ You set them in the monitor's **Sharing Options** and in **Manage → Site Confi
 - Badges at `/badge/{tag}/...` follow the same rule as the monitor page. For any other monitor, the badge shows an error. The `_` badge covers every `ACTIVE` monitor on the site that is not hidden.
 - Embeds at `/embed/monitor-{tag}` and `/embed/latency-{tag}` get their data from `/dashboard-apis/*`. That API returns 404 for a monitor that is hidden or `INACTIVE`.
 - The per-monitor RSS feed `/monitors/{tag}/rss.xml` returns 404 for a monitor that is hidden or `INACTIVE`.
-- On events pages and page RSS feeds, each event stays listed. Kener removes hidden monitors from the event's list of affected monitors. A page-scoped list shows an event only when the event is global (`is_global = YES`) or affects a monitor that is on the page, `ACTIVE`, and not hidden.
+- On events pages, in inline events, in the notifications list, and in page RSS feeds, each event stays listed. Kener removes hidden monitors from the event's list of affected monitors. A page-scoped list shows an event only when the event is global (`is_global = YES`) or affects a monitor that is on the page, `ACTIVE`, and not hidden. On `/monitors/{tag}`, inline events and notifications follow the same rule for that one monitor, so a hidden monitor's page shows only global events. These rules are the same for every viewer, signed-in users included.
 - `sitemap.xml` includes every monitor that is `ACTIVE` and not hidden.
 - The REST API `/api/v4/*` needs an API key. It returns every monitor. To get only public monitors, add `?status=ACTIVE&is_hidden=NO`. See [API Reference](/docs/spec/v4/).
 - The Manage dashboard shows every monitor.
@@ -68,9 +68,32 @@ You set them in the monitor's **Sharing Options** and in **Manage → Site Confi
 > [!NOTE]
 > Event lists filter only on `is_hidden`. An `INACTIVE` monitor that is not hidden still appears in an event's list of affected monitors.
 
+## Signed-in viewers {#signed-in-viewers}
+
+A signed-in user whose role has `monitors.read` sees hidden monitors on the pages that load with their session. The built-in roles `admin`, `editor`, and `member` all have `monitors.read`. A signed-in user whose custom role lacks it sees what an anonymous visitor sees. See [Roles and permissions](/docs/v4/user-management#roles-and-permissions).
+
+| Surface                                                                            | Anonymous | Signed in, no `monitors.read` | Signed in, `monitors.read`           |
+| ---------------------------------------------------------------------------------- | --------- | ----------------------------- | ------------------------------------ |
+| `/` and `/{page_path}`                                                             | Hides     | Hides                         | Shows, if the monitor is on the page |
+| `/monitors/{tag}`, with its status bars, charts, and day details                   | Hides     | Hides                         | Shows                                |
+| Group member list                                                                  | Hides     | Hides                         | Shows                                |
+| `/incidents/{id}` and `/maintenances/{id}` affected monitors                       | Hides     | Hides                         | Shows                                |
+| Inline events, notifications, and events pages ([rules](#where-each-rule-applies)) | Hides     | Hides                         | Hides                                |
+| Badges and embeds                                                                  | Hides     | Hides                         | Hides                                |
+| `/rss.xml`, `/{page_path}/rss.xml`, and `/monitors/{tag}/rss.xml`                  | Hides     | Hides                         | Hides                                |
+| `sitemap.xml`                                                                      | Hides     | Hides                         | Hides                                |
+| Subscriber emails                                                                  | Hides     | Hides                         | Hides                                |
+
+The status page still shows only `ACTIVE` monitors, for every viewer. A hidden monitor appears on a status page only when you add it to that page.
+
+Kener sends `Cache-Control: private` on every response to a signed-in request, unless the route sets its own header. A shared cache, such as a CDN, does not store these responses.
+
+> [!WARNING]
+> A CDN rule that ignores the origin's `Cache-Control` header can still cache a signed-in page and serve its hidden monitors to anonymous visitors. Do not cache HTML or `/dashboard-apis/*` responses for requests that carry the `kener-user` cookie.
+
 ## Group monitors {#group-monitors}
 
-A [group monitor](/docs/v4/monitors/group) computes its status from all of its members, hidden or not. A hidden member still changes the group's status. The group's member list still counts the hidden member. That list shows an error row for it instead of its name. To remove the group from the public site, hide the group itself.
+A [group monitor](/docs/v4/monitors/group) computes its status from all of its members, hidden or not. A hidden member still changes the group's status. The group's member list still counts the hidden member. For an anonymous visitor, that list shows an error row for it instead of its name. To remove the group from the public site, hide the group itself.
 
 ## Verify {#verify}
 
@@ -79,6 +102,7 @@ A [group monitor](/docs/v4/monitors/group) computes its status from all of its m
 3. Open `/monitors/{tag}` in a private window. Expect a 404 page.
 4. Run `curl -s https://status.example.com/badge/{tag}/status`. Expect the error badge.
 5. Run `curl -s -H "Authorization: Bearer $KENER_API_KEY" "https://status.example.com/api/v4/monitors?is_hidden=YES"`. Expect the monitor in the list.
+6. Sign in as a user whose role has `monitors.read`, then open `/monitors/{tag}` in the same window. Expect the monitor page.
 
 ## Related pages {#related-pages}
 

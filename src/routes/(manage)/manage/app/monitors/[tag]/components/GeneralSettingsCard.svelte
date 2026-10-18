@@ -259,8 +259,8 @@
           </span>
         </div>
         <p class="text-muted-foreground text-xs">
-          Hidden monitors won't appear on any status pages, but monitoring, alerting, and all other features will
-          continue to work normally.
+          Hidden monitors don't appear on status pages, except to signed-in users whose role has monitors.read.
+          Monitoring, alerting, and all other features keep working.
         </p>
       </div>
       <div class="flex flex-col gap-2">

@@ -213,4 +213,13 @@ const apiAuthHandle: Handle = async ({ event, resolve }) => {
   return response;
 };
 
-export const handle = sequence(csrfHandle, apiAuthHandle);
+// A signed-in response can include hidden monitors, so a shared cache (CDN) must not store it.
+const privateCacheHandle: Handle = async ({ event, resolve }) => {
+  const response = await resolve(event);
+  if (event.cookies.get("kener-user") && !response.headers.has("cache-control")) {
+    response.headers.set("cache-control", "private");
+  }
+  return response;
+};
+
+export const handle = sequence(csrfHandle, privateCacheHandle, apiAuthHandle);

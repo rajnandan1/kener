@@ -152,7 +152,7 @@ export async function renderRssFeedResponse(args: RenderRssFeedArgs): Promise<Re
       if (!page) {
         return new Response("Not found", { status: 404 });
       }
-      const pageMonitors = await db.getPageMonitorsExcludeHidden(page.id);
+      const pageMonitors = await db.getActivePageMonitors(page.id);
       monitorTags = pageMonitors.map((m) => m.monitor_tag);
     }
   }
