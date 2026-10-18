@@ -186,6 +186,7 @@ export class MaintenancesRepository extends BaseRepository {
     return await this.knex("maintenance_monitors")
       .join("monitors", "maintenance_monitors.monitor_tag", "monitors.tag")
       .where("maintenance_monitors.maintenance_id", maintenance_id)
+      .andWhere("monitors.is_hidden", "NO")
       .select(
         "maintenance_monitors.*",
         "monitors.name as monitor_name",
@@ -489,7 +490,9 @@ export class MaintenancesRepository extends BaseRepository {
       .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
       .leftJoin("monitors", "maintenance_monitors.monitor_tag", "monitors.tag")
       .where(function () {
-        this.whereIn("maintenance_monitors.monitor_tag", monitorTags).orWhere("maintenances.is_global", "YES");
+        this.where((tagged) =>
+          tagged.whereIn("maintenance_monitors.monitor_tag", monitorTags).andWhere("monitors.is_hidden", "NO"),
+        ).orWhere("maintenances.is_global", "YES");
       })
       .andWhere("maintenances.status", GC.ACTIVE)
       .whereIn("maintenances_events.status", [GC.ONGOING])
@@ -569,7 +572,9 @@ export class MaintenancesRepository extends BaseRepository {
       .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
       .leftJoin("monitors", "maintenance_monitors.monitor_tag", "monitors.tag")
       .where(function () {
-        this.whereIn("maintenance_monitors.monitor_tag", monitorTags).orWhere("maintenances.is_global", "YES");
+        this.where((tagged) =>
+          tagged.whereIn("maintenance_monitors.monitor_tag", monitorTags).andWhere("monitors.is_hidden", "NO"),
+        ).orWhere("maintenances.is_global", "YES");
       })
       .andWhere("maintenances_events.end_date_time", "<", timestamp)
       .andWhere("maintenances_events.end_date_time", ">=", pastTimestamp)
@@ -612,7 +617,9 @@ export class MaintenancesRepository extends BaseRepository {
       .leftJoin("maintenance_monitors", "maintenances_events.maintenance_id", "maintenance_monitors.maintenance_id")
       .leftJoin("monitors", "maintenance_monitors.monitor_tag", "monitors.tag")
       .where(function () {
-        this.whereIn("maintenance_monitors.monitor_tag", monitorTags).orWhere("maintenances.is_global", "YES");
+        this.where((tagged) =>
+          tagged.whereIn("maintenance_monitors.monitor_tag", monitorTags).andWhere("monitors.is_hidden", "NO"),
+        ).orWhere("maintenances.is_global", "YES");
       })
       .andWhere("maintenances.status", GC.ACTIVE)
       .whereIn("maintenances_events.status", [GC.SCHEDULED, GC.READY])

@@ -8,7 +8,7 @@ import {
 import db from "$lib/server/db/db";
 import type { MaintenanceEventRecord } from "$lib/server/db/dbimpl";
 
-export const load: PageServerLoad = async ({ params, url }) => {
+export const load: PageServerLoad = async ({ params, url, parent }) => {
   const { maintenance_id } = params;
   let idType = "event";
 
@@ -64,9 +64,10 @@ export const load: PageServerLoad = async ({ params, url }) => {
   }> = [];
 
   if (monitorTags.length > 0) {
+    const { canSeeHiddenMonitors } = await parent();
     const monitors = await db.getMonitorsByTags(monitorTags);
     affectedMonitors = monitors
-      .filter((m) => m.is_hidden !== "YES") // Exclude hidden monitors
+      .filter((m) => canSeeHiddenMonitors || m.is_hidden !== "YES")
       .map((m) => ({
         monitor_tag: m.tag,
         monitor_name: m.name,
@@ -75,9 +76,10 @@ export const load: PageServerLoad = async ({ params, url }) => {
       }));
   }
 
+  const visibleTags = new Set(affectedMonitors.map((m) => m.monitor_tag));
   return {
     ...{
-      maintenance,
+      maintenance: { ...maintenance, monitors: maintenance.monitors?.filter((m) => visibleTags.has(m.monitor_tag)) },
       maintenanceEvent, // The specific event that was clicked
       affectedMonitors,
     },

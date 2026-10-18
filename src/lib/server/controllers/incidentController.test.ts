@@ -6,7 +6,7 @@ const { db, subscriberQueue } = vi.hoisted(() => ({
     insertIncidentComment: vi.fn(),
     updateIncident: vi.fn(),
     setIncidentEndTimeToNull: vi.fn(),
-    getIncidentMonitorsByIncidentID: vi.fn(),
+    getMonitorsByIncidentId: vi.fn(),
     createIncident: vi.fn(),
     getMonitorByTag: vi.fn(),
     insertIncidentMonitorWithMerge: vi.fn(),
@@ -26,6 +26,7 @@ const incident = {
   title: "Checkout is slow",
   state: "INVESTIGATING",
   incident_type: "INCIDENT",
+  is_global: "YES",
   start_date_time: 1000,
   end_date_time: null,
 };
@@ -47,7 +48,7 @@ describe("AddIncidentComment: subscriber mail variables", () => {
   });
 
   it("flags the comment's state and the worst monitor impact", async () => {
-    db.getIncidentMonitorsByIncidentID.mockResolvedValue([
+    db.getMonitorsByIncidentId.mockResolvedValue([
       { monitor_tag: "api", monitor_impact: "DEGRADED" },
       { monitor_tag: "web", monitor_impact: "DOWN" },
     ]);
@@ -67,7 +68,7 @@ describe("AddIncidentComment: subscriber mail variables", () => {
   });
 
   it("reads degraded when no monitor is down", async () => {
-    db.getIncidentMonitorsByIncidentID.mockResolvedValue([{ monitor_tag: "api", monitor_impact: "DEGRADED" }]);
+    db.getMonitorsByIncidentId.mockResolvedValue([{ monitor_tag: "api", monitor_impact: "DEGRADED" }]);
 
     await AddIncidentComment(12, "Fixed", "RESOLVED", 3000);
 
@@ -81,7 +82,7 @@ describe("AddIncidentComment: subscriber mail variables", () => {
   });
 
   it("still sends the mail, without impact, when the monitors cannot be read", async () => {
-    db.getIncidentMonitorsByIncidentID.mockRejectedValue(new Error("connection reset"));
+    db.getMonitorsByIncidentId.mockRejectedValue(new Error("connection reset"));
     const logged = vi.spyOn(console, "error").mockImplementation(() => {});
 
     await AddIncidentComment(12, "Looking into it", "INVESTIGATING", 2000);
@@ -97,7 +98,7 @@ describe("AddIncidentComment: subscriber mail variables", () => {
   });
 
   it("leaves the impact empty for an incident without monitors", async () => {
-    db.getIncidentMonitorsByIncidentID.mockResolvedValue([]);
+    db.getMonitorsByIncidentId.mockResolvedValue([]);
 
     await AddIncidentComment(12, "We know why", "IDENTIFIED", 2500);
 
@@ -124,7 +125,7 @@ describe("CreateNewIncidentWithCommentAndMonitor", () => {
         attached.push(row);
       },
     );
-    db.getIncidentMonitorsByIncidentID.mockImplementation(async () => [...attached]);
+    db.getMonitorsByIncidentId.mockImplementation(async () => [...attached]);
     db.insertIncidentComment.mockImplementation(async (_id: number, comment: string, state: string) => ({
       id: 99,
       comment,

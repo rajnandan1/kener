@@ -66,6 +66,8 @@ Admins can also:
 
 ## When notifications are triggered {#when-notifications-are-triggered}
 
+Kener emails subscribers about an incident or maintenance only when it is global (`is_global = YES`) or affects at least one monitor that is not hidden. See [Monitor visibility](/docs/v4/monitors/visibility#where-each-rule-applies).
+
 ### Incident notifications {#incident-notifications}
 
 Incident subscription emails are queued when alert-driven incident lifecycle changes happen, including:

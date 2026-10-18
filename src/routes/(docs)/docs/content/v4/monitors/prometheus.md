@@ -80,7 +80,7 @@ The charted per-check number is always the **metric value**, not the HTTP round-
 - **Metric magnitude and precision.** The charted value is stored in Kener's shared `latency` column (DOUBLE / double precision after migration; SQLite uses REAL). Status and alerting use the full-precision value before storage. For very large-magnitude metrics (byte counts, `_total` counters), scale the query in PromQL (e.g. `... / 1e6`) so the chart stays readable.
 - **Float-equality caveat.** Prometheus sample values are floating point. Avoid `==` / `!=` against computed values (rates, averages) — floating-point rounding makes exact matches unreliable. Prefer range operators (`<`, `>`, `<=`, `>=`); reserve `==` / `!=` for integer-valued gauges.
 - **Absent-but-healthy metrics.** For metrics that legitimately disappear (e.g. a counter that only exists while a job runs), append `or vector(0)` to the query so it always returns a value, instead of relying on `noDataStatus`.
-- **Authentication.** Add an `Authorization` header under `headers`; use `$SECRET_NAME` to substitute an environment variable. Secret substitution applies to the URL and header values only — never to the query.
+- **Authentication.** Add an `Authorization` header under `headers`; use `$SECRET_NAME` to substitute an environment variable. Secret substitution applies to the URL and header values only — never to the query. If `url` or the proxy uses plain `http://`, substituted secrets are sent in cleartext — prefer `https://` unless the server is on a trusted network.
 
 ## Troubleshooting {#troubleshooting}
 

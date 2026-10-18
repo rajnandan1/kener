@@ -243,7 +243,7 @@ class DbImpl {
   addMonitorToPage!: PagesRepository["addMonitorToPage"];
   removeMonitorFromPage!: PagesRepository["removeMonitorFromPage"];
   getPageMonitors!: PagesRepository["getPageMonitors"];
-  getPageMonitorsExcludeHidden!: PagesRepository["getPageMonitorsExcludeHidden"];
+  getActivePageMonitors!: PagesRepository["getActivePageMonitors"];
   getPagesByMonitorTag!: PagesRepository["getPagesByMonitorTag"];
   updatePageMonitorSettings!: PagesRepository["updatePageMonitorSettings"];
   monitorExistsOnPage!: PagesRepository["monitorExistsOnPage"];
@@ -628,7 +628,7 @@ class DbImpl {
     this.addMonitorToPage = this.pages.addMonitorToPage.bind(this.pages);
     this.removeMonitorFromPage = this.pages.removeMonitorFromPage.bind(this.pages);
     this.getPageMonitors = this.pages.getPageMonitors.bind(this.pages);
-    this.getPageMonitorsExcludeHidden = this.pages.getPageMonitorsExcludeHidden.bind(this.pages);
+    this.getActivePageMonitors = this.pages.getActivePageMonitors.bind(this.pages);
     this.getPagesByMonitorTag = this.pages.getPagesByMonitorTag.bind(this.pages);
     this.updatePageMonitorSettings = this.pages.updatePageMonitorSettings.bind(this.pages);
     this.monitorExistsOnPage = this.pages.monitorExistsOnPage.bind(this.pages);

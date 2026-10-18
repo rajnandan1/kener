@@ -674,6 +674,9 @@ export const GetUserPermissions = async (userId: number): Promise<Set<string>> =
   return new Set(permissionIds);
 };
 
+export const CanSeeHiddenMonitors = async (user: UserRecordPublic | null): Promise<boolean> =>
+  !!user && (await GetUserPermissions(user.id)).has("monitors.read");
+
 export const RequirePermission = (userPermissions: Set<string>, permissionId: string): void => {
   if (!userPermissions.has(permissionId)) {
     throw new Error("You do not have permission to perform this action");

@@ -46,9 +46,14 @@ describe("IncidentsRepository.getMonitorsByIncidentId", () => {
     const monitors = await repo.getMonitorsByIncidentId(1);
     expect(monitors.map((m) => m.monitor_tag)).toEqual(["api"]);
   });
+
+  it("lists hidden monitors for a viewer who can see them", async () => {
+    const monitors = await repo.getMonitorsByIncidentId(1, true);
+    expect(monitors.map((m) => m.monitor_tag)).toEqual(["api", "billing-db"]);
+  });
 });
 
-describe("IncidentsRepository.getAllGlobalOngoingIncidentsWithComments", () => {
+describe("IncidentsRepository public incident lists with a hidden monitor", () => {
   const ts = 1000;
   let db: Knex;
   let repo: IncidentsRepository;
@@ -104,12 +109,21 @@ describe("IncidentsRepository.getAllGlobalOngoingIncidentsWithComments", () => {
       { id: 4, title: "Not global, hidden monitor only", start_date_time: 600, is_global: "NO" },
       { id: 5, title: "Not global, visible monitor only", start_date_time: 500, is_global: "NO" },
     ]);
+    await db("incidents").insert({
+      id: 6,
+      title: "Resolved, visible and hidden monitors",
+      start_date_time: 400,
+      end_date_time: 950,
+      state: "RESOLVED",
+    });
     await db("incident_monitors").insert([
       { incident_id: 2, monitor_tag: "billing-db", monitor_impact: "DOWN" },
       { incident_id: 3, monitor_tag: "api", monitor_impact: "DOWN" },
       { incident_id: 3, monitor_tag: "billing-db", monitor_impact: "DOWN" },
       { incident_id: 4, monitor_tag: "billing-db", monitor_impact: "DOWN" },
       { incident_id: 5, monitor_tag: "api", monitor_impact: "DOWN" },
+      { incident_id: 6, monitor_tag: "api", monitor_impact: "DOWN" },
+      { incident_id: 6, monitor_tag: "billing-db", monitor_impact: "DOWN" },
     ]);
 
     repo = new IncidentsRepository(db);
@@ -146,5 +160,30 @@ describe("IncidentsRepository.getAllGlobalOngoingIncidentsWithComments", () => {
       { id: 3, monitors: ["api"] },
       { id: 5, monitors: ["api"] },
     ]);
+  });
+
+  it("leaves hidden monitors out of the ongoing incidents shown inline on status pages", async () => {
+    expect(summarize(await repo.getOngoingIncidentsForMonitorListWithComments(ts, ["api"]))).toEqual([
+      { id: 1, monitors: [] },
+      { id: 2, monitors: [] },
+      { id: 3, monitors: ["api"] },
+      { id: 5, monitors: ["api"] },
+    ]);
+  });
+
+  it("leaves hidden monitors out of the resolved incidents shown on status pages", async () => {
+    expect(summarize(await repo.getResolvedIncidentsForMonitorListWithComments(ts, ["api"], 5, 1))).toEqual([
+      { id: 6, monitors: ["api"] },
+    ]);
+  });
+
+  it("does not match an incident through a hidden monitor, even when its tag is requested", async () => {
+    expect(summarize(await repo.getOngoingIncidentsForMonitorListWithComments(ts, ["api", "billing-db"]))).toEqual([
+      { id: 1, monitors: [] },
+      { id: 2, monitors: [] },
+      { id: 3, monitors: ["api"] },
+      { id: 5, monitors: ["api"] },
+    ]);
+    expect(await repo.getResolvedIncidentsForMonitorListWithComments(ts, ["billing-db"], 5, 1)).toEqual([]);
   });
 });

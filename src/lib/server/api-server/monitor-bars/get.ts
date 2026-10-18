@@ -1,5 +1,6 @@
 import { json, error } from "@sveltejs/kit";
 import type { APIServerRequest } from "$lib/server/types/api-server";
+import { CanSeeHiddenMonitors, GetLoggedInSession } from "$lib/server/controllers/userController";
 import db from "$lib/server/db/db";
 import { GetDayStartTimestampUTC, GetMinuteStartNowTimestampUTC } from "$lib/server/tool";
 import type { StatusType } from "$lib/types/status";
@@ -58,9 +59,10 @@ export default async function get(req: APIServerRequest): Promise<Response> {
   }
 
   const startTime = endOfDayTodayAtTz - days * 24 * 60 * 60;
+  const canSeeHidden = await CanSeeHiddenMonitors(await GetLoggedInSession(req.cookies));
 
   const [monitors, latestDataAll, aggregatedData] = await Promise.all([
-    db.getMonitors({ tags, status: GC.ACTIVE, is_hidden: GC.NO }),
+    db.getMonitors({ tags, status: GC.ACTIVE, is_hidden: canSeeHidden ? undefined : GC.NO }),
     GetLatestMonitoringDataAllActive(tags),
     GetStatusCountsByIntervalGroupedByMonitor(tags, startTime, 86400, days),
   ]);

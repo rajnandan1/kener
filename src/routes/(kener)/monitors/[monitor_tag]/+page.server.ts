@@ -28,18 +28,10 @@ import { GetLastMonitoringValue } from "$lib/server/cache/setGet.js";
 export const load: PageServerLoad = async ({ params, parent }) => {
   const { monitor_tag } = params;
   const parentData = await parent();
-  // Validate monitor exists
-  const monitors = await GetMonitorsParsed({ tag: monitor_tag, status: "ACTIVE", is_hidden: "NO" });
-  if (!monitors || monitors.length === 0) {
-    throw error(404, { message: "Monitor not found" });
-  }
+  const is_hidden = parentData.canSeeHiddenMonitors ? undefined : "NO";
+  const monitors = await GetMonitorsParsed({ tag: monitor_tag, status: "ACTIVE", is_hidden });
   const monitor = monitors[0];
   if (!monitor) {
-    throw error(404, { message: "Monitor not found" });
-  }
-
-  // Check if monitor is hidden
-  if (monitor.is_hidden === "YES") {
     throw error(404, { message: "Monitor not found" });
   }
 
@@ -106,7 +98,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   }
 
   if (extendedTags.length > 0) {
-    const parsedExtendedMonitors = await GetMonitorsParsed({ tags: extendedTags, status: "ACTIVE", is_hidden: "NO" });
+    const parsedExtendedMonitors = await GetMonitorsParsed({ tags: extendedTags, status: "ACTIVE", is_hidden });
     for (const parsedMonitor of parsedExtendedMonitors) {
       if (parsedMonitor.monitor_type !== "GROUP") continue;
 

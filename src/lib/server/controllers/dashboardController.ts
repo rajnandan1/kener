@@ -135,8 +135,9 @@ export const GetIncidentCommentsByIncidentId = async (incident_id: number): Prom
  */
 export const GetAffectedMonitorsByIncidentId = async (
   incident_id: number,
+  includeHidden = false,
 ): Promise<Array<IncidentMonitorDetailRecord>> => {
-  return await db.getMonitorsByIncidentId(incident_id);
+  return await db.getMonitorsByIncidentId(incident_id, includeHidden);
 };
 
 // ============ Page Dashboard Data ============
@@ -302,9 +303,9 @@ export const GetPageDashboardData = async (
   pagePath: string,
   layoutData: LayoutServerData | Promise<LayoutServerData>,
 ): Promise<PageDashboardData | null> => {
-  // Overlap layout queries (site data, session) with the page+monitors lookup
-  // instead of waiting for parent() to finish first.
-  const [pageData, resolvedLayout] = await Promise.all([GetPageByPathWithMonitors(pagePath), layoutData]);
+  // Layout must resolve first: which monitors to include depends on canSeeHiddenMonitors.
+  const resolvedLayout = await layoutData;
+  const pageData = await GetPageByPathWithMonitors(pagePath, resolvedLayout.canSeeHiddenMonitors);
   if (!pageData) {
     return null;
   }
@@ -375,7 +376,11 @@ export const GetPageDashboardData = async (
   // Fetch all dashboard data in parallel (respecting feature toggles)
   const [latestData, parsedMonitors, ongoingIncidents, ongoingMaintenances, upcomingMaintenances] = await Promise.all([
     GetLatestMonitoringDataAllActive(monitorTags),
-    GetMonitorsParsed({ tags: monitorTags, status: "ACTIVE", is_hidden: "NO" }),
+    GetMonitorsParsed({
+      tags: monitorTags,
+      status: "ACTIVE",
+      is_hidden: resolvedLayout.canSeeHiddenMonitors ? undefined : "NO",
+    }),
     showInlineEvents && eventSettings.incidents.enabled && eventSettings.incidents.ongoing.show
       ? GetOngoingIncidentsForMonitorList(monitorTags)
       : Promise.resolve([] as IncidentForMonitorListWithComments[]),
