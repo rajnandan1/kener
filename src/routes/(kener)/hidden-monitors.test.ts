@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Knex } from "knex";
 import type { Cookies } from "@sveltejs/kit";
 
@@ -22,7 +22,13 @@ import db from "$lib/server/db/db";
 import { GenerateToken } from "$lib/server/controllers/commonController";
 import { GetLayoutServerData, type LayoutServerData } from "$lib/server/controllers/layoutController";
 import { GetPageDashboardData } from "$lib/server/controllers/dashboardController";
-import { CreateMaintenanceEventWithNotification } from "$lib/server/controllers/maintenanceController";
+import {
+  CreateMaintenanceEventWithNotification,
+  UpdateMaintenanceEventStatus,
+  UpdateMaintenanceEventStatuses,
+} from "$lib/server/controllers/maintenanceController";
+import { AddIncidentComment } from "$lib/server/controllers/incidentController";
+import type { SubscriptionVariableMap } from "$lib/server/notification/types";
 import type { APIServerRequest } from "$lib/server/types/api-server";
 import monitorBars from "$lib/server/api-server/monitor-bars/get";
 import monitorBar from "$lib/server/api-server/monitor-bar/get";
@@ -276,18 +282,88 @@ describe("hidden monitor billing-db, by viewer", () => {
   });
 });
 
-it("maintenance subscriber emails leave out hidden monitor billing-db", async () => {
-  await knex("site_data").insert([
-    { key: "colors", value: JSON.stringify({ UP: "#0f0", DOWN: "#f00", DEGRADED: "#ff0" }), data_type: "object" },
-    {
-      key: "globalMaintenanceNotificationSettings",
-      value: JSON.stringify({ event_types: { created: true }, reminder_buffer_hours: 1 }),
-      data_type: "object",
-    },
-  ]);
-  await CreateMaintenanceEventWithNotification(maintenanceId, 2000, 2060, "DB upgrade", null);
-  expect(subscriberQueue.push).toHaveBeenCalledOnce();
-  const email = JSON.stringify(subscriberQueue.push.mock.calls[0][0]);
-  expect(email).toContain("Public API");
-  expect(email).not.toMatch(/billing-db|Billing DB/);
+describe("subscriber emails", () => {
+  const emails = () => subscriberQueue.push.mock.calls.map(([variables]) => variables as SubscriptionVariableMap);
+
+  beforeAll(async () => {
+    await knex("site_data").insert([
+      { key: "colors", value: JSON.stringify({ UP: "#0f0", DOWN: "#f00", DEGRADED: "#ff0" }), data_type: "object" },
+      {
+        key: "globalMaintenanceNotificationSettings",
+        value: JSON.stringify({
+          event_types: { created: true, ended: true, reminder: true, started: true },
+          reminder_buffer_hours: 1,
+        }),
+        data_type: "object",
+      },
+    ]);
+  });
+
+  beforeEach(() => subscriberQueue.push.mockClear());
+
+  it("maintenance emails leave out hidden monitor billing-db", async () => {
+    await CreateMaintenanceEventWithNotification(maintenanceId, 2000, 2060, "DB upgrade", null);
+    expect(subscriberQueue.push).toHaveBeenCalledOnce();
+    const email = JSON.stringify(emails()[0]);
+    expect(email).toContain("Public API");
+    expect(mentionsHidden(email)).toBe(false);
+  });
+
+  const events = [
+    { title: "Global, visible and hidden", is_global: "YES", sends: true, impact: "DEGRADED" },
+    { title: "Global, hidden only", is_global: "YES", sends: true, impact: "" },
+    { title: "Scoped, visible and hidden", is_global: "NO", sends: true, impact: "DEGRADED" },
+    { title: "Scoped, hidden only", is_global: "NO", sends: false, impact: "" },
+  ].map((e) => ({
+    ...e,
+    monitors: e.title.endsWith("hidden only")
+      ? [{ monitor_tag: "billing-db", monitor_impact: "DOWN" }]
+      : [
+          { monitor_tag: "api", monitor_impact: "DEGRADED" },
+          { monitor_tag: "billing-db", monitor_impact: "DOWN" },
+        ],
+  }));
+
+  it.each(events)("incident comment email for $title", async ({ title, is_global, monitors, sends, impact }) => {
+    const [id] = (await knex("incidents").insert({ title, start_date_time: 1000, is_global }, ["id"])).map(
+      (r: { id: number }) => r.id,
+    );
+    await knex("incident_monitors").insert(monitors.map((m) => ({ ...m, incident_id: id })));
+    await AddIncidentComment(id, "Looking into it", "INVESTIGATING", 1100);
+    expect(emails().map((e) => [e.title, e.incident_impact])).toEqual(sends ? [[title, impact]] : []);
+    expect(mentionsHidden(emails())).toBe(false);
+  });
+
+  it.each(events)("maintenance emails on all 6 paths for $title", async ({ title, is_global, monitors, sends }) => {
+    const now = GetNowTimestampUTC();
+    const [id] = (
+      await knex("maintenances").insert(
+        { title, start_date_time: now - 1200, rrule: "FREQ=DAILY;COUNT=1", duration_seconds: 600, is_global },
+        ["id"],
+      )
+    ).map((r: { id: number }) => r.id);
+    await knex("maintenance_monitors").insert(monitors.map(({ monitor_tag }) => ({ maintenance_id: id, monitor_tag })));
+    const [cancelledId] = (
+      await knex("maintenances_events").insert(
+        [
+          { maintenance_id: id, start_date_time: now + 7200, end_date_time: now + 7800, status: "SCHEDULED" },
+          { maintenance_id: id, start_date_time: now + 1800, end_date_time: now + 2400, status: "SCHEDULED" },
+          { maintenance_id: id, start_date_time: now - 600, end_date_time: now + 600, status: "SCHEDULED" },
+          { maintenance_id: id, start_date_time: now - 600, end_date_time: now + 600, status: "READY" },
+          { maintenance_id: id, start_date_time: now - 1200, end_date_time: now - 600, status: "ONGOING" },
+        ],
+        ["id"],
+      )
+    ).map((r: { id: number }) => r.id);
+
+    await CreateMaintenanceEventWithNotification(id, now + 9000, now + 9600, title, null);
+    await UpdateMaintenanceEventStatus(cancelledId, "CANCELLED");
+    await UpdateMaintenanceEventStatuses();
+
+    const sent = emails().filter((e) => e.title.endsWith(`: ${title}`));
+    expect(sent.map((e) => e.update_id.replace(/^maintenance_\d+_/, "")).sort()).toEqual(
+      sends ? ["cancelled", "completed", "created", "ongoing", "ongoing", "starting_soon"] : [],
+    );
+    expect(mentionsHidden(sent)).toBe(false);
+  });
 });

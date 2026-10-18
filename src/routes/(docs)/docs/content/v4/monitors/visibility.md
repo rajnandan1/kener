@@ -61,6 +61,7 @@ You set them in the monitor's **Sharing Options** and in **Manage → Site Confi
 - Embeds at `/embed/monitor-{tag}` and `/embed/latency-{tag}` get their data from `/dashboard-apis/*`. That API returns 404 for a monitor that is hidden or `INACTIVE`.
 - The per-monitor RSS feed `/monitors/{tag}/rss.xml` returns 404 for a monitor that is hidden or `INACTIVE`.
 - On events pages, in inline events, in the notifications list, and in page RSS feeds, each event stays listed. Kener removes hidden monitors from the event's list of affected monitors. A page-scoped list shows an event only when the event is global (`is_global = YES`) or affects a monitor that is on the page, `ACTIVE`, and not hidden. On `/monitors/{tag}`, inline events and notifications follow the same rule for that one monitor, so a hidden monitor's page shows only global events. These rules are the same for every viewer, signed-in users included.
+- Subscriber emails do not name hidden monitors. Kener emails subscribers about an event only when the event is global (`is_global = YES`) or affects a monitor that is not hidden. The incident impact in the email, `DOWN` or `DEGRADED`, counts only monitors that are not hidden.
 - `sitemap.xml` includes every monitor that is `ACTIVE` and not hidden.
 - The REST API `/api/v4/*` needs an API key. It returns every monitor. To get only public monitors, add `?status=ACTIVE&is_hidden=NO`. See [API Reference](/docs/spec/v4/).
 - The Manage dashboard shows every monitor.
