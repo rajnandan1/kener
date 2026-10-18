@@ -15,10 +15,14 @@ vi.mock("$lib/server/cache/cache", () => ({
   deleteCache: async () => {},
 }));
 
+const { subscriberQueue } = vi.hoisted(() => ({ subscriberQueue: { push: vi.fn() } }));
+vi.mock("$lib/server/queues/subscriberQueue", () => ({ default: subscriberQueue }));
+
 import db from "$lib/server/db/db";
 import { GenerateToken } from "$lib/server/controllers/commonController";
 import { GetLayoutServerData, type LayoutServerData } from "$lib/server/controllers/layoutController";
 import { GetPageDashboardData } from "$lib/server/controllers/dashboardController";
+import { CreateMaintenanceEventWithNotification } from "$lib/server/controllers/maintenanceController";
 import type { APIServerRequest } from "$lib/server/types/api-server";
 import monitorBars from "$lib/server/api-server/monitor-bars/get";
 import monitorBar from "$lib/server/api-server/monitor-bar/get";
@@ -46,6 +50,7 @@ const layouts = {} as Record<Viewer, LayoutServerData>;
 const sessionCookie = (token?: string) => ({ get: (name: string) => (name === "kener-user" ? token : undefined) });
 
 let incidentId: number;
+let maintenanceId: number;
 let maintenanceEventId: number;
 
 beforeAll(async () => {
@@ -88,7 +93,7 @@ beforeAll(async () => {
     { incident_id: incidentId, monitor_tag: "api", monitor_impact: "DOWN" },
     { incident_id: incidentId, monitor_tag: "billing-db", monitor_impact: "DOWN" },
   ]);
-  const [maintenanceId] = (
+  [maintenanceId] = (
     await knex("maintenances").insert(
       { title: "DB upgrade", start_date_time: 1000, rrule: "FREQ=DAILY;COUNT=1", duration_seconds: 60 },
       ["id"],
@@ -175,16 +180,18 @@ const statusOf = async (call: () => Response | Promise<Response>) => {
 
 const expectedShows = (viewer: Viewer) => viewer === "signed-in with monitors.read";
 
+const mentionsHidden = (data: unknown) => /billing-db|Billing DB/.test(JSON.stringify(data));
+
 describe("hidden monitor billing-db, by viewer", () => {
   it.each(viewers)("status page / for %s", async (viewer) => {
     const data = await GetPageDashboardData("", layouts[viewer]);
-    expect(data!.monitorTags.includes("billing-db")).toBe(expectedShows(viewer));
+    expect(mentionsHidden(data)).toBe(expectedShows(viewer));
     expect(data!.monitorTags).toContain("api");
   });
 
   it.each(viewers)("status page /{page_path} for %s", async (viewer) => {
     const data = await GetPageDashboardData("internal", layouts[viewer]);
-    expect(data!.monitorTags.includes("billing-db")).toBe(expectedShows(viewer));
+    expect(mentionsHidden(data)).toBe(expectedShows(viewer));
   });
 
   it.each(viewers)("monitor page /monitors/billing-db for %s", async (viewer) => {
@@ -221,7 +228,7 @@ describe("hidden monitor billing-db, by viewer", () => {
     const tags = (data as { affectedMonitors: Array<{ monitor_tag: string }> }).affectedMonitors.map(
       (m) => m.monitor_tag,
     );
-    expect(tags.includes("billing-db")).toBe(expectedShows(viewer));
+    expect(mentionsHidden(data)).toBe(expectedShows(viewer));
     expect(tags).toContain("api");
   });
 
@@ -235,7 +242,7 @@ describe("hidden monitor billing-db, by viewer", () => {
     const tags = (data as { affectedMonitors: Array<{ monitor_tag: string }> }).affectedMonitors.map(
       (m) => m.monitor_tag,
     );
-    expect(tags.includes("billing-db")).toBe(expectedShows(viewer));
+    expect(mentionsHidden(data)).toBe(expectedShows(viewer));
     expect(tags).toContain("api");
   });
 
@@ -267,4 +274,20 @@ describe("hidden monitor billing-db, by viewer", () => {
   it.each(viewers)("embed data /dashboard-apis/monitor-bar hides it for %s", async (viewer) => {
     expect(await statusOf(() => monitorBar(apiRequest(viewer, { tag: "billing-db" })))).toBe(404);
   });
+});
+
+it("maintenance subscriber emails leave out hidden monitor billing-db", async () => {
+  await knex("site_data").insert([
+    { key: "colors", value: JSON.stringify({ UP: "#0f0", DOWN: "#f00", DEGRADED: "#ff0" }), data_type: "object" },
+    {
+      key: "globalMaintenanceNotificationSettings",
+      value: JSON.stringify({ event_types: { created: true }, reminder_buffer_hours: 1 }),
+      data_type: "object",
+    },
+  ]);
+  await CreateMaintenanceEventWithNotification(maintenanceId, 2000, 2060, "DB upgrade", null);
+  expect(subscriberQueue.push).toHaveBeenCalledOnce();
+  const email = JSON.stringify(subscriberQueue.push.mock.calls[0][0]);
+  expect(email).toContain("Public API");
+  expect(email).not.toMatch(/billing-db|Billing DB/);
 });
