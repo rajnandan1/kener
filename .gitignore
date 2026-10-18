@@ -48,6 +48,3 @@ scratch/
 
 # Claude session-local state (ralph-loop etc.)
 .claude/*.local.md
-
-# Local-only Devin skills
-.devin/skills/ponytail/

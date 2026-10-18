@@ -53,8 +53,8 @@
     <Input id="prom-url" bind:value={data.url} placeholder="https://prometheus.example.com" />
     {#if secretsOverHttp}
       <p class="text-xs text-amber-600 dark:text-amber-400">
-        $SECRET values are sent in cleartext — the URL or proxy uses plain http://. Use https:// unless the
-        endpoint is on a trusted network.
+        $SECRET values are sent in cleartext — the URL or proxy uses plain http://. Use https:// unless the endpoint is
+        on a trusted network.
       </p>
     {/if}
   </div>
