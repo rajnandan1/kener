@@ -460,20 +460,22 @@ export const UpdateCommentByID = async (
 // choke point; alertingQueue must not push its own incident notifications, or
 // alert-driven incidents would notify twice.
 const notifySubscribersOfComment = async (
-  incident: Pick<IncidentRecord, "id" | "title">,
+  incident: Pick<IncidentRecord, "id" | "title" | "is_global">,
   comment: IncidentCommentRecord,
 ): Promise<void> => {
   try {
     const siteData = await GetAllSiteData();
     const siteUrl = siteDataToVariables(siteData).site_url;
     // Failing to read the impact must not cost the mail itself; it goes out without the flags.
-    let impact = "";
+    let impacts: Array<string | null> | null = null;
     try {
-      const impacts = (await db.getIncidentMonitorsByIncidentID(incident.id)).map((m) => m.monitor_impact);
-      impact = impacts.includes(GC.DOWN) ? GC.DOWN : impacts.includes(GC.DEGRADED) ? GC.DEGRADED : "";
+      impacts = (await db.getMonitorsByIncidentId(incident.id)).map((m) => m.monitor_impact);
     } catch (err) {
       console.error(`Error reading monitors of incident ${incident.id} for its subscriber mail:`, err);
     }
+    // Subscribers hear only of incidents a status page shows: global, or with a monitor that is not hidden.
+    if (incident.is_global !== "YES" && impacts?.length === 0) return;
+    const impact = impacts?.includes(GC.DOWN) ? GC.DOWN : impacts?.includes(GC.DEGRADED) ? GC.DEGRADED : "";
     const variables: SubscriptionVariableMap = {
       title: incident.title,
       cta_url: `${siteUrl}incidents/${incident.id}`,
