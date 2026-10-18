@@ -206,6 +206,14 @@ describe("hidden monitor billing-db, by viewer", () => {
     expect(tags).toContain("api");
   });
 
+  it.each(viewers)("inline incidents on / hide it for %s", async (viewer) => {
+    const eventDisplaySettings = { ...layouts[viewer].eventDisplaySettings, showInlineEvents: true };
+    const data = await GetPageDashboardData("", { ...layouts[viewer], eventDisplaySettings });
+    const tags = data!.ongoingIncidents.flatMap((incident) => incident.monitors.map((m) => m.monitor_tag));
+    expect(tags).toContain("api");
+    expect(tags).not.toContain("billing-db");
+  });
+
   it.each(viewers)("embed data /dashboard-apis/monitor-bar hides it for %s", async (viewer) => {
     expect(await statusOf(() => monitorBar(apiRequest(viewer, { tag: "billing-db" })))).toBe(404);
   });

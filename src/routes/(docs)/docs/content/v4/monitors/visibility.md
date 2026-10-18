@@ -60,7 +60,7 @@ You set them in the monitor's **Sharing Options** and in **Manage → Site Confi
 - Badges at `/badge/{tag}/...` follow the same rule as the monitor page. For any other monitor, the badge shows an error. The `_` badge covers every `ACTIVE` monitor on the site that is not hidden.
 - Embeds at `/embed/monitor-{tag}` and `/embed/latency-{tag}` get their data from `/dashboard-apis/*`. That API returns 404 for a monitor that is hidden or `INACTIVE`.
 - The per-monitor RSS feed `/monitors/{tag}/rss.xml` returns 404 for a monitor that is hidden or `INACTIVE`.
-- On events pages and page RSS feeds, each event stays listed. Kener removes hidden monitors from the event's list of affected monitors. A page-scoped list shows an event only when the event is global (`is_global = YES`) or affects a monitor that is on the page, `ACTIVE`, and not hidden.
+- On events pages, in inline events, and in page RSS feeds, each event stays listed. Kener removes hidden monitors from the event's list of affected monitors. A page-scoped list shows an event only when the event is global (`is_global = YES`) or affects a monitor that is on the page, `ACTIVE`, and not hidden.
 - `sitemap.xml` includes every monitor that is `ACTIVE` and not hidden.
 - The REST API `/api/v4/*` needs an API key. It returns every monitor. To get only public monitors, add `?status=ACTIVE&is_hidden=NO`. See [API Reference](/docs/spec/v4/).
 - The Manage dashboard shows every monitor.
@@ -78,7 +78,7 @@ A signed-in user whose role has `monitors.read` sees hidden monitors on the page
 | `/monitors/{tag}`, with its status bars, charts, and day details  | Hides     | Hides                         | Shows                                |
 | Group member list                                                 | Hides     | Hides                         | Shows                                |
 | `/incidents/{id}` and `/maintenances/{id}` affected monitors      | Hides     | Hides                         | Shows                                |
-| Events pages                                                      | Hides     | Hides                         | Hides                                |
+| Affected monitors in inline events and on events pages            | Hides     | Hides                         | Hides                                |
 | Badges and embeds                                                 | Hides     | Hides                         | Hides                                |
 | `/rss.xml`, `/{page_path}/rss.xml`, and `/monitors/{tag}/rss.xml` | Hides     | Hides                         | Hides                                |
 | `sitemap.xml`                                                     | Hides     | Hides                         | Hides                                |
