@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import knex, { type Knex } from "knex";
 import { MaintenancesRepository } from "./maintenances";
 
-describe("MaintenancesRepository.getAllGlobalOngoingMaintenanceEvents", () => {
+describe("MaintenancesRepository public maintenance lists with a hidden monitor", () => {
   const ts = 1000;
   let db: Knex;
   let repo: MaintenancesRepository;
@@ -62,6 +62,12 @@ describe("MaintenancesRepository.getAllGlobalOngoingMaintenanceEvents", () => {
       { id: 14, maintenance_id: 4, start_date_time: 600, end_date_time: 2000 },
       { id: 15, maintenance_id: 5, start_date_time: 500, end_date_time: 2000 },
     ]);
+    await db("maintenances_events").insert([
+      { id: 16, maintenance_id: 4, start_date_time: 1500, end_date_time: 1600, status: "SCHEDULED" },
+      { id: 17, maintenance_id: 5, start_date_time: 1500, end_date_time: 1600, status: "SCHEDULED" },
+      { id: 18, maintenance_id: 4, start_date_time: 100, end_date_time: 200, status: "COMPLETED" },
+      { id: 19, maintenance_id: 5, start_date_time: 100, end_date_time: 200, status: "COMPLETED" },
+    ]);
     await db("maintenance_monitors").insert([
       { maintenance_id: 2, monitor_tag: "billing-db", monitor_impact: "MAINTENANCE" },
       { maintenance_id: 3, monitor_tag: "api", monitor_impact: "MAINTENANCE" },
@@ -103,6 +109,22 @@ describe("MaintenancesRepository.getAllGlobalOngoingMaintenanceEvents", () => {
     expect(summarize(await repo.getAllGlobalOngoingMaintenanceEvents(ts, ["api"]))).toEqual([
       { id: 13, monitors: ["api"] },
       { id: 15, monitors: ["api"] },
+    ]);
+  });
+
+  it("does not match an event through a hidden monitor, even when its tag is requested", async () => {
+    const tags = ["api", "billing-db"];
+    expect(summarize(await repo.getOngoingMaintenanceEventsForMonitorList(ts, tags))).toEqual([
+      { id: 11, monitors: [] },
+      { id: 12, monitors: [] },
+      { id: 13, monitors: ["api"] },
+      { id: 15, monitors: ["api"] },
+    ]);
+    expect(summarize(await repo.getUpcomingMaintenanceEventsForMonitorList(ts, tags, 5, 1))).toEqual([
+      { id: 17, monitors: ["api"] },
+    ]);
+    expect(summarize(await repo.getPastMaintenanceEventsForMonitorList(ts, tags, 5, 1))).toEqual([
+      { id: 19, monitors: ["api"] },
     ]);
   });
 });

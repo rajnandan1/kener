@@ -470,7 +470,9 @@ export class IncidentsRepository extends BaseRepository {
       .leftJoin("incident_monitors", "incidents.id", "incident_monitors.incident_id")
       .leftJoin("monitors", "incident_monitors.monitor_tag", "monitors.tag")
       .where(function () {
-        this.whereIn("incident_monitors.monitor_tag", monitorTags).orWhere("incidents.is_global", "YES");
+        this.where((tagged) =>
+          tagged.whereIn("incident_monitors.monitor_tag", monitorTags).andWhere("monitors.is_hidden", "NO"),
+        ).orWhere("incidents.is_global", "YES");
       })
       .andWhere("incidents.state", "!=", GC.RESOLVED)
       .andWhere("incidents.incident_type", GC.INCIDENT)
@@ -594,8 +596,11 @@ export class IncidentsRepository extends BaseRepository {
     const incidentIds = await this.knex("incidents")
       .distinct("incidents.id")
       .leftJoin("incident_monitors", "incidents.id", "incident_monitors.incident_id")
+      .leftJoin("monitors", "incident_monitors.monitor_tag", "monitors.tag")
       .where(function () {
-        this.whereIn("incident_monitors.monitor_tag", monitorTags).orWhere("incidents.is_global", "YES");
+        this.where((tagged) =>
+          tagged.whereIn("incident_monitors.monitor_tag", monitorTags).andWhere("monitors.is_hidden", "NO"),
+        ).orWhere("incidents.is_global", "YES");
       })
       .andWhere("incidents.state", GC.RESOLVED)
       .andWhere("incidents.incident_type", GC.INCIDENT)

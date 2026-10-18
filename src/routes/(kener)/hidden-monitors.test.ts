@@ -27,6 +27,8 @@ import monitorDayStatus from "$lib/server/api-server/monitor-day-status/post";
 import monitorDayLatency from "$lib/server/api-server/monitor-day-latency/post";
 import monitorDayIncidents from "$lib/server/api-server/monitor-day-incidents/post";
 import monitorDayMaintenances from "$lib/server/api-server/monitor-day-maintenances/post";
+import notifications from "$lib/server/api-server/notifications/get";
+import { GetNowTimestampUTC } from "$lib/server/tool";
 import { load as loadMonitorPage } from "./monitors/[monitor_tag]/+page.server";
 import { load as loadIncidentPage } from "./incidents/[incident_id]/+page.server";
 import { load as loadMaintenancePage } from "./maintenances/[maintenance_id]/+page.server";
@@ -102,6 +104,37 @@ beforeAll(async () => {
     { maintenance_id: maintenanceId, monitor_tag: "api" },
     { maintenance_id: maintenanceId, monitor_tag: "billing-db" },
   ]);
+
+  const now = GetNowTimestampUTC();
+  const [hiddenOnlyIncidentId] = (
+    await knex("incidents").insert({ title: "Billing DB failover", start_date_time: now - 600, is_global: "NO" }, [
+      "id",
+    ])
+  ).map((r: { id: number }) => r.id);
+  await knex("incident_monitors").insert({
+    incident_id: hiddenOnlyIncidentId,
+    monitor_tag: "billing-db",
+    monitor_impact: "DOWN",
+  });
+  const [hiddenOnlyMaintenanceId] = (
+    await knex("maintenances").insert(
+      {
+        title: "Billing DB vacuum",
+        start_date_time: now - 600,
+        rrule: "FREQ=DAILY;COUNT=1",
+        duration_seconds: 1200,
+        is_global: "NO",
+      },
+      ["id"],
+    )
+  ).map((r: { id: number }) => r.id);
+  await knex("maintenance_monitors").insert({ maintenance_id: hiddenOnlyMaintenanceId, monitor_tag: "billing-db" });
+  for (const id of [maintenanceId, hiddenOnlyMaintenanceId]) {
+    await knex("maintenances_events").insert([
+      { maintenance_id: id, start_date_time: now - 600, end_date_time: now + 600, status: "ONGOING" },
+      { maintenance_id: id, start_date_time: now + 3600, end_date_time: now + 4200, status: "SCHEDULED" },
+    ]);
+  }
 
   const roleOf: Record<Viewer, string | null> = {
     anonymous: null,
@@ -212,6 +245,23 @@ describe("hidden monitor billing-db, by viewer", () => {
     const tags = data!.ongoingIncidents.flatMap((incident) => incident.monitors.map((m) => m.monitor_tag));
     expect(tags).toContain("api");
     expect(tags).not.toContain("billing-db");
+  });
+
+  it.each(viewers)("inline events on / leave out events that affect only it for %s", async (viewer) => {
+    const eventDisplaySettings = { ...layouts[viewer].eventDisplaySettings, showInlineEvents: true };
+    const data = await GetPageDashboardData("", { ...layouts[viewer], eventDisplaySettings });
+    expect(data!.ongoingIncidents.map((e) => e.title)).toEqual(["Billing outage"]);
+    expect(data!.ongoingMaintenances.map((e) => e.title)).toEqual(["DB upgrade"]);
+    expect(data!.upcomingMaintenances.map((e) => e.title)).toEqual(["DB upgrade"]);
+  });
+
+  it.each(viewers)("notifications /dashboard-apis/notifications?tags=billing-db for %s", async (viewer) => {
+    const body = await (await notifications(apiRequest(viewer, { tags: "billing-db" }))).json();
+    const titles = body.notifications.map((n: { eventTitle: string }) => n.eventTitle);
+    expect(titles).toContain("Billing outage");
+    expect(titles).toContain("DB upgrade");
+    expect(titles).not.toContain("Billing DB failover");
+    expect(titles).not.toContain("Billing DB vacuum");
   });
 
   it.each(viewers)("embed data /dashboard-apis/monitor-bar hides it for %s", async (viewer) => {

@@ -176,4 +176,14 @@ describe("IncidentsRepository public incident lists with a hidden monitor", () =
       { id: 6, monitors: ["api"] },
     ]);
   });
+
+  it("does not match an incident through a hidden monitor, even when its tag is requested", async () => {
+    expect(summarize(await repo.getOngoingIncidentsForMonitorListWithComments(ts, ["api", "billing-db"]))).toEqual([
+      { id: 1, monitors: [] },
+      { id: 2, monitors: [] },
+      { id: 3, monitors: ["api"] },
+      { id: 5, monitors: ["api"] },
+    ]);
+    expect(await repo.getResolvedIncidentsForMonitorListWithComments(ts, ["billing-db"], 5, 1)).toEqual([]);
+  });
 });
