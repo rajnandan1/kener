@@ -76,9 +76,10 @@ export const load: PageServerLoad = async ({ params, url, parent }) => {
       }));
   }
 
+  const visibleTags = new Set(affectedMonitors.map((m) => m.monitor_tag));
   return {
     ...{
-      maintenance,
+      maintenance: { ...maintenance, monitors: maintenance.monitors?.filter((m) => visibleTags.has(m.monitor_tag)) },
       maintenanceEvent, // The specific event that was clicked
       affectedMonitors,
     },

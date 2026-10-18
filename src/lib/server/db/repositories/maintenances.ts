@@ -186,6 +186,7 @@ export class MaintenancesRepository extends BaseRepository {
     return await this.knex("maintenance_monitors")
       .join("monitors", "maintenance_monitors.monitor_tag", "monitors.tag")
       .where("maintenance_monitors.maintenance_id", maintenance_id)
+      .andWhere("monitors.is_hidden", "NO")
       .select(
         "maintenance_monitors.*",
         "monitors.name as monitor_name",
