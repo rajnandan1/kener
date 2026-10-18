@@ -76,6 +76,8 @@ Kener queues an incident subscription email for each update posted on an inciden
 - An update added through the API (`POST /api/v4/incidents/{incident_id}/comments`)
 - The update an alert adds when it creates the incident, and when it resolves it
 
+Updates on legacy incidents of type `MAINTENANCE` (from before v4 maintenances) do not queue this email.
+
 ### Maintenance notifications {#maintenance-notifications}
 
 Maintenance subscription emails are queued on maintenance event status transitions:
