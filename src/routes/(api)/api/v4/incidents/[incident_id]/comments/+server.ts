@@ -115,6 +115,18 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     return json(errorResponse, { status: 400 });
   }
 
+  // A RESOLVED comment sets the incident end time, which cannot be before the start.
+  // Reject it here: AddIncidentComment saves the comment before it checks the end time.
+  if (body.state === GC.RESOLVED && timestamp < incident.start_date_time) {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: "timestamp of a RESOLVED comment cannot be before the incident start",
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
   // AddIncidentComment updates the incident state and end time and notifies subscribers,
   // the same as a comment posted from the dashboard
   const createdComment = await AddIncidentComment(incident.id, body.comment.trim(), body.state, timestamp);
