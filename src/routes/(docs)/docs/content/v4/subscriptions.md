@@ -70,10 +70,11 @@ Kener emails subscribers about an incident or maintenance only when it is global
 
 ### Incident notifications {#incident-notifications}
 
-Incident subscription emails are queued when alert-driven incident lifecycle changes happen, including:
+Kener queues an incident subscription email for each update posted on an incident, from any source:
 
-- Incident created from alert trigger
-- Incident resolved from alert recovery
+- An update added in the dashboard
+- An update added through the API (`POST /api/v4/incidents/{incident_id}/comments`)
+- The update an alert adds when it creates the incident, and when it resolves it
 
 ### Maintenance notifications {#maintenance-notifications}
 
