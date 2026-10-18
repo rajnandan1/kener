@@ -720,17 +720,19 @@ export class IncidentsRepository extends BaseRepository {
     return await query;
   }
 
-  async getMonitorsByIncidentId(incident_id: number): Promise<IncidentMonitorDetailRecord[]> {
-    return await this.knex("incident_monitors")
+  async getMonitorsByIncidentId(incident_id: number, includeHidden = false): Promise<IncidentMonitorDetailRecord[]> {
+    const query = this.knex("incident_monitors")
       .join("monitors", "incident_monitors.monitor_tag", "monitors.tag")
-      .where("incident_monitors.incident_id", incident_id)
-      .andWhere("monitors.is_hidden", "NO")
-      .select(
-        "incident_monitors.*",
-        "monitors.name as monitor_name",
-        "monitors.image as monitor_image",
-        "monitors.description as monitor_description",
-      );
+      .where("incident_monitors.incident_id", incident_id);
+    if (!includeHidden) {
+      query.andWhere("monitors.is_hidden", "NO");
+    }
+    return await query.select(
+      "incident_monitors.*",
+      "monitors.name as monitor_name",
+      "monitors.image as monitor_image",
+      "monitors.description as monitor_description",
+    );
   }
 
   async removeIncidentMonitor(incident_id: number, monitor_tag: string): Promise<number> {

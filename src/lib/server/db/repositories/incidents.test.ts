@@ -46,6 +46,11 @@ describe("IncidentsRepository.getMonitorsByIncidentId", () => {
     const monitors = await repo.getMonitorsByIncidentId(1);
     expect(monitors.map((m) => m.monitor_tag)).toEqual(["api"]);
   });
+
+  it("lists hidden monitors for a viewer who can see them", async () => {
+    const monitors = await repo.getMonitorsByIncidentId(1, true);
+    expect(monitors.map((m) => m.monitor_tag)).toEqual(["api", "billing-db"]);
+  });
 });
 
 describe("IncidentsRepository.getAllGlobalOngoingIncidentsWithComments", () => {
