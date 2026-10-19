@@ -109,7 +109,7 @@ describe("POST /api/v4/incidents/{incident_id}/comments", () => {
 
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({
-      error: { code: "BAD_REQUEST", message: "timestamp of a RESOLVED comment cannot be before the incident start" },
+      error: { code: "BAD_REQUEST", message: "A RESOLVED comment cannot be dated before the incident start" },
     });
     expect(db.insertIncidentComment).not.toHaveBeenCalled();
     expect(db.updateIncident).not.toHaveBeenCalled();

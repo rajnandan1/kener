@@ -517,6 +517,9 @@ export const AddIncidentComment = async (
   if (!!!state) {
     state = incidentExists.state;
   }
+  if (state === GC.RESOLVED && commented_at < incidentExists.start_date_time) {
+    throw new Error("A RESOLVED comment cannot be dated before the incident start");
+  }
 
   let c = await db.insertIncidentComment(incident_id, comment, state, commented_at);
   let incidentType = incidentExists.incident_type;

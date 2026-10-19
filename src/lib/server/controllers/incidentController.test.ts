@@ -109,6 +109,16 @@ describe("AddIncidentComment: subscriber mail variables", () => {
       is_degraded: false,
     });
   });
+
+  it("rejects a RESOLVED comment dated before the incident start, and saves and sends nothing", async () => {
+    await expect(AddIncidentComment(12, "Fixed", "RESOLVED", 900)).rejects.toThrow(
+      "A RESOLVED comment cannot be dated before the incident start",
+    );
+
+    expect(db.insertIncidentComment).not.toHaveBeenCalled();
+    expect(db.updateIncident).not.toHaveBeenCalled();
+    expect(subscriberQueue.push).not.toHaveBeenCalled();
+  });
 });
 
 describe("CreateNewIncidentWithCommentAndMonitor", () => {
