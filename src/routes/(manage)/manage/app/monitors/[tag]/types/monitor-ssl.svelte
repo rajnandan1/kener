@@ -45,8 +45,8 @@
     <Label for="ssl-self-signed">Allow Self-Signed / Untrusted Certificates</Label>
   </div>
   <p class="text-muted-foreground -mt-2 text-xs">
-    When enabled, certificate verification is skipped so expiry can still be read for self-signed or
-    expired certs.
+    When off, a certificate that fails verification (self-signed, unknown CA, or wrong host name) makes the check DOWN.
+    When on, only the expiry thresholds decide the status.
   </p>
 
   <div class="grid grid-cols-2 gap-4">

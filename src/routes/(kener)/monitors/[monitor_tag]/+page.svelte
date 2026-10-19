@@ -16,11 +16,13 @@
   import { getSslNowMs } from "$lib/client/sslClock.svelte";
   let { data } = $props();
 
-  let sslSecurity = $derived(
-    data.monitorType === "SSL" ? GetSslSecurityState(data.monitorSslExpiresAt, getSslNowMs()) : null
-  );
-  let sslRemaining = $derived(
-    data.monitorType === "SSL" ? FormatSslRemaining(data.monitorSslExpiresAt, getSslNowMs()) : ""
+  let isSsl = $derived(data.monitorType === "SSL");
+  let sslSecurity = $derived(GetSslSecurityState(data.monitorSslExpiresAt, getSslNowMs(), data.monitorSslTrusted));
+  let sslRemaining = $derived(FormatSslRemaining(data.monitorSslExpiresAt, getSslNowMs()));
+  let sslIssuer = $derived(
+    [data.monitorIssuerCn && `CN=${data.monitorIssuerCn}`, data.monitorIssuerO && `O=${data.monitorIssuerO}`]
+      .filter(Boolean)
+      .join(", ")
   );
 
   // State
@@ -122,46 +124,37 @@
         </Button>
       {/if}
     </div>
-    <div class="flex items-center justify-between gap-4 px-2">
-      {#if data.monitorType === "SSL" && sslSecurity}
-        <div class="flex flex-1 flex-col items-end gap-1">
-          <p class="text-2xl font-semibold {SslSecurityTextClass(sslSecurity)}">
+    <div class="flex items-center justify-between px-2">
+      <div class="flex flex-col items-start gap-1">
+        <p class="text-muted-foreground text-2xl font-semibold {data.textClass}">
+          {$t(data.monitorLastStatus)}
+        </p>
+        <p class="text-muted-foreground text-xs">{$t("Latest Status")}</p>
+      </div>
+      {#if isSsl}
+        <div class="flex flex-col items-end gap-1">
+          <p class="text-right text-2xl font-semibold {SslSecurityTextClass(sslSecurity)}">
             {$t(SslSecurityLabelKey(sslSecurity))}
           </p>
           {#if sslRemaining}
-            <p class="text-muted-foreground text-right text-sm">
-              {$t("Remaining Days")}: {sslRemaining}
-            </p>
+            <p class="text-muted-foreground text-right text-xs">{$t("Time Remaining")}: {sslRemaining}</p>
           {/if}
           {#if data.monitorSslExpiresAt}
             <p class="text-muted-foreground text-right text-xs">
               {$t("Expires At")}: {$formatDate(data.monitorSslExpiresAt, "MMMM d, yyyy HH:mm:ss")}
             </p>
           {/if}
-          {#if data.monitorIssuerCn || data.monitorIssuerO}
-            <p class="text-muted-foreground text-right text-xs">
-              {$t("Issued By")}:
-              {#if data.monitorIssuerCn}CN={data.monitorIssuerCn}{/if}
-              {#if data.monitorIssuerCn && data.monitorIssuerO}, {/if}
-              {#if data.monitorIssuerO}O={data.monitorIssuerO}{/if}
-            </p>
+          {#if sslIssuer}
+            <p class="text-muted-foreground text-right text-xs">{$t("Issued By")}: {sslIssuer}</p>
           {/if}
         </div>
-      {:else}
-        <div class="flex flex-col items-start gap-1">
-          <p class="text-muted-foreground text-2xl font-semibold {data.textClass}">
-            {$t(data.monitorLastStatus)}
+      {:else if !!data.monitorLastLatency}
+        <div class="flex flex-col items-end gap-1">
+          <p class="text-right text-2xl font-semibold">
+            {data.monitorLastLatency}
           </p>
-          <p class="text-muted-foreground text-xs">{$t("Latest Status")}</p>
+          <p class="text-muted-foreground text-xs">{$t("Latest Latency")}</p>
         </div>
-        {#if !!data.monitorLastLatency}
-          <div class="flex flex-col items-end gap-1">
-            <p class="text-right text-2xl font-semibold">
-              {data.monitorLastLatency}
-            </p>
-            <p class="text-muted-foreground text-xs">{$t("Latest Latency")}</p>
-          </div>
-        {/if}
       {/if}
     </div>
   </div>

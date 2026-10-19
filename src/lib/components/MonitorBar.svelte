@@ -13,7 +13,7 @@
     GetSslSecurityState,
     SslSecurityLabelKey,
     SslSecurityTextClass,
-    FormatSslRemaining,
+    FormatSslRemaining
   } from "$lib/clientTools.js";
   import { getSslNowMs } from "$lib/client/sslClock.svelte";
   import GroupMonitorPopover from "./GroupMonitorPopover.svelte";
@@ -108,9 +108,8 @@
     {@const StatusIcon = STATUS_ICON[data.currentStatus]}
     {@const sslNowMs = getSslNowMs()}
     {@const sslSecurity =
-      data.monitorType === "SSL" ? GetSslSecurityState(data.sslExpiresAt, sslNowMs) : null}
-    {@const sslRemainingLive =
-      data.monitorType === "SSL" ? FormatSslRemaining(data.sslExpiresAt, sslNowMs) : ""}
+      data.monitorType === "SSL" ? GetSslSecurityState(data.sslExpiresAt, sslNowMs, data.sslTrusted) : null}
+    {@const sslRemainingLive = data.monitorType === "SSL" ? FormatSslRemaining(data.sslExpiresAt, sslNowMs) : ""}
     <Item.Root class="items-start ">
       {#if !compact}
         <Item.Media variant="image" class="hidden sm:block">
@@ -138,13 +137,13 @@
             {#if data.monitorType === "SSL" && sslSecurity}
               <span
                 class="{grid ? 'text-base sm:text-lg' : 'text-lg sm:text-xl'} font-semibold {SslSecurityTextClass(
-                  sslSecurity,
+                  sslSecurity
                 )}"
               >
                 {$t(SslSecurityLabelKey(sslSecurity))}
               </span>
               <span class="text-muted-foreground text-right text-xs">
-                {$t("Remaining Days")}: {sslRemainingLive || "—"}
+                {$t("Time Remaining")}: {sslRemainingLive || "—"}
               </span>
               {#if data.sslExpiresAt}
                 <span class="text-muted-foreground text-right text-[10px] leading-tight sm:text-xs">
@@ -163,13 +162,7 @@
     </Item.Root>
     {#if !compact}
       <div class="mx-auto flex w-full flex-col gap-1 px-4">
-        <StatusBarCalendar
-          data={data.uptimeData}
-          monitorTag={tag}
-          monitorType={data.monitorType}
-          barHeight={40}
-          radius={8}
-        />
+        <StatusBarCalendar data={data.uptimeData} monitorTag={tag} barHeight={40} radius={8} />
         <div class="flex min-w-0 justify-between gap-3">
           <p class="text-muted-foreground min-w-0 truncate text-xs font-medium">
             {$formatDate(new Date(data.fromTimeStamp * 1000), page.data.dateAndTimeFormat.dateOnly)}

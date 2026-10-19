@@ -6,9 +6,7 @@ import type { SslMonitor, MonitoringResult } from "../types/monitor.js";
 
 export const DEFAULT_SSL_TIMEOUT_MS = 10000;
 
-/** Thrown when the TLS handshake or certificate read exceeds the configured timeout. */
 export class SSLTimeoutError extends Error {
-  /** @param timeoutMs - Timeout budget that was exceeded. */
   constructor(timeoutMs: number) {
     super(`SSL check timed out after ${timeoutMs}ms`);
     this.name = "SSLTimeoutError";
@@ -22,6 +20,8 @@ interface SSLExpiryResult {
   handshakeMs: number;
   issuerCn: string | null;
   issuerO: string | null;
+  /** Why the chain or host name failed verification; null when the certificate is trusted. */
+  authorizationError: string | null;
 }
 
 export interface GetSSLExpiryOptions {
@@ -29,10 +29,9 @@ export interface GetSSLExpiryOptions {
   timeoutMs?: number;
   /** SNI name; when omitted, uses `domain` unless `domain` is an IP. */
   servername?: string;
-  rejectUnauthorized?: boolean;
 }
 
-/** Normalize a certificate DN attribute that may be a string or string[]. */
+/** Node returns a DN attribute as string[] when the certificate repeats it. */
 export function dnAttr(value: unknown): string | null {
   if (typeof value === "string" && value.trim()) return value.trim();
   if (Array.isArray(value)) {
@@ -42,7 +41,6 @@ export function dnAttr(value: unknown): string | null {
   return null;
 }
 
-/** Build a short `Issued by CN=..., O=...` note for logs and last_status. */
 function formatIssuerLine(issuerCn: string | null, issuerO: string | null): string | undefined {
   const parts: string[] = [];
   if (issuerCn) parts.push(`CN=${issuerCn}`);
@@ -51,20 +49,18 @@ function formatIssuerLine(issuerCn: string | null, issuerO: string | null): stri
 }
 
 /**
- * Open a TLS connection and read the leaf certificate expiry + issuer.
- * Always destroys the socket on settle (success, error, or timeout).
+ * Reads the leaf certificate even when verification fails, so an expired or untrusted
+ * certificate still reports its expiry. Callers decide what an authorizationError means.
  */
 export const getSSLExpiry = (domain: string, options: GetSSLExpiryOptions = {}): Promise<SSLExpiryResult> => {
   const port = options.port ?? 443;
   const timeoutMs = options.timeoutMs ?? DEFAULT_SSL_TIMEOUT_MS;
-  const rejectUnauthorized = options.rejectUnauthorized ?? true;
   const servername = options.servername || (net.isIP(domain) ? undefined : domain);
 
   return new Promise((resolve, reject) => {
     const startTime = performance.now();
     let settled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    let socket: tls.TLSSocket;
 
     const settle = (fn: () => void) => {
       if (settled) return;
@@ -74,33 +70,27 @@ export const getSSLExpiry = (domain: string, options: GetSSLExpiryOptions = {}):
       socket.destroy();
     };
 
-    socket = tls.connect(
-      {
-        host: domain,
-        port,
-        servername,
-        rejectUnauthorized,
-      },
-      () => {
-        const cert = socket.getPeerCertificate();
-        if (!cert || !cert.valid_to) {
-          settle(() => reject(new Error("No certificate found.")));
-          return;
-        }
-        const handshakeMs = Math.round(performance.now() - startTime);
-        const timeTillExpiryMs = new Date(cert.valid_to).getTime() - Date.now();
-        settle(() =>
-          resolve({
-            domain,
-            expiryDate: new Date(cert.valid_to),
-            timeTillExpiryMs,
-            handshakeMs,
-            issuerCn: dnAttr(cert.issuer?.CN),
-            issuerO: dnAttr(cert.issuer?.O),
-          }),
-        );
-      },
-    );
+    // Node still runs chain and host name checks with rejectUnauthorized: false; it reports them on socket.authorized.
+    const socket = tls.connect({ host: domain, port, servername, rejectUnauthorized: false }, () => {
+      const cert = socket.getPeerCertificate();
+      if (!cert || !cert.valid_to) {
+        settle(() => reject(new Error("No certificate found.")));
+        return;
+      }
+      const handshakeMs = Math.round(performance.now() - startTime);
+      const timeTillExpiryMs = new Date(cert.valid_to).getTime() - Date.now();
+      settle(() =>
+        resolve({
+          domain,
+          expiryDate: new Date(cert.valid_to),
+          timeTillExpiryMs,
+          handshakeMs,
+          issuerCn: dnAttr(cert.issuer?.CN),
+          issuerO: dnAttr(cert.issuer?.O),
+          authorizationError: socket.authorized ? null : String(socket.authorizationError || "UNKNOWN_ERROR"),
+        }),
+      );
+    });
 
     timer = setTimeout(() => {
       settle(() => reject(new SSLTimeoutError(timeoutMs)));
@@ -112,26 +102,22 @@ export const getSSLExpiry = (domain: string, options: GetSSLExpiryOptions = {}):
   });
 };
 
-/** Runs a configured SSL/TLS certificate monitor check. */
 class SSLCall {
   monitor: SslMonitor;
 
-  /** @param monitor - Active SSL monitor definition. */
   constructor(monitor: SslMonitor) {
     this.monitor = monitor;
   }
 
-  /** Probe the host, evaluate remaining lifetime thresholds, and return a MonitoringResult. */
   async execute(): Promise<MonitoringResult> {
-    const domain = this.monitor.type_data.host;
+    const domain = String(this.monitor.type_data.host ?? "").trim();
     const port = parseInt(this.monitor.type_data.port || "443", 10);
     const degradedRemainingHours = Number(this.monitor.type_data.degradedRemainingHours);
     const downRemainingHours = Number(this.monitor.type_data.downRemainingHours);
+    const configuredTimeout = Number(this.monitor.type_data.timeout);
+    // setTimeout fires at once for delays above 2^31-1 ms.
     const timeoutMs =
-      typeof this.monitor.type_data.timeout === "number" && Number.isFinite(this.monitor.type_data.timeout)
-        ? this.monitor.type_data.timeout
-        : DEFAULT_SSL_TIMEOUT_MS;
-    const rejectUnauthorized = !this.monitor.type_data.allowSelfSignedCert;
+      configuredTimeout >= 1 && configuredTimeout <= 2_147_483_647 ? configuredTimeout : DEFAULT_SSL_TIMEOUT_MS;
     const servername = this.monitor.type_data.tlsServername?.trim() || undefined;
 
     if (!Number.isFinite(degradedRemainingHours) || !Number.isFinite(downRemainingHours)) {
@@ -153,61 +139,40 @@ class SSLCall {
     }
 
     try {
-      const { timeTillExpiryMs, expiryDate, issuerCn, issuerO } = await getSSLExpiry(domain, {
-        port,
-        timeoutMs,
-        servername,
-        rejectUnauthorized,
-      });
+      const { timeTillExpiryMs, expiryDate, handshakeMs, issuerCn, issuerO, authorizationError } = await getSSLExpiry(
+        domain,
+        { port, timeoutMs, servername },
+      );
       const timeTillExpiryHours = timeTillExpiryMs / 1000 / 60 / 60;
-      // Intentionally store remaining lifetime (ms) as the chart/log metric so the
-      // "latency" trend is a certificate expiry countdown, not TLS handshake RTT.
-      const latency = Math.max(0, Math.round(timeTillExpiryMs));
       const expiresAt = expiryDate.toISOString();
+      const certificate = { expiry_at: expiresAt, issuer_cn: issuerCn, issuer_o: issuerO };
       const issuerLine = formatIssuerLine(issuerCn, issuerO);
-      const sslMeta = {
-        expiry_at: expiresAt,
-        issuer_cn: issuerCn,
-        issuer_o: issuerO,
-      };
+
+      if (authorizationError && !this.monitor.type_data.allowSelfSignedCert) {
+        return {
+          ...certificate,
+          status: GC.DOWN,
+          latency: 0,
+          type: GC.ERROR,
+          error_message: [`SSL certificate for ${domain} is not trusted: ${authorizationError}.`, issuerLine]
+            .filter(Boolean)
+            .join(" "),
+        };
+      }
+
+      const expiryLine =
+        timeTillExpiryHours <= 0
+          ? `SSL certificate for ${domain} expired at ${expiresAt}.`
+          : `SSL certificate for ${domain} expires at ${expiresAt} (in ${timeTillExpiryHours.toFixed(2)} hours).`;
+      const warning = [expiryLine, issuerLine].filter(Boolean).join(" ");
+      const checked = { ...certificate, latency: handshakeMs, type: GC.REALTIME };
 
       if (timeTillExpiryHours > degradedRemainingHours) {
-        return {
-          status: GC.UP,
-          latency,
-          type: GC.REALTIME,
-          ...sslMeta,
-          // Persist issuer on UP so recent logs / last-status can show Issued by CN/O
-          error_message: issuerLine,
-        };
+        return { ...checked, status: GC.UP };
       } else if (timeTillExpiryHours > downRemainingHours) {
-        return {
-          status: GC.DEGRADED,
-          latency,
-          type: GC.REALTIME,
-          ...sslMeta,
-          error_message: [
-            `SSL certificate for ${domain} expires at ${expiresAt} (in ${timeTillExpiryHours.toFixed(2)} hours).`,
-            issuerLine,
-          ]
-            .filter(Boolean)
-            .join(" "),
-        };
+        return { ...checked, status: GC.DEGRADED, error_message: warning };
       } else {
-        return {
-          status: GC.DOWN,
-          latency,
-          type: GC.REALTIME,
-          ...sslMeta,
-          error_message: [
-            timeTillExpiryHours <= 0
-              ? `SSL certificate for ${domain} expired at ${expiresAt}.`
-              : `SSL certificate for ${domain} expires at ${expiresAt} (in ${timeTillExpiryHours.toFixed(2)} hours).`,
-            issuerLine,
-          ]
-            .filter(Boolean)
-            .join(" "),
-        };
+        return { ...checked, status: GC.DOWN, error_message: warning };
       }
     } catch (error: unknown) {
       let errorMessage = error instanceof Error ? error.message : String(error);
@@ -215,11 +180,10 @@ class SSLCall {
         errorMessage = errorMessage.substring(0, 200) + "...";
       }
       console.log(`Error checking SSL for ${domain}:`, errorMessage);
-      const isTimeout = error instanceof SSLTimeoutError;
       return {
         status: GC.DOWN,
         latency: 0,
-        type: isTimeout ? GC.TIMEOUT : GC.ERROR,
+        type: error instanceof SSLTimeoutError ? GC.TIMEOUT : GC.ERROR,
         error_message: errorMessage,
       };
     }

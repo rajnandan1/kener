@@ -58,10 +58,7 @@ const addWorker = () => {
       status: status,
       latency: latency,
       type: type,
-      error_message: error_message,
-      expiry_at: expiry_at ?? null,
-      issuer_cn: issuer_cn ?? null,
-      issuer_o: issuer_o ?? null,
+      ...(expiry_at ? { expiry_at, issuer_cn, issuer_o } : {}),
     });
     alertingQueue.push(monitorTag, ts, status);
 

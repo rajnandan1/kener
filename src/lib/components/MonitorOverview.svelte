@@ -18,8 +18,6 @@
   import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
   import GroupMonitorPopover from "$lib/components/GroupMonitorPopover.svelte";
   import { page } from "$app/state";
-  import { GetSslSecurityState, SslSecurityLabelKey, SslSecurityTextClass, FormatSslRemaining } from "$lib/clientTools";
-  import { getSslNowMs } from "$lib/client/sslClock.svelte";
 
   interface Props {
     monitorTag: string;
@@ -66,11 +64,6 @@
   let displayAvgLatency = $derived(overviewData?.avgLatency ?? "--");
   let displayMaxLatency = $derived(overviewData?.maxLatency ?? "--");
   let displayMinLatency = $derived(overviewData?.minLatency ?? "--");
-  let isSslMonitor = $derived(overviewData?.monitorType === "SSL");
-  let sslExpiresAt = $derived(overviewData?.sslExpiresAt ?? null);
-  let sslNowMs = $derived(getSslNowMs());
-  let sslRemaining = $derived(isSslMonitor ? FormatSslRemaining(sslExpiresAt, sslNowMs) : "");
-  let sslSecurity = $derived(isSslMonitor ? GetSslSecurityState(sslExpiresAt, sslNowMs) : null);
 
   // Data for calendar/chart comes directly from API
   let displayData = $derived(overviewData?.uptimeData ?? []);
@@ -145,7 +138,7 @@
       <div>
         <Card.Title class="text-base font-medium">{dayOptions[selectedDayIndex].text}</Card.Title>
         <Card.Description class="text-xs">
-          {isSslMonitor ? $t("Status history") : $t("Status history and latency trend")}
+          {$t("Status history and latency trend")}
         </Card.Description>
       </div>
       {#if !loading && overviewData}
@@ -199,42 +192,14 @@
       <!-- Stats Summary -->
       <div class="flex gap-4">
         <div class="flex flex-1 flex-col items-start gap-1">
-          {#if isSslMonitor && sslSecurity}
-            <p class="text-2xl font-semibold {SslSecurityTextClass(sslSecurity)}">
-              {$t(SslSecurityLabelKey(sslSecurity))}
-            </p>
-            <p class="text-muted-foreground text-sm font-medium">
-              {$t("Remaining Days")}: {sslRemaining || "—"}
-            </p>
-            {#if sslExpiresAt}
-              <p class="text-muted-foreground text-xs">
-                {$t("Expires At")}: {$formatDate(sslExpiresAt, "MMMM d, yyyy HH:mm:ss")}
-              </p>
-            {/if}
-            {#if overviewData.issuerCn || overviewData.issuerO}
-              <p class="text-muted-foreground text-xs">
-                {$t("Issued By")}:
-                {#if overviewData.issuerCn}CN={overviewData.issuerCn}{/if}
-                {#if overviewData.issuerCn && overviewData.issuerO}, {/if}
-                {#if overviewData.issuerO}O={overviewData.issuerO}{/if}
-              </p>
-            {/if}
-          {:else if !isSslMonitor}
-            <p class="text-2xl font-semibold">{displayUptime}%</p>
-            <p class="text-muted-foreground text-sm font-medium">{$t("Uptime")}</p>
-          {/if}
+          <p class="text-2xl font-semibold">{displayUptime}%</p>
+          <p class="text-muted-foreground text-sm font-medium">{$t("Uptime")}</p>
         </div>
       </div>
 
       <!-- Status Bar Calendar -->
       <div class="flex flex-col gap-1">
-        <StatusBarCalendar
-          data={displayData}
-          {monitorTag}
-          monitorType={overviewData.monitorType}
-          barHeight={40}
-          radius={8}
-        />
+        <StatusBarCalendar data={displayData} {monitorTag} barHeight={40} radius={8} />
 
         <!-- Date labels -->
         <div class="flex justify-between">
@@ -260,53 +225,52 @@
         </div>
       {/if}
 
-      <!-- Latency chart is not meaningful for SSL (metric is remaining certificate time) -->
-      {#if !isSslMonitor}
-        <div class="pt-2">
-          <p class="text-muted-foreground mb-2 text-sm font-medium">
-            {$t("Latency Trend")}
-            <Popover.Root>
-              <Popover.Trigger class="text-foreground cursor-pointer underline">{latencyChartLabel}</Popover.Trigger>
-              <Popover.Content class="flex w-fit flex-col gap-2">
-                <p class="text-muted-foreground text-xs font-medium">
-                  {$t("Select latency metric to display")}
-                </p>
-                <ToggleGroup.Root
-                  type="single"
-                  spacing={2}
-                  size="sm"
-                  value={latencyMetric}
-                  onValueChange={(v) => {
-                    if (v) latencyMetric = v;
-                  }}
-                  class="flex justify-between"
-                >
-                  <ToggleGroup.Item value="average" aria-label="Average latency">{$t("Avg Latency")}</ToggleGroup.Item>
-                  <ToggleGroup.Item value="maximum" aria-label="Maximum latency">{$t("Max Latency")}</ToggleGroup.Item>
-                  <ToggleGroup.Item value="minimum" aria-label="Minimum latency">{$t("Min Latency")}</ToggleGroup.Item>
-                </ToggleGroup.Root>
-              </Popover.Content>
-            </Popover.Root>
-          </p>
+      <!-- Latency Chart -->
+      <div class="pt-2">
+        <p class="text-muted-foreground mb-2 text-sm font-medium">
+          {$t("Latency Trend")}
+          <Popover.Root>
+            <Popover.Trigger class="text-foreground cursor-pointer underline">{latencyChartLabel}</Popover.Trigger>
+            <Popover.Content class="flex w-fit flex-col gap-2">
+              <p class="text-muted-foreground text-xs font-medium">
+                {$t("Select latency metric to display")}
+              </p>
+              <ToggleGroup.Root
+                type="single"
+                spacing={2}
+                size="sm"
+                value={latencyMetric}
+                onValueChange={(v) => {
+                  if (v) latencyMetric = v;
+                }}
+                class="flex justify-between"
+              >
+                <ToggleGroup.Item value="average" aria-label="Average latency">{$t("Avg Latency")}</ToggleGroup.Item>
+                <ToggleGroup.Item value="maximum" aria-label="Maximum latency">{$t("Max Latency")}</ToggleGroup.Item>
+                <ToggleGroup.Item value="minimum" aria-label="Minimum latency">{$t("Min Latency")}</ToggleGroup.Item>
+              </ToggleGroup.Root>
+            </Popover.Content>
+          </Popover.Root>
+        </p>
 
-          <div class="mb-3 flex justify-between gap-4">
-            <div class="flex flex-col items-start gap-1">
-              <p class="text-lg font-semibold">{displayMinLatency}</p>
-              <p class="text-muted-foreground text-xs">{$t("Minimum Latency")}</p>
-            </div>
-            <div class="flex flex-col items-center gap-1">
-              <p class="text-lg font-semibold">{displayAvgLatency}</p>
-              <p class="text-muted-foreground text-xs">{$t("Average Latency")}</p>
-            </div>
-            <div class="flex flex-col items-end gap-1">
-              <p class="text-lg font-semibold">{displayMaxLatency}</p>
-              <p class="text-muted-foreground text-xs">{$t("Maximum Latency")}</p>
-            </div>
+        <!-- Latency Stats -->
+        <div class="mb-3 flex justify-between gap-4">
+          <div class="flex flex-col items-start gap-1">
+            <p class="text-lg font-semibold">{displayMinLatency}</p>
+            <p class="text-muted-foreground text-xs">{$t("Minimum Latency")}</p>
           </div>
-
-          <LatencyTrendChart data={latencyChartData} label={latencyChartLabel} height={128} />
+          <div class="flex flex-col items-center gap-1">
+            <p class="text-lg font-semibold">{displayAvgLatency}</p>
+            <p class="text-muted-foreground text-xs">{$t("Average Latency")}</p>
+          </div>
+          <div class="flex flex-col items-end gap-1">
+            <p class="text-lg font-semibold">{displayMaxLatency}</p>
+            <p class="text-muted-foreground text-xs">{$t("Maximum Latency")}</p>
+          </div>
         </div>
-      {/if}
+
+        <LatencyTrendChart data={latencyChartData} label={latencyChartLabel} height={128} />
+      </div>
     {/if}
   </Card.Content>
 </Card.Root>

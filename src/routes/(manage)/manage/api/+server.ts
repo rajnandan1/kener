@@ -9,7 +9,6 @@ import type { MonitoringStatus } from "$lib/types/status.js";
 import {
   CreateUpdateMonitor,
   UpdateMonitoringData,
-  DeleteMonitoringData,
   InsertKeyValue,
   GetMonitors,
   CreateUpdateTrigger,
@@ -233,7 +232,8 @@ export async function POST({ request, cookies }) {
         }
         status = data.status;
       }
-      resp = await DeleteMonitoringData(data.tag || undefined, data.start, data.end, status);
+      await db.deleteMonitorDataByTag(data.tag || undefined, data.start, data.end, status);
+      resp = { success: true };
     } else if (action == "cloneMonitor") {
       resp = await CloneMonitor({
         sourceTag: String(data.sourceTag || ""),

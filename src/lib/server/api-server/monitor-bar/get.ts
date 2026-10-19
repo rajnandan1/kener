@@ -1,7 +1,7 @@
 import { json, error } from "@sveltejs/kit";
 import type { APIServerRequest } from "$lib/server/types/api-server";
 import db from "$lib/server/db/db";
-import { GetDayStartTimestampUTC, GetMinuteStartNowTimestampUTC } from "$lib/server/tool";
+import { GetMinuteStartNowTimestampUTC } from "$lib/server/tool";
 import type { StatusType } from "$lib/types/status";
 import type { TimestampStatusCount } from "$lib/server/types/db";
 import { buildMonitorBarResponse } from "./shared";
@@ -28,10 +28,8 @@ export interface MonitorBarResponse {
   maxLatency: string;
   minLatency: string;
   monitorType?: string;
-  /** Absolute SSL certificate expiry timestamp in ms, when available. */
   sslExpiresAt?: number | null;
-  /** Live remaining time until expiry (e.g. "80.56d"), from latest check — not period avg. */
-  sslRemaining?: string | null;
+  sslTrusted?: boolean | null;
   issuerCn?: string | null;
   issuerO?: string | null;
 }
@@ -47,11 +45,7 @@ export default async function get(req: APIServerRequest): Promise<Response> {
   // const numberOfDaysReceived
   const days = Math.min(MAX_DAYS, Math.max(1, daysStr ? parseInt(daysStr, 10) : DEFAULT_DAYS));
   const endOfDayTodayAtTzStr = req.query.get("endOfDayTodayAtTz");
-  // Prefer the client day boundary. When omitted, use a stable UTC day end — not
-  // GetMinuteStartNowTimestampUTC() — so daily aggregates stay on one bucket grid per day.
-  const endOfDayTodayAtTz = endOfDayTodayAtTzStr
-    ? parseInt(endOfDayTodayAtTzStr, 10)
-    : GetDayStartTimestampUTC(GetMinuteStartNowTimestampUTC()) + 86400;
+  const endOfDayTodayAtTz = endOfDayTodayAtTzStr ? parseInt(endOfDayTodayAtTzStr, 10) : GetMinuteStartNowTimestampUTC();
   if (!tag) {
     return error(400, { message: "tag query parameter is required" });
   }

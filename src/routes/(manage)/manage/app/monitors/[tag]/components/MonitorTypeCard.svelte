@@ -215,6 +215,8 @@
           (typeof data.timeout !== "number" || !Number.isFinite(data.timeout) || data.timeout < 1)
         )
           return false;
+        const sslServername = (data.tlsServername || "").trim();
+        if (sslServername && !IsValidHost(sslServername)) return false;
         return true;
       }
 
@@ -454,9 +456,7 @@
                   </div>
                 </div>
                 <div class="rounded-lg border p-4 text-center">
-                  <div class="text-muted-foreground text-xs uppercase">
-                    {monitor.monitor_type === "SSL" ? "Time Remaining (ms)" : "Latency (milliseconds)"}
-                  </div>
+                  <div class="text-muted-foreground text-xs uppercase">Latency (milliseconds)</div>
                   <div class="mt-1 truncate text-2xl font-bold">
                     {testResult.latency}
                   </div>

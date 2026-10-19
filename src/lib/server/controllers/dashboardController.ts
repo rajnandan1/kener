@@ -301,11 +301,9 @@ export const BuildNotificationPayload = (
  */
 export const GetPageDashboardData = async (
   pagePath: string,
-  layoutData: LayoutServerData | Promise<LayoutServerData>,
+  layoutData: LayoutServerData,
 ): Promise<PageDashboardData | null> => {
-  // Layout must resolve first: which monitors to include depends on canSeeHiddenMonitors.
-  const resolvedLayout = await layoutData;
-  const pageData = await GetPageByPathWithMonitors(pagePath, resolvedLayout.canSeeHiddenMonitors);
+  const pageData = await GetPageByPathWithMonitors(pagePath, layoutData.canSeeHiddenMonitors);
   if (!pageData) {
     return null;
   }
@@ -341,16 +339,16 @@ export const GetPageDashboardData = async (
     updated_at: pageDetails.updated_at,
   };
 
-  let socialPagePreviewImage: string | undefined = resolvedLayout.socialPreviewImage;
-  let metaPageTitle: string | undefined = resolvedLayout.metaSiteTitle;
-  let metaPageDescription: string | undefined = resolvedLayout.metaSiteDescription;
+  let socialPagePreviewImage: string | undefined = layoutData.socialPreviewImage;
+  let metaPageTitle: string | undefined = layoutData.metaSiteTitle;
+  let metaPageDescription: string | undefined = layoutData.metaSiteDescription;
   if (!!pageDetails.page_settings_json) {
     try {
       const pageSettings = JSON.parse(pageDetails.page_settings_json);
       if (pageSettings) {
-        socialPagePreviewImage = pageSettings.socialPagePreviewImage || resolvedLayout.socialPreviewImage;
-        metaPageTitle = pageSettings.metaPageTitle || resolvedLayout.metaSiteTitle;
-        metaPageDescription = pageSettings.metaPageDescription || resolvedLayout.metaSiteDescription;
+        socialPagePreviewImage = pageSettings.socialPagePreviewImage || layoutData.socialPreviewImage;
+        metaPageTitle = pageSettings.metaPageTitle || layoutData.metaSiteTitle;
+        metaPageDescription = pageSettings.metaPageDescription || layoutData.metaSiteDescription;
       }
     } catch (e) {
       // Ignore JSON parsing errors and fallback to layout data or defaults
@@ -371,7 +369,7 @@ export const GetPageDashboardData = async (
       metaPageDescription,
     };
   }
-  const eventSettings = resolvedLayout.eventDisplaySettings;
+  const eventSettings = layoutData.eventDisplaySettings;
   const showInlineEvents = eventSettings.showInlineEvents === true;
   // Fetch all dashboard data in parallel (respecting feature toggles)
   const [latestData, parsedMonitors, ongoingIncidents, ongoingMaintenances, upcomingMaintenances] = await Promise.all([
@@ -379,7 +377,7 @@ export const GetPageDashboardData = async (
     GetMonitorsParsed({
       tags: monitorTags,
       status: "ACTIVE",
-      is_hidden: resolvedLayout.canSeeHiddenMonitors ? undefined : "NO",
+      is_hidden: layoutData.canSeeHiddenMonitors ? undefined : "NO",
     }),
     showInlineEvents && eventSettings.incidents.enabled && eventSettings.incidents.ongoing.show
       ? GetOngoingIncidentsForMonitorList(monitorTags)

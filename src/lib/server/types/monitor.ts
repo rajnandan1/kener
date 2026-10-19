@@ -62,7 +62,7 @@ export interface SslMonitorTypeData {
   timeout?: number;
   /** Override SNI; useful when `host` is an IP. */
   tlsServername?: string;
-  /** When true, skip cert chain verification so expiry can still be read. */
+  /** When true, a certificate that fails verification does not make the check DOWN. */
   allowSelfSignedCert?: boolean;
 }
 

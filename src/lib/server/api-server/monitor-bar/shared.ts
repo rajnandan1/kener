@@ -1,19 +1,17 @@
 import db from "$lib/server/db/db";
 import GC from "$lib/global-constants";
 import type { StatusType } from "$lib/types/status";
-import type { MonitorRecord, TimestampStatusCount, MonitoringData } from "$lib/server/types/db";
+import type { MonitorRecord, MonitoringData, TimestampStatusCount } from "$lib/server/types/db";
 import { UptimeCalculator } from "$lib/server/tool";
 import type { MonitorBarResponse } from "./get";
-import { ResolveSslExpiresAtMs, FormatSslRemaining, ParseSslIssuerFromMessage } from "$lib/clientTools";
-import { GetLastMonitoringValue } from "$lib/server/cache/setGet.js";
-import { mergeLatestMonitoringWithSslCache } from "$lib/server/controllers/monitorsController";
+import { ResolveSslExpiresAtMs } from "$lib/clientTools";
+import { AttachSslCacheFields } from "$lib/server/controllers/monitorsController";
 
 interface ParsedMonitorSettings {
   uptime_formula_numerator?: string;
   uptime_formula_denominator?: string;
 }
 
-/** Parse monitor_settings_json; invalid JSON yields an empty object. */
 const parseMonitorSettings = (value: string | null): ParsedMonitorSettings => {
   if (!value) return {};
   try {
@@ -24,7 +22,6 @@ const parseMonitorSettings = (value: string | null): ParsedMonitorSettings => {
   }
 };
 
-/** Fill gaps in daily uptime buckets so the calendar always has `days` points. */
 const fillMissingUptimeData = (
   rawUptimeData: TimestampStatusCount[],
   startTime: number,
@@ -55,7 +52,6 @@ const fillMissingUptimeData = (
   return uptimeData;
 };
 
-/** Load aggregates + latest sample and build a monitor-bar API payload. */
 export const buildMonitorBarResponse = async (
   monitor: MonitorRecord,
   days: number,
@@ -63,13 +59,12 @@ export const buildMonitorBarResponse = async (
   latestStatus?: StatusType,
 ): Promise<MonitorBarResponse> => {
   const startTime = endOfDayTodayAtTz - days * 24 * 60 * 60;
-  const [rawUptimeData, latestData, cached] = await Promise.all([
+  const isSsl = monitor.monitor_type === "SSL";
+  const [rawUptimeData, latestData] = await Promise.all([
     db.getStatusCountsByInterval(monitor.tag, startTime, 86400, days),
-    db.getLatestMonitoringData(monitor.tag),
-    GetLastMonitoringValue(monitor.tag).catch(() => null),
+    latestStatus && !isSsl ? Promise.resolve(null) : db.getLatestMonitoringData(monitor.tag),
   ]);
-
-  const latest = mergeLatestMonitoringWithSslCache(latestData, cached);
+  const latest = isSsl ? await AttachSslCacheFields(latestData) : latestData;
 
   return buildMonitorBarResponseFromRawData(
     monitor,
@@ -81,39 +76,22 @@ export const buildMonitorBarResponse = async (
   );
 };
 
-/** Map pre-fetched uptime rows and latest sample into a monitor-bar response. */
 export const buildMonitorBarResponseFromRawData = (
   monitor: MonitorRecord,
   rawUptimeData: TimestampStatusCount[],
   days: number,
   endOfDayTodayAtTz: number,
   latestStatus?: StatusType,
-  latestData?: MonitoringData | { timestamp: number; latency: number | null; error_message?: string | null } | null,
+  latestData?: MonitoringData | null,
 ): MonitorBarResponse => {
   const startTime = endOfDayTodayAtTz - days * 24 * 60 * 60;
+  const isSsl = monitor.monitor_type === "SSL";
   const monitorSettings = parseMonitorSettings(monitor.monitor_settings_json);
   const uptimeCalculationResult = UptimeCalculator(
     rawUptimeData,
     monitorSettings.uptime_formula_numerator,
     monitorSettings.uptime_formula_denominator,
   );
-
-  const sslExpiresAt =
-    monitor.monitor_type === "SSL" ? ResolveSslExpiresAtMs(latestData as MonitoringData | null | undefined) : null;
-  const sslRemaining = monitor.monitor_type === "SSL" ? FormatSslRemaining(sslExpiresAt) || null : null;
-
-  let issuerCn: string | null = null;
-  let issuerO: string | null = null;
-  if (monitor.monitor_type === "SSL" && latestData) {
-    const cached = latestData as MonitoringData;
-    issuerCn = cached.issuer_cn ?? null;
-    issuerO = cached.issuer_o ?? null;
-    if (!issuerCn && !issuerO) {
-      const parsed = ParseSslIssuerFromMessage(cached.error_message);
-      issuerCn = parsed.issuer_cn;
-      issuerO = parsed.issuer_o;
-    }
-  }
 
   return {
     name: monitor.name,
@@ -128,9 +106,9 @@ export const buildMonitorBarResponseFromRawData = (
     maxLatency: uptimeCalculationResult.maxLatency,
     minLatency: uptimeCalculationResult.minLatency,
     monitorType: monitor.monitor_type,
-    sslExpiresAt,
-    sslRemaining,
-    issuerCn,
-    issuerO,
+    sslExpiresAt: isSsl ? ResolveSslExpiresAtMs(latestData) : null,
+    sslTrusted: isSsl && latestData?.expiry_at ? latestData.type !== GC.ERROR : null,
+    issuerCn: isSsl ? (latestData?.issuer_cn ?? null) : null,
+    issuerO: isSsl ? (latestData?.issuer_o ?? null) : null,
   };
 };

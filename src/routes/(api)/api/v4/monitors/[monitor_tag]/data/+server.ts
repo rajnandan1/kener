@@ -167,7 +167,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   // Update the cache so group monitors (and other cache consumers) see the latest status
   const latestData = await db.getLatestMonitoringData(monitorTag);
   if (latestData) {
-    await SetLastMonitoringValue(monitorTag, latestData, { force: true });
+    await SetLastMonitoringValue(monitorTag, latestData);
   }
 
   // MANUAL samples are alert-visible (docs/adr/0005), so re-evaluate alerts once for the

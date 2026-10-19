@@ -14,15 +14,10 @@ import {
   CloneMonitor,
   CreateMonitor,
   CreateUpdateMonitor,
-  combineCachedAndDbLatest,
   mergeLatestMonitoringWithSslCache,
-  mergeStatusCountsByMonitor,
-  statusCountsCacheKey,
-  statusCountsHistoryCacheKey,
-  statusCountsTodayStart,
-} from "./monitorsController.js";
+} from "./monitorsController";
 import { HEARTBEAT_SECRET_RULE } from "$lib/anywhere";
-import type { MonitoringData, TimestampStatusCountByMonitor } from "../types/db.js";
+import type { MonitoringData } from "../types/db.js";
 
 const mockedDb = vi.mocked(db);
 
@@ -174,132 +169,21 @@ describe("monitor save: heartbeat secret", () => {
   });
 });
 
-const row = (tag: string, status: string): MonitoringData => ({
-  monitor_tag: tag,
-  timestamp: 1,
-  status,
-  latency: 10,
-  type: "REALTIME",
-});
-
-const day = (tag: string, ts: number): TimestampStatusCountByMonitor => ({
-  monitor_tag: tag,
-  ts,
-  countOfUp: 1,
-  countOfDown: 0,
-  countOfDegraded: 0,
-  countOfMaintenance: 0,
-  avgLatency: 10,
-  maxLatency: 10,
-  minLatency: 10,
-});
-
-describe("combineCachedAndDbLatest", () => {
-  it("prefers cache hits and fills misses from DB in tag order", () => {
-    const cached = [row("a", "UP"), null, row("c", "DOWN")];
-    const fromDb = [row("b", "DEGRADED")];
-    expect(combineCachedAndDbLatest(["a", "b", "c"], cached, fromDb)).toEqual([
-      row("a", "UP"),
-      row("b", "DEGRADED"),
-      row("c", "DOWN"),
-    ]);
-  });
-
-  it("omits tags that are missing from both cache and DB", () => {
-    expect(combineCachedAndDbLatest(["a", "b"], [null, null], [row("a", "UP")])).toEqual([row("a", "UP")]);
-  });
-});
-
 describe("mergeLatestMonitoringWithSslCache", () => {
-  it("attaches Redis SSL fields when timestamps match", () => {
-    const fromDb = { ...row("ssl", "UP"), timestamp: 100, latency: 0 };
-    const cached = {
-      ...row("ssl", "UP"),
-      timestamp: 100,
-      latency: 0,
-      expiry_at: "2020-01-01T00:00:00.000Z",
-      issuer_cn: "R3",
-      issuer_o: "Let's Encrypt",
-    };
-    expect(mergeLatestMonitoringWithSslCache(fromDb, cached)).toEqual({
-      ...fromDb,
-      expiry_at: "2020-01-01T00:00:00.000Z",
-      issuer_cn: "R3",
-      issuer_o: "Let's Encrypt",
-    });
+  const dbRow: MonitoringData = { monitor_tag: "ssl", timestamp: 100, status: "UP", latency: 42, type: "REALTIME" };
+  const sslFields = { expiry_at: "2030-01-01T00:00:00.000Z", issuer_cn: "R3", issuer_o: "Let's Encrypt" };
+
+  it("attaches Redis SSL fields when the cache holds the same check", () => {
+    expect(mergeLatestMonitoringWithSslCache(dbRow, { ...dbRow, ...sslFields })).toEqual({ ...dbRow, ...sslFields });
   });
 
-  it("ignores stale cache when DB has a newer check", () => {
-    const fromDb = { ...row("ssl", "DOWN"), timestamp: 200, latency: 0 };
-    const cached = {
-      ...row("ssl", "UP"),
-      timestamp: 100,
-      expiry_at: "2030-01-01T00:00:00.000Z",
-      issuer_cn: "stale",
-    };
-    expect(mergeLatestMonitoringWithSslCache(fromDb, cached)).toEqual(fromDb);
+  it("ignores a cache entry from another check", () => {
+    expect(mergeLatestMonitoringWithSslCache(dbRow, { ...dbRow, ...sslFields, timestamp: 40 })).toEqual(dbRow);
+    expect(mergeLatestMonitoringWithSslCache(dbRow, { ...dbRow, ...sslFields, status: "DOWN" })).toEqual(dbRow);
+    expect(mergeLatestMonitoringWithSslCache(dbRow, { ...dbRow, ...sslFields, type: "MANUAL" })).toEqual(dbRow);
   });
 
-  it("does not keep SSL metadata when status/type changed at the same timestamp", () => {
-    const fromDb = { ...row("ssl", "DOWN"), timestamp: 100, type: "MANUAL", latency: 0 };
-    const cached = {
-      ...row("ssl", "UP"),
-      timestamp: 100,
-      type: "REALTIME",
-      expiry_at: "2030-01-01T00:00:00.000Z",
-      issuer_cn: "R3",
-    };
-    expect(mergeLatestMonitoringWithSslCache(fromDb, cached)).toEqual(fromDb);
-  });
-
-  it("falls back to cache when DB has no row", () => {
-    const cached = { ...row("ssl", "UP"), expiry_at: "2030-01-01T00:00:00.000Z" };
-    expect(mergeLatestMonitoringWithSslCache(null, cached)).toEqual(cached);
-  });
-});
-
-describe("statusCountsCacheKey", () => {
-  it("is per-tag so pages can share monitor aggregates", () => {
-    expect(statusCountsCacheKey("a", 1, 86400, 89)).toBe("status_counts:a:1:86400:89");
-    expect(statusCountsCacheKey("a", 1, 86400, 89)).not.toBe(statusCountsCacheKey("b", 1, 86400, 89));
-  });
-});
-
-describe("statusCountsHistoryCacheKey", () => {
-  it("keys completed-day history by todayStart so the query origin and Redis identity match", () => {
-    const todayStart = 1_700_000_000 + 89 * 86400;
-    expect(statusCountsHistoryCacheKey("a", todayStart, 89)).toBe(`status_counts:a:until:${todayStart}:89`);
-    expect(statusCountsHistoryCacheKey("a", todayStart, 89)).not.toBe(
-      statusCountsHistoryCacheKey("b", todayStart, 89),
-    );
-  });
-});
-
-describe("statusCountsTodayStart", () => {
-  it("returns the last daily bucket start for a multi-day window", () => {
-    const start = 1_700_000_000;
-    expect(statusCountsTodayStart(start, 86400, 90)).toBe(start + 89 * 86400);
-  });
-
-  it("returns null for today-only or non-daily windows so those stay uncached", () => {
-    expect(statusCountsTodayStart(1, 86400, 1)).toBeNull();
-    expect(statusCountsTodayStart(1, 3600, 24)).toBeNull();
-  });
-});
-
-describe("mergeStatusCountsByMonitor", () => {
-  it("uses cache hits and fills misses from DB in request tag order", () => {
-    const cached: Array<TimestampStatusCountByMonitor[] | null> = [[day("a", 10)], null, [day("c", 30)]];
-    const fromDb = [day("b", 20), day("b", 21)];
-    expect(mergeStatusCountsByMonitor(["a", "b", "c"], cached, fromDb)).toEqual([
-      day("a", 10),
-      day("b", 20),
-      day("b", 21),
-      day("c", 30),
-    ]);
-  });
-
-  it("treats empty DB results as an empty series for a missing tag", () => {
-    expect(mergeStatusCountsByMonitor(["a"], [null], [])).toEqual([]);
+  it("returns null when the DB has no row, even if Redis still has one", () => {
+    expect(mergeLatestMonitoringWithSslCache(null, { ...dbRow, ...sslFields })).toBeNull();
   });
 });

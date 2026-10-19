@@ -11,19 +11,9 @@ import {
 import type { TimestampStatusCount } from "$lib/server/types/db";
 import { GetNowTimestampUTC, UptimeCalculator } from "$lib/server/tool";
 import GC from "$lib/global-constants.js";
-import {
-  GetStatusColor,
-  GetStatusSummary,
-  ParseLatency,
-  ResolveSslExpiresAtMs,
-  ParseSslIssuerFromMessage,
-} from "$lib/clientTools";
-import {
-  GetMonitorsParsed,
-  mergeLatestMonitoringWithSslCache,
-} from "$lib/server/controllers/monitorsController";
+import { GetStatusColor, GetStatusSummary, ParseLatency, ResolveSslExpiresAtMs } from "$lib/clientTools";
+import { AttachSslCacheFields, GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
 import type { GroupMonitorTypeData } from "$lib/server/types/monitor";
-import { GetLastMonitoringValue } from "$lib/server/cache/setGet.js";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const { monitor_tag } = params;
@@ -57,15 +47,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
   //last known status
   const lastStatus = await db.getLatestMonitoringData(monitor.tag);
-  // Do not pass a DB fetcher here — caching a DB row would wipe Redis SSL-only fields.
-  const cachedStatus =
-    monitor.monitor_type === "SSL"
-      ? await GetLastMonitoringValue(monitor.tag).catch(() => null)
-      : null;
-  const sslStatus =
-    monitor.monitor_type === "SSL"
-      ? mergeLatestMonitoringWithSslCache(lastStatus, cachedStatus)
-      : lastStatus;
+  const sslStatus = monitor.monitor_type === "SSL" ? await AttachSslCacheFields(lastStatus) : null;
   //use uptime calculator tool to parse
   let item: TimestampStatusCount = {
     ts: lastStatus ? lastStatus.timestamp : GetNowTimestampUTC(),
@@ -77,16 +59,6 @@ export const load: PageServerLoad = async ({ params, parent }) => {
     maxLatency: lastStatus && lastStatus.latency ? lastStatus.latency : 0,
     minLatency: lastStatus && lastStatus.latency ? lastStatus.latency : 0,
   };
-
-  const sslExpiresAt =
-    monitor.monitor_type === "SSL" ? ResolveSslExpiresAtMs(sslStatus) : null;
-  let issuerCn = sslStatus?.issuer_cn ?? null;
-  let issuerO = sslStatus?.issuer_o ?? null;
-  if (monitor.monitor_type === "SSL" && !issuerCn && !issuerO) {
-    const parsed = ParseSslIssuerFromMessage(sslStatus?.error_message);
-    issuerCn = parsed.issuer_cn;
-    issuerO = parsed.issuer_o;
-  }
 
   //get status summary
   let extendedTags: string[] = [];
@@ -129,9 +101,10 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       monitorLastStatusTimestamp: item.ts,
       monitorLastLatency: ParseLatency(item.avgLatency),
       monitorType: monitor.monitor_type,
-      monitorSslExpiresAt: sslExpiresAt,
-      monitorIssuerCn: issuerCn,
-      monitorIssuerO: issuerO,
+      monitorSslExpiresAt: ResolveSslExpiresAtMs(sslStatus),
+      monitorSslTrusted: sslStatus?.expiry_at ? sslStatus.type !== GC.ERROR : null,
+      monitorIssuerCn: sslStatus?.issuer_cn ?? null,
+      monitorIssuerO: sslStatus?.issuer_o ?? null,
       ongoingIncidents,
       ongoingMaintenances,
       upcomingMaintenances,
