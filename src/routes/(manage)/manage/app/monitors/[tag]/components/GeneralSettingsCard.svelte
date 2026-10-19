@@ -60,8 +60,7 @@
             mimeType: file.type,
             fileName: file.name,
             maxWidth: 128,
-            maxHeight: 128,
-            prefix: "monitor_"
+            maxHeight: 128
           }
         })
       });
@@ -278,7 +277,8 @@
           }}
         />
         <p class="text-muted-foreground text-xs">
-          Require this many consecutive checks before a status change is recorded. 1 = off (record every check immediately).
+          Require this many consecutive checks before a status change is recorded. 1 = off (record every check
+          immediately).
         </p>
       </div>
     </div>
