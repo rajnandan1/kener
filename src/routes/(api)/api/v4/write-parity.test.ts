@@ -36,6 +36,7 @@ vi.mock("$lib/server/controllers/oidcController", async (importOriginal) => ({
 }));
 
 import db from "$lib/server/db/db";
+import GC from "$lib/global-constants";
 import { GenerateToken } from "$lib/server/controllers/commonController";
 import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
 import { GetNowTimestampUTC, GetMinuteStartNowTimestampUTC } from "$lib/server/tool";
@@ -79,12 +80,24 @@ const COUNTED: Record<string, string | null> = {
   site_data: null,
 };
 
-async function signals(): Promise<Record<string, number>> {
-  const out: Record<string, number> = {
+// Columns that differ between two runs of one write: the timestamps, and the surface that made the write.
+const UNCOMPARED = new Set(["created_at", "updated_at", "incident_source"]);
+const comparable = (value: unknown): unknown =>
+  value && typeof value === "object" && !Array.isArray(value)
+    ? Object.fromEntries(Object.entries(value).filter(([key]) => !UNCOMPARED.has(key)))
+    : value;
+const byContent = (a: unknown, b: unknown): number => JSON.stringify(a).localeCompare(JSON.stringify(b));
+
+async function signals(): Promise<Record<string, unknown>> {
+  const lastStatusWrites = setCache.mock.calls.filter(([key]) => key.endsWith(":last_status"));
+  const out: Record<string, unknown> = {
     "subscriber emails queued": subscriberQueue.push.mock.calls.length,
     "alert evaluations queued": alertingQueue.push.mock.calls.length,
-    "last-status cache writes": setCache.mock.calls.filter(([key]) => key.endsWith(":last_status")).length,
+    "last-status cache writes": lastStatusWrites.length,
     "OIDC config cache clears": ClearOidcConfigCache.mock.calls.length,
+    "subscriber email arguments": subscriberQueue.push.mock.calls.map((args) => args.map(comparable)),
+    "alert evaluation arguments": alertingQueue.push.mock.calls,
+    "last-status cache values": lastStatusWrites.map((args) => args.map(comparable)),
   };
   const now = GetNowTimestampUTC();
   out["incidents shown as ongoing"] = (
@@ -93,10 +106,11 @@ async function signals(): Promise<Record<string, number>> {
   for (const [table, column] of Object.entries(COUNTED)) {
     const rows: Record<string, unknown>[] = await knex(table).select("*");
     out[`${table} rows`] = rows.length;
+    out[`${table} content`] = rows.map(comparable).sort(byContent);
     if (!column) continue;
     for (const row of rows) {
       const key = `${table} ${column}=${row[column]}`;
-      out[key] = (out[key] ?? 0) + 1;
+      out[key] = ((out[key] as number | undefined) ?? 0) + 1;
     }
   }
   return out;
@@ -122,7 +136,7 @@ async function clearTables(): Promise<void> {
     const names = rows.map((r) => Object.values(r)[0]).filter((name) => !SEEDED_ONCE.has(name));
     await knex.transaction(async (trx) => {
       await trx.raw("set foreign_key_checks = 0");
-      for (const name of names) await trx(name).del();
+      for (const name of names) await trx.raw("truncate table ??", [name]);
       await trx.raw("set foreign_key_checks = 1");
     });
   } else {
@@ -130,6 +144,9 @@ async function clearTables(): Promise<void> {
       "select name from sqlite_master where type = 'table' and name not like 'sqlite_%'",
     );
     for (const { name } of tables) if (!SEEDED_ONCE.has(name)) await knex(name).del();
+    await knex("sqlite_sequence")
+      .whereNotIn("name", [...SEEDED_ONCE])
+      .del();
   }
 }
 
@@ -150,7 +167,17 @@ async function seed() {
   });
   await knex("users_roles").insert({ users_id: adminId, roles_id: "admin" });
 
-  const monitorRow = { status: "ACTIVE", is_hidden: "NO", monitor_type: "NONE", type_data: "{}", cron: "* * * * *" };
+  const monitorRow = {
+    status: "ACTIVE",
+    is_hidden: "NO",
+    monitor_type: "NONE",
+    type_data: "{}",
+    cron: "* * * * *",
+    monitor_settings_json: JSON.stringify({
+      uptime_formula_numerator: GC.defaultNumeratorStr,
+      uptime_formula_denominator: GC.defaultDenominatorStr,
+    }),
+  };
   await knex("monitors").insert([
     { tag: "api", name: "Public API", ...monitorRow },
     { tag: "web", name: "Website", ...monitorRow },
@@ -419,7 +446,12 @@ const pairs: Pair[] = [
   ...(["scheduledMaintenance", "cancelledMaintenance"] as const).map(
     (which): Pair => ({
       name: `PATCH /maintenances/{id} moving a one-time ${which.replace("Maintenance", "")} event = updateMaintenance`,
-      api: async (f) => v4(maintenance.PATCH, { start_date_time: FUTURE + 86400 }, await maintenanceLocals(f[which])),
+      api: async (f) =>
+        v4(
+          maintenance.PATCH,
+          { start_date_time: FUTURE + 86400, monitors: [{ monitor_tag: "api", impact: "MAINTENANCE" }] },
+          await maintenanceLocals(f[which]),
+        ),
       dashboard: (f) =>
         dashboard("updateMaintenance", {
           id: f[which],
@@ -566,6 +598,7 @@ const pairs: Pair[] = [
         page_logo: null,
       });
       await dashboard("removeMonitorFromPage", { page_id: f.statusPage, monitor_tag: "api" });
+      await dashboard("reorderPageMonitors", { page_id: f.statusPage, monitor_tags: ["web"] });
     },
   },
   {
@@ -715,5 +748,44 @@ describe("v4 writes the dashboard cannot make keep working through the dashboard
       start_date_time: FUTURE,
       end_date_time: FUTURE + 3600,
     });
+  });
+
+  it("PATCH /incidents/{id} returns 400 for a new start after the stored end, and saves nothing", async () => {
+    const f = await seed();
+    const before = await signals();
+    const response = await send(
+      incident.PATCH,
+      { start_date_time: T0 + 1200 },
+      await incidentLocals(f.resolvedIncident),
+    );
+
+    expect(response.status).toBe(400);
+    expect(await signals()).toEqual(before);
+  });
+
+  it("PATCH /incidents/{id} with end_date_time null takes a new start after the old end", async () => {
+    const f = await seed();
+    const response = await send(
+      incident.PATCH,
+      { start_date_time: T0 + 1200, end_date_time: null },
+      await incidentLocals(f.resolvedIncident),
+    );
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).incident).toMatchObject({ start_date_time: T0 + 1200, end_date_time: null });
+  });
+
+  it("POST /pages and PATCH /pages/{page_path} return 400 for a repeated monitor tag, and save nothing", async () => {
+    for (const write of [
+      () => send(pages.POST, { page_path: "eu", page_title: "EU", page_header: "EU", monitors: ["api", "api"] }),
+      async () => send(page.PATCH, { monitors: ["web", "api", "web"] }, await pageLocals("status")),
+    ]) {
+      await seed();
+      const before = await signals();
+      const response = await write();
+
+      expect(response.status).toBe(400);
+      expect(await signals()).toEqual(before);
+    }
   });
 });

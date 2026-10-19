@@ -366,18 +366,19 @@ export const UpdateIncident = async (incident_id: number, data: IncidentUpdateIn
     throw new Error(`Incident with id ${incident_id} does not exist`);
   }
 
-  let endDateTime = data.end_date_time;
-  if (endDateTime && endDateTime < (data.start_date_time || incidentExists.start_date_time)) {
+  const startDateTime = data.start_date_time || incidentExists.start_date_time;
+  const endDateTime = data.end_date_time || incidentExists.end_date_time;
+  if ((data.start_date_time || data.end_date_time) && endDateTime && endDateTime < startDateTime) {
     throw new Error("End date time cannot be less than start date time");
   }
 
   let updateObject: Partial<IncidentRecord> & { id: number } = {
     id: incident_id,
     title: data.title || incidentExists.title,
-    start_date_time: data.start_date_time || incidentExists.start_date_time,
+    start_date_time: startDateTime,
     status: data.status || incidentExists.status,
     state: data.state || incidentExists.state,
-    end_date_time: data.end_date_time || incidentExists.end_date_time,
+    end_date_time: endDateTime,
     is_global: data.is_global !== undefined ? data.is_global : incidentExists.is_global,
   };
 

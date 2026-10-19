@@ -124,6 +124,15 @@ export const POST: RequestHandler = async ({ request }) => {
         return json(errorResponse, { status: 400 });
       }
     }
+    if (new Set(body.monitors).size !== body.monitors.length) {
+      const errorResponse: BadRequestResponse = {
+        error: {
+          code: "BAD_REQUEST",
+          message: "monitors must not list a monitor tag twice",
+        },
+      };
+      return json(errorResponse, { status: 400 });
+    }
   }
 
   // Validate page settings if provided
@@ -145,7 +154,7 @@ export const POST: RequestHandler = async ({ request }) => {
     page_header: body.page_header.trim(),
     page_subheader: body.page_subheader ?? null,
     page_logo: body.page_logo ?? null,
-    page_settings_json: applyPageSettingsPatch(null, body.page_settings),
+    page_settings_json: body.page_settings === undefined ? null : applyPageSettingsPatch(null, body.page_settings),
   };
 
   const createdPage = await CreatePage(pageData);

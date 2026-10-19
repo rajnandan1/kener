@@ -183,6 +183,15 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
         return json(errorResponse, { status: 400 });
       }
     }
+    if (new Set(body.monitors).size !== body.monitors.length) {
+      const errorResponse: BadRequestResponse = {
+        error: {
+          code: "BAD_REQUEST",
+          message: "monitors must not list a monitor tag twice",
+        },
+      };
+      return json(errorResponse, { status: 400 });
+    }
   }
 
   // Validate page_settings if provided

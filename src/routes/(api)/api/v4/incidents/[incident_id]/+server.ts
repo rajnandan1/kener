@@ -133,15 +133,15 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   }
 
   try {
+    if (body.end_date_time === null) {
+      await ClearIncidentEndTime(existingIncident.id);
+    }
     await UpdateIncident(existingIncident.id, {
       title: body.title,
       start_date_time:
         body.start_date_time !== undefined ? GetMinuteStartTimestampUTC(body.start_date_time) : undefined,
       end_date_time: body.end_date_time ? GetMinuteStartTimestampUTC(body.end_date_time) : undefined,
     });
-    if (body.end_date_time === null) {
-      await ClearIncidentEndTime(existingIncident.id);
-    }
   } catch (err) {
     const errorResponse: BadRequestResponse = {
       error: {
