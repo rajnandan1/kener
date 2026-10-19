@@ -276,7 +276,6 @@ interface Pair {
   name: string;
   api: (f: Fixture) => Promise<void>;
   dashboard: (f: Fixture) => Promise<unknown>;
-  openGap?: string;
 }
 
 const pairs: Pair[] = [
@@ -522,7 +521,6 @@ const pairs: Pair[] = [
         latency: 100,
         deviation: 0,
       }),
-    openGap: "the dashboard does not queue an alert evaluation or write the last-status cache",
   },
   {
     name: "PATCH /monitors/{tag}/data/{timestamp} = updateMonitoringData",
@@ -539,7 +537,6 @@ const pairs: Pair[] = [
         latency: 100,
         deviation: 0,
       }),
-    openGap: "the dashboard does not queue an alert evaluation or write the last-status cache",
   },
   {
     name: "POST /pages = createPage + addMonitorToPage",
@@ -608,16 +605,13 @@ afterAll(async () => {
 });
 
 describe("a v4 write leaves through the same exits as the same dashboard write", () => {
-  for (const pair of pairs) {
-    const test = pair.openGap ? it.fails : it;
-    test(pair.openGap ? `${pair.name} (open gap: ${pair.openGap})` : pair.name, async () => {
-      await pair.api(await seed());
-      const api = await signals();
-      await pair.dashboard(await seed());
-      const dashboard = await signals();
-      expect(api).toEqual(dashboard);
-    });
-  }
+  it.each(pairs)("$name", async (pair) => {
+    await pair.api(await seed());
+    const api = await signals();
+    await pair.dashboard(await seed());
+    const dashboard = await signals();
+    expect(api).toEqual(dashboard);
+  });
 });
 
 describe("v4 writes the dashboard cannot make keep working through the dashboard controllers", () => {
