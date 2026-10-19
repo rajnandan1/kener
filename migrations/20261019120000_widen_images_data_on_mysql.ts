@@ -12,6 +12,10 @@ export async function up(knex: Knex): Promise<void> {
 
 export async function down(knex: Knex): Promise<void> {
   if (!isMysql(knex) || !(await knex.schema.hasColumn("images", "data"))) return;
+  const tooLong = await knex("images").whereRaw("length(data) > 65535").first("id");
+  if (tooLong) {
+    throw new Error(`Cannot change images.data back to text: image ${tooLong.id} is longer than 65,535 bytes`);
+  }
   await knex.schema.alterTable("images", (table) => {
     table.text("data").notNullable().alter();
   });
