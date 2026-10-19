@@ -121,18 +121,17 @@ export async function uploadImage(data: ImageUploadData) {
   const { data: stored, info } = await (keepJpeg ? resized.jpeg({ quality: 85 }) : resized.png())
     .toBuffer({ resolveWithObject: true })
     .catch(unreadable);
-  const mime_type = keepJpeg ? "image/jpeg" : "image/png";
-  const id = `${createHash("sha256").update(stored).digest("hex").slice(0, 16)}.${keepJpeg ? "jpg" : "png"}`;
-
-  await db.insertImage({
-    id,
+  const record = {
+    id: `${createHash("sha256").update(stored).digest("hex").slice(0, 16)}.${keepJpeg ? "jpg" : "png"}`,
     data: stored.toString("base64"),
-    mime_type,
+    mime_type: keepJpeg ? "image/jpeg" : "image/png",
     original_name: fileName || null,
     width: info.width,
     height: info.height,
     size: stored.length,
-  });
+  };
+  await db.insertImage(record);
 
-  return { id, url: `/assets/images/${id}`, mime_type, width: info.width, height: info.height, size: stored.length };
+  const { id, data: _data, original_name: _originalName, ...details } = record;
+  return { id, url: `/assets/images/${id}`, ...details };
 }
