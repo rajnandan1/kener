@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import sharp from "sharp";
 import type { Knex } from "knex";
 
@@ -140,6 +140,23 @@ describe("uploadImage", () => {
     const stored = await sharp((await serve(image.id)).bytes).metadata();
     expect([stored.width, stored.height]).toEqual([256, 256]);
     expect([image.width, image.height]).toEqual([256, 256]);
+  });
+
+  it("never stores an image cut short: an upload either fails and stores nothing, or stores bytes that hash to its ID", async () => {
+    const noisy = await sharp(randomBytes(160 * 160 * 3), { raw: { width: 160, height: 160, channels: 3 } })
+      .png()
+      .toBuffer();
+    const base64 = noisy.toString("base64");
+    expect(base64.length).toBeGreaterThan(65_535);
+
+    const [upload] = await Promise.allSettled([uploadImage({ base64, mimeType: "image/png" })]);
+
+    if (upload.status === "rejected") {
+      expect(await db.getAllImages()).toHaveLength(0);
+      return;
+    }
+    const { bytes } = await serve(upload.value.id);
+    expect(upload.value.id).toBe(`${createHash("sha256").update(bytes).digest("hex").slice(0, 16)}.png`);
   });
 
   it("states the real upload limit when the image is too large", async () => {

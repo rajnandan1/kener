@@ -1,6 +1,6 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import type { BadRequestResponse, UploadImageRequest, UploadImageResponse } from "$lib/types/api";
-import { uploadImage } from "$lib/server/controllers/imageController";
+import { ImageUploadError, uploadImage } from "$lib/server/controllers/imageController";
 
 function badRequest(message: string): Response {
   const errorResponse: BadRequestResponse = { error: { code: "BAD_REQUEST", message } };
@@ -46,6 +46,8 @@ export const POST: RequestHandler = async ({ request }) => {
     const response: UploadImageResponse = { image };
     return json(response, { status: 201 });
   } catch (err) {
-    return badRequest(err instanceof Error ? err.message : "Failed to upload image");
+    if (err instanceof ImageUploadError) return badRequest(err.message);
+    console.error("POST /api/v4/images failed:", err);
+    return json({ error: { code: "INTERNAL_ERROR", message: "Failed to upload image" } }, { status: 500 });
   }
 };
