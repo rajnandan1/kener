@@ -88,6 +88,11 @@ describe("POST /api/v4/images", () => {
       "Image is too large. Maximum upload size is 2MB",
     ],
     [
+      "a file_name longer than 255 characters",
+      { base64: tinyPng, mime_type: "image/png", file_name: `${"a".repeat(252)}.png` },
+      "File name must be 255 characters or fewer",
+    ],
+    [
       "bytes that are not an image",
       { base64: Buffer.from("not an image").toString("base64"), mime_type: "image/png" },
       "Could not read image data",

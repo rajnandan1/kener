@@ -37,6 +37,10 @@ export async function uploadImage(data: ImageUploadData) {
     throw new ImageUploadError(`Invalid image type. Allowed types: ${allowedMimeTypes.join(", ")}`);
   }
 
+  if (fileName && fileName.length > 255) {
+    throw new ImageUploadError("File name must be 255 characters or fewer");
+  }
+
   const imageBuffer = Buffer.from(base64, "base64");
   if (!imageBuffer.length) {
     throw new ImageUploadError("Invalid image data");

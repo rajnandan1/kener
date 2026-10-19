@@ -2591,6 +2591,7 @@
           },
           "file_name": {
             "type": "string",
+            "maxLength": 255,
             "description": "Stored as the image's original name."
           },
           "max_width": {
