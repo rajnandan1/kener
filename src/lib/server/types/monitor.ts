@@ -16,6 +16,8 @@ export interface MonitoringResult {
   issuer_cn?: string | null;
   /** Certificate issuer Organization (O), SSL checks only. */
   issuer_o?: string | null;
+  /** False when the certificate failed chain or host name verification, SSL checks only. */
+  cert_trusted?: boolean;
 }
 
 export interface MonitoringResultTS {

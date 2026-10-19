@@ -145,7 +145,12 @@ class SSLCall {
       );
       const timeTillExpiryHours = timeTillExpiryMs / 1000 / 60 / 60;
       const expiresAt = expiryDate.toISOString();
-      const certificate = { expiry_at: expiresAt, issuer_cn: issuerCn, issuer_o: issuerO };
+      const certificate = {
+        expiry_at: expiresAt,
+        issuer_cn: issuerCn,
+        issuer_o: issuerO,
+        cert_trusted: !authorizationError,
+      };
       const issuerLine = formatIssuerLine(issuerCn, issuerO);
 
       if (authorizationError && !this.monitor.type_data.allowSelfSignedCert) {

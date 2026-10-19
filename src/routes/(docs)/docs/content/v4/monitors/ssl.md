@@ -46,15 +46,15 @@ It also shows the time remaining, the expiry date, and the issuer. These values 
 
 ## Configuration fields {#configuration-fields}
 
-| Field                    | Type      | Default | Notes                                                              |
-| :----------------------- | :-------- | :------ | :----------------------------------------------------------------- |
-| `host`                   | `string`  | —       | Required (domain or IP)                                            |
-| `port`                   | `string`  | `443`   | Numeric string accepted                                            |
-| `degradedRemainingHours` | `number`  | `168`   | Must be > `downRemainingHours`                                     |
-| `downRemainingHours`     | `number`  | `24`    |                                                                    |
-| `timeout`                | `number`  | `10000` | TLS handshake timeout in milliseconds                              |
-| `tlsServername`          | `string`  | —       | SNI name. Defaults to `host` when it is a name. Not sent for an IP |
-| `allowSelfSignedCert`    | `boolean` | `false` | Ignore verification failures and judge the certificate by expiry   |
+| Field                    | Type      | Default | Notes                                                                   |
+| :----------------------- | :-------- | :------ | :---------------------------------------------------------------------- |
+| `host`                   | `string`  | —       | Required (domain or IP)                                                 |
+| `port`                   | `string`  | `443`   | Numeric string accepted                                                 |
+| `degradedRemainingHours` | `number`  | `168`   | Must be > `downRemainingHours`                                          |
+| `downRemainingHours`     | `number`  | `24`    |                                                                         |
+| `timeout`                | `number`  | `10000` | TLS handshake timeout in milliseconds                                   |
+| `tlsServername`          | `string`  | —       | SNI name. Defaults to `host` when it is a name. Not sent for an IP      |
+| `allowSelfSignedCert`    | `boolean` | `false` | Judge an untrusted certificate by expiry. The page still shows INSECURE |
 
 ## Example {#example}
 

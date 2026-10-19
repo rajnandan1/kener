@@ -107,7 +107,7 @@ export const buildMonitorBarResponseFromRawData = (
     minLatency: uptimeCalculationResult.minLatency,
     monitorType: monitor.monitor_type,
     sslExpiresAt: isSsl ? ResolveSslExpiresAtMs(latestData) : null,
-    sslTrusted: isSsl && latestData?.expiry_at ? latestData.type !== GC.ERROR : null,
+    sslTrusted: isSsl ? (latestData?.cert_trusted ?? null) : null,
     issuerCn: isSsl ? (latestData?.issuer_cn ?? null) : null,
     issuerO: isSsl ? (latestData?.issuer_o ?? null) : null,
   };

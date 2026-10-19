@@ -61,7 +61,13 @@ describe("SSLCall.execute", () => {
     const socket = connectedSocket(200);
     const r = await new SSLCall(makeMonitor()).execute();
 
-    expect(r).toMatchObject({ status: "UP", type: "REALTIME", issuer_cn: "R3", issuer_o: "Let's Encrypt" });
+    expect(r).toMatchObject({
+      status: "UP",
+      type: "REALTIME",
+      issuer_cn: "R3",
+      issuer_o: "Let's Encrypt",
+      cert_trusted: true,
+    });
     expect(r.latency).toBeGreaterThanOrEqual(0);
     expect(r.latency).toBeLessThan(DEFAULT_SSL_TIMEOUT_MS);
     expect(Date.parse(r.expiry_at!) - Date.now()).toBeGreaterThan(199 * 3_600_000);
@@ -97,7 +103,7 @@ describe("SSLCall.execute", () => {
   it("returns DOWN with the expiry for an untrusted certificate", async () => {
     connectedSocket(400, "DEPTH_ZERO_SELF_SIGNED_CERT");
     const r = await new SSLCall(makeMonitor()).execute();
-    expect(r).toMatchObject({ status: "DOWN", type: "ERROR", latency: 0, issuer_cn: "R3" });
+    expect(r).toMatchObject({ status: "DOWN", type: "ERROR", latency: 0, issuer_cn: "R3", cert_trusted: false });
     expect(r.expiry_at).toBeTruthy();
     expect(r.error_message).toMatch(/is not trusted: DEPTH_ZERO_SELF_SIGNED_CERT\./);
   });
@@ -112,7 +118,7 @@ describe("SSLCall.execute", () => {
   it("judges an untrusted certificate by expiry alone when allowSelfSignedCert is on", async () => {
     connectedSocket(400, "DEPTH_ZERO_SELF_SIGNED_CERT");
     const r = await new SSLCall(makeMonitor({ allowSelfSignedCert: true })).execute();
-    expect(r).toMatchObject({ status: "UP", type: "REALTIME" });
+    expect(r).toMatchObject({ status: "UP", type: "REALTIME", cert_trusted: false });
   });
 
   it("maps socket errors to DOWN / ERROR and destroys the socket", async () => {

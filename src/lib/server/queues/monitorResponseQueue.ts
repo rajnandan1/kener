@@ -21,6 +21,7 @@ interface JobData {
   expiry_at?: string | null;
   issuer_cn?: string | null;
   issuer_o?: string | null;
+  cert_trusted?: boolean;
 }
 
 const getQueue = () => {
@@ -34,8 +35,19 @@ const addWorker = () => {
   if (worker) return worker;
 
   worker = q.createWorker(getQueue(), async (job: Job): Promise<MonitoringData | null> => {
-    const { monitorTag, ts, status, latency, type, error_message, raw_status, expiry_at, issuer_cn, issuer_o } =
-      job.data as JobData;
+    const {
+      monitorTag,
+      ts,
+      status,
+      latency,
+      type,
+      error_message,
+      raw_status,
+      expiry_at,
+      issuer_cn,
+      issuer_o,
+      cert_trusted,
+    } = job.data as JobData;
 
     const dbRes = await InsertMonitoringData({
       monitor_tag: monitorTag,
@@ -58,7 +70,7 @@ const addWorker = () => {
       status: status,
       latency: latency,
       type: type,
-      ...(expiry_at ? { expiry_at, issuer_cn, issuer_o } : {}),
+      ...(expiry_at ? { expiry_at, issuer_cn, issuer_o, cert_trusted } : {}),
     });
     alertingQueue.push(monitorTag, ts, status);
 

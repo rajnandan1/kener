@@ -18,6 +18,7 @@ export interface MonitoringData {
   expiry_at?: string | null;
   issuer_cn?: string | null;
   issuer_o?: string | null;
+  cert_trusted?: boolean | null;
 }
 
 export interface MonitoringDataInsert {

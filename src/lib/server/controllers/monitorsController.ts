@@ -412,7 +412,13 @@ export function mergeLatestMonitoringWithSslCache(
   ) {
     return fromDb;
   }
-  return { ...fromDb, expiry_at: cached.expiry_at, issuer_cn: cached.issuer_cn, issuer_o: cached.issuer_o };
+  return {
+    ...fromDb,
+    expiry_at: cached.expiry_at,
+    issuer_cn: cached.issuer_cn,
+    issuer_o: cached.issuer_o,
+    cert_trusted: cached.cert_trusted,
+  };
 }
 
 export const AttachSslCacheFields = async (

@@ -102,7 +102,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       monitorLastLatency: ParseLatency(item.avgLatency),
       monitorType: monitor.monitor_type,
       monitorSslExpiresAt: ResolveSslExpiresAtMs(sslStatus),
-      monitorSslTrusted: sslStatus?.expiry_at ? sslStatus.type !== GC.ERROR : null,
+      monitorSslTrusted: sslStatus?.cert_trusted ?? null,
       monitorIssuerCn: sslStatus?.issuer_cn ?? null,
       monitorIssuerO: sslStatus?.issuer_o ?? null,
       ongoingIncidents,

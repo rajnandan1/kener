@@ -171,7 +171,12 @@ describe("monitor save: heartbeat secret", () => {
 
 describe("mergeLatestMonitoringWithSslCache", () => {
   const dbRow: MonitoringData = { monitor_tag: "ssl", timestamp: 100, status: "UP", latency: 42, type: "REALTIME" };
-  const sslFields = { expiry_at: "2030-01-01T00:00:00.000Z", issuer_cn: "R3", issuer_o: "Let's Encrypt" };
+  const sslFields = {
+    expiry_at: "2030-01-01T00:00:00.000Z",
+    issuer_cn: "R3",
+    issuer_o: "Let's Encrypt",
+    cert_trusted: false,
+  };
 
   it("attaches Redis SSL fields when the cache holds the same check", () => {
     expect(mergeLatestMonitoringWithSslCache(dbRow, { ...dbRow, ...sslFields })).toEqual({ ...dbRow, ...sslFields });

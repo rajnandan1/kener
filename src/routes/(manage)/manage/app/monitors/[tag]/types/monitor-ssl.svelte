@@ -11,7 +11,7 @@
   if (!data.host) data.host = "";
   if (!data.port) data.port = "443";
   if (!data.degradedRemainingHours) data.degradedRemainingHours = 168; // 7 days
-  if (!data.downRemainingHours) data.downRemainingHours = 24; // 1 day
+  if (data.downRemainingHours == null) data.downRemainingHours = 24; // 1 day
   if (!data.timeout) data.timeout = 10000;
   if (!data.tlsServername) data.tlsServername = "";
   if (data.allowSelfSignedCert === undefined) data.allowSelfSignedCert = false;
@@ -46,7 +46,7 @@
   </div>
   <p class="text-muted-foreground -mt-2 text-xs">
     When off, a certificate that fails verification (self-signed, unknown CA, or wrong host name) makes the check DOWN.
-    When on, only the expiry thresholds decide the status.
+    When on, only the expiry thresholds decide the status, and the status page still shows INSECURE.
   </p>
 
   <div class="grid grid-cols-2 gap-4">

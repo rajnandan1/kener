@@ -205,8 +205,8 @@
         const data = typeData as any;
         if (!data.host || ValidateIpAddress(String(data.host).trim()) === "Invalid") return false;
         if (!IsValidPort(data.port)) return false;
-        const degraded = Number(data.degradedRemainingHours);
-        const down = Number(data.downRemainingHours);
+        const degraded = Number(data.degradedRemainingHours ?? NaN);
+        const down = Number(data.downRemainingHours ?? NaN);
         if (!Number.isFinite(degraded) || degraded < 0) return false;
         if (!Number.isFinite(down) || down < 0) return false;
         if (degraded <= down) return false;
