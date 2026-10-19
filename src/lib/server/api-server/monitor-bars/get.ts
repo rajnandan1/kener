@@ -8,6 +8,7 @@ import GC from "$lib/global-constants";
 import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
 import { buildMonitorBarResponseFromRawData } from "$lib/server/api-server/monitor-bar/shared";
 import {
+  AttachSslCacheFields,
   GetLatestMonitoringDataAllActive,
   GetStatusCountsByIntervalGroupedByMonitor,
 } from "$lib/server/controllers/monitorsController";
@@ -66,6 +67,7 @@ export default async function get(req: APIServerRequest): Promise<Response> {
   const latestStatusByTag = new Map<string, StatusType>(
     latestDataAll.map((d) => [d.monitor_tag, (d.status as StatusType) || GC.NO_DATA]),
   );
+  const latestDataByTag = new Map(latestDataAll.map((d) => [d.monitor_tag, d]));
 
   const monitorByTag = new Map(monitors.map((m) => [m.tag, m]));
   const existingTags = new Set(monitors.map((m) => m.tag));
@@ -100,6 +102,7 @@ export default async function get(req: APIServerRequest): Promise<Response> {
           days,
           endOfDayTodayAtTz,
           latestStatusByTag.get(tag) || GC.NO_DATA,
+          monitor.monitor_type === "SSL" ? await AttachSslCacheFields(latestDataByTag.get(tag)) : null,
         );
         return { tag, payload };
       }),

@@ -27,6 +27,11 @@ export interface MonitorBarResponse {
   toTimeStamp: number;
   maxLatency: string;
   minLatency: string;
+  monitorType?: string;
+  sslExpiresAt?: number | null;
+  sslTrusted?: boolean | null;
+  issuerCn?: string | null;
+  issuerO?: string | null;
 }
 
 /**

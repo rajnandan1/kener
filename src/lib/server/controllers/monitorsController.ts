@@ -395,6 +395,40 @@ export const GetLatestMonitoringDataAllActive = async (monitor_tags: string[]): 
   return latestData;
 };
 
+/**
+ * expiry_at and issuer_* live only in Redis last_status, not in monitoring_data.
+ * Attach them only when the cached entry is the same check as the DB row.
+ */
+export function mergeLatestMonitoringWithSslCache(
+  fromDb: MonitoringData | null | undefined,
+  cached: MonitoringData | null | undefined,
+): MonitoringData | null {
+  if (!fromDb) return null;
+  if (
+    !cached ||
+    cached.timestamp !== fromDb.timestamp ||
+    cached.status !== fromDb.status ||
+    cached.type !== fromDb.type
+  ) {
+    return fromDb;
+  }
+  return {
+    ...fromDb,
+    expiry_at: cached.expiry_at,
+    issuer_cn: cached.issuer_cn,
+    issuer_o: cached.issuer_o,
+    cert_trusted: cached.cert_trusted,
+  };
+}
+
+export const AttachSslCacheFields = async (
+  fromDb: MonitoringData | null | undefined,
+): Promise<MonitoringData | null> => {
+  if (!fromDb) return null;
+  const cached = await GetLastMonitoringValue(fromDb.monitor_tag).catch(() => null);
+  return mergeLatestMonitoringWithSslCache(fromDb, cached);
+};
+
 export const GetLastHeartbeat = async (monitor_tag: string): Promise<MonitoringData | undefined> => {
   return await db.getLastHeartbeat(monitor_tag);
 };

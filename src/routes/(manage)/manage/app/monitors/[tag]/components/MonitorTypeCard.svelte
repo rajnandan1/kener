@@ -203,11 +203,20 @@
 
       case "SSL": {
         const data = typeData as any;
-        if (!data.host || !IsValidHost(data.host)) return false;
+        if (!data.host || ValidateIpAddress(String(data.host).trim()) === "Invalid") return false;
         if (!IsValidPort(data.port)) return false;
-        if (!data.degradedRemainingHours || data.degradedRemainingHours < 0) return false;
-        if (!data.downRemainingHours || data.downRemainingHours < 0) return false;
-        if (data.degradedRemainingHours <= data.downRemainingHours) return false;
+        const degraded = Number(data.degradedRemainingHours ?? NaN);
+        const down = Number(data.downRemainingHours ?? NaN);
+        if (!Number.isFinite(degraded) || degraded < 0) return false;
+        if (!Number.isFinite(down) || down < 0) return false;
+        if (degraded <= down) return false;
+        if (
+          data.timeout !== undefined &&
+          (typeof data.timeout !== "number" || !Number.isFinite(data.timeout) || data.timeout < 1)
+        )
+          return false;
+        const sslServername = (data.tlsServername || "").trim();
+        if (sslServername && !IsValidHost(sslServername)) return false;
         return true;
       }
 
@@ -453,6 +462,37 @@
                   </div>
                 </div>
               </div>
+              {#if monitor.monitor_type === "SSL" && testResult.expiry_at}
+                <div class="rounded-lg border p-4 text-center">
+                  <div class="text-muted-foreground text-xs uppercase">Expires At</div>
+                  <div class="mt-1 text-sm font-semibold break-all">
+                    {new Date(testResult.expiry_at).toLocaleString(undefined, {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit"
+                    })}
+                  </div>
+                </div>
+              {/if}
+              {#if monitor.monitor_type === "SSL" && (testResult.issuer_cn || testResult.issuer_o)}
+                <div class="grid grid-cols-2 gap-4">
+                  <div class="rounded-lg border p-4 text-center">
+                    <div class="text-muted-foreground text-xs uppercase">Issued By (CN)</div>
+                    <div class="mt-1 text-sm font-semibold break-all">
+                      {testResult.issuer_cn || "—"}
+                    </div>
+                  </div>
+                  <div class="rounded-lg border p-4 text-center">
+                    <div class="text-muted-foreground text-xs uppercase">Issued By (O)</div>
+                    <div class="mt-1 text-sm font-semibold break-all">
+                      {testResult.issuer_o || "—"}
+                    </div>
+                  </div>
+                </div>
+              {/if}
               <div class="flex justify-end">
                 <Button variant="outline" size="sm" onclick={testMonitor} disabled={testingMonitor}>
                   <PlayIcon class="size-3" />

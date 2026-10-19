@@ -8,7 +8,14 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { formatDate } from "$lib/stores/datetime";
-  import { GetInitials } from "$lib/clientTools.js";
+  import {
+    GetInitials,
+    GetSslSecurityState,
+    SslSecurityLabelKey,
+    SslSecurityTextClass,
+    FormatSslRemaining
+  } from "$lib/clientTools.js";
+  import { getSslNowMs } from "$lib/client/sslClock.svelte";
   import GroupMonitorPopover from "./GroupMonitorPopover.svelte";
   import { t } from "$lib/stores/i18n";
   import { page } from "$app/state";
@@ -99,6 +106,10 @@
   {:else if data}
     <!-- Loaded state -->
     {@const StatusIcon = STATUS_ICON[data.currentStatus]}
+    {@const sslNowMs = getSslNowMs()}
+    {@const sslSecurity =
+      data.monitorType === "SSL" ? GetSslSecurityState(data.sslExpiresAt, sslNowMs, data.sslTrusted) : null}
+    {@const sslRemainingLive = data.monitorType === "SSL" ? FormatSslRemaining(data.sslExpiresAt, sslNowMs) : ""}
     <Item.Root class="items-start ">
       {#if !compact}
         <Item.Media variant="image" class="hidden sm:block">
@@ -123,10 +134,28 @@
         <Item.Title class="items-start text-2xl">
           <StatusIcon class="{STATUS_STROKE[data.currentStatus]} {grid ? 'mt-1 size-5' : 'mt-1.5 size-6'}" />
           <div class="flex flex-col items-start gap-1 sm:items-end">
-            <span class={grid ? "text-base sm:text-lg" : "text-lg sm:text-xl"}>{data.uptime}%</span>
-            <span class="text-muted-foreground text-right text-xs">
-              {data.avgLatency}
-            </span>
+            {#if data.monitorType === "SSL" && sslSecurity}
+              <span
+                class="{grid ? 'text-base sm:text-lg' : 'text-lg sm:text-xl'} font-semibold {SslSecurityTextClass(
+                  sslSecurity
+                )}"
+              >
+                {$t(SslSecurityLabelKey(sslSecurity))}
+              </span>
+              <span class="text-muted-foreground text-right text-xs">
+                {$t("Time Remaining")}: {sslRemainingLive || "—"}
+              </span>
+              {#if data.sslExpiresAt}
+                <span class="text-muted-foreground text-right text-[10px] leading-tight sm:text-xs">
+                  {$t("Expires At")}: {$formatDate(data.sslExpiresAt, "MMMM d, yyyy HH:mm:ss")}
+                </span>
+              {/if}
+            {:else}
+              <span class={grid ? "text-base sm:text-lg" : "text-lg sm:text-xl"}>{data.uptime}%</span>
+              <span class="text-muted-foreground text-right text-xs">
+                {data.avgLatency}
+              </span>
+            {/if}
           </div>
         </Item.Title>
       </Item.Content>

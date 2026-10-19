@@ -17,6 +17,41 @@ function ParseLatency(latencyMs: number): string {
   }
 }
 
+function ResolveSslExpiresAtMs(latestData: { expiry_at?: string | null } | null | undefined): number | null {
+  const parsed = latestData?.expiry_at ? Date.parse(latestData.expiry_at) : NaN;
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+type SslSecurityState = "secured" | "insecure" | "unknown";
+
+function GetSslSecurityState(
+  expiresAtMs: number | null | undefined,
+  nowMs: number = Date.now(),
+  trusted: boolean | null | undefined = true,
+): SslSecurityState {
+  if (typeof expiresAtMs !== "number") return "unknown";
+  return trusted === false || expiresAtMs <= nowMs ? "insecure" : "secured";
+}
+
+function SslSecurityLabelKey(state: SslSecurityState): "SECURED" | "INSECURE" | "UNKNOWN" {
+  if (state === "insecure") return "INSECURE";
+  if (state === "secured") return "SECURED";
+  return "UNKNOWN";
+}
+
+function SslSecurityTextClass(state: SslSecurityState): string {
+  if (state === "insecure") return "text-down";
+  if (state === "secured") return "text-up";
+  return "text-muted-foreground";
+}
+
+function FormatSslRemaining(expiresAtMs: number | null | undefined, nowMs: number = Date.now()): string {
+  if (typeof expiresAtMs !== "number") return "";
+  const remainingMs = Math.max(0, expiresAtMs - nowMs);
+  if (remainingMs >= 86400000) return `${(remainingMs / 86400000).toFixed(1)}d`;
+  return `${(remainingMs / 3600000).toFixed(1)}h`;
+}
+
 function siteDataExtractFromDb(data: Record<string, unknown>, obj: Record<string, unknown>): Record<string, unknown> {
   let requestedObject: Record<string, unknown> = { ...obj };
   for (const key in requestedObject) {
@@ -402,5 +437,10 @@ export {
   GetStatusColor,
   GetStatusBgColor,
   ParseLatency,
+  ResolveSslExpiresAtMs,
+  GetSslSecurityState,
+  SslSecurityLabelKey,
+  SslSecurityTextClass,
+  FormatSslRemaining,
   GetInitials,
 };

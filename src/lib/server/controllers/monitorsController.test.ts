@@ -10,8 +10,14 @@ vi.mock("$lib/server/db/db", () => ({
 }));
 
 import db from "$lib/server/db/db";
-import { CloneMonitor, CreateMonitor, CreateUpdateMonitor } from "./monitorsController";
+import {
+  CloneMonitor,
+  CreateMonitor,
+  CreateUpdateMonitor,
+  mergeLatestMonitoringWithSslCache,
+} from "./monitorsController";
 import { HEARTBEAT_SECRET_RULE } from "$lib/anywhere";
+import type { MonitoringData } from "../types/db.js";
 
 const mockedDb = vi.mocked(db);
 
@@ -160,5 +166,29 @@ describe("monitor save: heartbeat secret", () => {
     const cloned = JSON.parse(mockedDb.insertMonitor.mock.calls[0][0].type_data!);
     expect(cloned.secretString).toMatch(/^[a-z]+-[a-z]+-[a-z]+-[a-z]+$/);
     expect(cloned).toMatchObject({ degradedRemainingMinutes: 5, downRemainingMinutes: 10 });
+  });
+});
+
+describe("mergeLatestMonitoringWithSslCache", () => {
+  const dbRow: MonitoringData = { monitor_tag: "ssl", timestamp: 100, status: "UP", latency: 42, type: "REALTIME" };
+  const sslFields = {
+    expiry_at: "2030-01-01T00:00:00.000Z",
+    issuer_cn: "R3",
+    issuer_o: "Let's Encrypt",
+    cert_trusted: false,
+  };
+
+  it("attaches Redis SSL fields when the cache holds the same check", () => {
+    expect(mergeLatestMonitoringWithSslCache(dbRow, { ...dbRow, ...sslFields })).toEqual({ ...dbRow, ...sslFields });
+  });
+
+  it("ignores a cache entry from another check", () => {
+    expect(mergeLatestMonitoringWithSslCache(dbRow, { ...dbRow, ...sslFields, timestamp: 40 })).toEqual(dbRow);
+    expect(mergeLatestMonitoringWithSslCache(dbRow, { ...dbRow, ...sslFields, status: "DOWN" })).toEqual(dbRow);
+    expect(mergeLatestMonitoringWithSslCache(dbRow, { ...dbRow, ...sslFields, type: "MANUAL" })).toEqual(dbRow);
+  });
+
+  it("returns null when the DB has no row, even if Redis still has one", () => {
+    expect(mergeLatestMonitoringWithSslCache(null, { ...dbRow, ...sslFields })).toBeNull();
   });
 });

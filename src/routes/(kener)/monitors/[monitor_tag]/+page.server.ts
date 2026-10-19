@@ -11,8 +11,8 @@ import {
 import type { TimestampStatusCount } from "$lib/server/types/db";
 import { GetNowTimestampUTC, UptimeCalculator } from "$lib/server/tool";
 import GC from "$lib/global-constants.js";
-import { GetStatusColor, GetStatusSummary, ParseLatency } from "$lib/clientTools";
-import { GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
+import { GetStatusColor, GetStatusSummary, ParseLatency, ResolveSslExpiresAtMs } from "$lib/clientTools";
+import { AttachSslCacheFields, GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
 import type { GroupMonitorTypeData } from "$lib/server/types/monitor";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
@@ -47,6 +47,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
   //last known status
   const lastStatus = await db.getLatestMonitoringData(monitor.tag);
+  const sslStatus = monitor.monitor_type === "SSL" ? await AttachSslCacheFields(lastStatus) : null;
   //use uptime calculator tool to parse
   let item: TimestampStatusCount = {
     ts: lastStatus ? lastStatus.timestamp : GetNowTimestampUTC(),
@@ -99,6 +100,11 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       textClass: GetStatusColor(item),
       monitorLastStatusTimestamp: item.ts,
       monitorLastLatency: ParseLatency(item.avgLatency),
+      monitorType: monitor.monitor_type,
+      monitorSslExpiresAt: ResolveSslExpiresAtMs(sslStatus),
+      monitorSslTrusted: sslStatus?.cert_trusted ?? null,
+      monitorIssuerCn: sslStatus?.issuer_cn ?? null,
+      monitorIssuerO: sslStatus?.issuer_o ?? null,
       ongoingIncidents,
       ongoingMaintenances,
       upcomingMaintenances,

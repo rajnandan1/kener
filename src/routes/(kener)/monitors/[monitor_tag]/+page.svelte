@@ -12,7 +12,18 @@
   import IncidentItem from "$lib/components/IncidentItem.svelte";
   import MaintenanceItem from "$lib/components/MaintenanceItem.svelte";
   import { page } from "$app/state";
+  import { GetSslSecurityState, SslSecurityLabelKey, SslSecurityTextClass, FormatSslRemaining } from "$lib/clientTools";
+  import { getSslNowMs } from "$lib/client/sslClock.svelte";
   let { data } = $props();
+
+  let isSsl = $derived(data.monitorType === "SSL");
+  let sslSecurity = $derived(GetSslSecurityState(data.monitorSslExpiresAt, getSslNowMs(), data.monitorSslTrusted));
+  let sslRemaining = $derived(FormatSslRemaining(data.monitorSslExpiresAt, getSslNowMs()));
+  let sslIssuer = $derived(
+    [data.monitorIssuerCn && `CN=${data.monitorIssuerCn}`, data.monitorIssuerO && `O=${data.monitorIssuerO}`]
+      .filter(Boolean)
+      .join(", ")
+  );
 
   // State
   let descriptionExpanded = $state(false);
@@ -120,7 +131,24 @@
         </p>
         <p class="text-muted-foreground text-xs">{$t("Latest Status")}</p>
       </div>
-      {#if !!data.monitorLastLatency}
+      {#if isSsl}
+        <div class="flex flex-col items-end gap-1">
+          <p class="text-right text-2xl font-semibold {SslSecurityTextClass(sslSecurity)}">
+            {$t(SslSecurityLabelKey(sslSecurity))}
+          </p>
+          {#if sslRemaining}
+            <p class="text-muted-foreground text-right text-xs">{$t("Time Remaining")}: {sslRemaining}</p>
+          {/if}
+          {#if data.monitorSslExpiresAt}
+            <p class="text-muted-foreground text-right text-xs">
+              {$t("Expires At")}: {$formatDate(data.monitorSslExpiresAt, "MMMM d, yyyy HH:mm:ss")}
+            </p>
+          {/if}
+          {#if sslIssuer}
+            <p class="text-muted-foreground text-right text-xs">{$t("Issued By")}: {sslIssuer}</p>
+          {/if}
+        </div>
+      {:else if !!data.monitorLastLatency}
         <div class="flex flex-col items-end gap-1">
           <p class="text-right text-2xl font-semibold">
             {data.monitorLastLatency}

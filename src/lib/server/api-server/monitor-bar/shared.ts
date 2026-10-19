@@ -1,9 +1,11 @@
 import db from "$lib/server/db/db";
 import GC from "$lib/global-constants";
 import type { StatusType } from "$lib/types/status";
-import type { MonitorRecord, TimestampStatusCount } from "$lib/server/types/db";
+import type { MonitorRecord, MonitoringData, TimestampStatusCount } from "$lib/server/types/db";
 import { UptimeCalculator } from "$lib/server/tool";
 import type { MonitorBarResponse } from "./get";
+import { ResolveSslExpiresAtMs } from "$lib/clientTools";
+import { AttachSslCacheFields } from "$lib/server/controllers/monitorsController";
 
 interface ParsedMonitorSettings {
   uptime_formula_numerator?: string;
@@ -57,17 +59,20 @@ export const buildMonitorBarResponse = async (
   latestStatus?: StatusType,
 ): Promise<MonitorBarResponse> => {
   const startTime = endOfDayTodayAtTz - days * 24 * 60 * 60;
+  const isSsl = monitor.monitor_type === "SSL";
   const [rawUptimeData, latestData] = await Promise.all([
     db.getStatusCountsByInterval(monitor.tag, startTime, 86400, days),
-    latestStatus ? Promise.resolve(null) : db.getLatestMonitoringData(monitor.tag),
+    latestStatus && !isSsl ? Promise.resolve(null) : db.getLatestMonitoringData(monitor.tag),
   ]);
+  const latest = isSsl ? await AttachSslCacheFields(latestData) : latestData;
 
   return buildMonitorBarResponseFromRawData(
     monitor,
     rawUptimeData,
     days,
     endOfDayTodayAtTz,
-    latestStatus || (latestData?.status as StatusType) || GC.NO_DATA,
+    latestStatus || (latest?.status as StatusType) || GC.NO_DATA,
+    latest,
   );
 };
 
@@ -77,8 +82,10 @@ export const buildMonitorBarResponseFromRawData = (
   days: number,
   endOfDayTodayAtTz: number,
   latestStatus?: StatusType,
+  latestData?: MonitoringData | null,
 ): MonitorBarResponse => {
   const startTime = endOfDayTodayAtTz - days * 24 * 60 * 60;
+  const isSsl = monitor.monitor_type === "SSL";
   const monitorSettings = parseMonitorSettings(monitor.monitor_settings_json);
   const uptimeCalculationResult = UptimeCalculator(
     rawUptimeData,
@@ -98,5 +105,10 @@ export const buildMonitorBarResponseFromRawData = (
     avgLatency: uptimeCalculationResult.avgLatency,
     maxLatency: uptimeCalculationResult.maxLatency,
     minLatency: uptimeCalculationResult.minLatency,
+    monitorType: monitor.monitor_type,
+    sslExpiresAt: isSsl ? ResolveSslExpiresAtMs(latestData) : null,
+    sslTrusted: isSsl ? (latestData?.cert_trusted ?? null) : null,
+    issuerCn: isSsl ? (latestData?.issuer_cn ?? null) : null,
+    issuerO: isSsl ? (latestData?.issuer_o ?? null) : null,
   };
 };
