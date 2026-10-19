@@ -11,6 +11,7 @@ import GC from "$lib/global-constants";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { SetLastMonitoringValue } from "$lib/server/cache/setGet";
 import alertingQueue from "$lib/server/queues/alertingQueue";
+import { InsertMonitoringData } from "$lib/server/controllers/monitorsController";
 
 export const GET: RequestHandler = async ({ params, locals }) => {
   // Monitor is validated by middleware and available in locals
@@ -147,7 +148,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   }
 
   // Insert or update the data point
-  await db.insertMonitoringData({
+  await InsertMonitoringData({
     monitor_tag: monitorTag,
     timestamp: timestamp,
     status: status,

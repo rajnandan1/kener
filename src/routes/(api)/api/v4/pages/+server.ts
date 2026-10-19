@@ -11,6 +11,7 @@ import type {
 import type { PageRecord } from "$lib/server/types/db";
 import GC from "$lib/global-constants";
 import { toApiPageSettings, applyPageSettingsPatch, validatePageSettings } from "$lib/server/pageSettings";
+import { AddMonitorToPage, CreatePage } from "$lib/server/controllers/pagesController";
 
 async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
   const pageSettings = toApiPageSettings(page.page_settings_json);
@@ -147,17 +148,12 @@ export const POST: RequestHandler = async ({ request }) => {
     page_settings_json: applyPageSettingsPatch(null, body.page_settings),
   };
 
-  const createdPage = await db.createPage(pageData);
+  const createdPage = await CreatePage(pageData);
 
   // Add monitors to the page
   if (body.monitors && Array.isArray(body.monitors)) {
     for (let i = 0; i < body.monitors.length; i++) {
-      await db.addMonitorToPage({
-        page_id: createdPage.id,
-        monitor_tag: body.monitors[i],
-        monitor_settings_json: null,
-        position: i,
-      });
+      await AddMonitorToPage(createdPage.id, body.monitors[i], null, i);
     }
   }
 

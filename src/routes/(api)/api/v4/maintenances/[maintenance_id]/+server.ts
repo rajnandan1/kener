@@ -10,7 +10,11 @@ import type {
   DeleteMaintenanceResponse,
 } from "$lib/types/api";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
-import { GenerateMaintenanceEvents, isOneTimeRrule } from "$lib/server/controllers/maintenanceController";
+import {
+  DeleteMaintenance,
+  GenerateMaintenanceEvents,
+  isOneTimeRrule,
+} from "$lib/server/controllers/maintenanceController";
 import { GetSiteURL } from "$lib/server/controllers/siteDataController";
 import serverResolver from "$lib/server/resolver";
 import { rrulestr } from "rrule";
@@ -308,17 +312,7 @@ export const DELETE: RequestHandler = async ({ locals }) => {
   // Maintenance is validated by middleware and available in locals
   const maintenance = locals.maintenance!;
 
-  // Delete all events for this maintenance
-  const events = await db.getMaintenanceEventsByMaintenanceId(maintenance.id);
-  for (const event of events) {
-    await db.deleteMaintenanceEvent(event.id);
-  }
-
-  // Delete all monitor associations
-  await db.removeAllMonitorsFromMaintenance(maintenance.id);
-
-  // Delete the maintenance itself
-  await db.deleteMaintenance(maintenance.id);
+  await DeleteMaintenance(maintenance.id);
 
   const response: DeleteMaintenanceResponse = {
     message: `Maintenance with id '${maintenance.id}' deleted successfully`,

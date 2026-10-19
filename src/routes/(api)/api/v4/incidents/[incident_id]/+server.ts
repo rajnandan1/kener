@@ -10,6 +10,7 @@ import type {
 } from "$lib/types/api";
 import { GetMinuteStartTimestampUTC, parseDbTimestamp } from "$lib/server/tool";
 import { GetSiteURL } from "$lib/server/controllers/siteDataController";
+import { DeleteIncident } from "$lib/server/controllers/incidentController";
 import serverResolver from "$lib/server/resolver";
 
 async function buildIncidentResponse(incidentId: number): Promise<IncidentDetailResponse | null> {
@@ -187,26 +188,7 @@ export const DELETE: RequestHandler = async ({ locals }) => {
   // Incident is validated by middleware and available in locals
   const incident = locals.incident!;
 
-  // Set incident_id to null in monitor_alerts_v2
-  const alerts = await db.getAlertsByIncidentId(incident.id);
-  for (const alert of alerts) {
-    await db.updateMonitorAlertV2(alert.id, { incident_id: null });
-  }
-
-  // Delete incident monitors
-  const monitors = await db.getIncidentMonitorsByIncidentID(incident.id);
-  for (const monitor of monitors) {
-    await db.removeIncidentMonitor(incident.id, monitor.monitor_tag);
-  }
-
-  // Delete incident comments (hard delete by setting status to DELETED)
-  const comments = await db.getIncidentComments(incident.id);
-  for (const comment of comments) {
-    await db.updateIncidentCommentStatusByID(comment.id, "DELETED");
-  }
-
-  // Actually delete the incident from the database
-  await db.deleteIncident(incident.id);
+  await DeleteIncident(incident.id);
 
   const response: DeleteIncidentResponse = {
     message: `Incident with id '${incident.id}' deleted successfully`,

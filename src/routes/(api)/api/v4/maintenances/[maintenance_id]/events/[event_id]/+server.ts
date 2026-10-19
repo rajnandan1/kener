@@ -12,7 +12,7 @@ import type {
 } from "$lib/types/api";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { GetSiteURL } from "$lib/server/controllers/siteDataController";
-import { UpdateMaintenanceEventStatus } from "$lib/server/controllers/maintenanceController";
+import { DeleteMaintenanceEvent, UpdateMaintenanceEventStatus } from "$lib/server/controllers/maintenanceController";
 import GC from "$lib/global-constants";
 import serverResolver from "$lib/server/resolver";
 
@@ -250,7 +250,7 @@ export const DELETE: RequestHandler = async ({ locals, params }) => {
     return json(errorResponse, { status: 404 });
   }
 
-  await db.deleteMaintenanceEvent(eventId);
+  await DeleteMaintenanceEvent(eventId);
 
   const response: DeleteMaintenanceEventResponse = {
     message: `Event with id '${eventId}' deleted successfully`,
