@@ -27,7 +27,13 @@ import type { MonitoringStatus } from "../../types/status.js";
 import { makeBadge } from "badge-maker";
 import randomName from "@scaleway/random-name";
 import { ErrorSvg } from "../../anywhere.js";
-import { GetLastMonitoringValue, SetLastHeartbeat, DeleteMonitorCaches } from "../cache/setGet.js";
+import {
+  GetLastMonitoringValue,
+  SetLastHeartbeat,
+  SetLastMonitoringValue,
+  DeleteMonitorCaches,
+} from "../cache/setGet.js";
+import alertingQueue from "../queues/alertingQueue.js";
 import { CollapseStatusCounts } from "../../clientTools.js";
 import { translate, isLocaleAvailable } from "../i18n.js";
 import type { HeartbeatMonitor, GroupMonitorTypeData } from "../types/monitor.js";
@@ -122,17 +128,29 @@ export const InsertMonitoringData = async (data: MonitoringDataInput): Promise<M
 };
 
 export const UpdateMonitoringData = async (data: UpdateMonitoringDataInput): Promise<unknown[]> => {
-  let queryData = { ...data };
-
-  return await db.updateMonitoringData(
-    queryData.monitor_tag,
-    GetMinuteStartTimestampUTC(queryData.start),
-    GetMinuteStartTimestampUTC(queryData.end),
-    queryData.newStatus,
-    queryData.type,
-    queryData.latency ?? 0,
-    queryData.deviation ?? 0,
+  const end = GetMinuteStartTimestampUTC(data.end);
+  const result = await db.updateMonitoringData(
+    data.monitor_tag,
+    GetMinuteStartTimestampUTC(data.start),
+    end,
+    data.newStatus,
+    data.type,
+    data.latency ?? 0,
+    data.deviation ?? 0,
   );
+
+  const latestData = await db.getLatestMonitoringData(data.monitor_tag);
+  if (latestData) {
+    await SetLastMonitoringValue(data.monitor_tag, latestData);
+  }
+  // Manual samples reach alerting: a NONE monitor has no other trigger for evaluation.
+  // Best-effort: the rows are committed, so a queue outage must not fail the write.
+  try {
+    await alertingQueue.push(data.monitor_tag, end, data.newStatus);
+  } catch (err) {
+    console.error(`Failed to enqueue alert evaluation for ${data.monitor_tag} after MANUAL data write:`, err);
+  }
+  return result;
 };
 
 export const AggregateData = (

@@ -139,7 +139,7 @@ import sendSlack from "$lib/server/notification/slack_notification.js";
 import heicConvert from "heic-convert";
 import serverResolver from "$lib/server/resolver.js";
 import { ACTION_PERMISSION_MAP } from "$lib/allPerms.js";
-import { TestOidcConnection, ClearOidcConfigCache } from "$lib/server/controllers/oidcController.js";
+import { TestOidcConnection } from "$lib/server/controllers/oidcController.js";
 
 export async function POST({ request, cookies }) {
   const payload = await request.json();
@@ -728,12 +728,6 @@ async function storeSiteData(data: { [x: string]: any }) {
         element = "";
       }
       await InsertKeyValue(key, element);
-
-      // Clear OIDC config cache when settings change so logins
-      // pick up new credentials immediately
-      if (key === "oidcSettings") {
-        ClearOidcConfigCache();
-      }
     }
   }
   return { success: true };

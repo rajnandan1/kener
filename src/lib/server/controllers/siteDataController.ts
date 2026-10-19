@@ -1,6 +1,7 @@
 import db from "../db/db.js";
 import { IsMaskedString, MaskString } from "../tool.js";
 import { siteDataKeys } from "./siteDataKeys.js";
+import { ClearOidcConfigCache } from "./oidcController.js";
 import type { Cookies } from "@sveltejs/kit";
 import type {
   DataRetentionPolicy,
@@ -122,7 +123,9 @@ export async function InsertKeyValue(key: string, value: string): Promise<number
   if (secretPath(key)) {
     value = JSON.stringify(RestoreSiteDataSecret(key, JSON.parse(value), await GetSiteDataByKey(key)));
   }
-  return db.insertOrUpdateSiteData(key, value, f.data_type);
+  const result = await db.insertOrUpdateSiteData(key, value, f.data_type);
+  if (key === "oidcSettings") ClearOidcConfigCache();
+  return result;
 }
 
 export async function GetAllSiteData(): Promise<SiteDataTransformed> {

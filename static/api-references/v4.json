@@ -2016,6 +2016,20 @@
           }
         }
       },
+      "IncidentMonitorImpact": {
+        "type": "object",
+        "required": ["monitor_tag"],
+        "properties": {
+          "monitor_tag": {
+            "type": "string"
+          },
+          "impact": {
+            "type": "string",
+            "enum": ["DOWN", "DEGRADED", "MAINTENANCE"],
+            "default": "DOWN"
+          }
+        }
+      },
       "Incident": {
         "type": "object",
         "required": ["id", "title"],
@@ -2076,7 +2090,7 @@
           "monitors": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/MonitorImpact"
+              "$ref": "#/components/schemas/IncidentMonitorImpact"
             }
           }
         },
@@ -2097,7 +2111,7 @@
           "monitors": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/MonitorImpact"
+              "$ref": "#/components/schemas/IncidentMonitorImpact"
             }
           }
         },

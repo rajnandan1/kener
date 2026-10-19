@@ -3,6 +3,7 @@ import db from "$lib/server/db/db";
 import {
   GetMonitorsParsed,
   DeleteMonitorCompletelyUsingTag,
+  UpdateMonitor,
   ValidateTypeDataProxy,
   WithValidHeartbeatSecret,
 } from "$lib/server/controllers/monitorsController";
@@ -150,7 +151,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  await db.updateMonitor(monitorToSave);
+  await UpdateMonitor(monitorToSave);
 
   // Fetch the updated monitor
   const updatedMonitor = await GetMonitorsParsed({ tag: monitorTag }).then((monitors) => monitors[0]);

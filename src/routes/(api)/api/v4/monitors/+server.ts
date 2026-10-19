@@ -9,6 +9,7 @@ import type {
 } from "$lib/types/api";
 import type { MonitorRecord } from "$lib/server/types/db";
 import {
+  CreateUpdateMonitor,
   GetMonitorsParsed,
   ValidateTypeDataProxy,
   WithValidHeartbeatSecret,
@@ -139,7 +140,7 @@ export const POST: RequestHandler = async ({ request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  await db.insertMonitor(monitorToInsert);
+  await CreateUpdateMonitor(monitorToInsert);
 
   // Fetch the created monitor
   const createdMonitor = await GetMonitorsParsed({ tag: body.tag }).then((monitors) =>

@@ -7,9 +7,10 @@ Dev needs Redis on `REDIS_URL`: `cp .env-min.example .env`, then `docker compose
 ## Finish a Change
 
 1. Put a test next to new server logic (`apiCall.ts` and `apiCall.test.ts`). Name a component test `<component>.svelte.test.ts` so it runs in Chromium.
-2. When the change alters what a user sees or can do, update every text that describes the old behavior: the docs in `src/routes/(docs)/docs/content/v4/` and the help text in `.svelte` files. Search all of `src/routes` for the setting key and its UI label, for example `rg -i 'is_hidden|hidden in status page|hidden monitor' src/routes`.
-3. Format only the files you changed: `npx prettier --write <files>`. Some files elsewhere are not formatted yet.
-4. Run `npm run check` and `npm test` until both pass. Run a single test through the npm scripts, which set `TZ=UTC`: `npm run test:server -- <file>`.
+2. A change that reads, writes, or updates the database, or adds a migration or seed, must pass on SQLite, PostgreSQL, and MySQL. `npm test` runs on SQLite only. Run the change on the other two as the Database section of `CODING_STANDARDS.md` shows.
+3. When the change alters what a user sees or can do, update every text that describes the old behavior: the docs in `src/routes/(docs)/docs/content/v4/` and the help text in `.svelte` files. Search all of `src/routes` for the setting key and its UI label, for example `rg -i 'is_hidden|hidden in status page|hidden monitor' src/routes`.
+4. Format only the files you changed: `npx prettier --write <files>`. Some files elsewhere are not formatted yet.
+5. Run `npm run check` and `npm test` until both pass. Run a single test through the npm scripts, which set `TZ=UTC`: `npm run test:server -- <file>`.
 
 ## Ask First
 
