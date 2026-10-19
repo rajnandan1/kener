@@ -8,6 +8,7 @@ import type {
   BadRequestResponse,
 } from "$lib/types/api";
 import GC from "$lib/global-constants";
+import { AddIncidentComment } from "$lib/server/controllers/incidentController";
 import { GetMinuteStartTimestampUTC, GetMinuteStartNowTimestampUTC, parseDbTimestamp } from "$lib/server/tool";
 
 const VALID_STATES: string[] = [GC.INVESTIGATING, GC.IDENTIFIED, GC.MONITORING, GC.RESOLVED];
@@ -114,23 +115,21 @@ export const POST: RequestHandler = async ({ locals, request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  // Create comment
-  const createdComment = await db.insertIncidentComment(incident.id, body.comment.trim(), body.state, timestamp);
+  // A RESOLVED comment sets the incident end time, which cannot be before the start.
+  // Reject it here: AddIncidentComment saves the comment before it checks the end time.
+  if (body.state === GC.RESOLVED && timestamp < incident.start_date_time) {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: "timestamp of a RESOLVED comment cannot be before the incident start",
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
 
-  // Update incident state to match the comment state
-  await db.updateIncident({
-    id: incident.id,
-    title: incident.title,
-    start_date_time: incident.start_date_time,
-    end_date_time: body.state === GC.RESOLVED ? timestamp : incident.end_date_time,
-    status: incident.status,
-    state: body.state,
-    created_at: incident.created_at,
-    updated_at: incident.updated_at,
-    incident_type: incident.incident_type,
-    incident_source: "",
-    is_global: incident.is_global,
-  });
+  // AddIncidentComment updates the incident state and end time and notifies subscribers,
+  // the same as a comment posted from the dashboard
+  const createdComment = await AddIncidentComment(incident.id, body.comment.trim(), body.state, timestamp);
 
   const response: CreateCommentResponse = {
     comment: formatCommentResponse(createdComment),
