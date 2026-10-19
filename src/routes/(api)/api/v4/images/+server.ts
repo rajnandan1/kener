@@ -1,6 +1,7 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import type { BadRequestResponse, UploadImageRequest, UploadImageResponse } from "$lib/types/api";
 import { ImageUploadError, uploadImage } from "$lib/server/controllers/imageController";
+import GC from "$lib/global-constants";
 
 function badRequest(message: string): Response {
   const errorResponse: BadRequestResponse = { error: { code: "BAD_REQUEST", message } };
@@ -26,8 +27,8 @@ export const POST: RequestHandler = async ({ request }) => {
   }
   for (const key of ["max_width", "max_height"] as const) {
     const size = body[key];
-    if (size !== undefined && !(Number.isInteger(size) && size > 0)) {
-      return badRequest(`${key} must be a positive integer`);
+    if (size !== undefined && !(Number.isInteger(size) && size > 0 && size <= GC.MAX_IMAGE_DIMENSION)) {
+      return badRequest(`${key} must be an integer from 1 to ${GC.MAX_IMAGE_DIMENSION}`);
     }
   }
   if (body.force_dimensions !== undefined && typeof body.force_dimensions !== "boolean") {

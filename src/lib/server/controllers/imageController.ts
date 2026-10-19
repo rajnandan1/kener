@@ -95,7 +95,7 @@ export async function uploadImage(data: ImageUploadData) {
   // HEIC/HEIF files often have .jpg extension (e.g. iPhone photos); allow the mismatch
   const isHeicDetected = detectedMimeType === "image/heic" || detectedMimeType === "image/heif";
   const isHeicRequested = normalizedRequestedMime === "image/heic" || normalizedRequestedMime === "image/heif";
-  if (normalizedRequestedMime !== detectedMimeType && !isHeicDetected && !isHeicRequested) {
+  if (normalizedRequestedMime !== detectedMimeType && !isHeicDetected && !(isHeicData && isHeicRequested)) {
     throw new ImageUploadError("Image MIME type does not match file content");
   }
 

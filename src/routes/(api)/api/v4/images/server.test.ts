@@ -153,15 +153,20 @@ describe("POST /api/v4/images", () => {
       JSON.stringify({ base64: tinyPng, mime_type: "image/png", file_name: 1 }),
       "file_name must be a string",
     ],
-    ...[0, -256, 25.5, "256", null].map((max_width) => [
+    ...[0, -256, 25.5, "256", null, 4097].map((max_width) => [
       `max_width ${JSON.stringify(max_width)}`,
       JSON.stringify({ base64: tinyPng, mime_type: "image/png", max_width }),
-      "max_width must be a positive integer",
+      "max_width must be an integer from 1 to 4096",
+    ]),
+    ...[0, 4097].map((max_height) => [
+      `max_height ${max_height}`,
+      JSON.stringify({ base64: tinyPng, mime_type: "image/png", max_height }),
+      "max_height must be an integer from 1 to 4096",
     ]),
     [
-      "max_height 0",
-      JSON.stringify({ base64: tinyPng, mime_type: "image/png", max_height: 0 }),
-      "max_height must be a positive integer",
+      "PNG bytes sent as image/heic",
+      JSON.stringify({ base64: tinyPng, mime_type: "image/heic" }),
+      "Image MIME type does not match file content",
     ],
     [
       'force_dimensions "true"',
