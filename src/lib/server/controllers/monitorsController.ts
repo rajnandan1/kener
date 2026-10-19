@@ -144,7 +144,11 @@ async function refreshLastStatusCache(tag: string): Promise<void> {
   } catch {
     previous = null;
   }
-  await SetLastMonitoringValue(tag, mergeLatestMonitoringWithSslCache(latest, previous) ?? latest);
+  // force: admin delete/update may leave an older DB row as latest — must replace
+  // a newer cached sample that was just deleted, bypassing the out-of-order guard.
+  await SetLastMonitoringValue(tag, mergeLatestMonitoringWithSslCache(latest, previous) ?? latest, {
+    force: true,
+  });
 }
 
 /** Manually rewrite monitoring samples in a time range, then refresh Redis last_status. */

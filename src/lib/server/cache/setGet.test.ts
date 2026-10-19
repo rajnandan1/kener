@@ -1,9 +1,37 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const evalFn = vi.fn();
-const get = vi.fn();
-const set = vi.fn();
-const del = vi.fn();
+/** In-memory Redis that implements the last_status compare-and-set Lua semantics. */
+const store = new Map<string, string>();
+
+const evalFn = vi.fn(async (script: string, _numKeys: number, key: string, payload: string, ts: string, ttl: string) => {
+  if (!script.includes("tonumber(existing['timestamp']) > tonumber(ARGV[2])")) {
+    throw new Error("unexpected Lua script");
+  }
+  const raw = store.get(key);
+  if (raw) {
+    try {
+      const existing = JSON.parse(raw) as { timestamp?: number };
+      if (existing.timestamp != null && Number(existing.timestamp) > Number(ts)) {
+        return 0;
+      }
+    } catch {
+      // overwrite invalid
+    }
+  }
+  store.set(key, payload);
+  void ttl;
+  return 1;
+});
+
+const get = vi.fn(async (key: string) => store.get(key) ?? null);
+const set = vi.fn(async (key: string, payload: string) => {
+  store.set(key, payload);
+  return "OK";
+});
+const del = vi.fn(async (key: string) => {
+  store.delete(key);
+  return 1;
+});
 const mget = vi.fn();
 
 vi.mock("../redisConnector.js", () => ({
@@ -20,7 +48,7 @@ vi.mock("../redisConnector.js", () => ({
   }),
 }));
 
-import { SetLastMonitoringValue } from "./setGet.js";
+import { GetLastMonitoringValue, SetLastMonitoringValue } from "./setGet.js";
 import type { MonitoringData } from "../types/db.js";
 
 const sample = (timestamp: number, status = "UP"): MonitoringData => ({
@@ -33,21 +61,47 @@ const sample = (timestamp: number, status = "UP"): MonitoringData => ({
 
 describe("SetLastMonitoringValue", () => {
   beforeEach(() => {
-    evalFn.mockReset();
-    evalFn.mockResolvedValue(1);
+    store.clear();
+    evalFn.mockClear();
+    get.mockClear();
+    set.mockClear();
   });
 
-  it("writes via a Lua compare-and-set keyed by sample timestamp", async () => {
-    const value = sample(1_700_000_100);
-    await SetLastMonitoringValue("api", value);
+  it("keeps a newer cached sample when an older check finishes later", async () => {
+    await SetLastMonitoringValue("api", sample(200, "UP"));
+    await SetLastMonitoringValue("api", sample(100, "DOWN"));
 
-    expect(evalFn).toHaveBeenCalledOnce();
-    const [script, numKeys, key, payload, ts, ttl] = evalFn.mock.calls[0];
-    expect(script).toContain("tonumber(existing['timestamp']) > tonumber(ARGV[2])");
-    expect(numKeys).toBe(1);
-    expect(key).toBe("kener:cache:api:last_status");
-    expect(payload).toBe(JSON.stringify(value));
-    expect(ts).toBe("1700000100");
-    expect(ttl).toBe("86400");
+    const retained = JSON.parse(store.get("kener:cache:api:last_status")!);
+    expect(retained.timestamp).toBe(200);
+    expect(retained.status).toBe("UP");
+  });
+
+  it("force replaces a newer cached sample (admin delete/update refresh)", async () => {
+    await SetLastMonitoringValue("api", sample(200, "UP"));
+    await SetLastMonitoringValue("api", sample(100, "DOWN"), { force: true });
+
+    const retained = JSON.parse(store.get("kener:cache:api:last_status")!);
+    expect(retained.timestamp).toBe(100);
+    expect(retained.status).toBe("DOWN");
+    expect(set).toHaveBeenCalled();
+  });
+});
+
+describe("GetLastMonitoringValue fetcher seed", () => {
+  beforeEach(() => {
+    store.clear();
+    evalFn.mockClear();
+    get.mockClear();
+  });
+
+  it("returns the Redis-retained sample when a newer write wins over the fetcher", async () => {
+    const result = await GetLastMonitoringValue("api", async () => {
+      // Concurrent newer check lands while the DB fetcher is in flight.
+      await SetLastMonitoringValue("api", sample(300, "UP"));
+      return sample(100, "DOWN");
+    });
+
+    expect(result?.timestamp).toBe(300);
+    expect(result?.status).toBe("UP");
   });
 });
