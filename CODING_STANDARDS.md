@@ -9,7 +9,10 @@ Timestamps are UTC **seconds**. Use the helpers in `src/lib/server/tool.ts` (`Ge
 
 ## Database
 
-- Every migration, query, and repository function works on **SQLite, PostgreSQL, and MySQL**. Switch engines with `DATABASE_URL`: `postgresql://...` or `mysql://...` (SQLite is the default).
+- Every read, write, update, migration, and seed works on **SQLite, PostgreSQL, and MySQL**. Switch engines with `DATABASE_URL`: `postgresql://...` or `mysql://...` (SQLite is the default). The tests use in-memory SQLite, so run a database change on the other two before you finish:
+    1. Start throwaway servers: `docker run -d --rm --name kener-pg -e POSTGRES_USER=kener -e POSTGRES_PASSWORD=kener -e POSTGRES_DB=kener -p 55432:5432 postgres:16-alpine` and `docker run -d --rm --name kener-mysql -e MARIADB_USER=kener -e MARIADB_PASSWORD=kener -e MARIADB_DATABASE=kener -e MARIADB_ROOT_PASSWORD=root -p 53306:3306 mariadb:11`.
+    2. For each URL, `postgresql://kener:kener@localhost:55432/kener` and `mysql://kener:kener@127.0.0.1:53306/kener`, run `DATABASE_URL=<url> npm run migrate` and `DATABASE_URL=<url> npm run seed`, then the test that covers the change with `TEST_DATABASE_URL=<url>`. `src/routes/(api)/api/v4/write-parity.test.ts` reads `TEST_DATABASE_URL` and runs every v4 and dashboard write; copy its database setup into a new database test. The test empties the tables of the database it runs on, so point it only at a throwaway server.
+    3. Stop the servers: `docker stop kener-pg kener-mysql`.
 - Write queries and schema changes with the Knex query builder and schema builder. When raw SQL is unavoidable, branch it on `GetDbType()` from `src/lib/server/tool.ts` or wrap it in `try/catch`. Check that `defaultTo()` and `notNullable()` behave the same on all three engines.
 - A new repository method needs a field and a `.bind` line in `src/lib/server/db/dbimpl.ts`. `npm run check` passes without the `.bind` line, and the call fails at runtime.
 
