@@ -7,25 +7,33 @@ const cachePrefix = "kener:cache:";
 
 export type SetLastMonitoringValueOptions = {
   /**
-   * Bypass the timestamp guard and always replace last_status.
-   * Use after intentional admin delete/update so an older remaining DB row
-   * can replace a deleted newer cached sample.
+   * Allow writing an older sample when the cache still holds this exact timestamp
+   * (the row an admin intended to replace). A concurrent newer check that changed
+   * the cache after the refresh started is not overwritten.
    */
-  force?: boolean;
+  replaceCachedTimestamp?: number | null;
 };
 
 /**
- * Atomically SET last_status only when the incoming sample is not older than the
- * cached one. Concurrent response workers can finish out of order; without this,
- * an older check would overwrite a newer dashboard status.
+ * Atomically SET last_status when:
+ * - there is no cached value, or
+ * - the incoming timestamp is >= the cached one, or
+ * - the cached timestamp equals ARGV[4] (intentional admin replace of that sample).
+ *
+ * ARGV: [1]=payload JSON, [2]=new timestamp, [3]=TTL seconds, [4]=expected cached ts or "".
  */
-const SET_LAST_STATUS_IF_NEWER_LUA = `
+const SET_LAST_STATUS_ORDERED_LUA = `
 local raw = redis.call('GET', KEYS[1])
+local new_ts = tonumber(ARGV[2])
+local expected = ARGV[4]
 if raw then
   local ok, existing = pcall(cjson.decode, raw)
   if ok and type(existing) == 'table' and existing['timestamp'] ~= nil then
-    if tonumber(existing['timestamp']) > tonumber(ARGV[2]) then
-      return 0
+    local cur = tonumber(existing['timestamp'])
+    if cur > new_ts then
+      if expected == '' or cur ~= tonumber(expected) then
+        return 0
+      end
     end
   end
 end
@@ -43,21 +51,19 @@ export async function SetLastMonitoringValue(
   value: MonitoringData,
   options?: SetLastMonitoringValueOptions,
 ): Promise<void> {
-  if (options?.force) {
-    await setCache<MonitoringData>(`${tag}:last_status`, value, LAST_STATUS_TTL_SECONDS);
-    return;
-  }
-
   const redis = redisIOConnection();
   const key = lastStatusRedisKey(tag);
   const payload = JSON.stringify(value);
+  const expected =
+    options?.replaceCachedTimestamp != null ? String(options.replaceCachedTimestamp) : "";
   await redis.eval(
-    SET_LAST_STATUS_IF_NEWER_LUA,
+    SET_LAST_STATUS_ORDERED_LUA,
     1,
     key,
     payload,
     String(value.timestamp ?? 0),
     String(LAST_STATUS_TTL_SECONDS),
+    expected,
   );
 }
 

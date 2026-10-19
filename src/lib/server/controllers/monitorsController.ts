@@ -144,10 +144,10 @@ async function refreshLastStatusCache(tag: string): Promise<void> {
   } catch {
     previous = null;
   }
-  // force: admin delete/update may leave an older DB row as latest — must replace
-  // a newer cached sample that was just deleted, bypassing the out-of-order guard.
+  // Replace the cached sample we observed (e.g. a just-deleted newest row) with the
+  // remaining DB latest. If a newer check landed in Redis during this refresh, keep it.
   await SetLastMonitoringValue(tag, mergeLatestMonitoringWithSslCache(latest, previous) ?? latest, {
-    force: true,
+    replaceCachedTimestamp: previous?.timestamp,
   });
 }
 

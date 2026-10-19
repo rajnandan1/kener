@@ -10,7 +10,6 @@ import type {
 import GC from "$lib/global-constants";
 import { UpdateMonitoringData } from "$lib/server/controllers/monitorsController";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
-import { SetLastMonitoringValue } from "$lib/server/cache/setGet";
 import alertingQueue from "$lib/server/queues/alertingQueue";
 
 export const GET: RequestHandler = async ({ locals, url }) => {
@@ -164,11 +163,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     deviation: deviation,
   });
 
-  // Update the cache so group monitors (and other cache consumers) see the latest status
-  const latestData = await db.getLatestMonitoringData(monitorTag);
-  if (latestData) {
-    await SetLastMonitoringValue(monitorTag, latestData, { force: true });
-  }
+  // last_status is refreshed inside UpdateMonitoringData (conditional replace).
 
   // MANUAL samples are alert-visible (docs/adr/0005), so re-evaluate alerts once for the
   // last written sample — for NONE monitors nothing else would ever trigger evaluation.

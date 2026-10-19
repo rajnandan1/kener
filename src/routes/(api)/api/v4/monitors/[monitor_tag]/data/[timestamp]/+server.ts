@@ -9,7 +9,7 @@ import type {
 } from "$lib/types/api";
 import GC from "$lib/global-constants";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
-import { SetLastMonitoringValue } from "$lib/server/cache/setGet";
+import { GetLastMonitoringValue, SetLastMonitoringValue } from "$lib/server/cache/setGet";
 import alertingQueue from "$lib/server/queues/alertingQueue";
 
 export const GET: RequestHandler = async ({ params, locals }) => {
@@ -146,6 +146,8 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     latency = 0;
   }
 
+  const previousCached = await GetLastMonitoringValue(monitorTag).catch(() => null);
+
   // Insert or update the data point
   await db.insertMonitoringData({
     monitor_tag: monitorTag,
@@ -155,10 +157,13 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     type: GC.MANUAL,
   });
 
-  // Update the cache so group monitors (and other cache consumers) see the latest status
+  // Refresh last_status from DB latest; replace only the sample we observed above so a
+  // concurrent newer check that landed mid-request is not overwritten.
   const latestData = await db.getLatestMonitoringData(monitorTag);
   if (latestData) {
-    await SetLastMonitoringValue(monitorTag, latestData, { force: true });
+    await SetLastMonitoringValue(monitorTag, latestData, {
+      replaceCachedTimestamp: previousCached?.timestamp,
+    });
   }
 
   // MANUAL samples are alert-visible (docs/adr/0005), so re-evaluate alerts for this
