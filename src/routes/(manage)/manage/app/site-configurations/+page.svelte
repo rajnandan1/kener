@@ -667,8 +667,7 @@
             fileName: file.name,
             maxWidth: type === "favicon" ? 64 : type === "socialPreviewImage" ? 640 : 256,
             maxHeight: type === "favicon" ? 64 : type === "socialPreviewImage" ? 320 : 256,
-            forceDimensions: type === "socialPreviewImage",
-            prefix: `${type}_`
+            forceDimensions: type === "socialPreviewImage"
           }
         })
       });
@@ -726,8 +725,7 @@
             mimeType: file.type,
             fileName: file.name,
             maxWidth: 32,
-            maxHeight: 32,
-            prefix: "navicon_"
+            maxHeight: 32
           }
         })
       });

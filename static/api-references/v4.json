@@ -45,6 +45,9 @@
     },
     {
       "name": "Maintenance Events"
+    },
+    {
+      "name": "Images"
     }
   ],
   "paths": {
@@ -1564,6 +1567,51 @@
           }
         }
       }
+    },
+    "/api/v4/images": {
+      "post": {
+        "tags": ["Images"],
+        "operationId": "uploadImage",
+        "summary": "Upload image",
+        "description": "Stores an image and returns its URL. Put `image.url` into `page_logo` or any other image field. Allowed types are PNG, JPEG, WebP, HEIC, and HEIF. SVG is rejected. The decoded image must be 2 MB or smaller and at most 4096 px on each side, and its bytes must match `mime_type`. When you leave out `max_width` and `max_height`, the server does not resize the image. JPEG stays JPEG at quality 85, HEIC and HEIF become JPEG, and every other type becomes PNG. The `id` is a hash of the stored bytes, so the same image always returns the same `id`: a repeat upload returns the existing image with `201` and stores nothing new.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadImageRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Image stored, or the same image already existed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": ["image"],
+                  "properties": {
+                    "image": {
+                      "$ref": "#/components/schemas/Image"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2527,6 +2575,75 @@
           }
         },
         "additionalProperties": true
+      },
+      "UploadImageRequest": {
+        "type": "object",
+        "required": ["base64", "mime_type"],
+        "properties": {
+          "base64": {
+            "type": "string",
+            "description": "The image bytes, base64-encoded. At most 2 MB after decoding."
+          },
+          "mime_type": {
+            "type": "string",
+            "enum": ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/heic", "image/heif"],
+            "description": "Must match the image bytes."
+          },
+          "file_name": {
+            "type": "string",
+            "maxLength": 255,
+            "description": "Stored as the image's original name."
+          },
+          "max_width": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4096,
+            "description": "Largest output width in pixels. Leave out both `max_width` and `max_height` to keep the original size."
+          },
+          "max_height": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4096,
+            "description": "Largest output height in pixels. Leave out both `max_width` and `max_height` to keep the original size."
+          },
+          "force_dimensions": {
+            "type": "boolean",
+            "default": false,
+            "description": "When `true`, the server resizes and crops the image to exactly `max_width` × `max_height`. When `false`, it scales the image down to fit and keeps the aspect ratio."
+          }
+        }
+      },
+      "Image": {
+        "type": "object",
+        "required": ["id", "url", "mime_type", "width", "height", "size"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "First 16 hex characters of the SHA-256 of the stored bytes, plus `.png` or `.jpg`.",
+            "examples": ["3f9a0c7e1b2d4a56.png"]
+          },
+          "url": {
+            "type": "string",
+            "description": "Path that serves the image without an API key. Use this exact string as an image field value.",
+            "examples": ["/assets/images/3f9a0c7e1b2d4a56.png"]
+          },
+          "mime_type": {
+            "type": "string",
+            "enum": ["image/png", "image/jpeg"]
+          },
+          "width": {
+            "type": "integer",
+            "description": "Stored width in pixels."
+          },
+          "height": {
+            "type": "integer",
+            "description": "Stored height in pixels."
+          },
+          "size": {
+            "type": "integer",
+            "description": "Stored size in bytes."
+          }
+        }
       }
     }
   }
