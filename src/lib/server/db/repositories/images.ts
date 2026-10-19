@@ -6,7 +6,7 @@ import type { ImageRecord, ImageRecordInsert } from "../../types/db.js";
  */
 export class ImagesRepository extends BaseRepository {
   async insertImage(data: ImageRecordInsert): Promise<string> {
-    await this.knex("images").insert(data);
+    await this.knex("images").insert(data).onConflict("id").ignore();
     return data.id;
   }
 
