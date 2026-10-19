@@ -2592,10 +2592,12 @@
           },
           "max_width": {
             "type": "integer",
+            "minimum": 1,
             "description": "Largest output width in pixels. Leave out both `max_width` and `max_height` to keep the original size."
           },
           "max_height": {
             "type": "integer",
+            "minimum": 1,
             "description": "Largest output height in pixels. Leave out both `max_width` and `max_height` to keep the original size."
           },
           "force_dimensions": {
