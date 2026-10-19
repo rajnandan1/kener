@@ -1,9 +1,17 @@
-import { beforeAll, describe, expect, it, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { Knex } from "knex";
 import type { Cookies, RequestEvent } from "@sveltejs/kit";
 
+// TEST_DATABASE_URL=postgresql://… or mysql://… runs this file on that engine instead of in-memory SQLite.
+vi.hoisted(() => {
+  if (process.env.TEST_DATABASE_URL) process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+});
 vi.mock("$lib/server/db/db", async () => {
   const { default: DbImpl } = await import("$lib/server/db/dbimpl");
+  if (process.env.TEST_DATABASE_URL) {
+    const { default: knexOb } = await import("../../../../../knexfile");
+    return { default: new DbImpl(knexOb) };
+  }
   return {
     default: new DbImpl({ client: "better-sqlite3", connection: { filename: ":memory:" }, useNullAsDefault: true }),
   };
@@ -94,17 +102,42 @@ async function signals(): Promise<Record<string, number>> {
   return out;
 }
 
-const insert = async (table: string, row: Record<string, unknown>): Promise<number> =>
-  (await knex(table).insert(row, ["id"]))[0].id;
+const client = knex.client.config.client as string;
+
+const insert = async (table: string, row: Record<string, unknown>): Promise<number> => {
+  const [result]: (number | { id: number })[] =
+    client === "mysql2" ? await knex(table).insert(row) : await knex(table).insert(row, ["id"]);
+  return typeof result === "object" ? result.id : result;
+};
+
+async function clearTables(): Promise<void> {
+  if (client === "pg") {
+    const { rows }: { rows: { tablename: string }[] } = await knex.raw(
+      "select tablename from pg_tables where schemaname = current_schema()",
+    );
+    const names = rows.map((r) => r.tablename).filter((name) => !SEEDED_ONCE.has(name));
+    await knex.raw(`truncate table ${names.map(() => "??").join(", ")} restart identity cascade`, names);
+  } else if (client === "mysql2") {
+    const [rows] = (await knex.raw("show tables")) as [Record<string, string>[]];
+    const names = rows.map((r) => Object.values(r)[0]).filter((name) => !SEEDED_ONCE.has(name));
+    await knex.transaction(async (trx) => {
+      await trx.raw("set foreign_key_checks = 0");
+      for (const name of names) await trx(name).del();
+      await trx.raw("set foreign_key_checks = 1");
+    });
+  } else {
+    const tables: { name: string }[] = await knex.raw(
+      "select name from sqlite_master where type = 'table' and name not like 'sqlite_%'",
+    );
+    for (const { name } of tables) if (!SEEDED_ONCE.has(name)) await knex(name).del();
+  }
+}
 
 const T0 = GetMinuteStartNowTimestampUTC() - 3600;
 const FUTURE = GetMinuteStartNowTimestampUTC() + 2 * 86400;
 
 async function seed() {
-  const tables: { name: string }[] = await knex.raw(
-    "select name from sqlite_master where type = 'table' and name not like 'sqlite_%'",
-  );
-  for (const { name } of tables) if (!SEEDED_ONCE.has(name)) await knex(name).del();
+  await clearTables();
   vi.clearAllMocks();
   await seedSiteData(knex);
 
@@ -205,17 +238,20 @@ async function seed() {
 type Fixture = Awaited<ReturnType<typeof seed>>;
 
 type Handler = (event: RequestEvent) => Response | Promise<Response>;
-async function v4(
+const send = async (
   handler: Handler,
   body: unknown,
   locals: Partial<App.Locals> = {},
   params: Record<string, string> = {},
-): Promise<void> {
-  const response = await handler({
+): Promise<Response> =>
+  handler({
     request: new Request("http://localhost/api/v4", { method: "POST", body: JSON.stringify(body ?? null) }),
     locals,
     params,
   } as unknown as RequestEvent);
+
+async function v4(...args: Parameters<typeof send>): Promise<void> {
+  const response = await send(...args);
   expect(response.status, JSON.stringify(await response.clone().json())).toBeLessThan(300);
 }
 
@@ -353,14 +389,12 @@ const pairs: Pair[] = [
         state: "RESOLVED",
         commented_at: T0 + 900,
       }),
-    openGap: "the route does not change the incident state",
   },
   {
     name: "DELETE /incidents/{id}/comments/{comment_id} = deleteComment",
     api: async (f) =>
       v4(comment.DELETE, undefined, await incidentLocals(f.openIncident), { comment_id: String(f.openComment) }),
     dashboard: (f) => dashboard("deleteComment", { incident_id: f.openIncident, comment_id: f.openComment }),
-    openGap: "the route stores status DELETED, the dashboard INACTIVE",
   },
   {
     name: "POST /maintenances = createMaintenance",
@@ -399,7 +433,6 @@ const pairs: Pair[] = [
           monitors: [{ monitor_tag: "api", monitor_impact: "MAINTENANCE" }],
           is_global: "YES",
         }),
-      openGap: which === "cancelledMaintenance" ? "the route deletes COMPLETED and CANCELLED events" : undefined,
     }),
   ),
   {
@@ -559,7 +592,7 @@ beforeAll(async () => {
   await knex.migrate.latest({
     migrationSource: {
       getMigrations: async () => Object.keys(migrations).sort(),
-      getMigrationName: (name: string) => name,
+      getMigrationName: (name: string) => name.slice("/migrations/".length),
       getMigration: async (name: string) => migrations[name],
     },
   });
@@ -568,6 +601,10 @@ beforeAll(async () => {
   await seed();
   const token = await GenerateToken((await db.getUserByEmail(ADMIN_EMAIL))!);
   adminCookies = { get: (name: string) => (name === "kener-user" ? token : undefined) } as unknown as Cookies;
+});
+
+afterAll(async () => {
+  await knex.destroy();
 });
 
 describe("a v4 write leaves through the same exits as the same dashboard write", () => {
@@ -581,4 +618,108 @@ describe("a v4 write leaves through the same exits as the same dashboard write",
       expect(api).toEqual(dashboard);
     });
   }
+});
+
+describe("v4 writes the dashboard cannot make keep working through the dashboard controllers", () => {
+  it("POST /incidents keeps an end time sent on create", async () => {
+    await seed();
+    const response = await send(incidents.POST, { title: "Past outage", start_date_time: T0, end_date_time: T0 + 600 });
+
+    expect(response.status).toBe(201);
+    expect((await response.json()).incident.end_date_time).toBe(T0 + 600);
+  });
+
+  it("POST /incidents returns 400 for a monitor impact the dashboard cannot set, and saves nothing", async () => {
+    await seed();
+    const before = await signals();
+    const response = await send(incidents.POST, {
+      title: "Search down",
+      start_date_time: T0,
+      monitors: [{ monitor_tag: "api", impact: "UP" }],
+    });
+
+    expect(response.status).toBe(400);
+    expect(await signals()).toEqual(before);
+  });
+
+  it("PATCH /incidents/{id} with end_date_time null reopens a resolved incident", async () => {
+    const f = await seed();
+    const response = await send(incident.PATCH, { end_date_time: null }, await incidentLocals(f.resolvedIncident));
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).incident.end_date_time).toBeNull();
+  });
+
+  it("PATCH /incidents/{id} accepts an end time that is after a new, earlier start", async () => {
+    const f = await seed();
+    const response = await send(
+      incident.PATCH,
+      { start_date_time: T0 - 1200, end_date_time: T0 - 600 },
+      await incidentLocals(f.openIncident),
+    );
+
+    expect(response.status).toBe(200);
+    expect((await response.json()).incident).toMatchObject({ start_date_time: T0 - 1200, end_date_time: T0 - 600 });
+  });
+
+  it("PATCH /incidents/{id} returns 400 for an end time before the start, and saves nothing", async () => {
+    const f = await seed();
+    const before = await signals();
+    const response = await send(incident.PATCH, { end_date_time: T0 - 600 }, await incidentLocals(f.openIncident));
+
+    expect(response.status).toBe(400);
+    expect(await signals()).toEqual(before);
+  });
+
+  it("PATCH …/comments/{comment_id} returns 400 for a RESOLVED comment dated before the incident start, and saves nothing", async () => {
+    const f = await seed();
+    const before = await signals();
+    const response = await send(
+      comment.PATCH,
+      { state: "RESOLVED", timestamp: T0 - 600 },
+      await incidentLocals(f.openIncident),
+      { comment_id: String(f.openComment) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(await signals()).toEqual(before);
+    expect(await knex("incident_comments").where({ id: f.openComment }).first()).toMatchObject({
+      state: "INVESTIGATING",
+      commented_at: T0,
+    });
+  });
+
+  it("GET …/comments/{comment_id} returns 404 for a comment deleted through the API or the dashboard", async () => {
+    for (const remove of [
+      async (f: Fixture) =>
+        v4(comment.DELETE, undefined, await incidentLocals(f.openIncident), { comment_id: String(f.openComment) }),
+      (f: Fixture) => dashboard("deleteComment", { incident_id: f.openIncident, comment_id: f.openComment }),
+    ]) {
+      const f = await seed();
+      await remove(f);
+      const response = await send(comment.GET, undefined, await incidentLocals(f.openIncident), {
+        comment_id: String(f.openComment),
+      });
+
+      expect(response.status).toBe(404);
+    }
+  });
+
+  it("PATCH …/events/{event_id} returns 400 for a window shorter than one minute, and saves nothing", async () => {
+    const f = await seed();
+    const before = await signals();
+    const response = await send(
+      maintenanceEvent.PATCH,
+      { start_date_time: FUTURE + 600, end_date_time: FUTURE + 630 },
+      await maintenanceLocals(f.scheduledMaintenance),
+      { event_id: String(f.scheduledEvent) },
+    );
+
+    expect(response.status).toBe(400);
+    expect(await signals()).toEqual(before);
+    expect(await knex("maintenances_events").where({ id: f.scheduledEvent }).first()).toMatchObject({
+      start_date_time: FUTURE,
+      end_date_time: FUTURE + 3600,
+    });
+  });
 });

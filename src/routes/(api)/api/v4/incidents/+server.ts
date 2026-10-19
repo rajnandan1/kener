@@ -11,7 +11,10 @@ import type {
 import GC from "$lib/global-constants";
 import { GetMinuteStartTimestampUTC, parseDbTimestamp } from "$lib/server/tool";
 import { GetSiteURL } from "$lib/server/controllers/siteDataController";
+import { AddIncidentMonitor, CreateIncident } from "$lib/server/controllers/incidentController";
 import serverResolver from "$lib/server/resolver";
+
+const VALID_IMPACTS: string[] = [GC.DOWN, GC.DEGRADED, GC.MAINTENANCE];
 
 export const GET: RequestHandler = async ({ url }) => {
   // Parse query params for filtering
@@ -157,32 +160,45 @@ export const POST: RequestHandler = async ({ request }) => {
         };
         return json(errorResponse, { status: 400 });
       }
+
+      if (monitor.impact && !VALID_IMPACTS.includes(monitor.impact)) {
+        const errorResponse: BadRequestResponse = {
+          error: {
+            code: "BAD_REQUEST",
+            message: `Invalid impact '${monitor.impact}'. Must be one of: ${VALID_IMPACTS.join(", ")}`,
+          },
+        };
+        return json(errorResponse, { status: 400 });
+      }
     }
   }
 
-  // Create incident
-  const incidentData = {
-    title: body.title.trim(),
-    start_date_time: GetMinuteStartTimestampUTC(body.start_date_time),
-    end_date_time: body.end_date_time ? GetMinuteStartTimestampUTC(body.end_date_time) : null,
-    status: "OPEN",
-    state: GC.INVESTIGATING,
-    incident_type: GC.INCIDENT,
-    incident_source: "API",
-  };
-
-  const createdIncident = await db.createIncident(incidentData);
-
-  // Add monitors if provided
-  if (body.monitors && body.monitors.length > 0) {
-    for (const monitor of body.monitors) {
-      await db.insertIncidentMonitor({
-        incident_id: createdIncident.id,
-        monitor_tag: monitor.monitor_tag,
-        monitor_impact: monitor.impact || "DOWN",
-      });
-    }
+  let incidentId: number;
+  try {
+    ({ incident_id: incidentId } = await CreateIncident({
+      title: body.title.trim(),
+      start_date_time: GetMinuteStartTimestampUTC(body.start_date_time),
+      end_date_time: body.end_date_time ? GetMinuteStartTimestampUTC(body.end_date_time) : null,
+      status: "OPEN",
+      state: GC.INVESTIGATING,
+      incident_type: GC.INCIDENT,
+      incident_source: "API",
+    }));
+  } catch (err) {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: err instanceof Error ? err.message : "Failed to create incident",
+      },
+    };
+    return json(errorResponse, { status: 400 });
   }
+
+  for (const monitor of body.monitors ?? []) {
+    await AddIncidentMonitor(incidentId, monitor.monitor_tag, monitor.impact || "DOWN");
+  }
+
+  const [createdIncident] = await db.getIncidentsPaginated(1, 1, { id: incidentId });
 
   // Fetch monitors for response
   const monitors = await db.getIncidentMonitorsByIncidentID(createdIncident.id);

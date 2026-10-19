@@ -347,11 +347,6 @@ export const CreateIncident = async (data: IncidentInput): Promise<{ incident_id
     is_global: data.is_global || "YES",
   };
 
-  //incident_type == INCIDENT delete endDateTime
-  if (incident.incident_type === "INCIDENT") {
-    incident.end_date_time = null;
-  }
-
   //if endDateTime is provided and it is less than startDateTime, throw error
   if (!!incident.end_date_time && incident.end_date_time < incident.start_date_time) {
     throw new Error("End date time cannot be less than start date time");
@@ -372,7 +367,7 @@ export const UpdateIncident = async (incident_id: number, data: IncidentUpdateIn
   }
 
   let endDateTime = data.end_date_time;
-  if (endDateTime && endDateTime < incidentExists.start_date_time) {
+  if (endDateTime && endDateTime < (data.start_date_time || incidentExists.start_date_time)) {
     throw new Error("End date time cannot be less than start date time");
   }
 
@@ -387,6 +382,14 @@ export const UpdateIncident = async (incident_id: number, data: IncidentUpdateIn
   };
 
   return await db.updateIncident(updateObject as IncidentRecord);
+};
+
+export const ClearIncidentEndTime = async (incident_id: number): Promise<number> => {
+  let incidentExists = await db.getIncidentById(incident_id);
+  if (!incidentExists) {
+    throw new Error(`Incident with id ${incident_id} does not exist`);
+  }
+  return await db.setIncidentEndTimeToNull(incident_id);
 };
 
 export const AddIncidentMonitor = async (
@@ -436,6 +439,9 @@ export const UpdateCommentByID = async (
   let commentExists = await db.getIncidentCommentByIDAndIncident(incident_id, comment_id);
   if (!commentExists) {
     throw new Error(`Comment with id ${comment_id} does not exist`);
+  }
+  if (state === GC.RESOLVED && commented_at < incidentExists.start_date_time) {
+    throw new Error("A RESOLVED comment cannot be dated before the incident start");
   }
   let c = await db.updateIncidentCommentByID(comment_id, comment, state, commented_at);
   if (c) {
