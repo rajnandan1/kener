@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import sharp from "sharp";
+import { randomBytes } from "node:crypto";
 
 const { db } = vi.hoisted(() => ({
   db: { insertImage: vi.fn(async (row: { id: string; data: string }) => row.id) },
@@ -22,6 +23,9 @@ const send = (raw: string) =>
 const post = (body: unknown) => send(JSON.stringify(body));
 const tinyPng = await png(8, 8);
 const widePng = await png(4097, 1);
+const noisyPng = await sharp(randomBytes(64 * 64 * 3), { raw: { width: 64, height: 64, channels: 3 } })
+  .png()
+  .toBuffer();
 const svg = Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="8" height="8"></svg>').toString("base64");
 const storedBytes = () => Buffer.from(db.insertImage.mock.calls[0][0].data, "base64");
 
@@ -84,6 +88,26 @@ describe("POST /api/v4/images", () => {
       "Image is too large. Maximum upload size is 2MB",
     ],
     [
+      "bytes that are not an image",
+      { base64: Buffer.from("not an image").toString("base64"), mime_type: "image/png" },
+      "Could not read image data",
+    ],
+    [
+      "a PNG cut off halfway",
+      { base64: noisyPng.subarray(0, noisyPng.length / 2).toString("base64"), mime_type: "image/png" },
+      "Could not read image data",
+    ],
+    [
+      "a HEIC header with no image after it",
+      {
+        base64: Buffer.concat([Buffer.from([0, 0, 0, 24]), Buffer.from("ftypheic"), Buffer.alloc(40)]).toString(
+          "base64",
+        ),
+        mime_type: "image/heic",
+      },
+      "Could not read image data",
+    ],
+    [
       "a side longer than 4096 px",
       { base64: widePng, mime_type: "image/png" },
       "Image dimensions exceed maximum allowed size of 4096x4096",
@@ -94,6 +118,19 @@ describe("POST /api/v4/images", () => {
     expect(response.status).toBe(400);
     expect(await response.json()).toStrictEqual({ error: { code: "BAD_REQUEST", message } });
     expect(db.insertImage).not.toHaveBeenCalled();
+  });
+
+  it("returns 500 INTERNAL_ERROR with a fixed message when the database write fails", async () => {
+    db.insertImage.mockRejectedValueOnce(
+      new Error('insert into `images` (`data`) values (?) - ER_DATA_TOO_LONG: Data too long for column "data"'),
+    );
+
+    const response = await post({ base64: tinyPng, mime_type: "image/png" });
+
+    expect(response.status).toBe(500);
+    expect(await response.json()).toStrictEqual({
+      error: { code: "INTERNAL_ERROR", message: "Failed to upload image" },
+    });
   });
 
   it.each([
