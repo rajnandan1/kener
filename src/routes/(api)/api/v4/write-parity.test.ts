@@ -43,7 +43,9 @@ import { GetNowTimestampUTC, GetMinuteStartNowTimestampUTC } from "$lib/server/t
 import { seed as seedPermissions } from "../../../../../seeds/permissions";
 import { seed as seedRoles } from "../../../../../seeds/roles";
 import { seed as seedSiteData } from "../../../../../seeds/site_data";
+import sharp from "sharp";
 import * as manageApi from "../../../(manage)/manage/api/+server";
+import * as images from "./images/+server";
 import * as incidents from "./incidents/+server";
 import * as incident from "./incidents/[incident_id]/+server";
 import * as comments from "./incidents/[incident_id]/comments/+server";
@@ -78,6 +80,7 @@ const COUNTED: Record<string, string | null> = {
   monitors: "status",
   monitoring_data: "status",
   site_data: null,
+  images: null,
 };
 
 // Columns that differ between two runs of one write: the timestamps, and the surface that made the write.
@@ -298,6 +301,11 @@ const monitorLocals = async (tag: string) => ({ monitor: (await GetMonitorsParse
 const pageLocals = async (path: string) => ({ page: await db.getPageByPath(path) });
 const monitorRow = async (tag: string) => (await knex("monitors").where({ tag }).first()) as Record<string, unknown>;
 const oidcSettings = { enabled: false, issuer_url: "https://id.example.com", client_id: "kener", client_secret: "s" };
+const logo = (
+  await sharp({ create: { width: 300, height: 200, channels: 3, background: { r: 30, g: 120, b: 200 } } })
+    .png()
+    .toBuffer()
+).toString("base64");
 
 interface Pair {
   name: string;
@@ -615,6 +623,25 @@ const pairs: Pair[] = [
     name: "PATCH /site/oidcSettings = storeSiteData",
     api: () => v4(siteKey.PATCH, { value: oidcSettings }, {}, { config_key: "oidcSettings" }),
     dashboard: () => dashboard("storeSiteData", { oidcSettings: JSON.stringify(oidcSettings) }),
+  },
+  {
+    name: "POST /images = uploadImage",
+    api: () =>
+      v4(images.POST, {
+        base64: logo,
+        mime_type: "image/png",
+        file_name: "logo.png",
+        max_width: 256,
+        max_height: 256,
+      }),
+    dashboard: () =>
+      dashboard("uploadImage", {
+        base64: logo,
+        mimeType: "image/png",
+        fileName: "logo.png",
+        maxWidth: 256,
+        maxHeight: 256,
+      }),
   },
 ];
 
