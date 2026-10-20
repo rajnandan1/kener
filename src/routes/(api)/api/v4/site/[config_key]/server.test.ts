@@ -11,11 +11,15 @@ const { db } = vi.hoisted(() => {
         rows.set(key, value);
         return [1];
       }),
+      getAllSiteDataByPrefix: vi.fn(async (prefix: string) =>
+        [...rows].filter(([key]) => key.startsWith(prefix)).map(([key, value]) => ({ key, value })),
+      ),
     },
   };
 });
 vi.mock("$lib/server/db/db", () => ({ default: db }));
 
+import { GetPublicCaptchaConfig, VerifyCaptchaToken } from "$lib/server/controllers/captchaController";
 import { PATCH } from "./+server";
 
 describe("PATCH /api/v4/site/{config_key}", () => {
@@ -34,5 +38,24 @@ describe("PATCH /api/v4/site/{config_key}", () => {
       client_id: "new-id",
       client_secret: "real-secret",
     });
+  });
+
+  it("saves no secret when the masked secret from another instance arrives, so captcha fails closed", async () => {
+    const fetch = vi.fn(async () => Response.json({ success: false }));
+    vi.stubGlobal("fetch", fetch);
+    const value = { isEnabled: true, requirements: { "Site Key": "site-key", "Secret Key": "********cret" } };
+
+    const request = new Request("http://localhost/api/v4/site/captcha.turnstile", {
+      method: "PATCH",
+      body: JSON.stringify({ value }),
+    });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const response = await PATCH({ params: { config_key: "captcha.turnstile" }, request } as any);
+
+    expect.soft((await response.text()).match(/\*/g) ?? []).toHaveLength(0);
+    expect.soft(await GetPublicCaptchaConfig()).toEqual({ provider: null, siteKey: null, misconfigured: true });
+    await VerifyCaptchaToken("token");
+    expect.soft(fetch).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 });
