@@ -98,16 +98,19 @@ export function MaskSiteDataSecret(key: string, value: unknown): unknown {
   return writePath(value, path, MaskString(secret));
 }
 
-/** Puts the stored secret back when a save sends any masked secret or leaves it out. An empty string clears it. */
+/**
+ * Puts the stored secret back when a save sends any masked secret or leaves it out. An empty string clears it.
+ * A masked secret with no stored secret saves an empty string, so a mask copied from another instance is never stored.
+ */
 export function RestoreSiteDataSecret(key: string, value: unknown, stored: unknown): unknown {
   const path = secretPath(key);
-  const storedSecret = path && readPath(stored, path);
-  if (!path || typeof storedSecret !== "string" || !storedSecret) return value;
-  if (!value || typeof value !== "object") return value;
+  if (!path || !value || typeof value !== "object") return value;
+  const storedSecret = readPath(stored, path);
+  const restored = typeof storedSecret === "string" ? storedSecret : "";
   const incoming = readPath(value, path);
-  const unchanged = incoming === undefined || (typeof incoming === "string" && IsMaskedString(incoming));
-  if (!unchanged) return value;
-  return writePath(value, path, storedSecret);
+  if (typeof incoming === "string" && IsMaskedString(incoming)) return writePath(value, path, restored);
+  if (incoming === undefined && restored) return writePath(value, path, restored);
+  return value;
 }
 
 export async function InsertKeyValue(key: string, value: string): Promise<number[]> {

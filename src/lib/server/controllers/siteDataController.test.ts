@@ -60,6 +60,22 @@ describe("InsertKeyValue", () => {
     expect(written()).toEqual({ client_id: "new-id", client_secret: "real-secret" });
   });
 
+  it.each([
+    ["captcha.turnstile", undefined, captcha("********cret"), captcha("")],
+    ["oidcSettings", { client_secret: "" }, { client_secret: "********cret" }, { client_secret: "" }],
+  ])("stores an empty %s secret, not the mask, when no secret is stored", async (key, row, sent, saved) => {
+    if (row) stored(key, row);
+    await InsertKeyValue(key, JSON.stringify(sent));
+    expect(written()).toEqual(saved);
+  });
+
+  it("saves a new secret, or no secret field, when no secret is stored", async () => {
+    await InsertKeyValue("captcha.turnstile", JSON.stringify(captcha("new-secret")));
+    await InsertKeyValue("captcha.turnstile", JSON.stringify(captcha()));
+    expect(written()).toEqual(captcha("new-secret"));
+    expect(JSON.parse(db.insertOrUpdateSiteData.mock.calls[1][1])).toEqual(captcha());
+  });
+
   it("saves a new secret and clears on an empty string", async () => {
     stored("oidcSettings", { client_secret: "real-secret" });
     await InsertKeyValue("oidcSettings", JSON.stringify({ client_secret: "rotated" }));
