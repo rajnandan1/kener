@@ -11,6 +11,11 @@ vi.mock("$lib/server/controllers/monitorsController", () => ({
   GetStatusCountsByIntervalGroupedByMonitor: vi.fn().mockResolvedValue([]),
 }));
 
+vi.mock("$lib/server/controllers/userController", () => ({
+  GetLoggedInSession: vi.fn().mockResolvedValue(null),
+  CanSeeHiddenMonitors: vi.fn().mockResolvedValue(false),
+}));
+
 import { GetStatusCountsByIntervalGroupedByMonitor } from "$lib/server/controllers/monitorsController";
 import type { APIServerRequest } from "$lib/server/types/api-server";
 import get from "./get";
