@@ -9,6 +9,7 @@
   import PlayIcon from "@lucide/svelte/icons/play";
   import type { MonitorRecord } from "$lib/server/types/db.js";
   import type { GroupMonitorTypeData, MonitoringResult } from "$lib/server/types/monitor.js";
+  import type { DockerConnectionDefaults } from "$lib/types/docker.js";
   import { MONITOR_TYPES, type MonitorType } from "$lib/types/monitor.js";
   import { toast } from "svelte-sonner";
   import {
@@ -51,9 +52,10 @@
     // the various strongly-typed type editors (API/PING/HEARTBEAT/etc.) without TS errors.
     typeData: any;
     availableMonitors: MonitorRecord[];
+    dockerDefaults: DockerConnectionDefaults;
   }
 
-  let { monitor = $bindable(), typeData = $bindable(), availableMonitors }: Props = $props();
+  let { monitor = $bindable(), typeData = $bindable(), availableMonitors, dockerDefaults }: Props = $props();
 
   const GROUP_MIN_MONITORS = 2;
   const GROUP_MIN_TIMEOUT_MS = 1000;
@@ -403,7 +405,7 @@
       {:else if monitor.monitor_type === "PROMETHEUS"}
         <MonitorPrometheus bind:data={typeData} />
       {:else if monitor.monitor_type === "DOCKER"}
-        <MonitorDocker bind:data={typeData} />
+        <MonitorDocker bind:data={typeData} defaults={dockerDefaults} />
       {:else if monitor.monitor_type === "NONE"}
         <MonitorNone bind:data={typeData} />
       {/if}

@@ -2,10 +2,10 @@ import axios, { type AxiosRequestConfig } from "axios";
 import type https from "https";
 import { AxiosProxyConfig } from "./proxy.js";
 import { performance } from "node:perf_hooks";
-import { DOCKER_CONNECTION_TYPES, DOCKER_DEFAULT_TIMEOUT } from "../anywhere.js";
+import { DOCKER_CONNECTION_TYPES, DOCKER_DEFAULT_SOCKET_PATH, DOCKER_DEFAULT_TIMEOUT } from "../anywhere.js";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "./tool.js";
 import type { DockerConnectionType } from "../anywhere.js";
-import type { DockerMonitorTypeData } from "../types/docker.js";
+import type { DockerConnectionDefaults, DockerMonitorTypeData } from "../types/docker.js";
 
 /**
  * Thin client for the Docker Engine HTTP API.
@@ -109,6 +109,33 @@ export function resolveConnection(typeData: Partial<DockerMonitorTypeData> | und
     tlsCert: substitute(raw.tlsCert) || undefined,
     tlsKey: substitute(raw.tlsKey) || undefined,
   };
+}
+
+const LOCAL_SOCKET: DockerConnectionDefaults = { connectionType: "socket", daemon: DOCKER_DEFAULT_SOCKET_PATH };
+
+/**
+ * Reads the Docker CLI's own `DOCKER_HOST`, plus `DOCKER_TLS_VERIFY` or `DOCKER_TLS` for TLS,
+ * so an operator behind a socket proxy sets the connection once. Only `unix://` and `tcp://` map to Kener.
+ */
+export function dockerDefaultsFromEnv(env: NodeJS.ProcessEnv): DockerConnectionDefaults {
+  const host = env.DOCKER_HOST?.trim();
+  if (!host) return LOCAL_SOCKET;
+  const [, scheme, address] = /^(unix|tcp):\/\/(.*?)\/*$/i.exec(host) ?? [];
+  if (scheme?.toLowerCase() === "unix") {
+    return { connectionType: "socket", daemon: address || DOCKER_DEFAULT_SOCKET_PATH };
+  }
+  if (scheme && address) {
+    return { connectionType: env.DOCKER_TLS_VERIFY || env.DOCKER_TLS ? "tls" : "tcp", daemon: address };
+  }
+  console.warn(`DOCKER_HOST "${host}" is not a unix:// or tcp:// address; new Docker monitors use the local socket`);
+  return LOCAL_SOCKET;
+}
+
+let envDefaults: DockerConnectionDefaults | undefined;
+
+/** `dockerDefaultsFromEnv` for this process, read once so a bad `DOCKER_HOST` warns once. */
+export function getDockerDefaults(): DockerConnectionDefaults {
+  return (envDefaults ??= dockerDefaultsFromEnv(process.env));
 }
 
 /**

@@ -8,12 +8,16 @@
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
   import { toast } from "svelte-sonner";
+  import { untrack } from "svelte";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import { DOCKER_DEFAULT_SOCKET_PATH, DOCKER_DEFAULT_TIMEOUT } from "$lib/anywhere.js";
-  import type { DockerMonitorTypeData } from "$lib/types/docker.js";
+  import type { DockerConnectionDefaults, DockerMonitorTypeData } from "$lib/types/docker.js";
 
-  let { data = $bindable({} as Record<string, unknown>) }: { data: Record<string, unknown> } = $props();
+  let {
+    data = $bindable({} as Record<string, unknown>),
+    defaults = { connectionType: "socket", daemon: DOCKER_DEFAULT_SOCKET_PATH }
+  }: { data: Record<string, unknown>; defaults?: DockerConnectionDefaults } = $props();
 
   const formData = data as unknown as DockerMonitorTypeData;
 
@@ -28,11 +32,14 @@
     daemon: "Docker daemon (ping only)"
   };
 
-  // Initialize defaults if not set
-  if (!(formData.connectionType in CONNECTION_TYPES)) formData.connectionType = "socket";
-  if (typeof formData.daemon !== "string") {
-    formData.daemon = formData.connectionType === "socket" ? DOCKER_DEFAULT_SOCKET_PATH : "";
+  function defaultDaemon(connectionType: string) {
+    if (connectionType === defaults.connectionType) return defaults.daemon;
+    return connectionType === "socket" ? DOCKER_DEFAULT_SOCKET_PATH : "";
   }
+
+  // Initialize defaults if not set
+  if (!(formData.connectionType in CONNECTION_TYPES)) formData.connectionType = untrack(() => defaults.connectionType);
+  if (typeof formData.daemon !== "string") formData.daemon = defaultDaemon(formData.connectionType);
   if (formData.checkType !== "daemon") formData.checkType = "container";
   if (typeof formData.containerName !== "string") formData.containerName = "";
   if (!formData.timeout) formData.timeout = DOCKER_DEFAULT_TIMEOUT;
@@ -51,7 +58,7 @@
   function selectConnectionType(value: string | undefined) {
     if (!value || !(value in CONNECTION_TYPES)) return;
     formData.connectionType = value as DockerMonitorTypeData["connectionType"];
-    formData.daemon = value === "socket" ? DOCKER_DEFAULT_SOCKET_PATH : "";
+    formData.daemon = defaultDaemon(value);
     if (value !== "tls") {
       // Otherwise a now-hidden private key would ride along on the next save.
       formData.tlsCa = undefined;
