@@ -13,6 +13,7 @@ import {
 } from "./controller.js";
 import type { EventDisplaySettings, GlobalPageVisibilitySettings, SiteDateTimeFormat } from "$lib/types/site.js";
 import serverResolve from "../resolver.js";
+import { ResolveEventListPlacement } from "$lib/clientTools";
 
 export interface LayoutServerData {
   isMobile: boolean;
@@ -85,6 +86,7 @@ function NormalizeEventDisplaySettings(settings?: Partial<EventDisplaySettings>)
   return {
     showInlineEvents:
       typeof settings?.showInlineEvents === "boolean" ? settings.showInlineEvents : defaults.showInlineEvents,
+    eventListPlacement: ResolveEventListPlacement(settings),
     incidents: {
       ...defaults.incidents,
       ...settings?.incidents,

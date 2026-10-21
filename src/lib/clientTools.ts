@@ -1,6 +1,7 @@
 import type { TimestampStatusCount } from "$lib/server/types/db";
 import GC, { PAGE_STATUS_MESSAGES } from "$lib/global-constants";
 import type { StatusType } from "$lib/types/status";
+import type { EventDisplaySettings, EventListPlacement } from "$lib/types/site";
 
 function ParseLatency(latencyMs: number): string {
   if (!!!latencyMs) {
@@ -424,6 +425,14 @@ function GetInitials(name: string): string {
     .toUpperCase()
     .slice(0, 2);
 }
+const EVENT_LIST_PLACEMENTS: EventListPlacement[] = ["button", "aside", "hidden"];
+
+function ResolveEventListPlacement(settings: Partial<EventDisplaySettings> | null | undefined): EventListPlacement {
+  const placement = settings?.eventListPlacement;
+  if (placement && EVENT_LIST_PLACEMENTS.includes(placement)) return placement;
+  // Settings saved before eventListPlacement existed put the list in the aside when showInlineEvents was on.
+  return settings?.showInlineEvents === true ? "aside" : "button";
+}
 export {
   AllRecordTypes,
   ValidateIpAddress,
@@ -443,4 +452,5 @@ export {
   SslSecurityTextClass,
   FormatSslRemaining,
   GetInitials,
+  ResolveEventListPlacement,
 };
