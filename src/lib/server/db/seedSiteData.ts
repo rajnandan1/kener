@@ -143,6 +143,7 @@ const seedSiteData = {
   },
   eventDisplaySettings: {
     showInlineEvents: false,
+    eventListPlacement: "button" as const,
     incidents: {
       enabled: true,
       ongoing: { show: true },

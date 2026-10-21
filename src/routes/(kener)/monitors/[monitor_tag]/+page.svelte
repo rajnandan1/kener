@@ -28,6 +28,7 @@
   // State
   let descriptionExpanded = $state(false);
   let showInlineEvents = $derived(data.eventDisplaySettings?.showInlineEvents === true);
+  let eventListPlacement = $derived(data.eventDisplaySettings?.eventListPlacement);
 
   function toggleDescription(expanded: boolean) {
     descriptionExpanded = expanded;
@@ -57,7 +58,7 @@
   <ThemePlus
     monitor_tags={[data.monitorTag]}
     embedMonitorTag={data.monitorTag}
-    hideNotificationsPopover={showInlineEvents}
+    hideNotificationsPopover={eventListPlacement === "hidden"}
   />
   <div class="flex flex-col gap-2 px-4 py-2">
     {#if data.monitorImage}

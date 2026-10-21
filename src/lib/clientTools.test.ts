@@ -1,10 +1,12 @@
 import { describe, it, expect } from "vitest";
+import type { EventDisplaySettings } from "$lib/types/site";
 import {
   IsValidDnsResolver,
   ParseLatency,
   ResolveSslExpiresAtMs,
   GetSslSecurityState,
   FormatSslRemaining,
+  ResolveEventListPlacement,
 } from "./clientTools";
 
 describe("IsValidDnsResolver", () => {
@@ -53,5 +55,24 @@ describe("SSL certificate state", () => {
 
   it("leaves ParseLatency unchanged for values above one day", () => {
     expect(ParseLatency(2 * day)).toBe("48.00h");
+  });
+});
+
+describe("ResolveEventListPlacement", () => {
+  it("keeps a stored placement", () => {
+    expect(ResolveEventListPlacement({ showInlineEvents: true, eventListPlacement: "button" })).toBe("button");
+    expect(ResolveEventListPlacement({ showInlineEvents: false, eventListPlacement: "aside" })).toBe("aside");
+    expect(ResolveEventListPlacement({ showInlineEvents: true, eventListPlacement: "hidden" })).toBe("hidden");
+  });
+
+  it("derives the placement from showInlineEvents when none is stored", () => {
+    expect(ResolveEventListPlacement({ showInlineEvents: true })).toBe("aside");
+    expect(ResolveEventListPlacement({ showInlineEvents: false })).toBe("button");
+    expect(ResolveEventListPlacement(null)).toBe("button");
+  });
+
+  it("ignores an unknown stored placement", () => {
+    const settings = { showInlineEvents: true, eventListPlacement: "sidebar" } as unknown as EventDisplaySettings;
+    expect(ResolveEventListPlacement(settings)).toBe("aside");
   });
 });
