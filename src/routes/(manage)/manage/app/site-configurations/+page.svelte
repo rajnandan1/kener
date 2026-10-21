@@ -1302,6 +1302,7 @@
             </p>
           </div>
           <RadioGroup.Root
+            aria-label="Event List"
             value={eventDisplaySettings.eventListPlacement}
             onValueChange={(v: string) => (eventDisplaySettings.eventListPlacement = v as EventListPlacement)}
             class="flex flex-col gap-3"
