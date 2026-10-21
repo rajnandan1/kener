@@ -41,6 +41,7 @@
 
   async function fetchNotifications(tags: string[]) {
     const id = ++requestId;
+    notifications = [];
     loading = true;
     try {
       const result = await requestNotifications(tags);
