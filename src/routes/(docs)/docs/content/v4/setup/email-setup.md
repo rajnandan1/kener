@@ -144,10 +144,10 @@ SMTP_FROM_EMAIL=noreply@yourdomain.com
 ```
 
 - `SMTP_USER` is always `groundmail`. `SMTP_PASS` is an SMTP credential (starts with `gmsmtp_`) created in the Groundmail dashboard under **SMTP**.
-- Verify the sending domain in Groundmail first. Until it is verified, mail only reaches the account owner's address.
+- Before Kener can email other people, verify the domain in `SMTP_FROM_EMAIL` and add a payment method in Groundmail (the Free plan isn't charged). Until then, Groundmail only delivers to your own account email, sent from `noreply@mail.groundmail.dev`.
 - If your host blocks outbound port 587, use `SMTP_PORT=2525` (also STARTTLS, so keep `SMTP_SECURE=0`).
 
-See [Groundmail SMTP docs](https://docs.groundmail.dev/api/smtp).
+See [Groundmail SMTP docs](https://docs.groundmail.dev/smtp).
 
 ## Troubleshooting {#troubleshooting}
 
