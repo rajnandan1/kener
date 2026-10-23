@@ -212,7 +212,7 @@
               {$t(SslSecurityLabelKey(sslSecurity))}
             </p>
             <p class="text-muted-foreground text-sm font-medium">
-              {$t("Remaining Days")}: {sslRemaining || "—"}
+              {$t("Time Remaining")}: {sslRemaining || "—"}
             </p>
             {#if sslExpiresAt}
               <p class="text-muted-foreground text-xs">
