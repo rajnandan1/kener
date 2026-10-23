@@ -18,15 +18,23 @@
   import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
   import GroupMonitorPopover from "$lib/components/GroupMonitorPopover.svelte";
   import { page } from "$app/state";
+  import {
+    FormatSslRemaining,
+    GetSslSecurityState,
+    SslSecurityLabelKey,
+    SslSecurityTextClass,
+  } from "$lib/clientTools";
+  import { getSslNowMs } from "$lib/client/sslClock.svelte";
 
   interface Props {
     monitorTag: string;
+    monitorType?: string;
     class?: string;
     maxDays?: number;
     groupTags?: string[];
   }
 
-  let { monitorTag, class: className = "", maxDays = 90, groupTags = [] }: Props = $props();
+  let { monitorTag, monitorType, class: className = "", maxDays = 90, groupTags = [] }: Props = $props();
 
   // State
   let loading = $state(true);
@@ -64,6 +72,13 @@
   let displayAvgLatency = $derived(overviewData?.avgLatency ?? "--");
   let displayMaxLatency = $derived(overviewData?.maxLatency ?? "--");
   let displayMinLatency = $derived(overviewData?.minLatency ?? "--");
+  let isSslMonitor = $derived((monitorType ?? overviewData?.monitorType) === "SSL");
+  let sslExpiresAt = $derived(overviewData?.sslExpiresAt ?? null);
+  let sslNowMs = $derived(isSslMonitor ? getSslNowMs() : Date.now());
+  let sslRemaining = $derived(isSslMonitor ? FormatSslRemaining(sslExpiresAt, sslNowMs) : "");
+  let sslSecurity = $derived(
+    isSslMonitor ? GetSslSecurityState(sslExpiresAt, sslNowMs, overviewData?.sslTrusted) : null,
+  );
 
   // Data for calendar/chart comes directly from API
   let displayData = $derived(overviewData?.uptimeData ?? []);
@@ -138,7 +153,7 @@
       <div>
         <Card.Title class="text-base font-medium">{dayOptions[selectedDayIndex].text}</Card.Title>
         <Card.Description class="text-xs">
-          {$t("Status history and latency trend")}
+          {isSslMonitor ? $t("Status history") : $t("Status history and latency trend")}
         </Card.Description>
       </div>
       {#if !loading && overviewData}
@@ -192,14 +207,41 @@
       <!-- Stats Summary -->
       <div class="flex gap-4">
         <div class="flex flex-1 flex-col items-start gap-1">
-          <p class="text-2xl font-semibold">{displayUptime}%</p>
-          <p class="text-muted-foreground text-sm font-medium">{$t("Uptime")}</p>
+          {#if isSslMonitor && sslSecurity}
+            <p class="text-2xl font-semibold {SslSecurityTextClass(sslSecurity)}">
+              {$t(SslSecurityLabelKey(sslSecurity))}
+            </p>
+            <p class="text-muted-foreground text-sm font-medium">
+              {$t("Remaining Days")}: {sslRemaining || "—"}
+            </p>
+            {#if sslExpiresAt}
+              <p class="text-muted-foreground text-xs">
+                {$t("Expires At")}: {$formatDate(sslExpiresAt, "MMMM d, yyyy HH:mm:ss")}
+              </p>
+            {/if}
+            {#if overviewData.issuerCn || overviewData.issuerO}
+              <p class="text-muted-foreground text-xs">
+                {$t("Issued By")}:
+                {#if overviewData.issuerCn}CN={overviewData.issuerCn}{/if}{#if overviewData.issuerCn && overviewData.issuerO},
+                {/if}{#if overviewData.issuerO}O={overviewData.issuerO}{/if}
+              </p>
+            {/if}
+          {:else}
+            <p class="text-2xl font-semibold">{displayUptime}%</p>
+            <p class="text-muted-foreground text-sm font-medium">{$t("Uptime")}</p>
+          {/if}
         </div>
       </div>
 
       <!-- Status Bar Calendar -->
       <div class="flex flex-col gap-1">
-        <StatusBarCalendar data={displayData} {monitorTag} barHeight={40} radius={8} />
+        <StatusBarCalendar
+          data={displayData}
+          {monitorTag}
+          monitorType={monitorType ?? overviewData.monitorType}
+          barHeight={40}
+          radius={8}
+        />
 
         <!-- Date labels -->
         <div class="flex justify-between">
@@ -225,7 +267,8 @@
         </div>
       {/if}
 
-      <!-- Latency Chart -->
+      <!-- Remaining certificate time is not a latency series. -->
+      {#if !isSslMonitor}
       <div class="pt-2">
         <p class="text-muted-foreground mb-2 text-sm font-medium">
           {$t("Latency Trend")}
@@ -271,6 +314,7 @@
 
         <LatencyTrendChart data={latencyChartData} label={latencyChartLabel} height={128} />
       </div>
+      {/if}
     {/if}
   </Card.Content>
 </Card.Root>
