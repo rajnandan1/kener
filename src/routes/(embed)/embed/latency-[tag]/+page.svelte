@@ -83,6 +83,8 @@
     <Skeleton class="w-full rounded" style="height: {data.height}px;" />
   {:else if error}
     <div class="text-muted-foreground text-xs">{$t("Failed to load data")}</div>
+  {:else if overviewData?.monitorType === "SSL"}
+    <div class="text-muted-foreground text-xs">{$t("Status history")}</div>
   {:else}
     <!-- Stats row -->
     <div class="flex items-center justify-between text-xs font-semibold">
