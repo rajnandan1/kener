@@ -91,6 +91,8 @@ export interface GroupMonitorTypeData extends Record<string, unknown> {
   monitors: GroupMonitorMember[];
   executionDelay: number;
   latencyCalculation: "AVG" | "MAX" | "MIN";
+  /** Link member names to their monitor pages in the Included Monitors drawer. Default true. */
+  linkMembers?: boolean;
 }
 
 export interface GamedigMonitorTypeData {

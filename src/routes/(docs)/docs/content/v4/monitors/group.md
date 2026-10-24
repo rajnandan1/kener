@@ -68,6 +68,7 @@ Group latency uses selected mode:
 | `monitors`           | `Array<{tag, weight}>` | `[]`    | Required, min 2                                |
 | `executionDelay`     | `number`               | `1000`  | ms to wait before aggregating; must be >= 1000 |
 | `latencyCalculation` | `AVG\|MAX\|MIN`        | `AVG`   |                                                |
+| `linkMembers`        | `boolean`              | `true`  | `false` lists included monitors without links  |
 
 ## Example {#example}
 

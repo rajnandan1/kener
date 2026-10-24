@@ -25,6 +25,8 @@
     prefetchedData?: MonitorBarResponse;
     prefetchedError?: string;
     groupChildTags?: string[];
+    groupLinkMembers?: boolean;
+    link?: boolean;
     days?: number;
     endOfDayTodayAtTz?: number;
     compact?: boolean;
@@ -36,6 +38,8 @@
     prefetchedData,
     prefetchedError,
     groupChildTags = [],
+    groupLinkMembers = true,
+    link = true,
     days,
     endOfDayTodayAtTz,
     compact = false,
@@ -123,7 +127,11 @@
       {/if}
       <Item.Content class="min-w-0 flex-1">
         <Item.Title class="w-full truncate">
-          <a class="hover:underline" href={clientResolver(resolve, `/monitors/${tag}`)}>{data.name}</a>
+          {#if link}
+            <a class="hover:underline" href={clientResolver(resolve, `/monitors/${tag}`)}>{data.name}</a>
+          {:else}
+            {data.name}
+          {/if}
         </Item.Title>
         {#if data.description}
           <Item.Description class="line-clamp-2 wrap-break-word">{data.description}</Item.Description>
@@ -178,6 +186,7 @@
       <div class="mt-2 flex justify-center gap-2 px-4">
         <GroupMonitorPopover
           tags={groupChildTags}
+          linkMembers={groupLinkMembers}
           days={days as number}
           endOfDayTodayAtTz={endOfDayTodayAtTz as number}
         >

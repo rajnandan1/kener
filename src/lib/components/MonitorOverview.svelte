@@ -24,9 +24,10 @@
     class?: string;
     maxDays?: number;
     groupTags?: string[];
+    groupLinkMembers?: boolean;
   }
 
-  let { monitorTag, class: className = "", maxDays = 90, groupTags = [] }: Props = $props();
+  let { monitorTag, class: className = "", maxDays = 90, groupTags = [], groupLinkMembers = true }: Props = $props();
 
   // State
   let loading = $state(true);
@@ -218,7 +219,7 @@
       <!-- Add group GroupMonitorPopover here -->
       {#if groupTags.length > 0}
         <div class="flex justify-center">
-          <GroupMonitorPopover tags={groupTags} days={selectedDays} {endOfDayTodayAtTz}>
+          <GroupMonitorPopover tags={groupTags} linkMembers={groupLinkMembers} days={selectedDays} {endOfDayTodayAtTz}>
             {$t("Included Monitors (%count)", { count: String(groupTags.length) })}
             <ArrowUp class="size-3" />
           </GroupMonitorPopover>

@@ -156,6 +156,7 @@ export interface PageDashboardData {
   upcomingMaintenances: MaintenanceEventsMonitorList[];
   monitorTags: string[];
   monitorGroupMembersByTag: Record<string, string[]>;
+  monitorGroupLinkMembersByTag: Record<string, boolean>;
   pageDetails: PageRecordTyped;
   socialPagePreviewImage?: string;
   metaPageTitle?: string;
@@ -363,6 +364,7 @@ export const GetPageDashboardData = async (
       upcomingMaintenances: [],
       monitorTags,
       monitorGroupMembersByTag: {},
+      monitorGroupLinkMembersByTag: {},
       pageDetails: pageDetailsTyped,
       socialPagePreviewImage,
       metaPageTitle,
@@ -396,6 +398,7 @@ export const GetPageDashboardData = async (
 
   const pageStatus = BuildPageStatus(latestData, nowTs);
   const monitorGroupMembersByTag: Record<string, string[]> = {};
+  const monitorGroupLinkMembersByTag: Record<string, boolean> = {};
 
   for (const monitor of parsedMonitors) {
     if (monitor.monitor_type !== "GROUP") continue;
@@ -404,6 +407,7 @@ export const GetPageDashboardData = async (
     if (!groupData?.monitors || !Array.isArray(groupData.monitors)) continue;
 
     monitorGroupMembersByTag[monitor.tag] = groupData.monitors.map((member) => member.tag);
+    monitorGroupLinkMembersByTag[monitor.tag] = groupData.linkMembers !== false;
   }
 
   return {
@@ -413,6 +417,7 @@ export const GetPageDashboardData = async (
     upcomingMaintenances,
     monitorTags,
     monitorGroupMembersByTag,
+    monitorGroupLinkMembersByTag,
     pageDetails: pageDetailsTyped,
     socialPagePreviewImage,
     metaPageTitle,
