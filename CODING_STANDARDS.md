@@ -4,7 +4,7 @@ Timestamps are UTC **seconds**. Use the helpers in `src/lib/server/tool.ts` (`Ge
 
 ## API Routes
 
-- `src/hooks.server.ts` requires a Bearer API key on every route in the `(api)` route group, which holds all of `/api/v4`. It decides from `event.route.id`, never from the request path, because SvelteKit decodes the path before it matches a route. It also loads the monitor, incident, maintenance, or page named in `event.params` into `locals`, and returns the JSON 404 when the record does not exist or an id is not a whole number up to 2147483647.
+- `src/hooks.server.ts` requires a Bearer API key on every route in the `(api)` route group, which holds all of `/api/v4`. It decides from `event.route.id`, because SvelteKit decodes the path before it matches a route. A request that matched no route but whose raw path starts with `/api/` also needs the key, and then gets the JSON 404. The hook also loads the monitor, incident, maintenance, or page named in `event.params` into `locals`, and returns the JSON 404 when the record does not exist or an id is not a whole number up to 2147483647.
 - The status page fetches its own data from `/dashboard-apis/<action>`, with no API key. `src/routes/(kener)/dashboard-apis/[action]/+server.ts` serves it from `src/lib/server/api-server/<action>/<method>.ts`.
 
 ## Database
