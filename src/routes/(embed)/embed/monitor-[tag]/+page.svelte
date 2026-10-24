@@ -7,6 +7,13 @@
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
   import { t } from "$lib/stores/i18n";
   import clientResolver from "$lib/client/resolver.js";
+  import {
+    FormatSslRemaining,
+    GetSslSecurityState,
+    SslSecurityLabelKey,
+    SslSecurityTextClass,
+  } from "$lib/clientTools";
+  import { getSslNowMs } from "$lib/client/sslClock.svelte";
   interface Props {
     data: {
       monitorTag: string;
@@ -30,6 +37,12 @@
   let displayUptime = $derived(overviewData?.uptime ?? "--");
   let displayAvgLatency = $derived(overviewData?.avgLatency ?? "--");
   let displayData = $derived(overviewData?.uptimeData ?? []);
+  let isSslMonitor = $derived(overviewData?.monitorType === "SSL");
+  let sslNowMs = $derived(isSslMonitor ? getSslNowMs() : Date.now());
+  let sslSecurity = $derived(
+    isSslMonitor ? GetSslSecurityState(overviewData?.sslExpiresAt, sslNowMs, overviewData?.sslTrusted) : null,
+  );
+  let sslRemaining = $derived(isSslMonitor ? FormatSslRemaining(overviewData?.sslExpiresAt, sslNowMs) : "");
 
   async function fetchData() {
     loading = true;
@@ -75,13 +88,27 @@
   {:else}
     <!-- Stats row -->
     <div class="flex items-center justify-between text-xs font-semibold">
-      <span class="text-foreground">{displayUptime}% {$t("Uptime")}</span>
-      {#if displayAvgLatency !== "--"}
-        <span class="">{displayAvgLatency} {$t("Avg Latency")}</span>
+      {#if isSslMonitor && sslSecurity}
+        <span class={SslSecurityTextClass(sslSecurity)}>{$t(SslSecurityLabelKey(sslSecurity))}</span>
+        <span class="text-muted-foreground font-medium">
+          {$t("Time Remaining")}: {sslRemaining || "—"}
+        </span>
+      {:else}
+        <span class="text-foreground">{displayUptime}% {$t("Uptime")}</span>
+        {#if displayAvgLatency !== "--"}
+          <span class="">{displayAvgLatency} {$t("Avg Latency")}</span>
+        {/if}
       {/if}
     </div>
 
     <!-- Status bar calendar -->
-    <StatusBarCalendar data={displayData} monitorTag={data.monitorTag} barHeight={30} radius={4} disableClick={true} />
+    <StatusBarCalendar
+      data={displayData}
+      monitorTag={data.monitorTag}
+      monitorType={overviewData?.monitorType}
+      barHeight={30}
+      radius={4}
+      disableClick={true}
+    />
   {/if}
 </div>
