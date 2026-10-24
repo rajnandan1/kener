@@ -47,7 +47,7 @@ Return object:
 
 ```json
 {
-    "type": "TCP",
+    "monitor_type": "TCP",
     "type_data": {
         "hosts": [{ "type": "IP4", "host": "db.example.com", "port": 5432, "timeout": 2000 }]
     }

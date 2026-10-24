@@ -9,8 +9,7 @@ import type {
 } from "$lib/types/api";
 import GC from "$lib/global-constants";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
-import { SetLastMonitoringValue } from "$lib/server/cache/setGet";
-import alertingQueue from "$lib/server/queues/alertingQueue";
+import { UpdateMonitoringData } from "$lib/server/controllers/monitorsController";
 
 export const GET: RequestHandler = async ({ params, locals }) => {
   // Monitor is validated by middleware and available in locals
@@ -146,29 +145,14 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     latency = 0;
   }
 
-  // Insert or update the data point
-  await db.insertMonitoringData({
+  await UpdateMonitoringData({
     monitor_tag: monitorTag,
-    timestamp: timestamp,
-    status: status,
-    latency: latency,
+    start: timestamp,
+    end: timestamp,
+    newStatus: status,
     type: GC.MANUAL,
+    latency: latency,
   });
-
-  // Update the cache so group monitors (and other cache consumers) see the latest status
-  const latestData = await db.getLatestMonitoringData(monitorTag);
-  if (latestData) {
-    await SetLastMonitoringValue(monitorTag, latestData);
-  }
-
-  // MANUAL samples are alert-visible (docs/adr/0005), so re-evaluate alerts for this
-  // sample — for NONE monitors nothing else would ever trigger evaluation.
-  // Best-effort: the row is already committed; a queue outage must not fail the request.
-  try {
-    await alertingQueue.push(monitorTag, timestamp, status);
-  } catch (err) {
-    console.error(`Failed to enqueue alert evaluation for ${monitorTag} after MANUAL data write:`, err);
-  }
 
   // Fetch the updated data
   const updatedData = await db.getMonitoringDataAt(monitorTag, timestamp);

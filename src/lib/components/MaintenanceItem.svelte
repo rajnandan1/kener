@@ -110,7 +110,7 @@
         <span
           class="absolute top-0 bottom-0 left-1/2 border-l sm:top-1/2 sm:right-0 sm:bottom-auto sm:left-0 sm:border-t sm:border-l-0"
         ></span>
-        <span class="bg-background relative z-10 rounded-full px-0 py-1 sm:px-2">
+        <span class="bg-background relative rounded-full px-0 py-1 sm:px-2">
           {$formatDuration(maintenance.start_date_time, maintenance.end_date_time)}
         </span>
       </span>

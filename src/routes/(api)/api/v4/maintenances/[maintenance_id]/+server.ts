@@ -10,7 +10,11 @@ import type {
   DeleteMaintenanceResponse,
 } from "$lib/types/api";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
-import { GenerateMaintenanceEvents, isOneTimeRrule } from "$lib/server/controllers/maintenanceController";
+import {
+  DeleteMaintenance,
+  UpdateMaintenance,
+  type UpdateMaintenanceInput,
+} from "$lib/server/controllers/maintenanceController";
 import { GetSiteURL } from "$lib/server/controllers/siteDataController";
 import serverResolver from "$lib/server/resolver";
 import { rrulestr } from "rrule";
@@ -188,18 +192,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     }
   }
 
-  // Determine if this is a one-time maintenance
-  const currentRrule = body.rrule !== undefined ? body.rrule : existingMaintenance.rrule;
-  const isOneTime = isOneTimeRrule(currentRrule);
-
-  // Check if schedule-related fields changed
-  const scheduleChanged =
-    (body.start_date_time !== undefined && body.start_date_time !== existingMaintenance.start_date_time) ||
-    (body.rrule !== undefined && body.rrule !== existingMaintenance.rrule) ||
-    (body.duration_seconds !== undefined && body.duration_seconds !== existingMaintenance.duration_seconds);
-
-  // Build update data
-  const updateData: Record<string, unknown> = {};
+  const updateData: UpdateMaintenanceInput = {};
   if (body.title !== undefined) {
     updateData.title = body.title.trim();
   }
@@ -218,74 +211,14 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   if (body.status !== undefined) {
     updateData.status = body.status;
   }
-
-  // Update the maintenance record
-  if (Object.keys(updateData).length > 0) {
-    await db.updateMaintenance(existingMaintenance.id, updateData);
-  }
-
-  // Handle monitors update if provided
   if (body.monitors !== undefined) {
-    // Remove all existing monitors and add new ones
-    await db.removeAllMonitorsFromMaintenance(existingMaintenance.id);
-    if (body.monitors.length > 0) {
-      await db.addMonitorsToMaintenanceWithStatus(
-        existingMaintenance.id,
-        body.monitors.map((m) => ({
-          monitor_tag: m.monitor_tag,
-          monitor_impact: m.impact || "MAINTENANCE",
-        })),
-      );
-    }
+    updateData.monitors = body.monitors.map((m) => ({
+      monitor_tag: m.monitor_tag,
+      monitor_impact: m.impact || "MAINTENANCE",
+    }));
   }
 
-  // For one-time maintenances: if schedule changed (start_date_time or duration),
-  // delete the existing event and create a new one
-  if (isOneTime && scheduleChanged) {
-    // Get all events for this maintenance
-    const events = await db.getMaintenanceEventsByMaintenanceId(existingMaintenance.id);
-
-    // Delete all existing events
-    for (const event of events) {
-      await db.deleteMaintenanceEvent(event.id);
-    }
-
-    // Get updated maintenance data
-    const updatedMaintenance = await db.getMaintenanceById(existingMaintenance.id);
-    if (updatedMaintenance) {
-      // Regenerate the event
-      await GenerateMaintenanceEvents(
-        existingMaintenance.id,
-        updatedMaintenance.start_date_time,
-        updatedMaintenance.rrule,
-        updatedMaintenance.duration_seconds,
-        1,
-      );
-    }
-  } else if (!isOneTime && scheduleChanged) {
-    // For recurring maintenances: delete future SCHEDULED events and regenerate
-    const events = await db.getMaintenanceEventsByMaintenanceId(existingMaintenance.id);
-    const now = Math.floor(Date.now() / 1000);
-
-    for (const event of events) {
-      // Only delete SCHEDULED events in the future
-      if (event.status === "SCHEDULED" && event.start_date_time > now) {
-        await db.deleteMaintenanceEvent(event.id);
-      }
-    }
-
-    // Regenerate events
-    const updatedMaintenance = await db.getMaintenanceById(existingMaintenance.id);
-    if (updatedMaintenance) {
-      await GenerateMaintenanceEvents(
-        existingMaintenance.id,
-        updatedMaintenance.start_date_time,
-        updatedMaintenance.rrule,
-        updatedMaintenance.duration_seconds,
-        1,
-      );
-    }
-  }
+  await UpdateMaintenance(existingMaintenance.id, updateData);
 
   // Build and return the updated maintenance
   const maintenanceResponse = await buildMaintenanceResponse(existingMaintenance.id);
@@ -308,17 +241,7 @@ export const DELETE: RequestHandler = async ({ locals }) => {
   // Maintenance is validated by middleware and available in locals
   const maintenance = locals.maintenance!;
 
-  // Delete all events for this maintenance
-  const events = await db.getMaintenanceEventsByMaintenanceId(maintenance.id);
-  for (const event of events) {
-    await db.deleteMaintenanceEvent(event.id);
-  }
-
-  // Delete all monitor associations
-  await db.removeAllMonitorsFromMaintenance(maintenance.id);
-
-  // Delete the maintenance itself
-  await db.deleteMaintenance(maintenance.id);
+  await DeleteMaintenance(maintenance.id);
 
   const response: DeleteMaintenanceResponse = {
     message: `Maintenance with id '${maintenance.id}' deleted successfully`,

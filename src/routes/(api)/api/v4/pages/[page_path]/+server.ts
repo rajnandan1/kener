@@ -13,6 +13,13 @@ import type {
 import type { PageRecord } from "$lib/server/types/db";
 import GC from "$lib/global-constants";
 import { toApiPageSettings, applyPageSettingsPatch, validatePageSettings } from "$lib/server/pageSettings";
+import {
+  AddMonitorToPage,
+  DeletePage,
+  GetPageMonitors,
+  RemoveMonitorFromPage,
+  UpdatePage,
+} from "$lib/server/controllers/pagesController";
 
 async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
   const pageSettings = toApiPageSettings(page.page_settings_json);
@@ -176,6 +183,15 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
         return json(errorResponse, { status: 400 });
       }
     }
+    if (new Set(body.monitors).size !== body.monitors.length) {
+      const errorResponse: BadRequestResponse = {
+        error: {
+          code: "BAD_REQUEST",
+          message: "monitors must not list a monitor tag twice",
+        },
+      };
+      return json(errorResponse, { status: 400 });
+    }
   }
 
   // Validate page_settings if provided
@@ -221,22 +237,16 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 
   // Update page if there are changes
   if (Object.keys(updateData).length > 0) {
-    await db.updatePage(page.id, updateData);
+    await UpdatePage(page.id, updateData);
   }
 
   // Handle monitors update - replace all monitors
   if (body.monitors !== undefined && Array.isArray(body.monitors)) {
-    // Delete all existing page monitors
-    await db.deletePageMonitorsByPageId(page.id);
-
-    // Add new monitors
+    for (const current of await GetPageMonitors(page.id)) {
+      await RemoveMonitorFromPage(page.id, current.monitor_tag);
+    }
     for (let i = 0; i < body.monitors.length; i++) {
-      await db.addMonitorToPage({
-        page_id: page.id,
-        monitor_tag: body.monitors[i],
-        monitor_settings_json: null,
-        position: i,
-      });
+      await AddMonitorToPage(page.id, body.monitors[i], null, i);
     }
   }
 
@@ -285,11 +295,7 @@ export const DELETE: RequestHandler = async ({ locals }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  // Delete all page monitors first
-  await db.deletePageMonitorsByPageId(page.id);
-
-  // Delete the page
-  await db.deletePage(page.id);
+  await DeletePage(page.id);
 
   const response: DeletePageResponse = {
     message: `Page '${page.page_path || GC.HOME_PAGE_TOKEN}' deleted successfully`,

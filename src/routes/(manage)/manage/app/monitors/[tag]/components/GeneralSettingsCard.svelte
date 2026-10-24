@@ -60,8 +60,7 @@
             mimeType: file.type,
             fileName: file.name,
             maxWidth: 128,
-            maxHeight: 128,
-            prefix: "monitor_"
+            maxHeight: 128
           }
         })
       });
@@ -259,8 +258,8 @@
           </span>
         </div>
         <p class="text-muted-foreground text-xs">
-          Hidden monitors won't appear on any status pages, but monitoring, alerting, and all other features will
-          continue to work normally.
+          Hidden monitors don't appear on status pages, except to signed-in users whose role has monitors.read.
+          Monitoring, alerting, and all other features keep working.
         </p>
       </div>
       <div class="flex flex-col gap-2">
@@ -278,7 +277,8 @@
           }}
         />
         <p class="text-muted-foreground text-xs">
-          Require this many consecutive checks before a status change is recorded. 1 = off (record every check immediately).
+          Require this many consecutive checks before a status change is recorded. 1 = off (record every check
+          immediately).
         </p>
       </div>
     </div>

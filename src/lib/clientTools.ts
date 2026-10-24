@@ -1,6 +1,7 @@
 import type { TimestampStatusCount } from "$lib/server/types/db";
 import GC, { PAGE_STATUS_MESSAGES } from "$lib/global-constants";
 import type { StatusType } from "$lib/types/status";
+import type { EventDisplaySettings, EventListPlacement } from "$lib/types/site";
 
 function ParseLatency(latencyMs: number): string {
   if (!!!latencyMs) {
@@ -15,6 +16,41 @@ function ParseLatency(latencyMs: number): string {
   } else {
     return `${(latencyMs / 3600000).toFixed(2)}h`;
   }
+}
+
+function ResolveSslExpiresAtMs(latestData: { expiry_at?: string | null } | null | undefined): number | null {
+  const parsed = latestData?.expiry_at ? Date.parse(latestData.expiry_at) : NaN;
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
+type SslSecurityState = "secured" | "insecure" | "unknown";
+
+function GetSslSecurityState(
+  expiresAtMs: number | null | undefined,
+  nowMs: number = Date.now(),
+  trusted: boolean | null | undefined = true,
+): SslSecurityState {
+  if (typeof expiresAtMs !== "number") return "unknown";
+  return trusted === false || expiresAtMs <= nowMs ? "insecure" : "secured";
+}
+
+function SslSecurityLabelKey(state: SslSecurityState): "SECURED" | "INSECURE" | "UNKNOWN" {
+  if (state === "insecure") return "INSECURE";
+  if (state === "secured") return "SECURED";
+  return "UNKNOWN";
+}
+
+function SslSecurityTextClass(state: SslSecurityState): string {
+  if (state === "insecure") return "text-down";
+  if (state === "secured") return "text-up";
+  return "text-muted-foreground";
+}
+
+function FormatSslRemaining(expiresAtMs: number | null | undefined, nowMs: number = Date.now()): string {
+  if (typeof expiresAtMs !== "number") return "";
+  const remainingMs = Math.max(0, expiresAtMs - nowMs);
+  if (remainingMs >= 86400000) return `${(remainingMs / 86400000).toFixed(1)}d`;
+  return `${(remainingMs / 3600000).toFixed(1)}h`;
 }
 
 function siteDataExtractFromDb(data: Record<string, unknown>, obj: Record<string, unknown>): Record<string, unknown> {
@@ -389,6 +425,14 @@ function GetInitials(name: string): string {
     .toUpperCase()
     .slice(0, 2);
 }
+const EVENT_LIST_PLACEMENTS: EventListPlacement[] = ["button", "aside", "hidden"];
+
+function ResolveEventListPlacement(settings: Partial<EventDisplaySettings> | null | undefined): EventListPlacement {
+  const placement = settings?.eventListPlacement;
+  if (placement && EVENT_LIST_PLACEMENTS.includes(placement)) return placement;
+  // Settings saved before eventListPlacement existed put the list in the aside when showInlineEvents was on.
+  return settings?.showInlineEvents === true ? "aside" : "button";
+}
 export {
   AllRecordTypes,
   ValidateIpAddress,
@@ -402,5 +446,11 @@ export {
   GetStatusColor,
   GetStatusBgColor,
   ParseLatency,
+  ResolveSslExpiresAtMs,
+  GetSslSecurityState,
+  SslSecurityLabelKey,
+  SslSecurityTextClass,
+  FormatSslRemaining,
   GetInitials,
+  ResolveEventListPlacement,
 };

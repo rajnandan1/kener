@@ -73,7 +73,7 @@ Group latency uses selected mode:
 
 ```json
 {
-    "type": "GROUP",
+    "monitor_type": "GROUP",
     "type_data": {
         "monitors": [
             { "tag": "api", "weight": 0.6 },

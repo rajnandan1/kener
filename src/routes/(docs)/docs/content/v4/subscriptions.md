@@ -66,12 +66,17 @@ Admins can also:
 
 ## When notifications are triggered {#when-notifications-are-triggered}
 
+Kener emails subscribers about an incident or maintenance only when it is global (`is_global = YES`) or affects at least one monitor that is not hidden. See [Monitor visibility](/docs/v4/monitors/visibility#where-each-rule-applies).
+
 ### Incident notifications {#incident-notifications}
 
-Incident subscription emails are queued when alert-driven incident lifecycle changes happen, including:
+Kener queues an incident subscription email for each update posted on an incident, from any source:
 
-- Incident created from alert trigger
-- Incident resolved from alert recovery
+- An update added in the dashboard
+- An update added through the API (`POST /api/v4/incidents/{incident_id}/comments`)
+- The update an alert adds when it creates the incident, and when it resolves it
+
+Updates on legacy incidents of type `MAINTENANCE` (from before v4 maintenances) do not queue this email.
 
 ### Maintenance notifications {#maintenance-notifications}
 

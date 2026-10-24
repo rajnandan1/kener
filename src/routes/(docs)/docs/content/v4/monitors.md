@@ -1,105 +1,45 @@
 ---
 title: Monitors
-description: Learn about API, Ping, TCP, DNS, and SSL monitors for tracking service health
+description: Pick a monitor type and create monitors from the admin panel or the API
 ---
 
 Monitors are the core of Kener. They continuously check the health of your services and track their availability.
 
-## Monitor Types
+## Monitor Types {#monitor-types}
 
-Kener supports multiple monitor types for different use cases:
+Each monitor type has its own page with its `type_data` options and an example. See the list in [Monitors Overview](/docs/v4/monitors/overview#monitor-types).
 
-### API Monitor
+## Creating a Monitor {#creating-a-monitor}
 
-Check HTTP/HTTPS endpoints for availability and response codes.
+### Via Admin Panel {#via-admin-panel}
 
-```json
-{
-    "type": "API",
-    "url": "https://api.example.com/health",
-    "method": "GET",
-    "expectedStatusCode": 200,
-    "timeout": 10000
-}
-```
-
-**Options:**
-
-- `url` - The endpoint to check
-- `method` - HTTP method (GET, POST, PUT, etc.)
-- `expectedStatusCode` - Expected response code
-- `headers` - Custom headers to send
-- `body` - Request body for POST/PUT requests
-
-### Ping Monitor {#ping-monitor}
-
-Simple ICMP ping to verify server availability.
-
-```json
-{
-    "type": "PING",
-    "host": "server.example.com"
-}
-```
-
-### TCP Monitor
-
-Check if a specific port is open and responding.
-
-```json
-{
-    "type": "TCP",
-    "host": "server.example.com",
-    "port": 443
-}
-```
-
-### DNS Monitor
-
-Verify DNS records are resolving correctly.
-
-```json
-{
-    "type": "DNS",
-    "host": "example.com",
-    "recordType": "A"
-}
-```
-
-### SSL Monitor
-
-Track SSL certificate expiration and validity.
-
-```json
-{
-    "type": "SSL",
-    "host": "example.com",
-    "port": 443
-}
-```
-
-## Creating a Monitor
-
-### Via Admin Panel
-
-1. Navigate to `/manage/monitors`
-2. Click "Add Monitor"
+1. Navigate to `/manage/app/monitors`
+2. Click "New Monitor"
 3. Fill in the monitor details
 4. Save and activate
 
-### Via API
+### Via API {#via-api}
+
+Send the type in `monitor_type` and its settings in `type_data`. The `cron` expression sets how often the check runs.
 
 ```bash
-curl -X POST https://your-kener.com/api/monitors \
+curl -X POST https://your-kener.com/api/v4/monitors \
   -H "Authorization: Bearer YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
+    "tag": "api-health",
     "name": "API Health Check",
-    "type": "API",
-    "url": "https://api.example.com/health",
-    "interval": 60
+    "monitor_type": "API",
+    "cron": "* * * * *",
+    "type_data": {
+      "url": "https://api.example.com/health",
+      "method": "GET",
+      "timeout": 10000
+    }
   }'
 ```
+
+See the [API Reference](/docs/spec/v4/) for every field.
 
 ## Monitor Status
 
