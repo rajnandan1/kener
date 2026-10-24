@@ -3,7 +3,24 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 
 const saltRounds = 10;
-const DUMMY_SECRET = "DUMMY_SECRET";
+
+/**
+ * KENER_SECRET_KEY signs/verifies every session JWT, password-reset token, and API-key
+ * hash in this file. There is no safe fallback for it: silently substituting a hardcoded
+ * value here would let anyone who knows that value forge a valid admin session or
+ * password-reset token against any Kener instance that has not set this variable.
+ * Fail loudly instead, exactly where the key is actually needed.
+ */
+const GetSecretKey = (): string => {
+  const key = process.env.KENER_SECRET_KEY;
+  if (!key) {
+    throw new Error(
+      "KENER_SECRET_KEY is not set. Kener will not sign or verify tokens with a hardcoded fallback secret; " +
+        "set KENER_SECRET_KEY to a strong, unique value before using authentication, password reset, or API keys.",
+    );
+  }
+  return key;
+};
 
 export const ValidatePassword = (password: string): boolean => {
   return /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/.test(password);
@@ -43,7 +60,7 @@ import type { SMTPConfiguration } from "../notification/types";
 
 export const VerifyToken = async (token: string): Promise<TokenPayload | undefined> => {
   try {
-    const decoded = jwt.verify(token, process.env.KENER_SECRET_KEY || DUMMY_SECRET);
+    const decoded = jwt.verify(token, GetSecretKey());
     if (typeof decoded === "string") {
       return undefined;
     }
@@ -79,7 +96,7 @@ export const GetSMTPFromENV = (): SMTPConfiguration | null => {
 
 export const GenerateTokenWithExpiry = async (data: object, expiry: string): Promise<string> => {
   try {
-    const token = jwt.sign(data, process.env.KENER_SECRET_KEY || DUMMY_SECRET, {
+    const token = jwt.sign(data, GetSecretKey(), {
       expiresIn: expiry,
     } as jwt.SignOptions);
     return token;
@@ -91,7 +108,7 @@ export const GenerateTokenWithExpiry = async (data: object, expiry: string): Pro
 
 export const ForgotPasswordJWT = async (data: object): Promise<string> => {
   try {
-    const token = jwt.sign(data, process.env.KENER_SECRET_KEY || DUMMY_SECRET, {
+    const token = jwt.sign(data, GetSecretKey(), {
       expiresIn: "1h",
     } as jwt.SignOptions);
     return token;
@@ -102,7 +119,7 @@ export const ForgotPasswordJWT = async (data: object): Promise<string> => {
 };
 export const GenerateToken = async (data: object): Promise<string> => {
   try {
-    const token = jwt.sign(data, process.env.KENER_SECRET_KEY || DUMMY_SECRET, {
+    const token = jwt.sign(data, GetSecretKey(), {
       expiresIn: "1y",
     } as jwt.SignOptions);
     return token;
@@ -145,7 +162,7 @@ export const MaskString = (str: string): string => {
 
 export const CreateHash = (apiKey: string): string => {
   return crypto
-    .createHmac("sha256", process.env.KENER_SECRET_KEY || DUMMY_SECRET)
+    .createHmac("sha256", GetSecretKey())
     .update(apiKey)
     .digest("hex");
 };

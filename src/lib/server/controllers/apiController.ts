@@ -4,6 +4,7 @@ import { MaskString, CreateHash } from "./commonController.js";
 
 interface ApiKeyInput {
   name: string;
+  expires_at?: Date | string | null;
 }
 interface ApiKeyStatusInput {
   id: number;
@@ -31,10 +32,23 @@ export const CreateNewAPIKey = async (data: ApiKeyInput): Promise<{ apiKey: stri
     throw new Error("Name is required");
   }
 
+  let expiresAt: Date | null = null;
+  if (data.expires_at !== undefined && data.expires_at !== null && data.expires_at !== "") {
+    const parsed = new Date(data.expires_at);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new Error("expires_at must be a valid date");
+    }
+    if (parsed.getTime() <= Date.now()) {
+      throw new Error("expires_at must be in the future");
+    }
+    expiresAt = parsed;
+  }
+
   await db.createNewApiKey({
     name: data.name,
     hashed_key: hashed_key,
     masked_key: MaskString(apiKey),
+    expires_at: expiresAt,
   });
 
   return {
@@ -64,8 +78,14 @@ export const VerifyAPIKey = async (apiKey: string): Promise<boolean> => {
   // Check if the hash exists in the database
   const record = await db.getApiKeyByHashedKey(hashed_key);
 
-  if (!!record) {
-    return record.status == "ACTIVE";
-  } // Adjust this for your DB query
-  return false;
+  if (!record) {
+    return false;
+  }
+  if (record.status !== "ACTIVE") {
+    return false;
+  }
+  if (record.expires_at && new Date(record.expires_at).getTime() <= Date.now()) {
+    return false;
+  }
+  return true;
 };
