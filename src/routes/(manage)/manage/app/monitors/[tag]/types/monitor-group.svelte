@@ -3,6 +3,7 @@
   import { Input } from "$lib/components/ui/input/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
+  import { Checkbox } from "$lib/components/ui/checkbox/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import MonitorPicker from "$lib/components/MonitorPicker.svelte";
   import type { MonitorRecord } from "$lib/server/types/db.js";
@@ -26,6 +27,7 @@
     monitors: GroupMonitorMember[];
     executionDelay: number;
     latencyCalculation: LatencyCalculationOption;
+    linkMembers?: boolean;
   };
 
   let {
@@ -224,6 +226,20 @@
         </Select.Content>
       </Select.Root>
       <p class="text-muted-foreground text-xs">Choose how latency should be derived from the selected monitors.</p>
+    </div>
+  </div>
+
+  <div class="flex items-start gap-2">
+    <Checkbox
+      id="group-link-members"
+      checked={formData.linkMembers !== false}
+      onCheckedChange={(checked) => (formData.linkMembers = checked === true)}
+    />
+    <div class="space-y-1">
+      <Label for="group-link-members">Link included monitors</Label>
+      <p class="text-muted-foreground text-xs">
+        Show member names as links to their monitor pages. Turn off to list them as plain text.
+      </p>
     </div>
   </div>
 

@@ -224,6 +224,7 @@
                   days={barCount}
                   {endOfDayTodayAtTz}
                   groupChildTags={data.monitorGroupMembersByTag?.[tag] || []}
+                  groupLinkMembers={data.monitorGroupLinkMembersByTag?.[tag] !== false}
                   compact={isCompact}
                   grid={viewType === "compact-grid" || viewType === "default-grid"}
                 />
