@@ -10,12 +10,13 @@
 
   interface Props {
     tags: string[];
+    linkMembers?: boolean;
     days: number;
     endOfDayTodayAtTz: number;
     children: Snippet;
   }
 
-  let { tags, days, endOfDayTodayAtTz, children }: Props = $props();
+  let { tags, linkMembers = true, days, endOfDayTodayAtTz, children }: Props = $props();
   let isOpen = $state(false);
   let monitorBarPromiseByTag = $derived.by(() => {
     if (!browser || !isOpen || tags.length === 0) {
@@ -51,14 +52,18 @@
             <div class="{i < tags.length - 1 ? 'border-b' : ''} py-2 pb-4">
               {#if monitorBarPromiseByTag[tag]}
                 {#await monitorBarPromiseByTag[tag]}
-                  <MonitorBar {tag} />
+                  <MonitorBar {tag} link={linkMembers} />
                 {:then monitorBarData}
-                  <MonitorBar {tag} prefetchedData={monitorBarData} />
+                  <MonitorBar {tag} prefetchedData={monitorBarData} link={linkMembers} />
                 {:catch err}
-                  <MonitorBar {tag} prefetchedError={err instanceof Error ? err.message : "Unknown error"} />
+                  <MonitorBar
+                    {tag}
+                    prefetchedError={err instanceof Error ? err.message : "Unknown error"}
+                    link={linkMembers}
+                  />
                 {/await}
               {:else}
-                <MonitorBar {tag} />
+                <MonitorBar {tag} link={linkMembers} />
               {/if}
             </div>
           {/each}

@@ -62,11 +62,13 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 
   //get status summary
   let extendedTags: string[] = [];
+  let groupLinkMembers = true;
   let monitorGroupMembersByTag: Record<string, string[]> = {};
   if (monitor.monitor_type === "GROUP") {
     const groupData = monitor.type_data as GroupMonitorTypeData;
     const memberTags = groupData.monitors.map((m) => m.tag);
     extendedTags = extendedTags.concat(memberTags);
+    groupLinkMembers = groupData.linkMembers !== false;
   }
 
   if (extendedTags.length > 0) {
@@ -110,6 +112,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       upcomingMaintenances,
       externalUrl: monitor.external_url,
       extendedTags,
+      groupLinkMembers,
       monitorGroupMembersByTag,
       maxDays,
       monitorSharingOptions: {
