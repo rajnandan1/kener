@@ -80,7 +80,7 @@ export function maintenanceToVariables(
   return {
     title: `${subjectPrefix}: ${event.title}`,
     event_type: "maintenances",
-    cta_url: siteUrl + "maintenances/" + event.maintenance_id,
+    cta_url: siteUrl + "maintenances/" + event.maintenance_id + "?type=maintenance",
     cta_text: "View Maintenance Details",
     update_id: `maintenance_${event.id}_${updateIdSuffix}`,
     update_subject: `${subjectPrefix}: ${event.title}`,
