@@ -235,15 +235,45 @@ export const GetIncidentsByIDS = async (ids: number[]): Promise<unknown[]> => {
   return incidents;
 };
 
+// The impact an alert's incident has on its monitor, or null when the alert implies none. A
+// STATUS alert fires on the status in its value: DOWN and DEGRADED are impacts, UP is not one.
+// A LATENCY or UPTIME alert's value is a numeric threshold, and a slow or under-target monitor
+// is degraded.
+const AlertImpact = (alertFor: string, alertValue: string): string | null => {
+  if (alertFor === GC.STATUS) {
+    return alertValue === GC.DOWN || alertValue === GC.DEGRADED ? alertValue : null;
+  }
+  if (alertFor === GC.LATENCY || alertFor === GC.UPTIME) {
+    return GC.DEGRADED;
+  }
+  return null;
+};
+
 export const CreateNewIncidentWithCommentAndMonitor = async (
   data: IncidentInput,
   update: string,
   monitorTag: string,
   monitorStatus: string,
+  alertFor: string,
 ): Promise<{ incident_id: number }> => {
   let incidentCreation = await CreateIncident(data);
+  // The monitor before the comment: the comment notifies subscribers, and their mail reads the
+  // incident's impact from its monitors. If attaching fails, the comment is still posted and
+  // the error still raised, as when the comment came first. An alert that implies no impact
+  // opens its incident without the monitor rather than with an impact the monitor does not have.
+  const impact = AlertImpact(alertFor, monitorStatus);
+  let monitorError: unknown = null;
+  if (impact) {
+    try {
+      await AddIncidentMonitor(incidentCreation.incident_id, monitorTag, impact);
+    } catch (err) {
+      monitorError = err;
+    }
+  }
   await AddIncidentComment(incidentCreation.incident_id, update, GC.INVESTIGATING, data.start_date_time);
-  await AddIncidentMonitor(incidentCreation.incident_id, monitorTag, monitorStatus);
+  if (monitorError) {
+    throw monitorError;
+  }
 
   return incidentCreation;
 };
@@ -317,11 +347,6 @@ export const CreateIncident = async (data: IncidentInput): Promise<{ incident_id
     is_global: data.is_global || "YES",
   };
 
-  //incident_type == INCIDENT delete endDateTime
-  if (incident.incident_type === "INCIDENT") {
-    incident.end_date_time = null;
-  }
-
   //if endDateTime is provided and it is less than startDateTime, throw error
   if (!!incident.end_date_time && incident.end_date_time < incident.start_date_time) {
     throw new Error("End date time cannot be less than start date time");
@@ -341,22 +366,31 @@ export const UpdateIncident = async (incident_id: number, data: IncidentUpdateIn
     throw new Error(`Incident with id ${incident_id} does not exist`);
   }
 
-  let endDateTime = data.end_date_time;
-  if (endDateTime && endDateTime < incidentExists.start_date_time) {
+  const startDateTime = data.start_date_time || incidentExists.start_date_time;
+  const endDateTime = data.end_date_time || incidentExists.end_date_time;
+  if ((data.start_date_time || data.end_date_time) && endDateTime && endDateTime < startDateTime) {
     throw new Error("End date time cannot be less than start date time");
   }
 
   let updateObject: Partial<IncidentRecord> & { id: number } = {
     id: incident_id,
     title: data.title || incidentExists.title,
-    start_date_time: data.start_date_time || incidentExists.start_date_time,
+    start_date_time: startDateTime,
     status: data.status || incidentExists.status,
     state: data.state || incidentExists.state,
-    end_date_time: data.end_date_time || incidentExists.end_date_time,
+    end_date_time: endDateTime,
     is_global: data.is_global !== undefined ? data.is_global : incidentExists.is_global,
   };
 
   return await db.updateIncident(updateObject as IncidentRecord);
+};
+
+export const ClearIncidentEndTime = async (incident_id: number): Promise<number> => {
+  let incidentExists = await db.getIncidentById(incident_id);
+  if (!incidentExists) {
+    throw new Error(`Incident with id ${incident_id} does not exist`);
+  }
+  return await db.setIncidentEndTimeToNull(incident_id);
 };
 
 export const AddIncidentMonitor = async (
@@ -407,6 +441,9 @@ export const UpdateCommentByID = async (
   if (!commentExists) {
     throw new Error(`Comment with id ${comment_id} does not exist`);
   }
+  if (state === GC.RESOLVED && commented_at < incidentExists.start_date_time) {
+    throw new Error("A RESOLVED comment cannot be dated before the incident start");
+  }
   let c = await db.updateIncidentCommentByID(comment_id, comment, state, commented_at);
   if (c) {
     let incidentUpdate: IncidentUpdateInput = {
@@ -430,12 +467,22 @@ export const UpdateCommentByID = async (
 // choke point; alertingQueue must not push its own incident notifications, or
 // alert-driven incidents would notify twice.
 const notifySubscribersOfComment = async (
-  incident: Pick<IncidentRecord, "id" | "title">,
+  incident: Pick<IncidentRecord, "id" | "title" | "is_global">,
   comment: IncidentCommentRecord,
 ): Promise<void> => {
   try {
     const siteData = await GetAllSiteData();
     const siteUrl = siteDataToVariables(siteData).site_url;
+    // Failing to read the impact must not cost the mail itself; it goes out without the flags.
+    let impacts: Array<string | null> | null = null;
+    try {
+      impacts = (await db.getMonitorsByIncidentId(incident.id)).map((m) => m.monitor_impact);
+    } catch (err) {
+      console.error(`Error reading monitors of incident ${incident.id} for its subscriber mail:`, err);
+    }
+    // Subscribers hear only of incidents a status page shows: global, or with a monitor that is not hidden.
+    if (incident.is_global !== "YES" && impacts?.length === 0) return;
+    const impact = impacts?.includes(GC.DOWN) ? GC.DOWN : impacts?.includes(GC.DEGRADED) ? GC.DEGRADED : "";
     const variables: SubscriptionVariableMap = {
       title: incident.title,
       cta_url: `${siteUrl}incidents/${incident.id}`,
@@ -444,6 +491,14 @@ const notifySubscribersOfComment = async (
       update_subject: `[#${incident.id}:${comment.state}] ${incident.title}`,
       update_id: String(comment.id),
       event_type: "incidents",
+      update_state: comment.state,
+      is_investigating: comment.state === GC.INVESTIGATING,
+      is_identified: comment.state === GC.IDENTIFIED,
+      is_monitoring: comment.state === GC.MONITORING,
+      is_resolved: comment.state === GC.RESOLVED,
+      incident_impact: impact,
+      is_down: impact === GC.DOWN,
+      is_degraded: impact === GC.DEGRADED,
     };
     // Stable dedup id per comment so a retried/double push notifies once — without
     // it subscriberQueue falls back to a Date.now()-suffixed id that never dedupes.
@@ -468,6 +523,9 @@ export const AddIncidentComment = async (
 
   if (!!!state) {
     state = incidentExists.state;
+  }
+  if (state === GC.RESOLVED && commented_at < incidentExists.start_date_time) {
+    throw new Error("A RESOLVED comment cannot be dated before the incident start");
   }
 
   let c = await db.insertIncidentComment(incident_id, comment, state, commented_at);

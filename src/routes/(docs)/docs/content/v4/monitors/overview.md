@@ -52,6 +52,7 @@ UP + MAINTENANCE + DEGRADED + DOWN
 - [gRPC Monitor](/docs/v4/monitors/grpc) — gRPC Health Checking Protocol
 - [Docker Monitor](/docs/v4/monitors/docker) — Container state and healthcheck via the Docker Engine API, or the daemon itself
 - [Group Monitor](/docs/v4/monitors/group) — Weighted aggregate of member monitors
+- [Prometheus Monitor](/docs/v4/monitors/prometheus) — PromQL instant query with threshold-based status
 
 ## Related docs {#related-docs}
 

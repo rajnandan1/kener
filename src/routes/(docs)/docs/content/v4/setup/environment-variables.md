@@ -237,6 +237,23 @@ NO_PROXY=localhost,127.0.0.1,prometheus.lan,.internal
 - An API or Prometheus monitor can set its own **Proxy URL** (for example `http://user:$PROXY_PASS@proxy.internal:3128`, with `$SECRET` substitution), which overrides these variables for that monitor.
 - A monitor error of `Failed to establish tunnel to host:443 via …` means the proxy refused the connection: check the proxy credentials, or add the host to `NO_PROXY`.
 
+### DOCKER_HOST / DOCKER_TLS_VERIFY {#docker-host}
+
+**Purpose**: The connection a new [Docker monitor](/docs/v4/monitors/docker#default-connection) starts with, in the Docker CLI's own format. Set it when Kener reaches Docker through a socket proxy.
+
+**Default**: unset (the form starts on `/var/run/docker.sock`)
+
+**Example**:
+
+```bash
+DOCKER_HOST=tcp://docker-socket-proxy:2375
+```
+
+**Important**:
+
+- Kener reads `unix://` and `tcp://` addresses. Set `DOCKER_TLS_VERIFY=1` or `DOCKER_TLS=1` to start on `tls`. Any other value logs one warning and keeps the socket.
+- Only the dashboard form uses it. Saved monitors and monitors created through the API keep the connection they were given.
+
 ## Integration Variables {#integration-variables}
 
 For detailed configuration of these integrations, see their dedicated documentation pages.

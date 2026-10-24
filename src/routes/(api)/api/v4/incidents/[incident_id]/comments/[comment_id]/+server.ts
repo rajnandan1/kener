@@ -12,6 +12,7 @@ import type {
 } from "$lib/types/api";
 import GC from "$lib/global-constants";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
+import { UpdateCommentByID, UpdateCommentStatusByID } from "$lib/server/controllers/incidentController";
 
 const VALID_STATES: string[] = [GC.INVESTIGATING, GC.IDENTIFIED, GC.MONITORING, GC.RESOLVED];
 
@@ -73,7 +74,7 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     return json(errorResponse, { status: 404 });
   }
 
-  if (comment.status === "DELETED") {
+  if (comment.status !== "ACTIVE") {
     const errorResponse: NotFoundResponse = {
       error: {
         code: "NOT_FOUND",
@@ -128,7 +129,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     return json(errorResponse, { status: 404 });
   }
 
-  if (existingComment.status === "DELETED") {
+  if (existingComment.status !== "ACTIVE") {
     const errorResponse: NotFoundResponse = {
       error: {
         code: "NOT_FOUND",
@@ -169,8 +170,17 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   const updateTimestamp =
     body.timestamp !== undefined ? GetMinuteStartTimestampUTC(body.timestamp) : existingComment.commented_at;
 
-  // Update the comment (does NOT change incident state)
-  await db.updateIncidentCommentByID(commentId, updateComment, updateState, updateTimestamp);
+  try {
+    await UpdateCommentByID(incident.id, commentId, updateComment, updateState, updateTimestamp);
+  } catch (err) {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: err instanceof Error ? err.message : "Failed to update comment",
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
 
   // Fetch updated comment
   const updatedComment = await db.getIncidentCommentByIDAndIncident(incident.id, commentId);
@@ -224,7 +234,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     return json(errorResponse, { status: 404 });
   }
 
-  if (existingComment.status === "DELETED") {
+  if (existingComment.status !== "ACTIVE") {
     const errorResponse: NotFoundResponse = {
       error: {
         code: "NOT_FOUND",
@@ -234,8 +244,7 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     return json(errorResponse, { status: 404 });
   }
 
-  // Soft delete the comment
-  await db.updateIncidentCommentStatusByID(commentId, "DELETED");
+  await UpdateCommentStatusByID(incident.id, commentId, "INACTIVE");
 
   const response: DeleteCommentResponse = {
     message: `Comment with id '${commentId}' deleted successfully`,

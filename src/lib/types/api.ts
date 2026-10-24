@@ -563,3 +563,26 @@ export interface UpdatePageResponse {
 export interface DeletePageResponse {
   message: string;
 }
+
+// Image API types
+export interface UploadImageRequest {
+  base64: string;
+  mime_type: string;
+  file_name?: string;
+  max_width?: number;
+  max_height?: number;
+  force_dimensions?: boolean;
+}
+
+export interface ImageResponse {
+  id: string;
+  url: string;
+  mime_type: string;
+  width: number;
+  height: number;
+  size: number;
+}
+
+export interface UploadImageResponse {
+  image: ImageResponse;
+}

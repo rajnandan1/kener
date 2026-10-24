@@ -215,16 +215,17 @@ export async function GetPageWithMonitors(
 }
 
 /**
- * Get page by path with its monitors (excluding hidden monitors)
+ * Get page by path with its active monitors (hidden monitors only when includeHidden)
  */
 export async function GetPageByPathWithMonitors(
   page_path: string,
+  includeHidden = false,
 ): Promise<{ page: PageRecord; monitors: PageMonitorRecord[] } | undefined> {
   const page = await db.getPageByPath(page_path);
   if (!page) {
     return undefined;
   }
 
-  const monitors = await db.getPageMonitorsExcludeHidden(page.id);
+  const monitors = await db.getActivePageMonitors(page.id, includeHidden);
   return { page, monitors };
 }

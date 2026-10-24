@@ -18,3 +18,6 @@ export interface DockerMonitorTypeData {
   /** Docker API request timeout in ms */
   timeout?: number;
 }
+
+/** The connection a new DOCKER monitor starts with. */
+export type DockerConnectionDefaults = Pick<DockerMonitorTypeData, "connectionType" | "daemon">;

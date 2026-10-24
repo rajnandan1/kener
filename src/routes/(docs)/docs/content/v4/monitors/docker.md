@@ -8,7 +8,7 @@ Docker monitors read a container's state from the [Docker Engine API](https://do
 ## Minimum setup {#minimum-setup}
 
 1. Create a monitor with the type **Docker Container**.
-2. Pick a connection type and enter the socket path or daemon address.
+2. Check the connection type and the socket path or daemon address. They start on [`DOCKER_HOST`](#default-connection) when it is set.
 3. Enter the container name, or click **Browse** to pick one from the daemon.
 4. Click **Save**. Test Monitor runs against the saved settings.
 5. Click **Test Monitor**.
@@ -27,13 +27,33 @@ services:
 
 ## Connection types {#connection-types}
 
-| Type     | Address                                              | Notes                                                                  |
-| :------- | :--------------------------------------------------- | :--------------------------------------------------------------------- |
-| `socket` | `/var/run/docker.sock` (or `\\.\pipe\docker_engine`) | Default. The Kener process needs read access to the socket.            |
-| `tcp`    | `10.0.0.5:2375`                                      | No encryption. Trusted networks only.                                  |
-| `tls`    | `docker.example.com:2376`                            | HTTPS, optionally with a client certificate and key for `--tlsverify`. |
+| Type     | Address                                              | Notes                                                                                                          |
+| :------- | :--------------------------------------------------- | :------------------------------------------------------------------------------------------------------------- |
+| `socket` | `/var/run/docker.sock` (or `\\.\pipe\docker_engine`) | Default unless [`DOCKER_HOST`](#default-connection) is set. The Kener process needs read access to the socket. |
+| `tcp`    | `10.0.0.5:2375`                                      | No encryption. Trusted networks only.                                                                          |
+| `tls`    | `docker.example.com:2376`                            | HTTPS, optionally with a client certificate and key for `--tlsverify`.                                         |
 
 The address may carry a scheme (`tcp://host:port`). Without a port, Kener uses `2375` for `tcp` and `2376` for `tls`.
+
+### Default connection {#default-connection}
+
+A new Docker monitor starts on the local socket. Behind a socket proxy, set the standard Docker variable once, and every new Docker monitor starts on the proxy instead:
+
+```yaml
+services:
+    kener:
+        environment:
+            - DOCKER_HOST=tcp://docker-socket-proxy:2375
+```
+
+| `DOCKER_HOST`                                            | The form starts on                 |
+| :------------------------------------------------------- | :--------------------------------- |
+| unset                                                    | `socket`, `/var/run/docker.sock`   |
+| `unix:///run/proxy/docker.sock`                          | `socket`, `/run/proxy/docker.sock` |
+| `tcp://docker-socket-proxy:2375`                         | `tcp`, `docker-socket-proxy:2375`  |
+| `tcp://...` with `DOCKER_TLS_VERIFY` or `DOCKER_TLS` set | `tls`, the same address            |
+
+Any other scheme, such as `ssh://` or `npipe://`, logs one warning and keeps the local socket. A saved monitor keeps its own connection. The variable only fills the dashboard form: a monitor created through the API must send `connectionType` and `daemon`. TLS certificates stay per monitor, as [below](#tls-secrets).
 
 ### Keeping the TLS key out of the database {#tls-secrets}
 
@@ -66,22 +86,22 @@ Latency is the round-trip time of the Docker API call, so the latency chart show
 
 ## Configuration fields {#configuration-fields}
 
-| Field            | Type     | Default                | Notes                                                  |
-| :--------------- | :------- | :--------------------- | :----------------------------------------------------- |
-| `connectionType` | `string` | `socket`               | `socket`, `tcp`, or `tls`                              |
-| `daemon`         | `string` | `/var/run/docker.sock` | Required. Socket path, or `host:port` for tcp and tls. |
-| `tlsCa`          | `string` | None                   | CA PEM for `tls`. `$SECRET` allowed.                   |
-| `tlsCert`        | `string` | None                   | Client certificate PEM for `tls`. `$SECRET` allowed.   |
-| `tlsKey`         | `string` | None                   | Client key PEM for `tls`. `$SECRET` allowed.           |
-| `checkType`      | `string` | `container`            | `container` or `daemon`                                |
-| `containerName`  | `string` | None                   | Container name or id. Required for `container`.        |
-| `timeout`        | `number` | `10000`                | Docker API request timeout in ms                       |
+| Field            | Type     | Default                                                              | Notes                                                  |
+| :--------------- | :------- | :------------------------------------------------------------------- | :----------------------------------------------------- |
+| `connectionType` | `string` | `socket`, or from [`DOCKER_HOST`](#default-connection)               | `socket`, `tcp`, or `tls`                              |
+| `daemon`         | `string` | `/var/run/docker.sock`, or from [`DOCKER_HOST`](#default-connection) | Required. Socket path, or `host:port` for tcp and tls. |
+| `tlsCa`          | `string` | None                                                                 | CA PEM for `tls`. `$SECRET` allowed.                   |
+| `tlsCert`        | `string` | None                                                                 | Client certificate PEM for `tls`. `$SECRET` allowed.   |
+| `tlsKey`         | `string` | None                                                                 | Client key PEM for `tls`. `$SECRET` allowed.           |
+| `checkType`      | `string` | `container`                                                          | `container` or `daemon`                                |
+| `containerName`  | `string` | None                                                                 | Container name or id. Required for `container`.        |
+| `timeout`        | `number` | `10000`                                                              | Docker API request timeout in ms                       |
 
 ## Example {#example}
 
 ```json
 {
-    "type": "DOCKER",
+    "monitor_type": "DOCKER",
     "type_data": {
         "connectionType": "tls",
         "daemon": "docker.example.com:2376",

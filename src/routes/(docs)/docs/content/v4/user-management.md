@@ -54,6 +54,8 @@ Permissions follow a `domain.action` format:
 
 Permissions are enforced at both the **route level** (page access) and the **action level** (API operations).
 
+`monitors.read` also shows hidden monitors on the public site to the signed-in user. See [Monitor Visibility](/docs/v4/monitors/visibility#signed-in-viewers).
+
 ### Managing role permissions {#managing-role-permissions}
 
 From the roles table, click **Permissions** on any role to view or edit its permissions. Permissions are grouped by domain and can be toggled individually. Readonly (built-in) roles show permissions in read-only mode.

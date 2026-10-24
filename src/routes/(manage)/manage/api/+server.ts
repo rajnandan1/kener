@@ -1,8 +1,6 @@
 import { json } from "@sveltejs/kit";
 import Service, { type MonitorWithType } from "$lib/server/services/service.js";
 import { format } from "date-fns";
-import sharp from "sharp";
-import { nanoid } from "nanoid";
 import db from "$lib/server/db/db";
 import GC, { isMonitoringStatus } from "$lib/global-constants.js";
 import type { MonitoringStatus } from "$lib/types/status.js";
@@ -50,6 +48,7 @@ import {
   DeleteMonitorCompletelyUsingTag,
   CloneMonitor,
   GetSiteDataByKey,
+  MaskSiteDataSecret,
   GetMonitoringDataPaginated,
 } from "$lib/server/controllers/controller.js";
 
@@ -135,11 +134,10 @@ import sendWebhook from "$lib/server/notification/webhook_notification.js";
 import sendEmail from "$lib/server/notification/email_notification.js";
 import sendDiscord from "$lib/server/notification/discord_notification.js";
 import sendSlack from "$lib/server/notification/slack_notification.js";
-import heicConvert from "heic-convert";
 import serverResolver from "$lib/server/resolver.js";
 import { ACTION_PERMISSION_MAP } from "$lib/allPerms.js";
-import { TestOidcConnection, ClearOidcConfigCache } from "$lib/server/controllers/oidcController.js";
-import { MaskString } from "$lib/server/tool.js";
+import { TestOidcConnection } from "$lib/server/controllers/oidcController.js";
+import { uploadImage } from "$lib/server/controllers/imageController.js";
 
 export async function POST({ request, cookies }) {
   const payload = await request.json();
@@ -173,7 +171,9 @@ export async function POST({ request, cookies }) {
       data.userID = userDB.id;
       resp = await UpdateUserData(data);
     } else if (action == "getAllSiteData") {
-      resp = await GetAllSiteData();
+      resp = Object.fromEntries(
+        Object.entries(await GetAllSiteData()).map(([key, value]) => [key, MaskSiteDataSecret(key, value)]),
+      );
     } else if (action == "manualUpdate") {
       await ManualUpdateUserData(data.id, data);
       resp = await GetUserByIDDashboard(data.id);
@@ -400,7 +400,7 @@ export async function POST({ request, cookies }) {
       const serviceClient = new Service(monitorReducedType);
       resp = await serviceClient.execute();
     } else if (action == "uploadImage") {
-      resp = await uploadImage(data);
+      resp = await uploadImage({ maxWidth: 256, maxHeight: 256, ...data });
     } else if (action == "deleteImage") {
       resp = await db.deleteImage(data.id);
     } else if (action == "getPages") {
@@ -653,7 +653,7 @@ export async function POST({ request, cookies }) {
       if (!!!siteData) {
         throw new Error("Site data not found for the given key");
       }
-      resp = siteData;
+      resp = MaskSiteDataSecret(key, siteData);
     } else if (action == "updateSubscriptionsConfig") {
       resp = await InsertKeyValue("subscriptionsSettings", JSON.stringify(data));
     } else if (action == "getRoles") {
@@ -708,16 +708,7 @@ export async function POST({ request, cookies }) {
     } else if (action == "testOidcConnection") {
       resp = await TestOidcConnection(data.settings);
     } else if (action == "getOidcSettingsMasked") {
-      const raw = await GetSiteDataByKey("oidcSettings");
-      if (raw && typeof raw === "object") {
-        const settings = { ...(raw as Record<string, unknown>) };
-        if (settings.client_secret && typeof settings.client_secret === "string") {
-          settings.client_secret = MaskString(settings.client_secret);
-        }
-        resp = settings;
-      } else {
-        resp = raw;
-      }
+      resp = MaskSiteDataSecret("oidcSettings", await GetSiteDataByKey("oidcSettings"));
     }
   } catch (error: unknown) {
     console.log(error);
@@ -734,198 +725,8 @@ async function storeSiteData(data: { [x: string]: any }) {
       if (key === "socialPreviewImage" && (element === null || element === undefined)) {
         element = "";
       }
-      // If oidcSettings is saved without client_secret, preserve the existing one.
-      // An explicit empty string clears it.
-      if (key === "oidcSettings" && typeof element === "string") {
-        try {
-          const newSettings = JSON.parse(element);
-          if (newSettings.client_secret === undefined) {
-            const existing = await GetSiteDataByKey("oidcSettings");
-            if (existing && typeof existing === "object") {
-              newSettings.client_secret = (existing as Record<string, unknown>).client_secret;
-              element = JSON.stringify(newSettings);
-            }
-          }
-        } catch {
-          // If parsing fails, proceed with the original value
-        }
-      }
       await InsertKeyValue(key, element);
-
-      // Clear OIDC config cache when settings change so logins
-      // pick up new credentials immediately
-      if (key === "oidcSettings") {
-        ClearOidcConfigCache();
-      }
     }
   }
   return { success: true };
-}
-
-interface ImageUploadData {
-  base64: string; // base64 encoded image data (without data URI prefix)
-  mimeType: string;
-  fileName?: string;
-  maxWidth?: number;
-  maxHeight?: number;
-  forceDimensions?: boolean;
-  prefix?: string; // prefix for the ID (e.g., "logo_", "favicon_")
-}
-
-async function uploadImage(data: ImageUploadData): Promise<{ id: string; url: string }> {
-  const {
-    base64,
-    mimeType,
-    fileName,
-    maxWidth = 256,
-    maxHeight = 256,
-    forceDimensions = false,
-    prefix = "img_",
-  } = data;
-
-  if (!base64) {
-    throw new Error("Image data is required");
-  }
-
-  const allowedMimeTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/heic", "image/heif"];
-  if (!allowedMimeTypes.includes(mimeType)) {
-    throw new Error(`Invalid image type. Allowed types: ${allowedMimeTypes.join(", ")}`);
-  }
-
-  // Decode base64 to buffer
-  const imageBuffer = Buffer.from(base64, "base64");
-  if (!imageBuffer.length) {
-    throw new Error("Invalid image data");
-  }
-
-  if (imageBuffer.length > GC.MAX_UPLOAD_BYTES) {
-    throw new Error("Image is too large. Maximum upload size is 5MB");
-  }
-
-  const normalizedRequestedMime = mimeType === "image/jpg" ? "image/jpeg" : mimeType;
-  const maybeTextHeader = imageBuffer.subarray(0, 4096).toString("utf8");
-  const looksLikeSvg = /<svg[\s>]/i.test(maybeTextHeader) || /<\?xml/i.test(maybeTextHeader);
-
-  if (normalizedRequestedMime === "image/svg+xml" || looksLikeSvg) {
-    throw new Error("SVG uploads are not allowed");
-  }
-
-  let processedBuffer: Buffer;
-  let finalMimeType = mimeType;
-  let width: number | undefined;
-  let height: number | undefined;
-
-  // Pre-convert HEIC/HEIF to JPEG before passing to sharp (sharp may lack HEVC codec)
-  let sharpInputBuffer = imageBuffer;
-  const heicSignature = imageBuffer.subarray(4, 12).toString("ascii");
-  const isHeicData = heicSignature.includes("ftyp");
-  if (isHeicData) {
-    const converted = await heicConvert({
-      buffer: new Uint8Array(imageBuffer) as unknown as ArrayBuffer,
-      format: "JPEG",
-      quality: 0.85,
-    });
-    sharpInputBuffer = Buffer.from(converted);
-  }
-
-  // Process with sharp and normalize output
-  const image = sharp(sharpInputBuffer, { limitInputPixels: GC.MAX_INPUT_PIXELS });
-  const metadata = await image.metadata();
-
-  const formatToMime: Record<string, string> = {
-    png: "image/png",
-    jpeg: "image/jpeg",
-    webp: "image/webp",
-    svg: "image/svg+xml",
-    heic: "image/heic",
-    heif: "image/heif",
-  };
-
-  const detectedMimeType = metadata.format ? formatToMime[metadata.format] : undefined;
-  if (!detectedMimeType) {
-    throw new Error("Could not detect a valid image format");
-  }
-
-  if (detectedMimeType === "image/svg+xml") {
-    throw new Error("SVG uploads are not allowed");
-  }
-
-  // HEIC/HEIF files often have .jpg extension (e.g. iPhone photos); allow the mismatch
-  const isHeicDetected = detectedMimeType === "image/heic" || detectedMimeType === "image/heif";
-  const isHeicRequested = normalizedRequestedMime === "image/heic" || normalizedRequestedMime === "image/heif";
-  if (normalizedRequestedMime !== detectedMimeType && !isHeicDetected && !isHeicRequested) {
-    throw new Error("Image MIME type does not match file content");
-  }
-
-  const sourceWidth = metadata.width || maxWidth;
-  const sourceHeight = metadata.height || maxHeight;
-
-  if (sourceWidth > GC.MAX_IMAGE_DIMENSION || sourceHeight > GC.MAX_IMAGE_DIMENSION) {
-    throw new Error(
-      `Image dimensions exceed maximum allowed size of ${GC.MAX_IMAGE_DIMENSION}x${GC.MAX_IMAGE_DIMENSION}`,
-    );
-  }
-
-  const boundedMaxWidth = Math.min(maxWidth, GC.MAX_IMAGE_DIMENSION);
-  const boundedMaxHeight = Math.min(maxHeight, GC.MAX_IMAGE_DIMENSION);
-
-  // Calculate new dimensions.
-  let newWidth = sourceWidth;
-  let newHeight = sourceHeight;
-
-  if (forceDimensions) {
-    newWidth = Math.max(1, boundedMaxWidth);
-    newHeight = Math.max(1, boundedMaxHeight);
-  } else if (newWidth > boundedMaxWidth || newHeight > boundedMaxHeight) {
-    const ratio = Math.min(boundedMaxWidth / newWidth, boundedMaxHeight / newHeight);
-    newWidth = Math.max(1, Math.round(newWidth * ratio));
-    newHeight = Math.max(1, Math.round(newHeight * ratio));
-  }
-
-  width = newWidth;
-  height = newHeight;
-
-  // Keep JPEG as JPEG; convert HEIC/HEIF to JPEG; convert everything else (WebP/PNG) to PNG.
-  if (detectedMimeType === "image/jpeg" || isHeicDetected) {
-    processedBuffer = await image
-      .resize(newWidth, newHeight, {
-        fit: forceDimensions ? "cover" : "inside",
-        position: "centre",
-      })
-      .jpeg({ quality: 85 })
-      .toBuffer();
-    finalMimeType = "image/jpeg";
-  } else {
-    processedBuffer = await image
-      .resize(newWidth, newHeight, {
-        fit: forceDimensions ? "cover" : "inside",
-        position: "centre",
-      })
-      .png()
-      .toBuffer();
-    finalMimeType = "image/png";
-  }
-
-  // Generate ID with nanoid and extension
-  const fileExtension = finalMimeType === "image/jpeg" ? "jpg" : "png";
-  const id = `${nanoid(16)}.${fileExtension}`;
-
-  // Convert processed image back to base64
-  const processedBase64 = processedBuffer.toString("base64");
-
-  // Store in database
-  await db.insertImage({
-    id,
-    data: processedBase64,
-    mime_type: finalMimeType,
-    original_name: fileName || null,
-    width: width || null,
-    height: height || null,
-    size: processedBuffer.length,
-  });
-
-  return {
-    id,
-    url: `/assets/images/${id}`,
-  };
 }

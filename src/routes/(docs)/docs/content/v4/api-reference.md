@@ -69,6 +69,7 @@ All responses are JSON:
 | GET    | `/incidents`    | List incidents      |
 | POST   | `/incidents`    | Create incident     |
 | GET    | `/status`       | Get current status  |
+| POST   | `/v4/images`    | Upload an image     |
 
 ## Quick Examples
 

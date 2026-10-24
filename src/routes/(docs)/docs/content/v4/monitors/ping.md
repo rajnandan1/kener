@@ -47,7 +47,7 @@ Return object:
 
 ```json
 {
-    "type": "PING",
+    "monitor_type": "PING",
     "type_data": {
         "hosts": [{ "type": "IP4", "host": "8.8.8.8", "timeout": 1000, "count": 3 }]
     }

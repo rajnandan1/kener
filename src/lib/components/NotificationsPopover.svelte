@@ -7,7 +7,6 @@
   import ICONS from "$lib/icons";
   import { t } from "$lib/stores/i18n";
   import type { NotificationEvent } from "$lib/types/notifications.js";
-  import { onMount } from "svelte";
 
   interface Props {
     monitorTags?: string[];
@@ -20,19 +19,24 @@
   let notifications = $state<NotificationEvent[]>([]);
   let loading = $state(false);
 
-  async function fetchNotifications() {
+  let requestId = 0;
+
+  async function fetchNotifications(tags: string[]) {
+    const id = ++requestId;
+    notifications = [];
     loading = true;
     try {
-      notifications = await requestNotifications(monitorTags);
+      const result = await requestNotifications(tags);
+      if (id === requestId) notifications = result;
     } catch {
       // silently fail
     } finally {
-      loading = false;
+      if (id === requestId) loading = false;
     }
   }
 
-  onMount(() => {
-    void fetchNotifications();
+  $effect(() => {
+    void fetchNotifications(monitorTags);
   });
 </script>
 

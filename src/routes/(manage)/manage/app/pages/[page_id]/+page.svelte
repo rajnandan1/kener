@@ -386,8 +386,7 @@
             mimeType: file.type,
             fileName: file.name,
             maxWidth: 256,
-            maxHeight: 256,
-            prefix: "page_logo_"
+            maxHeight: 256
           }
         })
       });
@@ -461,8 +460,7 @@
             mimeType: file.type,
             fileName: file.name,
             maxWidth: 1200,
-            maxHeight: 630,
-            prefix: "page_social_"
+            maxHeight: 630
           }
         })
       });

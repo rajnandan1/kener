@@ -9,7 +9,6 @@
   import type { NotificationEvent } from "$lib/types/notifications.js";
   import Calendar from "@lucide/svelte/icons/calendar-1";
   import { format } from "date-fns";
-  import { onMount } from "svelte";
 
   interface Props {
     monitorTags?: string[];
@@ -38,21 +37,24 @@
     return finalEventsPath;
   });
 
-  async function fetchNotifications() {
+  let requestId = 0;
+
+  async function fetchNotifications(tags: string[]) {
+    const id = ++requestId;
+    notifications = [];
     loading = true;
     try {
-      notifications = await requestNotifications(monitorTags);
+      const result = await requestNotifications(tags);
+      if (id === requestId) notifications = result;
     } catch {
       // silently fail
     } finally {
-      loading = false;
+      if (id === requestId) loading = false;
     }
   }
 
-  onMount(() => {
-    if (fetchOnMount) {
-      void fetchNotifications();
-    }
+  $effect(() => {
+    if (fetchOnMount) void fetchNotifications(monitorTags);
   });
 
   function getEventId(eventURL: string) {

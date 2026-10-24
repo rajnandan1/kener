@@ -47,7 +47,7 @@ export default async function post(req: APIServerRequest): Promise<Response> {
     if (!pageData) {
       return error(404, { message: "Page not found" });
     }
-    const monitorsForPage = await db.getPageMonitorsExcludeHidden(pageData.id);
+    const monitorsForPage = await db.getActivePageMonitors(pageData.id);
     pathMonitors = monitorsForPage.map((m) => m.monitor_tag);
   }
 

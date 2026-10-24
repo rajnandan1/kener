@@ -6,7 +6,7 @@ import {
   GetAffectedMonitorsByIncidentId,
 } from "$lib/server/controllers/dashboardController.js";
 
-export const load: PageServerLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params, parent }) => {
   const { incident_id } = params;
   const incidentIdNum = Number(incident_id);
   if (isNaN(incidentIdNum)) {
@@ -22,7 +22,8 @@ export const load: PageServerLoad = async ({ params }) => {
   const comments = await GetIncidentCommentsByIncidentId(incidentIdNum);
 
   // Fetch affected monitors
-  const affectedMonitors = await GetAffectedMonitorsByIncidentId(incidentIdNum);
+  const { canSeeHiddenMonitors } = await parent();
+  const affectedMonitors = await GetAffectedMonitorsByIncidentId(incidentIdNum, canSeeHiddenMonitors);
 
   return {
     ...{ incident, comments, affectedMonitors },

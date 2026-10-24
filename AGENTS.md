@@ -1,40 +1,27 @@
-You are able to use the Svelte MCP server, where you have access to comprehensive Svelte 5 and SvelteKit documentation. Here's how to use the available tools effectively:
+# Kener — Agent Instructions
 
-## Available MCP Tools:
+## Run
 
-### 1. list-sections
+Dev needs Redis on `REDIS_URL`: `cp .env-min.example .env`, then `docker compose -f docker-compose.dev.yml up -d redis`. `npm run dev` migrates and seeds the database before it starts. `npm run build` leaves out the docs site in `src/routes/(docs)/`; `npm run build-with-docs` keeps it.
 
-Use this FIRST to discover all available documentation sections. Returns a structured list with titles, use_cases, and paths.
-When asked about Svelte or SvelteKit topics, ALWAYS use this tool at the start of the chat to find relevant sections.
+## Finish a Change
 
-### 2. get-documentation
+1. Put a test next to new server logic (`apiCall.ts` and `apiCall.test.ts`). Name a component test `<component>.svelte.test.ts` so it runs in Chromium.
+2. A change that reads, writes, or updates the database, or adds a migration or seed, must pass on SQLite, PostgreSQL, and MySQL. `npm test` runs on SQLite only. Run the change on the other two as the Database section of `CODING_STANDARDS.md` shows.
+3. When the change alters what a user sees or can do, update every text that describes the old behavior: the docs in `src/routes/(docs)/docs/content/v4/` and the help text in `.svelte` files. Search all of `src/routes` for the setting key and its UI label, for example `rg -i 'is_hidden|hidden in status page|hidden monitor' src/routes`.
+4. Format only the files you changed: `npx prettier --write <files>`. Some files elsewhere are not formatted yet.
+5. Run `npm run check` and `npm test` until both pass. Run a single test through the npm scripts, which set `TZ=UTC`: `npm run test:server -- <file>`.
 
-Retrieves full documentation content for specific sections. Accepts single or multiple sections.
-After calling the list-sections tool, you MUST analyze the returned documentation sections (especially the use_cases field) and then use the get-documentation tool to fetch ALL documentation sections that are relevant for the user's task.
+## Ask First
 
-### 3. svelte-autofixer
+Ask the maintainer before you add a dependency, change the database schema or the `/api/v4` request and response shapes, or edit `.github/workflows/`, `Dockerfile`, or `docker-compose*.yml`.
 
-Analyzes Svelte code and returns issues and suggestions.
-You MUST use this tool whenever writing Svelte code before sending it to the user. Keep calling it until no issues or suggestions are returned.
+## Guides
 
-### 4. playground-link
-
-Generates a Svelte Playground link with the provided code.
-After completing the code, ask the user if they want a playground link. Only call this tool after user confirmation and NEVER if code was written to files in their project.
-
-## Database compatibility rule
-
-All database operations — migrations, queries, and repository functions — **MUST** work across all three supported databases: **SQLite**, **PostgreSQL**, and **MySQL**. Use Knex.js schema builder and query builder abstractions; avoid raw SQL unless wrapped in dialect-safe helpers or guarded with `try/catch`. When writing migrations:
-
-- Use `knex.schema.hasColumn` / `knex.schema.hasTable` guards for idempotency.
-- Use Knex column types (`.string()`, `.integer()`, `.text()`, etc.) — never raw `ALTER TABLE` unless necessary.
-- For data-seeding inside migrations, use standard Knex query builder (`.insert()`, `.update()`, `.orderBy()`, `.first()`).
-- Test that `defaultTo()` values and `notNullable()` constraints work on all three engines.
-
-## Documentation writing skill
-
-When the user asks to write or edit documentation, follow the skill file:
-
-- `.claude/skills/documentation-writer/SKILL.md`
-
-This is mandatory for docs-related tasks. Prioritize short, clear, action-oriented docs and avoid bloat.
+- **Coding standards**: read `CODING_STANDARDS.md` before you write or review code that touches the database, a migration or seed, a timestamp, or an API route.
+- **Skills**: read the matching `.claude/skills/<name>/SKILL.md` before you edit a `.svelte` or `.svelte.ts` file (`svelte-code-writer`), the docs site in `src/routes/(docs)/` (`documentation-writer`), Tailwind classes (`tailwindcss`), or `src/lib/components/ui/` (`ss-shadcn-svelte`).
+- **Monitor types**: copy the closest existing type into each file where `rg -il <type> src` finds it. A type with no branch in `src/lib/server/services/service.ts` falls through to `NoneCall`: it runs no checks, reports no error, and passes `npm run check`.
+- **Locales**: the app loads every `src/lib/locales/{code}.json` with no registration. `node scripts/check-translations.js` writes each locale's missing and unused keys to `translation-report.json`.
+- **Environment variables**: `src/routes/(docs)/docs/content/v4/setup/environment-variables.md` documents each one. Add a new one there.
+- **Issues**: read `docs/agents/issue-tracker.md` before you create, read, or update a GitHub issue in `rajnandan1/kener`, and `docs/agents/triage-labels.md` before you label one.
+- **Domain docs**: read `docs/agents/domain.md` before you name a domain concept or record an architecture decision.

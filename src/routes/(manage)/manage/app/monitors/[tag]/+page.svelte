@@ -32,7 +32,7 @@
   import MonitorSharingOptionsCard from "./components/MonitorSharingOptionsCard.svelte";
   import GC from "$lib/global-constants.js";
 
-  let { params }: PageProps = $props();
+  let { params, data }: PageProps = $props();
   const isNew = $derived(params.tag === "new");
 
   // Form state
@@ -352,7 +352,7 @@
           <Accordion.Trigger>Configuration</Accordion.Trigger>
           <Accordion.Content class="flex flex-col gap-4 text-balance">
             <!-- Monitor Type Configuration Card -->
-            <MonitorTypeCard bind:monitor bind:typeData {availableMonitors} />
+            <MonitorTypeCard bind:monitor bind:typeData {availableMonitors} dockerDefaults={data.dockerDefaults} />
           </Accordion.Content>
         </Accordion.Item>
       {/if}

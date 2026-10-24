@@ -152,7 +152,7 @@ export async function renderRssFeedResponse(args: RenderRssFeedArgs): Promise<Re
       if (!page) {
         return new Response("Not found", { status: 404 });
       }
-      const pageMonitors = await db.getPageMonitorsExcludeHidden(page.id);
+      const pageMonitors = await db.getActivePageMonitors(page.id);
       monitorTags = pageMonitors.map((m) => m.monitor_tag);
     }
   }
@@ -180,12 +180,6 @@ export async function renderRssFeedResponse(args: RenderRssFeedArgs): Promise<Re
     });
   }
   for (const maintenance of maintenances) {
-    // Drop events whose affected monitors were all hidden: the DB layer strips
-    // hidden monitors from the row; a now-empty monitors[] means the public
-    // shouldn't see this on the events page either. A global maintenance is the
-    // exception — it has no per-monitor rows by design (it affects every
-    // monitor), so its empty monitors[] is expected and must still be published.
-    if (maintenance.monitors.length === 0 && maintenance.is_global !== "YES") continue;
     items.push({
       type: "maintenance",
       id: maintenance.id,

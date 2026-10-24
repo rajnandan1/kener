@@ -1,12 +1,14 @@
 import { json, error } from "@sveltejs/kit";
 import type { APIServerRequest } from "$lib/server/types/api-server";
+import { CanSeeHiddenMonitors, GetLoggedInSession } from "$lib/server/controllers/userController";
 import db from "$lib/server/db/db";
 import { GetMinuteStartNowTimestampUTC } from "$lib/server/tool";
 import type { StatusType } from "$lib/types/status";
 import GC from "$lib/global-constants";
 import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
-import { buildMonitorBarResponseFromRawData } from "$lib/server/api-server/monitor-bar/shared";
+import { buildMonitorBarResponseFromRawData, parseIntParam } from "$lib/server/api-server/monitor-bar/shared";
 import {
+  AttachSslCacheFields,
   GetLatestMonitoringDataAllActive,
   GetStatusCountsByIntervalGroupedByMonitor,
 } from "$lib/server/controllers/monitorsController";
@@ -28,9 +30,9 @@ interface MonitorBarsResponse {
 export default async function get(req: APIServerRequest): Promise<Response> {
   const tagsStr = req.query.get("tags");
   const daysStr = req.query.get("days");
-  const days = Math.min(MAX_DAYS, Math.max(1, daysStr ? parseInt(daysStr, 10) : DEFAULT_DAYS));
+  const days = Math.min(MAX_DAYS, Math.max(1, parseIntParam(daysStr, DEFAULT_DAYS)));
   const endOfDayTodayAtTzStr = req.query.get("endOfDayTodayAtTz");
-  const endOfDayTodayAtTz = endOfDayTodayAtTzStr ? parseInt(endOfDayTodayAtTzStr, 10) : GetMinuteStartNowTimestampUTC();
+  const endOfDayTodayAtTz = parseIntParam(endOfDayTodayAtTzStr, GetMinuteStartNowTimestampUTC());
 
   if (!tagsStr) {
     return error(400, { message: "tags query parameter is required" });
@@ -54,9 +56,10 @@ export default async function get(req: APIServerRequest): Promise<Response> {
   }
 
   const startTime = endOfDayTodayAtTz - days * 24 * 60 * 60;
+  const canSeeHidden = await CanSeeHiddenMonitors(await GetLoggedInSession(req.cookies));
 
   const [monitors, latestDataAll, aggregatedData] = await Promise.all([
-    db.getMonitors({ tags, status: GC.ACTIVE, is_hidden: GC.NO }),
+    db.getMonitors({ tags, status: GC.ACTIVE, is_hidden: canSeeHidden ? undefined : GC.NO }),
     GetLatestMonitoringDataAllActive(tags),
     GetStatusCountsByIntervalGroupedByMonitor(tags, startTime, 86400, days),
   ]);
@@ -64,6 +67,7 @@ export default async function get(req: APIServerRequest): Promise<Response> {
   const latestStatusByTag = new Map<string, StatusType>(
     latestDataAll.map((d) => [d.monitor_tag, (d.status as StatusType) || GC.NO_DATA]),
   );
+  const latestDataByTag = new Map(latestDataAll.map((d) => [d.monitor_tag, d]));
 
   const monitorByTag = new Map(monitors.map((m) => [m.tag, m]));
   const existingTags = new Set(monitors.map((m) => m.tag));
@@ -98,6 +102,7 @@ export default async function get(req: APIServerRequest): Promise<Response> {
           days,
           endOfDayTodayAtTz,
           latestStatusByTag.get(tag) || GC.NO_DATA,
+          monitor.monitor_type === "SSL" ? await AttachSslCacheFields(latestDataByTag.get(tag)) : null,
         );
         return { tag, payload };
       }),

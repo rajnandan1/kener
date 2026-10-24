@@ -12,7 +12,11 @@ import type {
 } from "$lib/types/api";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { GetSiteURL } from "$lib/server/controllers/siteDataController";
-import { UpdateMaintenanceEventStatus } from "$lib/server/controllers/maintenanceController";
+import {
+  DeleteMaintenanceEvent,
+  UpdateMaintenanceEvent,
+  UpdateMaintenanceEventStatus,
+} from "$lib/server/controllers/maintenanceController";
 import GC from "$lib/global-constants";
 import serverResolver from "$lib/server/resolver";
 
@@ -205,11 +209,20 @@ export const PATCH: RequestHandler = async ({ locals, params, request }) => {
   const normalizedStartDateTime = GetMinuteStartTimestampUTC(body.start_date_time);
   const normalizedEndDateTime = GetMinuteStartTimestampUTC(body.end_date_time);
 
-  // Update the event
-  await db.updateMaintenanceEvent(eventId, {
-    start_date_time: normalizedStartDateTime,
-    end_date_time: normalizedEndDateTime,
-  });
+  try {
+    await UpdateMaintenanceEvent(eventId, {
+      start_date_time: normalizedStartDateTime,
+      end_date_time: normalizedEndDateTime,
+    });
+  } catch (err) {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: err instanceof Error ? err.message : "Failed to update event",
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
 
   // Fetch updated event
   const updatedEvent = await db.getMaintenanceEventById(eventId);
@@ -250,7 +263,7 @@ export const DELETE: RequestHandler = async ({ locals, params }) => {
     return json(errorResponse, { status: 404 });
   }
 
-  await db.deleteMaintenanceEvent(eventId);
+  await DeleteMaintenanceEvent(eventId);
 
   const response: DeleteMaintenanceEventResponse = {
     message: `Event with id '${eventId}' deleted successfully`,

@@ -57,4 +57,40 @@ describe("monitor-docker form", () => {
     expect(data.tlsCert).toBeUndefined();
     expect(data.tlsKey).toBeUndefined();
   });
+
+  const PROXY = { connectionType: "tcp", daemon: "localhost:2375" } as const;
+
+  it("starts a new monitor on the env default connection", async () => {
+    const data = $state<Record<string, unknown>>({});
+    const screen = await render(MonitorDocker, { data, defaults: PROXY });
+
+    await expect.element(screen.getByLabelText(/Daemon address/)).toHaveValue("localhost:2375");
+    await expect.element(screen.getByText("TCP (no encryption)")).toBeVisible();
+    expect(data).toMatchObject({ connectionType: "tcp", daemon: "localhost:2375" });
+  });
+
+  it("keeps the stored connection of a saved monitor", async () => {
+    const data = $state<Record<string, unknown>>({ connectionType: "socket", daemon: "/var/run/docker.sock" });
+    const screen = await render(MonitorDocker, { data, defaults: PROXY });
+
+    await expect.element(screen.getByLabelText(/Socket path/)).toHaveValue("/var/run/docker.sock");
+    expect(data).toMatchObject({ connectionType: "socket", daemon: "/var/run/docker.sock" });
+  });
+
+  it("fills the env address only when switching to the env default type", async () => {
+    const data = $state<Record<string, unknown>>({ connectionType: "socket", daemon: "/var/run/docker.sock" });
+    const screen = await render(MonitorDocker, { data, defaults: PROXY });
+
+    await screen.getByText("Unix socket").click();
+    await page.getByRole("option", { name: "TCP (no encryption)" }).click();
+    await expect.element(screen.getByLabelText(/Daemon address/)).toHaveValue("localhost:2375");
+
+    await screen.getByText("TCP (no encryption)").click();
+    await page.getByRole("option", { name: "TCP with TLS" }).click();
+    await expect.element(screen.getByLabelText(/Daemon address/)).toHaveValue("");
+
+    await screen.getByText("TCP with TLS").click();
+    await page.getByRole("option", { name: "Unix socket" }).click();
+    await expect.element(screen.getByLabelText(/Socket path/)).toHaveValue("/var/run/docker.sock");
+  });
 });

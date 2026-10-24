@@ -97,8 +97,11 @@ export interface DataRetentionPolicy {
   retentionDays: number;
 }
 
+export type EventListPlacement = "button" | "aside" | "hidden";
+
 export interface EventDisplaySettings {
   showInlineEvents: boolean;
+  eventListPlacement: EventListPlacement;
   incidents: {
     enabled: boolean;
     ongoing: {

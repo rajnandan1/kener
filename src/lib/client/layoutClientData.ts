@@ -1,8 +1,9 @@
-import { toZonedTime, fromZonedTime } from "date-fns-tz";
-import { startOfDay, getUnixTime } from "date-fns";
+import { fromZonedTime } from "date-fns-tz";
+import { getUnixTime } from "date-fns";
 import { get } from "svelte/store";
 import { i18n } from "$lib/stores/i18n";
 import { timezone, selectedTimezone } from "$lib/stores/timezone";
+import { getStartOfDayAtTz, resolveTimezone } from "./datetime";
 
 export interface LayoutClientData {
   localTz: string;
@@ -29,13 +30,9 @@ export async function GetLayoutClientData(
   // Get the selected timezone from the store
   const localTz = get(selectedTimezone);
 
-  // Calculate start of day in the selected timezone as Unix timestamp
-  const now = new Date();
-  const zonedTime = toZonedTime(now, localTz);
-  const startOfZonedDay = startOfDay(zonedTime);
-  const startOfDayInUTC = fromZonedTime(startOfZonedDay, localTz);
-  const startOfDayTodayAtTz = getUnixTime(startOfDayInUTC);
-  const nowAtTz = getUnixTime(fromZonedTime(now, localTz));
+  const tz = resolveTimezone(localTz);
+  const startOfDayTodayAtTz = getStartOfDayAtTz(tz);
+  const nowAtTz = getUnixTime(fromZonedTime(new Date(), tz));
 
   return {
     localTz,
