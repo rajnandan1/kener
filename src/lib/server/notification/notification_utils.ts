@@ -2,7 +2,7 @@ import type { MaintenanceEventRecordDetailed, MonitorAlertConfigRecord, MonitorA
 import type { AlertVariableMap, SiteDataForNotification, SubscriptionVariableMap } from "./types.js";
 import GC from "../../global-constants.js";
 import type { SiteDataTransformed } from "../controllers/siteDataController.js";
-import { format } from "date-fns";
+import { formatInTimeZone } from "date-fns-tz";
 import mdToHTML from "../..//marked.js";
 import serverResolver from "../resolver.js";
 import { parseDbTimestamp } from "../tool.js";
@@ -54,7 +54,8 @@ function formatMaintenanceMarkdown(
   event: MaintenanceEventRecordDetailed,
   statusMessage: string,
 ): string {
-  const dateFormat = "PPpp";
+  // Pin to UTC: the server timezone is not the reader's, so say which zone the time is in.
+  const fmt = (ts: number) => formatInTimeZone(new Date(ts * 1000), "UTC", "PPpp") + " UTC";
   let update = `Maintenance **${event.title}** ${statusMessage}\n\n`;
   if (!!event.description) {
     update = update + `${event.description}\n\n`;
@@ -63,8 +64,8 @@ function formatMaintenanceMarkdown(
   update = update + `| Setting | Value |\n`;
   update = update + `| :--- | :--- |\n`;
   update = update + `| **Monitors** | ${monitorNames} |\n`;
-  update = update + `| **Start Time** | ${format(new Date(event.start_date_time * 1000), dateFormat)} |\n`;
-  update = update + `| **End Time** | ${format(new Date(event.end_date_time * 1000), dateFormat)} |\n`;
+  update = update + `| **Start Time** | ${fmt(event.start_date_time)} |\n`;
+  update = update + `| **End Time** | ${fmt(event.end_date_time)} |\n`;
   return mdToHTML(update);
 }
 

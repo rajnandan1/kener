@@ -108,4 +108,20 @@ describe("maintenanceToVariables", () => {
       true,
     );
   });
+
+  it("prints start and end in UTC with a label, whatever the server timezone is", () => {
+    const event = {
+      id: 3,
+      maintenance_id: 5,
+      title: "Database upgrade",
+      description: "",
+      start_date_time: 1767225600, // 2026-01-01T00:00:00Z
+      end_date_time: 1767229200,
+    } as unknown as Parameters<typeof maintenanceToVariables>[0];
+
+    const text = maintenanceToVariables(event, "api", "has started", "start", "Maintenance Started").update_text;
+
+    expect(text).toContain("Jan 1, 2026, 12:00:00 AM UTC");
+    expect(text).toContain("Jan 1, 2026, 1:00:00 AM UTC");
+  });
 });
