@@ -5,7 +5,7 @@
     "Affected Monitors (%count)": "Affected Monitors (%count)",
     "All Systems Operational": "All Systems Operational",
     "Auto-Refresh": "Auto-Refresh",
-    "auto-refresh-description": "Enable periodic page data refresh.",
+    "Enable periodic page data refresh.": "Enable periodic page data refresh.",
     "Interval": "Interval",
     "Seconds": "Seconds",
     "Enable": "Enable",
