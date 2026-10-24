@@ -5,7 +5,7 @@
     "Affected Monitors (%count)": "Monitores afetados (%count)",
     "All Systems Operational": "Todos os sistemas operando",
     "Auto-Refresh": "Atualização Automática",
-    "auto-refresh-description": "Ative para atualizar os dados da página periodicamente.",
+    "Enable periodic page data refresh.": "Ative para atualizar os dados da página periodicamente.",
     "Interval": "Intervalo",
     "Seconds": "Segundos",
     "Enable": "Ativar",

@@ -8,7 +8,7 @@ export const MAX_REFRESH_INTERVAL = 86400;
 const defaultState: RefreshState = {
   enabled: false,
   interval: DEFAULT_REFRESH_INTERVAL,
-  lastRefresh: null
+  lastRefresh: null,
 };
 
 function createRefreshStore() {
@@ -20,24 +20,24 @@ function createRefreshStore() {
     toggle: () =>
       update((state) => ({
         ...state,
-        enabled: !state.enabled
+        enabled: !state.enabled,
       })),
 
     setInterval: (interval: number) =>
       update((state) => ({
         ...state,
-        interval
+        interval,
       })),
 
     updateLastRefresh: () =>
       update((state) => ({
         ...state,
-        lastRefresh: Date.now()
+        lastRefresh: Date.now(),
       })),
 
     setState: (newState: RefreshState) => set(newState),
 
-    reset: () => set(defaultState)
+    reset: () => set(defaultState),
   };
 }
 

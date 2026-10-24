@@ -14,6 +14,7 @@
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
   import clientResolver from "$lib/client/resolver.js";
+  import { clearMonitorBarCache } from "$lib/client/monitor-bar-client";
   import RefreshCw from "@lucide/svelte/icons/refresh-cw";
   import { toast } from "svelte-sonner";
   import { t } from "$lib/stores/i18n";
@@ -43,6 +44,8 @@
     refreshInProgress = true;
 
     try {
+      // monitor bars are fetched client-side and cached; drop the cache so the reload gets fresh data
+      clearMonitorBarCache();
       await invalidateAll();
       refreshStore.updateLastRefresh();
     } catch (error) {
@@ -68,25 +71,21 @@
   }
 
   function normalizeRefreshInterval(value: unknown): number {
+    // Number(null) is 0, which would clamp to the minimum instead of the default
+    if (value === null || value === "") return DEFAULT_REFRESH_INTERVAL;
     const interval = Number(value);
 
     if (!Number.isFinite(interval)) {
       return DEFAULT_REFRESH_INTERVAL;
     }
 
-    return Math.min(
-      MAX_REFRESH_INTERVAL,
-      Math.max(MIN_REFRESH_INTERVAL, Math.floor(interval))
-    );
+    return Math.min(MAX_REFRESH_INTERVAL, Math.max(MIN_REFRESH_INTERVAL, Math.floor(interval)));
   }
 
   function saveRefreshInterval() {
     refreshInterval = normalizeRefreshInterval(refreshInterval);
 
-    localStorage.setItem(
-      "kener-global-refresh-interval",
-      String(refreshInterval)
-    );
+    localStorage.setItem("kener-global-refresh-interval", String(refreshInterval));
 
     refreshStore.setInterval(refreshInterval);
 
@@ -108,9 +107,7 @@
   }
 
   onMount(() => {
-    const savedInterval = localStorage.getItem(
-      "kener-global-refresh-interval"
-    );
+    const savedInterval = localStorage.getItem("kener-global-refresh-interval");
 
     refreshInterval = normalizeRefreshInterval(savedInterval);
     refreshStore.setInterval(refreshInterval);
@@ -161,25 +158,16 @@
   <Popover.Root>
     <Popover.Trigger>
       {#snippet child({ props })}
-        <Button
-          {...props}
-          variant="ghost"
-          size="icon"
-          aria-label={$t("Auto-Refresh")}
-        >
-          <RefreshCw
-            class={`h-[1.2rem] w-[1.2rem] ${
-              refreshInProgress ? "animate-spin" : ""
-            }`}
-          />
+        <Button {...props} variant="ghost" size="icon" aria-label={$t("Auto-Refresh")}>
+          <RefreshCw class={`h-[1.2rem] w-[1.2rem] ${refreshInProgress ? "animate-spin" : ""}`} />
         </Button>
       {/snippet}
     </Popover.Trigger>
     <Popover.Content class="w-60">
       <div class="grid gap-4">
         <div class="space-y-2">
-          <h4 class="font-medium leading-none">{$t("Auto-Refresh")}</h4>
-          <p class="text-sm text-muted-foreground">{$t("auto-refresh-description")}</p>
+          <h4 class="leading-none font-medium">{$t("Auto-Refresh")}</h4>
+          <p class="text-muted-foreground text-sm">{$t("Enable periodic page data refresh.")}</p>
         </div>
         <div class="grid gap-2">
           <div class="grid grid-cols-3 items-center gap-4">
