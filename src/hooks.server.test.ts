@@ -231,7 +231,7 @@ describe("route params fill event.locals", () => {
     expect(resolve).not.toHaveBeenCalled();
   });
 
-  it.each(["abc", "12abc", "12.9", "1e3", "-1"])(
+  it.each(["abc", "12abc", "12.9", "1e3", "-1", "2147483648", "99999999999999999999"])(
     "returns JSON 404 for the malformed id %s without querying the database",
     async (incident_id) => {
       db.getApiKeyByHashedKey.mockResolvedValueOnce({ status: "ACTIVE" });

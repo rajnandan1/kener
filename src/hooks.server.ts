@@ -12,7 +12,8 @@ InstallEnvProxy();
 
 const API_ROUTE_GROUP = "/(api)/";
 const API_PATH_PREFIX = "/api/";
-const INTEGER_ID = /^\d+$/;
+// Incident and maintenance ids are PostgreSQL `integer` columns; a larger id makes the query fail.
+const MAX_ID = 2147483647;
 
 // SvelteKit matches routes on the percent-decoded path, so "/%61pi/v4/monitors" reaches an API route
 // while event.url.pathname still reads "/%61pi/...". The raw path decides only when no route matched.
@@ -27,6 +28,11 @@ function extractBearerToken(authHeader: string | null): string | null {
     return parts[1];
   }
   return null;
+}
+
+function parseId(value: string): number | undefined {
+  const id = /^\d+$/.test(value) ? Number(value) : NaN;
+  return id <= MAX_ID ? id : undefined;
 }
 
 function unauthorized(message: string): Response {
@@ -89,15 +95,15 @@ const apiAuthHandle: Handle = async ({ event, resolve }) => {
     }
 
     if (incident_id !== undefined) {
-      const incident = INTEGER_ID.test(incident_id) ? await db.getIncidentById(Number(incident_id)) : undefined;
+      const id = parseId(incident_id);
+      const incident = id === undefined ? undefined : await db.getIncidentById(id);
       if (!incident) return notFound(`Incident with id '${incident_id}' not found`);
       event.locals.incident = incident;
     }
 
     if (maintenance_id !== undefined) {
-      const maintenance = INTEGER_ID.test(maintenance_id)
-        ? await db.getMaintenanceById(Number(maintenance_id))
-        : undefined;
+      const id = parseId(maintenance_id);
+      const maintenance = id === undefined ? undefined : await db.getMaintenanceById(id);
       if (!maintenance) return notFound(`Maintenance with id '${maintenance_id}' not found`);
       event.locals.maintenance = maintenance;
     }
