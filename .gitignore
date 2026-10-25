@@ -45,7 +45,8 @@ docs/superpowers/
 .superpowers/
 # Wayfinder scratch (local only)
 scratch/
-
+bun.lock
 # Claude session-local state (ralph-loop etc.)
 .claude/*.local.md
 .vitest-attachments/
+dump.rdb
