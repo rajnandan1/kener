@@ -50,3 +50,4 @@ bun.lock
 .claude/*.local.md
 .vitest-attachments/
 dump.rdb
+.github/workflows
