@@ -132,6 +132,23 @@ If you force `SMTP_SECURE=1` on these ports, connections can time out because th
 
 Use `SMTP_SECURE=1` only with an implicit TLS port (commonly `465`).
 
+### Groundmail {#groundmail}
+
+```env
+SMTP_HOST=smtp.groundmail.dev
+SMTP_PORT=587
+SMTP_SECURE=0
+SMTP_USER=groundmail
+SMTP_PASS=gmsmtp_xxxxxxxxxxxxx
+SMTP_FROM_EMAIL=noreply@yourdomain.com
+```
+
+- `SMTP_USER` is always `groundmail`. `SMTP_PASS` is an SMTP credential (starts with `gmsmtp_`) created in the Groundmail dashboard under **SMTP**.
+- Before Kener can email other people, verify the domain in `SMTP_FROM_EMAIL` and add a payment method in Groundmail. Until you do, Groundmail only sends from `noreply@mail.groundmail.dev` to your own account email; other recipients are rejected.
+- If your host blocks outbound port 587, use `SMTP_PORT=2525` (also STARTTLS, so keep `SMTP_SECURE=0`).
+
+See [Groundmail SMTP docs](https://docs.groundmail.dev/smtp).
+
 ## Troubleshooting {#troubleshooting}
 
 ### Email not sending {#email-not-sending}
