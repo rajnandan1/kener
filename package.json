@@ -36,18 +36,18 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "configure": "node build.js",
     "dev": "npm-run-all --parallel devschedule development",
-    "development": "vite dev",
+    "development": "vite dev --host",
     "devschedule": "vite-node src/lib/server/startup.ts",
     "generate-readme": "node scripts/generate-readme.js",
     "index-docs": "vite-node scripts/index-docs.ts",
-    "migrate": "vite-node scripts/fix-migration-ext.ts && npx knex migrate:latest",
-    "predev": "npm run seed",
+    "migrate": "vite-node scripts/fix-migration-ext.ts && bunx knex migrate:latest",
+    "predev": "bun run seed",
     "prepare": "svelte-kit sync || echo ''",
-    "preseed": "vite-node scripts/fix-migration-ext.ts && npx knex migrate:latest",
+    "preseed": "vite-node scripts/fix-migration-ext.ts && bunx knex migrate:latest",
     "prettify": "prettier --write .",
     "preview": "vite preview",
     "schedule": "vite-node src/lib/server/startup.ts",
-    "seed": "npx knex seed:run",
+    "seed": "bunx knex seed:run",
     "start": "node build/main.js",
     "test": "cross-env TZ=UTC vitest run",
     "test:client": "vitest run --project=client",
@@ -191,5 +191,8 @@
     "cookie": "^0.7.0",
     "mailparser": "^3.9.3",
     "shell-quote": "^1.8.4"
-  }
+  },
+  "trustedDependencies": [
+    "protobufjs"
+  ]
 }

@@ -3,7 +3,6 @@
   import "../kener.css";
   import { ModeWatcher } from "mode-watcher";
   import KenerNav from "$lib/components/KenerNav.svelte";
-  import KenerFooter from "$lib/components/KenerFooter.svelte";
   import * as Tooltip from "$lib/components/ui/tooltip/index.js";
   import { Toaster } from "$lib/components/ui/sonner/index.js";
   import { resolve } from "$app/paths";
@@ -62,7 +61,6 @@
       {@render children()}
     </Tooltip.Provider>
   </div>
-  <KenerFooter />
 </main>
 
 <style>

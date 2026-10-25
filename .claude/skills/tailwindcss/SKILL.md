@@ -285,10 +285,10 @@ module.exports = {
 ### Official Plugins
 
 ```bash
-npm install @tailwindcss/forms
-npm install @tailwindcss/typography
-npm install @tailwindcss/aspect-ratio
-npm install @tailwindcss/container-queries
+bun add @tailwindcss/forms
+bun add @tailwindcss/typography
+bun add @tailwindcss/aspect-ratio
+bun add @tailwindcss/container-queries
 ```
 
 ```tsx

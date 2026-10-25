@@ -22,7 +22,7 @@ The project must be a SvelteKit app with shadcn-svelte initialized:
 
 ```bash
 # Initialize shadcn-svelte in an existing SvelteKit project
-npx shadcn-svelte@latest init
+bunx --bun shadcn-svelte@latest init
 ```
 
 ## How to use
@@ -68,7 +68,7 @@ When building UI, follow this decision process:
 3. **Read the specific component docs** for the components you plan to use
 4. **Check if the component is installed** — if not, add it:
    ```bash
-   npx shadcn-svelte@latest add <component-name>
+   bunx --bun shadcn-svelte@latest add <component-name>
    ```
 5. **Import and use the component** following the documentation patterns
 
@@ -90,13 +90,13 @@ shadcn-svelte components are organized into these categories:
 
 ```bash
 # Add a single component
-npx shadcn-svelte@latest add button
+bunx --bun shadcn-svelte@latest add button
 
 # Add multiple components
-npx shadcn-svelte@latest add button card dialog
+bunx --bun shadcn-svelte@latest add button card dialog
 
 # List all available components
-npx shadcn-svelte@latest add
+bunx --bun shadcn-svelte@latest add
 ```
 
 ### Import patterns
