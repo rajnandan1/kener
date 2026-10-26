@@ -10,25 +10,23 @@
   import randomName from "@scaleway/random-name";
   import CopyButton from "$lib/components/CopyButton.svelte";
   import { Badge } from "$lib/components/ui/badge";
+  import { HEARTBEAT_SECRET_RULE, IsValidHeartbeatSecret } from "$lib/anywhere";
 
   let { data = $bindable(), tag = "" }: { data: HeartbeatMonitorTypeData; tag?: string } = $props();
 
-  // Initialize defaults if not set
   if (!data.degradedRemainingMinutes) data.degradedRemainingMinutes = 5;
   if (!data.downRemainingMinutes) data.downRemainingMinutes = 10;
+  const storedSecret = data.secretString;
+  if (!data.secretString) refreshSecret();
 
-  $effect(() => {
-    if (!data.secretString) data.secretString = randomName() + "-" + randomName();
-  });
+  const secretValid = $derived(data.secretString === storedSecret || IsValidHeartbeatSecret(data.secretString));
 
-  // Generate heartbeat URL
   let heartbeatUrl = $derived(
     tag
       ? window.location.origin + clientResolve(resolve, `/ext/heartbeat/${tag}/${data.secretString}`)
       : "Save the monitor first to get the heartbeat URL"
   );
 
-  //refresh secret string and thus heartbeat URL
   function refreshSecret() {
     data.secretString = randomName() + "-" + randomName();
   }
@@ -73,7 +71,27 @@
   </div>
 
   <div class="flex flex-col gap-2">
-    <Label>Heartbeat URL</Label>
+    <Label for="hb-secret">Heartbeat secret <span class="text-destructive">*</span></Label>
+    <div>
+      <InputGroup.Root>
+        <InputGroup.Input
+          id="hb-secret"
+          bind:value={data.secretString}
+          aria-invalid={!secretValid}
+          aria-describedby="hb-secret-rule"
+        />
+        <InputGroup.Addon align="inline-end">
+          <InputGroup.Button variant="secondary" onclick={refreshSecret}>New URL</InputGroup.Button>
+        </InputGroup.Addon>
+      </InputGroup.Root>
+      <p id="hb-secret-rule" class={["mt-1 text-xs", secretValid ? "text-muted-foreground" : "text-destructive"]}>
+        {HEARTBEAT_SECRET_RULE}
+      </p>
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-2">
+    <Label for="hb-url">Heartbeat URL</Label>
     <div>
       <div class="flex items-center gap-2">
         <InputGroup.Root>
@@ -82,10 +100,8 @@
               <Badge>GET | POST</Badge>
             </InputGroup.Text>
           </InputGroup.Addon>
-          <InputGroup.Input class="text-muted-foreground" id="hb-secret" bind:value={heartbeatUrl} readonly />
+          <InputGroup.Input class="text-muted-foreground" id="hb-url" value={heartbeatUrl} readonly />
           <InputGroup.Addon align="inline-end">
-            <InputGroup.Button variant="secondary" onclick={refreshSecret}>New URL</InputGroup.Button>
-
             <CopyButton variant="ghost" size="icon-sm" text={heartbeatUrl}>
               <Copy class="size-4" />
             </CopyButton>

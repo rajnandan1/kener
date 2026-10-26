@@ -1,9 +1,11 @@
 import { json, error } from "@sveltejs/kit";
 import type { APIServerRequest } from "$lib/server/types/api-server";
+import { CanSeeHiddenMonitors, GetLoggedInSession } from "$lib/server/controllers/userController";
 import db from "$lib/server/db/db";
 import { BeginningOfDay, GetMinuteStartNowTimestampUTC, GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { GetMonitorsParsed } from "../../controllers/monitorsController";
 import { ParseLatency } from "$lib/clientTools";
+import GC from "$lib/global-constants";
 
 interface DayDetailRequest {
   tag: string;
@@ -111,7 +113,12 @@ export default async function post(req: APIServerRequest): Promise<Response> {
       req.body.nowAtTz ? parseInt(req.body.nowAtTz || "0", 10) : GetMinuteStartNowTimestampUTC(),
     ) + 60;
 
-  const monitors = await GetMonitorsParsed({ tag: body.tag });
+  const canSeeHidden = await CanSeeHiddenMonitors(await GetLoggedInSession(req.cookies));
+  const monitors = await GetMonitorsParsed({
+    tag: body.tag,
+    status: GC.ACTIVE,
+    is_hidden: canSeeHidden ? undefined : GC.NO,
+  });
   if (!monitors || monitors.length === 0) {
     return error(404, { message: "Monitor not found" });
   }

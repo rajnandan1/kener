@@ -83,6 +83,17 @@ export function IsValidProxyURL(proxy: unknown): boolean {
   }
 }
 
+// The last segment of /ext/heartbeat/{tag}/{secret}. RFC 3986 unreserved characters only, so a
+// sender can put it in a URL path without encoding it.
+export const HEARTBEAT_SECRET_MIN_LENGTH = 12;
+export const HEARTBEAT_SECRET_RULE = `Use at least ${HEARTBEAT_SECRET_MIN_LENGTH} characters from A-Z a-z 0-9 . _ ~ -`;
+
+export function IsValidHeartbeatSecret(secret: unknown): boolean {
+  return (
+    typeof secret === "string" && secret.length >= HEARTBEAT_SECRET_MIN_LENGTH && /^[A-Za-z0-9._~-]+$/.test(secret)
+  );
+}
+
 export const ErrorSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="60" viewBox="0 0 120 60" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
   <circle cx="30" cy="24" r="10"/>
   <path d="M26 27h8"/>

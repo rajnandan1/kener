@@ -36,6 +36,18 @@ export interface SubscriptionVariableMap {
   update_subject: string;
   update_id: string;
   event_type: SubscriptionEventType;
+  // Flags for templates that style by what the mail is about. Mustache has no comparisons, so
+  // each is a boolean a section can test; only the flags that apply are set.
+  update_state?: string;
+  is_investigating?: boolean;
+  is_identified?: boolean;
+  is_monitoring?: boolean;
+  is_resolved?: boolean;
+  // The worst impact among the incident's monitors: "DOWN", "DEGRADED" or "".
+  incident_impact?: string;
+  is_down?: boolean;
+  is_degraded?: boolean;
+  is_maintenance?: boolean;
 }
 
 export interface EmailCodeVariableMap {

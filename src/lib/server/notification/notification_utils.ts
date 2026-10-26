@@ -85,6 +85,7 @@ export function maintenanceToVariables(
     update_id: `maintenance_${event.id}_${updateIdSuffix}`,
     update_subject: `${subjectPrefix}: ${event.title}`,
     update_text: template,
+    is_maintenance: true,
   };
 }
 

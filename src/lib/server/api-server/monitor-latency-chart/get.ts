@@ -1,7 +1,9 @@
 import { json, error } from "@sveltejs/kit";
 import type { APIServerRequest } from "$lib/server/types/api-server";
+import { CanSeeHiddenMonitors, GetLoggedInSession } from "$lib/server/controllers/userController";
 import db from "$lib/server/db/db";
 import { GetMinuteStartNowTimestampUTC } from "$lib/server/tool";
+import GC from "$lib/global-constants";
 
 /**
  * Time range definitions with aggregation intervals
@@ -39,7 +41,9 @@ export default async function get(req: APIServerRequest): Promise<Response> {
     return error(400, { message: "tag query parameter is required" });
   }
 
-  const monitor = await db.getMonitorByTag(tag);
+  const canSeeHidden = await CanSeeHiddenMonitors(await GetLoggedInSession(req.cookies));
+  const monitors = await db.getMonitors({ tag, status: GC.ACTIVE, is_hidden: canSeeHidden ? undefined : GC.NO });
+  const monitor = monitors[0];
   if (!monitor) {
     return error(404, { message: "Monitor not found" });
   }

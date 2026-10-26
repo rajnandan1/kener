@@ -11,6 +11,8 @@ import { GetAllAnalyticsData } from "$lib/server/controllers/siteDataController.
 
 import type { RequestHandler } from "./$types";
 
+// no-cache: the script is built from saved settings, and a CDN default TTL for .js (Cloudflare: 4h)
+// would keep serving the old provider config after an admin changes it (#857).
 export const GET: RequestHandler = async ({ params, url }) => {
   let analyticsData = await GetAllAnalyticsData();
 
@@ -19,6 +21,7 @@ export const GET: RequestHandler = async ({ params, url }) => {
     return new Response("//no data", {
       headers: {
         "Content-Type": "application/javascript",
+        "Cache-Control": "no-cache",
       },
     });
   }
@@ -113,6 +116,7 @@ export const GET: RequestHandler = async ({ params, url }) => {
   return new Response(captureScript, {
     headers: {
       "Content-Type": "application/javascript",
+      "Cache-Control": "no-cache",
     },
   });
 };

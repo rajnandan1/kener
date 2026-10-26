@@ -20,6 +20,7 @@ import {
   IsValidNameServer,
   IsValidURL,
   IsValidUptimeFormula,
+  IsMaskedString,
   MaskString,
   ParsePercentage,
   ParseUptime,
@@ -351,6 +352,12 @@ describe("string helpers", () => {
     expect(MaskString("abcd")).toBe("****");
     expect(MaskString("ab")).toBe("**");
     expect(MaskString("")).toBe("");
+  });
+
+  it("IsMaskedString recognizes MaskString output and nothing else", () => {
+    expect(["secret123", "abcd", "ab"].every((s) => IsMaskedString(MaskString(s)))).toBe(true);
+    expect(IsMaskedString("secret123")).toBe(false);
+    expect(IsMaskedString("")).toBe(false);
   });
 
   it("HashString returns the sha256 hex digest", () => {

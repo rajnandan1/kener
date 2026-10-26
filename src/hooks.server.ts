@@ -1,4 +1,4 @@
-import { json, type Handle } from "@sveltejs/kit";
+import { json, type Handle, type RequestEvent } from "@sveltejs/kit";
 import { sequence } from "@sveltejs/kit/hooks";
 import { VerifyAPIKey } from "$lib/server/controllers/apiController";
 import db from "$lib/server/db/db";
@@ -10,29 +10,15 @@ import { InstallEnvProxy } from "$lib/server/proxy";
 // Dev runs the SvelteKit server and the scheduler as separate processes; each installs once.
 InstallEnvProxy();
 
+const API_ROUTE_GROUP = "/(api)/";
 const API_PATH_PREFIX = "/api/";
+// Incident and maintenance ids are PostgreSQL `integer` columns; a larger id makes the query fail.
+const MAX_ID = 2147483647;
 
-// Paths that don't require authentication
-const PUBLIC_API_PATHS = ["/api/status"];
-
-// Regex to match routes with monitor_tag parameter
-const MONITOR_TAG_ROUTE_REGEX = /^\/api\/(?:v\d+\/)?monitors\/([^/]+)/;
-
-// Regex to match routes with incident_id parameter
-const INCIDENT_ID_ROUTE_REGEX = /^\/api\/(?:v\d+\/)?incidents\/(\d+)/;
-
-// Regex to match routes with maintenance_id parameter
-const MAINTENANCE_ID_ROUTE_REGEX = /^\/api\/(?:v\d+\/)?maintenances\/(\d+)/;
-
-// Regex to match routes with page_path parameter
-const PAGE_PATH_ROUTE_REGEX = /^\/api\/(?:v\d+\/)?pages\/([^/]+)/;
-
-function isApiRoute(pathname: string): boolean {
-  return pathname.startsWith(API_PATH_PREFIX);
-}
-
-function isPublicApiPath(pathname: string): boolean {
-  return PUBLIC_API_PATHS.some((path) => pathname === path || pathname === path + "/");
+// SvelteKit matches routes on the percent-decoded path, so "/%61pi/v4/monitors" reaches an API route
+// while event.url.pathname still reads "/%61pi/...". The raw path decides only when no route matched.
+function isApiRequest(event: RequestEvent): boolean {
+  return event.route.id?.startsWith(API_ROUTE_GROUP) ?? event.url.pathname.startsWith(API_PATH_PREFIX);
 }
 
 function extractBearerToken(authHeader: string | null): string | null {
@@ -44,24 +30,19 @@ function extractBearerToken(authHeader: string | null): string | null {
   return null;
 }
 
-function extractMonitorTag(pathname: string): string | null {
-  const match = pathname.match(MONITOR_TAG_ROUTE_REGEX);
-  return match ? match[1] : null;
+function parseId(value: string): number | undefined {
+  const id = /^\d+$/.test(value) ? Number(value) : NaN;
+  return id <= MAX_ID ? id : undefined;
 }
 
-function extractIncidentId(pathname: string): number | null {
-  const match = pathname.match(INCIDENT_ID_ROUTE_REGEX);
-  return match ? parseInt(match[1], 10) : null;
+function unauthorized(message: string): Response {
+  const body: UnauthorizedResponse = { error: { code: "UNAUTHORIZED", message } };
+  return json(body, { status: 401 });
 }
 
-function extractMaintenanceId(pathname: string): number | null {
-  const match = pathname.match(MAINTENANCE_ID_ROUTE_REGEX);
-  return match ? parseInt(match[1], 10) : null;
-}
-
-function extractPagePath(pathname: string): string | null {
-  const match = pathname.match(PAGE_PATH_ROUTE_REGEX);
-  return match ? decodeURIComponent(match[1]) : null;
+function notFound(message: string): Response {
+  const body: NotFoundResponse = { error: { code: "NOT_FOUND", message } };
+  return json(body, { status: 404 });
 }
 
 // Content types that indicate a form submission (mirrors SvelteKit's internal CSRF check scope)
@@ -96,114 +77,42 @@ const csrfHandle: Handle = async ({ event, resolve }) => {
 };
 
 const apiAuthHandle: Handle = async ({ event, resolve }) => {
-  const { pathname } = event.url;
-
-  // Check if this is an API route that requires authentication
-  if (isApiRoute(pathname) && !isPublicApiPath(pathname)) {
-    const authHeader = event.request.headers.get("authorization");
-    const token = extractBearerToken(authHeader);
-
-    if (!token) {
-      const errorResponse: UnauthorizedResponse = {
-        error: {
-          code: "UNAUTHORIZED",
-          message: "Missing or invalid authorization header",
-        },
-      };
-      return json(errorResponse, { status: 401 });
-    }
-
-    const isValidKey = await VerifyAPIKey(token);
-    if (!isValidKey) {
-      const errorResponse: UnauthorizedResponse = {
-        error: {
-          code: "UNAUTHORIZED",
-          message: "Invalid API key",
-        },
-      };
-      return json(errorResponse, { status: 401 });
-    }
+  if (isApiRequest(event)) {
+    const token = extractBearerToken(event.request.headers.get("authorization"));
+    if (!token) return unauthorized("Missing or invalid authorization header");
+    if (!(await VerifyAPIKey(token))) return unauthorized("Invalid API key");
 
     // API consumers must always get JSON; without this, an /api/ path with no
     // matching route falls through to SvelteKit's HTML error page
-    if (event.route.id === null) {
-      const errorResponse: NotFoundResponse = {
-        error: {
-          code: "NOT_FOUND",
-          message: `No API route matches '${pathname}'`,
-        },
-      };
-      return json(errorResponse, { status: 404 });
-    }
+    if (event.route.id === null) return notFound(`No API route matches '${event.url.pathname}'`);
 
-    // Validate monitor tag exists for /api/(vX/)?monitors/:monitor_tag/* routes
-    const monitorTag = extractMonitorTag(pathname);
-    if (monitorTag) {
-      const monitor = await GetMonitorsParsed({ tag: monitorTag }).then((monitors) => monitors[0]);
-      if (!monitor) {
-        const errorResponse: NotFoundResponse = {
-          error: {
-            code: "NOT_FOUND",
-            message: `Monitor with tag '${monitorTag}' not found`,
-          },
-        };
-        return json(errorResponse, { status: 404 });
-      }
-      // Store monitor in locals for use in endpoints
+    const { monitor_tag, incident_id, maintenance_id, page_path } = event.params;
+
+    if (monitor_tag !== undefined) {
+      const [monitor] = await GetMonitorsParsed({ tag: monitor_tag });
+      if (!monitor) return notFound(`Monitor with tag '${monitor_tag}' not found`);
       event.locals.monitor = monitor;
     }
 
-    // Validate incident_id exists for /api/(vX/)?incidents/:incident_id/* routes
-    const incidentId = extractIncidentId(pathname);
-    if (incidentId) {
-      const incident = await db.getIncidentById(incidentId);
-      if (!incident) {
-        const errorResponse: NotFoundResponse = {
-          error: {
-            code: "NOT_FOUND",
-            message: `Incident with id '${incidentId}' not found`,
-          },
-        };
-        return json(errorResponse, { status: 404 });
-      }
-      // Store incident in locals for use in endpoints
+    if (incident_id !== undefined) {
+      const id = parseId(incident_id);
+      const incident = id === undefined ? undefined : await db.getIncidentById(id);
+      if (!incident) return notFound(`Incident with id '${incident_id}' not found`);
       event.locals.incident = incident;
     }
 
-    // Validate maintenance_id exists for /api/(vX/)?maintenances/:maintenance_id/* routes
-    const maintenanceId = extractMaintenanceId(pathname);
-    if (maintenanceId) {
-      const maintenance = await db.getMaintenanceById(maintenanceId);
-      if (!maintenance) {
-        const errorResponse: NotFoundResponse = {
-          error: {
-            code: "NOT_FOUND",
-            message: `Maintenance with id '${maintenanceId}' not found`,
-          },
-        };
-        return json(errorResponse, { status: 404 });
-      }
-      // Store maintenance in locals for use in endpoints
+    if (maintenance_id !== undefined) {
+      const id = parseId(maintenance_id);
+      const maintenance = id === undefined ? undefined : await db.getMaintenanceById(id);
+      if (!maintenance) return notFound(`Maintenance with id '${maintenance_id}' not found`);
       event.locals.maintenance = maintenance;
     }
 
-    // Validate page_path exists for /api/(vX/)?pages/:page_path/* routes
-    const pagePath = extractPagePath(pathname);
-    if (pagePath) {
+    if (page_path !== undefined) {
       // The home page has an empty page_path, unreachable as a URL segment;
       // the ~home token addresses it instead
-      const lookupPath = pagePath === GC.HOME_PAGE_TOKEN ? "" : pagePath;
-      const page = await db.getPageByPath(lookupPath);
-      if (!page) {
-        const errorResponse: NotFoundResponse = {
-          error: {
-            code: "NOT_FOUND",
-            message: `Page with path '${pagePath}' not found`,
-          },
-        };
-        return json(errorResponse, { status: 404 });
-      }
-      // Store page in locals for use in endpoints
+      const page = await db.getPageByPath(page_path === GC.HOME_PAGE_TOKEN ? "" : page_path);
+      if (!page) return notFound(`Page with path '${page_path}' not found`);
       event.locals.page = page;
     }
   }
@@ -213,4 +122,13 @@ const apiAuthHandle: Handle = async ({ event, resolve }) => {
   return response;
 };
 
-export const handle = sequence(csrfHandle, apiAuthHandle);
+// A signed-in response can include hidden monitors, so a shared cache (CDN) must not store it.
+const privateCacheHandle: Handle = async ({ event, resolve }) => {
+  const response = await resolve(event);
+  if (event.cookies.get("kener-user") && !response.headers.has("cache-control")) {
+    response.headers.set("cache-control", "private");
+  }
+  return response;
+};
+
+export const handle = sequence(csrfHandle, privateCacheHandle, apiAuthHandle);
