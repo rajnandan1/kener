@@ -637,7 +637,7 @@ After setting environment variables:
 
 4. **Warning Signs**:
     ```
-    ⚠ KENER_SECRET_KEY not set, using default (INSECURE)
+    KENER_SECRET_KEY is not set. Sign-in, password reset, and API keys stay off until you set it, ...
     ⚠ Variable $API_KEY not found in environment
     ```
 
@@ -656,15 +656,15 @@ After setting environment variables:
 
 ### Secret Key Warnings {#secret-key-warnings}
 
-**Warning**: `KENER_SECRET_KEY not set, using default`
+**Warning**: `KENER_SECRET_KEY is not set. Sign-in, password reset, and API keys stay off until you set it, ...`
 
-**Impact**:
+**Impact**: The sign-in page shows **Set up not completed**, and `/api/v4` requests return HTTP 500.
 
-- Sessions can be hijacked
-- Authentication is insecure
-- Not suitable for production
+**Warning**: `KENER_SECRET_KEY is a published example value, so anyone can forge sign-in sessions for this instance. ...`
 
-**Solution**: Set `KENER_SECRET_KEY` immediately.
+**Impact**: The example values in these docs are public, so anyone can forge a sign-in session for your instance.
+
+**Solution**: Set `KENER_SECRET_KEY` to the output of `openssl rand -base64 32`, then restart Kener. Changing the key signs everyone out and stops every existing API key.
 
 ### Database Connection Fails {#database-connection-fails}
 
