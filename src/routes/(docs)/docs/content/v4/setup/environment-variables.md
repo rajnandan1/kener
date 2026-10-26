@@ -9,14 +9,13 @@ Environment variables allow you to configure Kener without modifying code. They'
 
 ### KENER_SECRET_KEY {#kener-secret-key}
 
-**Purpose**: Secret key for signing JWT tokens and encrypting sensitive data.
+**Purpose**: Secret key for signing JWT tokens and hashing API keys.
 
 **Used For**:
 
-- User session tokens and authentication
-- API key generation and validation
-- Password hashing and verification
-- Cookie signing for secure sessions
+- User session tokens
+- Password reset, invitation, and email verification links
+- API key validation
 
 **Requirements**:
 
@@ -42,7 +41,10 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
 > [!WARNING]
-> Without `KENER_SECRET_KEY`, Kener will use a default key which is **not secure for production**. You'll see warnings in the console if running without this variable.
+> Kener has no fallback key. When `KENER_SECRET_KEY` is unset or empty, the sign-in page shows **Set up not completed**, and sign-in, password reset, and API keys stay off. Kener also logs a startup warning when the key is unset or is an example value from these docs, such as `replace_me_with_a_random_string`.
+
+> [!IMPORTANT]
+> Changing `KENER_SECRET_KEY` signs everyone out and stops every existing API key. Create new API keys after the change.
 
 ### ORIGIN {#origin}
 
@@ -635,7 +637,7 @@ After setting environment variables:
 
 4. **Warning Signs**:
     ```
-    ⚠ KENER_SECRET_KEY not set, using default (INSECURE)
+    KENER_SECRET_KEY is not set. Sign-in, password reset, and API keys stay off until you set it, ...
     ⚠ Variable $API_KEY not found in environment
     ```
 
@@ -654,15 +656,15 @@ After setting environment variables:
 
 ### Secret Key Warnings {#secret-key-warnings}
 
-**Warning**: `KENER_SECRET_KEY not set, using default`
+**Warning**: `KENER_SECRET_KEY is not set. Sign-in, password reset, and API keys stay off until you set it, ...`
 
-**Impact**:
+**Impact**: The sign-in page shows **Set up not completed**, and `/api/v4` requests that send a Bearer key return HTTP 500.
 
-- Sessions can be hijacked
-- Authentication is insecure
-- Not suitable for production
+**Warning**: `KENER_SECRET_KEY is a published example value, so anyone can forge sign-in sessions for this instance. ...`
 
-**Solution**: Set `KENER_SECRET_KEY` immediately.
+**Impact**: The example values in these docs are public, so anyone can forge a sign-in session for your instance.
+
+**Solution**: Set `KENER_SECRET_KEY` to the output of `openssl rand -base64 32`, then restart Kener. Changing the key signs everyone out and stops every existing API key.
 
 ### Database Connection Fails {#database-connection-fails}
 
