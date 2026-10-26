@@ -66,6 +66,7 @@ export default defineConfig(({ mode }) => {
           test: {
             name: "server",
             environment: "node",
+            env: { KENER_SECRET_KEY: "kener-test-secret" },
             include: ["src/**/*.{test,spec}.{js,ts}"],
             exclude: [...configDefaults.exclude, "src/**/*.svelte.{test,spec}.{js,ts}"],
           },

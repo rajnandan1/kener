@@ -5,7 +5,21 @@ const { db } = vi.hoisted(() => ({
 }));
 vi.mock("../db/db.js", () => ({ default: db }));
 
-import { InsertKeyValue, MaskSiteDataSecret } from "./siteDataController.js";
+import { HasRequiredEnv, InsertKeyValue, MaskSiteDataSecret } from "./siteDataController.js";
+
+describe("HasRequiredEnv", () => {
+  it("treats an empty KENER_SECRET_KEY as missing", () => {
+    vi.stubEnv("ORIGIN", "http://localhost:3000");
+    vi.stubEnv("REDIS_URL", "redis://localhost:6379");
+    vi.stubEnv("KENER_SECRET_KEY", "");
+
+    expect(HasRequiredEnv()).toBe(false);
+
+    vi.stubEnv("KENER_SECRET_KEY", "a-real-secret");
+    expect(HasRequiredEnv()).toBe(true);
+    vi.unstubAllEnvs();
+  });
+});
 
 const captcha = (secret?: string) => ({
   isEnabled: true,

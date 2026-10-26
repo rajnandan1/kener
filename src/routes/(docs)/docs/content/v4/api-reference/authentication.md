@@ -3,151 +3,46 @@ title: Authentication
 description: Learn how to authenticate with the Kener API using API keys and Bearer tokens
 ---
 
-Learn how to authenticate with the Kener API.
+Every `/api/v4` request needs an API key in the `Authorization` header.
 
-## API Keys
+## Create an API key {#creating-an-api-key}
 
-API keys are the primary method of authentication for the Kener API.
+1. Sign in at `/manage`.
+2. Open **API Keys**.
+3. Click **Create New API Key** and enter a name.
+4. Copy the key. Kener shows it only once.
 
-### Creating an API Key
-
-1. Log in to the admin panel at `/manage`
-2. Navigate to **Settings** > **API Keys**
-3. Click **Generate New Key**
-4. Configure the key:
-    - **Name**: A descriptive name
-    - **Permissions**: Select allowed operations
-    - **Expiry**: Optional expiration date
-5. Click **Create**
-6. **Copy the key immediately** - it won't be shown again
-
-### Using API Keys
-
-Include the API key in the `Authorization` header:
+## Use an API key {#using-api-keys}
 
 ```bash
-curl -X GET https://your-kener.com/api/monitors \
-  -H "Authorization: Bearer YOUR_API_KEY"
+curl https://your-kener.com/api/v4/monitors \
+  -H "Authorization: Bearer $KENER_API_KEY"
 ```
 
-### Key Permissions
+A `200` response means the key works. Keep the key in an environment variable or a secret store, not in code.
 
-| Permission        | Description                    |
-| ----------------- | ------------------------------ |
-| `read:monitors`   | View monitors and their status |
-| `write:monitors`  | Create and update monitors     |
-| `delete:monitors` | Delete monitors                |
-| `read:incidents`  | View incidents                 |
-| `write:incidents` | Create and update incidents    |
-| `admin`           | Full access to all endpoints   |
+## What a key can do {#key-access}
 
-## Security Best Practices
+> [!WARNING]
+> Every API key has full access to every `/api/v4` route. Kener has no per-key permissions and no key expiry yet. A key can create monitors, and a monitor's custom eval code runs on the Kener server. Treat every API key like an admin password.
 
-### Store Keys Securely
+API keys depend on [`KENER_SECRET_KEY`](/docs/v4/setup/environment-variables#kener-secret-key). If you change it, every existing key stops working, and you must create new keys.
 
-```bash
-# Don't hardcode keys
-export KENER_API_KEY="your-api-key"
+## Deactivate or delete a key {#revoking-keys}
 
-# Use in scripts
-curl -H "Authorization: Bearer $KENER_API_KEY" ...
-```
+On the **API Keys** page, turn off a key's switch to deactivate it, or delete the key. Kener rejects a deactivated key until you turn it on again.
 
-### Use Environment Variables
+## Errors {#error-codes}
 
-```javascript
-// Node.js
-const apiKey = process.env.KENER_API_KEY
-```
-
-```python
-# Python
-import os
-api_key = os.environ.get('KENER_API_KEY')
-```
-
-### Rotate Keys Regularly
-
-- Create new keys periodically
-- Revoke unused or compromised keys
-- Use different keys for different applications
-
-### Use Minimal Permissions
-
-Only grant the permissions each key actually needs:
+A missing, unknown, or deactivated key gets HTTP `401`:
 
 ```json
 {
-    "name": "monitoring-service",
-    "permissions": ["read:monitors", "write:incidents"]
-}
-```
-
-## Error Codes
-
-| Code           | HTTP Status | Description                    |
-| -------------- | ----------- | ------------------------------ |
-| `UNAUTHORIZED` | 401         | Missing or invalid API key     |
-| `FORBIDDEN`    | 403         | Key lacks required permissions |
-| `KEY_EXPIRED`  | 401         | API key has expired            |
-| `KEY_REVOKED`  | 401         | API key has been revoked       |
-
-### Error Response Example
-
-```json
-{
-    "success": false,
     "error": {
         "code": "UNAUTHORIZED",
-        "message": "Invalid API key provided"
+        "message": "Invalid API key"
     }
 }
 ```
 
-## Rate Limiting
-
-API keys are subject to rate limiting:
-
-- **Default**: 100 requests per minute
-- **Headers**:
-    - `X-RateLimit-Limit`: Maximum requests allowed
-    - `X-RateLimit-Remaining`: Requests remaining
-    - `X-RateLimit-Reset`: Unix timestamp when limit resets
-
-```bash
-# Example headers
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1705312800
-```
-
-## Revoking Keys
-
-If a key is compromised:
-
-1. Go to **Settings** > **API Keys**
-2. Find the key in the list
-3. Click **Revoke**
-4. Generate a new key if needed
-
-## Testing Authentication
-
-Verify your API key works:
-
-```bash
-curl -X GET https://your-kener.com/api/me \
-  -H "Authorization: Bearer YOUR_API_KEY"
-```
-
-Response:
-
-```json
-{
-    "success": true,
-    "data": {
-        "key_name": "my-api-key",
-        "permissions": ["read:monitors", "write:incidents"],
-        "created_at": "2024-01-01T00:00:00Z"
-    }
-}
-```
+A request with no `Bearer` header gets the message `Missing or invalid authorization header`.

@@ -4,13 +4,35 @@ import crypto from "crypto";
 
 const saltRounds = 10;
 
-/**
- * KENER_SECRET_KEY signs/verifies every session JWT, password-reset token, and API-key
- * hash in this file. There is no safe fallback for it: silently substituting a hardcoded
- * value here would let anyone who knows that value forge a valid admin session or
- * password-reset token against any Kener instance that has not set this variable.
- * Fail loudly instead, exactly where the key is actually needed.
- */
+const PUBLISHED_EXAMPLE_SECRET_KEYS = new Set([
+  "DUMMY_SECRET",
+  "a-strong-secret-key",
+  "dev-secret-key",
+  "dev-secret-key-for-local-testing-only",
+  "please_change_me",
+  "production-key",
+  "replace_me_with_a_random_string",
+  "replace_with_a_long_random_secret",
+  "replace_with_a_random_string",
+  "secret123",
+  "some_secret_key_for_kener",
+  "somesecretkey",
+  "your-secret-key",
+  "your-super-secret-key-here",
+  "your-super-secret-random-string-min-32-chars",
+]);
+
+export const SecretKeyWarning = (): string | null => {
+  const key = process.env.KENER_SECRET_KEY;
+  if (!key) {
+    return "KENER_SECRET_KEY is not set. Sign-in, password reset, and API keys stay off until you set it, for example to the output of: openssl rand -base64 32";
+  }
+  if (PUBLISHED_EXAMPLE_SECRET_KEYS.has(key)) {
+    return "KENER_SECRET_KEY is a published example value, so anyone can forge sign-in sessions for this instance. Set it to a long random value, for example the output of: openssl rand -base64 32. Changing it signs everyone out and stops every existing API key.";
+  }
+  return null;
+};
+
 const GetSecretKey = (): string => {
   const key = process.env.KENER_SECRET_KEY;
   if (!key) {
@@ -161,10 +183,7 @@ export const MaskString = (str: string): string => {
 };
 
 export const CreateHash = (apiKey: string): string => {
-  return crypto
-    .createHmac("sha256", GetSecretKey())
-    .update(apiKey)
-    .digest("hex");
+  return crypto.createHmac("sha256", GetSecretKey()).update(apiKey).digest("hex");
 };
 
 //create md5 hash

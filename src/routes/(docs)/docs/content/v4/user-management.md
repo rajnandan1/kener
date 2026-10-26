@@ -52,6 +52,9 @@ Permissions follow a `domain.action` format:
 | `images` | `write` |
 | `roles` | `read`, `write`, `assign_permissions`, `assign_users` |
 
+> [!WARNING]
+> `monitors.write` lets a user set a monitor's custom eval code, and that code runs on the Kener server. Give `monitors.write` only to people you trust with the server. The built-in `editor` role has it.
+
 Permissions are enforced at both the **route level** (page access) and the **action level** (API operations).
 
 `monitors.read` also shows hidden monitors on the public site to the signed-in user. See [Monitor Visibility](/docs/v4/monitors/visibility#signed-in-viewers).
