@@ -658,7 +658,7 @@ After setting environment variables:
 
 **Warning**: `KENER_SECRET_KEY is not set. Sign-in, password reset, and API keys stay off until you set it, ...`
 
-**Impact**: The sign-in page shows **Set up not completed**, and `/api/v4` requests return HTTP 500.
+**Impact**: The sign-in page shows **Set up not completed**, and `/api/v4` requests that send a Bearer key return HTTP 500.
 
 **Warning**: `KENER_SECRET_KEY is a published example value, so anyone can forge sign-in sessions for this instance. ...`
 
