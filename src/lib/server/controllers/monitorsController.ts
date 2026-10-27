@@ -4,7 +4,7 @@ import {
   GetMinuteStartTimestampUTC,
   GetNowTimestampUTC,
   GetNowTimestampUTCInMs,
-  FindStoredHeader,
+  MatchStoredHeaders,
   MASKED_SECRET,
   UnparsePercentage,
   UptimeCalculator,
@@ -232,9 +232,10 @@ function mapTypeDataSecrets(
   }
   if (Array.isArray(result.headers)) {
     const storedHeaders = (Array.isArray(stored?.headers) ? stored.headers : []) as TypeDataHeader[];
-    result.headers = result.headers.map((header: TypeDataHeader, i, sent: TypeDataHeader[]) => {
+    const matches = MatchStoredHeaders(result.headers, storedHeaders);
+    result.headers = result.headers.map((header: TypeDataHeader, i) => {
       if (typeof header?.value !== "string" || !header.value) return header;
-      return { ...header, value: transform(header.value, FindStoredHeader(storedHeaders, sent, i)?.value) };
+      return { ...header, value: transform(header.value, matches[i]?.value) };
     });
   }
   return result;

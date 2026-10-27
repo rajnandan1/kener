@@ -1,6 +1,6 @@
 import db from "../db/db.js";
 import type { TriggerRecordInsert, TriggerFilter, TriggerRecord } from "../types/db.js";
-import { FindStoredHeader, MASKED_SECRET, ValidateEmail } from "../tool.js";
+import { MASKED_SECRET, MatchStoredHeaders, ValidateEmail } from "../tool.js";
 
 interface TriggerInput extends TriggerRecordInsert {
   id?: number;
@@ -54,9 +54,10 @@ function restoreTriggerSecrets(
   }
   if (Array.isArray(result.headers)) {
     const storedHeaders = (Array.isArray(stored.headers) ? stored.headers : []) as TriggerHeader[];
-    result.headers = result.headers.map((header: TriggerHeader, i, sent: TriggerHeader[]) => {
+    const matches = MatchStoredHeaders(result.headers, storedHeaders);
+    result.headers = result.headers.map((header: TriggerHeader, i) => {
       if (header?.value !== MASKED_SECRET) return header;
-      const match = FindStoredHeader(storedHeaders, sent, i);
+      const match = matches[i];
       return { ...header, value: typeof match?.value === "string" ? match.value : "" };
     });
   }

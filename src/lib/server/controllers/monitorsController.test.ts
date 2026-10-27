@@ -302,6 +302,36 @@ describe("monitor type_data secrets", () => {
     ]);
   });
 
+  it("uses each stored header value at most once when names repeat in mixed case", () => {
+    const restored = (stored: [string, string][], sent: string[]) =>
+      RestoreMonitorSecrets(
+        { headers: sent.map((key) => ({ key, value: "********" })) },
+        { headers: stored.map(([key, value]) => ({ key, value })) },
+      ).headers as { key: string; value: string }[];
+
+    const renamed = restored(
+      [
+        ["Authorization", "token-A"],
+        ["Authorization", "token-B"],
+      ],
+      ["authorization", "Authorization"],
+    );
+    expect(renamed.map((h) => h.value).sort()).toEqual(["token-A", "token-B"]);
+
+    expect(
+      restored(
+        [
+          ["Authorization", "B"],
+          ["authorization", "A"],
+        ],
+        ["AUTHORIZATION", "Authorization"],
+      ),
+    ).toEqual([
+      { key: "AUTHORIZATION", value: "A" },
+      { key: "Authorization", value: "B" },
+    ]);
+  });
+
   it("keeps a real value that only looks masked", () => {
     const stored = { headers: [{ key: "Accept", value: "application/json" }], body: "old" };
 
