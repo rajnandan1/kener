@@ -13,13 +13,15 @@ Kener uses a role-based access control (RBAC) system. Each user can be assigned 
 
 Three readonly roles are seeded automatically:
 
-| Role     | Permissions | Notes |
-| -------- | ----------- | ----- |
-| `admin`  | All permissions | Full access including `api_keys.delete` |
-| `editor` | All except `api_keys.delete` | Day-to-day operations |
-| `member` | All `.read` permissions only | View-only access |
+| Role     | Permissions                  | Notes                                   |
+| -------- | ---------------------------- | --------------------------------------- |
+| `admin`  | All permissions              | Full access including `api_keys.delete` |
+| `editor` | All except `api_keys.delete` | Day-to-day operations                   |
+| `member` | All `.read` permissions only | View-only access                        |
 
 Built-in roles cannot be edited or deleted.
+
+Every dashboard user sees stored monitor and trigger secrets as `********`. Users with `monitors.write` also see the heartbeat secret. See [Stored secrets](/docs/v4/monitors/overview#stored-secrets).
 
 ### Custom roles {#custom-roles}
 
@@ -36,21 +38,21 @@ Custom roles can be edited, deactivated, or deleted. When deleting a custom role
 
 Permissions follow a `domain.action` format:
 
-| Domain | Actions |
-| ------ | ------- |
-| `monitors` | `read`, `write` |
-| `incidents` | `read`, `write` |
-| `maintenances` | `read`, `write` |
-| `pages` | `read`, `write` |
-| `triggers` | `read`, `write` |
-| `alerts` | `read`, `write` |
-| `api_keys` | `read`, `write`, `delete` |
-| `users` | `read`, `write` |
-| `settings` | `read`, `write` |
-| `subscribers` | `read`, `write` |
-| `email_templates` | `read`, `write` |
-| `images` | `write` |
-| `roles` | `read`, `write`, `assign_permissions`, `assign_users` |
+| Domain            | Actions                                               |
+| ----------------- | ----------------------------------------------------- |
+| `monitors`        | `read`, `write`                                       |
+| `incidents`       | `read`, `write`                                       |
+| `maintenances`    | `read`, `write`                                       |
+| `pages`           | `read`, `write`                                       |
+| `triggers`        | `read`, `write`                                       |
+| `alerts`          | `read`, `write`                                       |
+| `api_keys`        | `read`, `write`, `delete`                             |
+| `users`           | `read`, `write`                                       |
+| `settings`        | `read`, `write`                                       |
+| `subscribers`     | `read`, `write`                                       |
+| `email_templates` | `read`, `write`                                       |
+| `images`          | `write`                                               |
+| `roles`           | `read`, `write`, `assign_permissions`, `assign_users` |
 
 > [!WARNING]
 > `monitors.write` lets a user set a monitor's custom eval code, and that code runs on the Kener server. Give `monitors.write` only to people you trust with the server. The built-in `editor` role has it.

@@ -54,6 +54,18 @@ describe("monitor save: type_data.proxy scheme check", () => {
     expect(mockedDb.updateMonitor).not.toHaveBeenCalled();
   });
 
+  it("keeps a stored proxy it would reject when an update sends it masked or sends no type_data", async () => {
+    const storedMonitor = apiMonitor({ proxy: "socks5://user:pass@proxy:1080" }, 7);
+    mockedDb.getMonitors.mockResolvedValue([storedMonitor] as never);
+
+    await CreateUpdateMonitor({ ...storedMonitor, type_data: undefined, status: "INACTIVE" });
+    await CreateUpdateMonitor(apiMonitor({ proxy: "********" }, 7));
+
+    mockedDb.getMonitors.mockResolvedValue([]);
+    const saved = mockedDb.updateMonitor.mock.calls.map(([monitor]) => JSON.parse(monitor.type_data!).proxy);
+    expect(saved).toEqual(["socks5://user:pass@proxy:1080", "socks5://user:pass@proxy:1080"]);
+  });
+
   it("accepts http(s) proxies, including $SECRET credentials, and no proxy at all", async () => {
     await CreateUpdateMonitor(apiMonitor({ proxy: "http://user:$PROXY_PASS@proxy.internal:3128" }));
     await CreateUpdateMonitor(apiMonitor({ proxy: "https://proxy.internal:3128" }));

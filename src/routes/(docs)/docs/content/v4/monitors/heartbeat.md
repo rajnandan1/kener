@@ -82,6 +82,6 @@ Minimal cron usage pattern:
 ## Troubleshooting {#troubleshooting}
 
 - **Always NO_DATA**: endpoint never called or wrong `tag`/`secret`
-- **`Invalid heartbeat secret`**: the URL secret does not match `secretString`. Copy the URL again from the monitor page. API responses mask the secret, except the `POST` response that created the monitor.
+- **`Invalid heartbeat secret`**: the URL secret does not match `secretString`. Copy the URL again from the monitor page, which shows the secret to users with `monitors.write`. API responses mask the secret, except the `POST` response that created the monitor.
 - **Always DOWN/DEGRADED**: thresholds too low for actual job interval
 - **Signal accepted but stale**: ensure heartbeat is sent only after successful completion

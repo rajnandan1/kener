@@ -310,6 +310,7 @@ function MaskString(str: string): string {
 function IsMaskedString(str: string): boolean {
   return /^\*+.{0,4}$/.test(str);
 }
+const MASKED_SECRET = "********";
 
 function GetDbType() {
   //sqlite, postgresql, mysql
@@ -591,6 +592,7 @@ export {
   Wait,
   MaskString,
   IsMaskedString,
+  MASKED_SECRET,
   GetDbType,
   HashString,
   ValidateEmail,
