@@ -3,6 +3,8 @@ import db from "$lib/server/db/db";
 import {
   GetMonitorsParsed,
   DeleteMonitorCompletelyUsingTag,
+  MaskMonitorSecrets,
+  RestoreMonitorSecrets,
   UpdateMonitor,
   ValidateTypeDataProxy,
   WithValidHeartbeatSecret,
@@ -21,7 +23,7 @@ export const GET: RequestHandler = async ({ locals }) => {
   const monitor = locals.monitor!;
 
   const response: GetMonitorResponse = {
-    monitor,
+    monitor: MaskMonitorSecrets(monitor),
   };
 
   return json(response);
@@ -108,8 +110,10 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
           existingTypeData = {};
         }
       }
-      // Merge existing with new data
-      const mergedTypeData = { ...existingTypeData, ...body.type_data };
+      const mergedTypeData = RestoreMonitorSecrets(
+        { ...existingTypeData, ...body.type_data },
+        existingMonitor.type_data,
+      );
       updateData.type_data = JSON.stringify(mergedTypeData);
     }
   } else {
@@ -167,7 +171,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   }
 
   const response: UpdateMonitorResponse = {
-    monitor: updatedMonitor,
+    monitor: MaskMonitorSecrets(updatedMonitor),
   };
 
   return json(response);

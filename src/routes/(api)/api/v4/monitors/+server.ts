@@ -11,6 +11,7 @@ import type { MonitorRecord } from "$lib/server/types/db";
 import {
   CreateUpdateMonitor,
   GetMonitorsParsed,
+  MaskMonitorSecrets,
   ValidateTypeDataProxy,
   WithValidHeartbeatSecret,
 } from "$lib/server/controllers/monitorsController";
@@ -29,7 +30,7 @@ export const GET: RequestHandler = async ({ url }) => {
   });
 
   const response: GetMonitorsListResponse = {
-    monitors: rawMonitors,
+    monitors: rawMonitors.map(MaskMonitorSecrets),
   };
 
   return json(response);

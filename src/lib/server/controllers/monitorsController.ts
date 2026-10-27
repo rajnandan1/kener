@@ -214,6 +214,52 @@ export const GetMonitorsParsed = async (query: MonitorFilter): Promise<Array<Mon
   return parsedMonitors;
 };
 
+const TYPE_DATA_SECRET_FIELDS = ["body", "proxy", "connectionString", "secretString", "tlsKey"];
+const MASKED_SECRET = "********";
+
+type TypeDataHeader = { key?: unknown; value?: unknown } | null | undefined;
+
+function mapTypeDataSecrets(
+  typeData: Record<string, unknown>,
+  stored: Record<string, unknown> | null | undefined,
+  transform: (secret: string, storedSecret: unknown) => string,
+): Record<string, unknown> {
+  const result = { ...typeData };
+  for (const field of TYPE_DATA_SECRET_FIELDS) {
+    const value = result[field];
+    if (typeof value === "string" && value) result[field] = transform(value, stored?.[field]);
+  }
+  if (Array.isArray(result.headers)) {
+    const storedHeaders = (Array.isArray(stored?.headers) ? stored.headers : []) as TypeDataHeader[];
+    result.headers = result.headers.map((header: TypeDataHeader, i) => {
+      if (typeof header?.value !== "string" || !header.value) return header;
+      const match =
+        storedHeaders[i]?.key === header.key ? storedHeaders[i] : storedHeaders.find((h) => h?.key === header.key);
+      return { ...header, value: transform(header.value, match?.value) };
+    });
+  }
+  return result;
+}
+
+/** Returns a copy of a monitor with each non-empty type_data secret and header value replaced by `********`. */
+export function MaskMonitorSecrets(monitor: MonitorRecordTyped): MonitorRecordTyped {
+  if (!monitor.type_data) return monitor;
+  return { ...monitor, type_data: mapTypeDataSecrets(monitor.type_data, null, () => MASKED_SECRET) };
+}
+
+/**
+ * Puts the stored secret back for each type_data secret or header value sent as `********`. A header is matched by key.
+ * A mask with no stored secret saves an empty string, so a mask copied from another monitor is never stored.
+ */
+export function RestoreMonitorSecrets(
+  typeData: Record<string, unknown>,
+  stored: Record<string, unknown> | null | undefined,
+): Record<string, unknown> {
+  return mapTypeDataSecrets(typeData, stored, (value, storedValue) =>
+    value === MASKED_SECRET ? (typeof storedValue === "string" ? storedValue : "") : value,
+  );
+}
+
 /**
  * type_data.proxy must be a valid http(s):// URL. Node silently ignores any other scheme and
  * throws on a malformed authority, both at check time, so save is where a typo has to fail.

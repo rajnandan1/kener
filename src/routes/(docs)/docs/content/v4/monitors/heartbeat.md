@@ -25,7 +25,7 @@ Rule: at least 12 characters, using only `A-Z a-z 0-9 . _ ~ -`. A secret that fo
 
 - **Admin UI**: type a value in **Heartbeat secret**, or click **New URL** for a random one.
 - **API**: set `type_data.secretString` on `POST /api/v4/monitors` or `PATCH /api/v4/monitors/{tag}`. A new or changed value that breaks the rule returns HTTP `400` with code `BAD_REQUEST`, and the message starts with `Heartbeat secret breaks the rule`. See the [API Reference](/docs/spec/v4/).
-- **Not set**: when a `HEARTBEAT` monitor is saved without `secretString`, Kener generates one, for example `focused-galois-sharp-chaum`. The `POST`/`PATCH` response includes it.
+- **Not set**: when a `HEARTBEAT` monitor is saved without `secretString`, Kener generates one, for example `focused-galois-sharp-chaum`. The `POST` response includes it. `GET` and `PATCH` responses mask it.
 - **Clone**: a cloned heartbeat monitor gets a new secret. Give the sender the clone's URL.
 
 > [!TIP]
@@ -82,6 +82,6 @@ Minimal cron usage pattern:
 ## Troubleshooting {#troubleshooting}
 
 - **Always NO_DATA**: endpoint never called or wrong `tag`/`secret`
-- **`Invalid heartbeat secret`**: the URL secret does not match `secretString`. Copy the URL again from the monitor page, or from the API response.
+- **`Invalid heartbeat secret`**: the URL secret does not match `secretString`. Copy the URL again from the monitor page. API responses mask the secret, except the `POST` response that created the monitor.
 - **Always DOWN/DEGRADED**: thresholds too low for actual job interval
 - **Signal accepted but stale**: ensure heartbeat is sent only after successful completion

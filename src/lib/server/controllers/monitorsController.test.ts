@@ -14,7 +14,9 @@ import {
   CloneMonitor,
   CreateMonitor,
   CreateUpdateMonitor,
+  MaskMonitorSecrets,
   mergeLatestMonitoringWithSslCache,
+  RestoreMonitorSecrets,
 } from "./monitorsController";
 import { HEARTBEAT_SECRET_RULE } from "$lib/anywhere";
 import type { MonitoringData } from "../types/db.js";
@@ -190,5 +192,83 @@ describe("mergeLatestMonitoringWithSslCache", () => {
 
   it("returns null when the DB has no row, even if Redis still has one", () => {
     expect(mergeLatestMonitoringWithSslCache(null, { ...dbRow, ...sslFields })).toBeNull();
+  });
+});
+
+describe("monitor type_data secrets", () => {
+  const secrets = {
+    url: "https://example.com/health",
+    method: "POST",
+    headers: [
+      { key: "Authorization", value: "Bearer sk-prod-abc123secret" },
+      { key: "Accept", value: "*/*" },
+    ],
+    body: '{"password":"hunter22"}',
+    proxy: "http://user:pass@proxy.internal:3128",
+    connectionString: "postgresql://monitor:pw@db.example.com:5432/app",
+    secretString: "my-job-hb-secret-01",
+    tlsKey: "-----BEGIN PRIVATE KEY-----\nMIIE\n-----END PRIVATE KEY-----\n",
+    timeout: 5000,
+  };
+  const masked = {
+    ...secrets,
+    headers: [
+      { key: "Authorization", value: "********" },
+      { key: "Accept", value: "********" },
+    ],
+    body: "********",
+    proxy: "********",
+    connectionString: "********",
+    secretString: "********",
+    tlsKey: "********",
+  };
+  const monitor = { id: 1, tag: "api", monitor_type: "API", type_data: secrets };
+
+  it("masks every secret field and header value, and nothing else", () => {
+    expect(MaskMonitorSecrets(monitor as never)).toEqual({ ...monitor, type_data: masked });
+    expect(monitor.type_data).toBe(secrets);
+  });
+
+  it("leaves empty, missing, and non-string values alone", () => {
+    const typeData = { proxy: { host: "x" }, body: "", headers: [{ key: "X" }, "junk"], secretString: null };
+
+    expect(MaskMonitorSecrets({ ...monitor, type_data: typeData } as never).type_data).toEqual(typeData);
+    expect(MaskMonitorSecrets({ ...monitor, type_data: null } as never).type_data).toBeNull();
+  });
+
+  it("puts every stored secret back when the masked type_data comes back", () => {
+    expect(RestoreMonitorSecrets(masked, secrets)).toEqual(secrets);
+  });
+
+  it("finds a masked header by key when the headers moved", () => {
+    const headers = [{ key: "X-New", value: "plain" }, ...masked.headers.slice().reverse()];
+
+    expect(RestoreMonitorSecrets({ headers }, secrets).headers).toEqual([
+      { key: "X-New", value: "plain" },
+      ...secrets.headers.slice().reverse(),
+    ]);
+  });
+
+  it("keeps a real value that only looks masked", () => {
+    const stored = { headers: [{ key: "Accept", value: "application/json" }], body: "old" };
+
+    expect(RestoreMonitorSecrets({ headers: [{ key: "Accept", value: "*/*" }], body: "**" }, stored)).toEqual({
+      headers: [{ key: "Accept", value: "*/*" }],
+      body: "**",
+    });
+  });
+
+  it("keeps new values and saves an empty string for a mask with no stored secret", () => {
+    const typeData = {
+      secretString: "new-hb-secret-0001",
+      body: "********",
+      headers: [{ key: "X-Key", value: "********" }],
+    };
+
+    expect(RestoreMonitorSecrets(typeData, { headers: secrets.headers })).toEqual({
+      secretString: "new-hb-secret-0001",
+      body: "",
+      headers: [{ key: "X-Key", value: "" }],
+    });
   });
 });
