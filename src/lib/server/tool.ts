@@ -314,11 +314,21 @@ const MASKED_SECRET = "********";
 
 type StoredHeader = { key?: unknown; value?: unknown } | null | undefined;
 
-/** The stored header that a sent header restores from: the same position first, then the first with the same name. */
+/**
+ * The stored header that a sent header restores from: the same position first, then the first with the same name.
+ * An exact name wins over one that differs only in case.
+ */
 function FindStoredHeader(stored: StoredHeader[], header: StoredHeader, index: number): StoredHeader {
-  const sameName = (h: StoredHeader) =>
-    typeof h?.key === "string" && typeof header?.key === "string" && h.key.toLowerCase() === header.key.toLowerCase();
-  return sameName(stored[index]) ? stored[index] : stored.find(sameName);
+  const name = typeof header?.key === "string" ? header.key : undefined;
+  const exact = (h: StoredHeader) => name !== undefined && h?.key === name;
+  const anyCase = (h: StoredHeader) =>
+    name !== undefined && typeof h?.key === "string" && h.key.toLowerCase() === name.toLowerCase();
+  for (const sameName of [exact, anyCase]) {
+    if (sameName(stored[index])) return stored[index];
+    const match = stored.find(sameName);
+    if (match) return match;
+  }
+  return undefined;
 }
 
 function GetDbType() {

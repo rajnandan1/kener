@@ -269,6 +269,19 @@ describe("monitor type_data secrets", () => {
     ]);
   });
 
+  it("prefers the header with the exact name when saved names differ only in case", () => {
+    const stored = {
+      headers: [
+        { key: "authorization", value: "token-A" },
+        { key: "Authorization", value: "token-B" },
+      ],
+    };
+
+    expect(RestoreMonitorSecrets({ headers: [{ key: "Authorization", value: "********" }] }, stored).headers).toEqual([
+      { key: "Authorization", value: "token-B" },
+    ]);
+  });
+
   it("keeps a real value that only looks masked", () => {
     const stored = { headers: [{ key: "Accept", value: "application/json" }], body: "old" };
 
