@@ -1,6 +1,7 @@
 import { json, type RequestHandler } from "@sveltejs/kit";
 import db from "$lib/server/db/db";
 import { siteDataKeys } from "$lib/server/controllers/siteDataKeys";
+import { StoredSecretError } from "$lib/server/storedSecrets";
 import { GetSiteDataByKey, InsertKeyValue, MaskSiteDataSecret } from "$lib/server/controllers/siteDataController";
 import type {
   GetSiteDataKeyResponse,
@@ -117,8 +118,13 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  // Insert or update the value
-  await InsertKeyValue(configKey, valueToStore);
+  try {
+    await InsertKeyValue(configKey, valueToStore);
+  } catch (e) {
+    if (!(e instanceof StoredSecretError)) throw e;
+    const errorResponse: BadRequestResponse = { error: { code: "BAD_REQUEST", message: e.message } };
+    return json(errorResponse, { status: 400 });
+  }
 
   const response: UpdateSiteDataKeyResponse = {
     key: configKey,

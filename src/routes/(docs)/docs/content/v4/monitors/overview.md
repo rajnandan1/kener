@@ -56,11 +56,12 @@ UP + MAINTENANCE + DEGRADED + DOWN
 
 ## Stored secrets {#stored-secrets}
 
-The dashboard and the REST API show these stored values as `********`: each header value, the request `body`, the `proxy` URL, a SQL `connectionString`, a Docker `tlsKey`, and a heartbeat `secretString`. Monitor checks use the real values.
+The dashboard and the REST API show these stored values as `********`: each header value, the request `body`, a SQL `connectionString`, a Docker `tlsKey`, and a heartbeat `secretString`. The `url` and `proxy` of an API or Prometheus monitor show only their origin, for example `https://api.example.com/********`, because a URL can carry a token in its user info, path, or query. Monitor checks use the real values.
 
 - The dashboard shows the heartbeat secret to users with `monitors.write`, so they can copy the heartbeat URL.
-- A save that sends `********` back keeps the stored value. To change a secret, type the new value.
-- A `$SECRET` reference such as `Bearer $API_TOKEN` is masked too. The value stays in the environment variable.
+- A save that sends a masked value back keeps the stored value. To change a secret or a URL, type the full new value.
+- Kener sends a stored secret only to the destination it was saved with. The destination is the `url` and `proxy` of an API or Prometheus monitor, and the `daemon` and `connectionType` of a Docker monitor. A save that changes a destination or the monitor type must send every secret again. If it sends a masked value back, or a `PATCH` leaves a stored secret out, the save fails with `400` and names each field to send.
+- A `$SECRET` reference such as `Bearer $API_TOKEN` is masked too. The value stays in the environment variable `KENER_VAR_API_TOKEN`. Put a URL token in a reference too, for example `?token=$HEALTH_TOKEN`.
 
 ## Related docs {#related-docs}
 

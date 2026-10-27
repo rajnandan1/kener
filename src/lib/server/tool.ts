@@ -185,18 +185,25 @@ function ReplaceAllOccurrences(originalString: string, searchString: string, rep
   return replacedString;
 }
 
+const SECRET_ENV_PREFIX = "KENER_VAR_";
+const warnedSecretNames = new Set<string>();
+
+/**
+ * Resolves each `$NAME` in `str` from the environment variable `KENER_VAR_NAME`, or from `NAME` when it already starts
+ * with `KENER_VAR_`. No other variable is read, so a stored value cannot pull out `KENER_SECRET_KEY` or any host secret.
+ */
 function GetRequiredSecrets(str: string): Array<{ find: string; replace: string | undefined }> {
-  let envSecrets: Array<{ find: string; replace: string | undefined }> = [];
-  const requiredSecrets = GetWordsStartingWithDollar(str).map((x: string) => x.substr(1));
-  for (const [key, value] of Object.entries(process.env)) {
-    if (requiredSecrets.indexOf(key) !== -1) {
-      envSecrets.push({
-        find: `$${key}`,
-        replace: value,
-      });
+  const names = new Set(GetWordsStartingWithDollar(str).map((word) => word.slice(1)));
+  return [...names].flatMap((name) => {
+    const envName = name.startsWith(SECRET_ENV_PREFIX) ? name : SECRET_ENV_PREFIX + name;
+    const value = process.env[envName];
+    if (value !== undefined) return [{ find: `$${name}`, replace: value }];
+    if (process.env[name] !== undefined && name !== envName && !warnedSecretNames.has(name)) {
+      warnedSecretNames.add(name);
+      console.warn(`$${name} is not replaced: Kener reads only ${envName}, never ${name}.`);
     }
-  }
-  return envSecrets;
+    return [];
+  });
 }
 
 /**
@@ -310,31 +317,6 @@ function MaskString(str: string): string {
 function IsMaskedString(str: string): boolean {
   return /^\*+.{0,4}$/.test(str);
 }
-const MASKED_SECRET = "********";
-
-type StoredHeader = { key?: unknown; value?: unknown } | null | undefined;
-
-/**
- * Pairs sent headers with stored headers one to one, in order: exact names first, then names that differ only in case.
- * `result[i]` is the stored header for `sent[i]`, or undefined. No stored header is paired twice.
- */
-function MatchStoredHeaders(sent: StoredHeader[], stored: StoredHeader[]): StoredHeader[] {
-  const name = (h: StoredHeader) => (typeof h?.key === "string" ? h.key : undefined);
-  const matches: StoredHeader[] = [];
-  const used = new Set<number>();
-  for (const fold of [(s: string) => s, (s: string) => s.toLowerCase()]) {
-    sent.forEach((header, i) => {
-      const key = name(header);
-      if (matches[i] || key === undefined) return;
-      const j = stored.findIndex((h, k) => !used.has(k) && name(h) !== undefined && fold(name(h)!) === fold(key));
-      if (j === -1) return;
-      used.add(j);
-      matches[i] = stored[j];
-    });
-  }
-  return matches;
-}
-
 function GetDbType() {
   //sqlite, postgresql, mysql
   return knexOb.databaseType;
@@ -615,8 +597,6 @@ export {
   Wait,
   MaskString,
   IsMaskedString,
-  MASKED_SECRET,
-  MatchStoredHeaders,
   GetDbType,
   HashString,
   ValidateEmail,

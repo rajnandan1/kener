@@ -21,7 +21,7 @@ Three readonly roles are seeded automatically:
 
 Built-in roles cannot be edited or deleted.
 
-Every dashboard user sees stored monitor and trigger secrets as `********`. Users with `monitors.write` also see the heartbeat secret. See [Stored secrets](/docs/v4/monitors/overview#stored-secrets).
+Every dashboard user sees stored monitor and trigger secrets masked: as `********`, or as a URL origin plus `/********`. Users with `monitors.write` also see the heartbeat secret. See [Stored secrets](/docs/v4/monitors/overview#stored-secrets).
 
 ### Custom roles {#custom-roles}
 

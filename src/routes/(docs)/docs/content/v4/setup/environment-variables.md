@@ -349,6 +349,8 @@ REDIS_URL=redis://localhost:6379
 
 Beyond built-in variables, Kener supports custom environment variables for use in monitors and alert triggers. This keeps sensitive credentials secure and out of your configuration.
 
+Kener reads only environment variables whose names start with `KENER_VAR_`. A reference `$NAME` reads `KENER_VAR_NAME`, so `$API_TOKEN` reads `KENER_VAR_API_TOKEN`. A reference that already starts with `KENER_VAR_` reads that variable as written. Any other reference, such as `$KENER_SECRET_KEY` or `$DATABASE_URL`, stays as literal text, because anyone who can edit a monitor or trigger could otherwise send that value to their own server.
+
 ### Where Custom Variables Work {#where-custom-variables-work}
 
 Custom variables (format: `$VARIABLE_NAME`) can be used in:
@@ -360,20 +362,24 @@ Custom variables (format: `$VARIABLE_NAME`) can be used in:
 5. **Alert Trigger URLs**
 6. **Alert Trigger Headers**
 7. **Alert Trigger Bodies**
+8. **Monitor Proxy URLs** (API and Prometheus monitors)
+9. **Docker TLS Fields** (`tlsCa`, `tlsCert`, `tlsKey`)
 
 ### Variable Syntax {#variable-syntax}
 
-Use `$VARIABLE_NAME` format (dollar sign + uppercase name):
+Define `KENER_VAR_NAME` in the environment, and write `$NAME` in the monitor or trigger:
 
 ```bash
 # In .env file
-API_TOKEN=abc123xyz
-WEBHOOK_SECRET=secret-key-here
-DB_PASSWORD=secure-password
+KENER_VAR_API_TOKEN=abc123xyz
+KENER_VAR_WEBHOOK_SECRET=secret-key-here
+KENER_VAR_DB_PASSWORD=secure-password
 ```
 
+Then write `Bearer $API_TOKEN` in a header.
+
 > [!IMPORTANT]
-> Variable names are **case-sensitive** and must match exactly in your .env file.
+> Variable names are **case-sensitive**. Kener v4.1.10 and earlier read `$API_TOKEN` from `API_TOKEN`. Since v4.1.11, rename it to `KENER_VAR_API_TOKEN`. Kener logs a warning when it finds only the old name.
 
 ### Examples {#custom-variable-examples}
 
@@ -382,8 +388,8 @@ DB_PASSWORD=secure-password
 **Environment Variables**:
 
 ```bash
-API_KEY=sk_live_abc123...
-API_SECRET=secret_xyz789...
+KENER_VAR_API_KEY=sk_live_abc123...
+KENER_VAR_API_SECRET=secret_xyz789...
 ```
 
 **Monitor Configuration**:
@@ -404,17 +410,17 @@ API_SECRET=secret_xyz789...
 }
 ```
 
-**At Runtime**: Kener replaces `$API_KEY` and `$API_SECRET` with actual values from your environment.
+**At Runtime**: Kener replaces `$API_KEY` and `$API_SECRET` with the values of `KENER_VAR_API_KEY` and `KENER_VAR_API_SECRET`.
 
 #### 2. SQL Monitor with Secure Credentials {#sql-credentials-example}
 
 **Environment Variables**:
 
 ```bash
-DB_USER=kener_monitor
-DB_PASSWORD=secure_db_password
-DB_HOST=db.production.com
-DB_NAME=production
+KENER_VAR_DB_USER=kener_monitor
+KENER_VAR_DB_PASSWORD=secure_db_password
+KENER_VAR_DB_HOST=db.production.com
+KENER_VAR_DB_NAME=production
 ```
 
 **Monitor Configuration**:
@@ -430,8 +436,8 @@ DB_NAME=production
 **Environment Variables**:
 
 ```bash
-TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz
-PAGERDUTY_TOKEN=y_NbAkKc66ryYTWUXYEu
+KENER_VAR_TELEGRAM_BOT_TOKEN=123456789:ABCdefGHIjklMNOpqrsTUVwxyz
+KENER_VAR_PAGERDUTY_TOKEN=y_NbAkKc66ryYTWUXYEu
 ```
 
 **Trigger URL**:
@@ -456,10 +462,10 @@ https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage
 **Environment Variables**:
 
 ```bash
-API_PROTOCOL=https
-API_DOMAIN=api.example.com
-API_VERSION=v2
-API_KEY=secret123
+KENER_VAR_API_PROTOCOL=https
+KENER_VAR_API_DOMAIN=api.example.com
+KENER_VAR_API_VERSION=v2
+KENER_VAR_API_KEY=secret123
 ```
 
 **Monitor URL**:
@@ -494,14 +500,14 @@ https://api.example.com/v2/status?key=secret123
 
 ```bash
 # Production Database
-PROD_DB_USER=kener
-PROD_DB_PASS=secret123
-PROD_DB_HOST=db.prod.com
+KENER_VAR_PROD_DB_USER=kener
+KENER_VAR_PROD_DB_PASS=secret123
+KENER_VAR_PROD_DB_HOST=db.prod.com
 
 # Staging Database
-STAGING_DB_USER=kener_test
-STAGING_DB_PASS=test123
-STAGING_DB_HOST=db.staging.com
+KENER_VAR_STAGING_DB_USER=kener_test
+KENER_VAR_STAGING_DB_PASS=test123
+KENER_VAR_STAGING_DB_HOST=db.staging.com
 ```
 
 #### Never Commit .env Files {#never-commit-env}
@@ -520,11 +526,11 @@ Create `.env.example` with placeholders:
 
 ```bash
 # Required for production API monitoring
-PRODUCTION_API_KEY=your-key-here
-PRODUCTION_API_SECRET=your-secret-here
+KENER_VAR_PRODUCTION_API_KEY=your-key-here
+KENER_VAR_PRODUCTION_API_SECRET=your-secret-here
 
 # Required for database monitoring
-DB_ADMIN_PASSWORD=your-password-here
+KENER_VAR_DB_ADMIN_PASSWORD=your-password-here
 ```
 
 #### Rotate Secrets Regularly {#rotate-secrets}

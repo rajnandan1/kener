@@ -101,20 +101,17 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     if (body.type_data === null) {
       updateData.type_data = null;
     } else {
-      // Parse existing type_data if it exists
-      let existingTypeData = {};
-      if (existingMonitor.type_data) {
-        try {
-          existingTypeData = existingMonitor.type_data;
-        } catch {
-          existingTypeData = {};
-        }
+      const merged = { ...MaskMonitorSecrets(existingMonitor).type_data, ...body.type_data };
+      try {
+        const restored = RestoreMonitorSecrets(
+          { monitor_type: updateData.monitor_type as string, type_data: merged },
+          existingMonitor,
+        );
+        updateData.type_data = JSON.stringify(restored);
+      } catch (e) {
+        const errorResponse: BadRequestResponse = { error: { code: "BAD_REQUEST", message: (e as Error).message } };
+        return json(errorResponse, { status: 400 });
       }
-      const mergedTypeData = RestoreMonitorSecrets(
-        { ...existingTypeData, ...body.type_data },
-        existingMonitor.type_data,
-      );
-      updateData.type_data = JSON.stringify(mergedTypeData);
     }
   } else {
     updateData.type_data = JSON.stringify(existingMonitor.type_data);

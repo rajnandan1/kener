@@ -43,7 +43,7 @@ Use [Templates](/docs/v4/alerting/templates) for the canonical variable list.
 
 ## Secret interpolation {#secret-interpolation}
 
-Secrets are interpolated from environment variables using `$VAR_NAME` syntax (not `{{env.VAR_NAME}}`).
+Secrets are interpolated from environment variables using `$VAR_NAME` syntax (not `{{env.VAR_NAME}}`). `$API_TOKEN` reads `KENER_VAR_API_TOKEN`; see [custom variables](/docs/v4/setup/environment-variables#custom-variables).
 
 Example:
 
