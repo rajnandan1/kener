@@ -332,6 +332,41 @@ describe("monitor type_data secrets", () => {
     ]);
   });
 
+  it("pairs rows in order, so an added same-name row and an edited first row both keep the stored values", () => {
+    const appended = RestoreMonitorSecrets(
+      {
+        headers: [
+          { key: "X-Auth", value: "********" },
+          { key: "X-Auth", value: "new" },
+        ],
+      },
+      { headers: [{ key: "X-Auth", value: "A" }] },
+    );
+    expect(appended.headers).toEqual([
+      { key: "X-Auth", value: "A" },
+      { key: "X-Auth", value: "new" },
+    ]);
+
+    const editedFirst = RestoreMonitorSecrets(
+      {
+        headers: [
+          { key: "X-Auth", value: "new" },
+          { key: "X-Auth", value: "********" },
+        ],
+      },
+      {
+        headers: [
+          { key: "X-Auth", value: "A" },
+          { key: "X-Auth", value: "B" },
+        ],
+      },
+    );
+    expect(editedFirst.headers).toEqual([
+      { key: "X-Auth", value: "new" },
+      { key: "X-Auth", value: "B" },
+    ]);
+  });
+
   it("keeps a real value that only looks masked", () => {
     const stored = { headers: [{ key: "Accept", value: "application/json" }], body: "old" };
 
