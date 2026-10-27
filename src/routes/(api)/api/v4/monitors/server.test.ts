@@ -1,21 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { db } = vi.hoisted(() => {
+const { db, rows } = vi.hoisted(() => {
   const rows = new Map<string, Record<string, unknown>>();
   return {
+    rows,
     db: {
       getMonitorByTag: vi.fn(async (tag: string) => rows.get(tag)),
       insertMonitor: vi.fn(async (monitor: Record<string, unknown>) => {
         rows.set(monitor.tag as string, monitor);
         return [rows.size];
       }),
-      getMonitors: vi.fn(async ({ tag }: { tag: string }) => (rows.has(tag) ? [rows.get(tag)] : [])),
+      getMonitors: vi.fn(async ({ tag }: { tag?: string }) =>
+        tag === undefined ? [...rows.values()] : rows.has(tag) ? [rows.get(tag)] : [],
+      ),
     },
   };
 });
 vi.mock("$lib/server/db/db", () => ({ default: db }));
 
-import { POST } from "./+server";
+import { GET, POST } from "./+server";
 import { HEARTBEAT_SECRET_RULE } from "$lib/anywhere";
 
 const post = (body: Record<string, unknown>) =>
@@ -24,6 +27,7 @@ const post = (body: Record<string, unknown>) =>
   } as Parameters<typeof POST>[0]);
 
 beforeEach(() => {
+  rows.clear();
   db.insertMonitor.mockClear();
 });
 
@@ -57,5 +61,21 @@ describe("POST /api/v4/monitors", () => {
 
     expect(response.status).toBe(201);
     expect((await response.json()).monitor.type_data.secretString).toMatch(/^[a-z]+-[a-z]+-[a-z]+-[a-z]+$/);
+  });
+});
+
+describe("GET /api/v4/monitors", () => {
+  it("masks type_data secrets", async () => {
+    await post({
+      tag: "hb",
+      name: "HB",
+      monitor_type: "HEARTBEAT",
+      type_data: { secretString: "my-job-hb-secret-01" },
+    });
+
+    const response = await GET({ url: new URL("http://localhost/api/v4/monitors") } as Parameters<typeof GET>[0]);
+    expect((await response.json()).monitors.map((m: { type_data: unknown }) => m.type_data)).toEqual([
+      { secretString: "********" },
+    ]);
   });
 });

@@ -310,6 +310,30 @@ function MaskString(str: string): string {
 function IsMaskedString(str: string): boolean {
   return /^\*+.{0,4}$/.test(str);
 }
+const MASKED_SECRET = "********";
+
+type StoredHeader = { key?: unknown; value?: unknown } | null | undefined;
+
+/**
+ * Pairs sent headers with stored headers one to one, in order: exact names first, then names that differ only in case.
+ * `result[i]` is the stored header for `sent[i]`, or undefined. No stored header is paired twice.
+ */
+function MatchStoredHeaders(sent: StoredHeader[], stored: StoredHeader[]): StoredHeader[] {
+  const name = (h: StoredHeader) => (typeof h?.key === "string" ? h.key : undefined);
+  const matches: StoredHeader[] = [];
+  const used = new Set<number>();
+  for (const fold of [(s: string) => s, (s: string) => s.toLowerCase()]) {
+    sent.forEach((header, i) => {
+      const key = name(header);
+      if (matches[i] || key === undefined) return;
+      const j = stored.findIndex((h, k) => !used.has(k) && name(h) !== undefined && fold(name(h)!) === fold(key));
+      if (j === -1) return;
+      used.add(j);
+      matches[i] = stored[j];
+    });
+  }
+  return matches;
+}
 
 function GetDbType() {
   //sqlite, postgresql, mysql
@@ -591,6 +615,8 @@ export {
   Wait,
   MaskString,
   IsMaskedString,
+  MASKED_SECRET,
+  MatchStoredHeaders,
   GetDbType,
   HashString,
   ValidateEmail,

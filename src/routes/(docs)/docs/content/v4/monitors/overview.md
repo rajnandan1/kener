@@ -54,6 +54,14 @@ UP + MAINTENANCE + DEGRADED + DOWN
 - [Group Monitor](/docs/v4/monitors/group) — Weighted aggregate of member monitors
 - [Prometheus Monitor](/docs/v4/monitors/prometheus) — PromQL instant query with threshold-based status
 
+## Stored secrets {#stored-secrets}
+
+The dashboard and the REST API show these stored values as `********`: each header value, the request `body`, the `proxy` URL, a SQL `connectionString`, a Docker `tlsKey`, and a heartbeat `secretString`. Monitor checks use the real values.
+
+- The dashboard shows the heartbeat secret to users with `monitors.write`, so they can copy the heartbeat URL.
+- A save that sends `********` back keeps the stored value. To change a secret, type the new value.
+- A `$SECRET` reference such as `Bearer $API_TOKEN` is masked too. The value stays in the environment variable.
+
 ## Related docs {#related-docs}
 
 - [Grace Period](/docs/v4/monitors/grace-period) — require N consecutive checks before a status change is recorded
