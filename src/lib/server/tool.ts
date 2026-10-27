@@ -312,6 +312,15 @@ function IsMaskedString(str: string): boolean {
 }
 const MASKED_SECRET = "********";
 
+type StoredHeader = { key?: unknown; value?: unknown } | null | undefined;
+
+/** The stored header that a sent header restores from: the same position first, then the first with the same name. */
+function FindStoredHeader(stored: StoredHeader[], header: StoredHeader, index: number): StoredHeader {
+  const sameName = (h: StoredHeader) =>
+    typeof h?.key === "string" && typeof header?.key === "string" && h.key.toLowerCase() === header.key.toLowerCase();
+  return sameName(stored[index]) ? stored[index] : stored.find(sameName);
+}
+
 function GetDbType() {
   //sqlite, postgresql, mysql
   return knexOb.databaseType;
@@ -593,6 +602,7 @@ export {
   MaskString,
   IsMaskedString,
   MASKED_SECRET,
+  FindStoredHeader,
   GetDbType,
   HashString,
   ValidateEmail,

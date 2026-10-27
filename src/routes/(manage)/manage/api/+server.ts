@@ -687,7 +687,7 @@ export async function POST({ request, cookies }) {
     } else if (action == "deleteRole") {
       resp = await DeleteRole(data.roleId, data.options);
     } else if (action == "listDockerContainers") {
-      resp = await ListDockerContainers(data);
+      resp = await ListDockerContainers(data.type_data, data.monitor_id);
     }
     // ============ OIDC Group-Role Mappings ============
     else if (action == "getOidcGroupRoleMappings") {

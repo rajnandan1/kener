@@ -4,6 +4,7 @@ import {
   GetMinuteStartTimestampUTC,
   GetNowTimestampUTC,
   GetNowTimestampUTCInMs,
+  FindStoredHeader,
   MASKED_SECRET,
   UnparsePercentage,
   UptimeCalculator,
@@ -233,9 +234,7 @@ function mapTypeDataSecrets(
     const storedHeaders = (Array.isArray(stored?.headers) ? stored.headers : []) as TypeDataHeader[];
     result.headers = result.headers.map((header: TypeDataHeader, i) => {
       if (typeof header?.value !== "string" || !header.value) return header;
-      const match =
-        storedHeaders[i]?.key === header.key ? storedHeaders[i] : storedHeaders.find((h) => h?.key === header.key);
-      return { ...header, value: transform(header.value, match?.value) };
+      return { ...header, value: transform(header.value, FindStoredHeader(storedHeaders, header, i)?.value) };
     });
   }
   return result;
@@ -271,6 +270,15 @@ export function RestoreMonitorSecrets(
     value === MASKED_SECRET ? (typeof storedValue === "string" ? storedValue : "") : value,
   );
 }
+
+/** RestoreMonitorSecrets against the saved monitor with this id. Without an id, the type_data comes back as sent. */
+export const RestoreSavedMonitorSecrets = async (
+  typeData: Record<string, unknown>,
+  monitorId?: number,
+): Promise<Record<string, unknown>> => {
+  const stored = monitorId ? (await db.getMonitors({ id: monitorId }))[0] : undefined;
+  return stored ? RestoreMonitorSecrets(typeData, parseTypeData(stored.type_data)) : typeData;
+};
 
 /**
  * type_data.proxy must be a valid http(s):// URL. Node silently ignores any other scheme and

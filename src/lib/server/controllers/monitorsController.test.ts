@@ -261,6 +261,14 @@ describe("monitor type_data secrets", () => {
     ]);
   });
 
+  it("finds a masked header whose name changed only in case", () => {
+    const headers = [{ key: "authorization", value: "********" }];
+
+    expect(RestoreMonitorSecrets({ headers }, secrets).headers).toEqual([
+      { key: "authorization", value: "Bearer sk-prod-abc123secret" },
+    ]);
+  });
+
   it("keeps a real value that only looks masked", () => {
     const stored = { headers: [{ key: "Accept", value: "application/json" }], body: "old" };
 

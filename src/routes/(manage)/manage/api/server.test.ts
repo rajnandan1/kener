@@ -17,6 +17,8 @@ vi.mock("$lib/server/db/db", async () => {
   };
 });
 vi.mock("$lib/server/queues/alertingQueue", () => ({ default: { push: vi.fn() } }));
+const { listContainers } = vi.hoisted(() => ({ listContainers: vi.fn(async () => ({ data: [] })) }));
+vi.mock("$lib/server/docker", async (importOriginal) => ({ ...(await importOriginal<object>()), listContainers }));
 
 import db from "$lib/server/db/db";
 import { GenerateToken } from "$lib/server/controllers/commonController";
@@ -75,6 +77,15 @@ const HEARTBEAT_TYPE_DATA = {
   downRemainingMinutes: 2,
   secretString: "raw-heartbeat-secret",
 };
+const DOCKER_TYPE_DATA = {
+  connectionType: "tls",
+  daemon: "docker.example.com:2376",
+  checkType: "daemon",
+  tlsCa: "ca-pem",
+  tlsCert: "cert-pem",
+  tlsKey: "raw-docker-key",
+  timeout: 5000,
+};
 const WEBHOOK_META = {
   url: "https://hooks.example.com/services/raw-webhook-path?token=raw-webhook-query",
   headers: [{ key: "Authorization", value: "Bearer raw-trigger-token" }],
@@ -86,6 +97,7 @@ const RAW_SECRETS = [
   "raw-proxy-pass",
   "raw-sql-pass",
   "raw-heartbeat-secret",
+  "raw-docker-key",
   "raw-webhook-path",
   "raw-webhook-query",
   "raw-trigger-token",
@@ -140,6 +152,13 @@ beforeAll(async () => {
       monitor_type: "HEARTBEAT",
       type_data: JSON.stringify(HEARTBEAT_TYPE_DATA),
     },
+    {
+      ...monitor,
+      tag: "secret-docker",
+      name: "Docker",
+      monitor_type: "DOCKER",
+      type_data: JSON.stringify(DOCKER_TYPE_DATA),
+    },
   ]);
   await knex("triggers").insert({
     name: "hook",
@@ -191,6 +210,25 @@ describe("dashboard reads mask stored monitor secrets", () => {
   });
 });
 
+describe("Docker container picker", () => {
+  it("browses a saved monitor with its stored TLS key, which getMonitors masks", async () => {
+    const [row] = await dashboard("editor", "getMonitors", { tag: "secret-docker" });
+
+    await dashboard("editor", "listDockerContainers", { monitor_id: row.id, type_data: JSON.parse(row.type_data) });
+
+    expect(listContainers).toHaveBeenLastCalledWith(
+      expect.objectContaining({ tlsKey: "raw-docker-key", daemon: "docker.example.com:2376" }),
+      5000,
+    );
+  });
+
+  it("browses an unsaved connection as typed", async () => {
+    await dashboard("editor", "listDockerContainers", { type_data: { ...DOCKER_TYPE_DATA, tlsKey: "new-key" } });
+
+    expect(listContainers).toHaveBeenLastCalledWith(expect.objectContaining({ tlsKey: "new-key" }), 5000);
+  });
+});
+
 describe("dashboard reads mask stored trigger secrets", () => {
   it("shows a member only the URL origin and masks header values", async () => {
     const triggers = await dashboard("member", "getTriggers", {});
@@ -209,6 +247,19 @@ describe("dashboard reads mask stored trigger secrets", () => {
     await dashboard("editor", "createUpdateTrigger", { ...trigger, trigger_desc: "edited" });
 
     expect(await storedMeta()).toEqual(WEBHOOK_META);
+  });
+
+  it("keeps a stored header value when only the header name's case changes", async () => {
+    const [trigger] = await dashboard("editor", "getTriggers", {});
+    const meta = JSON.parse(trigger.trigger_meta);
+    meta.headers = [{ key: "authorization", value: MASK }];
+
+    await dashboard("editor", "createUpdateTrigger", { ...trigger, trigger_meta: JSON.stringify(meta) });
+
+    expect((await storedMeta()).headers).toEqual([{ key: "authorization", value: "Bearer raw-trigger-token" }]);
+    await knex("triggers")
+      .where({ id: triggerId })
+      .update({ trigger_meta: JSON.stringify(WEBHOOK_META) });
   });
 
   it("saves a new URL as given", async () => {

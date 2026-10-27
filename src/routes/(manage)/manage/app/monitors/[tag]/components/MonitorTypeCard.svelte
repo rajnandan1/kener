@@ -411,7 +411,7 @@
       {:else if monitor.monitor_type === "PROMETHEUS"}
         <MonitorPrometheus bind:data={typeData} />
       {:else if monitor.monitor_type === "DOCKER"}
-        <MonitorDocker bind:data={typeData} defaults={dockerDefaults} />
+        <MonitorDocker bind:data={typeData} defaults={dockerDefaults} monitorId={monitor.id} />
       {:else if monitor.monitor_type === "NONE"}
         <MonitorNone bind:data={typeData} />
       {/if}
