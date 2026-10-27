@@ -315,17 +315,16 @@ const MASKED_SECRET = "********";
 type StoredHeader = { key?: unknown; value?: unknown } | null | undefined;
 
 /**
- * The stored header that a sent header restores from: the same position first, then the first with the same name.
+ * The stored header that `sent[index]` restores from: the k-th sent header with a name takes the k-th stored one.
  * An exact name wins over one that differs only in case.
  */
-function FindStoredHeader(stored: StoredHeader[], header: StoredHeader, index: number): StoredHeader {
-  const name = typeof header?.key === "string" ? header.key : undefined;
-  const exact = (h: StoredHeader) => name !== undefined && h?.key === name;
-  const anyCase = (h: StoredHeader) =>
-    name !== undefined && typeof h?.key === "string" && h.key.toLowerCase() === name.toLowerCase();
+function FindStoredHeader(stored: StoredHeader[], sent: StoredHeader[], index: number): StoredHeader {
+  const name = sent[index]?.key;
+  if (typeof name !== "string") return undefined;
+  const exact = (h: StoredHeader) => h?.key === name;
+  const anyCase = (h: StoredHeader) => typeof h?.key === "string" && h.key.toLowerCase() === name.toLowerCase();
   for (const sameName of [exact, anyCase]) {
-    if (sameName(stored[index])) return stored[index];
-    const match = stored.find(sameName);
+    const match = stored.filter(sameName)[sent.slice(0, index).filter(sameName).length];
     if (match) return match;
   }
   return undefined;

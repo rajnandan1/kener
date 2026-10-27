@@ -282,6 +282,26 @@ describe("monitor type_data secrets", () => {
     ]);
   });
 
+  it("restores repeated header names in order after a header is added in front", () => {
+    const stored = {
+      headers: [
+        { key: "X-Token", value: "first" },
+        { key: "X-Token", value: "second" },
+      ],
+    };
+    const headers = [
+      { key: "X-New", value: "plain" },
+      { key: "X-Token", value: "********" },
+      { key: "X-Token", value: "********" },
+    ];
+
+    expect(RestoreMonitorSecrets({ headers }, stored).headers).toEqual([
+      { key: "X-New", value: "plain" },
+      { key: "X-Token", value: "first" },
+      { key: "X-Token", value: "second" },
+    ]);
+  });
+
   it("keeps a real value that only looks masked", () => {
     const stored = { headers: [{ key: "Accept", value: "application/json" }], body: "old" };
 

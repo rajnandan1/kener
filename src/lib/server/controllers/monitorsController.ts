@@ -232,9 +232,9 @@ function mapTypeDataSecrets(
   }
   if (Array.isArray(result.headers)) {
     const storedHeaders = (Array.isArray(stored?.headers) ? stored.headers : []) as TypeDataHeader[];
-    result.headers = result.headers.map((header: TypeDataHeader, i) => {
+    result.headers = result.headers.map((header: TypeDataHeader, i, sent: TypeDataHeader[]) => {
       if (typeof header?.value !== "string" || !header.value) return header;
-      return { ...header, value: transform(header.value, FindStoredHeader(storedHeaders, header, i)?.value) };
+      return { ...header, value: transform(header.value, FindStoredHeader(storedHeaders, sent, i)?.value) };
     });
   }
   return result;

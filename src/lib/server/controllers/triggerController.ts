@@ -54,9 +54,9 @@ function restoreTriggerSecrets(
   }
   if (Array.isArray(result.headers)) {
     const storedHeaders = (Array.isArray(stored.headers) ? stored.headers : []) as TriggerHeader[];
-    result.headers = result.headers.map((header: TriggerHeader, i) => {
+    result.headers = result.headers.map((header: TriggerHeader, i, sent: TriggerHeader[]) => {
       if (header?.value !== MASKED_SECRET) return header;
-      const match = FindStoredHeader(storedHeaders, header, i);
+      const match = FindStoredHeader(storedHeaders, sent, i);
       return { ...header, value: typeof match?.value === "string" ? match.value : "" };
     });
   }
