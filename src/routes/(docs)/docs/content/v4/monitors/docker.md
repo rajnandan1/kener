@@ -60,11 +60,13 @@ Any other scheme, such as `ssh://` or `npipe://`, logs one warning and keeps the
 The three PEM fields accept `$SECRET` references, the same substitution API monitor headers use. Set the PEM in an environment variable and reference it:
 
 ```bash
-DOCKER_TLS_KEY="-----BEGIN PRIVATE KEY-----
+KENER_VAR_DOCKER_TLS_KEY="-----BEGIN PRIVATE KEY-----
 ..."
 ```
 
-Then enter `$DOCKER_TLS_KEY` as the client key. Kener resolves it on every check, so the key never reaches the database or the browser. The certificate and key are a pair: provide both or neither.
+Then enter `$DOCKER_TLS_KEY` as the client key. Kener reads `$NAME` only from `KENER_VAR_NAME`; see [custom variables](/docs/v4/setup/environment-variables#custom-variables). Kener resolves it on every check, so the key never reaches the database or the browser. The certificate and key are a pair: provide both or neither.
+
+A stored client key shows as `********`. If you change the `daemon` or `connectionType`, enter the client key again: Kener uses a stored key only with the daemon it was saved with.
 
 ## Status logic {#status-logic}
 

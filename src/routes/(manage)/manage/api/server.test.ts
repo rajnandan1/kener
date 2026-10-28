@@ -181,12 +181,13 @@ describe("dashboard reads mask stored monitor secrets", () => {
     const byTag = Object.fromEntries(monitors.map((m: { tag: string; type_data: string }) => [m.tag, m.type_data]));
     expect(JSON.parse(byTag["secret-api"])).toEqual({
       ...API_TYPE_DATA,
+      url: `https://internal.example.com/${MASK}`,
       headers: [
         { key: "Authorization", value: MASK },
         { key: "Accept", value: "" },
       ],
       body: MASK,
-      proxy: MASK,
+      proxy: `http://proxy.example.com:3128/${MASK}`,
     });
     expect(JSON.parse(byTag["secret-sql"])).toEqual({ ...SQL_TYPE_DATA, connectionString: MASK });
     expect(JSON.parse(byTag["secret-hb"])).toEqual({ ...HEARTBEAT_TYPE_DATA, secretString: MASK });
@@ -262,13 +263,17 @@ describe("dashboard reads mask stored trigger secrets", () => {
       .update({ trigger_meta: JSON.stringify(WEBHOOK_META) });
   });
 
-  it("saves a new URL as given", async () => {
+  it("saves a new URL with new header values as given", async () => {
     const [trigger] = await dashboard("editor", "getTriggers", {});
-    const meta = { ...JSON.parse(trigger.trigger_meta), url: `https://other.example.com/${MASK}` };
+    const meta = {
+      ...JSON.parse(trigger.trigger_meta),
+      url: "https://other.example.com/hook",
+      headers: [{ key: "Authorization", value: "Bearer other" }],
+    };
 
     await dashboard("editor", "createUpdateTrigger", { ...trigger, trigger_meta: JSON.stringify(meta) });
 
-    expect((await storedMeta()).url).toBe(`https://other.example.com/${MASK}`);
+    expect(await storedMeta()).toEqual(meta);
     await knex("triggers")
       .where({ id: triggerId })
       .update({ trigger_meta: JSON.stringify(WEBHOOK_META) });

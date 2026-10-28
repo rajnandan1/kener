@@ -228,34 +228,41 @@ describe("monitor type_data secrets", () => {
       { key: "Authorization", value: "********" },
       { key: "Accept", value: "********" },
     ],
+    url: "https://example.com/********",
     body: "********",
-    proxy: "********",
+    proxy: "http://proxy.internal:3128/********",
     connectionString: "********",
     secretString: "********",
     tlsKey: "********",
   };
   const monitor = { id: 1, tag: "api", monitor_type: "API", type_data: secrets };
+  const restore = (typeData: Record<string, unknown>, stored: Record<string, unknown>) =>
+    RestoreMonitorSecrets({ monitor_type: "API", type_data: typeData }, { monitor_type: "API", type_data: stored });
 
   it("masks every secret field and header value, and nothing else", () => {
     expect(MaskMonitorSecrets(monitor as never)).toEqual({ ...monitor, type_data: masked });
     expect(monitor.type_data).toBe(secrets);
   });
 
-  it("leaves empty, missing, and non-string values alone", () => {
+  it("leaves empty and missing values alone, and masks a secret that is not a string whole", () => {
     const typeData = { proxy: { host: "x" }, body: "", headers: [{ key: "X" }, "junk"], secretString: null };
 
-    expect(MaskMonitorSecrets({ ...monitor, type_data: typeData } as never).type_data).toEqual(typeData);
+    expect(MaskMonitorSecrets({ ...monitor, type_data: typeData } as never).type_data).toEqual({
+      ...typeData,
+      proxy: "********",
+      headers: [{ key: "X" }, "********"],
+    });
     expect(MaskMonitorSecrets({ ...monitor, type_data: null } as never).type_data).toBeNull();
   });
 
   it("puts every stored secret back when the masked type_data comes back", () => {
-    expect(RestoreMonitorSecrets(masked, secrets)).toEqual(secrets);
+    expect(restore(masked, secrets)).toEqual(secrets);
   });
 
   it("finds a masked header by key when the headers moved", () => {
     const headers = [{ key: "X-New", value: "plain" }, ...masked.headers.slice().reverse()];
 
-    expect(RestoreMonitorSecrets({ headers }, secrets).headers).toEqual([
+    expect(restore({ headers }, { headers: secrets.headers }).headers).toEqual([
       { key: "X-New", value: "plain" },
       ...secrets.headers.slice().reverse(),
     ]);
@@ -264,7 +271,7 @@ describe("monitor type_data secrets", () => {
   it("finds a masked header whose name changed only in case", () => {
     const headers = [{ key: "authorization", value: "********" }];
 
-    expect(RestoreMonitorSecrets({ headers }, secrets).headers).toEqual([
+    expect(restore({ headers }, { headers: secrets.headers }).headers).toEqual([
       { key: "authorization", value: "Bearer sk-prod-abc123secret" },
     ]);
   });
@@ -277,7 +284,7 @@ describe("monitor type_data secrets", () => {
       ],
     };
 
-    expect(RestoreMonitorSecrets({ headers: [{ key: "Authorization", value: "********" }] }, stored).headers).toEqual([
+    expect(restore({ headers: [{ key: "Authorization", value: "********" }] }, stored).headers).toEqual([
       { key: "Authorization", value: "token-B" },
     ]);
   });
@@ -295,7 +302,7 @@ describe("monitor type_data secrets", () => {
       { key: "X-Token", value: "********" },
     ];
 
-    expect(RestoreMonitorSecrets({ headers }, stored).headers).toEqual([
+    expect(restore({ headers }, stored).headers).toEqual([
       { key: "X-New", value: "plain" },
       { key: "X-Token", value: "first" },
       { key: "X-Token", value: "second" },
@@ -304,7 +311,7 @@ describe("monitor type_data secrets", () => {
 
   it("uses each stored header value at most once when names repeat in mixed case", () => {
     const restored = (stored: [string, string][], sent: string[]) =>
-      RestoreMonitorSecrets(
+      restore(
         { headers: sent.map((key) => ({ key, value: "********" })) },
         { headers: stored.map(([key, value]) => ({ key, value })) },
       ).headers as { key: string; value: string }[];
@@ -333,7 +340,7 @@ describe("monitor type_data secrets", () => {
   });
 
   it("pairs rows in order, so an added same-name row and an edited first row both keep the stored values", () => {
-    const appended = RestoreMonitorSecrets(
+    const appended = restore(
       {
         headers: [
           { key: "X-Auth", value: "********" },
@@ -347,7 +354,7 @@ describe("monitor type_data secrets", () => {
       { key: "X-Auth", value: "new" },
     ]);
 
-    const editedFirst = RestoreMonitorSecrets(
+    const editedFirst = restore(
       {
         headers: [
           { key: "X-Auth", value: "new" },
@@ -370,7 +377,7 @@ describe("monitor type_data secrets", () => {
   it("keeps a real value that only looks masked", () => {
     const stored = { headers: [{ key: "Accept", value: "application/json" }], body: "old" };
 
-    expect(RestoreMonitorSecrets({ headers: [{ key: "Accept", value: "*/*" }], body: "**" }, stored)).toEqual({
+    expect(restore({ headers: [{ key: "Accept", value: "*/*" }], body: "**" }, stored)).toEqual({
       headers: [{ key: "Accept", value: "*/*" }],
       body: "**",
     });
@@ -383,7 +390,7 @@ describe("monitor type_data secrets", () => {
       headers: [{ key: "X-Key", value: "********" }],
     };
 
-    expect(RestoreMonitorSecrets(typeData, { headers: secrets.headers })).toEqual({
+    expect(restore(typeData, { headers: secrets.headers })).toEqual({
       secretString: "new-hb-secret-0001",
       body: "",
       headers: [{ key: "X-Key", value: "" }],

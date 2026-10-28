@@ -75,6 +75,8 @@ Go to **Manage → OpenID Connect** and fill in:
 
 Click **Test Connection** to verify Kener can reach the provider's discovery endpoint.
 
+The saved Client Secret shows masked. If you change the Issuer URL, enter the Client Secret again: Kener sends a stored secret only to the issuer it was saved with.
+
 Click **Save Settings**.
 
 ### 4. Set up group-to-role mappings {#group-role-mapping}

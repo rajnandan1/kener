@@ -56,6 +56,7 @@ import {
 } from "$lib/server/controllers/controller.js";
 
 import { ListDockerContainers } from "$lib/server/controllers/dockerController.js";
+import { StoredSecretError } from "$lib/server/storedSecrets.js";
 import { GetNowTimestampUTC } from "$lib/server/tool.js";
 import {
   CreatePage,
@@ -724,7 +725,7 @@ export async function POST({ request, cookies }) {
     console.log(error);
     const message = error instanceof Error ? error.message : String(error);
     resp = { error: message };
-    return json(resp, { status: 500 });
+    return json(resp, { status: error instanceof StoredSecretError ? 400 : 500 });
   }
   return json(resp, { status: 200 });
 }

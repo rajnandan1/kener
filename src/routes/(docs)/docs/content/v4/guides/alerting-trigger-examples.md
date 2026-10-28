@@ -145,6 +145,6 @@ CUSTOM_API_TOKEN=...
 
 ## Notes {#notes}
 
-- Use `$VAR_NAME` for secrets (not `{{env.VAR_NAME}}`).
+- Use `$VAR_NAME` for secrets (not `{{env.VAR_NAME}}`), and set the value in `KENER_VAR_VAR_NAME`, for example `KENER_VAR_TELEGRAM_BOT_TOKEN`.
 - Webhook headers must be key/value array entries.
 - Validate provider payloads with test channels before production routing.

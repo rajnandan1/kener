@@ -76,7 +76,7 @@ SECRET_PARAM=your_real_secret_value
 ```
 
 > [!IMPORTANT]
-> `$SECRET_PARAM` is resolved from environment variables at runtime. If `SECRET_PARAM` is not set in `.env` (or process env), your request body will not be populated with the secret value.
+> `$SECRET_PARAM` is resolved from the environment variable `KENER_VAR_SECRET_PARAM` at runtime. If `KENER_VAR_SECRET_PARAM` is not set in `.env` (or process env), your request body will not be populated with the secret value.
 
 ## Cheerio HTML content check {#cheerio-html-check-eval}
 

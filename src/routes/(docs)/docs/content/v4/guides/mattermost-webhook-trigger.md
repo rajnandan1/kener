@@ -45,7 +45,7 @@ After saving the trigger:
 - **HTTP 400/403 from Mattermost**: Re-check webhook URL and channel permissions.
 - **No message in channel**: Confirm the webhook is active and mapped to the expected channel/team.
 - **Variables not rendering**: Ensure you used Mustache variables like `{{alert_name}}` and not escaped placeholders.
-- **Secrets exposed in UI**: Use `$MATTERMOST_WEBHOOK_URL` in URL/body/headers and define it in environment variables.
+- **Secrets exposed in UI**: Use `$MATTERMOST_WEBHOOK_URL` in URL/body/headers and define `KENER_VAR_MATTERMOST_WEBHOOK_URL` in environment variables.
 
 ## Related docs {#related-docs}
 

@@ -86,7 +86,7 @@ describe("PATCH /api/v4/monitors/{tag}", () => {
 
   it("returns 400 when the body sets a proxy that is not an http(s) URL", async () => {
     const response = await patch(stored("API", { url: "https://example.com" }), {
-      type_data: { proxy: "proxy.internal:3128" },
+      type_data: { url: "https://example.com", proxy: "proxy.internal:3128" },
     });
 
     expect(response.status).toBe(400);
@@ -112,7 +112,7 @@ describe("PATCH /api/v4/monitors/{tag}", () => {
       for (const body of [{ name: "Renamed" }, { name: "Renamed", type_data: { ...monitor.type_data } }]) {
         const response = await patch(monitor, body);
         expect(response.status).toBe(200);
-        expect((await response.json()).monitor.type_data.proxy).toEqual(proxy);
+        expect(saved().proxy).toEqual(proxy);
       }
     }
   });
@@ -126,14 +126,35 @@ describe("PATCH /api/v4/monitors/{tag}", () => {
 
     const first = (await (await patch(monitor, { name: "Renamed" })).json()).monitor;
     expect(first.type_data).toEqual({
-      url: "https://example.com",
+      url: "https://example.com/********",
       headers: [{ key: "Authorization", value: "********" }],
-      proxy: "********",
+      proxy: "http://proxy.internal:3128/********",
     });
 
-    const response = await patch(monitor, { type_data: { ...first.type_data, url: "https://example.org" } });
+    const response = await patch(monitor, { type_data: { ...first.type_data, timeout: 5000 } });
     expect(response.status).toBe(200);
-    expect(saved()).toEqual({ ...monitor.type_data, url: "https://example.org" });
+    expect(saved()).toEqual({ ...monitor.type_data, timeout: 5000 });
+  });
+
+  it("returns 400 and saves nothing when the url changes while a stored secret comes back masked or left out", async () => {
+    const monitor = stored("API", {
+      url: "https://example.com",
+      headers: [{ key: "Authorization", value: "Bearer sk-prod-abc123secret" }],
+    });
+
+    for (const type_data of [
+      { url: "https://example.org", headers: [{ key: "Authorization", value: "********" }] },
+      { url: "https://example.org" },
+    ]) {
+      const response = await patch(monitor, { type_data });
+      expect(response.status).toBe(400);
+      expect((await response.json()).error.message).toContain("headers.Authorization");
+    }
+    expect(db.updateMonitor).not.toHaveBeenCalled();
+
+    const resent = { url: "https://example.org", headers: [{ key: "Authorization", value: "Bearer new" }] };
+    expect((await patch(monitor, { type_data: resent })).status).toBe(200);
+    expect(saved()).toEqual(resent);
   });
 
   it("keeps a stored heartbeat secret when the masked value comes back", async () => {
