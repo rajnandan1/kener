@@ -16,7 +16,7 @@ This route serves `/manage/app/alerts/logs/[alert_config_id]`. It lists the aler
 
 - The layout guard in `src/routes/(manage)/+layout.server.ts` lets only users with `alerts.read` open this route.
 - The page parses `alert_config_id` with `parseInt` before it sends it.
-- A delete needs a confirmation in an alert dialog. The dialog has a "delete incident" checkbox, which is off by default.
+- A delete needs a confirmation in an alert dialog. When the alert has an `incident_id`, the dialog shows a "delete incident" checkbox, which is off by default.
 
 ## Side Effects
 

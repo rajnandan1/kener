@@ -13,7 +13,7 @@ This route serves `/manage/app/pages/[page_id]`. It creates, edits, and deletes 
 - The monitors card sends `addMonitorToPage`, `removeMonitorFromPage`, and `reorderPageMonitors` (permission `pages.write`). Reorder sends the full ordered list of tags.
 - The logo and social preview fields send `uploadImage` (permission `images.write`).
 - Delete sends `deletePage` (permission `pages.write`).
-- The editor has these cards: General Information, logo, Page Monitors (edit mode only), Display Settings, Social Preview and SEO, and a Danger Zone.
+- The editor has these cards: General Information (with the Page Logo field), Page Monitors, Display Settings, Social Preview & SEO, and a Danger Zone. Create mode shows only General Information.
 
 ## Invariants
 
@@ -24,7 +24,7 @@ This route serves `/manage/app/pages/[page_id]`. It creates, edits, and deletes 
 - Delete runs only when the user types `delete {page_path}` exactly.
 - The history days for desktop and mobile must be whole numbers from 1 through 365.
 - The page merges the loaded `page_settings_json` over `defaultPageSettings`.
-- The logo accepts PNG, JPEG, SVG, and WebP. The social preview accepts PNG, JPEG, and WebP. An upload only puts the URL into the form. A save stores it.
+- The logo accepts PNG, JPEG, SVG, and WebP. The social preview accepts PNG, JPEG, and WebP. The logo upload asks for at most 256 by 256, and the social preview upload asks for at most 1200 by 630. An upload only puts the URL into the form. A save stores it.
 - Reorder changes the list in the browser before the request, and it does not undo the change on an error.
 
 ## Side Effects

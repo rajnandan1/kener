@@ -2,7 +2,7 @@
 
 ## Overview
 
-This folder serves `GET /dashboard-apis/monitor-bar`. The handler returns the data for one monitor's status bar: one bucket of status counts per day, the uptime figure, latency stats, and the current status. `shared.ts` holds the response builders that `monitor-bars` and the embed pages also use.
+This folder serves `GET /dashboard-apis/monitor-bar`. The handler returns the data for one monitor's status bar: one bucket of status counts per day, the uptime figure, latency stats, and the current status. `shared.ts` holds the response builders, which `monitor-bars` also uses, and `parseIntParam`, which the embed pages also use.
 
 ## Interface
 
@@ -26,7 +26,7 @@ This folder serves `GET /dashboard-apis/monitor-bar`. The handler returns the da
 ## Side Effects
 
 - `get.ts` reads monitors through `db.getMonitors`.
-- `shared.ts` reads `db.getStatusCountsByInterval(tag, startTime, 86400, days)` and `db.getLatestMonitoringData(tag)`. For SSL monitors it calls `AttachSslCacheFields` from `src/lib/server/controllers/monitorsController.ts`.
+- `shared.ts` reads `db.getStatusCountsByInterval(tag, startTime, 86400, days)` and `db.getLatestMonitoringData(tag)`. `buildMonitorBarResponse` skips `db.getLatestMonitoringData` when the caller passes `latestStatus` and the monitor is not `SSL`. For SSL monitors it calls `AttachSslCacheFields` from `src/lib/server/controllers/monitorsController.ts`.
 - The folder writes nothing and makes no network calls.
 
 ## Verification

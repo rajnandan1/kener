@@ -19,7 +19,7 @@ This folder holds the default text of Kener's general email templates. A general
 - The templates use Mustache placeholders (`{{name}}`). They never use JavaScript `${}` interpolation, so the strings hold the placeholders as plain text.
 - `subscription_update_template.ts:172` uses the triple brace `{{{update_text}}}`, which Mustache inserts without HTML escaping. The caller must pass safe HTML there. The text body uses the escaped `{{update_text}}`.
 - The subject of `subscription_update` is only `{{update_subject}}`, so the subject is empty when the caller does not pass that variable.
-- The email copy states fixed lifetimes: 5 minutes for the reset link and the subscriber code, and 7 days for the invite link. Change the copy when the server changes a token lifetime.
+- The email copy states fixed lifetimes. The subscriber code copy (5 minutes) and the invite link copy (7 days) match the server. The reset link copy says 5 minutes, but `src/routes/(account)/account/forgot/api/password-reset/+server.ts` accepts a reset token for 1 hour. Change the copy when the server changes a token lifetime.
 - The documented variable names in `src/routes/(docs)/docs/content/v4/guides/email-templates.md` must match the placeholders in these files.
 
 ## Side Effects

@@ -14,7 +14,9 @@ This route lists monitors and creates a new monitor. A monitor is one check that
 
 - `MaskMonitorSecrets` replaces each non-empty secret and header value in `type_data` (the settings of the monitor type) with `********` in the `GET` response.
 - The `POST` response is not masked. A `HEARTBEAT` monitor (one that waits for the checked service to call a secret URL) sent without a secret gets a generated one, and the caller reads it there.
-- `tag` must match `^[a-z0-9][a-z0-9_-]*[a-z0-9]$`, or `^[a-z0-9]$` for one character. A tag that already exists returns 400, not 409.
+- `tag` must match `^[a-z0-9][a-z0-9_-]*[a-z0-9]$`, or `^[a-z0-9]$` for one character, after the handler trims it. A tag that already exists returns 400, not 409.
+- The handler looks for a duplicate with `body.tag` as sent, but it inserts the trimmed tag. So a tag such as ` web` next to an existing `web` skips that 400 and fails on the unique index on `monitors.tag`. A padded new tag such as ` db` saves as `db`, but the read-back looks up ` db` and finds nothing, so the handler returns 500 "Failed to create monitor" after it saved the row.
+- `CreateUpdateMonitor` passes the `POST` `type_data` through `RestoreMonitorSecrets` with no stored monitor. So a secret or header value sent as `********` saves as an empty string. A `proxy` or a heartbeat `secretString` sent as `********` fails its check first and returns 400.
 - `confirmation_threshold` must be an integer from 1 to 60, and it defaults to 1.
 - The other defaults are `default_status` `UP`, `status` `ACTIVE`, `monitor_type` `API`, `include_degraded_in_downtime` `NO`, and `is_hidden` `NO`.
 - `ValidateTypeDataProxy` returns 400 when `type_data.proxy` is not an `http://` or `https://` URL. `WithValidHeartbeatSecret` returns 400 for a heartbeat secret that breaks the rule.

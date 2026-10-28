@@ -24,7 +24,7 @@ This folder holds one form per monitor type. `../components/MonitorTypeCard.svel
 
 ## Invariants
 
-- A new monitor type needs a form here, an export in `index.ts`, and a branch in the `{#if}` chain of `MonitorTypeCard.svelte`. It also needs a branch in `src/lib/server/services/service.ts`. A type with no branch there falls through to `NoneCall` and runs no checks.
+- A new monitor type needs a form here, an export in `index.ts`, and a branch in the `{#if}` chain of `MonitorTypeCard.svelte`. It also needs an entry in `MONITOR_TYPES` in `src/lib/types/monitor.ts`, which feeds the type picker and the `MonitorType` union. In `MonitorTypeCard.svelte`, it needs a label in `monitorTypeLabels` and a case in `isTypeSettingsValid`, whose `default` accepts any data. It also needs a branch in `src/lib/server/services/service.ts`. A type with no branch there falls through to `NoneCall` and runs no checks.
 - Each form sets its own defaults when a field is missing. For example, `monitor-grpc.svelte` sets port `50051` and timeout `10000`, and `monitor-group.svelte` sets `executionDelay` to at least 1000 ms and `latencyCalculation` to `AVG`.
 - Dashboard reads return stored secrets masked. When the form sends a masked secret back, the server restores the stored value in `CreateUpdateMonitor` (`RestoreMonitorSecrets` in `src/lib/server/controllers/monitorsController.ts`).
 - `monitor-docker.svelte` clears `tlsCa`, `tlsCert`, and `tlsKey` when the connection type changes away from `tls`. This stops a hidden private key from being saved.

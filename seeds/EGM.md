@@ -10,7 +10,7 @@ This folder holds six Knex seeds. A seed is a file that inserts default rows. Kn
 - `generate_template.ts` inserts five email templates into `general_email_templates`: subscription account code, subscription update, forgot password, invite user, and verify email. It imports them from `src/lib/server/templates/general/`.
 - `monitors.ts` inserts the default monitors from `src/lib/server/db/seedMonitorData.ts` into `monitors`.
 - `pages.ts` inserts the pages from `src/lib/server/db/seedPagesData.ts` into `pages`. For the home page (`page_path` is `""`), it links the monitors with the tags `earth` and `kener` in `pages_monitors`.
-- `permissions.ts` makes the `permissions` table match the `permissions` list in `src/lib/allPerms.ts`.
+- `permissions.ts` inserts each id from the `permissions` list in `src/lib/allPerms.ts` that the `permissions` table does not have, and deletes each row whose id is not in the list. It never updates `permission_name` on an existing row, so a renamed permission does not reach an existing database.
 - `roles.ts` inserts the read-only roles `admin`, `editor`, and `member` into `roles` and sets their links in `roles_permissions`. `admin` gets every permission. `editor` gets every permission except `api_keys.delete`. `member` gets only the permissions whose id ends in `.read`. When the legacy column `users.role` still exists, `roles.ts` also copies its values into `users_roles`.
 - `site_data.ts` inserts each key of `src/lib/server/db/seedSiteData.ts` into `site_data`. It stores an object value as a JSON string.
 
@@ -34,7 +34,7 @@ This folder holds six Knex seeds. A seed is a file that inserts default rows. Kn
 
 ## Verification
 
-- Run `npm run check` (svelte-kit sync and the svelte-check type check). Its include list in `.svelte-kit/tsconfig.json` covers only `src/**`, so it does not type check this folder. It does check the files that the seeds import.
+- Run `npm run check` (svelte-kit sync and the svelte-check type check). Its include list in `.svelte-kit/tsconfig.json` covers `src/**`, the `vite.config` files, `test/**`, and `tests/**`, so it does not type check this folder. It does check the files that the seeds import.
 - Run `npm run migrate`, then `npm run seed`. Run `npm run seed` a second time to check that a rerun adds no rows.
 - The change must also pass on PostgreSQL and MySQL, as the Database section of `CODING_STANDARDS.md` shows: start the throwaway servers, then run `DATABASE_URL=<url> npm run migrate` and `DATABASE_URL=<url> npm run seed` for each one.
 - Run `npm test` (the full suite). Vitest includes only `src/**` tests, so no Vitest test covers this folder directly.

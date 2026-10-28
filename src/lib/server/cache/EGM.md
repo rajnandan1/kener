@@ -2,7 +2,7 @@
 
 ## Overview
 
-This folder holds a small JSON cache in Redis. Kener uses it to read a monitor's last monitoring value and last heartbeat without a database query. Redis is shared by every Kener process that uses the same `REDIS_URL`, so the cache is not local to one process.
+This folder holds a small JSON cache in Redis. Kener uses it to read a monitor's last monitoring value and last heartbeat without a database query. `GetStatusCountsByIntervalGroupedByMonitor` in `src/lib/server/controllers/monitorsController.ts` also caches its status counts for 60 seconds under the key `status_counts_grouped:<sorted tags>:<start>:<interval>:<points>`. Redis is shared by every Kener process that uses the same `REDIS_URL`, so the cache is not local to one process.
 
 ## Interface
 
@@ -24,7 +24,8 @@ This folder holds a small JSON cache in Redis. Kener uses it to read a monitor's
 ## Side Effects
 
 - Each function reads or writes Redis through `redisIOConnection()` from `src/lib/server/redisConnector.ts`. That function throws when `REDIS_URL` is not set.
-- `src/lib/server/queues/monitorResponseQueue.ts` writes the last monitoring value after each check. `monitorsController.ts`, `src/lib/server/services/groupCall.ts`, `heartbeatCall.ts`, and `src/routes/(kener)/badge/[tag]/dot/+server.ts` read it.
+- `src/lib/server/queues/monitorResponseQueue.ts` writes the last monitoring value after each check. `UpdateMonitoringData` in `monitorsController.ts` also writes it after a manual data change. `monitorsController.ts`, `src/lib/server/services/groupCall.ts`, and `src/routes/(kener)/badge/[tag]/dot/+server.ts` read it. `src/lib/server/services/heartbeatCall.ts` reads only the last heartbeat.
+- `RegisterHeartbeat` in `monitorsController.ts` is the only caller of `SetLastHeartbeat`.
 
 ## Verification
 

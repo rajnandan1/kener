@@ -22,12 +22,12 @@ This folder gives the server one database object, `db`. `db` merges every reposi
 - On SQLite, `workerKnexOb` is not set, so both pools are the same Knex instance.
 - `knexfile.ts` reads the database type from the scheme of `DATABASE_URL` (default `sqlite://./database/kener.sqlite.db`). It sizes the pools from `DATABASE_POOL_MAX` (default 10) and `DATABASE_WORKER_POOL_MAX` (default 5).
 - `seedMonitorData.ts` and `seedPagesData.ts` serve only the first seed, through `seeds/monitors.ts` and `seeds/pages.ts`.
-- `seedSiteData.ts` also serves as the runtime default when a site setting is missing. `src/lib/server/controllers/layoutController.ts`, `maintenanceController.ts`, and `src/lib/server/api-server/notifications/get.ts` read it. A change to its values therefore changes live defaults, not only new installs.
+- `seedSiteData.ts` also serves as the runtime default when a site setting is missing. `src/lib/server/controllers/layoutController.ts`, `maintenanceController.ts`, and `src/lib/server/api-server/notifications/get.ts` read it. `src/routes/(manage)/+layout.server.ts` sends it to the site configuration page as the default values. A change to its values therefore changes live defaults, not only new installs.
 
 ## Side Effects
 
 - Importing `db.ts` creates the web pool. On PostgreSQL and MySQL it also creates the worker pool.
-- Importing `db.ts` loads `knexfile.ts`, which reads the `DATABASE_*` env vars and logs `Configuring database with type ...`.
+- Importing `db.ts` loads `knexfile.ts`, which reads the `DATABASE_*` env vars and logs `Configuring database with type ...`. When the `DATABASE_URL` scheme is not `sqlite`, `postgresql`, or `mysql`, it logs `Invalid database type` and calls `process.exit(1)`.
 - `poolContext.ts` creates one `AsyncLocalStorage` when it loads and opens no connection.
 - The seed files export constant data and do no I/O.
 

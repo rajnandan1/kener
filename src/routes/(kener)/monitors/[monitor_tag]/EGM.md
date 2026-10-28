@@ -8,12 +8,12 @@ This route serves `/monitors/{monitor_tag}`. It shows one monitor: its name, des
 
 - `+page.server.ts` exports `load`. It calls `GetMonitorsParsed({ tag, status: "ACTIVE", is_hidden })` from `src/lib/server/controllers/monitorsController.ts`. `is_hidden` is `"NO"` unless `canSeeHiddenMonitors` from `parent()` is true.
 - `load` throws 404 `Monitor not found` when no monitor matches. A hidden or inactive monitor gets the same 404.
-- `load` returns the monitor fields (`monitorTag`, `monitorName`, `monitorDescription`, `monitorType`, and more), the last status from `db.getLatestMonitoringData(tag)`, the SSL fields from `AttachSslCacheFields` for an SSL monitor, `ongoingIncidents`, `ongoingMaintenances`, `upcomingMaintenances`, `extendedTags`, `monitorGroupMembersByTag`, `maxDays`, and `monitorSharingOptions`.
+- `load` returns the monitor fields (`monitorTag`, `monitorName`, `monitorDescription`, `monitorType`, and more), the last status from `db.getLatestMonitoringData(tag)`, the SSL fields from `AttachSslCacheFields` in `src/lib/server/controllers/monitorsController.ts` for an SSL monitor, `ongoingIncidents`, `ongoingMaintenances`, `upcomingMaintenances`, `extendedTags`, `monitorGroupMembersByTag`, `maxDays`, and `monitorSharingOptions`.
 - `load` loads inline incidents and maintenance events only when `eventDisplaySettings.showInlineEvents` is true and the matching `enabled` and `show` flags are true. Upcoming maintenance events use `maxCount` and `daysInFuture` from the same settings.
 - For a `GROUP` monitor, `extendedTags` holds the member tags. `monitorGroupMembersByTag` maps each member that is also a group to its own member tags.
 - `maxDays` comes from `monitor_settings_json.monitor_status_history_days` (`mobile` or `desktop`, chosen by `isMobile`). The fallback is `GC.DEFAULT_STATUS_HISTORY_DAYS_MOBILE` or `GC.DEFAULT_STATUS_HISTORY_DAYS_DESKTOP`.
 - The route has no form actions.
-- `+page.svelte` renders `ThemePlus`, `MonitorOverview`, `IncidentItem`, and `MaintenanceItem`. `MonitorOverview` loads the status bar in the browser through `requestMonitorBar` (`GET /dashboard-apis/monitor-bars`).
+- `+page.svelte` renders `ThemePlus`, `MonitorOverview`, `IncidentItem`, and `MaintenanceItem`, which are the matching `.svelte` files in `src/lib/components/`. `MonitorOverview` loads the status bar in the browser through `requestMonitorBar` in `src/lib/client/monitor-bar-client.ts` (`GET /dashboard-apis/monitor-bars`).
 - Child route: [rss.xml](./rss.xml/EGM.md) serves the RSS feed `/monitors/{monitor_tag}/rss.xml`.
 
 ## Invariants

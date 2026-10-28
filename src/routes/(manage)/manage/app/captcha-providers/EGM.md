@@ -14,6 +14,8 @@ This route serves `/manage/app/captcha-providers`. It configures the CAPTCHA (a 
 
 - The layout guard in `src/routes/(manage)/+layout.server.ts` lets only users with `settings.read` open this route.
 - Only one CAPTCHA provider can be active at a time. The page passes `enforceSingleActive` to the panel.
+- With `enforceSingleActive`, a save that enables one provider also writes every other enabled provider with `isEnabled: false` in the same `storeSiteData` call. The panel refuses to enable a provider when the stored values failed to load.
+- The `getAllSiteData` read masks each provider's `Secret Key`, and `InsertKeyValue` puts the stored secret back when a save sends the masked value. `secretPath` in `src/lib/server/controllers/siteDataController.ts` finds the secret by the label `Secret Key`, so the label must stay the same.
 - Every provider starts with `isEnabled: false`, `activeInSite: false`, and empty values until the panel loads the stored values.
 
 ## Side Effects

@@ -16,10 +16,12 @@ This folder holds `ProviderSettingsPanel.svelte`, a shared admin panel for third
 ## Invariants
 
 - The panel copies `initialProviders` once, when it mounts. A later change to the prop has no effect.
-- After the load, each field shows the stored value. When the stored value is empty, it shows the default from `initialProviders`.
+- After the load, each field shows the value that `getAllSiteData` returns. When that value is empty, it shows the default from `initialProviders`.
+- For each `captcha.*` key, `getAllSiteData` masks `requirements["Secret Key"]` with `MaskSiteDataSecret` from `src/lib/server/controllers/siteDataController.ts`. So the CAPTCHA "Secret Key" field shows a mask, not the stored secret.
+- A save that sends the masked "Secret Key" back keeps the stored secret, because `InsertKeyValue` calls `RestoreSiteDataSecret` for `captcha.*` keys. Only the `Secret Key` label of a `captcha.*` key gets this mask and restore. A new secret field needs its own path in `secretPath` in `src/lib/server/controllers/siteDataController.ts`.
 - The save payload maps each provider `key` (for example `captcha.turnstile`) to a JSON string `{ requirements: { <label>: <value> }, isEnabled }`. Field values are keyed by their `label` text. `src/routes/(kener)/capture.js/+server.ts` reads the analytics values by the same labels, for example `Measurement ID`. Do not rename a label unless you also move the stored values.
 - With `enforceSingleActive`, a save of an enabled provider also saves every other enabled provider with `isEnabled: false`. That save sends the other providers' fields as the panel holds them. So the panel refuses the save when the load failed, because the fields would then hold only the defaults and would overwrite the stored credentials.
-- Only the HTML `required` attribute checks the required fields. Each input uses `req.type` as its HTML type, so a secret is hidden only when the caller passes `type: "password"`. The panel puts the stored values into the inputs as it gets them. It does no masking of its own.
+- Only the HTML `required` attribute checks the required fields. Each input uses `req.type` as its HTML type, so a secret is hidden only when the caller passes `type: "password"`. The panel puts the loaded values into the inputs as it gets them. It does no masking of its own.
 
 ## Side Effects
 

@@ -19,7 +19,7 @@ This route reads and overwrites a time range of monitoring data for one monitor.
 
 ## Side Effects
 
-- `PATCH` writes one `monitoring_data` row for each minute from the start minute through the end minute, both included, through `db.updateMonitoringData` in one transaction. So when `end_ts` falls on a minute start, the write covers one more minute than `updated_count` reports.
+- `PATCH` writes one `monitoring_data` row for each minute from the start minute through the end minute, both included, through `db.updateMonitoringData` in one transaction. So the write covers one more minute than `updated_count` reports when `end_ts` falls on a minute start. It also covers one more minute when `start_ts` does not fall on a minute start, because the count rounds `start_ts` up and the write rounds it down. The two cases can add up to two extra minutes.
 - `UpdateMonitoringData` then writes the latest row to the cache key `<monitor_tag>:last_status` with a TTL (time to live) of one day, through `SetLastMonitoringValue`.
 - `UpdateMonitoringData` also pushes the monitor tag, the end minute, and the status to `alertingQueue`, so alert rules evaluate the manual data. A failed push is logged and does not fail the request.
 

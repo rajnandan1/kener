@@ -27,4 +27,4 @@ This folder holds the default Mustache templates for alert messages, one per tri
 ## Verification
 
 - Run: `npm run check` (svelte-kit sync and the svelte-check type check).
-- Run: `npm run test:server -- "src/lib/server/notification"`. `notification_utils.test.ts` there imports these templates. No test file sits in this folder.
+- Run: `npm run test:server -- "src/lib/server/notification"`. `notification_utils.test.ts` there imports the email, Discord, and Slack templates. No test covers `webhook_alert_template.ts`, and no test file sits in this folder.

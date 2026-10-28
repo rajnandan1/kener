@@ -18,10 +18,10 @@ This route serves `/{page_path}`, for example `/status-a`. It shows one named st
 ## Invariants
 
 - `load` must pass the layout data from `parent()` to `GetPageDashboardData`. That data carries `canSeeHiddenMonitors`, which is true only for a signed-in user with the `monitors.read` permission.
-- `GetPageByPathWithMonitors` keeps only monitors with `status = "ACTIVE"`, and it also keeps only `is_hidden = "NO"` unless `canSeeHiddenMonitors` is true.
+- `GetPageByPathWithMonitors` in `src/lib/server/controllers/pagesController.ts` keeps only monitors with `status = "ACTIVE"`, and it also keeps only `is_hidden = "NO"` unless `canSeeHiddenMonitors` is true.
 - A page whose monitors are all hidden or inactive still returns HTTP 200, with an empty `monitorTags` list.
-- The inline incident and maintenance queries always skip events whose only monitors are hidden, also for a user who can see hidden monitors.
-- SvelteKit matches the static folders next to `[page_path]` first (`badge`, `events`, `incidents`, `maintenances`, `monitors`, `dashboard-apis`, and the file routes). A page whose `page_path` has one of those names cannot be reached at `/{page_path}`.
+- The inline incident and maintenance queries skip events whose only monitors are hidden, also for a user who can see hidden monitors. Events with `is_global = "YES"` always show, and their monitor lists leave out hidden monitors.
+- SvelteKit matches the file routes next to `[page_path]` first (`rss.xml`, `sitemap.xml`, `captcha-config.json`, and `capture.js`). A page whose `page_path` has one of those names cannot be reached at `/{page_path}`. The folders `badge`, `events`, `incidents`, `maintenances`, `monitors`, and `dashboard-apis` have no route at one segment, so a page with one of those names is still reached at `/{page_path}`.
 - `+page.svelte` here and `src/routes/(kener)/+page.svelte` are copies. A fix in one copy must also go into the other copy.
 - Page Markdown must go through `SveltePurify`, which removes unsafe HTML.
 - The route does no sign-in check. Anyone can see a page.

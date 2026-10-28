@@ -19,11 +19,12 @@ This folder holds the sidebar and header components of the admin dashboard, plus
 - `NavUser` copies `page.data.userDb` once, when it starts. A later change of the page data does not update it.
 - `NavMain` marks an item as active when the current path starts with the item's URL.
 - The name Save button is disabled when the name is empty after trim.
-- The password Save button is disabled unless the password has at least 8 characters, a digit, a lowercase letter, and an uppercase letter, and the confirm field matches. The server checks the password again with `ValidatePassword`.
+- The Update Password button is disabled unless the password has at least 8 characters, a digit, a lowercase letter, and an uppercase letter, and the confirm field matches. The server checks the password again with `ValidatePassword` in `src/lib/server/controllers/commonController.ts`.
 
 ## Side Effects
 
 - `updateUser` writes the user's name to `users`. `updatePassword` writes the password hash.
+- `UpdateUserData` in `src/lib/server/controllers/userController.ts` also accepts the `is_verified` key. The Account dialog sends only `name`.
 - Log out is a native form `POST` to `/account/logout`, which loads a new page.
 - The light and dark item calls `toggleMode` from `mode-watcher`.
 

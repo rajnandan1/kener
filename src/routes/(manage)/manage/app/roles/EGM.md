@@ -7,7 +7,7 @@ This route serves `/manage/app/roles`. It creates, clones, edits, and deletes ro
 ## Interface
 
 - The page reads `userPermissions` from the layout data. `hasPermission(perm)` checks that list.
-- The page sends `getRoles`, `getAllPermissions`, `getRolePermissions`, and `getRoleUsers` (permission `roles.read`). It sends `getUsers` (permission `users.read`) with `page` 1 and `limit` 1000.
+- The page sends `getRoles`, `getAllPermissions`, `getRolePermissions`, and `getRoleUsers` (permission `roles.read`). When the users sheet opens and the user has `roles.assign_users`, it sends `getUsers` (permission `users.read`) with `page` 1 and `limit` 1000.
 - Create sends `createRole` (permission `roles.write`) with `role_id` and `name`. Clone mode then copies the source role's permissions with `getRolePermissions` and `updateRolePermissions`.
 - Edit sends `updateRole` (permission `roles.write`) with `roleId`, `name`, and `status`.
 - Delete sends `deleteRole` (permission `roles.write`) with `roleId` and `options`. `options` is `{ action: "remove" }` or `{ action: "migrate", targetRoleId }`.

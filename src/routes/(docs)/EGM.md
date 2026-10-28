@@ -8,7 +8,7 @@
 
 - `+layout.server.ts` exports `load`. It reads the `user-agent` request header with `MobileDetect` from `mobile-detect` and returns `{ isMobile }`.
 - `+layout.svelte` imports the CSS files `layout.css`, `kener.css`, `docs.css`, and `prose.css` from `src/routes/`, plus `highlight.js/styles/github-dark.css`. It renders `ModeWatcher` from `mode-watcher` and `Toaster` from `$lib/components/ui/sonner`, and wraps the page in `<main class="kener-docs">`.
-- `docs.json` has the keys `name`, `logo`, `favicon`, and `versions`. Each version has a `name`, a `slug` (`v4` or `v3`), a `latest` flag, and `content` with the navigation tabs and their sidebars.
+- `docs.json` has the keys `name`, `logo`, `favicon`, and `versions`. Each version has a `name`, a `slug` (`v4` or `v3`), a `latest` flag, and `content`. `content` holds `navigation` (the tabs and their sidebars) and `footerLinks` (a list of `name` and `url` links that the docs navbar and the landing page show).
 - `docs.schema.json` is the JSON Schema (a JSON file that describes the allowed shape of another JSON file) for `docs.json`.
 - [docs](./docs/EGM.md): The folder serves `/docs` and every docs route, and its `docs-utils.server.ts` reads `docs.json` and the Markdown in `docs/content/`.
 

@@ -7,7 +7,7 @@ This route reads, edits, and deletes one monitor. A monitor is one check that Ke
 ## Interface
 
 - `GET` returns `{ monitor }`, passed through `MaskMonitorSecrets`.
-- `PATCH` takes a JSON body in which every monitor field is optional. It calls `RestoreMonitorSecrets`, `WithValidHeartbeatSecret`, `ValidateTypeDataProxy`, `UpdateMonitor`, and `MaskMonitorSecrets` from `$lib/server/controllers/monitorsController`. It returns `{ monitor }`, masked.
+- `PATCH` takes a JSON body in which every monitor field is optional. The handler does not copy `include_degraded_in_downtime` into the update, so `PATCH` keeps the stored value of that field. It calls `RestoreMonitorSecrets`, `WithValidHeartbeatSecret`, `ValidateTypeDataProxy`, `UpdateMonitor`, and `MaskMonitorSecrets` from `$lib/server/controllers/monitorsController`. It returns `{ monitor }`, masked.
 - `DELETE` calls `DeleteMonitorCompletelyUsingTag` from the same controller and returns `{ message }`.
 - [data](./data/EGM.md): this child route reads and overwrites the monitoring data of the monitor.
 
@@ -25,7 +25,7 @@ This route reads, edits, and deletes one monitor. A monitor is one check that Ke
 ## Side Effects
 
 - `PATCH` updates the row in `monitors` through `UpdateMonitor`.
-- `DELETE` removes the monitor and everything keyed to its tag: monitoring data, incident links, alerts, alert configs, page links, maintenance links, group memberships, and the caches of the monitor. The scheduler drops the job of the deleted monitor on its next reconcile.
+- `DELETE` removes the monitor and everything keyed to its tag: monitoring data, incident links, alerts, alert configs, page links, maintenance links, group memberships, and the caches of the monitor. The scheduler in `src/lib/server/schedulers/appScheduler.ts` drops the job of the deleted monitor on its next reconcile.
 
 ## Verification
 

@@ -10,7 +10,7 @@ This route serves `/manage/app/triggers/[trigger_id]`. It creates, edits, tests,
 - The param value `new` opens the editor in create mode with the default templates.
 - In edit mode, the page sends `getTriggers` (permission `triggers.read`) and finds the trigger by its numeric id in the browser.
 - Save sends `createUpdateTrigger` (permission `triggers.write`) with `id`, `name`, `trigger_type`, `trigger_status`, `trigger_desc`, and `trigger_meta` as a JSON string.
-- Test sends `testTrigger` (permission `triggers.write`) with `trigger_id`.
+- Test sends `testTrigger` (permission `triggers.write`) with `trigger_id` and `status: "TRIGGERED"`. The handler ignores `status` and picks `TRIGGERED` or `RESOLVED` at random. It tests the saved trigger, not unsaved edits in the form.
 - Delete sends `deleteTrigger` (permission `triggers.write`) with `trigger_id`.
 
 ## Invariants

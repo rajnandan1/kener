@@ -12,7 +12,7 @@ This folder holds the nine cards that the monitor editor page (`../+page.svelte`
 - `StatusHistoryDaysCard` takes the props `monitor` (bindable), `typeData`, and `statusHistoryDays` (bindable). It edits the desktop and mobile day counts and sends `storeMonitorData`.
 - `MonitorSharingOptionsCard` takes the props `monitor` (bindable), `typeData`, and `subMenuOptions`. It turns the badge and embed sharing on or off and sends `storeMonitorData`.
 - `PageVisibilityCard` takes the props `monitorTag`, `allPages`, and `onPagesUpdated`. It shows one checkbox per status page and sends `addMonitorToPage` or `removeMonitorFromPage`.
-- `ModifyDataCard` takes the prop `monitorTag`. It sends `updateMonitoringData` to overwrite the status, latency, and deviation of past monitoring rows in a time range.
+- `ModifyDataCard` takes the prop `monitorTag`. It sends `updateMonitoringData` to set the status and latency of each minute in a time range.
 - `MonitorRecentLogs` takes the prop `monitor_tag`. It sends `getMonitoringDataPaginated` for the last 10 rows and links to `/manage/app/monitoring-data`.
 - `DangerZoneCard` takes the props `monitor` and `status`. It sends `storeMonitorData` to set the status to `ACTIVE` or `INACTIVE`, `deleteMonitorData` to delete rows in a date range, and `deleteMonitor` to delete the monitor.
 
@@ -23,7 +23,7 @@ This folder holds the nine cards that the monitor editor page (`../+page.svelte`
 - The server does not merge `monitor_settings_json`, so the card that saves last decides the whole value.
 - On create, `GeneralSettingsCard` sets the default formulas `up + maintenance` and `up + maintenance + down + degraded`.
 - The tag input is disabled unless `isNew` is true. A saved monitor keeps its tag.
-- `GeneralSettingsCard` clamps the grace period to 1 through 60. It accepts PNG, JPEG, SVG, and WebP images up to `GC.MAX_UPLOAD_BYTES`.
+- `GeneralSettingsCard` clamps the grace period to 1 through 60. It accepts PNG, JPEG, SVG, and WebP images up to `GC.MAX_UPLOAD_BYTES`. It sends `uploadImage` with `maxWidth` 128 and `maxHeight` 128, which override the manage API default of 256.
 - `MonitorTypeCard` checks the required fields of each type and disables Save when they fail. For example, a `GROUP` monitor needs at least 2 members. `saveTypeSettings` does not check them again.
 - A change of monitor type resets `typeData` to `{}`, or to `createDefaultGroupTypeData()` for `GROUP`.
 - `testMonitor` does nothing for an unsaved monitor (no `id`) or for the type `NONE`.
@@ -37,10 +37,11 @@ This folder holds the nine cards that the monitor editor page (`../+page.svelte`
 
 - `storeMonitorData` writes the `monitors` row. `deleteMonitor` deletes the monitor, and the card then calls `goto("/manage/app/monitors")`.
 - `deleteMonitorData` permanently deletes `monitoring_data` rows for the tag between two Unix-second timestamps.
-- `updateMonitoringData` overwrites existing `monitoring_data` rows in the range.
+- `updateMonitoringData` upserts one `monitoring_data` row for each minute from the start to the end, so it also creates rows where none existed. Each row gets a random latency from `latency - deviation` to `latency + deviation`, never below 0. The server does not store the deviation.
+- After that write, `updateMonitoringData` rewrites the `{tag}:last_status` cache entry through `SetLastMonitoringValue` in `src/lib/server/cache/setGet.ts`. It also pushes an alert evaluation onto `alertingQueue` in `src/lib/server/queues/alertingQueue.ts`.
 - After a create, `GeneralSettingsCard` calls `goto("/manage/app/monitors/{tag}")`.
 - `uploadImage` sends the file as base64 and stores the returned URL in `monitor.image`.
-- `testMonitor` makes the server run one real check against the monitor's target.
+- `testMonitor` makes the server run one real check against the monitor's target. The card sends only `monitor_id`, so the server tests the saved `type_data`, not unsaved edits in the form.
 
 ## Verification
 

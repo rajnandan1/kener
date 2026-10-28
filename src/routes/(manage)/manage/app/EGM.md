@@ -6,7 +6,7 @@ This folder has no page of its own. It holds the admin dashboard pages, each ser
 
 - The layout guard in `src/routes/(manage)/+layout.server.ts` checks the session and the route's permission from `ROUTE_PERMISSION_MAP` in `src/lib/allPerms.ts` before the page opens.
 - The page loads and saves data in the browser through the manage API: the `POST /manage/api` endpoint in `src/routes/(manage)/manage/api/+server.ts`. Each request names an action, and the endpoint checks the action's permission from `ACTION_PERMISSION_MAP`.
-- A page that saves settings writes site data (the key-value settings in the `site_data` table) with the `storeSiteData` action.
+- A page that saves settings writes site data (the key-value settings in the `site_data` table) with the `storeSiteData` action. The subscriptions page saves its `subscriptionsSettings` key with the `updateSubscriptionsConfig` action instead.
 
 A new page here needs an entry in `ROUTE_PERMISSION_MAP`, or the layout guard returns 403. It also needs an item in the sidebar list in `src/routes/(manage)/+layout.svelte`.
 

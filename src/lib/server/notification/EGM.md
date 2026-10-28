@@ -6,7 +6,7 @@ This folder sends Kener's outbound messages: email through Resend or SMTP, and H
 
 ## Interface
 
-- `email_notification.ts` default-exports `send(emailBody, emailSubject, variables, to, from?, emailTextBody?)`. It renders the email and sends it through Resend or SMTP. `src/lib/server/queues/alertingQueue.ts`, `emailQueue.ts`, `src/lib/server/controllers/userController.ts`, and `userSubscriptionsController.ts` import it as `sendEmail`.
+- `email_notification.ts` default-exports `send(emailBody, emailSubject, variables, to, from?, emailTextBody?)`. It renders the email and sends it through Resend or SMTP. `src/lib/server/queues/alertingQueue.ts`, `emailQueue.ts`, `src/lib/server/controllers/userController.ts`, and `userSubscriptionsController.ts` import it as `sendEmail`. The routes `src/routes/(account)/account/forgot/api/fogot-password/+server.ts`, `src/routes/(account)/account/forgot/api/password-reset/+server.ts`, and `src/routes/(manage)/manage/api/+server.ts` import it too.
 - `discord_notification.ts`, `slack_notification.ts`, and `webhook_notification.ts` each default-export `send(body, variables, url, ...)`. Each posts the rendered JSON body to the URL. The webhook sender also takes `headers`, a JSON string with an array of `{ key, value }` pairs. Each returns `{ success, status, data }` or `{ error, details }`.
 - `smtps.ts` default-exports `getSMTPTransport(meta: SMTPConfiguration)`, which returns a nodemailer transporter and caches it per configuration.
 - `notification_utils.ts` exports `alertToVariables(config, alert, siteVars, monitorTag?)`, `siteDataToVariables(siteData)`, `maintenanceToVariables(event, monitorNames, statusMessage, updateIdSuffix, subjectPrefix, siteUrl?)`, and `describeError(error)`. `describeError` adds the innermost `error.cause` message to the top message.
@@ -25,7 +25,7 @@ This folder sends Kener's outbound messages: email through Resend or SMTP, and H
 
 ## Side Effects
 
-- The Discord, Slack, and webhook senders send one HTTP `POST` each, with the headers `user-agent: Kener/<version>`, `accept: application/json`, and `content-type: application/json`.
+- The Discord, Slack, and webhook senders send one HTTP `POST` each, with the default headers `user-agent: Kener/<version>`, `accept: application/json`, and `content-type: application/json`. The webhook sender lets its `headers` argument replace a default header (the name match ignores case) and add more headers.
 - The email sender calls the Resend API, or it opens an SMTP connection through `getSMTPTransport`. It reads the SMTP settings through `GetSMTPFromENV()` in `src/lib/server/controllers/commonController.ts`.
 - The senders read `process.env` for `RESEND_API_KEY`, `RESEND_SENDER_EMAIL`, and each `$NAME` in a template. They log errors with `console.error`.
 

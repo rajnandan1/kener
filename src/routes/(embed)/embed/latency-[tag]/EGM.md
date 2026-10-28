@@ -33,4 +33,4 @@ This route serves `/embed/latency-<tag>`, a page that other sites put in an ifra
 ## Verification
 
 - Run: `npm run check` (svelte-kit sync and svelte-check type check).
-- Run: `npm run test:server -- "src/routes/(embed)/embed/latency-[tag]"`. The test `page.server.test.ts` checks the defaults and the limits of `days` and `height`.
+- Run: `npm run test:server -- "src/routes/(embed)/embed/latency-[tag]"`. The test `page.server.test.ts` checks the defaults, a non-integer value, and the lower limits of `days` and `height`. No test checks the `MAX_DAYS` upper limit.

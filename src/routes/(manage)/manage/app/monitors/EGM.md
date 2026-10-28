@@ -24,6 +24,7 @@ This route serves `/manage/app/monitors`. It lists the monitors, turns a monitor
 ## Side Effects
 
 - A switch writes the whole `monitors` row with one changed field. The page changes the row first and rolls it back on an error.
+- The row comes from `getMonitors` with its `type_data` secrets masked, and the switch sends it back as is. `CreateUpdateMonitor` in `src/lib/server/controllers/monitorsController.ts` restores the stored secrets before the write.
 
 ## Verification
 

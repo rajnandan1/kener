@@ -9,7 +9,7 @@ This folder runs Kener's recurring work with BullMQ job schedulers. A job schedu
 - `appScheduler.ts` exports `start(options?)` and `shutdown()`. `start` upserts the scheduler `mainJob_main_job` on the queue `appSchedulerQueue` with `every: 10000` (10 seconds). Each run syncs the monitor schedulers and calls `UpdateMaintenanceEventStatuses()`.
 - `monitorSchedulers.ts` exports `addJobToSchedulerQueue(minNumOfWorkers, monitor, id, options?)`, `removeJobFromSchedulerQueue(id, minNumOfWorkers)`, `getSchedulers(minNumOfWorkers)`, and `shutdown()`. They manage one scheduler per monitor on the queue `monitorScheduleQueue`, with `pattern: monitor.cron` and `immediately: true`. Its worker calls `Minuter(monitor)` from `src/lib/server/cron-minute.ts` for each job.
 - `maintenanceScheduler.ts` exports `start(options?)` and a default object `{ start, shutdown }`. `start` upserts `maintenanceSchedulerJob_hourly` on `maintenanceSchedulerQueue` with `every: 3600000` (1 hour) and `immediately: true`.
-- `dailyCleanup.ts` exports `start(options?)` and `shutdown()`. `start` upserts `dailyCleanupJob_midnight_utc` on `dailyCleanupQueue` with the cron pattern `0 0 * * *` (00:00 UTC each day).
+- `dailyCleanup.ts` exports `start(options?)` and `shutdown()`. `start` upserts `dailyCleanupJob_midnight_utc` on `dailyCleanupQueue` with the cron pattern `0 0 * * *` and no time zone. The job runs at midnight in the process time zone, which is 00:00 UTC when `TZ=UTC`.
 - `shutdown.ts` default-exports a function that closes the workers of the app, monitor, maintenance, and daily cleanup schedulers, in that order.
 
 ## Invariants
@@ -27,6 +27,7 @@ This folder runs Kener's recurring work with BullMQ job schedulers. A job schedu
 
 - All files create queues and workers through `createQueue` and `createWorker` in `src/lib/server/queues/q.ts`. The jobs live in Redis under the `kener` prefix.
 - The app scheduler reads monitors every 10 seconds, adds and removes monitor schedulers, and logs `ADDING NEW SCHEDULER` and `REMOVING INACTIVE SCHEDULER` lines.
+- Each app scheduler run calls `UpdateMaintenanceEventStatuses`, which writes maintenance event statuses and can push `subscriberQueue` jobs that notify subscribers.
 - Each monitor job calls `Minuter`, which adds a job to `monitorExecuteQueue`.
 - The maintenance scheduler reads `db.getMaintenancesPaginated` and `db.getMaintenanceEventsByMaintenanceId`. It writes new events through `CreateMaintenanceEventWithNotification`, which can notify subscribers.
 - The daily cleanup calls `db.background(retentionDays)`, which deletes `monitoring_data` rows older than the retention window.

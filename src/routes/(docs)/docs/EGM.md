@@ -18,8 +18,9 @@ This folder holds the Kener documentation site under `/docs`. It serves the land
     - `getRawMarkdownContent`, `parseMarkdownWithFrontMatter`, and `getMarkdownContent` return the Markdown of `content/<slug>.md` or `content/<slug>/index.md`, with or without its front-matter.
     - `getDocsPageData` returns the title, description, body, group, and previous and next pages of one page.
     - `extractTableOfContents` and `addHeadingIds` work on the rendered HTML headings.
-    - `getVersionDocsUrls` and `getVersionDocsLlmEntries` build the absolute page URLs for one version.
-- `DocsNavbar.svelte` takes `config`, `currentSlug`, `onMenuToggle`, and `isMobileMenuOpen`. It renders the version menu, the tabs, the search button, and the light and dark mode toggle.
+    - `getVersionDocsUrls` returns the absolute URL of each sidebar page and each tab `url` of one version.
+    - `getVersionDocsLlmEntries` returns `DocsLlmEntry` objects (`title`, `description`, `url`) for one version. It lists each tab `url` first, then the raw Markdown URL `/docs/raw/<slug>.md` of each sidebar page.
+- `DocsNavbar.svelte` takes `config`, `currentSlug`, `onMenuToggle`, and `isMobileMenuOpen`. It renders the version menu, the tabs, the search button, the `config.footerLinks` links, and the light and dark mode toggle.
 - `DocsSearch.svelte` takes the bindable prop `open`. It opens on Cmd+K or Ctrl+K, closes on Escape, and calls `/docs/api/search?q=<query>` 200 ms after the last key press when the query has at least 2 characters.
 - `DocsSidebar.svelte` takes `config`, `currentSlug`, and `onNavigate`. It expands the group and the parent page of the current page, and calls `onNavigate` when the user clicks a page link.
 - `DocsTableOfContents.svelte` takes `items` and marks the heading that is in view with an `IntersectionObserver`.
@@ -44,7 +45,7 @@ This folder holds the Kener documentation site under `/docs`. It serves the land
 - `+layout.svelte` loads the Google tag script from `https://saki-production.up.railway.app/googletagmanager/gtag/js` and sends analytics through that host on every docs page.
 - `DocsSearch.svelte` sends a fetch request to `/docs/api/search` for each debounced query.
 - The light and dark mode toggle in `DocsNavbar.svelte` and `+page.svelte` uses `toggleMode` from `mode-watcher`, which stores the mode in the browser.
-- `LandingStatusDemo.svelte` runs a 1-second timer only while the demo is on screen and the tab is visible. It shows a static bar when the user prefers reduced motion.
+- `LandingStatusDemo.svelte` starts its 1-second timer when the demo comes on screen in a visible tab, and when the tab becomes visible. It stops the timer when the demo leaves the screen or the tab is hidden. It shows a static bar when the user prefers reduced motion.
 
 ## Verification
 

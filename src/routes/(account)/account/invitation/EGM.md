@@ -21,7 +21,7 @@ This route folder serves `/account/invitation?view=confirm_token&token=<jwt>`. A
 - The token is a JWT (JSON Web Token) signed with `KENER_SECRET_KEY`. `load` checks its signature, its `email`, and its `validTill` expiry in milliseconds. A missing `validTill` counts as expired.
 - `load` treats the invitation as open only while `users.password_hash` is exactly `""`. `./api/accept-invitation` repeats these checks. Keep the two files in step.
 - Every failure returns `token: ""`, so the browser never gets a token that the server rejected.
-- The page checks only that the two passwords match and have at least 8 characters. The server's `ValidatePassword` also needs one digit, one lowercase letter, and one uppercase letter. The form hint states the full rule.
+- The page checks only that the two passwords match and have at least 8 characters. The server's `ValidatePassword` in `src/lib/server/controllers/commonController.ts` also needs one digit, one lowercase letter, and one uppercase letter. The form hint states the full rule.
 - The JSON field names `receivedToken` and `newPassword` must match what `accept-invitation` reads.
 
 ## Side Effects

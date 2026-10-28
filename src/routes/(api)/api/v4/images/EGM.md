@@ -14,6 +14,7 @@ This route uploads one image. It stores the image in the database and returns th
 
 - `max_width` and `max_height` must be integers from 1 to `GC.MAX_IMAGE_DIMENSION` (4096). `force_dimensions` must be a boolean.
 - `uploadImage` accepts only `image/png`, `image/jpeg`, `image/jpg`, `image/webp`, `image/heic`, and `image/heif`. It rejects SVG, even when the bytes are SVG under another type.
+- `uploadImage` returns 400 `Image MIME type does not match file content` when `mime_type` differs from the format that sharp detects. It reads `image/jpg` as `image/jpeg`. It converts a HEIC or HEIF file to JPEG before sharp reads it, so such a file passes only as `image/jpeg`, `image/jpg`, `image/heic`, or `image/heif`.
 - `uploadImage` rejects a `file_name` longer than 255 characters and decoded data larger than `GC.MAX_UPLOAD_BYTES` (2 MB). It limits the source to `GC.MAX_INPUT_PIXELS` (4096 x 4096 pixels).
 - By default, the resize fits the image inside the size limits and never enlarges it. With `force_dimensions`, it crops to exactly that size.
 - The stored image is a JPEG at quality 85 when the source is JPEG or HEIC, and a PNG otherwise.

@@ -14,8 +14,8 @@ This folder serves `POST /dashboard-apis/monitor-day-latency`. The status page c
 
 - The handler returns 400 `tag is required` when `body.tag` is empty.
 - The handler parses `startOfDayTodayAtTz` with `parseInt` and does no NaN check. When the field is absent, it uses `BeginningOfDay()` with no time zone, so the default depends on the server's time zone.
-- The handler ends the window at the start of the current minute plus 60 seconds. All values are Unix seconds.
-- The handler drops rows whose latency is null or 0 before it computes the points and the stats. With no valid row, `minLatency` is 0.
+- The handler rounds `nowAtTz` (or the current time) down to the start of its minute and adds 60 seconds to end the window. All values are Unix seconds.
+- The handler drops rows whose latency is null or 0 before it computes the points and the stats. With no valid row, `avgLatency`, `maxLatency`, and `minLatency` are `""`, because `ParseLatency` returns `""` for 0.
 - The handler targets `min(100, validRows)` points. `lttbDownsample` returns the data unchanged when it has no more points than the target or when the target is below 3. LTTB needs ascending timestamps, and `db.getMonitoringData` orders by `timestamp asc`.
 - The handler shows a hidden monitor (`is_hidden` = `YES`) only when `CanSeeHiddenMonitors` returns true. That function needs a logged-in user who has the `monitors.read` permission. The handler always filters on `status: ACTIVE`.
 

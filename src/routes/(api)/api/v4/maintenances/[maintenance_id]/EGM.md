@@ -26,7 +26,7 @@ This route reads, edits, and deletes one maintenance. A maintenance is a planned
 - A change to `start_date_time`, `rrule`, or `duration_seconds` rebuilds events in `maintenances_events`:
     1. For a one-time RRULE (`isOneTimeRrule`), it deletes every event that is not `COMPLETED` or `CANCELLED`.
     2. For a recurring RRULE, it deletes only the `SCHEDULED` events that start in the future.
-    3. It then calls `GenerateMaintenanceEvents` to create the next event. That call pushes a "created" email job to `subscriberQueue` when `globalMaintenanceNotificationSettings.event_types.created` is on.
+    3. It then calls `GenerateMaintenanceEvents` to create the next event. That call pushes a "created" email job to `subscriberQueue` when `globalMaintenanceNotificationSettings.event_types.created` is on. It skips the push when the maintenance `is_global` is not `YES` and it has no visible monitors. `db.getMonitorsByMaintenanceId` reads only monitors with `is_hidden` `NO`.
 - `DELETE` deletes only the `maintenances` row through `db.deleteMaintenance`. The `maintenance_monitors` and `maintenances_events` rows go away only through their foreign-key `ON DELETE CASCADE`. A comment in `src/lib/server/db/repositories/monitorAlertConfig.ts` says that SQLite does not enforce those cascades.
 
 ## Verification

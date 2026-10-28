@@ -13,7 +13,7 @@ This route serves `/incidents/{incident_id}`. It shows one incident: its title, 
     - `GetAffectedMonitorsByIncidentId(id, canSeeHiddenMonitors)` joins `incident_monitors` to `monitors`. It adds `monitors.is_hidden = "NO"` unless the second argument is true.
 - `load` throws 400 `Invalid incident ID` when `Number(incident_id)` is `NaN`. It throws 404 `Incident not found` when no row exists.
 - The route has no form actions.
-- `+page.svelte` shows the updates as Markdown through `SveltePurify(mdToHTML(...))` and lists the affected monitors with links to `/monitors/{monitor_tag}`. It makes no fetch requests.
+- `+page.svelte` shows the updates as Markdown through `SveltePurify(mdToHTML(...))` and lists the affected monitors with links to `/monitors/{monitor_tag}`. It makes no fetch requests. `mdToHTML` is in `src/lib/marked.ts`.
 
 ## Invariants
 

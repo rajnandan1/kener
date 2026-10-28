@@ -7,9 +7,9 @@ This route serves `/manage/app/internationalization`. It sets the languages of t
 ## Interface
 
 - The page sends `getAllSiteData` (permission `settings.read`) and reads the keys `i18n`, `tzToggle`, and `dateAndTimeFormat`.
-- "Save languages" sends `storeSiteData` (permission `settings.write`) with `i18n` as a JSON string of `{ defaultLocale, locales }`.
-- "Save timezone" sends `storeSiteData` with `tzToggle`.
-- "Save date and time format" sends `storeSiteData` with `dateAndTimeFormat` as a JSON string of `{ datePlusTime, dateOnly, timeOnly }`.
+- "Save Languages" sends `storeSiteData` (permission `settings.write`) with `i18n` as a JSON string of `{ defaultLocale, locales }`.
+- "Save Timezone" sends `storeSiteData` with `tzToggle`.
+- "Save Format" sends `storeSiteData` with `dateAndTimeFormat` as a JSON string of `{ datePlusTime, dateOnly, timeOnly }`.
 
 ## Invariants
 

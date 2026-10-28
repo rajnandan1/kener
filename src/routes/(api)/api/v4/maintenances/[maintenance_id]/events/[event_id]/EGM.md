@@ -15,17 +15,17 @@ This route reads, edits, ends, and deletes one maintenance event. A maintenance 
 
 ## Invariants
 
-- Each handler returns 404 when `event_id` is not an integer or when the event does not belong to `locals.maintenance`. This route never returns 400 for a bad `event_id`.
+- Each handler parses `event_id` with `parseInt` and returns 404 when the result is `NaN` or when the event does not belong to `locals.maintenance`. `parseInt` reads the leading digits, so `7abc` and `7.5` read event 7. On PostgreSQL, an `event_id` above 2147483647 makes the query fail, and the request gets a 500 instead of a 404. This route never returns 400 for a bad `event_id`.
 - A `PATCH` body with `status` and a start or end time returns 400.
 - `UpdateMaintenanceEventStatus` allows only two transitions: `ONGOING` to `COMPLETED`, and `SCHEDULED`, `READY`, or `ONGOING` to `CANCELLED`. Any other transition throws, and the handler returns 400.
 - When status mode completes or cancels an `ONGOING` event, its `end_date_time` moves to the start of the current minute. That end stays at least 60 seconds after the start and never passes the planned end.
-- In window mode, both times are UTC seconds, and `end_date_time` must be after `start_date_time`. The handler rounds both down to the start of their minute. `UpdateMaintenanceEvent` throws when the rounded window is empty, so a window shorter than one minute returns 400.
+- In window mode, both times are UTC seconds, and `end_date_time` must be after `start_date_time`. The handler rounds both down to the start of their minute. `UpdateMaintenanceEvent` throws when the rounded window is empty, so a window inside one minute returns 400. A short window that crosses a minute start becomes a full 60-second window and saves.
 - The handlers call only `get*` methods on `db`. `src/routes/(api)/api/v4/no-direct-db-writes.test.ts` fails when a v4 route calls a `db` write method directly.
 
 ## Side Effects
 
 - `PATCH` updates the row in `maintenances_events`.
-- Status mode pushes one email job to `subscriberQueue` when the site setting `globalMaintenanceNotificationSettings.event_types.ended` is on. It skips the push when the maintenance `is_global` is not `YES` and it has no monitors. A failed push is logged and does not fail the request.
+- Status mode pushes one email job to `subscriberQueue` when the site setting `globalMaintenanceNotificationSettings.event_types.ended` is on. It skips the push when the maintenance `is_global` is not `YES` and it has no visible monitors. `db.getMonitorsByMaintenanceId` reads only monitors with `is_hidden` `NO`. A failed push is logged and does not fail the request.
 - Window mode sends no email.
 - `DELETE` deletes the row from `maintenances_events`.
 

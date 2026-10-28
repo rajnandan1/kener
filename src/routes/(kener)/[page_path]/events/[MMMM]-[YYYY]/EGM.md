@@ -8,7 +8,7 @@ This route serves `/{page_path}/events/{Month}-{Year}`, for example `/status-a/e
 
 - `+page.server.ts` exports `load`. It is the same file as `src/routes/(kener)/events/[MMMM]-[YYYY]/+page.server.ts`. It returns `{ monthParam, monthStartTs, monthEndTs }` and throws 404 for a bad or out-of-range month.
 - The route has no form actions.
-- `+page.svelte` sends `POST /dashboard-apis/events-by-month?page_path=<page_path>` with the body `{ start_ts, end_ts }` on mount. The handler finds the page with `db.getPageByPath` and keeps the events on the page's active, visible monitors and the events with `is_global = "YES"`.
+- `+page.svelte` sends `POST /dashboard-apis/events-by-month?page_path=<page_path>` with the body `{ start_ts, end_ts }` on mount. The handler in `src/lib/server/api-server/events-by-month/post.ts` finds the page with `db.getPageByPath` and keeps the events on the page's active, visible monitors and the events with `is_global = "YES"`.
 - The previous and next month links start with `/{page_path}`.
 
 ## Invariants

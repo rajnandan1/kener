@@ -21,29 +21,29 @@ This route serves `POST /manage/api`. It is the one endpoint that the dashboard 
     - Alerts and triggers: the alert config actions, the alert actions (`getAllAlertsPaginated`, `updateMonitorAlertV2Status`, and `deleteMonitorAlertV2`), and the trigger actions with `testTrigger`.
     - Users and roles: `getUsers`, `createNewUser`, `manualUpdate`, `resendInvitation`, and the role actions.
     - Other: API keys, subscribers, general email templates, images (`uploadImage` and `deleteImage`), and OIDC (the group-to-role mapping actions, `testOidcConnection`, and `getOidcSettingsMasked`).
-- `storeSiteData(data)` is a local helper. It calls `InsertKeyValue` once for each key in `data`, and it saves a missing `socialPreviewImage` as `""`.
+- `storeSiteData(data)` is a local helper. It calls `InsertKeyValue` (`src/lib/server/controllers/siteDataController.ts`) once for each key in `data`. It saves a `socialPreviewImage` value of `null` or `undefined` as `""`, and it does not save a key that `data` leaves out.
 
 ## Invariants
 
-- The handler checks in this order. Without a session (`GetLoggedInSession`), it returns 401. When `ACTION_PERMISSION_MAP` has no entry for the action, it returns 400 `Unknown action`. When the user lacks the mapped permission, it returns 403. Then it runs the action.
+- The handler checks in this order. Without a session (`GetLoggedInSession` in `src/lib/server/controllers/userController.ts`), it returns 401. When `ACTION_PERMISSION_MAP` has no entry for the action, it returns 400 `Unknown action`. When the user lacks the mapped permission, it returns 403. Then it runs the action.
 - A new action needs an entry in `ACTION_PERMISSION_MAP`. Without one, every call returns 400. A `null` entry means that any signed-in user can run the action.
 - Some branches check more than the map:
     - `sendVerificationEmail` for another user's id needs `users.write`.
     - `getMonitors` masks the heartbeat secret unless the user has `monitors.write`.
-    - `deleteMonitorData` and `getMonitoringDataPaginated` return 400 for a status that `isMonitoringStatus` rejects.
+    - `deleteMonitorData` and `getMonitoringDataPaginated` return 400 for a status that `isMonitoringStatus` (`src/lib/global-constants.ts`) rejects.
     - `upsertOidcGroupRoleMapping` needs a group name and a role that exists.
 - Reads mask stored secrets before the response: `MaskSiteDataSecret` for site data, `MaskMonitorRecordSecrets` for monitors, `MaskTriggerSecrets` for triggers, and `MaskAlertConfigTriggerSecrets` for alert configs.
 - The write controllers restore a masked secret to the stored value when a page saves it back.
-- `updateMonitoringData` always sets `type` to `GC.MANUAL`.
+- `updateMonitoringData` always sets `type` to `GC.MANUAL` (`src/lib/global-constants.ts`).
 - `uploadImage` uses a 256 by 256 maximum unless the request sends `maxWidth` and `maxHeight`.
 - `testMonitor` throws for the monitor type `NONE`.
-- Any thrown error becomes status 500 with `{ error: message }`, and the handler logs it with `console.log`.
+- An error thrown inside the action `try` block becomes status 500 with `{ error: message }`, and the handler logs it with `console.log`. `request.json()`, `GetLoggedInSession`, and `GetUserPermissions` run before that block, so their errors, such as an invalid JSON body, get the SvelteKit default 500 response.
 
 ## Side Effects
 
-- The actions read and write the database through the controllers in `src/lib/server/controllers/`. `deleteImage`, `deleteMonitorData`, and the OIDC mapping actions call `db` directly.
+- The actions read and write the database through the controllers in `src/lib/server/controllers/`. `deleteImage`, `deleteMonitorData`, `deleteMonitorAlertV2`, and the OIDC mapping actions call `db` directly.
 - `testTrigger` sends one real webhook, email, Discord, or Slack message with test alert data. It uses the newest monitor tag from the monitoring data, or `test-monitor`.
-- `testMonitor` runs one real check through `Service.execute()`.
+- `testMonitor` runs one real check through `Service.execute()` (`src/lib/server/services/service.ts`).
 - `listDockerContainers` connects to a Docker daemon.
 - `testOidcConnection` fetches the OIDC provider's discovery document.
 - `createNewUser`, `resendInvitation`, and `sendVerificationEmail` send email.

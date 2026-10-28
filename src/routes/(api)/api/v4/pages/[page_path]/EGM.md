@@ -23,7 +23,7 @@ This route reads, edits, and deletes one status page. A page is one public statu
 
 ## Side Effects
 
-- `PATCH` updates the row in `pages` through `UpdatePage`, but only when a page field changed.
+- `PATCH` updates the row in `pages` through `UpdatePage` whenever the body sends a page field, even when the value equals the stored one.
 - When `monitors` is a list, `PATCH` deletes every `pages_monitors` row of the page and inserts the new list in order, with `position` set to the list index. These writes do not run in a transaction, so a failure part way leaves only part of the list.
 - `DELETE` deletes only the `pages` row through `db.deletePage`. The `pages_monitors` rows go away only through their foreign-key `ON DELETE CASCADE`. A comment in `src/lib/server/db/repositories/monitorAlertConfig.ts` says that SQLite does not enforce those cascades.
 

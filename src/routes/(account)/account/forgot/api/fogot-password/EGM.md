@@ -12,7 +12,7 @@ This route folder serves `POST /account/forgot/api/fogot-password`. The folder n
 - `POST` returns `401 {error: "User does not exist"}` when no row in `users` matches the email.
 - `POST` returns `404 {error: "Email template not found"}` when `general_email_templates` has no row with `template_id` `forgot_password`.
 - `POST` returns `500 {success: false, error: "Failed to send password reset email"}` when the email send throws.
-- The handler calls `db.getUserByEmail`, `GenerateToken` and `GetAllSiteData` (from `$lib/server/controllers/controller.js`), `siteDataToVariables`, `GetGeneralEmailTemplateById`, and the default export of `src/lib/server/notification/email_notification.ts`.
+- The handler calls `db.getUserByEmail`, `GenerateToken` and `GetAllSiteData` (from `$lib/server/controllers/controller.js`), `siteDataToVariables` from `src/lib/server/notification/notification_utils.ts`, `GetGeneralEmailTemplateById` from `src/lib/server/controllers/generalTemplateController.ts`, and the default export of `src/lib/server/notification/email_notification.ts`.
 
 ## Invariants
 

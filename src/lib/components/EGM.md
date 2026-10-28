@@ -45,9 +45,10 @@ This folder holds the Svelte 5 components of the public status page, the embed p
 - The components read the viewer's timezone from the `selectedTimezone` store and the UI text from the `$t` store. A few strings are still English literals, for example `Failed to load monitor:` in `MonitorBar.svelte`.
 - `MonitorBar` never fetches. Its parent passes `prefetchedData` or `prefetchedError`, and `MonitorBar` shows a skeleton until one of them arrives.
 - `MonitorOverview` calls `clearMonitorBarCache()` when the viewer changes the day range, and then fetches again.
-- `Captcha` gets the provider and the site key from `/captcha-config.json`. It calls `onReady(true)` when a captcha is required, also when the provider is enabled but misconfigured. It calls `onReady(false)` when no provider is enabled. An expired or failed challenge calls `onVerify(null)`.
+- `Captcha` gets the provider and the site key from `/captcha-config.json`. It calls `onReady(true)` when a captcha is required, also when the provider is enabled but misconfigured. It calls `onReady(false)` when no provider is enabled, and also when the `/captcha-config.json` fetch or parse fails before it confirms a provider. An expired or failed challenge calls `onVerify(null)`.
 - `Captcha` shares script loads between instances through one module-level map. It removes a failed load from the map, so that a retry can run.
-- `SubscribeMenu` checks only that the email is not empty and that the code has exactly 6 characters. The server does the real checks.
+- `SubscribeMenu` checks that the email is not empty and that the code has exactly 6 characters. It renders `Captcha` and keeps the "Continue" button disabled while a captcha is required and no token is set. It sends the token as `captchaToken` in the `login` request. The server does the real checks.
+- When a captcha is required, the "Didn't receive the code? Resend" button sends the viewer back to the email view and does not send `login` again. The OTP view has no captcha widget to make a new token.
 
 ## Side Effects
 
