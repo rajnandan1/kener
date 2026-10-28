@@ -9,7 +9,7 @@ This folder is Kener's data access layer on Knex, a SQL query builder. Each file
 - `base.ts` exports the abstract class `BaseRepository` and the filter types `MonitorFilter`, `TriggerFilter`, `IncidentFilter`, and `CountResult`. Every repository extends `BaseRepository`. Its protected `knex` getter returns `getWorkerKnex() ?? fallbackKnex`.
 - `index.ts` re-exports `BaseRepository`, the four filter types, and ten repositories. It does not re-export `MonitorAlertConfigRepository` or `SubscriptionSystemRepository`.
 - `monitoring.ts` exports `MonitoringRepository`, which owns `monitoring_data`. Methods include `insertMonitoringData`, `getMonitoringData`, `getLatestMonitoringDataAllActive`, `getStatusCountsByInterval`, `background` (the retention delete), `consecutivelyStatusFor`, `getRecentSamplesForConfirmation`, and `backfillConfirmedStatus`.
-- `monitors.ts` exports `MonitorsRepository`, which owns `monitors`: `getMonitors`, `getMonitorByTag`, `getMonitorsByTags`, `insertMonitor`, `updateMonitor`, `updateMonitorTrigger`, and `deleteMonitorsByTag`.
+- `monitors.ts` exports `MonitorsRepository`, which owns `monitors`: `getMonitors`, `getMonitorByTag`, `getMonitorsByTag`, `getMonitorsByTags`, `insertMonitor`, `updateMonitor`, `updateMonitorTrigger`, and `deleteMonitorsByTag`. `getMonitorsByTag(tag)` returns one monitor, the same as `getMonitorByTag`.
 - `incidents.ts` exports `IncidentsRepository`, which owns `incidents`, `incident_monitors`, and `incident_comments`. Methods include `createIncident`, `updateIncident`, `getOngoingIncidentsForMonitorList`, `getIncidentsForEventsByDateRange`, `insertIncidentMonitorWithMerge`, and `insertIncidentComment`. One method name has a typo that callers use: `geAllGlobalOngoingIncidents`.
 - `maintenances.ts` exports `MaintenancesRepository`, which owns `maintenances`, `maintenance_monitors`, and `maintenances_events`. Methods include `createMaintenance`, `addMonitorsToMaintenance`, `createMaintenanceEvent`, `getScheduledEventsStartingSoon`, and `getMaintenanceEventsForEventsByDateRange`.
 - `monitorAlertConfig.ts` exports `MonitorAlertConfigRepository`, which owns `monitor_alerts_config`, `monitor_alerts_config_triggers`, `monitor_alerts_config_monitors`, and `monitor_alerts_v2`.
@@ -37,7 +37,7 @@ This folder is Kener's data access layer on Knex, a SQL query builder. Each file
 
 ## Side Effects
 
-- Each repository reads and writes only the tables listed for it above. `incidents.ts`, `maintenances.ts`, and `pages.ts` also read `monitors` through joins, for example to filter out hidden monitors.
+- Each repository reads and writes the tables listed for it above, with these exceptions. `AlertsRepository.deleteTrigger` also deletes the trigger's rows in `monitor_alerts_config_triggers`. `MonitorAlertConfigRepository` also reads `triggers` through joins. `incidents.ts`, `maintenances.ts`, and `pages.ts` also read `monitors` through joins, for example to filter out hidden monitors.
 - `MonitoringRepository.background(days)` deletes `monitoring_data` rows older than `days` days.
 - `base.ts` calls `getWorkerKnex()` from `../poolContext.ts` on every query to pick the connection pool.
 

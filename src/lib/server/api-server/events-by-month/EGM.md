@@ -13,8 +13,10 @@ This folder serves `POST /dashboard-apis/events-by-month`. The status page calls
 
 - The handler returns 400 when `start_ts` or `end_ts` is missing, is 0, or is not a JSON number (`post.ts:27-33`). It does not check that `start_ts` comes before `end_ts`.
 - The handler treats an empty `page_path` and the strings `undefined` and `null` (any letter case) as "no page" (`post.ts:20-25`).
-- When the site setting `globalPageVisibilitySettings.forceExclusivity` is on and the request has no page, the handler uses the home page (path `""`) (`post.ts:38-42`). Then only that page's monitors limit the results.
+- When the site setting `globalPageVisibilitySettings.forceExclusivity` is on and the request has no page, the handler uses the home page (path `""`) (`post.ts:38-42`). Then the home page's monitors limit the results.
 - With a page, the handler returns 404 `Page not found` when `db.getPageByPath` finds no page. It passes the page's active monitor tags to both queries (`post.ts:45-52`). Without a page, it passes `undefined`, and the queries return events for all monitors.
+- With monitor tags, each query also returns every event whose `is_global` is `YES`, whatever the page's monitors are.
+- Both queries match an event by its `start_date_time` only, so an event that started before `start_ts` is left out. The incident query also returns only incidents with `incident_type` = `INCIDENT` and `status` = `OPEN`.
 - The handler does not read the session and does no permission check. The `/dashboard-apis/[action]` route adds no auth check either.
 
 ## Side Effects

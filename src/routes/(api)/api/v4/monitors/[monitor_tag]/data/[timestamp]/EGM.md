@@ -11,7 +11,7 @@ This route reads and sets one minute of monitoring data for one monitor. Monitor
 
 ## Invariants
 
-- `timestamp` is in UTC seconds. Each handler rounds it down to the start of its minute, and returns 400 when it is not an integer.
+- `timestamp` is in UTC seconds. Each handler parses it with `parseInt`, rounds it down to the start of its minute, and returns 400 only when the result is `NaN`. `parseInt` reads the leading digits, so `1700000000abc` reads or writes minute 1699999980, and `1.7e9` reads or writes minute 0.
 - `GET` returns 404 when no row exists for that minute.
 - `status` must be `UP`, `DOWN`, or `DEGRADED`, and `latency` must be a non-negative number. Any other value returns 400.
 - A `PATCH` body without `status` keeps the stored status. With no stored row, it uses the monitor `default_status`, and then `UP`.

@@ -7,7 +7,7 @@ This route serves `/manage/app/incidents/[incident_id]`. It creates, edits, and 
 ## Interface
 
 - The param value `new` opens the editor in create mode.
-- In edit mode, the page sends `getIncident` and `getComments` (permission `incidents.read`). It sends `getIncidents` to read the impact of each affected monitor.
+- In edit mode, the page sends `getIncident` and `getComments` (permission `incidents.read`). It sends `getIncidents` with `{ page: 1, limit: 100, filter: { status: "ALL" } }` and finds the incident in that one page to read the impact of each affected monitor. An incident outside the 100 newest by `id` loads with an empty monitor list.
 - The page sends `getMonitors` (permission `monitors.read`) with `status: "ACTIVE"` to fill the monitor picker.
 - Save sends `createIncident` in create mode and `updateIncident` in edit mode (permission `incidents.write`).
 - On save, the page sends `addMonitor` for each added monitor or changed impact, and `removeMonitor` for each removed monitor (permission `incidents.write`).

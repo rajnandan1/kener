@@ -13,7 +13,7 @@ This route serves `GET /captcha-config.json`. It tells the browser which captcha
 ## Invariants
 
 - The response never contains the secret key. It contains only the provider name and the site key.
-- An enabled provider with a missing site key or secret key gives `misconfigured: true` with `provider: null`. The browser must keep the form blocked in this state, because `VerifyCaptchaToken` also fails closed for it.
+- An enabled provider with a missing site key or secret key gives `misconfigured: true` with `provider: null`. The browser must keep the form blocked in this state, because `VerifyCaptchaToken` in `src/lib/server/controllers/captchaController.ts` also fails closed for it.
 - The route does no sign-in check. Anyone can read it.
 
 ## Side Effects

@@ -20,7 +20,7 @@ This route folder serves `GET /account/oidc/callback`. The IdP (identity provide
 - The handler reads the three OIDC cookies and deletes them before it validates them, so each set of cookies works once.
 - The delete path is `KENER_BASE_PATH` or `/`. It must stay equal to the path in `src/routes/(account)/account/oidc/login/+server.ts`.
 - `HandleCallback` passes the expected state, nonce, and PKCE (Proof Key for Code Exchange) code verifier to `openid-client`, which validates them during the code exchange.
-- The `oidc_error` parameter carries only `OidcLoginError.code` or `auth_failed`. It never carries free text or an email address.
+- The `oidc_error` parameter carries only a fixed code: `provider_error`, `account_deactivated`, `no_roles`, `auth_failed`, or an `OidcLoginError.code`. It never carries free text or an email address.
 - The `catch` block re-throws any 3xx status. The redirects inside `try` depend on this.
 - `FindOrCreateOidcUser` creates a user only when `settings.auto_create_users` is true. Otherwise it throws `OidcLoginError("not_provisioned")`.
 - `FindOrCreateOidcUser` never merges accounts. A new OIDC user whose email belongs to an existing account gets `email_conflict`.
@@ -30,11 +30,13 @@ This route folder serves `GET /account/oidc/callback`. The IdP (identity provide
 ## Side Effects
 
 - The handler reads the `oidcSettings` key from `site_data`.
+- `HandleCallback` calls the IdP discovery endpoint when no configuration is cached, for example after a restart.
 - `HandleCallback` calls the IdP token endpoint. It also calls the IdP userinfo endpoint when the token claims have no email or no groups.
-- `FindOrCreateOidcUser` can insert a row into `users` with `auth_provider` `oidc`, an empty `password_hash`, `is_active` 1, and `is_verified` 1. It can update the user's name and email.
-- Role sync rewrites `users_roles` only when the OIDC-managed roles change. It keeps the roles that an admin assigned by hand.
-- The handler deletes the three OIDC cookies. It sets the session cookie with the name and options from `CookieConfig()`: the name is `kener-user` and the cookie lasts 1 year.
-- The session cookie value is a JWT (JSON Web Token) from `GenerateToken`, signed with `KENER_SECRET_KEY`.
+- `FindOrCreateOidcUser` can insert a row into `users` with `auth_provider` `oidc` and an empty `password_hash`. `insertUser` in `src/lib/server/db/repositories/users.ts` does not write `is_active` or `is_verified`, so the row gets the column defaults `is_active` 1 and `is_verified` 0. `FindOrCreateOidcUser` can also update the user's name and email.
+- `FindOrCreateOidcUser` and the role sync read `oidc_group_role_mappings` to map IdP groups to roles.
+- Role sync rewrites `users_roles` only when the role set changes. It keeps each current role that is not in any group mapping and is not the `default_role_id`. A role that an admin assigned by hand, but that is also mapped or is the default role, follows the groups and can be dropped.
+- The handler deletes the three OIDC cookies. It sets the session cookie with the name and options from `CookieConfig()` in `src/lib/server/controllers/commonController.ts`: the name is `kener-user` and the cookie lasts 1 year.
+- The session cookie value is a JWT (JSON Web Token) from `GenerateToken` in `src/lib/server/controllers/commonController.ts`, signed with `KENER_SECRET_KEY`.
 
 ## Verification
 

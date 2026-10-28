@@ -13,7 +13,7 @@ This route serves `/maintenances/{id}`. It shows one maintenance event: its time
 - With `?type=maintenance`, `maintenanceEvent` is the first event in that list.
 - `load` throws 400 `Invalid maintenance event ID` when the id is not a number. It throws 404 `Maintenance event not found` or `Maintenance not found` when a row is missing.
 - The route has no form actions.
-- `+page.svelte` shows the description as Markdown through `SveltePurify(mdToHTML(...))`. It marks the current event in the event list and scrolls to it on mount. It makes no fetch requests.
+- `+page.svelte` shows the description as Markdown through `SveltePurify(mdToHTML(...))`. It marks the current event in the event list and scrolls to it on mount. It makes no fetch requests. `mdToHTML` is in `src/lib/marked.ts`.
 
 ## Invariants
 

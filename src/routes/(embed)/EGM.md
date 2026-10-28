@@ -20,9 +20,9 @@
 
 ## Side Effects
 
-- `GetLayoutServerData` reads the tables `site_data` and `users` on every request. It also reads the `kener-user` session cookie and the `localLang` locale cookie.
+- `GetLayoutServerData` reads the tables `site_data` and `users` on every request. For a logged-in user, it also calls `CanSeeHiddenMonitors` in `src/lib/server/controllers/userController.ts`, which reads `users_roles`, `roles`, and `roles_permissions` to check the `monitors.read` permission. It also reads the `kener-user` session cookie and the `localLang` locale cookie.
 - `GetLayoutClientData` sets up the `i18n` store, which loads the locale file from `src/lib/locales/` for the selected locale.
-- `GetLayoutClientData` sets up the time zone store, which reads the saved time zone from `localStorage` and falls back to the browser time zone.
+- `GetLayoutClientData` sets up the time zone store, which reads the saved time zone from `localStorage` and falls back to the browser time zone. When no valid time zone is saved, `timezone.init()` writes the browser time zone to `localStorage`.
 - `ModeWatcher` reads and stores the light or dark mode in the browser.
 - The layout loads the site favicon and, when the site sets `font.cssSrc`, the font stylesheet from that URL.
 

@@ -18,7 +18,7 @@ This route folder serves `/account/forgot`. The page has two views. The request 
 - The query parameter names `view` and `token` must match the link that `fogot-password` builds: `account/forgot?view=confirm_token&token=<jwt>`.
 - The fetch URL spells `fogot-password`. It must match the folder name `./api/fogot-password`.
 - The JSON field names `receivedToken` and `newPassword` must match what `password-reset` reads.
-- The page checks only that the two passwords match and have at least 8 characters. The server's `ValidatePassword` also needs one digit, one lowercase letter, and one uppercase letter. The form hint names only the length rule.
+- The page checks only that the two passwords match and have at least 8 characters. The server's `ValidatePassword` in `src/lib/server/controllers/commonController.ts` also needs one digit, one lowercase letter, and one uppercase letter. The form hint names only the length rule.
 
 ## Side Effects
 

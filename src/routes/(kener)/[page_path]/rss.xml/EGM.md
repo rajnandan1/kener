@@ -12,7 +12,7 @@ This route serves `GET /{page_path}/rss.xml`. It returns an RSS 2.0 feed (a stan
 
 ## Invariants
 
-- The feed lists only events on the page's active, visible monitors (`db.getActivePageMonitors`) and events with `is_global = "YES"`.
+- The feed lists only events on the page's active, visible monitors (`db.getActivePageMonitors` in `src/lib/server/db/repositories/pages.ts`) and events with `is_global = "YES"`.
 - The feed has the same time window and item limit as `src/routes/(kener)/rss.xml/`: 90 days back, 90 days ahead for maintenance events, and 50 items at most.
 - The home page (`page_path = ""`) is not served here. `src/routes/(kener)/rss.xml/` serves it.
 - The route does no sign-in check. The response is cached as `public`, so it must never contain hidden monitors.

@@ -13,7 +13,7 @@ This route reads, edits, and deletes one comment of one incident. A comment is o
 
 ## Invariants
 
-- Each handler returns 400 when `comment_id` is not an integer.
+- Each handler parses `comment_id` with `parseInt` and returns 400 only when the result is `NaN`. `parseInt` reads the leading digits, so `5abc` and `5.9` read comment 5.
 - Each handler returns 404 when the comment does not belong to the incident or its `status` is not `ACTIVE`. So a deleted comment is not visible to any handler here.
 - `state` must be `INVESTIGATING`, `IDENTIFIED`, `MONITORING`, or `RESOLVED`. Any other value returns 400.
 - A field that the `PATCH` body leaves out keeps its stored value.

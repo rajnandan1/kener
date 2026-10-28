@@ -10,7 +10,7 @@ This folder holds browser-side helpers for the status page and the embed pages. 
 - `getStartOfDayAtTz(timezone)` and `getEndOfDayAtTz(timezone)` (`datetime.ts`) return the start and the end of today in that timezone, as Unix seconds.
 - `GetLayoutClientData(languageSetting, fetchFn)` (`layoutClientData.ts`) initialises the `i18n` and `timezone` stores. It returns a `LayoutClientData` object with `localTz`, `startOfDayTodayAtTz`, `nowAtTz`, and `endOfDayTodayAtTz`. `src/routes/(kener)/+layout.ts` and `src/routes/(embed)/+layout.ts` call it.
 - `requestMonitorBar(tag, days, endOfDayTodayAtTz)` (`monitor-bar-client.ts`) returns a promise of one monitor's `MonitorBarResponse`. `clearMonitorBarCache()` empties its cache.
-- `requestNotifications(monitorTags)` (`notifications-client.ts`) returns a list of `NotificationEvent` objects.
+- `requestNotifications(monitorTags)` (`notifications-client.ts`) returns a list of `NotificationEvent` objects, a type from `src/lib/types/notifications.ts`.
 - `urlResolve(resolve, path, params?)` (`resolver.ts`, the default export) wraps the SvelteKit `resolve` function from `$app/paths`. Most files import it as `clientResolver`. It returns an `http://` or `https://` URL unchanged. About 76 files import it.
 - `absoluteResolve(resolve, siteUrl, path, params?)` (`resolver.ts`) puts the site URL in front of the resolved path. Meta tags such as `og:image` need this absolute URL.
 - `getSslNowMs()` (`sslClock.svelte.ts`) returns a reactive "now" in milliseconds, so that an SSL certificate label changes when the certificate expires. `src/lib/components/MonitorBar.svelte` and `src/routes/(kener)/monitors/[monitor_tag]/+page.svelte` use it.

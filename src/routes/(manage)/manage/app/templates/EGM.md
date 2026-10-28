@@ -8,7 +8,7 @@ This route serves `/manage/app/templates`. It edits the general email templates 
 
 - The page sends `getGeneralEmailTemplates` (permission `email_templates.read`) to list the templates. It selects the first template.
 - Each template has `template_id`, `template_subject`, `template_html_body`, and `template_text_body`.
-- Save sends `updateGeneralEmailTemplate` (permission `email_templates.write`) with `template_id`, `template_subject`, `template_html_body`, and `template_text_body`.
+- Save sends `updateGeneralEmailTemplate` (permission `email_templates.write`) with `templateId`, `template_subject`, `template_html_body`, and `template_text_body`. The handler reads the key `templateId`, not `template_id`.
 
 ## Invariants
 

@@ -19,13 +19,13 @@ This route lists maintenances and creates a new maintenance. A maintenance is a 
 - `rrule` must be a non-empty string that `rrulestr` from the `rrule` package can parse. The same `isValidRrule` copy is in `./[maintenance_id]/+server.ts`, so a change to one copy must go to the other.
 - `duration_seconds` must be a positive number.
 - Each `monitor_tag` must name an existing monitor. Each `impact` must be `UP`, `DOWN`, `DEGRADED`, or `MAINTENANCE`, and a missing impact saves `MAINTENANCE`.
-- `CreateMaintenance` always saves `status` `ACTIVE` and `is_global` `YES`.
+- This route always saves `status` `ACTIVE` and `is_global` `YES`, because it passes no `is_global` and `CreateMaintenance` saves `data.is_global || "YES"`.
 - The handlers call only `get*` methods on `db`. `src/routes/(api)/api/v4/no-direct-db-writes.test.ts` fails when a v4 route calls a `db` write method directly.
 
 ## Side Effects
 
 - `POST` inserts one row in `maintenances` and one row in `maintenance_monitors` for each monitor.
-- `POST` then calls `GenerateMaintenanceEvents` to create the first event in `maintenances_events`:
+- `CreateMaintenance` then calls `GenerateMaintenanceEvents` to create the first event in `maintenances_events`:
     - A one-time RRULE (one that contains `COUNT=1`) gets an event only when its start is no more than one day in the past.
     - A recurring RRULE gets its next occurrence after the current time.
 - Each new event pushes a "created" email job to `subscriberQueue` when `globalMaintenanceNotificationSettings.event_types.created` is on. A failed push is logged and does not fail the request.

@@ -15,7 +15,7 @@ This route serves `/manage/app/monitoring-data`. It lists and deletes monitoring
 - The layout guard in `src/routes/(manage)/+layout.server.ts` lets only users with `monitors.read` open this route.
 - Timestamps are Unix seconds. The default range is the last 24 hours.
 - The range can be at most 30 days. When the start is after the end, the page sets the start to the end.
-- The status filter is `ALL` or a value that `isMonitoringStatus` accepts.
+- The status filter is `ALL` or a value that `isMonitoringStatus` in `src/lib/global-constants.ts` accepts.
 - The list request sends `ALL` as is. The delete request sends an empty `tag` and no `status` for `ALL`. The server handles both forms.
 - Delete needs a confirmation in an alert dialog. The dialog names the monitors, the status, and the range.
 

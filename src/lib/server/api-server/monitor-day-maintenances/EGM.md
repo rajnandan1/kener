@@ -14,6 +14,7 @@ This folder serves `POST /dashboard-apis/monitor-day-maintenances`. The status p
 - The handler parses `startOfDayTodayAtTz` with `parseInt` and does no NaN check. When the field is absent, it uses `BeginningOfDay()` with no time zone, so the default depends on the server's time zone (`post.ts:27-29`).
 - The handler rounds `nowAtTz` (or the current time) down to the start of its minute and adds 60 seconds, so the window includes the current minute (`post.ts:31-34`). All values are Unix seconds.
 - The handler shows a hidden monitor (`is_hidden` = `YES`) only when `CanSeeHiddenMonitors` returns true. That function needs a logged-in user who has the `monitors.read` permission. The handler always filters on `status: ACTIVE` (`post.ts:36-41`).
+- The repository drops hidden monitors from each event's `monitors` list. So for a hidden monitor, the handler returns its maintenance events with an empty `monitors` list.
 
 ## Side Effects
 

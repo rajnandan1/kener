@@ -7,11 +7,11 @@ This route serves `/manage/app/maintenances/[id]`. It creates, edits, and delete
 ## Interface
 
 - The param value `new` opens the editor in create mode.
-- In edit mode, the page sends `getMaintenance` and `getMaintenanceEvents` (permission `maintenances.read`).
+- In edit mode, the page sends `getMaintenance` (permission `maintenances.read`) and reads the events from its `events` field. It sends `getMaintenanceEvents` (permission `maintenances.read`) only to refresh the events list after an event delete or status change.
 - The page sends `getMonitors` (permission `monitors.read`) with `status: "ACTIVE"` to fill the monitor picker.
 - Save sends `createMaintenance` in create mode and `updateMaintenance` in edit mode (permission `maintenances.write`). The affected monitors go in the same request.
 - Delete sends `deleteMaintenance`. The events list sends `deleteMaintenanceEvent` and `updateMaintenanceEventStatus` (permission `maintenances.write`).
-- The editor has a details card (title, global switch, and duration), a schedule card (one-time or RRULE, with a preview of the next 5 dates), and a monitors card. Edit mode adds an `ACTIVE` or `INACTIVE` switch and the events list.
+- The editor has a details card (title, global switch, duration, and the "Affected Monitors" picker) and a schedule card (one-time or RRULE, with a preview of the next 5 dates). Edit mode adds the "Active" and "Inactive" status buttons and the events list.
 
 ## Invariants
 
@@ -25,6 +25,7 @@ This route serves `/manage/app/maintenances/[id]`. It creates, edits, and delete
 - Monitor impact is `UP`, `DOWN`, `DEGRADED`, or `MAINTENANCE`, and the default is `MAINTENANCE`.
 - The page offers Complete only for an `ONGOING` event. It offers Cancel for a `SCHEDULED`, `READY`, or `ONGOING` event.
 - Both deletes need a `window.confirm`. The maintenance delete warns that it also deletes all events.
+- Complete and Cancel open a confirmation dialog. The dialog's confirm button sends `updateMaintenanceEventStatus` with `COMPLETED` or `CANCELLED`.
 
 ## Side Effects
 

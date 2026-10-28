@@ -13,12 +13,12 @@
 
 ## Invariants
 
-- `load` checks in this order. When setup is not complete (`IsSetupComplete`), or when there is no session (`GetLoggedInSession`), it redirects with 302 to `/account/signin`.
+- `load` checks in this order. When setup is not complete (`IsSetupComplete` in `src/lib/server/controllers/siteDataController.ts`), or when there is no session (`GetLoggedInSession` in `src/lib/server/controllers/userController.ts`), it redirects with 302 to `/account/signin`.
 - Then `load` looks up `route.id` in `ROUTE_PERMISSION_MAP` (`src/lib/allPerms.ts`). It returns 403 when the route has no entry, so a new page under this group needs an entry. It also returns 403 when the user lacks the mapped permission. A `null` entry lets any signed-in user in.
 - The layout guard runs only for pages. The `POST /manage/api` endpoint does its own session and permission check.
 - The sidebar list in `+layout.svelte` and `ROUTE_PERMISSION_MAP` must name the same routes. An item with no map entry does not show.
 - `siteStatusColorsDark` falls back to `siteStatusColors`. `defaultSiteTheme` falls back to `system`.
-- `canSendEmail` comes from `IsEmailSetup()`. Pages use it to disable email features.
+- `canSendEmail` comes from `IsEmailSetup()` in `src/lib/server/controllers/emailController.ts`. Pages use it to disable email features.
 
 ## Side Effects
 

@@ -8,7 +8,7 @@ This route serves `/manage/app/alerts/[alert_config_id]`. It creates, edits, and
 
 - `+page.server.ts` exports `load`, which returns `{ alert_config_id }` from the route param. It reads no data.
 - The param value `new` opens the editor in create mode.
-- The page sends `getMonitors` (permission `monitors.read`) and `getTriggers` (permission `triggers.read`) to fill the pickers.
+- The page sends `getMonitors` (permission `monitors.read`) and `getTriggers` (permission `triggers.read`) to fill the pickers. The `getTriggers` request carries `status: GC.ACTIVE`, so the trigger picker lists only active triggers.
 - In edit mode, the page sends `getMonitorAlertConfigById` (permission `alerts.read`) to load the alert config.
 - Save sends `createMonitorAlertConfig` in create mode and `updateMonitorAlertConfig` in edit mode (permission `alerts.write`). The data has `monitor_tags`, `alert_for`, `alert_value`, `failure_threshold`, `success_threshold`, `alert_description`, `create_incident`, `severity`, and `trigger_ids`. Edit mode also sends `id` and `is_active`.
 - Delete sends `deleteMonitorAlertConfig` (permission `alerts.write`) with `id`.
@@ -28,7 +28,7 @@ This route serves `/manage/app/alerts/[alert_config_id]`. It creates, edits, and
 - Create and update write `monitor_alerts_config` and its links to monitors and triggers.
 - After a create, the page calls `goto("/manage/app/alerts/{id}")` with the new id.
 - After a delete, the page calls `goto("/manage/app/alerts")`.
-- Reads of an alert config return its triggers with their secrets masked (`MaskAlertConfigTriggerSecrets`).
+- Reads of an alert config return its triggers with their secrets masked (`MaskAlertConfigTriggerSecrets` in `src/lib/server/controllers/triggerController.ts`).
 
 ## Verification
 

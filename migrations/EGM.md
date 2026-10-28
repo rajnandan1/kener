@@ -36,7 +36,7 @@ This folder holds the 31 Knex migrations that build the Kener database schema on
 - The migrations create, alter, and index the tables above in the database that `DATABASE_URL` selects. SQLite is the default.
 - Some migrations also change rows:
     - `20260226120000_add_is_owner_to_users.ts` sets `is_owner` to `"YES"` on the user with the lowest id.
-    - `20260331120000_remove_role_from_users.ts` inserts the roles `admin`, `editor`, and `member`. It copies each `users.role` into `users_roles`, with the old role `user` mapped to `member`. Then it drops `users.role`.
+    - `20260331120000_remove_role_from_users.ts` inserts the roles `admin`, `editor`, and `member`. It reads each `users.role` into memory, drops `users.role`, and then inserts the `users_roles` rows. It maps the old role `user`, and any other unknown role, to `member`.
     - `20260325120000_multi_monitor_alerts.ts` copies each `monitor_alerts_config.monitor_tag` into `monitor_alerts_config_monitors` and fills `monitor_alerts_v2.monitor_tag`. On SQLite, it rebuilds the `monitor_alerts_config` table.
     - `20260831120000_monitoring_data_autovacuum.ts` runs on PostgreSQL only. It sets the autovacuum settings of `monitoring_data` and runs `ANALYZE`.
     - `20261019120000_widen_images_data_on_mysql.ts` runs on MySQL only. It changes `images.data` to `longtext`.
@@ -44,7 +44,7 @@ This folder holds the 31 Knex migrations that build the Kener database schema on
 
 ## Verification
 
-- Run `npm run check` (svelte-kit sync and the svelte-check type check). Its include list in `.svelte-kit/tsconfig.json` covers only `src/**`, so it does not type check this folder.
+- Run `npm run check` (svelte-kit sync and the svelte-check type check). Its include list in `.svelte-kit/tsconfig.json` covers `src/**`, the `vite.config` files, `test/**`, and `tests/**`, so it does not type check this folder.
 - Run `npm run migrate`, then `npm run seed`, on SQLite.
 - The change must also pass on PostgreSQL and MySQL, as the Database section of `CODING_STANDARDS.md` shows: start the throwaway servers, then run `DATABASE_URL=<url> npm run migrate` and `DATABASE_URL=<url> npm run seed` for each one.
 - Run `npm test` (the full suite). Vitest includes only `src/**` tests, so no Vitest test covers this folder directly. Database tests under `src` run these migrations. For example, `src/routes/(api)/api/v4/write-parity.test.ts` loads them with `import.meta.glob("/migrations/*.ts")`.

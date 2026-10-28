@@ -16,7 +16,7 @@ This route serves `/manage/app/analytics-providers`. It turns on and configures 
 - More than one analytics provider can be active at the same time. The panel does not get `enforceSingleActive`.
 - Every field is a plain text input. No value here is masked.
 - Some fields have defaults. For example, the Plausible API is `https://plausible.io/api/event`, the Umami script is `https://cloud.umami.is/script.js`, and the PostHog host is `https://us.i.posthog.com`.
-- A new provider key must also go in `src/lib/server/controllers/siteDataKeys.ts`. Otherwise `InsertKeyValue` rejects the save.
+- A new provider key must also go in `src/lib/server/controllers/siteDataKeys.ts`. Otherwise `InsertKeyValue` in `src/lib/server/controllers/siteDataController.ts` rejects the save.
 
 ## Side Effects
 

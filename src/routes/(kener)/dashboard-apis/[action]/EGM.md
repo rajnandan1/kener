@@ -20,14 +20,15 @@ This route serves `/dashboard-apis/{action}`. It sends each request to the handl
 ## Invariants
 
 - `index.ts` finds handlers with `import.meta.glob` on `./*/get.ts`, `./*/post.ts`, `./*/put.ts`, and `./*/delete.ts`. A new action is a new folder in `src/lib/server/api-server/` with one of these files and a default export of type `APIHandler`.
-- This route does no sign-in check and no permission check. Each handler decides visibility. The handlers that can show hidden monitors call `CanSeeHiddenMonitors`, which is true only for a signed-in user with the `monitors.read` permission.
+- This route does no sign-in check and no permission check. Each handler decides visibility. The handlers that can show hidden monitors call `CanSeeHiddenMonitors` in `src/lib/server/controllers/userController.ts`, which is true only for a signed-in user with the `monitors.read` permission.
 - `monitor-bar` always leaves out hidden monitors, also for a signed-in user.
 - The route looks up the handler before it reads the body, so an unknown action returns 404 even with a bad body.
 - `POST` and `PUT` always call `request.json()`. An empty or invalid JSON body throws, and the response is 500, not 400.
 
 ## Side Effects
 
-- `GET monitor-bars` writes a Redis cache entry with the key prefix `status_counts_grouped:` and a time to live of 60 seconds.
+- `GET monitor-bars` writes a Redis cache entry with the key prefix `kener:cache:status_counts_grouped:` and a time to live of 60 seconds.
+- `GET monitor-bar` and `GET monitor-bars` read the Redis key `kener:cache:<tag>:last_status` for each SSL monitor through `AttachSslCacheFields` in `src/lib/server/controllers/monitorsController.ts`. They do not write that key.
 - `POST subscription` with `login` can call the captcha provider's verify endpoint, writes a 6-digit code to `subscriber_users`, and sends an email. `verify` writes `subscriber_users` and `subscriber_methods`. `updatePreferences` writes `user_subscriptions_v2`.
 - All other actions only read the database.
 

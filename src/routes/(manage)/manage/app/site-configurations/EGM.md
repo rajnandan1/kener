@@ -20,7 +20,7 @@ This route serves `/manage/app/site-configurations`. It edits the main site sett
 - The site info save needs a `siteName` and a `siteURL`. `siteURL` must be an origin only: `http` or `https`, with no user name, password, path, query, or hash.
 - The page warns when the entered origin differs from the origin in the browser.
 - The image upload accepts PNG, JPEG, and WebP up to `GC.MAX_UPLOAD_BYTES`. The error text names SVG, but the type check rejects it.
-- The upload asks for at most 256 by 256 for the logo, 64 by 64 for the favicon, and 640 by 320 for the social preview. A navigation icon must be smaller than 100 KB.
+- The upload asks for at most 256 by 256 for the logo, 64 by 64 for the favicon, 640 by 320 for the social preview, and 32 by 32 for a navigation icon. A navigation icon must be smaller than 100 KB.
 - The data retention save sends `retentionDays` as at least 1, and the default is 90.
 - The maintenance reminder buffer must be a number of at least 1 hour.
 - When `forceExclusivity` is on, the page saves `showSwitcher` as `true`.

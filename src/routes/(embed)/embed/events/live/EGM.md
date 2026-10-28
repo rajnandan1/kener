@@ -21,7 +21,7 @@ This route serves `/embed/events/live`, a page that other sites put in an iframe
 - `load` skips the database query for a kind of event that is off and returns an empty array for it.
 - With no `tags`, the queries return only global events (`incidents.is_global = 'YES'` and `maintenances.is_global = 'YES'`).
 - With `tags`, the queries return the events of those monitors and exclude hidden monitors (`monitors.is_hidden = 'NO'`).
-- An unknown tag gives empty lists. `load` never throws an error.
+- An unknown tag gives empty lists. `load` does not catch database errors, so a failed query throws out of `load`.
 - When both lists are empty, the page shows the translated text "There are no ongoing incidents or maintenance events."
 - The route does no auth or permission check.
 

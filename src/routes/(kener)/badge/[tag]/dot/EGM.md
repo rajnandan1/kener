@@ -7,10 +7,10 @@ This route serves `GET /badge/{tag}/dot`. It returns a 32 x 32 SVG image: a circ
 ## Interface
 
 - `+server.ts` exports `GET`. It is the only HTTP method.
-- The path parameter `tag` names one monitor. The value `_` selects all monitors that have `status = "ACTIVE"` and `is_hidden = "NO"`, and `GetLatestStatusActiveAll` merges their latest statuses into one.
+- The path parameter `tag` names one monitor. The value `_` selects all monitors that have `status = "ACTIVE"` and `is_hidden = "NO"`, and `GetLatestStatusActiveAll` in `src/lib/server/controllers/monitorsController.ts` merges their latest statuses into one.
 - The query parameter `animate` changes the output only when it is `ping`. Then the SVG adds a second circle that grows and fades in a loop.
 - The query parameter `fillColor` sets the circle color. Without it, the route uses the status color from `StatusColor()` in `src/lib/color.ts`.
-- For one monitor, the handler calls `GetMonitors({ tag, status: "ACTIVE", is_hidden: "NO" })`, then `GetLastMonitoringValue(tag, () => GetLatestMonitoringData(tag))` from `src/lib/server/cache/setGet.ts`.
+- For one monitor, the handler calls `GetMonitors({ tag, status: "ACTIVE", is_hidden: "NO" })`, then `GetLastMonitoringValue(tag, () => GetLatestMonitoringData(tag))` from `src/lib/server/cache/setGet.ts`. `GetMonitors` and `GetLatestMonitoringData` are in `src/lib/server/controllers/monitorsController.ts`.
 - The response has `Content-Type: image/svg+xml`. The route sets no `Cache-Control` header.
 
 ## Invariants

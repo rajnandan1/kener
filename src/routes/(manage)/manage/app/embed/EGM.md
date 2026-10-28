@@ -7,9 +7,9 @@ This route serves `/manage/app/embed`. It builds embed code: an `<iframe>` or `<
 ## Interface
 
 - The page sends `getMonitors` (permission `monitors.read`) with `status: "ACTIVE"` to fill the monitor picker. It selects the first monitor by default.
-- The embed type is `status` (status bar), `latency` (latency chart), or `events` (live events). The format is `iframe` or `script`.
+- The embed type is `status` (status bar), `latency` (latency chart), or `events` (live events). The format is `iframe` or `script`. The theme is `light` or `dark`. It starts from the current `mode-watcher` mode, and every URL and snippet sends it.
 - The page builds these paths with `clientResolver`: `/embed/monitor-{tag}`, `/embed/latency-{tag}`, and `/embed/events/live`.
-- The script format loads `{embedUrl}/js` with the same query parameters.
+- The script format loads `{embedUrl}/js` with the same query parameters. Only `src/routes/(embed)/embed/monitor-[tag]/js/+server.ts` serves that path. No route serves `/js` for `latency` or `events`, so the script snippet for those two types points at a path with no route.
 
 ## Invariants
 
