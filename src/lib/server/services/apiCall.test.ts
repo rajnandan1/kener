@@ -50,7 +50,7 @@ describe("ApiCall proxy", () => {
   const optionsOfLastCall = () => mockedAxios.mock.calls[0][1] as Record<string, any>;
 
   it("routes through the monitor's own proxy, with $SECRET substituted, on both agents", async () => {
-    restoreEnv = withEnv("PROXY_PASS", "pw");
+    restoreEnv = withEnv("KENER_VAR_PROXY_PASS", "pw");
     await new ApiCall(monitor({ proxy: "http://user:$PROXY_PASS@proxy.internal:3128" })).execute();
     const o = optionsOfLastCall();
     expect(o.proxy).toBe(false);

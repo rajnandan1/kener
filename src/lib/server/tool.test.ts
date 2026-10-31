@@ -388,13 +388,40 @@ describe("string helpers", () => {
 describe("GetRequiredSecrets", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
+    vi.restoreAllMocks();
   });
 
-  it("resolves $-tokens that exist in the environment", () => {
-    vi.stubEnv("KENER_TEST_SECRET", "s3cret");
-    expect(GetRequiredSecrets("token: $KENER_TEST_SECRET")).toEqual([
-      { find: "$KENER_TEST_SECRET", replace: "s3cret" },
+  it("resolves $NAME from KENER_VAR_NAME", () => {
+    vi.stubEnv("KENER_VAR_TEST_SECRET", "s3cret");
+    expect(GetRequiredSecrets("token: $TEST_SECRET and $TEST_SECRET")).toEqual([
+      { find: "$TEST_SECRET", replace: "s3cret" },
     ]);
+  });
+
+  it("resolves a name that already starts with KENER_VAR_ as written", () => {
+    vi.stubEnv("KENER_VAR_TEST_SECRET", "s3cret");
+    expect(GetRequiredSecrets("token: $KENER_VAR_TEST_SECRET")).toEqual([
+      { find: "$KENER_VAR_TEST_SECRET", replace: "s3cret" },
+    ]);
+  });
+
+  it("never reads a variable without the KENER_VAR_ prefix, such as KENER_SECRET_KEY", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.stubEnv("KENER_SECRET_KEY", "signing-key");
+    vi.stubEnv("TEST_SECRET", "host-secret");
+
+    expect(GetRequiredSecrets("$KENER_SECRET_KEY $TEST_SECRET $DATABASE_URL")).toEqual([]);
+  });
+
+  it("warns once when only the old unprefixed variable is set", () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.stubEnv("TEST_OLD_ONLY", "old");
+
+    GetRequiredSecrets("$TEST_OLD_ONLY");
+    GetRequiredSecrets("$TEST_OLD_ONLY");
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0][0]).toContain("KENER_VAR_TEST_OLD_ONLY");
   });
 
   it("ignores tokens with no matching environment variable", () => {

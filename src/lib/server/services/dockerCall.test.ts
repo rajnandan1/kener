@@ -151,13 +151,13 @@ describe("daemon checks", () => {
 
 describe("connection", () => {
   afterEach(() => {
-    delete process.env.KENER_TEST_DOCKER_SOCK;
+    delete process.env.KENER_VAR_TEST_DOCKER_SOCK;
   });
 
   it("resolves $SECRET references before calling the daemon", async () => {
-    process.env.KENER_TEST_DOCKER_SOCK = "/tmp/docker.sock";
+    process.env.KENER_VAR_TEST_DOCKER_SOCK = "/tmp/docker.sock";
     respondWith(state({}));
-    await run({ daemon: "$KENER_TEST_DOCKER_SOCK" });
+    await run({ daemon: "$TEST_DOCKER_SOCK" });
     expect(inspectContainer).toHaveBeenCalledWith(
       expect.objectContaining({ connectionType: "socket", daemon: "/tmp/docker.sock" }),
       "app",

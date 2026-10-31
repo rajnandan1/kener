@@ -66,7 +66,7 @@ Default templates are defined in:
 
 ## Secret interpolation {#secret-interpolation}
 
-Use `$VAR_NAME` (not `{{env.VAR_NAME}}`) for secrets.
+Use `$VAR_NAME` (not `{{env.VAR_NAME}}`) for secrets. `$API_TOKEN` reads the environment variable `KENER_VAR_API_TOKEN`.
 
 ```text
 Authorization: Bearer $API_TOKEN

@@ -1821,7 +1821,7 @@
           },
           "type_data": {
             "type": "object",
-            "description": "Settings for the monitor's `monitor_type`. Every response except the `POST /api/v4/monitors` response shows `body`, `proxy`, `connectionString`, `secretString`, `tlsKey`, and each `headers` value as `********` when it is set. A `PATCH` that sends `********` back keeps the stored value.",
+            "description": "Settings for the monitor's `monitor_type`. Every response except the `POST /api/v4/monitors` response masks each stored secret: `body`, `connectionString`, `secretString`, `tlsKey`, and each `headers` value show as `********`, and `url` and `proxy` show their origin plus `/********`. A `PATCH` that sends a masked value back keeps the stored value while the destination stays the same: `url`, `proxy`, and the Docker `daemon` and `connectionType`. A `PATCH` that changes a destination or `monitor_type` must send each stored secret again; otherwise it returns `400` with code `BAD_REQUEST`.",
             "additionalProperties": true
           },
           "include_degraded_in_downtime": {
@@ -2332,7 +2332,7 @@
             "type": "string"
           },
           "value": {
-            "description": "Secret fields (`oidcSettings.client_secret` and the `Secret Key` of `captcha.*` entries) are returned masked. A PATCH that sends the masked value back keeps the stored secret, or saves an empty secret when none is stored."
+            "description": "Secret fields (`oidcSettings.client_secret` and the `Secret Key` of `captcha.*` entries) are returned masked. A PATCH that sends the masked value back, or leaves it out, keeps the stored secret, or saves an empty secret when none is stored. A PATCH that changes `oidcSettings.issuer_url` must send `client_secret` again; otherwise it returns `400` with code `BAD_REQUEST`."
           },
           "data_type": {
             "type": "string"

@@ -12,13 +12,14 @@ export interface DockerContainerOption {
 
 /**
  * Container picker for the DOCKER monitor editor. Takes the unsaved form fields, so browsing works before a save;
- * `monitorId` puts back a saved monitor's masked `tlsKey`. `$SECRET` references resolve server-side, as in a monitor run.
+ * `monitorId` puts back a saved monitor's masked `tlsKey` while the daemon stays as saved. `$SECRET` references
+ * resolve server-side, as in a monitor run.
  */
 export const ListDockerContainers = async (
   formData: Partial<DockerMonitorTypeData>,
   monitorId?: number,
 ): Promise<DockerContainerOption[]> => {
-  const typeData = (await RestoreSavedMonitorSecrets(formData, monitorId)) as Partial<DockerMonitorTypeData>;
+  const typeData = (await RestoreSavedMonitorSecrets("DOCKER", formData, monitorId)) as Partial<DockerMonitorTypeData>;
   const timeout = typeData.timeout && typeData.timeout > 0 ? typeData.timeout : undefined;
   const { data } = await listContainers(resolveConnection(typeData), timeout);
   return data.map((container) => ({

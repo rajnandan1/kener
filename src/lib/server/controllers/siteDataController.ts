@@ -1,5 +1,12 @@
 import db from "../db/db.js";
 import { IsMaskedString, MaskString } from "../tool.js";
+import {
+  LabelsFor,
+  MaskOmittedSecrets,
+  MaskStoredSecrets,
+  RestoreStoredSecrets,
+  SITE_DATA_LABELS,
+} from "../storedSecrets.js";
 import { siteDataKeys } from "./siteDataKeys.js";
 import { ClearOidcConfigCache } from "./oidcController.js";
 import type { Cookies } from "@sveltejs/kit";
@@ -72,45 +79,22 @@ export interface SiteDataTransformed {
   globalMaintenanceNotificationSettings?: GlobalMaintenanceNotificationSettings;
 }
 
-function secretPath(key: string): string[] | null {
-  if (key === "oidcSettings") return ["client_secret"];
-  if (key.startsWith("captcha.")) return ["requirements", "Secret Key"];
-  return null;
-}
+const siteDataLabels = (key: string) => LabelsFor(SITE_DATA_LABELS, key);
 
-function readPath(value: unknown, path: string[]): unknown {
-  return path.reduce<unknown>(
-    (v, k) => (v && typeof v === "object" ? (v as Record<string, unknown>)[k] : undefined),
-    value,
-  );
-}
-
-function writePath(value: unknown, [head, ...rest]: string[], secret: string): Record<string, unknown> {
-  const obj = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
-  return { ...obj, [head]: rest.length ? writePath(obj[head], rest, secret) : secret };
-}
-
-/** Returns a copy of a site-data value with its secret field masked, for any response that leaves the server. */
+/** Returns a copy of a site-data value with its secrets masked, for any response that leaves the server. */
 export function MaskSiteDataSecret(key: string, value: unknown): unknown {
-  const path = secretPath(key);
-  const secret = path && readPath(value, path);
-  if (!path || typeof secret !== "string" || !secret) return value;
-  return writePath(value, path, MaskString(secret));
+  return MaskStoredSecrets(value, siteDataLabels(key), MaskString);
 }
 
 /**
  * Puts the stored secret back when a save sends any masked secret or leaves it out. An empty string clears it.
- * A masked secret with no stored secret saves an empty string, so a mask copied from another instance is never stored.
+ * Throws StoredSecretError when the value's destination changed, for example the OIDC issuer_url.
  */
 export function RestoreSiteDataSecret(key: string, value: unknown, stored: unknown): unknown {
-  const path = secretPath(key);
-  if (!path || !value || typeof value !== "object") return value;
-  const storedSecret = readPath(stored, path);
-  const restored = typeof storedSecret === "string" ? storedSecret : "";
-  const incoming = readPath(value, path);
-  if (typeof incoming === "string" && IsMaskedString(incoming)) return writePath(value, path, restored);
-  if (incoming === undefined && restored) return writePath(value, path, restored);
-  return value;
+  const labels = siteDataLabels(key);
+  if (labels === "plain" || !value || typeof value !== "object" || Array.isArray(value)) return value;
+  const sent = labels ? MaskOmittedSecrets(value as Record<string, unknown>, stored, labels) : value;
+  return RestoreStoredSecrets(sent, stored, labels, labels, IsMaskedString);
 }
 
 export async function InsertKeyValue(key: string, value: string): Promise<number[]> {
@@ -123,7 +107,7 @@ export async function InsertKeyValue(key: string, value: string): Promise<number
     console.trace(`Invalid value for key: ${key}`);
     throw new Error(`Invalid value for key: ${key}`);
   }
-  if (secretPath(key)) {
+  if (siteDataLabels(key) !== "plain") {
     value = JSON.stringify(RestoreSiteDataSecret(key, JSON.parse(value), await GetSiteDataByKey(key)));
   }
   const result = await db.insertOrUpdateSiteData(key, value, f.data_type);

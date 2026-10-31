@@ -16,5 +16,5 @@ This guide includes Telegram and other common webhook integrations with runtime-
 ## Quick reminder {#quick-reminder}
 
 - Use Mustache variables from [Templates](/docs/v4/alerting/templates)
-- Use `$VAR_NAME` for secrets in URL/headers/body
+- Use `$VAR_NAME` for secrets in URL/headers/body; set the value in `KENER_VAR_VAR_NAME`
 - For webhook headers, use `[{"key":"...","value":"..."}]`

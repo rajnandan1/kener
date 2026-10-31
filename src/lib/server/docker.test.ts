@@ -51,19 +51,19 @@ describe("buildBaseURL", () => {
 
 describe("resolveConnection", () => {
   afterEach(() => {
-    delete process.env.KENER_TEST_DOCKER_HOST;
-    delete process.env.KENER_TEST_DOCKER_KEY;
+    delete process.env.KENER_VAR_TEST_DOCKER_HOST;
+    delete process.env.KENER_VAR_TEST_DOCKER_KEY;
   });
 
   it("substitutes $SECRET references from the environment", () => {
-    process.env.KENER_TEST_DOCKER_HOST = "10.0.0.5:2376";
-    process.env.KENER_TEST_DOCKER_KEY = "-----BEGIN PRIVATE KEY-----";
+    process.env.KENER_VAR_TEST_DOCKER_HOST = "10.0.0.5:2376";
+    process.env.KENER_VAR_TEST_DOCKER_KEY = "-----BEGIN PRIVATE KEY-----";
     expect(
       resolveConnection({
         connectionType: "tls",
-        daemon: "$KENER_TEST_DOCKER_HOST",
+        daemon: "$TEST_DOCKER_HOST",
         tlsCert: "cert-pem",
-        tlsKey: "$KENER_TEST_DOCKER_KEY",
+        tlsKey: "$TEST_DOCKER_KEY",
       }),
     ).toEqual({
       connectionType: "tls",

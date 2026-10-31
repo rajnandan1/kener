@@ -156,9 +156,10 @@
       </div>
     </div>
     <p class="text-muted-foreground text-xs">
-      Paste PEM, or reference an environment variable such as <code>$DOCKER_TLS_KEY</code> to keep the key out of the database.
-      Leave all three empty for a daemon behind a TLS proxy that does not ask for a client certificate. The certificate and
-      key go together.
+      Paste PEM, or write <code>$DOCKER_TLS_KEY</code> to read the environment variable
+      <code>KENER_VAR_DOCKER_TLS_KEY</code>
+      and keep the key out of the database. Leave all three empty for a daemon behind a TLS proxy that does not ask for a
+      client certificate. The certificate and key go together.
     </p>
   {/if}
 
