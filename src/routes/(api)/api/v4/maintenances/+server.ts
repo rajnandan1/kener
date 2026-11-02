@@ -17,6 +17,7 @@ import {
 import { GetSiteURL } from "$lib/server/controllers/siteDataController";
 import serverResolver from "$lib/server/resolver";
 import { rrulestr } from "rrule";
+import { readRequestBody } from "$lib/server/requestBody";
 
 function isValidRrule(rrule: string): boolean {
   try {
@@ -29,8 +30,6 @@ function isValidRrule(rrule: string): boolean {
     return false;
   }
 }
-
-const VALID_IMPACTS = ["UP", "DOWN", "DEGRADED", "MAINTENANCE"];
 
 export const GET: RequestHandler = async ({ url }) => {
   // Parse query params for filtering
@@ -90,22 +89,11 @@ export const GET: RequestHandler = async ({ url }) => {
 };
 
 export const POST: RequestHandler = async ({ request }) => {
-  let body: CreateMaintenanceRequest;
-
-  try {
-    body = await request.json();
-  } catch {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "Invalid JSON body",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
+  const body = await readRequestBody<CreateMaintenanceRequest>(request, "POST /api/v4/maintenances");
+  if (body instanceof Response) return body;
 
   // Validate required fields
-  if (!body.title || typeof body.title !== "string" || body.title.trim().length === 0) {
+  if (body.title.trim().length === 0) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",
@@ -115,27 +103,7 @@ export const POST: RequestHandler = async ({ request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  if (body.start_date_time === undefined || body.start_date_time === null) {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "start_date_time is required",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
-
-  if (typeof body.start_date_time !== "number" || isNaN(body.start_date_time)) {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "start_date_time must be a valid timestamp (UTC seconds)",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
-
-  if (!body.rrule || typeof body.rrule !== "string" || body.rrule.trim().length === 0) {
+  if (body.rrule.trim().length === 0) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",
@@ -156,17 +124,7 @@ export const POST: RequestHandler = async ({ request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  if (body.duration_seconds === undefined || body.duration_seconds === null) {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "duration_seconds is required",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
-
-  if (typeof body.duration_seconds !== "number" || body.duration_seconds <= 0) {
+  if (body.duration_seconds <= 0) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",
@@ -178,18 +136,8 @@ export const POST: RequestHandler = async ({ request }) => {
 
   // Validate monitors if provided
   if (body.monitors !== undefined) {
-    if (!Array.isArray(body.monitors)) {
-      const errorResponse: BadRequestResponse = {
-        error: {
-          code: "BAD_REQUEST",
-          message: "monitors must be an array",
-        },
-      };
-      return json(errorResponse, { status: 400 });
-    }
-
     for (const monitor of body.monitors) {
-      if (!monitor.monitor_tag || typeof monitor.monitor_tag !== "string") {
+      if (!monitor.monitor_tag) {
         const errorResponse: BadRequestResponse = {
           error: {
             code: "BAD_REQUEST",
@@ -206,17 +154,6 @@ export const POST: RequestHandler = async ({ request }) => {
           error: {
             code: "BAD_REQUEST",
             message: `Monitor with tag '${monitor.monitor_tag}' not found`,
-          },
-        };
-        return json(errorResponse, { status: 400 });
-      }
-
-      // Validate impact if provided
-      if (monitor.impact && !VALID_IMPACTS.includes(monitor.impact)) {
-        const errorResponse: BadRequestResponse = {
-          error: {
-            code: "BAD_REQUEST",
-            message: `Invalid impact '${monitor.impact}'. Must be one of: ${VALID_IMPACTS.join(", ")}`,
           },
         };
         return json(errorResponse, { status: 400 });

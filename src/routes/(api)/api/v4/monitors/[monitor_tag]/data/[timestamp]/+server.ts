@@ -10,6 +10,7 @@ import type {
 import GC from "$lib/global-constants";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { UpdateMonitoringData } from "$lib/server/controllers/monitorsController";
+import { readRequestBody } from "$lib/server/requestBody";
 
 export const GET: RequestHandler = async ({ params, locals }) => {
   // Monitor is validated by middleware and available in locals
@@ -90,19 +91,11 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  let body: UpdateMonitoringDataPointRequest;
-
-  try {
-    body = await request.json();
-  } catch {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "Invalid JSON body",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
+  const body = await readRequestBody<UpdateMonitoringDataPointRequest>(
+    request,
+    "PATCH /api/v4/monitors/{monitor_tag}/data/{timestamp}",
+  );
+  if (body instanceof Response) return body;
 
   // Get existing data if it exists
   const existingData = await db.getMonitoringDataAt(monitorTag, timestamp);
@@ -112,15 +105,6 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   let latency: number;
 
   if (body.status !== undefined) {
-    if (![GC.UP, GC.DOWN, GC.DEGRADED].includes(body.status)) {
-      const errorResponse: BadRequestResponse = {
-        error: {
-          code: "BAD_REQUEST",
-          message: "status must be one of: UP, DOWN, DEGRADED",
-        },
-      };
-      return json(errorResponse, { status: 400 });
-    }
     status = body.status;
   } else if (existingData?.status) {
     status = existingData.status;
@@ -129,7 +113,7 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
   }
 
   if (body.latency !== undefined) {
-    if (typeof body.latency !== "number" || body.latency < 0) {
+    if (body.latency < 0) {
       const errorResponse: BadRequestResponse = {
         error: {
           code: "BAD_REQUEST",

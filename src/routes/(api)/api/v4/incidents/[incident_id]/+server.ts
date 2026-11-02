@@ -18,9 +18,7 @@ import {
   UpdateIncident,
 } from "$lib/server/controllers/incidentController";
 import serverResolver from "$lib/server/resolver";
-import GC from "$lib/global-constants";
-
-const VALID_IMPACTS: string[] = [GC.DOWN, GC.DEGRADED, GC.MAINTENANCE];
+import { readRequestBody } from "$lib/server/requestBody";
 
 async function buildIncidentResponse(incidentId: number): Promise<IncidentDetailResponse | null> {
   const incident = await db.getIncidentById(incidentId);
@@ -71,34 +69,13 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   // Incident is validated by middleware and available in locals
   const existingIncident = locals.incident!;
 
-  let body: UpdateIncidentRequest;
-
-  try {
-    body = await request.json();
-  } catch {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "Invalid JSON body",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
+  const body = await readRequestBody<UpdateIncidentRequest>(request, "PATCH /api/v4/incidents/{incident_id}");
+  if (body instanceof Response) return body;
 
   // Validate monitors if provided
   if (body.monitors !== undefined) {
-    if (!Array.isArray(body.monitors)) {
-      const errorResponse: BadRequestResponse = {
-        error: {
-          code: "BAD_REQUEST",
-          message: "monitors must be an array",
-        },
-      };
-      return json(errorResponse, { status: 400 });
-    }
-
     for (const monitor of body.monitors) {
-      if (!monitor.monitor_tag || typeof monitor.monitor_tag !== "string") {
+      if (!monitor.monitor_tag) {
         const errorResponse: BadRequestResponse = {
           error: {
             code: "BAD_REQUEST",
@@ -115,16 +92,6 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
           error: {
             code: "BAD_REQUEST",
             message: `Monitor with tag '${monitor.monitor_tag}' not found`,
-          },
-        };
-        return json(errorResponse, { status: 400 });
-      }
-
-      if (monitor.impact && !VALID_IMPACTS.includes(monitor.impact)) {
-        const errorResponse: BadRequestResponse = {
-          error: {
-            code: "BAD_REQUEST",
-            message: `Invalid impact '${monitor.impact}'. Must be one of: ${VALID_IMPACTS.join(", ")}`,
           },
         };
         return json(errorResponse, { status: 400 });
