@@ -820,6 +820,8 @@ describe("v4 writes the dashboard cannot make keep working through the dashboard
 
 interface Schema {
   type?: string | string[];
+  enum?: unknown[];
+  required?: string[];
   properties?: Record<string, Schema>;
   additionalProperties?: boolean | Schema;
   items?: Schema;
@@ -868,16 +870,28 @@ function forbiddenBodies(schema: Schema, valid: Record<string, unknown>): Probe[
   for (const branch of root.oneOf?.map(resolveRef) ?? [root]) {
     const properties = branch.properties ?? {};
     const base = Object.fromEntries(Object.entries(valid).filter(([key]) => key in properties));
+    for (const field of branch.required ?? []) {
+      if (!(field in base)) continue;
+      const { [field]: _omitted, ...rest } = base;
+      probes.push({ field, label: `${field} omitted`, body: rest });
+    }
     for (const [field, fieldSchema] of Object.entries(properties)) {
-      const types = acceptedTypes(fieldSchema);
       const itemSchema = resolveRef(fieldSchema).items;
-      const itemTypes = itemSchema && acceptedTypes(itemSchema);
-      for (const [type, value] of Object.entries(WRONG_VALUES)) {
-        if (types && !types.has(type)) {
-          probes.push({ field, label: `${field}=${JSON.stringify(value)}`, body: { ...base, [field]: value } });
-        }
-        if (itemTypes && !itemTypes.has(type)) {
-          probes.push({ field, label: `${field}=[${JSON.stringify(value)}]`, body: { ...base, [field]: [value] } });
+      const shapes: [Schema, (value: unknown) => unknown][] = [[fieldSchema, (value) => value]];
+      if (itemSchema) shapes.push([itemSchema, (value) => [value]]);
+      for (const [shapeSchema, wrap] of shapes) {
+        const s = resolveRef(shapeSchema);
+        const types = acceptedTypes(s);
+        const values = Object.entries(WRONG_VALUES)
+          .filter(([type]) => types && !types.has(type))
+          .map(([, value]) => value);
+        if (s.enum) values.push("zz_not_allowed");
+        for (const value of values) {
+          probes.push({
+            field,
+            label: `${field}=${JSON.stringify(wrap(value))}`,
+            body: { ...base, [field]: wrap(value) },
+          });
         }
       }
     }

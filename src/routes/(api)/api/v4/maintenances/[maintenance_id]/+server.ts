@@ -119,10 +119,6 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     }
   }
 
-  // Validate status if provided
-  if (body.status !== undefined) {
-  }
-
   // Validate monitors if provided
   if (body.monitors !== undefined) {
     for (const monitor of body.monitors) {
