@@ -10,6 +10,7 @@ import type {
 import GC from "$lib/global-constants";
 import { UpdateMonitoringData } from "$lib/server/controllers/monitorsController";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
+import { readRequestBody } from "$lib/server/requestBody";
 
 export const GET: RequestHandler = async ({ locals, url }) => {
   // Monitor is validated by middleware and available in locals
@@ -75,40 +76,11 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   const monitor = locals.monitor!;
   const monitorTag = monitor.tag;
 
-  let body: UpdateMonitoringDataRangeRequest;
-
-  try {
-    body = await request.json();
-  } catch {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "Invalid JSON body",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
-
-  // Validate required fields
-  if (body.start_ts === undefined || body.end_ts === undefined) {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "start_ts and end_ts are required",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
-
-  if (typeof body.start_ts !== "number" || typeof body.end_ts !== "number") {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "start_ts and end_ts must be numbers (UTC timestamps in seconds)",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
+  const body = await readRequestBody<UpdateMonitoringDataRangeRequest>(
+    request,
+    "PATCH /api/v4/monitors/{monitor_tag}/data",
+  );
+  if (body instanceof Response) return body;
 
   if (body.start_ts >= body.end_ts) {
     const errorResponse: BadRequestResponse = {
@@ -120,17 +92,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  if (!body.status || ![GC.UP, GC.DOWN, GC.DEGRADED].includes(body.status)) {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "status is required and must be one of: UP, DOWN, DEGRADED",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
-
-  if (body.latency === undefined || typeof body.latency !== "number" || body.latency < 0) {
+  if (body.latency < 0) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",
@@ -141,7 +103,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   }
 
   const deviation = body.deviation ?? 0;
-  if (typeof deviation !== "number" || deviation < 0) {
+  if (deviation < 0) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",

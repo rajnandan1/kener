@@ -74,7 +74,7 @@ describe("POST /api/v4/images", () => {
     [
       "an SVG mime_type",
       { base64: svg, mime_type: "image/svg+xml" },
-      "Invalid image type. Allowed types: image/png, image/jpeg, image/jpg, image/webp, image/heic, image/heif",
+      "mime_type must be one of: image/png, image/jpeg, image/jpg, image/webp, image/heic, image/heif",
     ],
     ["SVG bytes sent as PNG", { base64: svg, mime_type: "image/png" }, "SVG uploads are not allowed"],
     [
@@ -140,23 +140,24 @@ describe("POST /api/v4/images", () => {
 
   it.each([
     ["a body that is not JSON", "{", "Invalid JSON body"],
-    ["a JSON body that is not an object", "null", "base64 is required and must be a string"],
-    ["no base64", JSON.stringify({ mime_type: "image/png" }), "base64 is required and must be a string"],
-    [
-      "a base64 that is not a string",
-      JSON.stringify({ base64: 1, mime_type: "image/png" }),
-      "base64 is required and must be a string",
-    ],
-    ["no mime_type", JSON.stringify({ base64: tinyPng }), "mime_type is required and must be a string"],
+    ["a JSON body that is not an object", "null", "The request body must be an object"],
+    ["no base64", JSON.stringify({ mime_type: "image/png" }), "base64 is required"],
+    ["a base64 that is not a string", JSON.stringify({ base64: 1, mime_type: "image/png" }), "base64 must be a string"],
+    ["no mime_type", JSON.stringify({ base64: tinyPng }), "mime_type is required"],
     [
       "a file_name that is not a string",
       JSON.stringify({ base64: tinyPng, mime_type: "image/png", file_name: 1 }),
       "file_name must be a string",
     ],
-    ...[0, -256, 25.5, "256", null, 4097].map((max_width) => [
-      `max_width ${JSON.stringify(max_width)}`,
+    ...[0, -256, 4097].map((max_width) => [
+      `max_width ${max_width}`,
       JSON.stringify({ base64: tinyPng, mime_type: "image/png", max_width }),
       "max_width must be an integer from 1 to 4096",
+    ]),
+    ...[25.5, "256", null].map((max_width) => [
+      `max_width ${JSON.stringify(max_width)}`,
+      JSON.stringify({ base64: tinyPng, mime_type: "image/png", max_width }),
+      "max_width must be an integer",
     ]),
     ...[0, 4097].map((max_height) => [
       `max_height ${max_height}`,

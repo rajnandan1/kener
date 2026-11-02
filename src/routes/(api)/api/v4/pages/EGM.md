@@ -17,7 +17,7 @@ This route lists status pages and creates a new page. A page is one public statu
 - The handler cleans `page_path` before it checks it: lowercase, trimmed, spaces turned into `-`, and every character outside `[a-z0-9_-]` removed. A path that a page already uses returns 400, not 409. A path that cleans to the empty string matches the home page, so it also returns 400.
 - `page_title` and `page_header` must be non-empty strings. The handler trims them.
 - `page_settings` must pass `validatePageSettings` from `$lib/server/pageSettings`.
-- Each tag in `monitors` must name an existing monitor, and no tag may appear twice. A `monitors` value that is not a list is ignored.
+- Each tag in `monitors` must name an existing monitor, and no tag may appear twice. A `monitors` value that is not a list of strings returns `400`.
 - The handlers call only `get*` methods on `db`. `src/routes/(api)/api/v4/no-direct-db-writes.test.ts` fails when a v4 route calls a `db` write method directly.
 
 ## Side Effects

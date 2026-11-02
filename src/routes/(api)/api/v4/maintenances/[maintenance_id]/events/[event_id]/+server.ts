@@ -17,8 +17,8 @@ import {
   UpdateMaintenanceEvent,
   UpdateMaintenanceEventStatus,
 } from "$lib/server/controllers/maintenanceController";
-import GC from "$lib/global-constants";
 import serverResolver from "$lib/server/resolver";
+import { readRequestBody } from "$lib/server/requestBody";
 
 async function buildEventResponse(event: {
   id: number;
@@ -100,19 +100,11 @@ export const PATCH: RequestHandler = async ({ locals, params, request }) => {
     return json(errorResponse, { status: 404 });
   }
 
-  let body: UpdateMaintenanceEventRequest;
-
-  try {
-    body = await request.json();
-  } catch {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "Invalid JSON body",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
+  const body = await readRequestBody<UpdateMaintenanceEventRequest>(
+    request,
+    "PATCH /api/v4/maintenances/{maintenance_id}/events/{event_id}",
+  );
+  if (body instanceof Response) return body;
 
   // Transition mode: `status` alone, mutually exclusive with window edits
   if (body.status !== undefined) {
@@ -121,16 +113,6 @@ export const PATCH: RequestHandler = async ({ locals, params, request }) => {
         error: {
           code: "BAD_REQUEST",
           message: "Cannot update status and start/end times in the same request",
-        },
-      };
-      return json(errorResponse, { status: 400 });
-    }
-
-    if (body.status !== GC.COMPLETED && body.status !== GC.CANCELLED) {
-      const errorResponse: BadRequestResponse = {
-        error: {
-          code: "BAD_REQUEST",
-          message: `status must be ${GC.COMPLETED} or ${GC.CANCELLED}`,
         },
       };
       return json(errorResponse, { status: 400 });
@@ -153,49 +135,8 @@ export const PATCH: RequestHandler = async ({ locals, params, request }) => {
     }
   }
 
-  // Window edit mode: both times required
-  if (body.start_date_time === undefined || body.start_date_time === null) {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "start_date_time is required",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
-
-  if (body.end_date_time === undefined || body.end_date_time === null) {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "end_date_time is required",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
-
-  if (typeof body.start_date_time !== "number" || isNaN(body.start_date_time)) {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "start_date_time must be a valid timestamp (UTC seconds)",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
-
-  if (typeof body.end_date_time !== "number" || isNaN(body.end_date_time)) {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "end_date_time must be a valid timestamp (UTC seconds)",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
-
-  // Validate end_date_time > start_date_time
-  if (body.end_date_time <= body.start_date_time) {
+  const { start_date_time, end_date_time } = body as Required<UpdateMaintenanceEventRequest>;
+  if (end_date_time <= start_date_time) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",
@@ -206,8 +147,8 @@ export const PATCH: RequestHandler = async ({ locals, params, request }) => {
   }
 
   // Normalize timestamps
-  const normalizedStartDateTime = GetMinuteStartTimestampUTC(body.start_date_time);
-  const normalizedEndDateTime = GetMinuteStartTimestampUTC(body.end_date_time);
+  const normalizedStartDateTime = GetMinuteStartTimestampUTC(start_date_time);
+  const normalizedEndDateTime = GetMinuteStartTimestampUTC(end_date_time);
 
   try {
     await UpdateMaintenanceEvent(eventId, {

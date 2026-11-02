@@ -12,6 +12,7 @@ import type { PageRecord } from "$lib/server/types/db";
 import GC from "$lib/global-constants";
 import { toApiPageSettings, applyPageSettingsPatch, validatePageSettings } from "$lib/server/pageSettings";
 import { AddMonitorToPage, CreatePage } from "$lib/server/controllers/pagesController";
+import { readRequestBody } from "$lib/server/requestBody";
 
 async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
   const pageSettings = toApiPageSettings(page.page_settings_json);
@@ -46,22 +47,11 @@ export const GET: RequestHandler = async () => {
 };
 
 export const POST: RequestHandler = async ({ request }) => {
-  let body: CreatePageRequest;
-
-  try {
-    body = await request.json();
-  } catch {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "Invalid JSON body",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
+  const body = await readRequestBody<CreatePageRequest>(request, "POST /api/v4/pages");
+  if (body instanceof Response) return body;
 
   // Validate required fields
-  if (!body.page_path || typeof body.page_path !== "string") {
+  if (!body.page_path) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",
@@ -78,7 +68,7 @@ export const POST: RequestHandler = async ({ request }) => {
     .replace(/\s+/g, "-")
     .replace(/[^a-z0-9_-]/g, "");
 
-  if (!body.page_title || typeof body.page_title !== "string" || body.page_title.trim().length === 0) {
+  if (body.page_title.trim().length === 0) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",
@@ -88,7 +78,7 @@ export const POST: RequestHandler = async ({ request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  if (!body.page_header || typeof body.page_header !== "string" || body.page_header.trim().length === 0) {
+  if (body.page_header.trim().length === 0) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",
@@ -111,7 +101,7 @@ export const POST: RequestHandler = async ({ request }) => {
   }
 
   // Validate monitors if provided
-  if (body.monitors && Array.isArray(body.monitors)) {
+  if (body.monitors) {
     for (const monitorTag of body.monitors) {
       const monitor = await db.getMonitorByTag(monitorTag);
       if (!monitor) {
@@ -160,7 +150,7 @@ export const POST: RequestHandler = async ({ request }) => {
   const createdPage = await CreatePage(pageData);
 
   // Add monitors to the page
-  if (body.monitors && Array.isArray(body.monitors)) {
+  if (body.monitors) {
     for (let i = 0; i < body.monitors.length; i++) {
       await AddMonitorToPage(createdPage.id, body.monitors[i], null, i);
     }

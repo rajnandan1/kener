@@ -8,6 +8,7 @@ import type {
   NotFoundResponse,
   BadRequestResponse,
 } from "$lib/types/api";
+import { readRequestBody } from "$lib/server/requestBody";
 
 export const GET: RequestHandler = async ({ params }) => {
   const configKey = params.config_key as string;
@@ -80,18 +81,8 @@ export const PATCH: RequestHandler = async ({ params, request }) => {
     return json(errorResponse, { status: 404 });
   }
 
-  let body: { value: unknown };
-  try {
-    body = await request.json();
-  } catch {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "Invalid JSON body",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
+  const body = await readRequestBody<{ value: unknown }>(request, "PATCH /api/v4/site/{config_key}");
+  if (body instanceof Response) return body;
 
   if (body.value === undefined) {
     const errorResponse: BadRequestResponse = {
