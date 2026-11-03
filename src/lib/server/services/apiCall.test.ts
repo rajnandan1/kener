@@ -45,15 +45,13 @@ describe("ApiCall proxy", () => {
       type_data: { url: "https://example.com/health", method: "GET", ...overrides },
     }) as ApiMonitor;
 
-  // axios's own env-proxy code never CONNECT-tunnels and drops httpsAgent for http:// proxies,
-  // so every call must opt out of it and let Node's agents do the proxying.
   const optionsOfLastCall = () => mockedAxios.mock.calls[0][1] as Record<string, any>;
 
   it("routes through the monitor's own proxy, with $SECRET substituted, on both agents", async () => {
     restoreEnv = withEnv("PROXY_PASS", "pw");
     await new ApiCall(monitor({ proxy: "http://user:$PROXY_PASS@proxy.internal:3128" })).execute();
     const o = optionsOfLastCall();
-    expect(o.proxy).toBe(false);
+    expect(o).not.toHaveProperty("proxy");
     const expected = {
       HTTPS_PROXY: "http://user:pw@proxy.internal:3128",
       HTTP_PROXY: "http://user:pw@proxy.internal:3128",
@@ -65,7 +63,7 @@ describe("ApiCall proxy", () => {
   it("falls back to the process env (HTTP_PROXY / HTTPS_PROXY / NO_PROXY) without a monitor proxy", async () => {
     await new ApiCall(monitor()).execute();
     const o = optionsOfLastCall();
-    expect(o.proxy).toBe(false);
+    expect(o).not.toHaveProperty("proxy");
     expect(o.httpsAgent.options.proxyEnv).toBe(process.env);
     expect(o.httpAgent.options.proxyEnv).toBe(process.env);
   });

@@ -4,9 +4,9 @@ import https from "https";
 import { AxiosProxyConfig, InstallEnvProxy } from "./proxy";
 
 describe("AxiosProxyConfig", () => {
-  it("switches axios's own proxy off and puts the monitor's proxy on both agents, no NO_PROXY key", () => {
+  it("puts the monitor's proxy on both agents without disabling proxy routing or setting NO_PROXY", () => {
     const c = AxiosProxyConfig(" http://user:pw@proxy.internal:3128 ");
-    expect(c.proxy).toBe(false);
+    expect(c).not.toHaveProperty("proxy");
     const expected = {
       HTTPS_PROXY: "http://user:pw@proxy.internal:3128",
       HTTP_PROXY: "http://user:pw@proxy.internal:3128",
