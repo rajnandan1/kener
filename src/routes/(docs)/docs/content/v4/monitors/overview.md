@@ -54,6 +54,35 @@ UP + MAINTENANCE + DEGRADED + DOWN
 - [Group Monitor](/docs/v4/monitors/group) — Weighted aggregate of member monitors
 - [Prometheus Monitor](/docs/v4/monitors/prometheus) — PromQL instant query with threshold-based status
 
+## Custom eval sandbox {#eval-sandbox}
+
+API, Ping, TCP, and GameDig monitors run custom `eval` code in a sandbox. The sandbox is a separate JavaScript engine. It cannot reach the Kener server, its files, its environment variables, or the network.
+
+Eval code can use:
+
+- The JavaScript language, including `JSON`, `Math`, `Date`, regular expressions, and `async` functions
+- `modules.cheerio` to parse HTML
+- `atob` and `btoa`
+- `console`, which writes nothing
+
+Node.js and browser features do not exist in the sandbox. This includes `fetch`, `process`, `require`, `import()`, `Buffer`, `setTimeout`, `URL`, `TextDecoder`, `crypto`, and `Intl`. An eval that uses one reports **DOWN** with an error such as `'fetch' is not defined`.
+
+`modules.cheerio` has `load`, `contains`, and `merge`. `Date` uses the time zone of the server. With no `Intl`, `toLocaleString()` adds no thousands separators or local date formats.
+
+| Limit    | Value      |
+| -------- | ---------- |
+| Run time | 10 seconds |
+| Memory   | 256 MB     |
+
+An eval reports **DOWN** with type `ERROR` when it goes over a limit, throws an error, or returns a `status` that is not `UP`, `DEGRADED`, `DOWN`, or `MAINTENANCE`.
+
+Cheerio runs about 20 times slower in the sandbox than in Node.js. A 1 MB page takes about 2 seconds. A response body above 100 MB can go over the memory limit.
+
+### Replace `fetch` in an eval {#replace-fetch}
+
+- **The second URL is fixed**: add a second [API monitor](/docs/v4/monitors/api). To show one status, add both monitors to a [Group monitor](/docs/v4/monitors/group).
+- **The second URL comes from the first response, or the check needs a login**: run your own script outside Kener. Make the script call the URL of a [Heartbeat monitor](/docs/v4/monitors/heartbeat) when every step passes.
+
 ## Stored secrets {#stored-secrets}
 
 The dashboard and the REST API show these stored values as `********`: each header value, the request `body`, the `proxy` URL, a SQL `connectionString`, a Docker `tlsKey`, and a heartbeat `secretString`. Monitor checks use the real values.
