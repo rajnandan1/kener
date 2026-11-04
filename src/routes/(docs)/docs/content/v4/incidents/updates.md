@@ -109,7 +109,7 @@ When creating a new incident, you can optionally provide an **Initial Update**:
 - Incident state changes to the update's state
 - If state is RESOLVED, end_date_time is set
 - Update appears immediately on status page
-- Subscribers receive notifications (if configured)
+- Subscribers of the incident's monitors receive notifications (if configured)
 
 ## Editing Updates {#editing-updates}
 
@@ -418,7 +418,7 @@ On the public status page, updates are displayed:
 
 ## Update Notifications {#update-notifications}
 
-When configured with the subscription system:
+When configured with the subscription system, Kener emails the subscribers of the incident's monitors.
 
 **Users Receive:**
 

@@ -36,6 +36,7 @@ import {
   DeleteMonitorCaches,
 } from "../cache/setGet.js";
 import alertingQueue from "../queues/alertingQueue.js";
+import { NotifySubscribersOfStatusChange } from "./statusChangeController.js";
 import { CollapseStatusCounts } from "../../clientTools.js";
 import { translate, isLocaleAvailable } from "../i18n.js";
 import type { HeartbeatMonitor, GroupMonitorTypeData } from "../types/monitor.js";
@@ -151,6 +152,11 @@ export const UpdateMonitoringData = async (data: UpdateMonitoringDataInput): Pro
     await alertingQueue.push(data.monitor_tag, end, data.newStatus);
   } catch (err) {
     console.error(`Failed to enqueue alert evaluation for ${data.monitor_tag} after MANUAL data write:`, err);
+  }
+  try {
+    await NotifySubscribersOfStatusChange(data.monitor_tag, end, data.newStatus, data.type);
+  } catch (err) {
+    console.error(`Failed to notify subscribers of ${data.monitor_tag} after MANUAL data write:`, err);
   }
   return result;
 };
@@ -633,6 +639,7 @@ export const DeleteMonitorCompletelyUsingTag = async (tag: string): Promise<numb
   await db.deleteMonitorAlertConfigsByMonitorTag(tag);
   await db.deletePageMonitorsByTag(tag);
   await db.deleteMaintenanceMonitorsByTag(tag);
+  await db.deleteSubscriberMonitorsByTag(tag);
   await removeTagFromGroupMonitors(tag);
   await DeleteMonitorCaches(tag);
   return await db.deleteMonitorsByTag(tag);

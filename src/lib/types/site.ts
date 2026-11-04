@@ -80,8 +80,10 @@ export interface SiteSubscriptionsSettings {
   enable: boolean;
   methods: {
     emails: {
-      incidents: boolean;
-      maintenance: boolean;
+      monitors?: boolean;
+      // Read only from settings saved before monitor subscriptions.
+      incidents?: boolean;
+      maintenances?: boolean;
     };
   };
 }

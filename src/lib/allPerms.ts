@@ -33,7 +33,7 @@
  * settings.write     → storeSiteData, updateSubscriptionsConfig
  *
  * subscribers.read   → getSubscribersByMethod, getSubscriberWithSubscriptions, getSubscriberCountsByMethod, getAdminSubscribers
- * subscribers.write  → deleteUserSubscription, updateUserSubscriptionStatus, adminUpdateSubscriptionStatus, adminDeleteSubscriber, adminAddSubscriber
+ * subscribers.write  → deleteUserSubscription, updateUserSubscriptionStatus, adminSetSubscriberMonitors, adminDeleteSubscriber, adminAddSubscriber
  *
  * email_templates.read  → getGeneralEmailTemplates, getGeneralEmailTemplateById
  * email_templates.write → updateGeneralEmailTemplate
@@ -198,7 +198,7 @@ export const ACTION_PERMISSION_MAP: Record<string, string | null> = {
   getAdminSubscribers: "subscribers.read",
   deleteUserSubscription: "subscribers.write",
   updateUserSubscriptionStatus: "subscribers.write",
-  adminUpdateSubscriptionStatus: "subscribers.write",
+  adminSetSubscriberMonitors: "subscribers.write",
   adminDeleteSubscriber: "subscribers.write",
   adminAddSubscriber: "subscribers.write",
 

@@ -13,6 +13,7 @@ import {
 } from "./controller.js";
 import type { EventDisplaySettings, GlobalPageVisibilitySettings, SiteDateTimeFormat } from "$lib/types/site.js";
 import serverResolve from "../resolver.js";
+import { IsEmailSubscriptionEnabled } from "./userSubscriptionsController.js";
 import { ResolveEventListPlacement } from "$lib/clientTools";
 
 export interface LayoutServerData {
@@ -139,16 +140,7 @@ export async function GetLayoutServerData(cookies: Cookies, request: Request): P
 
   const siteStatusColorsDark = siteData.colorsDark || siteStatusColors;
 
-  // Check if subscription is enabled
-  let isSubsEnabled = false;
-  const subsSetting = siteData.subscriptionsSettings;
-  if (
-    subsSetting &&
-    subsSetting.enable &&
-    (subsSetting.methods.emails.incidents || subsSetting.methods.emails.maintenance)
-  ) {
-    isSubsEnabled = true;
-  }
+  const isSubsEnabled = IsEmailSubscriptionEnabled(siteData.subscriptionsSettings);
 
   const languageSetting = {
     ...(siteData.i18n || seedSiteData.i18n),

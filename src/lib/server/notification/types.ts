@@ -45,6 +45,8 @@ export interface SubscriptionVariableMap {
   is_resolved?: boolean;
   // The worst impact among the incident's monitors: "DOWN", "DEGRADED" or "".
   incident_impact?: string;
+  // A monitor status change sets update_state to the new status and one of is_up, is_down, is_degraded.
+  is_up?: boolean;
   is_down?: boolean;
   is_degraded?: boolean;
   is_maintenance?: boolean;

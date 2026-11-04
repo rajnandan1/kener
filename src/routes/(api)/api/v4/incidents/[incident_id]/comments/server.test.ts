@@ -87,7 +87,8 @@ describe("POST /api/v4/incidents/{incident_id}/comments", () => {
       is_identified: true,
       incident_impact: "DOWN",
     });
-    expect(subscriberQueue.push.mock.calls[0][1]).toEqual({ deduplication: { id: "subscriber-incidents-99" } });
+    expect(subscriberQueue.push.mock.calls[0][1]).toEqual(["api"]);
+    expect(subscriberQueue.push.mock.calls[0][2]).toEqual({ deduplication: { id: "subscriber-incidents-99" } });
   });
 
   it("sets the end time when the comment resolves the incident", async () => {

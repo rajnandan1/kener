@@ -127,8 +127,7 @@ const seedSiteData = {
     enable: false,
     methods: {
       emails: {
-        incidents: false,
-        maintenances: false,
+        monitors: false,
       },
     },
   },

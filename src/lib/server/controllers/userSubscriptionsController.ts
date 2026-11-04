@@ -113,6 +113,8 @@ export function FormatEventType(eventType: SubscriptionEventType): string {
       return "Incident Updates";
     case "maintenances":
       return "Maintenance Updates";
+    case "monitors":
+      return "Monitor Updates";
     default:
       return eventType;
   }
@@ -124,11 +126,39 @@ export interface AdminSubscriberRecord {
   user_id: number;
   method_id: number;
   email: string;
-  incidents_enabled: boolean;
-  maintenances_enabled: boolean;
-  incidents_subscription_id: number | null;
-  maintenances_subscription_id: number | null;
+  monitor_tags: string[];
   created_at: DbTimestamp;
+}
+
+export interface SubscribableMonitor {
+  tag: string;
+  name: string;
+}
+
+/**
+ * Monitors a subscriber may pick: the active ones a status page shows. Hidden monitors are left out.
+ */
+export async function GetSubscribableMonitors(): Promise<SubscribableMonitor[]> {
+  const monitors = await db.getMonitors({ status: "ACTIVE", is_hidden: "NO" });
+  return monitors
+    .map((m) => ({ tag: m.tag, name: m.name }))
+    .sort((a, b) => a.name.localeCompare(b.name) || a.tag.localeCompare(b.tag));
+}
+
+/**
+ * Adds and removes monitors of one subscriber method. Only subscribable monitors can be added;
+ * any monitor can be removed, so a subscriber can still drop one that has since been hidden.
+ */
+async function ApplySubscriberMonitorChanges(
+  method: SubscriberMethodRecord,
+  changes: Record<string, boolean>,
+): Promise<string[]> {
+  const subscribable = new Set((await GetSubscribableMonitors()).map((m) => m.tag));
+  const toAdd = Object.keys(changes).filter((tag) => changes[tag] === true && subscribable.has(tag));
+  const toRemove = Object.keys(changes).filter((tag) => changes[tag] === false);
+  await db.addSubscriberMonitors(method.subscriber_user_id, method.id, toAdd);
+  await db.removeSubscriberMonitors(method.id, toRemove);
+  return await db.getSubscriberMonitorTags(method.id);
 }
 
 /**
@@ -139,6 +169,7 @@ export async function GetAdminSubscribersPaginated(
   limit: number = 10,
 ): Promise<{
   subscribers: AdminSubscriberRecord[];
+  monitors: SubscribableMonitor[];
   total: number;
   totalPages: number;
   page: number;
@@ -149,32 +180,20 @@ export async function GetAdminSubscribersPaginated(
   const total = await db.getMethodsCountByType("email");
   const totalPages = Math.ceil(total / limit);
 
-  // Transform to admin record format with subscription statuses
   const subscribers: AdminSubscriberRecord[] = [];
-
   for (const item of result) {
-    // Get subscriptions for this method
-    const subscriptions = await db.getUserSubscriptionsV2({
-      subscriber_method_id: item.method_id,
-    });
-
-    const incidentsSub = subscriptions.find((s) => s.event_type === "incidents");
-    const maintenancesSub = subscriptions.find((s) => s.event_type === "maintenances");
-
     subscribers.push({
       user_id: item.id,
       method_id: item.method_id,
       email: item.email,
-      incidents_enabled: incidentsSub?.status === "ACTIVE",
-      maintenances_enabled: maintenancesSub?.status === "ACTIVE",
-      incidents_subscription_id: incidentsSub?.id || null,
-      maintenances_subscription_id: maintenancesSub?.id || null,
+      monitor_tags: await db.getSubscriberMonitorTags(item.method_id),
       created_at: item.created_at,
     });
   }
 
   return {
     subscribers,
+    monitors: await GetSubscribableMonitors(),
     total,
     totalPages,
     page,
@@ -183,47 +202,27 @@ export async function GetAdminSubscribersPaginated(
 }
 
 /**
- * Admin: Update a subscription's status
+ * Admin: Replace the monitors a subscriber method is subscribed to
  */
-export async function AdminUpdateSubscriptionStatus(
+export async function AdminSetSubscriberMonitors(
   methodId: number,
-  eventType: SubscriptionEventType,
-  enabled: boolean,
-): Promise<{ success: boolean; error?: string }> {
-  // Get method details to get user_id
-  const methodDetails = await db.getSubscriberMethodById(methodId);
-  if (!methodDetails) {
+  monitorTags: string[],
+): Promise<{ success: boolean; error?: string; monitor_tags?: string[] }> {
+  const method = await db.getSubscriberMethodById(methodId);
+  if (!method) {
     return { success: false, error: "Method not found" };
   }
 
-  // Get existing subscription
-  const subs = await db.getUserSubscriptionsV2({
-    subscriber_method_id: methodId,
-    event_type: eventType,
-  });
-
-  if (enabled) {
-    // Enable subscription
-    if (subs.length === 0) {
-      // Create new subscription
-      await db.createUserSubscriptionV2({
-        subscriber_user_id: methodDetails.subscriber_user_id,
-        subscriber_method_id: methodId,
-        event_type: eventType,
-        status: "ACTIVE",
-      });
-    } else if (subs[0].status !== "ACTIVE") {
-      // Reactivate existing
-      await db.updateUserSubscriptionV2(subs[0].id, { status: "ACTIVE" });
-    }
-  } else {
-    // Disable subscription
-    if (subs.length > 0 && subs[0].status === "ACTIVE") {
-      await db.updateUserSubscriptionV2(subs[0].id, { status: "INACTIVE" });
-    }
+  const wanted = new Set(monitorTags);
+  const changes: Record<string, boolean> = {};
+  for (const tag of await db.getSubscriberMonitorTags(method.id)) {
+    if (!wanted.has(tag)) changes[tag] = false;
+  }
+  for (const tag of wanted) {
+    changes[tag] = true;
   }
 
-  return { success: true };
+  return { success: true, monitor_tags: await ApplySubscriberMonitorChanges(method, changes) };
 }
 
 /**
@@ -244,6 +243,7 @@ export async function AdminDeleteSubscriber(methodId: number): Promise<{ success
   for (const sub of subscriptions) {
     await db.deleteUserSubscriptionV2(sub.id);
   }
+  await db.removeSubscriberMonitors(methodId, await db.getSubscriberMonitorTags(methodId));
 
   // Delete the method
   await db.deleteSubscriberMethod(methodId);
@@ -259,12 +259,11 @@ export async function AdminDeleteSubscriber(methodId: number): Promise<{ success
 }
 
 /**
- * Admin: Add a new subscriber with specified subscriptions
+ * Admin: Add a new subscriber subscribed to the given monitors
  */
 export async function AdminAddSubscriber(
   email: string,
-  incidents: boolean,
-  maintenances: boolean,
+  monitorTags: string[],
 ): Promise<{ success: boolean; error?: string; subscriber?: AdminSubscriberRecord }> {
   if (!ValidateEmail(email)) {
     return { success: false, error: "Invalid email address" };
@@ -298,45 +297,8 @@ export async function AdminAddSubscriber(
     await db.updateSubscriberMethod(method.id, { status: "ACTIVE" });
   }
 
-  // Create/update subscriptions
-  let incidentsSub = null;
-  let maintenancesSub = null;
-
-  if (incidents) {
-    const existing = await db.getUserSubscriptionsV2({
-      subscriber_method_id: method.id,
-      event_type: "incidents",
-    });
-    if (existing.length === 0) {
-      incidentsSub = await db.createUserSubscriptionV2({
-        subscriber_user_id: user.id,
-        subscriber_method_id: method.id,
-        event_type: "incidents",
-        status: "ACTIVE",
-      });
-    } else {
-      await db.updateUserSubscriptionV2(existing[0].id, { status: "ACTIVE" });
-      incidentsSub = existing[0];
-    }
-  }
-
-  if (maintenances) {
-    const existing = await db.getUserSubscriptionsV2({
-      subscriber_method_id: method.id,
-      event_type: "maintenances",
-    });
-    if (existing.length === 0) {
-      maintenancesSub = await db.createUserSubscriptionV2({
-        subscriber_user_id: user.id,
-        subscriber_method_id: method.id,
-        event_type: "maintenances",
-        status: "ACTIVE",
-      });
-    } else {
-      await db.updateUserSubscriptionV2(existing[0].id, { status: "ACTIVE" });
-      maintenancesSub = existing[0];
-    }
-  }
+  const changes = Object.fromEntries(monitorTags.map((tag) => [tag, true]));
+  const subscribedTags = await ApplySubscriberMonitorChanges(method, changes);
 
   return {
     success: true,
@@ -344,27 +306,33 @@ export async function AdminAddSubscriber(
       user_id: user.id,
       method_id: method.id,
       email: normalizedEmail,
-      incidents_enabled: incidents,
-      maintenances_enabled: maintenances,
-      incidents_subscription_id: incidentsSub?.id || null,
-      maintenances_subscription_id: maintenancesSub?.id || null,
+      monitor_tags: subscribedTags,
       created_at: method.created_at,
     },
   };
 }
 
 /**
- * Get active email addresses for a given event type
+ * Get active email addresses subscribed to any of the given monitors
  * Used for sending notification emails to subscribers
  */
-export async function GetActiveEmailsForEventType(eventType: SubscriptionEventType): Promise<string[]> {
-  const subscribers = await db.getSubscribersForEvent(eventType);
+export async function GetActiveEmailsForMonitors(monitorTags: string[]): Promise<string[]> {
+  return await db.getEmailsSubscribedToMonitors([...new Set(monitorTags)]);
+}
 
-  // Filter for email method type and extract unique email addresses
-  const emails = subscribers.filter((s) => s.method.method_type === "email").map((s) => s.method.method_value);
+type SubscriptionSettingsLike = {
+  enable?: boolean;
+  methods?: { emails?: { monitors?: boolean; incidents?: boolean; maintenances?: boolean } };
+} | null;
 
-  // Return unique emails
-  return [...new Set(emails)];
+/**
+ * Whether the status page offers email subscriptions. Settings saved before monitor
+ * subscriptions have no `monitors` flag; there, either of the old flags keeps them on.
+ */
+export function IsEmailSubscriptionEnabled(settings: SubscriptionSettingsLike | undefined): boolean {
+  if (!settings?.enable) return false;
+  const emails = settings.methods?.emails;
+  return emails?.monitors ?? (emails?.incidents === true || emails?.maintenances === true);
 }
 
 // ============ Public Subscription Functions ============
@@ -391,7 +359,7 @@ export async function VerifySubscriberToken(token: string): Promise<{
   error?: string;
   user?: SubscriberUserRecord;
   method?: SubscriberMethodRecord;
-  subscriptions?: { incidents: boolean; maintenances: boolean };
+  monitorTags?: string[];
 }> {
   const decoded = await VerifyToken(token);
   if (!decoded || (decoded as unknown as SubscriberTokenPayload).type !== "subscriber") {
@@ -409,18 +377,9 @@ export async function VerifySubscriberToken(token: string): Promise<{
     return { success: false, error: "Subscription method not found or inactive" };
   }
 
-  // Get subscriptions
-  const allSubs = await db.getUserSubscriptionsV2({
-    subscriber_user_id: user.id,
-    subscriber_method_id: method.id,
-  });
+  const monitorTags = await db.getSubscriberMonitorTags(method.id);
 
-  const subscriptions = {
-    incidents: allSubs.some((s) => s.event_type === "incidents" && s.status === "ACTIVE"),
-    maintenances: allSubs.some((s) => s.event_type === "maintenances" && s.status === "ACTIVE"),
-  };
-
-  return { success: true, user, method, subscriptions };
+  return { success: true, user, method, monitorTags };
 }
 
 /**
@@ -546,74 +505,17 @@ export async function VerifySubscriberOTP(
 }
 
 /**
- * Update subscription preferences
+ * Subscribe to or unsubscribe from monitors: `changes` maps a monitor tag to whether to follow it
  */
-export async function UpdateSubscriberPreferences(
+export async function UpdateSubscriberMonitors(
   token: string,
-  preferences: { incidents?: boolean; maintenances?: boolean },
-): Promise<{ success: boolean; error?: string }> {
+  changes: Record<string, boolean>,
+): Promise<{ success: boolean; error?: string; monitorTags?: string[] }> {
   const verifyResult = await VerifySubscriberToken(token);
-  if (!verifyResult.success || !verifyResult.user || !verifyResult.method) {
+  if (!verifyResult.success || !verifyResult.method) {
     return { success: false, error: verifyResult.error || "Invalid token" };
   }
 
-  const { user, method } = verifyResult;
-
-  // Handle incidents subscription
-  if (preferences.incidents !== undefined) {
-    const existingSub = await db.getUserSubscriptionsV2({
-      subscriber_user_id: user.id,
-      subscriber_method_id: method.id,
-      event_type: "incidents",
-    });
-
-    if (preferences.incidents) {
-      // Enable
-      if (existingSub.length === 0) {
-        await db.createUserSubscriptionV2({
-          subscriber_user_id: user.id,
-          subscriber_method_id: method.id,
-          event_type: "incidents",
-          status: "ACTIVE",
-        });
-      } else if (existingSub[0].status !== "ACTIVE") {
-        await db.updateUserSubscriptionV2(existingSub[0].id, { status: "ACTIVE" });
-      }
-    } else {
-      // Disable
-      if (existingSub.length > 0 && existingSub[0].status === "ACTIVE") {
-        await db.updateUserSubscriptionV2(existingSub[0].id, { status: "INACTIVE" });
-      }
-    }
-  }
-
-  // Handle maintenances subscription
-  if (preferences.maintenances !== undefined) {
-    const existingSub = await db.getUserSubscriptionsV2({
-      subscriber_user_id: user.id,
-      subscriber_method_id: method.id,
-      event_type: "maintenances",
-    });
-
-    if (preferences.maintenances) {
-      // Enable
-      if (existingSub.length === 0) {
-        await db.createUserSubscriptionV2({
-          subscriber_user_id: user.id,
-          subscriber_method_id: method.id,
-          event_type: "maintenances",
-          status: "ACTIVE",
-        });
-      } else if (existingSub[0].status !== "ACTIVE") {
-        await db.updateUserSubscriptionV2(existingSub[0].id, { status: "ACTIVE" });
-      }
-    } else {
-      // Disable
-      if (existingSub.length > 0 && existingSub[0].status === "ACTIVE") {
-        await db.updateUserSubscriptionV2(existingSub[0].id, { status: "INACTIVE" });
-      }
-    }
-  }
-
-  return { success: true };
+  const monitorTags = await ApplySubscriberMonitorChanges(verifyResult.method, changes);
+  return { success: true, monitorTags };
 }

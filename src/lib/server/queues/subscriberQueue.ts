@@ -1,6 +1,6 @@
 /**
- * Subscriber Queue - receives subscription variable data and trigger id
- * Finds all subscribers for a given trigger and sends emails via senderQueue
+ * Subscriber Queue - receives subscription variable data and the monitors the update is about
+ * Finds the subscribers of those monitors and sends emails via senderQueue
  */
 
 import { Queue, Worker, Job, type JobsOptions } from "bullmq";
@@ -9,7 +9,9 @@ import { GetAllSiteData } from "../controllers/controller.js";
 import { siteDataToVariables } from "../notification/notification_utils.js";
 import type { SubscriptionVariableMap } from "../notification/types.js";
 import { GetGeneralEmailTemplateById } from "../controllers/generalTemplateController.js";
-import { GetActiveEmailsForEventType } from "../controllers/userSubscriptionsController.js";
+import { GetSiteDataByKey } from "../controllers/siteDataController.js";
+import { GetActiveEmailsForMonitors, IsEmailSubscriptionEnabled } from "../controllers/userSubscriptionsController.js";
+import type { SubscriptionsConfig } from "../types/db.js";
 import emailQueue from "./emailQueue.js";
 let subscriberQueue: Queue | null = null;
 let worker: Worker | null = null;
@@ -18,6 +20,7 @@ const jobNamePrefix = "subscriberJob";
 
 interface SubscriberJobData {
   variables: SubscriptionVariableMap;
+  monitor_tags: string[];
 }
 
 const getQueue = () => {
@@ -31,9 +34,14 @@ const addWorker = () => {
   if (worker) return worker;
 
   worker = q.createWorker(getQueue(), async (job: Job): Promise<void> => {
-    const { variables } = job.data as SubscriberJobData;
+    const { variables, monitor_tags } = job.data as SubscriberJobData;
 
     try {
+      const settings = (await GetSiteDataByKey("subscriptionsSettings")) as SubscriptionsConfig | null;
+      if (!IsEmailSubscriptionEnabled(settings)) {
+        return;
+      }
+
       // Get site data for template variables
       const siteData = await GetAllSiteData();
       const templateSiteVars = siteDataToVariables(siteData);
@@ -49,11 +57,11 @@ const addWorker = () => {
 
       const eventType = variables.event_type;
 
-      // Get active subscriber emails for this event type
-      const subscriberEmails = await GetActiveEmailsForEventType(eventType);
+      // Only the subscribers of the monitors this update is about
+      const subscriberEmails = await GetActiveEmailsForMonitors(monitor_tags);
 
       if (subscriberEmails.length === 0) {
-        console.log(`📭 No active subscribers for event type: ${eventType}`);
+        console.log(`📭 No active subscribers for ${eventType} update ${variables.update_id}`);
         return;
       }
 
@@ -88,9 +96,9 @@ const addWorker = () => {
 };
 
 /**
- * Push a subscriber notification job to the queue
+ * Push a subscriber notification job to the queue. It reaches the subscribers of `monitorTags` only.
  */
-export const push = async (variables: SubscriptionVariableMap, options?: JobsOptions) => {
+export const push = async (variables: SubscriptionVariableMap, monitorTags: string[], options?: JobsOptions) => {
   if (!options) {
     options = {};
   }
@@ -119,6 +127,7 @@ export const push = async (variables: SubscriptionVariableMap, options?: JobsOpt
     `${jobNamePrefix}_${variables.update_id}`,
     {
       variables,
+      monitor_tags: monitorTags,
     },
     options,
   );

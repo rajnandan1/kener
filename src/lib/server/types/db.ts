@@ -877,7 +877,8 @@ export interface SubscriptionConfigUpdate {
 // ============ New Subscription System (v2) ============
 
 export type SubscriptionMethodType = "email";
-export type SubscriptionEventType = "incidents" | "maintenances";
+// "monitors" marks a monitor's status change; incident and maintenance mails keep their own type.
+export type SubscriptionEventType = "incidents" | "maintenances" | "monitors";
 export type SubscriptionStatus = "ACTIVE" | "INACTIVE";
 export type SubscriberUserStatus = "PENDING" | "ACTIVE" | "INACTIVE";
 
@@ -945,6 +946,16 @@ export interface UserSubscriptionV2Filter {
   event_type?: SubscriptionEventType;
 
   status?: SubscriptionStatus;
+}
+
+// ============ subscriber_monitors table ============
+export interface SubscriberMonitorRecord {
+  id: number;
+  subscriber_user_id: number;
+  subscriber_method_id: number;
+  monitor_tag: string;
+  created_at: DbTimestamp;
+  updated_at: DbTimestamp;
 }
 
 // ============ Old types (kept for compatibility) ============
@@ -1020,8 +1031,10 @@ export interface SubscriptionsConfig {
   enable: boolean;
   methods: {
     emails: {
-      incidents: boolean;
-      maintenances: boolean;
+      monitors?: boolean;
+      // Read only from settings saved before monitor subscriptions; see IsEmailSubscriptionEnabled.
+      incidents?: boolean;
+      maintenances?: boolean;
     };
   };
 }

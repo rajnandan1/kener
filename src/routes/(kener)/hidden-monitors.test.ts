@@ -284,6 +284,8 @@ describe("hidden monitor billing-db, by viewer", () => {
 
 describe("subscriber emails", () => {
   const emails = () => subscriberQueue.push.mock.calls.map(([variables]) => variables as SubscriptionVariableMap);
+  // The monitors whose subscribers each mail goes to
+  const recipients = () => subscriberQueue.push.mock.calls.map(([, monitorTags]) => monitorTags as string[]);
 
   beforeAll(async () => {
     await knex("site_data").insert([
@@ -307,11 +309,13 @@ describe("subscriber emails", () => {
     const email = JSON.stringify(emails()[0]);
     expect(email).toContain("Public API");
     expect(mentionsHidden(email)).toBe(false);
+    expect(recipients()).toEqual([["api"]]);
   });
 
   const events = [
     { title: "Global, visible and hidden", is_global: "YES", sends: true, impact: "DEGRADED" },
-    { title: "Global, hidden only", is_global: "YES", sends: true, impact: "" },
+    // Subscribers follow monitors, so an event on no visible monitor reaches no one, global or not.
+    { title: "Global, hidden only", is_global: "YES", sends: false, impact: "" },
     { title: "Scoped, visible and hidden", is_global: "NO", sends: true, impact: "DEGRADED" },
     { title: "Scoped, hidden only", is_global: "NO", sends: false, impact: "" },
   ].map((e) => ({
@@ -331,6 +335,7 @@ describe("subscriber emails", () => {
     await knex("incident_monitors").insert(monitors.map((m) => ({ ...m, incident_id: id })));
     await AddIncidentComment(id, "Looking into it", "INVESTIGATING", 1100);
     expect(emails().map((e) => [e.title, e.incident_impact])).toEqual(sends ? [[title, impact]] : []);
+    expect(recipients()).toEqual(sends ? [["api"]] : []);
     expect(mentionsHidden(emails())).toBe(false);
   });
 
@@ -364,6 +369,10 @@ describe("subscriber emails", () => {
     expect(sent.map((e) => e.update_id.replace(/^maintenance_\d+_/, "")).sort()).toEqual(
       sends ? ["cancelled", "completed", "created", "ongoing", "ongoing", "starting_soon"] : [],
     );
+    const sentTo = subscriberQueue.push.mock.calls
+      .filter(([variables]) => (variables as SubscriptionVariableMap).title.endsWith(`: ${title}`))
+      .flatMap(([, monitorTags]) => monitorTags as string[]);
+    expect(new Set(sentTo)).toEqual(new Set(sends ? ["api"] : []));
     expect(mentionsHidden(sent)).toBe(false);
   });
 });

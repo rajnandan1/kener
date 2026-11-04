@@ -97,23 +97,59 @@ export function determineEventStatus(
 
 // ============ Helper to create a maintenance event with notification ============
 
-// Subscribers hear only of maintenances a status page shows: global, or with a monitor that is not hidden.
+// Subscribers hear of a maintenance through its monitors: the mail reaches the subscribers of its
+// visible monitors, or of `onlyMonitorTags` among them. A maintenance on no visible monitor reaches no one.
 const pushMaintenanceUpdate = async (
   event: MaintenanceEventRecordDetailed,
   statusMessage: string,
   updateIdSuffix: string,
   subjectPrefix: string,
   siteUrl: string,
+  onlyMonitorTags?: string[],
 ): Promise<void> => {
-  const [maintenance, monitors] = await Promise.all([
-    db.getMaintenanceById(event.maintenance_id),
-    db.getMonitorsByMaintenanceId(event.maintenance_id),
-  ]);
-  if (maintenance?.is_global !== "YES" && monitors.length === 0) return;
+  const monitors = await db.getMonitorsByMaintenanceId(event.maintenance_id);
+  const recipientsOf = onlyMonitorTags
+    ? monitors.filter((m) => onlyMonitorTags.includes(m.monitor_tag)).map((m) => m.monitor_tag)
+    : monitors.map((m) => m.monitor_tag);
+  if (recipientsOf.length === 0) return;
   const monitorNames = monitors.map((m) => `${m.monitor_name}(${m.monitor_impact})`).join(", ");
   await subscriberQueue.push(
     maintenanceToVariables(event, monitorNames, statusMessage, updateIdSuffix, subjectPrefix, siteUrl),
+    recipientsOf,
   );
+};
+
+// Monitors added to a maintenance whose next window is already announced: their subscribers hear of
+// that window now, as everyone else did when it was created. A schedule change announces new windows
+// to every monitor's subscribers, so it needs no mail here.
+const notifySubscribersOfAddedMonitors = async (maintenance_id: number, monitorTags: string[]): Promise<void> => {
+  if (monitorTags.length === 0) return;
+  try {
+    const maintenance = await db.getMaintenanceById(maintenance_id);
+    if (!maintenance || maintenance.status !== "ACTIVE") return;
+    const siteData = await GetAllSiteData();
+    const notificationSettings =
+      siteData.globalMaintenanceNotificationSettings || seedSiteData.globalMaintenanceNotificationSettings;
+    if (!notificationSettings.event_types.created) return;
+    const [next] = (await db.getMaintenanceEventsByMaintenanceId(maintenance_id))
+      .filter((e) => e.status === "SCHEDULED" || e.status === "READY" || e.status === "ONGOING")
+      .sort((a, b) => a.start_date_time - b.start_date_time);
+    if (!next) return;
+    const monitorNames = (await db.getMonitorsByMaintenanceId(maintenance_id))
+      .filter((m) => monitorTags.includes(m.monitor_tag))
+      .map((m) => m.monitor_name)
+      .join(", ");
+    await pushMaintenanceUpdate(
+      { ...next, title: maintenance.title, description: maintenance.description },
+      `**now includes ${monitorNames}**`,
+      `monitors_added_${[...monitorTags].sort().join("_")}`,
+      "Maintenance Updated",
+      siteDataToVariables(siteData).site_url,
+      monitorTags,
+    );
+  } catch (err) {
+    console.error(`Error notifying subscribers of monitors added to maintenance ${maintenance_id}:`, err);
+  }
 };
 
 export const CreateMaintenanceEventWithNotification = async (
@@ -384,7 +420,10 @@ export const UpdateMaintenance = async (id: number, data: UpdateMaintenanceInput
   const result = await db.updateMaintenance(id, updateData);
 
   // Update monitors if provided
+  let addedMonitorTags: string[] = [];
   if (monitors !== undefined) {
+    const previousTags = (await db.getMaintenanceMonitors(id)).map((m) => m.monitor_tag);
+    addedMonitorTags = monitors.map((m) => m.monitor_tag).filter((tag) => !previousTags.includes(tag));
     await db.removeAllMonitorsFromMaintenance(id);
     if (monitors.length > 0) {
       await db.addMonitorsToMaintenanceWithStatus(id, monitors);
@@ -421,6 +460,8 @@ export const UpdateMaintenance = async (id: number, data: UpdateMaintenanceInput
         await GenerateMaintenanceEvents(id, updated.start_date_time, updated.rrule, updated.duration_seconds, 1);
       }
     }
+  } else {
+    await notifySubscribersOfAddedMonitors(id, addedMonitorTags);
   }
 
   return result;
@@ -585,7 +626,11 @@ export const AddMonitorToMaintenance = async (maintenance_id: number, monitor_ta
     throw new Error(`Monitor with tag ${monitor_tag} does not exist`);
   }
 
+  const alreadyAttached = (await db.getMaintenanceMonitors(maintenance_id)).some((m) => m.monitor_tag === monitor_tag);
   await db.addMonitorToMaintenance({ maintenance_id, monitor_tag });
+  if (!alreadyAttached) {
+    await notifySubscribersOfAddedMonitors(maintenance_id, [monitor_tag]);
+  }
 };
 
 export const RemoveMonitorFromMaintenance = async (maintenance_id: number, monitor_tag: string): Promise<number> => {

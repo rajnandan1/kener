@@ -33,10 +33,7 @@ describe("SubscribeMenu — captcha gating", () => {
   });
 
   it("leaves Continue enabled when no captcha provider is configured", async () => {
-    vi.stubGlobal(
-      "fetch",
-      mockFetchByUrl({ "captcha-config.json": async () => ({ provider: null, siteKey: null }) }),
-    );
+    vi.stubGlobal("fetch", mockFetchByUrl({ "captcha-config.json": async () => ({ provider: null, siteKey: null }) }));
 
     const screen = await render(SubscribeMenu, {});
     await screen.getByRole("button", { name: "Subscribe" }).click();
@@ -144,5 +141,81 @@ describe("SubscribeMenu — captcha gating", () => {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (window as any).turnstile;
+  });
+});
+
+describe("SubscribeMenu — monitor preferences", () => {
+  const availableMonitors = [
+    { tag: "api", name: "Public API" },
+    { tag: "db", name: "Database" },
+    { tag: "web", name: "Website" },
+  ];
+
+  beforeEach(() => {
+    localStorage.clear();
+    localStorage.setItem("subscriber_token", "token-1");
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  function mockSubscriptionApi(onUpdate: (monitors: Record<string, boolean>) => Response) {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url.includes("captcha-config.json")) {
+          return { ok: true, json: async () => ({ provider: null, siteKey: null }) } as Response;
+        }
+        const body = JSON.parse(init?.body as string);
+        if (body.action === "getPreferences") {
+          const prefs = { success: true, email: "ana@example.com", monitors: ["web"], availableMonitors };
+          return { ok: true, json: async () => prefs } as Response;
+        }
+        if (body.action === "updatePreferences") return onUpdate(body.monitors);
+        throw new Error(`Unhandled fetch in test: ${url} ${body.action}`);
+      }),
+    );
+  }
+
+  it("lists the monitors with the subscribed ones ticked, and narrows them by search", async () => {
+    mockSubscriptionApi(() => ({ ok: true, json: async () => ({}) }) as Response);
+
+    const screen = await render(SubscribeMenu, {});
+    await screen.getByRole("button", { name: "Subscribe" }).click();
+
+    await expect.element(screen.getByRole("checkbox", { name: "Website" })).toBeChecked();
+    await expect.element(screen.getByRole("checkbox", { name: "Public API" })).not.toBeChecked();
+
+    await screen.getByRole("searchbox", { name: "Search monitors" }).fill("data");
+
+    await expect.element(screen.getByRole("checkbox", { name: "Database" })).toBeInTheDocument();
+    await expect.element(screen.getByRole("checkbox", { name: "Website" })).not.toBeInTheDocument();
+  });
+
+  it("saves a ticked monitor as one change", async () => {
+    const updates: Record<string, boolean>[] = [];
+    mockSubscriptionApi((monitors) => {
+      updates.push(monitors);
+      return { ok: true, json: async () => ({ success: true, monitors: ["api", "web"] }) } as Response;
+    });
+
+    const screen = await render(SubscribeMenu, {});
+    await screen.getByRole("button", { name: "Subscribe" }).click();
+    await screen.getByRole("checkbox", { name: "Public API" }).click();
+
+    await expect.element(screen.getByRole("checkbox", { name: "Public API" })).toBeChecked();
+    expect(updates).toEqual([{ api: true }]);
+  });
+
+  it("unticks the monitor again when saving fails", async () => {
+    mockSubscriptionApi(() => ({ ok: false, json: async () => ({ message: "nope" }) }) as Response);
+
+    const screen = await render(SubscribeMenu, {});
+    await screen.getByRole("button", { name: "Subscribe" }).click();
+    await screen.getByRole("checkbox", { name: "Public API" }).click();
+
+    await expect.element(screen.getByText("Failed to update preference")).toBeInTheDocument();
+    await expect.element(screen.getByRole("checkbox", { name: "Public API" })).not.toBeChecked();
   });
 });

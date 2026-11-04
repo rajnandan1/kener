@@ -349,7 +349,7 @@ Notifications are sent based on your subscription configuration:
 - Slack (if configured)
 - Discord (if configured)
 
-Only users subscribed to maintenance updates receive notifications.
+Subscriber emails go only to the subscribers of the maintenance's monitors. See [User Subscriptions](/docs/v4/subscriptions#maintenance-notifications).
 
 ## Viewing Events {#viewing-events}
 

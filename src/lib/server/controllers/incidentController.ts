@@ -419,11 +419,18 @@ export const AddIncidentMonitor = async (
     throw new Error(`Incident with id ${incident_id} does not exist`);
   }
 
-  return await db.insertIncidentMonitorWithMerge({
+  const alreadyAttached = (await db.getMonitorsByIncidentId(incident_id, true)).some(
+    (m) => m.monitor_tag === monitor_tag,
+  );
+  const result = await db.insertIncidentMonitorWithMerge({
     incident_id,
     monitor_tag,
     monitor_impact,
   });
+  if (!alreadyAttached) {
+    await notifySubscribersOfAddedMonitor(incidentExists, monitor_tag);
+  }
+  return result;
 };
 
 export const UpdateCommentByID = async (
@@ -460,53 +467,95 @@ export const UpdateCommentByID = async (
   }
   return c;
 };
-// Subscriber notifications are driven solely by incident comments: the comment
-// timeline is the incident's public communication channel, so posting a comment
-// is the one event that emails "incidents" subscribers — regardless of whether
-// the incident came from an alert, the dashboard, or the API. This is the single
-// choke point; alertingQueue must not push its own incident notifications, or
-// alert-driven incidents would notify twice.
+// Subscriber notifications are driven by incident comments: the comment timeline is the
+// incident's public communication channel, so posting a comment is the event that emails the
+// subscribers of the incident's monitors — regardless of whether the incident came from an alert,
+// the dashboard, or the API. This is the single choke point; alertingQueue must not push its own
+// incident notifications, or alert-driven incidents would notify twice. The one other mail is for a
+// monitor added after the incident was announced (notifySubscribersOfAddedMonitor).
+const incidentMailVariables = (
+  incident: Pick<IncidentRecord, "id" | "title">,
+  comment: IncidentCommentRecord,
+  impacts: Array<string | null>,
+  siteUrl: string,
+  updateText: string = comment.comment,
+): SubscriptionVariableMap => {
+  const impact = impacts.includes(GC.DOWN) ? GC.DOWN : impacts.includes(GC.DEGRADED) ? GC.DEGRADED : "";
+  return {
+    title: incident.title,
+    cta_url: `${siteUrl}incidents/${incident.id}`,
+    cta_text: "View Incident",
+    update_text: mdToHTML(updateText),
+    update_subject: `[#${incident.id}:${comment.state}] ${incident.title}`,
+    update_id: String(comment.id),
+    event_type: "incidents",
+    update_state: comment.state,
+    is_investigating: comment.state === GC.INVESTIGATING,
+    is_identified: comment.state === GC.IDENTIFIED,
+    is_monitoring: comment.state === GC.MONITORING,
+    is_resolved: comment.state === GC.RESOLVED,
+    incident_impact: impact,
+    is_down: impact === GC.DOWN,
+    is_degraded: impact === GC.DEGRADED,
+  };
+};
+
 const notifySubscribersOfComment = async (
-  incident: Pick<IncidentRecord, "id" | "title" | "is_global">,
+  incident: Pick<IncidentRecord, "id" | "title">,
   comment: IncidentCommentRecord,
 ): Promise<void> => {
   try {
     const siteData = await GetAllSiteData();
     const siteUrl = siteDataToVariables(siteData).site_url;
-    // Failing to read the impact must not cost the mail itself; it goes out without the flags.
-    let impacts: Array<string | null> | null = null;
-    try {
-      impacts = (await db.getMonitorsByIncidentId(incident.id)).map((m) => m.monitor_impact);
-    } catch (err) {
-      console.error(`Error reading monitors of incident ${incident.id} for its subscriber mail:`, err);
-    }
-    // Subscribers hear only of incidents a status page shows: global, or with a monitor that is not hidden.
-    if (incident.is_global !== "YES" && impacts?.length === 0) return;
-    const impact = impacts?.includes(GC.DOWN) ? GC.DOWN : impacts?.includes(GC.DEGRADED) ? GC.DEGRADED : "";
-    const variables: SubscriptionVariableMap = {
-      title: incident.title,
-      cta_url: `${siteUrl}incidents/${incident.id}`,
-      cta_text: "View Incident",
-      update_text: mdToHTML(comment.comment),
-      update_subject: `[#${incident.id}:${comment.state}] ${incident.title}`,
-      update_id: String(comment.id),
-      event_type: "incidents",
-      update_state: comment.state,
-      is_investigating: comment.state === GC.INVESTIGATING,
-      is_identified: comment.state === GC.IDENTIFIED,
-      is_monitoring: comment.state === GC.MONITORING,
-      is_resolved: comment.state === GC.RESOLVED,
-      incident_impact: impact,
-      is_down: impact === GC.DOWN,
-      is_degraded: impact === GC.DEGRADED,
-    };
+    // Hidden monitors are left out: an incident on no visible monitor reaches no subscriber.
+    const monitors = await db.getMonitorsByIncidentId(incident.id);
+    if (monitors.length === 0) return;
+    const variables = incidentMailVariables(
+      incident,
+      comment,
+      monitors.map((m) => m.monitor_impact),
+      siteUrl,
+    );
     // Stable dedup id per comment so a retried/double push notifies once — without
     // it subscriberQueue falls back to a Date.now()-suffixed id that never dedupes.
-    await subscriberQueue.push(variables, {
-      deduplication: { id: `subscriber-incidents-${comment.id}` },
-    });
+    await subscriberQueue.push(
+      variables,
+      monitors.map((m) => m.monitor_tag),
+      { deduplication: { id: `subscriber-incidents-${comment.id}` } },
+    );
   } catch (err) {
     console.error(`Error sending subscriber notification for incident ${incident.id}:`, err);
+  }
+};
+
+// A monitor added to an incident its subscribers have not heard of yet: they get the latest update.
+// Before the first comment there is nothing to tell, and that comment reaches every monitor's
+// subscribers; after the incident is resolved, adding a monitor is a correction, not news.
+const notifySubscribersOfAddedMonitor = async (
+  incident: Pick<IncidentRecord, "id" | "title" | "state" | "incident_type">,
+  monitor_tag: string,
+): Promise<void> => {
+  try {
+    if (incident.incident_type !== GC.INCIDENT || incident.state === GC.RESOLVED) return;
+    const [latest] = await db.getActiveIncidentComments(incident.id);
+    if (!latest) return;
+    const monitors = await db.getMonitorsByIncidentId(incident.id);
+    const added = monitors.find((m) => m.monitor_tag === monitor_tag);
+    if (!added) return;
+    const siteUrl = siteDataToVariables(await GetAllSiteData()).site_url;
+    const variables = incidentMailVariables(
+      incident,
+      latest,
+      monitors.map((m) => m.monitor_impact),
+      siteUrl,
+      `**${added.monitor_name}** has been added to this incident.\n\n${latest.comment}`,
+    );
+    variables.update_id = `${latest.id}_${monitor_tag}`;
+    await subscriberQueue.push(variables, [monitor_tag], {
+      deduplication: { id: `subscriber-incidents-${latest.id}-${monitor_tag}` },
+    });
+  } catch (err) {
+    console.error(`Error notifying subscribers of ${monitor_tag} added to incident ${incident.id}:`, err);
   }
 };
 

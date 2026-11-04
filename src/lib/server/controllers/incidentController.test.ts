@@ -7,6 +7,7 @@ const { db, subscriberQueue } = vi.hoisted(() => ({
     updateIncident: vi.fn(),
     setIncidentEndTimeToNull: vi.fn(),
     getMonitorsByIncidentId: vi.fn(),
+    getActiveIncidentComments: vi.fn(),
     createIncident: vi.fn(),
     getMonitorByTag: vi.fn(),
     insertIncidentMonitorWithMerge: vi.fn(),
@@ -19,7 +20,11 @@ vi.mock("./siteDataController.js", () => ({
   GetAllSiteData: vi.fn(async () => ({ siteURL: "https://status.example.com", siteName: "Example", colors: {} })),
 }));
 
-import { AddIncidentComment, CreateNewIncidentWithCommentAndMonitor } from "./incidentController.js";
+import {
+  AddIncidentComment,
+  AddIncidentMonitor,
+  CreateNewIncidentWithCommentAndMonitor,
+} from "./incidentController.js";
 
 const incident = {
   id: 12,
@@ -34,6 +39,11 @@ const incident = {
 function pushedVariables() {
   expect(subscriberQueue.push).toHaveBeenCalledOnce();
   return subscriberQueue.push.mock.calls[0][0];
+}
+
+function pushedMonitorTags() {
+  expect(subscriberQueue.push).toHaveBeenCalledOnce();
+  return subscriberQueue.push.mock.calls[0][1];
 }
 
 describe("AddIncidentComment: subscriber mail variables", () => {
@@ -81,33 +91,36 @@ describe("AddIncidentComment: subscriber mail variables", () => {
     });
   });
 
-  it("still sends the mail, without impact, when the monitors cannot be read", async () => {
+  it("sends the mail to the subscribers of the incident's monitors", async () => {
+    db.getMonitorsByIncidentId.mockResolvedValue([
+      { monitor_tag: "api", monitor_impact: "DEGRADED" },
+      { monitor_tag: "web", monitor_impact: "DOWN" },
+    ]);
+
+    await AddIncidentComment(12, "Looking into it", "INVESTIGATING", 2000);
+
+    expect(pushedMonitorTags()).toEqual(["api", "web"]);
+  });
+
+  it("sends no mail, and logs, when the monitors cannot be read", async () => {
     db.getMonitorsByIncidentId.mockRejectedValue(new Error("connection reset"));
     const logged = vi.spyOn(console, "error").mockImplementation(() => {});
 
     await AddIncidentComment(12, "Looking into it", "INVESTIGATING", 2000);
 
-    expect(pushedVariables()).toMatchObject({
-      is_investigating: true,
-      incident_impact: "",
-      is_down: false,
-      is_degraded: false,
-    });
+    expect(db.insertIncidentComment).toHaveBeenCalledOnce();
+    expect(subscriberQueue.push).not.toHaveBeenCalled();
     expect(logged).toHaveBeenCalled();
     logged.mockRestore();
   });
 
-  it("leaves the impact empty for an incident without monitors", async () => {
+  it("sends no mail for an incident without visible monitors, even a global one", async () => {
     db.getMonitorsByIncidentId.mockResolvedValue([]);
 
     await AddIncidentComment(12, "We know why", "IDENTIFIED", 2500);
 
-    expect(pushedVariables()).toMatchObject({
-      is_identified: true,
-      incident_impact: "",
-      is_down: false,
-      is_degraded: false,
-    });
+    expect(db.insertIncidentComment).toHaveBeenCalledOnce();
+    expect(subscriberQueue.push).not.toHaveBeenCalled();
   });
 
   it("rejects a RESOLVED comment dated before the incident start, and saves and sends nothing", async () => {
@@ -136,6 +149,7 @@ describe("CreateNewIncidentWithCommentAndMonitor", () => {
       },
     );
     db.getMonitorsByIncidentId.mockImplementation(async () => [...attached]);
+    db.getActiveIncidentComments.mockResolvedValue([]);
     db.insertIncidentComment.mockImplementation(async (_id: number, comment: string, state: string) => ({
       id: 99,
       comment,
@@ -172,6 +186,7 @@ describe("CreateNewIncidentWithCommentAndMonitor", () => {
         is_down: impact === "DOWN",
         is_degraded: impact === "DEGRADED",
       });
+      expect(pushedMonitorTags()).toEqual(["web"]);
     },
   );
 
@@ -180,19 +195,15 @@ describe("CreateNewIncidentWithCommentAndMonitor", () => {
 
     expect(db.insertIncidentMonitorWithMerge).not.toHaveBeenCalled();
     expect(db.insertIncidentComment).toHaveBeenCalledOnce();
-    expect(pushedVariables()).toMatchObject({
-      is_investigating: true,
-      incident_impact: "",
-      is_down: false,
-      is_degraded: false,
-    });
+    // No monitor, so no subscriber to tell.
+    expect(subscriberQueue.push).not.toHaveBeenCalled();
   });
 
   it("claims no impact for an alert type it does not know", async () => {
     await expect(create("DOWN", "SOMETHING_NEW")).resolves.toEqual({ incident_id: 12 });
 
     expect(db.insertIncidentMonitorWithMerge).not.toHaveBeenCalled();
-    expect(pushedVariables()).toMatchObject({ incident_impact: "", is_down: false, is_degraded: false });
+    expect(subscriberQueue.push).not.toHaveBeenCalled();
   });
 
   it("still posts the opening comment and its mail when the monitor cannot be attached, then raises", async () => {
@@ -201,6 +212,71 @@ describe("CreateNewIncidentWithCommentAndMonitor", () => {
     await expect(create("DOWN")).rejects.toThrow("Monitor with tag web does not exist");
 
     expect(db.insertIncidentComment).toHaveBeenCalledOnce();
-    expect(pushedVariables()).toMatchObject({ is_investigating: true, incident_impact: "" });
+    expect(subscriberQueue.push).not.toHaveBeenCalled();
+  });
+
+  it("sends no separate mail for the monitor it attaches before the opening comment", async () => {
+    await create("DOWN");
+
+    // One mail: the opening comment's. The attach found no comment to repeat.
+    expect(pushedVariables()).toMatchObject({ update_id: "99" });
+  });
+});
+
+describe("AddIncidentMonitor: a monitor added to an announced incident", () => {
+  let attached: Array<{ monitor_tag: string; monitor_impact: string; monitor_name: string }>;
+  const latest = { id: 41, comment: "Payments are failing", state: "IDENTIFIED" };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    attached = [{ monitor_tag: "api", monitor_impact: "DEGRADED", monitor_name: "API" }];
+    db.getIncidentById.mockResolvedValue({ ...incident, state: "IDENTIFIED" });
+    db.getMonitorByTag.mockResolvedValue({ tag: "web" });
+    db.insertIncidentMonitorWithMerge.mockImplementation(
+      async (row: { monitor_tag: string; monitor_impact: string }) => {
+        attached = attached.filter((m) => m.monitor_tag !== row.monitor_tag);
+        attached.push({ ...row, monitor_name: row.monitor_tag === "web" ? "Website" : row.monitor_tag });
+      },
+    );
+    db.getMonitorsByIncidentId.mockImplementation(async () => [...attached]);
+    db.getActiveIncidentComments.mockResolvedValue([latest]);
+  });
+
+  it("sends the latest update to the subscribers of the added monitor only", async () => {
+    await AddIncidentMonitor(12, "web", "DOWN");
+
+    expect(pushedMonitorTags()).toEqual(["web"]);
+    const variables = pushedVariables();
+    expect(variables).toMatchObject({
+      title: incident.title,
+      update_state: "IDENTIFIED",
+      incident_impact: "DOWN",
+      update_id: "41_web",
+    });
+    expect(variables.update_text).toContain("Website");
+    expect(variables.update_text).toContain("Payments are failing");
+  });
+
+  it("sends nothing when the monitor was already on the incident", async () => {
+    await AddIncidentMonitor(12, "api", "DOWN");
+
+    expect(db.insertIncidentMonitorWithMerge).toHaveBeenCalledOnce();
+    expect(subscriberQueue.push).not.toHaveBeenCalled();
+  });
+
+  it("sends nothing before the incident's first update", async () => {
+    db.getActiveIncidentComments.mockResolvedValue([]);
+
+    await AddIncidentMonitor(12, "web", "DOWN");
+
+    expect(subscriberQueue.push).not.toHaveBeenCalled();
+  });
+
+  it("sends nothing for a resolved incident", async () => {
+    db.getIncidentById.mockResolvedValue({ ...incident, state: "RESOLVED" });
+
+    await AddIncidentMonitor(12, "web", "DOWN");
+
+    expect(subscriberQueue.push).not.toHaveBeenCalled();
   });
 });

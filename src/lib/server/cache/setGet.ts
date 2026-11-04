@@ -21,7 +21,18 @@ export async function GetLastHeartbeat(tag: string): Promise<{ timestamp: number
   return await getCache<{ timestamp: number }>("last_heartbeat:" + tag, undefined, 45 * 86400);
 }
 
+// The last status subscribers were told about (or would have been), so a change can be detected
+// across NO_DATA gaps and incident/maintenance windows.
+export async function SetLastSubscriberStatus(tag: string, value: { status: string; ts: number }): Promise<void> {
+  await setCache<{ status: string; ts: number }>("subscriber_status:" + tag, value, 45 * 86400); //set ttl to 45 days
+}
+
+export async function GetLastSubscriberStatus(tag: string): Promise<{ status: string; ts: number } | null> {
+  return await getCache<{ status: string; ts: number }>("subscriber_status:" + tag, undefined, 45 * 86400);
+}
+
 export async function DeleteMonitorCaches(tag: string): Promise<void> {
   await deleteCache(tag + ":last_status");
   await deleteCache("last_heartbeat:" + tag);
+  await deleteCache("subscriber_status:" + tag);
 }

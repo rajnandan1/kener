@@ -373,6 +373,11 @@ class DbImpl {
   updateUserSubscriptionV2!: SubscriptionSystemRepository["updateUserSubscriptionV2"];
   deleteUserSubscriptionV2!: SubscriptionSystemRepository["deleteUserSubscriptionV2"];
   subscriptionV2Exists!: SubscriptionSystemRepository["subscriptionV2Exists"];
+  getSubscriberMonitorTags!: SubscriptionSystemRepository["getSubscriberMonitorTags"];
+  addSubscriberMonitors!: SubscriptionSystemRepository["addSubscriberMonitors"];
+  removeSubscriberMonitors!: SubscriptionSystemRepository["removeSubscriberMonitors"];
+  deleteSubscriberMonitorsByTag!: SubscriptionSystemRepository["deleteSubscriberMonitorsByTag"];
+  getEmailsSubscribedToMonitors!: SubscriptionSystemRepository["getEmailsSubscribedToMonitors"];
   getSubscriptionsWithMethodsForUser!: SubscriptionSystemRepository["getSubscriptionsWithMethodsForUser"];
   getSubscribersForEvent!: SubscriptionSystemRepository["getSubscribersForEvent"];
   getSubscribersSummary!: SubscriptionSystemRepository["getSubscribersSummary"];
@@ -837,6 +842,17 @@ class DbImpl {
     this.updateUserSubscriptionV2 = this.subscriptionSystem.updateUserSubscriptionV2.bind(this.subscriptionSystem);
     this.deleteUserSubscriptionV2 = this.subscriptionSystem.deleteUserSubscriptionV2.bind(this.subscriptionSystem);
     this.subscriptionV2Exists = this.subscriptionSystem.subscriptionV2Exists.bind(this.subscriptionSystem);
+
+    // Subscriber Monitors
+    this.getSubscriberMonitorTags = this.subscriptionSystem.getSubscriberMonitorTags.bind(this.subscriptionSystem);
+    this.addSubscriberMonitors = this.subscriptionSystem.addSubscriberMonitors.bind(this.subscriptionSystem);
+    this.removeSubscriberMonitors = this.subscriptionSystem.removeSubscriberMonitors.bind(this.subscriptionSystem);
+    this.deleteSubscriberMonitorsByTag = this.subscriptionSystem.deleteSubscriberMonitorsByTag.bind(
+      this.subscriptionSystem,
+    );
+    this.getEmailsSubscribedToMonitors = this.subscriptionSystem.getEmailsSubscribedToMonitors.bind(
+      this.subscriptionSystem,
+    );
 
     // Complex Queries
     this.getSubscriptionsWithMethodsForUser = this.subscriptionSystem.getSubscriptionsWithMethodsForUser.bind(

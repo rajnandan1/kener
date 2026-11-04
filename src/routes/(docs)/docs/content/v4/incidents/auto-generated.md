@@ -353,7 +353,7 @@ See [Triggers](/docs/v4/alerting/triggers) and [Templates](/docs/v4/alerting/tem
 
 ### Subscriber Notifications {#subscriber-notifications}
 
-If subscription system is configured:
+If subscription system is configured, the subscribers of the alerting monitor receive:
 
 **Incident Created:**
 

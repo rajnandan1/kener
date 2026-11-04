@@ -19,10 +19,11 @@
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
   import ChevronRightIcon from "@lucide/svelte/icons/chevron-right";
-  import AlertTriangle from "@lucide/svelte/icons/alert-triangle";
-  import Wrench from "@lucide/svelte/icons/wrench";
+  import PencilIcon from "@lucide/svelte/icons/pencil";
+  import Activity from "@lucide/svelte/icons/activity";
   import Mail from "@lucide/svelte/icons/mail";
   import Rss from "@lucide/svelte/icons/rss";
+  import MonitorSubscriptionPicker from "$lib/components/MonitorSubscriptionPicker.svelte";
 
   import type { SubscriptionsConfig } from "$lib/server/types/db.js";
   import AlertCircleIcon from "@lucide/svelte/icons/octagon-alert";
@@ -32,8 +33,7 @@
     enable: false,
     methods: {
       emails: {
-        incidents: true,
-        maintenances: true
+        monitors: true
       }
     }
   });
@@ -103,14 +103,14 @@
     user_id: number;
     method_id: number;
     email: string;
-    incidents_enabled: boolean;
-    maintenances_enabled: boolean;
-    incidents_subscription_id: number | null;
-    maintenances_subscription_id: number | null;
+    monitor_tags: string[];
     created_at: string;
   }
 
   let subscribers = $state<Subscriber[]>([]);
+  // Monitors a subscriber can be subscribed to: active and not hidden
+  let monitors = $state<Array<{ tag: string; name: string }>>([]);
+  const monitorNames = $derived(new Map(monitors.map((m) => [m.tag, m.name])));
   let loadingSubscribers = $state(true);
   let page = $state(1);
   let limit = $state(10);
@@ -121,17 +121,18 @@
   let showAddDialog = $state(false);
   let addingSubscriber = $state(false);
   let newEmail = $state("");
-  let newIncidents = $state(true);
-  let newMaintenances = $state(true);
+  let newMonitorTags = $state<string[]>([]);
   let addError = $state("");
+
+  // Edit monitors dialog
+  let editingSubscriber = $state<Subscriber | null>(null);
+  let editMonitorTags = $state<string[]>([]);
+  let savingMonitors = $state(false);
 
   // Delete confirmation
   let showDeleteDialog = $state(false);
   let deletingSubscriber = $state<Subscriber | null>(null);
   let isDeleting = $state(false);
-
-  // Updating toggles
-  let updatingToggle = $state<Record<string, boolean>>({});
 
   // Fetch config
   async function fetchConfig() {
@@ -142,7 +143,13 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "getSubscriptionsConfig" })
       });
-      config = await res.json();
+      const data = await res.json();
+      const emails = data?.methods?.emails ?? {};
+      // Settings saved before monitor subscriptions carry incidents/maintenances flags instead.
+      config = {
+        enable: !!data?.enable,
+        methods: { emails: { monitors: emails.monitors ?? (!!emails.incidents || !!emails.maintenances) } }
+      };
     } catch (error) {
       toast.error("Failed to load configuration");
     } finally {
@@ -185,6 +192,7 @@
       const result = await res.json();
       if (!result.error) {
         subscribers = result.subscribers || [];
+        monitors = result.monitors || [];
         total = result.total || 0;
         totalPages = result.totalPages || 0;
       }
@@ -195,51 +203,49 @@
     }
   }
 
-  // Toggle subscription status
-  async function toggleSubscription(subscriber: Subscriber, eventType: "incidents" | "maintenances", enabled: boolean) {
-    const key = `${subscriber.method_id}-${eventType}`;
-    updatingToggle[key] = true;
+  function applyMonitorChanges(tags: string[], changes: Record<string, boolean>): string[] {
+    return [
+      ...tags.filter((tag) => changes[tag] !== false),
+      ...Object.keys(changes).filter((tag) => changes[tag] && !tags.includes(tag))
+    ];
+  }
 
+  function describeMonitors(tags: string[]): string {
+    if (tags.length === 0) return "None";
+    const names = tags.map((tag) => monitorNames.get(tag) ?? tag);
+    return names.length <= 2 ? names.join(", ") : `${names.slice(0, 2).join(", ")} +${names.length - 2} more`;
+  }
+
+  function openEditMonitors(subscriber: Subscriber) {
+    editingSubscriber = subscriber;
+    editMonitorTags = [...subscriber.monitor_tags];
+  }
+
+  // Save the monitors of the subscriber being edited
+  async function saveSubscriberMonitors() {
+    if (!editingSubscriber) return;
+    savingMonitors = true;
     try {
       const res = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          action: "adminUpdateSubscriptionStatus",
-          data: {
-            methodId: subscriber.method_id,
-            eventType,
-            enabled
-          }
+          action: "adminSetSubscriberMonitors",
+          data: { methodId: editingSubscriber.method_id, monitorTags: editMonitorTags }
         })
       });
       const result = await res.json();
       if (result.error) {
         toast.error(result.error);
-        // Revert toggle
-        if (eventType === "incidents") {
-          subscriber.incidents_enabled = !enabled;
-        } else {
-          subscriber.maintenances_enabled = !enabled;
-        }
-      } else {
-        // Update local state
-        if (eventType === "incidents") {
-          subscriber.incidents_enabled = enabled;
-        } else {
-          subscriber.maintenances_enabled = enabled;
-        }
+        return;
       }
+      editingSubscriber.monitor_tags = result.monitor_tags ?? editMonitorTags;
+      editingSubscriber = null;
+      toast.success("Monitors updated");
     } catch (error) {
-      toast.error("Failed to update subscription");
-      // Revert
-      if (eventType === "incidents") {
-        subscriber.incidents_enabled = !enabled;
-      } else {
-        subscriber.maintenances_enabled = !enabled;
-      }
+      toast.error("Failed to update monitors");
     } finally {
-      updatingToggle[key] = false;
+      savingMonitors = false;
     }
   }
 
@@ -261,8 +267,7 @@
           action: "adminAddSubscriber",
           data: {
             email: newEmail.trim(),
-            incidents: newIncidents,
-            maintenances: newMaintenances
+            monitorTags: newMonitorTags
           }
         })
       });
@@ -284,8 +289,7 @@
 
   function resetAddForm() {
     newEmail = "";
-    newIncidents = true;
-    newMaintenances = true;
+    newMonitorTags = [];
     addError = "";
   }
 
@@ -378,8 +382,7 @@
               checked={config.enable}
               onCheckedChange={(e) => {
                 config.enable = e;
-                config.methods.emails.incidents = e;
-                config.methods.emails.maintenances = e;
+                config.methods.emails.monitors = e;
                 handleConfigChange();
               }}
             />
@@ -392,30 +395,22 @@
                 Email Notifications
               </p>
               <div class="space-y-4 pl-4">
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <AlertTriangle class="h-4 w-4 text-orange-500" />
-                    <Label for="enable-email-incidents" class="mb-0">Incident Updates</Label>
+                <div class="flex items-center justify-between gap-4">
+                  <div class="space-y-0.5">
+                    <div class="flex items-center gap-2">
+                      <Activity class="h-4 w-4 text-blue-500" />
+                      <Label for="enable-email-monitors" class="mb-0">Monitor Updates</Label>
+                    </div>
+                    <p class="text-muted-foreground text-xs">
+                      Visitors pick monitors to follow. They get an email when a followed monitor changes status, or is
+                      part of an incident or maintenance.
+                    </p>
                   </div>
                   <Switch
-                    id="enable-email-incidents"
-                    checked={config.methods.emails.incidents}
+                    id="enable-email-monitors"
+                    checked={config.methods.emails.monitors}
                     onCheckedChange={(e) => {
-                      config.methods.emails.incidents = e;
-                      handleConfigChange();
-                    }}
-                  />
-                </div>
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center gap-2">
-                    <Wrench class="h-4 w-4 text-blue-500" />
-                    <Label for="enable-email-maintenances" class="mb-0">Maintenance Updates</Label>
-                  </div>
-                  <Switch
-                    id="enable-email-maintenances"
-                    checked={config.methods.emails.maintenances}
-                    onCheckedChange={(e) => {
-                      config.methods.emails.maintenances = e;
+                      config.methods.emails.monitors = e;
                       handleConfigChange();
                     }}
                   />
@@ -437,8 +432,8 @@
                 <div class="space-y-0.5">
                   <Label for="enable-rss-feed" class="mb-0">Show RSS feed link</Label>
                   <p class="text-muted-foreground text-xs">
-                    Adds an RSS icon to the public page header. The feed routes
-                    (<code class="text-xs">/rss.xml</code>) remain reachable either way.
+                    Adds an RSS icon to the public page header. The feed routes (<code class="text-xs">/rss.xml</code>)
+                    remain reachable either way.
                   </p>
                 </div>
                 <Switch
@@ -480,18 +475,7 @@
           <Table.Header>
             <Table.Row>
               <Table.Head>Email</Table.Head>
-              <Table.Head class="text-center">
-                <div class="flex items-center justify-center gap-1">
-                  <AlertTriangle class="h-4 w-4 text-orange-500" />
-                  Incidents
-                </div>
-              </Table.Head>
-              <Table.Head class="text-center">
-                <div class="flex items-center justify-center gap-1">
-                  <Wrench class="h-4 w-4 text-blue-500" />
-                  Maintenances
-                </div>
-              </Table.Head>
+              <Table.Head>Monitors</Table.Head>
               <Table.Head>Subscribed At</Table.Head>
               <Table.Head class="w-20 text-center">Actions</Table.Head>
             </Table.Row>
@@ -499,7 +483,7 @@
           <Table.Body>
             {#if loadingSubscribers && subscribers.length === 0}
               <Table.Row>
-                <Table.Cell colspan={5} class="py-8 text-center">
+                <Table.Cell colspan={4} class="py-8 text-center">
                   <div class="flex items-center justify-center gap-2">
                     <Spinner class="size-4" />
                     <span class="text-muted-foreground text-sm">Loading subscribers...</span>
@@ -508,7 +492,7 @@
               </Table.Row>
             {:else if subscribers.length === 0}
               <Table.Row>
-                <Table.Cell colspan={5} class="text-muted-foreground py-8 text-center">
+                <Table.Cell colspan={4} class="text-muted-foreground py-8 text-center">
                   No subscribers yet. Add your first subscriber above.
                 </Table.Cell>
               </Table.Row>
@@ -516,19 +500,17 @@
               {#each subscribers as subscriber (subscriber.method_id)}
                 <Table.Row>
                   <Table.Cell class="font-medium">{subscriber.email}</Table.Cell>
-                  <Table.Cell class="text-center">
-                    <Switch
-                      checked={subscriber.incidents_enabled}
-                      disabled={updatingToggle[`${subscriber.method_id}-incidents`]}
-                      onCheckedChange={(e) => toggleSubscription(subscriber, "incidents", e)}
-                    />
-                  </Table.Cell>
-                  <Table.Cell class="text-center">
-                    <Switch
-                      checked={subscriber.maintenances_enabled}
-                      disabled={updatingToggle[`${subscriber.method_id}-maintenances`]}
-                      onCheckedChange={(e) => toggleSubscription(subscriber, "maintenances", e)}
-                    />
+                  <Table.Cell>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      class="h-8 max-w-64 justify-start gap-2 px-2 font-normal"
+                      title={subscriber.monitor_tags.map((tag) => monitorNames.get(tag) ?? tag).join(", ")}
+                      onclick={() => openEditMonitors(subscriber)}
+                    >
+                      <span class="truncate">{describeMonitors(subscriber.monitor_tags)}</span>
+                      <PencilIcon class="text-muted-foreground size-3.5 shrink-0" />
+                    </Button>
                   </Table.Cell>
                   <Table.Cell>
                     <LocalTime value={subscriber.created_at} format="MMM d, yyyy" />
@@ -605,21 +587,14 @@
           disabled={addingSubscriber}
         />
       </div>
-      <div class="space-y-4">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <AlertTriangle class="h-4 w-4 text-orange-500" />
-            <Label for="new-incidents" class="mb-0">Subscribe to Incidents</Label>
-          </div>
-          <Switch id="new-incidents" bind:checked={newIncidents} disabled={addingSubscriber} />
-        </div>
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <Wrench class="h-4 w-4 text-blue-500" />
-            <Label for="new-maintenances" class="mb-0">Subscribe to Maintenances</Label>
-          </div>
-          <Switch id="new-maintenances" bind:checked={newMaintenances} disabled={addingSubscriber} />
-        </div>
+      <div class="space-y-2">
+        <Label>Monitors</Label>
+        <MonitorSubscriptionPicker
+          {monitors}
+          selected={newMonitorTags}
+          onChange={(changes) => (newMonitorTags = applyMonitorChanges(newMonitorTags, changes))}
+          disabled={addingSubscriber}
+        />
       </div>
       {#if addError}
         <Alert.Root variant="destructive">
@@ -644,6 +619,42 @@
           Adding...
         {:else}
           Add Subscriber
+        {/if}
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
+
+<!-- Edit Monitors Dialog -->
+<Dialog.Root
+  open={editingSubscriber !== null}
+  onOpenChange={(open) => {
+    if (!open && !savingMonitors) editingSubscriber = null;
+  }}
+>
+  <Dialog.Content class="sm:max-w-md">
+    <Dialog.Header>
+      <Dialog.Title>Monitors</Dialog.Title>
+      <Dialog.Description>
+        Choose the monitors {editingSubscriber?.email} gets email updates for
+      </Dialog.Description>
+    </Dialog.Header>
+    <div class="py-4">
+      <MonitorSubscriptionPicker
+        {monitors}
+        selected={editMonitorTags}
+        onChange={(changes) => (editMonitorTags = applyMonitorChanges(editMonitorTags, changes))}
+        disabled={savingMonitors}
+      />
+    </div>
+    <Dialog.Footer>
+      <Button variant="outline" onclick={() => (editingSubscriber = null)} disabled={savingMonitors}>Cancel</Button>
+      <Button onclick={saveSubscriberMonitors} disabled={savingMonitors}>
+        {#if savingMonitors}
+          <Spinner class="size-4" />
+          Saving...
+        {:else}
+          Save
         {/if}
       </Button>
     </Dialog.Footer>

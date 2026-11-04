@@ -234,6 +234,65 @@ export class SubscriptionSystemRepository extends BaseRepository {
     return !!result;
   }
 
+  // ============ Subscriber Monitors ============
+
+  async getSubscriberMonitorTags(subscriberMethodId: number): Promise<string[]> {
+    return await this.knex("subscriber_monitors")
+      .where("subscriber_method_id", subscriberMethodId)
+      .orderBy("monitor_tag", "asc")
+      .pluck("monitor_tag");
+  }
+
+  async addSubscriberMonitors(
+    subscriberUserId: number,
+    subscriberMethodId: number,
+    monitorTags: string[],
+  ): Promise<void> {
+    if (monitorTags.length === 0) return;
+    await this.knex("subscriber_monitors")
+      .insert(
+        monitorTags.map((monitorTag) => ({
+          subscriber_user_id: subscriberUserId,
+          subscriber_method_id: subscriberMethodId,
+          monitor_tag: monitorTag,
+          created_at: this.knex.fn.now(),
+          updated_at: this.knex.fn.now(),
+        })),
+      )
+      .onConflict(["subscriber_method_id", "monitor_tag"])
+      .ignore();
+  }
+
+  async removeSubscriberMonitors(subscriberMethodId: number, monitorTags: string[]): Promise<number> {
+    if (monitorTags.length === 0) return 0;
+    return await this.knex("subscriber_monitors")
+      .where("subscriber_method_id", subscriberMethodId)
+      .whereIn("monitor_tag", monitorTags)
+      .del();
+  }
+
+  async deleteSubscriberMonitorsByTag(monitorTag: string): Promise<number> {
+    return await this.knex("subscriber_monitors").where("monitor_tag", monitorTag).del();
+  }
+
+  /**
+   * Emails of active subscribers to any of these monitors, once each. A hidden monitor reaches no one.
+   */
+  async getEmailsSubscribedToMonitors(monitorTags: string[]): Promise<string[]> {
+    if (monitorTags.length === 0) return [];
+    return await this.knex("subscriber_monitors as smo")
+      .join("subscriber_methods as sm", "smo.subscriber_method_id", "sm.id")
+      .join("subscriber_users as su", "sm.subscriber_user_id", "su.id")
+      .join("monitors as m", "smo.monitor_tag", "m.tag")
+      .whereIn("smo.monitor_tag", monitorTags)
+      .andWhere("m.is_hidden", "NO")
+      .andWhere("sm.method_type", "email")
+      .andWhere("sm.status", "ACTIVE")
+      .andWhere("su.status", "ACTIVE")
+      .distinct("sm.method_value")
+      .pluck("sm.method_value");
+  }
+
   // ============ Complex Queries ============
 
   /**

@@ -3,7 +3,6 @@
   import * as InputOTP from "$lib/components/ui/input-otp/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
-  import { Switch } from "$lib/components/ui/switch/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { onMount } from "svelte";
   import { resolve } from "$app/paths";
@@ -14,12 +13,11 @@
   import LogOut from "@lucide/svelte/icons/log-out";
   import Loader2 from "@lucide/svelte/icons/loader-2";
   import Bell from "@lucide/svelte/icons/bell";
-  import AlertTriangle from "@lucide/svelte/icons/alert-triangle";
-  import Wrench from "@lucide/svelte/icons/wrench";
   import { t } from "$lib/stores/i18n";
   import trackEvent from "$lib/beacon";
   import ICONS from "$lib/icons";
   import Captcha from "./Captcha.svelte";
+  import MonitorSubscriptionPicker from "./MonitorSubscriptionPicker.svelte";
 
   interface Props {
     compact?: boolean;
@@ -45,12 +43,8 @@
 
   // Preferences data
   let subscriberEmail = $state("");
-  let incidentsEnabled = $state(false);
-  let maintenancesEnabled = $state(false);
-  let availableSubscriptions = $state<{ incidents: boolean; maintenances: boolean }>({
-    incidents: false,
-    maintenances: false
-  });
+  let subscribedMonitors = $state<string[]>([]);
+  let availableMonitors = $state<Array<{ tag: string; name: string }>>([]);
 
   // Check token on mount
   onMount(() => {
@@ -88,9 +82,8 @@
 
       const data = await response.json();
       subscriberEmail = data.email || "";
-      incidentsEnabled = data.subscriptions?.incidents || false;
-      maintenancesEnabled = data.subscriptions?.maintenances || false;
-      availableSubscriptions = data.availableSubscriptions || { incidents: false, maintenances: false };
+      subscribedMonitors = data.monitors || [];
+      availableMonitors = data.availableMonitors || [];
       currentView = "preferences";
     } catch (err) {
       localStorage.removeItem(STORAGE_KEY);
@@ -182,52 +175,41 @@
     }
   }
 
-  async function handlePreferenceChange(type: "incidents" | "maintenances", value: boolean) {
+  async function handleMonitorsChange(changes: Record<string, boolean>) {
     const token = localStorage.getItem(STORAGE_KEY);
     if (!token) {
       currentView = "login";
       return;
     }
+    if (Object.keys(changes).length === 0) return;
+
+    // Show the change at once; put the previous selection back if saving fails.
+    const previous = subscribedMonitors;
+    subscribedMonitors = [
+      ...previous.filter((tag) => changes[tag] !== false),
+      ...Object.keys(changes).filter((tag) => changes[tag] && !previous.includes(tag))
+    ];
+    errorMessage = "";
 
     try {
       const response = await fetch(clientResolver(resolve, "/dashboard-apis/subscription"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "updatePreferences",
-          token,
-          [type]: value
-        })
+        body: JSON.stringify({ action: "updatePreferences", token, monitors: changes })
       });
 
       if (!response.ok) {
-        const data = await response.json();
         errorMessage = $t("Failed to update preference");
-        // Revert the toggle
-        if (type === "incidents") {
-          incidentsEnabled = !value;
-        } else {
-          maintenancesEnabled = !value;
-        }
+        subscribedMonitors = previous;
         return;
       }
 
-      // Update local state
-      if (type === "incidents") {
-        incidentsEnabled = value;
-      } else {
-        maintenancesEnabled = value;
-      }
-
-      trackEvent("subscribe_pref_toggled", { source: "subscribe_menu", type, value });
+      const data = await response.json();
+      subscribedMonitors = data.monitors || subscribedMonitors;
+      trackEvent("subscribe_monitors_changed", { source: "subscribe_menu", count: Object.keys(changes).length });
     } catch (err) {
       errorMessage = $t("Network error. Please try again.");
-      // Revert the toggle
-      if (type === "incidents") {
-        incidentsEnabled = !value;
-      } else {
-        maintenancesEnabled = !value;
-      }
+      subscribedMonitors = previous;
     }
   }
 
@@ -236,8 +218,8 @@
     email = "";
     otpValue = "";
     subscriberEmail = "";
-    incidentsEnabled = false;
-    maintenancesEnabled = false;
+    subscribedMonitors = [];
+    availableMonitors = [];
     errorMessage = "";
     currentView = "login";
     trackEvent("subscribe_logout", { source: "subscribe_menu" });
@@ -300,7 +282,7 @@
 <Dialog.Root bind:open>
   <Dialog.Overlay class="backdrop-blur-[2px]" />
   <Dialog.Content
-    class="max-w-sm rounded-3xl"
+    class="max-h-[90dvh] max-w-sm overflow-y-auto rounded-3xl"
     onInteractOutside={ignoreCaptchaIframeInteraction}
     onFocusOutside={ignoreCaptchaIframeInteraction}
   >
@@ -311,11 +293,11 @@
       </Dialog.Title>
       <Dialog.Description>
         {#if currentView === "login"}
-          {$t("Get notified about incidents and scheduled maintenance.")}
+          {$t("Get email updates about the monitors you choose.")}
         {:else if currentView === "otp"}
           {$t("Enter the verification code sent to your email.")}
         {:else if currentView === "preferences"}
-          {$t("Manage your notification preferences.")}
+          {$t("Choose the monitors you want to hear about.")}
         {:else if currentView === "loading"}
           {$t("Loading your preferences...")}
         {/if}
@@ -409,8 +391,8 @@
         </div>
       {:else if currentView === "preferences"}
         <!-- Preferences View -->
-        <div class="flex flex-col gap-6">
-          <div class="rounded-lg border p-4">
+        <div class="flex flex-col gap-4">
+          <div class="rounded-lg border px-4 py-3">
             <div class="flex items-center justify-between gap-2">
               <div class="flex gap-2">
                 <Mail class="text-muted-foreground h-4 w-4" />
@@ -422,38 +404,15 @@
             </div>
           </div>
 
-          <div class="flex flex-col gap-4">
-            {#if availableSubscriptions.incidents}
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <AlertTriangle class="h-5 w-5 text-orange-500" />
-                  <div>
-                    <Label class="font-medium">{$t("Incident Updates")}</Label>
-                    <p class="text-muted-foreground text-xs">{$t("Get notified about incidents updates")}</p>
-                  </div>
-                </div>
-                <Switch
-                  checked={incidentsEnabled}
-                  onCheckedChange={(value) => handlePreferenceChange("incidents", value)}
-                />
-              </div>
-            {/if}
-
-            {#if availableSubscriptions.maintenances}
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                  <Wrench class="h-5 w-5 text-blue-500" />
-                  <div>
-                    <Label class="font-medium">{$t("Maintenance Updates")}</Label>
-                    <p class="text-muted-foreground text-xs">{$t("Get notified about scheduled maintenance")}</p>
-                  </div>
-                </div>
-                <Switch
-                  checked={maintenancesEnabled}
-                  onCheckedChange={(value) => handlePreferenceChange("maintenances", value)}
-                />
-              </div>
-            {/if}
+          <div class="flex flex-col gap-2">
+            <p class="text-muted-foreground text-xs">
+              {$t("You get an email when a chosen monitor changes status or is part of an incident or maintenance.")}
+            </p>
+            <MonitorSubscriptionPicker
+              monitors={availableMonitors}
+              selected={subscribedMonitors}
+              onChange={handleMonitorsChange}
+            />
           </div>
 
           {#if errorMessage}

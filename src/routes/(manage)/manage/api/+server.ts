@@ -107,7 +107,7 @@ import {
   DeleteUserSubscription,
   UpdateUserSubscriptionStatus,
   GetAdminSubscribersPaginated,
-  AdminUpdateSubscriptionStatus,
+  AdminSetSubscriberMonitors,
   AdminDeleteSubscriber,
   AdminAddSubscriber,
 } from "$lib/server/controllers/userSubscriptionsController.js";
@@ -613,12 +613,12 @@ export async function POST({ request, cookies }) {
       const page = parseInt(String(data.page)) || 1;
       const limit = parseInt(String(data.limit)) || 10;
       resp = await GetAdminSubscribersPaginated(page, limit);
-    } else if (action == "adminUpdateSubscriptionStatus") {
-      const { methodId, eventType, enabled } = data;
-      if (!methodId || !eventType) {
-        throw new Error("Method ID and event type are required");
+    } else if (action == "adminSetSubscriberMonitors") {
+      const { methodId, monitorTags } = data;
+      if (!methodId || !Array.isArray(monitorTags)) {
+        throw new Error("Method ID and monitor tags are required");
       }
-      resp = await AdminUpdateSubscriptionStatus(methodId, eventType, enabled);
+      resp = await AdminSetSubscriberMonitors(methodId, monitorTags);
       if (!resp.success) {
         throw new Error(resp.error);
       }
@@ -632,11 +632,11 @@ export async function POST({ request, cookies }) {
         throw new Error(resp.error);
       }
     } else if (action == "adminAddSubscriber") {
-      const { email, incidents, maintenances } = data;
+      const { email, monitorTags } = data;
       if (!email) {
         throw new Error("Email is required");
       }
-      resp = await AdminAddSubscriber(email, incidents ?? false, maintenances ?? false);
+      resp = await AdminAddSubscriber(email, Array.isArray(monitorTags) ? monitorTags : []);
       if (!resp.success) {
         throw new Error(resp.error);
       }
@@ -647,8 +647,7 @@ export async function POST({ request, cookies }) {
           enable: false,
           methods: {
             emails: {
-              incidents: true,
-              maintenances: true,
+              monitors: true,
             },
           },
         };
