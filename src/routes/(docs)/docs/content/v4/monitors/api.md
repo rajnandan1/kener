@@ -52,6 +52,8 @@ It must return:
 { status: "UP" | "DEGRADED" | "DOWN" | "MAINTENANCE", latency: number }
 ```
 
+Eval code runs in a [sandbox](/docs/v4/monitors/overview#eval-sandbox).
+
 ## Example {#example}
 
 ```json
@@ -70,4 +72,5 @@ It must return:
 - **Always DOWN**: verify URL/method/headers/body
 - **TLS errors**: enable `allowSelfSignedCert` only for trusted self-signed endpoints
 - **Eval errors**: simplify eval and validate return shape
+- **`'fetch' is not defined`**: eval code has no Node.js or browser features; see the [sandbox](/docs/v4/monitors/overview#eval-sandbox)
 - **`Failed to establish tunnel`**: the proxy refused the connection; see [proxy settings](/docs/v4/setup/environment-variables#http-proxy)

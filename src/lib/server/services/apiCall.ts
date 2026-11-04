@@ -1,11 +1,11 @@
 import axios, { type AxiosRequestConfig } from "axios";
 import { GetRequiredSecrets, ReplaceAllOccurrences, ApplySecretsToHeaders } from "../tool.js";
 import GC from "../../global-constants.js";
-import * as cheerio from "cheerio";
 import { DefaultAPIEval } from "../../anywhere.js";
 import version from "../../version.js";
 import { AxiosProxyConfig } from "../proxy.js";
 import { performance } from "node:perf_hooks";
+import { RunMonitorEval } from "./evalSandbox.js";
 import type { ApiMonitor, EvalResponse, MonitoringResult } from "../types/monitor.js";
 
 class ApiCall {
@@ -127,58 +127,17 @@ class ApiCall {
       }
     }
 
-    let evalResp: EvalResponse | undefined = undefined;
-    let modules = { cheerio };
-
+    let evalResp: EvalResponse;
     try {
-      const evalFunction = new Function(
-        "statusCode",
-        "responseTime",
-        "responseRaw",
-        "modules",
-        `return (${monitorEval})(statusCode, responseTime, responseRaw, modules);`,
-      );
-      evalResp = await evalFunction(statusCode, latency, resp, modules);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        if (error.message.length > 200) {
-          errorMessage += ` | Eval error: ${error.message.substring(0, 200)}...`;
-        } else {
-          errorMessage += ` | Eval error: ${error.message}`;
-        }
-      } else {
-        errorMessage += ` | Eval error: ${String(error)}`;
-      }
-    }
-
-    if (!evalResp || typeof evalResp !== "object") {
-      evalResp = {
-        status: GC.DOWN,
-        latency: latency,
-        type: GC.ERROR,
-      };
-      errorMessage += " | Eval must return an object with 'status' and 'latency' fields, got no response";
-    } else if (evalResp.status === undefined) {
-      evalResp = {
-        status: GC.DOWN,
-        latency: latency,
-        type: GC.ERROR,
-      };
-      errorMessage += ` | Eval must return an object with a 'status' field (one of: ${GC.UP}, ${GC.DOWN}, ${GC.DEGRADED}, ${GC.MAINTENANCE}), but 'status' was missing`;
-    } else if (([GC.UP, GC.DOWN, GC.DEGRADED, GC.MAINTENANCE] as string[]).indexOf(evalResp.status) === -1) {
-      evalResp = {
-        status: GC.DOWN,
-        latency: latency,
-        type: GC.ERROR,
-      };
-      errorMessage += ` | Eval returned invalid 'status' value "${evalResp.status}". Must be one of: ${GC.UP}, ${GC.DOWN}, ${GC.DEGRADED}, ${GC.MAINTENANCE}`;
-    } else {
+      evalResp = await RunMonitorEval(monitorEval, [statusCode, latency, resp]);
       evalResp.type = GC.REALTIME;
-      // Ensure latency is a valid number; fall back to measured latency
-      if (typeof evalResp.latency !== "number" || isNaN(evalResp.latency)) {
-        errorMessage += ` | Eval 'latency' must be a number, got ${JSON.stringify(evalResp.latency)}. Using measured latency instead`;
+      if (evalResp.latency === undefined) {
+        errorMessage += " | Eval 'latency' must be a number. Using measured latency instead";
         evalResp.latency = latency;
       }
+    } catch (error: unknown) {
+      errorMessage += ` | ${error instanceof Error ? error.message : String(error)}`;
+      evalResp = { status: GC.DOWN, latency, type: GC.ERROR };
     }
 
     let toWrite: MonitoringResult = {

@@ -1,5 +1,6 @@
 import * as esbuild from "esbuild";
 import { readFileSync } from "fs";
+import { buildCheerioGuest } from "./cheerio-guest.js";
 
 const pkg = JSON.parse(readFileSync("./package.json", "utf8"));
 
@@ -28,6 +29,7 @@ await esbuild.build({
     // Inject version at build time so src/lib/version.ts resolves it
     // without relying on vite-plugin-package-version at runtime
     "import.meta.env.PACKAGE_VERSION": JSON.stringify(pkg.version),
+    __CHEERIO_GUEST__: JSON.stringify(buildCheerioGuest()),
   },
   plugins: [
     {

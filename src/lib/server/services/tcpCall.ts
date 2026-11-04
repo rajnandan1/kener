@@ -1,7 +1,8 @@
 import { TCP } from "../ping.js";
 import GC from "../../global-constants.js";
 import { DefaultTCPEval } from "../../anywhere.js";
-import type { TcpMonitor, MonitoringResult, EvalResponse } from "../types/monitor.js";
+import { RunMonitorEval } from "./evalSandbox.js";
+import type { TcpMonitor, MonitoringResult } from "../types/monitor.js";
 
 class TcpCall {
   monitor: TcpMonitor;
@@ -40,11 +41,17 @@ class TcpCall {
       arrayOfPings.push(result);
     }
 
-    let evalResp: EvalResponse | undefined = undefined;
-
     try {
-      const evalFunction = new Function("arrayOfPings", `return (${tcpEval})(arrayOfPings);`);
-      evalResp = await evalFunction(arrayOfPings);
+      const { status, latency } = await RunMonitorEval(tcpEval, [arrayOfPings]);
+      if (latency === undefined) {
+        throw new Error("tcpEval did not return status or latency.");
+      }
+      return {
+        status,
+        latency,
+        type: GC.REALTIME,
+        error_message: errorMessages.length > 0 ? errorMessages.join("; ") : undefined,
+      };
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       console.log(`Error in tcpEval for ${tag}`, message);
@@ -55,36 +62,6 @@ class TcpCall {
         error_message: `Error in tcpEval: ${message}`,
       };
     }
-    if (!evalResp) {
-      const message = "tcpEval did not return a valid response.";
-      console.log(`Error in tcpEval for ${tag}:`, message);
-      return {
-        status: GC.DOWN,
-        latency: 0,
-        type: GC.ERROR,
-        error_message: `Error in tcpEval: ${message}`,
-      };
-    }
-
-    //evalResp to be an object with status and latency
-    if (!("status" in evalResp) || !("latency" in evalResp)) {
-      const message = "tcpEval did not return status or latency.";
-      console.log(`Error in tcpEval for ${tag}:`, message);
-      return {
-        status: GC.DOWN,
-        latency: 0,
-        type: GC.ERROR,
-        error_message: `Error in tcpEval: ${message}`,
-      };
-    }
-
-    //reduce to get the status
-    return {
-      status: evalResp?.status || GC.DOWN,
-      latency: evalResp?.latency || 0,
-      type: GC.REALTIME,
-      error_message: errorMessages.length > 0 ? errorMessages.join("; ") : undefined,
-    };
   }
 }
 

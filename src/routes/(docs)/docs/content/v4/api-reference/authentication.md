@@ -24,7 +24,7 @@ A `200` response means the key works. Keep the key in an environment variable or
 ## What a key can do {#key-access}
 
 > [!WARNING]
-> Every API key has full access to every `/api/v4` route. Kener has no per-key permissions and no key expiry yet. A key can create monitors, and a monitor's custom eval code runs on the Kener server. Treat every API key like an admin password.
+> Every API key has full access to every `/api/v4` route. Kener has no per-key permissions and no key expiry yet. A key can create monitors that send requests to any address the Kener server can reach. Treat every API key like an admin password.
 
 API keys depend on [`KENER_SECRET_KEY`](/docs/v4/setup/environment-variables#kener-secret-key). If you change it, every existing key stops working, and you must create new keys.
 

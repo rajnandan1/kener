@@ -1,7 +1,8 @@
 import { Ping } from "../ping.js";
 import GC from "../../global-constants.js";
 import { DefaultPingEval } from "../../anywhere.js";
-import type { PingMonitor, MonitoringResult, EvalResponse } from "../types/monitor.js";
+import { RunMonitorEval } from "./evalSandbox.js";
+import type { PingMonitor, MonitoringResult } from "../types/monitor.js";
 
 class PingCall {
   monitor: PingMonitor;
@@ -34,28 +35,25 @@ class PingCall {
       }
       arrayOfPings.push(result);
     }
-    let evalResp: EvalResponse | undefined = undefined;
 
     try {
-      const evalFunction = new Function("arrayOfPings", `return (${pingEval})(arrayOfPings);`);
-      evalResp = await evalFunction(arrayOfPings);
+      const { status, latency } = await RunMonitorEval(pingEval, [arrayOfPings]);
+      return {
+        status,
+        latency: latency ?? 0,
+        type: GC.REALTIME,
+        error_message: errorMessages.length > 0 ? errorMessages.join("; ") : undefined,
+      };
     } catch (error: unknown) {
-      console.log(`Error in pingEval for ${tag}`, (error as Error).message);
+      const message = error instanceof Error ? error.message : String(error);
+      console.log(`Error in pingEval for ${tag}`, message);
       return {
         status: GC.DOWN,
         latency: 0,
         type: GC.ERROR,
-        error_message: `Error in pingEval: ${(error as Error).message}`,
+        error_message: `Error in pingEval: ${message}`,
       };
     }
-
-    //reduce to get the status
-    return {
-      status: evalResp?.status || GC.DOWN,
-      latency: evalResp?.latency || 0,
-      type: GC.REALTIME,
-      error_message: errorMessages.length > 0 ? errorMessages.join("; ") : undefined,
-    };
   }
 }
 

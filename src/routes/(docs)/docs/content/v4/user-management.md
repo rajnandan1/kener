@@ -55,7 +55,7 @@ Permissions follow a `domain.action` format:
 | `roles`           | `read`, `write`, `assign_permissions`, `assign_users` |
 
 > [!WARNING]
-> `monitors.write` lets a user set a monitor's custom eval code, and that code runs on the Kener server. Give `monitors.write` only to people you trust with the server. The built-in `editor` role has it.
+> `monitors.write` lets a user make Kener send requests to any address the server can reach, including internal addresses. Monitors also read the server's environment variables through [`$SECRET` substitution](/docs/v4/monitors/api). Give `monitors.write` only to people you trust with your network and those variables. The built-in `editor` role has it.
 
 Permissions are enforced at both the **route level** (page access) and the **action level** (API operations).
 

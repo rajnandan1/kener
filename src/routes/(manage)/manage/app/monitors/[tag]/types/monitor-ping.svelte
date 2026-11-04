@@ -141,7 +141,8 @@
       />
     </div>
     <p class="text-muted-foreground mt-1 text-xs">
-      Function receives (arrayOfPings) and should return {`{ status, latency }`}
+      Function receives (arrayOfPings) and should return {`{ status, latency }`}. It runs in a sandbox with no Node.js
+      features such as fetch or process.
     </p>
   </div>
 </div>
