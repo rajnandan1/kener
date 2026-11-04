@@ -80,7 +80,7 @@ Cheerio runs about 20 times slower in the sandbox than in Node.js. A 1 MB page t
 
 ### Replace `fetch` in an eval {#replace-fetch}
 
-- **The second URL is fixed**: add a second [API monitor](/docs/v4/monitors/api). To show one status, add both monitors to a [Group monitor](/docs/v4/monitors/group).
+- **The second URL is fixed**: add a second [API monitor](/docs/v4/monitors/api). To show one status, add both monitors to a [Group monitor](/docs/v4/monitors/group). When only one of the two is **DOWN**, the group reports **DEGRADED**, so an alert on **DOWN** alone does not fire.
 - **The second URL comes from the first response, or the check needs a login**: run your own script outside Kener. Make the script call the URL of a [Heartbeat monitor](/docs/v4/monitors/heartbeat) when every step passes.
 
 ## Stored secrets {#stored-secrets}

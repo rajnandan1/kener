@@ -5,6 +5,15 @@ import { DefaultAPIEval, DefaultGamedigEval, DefaultPingEval, DefaultTCPEval } f
 import { RunMonitorEval } from "./evalSandbox";
 
 const up = `{ status: "UP", latency: 1 }`;
+const realSetTimeout = setTimeout;
+
+async function expectKillAtDeadline(code: string) {
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
+  const assertion = expect(RunMonitorEval(code, [])).rejects.toThrow("Eval error: Timed out after 10000 ms");
+  await new Promise((resolve) => realSetTimeout(resolve, 250));
+  await vi.advanceTimersByTimeAsync(10_000);
+  await assertion;
+}
 
 function runInNode(code: string, args: unknown[]): Promise<unknown> {
   const evalFunction = new Function("args", "modules", `return (${code}\n)(...args, modules);`);
@@ -215,23 +224,22 @@ describe("RunMonitorEval limits", () => {
     ["a getter that never returns", `async () => ({ get status() { while (true) {} } })`],
     ["a C builtin that ignores interrupts", `async () => ({ length: Array(2 ** 32 - 1).join("").length })`],
   ])("kills %s at the deadline", async (_name, code) => {
-    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
-
-    const assertion = expect(RunMonitorEval(code, [])).rejects.toThrow("Eval error: Timed out after 10000 ms");
-    await vi.advanceTimersByTimeAsync(10_000);
-
-    await assertion;
+    await expectKillAtDeadline(code);
   });
 
   it("ends the worker thread at the deadline", async () => {
     const terminate = vi.spyOn(Worker.prototype, "terminate");
-    vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] });
 
-    const assertion = expect(RunMonitorEval(`async () => { while (true) {} }`, [])).rejects.toThrow("Timed out");
-    await vi.advanceTimersByTimeAsync(10_000);
-    await assertion;
+    await expectKillAtDeadline(`async () => { while (true) {} }`);
 
-    expect(terminate).toHaveBeenCalled();
+    const exitCodes = await Promise.all(terminate.mock.results.map((result) => result.value));
+    expect(exitCodes).toContain(1);
+  });
+
+  it("rejects a result that is too large", async () => {
+    const code = `async () => ({ status: "x".repeat(2048), latency: 1 })`;
+
+    await expect(RunMonitorEval(code, [])).rejects.toThrow("Eval error: The result is too large");
   });
 
   it("reports a promise that never resolves", async () => {

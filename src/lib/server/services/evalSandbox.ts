@@ -6,6 +6,7 @@ declare const __CHEERIO_GUEST__: string;
 const EVAL_TIMEOUT_MS = 10_000;
 const EVAL_MEMORY_LIMIT_BYTES = 256 * 1024 * 1024;
 const EVAL_ERROR_MAX_LENGTH = 200;
+const EVAL_MESSAGE_MAX_LENGTH = 1024;
 const EVAL_STATUSES = [GC.UP, GC.DOWN, GC.DEGRADED, GC.MAINTENANCE] as const;
 
 const GUEST_PRELUDE = `(() => {
@@ -69,8 +70,9 @@ const variant = load("@jitl/quickjs-wasmfile-release-sync");
   }
   return context.dump(state.value);
 })().then(
-  (result) => parentPort.postMessage({ result }),
-  (error) => parentPort.postMessage({ error: String(error?.message ?? error) }),
+  (result) =>
+    parentPort.postMessage(result?.length > workerData.messageLimit ? { error: "The result is too large" } : { result }),
+  (error) => parentPort.postMessage({ error: String(error?.message ?? error).slice(0, workerData.messageLimit) }),
 );
 `;
 
@@ -96,6 +98,7 @@ function runInWorker(code: string, args: unknown[]): Promise<unknown> {
       workerData: {
         requireFrom: import.meta.url,
         memoryLimit: EVAL_MEMORY_LIMIT_BYTES,
+        messageLimit: EVAL_MESSAGE_MAX_LENGTH,
         prelude: GUEST_PRELUDE + (code.includes("cheerio") ? __CHEERIO_GUEST__ : ""),
         script: guestScript(code),
         args: serializeArgs(args),
