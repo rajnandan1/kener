@@ -18,6 +18,7 @@
   import { SveltePurify } from "@humanspeak/svelte-purify";
   import type { PageMonitorLayoutStyle } from "$lib/types/api";
   import GC from "$lib/global-constants.js";
+  import { GetGridContainerClass, GetGridItemSpanClass, IsCompactLayout, IsGridLayout } from "$lib/monitorLayout";
   let { data } = $props();
   let pageSettings = $derived(data.pageDetails.page_settings);
   let barCount = $derived.by(() =>
@@ -31,49 +32,10 @@
   let monitorBarErrorByTag = $state<Record<string, string>>({});
   let requestVersion = 0;
   let viewType = $derived<PageMonitorLayoutStyle | undefined>(pageSettings?.monitor_layout_style);
-  let isCompact = $derived(viewType === "compact-list" || viewType === "compact-grid");
+  let isCompact = $derived(IsCompactLayout(viewType));
+  let isGrid = $derived(IsGridLayout(viewType));
   let showInlineEvents = $derived(data.eventDisplaySettings?.showInlineEvents === true);
   let eventListPlacement = $derived(data.eventDisplaySettings?.eventListPlacement);
-
-  function getGridItemSpanClass(index: number, total: number, type: typeof viewType): string {
-    if (type === "default-grid") {
-      const mdLastRowCount = total % 2 || 2;
-      const mdLastRowStart = total - mdLastRowCount;
-      const isInMdLastRow = index >= mdLastRowStart;
-      const mdSpan = isInMdLastRow && mdLastRowCount === 1 ? "md:col-span-4" : "md:col-span-2";
-
-      const lgLastRowCount = total % 2 || 2;
-      const lgLastRowStart = total - lgLastRowCount;
-      const isInLgLastRow = index >= lgLastRowStart;
-      const lgSpan = isInLgLastRow && lgLastRowCount === 1 ? "lg:col-span-4" : "lg:col-span-2";
-
-      return `${mdSpan} ${lgSpan}`;
-    }
-
-    const smLastRowCount = total % 2 || 2;
-    const smLastRowStart = total - smLastRowCount;
-    const isInSmLastRow = index >= smLastRowStart;
-    const smSpan = isInSmLastRow && smLastRowCount === 1 ? "sm:col-span-4" : "sm:col-span-2";
-
-    const lgLastRowCount = total % 3 || 3;
-    const lgLastRowStart = total - lgLastRowCount;
-    const isInLgLastRow = index >= lgLastRowStart;
-    const lgSpan = isInLgLastRow
-      ? lgLastRowCount === 1
-        ? "lg:col-span-6"
-        : lgLastRowCount === 2
-          ? "lg:col-span-3"
-          : "lg:col-span-2"
-      : "lg:col-span-2";
-
-    return `${smSpan} ${lgSpan}`;
-  }
-
-  function getGridContainerClass(type: typeof viewType): string {
-    if (type === "compact-grid") return "bg-border gap-px sm:grid-cols-4 lg:grid-cols-6";
-    if (type === "default-grid") return "bg-border gap-px md:grid-cols-4 lg:grid-cols-4";
-    return "";
-  }
 
   $effect(() => {
     const tags = data.monitorTags || [];
@@ -208,11 +170,11 @@
           </div>
         {/if}
         <div class="overflow-hidden rounded-3xl border">
-          <div class={`grid grid-cols-1 ${getGridContainerClass(viewType)}`}>
+          <div class={`grid grid-cols-1 ${GetGridContainerClass(viewType)}`}>
             {#each data.monitorTags as tag, i (tag)}
               <div
-                class="{viewType === 'compact-grid' || viewType === 'default-grid'
-                  ? `${getGridItemSpanClass(i, data.monitorTags.length, viewType)} bg-background`
+                class="{isGrid
+                  ? `${GetGridItemSpanClass(i, data.monitorTags.length, viewType)} bg-background`
                   : i < data.monitorTags.length - 1
                     ? 'border-b'
                     : ''} px-2 py-2 sm:px-0"
@@ -224,8 +186,9 @@
                   days={barCount}
                   {endOfDayTodayAtTz}
                   groupChildTags={data.monitorGroupMembersByTag?.[tag] || []}
+                  groupLayoutStyle={data.monitorGroupLayoutByTag?.[tag]}
                   compact={isCompact}
-                  grid={viewType === "compact-grid" || viewType === "default-grid"}
+                  grid={isGrid}
                 />
               </div>
             {/each}

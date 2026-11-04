@@ -7,15 +7,21 @@
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
   import MonitorBar from "$lib/components/MonitorBar.svelte";
   import { t } from "$lib/stores/i18n";
+  import type { PageMonitorLayoutStyle } from "$lib/types/api";
+  import { GetGridContainerClass, GetGridItemSpanClass, IsCompactLayout, IsGridLayout } from "$lib/monitorLayout";
 
   interface Props {
     tags: string[];
     days: number;
     endOfDayTodayAtTz: number;
+    // The group's memberLayoutStyle; default-list is the layout groups had before they could choose.
+    layoutStyle?: PageMonitorLayoutStyle;
     children: Snippet;
   }
 
-  let { tags, days, endOfDayTodayAtTz, children }: Props = $props();
+  let { tags, days, endOfDayTodayAtTz, layoutStyle = "default-list", children }: Props = $props();
+  let isGrid = $derived(IsGridLayout(layoutStyle));
+  let isCompact = $derived(IsCompactLayout(layoutStyle));
   let isOpen = $state(false);
   let monitorBarPromiseByTag = $derived.by(() => {
     if (!browser || !isOpen || tags.length === 0) {
@@ -47,21 +53,37 @@
         {#if tags.length === 0}
           <div class="text-muted-foreground p-4 text-sm">{$t("No monitors available.")}</div>
         {:else}
-          {#each tags as tag, i (tag)}
-            <div class="{i < tags.length - 1 ? 'border-b' : ''} py-2 pb-4">
-              {#if monitorBarPromiseByTag[tag]}
-                {#await monitorBarPromiseByTag[tag]}
-                  <MonitorBar {tag} />
-                {:then monitorBarData}
-                  <MonitorBar {tag} prefetchedData={monitorBarData} />
-                {:catch err}
-                  <MonitorBar {tag} prefetchedError={err instanceof Error ? err.message : "Unknown error"} />
-                {/await}
-              {:else}
-                <MonitorBar {tag} />
-              {/if}
-            </div>
-          {/each}
+          <div
+            class={isGrid
+              ? `grid grid-cols-1 overflow-hidden rounded-3xl border ${GetGridContainerClass(layoutStyle)}`
+              : ""}
+            data-layout={layoutStyle}
+          >
+            {#each tags as tag, i (tag)}
+              <div
+                class={isGrid
+                  ? `${GetGridItemSpanClass(i, tags.length, layoutStyle)} bg-background px-2 py-2`
+                  : `${i < tags.length - 1 ? "border-b" : ""} py-2 ${isCompact ? "" : "pb-4"}`}
+              >
+                {#if monitorBarPromiseByTag[tag]}
+                  {#await monitorBarPromiseByTag[tag]}
+                    <MonitorBar {tag} compact={isCompact} grid={isGrid} />
+                  {:then monitorBarData}
+                    <MonitorBar {tag} prefetchedData={monitorBarData} compact={isCompact} grid={isGrid} />
+                  {:catch err}
+                    <MonitorBar
+                      {tag}
+                      prefetchedError={err instanceof Error ? err.message : "Unknown error"}
+                      compact={isCompact}
+                      grid={isGrid}
+                    />
+                  {/await}
+                {:else}
+                  <MonitorBar {tag} compact={isCompact} grid={isGrid} />
+                {/if}
+              </div>
+            {/each}
+          </div>
         {/if}
       </div>
     </Drawer.Content>

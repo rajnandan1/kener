@@ -11,6 +11,7 @@ import type {
   UserSubscriptionV2RecordInsert,
   UserSubscriptionV2Filter,
   SubscriptionEventType,
+  SubscriberMigrationReportRecord,
   DbTimestamp,
 } from "../../types/db.js";
 import { GetDbType } from "../../tool.js";
@@ -291,6 +292,40 @@ export class SubscriptionSystemRepository extends BaseRepository {
       .andWhere("su.status", "ACTIVE")
       .distinct("sm.method_value")
       .pluck("sm.method_value");
+  }
+
+  // ============ Legacy Subscriber Migration Report ============
+
+  /**
+   * Rows of the legacy subscriber migration an admin has not reviewed yet: REVIEW first, then ASSUMED
+   */
+  async getSubscriberMigrationReview(limit: number): Promise<SubscriberMigrationReportRecord[]> {
+    return await this.knex("subscriber_migration_report")
+      .whereIn("outcome", ["REVIEW", "ASSUMED"])
+      .whereNull("reviewed_at")
+      .orderBy([
+        { column: "outcome", order: "desc" },
+        { column: "id", order: "asc" },
+      ])
+      .limit(limit);
+  }
+
+  async countSubscriberMigrationReview(): Promise<{ review: number; assumed: number }> {
+    const rows: Array<{ outcome: string; count: number | string }> = await this.knex("subscriber_migration_report")
+      .whereIn("outcome", ["REVIEW", "ASSUMED"])
+      .whereNull("reviewed_at")
+      .select("outcome")
+      .count("id as count")
+      .groupBy("outcome");
+    const countOf = (outcome: string) => Number(rows.find((r) => r.outcome === outcome)?.count ?? 0);
+    return { review: countOf("REVIEW"), assumed: countOf("ASSUMED") };
+  }
+
+  async markSubscriberMigrationReviewed(): Promise<number> {
+    return await this.knex("subscriber_migration_report")
+      .whereIn("outcome", ["REVIEW", "ASSUMED"])
+      .whereNull("reviewed_at")
+      .update({ reviewed_at: this.knex.fn.now() });
   }
 
   // ============ Complex Queries ============

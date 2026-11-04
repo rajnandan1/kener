@@ -9,6 +9,7 @@
   import * as Table from "$lib/components/ui/table/index.js";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import * as Alert from "$lib/components/ui/alert/index.js";
+  import { Badge } from "$lib/components/ui/badge/index.js";
   import { toast } from "svelte-sonner";
   import LocalTime from "$lib/components/LocalTime.svelte";
   import { resolve } from "$app/paths";
@@ -27,6 +28,7 @@
 
   import type { SubscriptionsConfig } from "$lib/server/types/db.js";
   import AlertCircleIcon from "@lucide/svelte/icons/octagon-alert";
+  import History from "@lucide/svelte/icons/history";
 
   // Config state
   let config = $state<SubscriptionsConfig>({
@@ -337,10 +339,62 @@
     saveConfig();
   }
 
+  // Subscribers the legacy subscriber migration copied with a caveat (Kener 3, and Kener 4.0–4.1 incident
+  // and maintenance subscriptions). Hidden once marked reviewed.
+  interface MigrationReviewItem {
+    id: number;
+    source: "v3" | "v4";
+    email: string | null;
+    outcome: "REVIEW" | "ASSUMED";
+    monitors_added: number;
+    details: string | null;
+  }
+  let migrationReview = $state<{ items: MigrationReviewItem[]; review: number; assumed: number }>({
+    items: [],
+    review: 0,
+    assumed: 0
+  });
+  let markingReviewed = $state(false);
+  const migrationReviewTotal = $derived(migrationReview.review + migrationReview.assumed);
+
+  async function fetchMigrationReview() {
+    try {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "getSubscriberMigrationReview" })
+      });
+      const result = await res.json();
+      if (!result.error) migrationReview = result;
+    } catch {
+      // Without the list the page still works; nothing to show.
+    }
+  }
+
+  async function markMigrationReviewed() {
+    markingReviewed = true;
+    try {
+      const res = await fetch(clientResolver(resolve, "/manage/api"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "markSubscriberMigrationReviewed" })
+      });
+      const result = await res.json();
+      if (result.error) throw new Error(result.error);
+      migrationReview = { items: [], review: 0, assumed: 0 };
+      toast.success("Marked as reviewed");
+    } catch {
+      toast.error("Failed to mark as reviewed");
+    } finally {
+      markingReviewed = false;
+    }
+  }
+
   onMount(() => {
     fetchConfig();
     fetchSubMenuOptions();
     fetchSubscribers();
+    fetchMigrationReview();
   });
 </script>
 
@@ -449,6 +503,72 @@
       {/if}
     </Card.Content>
   </Card.Root>
+
+  {#if migrationReviewTotal > 0}
+    <!-- Migrated Subscribers Review Card -->
+    <Card.Root>
+      <Card.Header>
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <Card.Title class="flex items-center gap-2">
+              <History class="h-5 w-5" />
+              Migrated subscribers to review
+            </Card.Title>
+            <Card.Description>
+              Copied from Kener 3 subscriptions and Kener 4.0–4.1 incident and maintenance subscriptions.
+              <strong>Review</strong>: something could not be copied. <strong>All monitors</strong>: followed all
+              incidents or maintenances, so now follows every public monitor.
+            </Card.Description>
+          </div>
+          <Button variant="outline" onclick={markMigrationReviewed} disabled={markingReviewed} class="shrink-0">
+            {#if markingReviewed}
+              <Spinner class="size-4" />
+            {/if}
+            Mark all reviewed
+          </Button>
+        </div>
+      </Card.Header>
+      <Card.Content class="space-y-2">
+        <div class="ktable max-h-80 overflow-y-auto rounded-xl border">
+          <Table.Root>
+            <Table.Header>
+              <Table.Row>
+                <Table.Head>Email</Table.Head>
+                <Table.Head>From</Table.Head>
+                <Table.Head>Outcome</Table.Head>
+                <Table.Head class="text-right">Monitors added</Table.Head>
+                <Table.Head>Details</Table.Head>
+              </Table.Row>
+            </Table.Header>
+            <Table.Body>
+              {#each migrationReview.items as item (item.id)}
+                <Table.Row>
+                  <Table.Cell class="font-medium">{item.email ?? "—"}</Table.Cell>
+                  <Table.Cell class="whitespace-nowrap">{item.source === "v3" ? "Kener 3" : "Kener 4.0–4.1"}</Table.Cell
+                  >
+                  <Table.Cell>
+                    {#if item.outcome === "REVIEW"}
+                      <Badge variant="destructive">Review</Badge>
+                    {:else}
+                      <Badge variant="secondary">All monitors</Badge>
+                    {/if}
+                  </Table.Cell>
+                  <Table.Cell class="text-right">{item.monitors_added}</Table.Cell>
+                  <Table.Cell class="text-muted-foreground min-w-64 text-xs whitespace-normal"
+                    >{item.details}</Table.Cell
+                  >
+                </Table.Row>
+              {/each}
+            </Table.Body>
+          </Table.Root>
+        </div>
+        <p class="text-muted-foreground text-xs">
+          {migrationReview.review} to review, {migrationReview.assumed} moved to all monitors{#if migrationReview.items.length < migrationReviewTotal};
+            showing the first {migrationReview.items.length}{/if}.
+        </p>
+      </Card.Content>
+    </Card.Root>
+  {/if}
 
   <!-- Subscribers Card -->
   <Card.Root>

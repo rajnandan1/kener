@@ -29,6 +29,7 @@
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
   import GC from "$lib/global-constants.js";
+  import MonitorLayoutStyleSelect from "$lib/components/MonitorLayoutStyleSelect.svelte";
 
   // Default page settings
   const defaultPageSettings: PageSettingsType = {
@@ -835,25 +836,7 @@
               <Label class="text-base font-medium">Monitor Layout Style</Label>
               <p class="text-muted-foreground text-sm">Choose how monitors are displayed on the status page</p>
             </div>
-            <Select.Root type="single" bind:value={pageSettings.monitor_layout_style}>
-              <Select.Trigger class="w-full">
-                {#if pageSettings.monitor_layout_style === "default-list"}
-                  Default List
-                {:else if pageSettings.monitor_layout_style === "default-grid"}
-                  Default Grid
-                {:else if pageSettings.monitor_layout_style === "compact-list"}
-                  Compact List
-                {:else}
-                  Compact Grid
-                {/if}
-              </Select.Trigger>
-              <Select.Content>
-                <Select.Item value="default-list">Default List</Select.Item>
-                <Select.Item value="default-grid">Default Grid</Select.Item>
-                <Select.Item value="compact-list">Compact List</Select.Item>
-                <Select.Item value="compact-grid">Compact Grid</Select.Item>
-              </Select.Content>
-            </Select.Root>
+            <MonitorLayoutStyleSelect bind:value={pageSettings.monitor_layout_style} />
             <p class="text-muted-foreground text-xs">
               Default is <code class="bg-muted rounded px-1 font-mono">default-list</code>
             </p>

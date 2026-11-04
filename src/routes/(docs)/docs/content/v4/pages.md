@@ -62,7 +62,7 @@ Choose one layout:
 - `compact-list`
 - `compact-grid`
 
-Click **Save Preferences** after changes.
+Click **Save Preferences** after changes. A group monitor's members have their own layout; see [Group Monitor → Member layout](/docs/v4/monitors/group#member-layout).
 
 ## Social preview and SEO {#social-preview-and-seo}
 

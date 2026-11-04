@@ -958,6 +958,22 @@ export interface SubscriberMonitorRecord {
   updated_at: DbTimestamp;
 }
 
+// ============ subscriber_migration_report table ============
+// Written once by the legacy subscriber migration; see migrations/20261104130000_migrate_legacy_subscribers.ts.
+export type SubscriberMigrationOutcome = "MIGRATED" | "ASSUMED" | "REVIEW";
+
+export interface SubscriberMigrationReportRecord {
+  id: number;
+  source: "v3" | "v4";
+  legacy_id: number | null;
+  email: string | null;
+  outcome: SubscriberMigrationOutcome;
+  monitors_added: number;
+  details: string | null;
+  reviewed_at: DbTimestamp | null;
+  created_at: DbTimestamp;
+}
+
 // ============ Old types (kept for compatibility) ============
 
 export interface UserSubscriptionRecord {

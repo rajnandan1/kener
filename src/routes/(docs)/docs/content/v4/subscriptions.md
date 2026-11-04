@@ -94,9 +94,29 @@ When an event is queued:
 3. Kener enqueues **one email per recipient** (privacy-safe fan-out).
 4. Email sender queue sends the final emails.
 
-## Upgrading from incident and maintenance subscriptions {#upgrading}
+## Upgrading from earlier subscriptions {#upgrading}
 
-Earlier versions let users subscribe to all incidents and all maintenances. Those subscriptions do not carry over: existing subscribers keep their verified email but follow no monitors, so they get no email until they pick monitors in the subscribe dialog or an admin picks monitors for them. Subscriptions stay enabled if either old setting was on.
+On the first start after upgrading, Kener copies earlier subscribers into monitor subscriptions, once. It only reads the old tables and never changes them.
+
+| Earlier subscription                                 | Becomes                                                                    |
+| ---------------------------------------------------- | -------------------------------------------------------------------------- |
+| Kener 3: a monitor                                   | That monitor                                                               |
+| Kener 3: all monitors (`ALL`)                        | Every monitor that is `ACTIVE` and not hidden at upgrade time              |
+| Kener 4.0–4.1: all incidents and/or all maintenances | Every monitor that is `ACTIVE` and not hidden, so status changes are added |
+
+- One email gets one subscriber, whatever its case. An email that is already a Kener 4 subscriber is reused, not duplicated.
+- A Kener 3 subscriber who never confirmed their email is copied, but gets no mail until they sign in from the status page.
+- Kener 3 sign-ins saved in visitors' browsers do not carry over. Subscribers sign in again with a code to change their monitors.
+- A Kener 4 subscriber who had already picked monitors keeps that choice.
+- Monitors added after the upgrade are not added to anyone's subscriptions.
+
+### Review the copy {#review-the-migration}
+
+Anything Kener cannot copy is kept in the old tables and listed for review: a monitor that no longer exists, a subscription that was turned off in Kener 3, an invalid email, or a monitor that is now hidden or inactive. The startup log prints a summary and each subscriber to review.
+
+**Manage → Subscriptions** lists these subscribers, with Kener 4.0–4.1 subscribers who were given all monitors marked **All monitors**. Fix a subscriber from the **Monitors** cell, then click **Mark all reviewed** to hide the list. The full report, every copied subscriber included, stays in the `subscriber_migration_report` table.
+
+Subscriptions stay enabled if either earlier setting, incident or maintenance updates, was on.
 
 ## Verify your setup {#verify-your-setup}
 

@@ -5,6 +5,10 @@
   import * as Select from "$lib/components/ui/select/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
   import MonitorPicker from "$lib/components/MonitorPicker.svelte";
+  import MonitorLayoutStyleSelect from "$lib/components/MonitorLayoutStyleSelect.svelte";
+  import GroupLayoutPreview from "$lib/components/GroupLayoutPreview.svelte";
+  import { ResolveMonitorLayoutStyle } from "$lib/monitorLayout";
+  import type { PageMonitorLayoutStyle } from "$lib/types/api";
   import type { MonitorRecord } from "$lib/server/types/db.js";
   import type { GroupMonitorMember } from "$lib/server/types/monitor.js";
   import ArrowUp from "@lucide/svelte/icons/arrow-up";
@@ -26,6 +30,7 @@
     monitors: GroupMonitorMember[];
     executionDelay: number;
     latencyCalculation: LatencyCalculationOption;
+    memberLayoutStyle: PageMonitorLayoutStyle;
   };
 
   let {
@@ -50,6 +55,7 @@
   if (!LATENCY_CALCULATION_OPTIONS.includes(formData.latencyCalculation)) {
     formData.latencyCalculation = "AVG";
   }
+  formData.memberLayoutStyle = ResolveMonitorLayoutStyle(formData.memberLayoutStyle);
 
   let executionDelayInput = $state(String(formData.executionDelay));
   const parsedExecutionDelay = $derived.by(() => {
@@ -70,6 +76,13 @@
   function isStale(monitorTag: string): boolean {
     return !eligibleMonitors.some((m) => m.tag === monitorTag);
   }
+
+  let previewMembers = $derived(
+    formData.monitors.map((m) => ({
+      tag: m.tag,
+      name: availableMonitors.find((am) => am.tag === m.tag)?.name || m.tag
+    }))
+  );
 
   let totalWeight = $derived(Math.round(formData.monitors.reduce((sum, m) => sum + m.weight, 0) * 1000) / 1000);
   let weightsValid = $derived(Math.abs(totalWeight - 1) < 0.001 || formData.monitors.length === 0);
@@ -225,6 +238,19 @@
       </Select.Root>
       <p class="text-muted-foreground text-xs">Choose how latency should be derived from the selected monitors.</p>
     </div>
+  </div>
+
+  <div class="space-y-2">
+    <div>
+      <Label for="group-member-layout-style">Member layout style</Label>
+      <p class="text-muted-foreground text-xs">
+        How the status page and the monitor page lay out this group's monitors when a visitor opens
+        <strong>Included Monitors</strong>. Default is
+        <code class="bg-muted rounded px-1 font-mono">default-list</code>.
+      </p>
+    </div>
+    <MonitorLayoutStyleSelect id="group-member-layout-style" bind:value={formData.memberLayoutStyle} />
+    <GroupLayoutPreview members={previewMembers} layoutStyle={formData.memberLayoutStyle} />
   </div>
 
   {#if formData.monitors.length > 0}

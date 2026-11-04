@@ -109,6 +109,8 @@ import {
   GetAdminSubscribersPaginated,
   AdminSetSubscriberMonitors,
   AdminDeleteSubscriber,
+  GetSubscriberMigrationReview,
+  MarkSubscriberMigrationReviewed,
   AdminAddSubscriber,
 } from "$lib/server/controllers/userSubscriptionsController.js";
 import {
@@ -613,6 +615,10 @@ export async function POST({ request, cookies }) {
       const page = parseInt(String(data.page)) || 1;
       const limit = parseInt(String(data.limit)) || 10;
       resp = await GetAdminSubscribersPaginated(page, limit);
+    } else if (action == "getSubscriberMigrationReview") {
+      resp = await GetSubscriberMigrationReview();
+    } else if (action == "markSubscriberMigrationReviewed") {
+      resp = await MarkSubscriberMigrationReviewed();
     } else if (action == "adminSetSubscriberMonitors") {
       const { methodId, monitorTags } = data;
       if (!methodId || !Array.isArray(monitorTags)) {

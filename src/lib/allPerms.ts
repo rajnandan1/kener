@@ -32,8 +32,8 @@
  * settings.read      → getAllSiteData, getSiteDataByKey, getSubscriptionsConfig
  * settings.write     → storeSiteData, updateSubscriptionsConfig
  *
- * subscribers.read   → getSubscribersByMethod, getSubscriberWithSubscriptions, getSubscriberCountsByMethod, getAdminSubscribers
- * subscribers.write  → deleteUserSubscription, updateUserSubscriptionStatus, adminSetSubscriberMonitors, adminDeleteSubscriber, adminAddSubscriber
+ * subscribers.read   → getSubscribersByMethod, getSubscriberWithSubscriptions, getSubscriberCountsByMethod, getAdminSubscribers, getSubscriberMigrationReview
+ * subscribers.write  → deleteUserSubscription, updateUserSubscriptionStatus, adminSetSubscriberMonitors, adminDeleteSubscriber, adminAddSubscriber, markSubscriberMigrationReviewed
  *
  * email_templates.read  → getGeneralEmailTemplates, getGeneralEmailTemplateById
  * email_templates.write → updateGeneralEmailTemplate
@@ -196,11 +196,13 @@ export const ACTION_PERMISSION_MAP: Record<string, string | null> = {
   getSubscriberWithSubscriptions: "subscribers.read",
   getSubscriberCountsByMethod: "subscribers.read",
   getAdminSubscribers: "subscribers.read",
+  getSubscriberMigrationReview: "subscribers.read",
   deleteUserSubscription: "subscribers.write",
   updateUserSubscriptionStatus: "subscribers.write",
   adminSetSubscriberMonitors: "subscribers.write",
   adminDeleteSubscriber: "subscribers.write",
   adminAddSubscriber: "subscribers.write",
+  markSubscriberMigrationReviewed: "subscribers.write",
 
   // Email Templates
   getGeneralEmailTemplates: "email_templates.read",

@@ -378,6 +378,9 @@ class DbImpl {
   removeSubscriberMonitors!: SubscriptionSystemRepository["removeSubscriberMonitors"];
   deleteSubscriberMonitorsByTag!: SubscriptionSystemRepository["deleteSubscriberMonitorsByTag"];
   getEmailsSubscribedToMonitors!: SubscriptionSystemRepository["getEmailsSubscribedToMonitors"];
+  getSubscriberMigrationReview!: SubscriptionSystemRepository["getSubscriberMigrationReview"];
+  countSubscriberMigrationReview!: SubscriptionSystemRepository["countSubscriberMigrationReview"];
+  markSubscriberMigrationReviewed!: SubscriptionSystemRepository["markSubscriberMigrationReviewed"];
   getSubscriptionsWithMethodsForUser!: SubscriptionSystemRepository["getSubscriptionsWithMethodsForUser"];
   getSubscribersForEvent!: SubscriptionSystemRepository["getSubscribersForEvent"];
   getSubscribersSummary!: SubscriptionSystemRepository["getSubscribersSummary"];
@@ -851,6 +854,17 @@ class DbImpl {
       this.subscriptionSystem,
     );
     this.getEmailsSubscribedToMonitors = this.subscriptionSystem.getEmailsSubscribedToMonitors.bind(
+      this.subscriptionSystem,
+    );
+
+    // Legacy Subscriber Migration Report
+    this.getSubscriberMigrationReview = this.subscriptionSystem.getSubscriberMigrationReview.bind(
+      this.subscriptionSystem,
+    );
+    this.countSubscriberMigrationReview = this.subscriptionSystem.countSubscriberMigrationReview.bind(
+      this.subscriptionSystem,
+    );
+    this.markSubscriberMigrationReviewed = this.subscriptionSystem.markSubscriberMigrationReviewed.bind(
       this.subscriptionSystem,
     );
 

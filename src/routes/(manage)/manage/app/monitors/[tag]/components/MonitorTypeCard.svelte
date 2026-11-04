@@ -11,6 +11,8 @@
   import type { GroupMonitorTypeData, MonitoringResult } from "$lib/server/types/monitor.js";
   import type { DockerConnectionDefaults } from "$lib/types/docker.js";
   import { MONITOR_TYPES, type MonitorType } from "$lib/types/monitor.js";
+  import { ResolveMonitorLayoutStyle } from "$lib/monitorLayout";
+  import GC from "$lib/global-constants.js";
   import { toast } from "svelte-sonner";
   import {
     ValidateIpAddress,
@@ -70,7 +72,8 @@
     return {
       monitors: [],
       executionDelay: GROUP_MIN_TIMEOUT_MS,
-      latencyCalculation: "AVG"
+      latencyCalculation: "AVG",
+      memberLayoutStyle: GC.DEFAULT_MONITOR_LAYOUT_STYLE
     };
   }
 
@@ -103,7 +106,8 @@
     return {
       monitors,
       latencyCalculation,
-      executionDelay
+      executionDelay,
+      memberLayoutStyle: ResolveMonitorLayoutStyle(candidate.memberLayoutStyle)
     };
   }
 

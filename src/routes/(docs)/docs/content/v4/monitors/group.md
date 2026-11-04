@@ -61,13 +61,25 @@ Group latency uses selected mode:
 - If member monitors take longer to finish (e.g. slow API checks), increase this value so the group always reads fresh results.
 - Only affects cron-driven execution. When a member's status is updated via the API, the cache is updated immediately and the group will read the new value on its next run.
 
+## Member layout {#member-layout}
+
+On the status page and the monitor page, **Included Monitors** opens the group's members. **Member layout style** in the group's settings picks how they are laid out, with the same four styles as a [page's monitor layout](/docs/v4/pages#monitor-layout-style):
+
+- `default-list` (default): one member per row, with status bars. Groups saved before this setting keep this layout.
+- `default-grid`: two members per row on tablets and desktops, with status bars.
+- `compact-list`: one member per row, without status bars.
+- `compact-grid`: two members per row on tablets and three on desktops, without status bars.
+
+Grids show one member per row on phones. The preview under the setting changes as soon as you pick a style; click **Save Monitor Type Settings** to apply it. Each group keeps its own style, whatever the page's layout is.
+
 ## Configuration fields {#configuration-fields}
 
-| Field                | Type                   | Default | Notes                                          |
-| :------------------- | :--------------------- | :------ | :--------------------------------------------- |
-| `monitors`           | `Array<{tag, weight}>` | `[]`    | Required, min 2                                |
-| `executionDelay`     | `number`               | `1000`  | ms to wait before aggregating; must be >= 1000 |
-| `latencyCalculation` | `AVG\|MAX\|MIN`        | `AVG`   |                                                |
+| Field                | Type                                                     | Default        | Notes                                                                                    |
+| :------------------- | :------------------------------------------------------- | :------------- | :--------------------------------------------------------------------------------------- |
+| `monitors`           | `Array<{tag, weight}>`                                   | `[]`           | Required, min 2                                                                          |
+| `executionDelay`     | `number`                                                 | `1000`         | ms to wait before aggregating; must be >= 1000                                           |
+| `latencyCalculation` | `AVG\|MAX\|MIN`                                          | `AVG`          |                                                                                          |
+| `memberLayoutStyle`  | `default-list\|default-grid\|compact-list\|compact-grid` | `default-list` | How the members are laid out; see [Member layout](/docs/v4/monitors/group#member-layout) |
 
 ## Example {#example}
 
@@ -81,7 +93,8 @@ Group latency uses selected mode:
             { "tag": "cache", "weight": 0.1 }
         ],
         "executionDelay": 1500,
-        "latencyCalculation": "AVG"
+        "latencyCalculation": "AVG",
+        "memberLayoutStyle": "default-grid"
     }
 }
 ```

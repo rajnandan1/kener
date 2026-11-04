@@ -9,6 +9,7 @@ import type {
   UserSubscriptionV2Record,
   SubscriberUserRecord,
   SubscriberMethodRecord,
+  SubscriberMigrationReportRecord,
   DbTimestamp,
 } from "$lib/server/types/db.js";
 
@@ -310,6 +311,29 @@ export async function AdminAddSubscriber(
       created_at: method.created_at,
     },
   };
+}
+
+/**
+ * Admin: subscribers the legacy subscriber migration copied with a caveat, not yet reviewed.
+ * REVIEW rows hold data that could not be copied; ASSUMED rows were given every public monitor.
+ */
+export async function GetSubscriberMigrationReview(limit: number = 200): Promise<{
+  items: SubscriberMigrationReportRecord[];
+  review: number;
+  assumed: number;
+}> {
+  const [items, counts] = await Promise.all([
+    db.getSubscriberMigrationReview(limit),
+    db.countSubscriberMigrationReview(),
+  ]);
+  return { items, ...counts };
+}
+
+/**
+ * Admin: mark every listed migration row as reviewed, which hides the list
+ */
+export async function MarkSubscriberMigrationReviewed(): Promise<{ success: boolean; reviewed: number }> {
+  return { success: true, reviewed: await db.markSubscriberMigrationReviewed() };
 }
 
 /**

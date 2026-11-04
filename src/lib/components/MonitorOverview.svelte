@@ -17,6 +17,7 @@
   import * as Popover from "$lib/components/ui/popover/index.js";
   import * as ToggleGroup from "$lib/components/ui/toggle-group/index.js";
   import GroupMonitorPopover from "$lib/components/GroupMonitorPopover.svelte";
+  import type { PageMonitorLayoutStyle } from "$lib/types/api";
   import { page } from "$app/state";
 
   interface Props {
@@ -24,9 +25,10 @@
     class?: string;
     maxDays?: number;
     groupTags?: string[];
+    groupLayoutStyle?: PageMonitorLayoutStyle;
   }
 
-  let { monitorTag, class: className = "", maxDays = 90, groupTags = [] }: Props = $props();
+  let { monitorTag, class: className = "", maxDays = 90, groupTags = [], groupLayoutStyle }: Props = $props();
 
   // State
   let loading = $state(true);
@@ -218,7 +220,7 @@
       <!-- Add group GroupMonitorPopover here -->
       {#if groupTags.length > 0}
         <div class="flex justify-center">
-          <GroupMonitorPopover tags={groupTags} days={selectedDays} {endOfDayTodayAtTz}>
+          <GroupMonitorPopover tags={groupTags} days={selectedDays} {endOfDayTodayAtTz} layoutStyle={groupLayoutStyle}>
             {$t("Included Monitors (%count)", { count: String(groupTags.length) })}
             <ArrowUp class="size-3" />
           </GroupMonitorPopover>

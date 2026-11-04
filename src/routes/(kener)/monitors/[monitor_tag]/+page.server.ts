@@ -14,6 +14,7 @@ import GC from "$lib/global-constants.js";
 import { GetStatusColor, GetStatusSummary, ParseLatency, ResolveSslExpiresAtMs } from "$lib/clientTools";
 import { AttachSslCacheFields, GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
 import type { GroupMonitorTypeData } from "$lib/server/types/monitor";
+import { ResolveMonitorLayoutStyle } from "$lib/monitorLayout";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const { monitor_tag } = params;
@@ -63,10 +64,12 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   //get status summary
   let extendedTags: string[] = [];
   let monitorGroupMembersByTag: Record<string, string[]> = {};
+  let groupLayoutStyle = ResolveMonitorLayoutStyle(undefined);
   if (monitor.monitor_type === "GROUP") {
     const groupData = monitor.type_data as GroupMonitorTypeData;
     const memberTags = groupData.monitors.map((m) => m.tag);
     extendedTags = extendedTags.concat(memberTags);
+    groupLayoutStyle = ResolveMonitorLayoutStyle(groupData.memberLayoutStyle);
   }
 
   if (extendedTags.length > 0) {
@@ -110,6 +113,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       upcomingMaintenances,
       externalUrl: monitor.external_url,
       extendedTags,
+      groupLayoutStyle,
       monitorGroupMembersByTag,
       maxDays,
       monitorSharingOptions: {
