@@ -71,7 +71,11 @@ const variant = load("@jitl/quickjs-wasmfile-release-sync");
   return context.dump(state.value);
 })().then(
   (result) =>
-    parentPort.postMessage(result?.length > workerData.messageLimit ? { error: "The result is too large" } : { result }),
+    parentPort.postMessage(
+      result === undefined || (typeof result === "string" && result.length <= workerData.messageLimit)
+        ? { result }
+        : { error: "The result is too large or not valid" },
+    ),
   (error) => parentPort.postMessage({ error: String(error?.message ?? error).slice(0, workerData.messageLimit) }),
 );
 `;

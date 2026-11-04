@@ -239,7 +239,13 @@ describe("RunMonitorEval limits", () => {
   it("rejects a result that is too large", async () => {
     const code = `async () => ({ status: "x".repeat(2048), latency: 1 })`;
 
-    await expect(RunMonitorEval(code, [])).rejects.toThrow("Eval error: The result is too large");
+    await expect(RunMonitorEval(code, [])).rejects.toThrow("Eval error: The result is too large or not valid");
+  });
+
+  it("rejects a result that is not a JSON string", async () => {
+    const code = `0)));})(); (async () => { const modules = 0; return (((() => ({ length: 1 })`;
+
+    await expect(RunMonitorEval(code, [])).rejects.toThrow("Eval error: The result is too large or not valid");
   });
 
   it("reports a promise that never resolves", async () => {
