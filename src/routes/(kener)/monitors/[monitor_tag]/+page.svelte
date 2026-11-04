@@ -190,6 +190,7 @@
   <!-- Calendar View (self-contained component with its own API call) -->
   <MonitorOverview
     monitorTag={data.monitorTag}
+    monitorType={data.monitorType}
     maxDays={data.maxDays}
     groupTags={data.extendedTags || []}
     class="mb-4"
