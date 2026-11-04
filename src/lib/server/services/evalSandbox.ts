@@ -14,7 +14,10 @@ const GUEST_PRELUDE = `(() => {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
   globalThis.atob = (input) => {
     let output = "", buffer = 0, bits = 0;
-    for (const char of String(input).replace(/[\\s=]/g, "")) {
+    const text = String(input).replace(/[\\t\\n\\f\\r ]/g, "");
+    const body = text.length % 4 === 0 ? text.replace(/==?$/, "") : text;
+    if (body.length % 4 === 1) throw new Error("Invalid character");
+    for (const char of body) {
       const value = alphabet.indexOf(char);
       if (value < 0) throw new Error("Invalid character");
       buffer = (buffer << 6) | value;
@@ -74,8 +77,9 @@ const variant = load("@jitl/quickjs-wasmfile-release-sync");
 function guestScript(code: string): string {
   return `(async () => {
     const modules = typeof __cheerio === "undefined" ? {} : { cheerio: __cheerio };
-    return JSON.stringify(await (${code}
-    )(...JSON.parse(__args), modules));
+    const pick = (result) => (result && typeof result === "object" ? { status: result.status, latency: result.latency } : result);
+    return JSON.stringify(pick(await (${code}
+    )(...JSON.parse(__args), modules)));
   })()`;
 }
 

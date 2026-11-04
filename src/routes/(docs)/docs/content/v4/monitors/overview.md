@@ -67,7 +67,7 @@ Eval code can use:
 
 Node.js and browser features do not exist in the sandbox. This includes `fetch`, `process`, `require`, `import()`, `Buffer`, `setTimeout`, `URL`, `TextDecoder`, `crypto`, and `Intl`. An eval that uses one reports **DOWN** with an error such as `'fetch' is not defined`.
 
-`modules.cheerio` has `load`, `contains`, and `merge`. `Date` uses the time zone of the server. With no `Intl`, `toLocaleString()` adds no thousands separators or local date formats.
+`modules.cheerio` has `load`, `contains`, and `merge`. Write `modules.cheerio` as plain text in the eval, because Kener loads cheerio only when the eval contains the word `cheerio`. `Date` uses the time zone of the server. With no `Intl`, `toLocaleString()` adds no thousands separators or local date formats.
 
 | Limit    | Value      |
 | -------- | ---------- |

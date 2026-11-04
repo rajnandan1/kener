@@ -89,6 +89,30 @@ describe("RunMonitorEval guest features", () => {
     expect(await RunMonitorEval(code, [])).toEqual({ status: "UP", latency: 1 });
   });
 
+  it.each(["A", "Z=g=", "====", "YQ=", "YQ", "YQ==", "Y Q = =", "\u00a0YQ==", "a$b"])(
+    "gives the same atob result as Node.js for %j",
+    async (text) => {
+      const decodeInNode = () => {
+        try {
+          return atob(text);
+        } catch {
+          return "threw";
+        }
+      };
+      const code = `async (text, expected) => {
+        let decoded;
+        try {
+          decoded = atob(text);
+        } catch {
+          decoded = "threw";
+        }
+        return { status: decoded === expected ? "UP" : "DOWN", latency: 1 };
+      }`;
+
+      expect(await RunMonitorEval(code, [text, decodeInNode()])).toEqual({ status: "UP", latency: 1 });
+    },
+  );
+
   it.each([
     ["atob", `atob("a$b")`],
     ["btoa", `btoa("\u0100")`],
@@ -151,6 +175,15 @@ describe("RunMonitorEval result checks", () => {
     ["a status of the wrong type", `async () => ({ status: ["UP"], latency: 1 })`, `invalid 'status' value "UP"`],
   ])("rejects %s", async (_name, code, message) => {
     await expect(RunMonitorEval(code, [])).rejects.toThrow(message);
+  });
+
+  it.each([
+    ["a BigInt", `1n`],
+    ["a circular object", `(() => { const self = {}; self.self = self; return self; })()`],
+  ])("ignores an extra property that holds %s", async (_name, extra) => {
+    const code = `async () => ({ status: "UP", latency: 1, extra: ${extra} })`;
+
+    expect(await RunMonitorEval(code, [])).toEqual({ status: "UP", latency: 1 });
   });
 
   it("returns no latency when the latency is not a number", async () => {
@@ -218,7 +251,9 @@ describe("RunMonitorEval limits", () => {
   });
 
   it("keeps working after an eval crashes its sandbox", async () => {
-    await expect(RunMonitorEval(`async () => { const a = {}; a.a = a; return a; }`, [])).rejects.toThrow("circular");
+    await expect(RunMonitorEval(`async () => { const a = {}; a.a = a; return { status: a }; }`, [])).rejects.toThrow(
+      "circular",
+    );
 
     expect(await RunMonitorEval(`async () => (${up})`, [])).toEqual({ status: "UP", latency: 1 });
   });
