@@ -2,7 +2,7 @@
 import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 import version from "vite-plugin-package-version";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import devtoolsJson from "vite-plugin-devtools-json";
 import { playwright } from "@vitest/browser-playwright";
 import { configDefaults } from "vitest/config";
@@ -17,6 +17,30 @@ function getAllowedHost(origin: string): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+// vite-plugin-svelte serves a component's <style> from the module graph entry of the bare .svelte path. In dev,
+// Vite adds ?v=<hash> to the files of a package in optimizeDeps.exclude, so for svelte-codemirror-editor that
+// entry is CodeMirror.svelte?v=<hash>: the bare-path lookup misses, Vite falls back to the raw .svelte source,
+// and @tailwindcss/vite fails on it ("Invalid declaration: `<script lang="ts" module>"). This serves the CSS
+// from the versioned entry. Production builds add no version query, so it runs in dev only.
+function svelteVersionedDepCss(): Plugin {
+  return {
+    name: "kener:svelte-versioned-dep-css",
+    apply: "serve",
+    enforce: "pre",
+    load(id) {
+      if (!id.includes("/node_modules/") || !/[?&]svelte&type=style&lang\.css$/.test(id)) return;
+      const filename = id.slice(0, id.indexOf("?"));
+      const cssOf = (moduleId: string) => this.getModuleInfo(moduleId)?.meta?.svelte?.css;
+      if (cssOf(filename)) return; // vite-plugin-svelte finds it
+      for (const moduleId of this.getModuleIds()) {
+        if (!moduleId.startsWith(`${filename}?v=`)) continue;
+        const css = cssOf(moduleId);
+        if (css) return { code: css.code, map: css.map };
+      }
+    },
+  };
 }
 
 export default defineConfig(({ mode }) => {
@@ -42,7 +66,7 @@ export default defineConfig(({ mode }) => {
         "@uiw/codemirror-theme-github",
       ],
     },
-    plugins: [tailwindcss(), sveltekit(), version(), devtoolsJson()],
+    plugins: [svelteVersionedDepCss(), tailwindcss(), sveltekit(), version(), devtoolsJson()],
     server: {
       allowedHosts: allowedHost ? [allowedHost] : undefined,
       port,

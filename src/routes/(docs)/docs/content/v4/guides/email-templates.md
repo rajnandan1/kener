@@ -40,6 +40,21 @@ Kener renders subject and HTML body with Mustache variables.
 > [!NOTE]
 > If `template_text_body` is empty, Kener falls back to generating plain-text content from rendered HTML.
 
+## Images {#images}
+
+Add pictures to an email without hosting them anywhere:
+
+1. In the **HTML Body** editor, put the cursor where the image goes.
+2. Click **Insert image** and pick a PNG, JPG, WebP, or HEIC file of up to 2 MB.
+3. Kener uploads it and inserts `<img src="cid:IMAGE_ID" …>` at the cursor. Move or resize the tag like any other HTML.
+
+When the email is sent, each image the HTML refers to with `cid:` goes along as an inline attachment under that Content-ID, through SMTP and Resend alike. Email triggers have the same button above their **Custom HTML Template**.
+
+- Kener stores uploads as PNG or JPEG, at most 1200 px wide or high. The inserted tag shows the image at most 600 px wide and scales it down on narrow screens.
+- Thumbnails next to the button show the images the template uses. **Missing** marks a `cid:` id that matches no uploaded image: the email is sent without it, and the server log says so.
+- Uploading needs the `images` `write` permission. See [User Management](/docs/v4/user-management).
+- Every email carries its images. Keep them small in emails that go to many subscribers.
+
 ## Common variables {#common-variables}
 
 All templates can use site-level variables:
@@ -120,6 +135,7 @@ The flags let a template change its look by what the mail is about, which Mustac
 
 - **Variables render blank**: confirm variable name spelling and braces.
 - **Emails fail after edits**: verify template still contains required flow links (`invitation_link`, `verification_link`, `reset_link`).
+- **Image missing in the email**: check that the tag reads `cid:` followed by the exact image id, and that the thumbnail above the editor is not marked **Missing**. Some email clients hide images until the reader allows them.
 - **Defaults did not come back after restart**: seeds only insert missing templates; existing customized templates are not overwritten.
 
 ## Related pages {#related-pages}

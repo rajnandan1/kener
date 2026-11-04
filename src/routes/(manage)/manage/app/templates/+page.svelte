@@ -14,6 +14,8 @@
   import { toast } from "svelte-sonner";
   import { mode } from "mode-watcher";
   import CodeMirror from "svelte-codemirror-editor";
+  import type { EditorView } from "@codemirror/view";
+  import EmailTemplateImages from "$lib/components/EmailTemplateImages.svelte";
   import { html } from "@codemirror/lang-html";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
   import { onMount } from "svelte";
@@ -37,6 +39,7 @@
   let templateSubject = $state("");
   let templateHtmlBody = $state("");
   let templateTextBody = $state("");
+  let htmlEditorView = $state<EditorView>();
 
   // Derived: selected template
   let selectedTemplate = $derived(templates.find((t) => t.template_id === selectedTemplateId));
@@ -209,9 +212,11 @@
             <p class="text-muted-foreground text-xs">
               The HTML content of the email. Use Mustache variables for dynamic content.
             </p>
+            <EmailTemplateImages bind:value={templateHtmlBody} view={htmlEditorView} />
             <div class="overflow-hidden rounded-md border">
               <CodeMirror
                 bind:value={templateHtmlBody}
+                onready={(view) => (htmlEditorView = view)}
                 lang={html()}
                 theme={mode.current === "dark" ? githubDark : githubLight}
                 styles={{ "&": { width: "100%", height: "400px" } }}

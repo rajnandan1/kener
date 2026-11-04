@@ -6,6 +6,40 @@ import type { SMTPConfiguration } from "./types.js";
 import getSMTPTransport from "./smtps.js";
 import { GetSMTPFromENV } from "../controllers/commonController.js";
 import { IsEmailSetup, IsResendSetup } from "../controllers/emailController.js";
+import db from "../db/db.js";
+
+export interface InlineImage {
+  cid: string;
+  filename: string;
+  content: Buffer;
+  contentType: string;
+}
+
+// A template shows an uploaded image with <img src="cid:IMAGE_ID">; the id is the one the upload returned.
+const CID_REFERENCE = /cid:([A-Za-z0-9._-]+)/g;
+
+/**
+ * The uploaded images an email's HTML refers to by `cid:`, each once, to send as inline attachments
+ * under that Content-ID. A reference to an image that does not exist is logged and left out.
+ */
+export async function GetInlineImages(html: string): Promise<InlineImage[]> {
+  const ids = [...new Set([...html.matchAll(CID_REFERENCE)].map((match) => match[1]))];
+  const images: InlineImage[] = [];
+  for (const id of ids) {
+    const image = await db.getImageById(id);
+    if (!image) {
+      console.warn(`Email refers to cid:${id}, but no uploaded image has that id; it is sent without the image`);
+      continue;
+    }
+    images.push({
+      cid: id,
+      filename: image.original_name || id,
+      content: Buffer.from(image.data, "base64"),
+      contentType: image.mime_type,
+    });
+  }
+  return images;
+}
 
 export default async function send(
   emailBody: string,
@@ -39,6 +73,7 @@ export default async function send(
     if (!isEmailSetupDone) {
       throw new Error("Email not configured properly. Please check SMTP or Resend configuration.");
     }
+    const inlineImages = await GetInlineImages(htmlBody);
     let isResend = IsResendSetup();
     let mySMTPData = GetSMTPFromENV();
     if (isResend) {
@@ -51,6 +86,14 @@ export default async function send(
         html: htmlBody,
         text: textBody,
       };
+      if (inlineImages.length > 0) {
+        emailBody.attachments = inlineImages.map(({ cid, filename, content, contentType }) => ({
+          contentId: cid,
+          filename,
+          content,
+          contentType,
+        }));
+      }
       let resp = await resend.emails.send(emailBody);
       if (!!resp.error) {
         throw new Error(`Resend API error: ${resp.error.message}`);
@@ -65,6 +108,13 @@ export default async function send(
         subject: subject, // email subject
         text: textBody, // plain text body
         html: htmlBody, // HTML body (if any)
+        // A cid attachment is sent inline, for the HTML to show where it refers to it.
+        attachments: inlineImages.map(({ cid, filename, content, contentType }) => ({
+          cid,
+          filename,
+          content,
+          contentType,
+        })),
       };
       return await transport.sendMail(mailOptions);
     } else {

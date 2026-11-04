@@ -26,6 +26,8 @@ Runtime currently supports:
 > [!NOTE]
 > For webhook headers, use an array shape: `[{"key":"Authorization","value":"Bearer $TOKEN"}]`.
 
+An email trigger's `email_body` can show uploaded images with `<img src="cid:IMAGE_ID">`; they are sent as inline attachments. See [Email Templates → Images](/docs/v4/guides/email-templates#images).
+
 ## Template variables {#template-variables}
 
 Trigger bodies/subjects can use Mustache variables. Use the canonical list in [Templates](/docs/v4/alerting/templates).

@@ -1,7 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { render } from "vitest-browser-svelte";
-// svelte-codemirror-editor CSS fails to load under the tailwind vite plugin in browser tests
-vi.mock("svelte-codemirror-editor", () => ({ default: () => {} }));
 import MonitorApi from "./monitor-api.svelte";
 import MonitorPrometheus from "./monitor-prometheus.svelte";
 

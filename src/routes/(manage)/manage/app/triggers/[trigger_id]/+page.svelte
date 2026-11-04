@@ -28,6 +28,8 @@
   import { mode } from "mode-watcher";
   import { IsValidURL } from "$lib/clientTools";
   import CodeMirror from "svelte-codemirror-editor";
+  import type { EditorView } from "@codemirror/view";
+  import EmailTemplateImages from "$lib/components/EmailTemplateImages.svelte";
   import { html } from "@codemirror/lang-html";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
   import type { TriggerMeta } from "$lib/server/types/db";
@@ -37,6 +39,7 @@
 
   // State
   let loading = $state(true);
+  let emailEditorView = $state<EditorView>();
   let saving = $state(false);
   let testing = $state<"idle" | "loading" | "success" | "error">("idle");
   let invalidFormMessage = $state("");
@@ -496,9 +499,11 @@
               is_triggered, site_url, site_name, site_logo_url, colors_up, colors_down, colors_degraded,
               colors_maintenance
             </p>
+            <EmailTemplateImages bind:value={trigger.trigger_meta.email_body} view={emailEditorView} />
             <div class="overflow-hidden rounded-md border">
               <CodeMirror
                 bind:value={trigger.trigger_meta.email_body}
+                onready={(view) => (emailEditorView = view)}
                 lang={html()}
                 theme={mode.current === "dark" ? githubDark : githubLight}
                 styles={{ "&": { width: "100%", height: "400px" } }}
