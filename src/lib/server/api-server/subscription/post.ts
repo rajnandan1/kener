@@ -95,7 +95,11 @@ async function handleLogin(
   return json({ success: true, message: "Verification code sent" });
 }
 
-async function handleVerify(email: string, code: string): Promise<Response> {
+async function handleVerify(email: unknown, code: unknown): Promise<Response> {
+  // The body is whatever JSON the caller sent: a null or numeric code is no verification attempt.
+  if (typeof email !== "string" || typeof code !== "string") {
+    return error(400, { message: "Invalid verification code" });
+  }
   const result = await VerifySubscriberOTP(email, code);
   if (!result.success) {
     return error(400, { message: result.error || "Verification failed" });

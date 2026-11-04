@@ -255,6 +255,8 @@ describe("AddIncidentMonitor: a monitor added to an announced incident", () => {
     });
     expect(variables.update_text).toContain("Website");
     expect(variables.update_text).toContain("Payments are failing");
+    expect(variables.update_text).toContain("<li>API: DEGRADED</li>");
+    expect(variables.update_text).toContain("<li>Website: DOWN</li>");
   });
 
   it("sends nothing when the monitor was already on the incident", async () => {
@@ -278,5 +280,39 @@ describe("AddIncidentMonitor: a monitor added to an announced incident", () => {
     await AddIncidentMonitor(12, "web", "DOWN");
 
     expect(subscriberQueue.push).not.toHaveBeenCalled();
+  });
+});
+
+describe("the dashboard's new incident: create it, attach its monitors, then post the first update", () => {
+  let attached: Array<{ monitor_tag: string; monitor_impact: string; monitor_name: string }>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    attached = [];
+    db.getIncidentById.mockResolvedValue(incident);
+    db.getMonitorByTag.mockImplementation(async (tag: string) => ({ tag }));
+    db.insertIncidentMonitorWithMerge.mockImplementation(
+      async (row: { monitor_tag: string; monitor_impact: string }) => {
+        attached.push({ ...row, monitor_name: row.monitor_tag === "kener" ? "Kener.ing" : row.monitor_tag });
+      },
+    );
+    db.getMonitorsByIncidentId.mockImplementation(async () => [...attached]);
+    db.getActiveIncidentComments.mockResolvedValue([]);
+    db.insertIncidentComment.mockImplementation(async (_id: number, comment: string, state: string) => ({
+      id: 99,
+      comment,
+      state,
+    }));
+  });
+
+  it("names the monitor and its impact in the one mail it sends", async () => {
+    await AddIncidentMonitor(12, "kener", "DOWN");
+    await AddIncidentComment(12, "incident test", "INVESTIGATING", 2000);
+
+    expect(pushedMonitorTags()).toEqual(["kener"]);
+    const { update_text } = pushedVariables();
+    expect(update_text).toContain("incident test");
+    expect(update_text).toContain("<strong>Affected monitors</strong>");
+    expect(update_text).toContain("<li>Kener.ing: DOWN</li>");
   });
 });

@@ -286,8 +286,14 @@ export const GetLoggedInSession = async (cookies: Cookies): Promise<UserRecordPu
   if (!tokenUser) {
     return null;
   }
+  // Only a session token signs someone in. The app signs other tokens with the same key (subscriber,
+  // invitation, password reset, email verification); they carry an email but not the user's id, which
+  // every session token does, so an id that matches the user is what makes a token a session.
+  if (typeof tokenUser.id !== "number") {
+    return null;
+  }
   const userDB = await db.getUserByEmail(tokenUser.email);
-  if (!userDB) {
+  if (!userDB || Number(userDB.id) !== tokenUser.id) {
     return null;
   }
   if (!userDB.is_active) {

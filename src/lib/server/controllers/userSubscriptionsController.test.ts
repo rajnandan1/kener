@@ -33,6 +33,7 @@ import {
   GetSubscribableMonitors,
   IsEmailSubscriptionEnabled,
   UpdateSubscriberMonitors,
+  VerifySubscriberOTP,
   VerifySubscriberToken,
 } from "./userSubscriptionsController.js";
 
@@ -177,6 +178,58 @@ describe("who gets a monitor's mail", () => {
 
     expect(await GetActiveEmailsForMonitors([TAGS.web, TAGS.api])).toEqual(["cy@example.com"]);
     expect(await db.getSubscriberMonitorTags(anaMethod)).toEqual([TAGS.web]);
+  });
+});
+
+describe("VerifySubscriberOTP", () => {
+  const invalid = { success: false, error: "Invalid verification code" };
+  const inFiveMinutes = () => new Date(Date.now() + 5 * 60 * 1000);
+
+  // An account an admin added: no code pending until the subscriber asks for one.
+  async function subscriber(code: string | null, expiresAt: Date | null): Promise<void> {
+    const methodId = await addSubscriber("ana@example.com", [TAGS.web]);
+    const method = (await db.getSubscriberMethodById(methodId))!;
+    await db.updateSubscriberUser(method.subscriber_user_id, {
+      verification_code: code,
+      verification_expires_at: expiresAt,
+    });
+  }
+
+  it("signs in with the code that was mailed, and only once", async () => {
+    await subscriber("123456", inFiveMinutes());
+
+    const result = await VerifySubscriberOTP("ana@example.com", "123456");
+
+    expect(result.success).toBe(true);
+    expect(await VerifySubscriberToken(result.token!)).toMatchObject({ success: true, monitorTags: [TAGS.web] });
+    expect(await VerifySubscriberOTP("ana@example.com", "123456")).toEqual(invalid);
+  });
+
+  it.each([null, undefined, 123456, "", "12345", "abcdef", "123456 "])(
+    "refuses %j for an account with no code pending",
+    async (code) => {
+      await subscriber(null, null);
+
+      expect(await VerifySubscriberOTP("ana@example.com", code)).toEqual(invalid);
+    },
+  );
+
+  it("refuses a wrong code, a code with no expiry, and an expired one", async () => {
+    await subscriber("123456", inFiveMinutes());
+    expect(await VerifySubscriberOTP("ana@example.com", "654321")).toEqual(invalid);
+
+    await subscriber("123456", null);
+    expect(await VerifySubscriberOTP("ana@example.com", "123456")).toEqual(invalid);
+
+    await subscriber("123456", new Date(Date.now() - 1000));
+    expect(await VerifySubscriberOTP("ana@example.com", "123456")).toEqual({
+      success: false,
+      error: "Verification code expired",
+    });
+  });
+
+  it("answers an unknown email as it answers a wrong code", async () => {
+    expect(await VerifySubscriberOTP("nobody@example.com", "123456")).toEqual(invalid);
   });
 });
 

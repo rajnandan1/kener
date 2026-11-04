@@ -75,7 +75,9 @@ Kener queues an incident email for each update posted on an incident, from any s
 - An update added through the API (`POST /api/v4/incidents/{incident_id}/comments`)
 - The update an alert adds when it creates the incident, and when it resolves it
 
-When a monitor is added to an incident that already has an update and is not resolved, that monitor's subscribers get the latest update.
+Each incident email ends with the incident's affected monitors and their impact, such as `Kener.ing: DOWN`, so subscribers see which of their monitors is hit. When a monitor is added to an incident that already has an update and is not resolved, that monitor's subscribers get the latest update, which names the added monitor.
+
+Status set by an incident does not send a separate [status change](/docs/v4/subscriptions#status-change-notifications) email: the incident email covers it.
 
 Updates on legacy incidents of type `MAINTENANCE` (from before v4 maintenances) do not queue this email.
 

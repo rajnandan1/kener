@@ -473,19 +473,24 @@ export const UpdateCommentByID = async (
 // the dashboard, or the API. This is the single choke point; alertingQueue must not push its own
 // incident notifications, or alert-driven incidents would notify twice. The one other mail is for a
 // monitor added after the incident was announced (notifySubscribersOfAddedMonitor).
+// Every incident mail ends with the monitors it affects, so a subscriber sees which of theirs is hit.
 const incidentMailVariables = (
   incident: Pick<IncidentRecord, "id" | "title">,
   comment: IncidentCommentRecord,
-  impacts: Array<string | null>,
+  monitors: Array<{ monitor_tag: string; monitor_name?: string; monitor_impact: string | null }>,
   siteUrl: string,
   updateText: string = comment.comment,
 ): SubscriptionVariableMap => {
+  const impacts = monitors.map((m) => m.monitor_impact);
   const impact = impacts.includes(GC.DOWN) ? GC.DOWN : impacts.includes(GC.DEGRADED) ? GC.DEGRADED : "";
+  const affected = monitors
+    .map((m) => `- ${m.monitor_name || m.monitor_tag}${m.monitor_impact ? `: ${m.monitor_impact}` : ""}`)
+    .join("\n");
   return {
     title: incident.title,
     cta_url: `${siteUrl}incidents/${incident.id}`,
     cta_text: "View Incident",
-    update_text: mdToHTML(updateText),
+    update_text: mdToHTML(`${updateText}\n\n**Affected monitors**\n\n${affected}`),
     update_subject: `[#${incident.id}:${comment.state}] ${incident.title}`,
     update_id: String(comment.id),
     event_type: "incidents",
@@ -510,12 +515,7 @@ const notifySubscribersOfComment = async (
     // Hidden monitors are left out: an incident on no visible monitor reaches no subscriber.
     const monitors = await db.getMonitorsByIncidentId(incident.id);
     if (monitors.length === 0) return;
-    const variables = incidentMailVariables(
-      incident,
-      comment,
-      monitors.map((m) => m.monitor_impact),
-      siteUrl,
-    );
+    const variables = incidentMailVariables(incident, comment, monitors, siteUrl);
     // Stable dedup id per comment so a retried/double push notifies once — without
     // it subscriberQueue falls back to a Date.now()-suffixed id that never dedupes.
     await subscriberQueue.push(
@@ -546,7 +546,7 @@ const notifySubscribersOfAddedMonitor = async (
     const variables = incidentMailVariables(
       incident,
       latest,
-      monitors.map((m) => m.monitor_impact),
+      monitors,
       siteUrl,
       `**${added.monitor_name}** has been added to this incident.\n\n${latest.comment}`,
     );

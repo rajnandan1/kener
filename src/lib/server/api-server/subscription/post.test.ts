@@ -4,6 +4,7 @@ const {
   VerifyCaptchaToken,
   GetSiteDataByKey,
   SubscriberLogin,
+  VerifySubscriberOTP,
   VerifySubscriberToken,
   UpdateSubscriberMonitors,
   GetSubscribableMonitors,
@@ -11,6 +12,7 @@ const {
   VerifyCaptchaToken: vi.fn(),
   GetSiteDataByKey: vi.fn(),
   SubscriberLogin: vi.fn(),
+  VerifySubscriberOTP: vi.fn(),
   VerifySubscriberToken: vi.fn(),
   UpdateSubscriberMonitors: vi.fn(),
   GetSubscribableMonitors: vi.fn(),
@@ -23,7 +25,7 @@ vi.mock("$lib/server/controllers/userSubscriptionsController", async (importOrig
     await importOriginal<typeof import("$lib/server/controllers/userSubscriptionsController")>()
   ).IsEmailSubscriptionEnabled,
   SubscriberLogin,
-  VerifySubscriberOTP: vi.fn(),
+  VerifySubscriberOTP,
   VerifySubscriberToken,
   UpdateSubscriberMonitors,
   GetSubscribableMonitors,
@@ -161,5 +163,21 @@ describe("POST /dashboard-apis/subscription — monitor preferences", () => {
       post({ body: { action: "updatePreferences", token: "t", monitors: changes } } as any),
     ).rejects.toMatchObject({ status: 400 });
     expect(UpdateSubscriberMonitors).not.toHaveBeenCalled();
+  });
+});
+
+describe("POST /dashboard-apis/subscription — verify action", () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it.each([null, 123456, undefined])("refuses a %j code before looking up anyone", async (code) => {
+    GetSiteDataByKey.mockResolvedValue(enabledConfig);
+
+    await expect(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      post({ body: { action: "verify", email: "victim@example.com", code } } as any),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(VerifySubscriberOTP).not.toHaveBeenCalled();
   });
 });

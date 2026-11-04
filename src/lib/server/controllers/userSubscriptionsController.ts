@@ -361,6 +361,7 @@ export function IsEmailSubscriptionEnabled(settings: SubscriptionSettingsLike | 
 
 // ============ Public Subscription Functions ============
 
+import { timingSafeEqual } from "node:crypto";
 import { GenerateTokenWithExpiry, VerifyToken } from "./commonController.js";
 import { GenerateRandomNumber, ValidateEmail, GetNowTimestampUTC } from "../tool.js";
 import sendEmail from "../notification/email_notification.js";
@@ -475,26 +476,35 @@ export async function SubscriberLogin(email: string): Promise<{ success: boolean
  */
 export async function VerifySubscriberOTP(
   email: string,
-  code: string,
+  code: unknown,
 ): Promise<{ success: boolean; error?: string; token?: string }> {
   if (!ValidateEmail(email)) {
     return { success: false, error: "Invalid email address" };
   }
 
+  // A code is the six digits SubscriberLogin mailed, good until its expiry. A subscriber with no pending
+  // code (one never asked for, already used, or an account an admin or the legacy migration created) has
+  // nothing to match: comparing null with null must not sign anyone in. An unknown email gets the same
+  // answer as a wrong code, so the reply does not tell who subscribes.
+  const invalid = { success: false, error: "Invalid verification code" };
+  if (typeof code !== "string" || !/^\d{6}$/.test(code)) {
+    return invalid;
+  }
+
   const normalizedEmail = email.toLowerCase().trim();
   const user = await db.getSubscriberUserByEmail(normalizedEmail);
 
-  if (!user) {
-    return { success: false, error: "User not found" };
+  if (!user || !user.verification_code || !user.verification_expires_at) {
+    return invalid;
   }
 
-  // Check verification code
-  if (user.verification_code !== code) {
-    return { success: false, error: "Invalid verification code" };
+  const expected = Buffer.from(String(user.verification_code));
+  const given = Buffer.from(code);
+  if (expected.length !== given.length || !timingSafeEqual(expected, given)) {
+    return invalid;
   }
 
-  // Check expiry
-  if (user.verification_expires_at && new Date(user.verification_expires_at) < new Date()) {
+  if (new Date(user.verification_expires_at) < new Date()) {
     return { success: false, error: "Verification code expired" };
   }
 

@@ -29,6 +29,7 @@ import {
   GetActiveEmailsForMonitors,
   GetSubscriberMigrationReview,
   MarkSubscriberMigrationReviewed,
+  VerifySubscriberOTP,
 } from "$lib/server/controllers/userSubscriptionsController";
 import * as legacyMigration from "../../../../migrations/20261104130000_migrate_legacy_subscribers";
 
@@ -218,6 +219,20 @@ describe("Kener 3 subscribers", () => {
     expect(Number((await knex("subscriber_methods").count("id as count").first())?.count)).toBe(2);
     expect(await monitorsOf("ana@example.com")).toEqual(["api", "web"]);
     expect(await monitorsOf("bo@example.com")).toEqual(["db"]);
+  });
+
+  it("gives copied subscribers no code anyone could sign in with", async () => {
+    await v3Subscriber("ana@example.com", "ACTIVE", [["web"]]);
+    await v3Subscriber("bo@example.com", "PENDING", [["web"]]);
+
+    await run();
+
+    for (const email of ["ana@example.com", "bo@example.com"]) {
+      expect(await VerifySubscriberOTP(email, null)).toMatchObject({ success: false });
+    }
+    expect(await knex("subscriber_users").where("email", "bo@example.com").first()).toMatchObject({
+      status: "PENDING",
+    });
   });
 
   it("leaves the legacy tables as they were", async () => {
