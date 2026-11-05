@@ -307,8 +307,8 @@ async function SyncOidcUserRoles(userId: number, oidcGroups: string[], settings:
 
   const finalRoleIds = [...new Set([...manualRoles, ...effectiveOidcRoles])];
 
-  const currentSorted = [...currentRoleIds].sort().join(",");
-  const newSorted = [...finalRoleIds].sort().join(",");
+  const currentSorted = [...currentRoleIds].sort((a, b) => a.localeCompare(b)).join(",");
+  const newSorted = [...finalRoleIds].sort((a, b) => a.localeCompare(b)).join(",");
 
   if (currentSorted !== newSorted) {
     await db.updateUserRoles(userId, finalRoleIds);

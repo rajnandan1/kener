@@ -9,6 +9,7 @@
  */
 
 import db from "$lib/server/db/db.js";
+import { TrimSlashes, TrimTrailingSlashes } from "$lib/slashes.js";
 import { GetAllSiteData } from "$lib/server/controllers/siteDataController.js";
 import type { IncidentForMonitorListWithComments, MaintenanceEventsMonitorList } from "$lib/server/types/db.js";
 
@@ -99,11 +100,11 @@ function nowSeconds(): number {
 
 function joinUrl(...parts: string[]): string {
   const [origin, ...rest] = parts;
-  const trimmedOrigin = origin.replace(/\/+$/, "");
+  const trimmedOrigin = TrimTrailingSlashes(origin);
   const path = rest
     .map((p) => p.trim())
     .filter((p) => p.length > 0)
-    .map((p) => "/" + p.replace(/^\/+/, "").replace(/\/+$/, ""))
+    .map((p) => "/" + TrimSlashes(p))
     .join("");
   return trimmedOrigin + path;
 }

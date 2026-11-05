@@ -183,12 +183,12 @@ export const siteDataKeys: SiteDataKey[] = [
   },
   {
     key: "homeIncidentCount",
-    isValid: (value) => parseInt(value) >= 0,
+    isValid: (value) => Number.parseInt(value) >= 0,
     data_type: "string",
   },
   {
     key: "homeIncidentStartTimeWithin",
-    isValid: (value) => parseInt(value) >= 1,
+    isValid: (value) => Number.parseInt(value) >= 1,
     data_type: "string",
   },
   {

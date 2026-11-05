@@ -105,9 +105,9 @@ const BeginningOfDay = (options: { date?: Date; timeZone?: string } = {}): numbe
     minute: "numeric",
     second: "numeric",
   }).formatToParts(date);
-  const hour = parseInt(parts.find((i) => i.type === "hour")?.value ?? "0");
-  const minute = parseInt(parts.find((i) => i.type === "minute")?.value ?? "0");
-  const second = parseInt(parts.find((i) => i.type === "second")?.value ?? "0");
+  const hour = Number.parseInt(parts.find((i) => i.type === "hour")?.value ?? "0");
+  const minute = Number.parseInt(parts.find((i) => i.type === "minute")?.value ?? "0");
+  const second = Number.parseInt(parts.find((i) => i.type === "second")?.value ?? "0");
   const dt = new Date(1000 * Math.floor((date.getTime() - hour * 3600000 - minute * 60000 - second * 1000) / 1000));
   return dt.getTime() / 1000;
 };
@@ -118,7 +118,7 @@ const BeginningOfMinute = (options: { date?: Date; timeZone?: string } = {}): nu
     hourCycle: "h23",
     second: "numeric",
   }).formatToParts(date);
-  const second = parseInt(parts.find((i) => i.type === "second")?.value ?? "0");
+  const second = Number.parseInt(parts.find((i) => i.type === "second")?.value ?? "0");
   const dt = new Date(1000 * Math.floor((date.getTime() - second * 1000) / 1000));
   return dt.getTime() / 1000;
 };
@@ -148,16 +148,16 @@ const ParseUptime = function (up: number, all: number): string {
     return String(((up / all) * 100).toFixed(0));
   }
   // Remove trailing zeros
-  return String(parseFloat(((up / all) * 100).toFixed(4)));
+  return String(Number.parseFloat(((up / all) * 100).toFixed(4)));
 };
 
 //unparse percentage string to float
 const UnparsePercentage = function (str: string): number {
-  if (str === "-") return NaN;
-  return parseFloat(str);
+  if (str === "-") return Number.NaN;
+  return Number.parseFloat(str);
 };
 const ParsePercentage = function (n: number): string {
-  if (isNaN(n)) return "-";
+  if (Number.isNaN(n)) return "-";
   if (n == 0) {
     return "0";
   }
@@ -362,11 +362,12 @@ function ValidateURL(url: string): boolean {
   }
 }
 
-//function to generate 6 digit random number, number of digits as argument
+// A random number with exactly `digits` digits, such as a sign-in code. Drawn from the cryptographic
+// generator: Math.random() is predictable enough to guess the codes it makes.
 function GenerateRandomNumber(digits: number): number {
   const min = Math.pow(10, digits - 1);
   const max = Math.pow(10, digits) - 1;
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+  return crypto.randomInt(min, max + 1);
 }
 
 // Validate uptime formula
@@ -443,7 +444,7 @@ function SafeEvaluateExpression(expression: string): number {
     const char = normalized[i];
     if (char === "+" || char === "-" || char === "*" || char === "/") {
       if (currentNum) {
-        tokens.push(parseFloat(currentNum));
+        tokens.push(Number.parseFloat(currentNum));
         currentNum = "";
       }
       tokens.push(char);
@@ -452,7 +453,7 @@ function SafeEvaluateExpression(expression: string): number {
     }
   }
   if (currentNum) {
-    tokens.push(parseFloat(currentNum));
+    tokens.push(Number.parseFloat(currentNum));
   }
 
   // Validate tokens - must start and end with numbers, alternating

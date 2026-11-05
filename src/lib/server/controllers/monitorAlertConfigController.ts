@@ -66,12 +66,12 @@ function validateAlertValue(alertFor: AlertForType, alertValue: string): void {
     }
   } else if (alertFor === "LATENCY") {
     const numValue = Number(alertValue);
-    if (isNaN(numValue) || numValue <= 0) {
+    if (Number.isNaN(numValue) || numValue <= 0) {
       throw new Error(`Invalid alert_value for LATENCY alert: ${alertValue}. Must be a positive number (milliseconds)`);
     }
   } else if (alertFor === "UPTIME") {
     const numValue = Number(alertValue);
-    if (isNaN(numValue) || numValue < 0 || numValue > 100) {
+    if (Number.isNaN(numValue) || numValue < 0 || numValue > 100) {
       throw new Error(
         `Invalid alert_value for UPTIME alert: ${alertValue}. Must be a number between 0 and 100 (percentage)`,
       );

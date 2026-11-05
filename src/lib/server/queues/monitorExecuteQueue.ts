@@ -202,7 +202,7 @@ const addWorker = () => {
     // default → realtime → incident → maintenance
     // Each level only overrides if it has its own error_message
     for (const timestamp in mergedData) {
-      const ts = parseInt(timestamp);
+      const ts = Number.parseInt(timestamp);
       let errorMessage: string | undefined = defaultData[ts]?.error_message;
       if (realtimeData[ts]?.error_message) {
         errorMessage = realtimeData[ts].error_message;
@@ -221,7 +221,7 @@ const addWorker = () => {
     // Preserve latency from realtime monitoring
     // Incident/maintenance override status but should keep the actual latency from monitoring
     for (const timestamp in mergedData) {
-      const ts = parseInt(timestamp);
+      const ts = Number.parseInt(timestamp);
       if (realtimeData[ts]?.latency !== undefined && realtimeData[ts].latency > 0) {
         mergedData[ts].latency = realtimeData[ts].latency;
       }
@@ -230,14 +230,16 @@ const addWorker = () => {
     // Preserve raw_status from realtime monitoring (overlays replace the merged object wholesale,
     // so re-attach the observed value the resolver recorded).
     for (const timestamp in mergedData) {
-      const ts = parseInt(timestamp);
+      const ts = Number.parseInt(timestamp);
       if (realtimeData[ts]?.raw_status !== undefined) {
         mergedData[ts].raw_status = realtimeData[ts].raw_status;
       }
     }
 
     for (const timestamp in mergedData) {
-      monitorResponseQueue.push(monitor.tag, parseInt(timestamp), mergedData[timestamp]);
+      monitorResponseQueue.push(monitor.tag, Number.parseInt(timestamp), mergedData[timestamp]).catch((err) => {
+        console.error(`Failed to queue the result of ${monitor.tag} at ${timestamp}:`, err);
+      });
     }
 
     return mergedData;

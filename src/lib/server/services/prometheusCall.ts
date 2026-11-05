@@ -3,6 +3,7 @@ import { AxiosProxyConfig } from "../proxy.js";
 import GC from "../../global-constants.js";
 import version from "../../version.js";
 import { GetRequiredSecrets, ReplaceAllOccurrences, ApplySecretsToHeaders } from "../tool.js";
+import { TrimTrailingSlashes } from "../../slashes.js";
 import type { PrometheusMonitor, PrometheusThreshold, MonitoringResult } from "../types/monitor.js";
 
 /**
@@ -11,10 +12,10 @@ import type { PrometheusMonitor, PrometheusThreshold, MonitoringResult } from ".
  * `parseFloat` mishandles (parseFloat("+Inf") === NaN), so special-case them.
  */
 export function parsePromValue(raw: string): number {
-  if (raw === "NaN") return NaN;
+  if (raw === "NaN") return Number.NaN;
   if (raw === "+Inf") return Infinity;
   if (raw === "-Inf") return -Infinity;
-  return parseFloat(raw);
+  return Number.parseFloat(raw);
 }
 
 /**
@@ -83,7 +84,7 @@ class PrometheusCall {
     }
 
     // Build the query endpoint: strip trailing slashes, append /api/v1/query.
-    const endpoint = `${url.replace(/\/+$/, "")}/api/v1/query`;
+    const endpoint = `${TrimTrailingSlashes(url)}/api/v1/query`;
 
     // Merge default headers with user headers (user wins on collision). Secrets
     // are substituted into each header key/value individually - never into a

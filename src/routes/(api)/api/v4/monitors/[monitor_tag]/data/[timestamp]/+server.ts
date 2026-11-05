@@ -28,8 +28,8 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  const timestamp = GetMinuteStartTimestampUTC(parseInt(timestampParam, 10));
-  if (isNaN(timestamp)) {
+  const timestamp = GetMinuteStartTimestampUTC(Number.parseInt(timestampParam, 10));
+  if (Number.isNaN(timestamp)) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",
@@ -80,8 +80,8 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  const timestamp = GetMinuteStartTimestampUTC(parseInt(timestampParam, 10));
-  if (isNaN(timestamp)) {
+  const timestamp = GetMinuteStartTimestampUTC(Number.parseInt(timestampParam, 10));
+  if (Number.isNaN(timestamp)) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",

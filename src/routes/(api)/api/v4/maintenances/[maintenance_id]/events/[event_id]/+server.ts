@@ -45,8 +45,8 @@ export const GET: RequestHandler = async ({ locals, params }) => {
   // Maintenance is validated by middleware and available in locals
   const maintenance = locals.maintenance!;
 
-  const eventId = parseInt(params.event_id!, 10);
-  if (isNaN(eventId)) {
+  const eventId = Number.parseInt(params.event_id!, 10);
+  if (Number.isNaN(eventId)) {
     const errorResponse: NotFoundResponse = {
       error: {
         code: "NOT_FOUND",
@@ -78,8 +78,8 @@ export const PATCH: RequestHandler = async ({ locals, params, request }) => {
   // Maintenance is validated by middleware and available in locals
   const maintenance = locals.maintenance!;
 
-  const eventId = parseInt(params.event_id!, 10);
-  if (isNaN(eventId)) {
+  const eventId = Number.parseInt(params.event_id!, 10);
+  if (Number.isNaN(eventId)) {
     const errorResponse: NotFoundResponse = {
       error: {
         code: "NOT_FOUND",
@@ -182,8 +182,8 @@ export const DELETE: RequestHandler = async ({ locals, params }) => {
   // Maintenance is validated by middleware and available in locals
   const maintenance = locals.maintenance!;
 
-  const eventId = parseInt(params.event_id!, 10);
-  if (isNaN(eventId)) {
+  const eventId = Number.parseInt(params.event_id!, 10);
+  if (Number.isNaN(eventId)) {
     const errorResponse: NotFoundResponse = {
       error: {
         code: "NOT_FOUND",

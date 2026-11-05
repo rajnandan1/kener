@@ -175,7 +175,7 @@ class ApiCall {
     } else {
       evalResp.type = GC.REALTIME;
       // Ensure latency is a valid number; fall back to measured latency
-      if (typeof evalResp.latency !== "number" || isNaN(evalResp.latency)) {
+      if (typeof evalResp.latency !== "number" || Number.isNaN(evalResp.latency)) {
         errorMessage += ` | Eval 'latency' must be a number, got ${JSON.stringify(evalResp.latency)}. Using measured latency instead`;
         evalResp.latency = latency;
       }

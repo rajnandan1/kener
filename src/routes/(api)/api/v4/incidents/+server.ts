@@ -21,16 +21,16 @@ export const GET: RequestHandler = async ({ url }) => {
   const endTsParam = url.searchParams.get("end_ts");
   const monitorTagsParam = url.searchParams.get("monitor_tags");
 
-  const startTs = startTsParam ? parseInt(startTsParam, 10) : undefined;
-  const endTs = endTsParam ? parseInt(endTsParam, 10) : undefined;
+  const startTs = startTsParam ? Number.parseInt(startTsParam, 10) : undefined;
+  const endTs = endTsParam ? Number.parseInt(endTsParam, 10) : undefined;
   const monitorTags = monitorTagsParam ? monitorTagsParam.split(",").map((t) => t.trim()) : undefined;
 
   // Build filter for incidents query
   const filter: { start?: number; end?: number } = {};
-  if (startTs && !isNaN(startTs)) {
+  if (startTs && !Number.isNaN(startTs)) {
     filter.start = startTs;
   }
-  if (endTs && !isNaN(endTs)) {
+  if (endTs && !Number.isNaN(endTs)) {
     filter.end = endTs;
   }
 

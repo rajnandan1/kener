@@ -1,3 +1,4 @@
+import { TrimTrailingSlashes } from "../slashes.js";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ResolveFn = (...args: any[]) => string;
 
@@ -51,7 +52,7 @@ export function absoluteResolve(
   resolve: ResolveFn,
   siteUrl: string,
   path: string,
-  params?: Record<string, string>
+  params?: Record<string, string>,
 ): string {
   // Normalize relative paths like "./assets/..." to "/assets/..." so the
   // final URL doesn't contain "/./" segments (crawlers don't normalize these)
@@ -64,6 +65,6 @@ export function absoluteResolve(
   if (!siteUrl) {
     return resolved;
   }
-  const trimmedSiteUrl = siteUrl.replace(/\/+$/, "");
+  const trimmedSiteUrl = TrimTrailingSlashes(siteUrl);
   return trimmedSiteUrl + (resolved.startsWith("/") ? resolved : "/" + resolved);
 }

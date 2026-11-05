@@ -20,7 +20,7 @@ const Minuter = async (monitor: MonitorRecordTyped) => {
   let options: JobsOptions | undefined = undefined;
   if (monitor.monitor_type === "GROUP") {
     options = {
-      delay: parseInt(String(monitor.type_data?.executionDelay)) || 1000, // default 1 second delay for group monitors
+      delay: Number.parseInt(String(monitor.type_data?.executionDelay)) || 1000, // default 1 second delay for group monitors
     };
   }
   await monitorExecuteQueue.push(monitor, startOfMinute, options);

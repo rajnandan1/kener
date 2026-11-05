@@ -31,10 +31,10 @@ export const GET: RequestHandler = async ({ locals, url }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  const startTs = GetMinuteStartTimestampUTC(parseInt(startTsParam, 10));
-  const endTs = GetMinuteStartTimestampUTC(parseInt(endTsParam, 10));
+  const startTs = GetMinuteStartTimestampUTC(Number.parseInt(startTsParam, 10));
+  const endTs = GetMinuteStartTimestampUTC(Number.parseInt(endTsParam, 10));
 
-  if (isNaN(startTs) || isNaN(endTs)) {
+  if (Number.isNaN(startTs) || Number.isNaN(endTs)) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",

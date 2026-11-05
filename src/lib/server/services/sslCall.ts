@@ -111,7 +111,7 @@ class SSLCall {
 
   async execute(): Promise<MonitoringResult> {
     const domain = String(this.monitor.type_data.host ?? "").trim();
-    const port = parseInt(this.monitor.type_data.port || "443", 10);
+    const port = Number.parseInt(this.monitor.type_data.port || "443", 10);
     const degradedRemainingHours = Number(this.monitor.type_data.degradedRemainingHours);
     const downRemainingHours = Number(this.monitor.type_data.downRemainingHours);
     const configuredTimeout = Number(this.monitor.type_data.timeout);

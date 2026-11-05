@@ -58,7 +58,7 @@ export const GetIncidentsOpenHome = async (
   start: number,
   end: number,
 ): Promise<unknown[]> => {
-  homeIncidentCount = parseInt(String(homeIncidentCount));
+  homeIncidentCount = Number.parseInt(String(homeIncidentCount));
 
   if (homeIncidentCount < 0) {
     homeIncidentCount = 0;

@@ -128,6 +128,7 @@ describe("dockerDefaultsFromEnv", () => {
     [{ DOCKER_HOST: "unix:///run/proxy/docker.sock" }, { connectionType: "socket", daemon: "/run/proxy/docker.sock" }],
     [{ DOCKER_HOST: "tcp://localhost:2375" }, { connectionType: "tcp", daemon: "localhost:2375" }],
     [{ DOCKER_HOST: " TCP://socket-proxy:2375/ " }, { connectionType: "tcp", daemon: "socket-proxy:2375" }],
+    [{ DOCKER_HOST: "tcp://socket-proxy:2375///" }, { connectionType: "tcp", daemon: "socket-proxy:2375" }],
     [
       { DOCKER_HOST: "tcp://socket-proxy", DOCKER_TLS_VERIFY: "" },
       { connectionType: "tcp", daemon: "socket-proxy" },

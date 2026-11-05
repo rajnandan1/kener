@@ -809,7 +809,7 @@ export const GetBadge = async (badgeType: BadgeType, params: BadgeParams): Promi
     // For uptime/latency badges, we calculate over a time period
     let sinceLast: number;
     const sinceLastParam = params.sinceLast;
-    if (sinceLastParam == undefined || isNaN(Number(sinceLastParam)) || Number(sinceLastParam) < 60) {
+    if (sinceLastParam == undefined || Number.isNaN(Number(sinceLastParam)) || Number(sinceLastParam) < 60) {
       sinceLast = 90 * 24 * 60 * 60;
     } else {
       sinceLast = Number(sinceLastParam);
@@ -934,7 +934,7 @@ export const GetStatusCountsByIntervalGroupedByMonitor = async (
   intervalInSeconds: number,
   numberOfPoints: number,
 ): Promise<Array<TimestampStatusCountByMonitor>> => {
-  const sortedTags = [...monitorTags].sort();
+  const sortedTags = [...monitorTags].sort((a, b) => a.localeCompare(b));
   const cacheKey = `status_counts_grouped:${sortedTags.join(",")}:${startTimestamp}:${intervalInSeconds}:${numberOfPoints}`;
   const cached = await getCache<Array<TimestampStatusCountByMonitor>>(cacheKey);
   if (cached) {

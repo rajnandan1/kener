@@ -19,6 +19,8 @@ async function start() {
   const { handler } = await import("../build/handler.js");
 
   const app: any = express();
+  // Express announces itself in an X-Powered-By header unless told not to
+  app.disable("x-powered-by");
   const db = knex(knexOb);
 
   // Caps a health probe at 2s so a wedged dependency can not hang the
@@ -104,7 +106,10 @@ async function start() {
     await runMigrations();
     await runSeed();
     await db.destroy();
-    Startup();
+    Startup().catch((err) => {
+      console.error("Kener failed to start:", err);
+      process.exit(1);
+    });
     console.log("Kener is running on port " + PORT + "!");
   });
 
@@ -138,4 +143,7 @@ async function start() {
   process.on("SIGINT", () => gracefulShutdown("SIGINT"));
 }
 
-start();
+start().catch((err) => {
+  console.error("Kener failed to start:", err);
+  process.exit(1);
+});

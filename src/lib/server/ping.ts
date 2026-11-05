@@ -18,7 +18,7 @@ interface TCPSocketOptions {
 
 const TCP = function (type: string, host: string, port: string | number, timeout: number): Promise<TCPResult> {
   timeout = Number(timeout);
-  port = parseInt(port as string, 10);
+  port = Number.parseInt(port as string, 10);
   return new Promise((resolve) => {
     const socket = new net.Socket();
     const start = process.hrtime.bigint(); // High-precision timestamp
@@ -150,7 +150,7 @@ function ExtractIPv6HostAndPort(input: string): IPv6HostAndPort | null {
 
   // If there's a valid port at the end, extract it
   const lastPart: string = parts[parts.length - 1];
-  const port: number | null = /^\d+$/.test(lastPart) ? parseInt(parts.pop() as string, 10) : null; // Check if last part is a number
+  const port: number | null = /^\d+$/.test(lastPart) ? Number.parseInt(parts.pop() as string, 10) : null; // Check if last part is a number
 
   // Reconstruct the IPv6 address
   const host: string = parts.join(":");

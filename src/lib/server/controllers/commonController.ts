@@ -186,7 +186,7 @@ export const CreateHash = (apiKey: string): string => {
   return crypto.createHmac("sha256", GetSecretKey()).update(apiKey).digest("hex");
 };
 
-//create md5 hash
-export const CreateMD5Hash = (data: string): string => {
-  return crypto.createHash("md5").update(data).digest("hex");
+// A short fingerprint of a string, for ids such as a queue's deduplication id (not for secrets)
+export const CreateSha256Hash = (data: string): string => {
+  return crypto.createHash("sha256").update(data).digest("hex");
 };

@@ -39,4 +39,7 @@ async function fixMigrationExtensions() {
   }
 }
 
-fixMigrationExtensions();
+fixMigrationExtensions().catch((err) => {
+  console.error("Failed to fix migration extensions:", err);
+  process.exit(1);
+});

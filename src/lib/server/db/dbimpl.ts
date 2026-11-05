@@ -429,8 +429,6 @@ class DbImpl {
     this.bindMonitorAlertConfigMethods();
     this.bindSubscriptionSystemMethods();
     this.bindEmailTemplateConfigMethods();
-
-    this.init();
   }
 
   private bindMonitoringMethods(): void {
@@ -894,8 +892,6 @@ class DbImpl {
     this.deleteEmailTemplate = this.emailTemplateConfig.deleteEmailTemplate.bind(this.emailTemplateConfig);
     this.upsertEmailTemplate = this.emailTemplateConfig.upsertEmailTemplate.bind(this.emailTemplateConfig);
   }
-
-  async init(): Promise<void> {}
 
   /**
    * Runs `fn` with all repository queries routed to the worker connection pool.

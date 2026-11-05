@@ -191,7 +191,7 @@ export async function POST({ request, cookies }) {
       await ResendInvitationEmail(data.email);
       resp = { success: true };
     } else if (action == "sendVerificationEmail") {
-      const toId = parseInt(String(data.toId));
+      const toId = Number.parseInt(String(data.toId));
       if (!toId) {
         throw new Error("User ID is required");
       }
@@ -204,11 +204,11 @@ export async function POST({ request, cookies }) {
       await SendVerificationEmail(toId, userDB.id);
       resp = { success: true };
     } else if (action == "getUsers") {
-      const page = parseInt(String(data.page)) || 1;
-      const limit = parseInt(String(data.limit)) || 10;
+      const page = Number.parseInt(String(data.page)) || 1;
+      const limit = Number.parseInt(String(data.limit)) || 10;
       const filter: { is_active?: number } = {};
       if (data.is_active !== undefined && data.is_active !== null) {
-        filter.is_active = parseInt(String(data.is_active));
+        filter.is_active = Number.parseInt(String(data.is_active));
       }
       const hasFilter = Object.keys(filter).length > 0 ? filter : undefined;
       const users = await GetAllUsersPaginatedDashboard({ page, limit }, hasFilter);
@@ -252,15 +252,15 @@ export async function POST({ request, cookies }) {
     } else if (action == "deleteTrigger") {
       resp = await DeleteTrigger(data.trigger_id);
     } else if (action == "getAllAlertsPaginated") {
-      const page = parseInt(String(data.page)) || 1;
-      const limit = parseInt(String(data.limit)) || 20;
+      const page = Number.parseInt(String(data.page)) || 1;
+      const limit = Number.parseInt(String(data.limit)) || 20;
       const filter: { alert_status?: "TRIGGERED" | "RESOLVED"; config_id?: number } = {};
       if (data.status && data.status !== "ALL") filter.alert_status = data.status as "TRIGGERED" | "RESOLVED";
-      if (data.config_id) filter.config_id = parseInt(String(data.config_id));
+      if (data.config_id) filter.config_id = Number.parseInt(String(data.config_id));
       resp = await GetMonitorAlertsV2Paginated(page, limit, Object.keys(filter).length > 0 ? filter : undefined);
     } else if (action == "getMonitoringDataPaginated") {
-      const page = parseInt(String(data.page)) || 1;
-      const limit = parseInt(String(data.limit)) || 50;
+      const page = Number.parseInt(String(data.page)) || 1;
+      const limit = Number.parseInt(String(data.limit)) || 50;
       const filter: { monitor_tag?: string; status?: MonitoringStatus; start_time?: number; end_time?: number } = {};
       if (data.monitor_tag && data.monitor_tag !== "ALL") {
         filter.monitor_tag = data.monitor_tag;
@@ -272,10 +272,10 @@ export async function POST({ request, cookies }) {
         filter.status = data.status;
       }
       if (data.start_time) {
-        filter.start_time = parseInt(String(data.start_time));
+        filter.start_time = Number.parseInt(String(data.start_time));
       }
       if (data.end_time) {
-        filter.end_time = parseInt(String(data.end_time));
+        filter.end_time = Number.parseInt(String(data.end_time));
       }
       resp = await GetMonitoringDataPaginated(page, limit, Object.keys(filter).length > 0 ? filter : undefined);
     } else if (action == "getAPIKeys") {
@@ -502,8 +502,8 @@ export async function POST({ request, cookies }) {
     } else if (action == "toggleMonitorAlertConfigStatus") {
       resp = await ToggleMonitorAlertConfigStatus(data.id);
     } else if (action == "getAlertConfigsPaginated") {
-      const page = parseInt(String(data.page)) || 1;
-      const limit = parseInt(String(data.limit)) || 10;
+      const page = Number.parseInt(String(data.page)) || 1;
+      const limit = Number.parseInt(String(data.limit)) || 10;
       const filter: { monitor_tag?: string; is_active?: "YES" | "NO"; alert_for?: "STATUS" | "LATENCY" | "UPTIME" } =
         {};
       if (data.monitor_tag) filter.monitor_tag = data.monitor_tag;
@@ -611,12 +611,12 @@ export async function POST({ request, cookies }) {
     }
     // ============ Admin Subscribers Management ============
     else if (action == "getAdminSubscribers") {
-      const page = parseInt(String(data.page)) || 1;
-      const limit = parseInt(String(data.limit)) || 10;
+      const page = Number.parseInt(String(data.page)) || 1;
+      const limit = Number.parseInt(String(data.limit)) || 10;
       resp = await GetAdminSubscribersPaginated(page, limit);
     } else if (action == "getSubscriptionMigrationReport") {
-      const page = parseInt(String(data.page)) || 1;
-      const limit = parseInt(String(data.limit)) || 25;
+      const page = Number.parseInt(String(data.page)) || 1;
+      const limit = Number.parseInt(String(data.limit)) || 25;
       resp = await GetSubscriptionMigrationReport(page, limit);
     } else if (action == "adminSetSubscriberMonitors") {
       const { methodId, monitorTags } = data;

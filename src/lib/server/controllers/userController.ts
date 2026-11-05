@@ -35,7 +35,13 @@ interface NewUserInput {
   role_ids: string[];
 }
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// The shape /^[^\s@]+@[^\s@]+\.[^\s@]+$/ checks, without its backtracking on long input: one @ with text
+// before it, no whitespace, and a dot inside the domain (not its first or last character).
+export function IsEmailShaped(email: string): boolean {
+  const at = email.indexOf("@");
+  if (at < 1 || at !== email.lastIndexOf("@") || /\s/.test(email)) return false;
+  return email.slice(at + 2, -1).includes(".");
+}
 
 const normalizeEmail = (email: string): string => email.trim().toLowerCase();
 const normalizeName = (name: string): string => name.trim().replace(/\s+/g, " ");
@@ -45,7 +51,7 @@ const validateEmailOrThrow = (email: string): string => {
   if (!normalizedEmail) {
     throw new Error("Email cannot be empty");
   }
-  if (!EMAIL_REGEX.test(normalizedEmail)) {
+  if (!IsEmailShaped(normalizedEmail)) {
     throw new Error("Please enter a valid email address");
   }
   return normalizedEmail;
@@ -145,7 +151,7 @@ export const UpdateUserData = async (data: UserUpdateInput): Promise<number> => 
     case "name":
       return await db.updateUserName(userID, updateValue);
     case "is_verified":
-      return await db.updateIsVerified(userID, parseInt(updateValue));
+      return await db.updateIsVerified(userID, Number.parseInt(updateValue));
     default:
       throw new Error("Invalid update key");
   }

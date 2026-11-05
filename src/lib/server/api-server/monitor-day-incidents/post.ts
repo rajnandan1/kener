@@ -24,12 +24,12 @@ export default async function post(req: APIServerRequest): Promise<Response> {
   }
 
   const startOfDayTodayAtTz = req.body.startOfDayTodayAtTz
-    ? parseInt(req.body.startOfDayTodayAtTz || "0", 10)
+    ? Number.parseInt(req.body.startOfDayTodayAtTz || "0", 10)
     : BeginningOfDay();
 
   const nowAtTz =
     GetMinuteStartTimestampUTC(
-      req.body.nowAtTz ? parseInt(req.body.nowAtTz || "0", 10) : GetMinuteStartNowTimestampUTC(),
+      req.body.nowAtTz ? Number.parseInt(req.body.nowAtTz || "0", 10) : GetMinuteStartNowTimestampUTC(),
     ) + 60;
 
   const canSeeHidden = await CanSeeHiddenMonitors(await GetLoggedInSession(req.cookies));

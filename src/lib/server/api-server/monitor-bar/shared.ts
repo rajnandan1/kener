@@ -33,7 +33,7 @@ const parseMonitorSettings = (value: string | null): ParsedMonitorSettings => {
 export const parseIntParam = (value: string | null, fallback: number): number => {
   const trimmed = value?.trim();
   if (!trimmed || !/^[+-]?\d+$/.test(trimmed)) return fallback;
-  const parsed = parseInt(trimmed, 10);
+  const parsed = Number.parseInt(trimmed, 10);
   return Number.isSafeInteger(parsed) ? parsed : fallback;
 };
 

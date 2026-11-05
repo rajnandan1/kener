@@ -1,4 +1,5 @@
 import db from "../db/db.js";
+import { TrimTrailingSlashes } from "../../slashes.js";
 import { IsMaskedString, MaskString } from "../tool.js";
 import { siteDataKeys } from "./siteDataKeys.js";
 import { ClearOidcConfigCache } from "./oidcController.js";
@@ -166,7 +167,7 @@ export const GetSiteURL = async (): Promise<string> => {
   const siteURL = await GetSiteDataByKey("siteURL");
   for (const candidate of [siteURL, process.env.ORIGIN]) {
     if (typeof candidate === "string" && /^https?:\/\//i.test(candidate)) {
-      return candidate.replace(/\/+$/, "");
+      return TrimTrailingSlashes(candidate);
     }
   }
   return "";

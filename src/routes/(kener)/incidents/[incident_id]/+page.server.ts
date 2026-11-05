@@ -9,7 +9,7 @@ import {
 export const load: PageServerLoad = async ({ params, parent }) => {
   const { incident_id } = params;
   const incidentIdNum = Number(incident_id);
-  if (isNaN(incidentIdNum)) {
+  if (Number.isNaN(incidentIdNum)) {
     throw error(400, { message: "Invalid incident ID" });
   }
 

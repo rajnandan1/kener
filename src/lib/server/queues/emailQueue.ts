@@ -7,7 +7,7 @@
 import { Queue, Worker, Job, type JobsOptions } from "bullmq";
 import q from "./q.js";
 import sendEmail from "../notification/email_notification.js";
-import { CreateMD5Hash } from "../controllers/commonController.js";
+import { CreateSha256Hash } from "../controllers/commonController.js";
 
 let emailQueue: Queue | null = null;
 let worker: Worker | null = null;
@@ -86,7 +86,7 @@ export const push = async (jobData: EmailJobData, options?: JobsOptions) => {
   addWorker();
 
   // Use deduplication to prevent duplicate emails to same recipient
-  const deDupId = `email-${CreateMD5Hash(jobData.toEmails.join(","))}-${Date.now()}`;
+  const deDupId = `email-${CreateSha256Hash(jobData.toEmails.join(","))}-${Date.now()}`;
   if (!options.deduplication) {
     options.deduplication = {
       id: deDupId,

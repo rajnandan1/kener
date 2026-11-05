@@ -194,11 +194,15 @@ const addWorker = () => {
         //alertValue can be DOWN or DEGRADED
         isAffected = await db.consecutivelyStatusFor(monitor_tag, alertValue, failureThreshold);
       } else if (typeOfConfig === GC.LATENCY) {
-        isAffected = await db.consecutivelyLatencyGreaterThan(monitor_tag, parseFloat(alertValue), failureThreshold);
+        isAffected = await db.consecutivelyLatencyGreaterThan(
+          monitor_tag,
+          Number.parseFloat(alertValue),
+          failureThreshold,
+        );
       } else if (typeOfConfig === GC.UPTIME) {
         isAffected = await IsUptimeLessThanXPercent(
           monitor_tag,
-          parseFloat(alertValue),
+          Number.parseFloat(alertValue),
           failureThreshold,
           numerator,
           denominator,
@@ -243,11 +247,11 @@ const addWorker = () => {
           if (typeOfConfig === GC.STATUS) {
             isUp = await db.consecutivelyStatusFor(monitor_tag, GC.UP, successThreshold);
           } else if (typeOfConfig === GC.LATENCY) {
-            isUp = await db.consecutivelyLatencyLessThan(monitor_tag, parseFloat(alertValue), successThreshold);
+            isUp = await db.consecutivelyLatencyLessThan(monitor_tag, Number.parseFloat(alertValue), successThreshold);
           } else if (typeOfConfig === GC.UPTIME) {
             isUp = await IsUptimeGreaterThanXPercent(
               monitor_tag,
-              parseFloat(alertValue),
+              Number.parseFloat(alertValue),
               successThreshold,
               numerator,
               denominator,

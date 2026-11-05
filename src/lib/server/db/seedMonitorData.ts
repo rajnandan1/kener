@@ -13,7 +13,7 @@ const defaultMonitorSettings = {
   uptime_formula_denominator: "up + maintenance + down + degraded",
 };
 
-let seedMonitorData = [
+const seedMonitorData = [
   {
     tag: "earth",
     name: "Earth - Planet 3",

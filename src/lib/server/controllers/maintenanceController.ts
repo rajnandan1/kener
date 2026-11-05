@@ -142,7 +142,7 @@ const notifySubscribersOfAddedMonitors = async (maintenance_id: number, monitorT
     await pushMaintenanceUpdate(
       { ...next, title: maintenance.title, description: maintenance.description },
       `**now includes ${monitorNames}**`,
-      `monitors_added_${[...monitorTags].sort().join("_")}`,
+      `monitors_added_${[...monitorTags].sort((a, b) => a.localeCompare(b)).join("_")}`,
       "Maintenance Updated",
       siteDataToVariables(siteData).site_url,
       monitorTags,

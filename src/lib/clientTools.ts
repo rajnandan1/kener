@@ -19,7 +19,7 @@ function ParseLatency(latencyMs: number): string {
 }
 
 function ResolveSslExpiresAtMs(latestData: { expiry_at?: string | null } | null | undefined): number | null {
-  const parsed = latestData?.expiry_at ? Date.parse(latestData.expiry_at) : NaN;
+  const parsed = latestData?.expiry_at ? Date.parse(latestData.expiry_at) : Number.NaN;
   return Number.isNaN(parsed) ? null : parsed;
 }
 
@@ -309,7 +309,7 @@ function ValidateCronExpression(cronExp: string): { isValid: boolean; message: s
 
 function isValidRange(value: string | number, min: number, max: number): boolean {
   const num = Number(value);
-  return !isNaN(num) && num >= min && num <= max;
+  return !Number.isNaN(num) && num >= min && num <= max;
 }
 function IsValidPort(port: number | string): boolean {
   return isValidRange(port, 1, 65535);
@@ -345,8 +345,14 @@ function SortMonitor(monitorSort: number[] | undefined, resp: MonitorItem[]): Mo
 //js function to generate 32 character random string
 function RandomString(length: number): string {
   const chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  // The Web Crypto generator, in browsers and Node alike. 248 is the largest multiple of 62 under 256,
+  // so dropping bytes from 248 up keeps every character equally likely.
   let result = "";
-  for (let i = length; i > 0; --i) result += chars[Math.floor(Math.random() * chars.length)];
+  while (result.length < length) {
+    for (const byte of globalThis.crypto.getRandomValues(new Uint8Array(length))) {
+      if (byte < 248 && result.length < length) result += chars[byte % chars.length];
+    }
+  }
   return result;
 }
 

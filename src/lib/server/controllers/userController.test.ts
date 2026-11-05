@@ -17,7 +17,7 @@ vi.mock("$lib/server/cache/cache", () => ({
 
 import db from "$lib/server/db/db";
 import { GenerateToken, GenerateTokenWithExpiry } from "./commonController";
-import { GetLoggedInSession } from "./userController";
+import { GetLoggedInSession, IsEmailShaped } from "./userController";
 
 const migrations = import.meta.glob<Knex.Migration>("/migrations/*.ts", { eager: true });
 const knex = (db as unknown as { knex: Knex }).knex;
@@ -72,5 +72,37 @@ describe("GetLoggedInSession", () => {
     expect(await signedInAs(await GenerateToken(off))).toBeNull();
     expect(await signedInAs("not-a-jwt")).toBeNull();
     expect(await GetLoggedInSession({ get: () => undefined } as unknown as Cookies)).toBeNull();
+  });
+});
+
+describe("IsEmailShaped", () => {
+  // The regular expression it replaces, which backtracks on long input
+  const OLD = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  it.each([
+    "ana@example.com",
+    "a@b.c",
+    "a.b@c.d.e",
+    "a@.b.c",
+    "a@b.",
+    "a@.b",
+    "a@b..c",
+    "a@bc",
+    "@b.c",
+    "a@@b.c",
+    "a@b@c.d",
+    "a b@c.d",
+    "a@b.c ",
+    "a@b\t.c",
+    "",
+    "a@b.c.",
+  ])("agrees with the old pattern on %j", (email) => {
+    expect(IsEmailShaped(email)).toBe(OLD.test(email));
+  });
+
+  it("stays fast on long input", () => {
+    const started = performance.now();
+    expect(IsEmailShaped("a@" + ".".repeat(100_000) + " ")).toBe(false);
+    expect(performance.now() - started).toBeLessThan(200);
   });
 });

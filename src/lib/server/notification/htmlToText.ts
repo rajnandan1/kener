@@ -14,7 +14,8 @@ const BLOCKS = "p|div|h[1-6]|ul|ol|table|tr|blockquote|pre|section|header|footer
 function decodeEntities(text: string): string {
   return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (entity, code: string) => {
     if (code[0] === "#") {
-      const point = code[1] === "x" || code[1] === "X" ? parseInt(code.slice(2), 16) : parseInt(code.slice(1), 10);
+      const point =
+        code[1] === "x" || code[1] === "X" ? Number.parseInt(code.slice(2), 16) : Number.parseInt(code.slice(1), 10);
       return Number.isFinite(point) && point > 0 && point <= 0x10ffff ? String.fromCodePoint(point) : entity;
     }
     return NAMED_ENTITIES[code.toLowerCase()] ?? entity;
@@ -32,9 +33,11 @@ export function HtmlToText(html: string): string {
     // As in HTML, a line break in the source is a space; only the tags below break lines.
     .replace(/\s+/g, " ")
     .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/\s*<li[^>]*>\s*/gi, "\n- ")
-    .replace(/\s*<\/li>\s*/gi, "\n")
-    .replace(new RegExp(`\\s*</?(${BLOCKS})(\\s[^>]*)?>\\s*`, "gi"), "\n\n");
+    // Whitespace is single spaces by now, so " ?" takes the space around a tag without backtracking.
+    // Each item ends its line; the one before it, or the list's opening, starts it.
+    .replace(/ ?<\/li> ?/gi, "\n")
+    .replace(/ ?<li[^>]*> ?/gi, "- ")
+    .replace(new RegExp(` ?</?(${BLOCKS})(\\s[^>]*)?> ?`, "gi"), "\n\n");
   return decodeEntities(striptags(withBreaks))
     .split("\n")
     .map((line) => line.replace(/[ \t\f\v ]+/g, " ").trim())

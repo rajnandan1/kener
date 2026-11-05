@@ -73,7 +73,10 @@ const addWorker = () => {
       type: type,
       ...(expiry_at ? { expiry_at, issuer_cn, issuer_o, cert_trusted } : {}),
     });
-    alertingQueue.push(monitorTag, ts, status);
+    // Not awaited, so the job does not wait for alert evaluation; a failure is logged, not thrown.
+    alertingQueue.push(monitorTag, ts, status).catch((err) => {
+      console.error(`Failed to enqueue alert evaluation for ${monitorTag}:`, err);
+    });
     // Best-effort: the row is committed, so a failed subscriber lookup must not fail (and retry) the job.
     try {
       await NotifySubscribersOfStatusChange(monitorTag, ts, status, type);

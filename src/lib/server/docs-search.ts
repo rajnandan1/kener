@@ -72,7 +72,8 @@ function findSectionAnchor(rawContent: string, query: string): { anchor: string;
 
   for (const line of lines) {
     // Check for heading
-    const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
+    // \S after the spaces: if the title could also start with a space, the two would split it every way
+    const headingMatch = line.match(/^(#{1,6})\s+(\S.*)$/);
     if (headingMatch) {
       // If we found query in previous section, return that heading
       if (queryFoundInSection && currentHeading) {

@@ -31,7 +31,7 @@ function extractBearerToken(authHeader: string | null): string | null {
 }
 
 function parseId(value: string): number | undefined {
-  const id = /^\d+$/.test(value) ? Number(value) : NaN;
+  const id = /^\d+$/.test(value) ? Number(value) : Number.NaN;
   return id <= MAX_ID ? id : undefined;
 }
 

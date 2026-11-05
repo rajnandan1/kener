@@ -17,7 +17,7 @@ export function IsValidGHObject(data: string): boolean {
 
   if (!!parsed.owner && typeof parsed.owner !== "string") return false;
   if (!!parsed.repo && typeof parsed.repo !== "string") return false;
-  if (!!parsed.incidentSince && isNaN(parsed.incidentSince as number)) return false;
+  if (!!parsed.incidentSince && Number.isNaN(Number(parsed.incidentSince))) return false;
   return true;
 }
 

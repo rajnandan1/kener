@@ -4,6 +4,7 @@ import { AxiosProxyConfig } from "./proxy.js";
 import { performance } from "node:perf_hooks";
 import { DOCKER_CONNECTION_TYPES, DOCKER_DEFAULT_SOCKET_PATH, DOCKER_DEFAULT_TIMEOUT } from "../anywhere.js";
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "./tool.js";
+import { TrimTrailingSlashes } from "../slashes.js";
 import type { DockerConnectionType } from "../anywhere.js";
 import type { DockerConnectionDefaults, DockerMonitorTypeData } from "../types/docker.js";
 
@@ -120,7 +121,9 @@ const LOCAL_SOCKET: DockerConnectionDefaults = { connectionType: "socket", daemo
 export function dockerDefaultsFromEnv(env: NodeJS.ProcessEnv): DockerConnectionDefaults {
   const host = env.DOCKER_HOST?.trim();
   if (!host) return LOCAL_SOCKET;
-  const [, scheme, address] = /^(unix|tcp):\/\/(.*?)\/*$/i.exec(host) ?? [];
+  const match = /^(unix|tcp):\/\//i.exec(host);
+  const scheme = match?.[1];
+  const address = match ? TrimTrailingSlashes(host.slice(match[0].length)) : undefined;
   if (scheme?.toLowerCase() === "unix") {
     return { connectionType: "socket", daemon: address || DOCKER_DEFAULT_SOCKET_PATH };
   }
@@ -149,7 +152,7 @@ export function getDockerDefaults(): DockerConnectionDefaults {
 export function buildBaseURL(connection: DockerConnection): string {
   const raw = (connection.daemon || "").trim();
   const scheme = connection.connectionType === "tls" ? "https" : "http";
-  const withoutScheme = raw.replace(/^(tcp|http|https):\/\//i, "").replace(/\/+$/, "");
+  const withoutScheme = TrimTrailingSlashes(raw.replace(/^(tcp|http|https):\/\//i, ""));
   if (!withoutScheme) {
     throw new DockerError("Docker host address is empty");
   }

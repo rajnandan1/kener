@@ -13,8 +13,8 @@ export const GET: RequestHandler = async ({ locals, url }) => {
   const pageParam = url.searchParams.get("page");
   const limitParam = url.searchParams.get("limit");
 
-  const page = pageParam ? Math.max(1, parseInt(pageParam, 10) || 1) : 1;
-  const limit = limitParam ? Math.min(100, Math.max(1, parseInt(limitParam, 10) || 20)) : 20;
+  const page = pageParam ? Math.max(1, Number.parseInt(pageParam, 10) || 1) : 1;
+  const limit = limitParam ? Math.min(100, Math.max(1, Number.parseInt(limitParam, 10) || 20)) : 20;
 
   // Get all events for this maintenance
   const allEvents = await db.getMaintenanceEventsByMaintenanceId(maintenance.id);

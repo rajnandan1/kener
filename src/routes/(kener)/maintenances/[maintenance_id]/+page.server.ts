@@ -18,7 +18,7 @@ export const load: PageServerLoad = async ({ params, url, parent }) => {
   }
 
   const eventIdNum = Number(maintenance_id);
-  if (isNaN(eventIdNum)) {
+  if (Number.isNaN(eventIdNum)) {
     throw error(400, { message: "Invalid maintenance event ID" });
   }
 

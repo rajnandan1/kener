@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ApplySecretsToHeaders,
+  GenerateRandomNumber,
   BeginningOfDay,
   BeginningOfMinute,
   checkIfDuplicateExists,
@@ -453,5 +454,24 @@ describe("parseDbTimestamp", () => {
 
   it("falls back to Date parsing for ISO strings", () => {
     expect(parseDbTimestamp("2026-08-20T04:02:00Z").toISOString()).toBe("2026-08-20T04:02:00.000Z");
+  });
+});
+
+describe("GenerateRandomNumber", () => {
+  it("always has the number of digits asked for", () => {
+    for (let i = 0; i < 2000; i++) {
+      const code = GenerateRandomNumber(6);
+      expect(Number.isInteger(code)).toBe(true);
+      expect(String(code)).toHaveLength(6);
+    }
+  });
+
+  it("draws from the cryptographic generator, not Math.random", () => {
+    const random = vi.spyOn(Math, "random");
+
+    GenerateRandomNumber(6);
+
+    expect(random).not.toHaveBeenCalled();
+    random.mockRestore();
   });
 });

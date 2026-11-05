@@ -21,15 +21,15 @@ export const GET: RequestHandler = async ({ url }) => {
   const maintenanceIdParam = url.searchParams.get("maintenance_id");
 
   // Pagination
-  const page = pageParam ? Math.max(1, parseInt(pageParam, 10) || 1) : 1;
-  const limit = limitParam ? Math.min(100, Math.max(1, parseInt(limitParam, 10) || 20)) : 20;
+  const page = pageParam ? Math.max(1, Number.parseInt(pageParam, 10) || 1) : 1;
+  const limit = limitParam ? Math.min(100, Math.max(1, Number.parseInt(limitParam, 10) || 20)) : 20;
 
   // Determine start timestamp for filtering
   // If not provided, use current timestamp; otherwise normalize to minute start
   let startFromTimestamp: number;
   if (eventStartDateTimeParam) {
-    const parsed = parseInt(eventStartDateTimeParam, 10);
-    if (!isNaN(parsed)) {
+    const parsed = Number.parseInt(eventStartDateTimeParam, 10);
+    if (!Number.isNaN(parsed)) {
       startFromTimestamp = GetMinuteStartTimestampUTC(parsed);
     } else {
       startFromTimestamp = GetNowTimestampUTC();
@@ -55,8 +55,8 @@ export const GET: RequestHandler = async ({ url }) => {
   // Parse maintenance_id filter
   let maintenanceId: number | undefined;
   if (maintenanceIdParam) {
-    const parsed = parseInt(maintenanceIdParam, 10);
-    if (!isNaN(parsed)) {
+    const parsed = Number.parseInt(maintenanceIdParam, 10);
+    if (!Number.isNaN(parsed)) {
       maintenanceId = parsed;
     }
   }

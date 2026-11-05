@@ -49,8 +49,8 @@ export const GET: RequestHandler = async ({ params, locals }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  const commentId = parseInt(commentIdParam, 10);
-  if (isNaN(commentId)) {
+  const commentId = Number.parseInt(commentIdParam, 10);
+  if (Number.isNaN(commentId)) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",
@@ -104,8 +104,8 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  const commentId = parseInt(commentIdParam, 10);
-  if (isNaN(commentId)) {
+  const commentId = Number.parseInt(commentIdParam, 10);
+  if (Number.isNaN(commentId)) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",
@@ -190,8 +190,8 @@ export const DELETE: RequestHandler = async ({ params, locals }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  const commentId = parseInt(commentIdParam, 10);
-  if (isNaN(commentId)) {
+  const commentId = Number.parseInt(commentIdParam, 10);
+  if (Number.isNaN(commentId)) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",

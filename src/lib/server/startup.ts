@@ -20,6 +20,7 @@ async function Startup(): Promise<void> {
 
   const runtimeVersion = version();
 
+  // The callback reports a failure; the promise figlet also returns would reject with the same error.
   figlet("Kener v" + runtimeVersion, function (err, data) {
     if (err) {
       console.log("Something went wrong...");
@@ -27,14 +28,17 @@ async function Startup(): Promise<void> {
     }
     console.log(data);
     console.log(`Kener version ${runtimeVersion} is running!`);
-  });
+  }).catch(() => {});
 }
 
 // Call Startup() when run directly (works with both tsx and vite-node)
 const isMainModule = process.argv[1]?.includes("startup") || process.argv[1]?.includes("vite-node");
 
 if (isMainModule) {
-  Startup();
+  Startup().catch((err) => {
+    console.error("Kener failed to start:", err);
+    process.exit(1);
+  });
 }
 
 export default Startup;

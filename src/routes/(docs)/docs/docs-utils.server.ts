@@ -1,4 +1,5 @@
 import fm from "front-matter";
+import { TrimSlashes, TrimTrailingSlashes } from "$lib/slashes.js";
 import type {
   DocsConfig,
   DocsTableOfContentsItem,
@@ -217,7 +218,7 @@ function normalizeAbsoluteUrl(baseDomain: string, value: string): string {
   }
 
   const path = trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
-  return `${baseDomain.replace(/\/+$/, "")}${path}`;
+  return `${TrimTrailingSlashes(baseDomain)}${path}`;
 }
 
 function collectSidebarPagePaths(pages: DocsPageSource[], output: Set<string>) {
@@ -451,7 +452,7 @@ export function getVersionDocsLlmEntries(versionSlug: string, baseDomain: string
  * Example: "v4/setup/email-setup" => { versionSlug: "v4", pageSlug: "setup/email-setup" }
  */
 export function resolveVersionedDocsSlug(rawSlug: string): { versionSlug?: string; pageSlug: string } {
-  const cleanSlug = rawSlug.replace(/^\/+|\/+$/g, "");
+  const cleanSlug = TrimSlashes(rawSlug);
 
   if (!cleanSlug) {
     return { pageSlug: "" };
@@ -620,7 +621,7 @@ export function extractTableOfContents(htmlContent: string): DocsTableOfContents
   let match;
   while ((match = headingRegex.exec(htmlContent)) !== null) {
     items.push({
-      level: parseInt(match[1]),
+      level: Number.parseInt(match[1]),
       id: match[2],
       text: match[3].trim(),
     });
