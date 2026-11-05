@@ -377,10 +377,10 @@ class DbImpl {
   addSubscriberMonitors!: SubscriptionSystemRepository["addSubscriberMonitors"];
   removeSubscriberMonitors!: SubscriptionSystemRepository["removeSubscriberMonitors"];
   deleteSubscriberMonitorsByTag!: SubscriptionSystemRepository["deleteSubscriberMonitorsByTag"];
+  deleteSubscriberMonitorsByMethodId!: SubscriptionSystemRepository["deleteSubscriberMonitorsByMethodId"];
   getEmailsSubscribedToMonitors!: SubscriptionSystemRepository["getEmailsSubscribedToMonitors"];
-  getSubscriberMigrationReview!: SubscriptionSystemRepository["getSubscriberMigrationReview"];
-  countSubscriberMigrationReview!: SubscriptionSystemRepository["countSubscriberMigrationReview"];
-  markSubscriberMigrationReviewed!: SubscriptionSystemRepository["markSubscriberMigrationReviewed"];
+  getSubscriptionMigrationReport!: SubscriptionSystemRepository["getSubscriptionMigrationReport"];
+  getSubscriptionMigrationReportCount!: SubscriptionSystemRepository["getSubscriptionMigrationReportCount"];
   getSubscriptionsWithMethodsForUser!: SubscriptionSystemRepository["getSubscriptionsWithMethodsForUser"];
   getSubscribersForEvent!: SubscriptionSystemRepository["getSubscribersForEvent"];
   getSubscribersSummary!: SubscriptionSystemRepository["getSubscribersSummary"];
@@ -853,18 +853,18 @@ class DbImpl {
     this.deleteSubscriberMonitorsByTag = this.subscriptionSystem.deleteSubscriberMonitorsByTag.bind(
       this.subscriptionSystem,
     );
+    this.deleteSubscriberMonitorsByMethodId = this.subscriptionSystem.deleteSubscriberMonitorsByMethodId.bind(
+      this.subscriptionSystem,
+    );
     this.getEmailsSubscribedToMonitors = this.subscriptionSystem.getEmailsSubscribedToMonitors.bind(
       this.subscriptionSystem,
     );
 
-    // Legacy Subscriber Migration Report
-    this.getSubscriberMigrationReview = this.subscriptionSystem.getSubscriberMigrationReview.bind(
+    // Migration report
+    this.getSubscriptionMigrationReport = this.subscriptionSystem.getSubscriptionMigrationReport.bind(
       this.subscriptionSystem,
     );
-    this.countSubscriberMigrationReview = this.subscriptionSystem.countSubscriberMigrationReview.bind(
-      this.subscriptionSystem,
-    );
-    this.markSubscriberMigrationReviewed = this.subscriptionSystem.markSubscriberMigrationReviewed.bind(
+    this.getSubscriptionMigrationReportCount = this.subscriptionSystem.getSubscriptionMigrationReportCount.bind(
       this.subscriptionSystem,
     );
 

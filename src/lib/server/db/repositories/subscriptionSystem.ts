@@ -11,7 +11,7 @@ import type {
   UserSubscriptionV2RecordInsert,
   UserSubscriptionV2Filter,
   SubscriptionEventType,
-  SubscriberMigrationReportRecord,
+  SubscriptionMigrationReportRecord,
   DbTimestamp,
 } from "../../types/db.js";
 import { GetDbType } from "../../tool.js";
@@ -235,11 +235,14 @@ export class SubscriptionSystemRepository extends BaseRepository {
     return !!result;
   }
 
-  // ============ Subscriber Monitors ============
+  // ============ Monitor Subscriptions (subscriber_monitor_subscriptions) ============
+  // One row per subscriber, method and monitor. Unfollowing sets the row INACTIVE, as ../meteo does,
+  // so following again reactivates it; only ACTIVE rows count.
 
   async getSubscriberMonitorTags(subscriberMethodId: number): Promise<string[]> {
-    return await this.knex("subscriber_monitors")
+    return await this.knex("subscriber_monitor_subscriptions")
       .where("subscriber_method_id", subscriberMethodId)
+      .andWhere("status", "ACTIVE")
       .orderBy("monitor_tag", "asc")
       .pluck("monitor_tag");
   }
@@ -250,30 +253,36 @@ export class SubscriptionSystemRepository extends BaseRepository {
     monitorTags: string[],
   ): Promise<void> {
     if (monitorTags.length === 0) return;
-    await this.knex("subscriber_monitors")
+    await this.knex("subscriber_monitor_subscriptions")
       .insert(
         monitorTags.map((monitorTag) => ({
           subscriber_user_id: subscriberUserId,
           subscriber_method_id: subscriberMethodId,
           monitor_tag: monitorTag,
+          status: "ACTIVE",
           created_at: this.knex.fn.now(),
           updated_at: this.knex.fn.now(),
         })),
       )
-      .onConflict(["subscriber_method_id", "monitor_tag"])
-      .ignore();
+      .onConflict(["subscriber_user_id", "subscriber_method_id", "monitor_tag"])
+      .merge({ status: "ACTIVE", updated_at: this.knex.fn.now() });
   }
 
   async removeSubscriberMonitors(subscriberMethodId: number, monitorTags: string[]): Promise<number> {
     if (monitorTags.length === 0) return 0;
-    return await this.knex("subscriber_monitors")
+    return await this.knex("subscriber_monitor_subscriptions")
       .where("subscriber_method_id", subscriberMethodId)
       .whereIn("monitor_tag", monitorTags)
-      .del();
+      .andWhere("status", "ACTIVE")
+      .update({ status: "INACTIVE", updated_at: this.knex.fn.now() });
   }
 
   async deleteSubscriberMonitorsByTag(monitorTag: string): Promise<number> {
-    return await this.knex("subscriber_monitors").where("monitor_tag", monitorTag).del();
+    return await this.knex("subscriber_monitor_subscriptions").where("monitor_tag", monitorTag).del();
+  }
+
+  async deleteSubscriberMonitorsByMethodId(subscriberMethodId: number): Promise<number> {
+    return await this.knex("subscriber_monitor_subscriptions").where("subscriber_method_id", subscriberMethodId).del();
   }
 
   /**
@@ -281,11 +290,12 @@ export class SubscriptionSystemRepository extends BaseRepository {
    */
   async getEmailsSubscribedToMonitors(monitorTags: string[]): Promise<string[]> {
     if (monitorTags.length === 0) return [];
-    return await this.knex("subscriber_monitors as smo")
+    return await this.knex("subscriber_monitor_subscriptions as smo")
       .join("subscriber_methods as sm", "smo.subscriber_method_id", "sm.id")
       .join("subscriber_users as su", "sm.subscriber_user_id", "su.id")
       .join("monitors as m", "smo.monitor_tag", "m.tag")
       .whereIn("smo.monitor_tag", monitorTags)
+      .andWhere("smo.status", "ACTIVE")
       .andWhere("m.is_hidden", "NO")
       .andWhere("sm.method_type", "email")
       .andWhere("sm.status", "ACTIVE")
@@ -294,38 +304,22 @@ export class SubscriptionSystemRepository extends BaseRepository {
       .pluck("sm.method_value");
   }
 
-  // ============ Legacy Subscriber Migration Report ============
+  // ============ Migration report (subscription_migration_report) ============
 
-  /**
-   * Rows of the legacy subscriber migration an admin has not reviewed yet: REVIEW first, then ASSUMED
-   */
-  async getSubscriberMigrationReview(limit: number): Promise<SubscriberMigrationReportRecord[]> {
-    return await this.knex("subscriber_migration_report")
-      .whereIn("outcome", ["REVIEW", "ASSUMED"])
-      .whereNull("reviewed_at")
+  async getSubscriptionMigrationReport(page: number, limit: number): Promise<SubscriptionMigrationReportRecord[]> {
+    return await this.knex("subscription_migration_report")
+      .select("*")
       .orderBy([
-        { column: "outcome", order: "desc" },
-        { column: "id", order: "asc" },
+        { column: "created_at", order: "desc" },
+        { column: "id", order: "desc" },
       ])
-      .limit(limit);
+      .limit(limit)
+      .offset((page - 1) * limit);
   }
 
-  async countSubscriberMigrationReview(): Promise<{ review: number; assumed: number }> {
-    const rows: Array<{ outcome: string; count: number | string }> = await this.knex("subscriber_migration_report")
-      .whereIn("outcome", ["REVIEW", "ASSUMED"])
-      .whereNull("reviewed_at")
-      .select("outcome")
-      .count("id as count")
-      .groupBy("outcome");
-    const countOf = (outcome: string) => Number(rows.find((r) => r.outcome === outcome)?.count ?? 0);
-    return { review: countOf("REVIEW"), assumed: countOf("ASSUMED") };
-  }
-
-  async markSubscriberMigrationReviewed(): Promise<number> {
-    return await this.knex("subscriber_migration_report")
-      .whereIn("outcome", ["REVIEW", "ASSUMED"])
-      .whereNull("reviewed_at")
-      .update({ reviewed_at: this.knex.fn.now() });
+  async getSubscriptionMigrationReportCount(): Promise<number> {
+    const result = await this.knex("subscription_migration_report").count("id as count").first();
+    return Number(result?.count || 0);
   }
 
   // ============ Complex Queries ============

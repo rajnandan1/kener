@@ -9,7 +9,6 @@
   import * as Table from "$lib/components/ui/table/index.js";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import * as Alert from "$lib/components/ui/alert/index.js";
-  import { Badge } from "$lib/components/ui/badge/index.js";
   import { toast } from "svelte-sonner";
   import LocalTime from "$lib/components/LocalTime.svelte";
   import { resolve } from "$app/paths";
@@ -346,54 +345,31 @@
     saveConfig();
   }
 
-  // Subscribers the legacy subscriber migration copied with a caveat (Kener 3, and Kener 4.0–4.1 incident
-  // and maintenance subscriptions). Hidden once marked reviewed.
-  interface MigrationReviewItem {
+  // Legacy subscribers and subscriptions the upgrade could not copy (subscription_migration_report)
+  interface MigrationReportRow {
     id: number;
-    source: "v3" | "v4";
-    email: string | null;
-    outcome: "REVIEW" | "ASSUMED";
-    monitors_added: number;
-    details: string | null;
+    source: string;
+    subscriber_email: string | null;
+    reason: string;
   }
-  let migrationReview = $state<{ items: MigrationReviewItem[]; review: number; assumed: number }>({
-    items: [],
-    review: 0,
-    assumed: 0
-  });
-  let markingReviewed = $state(false);
-  const migrationReviewTotal = $derived(migrationReview.review + migrationReview.assumed);
+  const MIGRATION_SOURCES: Record<string, string> = {
+    v3_subscriber: "Kener 3 subscriber",
+    v3_subscription: "Kener 3 subscription",
+    v2_event_subscription: "Kener 4.0–4.1 subscription"
+  };
+  let migrationReport = $state<{ rows: MigrationReportRow[]; total: number }>({ rows: [], total: 0 });
 
-  async function fetchMigrationReview() {
+  async function fetchMigrationReport() {
     try {
       const res = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "getSubscriberMigrationReview" })
+        body: JSON.stringify({ action: "getSubscriptionMigrationReport", data: { page: 1, limit: 100 } })
       });
       const result = await res.json();
-      if (!result.error) migrationReview = result;
+      if (!result.error) migrationReport = { rows: result.rows || [], total: result.total || 0 };
     } catch {
-      // Without the list the page still works; nothing to show.
-    }
-  }
-
-  async function markMigrationReviewed() {
-    markingReviewed = true;
-    try {
-      const res = await fetch(clientResolver(resolve, "/manage/api"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "markSubscriberMigrationReviewed" })
-      });
-      const result = await res.json();
-      if (result.error) throw new Error(result.error);
-      migrationReview = { items: [], review: 0, assumed: 0 };
-      toast.success("Marked as reviewed");
-    } catch {
-      toast.error("Failed to mark as reviewed");
-    } finally {
-      markingReviewed = false;
+      // Without the report the page still works; nothing to show.
     }
   }
 
@@ -401,7 +377,7 @@
     fetchConfig();
     fetchSubMenuOptions();
     fetchSubscribers();
-    fetchMigrationReview();
+    fetchMigrationReport();
   });
 </script>
 
@@ -511,68 +487,51 @@
     </Card.Content>
   </Card.Root>
 
-  {#if migrationReviewTotal > 0}
-    <!-- Migrated Subscribers Review Card -->
+  {#if migrationReport.total > 0}
+    <!-- Upgrade Report Card: what the subscriber migration could not copy -->
     <Card.Root>
       <Card.Header>
-        <div class="flex items-start justify-between gap-4">
-          <div>
-            <Card.Title class="flex items-center gap-2">
-              <History class="h-5 w-5" />
-              Migrated subscribers to review
-            </Card.Title>
-            <Card.Description>
-              Copied from Kener 3 subscriptions and Kener 4.0–4.1 incident and maintenance subscriptions.
-              <strong>Review</strong>: something could not be copied. <strong>All monitors</strong>: followed all
-              incidents or maintenances, so now follows every public monitor.
-            </Card.Description>
-          </div>
-          <Button variant="outline" onclick={markMigrationReviewed} disabled={markingReviewed} class="shrink-0">
-            {#if markingReviewed}
-              <Spinner class="size-4" />
-            {/if}
-            Mark all reviewed
-          </Button>
-        </div>
+        <Card.Title class="flex items-center gap-2">
+          <History class="h-5 w-5" />
+          Subscribers the upgrade could not copy ({migrationReport.total})
+        </Card.Title>
+        <Card.Description>
+          Kener 3 and Kener 4.0–4.1 subscriptions that did not map to a monitor. Fix a subscriber from the
+          <strong>Monitors</strong> cell below if needed. The full rows are in the
+          <code class="bg-muted rounded px-1">subscription_migration_report</code> table.
+        </Card.Description>
       </Card.Header>
       <Card.Content class="space-y-2">
-        <div class="ktable max-h-80 overflow-y-auto rounded-xl border">
-          <Table.Root>
-            <Table.Header>
-              <Table.Row>
-                <Table.Head>Email</Table.Head>
-                <Table.Head>From</Table.Head>
-                <Table.Head>Outcome</Table.Head>
-                <Table.Head class="text-right">Monitors added</Table.Head>
-                <Table.Head>Details</Table.Head>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {#each migrationReview.items as item (item.id)}
+        <details>
+          <summary class="cursor-pointer text-sm font-medium">Show the report</summary>
+          <div class="ktable mt-3 max-h-80 overflow-y-auto rounded-xl border">
+            <Table.Root>
+              <Table.Header>
                 <Table.Row>
-                  <Table.Cell class="font-medium">{item.email ?? "—"}</Table.Cell>
-                  <Table.Cell class="whitespace-nowrap">{item.source === "v3" ? "Kener 3" : "Kener 4.0–4.1"}</Table.Cell
-                  >
-                  <Table.Cell>
-                    {#if item.outcome === "REVIEW"}
-                      <Badge variant="destructive">Review</Badge>
-                    {:else}
-                      <Badge variant="secondary">All monitors</Badge>
-                    {/if}
-                  </Table.Cell>
-                  <Table.Cell class="text-right">{item.monitors_added}</Table.Cell>
-                  <Table.Cell class="text-muted-foreground min-w-64 text-xs whitespace-normal"
-                    >{item.details}</Table.Cell
-                  >
+                  <Table.Head>Email</Table.Head>
+                  <Table.Head>From</Table.Head>
+                  <Table.Head>Reason</Table.Head>
                 </Table.Row>
-              {/each}
-            </Table.Body>
-          </Table.Root>
-        </div>
-        <p class="text-muted-foreground text-xs">
-          {migrationReview.review} to review, {migrationReview.assumed} moved to all monitors{#if migrationReview.items.length < migrationReviewTotal};
-            showing the first {migrationReview.items.length}{/if}.
-        </p>
+              </Table.Header>
+              <Table.Body>
+                {#each migrationReport.rows as row (row.id)}
+                  <Table.Row>
+                    <Table.Cell class="font-medium">{row.subscriber_email ?? "—"}</Table.Cell>
+                    <Table.Cell class="whitespace-nowrap">{MIGRATION_SOURCES[row.source] ?? row.source}</Table.Cell>
+                    <Table.Cell class="text-muted-foreground min-w-64 text-xs whitespace-normal"
+                      >{row.reason}</Table.Cell
+                    >
+                  </Table.Row>
+                {/each}
+              </Table.Body>
+            </Table.Root>
+          </div>
+          {#if migrationReport.rows.length < migrationReport.total}
+            <p class="text-muted-foreground mt-2 text-xs">
+              Showing the newest {migrationReport.rows.length} of {migrationReport.total}.
+            </p>
+          {/if}
+        </details>
       </Card.Content>
     </Card.Root>
   {/if}

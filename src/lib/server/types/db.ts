@@ -948,29 +948,29 @@ export interface UserSubscriptionV2Filter {
   status?: SubscriptionStatus;
 }
 
-// ============ subscriber_monitors table ============
-export interface SubscriberMonitorRecord {
+// ============ subscriber_monitor_subscriptions table ============
+// The schema of ../meteo's migrations/20261023120000_add_monitor_subscriptions.ts: one row per subscriber,
+// method and monitor. Unfollowing a monitor sets the row INACTIVE; only ACTIVE rows are followed.
+export interface MonitorSubscriptionRecord {
   id: number;
   subscriber_user_id: number;
   subscriber_method_id: number;
   monitor_tag: string;
+  status: SubscriptionStatus;
   created_at: DbTimestamp;
   updated_at: DbTimestamp;
 }
 
-// ============ subscriber_migration_report table ============
-// Written once by the legacy subscriber migration; see migrations/20261104130000_migrate_legacy_subscribers.ts.
-export type SubscriberMigrationOutcome = "MIGRATED" | "ASSUMED" | "REVIEW";
-
-export interface SubscriberMigrationReportRecord {
+// ============ subscription_migration_report table ============
+// Legacy V3 subscriber/subscription rows that could not be mapped with
+// confidence are recorded here instead of being dropped.
+export interface SubscriptionMigrationReportRecord {
   id: number;
-  source: "v3" | "v4";
-  legacy_id: number | null;
-  email: string | null;
-  outcome: SubscriberMigrationOutcome;
-  monitors_added: number;
-  details: string | null;
-  reviewed_at: DbTimestamp | null;
+  source: string;
+  source_id: number | null;
+  subscriber_email: string | null;
+  reason: string;
+  raw_data: string | null;
   created_at: DbTimestamp;
 }
 

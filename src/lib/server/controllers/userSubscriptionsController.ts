@@ -9,7 +9,7 @@ import type {
   UserSubscriptionV2Record,
   SubscriberUserRecord,
   SubscriberMethodRecord,
-  SubscriberMigrationReportRecord,
+  SubscriptionMigrationReportRecord,
   DbTimestamp,
 } from "$lib/server/types/db.js";
 
@@ -244,7 +244,7 @@ export async function AdminDeleteSubscriber(methodId: number): Promise<{ success
   for (const sub of subscriptions) {
     await db.deleteUserSubscriptionV2(sub.id);
   }
-  await db.removeSubscriberMonitors(methodId, await db.getSubscriberMonitorTags(methodId));
+  await db.deleteSubscriberMonitorsByMethodId(methodId);
 
   // Delete the method
   await db.deleteSubscriberMethod(methodId);
@@ -314,26 +314,23 @@ export async function AdminAddSubscriber(
 }
 
 /**
- * Admin: subscribers the legacy subscriber migration copied with a caveat, not yet reviewed.
- * REVIEW rows hold data that could not be copied; ASSUMED rows were given every public monitor.
+ * Admin: legacy subscribers and subscriptions the upgrade could not copy, newest first
  */
-export async function GetSubscriberMigrationReview(limit: number = 200): Promise<{
-  items: SubscriberMigrationReportRecord[];
-  review: number;
-  assumed: number;
+export async function GetSubscriptionMigrationReport(
+  page: number = 1,
+  limit: number = 25,
+): Promise<{
+  rows: SubscriptionMigrationReportRecord[];
+  total: number;
+  totalPages: number;
+  page: number;
+  limit: number;
 }> {
-  const [items, counts] = await Promise.all([
-    db.getSubscriberMigrationReview(limit),
-    db.countSubscriberMigrationReview(),
+  const [rows, total] = await Promise.all([
+    db.getSubscriptionMigrationReport(page, limit),
+    db.getSubscriptionMigrationReportCount(),
   ]);
-  return { items, ...counts };
-}
-
-/**
- * Admin: mark every listed migration row as reviewed, which hides the list
- */
-export async function MarkSubscriberMigrationReviewed(): Promise<{ success: boolean; reviewed: number }> {
-  return { success: true, reviewed: await db.markSubscriberMigrationReviewed() };
+  return { rows, total, totalPages: Math.ceil(total / limit), page, limit };
 }
 
 /**

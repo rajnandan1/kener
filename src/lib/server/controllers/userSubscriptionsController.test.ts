@@ -28,6 +28,7 @@ import { GenerateTokenWithExpiry } from "./commonController.js";
 import { DeleteMonitorCompletelyUsingTag } from "./monitorsController.js";
 import {
   AdminAddSubscriber,
+  AdminDeleteSubscriber,
   AdminSetSubscriberMonitors,
   GetActiveEmailsForMonitors,
   GetSubscribableMonitors,
@@ -67,7 +68,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await knex("subscriber_monitors").del();
+  await knex("subscriber_monitor_subscriptions").del();
   await knex("subscriber_methods").del();
   await knex("subscriber_users").del();
   await knex("monitors").whereIn("tag", Object.values(TAGS)).del();
@@ -111,6 +112,28 @@ describe("subscribing to monitors", () => {
     expect(await db.getSubscriberMonitorTags(methodId)).toEqual([TAGS.api, TAGS.web]);
   });
 
+  it("turns an unfollowed monitor off and on again in the same row", async () => {
+    const methodId = await addSubscriber("ana@example.com", [TAGS.web, TAGS.api]);
+
+    await AdminSetSubscriberMonitors(methodId, [TAGS.api]);
+    expect(await knex("subscriber_monitor_subscriptions").where("monitor_tag", TAGS.web).first()).toMatchObject({
+      status: "INACTIVE",
+    });
+
+    await AdminSetSubscriberMonitors(methodId, [TAGS.api, TAGS.web]);
+    expect(await db.getSubscriberMonitorTags(methodId)).toEqual([TAGS.api, TAGS.web]);
+    expect(Number((await knex("subscriber_monitor_subscriptions").count("id as count").first())?.count)).toBe(2);
+  });
+
+  it("deletes the subscriptions of a deleted subscriber", async () => {
+    const methodId = await addSubscriber("ana@example.com", [TAGS.web]);
+    await AdminSetSubscriberMonitors(methodId, []);
+
+    expect(await AdminDeleteSubscriber(methodId)).toEqual({ success: true });
+
+    expect(Number((await knex("subscriber_monitor_subscriptions").count("id as count").first())?.count)).toBe(0);
+  });
+
   it("replaces the monitors of a subscriber", async () => {
     const methodId = await addSubscriber("ana@example.com", [TAGS.web, TAGS.api]);
 
@@ -143,7 +166,7 @@ describe("subscribing to monitors", () => {
     const result = await UpdateSubscriberMonitors("not-a-token", { [TAGS.api]: true });
 
     expect(result.success).toBe(false);
-    expect(Number((await knex("subscriber_monitors").count("id as count").first())?.count)).toBe(0);
+    expect(Number((await knex("subscriber_monitor_subscriptions").count("id as count").first())?.count)).toBe(0);
   });
 
   it("drops the subscriptions of a deleted monitor", async () => {

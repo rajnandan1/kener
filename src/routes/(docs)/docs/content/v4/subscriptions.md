@@ -98,25 +98,29 @@ When an event is queued:
 
 ## Upgrading from earlier subscriptions {#upgrading}
 
-On the first start after upgrading, Kener copies earlier subscribers into monitor subscriptions, once. It only reads the old tables and never changes them.
+On the first start after upgrading, the `20261023120000_add_monitor_subscriptions` migration creates the `subscriber_monitor_subscriptions` table and copies earlier subscribers into it, once. It only reads the old tables and never changes them.
 
 | Earlier subscription                                 | Becomes                                                                    |
 | ---------------------------------------------------- | -------------------------------------------------------------------------- |
-| Kener 3: a monitor                                   | That monitor                                                               |
-| Kener 3: all monitors (`ALL`)                        | Every monitor that is `ACTIVE` and not hidden at upgrade time              |
+| Kener 3: a monitor, by tag or by name                | That monitor; a subscription turned off in Kener 3 stays turned off        |
+| Kener 3: all monitors (`ALL` or `_`)                 | Every monitor that is `ACTIVE` and not hidden at upgrade time              |
 | Kener 4.0–4.1: all incidents and/or all maintenances | Every monitor that is `ACTIVE` and not hidden, so status changes are added |
 
 - One email gets one subscriber, whatever its case. An email that is already a Kener 4 subscriber is reused, not duplicated.
 - A Kener 3 subscriber who never confirmed their email is copied, but gets no mail until they sign in from the status page.
 - Kener 3 sign-ins saved in visitors' browsers do not carry over. Subscribers sign in again with a code to change their monitors.
-- A Kener 4 subscriber who had already picked monitors keeps that choice.
 - Monitors added after the upgrade are not added to anyone's subscriptions.
+
+Unfollowing a monitor later sets its row in `subscriber_monitor_subscriptions` to `INACTIVE`; following it again sets it back to `ACTIVE`.
 
 ### Review the copy {#review-the-migration}
 
-Anything Kener cannot copy is kept in the old tables and listed for review: a monitor that no longer exists, a subscription that was turned off in Kener 3, an invalid email, or a monitor that is now hidden or inactive. The startup log prints a summary and each subscriber to review.
+Rows Kener cannot copy are not dropped: a monitor that no longer exists, an invalid email, a subscriber type other than email, or a subscription whose subscriber is gone. Kener writes each to the `subscription_migration_report` table with its source row and reason, and logs a warning during the migration.
 
-**Manage → Subscriptions** lists these subscribers, with Kener 4.0–4.1 subscribers who were given all monitors marked **All monitors**. Fix a subscriber from the **Monitors** cell, then click **Mark all reviewed** to hide the list. The full report, every copied subscriber included, stays in the `subscriber_migration_report` table.
+**Manage → Subscriptions** shows these rows under **Subscribers the upgrade could not copy**. Fix a subscriber from the **Monitors** cell if needed.
+
+> [!TIP]
+> Back up the database before upgrading.
 
 Subscriptions stay enabled if either earlier setting, incident or maintenance updates, was on.
 
