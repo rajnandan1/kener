@@ -219,3 +219,68 @@ describe("SubscribeMenu — monitor preferences", () => {
     await expect.element(screen.getByRole("checkbox", { name: "Public API" })).not.toBeChecked();
   });
 });
+
+describe("SubscribeMenu — keeping the subscriber signed in", () => {
+  const prefs = {
+    success: true,
+    email: "ana@example.com",
+    monitors: ["web"],
+    availableMonitors: [{ tag: "web", name: "Website" }],
+  };
+
+  beforeEach(() => {
+    localStorage.clear();
+    localStorage.setItem("subscriber_token", "token-1");
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  // Answers getPreferences with each status in turn, then with the preferences.
+  function preferencesAnswering(...statuses: number[]) {
+    const queue = [...statuses];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url.includes("captcha-config.json")) {
+          return { ok: true, json: async () => ({ provider: null, siteKey: null }) } as Response;
+        }
+        const status = queue.shift() ?? 200;
+        if (status === 0) throw new TypeError("Failed to fetch");
+        const body =
+          status === 200 ? prefs : { message: status === 401 ? "Invalid or expired token" : "Internal Error" };
+        expect(JSON.parse(init?.body as string).action).toBe("getPreferences");
+        return { ok: status === 200, status, json: async () => body } as Response;
+      }),
+    );
+  }
+
+  it.each([
+    ["a server error", 500],
+    ["a dropped connection", 0],
+  ])("keeps the sign-in after %s and loads the monitors on Retry", async (_, status) => {
+    // The first answer goes to the check on mount, the second to the one on opening.
+    preferencesAnswering(status, status);
+
+    const screen = await render(SubscribeMenu, {});
+    await screen.getByRole("button", { name: "Subscribe" }).click();
+
+    await expect.element(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+    expect(localStorage.getItem("subscriber_token")).toBe("token-1");
+
+    await screen.getByRole("button", { name: "Retry" }).click();
+
+    await expect.element(screen.getByRole("checkbox", { name: "Website" })).toBeChecked();
+  });
+
+  it("asks to sign in again only when the token is refused", async () => {
+    preferencesAnswering(401, 401);
+
+    const screen = await render(SubscribeMenu, {});
+    await screen.getByRole("button", { name: "Subscribe" }).click();
+
+    await expect.element(screen.getByLabelText("Email address")).toBeInTheDocument();
+    expect(localStorage.getItem("subscriber_token")).toBeNull();
+  });
+});

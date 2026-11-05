@@ -110,6 +110,8 @@
   }
 
   let subscribers = $state<Subscriber[]>([]);
+  // Why the list could not be loaded, so a failed request is not shown as "No subscribers yet"
+  let subscribersError = $state("");
   // Monitors a subscriber can be subscribed to: active and not hidden
   let monitors = $state<Array<{ tag: string; name: string }>>([]);
   const monitorNames = $derived(new Map(monitors.map((m) => [m.tag, m.name])));
@@ -192,13 +194,18 @@
         })
       });
       const result = await res.json();
-      if (!result.error) {
+      if (result.error) {
+        subscribersError = result.error;
+        toast.error(`Failed to load subscribers: ${result.error}`);
+      } else {
         subscribers = result.subscribers || [];
         monitors = result.monitors || [];
         total = result.total || 0;
         totalPages = result.totalPages || 0;
+        subscribersError = "";
       }
     } catch (error) {
+      subscribersError = "The server did not answer";
       toast.error("Failed to load subscribers");
     } finally {
       loadingSubscribers = false;
@@ -607,6 +614,15 @@
                   <div class="flex items-center justify-center gap-2">
                     <Spinner class="size-4" />
                     <span class="text-muted-foreground text-sm">Loading subscribers...</span>
+                  </div>
+                </Table.Cell>
+              </Table.Row>
+            {:else if subscribersError && subscribers.length === 0}
+              <Table.Row>
+                <Table.Cell colspan={4} class="py-8 text-center">
+                  <div class="flex flex-col items-center gap-2">
+                    <span class="text-destructive text-sm">Could not load subscribers: {subscribersError}</span>
+                    <Button variant="outline" size="sm" onclick={fetchSubscribers}>Retry</Button>
                   </div>
                 </Table.Cell>
               </Table.Row>

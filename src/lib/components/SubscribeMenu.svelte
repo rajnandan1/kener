@@ -73,10 +73,16 @@
         body: JSON.stringify({ action: "getPreferences", token })
       });
 
-      if (!response.ok) {
-        // Token invalid or expired
+      // Only a rejected token means signing in again. Any other failure (the server restarting, an
+      // error, a dropped connection) keeps the sign-in and offers to try again.
+      if (response.status === 401) {
         localStorage.removeItem(STORAGE_KEY);
         currentView = "login";
+        return;
+      }
+      if (!response.ok) {
+        errorMessage = $t("Could not load your preferences. Please try again.");
+        currentView = "error";
         return;
       }
 
@@ -84,10 +90,11 @@
       subscriberEmail = data.email || "";
       subscribedMonitors = data.monitors || [];
       availableMonitors = data.availableMonitors || [];
+      errorMessage = "";
       currentView = "preferences";
     } catch (err) {
-      localStorage.removeItem(STORAGE_KEY);
-      currentView = "login";
+      errorMessage = $t("Network error. Please try again.");
+      currentView = "error";
     }
   }
 
@@ -198,6 +205,12 @@
         body: JSON.stringify({ action: "updatePreferences", token, monitors: changes })
       });
 
+      if (response.status === 401) {
+        localStorage.removeItem(STORAGE_KEY);
+        subscribedMonitors = previous;
+        currentView = "login";
+        return;
+      }
       if (!response.ok) {
         errorMessage = $t("Failed to update preference");
         subscribedMonitors = previous;
@@ -296,7 +309,7 @@
           {$t("Get email updates about the monitors you choose.")}
         {:else if currentView === "otp"}
           {$t("Enter the verification code sent to your email.")}
-        {:else if currentView === "preferences"}
+        {:else if currentView === "preferences" || currentView === "error"}
           {$t("Choose the monitors you want to hear about.")}
         {:else if currentView === "loading"}
           {$t("Loading your preferences...")}
@@ -308,6 +321,19 @@
       {#if currentView === "loading"}
         <div class="flex items-center justify-center py-8">
           <Loader2 class="text-muted-foreground h-8 w-8 animate-spin" />
+        </div>
+      {:else if currentView === "error"}
+        <!-- Still signed in: the preferences did not load this time -->
+        <div class="flex flex-col items-center gap-4 py-4">
+          <p class="text-destructive text-center text-sm">{errorMessage}</p>
+          <div class="flex w-full gap-2">
+            <Button variant="outline" onclick={handleLogout} class="flex-1">
+              {$t("Use another email")}
+            </Button>
+            <Button onclick={checkExistingToken} class="flex-1">
+              {$t("Retry")}
+            </Button>
+          </div>
         </div>
       {:else if currentView === "login"}
         <!-- Login View -->

@@ -144,6 +144,9 @@
     "Search monitors": "Search monitors",
     "Select all": "Select all",
     "You get an email when a chosen monitor changes status or is part of an incident or maintenance.": "You get an email when a chosen monitor changes status or is part of an incident or maintenance.",
-    "Selected": "Selected"
+    "Selected": "Selected",
+    "Could not load your preferences. Please try again.": "Could not load your preferences. Please try again.",
+    "Retry": "Retry",
+    "Use another email": "Use another email"
   }
 }
