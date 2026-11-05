@@ -46,6 +46,8 @@ vi.mock("resend", () => ({
 import db from "$lib/server/db/db";
 import { uploadImage } from "../controllers/imageController.js";
 import send from "./email_notification.js";
+import subscriptionUpdateTemplate from "../templates/general/subscription_update_template.js";
+import mdToHTML from "../../marked.js";
 
 const migrations = import.meta.glob<Knex.Migration>("/migrations/*.ts", { eager: true });
 const knex = (db as unknown as { knex: Knex }).knex;
@@ -168,5 +170,28 @@ describe("plain parts of an email", () => {
 
     const mail = transport.sendMail.mock.calls[0][0] as { text: string };
     expect(mail.text).toBe("Hello Ana\n\nPayments are failing & we are on it.\n\n- Kener.ing: DOWN");
+  });
+});
+
+describe("the subscriber update email built from the default template", () => {
+  it("shows the update as formatted HTML in the HTML part and as plain text in the text part", async () => {
+    const { template_html_body, template_subject, template_text_body } = subscriptionUpdateTemplate;
+    const update_text = mdToHTML("We are looking into it.\n\n**Affected monitors**\n\n- Kener.ing: DOWN");
+
+    await send(
+      template_html_body,
+      template_subject,
+      { title: "Checkout & payments", update_subject: "[#1:INVESTIGATING] Checkout & payments", update_text },
+      ["ana@example.com"],
+      undefined,
+      template_text_body,
+    );
+
+    const mail = transport.sendMail.mock.calls[0][0] as { subject: string; html: string; text: string };
+    expect(mail.subject).toBe("[#1:INVESTIGATING] Checkout & payments");
+    expect(mail.html).toContain("<p>We are looking into it.</p>");
+    expect(mail.html).toContain("<li>Kener.ing: DOWN</li>");
+    expect(mail.html).not.toMatch(/&lt;(p|li|ul|strong)/);
+    expect(mail.text).toBe("We are looking into it.\n\nAffected monitors\n\n- Kener.ing: DOWN");
   });
 });
