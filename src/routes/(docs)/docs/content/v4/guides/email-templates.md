@@ -35,10 +35,13 @@ Each template has:
 - `template_html_body`
 - `template_text_body` (used as plain-text body when provided)
 
-Kener renders subject and HTML body with Mustache variables.
+Kener renders the subject, HTML body and text body with Mustache variables.
+
+- **HTML body**: `{{variable}}` escapes HTML. Use `{{{update_text}}}` (three braces) for a variable that holds HTML, as the default `subscription_update` template does.
+- **Subject and text body**: plain text. Variables go in unescaped, so `&` stays `&`, and a variable that holds HTML, such as `update_text`, is turned into readable text: paragraphs become lines and list items become `- ` lines.
 
 > [!NOTE]
-> If `template_text_body` is empty, Kener falls back to generating plain-text content from rendered HTML.
+> If `template_text_body` is empty, Kener builds the plain-text body from the rendered HTML the same way.
 
 ## Images {#images}
 

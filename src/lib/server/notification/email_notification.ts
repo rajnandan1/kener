@@ -1,6 +1,6 @@
 import { GetRequiredSecrets, ReplaceAllOccurrences } from "../tool.js";
 import Mustache from "mustache";
-import striptags from "striptags";
+import { HtmlToText, PlainTextVariables } from "./htmlToText.js";
 import { Resend, type CreateEmailOptions } from "resend";
 import type { SMTPConfiguration } from "./types.js";
 import getSMTPTransport from "./smtps.js";
@@ -64,9 +64,15 @@ export default async function send(
     }
   }
 
-  const subject = Mustache.render(emailSubject, variables);
+  // Only the HTML part is HTML. The subject and the text part are plain text: escaping them would show
+  // &lt;p&gt; or &amp;, so they render unescaped, and a variable that holds HTML (an update's text) goes
+  // into the text part as readable text.
+  const plain = { escape: (value: unknown) => String(value) };
+  const subject = Mustache.render(emailSubject, variables, undefined, plain);
   const htmlBody = Mustache.render(emailBody, variables);
-  const textBody = emailTextBody ? Mustache.render(emailTextBody, variables) : striptags(htmlBody);
+  const textBody = emailTextBody
+    ? Mustache.render(emailTextBody, PlainTextVariables(variables), undefined, plain)
+    : HtmlToText(htmlBody);
 
   try {
     let isEmailSetupDone = IsEmailSetup();

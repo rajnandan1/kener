@@ -159,7 +159,7 @@ const emailTemplate = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional
                       We would like to provide you with an update regarding the current system
                       status.
                     </p>
-                    <p
+                    <div
                       style="
                         font-size: 16px;
                         color: rgb(55, 65, 81);
@@ -168,9 +168,8 @@ const emailTemplate = `<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional
                         margin-top: 16px;
                       "
                     >
-                      
                       {{{update_text}}}
-                    </p>
+                    </div>
 
                     <a
                       href="{{cta_url}}"

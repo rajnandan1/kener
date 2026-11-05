@@ -137,3 +137,36 @@ describe("images in email templates", () => {
     warn.mockRestore();
   });
 });
+
+describe("plain parts of an email", () => {
+  const update = "<p>Payments are failing &amp; we are on it.</p>\n<ul>\n<li>Kener.ing: DOWN</li>\n</ul>\n";
+
+  it("sends the update as readable text, and an unescaped subject", async () => {
+    await send(
+      "<h1>{{title}}</h1>{{{update_text}}}",
+      "[#1:INVESTIGATING] {{title}}",
+      { title: "Checkout & payments", update_text: update },
+      ["ana@example.com"],
+      undefined,
+      "{{update_text}}",
+    );
+
+    const mail = transport.sendMail.mock.calls[0][0] as { subject: string; text: string; html: string };
+    expect(mail.subject).toBe("[#1:INVESTIGATING] Checkout & payments");
+    expect(mail.text).toBe("Payments are failing & we are on it.\n\n- Kener.ing: DOWN");
+    expect(mail.html).toContain("<h1>Checkout &amp; payments</h1><p>Payments are failing &amp; we are on it.</p>");
+    expect(mail.html).toContain("<li>Kener.ing: DOWN</li>");
+  });
+
+  it("builds the text part from the HTML when the template has none", async () => {
+    await send(
+      "<html><head><style>p{color:red}</style></head><body><p>Hello {{name}}</p>{{{update_text}}}</body></html>",
+      "Hi",
+      { name: "Ana", update_text: update },
+      ["ana@example.com"],
+    );
+
+    const mail = transport.sendMail.mock.calls[0][0] as { text: string };
+    expect(mail.text).toBe("Hello Ana\n\nPayments are failing & we are on it.\n\n- Kener.ing: DOWN");
+  });
+});
