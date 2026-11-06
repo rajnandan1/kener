@@ -29,7 +29,7 @@ services:
   # ---------------------------------------------------------------------------
   kener:
     image: rajnandan1/kener:latest
-    # For Alpine variant use: rajnandan1/kener:alpine
+    # For Alpine variant use: rajnandan1/kener:latest-alpine
     container_name: kener
     environment:
       # ── Required ──

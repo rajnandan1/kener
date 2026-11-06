@@ -54,19 +54,16 @@ function ProxyEnvFor(proxy: string | undefined): ProxyEnv {
 }
 
 /**
- * The axios options that make one request honour the proxy. axios's own env-proxy code sends
- * https URLs to the proxy in plaintext (no CONNECT) and, for an http:// proxy, drops httpsAgent;
- * so it is switched off and both Node agents carry `proxyEnv` instead. `agent` options go on
- * both agents, `tls` options on the https one only.
+ * Let Node agents handle proxy routing; axios detects `proxyEnv` and skips its own env lookup.
+ * Do not set `proxy: false`: it also disables the agents' proxy routing in axios >= 1.21.
  */
 export function AxiosProxyConfig(
   proxy: string | undefined,
   agent: http.AgentOptions = {},
   tls: https.AgentOptions = {},
-): Pick<AxiosRequestConfig, "proxy" | "httpAgent" | "httpsAgent"> {
+): Pick<AxiosRequestConfig, "httpAgent" | "httpsAgent"> {
   const proxyEnv = ProxyEnvFor(proxy);
   return {
-    proxy: false,
     httpAgent: new http.Agent({ ...agent, proxyEnv }),
     httpsAgent: new https.Agent({ ...agent, ...tls, proxyEnv }),
   };

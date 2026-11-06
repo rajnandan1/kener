@@ -4,6 +4,8 @@ import {
   GetMinuteStartTimestampUTC,
   GetNowTimestampUTC,
   GetNowTimestampUTCInMs,
+  MatchStoredHeaders,
+  MASKED_SECRET,
   UnparsePercentage,
   UptimeCalculator,
 } from "../tool.js";
@@ -214,6 +216,71 @@ export const GetMonitorsParsed = async (query: MonitorFilter): Promise<Array<Mon
   return parsedMonitors;
 };
 
+const TYPE_DATA_SECRET_FIELDS = ["body", "proxy", "connectionString", "secretString", "tlsKey"];
+
+type TypeDataHeader = { key?: unknown; value?: unknown } | null | undefined;
+
+function mapTypeDataSecrets(
+  typeData: Record<string, unknown>,
+  stored: Record<string, unknown> | null | undefined,
+  transform: (secret: string, storedSecret: unknown) => string,
+): Record<string, unknown> {
+  const result = { ...typeData };
+  for (const field of TYPE_DATA_SECRET_FIELDS) {
+    const value = result[field];
+    if (typeof value === "string" && value) result[field] = transform(value, stored?.[field]);
+  }
+  if (Array.isArray(result.headers)) {
+    const storedHeaders = (Array.isArray(stored?.headers) ? stored.headers : []) as TypeDataHeader[];
+    const matches = MatchStoredHeaders(result.headers, storedHeaders);
+    result.headers = result.headers.map((header: TypeDataHeader, i) => {
+      if (typeof header?.value !== "string" || !header.value) return header;
+      return { ...header, value: transform(header.value, matches[i]?.value) };
+    });
+  }
+  return result;
+}
+
+/** Returns a copy of a monitor with each non-empty type_data secret and header value replaced by `********`. */
+export function MaskMonitorSecrets(monitor: MonitorRecordTyped): MonitorRecordTyped {
+  if (!monitor.type_data) return monitor;
+  return { ...monitor, type_data: mapTypeDataSecrets(monitor.type_data, null, () => MASKED_SECRET) };
+}
+
+/**
+ * MaskMonitorSecrets for a dashboard row, whose type_data is a JSON string. `keepHeartbeatSecret` leaves
+ * `secretString` readable for monitor writers, who need the heartbeat URL and can set the secret anyway.
+ */
+export function MaskMonitorRecordSecrets(monitor: MonitorRecord, keepHeartbeatSecret: boolean): MonitorRecord {
+  if (!monitor.type_data) return monitor;
+  const typeData = parseTypeData(monitor.type_data) ?? {};
+  const masked = mapTypeDataSecrets(typeData, null, () => MASKED_SECRET);
+  if (keepHeartbeatSecret && typeData.secretString !== undefined) masked.secretString = typeData.secretString;
+  return { ...monitor, type_data: JSON.stringify(masked) };
+}
+
+/**
+ * Puts the stored secret back for each type_data secret or header value sent as `********`. A header is matched by key.
+ * A mask with no stored secret saves an empty string, so a mask copied from another monitor is never stored.
+ */
+export function RestoreMonitorSecrets(
+  typeData: Record<string, unknown>,
+  stored: Record<string, unknown> | null | undefined,
+): Record<string, unknown> {
+  return mapTypeDataSecrets(typeData, stored, (value, storedValue) =>
+    value === MASKED_SECRET ? (typeof storedValue === "string" ? storedValue : "") : value,
+  );
+}
+
+/** RestoreMonitorSecrets against the saved monitor with this id. Without an id, the type_data comes back as sent. */
+export const RestoreSavedMonitorSecrets = async (
+  typeData: Record<string, unknown>,
+  monitorId?: number,
+): Promise<Record<string, unknown>> => {
+  const stored = monitorId ? (await db.getMonitors({ id: monitorId }))[0] : undefined;
+  return stored ? RestoreMonitorSecrets(typeData, parseTypeData(stored.type_data)) : typeData;
+};
+
 /**
  * type_data.proxy must be a valid http(s):// URL. Node silently ignores any other scheme and
  * throws on a malformed authority, both at check time, so save is where a typo has to fail.
@@ -271,10 +338,13 @@ export function WithValidHeartbeatSecret<T extends Pick<MonitorInput, "monitor_t
 
 export const CreateUpdateMonitor = async (monitor: MonitorInput): Promise<number | number[]> => {
   let monitorData = { ...monitor };
-  ValidateTypeDataProxy(monitorData);
   const stored = monitorData.id ? (await db.getMonitors({ id: monitorData.id }))[0] : undefined;
+  const storedTypeData = parseTypeData(stored?.type_data);
+  const typeData = monitorData.type_data ? parseTypeData(monitorData.type_data) : null;
   if (stored && monitorData.type_data === undefined) monitorData.type_data = stored.type_data;
-  monitorData = WithValidHeartbeatSecret(monitorData, parseTypeData(stored?.type_data)?.secretString);
+  else if (typeData) monitorData.type_data = JSON.stringify(RestoreMonitorSecrets(typeData, storedTypeData));
+  ValidateTypeDataProxy(monitorData, storedTypeData?.proxy);
+  monitorData = WithValidHeartbeatSecret(monitorData, storedTypeData?.secretString);
   if (monitorData.id) {
     return await db.updateMonitor(monitorData as MonitorRecord);
   } else {

@@ -2,6 +2,7 @@ import { json, type RequestHandler } from "@sveltejs/kit";
 import type { BadRequestResponse, UploadImageRequest, UploadImageResponse } from "$lib/types/api";
 import { ImageUploadError, uploadImage } from "$lib/server/controllers/imageController";
 import GC from "$lib/global-constants";
+import { readRequestBody } from "$lib/server/requestBody";
 
 function badRequest(message: string): Response {
   const errorResponse: BadRequestResponse = { error: { code: "BAD_REQUEST", message } };
@@ -9,30 +10,13 @@ function badRequest(message: string): Response {
 }
 
 export const POST: RequestHandler = async ({ request }) => {
-  let body: UploadImageRequest;
-  try {
-    body = await request.json();
-  } catch {
-    return badRequest("Invalid JSON body");
-  }
-
-  if (typeof body?.base64 !== "string") {
-    return badRequest("base64 is required and must be a string");
-  }
-  if (typeof body.mime_type !== "string") {
-    return badRequest("mime_type is required and must be a string");
-  }
-  if (body.file_name !== undefined && typeof body.file_name !== "string") {
-    return badRequest("file_name must be a string");
-  }
+  const body = await readRequestBody<UploadImageRequest>(request, "POST /api/v4/images");
+  if (body instanceof Response) return body;
   for (const key of ["max_width", "max_height"] as const) {
     const size = body[key];
-    if (size !== undefined && !(Number.isInteger(size) && size > 0 && size <= GC.MAX_IMAGE_DIMENSION)) {
+    if (size !== undefined && (size < 1 || size > GC.MAX_IMAGE_DIMENSION)) {
       return badRequest(`${key} must be an integer from 1 to ${GC.MAX_IMAGE_DIMENSION}`);
     }
-  }
-  if (body.force_dimensions !== undefined && typeof body.force_dimensions !== "boolean") {
-    return badRequest("force_dimensions must be a boolean");
   }
 
   try {

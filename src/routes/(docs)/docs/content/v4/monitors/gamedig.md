@@ -53,6 +53,8 @@ Return:
 { status: "UP" | "DEGRADED" | "DOWN" | "MAINTENANCE", latency: number }
 ```
 
+Eval code runs in a [sandbox](/docs/v4/monitors/overview#eval-sandbox).
+
 ## Example {#example}
 
 ```json

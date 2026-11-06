@@ -3,7 +3,7 @@ title: API Custom Eval Examples
 description: Ready-to-use API monitor eval functions for UP, DEGRADED, and DOWN states
 ---
 
-Use these snippets directly in an API monitor.
+Use these snippets directly in an API monitor. Eval code runs in a [sandbox](/docs/v4/monitors/overview#eval-sandbox).
 
 ## JSONPlaceholder todos threshold eval {#todos-threshold-eval}
 

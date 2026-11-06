@@ -13,7 +13,7 @@
 <p align="center">
   <a href="https://hub.docker.com/r/rajnandan1/kener"><img src="https://img.shields.io/docker/pulls/rajnandan1/kener" alt="Docker Kener" /></a>
   <a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=latest"><img alt="Docker Image Size" src="https://img.shields.io/docker/image-size/rajnandan1/kener/latest?logo=docker&logoColor=white&label=debian" /></a>
-  <a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=alpine"><img alt="Docker Image Size" src="https://img.shields.io/docker/image-size/rajnandan1/kener/alpine?logo=docker&logoColor=white&label=alpine" /></a>
+  <a href="https://hub.docker.com/r/rajnandan1/kener/tags?page=1&ordering=last_updated&name=latest-alpine"><img alt="Docker Image Size" src="https://img.shields.io/docker/image-size/rajnandan1/kener/latest-alpine?logo=docker&logoColor=white&label=alpine" /></a>
 </p>
 
 <p align="center">
@@ -26,7 +26,11 @@
 <p align="center">
 	<a href="https://www.producthunt.com/posts/kener-2" target="_blank">
 		<img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=kener-2&theme=light" alt="Kener on Product Hunt">
+	</a>  
+    <a href="https://ditchly.co/software/kener" target="_blank">
+		<img src="https://ditchly.co/badges/featured-on-ditchly.svg" alt="Featured on Ditchly">
 	</a>
+   
 </p>
 
 <p align="center">
@@ -53,6 +57,7 @@
 [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates/1YRTMI?referralCode=rajnandan1)
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Frajnandan1%2Fkener)
 [![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/Kener/)
+[![Deploy on ZopDay](https://zop.dev/deploytozopday-inkhard.svg)](https://zop.dev/zopday/app/deploy?image=rajnandan1/kener:latest&port=3000)
 
 </p>
 

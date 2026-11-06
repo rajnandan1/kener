@@ -20,6 +20,7 @@ import {
   RemoveMonitorFromPage,
   UpdatePage,
 } from "$lib/server/controllers/pagesController";
+import { readRequestBody } from "$lib/server/requestBody";
 
 async function formatPageResponse(page: PageRecord): Promise<PageResponse> {
   const pageSettings = toApiPageSettings(page.page_settings_json);
@@ -74,19 +75,8 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     return json(errorResponse, { status: 404 });
   }
 
-  let body: UpdatePageRequest;
-
-  try {
-    body = await request.json();
-  } catch {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "Invalid JSON body",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
+  const body = await readRequestBody<UpdatePageRequest>(request, "PATCH /api/v4/pages/{page_path}");
+  if (body instanceof Response) return body;
 
   // API responses render the home page's path as ~home, so a read-modify-write
   // client sends it back unchanged; treat that as "no path change"
@@ -96,16 +86,6 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 
   // Validate page_path if provided
   if (body.page_path !== undefined) {
-    if (typeof body.page_path !== "string") {
-      const errorResponse: BadRequestResponse = {
-        error: {
-          code: "BAD_REQUEST",
-          message: "page_path must be a string",
-        },
-      };
-      return json(errorResponse, { status: 400 });
-    }
-
     // Make page_path URL-friendly: lowercase, replace spaces with hyphens, remove special chars
     const sanitizedPagePath = body.page_path
       .toLowerCase()
@@ -145,7 +125,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 
   // Validate page_title if provided
   if (body.page_title !== undefined) {
-    if (typeof body.page_title !== "string" || body.page_title.trim().length === 0) {
+    if (body.page_title.trim().length === 0) {
       const errorResponse: BadRequestResponse = {
         error: {
           code: "BAD_REQUEST",
@@ -158,7 +138,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 
   // Validate page_header if provided
   if (body.page_header !== undefined) {
-    if (typeof body.page_header !== "string" || body.page_header.trim().length === 0) {
+    if (body.page_header.trim().length === 0) {
       const errorResponse: BadRequestResponse = {
         error: {
           code: "BAD_REQUEST",
@@ -170,7 +150,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   }
 
   // Validate monitors if provided
-  if (body.monitors !== undefined && Array.isArray(body.monitors)) {
+  if (body.monitors !== undefined) {
     for (const monitorTag of body.monitors) {
       const monitor = await db.getMonitorByTag(monitorTag);
       if (!monitor) {
@@ -241,7 +221,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   }
 
   // Handle monitors update - replace all monitors
-  if (body.monitors !== undefined && Array.isArray(body.monitors)) {
+  if (body.monitors !== undefined) {
     for (const current of await GetPageMonitors(page.id)) {
       await RemoveMonitorFromPage(page.id, current.monitor_tag);
     }

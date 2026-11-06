@@ -119,12 +119,7 @@ Configure webhooks in the admin panel:
 
 ### API Keys
 
-Generate API keys for integrations:
-
-1. Go to Settings > API Keys
-2. Click "Generate New Key"
-3. Set permissions and expiry
-4. Copy and securely store the key
+Generate API keys for integrations. See [Create an API key](/docs/v4/api-reference/authentication#creating-an-api-key). Every key has full access, because Kener has no per-key permissions or key expiry yet.
 
 ### Authentication
 

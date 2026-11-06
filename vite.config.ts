@@ -6,6 +6,7 @@ import { defineConfig } from "vite";
 import devtoolsJson from "vite-plugin-devtools-json";
 import { playwright } from "@vitest/browser-playwright";
 import { configDefaults } from "vitest/config";
+import { buildCheerioGuest } from "./scripts/cheerio-guest.js";
 
 import * as dotenv from "dotenv";
 
@@ -58,6 +59,7 @@ export default defineConfig(({ mode }) => {
     define: {
       __KENER_BUILD_ENV__: JSON.stringify(buildEnv),
       __KENER_IS_PROD__: JSON.stringify(isProduction),
+      __CHEERIO_GUEST__: JSON.stringify(buildCheerioGuest()),
     },
     test: {
       projects: [
@@ -66,6 +68,7 @@ export default defineConfig(({ mode }) => {
           test: {
             name: "server",
             environment: "node",
+            env: { KENER_SECRET_KEY: "kener-test-secret" },
             include: ["src/**/*.{test,spec}.{js,ts}"],
             exclude: [...configDefaults.exclude, "src/**/*.svelte.{test,spec}.{js,ts}"],
           },

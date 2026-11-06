@@ -1821,6 +1821,7 @@
           },
           "type_data": {
             "type": "object",
+            "description": "Settings for the monitor's `monitor_type`. Every response except the `POST /api/v4/monitors` response shows `body`, `proxy`, `connectionString`, `secretString`, `tlsKey`, and each `headers` value as `********` when it is set. A `PATCH` that sends `********` back keeps the stored value.",
             "additionalProperties": true
           },
           "include_degraded_in_downtime": {
@@ -1854,7 +1855,7 @@
             "type": "string",
             "minLength": 12,
             "pattern": "^[A-Za-z0-9._~-]+$",
-            "description": "`HEARTBEAT` only. The heartbeat secret: the last segment of `/ext/heartbeat/{tag}/{secret}`. Use at least 12 characters from `A-Z a-z 0-9 . _ ~ -`. A new or changed value that breaks this rule returns `400` with code `BAD_REQUEST`. A stored value sent back unchanged is accepted. If a `HEARTBEAT` monitor is saved without it, the server generates one (for example `focused-galois-sharp-chaum`) and the response shows it. A cloned heartbeat monitor gets a new secret.",
+            "description": "`HEARTBEAT` only. The heartbeat secret: the last segment of `/ext/heartbeat/{tag}/{secret}`. Use at least 12 characters from `A-Z a-z 0-9 . _ ~ -`. A new or changed value that breaks this rule returns `400` with code `BAD_REQUEST`. A stored value sent back unchanged is accepted. If a `HEARTBEAT` monitor is saved without it, the server generates one (for example `focused-galois-sharp-chaum`). The `POST` response shows it. `GET` and `PATCH` responses mask it. A cloned heartbeat monitor gets a new secret.",
             "examples": ["my-job-hb-secret-01"]
           }
         },
@@ -1873,34 +1874,81 @@
             "minLength": 1
           },
           "description": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "image": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "cron": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "default_status": {
-            "type": "string"
+            "type": "string",
+            "enum": ["UP", "DOWN", "DEGRADED", "MAINTENANCE"]
           },
           "status": {
-            "type": "string"
+            "type": "string",
+            "enum": ["ACTIVE", "INACTIVE"]
           },
           "category_name": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "monitor_type": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "API",
+              "PING",
+              "TCP",
+              "DNS",
+              "NONE",
+              "GROUP",
+              "SSL",
+              "SQL",
+              "HEARTBEAT",
+              "GAMEDIG",
+              "GRPC",
+              "PROMETHEUS",
+              "DOCKER"
+            ]
           },
           "type_data": {
             "$ref": "#/components/schemas/MonitorTypeData"
           },
           "include_degraded_in_downtime": {
-            "type": "string"
+            "type": "string",
+            "enum": ["YES", "NO"]
           },
           "is_hidden": {
-            "type": "string"
+            "type": "string",
+            "enum": ["YES", "NO"]
           },
           "monitor_settings_json": {
             "type": "object",
@@ -1915,9 +1963,21 @@
                 "type": "null"
               }
             ]
+          },
+          "confirmation_threshold": {
+            "description": "Grace period: the number of consecutive checks required to confirm a status change. `1` turns the grace period off. `null` or a missing field means `1`.",
+            "oneOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 60
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
-        },
-        "additionalProperties": false
+        }
       },
       "UpdateMonitorRequest": {
         "type": "object",
@@ -1926,25 +1986,70 @@
             "type": "string"
           },
           "description": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "image": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "cron": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "default_status": {
-            "type": "string"
+            "type": "string",
+            "enum": ["UP", "DOWN", "DEGRADED", "MAINTENANCE"]
           },
           "status": {
-            "type": "string"
+            "type": "string",
+            "enum": ["ACTIVE", "INACTIVE"]
           },
           "category_name": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "monitor_type": {
-            "type": "string"
+            "type": "string",
+            "enum": [
+              "API",
+              "PING",
+              "TCP",
+              "DNS",
+              "NONE",
+              "GROUP",
+              "SSL",
+              "SQL",
+              "HEARTBEAT",
+              "GAMEDIG",
+              "GRPC",
+              "PROMETHEUS",
+              "DOCKER"
+            ]
           },
           "type_data": {
             "oneOf": [
@@ -1957,10 +2062,12 @@
             ]
           },
           "include_degraded_in_downtime": {
-            "type": "string"
+            "type": "string",
+            "enum": ["YES", "NO"]
           },
           "is_hidden": {
-            "type": "string"
+            "type": "string",
+            "enum": ["YES", "NO"]
           },
           "monitor_settings_json": {
             "oneOf": [
@@ -1982,9 +2089,21 @@
                 "type": "null"
               }
             ]
+          },
+          "confirmation_threshold": {
+            "description": "Grace period: the number of consecutive checks required to confirm a status change. `1` turns the grace period off. `null` resets it to `1`. A missing field keeps the stored value.",
+            "oneOf": [
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 60
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
-        },
-        "additionalProperties": false
+        }
       },
       "MonitoringDataPoint": {
         "type": "object",
@@ -2034,8 +2153,7 @@
             "minimum": 0,
             "default": 0
           }
-        },
-        "additionalProperties": false
+        }
       },
       "UpsertMonitorDataPointRequest": {
         "type": "object",
@@ -2048,8 +2166,7 @@
             "type": "number",
             "minimum": 0
           }
-        },
-        "additionalProperties": false
+        }
       },
       "MonitorImpact": {
         "type": "object",
@@ -2133,7 +2250,14 @@
             "type": "integer"
           },
           "end_date_time": {
-            "type": "integer"
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "monitors": {
             "type": "array",
@@ -2141,8 +2265,7 @@
               "$ref": "#/components/schemas/IncidentMonitorImpact"
             }
           }
-        },
-        "additionalProperties": false
+        }
       },
       "UpdateIncidentRequest": {
         "type": "object",
@@ -2154,7 +2277,14 @@
             "type": "integer"
           },
           "end_date_time": {
-            "type": "integer"
+            "oneOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "monitors": {
             "type": "array",
@@ -2162,8 +2292,7 @@
               "$ref": "#/components/schemas/IncidentMonitorImpact"
             }
           }
-        },
-        "additionalProperties": false
+        }
       },
       "IncidentComment": {
         "type": "object",
@@ -2206,8 +2335,7 @@
           "timestamp": {
             "type": "integer"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "UpdateIncidentCommentRequest": {
         "type": "object",
@@ -2222,8 +2350,7 @@
           "timestamp": {
             "type": "integer"
           }
-        },
-        "additionalProperties": false
+        }
       },
       "Page": {
         "type": "object",
@@ -2275,10 +2402,24 @@
             "minLength": 1
           },
           "page_subheader": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "page_logo": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "page_settings": {
             "$ref": "#/components/schemas/PageSettings"
@@ -2289,8 +2430,7 @@
               "type": "string"
             }
           }
-        },
-        "additionalProperties": false
+        }
       },
       "UpdatePageRequest": {
         "type": "object",
@@ -2306,10 +2446,24 @@
             "type": "string"
           },
           "page_subheader": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "page_logo": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "page_settings": {
             "$ref": "#/components/schemas/PageSettings"
@@ -2320,8 +2474,7 @@
               "type": "string"
             }
           }
-        },
-        "additionalProperties": false
+        }
       },
       "SiteDataEntry": {
         "type": "object",
@@ -2390,7 +2543,14 @@
             "minLength": 1
           },
           "description": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "start_date_time": {
             "type": "integer"
@@ -2410,8 +2570,7 @@
               "$ref": "#/components/schemas/MonitorImpact"
             }
           }
-        },
-        "additionalProperties": false
+        }
       },
       "UpdateMaintenanceRequest": {
         "type": "object",
@@ -2420,7 +2579,14 @@
             "type": "string"
           },
           "description": {
-            "type": "string"
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "start_date_time": {
             "type": "integer"
@@ -2442,8 +2608,7 @@
               "$ref": "#/components/schemas/MonitorImpact"
             }
           }
-        },
-        "additionalProperties": false
+        }
       },
       "MaintenanceEvent": {
         "type": "object",
@@ -2505,8 +2670,7 @@
                 "type": "integer",
                 "description": "Must be greater than start_date_time"
               }
-            },
-            "additionalProperties": false
+            }
           },
           {
             "title": "Status transition",
@@ -2518,8 +2682,7 @@
                 "enum": ["COMPLETED", "CANCELLED"],
                 "description": "Allowed transitions: ONGOING to COMPLETED; SCHEDULED, READY or ONGOING to CANCELLED. Both target statuses are terminal. Transitioning an ONGOING event moves its end_date_time to the moment of the transition; cancelling an event that has not started keeps its planned window. Invalid transitions return 400."
               }
-            },
-            "additionalProperties": false
+            }
           }
         ]
       },

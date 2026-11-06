@@ -10,11 +10,9 @@ import type {
   BadRequestResponse,
   NotFoundResponse,
 } from "$lib/types/api";
-import GC from "$lib/global-constants";
 import { GetMinuteStartTimestampUTC } from "$lib/server/tool";
 import { UpdateCommentByID, UpdateCommentStatusByID } from "$lib/server/controllers/incidentController";
-
-const VALID_STATES: string[] = [GC.INVESTIGATING, GC.IDENTIFIED, GC.MONITORING, GC.RESOLVED];
+import { readRequestBody } from "$lib/server/requestBody";
 
 function formatCommentResponse(comment: {
   id: number;
@@ -139,30 +137,11 @@ export const PATCH: RequestHandler = async ({ params, locals, request }) => {
     return json(errorResponse, { status: 404 });
   }
 
-  let body: UpdateCommentRequest;
-
-  try {
-    body = await request.json();
-  } catch {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "Invalid JSON body",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
-
-  // Validate state if provided
-  if (body.state !== undefined && !VALID_STATES.includes(body.state)) {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: `state must be one of: ${VALID_STATES.join(", ")}`,
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
+  const body = await readRequestBody<UpdateCommentRequest>(
+    request,
+    "PATCH /api/v4/incidents/{incident_id}/comments/{comment_id}",
+  );
+  if (body instanceof Response) return body;
 
   // Build update values - only update fields that are present in the request
   const updateComment = body.comment !== undefined ? body.comment : existingComment.comment;

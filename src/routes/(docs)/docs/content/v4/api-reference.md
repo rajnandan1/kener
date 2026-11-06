@@ -22,11 +22,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 
 ### Generating API Keys
 
-1. Log in to the admin panel
-2. Navigate to Settings > API Keys
-3. Click "Generate New Key"
-4. Set permissions and save
-5. Copy the key (shown only once)
+See [Create an API key](/docs/v4/api-reference/authentication#creating-an-api-key). Every key has full access, because Kener has no per-key permissions or key expiry yet.
 
 ## Response Format
 

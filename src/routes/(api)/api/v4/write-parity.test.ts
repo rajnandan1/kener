@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
 import type { Knex } from "knex";
 import type { Cookies, RequestEvent } from "@sveltejs/kit";
 
@@ -814,5 +815,228 @@ describe("v4 writes the dashboard cannot make keep working through the dashboard
       expect(response.status).toBe(400);
       expect(await signals()).toEqual(before);
     }
+  });
+});
+
+interface Schema {
+  type?: string | string[];
+  enum?: unknown[];
+  required?: string[];
+  properties?: Record<string, Schema>;
+  additionalProperties?: boolean | Schema;
+  items?: Schema;
+  oneOf?: Schema[];
+  $ref?: string;
+}
+const spec: {
+  paths: Record<string, Record<string, { requestBody?: { content: Record<string, { schema: Schema }> } }>>;
+  components: { schemas: Record<string, Schema> };
+} = JSON.parse(readFileSync(new URL("../../../../../static/api-references/v4.json", import.meta.url), "utf8"));
+const resolveRef = (schema: Schema): Schema =>
+  schema.$ref ? resolveRef(spec.components.schemas[schema.$ref.split("/").pop()!]) : schema;
+
+const WRONG_VALUES: Record<string, unknown> = {
+  string: "x",
+  number: 123,
+  boolean: true,
+  object: { x: 1 },
+  array: ["x"],
+  null: null,
+};
+
+function acceptedTypes(schema: Schema): Set<string> | undefined {
+  const s = resolveRef(schema);
+  if (s.oneOf) {
+    const sets = s.oneOf.map(acceptedTypes);
+    return sets.every(Boolean) ? new Set(sets.flatMap((set) => [...set!])) : undefined;
+  }
+  if (!s.type) return undefined;
+  const types = new Set([s.type].flat());
+  if (types.has("integer")) types.add("number");
+  return types;
+}
+
+interface Probe {
+  label: string;
+  body: unknown;
+  field?: string;
+}
+
+function forbiddenBodies(schema: Schema, valid: Record<string, unknown>): Probe[] {
+  const root = resolveRef(schema);
+  const probes: Probe[] = Object.entries(WRONG_VALUES)
+    .filter(([type]) => type !== "object")
+    .map(([, value]) => ({ label: `body=${JSON.stringify(value)}`, body: value }));
+  for (const branch of root.oneOf?.map(resolveRef) ?? [root]) {
+    const properties = branch.properties ?? {};
+    const base = Object.fromEntries(Object.entries(valid).filter(([key]) => key in properties));
+    for (const field of branch.required ?? []) {
+      if (!(field in base)) continue;
+      const { [field]: _omitted, ...rest } = base;
+      probes.push({ field, label: `${field} omitted`, body: rest });
+    }
+    for (const [field, fieldSchema] of Object.entries(properties)) {
+      const itemSchema = resolveRef(fieldSchema).items;
+      const shapes: [Schema, (value: unknown) => unknown][] = [[fieldSchema, (value) => value]];
+      if (itemSchema) shapes.push([itemSchema, (value) => [value]]);
+      for (const [shapeSchema, wrap] of shapes) {
+        const s = resolveRef(shapeSchema);
+        const types = acceptedTypes(s);
+        const values = Object.entries(WRONG_VALUES)
+          .filter(([type]) => types && !types.has(type))
+          .map(([, value]) => value);
+        if (s.enum) values.push("zz_not_allowed");
+        for (const value of values) {
+          probes.push({
+            field,
+            label: `${field}=${JSON.stringify(wrap(value))}`,
+            body: { ...base, [field]: wrap(value) },
+          });
+        }
+      }
+    }
+    if (branch.additionalProperties === false) {
+      probes.push({ field: "zz_unknown", label: "zz_unknown=1", body: { ...base, zz_unknown: 1 } });
+    }
+  }
+  return probes;
+}
+
+function allowedBodies(schema: Schema, valid: Record<string, unknown>): Probe[] {
+  const properties = resolveRef(schema).properties ?? {};
+  return [
+    { label: "zz_unknown=1", body: { ...valid, zz_unknown: 1 } },
+    ...Object.entries(properties)
+      .filter(([, fieldSchema]) => acceptedTypes(fieldSchema)?.has("null"))
+      .map(([field]) => ({ label: `${field}=null`, body: { ...valid, [field]: null } })),
+  ];
+}
+
+interface WriteTarget {
+  handler: Handler;
+  valid: Record<string, unknown>;
+  locals?: Partial<App.Locals>;
+  params?: Record<string, string>;
+}
+
+const writeTargets: Record<string, (f: Fixture) => Promise<WriteTarget>> = {
+  "POST /api/v4/monitors": async () => ({ handler: monitors.POST, valid: { tag: "probe", name: "Probe" } }),
+  "PATCH /api/v4/monitors/{monitor_tag}": async () => ({
+    handler: monitor.PATCH,
+    valid: {},
+    locals: await monitorLocals("api"),
+  }),
+  "PATCH /api/v4/monitors/{monitor_tag}/data": async () => ({
+    handler: monitorData.PATCH,
+    valid: { start_ts: T0, end_ts: T0 + 120, status: "UP", latency: 10 },
+    locals: await monitorLocals("api"),
+  }),
+  "PATCH /api/v4/monitors/{monitor_tag}/data/{timestamp}": async () => ({
+    handler: monitorDataPoint.PATCH,
+    valid: {},
+    locals: await monitorLocals("api"),
+    params: { timestamp: String(T0) },
+  }),
+  "POST /api/v4/incidents": async () => ({ handler: incidents.POST, valid: { title: "Probe", start_date_time: T0 } }),
+  "PATCH /api/v4/incidents/{incident_id}": async (f) => ({
+    handler: incident.PATCH,
+    valid: {},
+    locals: await incidentLocals(f.openIncident),
+  }),
+  "POST /api/v4/incidents/{incident_id}/comments": async (f) => ({
+    handler: comments.POST,
+    valid: { comment: "Probe", state: "INVESTIGATING" },
+    locals: await incidentLocals(f.openIncident),
+  }),
+  "PATCH /api/v4/incidents/{incident_id}/comments/{comment_id}": async (f) => ({
+    handler: comment.PATCH,
+    valid: {},
+    locals: await incidentLocals(f.openIncident),
+    params: { comment_id: String(f.openComment) },
+  }),
+  "POST /api/v4/pages": async () => ({
+    handler: pages.POST,
+    valid: { page_path: "probe", page_title: "Probe", page_header: "Probe" },
+  }),
+  "PATCH /api/v4/pages/{page_path}": async () => ({
+    handler: page.PATCH,
+    valid: {},
+    locals: await pageLocals("status"),
+  }),
+  "PATCH /api/v4/site/{config_key}": async () => ({
+    handler: siteKey.PATCH,
+    valid: { value: "Probe" },
+    params: { config_key: "siteName" },
+  }),
+  "POST /api/v4/maintenances": async () => ({
+    handler: maintenances.POST,
+    valid: { title: "Probe", start_date_time: FUTURE, rrule: "FREQ=MINUTELY;COUNT=1", duration_seconds: 3600 },
+  }),
+  "PATCH /api/v4/maintenances/{maintenance_id}": async (f) => ({
+    handler: maintenance.PATCH,
+    valid: {},
+    locals: await maintenanceLocals(f.scheduledMaintenance),
+  }),
+  "PATCH /api/v4/maintenances/{maintenance_id}/events/{event_id}": async (f) => ({
+    handler: maintenanceEvent.PATCH,
+    valid: { start_date_time: FUTURE + 600, end_date_time: FUTURE + 4200 },
+    locals: await maintenanceLocals(f.scheduledMaintenance),
+    params: { event_id: String(f.scheduledEvent) },
+  }),
+  "POST /api/v4/images": async () => ({ handler: images.POST, valid: { base64: logo, mime_type: "image/png" } }),
+};
+
+const specWrites = Object.entries(spec.paths).flatMap(([path, methods]) =>
+  Object.entries(methods).flatMap(([method, op]) =>
+    op.requestBody
+      ? [[`${method.toUpperCase()} ${path}`, op.requestBody.content["application/json"].schema] as const]
+      : [],
+  ),
+);
+
+describe("a v4 write body follows static/api-references/v4.json", () => {
+  it("has a write target for every write in the spec", () => {
+    expect(Object.keys(writeTargets).sort()).toEqual(specWrites.map(([op]) => op).sort());
+  });
+
+  it.each(specWrites)("%s returns 400 BAD_REQUEST that names the field, and saves nothing", async (op, schema) => {
+    let f = await seed();
+    const failures: string[] = [];
+    for (const probe of forbiddenBodies(schema, (await writeTargets[op](f)).valid)) {
+      const target = await writeTargets[op](f);
+      const before = JSON.stringify(await signals());
+      let status: number | string;
+      let error: { code?: string; message?: string } = {};
+      try {
+        const response = await send(target.handler, probe.body, target.locals, target.params);
+        status = response.status;
+        error = (await response.json().catch(() => ({}))).error ?? {};
+      } catch (e) {
+        status = `threw ${String((e as Error).message)
+          .split("\n")[0]
+          .slice(-90)}`;
+      }
+      const saved = JSON.stringify(await signals()) !== before;
+      const namesField = !probe.field || !!error.message?.toLowerCase().includes(probe.field.toLowerCase());
+      if (status !== 400 || error.code !== "BAD_REQUEST" || saved || !namesField) {
+        failures.push(`${probe.label} -> ${status} ${error.message ?? ""}${saved ? " (saved)" : ""}`);
+      }
+      if (saved) f = await seed();
+    }
+    expect(failures.join("\n")).toBe("");
+  });
+
+  it.each(specWrites)("%s accepts an unknown field, and null where the spec allows null", async (op, schema) => {
+    let f = await seed();
+    const failures: string[] = [];
+    for (const probe of allowedBodies(schema, (await writeTargets[op](f)).valid)) {
+      const target = await writeTargets[op](f);
+      const response = await send(target.handler, probe.body, target.locals, target.params);
+      if (response.status >= 300) {
+        failures.push(`${probe.label} -> ${response.status} ${(await response.json()).error?.message}`);
+      }
+      f = await seed();
+    }
+    expect(failures.join("\n")).toBe("");
   });
 });

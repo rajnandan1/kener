@@ -112,6 +112,8 @@
   }
 
   const storedHeartbeatSecret = typeData?.secretString;
+  const storedProxy = typeData?.proxy;
+  const storedConnectionString = typeData?.connectionString;
 
   let savingType = $state(false);
   let testingMonitor = $state(false);
@@ -143,7 +145,7 @@
         if (!data.url) return false;
         if (!IsValidURL(data.url)) return false;
         if (!data.timeout || data.timeout < 1) return false;
-        if (data.proxy && !IsValidProxyURL(data.proxy)) return false;
+        if (data.proxy && data.proxy !== storedProxy && !IsValidProxyURL(data.proxy)) return false;
         return true;
       }
 
@@ -225,7 +227,11 @@
       case "SQL": {
         const data = typeData as any;
         if (!data.connectionString) return false;
-        if (!data.connectionString.startsWith("postgresql://") && !data.connectionString.startsWith("mysql://"))
+        if (
+          data.connectionString !== storedConnectionString &&
+          !data.connectionString.startsWith("postgresql://") &&
+          !data.connectionString.startsWith("mysql://")
+        )
           return false;
         if (!data.timeout || data.timeout < 1) return false;
         if (!data.query) return false;
@@ -260,7 +266,7 @@
       case "PROMETHEUS": {
         const data = typeData as any;
         if (!data.url || !IsValidURL(data.url)) return false;
-        if (data.proxy && !IsValidProxyURL(data.proxy)) return false;
+        if (data.proxy && data.proxy !== storedProxy && !IsValidProxyURL(data.proxy)) return false;
         if (!data.query || !data.query.trim()) return false;
         for (const key of ["down", "degraded"] as const) {
           const t = data[key];
@@ -405,7 +411,7 @@
       {:else if monitor.monitor_type === "PROMETHEUS"}
         <MonitorPrometheus bind:data={typeData} />
       {:else if monitor.monitor_type === "DOCKER"}
-        <MonitorDocker bind:data={typeData} defaults={dockerDefaults} />
+        <MonitorDocker bind:data={typeData} defaults={dockerDefaults} monitorId={monitor.id} />
       {:else if monitor.monitor_type === "NONE"}
         <MonitorNone bind:data={typeData} />
       {/if}

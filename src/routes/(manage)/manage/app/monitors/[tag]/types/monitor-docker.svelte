@@ -16,8 +16,9 @@
 
   let {
     data = $bindable({} as Record<string, unknown>),
-    defaults = { connectionType: "socket", daemon: DOCKER_DEFAULT_SOCKET_PATH }
-  }: { data: Record<string, unknown>; defaults?: DockerConnectionDefaults } = $props();
+    defaults = { connectionType: "socket", daemon: DOCKER_DEFAULT_SOCKET_PATH },
+    monitorId
+  }: { data: Record<string, unknown>; defaults?: DockerConnectionDefaults; monitorId?: number } = $props();
 
   const formData = data as unknown as DockerMonitorTypeData;
 
@@ -68,14 +69,14 @@
     containers = [];
   }
 
-  // Sends the unsaved connection fields, so browsing works before the monitor is saved.
+  // Sends the unsaved connection fields, so browsing works before the monitor is saved. The server puts back a masked saved key.
   async function loadContainers() {
     loadingContainers = true;
     try {
       const response = await fetch(clientResolver(resolve, "/manage/api"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "listDockerContainers", data: formData })
+        body: JSON.stringify({ action: "listDockerContainers", data: { monitor_id: monitorId, type_data: formData } })
       });
       const result = await response.json();
       if (result?.error) throw new Error(result.error);

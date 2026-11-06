@@ -11,9 +11,11 @@ import type { MonitorRecord } from "$lib/server/types/db";
 import {
   CreateUpdateMonitor,
   GetMonitorsParsed,
+  MaskMonitorSecrets,
   ValidateTypeDataProxy,
   WithValidHeartbeatSecret,
 } from "$lib/server/controllers/monitorsController";
+import { readRequestBody } from "$lib/server/requestBody";
 
 export const GET: RequestHandler = async ({ url }) => {
   const status = url.searchParams.get("status") || undefined;
@@ -29,29 +31,18 @@ export const GET: RequestHandler = async ({ url }) => {
   });
 
   const response: GetMonitorsListResponse = {
-    monitors: rawMonitors,
+    monitors: rawMonitors.map(MaskMonitorSecrets),
   };
 
   return json(response);
 };
 
 export const POST: RequestHandler = async ({ request }) => {
-  let body: CreateMonitorRequest;
-
-  try {
-    body = await request.json();
-  } catch {
-    const errorResponse: BadRequestResponse = {
-      error: {
-        code: "BAD_REQUEST",
-        message: "Invalid JSON body",
-      },
-    };
-    return json(errorResponse, { status: 400 });
-  }
+  const body = await readRequestBody<CreateMonitorRequest>(request, "POST /api/v4/monitors");
+  if (body instanceof Response) return body;
 
   // Validate required fields
-  if (!body.tag || typeof body.tag !== "string" || body.tag.trim().length === 0) {
+  if (body.tag.trim().length === 0) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",
@@ -75,7 +66,7 @@ export const POST: RequestHandler = async ({ request }) => {
     return json(errorResponse, { status: 400 });
   }
 
-  if (!body.name || typeof body.name !== "string" || body.name.trim().length === 0) {
+  if (body.name.trim().length === 0) {
     const errorResponse: BadRequestResponse = {
       error: {
         code: "BAD_REQUEST",
@@ -100,8 +91,8 @@ export const POST: RequestHandler = async ({ request }) => {
   // Validate confirmation_threshold
   let confirmationThreshold = 1;
   if (body.confirmation_threshold !== undefined && body.confirmation_threshold !== null) {
-    const ct = Number(body.confirmation_threshold);
-    if (!Number.isInteger(ct) || ct < 1 || ct > 60) {
+    const ct = body.confirmation_threshold;
+    if (ct < 1 || ct > 60) {
       const errorResponse: BadRequestResponse = {
         error: { code: "BAD_REQUEST", message: "confirmation_threshold must be an integer between 1 and 60" },
       };

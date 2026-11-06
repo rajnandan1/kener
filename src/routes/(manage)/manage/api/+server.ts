@@ -49,6 +49,9 @@ import {
   CloneMonitor,
   GetSiteDataByKey,
   MaskSiteDataSecret,
+  MaskMonitorRecordSecrets,
+  MaskTriggerSecrets,
+  MaskAlertConfigTriggerSecrets,
   GetMonitoringDataPaginated,
 } from "$lib/server/controllers/controller.js";
 
@@ -219,7 +222,8 @@ export async function POST({ request, cookies }) {
       data.type = GC.MANUAL;
       resp = await UpdateMonitoringData(data);
     } else if (action == "getMonitors") {
-      resp = await GetMonitors(data);
+      const keepHeartbeatSecret = userPermissions.has("monitors.write");
+      resp = (await GetMonitors(data)).map((monitor) => MaskMonitorRecordSecrets(monitor, keepHeartbeatSecret));
     } else if (action == "deleteMonitor") {
       resp = await DeleteMonitorCompletelyUsingTag(data.tag);
     } else if (action == "deleteMonitorData") {
@@ -241,7 +245,7 @@ export async function POST({ request, cookies }) {
     } else if (action == "createUpdateTrigger") {
       resp = await CreateUpdateTrigger(data);
     } else if (action == "getTriggers") {
-      resp = await GetAllTriggers(data);
+      resp = (await GetAllTriggers(data)).map(MaskTriggerSecrets);
     } else if (action == "updateMonitorTriggers") {
       resp = await UpdateTriggerData(data);
     } else if (action == "deleteTrigger") {
@@ -480,16 +484,17 @@ export async function POST({ request, cookies }) {
     }
     // ============ Monitor Alert Config Actions ============
     else if (action == "createMonitorAlertConfig") {
-      resp = await CreateMonitorAlertConfig(data);
+      resp = MaskAlertConfigTriggerSecrets(await CreateMonitorAlertConfig(data));
     } else if (action == "updateMonitorAlertConfig") {
-      resp = await UpdateMonitorAlertConfig(data);
+      resp = MaskAlertConfigTriggerSecrets(await UpdateMonitorAlertConfig(data));
     } else if (action == "getMonitorAlertConfig" || action == "getMonitorAlertConfigById") {
-      resp = await GetMonitorAlertConfigById(data.id);
-      if (!resp) {
+      const config = await GetMonitorAlertConfigById(data.id);
+      if (!config) {
         throw new Error("Monitor alert config not found");
       }
+      resp = MaskAlertConfigTriggerSecrets(config);
     } else if (action == "getMonitorAlertConfigsByMonitorTag") {
-      resp = await GetMonitorAlertConfigsByMonitorTag(data.monitor_tag);
+      resp = (await GetMonitorAlertConfigsByMonitorTag(data.monitor_tag)).map(MaskAlertConfigTriggerSecrets);
     } else if (action == "deleteMonitorAlertConfig") {
       await DeleteMonitorAlertConfig(data.id);
       resp = { success: true };
@@ -503,7 +508,12 @@ export async function POST({ request, cookies }) {
       if (data.monitor_tag) filter.monitor_tag = data.monitor_tag;
       if (data.is_active) filter.is_active = data.is_active as "YES" | "NO";
       if (data.alert_for) filter.alert_for = data.alert_for as "STATUS" | "LATENCY" | "UPTIME";
-      resp = await GetMonitorAlertConfigsPaginated(page, limit, Object.keys(filter).length > 0 ? filter : undefined);
+      const result = await GetMonitorAlertConfigsPaginated(
+        page,
+        limit,
+        Object.keys(filter).length > 0 ? filter : undefined,
+      );
+      resp = { ...result, configs: result.configs.map(MaskAlertConfigTriggerSecrets) };
     } else if (action == "deleteMonitorAlertV2") {
       const deleteIncident = data.deleteIncident === true;
       // If deleteIncident is true, delete the incident first
@@ -677,7 +687,7 @@ export async function POST({ request, cookies }) {
     } else if (action == "deleteRole") {
       resp = await DeleteRole(data.roleId, data.options);
     } else if (action == "listDockerContainers") {
-      resp = await ListDockerContainers(data);
+      resp = await ListDockerContainers(data.type_data, data.monitor_id);
     }
     // ============ OIDC Group-Role Mappings ============
     else if (action == "getOidcGroupRoleMappings") {
