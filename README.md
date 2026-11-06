@@ -27,6 +27,7 @@
 	<a href="https://www.producthunt.com/posts/kener-2" target="_blank">
 		<img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=kener-2&theme=light" alt="Kener on Product Hunt">
 	</a>
+    [![Featured on Ditchly](https://ditchly.co/badges/featured-on-ditchly.svg)](https://ditchly.co/software/kener)
 </p>
 
 <p align="center">
