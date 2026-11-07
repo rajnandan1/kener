@@ -54,8 +54,24 @@ describe("GroupMonitorPopover", () => {
     // Tailwind does not load in component tests, so this checks the class that hides the panel.
     const member = screen.getByText("Member api");
     await expect.element(member).toBeInTheDocument();
-    expect(member.element().closest(".grid")).toHaveClass("invisible", "grid-rows-[0fr]");
+    const panel = member.element().closest(".grid");
+    expect(panel).toHaveClass("invisible", "grid-rows-[0fr]");
+    expect(button.element().getAttribute("aria-controls")).toBe(panel?.id);
     expect(requestMonitorBar).toHaveBeenCalledTimes(2);
+  });
+
+  it("retries a failed member when the list reopens", async () => {
+    requestMonitorBar.mockRejectedValueOnce(new Error("offline"));
+    const screen = await render(GroupMonitorPopover, { ...props, tags: ["api"], display: "INLINE" });
+    const button = screen.getByRole("button", { name: "Included Monitors" });
+
+    await button.click();
+    await expect.element(screen.getByText("Failed to load monitor: offline")).toBeInTheDocument();
+
+    await button.click();
+    await button.click();
+
+    await expect.element(screen.getByText("Member api")).toBeInTheDocument();
   });
 
   it.each([

@@ -20,11 +20,12 @@
   }
 
   let { tags, days, endOfDayTodayAtTz, display = "DRAWER", compactMembers = false, children }: Props = $props();
+  const panelId = $props.id();
   let isOpen = $state(false);
-  let hasExpanded = $state(false);
-  let shouldLoadMembers = $derived(isOpen || hasExpanded);
+  let openCount = $state(0);
+  let requestKey = $derived(display === "INLINE" ? openCount : Number(isOpen));
   let monitorBarPromiseByTag = $derived.by(() => {
-    if (!browser || !shouldLoadMembers || tags.length === 0) {
+    if (!browser || requestKey === 0 || tags.length === 0) {
       return {} as Partial<Record<string, Promise<MonitorBarResponse>>>;
     }
 
@@ -63,9 +64,10 @@
       size="sm"
       class="rounded-btn bg-secondary w-full text-xs"
       aria-expanded={isOpen}
+      aria-controls={panelId}
       onclick={() => {
-        hasExpanded = true;
         isOpen = !isOpen;
+        if (isOpen) openCount += 1;
       }}
     >
       {@render children()}
@@ -75,12 +77,13 @@
     </Button>
     <!-- CSS cannot animate height to auto, but it can animate a grid row from 0fr to 1fr. -->
     <div
+      id={panelId}
       class="grid transition-[grid-template-rows,visibility] duration-200 motion-reduce:transition-none {isOpen
         ? 'visible grid-rows-[1fr]'
         : 'invisible grid-rows-[0fr]'}"
     >
       <div class="overflow-hidden">
-        {#if hasExpanded}
+        {#if openCount > 0}
           <div class="flex flex-col pt-2">
             {@render memberList({ compact: compactMembers, grid: compactMembers })}
           </div>
