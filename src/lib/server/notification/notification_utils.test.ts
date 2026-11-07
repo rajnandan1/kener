@@ -124,4 +124,23 @@ describe("maintenanceToVariables", () => {
     expect(text).toContain("Jan 1, 2026, 12:00:00 AM UTC");
     expect(text).toContain("Jan 1, 2026, 1:00:00 AM UTC");
   });
+
+  // An instant inside the US spring-forward gap (02:00-03:00 local = 07:00-08:00 UTC on 2026-03-08):
+  // formatInTimeZone writes UTC fields via host-local setters and would shift this hour on a DST host.
+  // Intl with timeZone:"UTC" ignores the host zone, so the label and the time always agree.
+  it("keeps the UTC time correct across a DST spring-forward instant", () => {
+    const event = {
+      id: 4,
+      maintenance_id: 6,
+      title: "DST window",
+      description: "",
+      start_date_time: 1772955000, // 2026-03-08T07:30:00Z
+      end_date_time: 1772958600, // 2026-03-08T08:30:00Z
+    } as unknown as Parameters<typeof maintenanceToVariables>[0];
+
+    const text = maintenanceToVariables(event, "api", "has started", "start", "Maintenance Started").update_text;
+
+    expect(text).toContain("Mar 8, 2026, 7:30:00 AM UTC");
+    expect(text).toContain("Mar 8, 2026, 8:30:00 AM UTC");
+  });
 });

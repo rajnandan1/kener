@@ -2,7 +2,6 @@ import type { MaintenanceEventRecordDetailed, MonitorAlertConfigRecord, MonitorA
 import type { AlertVariableMap, SiteDataForNotification, SubscriptionVariableMap } from "./types.js";
 import GC from "../../global-constants.js";
 import type { SiteDataTransformed } from "../controllers/siteDataController.js";
-import { formatInTimeZone } from "date-fns-tz";
 import mdToHTML from "../..//marked.js";
 import serverResolver from "../resolver.js";
 import { parseDbTimestamp } from "../tool.js";
@@ -55,7 +54,10 @@ function formatMaintenanceMarkdown(
   statusMessage: string,
 ): string {
   // Pin to UTC: the server timezone is not the reader's, so say which zone the time is in.
-  const fmt = (ts: number) => formatInTimeZone(new Date(ts * 1000), "UTC", "PPpp") + " UTC";
+  // Intl with timeZone:"UTC" ignores the host zone, so it is correct even on a DST server
+  // (formatInTimeZone goes through host-local date setters and can shift the spring-forward hour).
+  const utcFormat = new Intl.DateTimeFormat("en-US", { timeZone: "UTC", dateStyle: "medium", timeStyle: "medium" });
+  const fmt = (ts: number) => utcFormat.format(new Date(ts * 1000)) + " UTC";
   let update = `Maintenance **${event.title}** ${statusMessage}\n\n`;
   if (!!event.description) {
     update = update + `${event.description}\n\n`;
