@@ -11,9 +11,15 @@ import {
 import type { TimestampStatusCount } from "$lib/server/types/db";
 import { GetNowTimestampUTC, UptimeCalculator } from "$lib/server/tool";
 import GC from "$lib/global-constants.js";
-import { GetStatusColor, GetStatusSummary, ParseLatency, ResolveSslExpiresAtMs } from "$lib/clientTools";
+import {
+  GetStatusColor,
+  GetStatusSummary,
+  ParseLatency,
+  ResolveGroupMemberDisplay,
+  ResolveSslExpiresAtMs,
+} from "$lib/clientTools";
 import { AttachSslCacheFields, GetMonitorsParsed } from "$lib/server/controllers/monitorsController";
-import type { GroupMonitorTypeData } from "$lib/server/types/monitor";
+import type { GroupMemberDisplay, GroupMonitorTypeData } from "$lib/server/types/monitor";
 
 export const load: PageServerLoad = async ({ params, parent }) => {
   const { monitor_tag } = params;
@@ -63,10 +69,12 @@ export const load: PageServerLoad = async ({ params, parent }) => {
   //get status summary
   let extendedTags: string[] = [];
   let monitorGroupMembersByTag: Record<string, string[]> = {};
+  let groupMemberDisplay: GroupMemberDisplay | undefined;
   if (monitor.monitor_type === "GROUP") {
     const groupData = monitor.type_data as GroupMonitorTypeData;
     const memberTags = groupData.monitors.map((m) => m.tag);
     extendedTags = extendedTags.concat(memberTags);
+    groupMemberDisplay = ResolveGroupMemberDisplay(groupData.memberDisplay);
   }
 
   if (extendedTags.length > 0) {
@@ -111,6 +119,7 @@ export const load: PageServerLoad = async ({ params, parent }) => {
       externalUrl: monitor.external_url,
       extendedTags,
       monitorGroupMembersByTag,
+      groupMemberDisplay,
       maxDays,
       monitorSharingOptions: {
         showShareBadgeMonitor: monitor.monitor_settings_json?.sharing_options?.showShareBadgeMonitor ?? true,

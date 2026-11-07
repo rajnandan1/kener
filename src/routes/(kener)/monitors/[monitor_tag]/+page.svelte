@@ -192,6 +192,7 @@
     monitorTag={data.monitorTag}
     maxDays={data.maxDays}
     groupTags={data.extendedTags || []}
+    groupMemberDisplay={data.groupMemberDisplay}
     class="mb-4"
   />
 </div>

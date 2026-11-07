@@ -1,4 +1,5 @@
 import type { TimestampStatusCount } from "$lib/server/types/db";
+import type { GroupMemberDisplay } from "$lib/server/types/monitor";
 import GC, { PAGE_STATUS_MESSAGES } from "$lib/global-constants";
 import type { StatusType } from "$lib/types/status";
 import type { EventDisplaySettings, EventListPlacement } from "$lib/types/site";
@@ -16,6 +17,10 @@ function ParseLatency(latencyMs: number): string {
   } else {
     return `${(latencyMs / 3600000).toFixed(2)}h`;
   }
+}
+
+function ResolveGroupMemberDisplay(value: unknown): GroupMemberDisplay {
+  return value === "INLINE" ? "INLINE" : "DRAWER";
 }
 
 function ResolveSslExpiresAtMs(latestData: { expiry_at?: string | null } | null | undefined): number | null {
@@ -446,6 +451,7 @@ export {
   GetStatusColor,
   GetStatusBgColor,
   ParseLatency,
+  ResolveGroupMemberDisplay,
   ResolveSslExpiresAtMs,
   GetSslSecurityState,
   SslSecurityLabelKey,

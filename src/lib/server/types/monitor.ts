@@ -87,10 +87,13 @@ export interface GroupMonitorMember {
   weight: number;
 }
 
+export type GroupMemberDisplay = "INLINE" | "DRAWER";
+
 export interface GroupMonitorTypeData extends Record<string, unknown> {
   monitors: GroupMonitorMember[];
   executionDelay: number;
   latencyCalculation: "AVG" | "MAX" | "MIN";
+  memberDisplay?: GroupMemberDisplay;
 }
 
 export interface GamedigMonitorTypeData {
