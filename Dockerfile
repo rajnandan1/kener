@@ -129,6 +129,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # ---------- Selected variant ----------
 FROM final-${VARIANT} AS final
 
+# The runtime starts Kener with `node` (CMD, docker-entrypoint.sh) and never with a package
+# manager. The npm and corepack bundled with the Node.js base image would only add their own
+# dependencies, which container scanners report against this image.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack \
+    /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack
+
 ARG PORT=3000
 ARG KENER_BASE_PATH=
 
