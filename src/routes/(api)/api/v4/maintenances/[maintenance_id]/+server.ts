@@ -19,6 +19,7 @@ import { GetSiteURL } from "$lib/server/controllers/siteDataController";
 import serverResolver from "$lib/server/resolver";
 import { rrulestr } from "rrule";
 import { readRequestBody } from "$lib/server/requestBody";
+import { isValidTimezone } from "$lib/maintenanceOccurrences";
 
 function isValidRrule(rrule: string): boolean {
   try {
@@ -44,6 +45,7 @@ async function buildMaintenanceResponse(maintenanceId: number): Promise<Maintena
     description: maintenance.description,
     start_date_time: maintenance.start_date_time,
     rrule: maintenance.rrule,
+    timezone: maintenance.timezone,
     duration_seconds: maintenance.duration_seconds,
     status: maintenance.status as "ACTIVE" | "INACTIVE",
     monitors: monitors.map((m) => ({
@@ -106,6 +108,17 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
     }
   }
 
+  const timezone = body.timezone?.trim();
+  if (timezone && !isValidTimezone(timezone)) {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: "timezone must be a known IANA time zone, such as America/New_York",
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
   // Validate duration_seconds if provided
   if (body.duration_seconds !== undefined) {
     if (body.duration_seconds <= 0) {
@@ -158,6 +171,9 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
   }
   if (body.rrule !== undefined) {
     updateData.rrule = body.rrule.trim();
+  }
+  if (body.timezone !== undefined) {
+    updateData.timezone = body.timezone;
   }
   if (body.duration_seconds !== undefined) {
     updateData.duration_seconds = body.duration_seconds;

@@ -452,6 +452,43 @@ const pairs: Pair[] = [
         is_global: "YES",
       }),
   },
+  {
+    name: "POST /maintenances with a timezone = createMaintenance",
+    api: () =>
+      v4(maintenances.POST, {
+        title: "Patch night",
+        start_date_time: FUTURE,
+        rrule: "FREQ=WEEKLY;BYDAY=MO",
+        timezone: "America/New_York",
+        duration_seconds: 3600,
+      }),
+    dashboard: () =>
+      dashboard("createMaintenance", {
+        title: "Patch night",
+        description: null,
+        start_date_time: FUTURE,
+        rrule: "FREQ=WEEKLY;BYDAY=MO",
+        timezone: "America/New_York",
+        duration_seconds: 3600,
+        monitors: [],
+        is_global: "YES",
+      }),
+  },
+  {
+    name: "PATCH /maintenances/{id} setting a timezone = updateMaintenance",
+    api: async (f) =>
+      v4(
+        maintenance.PATCH,
+        { rrule: "FREQ=WEEKLY;BYDAY=MO", timezone: "Asia/Kolkata" },
+        await maintenanceLocals(f.scheduledMaintenance),
+      ),
+    dashboard: (f) =>
+      dashboard("updateMaintenance", {
+        id: f.scheduledMaintenance,
+        rrule: "FREQ=WEEKLY;BYDAY=MO",
+        timezone: "Asia/Kolkata",
+      }),
+  },
   ...(["scheduledMaintenance", "cancelledMaintenance"] as const).map(
     (which): Pair => ({
       name: `PATCH /maintenances/{id} moving a one-time ${which.replace("Maintenance", "")} event = updateMaintenance`,
@@ -757,6 +794,51 @@ describe("v4 writes the dashboard cannot make keep working through the dashboard
       });
 
       expect(response.status).toBe(404);
+    }
+  });
+
+  it.each(["Mars/Olympus_Mons", "+05:30"])("POST and PATCH /maintenances return 400 for timezone %s", async (zone) => {
+    const f = await seed();
+    const before = await signals();
+    const created = await send(maintenances.POST, {
+      title: "Bad zone",
+      start_date_time: FUTURE,
+      rrule: "FREQ=DAILY",
+      duration_seconds: 60,
+      timezone: zone,
+    });
+    const updated = await send(maintenance.PATCH, { timezone: zone }, await maintenanceLocals(f.scheduledMaintenance));
+
+    for (const response of [created, updated]) {
+      expect(response.status).toBe(400);
+      expect((await response.json()).error).toEqual({
+        code: "BAD_REQUEST",
+        message: "timezone must be a known IANA time zone, such as America/New_York",
+      });
+    }
+    expect(await signals()).toEqual(before);
+  });
+
+  it("returns the timezone from POST, GET and PATCH /maintenances, and null when it is cleared", async () => {
+    const f = await seed();
+    const body = { title: "Patch", start_date_time: FUTURE, rrule: "FREQ=DAILY", duration_seconds: 60 };
+    const created = await send(maintenances.POST, { ...body, timezone: "Asia/Kolkata" });
+    const plain = await send(maintenances.POST, body);
+    const { maintenance: row } = await created.json();
+    const locals = await maintenanceLocals(row.id);
+
+    expect(row.timezone).toBe("Asia/Kolkata");
+    expect((await plain.json()).maintenance.timezone).toBeNull();
+    const fetched = await maintenance.GET({ locals } as unknown as RequestEvent as never);
+    expect((await fetched.json()).maintenance.timezone).toBe("Asia/Kolkata");
+    const listed = await maintenances.GET({ url: new URL("http://x/") } as unknown as RequestEvent as never);
+    const rows: { id: number; timezone: string | null }[] = (await listed.json()).maintenances;
+    expect(rows.find((item) => item.id === row.id)?.timezone).toBe("Asia/Kolkata");
+    expect(rows.find((item) => item.id === f.scheduledMaintenance)?.timezone).toBeNull();
+    for (const empty of [null, "", "  "]) {
+      await send(maintenance.PATCH, { timezone: "Asia/Kolkata" }, locals);
+      const cleared = await send(maintenance.PATCH, { timezone: empty }, locals);
+      expect((await cleared.json()).maintenance.timezone).toBeNull();
     }
   });
 
