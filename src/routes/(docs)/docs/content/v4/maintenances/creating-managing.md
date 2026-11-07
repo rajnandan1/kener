@@ -92,8 +92,9 @@ Use **Manage → Maintenances** to create and manage planned work windows.
     - Title
     - Start date/time
     - Duration
-4. Select affected monitors and set impact.
-5. Click **Create Maintenance**.
+4. For a recurring maintenance, check **Timezone**. A new maintenance uses your browser timezone, and the start time is local time in that zone. Choose **None (repeat in UTC)** to repeat at one UTC time. See [Time Zones and Daylight Saving](/docs/v4/maintenances/rrule-patterns#timezone-considerations).
+5. Select affected monitors and set impact.
+6. Click **Create Maintenance**.
    **First Occurrence Date/Time** (Required)
 
 ## Impact settings {#impact-settings}
@@ -251,16 +252,17 @@ From the maintenances list:
 
 - Start date/time
 - RRULE (frequency, interval, days)
+- Timezone
 - Duration
 
 **Warning:** Changing schedule settings affects event generation:
 
 - **One-Time:** Non-completed events deleted, new event created
-- **Recurring:** Future SCHEDULED events deleted, new events generated
+- **Recurring:** SCHEDULED and READY events that have not started are deleted, new events generated
 
 ### Editing Schedule {#editing-schedule}
 
-When you edit start time, RRULE, or duration:
+When you edit start time, RRULE, timezone, or duration:
 
 **For One-Time Maintenances:**
 
@@ -270,9 +272,9 @@ When you edit start time, RRULE, or duration:
 
 **For Recurring Maintenances:**
 
-1. Future SCHEDULED events are deleted
+1. SCHEDULED and READY events that have not started are deleted
 2. New events are generated for the next 7 days
-3. READY, ONGOING, and COMPLETED events are preserved
+3. ONGOING and COMPLETED events are preserved
 
 **Example Scenario:**
 
@@ -281,7 +283,7 @@ Original: Every Sunday at 3 AM for 1 hour
 Edited to: Every Sunday at 4 AM for 2 hours
 
 Result:
-- All SCHEDULED events deleted
+- All SCHEDULED and READY events that have not started are deleted
 - New events created: Every Sunday at 4 AM, 2-hour duration
 - Currently ONGOING or past COMPLETED events unchanged
 ```

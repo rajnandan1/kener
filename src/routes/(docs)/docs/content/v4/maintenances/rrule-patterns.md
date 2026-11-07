@@ -467,23 +467,39 @@ RRULE doesn't support holiday exclusions directly.
 2. Manually cancel events that fall on holidays
 3. Or schedule maintenance to avoid common holiday dates
 
-### Time Zone Considerations {#timezone-considerations}
+### Time Zones and Daylight Saving {#timezone-considerations}
 
-**Important:** Start times are stored in UTC but displayed in local timezone.
+Set **Timezone** on a recurring maintenance (`timezone` in the API) to keep its local time all year. The value is an IANA time zone name such as `America/New_York`. The API returns 400 for an unknown name.
 
-**Best Practice:**
-
-- Choose start times that work across time zones
-- Be aware of DST changes
-- Document timezone in maintenance description
-
-**Example:**
+**With a timezone,** the rule repeats in local time of that zone. `BYDAY`, `BYMONTHDAY`, and `BYHOUR` read the local date and hour.
 
 ```yaml
-Title: Global Maintenance Window
-Description: Scheduled at 2 AM UTC (6 PM PST, 10 PM EST)
-Start: 2:00 AM UTC
+Title: Weekly Patch Window
+Start: Monday, October 5, 2026 at 10:00 AM
+Timezone: America/New_York
+RRULE: FREQ=WEEKLY;BYDAY=MO
+
+Occurrences:
+    - Mon, Oct 26 at 10:00 AM EDT (14:00 UTC)
+    - Mon, Nov 2 at 10:00 AM EST (15:00 UTC)
 ```
+
+**Without a timezone,** the rule repeats in UTC. Every maintenance created before this setting works this way, and it stays that way until you set a timezone:
+
+- Its local time moves by 1 hour after a clock change.
+- `BYDAY` reads the UTC date. "Every Monday" with a start at 10 PM in New York runs on Sunday night there, because that time is already Monday in UTC.
+
+Two local times need a rule on the day of a clock change. Both follow [RFC 5545 section 3.3.5](https://www.rfc-editor.org/rfc/rfc5545#section-3.3.5):
+
+| Local time | Example in New York    | Result                                                     |
+| :--------- | :--------------------- | :--------------------------------------------------------- |
+| Missing    | 2:30 AM on Mar 8, 2026 | Runs at 3:30 AM EDT. It goes back to 2:30 AM the next day. |
+| Repeated   | 1:30 AM on Nov 1, 2026 | Runs once, at the first 1:30 AM (EDT).                     |
+
+`UNTIL` with a trailing `Z`, such as `UNTIL=20261231T235959Z`, is one exact moment. `UNTIL` without the `Z` is a local time in the timezone.
+
+> [!NOTE]
+> Kener reads the local time from the start time. A start time inside a missing hour moves forward, so every later occurrence uses the moved time. Check **Upcoming Occurrences** before you save.
 
 ## RRULE Validation {#validation}
 
@@ -578,7 +594,7 @@ RRULE:FREQ=WEEKLY;BYDAY=SU
 **Solutions:**
 
 - Check start_date_time is correct
-- Verify time zone interpretation
+- Set a timezone, because a maintenance without one reads `BYDAY` on the UTC date
 - Confirm INTERVAL matches expectation
 
 ## Best Practices {#best-practices}
