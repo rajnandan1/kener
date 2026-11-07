@@ -2,6 +2,7 @@ import { fromZonedTime } from "date-fns-tz";
 import { rrulestr } from "rrule";
 
 const DAY_MS = 86_400_000;
+const GAP_SLACK_MS = DAY_MS;
 const UTC_UNTIL = /UNTIL=(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z/i;
 
 export interface MaintenanceSchedule {
@@ -78,8 +79,7 @@ function splitUtcUntil(rrule: string, clock: Clock): { wallRule: string; untilMs
 
 /**
  * The occurrences of a schedule from `from`, ascending and unique, up to `range.to` (inclusive) or `range.limit`.
- * The rule repeats in local time of `schedule.timezone`, and an empty timezone repeats in UTC.
- * It never uses the rrule TZID option, because the output of that option changes with the server timezone.
+ * The rule repeats in `schedule.timezone`, or in UTC when it is empty. The rrule TZID option stays unused, because its output changes with the server timezone.
  */
 export function getOccurrences(schedule: MaintenanceSchedule, from: Date, range: OccurrenceRange): Date[] {
   const { start_date_time, rrule, timezone } = schedule;
@@ -96,8 +96,7 @@ export function getOccurrences(schedule: MaintenanceSchedule, from: Date, range:
     const instantMs = clock.toInstant(wall.getTime());
     if (instantMs >= fromMs && instantMs <= lastMs) found.add(instantMs);
     if (found.size === range.limit) fullAtMs = Math.min(fullAtMs, instantMs);
-    // A gap moves a local time past the next ones, so the walk runs one day longer before it stops.
-    return instantMs <= Math.min(lastMs, fullAtMs) + DAY_MS;
+    return instantMs <= Math.min(lastMs, fullAtMs) + GAP_SLACK_MS;
   });
 
   return [...found]

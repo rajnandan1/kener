@@ -90,7 +90,6 @@
   // Custom RRULE input for recurring
   let customRrule = $state("FREQ=WEEKLY;BYDAY=SU");
 
-  // Timezone the recurring RRULE repeats in; empty repeats in UTC
   const NO_TIMEZONE = "None (repeat in UTC)";
   const timezones = Intl.supportedValuesOf("timeZone");
   let timezone = $state("");
@@ -177,7 +176,6 @@
     return Math.floor(date.getTime() / 1000);
   }
 
-  // The input holds local time of the timezone, or browser time when there is none
   function startTimestamp(): number {
     return scheduleTimezone
       ? wallClockToStart(startDateTimeLocal, scheduleTimezone)
