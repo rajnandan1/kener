@@ -224,6 +224,19 @@ describe("getOccurrences range", () => {
       ]);
     });
 
+    it("keeps walking past `to` until the gap ends", () => {
+      expect(iso(getOccurrences(gap, from, { to: new Date("2026-03-08T07:30:00Z") }))).toEqual([
+        "2026-03-08T06:20Z",
+        "2026-03-08T07:00Z",
+        "2026-03-08T07:20Z",
+      ]);
+    });
+
+    it("keeps walking past `limit` until the gap ends", () => {
+      const steps = { ...gap, start_date_time: seconds("2026-03-08T06:50:00Z"), rrule: "FREQ=MINUTELY;INTERVAL=25" };
+      expect(iso(getOccurrences(steps, new Date("2026-03-08T07:00:00Z"), { limit: 1 }))).toEqual(["2026-03-08T07:05Z"]);
+    });
+
     it("picks the earliest instants for `limit`, not the first local times", () => {
       expect(iso(getOccurrences(gap, from, { limit: 3 }))).toEqual([
         "2026-03-08T06:20Z",
