@@ -42,6 +42,7 @@ import {
   UpdateMaintenance,
   UpdateMaintenanceEventStatuses,
 } from "$lib/server/controllers/maintenanceController";
+import subscriberQueue from "$lib/server/queues/subscriberQueue";
 import scheduler from "./maintenanceScheduler";
 import { seed as seedSiteData } from "../../../../seeds/site_data";
 
@@ -170,6 +171,8 @@ describe("the hourly scheduler", () => {
 
     await hourlyRun("2026-10-29T13:00:00Z");
     const firstRun = await eventRows(id);
+    expect(firstRun.every((event) => event.end_date_time === event.start_date_time + 1800)).toBe(true);
+    expect(await hourlyJob.run({})).toMatchObject({ total: 1, eventsCreated: 0 });
     await hourlyRun("2026-10-29T14:30:00Z");
     await hourlyRun("2026-10-29T15:00:00Z");
 
@@ -329,5 +332,166 @@ describe("UpdateMaintenance with a timezone", () => {
       }),
     ).rejects.toThrow(/Mars\/Olympus_Mons/);
     expect(await knex("maintenances").where({ title: "Bad zone" })).toHaveLength(0);
+  });
+});
+
+describe("CreateMaintenance", () => {
+  const fields = { title: "Patch", start_date_time: seconds("2026-07-10T14:00:00Z"), rrule: "FREQ=DAILY" };
+
+  beforeEach(() => {
+    setClock("2026-07-06T12:00:00Z");
+    vi.mocked(subscriberQueue.push).mockClear();
+  });
+
+  it.each([
+    ["title", { title: "" }, "Title is required"],
+    ["start", { start_date_time: 0 }, "Start date/time is required"],
+    ["rrule", { rrule: "" }, "RRULE is required"],
+    ["a missing duration", { duration_seconds: 0 }, "Duration must be greater than 0"],
+    ["a negative duration", { duration_seconds: -1 }, "Duration must be greater than 0"],
+  ])("rejects %s", async (_name, change, message) => {
+    await expect(CreateMaintenance({ ...fields, duration_seconds: 60, ...change })).rejects.toThrow(message);
+  });
+
+  it("keeps a one-second duration, the description, the global flag and one monitor", async () => {
+    await knex("monitors").where({ tag: "patch-api" }).del();
+    await knex("monitors").insert({
+      tag: "patch-api",
+      name: "API",
+      status: "ACTIVE",
+      monitor_type: "NONE",
+      type_data: "{}",
+      cron: "* * * * *",
+    });
+    const { maintenance_id: id } = await CreateMaintenance({
+      ...fields,
+      duration_seconds: 1,
+      description: "Kernel patches",
+      is_global: "NO",
+      monitors: [{ monitor_tag: "patch-api", monitor_impact: "DOWN" }],
+    });
+
+    expect(await db.getMaintenanceById(id)).toMatchObject({ description: "Kernel patches", is_global: "NO" });
+    expect((await eventRows(id))[0]).toMatchObject({ end_date_time: seconds("2026-07-10T14:00:01Z") });
+    expect(await db.getMaintenanceMonitors(id)).toMatchObject([{ monitor_tag: "patch-api", monitor_impact: "DOWN" }]);
+
+    await UpdateMaintenance(id, { monitors: [] });
+    expect(await db.getMaintenanceMonitors(id)).toEqual([]);
+    await UpdateMaintenance(id, { monitors: [{ monitor_tag: "patch-api", monitor_impact: "DEGRADED" }] });
+    expect(await db.getMaintenanceMonitors(id)).toMatchObject([{ monitor_impact: "DEGRADED" }]);
+    await knex("maintenance_monitors").where({ maintenance_id: id }).del();
+    await knex("monitors").where({ tag: "patch-api" }).del();
+  });
+
+  it("sends the description in the created notification when that setting is on", async () => {
+    const key = "globalMaintenanceNotificationSettings";
+    const row = await knex("site_data").where({ key }).first();
+    const settings = JSON.parse(row.value);
+    const value = JSON.stringify({ ...settings, event_types: { ...settings.event_types, created: true } });
+    await knex("site_data").where({ key }).update({ value });
+
+    await CreateMaintenance({ ...fields, duration_seconds: 60, description: "Kernel patches" });
+    await hourlyRun("2026-07-06T12:30:00Z");
+    await knex("site_data").where({ key }).update({ value: row.value });
+
+    const notifications = vi.mocked(subscriberQueue.push).mock.calls.map((call) => JSON.stringify(call));
+    expect(notifications.length).toBeGreaterThan(1);
+    expect(notifications.filter((text) => !text.includes("Kernel patches"))).toEqual([]);
+  });
+
+  it("defaults the description to null and the global flag to YES", async () => {
+    const { maintenance_id: id } = await CreateMaintenance({ ...fields, duration_seconds: 60 });
+
+    expect(await db.getMaintenanceById(id)).toMatchObject({ description: null, is_global: "YES" });
+  });
+});
+
+describe("a one-time maintenance", () => {
+  const oneTime = "FREQ=MINUTELY;COUNT=1";
+
+  beforeEach(() => {
+    setClock("2026-07-06T12:00:00Z");
+  });
+
+  it("creates its event at the start time", async () => {
+    const id = await createMaintenance("2026-07-10T14:00:00Z", oneTime);
+
+    expect((await eventRows(id)).map((event) => event.start_date_time)).toEqual([seconds("2026-07-10T14:00:00Z")]);
+  });
+
+  it("creates an event for a start up to 1 day ago and none for an older start", async () => {
+    const dayOld = await createMaintenance("2026-07-05T12:00:00Z", oneTime);
+    const older = await createMaintenance("2026-07-05T11:59:59Z", oneTime);
+
+    expect(await eventRows(dayOld)).toHaveLength(1);
+    expect(await eventRows(older)).toHaveLength(0);
+  });
+
+  it.each([
+    ["SCHEDULED", 1],
+    ["READY", 1],
+    ["ONGOING", 1],
+    ["COMPLETED", 2],
+    ["CANCELLED", 2],
+  ])("moving it replaces a %s event or keeps the event as history", async (status, rows) => {
+    const id = await createMaintenance("2026-07-10T14:00:00Z", oneTime);
+    await knex("maintenances_events").where({ maintenance_id: id }).update({ status });
+
+    await UpdateMaintenance(id, { start_date_time: seconds("2026-07-11T14:00:00Z") });
+
+    const events = await eventRows(id);
+    expect(events).toHaveLength(rows);
+    expect(events.at(-1)?.start_date_time).toBe(seconds("2026-07-11T14:00:00Z"));
+  });
+});
+
+describe("a schedule change on a recurring maintenance", () => {
+  const daily = "FREQ=DAILY";
+  const start = "2026-07-06T14:00:00Z";
+  const nextStart = seconds("2026-07-07T14:00:00Z");
+
+  beforeEach(() => {
+    setClock("2026-07-06T15:00:00Z");
+  });
+
+  it.each([
+    ["start_date_time", { start_date_time: seconds("2026-07-06T16:00:00Z") }, seconds("2026-07-06T16:00:00Z")],
+    ["rrule", { rrule: "FREQ=DAILY;INTERVAL=2" }, seconds("2026-07-08T14:00:00Z")],
+    ["duration_seconds", { duration_seconds: 7200 }, nextStart],
+  ])("replaces the next event when only %s changes", async (_field, change, wanted) => {
+    const id = await createMaintenance(start, daily);
+    const [before] = await eventRows(id);
+
+    await UpdateMaintenance(id, change);
+
+    const [after] = await eventRows(id);
+    expect(after.start_date_time).toBe(wanted);
+    expect(after.id).not.toBe(before.id);
+  });
+
+  it("does not recreate a cancelled occurrence", async () => {
+    const id = await createMaintenance(start, daily);
+    await knex("maintenances_events").where({ maintenance_id: id }).update({ status: "CANCELLED" });
+
+    await UpdateMaintenance(id, { duration_seconds: 7200 });
+
+    expect(await eventRows(id)).toMatchObject([{ start_date_time: nextStart, status: "CANCELLED" }]);
+  });
+
+  it.each([
+    ["SCHEDULED, already started", "SCHEDULED", -60],
+    ["READY, starting this second", "READY", 0],
+    ["ONGOING", "ONGOING", -60],
+    ["COMPLETED", "COMPLETED", 3600],
+  ])("keeps a %s event", async (_name, status, offset) => {
+    const id = await createMaintenance(start, daily);
+    const kept = seconds("2026-07-06T15:00:00Z") + offset;
+    await knex("maintenances_events").where({ maintenance_id: id }).update({ status, start_date_time: kept });
+
+    await UpdateMaintenance(id, { duration_seconds: 7200 });
+
+    const starts = (await eventRows(id)).map((event) => event.start_date_time);
+    expect(starts).toContain(kept);
+    expect(starts).toContain(nextStart);
   });
 });
