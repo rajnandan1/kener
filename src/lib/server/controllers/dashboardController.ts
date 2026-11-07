@@ -2,7 +2,7 @@ import db from "../db/db.js";
 import { GetMinuteStartNowTimestampUTC, BeginningOfMinute, BeginningOfDay } from "../tool.js";
 import { GetPageByPathWithMonitors, GetLatestMonitoringDataAllActive } from "./controller.js";
 import { GetMonitorsParsed } from "./monitorsController.js";
-import { GetStatusSummary, GetStatusBgColor } from "../../clientTools";
+import { GetStatusSummary, GetStatusBgColor, ResolveGroupMemberDisplay } from "../../clientTools";
 
 import type {
   IncidentRecord,
@@ -14,7 +14,7 @@ import type {
   PageSettingsType,
   IncidentMonitorDetailRecord,
 } from "../types/db.js";
-import type { GroupMonitorTypeData } from "../types/monitor.js";
+import type { GroupMemberDisplay, GroupMonitorTypeData } from "../types/monitor.js";
 import GC from "../../global-constants.js";
 import type { LayoutServerData } from "./layoutController.js";
 import type { NotificationEvent } from "../../types/notifications.js";
@@ -156,6 +156,7 @@ export interface PageDashboardData {
   upcomingMaintenances: MaintenanceEventsMonitorList[];
   monitorTags: string[];
   monitorGroupMembersByTag: Record<string, string[]>;
+  monitorGroupMemberDisplayByTag: Record<string, GroupMemberDisplay>;
   pageDetails: PageRecordTyped;
   socialPagePreviewImage?: string;
   metaPageTitle?: string;
@@ -363,6 +364,7 @@ export const GetPageDashboardData = async (
       upcomingMaintenances: [],
       monitorTags,
       monitorGroupMembersByTag: {},
+      monitorGroupMemberDisplayByTag: {},
       pageDetails: pageDetailsTyped,
       socialPagePreviewImage,
       metaPageTitle,
@@ -396,6 +398,7 @@ export const GetPageDashboardData = async (
 
   const pageStatus = BuildPageStatus(latestData, nowTs);
   const monitorGroupMembersByTag: Record<string, string[]> = {};
+  const monitorGroupMemberDisplayByTag: Record<string, GroupMemberDisplay> = {};
 
   for (const monitor of parsedMonitors) {
     if (monitor.monitor_type !== "GROUP") continue;
@@ -404,6 +407,7 @@ export const GetPageDashboardData = async (
     if (!groupData?.monitors || !Array.isArray(groupData.monitors)) continue;
 
     monitorGroupMembersByTag[monitor.tag] = groupData.monitors.map((member) => member.tag);
+    monitorGroupMemberDisplayByTag[monitor.tag] = ResolveGroupMemberDisplay(groupData.memberDisplay);
   }
 
   return {
@@ -413,6 +417,7 @@ export const GetPageDashboardData = async (
     upcomingMaintenances,
     monitorTags,
     monitorGroupMembersByTag,
+    monitorGroupMemberDisplayByTag,
     pageDetails: pageDetailsTyped,
     socialPagePreviewImage,
     metaPageTitle,

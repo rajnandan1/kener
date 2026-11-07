@@ -6,7 +6,7 @@
   import { Badge } from "$lib/components/ui/badge/index.js";
   import MonitorPicker from "$lib/components/MonitorPicker.svelte";
   import type { MonitorRecord } from "$lib/server/types/db.js";
-  import type { GroupMonitorMember } from "$lib/server/types/monitor.js";
+  import type { GroupMemberDisplay, GroupMonitorMember } from "$lib/server/types/monitor.js";
   import ArrowUp from "@lucide/svelte/icons/arrow-up";
   import ArrowDown from "@lucide/svelte/icons/arrow-down";
   import GripVertical from "@lucide/svelte/icons/grip-vertical";
@@ -22,10 +22,16 @@
     MIN: "Minimum (fastest)"
   };
 
+  const MEMBER_DISPLAY_LABELS: Record<GroupMemberDisplay, string> = {
+    DRAWER: "Drawer",
+    INLINE: "Inline"
+  };
+
   type GroupMonitorFormData = {
     monitors: GroupMonitorMember[];
     executionDelay: number;
     latencyCalculation: LatencyCalculationOption;
+    memberDisplay: GroupMemberDisplay;
   };
 
   let {
@@ -224,6 +230,28 @@
         </Select.Content>
       </Select.Root>
       <p class="text-muted-foreground text-xs">Choose how latency should be derived from the selected monitors.</p>
+    </div>
+
+    <div class="space-y-2">
+      <Label for="group-member-display">Member Display</Label>
+      <Select.Root
+        type="single"
+        value={formData.memberDisplay}
+        onValueChange={(value) => {
+          if (value) formData.memberDisplay = value as GroupMemberDisplay;
+        }}
+      >
+        <Select.Trigger id="group-member-display" class="w-full">
+          {MEMBER_DISPLAY_LABELS[formData.memberDisplay]}
+        </Select.Trigger>
+        <Select.Content>
+          <Select.Item value="DRAWER">{MEMBER_DISPLAY_LABELS.DRAWER}</Select.Item>
+          <Select.Item value="INLINE">{MEMBER_DISPLAY_LABELS.INLINE}</Select.Item>
+        </Select.Content>
+      </Select.Root>
+      <p class="text-muted-foreground text-xs">
+        Choose how Included Monitors opens on public pages: in a bottom drawer, or below the group on the same page.
+      </p>
     </div>
   </div>
 

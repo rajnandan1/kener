@@ -7,6 +7,7 @@ import {
   GetSslSecurityState,
   FormatSslRemaining,
   ResolveEventListPlacement,
+  ResolveGroupMemberDisplay,
 } from "./clientTools";
 
 describe("IsValidDnsResolver", () => {
@@ -74,5 +75,14 @@ describe("ResolveEventListPlacement", () => {
   it("ignores an unknown stored placement", () => {
     const settings = { showInlineEvents: true, eventListPlacement: "sidebar" } as unknown as EventDisplaySettings;
     expect(ResolveEventListPlacement(settings)).toBe("aside");
+  });
+});
+
+describe("ResolveGroupMemberDisplay", () => {
+  it("keeps INLINE and reads every other value as DRAWER", () => {
+    expect(ResolveGroupMemberDisplay("INLINE")).toBe("INLINE");
+    expect(ResolveGroupMemberDisplay("DRAWER")).toBe("DRAWER");
+    expect(ResolveGroupMemberDisplay(undefined)).toBe("DRAWER");
+    expect(ResolveGroupMemberDisplay("inline")).toBe("DRAWER");
   });
 });

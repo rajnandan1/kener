@@ -61,13 +61,21 @@ Group latency uses selected mode:
 - If member monitors take longer to finish (e.g. slow API checks), increase this value so the group always reads fresh results.
 - Only affects cron-driven execution. When a member's status is updated via the API, the cache is updated immediately and the group will read the new value on its next run.
 
+## Member display {#member-display}
+
+`memberDisplay` sets what the **Included Monitors** button does on status pages and on the monitor page. In the group monitor's settings, this field is **Member Display**.
+
+- `DRAWER`: opens the member list in a panel at the bottom of the screen. This is the default.
+- `INLINE`: slides the member list open below the group on the same page. In a grid layout, the list opens inside the group's cell. In the `compact-grid` layout, member rows hide their status bars, like the group row.
+
 ## Configuration fields {#configuration-fields}
 
-| Field                | Type                   | Default | Notes                                          |
-| :------------------- | :--------------------- | :------ | :--------------------------------------------- |
-| `monitors`           | `Array<{tag, weight}>` | `[]`    | Required, min 2                                |
-| `executionDelay`     | `number`               | `1000`  | ms to wait before aggregating; must be >= 1000 |
-| `latencyCalculation` | `AVG\|MAX\|MIN`        | `AVG`   |                                                |
+| Field                | Type                   | Default  | Notes                                          |
+| :------------------- | :--------------------- | :------- | :--------------------------------------------- |
+| `monitors`           | `Array<{tag, weight}>` | `[]`     | Required, min 2                                |
+| `executionDelay`     | `number`               | `1000`   | ms to wait before aggregating; must be >= 1000 |
+| `latencyCalculation` | `AVG\|MAX\|MIN`        | `AVG`    |                                                |
+| `memberDisplay`      | `DRAWER\|INLINE`       | `DRAWER` | How the member list opens on public pages      |
 
 ## Example {#example}
 
