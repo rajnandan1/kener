@@ -15,13 +15,16 @@
     days: number;
     endOfDayTodayAtTz: number;
     display?: GroupMemberDisplay;
+    compactMembers?: boolean;
     children: Snippet;
   }
 
-  let { tags, days, endOfDayTodayAtTz, display = "DRAWER", children }: Props = $props();
+  let { tags, days, endOfDayTodayAtTz, display = "DRAWER", compactMembers = false, children }: Props = $props();
   let isOpen = $state(false);
+  let hasExpanded = $state(false);
+  let shouldLoadMembers = $derived(isOpen || hasExpanded);
   let monitorBarPromiseByTag = $derived.by(() => {
-    if (!browser || !isOpen || tags.length === 0) {
+    if (!browser || !shouldLoadMembers || tags.length === 0) {
       return {} as Partial<Record<string, Promise<MonitorBarResponse>>>;
     }
 
@@ -31,7 +34,7 @@
   });
 </script>
 
-{#snippet memberList()}
+{#snippet memberList(rowProps: { compact?: boolean; grid?: boolean } = {})}
   {#if tags.length === 0}
     <div class="text-muted-foreground p-4 text-sm">{$t("No monitors available.")}</div>
   {:else}
@@ -39,14 +42,14 @@
       <div class="{i < tags.length - 1 ? 'border-b' : ''} py-2 pb-4">
         {#if monitorBarPromiseByTag[tag]}
           {#await monitorBarPromiseByTag[tag]}
-            <MonitorBar {tag} />
+            <MonitorBar {tag} {...rowProps} />
           {:then monitorBarData}
-            <MonitorBar {tag} prefetchedData={monitorBarData} />
+            <MonitorBar {tag} prefetchedData={monitorBarData} {...rowProps} />
           {:catch err}
-            <MonitorBar {tag} prefetchedError={err instanceof Error ? err.message : "Unknown error"} />
+            <MonitorBar {tag} prefetchedError={err instanceof Error ? err.message : "Unknown error"} {...rowProps} />
           {/await}
         {:else}
-          <MonitorBar {tag} />
+          <MonitorBar {tag} {...rowProps} />
         {/if}
       </div>
     {/each}
@@ -60,16 +63,30 @@
       size="sm"
       class="rounded-btn bg-secondary w-full text-xs"
       aria-expanded={isOpen}
-      onclick={() => (isOpen = !isOpen)}
+      onclick={() => {
+        hasExpanded = true;
+        isOpen = !isOpen;
+      }}
     >
       {@render children()}
-      <ChevronDown class="size-3 transition-transform {isOpen ? 'rotate-180' : ''}" />
+      <ChevronDown
+        class="size-3 transition-transform duration-200 motion-reduce:transition-none {isOpen ? 'rotate-180' : ''}"
+      />
     </Button>
-    {#if isOpen}
-      <div class="flex flex-col pt-2">
-        {@render memberList()}
+    <!-- CSS cannot animate height to auto, but it can animate a grid row from 0fr to 1fr. -->
+    <div
+      class="grid transition-[grid-template-rows,visibility] duration-200 motion-reduce:transition-none {isOpen
+        ? 'visible grid-rows-[1fr]'
+        : 'invisible grid-rows-[0fr]'}"
+    >
+      <div class="overflow-hidden">
+        {#if hasExpanded}
+          <div class="flex flex-col pt-2">
+            {@render memberList({ compact: compactMembers, grid: compactMembers })}
+          </div>
+        {/if}
       </div>
-    {/if}
+    </div>
   {:else}
     <Drawer.Root bind:open={isOpen} direction="bottom">
       <Drawer.Trigger

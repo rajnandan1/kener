@@ -51,7 +51,23 @@ describe("GroupMonitorPopover", () => {
     await button.click();
 
     await expect.element(button).toHaveAttribute("aria-expanded", "false");
-    await expect.element(screen.getByText("Member api")).not.toBeInTheDocument();
+    // Tailwind does not load in component tests, so this checks the class that hides the panel.
+    const member = screen.getByText("Member api");
+    await expect.element(member).toBeInTheDocument();
+    expect(member.element().closest(".grid")).toHaveClass("invisible", "grid-rows-[0fr]");
+    expect(requestMonitorBar).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    { compactMembers: false, hasBars: true },
+    { compactMembers: true, hasBars: false },
+  ])("shows member bars: $hasBars when compactMembers is $compactMembers", async ({ compactMembers, hasBars }) => {
+    const screen = await render(GroupMonitorPopover, { ...props, display: "INLINE", compactMembers });
+
+    await screen.getByRole("button", { name: "Included Monitors" }).click();
+
+    await expect.element(screen.getByText("Member api")).toBeInTheDocument();
+    expect(screen.container.querySelector("canvas") !== null).toBe(hasBars);
   });
 
   it("opens the members in a drawer when no display is set", async () => {

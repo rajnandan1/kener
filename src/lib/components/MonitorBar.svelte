@@ -184,6 +184,7 @@
           days={days as number}
           endOfDayTodayAtTz={endOfDayTodayAtTz as number}
           display={groupMemberDisplay}
+          compactMembers={compact && grid}
         >
           {$t("Included Monitors (%count)", { count: String(groupChildTags.length) })}
         </GroupMonitorPopover>

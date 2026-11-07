@@ -66,7 +66,7 @@ Group latency uses selected mode:
 `memberDisplay` sets what the **Included Monitors** button does on status pages and on the monitor page. In the group monitor's settings, this field is **Member Display**.
 
 - `DRAWER`: opens the member list in a panel at the bottom of the screen. This is the default.
-- `INLINE`: expands the member list below the group on the same page. In a grid layout, the list opens inside the group's cell.
+- `INLINE`: slides the member list open below the group on the same page. In a grid layout, the list opens inside the group's cell. In the `compact-grid` layout, member rows hide their status bars, like the group row.
 
 ## Configuration fields {#configuration-fields}
 
