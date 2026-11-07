@@ -121,15 +121,6 @@ describe("getOccurrences in a timezone", () => {
       want: ["2026-03-08T07:30Z"],
     },
     {
-      name: "sorts a gap occurrence after a later local time that lands earlier",
-      now: "2026-03-08T06:00:00Z",
-      rrule: "FREQ=DAILY;BYHOUR=2,3;BYMINUTE=15,45",
-      start: "2026-03-01T07:15:00Z",
-      timezone: NEW_YORK,
-      to: "2026-03-08T08:00:00Z",
-      want: ["2026-03-08T07:15Z", "2026-03-08T07:45Z"],
-    },
-    {
       name: "treats UNTIL with Z as an instant and keeps the occurrence on it",
       now: "2026-10-30T00:00:00Z",
       rrule: "FREQ=DAILY;UNTIL=20261101T053000Z",
@@ -214,14 +205,37 @@ describe("getOccurrences range", () => {
     ]);
   });
 
-  it("picks the earliest instants for `limit` when a gap puts them out of local order", () => {
-    const gap = { start_date_time: seconds("2026-03-01T07:15:00Z"), rrule: "FREQ=DAILY;BYHOUR=2,3;BYMINUTE=15,45" };
-    const after = new Date("2026-03-08T06:00:00Z");
-    expect(iso(getOccurrences({ ...gap, timezone: NEW_YORK }, after, { limit: 3 }))).toEqual([
-      "2026-03-08T07:15Z",
-      "2026-03-08T07:45Z",
-      "2026-03-09T06:15Z",
-    ]);
+  describe("when a gap puts instants out of local order", () => {
+    // 02:00 and 02:40 are missing and move to 03:00 and 03:40 EDT, so 02:40 lands after the real 03:20.
+    const gap = {
+      start_date_time: seconds("2026-03-08T06:20:00Z"),
+      rrule: "FREQ=MINUTELY;INTERVAL=40",
+      timezone: NEW_YORK,
+    };
+    const from = new Date("2026-03-08T06:20:00Z");
+
+    it("returns a window in ascending order", () => {
+      expect(iso(getOccurrences(gap, from, { to: new Date("2026-03-08T08:00:00Z") }))).toEqual([
+        "2026-03-08T06:20Z",
+        "2026-03-08T07:00Z",
+        "2026-03-08T07:20Z",
+        "2026-03-08T07:40Z",
+        "2026-03-08T08:00Z",
+      ]);
+    });
+
+    it("picks the earliest instants for `limit`, not the first local times", () => {
+      expect(iso(getOccurrences(gap, from, { limit: 3 }))).toEqual([
+        "2026-03-08T06:20Z",
+        "2026-03-08T07:00Z",
+        "2026-03-08T07:20Z",
+      ]);
+    });
+  });
+
+  it("honors `to` at the epoch", () => {
+    const old = { start_date_time: -2 * 86_400, rrule: "FREQ=DAILY;COUNT=5" };
+    expect(getOccurrences(old, new Date(-3 * DAY_MS), { to: new Date(0) })).toHaveLength(3);
   });
 
   it("ends a finite rule with fewer than `limit` occurrences", () => {
