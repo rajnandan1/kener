@@ -106,6 +106,15 @@ export function getOccurrences(schedule: MaintenanceSchedule, from: Date, range:
     .map((ms) => new Date(ms));
 }
 
+export function isValidRrule(rrule: string): boolean {
+  try {
+    rrulestr(`DTSTART:${rfcDateTime(Date.now())}Z\nRRULE:${rrule}`);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function isValidTimezone(timezone: string): boolean {
   if (!/^[A-Za-z]/.test(timezone)) return false;
   try {

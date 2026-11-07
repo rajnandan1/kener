@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getOccurrences, isValidTimezone, startToWallClock, wallClockToStart } from "./maintenanceOccurrences";
+import {
+  getOccurrences,
+  isValidRrule,
+  isValidTimezone,
+  startToWallClock,
+  wallClockToStart,
+} from "./maintenanceOccurrences";
 
 const NEW_YORK = "America/New_York";
 const BERLIN = "Europe/Berlin";
@@ -225,6 +231,19 @@ describe("getOccurrences range", () => {
 
   it("throws on an invalid rule", () => {
     expect(() => getOccurrences({ ...schedule, rrule: "FREQ=NOPE" }, onOccurrence, { limit: 1 })).toThrow();
+  });
+});
+
+describe("isValidRrule", () => {
+  it.each(["FREQ=DAILY", "FREQ=WEEKLY;BYDAY=MO", "FREQ=DAILY;UNTIL=20261231T235959Z", "FREQ=MINUTELY;COUNT=1"])(
+    "accepts %s",
+    (rrule) => {
+      expect(isValidRrule(rrule)).toBe(true);
+    },
+  );
+
+  it.each(["FREQ=NOPE", "NOPE=1", "FREQ=WEEKLY;BYDAY=XX1"])("rejects %s", (rrule) => {
+    expect(isValidRrule(rrule)).toBe(false);
   });
 });
 

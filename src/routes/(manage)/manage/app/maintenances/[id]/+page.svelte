@@ -34,8 +34,7 @@
   import { toast } from "svelte-sonner";
   import { format, formatDistanceToNow, isPast, isFuture, isWithinInterval } from "date-fns";
   import LocalTime from "$lib/components/LocalTime.svelte";
-  import { rrulestr } from "rrule";
-  import { getOccurrences, startToWallClock, wallClockToStart } from "$lib/maintenanceOccurrences";
+  import { getOccurrences, isValidRrule, startToWallClock, wallClockToStart } from "$lib/maintenanceOccurrences";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
 
@@ -242,14 +241,7 @@
       return null;
     }
 
-    try {
-      const dtstart = new Date();
-      const fullRrule = `DTSTART:${dtstart.toISOString().replace(/[-:]/g, "").split(".")[0]}Z\nRRULE:${customRrule}`;
-      rrulestr(fullRrule);
-      return null;
-    } catch (e) {
-      return "Invalid RRULE format";
-    }
+    return isValidRrule(customRrule) ? null : "Invalid RRULE format";
   }
 
   // Reactive preview dates

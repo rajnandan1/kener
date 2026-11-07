@@ -16,21 +16,8 @@ import {
 } from "$lib/server/controllers/maintenanceController";
 import { GetSiteURL } from "$lib/server/controllers/siteDataController";
 import serverResolver from "$lib/server/resolver";
-import { rrulestr } from "rrule";
 import { readRequestBody } from "$lib/server/requestBody";
-import { isValidTimezone } from "$lib/maintenanceOccurrences";
-
-function isValidRrule(rrule: string): boolean {
-  try {
-    // Test parsing by creating a full rrule string with a dummy DTSTART
-    const dtstart = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-    const fullRrule = `DTSTART:${dtstart}\nRRULE:${rrule}`;
-    rrulestr(fullRrule);
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { isValidRrule, isValidTimezone } from "$lib/maintenanceOccurrences";
 
 export const GET: RequestHandler = async ({ url }) => {
   // Parse query params for filtering
