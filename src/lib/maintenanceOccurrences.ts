@@ -2,7 +2,6 @@ import { fromZonedTime } from "date-fns-tz";
 import { rrulestr } from "rrule";
 
 const DAY_MS = 86_400_000;
-const GAP_SLACK_MS = DAY_MS;
 const UTC_UNTIL = /UNTIL=(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z/i;
 
 export interface MaintenanceSchedule {
@@ -16,9 +15,10 @@ export type OccurrenceRange = { to: Date; limit?: never } | { limit: number; to?
 interface Clock {
   toWall: (instantMs: number) => number;
   toInstant: (wallMs: number) => number;
+  gapNear: (instantMs: number) => number;
 }
 
-const UTC_CLOCK: Clock = { toWall: (ms) => ms, toInstant: (ms) => ms };
+const UTC_CLOCK: Clock = { toWall: (ms) => ms, toInstant: (ms) => ms, gapNear: () => 0 };
 
 const formatters = new Map<string, Intl.DateTimeFormat>();
 
@@ -64,6 +64,7 @@ function wallClockToInstant(wallMs: number, timezone: string): number {
 const zonedClock = (timezone: string): Clock => ({
   toWall: (instantMs) => instantMs + offsetAt(timezone, instantMs),
   toInstant: (wallMs) => wallClockToInstant(wallMs, timezone),
+  gapNear: (instantMs) => Math.max(0, offsetAt(timezone, instantMs + DAY_MS) - offsetAt(timezone, instantMs - DAY_MS)),
 });
 
 const rfcDateTime = (ms: number) => new Date(ms).toISOString().replace(/[-:]/g, "").split(".")[0];
@@ -88,15 +89,16 @@ export function getOccurrences(schedule: MaintenanceSchedule, from: Date, range:
   const fromMs = from.getTime();
   const lastMs = Math.min(range.to?.getTime() ?? Infinity, untilMs);
   const found = new Set<number>();
-  let fullAtMs = Infinity;
+  // A gap can move a local time past the next ones, so the walk stops one gap after the end.
+  let stopMs = Number.isFinite(lastMs) ? lastMs + clock.gapNear(lastMs) : Infinity;
 
   const dtstart = rfcDateTime(clock.toWall(start_date_time * 1000));
   rrulestr(`DTSTART:${dtstart}Z\nRRULE:${wallRule}`).all((wall) => {
     if (wall.getTime() < fromMs - 2 * DAY_MS) return true;
     const instantMs = clock.toInstant(wall.getTime());
     if (instantMs >= fromMs && instantMs <= lastMs) found.add(instantMs);
-    if (found.size === range.limit) fullAtMs = Math.min(fullAtMs, instantMs);
-    return instantMs <= Math.min(lastMs, fullAtMs) + GAP_SLACK_MS;
+    if (found.size === range.limit) stopMs = Math.min(stopMs, instantMs + clock.gapNear(instantMs));
+    return instantMs <= stopMs;
   });
 
   return [...found]

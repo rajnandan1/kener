@@ -11,7 +11,7 @@ import type {
   MaintenanceFilter,
   MaintenanceEventFilter,
 } from "../types/db.js";
-import { GetMinuteStartNowTimestampUTC } from "../tool.js";
+import { GetMinuteStartNowTimestampUTC, GetNowTimestampUTC } from "../tool.js";
 import { maintenanceToVariables, siteDataToVariables } from "../notification/notification_utils.js";
 import { GetAllSiteData } from "./controller.js";
 import subscriberQueue from "../queues/subscriberQueue.js";
@@ -346,7 +346,7 @@ const isScheduleChange = (existing: MaintenanceRecord, update: UpdateMaintenance
   (!isOneTime && differs(update.timezone, existing.timezone));
 
 const replaceUpcomingEvents = async (maintenance: MaintenanceRecord, isOneTime: boolean): Promise<void> => {
-  const now = Math.floor(Date.now() / 1000);
+  const now = GetNowTimestampUTC();
   const isReplaced = (event: MaintenanceEventRecord): boolean =>
     isOneTime
       ? event.status !== "COMPLETED" && event.status !== "CANCELLED"

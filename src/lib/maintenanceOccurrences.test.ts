@@ -233,6 +233,27 @@ describe("getOccurrences range", () => {
     });
   });
 
+  it("stops at `limit` right away when no clock change is near", () => {
+    const formatToParts = vi.spyOn(Intl.DateTimeFormat.prototype, "formatToParts");
+    const everyMinute = { ...schedule, rrule: "FREQ=MINUTELY", start_date_time: seconds("2026-07-01T00:00:00Z") };
+
+    const found = getOccurrences(everyMinute, new Date("2026-07-01T00:00:00Z"), { limit: 2 });
+
+    expect(iso(found)).toEqual(["2026-07-01T00:00Z", "2026-07-01T00:01Z"]);
+    expect(formatToParts.mock.calls.length).toBeLessThan(40);
+    formatToParts.mockRestore();
+  });
+
+  it("stops at `to` right away when no clock change is near", () => {
+    const formatToParts = vi.spyOn(Intl.DateTimeFormat.prototype, "formatToParts");
+    const everyMinute = { ...schedule, rrule: "FREQ=MINUTELY", start_date_time: seconds("2026-07-01T00:00:00Z") };
+    const to = new Date("2026-07-01T00:01:00Z");
+
+    expect(getOccurrences(everyMinute, new Date("2026-07-01T00:00:00Z"), { to })).toHaveLength(2);
+    expect(formatToParts.mock.calls.length).toBeLessThan(40);
+    formatToParts.mockRestore();
+  });
+
   it("honors `to` at the epoch", () => {
     const old = { start_date_time: -2 * 86_400, rrule: "FREQ=DAILY;COUNT=5" };
     expect(getOccurrences(old, new Date(-3 * DAY_MS), { to: new Date(0) })).toHaveLength(3);
