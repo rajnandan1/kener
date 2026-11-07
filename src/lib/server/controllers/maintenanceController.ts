@@ -213,8 +213,7 @@ const parseTimezone = (timezone: string | null | undefined): string | null => {
   return zone;
 };
 
-export const CreateMaintenance = async (data: CreateMaintenanceInput): Promise<{ maintenance_id: number }> => {
-  // Validate required fields
+const assertMaintenanceFields = (data: CreateMaintenanceInput): void => {
   if (!data.title) {
     throw new Error("Title is required");
   }
@@ -227,6 +226,10 @@ export const CreateMaintenance = async (data: CreateMaintenanceInput): Promise<{
   if (!data.duration_seconds || data.duration_seconds <= 0) {
     throw new Error("Duration must be greater than 0");
   }
+};
+
+export const CreateMaintenance = async (data: CreateMaintenanceInput): Promise<{ maintenance_id: number }> => {
+  assertMaintenanceFields(data);
   const timezone = parseTimezone(data.timezone);
 
   // Create the maintenance record
@@ -333,6 +336,30 @@ export const GetMaintenancesDashboard = async (data: {
   return { maintenances: enriched, total };
 };
 
+const differs = (next: unknown, current: unknown): boolean => next !== undefined && next !== current;
+
+// A timezone moves the occurrences of a recurring maintenance only: a one-time event keeps its instant
+const isScheduleChange = (existing: MaintenanceRecord, update: UpdateMaintenanceInput, isOneTime: boolean): boolean =>
+  differs(update.start_date_time, existing.start_date_time) ||
+  differs(update.rrule, existing.rrule) ||
+  differs(update.duration_seconds, existing.duration_seconds) ||
+  (!isOneTime && differs(update.timezone, existing.timezone));
+
+const replaceUpcomingEvents = async (maintenance: MaintenanceRecord, isOneTime: boolean): Promise<void> => {
+  const now = Math.floor(Date.now() / 1000);
+  const isReplaced = (event: MaintenanceEventRecord): boolean =>
+    isOneTime
+      ? event.status !== "COMPLETED" && event.status !== "CANCELLED"
+      : (event.status === "SCHEDULED" || event.status === "READY") && event.start_date_time > now;
+
+  for (const event of await db.getMaintenanceEventsByMaintenanceId(maintenance.id)) {
+    if (isReplaced(event)) {
+      await db.deleteMaintenanceEvent(event.id);
+    }
+  }
+  await GenerateMaintenanceEvents(maintenance);
+};
+
 export const UpdateMaintenance = async (id: number, data: UpdateMaintenanceInput): Promise<number> => {
   const existing = await db.getMaintenanceById(id);
   if (!existing) {
@@ -345,19 +372,8 @@ export const UpdateMaintenance = async (id: number, data: UpdateMaintenanceInput
     updateData.timezone = parseTimezone(data.timezone);
   }
 
-  // Determine the rrule after update (use new value if provided, otherwise existing)
-  const effectiveRrule = data.rrule !== undefined ? data.rrule : existing.rrule;
-  const isOneTime = isOneTimeRrule(effectiveRrule);
-
-  // A timezone moves the occurrences of a recurring maintenance only: a one-time event keeps its instant
-  const timezoneChanged = updateData.timezone !== undefined && updateData.timezone !== existing.timezone && !isOneTime;
-
-  // Check if schedule has changed (start_date_time, rrule, timezone, or duration_seconds)
-  const scheduleChanged =
-    (data.start_date_time !== undefined && data.start_date_time !== existing.start_date_time) ||
-    (data.rrule !== undefined && data.rrule !== existing.rrule) ||
-    timezoneChanged ||
-    (data.duration_seconds !== undefined && data.duration_seconds !== existing.duration_seconds);
+  const isOneTime = isOneTimeRrule(data.rrule ?? existing.rrule);
+  const scheduleChanged = isScheduleChange(existing, updateData, isOneTime);
 
   // Update the maintenance record
   const result = await db.updateMaintenance(id, updateData);
@@ -370,36 +386,9 @@ export const UpdateMaintenance = async (id: number, data: UpdateMaintenanceInput
     }
   }
 
-  // Handle schedule changes differently for one-time vs recurring
-  if (scheduleChanged) {
-    // Get current values (may have been updated)
-    const updated = await db.getMaintenanceById(id);
-    if (updated) {
-      const events = await db.getMaintenanceEventsByMaintenanceId(id);
-      const now = Math.floor(Date.now() / 1000);
-
-      if (isOneTime) {
-        // For one-time maintenance: delete all events that aren't completed and create a new one
-        for (const event of events) {
-          // Delete events that are not COMPLETED or CANCELLED
-          if (event.status !== "COMPLETED" && event.status !== "CANCELLED") {
-            await db.deleteMaintenanceEvent(event.id);
-          }
-        }
-        // Regenerate the event
-        await GenerateMaintenanceEvents(updated);
-      } else {
-        // For recurring maintenances: delete events that have not started and regenerate
-        for (const event of events) {
-          const notStarted = event.status === "SCHEDULED" || event.status === "READY";
-          if (notStarted && event.start_date_time > now) {
-            await db.deleteMaintenanceEvent(event.id);
-          }
-        }
-        // Regenerate events
-        await GenerateMaintenanceEvents(updated);
-      }
-    }
+  const updated = await db.getMaintenanceById(id);
+  if (scheduleChanged && updated) {
+    await replaceUpcomingEvents(updated, isOneTime);
   }
 
   return result;
