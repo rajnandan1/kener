@@ -305,6 +305,7 @@ export interface MaintenanceResponse {
   description: string | null;
   start_date_time: number;
   rrule: string;
+  timezone: string | null;
   duration_seconds: number;
   status: "ACTIVE" | "INACTIVE";
   monitors: MaintenanceMonitor[];
@@ -332,6 +333,7 @@ export interface CreateMaintenanceRequest {
   description?: string | null;
   start_date_time: number;
   rrule: string;
+  timezone?: string | null;
   duration_seconds: number;
   monitors?: MaintenanceMonitor[];
 }
@@ -345,6 +347,7 @@ export interface UpdateMaintenanceRequest {
   description?: string | null;
   start_date_time?: number;
   rrule?: string;
+  timezone?: string | null;
   duration_seconds?: number;
   status?: "ACTIVE" | "INACTIVE";
   monitors?: MaintenanceMonitor[];

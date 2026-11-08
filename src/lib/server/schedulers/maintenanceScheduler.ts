@@ -1,15 +1,15 @@
 import { Queue, Worker, Job, type JobSchedulerTemplateOptions } from "bullmq";
 import q from "../queues/q.js";
 import db from "../db/db.js";
-import { rrulestr } from "rrule";
-import { addDays } from "date-fns";
-import type { MaintenanceRecord, MaintenanceEventRecord } from "../types/db.js";
-import { determineEventStatus, CreateMaintenanceEventWithNotification } from "../controllers/maintenanceController.js";
+import type { MaintenanceRecord } from "../types/db.js";
+import { CreateMaintenanceEventWithNotification } from "../controllers/maintenanceController.js";
+import { getOccurrences } from "../../maintenanceOccurrences.js";
 
 let maintenanceSchedulerQueue: Queue | null = null;
 let worker: Worker | null = null;
 const queueName = "maintenanceSchedulerQueue";
 const jobNamePrefix = "maintenanceSchedulerJob";
+const EVENT_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 
 const getQueue = () => {
   if (!maintenanceSchedulerQueue) {
@@ -30,22 +30,13 @@ const generateEventsForMaintenance = async (maintenance: MaintenanceRecord): Pro
     return eventsCreated;
   }
 
-  // Convert start timestamp to Date (UTC)
-  const dtstart = new Date(maintenance.start_date_time * 1000);
-
   // Define the window to generate events (now to 7 days ahead)
   const now = new Date();
-  const windowEnd = addDays(now, 7);
+  const windowEnd = new Date(now.getTime() + EVENT_WINDOW_MS);
 
   try {
-    // Build the full RRULE string with DTSTART
-    const fullRrule = `DTSTART:${dtstart.toISOString().replace(/[-:]/g, "").split(".")[0]}Z\nRRULE:${maintenance.rrule}`;
-
-    // Parse the RRULE
-    const rule = rrulestr(fullRrule);
-
     // Get all occurrences in the window
-    const occurrences = rule.between(now, windowEnd, true);
+    const occurrences = getOccurrences(maintenance, now, { to: windowEnd });
 
     // Get existing events to avoid duplicates
     const existingEvents = await db.getMaintenanceEventsByMaintenanceId(maintenance.id);
