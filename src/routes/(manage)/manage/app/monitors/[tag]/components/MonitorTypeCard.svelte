@@ -18,7 +18,8 @@
     IsValidNameServer,
     IsValidDnsResolver,
     IsValidURL,
-    IsValidPort
+    IsValidPort,
+    ResolveGroupMemberDisplay
   } from "$lib/clientTools";
   import {
     GAMEDIG_SOCKET_TIMEOUT,
@@ -70,7 +71,8 @@
     return {
       monitors: [],
       executionDelay: GROUP_MIN_TIMEOUT_MS,
-      latencyCalculation: "AVG"
+      latencyCalculation: "AVG",
+      memberDisplay: "DRAWER"
     };
   }
 
@@ -103,7 +105,8 @@
     return {
       monitors,
       latencyCalculation,
-      executionDelay
+      executionDelay,
+      memberDisplay: ResolveGroupMemberDisplay(candidate.memberDisplay)
     };
   }
 

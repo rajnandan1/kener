@@ -17,6 +17,7 @@
   } from "$lib/clientTools.js";
   import { getSslNowMs } from "$lib/client/sslClock.svelte";
   import GroupMonitorPopover from "./GroupMonitorPopover.svelte";
+  import type { GroupMemberDisplay } from "$lib/server/types/monitor";
   import { t } from "$lib/stores/i18n";
   import { page } from "$app/state";
 
@@ -25,6 +26,7 @@
     prefetchedData?: MonitorBarResponse;
     prefetchedError?: string;
     groupChildTags?: string[];
+    groupMemberDisplay?: GroupMemberDisplay;
     days?: number;
     endOfDayTodayAtTz?: number;
     compact?: boolean;
@@ -36,6 +38,7 @@
     prefetchedData,
     prefetchedError,
     groupChildTags = [],
+    groupMemberDisplay,
     days,
     endOfDayTodayAtTz,
     compact = false,
@@ -180,6 +183,8 @@
           tags={groupChildTags}
           days={days as number}
           endOfDayTodayAtTz={endOfDayTodayAtTz as number}
+          display={groupMemberDisplay}
+          compactMembers={compact && grid}
         >
           {$t("Included Monitors (%count)", { count: String(groupChildTags.length) })}
         </GroupMonitorPopover>

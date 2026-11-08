@@ -457,12 +457,12 @@ Events can be permanently deleted:
 Individual event times cannot be edited from the dashboard. To change event timing or duration:
 
 1. Edit the parent maintenance
-2. Update start time, RRULE, or duration
+2. Update start time, RRULE, timezone, or duration
 3. Save maintenance
 
 **Result:**
 
-- Future SCHEDULED events deleted
+- SCHEDULED and READY events that have not started are deleted
 - New events generated with updated settings
 - ONGOING/COMPLETED/CANCELLED events preserved
 

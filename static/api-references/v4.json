@@ -2511,6 +2511,18 @@
           "rrule": {
             "type": "string"
           },
+          "timezone": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "IANA time zone the rrule repeats in, such as America/New_York. Empty or null repeats in UTC. An unknown zone returns 400.",
+            "examples": ["America/New_York"]
+          },
           "duration_seconds": {
             "type": "integer",
             "minimum": 1
@@ -2560,6 +2572,18 @@
             "minLength": 1,
             "description": "Valid RRULE string"
           },
+          "timezone": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "IANA time zone the rrule repeats in, such as America/New_York. Empty or null repeats in UTC. An unknown zone returns 400.",
+            "examples": ["America/New_York"]
+          },
           "duration_seconds": {
             "type": "integer",
             "minimum": 1
@@ -2593,6 +2617,18 @@
           },
           "rrule": {
             "type": "string"
+          },
+          "timezone": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "IANA time zone the rrule repeats in, such as America/New_York. Empty or null repeats in UTC. An unknown zone returns 400.",
+            "examples": ["America/New_York"]
           },
           "duration_seconds": {
             "type": "integer",

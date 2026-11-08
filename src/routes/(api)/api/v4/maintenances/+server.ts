@@ -16,20 +16,8 @@ import {
 } from "$lib/server/controllers/maintenanceController";
 import { GetSiteURL } from "$lib/server/controllers/siteDataController";
 import serverResolver from "$lib/server/resolver";
-import { rrulestr } from "rrule";
 import { readRequestBody } from "$lib/server/requestBody";
-
-function isValidRrule(rrule: string): boolean {
-  try {
-    // Test parsing by creating a full rrule string with a dummy DTSTART
-    const dtstart = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
-    const fullRrule = `DTSTART:${dtstart}\nRRULE:${rrule}`;
-    rrulestr(fullRrule);
-    return true;
-  } catch {
-    return false;
-  }
-}
+import { isValidRrule, isValidTimezone } from "$lib/maintenanceOccurrences";
 
 export const GET: RequestHandler = async ({ url }) => {
   // Parse query params for filtering
@@ -69,6 +57,7 @@ export const GET: RequestHandler = async ({ url }) => {
       description: maintenance.description,
       start_date_time: maintenance.start_date_time,
       rrule: maintenance.rrule,
+      timezone: maintenance.timezone,
       duration_seconds: maintenance.duration_seconds,
       status: maintenance.status as "ACTIVE" | "INACTIVE",
       monitors: monitors.map((m) => ({
@@ -124,6 +113,17 @@ export const POST: RequestHandler = async ({ request }) => {
     return json(errorResponse, { status: 400 });
   }
 
+  const timezone = body.timezone?.trim();
+  if (timezone && !isValidTimezone(timezone)) {
+    const errorResponse: BadRequestResponse = {
+      error: {
+        code: "BAD_REQUEST",
+        message: "timezone must be a known IANA time zone, such as America/New_York",
+      },
+    };
+    return json(errorResponse, { status: 400 });
+  }
+
   if (body.duration_seconds <= 0) {
     const errorResponse: BadRequestResponse = {
       error: {
@@ -170,6 +170,7 @@ export const POST: RequestHandler = async ({ request }) => {
     description: body.description || null,
     start_date_time: normalizedStartDateTime,
     rrule: body.rrule.trim(),
+    timezone: body.timezone,
     duration_seconds: body.duration_seconds,
     monitors: body.monitors?.map((m) => ({
       monitor_tag: m.monitor_tag,
@@ -191,6 +192,7 @@ export const POST: RequestHandler = async ({ request }) => {
     description: maintenance.description,
     start_date_time: maintenance.start_date_time,
     rrule: maintenance.rrule,
+    timezone: maintenance.timezone,
     duration_seconds: maintenance.duration_seconds,
     status: maintenance.status as "ACTIVE" | "INACTIVE",
     monitors: monitors.map((m) => ({

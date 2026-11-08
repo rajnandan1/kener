@@ -28,6 +28,7 @@ export class MaintenancesRepository extends BaseRepository {
       description: data.description || null,
       start_date_time: data.start_date_time,
       rrule: data.rrule,
+      timezone: data.timezone || null,
       duration_seconds: data.duration_seconds,
       status: data.status || GC.ACTIVE,
       is_global: data.is_global || "YES",

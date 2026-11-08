@@ -10,12 +10,16 @@
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Dialog from "$lib/components/ui/dialog/index.js";
   import * as Select from "$lib/components/ui/select/index.js";
+  import * as Popover from "$lib/components/ui/popover/index.js";
+  import * as Command from "$lib/components/ui/command/index.js";
   import * as Breadcrumb from "$lib/components/ui/breadcrumb/index.js";
   import * as RadioGroup from "$lib/components/ui/radio-group/index.js";
   import SaveIcon from "@lucide/svelte/icons/save";
   import Loader from "@lucide/svelte/icons/loader";
   import TrashIcon from "@lucide/svelte/icons/trash";
   import AlertTriangleIcon from "@lucide/svelte/icons/alert-triangle";
+  import CheckIcon from "@lucide/svelte/icons/check";
+  import ChevronsUpDownIcon from "@lucide/svelte/icons/chevrons-up-down";
   import CalendarIcon from "@lucide/svelte/icons/calendar";
   import RepeatIcon from "@lucide/svelte/icons/repeat";
   import InfoIcon from "@lucide/svelte/icons/info";
@@ -30,7 +34,7 @@
   import { toast } from "svelte-sonner";
   import { format, formatDistanceToNow, isPast, isFuture, isWithinInterval } from "date-fns";
   import LocalTime from "$lib/components/LocalTime.svelte";
-  import { rrulestr } from "rrule";
+  import { getOccurrences, isValidRrule, startToWallClock, wallClockToStart } from "$lib/maintenanceOccurrences";
   import { resolve } from "$app/paths";
   import clientResolver from "$lib/client/resolver.js";
 
@@ -85,6 +89,12 @@
 
   // Custom RRULE input for recurring
   let customRrule = $state("FREQ=WEEKLY;BYDAY=SU");
+
+  const NO_TIMEZONE = "None (repeat in UTC)";
+  const timezones = Intl.supportedValuesOf("timeZone");
+  let timezone = $state("");
+  let timezonePickerOpen = $state(false);
+  const scheduleTimezone = $derived(scheduleType === "RECURRING" ? timezone : "");
 
   // Sample RRULE patterns
   const sampleRrules = [
@@ -166,6 +176,31 @@
     return Math.floor(date.getTime() / 1000);
   }
 
+  function startTimestamp(): number {
+    return scheduleTimezone
+      ? wallClockToStart(startDateTimeLocal, scheduleTimezone)
+      : localDatetimeToTimestamp(startDateTimeLocal);
+  }
+
+  function formatPreviewDate(date: Date): string {
+    if (!scheduleTimezone) return format(date, "EEE, MMM d, yyyy 'at' h:mm a");
+    return date.toLocaleString("en-US", {
+      timeZone: scheduleTimezone,
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      timeZoneName: "short"
+    });
+  }
+
+  function selectTimezone(zone: string) {
+    timezone = zone;
+    timezonePickerOpen = false;
+  }
+
   // Get the RRULE to use
   function getRrule(): string {
     if (scheduleType === "ONE_TIME") {
@@ -191,20 +226,8 @@
     }
 
     try {
-      const dtstart = new Date(startDateTimeLocal);
-      const fullRrule = `DTSTART:${dtstart.toISOString().replace(/[-:]/g, "").split(".")[0]}Z\nRRULE:${customRrule}`;
-      const rule = rrulestr(fullRrule);
-      const occurrences: Date[] = [];
-      let searchFrom = new Date();
-
-      for (let i = 0; i < 5; i++) {
-        const next = rule.after(searchFrom, i === 0);
-        if (!next) break;
-        occurrences.push(next);
-        searchFrom = next;
-      }
-
-      return occurrences.map((d) => format(d, "EEE, MMM d, yyyy 'at' h:mm a"));
+      const schedule = { start_date_time: startTimestamp(), rrule: customRrule, timezone: scheduleTimezone };
+      return getOccurrences(schedule, new Date(), { limit: 5 }).map(formatPreviewDate);
     } catch (e) {
       return [];
     }
@@ -216,14 +239,7 @@
       return null;
     }
 
-    try {
-      const dtstart = new Date();
-      const fullRrule = `DTSTART:${dtstart.toISOString().replace(/[-:]/g, "").split(".")[0]}Z\nRRULE:${customRrule}`;
-      rrulestr(fullRrule);
-      return null;
-    } catch (e) {
-      return "Invalid RRULE format";
-    }
+    return isValidRrule(customRrule) ? null : "Invalid RRULE format";
   }
 
   // Reactive preview dates
@@ -255,6 +271,7 @@
     if (isNew) {
       // Set default start time (1 hour from now)
       startDateTimeLocal = timestampToLocalDatetime(Math.floor(Date.now() / 1000) + 3600);
+      timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       loading = false;
       return;
     }
@@ -284,9 +301,12 @@
 
         // Parse RRULE for UI
         parseRrule(result.rrule);
+        timezone = result.timezone ?? "";
 
         // Set UI values
-        startDateTimeLocal = timestampToLocalDatetime(result.start_date_time);
+        startDateTimeLocal = scheduleTimezone
+          ? startToWallClock(result.start_date_time, scheduleTimezone)
+          : timestampToLocalDatetime(result.start_date_time);
         updateDurationInputs(result.duration_seconds);
 
         // Set monitors with their statuses
@@ -353,7 +373,7 @@
 
     try {
       const rrule = getRrule();
-      const startTime = localDatetimeToTimestamp(startDateTimeLocal);
+      const startTime = startTimestamp();
 
       if (isNew) {
         const createData = {
@@ -361,6 +381,7 @@
           description: maintenance.description || null,
           start_date_time: startTime,
           rrule,
+          timezone: scheduleTimezone || null,
           duration_seconds: calculatedDurationSeconds,
           monitors: selectedMonitors.map((m) => ({ monitor_tag: m.tag, monitor_impact: m.status })),
           is_global: maintenance.is_global
@@ -385,6 +406,7 @@
           description: maintenance.description || null,
           start_date_time: startTime,
           rrule,
+          timezone: scheduleTimezone || null,
           duration_seconds: calculatedDurationSeconds,
           status: maintenance.status,
           monitors: selectedMonitors.map((m) => ({ monitor_tag: m.tag, monitor_impact: m.status })),
@@ -695,10 +717,56 @@
           <Input id="start-time" type="datetime-local" bind:value={startDateTimeLocal} />
           {#if scheduleType === "RECURRING"}
             <p class="text-muted-foreground text-xs">
-              Recurring maintenances will occur at this same time of day. The date pattern is configured below.
+              {#if timezone}
+                Recurring maintenances run at this local time in {timezone} all year, also after a daylight saving change.
+                The date pattern is configured below.
+              {:else}
+                This is your browser time. Without a timezone the maintenance repeats in UTC, so its local time moves by
+                1 hour after a daylight saving change. The date pattern is configured below.
+              {/if}
             </p>
           {/if}
         </div>
+
+        <!-- Timezone -->
+        {#if scheduleType === "RECURRING"}
+          <div class="flex flex-col gap-2">
+            <Label for="timezone">Timezone</Label>
+            <Popover.Root bind:open={timezonePickerOpen}>
+              <Popover.Trigger>
+                {#snippet child({ props })}
+                  <Button
+                    {...props}
+                    id="timezone"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={timezonePickerOpen}
+                    class="w-full justify-between font-normal"
+                  >
+                    <span class="truncate">{timezone || NO_TIMEZONE}</span>
+                    <ChevronsUpDownIcon class="text-muted-foreground size-4 shrink-0" />
+                  </Button>
+                {/snippet}
+              </Popover.Trigger>
+              <Popover.Content class="w-[var(--bits-popover-trigger-width)] p-0" align="start">
+                <Command.Root>
+                  <Command.Input placeholder="Search timezone..." />
+                  <Command.List class="max-h-60">
+                    <Command.Empty>No timezone found.</Command.Empty>
+                    <Command.Group>
+                      {#each ["", ...timezones] as zone (zone)}
+                        <Command.Item value={zone || NO_TIMEZONE} onSelect={() => selectTimezone(zone)}>
+                          <CheckIcon class="size-4 {timezone === zone ? 'opacity-100' : 'opacity-0'}" />
+                          {zone || NO_TIMEZONE}
+                        </Command.Item>
+                      {/each}
+                    </Command.Group>
+                  </Command.List>
+                </Command.Root>
+              </Popover.Content>
+            </Popover.Root>
+          </div>
+        {/if}
 
         <!-- Duration -->
         <div class="flex flex-col gap-2">

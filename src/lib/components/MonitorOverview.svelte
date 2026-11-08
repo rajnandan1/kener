@@ -8,6 +8,7 @@
   import ChevronDown from "@lucide/svelte/icons/chevron-down";
   import ArrowUp from "@lucide/svelte/icons/arrow-up";
   import type { MonitorBarResponse } from "$lib/server/api-server/monitor-bar/get";
+  import type { GroupMemberDisplay } from "$lib/server/types/monitor";
   import { Button } from "$lib/components/ui/button";
   import { t } from "$lib/stores/i18n";
   import { selectedTimezone } from "$lib/stores/timezone";
@@ -24,9 +25,10 @@
     class?: string;
     maxDays?: number;
     groupTags?: string[];
+    groupMemberDisplay?: GroupMemberDisplay;
   }
 
-  let { monitorTag, class: className = "", maxDays = 90, groupTags = [] }: Props = $props();
+  let { monitorTag, class: className = "", maxDays = 90, groupTags = [], groupMemberDisplay }: Props = $props();
 
   // State
   let loading = $state(true);
@@ -218,9 +220,11 @@
       <!-- Add group GroupMonitorPopover here -->
       {#if groupTags.length > 0}
         <div class="flex justify-center">
-          <GroupMonitorPopover tags={groupTags} days={selectedDays} {endOfDayTodayAtTz}>
+          <GroupMonitorPopover tags={groupTags} days={selectedDays} {endOfDayTodayAtTz} display={groupMemberDisplay}>
             {$t("Included Monitors (%count)", { count: String(groupTags.length) })}
-            <ArrowUp class="size-3" />
+            {#if groupMemberDisplay !== "INLINE"}
+              <ArrowUp class="size-3" />
+            {/if}
           </GroupMonitorPopover>
         </div>
       {/if}

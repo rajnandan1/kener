@@ -1,6 +1,6 @@
 import db from "../db/db.js";
-import { RRule, rrulestr } from "rrule";
 import { addDays, formatDistanceStrict } from "date-fns";
+import { getOccurrences, isValidTimezone } from "../../maintenanceOccurrences.js";
 import type {
   MaintenanceRecord,
   MaintenanceRecordInsert,
@@ -11,7 +11,7 @@ import type {
   MaintenanceFilter,
   MaintenanceEventFilter,
 } from "../types/db.js";
-import { GetMinuteStartNowTimestampUTC } from "../tool.js";
+import { GetMinuteStartNowTimestampUTC, GetNowTimestampUTC } from "../tool.js";
 import { maintenanceToVariables, siteDataToVariables } from "../notification/notification_utils.js";
 import { GetAllSiteData } from "./controller.js";
 import subscriberQueue from "../queues/subscriberQueue.js";
@@ -30,6 +30,7 @@ export interface CreateMaintenanceInput {
   description?: string | null;
   start_date_time: number; // Unix timestamp - when the first occurrence starts
   rrule: string; // iCalendar RRULE string (e.g., FREQ=WEEKLY;BYDAY=SU or FREQ=MINUTELY;COUNT=1)
+  timezone?: string | null; // IANA time zone the rrule repeats in; empty repeats in UTC
   duration_seconds: number; // Duration of each maintenance window in seconds
   // Monitors with their status during maintenance
   monitors?: MonitorWithStatusInput[];
@@ -41,6 +42,7 @@ export interface UpdateMaintenanceInput {
   description?: string | null;
   start_date_time?: number;
   rrule?: string;
+  timezone?: string | null;
   duration_seconds?: number;
   status?: "ACTIVE" | "INACTIVE";
   monitors?: MonitorWithStatusInput[];
@@ -162,74 +164,34 @@ export const CreateMaintenanceEventWithNotification = async (
 // ============ Helper to generate upcoming events from RRULE ============
 
 /**
- * Generate maintenance events based on the RRULE
- * @param maintenance_id - The maintenance record ID
- * @param start_date_time - Unix timestamp for the DTSTART
- * @param rrule - The RRULE string (e.g., FREQ=WEEKLY;BYDAY=SU)
- * @param duration_seconds - Duration of each maintenance window
- * @param count - Maximum number of events to create (default 1)
+ * Create the next maintenance event from the RRULE, or the event of a one-time maintenance
  */
-export const GenerateMaintenanceEvents = async (
-  maintenance_id: number,
-  start_date_time: number,
-  rrule: string,
-  duration_seconds: number,
-  count: number = 1,
-): Promise<MaintenanceEventRecord[]> => {
+export const GenerateMaintenanceEvents = async (maintenance: MaintenanceRecord): Promise<MaintenanceEventRecord[]> => {
   const createdEvents: MaintenanceEventRecord[] = [];
-
-  // Convert start timestamp to Date (UTC)
-  const dtstart = new Date(start_date_time * 1000);
-
+  const dtstart = new Date(maintenance.start_date_time * 1000);
   const now = new Date();
 
   try {
-    // Build the full RRULE string with DTSTART
-    const fullRrule = `DTSTART:${dtstart.toISOString().replace(/[-:]/g, "").split(".")[0]}Z\nRRULE:${rrule}`;
-
-    // Parse the RRULE
-    const rule = rrulestr(fullRrule);
-
-    // Get occurrences based on count
-    let occurrences: Date[] = [];
-
-    if (rrule.includes("COUNT=1")) {
-      // One-time maintenance: only create event if start_date_time is recent or in the future
-      if (dtstart >= now || dtstart >= addDays(now, -1)) {
-        occurrences = [dtstart];
-      }
-    } else {
-      // Recurring: get the next `count` occurrences from now
-      let searchFrom = now;
-      for (let i = 0; i < count; i++) {
-        const next = rule.after(searchFrom, i === 0);
-        if (!next) break;
-        occurrences.push(next);
-        searchFrom = new Date(next.getTime() + 1000);
-      }
-    }
-
-    // Fetch maintenance info for notifications
-    const maintenance = await db.getMaintenanceById(maintenance_id);
-    const maintenanceTitle = maintenance?.title || "";
-    const maintenanceDescription = maintenance?.description || null;
+    const next = getOccurrences(maintenance, now, { limit: 1 });
+    const isRecentOneTime = dtstart >= addDays(now, -1);
+    const occurrences = !isOneTimeRrule(maintenance.rrule) ? next : isRecentOneTime ? [dtstart] : [];
 
     // Create events for each occurrence
     for (const occurrence of occurrences) {
       const eventStart = Math.floor(occurrence.getTime() / 1000);
-      const eventEnd = eventStart + duration_seconds;
+      const eventEnd = eventStart + maintenance.duration_seconds;
 
       // Check if event already exists for this time
-      const existing = await db.getMaintenanceEventsByMaintenanceId(maintenance_id);
+      const existing = await db.getMaintenanceEventsByMaintenanceId(maintenance.id);
       const alreadyExists = existing.some((e) => e.start_date_time === eventStart);
 
       if (!alreadyExists) {
         const event = await CreateMaintenanceEventWithNotification(
-          maintenance_id,
+          maintenance.id,
           eventStart,
           eventEnd,
-          maintenanceTitle,
-          maintenanceDescription,
+          maintenance.title,
+          maintenance.description || null,
         );
         createdEvents.push(event);
       }
@@ -243,8 +205,15 @@ export const GenerateMaintenanceEvents = async (
 
 // ============ Maintenance CRUD ============
 
-export const CreateMaintenance = async (data: CreateMaintenanceInput): Promise<{ maintenance_id: number }> => {
-  // Validate required fields
+const parseTimezone = (timezone: string | null | undefined): string | null => {
+  const zone = timezone?.trim() || null;
+  if (zone && !isValidTimezone(zone)) {
+    throw new Error(`timezone '${zone}' is not a known IANA time zone`);
+  }
+  return zone;
+};
+
+const assertMaintenanceFields = (data: CreateMaintenanceInput): void => {
   if (!data.title) {
     throw new Error("Title is required");
   }
@@ -257,6 +226,11 @@ export const CreateMaintenance = async (data: CreateMaintenanceInput): Promise<{
   if (!data.duration_seconds || data.duration_seconds <= 0) {
     throw new Error("Duration must be greater than 0");
   }
+};
+
+export const CreateMaintenance = async (data: CreateMaintenanceInput): Promise<{ maintenance_id: number }> => {
+  assertMaintenanceFields(data);
+  const timezone = parseTimezone(data.timezone);
 
   // Create the maintenance record
   const maintenance = await db.createMaintenance({
@@ -264,6 +238,7 @@ export const CreateMaintenance = async (data: CreateMaintenanceInput): Promise<{
     description: data.description || null,
     start_date_time: data.start_date_time,
     rrule: data.rrule,
+    timezone,
     duration_seconds: data.duration_seconds,
     status: "ACTIVE",
     is_global: data.is_global || "YES",
@@ -275,7 +250,7 @@ export const CreateMaintenance = async (data: CreateMaintenanceInput): Promise<{
   }
 
   // Generate initial events
-  await GenerateMaintenanceEvents(maintenance.id, data.start_date_time, data.rrule, data.duration_seconds, 1);
+  await GenerateMaintenanceEvents(maintenance);
 
   return {
     maintenance_id: maintenance.id,
@@ -361,6 +336,30 @@ export const GetMaintenancesDashboard = async (data: {
   return { maintenances: enriched, total };
 };
 
+const differs = (next: unknown, current: unknown): boolean => next !== undefined && next !== current;
+
+// A timezone moves the occurrences of a recurring maintenance only: a one-time event keeps its instant
+const isScheduleChange = (existing: MaintenanceRecord, update: UpdateMaintenanceInput, isOneTime: boolean): boolean =>
+  differs(update.start_date_time, existing.start_date_time) ||
+  differs(update.rrule, existing.rrule) ||
+  differs(update.duration_seconds, existing.duration_seconds) ||
+  (!isOneTime && differs(update.timezone, existing.timezone));
+
+const replaceUpcomingEvents = async (maintenance: MaintenanceRecord, isOneTime: boolean): Promise<void> => {
+  const now = GetNowTimestampUTC();
+  const isReplaced = (event: MaintenanceEventRecord): boolean =>
+    isOneTime
+      ? event.status !== "COMPLETED" && event.status !== "CANCELLED"
+      : (event.status === "SCHEDULED" || event.status === "READY") && event.start_date_time > now;
+
+  for (const event of await db.getMaintenanceEventsByMaintenanceId(maintenance.id)) {
+    if (isReplaced(event)) {
+      await db.deleteMaintenanceEvent(event.id);
+    }
+  }
+  await GenerateMaintenanceEvents(maintenance);
+};
+
 export const UpdateMaintenance = async (id: number, data: UpdateMaintenanceInput): Promise<number> => {
   const existing = await db.getMaintenanceById(id);
   if (!existing) {
@@ -369,16 +368,12 @@ export const UpdateMaintenance = async (id: number, data: UpdateMaintenanceInput
 
   // Extract monitors separately as it's not part of the record
   const { monitors, ...updateData } = data;
+  if (data.timezone !== undefined) {
+    updateData.timezone = parseTimezone(data.timezone);
+  }
 
-  // Determine the rrule after update (use new value if provided, otherwise existing)
-  const effectiveRrule = data.rrule !== undefined ? data.rrule : existing.rrule;
-  const isOneTime = isOneTimeRrule(effectiveRrule);
-
-  // Check if schedule has changed (start_date_time, rrule, or duration_seconds)
-  const scheduleChanged =
-    (data.start_date_time !== undefined && data.start_date_time !== existing.start_date_time) ||
-    (data.rrule !== undefined && data.rrule !== existing.rrule) ||
-    (data.duration_seconds !== undefined && data.duration_seconds !== existing.duration_seconds);
+  const isOneTime = isOneTimeRrule(data.rrule ?? existing.rrule);
+  const scheduleChanged = isScheduleChange(existing, updateData, isOneTime);
 
   // Update the maintenance record
   const result = await db.updateMaintenance(id, updateData);
@@ -391,36 +386,9 @@ export const UpdateMaintenance = async (id: number, data: UpdateMaintenanceInput
     }
   }
 
-  // Handle schedule changes differently for one-time vs recurring
-  if (scheduleChanged) {
-    // Get current values (may have been updated)
-    const updated = await db.getMaintenanceById(id);
-    if (updated) {
-      const events = await db.getMaintenanceEventsByMaintenanceId(id);
-      const now = Math.floor(Date.now() / 1000);
-
-      if (isOneTime) {
-        // For one-time maintenance: delete all events that aren't completed and create a new one
-        for (const event of events) {
-          // Delete events that are not COMPLETED or CANCELLED
-          if (event.status !== "COMPLETED" && event.status !== "CANCELLED") {
-            await db.deleteMaintenanceEvent(event.id);
-          }
-        }
-        // Regenerate the event
-        await GenerateMaintenanceEvents(id, updated.start_date_time, updated.rrule, updated.duration_seconds, 1);
-      } else {
-        // For recurring maintenances: delete future SCHEDULED events and regenerate
-        for (const event of events) {
-          // Only delete SCHEDULED events in the future
-          if (event.status === "SCHEDULED" && event.start_date_time > now) {
-            await db.deleteMaintenanceEvent(event.id);
-          }
-        }
-        // Regenerate events
-        await GenerateMaintenanceEvents(id, updated.start_date_time, updated.rrule, updated.duration_seconds, 1);
-      }
-    }
+  const updated = await db.getMaintenanceById(id);
+  if (scheduleChanged && updated) {
+    await replaceUpcomingEvents(updated, isOneTime);
   }
 
   return result;
