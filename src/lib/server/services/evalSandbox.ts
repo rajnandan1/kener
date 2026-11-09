@@ -132,7 +132,7 @@ async function runInProcess(code: string, args: unknown[]): Promise<unknown> {
   let child: ChildProcess;
   try {
     child = spawn(process.execPath, ["--stack-size=3900", "-e", HOST_SOURCE], {
-      env: {},
+      env: { TZ: process.env.TZ },
       stdio: ["ignore", "inherit", "inherit", "ipc"],
     });
   } catch (error) {

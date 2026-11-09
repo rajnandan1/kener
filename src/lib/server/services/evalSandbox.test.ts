@@ -152,6 +152,18 @@ describe("RunMonitorEval guest features", () => {
     expect(await RunMonitorEval(code, [html])).toEqual({ status: "UP", latency: -1 });
   });
 
+  it("uses the time zone of the server", async () => {
+    const serverTimeZone = process.env.TZ;
+    process.env.TZ = "Etc/GMT+5";
+    try {
+      const code = `async () => ({ status: new Date(0).getTimezoneOffset() === 300 ? "UP" : "DOWN", latency: 1 })`;
+
+      expect(await RunMonitorEval(code, [])).toEqual({ status: "UP", latency: 1 });
+    } finally {
+      process.env.TZ = serverTimeZone;
+    }
+  });
+
   it("gives every eval a new global scope", async () => {
     await RunMonitorEval(`async () => { globalThis.leak = true; return ${up}; }`, []);
 
