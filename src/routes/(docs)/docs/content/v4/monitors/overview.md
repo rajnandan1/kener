@@ -69,10 +69,13 @@ Node.js and browser features do not exist in the sandbox. This includes `fetch`,
 
 `modules.cheerio` has `load`, `contains`, and `merge`. Write `modules.cheerio` as plain text in the eval, because Kener loads cheerio only when the eval contains the word `cheerio`. `Date` uses the time zone of the server. With no `Intl`, `toLocaleString()` adds no thousands separators or local date formats.
 
-| Limit    | Value      |
-| -------- | ---------- |
-| Run time | 10 seconds |
-| Memory   | 256 MB     |
+| Limit         | Value      |
+| ------------- | ---------- |
+| Run time      | 10 seconds |
+| Memory        | 256 MB     |
+| Evals at once | 2          |
+
+When 2 evals already run, the next eval waits for a free slot. Its 10 seconds start when it begins to run.
 
 An eval reports **DOWN** with type `ERROR` when it goes over a limit, throws an error, or returns a `status` that is not `UP`, `DEGRADED`, `DOWN`, or `MAINTENANCE`.
 
