@@ -112,14 +112,21 @@ function freeSlot(): void {
   else running--;
 }
 
+const liveChildren = new Set<ChildProcess>();
+process.once("exit", () => {
+  for (const child of liveChildren) child.kill("SIGKILL");
+});
+
 function holdSlotUntilGone(child: ChildProcess): void {
   let freed = false;
   const free = () => {
     if (!freed) {
       freed = true;
+      liveChildren.delete(child);
       freeSlot();
     }
   };
+  liveChildren.add(child);
   child.once("exit", free);
   child.on("error", () => child.pid === undefined && free());
 }
