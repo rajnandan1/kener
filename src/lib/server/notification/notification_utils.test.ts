@@ -108,4 +108,40 @@ describe("maintenanceToVariables", () => {
       true,
     );
   });
+
+  it("prints start and end in UTC with a label, whatever the server timezone is", () => {
+    const event = {
+      id: 3,
+      maintenance_id: 5,
+      title: "Database upgrade",
+      description: "",
+      start_date_time: 1767225600, // 2026-01-01T00:00:00Z
+      end_date_time: 1767229200,
+    } as unknown as Parameters<typeof maintenanceToVariables>[0];
+
+    const text = maintenanceToVariables(event, "api", "has started", "start", "Maintenance Started").update_text;
+
+    expect(text).toContain("Jan 1, 2026, 12:00:00 AM UTC");
+    expect(text).toContain("Jan 1, 2026, 1:00:00 AM UTC");
+  });
+
+  // 02:30 UTC wall-clock lands in America/New_York's non-existent 02:00-03:00 local hour.
+  // formatInTimeZone feeds those UTC fields to host-local setters, which roll 02:30 forward to
+  // 03:30 on a NY host (run with TZ=America/New_York to see the old code shift the hour). Intl with
+  // timeZone:"UTC" ignores the host zone, so the label and the time always agree.
+  it("keeps the UTC time correct across a DST spring-forward instant", () => {
+    const event = {
+      id: 4,
+      maintenance_id: 6,
+      title: "DST window",
+      description: "",
+      start_date_time: 1772937000, // 2026-03-08T02:30:00Z
+      end_date_time: 1772940600, // 2026-03-08T03:30:00Z
+    } as unknown as Parameters<typeof maintenanceToVariables>[0];
+
+    const text = maintenanceToVariables(event, "api", "has started", "start", "Maintenance Started").update_text;
+
+    expect(text).toContain("Mar 8, 2026, 2:30:00 AM UTC");
+    expect(text).toContain("Mar 8, 2026, 3:30:00 AM UTC");
+  });
 });
