@@ -83,6 +83,9 @@ describe("readRequestBody", () => {
     )) as Response;
 
     expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: { code: "BAD_REQUEST", message: "monitors[0].tag is required" },
+    });
   });
 
   it("rejects unknown page monitor fields", async () => {
@@ -91,6 +94,9 @@ describe("readRequestBody", () => {
     )) as Response;
 
     expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      error: { code: "BAD_REQUEST", message: "monitors[0].groups is not allowed" },
+    });
   });
 });
 

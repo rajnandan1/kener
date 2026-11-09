@@ -44,7 +44,10 @@ export function findBodyError(schema: Schema, value: unknown, path = ""): string
     if (errors.includes(undefined)) return undefined;
     const types = typesOf(s);
     if (!types.some((type) => isType(value, type))) return typeError(name, types);
-    return errors.find((error) => !error!.endsWith(" is required")) ?? errors[0];
+    const applicable = s.oneOf.flatMap((branch, index) =>
+      typesOf(branch).some((type) => isType(value, type)) ? [errors[index]!] : [],
+    );
+    return applicable.find((error) => !error.endsWith(" is required")) ?? applicable[0] ?? errors[0];
   }
   const types = [s.type ?? []].flat();
   if (types.length > 0 && !types.some((type) => isType(value, type))) return typeError(name, types);
