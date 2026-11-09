@@ -66,8 +66,27 @@ export class PagesRepository extends BaseRepository {
       monitor_tag: data.monitor_tag,
       monitor_settings_json: data.monitor_settings_json,
       position: data.position ?? 0,
+      group_name: data.group_name ?? null,
       created_at: this.knex.fn.now(),
       updated_at: this.knex.fn.now(),
+    });
+  }
+
+  async replacePageMonitors(page_id: number, monitors: PageMonitorRecordInsert[]): Promise<void> {
+    await this.knex.transaction(async (trx) => {
+      await trx("pages_monitors").where({ page_id }).del();
+      if (monitors.length === 0) return;
+      await trx("pages_monitors").insert(
+        monitors.map((monitor) => ({
+          page_id: monitor.page_id,
+          monitor_tag: monitor.monitor_tag,
+          monitor_settings_json: monitor.monitor_settings_json ?? null,
+          position: monitor.position ?? 0,
+          group_name: monitor.group_name ?? null,
+          created_at: trx.fn.now(),
+          updated_at: trx.fn.now(),
+        })),
+      );
     });
   }
 
@@ -101,6 +120,13 @@ export class PagesRepository extends BaseRepository {
   ): Promise<number> {
     return await this.knex("pages_monitors").where({ page_id, monitor_tag }).update({
       monitor_settings_json,
+      updated_at: this.knex.fn.now(),
+    });
+  }
+
+  async updatePageMonitorGroup(page_id: number, monitor_tag: string, group_name: string | null): Promise<number> {
+    return await this.knex("pages_monitors").where({ page_id, monitor_tag }).update({
+      group_name,
       updated_at: this.knex.fn.now(),
     });
   }
