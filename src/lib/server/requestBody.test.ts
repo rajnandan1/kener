@@ -84,6 +84,14 @@ describe("readRequestBody", () => {
 
     expect(response.status).toBe(400);
   });
+
+  it("rejects unknown page monitor fields", async () => {
+    const response = (await readPage(
+      '{"page_path":"status","page_title":"Status","page_header":"Status","monitors":[{"tag":"api","groups":"Backend"}]}',
+    )) as Response;
+
+    expect(response.status).toBe(400);
+  });
 });
 
 it("the spec allows the same monitor types as MONITOR_TYPES", () => {

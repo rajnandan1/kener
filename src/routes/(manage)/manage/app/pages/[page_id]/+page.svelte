@@ -83,6 +83,7 @@
   let addingMonitor = $state(false);
   let removingMonitor = $state<string | null>(null);
   let reordering = $state(false);
+  let groupBusy = $state(false);
   let addingGroup = $state(false);
   let newGroupName = $state("");
   let movingMonitor = $state<string | null>(null);
@@ -362,9 +363,9 @@
   // Get available monitors (not already on the current page)
   const availableMonitors = $derived(monitors.filter((m) => !selectedMonitors.some((sm) => sm.monitor_tag === m.tag)));
 
-  // Reorder within a single group section by swapping the two monitors' positions
-  // in the global selectedMonitors list, then persisting the new flat order.
+  /** Reorders a monitor within its group section and persists the flat order. */
   async function moveMonitorInSection(groupName: string | null, tag: string, direction: "up" | "down") {
+    if (groupBusy || reordering) return;
     const section = groupSections.find((s) => s.name === groupName);
     if (!section) return;
     const idx = section.monitors.findIndex((m) => m.monitor_tag === tag);
@@ -377,10 +378,15 @@
     const bFlat = selectedMonitors.findIndex((m) => m.monitor_tag === bTag);
     if (aFlat < 0 || bFlat < 0) return;
 
-    const updated = [...selectedMonitors];
-    [updated[aFlat], updated[bFlat]] = [updated[bFlat], updated[aFlat]];
-    selectedMonitors = updated;
-    await persistOrder();
+    groupBusy = true;
+    try {
+      const updated = [...selectedMonitors];
+      [updated[aFlat], updated[bFlat]] = [updated[bFlat], updated[aFlat]];
+      selectedMonitors = updated;
+      await persistOrder();
+    } finally {
+      groupBusy = false;
+    }
   }
 
   async function persistOrder() {
@@ -407,14 +413,14 @@
     }
   }
 
-  // Reassign a single monitor to a different group via the per-row "Move to"
-  // menu. Optimistic update; reverts on server failure.
+  /** Moves a monitor to a group and reverts its optimistic state on failure. */
   async function moveMonitorToGroup(tag: string, groupName: string | null) {
-    if (!currentPage) return;
+    if (!currentPage || groupBusy || reordering) return;
     const monitor = selectedMonitors.find((m) => m.monitor_tag === tag);
     if (!monitor || monitor.group_name === groupName) return;
 
     const previousGroup = monitor.group_name;
+    groupBusy = true;
     movingMonitor = tag;
     selectedMonitors = selectedMonitors.map((m) => (m.monitor_tag === tag ? { ...m, group_name: groupName } : m));
     if (groupName) pendingGroups = pendingGroups.filter((g) => g !== groupName);
@@ -429,12 +435,13 @@
         })
       });
       const result = await response.json();
-      if (result.error) throw new Error(result.error);
+      if (!response.ok || result.error) throw new Error(result.error || "Failed to move monitor");
     } catch (e) {
       selectedMonitors = selectedMonitors.map((m) => (m.monitor_tag === tag ? { ...m, group_name: previousGroup } : m));
       toast.error("Failed to move monitor");
     } finally {
       movingMonitor = null;
+      groupBusy = false;
     }
   }
 
@@ -460,28 +467,44 @@
     newGroupName = "";
   }
 
+  /** Ungroups a group's monitors and restores only writes that fail. */
   async function removeGroup(name: string) {
-    if (!currentPage) return;
+    if (!currentPage || groupBusy || reordering) return;
     const monitorsInGroup = selectedMonitors.filter((m) => m.group_name === name);
+    groupBusy = true;
     // Optimistic — move all to ungrouped
     selectedMonitors = selectedMonitors.map((m) => (m.group_name === name ? { ...m, group_name: null } : m));
     pendingGroups = pendingGroups.filter((g) => g !== name);
-    if (monitorsInGroup.length === 0) return;
+    if (monitorsInGroup.length === 0) {
+      groupBusy = false;
+      return;
+    }
     try {
+      const failed = new Set<string>();
       await Promise.all(
-        monitorsInGroup.map((m) =>
-          fetch(clientResolver(resolve, "/manage/api"), {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action: "updatePageMonitorGroup",
-              data: { page_id: currentPage!.id, monitor_tag: m.monitor_tag, group_name: null }
-            })
-          })
-        )
+        monitorsInGroup.map(async (m) => {
+          try {
+            const response = await fetch(clientResolver(resolve, "/manage/api"), {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                action: "updatePageMonitorGroup",
+                data: { page_id: currentPage!.id, monitor_tag: m.monitor_tag, group_name: null }
+              })
+            });
+            const result = await response.json();
+            if (!response.ok || result.error) throw new Error(result.error || "Failed to remove group");
+          } catch (e) {
+            failed.add(m.monitor_tag);
+          }
+        })
       );
-    } catch (e) {
-      toast.error("Failed to remove group");
+      if (failed.size > 0) {
+        selectedMonitors = selectedMonitors.map((m) => (failed.has(m.monitor_tag) ? { ...m, group_name: name } : m));
+        toast.error("Failed to remove group");
+      }
+    } finally {
+      groupBusy = false;
     }
   }
 
@@ -890,7 +913,7 @@
             {#if selectedMonitors.length > 0}
               {@const knownGroupNames = groupSections.map((s) => s.name).filter((n): n is string => n !== null)}
               <div class="space-y-3">
-                {#each groupSections as section (section.name ?? "__ungrouped__")}
+                {#each groupSections as section (section.name === null ? "__ungrouped__" : `group:${section.name}`)}
                   <div
                     class="border-border rounded-lg border p-2"
                     role="region"
@@ -906,6 +929,7 @@
                           size="sm"
                           title="Remove group (monitors move to Ungrouped)"
                           onclick={() => removeGroup(section.name as string)}
+                          disabled={groupBusy || reordering}
                         >
                           <XIcon class="h-4 w-4" />
                         </Button>
@@ -934,7 +958,7 @@
                                       variant="ghost"
                                       size="sm"
                                       title="Move to group"
-                                      disabled={movingMonitor === item.monitor_tag}
+                                      disabled={groupBusy || reordering || movingMonitor === item.monitor_tag}
                                     >
                                       {#if movingMonitor === item.monitor_tag}
                                         <Loader class="h-4 w-4 animate-spin" />
@@ -978,7 +1002,7 @@
                                 variant="ghost"
                                 size="sm"
                                 onclick={() => moveMonitorInSection(section.name, item.monitor_tag, "up")}
-                                disabled={i === 0 || reordering}
+                                disabled={i === 0 || groupBusy || reordering}
                               >
                                 <ArrowUpIcon class="h-4 w-4" />
                               </Button>
@@ -986,7 +1010,7 @@
                                 variant="ghost"
                                 size="sm"
                                 onclick={() => moveMonitorInSection(section.name, item.monitor_tag, "down")}
-                                disabled={i === section.monitors.length - 1 || reordering}
+                                disabled={i === section.monitors.length - 1 || groupBusy || reordering}
                               >
                                 <ArrowDownIcon class="h-4 w-4" />
                               </Button>
@@ -994,7 +1018,7 @@
                                 variant="ghost"
                                 size="sm"
                                 onclick={() => removeMonitorFromPage(item.monitor_tag)}
-                                disabled={removingMonitor === item.monitor_tag}
+                                disabled={groupBusy || removingMonitor === item.monitor_tag}
                               >
                                 {#if removingMonitor === item.monitor_tag}
                                   <Loader class="h-4 w-4 animate-spin" />

@@ -20,4 +20,13 @@ describe("normalizePageMonitorInputs", () => {
       "Monitor `group` must be a string or null",
     );
   });
+
+  it("rejects values the database cannot store", () => {
+    expect(() => normalizePageMonitorInputs([{ tag: "api", group: "x".repeat(256) }])).toThrow(
+      "Monitor `group` must be 255 characters or fewer",
+    );
+    expect(() => normalizePageMonitorInputs([{ tag: "api", position: 2_147_483_648 }])).toThrow(
+      "Monitor `position` must be a non-negative integer",
+    );
+  });
 });

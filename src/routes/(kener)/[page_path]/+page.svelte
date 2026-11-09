@@ -210,7 +210,7 @@
         <!-- Render monitors grouped by group_name. Pages with no group_name yield
              a single group with name=null, which renders without a header — i.e.
              backward-compatible with the pre-groups layout. -->
-        {#each data.monitorGroups as group, gIdx (group.name ?? `__ungrouped_${gIdx}`)}
+        {#each data.monitorGroups as group (group.name === null ? "__ungrouped__" : `group:${group.name}`)}
           <div class="flex flex-col gap-2">
             {#if group.name}
               <h2 class="px-3 text-lg font-semibold sm:px-4">{group.name}</h2>

@@ -15,11 +15,9 @@ import type { PageRecord } from "$lib/server/types/db";
 import GC from "$lib/global-constants";
 import { toApiPageSettings, applyPageSettingsPatch, validatePageSettings } from "$lib/server/pageSettings";
 import {
-  AddMonitorToPage,
   DeletePage,
-  GetPageMonitors,
   normalizePageMonitorInputs,
-  RemoveMonitorFromPage,
+  ReplacePageMonitors,
   UpdatePage,
 } from "$lib/server/controllers/pagesController";
 import { readRequestBody } from "$lib/server/requestBody";
@@ -236,12 +234,7 @@ export const PATCH: RequestHandler = async ({ locals, request }) => {
 
   // Handle monitors update - replace all monitors
   if (normalizedMonitors !== null) {
-    for (const current of await GetPageMonitors(page.id)) {
-      await RemoveMonitorFromPage(page.id, current.monitor_tag);
-    }
-    for (const m of normalizedMonitors) {
-      await AddMonitorToPage(page.id, m.tag, null, m.position, m.group);
-    }
+    await ReplacePageMonitors(page.id, normalizedMonitors);
   }
 
   // Fetch updated page

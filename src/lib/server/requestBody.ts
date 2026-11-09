@@ -6,6 +6,7 @@ export interface Schema {
   enum?: unknown[];
   required?: string[];
   properties?: Record<string, Schema>;
+  additionalProperties?: boolean;
   items?: Schema;
   oneOf?: Schema[];
   $ref?: string;
@@ -57,6 +58,10 @@ export function findBodyError(schema: Schema, value: unknown, path = ""): string
   if (isType(value, "object")) {
     const record = value as Record<string, unknown>;
     const field = (key: string) => (path ? `${path}.${key}` : key);
+    if (s.additionalProperties === false) {
+      const unknown = Object.keys(record).find((key) => !s.properties?.[key]);
+      if (unknown) return `${field(unknown)} is not allowed`;
+    }
     const missing = s.required?.find((key) => record[key] === undefined);
     if (missing) return `${field(missing)} is required`;
     for (const [key, property] of Object.entries(s.properties ?? {})) {

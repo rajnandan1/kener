@@ -240,6 +240,7 @@ class DbImpl {
 
   // ============ Page Monitors ============
   addMonitorToPage!: PagesRepository["addMonitorToPage"];
+  replacePageMonitors!: PagesRepository["replacePageMonitors"];
   removeMonitorFromPage!: PagesRepository["removeMonitorFromPage"];
   getPageMonitors!: PagesRepository["getPageMonitors"];
   getActivePageMonitors!: PagesRepository["getActivePageMonitors"];
@@ -625,6 +626,7 @@ class DbImpl {
     this.updatePage = this.pages.updatePage.bind(this.pages);
     this.deletePage = this.pages.deletePage.bind(this.pages);
     this.addMonitorToPage = this.pages.addMonitorToPage.bind(this.pages);
+    this.replacePageMonitors = this.pages.replacePageMonitors.bind(this.pages);
     this.removeMonitorFromPage = this.pages.removeMonitorFromPage.bind(this.pages);
     this.getPageMonitors = this.pages.getPageMonitors.bind(this.pages);
     this.getActivePageMonitors = this.pages.getActivePageMonitors.bind(this.pages);
