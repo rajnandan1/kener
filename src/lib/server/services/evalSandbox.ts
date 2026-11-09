@@ -1,4 +1,4 @@
-import { Worker } from "node:worker_threads";
+import { spawn, type ChildProcess } from "node:child_process";
 import GC from "../../global-constants.js";
 
 declare const __CHEERIO_GUEST__: string;
@@ -8,6 +8,7 @@ const EVAL_MEMORY_LIMIT_BYTES = 256 * 1024 * 1024;
 const EVAL_ERROR_MAX_LENGTH = 200;
 const EVAL_MESSAGE_MAX_LENGTH = 1024;
 const EVAL_STATUSES = [GC.UP, GC.DOWN, GC.DEGRADED, GC.MAINTENANCE] as const;
+const EVAL_MAX_RUNNING = 2;
 
 const GUEST_PRELUDE = `(() => {
   const noop = () => {};
@@ -47,37 +48,38 @@ const GUEST_PRELUDE = `(() => {
   };
 })();`;
 
-const WORKER_SOURCE = `
-const { parentPort, workerData } = require("node:worker_threads");
-const load = require("node:module").createRequire(workerData.requireFrom);
-const { newQuickJSWASMModuleFromVariant } = load("quickjs-emscripten-core");
-const variant = load("@jitl/quickjs-wasmfile-release-sync");
-
-(async () => {
-  const QuickJS = await newQuickJSWASMModuleFromVariant(variant.default ?? variant);
-  const runtime = QuickJS.newRuntime();
-  runtime.setMemoryLimit(workerData.memoryLimit);
-  const context = runtime.newContext();
-  context.unwrapResult(context.evalCode(workerData.prelude));
-  context.setProp(context.global, "__args", context.newString(workerData.args));
-  const pending = context.unwrapResult(context.evalCode(workerData.script));
-  context.unwrapResult(runtime.executePendingJobs());
-  const state = context.getPromiseState(pending);
-  if (state.type === "pending") throw new Error("The returned promise never resolves");
-  if (state.type === "rejected") {
-    const error = context.dump(state.error);
-    throw new Error(error?.message ?? String(error));
-  }
-  return context.dump(state.value);
-})().then(
-  (result) =>
-    parentPort.postMessage(
-      result === undefined || (typeof result === "string" && result.length <= workerData.messageLimit)
-        ? { result }
-        : { error: "The result is too large or not valid" },
-    ),
-  (error) => parentPort.postMessage({ error: String(error?.message ?? error).slice(0, workerData.messageLimit) }),
-);
+const HOST_SOURCE = `
+// on, not once: a message listener keeps the IPC channel ref'd, so the process lives until the host kills it.
+process.on("message", (job) => {
+  (async () => {
+    const load = require("node:module").createRequire(job.requireFrom);
+    const { newQuickJSWASMModuleFromVariant } = load("quickjs-emscripten-core");
+    const variant = load("@jitl/quickjs-wasmfile-release-sync");
+    const QuickJS = await newQuickJSWASMModuleFromVariant(variant.default ?? variant);
+    const runtime = QuickJS.newRuntime();
+    runtime.setMemoryLimit(job.memoryLimit);
+    const context = runtime.newContext();
+    context.unwrapResult(context.evalCode(job.prelude));
+    context.setProp(context.global, "__args", context.newString(job.args));
+    const pending = context.unwrapResult(context.evalCode(job.script));
+    context.unwrapResult(runtime.executePendingJobs());
+    const state = context.getPromiseState(pending);
+    if (state.type === "pending") throw new Error("The returned promise never resolves");
+    if (state.type === "rejected") {
+      const error = context.dump(state.error);
+      throw new Error(error?.message ?? String(error));
+    }
+    return context.dump(state.value);
+  })().then(
+    (result) =>
+      process.send(
+        result === undefined || (typeof result === "string" && result.length <= job.messageLimit)
+          ? { result }
+          : { error: "The result is too large or not valid" },
+      ),
+    (error) => process.send({ error: String(error?.message ?? error).slice(0, job.messageLimit) }),
+  );
+});
 `;
 
 function guestScript(code: string): string {
@@ -93,13 +95,76 @@ function serializeArgs(args: unknown[]): string {
   return JSON.stringify(args, (_key, value) => (typeof value === "bigint" ? value.toString() : value));
 }
 
-// ken: one worker per eval (22 ms, 5 queue slots); reuse workers when checks per minute make this measurable
-function runInWorker(code: string, args: unknown[]): Promise<unknown> {
+let running = 0;
+const waiting: (() => void)[] = [];
+
+async function takeSlot(): Promise<void> {
+  if (running < EVAL_MAX_RUNNING) {
+    running++;
+    return;
+  }
+  await new Promise<void>((resolve) => waiting.push(resolve));
+}
+
+function freeSlot(): void {
+  const next = waiting.shift();
+  if (next) next();
+  else running--;
+}
+
+const liveChildren = new Set<ChildProcess>();
+process.once("exit", () => {
+  for (const child of liveChildren) child.kill("SIGKILL");
+});
+
+function holdSlotUntilGone(child: ChildProcess): void {
+  let freed = false;
+  const free = () => {
+    if (!freed) {
+      freed = true;
+      liveChildren.delete(child);
+      freeSlot();
+    }
+  };
+  liveChildren.add(child);
+  child.once("exit", free);
+  child.on("error", () => child.pid === undefined && free());
+}
+
+// ken: one process per eval, 2 at a time (~55 ms, ~60 MiB each); reuse processes when queue waits are measured
+// A process, not a Worker: per-eval Workers starve Node's shared V8 task pool (issue 928, nodejs/node#54918).
+async function runInProcess(code: string, args: unknown[]): Promise<unknown> {
+  await takeSlot();
+  // Worker threads ran with a 4 MB V8 stack; keep it so QuickJS's own "stack overflow" check fires before V8's.
+  let child: ChildProcess;
+  try {
+    child = spawn(process.execPath, ["--stack-size=3900", "-e", HOST_SOURCE], {
+      env: { TZ: process.env.TZ },
+      stdio: ["ignore", "inherit", "inherit", "ipc"],
+    });
+  } catch (error) {
+    freeSlot();
+    throw error;
+  }
+  holdSlotUntilGone(child);
   return new Promise((resolve, reject) => {
-    const worker = new Worker(WORKER_SOURCE, {
-      eval: true,
-      env: {},
-      workerData: {
+    const finish = (settle: () => void) => {
+      clearTimeout(timer);
+      child.kill("SIGKILL");
+      settle();
+    };
+    // QuickJS's interrupt handler does not stop C builtins such as Array.prototype.join, so the host kills the process.
+    const timer = setTimeout(
+      () => finish(() => reject(new Error(`Timed out after ${EVAL_TIMEOUT_MS} ms`))),
+      EVAL_TIMEOUT_MS,
+    );
+    child.once("message", ({ result, error }: { result?: unknown; error?: string }) =>
+      finish(() => (error === undefined ? resolve(result) : reject(new Error(error)))),
+    );
+    child.on("error", (error) => finish(() => reject(error)));
+    child.once("exit", () => finish(() => reject(new Error("The sandbox stopped before the eval returned"))));
+    child.send(
+      {
         requireFrom: import.meta.url,
         memoryLimit: EVAL_MEMORY_LIMIT_BYTES,
         messageLimit: EVAL_MESSAGE_MAX_LENGTH,
@@ -107,22 +172,8 @@ function runInWorker(code: string, args: unknown[]): Promise<unknown> {
         script: guestScript(code),
         args: serializeArgs(args),
       },
-    });
-    const finish = (settle: () => void) => {
-      clearTimeout(timer);
-      void worker.terminate();
-      settle();
-    };
-    // QuickJS's interrupt handler does not stop C builtins such as Array.prototype.join, so the host kills the thread.
-    const timer = setTimeout(
-      () => finish(() => reject(new Error(`Timed out after ${EVAL_TIMEOUT_MS} ms`))),
-      EVAL_TIMEOUT_MS,
+      (error) => error && finish(() => reject(error)),
     );
-    worker.once("message", ({ result, error }: { result?: unknown; error?: string }) =>
-      finish(() => (error === undefined ? resolve(result) : reject(new Error(error)))),
-    );
-    worker.once("error", (error) => finish(() => reject(error)));
-    worker.once("exit", () => finish(() => reject(new Error("The sandbox stopped before the eval returned"))));
   });
 }
 
@@ -163,7 +214,7 @@ function parseEvalResult(output: unknown): EvalResult {
 export async function RunMonitorEval(code: string, args: unknown[]): Promise<EvalResult> {
   let output: unknown;
   try {
-    output = await runInWorker(code, args);
+    output = await runInProcess(code, args);
   } catch (error: unknown) {
     throw new Error(`Eval error: ${truncate(error instanceof Error ? error.message : String(error))}`);
   }

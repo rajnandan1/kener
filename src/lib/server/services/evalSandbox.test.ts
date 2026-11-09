@@ -1,4 +1,5 @@
-import { Worker } from "node:worker_threads";
+import { ChildProcess } from "node:child_process";
+import { once } from "node:events";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as cheerio from "cheerio";
 import { DefaultAPIEval, DefaultGamedigEval, DefaultPingEval, DefaultTCPEval } from "../../anywhere.js";
@@ -151,6 +152,18 @@ describe("RunMonitorEval guest features", () => {
     expect(await RunMonitorEval(code, [html])).toEqual({ status: "UP", latency: -1 });
   });
 
+  it("uses the time zone of the server", async () => {
+    const serverTimeZone = process.env.TZ;
+    process.env.TZ = "Etc/GMT+5";
+    try {
+      const code = `async () => ({ status: new Date(0).getTimezoneOffset() === 300 ? "UP" : "DOWN", latency: 1 })`;
+
+      expect(await RunMonitorEval(code, [])).toEqual({ status: "UP", latency: 1 });
+    } finally {
+      process.env.TZ = serverTimeZone;
+    }
+  });
+
   it("gives every eval a new global scope", async () => {
     await RunMonitorEval(`async () => { globalThis.leak = true; return ${up}; }`, []);
 
@@ -227,13 +240,54 @@ describe("RunMonitorEval limits", () => {
     await expectKillAtDeadline(code);
   });
 
-  it("ends the worker thread at the deadline", async () => {
-    const terminate = vi.spyOn(Worker.prototype, "terminate");
+  it("ends the eval process at the deadline", async () => {
+    const kill = vi.spyOn(ChildProcess.prototype, "kill");
 
     await expectKillAtDeadline(`async () => { while (true) {} }`);
 
-    const exitCodes = await Promise.all(terminate.mock.results.map((result) => result.value));
-    expect(exitCodes).toContain(1);
+    expect(kill).toHaveBeenCalledWith("SIGKILL");
+    const child = kill.mock.contexts[0] as ChildProcess;
+    await vi.waitFor(() => expect(child.signalCode).toBe("SIGKILL"));
+  });
+
+  it("keeps an eval process alive after it answers", async () => {
+    const kill = ChildProcess.prototype.kill;
+    const killSpy = vi.spyOn(ChildProcess.prototype, "kill").mockReturnValue(true);
+    const alive = (child: ChildProcess) => child.exitCode === null && child.signalCode === null;
+
+    await RunMonitorEval(`async () => (${up})`, []);
+    await new Promise((resolve) => realSetTimeout(resolve, 500));
+
+    const children = (killSpy.mock.contexts as ChildProcess[]).filter(alive);
+    try {
+      expect(children).toHaveLength(1);
+    } finally {
+      await Promise.all(
+        children.map((child) => {
+          const gone = once(child, "exit");
+          kill.call(child, "SIGKILL");
+          return gone;
+        }),
+      );
+    }
+  });
+
+  it("runs at most 2 eval processes at once", async () => {
+    const prototype = ChildProcess.prototype as ChildProcess & { spawn(options: unknown): unknown };
+    const spawn = prototype.spawn;
+    let alive = 0;
+    let most = 0;
+    vi.spyOn(prototype, "spawn").mockImplementation(function (this: ChildProcess, options: unknown) {
+      const result = spawn.call(this, options);
+      most = Math.max(most, ++alive);
+      this.once("exit", () => alive--);
+      return result;
+    });
+
+    const results = await Promise.all(Array.from({ length: 6 }, () => RunMonitorEval(`async () => (${up})`, [])));
+
+    expect(results).toEqual(Array.from({ length: 6 }, () => ({ status: "UP", latency: 1 })));
+    expect(most).toBe(2);
   });
 
   it("rejects a result that is too large", async () => {
