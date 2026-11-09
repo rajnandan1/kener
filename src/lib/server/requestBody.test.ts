@@ -47,6 +47,8 @@ describe("findBodyError", () => {
 describe("readRequestBody", () => {
   const read = (raw: string) =>
     readRequestBody(new Request("http://localhost", { method: "POST", body: raw }), "POST /api/v4/monitors");
+  const readPage = (raw: string) =>
+    readRequestBody(new Request("http://localhost", { method: "POST", body: raw }), "POST /api/v4/pages");
 
   it("returns the parsed body when it matches the spec", async () => {
     expect(await read('{"tag":"api","name":"API"}')).toEqual({ tag: "api", name: "API" });
@@ -60,6 +62,27 @@ describe("readRequestBody", () => {
 
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ error: { code: "BAD_REQUEST", message } });
+  });
+
+  it("accepts legacy and grouped page monitors", async () => {
+    expect(
+      await readPage(
+        '{"page_path":"status","page_title":"Status","page_header":"Status","monitors":["api",{"tag":"db","group":"Backend","position":2}]}',
+      ),
+    ).toEqual({
+      page_path: "status",
+      page_title: "Status",
+      page_header: "Status",
+      monitors: ["api", { tag: "db", group: "Backend", position: 2 }],
+    });
+  });
+
+  it("rejects a page monitor object without a tag", async () => {
+    const response = (await readPage(
+      '{"page_path":"status","page_title":"Status","page_header":"Status","monitors":[{"group":"Backend"}]}',
+    )) as Response;
+
+    expect(response.status).toBe(400);
   });
 });
 

@@ -222,26 +222,26 @@
                     class="{viewType === 'compact-grid' || viewType === 'default-grid'
                       ? `${getGridItemSpanClass(i, group.tags.length, viewType)} bg-background`
                       : i < group.tags.length - 1
-                    ? 'border-b'
-                    : ''} px-2 py-2 sm:px-0"
-              >
-                <MonitorBar
-                  {tag}
-                  prefetchedData={monitorBarDataByTag[tag]}
-                  prefetchedError={monitorBarErrorByTag[tag]}
-                  days={barCount}
-                  {endOfDayTodayAtTz}
-                  groupChildTags={data.monitorGroupMembersByTag?.[tag] || []}
-                  groupMemberDisplay={data.monitorGroupMemberDisplayByTag?.[tag]}
-                  compact={isCompact}
-                  grid={viewType === "compact-grid" || viewType === "default-grid"}
-                />
+                        ? 'border-b'
+                        : ''} px-2 py-2 sm:px-0"
+                  >
+                    <MonitorBar
+                      {tag}
+                      prefetchedData={monitorBarDataByTag[tag]}
+                      prefetchedError={monitorBarErrorByTag[tag]}
+                      days={barCount}
+                      {endOfDayTodayAtTz}
+                      groupChildTags={data.monitorGroupMembersByTag?.[tag] || []}
+                      groupMemberDisplay={data.monitorGroupMemberDisplayByTag?.[tag]}
+                      compact={isCompact}
+                      grid={viewType === "compact-grid" || viewType === "default-grid"}
+                    />
+                  </div>
+                {/each}
               </div>
-            {/each}
+            </div>
           </div>
-        </div>
-      </div>
-    {/each}
+        {/each}
       {/if}
     </div>
     {#if eventListPlacement === "aside"}
