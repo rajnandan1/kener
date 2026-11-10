@@ -58,17 +58,16 @@ export class LocalQueue<T = unknown, R = unknown> {
 
   constructor(private readonly defaultJobOptions: JobsOptions = {}) {}
 
-  /** Installs the processor used by jobs from this queue. */
   setProcessor(processor: LocalProcessor<T, R>): void {
     this.processor = processor;
   }
 
-  /** Sets the maximum number of jobs that may run at once. */
   setConcurrency(concurrency: number): void {
     this.concurrency = Math.max(1, concurrency);
     this.drain();
   }
 
+  /** Delivers an event to every listener without coupling failures to job outcomes. */
   private emit(event: string, ...args: unknown[]): number {
     const handlers = this.handlers.get(event) ?? [];
     for (const handler of handlers) {
@@ -136,6 +135,7 @@ export class LocalQueue<T = unknown, R = unknown> {
     });
   }
 
+  /** Runs a job through its retry policy and deduplication lifetime. */
   private async run(job: LocalJobData<T>, dedupeId?: string): Promise<R | undefined> {
     const attempts = Math.max(1, job.opts.attempts ?? this.defaultJobOptions.attempts ?? 1);
     try {
@@ -196,6 +196,7 @@ export class LocalQueue<T = unknown, R = unknown> {
     return job;
   }
 
+  /** Starts the interval or cron timer for one scheduler definition. */
   private schedule(entry: SchedulerEntry<T>): void {
     const run = () => {
       if (this.closed) return;
@@ -221,7 +222,6 @@ export class LocalQueue<T = unknown, R = unknown> {
     this.schedule(entry);
   }
 
-  /** Lists the names of registered job schedulers. */
   async getJobSchedulers(): Promise<Array<{ name: string }>> {
     return [...this.schedulers.keys()].map((name) => ({ name }));
   }
@@ -262,7 +262,6 @@ export class LocalWorker<T = unknown, R = unknown> {
     queue.setConcurrency(options.concurrency ?? 1);
   }
 
-  /** Registers a handler for queue lifecycle events. */
   on(event: string, handler: LocalEventHandler): this {
     this.queue.on(event, handler);
     return this;

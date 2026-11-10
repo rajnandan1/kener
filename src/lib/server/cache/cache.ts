@@ -39,6 +39,7 @@ export async function deleteCache(key: string): Promise<void> {
   await redis.del(getCacheKey(key));
 }
 
+/** Reads through the selected cache backend, optionally filling it. */
 export async function getCache<T>(
   key: string,
   fetcher?: () => Promise<T | null | undefined> | T | null | undefined,

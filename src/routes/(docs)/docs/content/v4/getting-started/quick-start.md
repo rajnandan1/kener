@@ -50,7 +50,7 @@ npm install
 # docker run -d --name kener-redis -p 6379:6379 redis:7-alpine
 # REDIS_URL=redis://localhost:6379 npm run dev
 
-# Default: queues and schedules run in-process
+# Default: queues, schedules, and caches run in-process
 npm run dev
 ```
 

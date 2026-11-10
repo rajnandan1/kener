@@ -2,7 +2,7 @@
 import tailwindcss from "@tailwindcss/vite";
 import { sveltekit } from "@sveltejs/kit/vite";
 import version from "vite-plugin-package-version";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import devtoolsJson from "vite-plugin-devtools-json";
 import { playwright } from "@vitest/browser-playwright";
 import { configDefaults } from "vitest/config";
@@ -18,6 +18,35 @@ function getAllowedHost(origin: string): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+function devScheduler(): Plugin {
+  return {
+    name: "kener-dev-scheduler",
+    apply: "serve",
+    configureServer(server) {
+      if (process.env.VITEST === "true" || !server.httpServer) return;
+
+      server.httpServer.once("listening", () => {
+        void server
+          .ssrLoadModule("/src/lib/server/startup.ts")
+          .then(({ default: Startup }) => Startup())
+          .catch((error) => console.error("Failed to start Kener schedulers:", error));
+      });
+
+      server.httpServer.once("close", () => {
+        void Promise.all([
+          server.ssrLoadModule("/src/lib/server/schedulers/shutdown.ts"),
+          server.ssrLoadModule("/src/lib/server/queues/shutdown.ts"),
+        ])
+          .then(async ([schedulers, queues]) => {
+            await schedulers.default();
+            await queues.default();
+          })
+          .catch((error) => console.error("Failed to stop Kener schedulers:", error));
+      });
+    },
+  };
 }
 
 export default defineConfig(({ mode }) => {
@@ -43,7 +72,7 @@ export default defineConfig(({ mode }) => {
         "@uiw/codemirror-theme-github",
       ],
     },
-    plugins: [tailwindcss(), sveltekit(), version(), devtoolsJson()],
+    plugins: [tailwindcss(), sveltekit(), devScheduler(), version(), devtoolsJson()],
     server: {
       allowedHosts: allowedHost ? [allowedHost] : undefined,
       port,

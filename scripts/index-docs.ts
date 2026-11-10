@@ -145,7 +145,7 @@ function normalizeSidebar(sidebar: DocsSidebarGroup[]): Array<{ group: string; p
 }
 
 async function main(): Promise<void> {
-  if (!process.env.REDIS_URL) {
+  if (!process.env.REDIS_URL?.trim()) {
     console.log("[index-docs] Redis is not configured; skipping the docs search index.");
     return;
   }
