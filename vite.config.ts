@@ -20,6 +20,7 @@ function getAllowedHost(origin: string): string | undefined {
   }
 }
 
+/** Starts Kener's background schedulers inside the Vite dev process. */
 function devScheduler(): Plugin {
   return {
     name: "kener-dev-scheduler",

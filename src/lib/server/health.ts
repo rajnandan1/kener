@@ -4,6 +4,7 @@ interface HealthChecks {
   redisConfigured: boolean;
 }
 
+/** Runs one health probe with a bounded wait. */
 const probe = async (check: () => Promise<unknown>): Promise<boolean> => {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {

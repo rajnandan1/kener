@@ -11,7 +11,7 @@ import {
   type ConnectionOptions,
 } from "bullmq";
 
-//create and return queue instance given name and options
+/** Creates a BullMQ queue, or the in-process queue when Redis is unset. */
 export const createQueue = (name: string, options?: Omit<QueueOptions, "connection" | "prefix">) => {
   const defaultJobOptions = {
     attempts: 3,
@@ -35,7 +35,7 @@ export const createQueue = (name: string, options?: Omit<QueueOptions, "connecti
   return new Queue(name, opts);
 };
 
-//create and return worker instance given queue, processor, and options
+/** Binds a worker processor to the selected queue backend. */
 export const createWorker = <T = unknown, R = unknown>(
   queue: Queue,
   processor: Processor<T, R>,

@@ -14,6 +14,7 @@ import knexOb from "../knexfile.js";
 const PORT = process.env.PORT || 3000;
 const base = process.env.KENER_BASE_PATH || "";
 
+/** Starts HTTP serving, migrations, seeding, and graceful shutdown handling. */
 async function start() {
   // Dynamic import so BODY_SIZE_LIMIT from .env is available
   // before the handler reads it at module top-level

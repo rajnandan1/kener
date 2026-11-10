@@ -11,6 +11,7 @@ const memoryCache = ((
 
 const getCacheKey = (key: string) => `${prefix}${key}`;
 
+/** Stores a JSON value in the selected cache backend with a TTL. */
 export async function setCache<T>(key: string, value: T | null | undefined, ttlSeconds?: number): Promise<void> {
   const payload = JSON.stringify(value ?? null);
   const ttl = typeof ttlSeconds === "number" && ttlSeconds > 0 ? ttlSeconds : defaultTtlSeconds;
