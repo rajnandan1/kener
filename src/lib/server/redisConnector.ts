@@ -34,6 +34,10 @@ const redisClientOptions: RedisOptions = {
   },
 };
 
+export function isRedisConfigured(): boolean {
+  return Boolean(process.env.REDIS_URL?.trim());
+}
+
 export function redisIOConnection(): IORedis {
   if (!redisIOClient) {
     if (!process.env.REDIS_URL) {

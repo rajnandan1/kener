@@ -8,7 +8,7 @@ Kener is an open-source status page system designed to help you monitor and comm
 > [!NOTE]
 > This documentation is for kener version 4x. There are few changes from version 3.x. Please refer to the [migration guide](/docs/v4/changelogs/v4.0.0) if you are upgrading from version 3.x. If you are looking for version 3.x documentation, you can find it [here](/docs/v3/home).
 
-Kener is a simple status monitoring app that helps you keep your users informed about the status of your services. It is built with Node.js and Svelte, and uses Redis for caching.
+Kener is a simple status monitoring app that helps you keep your users informed about the status of your services. It is built with Node.js and Svelte. Redis is optional; without it, background work runs in-process.
 
 Kener is built and maintained by [Rajnandan1](https://www.rajnandan.com). It is licensed under the MIT License. Please consider supporting the project by starring it on [GitHub](https://github.com/rajnandan1/kener) or by [sponsoring](https://github.com/sponsors/rajnandan1) the development.
 

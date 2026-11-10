@@ -17,6 +17,9 @@ cd kener
 
 # Update KENER_SECRET_KEY and ORIGIN in docker-compose.yml before first run
 docker compose up -d
+
+# Optional: include Redis for durable queues and multiple replicas
+# REDIS_URL=redis://redis:6379 docker compose --profile redis up -d
 ```
 
 Kener will be available at `http://localhost:3000`.
@@ -43,7 +46,7 @@ git clone https://github.com/rajnandan1/kener.git
 cd kener
 npm install
 
-# Start Redis (if not already running)
+# Optional: use Redis for durable queues and multi-replica deployments
 docker run -d --name kener-redis -p 6379:6379 redis:7-alpine
 
 npm run dev

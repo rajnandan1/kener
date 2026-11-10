@@ -78,23 +78,19 @@ ORIGIN=https://example.com
 > [!CAUTION]
 > Without `ORIGIN`, **all form submissions will be rejected** in production. This includes login, signup, and admin panel actions. Always set this variable when deploying.
 
+## Optional Variables {#optional-variables}
+
 ### REDIS_URL {#redis-url}
 
-**Purpose**: Full Redis connection string used for background job processing.
+**Purpose**: Optional Redis connection used for shared caches, durable queues, and coordinated schedules.
 
-**Requirements**:
-
-- Must be a valid Redis connection URL
-- Include protocol (`redis://` or `rediss://`)
-- Must point to a reachable Redis instance
+When omitted, Kener keeps monitoring, alerts, emails, and scheduled jobs running in-process. Use one replica in that mode because queue state and caches are local to the process and reset on restart.
 
 **Example**:
 
 ```bash
 REDIS_URL=redis://localhost:6379
 ```
-
-## Optional Variables {#optional-variables}
 
 ### KENER_BASE_PATH {#kener-base-path}
 
@@ -333,9 +329,9 @@ DATABASE_URL=mysql://user:password@localhost:3306/kener
 
 | Variable    | Description                  | Required |
 | :---------- | :--------------------------- | :------- |
-| `REDIS_URL` | Full Redis connection string | Yes      |
+| `REDIS_URL` | Full Redis connection string | No       |
 
-**Purpose**: Redis queue for background job processing.
+**Purpose**: Preferred backend for shared caches and durable background job processing.
 
 **Example**:
 

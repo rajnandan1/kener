@@ -56,7 +56,6 @@
             <ul class="list-inside list-disc text-sm">
               <li>KENER_SECRET_KEY</li>
               <li>ORIGIN</li>
-              <li>REDIS_URL</li>
             </ul>
             <Button
               variant="link"

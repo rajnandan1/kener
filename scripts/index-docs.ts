@@ -145,10 +145,9 @@ function normalizeSidebar(sidebar: DocsSidebarGroup[]): Array<{ group: string; p
 }
 
 async function main(): Promise<void> {
-  // Validate Redis URL
   if (!process.env.REDIS_URL) {
-    console.error("Error: REDIS_URL environment variable is not set.");
-    process.exit(1);
+    console.log("[index-docs] Redis is not configured; skipping the docs search index.");
+    return;
   }
 
   // Read docs.json
