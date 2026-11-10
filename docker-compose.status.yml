@@ -1,12 +1,15 @@
 # =============================================================================
 # Kener v4 — Production Docker Compose for /status base path
 #
-# Usage:
+# Usage with in-process queues:
 #   docker compose -f docker-compose.status.yml up -d
+# With Redis:
+#   REDIS_URL=redis://redis:6379 docker compose --profile redis -f docker-compose.status.yml up -d
 # =============================================================================
 
 services:
   redis:
+    profiles: ["redis"]
     image: redis:7-alpine
     container_name: kener-redis-status
     restart: unless-stopped
@@ -25,7 +28,7 @@ services:
     environment:
       KENER_SECRET_KEY: replace_me_with_a_random_string # generate: openssl rand -base64 32
       ORIGIN: http://localhost:3000/status
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: ${REDIS_URL:-}
       KENER_BASE_PATH: /status
 
       # DATABASE_URL: sqlite://./database/kener.sqlite.db
@@ -38,6 +41,7 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+        required: false
     restart: unless-stopped
 
 volumes:

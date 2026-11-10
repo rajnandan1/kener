@@ -5,6 +5,7 @@ import maintenanceScheduler from "./schedulers/maintenanceScheduler.js";
 import dailyCleanupScheduler from "./schedulers/dailyCleanup.js";
 import { InstallEnvProxy } from "./proxy.js";
 import { SecretKeyWarning } from "./controllers/commonController.js";
+import { isRedisConfigured } from "./redisConnector.js";
 
 process.env.TZ = "UTC";
 
@@ -14,6 +15,11 @@ async function Startup(): Promise<void> {
   InstallEnvProxy();
   const secretKeyWarning = SecretKeyWarning();
   if (secretKeyWarning) console.warn(secretKeyWarning);
+  if (!isRedisConfigured()) {
+    console.warn(
+      "REDIS_URL is not set. Queues, schedules, and caches are running in-process; use a single Kener replica.",
+    );
+  }
   await mainScheduler.start();
   await maintenanceScheduler.start();
   await dailyCleanupScheduler.start();

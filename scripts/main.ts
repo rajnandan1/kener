@@ -6,13 +6,15 @@ import Startup from "../src/lib/server/startup.ts";
 import shutdownSchedulers from "../src/lib/server/schedulers/shutdown.ts";
 import shutdownQueues from "../src/lib/server/queues/shutdown.ts";
 import dbInstance from "../src/lib/server/db/db.ts";
-import { redisConnection } from "../src/lib/server/redisConnector.ts";
+import { checkHealth } from "../src/lib/server/health.ts";
+import { isRedisConfigured, redisConnection } from "../src/lib/server/redisConnector.ts";
 import knex from "knex";
 import knexOb from "../knexfile.js";
 
 const PORT = process.env.PORT || 3000;
 const base = process.env.KENER_BASE_PATH || "";
 
+/** Starts HTTP serving, migrations, seeding, and graceful shutdown handling. */
 async function start() {
   // Dynamic import so BODY_SIZE_LIMIT from .env is available
   // before the handler reads it at module top-level
@@ -21,47 +23,24 @@ async function start() {
   const app: any = express();
   const db = knex(knexOb);
 
-  // Caps a health probe at 2s so a wedged dependency can not hang the
-  // endpoint. A probe is healthy unless it throws, times out, or resolves false.
-  const probe = async (check: () => Promise<unknown>): Promise<boolean> => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    try {
-      const result = await Promise.race([
-        check(),
-        new Promise((_, reject) => {
-          timer = setTimeout(() => reject(new Error("health probe timeout")), 2000);
-        }),
-      ]);
-      return result !== false;
-    } catch {
-      return false;
-    } finally {
-      clearTimeout(timer);
-    }
-  };
-
   // Reports component health. Always 200 so healthcheck-driven restarters do
   // not bounce the app while a dependency is down (a restart can not fix a
   // dead database); pass ?strict=1 to get 503 when any component is down.
   app.get(base + "/healthcheck", async (req: any, res: any) => {
-    const [dbOk, redisOk] = await Promise.all([
-      probe(() => dbInstance.ping()),
-      // Guard on status before PING: the shared ioredis client has
-      // maxRetriesPerRequest null, so commands sent while disconnected would
-      // queue forever and accumulate across healthcheck polls
-      probe(async () => {
-        const redis = redisConnection();
-        if (redis.status !== "ready") return false;
-        return await redis.ping();
-      }),
-    ]);
-    const healthy = dbOk && redisOk;
-    const strict = req.query.strict === "1";
-    res.status(strict && !healthy ? 503 : 200).json({
-      status: healthy ? "ok" : "degraded",
-      db: dbOk,
-      redis: redisOk,
+    const redisConfigured = isRedisConfigured();
+    const health = await checkHealth({
+      database: () => dbInstance.ping(),
+      redisConfigured,
+      redis: redisConfigured
+        ? async () => {
+            const redis = redisConnection();
+            if (redis.status !== "ready") return false;
+            return await redis.ping();
+          }
+        : undefined,
     });
+    const strict = req.query.strict === "1";
+    res.status(strict && !health.healthy ? 503 : 200).json(health.body);
   });
 
   app.use(handler);

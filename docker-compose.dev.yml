@@ -16,6 +16,7 @@ services:
   # Redis
   # ---------------------------------------------------------------------------
   redis:
+    profiles: ["redis"]
     image: redis:7-alpine
     container_name: kener-redis-dev
     ports:
@@ -42,7 +43,7 @@ services:
     environment:
       KENER_SECRET_KEY: dev-secret-key-for-local-testing-only
       ORIGIN: http://localhost:3000
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: ${REDIS_URL:-}
       # DATABASE_URL: sqlite://./database/kener.sqlite.db
     ports:
       - "3000:3000"
@@ -51,6 +52,7 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+        required: false
 
 volumes:
   dev_data:

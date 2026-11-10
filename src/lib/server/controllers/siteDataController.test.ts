@@ -19,6 +19,21 @@ describe("HasRequiredEnv", () => {
     expect(HasRequiredEnv()).toBe(true);
     vi.unstubAllEnvs();
   });
+
+  it("does not require Redis", () => {
+    vi.stubEnv("ORIGIN", "http://localhost:3000");
+    vi.stubEnv("KENER_SECRET_KEY", "a-real-secret");
+    const redisUrl = process.env.REDIS_URL;
+    delete process.env.REDIS_URL;
+
+    try {
+      expect(HasRequiredEnv()).toBe(true);
+    } finally {
+      if (redisUrl === undefined) delete process.env.REDIS_URL;
+      else process.env.REDIS_URL = redisUrl;
+      vi.unstubAllEnvs();
+    }
+  });
 });
 
 const captcha = (secret?: string) => ({
