@@ -46,7 +46,6 @@ export class LocalQueue<T = unknown, R = unknown> {
 
   private processor: LocalProcessor<T, R> | null = null;
   private readonly timers = new Set<NodeJS.Timeout>();
-  private readonly retryWaiters = new Set<() => void>();
   private readonly schedulers = new Map<string, SchedulerEntry<T>>();
   private readonly scheduled = new Map<string, NodeJS.Timeout>();
   private readonly running = new Set<Promise<unknown>>();
@@ -111,59 +110,45 @@ export class LocalQueue<T = unknown, R = unknown> {
       this.drain();
     };
     void promise.then(
-      () => finalize(),
+      (retrying) => {
+        if (!retrying && dedupeId) this.scheduled.delete(dedupeId);
+        finalize();
+      },
       (error) => {
+        if (dedupeId) this.scheduled.delete(dedupeId);
         console.error(`Local queue job "${job.name}" failed unexpectedly:`, error);
         finalize();
       },
     );
   }
 
-  private waitForRetry(milliseconds: number): Promise<void> {
-    if (milliseconds <= 0) return Promise.resolve();
-
-    return new Promise((resolve) => {
-      let timer: NodeJS.Timeout;
-      const done = () => {
-        this.retryWaiters.delete(done);
-        clearTimeout(timer);
-        resolve();
-      };
-      timer = setTimeout(done, milliseconds);
-      timer.unref?.();
-      this.retryWaiters.add(done);
-    });
+  private scheduleRetry(job: LocalJobData<T>, dedupeId: string | undefined, delay: number): void {
+    const timer = setTimeout(() => this.execute(job, dedupeId, timer), delay);
+    timer.unref?.();
+    this.timers.add(timer);
+    if (dedupeId) this.scheduled.set(dedupeId, timer);
   }
 
   /** Runs a job through its retry policy and deduplication lifetime. */
-  private async run(job: LocalJobData<T>, dedupeId?: string): Promise<R | undefined> {
+  private async run(job: LocalJobData<T>, dedupeId?: string): Promise<boolean> {
     const attempts = Math.max(1, job.opts.attempts ?? this.defaultJobOptions.attempts ?? 1);
+    if (this.closed) return false;
+
     try {
-      for (;;) {
-        if (this.closed) return undefined;
-        try {
-          const result = await this.processor!(job);
-          this.emit("completed", job, result);
-          return result;
-        } catch (error) {
-          job.attemptsMade++;
-          if (job.attemptsMade >= attempts) {
-            if (this.emit("failed", job, error) === 0) {
-              console.error(
-                `Local queue job "${job.name}" (${job.id}) failed after ${job.attemptsMade} attempts:`,
-                error,
-              );
-            }
-            return undefined;
-          }
-          if (this.closed) return undefined;
-          const delay = retryDelay(job.attemptsMade, job.opts);
-          await this.waitForRetry(delay);
-          if (this.closed) return undefined;
+      const result = await this.processor!(job);
+      this.emit("completed", job, result);
+      return false;
+    } catch (error) {
+      job.attemptsMade++;
+      if (job.attemptsMade >= attempts) {
+        if (this.emit("failed", job, error) === 0) {
+          console.error(`Local queue job "${job.name}" (${job.id}) failed after ${job.attemptsMade} attempts:`, error);
         }
+        return false;
       }
-    } finally {
-      if (dedupeId) this.scheduled.delete(dedupeId);
+      if (this.closed) return false;
+      this.scheduleRetry(job, dedupeId, retryDelay(job.attemptsMade, job.opts));
+      return true;
     }
   }
 
@@ -244,7 +229,6 @@ export class LocalQueue<T = unknown, R = unknown> {
     this.timers.clear();
     this.scheduled.clear();
     this.pending.length = 0;
-    for (const wake of [...this.retryWaiters]) wake();
     await Promise.allSettled(this.running);
   }
 }

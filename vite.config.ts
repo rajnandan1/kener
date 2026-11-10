@@ -27,19 +27,23 @@ function devScheduler(): Plugin {
     apply: "serve",
     configureServer(server) {
       if (process.env.VITEST === "true" || !server.httpServer) return;
+      let startup = Promise.resolve();
 
       server.httpServer.once("listening", () => {
-        void server
+        startup = server
           .ssrLoadModule("/src/lib/server/startup.ts")
           .then(({ default: Startup }) => Startup())
           .catch((error) => console.error("Failed to start Kener schedulers:", error));
       });
 
       server.httpServer.once("close", () => {
-        void Promise.all([
-          server.ssrLoadModule("/src/lib/server/schedulers/shutdown.ts"),
-          server.ssrLoadModule("/src/lib/server/queues/shutdown.ts"),
-        ])
+        void startup
+          .then(() =>
+            Promise.all([
+              server.ssrLoadModule("/src/lib/server/schedulers/shutdown.ts"),
+              server.ssrLoadModule("/src/lib/server/queues/shutdown.ts"),
+            ]),
+          )
           .then(async ([schedulers, queues]) => {
             await schedulers.default();
             await queues.default();

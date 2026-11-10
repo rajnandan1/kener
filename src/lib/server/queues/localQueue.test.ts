@@ -120,6 +120,31 @@ describe("LocalQueue", () => {
     expect(processor).toHaveBeenCalledOnce();
   });
 
+  it("releases a worker slot while a failed job waits to retry", async () => {
+    vi.useFakeTimers();
+    const queue = new LocalQueue<{ id: string }>();
+    const seen: string[] = [];
+    const worker = new LocalWorker(
+      queue,
+      async (job) => {
+        seen.push(job.data.id);
+        if (job.data.id === "retry" && job.attemptsMade === 0) throw new Error("retry later");
+        return undefined;
+      },
+      { concurrency: 1 },
+    );
+    workers.push(worker);
+
+    await queue.add("retry", { id: "retry" }, { attempts: 2, backoff: { type: "fixed", delay: 60_000 } });
+    await queue.add("next", { id: "next" });
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(seen).toEqual(["retry", "next"]);
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(seen).toEqual(["retry", "next", "retry"]);
+  });
+
   it("does not exceed the worker concurrency", async () => {
     const queue = new LocalQueue<{ id: number }>();
     let release!: () => void;
