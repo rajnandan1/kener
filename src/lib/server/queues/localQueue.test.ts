@@ -8,6 +8,7 @@ afterEach(async () => {
   await Promise.all(workers.splice(0).map((worker) => worker.close()));
   vi.useRealTimers();
   vi.unstubAllEnvs();
+  vi.restoreAllMocks();
 });
 
 describe("LocalQueue", () => {
@@ -69,6 +70,56 @@ describe("LocalQueue", () => {
     await vi.waitFor(() => expect(attempts).toBe(2));
   });
 
+  it("isolates listener errors from job outcomes", async () => {
+    const queue = new LocalQueue();
+    const processor = vi.fn(async () => "done");
+    const followingListener = vi.fn();
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const worker = new LocalWorker(queue, processor);
+    workers.push(worker);
+    worker.on("completed", () => {
+      throw new Error("listener failed");
+    });
+    worker.on("completed", followingListener);
+
+    await queue.add("listener", {});
+
+    await vi.waitFor(() => expect(followingListener).toHaveBeenCalledOnce());
+    expect(processor).toHaveBeenCalledOnce();
+    expect(consoleError).toHaveBeenCalledWith('Local queue "completed" listener threw:', expect.any(Error));
+  });
+
+  it("logs a final failure when no failed listener is registered", async () => {
+    const queue = new LocalQueue();
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    const processor = vi.fn(async () => {
+      throw new Error("failed");
+    });
+    const worker = new LocalWorker(queue, processor);
+    workers.push(worker);
+
+    await queue.add("fail", {}, { attempts: 2, backoff: { type: "fixed", delay: 1 } });
+
+    await vi.waitFor(() => expect(processor).toHaveBeenCalledTimes(2));
+    expect(consoleError).toHaveBeenCalledWith(expect.stringContaining('Local queue job "fail"'), expect.any(Error));
+  });
+
+  it("stops retrying when closed during backoff", async () => {
+    const queue = new LocalQueue();
+    const processor = vi.fn(async () => {
+      throw new Error("retry later");
+    });
+    const worker = new LocalWorker(queue, processor);
+    workers.push(worker);
+
+    await queue.add("retry", {}, { attempts: 3, backoff: { type: "fixed", delay: 60_000 } });
+    await vi.waitFor(() => expect(processor).toHaveBeenCalledOnce());
+
+    await worker.close();
+
+    expect(processor).toHaveBeenCalledOnce();
+  });
+
   it("does not exceed the worker concurrency", async () => {
     const queue = new LocalQueue<{ id: number }>();
     let release!: () => void;
@@ -125,6 +176,17 @@ describe("LocalQueue", () => {
 
     await queue.removeJobScheduler("midnight");
     expect(await queue.getJobSchedulers()).toEqual([]);
+  });
+
+  it("rejects new schedulers after close", async () => {
+    const queue = new LocalQueue();
+    const worker = new LocalWorker(queue, async () => undefined);
+    workers.push(worker);
+    await worker.close();
+
+    await expect(queue.upsertJobScheduler("late", { every: 1000 }, { data: {} })).rejects.toThrow(
+      "Local queue is closed",
+    );
   });
 
   it("runs a cron scheduler on its next matching second", async () => {

@@ -35,4 +35,16 @@ describe("cache without Redis", () => {
 
     expect(await getCache("cache-test-delete")).toBeNull();
   });
+
+  it("shares entries across separately loaded module instances", async () => {
+    vi.resetModules();
+    const first = await import("./cache");
+    await first.setCache("cache-test-shared", { status: "UP" }, 30);
+
+    vi.resetModules();
+    const second = await import("./cache");
+
+    expect(await second.getCache("cache-test-shared")).toEqual({ status: "UP" });
+    await second.deleteCache("cache-test-shared");
+  });
 });

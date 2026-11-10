@@ -40,17 +40,13 @@ const retryDelay = (attemptsMade: number, options: JobsOptions): number => {
     : delay;
 };
 
-const sleep = (milliseconds: number): Promise<void> =>
-  new Promise((resolve) => {
-    const timer = setTimeout(resolve, milliseconds);
-    timer.unref?.();
-  });
-
+/** In-process BullMQ-compatible queue for single-replica deployments. */
 export class LocalQueue<T = unknown, R = unknown> {
   readonly local = true;
 
   private processor: LocalProcessor<T, R> | null = null;
   private readonly timers = new Set<NodeJS.Timeout>();
+  private readonly retryWaiters = new Set<() => void>();
   private readonly schedulers = new Map<string, SchedulerEntry<T>>();
   private readonly scheduled = new Map<string, NodeJS.Timeout>();
   private readonly running = new Set<Promise<unknown>>();
@@ -62,19 +58,30 @@ export class LocalQueue<T = unknown, R = unknown> {
 
   constructor(private readonly defaultJobOptions: JobsOptions = {}) {}
 
+  /** Installs the processor used by jobs from this queue. */
   setProcessor(processor: LocalProcessor<T, R>): void {
     this.processor = processor;
   }
 
+  /** Sets the maximum number of jobs that may run at once. */
   setConcurrency(concurrency: number): void {
     this.concurrency = Math.max(1, concurrency);
     this.drain();
   }
 
-  private emit(event: string, ...args: unknown[]): void {
-    for (const handler of this.handlers.get(event) ?? []) handler(...args);
+  private emit(event: string, ...args: unknown[]): number {
+    const handlers = this.handlers.get(event) ?? [];
+    for (const handler of handlers) {
+      try {
+        handler(...args);
+      } catch (error) {
+        console.error(`Local queue "${event}" listener threw:`, error);
+      }
+    }
+    return handlers.length;
   }
 
+  /** Registers a handler for local queue lifecycle events. */
   on(event: string, handler: LocalEventHandler): void {
     const handlers = this.handlers.get(event) ?? [];
     handlers.push(handler);
@@ -99,10 +106,33 @@ export class LocalQueue<T = unknown, R = unknown> {
 
     const promise = this.run(job, dedupeId);
     this.running.add(promise);
-    void promise.finally(() => {
+    const finalize = () => {
       this.running.delete(promise);
       this.active--;
       this.drain();
+    };
+    void promise.then(
+      () => finalize(),
+      (error) => {
+        console.error(`Local queue job "${job.name}" failed unexpectedly:`, error);
+        finalize();
+      },
+    );
+  }
+
+  private waitForRetry(milliseconds: number): Promise<void> {
+    if (milliseconds <= 0) return Promise.resolve();
+
+    return new Promise((resolve) => {
+      let timer: NodeJS.Timeout;
+      const done = () => {
+        this.retryWaiters.delete(done);
+        clearTimeout(timer);
+        resolve();
+      };
+      timer = setTimeout(done, milliseconds);
+      timer.unref?.();
+      this.retryWaiters.add(done);
     });
   }
 
@@ -110,6 +140,7 @@ export class LocalQueue<T = unknown, R = unknown> {
     const attempts = Math.max(1, job.opts.attempts ?? this.defaultJobOptions.attempts ?? 1);
     try {
       for (;;) {
+        if (this.closed) return undefined;
         try {
           const result = await this.processor!(job);
           this.emit("completed", job, result);
@@ -117,11 +148,18 @@ export class LocalQueue<T = unknown, R = unknown> {
         } catch (error) {
           job.attemptsMade++;
           if (job.attemptsMade >= attempts) {
-            this.emit("failed", job, error);
+            if (this.emit("failed", job, error) === 0) {
+              console.error(
+                `Local queue job "${job.name}" (${job.id}) failed after ${job.attemptsMade} attempts:`,
+                error,
+              );
+            }
             return undefined;
           }
+          if (this.closed) return undefined;
           const delay = retryDelay(job.attemptsMade, job.opts);
-          if (delay > 0) await sleep(delay);
+          await this.waitForRetry(delay);
+          if (this.closed) return undefined;
         }
       }
     } finally {
@@ -129,6 +167,7 @@ export class LocalQueue<T = unknown, R = unknown> {
     }
   }
 
+  /** Adds a job, optionally delayed or deduplicated by its options. */
   async add(name: string, data: T, options: JobsOptions = {}): Promise<LocalJobData<T>> {
     if (this.closed) throw new Error("Local queue is closed");
     if (!this.processor) throw new Error(`No local worker registered for queue before adding ${name}`);
@@ -159,7 +198,10 @@ export class LocalQueue<T = unknown, R = unknown> {
 
   private schedule(entry: SchedulerEntry<T>): void {
     const run = () => {
-      void this.add(entry.name, (entry.template.data ?? {}) as T, entry.template.opts);
+      if (this.closed) return;
+      void this.add(entry.name, (entry.template.data ?? {}) as T, entry.template.opts).catch((error) => {
+        if (!this.closed) console.error(`Local scheduler "${entry.name}" failed to enqueue:`, error);
+      });
     };
 
     if (entry.repeat.immediately) run();
@@ -170,17 +212,21 @@ export class LocalQueue<T = unknown, R = unknown> {
     }
   }
 
+  /** Creates or replaces a repeating scheduler. */
   async upsertJobScheduler(name: string, repeat: SchedulerRepeat, template: SchedulerTemplate<T> = {}): Promise<void> {
-    this.removeJobScheduler(name);
+    if (this.closed) throw new Error("Local queue is closed");
+    await this.removeJobScheduler(name);
     const entry = { name, repeat, template };
     this.schedulers.set(name, entry);
     this.schedule(entry);
   }
 
+  /** Lists the names of registered job schedulers. */
   async getJobSchedulers(): Promise<Array<{ name: string }>> {
     return [...this.schedulers.keys()].map((name) => ({ name }));
   }
 
+  /** Stops and removes a registered job scheduler. */
   async removeJobScheduler(name: string): Promise<void> {
     const entry = this.schedulers.get(name);
     if (!entry) return;
@@ -189,6 +235,7 @@ export class LocalQueue<T = unknown, R = unknown> {
     this.schedulers.delete(name);
   }
 
+  /** Stops schedules and waits for in-flight jobs to finish. */
   async close(): Promise<void> {
     if (this.closed) return;
     this.closed = true;
@@ -197,10 +244,12 @@ export class LocalQueue<T = unknown, R = unknown> {
     this.timers.clear();
     this.scheduled.clear();
     this.pending.length = 0;
+    for (const wake of [...this.retryWaiters]) wake();
     await Promise.allSettled(this.running);
   }
 }
 
+/** Binds a processor to an in-process queue and exposes BullMQ-compatible events. */
 export class LocalWorker<T = unknown, R = unknown> {
   readonly local = true;
 
@@ -213,16 +262,19 @@ export class LocalWorker<T = unknown, R = unknown> {
     queue.setConcurrency(options.concurrency ?? 1);
   }
 
+  /** Registers a handler for queue lifecycle events. */
   on(event: string, handler: LocalEventHandler): this {
     this.queue.on(event, handler);
     return this;
   }
 
+  /** Closes the underlying local queue. */
   async close(): Promise<void> {
     await this.queue.close();
   }
 }
 
+/** Returns whether a queue is backed by the in-process implementation. */
 export function isLocalQueue(queue: unknown): queue is LocalQueue {
   return Boolean(queue && typeof queue === "object" && (queue as { local?: boolean }).local);
 }

@@ -34,6 +34,7 @@ const redisClientOptions: RedisOptions = {
   },
 };
 
+/** Returns whether Redis is configured as a non-empty connection URL. */
 export function isRedisConfigured(): boolean {
   return Boolean(process.env.REDIS_URL?.trim());
 }

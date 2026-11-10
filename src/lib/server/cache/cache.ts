@@ -3,7 +3,11 @@ import { isRedisConfigured, redisIOConnection } from "../redisConnector.js";
 const prefix = "kener:cache:";
 const defaultTtlSeconds = 300;
 const memoryLimit = 5000;
-const memoryCache = new Map<string, { payload: string; expiresAt: number }>();
+const memoryCache = ((
+  globalThis as typeof globalThis & {
+    __kenerMemoryCache?: Map<string, { payload: string; expiresAt: number }>;
+  }
+).__kenerMemoryCache ??= new Map());
 
 const getCacheKey = (key: string) => `${prefix}${key}`;
 

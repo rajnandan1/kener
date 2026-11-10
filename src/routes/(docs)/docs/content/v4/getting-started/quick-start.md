@@ -47,8 +47,10 @@ cd kener
 npm install
 
 # Optional: use Redis for durable queues and multi-replica deployments
-docker run -d --name kener-redis -p 6379:6379 redis:7-alpine
+# docker run -d --name kener-redis -p 6379:6379 redis:7-alpine
+# REDIS_URL=redis://localhost:6379 npm run dev
 
+# Default: queues and schedules run in-process
 npm run dev
 ```
 

@@ -21,6 +21,7 @@ const probe = async (check: () => Promise<unknown>): Promise<boolean> => {
   }
 };
 
+/** Probes configured dependencies and reports whether the instance is healthy. */
 export async function checkHealth(checks: HealthChecks) {
   const [db, redis] = await Promise.all([
     probe(checks.database),
