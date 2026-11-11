@@ -42,13 +42,15 @@
   interface Props {
     open: boolean;
     monitorTag: string;
+    monitorType?: string;
     selectedDay: {
       timestamp: number;
       status: string;
     } | null;
   }
 
-  let { open = $bindable(), monitorTag, selectedDay }: Props = $props();
+  let { open = $bindable(), monitorTag, monitorType, selectedDay }: Props = $props();
+  let isSslMonitor = $derived(monitorType === "SSL");
 
   let loading = $state(false);
   let latencyLoading = $state(false);
@@ -186,11 +188,21 @@
     }
   }
 
+  // Keep this separate from the fetch effect so changing tabs does not refetch the day.
+  $effect(() => {
+    if (isSslMonitor && activeView === "latency") {
+      activeView = "status";
+    }
+  });
+
   // Fetch data when dialog opens with a new day
   $effect(() => {
     if (open && selectedDay) {
+      const skipLatency = isSslMonitor;
       fetchDayDetail();
-      fetchDayLatency();
+      if (!skipLatency) {
+        fetchDayLatency();
+      }
       fetchDayIncidents();
       fetchDayMaintenances();
     }
@@ -225,9 +237,11 @@
         <Tabs.Trigger value="status" class="shrink-0 rounded-3xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
           >{$t("Status")}</Tabs.Trigger
         >
-        <Tabs.Trigger value="latency" class="shrink-0 rounded-3xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
-          >{$t("Latency")}</Tabs.Trigger
-        >
+        {#if !isSslMonitor}
+          <Tabs.Trigger value="latency" class="shrink-0 rounded-3xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
+            >{$t("Latency")}</Tabs.Trigger
+          >
+        {/if}
         <Tabs.Trigger value="incidents" class="shrink-0 rounded-3xl px-2 py-1.5 text-xs sm:px-3 sm:py-2 sm:text-sm"
           >{$t("Incidents")}</Tabs.Trigger
         >
@@ -258,6 +272,7 @@
           </div>
         {/if}
       </Tabs.Content>
+      {#if !isSslMonitor}
       <Tabs.Content value="latency" class="p-2 sm:p-4">
         {#if latencyLoading}
           <!-- Loading state -->
@@ -364,6 +379,7 @@
           </div>
         {/if}
       </Tabs.Content>
+      {/if}
       <Tabs.Content value="incidents" class="p-2 sm:p-4">
         {#if incidentsLoading}
           <!-- Loading state -->
