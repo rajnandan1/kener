@@ -1,7 +1,8 @@
 import db from "../db/db.js";
 import { GetMinuteStartNowTimestampUTC, BeginningOfMinute, BeginningOfDay } from "../tool.js";
 import { GetPageByPathWithMonitors, GetLatestMonitoringDataAllActive } from "./controller.js";
-import { GetMonitorsParsed } from "./monitorsController.js";
+import { GetMonitors, GetMonitorsParsed } from "./monitorsController.js";
+import { SplitGroupMembers } from "../groupMembers.js";
 import { GetStatusSummary, GetStatusBgColor, ResolveGroupMemberDisplay } from "../../clientTools";
 
 import type {
@@ -156,6 +157,8 @@ export interface PageDashboardData {
   upcomingMaintenances: MaintenanceEventsMonitorList[];
   monitorTags: string[];
   monitorGroupMembersByTag: Record<string, string[]>;
+  /** Hidden members per group that this viewer cannot see. Their tags are left out of monitorGroupMembersByTag. */
+  monitorGroupHiddenCountByTag: Record<string, number>;
   monitorGroupMemberDisplayByTag: Record<string, GroupMemberDisplay>;
   pageDetails: PageRecordTyped;
   socialPagePreviewImage?: string;
@@ -364,6 +367,7 @@ export const GetPageDashboardData = async (
       upcomingMaintenances: [],
       monitorTags,
       monitorGroupMembersByTag: {},
+      monitorGroupHiddenCountByTag: {},
       monitorGroupMemberDisplayByTag: {},
       pageDetails: pageDetailsTyped,
       socialPagePreviewImage,
@@ -397,7 +401,7 @@ export const GetPageDashboardData = async (
   ]);
 
   const pageStatus = BuildPageStatus(latestData, nowTs);
-  const monitorGroupMembersByTag: Record<string, string[]> = {};
+  const allGroupMembersByTag: Record<string, string[]> = {};
   const monitorGroupMemberDisplayByTag: Record<string, GroupMemberDisplay> = {};
 
   for (const monitor of parsedMonitors) {
@@ -406,9 +410,20 @@ export const GetPageDashboardData = async (
     const groupData = monitor.type_data as GroupMonitorTypeData;
     if (!groupData?.monitors || !Array.isArray(groupData.monitors)) continue;
 
-    monitorGroupMembersByTag[monitor.tag] = groupData.monitors.map((member) => member.tag);
+    allGroupMembersByTag[monitor.tag] = groupData.monitors.map((member) => member.tag);
     monitorGroupMemberDisplayByTag[monitor.tag] = ResolveGroupMemberDisplay(groupData.memberDisplay);
   }
+
+  // A viewer who cannot see hidden monitors gets a count of the hidden members, not their tags.
+  const allMemberTags = [...new Set(Object.values(allGroupMembersByTag).flat())];
+  const hiddenMemberTags =
+    layoutData.canSeeHiddenMonitors || allMemberTags.length === 0
+      ? new Set<string>()
+      : new Set((await GetMonitors({ tags: allMemberTags, is_hidden: "YES" })).map((m) => m.tag));
+  const { membersByTag: monitorGroupMembersByTag, hiddenCountByTag: monitorGroupHiddenCountByTag } = SplitGroupMembers(
+    allGroupMembersByTag,
+    hiddenMemberTags,
+  );
 
   return {
     pageStatus,
@@ -417,6 +432,7 @@ export const GetPageDashboardData = async (
     upcomingMaintenances,
     monitorTags,
     monitorGroupMembersByTag,
+    monitorGroupHiddenCountByTag,
     monitorGroupMemberDisplayByTag,
     pageDetails: pageDetailsTyped,
     socialPagePreviewImage,

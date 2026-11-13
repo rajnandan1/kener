@@ -26,6 +26,7 @@
     prefetchedData?: MonitorBarResponse;
     prefetchedError?: string;
     groupChildTags?: string[];
+    groupHiddenCount?: number;
     groupMemberDisplay?: GroupMemberDisplay;
     days?: number;
     endOfDayTodayAtTz?: number;
@@ -38,6 +39,7 @@
     prefetchedData,
     prefetchedError,
     groupChildTags = [],
+    groupHiddenCount = 0,
     groupMemberDisplay,
     days,
     endOfDayTodayAtTz,
@@ -48,7 +50,7 @@
   let error = $derived(prefetchedError ?? null);
   let loading = $derived(!data && !error);
   let showGroupPopover = $derived(
-    groupChildTags.length > 0 && typeof days === "number" && typeof endOfDayTodayAtTz === "number"
+    groupChildTags.length + groupHiddenCount > 0 && typeof days === "number" && typeof endOfDayTodayAtTz === "number"
   );
 
   const STATUS_ICON = {
@@ -181,12 +183,13 @@
       <div class="mt-2 flex justify-center gap-2 px-4">
         <GroupMonitorPopover
           tags={groupChildTags}
+          hiddenCount={groupHiddenCount}
           days={days as number}
           endOfDayTodayAtTz={endOfDayTodayAtTz as number}
           display={groupMemberDisplay}
           compactMembers={compact && grid}
         >
-          {$t("Included Monitors (%count)", { count: String(groupChildTags.length) })}
+          {$t("Included Monitors (%count)", { count: String(groupChildTags.length + groupHiddenCount) })}
         </GroupMonitorPopover>
       </div>
     {/if}
