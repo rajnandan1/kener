@@ -19,6 +19,19 @@ describe("HasRequiredEnv", () => {
     expect(HasRequiredEnv()).toBe(true);
     vi.unstubAllEnvs();
   });
+
+  it("accepts HOST_HEADER in place of ORIGIN", () => {
+    vi.stubEnv("KENER_SECRET_KEY", "a-real-secret");
+    vi.stubEnv("REDIS_URL", "redis://localhost:6379");
+    vi.stubEnv("ORIGIN", undefined);
+    vi.stubEnv("HOST_HEADER", undefined);
+
+    expect(HasRequiredEnv()).toBe(false);
+
+    vi.stubEnv("HOST_HEADER", "x-forwarded-host");
+    expect(HasRequiredEnv()).toBe(true);
+    vi.unstubAllEnvs();
+  });
 });
 
 const captcha = (secret?: string) => ({
