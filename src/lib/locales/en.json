@@ -48,6 +48,8 @@
     "Incident Updates": "Incident Updates",
     "Incidents": "Incidents",
     "Included Monitors (%count)": "Included Monitors (%count)",
+    "%count private monitors.": "%count private monitors.",
+    "Sign in to see them.": "Sign in to see them.",
     "Issued By": "Issued By",
     "INVESTIGATING": "INVESTIGATING",
     "Expires At": "Expires At",

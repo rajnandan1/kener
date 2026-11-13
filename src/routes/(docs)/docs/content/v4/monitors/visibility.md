@@ -94,7 +94,7 @@ Kener sends `Cache-Control: private` on every response to a signed-in request, u
 
 ## Group monitors {#group-monitors}
 
-A [group monitor](/docs/v4/monitors/group) computes its status from all of its members, hidden or not. A hidden member still changes the group's status. The group's member list still counts the hidden member. For an anonymous visitor, that list shows an error row for it instead of its name. To remove the group from the public site, hide the group itself.
+A [group monitor](/docs/v4/monitors/group) computes its status from all of its members, hidden or not. A hidden member still changes the group's status. The group's member list still counts the hidden member. For an anonymous visitor, that list shows one row such as "2 private monitors. Sign in to see them." in place of the hidden members. The page does not send their names or tags. To remove the group from the public site, hide the group itself.
 
 ## Verify {#verify}
 
