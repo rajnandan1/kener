@@ -76,7 +76,30 @@ ORIGIN=https://example.com
 ```
 
 > [!CAUTION]
-> Without `ORIGIN`, **all form submissions will be rejected** in production. This includes login, signup, and admin panel actions. Always set this variable when deploying.
+> Without `ORIGIN`, **all form submissions will be rejected** in production. This includes login, signup, and admin panel actions. Always set this variable when deploying, unless you serve one instance on several domains as [Several domains on one instance](#several-domains) shows.
+
+#### Several domains on one instance {#several-domains}
+
+`ORIGIN` holds one URL. To serve one instance on several domains, for example a custom domain and the hosting platform's URL, leave `ORIGIN` unset and let Kener read the origin from each request:
+
+| Variable               | Value                   | Purpose                                                   |
+| :--------------------- | :---------------------- | :-------------------------------------------------------- |
+| `ORIGIN`               | unset                   | Turns off the fixed origin                                |
+| `PROTOCOL_HEADER`      | `x-forwarded-proto`     | Reads the scheme from the proxy header                    |
+| `HOST_HEADER`          | `x-forwarded-host`      | Reads the host from the proxy header                      |
+| `CSRF_TRUSTED_ORIGINS` | comma-separated origins | Lists more origins that may submit forms, such as sign-in |
+
+```bash
+PROTOCOL_HEADER=x-forwarded-proto
+HOST_HEADER=x-forwarded-host
+CSRF_TRUSTED_ORIGINS=https://status.example.com,https://kener.up.railway.app
+```
+
+- Set `PROTOCOL_HEADER` and `HOST_HEADER` only behind a proxy that sets these headers. A client can send them too.
+- Each `CSRF_TRUSTED_ORIGINS` entry is a full origin (`https://status.example.com`) or a host (`status.example.com`).
+- Set `CSRF_TRUSTED_ORIGINS` when your proxy sends the same forwarded host for every domain. Cloudflare in front of Railway does this. Without it, sign-in from the other domains fails with **"Cross-site POST form submissions are forbidden"**, and the message names the origin to add.
+- With `ORIGIN` unset, the session cookie is `Secure` when `NODE_ENV` is `production`.
+- Leave `CSRF_TRUSTED_ORIGINS` unset on a single domain. Kener then accepts forms only from the request's own host, as before.
 
 ### REDIS_URL {#redis-url}
 

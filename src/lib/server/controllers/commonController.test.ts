@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import jwt from "jsonwebtoken";
-import { CreateHash, GenerateToken, SecretKeyWarning, VerifyToken } from "./commonController.js";
+import { CookieConfig, CreateHash, GenerateToken, SecretKeyWarning, VerifyToken } from "./commonController.js";
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -58,5 +58,25 @@ describe("SecretKeyWarning", () => {
     vi.stubEnv("KENER_SECRET_KEY", "k3n3r-6f1c2a9e0b7d4f58a1c3e9d7b2f4a6c8");
 
     expect(SecretKeyWarning()).toBeNull();
+  });
+});
+
+describe("CookieConfig secure flag", () => {
+  it("follows the ORIGIN scheme when ORIGIN is set", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ORIGIN", "http://localhost:3000");
+    expect(CookieConfig().secure).toBe(false);
+
+    vi.stubEnv("ORIGIN", "https://status.example.com");
+    expect(CookieConfig().secure).toBe(true);
+  });
+
+  it("stays secure in production when ORIGIN is unset", () => {
+    vi.stubEnv("ORIGIN", undefined);
+    vi.stubEnv("NODE_ENV", "production");
+    expect(CookieConfig().secure).toBe(true);
+
+    vi.stubEnv("NODE_ENV", "development");
+    expect(CookieConfig().secure).toBe(false);
   });
 });

@@ -53,6 +53,23 @@ function isFormContentType(request: Request): boolean {
   return FORM_CONTENT_TYPES.includes(type);
 }
 
+// CSRF_TRUSTED_ORIGINS lists more origins that may submit forms, as full origins
+// (https://status.example.com) or bare hosts. One instance served on several domains needs it
+// when a proxy sends the same forwarded host for every domain. Unset means no extra origins.
+function trustedHosts(): Set<string> {
+  const hosts = new Set<string>();
+  for (const entry of (process.env.CSRF_TRUSTED_ORIGINS ?? "").split(",")) {
+    const value = entry.trim();
+    if (!value) continue;
+    try {
+      hosts.add(new URL(value.includes("://") ? value : `https://${value}`).host);
+    } catch {
+      hosts.add(value);
+    }
+  }
+  return hosts;
+}
+
 // Custom CSRF handler: validates Origin when present, allows requests when absent.
 // When Origin is absent (e.g. Referrer-Policy: no-referrer), security relies on
 // SameSite=Lax cookies which prevent cross-site POST from carrying auth cookies.
@@ -67,8 +84,12 @@ const csrfHandle: Handle = async ({ event, resolve }) => {
     if (requestOrigin && requestOrigin !== "null") {
       const requestHost = new URL(requestOrigin).host;
       const expectedHost = event.url.host;
-      if (requestHost !== expectedHost) {
-        return new Response(`Cross-site ${request.method} form submissions are forbidden`, { status: 403 });
+      if (requestHost !== expectedHost && !trustedHosts().has(requestHost)) {
+        return new Response(
+          `Cross-site ${request.method} form submissions are forbidden. ` +
+            `To accept forms from ${requestOrigin}, add it to CSRF_TRUSTED_ORIGINS.`,
+          { status: 403 },
+        );
       }
     }
   }

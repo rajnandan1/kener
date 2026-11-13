@@ -215,8 +215,11 @@ export const GetSiteDataByKey = async (key: string): Promise<unknown> => {
 };
 
 /** Checks the env vars required for setup, without touching the database. */
+// ORIGIN fixes one public origin. HOST_HEADER instead derives the origin from each request
+// (adapter-node), so one instance can serve several domains. Either one is enough.
 export const HasRequiredEnv = (): boolean => {
-  return !!process.env.KENER_SECRET_KEY && process.env.ORIGIN !== undefined && process.env.REDIS_URL !== undefined;
+  const hasOrigin = process.env.ORIGIN !== undefined || process.env.HOST_HEADER !== undefined;
+  return !!process.env.KENER_SECRET_KEY && hasOrigin && process.env.REDIS_URL !== undefined;
 };
 
 export const IsSetupComplete = async (): Promise<boolean> => {
