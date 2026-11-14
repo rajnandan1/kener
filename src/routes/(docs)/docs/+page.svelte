@@ -452,7 +452,7 @@
             <img src="https://railway.com/button.svg" alt="Deploy on Railway" class="h-8" />
           </a>
           <a
-            href="https://zenavo.app/deploy?template=kener"
+            href="https://zenavo.app/templates/kener"
             target="_blank"
             rel="noopener noreferrer"
             class="transition-transform duration-300 hover:scale-105"
