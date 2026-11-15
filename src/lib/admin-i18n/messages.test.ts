@@ -93,10 +93,11 @@ describe("administrative locale resolution", () => {
     expect(resolveAdminLocale(undefined, "en;q=0,pl;q=0.1")).toBe("pl");
     expect(resolveAdminLocale(undefined, "en;q=invalid,pl;q=0.5")).toBe("pl");
   });
-  it("rejects unsupported cookie values and defaults to Polish", () => {
-    expect(resolveAdminLocale("../en", null)).toBe("pl");
-    expect(resolveAdminLocale(undefined, "de,fr")).toBe("pl");
-    expect(resolveAdminLocale(undefined, undefined)).toBe("pl");
+  it("rejects unsupported preferences and falls back to English", () => {
+    expect(resolveAdminLocale("../en", null)).toBe("en");
+    expect(resolveAdminLocale(undefined, "de,fr")).toBe("en");
+    expect(resolveAdminLocale(undefined, undefined)).toBe("en");
+    expect(resolveAdminLocale(undefined, "pl;q=0,fr;q=1")).toBe("en");
     expect(adminLocaleTag("en")).toBe("en-GB");
     expect(adminLocaleTag("pl")).toBe("pl-PL");
   });

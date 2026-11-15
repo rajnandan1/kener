@@ -63,7 +63,7 @@ export function resolveAdminLocale(cookie: string | undefined, acceptLanguage: s
     })
     .filter((item) => item.q > 0)
     .sort((a, b) => b.q - a.q || a.order - b.order);
-  return (languages.find((item) => item.tag === "pl" || item.tag === "en")?.tag as AdminLocale | undefined) ?? "pl";
+  return (languages.find((item) => item.tag === "pl" || item.tag === "en")?.tag as AdminLocale | undefined) ?? "en";
 }
 
 export function adminLocaleTag(locale: AdminLocale): "pl-PL" | "en-GB" {
