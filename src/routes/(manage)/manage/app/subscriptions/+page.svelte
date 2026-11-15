@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
@@ -89,10 +92,10 @@
       });
       const result = await res.json();
       if (result.error) throw new Error(result.error);
-      toast.success("RSS feed preference saved");
+      toast.success($adminT("RSS feed preference saved"));
     } catch {
       subMenuOptions.showRssFeed = previous;
-      toast.error("Failed to save RSS feed preference");
+      toast.error($adminT("Failed to save RSS feed preference"));
     } finally {
       savingRssToggle = false;
     }
@@ -144,7 +147,7 @@
       });
       config = await res.json();
     } catch (error) {
-      toast.error("Failed to load configuration");
+      toast.error($adminT("Failed to load configuration"));
     } finally {
       loadingConfig = false;
     }
@@ -162,9 +165,9 @@
           data: config
         })
       });
-      toast.success("Configuration saved");
+      toast.success($adminT("Configuration saved"));
     } catch (error) {
-      toast.error("Failed to save configuration");
+      toast.error($adminT("Failed to save configuration"));
     } finally {
       savingConfig = false;
     }
@@ -189,7 +192,7 @@
         totalPages = result.totalPages || 0;
       }
     } catch (error) {
-      toast.error("Failed to load subscribers");
+      toast.error($adminT("Failed to load subscribers"));
     } finally {
       loadingSubscribers = false;
     }
@@ -215,7 +218,7 @@
       });
       const result = await res.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
         // Revert toggle
         if (eventType === "incidents") {
           subscriber.incidents_enabled = !enabled;
@@ -231,7 +234,7 @@
         }
       }
     } catch (error) {
-      toast.error("Failed to update subscription");
+      toast.error($adminT("Failed to update subscription"));
       // Revert
       if (eventType === "incidents") {
         subscriber.incidents_enabled = !enabled;
@@ -272,7 +275,7 @@
       } else {
         showAddDialog = false;
         resetAddForm();
-        toast.success("Subscriber added successfully");
+        toast.success($adminT("Subscriber added successfully"));
         await fetchSubscribers();
       }
     } catch (error) {
@@ -305,15 +308,15 @@
       });
       const result = await res.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
         showDeleteDialog = false;
         deletingSubscriber = null;
-        toast.success("Subscriber deleted");
+        toast.success($adminT("Subscriber deleted"));
         await fetchSubscribers();
       }
     } catch (error) {
-      toast.error("Failed to delete subscriber");
+      toast.error($adminT("Failed to delete subscriber"));
     } finally {
       isDeleting = false;
     }
@@ -346,20 +349,20 @@
     <Card.Header>
       <Card.Title class="flex items-center gap-2">
         <Bell class="h-5 w-5" />
-        Subscriptions Settings
+        {$adminT("Subscriptions Settings")}
       </Card.Title>
-      <Card.Description>Configure subscription options for your status page</Card.Description>
+      <Card.Description>{$adminT("Configure subscription options for your status page")}</Card.Description>
     </Card.Header>
     <Card.Content class="space-y-4">
       {#if pageData.data.canSendEmail === false}
         <Alert.Root variant="destructive">
           <AlertCircleIcon />
-          <Alert.Title>Email is not setup</Alert.Title>
+          <Alert.Title>{$adminT("Email is not setup")}</Alert.Title>
           <Alert.Description>
             <p>
-              Please visit the email set up documentation <a
-                class="underline"
-                href={clientResolver(resolve, "https://kener.ing/docs/v4/setup/email-setup")}>here</a
+              {$adminT("Please visit the email set up documentation")}
+              <a class="underline" href={clientResolver(resolve, "https://kener.ing/docs/v4/setup/email-setup")}
+                >{$adminT("here")}</a
               >.
             </p>
           </Alert.Description>
@@ -372,7 +375,7 @@
       {:else}
         <div class="space-y-6">
           <div class="flex items-center justify-between">
-            <Label for="enable-subscriptions" class="mb-0">Enable Subscriptions</Label>
+            <Label for="enable-subscriptions" class="mb-0">{$adminT("Enable Subscriptions")}</Label>
             <Switch
               id="enable-subscriptions"
               checked={config.enable}
@@ -389,13 +392,13 @@
             <div class="space-y-4 border-l-2 pl-4">
               <p class="flex items-center gap-2 text-sm font-semibold">
                 <Mail class="h-4 w-4" />
-                Email Notifications
+                {$adminT("Email Notifications")}
               </p>
               <div class="space-y-4 pl-4">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
                     <AlertTriangle class="h-4 w-4 text-orange-500" />
-                    <Label for="enable-email-incidents" class="mb-0">Incident Updates</Label>
+                    <Label for="enable-email-incidents" class="mb-0">{$adminT("Incident Updates")}</Label>
                   </div>
                   <Switch
                     id="enable-email-incidents"
@@ -409,7 +412,7 @@
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
                     <Wrench class="h-4 w-4 text-blue-500" />
-                    <Label for="enable-email-maintenances" class="mb-0">Maintenance Updates</Label>
+                    <Label for="enable-email-maintenances" class="mb-0">{$adminT("Maintenance Updates")}</Label>
                   </div>
                   <Switch
                     id="enable-email-maintenances"
@@ -430,15 +433,16 @@
           <div class="space-y-4 border-l-2 pl-4">
             <p class="flex items-center gap-2 text-sm font-semibold">
               <Rss class="h-4 w-4" />
-              RSS Feed
+              {$adminT("RSS Feed")}
             </p>
             <div class="space-y-4 pl-4">
               <div class="flex items-center justify-between">
                 <div class="space-y-0.5">
-                  <Label for="enable-rss-feed" class="mb-0">Show RSS feed link</Label>
+                  <Label for="enable-rss-feed" class="mb-0">{$adminT("Show RSS feed link")}</Label>
                   <p class="text-muted-foreground text-xs">
-                    Adds an RSS icon to the public page header. The feed routes
-                    (<code class="text-xs">/rss.xml</code>) remain reachable either way.
+                    {$adminT("Adds an RSS icon to the public page header. The feed routes (")}<code class="text-xs"
+                      >/rss.xml</code
+                    >{$adminT(") remain reachable either way.")}
                   </p>
                 </div>
                 <Switch
@@ -460,8 +464,8 @@
     <Card.Header>
       <div class="flex items-center justify-between">
         <div>
-          <Card.Title>Subscribers</Card.Title>
-          <Card.Description>Manage email subscribers for notifications</Card.Description>
+          <Card.Title>{$adminT("Subscribers")}</Card.Title>
+          <Card.Description>{$adminT("Manage email subscribers for notifications")}</Card.Description>
         </div>
         <div class="flex items-center gap-2">
           {#if loadingSubscribers}
@@ -469,7 +473,7 @@
           {/if}
           <Button onclick={() => (showAddDialog = true)}>
             <PlusIcon class="h-4 w-4" />
-            Add Subscriber
+            {$adminT("Add Subscriber")}
           </Button>
         </div>
       </div>
@@ -479,21 +483,21 @@
         <Table.Root>
           <Table.Header>
             <Table.Row>
-              <Table.Head>Email</Table.Head>
+              <Table.Head>{$adminT("Email")}</Table.Head>
               <Table.Head class="text-center">
                 <div class="flex items-center justify-center gap-1">
                   <AlertTriangle class="h-4 w-4 text-orange-500" />
-                  Incidents
+                  {$adminT("Incidents")}
                 </div>
               </Table.Head>
               <Table.Head class="text-center">
                 <div class="flex items-center justify-center gap-1">
                   <Wrench class="h-4 w-4 text-blue-500" />
-                  Maintenances
+                  {$adminT("Maintenances")}
                 </div>
               </Table.Head>
-              <Table.Head>Subscribed At</Table.Head>
-              <Table.Head class="w-20 text-center">Actions</Table.Head>
+              <Table.Head>{$adminT("Subscribed At")}</Table.Head>
+              <Table.Head class="w-20 text-center">{$adminT("Actions")}</Table.Head>
             </Table.Row>
           </Table.Header>
           <Table.Body>
@@ -502,14 +506,14 @@
                 <Table.Cell colspan={5} class="py-8 text-center">
                   <div class="flex items-center justify-center gap-2">
                     <Spinner class="size-4" />
-                    <span class="text-muted-foreground text-sm">Loading subscribers...</span>
+                    <span class="text-muted-foreground text-sm">{$adminT("Loading subscribers...")}</span>
                   </div>
                 </Table.Cell>
               </Table.Row>
             {:else if subscribers.length === 0}
               <Table.Row>
                 <Table.Cell colspan={5} class="text-muted-foreground py-8 text-center">
-                  No subscribers yet. Add your first subscriber above.
+                  {$adminT("No subscribers yet. Add your first subscriber above.")}
                 </Table.Cell>
               </Table.Row>
             {:else}
@@ -555,7 +559,13 @@
         {@const startItem = (page - 1) * limit + 1}
         {@const endItem = Math.min(page * limit, total)}
         <div class="mt-4 flex items-center justify-between">
-          <span class="text-muted-foreground text-sm">Showing {startItem}-{endItem} of {total}</span>
+          <span class="text-muted-foreground text-sm"
+            >{$adminT("Showing {startItem}-{endItem} of {total}", {
+              startItem: startItem,
+              endItem: endItem,
+              total: total
+            })}</span
+          >
           {#if totalPages > 1}
             <div class="flex items-center gap-2">
               <Button variant="outline" size="icon" disabled={page === 1} onclick={() => goToPage(page - 1)}>
@@ -591,16 +601,16 @@
 <Dialog.Root bind:open={showAddDialog}>
   <Dialog.Content class="sm:max-w-md">
     <Dialog.Header>
-      <Dialog.Title>Add Subscriber</Dialog.Title>
-      <Dialog.Description>Add a new email subscriber for notifications</Dialog.Description>
+      <Dialog.Title>{$adminT("Add Subscriber")}</Dialog.Title>
+      <Dialog.Description>{$adminT("Add a new email subscriber for notifications")}</Dialog.Description>
     </Dialog.Header>
     <div class="space-y-4 py-4">
       <div class="space-y-2">
-        <Label for="new-email">Email Address</Label>
+        <Label for="new-email">{$adminT("Email Address")}</Label>
         <Input
           id="new-email"
           type="email"
-          placeholder="subscriber@example.com"
+          placeholder={$adminT("subscriber@example.com")}
           bind:value={newEmail}
           disabled={addingSubscriber}
         />
@@ -609,21 +619,21 @@
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <AlertTriangle class="h-4 w-4 text-orange-500" />
-            <Label for="new-incidents" class="mb-0">Subscribe to Incidents</Label>
+            <Label for="new-incidents" class="mb-0">{$adminT("Subscribe to Incidents")}</Label>
           </div>
           <Switch id="new-incidents" bind:checked={newIncidents} disabled={addingSubscriber} />
         </div>
         <div class="flex items-center justify-between">
           <div class="flex items-center gap-2">
             <Wrench class="h-4 w-4 text-blue-500" />
-            <Label for="new-maintenances" class="mb-0">Subscribe to Maintenances</Label>
+            <Label for="new-maintenances" class="mb-0">{$adminT("Subscribe to Maintenances")}</Label>
           </div>
           <Switch id="new-maintenances" bind:checked={newMaintenances} disabled={addingSubscriber} />
         </div>
       </div>
       {#if addError}
         <Alert.Root variant="destructive">
-          <Alert.Description>{addError}</Alert.Description>
+          <Alert.Description>{$adminT(String(addError ?? ""))}</Alert.Description>
         </Alert.Root>
       {/if}
     </div>
@@ -636,14 +646,14 @@
         }}
         disabled={addingSubscriber}
       >
-        Cancel
+        {$adminT("Cancel")}
       </Button>
       <Button onclick={addSubscriber} disabled={addingSubscriber}>
         {#if addingSubscriber}
           <Spinner class="size-4" />
-          Adding...
+          {$adminT("Adding...")}
         {:else}
-          Add Subscriber
+          {$adminT("Add Subscriber")}
         {/if}
       </Button>
     </Dialog.Footer>
@@ -654,15 +664,15 @@
 <Dialog.Root bind:open={showDeleteDialog}>
   <Dialog.Content class="sm:max-w-md">
     <Dialog.Header>
-      <Dialog.Title>Delete Subscriber</Dialog.Title>
+      <Dialog.Title>{$adminT("Delete Subscriber")}</Dialog.Title>
       <Dialog.Description>
-        Are you sure you want to delete this subscriber? This action cannot be undone.
+        {$adminT("Are you sure you want to delete this subscriber? This action cannot be undone.")}
       </Dialog.Description>
     </Dialog.Header>
     {#if deletingSubscriber}
       <div class="py-4">
         <p class="text-sm">
-          <span class="text-muted-foreground">Email:</span>
+          <span class="text-muted-foreground">{$adminT("Email:")}</span>
           <span class="font-medium">{deletingSubscriber.email}</span>
         </p>
       </div>
@@ -676,14 +686,14 @@
         }}
         disabled={isDeleting}
       >
-        Cancel
+        {$adminT("Cancel")}
       </Button>
       <Button variant="destructive" onclick={deleteSubscriber} disabled={isDeleting}>
         {#if isDeleting}
           <Spinner class="size-4" />
-          Deleting...
+          {$adminT("Deleting...")}
         {:else}
-          Delete
+          {$adminT("Delete")}
         {/if}
       </Button>
     </Dialog.Footer>

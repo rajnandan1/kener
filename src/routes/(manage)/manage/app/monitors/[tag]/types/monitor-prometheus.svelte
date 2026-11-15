@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Textarea } from "$lib/components/ui/textarea/index.js";
@@ -49,34 +52,36 @@
 
 <div class="space-y-4">
   <div class="flex flex-col gap-2">
-    <Label for="prom-url">URL <span class="text-destructive">*</span></Label>
+    <Label for="prom-url">{$adminT("URL")} <span class="text-destructive">*</span></Label>
     <Input id="prom-url" bind:value={data.url} placeholder="https://prometheus.example.com" />
     {#if secretsOverHttp}
       <p class="text-xs text-amber-600 dark:text-amber-400">
-        $SECRET values are sent in cleartext — the URL or proxy uses plain http://. Use https:// unless the endpoint is
-        on a trusted network.
+        {$adminT(
+          "$SECRET values are sent in cleartext — the URL or proxy uses plain http://. Use https:// unless the endpoint is on a trusted network."
+        )}
       </p>
     {/if}
   </div>
 
   <div class="flex flex-col gap-2">
-    <Label for="prom-query">PromQL Query <span class="text-destructive">*</span></Label>
+    <Label for="prom-query">{$adminT("PromQL Query")} <span class="text-destructive">*</span></Label>
     <Textarea id="prom-query" bind:value={data.query} placeholder="up" rows={3} />
     <p class="text-muted-foreground mt-1 text-xs">
-      Instant query. Aggregate multi-series results in PromQL (e.g. <code>max(...)</code>) — otherwise the first series
-      is used.
+      {$adminT("Instant query. Aggregate multi-series results in PromQL (e.g.")} <code>max(...)</code>{$adminT(
+        ") — otherwise the first series is used."
+      )}
     </p>
   </div>
 
   <!-- Down condition -->
   <div class="flex items-center space-x-2">
     <Switch id="prom-down-enabled" checked={!!data.down} onCheckedChange={toggleDown} />
-    <Label for="prom-down-enabled">Down condition</Label>
+    <Label for="prom-down-enabled">{$adminT("Down condition")}</Label>
   </div>
   {#if data.down}
     <div class="grid grid-cols-2 gap-4">
       <div class="flex flex-col gap-2">
-        <Label for="prom-down-op">Operator</Label>
+        <Label for="prom-down-op">{$adminT("Operator")}</Label>
         <Select.Root
           type="single"
           value={data.down.operator}
@@ -93,22 +98,24 @@
         </Select.Root>
       </div>
       <div class="flex flex-col gap-2">
-        <Label for="prom-down-val">Value</Label>
+        <Label for="prom-down-val">{$adminT("Value")}</Label>
         <Input id="prom-down-val" type="number" bind:value={data.down.value} />
       </div>
     </div>
-    <p class="text-muted-foreground -mt-2 text-xs">DOWN when metric value {data.down.operator} {data.down.value}.</p>
+    <p class="text-muted-foreground -mt-2 text-xs">
+      {$adminT("DOWN when metric value {operator} {value}.", { operator: data.down.operator, value: data.down.value })}
+    </p>
   {/if}
 
   <!-- Degraded condition -->
   <div class="flex items-center space-x-2">
     <Switch id="prom-degraded-enabled" checked={!!data.degraded} onCheckedChange={toggleDegraded} />
-    <Label for="prom-degraded-enabled">Degraded condition</Label>
+    <Label for="prom-degraded-enabled">{$adminT("Degraded condition")}</Label>
   </div>
   {#if data.degraded}
     <div class="grid grid-cols-2 gap-4">
       <div class="flex flex-col gap-2">
-        <Label for="prom-degraded-op">Operator</Label>
+        <Label for="prom-degraded-op">{$adminT("Operator")}</Label>
         <Select.Root
           type="single"
           value={data.degraded.operator}
@@ -125,19 +132,21 @@
         </Select.Root>
       </div>
       <div class="flex flex-col gap-2">
-        <Label for="prom-degraded-val">Value</Label>
+        <Label for="prom-degraded-val">{$adminT("Value")}</Label>
         <Input id="prom-degraded-val" type="number" bind:value={data.degraded.value} />
       </div>
     </div>
     <p class="text-muted-foreground -mt-2 text-xs">
-      DEGRADED when metric value {data.degraded.operator}
-      {data.degraded.value} (checked after DOWN).
+      {$adminT("DEGRADED when metric value {operator} {value} (checked after DOWN).", {
+        operator: data.degraded.operator,
+        value: data.degraded.value
+      })}
     </p>
   {/if}
 
   <!-- No-data status -->
   <div class="flex flex-col gap-2">
-    <Label for="prom-nodata">No-data status</Label>
+    <Label for="prom-nodata">{$adminT("No-data status")}</Label>
     <Select.Root
       type="single"
       value={data.noDataStatus}
@@ -145,18 +154,18 @@
         if (v) data.noDataStatus = v;
       }}
     >
-      <Select.Trigger id="prom-nodata" class="w-full">{data.noDataStatus}</Select.Trigger>
+      <Select.Trigger id="prom-nodata" class="w-full">{$adminT(String(data.noDataStatus ?? ""))}</Select.Trigger>
       <Select.Content>
         {#each STATUS_OPTIONS as opt}
-          <Select.Item value={opt}>{opt}</Select.Item>
+          <Select.Item value={opt}>{$adminT(opt)}</Select.Item>
         {/each}
       </Select.Content>
     </Select.Root>
-    <p class="text-muted-foreground mt-1 text-xs">Status recorded when the query returns no data.</p>
+    <p class="text-muted-foreground mt-1 text-xs">{$adminT("Status recorded when the query returns no data.")}</p>
   </div>
 
   <div class="flex flex-col gap-2">
-    <Label for="prom-error">Unreachable status</Label>
+    <Label for="prom-error">{$adminT("Unreachable status")}</Label>
     <Select.Root
       type="single"
       value={data.errorStatus}
@@ -164,34 +173,35 @@
         if (v) data.errorStatus = v;
       }}
     >
-      <Select.Trigger id="prom-error" class="w-full">{data.errorStatus}</Select.Trigger>
+      <Select.Trigger id="prom-error" class="w-full">{$adminT(String(data.errorStatus ?? ""))}</Select.Trigger>
       <Select.Content>
         {#each STATUS_OPTIONS as opt}
-          <Select.Item value={opt}>{opt}</Select.Item>
+          <Select.Item value={opt}>{$adminT(opt)}</Select.Item>
         {/each}
       </Select.Content>
     </Select.Root>
     <p class="text-muted-foreground mt-1 text-xs">
-      Status recorded when Prometheus cannot be reached or answers unusably (timeout, HTTP error, malformed response).
-      Distinct from no-data, which means the query ran and matched nothing.
+      {$adminT(
+        "Status recorded when Prometheus cannot be reached or answers unusably (timeout, HTTP error, malformed response). Distinct from no-data, which means the query ran and matched nothing."
+      )}
     </p>
   </div>
 
   <!-- Headers -->
   <div>
     <div class="mb-2 flex items-center justify-between">
-      <Label>Headers</Label>
+      <Label>{$adminT("Headers")}</Label>
       <Button variant="outline" size="sm" onclick={addHeader}>
         <Plus class="mr-1 size-4" />
-        Add Header
+        {$adminT("Add Header")}
       </Button>
     </div>
     {#if data.headers && data.headers.length > 0}
       <div class="space-y-2">
         {#each data.headers as header, index}
           <div class="flex items-center gap-2">
-            <Input bind:value={header.key} placeholder="Header Key" class="flex-1" />
-            <Input bind:value={header.value} placeholder="Header Value" class="flex-1" />
+            <Input bind:value={header.key} placeholder={$adminT("Header Key")} class="flex-1" />
+            <Input bind:value={header.value} placeholder={$adminT("Header Value")} class="flex-1" />
             <Button variant="ghost" size="icon" onclick={() => removeHeader(index)}>
               <X class="size-4" />
             </Button>
@@ -203,20 +213,22 @@
 
   <!-- Timeout -->
   <div class="flex flex-col gap-2">
-    <Label for="prom-timeout">Timeout (ms)</Label>
+    <Label for="prom-timeout">{$adminT("Timeout (ms)")}</Label>
     <Input id="prom-timeout" type="number" bind:value={data.timeout} placeholder="10000" />
   </div>
 
   <!-- Proxy -->
   <div class="flex flex-col gap-2">
-    <Label for="prom-proxy">Proxy URL</Label>
+    <Label for="prom-proxy">{$adminT("Proxy URL")}</Label>
     <Input id="prom-proxy" bind:value={data.proxy} placeholder="http://user:$PROXY_PASS@proxy.internal:3128" />
-    <p class="text-muted-foreground text-xs">Leave empty to use HTTP_PROXY / HTTPS_PROXY from the environment.</p>
+    <p class="text-muted-foreground text-xs">
+      {$adminT("Leave empty to use HTTP_PROXY / HTTPS_PROXY from the environment.")}
+    </p>
   </div>
 
   <!-- Self-signed -->
   <div class="flex items-center space-x-2">
     <Switch id="prom-self-signed" bind:checked={data.allowSelfSignedCert} />
-    <Label for="prom-self-signed">Allow Self-Signed Certificates</Label>
+    <Label for="prom-self-signed">{$adminT("Allow Self-Signed Certificates")}</Label>
   </div>
 </div>

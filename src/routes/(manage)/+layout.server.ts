@@ -1,3 +1,4 @@
+import { resolveAdminLocale } from "$lib/admin-i18n/messages";
 import { redirect } from "@sveltejs/kit";
 import MobileDetect from "mobile-detect";
 import type { LayoutServerLoad } from "./$types";
@@ -17,7 +18,7 @@ import {
 } from "$lib/server/controllers/controller.js";
 import { GetUserPermissions } from "$lib/server/controllers/userController.js";
 
-export const load: LayoutServerLoad = async ({ cookies, route }) => {
+export const load: LayoutServerLoad = async ({ cookies, route, request }) => {
   let isSetupComplete = await IsSetupComplete();
   if (!isSetupComplete) {
     throw redirect(302, serverResolve(`/account/signin`));
@@ -51,6 +52,7 @@ export const load: LayoutServerLoad = async ({ cookies, route }) => {
   const font = siteData.font || { cssSrc: "", family: "" };
   const defaultSiteTheme = siteData.theme || "system";
   return {
+    adminLocale: resolveAdminLocale(cookies.get("kener_admin_locale"), request.headers.get("accept-language")),
     userDb: loggedInUser,
     userPermissions: [...userPermissions],
     siteStatusColors,

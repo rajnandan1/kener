@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
@@ -47,7 +50,7 @@
       const result = await response.json();
 
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
         providers = providers.map((provider) => {
           const dbData = result[provider.key];
@@ -66,7 +69,7 @@
         loadSucceeded = true;
       }
     } catch (e) {
-      toast.error("Failed to load settings");
+      toast.error($adminT("Failed to load settings"));
     } finally {
       selected = providers[0] ?? null;
       loading = false;
@@ -77,7 +80,9 @@
     if (!selected) return;
 
     if (enforceSingleActive && selected.isEnabled && !loadSucceeded) {
-      toast.error("Provider data hasn't finished loading. Reload the page and try again before enabling a provider.");
+      toast.error(
+        $adminT("Provider data hasn't finished loading. Reload the page and try again before enabling a provider.")
+      );
       return;
     }
 
@@ -116,9 +121,9 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success(`${selected.label} settings saved successfully`);
+        toast.success($adminT("{label} settings saved successfully", { label: $adminT(selected.label) }));
         if (enforceSingleActive && selected.isEnabled) {
           providers = providers.map((provider) =>
             provider.key === selected!.key ? provider : { ...provider, isEnabled: false, activeInSite: false }
@@ -130,7 +135,7 @@
         }
       }
     } catch (e) {
-      toast.error("Failed to save settings");
+      toast.error($adminT("Failed to save settings"));
     } finally {
       saving = false;
     }
@@ -143,10 +148,13 @@
 
 <div class="flex w-full flex-col gap-4 px-4">
   <div>
-    {description}
+    {$adminT(String(description ?? ""))}
     {#if learnMoreUrl}
-      <a href={learnMoreUrl} target="_blank" rel="noopener noreferrer" class="text-primary ml-1 underline underline-offset-2"
-        >Learn more</a
+      <a
+        href={learnMoreUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-primary ml-1 underline underline-offset-2">{$adminT("Learn more")}</a
       >.
     {/if}
   </div>
@@ -165,11 +173,15 @@
           >
             <div class="flex flex-row items-center gap-x-3">
               {#if provider.logo}
-                <img src={clientResolver(resolve, provider.logo)} class="w-5" alt={provider.label} />
+                <img
+                  src={clientResolver(resolve, provider.logo)}
+                  class="w-5"
+                  alt={$adminT(String(provider.label ?? ""))}
+                />
               {:else}
                 <ShieldCheck class="text-muted-foreground h-5 w-5" />
               {/if}
-              <span>{provider.label}</span>
+              <span>{$adminT(String(provider.label ?? ""))}</span>
             </div>
             {#if provider.activeInSite && provider.isEnabled}
               <div class="rounded-sm">
@@ -194,25 +206,25 @@
         {#if selected}
           <div>
             <div class="text-muted-foreground mb-4 text-sm font-medium">
-              Add details for your {selected.label} account
+              {$adminT("Add details for your {label} account", { label: $adminT(selected.label) })}
             </div>
 
             <div class="grid grid-cols-2 gap-4">
               {#each selected.requirements as req (req.label)}
                 {@const fieldId = `${selected.key}-${req.label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
                 <div class="flex flex-col gap-y-2">
-                  <Label for={fieldId}>{req.label}</Label>
+                  <Label for={fieldId}>{$adminT(String(req.label ?? ""))}</Label>
                   <Input
                     bind:value={req.value}
                     type={req.type}
                     id={fieldId}
-                    placeholder={req.placeholder}
+                    placeholder={$adminT(String(req.placeholder ?? ""))}
                     required={req.required}
                   />
                 </div>
               {/each}
               <div class="flex flex-col gap-2">
-                <Label>Status</Label>
+                <Label>{$adminT("Status")}</Label>
                 <Select.Root
                   type="single"
                   value={selected.isEnabled ? "enabled" : "disabled"}
@@ -222,11 +234,11 @@
                   }}
                 >
                   <Select.Trigger class="w-32">
-                    {selected.isEnabled ? "Enable" : "Disable"}
+                    {selected.isEnabled ? $adminT("Enable") : $adminT("Disable")}
                   </Select.Trigger>
                   <Select.Content>
-                    <Select.Item value="enabled">Enable</Select.Item>
-                    <Select.Item value="disabled">Disable</Select.Item>
+                    <Select.Item value="enabled">{$adminT("Enable")}</Select.Item>
+                    <Select.Item value="disabled">{$adminT("Disable")}</Select.Item>
                   </Select.Content>
                 </Select.Root>
               </div>
@@ -234,7 +246,8 @@
 
             <div class="mt-4 flex flex-row items-center justify-between">
               <Button type="submit" disabled={saving}>
-                Save Changes for {selected.label}
+                {$adminT("Save Changes for")}
+                {$adminT(String(selected.label ?? ""))}
                 {#if saving}
                   <Loader class="ml-2 inline size-4 animate-spin" />
                 {/if}

@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
@@ -38,7 +41,7 @@
 <div class="space-y-4">
   <div class="grid grid-cols-2 gap-4">
     <div class="flex flex-col gap-2">
-      <Label for="dns-transport">Transport</Label>
+      <Label for="dns-transport">{$adminT("Transport")}</Label>
       <Select.Root
         type="single"
         value={data.transport}
@@ -47,46 +50,50 @@
         }}
       >
         <Select.Trigger id="dns-transport" class="w-full">
-          {data.transport === "TLS" ? "DNS-over-TLS" : "UDP"}
+          {data.transport === "TLS" ? $adminT("DNS-over-TLS") : $adminT("UDP")}
         </Select.Trigger>
         <Select.Content>
-          <Select.Item value="UDP">UDP - Standard DNS (port 53)</Select.Item>
-          <Select.Item value="TLS">TLS - DNS-over-TLS (port 853)</Select.Item>
+          <Select.Item value="UDP">{$adminT("UDP - Standard DNS (port 53)")}</Select.Item>
+          <Select.Item value="TLS">{$adminT("TLS - DNS-over-TLS (port 853)")}</Select.Item>
         </Select.Content>
       </Select.Root>
     </div>
     <div class="flex flex-col gap-2">
-      <Label for="dns-host">Host <span class="text-destructive">*</span></Label>
-      <Input id="dns-host" bind:value={data.host} placeholder="example.com" />
+      <Label for="dns-host">{$adminT("Host")} <span class="text-destructive">*</span></Label>
+      <Input id="dns-host" bind:value={data.host} placeholder={$adminT("example.com")} />
     </div>
   </div>
 
   <div class="grid grid-cols-2 gap-4">
     <div class="flex flex-col gap-2">
       <Label for="dns-nameserver">
-        Name Server
+        {$adminT("Name Server")}
         {#if usesTls}
           <span class="text-destructive">*</span>
         {:else}
-          (optional)
+          {$adminT("(optional)")}
         {/if}
       </Label>
       <Input
         id="dns-nameserver"
         bind:value={data.nameServer}
-        placeholder={usesTls ? "1.1.1.1 or dns.example.com" : "Leave empty for authoritative lookup"}
+        placeholder={$adminT(String(usesTls ? "1.1.1.1 or dns.example.com" : "Leave empty for authoritative lookup"))}
       />
       {#if usesTls}
         <p class="text-muted-foreground text-xs">
-          DoT resolver address. For IP resolvers, set TLS Server Name when required (e.g. 8.8.8.8 → dns.google).
+          {$adminT(
+            "DoT resolver address. For IP resolvers, set TLS Server Name when required (e.g. 8.8.8.8 → dns.google)."
+          )}
         </p>
       {:else}
-        <p class="text-muted-foreground text-xs">Leave blank to use authoritative DNS nameservers automatically.</p>
+        <p class="text-muted-foreground text-xs">
+          {$adminT("Leave blank to use authoritative DNS nameservers automatically.")}
+        </p>
       {/if}
     </div>
     {#if usesTls}
       <div class="flex flex-col gap-2">
-        <Label for="dns-tls-port">TLS Port</Label>
+        <Label for="dns-tls-port">{$adminT("TLS Port")}</Label>
         <Input id="dns-tls-port" type="number" min="1" max="65535" bind:value={data.tlsPort} placeholder="853" />
       </div>
     {/if}
@@ -95,20 +102,22 @@
   {#if usesTls}
     <div class="grid grid-cols-2 gap-4">
       <div class="flex flex-col gap-2">
-        <Label for="dns-tls-servername">TLS Server Name (optional)</Label>
-        <Input id="dns-tls-servername" bind:value={data.tlsServername} placeholder="dns.google" />
-        <p class="text-muted-foreground text-xs">SNI hostname for TLS. Required for many public resolvers when using an IP address.</p>
+        <Label for="dns-tls-servername">{$adminT("TLS Server Name (optional)")}</Label>
+        <Input id="dns-tls-servername" bind:value={data.tlsServername} placeholder={$adminT("dns.google")} />
+        <p class="text-muted-foreground text-xs">
+          {$adminT("SNI hostname for TLS. Required for many public resolvers when using an IP address.")}
+        </p>
       </div>
       <div class="flex items-center gap-3 pt-6">
         <Switch id="dns-self-signed" bind:checked={data.allowSelfSignedCert} />
-        <Label for="dns-self-signed">Allow self-signed TLS certificates</Label>
+        <Label for="dns-self-signed">{$adminT("Allow self-signed TLS certificates")}</Label>
       </div>
     </div>
   {/if}
 
   <div class="grid grid-cols-2 gap-4">
     <div class="flex flex-col gap-2">
-      <Label for="dns-record">Lookup Record</Label>
+      <Label for="dns-record">{$adminT("Lookup Record")}</Label>
       <Select.Root
         type="single"
         value={data.lookupRecord}
@@ -127,7 +136,7 @@
       </Select.Root>
     </div>
     <div class="flex flex-col gap-2">
-      <Label for="dns-matchtype">Match Type</Label>
+      <Label for="dns-matchtype">{$adminT("Match Type")}</Label>
       <Select.Root
         type="single"
         value={data.matchType}
@@ -136,11 +145,11 @@
         }}
       >
         <Select.Trigger id="dns-matchtype" class="w-full">
-          {data.matchType}
+          {$adminT(String(data.matchType ?? ""))}
         </Select.Trigger>
         <Select.Content>
-          <Select.Item value="ANY">ANY - At least one value matches</Select.Item>
-          <Select.Item value="ALL">ALL - All values must match</Select.Item>
+          <Select.Item value="ANY">{$adminT("ANY - At least one value matches")}</Select.Item>
+          <Select.Item value="ALL">{$adminT("ALL - All values must match")}</Select.Item>
         </Select.Content>
       </Select.Root>
     </div>
@@ -148,10 +157,10 @@
 
   <div>
     <div class="mb-2 flex items-center justify-between">
-      <Label>Expected Values <span class="text-destructive">*</span></Label>
+      <Label>{$adminT("Expected Values")} <span class="text-destructive">*</span></Label>
       <Button variant="outline" size="sm" onclick={addValue}>
         <Plus class="mr-1 size-4" />
-        {data.values.length > 0 ? "Add More Values" : "Add Value"}
+        {data.values.length > 0 ? $adminT("Add More Values") : $adminT("Add Value")}
       </Button>
     </div>
     {#if data.values.length > 0}
@@ -159,9 +168,11 @@
         {#each data.values as value, index}
           <InputGroup.Root>
             <InputGroup.Addon class="">
-              <InputGroup.Text class="border-r-2 pr-2">Value {index + 1}</InputGroup.Text>
+              <InputGroup.Text class="border-r-2 pr-2"
+                >{$adminT("Value {value1}", { value1: index + 1 })}</InputGroup.Text
+              >
             </InputGroup.Addon>
-            <InputGroup.Input bind:value={data.values[index]} placeholder="Expected DNS value" />
+            <InputGroup.Input bind:value={data.values[index]} placeholder={$adminT("Expected DNS value")} />
             <InputGroup.Addon align="inline-end">
               <InputGroup.Button variant="ghost" size="icon-xs" onclick={() => removeValue(index)}>
                 <X class="size-4" />
@@ -172,7 +183,7 @@
       </div>
     {:else}
       <p class="text-muted-foreground text-sm">
-        No values added. Click "Add Value" to add expected DNS response values.
+        {$adminT('No values added. Click "Add Value" to add expected DNS response values.')}
       </p>
     {/if}
   </div>

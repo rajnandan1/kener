@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT, locale } = getAdminI18n();
+
   import { Button } from "$lib/components/ui/button/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
@@ -15,6 +18,7 @@
   import SirenIcon from "@lucide/svelte/icons/siren";
   import { goto } from "$app/navigation";
   import { formatDistanceToNow } from "date-fns";
+  import { formatAdminDuration, formatAdminRelative } from "$lib/admin-i18n/formatters";
   import LocalTime from "$lib/components/LocalTime.svelte";
   import GC from "$lib/global-constants";
   import { resolve } from "$app/paths";
@@ -140,11 +144,11 @@
     <div class="flex items-center gap-3">
       <Select.Root type="single" value={stateFilter} onValueChange={handleStateFilterChange}>
         <Select.Trigger class="w-44">
-          {stateOptions.find((o) => o.value === stateFilter)?.label || "All States"}
+          {$adminT(String(stateOptions.find((o) => o.value === stateFilter)?.label ?? "")) || $adminT("All States")}
         </Select.Trigger>
         <Select.Content>
           {#each stateOptions as option}
-            <Select.Item value={option.value}>{option.label}</Select.Item>
+            <Select.Item value={option.value}>{$adminT(String(option.label ?? ""))}</Select.Item>
           {/each}
         </Select.Content>
       </Select.Root>
@@ -155,7 +159,7 @@
     <div class="flex items-center gap-3">
       <Button onclick={createNewIncident}>
         <PlusIcon class="size-4" />
-        New Incident
+        {$adminT("New Incident")}
       </Button>
     </div>
   </div>
@@ -165,19 +169,21 @@
     <Table.Root>
       <Table.Header>
         <Table.Row>
-          <Table.Head class="w-16">ID</Table.Head>
-          <Table.Head>Title</Table.Head>
-          <Table.Head class="w-40">Started</Table.Head>
-          <Table.Head class="w-32">Duration</Table.Head>
-          <Table.Head class="w-36">State</Table.Head>
-          <Table.Head class="w-40">Affects</Table.Head>
-          <Table.Head class="w-24 text-right">Actions</Table.Head>
+          <Table.Head class="w-16">{$adminT("ID")}</Table.Head>
+          <Table.Head>{$adminT("Title")}</Table.Head>
+          <Table.Head class="w-40">{$adminT("Started")}</Table.Head>
+          <Table.Head class="w-32">{$adminT("Duration")}</Table.Head>
+          <Table.Head class="w-36">{$adminT("State")}</Table.Head>
+          <Table.Head class="w-40">{$adminT("Affects")}</Table.Head>
+          <Table.Head class="w-24 text-right">{$adminT("Actions")}</Table.Head>
         </Table.Row>
       </Table.Header>
       <Table.Body>
         {#if incidents.length === 0 && !loading}
           <Table.Row>
-            <Table.Cell colspan={7} class="text-muted-foreground py-8 text-center">No incidents found</Table.Cell>
+            <Table.Cell colspan={7} class="text-muted-foreground py-8 text-center"
+              >{$adminT("No incidents found")}</Table.Cell
+            >
           </Table.Row>
         {:else}
           {#each incidents as incident}
@@ -201,18 +207,22 @@
               <Table.Cell>
                 <Tooltip.Root>
                   <Tooltip.Trigger>
-                    <span class="text-muted-foreground text-sm">{incident.duration}</span>
+                    <span class="text-muted-foreground text-sm"
+                      >{incident.end_date_time
+                        ? formatAdminDuration(incident.end_date_time - incident.start_date_time, $locale, true)
+                        : formatAdminRelative(new Date(incident.start_date_time * 1000), $locale)}</span
+                    >
                   </Tooltip.Trigger>
                   <Tooltip.Content>
                     <div class="text-sm">
-                      <span class="text-muted-foreground">From:</span>
+                      <span class="text-muted-foreground">{$adminT("From:")}</span>
                       <LocalTime value={incident.start_date_time} format="yyyy-MM-dd HH:mm" />
                       <br />
-                      <span class="text-muted-foreground">To:</span>
+                      <span class="text-muted-foreground">{$adminT("To:")}</span>
                       {#if incident.end_date_time}
                         <LocalTime value={incident.end_date_time} format="yyyy-MM-dd HH:mm" />
                       {:else}
-                        Ongoing
+                        {$adminT("Ongoing")}
                       {/if}
                     </div>
                   </Tooltip.Content>
@@ -222,7 +232,7 @@
                 <div class="flex items-center gap-2">
                   <Badge variant={getStateBadgeVariant(incident.state)} class="gap-1">
                     <SirenIcon class="size-3" />
-                    {incident.state}
+                    {$adminT(String(incident.state ?? ""))}
                   </Badge>
                 </div>
               </Table.Cell>
@@ -230,7 +240,9 @@
                 {#if incident.monitors && incident.monitors.length > 0}
                   <Tooltip.Root>
                     <Tooltip.Trigger>
-                      <Badge variant="outline">{incident.monitors.length} monitor(s)</Badge>
+                      <Badge variant="outline"
+                        >{$adminT("Monitors: {length}", { length: incident.monitors.length })}</Badge
+                      >
                     </Tooltip.Trigger>
                     <Tooltip.Content>
                       <div class="space-y-1">
@@ -238,7 +250,7 @@
                           <div class="text-sm">
                             <span class="font-medium">{monitor.tag || monitor.monitor_tag}</span>
                             <span class="text-muted-foreground ml-1"
-                              >({monitor.impact_type || monitor.monitor_impact})</span
+                              >({monitor.impact_type || $adminT(String(monitor.monitor_impact ?? ""))})</span
                             >
                           </div>
                         {/each}
@@ -246,7 +258,7 @@
                     </Tooltip.Content>
                   </Tooltip.Root>
                 {:else}
-                  <span class="text-muted-foreground text-sm">None</span>
+                  <span class="text-muted-foreground text-sm">{$adminT("None")}</span>
                 {/if}
               </Table.Cell>
               <Table.Cell class="text-right">
@@ -258,7 +270,8 @@
                     openIncident(incident.id);
                   }}
                 >
-                  <PencilIcon class="size-4" /> Edit
+                  <PencilIcon class="size-4" />
+                  {$adminT("Edit")}
                 </Button>
               </Table.Cell>
             </Table.Row>
@@ -272,7 +285,11 @@
   {#if totalPages > 0}
     <div class="flex items-center justify-between">
       <p class="text-muted-foreground text-sm">
-        Showing {(pageNo - 1) * limit + 1} - {Math.min(pageNo * limit, totalCount)} of {totalCount} incidents
+        {$adminT("Showing {value1} - {value2} of {totalCount} incidents", {
+          value1: (pageNo - 1) * limit + 1,
+          value2: Math.min(pageNo * limit, totalCount),
+          totalCount: totalCount
+        })}
       </p>
       {#if totalPages > 1}
         <div class="flex items-center gap-2">

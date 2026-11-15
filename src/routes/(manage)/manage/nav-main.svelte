@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
   import { page } from "$app/state";
   import type { Component } from "svelte";
@@ -14,7 +17,7 @@
             {#snippet child({ props })}
               <a href={item.url} {...props}>
                 <item.icon />
-                <span>{item.title}</span>
+                <span>{$adminT(String(item.title ?? ""))}</span>
               </a>
             {/snippet}
           </Sidebar.MenuButton>

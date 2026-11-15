@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
+  import LanguageSwitcher from "$lib/admin-i18n/LanguageSwitcher.svelte";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Separator } from "$lib/components/ui/separator/index.js";
   import * as Sidebar from "$lib/components/ui/sidebar/index.js";
@@ -14,8 +18,9 @@
   <div class="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
     <Sidebar.Trigger class="-ms-1" />
     <Separator orientation="vertical" class="mx-2 data-[orientation=vertical]:h-4" />
-    <h1 class="text-base font-medium">{title}</h1>
+    <h1 class="text-base font-medium">{$adminT(String(title ?? ""))}</h1>
     <div class="ms-auto flex items-center gap-2">
+      <LanguageSwitcher />
       <Button
         href={clientResolver(resolve, "/")}
         variant="secondary"
@@ -23,10 +28,10 @@
         target="_blank"
         rel="noopener noreferrer"
       >
-        Status Page
+        {$adminT("Status Page")}
       </Button>
       <Button href="https://kener.ing/docs" variant="secondary" size="sm" target="_blank" rel="noopener noreferrer">
-        Documentation
+        {$adminT("Documentation")}
       </Button>
     </div>
   </div>

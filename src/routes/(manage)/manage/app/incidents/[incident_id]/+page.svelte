@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT, editorPhrases: adminEditorPhrases } = getAdminI18n();
+  const editorLocale = $derived(EditorState.phrases.of($adminEditorPhrases));
+
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
@@ -31,6 +35,7 @@
   import clientResolver from "$lib/client/resolver.js";
   import { SveltePurify } from "@humanspeak/svelte-purify";
 
+  import { EditorState } from "@codemirror/state";
   import CodeMirror from "svelte-codemirror-editor";
   import { markdown } from "@codemirror/lang-markdown";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
@@ -156,7 +161,7 @@
         // Fetch comments and monitors
         await Promise.all([fetchComments(), fetchIncidentMonitors()]);
       } else {
-        error = "Incident not found";
+        error = $adminT("Incident not found");
       }
     } catch (e) {
       error = e instanceof Error ? e.message : "Failed to fetch incident";
@@ -260,7 +265,7 @@
         });
         const result = await response.json();
         if (result.error) {
-          toast.error(result.error);
+          toast.error($adminT(result.error));
         } else {
           const incidentId = result.incident_id;
 
@@ -296,7 +301,7 @@
               })
             });
           }
-          toast.success("Incident created successfully");
+          toast.success($adminT("Incident created successfully"));
           goto(clientResolver(resolve, `/manage/app/incidents/${incidentId}`));
         }
       } else {
@@ -318,7 +323,7 @@
         });
         const result = await response.json();
         if (result.error) {
-          toast.error(result.error);
+          toast.error($adminT(result.error));
         } else {
           // Sync monitors - find added, removed, and changed
           const originalTags = originalMonitors.map((m) => m.monitor_tag);
@@ -384,11 +389,11 @@
           // Update originalMonitors to reflect current state
           originalMonitors = [...incidentMonitors];
 
-          toast.success("Changes saved successfully");
+          toast.success($adminT("Changes saved successfully"));
         }
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Failed to save");
+      toast.error($adminT(e instanceof Error ? e.message : "Failed to save"));
     } finally {
       saving = false;
     }
@@ -413,16 +418,16 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Monitor added to incident");
+        toast.success($adminT("Monitor added to incident"));
         await fetchIncidentMonitors();
         addMonitorDialogOpen = false;
         selectedMonitorTag = "";
         selectedMonitorImpact = "DOWN";
       }
     } catch (e) {
-      toast.error("Failed to add monitor");
+      toast.error($adminT("Failed to add monitor"));
     } finally {
       addingMonitor = false;
     }
@@ -444,13 +449,13 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Monitor removed from incident");
+        toast.success($adminT("Monitor removed from incident"));
         await fetchIncidentMonitors();
       }
     } catch {
-      toast.error("Failed to remove monitor");
+      toast.error($adminT("Failed to remove monitor"));
     }
   }
 
@@ -510,9 +515,9 @@
         });
         const result = await response.json();
         if (result.error) {
-          toast.error(result.error);
+          toast.error($adminT(result.error));
         } else {
-          toast.success("Update saved");
+          toast.success($adminT("Update saved"));
           await fetchComments();
           await fetchIncident();
           cancelEditComment();
@@ -534,16 +539,16 @@
         });
         const result = await response.json();
         if (result.error) {
-          toast.error(result.error);
+          toast.error($adminT(result.error));
         } else {
-          toast.success("Update added");
+          toast.success($adminT("Update added"));
           await fetchComments();
           await fetchIncident();
           cancelAddComment();
         }
       }
     } catch {
-      toast.error("Failed to save update");
+      toast.error($adminT("Failed to save update"));
     } finally {
       savingComment = false;
     }
@@ -565,13 +570,13 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Update deleted");
+        toast.success($adminT("Update deleted"));
         await fetchComments();
       }
     } catch {
-      toast.error("Failed to delete update");
+      toast.error($adminT("Failed to delete update"));
     }
   }
 
@@ -660,13 +665,13 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Incident deleted successfully");
+        toast.success($adminT("Incident deleted successfully"));
         window.location.replace(clientResolver(resolve, "/manage/app/incidents"));
       }
     } catch {
-      toast.error("Failed to delete incident");
+      toast.error($adminT("Failed to delete incident"));
     } finally {
       deleting = false;
     }
@@ -684,11 +689,17 @@
     <Breadcrumb.Root>
       <Breadcrumb.List>
         <Breadcrumb.Item>
-          <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/incidents")}>Incidents</Breadcrumb.Link>
+          <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/incidents")}
+            >{$adminT("Incidents")}</Breadcrumb.Link
+          >
         </Breadcrumb.Item>
         <Breadcrumb.Separator />
         <Breadcrumb.Item>
-          <Breadcrumb.Page>{isNew ? "New Incident" : `Edit Incident #${params.incident_id}`}</Breadcrumb.Page>
+          <Breadcrumb.Page
+            >{isNew
+              ? $adminT("New Incident")
+              : $adminT("Edit Incident #{incident_id}", { incident_id: params.incident_id })}</Breadcrumb.Page
+          >
         </Breadcrumb.Item>
       </Breadcrumb.List>
     </Breadcrumb.Root>
@@ -700,38 +711,42 @@
           size="sm"
           href={clientResolver(resolve, `/incidents/${params.incident_id}`)}
         >
-          View
+          {$adminT("View")}
         </Button>
         <Dialog.Root bind:open={deleteDialogOpen} onOpenChange={() => (deleteConfirmText = "")}>
           <Dialog.Trigger>
             {#snippet child({ props })}
               <Button {...props} variant="destructive" size="sm">
                 <TrashIcon class="size-4" />
-                Delete
+                {$adminT("Delete")}
               </Button>
             {/snippet}
           </Dialog.Trigger>
           <Dialog.Content>
             <Dialog.Header>
-              <Dialog.Title>Delete Incident</Dialog.Title>
+              <Dialog.Title>{$adminT("Delete Incident")}</Dialog.Title>
               <Dialog.Description>
-                This action cannot be undone. This will permanently delete the incident, its updates, and remove all
-                associated monitor links.
+                {$adminT(
+                  "This action cannot be undone. This will permanently delete the incident, its updates, and remove all associated monitor links."
+                )}
               </Dialog.Description>
             </Dialog.Header>
             <div class="space-y-4 py-4">
               <div class="flex flex-col gap-2">
-                <Label>Type <span class="font-mono font-semibold">{deleteConfirmPhrase}</span> to confirm</Label>
+                <Label
+                  >{$adminT("Type")} <span class="font-mono font-semibold">{deleteConfirmPhrase}</span>
+                  {$adminT("to confirm")}</Label
+                >
                 <Input bind:value={deleteConfirmText} placeholder={deleteConfirmPhrase} />
               </div>
             </div>
             <Dialog.Footer>
-              <Button variant="outline" onclick={() => (deleteDialogOpen = false)}>Cancel</Button>
+              <Button variant="outline" onclick={() => (deleteDialogOpen = false)}>{$adminT("Cancel")}</Button>
               <Button variant="destructive" onclick={deleteIncident} disabled={!deleteConfirmed || deleting}>
                 {#if deleting}
                   <Loader class="size-4 animate-spin" />
                 {/if}
-                Delete Incident
+                {$adminT("Delete Incident")}
               </Button>
             </Dialog.Footer>
           </Dialog.Content>
@@ -749,7 +764,7 @@
       <Card.Content class="pt-6">
         <div class="flex items-center gap-2">
           <AlertTriangleIcon class="text-destructive size-5" />
-          <p class="text-destructive">{error}</p>
+          <p class="text-destructive">{$adminT(String(error ?? ""))}</p>
         </div>
       </Card.Content>
     </Card.Root>
@@ -757,12 +772,12 @@
     <!-- Incident Details -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>{isNew ? "Create New Incident" : "Incident Details"}</Card.Title>
+        <Card.Title>{isNew ? $adminT("Create New Incident") : $adminT("Incident Details")}</Card.Title>
         <Card.Description>
           {#if isNew}
-            Create a new incident to track
+            {$adminT("Create a new incident to track")}
           {:else}
-            Edit incident details and manage updates
+            {$adminT("Edit incident details and manage updates")}
           {/if}
         </Card.Description>
       </Card.Header>
@@ -773,34 +788,42 @@
             <Badge
               variant="outline"
               class="text-{incident.state.toLowerCase()} border-{incident.state.toLowerCase()} font-semibold"
-              >{incident.state}</Badge
+              >{$adminT(String(incident.state ?? ""))}</Badge
             >
           </div>
         {/if}
 
         <!-- Title -->
         <div class="flex flex-col gap-2">
-          <Label for="incident-title">Title <span class="text-destructive">*</span></Label>
-          <Input id="incident-title" bind:value={incident.title} placeholder="Brief description of the incident" />
+          <Label for="incident-title">{$adminT("Title")} <span class="text-destructive">*</span></Label>
+          <Input
+            id="incident-title"
+            bind:value={incident.title}
+            placeholder={$adminT("Brief description of the incident")}
+          />
         </div>
 
         <!-- Start Date/Time -->
         <div class="flex flex-col gap-2">
-          <Label for="incident-start">Start Date/Time <span class="text-destructive">*</span></Label>
+          <Label for="incident-start">{$adminT("Start Date/Time")} <span class="text-destructive">*</span></Label>
           <Input
             id="incident-start"
             type="datetime-local"
             value={startDateTimeLocal}
             onchange={handleStartDateChange}
           />
-          <p class="text-muted-foreground text-xs">Enter time in your local timezone. It will be stored as UTC.</p>
+          <p class="text-muted-foreground text-xs">
+            {$adminT("Enter time in your local timezone. It will be stored as UTC.")}
+          </p>
         </div>
 
         <!-- Global Visibility -->
         <div class="flex items-center justify-between rounded-md border p-3">
           <div class="flex flex-col gap-1">
-            <Label for="is-global">Global Incident</Label>
-            <p class="text-muted-foreground text-xs">When enabled, this incident will be visible on all status pages</p>
+            <Label for="is-global">{$adminT("Global Incident")}</Label>
+            <p class="text-muted-foreground text-xs">
+              {$adminT("When enabled, this incident will be visible on all status pages")}
+            </p>
           </div>
           <Switch
             id="is-global"
@@ -814,9 +837,10 @@
         <!-- First Comment (only for new) -->
         {#if isNew}
           <div class="flex flex-col gap-2">
-            <Label for="first-comment">Initial Update (Optional)</Label>
+            <Label for="first-comment">{$adminT("Initial Update (Optional)")}</Label>
             <div class="overflow-hidden rounded-md border">
               <CodeMirror
+                extensions={[editorLocale]}
                 bind:value={firstComment}
                 lang={markdown()}
                 theme={mode.current === "dark" ? githubDark : githubLight}
@@ -830,7 +854,7 @@
               />
             </div>
             <p class="text-muted-foreground text-xs">
-              Supports Markdown. This will be added as the first update for this incident.
+              {$adminT("Supports Markdown. This will be added as the first update for this incident.")}
             </p>
           </div>
         {/if}
@@ -838,24 +862,24 @@
         <!-- Affected Monitors (for both new and existing incidents) -->
         <div class="flex flex-col gap-2">
           <div class="flex items-center justify-between">
-            <Label>Affected Monitors (Optional)</Label>
+            <Label>{$adminT("Affected Monitors (Optional)")}</Label>
             <Dialog.Root bind:open={addMonitorDialogOpen}>
               <Dialog.Trigger>
                 {#snippet child({ props })}
                   <Button {...props} size="sm" variant="outline" disabled={unassignedMonitors.length === 0}>
                     <PlusIcon class="size-4" />
-                    Add Monitor
+                    {$adminT("Add Monitor")}
                   </Button>
                 {/snippet}
               </Dialog.Trigger>
               <Dialog.Content>
                 <Dialog.Header>
-                  <Dialog.Title>Add Affected Monitor</Dialog.Title>
-                  <Dialog.Description>Select a monitor and its impact level</Dialog.Description>
+                  <Dialog.Title>{$adminT("Add Affected Monitor")}</Dialog.Title>
+                  <Dialog.Description>{$adminT("Select a monitor and its impact level")}</Dialog.Description>
                 </Dialog.Header>
                 <div class="space-y-4 py-4">
                   <div class="flex flex-col gap-2">
-                    <Label>Monitor</Label>
+                    <Label>{$adminT("Monitor")}</Label>
                     <Select.Root
                       type="single"
                       value={selectedMonitorTag}
@@ -864,7 +888,7 @@
                       }}
                     >
                       <Select.Trigger class="w-full">
-                        {selectedMonitorTag ? getMonitorName(selectedMonitorTag) : "Select a monitor"}
+                        {selectedMonitorTag ? getMonitorName(selectedMonitorTag) : $adminT("Select a monitor")}
                       </Select.Trigger>
                       <Select.Content>
                         {#each unassignedMonitors as monitor}
@@ -874,7 +898,7 @@
                     </Select.Root>
                   </div>
                   <div class="flex flex-col gap-2">
-                    <Label>Impact Level</Label>
+                    <Label>{$adminT("Impact Level")}</Label>
                     <Select.Root
                       type="single"
                       value={selectedMonitorImpact}
@@ -883,24 +907,24 @@
                       }}
                     >
                       <Select.Trigger class="w-full">
-                        {selectedMonitorImpact}
+                        {$adminT(String(selectedMonitorImpact ?? ""))}
                       </Select.Trigger>
                       <Select.Content>
-                        <Select.Item value="DOWN">Down</Select.Item>
-                        <Select.Item value="DEGRADED">Degraded</Select.Item>
+                        <Select.Item value="DOWN">{$adminT("Down")}</Select.Item>
+                        <Select.Item value="DEGRADED">{$adminT("Degraded")}</Select.Item>
                       </Select.Content>
                     </Select.Root>
                   </div>
                 </div>
                 <Dialog.Footer>
-                  <Button variant="outline" onclick={() => (addMonitorDialogOpen = false)}>Cancel</Button>
-                  <Button onclick={addMonitorToList} disabled={!selectedMonitorTag}>Add Monitor</Button>
+                  <Button variant="outline" onclick={() => (addMonitorDialogOpen = false)}>{$adminT("Cancel")}</Button>
+                  <Button onclick={addMonitorToList} disabled={!selectedMonitorTag}>{$adminT("Add Monitor")}</Button>
                 </Dialog.Footer>
               </Dialog.Content>
             </Dialog.Root>
           </div>
           {#if incidentMonitors.length === 0}
-            <p class="text-muted-foreground text-sm">No monitors selected</p>
+            <p class="text-muted-foreground text-sm">{$adminT("No monitors selected")}</p>
           {:else}
             <div class="space-y-2">
               {#each incidentMonitors as monitor}
@@ -912,7 +936,7 @@
                       class="text-{monitor.monitor_impact?.toLowerCase() ||
                         'default'} font-semibold border-{monitor.monitor_impact?.toLowerCase() || 'default'}"
                     >
-                      {monitor.monitor_impact || "Unknown"}
+                      {$adminT(String(monitor.monitor_impact ?? "")) || $adminT("Unknown")}
                     </Badge>
                   </div>
                   <DropdownMenu.Root>
@@ -924,7 +948,7 @@
                       {/snippet}
                     </DropdownMenu.Trigger>
                     <DropdownMenu.Content align="end">
-                      <DropdownMenu.Label>Update Impact</DropdownMenu.Label>
+                      <DropdownMenu.Label>{$adminT("Update Impact")}</DropdownMenu.Label>
                       <DropdownMenu.Group>
                         <DropdownMenu.Item
                           class="cursor-pointer"
@@ -936,7 +960,7 @@
                             {:else}
                               <span class="size-4"></span>
                             {/if}
-                            Down
+                            {$adminT("Down")}
                           </span>
                         </DropdownMenu.Item>
                         <DropdownMenu.Item
@@ -949,7 +973,7 @@
                             {:else}
                               <span class="size-4"></span>
                             {/if}
-                            Degraded
+                            {$adminT("Degraded")}
                           </span>
                         </DropdownMenu.Item>
                       </DropdownMenu.Group>
@@ -959,7 +983,7 @@
                         onclick={() => removeMonitorFromList(monitor.monitor_tag)}
                       >
                         <TrashIcon class="size-4" />
-                        Remove
+                        {$adminT("Remove")}
                       </DropdownMenu.Item>
                     </DropdownMenu.Content>
                   </DropdownMenu.Root>
@@ -976,7 +1000,7 @@
           {:else}
             <SaveIcon class="size-4" />
           {/if}
-          {isNew ? "Create Incident" : "Save Changes"}
+          {isNew ? $adminT("Create Incident") : $adminT("Save Changes")}
         </Button>
       </Card.Footer>
     </Card.Root>
@@ -987,13 +1011,13 @@
         <Card.Header>
           <div class="flex items-center justify-between">
             <div>
-              <Card.Title>Updates</Card.Title>
-              <Card.Description>Timeline of status updates for this incident</Card.Description>
+              <Card.Title>{$adminT("Updates")}</Card.Title>
+              <Card.Description>{$adminT("Timeline of status updates for this incident")}</Card.Description>
             </div>
             {#if !addingNewComment}
               <Button size="sm" onclick={startAddComment}>
                 <PlusIcon class="size-4" />
-                Add Update
+                {$adminT("Add Update")}
               </Button>
             {/if}
           </div>
@@ -1003,9 +1027,10 @@
           {#if addingNewComment}
             <div class="mb-4 space-y-4 rounded-md border p-4">
               <div class="flex flex-col gap-2">
-                <Label>Update Message</Label>
+                <Label>{$adminT("Update Message")}</Label>
                 <div class="overflow-hidden rounded-md border">
                   <CodeMirror
+                    extensions={[editorLocale]}
                     bind:value={commentText}
                     lang={markdown()}
                     theme={mode.current === "dark" ? githubDark : githubLight}
@@ -1018,11 +1043,11 @@
                     }}
                   />
                 </div>
-                <p class="text-muted-foreground text-xs">Supports Markdown formatting</p>
+                <p class="text-muted-foreground text-xs">{$adminT("Supports Markdown formatting")}</p>
               </div>
               <div class="grid grid-cols-2 gap-4">
                 <div class="flex flex-col gap-2">
-                  <Label>State</Label>
+                  <Label>{$adminT("State")}</Label>
                   <Select.Root
                     type="single"
                     value={commentState}
@@ -1030,26 +1055,26 @@
                       if (v) commentState = v;
                     }}
                   >
-                    <Select.Trigger class="w-full">{commentState}</Select.Trigger>
+                    <Select.Trigger class="w-full">{$adminT(String(commentState ?? ""))}</Select.Trigger>
                     <Select.Content>
                       {#each states as state}
-                        <Select.Item value={state}>{state}</Select.Item>
+                        <Select.Item value={state}>{$adminT(String(state ?? ""))}</Select.Item>
                       {/each}
                     </Select.Content>
                   </Select.Root>
                 </div>
                 <div class="flex flex-col gap-2">
-                  <Label>Date/Time</Label>
+                  <Label>{$adminT("Date/Time")}</Label>
                   <Input type="datetime-local" bind:value={commentDateTime} />
                 </div>
               </div>
               <div class="flex justify-end gap-2">
-                <Button variant="outline" size="sm" onclick={cancelAddComment}>Cancel</Button>
+                <Button variant="outline" size="sm" onclick={cancelAddComment}>{$adminT("Cancel")}</Button>
                 <Button size="sm" onclick={saveComment} disabled={!commentText.trim() || savingComment}>
                   {#if savingComment}
                     <Loader class="size-4 animate-spin" />
                   {/if}
-                  Add Update
+                  {$adminT("Add Update")}
                 </Button>
               </div>
             </div>
@@ -1060,7 +1085,7 @@
               <Spinner class="size-6" />
             </div>
           {:else if comments.length === 0 && !addingNewComment}
-            <p class="text-muted-foreground py-4 text-center text-sm">No updates yet</p>
+            <p class="text-muted-foreground py-4 text-center text-sm">{$adminT("No updates yet")}</p>
           {:else}
             <div class="space-y-4">
               {#each comments as comment (comment.id)}
@@ -1069,9 +1094,10 @@
                     <!-- Inline edit mode -->
                     <div class="space-y-4">
                       <div class="flex flex-col gap-2">
-                        <Label>Update Message</Label>
+                        <Label>{$adminT("Update Message")}</Label>
                         <div class="overflow-hidden rounded-md border">
                           <CodeMirror
+                            extensions={[editorLocale]}
                             bind:value={commentText}
                             lang={markdown()}
                             theme={mode.current === "dark" ? githubDark : githubLight}
@@ -1084,11 +1110,11 @@
                             }}
                           />
                         </div>
-                        <p class="text-muted-foreground text-xs">Supports Markdown formatting</p>
+                        <p class="text-muted-foreground text-xs">{$adminT("Supports Markdown formatting")}</p>
                       </div>
                       <div class="grid grid-cols-2 gap-4">
                         <div class="flex flex-col gap-2">
-                          <Label>State</Label>
+                          <Label>{$adminT("State")}</Label>
                           <Select.Root
                             type="single"
                             value={commentState}
@@ -1096,26 +1122,26 @@
                               if (v) commentState = v;
                             }}
                           >
-                            <Select.Trigger class="w-full">{commentState}</Select.Trigger>
+                            <Select.Trigger class="w-full">{$adminT(String(commentState ?? ""))}</Select.Trigger>
                             <Select.Content>
                               {#each states as state}
-                                <Select.Item value={state}>{state}</Select.Item>
+                                <Select.Item value={state}>{$adminT(String(state ?? ""))}</Select.Item>
                               {/each}
                             </Select.Content>
                           </Select.Root>
                         </div>
                         <div class="flex flex-col gap-2">
-                          <Label>Date/Time</Label>
+                          <Label>{$adminT("Date/Time")}</Label>
                           <Input type="datetime-local" bind:value={commentDateTime} />
                         </div>
                       </div>
                       <div class="flex justify-end gap-2">
-                        <Button variant="outline" size="sm" onclick={cancelEditComment}>Cancel</Button>
+                        <Button variant="outline" size="sm" onclick={cancelEditComment}>{$adminT("Cancel")}</Button>
                         <Button size="sm" onclick={saveComment} disabled={!commentText.trim() || savingComment}>
                           {#if savingComment}
                             <Loader class="size-4 animate-spin" />
                           {/if}
-                          Save
+                          {$adminT("Save")}
                         </Button>
                       </div>
                     </div>
@@ -1124,7 +1150,9 @@
                     <div class="flex items-start justify-between">
                       <div class="flex-1 space-y-2">
                         <div class="flex items-center gap-2">
-                          <Badge variant={getStateBadgeVariant(comment.state)}>{comment.state}</Badge>
+                          <Badge variant={getStateBadgeVariant(comment.state)}
+                            >{$adminT(String(comment.state ?? ""))}</Badge
+                          >
                           <span class="text-muted-foreground text-sm">
                             <LocalTime value={comment.commented_at} format="MMM d, yyyy HH:mm" />
                           </span>

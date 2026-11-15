@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
@@ -82,14 +85,14 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
         monitor.monitor_settings_json = JSON.stringify(mergedSettings);
-        toast.success("Sharing options saved successfully");
+        toast.success($adminT("Sharing options saved successfully"));
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to save sharing options";
-      toast.error(message);
+      toast.error($adminT(message));
     } finally {
       saving = false;
     }
@@ -98,17 +101,17 @@
 
 <Card.Root>
   <Card.Header>
-    <Card.Title>Sharing Options</Card.Title>
-    <Card.Description>Control which sharing actions are available for this monitor</Card.Description>
+    <Card.Title>{$adminT("Sharing Options")}</Card.Title>
+    <Card.Description>{$adminT("Control which sharing actions are available for this monitor")}</Card.Description>
   </Card.Header>
   <Card.Content class="space-y-6">
     <div class="flex items-center justify-between">
       <div class="space-y-0.5">
-        <Label>Share Badge</Label>
+        <Label>{$adminT("Share Badge")}</Label>
         <p class="text-muted-foreground text-xs">
-          Show option to get embeddable status and uptime badges
+          {$adminT("Show option to get embeddable status and uptime badges")}
           <span class="text-red-500" class:hidden={subMenuOptions?.showShareBadgeMonitor}>
-            Disabled by site settings
+            {$adminT("Disabled by site settings")}
           </span>
         </p>
       </div>
@@ -117,11 +120,11 @@
 
     <div class="flex items-center justify-between">
       <div class="space-y-0.5">
-        <Label>Share Embed</Label>
+        <Label>{$adminT("Share Embed")}</Label>
         <p class="text-muted-foreground text-xs">
-          Show option to get iframe or script embed code for this monitor
+          {$adminT("Show option to get iframe or script embed code for this monitor")}
           <span class="text-red-500" class:hidden={subMenuOptions?.showShareEmbedMonitor}>
-            Disabled by site settings
+            {$adminT("Disabled by site settings")}
           </span>
         </p>
       </div>
@@ -135,7 +138,7 @@
       {:else}
         <SaveIcon class="size-4" />
       {/if}
-      Save Sharing Options
+      {$adminT("Save Sharing Options")}
     </Button>
   </Card.Footer>
 </Card.Root>

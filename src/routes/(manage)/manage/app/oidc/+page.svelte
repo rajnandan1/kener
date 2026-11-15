@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
@@ -111,7 +114,7 @@
         originalMaskedSecret = settings.client_secret;
       }
     } catch {
-      toast.error("Failed to load OIDC settings");
+      toast.error($adminT("Failed to load OIDC settings"));
     } finally {
       loading = false;
     }
@@ -129,12 +132,12 @@
         error?: string;
       };
       if (result?.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("OIDC settings saved");
+        toast.success($adminT("OIDC settings saved"));
       }
     } catch {
-      toast.error("Failed to save OIDC settings");
+      toast.error($adminT("Failed to save OIDC settings"));
     } finally {
       saving = false;
     }
@@ -154,12 +157,12 @@
       };
       testResult = result;
       if (result.success) {
-        toast.success("Connection successful");
+        toast.success($adminT("Connection successful"));
       } else {
-        toast.error(result.error || "Connection failed");
+        toast.error($adminT(result.error || "Connection failed"));
       }
     } catch {
-      toast.error("Connection test failed");
+      toast.error($adminT("Connection test failed"));
       testResult = { success: false, error: "Network error" };
     } finally {
       testing = false;
@@ -176,7 +179,7 @@
         mappings = result;
       }
     } catch {
-      toast.error("Failed to load group mappings");
+      toast.error($adminT("Failed to load group mappings"));
     } finally {
       loadingMappings = false;
     }
@@ -195,11 +198,11 @@
 
   async function addMapping() {
     if (!newMappingGroup.trim()) {
-      toast.error("Please enter an OIDC group name");
+      toast.error($adminT("Please enter an OIDC group name"));
       return;
     }
     if (!newMappingRoleId) {
-      toast.error("Please select a Kener role");
+      toast.error($adminT("Please select a Kener role"));
       return;
     }
 
@@ -210,15 +213,20 @@
         role_id: newMappingRoleId
       })) as { error?: string };
       if (result?.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success(`Mapping added: "${newMappingGroup}" → "${getRoleName(newMappingRoleId)}"`);
+        toast.success(
+          $adminT('Mapping added: "{newMappingGroup}" → "{value2}"', {
+            newMappingGroup: newMappingGroup,
+            value2: getRoleName(newMappingRoleId)
+          })
+        );
         newMappingGroup = "";
         newMappingRoleId = "";
         await loadMappings();
       }
     } catch {
-      toast.error("Failed to add mapping");
+      toast.error($adminT("Failed to add mapping"));
     } finally {
       addingMapping = false;
     }
@@ -237,13 +245,13 @@
         id: mappingToDelete.id
       })) as { error?: string };
       if (result?.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Mapping deleted");
+        toast.success($adminT("Mapping deleted"));
         await loadMappings();
       }
     } catch {
-      toast.error("Failed to delete mapping");
+      toast.error($adminT("Failed to delete mapping"));
     } finally {
       deletingMapping = false;
       deleteDialogOpen = false;
@@ -274,9 +282,11 @@
     <!-- ============ OIDC Settings Card ============ -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>OpenID Connect Settings</Card.Title>
+        <Card.Title>{$adminT("OpenID Connect Settings")}</Card.Title>
         <Card.Description>
-          Configure an OIDC provider (e.g. Keycloak, Azure AD, Authentik) to allow single sign-on for your users.
+          {$adminT(
+            "Configure an OIDC provider (e.g. Keycloak, Azure AD, Authentik) to allow single sign-on for your users."
+          )}
         </Card.Description>
       </Card.Header>
       <Card.Content>
@@ -284,8 +294,10 @@
           <!-- Enable/Disable -->
           <div class="flex items-center justify-between">
             <div>
-              <Label>Enable OpenID Connect</Label>
-              <p class="text-muted-foreground text-sm">Allow users to sign in using an external identity provider.</p>
+              <Label>{$adminT("Enable OpenID Connect")}</Label>
+              <p class="text-muted-foreground text-sm">
+                {$adminT("Allow users to sign in using an external identity provider.")}
+              </p>
             </div>
             <Switch bind:checked={settings.enabled} />
           </div>
@@ -295,40 +307,42 @@
           {#if settings.enabled}
             <!-- Provider Name -->
             <div class="grid gap-2">
-              <Label for="provider_name">Provider Name</Label>
+              <Label for="provider_name">{$adminT("Provider Name")}</Label>
               <Input
                 id="provider_name"
                 bind:value={settings.provider_name}
-                placeholder="e.g. Keycloak, Azure AD, Authentik"
+                placeholder={$adminT("e.g. Keycloak, Azure AD, Authentik")}
               />
               <p class="text-muted-foreground text-xs">
-                Displayed on the login button: "Sign in with {settings.provider_name || "..."}"
+                {$adminT('Displayed on the login button: "Sign in with')}
+                {settings.provider_name || "..."}"
               </p>
             </div>
 
             <!-- Issuer URL -->
             <div class="grid gap-2">
-              <Label for="issuer_url">Issuer URL</Label>
+              <Label for="issuer_url">{$adminT("Issuer URL")}</Label>
               <Input
                 id="issuer_url"
                 bind:value={settings.issuer_url}
                 placeholder="https://keycloak.example.com/realms/myrealm"
               />
               <p class="text-muted-foreground text-xs">
-                The base URL of the OIDC provider. Must support
-                <code>.well-known/openid-configuration</code> discovery.
+                {$adminT("The base URL of the OIDC provider. Must support")}
+                <code>.well-known/openid-configuration</code>
+                {$adminT("discovery.")}
               </p>
             </div>
 
             <!-- Client ID -->
             <div class="grid gap-2">
-              <Label for="client_id">Client ID</Label>
-              <Input id="client_id" bind:value={settings.client_id} placeholder="kener-client" />
+              <Label for="client_id">{$adminT("Client ID")}</Label>
+              <Input id="client_id" bind:value={settings.client_id} placeholder={$adminT("kener-client")} />
             </div>
 
             <!-- Client Secret -->
             <div class="grid gap-2">
-              <Label for="client_secret">Client Secret</Label>
+              <Label for="client_secret">{$adminT("Client Secret")}</Label>
               <div class="relative">
                 <Input
                   id="client_secret"
@@ -353,21 +367,23 @@
 
             <!-- Scopes -->
             <div class="grid gap-2">
-              <Label for="scopes">Scopes</Label>
-              <Input id="scopes" bind:value={settings.scopes} placeholder="openid profile email" />
+              <Label for="scopes">{$adminT("Scopes")}</Label>
+              <Input id="scopes" bind:value={settings.scopes} placeholder={$adminT("openid profile email")} />
               <p class="text-muted-foreground text-xs">
-                Space-separated list of OIDC scopes. Add your provider's group scope if needed (e.g. "openid profile
-                email groups").
+                {$adminT(
+                  'Space-separated list of OIDC scopes. Add your provider\'s group scope if needed (e.g. "openid profile email groups").'
+                )}
               </p>
             </div>
 
             <!-- Groups Claim -->
             <div class="grid gap-2">
-              <Label for="groups_claim">Groups Claim Name</Label>
-              <Input id="groups_claim" bind:value={settings.groups_claim} placeholder="groups" />
+              <Label for="groups_claim">{$adminT("Groups Claim Name")}</Label>
+              <Input id="groups_claim" bind:value={settings.groups_claim} placeholder={$adminT("groups")} />
               <p class="text-muted-foreground text-xs">
-                The claim in the ID token that contains the user's group memberships. Common values: "groups" (Keycloak,
-                Authentik), "roles", "cognito:groups" (AWS).
+                {$adminT(
+                  'The claim in the ID token that contains the user\'s group memberships. Common values: "groups" (Keycloak, Authentik), "roles", "cognito:groups" (AWS).'
+                )}
               </p>
             </div>
 
@@ -376,9 +392,11 @@
             <!-- Allow Local Login -->
             <div class="flex items-center justify-between">
               <div>
-                <Label>Allow local login</Label>
+                <Label>{$adminT("Allow local login")}</Label>
                 <p class="text-muted-foreground text-sm">
-                  When disabled, users can only sign in via the OIDC provider. The password login form will be hidden.
+                  {$adminT(
+                    "When disabled, users can only sign in via the OIDC provider. The password login form will be hidden."
+                  )}
                 </p>
               </div>
               <Switch bind:checked={settings.allow_local_login} />
@@ -387,10 +405,11 @@
             <!-- Auto-Create Users -->
             <div class="flex items-center justify-between">
               <div>
-                <Label>Auto-create users on first login</Label>
+                <Label>{$adminT("Auto-create users on first login")}</Label>
                 <p class="text-muted-foreground text-sm">
-                  When enabled, a new Kener user is created automatically on first OIDC login. When disabled, users must
-                  be pre-created.
+                  {$adminT(
+                    "When enabled, a new Kener user is created automatically on first OIDC login. When disabled, users must be pre-created."
+                  )}
                 </p>
               </div>
               <Switch bind:checked={settings.auto_create_users} />
@@ -398,7 +417,7 @@
 
             <!-- Default Role -->
             <div class="grid gap-2">
-              <Label>Default Role</Label>
+              <Label>{$adminT("Default Role")}</Label>
               <Select.Root
                 type="single"
                 value={settings.default_role_id}
@@ -407,7 +426,7 @@
                 }}
               >
                 <Select.Trigger class="w-full">
-                  {getRoleName(settings.default_role_id) || "Select a role..."}
+                  {getRoleName(settings.default_role_id) || $adminT("Select a role...")}
                 </Select.Trigger>
                 <Select.Content>
                   {#each roles as role (role.id)}
@@ -418,7 +437,7 @@
                 </Select.Content>
               </Select.Root>
               <p class="text-muted-foreground text-xs">
-                Assigned when a user's OIDC groups don't match any mapping below.
+                {$adminT("Assigned when a user's OIDC groups don't match any mapping below.")}
               </p>
             </div>
 
@@ -434,23 +453,25 @@
                 <div class="mb-2 flex items-center gap-2">
                   {#if testResult.success}
                     <CheckCircleIcon class="h-5 w-5 text-green-600 dark:text-green-400" />
-                    <span class="font-medium text-green-800 dark:text-green-200">Connection successful</span>
+                    <span class="font-medium text-green-800 dark:text-green-200"
+                      >{$adminT("Connection successful")}</span
+                    >
                   {:else}
                     <XCircleIcon class="h-5 w-5 text-red-600 dark:text-red-400" />
-                    <span class="font-medium text-red-800 dark:text-red-200">Connection failed</span>
+                    <span class="font-medium text-red-800 dark:text-red-200">{$adminT("Connection failed")}</span>
                   {/if}
                 </div>
                 {#if testResult.success}
                   <div class="space-y-1 text-sm text-green-700 dark:text-green-300">
-                    <p>Issuer: <code class="text-xs">{testResult.issuer}</code></p>
-                    <p>Authorization: <code class="text-xs">{testResult.authorizationEndpoint}</code></p>
-                    <p>Token: <code class="text-xs">{testResult.tokenEndpoint}</code></p>
+                    <p>{$adminT("Issuer:")} <code class="text-xs">{testResult.issuer}</code></p>
+                    <p>{$adminT("Authorization:")} <code class="text-xs">{testResult.authorizationEndpoint}</code></p>
+                    <p>{$adminT("Token:")} <code class="text-xs">{testResult.tokenEndpoint}</code></p>
                     {#if testResult.userinfoEndpoint}
-                      <p>Userinfo: <code class="text-xs">{testResult.userinfoEndpoint}</code></p>
+                      <p>{$adminT("Userinfo:")} <code class="text-xs">{testResult.userinfoEndpoint}</code></p>
                     {/if}
                   </div>
                 {:else}
-                  <p class="text-sm text-red-700 dark:text-red-300">{testResult.error}</p>
+                  <p class="text-sm text-red-700 dark:text-red-300">{$adminT(String(testResult.error ?? ""))}</p>
                 {/if}
               </div>
             {/if}
@@ -469,7 +490,7 @@
             {:else}
               <PlayIcon class="mr-2 h-4 w-4" />
             {/if}
-            Test Connection
+            {$adminT("Test Connection")}
           </Button>
         {:else}
           <div></div>
@@ -480,7 +501,7 @@
           {:else}
             <SaveIcon class="mr-2 h-4 w-4" />
           {/if}
-          Save Settings
+          {$adminT("Save Settings")}
         </Button>
       </Card.Footer>
     </Card.Root>
@@ -489,21 +510,22 @@
     {#if settings.enabled}
       <Card.Root>
         <Card.Header>
-          <Card.Title>Group → Role Mapping</Card.Title>
+          <Card.Title>{$adminT("Group → Role Mapping")}</Card.Title>
           <Card.Description>
-            Map OIDC group names to Kener roles. When a user signs in via OIDC, their group memberships determine which
-            roles they get in Kener. Roles are synchronized on every login.
+            {$adminT(
+              "Map OIDC group names to Kener roles. When a user signs in via OIDC, their group memberships determine which roles they get in Kener. Roles are synchronized on every login."
+            )}
           </Card.Description>
         </Card.Header>
         <Card.Content>
           <!-- Add new mapping -->
           <div class="mb-6 flex items-end gap-3">
             <div class="grid flex-1 gap-2">
-              <Label for="new_group">OIDC Group</Label>
-              <Input id="new_group" bind:value={newMappingGroup} placeholder="e.g. Windows-Admins" />
+              <Label for="new_group">{$adminT("OIDC Group")}</Label>
+              <Input id="new_group" bind:value={newMappingGroup} placeholder={$adminT("e.g. Windows-Admins")} />
             </div>
             <div class="grid flex-1 gap-2">
-              <Label>Kener Role</Label>
+              <Label>{$adminT("Kener Role")}</Label>
               <Select.Root
                 type="single"
                 value={newMappingRoleId}
@@ -512,7 +534,7 @@
                 }}
               >
                 <Select.Trigger class="w-full">
-                  {newMappingRoleId ? getRoleName(newMappingRoleId) : "Select a role..."}
+                  {newMappingRoleId ? getRoleName(newMappingRoleId) : $adminT("Select a role...")}
                 </Select.Trigger>
                 <Select.Content>
                   {#each roles as role (role.id)}
@@ -529,7 +551,7 @@
               {:else}
                 <PlusIcon class="mr-2 h-4 w-4" />
               {/if}
-              Add
+              {$adminT("Add")}
             </Button>
           </div>
 
@@ -540,16 +562,16 @@
             </div>
           {:else if mappings.length === 0}
             <div class="text-muted-foreground rounded-lg border border-dashed py-8 text-center">
-              <p>No group mappings configured yet.</p>
-              <p class="mt-1 text-sm">Add a mapping above to assign Kener roles based on OIDC groups.</p>
+              <p>{$adminT("No group mappings configured yet.")}</p>
+              <p class="mt-1 text-sm">{$adminT("Add a mapping above to assign Kener roles based on OIDC groups.")}</p>
             </div>
           {:else}
             <Table.Root>
               <Table.Header>
                 <Table.Row>
-                  <Table.Head class="pl-4">OIDC Group</Table.Head>
-                  <Table.Head>Kener Role</Table.Head>
-                  <Table.Head class="pr-4 text-right">Actions</Table.Head>
+                  <Table.Head class="pl-4">{$adminT("OIDC Group")}</Table.Head>
+                  <Table.Head>{$adminT("Kener Role")}</Table.Head>
+                  <Table.Head class="pr-4 text-right">{$adminT("Actions")}</Table.Head>
                 </Table.Row>
               </Table.Header>
               <Table.Body>
@@ -577,27 +599,33 @@
       <!-- ============ Info Card ============ -->
       <Card.Root>
         <Card.Header>
-          <Card.Title>How it works</Card.Title>
+          <Card.Title>{$adminT("How it works")}</Card.Title>
         </Card.Header>
         <Card.Content>
           <div class="text-muted-foreground space-y-3 text-sm">
             <p>
-              <strong>On every OIDC login</strong>, Kener reads the user's group memberships from the ID token (using
-              the claim name configured above) and updates their roles accordingly.
+              <strong>{$adminT("On every OIDC login")}</strong>{$adminT(
+                ", Kener reads the user's group memberships from the ID token (using the claim name configured above) and updates their roles accordingly."
+              )}
             </p>
             <p>
-              <strong>Roles from OIDC mappings</strong> are fully synchronized: if a user is removed from an OIDC group, they
-              lose the corresponding Kener role on next login.
+              <strong>{$adminT("Roles from OIDC mappings")}</strong>
+              {$adminT(
+                "are fully synchronized: if a user is removed from an OIDC group, they lose the corresponding Kener role on next login."
+              )}
             </p>
             <p>
-              <strong>Manually assigned roles</strong> (roles that don't appear in any mapping above) are preserved and not
-              affected by OIDC sync.
+              <strong>{$adminT("Manually assigned roles")}</strong>
+              {$adminT("(roles that don't appear in any mapping above) are preserved and not affected by OIDC sync.")}
             </p>
             <p>
-              <strong>If no groups match</strong>, the default role (configured above) is assigned.
+              <strong>{$adminT("If no groups match")}</strong>{$adminT(
+                ", the default role (configured above) is assigned."
+              )}
             </p>
             <p>
-              <strong>Callback URL</strong> to configure in your OIDC provider:<br />
+              <strong>{$adminT("Callback URL")}</strong>
+              {$adminT("to configure in your OIDC provider:")}<br />
               <code class="bg-muted rounded px-2 py-1 text-xs">
                 {typeof window !== "undefined" ? window.location.origin : "https://your-kener-domain"}{resolve(
                   "/account/oidc/callback"
@@ -615,19 +643,20 @@
 <AlertDialog.Root bind:open={deleteDialogOpen}>
   <AlertDialog.Content>
     <AlertDialog.Header>
-      <AlertDialog.Title>Delete Group Mapping</AlertDialog.Title>
+      <AlertDialog.Title>{$adminT("Delete Group Mapping")}</AlertDialog.Title>
       <AlertDialog.Description>
-        Remove the mapping for OIDC group "{mappingToDelete?.oidc_group}"? Users in this group will no longer receive
-        the "{mappingToDelete ? getRoleName(mappingToDelete.role_id) : ""}" role on their next login.
+        {$adminT('Remove the mapping for OIDC group "')}{mappingToDelete?.oidc_group}{$adminT(
+          '"? Users in this group will no longer receive the "'
+        )}{mappingToDelete ? getRoleName(mappingToDelete.role_id) : ""}{$adminT('" role on their next login.')}
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer>
-      <AlertDialog.Cancel disabled={deletingMapping}>Cancel</AlertDialog.Cancel>
+      <AlertDialog.Cancel disabled={deletingMapping}>{$adminT("Cancel")}</AlertDialog.Cancel>
       <AlertDialog.Action onclick={deleteMapping} disabled={deletingMapping}>
         {#if deletingMapping}
           <Spinner class="h-4 w-4" />
         {/if}
-        Delete
+        {$adminT("Delete")}
       </AlertDialog.Action>
     </AlertDialog.Footer>
   </AlertDialog.Content>

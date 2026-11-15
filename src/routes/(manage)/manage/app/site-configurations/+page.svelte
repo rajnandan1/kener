@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
@@ -253,7 +256,7 @@
         }
       }
     } catch (e) {
-      toast.error("Failed to load site data");
+      toast.error($adminT("Failed to load site data"));
     } finally {
       loading = false;
     }
@@ -278,12 +281,12 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Site information saved successfully");
+        toast.success($adminT("Site information saved successfully"));
       }
     } catch (e) {
-      toast.error("Failed to save site information");
+      toast.error($adminT("Failed to save site information"));
     } finally {
       savingSiteInfo = false;
     }
@@ -303,12 +306,12 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Logo saved successfully");
+        toast.success($adminT("Logo saved successfully"));
       }
     } catch (e) {
-      toast.error("Failed to save logo");
+      toast.error($adminT("Failed to save logo"));
     } finally {
       savingLogo = false;
     }
@@ -328,12 +331,12 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Favicon saved successfully");
+        toast.success($adminT("Favicon saved successfully"));
       }
     } catch (e) {
-      toast.error("Failed to save favicon");
+      toast.error($adminT("Failed to save favicon"));
     } finally {
       savingFavicon = false;
     }
@@ -357,12 +360,12 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Social preview & SEO settings saved successfully");
+        toast.success($adminT("Social preview & SEO settings saved successfully"));
       }
     } catch (e) {
-      toast.error("Failed to save social preview & SEO settings");
+      toast.error($adminT("Failed to save social preview & SEO settings"));
     } finally {
       savingSocialPreviewImage = false;
     }
@@ -386,12 +389,12 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Navigation saved successfully");
+        toast.success($adminT("Navigation saved successfully"));
       }
     } catch (e) {
-      toast.error("Failed to save navigation");
+      toast.error($adminT("Failed to save navigation"));
     } finally {
       savingNav = false;
     }
@@ -410,12 +413,12 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Sub menu options saved successfully");
+        toast.success($adminT("Sub menu options saved successfully"));
       }
     } catch (e) {
-      toast.error("Failed to save sub menu options");
+      toast.error($adminT("Failed to save sub menu options"));
     } finally {
       savingSubMenuOptions = false;
     }
@@ -439,13 +442,13 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
         globalPageVisibilitySettings = payload;
-        toast.success("Global page visibility settings saved successfully");
+        toast.success($adminT("Global page visibility settings saved successfully"));
       }
     } catch (e) {
-      toast.error("Failed to save global page visibility settings");
+      toast.error($adminT("Failed to save global page visibility settings"));
     } finally {
       savingGlobalPageVisibilitySettings = false;
     }
@@ -470,13 +473,13 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
         dataRetentionPolicy.retentionDays = safeRetentionDays;
-        toast.success("Data retention policy saved successfully");
+        toast.success($adminT("Data retention policy saved successfully"));
       }
     } catch (e) {
-      toast.error("Failed to save data retention policy");
+      toast.error($adminT("Failed to save data retention policy"));
     } finally {
       savingDataRetentionPolicy = false;
     }
@@ -496,12 +499,12 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Event display settings saved successfully");
+        toast.success($adminT("Event display settings saved successfully"));
       }
     } catch (e) {
-      toast.error("Failed to save event display settings");
+      toast.error($adminT("Failed to save event display settings"));
     } finally {
       savingEventDisplaySettings = false;
     }
@@ -578,12 +581,12 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Sitemap settings saved successfully");
+        toast.success($adminT("Sitemap settings saved successfully"));
       }
     } catch (e) {
-      toast.error("Failed to save sitemap settings");
+      toast.error($adminT("Failed to save sitemap settings"));
     } finally {
       savingSitemap = false;
     }
@@ -592,7 +595,7 @@
   async function saveMaintenanceNotificationSettings() {
     const bufferHours = Number(maintenanceNotificationSettings.reminder_buffer_hours);
     if (!Number.isFinite(bufferHours) || bufferHours < 1) {
-      toast.error("Reminder buffer hours must be a number of at least 1");
+      toast.error($adminT("Reminder buffer hours must be a number of at least 1"));
       return;
     }
     savingMaintenanceNotificationSettings = true;
@@ -617,13 +620,13 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
         maintenanceNotificationSettings.reminder_buffer_hours = payload.reminder_buffer_hours;
-        toast.success("Maintenance notification settings saved successfully");
+        toast.success($adminT("Maintenance notification settings saved successfully"));
       }
     } catch (e) {
-      toast.error("Failed to save maintenance notification settings");
+      toast.error($adminT("Failed to save maintenance notification settings"));
     } finally {
       savingMaintenanceNotificationSettings = false;
     }
@@ -637,13 +640,15 @@
     // Validate file type
     const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      toast.error("Invalid file type. Allowed: PNG, JPG, SVG, WebP");
+      toast.error($adminT("Invalid file type. Allowed: PNG, JPG, SVG, WebP"));
       return;
     }
 
     // Validate file size (max 2MB)
     if (file.size > GC.MAX_UPLOAD_BYTES) {
-      toast.error(`File too large. Maximum size is ${GC.MAX_UPLOAD_BYTES / (1024 * 1024)}MB`);
+      toast.error(
+        $adminT("File too large. Maximum size is {value1}MB", { value1: GC.MAX_UPLOAD_BYTES / (1024 * 1024) })
+      );
       return;
     }
 
@@ -677,7 +682,7 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
         if (type === "logo") {
           siteData.logo = result.url;
@@ -687,11 +692,17 @@
           siteData.favicon = result.url;
         }
         toast.success(
-          `${type === "logo" ? "Logo" : type === "favicon" ? "Favicon" : "Social preview image"} uploaded successfully`
+          $adminT("{value1} uploaded successfully", {
+            value1: $adminT(type === "logo" ? "Logo" : type === "favicon" ? "Favicon" : "Social preview image")
+          })
         );
       }
     } catch (e) {
-      toast.error(`Failed to upload ${type}`);
+      toast.error(
+        $adminT("Failed to upload {type}", {
+          type: $adminT(type === "logo" ? "Logo" : type === "favicon" ? "Favicon" : "Social preview image")
+        })
+      );
     } finally {
       if (type === "logo") {
         uploadingLogo = false;
@@ -711,7 +722,7 @@
     if (!file) return;
 
     if (file.size > 102400) {
-      toast.error("File size should be less than 100KB");
+      toast.error($adminT("File size should be less than 100KB"));
       return;
     }
 
@@ -734,12 +745,12 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
         nav[index].iconURL = result.url;
       }
     } catch (e) {
-      toast.error("Failed to upload icon");
+      toast.error($adminT("Failed to upload icon"));
     } finally {
       nav[index].uploading = false;
     }
@@ -794,35 +805,39 @@
     <!-- Site Information Card -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>Site Information</Card.Title>
-        <Card.Description>Basic information about your status page</Card.Description>
+        <Card.Title>{$adminT("Site Information")}</Card.Title>
+        <Card.Description>{$adminT("Basic information about your status page")}</Card.Description>
       </Card.Header>
       <Card.Content class="space-y-4">
         <div class="grid gap-4 md:grid-cols-2">
           <!-- Site Name -->
           <div class="space-y-2">
-            <Label for="siteName">Site Name *</Label>
-            <Input id="siteName" type="text" bind:value={siteData.siteName} placeholder="My Status Page" />
-            <p class="text-muted-foreground text-xs">The name displayed in the header and browser tab</p>
+            <Label for="siteName">{$adminT("Site Name *")}</Label>
+            <Input id="siteName" type="text" bind:value={siteData.siteName} placeholder={$adminT("My Status Page")} />
+            <p class="text-muted-foreground text-xs">{$adminT("The name displayed in the header and browser tab")}</p>
           </div>
 
           <!-- Site URL -->
           <div class="space-y-2">
-            <Label for="siteURL">Site URL *</Label>
+            <Label for="siteURL">{$adminT("Site URL *")}</Label>
             <Input id="siteURL" type="url" bind:value={siteData.siteURL} placeholder="https://status.example.com" />
             {#if siteData.siteURL.trim().length > 0 && !isOriginOnlySiteURL}
               <p class="text-destructive text-xs">
-                Invalid site URL. Please enter only protocol + domain (no path, query, or hash).
+                {$adminT("Invalid site URL. Please enter only protocol + domain (no path, query, or hash).")}
               </p>
             {/if}
             {#if siteData.siteURL.trim().length > 0 && isOriginOnlySiteURL && hasOriginMismatch}
               <p class="text-xs text-amber-600 dark:text-amber-400">
-                Warning: Entered origin ({enteredSiteOrigin}) does not match current origin ({currentOrigin}).
+                {$adminT(
+                  "Warning: Entered origin ({enteredSiteOrigin}) does not match current origin ({currentOrigin}).",
+                  { enteredSiteOrigin: enteredSiteOrigin, currentOrigin: currentOrigin }
+                )}
               </p>
             {/if}
             <p class="text-muted-foreground text-xs">
-              Effective URL: {(isOriginOnlySiteURL ? enteredSiteOrigin : siteData.siteURL) +
-                clientResolver(resolve, "/")}
+              {$adminT("Effective URL: {value1}", {
+                value1: (isOriginOnlySiteURL ? enteredSiteOrigin : siteData.siteURL) + clientResolver(resolve, "/")
+              })}
             </p>
           </div>
         </div>
@@ -831,10 +846,10 @@
         <Button onclick={saveSiteInfo} disabled={savingSiteInfo || !isValidSiteInfo} class="cursor-pointer">
           {#if savingSiteInfo}
             <Loader class="h-4 w-4 animate-spin" />
-            Saving...
+            {$adminT("Saving...")}
           {:else}
             <SaveIcon class="h-4 w-4" />
-            Save
+            {$adminT("Save")}
           {/if}
         </Button>
       </Card.Footer>
@@ -843,15 +858,19 @@
     <!-- Logo Card -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>Logo</Card.Title>
-        <Card.Description>Upload your site logo (max 256x256px, PNG/JPG/SVG/WebP)</Card.Description>
+        <Card.Title>{$adminT("Logo")}</Card.Title>
+        <Card.Description>{$adminT("Upload your site logo (max 256x256px, PNG/JPG/SVG/WebP)")}</Card.Description>
       </Card.Header>
       <Card.Content class="space-y-4">
         <div class="flex items-start gap-4">
           <!-- Preview -->
           <div class="bg-muted flex h-24 w-24 items-center justify-center rounded-lg border">
             {#if siteData.logo}
-              <img src={clientResolver(resolve, siteData.logo)} alt="Logo" class="max-h-20 max-w-20 object-contain" />
+              <img
+                src={clientResolver(resolve, siteData.logo)}
+                alt={$adminT("Logo")}
+                class="max-h-20 max-w-20 object-contain"
+              />
             {:else}
               <ImageIcon class="text-muted-foreground h-8 w-8" />
             {/if}
@@ -867,10 +886,10 @@
               >
                 {#if uploadingLogo}
                   <Loader class="h-4 w-4 animate-spin" />
-                  Uploading...
+                  {$adminT("Uploading...")}
                 {:else}
                   <UploadIcon class="h-4 w-4" />
-                  Upload Logo
+                  {$adminT("Upload Logo")}
                 {/if}
               </Button>
               <input
@@ -897,10 +916,10 @@
         <Button onclick={saveLogo} disabled={savingLogo} class="cursor-pointer">
           {#if savingLogo}
             <Loader class="h-4 w-4 animate-spin" />
-            Saving...
+            {$adminT("Saving...")}
           {:else}
             <SaveIcon class="h-4 w-4" />
-            Save
+            {$adminT("Save")}
           {/if}
         </Button>
       </Card.Footer>
@@ -909,8 +928,8 @@
     <!-- Favicon Card -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>Favicon</Card.Title>
-        <Card.Description>Upload your site favicon (max 64x64px, PNG/JPG/SVG/WebP)</Card.Description>
+        <Card.Title>{$adminT("Favicon")}</Card.Title>
+        <Card.Description>{$adminT("Upload your site favicon (max 64x64px, PNG/JPG/SVG/WebP)")}</Card.Description>
       </Card.Header>
       <Card.Content class="space-y-4">
         <div class="flex items-start gap-4">
@@ -919,7 +938,7 @@
             {#if siteData.favicon}
               <img
                 src={clientResolver(resolve, siteData.favicon)}
-                alt="Favicon"
+                alt={$adminT("Favicon")}
                 class="max-h-12 max-w-12 object-contain"
               />
             {:else}
@@ -937,10 +956,10 @@
               >
                 {#if uploadingFavicon}
                   <Loader class="h-4 w-4 animate-spin" />
-                  Uploading...
+                  {$adminT("Uploading...")}
                 {:else}
                   <UploadIcon class="h-4 w-4" />
-                  Upload Favicon
+                  {$adminT("Upload Favicon")}
                 {/if}
               </Button>
               <input
@@ -967,10 +986,10 @@
         <Button onclick={saveFavicon} disabled={savingFavicon} class="cursor-pointer">
           {#if savingFavicon}
             <Loader class="h-4 w-4 animate-spin" />
-            Saving...
+            {$adminT("Saving...")}
           {:else}
             <SaveIcon class="h-4 w-4" />
-            Save
+            {$adminT("Save")}
           {/if}
         </Button>
       </Card.Footer>
@@ -979,8 +998,9 @@
     <!-- Social Preview & SEO Card -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>Social Preview & SEO</Card.Title>
-        <Card.Description>Configure social preview image and meta tags for search engines</Card.Description>
+        <Card.Title>{$adminT("Social Preview & SEO")}</Card.Title>
+        <Card.Description>{$adminT("Configure social preview image and meta tags for search engines")}</Card.Description
+        >
       </Card.Header>
       <Card.Content class="space-y-4">
         <div class="flex items-start gap-4">
@@ -989,7 +1009,7 @@
             {#if siteData.socialPreviewImage}
               <img
                 src={clientResolver(resolve, siteData.socialPreviewImage)}
-                alt="Social preview"
+                alt={$adminT("Social preview")}
                 class="h-full w-full rounded-lg object-cover"
               />
             {:else}
@@ -1007,10 +1027,10 @@
               >
                 {#if uploadingSocialPreviewImage}
                   <Loader class="h-4 w-4 animate-spin" />
-                  Uploading...
+                  {$adminT("Uploading...")}
                 {:else}
                   <UploadIcon class="h-4 w-4" />
-                  Upload Social Preview
+                  {$adminT("Upload Social Preview")}
                 {/if}
               </Button>
               <input
@@ -1030,40 +1050,42 @@
             {#if siteData.socialPreviewImage}
               <p class="text-muted-foreground truncate text-xs">{siteData.socialPreviewImage}</p>
             {:else}
-              <p class="text-muted-foreground text-xs">Optional. Leave empty to use no social preview image.</p>
+              <p class="text-muted-foreground text-xs">
+                {$adminT("Optional. Leave empty to use no social preview image.")}
+              </p>
             {/if}
           </div>
         </div>
 
         <div class="space-y-2">
-          <Label for="metaSiteTitle">Meta Title</Label>
+          <Label for="metaSiteTitle">{$adminT("Meta Title")}</Label>
           <Input
             id="metaSiteTitle"
             type="text"
             bind:value={metaSiteTitle}
-            placeholder="Custom page title for search engines"
+            placeholder={$adminT("Custom page title for search engines")}
           />
-          <p class="text-muted-foreground text-xs">Overrides the default page title in search results</p>
+          <p class="text-muted-foreground text-xs">{$adminT("Overrides the default page title in search results")}</p>
         </div>
         <div class="space-y-2">
-          <Label for="metaSiteDescription">Meta Description</Label>
+          <Label for="metaSiteDescription">{$adminT("Meta Description")}</Label>
           <Textarea
             id="metaSiteDescription"
             bind:value={metaSiteDescription}
-            placeholder="Custom description for search engines"
+            placeholder={$adminT("Custom description for search engines")}
             rows={3}
           />
-          <p class="text-muted-foreground text-xs">Shown as the snippet text in search engine results</p>
+          <p class="text-muted-foreground text-xs">{$adminT("Shown as the snippet text in search engine results")}</p>
         </div>
       </Card.Content>
       <Card.Footer class="flex justify-end">
         <Button onclick={saveSocialPreviewImage} disabled={savingSocialPreviewImage} class="cursor-pointer">
           {#if savingSocialPreviewImage}
             <Loader class="h-4 w-4 animate-spin" />
-            Saving...
+            {$adminT("Saving...")}
           {:else}
             <SaveIcon class="h-4 w-4" />
-            Save
+            {$adminT("Save")}
           {/if}
         </Button>
       </Card.Footer>
@@ -1072,26 +1094,35 @@
     <!-- Navigation Menu Card -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>Navigation Menu</Card.Title>
-        <Card.Description>Add custom navigation links to your status page header</Card.Description>
+        <Card.Title>{$adminT("Navigation Menu")}</Card.Title>
+        <Card.Description>{$adminT("Add custom navigation links to your status page header")}</Card.Description>
       </Card.Header>
       <Card.Content class="space-y-4">
         {#each nav as item, index (index)}
           <div class="flex items-end gap-2 rounded-lg border p-3">
             <div class="grid flex-1 gap-2 sm:grid-cols-3">
               <div class="space-y-1">
-                <Label for="nav-name-{index}">Name</Label>
-                <Input id="nav-name-{index}" type="text" bind:value={item.name} placeholder="Documentation" />
+                <Label for="nav-name-{index}">{$adminT("Name")}</Label>
+                <Input
+                  id="nav-name-{index}"
+                  type="text"
+                  bind:value={item.name}
+                  placeholder={$adminT("Documentation")}
+                />
               </div>
               <div class="space-y-1">
-                <Label for="nav-url-{index}">URL</Label>
+                <Label for="nav-url-{index}">{$adminT("URL")}</Label>
                 <Input id="nav-url-{index}" type="text" bind:value={item.url} placeholder="https://docs.example.com" />
               </div>
               <div class="space-y-1">
-                <Label for="nav-icon-{index}">Icon</Label>
+                <Label for="nav-icon-{index}">{$adminT("Icon")}</Label>
                 <div class="flex items-center gap-2">
                   {#if item.iconURL}
-                    <img src={clientResolver(resolve, item.iconURL)} alt="Icon" class="h-6 w-6 object-contain" />
+                    <img
+                      src={clientResolver(resolve, item.iconURL)}
+                      alt={$adminT("Icon")}
+                      class="h-6 w-6 object-contain"
+                    />
                     <Button variant="ghost" size="sm" onclick={() => (item.iconURL = "")}>
                       <XIcon class="h-4 w-4" />
                     </Button>
@@ -1126,17 +1157,17 @@
         {/each}
         <Button variant="outline" onclick={addNavItem}>
           <Plus class="h-4 w-4" />
-          Add Navigation Item
+          {$adminT("Add Navigation Item")}
         </Button>
       </Card.Content>
       <Card.Footer class="flex justify-end">
         <Button onclick={saveNavigation} disabled={savingNav} class="cursor-pointer">
           {#if savingNav}
             <Loader class="h-4 w-4 animate-spin" />
-            Saving...
+            {$adminT("Saving...")}
           {:else}
             <SaveIcon class="h-4 w-4" />
-            Save
+            {$adminT("Save")}
           {/if}
         </Button>
       </Card.Footer>
@@ -1145,31 +1176,35 @@
     <!-- Sub Menu Options Card -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>Monitor Sub Menu Options</Card.Title>
-        <Card.Description>Configure which options appear in the monitor sub menu on the status page</Card.Description>
+        <Card.Title>{$adminT("Monitor Sub Menu Options")}</Card.Title>
+        <Card.Description
+          >{$adminT("Configure which options appear in the monitor sub menu on the status page")}</Card.Description
+        >
       </Card.Header>
       <Card.Content class="space-y-6">
         <div class="flex items-center justify-between">
           <div class="space-y-0.5">
-            <Label>Share Badge</Label>
+            <Label>{$adminT("Share Badge")}</Label>
             <p class="text-muted-foreground text-xs">
-              Show option to get embeddable status and uptime badges for the monitor
+              {$adminT("Show option to get embeddable status and uptime badges for the monitor")}
             </p>
           </div>
           <Switch bind:checked={subMenuOptions.showShareBadgeMonitor} />
         </div>
         <div class="flex items-center justify-between">
           <div class="space-y-0.5">
-            <Label>Share Embed</Label>
-            <p class="text-muted-foreground text-xs">Show option to get iframe or script embed code for the monitor</p>
+            <Label>{$adminT("Share Embed")}</Label>
+            <p class="text-muted-foreground text-xs">
+              {$adminT("Show option to get iframe or script embed code for the monitor")}
+            </p>
           </div>
           <Switch bind:checked={subMenuOptions.showShareEmbedMonitor} />
         </div>
         <div class="flex items-center justify-between">
           <div class="space-y-0.5">
-            <Label>RSS Feed</Label>
+            <Label>{$adminT("RSS Feed")}</Label>
             <p class="text-muted-foreground text-xs">
-              Show an RSS feed link in the page header. The feed itself is always reachable at /rss.xml.
+              {$adminT("Show an RSS feed link in the page header. The feed itself is always reachable at /rss.xml.")}
             </p>
           </div>
           <Switch bind:checked={subMenuOptions.showRssFeed} />
@@ -1179,10 +1214,10 @@
         <Button onclick={saveSubMenuOptions} disabled={savingSubMenuOptions} class="cursor-pointer">
           {#if savingSubMenuOptions}
             <Loader class="h-4 w-4 animate-spin" />
-            Saving...
+            {$adminT("Saving...")}
           {:else}
             <SaveIcon class="h-4 w-4" />
-            Save
+            {$adminT("Save")}
           {/if}
         </Button>
       </Card.Footer>
@@ -1191,16 +1226,16 @@
     <!-- Global Page Visibility Settings Card -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>Global Page Visibility Settings</Card.Title>
+        <Card.Title>{$adminT("Global Page Visibility Settings")}</Card.Title>
         <Card.Description>
-          Configure page switcher visibility and global exclusivity behavior for page-linked content.
+          {$adminT("Configure page switcher visibility and global exclusivity behavior for page-linked content.")}
         </Card.Description>
       </Card.Header>
       <Card.Content class="space-y-6">
         <div class="flex items-center justify-between">
           <div class="space-y-0.5">
-            <Label>Show page switcher</Label>
-            <p class="text-muted-foreground text-xs">This will hide the pages dropdown from the menu.</p>
+            <Label>{$adminT("Show page switcher")}</Label>
+            <p class="text-muted-foreground text-xs">{$adminT("This will hide the pages dropdown from the menu.")}</p>
           </div>
           <Switch
             bind:checked={globalPageVisibilitySettings.showSwitcher}
@@ -1210,11 +1245,13 @@
 
         <div class="flex items-center justify-between">
           <div class="space-y-0.5">
-            <Label>Force exclusivity</Label>
+            <Label>{$adminT("Force exclusivity")}</Label>
             <p class="text-muted-foreground text-xs">
-              This sets <code>showSwitcher</code> to true and makes it read-only. It also enables brand icon link
-              overwrite and calendar event updates for affected monitors. Global events (incidents and maintenances with
-              <code>is_global=YES</code>) are still shown.
+              {$adminT("This sets")} <code>showSwitcher</code>
+              {$adminT(
+                "to true and makes it read-only. It also enables brand icon link overwrite and calendar event updates for affected monitors. Global events (incidents and maintenances with"
+              )}
+              <code>is_global=YES</code>{$adminT(") are still shown.")}
             </p>
           </div>
           <Switch checked={globalPageVisibilitySettings.forceExclusivity} onCheckedChange={onForceExclusivityChange} />
@@ -1228,10 +1265,10 @@
         >
           {#if savingGlobalPageVisibilitySettings}
             <Loader class="h-4 w-4 animate-spin" />
-            Saving...
+            {$adminT("Saving...")}
           {:else}
             <SaveIcon class="h-4 w-4" />
-            Save
+            {$adminT("Save")}
           {/if}
         </Button>
       </Card.Footer>
@@ -1240,20 +1277,22 @@
     <!-- Data Retention Policy Card -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>Data Retention Policy</Card.Title>
-        <Card.Description>Configure automatic cleanup for old monitor status data</Card.Description>
+        <Card.Title>{$adminT("Data Retention Policy")}</Card.Title>
+        <Card.Description>{$adminT("Configure automatic cleanup for old monitor status data")}</Card.Description>
       </Card.Header>
       <Card.Content class="space-y-6">
         <div class="flex items-center justify-between">
           <div class="space-y-0.5">
-            <Label>Enable Data Retention</Label>
-            <p class="text-muted-foreground text-xs">Automatically remove status data older than retention days</p>
+            <Label>{$adminT("Enable Data Retention")}</Label>
+            <p class="text-muted-foreground text-xs">
+              {$adminT("Automatically remove status data older than retention days")}
+            </p>
           </div>
           <Switch bind:checked={dataRetentionPolicy.enabled} />
         </div>
 
         <div class="space-y-2">
-          <Label for="retention-days">Retention Days</Label>
+          <Label for="retention-days">{$adminT("Retention Days")}</Label>
           <Input
             id="retention-days"
             type="number"
@@ -1261,17 +1300,17 @@
             bind:value={dataRetentionPolicy.retentionDays}
             disabled={!dataRetentionPolicy.enabled}
           />
-          <p class="text-muted-foreground text-xs">Default is 90 days if not configured.</p>
+          <p class="text-muted-foreground text-xs">{$adminT("Default is 90 days if not configured.")}</p>
         </div>
       </Card.Content>
       <Card.Footer class="flex justify-end">
         <Button onclick={saveDataRetentionPolicy} disabled={savingDataRetentionPolicy} class="cursor-pointer">
           {#if savingDataRetentionPolicy}
             <Loader class="h-4 w-4 animate-spin" />
-            Saving...
+            {$adminT("Saving...")}
           {:else}
             <SaveIcon class="h-4 w-4" />
-            Save
+            {$adminT("Save")}
           {/if}
         </Button>
       </Card.Footer>
@@ -1280,15 +1319,19 @@
     <!-- Event Display Settings Card -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>Event Display Settings</Card.Title>
-        <Card.Description>Configure which incidents and maintenances are shown on the site</Card.Description>
+        <Card.Title>{$adminT("Event Display Settings")}</Card.Title>
+        <Card.Description
+          >{$adminT("Configure which incidents and maintenances are shown on the site")}</Card.Description
+        >
       </Card.Header>
       <Card.Content class="space-y-6">
         <div class="flex items-center justify-between rounded-lg border p-4">
           <div class="space-y-0.5">
-            <Label for="events-display-inline">Display Events Inline</Label>
+            <Label for="events-display-inline">{$adminT("Display Events Inline")}</Label>
             <p class="text-muted-foreground text-xs">
-              Turn on to show ongoing incidents and maintenances, and upcoming maintenances, above the monitors.
+              {$adminT(
+                "Turn on to show ongoing incidents and maintenances, and upcoming maintenances, above the monitors."
+              )}
             </p>
           </div>
           <Switch id="events-display-inline" bind:checked={eventDisplaySettings.showInlineEvents} />
@@ -1296,37 +1339,37 @@
 
         <div class="space-y-3 rounded-lg border p-4">
           <div class="space-y-0.5">
-            <Label>Event List</Label>
+            <Label>{$adminT("Event List")}</Label>
             <p class="text-muted-foreground text-xs">
-              Choose where the list of current and past events appears on status pages.
+              {$adminT("Choose where the list of current and past events appears on status pages.")}
             </p>
           </div>
           <RadioGroup.Root
-            aria-label="Event List"
+            aria-label={$adminT("Event List")}
             value={eventDisplaySettings.eventListPlacement}
             onValueChange={(v: string) => (eventDisplaySettings.eventListPlacement = v as EventListPlacement)}
             class="flex flex-col gap-3"
           >
             <div class="flex items-center space-x-2">
               <RadioGroup.Item value="button" id="event-list-button" />
-              <Label for="event-list-button" class="cursor-pointer font-normal">Top bar button</Label>
+              <Label for="event-list-button" class="cursor-pointer font-normal">{$adminT("Top bar button")}</Label>
             </div>
             <div class="flex items-center space-x-2">
               <RadioGroup.Item value="aside" id="event-list-aside" />
-              <Label for="event-list-aside" class="cursor-pointer font-normal">Side column</Label>
+              <Label for="event-list-aside" class="cursor-pointer font-normal">{$adminT("Side column")}</Label>
             </div>
             <div class="flex items-center space-x-2">
               <RadioGroup.Item value="hidden" id="event-list-hidden" />
-              <Label for="event-list-hidden" class="cursor-pointer font-normal">Hidden</Label>
+              <Label for="event-list-hidden" class="cursor-pointer font-normal">{$adminT("Hidden")}</Label>
             </div>
           </RadioGroup.Root>
           <p class="text-muted-foreground text-xs">
             {#if eventDisplaySettings.eventListPlacement === "button"}
-              A button in the top bar opens the event list.
+              {$adminT("A button in the top bar opens the event list.")}
             {:else if eventDisplaySettings.eventListPlacement === "aside"}
-              The event list shows in a column next to the monitors. Monitor pages show the top bar button.
+              {$adminT("The event list shows in a column next to the monitors. Monitor pages show the top bar button.")}
             {:else}
-              No event list shows. The events pages stay available.
+              {$adminT("No event list shows. The events pages stay available.")}
             {/if}
           </p>
         </div>
@@ -1335,8 +1378,8 @@
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <div class="space-y-0.5">
-              <Label>Incidents</Label>
-              <p class="text-muted-foreground text-xs">Enable or disable incident display globally</p>
+              <Label>{$adminT("Incidents")}</Label>
+              <p class="text-muted-foreground text-xs">{$adminT("Enable or disable incident display globally")}</p>
             </div>
             <Switch bind:checked={eventDisplaySettings.incidents.enabled} />
           </div>
@@ -1345,16 +1388,16 @@
             <div class="border-muted ml-4 space-y-4 border-l-2 pl-4">
               <div class="flex items-center justify-between">
                 <div class="space-y-0.5">
-                  <Label>Show Ongoing Incidents</Label>
-                  <p class="text-muted-foreground text-xs">Display active incidents</p>
+                  <Label>{$adminT("Show Ongoing Incidents")}</Label>
+                  <p class="text-muted-foreground text-xs">{$adminT("Display active incidents")}</p>
                 </div>
                 <Switch bind:checked={eventDisplaySettings.incidents.ongoing.show} />
               </div>
 
               <div class="flex items-center justify-between">
                 <div class="space-y-0.5">
-                  <Label>Show Resolved Incidents</Label>
-                  <p class="text-muted-foreground text-xs">Display recently resolved incidents</p>
+                  <Label>{$adminT("Show Resolved Incidents")}</Label>
+                  <p class="text-muted-foreground text-xs">{$adminT("Display recently resolved incidents")}</p>
                 </div>
                 <Switch bind:checked={eventDisplaySettings.incidents.resolved.show} />
               </div>
@@ -1362,7 +1405,7 @@
               {#if eventDisplaySettings.incidents.resolved.show}
                 <div class="grid gap-4 md:grid-cols-2">
                   <div class="space-y-2">
-                    <Label for="events-incidents-max-count">Max Resolved Count</Label>
+                    <Label for="events-incidents-max-count">{$adminT("Max Resolved Count")}</Label>
                     <Input
                       id="events-incidents-max-count"
                       type="number"
@@ -1372,7 +1415,7 @@
                     />
                   </div>
                   <div class="space-y-2">
-                    <Label for="events-incidents-days-in-past">Days in Past</Label>
+                    <Label for="events-incidents-days-in-past">{$adminT("Days in Past")}</Label>
                     <Input
                       id="events-incidents-days-in-past"
                       type="number"
@@ -1393,8 +1436,8 @@
         <div class="space-y-4">
           <div class="flex items-center justify-between">
             <div class="space-y-0.5">
-              <Label>Maintenances</Label>
-              <p class="text-muted-foreground text-xs">Enable or disable maintenance display globally</p>
+              <Label>{$adminT("Maintenances")}</Label>
+              <p class="text-muted-foreground text-xs">{$adminT("Enable or disable maintenance display globally")}</p>
             </div>
             <Switch bind:checked={eventDisplaySettings.maintenances.enabled} />
           </div>
@@ -1403,16 +1446,16 @@
             <div class="border-muted ml-4 space-y-4 border-l-2 pl-4">
               <div class="flex items-center justify-between">
                 <div class="space-y-0.5">
-                  <Label>Show Ongoing Maintenances</Label>
-                  <p class="text-muted-foreground text-xs">Display active maintenance windows</p>
+                  <Label>{$adminT("Show Ongoing Maintenances")}</Label>
+                  <p class="text-muted-foreground text-xs">{$adminT("Display active maintenance windows")}</p>
                 </div>
                 <Switch bind:checked={eventDisplaySettings.maintenances.ongoing.show} />
               </div>
 
               <div class="flex items-center justify-between">
                 <div class="space-y-0.5">
-                  <Label>Show Past Maintenances</Label>
-                  <p class="text-muted-foreground text-xs">Display completed maintenance windows</p>
+                  <Label>{$adminT("Show Past Maintenances")}</Label>
+                  <p class="text-muted-foreground text-xs">{$adminT("Display completed maintenance windows")}</p>
                 </div>
                 <Switch bind:checked={eventDisplaySettings.maintenances.past.show} />
               </div>
@@ -1420,7 +1463,7 @@
               {#if eventDisplaySettings.maintenances.past.show}
                 <div class="grid gap-4 md:grid-cols-2">
                   <div class="space-y-2">
-                    <Label for="events-maint-past-max-count">Max Past Count</Label>
+                    <Label for="events-maint-past-max-count">{$adminT("Max Past Count")}</Label>
                     <Input
                       id="events-maint-past-max-count"
                       type="number"
@@ -1430,7 +1473,7 @@
                     />
                   </div>
                   <div class="space-y-2">
-                    <Label for="events-maint-past-days-in-past">Days in Past</Label>
+                    <Label for="events-maint-past-days-in-past">{$adminT("Days in Past")}</Label>
                     <Input
                       id="events-maint-past-days-in-past"
                       type="number"
@@ -1444,8 +1487,8 @@
 
               <div class="flex items-center justify-between">
                 <div class="space-y-0.5">
-                  <Label>Show Upcoming Maintenances</Label>
-                  <p class="text-muted-foreground text-xs">Display scheduled maintenance windows</p>
+                  <Label>{$adminT("Show Upcoming Maintenances")}</Label>
+                  <p class="text-muted-foreground text-xs">{$adminT("Display scheduled maintenance windows")}</p>
                 </div>
                 <Switch bind:checked={eventDisplaySettings.maintenances.upcoming.show} />
               </div>
@@ -1453,7 +1496,7 @@
               {#if eventDisplaySettings.maintenances.upcoming.show}
                 <div class="grid gap-4 md:grid-cols-2">
                   <div class="space-y-2">
-                    <Label for="events-maint-upcoming-max-count">Max Upcoming Count</Label>
+                    <Label for="events-maint-upcoming-max-count">{$adminT("Max Upcoming Count")}</Label>
                     <Input
                       id="events-maint-upcoming-max-count"
                       type="number"
@@ -1463,7 +1506,7 @@
                     />
                   </div>
                   <div class="space-y-2">
-                    <Label for="events-maint-upcoming-days-in-future">Days in Future</Label>
+                    <Label for="events-maint-upcoming-days-in-future">{$adminT("Days in Future")}</Label>
                     <Input
                       id="events-maint-upcoming-days-in-future"
                       type="number"
@@ -1482,10 +1525,10 @@
         <Button onclick={saveEventDisplaySettings} disabled={savingEventDisplaySettings} class="cursor-pointer">
           {#if savingEventDisplaySettings}
             <Loader class="h-4 w-4 animate-spin" />
-            Saving...
+            {$adminT("Saving...")}
           {:else}
             <SaveIcon class="h-4 w-4" />
-            Save
+            {$adminT("Save")}
           {/if}
         </Button>
       </Card.Footer>
@@ -1494,12 +1537,12 @@
     <!-- Sitemap Configuration Card -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>Sitemap</Card.Title>
-        <Card.Description>Configure how your sitemap.xml is generated</Card.Description>
+        <Card.Title>{$adminT("Sitemap")}</Card.Title>
+        <Card.Description>{$adminT("Configure how your sitemap.xml is generated")}</Card.Description>
       </Card.Header>
       <Card.Content class="space-y-6">
         <div class="space-y-3">
-          <Label>Mode</Label>
+          <Label>{$adminT("Mode")}</Label>
           <RadioGroup.Root
             value={sitemap.mode}
             onValueChange={(v: string) => {
@@ -1512,31 +1555,33 @@
           >
             <div class="flex items-center space-x-2">
               <RadioGroup.Item value="auto" id="sitemap-auto" />
-              <Label for="sitemap-auto" class="cursor-pointer font-normal">Auto</Label>
+              <Label for="sitemap-auto" class="cursor-pointer font-normal">{$adminT("Auto")}</Label>
             </div>
             <div class="flex items-center space-x-2">
               <RadioGroup.Item value="manual" id="sitemap-manual" />
-              <Label for="sitemap-manual" class="cursor-pointer font-normal">Manual</Label>
+              <Label for="sitemap-manual" class="cursor-pointer font-normal">{$adminT("Manual")}</Label>
             </div>
             <div class="flex items-center space-x-2">
               <RadioGroup.Item value="off" id="sitemap-off" />
-              <Label for="sitemap-off" class="cursor-pointer font-normal">Off</Label>
+              <Label for="sitemap-off" class="cursor-pointer font-normal">{$adminT("Off")}</Label>
             </div>
           </RadioGroup.Root>
           <p class="text-muted-foreground text-xs">
             {#if sitemap.mode === "auto"}
-              Sitemap will be auto-generated from your monitors and pages. You can also add additional URLs below.
+              {$adminT(
+                "Sitemap will be auto-generated from your monitors and pages. You can also add additional URLs below."
+              )}
             {:else if sitemap.mode === "manual"}
-              Provide custom URLs to include in the sitemap.
+              {$adminT("Provide custom URLs to include in the sitemap.")}
             {:else}
-              Sitemap generation is disabled.
+              {$adminT("Sitemap generation is disabled.")}
             {/if}
           </p>
         </div>
 
         {#if sitemap.mode === "manual" || sitemap.mode === "auto"}
           <div class="space-y-3">
-            <Label>{sitemap.mode === "auto" ? "Additional URLs" : "URLs"}</Label>
+            <Label>{sitemap.mode === "auto" ? $adminT("Additional URLs") : $adminT("URLs")}</Label>
             {#each sitemap.urls as url, index (index)}
               <div class="flex items-center gap-2">
                 <Input type="url" bind:value={url.loc} placeholder="https://example.com/page" class="flex-1" />
@@ -1552,10 +1597,10 @@
             {/each}
             <Button variant="outline" onclick={addSitemapUrl}>
               <Plus class="h-4 w-4" />
-              {sitemap.urls.length > 0 ? "Add More URLs" : "Add URL"}
+              {sitemap.urls.length > 0 ? $adminT("Add More URLs") : $adminT("Add URL")}
             </Button>
             {#if sitemap.mode === "manual" && sitemap.urls.length === 0}
-              <p class="text-destructive text-xs">At least one URL is required for manual mode.</p>
+              <p class="text-destructive text-xs">{$adminT("At least one URL is required for manual mode.")}</p>
             {/if}
           </div>
         {/if}
@@ -1564,7 +1609,7 @@
         {#if sitemap.mode !== "off" && sitemapURL}
           <CopyButton variant="outline" size="default" text={sitemapURL}>
             <CopyIcon class="mr-2 h-4 w-4" />
-            Copy URL
+            {$adminT("Copy URL")}
           </CopyButton>
           <Button
             variant="outline"
@@ -1572,16 +1617,16 @@
             onclick={() => window.open(clientResolver(resolve, "/sitemap.xml"), "_blank")}
           >
             <ExternalLinkIcon class="h-4 w-4" />
-            View
+            {$adminT("View")}
           </Button>
         {/if}
         <Button onclick={saveSitemap} disabled={savingSitemap || !isValidSitemap} class="cursor-pointer">
           {#if savingSitemap}
             <Loader class="h-4 w-4 animate-spin" />
-            Saving...
+            {$adminT("Saving...")}
           {:else}
             <SaveIcon class="h-4 w-4" />
-            Save
+            {$adminT("Save")}
           {/if}
         </Button>
       </Card.Footer>
@@ -1590,19 +1635,19 @@
     <!-- Maintenance Notification Settings Card -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>Maintenance Notification Settings</Card.Title>
+        <Card.Title>{$adminT("Maintenance Notification Settings")}</Card.Title>
         <Card.Description
-          >Configure which maintenance lifecycle events trigger subscriber notifications</Card.Description
+          >{$adminT("Configure which maintenance lifecycle events trigger subscriber notifications")}</Card.Description
         >
       </Card.Header>
       <Card.Content class="space-y-6">
         <div class="space-y-4">
-          <Label>Event Types</Label>
+          <Label>{$adminT("Event Types")}</Label>
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="flex items-center justify-between gap-2 rounded-lg border p-3">
               <div>
-                <p class="text-sm font-medium">Created</p>
-                <p class="text-muted-foreground text-xs">When a maintenance is created</p>
+                <p class="text-sm font-medium">{$adminT("Created")}</p>
+                <p class="text-muted-foreground text-xs">{$adminT("When a maintenance is created")}</p>
               </div>
               <Switch
                 checked={maintenanceNotificationSettings.event_types.created}
@@ -1613,8 +1658,8 @@
             </div>
             <div class="flex items-center justify-between gap-2 rounded-lg border p-3">
               <div>
-                <p class="text-sm font-medium">Reminder</p>
-                <p class="text-muted-foreground text-xs">Before a scheduled maintenance starts</p>
+                <p class="text-sm font-medium">{$adminT("Reminder")}</p>
+                <p class="text-muted-foreground text-xs">{$adminT("Before a scheduled maintenance starts")}</p>
               </div>
               <Switch
                 checked={maintenanceNotificationSettings.event_types.reminder}
@@ -1625,8 +1670,8 @@
             </div>
             <div class="flex items-center justify-between gap-2 rounded-lg border p-3">
               <div>
-                <p class="text-sm font-medium">Started</p>
-                <p class="text-muted-foreground text-xs">When a maintenance begins</p>
+                <p class="text-sm font-medium">{$adminT("Started")}</p>
+                <p class="text-muted-foreground text-xs">{$adminT("When a maintenance begins")}</p>
               </div>
               <Switch
                 checked={maintenanceNotificationSettings.event_types.started}
@@ -1637,8 +1682,8 @@
             </div>
             <div class="flex items-center justify-between gap-2 rounded-lg border p-3">
               <div>
-                <p class="text-sm font-medium">Ended</p>
-                <p class="text-muted-foreground text-xs">When a maintenance completes</p>
+                <p class="text-sm font-medium">{$adminT("Ended")}</p>
+                <p class="text-muted-foreground text-xs">{$adminT("When a maintenance completes")}</p>
               </div>
               <Switch
                 checked={maintenanceNotificationSettings.event_types.ended}
@@ -1652,7 +1697,7 @@
 
         {#if maintenanceNotificationSettings.event_types.reminder}
           <div class="space-y-2">
-            <Label for="reminder-buffer-hours">Reminder Buffer (hours)</Label>
+            <Label for="reminder-buffer-hours">{$adminT("Reminder Buffer (hours)")}</Label>
             <Input
               id="reminder-buffer-hours"
               type="number"
@@ -1660,7 +1705,7 @@
               bind:value={maintenanceNotificationSettings.reminder_buffer_hours}
             />
             <p class="text-muted-foreground text-xs">
-              How many hours before the maintenance start time to send the reminder notification
+              {$adminT("How many hours before the maintenance start time to send the reminder notification")}
             </p>
           </div>
         {/if}
@@ -1673,10 +1718,10 @@
         >
           {#if savingMaintenanceNotificationSettings}
             <Loader class="h-4 w-4 animate-spin" />
-            Saving...
+            {$adminT("Saving...")}
           {:else}
             <SaveIcon class="h-4 w-4" />
-            Save
+            {$adminT("Save")}
           {/if}
         </Button>
       </Card.Footer>

@@ -1,5 +1,10 @@
 <script lang="ts">
   import { page } from "$app/state";
+  import { adminLocaleTag, translateAdmin } from "$lib/admin-i18n/messages";
+
+  function errorText(message: string): string {
+    return translateAdmin(page.data.adminLocale ?? "en", message);
+  }
 
   // This boundary renders when a route group's layout load fails (e.g. the
   // database is unreachable), so it must not depend on app CSS or any server
@@ -8,21 +13,25 @@
 </script>
 
 <svelte:head>
-  <title>{page.status} — {isServerFailure ? "Status page temporarily unavailable" : "Something went wrong"}</title>
+  <title
+    >{page.status} — {errorText(
+      isServerFailure ? "Status page temporarily unavailable" : "Something went wrong"
+    )}</title
+  >
   {#if isServerFailure}
     <meta http-equiv="refresh" content="30" />
   {/if}
 </svelte:head>
 
-<div class="error-wrap">
+<div class="error-wrap" lang={adminLocaleTag(page.data.adminLocale ?? "en")}>
   <div class="error-card">
     {#if isServerFailure}
-      <h1>This status page is temporarily unavailable</h1>
-      <p>We are having trouble serving this page right now. It usually resolves on its own.</p>
-      <p>This page will retry automatically in 30 seconds.</p>
+      <h1>{errorText("This status page is temporarily unavailable")}</h1>
+      <p>{errorText("We are having trouble serving this page right now. It usually resolves on its own.")}</p>
+      <p>{errorText("This page will retry automatically in 30 seconds.")}</p>
     {:else}
-      <h1>Something went wrong</h1>
-      <p>{page.error?.message || "The page you requested could not be loaded."}</p>
+      <h1>{errorText("Something went wrong")}</h1>
+      <p>{errorText(page.error?.message || "The page you requested could not be loaded.")}</p>
     {/if}
     <div class="error-code">{page.status}</div>
   </div>

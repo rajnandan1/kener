@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Button } from "$lib/components/ui/button/index.js";
   import { Spinner } from "$lib/components/ui/spinner/index.js";
   import { Badge } from "$lib/components/ui/badge/index.js";
@@ -93,13 +96,13 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success(result.is_active === "YES" ? "Alert activated" : "Alert deactivated");
+        toast.success($adminT(result.is_active === "YES" ? "Alert activated" : "Alert deactivated"));
         await fetchConfigs();
       }
     } catch (error) {
-      toast.error("Failed to toggle alert status");
+      toast.error($adminT("Failed to toggle alert status"));
     }
   }
 
@@ -140,10 +143,12 @@
     <div class="flex items-center gap-3">
       <Select.Root type="single" value={monitorFilter} onValueChange={handleMonitorChange}>
         <Select.Trigger class="w-48">
-          {monitorFilter ? monitors.find((m) => m.tag === monitorFilter)?.name || monitorFilter : "All Monitors"}
+          {monitorFilter
+            ? monitors.find((m) => m.tag === monitorFilter)?.name || monitorFilter
+            : $adminT("All Monitors")}
         </Select.Trigger>
         <Select.Content>
-          <Select.Item value="">All Monitors</Select.Item>
+          <Select.Item value="">{$adminT("All Monitors")}</Select.Item>
           {#each monitors as monitor}
             <Select.Item value={monitor.tag}>{monitor.name}</Select.Item>
           {/each}
@@ -155,7 +160,7 @@
     </div>
     <Button onclick={() => goto(clientResolver(resolve, "/manage/app/alerts/new"))}>
       <PlusIcon class="size-4" />
-      Create Alert
+      {$adminT("Create Alert")}
     </Button>
   </div>
 
@@ -164,13 +169,13 @@
     <Table.Root>
       <Table.Header>
         <Table.Row>
-          <Table.Head>Monitors</Table.Head>
-          <Table.Head>Alert Type</Table.Head>
-          <Table.Head>Severity</Table.Head>
-          <Table.Head>Description</Table.Head>
-          <Table.Head class="w-24">Triggers</Table.Head>
-          <Table.Head class="w-20 text-center">Active</Table.Head>
-          <Table.Head class="w-32 text-right">Actions</Table.Head>
+          <Table.Head>{$adminT("Monitors")}</Table.Head>
+          <Table.Head>{$adminT("Alert Type")}</Table.Head>
+          <Table.Head>{$adminT("Severity")}</Table.Head>
+          <Table.Head>{$adminT("Description")}</Table.Head>
+          <Table.Head class="w-24">{$adminT("Triggers")}</Table.Head>
+          <Table.Head class="w-20 text-center">{$adminT("Active")}</Table.Head>
+          <Table.Head class="w-32 text-right">{$adminT("Actions")}</Table.Head>
         </Table.Row>
       </Table.Header>
       <Table.Body>
@@ -180,16 +185,16 @@
               <div class="flex flex-col items-center gap-4">
                 <BellOffIcon class="text-muted-foreground size-16" />
                 <div class="space-y-2">
-                  <h3 class="text-lg font-semibold">No alert configurations</h3>
+                  <h3 class="text-lg font-semibold">{$adminT("No alert configurations")}</h3>
                   <p class="text-muted-foreground text-sm">
                     {monitorFilter
-                      ? "No alerts found for this monitor."
-                      : "Create an alert to get notified when your monitors have issues."}
+                      ? $adminT("No alerts found for this monitor.")
+                      : $adminT("Create an alert to get notified when your monitors have issues.")}
                   </p>
                 </div>
                 <Button onclick={() => goto(clientResolver(resolve, "/manage/app/alerts/new"))}>
                   <PlusIcon class="size-4" />
-                  Create Alert
+                  {$adminT("Create Alert")}
                 </Button>
               </div>
             </Table.Cell>
@@ -217,11 +222,11 @@
                 {/if}
               </Table.Cell>
               <Table.Cell>
-                <Badge variant="outline">{config.alert_for}</Badge>
+                <Badge variant="outline">{$adminT(String(config.alert_for ?? ""))}</Badge>
               </Table.Cell>
               <Table.Cell>
                 <Badge variant={getSeverityBadgeVariant(config.severity)}>
-                  {config.severity}
+                  {$adminT(String(config.severity ?? ""))}
                 </Badge>
               </Table.Cell>
               <Table.Cell>
@@ -229,26 +234,34 @@
                   <Tooltip.Trigger>
                     <div class="max-w-xs space-y-1">
                       <p class="text-muted-foreground line-clamp-2 text-sm">
-                        {getAlertText({
-                          kind: "description",
-                          alert_for: config.alert_for,
-                          alert_value: config.alert_value,
-                          failure_threshold: config.failure_threshold,
-                          success_threshold: config.success_threshold
-                        })}
+                        {$adminT(
+                          String(
+                            getAlertText({
+                              kind: "description",
+                              alert_for: config.alert_for,
+                              alert_value: config.alert_value,
+                              failure_threshold: config.failure_threshold,
+                              success_threshold: config.success_threshold
+                            })
+                          )
+                        )}
                       </p>
                     </div>
                   </Tooltip.Trigger>
                   <Tooltip.Content class="max-w-md">
                     <div class="space-y-2">
                       <p class="text-sm">
-                        {getAlertText({
-                          kind: "description",
-                          alert_for: config.alert_for,
-                          alert_value: config.alert_value,
-                          failure_threshold: config.failure_threshold,
-                          success_threshold: config.success_threshold
-                        })}
+                        {$adminT(
+                          String(
+                            getAlertText({
+                              kind: "description",
+                              alert_for: config.alert_for,
+                              alert_value: config.alert_value,
+                              failure_threshold: config.failure_threshold,
+                              success_threshold: config.success_threshold
+                            })
+                          )
+                        )}
                       </p>
                     </div>
                   </Tooltip.Content>
@@ -259,7 +272,7 @@
                   <Tooltip.Root>
                     <Tooltip.Trigger>
                       <Badge variant="secondary" class="cursor-pointer text-xs">
-                        {config.triggers.length} trigger{config.triggers.length > 1 ? "s" : ""}
+                        {$adminT("Notification channels: {length}", { length: config.triggers.length })}
                       </Badge>
                     </Tooltip.Trigger>
                     <Tooltip.Content>
@@ -285,7 +298,7 @@
                     onclick={() => goto(clientResolver(resolve, `/manage/app/alerts/${config.id}`))}
                   >
                     <EditIcon class="size-3" />
-                    Edit
+                    {$adminT("Edit")}
                   </Button>
                   <Button
                     variant="outline"
@@ -293,7 +306,7 @@
                     onclick={() => goto(clientResolver(resolve, `/manage/app/alerts/logs/${config.id}`))}
                   >
                     <ListIcon class="size-3" />
-                    Logs
+                    {$adminT("Logs")}
                   </Button>
                 </div>
               </Table.Cell>
@@ -309,7 +322,13 @@
     {@const startItem = (pageNo - 1) * limit + 1}
     {@const endItem = Math.min(pageNo * limit, totalCount)}
     <div class="flex items-center justify-between">
-      <span class="text-muted-foreground text-sm">Showing {startItem}-{endItem} of {totalCount}</span>
+      <span class="text-muted-foreground text-sm"
+        >{$adminT("Showing {startItem}-{endItem} of {totalCount}", {
+          startItem: startItem,
+          endItem: endItem,
+          totalCount: totalCount
+        })}</span
+      >
       {#if totalPages > 1}
         <div class="flex items-center gap-2">
           <Button variant="outline" size="icon" disabled={pageNo === 1} onclick={() => goToPage(pageNo - 1)}>

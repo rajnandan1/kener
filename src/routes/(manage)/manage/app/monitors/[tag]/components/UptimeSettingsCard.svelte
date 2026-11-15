@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Button } from "$lib/components/ui/button/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as InputGroup from "$lib/components/ui/input-group/index.js";
@@ -73,7 +76,7 @@
 
   async function saveUptimeSettings() {
     if (!isUptimeSettingsValid) {
-      toast.error("Invalid uptime formula. Use: up, down, degraded, maintenance with +, -, *, /");
+      toast.error($adminT("Invalid uptime formula. Use: up, down, degraded, maintenance with +, -, *, /"));
       return;
     }
 
@@ -93,13 +96,13 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Uptime settings saved successfully");
+        toast.success($adminT("Uptime settings saved successfully"));
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to save uptime settings";
-      toast.error(message);
+      toast.error($adminT(message));
     } finally {
       savingUptimeSettings = false;
     }
@@ -108,38 +111,38 @@
 
 <Card.Root>
   <Card.Header>
-    <Card.Title>Uptime Calculation</Card.Title>
-    <Card.Description>Customize how uptime percentage is calculated for this monitor</Card.Description>
+    <Card.Title>{$adminT("Uptime Calculation")}</Card.Title>
+    <Card.Description>{$adminT("Customize how uptime percentage is calculated for this monitor")}</Card.Description>
   </Card.Header>
   <Card.Content class="space-y-4">
     <div class="flex gap-2">
       <InputGroup.Root>
-        <InputGroup.Addon>a =</InputGroup.Addon>
+        <InputGroup.Addon>{$adminT("a =")}</InputGroup.Addon>
         <InputGroup.Input
-          placeholder="up + maintenance"
+          placeholder={$adminT("up + maintenance")}
           bind:value={uptimeSettings.uptime_formula_numerator}
           class={!isValidUptimeFormula(uptimeSettings.uptime_formula_numerator) ? "border-destructive" : ""}
         />
       </InputGroup.Root>
       <InputGroup.Root>
-        <InputGroup.Addon>b =</InputGroup.Addon>
+        <InputGroup.Addon>{$adminT("b =")}</InputGroup.Addon>
         <InputGroup.Input
-          placeholder="up + maintenance + down + degraded"
+          placeholder={$adminT("up + maintenance + down + degraded")}
           bind:value={uptimeSettings.uptime_formula_denominator}
           class={!isValidUptimeFormula(uptimeSettings.uptime_formula_denominator) ? "border-destructive" : ""}
         />
       </InputGroup.Root>
     </div>
     <div class="text-muted-foreground text-sm">
-      <p><strong>Uptime % = (a / b) × 100</strong></p>
+      <p><strong>{$adminT("Uptime % = (a / b) × 100")}</strong></p>
       <p class="mt-2 text-xs">
-        Valid variables: <code class="bg-muted rounded px-1">up</code>,
+        {$adminT("Valid variables:")} <code class="bg-muted rounded px-1">up</code>,
         <code class="bg-muted rounded px-1">down</code>,
         <code class="bg-muted rounded px-1">degraded</code>,
         <code class="bg-muted rounded px-1">maintenance</code>
       </p>
       <p class="text-xs">
-        Valid operators: <code class="bg-muted rounded px-1">+</code>,
+        {$adminT("Valid operators:")} <code class="bg-muted rounded px-1">+</code>,
         <code class="bg-muted rounded px-1">-</code>,
         <code class="bg-muted rounded px-1">*</code>,
         <code class="bg-muted rounded px-1">/</code>
@@ -153,7 +156,7 @@
       {:else}
         <SaveIcon class="size-4" />
       {/if}
-      Save Uptime Settings
+      {$adminT("Save Uptime Settings")}
     </Button>
   </Card.Footer>
 </Card.Root>

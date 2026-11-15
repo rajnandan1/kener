@@ -25,6 +25,16 @@ Use this page to configure all three from the admin UI.
     - set formats for **Date + Time**, **Date Only**, and **Time Only**,
     - click **Save Format**.
 
+## Management panel language — Admin PL fork {#admin-panel-language}
+
+This fork adds a separate **Panel language** selector to the management header and account pages. Choose **Polski** or **English**; labels change immediately. The official Kener 4.2.1 release does not include this panel selector.
+
+The choice is stored for one year in the `kener_admin_locale` cookie, scoped to the application base path. An existing cookie takes priority; otherwise the panel follows a supported browser language and falls back to Polish. This is a browser preference, not a user-account setting.
+
+**Internationalization → Languages** continues to control the public status page independently. Panel localization does not translate saved incident text, monitor names, editable email bodies, code examples, or protocol identifiers.
+
+Panel catalogues are `src/lib/admin-i18n/en.json` and `pl.json`. Check them with `node scripts/admin-i18n/audit.mjs`. The public-page translation scripts below do not audit the management panel.
+
 ## Localization {#localization}
 
 ### How it works {#localization-how-it-works}

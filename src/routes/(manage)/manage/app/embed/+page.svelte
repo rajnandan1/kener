@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { onMount } from "svelte";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
@@ -190,9 +193,11 @@
     <div class="flex flex-col gap-6">
       <Card.Root>
         <Card.Header>
-          <Card.Title>Embed Generator</Card.Title>
+          <Card.Title>{$adminT("Embed Generator")}</Card.Title>
           <Card.Description>
-            Create customizable embeds to display the status or latency of your monitors on external websites
+            {$adminT(
+              "Create customizable embeds to display the status or latency of your monitors on external websites"
+            )}
           </Card.Description>
         </Card.Header>
         <Card.Content>
@@ -201,7 +206,7 @@
             <div class="flex flex-col gap-4 border-r pr-4">
               <!-- Embed Type -->
               <div class="flex flex-col gap-2">
-                <Label for="embed-type">Embed Type</Label>
+                <Label for="embed-type">{$adminT("Embed Type")}</Label>
                 <Select.Root
                   type="single"
                   value={embedConfig.embedType}
@@ -211,24 +216,24 @@
                 >
                   <Select.Trigger id="embed-type" class="w-full capitalize">
                     {embedConfig.embedType === "status"
-                      ? "Status Bar"
+                      ? $adminT("Status Bar")
                       : embedConfig.embedType === "latency"
-                        ? "Latency Chart"
-                        : "Live Events"}
+                        ? $adminT("Latency Chart")
+                        : $adminT("Live Events")}
                   </Select.Trigger>
                   <Select.Content>
-                    <Select.Item value="status">Status Bar</Select.Item>
-                    <Select.Item value="latency">Latency Chart</Select.Item>
-                    <Select.Item value="events">Live Events</Select.Item>
+                    <Select.Item value="status">{$adminT("Status Bar")}</Select.Item>
+                    <Select.Item value="latency">{$adminT("Latency Chart")}</Select.Item>
+                    <Select.Item value="events">{$adminT("Live Events")}</Select.Item>
                   </Select.Content>
                 </Select.Root>
                 <p class="text-muted-foreground text-xs">
                   {#if embedConfig.embedType === "status"}
-                    Shows a status bar with uptime percentage and daily status indicators
+                    {$adminT("Shows a status bar with uptime percentage and daily status indicators")}
                   {:else if embedConfig.embedType === "latency"}
-                    Shows a latency trend chart over time
+                    {$adminT("Shows a latency trend chart over time")}
                   {:else}
-                    Shows ongoing incidents and maintenance events in real time
+                    {$adminT("Shows ongoing incidents and maintenance events in real time")}
                   {/if}
                 </p>
               </div>
@@ -236,7 +241,7 @@
               <!-- Monitor Selection (status & latency only) -->
               {#if embedConfig.embedType !== "events"}
                 <div class="flex flex-col gap-2">
-                  <Label for="monitor-select">Monitor</Label>
+                  <Label for="monitor-select">{$adminT("Monitor")}</Label>
                   <Select.Root
                     type="single"
                     value={embedConfig.tag}
@@ -245,7 +250,7 @@
                     }}
                   >
                     <Select.Trigger id="monitor-select" class="w-full">
-                      {monitors.find((m) => m.tag === embedConfig.tag)?.name || "Select a monitor"}
+                      {monitors.find((m) => m.tag === embedConfig.tag)?.name || $adminT("Select a monitor")}
                     </Select.Trigger>
                     <Select.Content>
                       {#each monitors as monitor (monitor.tag)}
@@ -258,21 +263,21 @@
 
               <!-- Theme -->
               <div class="flex flex-col gap-2">
-                <Label>Theme</Label>
+                <Label>{$adminT("Theme")}</Label>
                 <div class="flex gap-2">
                   <Button
                     variant={embedConfig.theme === "light" ? "default" : "outline"}
                     size="sm"
                     onclick={() => (embedConfig.theme = "light")}
                   >
-                    Light
+                    {$adminT("Light")}
                   </Button>
                   <Button
                     variant={embedConfig.theme === "dark" ? "default" : "outline"}
                     size="sm"
                     onclick={() => (embedConfig.theme = "dark")}
                   >
-                    Dark
+                    {$adminT("Dark")}
                   </Button>
                 </div>
               </div>
@@ -280,7 +285,7 @@
               <!-- Events-specific options -->
               {#if embedConfig.embedType === "events"}
                 <div class="flex flex-col gap-2">
-                  <Label>Show</Label>
+                  <Label>{$adminT("Show")}</Label>
                   <div class="flex flex-col gap-2">
                     <label class="flex items-center gap-2">
                       <Checkbox
@@ -289,7 +294,7 @@
                           embedConfig.showIncidents = !!v;
                         }}
                       />
-                      <span class="text-sm">Incidents</span>
+                      <span class="text-sm">{$adminT("Incidents")}</span>
                     </label>
                     <label class="flex items-center gap-2">
                       <Checkbox
@@ -298,16 +303,16 @@
                           embedConfig.showMaintenance = !!v;
                         }}
                       />
-                      <span class="text-sm">Maintenance</span>
+                      <span class="text-sm">{$adminT("Maintenance")}</span>
                     </label>
                   </div>
                 </div>
 
                 <!-- Monitor Tags Filter (optional) -->
                 <div class="flex flex-col gap-2">
-                  <Label>Filter by Monitors</Label>
+                  <Label>{$adminT("Filter by Monitors")}</Label>
                   <p class="text-muted-foreground text-xs">
-                    Select monitors to filter events. Leave empty to show all global events.
+                    {$adminT("Select monitors to filter events. Leave empty to show all global events.")}
                   </p>
                   <div class="flex max-h-40 flex-col gap-1.5 overflow-y-auto rounded-md border p-2">
                     {#each monitors as monitor (monitor.tag)}
@@ -331,7 +336,7 @@
                       class="text-muted-foreground self-start text-xs underline hover:no-underline"
                       onclick={() => (embedConfig.selectedTags = [])}
                     >
-                      Clear selection
+                      {$adminT("Clear selection")}
                     </button>
                   {/if}
                 </div>
@@ -340,7 +345,7 @@
               <!-- Days (status & latency only) -->
               {#if embedConfig.embedType !== "events"}
                 <div class="flex flex-col gap-2">
-                  <Label for="days-select">Time Period</Label>
+                  <Label for="days-select">{$adminT("Time Period")}</Label>
                   <Select.Root
                     type="single"
                     value={embedConfig.days.toString()}
@@ -349,11 +354,12 @@
                     }}
                   >
                     <Select.Trigger id="days-select" class="w-full">
-                      {daysPresets.find((d) => d.value === embedConfig.days)?.label || `${embedConfig.days} Days`}
+                      {$adminT(String(daysPresets.find((d) => d.value === embedConfig.days)?.label ?? "")) ||
+                        $adminT("{days} Days", { days: embedConfig.days })}
                     </Select.Trigger>
                     <Select.Content>
                       {#each daysPresets as preset (preset.value)}
-                        <Select.Item value={preset.value.toString()}>{preset.label}</Select.Item>
+                        <Select.Item value={preset.value.toString()}>{$adminT(String(preset.label ?? ""))}</Select.Item>
                       {/each}
                     </Select.Content>
                   </Select.Root>
@@ -363,7 +369,7 @@
               <!-- Height (only for latency) -->
               {#if embedConfig.embedType === "latency"}
                 <div class="flex flex-col gap-2">
-                  <Label for="height-select">Chart Height</Label>
+                  <Label for="height-select">{$adminT("Chart Height")}</Label>
                   <Select.Root
                     type="single"
                     value={embedConfig.height.toString()}
@@ -372,11 +378,12 @@
                     }}
                   >
                     <Select.Trigger id="height-select" class="w-full">
-                      {heightPresets.find((h) => h.value === embedConfig.height)?.label || `${embedConfig.height}px`}
+                      {$adminT(String(heightPresets.find((h) => h.value === embedConfig.height)?.label ?? "")) ||
+                        $adminT("{height}px", { height: embedConfig.height })}
                     </Select.Trigger>
                     <Select.Content>
                       {#each heightPresets as preset (preset.value)}
-                        <Select.Item value={preset.value.toString()}>{preset.label}</Select.Item>
+                        <Select.Item value={preset.value.toString()}>{$adminT(String(preset.label ?? ""))}</Select.Item>
                       {/each}
                     </Select.Content>
                   </Select.Root>
@@ -384,7 +391,7 @@
 
                 <!-- Latency Metric -->
                 <div class="flex flex-col gap-2">
-                  <Label for="metric-select">Latency Metric</Label>
+                  <Label for="metric-select">{$adminT("Latency Metric")}</Label>
                   <Select.Root
                     type="single"
                     value={embedConfig.metric}
@@ -394,45 +401,47 @@
                   >
                     <Select.Trigger id="metric-select" class="w-full capitalize">
                       {embedConfig.metric === "average"
-                        ? "Average"
+                        ? $adminT("Average")
                         : embedConfig.metric === "maximum"
-                          ? "Maximum"
-                          : "Minimum"}
+                          ? $adminT("Maximum")
+                          : $adminT("Minimum")}
                     </Select.Trigger>
                     <Select.Content>
-                      <Select.Item value="average">Average</Select.Item>
-                      <Select.Item value="maximum">Maximum</Select.Item>
-                      <Select.Item value="minimum">Minimum</Select.Item>
+                      <Select.Item value="average">{$adminT("Average")}</Select.Item>
+                      <Select.Item value="maximum">{$adminT("Maximum")}</Select.Item>
+                      <Select.Item value="minimum">{$adminT("Minimum")}</Select.Item>
                     </Select.Content>
                   </Select.Root>
-                  <p class="text-muted-foreground text-xs">Select which latency metric to display in the chart</p>
+                  <p class="text-muted-foreground text-xs">
+                    {$adminT("Select which latency metric to display in the chart")}
+                  </p>
                 </div>
               {/if}
 
               <!-- Format -->
               <div class="flex flex-col gap-2">
-                <Label>Embed Format</Label>
+                <Label>{$adminT("Embed Format")}</Label>
                 <div class="flex gap-2">
                   <Button
                     variant={embedConfig.format === "iframe" ? "default" : "outline"}
                     size="sm"
                     onclick={() => (embedConfig.format = "iframe")}
                   >
-                    iFrame
+                    {$adminT("iFrame")}
                   </Button>
                   <Button
                     variant={embedConfig.format === "script" ? "default" : "outline"}
                     size="sm"
                     onclick={() => (embedConfig.format = "script")}
                   >
-                    Script
+                    {$adminT("Script")}
                   </Button>
                 </div>
                 <p class="text-muted-foreground text-xs">
                   {#if embedConfig.format === "iframe"}
-                    Use an iframe to embed the widget. Works on most websites.
+                    {$adminT("Use an iframe to embed the widget. Works on most websites.")}
                   {:else}
-                    Use a script tag for dynamic embedding. May require CSP configuration.
+                    {$adminT("Use a script tag for dynamic embedding. May require CSP configuration.")}
                   {/if}
                 </p>
               </div>
@@ -443,12 +452,12 @@
               {#if embedConfig.tag || embedConfig.embedType === "events"}
                 <div>
                   <p class="flex items-center justify-between">
-                    <span class="text-sm font-semibold">Preview</span>
+                    <span class="text-sm font-semibold">{$adminT("Preview")}</span>
                     <Button variant="ghost" size="icon-sm" onclick={refreshPreview}>
                       <RefreshCwIcon class="h-4 w-4" />
                     </Button>
                   </p>
-                  <p class="text-muted-foreground text-sm">See how your embed will look</p>
+                  <p class="text-muted-foreground text-sm">{$adminT("See how your embed will look")}</p>
                 </div>
 
                 <!-- Embed Preview -->
@@ -459,7 +468,7 @@
                   {#key previewKey}
                     {#key embedConfig}
                       <iframe
-                        title="Embed preview"
+                        title={$adminT("Embed preview")}
                         src={previewUrl}
                         width="100%"
                         height={embedConfig.embedType === "status"
@@ -476,7 +485,7 @@
 
                 <!-- Embed URL -->
                 <div class="space-y-2">
-                  <Label>Embed URL</Label>
+                  <Label>{$adminT("Embed URL")}</Label>
                   <div class="flex gap-2">
                     <Input readonly value={previewUrl} class="font-mono text-xs" />
                     <CopyButton variant="outline" size="icon" text={previewUrl}>
@@ -487,7 +496,7 @@
 
                 <!-- Embed Code -->
                 <div class="space-y-2">
-                  <Label>Embed Code</Label>
+                  <Label>{$adminT("Embed Code")}</Label>
                   <div class="flex gap-2">
                     <Input readonly value={htmlSnippet} class="font-mono text-xs" />
                     <CopyButton variant="outline" size="icon" text={htmlSnippet}>
@@ -497,7 +506,7 @@
                 </div>
               {:else}
                 <div class="text-muted-foreground flex items-center justify-center py-12 text-center">
-                  Select a monitor to preview the embed
+                  {$adminT("Select a monitor to preview the embed")}
                 </div>
               {/if}
             </div>

@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Badge } from "$lib/components/ui/badge/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
@@ -122,10 +125,10 @@
       }
       const stateLabel =
         field === "status" ? (next === "ACTIVE" ? "active" : "inactive") : next === "YES" ? "hidden" : "visible";
-      toast.success(`${monitor.name} is now ${stateLabel}`);
+      toast.success($adminT("{name} is now {stateLabel}", { name: monitor.name, stateLabel: $adminT(stateLabel) }));
     } catch (e) {
       monitor[field] = previous;
-      toast.error(e instanceof Error ? e.message : "Failed to update monitor");
+      toast.error($adminT(e instanceof Error ? e.message : "Failed to update monitor"));
     } finally {
       delete toggling[key];
     }
@@ -142,9 +145,9 @@
       <div class="flex items-center gap-2">
         <Button variant={showFilters ? "default" : "outline"} size="sm" onclick={() => (showFilters = !showFilters)}>
           <FilterIcon class="size-4" />
-          Filters
+          {$adminT("Filters")}
           {#if hasActiveFilters}
-            <Badge variant="secondary" class="ml-1 px-1.5 py-0 text-[10px]">ON</Badge>
+            <Badge variant="secondary" class="ml-1 px-1.5 py-0 text-[10px]">{$adminT("ON")}</Badge>
           {/if}
         </Button>
         {#if loading}
@@ -153,18 +156,18 @@
       </div>
       <Button class="cursor-pointer" href={clientResolver(resolve, "/manage/app/monitors/new")}>
         <Plus class="size-4" />
-        New Monitor
+        {$adminT("New Monitor")}
       </Button>
     </div>
 
     {#if showFilters}
       <div class="bg-muted/50 flex flex-wrap items-end gap-3 rounded-lg border p-3">
         <div class="flex flex-col gap-1">
-          <span class="text-muted-foreground text-xs font-medium">Search</span>
-          <Input type="text" placeholder="Search by name or tag..." bind:value={searchQuery} class="w-60" />
+          <span class="text-muted-foreground text-xs font-medium">{$adminT("Search")}</span>
+          <Input type="text" placeholder={$adminT("Search by name or tag...")} bind:value={searchQuery} class="w-60" />
         </div>
         <div class="flex flex-col gap-1">
-          <span class="text-muted-foreground text-xs font-medium">Status</span>
+          <span class="text-muted-foreground text-xs font-medium">{$adminT("Status")}</span>
           <Select.Root
             type="single"
             value={statusFilter}
@@ -173,23 +176,24 @@
             }}
           >
             <Select.Trigger class="w-40">
-              {statusOptions.find((o) => o.value === statusFilter)?.label || "All Status"}
+              {$adminT(String(statusOptions.find((o) => o.value === statusFilter)?.label ?? "")) ||
+                $adminT("All Status")}
             </Select.Trigger>
             <Select.Content>
               {#each statusOptions as option (option.value)}
-                <Select.Item value={option.value}>{option.label}</Select.Item>
+                <Select.Item value={option.value}>{$adminT(String(option.label ?? ""))}</Select.Item>
               {/each}
             </Select.Content>
           </Select.Root>
         </div>
         <Button size="sm" onclick={applyFilters}>
           <SearchIcon class="size-4" />
-          Search
+          {$adminT("Search")}
         </Button>
         {#if hasActiveFilters}
           <Button variant="ghost" size="sm" onclick={clearFilters}>
             <XIcon class="size-4" />
-            Clear
+            {$adminT("Clear")}
           </Button>
         {/if}
       </div>
@@ -202,28 +206,28 @@
           <Spinner />
         </Item.Media>
         <Item.Content>
-          <Item.Title class="line-clamp-1">Loading Monitors....</Item.Title>
+          <Item.Title class="line-clamp-1">{$adminT("Loading Monitors....")}</Item.Title>
         </Item.Content>
         <Item.Content class="flex-none justify-end"></Item.Content>
       </Item.Root>
     </div>
   {:else if error}
     <div class="text-destructive py-8 text-center">
-      {error}
+      {$adminT(String(error ?? ""))}
     </div>
   {:else if monitors.length === 0}
-    <div class="text-muted-foreground py-8 text-center">No monitors found.</div>
+    <div class="text-muted-foreground py-8 text-center">{$adminT("No monitors found.")}</div>
   {:else}
     <div class="ktable rounded-xl border">
       <Table.Root>
         <Table.Header>
           <Table.Row>
-            <Table.Head class="w-[300px]">Monitor</Table.Head>
-            <Table.Head class="w-[180px]">Tag</Table.Head>
-            <Table.Head class="w-[130px]">Type</Table.Head>
-            <Table.Head class="w-[120px]">Status</Table.Head>
-            <Table.Head class="w-[120px]">Visible</Table.Head>
-            <Table.Head class="w-[180px]">Cron</Table.Head>
+            <Table.Head class="w-[300px]">{$adminT("Monitor")}</Table.Head>
+            <Table.Head class="w-[180px]">{$adminT("Tag")}</Table.Head>
+            <Table.Head class="w-[130px]">{$adminT("Type")}</Table.Head>
+            <Table.Head class="w-[120px]">{$adminT("Status")}</Table.Head>
+            <Table.Head class="w-[120px]">{$adminT("Visible")}</Table.Head>
+            <Table.Head class="w-[180px]">{$adminT("Cron")}</Table.Head>
             <Table.Head class="w-[120px] text-right"></Table.Head>
           </Table.Row>
         </Table.Header>
@@ -247,18 +251,18 @@
                 <Badge variant="outline">{data.tag}</Badge>
               </Table.Cell>
               <Table.Cell>
-                <Badge variant="secondary">{data.monitor_type}</Badge>
+                <Badge variant="secondary">{$adminT(data.monitor_type)}</Badge>
               </Table.Cell>
               <Table.Cell>
                 <div class="flex items-center gap-2">
                   <Switch
                     checked={(data.status || "INACTIVE") === "ACTIVE"}
                     disabled={!canWrite || !!toggling[`${data.id}:status`]}
-                    aria-label="Toggle status for {data.name}"
+                    aria-label={$adminT("Toggle status for {name}", { name: data.name })}
                     onCheckedChange={(checked) => toggleMonitorField(data, "status", checked)}
                   />
                   <span class="text-muted-foreground text-xs">
-                    {(data.status || "INACTIVE") === "ACTIVE" ? "Active" : "Inactive"}
+                    {(data.status || "INACTIVE") === "ACTIVE" ? $adminT("Active") : $adminT("Inactive")}
                   </span>
                 </div>
               </Table.Cell>
@@ -267,11 +271,11 @@
                   <Switch
                     checked={data.is_hidden !== "YES"}
                     disabled={!canWrite || !!toggling[`${data.id}:is_hidden`]}
-                    aria-label="Toggle status page visibility for {data.name}"
+                    aria-label={$adminT("Toggle status page visibility for {name}", { name: data.name })}
                     onCheckedChange={(checked) => toggleMonitorField(data, "is_hidden", checked)}
                   />
                   <span class="text-muted-foreground text-xs">
-                    {data.is_hidden === "YES" ? "Hidden" : "Visible"}
+                    {data.is_hidden === "YES" ? $adminT("Hidden") : $adminT("Visible")}
                   </span>
                 </div>
               </Table.Cell>
@@ -281,7 +285,7 @@
               <Table.Cell class="text-right">
                 <Button variant="outline" size="sm" href={clientResolver(resolve, `/manage/app/monitors/${data.tag}`)}>
                   <SettingsIcon class="mr-1 size-4" />
-                  Configure
+                  {$adminT("Configure")}
                 </Button>
               </Table.Cell>
             </Table.Row>
@@ -294,7 +298,11 @@
     {#if totalPages > 0}
       <div class="flex items-center justify-between">
         <p class="text-muted-foreground text-sm">
-          Showing {(pageNo - 1) * limit + 1} - {Math.min(pageNo * limit, totalCount)} of {totalCount} monitors
+          {$adminT("Showing {value1} - {value2} of {totalCount} monitors", {
+            value1: (pageNo - 1) * limit + 1,
+            value2: Math.min(pageNo * limit, totalCount),
+            totalCount: totalCount
+          })}
         </p>
         {#if totalPages > 1}
           <div class="flex items-center gap-2">

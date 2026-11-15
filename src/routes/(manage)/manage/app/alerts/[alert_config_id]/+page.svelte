@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { page } from "$app/stores";
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
@@ -175,7 +178,7 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
         goto(clientResolver(resolve, "/manage/app/alerts"));
       } else {
         const config = result as MonitorAlertConfigWithTriggers;
@@ -194,14 +197,14 @@
       }
     } catch (error) {
       console.error("Failed to load alert config", error);
-      toast.error("Failed to load alert configuration");
+      toast.error($adminT("Failed to load alert configuration"));
       goto(clientResolver(resolve, "/manage/app/alerts"));
     }
   }
 
   async function saveAlertConfig() {
     if (form.monitor_tags.length === 0) {
-      toast.error("Please select at least one monitor");
+      toast.error($adminT("Please select at least one monitor"));
       return;
     }
 
@@ -233,15 +236,15 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success(isNew ? "Alert created successfully" : "Alert updated successfully");
+        toast.success($adminT(isNew ? "Alert created successfully" : "Alert updated successfully"));
         if (isNew) {
           goto(clientResolver(resolve, `/manage/app/alerts/${result.id}`));
         }
       }
     } catch (error) {
-      toast.error("Failed to save alert");
+      toast.error($adminT("Failed to save alert"));
     } finally {
       saving = false;
     }
@@ -260,13 +263,13 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Alert deleted successfully");
+        toast.success($adminT("Alert deleted successfully"));
         goto(clientResolver(resolve, "/manage/app/alerts"));
       }
     } catch (error) {
-      toast.error("Failed to delete alert");
+      toast.error($adminT("Failed to delete alert"));
     } finally {
       deleteDialogOpen = false;
     }
@@ -284,11 +287,15 @@
   <Breadcrumb.Root>
     <Breadcrumb.List>
       <Breadcrumb.Item>
-        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/alerts")}>Alerts</Breadcrumb.Link>
+        <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/alerts")}>{$adminT("Alerts")}</Breadcrumb.Link>
       </Breadcrumb.Item>
       <Breadcrumb.Separator />
       <Breadcrumb.Item>
-        <Breadcrumb.Page>{isNew ? "New Alert" : `Edit Alert #${alertConfigId}`}</Breadcrumb.Page>
+        <Breadcrumb.Page
+          >{isNew
+            ? $adminT("New Alert")
+            : $adminT("Edit Alert #{alertConfigId}", { alertConfigId: alertConfigId })}</Breadcrumb.Page
+        >
       </Breadcrumb.Item>
     </Breadcrumb.List>
   </Breadcrumb.Root>
@@ -296,40 +303,39 @@
   {#if loading}
     <div class="flex flex-col items-center gap-4 py-16">
       <Spinner class="size-8" />
-      <p class="text-muted-foreground">Loading...</p>
+      <p class="text-muted-foreground">{$adminT("Loading...")}</p>
     </div>
   {:else}
     <Card.Root>
       <Card.Content class="space-y-6 pt-6">
         <!-- Monitor Selection (Searchable Multi-select) -->
         <div class="flex flex-col gap-2">
-          <Label>Monitors</Label>
-          <p class="text-muted-foreground text-xs">Select which monitors this alert applies to</p>
+          <Label>{$adminT("Monitors")}</Label>
+          <p class="text-muted-foreground text-xs">{$adminT("Select which monitors this alert applies to")}</p>
           <Popover.Root bind:open={monitorPopoverOpen}>
             <Popover.Trigger>
               <Button variant="outline" role="combobox" class="w-full justify-between font-normal">
                 {#if form.monitor_tags.length === 0}
-                  Select monitors...
+                  {$adminT("Select monitors...")}
                 {:else if form.monitor_tags.length === 1}
                   {monitors.find((m) => m.tag === form.monitor_tags[0])?.name || form.monitor_tags[0]}
                 {:else}
-                  {form.monitor_tags.length} monitors selected
+                  {$adminT("{length} monitors selected", { length: form.monitor_tags.length })}
                 {/if}
                 <ChevronsUpDownIcon class="text-muted-foreground size-4 shrink-0" />
               </Button>
             </Popover.Trigger>
             <Popover.Content class="w-[var(--bits-popover-trigger-width)] p-0" align="start">
               <Command.Root>
-                <Command.Input placeholder="Search monitors..." />
+                <Command.Input placeholder={$adminT("Search monitors...")} />
                 <Command.List>
-                  <Command.Empty>No monitors found.</Command.Empty>
+                  <Command.Empty>{$adminT("No monitors found.")}</Command.Empty>
                   <Command.Group>
                     {#each monitors as monitor (monitor.tag)}
-                      <Command.Item
-                        value={monitor.name}
-                        onSelect={() => toggleMonitor(monitor.tag)}
-                      >
-                        <CheckIcon class="size-4 {form.monitor_tags.includes(monitor.tag) ? 'opacity-100' : 'opacity-0'}" />
+                      <Command.Item value={monitor.name} onSelect={() => toggleMonitor(monitor.tag)}>
+                        <CheckIcon
+                          class="size-4 {form.monitor_tags.includes(monitor.tag) ? 'opacity-100' : 'opacity-0'}"
+                        />
                         {monitor.name}
                       </Command.Item>
                     {/each}
@@ -343,11 +349,7 @@
               {#each form.monitor_tags as tag (tag)}
                 <Badge variant="secondary" class="gap-1 pr-1">
                   {monitors.find((m) => m.tag === tag)?.name || tag}
-                  <button
-                    type="button"
-                    class="hover:bg-muted rounded-sm p-0.5"
-                    onclick={() => toggleMonitor(tag)}
-                  >
+                  <button type="button" class="hover:bg-muted rounded-sm p-0.5" onclick={() => toggleMonitor(tag)}>
                     <XIcon class="size-3" />
                   </button>
                 </Badge>
@@ -358,18 +360,19 @@
 
         <!-- Alert For -->
         <div class="flex flex-col gap-2">
-          <Label for="alert-for">Alert Type</Label>
+          <Label for="alert-for">{$adminT("Alert Type")}</Label>
           <Select.Root
             type="single"
             value={form.alert_for}
             onValueChange={(v) => v && handleAlertForChange(v as AlertForType)}
           >
             <Select.Trigger id="alert-for" class="w-full">
-              {alertForOptions.find((o) => o.value === form.alert_for)?.label || "Select type"}
+              {$adminT(String(alertForOptions.find((o) => o.value === form.alert_for)?.label ?? "")) ||
+                $adminT("Select type")}
             </Select.Trigger>
             <Select.Content>
               {#each alertForOptions as option}
-                <Select.Item value={option.value}>{option.label}</Select.Item>
+                <Select.Item value={option.value}>{$adminT(String(option.label ?? ""))}</Select.Item>
               {/each}
             </Select.Content>
           </Select.Root>
@@ -377,15 +380,15 @@
 
         <!-- Alert Value -->
         <div class="flex flex-col gap-2">
-          <Label for="alert-value">{alertValueLabel}</Label>
+          <Label for="alert-value">{$adminT(String(alertValueLabel ?? ""))}</Label>
           {#if form.alert_for === "STATUS"}
             <Select.Root type="single" value={form.alert_value} onValueChange={(v) => v && (form.alert_value = v)}>
               <Select.Trigger id="alert-value" class="w-full">
-                {form.alert_value}
+                {$adminT(String(form.alert_value ?? ""))}
               </Select.Trigger>
               <Select.Content>
                 {#each statusValueOptions as option}
-                  <Select.Item value={option.value}>{option.label}</Select.Item>
+                  <Select.Item value={option.value}>{$adminT(String(option.label ?? ""))}</Select.Item>
                 {/each}
               </Select.Content>
             </Select.Root>
@@ -398,44 +401,47 @@
               bind:value={form.alert_value}
             />
           {/if}
-          <p class="text-muted-foreground text-xs">{alertValueHelp}</p>
+          <p class="text-muted-foreground text-xs">{$adminT(String(alertValueHelp ?? ""))}</p>
         </div>
 
         <!-- Thresholds -->
         <div class="grid grid-cols-2 gap-4">
           <div class="flex flex-col gap-2">
-            <Label for="failure-threshold">Failure Threshold</Label>
+            <Label for="failure-threshold">{$adminT("Failure Threshold")}</Label>
             <Input id="failure-threshold" type="number" min="1" bind:value={form.failure_threshold} />
-            <p class="text-muted-foreground text-xs">Consecutive failures before alert</p>
+            <p class="text-muted-foreground text-xs">{$adminT("Consecutive failures before alert")}</p>
           </div>
 
           <div class="flex flex-col gap-2">
-            <Label for="success-threshold">Success Threshold</Label>
+            <Label for="success-threshold">{$adminT("Success Threshold")}</Label>
             <Input id="success-threshold" type="number" min="1" bind:value={form.success_threshold} />
-            <p class="text-muted-foreground text-xs">Consecutive successes to resolve</p>
+            <p class="text-muted-foreground text-xs">{$adminT("Consecutive successes to resolve")}</p>
           </div>
         </div>
 
         <!-- Generated Alert Text -->
         <div class="flex flex-col gap-2">
-          <Label>Details</Label>
-          <p class="text-muted-foreground bg-muted/40 rounded-md border p-3 text-sm">{alertDescriptionText}</p>
+          <Label>{$adminT("Details")}</Label>
+          <p class="text-muted-foreground bg-muted/40 rounded-md border p-3 text-sm">
+            {$adminT(String(alertDescriptionText ?? ""))}
+          </p>
         </div>
 
         <!-- Severity -->
         <div class="flex flex-col gap-2">
-          <Label for="severity">Severity</Label>
+          <Label for="severity">{$adminT("Severity")}</Label>
           <Select.Root
             type="single"
             value={form.severity}
             onValueChange={(v) => v && (form.severity = v as AlertSeverityType)}
           >
             <Select.Trigger id="severity" class="w-full">
-              {severityOptions.find((o) => o.value === form.severity)?.label || "Select severity"}
+              {$adminT(String(severityOptions.find((o) => o.value === form.severity)?.label ?? "")) ||
+                $adminT("Select severity")}
             </Select.Trigger>
             <Select.Content>
               {#each severityOptions as option}
-                <Select.Item value={option.value}>{option.label}</Select.Item>
+                <Select.Item value={option.value}>{$adminT(String(option.label ?? ""))}</Select.Item>
               {/each}
             </Select.Content>
           </Select.Root>
@@ -443,30 +449,32 @@
 
         <!-- Create Incident -->
         <div class="flex flex-col gap-2">
-          <Label for="create-incident">Create Incident</Label>
+          <Label for="create-incident">{$adminT("Create Incident")}</Label>
           <Select.Root
             type="single"
             value={form.create_incident}
             onValueChange={(v) => v && (form.create_incident = v as YesNoType)}
           >
             <Select.Trigger id="create-incident" class="w-full">
-              {form.create_incident}
+              {$adminT(String(form.create_incident ?? ""))}
             </Select.Trigger>
             <Select.Content>
               {#each yesNoOptions as option}
-                <Select.Item value={option.value}>{option.label}</Select.Item>
+                <Select.Item value={option.value}>{$adminT(String(option.label ?? ""))}</Select.Item>
               {/each}
             </Select.Content>
           </Select.Root>
-          <p class="text-muted-foreground text-xs">Automatically create an incident when this alert triggers</p>
+          <p class="text-muted-foreground text-xs">
+            {$adminT("Automatically create an incident when this alert triggers")}
+          </p>
         </div>
 
         <!-- Is Active (only when editing) -->
         {#if !isNew}
           <div class="flex items-center justify-between">
             <div>
-              <Label>Active</Label>
-              <p class="text-muted-foreground text-xs">Enable or disable this alert</p>
+              <Label>{$adminT("Active")}</Label>
+              <p class="text-muted-foreground text-xs">{$adminT("Enable or disable this alert")}</p>
             </div>
             <Switch
               checked={form.is_active === GC.YES}
@@ -477,10 +485,10 @@
 
         <!-- Description -->
         <div class="flex flex-col gap-2">
-          <Label for="alert-description">Description (optional)</Label>
+          <Label for="alert-description">{$adminT("Description (optional)")}</Label>
           <Textarea
             id="alert-description"
-            placeholder="Add a description for this alert..."
+            placeholder={$adminT("Add a description for this alert...")}
             bind:value={form.alert_description}
             rows={2}
           />
@@ -489,8 +497,10 @@
         <!-- Triggers -->
         {#if triggers.length > 0}
           <div class="flex flex-col gap-2">
-            <Label>Notification Triggers</Label>
-            <p class="text-muted-foreground text-xs">Select which triggers to notify when this alert fires</p>
+            <Label>{$adminT("Notification Triggers")}</Label>
+            <p class="text-muted-foreground text-xs">
+              {$adminT("Select which triggers to notify when this alert fires")}
+            </p>
             <div class="mt-2 grid gap-2">
               {#each triggers as trigger (trigger.id)}
                 <label
@@ -506,28 +516,33 @@
                       <p class="text-muted-foreground text-xs">{trigger.trigger_desc}</p>
                     {/if}
                   </div>
-                  <Badge variant="outline" class="text-xs capitalize">{trigger.trigger_type}</Badge>
+                  <Badge variant="outline" class="text-xs capitalize"
+                    >{$adminT(String(trigger.trigger_type ?? ""))}</Badge
+                  >
                 </label>
               {/each}
             </div>
           </div>
         {:else}
           <p class="text-muted-foreground text-sm">
-            No notification triggers available. <a
-              href={clientResolver(resolve, "/manage/app/triggers")}
-              class="text-primary underline">Create a trigger</a
-            > to receive notifications.
+            {$adminT("No notification triggers available.")}
+            <a href={clientResolver(resolve, "/manage/app/triggers")} class="text-primary underline"
+              >{$adminT("Create a trigger")}</a
+            >
+            {$adminT("to receive notifications.")}
           </p>
         {/if}
       </Card.Content>
 
       <Card.Footer class="flex justify-between">
-        <Button variant="outline" onclick={() => goto(clientResolver(resolve, "/manage/app/alerts"))}>Cancel</Button>
+        <Button variant="outline" onclick={() => goto(clientResolver(resolve, "/manage/app/alerts"))}
+          >{$adminT("Cancel")}</Button
+        >
         <Button onclick={saveAlertConfig} disabled={saving}>
           {#if saving}
             <Spinner class="size-4" />
           {/if}
-          {isNew ? "Create Alert" : "Save Changes"}
+          {isNew ? $adminT("Create Alert") : $adminT("Save Changes")}
         </Button>
       </Card.Footer>
     </Card.Root>
@@ -536,13 +551,13 @@
     {#if !isNew}
       <Card.Root class="border-destructive">
         <Card.Header>
-          <Card.Title class="text-destructive">Danger Zone</Card.Title>
-          <Card.Description>Irreversible actions for this alert configuration.</Card.Description>
+          <Card.Title class="text-destructive">{$adminT("Danger Zone")}</Card.Title>
+          <Card.Description>{$adminT("Irreversible actions for this alert configuration.")}</Card.Description>
         </Card.Header>
         <Card.Content>
           <Button variant="destructive" onclick={() => (deleteDialogOpen = true)}>
             <TrashIcon class="size-4" />
-            Delete Alert
+            {$adminT("Delete Alert")}
           </Button>
         </Card.Content>
       </Card.Root>
@@ -554,14 +569,14 @@
 <AlertDialog.Root bind:open={deleteDialogOpen}>
   <AlertDialog.Content>
     <AlertDialog.Header>
-      <AlertDialog.Title>Delete Alert</AlertDialog.Title>
+      <AlertDialog.Title>{$adminT("Delete Alert")}</AlertDialog.Title>
       <AlertDialog.Description>
-        Are you sure you want to delete this alert? This action cannot be undone.
+        {$adminT("Are you sure you want to delete this alert? This action cannot be undone.")}
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer>
-      <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-      <AlertDialog.Action onclick={deleteAlertConfig}>Delete</AlertDialog.Action>
+      <AlertDialog.Cancel>{$adminT("Cancel")}</AlertDialog.Cancel>
+      <AlertDialog.Action onclick={deleteAlertConfig}>{$adminT("Delete")}</AlertDialog.Action>
     </AlertDialog.Footer>
   </AlertDialog.Content>
 </AlertDialog.Root>

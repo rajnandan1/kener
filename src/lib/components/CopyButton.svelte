@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT, active: adminActive } = getAdminI18n();
+
   import { Button } from "$lib/components/ui/button/index.js";
   import { UseClipboard } from "$lib/hooks/use-clipboard.svelte.js";
   import Check from "@lucide/svelte/icons/check";
@@ -29,7 +32,14 @@
   }
 </script>
 
-<Button {variant} {size} class="{className} relative cursor-pointer" onclick={handleClick} {title}>
+<Button
+  {variant}
+  {size}
+  class="{className} relative cursor-pointer"
+  onclick={handleClick}
+  title={$adminT(String(title ?? ""))}
+  aria-label={adminActive ? $adminT(clipboard.copied ? "Copied" : "Copy") : undefined}
+>
   <span
     class="absolute flex items-center transition-all duration-200 ease-out {clipboard.copied
       ? 'scale-100 opacity-100'
@@ -47,10 +57,11 @@
     {/if}
   </span>
   <span
+    aria-hidden={adminActive || !clipboard.copied}
     class="bg-popover text-popover-foreground absolute bottom-full left-1/2 z-50 mb-2 origin-bottom -translate-x-1/2 rounded-md border px-2 py-1 text-xs shadow-md transition-all duration-200 ease-out {clipboard.copied
       ? 'scale-100 opacity-100'
       : 'pointer-events-none scale-75 opacity-0'}"
   >
-    {$t("Copied")}
+    {adminActive ? $adminT("Copied") : $t("Copied")}
   </span>
 </Button>

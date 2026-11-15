@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import * as Sheet from "$lib/components/ui/sheet/index.js";
   import { cn, type WithElementRef } from "$lib/utils.js";
   import type { HTMLAttributes } from "svelte/elements";
@@ -41,8 +44,8 @@
       {side}
     >
       <Sheet.Header class="sr-only">
-        <Sheet.Title>Sidebar</Sheet.Title>
-        <Sheet.Description>Displays the mobile sidebar.</Sheet.Description>
+        <Sheet.Title>{$adminT("Sidebar")}</Sheet.Title>
+        <Sheet.Description>{$adminT("Displays the mobile sidebar.")}</Sheet.Description>
       </Sheet.Header>
       <div class="flex h-full w-full flex-col">
         {@render children?.()}

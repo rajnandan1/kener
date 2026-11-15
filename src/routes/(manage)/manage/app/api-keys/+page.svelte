@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Button } from "$lib/components/ui/button/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
@@ -50,12 +53,12 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
         apiKeys = result;
       }
     } catch (e) {
-      toast.error("Failed to load API keys");
+      toast.error($adminT("Failed to load API keys"));
     } finally {
       loading = false;
     }
@@ -63,7 +66,7 @@
 
   async function createNewAPIKey() {
     if (!newAPIKeyName.trim()) {
-      toast.error("Please enter a name for the API key");
+      toast.error($adminT("Please enter a name for the API key"));
       return;
     }
 
@@ -79,16 +82,16 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
         newKeyResp = result;
-        toast.success("API key created successfully");
+        toast.success($adminT("API key created successfully"));
         loadAPIKeys();
         showCreateDialog = false;
         newAPIKeyName = "";
       }
     } catch (e) {
-      toast.error("Failed to create API key");
+      toast.error($adminT("Failed to create API key"));
     } finally {
       creating = false;
     }
@@ -107,14 +110,16 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
         apiKey.status = newStatus;
         apiKeys = [...apiKeys];
-        toast.success(`API key ${newStatus === "ACTIVE" ? "activated" : "deactivated"}`);
+        toast.success(
+          $adminT("API key {value1}", { value1: $adminT(newStatus === "ACTIVE" ? "activated" : "deactivated") })
+        );
       }
     } catch (e) {
-      toast.error("Failed to update API key status");
+      toast.error($adminT("Failed to update API key status"));
     }
   }
 
@@ -138,13 +143,13 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("API key deleted successfully");
+        toast.success($adminT("API key deleted successfully"));
         await loadAPIKeys();
       }
     } catch (e) {
-      toast.error("Failed to delete API key");
+      toast.error($adminT("Failed to delete API key"));
     } finally {
       deleting = false;
       deleteDialogOpen = false;
@@ -156,7 +161,7 @@
     if (newKeyResp.apiKey) {
       navigator.clipboard.writeText(newKeyResp.apiKey);
       copied = true;
-      toast.success("API key copied to clipboard");
+      toast.success($adminT("API key copied to clipboard"));
       setTimeout(() => {
         copied = false;
       }, 2000);
@@ -179,7 +184,7 @@
   <div class="flex items-center justify-end">
     <Button onclick={() => (showCreateDialog = true)}>
       <Plus class="h-4 w-4" />
-      Create New API Key
+      {$adminT("Create New API Key")}
     </Button>
   </div>
 
@@ -189,7 +194,7 @@
       <Card.Content class="">
         <div class="flex items-start gap-3">
           <div class="flex-1">
-            <p class="font-medium text-green-800 dark:text-green-200">🎉 API Key Created Successfully</p>
+            <p class="font-medium text-green-800 dark:text-green-200">{$adminT("🎉 API Key Created Successfully")}</p>
             <div class="relative mt-2">
               <code class="bg-background block rounded-md border px-4 py-2 pr-12 font-mono text-sm">
                 {newKeyResp.apiKey}
@@ -208,11 +213,13 @@
               </Button>
             </div>
             <p class="text-muted-foreground mt-2 text-xs">
-              Your new API key has been created. It will <strong class="uppercase underline">not be shown again</strong
-              >, so make sure to save it.
+              {$adminT("Your new API key has been created. It will")}
+              <strong class="uppercase underline">{$adminT("not be shown again")}</strong>{$adminT(
+                ", so make sure to save it."
+              )}
             </p>
           </div>
-          <Button size="sm" variant="ghost" onclick={dismissNewKey}>Dismiss</Button>
+          <Button size="sm" variant="ghost" onclick={dismissNewKey}>{$adminT("Dismiss")}</Button>
         </div>
       </Card.Content>
     </Card.Root>
@@ -228,18 +235,18 @@
       {:else if apiKeys.length === 0}
         <div class="text-muted-foreground py-12 text-center">
           <KeyIcon class="mx-auto mb-4 h-12 w-12 opacity-50" />
-          <p>No API keys found</p>
-          <p class="text-sm">Create your first API key to get started</p>
+          <p>{$adminT("No API keys found")}</p>
+          <p class="text-sm">{$adminT("Create your first API key to get started")}</p>
         </div>
       {:else}
         <Table.Root class="p-4">
           <Table.Header>
             <Table.Row>
-              <Table.Head class="pl-4">Name</Table.Head>
-              <Table.Head>Key</Table.Head>
-              <Table.Head>Created At</Table.Head>
-              <Table.Head class="pr-4 text-right">Status</Table.Head>
-              <Table.Head class="pr-4 text-right">Actions</Table.Head>
+              <Table.Head class="pl-4">{$adminT("Name")}</Table.Head>
+              <Table.Head>{$adminT("Key")}</Table.Head>
+              <Table.Head>{$adminT("Created At")}</Table.Head>
+              <Table.Head class="pr-4 text-right">{$adminT("Status")}</Table.Head>
+              <Table.Head class="pr-4 text-right">{$adminT("Actions")}</Table.Head>
             </Table.Row>
           </Table.Header>
           <Table.Body>
@@ -257,7 +264,7 @@
                 <Table.Cell class="pr-4 text-right">
                   <div class="flex items-center justify-end gap-2">
                     <span class="text-muted-foreground text-xs">
-                      {apiKey.status === "ACTIVE" ? "Active" : "Inactive"}
+                      {apiKey.status === "ACTIVE" ? $adminT("Active") : $adminT("Inactive")}
                     </span>
                     <Switch checked={apiKey.status === "ACTIVE"} onCheckedChange={() => updateStatus(apiKey)} />
                   </div>
@@ -270,7 +277,7 @@
                     onclick={() => openDeleteDialog(apiKey)}
                   >
                     <Trash2 class="h-4 w-4" />
-                    Delete
+                    {$adminT("Delete")}
                   </Button>
                 </Table.Cell>
               </Table.Row>
@@ -284,10 +291,11 @@
 <Dialog.Root bind:open={showCreateDialog}>
   <Dialog.Content class="sm:max-w-md">
     <Dialog.Header>
-      <Dialog.Title>Create a new API Key</Dialog.Title>
+      <Dialog.Title>{$adminT("Create a new API Key")}</Dialog.Title>
       <Dialog.Description>
-        API keys are used to authenticate your requests to the API. They are unique to your account and should be kept
-        secret.
+        {$adminT(
+          "API keys are used to authenticate your requests to the API. They are unique to your account and should be kept secret."
+        )}
       </Dialog.Description>
     </Dialog.Header>
     <form
@@ -298,17 +306,17 @@
     >
       <div class="grid gap-4 py-4">
         <div class="grid gap-2">
-          <Label for="newAPIKeyName">Name</Label>
-          <Input id="newAPIKeyName" bind:value={newAPIKeyName} placeholder="eg. My API Key" required />
+          <Label for="newAPIKeyName">{$adminT("Name")}</Label>
+          <Input id="newAPIKeyName" bind:value={newAPIKeyName} placeholder={$adminT("eg. My API Key")} required />
         </div>
       </div>
       <Dialog.Footer>
-        <Button type="button" variant="outline" onclick={() => (showCreateDialog = false)}>Cancel</Button>
+        <Button type="button" variant="outline" onclick={() => (showCreateDialog = false)}>{$adminT("Cancel")}</Button>
         <Button type="submit" disabled={creating}>
           {#if creating}
             <Loader class="h-4 w-4 animate-spin" />
           {/if}
-          Create
+          {$adminT("Create")}
         </Button>
       </Dialog.Footer>
     </form>
@@ -318,18 +326,20 @@
 <AlertDialog.Root bind:open={deleteDialogOpen}>
   <AlertDialog.Content>
     <AlertDialog.Header>
-      <AlertDialog.Title>Delete API Key</AlertDialog.Title>
+      <AlertDialog.Title>{$adminT("Delete API Key")}</AlertDialog.Title>
       <AlertDialog.Description>
-        Are you sure you want to delete API key "{keyToDelete?.name}"? This action cannot be undone.
+        {$adminT('Are you sure you want to delete API key "{value1}"? This action cannot be undone.', {
+          value1: keyToDelete?.name ?? ""
+        })}
       </AlertDialog.Description>
     </AlertDialog.Header>
     <AlertDialog.Footer>
-      <AlertDialog.Cancel disabled={deleting}>Cancel</AlertDialog.Cancel>
+      <AlertDialog.Cancel disabled={deleting}>{$adminT("Cancel")}</AlertDialog.Cancel>
       <AlertDialog.Action onclick={deleteApiKey} disabled={deleting}>
         {#if deleting}
           <Spinner class="h-4 w-4" />
         {/if}
-        Delete
+        {$adminT("Delete")}
       </AlertDialog.Action>
     </AlertDialog.Footer>
   </AlertDialog.Content>

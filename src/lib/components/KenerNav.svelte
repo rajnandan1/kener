@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
   import { page } from "$app/state";
   import * as NavigationMenu from "$lib/components/ui/navigation-menu/index.js";
   import * as Dropdown from "$lib/components/ui/dropdown-menu/index.js";
@@ -90,7 +92,7 @@
                 type="button"
                 class="{navigationMenuTriggerStyle()} hover:border-border border border-transparent bg-transparent text-xs hover:bg-transparent sm:hidden"
                 style="border-radius: var(--radius-3xl)"
-                aria-label="Open navigation menu"
+                aria-label={$adminT("Open navigation menu")}
               >
                 <MenuIcon class="h-4 w-4" />
               </button>

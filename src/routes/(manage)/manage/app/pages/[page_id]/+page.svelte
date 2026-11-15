@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT, editorPhrases: adminEditorPhrases } = getAdminI18n();
+  const editorLocale = $derived(EditorState.phrases.of($adminEditorPhrases));
+
   import { page } from "$app/state";
   import { goto } from "$app/navigation";
   import * as Card from "$lib/components/ui/card/index.js";
@@ -22,6 +26,7 @@
   import TrashIcon from "@lucide/svelte/icons/trash";
   import type { PageRecord, MonitorRecord, PageSettingsType } from "$lib/server/types/db.js";
   import { mode } from "mode-watcher";
+  import { EditorState } from "@codemirror/state";
   import CodeMirror from "svelte-codemirror-editor";
   import { onMount } from "svelte";
   import { markdown } from "@codemirror/lang-markdown";
@@ -117,7 +122,7 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
         goto(clientResolver(resolve, "/manage/app/pages"));
         return;
       }
@@ -148,11 +153,11 @@
           pageSettings = structuredClone(defaultPageSettings);
         }
       } else {
-        toast.error("Page not found");
+        toast.error($adminT("Page not found"));
         goto(clientResolver(resolve, "/manage/app/pages"));
       }
     } catch (e) {
-      toast.error("Failed to load page");
+      toast.error($adminT("Failed to load page"));
       goto(clientResolver(resolve, "/manage/app/pages"));
     } finally {
       loading = false;
@@ -207,9 +212,9 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success(isNew ? "Page created successfully" : "Page updated successfully");
+        toast.success($adminT(isNew ? "Page created successfully" : "Page updated successfully"));
         if (isNew && result.id) {
           // Navigate to the newly created page
           goto(clientResolver(resolve, `/manage/app/pages/${result.id}`));
@@ -219,7 +224,7 @@
         }
       }
     } catch (e) {
-      toast.error(isNew ? "Failed to create page" : "Failed to update page");
+      toast.error($adminT(isNew ? "Failed to create page" : "Failed to update page"));
     } finally {
       saving = false;
     }
@@ -244,14 +249,14 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Monitor added to page");
+        toast.success($adminT("Monitor added to page"));
         selectedMonitors = [...selectedMonitors, selectedMonitorTag];
         selectedMonitorTag = "";
       }
     } catch (e) {
-      toast.error("Failed to add monitor");
+      toast.error($adminT("Failed to add monitor"));
     } finally {
       addingMonitor = false;
     }
@@ -273,13 +278,13 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Page deleted successfully");
+        toast.success($adminT("Page deleted successfully"));
         goto(clientResolver(resolve, "/manage/app/pages"));
       }
     } catch (e) {
-      toast.error("Failed to delete page");
+      toast.error($adminT("Failed to delete page"));
     } finally {
       deleting = false;
     }
@@ -304,13 +309,13 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Monitor removed from page");
+        toast.success($adminT("Monitor removed from page"));
         selectedMonitors = selectedMonitors.filter((t) => t !== monitorTag);
       }
     } catch (e) {
-      toast.error("Failed to remove monitor");
+      toast.error($adminT("Failed to remove monitor"));
     } finally {
       removingMonitor = null;
     }
@@ -343,10 +348,10 @@
       });
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       }
     } catch (e) {
-      toast.error("Failed to reorder monitors");
+      toast.error($adminT("Failed to reorder monitors"));
     } finally {
       reordering = false;
     }
@@ -361,13 +366,15 @@
     // Validate file type
     const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/svg+xml", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      toast.error("Invalid file type. Allowed: PNG, JPG, SVG, WebP");
+      toast.error($adminT("Invalid file type. Allowed: PNG, JPG, SVG, WebP"));
       return;
     }
 
     // Validate file size (max 2MB)
     if (file.size > GC.MAX_UPLOAD_BYTES) {
-      toast.error(`File too large. Maximum size is ${GC.MAX_UPLOAD_BYTES / (1024 * 1024)}MB`);
+      toast.error(
+        $adminT("File too large. Maximum size is {value1}MB", { value1: GC.MAX_UPLOAD_BYTES / (1024 * 1024) })
+      );
       return;
     }
 
@@ -392,18 +399,18 @@
       });
 
       if (!response.ok) {
-        toast.error("Failed to upload logo");
+        toast.error($adminT("Failed to upload logo"));
         return;
       }
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
         formData.page_logo = result.url;
-        toast.success("Logo uploaded successfully");
+        toast.success($adminT("Logo uploaded successfully"));
       }
     } catch (e) {
-      toast.error("Failed to upload logo");
+      toast.error($adminT("Failed to upload logo"));
     } finally {
       uploadingLogo = false;
       input.value = "";
@@ -438,12 +445,14 @@
 
     const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
-      toast.error("Invalid file type. Allowed: PNG, JPG, WebP");
+      toast.error($adminT("Invalid file type. Allowed: PNG, JPG, WebP"));
       return;
     }
 
     if (file.size > GC.MAX_UPLOAD_BYTES) {
-      toast.error(`File too large. Maximum size is ${GC.MAX_UPLOAD_BYTES / (1024 * 1024)}MB`);
+      toast.error(
+        $adminT("File too large. Maximum size is {value1}MB", { value1: GC.MAX_UPLOAD_BYTES / (1024 * 1024) })
+      );
       return;
     }
 
@@ -466,18 +475,18 @@
       });
 
       if (!response.ok) {
-        toast.error("Failed to upload social preview image");
+        toast.error($adminT("Failed to upload social preview image"));
         return;
       }
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
         pageSettings.socialPagePreviewImage = result.url;
-        toast.success("Social preview image uploaded");
+        toast.success($adminT("Social preview image uploaded"));
       }
     } catch (e) {
-      toast.error("Failed to upload social preview image");
+      toast.error($adminT("Failed to upload social preview image"));
     } finally {
       uploadingSocialPreview = false;
       input.value = "";
@@ -489,7 +498,10 @@
 
     if (source === "display" && (!isHistoryDesktopValid || !isHistoryMobileValid)) {
       toast.error(
-        `Days must be a whole number between ${GC.STATUS_HISTORY_DAYS_MIN} and ${GC.STATUS_HISTORY_DAYS_MAX}`
+        $adminT("Days must be a whole number between {STATUS_HISTORY_DAYS_MIN} and {STATUS_HISTORY_DAYS_MAX}", {
+          STATUS_HISTORY_DAYS_MIN: GC.STATUS_HISTORY_DAYS_MIN,
+          STATUS_HISTORY_DAYS_MAX: GC.STATUS_HISTORY_DAYS_MAX
+        })
       );
       return;
     }
@@ -511,12 +523,12 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Page settings saved successfully");
+        toast.success($adminT("Page settings saved successfully"));
       }
     } catch (e) {
-      toast.error("Failed to save page settings");
+      toast.error($adminT("Failed to save page settings"));
     } finally {
       if (source === "display") savingDisplaySettings = false;
       else savingSeoSettings = false;
@@ -540,11 +552,13 @@
       <Breadcrumb.Root>
         <Breadcrumb.List>
           <Breadcrumb.Item>
-            <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/pages")}>Pages</Breadcrumb.Link>
+            <Breadcrumb.Link href={clientResolver(resolve, "/manage/app/pages")}>{$adminT("Pages")}</Breadcrumb.Link>
           </Breadcrumb.Item>
           <Breadcrumb.Separator />
           <Breadcrumb.Item>
-            <Breadcrumb.Page>{isNew ? "New Page" : currentPage?.page_title || "Edit Page"}</Breadcrumb.Page>
+            <Breadcrumb.Page
+              >{isNew ? $adminT("New Page") : currentPage?.page_title || $adminT("Edit Page")}</Breadcrumb.Page
+            >
           </Breadcrumb.Item>
         </Breadcrumb.List>
       </Breadcrumb.Root>
@@ -556,7 +570,7 @@
             size="sm"
             href={clientResolver(resolve, `/${currentPage?.page_path}`)}
           >
-            View
+            {$adminT("View")}
           </Button>
         {/if}
       </div>
@@ -565,16 +579,16 @@
     <!-- General Information Card -->
     <Card.Root>
       <Card.Header>
-        <Card.Title>General Information</Card.Title>
+        <Card.Title>{$adminT("General Information")}</Card.Title>
         <Card.Description>
-          {isNew ? "Create a new status page" : "Update page settings"}
+          {isNew ? $adminT("Create a new status page") : $adminT("Update page settings")}
         </Card.Description>
       </Card.Header>
       <Card.Content class="space-y-4">
         <!-- Path -->
         <div class="space-y-2">
           <Label for="page-path">
-            Path <span class="text-destructive">*</span>
+            {$adminT("Path")} <span class="text-destructive">*</span>
           </Label>
           <Input
             id="page-path"
@@ -584,34 +598,45 @@
           />
           <p class="text-muted-foreground text-xs">
             {!isNew && currentPage?.page_path === ""
-              ? "Home page path cannot be changed"
-              : "URL path for the page (e.g., services, infrastructure). Will be made URL-friendly."}
+              ? $adminT("Home page path cannot be changed")
+              : $adminT("URL path for the page (e.g., services, infrastructure). Will be made URL-friendly.")}
           </p>
         </div>
 
         <!-- Title -->
         <div class="space-y-2">
           <Label for="page-title">
-            Title <span class="text-destructive">*</span>
+            {$adminT("Title")} <span class="text-destructive">*</span>
           </Label>
-          <Input id="page-title" type="text" bind:value={formData.page_title} placeholder="Services Status" />
-          <p class="text-muted-foreground text-xs">Page title shown in browser tab</p>
+          <Input
+            id="page-title"
+            type="text"
+            bind:value={formData.page_title}
+            placeholder={$adminT("Services Status")}
+          />
+          <p class="text-muted-foreground text-xs">{$adminT("Page title shown in browser tab")}</p>
         </div>
 
         <!-- Header -->
         <div class="space-y-2">
           <Label for="page-header">
-            Header <span class="text-destructive">*</span>
+            {$adminT("Header")} <span class="text-destructive">*</span>
           </Label>
-          <Input id="page-header" type="text" bind:value={formData.page_header} placeholder="Services Status" />
-          <p class="text-muted-foreground text-xs">Main heading displayed on the page</p>
+          <Input
+            id="page-header"
+            type="text"
+            bind:value={formData.page_header}
+            placeholder={$adminT("Services Status")}
+          />
+          <p class="text-muted-foreground text-xs">{$adminT("Main heading displayed on the page")}</p>
         </div>
 
         <!-- Subheader -->
         <div class="space-y-2">
-          <Label for="page-subheader">Page Content</Label>
+          <Label for="page-subheader">{$adminT("Page Content")}</Label>
           <div class="overflow-hidden rounded-md border">
             <CodeMirror
+              extensions={[editorLocale]}
               bind:value={formData.page_subheader}
               lang={markdown()}
               theme={mode.current === "dark" ? githubDark : githubLight}
@@ -624,18 +649,20 @@
               }}
             />
           </div>
-          <p class="text-muted-foreground text-xs">Supports Markdown. Optional content below the header.</p>
+          <p class="text-muted-foreground text-xs">
+            {$adminT("Supports Markdown. Optional content below the header.")}
+          </p>
         </div>
 
         <!-- Logo Upload -->
         <div class="space-y-2">
-          <Label>Page Logo</Label>
+          <Label>{$adminT("Page Logo")}</Label>
           <div class="flex items-start gap-4">
             <div class="bg-muted flex h-16 w-16 items-center justify-center rounded-lg border">
               {#if formData.page_logo}
                 <img
                   src={clientResolver(resolve, formData.page_logo)}
-                  alt="Logo"
+                  alt={$adminT("Logo")}
                   class="max-h-14 max-w-14 object-contain"
                 />
               {:else}
@@ -652,10 +679,10 @@
                 >
                   {#if uploadingLogo}
                     <Loader class="h-4 w-4 animate-spin" />
-                    Uploading...
+                    {$adminT("Uploading...")}
                   {:else}
                     <UploadIcon class="h-4 w-4" />
-                    Upload
+                    {$adminT("Upload")}
                   {/if}
                 </Button>
                 <input
@@ -672,7 +699,7 @@
                   </Button>
                 {/if}
               </div>
-              <p class="text-muted-foreground text-xs">Optional logo for this page (max 256x256px)</p>
+              <p class="text-muted-foreground text-xs">{$adminT("Optional logo for this page (max 256x256px)")}</p>
             </div>
           </div>
         </div>
@@ -681,10 +708,10 @@
         <Button onclick={savePage} disabled={saving || !isFormValid}>
           {#if saving}
             <Loader class="h-4 w-4 animate-spin" />
-            {isNew ? "Creating..." : "Saving..."}
+            {isNew ? $adminT("Creating...") : $adminT("Saving...")}
           {:else}
             <SaveIcon class="h-4 w-4" />
-            {isNew ? "Create Page" : "Save Changes"}
+            {isNew ? $adminT("Create Page") : $adminT("Save Changes")}
           {/if}
         </Button>
       </Card.Footer>
@@ -694,8 +721,8 @@
     {#if !isNew && currentPage}
       <Card.Root>
         <Card.Header>
-          <Card.Title>Page Monitors</Card.Title>
-          <Card.Description>Select which monitors to display on this page</Card.Description>
+          <Card.Title>{$adminT("Page Monitors")}</Card.Title>
+          <Card.Description>{$adminT("Select which monitors to display on this page")}</Card.Description>
         </Card.Header>
         <Card.Content class="space-y-4">
           <!-- Add Monitor -->
@@ -705,7 +732,7 @@
                 {#if selectedMonitorTag}
                   {monitors.find((m) => m.tag === selectedMonitorTag)?.name || selectedMonitorTag}
                 {:else}
-                  Select a monitor to add
+                  {$adminT("Select a monitor to add")}
                 {/if}
               </Select.Trigger>
               <Select.Content>
@@ -713,7 +740,7 @@
                   <Select.Item value={monitor.tag}>{monitor.name} ({monitor.tag})</Select.Item>
                 {/each}
                 {#if availableMonitors.length === 0}
-                  <div class="text-muted-foreground px-2 py-1 text-sm">No available monitors</div>
+                  <div class="text-muted-foreground px-2 py-1 text-sm">{$adminT("No available monitors")}</div>
                 {/if}
               </Select.Content>
             </Select.Root>
@@ -722,14 +749,14 @@
                 <Loader class="h-4 w-4 animate-spin" />
               {:else}
                 <PlusIcon class="h-4 w-4" />
-                Add
+                {$adminT("Add")}
               {/if}
             </Button>
           </div>
 
           <!-- Current Monitors -->
           <div class="space-y-2">
-            <Label>Current Monitors</Label>
+            <Label>{$adminT("Current Monitors")}</Label>
             {#if selectedMonitors.length > 0}
               <div class="space-y-2">
                 {#each selectedMonitors as monitorTag, i (monitorTag)}
@@ -774,7 +801,7 @@
               </div>
             {:else}
               <div class="text-muted-foreground bg-muted rounded-lg p-4 text-center text-sm">
-                No monitors added to this page yet
+                {$adminT("No monitors added to this page yet")}
               </div>
             {/if}
           </div>
@@ -784,22 +811,22 @@
       <!-- Page Settings Card -->
       <Card.Root>
         <Card.Header>
-          <Card.Title>Display Settings</Card.Title>
-          <Card.Description>Configure what content is shown on this status page</Card.Description>
+          <Card.Title>{$adminT("Display Settings")}</Card.Title>
+          <Card.Description>{$adminT("Configure what content is shown on this status page")}</Card.Description>
         </Card.Header>
         <Card.Content class="space-y-6">
           <!-- Monitor Status History Days -->
           <div class="space-y-4">
             <div>
-              <Label class="text-base font-medium">Monitor Status History</Label>
+              <Label class="text-base font-medium">{$adminT("Monitor Status History")}</Label>
               <p class="text-muted-foreground text-sm">
-                Configure how many days of status history to display on the status page
+                {$adminT("Configure how many days of status history to display on the status page")}
               </p>
             </div>
 
             <div class="grid grid-cols-2 gap-4">
               <div class="space-y-2">
-                <Label for="history-desktop">Desktop (days)</Label>
+                <Label for="history-desktop">{$adminT("Desktop (days)")}</Label>
                 <Input
                   id="history-desktop"
                   type="number"
@@ -809,10 +836,10 @@
                   bind:value={pageSettings.monitor_status_history_days.desktop}
                   class={isHistoryDesktopValid ? "" : "border-destructive"}
                 />
-                <p class="text-muted-foreground text-xs">Number of days shown on desktop screens</p>
+                <p class="text-muted-foreground text-xs">{$adminT("Number of days shown on desktop screens")}</p>
               </div>
               <div class="space-y-2">
-                <Label for="history-mobile">Mobile (days)</Label>
+                <Label for="history-mobile">{$adminT("Mobile (days)")}</Label>
                 <Input
                   id="history-mobile"
                   type="number"
@@ -822,7 +849,7 @@
                   bind:value={pageSettings.monitor_status_history_days.mobile}
                   class={isHistoryMobileValid ? "" : "border-destructive"}
                 />
-                <p class="text-muted-foreground text-xs">Number of days shown on mobile screens</p>
+                <p class="text-muted-foreground text-xs">{$adminT("Number of days shown on mobile screens")}</p>
               </div>
             </div>
           </div>
@@ -832,30 +859,32 @@
           <!-- Monitor Layout Style -->
           <div class="space-y-4">
             <div>
-              <Label class="text-base font-medium">Monitor Layout Style</Label>
-              <p class="text-muted-foreground text-sm">Choose how monitors are displayed on the status page</p>
+              <Label class="text-base font-medium">{$adminT("Monitor Layout Style")}</Label>
+              <p class="text-muted-foreground text-sm">
+                {$adminT("Choose how monitors are displayed on the status page")}
+              </p>
             </div>
             <Select.Root type="single" bind:value={pageSettings.monitor_layout_style}>
               <Select.Trigger class="w-full">
                 {#if pageSettings.monitor_layout_style === "default-list"}
-                  Default List
+                  {$adminT("Default List")}
                 {:else if pageSettings.monitor_layout_style === "default-grid"}
-                  Default Grid
+                  {$adminT("Default Grid")}
                 {:else if pageSettings.monitor_layout_style === "compact-list"}
-                  Compact List
+                  {$adminT("Compact List")}
                 {:else}
-                  Compact Grid
+                  {$adminT("Compact Grid")}
                 {/if}
               </Select.Trigger>
               <Select.Content>
-                <Select.Item value="default-list">Default List</Select.Item>
-                <Select.Item value="default-grid">Default Grid</Select.Item>
-                <Select.Item value="compact-list">Compact List</Select.Item>
-                <Select.Item value="compact-grid">Compact Grid</Select.Item>
+                <Select.Item value="default-list">{$adminT("Default List")}</Select.Item>
+                <Select.Item value="default-grid">{$adminT("Default Grid")}</Select.Item>
+                <Select.Item value="compact-list">{$adminT("Compact List")}</Select.Item>
+                <Select.Item value="compact-grid">{$adminT("Compact Grid")}</Select.Item>
               </Select.Content>
             </Select.Root>
             <p class="text-muted-foreground text-xs">
-              Default is <code class="bg-muted rounded px-1 font-mono">default-list</code>
+              {$adminT("Default is")} <code class="bg-muted rounded px-1 font-mono">default-list</code>
             </p>
           </div>
         </Card.Content>
@@ -863,10 +892,10 @@
           <Button onclick={() => savePageSettings("display")} disabled={savingDisplaySettings}>
             {#if savingDisplaySettings}
               <Loader class="h-4 w-4 animate-spin" />
-              Saving...
+              {$adminT("Saving...")}
             {:else}
               <SaveIcon class="h-4 w-4" />
-              Save Preferences
+              {$adminT("Save Preferences")}
             {/if}
           </Button>
         </Card.Footer>
@@ -875,9 +904,11 @@
       <!-- Social Preview & SEO Card -->
       <Card.Root>
         <Card.Header>
-          <Card.Title>Social Preview & SEO</Card.Title>
+          <Card.Title>{$adminT("Social Preview & SEO")}</Card.Title>
           <Card.Description
-            >Optional social preview image and meta tags for this page. Leave empty to use site defaults.</Card.Description
+            >{$adminT(
+              "Optional social preview image and meta tags for this page. Leave empty to use site defaults."
+            )}</Card.Description
           >
         </Card.Header>
         <Card.Content class="space-y-4">
@@ -887,7 +918,7 @@
               {#if pageSettings.socialPagePreviewImage}
                 <img
                   src={clientResolver(resolve, pageSettings.socialPagePreviewImage)}
-                  alt="Social preview"
+                  alt={$adminT("Social preview")}
                   class="h-full w-full rounded-lg object-cover"
                 />
               {:else}
@@ -906,10 +937,10 @@
                 >
                   {#if uploadingSocialPreview}
                     <Loader class="h-4 w-4 animate-spin" />
-                    Uploading...
+                    {$adminT("Uploading...")}
                   {:else}
                     <UploadIcon class="h-4 w-4" />
-                    Upload Social Preview
+                    {$adminT("Upload Social Preview")}
                   {/if}
                 </Button>
                 <input
@@ -929,40 +960,40 @@
               {#if pageSettings.socialPagePreviewImage}
                 <p class="text-muted-foreground truncate text-xs">{pageSettings.socialPagePreviewImage}</p>
               {:else}
-                <p class="text-muted-foreground text-xs">Optional. Leave empty to use site default.</p>
+                <p class="text-muted-foreground text-xs">{$adminT("Optional. Leave empty to use site default.")}</p>
               {/if}
             </div>
           </div>
 
           <div class="space-y-2">
-            <Label for="page-metaPageTitle">Meta Title</Label>
+            <Label for="page-metaPageTitle">{$adminT("Meta Title")}</Label>
             <Input
               id="page-metaPageTitle"
               type="text"
               bind:value={pageSettings.metaPageTitle}
-              placeholder="Custom page title for search engines"
+              placeholder={$adminT("Custom page title for search engines")}
             />
-            <p class="text-muted-foreground text-xs">Overrides the default page title in search results</p>
+            <p class="text-muted-foreground text-xs">{$adminT("Overrides the default page title in search results")}</p>
           </div>
           <div class="space-y-2">
-            <Label for="page-metaPageDescription">Meta Description</Label>
+            <Label for="page-metaPageDescription">{$adminT("Meta Description")}</Label>
             <Textarea
               id="page-metaPageDescription"
               bind:value={pageSettings.metaPageDescription}
-              placeholder="Custom description for search engines"
+              placeholder={$adminT("Custom description for search engines")}
               rows={3}
             />
-            <p class="text-muted-foreground text-xs">Shown as the snippet text in search engine results</p>
+            <p class="text-muted-foreground text-xs">{$adminT("Shown as the snippet text in search engine results")}</p>
           </div>
         </Card.Content>
         <Card.Footer class="flex justify-end">
           <Button onclick={() => savePageSettings("seo")} disabled={savingSeoSettings}>
             {#if savingSeoSettings}
               <Loader class="h-4 w-4 animate-spin" />
-              Saving...
+              {$adminT("Saving...")}
             {:else}
               <SaveIcon class="h-4 w-4" />
-              Save
+              {$adminT("Save")}
             {/if}
           </Button>
         </Card.Footer>
@@ -972,17 +1003,19 @@
       {#if currentPage.page_path !== ""}
         <Card.Root class="border-destructive">
           <Card.Header>
-            <Card.Title class="text-destructive">Danger Zone</Card.Title>
-            <Card.Description>Irreversible actions for this page</Card.Description>
+            <Card.Title class="text-destructive">{$adminT("Danger Zone")}</Card.Title>
+            <Card.Description>{$adminT("Irreversible actions for this page")}</Card.Description>
           </Card.Header>
           <Card.Content class="space-y-4">
             <div class="space-y-2">
-              <Label for="delete-confirm">Delete Page</Label>
+              <Label for="delete-confirm">{$adminT("Delete Page")}</Label>
               <p class="text-muted-foreground text-sm">
-                Once you delete a page, there is no going back. Please be certain.
+                {$adminT("Once you delete a page, there is no going back. Please be certain.")}
               </p>
               <p class="text-muted-foreground text-sm">
-                Type <code class="bg-muted rounded px-1 font-mono">delete {currentPage.page_path || "home"}</code> to confirm:
+                {$adminT("Type")}
+                <code class="bg-muted rounded px-1 font-mono">delete {currentPage.page_path || "home"}</code>
+                {$adminT("to confirm:")}
               </p>
               <Input
                 id="delete-confirm"
@@ -996,10 +1029,10 @@
             <Button variant="destructive" onclick={deletePage} disabled={!canDelete || deleting}>
               {#if deleting}
                 <Loader class="h-4 w-4 animate-spin" />
-                Deleting...
+                {$adminT("Deleting...")}
               {:else}
                 <TrashIcon class="h-4 w-4" />
-                Delete Page
+                {$adminT("Delete Page")}
               {/if}
             </Button>
           </Card.Footer>

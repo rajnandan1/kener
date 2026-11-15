@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import CreditCardIcon from "@lucide/svelte/icons/credit-card";
   import DotsVerticalIcon from "@lucide/svelte/icons/ellipsis-vertical";
   import LogoutIcon from "@lucide/svelte/icons/log-out";
@@ -187,13 +190,13 @@
         <DropdownMenu.Group>
           <DropdownMenu.Item onclick={openAccountDialog}>
             <UserCircleIcon />
-            Account
+            {$adminT("Account")}
           </DropdownMenu.Item>
           <DropdownMenu.Item class="relative" onclick={toggleMode}>
             <Sun class="absolute left-2  scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
             <Moon class="absolute left-2  scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
             <span class="pl-6">
-              {mode.current === "light" ? "Light" : "Dark"}
+              {mode.current === "light" ? $adminT("Light") : $adminT("Dark")}
             </span>
           </DropdownMenu.Item>
         </DropdownMenu.Group>
@@ -203,7 +206,7 @@
             <form method="POST" action={clientResolver(resolve, "/account/logout")} class="w-full">
               <Button {...props} type="submit" variant="ghost" class="w-full justify-start">
                 <LogoutIcon />
-                Log out
+                {$adminT("Log out")}
               </Button>
             </form>
           {/snippet}
@@ -217,10 +220,10 @@
   <Dialog.Content class="max-w-md">
     <Dialog.Header>
       <Dialog.Title class="flex flex-col  justify-between">
-        <span>Account Settings</span>
+        <span>{$adminT("Account Settings")}</span>
       </Dialog.Title>
       <Dialog.Description class="flex flex-col gap-2">
-        <span> Manage your profile information. </span>
+        <span> {$adminT("Manage your profile information.")} </span>
         <div class="flex items-center justify-between">
           <span class="text-foreground rounded-sm font-medium">
             {user.email}
@@ -242,21 +245,27 @@
           saveName();
         }}
       >
-        <Label for="account-name">Name</Label>
+        <Label for="account-name">{$adminT("Name")}</Label>
         <div class="flex gap-2">
-          <Input id="account-name" bind:value={myName} placeholder="Your name" disabled={savingName} class="flex-1" />
+          <Input
+            id="account-name"
+            bind:value={myName}
+            placeholder={$adminT("Your name")}
+            disabled={savingName}
+            class="flex-1"
+          />
           <Button type="submit" disabled={savingName || !myName.trim()}>
             {#if savingName}
               <LoaderIcon class="size-4 animate-spin" />
             {:else if nameSuccess}
               <CheckIcon class="size-4" />
             {:else}
-              Save
+              {$adminT("Save")}
             {/if}
           </Button>
         </div>
         {#if nameError}
-          <p class="text-destructive text-sm">{nameError}</p>
+          <p class="text-destructive text-sm">{$adminT(String(nameError ?? ""))}</p>
         {/if}
       </form>
 
@@ -270,39 +279,44 @@
           updatePassword();
         }}
       >
-        <Label for="new-password">Change Password</Label>
+        <Label for="new-password">{$adminT("Change Password")}</Label>
         <Input
           id="new-password"
           type="password"
           bind:value={myPassword}
-          placeholder="New Password"
+          placeholder={$adminT("New Password")}
           disabled={resettingPass}
         />
         <Input
           id="confirm-password"
           type="password"
           bind:value={plainPassword}
-          placeholder="Confirm Password"
+          placeholder={$adminT("Confirm Password")}
           disabled={resettingPass}
         />
 
         <div class="text-muted-foreground text-xs">
-          <p class="mb-1 font-medium">Password requirements:</p>
+          <p class="mb-1 font-medium">{$adminT("Password requirements:")}</p>
           <ul class="grid grid-cols-2 gap-1">
             <li class:text-green-500={hasDigit}>
-              {#if hasDigit}<CheckIcon class="inline size-3" />{/if} One digit
+              {#if hasDigit}<CheckIcon class="inline size-3" />{/if}
+              {$adminT("One digit")}
             </li>
             <li class:text-green-500={hasLowercase}>
-              {#if hasLowercase}<CheckIcon class="inline size-3" />{/if} One lowercase
+              {#if hasLowercase}<CheckIcon class="inline size-3" />{/if}
+              {$adminT("One lowercase")}
             </li>
             <li class:text-green-500={hasUppercase}>
-              {#if hasUppercase}<CheckIcon class="inline size-3" />{/if} One uppercase
+              {#if hasUppercase}<CheckIcon class="inline size-3" />{/if}
+              {$adminT("One uppercase")}
             </li>
             <li class:text-green-500={hasMinLength}>
-              {#if hasMinLength}<CheckIcon class="inline size-3" />{/if} 8+ characters
+              {#if hasMinLength}<CheckIcon class="inline size-3" />{/if}
+              {$adminT("8+ characters")}
             </li>
             <li class:text-green-500={passwordsMatch}>
-              {#if passwordsMatch}<CheckIcon class="inline size-3" />{/if} Passwords match
+              {#if passwordsMatch}<CheckIcon class="inline size-3" />{/if}
+              {$adminT("Passwords match")}
             </li>
           </ul>
         </div>
@@ -310,16 +324,16 @@
         <Button type="submit" disabled={resettingPass || !isPasswordValid}>
           {#if resettingPass}
             <LoaderIcon class="size-4 animate-spin" />
-            Updating...
+            {$adminT("Updating...")}
           {:else if passwordSuccess}
             <CheckIcon class="size-4" />
-            Updated!
+            {$adminT("Updated!")}
           {:else}
-            Update Password
+            {$adminT("Update Password")}
           {/if}
         </Button>
         {#if passwordError}
-          <p class="text-destructive text-sm">{passwordError}</p>
+          <p class="text-destructive text-sm">{$adminT(String(passwordError ?? ""))}</p>
         {/if}
       </form>
     </div>

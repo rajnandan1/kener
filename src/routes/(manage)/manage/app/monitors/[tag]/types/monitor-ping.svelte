@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT, editorPhrases: adminEditorPhrases } = getAdminI18n();
+  const editorLocale = $derived(EditorState.phrases.of($adminEditorPhrases));
+
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Button } from "$lib/components/ui/button/index.js";
@@ -7,6 +11,7 @@
   import Plus from "@lucide/svelte/icons/plus";
   import X from "@lucide/svelte/icons/x";
   import { DefaultPingEval } from "$lib/anywhere.js";
+  import { EditorState } from "@codemirror/state";
   import CodeMirror from "svelte-codemirror-editor";
   import { javascript } from "@codemirror/lang-javascript";
   import { githubLight, githubDark } from "@uiw/codemirror-theme-github";
@@ -65,10 +70,10 @@
 <div class="space-y-4">
   <div class="flex flex-col gap-2">
     <div class="mb-2 flex items-center justify-between">
-      <Label>Hosts <span class="text-destructive">*</span></Label>
+      <Label>{$adminT("Hosts")} <span class="text-destructive">*</span></Label>
       <Button variant="outline" size="sm" onclick={addHost}>
         <Plus class="mr-1 size-4" />
-        Add Host
+        {$adminT("Add Host")}
       </Button>
     </div>
     {#if data.hosts.length > 0}
@@ -76,44 +81,44 @@
         {#each data.hosts as host, index (index)}
           <div class="bg-muted/50 rounded-lg border p-3">
             <div class="mb-2 flex items-center justify-between">
-              <span class="text-sm font-medium">Host {index + 1}</span>
+              <span class="text-sm font-medium">{$adminT("Host {value1}", { value1: index + 1 })}</span>
               <Button variant="ghost" size="icon" onclick={() => removeHost(index)}>
                 <X class="size-4" />
               </Button>
             </div>
             <div class="grid grid-cols-5 gap-2">
               <div class="flex flex-col gap-2">
-                <Label for="ping-type-{index}">Type</Label>
+                <Label for="ping-type-{index}">{$adminT("Type")}</Label>
                 <Select.Root
                   type="single"
                   value={normalizeHostType(host.type)}
                   onValueChange={(v) => (host.type = normalizeHostType(v))}
                 >
                   <Select.Trigger id="ping-type-{index}" class="w-full">
-                    {normalizeHostType(host.type)}
+                    {$adminT(normalizeHostType(host.type))}
                   </Select.Trigger>
                   <Select.Content>
                     {#each PING_HOST_TYPES as typeOption (typeOption)}
-                      <Select.Item value={typeOption}>{typeOption}</Select.Item>
+                      <Select.Item value={typeOption}>{$adminT(typeOption)}</Select.Item>
                     {/each}
                   </Select.Content>
                 </Select.Root>
               </div>
               <div class="col-span-2 flex flex-col gap-2">
-                <Label for="ping-host-{index}">Host</Label>
+                <Label for="ping-host-{index}">{$adminT("Host")}</Label>
                 <Input
                   id="ping-host-{index}"
                   bind:value={host.host}
                   oninput={() => onHostChange(host)}
-                  placeholder="8.8.8.8, 2001:db8::1, or example.com"
+                  placeholder={$adminT("8.8.8.8, 2001:db8::1, or example.com")}
                 />
               </div>
               <div class="flex flex-col gap-2">
-                <Label for="ping-timeout-{index}">Timeout (ms)</Label>
+                <Label for="ping-timeout-{index}">{$adminT("Timeout (ms)")}</Label>
                 <Input id="ping-timeout-{index}" type="number" bind:value={host.timeout} placeholder="1000" />
               </div>
               <div class="flex flex-col gap-2">
-                <Label for="ping-count-{index}">Count</Label>
+                <Label for="ping-count-{index}">{$adminT("Count")}</Label>
                 <Input id="ping-count-{index}" type="number" bind:value={host.count} placeholder="3" />
               </div>
             </div>
@@ -121,14 +126,15 @@
         {/each}
       </div>
     {:else}
-      <p class="text-muted-foreground text-sm">No hosts added. Click "Add Host" to add a ping target.</p>
+      <p class="text-muted-foreground text-sm">{$adminT('No hosts added. Click "Add Host" to add a ping target.')}</p>
     {/if}
   </div>
 
   <div class="flex flex-col gap-2">
-    <Label for="ping-eval">Custom Eval Function</Label>
+    <Label for="ping-eval">{$adminT("Custom Eval Function")}</Label>
     <div class="rounded-md border">
       <CodeMirror
+        extensions={[editorLocale]}
         bind:value={data.pingEval}
         lang={javascript()}
         theme={mode.current === "dark" ? githubDark : githubLight}
@@ -141,8 +147,8 @@
       />
     </div>
     <p class="text-muted-foreground mt-1 text-xs">
-      Function receives (arrayOfPings) and should return {`{ status, latency }`}. It runs in a sandbox with no Node.js
-      features such as fetch or process.
+      {$adminT("Function receives (arrayOfPings) and should return")}
+      {"{ status, latency }"}{$adminT(". It runs in a sandbox with no Node.js features such as fetch or process.")}
     </p>
   </div>
 </div>

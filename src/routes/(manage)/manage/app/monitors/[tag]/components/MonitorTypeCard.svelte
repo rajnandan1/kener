@@ -1,4 +1,8 @@
 <script lang="ts">
+  import { adminLocaleTag } from "$lib/admin-i18n/messages";
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT, locale } = getAdminI18n();
+
   import { Button } from "$lib/components/ui/button/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
@@ -324,13 +328,13 @@
 
       const result = await response.json();
       if (result.error) {
-        toast.error(result.error);
+        toast.error($adminT(result.error));
       } else {
-        toast.success("Monitor type settings saved successfully");
+        toast.success($adminT("Monitor type settings saved successfully"));
       }
     } catch (e) {
       const message = e instanceof Error ? e.message : "Failed to save monitor type settings";
-      toast.error(message);
+      toast.error($adminT(message));
     } finally {
       savingType = false;
     }
@@ -363,12 +367,12 @@
 
 <Card.Root>
   <Card.Header>
-    <Card.Title>Monitor Type Configuration</Card.Title>
-    <Card.Description>Configure how this monitor checks your service</Card.Description>
+    <Card.Title>{$adminT("Monitor Type Configuration")}</Card.Title>
+    <Card.Description>{$adminT("Configure how this monitor checks your service")}</Card.Description>
   </Card.Header>
   <Card.Content class="space-y-4">
     <div class="flex flex-col gap-2">
-      <Label for="monitor-type">Monitor Type</Label>
+      <Label for="monitor-type">{$adminT("Monitor Type")}</Label>
       <Select.Root
         type="single"
         value={monitor.monitor_type}
@@ -380,11 +384,11 @@
         }}
       >
         <Select.Trigger id="monitor-type" class="w-full">
-          {monitorTypeLabels[monitor.monitor_type as MonitorType]}
+          {$adminT(String(monitorTypeLabels[monitor.monitor_type as MonitorType] ?? ""))}
         </Select.Trigger>
         <Select.Content>
           {#each MONITOR_TYPES as type (type)}
-            <Select.Item value={type}>{monitorTypeLabels[type]}</Select.Item>
+            <Select.Item value={type}>{$adminT(String(monitorTypeLabels[type] ?? ""))}</Select.Item>
           {/each}
         </Select.Content>
       </Select.Root>
@@ -430,7 +434,7 @@
         {#snippet child({ props })}
           <Button {...props} variant="secondary">
             <PlayIcon class="size-4" />
-            Test Monitor
+            {$adminT("Test Monitor")}
           </Button>
         {/snippet}
       </Dialog.Trigger>
@@ -438,11 +442,11 @@
         <Dialog.Header>
           <Dialog.Title>
             {#if testingMonitor}
-              Running Test
+              {$adminT("Running Test")}
             {:else if testResult}
-              Test Result
+              {$adminT("Test Result")}
             {:else}
-              Test Monitor
+              {$adminT("Test Monitor")}
             {/if}
           </Dialog.Title>
         </Dialog.Header>
@@ -450,24 +454,26 @@
           {#if testingMonitor}
             <div class="flex flex-col items-center gap-2 py-8">
               <Loader class="size-8 animate-spin" />
-              <p class="text-muted-foreground mt-4 text-center">Please wait while the test is being performed...</p>
+              <p class="text-muted-foreground mt-4 text-center">
+                {$adminT("Please wait while the test is being performed...")}
+              </p>
             </div>
           {:else if testResult}
             <div class="mt-4 flex flex-col gap-4">
               {#if testResult.error_message}
                 <div class="bg-destructive/10 text-destructive rounded-md p-3 text-sm font-medium">
-                  {testResult.error_message}
+                  {$adminT(String(testResult.error_message ?? ""))}
                 </div>
               {/if}
               <div class="grid grid-cols-2 gap-4">
                 <div class="rounded-lg border p-4 text-center">
-                  <div class="text-muted-foreground text-xs uppercase">Status</div>
+                  <div class="text-muted-foreground text-xs uppercase">{$adminT("Status")}</div>
                   <div class="mt-1 text-2xl font-bold text-{testResult.status.toLowerCase()}">
-                    {testResult.status}
+                    {$adminT(String(testResult.status ?? ""))}
                   </div>
                 </div>
                 <div class="rounded-lg border p-4 text-center">
-                  <div class="text-muted-foreground text-xs uppercase">Latency (milliseconds)</div>
+                  <div class="text-muted-foreground text-xs uppercase">{$adminT("Latency (milliseconds)")}</div>
                   <div class="mt-1 truncate text-2xl font-bold">
                     {testResult.latency}
                   </div>
@@ -475,9 +481,9 @@
               </div>
               {#if monitor.monitor_type === "SSL" && testResult.expiry_at}
                 <div class="rounded-lg border p-4 text-center">
-                  <div class="text-muted-foreground text-xs uppercase">Expires At</div>
+                  <div class="text-muted-foreground text-xs uppercase">{$adminT("Expires At")}</div>
                   <div class="mt-1 text-sm font-semibold break-all">
-                    {new Date(testResult.expiry_at).toLocaleString(undefined, {
+                    {new Date(testResult.expiry_at).toLocaleString(adminLocaleTag($locale), {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
@@ -491,13 +497,13 @@
               {#if monitor.monitor_type === "SSL" && (testResult.issuer_cn || testResult.issuer_o)}
                 <div class="grid grid-cols-2 gap-4">
                   <div class="rounded-lg border p-4 text-center">
-                    <div class="text-muted-foreground text-xs uppercase">Issued By (CN)</div>
+                    <div class="text-muted-foreground text-xs uppercase">{$adminT("Issued By (CN)")}</div>
                     <div class="mt-1 text-sm font-semibold break-all">
                       {testResult.issuer_cn || "—"}
                     </div>
                   </div>
                   <div class="rounded-lg border p-4 text-center">
-                    <div class="text-muted-foreground text-xs uppercase">Issued By (O)</div>
+                    <div class="text-muted-foreground text-xs uppercase">{$adminT("Issued By (O)")}</div>
                     <div class="mt-1 text-sm font-semibold break-all">
                       {testResult.issuer_o || "—"}
                     </div>
@@ -507,7 +513,7 @@
               <div class="flex justify-end">
                 <Button variant="outline" size="sm" onclick={testMonitor} disabled={testingMonitor}>
                   <PlayIcon class="size-3" />
-                  Run Test Again
+                  {$adminT("Run Test Again")}
                 </Button>
               </div>
             </div>
@@ -522,7 +528,7 @@
       {:else}
         <SaveIcon class="size-4" />
       {/if}
-      Save Monitor Type Settings
+      {$adminT("Save Monitor Type Settings")}
     </Button>
   </Card.Footer>
 </Card.Root>

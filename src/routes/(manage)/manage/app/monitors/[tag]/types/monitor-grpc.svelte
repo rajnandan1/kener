@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import { Input } from "$lib/components/ui/input/index.js";
   import { Label } from "$lib/components/ui/label/index.js";
   import { Switch } from "$lib/components/ui/switch/index.js";
@@ -22,37 +25,37 @@
 <div class="space-y-4">
   <div class="grid grid-cols-3 gap-4">
     <div class="col-span-2 flex flex-col gap-2">
-      <Label for="grpc-host">Host <span class="text-destructive">*</span></Label>
-      <Input id="grpc-host" bind:value={data.host} placeholder="localhost" />
+      <Label for="grpc-host">{$adminT("Host")} <span class="text-destructive">*</span></Label>
+      <Input id="grpc-host" bind:value={data.host} placeholder={$adminT("localhost")} />
     </div>
     <div class="col-span-1 flex flex-col gap-2">
-      <Label for="grpc-port">Port <span class="text-destructive">*</span></Label>
+      <Label for="grpc-port">{$adminT("Port")} <span class="text-destructive">*</span></Label>
       <Input id="grpc-port" type="number" bind:value={data.port} placeholder="50051" />
     </div>
   </div>
 
   <div class="flex flex-col gap-2">
-    <Label for="grpc-service">Service Name</Label>
-    <Input id="grpc-service" bind:value={data.service} placeholder="my.package.ServiceName" />
+    <Label for="grpc-service">{$adminT("Service Name")}</Label>
+    <Input id="grpc-service" bind:value={data.service} placeholder={$adminT("my.package.ServiceName")} />
     <p class="text-muted-foreground mt-1 text-xs">
-      The fully qualified gRPC service name to health check. Leave empty to check overall server health.
+      {$adminT("The fully qualified gRPC service name to health check. Leave empty to check overall server health.")}
     </p>
   </div>
 
   <div class="flex flex-col gap-2">
-    <Label for="grpc-timeout">Timeout (ms)</Label>
+    <Label for="grpc-timeout">{$adminT("Timeout (ms)")}</Label>
     <Input id="grpc-timeout" type="number" bind:value={data.timeout} placeholder="10000" />
   </div>
 
   <div class="flex items-center space-x-2">
     <Switch id="grpc-tls" bind:checked={data.tls} />
-    <Label for="grpc-tls">Use TLS</Label>
+    <Label for="grpc-tls">{$adminT("Use TLS")}</Label>
   </div>
 
   {#if data.tls}
     <div class="flex items-center space-x-2">
       <Switch id="grpc-insecure" bind:checked={data.insecure} />
-      <Label for="grpc-insecure">Allow Insecure TLS (skip certificate verification)</Label>
+      <Label for="grpc-insecure">{$adminT("Allow Insecure TLS (skip certificate verification)")}</Label>
     </div>
   {/if}
 </div>

@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
 	import { Dialog as DialogPrimitive } from "bits-ui";
 	import DialogPortal from "./dialog-portal.svelte";
 	import XIcon from "@lucide/svelte/icons/x";
@@ -38,7 +41,7 @@
 				class="ring-offset-background focus:ring-ring absolute end-4 top-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
 			>
 				<XIcon />
-				<span class="sr-only">Close</span>
+				<span class="sr-only">{$adminT("Close")}</span>
 			</DialogPrimitive.Close>
 		{/if}
 	</DialogPrimitive.Content>

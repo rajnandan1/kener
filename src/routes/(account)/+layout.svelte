@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { untrack } from "svelte";
+  import { createAdminI18n } from "$lib/admin-i18n/context";
   import "../layout.css";
   import "../kener.css";
   import { ModeWatcher } from "mode-watcher";
@@ -7,6 +9,8 @@
   import clientResolver from "$lib/client/resolver.js";
 
   let { children, data } = $props();
+  const { locale, t: adminT } = createAdminI18n(untrack(() => data.adminLocale));
+  import LanguageSwitcher from "$lib/admin-i18n/LanguageSwitcher.svelte";
   import KenerNav from "$lib/components/KenerNav.svelte";
 </script>
 
@@ -42,9 +46,10 @@
 	</style>`}
   <script src={clientResolver(resolve, "/capture.js")}></script>
 </svelte:head>
-<main>
+<main lang={$locale}>
   <!-- Nav -->
   <KenerNav />
+  <div class="mx-auto flex max-w-5xl justify-end px-4 py-3"><LanguageSwitcher /></div>
   <!-- Body -->
   <div class="mx-auto max-w-5xl">
     {@render children()}

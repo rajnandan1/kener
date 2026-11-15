@@ -1,4 +1,7 @@
 <script lang="ts">
+  import { getAdminI18n } from "$lib/admin-i18n/context";
+  const { t: adminT } = getAdminI18n();
+
   import * as Accordion from "$lib/components/ui/accordion/index.js";
   import * as Card from "$lib/components/ui/card/index.js";
   import * as Table from "$lib/components/ui/table/index.js";
@@ -47,6 +50,12 @@
 
   function hasPermission(perm: string): boolean {
     return userPermissions.includes(perm);
+  }
+
+  /** Readonly roles are system-defined; names of custom roles remain untouched. */
+  function displayRoleName(role: RoleRecord | null): string {
+    if (!role) return "";
+    return role.readonly === 1 ? $adminT(role.role_name) : role.role_name;
   }
 
   // State
@@ -111,7 +120,7 @@
       const result = await apiCall("getRoles");
       roles = result;
     } catch {
-      toast.error("Failed to load roles");
+      toast.error($adminT("Failed to load roles"));
     } finally {
       loading = false;
     }
@@ -121,7 +130,7 @@
     try {
       allPermissions = await apiCall("getAllPermissions");
     } catch {
-      toast.error("Failed to load permissions");
+      toast.error($adminT("Failed to load permissions"));
     }
   }
 
@@ -130,7 +139,7 @@
       const result = await apiCall("getUsers", { page: 1, limit: 1000 });
       allUsers = result.users || [];
     } catch {
-      toast.error("Failed to load users");
+      toast.error($adminT("Failed to load users"));
     }
   }
 
@@ -179,7 +188,7 @@
         }
       }
 
-      toast.success("Role created");
+      toast.success($adminT("Role created"));
       showCreateDialog = false;
       const createdRoleId = newRole.role_id.trim().toLowerCase().replace(/\s+/g, "_");
       newRole = { role_id: "", name: "" };
@@ -209,12 +218,12 @@
           ? { action: "migrate" as const, targetRoleId: deleteTargetRoleId }
           : { action: "remove" as const };
       await apiCall("deleteRole", { roleId: roleToDelete.id, options });
-      toast.success("Role deleted");
+      toast.success($adminT("Role deleted"));
       showDeleteDialog = false;
       roleToDelete = null;
       await fetchRoles();
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Failed to delete role");
+      toast.error($adminT(e instanceof Error ? e.message : "Failed to delete role"));
     } finally {
       deletingRole = false;
     }
@@ -242,7 +251,7 @@
         name: editRole.name,
         status: editRole.status
       });
-      toast.success("Role updated");
+      toast.success($adminT("Role updated"));
       showEditDialog = false;
       roleToEdit = null;
       await fetchRoles();
@@ -263,7 +272,7 @@
       const perms = await apiCall("getRolePermissions", { roleId: role.id });
       rolePermissionIds = new Set(perms.map((p: { permissions_id: string }) => p.permissions_id));
     } catch {
-      toast.error("Failed to load permissions");
+      toast.error($adminT("Failed to load permissions"));
     } finally {
       loadingPermissions = false;
     }
@@ -278,10 +287,10 @@
         roleId: permissionsRole.id,
         permissionIds: Array.from(rolePermissionIds)
       });
-      toast.success("Permissions updated");
+      toast.success($adminT("Permissions updated"));
       showPermissionsSheet = false;
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Failed to update permissions");
+      toast.error($adminT(e instanceof Error ? e.message : "Failed to update permissions"));
     } finally {
       savingPermissions = false;
     }
@@ -311,7 +320,7 @@
       ]);
       roleUsers = users;
     } catch {
-      toast.error("Failed to load role users");
+      toast.error($adminT("Failed to load role users"));
     } finally {
       loadingUsers = false;
     }
@@ -323,10 +332,10 @@
     addingUserId = userId;
     try {
       await apiCall("addUserToRole", { roleId: usersRole.id, userId });
-      toast.success("User added to role");
+      toast.success($adminT("User added to role"));
       roleUsers = await apiCall("getRoleUsers", { roleId: usersRole.id });
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Failed to add user");
+      toast.error($adminT(e instanceof Error ? e.message : "Failed to add user"));
     } finally {
       addingUserId = null;
     }
@@ -338,10 +347,10 @@
     removingUserId = userId;
     try {
       await apiCall("removeUserFromRole", { roleId: usersRole.id, userId });
-      toast.success("User removed from role");
+      toast.success($adminT("User removed from role"));
       roleUsers = await apiCall("getRoleUsers", { roleId: usersRole.id });
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Failed to remove user");
+      toast.error($adminT(e instanceof Error ? e.message : "Failed to remove user"));
     } finally {
       removingUserId = null;
     }
@@ -379,12 +388,12 @@
   <div class="flex items-center justify-between">
     <div class="flex items-center gap-2">
       <ShieldIcon class="h-5 w-5" />
-      <h2 class="text-xl font-semibold">Roles</h2>
+      <h2 class="text-xl font-semibold">{$adminT("Roles")}</h2>
     </div>
     {#if hasPermission("roles.write")}
       <Button size="sm" onclick={() => openCreateDialog()}>
         <PlusIcon class="mr-1 h-4 w-4" />
-        Create Role
+        {$adminT("Create Role")}
       </Button>
     {/if}
   </div>
@@ -396,16 +405,16 @@
         <Spinner class="h-6 w-6" />
       </div>
     {:else if roles.length === 0}
-      <div class="text-muted-foreground p-8 text-center text-sm">No roles found</div>
+      <div class="text-muted-foreground p-8 text-center text-sm">{$adminT("No roles found")}</div>
     {:else}
       <div class="ktable overflow-hidden rounded-xl border">
         <Table.Root>
           <Table.Header>
             <Table.Row>
-              <Table.Head>Role ID</Table.Head>
-              <Table.Head>Name</Table.Head>
-              <Table.Head>Status</Table.Head>
-              <Table.Head>Type</Table.Head>
+              <Table.Head>{$adminT("Role ID")}</Table.Head>
+              <Table.Head>{$adminT("Name")}</Table.Head>
+              <Table.Head>{$adminT("Status")}</Table.Head>
+              <Table.Head>{$adminT("Type")}</Table.Head>
               <Table.Head class="text-right"></Table.Head>
             </Table.Row>
           </Table.Header>
@@ -413,37 +422,37 @@
             {#each roles as role (role.id)}
               <Table.Row>
                 <Table.Cell class="font-mono text-sm">{role.id}</Table.Cell>
-                <Table.Cell>{role.role_name}</Table.Cell>
+                <Table.Cell>{displayRoleName(role)}</Table.Cell>
                 <Table.Cell>
                   <Badge variant={role.status === "ACTIVE" ? "default" : "secondary"}>
-                    {role.status}
+                    {$adminT(String(role.status ?? ""))}
                   </Badge>
                 </Table.Cell>
                 <Table.Cell>
                   {#if role.readonly === 1}
                     <Badge variant="outline">
                       <LockIcon class="mr-1 h-3 w-3" />
-                      Readonly
+                      {$adminT("Readonly")}
                     </Badge>
                   {:else}
-                    <Badge variant="outline">Custom</Badge>
+                    <Badge variant="outline">{$adminT("Custom")}</Badge>
                   {/if}
                 </Table.Cell>
                 <Table.Cell class="text-right">
                   <div class="flex items-center justify-end gap-1">
                     <Button variant="ghost" size="sm" onclick={() => openPermissions(role)}>
                       <KeyIcon class="mr-1 h-4 w-4" />
-                      Permissions
+                      {$adminT("Permissions")}
                     </Button>
                     <Button variant="ghost" size="sm" onclick={() => openUsers(role)}>
                       <UsersIcon class="mr-1 h-4 w-4" />
-                      Users
+                      {$adminT("Users")}
                     </Button>
                     {#if hasPermission("roles.write")}
                       <Button
                         variant="ghost"
                         size="sm"
-                        title="Duplicate"
+                        title={$adminT("Duplicate")}
                         onclick={() =>
                           openCreateDialog({
                             role_id: role.id + "-copy",
@@ -486,38 +495,39 @@
 <Dialog.Root bind:open={showEditDialog}>
   <Dialog.Content>
     <Dialog.Header>
-      <Dialog.Title>Edit Role</Dialog.Title>
+      <Dialog.Title>{$adminT("Edit Role")}</Dialog.Title>
       <Dialog.Description>
-        Update <span class="font-semibold">{roleToEdit?.role_name}</span> role.
+        {$adminT("Update")} <span class="font-semibold">{displayRoleName(roleToEdit)}</span>
+        {$adminT("role.")}
       </Dialog.Description>
     </Dialog.Header>
     <div class="grid gap-4 py-4">
       <div class="grid gap-2">
-        <Label for="edit-role-name">Role Name</Label>
+        <Label for="edit-role-name">{$adminT("Role Name")}</Label>
         <Input id="edit-role-name" bind:value={editRole.name} />
       </div>
       <div class="grid gap-2">
-        <Label for="edit-role-status">Status</Label>
+        <Label for="edit-role-status">{$adminT("Status")}</Label>
         <select
           id="edit-role-status"
           class="border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm"
           bind:value={editRole.status}
         >
-          <option value="ACTIVE">Active</option>
-          <option value="INACTIVE">Inactive</option>
+          <option value="ACTIVE">{$adminT("Active")}</option>
+          <option value="INACTIVE">{$adminT("Inactive")}</option>
         </select>
       </div>
       {#if editError}
-        <p class="text-destructive text-sm">{editError}</p>
+        <p class="text-destructive text-sm">{$adminT(String(editError ?? ""))}</p>
       {/if}
     </div>
     <Dialog.Footer>
-      <Button variant="outline" onclick={() => (showEditDialog = false)}>Cancel</Button>
+      <Button variant="outline" onclick={() => (showEditDialog = false)}>{$adminT("Cancel")}</Button>
       <Button onclick={handleEditRole} disabled={editingRole}>
         {#if editingRole}
           <Spinner class="mr-2 h-4 w-4" />
         {/if}
-        Save
+        {$adminT("Save")}
       </Button>
     </Dialog.Footer>
   </Dialog.Content>
@@ -527,21 +537,21 @@
 <Dialog.Root bind:open={showCreateDialog}>
   <Dialog.Content>
     <Dialog.Header>
-      <Dialog.Title>Create Role</Dialog.Title>
-      <Dialog.Description>Create a new custom role with its own permissions.</Dialog.Description>
+      <Dialog.Title>{$adminT("Create Role")}</Dialog.Title>
+      <Dialog.Description>{$adminT("Create a new custom role with its own permissions.")}</Dialog.Description>
     </Dialog.Header>
     <div class="grid gap-4 py-4">
       <div class="grid gap-2">
-        <Label for="role-id">Role ID</Label>
-        <Input id="role-id" placeholder="e.g. viewer" bind:value={newRole.role_id} />
-        <p class="text-muted-foreground text-xs">Lowercase letters, numbers, underscores, hyphens only.</p>
+        <Label for="role-id">{$adminT("Role ID")}</Label>
+        <Input id="role-id" placeholder={$adminT("e.g. viewer")} bind:value={newRole.role_id} />
+        <p class="text-muted-foreground text-xs">{$adminT("Lowercase letters, numbers, underscores, hyphens only.")}</p>
       </div>
       <div class="grid gap-2">
-        <Label for="role-name">Role Name</Label>
-        <Input id="role-name" placeholder="e.g. Viewer" bind:value={newRole.name} />
+        <Label for="role-name">{$adminT("Role Name")}</Label>
+        <Input id="role-name" placeholder={$adminT("e.g. Viewer")} bind:value={newRole.name} />
       </div>
       <div class="grid gap-2">
-        <Label>Permissions</Label>
+        <Label>{$adminT("Permissions")}</Label>
         <div class="flex gap-2">
           <Button
             variant={createPermissionMode === "pick" ? "default" : "outline"}
@@ -551,43 +561,43 @@
               cloneFromRoleId = "";
             }}
           >
-            Pick after creation
+            {$adminT("Pick after creation")}
           </Button>
           <Button
             variant={createPermissionMode === "clone" ? "default" : "outline"}
             size="sm"
             onclick={() => (createPermissionMode = "clone")}
           >
-            Clone from existing role
+            {$adminT("Clone from existing role")}
           </Button>
         </div>
       </div>
       {#if createPermissionMode === "clone"}
         <div class="grid gap-2">
-          <Label for="clone-role">Clone permissions from</Label>
+          <Label for="clone-role">{$adminT("Clone permissions from")}</Label>
           <select
             id="clone-role"
             class="border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm"
             bind:value={cloneFromRoleId}
           >
-            <option value="">Select a role...</option>
+            <option value="">{$adminT("Select a role...")}</option>
             {#each roles.filter((r) => r.status === "ACTIVE") as r (r.id)}
-              <option value={r.id}>{r.role_name}</option>
+              <option value={r.id}>{displayRoleName(r)}</option>
             {/each}
           </select>
         </div>
       {/if}
       {#if createError}
-        <p class="text-destructive text-sm">{createError}</p>
+        <p class="text-destructive text-sm">{$adminT(String(createError ?? ""))}</p>
       {/if}
     </div>
     <Dialog.Footer>
-      <Button variant="outline" onclick={() => (showCreateDialog = false)}>Cancel</Button>
+      <Button variant="outline" onclick={() => (showCreateDialog = false)}>{$adminT("Cancel")}</Button>
       <Button onclick={handleCreateRole} disabled={creatingRole}>
         {#if creatingRole}
           <Spinner class="mr-2 h-4 w-4" />
         {/if}
-        Create
+        {$adminT("Create")}
       </Button>
     </Dialog.Footer>
   </Dialog.Content>
@@ -597,49 +607,49 @@
 <Dialog.Root bind:open={showDeleteDialog}>
   <Dialog.Content>
     <Dialog.Header>
-      <Dialog.Title>Delete Role</Dialog.Title>
+      <Dialog.Title>{$adminT("Delete Role")}</Dialog.Title>
       <Dialog.Description>
-        Are you sure you want to delete <span class="font-semibold">{roleToDelete?.role_name}</span>?
+        {$adminT("Are you sure you want to delete")} <span class="font-semibold">{displayRoleName(roleToDelete)}</span>?
       </Dialog.Description>
     </Dialog.Header>
     <div class="grid gap-4 py-4">
       <div class="grid gap-2">
-        <Label>What should happen to users in this role?</Label>
+        <Label>{$adminT("What should happen to users in this role?")}</Label>
         <div class="flex gap-2">
           <Button
             variant={deleteAction === "remove" ? "default" : "outline"}
             size="sm"
             onclick={() => (deleteAction = "remove")}
           >
-            Remove assignments
+            {$adminT("Remove assignments")}
           </Button>
           <Button
             variant={deleteAction === "migrate" ? "default" : "outline"}
             size="sm"
             onclick={() => (deleteAction = "migrate")}
           >
-            Migrate to another role
+            {$adminT("Migrate to another role")}
           </Button>
         </div>
       </div>
       {#if deleteAction === "migrate"}
         <div class="grid gap-2">
-          <Label for="target-role">Target Role</Label>
+          <Label for="target-role">{$adminT("Target Role")}</Label>
           <select
             id="target-role"
             class="border-input flex h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-sm"
             bind:value={deleteTargetRoleId}
           >
-            <option value="">Select a role...</option>
+            <option value="">{$adminT("Select a role...")}</option>
             {#each roles.filter((r) => r.id !== roleToDelete?.id && r.status === "ACTIVE") as r (r.id)}
-              <option value={r.id}>{r.role_name}</option>
+              <option value={r.id}>{displayRoleName(r)}</option>
             {/each}
           </select>
         </div>
       {/if}
     </div>
     <Dialog.Footer>
-      <Button variant="outline" onclick={() => (showDeleteDialog = false)}>Cancel</Button>
+      <Button variant="outline" onclick={() => (showDeleteDialog = false)}>{$adminT("Cancel")}</Button>
       <Button
         variant="destructive"
         onclick={handleDeleteRole}
@@ -648,7 +658,7 @@
         {#if deletingRole}
           <Spinner class="mr-2 h-4 w-4" />
         {/if}
-        Delete
+        {$adminT("Delete")}
       </Button>
     </Dialog.Footer>
   </Dialog.Content>
@@ -659,13 +669,13 @@
   <Sheet.Content side="right" class="w-full overflow-y-auto sm:max-w-lg">
     <Sheet.Header>
       <Sheet.Title>
-        Permissions — {permissionsRole?.role_name}
+        {$adminT("Permissions — {value1}", { value1: displayRoleName(permissionsRole) })}
       </Sheet.Title>
       <Sheet.Description>
         {#if permissionsRole?.readonly === 1}
-          This is a readonly role. Permissions cannot be modified.
+          {$adminT("This is a readonly role. Permissions cannot be modified.")}
         {:else}
-          Toggle permissions for this role.
+          {$adminT("Toggle permissions for this role.")}
         {/if}
       </Sheet.Description>
     </Sheet.Header>
@@ -682,7 +692,7 @@
               <Accordion.Item value={group.group}>
                 <Accordion.Trigger class="px-4">
                   <div>
-                    <span class="capitalize">{group.label}</span>
+                    <span class="capitalize">{$adminT(String(group.label ?? ""))}</span>
                     <Badge
                       variant={granted === group.permissions.length ? "default" : granted > 0 ? "secondary" : "outline"}
                       class="ml-2"
@@ -707,7 +717,7 @@
                           disabled={permissionsRole?.readonly === 1 || !hasPermission("roles.assign_permissions")}
                         />
                         <div class="flex flex-col">
-                          <span class="text-sm font-medium">{perm.permission_name}</span>
+                          <span class="text-sm font-medium">{$adminT(String(perm.permission_name ?? ""))}</span>
                         </div>
                       </Button>
                     {/each}
@@ -720,12 +730,12 @@
 
         {#if permissionsRole?.readonly !== 1 && hasPermission("roles.assign_permissions")}
           <div class="flex justify-end gap-2 p-4">
-            <Button variant="outline" onclick={() => (showPermissionsSheet = false)}>Cancel</Button>
+            <Button variant="outline" onclick={() => (showPermissionsSheet = false)}>{$adminT("Cancel")}</Button>
             <Button onclick={savePermissions} disabled={savingPermissions}>
               {#if savingPermissions}
                 <Spinner class="mr-2 h-4 w-4" />
               {/if}
-              Save Permissions
+              {$adminT("Save Permissions")}
             </Button>
           </div>
         {/if}
@@ -739,9 +749,9 @@
   <Sheet.Content side="right" class="w-full overflow-y-auto sm:max-w-lg">
     <Sheet.Header>
       <Sheet.Title>
-        Users — {usersRole?.role_name}
+        {$adminT("Users — {value1}", { value1: displayRoleName(usersRole) })}
       </Sheet.Title>
-      <Sheet.Description>Manage users assigned to this role.</Sheet.Description>
+      <Sheet.Description>{$adminT("Manage users assigned to this role.")}</Sheet.Description>
     </Sheet.Header>
 
     {#if loadingUsers}
@@ -751,9 +761,9 @@
     {:else}
       <!-- Current users in role -->
       <div class="p-4">
-        <h4 class="mb-2 text-sm font-medium">Current Users ({roleUsers.length})</h4>
+        <h4 class="mb-2 text-sm font-medium">{$adminT("Current Users ({length})", { length: roleUsers.length })}</h4>
         {#if roleUsers.length === 0}
-          <p class="text-muted-foreground text-sm">No users assigned to this role.</p>
+          <p class="text-muted-foreground text-sm">{$adminT("No users assigned to this role.")}</p>
         {:else}
           <div class="flex flex-col gap-2">
             {#each roleUsers as user (user.id)}
@@ -787,9 +797,9 @@
 
         <!-- Add users -->
         <div class="p-4">
-          <h4 class="mb-2 text-sm font-medium">Add Users</h4>
+          <h4 class="mb-2 text-sm font-medium">{$adminT("Add Users")}</h4>
           {#if availableUsersToAdd.length === 0}
-            <p class="text-muted-foreground text-sm">All users are already in this role.</p>
+            <p class="text-muted-foreground text-sm">{$adminT("All users are already in this role.")}</p>
           {:else}
             <div class="flex max-h-64 flex-col gap-2 overflow-y-auto">
               {#each availableUsersToAdd as user (user.id)}
